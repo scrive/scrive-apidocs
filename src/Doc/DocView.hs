@@ -28,7 +28,6 @@ module Doc.DocView (
   , mailInvitation
   , modalLoginForSaveView
   , modalRejectedView
-  , modalSendInviteView
   , modalSignAwaitingAuthorLast
   , modalSendConfirmationView
   , pageAttachmentDesign
@@ -90,20 +89,15 @@ modalPdfTooLarge = toModal <$> renderTemplate_ "pdfTooBigModal"
 modalSignAwaitingAuthorLast :: TemplatesMonad m => m FlashMessage
 modalSignAwaitingAuthorLast = toModal <$> renderTemplate_ "signAwaitingAuthorLast"
 
-modalSendConfirmationView :: TemplatesMonad m => Document -> m FlashMessage
-modalSendConfirmationView document = do
+modalSendConfirmationView :: TemplatesMonad m => Document -> Bool -> m FlashMessage
+modalSendConfirmationView document authorWillSign = do
   partylist <- renderListTemplate . map getSmartName $ partyListButAuthor document
   toModal <$> (renderTemplateForProcess document processmodalsendconfirmation $ do
     F.value "partyListButAuthor" partylist
     F.value "signatory" . listToMaybe $ map getSmartName $ partyList document
+    F.value "willBeSigned" (authorWillSign && (not $ hasOtherSignatoriesThenAuthor document))
     documentInfoFields document)
 
-modalSendInviteView :: TemplatesMonad m => Document -> m FlashMessage
-modalSendInviteView document = do
-  partylist <- renderListTemplate . map getSmartName $ partyListButAuthor document
-  toModal <$> (renderTemplate "modalSendInviteView" $ do
-    F.value "partyListButAuthor" partylist
-    F.value "documenttitle" $ documenttitle document)
 
 modalRejectedView :: TemplatesMonad m => Document -> m FlashMessage
 modalRejectedView document = do
@@ -358,6 +352,8 @@ processJSON doc = do
     J.valueM "signatorysignmodalcontentauthorlast" $ text processsignatorysignmodalcontentauthorlast
     J.valueM "signatorysignmodalcontentdesignvieweleg" $ text processsignatorysignmodalcontentdesignvieweleg
     J.valueM "signatorysignmodalcontentsignvieweleg" $ text processsignatorysignmodalcontentdesignvieweleg
+    J.valueM "signatorysignmodalcontentauthoronly" $ text processsignatorysignmodalcontentauthoronly
+    
 
     J.valueM "signbuttontext" $ text processsignbuttontext
     J.valueM "signbuttontextauthor" $ text processsignbuttontextauthor

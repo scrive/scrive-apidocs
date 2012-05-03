@@ -697,15 +697,26 @@ showDocuments = onlySalesOrAdmin $ adminDocuments =<< getContext
 
 jsonDocuments :: Kontrakcja m => m JSValue
 jsonDocuments = onlySalesOrAdmin $ do
-    srvs <- dbQuery $ GetServices
-    Log.debug "Document list for admin per service"
-    docs <- join <$> (sequence $ map (dbQuery . GetDocumentsByService) (Nothing:(map (Just . serviceid) srvs)))
-    Log.debug $ "Total document found:" ++ show (length docs)
-    params <- getListParamsNew
-    let documents = documentsSortSearchPage params docs
-    Log.debug $ "Document on current list:" ++ show (length $ list documents)
-    Log.debug $ "Force execution due to stack overflow:" ++ show (length $ show $ list documents)
-    return $ JSObject
+
+  params <- getListParamsNew
+  let sorting    = docSortingFromParams params
+      searching  = docSearchingFromParams params
+      pagination = docPaginationFromParams docsPageSize params
+      filters    = []
+      domain     = [DocumentsOfWholeUniverse]
+      docsPageSize = 100
+
+  allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
+  totalCount <- dbQuery $ GetDocumentsCount domain (searching ++ filters)
+
+
+  let documents = PagedList { list       = allDocs
+                            , params     = params
+                            , totalCount = totalCount
+                            , pageSize   = docsPageSize
+                            }
+
+  return $ JSObject
            $ toJSObject
             [("list", JSArray $ map (\doc -> 
                 JSObject $ toJSObject
@@ -728,36 +739,45 @@ jsonDocuments = onlySalesOrAdmin $ do
             , ("paging", pagingParamsJSON documents)
             ]
 
-documentsSortSearchPage :: ListParams -> [Document] -> PagedList Document
-documentsSortSearchPage = 
-    listSortSearchPage documentsSortFunc documentsSearchFunc documentsPageSize
+docSortingFromParams :: ListParams -> [AscDesc DocumentOrderBy]
+docSortingFromParams params =
+   (concatMap x (listParamsSorting params)) ++ [Desc DocumentOrderByMTime] -- default order by mtime
+  where
+    x "status"            = [Asc DocumentOrderByStatusClass]
+    x "statusREV"         = [Desc DocumentOrderByStatusClass]
+    x "title"             = [Asc DocumentOrderByTitle]
+    x "titleREV"          = [Desc DocumentOrderByTitle]
+    x "time"              = [Asc DocumentOrderByMTime]
+    x "timeREV"           = [Desc DocumentOrderByMTime]
+    x "ctime"             = [Asc DocumentOrderByCTime]
+    x "ctimeREV"          = [Desc DocumentOrderByCTime]
+    x "signs"             = [Asc DocumentOrderByPartners]
+    x "signsREV"          = [Desc DocumentOrderByPartners]
+    -- x "partner"        = comparePartners
+    -- x "partnerREV"     = revComparePartners
+    -- x "partnercomp"    = viewComparing partnerComps
+    -- x "partnercompREV" = viewComparingRev partnerComps
+    x "process"           = [Asc DocumentOrderByProcess]
+    x "processREV"        = [Desc DocumentOrderByProcess]
+    x "service"           = [Asc DocumentOrderByService]
+    x "serviceREV"        = [Desc DocumentOrderByService]
+    x "type"              = [Asc DocumentOrderByType]
+    x "typeREV"           = [Desc DocumentOrderByType]
+    x "author"            = [Asc DocumentOrderByAuthor]
+    x "authorRev"         = [Desc DocumentOrderByAuthor]
+    x _                   = []
 
-documentsSortFunc :: SortingFunction Document
-documentsSortFunc "ctime"      = viewComparing documentctime
-documentsSortFunc "ctimeREV"   = viewComparingRev documentctime
-documentsSortFunc "author"     = viewComparing (maybe "" getSmartName . getAuthorSigLink)
-documentsSortFunc "authorREV"  = viewComparingRev (maybe "" getSmartName . getAuthorSigLink)
-documentsSortFunc "title"      = viewComparing documenttitle
-documentsSortFunc "titleREV"   = viewComparingRev documenttitle
-documentsSortFunc "service"    = viewComparing (maybe "" show . documentservice)
-documentsSortFunc "serviceREV" = viewComparingRev (maybe "" show . documentservice)
-documentsSortFunc "status"     = viewComparing (take 20 . show . documentstatus)
-documentsSortFunc "statusREV"  = viewComparingRev (take 20 . show . documentstatus)
-documentsSortFunc "type"       = viewComparing documenttype
-documentsSortFunc "typeREV"    = viewComparingRev documenttype
-documentsSortFunc "signs"      = viewComparing (map getSmartName . documentsignatorylinks)
-documentsSortFunc "signsREV"   = viewComparingRev (map getSmartName . documentsignatorylinks)
-documentsSortFunc _            = const $ const EQ
 
-documentsSearchFunc :: SearchingFunction Document
-documentsSearchFunc s doc =  nameMatch doc || signMatch doc
-    where
-    match m = isInfixOf (map toUpper s) (map toUpper m)
-    nameMatch = match . documenttitle
-    signMatch d = any (match . getSmartName) (documentsignatorylinks d)
+docSearchingFromParams :: ListParams -> [DocumentFilter]
+docSearchingFromParams params =
+  case listParamsSearching params of
+    "" -> []
+    x -> [DocumentFilterByString x]
 
-documentsPageSize :: Int
-documentsPageSize = 100
+
+docPaginationFromParams :: Int -> ListParams -> DocumentPagination
+docPaginationFromParams pageSize params = DocumentPagination ((listParamsPage params - 1) * pageSize) pageSize
+
 
 handleBackdoorQuery :: Kontrakcja m => String -> m String
 handleBackdoorQuery email = onlySalesOrAdmin $ onlyBackdoorOpen $ do

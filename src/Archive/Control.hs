@@ -196,18 +196,18 @@ docSortingFromParams params =
     x "titleREV"          = [Desc DocumentOrderByTitle]
     x "time"              = [Asc DocumentOrderByMTime]
     x "timeREV"           = [Desc DocumentOrderByMTime]
-    -- x "party"          = comparePartners
-    -- x "partyREV"       = revComparePartners
-    -- x "partner"        = comparePartners
-    -- x "partnerREV"     = revComparePartners
+    x "party"             = [Asc DocumentOrderByPartners]
+    x "partyREV"          = [Desc DocumentOrderByPartners]
+    x "partner"           = [Asc DocumentOrderByPartners]
+    x "partnerREV"        = [Desc DocumentOrderByPartners]
     -- x "partnercomp"    = viewComparing partnerComps
     -- x "partnercompREV" = viewComparingRev partnerComps
     x "process"           = [Asc DocumentOrderByProcess]
     x "processREV"        = [Desc DocumentOrderByProcess]
     x "type"              = [Asc DocumentOrderByType]
     x "typeREV"           = [Desc DocumentOrderByType]
-    -- x "author"         = viewComparing getAuthorName
-    -- x "authorRev"      = viewComparingRev getAuthorName
+    x "author"            = [Asc DocumentOrderByAuthor]
+    x "authorRev"         = [Desc DocumentOrderByAuthor]
     x _                   = []
 
 

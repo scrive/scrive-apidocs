@@ -207,7 +207,7 @@ propValidPasswordGoodExamples ps =
     let xs = map pc ps in
     length xs > 8
       && length xs < 25
-      && (any isAlpha xs && any isDigit xs)
+      && (length (filter isAlpha xs) >= 2 && length (filter isDigit xs) >= 2)
      ==> isGood $ asValidPassword xs
 
 newtype PasswordChar = PasswordChar { pc :: Char } deriving Show

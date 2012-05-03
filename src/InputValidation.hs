@@ -352,7 +352,7 @@ asDirtyEmail input =
 {- |
     Creates a clean and validated password.
     White list: Alphabetic characters, Digits [0-9], Punctuation characters, and Symbols (such as $) or spaces (to accommodate people who like to use passphrases)
-    Rules: Must contain at least one Alphabetic character, and one Digit [0-9]
+    Rules: Must contain at least 2 Alphabetic characters, and 2 Digits [0-9]
     Size: At least 8 chars.  No more than 250 chars.
 -}
 asValidPassword :: String -> Result String
@@ -361,11 +361,11 @@ asValidPassword input =
     >>= checkLengthIsMin 8 fieldtemplate
     >>= checkLengthIsMax 250 fieldtemplate
     >>= checkOnly [isAlpha, isDigit, isPunctuation, isSymbol] fieldtemplate
-    >>= checkContainsAlphaAndDigit
+    >>= checkContains2AlphaAndDigit
     where fieldtemplate = "passwordFieldName"
-          checkContainsAlphaAndDigit :: String -> Result String
-          checkContainsAlphaAndDigit pwd
-              | any isAlpha pwd && any isDigit pwd = return pwd
+          checkContains2AlphaAndDigit :: String -> Result String
+          checkContains2AlphaAndDigit pwd
+              | length (filter isAlpha pwd) >= 2 && length (filter isDigit pwd) >= 2 = return pwd
               | otherwise = Bad $ flashMessageNeedsLetterAndDigit fieldtemplate
 
 flashMessageNeedsLetterAndDigit :: String -> ValidationMessage

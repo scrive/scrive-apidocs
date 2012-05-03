@@ -61,9 +61,9 @@ echo "  password:               $PGPASSWORD"
 #
 echo Dropping old database
 dropdb -i $PGDATABASE --no-password
-createdb $PGDATABASE -O $PGUSER --no-password
+createdb $PGDATABASE -O $PGUSER --no-password --locale=sv_SE.UTF-8
 psql $PGDATABASE -c "ALTER DATABASE $PGDATABASE SET TIMEZONE = UTC"
-psql $PGDATABASE -c "DROP LANGUAGE 'plpgsql'"
+psql $PGDATABASE -c "DROP EXTENSION plpgsql"
 
 echo Restoring postgresql database...
 pg_restore -O -1 -v -d $PGDATABASE $ALLDATA/psql_database.dump --no-password

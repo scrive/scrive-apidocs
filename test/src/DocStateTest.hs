@@ -67,6 +67,7 @@ docStateTests env = testGroup "DocState" [
   testThat "Documents are shared in company properly" env testGetDocumentsSharedInCompany,
 
   testThat "Documents sorting SQL syntax is correct" env testGetDocumentsSQLSorted,
+  testThat "Documents searching by text works" env testGetDocumentsSQLTextFiltered,
  
   testThat "PreparationToPending adds to the log" env testPreparationToPendingEvidenceLog,
   testThat "MarkInvitationRead adds to the log" env testMarkInvitationReadEvidenceLog,
@@ -566,8 +567,12 @@ testUpdateFieldsEvidenceLog = doTimes 10 $ do
   etdoc <- randomUpdate $ \f t->UpdateFields (documentid doc) (signatorylinkid sl) [f] (systemActor t)
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   validTest $ do
-    assertRight etdoc
-    assertJust $ find (\e -> evType e == UpdateFieldsEvidence) lg
+    case etdoc of
+      Right _ ->
+        assertJust $ find (\e -> evType e == UpdateFieldsEvidence) lg
+      Left _ ->
+        assertEqual "if UpdateFields did not change any rows it should not add to the evidence" Nothing
+                    (find (\e -> evType e == UpdateFieldsEvidence) lg)
   
 testPreparationToPendingEvidenceLog :: TestEnv ()
 testPreparationToPendingEvidenceLog = do
@@ -1469,8 +1474,53 @@ testGetDocumentsSharedInCompany = doTimes 10 $ do
     assertEqual "Documents properly shared in company (1) by user 2" 2 (length dlist2)
 
 
+testGetDocumentsSQLTextFiltered :: TestEnv ()
+testGetDocumentsSQLTextFiltered = doTimes 1 $ do
+  -- setup
+  author <- addNewRandomAdvancedUser
+  doc1 <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
+  _doc2 <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
+  _doc3 <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
+
+  let domains = [ DocumentsOfAuthor (userid author) ]
+      first_name = getFirstName (head (documentsignatorylinks doc1))
+      last_name = getLastName (head (documentsignatorylinks doc1))
+      email = getEmail (head (documentsignatorylinks doc1))
+      filters1 = [DocumentFilterByString first_name]
+      filters2 = [DocumentFilterByString last_name]
+      filters3 = [DocumentFilterByString email]
+      filters4 = [DocumentFilterByString title]
+      filters5 = [DocumentFilterByString title1]
+      filters6 = [DocumentFilterByString title2]
+      -- we want to check case-insensitivity and Swedish characters
+      title  = "thisshouldbeuniquetitleöåä"
+      title1 = "thisshouldbeuniquetitle"
+      title2 = "THISshouldbeuniquetitleÖÅÄ"
+
+  actor <- unAuthorActor <$> rand 10 arbitrary
+
+  docx <- dbUpdate $ SetDocumentTitle (documentid doc1) title (actor)
+
+  docs0 <- dbQuery $ GetDocuments domains [] [] (DocumentPagination 0 maxBound)
+  docs1 <- dbQuery $ GetDocuments domains filters1 [] (DocumentPagination 0 maxBound)
+  docs2 <- dbQuery $ GetDocuments domains filters2 [] (DocumentPagination 0 maxBound)
+  docs3 <- dbQuery $ GetDocuments domains filters3 [] (DocumentPagination 0 maxBound)
+  docs4 <- dbQuery $ GetDocuments domains filters4 [] (DocumentPagination 0 maxBound)
+  docs5 <- dbQuery $ GetDocuments domains filters5 [] (DocumentPagination 0 maxBound)
+  docs6 <- dbQuery $ GetDocuments domains filters6 [] (DocumentPagination 0 maxBound)
+  
+  validTest $ do
+    assertEqual ("GetDocuments fetches all documents without filter") 3 (length docs0)
+    assertEqual ("Document title really got changed") (Right title) (documenttitle <$> docx)
+    assertEqual ("GetDocuments and filter by title: " ++ title1) 1 (length docs5)
+    assertEqual ("GetDocuments and filter by title: " ++ title) 1 (length docs4)
+    assertEqual ("GetDocuments and filter by title: " ++ title2) 1 (length docs6)
+    assertEqual ("GetDocuments and filter by first name: " ++ first_name) 1 (length docs1)
+    assertEqual ("GetDocuments and filter by last name: " ++ last_name) 1 (length docs2)
+    assertEqual ("GetDocuments and filter by email: " ++ email) 1 (length docs3)
+
 testGetDocumentsSQLSorted :: TestEnv ()
-testGetDocumentsSQLSorted = doTimes 10 $ do
+testGetDocumentsSQLSorted = doTimes 1 $ do
   -- setup
   author <- addNewRandomAdvancedUser
   _doc <- addRandomDocumentWithAuthorAndCondition author (const True)
@@ -1497,6 +1547,7 @@ testGetDocumentsSQLSorted = doTimes 10 $ do
             , Desc DocumentOrderByStatusClass
             , Desc DocumentOrderByType
             , Desc DocumentOrderByProcess
+            , Desc DocumentOrderByPartners
             ]
             (DocumentPagination 0 maxBound)
   validTest $ do

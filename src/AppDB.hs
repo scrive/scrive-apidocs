@@ -65,6 +65,7 @@ kontraMigrations = [
   , setSignatoryAttachmentsForeignKeyToSLIDOnly
   , dropDocumentIDColumntFromSignatoryAttachments
   , addCheckLowercaseEmailsUsers
+  , moveSignatoryLinkFieldsToSeparateTable
   , migrateTempCredentialRemoveEmail -- for oauth
   ] ++ mailerMigrations
 
@@ -92,6 +93,7 @@ kontraTables = [
   , tableUserRequest
   , tableMailAPIDelay
   , tableDocumentTags
+  , tableSignatoryLinkFields
   , tableTempCredential
   , tableTempPrivileges
   , tableAPIToken

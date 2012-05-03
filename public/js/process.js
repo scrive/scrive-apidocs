@@ -96,6 +96,9 @@ window.Process = Backbone.Model.extend({
     signatorysignmodalcontentsignvieweleg:  function() {
         return this.get("signatorysignmodalcontentsignvieweleg");
     },
+    authorIsOnlySignatory:  function() {
+        return this.get("signatorysignmodalcontentauthoronly");
+    },
     signatorysignmodaltitle : function() {
         return this.get("signatorysignmodaltitle");
     },

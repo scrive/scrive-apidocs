@@ -325,8 +325,8 @@ filterSingleFieldType (f:fs) = f : filterSingleFieldType (filter (\h-> sfType f 
 
 instance Arbitrary SignatoryDetails where
   arbitrary = do
-    fn <- arbitrary
-    ln <- arbitrary
+    fn <- arbString 1 20
+    ln <- arbString 1 20
     em <- arbEmail
     fields <- filterSingleFieldType <$> arbitrary
     return $ SignatoryDetails { signatorysignorder = SignOrder 1
@@ -347,14 +347,14 @@ instance Arbitrary FieldPlacement where
 
 instance Arbitrary FieldType where
   arbitrary = do
-    fieldlabel <- arbitrary
+    fieldlabel <- arbString 1 20
     filled <- arbitrary
     elements [FirstNameFT, LastNameFT, EmailFT, CompanyFT, CompanyNumberFT, PersonalNumberFT, CustomFT fieldlabel filled]
 
 instance Arbitrary SignatoryField where
   arbitrary = do
     t <- arbitrary
-    v <- arbitrary
+    v <- arbString 1 100
     p <- arbitrary
     return $ SignatoryField { sfType = t
                             , sfValue = v

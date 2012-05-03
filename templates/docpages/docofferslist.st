@@ -16,7 +16,7 @@ $loadingdialog()$
   schema: new Schema({
   url: "/docs",
   extraParams : { documentType : "Offer" },
-  sorting: new Sorting({ fields: ["title", "status", "time"/*,"partner", "partnercomp", "author"*/]}),
+  sorting: new Sorting({ fields: ["title", "status", "time","partner", "partnercomp", "author"]}),
     paging: new Paging({}),
     filtering: new Filtering({text: "", infotext: "$_SearchDoc()$"}),
     cells : [

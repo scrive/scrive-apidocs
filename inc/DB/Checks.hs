@@ -22,6 +22,9 @@ performDBChecks logger tables migrations = runDBEnv $ do
   let liftedLogger = lift . logger
   checkDBTimeZone liftedLogger
   checkDBConsistency liftedLogger (tableVersions : tables) migrations
+  -- everything is OK, commit changes
+  lift dbCommit
+  return ()
 
 -- |  Checks whether database returns timestamps in UTC
 checkDBTimeZone :: MonadDB m => (String -> DBEnv m ()) -> DBEnv m ()

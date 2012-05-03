@@ -90,12 +90,15 @@ data DocProcessInfo =
   , processcancelmodaltext :: String
 
   , processrejectbuttontext :: String
+
+  -- Texts for modal that is shown when someone is about to sign (clicked the blue sign button).
   , processsignatorysignmodaltitle :: String
-  , processsignatorysignmodalcontentlast :: String
-  , processsignatorysignmodalcontentnotlast :: String
-  , processsignatorysignmodalcontentauthorlast :: String
-  , processsignatorysignmodalcontentdesignvieweleg :: String
-  , processsignatorysignmodalcontentsignvieweleg :: String
+  , processsignatorysignmodalcontentlast :: String           -- Sign & design view. When person is last to sign
+  , processsignatorysignmodalcontentnotlast :: String        -- Sign & design view. When person is not last to sign
+  , processsignatorysignmodalcontentauthorlast :: String     -- Sign view. When person is author and is last to sign
+  , processsignatorysignmodalcontentdesignvieweleg :: String -- Design view, eleg authorization
+  , processsignatorysignmodalcontentsignvieweleg   :: String   -- Sign view, eleg authorization
+  , processsignatorysignmodalcontentauthoronly     :: String   -- Sign & design view. Only author is signatory.
   , processsignbuttontext :: String
   , processsignbuttontextauthor :: String
   , processsignatorycancelmodaltitle :: String
@@ -189,6 +192,7 @@ contractProcess =
   , processsignatorysignmodalcontentauthorlast = "contractsignatorysignmodalcontentauthorlast"
   , processsignatorysignmodalcontentdesignvieweleg = "contractsignatorysignmodalcontentdesignvieweleg"
   , processsignatorysignmodalcontentsignvieweleg = "contractsignatorysignmodalcontentsignvieweleg"
+  , processsignatorysignmodalcontentauthoronly = "contractsignatorysignmodalcontentauthoronly"
   , processsignbuttontext = "contractsignbuttontext"
   , processsignbuttontextauthor = "contractsignbuttontextauthor"
   , processsignatorycancelmodaltitle = "contractsignatorycancelmodaltitle"
@@ -215,7 +219,7 @@ contractProcess =
   , processflashmessagenobulkremindssent = "flashMessageNoBulkContractRemindsSent"
 
   -- process specific modal templates
-  , processmodalsendconfirmation = "modalSignInviteView"
+  , processmodalsendconfirmation = "modalContractCreated"
 
   -- process specific seal information
   , processsealincludesmaxtime = True
@@ -283,6 +287,7 @@ offerProcess =
   , processsignatorysignmodalcontentauthorlast = "offersignatorysignmodalcontentauthorlast"
   , processsignatorysignmodalcontentdesignvieweleg = "offersignatorysignmodalcontentdesignvieweleg"
   , processsignatorysignmodalcontentsignvieweleg = "offersignatorysignmodalcontentsignvieweleg"
+  , processsignatorysignmodalcontentauthoronly = "offersignatorysignmodalcontentauthoronly"
   , processsignbuttontext = "offersignbuttontext"
   , processsignbuttontextauthor = "offersignbuttontextauthor"
   , processsignatorycancelmodaltitle = "offersignatorycancelmodaltitle"
@@ -378,6 +383,7 @@ orderProcess =
   , processsignatorysignmodalcontentauthorlast = "ordersignatorysignmodalcontentauthorlast"
   , processsignatorysignmodalcontentdesignvieweleg = "ordersignatorysignmodalcontentdesignvieweleg"
   , processsignatorysignmodalcontentsignvieweleg = "ordersignatorysignmodalcontentsignvieweleg"
+  , processsignatorysignmodalcontentauthoronly = "ordersignatorysignmodalcontentauthoronly"
   , processsignbuttontext = "ordersignbuttontext"
   , processsignbuttontextauthor = "ordersignbuttontextauthor"
   , processsignatorycancelmodaltitle = "ordersignatorycancelmodaltitle"
