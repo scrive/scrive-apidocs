@@ -115,15 +115,16 @@ instance MonadDB m => DBQuery m GetAPITokensForUser [(APIToken, MagicHash)] wher
 
 -- Temporary Credentials Request (first part of OAuth flow)
 
-data RequestTempCredentials = RequestTempCredentials
-                              APIToken 
-                              MagicHash
-                              [APIPrivilege]
-                              URI
-                              MinutesTime
+{- |
+   Record a request and return the Temporary API Token + Secret.
+
+   Used in the first part of the OAuth flow.
+ -}
+data RequestTempCredentials = RequestTempCredentials OAuthTempCredRequest MinutesTime
 instance (CryptoRNG m, MonadDB m) => DBUpdate m RequestTempCredentials (Maybe (APIToken, MagicHash)) where
-  update (RequestTempCredentials _     _      []    _        _) = return Nothing
-  update (RequestTempCredentials token secret privs callback time) = do
+  update (RequestTempCredentials (OAuthTempCredRequest {tcPrivileges = []}) _) = return Nothing
+  update (RequestTempCredentials (OAuthTempCredRequest {tcPrivileges}) _) | APIPersonal `elem` tcPrivileges = return Nothing
+  update (RequestTempCredentials (OAuthTempCredRequest {..}) time) = do
     temptoken  :: MagicHash <- lift random
     tempsecret :: MagicHash <- lift random
     verifier   :: MagicHash <- lift random
@@ -138,13 +139,13 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m RequestTempCredentials (Maybe (A
                            ++ " RETURNING id")
                            [ toSql temptoken
                            , toSql tempsecret
-                           , toSql $ atID token
+                           , toSql $ atID tcAPIToken
                            , toSql verifier
                            , toSql $ 10 `minutesAfter` time
-                           , toSql $ show callback
-                           , toSql $ atID token
-                           , toSql $ atToken token
-                           , toSql secret
+                           , toSql $ show tcCallback
+                           , toSql $ atID tcAPIToken
+                           , toSql $ atToken tcAPIToken
+                           , toSql tcAPISecret
                            ]
     case mid of
       Nothing          -> return Nothing
@@ -153,21 +154,21 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m RequestTempCredentials (Maybe (A
                   ++ " temp_token_id "
                   ++ ",privilege "
                   ++ ") VALUES " 
-                  ++ (intercalate ", " $ map (const "(?,?)") privs))
-        _ <- kExecute $ concatMap (\p-> [toSql temptokenid, toSql p]) privs
+                  ++ (intercalate ", " $ map (const "(?,?)") tcPrivileges))
+        _ <- kExecute $ concatMap (\p-> [toSql temptokenid, toSql p]) tcPrivileges
         return $ Just (APIToken { atID = temptokenid, atToken = temptoken}, tempsecret)
 
-data VerifyCredentials = VerifyCredentials
-                              APIToken 
-                              UserID
-                              MinutesTime
+-- second part of flow (user granting privileges)
+
+{- |
+   Associate a User with a temporary token.
+ -}
+data VerifyCredentials = VerifyCredentials APIToken UserID MinutesTime
 instance MonadDB m => DBUpdate m VerifyCredentials (Maybe (URI, MagicHash)) where
   update (VerifyCredentials token uid time) = do
-    kPrepare ("UPDATE oauth_temp_credential SET user_id = ? WHERE id = ? AND temp_token = ? AND expires > ? RETURNING callback, verifier")
-    _ <- kExecute [ toSql uid, toSql $ atID token, toSql $ atToken token, toSql time ]
-    mr <- foldDB (\acc cb vr -> case parseURI cb of 
-                     Just uri -> (uri, vr):acc
-                     Nothing  -> acc) []
+    kPrepare ("UPDATE oauth_temp_credential SET user_id = ? WHERE EXISTS (SELECT 1 FROM users WHERE id = ?) AND id = ? AND temp_token = ? AND expires > ? RETURNING callback, verifier")
+    _ <- kExecute [ toSql uid, toSql uid, toSql $ atID token, toSql $ atToken token, toSql time ]
+    mr <- foldDB (\acc cb vr -> maybe acc (\uri->(uri,vr):acc) $ parseURI cb) []
     oneObjectReturnedGuard mr
 
 data GetRequestedPrivileges = GetRequestedPrivileges
@@ -187,6 +188,8 @@ instance MonadDB m => DBQuery m GetRequestedPrivileges (Maybe (String, [APIPrivi
     where f :: Maybe (String, [APIPrivilege]) -> Maybe String -> String -> APIPrivilege -> Maybe (String, [APIPrivilege])
           f Nothing         cname name pr = Just (fromMaybe name cname, [pr])
           f (Just (_, acc)) cname name pr = Just (fromMaybe name cname, pr:acc)
+
+-- third part of flow
 
 data RequestAccessToken = RequestAccessToken
                           APIToken  -- API Token

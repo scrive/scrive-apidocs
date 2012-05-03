@@ -56,7 +56,7 @@ tempCredRequest = api $ do
     Left errors -> throwError $ badInput errors
     Right tcr -> do
       Log.debug $ "TempCredRequest: " ++ show tcr
-      (temptoken, tempsecret) <- apiGuardL' $ dbUpdate $ RequestTempCredentials (tcAPIToken tcr) (tcAPISecret tcr) (tcPrivileges tcr) (tcCallback tcr) time
+      (temptoken, tempsecret) <- apiGuardL' $ dbUpdate $ RequestTempCredentials tcr time
 
       return $ FormEncoded [("oauth_token", show temptoken),
                             ("oauth_token_secret", show tempsecret),
