@@ -74,7 +74,7 @@ instance (MonadDB m, CryptoRNG m) => DBUpdate m CreateAPIToken Bool where
     kPrepare (  "INSERT INTO oauth_api_token "
              ++ "(api_token, api_secret, user_id) "   
              ++ "SELECT ?, ?, ? "
-             ++ "WHERE ? in (SELECT id from users)")
+             ++ "WHERE ? in (SELECT id from users)") -- UserID must point to real user
     r <- kExecute [toSql token,
                    toSql secret,
                    toSql userid, 

@@ -5,17 +5,22 @@ import Test.Framework
 --import Test.Framework.Providers.HUnit
 import TestKontra
 import TestingUtil
+import Test.QuickCheck
 
 import OAuth.Model
 import User.Model
 import DB
 
+--import qualified Log
+
 oauthTest :: TestEnvSt -> Test
 oauthTest env = testGroup "OAuth" [
-  testThat "CreateAPIToken makes readable token." env testCreateAPIToken
+  testThat "CreateAPIToken makes readable token." env testCreateAPIToken,
+  testThat "DeleteAPIToken does delete it." env testDeleteAPIToken
   ]
 
 -- test model
+
 testCreateAPIToken :: TestEnv ()
 testCreateAPIToken = do
   singleuser <- addNewRandomUser
@@ -33,4 +38,24 @@ testCreateAPIToken = do
   _ <- dbUpdate $ CreateAPIToken (userid singleuser)
   ls'' <- dbQuery $ GetAPITokensForUser (userid singleuser)
   assertBool "GetAPITokensForUser should return 2 tokens." $ length ls'' == 2
+  
+  let loop = do
+        uid <- rand 10 arbitrary
+        if uid /= (userid singleuser) && uid /= (userid seconduser)
+          then return uid
+          else loop
+  nonuid <- loop
+  r3 <- dbUpdate $ CreateAPIToken nonuid
+  assertBool "CreateAPIToken for non-existing user did not return False." $ not r3
+  
+testDeleteAPIToken :: TestEnv ()
+testDeleteAPIToken = do
+  singleuser <- addNewRandomUser
+  _ <- dbUpdate $ CreateAPIToken (userid singleuser)
+  ls <- dbQuery $ GetAPITokensForUser (userid singleuser)
+  assertBool "GetAPITokensForUser did not return the token just created." $ length ls == 1
+  let (apitoken,_):_ = ls
+  _ <- dbUpdate $ DeleteAPIToken (userid singleuser) apitoken
+  ls' <- dbQuery $ GetAPITokensForUser (userid singleuser)
+  assertBool "GetAPITokensForUser did not delete the token." $ length ls' == 0
   
