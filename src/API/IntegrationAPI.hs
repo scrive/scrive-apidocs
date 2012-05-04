@@ -52,6 +52,7 @@ import Company.Model
 import User.Model
 import Data.Foldable (fold)
 import Crypto.RNG
+import Util.Actor
 import Util.SignatoryLinkUtils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
@@ -69,7 +70,6 @@ import Doc.DocStorage
 import User.History.Model
 import qualified Templates.Fields as F
 
-import EvidenceLog.Model
 
 {- |
   Definition of integration API
@@ -203,6 +203,7 @@ createDocument = do
      Nothing -> return $ createDocFromFiles title doctype files
    d <- createAPIDocument comp involved tags mlocale createFun
    doc <- updateDocumentWithDocumentUI d
+   _ <- lift $ addDocumentCreateStatEvents doc "integration api"
    return $ toJSObject [ ("document_id",JSString $ toJSString $ show $ documentid doc)]
 
 createDocFromTemplate ::(Kontrakcja m) =>

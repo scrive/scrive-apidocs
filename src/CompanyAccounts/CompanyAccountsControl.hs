@@ -37,6 +37,7 @@ import KontraLink
 import ListUtil
 import Mails.SendMail
 import Misc
+import Util.Actor
 import Util.FlashUtil
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
@@ -44,7 +45,6 @@ import Util.MonadUtils
 import User.Utils
 import User.UserControl
 import User.UserView
-import EvidenceLog.Model
 import User.History.Model
 
 {- |

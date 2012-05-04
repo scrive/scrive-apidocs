@@ -28,7 +28,7 @@ import AppView
 import Happstack.Server.Types
 import Data.Char (toLower)
 import Data.Maybe
-import EvidenceLog.Model
+import Util.Actor
 import User.History.Model
 
 -- PadQueue STATE

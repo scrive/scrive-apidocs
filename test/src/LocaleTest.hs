@@ -21,7 +21,7 @@ import User.Locale
 import User.Model
 import User.UserControl
 import Misc
-import EvidenceLog.Model
+import Util.Actor
 
 localeTests :: TestEnvSt -> Test
 localeTests env = testGroup "Locale" [

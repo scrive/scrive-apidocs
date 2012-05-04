@@ -75,6 +75,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString as BSS
 import qualified Data.ByteString.UTF8 as BS
 import Crypto.RNG(random)
+import Util.Actor
 
 import InspectXMLInstances ()
 import InspectXML
@@ -87,7 +88,6 @@ import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model
 import Util.SignatoryLinkUtils
 import Stats.Control (getUsersAndStats)
-import EvidenceLog.Model
 import User.History.Model
 import Codec.Archive.Zip
 import qualified Data.Map as Map

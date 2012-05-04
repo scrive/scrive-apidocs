@@ -28,7 +28,7 @@ import MinutesTime
 import Doc.Model
 import Control.Monad
 import Doc.DocStateData
-import EvidenceLog.Model
+import Util.Actor
 
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils

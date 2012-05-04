@@ -142,7 +142,7 @@ signatoryFieldsListForJSON tl crtime padqueue doc sl = do
     J.value "time" $ fromMaybe "" $ (showDateAbbrev tl crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open)
     J.value "invitationundelivered" $ show $ isUndelivered sl && Pending == documentstatus doc
     J.value "inpadqueue" $ "true" <| (fmap fst padqueue == Just (documentid doc)) && (fmap snd padqueue == Just (signatorylinkid sl)) |> "false"
-    J.value "author" $ "true" <| isAuthor sl |> "false" 
+    J.value "isauthor" $ "true" <| isAuthor sl |> "false" 
     where
         sign = signtime <$> maybesigninfo sl
         seen = signtime <$> maybesigninfo sl

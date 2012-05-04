@@ -66,8 +66,9 @@ kontraMigrations = [
   , dropDocumentIDColumntFromSignatoryAttachments
   , addCheckLowercaseEmailsUsers
   , moveSignatoryLinkFieldsToSeparateTable
+  , addAPIStringDocStats
   , migrateTempCredentialRemoveEmail -- for oauth
-  ] ++ mailerMigrations
+  ] ++ mailerMigrations 
 
 kontraTables :: [Table]
 kontraTables = [

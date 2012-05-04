@@ -22,6 +22,7 @@ import Data.Maybe
 --import qualified Data.ByteString as BS
 --import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.ByteString.Lazy as BSL
+import Util.Actor
 import Util.SignatoryLinkUtils
 import Util.HasSomeUserInfo
 import Happstack.Server.RqData
@@ -43,8 +44,6 @@ import Stats.Control
 --import Control.Applicative
 --import Data.String.Utils
 --import MinutesTime
-import EvidenceLog.Model
-
 documentAPI :: Route (KontraPlus Response)
 documentAPI = choice [
   dir "api" $ dir "document" $ hPostNoXToken $ toK0 $ documentNew,
@@ -95,7 +94,7 @@ documentNew = api $ do
   file <- lift $ dbUpdate $ NewFile filename $ concatChunks content1
 
   d2 <- apiGuardL' $ dbUpdate $ AttachFile (documentid d1) (fileid file) actor
-
+  _ <- lift $ addDocumentCreateStatEvents d2 "web"
   -- we really need to check SignatoryDetails before adding them
 
   d3 <- apiGuardL' $ dbUpdate $ ResetSignatoryDetails2 (documentid d2) (map (\ir -> (SignatoryDetails {

@@ -35,7 +35,7 @@ import Util.MonadUtils
 import Control.Applicative
 import Util.SignatoryLinkUtils
 import Stats.Control
-import EvidenceLog.Model
+import Util.Actor
 import Util.HasSomeUserInfo
 import Text.JSON
 import qualified Log as Log
