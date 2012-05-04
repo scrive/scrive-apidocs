@@ -94,7 +94,6 @@ documentNew = api $ do
   file <- lift $ dbUpdate $ NewFile filename $ concatChunks content1
 
   d2 <- apiGuardL' $ dbUpdate $ AttachFile (documentid d1) (fileid file) actor
-  _ <- lift $ addDocumentCreateStatEvents d2 "web"
   -- we really need to check SignatoryDetails before adding them
 
   d3 <- apiGuardL' $ dbUpdate $ ResetSignatoryDetails2 (documentid d2) (map (\ir -> (SignatoryDetails {
@@ -106,7 +105,7 @@ documentNew = api $ do
                                                                                      Nothing)) -- No CSV
                                                                                 (dcrInvolved dcr))
                                                                                 actor
-  _ <- lift $ addDocumentCreateStatEvents d3
+  _ <- lift $ addDocumentCreateStatEvents d3 "web"
   return $ Created $ jsonDocumentForAuthor d3 (ctxhostpart ctx)
 
 -- this one must be standard post with post params because it needs to

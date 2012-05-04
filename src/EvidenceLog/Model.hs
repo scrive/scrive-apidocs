@@ -21,18 +21,6 @@ import Version
 import Templates.Templates
 import qualified Templates.Fields as F
 
-
-apiActor :: MinutesTime -> IPAddress -> UserID -> String -> String -> Actor
-apiActor time ip uid email apistring = Actor {
-    actorTime = time
-  , actorIP = Just ip
-  , actorUserID = Just uid
-  , actorEmail = Just email
-  , actorSigLinkID = Nothing
-  , actorAPIString = Just apistring
-  , actorWho = "the user with email " ++ show email ++ " using the API" 
-  }
-
 data InsertEvidenceEvent = InsertEvidenceEvent
                            EvidenceEventType      -- A code for the event
                            String                 -- Text for evidence

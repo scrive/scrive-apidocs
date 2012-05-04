@@ -47,6 +47,7 @@ import Util.HasSomeUserInfo
 import OAuth.Util
 import OAuth.Model
 import Doc.DocStorage
+import Util.Actor
 
 -- | Respond with a 201 Created status
 data Created a = Created a
