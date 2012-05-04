@@ -89,7 +89,6 @@ import Stats.Control
 import User.Utils
 import API.Service.Model
 import Company.Model
-
 import Control.Applicative
 import Control.Concurrent
 import Control.Monad
@@ -106,10 +105,11 @@ import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import Text.JSON hiding (Result)
 import Text.JSON.Gen hiding (value)
+import Text.JSON.String (runGetJSON)
 import qualified Text.JSON.Gen as J
+import Text.JSON.FromJSValue
 import Doc.DocDraft as Draft
 import qualified User.Action
-import Util.JSON
 import qualified ELegitimation.BankID as BankID
 import Util.Actor
 import PadQueue.Model
@@ -1107,7 +1107,11 @@ handleCSVLandpage c = do
 handleSaveDraft:: Kontrakcja m => DocumentID -> m JSValue
 handleSaveDraft did = do
     doc <- guardRightM $ getDocByDocIDForAuthor did
-    draftData <- guardJustM $ withJSONFromField "draft" $ fromJSON
+    draftData <- guardJustM $ do
+        v <- liftM (runGetJSON readJSObject) $ getField' "draft"
+        case v of
+         Right j -> return $ fromJSValue j
+         _ -> return Nothing
     actor     <- guardJustM $ mkAuthorActor <$> getContext
     res       <- applyDraftDataToDocument doc draftData actor
     case res of

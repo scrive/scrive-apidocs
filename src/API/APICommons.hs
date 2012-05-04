@@ -32,6 +32,7 @@ module API.APICommons (
 
 import Doc.DocStateData
 import Text.JSON
+import Text.JSON.FromJSValue
 import MinutesTime
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
@@ -130,16 +131,16 @@ api_date = showJSON  . showMinutesTimeForAPI
 
 getSignatoryTMP :: (APIContext c, Kontrakcja m) => [SignatoryRole] -> APIFunction c m (Maybe SignatoryTMP)
 getSignatoryTMP defaultRoles = do
-    fstname'        <- fromJSONField "fstname"
-    sndname'        <- fromJSONField "sndname"
-    company'        <- fromJSONField "company"
-    personalnumber' <- fromJSONField "personalnr"
-    companynumber'  <- fromJSONField "companynr"
-    email'          <- fromJSONField "email"
-    relation'       <- fromJSONField "relation"
-    fields' <- fromJSONLocal "fields" $ fromJSONLocalMap $ do
-                                        name <- fromJSONField "name"
-                                        value <- fromJSONField "value"
+    fstname'        <- fromJSValueField "fstname"
+    sndname'        <- fromJSValueField "sndname"
+    company'        <- fromJSValueField "company"
+    personalnumber' <- fromJSValueField "personalnr"
+    companynumber'  <- fromJSValueField "companynr"
+    email'          <- fromJSValueField "email"
+    relation'       <- fromJSValueField "relation"
+    fields' <- fromJSValueFieldCustom "fields" $ fromJSValueCustomMany $ do
+                                        name <- fromJSValueField "name"
+                                        value <- fromJSValueField "value"
                                         return $ (, value) <$> name
     return $ Just $ 
      (setFstname <$> fstname') $^
@@ -160,9 +161,9 @@ applyRelation _                      = id
 
 -- High level commons. Used buy some simmilar API's, but not all of them
 getFiles :: (APIContext c, Kontrakcja m) => APIFunction c m [(String, BS.ByteString)]
-getFiles = fmap (fromMaybe []) $ fromJSONLocal "files" $ fromJSONLocalMap $ do
-    name    <- fromJSONField "name"
-    content <- fromJSONFieldBase64 "content"
+getFiles = fmap (fromMaybe []) $ fromJSValueFieldCustom "files" $ fromJSValueCustomMany $ do
+    name    <- fromJSValueField "name"
+    content <- fromJSValueFieldBase64 "content"
     when (isNothing name || isNothing content) $ throwApiError API_ERROR_MISSING_VALUE "Problems with files upload."
     return $ Just (fromJust name, fromJust content)
 
@@ -172,7 +173,7 @@ jsonFromLocale :: Locale -> JSValue
 jsonFromLocale l = JSObject $ toJSObject [("region", showJSON $ codeFromRegion $ getRegion l),
                                           ("language", showJSON $ codeFromLang $ getLang l)]
 
-instance FromJSON Locale where
+instance FromJSValue Locale where
   fromJSValue (JSObject obj) = 
     case (fromJSValue =<< getJSONField "region" obj, fromJSValue =<< getJSONField "language" obj) of
       (Just region, Just language) -> Just $ mkLocale region language
@@ -180,8 +181,8 @@ instance FromJSON Locale where
       _                            -> Nothing
   fromJSValue _ = Nothing
 
-instance FromJSON Region where
+instance FromJSValue Region where
   fromJSValue a = regionFromCode =<< (fromJSValue a)
   
-instance FromJSON Lang where
+instance FromJSValue Lang where
   fromJSValue a = langFromCode =<< (fromJSValue a)
