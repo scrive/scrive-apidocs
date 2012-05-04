@@ -332,7 +332,7 @@ $if(loginModal)$
         <div class="modal-footer">
           <div class="float-left">
             <a class="close cancel">$_cancel()$</a>
-            <a href="#" class="txt-link message">$_forgotpassword()$</a>
+            <a href="#" class="txt-link message s-forgot-password">$_forgotpassword()$</a>
           </div>
           <a href="#" class="btn-small blue float-right submit">
             <div class="left"></div>
@@ -360,7 +360,7 @@ $if(loginModal)$
           <div class="modal-content">
             <div class="body">
               <div class="wrapper">
-                <span class="txt">$_email()$</span><input type="email" name="email" infotext="$_email()$" autocomplete="off"/>
+                <span class="txt">$_email()$</span><input class="s-forgot-password-email" type="email" name="email" infotext="$_email()$" autocomplete="off"/>
                 <input type="submit" class="hidden" />
               </div>
             </div>
@@ -371,7 +371,7 @@ $if(loginModal)$
             <a class="close cancel">$_cancel()$</a>
             <a href="#" class="txt-link message">$_login()$</a>
           </div>
-          <a href="#" class="btn-small green float-right submit">
+          <a href="#" class="btn-small green float-right submit s-forgot-password-submit">
             <div class="left"></div>
             <div class="label">
               <p>$_loginModalForgotPasswordSendNewPassword()$</p>
