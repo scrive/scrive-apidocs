@@ -468,6 +468,11 @@ window.Signatory = Backbone.Model.extend({
             this.signorder() == this.document().signorder();
         return canSign;
     },
+    ableToSign : function() { // Same as can sign but does not check document state.
+        return   this.signs() &&
+                !this.hasSigned() &&
+                 this.signorder() == this.document().signorder();
+    },
     canPadSignQuickSign : function() {
        return this.document().padAuthorization() && this.canSign() && !this.document().hasAnyAttachments() && this.allFieldsButSignatureDontRequiredFilling();
     },
