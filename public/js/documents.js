@@ -84,10 +84,10 @@ window.Document = Backbone.Model.extend({
     signatories: function() {
         return this.get("signatories");
     },
-    signatoriesThatCanSignNow: function() { //This is a little strange sicne it is not obvious when author can sign
+    signatoriesThatCanSignNow: function() { 
         var sigs = _.filter(this.signatories(),function(sig) {return sig.ableToSign()});
-        if (sigs.length > 1 && this.author().ableToSign())
-            return _.filter(this.signatories(),function(sig) {return sig.ableToSign() && !sig.author()});
+        if (sigs.length > 1) //We try not to show author on this list unless he is only one left due to sign-last functionality misdesign. |
+            return _.filter(sigs,function(sig) {return !sig.author()});
         return sigs;
     },
     fixForBasic: function() {

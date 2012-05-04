@@ -70,7 +70,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     var container = $("<div class='instructions' />");
     container.append($("<div class='headline' />").text(this.text()));
     container.append($("<div class='subheadline' />").text(this.subtext()));
-    if (this.model.document.padAuthorization() && this.isSignedNotClosed() && BrowserInfo.padDevice())
+    if (this.model.document.padAuthorization() && this.isSignedNotClosed() && BrowserInfo.isPadDevice())
     {    var padGiveToNextSignatoryModel = new PadGiveToNextSignatoryModel({document : this.model.document});
          container.append(new PadGiveToNextSignatoryView({model : padGiveToNextSignatoryModel}).el);
     }
