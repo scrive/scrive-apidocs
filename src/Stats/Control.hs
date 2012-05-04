@@ -20,7 +20,7 @@ module Stats.Control
          getUsageStatsForUser,
          getUsageStatsForCompany,
          getDocStatsForUser,
-         getUsersAndStats,
+         getUsersAndStatsInv,
          addSignStatInviteEvent,
          addSignStatReceiveEvent,
          addSignStatOpenEvent,
@@ -571,13 +571,20 @@ handleUserStatsCSV = onlySalesOrAdmin $ do
      $ toResponse (userStatisticsCSV stats)
 
 -- For User Admin tab in adminonly
-getUsersAndStats :: Kontrakcja m => [UserFilter] -> m [(User, Maybe Company, DocStats)]
-getUsersAndStats filters = do
+getUsersAndStatsInv :: Kontrakcja m => [UserFilter] -> m [(User, Maybe Company, DocStats, InviteType)]
+getUsersAndStatsInv filters = do
   Context{ctxtime} <- getContext
-  list <- dbQuery $ GetUsersAndStats filters
+  list <- dbQuery $ GetUsersAndStatsAndInviteInfo filters
   return $ convert' ctxtime list
   where
-    convert' ctxtime list = map (\(u,mc,l) -> (u,mc,calculateDocStats ctxtime $ tuples' l)) list
+    convert' ctxtime list = map (\(u,mc,l,iv) ->
+                                   ( u
+                                   , mc
+                                   , calculateDocStats ctxtime $ tuples' l
+                                   , case iv of
+                                       Nothing                     -> Admin
+                                       Just (InviteInfo _ _ mtype) -> fromMaybe Admin mtype
+                                   )) list
     tuples' :: [(MinutesTime, DocStatQuantity, Int)]
             -> [(Int, [Int])]
     tuples' l = map toTuple' l

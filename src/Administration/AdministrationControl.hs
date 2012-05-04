@@ -87,7 +87,7 @@ import Util.HasSomeCompanyInfo
 import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model
 import Util.SignatoryLinkUtils
-import Stats.Control (getUsersAndStats)
+import Stats.Control (getUsersAndStatsInv)
 import User.History.Model
 import Codec.Archive.Zip
 import qualified Data.Map as Map
@@ -296,23 +296,11 @@ usersSortFunc _                = const $ const EQ
 usersPageSize :: Int
 usersPageSize = 100
 
-getUsersAndStatsInv :: Kontrakcja m => [UserFilter] -> m [(User, Maybe Company, DocStats, InviteType)]
-getUsersAndStatsInv filters = do
-    users <- getUsersAndStats filters
-    mapM addInviteType users
-  where
-    addInviteType = \(user,mcompany,docstats) -> do
-        invite <- dbQuery $ GetInviteInfo (userid user)
-        let invitestype = case invite of
-                          Nothing                     -> Admin
-                          Just (InviteInfo _ _ mtype) -> fromMaybe Admin mtype
-        return (user,mcompany,docstats,invitestype)
-
 
 {- Shows table of all users-}
 showAllUsersTable :: Kontrakcja m => m String
 showAllUsersTable = onlySalesOrAdmin $ do
-    users <- getUsersAndStats []
+    users <- getUsersAndStatsInv []
     allUsersTable users
 
 

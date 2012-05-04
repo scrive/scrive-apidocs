@@ -20,12 +20,13 @@ module Stats.Model
          AddSignStatEvent(..),
          GetSignStatEvents(..),
 
-         GetUsersAndStats(..)
+         GetUsersAndStatsAndInviteInfo(..)
        )
 
        where
 
 import Control.Monad
+import Control.Applicative ((<$>), (<*>))
 import Data.Monoid
 import Data.List
 import Database.HDBC
@@ -165,8 +166,8 @@ instance MonadDB m => DBQuery m GetDocStatEventsByCompanyID [DocStatEvent] where
       <++> SQL "WHERE e.company_id = ?" [toSql companyid]
     fetchDocStats
 
-selectUsersAndCompaniesSQL :: SQL
-selectUsersAndCompaniesSQL = SQL ("SELECT "
+selectUsersAndCompaniesAndInviteInfoSQL :: SQL
+selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   -- User:
   ++ "  users.id AS user_id"
   ++ ", encode(users.password, 'base64') AS password_bas64"
@@ -204,20 +205,27 @@ selectUsersAndCompaniesSQL = SQL ("SELECT "
   ++ ", c.bars_textcolour"
   ++ ", encode(c.logo, 'base64') AS logo_base64"
   ++ ", email_domain"
+  -- InviteInfo:
+  ++ ", user_invite_infos.inviter_id"
+  ++ ", user_invite_infos.invite_time"
+  ++ ", user_invite_infos.invite_type"
   ++ "  FROM users"
   ++ "  LEFT JOIN companies c ON users.company_id = c.id"
+  ++ "  LEFT JOIN user_invite_infos ON users.id = user_invite_infos.user_id"
   ++ "  WHERE users.deleted = FALSE")
   []
 
 
-fetchUsersAndCompanies :: MonadDB m => DBEnv m [(User, Maybe Company)]
-fetchUsersAndCompanies = reverse `liftM` foldDB decoder []
+fetchUsersAndCompaniesAndInviteInfo :: MonadDB m => DBEnv m [(User, Maybe Company, Maybe InviteInfo)]
+fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` foldDB decoder []
   where
     decoder acc uid password salt is_company_admin account_suspended
      has_accepted_terms_of_service signup_method service_id company_id
      first_name last_name personal_number company_position phone mobile
      email preferred_design_mode lang region customfooter company_name company_number cid eid sid
-     name number address zip' city country bars_background bars_textcolour logo email_domain = (
+     name number address zip' city country bars_background bars_textcolour logo email_domain 
+     inviter_id invite_time invite_type
+     = (
        User {
            userid = uid
          , userpassword = maybePassword (password, salt)
@@ -265,6 +273,7 @@ fetchUsersAndCompanies = reverse `liftM` foldDB decoder []
                 }
               }
             _ -> Nothing
+        , InviteInfo <$> inviter_id <*> invite_time <*> invite_type
         ) : acc
 
 selectUserIDAndStatsSQL :: (DocStatQuantity, DocStatQuantity) -> SQL
@@ -284,13 +293,13 @@ fetchUserIDAndStats = foldDB decoder M.empty
     decoder acc uid time quantity amount =
       M.insertWith' (++) uid [(time,quantity,amount)] acc
 
-data GetUsersAndStats = GetUsersAndStats [UserFilter]
-instance MonadDB m => DBQuery m GetUsersAndStats
-  [(User, Maybe Company, [(MinutesTime, DocStatQuantity, Int)])] where
-  query (GetUsersAndStats filters) = do
+data GetUsersAndStatsAndInviteInfo = GetUsersAndStatsAndInviteInfo [UserFilter]
+instance MonadDB m => DBQuery m GetUsersAndStatsAndInviteInfo
+  [(User, Maybe Company, [(MinutesTime, DocStatQuantity, Int)], Maybe InviteInfo)] where
+  query (GetUsersAndStatsAndInviteInfo filters) = do
     _ <- kRun $ mconcat
          [ SQL "CREATE TEMP TABLE users_and_companies_temp AS " []
-         , selectUsersAndCompaniesSQL
+         , selectUsersAndCompaniesAndInviteInfoSQL
          , if null filters
              then SQL "" []
              else SQL " AND " [] `mappend` sqlConcatAND (map userFilterToSQL filters)
@@ -298,7 +307,7 @@ instance MonadDB m => DBQuery m GetUsersAndStats
          ]
 
     _ <- kRun $ SQL "SELECT * FROM users_and_companies_temp" []
-    usersWithCompanies <- fetchUsersAndCompanies
+    usersWithCompaniesAndInviteInfo <- fetchUsersAndCompaniesAndInviteInfo
 
     _ <- kRun $ selectUserIDAndStatsSQL (DocStatCreate, DocStatClose) <++>
          SQL " AND EXISTS (SELECT 1 FROM users_and_companies_temp WHERE users_and_companies_temp.user_id = e.user_id)" []
@@ -307,9 +316,9 @@ instance MonadDB m => DBQuery m GetUsersAndStats
 
     _ <- kRunRaw "DROP TABLE users_and_companies_temp"
 
-    let findStats (user,mcompany) = (user, mcompany, M.findWithDefault [] (userid user) stats)
+    let findStats (user,mcompany,minviteinfo) = (user, mcompany, M.findWithDefault [] (userid user) stats,minviteinfo)
 
-    return $ map findStats usersWithCompanies
+    return $ map findStats usersWithCompaniesAndInviteInfo
 
 {-------- Doc Stat Updates --}
 

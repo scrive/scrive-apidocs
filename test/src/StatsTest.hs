@@ -239,7 +239,7 @@ testGetUsersAndStats = do
 
   Log.debug $ "Set up test, now running query."
   t0 <- getMinutesTime
-  stats <- dbQuery $ GetUsersAndStats []
+  stats <- dbQuery $ GetUsersAndStatsAndInviteInfo []
   Log.debug $ "Number of stats returned: " ++ show (length stats)
   t1 <- getMinutesTime
 
