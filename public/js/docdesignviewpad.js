@@ -83,7 +83,7 @@ window.PadDesignViewUtilsView = Backbone.View.extend({
     sigSelector : function(source,callback) {
         var model = this.model;
         var sigs = model.document().signatoriesThatCanSignNow();
-        if (sigs == 1)
+        if (sigs.length <= 1)
          return $("<strong/>").text(source().smartname());
         var select = $("<select/>");
         _.each(sigs,function(sig) {
