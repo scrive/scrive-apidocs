@@ -12,23 +12,9 @@ window.PadDesignViewUtilsModel = Backbone.Model.extend({
         sendForSigning : false
     },
     initialize: function (args) {
-        var sigs = args.document.signatories();
-        //We try to init with signatory.
-        var sig;
-        for(var i=sigs.length-1;i>=0;i--){
-            if (!sigs[i].signs()) continue; // We ignore viewers
-            if (sig == undefined)
-                sig = sigs[i]; 
-            if (sig.signorder() > sigs[i].signorder()) // We prefere ones with lower sign order 
-                sig = sigs[i];
-            else if ((sig.signorder() == sigs[i].signorder()) && (sig.author() && !sigs[i].author())) // We prefere not-authors
-                sig = sigs[i];
-         }
-        if (sig != undefined) {
-                this.setGiveForSigningSignatory(sig);
-                this.setSendToPadSignatory(sig);
-        }
-        
+        var sig = args.document.signatoriesThatCanSignNow()[0];
+        this.setGiveForSigningSignatory(sig);
+        this.setSendToPadSignatory(sig);      
     },
     document: function() {
        return this.get("document");
@@ -96,11 +82,11 @@ window.PadDesignViewUtilsView = Backbone.View.extend({
     tagname : "div",
     sigSelector : function(source,callback) {
         var model = this.model;
-        var sigs = model.document().signatories();
-        if (model.document().signatories().length == 2)
+        var sigs = model.document().signatoriesThatCanSignNow();
+        if (sigs == 1)
          return $("<strong/>").text(source().smartname());
         var select = $("<select/>");
-        _.each(model.document().signatories(),function(sig) {
+        _.each(sigs,function(sig) {
             var option = $("<option>").text(sig.smartname()).val(sig.email());
             if (sig == source())
                 option.attr("selected","YES");

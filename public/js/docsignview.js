@@ -70,7 +70,10 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     var container = $("<div class='instructions' />");
     container.append($("<div class='headline' />").text(this.text()));
     container.append($("<div class='subheadline' />").text(this.subtext()));
-
+    if (this.model.document.padAuthorization() && this.isSignedNotClosed())
+    {    var padGiveToNextSignatoryModel = new PadGiveToNextSignatoryModel({document : this.model.document});
+         container.append(new PadGiveToNextSignatoryView({model : padGiveToNextSignatoryModel}).el);
+    }
     var smallerbit = $("<div />");
     var timeout = this.model.document.timeouttime();
     if (timeout != undefined && this.model.document.signingInProcess()) {

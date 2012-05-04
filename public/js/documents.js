@@ -84,6 +84,12 @@ window.Document = Backbone.Model.extend({
     signatories: function() {
         return this.get("signatories");
     },
+    signatoriesThatCanSignNow: function() { //This is a little strange sicne it is not obvious when author can sign
+        var sigs = _.filter(this.signatories(),function(sig) {return sig.ableToSign()});
+        if (sigs.length > 1 && this.author().ableToSign())
+            return _.filter(this.signatories(),function(sig) {return sig.ableToSign() && !sig.author()});
+        return sigs;
+    },
     fixForBasic: function() {
         if (this.padAuthorization())
             this.setEmailVerification();
