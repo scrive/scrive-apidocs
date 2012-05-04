@@ -18,12 +18,20 @@ window.DocumentSignViewHeader = Backbone.View.extend({
   tagName: "div",
   refresh : function() {
       var el = $(this.el);
-      var tbd = $("<span/>")
+      var tbd = $("<span/>");
       $(this.el).append(tbd);
-      setTimeout(function() {tbd.remove();},1)
-      var width = Math.max($('body').width(),$(document).width());
-      if (width > 1020)
+      setTimeout(function() {tbd.remove();},1);
+      if (!$.browser.msie) {
+        var width = Math.max($('body').width(),$(document).width());
+        if (width > 1020)
           el.css("min-width",width + "px");
+        var pbs = $(".poweredbyscrive",this.el);
+        if (pbs.size() > 0)
+            pbs.css("left", width - pbs.width() - 1);
+        var pti = $(".padTopIcon");
+        if (pti.size() > 0)
+            pti.css("left", width - pti.width() - 2);
+      }
   },
   updateHeaderSenderPosition: function() {
     if ($(window).width() < 1150) {
@@ -42,9 +50,12 @@ window.DocumentSignViewHeader = Backbone.View.extend({
       maindiv.removeClass();
       maindiv.attr("style","");
     maindiv.addClass("pageheader");
-    if(model.hasSigned() && model.saved()) {
+
+    if(inService) {
         maindiv.addClass('withstandardlogo');
-/*
+        var content = $("<div class='content' />");
+        var logowrapper = $("<div class='logowrapper' />");
+        logowrapper.append("<a href='/'><div class='logo'></div></a>");
         if (document.barsbackgroundcolor() != undefined)
         {
             maindiv.css('background-image', 'none');
@@ -52,12 +63,15 @@ window.DocumentSignViewHeader = Backbone.View.extend({
         }
         if (document.barsbackgroundtextcolor() != undefined)
             maindiv.css("color", document.barsbackgroundtextcolor());
-*/
+
+    } else if(model.hasSigned() && model.saved()) {
+        maindiv.addClass('withstandardlogo');
         var content = $("<div class='content' />");
         var logowrapper = $("<div class='logowrapper' />");
         logowrapper.append("<a href='/'><div class='logo'></div></a>");
 
     } else {
+      maindiv.append($("<div class='poweredbyscrive'/>"));
         maindiv.addClass(document.logo() == undefined ? 'withstandardlogo' : 'withcustomlogo');
         if (document.barsbackgroundcolor() != undefined)
         {
@@ -115,12 +129,14 @@ window.DocumentSignViewFooter = Backbone.View.extend({
   },
   refresh : function() {
       var el = $(this.el);
-      var tbd = $("<span/>")
+      var tbd = $("<span/>");
       $(this.el).append(tbd);
-      setTimeout(function() {tbd.remove();},1)
-      var width = Math.max($('body').width(),$(document).width());
-      if (width > 1020)
+      setTimeout(function() {tbd.remove();},1);
+      if (!$.browser.msie) {
+        var width = Math.max($('body').width(),$(document).width());
+        if (width > 1020)
           el.css("min-width",width + "px");
+      }   
   },
   tagName: "div",
   render: function() {
@@ -158,7 +174,10 @@ window.DocumentSignViewFooter = Backbone.View.extend({
       sender.append(name).append(position).append(company).append(phone).append(email);
     }
 
-    content.append(sender).append(powerdiv).append("<div class='clearboth'/>");
+    content.append(sender);
+      if(!inService)
+          content.append(powerdiv);
+      content.append("<div class='clearboth'/>");
     maindiv.append(dogtooth.append(content));
     return this;
   }

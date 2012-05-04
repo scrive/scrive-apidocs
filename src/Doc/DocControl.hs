@@ -367,7 +367,7 @@ handleIssueSign document = do
         case partitionEithers mndocs of
           ([], [d]) -> do
             when_ (sendMailsDurringSigning d) $ do
-                addFlashM $ modalSendConfirmationView d
+                addFlashM $ modalSendConfirmationView d True
             return $ LinkIssueDoc (documentid d)
           ([], ds) -> do
             if isJust $ ctxservice ctx
@@ -404,7 +404,9 @@ handleIssueSign document = do
         case mndoc of
           Right (Right newdocument) -> do
             postDocumentPreparationChange newdocument "web"
-            return $ Right newdocument
+            newdocument' <- guardJustM $ dbQuery $ GetDocumentByDocumentID (documentid newdocument)
+            postDocumentPendingChange newdocument' newdocument' -- | We call it on same document since there was no change
+            return $ Right newdocument'
           _ -> return $ Left LoopBack
 
 
@@ -419,7 +421,7 @@ handleIssueSend document = do
         case partitionEithers mndocs of
           ([], [d]) -> do
             when_ (sendMailsDurringSigning d) $ do
-                addFlashM $ modalSendConfirmationView d
+                addFlashM $ modalSendConfirmationView d False
             return $ LinkIssueDoc (documentid d)
           ([], ds) -> do
             if isJust $ ctxservice ctx

@@ -128,10 +128,9 @@ tableAuthorAttachments = Table {
 tableSignatoryAttachments :: Table
 tableSignatoryAttachments = Table {
     tblName = "signatory_attachments"
-  , tblVersion = 3
+  , tblVersion = 7
   , tblCreateOrValidate = \desc -> case desc of
       [  ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
-       , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("description", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("signatory_link_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -139,42 +138,35 @@ tableSignatoryAttachments = Table {
       [] -> do
         kRunRaw $ "CREATE TABLE signatory_attachments "
           ++ "( file_id BIGINT NULL"
-          ++ ", document_id BIGINT NOT NULL"
           ++ ", description TEXT NOT NULL"
           ++ ", name TEXT NOT NULL"
           ++ ", signatory_link_id BIGINT NOT NULL DEFAULT 0"
-          ++ ", CONSTRAINT pk_signatory_attachments PRIMARY KEY (document_id, signatory_link_id, name)"
+          ++ ", CONSTRAINT pk_signatory_attachments PRIMARY KEY (signatory_link_id, name)"
           ++ ")"
         return TVRcreated
       _ -> do
         return TVRinvalid
   , tblPutProperties = do
-    kRunRaw $ "CREATE INDEX idx_signatory_attachments_document_id ON signatory_attachments(document_id)"
     kRunRaw $ "CREATE INDEX idx_signatory_attachments_signatory_link_id ON signatory_attachments(signatory_link_id)"
     kRunRaw $ "ALTER TABLE signatory_attachments"
       ++ " ADD CONSTRAINT fk_signatory_attachments_files FOREIGN KEY(file_id)"
       ++ " REFERENCES files(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
     kRunRaw $ "ALTER TABLE signatory_attachments"
-      ++ " ADD CONSTRAINT fk_signatory_attachments_documents FOREIGN KEY(document_id)"
-      ++ " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE signatory_attachments"
-      ++ " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id, document_id)"
-      ++ " REFERENCES signatory_links(id, document_id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id)"
+      ++ " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 
 tableSignatoryLinks :: Table
 tableSignatoryLinks = Table {
     tblName = "signatory_links"
-  , tblVersion = 6
+  , tblVersion = 9
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("company_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
-       , ("fields", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("sign_order", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("token", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("sign_time", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True})
@@ -205,7 +197,6 @@ tableSignatoryLinks = Table {
           ++ ", document_id BIGINT NOT NULL"
           ++ ", user_id BIGINT NULL DEFAULT NULL"
           ++ ", company_id BIGINT NULL DEFAULT NULL"
-          ++ ", fields TEXT NOT NULL DEFAULT NULL"
           ++ ", sign_order INTEGER NOT NULL DEFAULT 1"
           ++ ", token BIGINT NOT NULL"
           ++ ", sign_time TIMESTAMPTZ NULL DEFAULT NULL"
@@ -228,7 +219,7 @@ tableSignatoryLinks = Table {
           ++ ", csv_contents TEXT NULL"
           ++ ", csv_signatory_index INTEGER NULL"
           ++ ", internal_insert_order BIGINT NOT NULL DEFAULT nextval('signatory_links_internal_insert_order_seq')"
-          ++ ", CONSTRAINT pk_signatory_links PRIMARY KEY (id, document_id)"
+          ++ ", CONSTRAINT pk_signatory_links PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
@@ -275,4 +266,38 @@ tableDocumentTags = Table {
       _ -> return TVRinvalid
   , tblPutProperties = do
     kRunRaw $ "CREATE INDEX idx_document_tags_document_id ON document_tags(document_id)"
+  }
+
+tableSignatoryLinkFields :: Table
+tableSignatoryLinkFields = Table {
+    tblName = "signatory_link_fields"
+  , tblVersion = 1
+  , tblCreateOrValidate = \desc -> case desc of
+      [ ("id",                 SqlColDesc {colType = SqlBigIntT,   colNullable = Just False})
+       , ("signatory_link_id", SqlColDesc {colType = SqlBigIntT,   colNullable = Just False})
+       , ("type",              SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
+       , ("custom_name",       SqlColDesc {colType = SqlVarCharT,  colNullable = Just False})
+       , ("value",             SqlColDesc {colType = SqlVarCharT,  colNullable = Just False})
+       , ("is_author_filled",  SqlColDesc {colType = SqlBitT,      colNullable = Just False})
+       , ("placements",        SqlColDesc {colType = SqlVarCharT,  colNullable = Just False})
+       ] -> return TVRvalid
+      [] -> do
+        kRunRaw $ "CREATE TABLE signatory_link_fields"
+                  ++ "( id                BIGSERIAL"
+                  ++ ", signatory_link_id BIGINT    NOT NULL"
+                  ++ ", type              SMALLINT  NOT NULL"
+                  ++ ", custom_name       TEXT      NOT NULL DEFAULT ''"
+                  ++ ", value             TEXT      NOT NULL DEFAULT ''"
+                  ++ ", is_author_filled  BOOL      NOT NULL DEFAULT FALSE"
+                  ++ ", placements        TEXT      NOT NULL DEFAULT ''"
+                  ++ ", CONSTRAINT pk_signatory_link_fields PRIMARY KEY (id)"
+                  ++ ")"
+        return TVRcreated
+      _ -> return TVRinvalid
+  , tblPutProperties = do
+    kRunRaw $ "CREATE INDEX idx_signatory_link_fields_signatory_links_signatory_link_id ON signatory_link_fields(signatory_link_id)"
+    kRunRaw $ "ALTER TABLE signatory_link_fields"
+      ++ " ADD CONSTRAINT fk_signatory_link_fields_signatory_links FOREIGN KEY(signatory_link_id)"
+      ++ " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }

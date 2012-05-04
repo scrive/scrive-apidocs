@@ -96,12 +96,13 @@ startSystem appGlobals appConf =
               rng = cryptorng appGlobals
           t2 <- forkIO $ cron 60 $ runScheduler rng (oldScheduler >> actionScheduler UrgentAction) scheddata
           t3 <- forkIO $ cron 600 $ runScheduler rng (actionScheduler LeisureAction) scheddata
-          t4 <- forkIO $ cron (60 * 60 * 4) $ runScheduler rng runDocumentProblemsCheck scheddata
-          t5 <- forkIO $ cron (60 * 60 * 24) $ runScheduler rng runArchiveProblemsCheck scheddata
+          --t4 <- forkIO $ cron (60 * 60 * 4) $ runScheduler rng runDocumentProblemsCheck scheddata
+          --t5 <- forkIO $ cron (60 * 60 * 24) $ runScheduler rng runArchiveProblemsCheck scheddata
           t6 <- forkIO $ cron 5 $ runScheduler rng processEvents scheddata
           t7 <- forkIO $ cron 60 $ runScheduler rng AWS.uploadFilesToAmazon scheddata
           t8 <- forkIO $ cron (60 * 60) System.Mem.performGC
-          return [t1, t2, t3, t4, t5, t6, t7, t8]
+          --return [t1, t2, t3, t4, t5, t6, t7, t8]
+          return [t1, t2, t3, t6, t7, t8]
 
         waitForTerm _ = E.bracket
           -- checkpoint the state once a day

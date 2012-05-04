@@ -7,10 +7,11 @@
 
 var DocumentDesignView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render', 'refreshFinalButton', 'refreshAuthorizationDependantOptions');
+        _.bindAll(this, 'render', 'refreshFinalButton', 'refreshSignatoryAttachmentsOption', 'refreshAuthorizationDependantOptions');
         this.model.bind('reset', this.render);
         this.model.bind('change:ready', this.render);
         this.model.bind('change:signatories', this.refreshFinalButton);
+        this.model.bind('change:signatories', this.refreshSignatoryAttachmentsOption);
         this.model.bind('change:authorization', this.refreshAuthorizationDependantOptions);
         this.model.view = this;
         this.prerender();
@@ -316,7 +317,7 @@ var DocumentDesignView = Backbone.View.extend({
         var icon = $("<span class='editinvitemessageicon'/>");
         var text = $("<span class='editinvitemessagetext'/>").text(localization.editInviteText);
         box.append(icon).append(text);
-        box.find("span").click(function() {
+        icon.add(text).click(function() {
               document.save().sendAjax( function() {
                          ConfirmationWithEmail.popup({
                             title :localization.editInviteDialogHead,
@@ -331,7 +332,8 @@ var DocumentDesignView = Backbone.View.extend({
                             }
                             });
             });
-       });
+            return false;
+        });
         return box;
     },
     selectLanguageOption: function() {
@@ -406,9 +408,10 @@ var DocumentDesignView = Backbone.View.extend({
         var countspan = $("<span class='countspan' />").text("(" + document.authorattachments().length + ")").appendTo(text);
         box.append(icon).append(text);
 
-        box.find("span").click(function() {
+        icon.add(text).click(function() {
             document.save().sendAjax();
             DesignAuthorAttachmentsPopup.popup({document: document});
+            return false;
         });
         return box;
 
@@ -426,9 +429,10 @@ var DocumentDesignView = Backbone.View.extend({
         document.bind("change:attachments", function(){
           countspan.text("(" + document.signatoryattachments().length + ")");
         });
-        box.find("span").click(function() {
+        icon.add(text).click(function() {
             document.save().sendAjax();
             DesignSignatoryAttachmentsPopup.popup({document: document});
+            return false;
         });
         return box;
     },
@@ -567,9 +571,17 @@ var DocumentDesignView = Backbone.View.extend({
                     }
                 }).input();
         }
-        var content = document.lastSignatoryLeft() ? $(document.process().signatorysignmodalcontentlast()) : $(document.process().signatorysignmodalcontentnotlast());
-        if (document.elegAuthorization())
-            content = $(document.process().signatorysignmodalcontentdesignvieweleg());
+        var content = $("<span/>");
+        if (document.authorIsOnlySignatory())
+            content = $(document.process().authorIsOnlySignatory());
+        else if (document.elegAuthorization())
+            content = $(document.process().signatorysignmodalcontentdesignvieweleg());    
+        else if (document.lastSignatoryLeft())
+            content = $(document.process().signatorysignmodalcontentlast());
+        else
+            content = $(document.process().signatorysignmodalcontentnotlast());
+
+        
         DocumentDataFiller.fill(document, content);
         if (document.elegAuthorization())
         {
@@ -592,7 +604,11 @@ var DocumentDesignView = Backbone.View.extend({
        var document = this.model;
        var signatory = document.currentSignatory();
        var box = $("<div>");
-       var content = $("<p>" + document.process().confirmsendtext() + " <strong class='documenttitle'/> " + localization.to + "<span class='unsignedpartynotcurrent'/></p>");
+       var confirmtext =  $("<span/>").append(document.process().confirmsendtext());
+       var content = $("<p/>").append(confirmtext);
+       if (!document.authorIsOnlySignatory())
+           content.append($("<span/>").text(localization.to)).append("<span class='unsignedpartynotcurrent'/>");
+       content.append($("<span>.</span>"));
        box.append(DocumentDataFiller.fill(document,content));
        var padDesignViewUtil = undefined;
        if (document.padAuthorization())
@@ -627,7 +643,7 @@ var DocumentDesignView = Backbone.View.extend({
         var vres = true;
         var atLeastOneSignatory = false;
         for(var i =0; i< sigs.length; i++)
-        {   if (!sigs[i].author() && sigs[i].signs()) atLeastOneSignatory = true;
+        {   if (sigs[i].signs()) atLeastOneSignatory = true;
             var fields = sigs[i].fields();
             for(var j = 0; j< fields.length; j++) {
                 var field = fields[j];
@@ -644,7 +660,7 @@ var DocumentDesignView = Backbone.View.extend({
 
         if (!atLeastOneSignatory)
         {
-              FlashMessages.add({color: 'red', content : localization.designview.validation.atLeastOnePersonOtherThenAuthor});
+              FlashMessages.add({color: 'red', content : localization.designview.validation.atLeastOnePersonMustSigns});
               this.tabs.activate(this.tab2);
               return false;
         }

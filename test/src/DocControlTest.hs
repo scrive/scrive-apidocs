@@ -80,9 +80,10 @@ testSendingDocumentSendsInvites = do
 
   doc <- addRandomDocumentWithAuthorAndCondition user (\d -> documentstatus d == Preparation
                                                              && 2 <= length (filterSigLinksFor SignatoryPartner d)
-                                                               && case documenttype d of
+                                                             && case documenttype d of
                                                                     Signable _ -> True
-                                                                    _ -> False)
+                                                                    _ -> False
+                                                             && sendMailsDurringSigning d)
 
   req <- mkRequest POST [ ("send", inText "True")
                         -- this stuff is for updateDocument function, which I believe
@@ -120,7 +121,8 @@ testSigningDocumentFromDesignViewSendsInvites = do
                                                                     Signable Contract -> True
                                                                     _ -> False
                                                                && isSignatory (getAuthorSigLink d)
-                                                               && 2 <= length (filterSigLinksFor SignatoryPartner d))
+                                                               && 2 <= length (filterSigLinksFor SignatoryPartner d)
+                                                               && sendMailsDurringSigning d)
 
   req <- mkRequest POST [ ("sign", inText "True")
                         ]

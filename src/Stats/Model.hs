@@ -37,6 +37,7 @@ import Stats.Tables
 import Company.Model
 import API.Service.Model
 import OurPrelude
+import qualified Data.Map as M
 
 {------ Doc Stats ------}
 
@@ -131,18 +132,18 @@ instance MonadDB m => DBQuery m GetDocStatEventsByCompanyID [DocStatEvent] where
       <++> SQL "WHERE e.company_id = ?" [toSql companyid]
     fetchDocStats
 
-selectUsersAndStatsSQL :: (DocStatQuantity, DocStatQuantity) -> SQL
-selectUsersAndStatsSQL (q1, q2) = SQL ("SELECT "
+selectUsersAndCompaniesSQL :: SQL
+selectUsersAndCompaniesSQL = SQL ("SELECT "
   -- User:
-  ++ "  u.id AS userid"
-  ++ ", encode(u.password, 'base64')"
-  ++ ", encode(u.salt, 'base64')"
+  ++ "  u.id AS user_id"
+  ++ ", encode(u.password, 'base64') AS password_bas64"
+  ++ ", encode(u.salt, 'base64') AS salt_base64"
   ++ ", u.is_company_admin"
   ++ ", u.account_suspended"
   ++ ", u.has_accepted_terms_of_service"
   ++ ", u.signup_method"
-  ++ ", u.service_id"
-  ++ ", u.company_id"
+  ++ ", u.service_id AS user_service_id"
+  ++ ", u.company_id AS user_company_id"
   ++ ", u.first_name"
   ++ ", u.last_name"
   ++ ", u.personal_number"
@@ -159,7 +160,7 @@ selectUsersAndStatsSQL (q1, q2) = SQL ("SELECT "
   -- Company:
   ++ ", c.id AS company_id"
   ++ ", c.external_id"
-  ++ ", c.service_id"
+  ++ ", c.service_id AS company_service_id"
   ++ ", c.name"
   ++ ", c.number"
   ++ ", c.address"
@@ -168,31 +169,23 @@ selectUsersAndStatsSQL (q1, q2) = SQL ("SELECT "
   ++ ", c.country"
   ++ ", c.bars_background"
   ++ ", c.bars_textcolour"
-  ++ ", encode(c.logo, 'base64')"
+  ++ ", encode(c.logo, 'base64') AS logo_base64"
   ++ ", email_domain"
-  -- Events:
-  ++ ", e.time"
-  ++ ", e.quantity"
-  ++ ", e.amount"
   ++ "  FROM users u"
   ++ "  LEFT JOIN companies c ON u.company_id = c.id"
-  ++ "  LEFT JOIN doc_stat_events e ON u.id = e.user_id"
-  ++ "    AND e.quantity IN (?, ?)"
   ++ "  WHERE u.deleted = FALSE"
-  ++ "  ORDER BY u.first_name || ' ' || u.last_name ASC, u.email ASC, userid ASC")
-  [toSql q1, toSql q2]
+  ++ "  ORDER BY u.first_name || ' ' || u.last_name ASC, u.email ASC, user_id ASC")
+  []
 
-fetchUsersAndStats :: MonadDB m => DBEnv m 
-  [(User, Maybe Company, ( Maybe MinutesTime
-                         , Maybe DocStatQuantity
-                         , Maybe Int))]
-fetchUsersAndStats = reverse `liftM` foldDB decoder []
+
+fetchUsersAndCompanies :: MonadDB m => DBEnv m [(User, Maybe Company)]
+fetchUsersAndCompanies = reverse `liftM` foldDB decoder []
   where
     decoder acc uid password salt is_company_admin account_suspended
      has_accepted_terms_of_service signup_method service_id company_id
      first_name last_name personal_number company_position phone mobile
      email preferred_design_mode lang region customfooter company_name company_number cid eid sid
-     name number address zip' city country bars_background bars_textcolour logo email_domain time quantity amount = (
+     name number address zip' city country bars_background bars_textcolour logo email_domain = (
        User {
            userid = uid
          , userpassword = maybePassword (password, salt)
@@ -240,19 +233,44 @@ fetchUsersAndStats = reverse `liftM` foldDB decoder []
                 }
               }
             _ -> Nothing
-        , case time of
-            (Just _) -> (time, quantity, amount)
-            _        -> (Nothing, Nothing, Nothing)
         ) : acc
+
+selectUserIDAndStatsSQL :: (DocStatQuantity, DocStatQuantity) -> SQL
+selectUserIDAndStatsSQL (q1, q2) = SQL ("SELECT "
+  ++ " e.user_id"
+  ++ ", e.time"
+  ++ ", e.quantity"
+  ++ ", e.amount"
+  ++ "  FROM doc_stat_events e"
+  ++ "    WHERE e.quantity IN (?, ?)")
+  [toSql q1, toSql q2]
+
+
+fetchUserIDAndStats :: MonadDB m => DBEnv m (M.Map UserID [(MinutesTime, DocStatQuantity, Int)])
+fetchUserIDAndStats = foldDB decoder M.empty
+  where
+    decoder acc uid time quantity amount =
+      M.insertWith' (++) uid [(time,quantity,amount)] acc
 
 data GetUsersAndStats = GetUsersAndStats
 instance MonadDB m => DBQuery m GetUsersAndStats
-  [(User, Maybe Company, ( Maybe MinutesTime
-                         , Maybe DocStatQuantity
-                         , Maybe Int))] where
+  [(User, Maybe Company, [(MinutesTime, DocStatQuantity, Int)])] where
   query GetUsersAndStats = do
-    _ <- kRun $ selectUsersAndStatsSQL (DocStatCreate, DocStatClose)
-    fetchUsersAndStats
+    _ <- kRun $ SQL "CREATE TEMP TABLE users_and_companies_temp AS " [] <++> 
+         selectUsersAndCompaniesSQL
+    _ <- kRun $ SQL "SELECT * FROM users_and_companies_temp" []
+    usersWithCompanies <- fetchUsersAndCompanies
+
+    _ <- kRun $ selectUserIDAndStatsSQL (DocStatCreate, DocStatClose) <++>
+         SQL " AND EXISTS (SELECT 1 FROM users_and_companies_temp WHERE users_and_companies_temp.user_id = e.user_id)" []
+
+    stats <- fetchUserIDAndStats
+
+    _ <- kRunRaw "DROP TABLE users_and_companies_temp"
+
+    let findStats (user,mcompany) = (user, mcompany, M.findWithDefault [] (userid user) stats)
+
+    return $ map findStats usersWithCompanies
 
 {-------- Doc Stat Updates --}
 

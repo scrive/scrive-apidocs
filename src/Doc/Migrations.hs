@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.Migrations where
 
 import Control.Monad
@@ -13,8 +14,140 @@ import Doc.DocStateData
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
-import Debug.Trace
 
+$(jsonableDeriveConvertible [t| [SignatoryField] |])
+
+setCascadeOnSignatoryAttachments :: MonadDB m => Migration m
+setCascadeOnSignatoryAttachments = Migration {
+    mgrTable = tableSignatoryAttachments
+  , mgrFrom = 3
+  , mgrDo = do
+    -- this is supposed to aid in the signatory_links renumeration step that follows
+    kRunRaw $ "ALTER TABLE signatory_attachments"
+              ++ " DROP CONSTRAINT fk_signatory_attachments_signatory_links,"
+              ++ " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(document_id,signatory_link_id)"
+              ++ " REFERENCES signatory_links(document_id,id) ON DELETE RESTRICT ON UPDATE CASCADE"
+              ++ " DEFERRABLE INITIALLY IMMEDIATE"
+  }
+
+renumerateSignatoryLinkIDS :: MonadDB m => Migration m
+renumerateSignatoryLinkIDS = Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 6
+  , mgrDo = do
+    kRunRaw $ "UPDATE signatory_links"
+              ++ " SET id = DEFAULT"
+              ++ " FROM signatory_links AS sl2"
+              ++ " WHERE signatory_links.id = sl2.id"
+              ++ " AND signatory_links.document_id <>"
+              ++ " sl2.document_id"
+  }
+
+dropSLForeignKeyOnSignatoryAttachments :: MonadDB m => Migration m
+dropSLForeignKeyOnSignatoryAttachments = Migration {
+    mgrTable = tableSignatoryAttachments
+  , mgrFrom = 4
+  , mgrDo = do
+    kRunRaw $ "ALTER TABLE signatory_attachments"
+           ++ " DROP CONSTRAINT fk_signatory_attachments_signatory_links"
+  }
+
+setSignatoryLinksPrimaryKeyToIDOnly :: MonadDB m => Migration m
+setSignatoryLinksPrimaryKeyToIDOnly = Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 7
+  , mgrDo = do
+    kRunRaw $ "ALTER TABLE signatory_links"
+              ++ " DROP CONSTRAINT pk_signatory_links,"
+              ++ " ADD CONSTRAINT pk_signatory_links PRIMARY KEY (id)"
+  }
+
+setSignatoryAttachmentsForeignKeyToSLIDOnly :: MonadDB m => Migration m
+setSignatoryAttachmentsForeignKeyToSLIDOnly = Migration {
+    mgrTable = tableSignatoryAttachments
+  , mgrFrom = 5
+  , mgrDo = do
+    kRunRaw $ "ALTER TABLE signatory_attachments"
+      ++ " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id)"
+      ++ " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+  }
+
+dropDocumentIDColumntFromSignatoryAttachments :: MonadDB m => Migration m
+dropDocumentIDColumntFromSignatoryAttachments = Migration {
+    mgrTable = tableSignatoryAttachments
+  , mgrFrom = 6
+  , mgrDo = do
+    kRunRaw $ "ALTER TABLE signatory_attachments"
+      ++ " DROP COLUMN document_id"
+  }
+
+{-
+- migrate padqueue - set fk referencing signatory_links to ON UPDATE CASCADE
+- migrate signatory_attachments - set fk referencing signatory_links to ON UPDATE CASCADE
+- migrate signatory_links - renumerate ids (references in padqueue/signatory_attachments are properly updated if necessary)
+- migrate padqueue - drop fk referencing signatory_links
+- migrate signatory_attachments - drop fk referencing signatory_links
+- migrate signatory_links - change primary key
+- migrate padqueue - add new fk referencing signatory_links
+- migrate signatory_attachments - add new fk referencing signatory_links
+-}
+
+
+
+moveSignatoryLinkFieldsToSeparateTable :: MonadDB m => Migration m
+moveSignatoryLinkFieldsToSeparateTable = Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 8
+  , mgrDo = do
+    _ <- kRun $ SQL "SELECT id, fields FROM signatory_links WHERE fields <> '' AND fields <> '[]'" [];
+    values <- foldDB fetch []
+    forM_ values $ \(slid, fields) -> do
+      forM_ fields $ \field -> do
+        let (xtypestr :: String, custom_name :: String, is_author_filled :: Bool) =
+              case lookup "sfType" field of
+                Just (JSString x_sfType) -> (fromJSString x_sfType,"",False)
+                Just obj@(JSObject xcustom) -> 
+                  case lookup "CustomFT" (fromJSObject xcustom) of
+                    Just (JSArray [JSString custname, JSBool authorfilled]) ->
+                      ("CustomFT", fromJSString custname, authorfilled)
+                    _ -> error $ "Custom field has unrecognized format: " ++ encode obj
+                Just x -> error $ "Field type must be either string or object, found: " ++ encode x
+                Nothing -> error $ "Field definition does not have sfType, whole def: " ++ encode field
+
+            Just (JSString x_sfValue) = lookup "sfValue" field
+            Just placement = lookup "sfPlacements" field
+            (xtype :: Int) = case xtypestr of
+                      "FirstNameFT"      -> 1
+                      "LastNameFT"       -> 2
+                      "CompanyFT"        -> 3
+                      "PersonalNumberFT" -> 4
+                      "CompanyNumberFT"  -> 5
+                      "EmailFT"          -> 6
+                      "CustomFT"         -> 7
+                      "SignatureFT"      -> 8
+                      _                  -> error $ "Unknown field type: " ++ xtypestr
+
+        _ <- kRun $ mkSQL INSERT tableSignatoryLinkFields
+           [ sql "type" xtype
+           , sql "value" $ fromJSString x_sfValue
+           , sql "signatory_link_id" slid
+           , sql "is_author_filled" is_author_filled
+           , sql "custom_name" custom_name
+           , sql "placements" $ encode placement
+           ]
+        return ()
+      return ()
+    kRunRaw $ "ALTER TABLE signatory_links DROP COLUMN fields"
+  }
+  where
+    fetch acc slid fieldsstr = (slid :: Int64, fields) : acc
+      where
+        Ok (JSArray arr) = decode fieldsstr
+        fromJSValue (JSObject obj) = fromJSObject obj
+        fromJSValue x =
+          error $ "moveSignatoryLinkFieldsToSeparateTable: expected valid object, got: " ++ encode x
+        fields = map fromJSValue arr
 
 moveDocumentTagsFromDocumentsTableToDocumentTagsTable :: MonadDB m => Migration m
 moveDocumentTagsFromDocumentsTableToDocumentTagsTable = Migration {
@@ -197,14 +330,11 @@ fixSignatoryLinksSwedishChars =
     mgrTable = tableSignatoryLinks
   , mgrFrom = 5
   , mgrDo = do
-     Log.debug "Starting migration for swedish chars"
      _ <- kRun $ SQL "SELECT id, document_id, fields FROM signatory_links" []
      sls <- foldDB decoder []
      forM_ sls $ \(sid,did,fields) -> do
        let fixedfields = fixSwedishChars fields
        when (fields /= fixedfields) $ do
-         let msg = "Swedish fields migrated for docid #" ++ show did ++ ", slid #" ++ show sid ++ "\n"
-         Log.debug msg
          _ <- kRun $ SQL "UPDATE signatory_links SET fields = ? WHERE id = ? AND document_id = ?" 
                 [ toSql fixedfields
                 , toSql sid
@@ -212,8 +342,6 @@ fixSignatoryLinksSwedishChars =
                 ]
          return ()
 
-     -- _ <- Prelude.error "Bailing out temporarily"
-     Log.debug "Migration for swedish chars done"
   }
     where
         decoder :: [(SignatoryLinkID, DocumentID, [SignatoryField])] ->  SignatoryLinkID ->  DocumentID -> [SignatoryField] -> [(SignatoryLinkID, DocumentID, [SignatoryField])]
@@ -230,5 +358,5 @@ fixSignatoryLinksSwedishChars =
         fixSwedishCharsForAString s = 
           let value = BS.toString $ BSC.pack s
           in if value /= s && BS.replacement_char `notElem` value
-             then trace (show s ++ " -> " ++ show value) $ value
+             then value
              else s

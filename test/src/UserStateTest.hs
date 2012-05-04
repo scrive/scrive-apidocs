@@ -29,6 +29,10 @@ userStateTests env = testGroup "UserState" [
   , testGroup "getAllUsers" [
       testThat "returns all the users" env test_getAllUsers_returnsAllUsers
     ]
+  , testGroup "setUserEmail" [
+      testThat "email casing works with set user email" env test_setUserEmail_GetByEmail
+    , testThat "email gets set!" env test_setUserEmail_works
+    ]
   , testGroup "setUserPassword" [
       testThat "password is successfully set" env test_setUserPassword_changesPassword
     ]
@@ -39,7 +43,10 @@ userStateTests env = testGroup "UserState" [
   , testThat "GetInviteInfo/SetInviteInfo works" env test_getInviteInfo
   , testThat "SetUserCompany works" env test_setUserCompany
   , testThat "DeleteUser works" env test_deleteUser
-  , testThat "SetUserInfo works" env test_setUserInfo
+  , testGroup "SetUserInfo" [
+      testThat "SetUserInfo works" env test_setUserInfo   
+    , testThat "SetUserInfo handles email correctly" env test_setUserInfoCapEmail
+    ]   
   , testThat "SetUserSettings works" env test_setUserSettings
   , testThat "SetPreferredDesignMode works" env test_setPreferredDesignMode
   , testThat "AcceptTermsOfService works" env test_acceptTermsOfService
@@ -57,6 +64,16 @@ test_getUserByEmail_returnsTheRightUser = do
   queriedUser <- dbQuery $ GetUserByEmail Nothing (Email "emily@green.com")
   assert (isJust queriedUser)
   assertEqual "For GetUserByEmail result" user (fromJust queriedUser)
+  queriedUser2 <- dbQuery $ GetUserByEmail Nothing (Email "EMILY@green.com")
+  assert (isJust queriedUser2)
+  assertEqual "For GetUserByEmail result" user (fromJust queriedUser2)
+  Just user3 <- addNewUser "Eric" "Normand" "ERIc@Normand.Com"
+  queriedUser3 <- dbQuery $ GetUserByEmail Nothing (Email "eric@normand.com")
+  assert (isJust queriedUser3)
+  assertEqual "For GetUserByEmail result" user3 (fromJust queriedUser3)
+  queriedUser4 <- dbQuery $ GetUserByEmail Nothing (Email "erIc@normand.com")
+  assert (isJust queriedUser4)
+  assertEqual "For GetUserByEmail result" user3 (fromJust queriedUser4)
 
 test_getUserByID_returnsNothing :: TestEnv ()
 test_getUserByID_returnsNothing = do
@@ -78,6 +95,29 @@ test_getAllUsers_returnsAllUsers = do
   assertEqual "For GetUsers result" 2 (length queriedUsers)
   assert $ user0 `elem` queriedUsers
   assert $ user1 `elem` queriedUsers
+
+test_setUserEmail_GetByEmail :: TestEnv ()
+test_setUserEmail_GetByEmail = do
+  Just user' <- addNewUser "Emily" "Green" "emily@green.com"
+  _ <- dbUpdate $ SetUserEmail Nothing (userid user') $ Email "Emily@green.coM"
+  Just user <- dbQuery $ GetUserByID $ userid user'
+  queriedUser <- dbQuery $ GetUserByEmail Nothing (Email "emily@green.com")
+  assert (isJust queriedUser)
+  assertEqual "For GetUserByEmail result" user (fromJust queriedUser)
+  queriedUser2 <- dbQuery $ GetUserByEmail Nothing (Email "EMILY@green.com")
+  assert (isJust queriedUser2)
+  assertEqual "For GetUserByEmail result" user (fromJust queriedUser2)
+
+test_setUserEmail_works :: TestEnv ()
+test_setUserEmail_works = do
+  Just user' <- addNewUser "Emily" "Green" "emily@green.com"
+  _ <- dbUpdate $ SetUserEmail Nothing (userid user') $ Email "other@email.com"
+  Just user <- dbQuery $ GetUserByID $ userid user'
+  queriedUser <- dbQuery $ GetUserByEmail Nothing (Email "emily@green.com")
+  assert (isNothing queriedUser)
+  queriedUser2 <- dbQuery $ GetUserByEmail Nothing (Email "Other@EmAil.com")
+  assert (isJust queriedUser2)
+  assertEqual "For GetUserByEmail result" user (fromJust queriedUser2)
 
 test_setUserPassword_changesPassword :: TestEnv ()
 test_setUserPassword_changesPassword = do
@@ -155,6 +195,21 @@ test_setUserInfo = do
   assertBool "UserInfo updated correctly" res
   Just User{userinfo = ui2} <- dbQuery $ GetUserByID userid
   assertBool "Updated UserInfo returned" $ ui == ui2
+
+test_setUserInfoCapEmail :: TestEnv ()
+test_setUserInfoCapEmail = do
+  Just User{userid, userinfo} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  let ui = userinfo {
+      userpersonalnumber = "1234567"
+    , usercompanyposition = "blabla"
+    , userphone = "66346343"
+    , usermobile = "989834343"
+    , useremail = Email "DFSFS@fsdfs.com"
+  }
+  res <- dbUpdate $ SetUserInfo userid ui
+  assertBool "UserInfo updated correctly" res
+  Just User{userinfo = ui2} <- dbQuery $ GetUserByID userid
+  assertBool "Updated UserInfo returned" $ ui {useremail = Email "dfsfs@fsdfs.com"} == ui2
 
 test_setUserSettings :: TestEnv ()
 test_setUserSettings = do

@@ -237,6 +237,10 @@
    text-transform: uppercase;
 }
 
+.account-body table input[disabled] {
+   background: transparent;
+}
+
 .tab-viewer .account-body table td {
    padding: 4px;
 }

@@ -32,8 +32,10 @@ import Happstack.StaticRouting (Route, Path, dir, path, remainingPath)
 import Misc
 import KontraMonad
 import Text.JSON
-import Control.Monad.Reader
+import Control.Monad.Base
 import Control.Monad.Error
+import Control.Monad.Reader
+import Control.Monad.Trans.Control
 import Crypto.RNG
 import DB
 import Templates.Templates
@@ -48,7 +50,7 @@ type APIRequestBody = JSValue
 
 {- | API functions are build over Kontra with an ability to exit, and with some context -}
 newtype APIFunction c m a = AF { unAF :: ReaderT c (ErrorT (API_ERROR, String) m) a }
-    deriving (Applicative, CryptoRNG, Functor, Monad, MonadDB, MonadError (API_ERROR, String), MonadIO, MonadReader c)
+    deriving (Applicative, CryptoRNG, Functor, Monad, MonadBase b, MonadDB, MonadError (API_ERROR, String), MonadIO, MonadReader c)
 
 {-
 instance (MonadBase IO m, MonadBaseControl IO m) => MonadBaseControl IO (APIFunction m c) where
@@ -61,6 +63,21 @@ instance (MonadBase IO m, MonadBaseControl IO m) => MonadBaseControl IO (APIFunc
 
 instance MonadTrans (APIFunction c) where
     lift = AF . lift . lift
+
+instance MonadTransControl (APIFunction c) where
+    newtype StT (APIFunction c) a = StAF { unStAF :: StT (ErrorT (API_ERROR, String)) (StT (ReaderT c) a) }
+    liftWith f = AF $ liftWith $ \runReader' -> liftWith $ \runError' ->
+                  f $ liftM StAF . runError' . runReader' . unAF
+    restoreT   = AF . restoreT . restoreT . liftM unStAF
+    {-# INLINE liftWith #-}
+    {-# INLINE restoreT #-}
+
+instance MonadBaseControl b m => MonadBaseControl b (APIFunction c m) where
+    newtype StM (APIFunction c m) a = StMAF { unStMAF :: ComposeSt (APIFunction c) m a }
+    liftBaseWith = defaultLiftBaseWith StMAF
+    restoreM     = defaultRestoreM unStMAF
+    {-# INLINE liftBaseWith #-}
+    {-# INLINE restoreM #-}
 
 instance TemplatesMonad m => TemplatesMonad (APIFunction c m) where
     getTemplates = lift getTemplates

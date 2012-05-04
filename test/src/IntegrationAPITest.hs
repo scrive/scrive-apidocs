@@ -485,10 +485,10 @@ testNewDocumentExtraFields = do
         Just (JSObject d) -> case getJSONField "involved" d of
           Just (JSArray [JSObject m]) -> case getJSONField "fields" m of
             Just (JSArray [JSObject prs1, JSObject prs2]) -> do
-              assertBool ("name of first field was not prs1, in " ++ show prs1) $ getJSONField "name" prs1 == Just (showJSON "prs1")
-              assertBool ("value of first field was not val1, in " ++ show prs1) $ getJSONField "value" prs1 == Just (showJSON "val1")
-              assertBool ("name of second field was not prs2, in " ++ show prs2) $ getJSONField "name" prs2 == Just (showJSON "prs2")
-              assertBool ("value of second field was not val2, in " ++ show prs2) $ getJSONField "value" prs2 == Just (showJSON "val2")
+              assertEqual ("name of first field was not prs1, in " ++ encode prs1) (Just (showJSON "prs1")) (getJSONField "name" prs1)
+              assertEqual ("value of first field was not val1, in " ++ encode prs1) (Just (showJSON "val1")) (getJSONField "value" prs1)
+              assertEqual ("name of second field was not prs2, in " ++ encode prs2) (Just (showJSON "prs2")) (getJSONField "name" prs2)
+              assertEqual ("value of second field was not val2, in " ++ encode prs2) (Just (showJSON "val2")) (getJSONField "value" prs2)
             _ -> assertBool ("fields does not exist") False
           _ -> error $ "No involved in document: " ++ show d
         _ -> error $ "No document in return: " ++ show doc

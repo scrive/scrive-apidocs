@@ -2,65 +2,43 @@ require "rubygems"
 gem "rspec"
 require "selenium/rspec/spec_helper"
 require "spec/test/unit"
-require "selenium-webdriver"
-require "selenium-test/src/test_properties.rb"
-require "selenium-test/src/test_context.rb"
-require "selenium-test/src/email_helper.rb"
-require "selenium-test/src/login_helper.rb"
-require "selenium-test/src/doc_helper.rb"
+require "selenium-test/src/helpers.rb"
 
 describe "basic signing" do
 
   before(:each) do
-    @wait = Selenium::WebDriver::Wait.new(:timeout => 60)
-
-    @ctx = TestContext.new
-    @driver = @ctx.createWebDriver
-
-    @emailhelper = EmailHelper.new(@ctx, @driver, @wait)
-    @loginhelper = LoginHelper.new(@ctx, @driver, @wait)
-    @dochelper = DocHelper.new(@ctx, @driver, @wait)
+    @h = Helpers.new
   end
 
   append_after(:each) do
-    @driver.quit
+    @h.quit
   end
 
   it "allows users to sign basic contracts if they've checked the sign guard" do
 
-    @loginhelper.login_as(@ctx.props.tester_email, @ctx.props.tester_password)
+    @h.loginhelper.login_as(@h.ctx.props.tester_email, @h.ctx.props.tester_password)
     puts "Logged in"
     begin
-      @dochelper.uploadContract
+      @h.dochelper.uploadContract
       puts "Use basic mode"
-      @dochelper.useBasicMode
+      @h.dochelper.useBasicMode
       puts "Fill in counterpart"
-      @dochelper.enterCounterpart(@ctx.props.first_counterpart_fstname, @ctx.props.first_counterpart_sndname, @ctx.props.first_counterpart_email)
+      @h.dochelper.enterCounterpart(@h.ctx.props.first_counterpart_fstname, @h.ctx.props.first_counterpart_sndname, @h.ctx.props.first_counterpart_email)
       puts "About to sign and send"
-      @dochelper.signAndSend
+      @h.dochelper.signAndSend
     ensure
-      @loginhelper.logout
+      @h.loginhelper.logout
     end
     puts "Getting the mail"
 
-    @emailhelper.follow_link_in_latest_mail_for @ctx.props.first_counterpart_email
+    @h.emailhelper.follow_link_in_latest_mail_for @h.ctx.props.first_counterpart_email
 
-    puts "make sure it's a signatory is in an opened state"
-    @wait.until { @driver.find_element :css => ".summary.opened" }
+    @h.dochelper.checkOpened
 
-    puts "try and sign the doc without checking the sign guard"
-    (@wait.until { @driver.find_element :css => ".sign a" }).click
-    (@wait.until { @driver.find_element :css => ".modal-container a.btn-small.float-right" }).click
-
-    puts "make sure we can still see the signguard"
-    @wait.until { @driver.find_element :css => ".signguard" }
-
-    puts "sign the doc"
-    (@wait.until { @driver.find_element :css => ".signguard input[type='checkbox']"  }).click
-    (@wait.until { @driver.find_element :css => ".modal-container a.btn-small.float-right" }).click
+    @h.dochelper.partSign
 
     puts "make sure you're given a save option"
-    @wait.until { @driver.find_elements :css => ".save" }
+    @h.wait.until { @h.driver.find_elements :css => ".save" }
   end
 
 end

@@ -61,7 +61,6 @@ import Util.MonadUtils
 import Templates.Templates
 import Stats.Control
 import File.Model
-import Util.FinishWith
 import Util.JSON
 import Text.JSON.String
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
@@ -451,14 +450,14 @@ removeDocument = do
 {- | Call connect user to session (all passed as URL params)
      and redirect user to referer
 -}
-connectUserToSessionPost :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m KontraLink
+connectUserToSessionPost :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m Response
 connectUserToSessionPost sid uid ssid = do
     matchingService <-sameService sid <$> (dbQuery $ GetUserByID uid)
     when (not matchingService) internalError
     loaded <- loadServiceSession (Right uid) ssid
     -- just send back empty string
     if loaded
-       then finishWith $ return $ toResponseBS (BS.fromString "text/html;charset=utf-8") (BSL.fromString "")
+       then return $ toResponseBS (BS.fromString "text/html;charset=utf-8") (BSL.fromString "")
        else internalError
 
 connectUserToSessionGet :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m Response

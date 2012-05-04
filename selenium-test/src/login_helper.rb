@@ -1,7 +1,5 @@
 require "rubygems"
 gem "rspec"
-require "selenium/rspec/spec_helper"
-require "spec/test/unit"
 require "selenium-webdriver"
 
 class LoginHelper
@@ -33,8 +31,19 @@ class LoginHelper
     @wait.until { @driver.find_element :css => "a.documenticon" }
   end
 
+  def set_name(fstname, sndname)
+    (@wait.until { @driver.find_element :xpath => "//a[@href='/account']" }).click
+    (@wait.until { @driver.find_element :xpath => "//input[@name='fstname']" }).clear
+    (@wait.until { @driver.find_element :xpath => "//input[@name='fstname']" }).send_keys fstname
+    (@wait.until { @driver.find_element :xpath => "//input[@name='sndname']" }).clear
+    (@wait.until { @driver.find_element :xpath => "//input[@name='sndname']" }).send_keys sndname
+    (@wait.until { @driver.find_element :xpath => "//a[contains(@class,'green') and contains(@class,'submit')]" }).click
+  end
+
   def logout
+    puts "logout"
     (@wait.until { (@driver.find_element :css => "a.logout") }).click
     @wait.until { @driver.find_element :css => "a.login-button" }
+    puts "logged out"
   end
 end

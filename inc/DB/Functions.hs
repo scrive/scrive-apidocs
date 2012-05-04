@@ -134,4 +134,12 @@ getQuery = fromMaybe "" . fmap HDBC.originalQuery
 -- | Protected 'liftIO'. Properly catches 'SqlError' and converts it
 -- to 'DBException'. Adds 'HDBC.originalQuery' that should help a lot.
 protIO :: MonadDB m => SQL -> IO a -> m a
-protIO sql m = liftIO $ m `E.catch` (liftIO . E.throwIO . SQLError sql)
+protIO sql m = do
+  conn <- getNexus
+  liftIO $ m `E.catch` (\e -> do
+        -- for some unknown reason we need to do rollback here
+        -- ourselves otherwise something underneath will try to issue
+        -- some commands and those will fail with 'transaction
+        -- aborted, ignoring commands till the end of the block'
+        liftIO $ rollback conn
+        liftIO $ E.throwIO $ SQLError sql e)

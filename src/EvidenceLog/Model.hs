@@ -13,17 +13,21 @@ import EvidenceLog.Tables
 import IPAddress
 import MinutesTime
 import Misc
+import Data.Typeable
 import User.Model
 import Util.Actor
 import Version
 import Templates.Templates
 import qualified Templates.Fields as F
 
+
 data InsertEvidenceEvent = InsertEvidenceEvent
                            EvidenceEventType      -- A code for the event
                            String                 -- Text for evidence
                            (Maybe DocumentID)     -- The documentid if this event is about a document
                            Actor                  -- Actor
+    deriving (Eq, Ord, Show, Typeable)
+
 instance MonadDB m => DBUpdate m InsertEvidenceEvent Bool where
   update (InsertEvidenceEvent event text mdid actor) =
     kRun01 $ mkSQL INSERT tableEvidenceLog [
@@ -52,6 +56,7 @@ data DocumentEvidenceEvent = DocumentEvidenceEvent {
   , evSigLinkID  :: Maybe SignatoryLinkID
   , evAPI        :: Maybe String
   }
+  deriving (Eq, Ord, Show, Typeable)
 
 htmlDocFromEvidenceLog :: TemplatesMonad m => String -> [DocumentEvidenceEvent] -> m String
 htmlDocFromEvidenceLog title elog = do

@@ -1,15 +1,19 @@
 ###
-modalSignInviteView=
+modalContractCreated=
 <div class="modal-container">
   <div class="modal-header">
     <span class="modal-icon message"></span>
     $if(signed)$
     <span class="modal-title">
-      <h3>$_modalSignInviteViewHeaderIfSigned()$</h3>
+      <h3>$_modalContractCreatedHeaderIfSigned()$</h3>
+    </span>
+    $elseif(willBeSigned)$
+    <span class="modal-title">
+      <h3>$_modalContractCreatedHeaderIfSigned()$</h3>
     </span>
     $else$
     <span class="modal-title">
-      <h3>$_modalSignInviteViewHeaderIfElse()$</h3>
+      <h3>$_modalContractCreatedHeaderIfElse()$</h3>
     </span>
     $endif$
     <a class="modal-close close"> </a>
@@ -18,11 +22,15 @@ modalSignInviteView=
     <div class="modal-content">
       $if(signed)$
       <p>
-        $_modalSignInviteViewBodyIfSigned()$
+        $_modalContractCreatedBodyIfSigned()$
+      </p>
+      $elseif(willBeSigned)$
+      <p>
+        $_modalContractCreatedBodyIfSigned()$
       </p>
       $else$
       <p>
-        $_modalSignInviteViewBodyIfElse()$
+        $_modalContractCreatedBodyIfElse()$
       </p>
       $endif$
     </div>
@@ -32,7 +40,7 @@ modalSignInviteView=
       <div class="left"></div>
       <div class="label">
         <p>$_close()$</p>
-        <div class="btn-symbol green arrow-left"></div>
+        <div class="btn-symbol green arrow-left s-sign-confirmation"></div>
       </div>
       <div class="right"></div>
     </a>
@@ -241,34 +249,6 @@ jQuery('form[action="$signuplink$"]').submit(function(){
 }
 </script>
 ###
-modalSendInviteView=
-<div class="modal-container">
-  <div class="modal-header">
-    <span class="modal-icon message"></span>
-    <span class="modal-title">
-      <h3>$_modalSendInviteViewHeader()$</h3>
-    </span>
-    <a class="modal-close close"> </a>
-  </div>
-  <div class="modal-body">
-    <div class="modal-content">
-      <p>$_modalSendInviteViewBody()$
-      </p>
-    </div>
-  </div>
-  <div class="modal-footer">
-    <a class="btn-small green float-right close">
-      <div class="left"></div>
-      <div class="label">
-        <p>$_close()$</p>
-        <div class="btn-symbol green arrow-left"></div>
-      </div>
-      <div class="right"></div>
-    </a>
-  </div>
-</div>
-######
-######
 modalLoginForSaveView=
 <div class="modal-container">
   <div class="modal-header">
@@ -352,7 +332,7 @@ $if(loginModal)$
         <div class="modal-footer">
           <div class="float-left">
             <a class="close cancel">$_cancel()$</a>
-            <a href="#" class="txt-link message">$_forgotpassword()$</a>
+            <a href="#" class="txt-link message s-forgot-password">$_forgotpassword()$</a>
           </div>
           <a href="#" class="btn-small blue float-right submit">
             <div class="left"></div>
@@ -380,7 +360,7 @@ $if(loginModal)$
           <div class="modal-content">
             <div class="body">
               <div class="wrapper">
-                <span class="txt">$_email()$</span><input type="email" name="email" infotext="$_email()$" autocomplete="off"/>
+                <span class="txt">$_email()$</span><input class="s-forgot-password-email" type="email" name="email" infotext="$_email()$" autocomplete="off"/>
                 <input type="submit" class="hidden" />
               </div>
             </div>
@@ -391,7 +371,7 @@ $if(loginModal)$
             <a class="close cancel">$_cancel()$</a>
             <a href="#" class="txt-link message">$_login()$</a>
           </div>
-          <a href="#" class="btn-small green float-right submit">
+          <a href="#" class="btn-small green float-right submit s-forgot-password-submit">
             <div class="left"></div>
             <div class="label">
               <p>$_loginModalForgotPasswordSendNewPassword()$</p>

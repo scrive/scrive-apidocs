@@ -49,6 +49,7 @@ import Util.Actor
 import Control.Concurrent
 import Data.String.Utils
 import qualified Templates.Fields as F
+import Control.Logic
 
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
@@ -174,7 +175,7 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
           return $ if (isauthor)
                     then [signEvent]
                     else [seenEvent,signEvent]
-      invitationSentEntry = case (documentinvitetime document,sendMailsDurringSigning document) of
+      invitationSentEntry = case (documentinvitetime document,(sendMailsDurringSigning &&^ hasOtherSignatoriesThenAuthor) document ) of
                                 (Just (SignInfo time ipnumber),True) -> do
                                    desc <-  renderLocalTemplateForProcess document processinvitationsententry $ do
                                        documentInfoFields document
