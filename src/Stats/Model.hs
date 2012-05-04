@@ -26,6 +26,8 @@ module Stats.Model
        where
 
 import Control.Monad
+import Data.Monoid
+import Data.List
 import Database.HDBC
 
 import DB
@@ -79,6 +81,37 @@ data DocStatEvent = DocStatEvent {
   , seDocumentType :: DocumentType
   , seAPIString :: String
   }
+
+sqlOR :: SQL -> SQL -> SQL
+sqlOR sql1 sql2 = mconcat [parenthesize sql1, SQL " OR " [], parenthesize sql2]
+
+sqlAND :: SQL -> SQL -> SQL
+sqlAND sql1 sql2 = mconcat [parenthesize sql1, SQL " AND " [], parenthesize sql2]
+
+sqlJoinWith :: SQL -> [SQL] -> SQL
+sqlJoinWith comm list = mconcat $ intersperse comm $ map parenthesize list
+
+
+sqlJoinWithOR :: [SQL] -> SQL
+sqlJoinWithOR = sqlJoinWith (SQL " OR " [])
+
+sqlJoinWithAND :: [SQL] -> SQL
+sqlJoinWithAND = sqlJoinWith (SQL " AND " [])
+
+sqlConcatComma :: [SQL] -> SQL
+sqlConcatComma sqls =
+  mconcat $ intersperse (SQL ", " []) sqls
+
+sqlConcatAND :: [SQL] -> SQL
+sqlConcatAND sqls =
+  mconcat $ intercalate [SQL " AND " []] (map (\s -> [SQL "(" [], s, SQL ")" [] ]) sqls)
+
+sqlConcatOR :: [SQL] -> SQL
+sqlConcatOR sqls =
+  mconcat $ intercalate [SQL " OR " []] (map (\s -> [SQL "(" [], s, SQL ")" [] ]) sqls)
+
+parenthesize :: SQL -> SQL
+parenthesize (SQL command values) = SQL ("(" ++ command ++ ")") values
 
 {-------- Doc Stat Queries ---}
 
@@ -135,28 +168,28 @@ instance MonadDB m => DBQuery m GetDocStatEventsByCompanyID [DocStatEvent] where
 selectUsersAndCompaniesSQL :: SQL
 selectUsersAndCompaniesSQL = SQL ("SELECT "
   -- User:
-  ++ "  u.id AS user_id"
-  ++ ", encode(u.password, 'base64') AS password_bas64"
-  ++ ", encode(u.salt, 'base64') AS salt_base64"
-  ++ ", u.is_company_admin"
-  ++ ", u.account_suspended"
-  ++ ", u.has_accepted_terms_of_service"
-  ++ ", u.signup_method"
-  ++ ", u.service_id AS user_service_id"
-  ++ ", u.company_id AS user_company_id"
-  ++ ", u.first_name"
-  ++ ", u.last_name"
-  ++ ", u.personal_number"
-  ++ ", u.company_position"
-  ++ ", u.phone"
-  ++ ", u.mobile"
-  ++ ", u.email"
-  ++ ", u.preferred_design_mode"
-  ++ ", u.lang"
-  ++ ", u.region"
-  ++ ", u.customfooter"
-  ++ ", u.company_name"
-  ++ ", u.company_number"
+  ++ "  users.id AS user_id"
+  ++ ", encode(users.password, 'base64') AS password_bas64"
+  ++ ", encode(users.salt, 'base64') AS salt_base64"
+  ++ ", users.is_company_admin"
+  ++ ", users.account_suspended"
+  ++ ", users.has_accepted_terms_of_service"
+  ++ ", users.signup_method"
+  ++ ", users.service_id AS user_service_id"
+  ++ ", users.company_id AS user_company_id"
+  ++ ", users.first_name"
+  ++ ", users.last_name"
+  ++ ", users.personal_number"
+  ++ ", users.company_position"
+  ++ ", users.phone"
+  ++ ", users.mobile"
+  ++ ", users.email"
+  ++ ", users.preferred_design_mode"
+  ++ ", users.lang"
+  ++ ", users.region"
+  ++ ", users.customfooter"
+  ++ ", users.company_name"
+  ++ ", users.company_number"
   -- Company:
   ++ ", c.id AS company_id"
   ++ ", c.external_id"
@@ -171,10 +204,9 @@ selectUsersAndCompaniesSQL = SQL ("SELECT "
   ++ ", c.bars_textcolour"
   ++ ", encode(c.logo, 'base64') AS logo_base64"
   ++ ", email_domain"
-  ++ "  FROM users u"
-  ++ "  LEFT JOIN companies c ON u.company_id = c.id"
-  ++ "  WHERE u.deleted = FALSE"
-  ++ "  ORDER BY u.first_name || ' ' || u.last_name ASC, u.email ASC, user_id ASC")
+  ++ "  FROM users"
+  ++ "  LEFT JOIN companies c ON users.company_id = c.id"
+  ++ "  WHERE users.deleted = FALSE")
   []
 
 
@@ -252,12 +284,19 @@ fetchUserIDAndStats = foldDB decoder M.empty
     decoder acc uid time quantity amount =
       M.insertWith' (++) uid [(time,quantity,amount)] acc
 
-data GetUsersAndStats = GetUsersAndStats
+data GetUsersAndStats = GetUsersAndStats [UserFilter]
 instance MonadDB m => DBQuery m GetUsersAndStats
   [(User, Maybe Company, [(MinutesTime, DocStatQuantity, Int)])] where
-  query GetUsersAndStats = do
-    _ <- kRun $ SQL "CREATE TEMP TABLE users_and_companies_temp AS " [] <++> 
-         selectUsersAndCompaniesSQL
+  query (GetUsersAndStats filters) = do
+    _ <- kRun $ mconcat
+         [ SQL "CREATE TEMP TABLE users_and_companies_temp AS " []
+         , selectUsersAndCompaniesSQL
+         , if null filters
+             then SQL "" []
+             else SQL " AND " [] `mappend` sqlConcatAND (map userFilterToSQL filters)
+         , SQL "  ORDER BY users.first_name || ' ' || users.last_name ASC, users.email ASC, user_id ASC" []
+         ]
+
     _ <- kRun $ SQL "SELECT * FROM users_and_companies_temp" []
     usersWithCompanies <- fetchUsersAndCompanies
 

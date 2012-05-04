@@ -189,7 +189,7 @@ showAdminUsersForSales = onlySalesOrAdmin $ adminUsersPageForSales
 
 handleUsersListCSV :: Kontrakcja m => m Response
 handleUsersListCSV = onlySalesOrAdmin $ do
-  users <- getUsersAndStatsInv
+  users <- getUsersAndStatsInv []
   ok $ setHeader "Content-Disposition" "attachment;filename=userslist.csv"
      $ setHeader "Content-Type" "text/csv"
      $ toResponse (usersListCSV users)
@@ -213,10 +213,18 @@ usersListCSV users =
                           ]
                           ++ "\"\n"
 
+userSearchingFromParams :: ListParams -> [UserFilter]
+userSearchingFromParams params =
+  case listParamsSearching params of
+    "" -> []
+    x -> [UserFilterByString x]
+
+
 jsonUsersList ::Kontrakcja m => m JSValue
 jsonUsersList = do
     params <- getListParamsNew
-    allUsers <- getUsersAndStatsInv
+    let filters = userSearchingFromParams params
+    allUsers <- getUsersAndStatsInv filters
     let users = usersSortSearchPage params allUsers
     return $ JSObject
            $ toJSObject
@@ -254,7 +262,7 @@ isAdminInvite Admin = True
 usersSortSearchPage :: ListParams -> [(User, Maybe Company, DocStats, InviteType)]
                        -> PagedList (User, Maybe Company, DocStats, InviteType)
 usersSortSearchPage =
-    listSortSearchPage usersSortFunc usersSearchFunc usersPageSize
+    listSortSearchPage usersSortFunc (\_ _ -> True) usersPageSize
 
 usersSortFunc :: SortingFunction (User, Maybe Company, DocStats, InviteType)
 usersSortFunc "username"       = viewComparing (getFullName . (\(u,_,_,_) -> u))
@@ -285,21 +293,12 @@ usersSortFunc "viral_invites"    = viewComparing (isAdminInvite . (\(_,_,_,i) ->
 usersSortFunc "viral_invitesREV" = viewComparingRev (not . isAdminInvite . (\(_,_,_,i) -> i))
 usersSortFunc _                = const $ const EQ
 
-usersSearchFunc :: SearchingFunction (User, Maybe Company, DocStats, InviteType)
-usersSearchFunc s userdata = userMatch userdata s
-  where
-      match s' m = isInfixOf (map toUpper s') (map toUpper m)
-      userMatch (u,mc,_,_) s' = match s' (getCompanyName mc)
-                             || match s' (getFirstName u)
-                             || match s' (getLastName  u)
-                             || match s' (getEmail u)
-
 usersPageSize :: Int
 usersPageSize = 100
 
-getUsersAndStatsInv :: Kontrakcja m => m [(User, Maybe Company, DocStats, InviteType)]
-getUsersAndStatsInv = do
-    users <- getUsersAndStats
+getUsersAndStatsInv :: Kontrakcja m => [UserFilter] -> m [(User, Maybe Company, DocStats, InviteType)]
+getUsersAndStatsInv filters = do
+    users <- getUsersAndStats filters
     mapM addInviteType users
   where
     addInviteType = \(user,mcompany,docstats) -> do
@@ -313,7 +312,7 @@ getUsersAndStatsInv = do
 {- Shows table of all users-}
 showAllUsersTable :: Kontrakcja m => m String
 showAllUsersTable = onlySalesOrAdmin $ do
-    users <- getUsersAndStats
+    users <- getUsersAndStats []
     allUsersTable users
 
 

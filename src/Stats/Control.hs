@@ -571,10 +571,10 @@ handleUserStatsCSV = onlySalesOrAdmin $ do
      $ toResponse (userStatisticsCSV stats)
 
 -- For User Admin tab in adminonly
-getUsersAndStats :: Kontrakcja m => m [(User, Maybe Company, DocStats)]
-getUsersAndStats = do
+getUsersAndStats :: Kontrakcja m => [UserFilter] -> m [(User, Maybe Company, DocStats)]
+getUsersAndStats filters = do
   Context{ctxtime} <- getContext
-  list <- dbQuery GetUsersAndStats
+  list <- dbQuery $ GetUsersAndStats filters
   return $ convert' ctxtime list
   where
     convert' ctxtime list = map (\(u,mc,l) -> (u,mc,calculateDocStats ctxtime $ tuples' l)) list
