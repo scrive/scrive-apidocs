@@ -25,5 +25,5 @@ cleaner rng dbconf = do
   where
     freq = 24 * 60
     second = 1000000
-    daylimit = 2
+    daylimit = 14
     
