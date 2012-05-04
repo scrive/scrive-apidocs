@@ -1648,7 +1648,7 @@ instance MonadDB m => DBUpdate m ReallyDeleteDocument (Either String Document) w
     -- in a User which could be old. It should be done within a
     -- transaction. -EN
     r <- case (usercompany user, useriscompanyadmin user) of
-      (Just cid, True) -> deleteDoc $ SQL "WHERE company_id = ?" [toSql cid]
+      (Just cid, True) -> deleteDoc $ SQL "WHERE (company_id = ? OR user_id = ?)" [toSql cid,toSql $ userid user]
       _ -> deleteDoc $ SQL "WHERE user_id = ? AND (company_id IS NULL OR EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?))" [toSql $ userid user,toSql did, toSql Preparation]
     let txt = case (usercompany user, useriscompanyadmin user) of
           (Just _, True) -> "the company with admin email \"" ++ getEmail user ++ "\""
