@@ -405,7 +405,7 @@ handleIssueSign document = do
           Right (Right newdocument) -> do
             postDocumentPreparationChange newdocument "web"
             newdocument' <- guardJustM $ dbQuery $ GetDocumentByDocumentID (documentid newdocument)
-            postDocumentPendingChange newdocument' newdocument' -- | We call it on same document since there was no change
+            postDocumentPendingChange newdocument' newdocument' "web" -- | We call it on same document since there was no change
             return $ Right newdocument'
           _ -> return $ Left LoopBack
 

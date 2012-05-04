@@ -13,10 +13,10 @@ import MinutesTime
 
 import Test.Framework
 import TestKontra
+import Util.Actor
 
 
 import Util.HasSomeUserInfo
-import EvidenceLog.Model
 import PadQueue.Model
 
 padTests :: TestEnvSt -> Test
