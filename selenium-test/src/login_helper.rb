@@ -32,12 +32,12 @@ class LoginHelper
   end
 
   def set_name(fstname, sndname)
-    (@wait.until { @driver.find_element :xpath => "//a[@href='/account']" }).click
-    (@wait.until { @driver.find_element :xpath => "//input[@name='fstname']" }).clear
-    (@wait.until { @driver.find_element :xpath => "//input[@name='fstname']" }).send_keys fstname
-    (@wait.until { @driver.find_element :xpath => "//input[@name='sndname']" }).clear
-    (@wait.until { @driver.find_element :xpath => "//input[@name='sndname']" }).send_keys sndname
-    (@wait.until { @driver.find_element :xpath => "//a[contains(@class,'green') and contains(@class,'submit')]" }).click
+    (@wait.until { @driver.find_element :css => "a.s-account" }).click
+    (@wait.until { @driver.find_element :name => "fstname" }).clear
+    (@wait.until { @driver.find_element :name => "fstname" }).send_keys fstname
+    (@wait.until { @driver.find_element :name => "sndname" }).clear
+    (@wait.until { @driver.find_element :name => "sndname" }).send_keys sndname
+    (@wait.until { @driver.find_element :css => "a.submit" }).click
   end
 
   def logout

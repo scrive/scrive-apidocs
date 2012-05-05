@@ -393,7 +393,7 @@ header=
                                 </span>
                                  -->
                                <a href="$linklogout$" class="toplink logout">$_headerLogOut()$</a>
-                               <a href="$linkaccount$" class="toplink">$_headerAccount()$</a>
+                               <a href="$linkaccount$" class="toplink s-account">$_headerAccount()$</a>
                                <a href="$linkissue$" class="toplink">$_headerArchive()$</a>
                                <a href="$linkupload$" class="toplink">$_headerSend()$</a>
                                 $localeSwitcher()$
