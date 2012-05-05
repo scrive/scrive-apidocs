@@ -45,6 +45,7 @@ import File.Model
 import DB
 import Control.Applicative
 import EvidenceLog.Model
+import Util.Actor
 import Control.Concurrent
 import Data.String.Utils
 import qualified Templates.Fields as F

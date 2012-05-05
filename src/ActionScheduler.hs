@@ -34,7 +34,7 @@ import qualified Log
 import System.Time
 import Doc.Invariants
 import Stats.Control
-import EvidenceLog.Model
+import Util.Actor
 
 type SchedulerData' = SchedulerData AppConf (MVar (ClockTime, KontrakcjaGlobalTemplates))
 
@@ -199,7 +199,7 @@ timeoutDocuments now = do
         case edoc of
           Left _ -> return ()
           Right doc' -> do
-            _ <- addDocumentTimeoutStatEvents doc'
+            _ <- addDocumentTimeoutStatEvents doc' "scheduler"
             return ()
         Log.debug $ "Document timedout " ++ (show $ documenttitle doc)
 

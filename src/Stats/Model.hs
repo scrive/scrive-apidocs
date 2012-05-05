@@ -59,6 +59,11 @@ data DocStatQuantity = DocStatClose       -- ^ A Close Document event
                      | DocStatTimeout
                      | DocStatEmailSignatureTimeout
                      | DocStatElegSignatureTimeout
+                     | DocStatPadSignatures
+                     | DocStatPadSignaturePending
+                     | DocStatPadSignatureCancel
+                     | DocStatPadSignatureReject
+                     | DocStatPadSignatureTimeout
   deriving (Eq, Ord, Show)
 $(enumDeriveConvertible ''DocStatQuantity)
 
@@ -72,6 +77,7 @@ data DocStatEvent = DocStatEvent {
   , seServiceID :: Maybe ServiceID
   , seCompanyID :: Maybe CompanyID
   , seDocumentType :: DocumentType
+  , seAPIString :: String
   }
 
 {-------- Doc Stat Queries ---}
@@ -86,6 +92,7 @@ selectDocStatEventsSQL = SQL ("SELECT "
  ++ ", e.service_id"
  ++ ", e.company_id"
  ++ ", e.document_type"
+ ++ ", e.api_string"
  ++ "  FROM doc_stat_events e"
  ++ " ") []
 
@@ -93,7 +100,7 @@ fetchDocStats :: MonadDB m => DBEnv m [DocStatEvent]
 fetchDocStats = foldDB decoder []
   where
     decoder acc uid time quantity amount documentid serviceid
-     companyid documenttype = DocStatEvent {
+     companyid documenttype apistring = DocStatEvent {
          seUserID       = uid
        , seTime         = time
        , seQuantity     = quantity
@@ -102,6 +109,7 @@ fetchDocStats = foldDB decoder []
        , seServiceID    = serviceid
        , seCompanyID    = companyid
        , seDocumentType = doctypeFromString documenttype
+       , seAPIString    = apistring
        } : acc
 
 data GetDocStatEvents = GetDocStatEvents
@@ -278,6 +286,7 @@ instance MonadDB m => DBUpdate m AddDocStatEvent Bool where
       , sql "service_id" seServiceID
       , sql "company_id" seCompanyID
       , sql "document_type" $ show seDocumentType
+      , sql "api_string" seAPIString
       ] <++> SQL "WHERE NOT EXISTS (SELECT 1 FROM doc_stat_events WHERE document_id = ? AND quantity = ?)" [
         toSql seDocumentID
       , toSql seQuantity

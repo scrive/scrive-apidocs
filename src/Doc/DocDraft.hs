@@ -5,7 +5,6 @@ module Doc.DocDraft (
   ) where
 
 import Doc.SignatoryTMP 
-import Util.JSON
 import Doc.DocStateData
 import Misc
 import Control.Monad
@@ -17,8 +16,9 @@ import Data.List
 import User.Region
 import Doc.Model
 import DB
-import EvidenceLog.Model
+import Util.Actor
 import Util.MonadUtils
+import Text.JSON.FromJSValue
 
 data DraftData = DraftData {
       title :: String
@@ -31,33 +31,33 @@ data DraftData = DraftData {
     , template :: Bool
     } deriving Show
 
-instance FromJSON DocumentFunctionality where
+instance FromJSValue DocumentFunctionality where
     fromJSValue j = case fromJSValue j of 
              Just "basic" -> Just BasicFunctionality
              Just "advanced" -> Just AdvancedFunctionality
              _ -> Nothing
 
-instance FromJSON IdentificationType where
+instance FromJSValue IdentificationType where
     fromJSValue j = case fromJSValue j of 
              Just "eleg" -> Just ELegitimationIdentification
              Just "pad" -> Just PadIdentification
              _ -> Just EmailIdentification
 
-instance FromJSON Region where
+instance FromJSValue Region where
     fromJSValue j = do
          s <-fromJSValue j
          find (\r -> codeFromRegion r  == s) allValues
 
-instance FromJSON DraftData where
-   fromJSON = do
-        title' <- fromJSONField "title"
-        functionality' <- fromJSONField "functionality"
-        invitationmessage <-  liftM join $ liftM (fmap nothingIfEmpty) $ fromJSONField "invitationmessage"
-        daystosign <- fromJSONField "daystosign"
-        authorization' <-  fromJSONField "authorization"
-        signatories' <-  fromJSONField "signatories"
-        region' <- fromJSONField "region"
-        template' <- fromJSONField "template"
+instance FromJSValue DraftData where
+   fromJSValue = do
+        title' <- fromJSValueField "title"
+        functionality' <- fromJSValueField "functionality"
+        invitationmessage <-  liftM join $ liftM (fmap nothingIfEmpty) $ fromJSValueField "invitationmessage"
+        daystosign <- fromJSValueField "daystosign"
+        authorization' <-  fromJSValueField "authorization"
+        signatories' <-  fromJSValueField "signatories"
+        region' <- fromJSValueField "region"
+        template' <- fromJSValueField "template"
         case (title',functionality', authorization', region') of
             (Just t, Just f, Just a, Just r) -> return $ Just DraftData {
                                       title =  t

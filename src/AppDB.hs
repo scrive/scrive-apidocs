@@ -54,7 +54,6 @@ kontraMigrations = [
   , updateDocumentStatusAfterRemovingAwaitingAuthor
   , moveDocumentTagsFromDocumentsTableToDocumentTagsTable
   , fixSignatoryLinksSwedishChars
-
   , setCascadeOnPadQueue
   , setCascadeOnSignatoryAttachments
   , renumerateSignatoryLinkIDS
@@ -66,7 +65,8 @@ kontraMigrations = [
   , dropDocumentIDColumntFromSignatoryAttachments
   , addCheckLowercaseEmailsUsers
   , moveSignatoryLinkFieldsToSeparateTable
-  ] ++ mailerMigrations
+  , addAPIStringDocStats
+  ] ++ mailerMigrations 
 
 kontraTables :: [Table]
 kontraTables = [

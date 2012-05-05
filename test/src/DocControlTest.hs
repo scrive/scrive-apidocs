@@ -20,7 +20,7 @@ import Company.Model
 import KontraLink
 import User.Model
 import Util.SignatoryLinkUtils
-import EvidenceLog.Model
+import Util.Actor
 import Util.HasSomeUserInfo
 
 docControlTests :: TestEnvSt -> Test

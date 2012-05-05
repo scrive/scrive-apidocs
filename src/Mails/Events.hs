@@ -39,7 +39,7 @@ import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import qualified Log
-import EvidenceLog.Model
+import Util.Actor
 import Stats.Control
 import qualified Templates.Fields as F
 
