@@ -189,7 +189,7 @@ showAdminUsersForSales = onlySalesOrAdmin $ adminUsersPageForSales
 
 handleUsersListCSV :: Kontrakcja m => m Response
 handleUsersListCSV = onlySalesOrAdmin $ do
-  users <- getUsersAndStatsInv []
+  users <- getUsersAndStatsInv [] [] (UserPagination 0 maxBound)
   ok $ setHeader "Content-Disposition" "attachment;filename=userslist.csv"
      $ setHeader "Content-Type" "text/csv"
      $ toResponse (usersListCSV users)
@@ -219,13 +219,38 @@ userSearchingFromParams params =
     "" -> []
     x -> [UserFilterByString x]
 
+userSortingFromParams :: ListParams -> [AscDesc UserOrderBy]
+userSortingFromParams params =
+   (concatMap x (listParamsSorting params)) ++ [Asc UserOrderByName]
+  where
+    x "username"    = [Asc UserOrderByName]
+    x "usernameREV" = [Desc UserOrderByName]
+    x "email"       = [Asc UserOrderByEmail]
+    x "emailREV"    = [Desc UserOrderByEmail]
+    x "company"     = [Asc UserOrderByCompanyName]
+    x "companyREV"  = [Desc UserOrderByCompanyName]
+    x "tos"         = [Asc UserOrderByAccountCreationDate]
+    x "tosREV"      = [Desc UserOrderByAccountCreationDate]
+    x _             = [Asc UserOrderByName]
+
+userPaginationFromParams :: Int -> ListParams -> UserPagination
+userPaginationFromParams pageSize params = UserPagination ((listParamsPage params - 1) * pageSize) pageSize
+
 
 jsonUsersList ::Kontrakcja m => m JSValue
 jsonUsersList = do
     params <- getListParamsNew
     let filters = userSearchingFromParams params
-    allUsers <- getUsersAndStatsInv filters
-    let users = usersSortSearchPage params allUsers
+        sorting = userSortingFromParams params
+        pagination = userPaginationFromParams usersPageSize params
+        usersPageSize = 100
+    allUsers <- getUsersAndStatsInv filters sorting pagination
+    let users = PagedList { list       = allUsers
+                          , params     = params
+                          , totalCount = 1000
+                          , pageSize   = usersPageSize
+                          }
+
     return $ JSObject
            $ toJSObject
             [("list", JSArray $ map (\(user,mcompany,docstats,itype) ->
@@ -259,48 +284,13 @@ isAdminInvite :: InviteType -> Bool
 isAdminInvite Viral = False
 isAdminInvite Admin = True
 
-usersSortSearchPage :: ListParams -> [(User, Maybe Company, DocStats, InviteType)]
-                       -> PagedList (User, Maybe Company, DocStats, InviteType)
-usersSortSearchPage =
-    listSortSearchPage usersSortFunc (\_ _ -> True) usersPageSize
 
-usersSortFunc :: SortingFunction (User, Maybe Company, DocStats, InviteType)
-usersSortFunc "username"       = viewComparing (getFullName . (\(u,_,_,_) -> u))
-usersSortFunc "usernameREV"    = viewComparingRev (getFullName . (\(u,_,_,_) -> u))
-usersSortFunc "email"          = viewComparing (getEmail . (\(u,_,_,_) -> u))
-usersSortFunc "emailREV"       = viewComparingRev (getEmail . (\(u,_,_,_) -> u))
-usersSortFunc "company"        = viewComparing (getCompanyName . (\(_,c,_,_) -> c))
-usersSortFunc "companyREV"     = viewComparingRev (getCompanyName . (\(_,c,_,_) -> c))
-usersSortFunc "phone"          = viewComparing (userphone . userinfo . (\(u,_,_,_) -> u))
-usersSortFunc "phoneREV"       = viewComparingRev (userphone . userinfo . (\(u,_,_,_) -> u))
-usersSortFunc "tos"            = viewComparing ((maybe "-" show) . (userhasacceptedtermsofservice . (\(u,_,_,_) -> u)))
-usersSortFunc "tosREV"         = viewComparingRev ((maybe "-" show) . (userhasacceptedtermsofservice . (\(u,_,_,_) -> u)))
-usersSortFunc "signed_docs"    = viewComparing (signaturecount . (\(_,_,d,_) -> d))
-usersSortFunc "signed_docsREV" = viewComparingRev (signaturecount . (\(_,_,d,_) -> d))
-usersSortFunc "signed_1m"      = viewComparing (signaturecount1m . (\(_,_,d,_) -> d))
-usersSortFunc "signed_1mREV"   = viewComparingRev (signaturecount1m . (\(_,_,d,_) -> d))
-usersSortFunc "signed_2m"      = viewComparing (signaturecount2m . (\(_,_,d,_) -> d))
-usersSortFunc "signed_2mREV"   = viewComparingRev (signaturecount2m . (\(_,_,d,_) -> d))
-usersSortFunc "signed_3m"      = viewComparing (signaturecount3m . (\(_,_,d,_) -> d))
-usersSortFunc "signed_3mREV"   = viewComparingRev (signaturecount3m . (\(_,_,d,_) -> d))
-usersSortFunc "signed_6m"      = viewComparing (signaturecount6m . (\(_,_,d,_) -> d))
-usersSortFunc "signed_6mREV"   = viewComparingRev (signaturecount6m . (\(_,_,d,_) -> d))
-usersSortFunc "signed_12m"     = viewComparing (signaturecount12m . (\(_,_,d,_) -> d))
-usersSortFunc "signed_12mREV"  = viewComparingRev (signaturecount12m . (\(_,_,d,_) -> d))
-usersSortFunc "uploaded_docs"    = viewComparing (doccount . (\(_,_,d,_) -> d))
-usersSortFunc "uploaded_docsREV" = viewComparingRev (doccount . (\(_,_,d,_) -> d))
-usersSortFunc "viral_invites"    = viewComparing (isAdminInvite . (\(_,_,_,i) -> i))
-usersSortFunc "viral_invitesREV" = viewComparingRev (not . isAdminInvite . (\(_,_,_,i) -> i))
-usersSortFunc _                = const $ const EQ
-
-usersPageSize :: Int
-usersPageSize = 100
 
 
 {- Shows table of all users-}
 showAllUsersTable :: Kontrakcja m => m String
 showAllUsersTable = onlySalesOrAdmin $ do
-    users <- getUsersAndStatsInv []
+    users <- getUsersAndStatsInv [] [] (UserPagination 0 maxBound)
     allUsersTable users
 
 

@@ -33,6 +33,11 @@ module User.Model (
   , UserFilter(..)
   , composeFullName
   , userFilterToSQL
+
+  , UserOrderBy(..)
+  , userOrderByToSQL
+  , userOrderByAscDescToSQL
+  , UserPagination(..)
   ) where
 
 import Control.Applicative
@@ -150,6 +155,29 @@ userFilterToSQL (UserFilterByString string) =
       escape '_' = "\\_"
       escape c = [c]
 
+data UserPagination =
+  UserPagination
+  { userOffset :: Int        -- ^ use for SQL OFFSET command
+  , userLimit  :: Int        -- ^ use for SQL LIMIT command
+  }
+
+
+data UserOrderBy
+  = UserOrderByName
+  | UserOrderByCompanyName
+  | UserOrderByEmail
+  | UserOrderByAccountCreationDate
+
+-- | Convert UserOrderBy enumeration into proper SQL order by statement
+userOrderByToSQL :: UserOrderBy -> SQL
+userOrderByToSQL UserOrderByName                = SQL "(users.first_name || ' ' || users.last_name)" []
+userOrderByToSQL UserOrderByCompanyName         = SQL "users.company_name" []
+userOrderByToSQL UserOrderByEmail               = SQL "users.email" []
+userOrderByToSQL UserOrderByAccountCreationDate = SQL "users.has_accepted_terms_of_service" []
+
+userOrderByAscDescToSQL :: AscDesc UserOrderBy -> SQL
+userOrderByAscDescToSQL (Asc x) = userOrderByToSQL x
+userOrderByAscDescToSQL (Desc x) = userOrderByToSQL x `mappend` SQL " DESC" []
 
 data GetUsers = GetUsers
 instance MonadDB m => DBQuery m GetUsers [User] where
