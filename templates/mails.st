@@ -463,30 +463,6 @@ mailNewCompanyUserInviteMainP=
 
     <p>$_mailNewCompanyUserInviteContentClickLink()$ <a href="$ctxhostpart$$link$">$ctxhostpart$$link$</a></p>
 
-####
-### VIRAL INVITE
-###
-###
-mailViralInvite=
-    $_mailViralInviteTitle()$
-    $nicemail(
-        mailheader=_mailViralInviteTitle();
-        mailp1=mailViralInviteMainP();
-        mailp2=poweredByScrive()
-    )$
-####
-mailViralInviteMainP =
-<p>$_hi()$,</p>
-
-    <p>$_mailViralInviteContentBodyFirst()$</p>
-
-    <p>$_mailViralInviteContentBodySecond()$</p>
-
-    <p>$_mailViralInviteContentBodyUserName()$ $email$</p>
-
-    <p>$_mailViralInviteContentBodyThird()$ <a href="$ctxhostpart$$passwordlink$">$ctxhostpart$$passwordlink$</a></p>
-
-###
 ###
 ### NEW ACCOUNT BY ADMIN
 ###

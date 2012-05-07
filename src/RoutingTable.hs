@@ -258,8 +258,7 @@ staticRoutes = choice
      , dir "accountsetup"  $ hGet $ toK2 $ UserControl.handleAccountSetupGet
      , dir "accountsetup"  $ hPostNoXToken $ toK2 $ UserControl.handleAccountSetupPost
 
-     -- viral invite
-     , dir "invite"      $ hPostNoXToken $ toK0 $ UserControl.handleViralInvite
+     -- question form on static pages
      , dir "question"    $ hPostAllowHttp $ toK0 $ UserControl.handleQuestion
 
      , integrationAPI
