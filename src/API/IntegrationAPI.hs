@@ -317,7 +317,7 @@ userFromTMP uTMP comp = do
               Just u -> return u
               Nothing -> do
                 password <- createPassword =<< randomPassword
-                mu <- dbUpdate $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) (Just password) False (Just sid) (Just $ companyid comp) (mkLocaleFromRegion defaultValue)
+                mu <- dbUpdate $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) (Just password) (Just sid) (Just $ companyid comp) (mkLocaleFromRegion defaultValue)
                 when (isNothing mu) $ throwApiError API_ERROR_OTHER "Problem creating a user (BASE) | This should never happend"
                 let u = fromJust mu
                 tos_accepted <- dbUpdate $ AcceptTermsOfService (userid u) (fromSeconds 0)

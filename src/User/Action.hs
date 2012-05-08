@@ -112,7 +112,7 @@ createInvitedUser names email mlocale = do
     ctx <- getContext
     let locale = fromMaybe (ctxlocale ctx) mlocale
     passwd <- createPassword =<< randomPassword
-    muser <- dbUpdate $ AddUser names email (Just passwd) False Nothing Nothing locale
+    muser <- dbUpdate $ AddUser names email (Just passwd) Nothing Nothing locale
     case muser of
       Just user -> do
                    _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) (Email email) (userid <$> ctxmaybeuser ctx)

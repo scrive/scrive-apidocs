@@ -7,14 +7,14 @@ module Login (
   , handleSignup
   ) where
 
-import ActionSchedulerState
+import ActionQueue.Core
+import ActionQueue.PasswordReminder
 import AppView as V
-import DB hiding (update, query)
+import DB
 import InputValidation
 import Kontra
 import KontraLink
 import Mails.SendMail
-import MinutesTime
 import Misc
 import Redirect
 import User.Model
@@ -26,10 +26,9 @@ import Util.HasSomeUserInfo
 import Stats.Control
 import User.History.Model
 
-import Data.Functor
+import Control.Applicative
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
-import Happstack.State (query, update)
 
 {- |
    Handles submission of the password reset form
@@ -46,22 +45,15 @@ forgotPasswordPagePost = do
         Nothing -> do
           Log.security $ "ip " ++ (show $ ctxipnumber ctx) ++ " made a failed password reset request for non-existant account " ++ email
         Just user -> do
-          now <- getMinutesTime
-          minv <- checkValidity now <$> (query $ GetPasswordReminder $ userid user)
+          minv <- dbQuery $ GetAction passwordReminder $ userid user
           case minv of
-            Just Action{ actionID, actionType = PasswordReminder { prToken, prRemainedEmails, prUserID } } ->
-              case prRemainedEmails of
-                0 -> addFlashM flashMessageNoRemainedPasswordReminderEmails
-                n -> do
-                  -- I had to make it PasswordReminder because it was complaining about not giving cases
-                  -- for the constructors of ActionType
-                  _ <- update $ UpdateActionType actionID $ PasswordReminder {
-                      prToken          = prToken
-                    , prRemainedEmails = n - 1
-                    , prUserID         = prUserID}
-                  sendResetPasswordMail ctx (LinkPasswordReminder actionID prToken) user
-            _ -> do -- Nothing or other ActionTypes (which should not happen)
-              link <- newPasswordReminderLink user
+            Just pr@PasswordReminder{..} -> case prRemainedEmails of
+              0 -> addFlashM flashMessageNoRemainedPasswordReminderEmails
+              n -> do
+                _ <- dbUpdate $ UpdateAction passwordReminder $ pr { prRemainedEmails = n - 1 }
+                sendResetPasswordMail ctx (LinkPasswordReminder prUserID prToken) user
+            _ -> do
+              link <- newPasswordReminderLink $ userid user
               sendResetPasswordMail ctx link user
       addFlashM flashMessageChangePasswordEmailSend
       return LinkUpload

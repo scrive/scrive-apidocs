@@ -52,10 +52,12 @@ import API.Service.Model
 import Company.Model
 import DB
 import MinutesTime
+import Misc
 import User.Lang
 import User.Locale
 import User.Password
 import User.Region
+import User.Tables
 import User.UserID
 import DB.SQL2
 import Doc.DocStateData (DocumentStatus(..), SignatoryRole(..), DocumentID)
@@ -252,52 +254,35 @@ instance MonadDB m => DBUpdate m DeleteUser Bool where
     kPrepare $ "UPDATE users SET deleted = ? WHERE id = ? AND deleted = FALSE"
     kExecute01 [toSql True, toSql uid]
 
-data AddUser = AddUser (String, String) String (Maybe Password) Bool (Maybe ServiceID) (Maybe CompanyID) Locale
+data AddUser = AddUser (String, String) String (Maybe Password) (Maybe ServiceID) (Maybe CompanyID) Locale
 instance MonadDB m => DBUpdate m AddUser (Maybe User) where
-  update (AddUser (fname, lname) email mpwd iscompadmin msid mcid l) = do
+  update (AddUser (fname, lname) email mpwd msid mcid l) = do
     mu <- query $ GetUserByEmail msid $ Email email
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
       Nothing -> do
-        kPrepare $ "INSERT INTO users"
-          ++ "( password"
-          ++ ", salt"
-          ++ ", is_company_admin"
-          ++ ", account_suspended"
-          ++ ", has_accepted_terms_of_service"
-          ++ ", signup_method"
-          ++ ", service_id"
-          ++ ", company_id"
-          ++ ", first_name"
-          ++ ", last_name"
-          ++ ", personal_number"
-          ++ ", company_position"
-          ++ ", company_name"
-          ++ ", company_number"
-          ++ ", phone"
-          ++ ", mobile"
-          ++ ", email"
-          ++ ", lang"
-          ++ ", region"
-          ++ ", deleted) VALUES (decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-          ++ " RETURNING " ++ selectUsersSelectors
-        _ <- kExecute $
-          [ toSql $ pwdHash <$> mpwd
-          , toSql $ pwdSalt <$> mpwd
-          , toSql iscompadmin
-          , toSql False
-          , SqlNull
-          , toSql AccountRequest
-          , toSql msid
-          , toSql mcid
-          , toSql fname
-          , toSql lname
-          ] ++ replicate 6 (toSql "")
-            ++ [toSql $ map toLower email] ++ [
-              toSql $ getLang l
-            , toSql $ getRegion l
-            , toSql False
-            ]
+        _ <- kRun $ mkSQL INSERT tableUsers [
+            sql' "password" "decode(?, 'base64')" $ pwdHash <$> mpwd
+          , sql' "salt" "decode(?, 'base64')" $ pwdSalt <$> mpwd
+          , sql "is_company_admin" False
+          , sql "account_suspended" False
+          , sql "has_accepted_terms_of_service" SqlNull
+          , sql "signup_method" AccountRequest
+          , sql "service_id" msid
+          , sql "company_id" mcid
+          , sql "first_name" fname
+          , sql "last_name" lname
+          , sql "personal_number" ""
+          , sql "company_position" ""
+          , sql "company_name" ""
+          , sql "company_number" ""
+          , sql "phone" ""
+          , sql "mobile" ""
+          , sql "email" $ map toLower email
+          , sql "lang" $ getLang l
+          , sql "region" $ getRegion l
+          , sql "deleted" False
+          ] <++> SQL ("RETURNING " ++ selectUsersSelectors) []
         fetchUsers >>= oneObjectReturnedGuard
 
 data SetUserEmail = SetUserEmail (Maybe ServiceID) UserID Email

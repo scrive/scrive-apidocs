@@ -58,8 +58,6 @@ testSignupAndActivate = do
   emails <- dbQuery GetEmails
   assertEqual "An email was sent" 2 (length emails) -- Two mail - one for user and one to info adress.
 
-
-
 testLoginEventRecordedWhenLoggedInAfterActivation :: TestEnv ()
 testLoginEventRecordedWhenLoggedInAfterActivation = do
   ctx <- mkContext (mkLocaleFromRegion defaultValue)
@@ -74,7 +72,6 @@ testLoginEventRecordedWhenLoggedInAfterActivation = do
   (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12" Nothing
   assertAccountActivatedFor uid "Andrzej" "Rybczak" (res3, ctx3)
   assertLoginEventRecordedFor uid
-
 
 testAcceptTOSToActivate :: TestEnv ()
 testAcceptTOSToActivate = do
@@ -161,7 +158,6 @@ assertSignupSuccessful (res, ctx) = do
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
   return $ head actions
-
 
 followActivationLink :: Context -> ActionID -> MagicHash -> TestEnv (Response, Context)
 followActivationLink ctx aid token = do

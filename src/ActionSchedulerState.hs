@@ -10,7 +10,6 @@ module ActionSchedulerState (
     , Actions
     , GetAction(..)
     , GetExpiredActions(..)
-    , GetPasswordReminder(..)
     , NewAction(..)
     , UpdateActionType(..)
     , UpdateActionEvalTime(..)
@@ -19,9 +18,7 @@ module ActionSchedulerState (
     , actionImportance
     , checkTypeID
     , checkValidity
-    , newPasswordReminder
     , newAccountCreated
-    , newRequestEmailChange
     ) where
 
 import Control.Applicative
@@ -173,11 +170,6 @@ getAction aid = return . getOne . (@= aid) =<< ask
 getExpiredActions :: ActionImportance -> MinutesTime -> Query Actions [Action]
 getExpiredActions imp now = return . IxSet.toList . (@<= now) . (@= imp) =<< ask
 
--- | Get password reminder action by user id
-getPasswordReminder :: UserID -> Query Actions (Maybe Action)
-getPasswordReminder uid =
-    return . getOne . (@= uid) . (@= PasswordReminderID) =<< ask
-
 -- | Insert new action
 newAction :: StdGen -> ActionType -> MinutesTime -> Update Actions Action
 newAction rng atype time = do
@@ -227,7 +219,6 @@ deleteAction aid = do
 $(mkMethods ''Actions
   [ 'getAction
   , 'getExpiredActions
-  , 'getPasswordReminder
   , 'newAction
   , 'updateActionType
   , 'updateActionEvalTime
@@ -248,19 +239,6 @@ checkValidity now maction = maction >>= \action ->
        then Just action
        else Nothing
 
--- | Create new 'password reminder' action
-newPasswordReminder :: (MonadIO m, CryptoRNG m) => User -> m Action
-newPasswordReminder user = do
-    hash <- random
-    rng <- random
-    now <- getMinutesTime
-    let action = PasswordReminder {
-          prUserID         = userid user
-        , prRemainedEmails = 9
-        , prToken          = hash
-    }
-    update $ NewAction rng action $ (12*60) `minutesAfter` now
-
 -- | Create new 'account created' action
 newAccountCreated :: (MonadIO m, CryptoRNG m) => User -> m Action
 newAccountCreated user = do
@@ -272,18 +250,6 @@ newAccountCreated user = do
         , acToken  = hash
     }
     update $ NewAction rng action $ (24*60) `minutesAfter` now
-
-newRequestEmailChange :: (MonadIO m, CryptoRNG m) => User -> Email -> m Action
-newRequestEmailChange user newemail = do
-  hash <- random
-  rng <- random
-  now <- getMinutesTime
-  let action = RequestEmailChange {
-    recUser = userid user
-  , recNewEmail = newemail
-  , recToken = hash
-  }
-  update $ NewAction rng action $ (24 * 60) `minutesAfter` now
 
 -- Migrations and old stuff --
 

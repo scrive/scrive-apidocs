@@ -34,6 +34,9 @@ import User.Action
 import User.Utils
 import User.History.Model
 import ScriveByMail.Model
+import qualified ActionQueue.EmailChangeRequest as Q
+import qualified ActionQueue.PasswordReminder as Q
+import qualified ActionQueue.Core as Q
 
 handleUserGet :: Kontrakcja m => m (Either KontraLink Response)
 handleUserGet = checkUserTOSGet $ do
@@ -140,19 +143,12 @@ sendChangeToExistingEmailInternalWarningMail user newemail = do
 sendRequestChangeEmailMail :: Kontrakcja m => User -> Email -> m ()
 sendRequestChangeEmailMail user newemail = do
   ctx <- getContext
-  changeemaillink <- newRequestChangeEmailLink user newemail
-  mail <- mailRequestChangeEmail (ctxhostpart ctx) user newemail changeemaillink
+  changeemaillink <- Q.newEmailChangeRequestLink (userid user) newemail
+  mail <- mailEmailChangeRequest (ctxhostpart ctx) user newemail changeemaillink
   scheduleEmailSendout (ctxmailsconfig ctx)
                         (mail{to = [MailAddress{
                                     fullname = getFullName user
                                   , email = unEmail newemail }]})
-
-newRequestChangeEmailLink :: (MonadIO m, CryptoRNG m) => User -> Email -> m KontraLink
-newRequestChangeEmailLink user newemail = do
-    action <- newRequestEmailChange user newemail
-    return $ LinkChangeUserEmail (actionID action)
-                                 (recToken $ actionType action)
-
 
 handleCreateCompany :: Kontrakcja m => m KontraLink
 handleCreateCompany = do
@@ -173,9 +169,9 @@ handleCreateCompany = do
   addFlashM flashMessageCompanyCreated
   return LoopBack
 
-handleGetChangeEmail :: Kontrakcja m => ActionID -> MagicHash -> m (Either KontraLink Response)
-handleGetChangeEmail actionid hash = withUserGet $ do
-  mnewemail <- getNewEmailFromAction actionid hash
+handleGetChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink Response)
+handleGetChangeEmail uid hash = withUserGet $ do
+  mnewemail <- Q.getEmailChangeRequestNewEmail uid hash
   case mnewemail of
     Nothing -> addFlashM $ flashMessageProblemWithEmailChange
     Just newemail -> addFlashM $ modalDoYouWantToChangeEmail newemail
@@ -184,9 +180,9 @@ handleGetChangeEmail actionid hash = withUserGet $ do
   content <- showUser user mcompany False
   renderFromBody kontrakcja content
 
-handlePostChangeEmail :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
-handlePostChangeEmail actionid hash = withUserPost $ do
-  mnewemail <- getNewEmailFromAction actionid hash
+handlePostChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m KontraLink
+handlePostChangeEmail uid hash = withUserPost $ do
+  mnewemail <- Q.getEmailChangeRequestNewEmail uid hash
   Context{ctxmaybeuser = Just user, ctxipnumber, ctxtime} <- getContext
   mpassword <- getRequiredField asDirtyPassword "password"
   case mpassword of
@@ -202,20 +198,11 @@ handlePostChangeEmail actionid hash = withUserPost $ do
                                                      (Just $ userid user)
             addFlashM $ flashMessageYourEmailHasChanged
         else addFlashM $ flashMessageProblemWithEmailChange
+      _ <- dbUpdate $ Q.DeleteAction Q.emailChangeRequest uid
+      return ()
     Just _password -> do
       addFlashM $ flashMessageProblemWithPassword
   return $ LinkAccount
-
-getNewEmailFromAction :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe Email)
-getNewEmailFromAction actionid hash = do
-  Context{ctxmaybeuser = Just user} <- getContext
-  maction <- getActionByActionID actionid
-  case actionType <$> maction of
-    Just (RequestEmailChange recUser recNewEmail recToken)
-      | hash == recToken
-        && userid user == recUser -> do
-      return $ Just recNewEmail
-    _ -> return Nothing
 
 getUserInfoUpdate :: Kontrakcja m => m (UserInfo -> UserInfo)
 getUserInfoUpdate  = do
@@ -435,7 +422,7 @@ createUser :: Kontrakcja m => Email
 createUser email fstname sndname mcompany = do
   ctx <- getContext
   passwd <- createPassword =<< randomPassword
-  muser <- dbUpdate $ AddUser (fstname, sndname) (unEmail email) (Just passwd) False Nothing (fmap companyid mcompany) (ctxlocale ctx)
+  muser <- dbUpdate $ AddUser (fstname, sndname) (unEmail email) (Just passwd) Nothing (fmap companyid mcompany) (ctxlocale ctx)
   case muser of
     Just user -> do
                  _ <- dbUpdate $
@@ -643,56 +630,52 @@ guardMagicTokenMatch expectedtoken action =
     email.  This'll show them the usual landing page, but with a modal dialog
     for changing their password.
 -}
-handlePasswordReminderGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
-handlePasswordReminderGet aid hash = do
-    muser <- getUserFromActionOfType PasswordReminderID aid hash
-    case muser of
-         Just user -> do
-             switchLocale (getLocale user)
-             extendActionEvalTimeToOneDayMinimum aid
-             addFlashM $ modalNewPasswordView aid hash
-             sendRedirect LinkUpload
-         Nothing -> do
-             addFlashM flashMessagePasswordChangeLinkNotValid
-             linkmain <- getHomeOrUploadLink
-             sendRedirect linkmain
+handlePasswordReminderGet :: Kontrakcja m => UserID -> MagicHash -> m Response
+handlePasswordReminderGet uid token = do
+  muser <- Q.getPasswordReminderUser uid token
+  case muser of
+    Just user -> do
+      switchLocale (getLocale user)
+      addFlashM $ modalNewPasswordView uid token
+      sendRedirect LinkUpload
+    Nothing -> do
+      addFlashM flashMessagePasswordChangeLinkNotValid
+      linkmain <- getHomeOrUploadLink
+      sendRedirect linkmain
 
-handlePasswordReminderPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
-handlePasswordReminderPost aid hash = do
-    muser <- getUserFromActionOfType PasswordReminderID aid hash
-    case muser of
-         Just user -> do
-             switchLocale (getLocale user)
-             handleChangePassword user
-         Nothing   -> do
-             addFlashM flashMessagePasswordChangeLinkNotValid
-             getHomeOrUploadLink
-    where
-        handleChangePassword user = do
-            Context{ctxtime, ctxipnumber, ctxmaybeuser} <- getContext
-            mpassword <- getRequiredField asValidPassword "password"
-            mpassword2 <- getRequiredField asDirtyPassword "password2"
-            case (mpassword, mpassword2) of
-                 (Just password, Just password2) -> do
-                     case (checkPasswordsMatch password password2) of
-                          Right () -> do
-                              dropExistingAction aid
-                              passwordhash <- createPassword password
-                              _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
-                              _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
-                              addFlashM flashMessageUserPasswordChanged
-                              _ <- addUserLoginStatEvent ctxtime user
-                              logUserToContext $ Just user
-                              return LinkUpload
-                          Left flash -> do
-                              _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
-                              addFlashM flash
-                              addFlashM $ modalNewPasswordView aid hash
-                              getHomeOrUploadLink
-                 _ -> do
-                   _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
-                   addFlashM $ modalNewPasswordView aid hash
-                   getHomeOrUploadLink
+handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m KontraLink
+handlePasswordReminderPost uid token = do
+  muser <- Q.getPasswordReminderUser uid token
+  case muser of
+    Just user -> do
+      switchLocale (getLocale user)
+      Context{ctxtime, ctxipnumber, ctxmaybeuser} <- getContext
+      mpassword <- getRequiredField asValidPassword "password"
+      mpassword2 <- getRequiredField asDirtyPassword "password2"
+      case (mpassword, mpassword2) of
+        (Just password, Just password2) -> do
+          case (checkPasswordsMatch password password2) of
+            Right () -> do
+              _ <- dbUpdate $ Q.DeleteAction Q.passwordReminder uid
+              passwordhash <- createPassword password
+              _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
+              _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
+              addFlashM flashMessageUserPasswordChanged
+              _ <- addUserLoginStatEvent ctxtime user
+              logUserToContext $ Just user
+              return LinkUpload
+            Left flash -> do
+              _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) ctxipnumber (ctxtime) (userid <$> ctxmaybeuser)
+              addFlashM flash
+              addFlashM $ modalNewPasswordView uid token
+              getHomeOrUploadLink
+        _ -> do
+          _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
+          addFlashM $ modalNewPasswordView uid token
+          getHomeOrUploadLink
+    Nothing   -> do
+      addFlashM flashMessagePasswordChangeLinkNotValid
+      getHomeOrUploadLink
 
 getUserFromActionOfType :: Kontrakcja m => ActionTypeID -> ActionID -> MagicHash -> m (Maybe User)
 getUserFromActionOfType atypeid aid hash = do

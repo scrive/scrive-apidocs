@@ -130,6 +130,6 @@ initDatabaseEntries = mapM_ $ \(email, passwordstring) -> do
   maybeuser <- dbQuery $ GetUserByEmail Nothing email
   case maybeuser of
     Nothing -> do
-      _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
+      _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) Nothing Nothing (mkLocaleFromRegion defaultValue)
       return ()
     Just _ -> return () -- user exist, do not add it

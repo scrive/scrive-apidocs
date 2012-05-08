@@ -14,7 +14,6 @@ module Kontra
     , onlyAdmin
     , onlySalesOrAdmin
     , onlyBackdoorOpen
-    , newPasswordReminderLink
     , newAccountCreatedLink
     , getAsString
     , getDataFnM
@@ -157,12 +156,6 @@ switchLocale locale =
          ctxlocale     = locale,
          ctxtemplates  = localizedVersion locale (ctxglobaltemplates ctx)
      }
-
-newPasswordReminderLink :: (MonadIO m, CryptoRNG m) => User -> m KontraLink
-newPasswordReminderLink user = do
-    action <- newPasswordReminder user
-    return $ LinkPasswordReminder (actionID action)
-                                  (prToken $ actionType action)
 
 newAccountCreatedLink :: (MonadIO m, CryptoRNG m) => User -> m KontraLink
 newAccountCreatedLink user = do

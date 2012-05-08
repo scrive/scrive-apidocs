@@ -1,5 +1,7 @@
 module KontraLink(KontraLink(..), LoginRedirectReason(..), getHomeOrUploadLink) where
 
+import Data.Int
+
 import Doc.DocStateData
 import MagicHash (MagicHash)
 import Misc
@@ -16,7 +18,6 @@ import OAuth.Model
 import Network.URI
 import Network.HTTP
 import KontraMonad
-import Data.Int
 import Context
 
 {- |
@@ -59,7 +60,7 @@ data KontraLink
     | LinkAccount
     | LinkAccountCompany (Maybe CompanyID)
     | LinkCompanyLogo CompanyID
-    | LinkChangeUserEmail ActionID MagicHash
+    | LinkChangeUserEmail UserID MagicHash
     | LinkAccountSecurity
     | LinkUserMailAPI
     | LinkSignDoc Document SignatoryLink
@@ -81,7 +82,7 @@ data KontraLink
     | LinkCompanyUserAdmin CompanyID
     | LinkAdminServices
     | LinkAdminQuarantine
-    | LinkPasswordReminder ActionID MagicHash
+    | LinkPasswordReminder UserID MagicHash
     | LinkAccountCreated ActionID MagicHash String -- email
     | LinkChangeSignatoryEmail DocumentID SignatoryLinkID
     | LinkWithdrawn DocumentID
