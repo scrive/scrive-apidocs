@@ -28,6 +28,7 @@ import Control.Applicative
 import Happstack.Server.Types
 import Data.Maybe
 import Control.Monad.Error
+import Data.Map (singleton)
 
 --import qualified Log
 
@@ -204,37 +205,43 @@ apiDashboardGrantedPrivileges = do
       J.value "itemMax" $ length ls - 1
       J.value "itemTotal" $ length ls
 
-createAPIToken :: Kontrakcja m => m KontraLink
-createAPIToken = withUserPost $ do
-  Just user <- ctxmaybeuser <$> getContext -- safe because we check user
+-- Manipulate dashboard stuff
+
+createAPIToken :: Kontrakcja m => m JSValue
+createAPIToken = do
+  muser <- ctxmaybeuser <$> getContext
+  user <- guardJust muser
   _success <- dbUpdate $ CreateAPIToken (userid user)
-  return LinkOAuthDashboard
+  return $ toJSValue $ singleton "status" "success"
   
-deleteAPIToken :: Kontrakcja m => m KontraLink
-deleteAPIToken = withUserPost $ do
-  Just user <- ctxmaybeuser <$> getContext -- safe because we check user
+deleteAPIToken :: Kontrakcja m => m JSValue
+deleteAPIToken = do
+  muser <- ctxmaybeuser <$> getContext
+  user <- guardJust muser
   mtk <- getDataFn' (look "apitoken")
   case maybeRead =<< mtk of
-    Nothing -> return LinkOAuthDashboard
-    Just token -> do
-      _success <- dbUpdate $ DeleteAPIToken (userid user) token
-      return LinkOAuthDashboard
+    Nothing -> return ()
+    Just token -> ignore $ dbUpdate $ DeleteAPIToken (userid user) token
+  return $ toJSValue $ singleton "status" "success"
       
-createPersonalToken :: Kontrakcja m => m KontraLink
-createPersonalToken = withUserPost $ do
-  Just user <- ctxmaybeuser <$> getContext -- safe because we check user
+createPersonalToken :: Kontrakcja m => m JSValue
+createPersonalToken = do
+  muser <- ctxmaybeuser <$> getContext
+  user <- guardJust muser
   _success <- dbUpdate $ CreatePersonalToken (userid user)
-  return LinkOAuthDashboard
+  return $ toJSValue $ singleton "status" "success"
   
-deletePersonalToken :: Kontrakcja m => m KontraLink
-deletePersonalToken = withUserPost $ do
-  Just user <- ctxmaybeuser <$> getContext -- safe because we check user
+deletePersonalToken :: Kontrakcja m => m JSValue
+deletePersonalToken = do
+  muser <- ctxmaybeuser <$> getContext
+  user <- guardJust muser
   _success <- dbUpdate $ DeletePersonalToken (userid user)
-  return LinkOAuthDashboard
+  return $ toJSValue $ singleton "status" "success"
 
-deletePrivilege :: Kontrakcja m => m KontraLink
-deletePrivilege = withUserPost $ do
-  Just user <- ctxmaybeuser <$> getContext -- safe because we check user
+deletePrivilege :: Kontrakcja m => m JSValue
+deletePrivilege = do
+  muser <- ctxmaybeuser <$> getContext
+  user <- guardJust muser
   mtk <- getDataFn' (look "tokenid")
   case maybeRead =<< mtk of
     Nothing -> return ()
@@ -243,4 +250,4 @@ deletePrivilege = withUserPost $ do
       case maybeRead =<< mpr of
         Nothing -> ignore $ dbUpdate $ DeletePrivileges (userid user) tokenid
         Just pr -> ignore $ dbUpdate $ DeletePrivilege  (userid user) tokenid pr
-  return LinkOAuthDashboard
+  return $ toJSValue $ singleton "status" "success"
