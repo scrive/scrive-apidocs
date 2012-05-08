@@ -647,15 +647,12 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_flashMessageNoDataInCSV","Kunde inte hitta några data i filen.",,"Scrive could not find any data in the file."
 "_flashMessageNoDataInCSVApartFromHeader","Kunde inte hitta några data i filen. Kunde endast hitta titlar.",,"Scrive could not find any data in the file apart from column
  headers."
-"_flashMessageNoRemainedInvitationEmails","Du har redan skickat 10 inbjudningar till denna e-post. Vänligen försök senare.",,"You have sent 10 invitations to this email address. Please try
- again later."
 "_flashMessageNoRemainedPasswordReminderEmails","Du har redan begärt lösenordsbyte 10 gånger i rad. Vänligen försök igen senare.",,"You have requested a password change 10 times in a row. Please try again later."
 "_flashMessageNotAValidInteger","$fieldnametitlecase$ should be a number.",,"$fieldnametitlecase$ should be a number."
 "_flashMessageNumberAboveMaximum","$fieldnametitlecase$ can be a maximum of $max$.",,"$fieldnametitlecase$ can be a maximum of $max$."
 "_flashMessageNumberBelowMinimum","$fieldnametitlecase$ must be a minimum of $min$.",,"$fieldnametitlecase$ must be a minimum of $min$."
 "_flashMessageNumberIsRequired","Nummer krävs.",,"Number required."
 "_flashMessageOfferArchiveDone","Valda offerter har blivit raderade.",,"The selected offers have been deleted."
-"_flashMessageOtherUserSentInvitation","Inbjudan har redan skickats av en annan användare.",,"An invitation has already been sent by another user."
 "_flashMessagePasswordChangeLinkNotValid","Vi beklagar. Länken är inte längre giltig.<br/> Vänligen gå till www.scrive.com, klicka på ""Logga in"" och använd ""Glömt lösenord"" för att generera en ny länk.",,"We are sorry. This link is no longer valid.<br/> Please go to www.scrive.com, klick on ""Login"" and use ""Forgot password"" to generate a new link."
 "_flashMessagePasswordsDontMatch","<strong>Nytt lösenord</strong> matchar inte med <strong>Upprepa lösenord</strong>",,"The two passwords do not match."
 "_flashMessagePleaseSignWithEleg","Du signerar dokumentet längst ned. Det krävs e-legitimation
@@ -684,7 +681,6 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_flashMessageUserSignupDone","Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter
  till din inkorg.",,"Your account has been created. An email containing your account details has been sent to your inbox."
 "_flashMessageUserWithSameEmailExists","En användare med samma e-post existerar redan.",,"A user with this email already exists."
-"_flashMessageViralInviteSent","Inbjudan har skickats!",,"The invitation has been sent!"
 "_flashRemindMailSentNotSigned","En påminnelse har skickats till",,"A reminder has been sent to"
 "_flashRemindMailSentSigned","Dokumentet har skickats till",,"The document has been sent to"
 "_flashUserIsAlreadyCompanyAccount","Du har redan skickat en inbjudan till denna e-post!",,"You've already sent an invite to that email!"
@@ -1587,14 +1583,6 @@ the document <strong>$documenttitle$</strong>. The signing
  <strong>$documenttitle$</strong>."
 "_mailRejectOrderMailContentHasRejected","<strong>$rejectorName$</strong> har avvisat ordern <strong>$documenttitle$</strong>.",,"<strong>$rejectorName$</strong> has returned the order
  <strong>$documenttitle$</strong>."
-"_mailViralInviteContentBodyFirst","$invitername$ har bjudit dig på två månaders fri användning av
- tjänsten Scrive.    Det betyder nog att han/hon gillar vår
- tjänst och tror du också skulle uppskatta den också.",,"$invitername$ has treated you to two months of free service with
- Scrive. This means he/she likes our site and believes you would appreciate it too."
-"_mailViralInviteContentBodySecond","Scrive är en tjänst som gör det möjligt att e-signera dokument online istället för att krångla med papper, penna, scanner, fax mm. Lika juridiskt bindande men mycket smidigare för samtliga parter. Mottagaren behöver inte ha Scrive för att ta emot och signera dokument skickade genom Scrive.",,"Scrive is a service that allows you to e-sign documents online instead of fumbling with paper, pen, scanner and fax-machines. Just as legally binding, but much smoother for all parties. The recipient does not have to have Scrive to receive and sign documents sent from Scrive."
-"_mailViralInviteContentBodyThird","Vänligen klicka på länken för att aktivera kontot:<br/>",,"Click to activate:<br/>"
-"_mailViralInviteContentBodyUserName","Användarnamn:<br/>",,"Username:<br/>"
-"_mailViralInviteTitle","Inbjudan från $invitername$",,"Invite from $invitername$"
 "_message","Meddelande",,"Message"
 "_missingNames","Du har inte namngett alla fält. Vänligen försök igen.",,"You have not named all fields. Please try again."
 "_missingSignatoryNames","Du har inte skrivit in något namn på en eller flera motparter. Vänligen försök igen.",,"You have not entered names for one or several counterparts. Please try again."

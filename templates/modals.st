@@ -334,7 +334,7 @@ $if(loginModal)$
             <a class="close cancel">$_cancel()$</a>
             <a href="#" class="txt-link message s-forgot-password">$_forgotpassword()$</a>
           </div>
-          <a href="#" class="btn-small blue float-right submit">
+          <a href="#" class="btn-small blue float-right submit s-login-modal">
             <div class="left"></div>
             <div class="label">
               <p>$_login()$</p>
@@ -505,7 +505,7 @@ modalDoYouWantToChangeEmail=
       <div class="float-left">
             <a class="close cancel">$_cancel()$</a>
       </div>
-      <a href="#" class="btn-small blue float-right submit">
+      <a href="#" class="btn-small blue float-right submit s-submit-change-email">
             <div class="left"></div>
             <div class="label">
               <p>$_modalDoYouWantToChangeEmailAccept()$</p>

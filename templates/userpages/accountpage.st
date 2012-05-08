@@ -110,7 +110,7 @@ showUser =
                   $if(!iscompanyaccount)$
                   <span class="createcompanybuttonbox"></span>
                   $endif$
-                  <a href="#" class="btn-small green submit">
+                  <a href="#" class="btn-small green submit s-submit-user-settings">
                     <div class="left"></div>
                     <div class="label">
                         <p>$_SaveChanges()$</p>

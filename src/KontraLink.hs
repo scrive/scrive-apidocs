@@ -81,7 +81,6 @@ data KontraLink
     | LinkAdminServices
     | LinkAdminQuarantine
     | LinkPasswordReminder ActionID MagicHash
-    | LinkViralInvitationSent ActionID MagicHash String --email
     | LinkAccountCreated ActionID MagicHash String -- email
     | LinkChangeSignatoryEmail DocumentID SignatoryLinkID
     | LinkWithdrawn DocumentID
@@ -90,7 +89,6 @@ data KontraLink
     | LinkDaveDocument DocumentID
     | LinkFile FileID String
     | LinkAskQuestion
-    | LinkInvite
     | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
     | LinkConnectUserSession ServiceID UserID SessionId KontraLink
     | LinkConnectCompanySession ServiceID CompanyID SessionId KontraLink
@@ -206,7 +204,6 @@ instance Show KontraLink where
     showsPrec _ (LinkAdminServices) = (++) $ "/adminonly/services"
     showsPrec _ (LinkAdminQuarantine) = (++) $ "/adminonly/quarantine"
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
-    showsPrec _ (LinkViralInvitationSent aid hash email) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash ++ "?email=" ++ email
     showsPrec _ (LinkAccountCreated aid hash email) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash ++ "?email=" ++ email
     showsPrec _ (LinkChangeSignatoryEmail did slid ) = (++) $ "/changeemail/"++show did++"/"++show slid
     showsPrec _ (LinkWithdrawn did ) = (++) $ "/withdrawn/"++show did
@@ -214,7 +211,6 @@ instance Show KontraLink where
     showsPrec _ BackToReferer = (++) $ "/" -- this should never be used
     showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid ++"/")
     showsPrec _ (LinkAskQuestion) = (++) ("/question")
-    showsPrec _ (LinkInvite) = (++) "/invite"
     showsPrec _ (LinkSignCanceledDataMismatch docid sigid) = (++) $ "/landpage/signcanceleddatamismatch/" ++ show docid ++ "/" ++ show sigid
     showsPrec _ (LinkConnectUserSession sid uid ssid referer) = (++) $ "/integration/connectuser/" ++ encodeForURL sid ++ "/" ++ show uid  ++ "/" ++ show ssid
                                                                         ++ "?referer=" ++ (URL.encode $ UTF.encode  $ show referer)

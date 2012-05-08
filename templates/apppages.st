@@ -377,25 +377,8 @@ header=
 
                                 $if(logged)$
 
-                                <!--
-                               <span id="inviteContainer">
-                                 <form method="post" action="$linkinvite$" class="MultiFile-intercepted">
-                                 <div>
-                                  <div>
-                                       <input type="email" class="float-left" autocomplete="off" name="invitedemail" infotext="$_headerInviteFriend()$"/>
-                                       <a class="btn-tiny green float-right submit" href="#">
-                                            <div class="left"></div>
-                                            <div class="label"><p>$_headerInvite()$</p></div>
-                                            <div class="right"></div>
-                                       </a>
-                                       <input type="submit" class="hidden" name="invite" value="Skicka" />
-                                  </div>
-                                 </div>
-                                 </form>
-                                </span>
-                                 -->
                                <a href="$linklogout$" class="toplink logout">$_headerLogOut()$</a>
-                               <a href="$linkaccount$" class="toplink">$_headerAccount()$</a>
+                               <a href="$linkaccount$" class="toplink s-account">$_headerAccount()$</a>
                                <a href="$linkissue$" class="toplink">$_headerArchive()$</a>
                                <a href="$linkupload$" class="toplink">$_headerSend()$</a>
                                 $localeSwitcher()$

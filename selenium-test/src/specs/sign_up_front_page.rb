@@ -4,7 +4,7 @@ require "selenium/rspec/spec_helper"
 require "spec/test/unit"
 require "selenium-test/src/helpers.rb"
 
-describe "sign up on front page" do
+describe "sign up on front page and modify account settings" do
 
   before(:each) do
     @h = Helpers.new
@@ -78,8 +78,8 @@ describe "sign up on front page" do
     (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
     (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
     (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
-
-    (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys "password-12"
+    password = "password-12"
+    (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys password
 
     puts "submit the signup form"
     (@h.wait.until { @h.driver.find_element :css => ".modal-footer .btn-small.float-right" }).click
@@ -91,7 +91,7 @@ describe "sign up on front page" do
     @h.loginhelper.logout
 
     puts "make sure we can login and out as our new user"
-    @h.loginhelper.login_as(random_email, "password-12")
+    @h.loginhelper.login_as(random_email, password)
     @h.loginhelper.logout
 
     puts "reset password for new user"
@@ -100,6 +100,48 @@ describe "sign up on front page" do
 
     puts "make sure we can login with new password"
     @h.loginhelper.login_as(random_email, new_password)
+    @h.loginhelper.logout
+
+    puts "change account settings"
+    @h.loginhelper.login_as(random_email, new_password)
+    @h.loginhelper.set_name("Random", "User")
+    (@h.wait.until { @h.driver.find_element :css => "a.btn-tiny" }).click
+
+    puts "change email address"
+    new_email = "new-"+random_email
+    (@h.wait.until { @h.driver.find_element :name => "newemail" }).send_keys new_email
+    (@h.wait.until { @h.driver.find_element :name => "newemailagain" }).send_keys new_email
+    (@h.wait.until { @h.driver.find_element :css => "a.float-right" }).click
+    @h.loginhelper.logout
+
+    @h.emailhelper.follow_link_in_latest_mail_for new_email
+
+    (@h.wait.until { @h.driver.find_element :name => "email" }).send_keys random_email
+    (@h.wait.until { @h.driver.find_element :name => "password" }).send_keys new_password
+
+    (@h.wait.until { @h.driver.find_element :css => "a.s-login-modal" }).click
+
+    @h.wait.until { @h.driver.find_element :css => "div.recovery-container" }
+    (@h.wait.until { @h.driver.find_element :name => "password" }).send_keys new_password
+    (@h.wait.until { @h.driver.find_element :css => "a.s-submit-change-email" }).click
+    @h.loginhelper.logout
+
+    puts "make sure we can log in with new email address"
+    @h.loginhelper.login_as(new_email, new_password)
+
+    puts "change other personal settings"
+    (@h.wait.until { @h.driver.find_element :css => "a.s-account" }).click
+    companyposition = "Vice President of Testing"
+    (@h.wait.until { @h.driver.find_element :name => "personalnumber" }).send_keys "800101-4132"
+    (@h.wait.until { @h.driver.find_element :name => "phone" }).send_keys "031-650 000"
+    (@h.wait.until { @h.driver.find_element :name => "companyname" }).send_keys "Scrive AB"
+    (@h.wait.until { @h.driver.find_element :name => "companynumber" }).send_keys "556816-6804"
+    (@h.wait.until { @h.driver.find_element :name => "companyposition" }).send_keys companyposition
+    (@h.wait.until { @h.driver.find_element :css => "a.s-submit-user-settings" }).click
+
+    puts "make sure we get a confirmation"
+    @h.wait.until { @h.driver.find_element :css => "div.flash-container.green" }
+    @h.wait.until { @h.driver.find_element :xpath => "//input[@name='companyposition' and @value='"+companyposition+"']" }
     @h.loginhelper.logout
   end
 

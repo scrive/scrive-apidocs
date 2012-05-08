@@ -28,7 +28,6 @@ import Util.HasSomeUserInfo
 signupTests :: TestEnvSt -> Test
 signupTests env = testGroup "Signup" [
       testThat "can self signup and activate an account" env testSignupAndActivate
-    , testThat "can send viral invite which can be used to activate an account" env testViralInviteAndActivate
     , testThat "must accept tos to activate an account" env testAcceptTOSToActivate
     , testThat "must enter first name to activate an account" env testNeedFirstNameToActivate
     , testThat "must enter last name to activate an account" env testNeedLastNameToActivate
@@ -76,26 +75,6 @@ testLoginEventRecordedWhenLoggedInAfterActivation = do
   assertAccountActivatedFor uid "Andrzej" "Rybczak" (res3, ctx3)
   assertLoginEventRecordedFor uid
 
-testViralInviteAndActivate :: TestEnv ()
-testViralInviteAndActivate = do
-  Just inviter <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  ctx <- (\c -> c { ctxmaybeuser = Just inviter })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
-
-   -- enter the email to invite
-  (res1, ctx1) <- inviteToAccount ctx "emily@scrive.com"
-  action <- assertInviteSuccessful (userid inviter) ("emily@scrive.com") (res1, ctx1)
-  let aid = actionID action
-      (ViralInvitationSent _ _ _ _ token) = actionType action
-
-  -- follow the signup link
-  let ctx1withoutuser = ctx1{ctxmaybeuser = Nothing}
-  (res2, ctx2) <- followActivationLink ctx1withoutuser aid token
-  assertActivationPageOK (res2, ctx2)
-
-  -- activate the account using the signup details
-  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12" Nothing
-  assertAccountActivated "Andrzej" "Rybczak" (res3, ctx3)
 
 testAcceptTOSToActivate :: TestEnv ()
 testAcceptTOSToActivate = do
@@ -183,25 +162,6 @@ assertSignupSuccessful (res, ctx) = do
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
   return $ head actions
 
-inviteToAccount :: Context -> String -> TestEnv (Response, Context)
-inviteToAccount ctx email = do
-  req <- mkRequest POST [("invitedemail", inText email)]
-  runTestKontra req ctx $ handleViralInvite >>= sendRedirect
-
-assertInviteSuccessful :: UserID -> String -> (Response, Context) -> TestEnv Action
-assertInviteSuccessful expectedid expectedemail (res, ctx) = do
-  assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "User is logged in" (Just expectedid) (fmap userid $ ctxmaybeuser ctx)
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx)
-  -- why is this signing related?!  should be just success no?
-  assertBool "Flash message has type indicating its signing related" $ head (ctxflashmessages ctx) `isFlashOfType` SigningRelated
-  actions <- getViralInviteActions
-  assertEqual "A ViralInvite action was made" 1 (length $ actions)
-  let action = head actions
-      (ViralInvitationSent email _ inviterid _ _) = actionType action
-  assertEqual "Action email is correct" (Email expectedemail) email
-  assertEqual "Inviter id is correct" expectedid inviterid
-  return action
 
 followActivationLink :: Context -> ActionID -> MagicHash -> TestEnv (Response, Context)
 followActivationLink ctx aid token = do
@@ -255,19 +215,6 @@ assertAccountActivationFailed (res, ctx) = do
   -- if they don't accept the tos then the flash is signing related, not sure why
   assertBool "One flash has type indicating a failure or signing related" $ any (\f -> f `isFlashOfType` OperationFailed || f `isFlashOfType` SigningRelated) (ctxflashmessages ctx)
   assertBool "One flash has type indicating a modal (the tos modal)" $ any (`isFlashOfType` Modal) (ctxflashmessages ctx)
-
-getViralInviteActions :: MonadIO m => m [Action]
-getViralInviteActions = do
-  now <- getMinutesTime
-  let expirytime = (7 * 24 * 60 + 1) `minutesAfter` now
-  allactions <- query $ GetExpiredActions LeisureAction expirytime
-  return $ filter isViralInvite allactions
-
-isViralInvite :: Action -> Bool
-isViralInvite action =
-  case actionType action of
-    (ViralInvitationSent _ _ _ _ _) ->  True
-    _ -> False
 
 getAccountCreatedActions :: MonadIO m => m [Action]
 getAccountCreatedActions = do
