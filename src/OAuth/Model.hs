@@ -210,7 +210,7 @@ instance MonadDB m => DBUpdate m DenyCredentials (Maybe URI) where
 data GetRequestedPrivileges = GetRequestedPrivileges APIToken MinutesTime
 instance MonadDB m => DBQuery m GetRequestedPrivileges (Maybe (String, [APIPrivilege])) where
   query (GetRequestedPrivileges token time) = do
-    kPrepare (   "SELECT com.name, u.company_name, p.privilege "
+    kPrepare (   "SELECT com.name, u.company_name, u.first_name, u.last_name, u.email, p.privilege "
               ++ "FROM oauth_temp_privileges p " 
               ++ "JOIN oauth_temp_credential c  ON p.temp_token_id =   c.id "
               ++ "JOIN oauth_api_token t        ON c.api_token_id  =   t.id "
@@ -220,9 +220,13 @@ instance MonadDB m => DBQuery m GetRequestedPrivileges (Maybe (String, [APIPrivi
     _ <- kExecute [ toSql $ atToken token, toSql $ atID token, toSql time ]
     foldDB f Nothing
     -- get name of company from companies table, or if that does not exist, the users.company_name
-    where f :: Maybe (String, [APIPrivilege]) -> Maybe String -> String -> APIPrivilege -> Maybe (String, [APIPrivilege])
-          f Nothing         cname name pr = Just (fromMaybe name cname, [pr])
-          f (Just (_, acc)) cname name pr = Just (fromMaybe name cname, pr:acc)
+    where f :: Maybe (String, [APIPrivilege]) -> Maybe String -> String -> String -> String -> String -> APIPrivilege -> Maybe (String, [APIPrivilege])
+          f Nothing c n fn ln e pr       = Just (getname c n fn ln e, [pr])
+          f (Just (n, acc)) _ _ _ _ _ pr = Just (n, pr:acc)
+          getname (Just cname) _ _ _ _   = cname
+          getname Nothing "" "" "" email = email
+          getname Nothing "" fn ln _     = intercalate " " [fn, ln]
+          getname Nothing cname _ _ _    = cname
 
 -- third part of flow
 

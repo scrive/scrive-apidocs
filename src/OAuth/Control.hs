@@ -85,11 +85,8 @@ authorization = do
   case mprivs of
     Just (companyname, p:ps) ->
       case muser of
-        Just user -> do
-          let email = getEmail user
-          Right <$> pagePrivilegesConfirm       (p:ps) email companyname token
-        _ ->
-          Right <$> pagePrivilegesConfirmNoUser (p:ps) companyname token
+        Just user -> Right <$> pagePrivilegesConfirm       (p:ps) (getEmail user) companyname token
+        _         -> Right <$> pagePrivilegesConfirmNoUser (p:ps) companyname token
     _ -> -- no privileges recorded? we just take the traffic
       return $ Left $ LinkHome locale
 

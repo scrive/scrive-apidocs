@@ -21,7 +21,7 @@ pagePrivilegesConfirm=
     <div class="floatright" style="margin-left: 34px">
     <form method="POST" action="/oauth/authorizationconfirm">
       <div class="finalbuttonbox">
-        <a class="submit green btn-small">
+        <a class="submit green btn-big">
           <div class="left"></div>
           <div class="label">Confirm</div>
           <div class="right"></div>
@@ -34,7 +34,7 @@ pagePrivilegesConfirm=
     <div class="floatright">
     <form method="POST" action="/oauth/authorizationdeny">
       <div class="finalbuttonbox">
-        <a class="submit red btn-small">
+        <a class="submit red btn-big">
           <div class="left"></div>
           <div class="label">Deny</div>
           <div class="right"></div>
