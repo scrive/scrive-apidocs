@@ -159,10 +159,7 @@ tokenCredRequest = api $ do
 apiDashboard :: Kontrakcja m => m (Either KontraLink Response)
 apiDashboard = checkUserTOSGet $ do
   Just user <- ctxmaybeuser <$> getContext -- safe because we check user
-  apitokens      <- dbQuery $ GetAPITokensForUser  (userid user)
-  apiprivileges  <- dbQuery $ GetGrantedPrivileges (userid user)
-  mpersonaltoken <- dbQuery $ GetPersonalToken     (userid user)
-  showAPIDashboard user apitokens apiprivileges mpersonaltoken >>= renderFromBody kontrakcja
+  showAPIDashboard user >>= renderFromBody kontrakcja
 
 apiDashboardPersonalTokens :: Kontrakcja m => m JSValue
 apiDashboardPersonalTokens = do
