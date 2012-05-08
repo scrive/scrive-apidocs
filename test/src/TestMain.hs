@@ -215,8 +215,6 @@ allTests = tail tests
 #ifndef NO_EVIDENCELOG
       , ("evidencelog", const evidenceLogTests)
 #endif
-#ifndef NO_PAD
-      , ("pad", const padTests)
 #ifndef NO_LIVEDOCX
       , ("livedocx", const $ const liveDocxTests)
 #endif
