@@ -449,6 +449,10 @@ mapassoc f = map (id &&& f)
 mapassocM :: Monad m => (a -> m b) -> [a] -> m [(a, b)]
 mapassocM f = mapM (\a -> return . (a,) =<< f a)
 
+maybeM :: Monad m => (a -> m b) -> Maybe a -> m ()
+maybeM _ Nothing = return ()
+maybeM m (Just a) = m a >> return ()
+
 basename :: String -> String
 basename filename =
   case break (\x -> (x=='\\') || (x=='/')) filename of

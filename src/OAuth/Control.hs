@@ -17,6 +17,7 @@ import Login
 import User.Model
 import AppView
 import qualified Log
+import Stats.Control
 
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
@@ -59,14 +60,11 @@ tempCredRequest = api $ do
   time <- ctxtime <$> getContext
 
   etcr <- lift $ getTempCredRequest
-  
-
   case etcr of
     Left errors -> throwError $ badInput errors
     Right tcr -> do
       Log.debug $ "TempCredRequest: " ++ show tcr
       (temptoken, tempsecret) <- apiGuardL' $ dbUpdate $ RequestTempCredentials tcr time
-
       return $ FormEncoded [("oauth_token", show temptoken),
                             ("oauth_token_secret", show tempsecret),
                             ("oauth_callback_confirmed", "true")]
@@ -110,10 +108,11 @@ authorizationGranted = do
   muser <- ctxmaybeuser <$> getContext
   time <- ctxtime <$> getContext
   case muser of
-    Nothing ->
+    Nothing -> 
       return $ LinkOAuthAuthorization token
     Just user -> do
       (url, verifier) <- guardJustM $ dbUpdate $ VerifyCredentials token (userid user) time
+      _ <- addUserStatAPIGrantAccess (userid user) time (usercompany user) Nothing 
       return $ LinkOAuthCallback url token $ Just verifier
 
 authorizationGrantedLogin :: Kontrakcja m => m KontraLink
@@ -129,15 +128,19 @@ authorizationGrantedLogin = do
       return $ LinkOAuthAuthorization token
     Just user -> do
       (url, verifier) <- guardJustM $ dbUpdate $ VerifyCredentials token (userid user) time
+      _ <- addUserStatAPIGrantAccess (userid user) time (usercompany user) Nothing       
       return $ LinkOAuthCallback url token $ Just verifier
 
 authorizationGrantedNewUser :: Kontrakcja m => m KontraLink
 authorizationGrantedNewUser = do
+  time <- ctxtime <$> getContext
   mtk <- getDataFn' (look "oauth_token")
   token <- guardJust $ maybeRead =<< mtk
-  _ <- signupPagePost
-  -- flash message one by signup page
-  
+  meu <- handleSignup
+  case meu of
+    Just (_, Just uid) -> 
+      ignore $ addUserStatAPINewUser uid time Nothing Nothing 
+    _ -> return ()
   return $ LinkOAuthAuthorization token
 
 tokenCredRequest :: Kontrakcja m => m Response

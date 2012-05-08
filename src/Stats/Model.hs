@@ -304,6 +304,8 @@ data UserStatQuantity = UserSignTOS             -- When user signs TOS
                       | UserPhoneAfterTOS       -- when a user requests a phone call after accepting the TOS
                       | UserCreateCompany       -- when a user creates a company
                       | UserLogin               -- when a user logs in
+                      | UserAPIGrantAccess      -- when a user requests an access token
+                      | UserAPINewUser          -- when they create a new user because of api
                       deriving (Eq, Ord, Show)
 $(enumDeriveConvertible ''UserStatQuantity)
 
