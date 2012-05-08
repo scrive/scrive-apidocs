@@ -97,27 +97,7 @@
 }
 
 .apidashboard p {
-    margin: 12px 0px;
     font-size: 14px;
-}
-
-.apidashboard table {
-    border: 1px solid black;
-    width: 100%;
-}
-
-.apidashboard td {
-    padding: 4px;
-}
-
-.apidashboard tbody {
-    min-height: 100px;
-    font-size: 14px;
-}
-
-.apidashboard thead {
-    font-size: 16px;
-    font-weight: bold;
 }
 
 .apidashboard h2 {
@@ -127,6 +107,57 @@
 
 .apidashboard h2.first {
     margin-top: 0px;
+}
+
+.apidashboard .account .col {
+    width: 100%;
+}
+
+.apidashboard .tab-container {
+    border-width: 0px;
+}
+
+.apidashboard .account .col p {
+    margin-right: 30px;
+    display: inline-block;
+
+}
+.apidashboard .account .col .btn-small {
+    display: inline-block;
+}
+
+.apidashboard .tab-table {
+    border: 1px solid gray;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius:5px;
+}
+
+.apidashboard .col.float-right {
+    display: none;
+}
+
+.apidashboard .tab-content {
+
+}
+
+.apidashboard .col {
+    display: table;
+    #position: relative;
+    overflow: hidden;
+    height: 33px;
+}
+
+.apidashboard .middle {
+    #position: absolute;
+    #top: 50%;
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.apidashboard .col .middle p, .apidashboard .col .middle .btn-small {
+    #position: relative;
+    #top: -50%
 }
 
 .oauth-confirm h2 {

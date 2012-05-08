@@ -172,7 +172,7 @@ irFromJSON jsv = do
   role <- maybe (Left $ "Not a valid role: " ++ show i)
           Right $ toSafeEnum i
   hisData <- mapM sfFromJSON dat
-  let mso = either (const Nothing) fromJSON $ jsget "signorder" jsv
+  let mso = either (const Nothing) fromJSValue $ jsget "signorder" jsv
   return $ InvolvedRequest { irRole = role, irData = hisData, irAttachments = attachments, irSignOrder = mso }
 
 fileNameFromJSON :: JSValue -> Either String String

@@ -18,6 +18,9 @@ import User.Model
 import AppView
 import qualified Log
 
+import Text.JSON.Gen hiding (value)
+import qualified Text.JSON.Gen as J
+import Text.JSON
 
 import Happstack.Server.RqData
 import Control.Monad.Trans
@@ -42,8 +45,13 @@ oauthAPI = choice [
   dir "oauth" $ dir "createpersonaltoken"  $ hPost $ toK0 $ createPersonalToken,
   dir "oauth" $ dir "deletepersonaltoken"  $ hPost $ toK0 $ deletePersonalToken,
   dir "oauth" $ dir "deleteprivilege"      $ hPost $ toK0 $ deletePrivilege,
-  dir "oauth" $ dir "dashboard"            $ hGet  $ toK0 $ apiDashboard
+  dir "oauth" $ dir "dashboard"            $ hGet  $ toK0 $ apiDashboard,
+  dir "oauth" $ dir "dashboard" $ dir "personaltoken"     $ hGet $ toK0 $ apiDashboardPersonalTokens,
+  dir "oauth" $ dir "dashboard" $ dir "apitokens"         $ hGet $ toK0 $ apiDashboardAPITokens,
+  dir "oauth" $ dir "dashboard" $ dir "grantedprivileges" $ hGet $ toK0 $ apiDashboardGrantedPrivileges
   ]
+
+-- OAuth Flow
 
 tempCredRequest :: Kontrakcja m => m Response
 tempCredRequest = api $ do
@@ -145,6 +153,8 @@ tokenCredRequest = api $ do
       return $ FormEncoded [("oauth_token",        show accesstoken)
                            ,("oauth_token_secret", show accesssecret)
                            ]
+
+-- Show API Dashboard
     
 apiDashboard :: Kontrakcja m => m (Either KontraLink Response)
 apiDashboard = checkUserTOSGet $ do
@@ -153,7 +163,50 @@ apiDashboard = checkUserTOSGet $ do
   apiprivileges  <- dbQuery $ GetGrantedPrivileges (userid user)
   mpersonaltoken <- dbQuery $ GetPersonalToken     (userid user)
   showAPIDashboard user apitokens apiprivileges mpersonaltoken >>= renderFromBody kontrakcja
+
+apiDashboardPersonalTokens :: Kontrakcja m => m JSValue
+apiDashboardPersonalTokens = do
+  Context{..} <- getContext
+  user <- guardJust ctxmaybeuser
+  ls <- map jsonFromPersonalToken <$> maybeToList <$> (dbQuery $ GetPersonalToken (userid user))
+  return $ runJSONGen $ do
+    J.objects "list" $ map (J.value "fields") ls
+    J.object "paging" $ do
+      J.value "pageMax" (0::Int)
+      J.value "pageCurrent" (0::Int)
+      J.value "itemMin" (0::Int)
+      J.value "itemMax" $ length ls - 1
+      J.value "itemTotal" $ length ls
   
+apiDashboardAPITokens :: Kontrakcja m => m JSValue
+apiDashboardAPITokens = do
+  Context{..} <- getContext
+  user <- guardJust ctxmaybeuser
+  ls <- map jsonFromAPIToken <$> (dbQuery $ GetAPITokensForUser (userid user))
+  return $ runJSONGen $ do
+    J.objects "list" $ map (J.value "fields") ls
+    J.object "paging" $ do
+      J.value "pageMax" (0::Int)
+      J.value "pageCurrent" (0::Int)
+      J.value "itemMin" (0::Int)
+      J.value "itemMax" $ length ls - 1
+      J.value "itemTotal" $ length ls
+      
+apiDashboardGrantedPrivileges :: Kontrakcja m => m JSValue
+apiDashboardGrantedPrivileges = do
+  Context{..} <- getContext
+  user <- guardJust ctxmaybeuser
+  ds <- mapassocM privilegeDescription [APIDocCreate]
+  ls <- concatMap (\p->jsonFromGrantedPrivilege p ds) <$> (dbQuery $ GetGrantedPrivileges (userid user))
+  return $ runJSONGen $ do
+    J.objects "list" $ map (J.value "fields") ls
+    J.object "paging" $ do
+      J.value "pageMax" (0::Int)
+      J.value "pageCurrent" (0::Int)
+      J.value "itemMin" (0::Int)
+      J.value "itemMax" $ length ls - 1
+      J.value "itemTotal" $ length ls
+
 createAPIToken :: Kontrakcja m => m KontraLink
 createAPIToken = withUserPost $ do
   Just user <- ctxmaybeuser <$> getContext -- safe because we check user

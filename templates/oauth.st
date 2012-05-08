@@ -123,6 +123,150 @@ pagePrivilegesConfirmNoUser=
 ###
 ####
 apiDashboard =
+<script>
+var personalTokensTable = KontraList().init({
+    name : "Personal Access Token",
+    headerExtras: jQuery("<div class='middle'>").append(jQuery("<p>").append("$_userPersonalAccessToken()$")),
+    emptyAlternative: 
+      jQuery("<div >").append(jQuery("<div class='middle'>").append(jQuery("<p>").append("$_userPersonalAccessToken()$")))
+                      .append(jQuery("<div class='middle'>").append(Button.init({
+                      size: "small",
+                      color: "green",
+                      text: "Create Personal Token",
+                      onClick: function() {
+                        new Submit({
+                          url: "/oauth/createpersonaltoken",
+                          method: "POST",
+                          ajax: true,
+                          ajaxsuccess: function() {personalTokensTable.recall()}
+                        }).send();
+                      }
+                    }).input())),
+    schema: new Schema({
+    url: "/oauth/dashboard/personaltoken",
+    cells : [
+        new Cell({name: "API Token",     width:"120px", field:"apitoken"}),
+        new Cell({name: "API Secret",    width:"120px",  field:"apisecret"}),
+        new Cell({name: "Access Token",  width:"120px",  field:"accesstoken"}),
+        new Cell({name: "Access Secret", width:"120px",  field:"accesssecret"}),
+        new Cell({name: "",              width:"70px",  field:"accesssecret", special: "rendered",
+                 rendering: function(status,idx,listobject) {
+                    var button = Button.init({
+                      size: "small",
+                      color: "red",
+                      text: "Delete",
+                      onClick: function() {
+                        new Submit({
+                          url: "/oauth/deletepersonaltoken",
+                          method: "POST",
+                          ajax: true,
+                          ajaxsuccess: function() {personalTokensTable.recall()}
+                        }).send();
+                      }
+                    });
+                    return button.input();
+                 }})
+    ]})});
+
+jQuery(function(){
+    jQuery("#jspersonaltoken").append(personalTokensTable.view.el);
+});
+
+var grantedPrivilegesTable = KontraList().init({
+    name : "Granted Privileges",
+    emptyAlternative: jQuery("<div class='middle'>").append(jQuery("<p>").append("$_haveNoGrantedPrivileges()$")),
+    headerExtras: jQuery("<div class='middle'>").append(jQuery("<p>").append("$_haveGrantedPrivileges()$")),
+    schema: new Schema({
+    url: "/oauth/dashboard/grantedprivileges",
+    cells : [
+        new Cell({name: "Company/Individual", width:"240px",  field:"name"}),
+        new Cell({name: "Privilege",          width:"240px", field:"privilegedescription"}),
+        new Cell({name: "",                   width:"70px",  field:"privilege", special: "rendered",
+                 rendering: function(priv,idx,listobject) {
+                    if(priv === "") {
+                      return Button.init({
+                        size: "small",
+                        color: "red",
+                        text: "Delete All",
+                        onClick: function() {
+                          new Submit({
+                            tokenid: listobject.get("fields").tokenid,
+                            url: "/oauth/deleteprivilege",
+                            method: "POST",
+                            ajax: true,
+                            ajaxsuccess: function() {grantedPrivilegesTable.recall()}
+                          }).send();
+                        }
+                      }).input();
+                    } else {
+                      return Button.init({
+                        size: "small",
+                        color: "red",
+                        text: "Delete",
+                        onClick: function() {
+                          new Submit({
+                            tokenid: listobject.get("fields").tokenid,
+                            privilege: listobject.get("fields").privilege,
+                            url: "/oauth/deleteprivilege",
+                            method: "POST",
+                            ajax: true,
+                            ajaxsuccess: function() {grantedPrivilegesTable.recall()}
+                          }).send();
+                        }
+                      }).input();
+                    }
+                 }})
+    ]})});
+
+jQuery(function(){
+    jQuery("#jsgrantedprivileges").append(grantedPrivilegesTable.view.el);
+});
+
+var apiTokensTable = KontraList().init({
+    name : "Granted Privileges",
+    headerExtras: jQuery("<div />").append(jQuery("<div class='middle'>").append(jQuery("<p>").append("$_apiTokensMessage()$")))
+                                   .append(jQuery("<div class='middle'>").append(Button.init({
+                      size: "small",
+                      color: "green",
+                      text: "Create API Token",
+                      onClick: function() {
+                        new Submit({
+                          url: "/oauth/createapitoken",
+                          method: "POST",
+                          ajax: true,
+                          ajaxsuccess: function() {apiTokensTable.recall()}
+                        }).send();
+                      }
+                    }).input())),
+    schema: new Schema({
+    url: "/oauth/dashboard/apitokens",
+    cells : [
+        new Cell({name: "API Token",  width:"240px",  field:"apitoken"}),
+        new Cell({name: "API Secret", width:"240px", field:"apisecret"}),
+        new Cell({name: "",           width:"70px",  field:"apitoken", special: "rendered",
+                 rendering: function(apitoken,idx,listobject) {
+                    return Button.init({
+                      size: "small",
+                      color: "red",
+                      text: "Delete",
+                      onClick: function() {
+                        new Submit({
+                          apitoken: apitoken,
+                          url: "/oauth/deleteapitoken",
+                          method: "POST",
+                          ajax: true,
+                          ajaxsuccess: function() {apiTokensTable.recall()}
+                        }).send();
+                      }
+                    }).input();
+                 }})
+    ]})});
+
+jQuery(function(){
+    jQuery("#jsapitokens").append(apiTokensTable.view.el);
+});
+
+</script>
 <div class="tab-viewer apidashboard">
   <div class="tab-header">
   </div>
@@ -139,188 +283,14 @@ apiDashboard =
     <div class="tab-content account">
 
       <h2 class="first">Granted Privileges</h2>
-
-      $if(apiprivileges)$
-
-      <p>
-        You have granted the following companies or individuals
-        privileges to act on your behalf.
-      </p>
-
-
-      <table>
-        <thead>
-          <tr>
-            <td>Company/Individual</td>
-            <td>Privilege</td>
-            <td></td>
-          </tr>
-        </thead>
-        <tbody>
-          $apiprivileges:{apiprivilege|
-          <tr>
-            <td>
-              $apiprivilege.name$
-            </td>
-            <td>
-            </td>
-            <td>
-              <form method="POST" action="/oauth/deleteprivilege">
-                <input type="hidden" name="tokenid"
-                       value="$apiprivilege.tokenid$" />
-                <a class="submit red btn-small">
-                  <div class="left"></div>
-                  <div class="label">Delete All</div>
-                  <div class="right"></div>
-                </a>
-              </form>
-            </td>
-          </tr>
-          $apiprivilege.privileges:{privilege|
-          <tr>
-            <td>
-              $apiprivilege.name$
-            </td>
-            <td>
-              $privilege$
-            </td>
-            <td>
-              <form method="POST" action="/oauth/deleteprivilege">
-                <input type="hidden" name="tokenid"
-                       value="$apiprivilege.tokenid$" />
-                <input type="hidden" name="privilege"
-                       value="$apiprivilege.privilege$" />
-                <a class="submit red btn-small">
-                  <div class="left"></div>
-                  <div class="label">Delete</div>
-                  <div class="right"></div>
-                </a>
-              </form>
-            </td>
-          </tr>
-          }$
-          }$
-        </tbody>
-        <tfoot>
-          <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-          </tr>
-        </tfoot>
-      </table>
-      $else$
-      <p>You have granted no privileges to other companies or individuals.</p>
-      $endif$
+      <div id="jsgrantedprivileges"> </div>
 
       <h2>Personal Access Token</h2>
-      <p>
-        Use this access token to access your own Scrive account
-        through the API.
-      </p>
-      $if(personaltoken)$
-      <table>
-        <thead>
-          <tr>
-            <td>API Token</td>
-            <td>API Secret</td>
-            <td>Access Token</td>
-            <td>Access Secret</td>
-            <td></td>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>
-              $personaltoken.apitoken$
-            </td>
-            <td>
-              $personaltoken.apisecret$
-            </td>
-            <td>
-              $personaltoken.token$
-            </td>
-            <td>
-              $personaltoken.secret$
-            </td>
-            <td>
-              <form method="POST" action="/oauth/deletepersonaltoken">
-                <a class="submit red btn-small">
-                  <div class="left"></div>
-                  <div class="label">Delete</div>
-                  <div class="right"></div>
-                </a>
-              </form>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      $else$
-      <p>
-        <form method="POST" action="/oauth/createpersonaltoken">
-          <a class="submit green btn-small">
-            <div class="left"></div>
-            <div class="label">Create a personal token</div>
-            <div class="right"></div>
-          </a>
-        </form>
-      </p>
-      $endif$
-
-
+      <div id="jspersonaltoken"> </div>
 
       <h2>API Tokens</h2>
-      <p>
-        API Tokens allow you to request access to other Scrive
-        accounts using OAuth.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <td>API Token</td>
-            <td>API Secret</td>
-            <td>
-              <form method="POST" action="/oauth/createapitoken">
-                <a class="submit green btn-small">
-                  <div class="left"></div>
-                  <div class="label">Create</div>
-                  <div class="right"></div>
-                </a>
-              </form>
-            </td>
-          </tr>
-        </thead>
-        <tbody>
-          $apitokens:{apitoken|
-          <tr>
-            <td>
-              $apitoken.token$
-            </td>
-            <td>
-              $apitoken.secret$
-            </td>
-            <td>
-              <form method="POST" action="/oauth/deleteapitoken">
-                <input type="hidden" name="apitoken"
-                       value="$apitoken.token$" />
-                <a class="submit red btn-small">
-                  <div class="left"></div>
-                  <div class="label">Delete</div>
-                  <div class="right"></div>
-                </a>
-              </form>
-            </td>
-          </tr>
-          }$
-        </tbody>
-        <tfoot>
-          <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-          </tr>
-        </tfoot>
-      </table>
+      <div id="jsapitokens"> </div>
+
     </div>
   </div>
 </div>
