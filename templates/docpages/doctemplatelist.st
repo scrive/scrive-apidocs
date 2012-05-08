@@ -1,7 +1,7 @@
 ####
 pageTemplatesList=
 $loadingdialog()$
-<div> 
+<div>
     <div class="tab-viewer">
         <div class="tab-header">
         $docListRubbishBinLink()$
@@ -23,7 +23,7 @@ var documentsTable = KontraList().init({
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
         new Cell({name: "$_SortTime()$", width:"140px", field:"time"}),
-        new Cell({name: "$_SortType()$", width:"120px", field:"process", special: "expandable"}),
+        new Cell({name: "$_SortType()$", width:"120px", field:"process"}),
         new Cell({name: "$_SortTemplate()$", width:"400px", field:"title",  special: "link"}),
         new Cell({name: "", width:"100px", field:"shared", special: "rendered",
                   rendering: function(shared) {
