@@ -207,7 +207,10 @@ instance XmlContent RetrieveDocument where
   toContents (RetrieveDocument format) =
     [CElem (Elem "RetrieveDocument" [mkAttr "xmlns" liveDocxNamespace]
       [ mkElemC "format" (toText format)
+<<<<<<< HEAD
       , mkElemC "format" (toText format)
+=======
+>>>>>>> 3bfef64af59cc42a1f5fa1ba5f533342db12a9c0
       ]) ()]
   parseContents = error "Please do not parse a RetrieveDocument"
 
