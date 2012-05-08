@@ -1,19 +1,19 @@
 .paddevicearchive .statusIcon.inqueuestatus{
-        background-image: url(../theme/images/status_viewed.png);
+        background-image: url(../img/status_viewed.png);
         float: left;
         height: 16px;
         width: 16px;
 }
 
 .paddevicearchive .statusIcon.notinqueuestatus{
-        background-image: url(../theme/images/status_draft.png);
+        background-image: url(../img/status_draft.png);
         float: left;
         height: 16px;
         width: 16px;
 }
 
 .paddevicearchive .actionIcon.gotodocument{
-        background-image: url(../theme/images/next.gif);
+        background-image: url(../img/next.gif);
         float: left;
         height: 14px;
         width: 14px;

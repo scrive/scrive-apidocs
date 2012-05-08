@@ -102,7 +102,7 @@ loadingdialog=
     <div class="modal-body" style="padding:30px">
       <center>
         <h3 id="loadingmessage">Loading</h3>
-        <img src="/theme/images/wait30trans.gif" style="margin:30px"/>
+        <img src="/img/wait30trans.gif" style="margin:30px"/>
       </center>
     </div>
   </div>
