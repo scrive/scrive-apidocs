@@ -1,6 +1,7 @@
 ####
 pagePrivilegesConfirm=
 <div class="oauth-confirm">
+     <div class="maintext">
   <h2>Important Security Information</h2>
   <p>
     <em>$companyname$</em> is requesting permission to perform the
@@ -16,7 +17,7 @@ pagePrivilegesConfirm=
     They will show up in your archive.
   </p>
   $endif$
-
+  </div>
   <div class="buttons">
     <div class="floatright" style="margin-left: 34px">
     <form method="POST" action="/oauth/authorizationconfirm">
@@ -49,6 +50,7 @@ pagePrivilegesConfirm=
 ###
 pagePrivilegesConfirmNoUser=
 <div class="oauth-confirm">
+     <div class="maintext">
   <h2>Important Security Information</h2>
   <p>
     <em>$companyname$</em> is requesting permission to perform the
@@ -63,7 +65,7 @@ pagePrivilegesConfirmNoUser=
     They will show up in your archive.
   </p>
   $endif$
-  
+  </div>
   <div class="login option">
     <form id="loginForm" method="post" action="/oauth/authorizationconfirmlogin">
       <h2>Log in and confirm privileges</h2>
@@ -90,8 +92,7 @@ pagePrivilegesConfirmNoUser=
   </div>
   
   <div class="newuser option">
-    <h2>Create new account 
-      <br /> (3 free signatures per month!)</h2>
+    <h2>Create new account </h2>
     <form method="post" action="/oauth/authorizationconfirmnewuser" class="requestAccount">
       <input class="shiny"
              name="email" type="email"

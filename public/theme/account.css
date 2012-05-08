@@ -172,7 +172,19 @@
     font-size: 32px;
 }
 
-.oauth-confirm p {
+.oauth-confirm .option h2 {
+    font-size: 18px;
+}
+
+.oauth-confirm .option .btn-small, .oauth-confirm .option .new-btn-small {
+    margin-top: 24px;
+}
+
+.oauth-confirm .deny .finalbuttonbox {
+    margin-top: 104px;
+}
+
+.oauth-confirm .maintext p {
     margin-bottom: 18px;
     font-size: 16px;
     line-height: 24px;
@@ -193,7 +205,7 @@
 .oauth-confirm .option {
     float:left;
     max-width: 300px;
-    margin:12px;
+    margin:4px;
     padding:12px;
     border-right: 1px solid gray;
 }
