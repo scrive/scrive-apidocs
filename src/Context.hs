@@ -21,6 +21,7 @@ import API.Service.Model
 import Company.Model
 import MagicHash (MagicHash)
 import IPAddress
+import qualified Static.Resources as SR
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
@@ -50,4 +51,5 @@ data Context = Context
     , ctxsalesaccounts       :: [Email] -- ^
     , ctxmagichashes         :: Map.Map SignatoryLinkID MagicHash
     , ctxmaybepaduser        :: Maybe User -- ^ If we are loged in to the pad view
+    , ctxstaticresources     :: SR.ResourceSetsForImport
     }

@@ -7,36 +7,10 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 <meta http-equiv="content-language" content="$ctxlang$" />
                 <meta name="description" content="$_firstPageMetaDescription()$" />
                 <link href='https://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
-                <link href="$resourcehostpart$/css/main.css" rel="stylesheet" type="text/css" />
-                <link href="$resourcehostpart$/theme/flash.css" rel="stylesheet" type="text/css" />
-                <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/symbols.css" media="screen"/>
-                <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/newdesign.css" media="screen"/>
-                <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/buttons.css" media="screen"/>
-               <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"
-                type="text/javascript"></script>
-               <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/jquery-ui.min.js"
-                type="text/javascript"></script>
-               <script src="$resourcehostpart$/js/jquery.tools.min.js"
-                type="text/javascript"></script>
-               <script src="$resourcehostpart$/js/jquery.MultiFile.js"
-                type="text/javascript"></script>
-               <script src="$resourcehostpart$/tiny_mce/jquery.tinymce.js"
-                type="text/javascript"></script>
-               <script type="text/javascript">
-                $javascriptLocalisation()$</script>
-               <script src="$resourcehostpart$/js/global.js"
-                type="text/javascript"></script>
-               <script src="$resourcehostpart$/js/underscore.js"
-                type="text/javascript"></script>
-               <script src="$resourcehostpart$/js/backbone.js"
-                type="text/javascript"></script>
-               <script src="$resourcehostpart$/js/flashmessages.js"
-                type="text/javascript"></script>
-               <script src="$resourcehostpart$/js/validation.js"
-                type="text/javascript"></script>
-                <script src="$resourcehostpart$/js/jquery.tweet.js" type="text/javascript"></script>
+                $staticResources:noescape()$
+                <script type="text/javascript"> $javascriptLocalisation()$ </script>
                 $if(production)$
-                <script src="$resourcehostpart$/js/analytics.js" type="text/javascript"></script>
+                    <script src="$resourcehostpart$/libs/analytics.js" type="text/javascript"></script>
                 $endif$
         </head>
         <body>

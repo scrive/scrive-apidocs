@@ -62,7 +62,7 @@ window.MailView = Backbone.View.extend({
         editablePart.replaceWith(wrapper);
 		$('textarea',wrapper).livequery(function() {
 			view.editor = $(this).tinymce({
-				script_url: '/tiny_mce/tiny_mce.js',
+				script_url: '/libs/tiny_mce/tiny_mce.js',
 				theme: "advanced",
 				theme_advanced_toolbar_location: "top",
 				theme_advanced_buttons1: "bold,italic,underline,separator,strikethrough,bullist,numlist,separator,undo,redo,separator,cut,copy,paste",

@@ -102,17 +102,17 @@
     font-size: 8pt;
 }
 .addSignatory{
-    background-image: url("images/iconPlus.png");
+    background-image: url("/img/iconPlus.png");
 }
 .removeSignatory{
-    background-image: url("images/iconMinus.png");
+    background-image: url("/img/iconMinus.png");
 }
 .field .ddIcon{
     height:16px;
     width:12px;
     margin:2px;
     float:left;
-    background-image: url("images/iconHand.png");
+    background-image: url("/img/iconHand.png");
     cursor: pointer;
 }
 .field .prepIcon{
@@ -120,7 +120,7 @@
     width:15px;
     margin:2px;
     float:left;
-    background-image: url("images/iconPen.png");
+    background-image: url("/img/iconPen.png");
 }
 .field .setNameIcon{
     height:14px;
@@ -137,11 +137,11 @@
     width:14px;
     margin:2px;
     float:right;
-    background-image: url("images/iconMinus.png");
+    background-image: url("/img/iconMinus.png");
 }
 
 .addField{
-  background-image: url("images/iconPlus.png");
+  background-image: url("/img/iconPlus.png");
   width:14px;
   height:14px;
   margin-top: 1px;
@@ -150,7 +150,7 @@
   float: left;
 }
 .setSignOrder{
-  background-image: url("images/iconSigningOrder.png");
+  background-image: url("/img/iconSigningOrder.png");
   width:16px;
   height:16px;
   margin-left: 12px;
@@ -158,7 +158,7 @@
   float: left;
 }
 .setCsvSignatory{
-  background-image: url("images/iconCsv.png");
+  background-image: url("/img/iconCsv.png");
   width:16px;
   height:16px;
   margin-left: 12px;
@@ -166,7 +166,7 @@
   float: left;
 }
 .setRole{
-    background-image: url("images/iconMan.png");
+    background-image: url("/img/iconMan.png");
     margin-top: -1px;
     height: 16px;
     width: 16px;
@@ -298,7 +298,7 @@
 .calendarbutton {
     cursor: pointer;
     padding-left: 5px;
-    background-image: url("images/calendar.png");
+    background-image: url("/img/calendar.png");
     background-position: 2px 0;
     background-repeat: no-repeat;
     display: inline-block;
@@ -310,7 +310,7 @@
 .editinvitemessageicon {
     cursor: pointer;
     padding-left: 5px;
-    background-image: url("images/iconPen.png");
+    background-image: url("/img/iconPen.png");
     background-position: 2px 0;
     background-repeat: no-repeat;
     display: inline-block;
@@ -323,7 +323,7 @@
 .authorattachmentssetupicon , .signatoryattachmentssetupicon {
     cursor: pointer;
     padding-left: 5px;
-    background-image: url("images/attachment.gif");
+    background-image: url("/img/attachment.gif");
     background-position: 2px 0;
     background-repeat: no-repeat;
     display: inline-block;
@@ -453,7 +453,7 @@
     height:14px;
     width:14px;
     display: block;
-    background-image: url("images/iconMinus.png");
+    background-image: url("/img/iconMinus.png");
     margin-top: 2px;
 }
 

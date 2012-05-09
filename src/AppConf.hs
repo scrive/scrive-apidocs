@@ -25,6 +25,7 @@ data AppConf = AppConf {
   , amazonConfig       :: Maybe (String,String,String) -- ^ bucket, access key, secret key
   , dbConfig           :: String                       -- ^ postgresql configuration
   , gsCmd              :: String
+  , srConfig           :: String                       -- ^ static resource spec file
   , production         :: Bool                         -- ^ production flag, enables some production stuff, disables some development
   , trustWeaverSign    :: Maybe (String,String,String) -- ^ TrustWeaver sign service (URL,pem file path,pem private key password)
   , trustWeaverAdmin   :: Maybe (String,String,String) -- ^ TrustWeaver admin service (URL,pem file path,pem private key password)
@@ -51,7 +52,8 @@ instance Configuration AppConf where
     , amazonConfig       = Nothing
     , dbConfig           = "user='kontra' password='kontra' dbname='kontrakcja'"
     , gsCmd              = "gs"
-    , production         = False
+    , srConfig           = "public/resources.spec"
+    , production         = True
     , trustWeaverSign    = Nothing
     , trustWeaverAdmin   = Nothing
     , trustWeaverStorage = Nothing
