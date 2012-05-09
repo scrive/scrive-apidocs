@@ -372,6 +372,7 @@ getDocuments = do
                     return $ Just $ DocumentTag (fromJust n) (fromJust v)
     mFromDateString <- fromJSONField "from_date"
     mToDateString   <- fromJSONField "to_date"
+    Log.integration $ "toDateString: " ++ show mToDateString
     mFromState :: Maybe Int <- fromJSONField "from_state"
     mToState   :: Maybe Int <- fromJSONField "to_state"
     mFromDate <- case mFromDateString of
@@ -384,6 +385,7 @@ getDocuments = do
       Just s  -> case parseMinutesTimeISO s of
         Just t  -> return $ Just t
         Nothing -> throwApiError API_ERROR_PARSING $ "to_date unrecognized format: " ++ show s
+    Log.integration $ "toDate: " ++ show mToDate
     let allstatuses = [Preparation, Pending, Closed, Rejected, Timedout, Canceled, DocumentError ""]
         mstatuses   = case (mFromState, mToState) of
           (Nothing, Nothing) -> Nothing
