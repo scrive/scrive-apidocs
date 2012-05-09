@@ -217,7 +217,7 @@ testDocumentsFilteringToDate = do
     apiRespDocsFilter <- makeAPIRequest getDocuments apiReqDocsFilter
     assertBool ("All documents should be filtered out but " ++ (show $ docsCount apiRespDocsFilter) ++ " were found") $ (docsCount apiRespDocsFilter) == 0
     ctxtime <- getMinutesTime
-    let tm = minutesAfter 1000 ctxtime
+    let tm = minutesAfter 10 ctxtime
         tms = showMinutesTimeForAPI tm
     Right apiReqDocsFilter2 <- jsset "to_date" tms <$> getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
     
@@ -232,9 +232,9 @@ testDocumentsFilteringFromDate = do
     apiRespDocs3 <- makeAPIRequest getDocuments $ apiReqDocs3
     assertBool ("Should have 1 document but " ++ (show $ docsCount apiRespDocs3) ++ " were found") $ (docsCount apiRespDocs3) == 1
     ctxtime <- getMinutesTime
-    let tm = minutesAfter 1000 ctxtime
+    let tm = minutesAfter 10 ctxtime
         tms = showMinutesTimeForAPI tm
-        tmbefore = showMinutesTimeForAPI $ minutesBefore 1000 ctxtime
+        tmbefore = showMinutesTimeForAPI $ minutesBefore 10 ctxtime
     Right apiReqDocsFilter <- jsset "from_date" tms <$> getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
     apiRespDocsFilter <- makeAPIRequest getDocuments apiReqDocsFilter
     if docsCount apiRespDocsFilter == -1 
@@ -261,9 +261,9 @@ testDocumentsFilteringFromDate2 = do
     apiRespDocs3 <- makeAPIRequest getDocuments $ apiReqDocs3
     assertEqual ("getDocuments " ++ show apiReqDocs3 ++ " returned docs") 1 (docsCount apiRespDocs3)
     ctxtime <- getMinutesTime
-    let tm = minutesAfter 1000 ctxtime
+    let tm = minutesAfter 10 ctxtime
         tms = showMinutesTimeForAPI tm
-        tmbefore = showMinutesTimeForAPI $ minutesBefore 1000 ctxtime    
+        tmbefore = showMinutesTimeForAPI $ minutesBefore 10 ctxtime    
     
     Right apiReqDocsFilter <- jsset "from_date" tms <$> getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
     apiRespDocsFilter <- makeAPIRequest getDocuments apiReqDocsFilter
@@ -288,9 +288,9 @@ testDocumentsFilteringFromDate2 = do
     _ <- forM (documentsignatorylinks doc) $ \sl ->
       if isAuthor sl 
       then dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) 
-           (authorActor (minutesAfter 1000 tm) noIP (fromJust $ maybesignatory sl) (getEmail sl))
+           (authorActor (minutesAfter 10 tm) noIP (fromJust $ maybesignatory sl) (getEmail sl))
       else dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) 
-           (signatoryActor (minutesAfter 1000 tm) noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
+           (signatoryActor (minutesAfter 10 tm) noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
 
     Just _doc' <- dbQuery $ GetDocumentByDocumentID did
     Right apiReqDocsFilter3 <- jsset "from_date" tms <$> getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
