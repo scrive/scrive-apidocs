@@ -120,13 +120,6 @@ import EvidenceLogTest
 
 #ifndef NO_LIVEDOCX
 import LiveDocxTest
-<<<<<<< HEAD
-=======
-#endif
-
-#ifndef NO_EVIDENCELOG
-import PadTest
->>>>>>> 3bfef64af59cc42a1f5fa1ba5f533342db12a9c0
 #endif
 
 allTests :: [(String, [String] -> TestEnvSt -> Test)]

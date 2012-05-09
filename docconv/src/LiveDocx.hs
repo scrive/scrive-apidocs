@@ -1,30 +1,34 @@
 module LiveDocx (
   LiveDocxConf(..)
   , FileFormat(..)
+  , LiveDocxError(..)
   , convertToPDF
 ) where
+
+import Prelude hiding (catch)
+import Control.Exception (catch)
 
 import Control.Monad()
 import Control.Monad.Reader
 import Text.XML.HaXml.XmlContent.Parser
+import System.CPUTime
 import System.IO.Temp
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
 
 import SOAP.SOAP
+import qualified Log (docConverter)
 
 import LiveDocxConf
-
-data FileFormat = DOC | DOCX | RTF | TXD
-  deriving (Eq,Ord,Show,Read)
+import LiveDocxTypes
 
 data LiveDocxContext = LiveDocxContext {
     ctxurl :: String
   , ctxcookiefile :: FilePath
 }
 
-type LiveDocx a = ReaderT LiveDocxContext IO (Either String a)
+type LiveDocx a = ReaderT LiveDocxContext IO (Either LiveDocxError a)
 
 mkLiveDocxContext :: LiveDocxConf -> FilePath -> LiveDocxContext
 mkLiveDocxContext conf cookiefile = LiveDocxContext {
@@ -32,60 +36,79 @@ mkLiveDocxContext conf cookiefile = LiveDocxContext {
   , ctxcookiefile = cookiefile
 }
 
-makeLiveDocxCall :: (XmlContent request, XmlContent result)
-                      => String
-                      -> request
+makeLiveDocxCall :: (XmlContent request, HasXmlNamespace request, XmlContent result)
+                      => request
                       -> LiveDocx result
-makeLiveDocxCall action request = do
+makeLiveDocxCall request = do
   ctx <- ask
-  liftIO $ makeSoapCallWithCookies
+  eresult <- liftIO $ makeSoapCallWithCookies
     (ctxurl ctx)
     (ctxcookiefile ctx)
-    (liveDocxNamespace ++ action)
+    (liveDocxNamespace ++ xmlNamespace request)
     request
+  return $ case eresult of
+    Left msg -> Left $ LiveDocxSoapError msg
+    Right result -> Right result
 
-ignoreIfRight :: Either String a -> LiveDocx ()
+ignoreIfRight :: Either LiveDocxError a -> LiveDocx ()
 ignoreIfRight (Left x) = return $ Left x
 ignoreIfRight (Right _) = return $ Right ()
 
 logIn :: String -> String -> LiveDocx ()
 logIn username password = ignoreIfRight =<<
   (makeLiveDocxCall
-    "LogIn"
     (LogIn username password) :: LiveDocx LogInResponse)
 
 logOut :: LiveDocx ()
 logOut = ignoreIfRight =<<
   (makeLiveDocxCall
-    "LogOut"
     LogOut :: LiveDocx LogOutResponse)
 
 setLocalTemplate :: BS.ByteString -> FileFormat ->  LiveDocx ()
 setLocalTemplate filecontents format = ignoreIfRight =<<
   (makeLiveDocxCall
-    "SetLocalTemplate"
     (SetLocalTemplate filecontents format) :: LiveDocx SetLocalTemplateResponse)
 
 createDocument ::  LiveDocx ()
 createDocument = ignoreIfRight =<<
   (makeLiveDocxCall
-    "CreateDocument"
     CreateDocument :: LiveDocx CreateDocumentResponse)
 
 retrieveDocument :: String ->  LiveDocx BS.ByteString
 retrieveDocument format = do
   result <- makeLiveDocxCall
-              "RetrieveDocument"
               (RetrieveDocument format)
   case result of
     Right (RetrieveDocumentResponse pdfcontents) -> return $ Right pdfcontents
     Left msg -> return $ Left msg
 
-convertToPDF :: LiveDocxConf -> BS.ByteString -> FileFormat -> IO (Either String BS.ByteString)
-convertToPDF conf filecontents format =
-  withSystemTempFile "livedocx-cookies.txt" $ \cookiefile _cookiefilehandle ->
-    liftIO $ runReaderT convertDocument (mkLiveDocxContext conf cookiefile)
+{- | Calls the LiveDocx Soap API to convert the given document contents to a pdf.
+     Errors are put in the docconverter.log.
+ -}
+convertToPDF :: LiveDocxConf -> BS.ByteString -> FileFormat -> IO (Either LiveDocxError BS.ByteString)
+convertToPDF conf filecontents format = do
+  start <- getCPUTime
+  res <- catch
+           --withSystemTempFile gives us uniquely named temp file for storing LiveDocx session cookies in for curl
+           (withSystemTempFile "livedocx-cookies.txt" $ \cookiefile _cookiefilehandle ->
+              liftIO $ runReaderT convertDocument (mkLiveDocxContext conf cookiefile))
+           (return . Left . LiveDocxIOError)
+  end <- getCPUTime
+  case res of
+    Left err ->
+      Log.docConverter $ "failed conversion from " ++ show format ++ " to PDF: " ++ show err
+    Right _ ->
+      let diff = ((fromIntegral (end - start) * 0.00000000001) :: Double) in
+      Log.docConverter $ "successful conversion from " ++ show format ++ " to PDF (took " ++ show diff ++ "s)"
+  return res
   where
+    {- | API calls are as follows:
+         * logIn: login with username and password, generates session cookies which we store in a temp file for curl
+         * setLocalTemplate: set a template with the original file contents and file format
+         * createDocument: creates a document out of the template that we uploaded in the previous call
+         * retrieveDocument: retrieves the document we created in the previous call from the LiveDocx server, we retrieve it in PDF format
+         * logOut: finally logOut of the server
+    -}
     convertDocument :: LiveDocx BS.ByteString
     convertDocument = do
       _ <- logIn (username conf) (password conf)
@@ -99,6 +122,10 @@ convertToPDF conf filecontents format =
     Definitions of all the calls and responses we want to use.
     The documentation for these is here: https://api.livedocx.com/1.2/mailmerge.asmx?wsdl
 -}
+
+
+class HasXmlNamespace a where
+  xmlNamespace :: a -> String
 
 liveDocxNamespace :: String
 liveDocxNamespace = "http://api.livedocx.com/1.2/mailmerge/"
@@ -115,6 +142,8 @@ instance XmlContent LogIn where
       , mkElemC "password" (toText password)
       ]) ()]
   parseContents = error "Please do not parse a LogIn"
+instance HasXmlNamespace LogIn where
+  xmlNamespace = const "LogIn"
 
 data LogInResponse = LogInResponse
   deriving (Eq,Ord,Show,Read)
@@ -137,6 +166,8 @@ instance XmlContent LogOut where
   toContents LogOut =
     [CElem (Elem "LogOut" [mkAttr "xmlns" liveDocxNamespace] []) ()]
   parseContents = error "Please do not parse a LogOut"
+instance HasXmlNamespace LogOut where
+  xmlNamespace = const "LogOut"
 
 data LogOutResponse = LogOutResponse
   deriving (Eq,Ord,Show,Read)
@@ -163,6 +194,8 @@ instance XmlContent SetLocalTemplate where
       , mkElemC "format" (toText $ show format)
       ]) ()]
   parseContents = error "Please do not parse an SetLocalTemplate"
+instance HasXmlNamespace SetLocalTemplate where
+  xmlNamespace = const "SetLocalTemplate"
 
 data SetLocalTemplateResponse = SetLocalTemplateResponse
   deriving (Eq,Ord,Show,Read)
@@ -185,6 +218,8 @@ instance XmlContent CreateDocument where
   toContents CreateDocument =
     [CElem (Elem "CreateDocument" [mkAttr "xmlns" liveDocxNamespace] []) ()]
   parseContents = error "Please do not parse a CreateDocument"
+instance HasXmlNamespace CreateDocument where
+  xmlNamespace = const "CreateDocument"
 
 data CreateDocumentResponse = CreateDocumentResponse
   deriving (Eq,Ord,Show,Read)
@@ -207,12 +242,10 @@ instance XmlContent RetrieveDocument where
   toContents (RetrieveDocument format) =
     [CElem (Elem "RetrieveDocument" [mkAttr "xmlns" liveDocxNamespace]
       [ mkElemC "format" (toText format)
-<<<<<<< HEAD
-      , mkElemC "format" (toText format)
-=======
->>>>>>> 3bfef64af59cc42a1f5fa1ba5f533342db12a9c0
       ]) ()]
   parseContents = error "Please do not parse a RetrieveDocument"
+instance HasXmlNamespace RetrieveDocument where
+  xmlNamespace = const "RetrieveDocument"
 
 data RetrieveDocumentResponse = RetrieveDocumentResponse BS.ByteString
   deriving (Eq,Ord,Show,Read)

@@ -325,7 +325,7 @@ Executable mailing-server
               TypeSynonymInstances,
               UndecidableInstances
 
-Executable doc-converter
+Library
   if flag(doc-converter)
     Buildable: True
   else
@@ -346,8 +346,7 @@ Executable doc-converter
   if impl(ghc >= 7)
     ghc-options: -rtsopts
 
-  cpp-options: -DDocConverterMain=Main
-  Main-is: DocConverterMain.hs
+  exposed-modules: LiveDocx
 
   Build-depends: HaXml == 1.20.*
 
