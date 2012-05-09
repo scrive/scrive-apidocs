@@ -459,7 +459,7 @@
                         var a = cell.rendering(value, undefined, this.model);
                         td.append(a);
                     } else if (cell.isExpandable() && value != undefined) {
-                        var a = $("<a href='#' class='expand'>").text(value);
+                        var a = $("<a href='#' class='expand' />").text(value);
                         td.append(a);
                     } else if (cell.isBool()) {
                         if (value)
@@ -468,7 +468,7 @@
                            var a = $("<a href='" + this.model.link() + "'/>").text(value);
                            td.append(a);
                     }
-                   } 
+                   }
                    else if (value != undefined) {
                         var span = $("<span/>").text(value);
                         td.append(span);

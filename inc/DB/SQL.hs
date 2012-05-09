@@ -5,6 +5,7 @@ module DB.SQL (
   , sql
   , SQLType(..)
   , mkSQL
+  , AscDesc(..)
   ) where
 
 import Data.Convertible
@@ -46,3 +47,8 @@ mkSQL qtype Table{tblName} values = case qtype of
     ++ " ") vals
   where
     (columns, placeholders, vals) = unzip3 values
+
+-- | 'AscDesc' marks ORDER BY order as ascending or descending.
+-- Conversion to SQL adds DESC marker to descending and no marker
+-- to ascending order.
+data AscDesc a = Asc a | Desc a

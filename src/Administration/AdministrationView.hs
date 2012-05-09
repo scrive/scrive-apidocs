@@ -150,7 +150,7 @@ adminDocuments ctx = do
        F.value "adminlink" $ show $ LinkAdminOnly
        F.value "admin" $ isAdmin ctx
 
-allUsersTable :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> m String
+allUsersTable :: TemplatesMonad m => [(User,Maybe Company,DocStats,InviteType)] -> m String
 allUsersTable users =
     renderTemplate "allUsersTable" $ do
         F.objects "users" $ map mkUserInfoView $ users
@@ -165,8 +165,8 @@ servicesAdminPage services = do
             F.valueM "admin" $ fmap getSmartName <$> (dbQuery $ GetUserByID $ serviceadmin $ servicesettings service)
             F.value "location" $ show $ servicelocation $ servicesettings service
 
-mkUserInfoView :: Monad m => (User, Maybe Company, DocStats) -> Fields m ()
-mkUserInfoView (user, mcompany, docstats) = do
+mkUserInfoView :: Monad m => (User, Maybe Company, DocStats,InviteType) -> Fields m ()
+mkUserInfoView (user, mcompany, docstats, _) = do
   F.object "userdetails" $ userBasicFields user mcompany
   F.value "docstats" $ docstats
   F.object "adminview" $ do

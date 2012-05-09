@@ -13,7 +13,6 @@ module Doc.Model
   , DocumentFilter(..)
   , DocumentDomain(..)
   , DocumentPagination(..)
-  , AscDesc(..)
   , DocumentOrderBy(..)
 
   , AddDocumentAttachment(..)
@@ -162,10 +161,6 @@ data DocumentOrderBy
   | DocumentOrderByAuthor      -- ^ Order by author name or email
   | DocumentOrderByService     -- ^ Order by service
 
--- | 'AscDesc' marks ORDER BY order as ascending or descending.
--- Conversion to SQL adds DESC marker to descending and no marker
--- to ascending order.
-data AscDesc a = Asc a | Desc a
 
 -- | Convert DocumentOrderBy enumeration into proper SQL order by statement
 documentOrderByToSQL :: DocumentOrderBy -> SQL
