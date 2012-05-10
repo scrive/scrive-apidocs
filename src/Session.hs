@@ -235,7 +235,7 @@ newSession rng sessData =
 dropExpired :: MinutesTime -> Update Sessions ()
 dropExpired now = do
     sessions <- ask
-    let expired = (flip filter) (toList  sessions) (\s -> now >  60 `minutesAfter` (expires $ sessionData s))
+    let expired = (flip filter) (toList  sessions) (\s -> now >  120 `minutesAfter` (expires $ sessionData s))
     sequence_ $ map (modify . delete ) expired
 
 $(mkMethods ''Sessions
@@ -311,7 +311,7 @@ emptySessionData = do
     magicHash <- random
     xhash     <- random
     return $ SessionData { userID = Nothing
-                         , expires = 60 `minutesAfter` now
+                         , expires = 120 `minutesAfter` now
                          , hash = magicHash
                          , elegtransactions = []
                          , xtoken = xhash
@@ -380,7 +380,7 @@ updateSessionWithContextData (Session i sd) u trans magichashes' pu = do
     rng <- random
     let newsd = sd
                 { userID = u
-                , expires = 60 `minutesAfter` now
+                , expires = 120 `minutesAfter` now
                 , elegtransactions = trans
                 , magichashes = magichashes'
                 , padUserID = pu
