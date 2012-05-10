@@ -118,6 +118,11 @@ import StatsTest
 import EvidenceLogTest
 #endif
 
+
+#ifndef NO_PAD
+import PadTest
+#endif
+
 #ifndef NO_LIVEDOCX
 import LiveDocxTest
 #endif
@@ -214,6 +219,9 @@ allTests = tail tests
 #endif
 #ifndef NO_EVIDENCELOG
       , ("evidencelog", const evidenceLogTests)
+#endif
+#ifndef NO_PAD
+      , ("livedocx", const $ const liveDocxTests)
 #endif
 #ifndef NO_LIVEDOCX
       , ("livedocx", const $ const liveDocxTests)
