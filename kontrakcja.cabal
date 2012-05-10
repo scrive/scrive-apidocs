@@ -154,7 +154,7 @@ Executable kontrakcja-server
   else
     Buildable: False
 
-  Hs-source-dirs: inc src pdfseal/inc mailer/inc
+  Hs-source-dirs: inc src pdfseal/inc mailer/inc docconv/src
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fcontext-stack=34
   if !flag(allow-warnings)

@@ -104,7 +104,7 @@ var UploadButtonView = Backbone.View.extend({
         fileinput.MultiFile({
             list: list,
             onError: function(a,b,c,d) {
-                var splittype = model.type().split("/");
+                var splittype = model.type().split(",")[0].split("/");
                 var lasttype = splittype[splittype.length - 1].toUpperCase();
                 FlashMessages.add({content: localization.onlyFileWithTypeAllowed(lasttype), color: "red"});
                 if (model.get('onError'))
@@ -177,7 +177,7 @@ window.UploadBoxView = Backbone.View.extend({
     this.render();
   },
   tagName: 'td',
-  
+
   render: function () {
     var td = $(this.el);
     td.empty();
@@ -200,7 +200,7 @@ window.UploadTextView = Backbone.View.extend({
     this.render();
   },
   tagName: 'td',
-  
+
   render: function () {
     var td = $(this.el);
     td.empty();

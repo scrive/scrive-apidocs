@@ -8,7 +8,7 @@ data LiveDocxConf = LiveDocxConf {
     url :: String
   , username :: String
   , password :: String
-} deriving (Read, Show)
+} deriving (Eq, Ord, Read, Show)
 
 instance Configuration LiveDocxConf where
   confDefault = LiveDocxConf {
