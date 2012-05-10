@@ -12,9 +12,6 @@ var SignatureDrawer = Backbone.View.extend({
     startDrawing : function()
     {
         this.drawing = true;
-        document.ontouchstart = function(e){
-             e.preventDefault();
-        }
         document.ontouchmove = function(e){
              e.preventDefault();
         }
@@ -22,9 +19,6 @@ var SignatureDrawer = Backbone.View.extend({
     stopDrawing : function() {
         var view = this;
         this.drawing = false;
-        document.ontouchmove = function(e){
-            return state;
-        }
 
         document.ontouchstart = function(e){
             return state;
@@ -293,9 +287,6 @@ window.SignatureDrawerPopup = {
             return;
         }
         var popup = this;
-        document.ontouchmove = function(e){
-            return state;
-        }
         popup.overlay = $("<div style='width:900px;' class='overlay drawing-modal'><div class='close modal-close float-right' style='margin:5px;'/></div>");
         popup.overlay.append(new SignatureDrawerWrapper({model : args.signature, overlay : popup.overlay}).el);
         $('body').append( popup.overlay );
@@ -304,6 +295,16 @@ window.SignatureDrawerPopup = {
                 color: '#ffffff',
                 loadSpeed: 200,
                 opacity: 0.1
+            },
+            onLoad : function() {
+              document.ontouchmove = function(e){
+                e.preventDefault();
+              }
+            },
+            onClose : function() {
+              document.ontouchmove = function(e){
+                 return state;
+              }
             },
             top: standardDialogTop,
             resizable: false,
