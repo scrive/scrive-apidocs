@@ -393,7 +393,7 @@ getDocuments = do
                        , maybe True (fromSafeEnum s >=) mFromState
                        , maybe True (fromSafeEnum s <=) mToState
                        ]
-    linkeddocuments <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid comp)
+    linkeddocuments <- dbQuery $ GetDocumentsByAuthorCompanyWithFiltering (companyid comp)
                        ([ DocumentFilterByService (Just sid)
                         , DocumentFilterByTags tags
                         ] ++

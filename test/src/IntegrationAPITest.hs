@@ -35,7 +35,8 @@ import Util.SignatoryLinkUtils
 
 integrationAPITests :: TestEnvSt -> Test
 integrationAPITests env = testGroup "Integration API" [
-      testThat "Test creating a offer from template" env testDocumentCreationFromTemplate
+      testThat "Test separate companies" env testSeparateCompanies
+    , testThat "Test creating a offer from template" env testDocumentCreationFromTemplate
     , testThat "Test from state filtering" env testDocumentsFilteringFromState
     , testThat "Test to state filtering" env testDocumentsFilteringToState
     , testThat "Test to date filtering" env testDocumentsFilteringToDate
@@ -67,9 +68,66 @@ integrationAPITests env = testGroup "Integration API" [
 
     , testThat "Test that you can set the relation for a signatory and read it back" env testNewDocumentRelations
     , testThat "Test that we can create from templates" env testCreateFromTemplate
+    
     ]
 
 -- Main tests
+
+-- I am trying to test a problem that Upsales is having where getDocuments is crossing
+-- over company boundaries. It must have been some old migration that broke their boundaries
+-- because I cannot reproduce it. Anyway, I have fixed it.
+testSeparateCompanies :: TestEnv ()
+testSeparateCompanies = do
+  createTestService
+  x1 <- createDocumentJSONFriend "test_company1" "eric@scrive.com" "erik@scrive.com"
+  y1 <- createDocumentJSONFriend "test_company2" "erik@scrive.com" "eric@scrive.com"
+
+  djs <- forM [x1,y1] (makeAPIRequest createDocument)
+
+  let dids = catMaybes $ map (maybeRead) $ map (getJSONStringField "document_id") djs
+  
+  _dcs <- catMaybes <$> mapM (dbQuery . GetDocumentByDocumentID) dids
+  let actor = systemActor $ fromMinutes 0
+  _docs <- forM dids $ \did -> do
+    ed <- dbUpdate (PreparationToPending did  actor)
+    case ed of
+      Right d -> do
+        let Just sl = getAuthorSigLink d
+        _ <- dbUpdate $ SetDocumentInviteTime did (fromMinutes 0) actor
+        _ <- dbUpdate $ MarkInvitationRead did (signatorylinkid sl)  actor
+        _ <- dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) actor
+        _ <- dbUpdate $ (SignDocument did (signatorylinkid sl) (signatorymagichash sl) Nothing actor)
+        return $ Just d
+      Left _ -> return Nothing
+
+  x1' <- createDocumentJSONFriend "test_company1" "eric@scrive.com" "erik@scrive.com"
+  y1' <- createDocumentJSONFriend "test_company2" "erik@scrive.com" "eric@scrive.com"
+
+  djs' <- forM [x1',y1'] (makeAPIRequest createDocument)
+
+  let dids' = catMaybes $ map (maybeRead) $ map (getJSONStringField "document_id") djs'
+  
+  _dcs <- catMaybes <$> mapM (dbQuery . GetDocumentByDocumentID) dids'
+  _docs <- forM dids' $ \did -> do
+    ed <- dbUpdate (PreparationToPending did  actor)
+    case ed of
+      Right d -> do
+        let Just sl = getAuthorSigLink d
+        _ <- dbUpdate $ SetDocumentInviteTime did (fromMinutes 0) actor
+        _ <- dbUpdate $ MarkInvitationRead did (signatorylinkid sl)  actor
+        _ <- dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) actor
+        _ <- dbUpdate $ (SignDocument did (signatorylinkid sl) (signatorymagichash sl) Nothing actor)
+        return $ Just d
+      Left _ -> return Nothing
+
+  apiReqDocs1 <- getDocumentsJSONC "test_company1"
+  apiRespDocs1 <- makeAPIRequest getDocuments $ apiReqDocs1
+  assertBool ("Two documents were created by eric@scrive.com but " ++ (show $ docsCount apiRespDocs1) ++ " were found") $ (docsCount apiRespDocs1) == 2
+  apiReqDocs2 <- getDocumentsJSONC "test_company2"
+  apiRespDocs2 <- makeAPIRequest getDocuments $ apiReqDocs2
+  assertBool ("Two documents were created by erik@scrive.com but " ++ (show $ docsCount apiRespDocs2) ++ " were found") $ (docsCount apiRespDocs2) == 2
+  
+  
 
 testFriendDeleteScenario :: TestEnv ()
 testFriendDeleteScenario = do
@@ -407,14 +465,41 @@ createDocumentJSONFriend company author friend = do
          ,("involved" , JSArray [ JSObject $ toJSObject $
                                     [ ("fstname", JSString $ toJSString fname),
                                       ("sndname", JSString $ toJSString sname),
+                                      ("email",   JSString $ toJSString author)
+                                    ],
+                                  JSObject $ toJSObject $
+                                  [ ("fstname", JSString $ toJSString fname2),
+                                      ("sndname", JSString $ toJSString sname2),
+                                      ("email",   JSString $ toJSString friend)
+                                    ]
+
+                                ]
+        )]
+
+_createDocumentJSONWithCompany :: String -> String -> Int -> String -> Int -> TestEnv JSValue
+_createDocumentJSONWithCompany company author c1 friend c2 = do
+     dt <- rand 10 $  elements [1,3,5]
+     title <- rand 10 $ arbString 1 10
+     randomCall $ \fname sname fname2 sname2 -> JSObject $ toJSObject $
+        [ ("company_id", JSString $ toJSString company)
+         ,("title" , JSString $ toJSString $ title)
+         ,("type" , JSRational True (dt%1))
+         ,("files", JSArray [JSObject $ toJSObject $
+                             [("name", JSString $ toJSString "file.pdf")
+                             ,("content", JSString $ toJSString testFileBase64Content)
+                             ]
+                            ])
+         ,("involved" , JSArray [ JSObject $ toJSObject $
+                                    [ ("fstname", JSString $ toJSString fname),
+                                      ("sndname", JSString $ toJSString sname),
                                       ("email",   JSString $ toJSString author),
-                                      ("companynr", JSString $ toJSString company)
+                                      ("companynr", JSString $ toJSString $ show c1)
                                     ],
                                   JSObject $ toJSObject $
                                   [ ("fstname", JSString $ toJSString fname2),
                                       ("sndname", JSString $ toJSString sname2),
                                       ("email",   JSString $ toJSString friend),
-                                      ("companynr", JSString $ toJSString company)
+                                      ("companynr", JSString $ toJSString $ show c2)
                                     ]
 
                                 ]
@@ -446,6 +531,11 @@ getDocumentsJSON :: String -> String -> TestEnv JSValue
 getDocumentsJSON company email = randomCall $ JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
          ,("email" , JSString $ toJSString  email)
+        ]
+
+getDocumentsJSONC :: String -> TestEnv JSValue
+getDocumentsJSONC company = randomCall $ JSObject $ toJSObject $
+        [ ("company_id", JSString $ toJSString company)
         ]
 
 getEmbedDocumentaJSON :: String -> String -> String -> TestEnv JSValue
