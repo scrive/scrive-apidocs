@@ -81,6 +81,7 @@
 
 .sigview .field .fieldvalue.much-shorter {
     width: 100px;
+    float: left;
 }
 
 .basicMode .sigview .field .fieldvalue{
@@ -538,7 +539,7 @@
     border: 1px solid red;
     border-radius: 2px 2px 2px 2px;
 
-} 
+}
 
 .signatureBox{
     display: block;
@@ -593,7 +594,7 @@
 .padoptions .padoption{
     height: 30px;
     width: 400px;
-    
+
 }
 .padoptions .label{
     float:left;
@@ -633,4 +634,4 @@
     cursor: se-resize;
     background-image: url("/img/resize.png");
     z-index: 1001;
-} 
+}
