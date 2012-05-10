@@ -89,7 +89,7 @@ standardBodyWrapper=
                                                                            new-btn-small green2 center
                                                                            float-right"><p>$_ButtonCreateAccount()$!</p></a>
                                               <input type="submit" class="hidden" />
-                                              <div class="clearfix" />
+                                              <div class="clearfix"></div>
                                             </form>
                                           </div>
                                         </div>

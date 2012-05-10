@@ -43,26 +43,25 @@ window.Mail = Backbone.Model.extend({
 });
 
 window.MailView = Backbone.View.extend({
-	model : Mail,
+    model : Mail,
     initialize: function (args) {
         _.bindAll(this, 'render');
 		this.model.bind('change', this.render);
         this.model.view = this;
         this.render();
     },
-
-	editableMailContent : function()
-	{	var view = this;
-		var content = this.model.content().clone();
-		var editablePart = $(".editable", content);
+    editableMailContent : function() {
+        var view = this;
+	var content = this.model.content().clone();
+	var editablePart = $(".editable", content);
         var textarea = $("<textarea style='height:0px;border:0px;padding:0px;margin:0px'/>").html(editablePart.html());
         textarea.css("width", this.model.editWidth() + "px");
         var wrapper = $("<div/>").append(textarea);
-        wrapper.append(this.textarea);
         editablePart.replaceWith(wrapper);
-		$('textarea',wrapper).livequery(function() {
-			view.editor = $(this).tinymce({
-				script_url: '/libs/tiny_mce/tiny_mce.js',
+	$('textarea').livequery(function() {
+                        if (wrapper.has($(this)).length > 0)
+                            view.editor = $(this).tinymce({
+				script_url: '/tiny_mce/tiny_mce.js',
 				theme: "advanced",
 				theme_advanced_toolbar_location: "top",
 				theme_advanced_buttons1: "bold,italic,underline,separator,strikethrough,bullist,numlist,separator,undo,redo,separator,cut,copy,paste",
@@ -71,32 +70,30 @@ window.MailView = Backbone.View.extend({
 				theme_advanced_toolbar_align: "left",
 				plugins: "noneditable,paste",
 				valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul"
-			});
-		});
-		return content;
-
+                            });
+	});
+            return content;
 	},
-	render : function() {
-		var mail = this.model;
-		var container = $(this.el);
-		if (!mail.ready()) {
-                    container.addClass('loadingMail');
-                }
-                else {
-                    container.removeClass('loadingMail');
-                    container.empty();
-                    if (!mail.editable())
-                            container.append(mail.content());
-                    else
-                            container.append(this.editableMailContent());
-                }
-               return this;
-	},
-	customtext : function() {
-		if (this.editor != undefined)
-			return this.editor.val();
-
-	}
+    render : function() {
+	var mail = this.model;
+	var container = $(this.el);
+	if (!mail.ready()) {
+            container.addClass('loadingMail');
+        }
+        else {
+            container.removeClass('loadingMail');
+            container.empty();
+            if (!mail.editable())
+                  container.append(mail.content());
+             else
+                  container.append(this.editableMailContent());
+        }
+        return this;
+    },
+    customtext : function() {
+        if (this.editor != undefined)
+            return this.editor.val();
+    }
 });
 
 var ConfirmationWithEmailModel = Backbone.Model.extend({
