@@ -53,6 +53,8 @@ import Util.MonadUtils
 import Doc.SignatoryLinkID
 import qualified Data.Map as Map
 import Misc (optional)
+import Data.List (find, sortBy)
+import Data.Ord
 
 -- | Session ID is a wrapped 'Integer' really
 newtype SessionId = SessionId Integer
@@ -195,12 +197,12 @@ getSession :: SessionId -> Query Sessions (Maybe (Session))
 getSession sessionId = (return . getOne . (@= sessionId)) =<< ask
 
 -- | Get the session data associated with the supplied 'UserID'.
-getSessionByUserId :: UserID -> Query Sessions (Maybe (Session))
-getSessionByUserId userId = (return . getOne . (@= userId)) =<< ask
+getSessionsByUserId :: UserID -> Query Sessions [Session]
+getSessionsByUserId userId = (return . toList . (@= userId)) =<< ask
 
 -- | Get the session data associated with the supplied 'UserID'.
-getSessionByCompanyId :: CompanyID -> Query Sessions (Maybe (Session))
-getSessionByCompanyId companyId = (return . getOne . (@= companyId)) =<< ask
+getSessionsByCompanyId :: CompanyID -> Query Sessions [Session]
+getSessionsByCompanyId companyId = (return . toList . (@= companyId)) =<< ask
 
 -- | Update the 'Session'.
 --
@@ -240,8 +242,8 @@ dropExpired now = do
 
 $(mkMethods ''Sessions
   [ 'getSession
-  , 'getSessionByUserId
-  , 'getSessionByCompanyId
+  , 'getSessionsByUserId
+  , 'getSessionsByCompanyId
   , 'updateSession
   , 'delSession
   , 'newSession
@@ -388,12 +390,10 @@ updateSessionWithContextData (Session i sd) u trans magichashes' pu = do
     if i == tempSessionID && not (isSessionDataEmpty newsd)
        then do
            when (isNothing (userID sd) && isJust u) $ do
-               msess <- query $ GetSessionByUserId $ fromJust u
-               case msess of
-                    Just sess -> do
-                        _ <- update $ DelSession $ sessionId sess
-                        return ()
-                    Nothing   -> return ()
+               sess <- query $ GetSessionsByUserId $ fromJust u
+               case drop 2 $ reverse $ sortBy (comparing (expires . sessionData)) sess of
+                    [] -> return ()
+                    l  -> forM_ l (\s -> update $ DelSession $ sessionId s)
            update (NewSession rng newsd) >>= startSessionCookie
        else update $ UpdateSession (Session i newsd)
 
@@ -453,15 +453,11 @@ createServiceSession:: (MonadIO m, CryptoRNG m) => Either CompanyID UserID -> St
 createServiceSession userorcompany loc = do
     now <- liftIO getMinutesTime
     moldsession <- case userorcompany of
-      Right uid -> query $ GetSessionByUserId uid
-      Left  cid -> query $ GetSessionByCompanyId cid
-    case moldsession of
-      Just s -> if now >= expires (sessionData s)
-                then do
-                  _ <- update $ DelSession $ sessionId s
-                  newSession' userorcompany loc
-                else return $ sessionId s
-      Nothing -> newSession' userorcompany loc
+      Right uid -> query $ GetSessionsByUserId uid
+      Left  cid -> query $ GetSessionsByCompanyId cid
+    case find (\s -> now < expires (sessionData s)) moldsession of
+      Just s -> return $ sessionId s
+      Nothing   -> newSession' userorcompany loc
 
 newSession' :: (MonadIO m, CryptoRNG m) => Either CompanyID UserID -> String -> m SessionId
 newSession' userorcompany loc = do
