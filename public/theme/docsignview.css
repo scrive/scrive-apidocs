@@ -47,6 +47,7 @@ body.signview {
   #top: 50%;
   display: table-cell; 
   vertical-align: middle;
+  width: 960px;
 }
 
 .signview .pageheader .content .sender .name {
