@@ -35,8 +35,6 @@ import API.Monad
 import Control.Monad.Error
 import qualified Log
 import Stats.Control
-import System.FilePath
-import Data.Char
 import LiveDocx
 
 documentAPI :: Route (KontraPlus Response)
@@ -79,7 +77,7 @@ documentNew = api $ do
 
   -- might need to convert the content to pdf
   Context{ctxlivedocxconf} <- getContext
-  let mformat = fmap fst . listToMaybe . reads . map toUpper . dropWhile (== '.') $ takeExtension filename'
+  let mformat = getFileFormatForConversion filename'
   pdfcontent <- case mformat of
     Nothing -> return content1
     Just format -> do

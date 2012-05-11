@@ -350,21 +350,14 @@ Library
 
   Build-depends: HaXml == 1.20.*
 
-  Extensions: BangPatterns,
-              DeriveDataTypeable,
-              FlexibleContexts,
+  Extensions: FlexibleContexts,
               FlexibleInstances,
               GeneralizedNewtypeDeriving,
               MultiParamTypeClasses,
               NamedFieldPuns,
-              PatternGuards,
               RankNTypes,
-              RecordWildCards,
               ScopedTypeVariables,
-              TemplateHaskell,
               TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances,
               UndecidableInstances
 
 Executable kontrakcja-test

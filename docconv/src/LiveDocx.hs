@@ -2,6 +2,7 @@ module LiveDocx (
   LiveDocxConf(..)
   , FileFormat(..)
   , LiveDocxError(..)
+  , getFileFormatForConversion
   , convertToPDF
 ) where
 
@@ -10,13 +11,16 @@ import Control.Exception (catch)
 
 import Control.Monad()
 import Control.Monad.Reader
+import Data.Char
 import Text.XML.HaXml.XmlContent.Parser
 import System.CPUTime
+import System.FilePath
 import System.IO.Temp
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
 
+import Misc
 import SOAP.SOAP
 import qualified Log (docConverter)
 
@@ -81,6 +85,9 @@ retrieveDocument format = do
   case result of
     Right (RetrieveDocumentResponse pdfcontents) -> return $ Right pdfcontents
     Left msg -> return $ Left msg
+
+getFileFormatForConversion :: FilePath -> Maybe FileFormat
+getFileFormatForConversion = maybeRead . map toUpper . dropWhile (== '.') . takeExtension
 
 {- | Calls the LiveDocx Soap API to convert the given document contents to a pdf.
      Errors are put in the docconverter.log.
