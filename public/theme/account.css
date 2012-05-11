@@ -184,6 +184,10 @@
     margin-top: 104px;
 }
 
+.oauth-confirm .option.newuser input {
+    margin-bottom: 22px;
+}
+
 .oauth-confirm .maintext p {
     margin-bottom: 18px;
     font-size: 16px;

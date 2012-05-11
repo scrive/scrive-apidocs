@@ -2,19 +2,14 @@
 pagePrivilegesConfirm=
 <div class="oauth-confirm">
      <div class="maintext">
-  <h2>Important Security Information</h2>
+  <h2>$_importantSecurityInformation()$</h2>
   <p>
-    <em>$companyname$</em> is requesting permission to perform the
-    following operations on your behalf (the Scrive account for email
-    $email$). Please review them carefully and either confirm or deny
-    them.
+    $_isRequestingPermissions()$
   </p>
   $if(isDocumentCreate)$
-  <h3>Document Creation</h3>
+  <h3>$_documentCreation()$</h3>
   <p>
-    If confirmed, <em>$companyname$</em> will be able to create
-    documents for you. These documents would not be sent to anyone.
-    They will show up in your archive.
+    $_createDocumentsMessage()$
   </p>
   $endif$
   </div>
@@ -24,7 +19,7 @@ pagePrivilegesConfirm=
       <div class="finalbuttonbox">
         <a class="submit green btn-big">
           <div class="left"></div>
-          <div class="label">Confirm</div>
+          <div class="label">$_confirm()$</div>
           <div class="right"></div>
         </a>
       </div>
@@ -37,7 +32,7 @@ pagePrivilegesConfirm=
       <div class="finalbuttonbox">
         <a class="submit red btn-big">
           <div class="left"></div>
-          <div class="label">Deny</div>
+          <div class="label">$_deny()$</div>
           <div class="right"></div>
         </a>
       </div>
@@ -51,24 +46,20 @@ pagePrivilegesConfirm=
 pagePrivilegesConfirmNoUser=
 <div class="oauth-confirm">
      <div class="maintext">
-  <h2>Important Security Information</h2>
+  <h2>$_importantSecurityInformation()$</h2>
   <p>
-    <em>$companyname$</em> is requesting permission to perform the
-    following operations on your behalf. Please review them carefully
-    and either confirm or deny them.
+    $_isRequestingPermissions()$
   </p>
   $if(isDocumentCreate)$
-  <h3>Document Creation</h3>
+  <h3>$_documentCreation()$</h3>
   <p>
-    If confirmed, <em>$companyname$</em> will be able to create
-    documents for you. These documents would not be sent to anyone.
-    They will show up in your archive.
+    $_createDocumentsMessage()$
   </p>
   $endif$
   </div>
   <div class="login option">
     <form id="loginForm" method="post" action="/oauth/authorizationconfirmlogin">
-      <h2>Log in and confirm privileges</h2>
+      <h2>$_logInAndConfirmPrivileges()$</h2>
       <span class="txt">$_email()$</span><input type="email"
                                                 name="email" value=""
                                                 infotext="$_email()$"
@@ -84,7 +75,7 @@ pagePrivilegesConfirmNoUser=
       <div class="finalbuttonbox">
         <a class="submit green btn-small">
           <div class="left"></div>
-          <div class="label">Log in and Confirm</div>
+          <div class="label">$_logInAndConfirm()$</div>
           <div class="right"></div>
         </a>
       </div>
@@ -92,7 +83,7 @@ pagePrivilegesConfirmNoUser=
   </div>
   
   <div class="newuser option">
-    <h2>Create new account </h2>
+    <h2>$_createaccount()$</h2>
     <form method="post" action="/oauth/authorizationconfirmnewuser" class="requestAccount">
       <input class="shiny"
              name="email" type="email"
@@ -100,19 +91,19 @@ pagePrivilegesConfirmNoUser=
              autocomplete="off" />
       <input type="hidden" value="$token$" name="oauth_token" />
       <a href="#" class="submit new-btn-small green2 center">
-        <p>Create account</p>
+        <p>$_createaccount()$</p>
       </a>
       <input type="submit" class="hidden" />
       <div class="clearfix" > </div>
     </form>
   </div>
   <div class="deny option right">
-    <h2>Deny the privileges</h2>
+    <h2>$_denyPrivileges()$</h2>
     <form method="POST" action="/oauth/authorizationdeny">
       <div class="finalbuttonbox">
         <a class="submit red btn-small">
           <div class="left"></div>
-          <div class="label">Deny</div>
+          <div class="label">$_deny()$</div>
           <div class="right"></div>
         </a>
       </div>
