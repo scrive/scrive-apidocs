@@ -2109,7 +2109,9 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m ResetSignatoryDetails (Either St
 data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload)] Actor
 instance (CryptoRNG m, MonadDB m) => DBUpdate m ResetSignatoryDetails2 (Either String Document) where
   update (ResetSignatoryDetails2 documentid signatories actor) = do
+    Log.debug $ "reset: " ++ show signatories
     mdocument <- query $ GetDocumentByDocumentID documentid
+    Log.debug $ "got a doc: " ++ show (isJust mdocument)
     case mdocument of
       Nothing -> return $ Left $ "ResetSignatoryDetails: document #" ++ show documentid ++ " does not exist"
       Just document ->

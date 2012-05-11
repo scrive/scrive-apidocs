@@ -190,17 +190,17 @@
                 [
                     {name: "Contract",
                      localname: localization.process.contract.name,
-                     signable: "1",
+                     signable: 1,
                      prompt: localization.process.contract.uploadprompt
                     },
                     {name: "Offer",
                      localname: localization.process.offer.name,
-                     signable: "3",
+                     signable: 3,
                      prompt: localization.process.offer.uploadprompt
                     },
                     {name: "Order",
                      localname: localization.process.order.name,
-                     signable: "5",
+                     signable: 5,
                      prompt: localization.process.order.uploadprompt
                     }
                 ]
