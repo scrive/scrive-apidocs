@@ -8,7 +8,6 @@ import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
 import qualified Data.ByteString.UTF8 as BS
 import qualified Codec.MIME.Type as MIME
-import qualified Codec.MIME.Parse as MIME
 import Doc.DocStateData
 import Data.List
 
@@ -25,6 +24,7 @@ import qualified Log
 
 import ScriveByMail.Control
 import ScriveByMail.Model
+import ScriveByMail.Action
 
 mailApiTests :: TestEnvSt -> Test
 mailApiTests env = testGroup "MailAPI" [
@@ -49,7 +49,7 @@ mailApiTests env = testGroup "MailAPI" [
 testParseMimes :: String -> Assertion
 testParseMimes mimepath = do
   cont <- readFile mimepath
-  let (_mime, allParts) = MIME.parseMIMEToParts $ BS.fromString cont
+  let (_mime, allParts) = parseEmailMessageToParts $ BS.fromString cont
       isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf"
       isPlain (tp,_) = MIME.mimeType tp == MIME.Text "plain"
       --typesOfParts = map fst allParts
