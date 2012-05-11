@@ -207,6 +207,7 @@ Executable kontrakcja-server
   Build-depends: iconv == 0.4.1.0
   Build-depends: json == 0.4.4
   Build-depends: list-tries == 0.4.1
+  Build-depends: mime == 0.3.3.1
   Build-depends: mmap==0.5.*
   Build-depends: mtl == 2.*
   Build-depends: network == 2.3.0.11
