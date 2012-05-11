@@ -9,6 +9,7 @@ module DB.Functions (
   , kExecute1P
   , kFinish
   , kRunRaw
+  , kRun_
   , kRun
   , kRun01
   , kGetTables
@@ -26,7 +27,7 @@ import DB.Core
 import DB.Env
 import DB.Exception
 import DB.Nexus
-import DB.SQL (SQL(..))
+import DB.SQL (SQL(..), IsSQL(..))
 
 dbCommit :: MonadDB m => m ()
 dbCommit = getNexus >>= liftIO . commit
@@ -114,11 +115,18 @@ kFinish = withDBEnvSt $ \s@DBEnvSt{..} -> do
 kRunRaw :: MonadDB m => String -> DBEnv m ()
 kRunRaw sql = withDBEnv $ \_ -> getNexus >>= \c -> liftIO (runRaw c sql)
 
-kRun :: MonadDB m => SQL -> DBEnv m Integer
-kRun (SQL sql values) = kPrepare sql >> kExecute values
+kRun_ :: (MonadDB m, IsSQL sql) => sql -> DBEnv m ()
+kRun_ presql = kRun presql >> return ()
 
-kRun01 :: MonadDB m => SQL -> DBEnv m Bool
-kRun01 (SQL sql values) = kPrepare sql >> kExecute01 values
+kRun :: (MonadDB m, IsSQL sql) => sql -> DBEnv m Integer
+kRun presql = kPrepare sql >> kExecute values
+  where
+    (SQL sql values) = toSQLCommand presql
+
+kRun01 :: (MonadDB m, IsSQL sql) => sql -> DBEnv m Bool
+kRun01 presql = kPrepare sql >> kExecute01 values
+  where
+    (SQL sql values) = toSQLCommand presql
 
 kGetTables :: MonadDB m => DBEnv m [String]
 kGetTables = withDBEnv $ \_ -> getNexus >>= liftIO . getTables
