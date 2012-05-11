@@ -49,6 +49,8 @@ import OAuth.Model
 import Doc.DocStorage
 import Util.Actor
 
+import qualified Log
+
 -- | Respond with a 201 Created status
 data Created a = Created a
 
@@ -206,10 +208,12 @@ instance (Monad m, JSON b) => APIGuard m (Result b) b where
 getAPIUser :: Kontrakcja m => APIMonad m (User, Actor)
 getAPIUser = do
   moauthuser <- getOAuthUser
+  Log.debug $ "moauthuser: " ++ show moauthuser
   case moauthuser of
     Just (user, actor) -> return (user, actor)
     Nothing -> do
       msessionuser <- getSessionUser
+      Log.debug $ "msessionuser: " ++ show msessionuser
       case msessionuser of
         Just (user, actor) -> return (user, actor)
         Nothing -> throwError notLoggedIn'
@@ -223,10 +227,11 @@ getSessionUser = do
 
 getOAuthUser :: Kontrakcja m => APIMonad m (Maybe (User, Actor))
 getOAuthUser = do
+  Log.debug "getOAuthUser start"
   ctx <- getContext
   eauth <- lift $ getAuthorization
   case eauth of
-    Left errors -> throwError $ badInput errors
+    Left _ -> return Nothing
     Right auth -> do
       (userid, apistring) <- apiGuardL (forbidden "OAuth credentials are invalid.") $ 
                               dbQuery $ GetUserIDForAPIWithPrivilege (oaAPIToken auth) (oaAPISecret auth) (oaAccessToken auth) (oaAccessSecret auth) APIDocCreate

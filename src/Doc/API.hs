@@ -4,7 +4,6 @@ import Happstack.StaticRouting
 import Text.JSON
 import KontraMonad
 --import Util.JSON
-import Happstack.Server.SimpleHTTP (askRq)
 import Happstack.Server.Types
 import Routing
 import Doc.DocStateQuery
@@ -56,17 +55,13 @@ documentAPI = choice [
 
 documentNew :: Kontrakcja m => m Response
 documentNew = api $ do
-  rq <- lift $ askRq
-  Log.debug $ show $ rqHeaders rq
-  
   (user, actor) <- getAPIUser
+
   mcompany <- case usercompany user of
     Just companyid -> Just <$> (apiGuardL' $ dbQuery $ GetCompany companyid)
     Nothing -> return Nothing
-    
 
   jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFn' (look "json")
-
   json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
                                                                                Ok js -> Just js
                                                                                _     -> Nothing
@@ -100,23 +95,26 @@ documentNew = api $ do
   -- we use gs to do that of course
   ctx <- getContext
 
-  d1 <- apiGuardL' $ dbUpdate $ NewDocument user mcompany filename doctype 1 actor
-
   content <- apiGuardL (badInput "The PDF is invalid.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks pdfcontent)
+
   file <- lift $ dbUpdate $ NewFile filename content
 
+  d1 <- apiGuardL' $ dbUpdate $ NewDocument user mcompany filename doctype 1 actor
   d2 <- apiGuardL' $ dbUpdate $ AttachFile (documentid d1) (fileid file) actor
   -- we really need to check SignatoryDetails before adding them
+  let sigs = map (\ir -> (SignatoryDetails {
+                             signatorysignorder = SignOrder (toInteger $ fromMaybe 1 $ irSignOrder ir),
+                             signatoryfields = irData ir
+                             },
+                          irRole ir,
+                          irAttachments ir,
+                          Nothing)) -- No CSV
+             (dcrInvolved dcr)
+  
+  d3 <- case sigs of
+    [] -> return d2
+    _ -> apiGuardL' $ dbUpdate $ ResetSignatoryDetails2 (documentid d2) sigs actor
 
-  d3 <- apiGuardL' $ dbUpdate $ ResetSignatoryDetails2 (documentid d2) (map (\ir -> (SignatoryDetails {
-                                                                                                 signatorysignorder = SignOrder (toInteger $ fromMaybe 1 $ irSignOrder ir),
-                                                                                                 signatoryfields = irData ir
-                                                                                                 },
-                                                                                     irRole ir,
-                                                                                     irAttachments ir,
-                                                                                     Nothing)) -- No CSV
-                                                                                (dcrInvolved dcr))
-                                                                                actor
   _ <- lift $ addDocumentCreateStatEvents d3 "web"
   return $ Created $ jsonDocumentForAuthor d3 (ctxhostpart ctx)
 
