@@ -33,9 +33,6 @@ window.Process = Backbone.Model.extend({
     step1text : function(){
         return this.get("step1text");
     },
-    expirywarntext : function(){
-        return this.get("expirywarntext");
-    },
     sendbuttontext : function(){
         return this.get("sendbuttontext");
     },

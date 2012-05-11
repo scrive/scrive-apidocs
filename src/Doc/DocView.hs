@@ -215,7 +215,7 @@ documentJSON pq msl _crttime doc = do
       J.value "region" $ regionJSON doc
       J.valueM "infotext" $ documentInfoText ctx doc msl
       J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
-      J.value "canbecanceled" $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && not (canAuthorSignLast doc) && isNothing (documenttimeouttime doc)
+      J.value "canbecanceled" $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && not (canAuthorSignLast doc)
       J.value "canseeallattachments" $ isAuthor msl || isauthoradmin
       J.value "timeouttime" $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc
       J.value "status" $ show $ documentstatus doc
@@ -328,7 +328,6 @@ processJSON doc = do
     J.value "validationchoiceforbasic" $ bool processvalidationchoiceforbasic
     J.value "expiryforbasic" $ bool processexpiryforbasic
     J.valueM "step1text" $ text processstep1text
-    J.valueM "expirywarntext" $ text processexpirywarntext
     J.valueM "sendbuttontext" $ text processsendbuttontext
     J.valueM "confirmsendtitle" $ text processconfirmsendtitle
     J.valueM "confirmsendtext" $ text processconfirmsendtext

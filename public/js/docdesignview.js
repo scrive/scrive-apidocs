@@ -279,7 +279,6 @@ var DocumentDesignView = Backbone.View.extend({
             {
               if (document.daystosign() == undefined)
               {
-                  FlashMessages.add({content: document.process().expirywarntext(), color: 'red'});
                   document.setDaystosign(7);
               }
               box.append(selectdaysbox);
