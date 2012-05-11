@@ -1,0 +1,5 @@
+* write loads of tests - we need
+    * test of success
+    * test with bad pdf
+    * test with bad login details
+    * concurrent test

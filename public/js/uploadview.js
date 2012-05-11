@@ -61,6 +61,7 @@
                 width: 125,
                 text: localization.uploadButton,
                 submitOnUpload: true,
+                type: "application/pdf,application/doc,application/docx",
                 onClick : function () {
                     LoadingDialog.open();
                 },

@@ -40,6 +40,7 @@ import qualified Network.HTTP as HTTP
 
 import AppState
 import Control.Monad.Trans.Control.Util
+import Configuration
 import Crypto.RNG
 import DB
 import Kontra
@@ -223,6 +224,7 @@ mkContext locale = do
         , ctxlocaleswitch = False
         , ctxmailsconfig = defaultMailsConfig
         , ctxtwconf = error "twconf is not defined"
+        , ctxlivedocxconf = confDefault
         , ctxelegtransactions = []
         , ctxfilecache = memcache
         , ctxxtoken = error "xtoken is not defined"

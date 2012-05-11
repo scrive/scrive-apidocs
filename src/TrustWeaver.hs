@@ -299,7 +299,7 @@ signDocument' :: TrustWeaverConf
               -> String
               -> IO (Either String BS.ByteString)
 signDocument' TrustWeaverConf{signConf = Just (url, cert, certpwd)} pdfdata senderTag receiverTag = do
-  result <- makeSoapCall url
+  result <- makeSoapCallWithCert url
             "http://www.trustweaver.com/tsswitch#Sign"
             cert certpwd
            (SignRequest pdfdata senderTag receiverTag)
@@ -323,7 +323,7 @@ validateDocument' :: TrustWeaverConf
                   -> BS.ByteString
                   -> IO (Either String (String,String))
 validateDocument' TrustWeaverConf{signConf = Just (url, cert, certpwd)} pdfdata = do
-  result <- makeSoapCall url
+  result <- makeSoapCallWithCert url
             "http://www.trustweaver.com/tsswitch#Validate"
             cert certpwd
             (ValidateRequest pdfdata)
@@ -340,14 +340,14 @@ registerAndEnableSection' :: TrustWeaverConf
                           -> String
                           -> IO (Either String (String,String,String))
 registerAndEnableSection' TrustWeaverConf{adminConf = Just (url, cert, certpwd)} name = do
-  result  <- makeSoapCall url
+  result  <- makeSoapCallWithCert url
             "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/RegisterSection"
             cert certpwd
             (RegisterSectionRequest name)
   case result of
     Left errmsg -> return $ Left errmsg
     Right RegisterSectionResponse -> do
-                result2 <- makeSoapCall url
+                result2 <- makeSoapCallWithCert url
                            "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/EnableSection"
                            cert certpwd
                            (EnableSectionRequest name)
@@ -366,7 +366,7 @@ registerSection' :: TrustWeaverConf
                  -> String
                  -> IO (Either String ())
 registerSection' TrustWeaverConf{adminConf = Just (url, cert, certpwd)} name = do
-  result  <- makeSoapCall url
+  result  <- makeSoapCallWithCert url
             "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/RegisterSection"
             cert certpwd
             (RegisterSectionRequest name)
@@ -383,7 +383,7 @@ enableSection' :: TrustWeaverConf
                -> String
                -> IO (Either String (String,String,String))
 enableSection' TrustWeaverConf{adminConf = Just (url, cert, certpwd)} name = do
-  result <- makeSoapCall url
+  result <- makeSoapCallWithCert url
             "http://www.trustweaver.com/trustarchive/admin/v1/AdminServicePort/EnableSection"
             cert certpwd
             (EnableSectionRequest name)
@@ -404,7 +404,7 @@ storeInvoice' :: TrustWeaverConf
              -> BS.ByteString
              -> IO (Either String String)
 storeInvoice' TrustWeaverConf{storageConf = Just (url, cert, certpwd)} documentid documentdate ownertwname pdfdata = do
-  result <- makeSoapCall url
+  result <- makeSoapCallWithCert url
             "http://www.trustweaver.com/trustarchive/storage/v1/StorageServicePort/StoreInvoice"
             cert certpwd
            (StoreInvoiceRequest documentid documentdate ownertwname pdfdata)
@@ -424,7 +424,7 @@ getInvoice' :: TrustWeaverConf
            -> String
            -> IO (Either String BS.ByteString)
 getInvoice' TrustWeaverConf{storageConf = Just (url, cert, certpwd)} reference = do
-  result <- makeSoapCall url
+  result <- makeSoapCallWithCert url
             "http://www.trustweaver.com/trustarchive/storage/v1/StorageServicePort/GetInvoice"
             cert certpwd
            (GetInvoiceRequest reference)

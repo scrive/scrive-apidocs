@@ -118,8 +118,13 @@ import StatsTest
 import EvidenceLogTest
 #endif
 
-#ifndef NO_EVIDENCELOG
+
+#ifndef NO_PAD
 import PadTest
+#endif
+
+#ifndef NO_LIVEDOCX
+import LiveDocxTest
 #endif
 
 allTests :: [(String, [String] -> TestEnvSt -> Test)]
@@ -217,6 +222,9 @@ allTests = tail tests
 #endif
 #ifndef NO_PAD
       , ("pad", const padTests)
+#endif
+#ifndef NO_LIVEDOCX
+      , ("livedocx", const $ const liveDocxTests)
 #endif
       ]
 
