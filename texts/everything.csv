@@ -427,9 +427,6 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_contractconfirmsendtext","Är du säker på att du vill skicka dokumentet",,"Are you sure you want to send the contract"
 "_contractconfirmsendtitle","Skicka inbjudan",,"Send invitation"
 "_contractexpirytext","Förfaller inom",,"Expiration in"
-"_contractexpirywarntext","Varning: Om du väljer ett förfallodatum kan du inte återkalla
- inbjudan innan datumet förfallit.",,"OBSERVE: If you choose an expiration date, you cannot withdraw
- the invitation before the expiration."
 "_contracthassignedformailtext","Har signerat",,"Has signed"
 "_contractname","Avtal",,"Contract"
 "_documentpendinginfoheader","Väntar",,"Waiting"
@@ -1665,8 +1662,6 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_offerconfirmsendtext","Är du säker på att du vill skicka offerten ",,"Are you sure you want to send the offer "
 "_offerconfirmsendtitle","Skicka offert ",,"Send offer "
 "_offerexpirytext","Förfallodatum",,"Expiration date"
-"_offerexpirywarntext","Observera! Du kan ej återkalla offerten om du väljer ett förfallodatum.",,"OBSERVE: If you choose an expiration date, you cannot withdraw
- the invitation before that date."
 "_offerhassignedformailtext","Har accepterat ",,"Has accepted "
 "_offername","Offert",,"Offer"
 "_offerpendinginfotext","Offerten har ännu inte accepterats av alla mottagare.",,"The offer has not yet been accepted by all receipients."
@@ -1734,9 +1729,6 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_orderconfirmsendtext","Är du säker att du vill skicka orderbekräftelsen",,"Are you sure you want to send the order confirmation"
 "_orderconfirmsendtitle","Skicka orderbekräftelse",,"Send order confirmation"
 "_orderexpirytext","Förfallodatum",,"Expiration date"
-"_orderexpirywarntext","Varning: Om du väljer ett förfallodatum kan du inte återkalla
- inbjudan innan datumet förfallit.",,"OBSERVE: If you choose an expiration date, you cannot withdraw
- the invitation before the expiration."
 "_orderhassignedformailtext","Har bekräftat",,"Has confirmed"
 "_ordername","Orderbekräftelse",,"Order confirmation"
 "_orderpendinginfotext","Orderbekräftelsen har ännu inte bekräftats av alla mottagare.",,"The order has not yet been confirmed by all receipients."
