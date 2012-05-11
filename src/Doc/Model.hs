@@ -35,6 +35,7 @@ module Doc.Model
   , GetDocumentByDocumentID(..)
   , GetDocumentsByService(..)
   , GetDocumentsByCompanyWithFiltering(..)
+  , GetDocumentsByAuthorCompanyWithFiltering(..)
   , GetDocumentsByAuthor(..)
   , GetTemplatesByAuthor(..)
   , GetAvailableTemplates(..)
@@ -146,6 +147,7 @@ data DocumentDomain
   | TemplatesSharedInUsersCompany UserID         -- ^ Templates shared in company
   | DocumentsOfService (Maybe ServiceID)         -- ^ All documents of service
   | DocumentsOfCompany CompanyID Bool Bool       -- ^ All documents of a company, with flag for selecting also drafts and deleted
+  | DocumentsOfAuthorCompany CompanyID Bool Bool -- ^ All documents of a company by author, with flag for selecting also drafts and deleted
   | AttachmentsOfAuthorDeleteValue UserID Bool   -- ^ Attachments of user, with deleted flag
   | AttachmentsSharedInUsersCompany UserID       -- ^ Attachments shared in the user company
 
@@ -278,6 +280,9 @@ documentDomainToSQL (DocumentsOfService sid) =
 documentDomainToSQL (DocumentsOfCompany cid preparation deleted) =
   SQL "signatory_links.company_id = ? AND (? OR documents.status <> ?) AND signatory_links.deleted = ? AND signatory_links.really_deleted = FALSE"
         [toSql cid,toSql preparation, toSql Preparation, toSql deleted]
+documentDomainToSQL (DocumentsOfAuthorCompany cid preparation deleted) =
+  SQL "(signatory_links.roles & ?) <> 0 AND signatory_links.company_id = ? AND (? OR documents.status <> ?) AND signatory_links.deleted = ? AND signatory_links.really_deleted = FALSE"
+        [toSql [SignatoryAuthor], toSql cid, toSql preparation, toSql Preparation, toSql deleted]
 documentDomainToSQL (AttachmentsOfAuthorDeleteValue uid deleted) =
   SQL ("signatory_links.user_id = ?"
        ++ " AND signatory_links.deleted = ?"
@@ -1426,6 +1431,11 @@ data GetDocumentsByCompanyWithFiltering = GetDocumentsByCompanyWithFiltering Com
 instance MonadDB m => DBQuery m GetDocumentsByCompanyWithFiltering [Document] where
   query (GetDocumentsByCompanyWithFiltering companyid filters) =
     query (GetDocuments [DocumentsOfCompany companyid True False] filters [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
+
+data GetDocumentsByAuthorCompanyWithFiltering = GetDocumentsByAuthorCompanyWithFiltering CompanyID [DocumentFilter]
+instance MonadDB m => DBQuery m GetDocumentsByAuthorCompanyWithFiltering [Document] where
+  query (GetDocumentsByAuthorCompanyWithFiltering companyid filters) =
+    query (GetDocuments [DocumentsOfAuthorCompany companyid True False] filters [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
 
 data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser UserID

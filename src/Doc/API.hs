@@ -19,8 +19,7 @@ import Data.Maybe
 
 --import Text.JSON.String
 
---import qualified Data.ByteString as BS
---import qualified Data.ByteString.UTF8 as BS hiding (length)
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import Util.Actor
 import Util.SignatoryLinkUtils
@@ -41,7 +40,7 @@ import API.Monad
 import Control.Monad.Error
 import qualified Log
 import Stats.Control
---import Control.Applicative
+import LiveDocx
 --import Data.String.Utils
 --import MinutesTime
 documentAPI :: Route (KontraPlus Response)
@@ -75,23 +74,36 @@ documentNew = api $ do
   dcr <- either (throwError . badInput) return $ dcrFromJSON json
   
   let doctype = dcrType dcr
-  
-  -- pdf exists  
+
+  -- pdf exists
   Input contentspec (Just filename') _contentType <- apiGuardL (badInput "The main file of the document must be attached in the MIME part 'file'.") $ getDataFn' (lookInput "file")
-  
+
   let filename = basename filename'
-      
+
   content1 <- case contentspec of
     Left filepath -> liftIO $ BSL.readFile filepath
     Right content -> return content
-  
+
+  -- might need to convert the content to pdf
+  Context{ctxlivedocxconf} <- getContext
+  let mformat = getFileFormatForConversion filename'
+  pdfcontent <- case mformat of
+    Nothing -> return content1
+    Just format -> do
+      eres <- liftIO $ convertToPDF ctxlivedocxconf (BS.concat $ BSL.toChunks content1) format
+      case eres of
+        Left (LiveDocxIOError e) -> throwError $ serverError $ show e
+        Left (LiveDocxSoapError s)-> throwError $ serverError s
+        Right res -> return $ BSL.fromChunks [res]
+
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
   ctx <- getContext
-  
+
   d1 <- apiGuardL' $ dbUpdate $ NewDocument user mcompany filename doctype 1 actor
-  
-  file <- lift $ dbUpdate $ NewFile filename $ concatChunks content1
+
+  content <- apiGuardL (badInput "The PDF is invalid.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks pdfcontent)
+  file <- lift $ dbUpdate $ NewFile filename content
 
   d2 <- apiGuardL' $ dbUpdate $ AttachFile (documentid d1) (fileid file) actor
   -- we really need to check SignatoryDetails before adding them
@@ -126,19 +138,19 @@ documentChangeMainFile docid = api $ do
               content1 <- case contentspec of
                 Left filepath -> liftIO $ BSL.readFile filepath
                 Right content -> return content
-                
+
               -- we need to downgrade the PDF to 1.4 that has uncompressed structure
               -- we use gs to do that of course
               content <- apiGuardL (badInput "PDF precheck failed.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
               let filename = basename filename'
-      
+
               fileid <$> (dbUpdate $ NewFile filename content)
             (_, Just templateids) -> do
               templateid <- apiGuard (badInput $ "Template id in bad format: " ++ templateids) $ maybeRead templateids
               temp <- apiGuardL' $ getDocByDocID templateid
               apiGuard (badInput "No template found for that id (or you don't have permissions).") $ listToMaybe $ documentfiles temp
             _ -> throwError $ badInput "This API call requires one of 'file' or 'template' POST parameters."
-  
+
   _ <- apiGuardL' $ dbUpdate $ AttachFile docid fileid aa
   return ()
 
@@ -152,7 +164,7 @@ instance FromReqURI SignatoryResource where
 data AttachmentResource = AttachmentResource
 instance FromReqURI AttachmentResource where
     fromReqURI s = Just AttachmentResource <| s == "attachment" |> Nothing
-    
+
 data FileResource = FileResource
 instance FromReqURI FileResource where
     fromReqURI s = Just FileResource <| s == "file" |> Nothing
@@ -160,7 +172,7 @@ instance FromReqURI FileResource where
 data MetadataResource = MetadataResource
 instance FromReqURI MetadataResource where
     fromReqURI s = Just MetadataResource <| s == "metadata" |> Nothing
- 
+
 getSigLinkID :: Kontrakcja m => APIMonad m (SignatoryLinkID, MagicHash)
 getSigLinkID = do
   msignatorylink <- lift $ readField "signatorylinkid"
@@ -168,7 +180,7 @@ getSigLinkID = do
   case (msignatorylink, mmagichash) of
        (Just sl, Just mh) -> return (sl,mh)
        _ -> throwError $ badInput "The signatorylinkid or magichash were missing."
-  
+
 documentUploadSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryResource -> SignatoryLinkID -> AttachmentResource -> String -> FileResource -> m Response
 documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   Log.debug $ "sigattachment ajax"
@@ -176,32 +188,32 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   doc <- apiGuardL' $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash
   sl  <- apiGuard (forbidden "There is no signatory by that id.") $ getSigLinkFor doc sid
   let email = getEmail sl
-  
+
   sigattach <- apiGuard (forbidden "There is no signatory attachment request of that name.") $ getSignatoryAttachment doc slid aname
-  
+
   -- attachment must have no file
   apiGuard (actionNotAvailable "There is already a file attached for that attachment request.") (isNothing $ signatoryattachmentfile sigattach)
-  
+
   -- pdf exists in input param "file"
   (Input contentspec (Just filename) _contentType) <- apiGuardL (badInput "The attachment PDF must be in the MIME part named 'file'. It was not found.") $ getDataFn' (lookInput "file")
-  
+
   content1 <- case contentspec of
     Left filepath -> liftIO $ BSL.readFile filepath
     Right content -> return content
-  
+
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
   ctx <- getContext
 
   content <- apiGuardL (badInput "The PDF was invalid.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
-  
+
   file <- lift $ dbUpdate $ NewFile (basename filename) content
   let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) email slid
   d <- apiGuardL' $ dbUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor
-  
+
   -- let's dig the attachment out again
   sigattach' <- apiGuard' $ getSignatoryAttachment d sid aname
-  
+
   return $ Created $ jsonSigAttachmentWithFile sigattach' (Just file)
 
 documentDeleteSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryResource -> SignatoryLinkID -> AttachmentResource -> String -> FileResource -> m Response
@@ -209,12 +221,12 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   Context{ctxtime, ctxipnumber} <- getContext
   (slid, magichash) <- getSigLinkID
   doc <- apiGuardL' $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash
-  
+
   sl <- apiGuard (forbidden "The signatory does not exist.") $ getSigLinkFor doc sid
   let email = getEmail sl
       muid  = maybesignatory sl
-  
-  
+
+
   -- sigattachexists
   sigattach <- apiGuard (forbidden "The attachment with that name does not exist for the signatory.") $ getSignatoryAttachment doc sid aname
 
@@ -223,9 +235,9 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
 
   d <- apiGuardL' $ dbUpdate $ DeleteSigAttachment (documentid doc) sid fileid
        (signatoryActor ctxtime ctxipnumber muid email sid)
-  
+
   -- let's dig the attachment out again
   sigattach' <- apiGuard' $ getSignatoryAttachment d sid aname
-  
+
   return $ jsonSigAttachmentWithFile sigattach' Nothing
 

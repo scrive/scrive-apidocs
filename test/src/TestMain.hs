@@ -118,13 +118,19 @@ import StatsTest
 import EvidenceLogTest
 #endif
 
-#ifndef NO_EVIDENCELOG
+
+#ifndef NO_PAD
 import PadTest
 #endif
 
 #ifndef NO_GENERALAPI
 import GeneralAPI
 #endif
+
+#ifndef NO_LIVEDOCX
+import LiveDocxTest
+#endif
+
 
 #ifndef NO_OAUTH
 import OAuth
@@ -228,6 +234,9 @@ allTests = tail tests
 #endif
 #ifndef NO_GENERALAPI
       , ("generalapi", const generalAPITest)
+#endif
+#ifndef NO_LIVEDOCX
+      , ("livedocx", const $ const liveDocxTests)
 #endif
 #ifndef NO_OAUTH
       , ("oauth", const oauthTest)

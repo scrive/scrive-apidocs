@@ -88,6 +88,7 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistri
       Log.docevent $ "Pending -> Closed; Sending emails: " ++ show documentid
       _ <- addDocumentCloseStatEvents closeddoc apistring
       author <- getDocAuthor closeddoc
+      dbCommit
       forkAction ("Sealing document #" ++ show documentid ++ ": " ++ documenttitle) $ do
         enewdoc <- sealDocument closeddoc
         case enewdoc of

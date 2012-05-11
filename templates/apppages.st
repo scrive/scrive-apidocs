@@ -207,7 +207,7 @@ standardBodyWrapper=
                                                                            new-btn-small green2 center
                                                                            float-right"><p>$_ButtonCreateAccount()$!</p></a>
                                               <input type="submit" class="hidden" />
-                                              <div class="clearfix" />
+                                              <div class="clearfix"></div>
                                             </form>
                                           </div>
                                         </div>
@@ -332,7 +332,7 @@ safeReady(function() {
   if (typeof(Zenbox) !== "undefined") {
     Zenbox.init({
       dropboxID:   "20010532",
-      url:         "https://skrivapa.zendesk.com",
+      url:         "https://scrive.zendesk.com",
       tabID:       "support",
       tabColor:    "black",
       tabPosition: "Right"
