@@ -330,7 +330,7 @@ safeReady(function() {
   if (typeof(Zenbox) !== "undefined") {
     Zenbox.init({
       dropboxID:   "20010532",
-      url:         "https://skrivapa.zendesk.com",
+      url:         "https://scrive.zendesk.com",
       tabID:       "support",
       tabColor:    "black",
       tabPosition: "Right"
