@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE OverlappingInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Util.JSON (
     -- Stuff that was here before
       getJSONField
@@ -29,6 +30,8 @@ import Control.Monad
 import qualified Data.List.Utils as List
 import Misc
 import Text.JSON.FromJSValue
+import qualified Data.Text as T
+import Control.Applicative
 
 fromJSONString :: JSValue -> String
 fromJSONString (JSString s) = fromJSString s
@@ -58,6 +61,10 @@ getJSONStringField name obj =
     case (getJSONField name obj) of
         Just (JSString s) -> fromJSString s
         _ -> ""
+
+instance JSON T.Text where
+  readJSON a = T.pack <$> readJSON a
+  showJSON = showJSON . T.unpack
 
 instance (SafeEnum a) => FromJSValue a where
     fromJSValue = join . (fmap toSafeEnumInt) . fromJSValue

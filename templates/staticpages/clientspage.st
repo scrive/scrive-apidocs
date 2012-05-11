@@ -21,7 +21,7 @@ clientsPageContents=
 						<ul class="partner-list">
 							<li>
 								<div class="partner-image">
-									<img src="/img/goenterprise-logo.png" />
+									<div class="go-enterprise"></div>
 								</div>
 								<h2>$_clientsPageCusomerVid()$</h2>
 								<blockquote>$_QuoteOnVid()$</blockquote>
@@ -31,7 +31,7 @@ clientsPageContents=
 							</li>
 							<li>
 								<div class="partner-image">
-									<img src="/img/accountfactory-logo.png" style="left:3px;top:3px;"/>
+                                                                        <div class="account-factory"></div>
 								</div>
 								<h2>$_clientsPageCusomer1()$</h2>
 								<blockquote>$_Quote1()$</blockquote>
@@ -41,7 +41,7 @@ clientsPageContents=
 							</li>
 							<li>
 								<div class="partner-image">
-									<img src="/img/greenhatpeople-logo.png" />
+                                                                        <div class="green-hat-people"></div>
 								</div>
 								<h2>$_clientsPageCusomer2()$</h2>
 								<blockquote>$_Quote2()$</blockquote>
@@ -51,7 +51,7 @@ clientsPageContents=
 							</li>
 							<li>
 								<div class="partner-image">
-									<img src="/img/eventbook-logo.png" />
+                                                                        <div class="event-book"></div>
 								</div>
 								<h2>$_clientsPageCusomer3()$</h2>
 								<blockquote>$_Quote3()$</blockquote>
@@ -61,7 +61,7 @@ clientsPageContents=
 							</li>
                                                         <li>
 								<div class="partner-image">
-									<img src="/img/accenture-logo.png" />
+                                                                        <div class="accenture"></div>
 								</div>
 								<h2>$_clientsPageCusomer4()$</h2>
 								<blockquote>$_Quote4()$</blockquote>
@@ -71,7 +71,7 @@ clientsPageContents=
 							</li>
                                                         <li>
 								<div class="partner-image">
-									<img src="/img/coop-logo.png" />
+                                                                        <div class="coop"></div>
 								</div>
 								<h2>$_clientsPageCusomer5()$</h2>
 								<blockquote>$_Quote5()$</blockquote>
@@ -80,7 +80,7 @@ clientsPageContents=
 								<a href="http://www.coop.se/coopnord">$_clientsPageCusomer5Web()$</a>
 							</li>                                                        <li>
 								<div class="partner-image">
-									<img src="/img/ipas-logo.gif"  style="padding:68px 8px;background-color:black;"/>
+                                                                        <div class="ipas"></div>
 								</div>
 								<h2>$_clientsPageCusomer6()$</h2>
 								<blockquote>$_Quote6()$</blockquote>

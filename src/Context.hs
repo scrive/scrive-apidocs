@@ -17,6 +17,7 @@ import ELegitimation.ELegTransaction
 import qualified MemCache
 import FlashMessage
 import Mails.MailsConfig
+import LiveDocx (LiveDocxConf(..))
 import API.Service.Model
 import Company.Model
 import MagicHash (MagicHash)
@@ -41,6 +42,7 @@ data Context = Context
     , ctxlocaleswitch        :: Bool -- ^ Whether locale switching is available on this page
     , ctxmailsconfig         :: MailsConfig
     , ctxtwconf              :: TW.TrustWeaverConf -- ^ TrustWeaver configuration
+    , ctxlivedocxconf        :: LiveDocxConf -- ^ LiveDocx configuration (does doc conversion)
     , ctxelegtransactions    :: [ELegTransaction] -- ^ Transactions for connections to the Logica server
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString -- ^
     , ctxxtoken              :: MagicHash -- ^ The XToken for combatting CSRF

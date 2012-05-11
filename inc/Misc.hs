@@ -37,6 +37,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS
+import Network.HTTP (urlDecode)
 
 withSystemTempDirectory' :: MonadBaseControl IO m => String -> (FilePath -> m a) -> m a
 withSystemTempDirectory' dir handler =
@@ -448,6 +449,10 @@ mapassoc f = map (id &&& f)
 mapassocM :: Monad m => (a -> m b) -> [a] -> m [(a, b)]
 mapassocM f = mapM (\a -> return . (a,) =<< f a)
 
+maybeM :: Monad m => (a -> m b) -> Maybe a -> m ()
+maybeM _ Nothing = return ()
+maybeM m (Just a) = m a >> return ()
+
 basename :: String -> String
 basename filename =
   case break (\x -> (x=='\\') || (x=='/')) filename of
@@ -503,6 +508,15 @@ lengthWith f l = length $ filter f l
 optional :: (MonadPlus m) => m a -> m (Maybe a)
 optional c = (liftM Just c) `mplus` (return Nothing)
 
+urlDecodeVars :: String -> Maybe [(String, String)]
+urlDecodeVars ('?':s) = urlDecodeVars s
+urlDecodeVars s = makeKV (splitOver "&" s) []
+  where makeKV [] a = Just a
+        makeKV (kv:ks) a = case break (== '=') kv of
+          (k, '=':v) -> makeKV ks ((urlDecode k, urlDecode v):a)
+          (k, "") -> makeKV ks ((urlDecode k, ""):a)
+          _ -> Nothing
+          
 containsAll :: Eq a => [a] -> [a] -> Bool
 containsAll elems inList = all (`elem` inList) elems
 
@@ -513,3 +527,10 @@ listDiff :: Eq a => [a] -> [a] -> ([a], [a], [a])
 listDiff a b = ([x|x <- a, x `notElem` b],
                 [x|x <- a, x `elem`    b],
                 [x|x <- b, x `notElem` a])
+
+lookupAndRead :: (Read a, Eq k) => k -> [(k, String)] -> Maybe a
+lookupAndRead k kvs = maybeRead =<< lookup k kvs
+
+lookupAndReadString :: (Read a, Eq k) => k -> [(k, String)] -> Maybe a
+lookupAndReadString k kvs = maybeRead =<< maybeRead =<< lookup k kvs
+

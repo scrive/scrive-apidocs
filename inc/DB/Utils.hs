@@ -58,3 +58,4 @@ checkIfAnyReturned :: forall m. MonadDB m => SQL -> DBEnv m Bool
 checkIfAnyReturned sql =
   (getOne sql :: DBEnv m (Maybe SqlValue))
     >>= checkIfOneObjectReturned . maybeToList
+

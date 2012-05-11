@@ -61,6 +61,7 @@
                 width: 125,
                 text: localization.uploadButton,
                 submitOnUpload: true,
+                type: "application/pdf,application/doc,application/docx",
                 onClick : function () {
                     LoadingDialog.open();
                 },
@@ -72,7 +73,7 @@
                     method : "POST",
                     url : url,
                     ajax: true,
-                    type: wiz.get('process') ? wiz.get('process').signable : "",
+                    json: JSON.stringify({"type" : (wiz.get('process') ? wiz.get('process').signable : 1)}),
                     expectedType: 'json',
                     beforeSend: function() {
                         console.log("first");

@@ -20,6 +20,11 @@ Flag mailing-server
   Manual: True
   Default: True
 
+Flag doc-converter
+  Description: Build document converter
+  Manual: True
+  Default: True
+
 Flag server
   Description: Build server
   Manual: True
@@ -111,6 +116,11 @@ Flag test-userhistory
   Manual: True
   Default: True
 
+Flag test-livedocx
+  Description: Build livedocx testsuite
+  Manual: True
+  Default: True
+
 Flag test-csvutil
   Description: Build csvutil testsuite
   Manual: True
@@ -144,7 +154,7 @@ Executable kontrakcja-server
   else
     Buildable: False
 
-  Hs-source-dirs: inc src pdfseal/inc mailer/inc
+  Hs-source-dirs: inc src pdfseal/inc mailer/inc docconv/src
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fcontext-stack=34
   if !flag(allow-warnings)
@@ -197,6 +207,7 @@ Executable kontrakcja-server
   Build-depends: iconv == 0.4.1.0
   Build-depends: json == 0.4.4
   Build-depends: list-tries == 0.4.1
+  Build-depends: mime == 0.3.3.1
   Build-depends: mmap==0.5.*
   Build-depends: mtl == 2.*
   Build-depends: network == 2.3.0.11
@@ -316,6 +327,41 @@ Executable mailing-server
               TypeSynonymInstances,
               UndecidableInstances
 
+Library
+  if flag(doc-converter)
+    Buildable: True
+  else
+    Buildable: False
+
+  Hs-source-dirs: inc docconv/src
+
+  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
+  if !flag(allow-warnings)
+    GHC-Options: -Werror
+  if flag(server-coverage)
+    GHC-Options: -fhpc
+  if !os(windows)
+    -- don't do threaded on Windows because it uses blocking listen and accept
+    GHC-Options: -threaded
+  if os(windows)
+    cpp-options: -DWINDOWS
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
+  exposed-modules: LiveDocx
+
+  Build-depends: HaXml == 1.20.*
+
+  Extensions: FlexibleContexts,
+              FlexibleInstances,
+              GeneralizedNewtypeDeriving,
+              MultiParamTypeClasses,
+              NamedFieldPuns,
+              RankNTypes,
+              ScopedTypeVariables,
+              TypeFamilies,
+              UndecidableInstances
+
 Executable kontrakcja-test
   if flag(test)
     Buildable: True
@@ -324,7 +370,7 @@ Executable kontrakcja-test
   if impl(ghc >= 7)
     ghc-options: -rtsopts
 
-  Hs-source-dirs: inc test/src src pdfseal/inc mailer/inc
+  Hs-source-dirs: inc test/src src pdfseal/inc mailer/inc docconv/src docconv/test/src
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fcontext-stack=34
   if flag(test-coverage)
@@ -375,6 +421,8 @@ Executable kontrakcja-test
     cpp-options: -DNO_DOCSTATEQUERY
   if !flag(test-userhistory)
     cpp-options: -DNO_USERHISTORY
+  if !flag(test-livedocx)
+    cpp-options: -DNO_LIVEDOCX
 
   cpp-options: -DTestMain=Main
   Main-is: TestMain.hs

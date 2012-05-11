@@ -10,6 +10,7 @@ module Util.Actor (
   , adminActor
   , mkAuthorActor
   , mkAdminActor
+  , apiActor
   ) where
 
 import Util.HasSomeUserInfo
@@ -147,3 +148,14 @@ adminActor time ip uid email = Actor {
   , actorAPIString = Nothing
   , actorWho = "the admin with email \"" ++ email ++ "\""
 }
+
+apiActor :: MinutesTime -> IPAddress -> UserID -> String -> String -> Actor
+apiActor time ip uid email apistring = Actor {
+    actorTime = time
+  , actorIP = Just ip
+  , actorUserID = Just uid
+  , actorEmail = Just email
+  , actorSigLinkID = Nothing
+  , actorAPIString = Just apistring
+  , actorWho = "the user with email " ++ show email ++ " using the API" 
+  }

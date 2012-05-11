@@ -26,6 +26,7 @@ import qualified ELegitimation.BankID as BankID
 import qualified User.UserControl as UserControl
 import qualified ScriveByMail.Control as MailAPI
 import Doc.API
+import OAuth.Control
 
 import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 
@@ -263,6 +264,7 @@ staticRoutes = choice
 
      , integrationAPI
      , documentAPI
+     , oauthAPI
      -- static files
      , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "public"
      ]

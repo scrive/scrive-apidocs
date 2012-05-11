@@ -285,6 +285,7 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
           , TW.retries = 3
           , TW.timeout = 60000
           }
+        , ctxlivedocxconf = liveDocxConfig appConf
         , ctxelegtransactions = getELegTransactions session
         , ctxfilecache = filecache appGlobals
         , ctxxtoken = getSessionXToken session
