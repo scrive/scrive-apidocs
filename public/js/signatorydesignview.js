@@ -305,9 +305,10 @@ window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
             view.signatoriesListBox =  $("<div class='siglist'/>");
         else
             view.signatoriesListBox.empty();
-        var header = $("<a href='#' class='header'/>").text(localization.signatoryListPartner);
+        var header = $("<a href='#' class='header'/>");
         if (document.view.signOrderVisible())
             header.append($("<span class='float-right'/>").text(localization.signatoryListSignOrder));
+        header.append($("<span>").text(localization.signatoryListPartner));
         view.signatoriesListBox.append(header);
 
         var sigs = document.signatories();
@@ -319,9 +320,9 @@ window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
                    text = "(" + localization.noNamePerson + ")";
                 var number = sig.signs()? sig.signorder() : "-";
                 sigline.empty();
-                sigline.append($("<span/>").text(text));
                 if (document.view.signOrderVisible())
                   sigline.append($("<span class='float-right'/>").text(number));
+                sigline.append($("<span/>").text(text));
             }
             sig.bind('change', function() { setSiglineContent();} );
             setSiglineContent();
