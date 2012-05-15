@@ -57,7 +57,7 @@ import qualified Data.Map as Map
 import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
-
+import qualified Static.Resources as SR
 
 {- |
   Global application data
@@ -67,6 +67,7 @@ data AppGlobals
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
                  , docscache       :: MVar (Map.Map FileID JpegPages)
                  , cryptorng       :: CryptoRNGState
+                 , staticResources :: SR.ResourceSetsForImport
                  }
 
 
@@ -295,4 +296,5 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
         , ctxsalesaccounts = sales appConf
         , ctxmagichashes = getMagicHashes session
         , ctxmaybepaduser = mpaduser
+        , ctxstaticresources = staticResources appGlobals
         }

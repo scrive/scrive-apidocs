@@ -211,7 +211,7 @@ body.signview {
 
 .signview .save.saving {
   min-height: 118px;
-  background-image: url(images/wait30trans.gif);
+  background-image: url(/img/wait30trans.gif);
   background-position: center;
   background-repeat: no-repeat;
 }
@@ -397,7 +397,7 @@ body.signview {
 }
 
 .signview .share .facebook.btn {
-  background-image: url(../img/facebook-button.png);
+  background-image: url(/img/facebook-button.png);
 }
 
 .signview .share .dropdown {
@@ -427,11 +427,11 @@ body.signview {
 }
 
 .signview .share .facebook.dropdown {
-  background-image: url(../img/facebook-dropdown.png);
+  background-image: url(/img/facebook-dropdown.png);
 }
 
 .signview .share .phone.dropdown {
-  background-image: url(../img/phone-dropdown.png);
+  background-image: url(/img/phone-dropdown.png);
 }
 
 .signview .share .phone.dropdown .content {
@@ -443,7 +443,7 @@ body.signview {
 }
 
 .signview .share .phone.dropdown .loading {
-  background-image: url(images/wait30trans.gif);
+  background-image: url(/img/wait30trans.gif);
   background-position: center;
   background-repeat: no-repeat;
   height: 50px;
@@ -460,11 +460,11 @@ body.signview {
 }
 
 .signview .share .twitter.btn {
-  background-image: url(../img/twitter-button.png);
+  background-image: url(/img/twitter-button.png);
 }
 
 .signview .share .phone.btn {
-  background-image: url(../img/phone-button.png);
+  background-image: url(/img/phone-button.png);
 }
 
 .signview .share .phone.btn .label {
@@ -472,7 +472,7 @@ body.signview {
 }
 
 .signview .share .start.btn {
-  background-image: url(../img/start-button.png)
+  background-image: url(/img/start-button.png)
 }
 
 .signview .share .start.btn .label {

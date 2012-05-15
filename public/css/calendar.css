@@ -45,13 +45,13 @@ cursor:pointer;
 	display:block;
 	width:20px;
 	height:20px;
-	background:transparent url(images/prev.gif) no-repeat scroll center center;
+	background:transparent url(/img/prev.gif) no-repeat scroll center center;
 	float:left;
 	cursor:pointer;
 }
 
 #calnext {
-	background-image:url(images/next.gif);
+	background-image:url(/img/next.gif);
 	float:right;
 }
 

@@ -63,7 +63,7 @@ a img
 
 .rubbishbin
 {
-    background-image: url(images/rubbish-bin-icon-grey.png);
+    background-image: url(/img/rubbish-bin-icon-grey.png);
     background-repeat: no-repeat;
     height:16px;
     width:16px;
@@ -72,13 +72,13 @@ a img
 
 .rubbishbin.highlight
 {
-    background-image: url(images/rubbish-bin-icon-white.png);
+    background-image: url(/img/rubbish-bin-icon-white.png);
 }
 
 /*input[name=final] */
 .cross-button
 {
-    background-image: url(images/status_signed.png);
+    background-image: url(/img/status_signed.png);
     background-repeat: no-repeat;
     padding-left: 20px;
     background-position: 4px;
@@ -249,8 +249,8 @@ table .selectable tr.ui-selected, table .selectable tr.ui-selected td
 #headerContainer,
 #headerWide
 {
-    background: url(images/gradientextent.png) repeat-x bottom center;
-    /* background: url(images/darkpattern.png) repeat bottom center; */
+    background: url(/img/gradientextent.png) repeat-x bottom center;
+    /* background: url(/img/darkpattern.png) repeat bottom center; */
 
     color: #fafafa;
     height: 90px;
@@ -285,7 +285,7 @@ table .selectable tr.ui-selected, table .selectable tr.ui-selected td
 /* 003l maybe we no longer need headerContainer2 */
 #headerContainer2
 {
-    /*background: url(images/gradient.png) no-repeat bottom center; 003 remove*/
+    /*background: url(/img/gradient.png) no-repeat bottom center; 003 remove*/
     color: #fafafa;
     text-align: center;
     height: 90px;
@@ -336,12 +336,12 @@ table .selectable tr.ui-selected, table .selectable tr.ui-selected td
     font-weight: bold; /* 003l new */
     width: 151px;
 
-    background: url("images/ButtonTOPUnactive.png") no-repeat scroll left top transparent; /* 003l new */
+    background: url("/img/ButtonTOPUnactive.png") no-repeat scroll left top transparent; /* 003l new */
 }
 
 #nav li a.active
 {
-    background: url("images/ButtonTOP.png") no-repeat scroll left top transparent;
+    background: url("/img/ButtonTOP.png") no-repeat scroll left top transparent;
     /* 003l remove font-weight: bold; */
     color: #4d4d4d; /* 003l changed */
 }
@@ -613,7 +613,7 @@ color: white;
     height: 100px;
     border: 1px solid black;
     background-color: #fafafa;
-    background-image: url(images/wait30trans.gif);
+    background-image: url(/img/wait30trans.gif);
     background-repeat: no-repeat;
     background-position: center center;
 }
@@ -622,7 +622,7 @@ color: white;
     margin-left:40%;
     margin-right:40%;
     height: 100px;
-    background-image: url(images/wait30trans.gif);
+    background-image: url(/img/wait30trans.gif);
     background-repeat: no-repeat;
     background-position: center center;
 }
@@ -631,7 +631,7 @@ color: white;
     margin-left:40%;
     margin-right:40%;
     height: 400px;
-    background-image: url(images/wait30trans.gif);
+    background-image: url(/img/wait30trans.gif);
     background-repeat: no-repeat;
     background-position: center center;
 }
@@ -670,7 +670,7 @@ img.waiting
 }
 
 .templateslist {
-    background:url("images/ui-bg_glass_100_f6f6f6_1x400.png") repeat-x scroll 50% 50% #F6F6F6;
+    background:url("/img/ui-bg_glass_100_f6f6f6_1x400.png") repeat-x scroll 50% 50% #F6F6F6;
     border-top:1px solid #D0D0D0;
     border-bottom:1px solid #C0C0C0;
     border-left:1px solid #BDBDBD;
@@ -809,7 +809,7 @@ img.waiting
     /* 002 float: left;*/
     margin-top: 30px;
     width: 100%;
-    background: #f7f7f7 url(images/gradientbottom.png) no-repeat center 0; /* 004 new image */ /* 003 new image */
+    background: #f7f7f7 url(/img/gradientbottom.png) no-repeat center 0; /* 004 new image */ /* 003 new image */
     position: relative; /*003*/
     overflow: hidden;
 /* 002 position: fixed;*/
@@ -877,7 +877,7 @@ img.waiting
     top: 7px;
     width: 110px;
     height: 20px;
-    background: url(images/status_signed.png) no-repeat 91px -3px;
+    background: url(/img/status_signed.png) no-repeat 91px -3px;
 }
 
 div.floatleft
@@ -1162,7 +1162,7 @@ input[type=submit].hidden
 }
 
 #signStepsTitleRow .docname .docname-display .icon.edit {
-    background-image: url(images/iconPen.png);
+    background-image: url(/img/iconPen.png);
 }
 
 #signStepsTitleRow .docname .docname-display text {
@@ -1203,7 +1203,7 @@ input[type=submit].hidden
 {
     width: 145px;
     height: 25px;
-    background-image: url(images/saveButton.png);
+    background-image: url(/img/saveButton.png);
     background-repeat: no-repeat;
     overflow: hidden;
     position: relative; /* 008 new */
@@ -1211,14 +1211,14 @@ input[type=submit].hidden
 
 .saveIcon
 {
-    background-image: url(images/iconFloppy.png);
+    background-image: url(/img/iconFloppy.png);
 }
 
 .floppyIcon{
-    background-image: url(images/iconFloppy.png);
+    background-image: url(/img/iconFloppy.png);
 }
 .arrowDownIcon{
-    background-image: url(images/iconArrowDown.png);
+    background-image: url(/img/iconArrowDown.png);
 }
 
 
@@ -1248,20 +1248,20 @@ input[type=submit].hidden
 
 .icon.arrowRight
 {
-    background-image: url(images/iconArrowRight.png);
+    background-image: url(/img/iconArrowRight.png);
 }
 
 /* 008 new */
 .icon.arrowUp
 {
-    background-image: url(images/iconArrowUp.png);
+    background-image: url(/img/iconArrowUp.png);
     width: 13px;
     height: 11px;
 }
 
 .icon.check
 {
-    background-image: url(images/iconGreenCheck.png);
+    background-image: url(/img/iconGreenCheck.png);
     width: 14px;
     top: 5px;
 }
@@ -1287,7 +1287,7 @@ input[type=submit].hidden
 .signStepsBody
 {
     color: #414241;
-    background-image: url(images/signStepsBodyBorder.png);
+    background-image: url(/img/signStepsBodyBorder.png);
     background-repeat: repeat-y;
     overflow: hidden;
     min-height: 100px;
@@ -1302,7 +1302,7 @@ input[type=submit].hidden
 
 #signStepsBodyBorderBottom
 {
-    background-image: url(images/signStepsBodyBorderBottom.png);
+    background-image: url(/img/signStepsBodyBorderBottom.png);
     background-repeat: no-repeat;
     width: 960px;
     height: 11px;
@@ -1639,7 +1639,7 @@ input.multiFileInput {
 {
     display: inline-block;
     background-position: 2px 2px;
-    background-image: url(images/iconPen.png);
+    background-image: url(/img/iconPen.png);
     background-repeat: no-repeat;
     padding-left: 23px;
     margin-top: 2px;
@@ -1651,7 +1651,7 @@ input.multiFileInput {
 {
     display: inline-block;
     background-position: 2px 2px;
-    background-image: url(images/attachment.gif);
+    background-image: url(/img/attachment.gif);
     background-repeat: no-repeat;
     padding-left: 23px;
     margin-top: 2px;
@@ -1671,7 +1671,7 @@ input.multiFileInput {
 {
     display: inline-block;
     background-position: 2px 0px;
-    background-image: url(images/calendar.png);
+    background-image: url(/img/calendar.png);
     background-repeat: no-repeat;
     width:16px;
     height: 16px;
@@ -1705,37 +1705,37 @@ input.multiFileInput {
 
 .signStepsBodyIcons .man
 {
-    background-image: url(images/iconMan.png);
+    background-image: url(/img/iconMan.png);
 }
 
 .signStepsBodyIcons .group
 {
-    background-image: url(images/iconGroup.png);
+    background-image: url(/img/iconGroup.png);
 }
 
 .signStepsBodyIcons .single
 {
-    background-image: url(images/iconGroup.png);
+    background-image: url(/img/iconGroup.png);
 }
 
 .signStepsBodyIcons .csv
 {
-    background-image: url(images/iconCsv.png);
+    background-image: url(/img/iconCsv.png);
 }
 
 .signStepsBodyIcons .signingOrder
 {
-    background-image: url(images/iconSigningOrder.png);
+    background-image: url(/img/iconSigningOrder.png);
 }
 
 .signStepsBodyIcons a.hand
 {
-    background-image: url(images/iconHand.png);
+    background-image: url(/img/iconHand.png);
 }
 
 .signStepsBodyIcons .briefcase
 {
-    background-image: url(images/iconBriefcase.png);
+    background-image: url(/img/iconBriefcase.png);
 }
 
 .signViewBodyIcons a
@@ -1745,14 +1745,14 @@ input.multiFileInput {
 
 .signViewBodyIcons .man
 {
-    background-image: url(images/iconMan.png);
+    background-image: url(/img/iconMan.png);
 }
 
 .signStepsBodyIcons .plus,
 .newfield a.plus,
 #signStepsBodyFunctionsBox ul .plus
 {
-    background-image: url(images/iconPlus.png);
+    background-image: url(/img/iconPlus.png);
 
 }
 
@@ -1799,14 +1799,14 @@ input.multiFileInput {
     position: absolute;
     right: 2px;
     top: 3px;
-    background-image: url(images/iconMinus.png);
+    background-image: url(/img/iconMinus.png);
 }
 
 .signStepsBodyAddField a.minus,
 .newfield a.minus,
 #signStepsBodyFunctionsBox ul .minus
 {
-    background-image: url(images/iconMinus.png);
+    background-image: url(/img/iconMinus.png);
 }
 
 .signStepsBodyAddField p
@@ -1919,12 +1919,12 @@ input.multiFileInput {
 #signStepsBodyFunctionsBox ul a.floppy,
 .signStepsBodySaveMethods label
 {
-    background-image: url(images/iconFloppy.png);
+    background-image: url(/img/iconFloppy.png);
 }
 
 #signStepsBodyFunctionsBox ul .arrowDown
 {
-    background-image: url(images/iconArrowDown.png);
+    background-image: url(/img/iconArrowDown.png);
     background-position: 2px 2px;
 }
 
@@ -2034,7 +2034,7 @@ form {
 /* 013 new */
 .buttonSignLarge
 {
-    background-image: url(images/buttonSignLarge.png);
+    background-image: url(/img/buttonSignLarge.png);
     background-repeat: no-repeat;
     display: block;
     width: 252px;
@@ -2043,7 +2043,7 @@ form {
 }
 
 .buttonSendLarge {
-    background-image: url(images/button-send.png);
+    background-image: url(/img/button-send.png);
     background-repeat: no-repeat;
     display: block;
     width: 252px;
@@ -2304,7 +2304,7 @@ form {
 
 #signViewBottomBoxTop
 {
-    background-image: url(images/box2-top.png);
+    background-image: url(/img/box2-top.png);
     background-repeat: no-repeat;
     width: 960px;
     height: 10px;
@@ -2351,7 +2351,7 @@ form {
 
 #signViewBottomBoxContainerRight .button
 {
-    background-image: url(images/button-bg.png);
+    background-image: url(/img/button-bg.png);
     background-repeat: no-repeat;
     display: block;
     width: 167px;
@@ -2360,7 +2360,7 @@ form {
 
 #signViewBottomBoxBottom
 {
-    background-image: url(images/box2-bottom.png);
+    background-image: url(/img/box2-bottom.png);
     background-repeat: no-repeat;
     float: left;
     height: 10px;
@@ -2368,7 +2368,7 @@ form {
 }
 
 .numbericon1 {
-    background-image: url(images/icon1.png);
+    background-image: url(/img/icon1.png);
     background-repeat: no-repeat;
     float: left;
     height: 24px;
@@ -2376,7 +2376,7 @@ form {
 }
 
 .numbericon2 {
-    background-image: url(images/icon2.png);
+    background-image: url(/img/icon2.png);
     background-repeat: no-repeat;
     float: left;
     height: 24px;
@@ -2384,7 +2384,7 @@ form {
 }
 
 .numbericon3 {
-    background-image: url(images/icon3.png);
+    background-image: url(/img/icon3.png);
     background-repeat: no-repeat;
     float: left;
     height: 24px;
@@ -2552,13 +2552,13 @@ form {
 }
 
 .signViewBodyForms .dragfield input {
-    background-image: url(images/iconPen.png);
+    background-image: url(/img/iconPen.png);
     background-repeat: no-repeat;
     background-position: 3px 3px;
 }
 
 .newfield input.newfieldbox {
-    background-image: url(images/iconPen.png);
+    background-image: url(/img/iconPen.png);
     background-repeat: no-repeat;
     background-position: 3px 3px;
     width: 105px;
@@ -2638,7 +2638,7 @@ form {
 }
 
 .btn-blue {
-	background: url(images/btn-sign-1.png) 0 0 no-repeat;
+	background: url(/img/btn-sign-1.png) 0 0 no-repeat;
 	color: #fff;
 	font: 18px "Helvetica Neue";
 	height: 47px;
@@ -2704,7 +2704,7 @@ a#nextstep {
 {
     width: 120px;
     height: 25px;
-    background-image: url(images/singStepsButton.png);
+    background-image: url(/img/singStepsButton.png);
     background-repeat: no-repeat;
     overflow: hidden;
     position: relative; /* 008 new */
@@ -3030,7 +3030,7 @@ div.existingattachments {
 }
 
 #update-sigattachments-dialog .plus {
-    background-image: url(images/iconPlus.png);
+    background-image: url(/img/iconPlus.png);
     background-repeat: no-repeat;
     width: 16px;
     height: 16px;
@@ -3080,7 +3080,7 @@ table#sigattachmenttable a.minus {
     height: 16px;
     display: block;
     background-repeat: no-repeat;
-    background-image: url(images/iconMinus.png);
+    background-image: url(/img/iconMinus.png);
     align: left;
 }
 

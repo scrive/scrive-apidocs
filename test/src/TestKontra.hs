@@ -54,7 +54,7 @@ import User.Locale
 import Util.FinishWith
 import qualified Data.Map as Map
 import qualified Control.Exception.Lifted as E
-
+import qualified Static.Resources as SR
 data TestEnvSt = TestEnvSt {
     teNexus           :: Nexus
   , teRNGState        :: CryptoRNGState
@@ -235,6 +235,7 @@ mkContext locale = do
         , ctxsalesaccounts = []
         , ctxmagichashes = Map.empty
         , ctxmaybepaduser = Nothing
+        , ctxstaticresources = SR.ResourceSetsForImport []
     }
 
 -- pgsql database --

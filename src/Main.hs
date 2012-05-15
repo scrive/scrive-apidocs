@@ -31,11 +31,13 @@ import Network
 import RoutingTable
 import Templates.TemplatesLoader
 import User.Model
+import Control.Logic
 import qualified Amazon as AWS
 import qualified Log
 import qualified MemCache
 import qualified Paths_kontrakcja as Paths
 import qualified System.Mem
+import qualified Static.Resources as SR
 
 main :: IO ()
 main = Log.withLogger $ do
@@ -49,6 +51,11 @@ main = Log.withLogger $ do
     >>= \appname -> getArgs
     >>= \args -> readConfig Log.server appname args "kontrakcja.conf"
 
+  -- Generating static resources (JS and CSS). For development this does nothing. For production it generates joins.
+  staticResources' <- SR.getResourceSetsForImport (SR.Production <| production appConf |> SR.Development) (srConfig appConf)
+  staticResources <- case staticResources' of
+                          Right r -> return r
+                          Left s -> error $ "Error while generating static resources: " ++ s
   appGlobals <- (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
     >>= \templates -> MemCache.new BS.length 50000000
     >>= \filecache -> newMVar Map.empty
@@ -58,6 +65,7 @@ main = Log.withLogger $ do
       , filecache = filecache
       , docscache = docs
       , cryptorng = rng
+      , staticResources = staticResources
       }
 
   -- try to create directory for storing documents locally

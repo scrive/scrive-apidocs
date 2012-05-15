@@ -46,7 +46,7 @@ import User.Region
 import qualified Templates.Fields as F
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified Data.ByteString.UTF8 as BS (fromString)
-
+import qualified Static.Resources as SR
 
 {- |
    The name of our application (the codebase is known as kontrakcja,
@@ -206,6 +206,7 @@ standardPageFields ctx title mpubliclink showCreateAccount loginOn referer email
   publicSafeFlagField ctx loginOn (isJust mpubliclink)
   loginModal loginOn referer email
   serviceFields (ctxlocation ctx) (ctxservice ctx)
+  F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
 
 {- |
    The contents of the signup page.  This is read from a template.
@@ -245,6 +246,7 @@ firstPage ctx loginOn referer email = renderTemplate "firstPage" $ do
   staticLinksFields $ ctxlocale ctx
   localeSwitcherFields ctx (Just LinkHome)
   loginModal loginOn referer email
+  F.value "staticResources" $ SR.htmlImportList "firstPage" (ctxstaticresources ctx)
 
 {- |
    Defines the main links as fields handy for substituting into templates.

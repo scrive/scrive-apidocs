@@ -571,7 +571,7 @@
         },
         render: function() {
           if (this.model.isLoading() && !this.isLoader()) {
-            var img = $("<img src='/theme/images/wait30trans.gif' style='margin:30px'>");
+            var img = $("<img src='/img/wait30trans.gif' style='margin:30px'>");
             var overlay = $("<div>");
             overlay.append(img);
 
