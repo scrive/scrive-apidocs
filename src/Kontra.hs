@@ -15,7 +15,6 @@ module Kontra
     , onlySalesOrAdmin
     , onlyBackdoorOpen
     , newPasswordReminderLink
-    , newViralInvitationSentLink
     , newAccountCreatedLink
     , getAsString
     , getDataFnM
@@ -169,13 +168,6 @@ newPasswordReminderLink user = do
     action <- newPasswordReminder user
     return $ LinkPasswordReminder (actionID action)
                                   (prToken $ actionType action)
-
-newViralInvitationSentLink :: (MonadIO m, CryptoRNG m) => Email -> UserID -> m KontraLink
-newViralInvitationSentLink email inviterid = do
-    action <- newViralInvitationSent email inviterid
-    return $ LinkViralInvitationSent (actionID action)
-                                     (visToken $ actionType action)
-                                     (unEmail email)
 
 newAccountCreatedLink :: (MonadIO m, CryptoRNG m) => User -> m KontraLink
 newAccountCreatedLink user = do

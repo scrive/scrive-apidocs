@@ -26,6 +26,7 @@ import qualified ELegitimation.BankID as BankID
 import qualified User.UserControl as UserControl
 import qualified ScriveByMail.Control as MailAPI
 import Doc.API
+import OAuth.Control
 
 import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 
@@ -208,12 +209,6 @@ staticRoutes = choice
      , dir "adminonly" $ dir "signhistorycsv" $ path GET id $ Stats.handleSignHistoryCSV
      , dir "adminonly" $ dir "userslistcsv" $ path GET id $ Administration.handleUsersListCSV
 
-     , dir "adminonly" $ dir "runstatsonalldocs" $ hGet $ toK0 $ Stats.addAllDocsToStats
-     , dir "adminonly" $ dir "stats1to2" $ hGet $ toK0 $ Stats.handleMigrate1To2
-
-     , dir "adminonly" $ dir "runstatsonallusers" $ hGet $ toK0 $ Stats.addAllUsersToStats
-     , dir "adminonly" $ dir "runstatssigs" $ hGet $ toK0 $ Stats.addAllSigsToStats
-
      , dir "adminonly" $ dir "statistics"        $ hGet  $ toK0 $ Stats.showAdminSystemUsageStats
 
      , dir "adminonly" $ dir "services" $ hGet $ toK0 $ Administration.showServicesPage
@@ -264,12 +259,12 @@ staticRoutes = choice
      , dir "accountsetup"  $ hGet $ toK2 $ UserControl.handleAccountSetupGet
      , dir "accountsetup"  $ hPostNoXToken $ toK2 $ UserControl.handleAccountSetupPost
 
-     -- viral invite
-     , dir "invite"      $ hPostNoXToken $ toK0 $ UserControl.handleViralInvite
+     -- question form on static pages
      , dir "question"    $ hPostAllowHttp $ toK0 $ UserControl.handleQuestion
 
      , integrationAPI
      , documentAPI
+     , oauthAPI
      -- static files
      , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "public"
      ]

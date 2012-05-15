@@ -9,7 +9,6 @@ module User.UserView (
 
     -- mails
     newUserMail,
-    viralInviteMail,
     mailNewAccountCreatedByAdmin,
     resetPasswordMail,
     mailRequestChangeEmail,
@@ -30,9 +29,6 @@ module User.UserView (
     flashMessageUserPasswordChanged,
     flashMessagePasswordChangeLinkNotValid,
     flashMessageUserWithSameEmailExists,
-    flashMessageViralInviteSent,
-    flashMessageOtherUserSentInvitation,
-    flashMessageNoRemainedInvitationEmails,
     flashMessageActivationLinkNotValid,
     flashMessageUserActivated,
     flashMessageUserAlreadyActivated,
@@ -53,6 +49,7 @@ module User.UserView (
 
     --utils
     userBasicFields,
+    menuFields,
 
     userStatsDayToJSON,
     userStatsMonthToJSON,
@@ -245,16 +242,6 @@ newUserMail hostpart emailaddress personname activatelink = do
     F.value "activatelink" $ show activatelink
     F.value "ctxhostpart"  $ hostpart
 
-viralInviteMail :: TemplatesMonad m => Context -> String -> KontraLink -> m Mail
-viralInviteMail ctx invitedemail setpasslink = do
-  let invitername = maybe "" getSmartName (ctxmaybeuser ctx)
-  kontramail "mailViralInvite" $ do
-    F.value "email"        $ invitedemail
-    F.value "invitername"  $ invitername
-    F.value "ctxhostpart"  $ ctxhostpart ctx
-    F.value "passwordlink" $ show setpasslink
-
-
 mailNewAccountCreatedByAdmin :: (HasLocale a, TemplatesMonad m) => Context -> a -> String -> String -> KontraLink -> Maybe String -> m Mail
 mailNewAccountCreatedByAdmin ctx locale personname email setpasslink custommessage = do
   kontramaillocal locale "mailNewAccountCreatedByAdmin" $ do
@@ -347,18 +334,6 @@ flashMessageUserWithSameEmailExists :: TemplatesMonad m => m FlashMessage
 flashMessageUserWithSameEmailExists =
   toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageUserWithSameEmailExists"
 
-
-flashMessageViralInviteSent :: TemplatesMonad m => m FlashMessage
-flashMessageViralInviteSent =
-  toFlashMsg SigningRelated <$> renderTemplate_ "flashMessageViralInviteSent"
-
-flashMessageOtherUserSentInvitation :: TemplatesMonad m => m FlashMessage
-flashMessageOtherUserSentInvitation =
-    toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageOtherUserSentInvitation"
-
-flashMessageNoRemainedInvitationEmails :: TemplatesMonad m => m FlashMessage
-flashMessageNoRemainedInvitationEmails =
-    toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageNoRemainedInvitationEmails"
 
 flashMessageActivationLinkNotValid :: TemplatesMonad m => m FlashMessage
 flashMessageActivationLinkNotValid =

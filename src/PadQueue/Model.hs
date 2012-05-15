@@ -14,6 +14,7 @@ import User.Model
 import Doc.DocStateData
 import Data.Maybe (listToMaybe, isJust)
 import Data.Functor
+import Util.Actor
 import EvidenceLog.Model
 import Util.MonadUtils
 

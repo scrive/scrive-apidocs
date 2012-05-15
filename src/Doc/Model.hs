@@ -13,7 +13,6 @@ module Doc.Model
   , DocumentFilter(..)
   , DocumentDomain(..)
   , DocumentPagination(..)
-  , AscDesc(..)
   , DocumentOrderBy(..)
 
   , AddDocumentAttachment(..)
@@ -111,6 +110,7 @@ import Doc.DocStateCommon
 import qualified Log
 import Control.Monad
 import qualified Control.Exception as E
+import Util.Actor
 import Util.MonadUtils
 
 import EvidenceLog.Model
@@ -163,10 +163,6 @@ data DocumentOrderBy
   | DocumentOrderByAuthor      -- ^ Order by author name or email
   | DocumentOrderByService     -- ^ Order by service
 
--- | 'AscDesc' marks ORDER BY order as ascending or descending.
--- Conversion to SQL adds DESC marker to descending and no marker
--- to ascending order.
-data AscDesc a = Asc a | Desc a
 
 -- | Convert DocumentOrderBy enumeration into proper SQL order by statement
 documentOrderByToSQL :: DocumentOrderBy -> SQL
@@ -2113,7 +2109,9 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m ResetSignatoryDetails (Either St
 data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload)] Actor
 instance (CryptoRNG m, MonadDB m) => DBUpdate m ResetSignatoryDetails2 (Either String Document) where
   update (ResetSignatoryDetails2 documentid signatories actor) = do
+    Log.debug $ "reset: " ++ show signatories
     mdocument <- query $ GetDocumentByDocumentID documentid
+    Log.debug $ "got a doc: " ++ show (isJust mdocument)
     case mdocument of
       Nothing -> return $ Left $ "ResetSignatoryDetails: document #" ++ show documentid ++ " does not exist"
       Just document ->

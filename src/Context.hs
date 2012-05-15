@@ -17,10 +17,12 @@ import ELegitimation.ELegTransaction
 import qualified MemCache
 import FlashMessage
 import Mails.MailsConfig
+import LiveDocx (LiveDocxConf(..))
 import API.Service.Model
 import Company.Model
 import MagicHash (MagicHash)
 import IPAddress
+import qualified Static.Resources as SR
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
@@ -40,6 +42,7 @@ data Context = Context
     , ctxlocaleswitch        :: Bool -- ^ Whether locale switching is available on this page
     , ctxmailsconfig         :: MailsConfig
     , ctxtwconf              :: TW.TrustWeaverConf -- ^ TrustWeaver configuration
+    , ctxlivedocxconf        :: LiveDocxConf -- ^ LiveDocx configuration (does doc conversion)
     , ctxelegtransactions    :: [ELegTransaction] -- ^ Transactions for connections to the Logica server
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString -- ^
     , ctxxtoken              :: MagicHash -- ^ The XToken for combatting CSRF
@@ -50,4 +53,5 @@ data Context = Context
     , ctxsalesaccounts       :: [Email] -- ^
     , ctxmagichashes         :: Map.Map SignatoryLinkID MagicHash
     , ctxmaybepaduser        :: Maybe User -- ^ If we are loged in to the pad view
+    , ctxstaticresources     :: SR.ResourceSetsForImport
     }

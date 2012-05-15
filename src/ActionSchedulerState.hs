@@ -10,7 +10,6 @@ module ActionSchedulerState (
     , GetAction(..)
     , GetExpiredActions(..)
     , GetPasswordReminder(..)
-    , GetViralInvitationByEmail(..)
     , NewAction(..)
     , UpdateActionType(..)
     , UpdateActionEvalTime(..)
@@ -20,7 +19,6 @@ module ActionSchedulerState (
     , checkTypeID
     , checkValidity
     , newPasswordReminder
-    , newViralInvitationSent
     , newAccountCreated
     , newRequestEmailChange
     ) where
@@ -64,7 +62,7 @@ data ActionType = PasswordReminder {
                     , prRemainedEmails :: Int
                     , prToken          :: MagicHash
                 }
-                | ViralInvitationSent {
+                | ViralInvitationSent { {- This can be dropped with next migration -}
                       visEmail          :: Email
                     , visTime           :: MinutesTime
                     , visInviterID      :: UserID
@@ -95,7 +93,7 @@ data InactiveAccountState = NothingSent
 
 -- | Used for comparing action types since we can't compare type constructors
 data ActionTypeID = PasswordReminderID
-                  | ViralInvitationSentID
+                  | ViralInvitationSentID {- This can be dropped with next migration -}
                   | AccountCreatedID
                   | AccountCreatedBySigningID
                   | RequestEmailChangeID
@@ -179,11 +177,6 @@ getPasswordReminder :: UserID -> Query Actions (Maybe Action)
 getPasswordReminder uid =
     return . getOne . (@= uid) . (@= PasswordReminderID) =<< ask
 
--- | Get viral invitation action by invited person's email address
-getViralInvitationByEmail :: Email -> Query Actions (Maybe Action)
-getViralInvitationByEmail email =
-    return . getOne . (@= email) . (@= ViralInvitationSentID) =<< ask
-
 -- | Insert new action
 newAction :: StdGen -> ActionType -> MinutesTime -> Update Actions Action
 newAction rng atype time = do
@@ -234,7 +227,6 @@ $(mkMethods ''Actions
   [ 'getAction
   , 'getExpiredActions
   , 'getPasswordReminder
-  , 'getViralInvitationByEmail
   , 'newAction
   , 'updateActionType
   , 'updateActionEvalTime
@@ -267,21 +259,6 @@ newPasswordReminder user = do
         , prToken          = hash
     }
     update $ NewAction rng action $ (12*60) `minutesAfter` now
-
--- | Create new 'invitation sent' action
-newViralInvitationSent :: (MonadIO m, CryptoRNG m) => Email -> UserID -> m Action
-newViralInvitationSent email inviterid = do
-    hash <- random
-    rng <- random
-    now <- getMinutesTime
-    let action = ViralInvitationSent {
-          visEmail          = email
-        , visTime           = now
-        , visInviterID      = inviterid
-        , visRemainedEmails = 9
-        , visToken          = hash
-    }
-    update $ NewAction rng action $ (7*24*60) `minutesAfter` now
 
 -- | Create new 'account created' action
 newAccountCreated :: (MonadIO m, CryptoRNG m) => User -> m Action

@@ -69,16 +69,6 @@ flashMessageUserWithSameEmailExists=
 	$_flashMessageUserWithSameEmailExists()$
 
 ###
-flashMessageViralInviteSent=
-	$_flashMessageViralInviteSent()$
-
-###
-flashMessageOtherUserSentInvitation=
-	$_flashMessageOtherUserSentInvitation()$
-###
-flashMessageNoRemainedInvitationEmails=
-	$_flashMessageNoRemainedInvitationEmails()$
-###
 flashMessageActivationLinkNotValid=
 	$_flashMessageActivationLinkNotValid()$
 ###

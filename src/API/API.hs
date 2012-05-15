@@ -39,7 +39,8 @@ import Control.Monad.Trans.Control
 import Crypto.RNG
 import DB
 import Templates.Templates
-import Util.JSON
+import Text.JSON.JSValueContainer
+
 
 {- | API calls user JSPO object as a response and work within json value as a context-}
 type APIResponse = JSObject JSValue
@@ -48,6 +49,15 @@ type APIRequestBody = JSValue
 {- | API functions are build over Kontra with an ability to exit, and with some context -}
 newtype APIFunction c m a = AF { unAF :: ReaderT c (ErrorT (API_ERROR, String) m) a }
     deriving (Applicative, CryptoRNG, Functor, Monad, MonadBase b, MonadDB, MonadError (API_ERROR, String), MonadIO, MonadReader c)
+
+{-
+instance (MonadBase IO m, MonadBaseControl IO m) => MonadBaseControl IO (APIFunction m c) where
+  newtype StM (APIFunction m c) a = StAPIFunction { unStAPIFunction :: StM (ReaderT c (ErrorT (API_ERROR, String) m)) a }
+  liftBaseWith = newtypeLiftBaseWith AF unStAPIFunction StAPIFunction
+  restoreM     = newtypeRestoreM AF unAF
+  {-# INLINE liftBaseWith #-}
+  {-# INLINE restoreM #-}
+-}
 
 instance MonadTrans (APIFunction c) where
     lift = AF . lift . lift
@@ -119,7 +129,7 @@ apiUnknownCall = remainingPath POST $ apiResponse $ return $ apiError API_ERROR_
    But each context has to be able get read from HTTP params and should have JSON object inside.
 -}
 
-class (JSONContainer a) =>  APIContext a where
+class (JSValueContainer a) =>  APIContext a where
     apiContext :: Kontrakcja m => m (Either (API_ERROR,String) a)
 
 --- ERROR Response

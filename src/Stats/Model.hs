@@ -20,12 +20,15 @@ module Stats.Model
          AddSignStatEvent(..),
          GetSignStatEvents(..),
 
-         GetUsersAndStats(..)
+         GetUsersAndStatsAndInviteInfo(..)
        )
 
        where
 
 import Control.Monad
+import Control.Applicative ((<$>), (<*>))
+import Data.Monoid
+import Data.List
 import Database.HDBC
 
 import DB
@@ -59,6 +62,11 @@ data DocStatQuantity = DocStatClose       -- ^ A Close Document event
                      | DocStatTimeout
                      | DocStatEmailSignatureTimeout
                      | DocStatElegSignatureTimeout
+                     | DocStatPadSignatures
+                     | DocStatPadSignaturePending
+                     | DocStatPadSignatureCancel
+                     | DocStatPadSignatureReject
+                     | DocStatPadSignatureTimeout
   deriving (Eq, Ord, Show)
 $(enumDeriveConvertible ''DocStatQuantity)
 
@@ -72,7 +80,39 @@ data DocStatEvent = DocStatEvent {
   , seServiceID :: Maybe ServiceID
   , seCompanyID :: Maybe CompanyID
   , seDocumentType :: DocumentType
+  , seAPIString :: String
   }
+
+sqlOR :: SQL -> SQL -> SQL
+sqlOR sql1 sql2 = mconcat [parenthesize sql1, SQL " OR " [], parenthesize sql2]
+
+sqlAND :: SQL -> SQL -> SQL
+sqlAND sql1 sql2 = mconcat [parenthesize sql1, SQL " AND " [], parenthesize sql2]
+
+sqlJoinWith :: SQL -> [SQL] -> SQL
+sqlJoinWith comm list = mconcat $ intersperse comm $ map parenthesize list
+
+
+sqlJoinWithOR :: [SQL] -> SQL
+sqlJoinWithOR = sqlJoinWith (SQL " OR " [])
+
+sqlJoinWithAND :: [SQL] -> SQL
+sqlJoinWithAND = sqlJoinWith (SQL " AND " [])
+
+sqlConcatComma :: [SQL] -> SQL
+sqlConcatComma sqls =
+  mconcat $ intersperse (SQL ", " []) sqls
+
+sqlConcatAND :: [SQL] -> SQL
+sqlConcatAND sqls =
+  mconcat $ intercalate [SQL " AND " []] (map (\s -> [SQL "(" [], s, SQL ")" [] ]) sqls)
+
+sqlConcatOR :: [SQL] -> SQL
+sqlConcatOR sqls =
+  mconcat $ intercalate [SQL " OR " []] (map (\s -> [SQL "(" [], s, SQL ")" [] ]) sqls)
+
+parenthesize :: SQL -> SQL
+parenthesize (SQL command values) = SQL ("(" ++ command ++ ")") values
 
 {-------- Doc Stat Queries ---}
 
@@ -86,6 +126,7 @@ selectDocStatEventsSQL = SQL ("SELECT "
  ++ ", e.service_id"
  ++ ", e.company_id"
  ++ ", e.document_type"
+ ++ ", e.api_string"
  ++ "  FROM doc_stat_events e"
  ++ " ") []
 
@@ -93,7 +134,7 @@ fetchDocStats :: MonadDB m => DBEnv m [DocStatEvent]
 fetchDocStats = foldDB decoder []
   where
     decoder acc uid time quantity amount documentid serviceid
-     companyid documenttype = DocStatEvent {
+     companyid documenttype apistring = DocStatEvent {
          seUserID       = uid
        , seTime         = time
        , seQuantity     = quantity
@@ -102,6 +143,7 @@ fetchDocStats = foldDB decoder []
        , seServiceID    = serviceid
        , seCompanyID    = companyid
        , seDocumentType = doctypeFromString documenttype
+       , seAPIString    = apistring
        } : acc
 
 data GetDocStatEvents = GetDocStatEvents
@@ -124,31 +166,31 @@ instance MonadDB m => DBQuery m GetDocStatEventsByCompanyID [DocStatEvent] where
       <++> SQL "WHERE e.company_id = ?" [toSql companyid]
     fetchDocStats
 
-selectUsersAndCompaniesSQL :: SQL
-selectUsersAndCompaniesSQL = SQL ("SELECT "
+selectUsersAndCompaniesAndInviteInfoSQL :: SQL
+selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   -- User:
-  ++ "  u.id AS user_id"
-  ++ ", encode(u.password, 'base64') AS password_bas64"
-  ++ ", encode(u.salt, 'base64') AS salt_base64"
-  ++ ", u.is_company_admin"
-  ++ ", u.account_suspended"
-  ++ ", u.has_accepted_terms_of_service"
-  ++ ", u.signup_method"
-  ++ ", u.service_id AS user_service_id"
-  ++ ", u.company_id AS user_company_id"
-  ++ ", u.first_name"
-  ++ ", u.last_name"
-  ++ ", u.personal_number"
-  ++ ", u.company_position"
-  ++ ", u.phone"
-  ++ ", u.mobile"
-  ++ ", u.email"
-  ++ ", u.preferred_design_mode"
-  ++ ", u.lang"
-  ++ ", u.region"
-  ++ ", u.customfooter"
-  ++ ", u.company_name"
-  ++ ", u.company_number"
+  ++ "  users.id AS user_id"
+  ++ ", encode(users.password, 'base64') AS password_bas64"
+  ++ ", encode(users.salt, 'base64') AS salt_base64"
+  ++ ", users.is_company_admin"
+  ++ ", users.account_suspended"
+  ++ ", users.has_accepted_terms_of_service"
+  ++ ", users.signup_method"
+  ++ ", users.service_id AS user_service_id"
+  ++ ", users.company_id AS user_company_id"
+  ++ ", users.first_name"
+  ++ ", users.last_name"
+  ++ ", users.personal_number"
+  ++ ", users.company_position"
+  ++ ", users.phone"
+  ++ ", users.mobile"
+  ++ ", users.email"
+  ++ ", users.preferred_design_mode"
+  ++ ", users.lang"
+  ++ ", users.region"
+  ++ ", users.customfooter"
+  ++ ", users.company_name"
+  ++ ", users.company_number"
   -- Company:
   ++ ", c.id AS company_id"
   ++ ", c.external_id"
@@ -163,21 +205,27 @@ selectUsersAndCompaniesSQL = SQL ("SELECT "
   ++ ", c.bars_textcolour"
   ++ ", encode(c.logo, 'base64') AS logo_base64"
   ++ ", email_domain"
-  ++ "  FROM users u"
-  ++ "  LEFT JOIN companies c ON u.company_id = c.id"
-  ++ "  WHERE u.deleted = FALSE"
-  ++ "  ORDER BY u.first_name || ' ' || u.last_name ASC, u.email ASC, user_id ASC")
+  -- InviteInfo:
+  ++ ", user_invite_infos.inviter_id"
+  ++ ", user_invite_infos.invite_time"
+  ++ ", user_invite_infos.invite_type"
+  ++ "  FROM users"
+  ++ "  LEFT JOIN companies c ON users.company_id = c.id"
+  ++ "  LEFT JOIN user_invite_infos ON users.id = user_invite_infos.user_id"
+  ++ "  WHERE users.deleted = FALSE")
   []
 
 
-fetchUsersAndCompanies :: MonadDB m => DBEnv m [(User, Maybe Company)]
-fetchUsersAndCompanies = reverse `liftM` foldDB decoder []
+fetchUsersAndCompaniesAndInviteInfo :: MonadDB m => DBEnv m [(User, Maybe Company, Maybe InviteInfo)]
+fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` foldDB decoder []
   where
     decoder acc uid password salt is_company_admin account_suspended
      has_accepted_terms_of_service signup_method service_id company_id
      first_name last_name personal_number company_position phone mobile
      email preferred_design_mode lang region customfooter company_name company_number cid eid sid
-     name number address zip' city country bars_background bars_textcolour logo email_domain = (
+     name number address zip' city country bars_background bars_textcolour logo email_domain 
+     inviter_id invite_time invite_type
+     = (
        User {
            userid = uid
          , userpassword = maybePassword (password, salt)
@@ -225,6 +273,7 @@ fetchUsersAndCompanies = reverse `liftM` foldDB decoder []
                 }
               }
             _ -> Nothing
+        , InviteInfo <$> inviter_id <*> invite_time <*> invite_type
         ) : acc
 
 selectUserIDAndStatsSQL :: (DocStatQuantity, DocStatQuantity) -> SQL
@@ -244,14 +293,24 @@ fetchUserIDAndStats = foldDB decoder M.empty
     decoder acc uid time quantity amount =
       M.insertWith' (++) uid [(time,quantity,amount)] acc
 
-data GetUsersAndStats = GetUsersAndStats
-instance MonadDB m => DBQuery m GetUsersAndStats
-  [(User, Maybe Company, [(MinutesTime, DocStatQuantity, Int)])] where
-  query GetUsersAndStats = do
-    _ <- kRun $ SQL "CREATE TEMP TABLE users_and_companies_temp AS " [] <++> 
-         selectUsersAndCompaniesSQL
+data GetUsersAndStatsAndInviteInfo = GetUsersAndStatsAndInviteInfo [UserFilter] [AscDesc UserOrderBy] UserPagination
+instance MonadDB m => DBQuery m GetUsersAndStatsAndInviteInfo
+  [(User, Maybe Company, [(MinutesTime, DocStatQuantity, Int)], Maybe InviteInfo)] where
+  query (GetUsersAndStatsAndInviteInfo filters sorting pagination) = do
+    _ <- kRun $ mconcat
+         [ SQL "CREATE TEMP TABLE users_and_companies_temp AS " []
+         , selectUsersAndCompaniesAndInviteInfoSQL
+         , if null filters
+             then SQL "" []
+             else SQL " AND " [] `mappend` sqlConcatAND (map userFilterToSQL filters)
+         , if null sorting
+           then mempty
+           else SQL " ORDER BY " [] <++> sqlConcatComma (map userOrderByAscDescToSQL sorting)
+         , SQL (" OFFSET " ++ show (userOffset pagination) ++ " LIMIT " ++ show (userLimit pagination)) []
+         ]
+
     _ <- kRun $ SQL "SELECT * FROM users_and_companies_temp" []
-    usersWithCompanies <- fetchUsersAndCompanies
+    usersWithCompaniesAndInviteInfo <- fetchUsersAndCompaniesAndInviteInfo
 
     _ <- kRun $ selectUserIDAndStatsSQL (DocStatCreate, DocStatClose) <++>
          SQL " AND EXISTS (SELECT 1 FROM users_and_companies_temp WHERE users_and_companies_temp.user_id = e.user_id)" []
@@ -260,9 +319,9 @@ instance MonadDB m => DBQuery m GetUsersAndStats
 
     _ <- kRunRaw "DROP TABLE users_and_companies_temp"
 
-    let findStats (user,mcompany) = (user, mcompany, M.findWithDefault [] (userid user) stats)
+    let findStats (user,mcompany,minviteinfo) = (user, mcompany, M.findWithDefault [] (userid user) stats,minviteinfo)
 
-    return $ map findStats usersWithCompanies
+    return $ map findStats usersWithCompaniesAndInviteInfo
 
 {-------- Doc Stat Updates --}
 
@@ -278,6 +337,7 @@ instance MonadDB m => DBUpdate m AddDocStatEvent Bool where
       , sql "service_id" seServiceID
       , sql "company_id" seCompanyID
       , sql "document_type" $ show seDocumentType
+      , sql "api_string" seAPIString
       ] <++> SQL "WHERE NOT EXISTS (SELECT 1 FROM doc_stat_events WHERE document_id = ? AND quantity = ?)" [
         toSql seDocumentID
       , toSql seQuantity
@@ -295,6 +355,8 @@ data UserStatQuantity = UserSignTOS             -- When user signs TOS
                       | UserPhoneAfterTOS       -- when a user requests a phone call after accepting the TOS
                       | UserCreateCompany       -- when a user creates a company
                       | UserLogin               -- when a user logs in
+                      | UserAPIGrantAccess      -- when a user requests an access token
+                      | UserAPINewUser          -- when they create a new user because of api
                       deriving (Eq, Ord, Show)
 $(enumDeriveConvertible ''UserStatQuantity)
 

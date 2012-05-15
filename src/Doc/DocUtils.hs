@@ -481,4 +481,3 @@ recentDate doc =
                                              (maybeToList $ signtime <$> maybeseeninfo sl) ++
                                              (maybeToList $ signtime <$> maybesigninfo sl) ++
                                              (maybeToList $ id       <$> maybereadinvite sl)))
-

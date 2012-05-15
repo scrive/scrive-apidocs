@@ -428,48 +428,7 @@ isUserDeletable :: Kontrakcja m => User -> m Bool
 isUserDeletable user = do
   userdocs <- dbQuery $ GetDocumentsByAuthor (userid user)
   return $ all isDeletableDocument userdocs
-
-handleViralInvite :: Kontrakcja m => m KontraLink
-handleViralInvite = withUserPost $ do
-  getOptionalField asValidEmail "invitedemail" >>= maybe (return ())
-    (\invitedemail -> do
-        ctx@Context{ctxmaybeuser = Just user} <- getContext
-        muser <- dbQuery $ GetUserByEmail Nothing $ Email invitedemail
-        if isJust muser
-           -- we leak user information here! SECURITY!!!!
-           -- you can find out if a given email is already a user
-          then addFlashM flashMessageUserWithSameEmailExists
-          else do
-            now <- liftIO getMinutesTime
-            minv <- checkValidity now <$> (query $ GetViralInvitationByEmail $ Email invitedemail)
-            case minv of
-              Just Action{ actionID, actionType = ViralInvitationSent{ visEmail
-                                                                     , visTime
-                                                                     , visInviterID
-                                                                     , visRemainedEmails
-                                                                     , visToken } } -> do
-                if visInviterID == userid user
-                  then case visRemainedEmails of
-                    0 -> addFlashM flashMessageNoRemainedInvitationEmails
-                    n -> do
-                      _ <- update $ UpdateActionType actionID $ ViralInvitationSent { visEmail = visEmail
-                                                                                    , visTime = visTime
-                                                                                    , visInviterID = visInviterID
-                                                                                    , visRemainedEmails = n -1
-                                                                                    , visToken = visToken }
-                      sendInvitation ctx (LinkViralInvitationSent actionID visToken invitedemail) invitedemail
-                  else addFlashM flashMessageOtherUserSentInvitation
-              _ -> do
-                link <- newViralInvitationSentLink (Email invitedemail) (userid . fromJust $ ctxmaybeuser ctx)
-                sendInvitation ctx link invitedemail
-        )
-  return LoopBack
-    where
-      sendInvitation ctx link invitedemail = do
-        addFlashM flashMessageViralInviteSent
-        mail <- viralInviteMail ctx invitedemail link
-        scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = "", email = invitedemail }]}
-
+       
 --there must be a better way than all of these weird user create functions
 -- TODO clean up
 
@@ -609,7 +568,7 @@ handleAccountSetupPost aid hash = do
             Just (_activateduser, docs) -> do
               dropExistingAction aid
 
-              forM_ docs postDocumentPreparationChange
+              forM_ docs (\d->postDocumentPreparationChange d "mailapi")
 
               addFlashM flashMessageUserActivated
               return ()

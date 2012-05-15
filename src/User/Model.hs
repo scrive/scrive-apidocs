@@ -30,10 +30,19 @@ module User.Model (
   , AcceptTermsOfService(..)
   , SetSignupMethod(..)
   , SetUserCompanyAdmin(..)
+  , UserFilter(..)
   , composeFullName
+  , userFilterToSQL
+
+  , UserOrderBy(..)
+  , userOrderByToSQL
+  , userOrderByAscDescToSQL
+  , UserPagination(..)
   ) where
 
 import Control.Applicative
+import Data.Monoid
+import Data.List
 import Data.Char
 import Data.Data
 import Database.HDBC
@@ -111,6 +120,64 @@ instance HasLocale User where
 
 instance HasLocale UserSettings where
   getLocale = locale
+
+
+sqlOR :: SQL -> SQL -> SQL
+sqlOR sql1 sql2 = mconcat [parenthesize sql1, SQL " OR " [], parenthesize sql2]
+
+
+sqlJoinWith :: SQL -> [SQL] -> SQL
+sqlJoinWith comm list = mconcat $ intersperse comm $ map parenthesize list
+
+
+sqlJoinWithAND :: [SQL] -> SQL
+sqlJoinWithAND = sqlJoinWith (SQL " AND " [])
+
+parenthesize :: SQL -> SQL
+parenthesize (SQL command values) = SQL ("(" ++ command ++ ")") values
+
+data UserFilter
+  = UserFilterByString String             -- ^ Contains the string in name, email or anywhere
+
+
+userFilterToSQL :: UserFilter -> SQL
+userFilterToSQL (UserFilterByString string) =
+  sqlJoinWithAND (map (\wordpat -> SQL "users.first_name ILIKE ?" [wordpat] `sqlOR`
+                                   SQL "users.last_name ILIKE ?" [wordpat] `sqlOR`
+                                   SQL "users.email ILIKE ?" [wordpat] `sqlOR`
+                                   SQL "translate(users.mobile,'-+ .,()','') ILIKE translate(?,'-+ .,()','')" [wordpat] `sqlOR`
+                                   SQL "translate(users.personal_number,'-+ .,()','') ILIKE translate(?,'-+ .,()','')" [wordpat]
+                      ) sqlwordpat)
+  where
+      sqlwordpat = map (\word -> toSql $ "%" ++ concatMap escape word ++ "%") (words string)
+      escape '\\' = "\\\\"
+      escape '%' = "\\%"
+      escape '_' = "\\_"
+      escape c = [c]
+
+data UserPagination =
+  UserPagination
+  { userOffset :: Int        -- ^ use for SQL OFFSET command
+  , userLimit  :: Int        -- ^ use for SQL LIMIT command
+  }
+
+
+data UserOrderBy
+  = UserOrderByName
+  | UserOrderByCompanyName
+  | UserOrderByEmail
+  | UserOrderByAccountCreationDate
+
+-- | Convert UserOrderBy enumeration into proper SQL order by statement
+userOrderByToSQL :: UserOrderBy -> SQL
+userOrderByToSQL UserOrderByName                = SQL "(users.first_name || ' ' || users.last_name)" []
+userOrderByToSQL UserOrderByCompanyName         = SQL "users.company_name" []
+userOrderByToSQL UserOrderByEmail               = SQL "users.email" []
+userOrderByToSQL UserOrderByAccountCreationDate = SQL "users.has_accepted_terms_of_service" []
+
+userOrderByAscDescToSQL :: AscDesc UserOrderBy -> SQL
+userOrderByAscDescToSQL (Asc x) = userOrderByToSQL x
+userOrderByAscDescToSQL (Desc x) = userOrderByToSQL x `mappend` SQL " DESC" []
 
 data GetUsers = GetUsers
 instance MonadDB m => DBQuery m GetUsers [User] where
