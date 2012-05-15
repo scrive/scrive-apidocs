@@ -56,7 +56,7 @@ checkThat :: String -> Bool -> Maybe String
 checkThat s b = Nothing <| b |> Just s
 
 charset :: MIME.Type -> String
-charset mimetype = fromMaybe "us-ascii" $ lookup "charset" (MIME.mimeParams mimetype)        
+charset mimetype = fromMaybe "us-ascii" $ lookup "charset" (MIME.mimeParams mimetype)
 
 doMailAPI :: Kontrakcja m => BS.ByteString -> m (Maybe Document)
 doMailAPI content = do
@@ -88,7 +88,7 @@ doMailAPI content = do
   let extension = takeWhile (/= '@') $ dropWhile (== '+') $ dropWhile (/= '+') to
 
   muser <- dbQuery (GetUserByEmail Nothing (Email username))
-  
+
   minfo <- case muser of
     Just user -> do
       mmailapi <- dbQuery $ GetUserMailAPI $ userid user
@@ -111,7 +111,7 @@ doMailAPI content = do
                    return Nothing
     _ ->  -- no user for this address
       case break (== '@') $ map toLower username of
-        (_, '@':domain) -> do 
+        (_, '@':domain) -> do
           mcompany <- dbQuery $ GetCompanyByEmailDomain domain
           case mcompany of
             Just company -> do
@@ -128,7 +128,7 @@ doMailAPI content = do
                         sendMailAPIDelayAdminEmail (getEmail admin) username delayid key (ctxtime ctx)
                       return ()
                     Just (_, _, False) -> return () -- no need to do anything; we already have sent an admin confirmation
-                    Nothing -> do 
+                    Nothing -> do
                       Log.scrivebymail $ "Could not create delay; email: " ++ username ++ " companyid: " ++ show (companyid company)
                       return () -- this means we had an error
                   sendMailAPIDelayUserEmail username
@@ -142,7 +142,7 @@ doMailAPI content = do
         _ -> do
           Log.mailAPI $ "email from: " ++ from ++ " to " ++ to ++ "; User does not exist; domain does not match a company: " ++ username ++ "; not sending error because of opportunity for abuse."
           return Nothing
-                     
+
   -- at this point, the user has been authenticated
   -- we can start sending him emails about errors
 
@@ -161,7 +161,7 @@ isJSON plain =
     Left r -> isPrefixOf "{" $ strip $ BS.toString $ BS.concat $ BSL.toChunks r
     _      -> False
 
-{- | 
+{- |
 
    Parse and send a message using the simple human mail api.
 
@@ -186,131 +186,130 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
                                 , ("offer"    `isInfixOf` to, (Signable Offer,    [SignatoryAuthor]))
                                 , ("order"    `isInfixOf` to, (Signable Order,    [SignatoryAuthor]))
                                 ]                             (Signable Contract, [SignatoryAuthor, SignatoryPartner])
-      
+
   when (umapiDailyLimit (unTagMailAPIInfo mailapi) <= umapiSentToday (unTagMailAPIInfo mailapi)) $ do
     Log.scrivebymail $ "Daily limit of documents for user '" ++ username ++ "' has been reached"
-    
+
     sendMailAPIErrorEmail ctx username $ "<p>For your own protection, Scrive by Mail sets a daily limit on how many emails you can send out. Your daily Scrive by Mail limit has been reached. To reset your daily limit, please visit " ++ show LinkUserMailAPI ++ " .<p>"
-    
+
     internalError
-  
+
   --Log.scrivebymail $ "Types of mime parts: " ++ show typesOfParts
   let errors1 = catMaybes [
         checkThat "Exactly one PDF should be attached."        $ length pdfs   == 1,
         checkThat "Exactly one text should be in the message." $ length plains == 1
         ]
-                
+
   when ([] /= errors1) $ do
     let errorstring = intercalate "<br />\n" errors1
-  
+
     Log.scrivebymail $ (show $ toSeconds ctxtime) ++ " " ++ errorstring
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
-  
+
     -- send error email
     sendMailAPIErrorEmail ctx username $ "<p>Please ensure that the following condition is met: <br /> " ++ errorstring ++ "</p>"
-  
+
     internalError
-  
+
   let [plain] = plains
       [pdf]   = pdfs
-      
+
   recodedPlain' <- case IConv.convertStrictly (charset (fst plain)) "UTF-8" (BSL.fromChunks [(snd plain)]) of
     Left result' -> return $ BS.concat (BSL.toChunks (result'))
     Right errmsg -> do
       let msg = (show $ IConv.reportConversionError errmsg)
-      
+
       Log.scrivebymail $ (show $ toSeconds ctxtime) ++ " " ++ msg
       Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
-          
-      -- send error email          
+
+      -- send error email
       sendMailAPIErrorEmail ctx username $ "<p>I do not know what the problem is. Perhaps try again with a different email program.</p>"
       internalError
-      
+
   let recodedPlain = (replace "\r\n\r\n" "\r\n" $ BS.toString recodedPlain') <| isOutlook |> BS.toString recodedPlain'
       eparseresult = parseSimpleEmail subject recodedPlain
 
   when (isLeft eparseresult) $ do
     let Left msg = eparseresult
-    
+
     Log.scrivebymail $ (show $ toSeconds ctxtime) ++ " " ++ msg
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
-    
+
     -- send error mail
     sendMailAPIErrorEmail ctx username $ "<p>I could not understand the email you sent me. Here are the things I did not understand: <br /><br />\n" ++ msg ++ "<br /><br />\nPlease correct the problems and try again.</p>"
-    
+
     internalError
-    
+
   let Right (title, sigdets) = eparseresult
-  
+
   let pdfBinary = snd pdf
 
   -- create document
   -- set to advanced
   -- add signatories
   -- send document
-  
+
   let signatories = map (\p -> (p, [SignatoryPartner])) sigdets
-      
+
   mcompany <- case usercompany user of
     Just companyid -> dbQuery $ GetCompany companyid
     Nothing -> return Nothing
-  
+
   let userDetails = signatoryDetailsFromUser user mcompany
 
   let actor = mailAPIActor ctxtime (userid user) (getEmail user)
   edoc <- dbUpdate $ NewDocument user mcompany title doctype 0 actor
-  
-  
+
+
   when (isLeft edoc) $ do
     let Left msg = edoc
-    
+
     Log.scrivebymail $ "Could not create document: " ++ msg
-    
+
     -- send email saying sorry, there was some weird error
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not create your document. I do not know what is wrong. You can try again or you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkUpload) ++ "\">click here</a> to use the web interface.</p>"
-    
+
     internalError
-    
+
   let Right doc = edoc
 
-      
+
   content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) pdfBinary
   file <- dbUpdate $ NewFile title content14
   _ <- guardRightM $ dbUpdate (AttachFile (documentid doc) (fileid file) actor)
-  _ <- dbUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor
   _ <- dbUpdate $ SetDocumentIdentification (documentid doc) [EmailIdentification] actor
   res <- (sequence $ [dbUpdate $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) actor])
 
   let errs = lefts res
-          
+
   when ([] /= errs) $ do
     Log.scrivebymail $ "Could not set up document: " ++ (intercalate "; " errs)
-    
+
     -- send sorry email
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what is wrong. I created it in Scrive, but I cannot get it ready to send. If you want to see your document, you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
-    
+
     internalError
 
   let Right resdoc = last res
   _ <- addDocumentCreateStatEvents resdoc "mailapi+simple"
 
-  edoc2 <- dbUpdate $ PreparationToPending (documentid doc) actor    
-  
+  edoc2 <- dbUpdate $ PreparationToPending (documentid doc) actor
+
   when (isLeft edoc2) $ do
     Log.scrivebymail $ "Could not got to pending document: " ++ (intercalate "; " errs)
-    
+
     -- send sorry email
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what's wrong. Your document is created and ready to be sent. To see your document and send it yourself, <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
-    
+
     internalError
-  
+
   let Right doc2 = edoc2
 
 
 
   markDocumentAuthorReadAndSeen doc2
   --_ <- DocControl.postDocumentChangeAction doc2 doc Nothing
-    
+
   _ <- case (mailapi, usercompany user) of
     (CompanyMailAPIInfo _, Just companyid) -> dbUpdate $ IncrementCompanyMailAPI companyid
     (UserMailAPIInfo _, _) -> dbUpdate $ IncrementUserMailAPI (userid user)
@@ -368,7 +367,7 @@ parseEmailMessageToParts content = (mime, parts mime)
 
 data TaggedMailAPIInfo = CompanyMailAPIInfo MailAPIInfo
                        | UserMailAPIInfo    MailAPIInfo
-                         
+
 unTagMailAPIInfo :: TaggedMailAPIInfo -> MailAPIInfo
 unTagMailAPIInfo (CompanyMailAPIInfo i) = i
 unTagMailAPIInfo (   UserMailAPIInfo i) = i
@@ -393,7 +392,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
   ctx@Context{ctxtime} <- getContext
   when (umapiDailyLimit (unTagMailAPIInfo mailapi) <= umapiSentToday (unTagMailAPIInfo mailapi)) $ do
     Log.jsonMailAPI $ "Daily limit of documents for user '" ++ username ++ "' has been reached"
-    sendMailAPIErrorEmail ctx username $ "<p>For your own protection, Scrive Mail API sets a daily limit on how many emails you can send out. Your daily Scrive Mail API limit has been reached. To reset your daily limit, please visit " ++ ctxhostpart ctx ++ show LinkUserMailAPI ++ " .<p>"    
+    sendMailAPIErrorEmail ctx username $ "<p>For your own protection, Scrive Mail API sets a daily limit on how many emails you can send out. Your daily Scrive Mail API limit has been reached. To reset your daily limit, please visit " ++ ctxhostpart ctx ++ show LinkUserMailAPI ++ " .<p>"
     internalError
 
   when (length plains /= 1) $ do
@@ -468,14 +467,14 @@ jsonMailAPI mailapi username user pdfs plains content = do
             _                      -> return Nothing
 
   when (isNothing mpdf) $ do
-    let attnames = catMaybes $ map (lookup "name" . MIME.mimeParams . fst) pdfs 
+    let attnames = catMaybes $ map (lookup "name" . MIME.mimeParams . fst) pdfs
     Log.jsonMailAPI $ (show $ toSeconds ctxtime) ++ " Missing pdf attachment: " ++ show (dcrMainFile dcr)
     Log.jsonMailAPI $ "Here are the attachments: " ++ show (map fst pdfs)
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
     case dcrMainFile dcr of
-      Just mainfilename -> 
+      Just mainfilename ->
           sendMailAPIErrorEmail ctx username $ "<p>In the JSON, you requested the pdf called '" ++ mainfilename ++ "' to be considered the main file of the document. I could not find the pdf called '" ++ mainfilename ++ "' in the email attachments. The following pdfs were attached: '" ++ intercalate "', '" attnames ++ "'. Please check the file names and JSON and try again.</p>"
-      Nothing | length pdfs == 0 -> 
+      Nothing | length pdfs == 0 ->
           sendMailAPIErrorEmail ctx username $ "<p>There were no PDFs attached to the document. Please attach a PDF that will be considered the main file of the document.</p>"
       _ ->
           sendMailAPIErrorEmail ctx username $ "<p>There were multiple PDFs attached to the document. In order to disambiguate them, please add a JSON parameter like this: <code>\"mainfile\" : { \"name\" : \"filename.pdf\" }</code> where filename.pdf is the name of the attached file. Alternatively, please only attach one PDF.</p>"
@@ -529,7 +528,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
   let doctype = dcrType dcr
       title = maybe (basename $ getAttachmentFilename $ fst pdf) decodeWords $ dcrTitle dcr
       actor = mailAPIActor ctxtime (userid user) (getEmail user)
-      
+
   edoc <- dbUpdate $ NewDocument user mcompany title doctype 0 actor
 
   when (isLeft edoc) $ do
@@ -548,8 +547,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
   content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) pdfBinary
   file <- dbUpdate $ NewFile title content14
   _ <- guardRightM $ dbUpdate (AttachFile (documentid doc) (fileid file) actor)
-  
-  _ <- dbUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor
+
   _ <- dbUpdate $ SetDocumentIdentification (documentid doc) [EmailIdentification] actor
 
   let signatories = for (dcrInvolved dcr) $ \InvolvedRequest{irRole,irData} ->

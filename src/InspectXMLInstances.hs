@@ -77,7 +77,6 @@ instance InspectXML SignatoryRole where
 instance InspectXML DocumentStatus where
 instance InspectXML CSVUpload where
 instance InspectXML DocumentType where
-instance InspectXML DocumentFunctionality where
 instance InspectXML DocumentTag where
 instance InspectXML DocumentUI where
 instance InspectXML TimeoutTime where

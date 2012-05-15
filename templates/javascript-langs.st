@@ -145,18 +145,11 @@ javascriptLocalisation =
             , templateTitle : "$_signStepsTitleRowTextContainerIfTemplate()$"
             , step1template : "$_step1selectIfTemplate()$"
             , step2template : "$_step2selectIfTemplate()$"
-            , step2basic    : "$_step2selectIfisbasic()$"
             , step2normal   : "$_step2selectIfElse()$"
             , step3template : "$_step3selectIfTemplate()$"
             , step3normal   : "$_step3selectIfNotTemplate()$"
             , saveAsTemplate : "$_signStepsMenuEmptyStepSaveAsTemplate()$"
             , saveTemplate : "$_signStepsBodyFunctionssaveTemplate()$"
-            , switchToAdvanced : {
-                      option: "$_signStepsFunctionalityChangeToAdvanced()$"
-                    , title : "$_dialogConfirmAdvancedChangeToHead()$"
-                    , content : "$_dialogConfirmAdvancedBody()$"
-                    , button : "$_dialogConfirmAdvancedChangeToFooterChangeProcess()$"
-                    }
             , skrivapa : "$_skrivapa()$"
 
 

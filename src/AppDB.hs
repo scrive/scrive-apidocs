@@ -68,7 +68,8 @@ kontraMigrations = [
   , moveSignatoryLinkFieldsToSeparateTable
   , addAPIStringDocStats
   , migrateTempCredentialRemoveEmail -- for oauth
-  ] ++ mailerMigrations 
+  , deprecateDocFunctionalityCol
+  ] ++ mailerMigrations
 
 kontraTables :: [Table]
 kontraTables = [

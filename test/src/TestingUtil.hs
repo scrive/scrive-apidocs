@@ -284,7 +284,6 @@ instance Arbitrary Document where
                else return Preparation
     sls <- arbitrary
     ids <- arbitrary
-    fnc <- arbitrary
     -- we can have any days to sign. almost
     ddaystosign <- elements [Nothing, Just 1, Just 10, Just 99]
     -- document timeout time makes sense only when days to sign was set for this document
@@ -295,7 +294,6 @@ instance Arbitrary Document where
                            , documenttype = dtype
                            , documentsignatorylinks = sls
                            , documentallowedidtypes = [ids]
-                           , documentfunctionality = fnc
                            , documenttimeouttime = TimeoutTime <$> dtimeouttime
                            , documentdaystosign = ddaystosign
                            }
@@ -363,9 +361,6 @@ instance Arbitrary SignatoryField where
 
 instance Arbitrary SignatoryRole where
   arbitrary = return SignatoryPartner
-
-instance Arbitrary DocumentFunctionality where
-  arbitrary = elements [BasicFunctionality, AdvancedFunctionality]
 
 instance Arbitrary IdentificationType where
   arbitrary = elements [EmailIdentification, ELegitimationIdentification, PadIdentification]

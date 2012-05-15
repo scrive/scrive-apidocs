@@ -45,7 +45,6 @@ module Doc.DocView (
 import AppView (kontrakcja, standardPageFields)
 import API.Service.Model
 import Company.Model
-import Control.Logic
 import Doc.DocProcess
 import Doc.DocRegion
 import Doc.DocStateData
@@ -223,7 +222,6 @@ documentJSON pq msl _crttime doc = do
       J.value "signorder" $ unSignOrder $ documentcurrentsignorder doc
       J.value "authorization" $ authorizationJSON $ head $ (documentallowedidtypes doc) ++ [EmailIdentification]
       J.value "template" $ isTemplate doc
-      J.value "functionality" $ "basic" <| documentfunctionality doc == BasicFunctionality |> "advanced"
       J.value "daystosign" $ documentdaystosign doc
       J.value "invitationmessage" $ documentinvitetext doc
       J.value "logo" logo
@@ -353,7 +351,7 @@ processJSON doc = do
     J.valueM "signatorysignmodalcontentdesignvieweleg" $ text processsignatorysignmodalcontentdesignvieweleg
     J.valueM "signatorysignmodalcontentsignvieweleg" $ text processsignatorysignmodalcontentdesignvieweleg
     J.valueM "signatorysignmodalcontentauthoronly" $ text processsignatorysignmodalcontentauthoronly
-    
+
 
     J.valueM "signbuttontext" $ text processsignbuttontext
     J.valueM "signbuttontextauthor" $ text processsignbuttontextauthor
@@ -447,7 +445,6 @@ pageDocumentDesign :: TemplatesMonad m
                    -> m String
 pageDocumentDesign document = do
      renderTemplate "pageDocumentDesign" $ do
-         F.value "isbasic" $ (documentfunctionality document) ==BasicFunctionality
          F.value "documentid" $ show $ documentid document
 
 pageDocumentView :: TemplatesMonad m
