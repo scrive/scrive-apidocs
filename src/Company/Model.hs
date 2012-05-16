@@ -13,6 +13,10 @@ module Company.Model (
   , GetOrCreateCompanyWithExternalID(..)
   , GetCompanyByEmailDomain(..)
   , SetCompanyEmailDomain(..)
+
+  , CompanyDomain(..)
+  , CompanyFilter(..)
+  , CompanyOrderBy(..)
   ) where
 
 import Data.Typeable
@@ -22,6 +26,9 @@ import DB.SQL2
 import API.Service.Model
 import Company.CompanyID
 import Control.Monad.State
+import Data.Monoid
+import Misc
+import Data.List
 
 newtype ExternalCompanyID = ExternalCompanyID { unExternalCompanyID :: String }
   deriving (Eq, Ord, Show)
@@ -51,13 +58,72 @@ data CompanyUI = CompanyUI {
   , companylogo              :: Maybe Binary -- File with the logo
 } deriving (Eq, Ord, Show)
 
-data GetCompanies = GetCompanies (Maybe ServiceID)
+data CompanyDomain
+  = CompaniesOfWholeUniverse                     -- ^ All companies in the system. Only for admin view.
+  | CompaniesOfService (Maybe ServiceID)
+
+companyDomainToSQL :: CompanyDomain -> SQL
+companyDomainToSQL CompaniesOfWholeUniverse =
+  SQL"TRUE" []
+companyDomainToSQL (CompaniesOfService Nothing) =
+  SQL "companies.service_id IS NULL" []
+companyDomainToSQL (CompaniesOfService mservice) =
+  SQL "companies.service_id = ?" [toSql mservice]
+
+data CompanyFilter
+  = CompanyFilterByString String             -- ^ Contains the string anywhere
+
+companyFilterToWhereClause :: (SqlWhere command) => CompanyFilter -> State command ()
+companyFilterToWhereClause (CompanyFilterByString text) = do
+  -- ALL words from 'text' are in ANY of the fields
+  mapM_ (sqlWhere . findWord) (words text)
+  where
+      findWordInField word field =
+        SQL ("companies." ++ field ++ " ILIKE ?") [sqlwordpat word]
+      findWordList word = map (findWordInField word) ["name", "number", "address", "zip", "city", "country", "email_domain"]
+      findWord word = mconcat $ intersperse (SQL " OR " []) $ findWordList word
+      sqlwordpat word = toSql $ "%" ++ concatMap escape word ++ "%"
+      escape '\\' = "\\\\"
+      escape '%' = "\\%"
+      escape '_' = "\\_"
+      escape c = [c]
+
+data CompanyOrderBy
+  = CompanyOrderByName    -- ^ Order by title, alphabetically, case insensitive
+  | CompanyOrderByNumber  -- ^ Order by modification time
+  | CompanyOrderByAddress -- ^ Order by creation time
+  | CompanyOrderByZip     -- ^ Order by status class.
+  | CompanyOrderByCity    -- ^ Order by document type.
+  | CompanyOrderByCountry -- ^ Order by process
+  | CompanyOrderByID      -- ^ Order by process
+
+companyOrderByToOrderBySQL :: CompanyOrderBy -> SQL
+companyOrderByToOrderBySQL order =
+  case order of
+    CompanyOrderByName    -> SQL "companies.name" []
+    CompanyOrderByNumber  -> SQL "companies.number" []
+    CompanyOrderByAddress -> SQL "companies.address" []
+    CompanyOrderByZip     -> SQL "companies.zip" []
+    CompanyOrderByCity    -> SQL "companies.city" []
+    CompanyOrderByCountry -> SQL "companies.country" []
+    CompanyOrderByID      -> SQL "companies.id" []
+
+data GetCompanies = GetCompanies [CompanyDomain] [CompanyFilter] [AscDesc CompanyOrderBy] Integer Integer
 instance MonadDB m => DBQuery m GetCompanies [Company] where
-  query (GetCompanies msid) = do
+  query (GetCompanies domains filters sorting offset limit) = do
     kRun_ $ sqlSelect "companies" $ do
        selectCompaniesSelectors
-       sqlWhere $ SQL "service_id IS NOT DISTINCT FROM ?" [toSql msid]
-       sqlOrderBy "id DESC"
+       let orx [] = SQL "FALSE" []
+           orx [thing] = thing
+           orx xs = mconcat $ [SQL "(" []] ++ intersperse (SQL " OR " []) xs ++ [SQL ")" []]
+       sqlWhere (orx $ map companyDomainToSQL domains)
+       mapM_ companyFilterToWhereClause filters
+       let ascdesc (Asc x) = companyOrderByToOrderBySQL x
+           ascdesc (Desc x) = companyOrderByToOrderBySQL x <++> SQL " DESC" []
+       mapM_ (sqlOrderBy . ascdesc) sorting
+       sqlOffset offset
+       sqlLimit limit
+       sqlOrderBy "companies.id DESC"
     fetchCompanies
 
 data GetCompany = GetCompany CompanyID

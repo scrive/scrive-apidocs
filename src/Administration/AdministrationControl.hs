@@ -124,8 +124,20 @@ showAdminCompany companyid = onlySalesOrAdmin $ do
 jsonCompanies :: Kontrakcja m => m JSValue
 jsonCompanies = onlySalesOrAdmin $ do
     params <- getListParamsNew
-    allCompanies <- dbQuery $ GetCompanies Nothing
-    let companies = companiesSortSearchPage params allCompanies
+    let
+      domains = [CompaniesOfService Nothing]
+      filters = companySearchingFromParams params
+      sorting = companySortingFromParams params
+      (offset, limit) = companyPaginationFromParams companiesPageSize params
+      companiesPageSize = 100
+
+    allCompanies <- dbQuery $ GetCompanies domains filters sorting offset limit
+    let companies = PagedList { list       = allCompanies
+                              , params     = params
+                              , totalCount = 1000
+                              , pageSize   = companiesPageSize
+                              }
+
     return . JSObject . toJSObject $
         [("list", JSArray $ map (\company ->
             JSObject . toJSObject $
@@ -140,45 +152,37 @@ jsonCompanies = onlySalesOrAdmin $ do
                     ]
                  )
                 ,("link", jsFromString . show . LinkCompanyAdmin . Just . companyid $ company)
-                ]) (list companies) )
+                ]) allCompanies )
         ,("paging", pagingParamsJSON companies)
         ]
 
-companiesSortSearchPage :: ListParams -> [Company] -> PagedList Company
-companiesSortSearchPage =
-    listSortSearchPage companiesSortFunc companiesSearchFunc companiesPageSize
+companySearchingFromParams :: ListParams -> [CompanyFilter]
+companySearchingFromParams params =
+  case listParamsSearching params of
+    "" -> []
+    x -> [CompanyFilterByString x]
 
-companiesSortFunc :: SortingFunction Company
-companiesSortFunc "companyname"       = viewComparing    (companyname    . companyinfo)
-companiesSortFunc "companynameREV"    = viewComparingRev (companyname    . companyinfo)
-companiesSortFunc "companynumber"     = viewComparing    (companynumber  . companyinfo)
-companiesSortFunc "companynumberREV"  = viewComparingRev (companynumber  . companyinfo)
-companiesSortFunc "companyaddress"    = viewComparing    (companyaddress . companyinfo)
-companiesSortFunc "companyaddressREV" = viewComparingRev (companyaddress . companyinfo)
-companiesSortFunc "companyzip"        = viewComparing    (companyzip     . companyinfo)
-companiesSortFunc "companyzipREV"     = viewComparingRev (companyzip     . companyinfo)
-companiesSortFunc "companycity"       = viewComparing    (companycity    . companyinfo)
-companiesSortFunc "companycityREV"    = viewComparingRev (companycity    . companyinfo)
-companiesSortFunc "companycountry"    = viewComparing    (companycountry . companyinfo)
-companiesSortFunc "companycountryREV" = viewComparingRev (companycountry . companyinfo)
-companiesSortFunc _                   = const $ const EQ
+companySortingFromParams :: ListParams -> [AscDesc CompanyOrderBy]
+companySortingFromParams params =
+   concatMap x (listParamsSorting params)
+  where
+    x "companyname"       = [Asc CompanyOrderByName]
+    x "companynameREV"    = [Desc CompanyOrderByName]
+    x "companynumber"     = [Asc CompanyOrderByNumber]
+    x "companynumberREV"  = [Desc CompanyOrderByNumber]
+    x "companyaddress"    = [Asc CompanyOrderByAddress]
+    x "companyaddressREV" = [Desc CompanyOrderByAddress]
+    x "companyzip"        = [Asc CompanyOrderByZip]
+    x "companyzipREV"     = [Desc CompanyOrderByZip]
+    x "companycity"       = [Asc CompanyOrderByCity]
+    x "companycityREV"    = [Desc CompanyOrderByCity]
+    x "companycountry"    = [Asc CompanyOrderByCountry]
+    x "companycountryREV" = [Desc CompanyOrderByCountry]
+    x _                   = []
 
-companiesSearchFunc :: SearchingFunction Company
-companiesSearchFunc search_str company =
-     any (isInfixOf (map toUpper search_str) . (map toUpper))
-    $ [
-        show $ companyid company
-      , companyname    $ companyinfo $ company
-      , companynumber  $ companyinfo $ company
-      , companyaddress $ companyinfo $ company
-      , companyzip     $ companyinfo $ company
-      , companycity    $ companyinfo $ company
-      , companycountry $ companyinfo $ company
-      ]
+companyPaginationFromParams :: Int -> ListParams -> (Integer,Integer)
+companyPaginationFromParams pageSize params = ( fromIntegral ((listParamsPage params - 1) * pageSize), fromIntegral pageSize)
 
-
-companiesPageSize :: Int
-companiesPageSize = 100
 
 showAdminCompanyUsers :: Kontrakcja m => CompanyID -> m String
 showAdminCompanyUsers cid = onlySalesOrAdmin $ adminCompanyUsersPage cid
