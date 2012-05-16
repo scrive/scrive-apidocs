@@ -4,6 +4,7 @@ module ELegitimation.BankIDRequests (
         , generateChallenge
         , encodeTBS
         , verifySignature
+        , mbiRequestSignature
         ) where
 
 import Data.Maybe
@@ -12,10 +13,14 @@ import SOAP.SOAP
 import Text.XML.HaXml.Posn (Posn)
 import Text.XML.HaXml.XmlContent.Parser
 import ELegitimation.SignatureProvider
+import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString.Base64 as Base64
 
 data LogicaConfig = LogicaConfig { logicaEndpoint  :: String,  -- ^ URL to Logica
                                    logicaServiceID :: String,  -- ^ ServiceID from Logica
-                                   logicaCertFile  :: String   -- ^ Path to certificate file
+                                   logicaCertFile  :: String,   -- ^ Path to certificate file
+                                   logicaMBIDisplayName:: String,  -- ^ Display Name for Mobile Bank ID (must match display name registered with Logica)
+                                   logicaMBIEndpoint :: String -- ^ URL for MobileBankID at Logica
                                  }
                   deriving (Show, Read, Ord, Eq)
 
@@ -195,7 +200,7 @@ instance XmlContent (VerifySignatureResponse) where
             }
         } `adjustErr` ("in <VerifySignatureResponse>, "++)
 
-generateChallenge :: LogicaConfig -> SignatureProvider -> IO (Either ImplStatus (String, String))
+generateChallenge :: LogicaConfig -> SignatureProvider -> IO (Either ImplStatus (String, String)) -- challenge + transactionid
 generateChallenge (LogicaConfig{..}) provider = do
     eresponse <- makeSoapCallWithCA logicaEndpoint logicaCertFile "GenerateChallenge" $ GenerateChallengeRequest provider logicaServiceID
     case eresponse of
@@ -203,7 +208,7 @@ generateChallenge (LogicaConfig{..}) provider = do
         Right (GenerateChallengeResponse (ImplStatus _ _ 0 _) challenge transactionid) -> return $ Right (challenge, transactionid)
         Right (GenerateChallengeResponse status _ _) -> return $ Left status
 
-encodeTBS :: LogicaConfig -> SignatureProvider -> String -> String -> IO (Either ImplStatus String)
+encodeTBS :: LogicaConfig -> SignatureProvider -> String -> String -> IO (Either ImplStatus String) -- encoded TBS + transactionid
 encodeTBS (LogicaConfig{..}) provider tbs transactionID = do
     eresponse <- makeSoapCallWithCA logicaEndpoint logicaCertFile "EncodeTBS" $ EncodeTBSRequest provider logicaServiceID tbs transactionID
     case eresponse of
@@ -217,7 +222,7 @@ verifySignature :: LogicaConfig
                 -> String
                 -> Maybe String
                 -> String
-                -> IO (Either ImplStatus (String, [(String, String)]))
+                -> IO (Either ImplStatus (String, [(String, String)])) -- certificate and user attributes
 verifySignature LogicaConfig{..} provider tbs signature mnonce transactionID = do
     eresponse <- 
         makeSoapCallWithCA logicaEndpoint logicaCertFile
@@ -233,3 +238,44 @@ verifySignature LogicaConfig{..} provider tbs signature mnonce transactionID = d
         Right (VerifySignatureResponse (ImplStatus _ _ 0 _) attrs certificate) -> return $ Right (certificate, attrs)
         Right (VerifySignatureResponse status _ _) -> return $ Left status
 
+-- Mobile BankID Stuff
+
+data SignatureRequest = SignatureRequest { srPolicy            :: String
+                                         , srDisplayName       :: String
+                                         , srPersonalNumber    :: String
+                                         , srUserVisibleData   :: String
+                                         }
+                        
+instance HTypeable (SignatureRequest) where
+    toHType _x = Defined "SignatureRequest" [] []
+instance XmlContent (SignatureRequest) where
+    toContents (SignatureRequest{..}) =
+        [CElem (Elem "SignRequest"
+                [mkAttr "xmlns" "http://logica.com/mbi/service/v1.0.0/"]
+                [CElem (Elem "policy" [] $ toText srPolicy) ()
+                ,CElem (Elem "displayName" [] $ toText srDisplayName) ()
+                ,CElem (Elem "personalNumber" [] $ toText srPersonalNumber) ()
+                ,CElem (Elem "userVisibleData" [] $ toText srUserVisibleData) ()]) ()]
+    parseContents = error "Please do not parse SignatureRequest"
+
+data SignatureResponse = SignatureResponse String String
+                         
+instance HTypeable (SignatureResponse) where
+    toHType _x = Defined "SignatureResponse" [] []
+instance XmlContent (SignatureResponse) where
+    toContents _ = error "Do not serialize SignatureResponse"
+    parseContents =  do
+        { e <- elementNS "SignResponse"
+        ; interior e $ do
+            { transactionid <- inElementNS "transactionID" text
+            ; orderRef <- inElementNS "orderRef" text
+            ; return (SignatureResponse transactionid orderRef)
+            }
+        } `adjustErr` ("in <SignatureResponse>, "++)
+    
+mbiRequestSignature :: LogicaConfig -> String -> String -> IO (Either String (String, String))
+mbiRequestSignature LogicaConfig{..} personalnumber uvd = do
+  eresponse <- makeSoapCallWithCA logicaMBIEndpoint logicaCertFile "Sign" $ SignatureRequest logicaServiceID logicaMBIDisplayName personalnumber (BS.toString $ Base64.encode $ BS.fromString uvd)
+  case eresponse of
+    Left m -> return $ Left m
+    Right (SignatureResponse tid oref) -> return $ Right (tid, oref)

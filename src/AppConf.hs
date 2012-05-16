@@ -66,6 +66,8 @@ instance Configuration AppConf where
     , logicaConfig       = LogicaConfig { logicaEndpoint = "https://eidt.funktionstjanster.se:18898/osif"
                                         , logicaServiceID = "logtest004"
                                         , logicaCertFile = "certs/steria3.pem"
+                                        , logicaMBIEndpoint = "http://eidt.funktionstjanster.se:18899/mbi/service"
+                                        , logicaMBIDisplayName = "Test av Mobilt BankID"
                                         }
     , aesConfig          = AESConf {
         aesKey = BS.pack "}>\230\206>_\222\STX\218\SI\159i\DC1H\DC3Q\ENQK\r\169\183\133bu\211\NUL\251s|\207\245J"

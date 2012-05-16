@@ -226,7 +226,12 @@ mkContext locale = do
         , ctxmailsconfig = defaultMailsConfig
         , ctxtwconf = error "twconf is not defined"
         , ctxlivedocxconf = confDefault
-        , ctxlogicaconf = LogicaConfig { logicaEndpoint = "https://eidt.funktionstjanster.se:18898/osif", logicaCertFile = "certs/steria3.pem", logicaServiceID = "logtest004" }
+        , ctxlogicaconf = LogicaConfig { logicaEndpoint = "https://eidt.funktionstjanster.se:18898/osif"
+                                       , logicaCertFile = "certs/steria3.pem"
+                                       , logicaServiceID = "logtest004" 
+                                       , logicaMBIEndpoint = "https://eidt.funktionstjanster.se:18898/mbi/service"
+                                       , logicaMBIDisplayName = "Test av Mobilt BankID"
+                                       }
         , ctxelegtransactions = []
         , ctxfilecache = memcache
         , ctxxtoken = error "xtoken is not defined"
