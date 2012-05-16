@@ -164,11 +164,12 @@
 
     window.Paging = Backbone.Model.extend({
         defaults: {
+            // first visible item index
             itemMin: 0,
+            // last visible item index. If itemMax < itemMin, there are no items
             itemMax: 0,
-            itemTotal: 0,
             pageCurrent: 0,
-            pageMax: 0
+            pageSize: 0
         },
         disabled: function() {
             return this.get("disabled") != undefined && this.get("disabled") == true;
@@ -179,14 +180,11 @@
         itemMax: function() {
             return this.get("itemMax");
         },
-        itemTotal: function() {
-            return this.get("itemTotal");
-        },
         pageCurrent: function() {
             return this.get("pageCurrent");
         },
-        pageMax: function() {
-            return this.get("pageMax");
+        pageSize: function() {
+            return this.get("pageSize");
         },
         changePage: function(i) {
             this.set({ "pageCurrent": i });
@@ -197,8 +195,6 @@
         },
         updateWithServerResponse: function(resp) {
             this.set(resp);
-            if (this.pageCurrent() > this.pageMax()+1)
-                this.changePage(this.pageMax()+1);
         }
     });
 
@@ -211,24 +207,32 @@
         render: function() {
             var paging = this.model;
             var main = $("<div class='pages'>");
-            var items = $("<div />");
-            items.append($("<strong />").text((paging.itemMin() + 1) + " - " + (paging.itemMax() + 1) + " " + localization.of + " " + paging.itemTotal()));
             var pages = $("<div />");
-            for (var i = 0; i <= paging.pageMax(); i++) {
-                if (i == paging.pageCurrent()) {
-                    pages.append($("<span class='page-change current'>" + (i + 1) + "</span>"));
-                } else {
-                    var a = $("<span class='page-change'>" + (i + 1) + "</span>");
-                    a.click(paging.changePageFunction(i));
-                    pages.append(a);
+            var i = paging.pageCurrent();
+            // if this is not the first page, we can go back
+            if( i>1 ) {
+                var a = $("<span class='page-change' />").text(1 + "");
+                a.click(paging.changePageFunction(0));
+                pages.append(a);
+                if( i>2 ) {
+                    pages.append($("<span> ... </span>"));
                 }
             }
-            if (paging.itemMax() >= paging.itemMin()) {
-                main.append(items);
+            if( i>0 ) {
+                var a = $("<span class='page-change' />").text(i + "");
+                a.click(paging.changePageFunction(i-1));
+                pages.append(a);
             }
-            if (paging.pageMax() > 0) {
-                main.append(pages);
+            // number current page
+            pages.append($("<span class='page-change current'>" + (i + 1) + "</span>"));
+            // if this page is full then we have a link to next page
+            if( paging.pageSize() == paging.itemMax() - paging.itemMin() + 1 ) {
+                var a = $("<span class='page-change' />").text((i+2) + "");
+                a.click(paging.changePageFunction(i+1));
+                pages.append(a);
             }
+            main.append(pages);
+
             $(this.el).append(main);
         }
     });
