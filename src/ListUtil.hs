@@ -114,7 +114,8 @@ pagingParamsJSON :: PagedList a -> JSValue
 pagingParamsJSON (PagedList{list,pageSize,params}) = JSObject $ toJSObject [
     ("pageCurrent", showJSON $ (page params) - 1),
     ("itemMin",showJSON $ minElementIndex),
-    ("itemMax",showJSON $ minElementIndex + length list - 1)
+    ("itemMax",showJSON $ minElementIndex + length list - 1),
+    ("pageSize", showJSON $ pageSize)
     ]
     where
     minElementIndex = pageSize * (page params - 1) 
@@ -157,6 +158,7 @@ pagedListFields (PagedList{list,pageSize,params}) = do
         F.value "single" $ length list == 1
         F.value "nextPage" $ show $ page params + 1
         F.value "lastPage" $ show $ page params - 1
+        F.value "pageSize" $ show pageSize
     where
     minElementIndex = pageSize * (page params - 1) +1
 
