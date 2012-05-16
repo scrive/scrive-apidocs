@@ -13,8 +13,8 @@ data LiveDocxConf = LiveDocxConf {
 instance Configuration LiveDocxConf where
   confDefault = LiveDocxConf {
       url = "https://api.livedocx.com/1.2/mailmerge.asmx"
-    , username = "emilymaygreen"
-    , password = "monkey69"
+    , username = "unittests"
+    , password = "unitt3stsarenecessary"
   }
   confOptions = []
   confVerify _ = return $ Right ()
