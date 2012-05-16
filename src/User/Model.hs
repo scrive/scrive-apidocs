@@ -6,7 +6,6 @@ module User.Model (
   , module User.Password
   , module User.UserID
   , Email(..)
-  , DesignMode(..)
   , InviteType(..)
   , SignupMethod(..)
   , InviteInfo(..)
@@ -26,7 +25,6 @@ module User.Model (
   , SetInviteInfo(..)
   , SetUserInfo(..)
   , SetUserSettings(..)
-  , SetPreferredDesignMode(..)
   , AcceptTermsOfService(..)
   , SetSignupMethod(..)
   , SetUserCompanyAdmin(..)
@@ -63,11 +61,6 @@ newtype Email = Email { unEmail :: String }
   deriving (Eq, Ord, Typeable)
 $(newtypeDeriveConvertible ''Email)
 $(newtypeDeriveUnderlyingReadShow ''Email)
-
--- enums
-data DesignMode = BasicMode | AdvancedMode
-  deriving (Eq, Ord, Show)
-$(enumDeriveConvertible ''DesignMode)
 
 data InviteType = Viral | Admin
   deriving (Eq, Ord, Show)
@@ -110,8 +103,7 @@ data UserInfo = UserInfo {
   } deriving (Eq, Ord, Show)
 
 data UserSettings  = UserSettings {
-    preferreddesignmode :: Maybe DesignMode
-  , locale              :: Locale
+    locale              :: Locale
   , customfooter        :: Maybe String
   } deriving (Eq, Ord, Show)
 
@@ -375,24 +367,16 @@ data SetUserSettings = SetUserSettings UserID UserSettings
 instance MonadDB m => DBUpdate m SetUserSettings Bool where
   update (SetUserSettings uid us) = do
     kPrepare $ "UPDATE users SET"
-      ++ "  preferred_design_mode = ?"
       ++ ", lang = ?"
       ++ ", region = ?"
       ++ ", customfooter = ?"
       ++ "  WHERE id = ? AND deleted = FALSE"
     kExecute01 [
-        toSql $ preferreddesignmode us
-      , toSql $ getLang us
+        toSql $ getLang us
       , toSql $ getRegion us
       , toSql $ customfooter us
       , toSql uid
       ]
-
-data SetPreferredDesignMode = SetPreferredDesignMode UserID (Maybe DesignMode)
-instance MonadDB m => DBUpdate m SetPreferredDesignMode Bool where
-  update (SetPreferredDesignMode uid mmode) = do
-    kPrepare $ "UPDATE users SET preferred_design_mode = ? WHERE id = ? AND deleted = FALSE"
-    kExecute01 [toSql mmode, toSql uid]
 
 data AcceptTermsOfService = AcceptTermsOfService UserID MinutesTime
 instance MonadDB m => DBUpdate m AcceptTermsOfService Bool where
@@ -453,7 +437,6 @@ selectUsersSelectors =
  ++ ", phone"
  ++ ", mobile"
  ++ ", email"
- ++ ", preferred_design_mode"
  ++ ", lang"
  ++ ", region"
  ++ ", customfooter"
@@ -468,7 +451,7 @@ fetchUsers = foldDB decoder []
     decoder acc uid password salt is_company_admin account_suspended
       has_accepted_terms_of_service signup_method service_id company_id
       first_name last_name personal_number company_position phone mobile
-      email preferred_design_mode lang region customfooter
+      email lang region customfooter
       company_name company_number = User {
           userid = uid
         , userpassword = maybePassword (password, salt)
@@ -488,8 +471,7 @@ fetchUsers = foldDB decoder []
           , usercompanynumber = company_number
           }
         , usersettings = UserSettings {
-            preferreddesignmode = preferred_design_mode
-          , locale = mkLocale region lang
+            locale = mkLocale region lang
           , customfooter = customfooter
           }
         , userservice = service_id

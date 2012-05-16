@@ -450,8 +450,7 @@ blankUser = User { userid                        = unsafeUserID 0
                                        , usercompanyname = []
                                        , usercompanynumber = []
                                        }
-                 , usersettings  = UserSettings { preferreddesignmode = Nothing
-                                                , locale = mkLocaleFromRegion Misc.defaultValue
+                 , usersettings  = UserSettings { locale = mkLocaleFromRegion Misc.defaultValue
                                                 , customfooter = Nothing
                                                 }
                  , userservice = Nothing
@@ -494,13 +493,6 @@ addNewRandomUser = do
     Nothing -> do
       Log.debug "Could not create user, trying again."
       addNewRandomUser
-
-addNewRandomAdvancedUser :: TestEnv User
-addNewRandomAdvancedUser = do
-  User{userid,usersettings} <- addNewRandomUser
-  True <- dbUpdate $ SetUserSettings userid (usersettings{ preferreddesignmode = Just AdvancedMode })
-  Just user <- dbQuery $ GetUserByID userid
-  return user
 
 addNewRandomCompanyUser :: CompanyID -> Bool -> TestEnv User
 addNewRandomCompanyUser cid isadmin = do

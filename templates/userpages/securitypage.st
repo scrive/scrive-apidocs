@@ -71,12 +71,6 @@ showUserSecurity =
                <h2>$_userDocumentsSettings()$</h2>
              </div>
              <div class="account-body advancedview">
-               <p>
-                 <input type="checkbox" id="advancedMode"
-                        name="advancedMode"
-                        $if(advancedMode)$checked="checked"$endif$ />
-                 <label for="advancedMode">$_dialogConfirmAdvancedCheck()$</label>
-               </p>
               <p>
                  <input type="checkbox" id="footerCheckbox"
                         name="footerCheckbox"
