@@ -391,7 +391,7 @@ updateSessionWithContextData (Session i sd) u trans magichashes' pu = do
        then do
            when (isNothing (userID sd) && isJust u) $ do
                sess <- query $ GetSessionsByUserId $ fromJust u
-               case drop 2 $ reverse $ sortBy (comparing (expires . sessionData)) sess of
+               case drop 5 $ reverse $ sortBy (comparing (expires . sessionData)) sess of
                     [] -> return ()
                     l  -> forM_ l (\s -> update $ DelSession $ sessionId s)
            update (NewSession rng newsd) >>= startSessionCookie
