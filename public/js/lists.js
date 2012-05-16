@@ -1,26 +1,37 @@
-/* This is the main module for all list in our system.
- * Example usage can be found in doclist.st. There is version tat uses almoust all futures offered by this module.
+/*
+ * This is the main module for all list in our system.
+ *
+ * Example usage can be found in doclist.st. There is version that
+ * uses almost all features offered by this module.
  *
  * Introduction:
- *   To use list create KontraList object by using var list = KontraList().init({...}) and doing an append of
- *  list.view.el somewere on page. This is just the jQuery object so this should be easy, but css is brobably expecting
- *  some more structure around insered elem, so please check this out with example.
  *
- *  Most important param of init is schema object. It defines how the table looks and behaves.
- *  Important parts of schema:
- *      cells - definition of table columns with data binding and l&f details
- *      url - where to take data from
- *      sorting - if sorting is active and at what columns
- *      paging - if paging is avaible
- *      filtering - if filtering is alloud
- *      options - If there should be some options (select-like input, top left)
+ * To use list create KontraList object by using var list =
+ * KontraList().init({...}) and doing an append of list.view.el
+ * somewhere on page. This is just the jQuery object so this should be
+ * easy, but css is probably expecting some more structure around
+ * inserted element, so please check this out with example.
  *
- *  On load or when some changes occur (like new sorting set) this table will download new data from server (using this url param)
- *  as an JSON object, drop current table content and fill in with fetched data. Checkout skrivapa.se/docs to see an example.
+ * Most important param of init is the schema object. It defines how
+ * the table looks and behaves.
+ *
+ * Important parts of schema:
+ *   url       - where to take data from
+ *   cells     - definition of table columns with data binding and l&f details
+ *   sorting   - if sorting is active and at what columns
+ *   paging    - if paging is available
+ *   filtering - if filtering is allowed
+ *   options   - If there should be some options (select-like input, top left)
+ *
+ *  On load or when some changes occur (like new sorting set) this
+ *  table will download new data from server (using this url param) as
+ *  an JSON object, drop current table content and fill in with
+ *  fetched data. Checkout skrivapa.se/docs to see an example.
  *
  *  There are some utils in ListUtils.hs to parse sorting, paging or
+ *  searching.
  *
- *  There will be more documetation coming when module is more stable
+ *  There will be more documetation coming when module is more stable.
  */
 
 
