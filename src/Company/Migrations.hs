@@ -40,3 +40,17 @@ addEmailDomainOnCompanies =
   , mgrFrom = 4
   , mgrDo = kRunRaw $ "ALTER TABLE companies ADD COLUMN email_domain TEXT NULL"
   }
+
+addDefaultEmptyStringsToSomeColumnsInCompaniesTable :: MonadDB m => Migration m
+addDefaultEmptyStringsToSomeColumnsInCompaniesTable =
+  Migration {
+    mgrTable = tableCompanies
+  , mgrFrom = 5
+  , mgrDo = kRunRaw $ "ALTER TABLE companies"
+    ++ " ALTER name SET DEFAULT '',"
+    ++ " ALTER number SET DEFAULT '',"
+    ++ " ALTER address SET DEFAULT '',"
+    ++ " ALTER zip SET DEFAULT '',"
+    ++ " ALTER city SET DEFAULT '',"
+    ++ " ALTER country SET DEFAULT ''"
+  }

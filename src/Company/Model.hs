@@ -83,12 +83,6 @@ instance MonadDB m => DBUpdate m CreateCompany Company where
     kRun_ $ sqlInsert "companies" $ do
       sqlSet "external_id" mecid
       sqlSet "service_id" msid
-      sqlSet "name" ""
-      sqlSet "number" ""
-      sqlSet "address" ""
-      sqlSet "zip" ""
-      sqlSet "city" ""
-      sqlSet "country" ""
       selectCompaniesSelectors
     fetchCompanies >>= exactlyOneObjectReturnedGuard
 
