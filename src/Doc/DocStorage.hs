@@ -187,7 +187,11 @@ maybeScheduleRendering :: Kontrakcja m
                        -> DocumentID
                        -> m JpegPages
 maybeScheduleRendering fileid docid = do
+  Log.debug $ "Rendering is being scheduled for document " ++ show docid
   ctx@Context{ctxnormalizeddocuments = mvar} <- getContext
+  pgs <- readMVar mvar
+  Log.debug $ "Total rendered pages count: " ++ show (pagesCount (Map.elems pgs))
+
   (p, start) <- liftIO $ modifyMVar mvar $ \setoffilesrenderednow ->
     case Map.lookup fileid setoffilesrenderednow of
       Just pages -> return (setoffilesrenderednow, (pages, False))
@@ -204,7 +208,12 @@ maybeScheduleRendering fileid docid = do
         _                     -> return ()
       modifyMVar_ mvar (\filesrenderednow -> return (Map.insert fileid jpegpages filesrenderednow))
   return p
-
+ where
+  pagesCount (JpegPagesPending:fs) = pagesCount fs
+  pagesCount ((JpegPages ps) : fs) = (length ps) + pagesCount fs
+  pagesCount (_ : fs) =  pagesCount fs
+  pagesCount _ =  0
+  
 data FileError = FileSizeError Int Int
                | FileFormatError
                | FileNormalizeError BSL.ByteString
