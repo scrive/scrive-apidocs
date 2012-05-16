@@ -65,7 +65,6 @@ import Text.JSON
 -- This part is responsible for sorting,searching and paging documents lists
 data PagedList a = PagedList{
         list::[a]
-      , totalCount::Int
       , pageSize :: Int
       , params::ListParams
     } deriving Show
@@ -112,15 +111,12 @@ getListParamsNew = do
         , sorting  = maybeToList sorting' }
 
 pagingParamsJSON :: PagedList a -> JSValue
-pagingParamsJSON (PagedList{list,pageSize,totalCount,params}) = JSObject $ toJSObject [
-    ("pageMax",showJSON totalPages ),
+pagingParamsJSON (PagedList{list,pageSize,params}) = JSObject $ toJSObject [
     ("pageCurrent", showJSON $ (page params) - 1),
     ("itemMin",showJSON $ minElementIndex),
-    ("itemMax",showJSON $ minElementIndex + length list - 1),
-    ("itemTotal",showJSON $ totalCount)
+    ("itemMax",showJSON $ minElementIndex + length list - 1)
     ]
     where
-    totalPages =  (totalCount -1) `div` pageSize 
     minElementIndex = pageSize * (page params - 1) 
 
 
@@ -150,27 +146,18 @@ getListParamsForSearch = do
 
 {- Standard fields-}
 pagedListFields :: Monad m => PagedList a -> Fields m ()
-pagedListFields (PagedList{list,pageSize,totalCount,params}) = do
+pagedListFields (PagedList{list,pageSize,params}) = do
     F.object "params" $ do
         F.object "sorting" $ mapM_ (\sp -> F.value sp sp) $ sorting params
         F.value "search" $ join $ nothingIfEmpty <$> search params
-    F.objects "pages" $ for [1..totalPages] $ \n -> do
-        F.value "nr" $ show $ n
-        F.value "current" $ n == (page params)
     F.object "elements" $ do
         F.value "min" $ show $ minElementIndex
         F.value "max" $ show $ minElementIndex + length list - 1
-        F.value "total" $ show totalCount
-        F.value "totalPages" $ show $ totalPages
         F.value "none" $ null list
         F.value "single" $ length list == 1
-        F.value "firstPageAvaible" $ page params > 1 && not (null list)
-        F.value "lastPageAvaible" $ page params < totalPages && not (null list)
         F.value "nextPage" $ show $ page params + 1
         F.value "lastPage" $ show $ page params - 1
-
     where
-    totalPages = (totalCount -1) `div` pageSize + 1
     minElementIndex = pageSize * (page params - 1) +1
 
 {- | Applying  params to the list -}
@@ -190,7 +177,7 @@ listSortSearchPage sortFunc searchFunc pageSize params list =
         searched = doSearching searchFunc (search params) list
         sorted = doSorting sortFunc (sorting params) searched
         paged = doPaging pageSize (page params)  sorted
-    in  PagedList {list=paged , params = params, totalCount = length searched, pageSize = pageSize}
+    in  PagedList {list=paged , params = params, pageSize = pageSize}
 
 doSorting::SortingFunction a -> [String] -> [a] -> [a]
 doSorting sortFunc  = sortBy . compareList .  map sortFunc

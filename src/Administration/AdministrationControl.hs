@@ -251,7 +251,6 @@ jsonUsersList = do
     allUsers <- getUsersAndStatsInv filters sorting pagination
     let users = PagedList { list       = allUsers
                           , params     = params
-                          , totalCount = 1000
                           , pageSize   = usersPageSize
                           }
 
@@ -687,12 +686,9 @@ jsonDocuments = onlySalesOrAdmin $ do
       docsPageSize = 100
 
   allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
-  totalCount <- dbQuery $ GetDocumentsCount domain (searching ++ filters)
-
 
   let documents = PagedList { list       = allDocs
                             , params     = params
-                            , totalCount = totalCount
                             , pageSize   = docsPageSize
                             }
 
