@@ -9,57 +9,68 @@
 -- Function 'get' returns object in cache when found under key.
 --
 -- Function 'put' pus an object in cache. If resulting cache size
--- would be larger than limit some object in purged from cache before
+-- would be larger than limit some object (oldest) in purged from cache before
 -- putting the new one in.
 
 module MemCache (MemCache, new, put, get, size)
 where
 
 import Control.Concurrent.MVar
-import System.Random (randomRIO)
 import qualified Data.Map as Map
+import Control.Monad.Trans
+import MinutesTime
 
-data MemCache' k v = MemCache' (v -> Int) Int Int (Map.Map k v)
+
+data MemCache' k v = MemCache' (v -> Int) Int Int (Map.Map k (MinutesTime,v))
 
 newtype MemCache k v = MemCache (MVar (MemCache' k v))
 
 -- | Create new memory cache. Supply a memory limit (in bytes) and a
 -- sizing function. Key type should have 'Ord' and 'Eq' instances.
-new :: (v -> Int) -> Int -> IO (MemCache k v)
+new :: MonadIO m =>  (v -> Int) -> Int -> m (MemCache k v)
 new sizefun sizelimit =
-    do fmap MemCache $ newMVar (MemCache' sizefun sizelimit 0 Map.empty)
+    liftIO $ do fmap MemCache $ newMVar (MemCache' sizefun sizelimit 0 Map.empty)
 
 -- | Put a key value pair into cache. Cache will take care of its own
 -- size and never cross total size limit of values.
-put :: (Ord k) => k -> v -> MemCache k v -> IO ()
+put :: (MonadIO m, Ord k, Show k, Show v) => k -> v -> MemCache k v -> m ()
 put k v (MemCache mc) = do
-  modifyMVar_ mc $ \(MemCache' sizefun sizelimit csize mmap) ->
+  liftIO $ modifyMVar_ mc $ \(MemCache' sizefun sizelimit csize mmap) ->
       do
-        let newsize = csize + sizefun v
-        (mmap', newsize') <- if not (Map.null mmap) && newsize > sizelimit
-                             then do
-                                 -- now we need to kill one random thing in the cache
-                                 -- and reduce cache size by that element size
-                                 r <- randomRIO (0,Map.size mmap - 1)
-                                 let (_key,e) = Map.elemAt r mmap
-                                 return $ (Map.deleteAt r mmap, newsize - sizefun e)
-                             else return (mmap, newsize)
-        let mmap'' = Map.insert k v mmap'
-        let mc' = MemCache' sizefun sizelimit newsize' mmap''
-
+        now <- getMinutesTime
+        let (mmap', csize') = if (csize + sizefun v > sizelimit && sizefun v > 0)
+                                then cleanMap sizefun sizelimit (mmap,csize)
+                                else (mmap,csize)
+        let mc' = MemCache' sizefun sizelimit (csize' + sizefun v) ( Map.insert k (now,v) mmap')
         return mc'
-
+    where
+        cleanMap sizefun sizelimit (m,ms) =
+            case (ms + sizefun v > sizelimit `div` 2, Map.foldrWithKey (getOnetoBeRemoved sizefun) Nothing m) of
+                 (True,                Just (rk,_,rv)) -> cleanMap sizefun sizelimit  (Map.delete rk m, ms - sizefun rv)
+                 _                                   -> (m,ms)
+        getOnetoBeRemoved sizefun ok (ot,ov) c@(Just (_,ct,_)) =
+            if (sizefun ov > 0 && ot < ct)
+                 then Just (ok,ot,ov)
+                 else c
+        getOnetoBeRemoved sizefun ok (ot,ov) Nothing =
+            if (sizefun ov > 0)
+                 then Just (ok,ot,ov)
+                 else Nothing
 
 -- | Get a value under a key in cache. This may return 'Nothing' if
 -- not found.
-get :: (Ord k) => k -> MemCache k v -> IO (Maybe v)
-get k (MemCache mc) = do
-  withMVar mc $ \_mc@(MemCache' _sizefun _sizelimit _size mmap) -> do
-    return $ Map.lookup k mmap
+get :: (MonadIO m, Ord k) => k -> MemCache k v -> m (Maybe v)
+get k (MemCache mc) = liftIO $ do
+  modifyMVar mc $ \(MemCache' sf sl cs mmap) -> do
+      case Map.lookup k mmap of
+           Nothing -> return (MemCache' sf sl cs mmap, Nothing)
+           Just (_,v) -> do
+               now <- getMinutesTime
+               return (MemCache' sf sl cs (Map.insert k (now,v) mmap), Just v)
 
 -- | Get current cache size. This is the sum of all objects inside
 -- cache.
-size :: MemCache k v -> IO Int
-size (MemCache mc) = do
-  withMVar mc $ \_mc@(MemCache' _sizefun _sizelimit csize _mmap) -> return csize
+size :: MonadIO m => MemCache k v -> m Int
+size (MemCache mc) = liftIO $ do
+  withMVar mc $ \(MemCache' _ _ csize _) -> return csize
 

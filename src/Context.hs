@@ -2,7 +2,6 @@ module Context (
       Context(..)
     ) where
 
-import Control.Concurrent.MVar
 import File.FileID
 import Doc.JpegPages
 import Doc.SignatoryLinkID
@@ -30,7 +29,7 @@ data Context = Context
     , ctxresourcehostpart    :: String -- ^ The hostname for the resources (will be https if possible)
     , ctxflashmessages       :: [FlashMessage] -- ^ The flash messages for the NEXT request.
     , ctxtime                :: MinutesTime -- ^ The time of the request.
-    , ctxnormalizeddocuments :: MVar (Map.Map FileID JpegPages) -- ^
+    , ctxnormalizeddocuments :: MemCache.MemCache FileID JpegPages -- ^ Rendered jpeg pages
     , ctxipnumber            :: IPAddress -- ^ The ip number of the client.
     , ctxdocstore            :: FilePath -- ^ The temporary document directory.
     , ctxs3action            :: AWS.S3Action -- ^
