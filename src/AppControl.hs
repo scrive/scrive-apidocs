@@ -65,7 +65,7 @@ import qualified Network.HTTP as HTTP
 data AppGlobals
     = AppGlobals { templates       :: MVar (ClockTime, KontrakcjaGlobalTemplates)
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
-                 , docscache       :: MVar (Map.Map FileID JpegPages)
+                 , docscache       :: MemCache.MemCache FileID JpegPages
                  , cryptorng       :: CryptoRNGState
                  }
 

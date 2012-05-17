@@ -13,7 +13,6 @@ import System.Environment
 import System.IO
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.Map as Map
 
 import ActionScheduler
 import ActionSchedulerState
@@ -36,6 +35,7 @@ import qualified Log
 import qualified MemCache
 import qualified Paths_kontrakcja as Paths
 import qualified System.Mem
+import qualified Doc.JpegPages as JpegPages
 
 main :: IO ()
 main = Log.withLogger $ do
@@ -51,7 +51,7 @@ main = Log.withLogger $ do
 
   appGlobals <- (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
     >>= \templates -> MemCache.new BS.length 50000000
-    >>= \filecache -> newMVar Map.empty
+    >>= \filecache ->  MemCache.new JpegPages.pagesCount 1000
     >>= \docs -> newCryptoRNGState
     >>= \rng -> return AppGlobals {
         templates = templates
