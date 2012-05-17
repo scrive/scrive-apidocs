@@ -22,8 +22,8 @@ describe "sign up after signing a document" do
     @h.loginhelper.login_as(@h.ctx.props.tester_email, @h.ctx.props.tester_password)
     begin
       @h.dochelper.uploadContract
-      @h.dochelper.useBasicMode
       @h.dochelper.enterCounterpart("Random", "Person", random_email)
+      @h.dochelper.gotToStep3
       @h.dochelper.signAndSend
     ensure
       @h.loginhelper.logout
