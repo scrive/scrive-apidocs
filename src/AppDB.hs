@@ -69,6 +69,7 @@ kontraMigrations = [
   , addAPIStringDocStats
   , migrateTempCredentialRemoveEmail -- for oauth
   , deprecateDocFunctionalityCol
+  , removePreferedDesignMode
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

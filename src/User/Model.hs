@@ -255,10 +255,9 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
           ++ ", phone"
           ++ ", mobile"
           ++ ", email"
-          ++ ", preferred_design_mode"
           ++ ", lang"
           ++ ", region"
-          ++ ", deleted) VALUES (decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+          ++ ", deleted) VALUES (decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
           ++ " RETURNING " ++ selectUsersSelectors
         _ <- kExecute $
           [ toSql $ pwdHash <$> mpwd
@@ -273,8 +272,7 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
           , toSql lname
           ] ++ replicate 6 (toSql "")
             ++ [toSql $ map toLower email] ++ [
-              SqlNull
-            , toSql $ getLang l
+              toSql $ getLang l
             , toSql $ getRegion l
             , toSql False
             ]
@@ -367,7 +365,7 @@ data SetUserSettings = SetUserSettings UserID UserSettings
 instance MonadDB m => DBUpdate m SetUserSettings Bool where
   update (SetUserSettings uid us) = do
     kPrepare $ "UPDATE users SET"
-      ++ ", lang = ?"
+      ++ "  lang = ?"
       ++ ", region = ?"
       ++ ", customfooter = ?"
       ++ "  WHERE id = ? AND deleted = FALSE"

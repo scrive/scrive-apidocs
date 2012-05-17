@@ -32,7 +32,7 @@ tableUserFriends = Table {
 tableUsers :: Table
 tableUsers = Table {
     tblName = "users"
-  , tblVersion = 7
+  , tblVersion = 8
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
@@ -49,7 +49,6 @@ tableUsers = Table {
        , ("company_position", SqlColDesc {colType = SqlVarCharT, colNullable = Just False}), ("phone", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("mobile", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("email", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("preferred_design_mode", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True}) -- this has been deprecated
        , ("lang", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        , ("region", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
@@ -75,7 +74,6 @@ tableUsers = Table {
           ++ ", phone TEXT NOT NULL"
           ++ ", mobile TEXT NOT NULL"
           ++ ", email TEXT NOT NULL"
-          ++ ", preferred_design_mode SMALLINT NULL" -- this has been deprecated
           ++ ", lang SMALLINT NOT NULL"
           ++ ", deleted BOOL NOT NULL"
           ++ ", region SMALLINT NOT NULL"

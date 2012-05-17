@@ -22,7 +22,7 @@ deprecateDocFunctionalityCol = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 5
   , mgrDo = do
-    kRunRaw "ALTER TABLE documents ALTER COLUMN functionality DROP NOT NULL"
+    kRunRaw "ALTER TABLE documents DROP COLUMN functionality"
 }
 
 setCascadeOnSignatoryAttachments :: MonadDB m => Migration m
