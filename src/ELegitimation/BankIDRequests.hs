@@ -252,10 +252,10 @@ instance XmlContent (SignatureRequest) where
     toContents (SignatureRequest{..}) =
         [CElem (Elem "SignRequest"
                 [mkAttr "xmlns" "http://logica.com/mbi/service/v1.0.0/"]
-                [CElem (Elem "policy" [] $ toText srPolicy) ()
-                ,CElem (Elem "displayName" [] $ toText srDisplayName) ()
-                ,CElem (Elem "personalNumber" [] $ toText srPersonalNumber) ()
-                ,CElem (Elem "userVisibleData" [] $ toText srUserVisibleData) ()]) ()]
+                [CElem (Elem "policy" [mkAttr "xmlns" ""] $ toText srPolicy) ()
+                ,CElem (Elem "displayName" [mkAttr "xmlns" ""] $ toText srDisplayName) ()
+                ,CElem (Elem "personalNumber" [mkAttr "xmlns" ""] $ toText srPersonalNumber) ()
+                ,CElem (Elem "userVisibleData" [mkAttr "xmlns" ""] $ toText srUserVisibleData) ()]) ()]
     parseContents = error "Please do not parse SignatureRequest"
 
 data SignatureResponse = SignatureResponse String String
@@ -267,15 +267,65 @@ instance XmlContent (SignatureResponse) where
     parseContents =  do
         { e <- elementNS "SignResponse"
         ; interior e $ do
-            { transactionid <- inElementNS "transactionID" text
+            { transactionid <- inElementNS "transactionId" text
             ; orderRef <- inElementNS "orderRef" text
             ; return (SignatureResponse transactionid orderRef)
             }
         } `adjustErr` ("in <SignatureResponse>, "++)
-    
+
+data CollectRequest = CollectRequest { crPolicy        :: String
+                                     , crTransactionID :: String
+                                     , crOrderRef      :: String
+                                     , crDisplayName   :: String
+                                     }
+
+instance HTypeable (CollectRequest) where
+  toHType _ = Defined "CollectRequest" [] []
+instance XmlContent (CollectRequest) where
+  toContents (CollectRequest{..}) =
+    [CElem (Elem "CollectRequest"
+            [mkAttr "xmlns" "http://logica.com/mbi/service/v1.0.0/"]
+            [CElem (Elem "policy" [mkAttr "xmlns" ""] $ toText crPolicy) ()
+            ,CElem (Elem "displayName" [mkAttr "xmlns" ""] $ toText crDisplayName) ()
+            ,CElem (Elem "transactionId" [mkAttr "xmlns" ""] $ toText crTransactionID) ()
+            ,CElem (Elem "orderRef" [mkAttr "xmlns" ""] $ toText crOrderRef) ()]) ()]
+  parseContents = error "Please do not parse CollectRequest."
+  
+data CollectResponse = CROutstanding { cresTransactionID :: String }
+                     | CRUserSign { cresTransactionID :: String }
+                     | CRComplete { cresTransactionID :: String
+                                  , cresSignature :: String
+                                  , cresAttributes :: [(String, String)]
+                                  }
+
+instance HTypeable (CollectResponse) where
+    toHType _x = Defined "CollectResponse" [] []
+instance XmlContent (CollectResponse) where
+    toContents _ = error "Do not serialize CollectResponse"
+    parseContents =  do
+        { e <- elementNS "SignResponse"
+        ; interior e $ do
+            { transactionid <- inElementNS "transactionId" text
+            ; progressStatus <- inElementNS "progressStatus" text
+            ; msignature <- optional $ inElementNS "signature" text
+            ; attributes <- slurpAttributes
+            ; return $ case (progressStatus, msignature) of
+                ("OUTSTANDING_TRANSACTION", _) -> CROutstanding transactionid
+                ("USER_SIGN", _) -> CRUserSign transactionid
+                ("COMPLETE", Just signature) -> CRComplete transactionid signature attributes
+                _ -> error $ "Trying to parse CollectResponse but did not understand it; status: " ++ show progressStatus ++ ", signature: " ++ show msignature
+            }
+        } `adjustErr` ("in <CollectResponse>, "++)
+                     
 mbiRequestSignature :: LogicaConfig -> String -> String -> IO (Either String (String, String))
 mbiRequestSignature LogicaConfig{..} personalnumber uvd = do
   eresponse <- makeSoapCallWithCA logicaMBIEndpoint logicaCertFile "Sign" $ SignatureRequest logicaServiceID logicaMBIDisplayName personalnumber (BS.toString $ Base64.encode $ BS.fromString uvd)
   case eresponse of
     Left m -> return $ Left m
     Right (SignatureResponse tid oref) -> return $ Right (tid, oref)
+
+mbiRequestCollect :: LogicaConfig -> String -> String -> IO (Either String CollectResponse)
+mbiRequestCollect LogicaConfig{..} tid oref = do
+  makeSoapCallWithCA logicaMBIEndpoint logicaCertFile "Collect" $ CollectRequest logicaServiceID tid oref logicaMBIDisplayName
+  
+  
