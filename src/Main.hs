@@ -94,13 +94,13 @@ startSystem appGlobals appConf =
           t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port })  (appHandler routes appConf appGlobals)
           let scheddata = SchedulerData appConf $ templates appGlobals
               rng = cryptorng appGlobals
-          t2 <- forkIO $ cron 60 $ runScheduler rng (oldScheduler >> actionScheduler UrgentAction) scheddata
-          t3 <- forkIO $ cron 600 $ runScheduler rng (actionScheduler LeisureAction) scheddata
+          t2 <- forkIO $ cron 60 $ (runScheduler rng (oldScheduler >> actionScheduler UrgentAction) scheddata) >> Log.debug "Running scheduler for UA"
+          t3 <- forkIO $ cron 600 $ (runScheduler rng (actionScheduler LeisureAction) scheddata) >> Log.debug "Running scheduler for LA"
           --t4 <- forkIO $ cron (60 * 60 * 4) $ runScheduler rng runDocumentProblemsCheck scheddata
           --t5 <- forkIO $ cron (60 * 60 * 24) $ runScheduler rng runArchiveProblemsCheck scheddata
           t6 <- forkIO $ cron 5 $ runScheduler rng processEvents scheddata
-          t7 <- forkIO $ cron 60 $ runScheduler rng AWS.uploadFilesToAmazon scheddata
-          t8 <- forkIO $ cron (60 * 60) System.Mem.performGC
+          t7 <- forkIO $ cron 60 $ (runScheduler rng AWS.uploadFilesToAmazon scheddata) >>  Log.debug "Running scheduler for AU"
+          t8 <- forkIO $ cron (60 * 60) (System.Mem.performGC >> Log.debug "Performing GC")
           --return [t1, t2, t3, t4, t5, t6, t7, t8]
           return [t1, t2, t3, t6, t7, t8]
 
