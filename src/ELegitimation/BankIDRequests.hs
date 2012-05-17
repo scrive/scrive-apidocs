@@ -1,23 +1,36 @@
 module ELegitimation.BankIDRequests (
           ImplStatus(..)
+        , LogicaConfig(..)
         , generateChallenge
         , encodeTBS
         , verifySignature
+        , mbiRequestSignature
         ) where
 
-import Control.Monad.State
 import Data.Maybe
-import Doc.DocStateData as D
-import Kontra
 import Misc hiding (optional)
 import SOAP.SOAP
 import Text.XML.HaXml.Posn (Posn)
 import Text.XML.HaXml.XmlContent.Parser
-import ELegitimation.Config
+import ELegitimation.SignatureProvider
+import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString.Base64 as Base64
 
-data ImplStatus = ImplStatus Int String Int String
+data LogicaConfig = LogicaConfig { logicaEndpoint  :: String,  -- ^ URL to Logica
+                                   logicaServiceID :: String,  -- ^ ServiceID from Logica
+                                   logicaCertFile  :: String,   -- ^ Path to certificate file
+                                   logicaMBIDisplayName:: String,  -- ^ Display Name for Mobile Bank ID (must match display name registered with Logica)
+                                   logicaMBIEndpoint :: String -- ^ URL for MobileBankID at Logica
+                                 }
+                  deriving (Show, Read, Ord, Eq)
 
-data GenerateChallengeRequest = GenerateChallengeRequest SignatureProvider String
+data ImplStatus = ImplStatus { errorGroup            :: Int, 
+                               errorGroupDescription :: String, 
+                               errorCode             :: Int, 
+                               errorCodeDescription  :: String
+                            } 
+
+data GenerateChallengeRequest = GenerateChallengeRequest SignatureProvider String -- serviceid
 
 instance HTypeable (GenerateChallengeRequest) where
     toHType _x = Defined "GenerateChallengeRequest" [] []
@@ -187,53 +200,82 @@ instance XmlContent (VerifySignatureResponse) where
             }
         } `adjustErr` ("in <VerifySignatureResponse>, "++)
 
-generateChallenge :: Kontrakcja m => SignatureProvider -> m (Either ImplStatus (String, String))
-generateChallenge provider = do
-    eresponse <- liftIO $ makeSoapCallWithCA endpoint certfile "GenerateChallenge" $ GenerateChallengeRequest provider serviceid
+generateChallenge :: LogicaConfig -> SignatureProvider -> IO (Either ImplStatus (String, String)) -- challenge + transactionid
+generateChallenge (LogicaConfig{..}) provider = do
+    eresponse <- makeSoapCallWithCA logicaEndpoint logicaCertFile "GenerateChallenge" $ GenerateChallengeRequest provider logicaServiceID
     case eresponse of
-        Left msg -> do
-            liftIO $ print msg
-            error msg
-        Right (GenerateChallengeResponse (ImplStatus a b status msg) challenge transactionid) ->
-            if status == 0
-            then return $ Right (challenge, transactionid)
-            else return $ Left (ImplStatus a b status msg)
+        Left msg -> return $ Left $ ImplStatus (-1) "SOAP Call Failure" (-1) msg
+        Right (GenerateChallengeResponse (ImplStatus _ _ 0 _) challenge transactionid) -> return $ Right (challenge, transactionid)
+        Right (GenerateChallengeResponse status _ _) -> return $ Left status
 
-encodeTBS :: Kontrakcja m => SignatureProvider -> String -> String -> m (Either ImplStatus String)
-encodeTBS provider tbs transactionID = do
-    eresponse <- liftIO $ makeSoapCallWithCA endpoint certfile "EncodeTBS" $ EncodeTBSRequest provider serviceid tbs transactionID
+encodeTBS :: LogicaConfig -> SignatureProvider -> String -> String -> IO (Either ImplStatus String) -- encoded TBS + transactionid
+encodeTBS (LogicaConfig{..}) provider tbs transactionID = do
+    eresponse <- makeSoapCallWithCA logicaEndpoint logicaCertFile "EncodeTBS" $ EncodeTBSRequest provider logicaServiceID tbs transactionID
     case eresponse of
-        Left msg -> do
-            liftIO $ print msg
-            error msg
-        Right (EncodeTBSResponse (ImplStatus a b status msg) txt _c) ->
-            if status == 0
-            then return $ Right txt
-            else return $ Left (ImplStatus a b status msg)
+        Left msg -> return $ Left $ ImplStatus (-1) "SOAP Call Failure" (-1) msg
+        Right (EncodeTBSResponse (ImplStatus _ _ 0 _) txt _) -> return $ Right txt
+        Right (EncodeTBSResponse status _ _) -> return $ Left status
 
-verifySignature :: Kontrakcja m
-                => SignatureProvider
+verifySignature :: LogicaConfig
+                -> SignatureProvider
                 -> String
                 -> String
                 -> Maybe String
                 -> String
-                -> m (Either ImplStatus (String, [(String, String)]))
-verifySignature provider tbs signature mnonce transactionID = do
-    eresponse <- liftIO $
-        makeSoapCallWithCA endpoint certfile
+                -> IO (Either ImplStatus (String, [(String, String)])) -- certificate and user attributes
+verifySignature LogicaConfig{..} provider tbs signature mnonce transactionID = do
+    eresponse <- 
+        makeSoapCallWithCA logicaEndpoint logicaCertFile
             "VerifySignature" $
             VerifySignatureRequest provider
-                serviceid
+                logicaServiceID
                 tbs
                 signature
                 mnonce
                 transactionID
     case eresponse of
-        Left msg -> do
-            liftIO $ print msg
-            error msg
-        Right (VerifySignatureResponse (ImplStatus a b status msg) attrs certificate) ->
-            if status == 0
-            then return $ Right (certificate, attrs)
-            else return $ Left (ImplStatus a b status msg)
+        Left msg -> return $ Left $ ImplStatus (-1) "SOAP Call Failure" (-1) msg
+        Right (VerifySignatureResponse (ImplStatus _ _ 0 _) attrs certificate) -> return $ Right (certificate, attrs)
+        Right (VerifySignatureResponse status _ _) -> return $ Left status
 
+-- Mobile BankID Stuff
+
+data SignatureRequest = SignatureRequest { srPolicy            :: String
+                                         , srDisplayName       :: String
+                                         , srPersonalNumber    :: String
+                                         , srUserVisibleData   :: String
+                                         }
+                        
+instance HTypeable (SignatureRequest) where
+    toHType _x = Defined "SignatureRequest" [] []
+instance XmlContent (SignatureRequest) where
+    toContents (SignatureRequest{..}) =
+        [CElem (Elem "SignRequest"
+                [mkAttr "xmlns" "http://logica.com/mbi/service/v1.0.0/"]
+                [CElem (Elem "policy" [] $ toText srPolicy) ()
+                ,CElem (Elem "displayName" [] $ toText srDisplayName) ()
+                ,CElem (Elem "personalNumber" [] $ toText srPersonalNumber) ()
+                ,CElem (Elem "userVisibleData" [] $ toText srUserVisibleData) ()]) ()]
+    parseContents = error "Please do not parse SignatureRequest"
+
+data SignatureResponse = SignatureResponse String String
+                         
+instance HTypeable (SignatureResponse) where
+    toHType _x = Defined "SignatureResponse" [] []
+instance XmlContent (SignatureResponse) where
+    toContents _ = error "Do not serialize SignatureResponse"
+    parseContents =  do
+        { e <- elementNS "SignResponse"
+        ; interior e $ do
+            { transactionid <- inElementNS "transactionID" text
+            ; orderRef <- inElementNS "orderRef" text
+            ; return (SignatureResponse transactionid orderRef)
+            }
+        } `adjustErr` ("in <SignatureResponse>, "++)
+    
+mbiRequestSignature :: LogicaConfig -> String -> String -> IO (Either String (String, String))
+mbiRequestSignature LogicaConfig{..} personalnumber uvd = do
+  eresponse <- makeSoapCallWithCA logicaMBIEndpoint logicaCertFile "Sign" $ SignatureRequest logicaServiceID logicaMBIDisplayName personalnumber (BS.toString $ Base64.encode $ BS.fromString uvd)
+  case eresponse of
+    Left m -> return $ Left m
+    Right (SignatureResponse tid oref) -> return $ Right (tid, oref)

@@ -37,7 +37,7 @@ generateBankIDTransaction :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m 
 generateBankIDTransaction docid signid = do
     magic <- guardJustM $ readField "magichash"
     provider <- guardJustM $ readField "provider"
-    Context{ctxtime} <- getContext
+    Context{ctxtime,ctxlogicaconf} <- getContext
     let seconds = toSeconds ctxtime
 
     -- sanity check
@@ -46,13 +46,13 @@ generateBankIDTransaction docid signid = do
     unless (document `allowsIdentification` ELegitimationIdentification) internalError
     -- request a nonce
 
-    nonceresponse <- generateChallenge provider
+    nonceresponse <- liftIO $ generateChallenge ctxlogicaconf provider
     case nonceresponse of
         Left (ImplStatus _a _b code msg) -> generationFailed "Generate Challenge failed" code msg
         Right (nonce, transactionid) -> do
             -- encode the text to be signed
             tbs <- getTBS document
-            encodetbsresponse <- encodeTBS provider tbs transactionid
+            encodetbsresponse <- liftIO $ encodeTBS ctxlogicaconf provider tbs transactionid
             case encodetbsresponse of
                 Left (ImplStatus _a _b code msg) -> generationFailed "EncodeTBS failed" code msg
                 Right txt -> do
@@ -80,6 +80,7 @@ generateBankIDTransactionForAuthor  docid = do
     provider <- guardJustM $ readField "provider"
     author <- guardJustM $ ctxmaybeuser <$> getContext
     time <- ctxtime <$> getContext
+    logicaconf <-ctxlogicaconf <$> getContext
     document <- guardRightM $ getDocByDocID docid
     tbs <- case documentstatus document of
         Preparation    -> getDataFnM $ look "tbs" -- tbs will be sent as post param
@@ -88,13 +89,13 @@ generateBankIDTransactionForAuthor  docid = do
 
     unless (isAuthor (document, author)) internalError -- necessary because someone other than author cannot initiate eleg
 
-    nonceresponse <- generateChallenge provider
+    nonceresponse <- liftIO $ generateChallenge logicaconf provider
     case nonceresponse of
         Left (ImplStatus _a _b code msg) -> generationFailed "Generate Challenge failed" code msg
         Right (nonce, transactionid) -> do
             -- encode the text to be signed
 
-            encodetbsresponse <- encodeTBS provider tbs transactionid
+            encodetbsresponse <- liftIO $ encodeTBS logicaconf provider tbs transactionid
             case encodetbsresponse of
                 Left (ImplStatus _a _b code msg) -> generationFailed "EncodeTBS failed" code msg
                 Right txt -> do
@@ -144,6 +145,7 @@ verifySignatureAndGetSignInfo docid signid magic provider signature transactioni
     elegtransactions  <- ctxelegtransactions <$> getContext
     document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
     siglink <- guardJust $ getSigLinkFor document signid
+    logicaconf <- ctxlogicaconf <$> getContext
     -- valid transaction?
     ELegTransaction { transactionsignatorylinkid = mtsignid
                     , transactionmagichash       = mtmagic
@@ -158,7 +160,7 @@ verifySignatureAndGetSignInfo docid signid magic provider signature transactioni
      -- end validation
     Log.eleg $ "Successfully found eleg transaction: " ++ show transactionid
     -- send signature to ELeg
-    res <- verifySignature provider
+    res <- liftIO $ verifySignature logicaconf provider
                 transactionencodedtbs
                 signature
                 ( Just transactionnonce <|  provider == BankIDProvider |> Nothing )
@@ -223,6 +225,7 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
     elegtransactions  <- ctxelegtransactions <$> getContext
     author   <- guardJustM  $ ctxmaybeuser <$> getContext
     doc <- guardRightM $ getDocByDocID docid
+    logicaconf <- ctxlogicaconf <$> getContext
 
     unless (isAuthor (doc, author)) internalError -- necessary because someone other than author cannot initiate eleg
     Log.eleg $ ("Document " ++ show docid ) ++ ": Author verified"
@@ -237,11 +240,11 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
     Log.eleg $ ("Document " ++ show docid ) ++ ": Document matched"
     unless (doc `allowsIdentification` ELegitimationIdentification) internalError
     Log.eleg $ ("Document " ++ show docid ) ++ ": Document allows eleg"
-    res <- verifySignature provider
-                    transactionencodedtbs
-                    signature
-                    ( Just transactionnonce <|  provider == BankIDProvider |> Nothing )
-                    transactionid
+    res <- liftIO $ verifySignature logicaconf provider 
+                      transactionencodedtbs
+                      signature
+                      ( Just transactionnonce <|  provider == BankIDProvider |> Nothing )
+                      transactionid
 
     case res of
         Left (ImplStatus _a _b code msg) -> do
