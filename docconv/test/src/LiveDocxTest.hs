@@ -100,10 +100,7 @@ runLiveDocxConversion conf filename format = do
   convertToPDF conf contents format
 
 assertConversionSuccessful :: Either LiveDocxError BS.ByteString -> Assertion
-assertConversionSuccessful (Left err) = if ("Request for principal permission failed." `isInfixOf` (show err))
-                                           -- We use free account for tests. This is the error that you may get because of that.
-                                           then return ()
-                                           else assertFailure $ "conversion failed with error: " ++ show err
+assertConversionSuccessful (Left err) = assertFailure $ "conversion failed with error: " ++ show err
 assertConversionSuccessful (Right _) = return ()
 
 assertConversionFailed :: Either LiveDocxError a -> Assertion
