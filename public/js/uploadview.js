@@ -61,7 +61,7 @@
                 width: 125,
                 text: localization.uploadButton,
                 submitOnUpload: true,
-                type: "application/pdf,application/doc,application/docx",
+                type: "application/pdf,application/doc,application/docx,application/rtf",
                 onClick : function () {
                     LoadingDialog.open();
                 },
@@ -92,9 +92,14 @@
                     },
                     ajaxsuccess: function(d) {
                         console.log("there");
-                        if (d) {
+                        if (d != undefined && d.designurl != undefined) {
                             window.location.href = d.designurl;
                         }
+                        else {
+                             FlashMessages.add({content: localization.couldNotUpload, color: "red"});
+                             LoadingDialog.close();
+                             wiz.trigger('change');
+                        }     
                     }
                 })
             });
