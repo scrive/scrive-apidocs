@@ -56,6 +56,8 @@ import ELegitimation.BankIDRequests (LogicaConfig(..))
 import qualified Data.Map as Map
 import qualified Control.Exception.Lifted as E
 import qualified Static.Resources as SR
+import qualified Doc.JpegPages as JpegPages
+
 data TestEnvSt = TestEnvSt {
     teNexus           :: Nexus
   , teRNGState        :: CryptoRNGState
@@ -196,7 +198,7 @@ mkContext :: Locale -> TestEnv Context
 mkContext locale = do
   globaltemplates <- teGlobalTemplates <$> ask
   liftIO $ do
-    docs <- newMVar M.empty
+    docs <- MemCache.new JpegPages.pagesCount 500
     memcache <- MemCache.new BS.length 52428800
     time <- getMinutesTime
     return Context {

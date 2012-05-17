@@ -17,7 +17,6 @@ module Doc.DocStorage
     , preCheckPDF
     ) where
 
-import Control.Concurrent.MVar.Lifted
 import Control.Monad
 import Control.Monad.Error
 import Data.Typeable
@@ -36,9 +35,8 @@ import qualified Amazon as AWS
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
-import qualified Data.Map as Map
 import qualified Log
-import qualified MemCache
+import qualified MemCache as MemCache
 import qualified SealSpec as Seal
 import Redirect
 
@@ -52,12 +50,11 @@ instance GuardRight FileError where
 getFileContents :: (KontraMonad m, MonadIO m) => File -> m BS.ByteString
 getFileContents file = do
   ctx <- getContext
-  liftIO $ do
-    mcontent <- MemCache.get (fileid file) (ctxfilecache ctx)
-    case mcontent of
+  mcontent <- MemCache.get (fileid file) (ctxfilecache ctx)
+  case mcontent of
       Just content -> return content
       Nothing -> do
-        mcontentAWS <- AWS.getFileContents (ctxs3action ctx) file
+        mcontentAWS <- liftIO $ AWS.getFileContents (ctxs3action ctx) file
         MemCache.put (fileid file) mcontentAWS (ctxfilecache ctx)
         return mcontentAWS
 
@@ -187,24 +184,25 @@ maybeScheduleRendering :: Kontrakcja m
                        -> DocumentID
                        -> m JpegPages
 maybeScheduleRendering fileid docid = do
-  ctx@Context{ctxnormalizeddocuments = mvar} <- getContext
-  (p, start) <- liftIO $ modifyMVar mvar $ \setoffilesrenderednow ->
-    case Map.lookup fileid setoffilesrenderednow of
-      Just pages -> return (setoffilesrenderednow, (pages, False))
-      Nothing -> return (Map.insert fileid JpegPagesPending setoffilesrenderednow, (JpegPagesPending, True))
+  Context{ctxgscmd,ctxnormalizeddocuments} <- getContext
 
-  when start $
-    forkAction ("Rendering file #" ++ show fileid ++ " of doc #" ++ show docid) $ do
-      jpegpages <- convertPdfToJpgPages (ctxgscmd ctx) fileid docid
-      case jpegpages of
-        JpegPagesError _errmsg -> do
-          -- FIXME: need to report this error somewhere
-          -- _ <- runDBUpdate $ ErrorDocument docid $ BS.toString errmsg
-          return ()
-        _                     -> return ()
-      modifyMVar_ mvar (\filesrenderednow -> return (Map.insert fileid jpegpages filesrenderednow))
-  return p
+  -- Some debugs
+  Log.debug $ "Rendering is being scheduled for document " ++ show docid
+  pgs <- MemCache.size ctxnormalizeddocuments
+  Log.debug $ "Total rendered pages count: " ++ show (pgs)
 
+  -- Propper action
+  v <- MemCache.get fileid ctxnormalizeddocuments
+  case v of
+      Just pages -> return pages
+      Nothing -> do
+          MemCache.put fileid JpegPagesPending ctxnormalizeddocuments
+          forkAction ("Rendering file #" ++ show fileid ++ " of doc #" ++ show docid) $ do
+                   jpegpages <- convertPdfToJpgPages ctxgscmd fileid docid             -- FIXME: We should report error somewere
+                   MemCache.put fileid jpegpages ctxnormalizeddocuments
+          return JpegPagesPending
+
+  
 data FileError = FileSizeError Int Int
                | FileFormatError
                | FileNormalizeError BSL.ByteString
