@@ -49,6 +49,7 @@ module User.UserView (
 
     --utils
     userBasicFields,
+    menuFields,
 
     userStatsDayToJSON,
     userStatsMonthToJSON,
@@ -138,7 +139,6 @@ showUserSecurity user = renderTemplate "showUserSecurity" $ do
         F.value "en" $ LANG_EN == (getLang user)
         F.value "se" $ LANG_SE == (getLang user)
     F.value "footer" $ customfooter $ usersettings user
-    F.value "advancedMode" $ Just AdvancedMode == (preferreddesignmode $ usersettings user)
     menuFields user
 
 showUserMailAPI :: TemplatesMonad m => User -> Maybe MailAPIInfo -> Maybe MailAPIInfo -> m String

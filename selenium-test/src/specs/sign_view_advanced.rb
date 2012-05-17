@@ -20,7 +20,6 @@ describe "sign view all functionalities" do
     begin
       @h.loginhelper.set_name(@h.ctx.props.tester_fstname, @h.ctx.props.tester_sndname)
       @h.dochelper.uploadContract
-      @h.dochelper.useAdvancedMode
 
       puts "set the author to have some custom fields"
       @h.dochelper.addCustomField(1,"authorFN1","authorFV1")

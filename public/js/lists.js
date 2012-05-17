@@ -571,7 +571,7 @@
         },
         render: function() {
           if (this.model.isLoading() && !this.isLoader()) {
-            var img = $("<img src='/theme/images/wait30trans.gif' style='margin:30px'>");
+            var img = $("<img src='/img/wait30trans.gif' style='margin:30px'>");
             var overlay = $("<div>");
             overlay.append(img);
 
@@ -625,23 +625,39 @@
             this.headerExtras = args.headerExtras;
             this.bottomExtras = args.bottomExtras;
             this.makeElementsViews([]);
+            this.emptyAlternative = args.emptyAlternative;
         },
         makeElementsViews : function(ms){
             $(this.el).children().detach();
-            this.prerender();
-            new LoadingView({
-                model: this.loading,
-                colcount: this.schema.size(),
-                el: this.table
-            });
-            for (var i = 0; i < ms.length; i++) {
-                new ListObjectView({
-                    model: ms.at(i),
-                    schema: this.schema,
-                    el: $("<tr />")
-                });
+            if(this.emptyAlternative && ms.length === 0) {
+                this.renderEmpty();
             }
-            this.render();
+            else {
+                this.prerender();
+                new LoadingView({
+                    model: this.loading,
+                    colcount: this.schema.size(),
+                    el: this.table
+                });
+                for (var i = 0; i < ms.length; i++) {
+                    new ListObjectView({
+                        model: ms.at(i),
+                        schema: this.schema,
+                        el: $("<tr />")
+                    });
+                }
+                this.render();
+            }
+        },
+        renderEmpty: function() {
+            this.main = $("<div class='tab-container'/>");
+            this.pretableboxleft = $("<div class='col float-left'/>");
+            this.pretableboxright = $("<div class='col float-right'/>");
+            this.pretablebox = $("<div class='tab-content'/>");
+            this.pretableboxleft.append(this.emptyAlternative);
+            this.main.append(this.pretablebox);
+            this.pretablebox.append(this.pretableboxleft).append(this.pretableboxright);
+            $(this.el).append(this.main);
         },
         prerender: function() {
             this.main = $("<div class='tab-container'/>");
@@ -788,7 +804,8 @@
                 loading: this.loading,
                 el: $("<div class='list-container'/>"),
                 headerExtras: args.headerExtras,
-                bottomExtras: args.bottomExtras
+                bottomExtras: args.bottomExtras,
+                emptyAlternative: args.emptyAlternative
             });
             this.schema.bind('change', this.recall);
             this.recall();

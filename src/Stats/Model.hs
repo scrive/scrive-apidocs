@@ -185,7 +185,6 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   ++ ", users.phone"
   ++ ", users.mobile"
   ++ ", users.email"
-  ++ ", users.preferred_design_mode"
   ++ ", users.lang"
   ++ ", users.region"
   ++ ", users.customfooter"
@@ -222,8 +221,8 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` foldDB decoder []
     decoder acc uid password salt is_company_admin account_suspended
      has_accepted_terms_of_service signup_method service_id company_id
      first_name last_name personal_number company_position phone mobile
-     email preferred_design_mode lang region customfooter company_name company_number cid eid sid
-     name number address zip' city country bars_background bars_textcolour logo email_domain 
+     email lang region customfooter company_name company_number cid eid sid
+     name number address zip' city country bars_background bars_textcolour logo email_domain
      inviter_id invite_time invite_type
      = (
        User {
@@ -245,8 +244,7 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` foldDB decoder []
            , usercompanynumber = company_number
            }
          , usersettings = UserSettings {
-             preferreddesignmode = preferred_design_mode
-           , locale = mkLocale region lang
+             locale = mkLocale region lang
            , customfooter = customfooter
            }
          , userservice = service_id
@@ -355,6 +353,8 @@ data UserStatQuantity = UserSignTOS             -- When user signs TOS
                       | UserPhoneAfterTOS       -- when a user requests a phone call after accepting the TOS
                       | UserCreateCompany       -- when a user creates a company
                       | UserLogin               -- when a user logs in
+                      | UserAPIGrantAccess      -- when a user requests an access token
+                      | UserAPINewUser          -- when they create a new user because of api
                       deriving (Eq, Ord, Show)
 $(enumDeriveConvertible ''UserStatQuantity)
 

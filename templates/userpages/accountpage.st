@@ -11,6 +11,7 @@ showUser =
         $if(iscompanyadmin)$<li><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>$endif$
         <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
         <li><a href="/account/usagestats">$_HeadUsageStats()$</a></li>
+        <li><a href="/oauth/dashboard">API</a></li>
     </ul>
     <div class="tab-container">
         <div class="tab-content account">

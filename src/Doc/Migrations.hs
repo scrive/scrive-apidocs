@@ -17,6 +17,14 @@ import qualified Data.ByteString.UTF8 as BS
 
 $(jsonableDeriveConvertible [t| [SignatoryField] |])
 
+deprecateDocFunctionalityCol :: MonadDB m => Migration m
+deprecateDocFunctionalityCol = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 5
+  , mgrDo = do
+    kRunRaw "ALTER TABLE documents DROP COLUMN functionality"
+}
+
 setCascadeOnSignatoryAttachments :: MonadDB m => Migration m
 setCascadeOnSignatoryAttachments = Migration {
     mgrTable = tableSignatoryAttachments
@@ -107,7 +115,7 @@ moveSignatoryLinkFieldsToSeparateTable = Migration {
         let (xtypestr :: String, custom_name :: String, is_author_filled :: Bool) =
               case lookup "sfType" field of
                 Just (JSString x_sfType) -> (fromJSString x_sfType,"",False)
-                Just obj@(JSObject xcustom) -> 
+                Just obj@(JSObject xcustom) ->
                   case lookup "CustomFT" (fromJSObject xcustom) of
                     Just (JSArray [JSString custname, JSBool authorfilled]) ->
                       ("CustomFT", fromJSString custname, authorfilled)
@@ -173,7 +181,7 @@ moveDocumentTagsFromDocumentsTableToDocumentTagsTable = Migration {
       where
         Ok (JSArray arr) = decode tagsstr
         fromJSValue (JSObject obj) = fromJSObject obj
-        fromJSValue x = 
+        fromJSValue x =
           error $ "moveDocumentTagsFromDocumentsTableToDocumentTagsTable: expected {tagname:'',tagvalue:''}, got: " ++ encode x
         tags = map fromJSValue arr
 
@@ -299,7 +307,7 @@ addSignatoryLinkIdToSignatoryAttachment =
       ++ "WHERE sl.document_id = signatory_attachments.document_id "
       ++ "AND regexp_replace(sl.fields, '^.*EmailFT\",\"sfValue\":\"([a-zA-Z0-9@-_.]+)\".*$', E'\\\\1') = signatory_attachments.email"
     kRunRaw $ "ALTER TABLE signatory_attachments DROP CONSTRAINT pk_signatory_attachments"
-    -- delete attachments which have emails and document_id that don't exist in signatory_links  
+    -- delete attachments which have emails and document_id that don't exist in signatory_links
     logAndDeleteBadAttachments
     kRunRaw $ "ALTER TABLE signatory_attachments DROP COLUMN email"
     kRunRaw $ "ALTER TABLE signatory_attachments ADD CONSTRAINT pk_signatory_attachments PRIMARY KEY (document_id, signatory_link_id, name)"
@@ -310,11 +318,11 @@ addSignatoryLinkIdToSignatoryAttachment =
     kRunRaw $ "CREATE INDEX idx_signatory_attachments_signatory_link_id ON signatory_attachments(signatory_link_id)"
   }
   where
-    logAndDeleteBadAttachments = do 
+    logAndDeleteBadAttachments = do
       kRunRaw $ "SELECT document_id, name, email, description FROM signatory_attachments WHERE signatory_link_id = 0"
       atts <- foldDB decoder []
       kRunRaw $ "DELETE FROM signatory_attachments WHERE signatory_link_id = 0"
-      mapM_ (\(d, n, e, s) -> 
+      mapM_ (\(d, n, e, s) ->
         Log.debug $ "Deleted bad attachment: document_id = " ++ show d
                  ++ ", name = " ++ show n
                  ++ ", email = " ++ show e
@@ -335,7 +343,7 @@ fixSignatoryLinksSwedishChars =
      forM_ sls $ \(sid,did,fields) -> do
        let fixedfields = fixSwedishChars fields
        when (fields /= fixedfields) $ do
-         _ <- kRun $ SQL "UPDATE signatory_links SET fields = ? WHERE id = ? AND document_id = ?" 
+         _ <- kRun $ SQL "UPDATE signatory_links SET fields = ? WHERE id = ? AND document_id = ?"
                 [ toSql fixedfields
                 , toSql sid
                 , toSql did
@@ -355,7 +363,7 @@ fixSignatoryLinksSwedishChars =
         fixSwedishCharsForAFieldType (CustomFT s b) = CustomFT (fixSwedishCharsForAString s) b
         fixSwedishCharsForAFieldType a = a
         fixSwedishCharsForAString :: String -> String
-        fixSwedishCharsForAString s = 
+        fixSwedishCharsForAString s =
           let value = BS.toString $ BSC.pack s
           in if value /= s && BS.replacement_char `notElem` value
              then value

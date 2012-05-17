@@ -40,6 +40,7 @@ import qualified Network.HTTP as HTTP
 
 import AppState
 import Control.Monad.Trans.Control.Util
+import Configuration
 import Crypto.RNG
 import DB
 import Kontra
@@ -51,9 +52,10 @@ import Templates.TemplatesLoader
 import qualified MemCache
 import User.Locale
 import Util.FinishWith
+import ELegitimation.BankIDRequests (LogicaConfig(..))
 import qualified Data.Map as Map
 import qualified Control.Exception.Lifted as E
-
+import qualified Static.Resources as SR
 data TestEnvSt = TestEnvSt {
     teNexus           :: Nexus
   , teRNGState        :: CryptoRNGState
@@ -223,6 +225,13 @@ mkContext locale = do
         , ctxlocaleswitch = False
         , ctxmailsconfig = defaultMailsConfig
         , ctxtwconf = error "twconf is not defined"
+        , ctxlivedocxconf = confDefault
+        , ctxlogicaconf = LogicaConfig { logicaEndpoint = "https://eidt.funktionstjanster.se:18898/osif"
+                                       , logicaCertFile = "certs/steria3.pem"
+                                       , logicaServiceID = "logtest004" 
+                                       , logicaMBIEndpoint = "https://eidt.funktionstjanster.se:18898/mbi/service"
+                                       , logicaMBIDisplayName = "Test av Mobilt BankID"
+                                       }
         , ctxelegtransactions = []
         , ctxfilecache = memcache
         , ctxxtoken = error "xtoken is not defined"
@@ -233,6 +242,7 @@ mkContext locale = do
         , ctxsalesaccounts = []
         , ctxmagichashes = Map.empty
         , ctxmaybepaduser = Nothing
+        , ctxstaticresources = SR.ResourceSetsForImport []
     }
 
 -- pgsql database --

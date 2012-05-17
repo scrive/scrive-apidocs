@@ -23,6 +23,7 @@ import Mails.Tables
 import PadQueue.Tables
 import PadQueue.Migrations
 import Mails.Migrations
+import OAuth.Tables
 import ScriveByMail.Tables
 import EvidenceLog.Tables
 
@@ -66,7 +67,10 @@ kontraMigrations = [
   , addCheckLowercaseEmailsUsers
   , moveSignatoryLinkFieldsToSeparateTable
   , addAPIStringDocStats
-  ] ++ mailerMigrations 
+  , migrateTempCredentialRemoveEmail -- for oauth
+  , deprecateDocFunctionalityCol
+  , removePreferedDesignMode
+  ] ++ mailerMigrations
 
 kontraTables :: [Table]
 kontraTables = [
@@ -93,4 +97,9 @@ kontraTables = [
   , tableMailAPIDelay
   , tableDocumentTags
   , tableSignatoryLinkFields
+  , tableTempCredential
+  , tableTempPrivileges
+  , tableAPIToken
+  , tableAccessToken
+  , tablePrivilege
   ] ++ mailerTables

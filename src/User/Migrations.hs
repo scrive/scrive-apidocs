@@ -69,3 +69,13 @@ addCheckLowercaseEmailsUsers =
       _ <- kRunRaw $ "ALTER TABLE users ADD CONSTRAINT users_email_lowercase_chk CHECK (email = lower(email))"
       return ()
   }
+
+removePreferedDesignMode :: MonadDB m => Migration m
+removePreferedDesignMode =
+  Migration {
+    mgrTable = tableUsers
+  , mgrFrom = 7
+  , mgrDo = do
+      _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN preferred_design_mode"
+      return ()
+  }  

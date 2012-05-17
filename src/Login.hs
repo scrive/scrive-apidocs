@@ -4,6 +4,7 @@ module Login (
   , handleLoginGet
   , handleLoginPost
   , handleLogout
+  , handleSignup
   ) where
 
 import ActionSchedulerState
@@ -79,9 +80,19 @@ sendResetPasswordMail ctx link user = do
 -}
 signupPagePost :: Kontrakcja m => m KontraLink
 signupPagePost = do
+  me <- handleSignup
+  maybeM (addFlashM . modalUserSignupDone . fst) me
+  return LoopBack
+
+{- |
+   Try to sign up a new user. Returns the email and the new user id. If the 
+   user already existed, don't return the userid.
+ -}
+handleSignup :: Kontrakcja m => m (Maybe (Email, Maybe UserID))
+handleSignup = do
   memail <- getOptionalField asValidEmail "email"
   case memail of
-    Nothing -> return LoopBack
+    Nothing -> return Nothing
     Just email -> do
       muser <- dbQuery $ GetUserByEmail Nothing $ Email $ email
       case (muser, muser >>= userhasacceptedtermsofservice) of
@@ -89,16 +100,17 @@ signupPagePost = do
           -- there is an existing user that hasn't been activated
           -- send them another invite
           UserControl.sendNewUserMail user
+          return $ Just (Email email, Nothing)
         (Nothing, Nothing) -> do
           -- this email address is new to the system, so create the user
           -- and send an invite
           mnewuser <- UserControl.createUser (Email email) "" "" Nothing
           maybe (return ()) UserControl.sendNewUserMail mnewuser
-        (_, _) -> return ()
-      -- whatever happens we want the same outcome, we just claim we sent the activation link,
-      -- because we don't want any security problems with user information leaks
-      addFlashM $ modalUserSignupDone (Email email)
-      return LoopBack
+          return $ Just (Email email, userid <$> mnewuser)
+        (_, _) -> return $ Just (Email email, Nothing)
+        -- whatever happens we want the same outcome, we just claim we sent the activation link,
+        -- because we don't want any security problems with user information leaks
+        
 
 {- |
    Handles viewing of the login page

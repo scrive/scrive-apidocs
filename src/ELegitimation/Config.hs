@@ -1,3 +1,6 @@
+-- This file can be deleted as soon as the configuration for staging + production
+-- are set up.
+
 module ELegitimation.Config(
           certfile       
         , serviceid

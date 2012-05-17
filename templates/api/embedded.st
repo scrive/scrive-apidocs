@@ -140,7 +140,7 @@ $endif$
  float: none;
 }
 </style>
-<script type="text/javascript" src="/js/postmessage.js"></script>
+<script type="text/javascript" src="/libs/postmessage.js"></script>
 <script>
 standardDialogMask = $if(overlaybackground)$ "$overlaybackground$" $else$ "#FFFFFF" $endif$;
 standardDialogTop = 100;
@@ -186,7 +186,7 @@ $doctype()$
 <html>
 <head>
 $standardHeaderContents()$
-<script type="text/javascript" src="/js/postmessage.js"></script>
+<script type="text/javascript" src="/libs/postmessage.js"></script>
 <script>
 function propagateError() {
 if (! ("$location$" == "" && jQuery.browser.msie &&  parseInt(jQuery.browser.version, 10)  < 8))

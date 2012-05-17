@@ -86,36 +86,12 @@ var DocumentDesignView = Backbone.View.extend({
             titleedit.focus();
             return false;
         });
-        if (document.isBasic()) iconedit.hide();
         titlepart.append(namepart);
 
         // Download link
         var downloadpart = $("<span class='download'/>");
         downloadpart.append($("<a  target='_blank'/>").attr("href",document.mainfile().downloadLink()).text(localization.downloadPDF));
         return jQuery.merge(titlepart,downloadpart);
-    },
-    switchFunctionalityOption : function(){
-        var document = this.model;
-        var a = $("<a href='#' class='extraLink switchIcon'/>");
-        a.html(localization.switchToAdvanced.option);
-        a.click(function(){
-               Confirmation.popup({
-                  title : localization.switchToAdvanced.title,
-                  acceptText :localization.switchToAdvanced.button,
-                  rejectText: localization.cancel,
-                  content  : localization.switchToAdvanced.content,
-                  onAccept : function() {
-                      document.switchFunctionalityToAdvanced();
-                      document.save().sendAjax(function() {
-                               new Submit().send();
-                            });
-                      return false;
-                     }
-               });
-               return false;
-            });
-       return a;
-
     },
     saveAsTemplateOption : function() {
         var document = this.model;
@@ -152,14 +128,6 @@ var DocumentDesignView = Backbone.View.extend({
       box.append(wizardview.el);
       return box;
     },
-    designStepBasic: function() {
-        var document = this.model;
-        var box = $("<div class='signStepsBody basicMode'/>");
-        document.fixForBasic();
-        this.signatoriesView = new SignatoriesDesignBasicView({model: document, el: $("<div/>"), extra: this.finalBasicBox()});
-        box.append($(this.signatoriesView.el));
-        return box;
-    },
     finalBasicBox : function() {
         var document = this.model;
         var finalBox = $("<div class='finalbox'/>");
@@ -174,7 +142,7 @@ var DocumentDesignView = Backbone.View.extend({
     },
     designStep1: function() {
         var document = this.model;
-        var box = $("<div class='signStepsBody advancedMode'/>");
+        var box = $("<div class='signStepsBody'/>");
         this.signatoriesView  = new SignatoriesDesignAdvancedView({model: document, el: $("<div/>") , extra: this.nextStepButton()});
         box.append($(this.signatoriesView.el));
         return box;
@@ -218,7 +186,7 @@ var DocumentDesignView = Backbone.View.extend({
     verifikationMethodSelection : function() {
         var document = this.model;
         var elegAvaible = document.region().iselegavailable() || document.elegAuthorization();;
-        var padAvaible = !document.isBasic() || document.padAuthorization();
+        var padAvaible = document.padAuthorization();
         if (!elegAvaible && !padAvaible) return $("<div sttle='display:none;'/>");
         var box = $("<div class='verificationmethodselect'/>");
         var select= $("<select/>");
@@ -325,8 +293,8 @@ var DocumentDesignView = Backbone.View.extend({
                             editText :  localization.reminder.formOwnMessage,
                             rejectText : localization.cancel,
                             onAccept : function(customtext)
-                            {
-                                document.setInvitationMessage(customtext);
+                            {   if (customtext != undefined)
+                                    document.setInvitationMessage(customtext);
                                 return true;
                             }
                             });
@@ -485,13 +453,13 @@ var DocumentDesignView = Backbone.View.extend({
         var document = this.model;
         var view = this;
         this.finalButtonBox = $("<div class='finalbuttonbox'/>");
-        if (!document.isTemplate()  && !document.isBasic() && document.authorCanSignFirst())
+        if (!document.isTemplate()  && document.authorCanSignFirst())
             this.finalButtonBox.append(this.signLastOption());
         var button;
         if (document.isTemplate())
             button = Button.init({
                         color: "green",
-                        size: document.isBasic() ? "small" : "big" ,
+                        size: "big" ,
                         cssClass: "finalbutton",
                         text: localization.saveTemplate,
                         onClick: function() {
@@ -501,7 +469,7 @@ var DocumentDesignView = Backbone.View.extend({
         else if (!this.signLast() && document.authorCanSignFirst())
             button = Button.init({
                         color: "blue",
-                        size: document.isBasic() ? "small" : "big" ,
+                        size: "big" ,
                         cssClass: "finalbutton",
                         text: localization.designview.sign,
                         onClick: function() {
@@ -513,7 +481,7 @@ var DocumentDesignView = Backbone.View.extend({
        else
            button = Button.init({
                         color: "green",
-                        size: document.isBasic() ? "small" : "big" ,
+                        size: "big" ,
                         cssClass: "finalbutton",
                         text: document.process().sendbuttontext(),
                         onClick: function() {
@@ -574,13 +542,13 @@ var DocumentDesignView = Backbone.View.extend({
         if (document.authorIsOnlySignatory())
             content = $(document.process().authorIsOnlySignatory());
         else if (document.elegAuthorization())
-            content = $(document.process().signatorysignmodalcontentdesignvieweleg());    
+            content = $(document.process().signatorysignmodalcontentdesignvieweleg());
         else if (document.lastSignatoryLeft())
             content = $(document.process().signatorysignmodalcontentlast());
         else
             content = $(document.process().signatorysignmodalcontentnotlast());
 
-        
+
         DocumentDataFiller.fill(document, content);
         if (document.elegAuthorization())
         {
@@ -690,15 +658,15 @@ var DocumentDesignView = Backbone.View.extend({
 
 
         // Sign boxes
-        var designbody1 = document.isBasic() ? this.designStepBasic() : this.designStep1();
-        var designbody2 = document.isBasic() ? $("Nothing") : this.designStep2();
+        var designbody1 = this.designStep1();
+        var designbody2 = this.designStep2();
 
         var changemainfile = this.designChangeMainFile();
 
         var file = KontraFile.init({file: document.mainfile()});
         this.tabs = KontraTabs.init({
             title : this.titlerow(),
-            tabsTail : (document.isBasic()) ? [this.switchFunctionalityOption()] : (!document.isTemplate()) ?  [this.saveAsTemplateOption()] : [] ,
+            tabsTail : (!document.isTemplate()) ?  [this.saveAsTemplateOption()] : [] ,
             tabs: [
                 this.tab1 = new Tab({
                     name : document.isTemplate() ? localization.step1template : document.process().step1text(),
@@ -713,7 +681,7 @@ var DocumentDesignView = Backbone.View.extend({
                             ]
                   }),
                 this.tab2 = new Tab({
-                    name  : document.isTemplate() ? localization.step2template : document.isBasic() ? localization.step2basic : localization.step2normal,
+                    name  : document.isTemplate() ? localization.step2template : localization.step2normal,
                     active :  SessionStorage.get(document.documentid(), "step") != "1" && SessionStorage.get(document.documentid(), "step") != "3",
                     onActivate : function() {
                          SessionStorage.set(document.documentid(), "step", "2");
@@ -725,15 +693,14 @@ var DocumentDesignView = Backbone.View.extend({
                   }),
                 this.tab3 = new Tab({
                     name  : document.isTemplate() ? localization.step3template : localization.step3normal,
-                    active :  !document.isBasic() && SessionStorage.get(document.documentid(), "step") == "3",
+                    active :  SessionStorage.get(document.documentid(), "step") == "3",
                     onActivate : function() {
                          SessionStorage.set(document.documentid(), "step", "3");
                     },
                     elems : [
                             designbody2,
                             $(file.view.el)
-                            ],
-                    disabled : document.isBasic()
+                            ]
                   })
                 ]
         });

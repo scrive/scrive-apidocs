@@ -60,7 +60,7 @@ testBrandedDocumentMails mailTo = do
 
 testDocumentMails :: Maybe String -> TestEnv ()
 testDocumentMails mailTo = do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   sendDocumentMails mailTo author mcompany
 
@@ -125,7 +125,7 @@ testUserMails mailTo = do
   forM_ allLocales $ \l ->  do
     -- make a user and context that use the same locale
     ctx <- mailingContext l
-    user <- addNewRandomAdvancedUserWithLocale l
+    user <- addNewRandomUserWithLocale l
 
     req <- mkRequest POST []
     let checkMail s mg = do
@@ -155,9 +155,9 @@ validMail name m = do
          Right _ -> assertSuccess
          Left err -> assertFailure ("Not valid HTML mail " ++ name ++ " : " ++ c ++ " " ++ err)
 
-addNewRandomAdvancedUserWithLocale :: Locale -> TestEnv User
-addNewRandomAdvancedUserWithLocale l = do
-  user <- addNewRandomAdvancedUser
+addNewRandomUserWithLocale :: Locale -> TestEnv User
+addNewRandomUserWithLocale l = do
+  user <- addNewRandomUser
   _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
            locale = l
          }

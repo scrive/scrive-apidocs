@@ -1,5 +1,6 @@
 module EvidenceLog.Model (
     EvidenceEventType(..)
+  , apiActor
   , InsertEvidenceEvent(..)
   , GetEvidenceLog(..)
   , DocumentEvidenceEvent(..)
@@ -19,7 +20,6 @@ import Util.Actor
 import Version
 import Templates.Templates
 import qualified Templates.Fields as F
-
 
 data InsertEvidenceEvent = InsertEvidenceEvent
                            EvidenceEventType      -- A code for the event

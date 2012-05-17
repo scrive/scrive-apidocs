@@ -410,12 +410,10 @@ handlePostUserSecurity = do
               addFlashM flashMessageMissingRequiredField
         _ -> return ()
       mregion <- readField "region"
-      advancedMode <- isFieldSet "advancedMode"
       footer <- getField "customfooter"
       footerCheckbox <- isFieldSet "footerCheckbox"
       _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
              locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion,
-             preferreddesignmode = Just AdvancedMode  <| advancedMode |> Nothing,
              customfooter = footer <| footerCheckbox |> Nothing
            }
       return LinkAccountSecurity
@@ -428,7 +426,7 @@ isUserDeletable :: Kontrakcja m => User -> m Bool
 isUserDeletable user = do
   userdocs <- dbQuery $ GetDocumentsByAuthor (userid user)
   return $ all isDeletableDocument userdocs
-       
+
 --there must be a better way than all of these weird user create functions
 -- TODO clean up
 

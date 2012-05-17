@@ -1,0 +1,3220 @@
+/* 003  I removed the starting / on all image-urls */
+
+/* 003 new: html */
+html
+{
+    /* will always show a scroll */
+    overflow-y: scroll;
+}
+
+/* 003 moved body to the top */
+body
+{
+    /* 002 new font-family */
+    font-family: 'Segoe UI', arial, verdana, 'lucida sans unicode', tahoma, sans-serif;
+    color: #6d6e70;
+    /* 003  new backgroundcolor */
+    background-color: white;
+    font-size: small;
+    margin: 0px;
+}
+
+/* 003 new */
+a img
+{
+    border: 0;
+}
+
+
+/* 003 new: #mainContainer960. Consider to change this name to mainContainer */
+.mainContainer960
+{
+    width: 960px;
+    min-height: 700px;
+    height: auto;
+    margin-left: 30px;
+    margin-right: 30px;
+    margin: auto;
+    overflow: hidden;
+    padding-bottom:40px;
+}
+
+/* 003 a lot of changes */
+#loginContainer
+{
+    position: absolute;
+    right: 0;
+    top: 22px;
+    text-align: right;
+    font-size: 10px;
+}
+
+/* dont know if you want to cascade these changes to all text-input? */
+#loginContainer input[type=text],
+#loginContainer input[type=email],
+#loginContainer input[type=password],
+#signUpContainer input[type=text]
+{
+    width: 151px;
+    height: 16px;
+    margin-left: 6px; /* 003 change from ridht to left */
+    color: #848484;
+}
+
+.rubbishbin
+{
+    background-image: url(/img/rubbish-bin-icon-grey.png);
+    background-repeat: no-repeat;
+    height:16px;
+    width:16px;
+    display: block;
+}
+
+.rubbishbin.highlight
+{
+    background-image: url(/img/rubbish-bin-icon-white.png);
+}
+
+/*input[name=final] */
+.cross-button
+{
+    background-image: url(/img/status_signed.png);
+    background-repeat: no-repeat;
+    padding-left: 20px;
+    background-position: 4px;
+}
+
+/* dont know if you want to cascade these changes to all submit-buttons? */
+#loginContainer input[type=submit]
+{
+    /*height: 11px; 003 remove */
+    font-size: 11px; /* 003 new */
+    border: 1px solid #d2d2d6;
+    margin-top: 2px;
+    margin-left: 5px;
+    text-transform: none;
+    background-color: #5c5c69;
+    font-weight: normal;
+    color: white;
+    text-align: right; /* 003 new */
+}
+
+/* new mouse-effects for loginbutton. just an example, what king of effect and colors need to be descussed */
+#loginContainer input[type=submit]:hover
+{
+    background-color: #87879b;
+}
+
+#loginContainer input[type=submit]:active
+{
+    background-color: #43434e;
+}
+
+#loginContainer, #loginContainer a
+{
+    color: #FFFFFF;
+    text-decoration: none;
+    font-size: 11px;
+}
+
+/* 002 new, alaign loginbutton right with input fields */
+/* 003 remove
+   #loginContainer .button{
+   margin-right: 7px;
+   }*/
+
+/* 002 new code start */
+#textOneColumn,
+#pricingContainer{
+    width:  470px;
+    margin-top: 30px;
+}
+
+#textOneColumn p,
+#textOneColumn ul,
+#textOneColumn ol{
+    font-size: 12px;
+}
+
+#textOneColumn li{
+    padding-bottom: 10px;
+}
+
+#pricingContainer{
+    width: 700px;
+}
+
+#pricingContainer td{
+    width: 150px;
+    background-color: #f5f5f5;
+    padding: 5px;
+}
+
+#pricingContainer th{
+    text-align: left;
+}
+
+.alphaList{
+    list-style-type: lower-alpha;
+}
+/* 002 new code end */
+
+/* new first page code */
+/* 003 #firstPageContentContainer
+   {
+   width: 690px;
+   margin: auto;
+   margin-bottom: 105px;
+   }*/
+
+/* 003 remove
+   #firstPageLeft, #firstPageRight
+   {
+   margin-top: 70px;
+   float: left;
+   }*/
+
+/* 003 a lot of changes */
+/* 004 a lot of changes */
+#firstPageLeft
+{
+    float: left;
+    margin-top: 145px;
+    width: 400px;
+    padding-right: 40px;
+}
+
+/* 004 new */
+#firstPageLeft h1{
+    Xfont-size: 22px;
+}
+
+/* 003 a lot of changes */
+/* 004 a lot of changes */
+#firstPageRight
+{
+    float: left;
+    margin-top: 70px;
+    width: 520px;
+}
+
+#signUpContainer
+{
+    border-top: 1px dotted #c6c6c6;
+    width: 95%;
+    text-align: center;
+    margin-top: 7px;
+    float: left;
+    padding-top: 15px;
+}
+
+#signUpContainer input[type=text]
+{
+    width: 190px;
+}
+
+
+ input[type=submit]:hover, button:hover, a.button:hover
+{
+    background-color: #d9dae3;
+}
+
+ input[type=submit]:active, button:active, a.button:active
+{
+    background-color: #b3b5bd;
+}
+
+.bodycolorbg
+{
+    background-color: #fafafa;
+}
+
+.bodycolorfg
+{
+    background-color: #fafafa;
+}
+
+#selectable tr.ui-selecting, #selectable tr.ui-selecting td
+{
+    background: #e6e6e6;
+}
+
+#selectable tr.ui-selected, #selectable tr.ui-selected td,
+table .selectable tr.ui-selected, table .selectable tr.ui-selected td
+{
+    background: #e0e0e0;
+}
+
+
+#headerContainer,
+#headerWide
+{
+    background: url(/img/gradientextent.png) repeat-x bottom center;
+    /* background: url(/img/darkpattern.png) repeat bottom center; */
+
+    color: #fafafa;
+    height: 90px;
+    position:relative;
+}
+
+/* 003 new: headerWide */
+#headerWide
+{
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#headerContainer.topempty
+{
+    background: #fafafa;
+}
+
+/* 003l maybe we no longer need headerContainer2 */
+#headerContainer.topempty #headerContainer2
+{
+    background: #fafafa;
+}
+
+#headerContainer.topempty #nav
+{
+    display: none;
+}
+
+/* 003l maybe we no longer need headerContainer2 */
+#headerContainer2
+{
+    /*background: url(/img/gradient.png) no-repeat bottom center; 003 remove*/
+    color: #fafafa;
+    text-align: center;
+    height: 90px;
+}
+
+#nav
+{
+    background: none;
+    margin-left: auto;
+    margin-right: auto;
+    height: auto;
+    margin-top: auto;
+    float: right; /* 003l new */
+    padding: 50px 0 0 0;
+    text-align: center;
+
+/*width: 470px !important; 003l remove*/
+}
+
+#nav ul
+{
+    display: inline;
+    list-style: none outside none;
+    margin: 0;
+    padding: 0;
+}
+
+
+#nav li
+{
+    float: left;
+    margin-left: 1px;
+}
+
+#nav li a
+{
+    cursor: pointer;
+    display: block;
+    font-size: 14px;
+    height: 40px;
+    line-height: 40px;
+    text-decoration: none;
+    text-transform: uppercase;
+    vertical-align: center;
+    text-align: center;
+
+    color: #999999; /* 003l new/changed */
+    font-weight: bold; /* 003l new */
+    width: 151px;
+
+    background: url("/img/ButtonTOPUnactive.png") no-repeat scroll left top transparent; /* 003l new */
+}
+
+#nav li a.active
+{
+    background: url("/img/ButtonTOP.png") no-repeat scroll left top transparent;
+    /* 003l remove font-weight: bold; */
+    color: #4d4d4d; /* 003l changed */
+}
+
+#nav .activeleft
+{
+    padding-left: 20px;
+}
+
+#nav .activeright
+{
+    padding-right: 20px;
+}
+
+#nav .activemid
+{
+    font-size: 14px;
+    font-weight: bold;
+}
+
+#nav .inactiveleft
+{
+    padding-left: 20px;
+}
+
+#nav .inactiveright
+{
+    padding-right: 20px;
+}
+
+#nav .inactivemid
+{
+}
+
+#nav .inactivemid:hover
+{
+    font-size: 110%;
+}
+
+
+.para
+{
+    text-align: justify;
+}
+
+.topnavi
+{
+    padding-left: 2em;
+    padding-right: 2em;
+    margin-bottom: 1em;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.topnavi a
+{
+    text-decoration: none;
+    text-color: inherit;
+    color: #fafafa;
+}
+
+.selected a
+{
+    color: #9fb3b5;
+    background-color:  #fafafa;
+}
+
+.selected
+{
+    font-size: 130%;
+    background-color:  #fafafa;
+}
+
+.mainContainer
+{
+    /* overflow: auto; 004 remove */
+    /* margin-bottom: 25px; */
+    margin-bottom: 0px;
+}
+
+.mainContainer a
+{
+    color: #007cac;
+    text-decoration: none;
+}
+
+.mainContainer a.cancel {
+  color: #E91600;
+  cursor: pointer;
+  margin-right: 12px;
+  text-decoration: none;
+  font: 13px/34px "Helvetica Neue";
+}
+
+.mainContainer .headline
+{
+    font-weight: bold;
+    font-size: 130%;
+}
+
+/* 002 updated values */
+/* 003 change from .class to #id */
+#logosmall
+{
+    position: absolute;
+    top: 21px;
+    left: 0;
+    color: white;
+    font-size: 300%;
+}
+
+/* 003l changed from #logout to #userMenu */
+#userMenu, #userMenu a
+{
+    color: #FFFFFF;
+    text-decoration: none;
+    font-size: 11px;
+}
+
+#userMenu
+{
+    position: absolute;
+    right: 4px; /* 003l changed */
+    top: 22px; /* 003l changed */
+    width: 320px;
+    text-align: right;
+}
+
+/* 002 update values */
+.contactabout
+{
+    position: absolute;
+    top: 28px;
+    left: 211px;
+}
+
+.contactabout, .contactabout a
+{
+    color: #FFFFFF;
+    text-decoration: none;
+    font-size: 11px;
+}
+
+.centerdiv
+{
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.centerdivnarrow
+{
+    margin-left: auto;
+    margin-right: auto;
+    width: 300px;
+}
+
+.small
+{
+    font-size: small;
+}
+
+#toscontainer .nicetext
+{
+    height: 350px;
+    overflow: auto;
+    margin: auto;
+}
+
+a.button
+{
+    color: black !important;
+}
+.button
+{
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    -khtml-border-radius: 4px;
+    border-radius: 4px;
+
+    border: 1px solid lightgray;
+    background-color: #F5F5FF;
+
+    text-align: center;
+    vertical-align: center;
+    margin: 3px auto 3px 0px;
+    padding: 0px 7px;
+    display: block;
+    display: inline;
+
+    line-height: 20px;
+    white-space:nowrap;
+    cursor: pointer;
+}
+a.secbutton
+{
+    color: white;
+}
+
+.secbutton
+{
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    -khtml-border-radius: 4px;
+    border-radius: 4px;
+    color: white !important;
+    text-transform: uppercase;
+    background-color: gray;
+    font-family: Verdana;
+    border: none;
+    text-align: center;
+    vertical-align: center;
+    margin: 3px auto 3px 0px;
+    padding: 0px 7px;
+    display: block;
+
+    font-size: xx-small;
+    font-weight: bold;
+    height: 20px;
+    line-height: 20px;
+    width: 115px;
+    white-space:nowrap;
+}
+
+a.bigbutton
+
+color: white;
+}
+
+.bigbutton
+{
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    -khtml-border-radius: 4px;
+    border-radius: 4px;
+
+    color: white !important;
+    text-transform: uppercase;
+    background-color: #005794;
+    font-family: Verdana;
+    border: none;
+    text-align: center;
+    vertical-align: center;
+    margin: 3px auto 3px 0px;
+    padding: 0px 7px;
+    display: block;
+
+    font-size: small;
+    font-weight: bold;
+    height: 35px;
+    line-height: 35px;
+    width: 180px;
+    white-space:nowrap;
+}
+
+#documentBox
+{
+    overflow: auto;
+    text-align: center;
+    /* background-color: #999; */
+    margin: 0 auto;
+    width: 960px;
+    margin-top:10px;
+}
+
+.waiting4page
+{
+    margin: auto;
+    width: 944px;
+    height: 100px;
+    border: 1px solid black;
+    background-color: #fafafa;
+    background-image: url(/img/wait30trans.gif);
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+.waiting4data
+{
+    margin-left:40%;
+    margin-right:40%;
+    height: 100px;
+    background-image: url(/img/wait30trans.gif);
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+.loadingMail
+{
+    margin-left:40%;
+    margin-right:40%;
+    height: 400px;
+    background-image: url(/img/wait30trans.gif);
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+.pagejpg
+{
+    width: 943px;
+    height: 1335px;
+    border: 1px solid #777;
+    background-color: #fafafa;
+}
+
+img.waiting
+{
+    width: 30px;
+    height: 30px;
+    display: block;
+    top: 50%;
+    left: 50%;
+    position: relative;
+}
+
+.accounttable
+{
+    border-collapse:collapse;
+    border-width: 1px;
+    padding: 10px;
+    width: 800px;
+    margin: 15px auto 10px;
+}
+
+.accounttable td
+{
+    border-width: 1px;
+    border-color: gray;
+    font-weight:normal;
+}
+
+.templateslist {
+    background:url("/img/ui-bg_glass_100_f6f6f6_1x400.png") repeat-x scroll 50% 50% #F6F6F6;
+    border-top:1px solid #D0D0D0;
+    border-bottom:1px solid #C0C0C0;
+    border-left:1px solid #BDBDBD;
+    border-right:1px solid #BDBDBD;
+    width:958px;
+}
+
+.templateslist .searchBox {
+    padding-top: 48px;
+    padding-right: 30px;
+}
+
+.doctable {
+
+    border-collapse:collapse;
+    padding: 10px;
+    width:938px;
+    margin: 10px auto 10px;
+}
+
+#signStepsContainer .doctable {
+    width:898px;
+}
+
+.doctable td
+{
+    border-style: none none solid none;
+    border-width: 1px;
+    border-color: gray;
+    font-weight: normal;
+    max-width: 300px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.doctable thead tr td,
+.doctable thead tr
+{
+    padding: 3px 0px;
+    border-style: none none solid none;
+    border-width: 1px;
+    border-color: gray;
+}
+
+.doctable .tdleft
+{
+    border-top: 1px solid #B0B0B0;
+    border-bottom: 1px solid #B0B0B0;
+    width: 11px;
+    overflow: hidden;
+}
+
+.doctable col.tdleft
+{
+    width: 11px;
+}
+
+.doctable col.tdright
+{
+    width: 11px;
+}
+
+.doctable .tdright
+{
+    border-top: 1px solid #B0B0B0;
+    border-bottom: 1px solid #B0B0B0;
+    width: 11px;
+    overflow: hidden;
+}
+
+.doctable thead
+{
+    font-size: xx-small;
+    color: #606060;
+    border-style: none none solid none;
+    background-color: #FAFAFA;
+    border-width: 1px;
+    border-color: gray;
+}
+
+.doctable tfoot,
+.doctable tfoot tr,
+.doctable tfoot tr td
+{
+    font-size: xx-small;
+    color: #606060;
+    border-style: solid none none none;
+    background-color: #FAFAFA;
+    border-width: 1px;
+    border-color: gray;
+}
+
+.docview
+{
+    margin: 0px auto;
+    width: 960px;
+    height: 100%;
+}
+
+.docviewleft
+{
+    float: left;
+    height: 100%;
+    padding-right: 10px;
+    overflow: auto;
+}
+
+.docviewright
+{
+    /*float: right; */
+    height: 100%;
+    max-width: 180px;
+    overflow: auto;
+}
+
+.docviewright p
+{
+    overflow: hidden;
+}
+
+.inlinebox
+{
+    border-style: solid none;
+    border-width: 1px;
+    border-color: black;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: #FCFCFC;
+}
+/* 002 a lot of changes in #footerContainer  */
+/* 003 a lot of changes in #footerContainer  */
+#footerContainer
+{
+    height: 105px;
+    /* 002 float: left;*/
+    margin-top: 30px;
+    width: 100%;
+    background: #f7f7f7 url(/img/gradientbottom.png) no-repeat center 0; /* 004 new image */ /* 003 new image */
+    position: relative; /*003*/
+    overflow: hidden;
+/* 002 position: fixed;*/
+/*bottom: 0;*/
+}
+
+/* 003 a lot of changes in #footerContainer2  */
+#footerContainer2
+{
+    position: relative;
+    color:#777;
+    font-size: 11px;
+    width: 960px;/*003*/
+    margin: auto;
+    /*height: 100%;*/
+    border-top: 1px dotted #c6c6c6;
+}
+
+#footerContainer2 ul
+{
+    float: left;
+    list-style: none;
+    margin-right: 40px;
+    /* 002 new margin-top */
+    margin-top: 6px;
+    line-height: 14px;
+}
+
+/* 002 new */
+#footerContainer2 ul li
+{
+    margin: 2px 0 2px 0;
+}
+
+/*
+   002 new: #footerContainer2 .footerCategoryHeader instead of .footerCategoryHeader
+   */
+#footerContainer2 .footerCategoryHeader
+{
+    margin-left: -7px;
+    font-weight: bold;
+}
+
+#footerContainer2 a
+{
+    color: #777;
+    text-decoration: none;
+}
+
+#footerContainer2 a:hover
+{
+    text-decoration: underline;
+}
+
+#footerContainer2 a:active
+{
+    color: #535353;
+}
+
+/* 002 changed a lot in #copy */
+#copy
+{
+    position: absolute;
+    right: 30px;/* 003 new value */
+    top: 7px;
+    width: 110px;
+    height: 20px;
+    background: url(/img/status_signed.png) no-repeat 91px -3px;
+}
+
+div.floatleft
+{
+    float: left;
+}
+
+div.floatright
+{
+    float: right;
+}
+
+div.clearboth
+{
+    clear: both;
+}
+
+input , button, a.button
+{
+    border: 1px solid lightgray;
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    -khtml-border-radius: 2px;
+    border-radius: 2px;
+    background-color: #FFFFFF;
+    margin: 3px auto 3px 0px;
+}
+
+a.button {
+  cursor: pointer;
+}
+
+
+#signatorylist input
+{
+    width:140px;
+}
+
+.pagediv
+{
+    position: relative;
+    font-size: 15.93px; /* A4 is 595x842pt, for us it is 948x1337px. So 10pt font in PDF is 948px*10pt/595pt = 15.93px */
+    margin: 6px;
+}
+
+.pagediv .hline {
+    width: 100%;
+    height: 1px;
+    background: #dedede;
+    position: relative;
+}
+
+.pagediv .vline {
+    width: 1px;
+    height: 100%;
+    background: #dedede;
+    position: relative;
+}
+
+.placedfield, .placedfieldhelper {
+    position: absolute;
+    cursor: pointer;
+    font-family: Helvetica;
+    font-size: 15.93px;
+}
+
+.placedfieldvalue{
+    font-family: Helvetica;
+    font-size: 15.93px;
+}
+
+.placedfieldhelper {
+    cursor: pointer;
+}
+
+/* Localized */
+
+
+.author, .signatory
+{
+    margin-bottom:10px;
+}
+
+
+.hidden
+{
+    display:none;
+    height:0px;
+    width:0px;
+}
+
+/**
+   If you have display:none; for an input submit in Chrome it
+   will not submit when you press enter.  This is a hacky
+   way of getting round this.
+**/
+input[type=submit].hidden
+{
+    display: inherit;
+    visibility: hidden;
+    height:0px;
+    width:0px;
+    padding:0px;
+    margin:0px;
+}
+
+.transparent
+{
+    border:0;
+    background-color:transparent
+}
+
+#signStepsWrapper #signStepsContainer.fixed {
+    position: fixed;
+    top: -53px;
+    z-index: 5000;
+}
+
+/* 005 new code below */
+#signStepsContainer
+{
+    width: 960px;
+}
+
+#signStepsMenu
+{
+    height: 24px;
+    font-size: 11px;
+    position: relative;
+}
+
+#signStepsMenu div
+{
+    height: 23px;
+    position: relative;
+    float: left;
+    z-index: 2;
+    padding-left:16px;
+}
+
+#signStepsMenu div#signStepsMenuEmptyStep
+{
+    border-width: 1px 1px 1px 1px;
+    border-color: #BDBDBD ;
+    border-style: solid;
+    height: 23px;
+    width: 942px;
+    top: 0;
+    left: 0;
+    position: absolute;
+    z-index: 1;
+    background-color: #f4f4f4;
+}
+
+#signStepsMenu .text
+{
+	color: #000;
+    display: inline-block;
+	font: 11px/15px "Helvetica Neue";
+    margin: 5px 18px 0 2px;
+    padding-top: 1px;
+}
+
+.signStepsMenu div a
+{
+    color: #000;
+}
+
+#signStepsMenu .clickArea,
+.signStepsButton .clickArea,
+.uploadButton .clickArea
+{
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 3;
+    position: absolute;
+}
+
+#signStepsContentStack
+{
+    position: relative;
+}
+
+#signStep1Content,
+#signStep2Content,
+#signStep3Content
+{
+    /* position: absolute; */
+}
+
+#peopleDetails
+{
+    min-height: 50px;
+}
+
+#signStepsMenu div img
+{
+    position: absolute;
+    top: 5px;
+    left: 5px;
+}
+
+#signStepsMenu div.current
+{
+    background-image: url(../img/bg-header.jpg);;
+    background-repeat: repeat;
+    border-width: 0px 1px 0 1px;
+    border-color: #000000;
+    border-style: solid;
+    color: #fff !important;
+    height: 24px;
+}
+#signStepsMenu div.current a, #signStepsMenu .current .text
+{
+    color: #fff !important;
+}
+#signStepsMenu div.current img
+{
+    top: 4px;
+}
+/**/
+#signStepsTitleRow
+{
+    color: #ffffff;
+    min-height: 20px;
+    background-image: url(../img/bg-header.jpg);
+    padding: 4px 3px 3px 20px;
+    position: relative;
+}
+
+#signStepsTitleRowTextContainer
+{
+    min-height: 19px;
+    max-height: 22px;
+    float: left;
+}
+
+#signStepsTitleRow .title
+{
+    font-size: 10px;
+    margin-right: 2px;
+}
+
+#signStepsTitleRow .download
+{
+    font-size: 10px;
+    font-weight: bold;
+    margin-right: 2px;
+    display: inline-block;
+    float: right;
+    margin: 4px 10px 0 18px;
+
+
+}
+
+#signStepsTitleRow .download a{
+    color: #999999;
+    text-transform: uppercase;
+}
+
+#signStepsTitleRow .download .docname {
+  display: none;
+}
+
+
+#signStepsTitleRow .download a:hover{
+  color: #FFFFFF;
+}
+
+#signStepsTitleRow .docname
+{
+    font-weight: bold;
+    font-size: 16px;
+    margin-right: 2px;
+}
+
+#signStepsTitleRow .docname .icon {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+}
+
+#signStepsTitleRow .docname .docname-display .icon.edit {
+    background-image: url(/img/iconPen.png);
+}
+
+#signStepsTitleRow .docname .docname-display text {
+    display: inline-block;
+}
+
+#signStepsTitleRow .docname .docname-edit input {
+    -moz-border-radius:0px;
+    background:transparent;
+    border:0 none;
+    margin:0;
+    outline:0 none;
+    padding:0;
+    font-size:16px;
+    font-weight:bold;
+    color:#FFFFFF;
+    width: 450px;
+    font-family:'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
+}
+
+#signStepsTitleRow .changeName a
+{
+    font-size: 10px;
+}
+
+
+#signStepsTitleRow .saveButton,
+#signStepsTitleRow .downloadButton
+{
+    float:right;
+    margin-right: 10px;
+    margin-top: 2px;
+}
+
+
+.saveButton,
+.downloadButton
+{
+    width: 145px;
+    height: 25px;
+    background-image: url(/img/saveButton.png);
+    background-repeat: no-repeat;
+    overflow: hidden;
+    position: relative; /* 008 new */
+}
+
+.saveIcon
+{
+    background-image: url(/img/iconFloppy.png);
+}
+
+.floppyIcon{
+    background-image: url(/img/iconFloppy.png);
+}
+.arrowDownIcon{
+    background-image: url(/img/iconArrowDown.png);
+}
+
+
+.saveButton .icon,
+.downloadButton .icon
+{
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+    background-repeat: no-repeat;
+    left: 6px;
+    top: 5px;
+    position: absolute;
+}
+
+.uploadButton .icon ,
+.signStepsButton .icon
+{
+    width: 11px;
+    height: 13px;
+    display: inline-block;
+    background-repeat: no-repeat;
+    left: 8px;
+    top: 6px;
+    position: absolute;
+}
+
+.icon.arrowRight
+{
+    background-image: url(/img/iconArrowRight.png);
+}
+
+/* 008 new */
+.icon.arrowUp
+{
+    background-image: url(/img/iconArrowUp.png);
+    width: 13px;
+    height: 11px;
+}
+
+.icon.check
+{
+    background-image: url(/img/iconGreenCheck.png);
+    width: 14px;
+    top: 5px;
+}
+.signStepsButton{
+    margin: 0 0 0 22px;
+}
+
+.signStepsButton a .text,
+.uploadButton a .text,
+.saveButton a .text,
+.downloadButton a .text
+{
+    font-size: 11px;
+    position: absolute;
+    left: 28px;
+    top: 5px;
+    color: #414241;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+/**/
+.signStepsBody
+{
+    color: #414241;
+    background-image: url(/img/signStepsBodyBorder.png);
+    background-repeat: repeat-y;
+    overflow: hidden;
+    min-height: 100px;
+    padding:8px 19px;
+    border-left: 1px solid #BDBDBD;
+    border-right: 1px solid #BDBDBD;
+    border-bottom: 1px solid #C0C0C0;
+}
+
+.postSignStepBody {
+}
+
+#signStepsBodyBorderBottom
+{
+    background-image: url(/img/signStepsBodyBorderBottom.png);
+    background-repeat: no-repeat;
+    width: 960px;
+    height: 11px;
+}
+
+/* 006 i couldnt get the real pixel sizes from the psd, please edit the sizes if needed */
+/* step 1 */
+.signStepsBodyUploadBox
+{
+    width: 250px;
+    height: 92px;
+    margin: 15px;
+    border-top: 1px solid #E0E0E0;
+    border-right: 1px solid #E0E0E0;
+    border-bottom: 1px solid #E8E5E5;
+    border-left: 1px solid #E8E5E5;
+    padding: 10px;
+    text-align: center;
+    float: left;
+}
+
+#dialog-csvupload-1 .signStepsBodyUploadBox
+{
+   height: 105px;
+   position: relative;
+   left: 105px;
+}
+
+.documentTypeBox
+{
+    width: 140px;
+    height: 130px;
+    margin: 15px auto 15px auto;
+    border-top: 1px solid #E0E0E0;
+    border-right: 1px solid #E0E0E0;
+    border-bottom: 1px solid #E8E5E5;
+    border-left: 1px solid #E8E5E5;
+    padding: 10px;
+    text-align: center;
+
+}
+.documentTypeBox.selected, .signStepsBodyUploadBox.selected{
+
+    border: 1px solid #CCCCFF;
+    background-color: #F0F0FF
+
+}
+
+.documentTypeBox a{
+    background-color:transparent;
+}
+
+/* 008 new */
+.signStepsBodyUploadTextContainer .text
+{
+    color: #666666;
+}
+
+.signStepsBodyUploadBox .header
+{
+    font-weight: bold;
+    font-size: 16px;
+    color: black; /* 008 new */
+}
+
+.signStepsBodyUploadBox .title
+{
+    font-size: 14px;
+}
+
+.signStepsButtonContainer
+{
+    position: relative; /* 008 new */
+    margin-top: 15px;
+    margin-bottom: 5px;
+    margin-left:auto;
+    margin-right:auto;
+    width:134px;
+}
+
+.signStepsButtonContainer a {
+    overflow:hidden;
+    height:34px;
+    width:134px;
+}
+
+/* HOW TO MAKE FILE INPUT LOOKING LIKE A BUTTON !!!! */
+input.multiFileInput {
+    position:relative;
+    z-index:10;
+    cursor:pointer;
+    float:right;
+    top:-40px;
+    left:10;
+    right:0px;
+    font-size:xx-large;
+    cursor:pointer;
+    -ms-filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
+    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
+    opacity: 0;
+    /* only IE will use this, it's necessary because it ignores the maxlength att <IE7 */
+    #width:0px;
+}
+
+/* 007 code below added in 007 */
+/* step 2 */
+/* 013 changed */
+#signStepsBodyLeft
+{
+    width: 350px;
+    float: left;
+    position: relative;
+}
+
+#signStepsBodyLeft.step3{
+  display:block;
+  width: 290px;
+  padding-top: 5px;
+}
+#signStepsBodyRight.step3{
+   display:inline-block;
+   width: 290px;
+   float: left;
+   padding-top: 5px;
+}
+
+/* 013 changed */
+/* FIXME?
+#signStepsBodyRight
+{
+    width: 326px;
+    position: relative;
+    padding: 7px 6px 0 0px;
+}
+*/
+.signViewBodyRight
+{
+    float: right;
+    border-top: 1px solid #E0E0E0;
+    border-right: 1px solid #E0E0E0;
+    border-bottom: 1px solid #E8E5E5;
+    border-left: 1px solid #E8E5E5;
+    margin-top: 15px;
+    margin-left: 35px;
+    min-height: 140px;
+    margin-bottom: 10px;
+    margin-right: 0px;
+    width: 268px;
+}
+
+.signViewBodyBox {
+    width: 300px;
+}
+
+.forauthor .signViewBodyRight{
+    min-height: 170px;
+}
+
+#signViewBodyLeft
+{
+    width: 270px;
+    float: left;
+    position: relative;
+    padding: 14px 0px 5px 0px;
+    margin-top: 20px;
+}
+
+.signViewBodyRightTextContainer
+{
+    width: 218px;
+    padding-left: 25px;
+    padding-right: 25px;
+    padding-right: 20px;
+    padding-bottom: 10px;
+    overflow:hidden;
+    padding-top:20px;
+}
+
+.signViewBodyRightTextContainer .text
+{
+    margin-top: 10px;
+    margin-left: 3px;
+    font-size: 11px;
+    overflow:hidden;
+}
+
+.signViewBodyLeftTextContainer .text
+{
+    margin-top: 5px;
+    color: #666666;
+    font-size: 11px;
+}
+
+#signViewBodyLeftTextContainer .btn-small
+{
+    margin-top:16px;
+    margin-left: 0px;
+}
+
+#signViewBodyLeft .header
+{
+    font-weight: bold;
+    font-size: 16px;
+    color: black; /* 008 new */
+}
+
+#signViewBodyLeft .subheader, .subheader
+{
+    font-weight: bold;
+    color: black; /* 008 new */
+}
+
+.attachmentListContainer
+{
+    padding: 16px 0px;
+}
+
+.signViewBodyRight .header
+{
+    font-weight: bold;
+    font-size: 13px;
+    color: black; /* 008 new */
+}
+/* 015 new */
+.border {
+   background-color: #ecedf3;
+   width: 1px;
+   height: 130px;
+   display:inline-block;
+   float:left;
+   margin-top:-8px;
+   margin-bottom:-8px;
+}
+
+/* 015 new */
+#signStepsBodyRight.step3,
+#signStepsBodyFunctions.step3,
+#signStepsBodyLeft.step3
+{
+    color: #666666;
+}
+
+
+#signStepsBodyLeft.step3 .options{
+	margin-left: 4px;
+}
+
+/* 016 new */
+#signStepsBodyLeft.step3 .options label{
+	margin-left: 3px;
+}
+
+.step3 .signStepsBodyTitle{
+	padding-top: 3px;
+ }
+/* 013 changed */
+.signStepsBodyTitle
+{
+    height: 14px;
+    font-size: 11px;
+}
+
+.signViewBodyTitle
+{
+    marign-top: 9px;
+    height: 14px;
+    font-size: 12px;
+    width: 23px;
+}
+
+.saveTemplate
+{
+    margin-left:80px;
+    margin-top:40px;
+}
+
+.signStepsBodyIcons
+{
+    margin-top: 7px;
+    /* width: 55px; 013 removed */
+    height: 17px;
+}
+
+
+/* 016 new */
+.signStepsBodyIcons span{
+	float: left;
+	margin-right: 10px;
+ }
+
+
+/* 008 new starts */
+.signStepsBodyIcons a,
+.signStepsBodyIcons span,
+.signStepsBodyIcons span.briefcase,
+.signStepsBodyAddField a
+{
+    display: block;
+    width: 16px;
+    height: 16px;
+    margin-right: 15px;
+    float: left;
+    background-repeat: no-repeat;
+}
+
+.signViewBodyIcons a,
+.signViewField a
+{
+    display: block;
+    width: 16px;
+    height: 16px;
+    margin-right: 2px;
+    float: left;
+    background-repeat: no-repeat;
+}
+
+
+/* 015 new */
+#signStepsBodyLeft .options p
+{
+	margin-bottom: 4px;
+}
+#signStepsBodyFunctions .options p
+{
+	margin-top: 3px;
+	margin-bottom: 5px;
+ }
+
+.signStepsBodyFunctionsBox.options{
+	margin-left: 4px;
+}
+/* 015 new */
+.signStepsBodyInvation a
+{
+    display: inline-block;
+    background-position: 2px 2px;
+    background-image: url(/img/iconPen.png);
+    background-repeat: no-repeat;
+    padding-left: 23px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+
+}
+
+.signStepsBodyAttachments a, .signStepsBodySigAttachments a
+{
+    display: inline-block;
+    background-position: 2px 2px;
+    background-image: url(/img/attachment.gif);
+    background-repeat: no-repeat;
+    padding-left: 23px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.signStepsBodyDaysLeftInput
+{
+    font-size:11px;
+    text-align:center;
+    position:relative;
+    top:-1px;
+    width:20px;
+}
+
+.signStepsBodyCalendar
+{
+    display: inline-block;
+    background-position: 2px 0px;
+    background-image: url(/img/calendar.png);
+    background-repeat: no-repeat;
+    width:16px;
+    height: 16px;
+    position:relative;
+    top:3px;
+}
+
+.tab-viewer .tabs a.extraLink
+{
+    display: inline-block;
+    height: 20px;
+    background-position: 2px 0px;
+    background-repeat: no-repeat;
+    padding-left: 23px;
+    color: #007CAC;
+    cursor: pointer;
+    font-size: 9px;
+    font-family: 'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
+}
+
+.tab-viewer tabs a.extraLink:hover{
+    color: #000000;
+}
+
+/* 013 new */
+.signStepsBodyIcons a
+{
+    margin-right: 12px;
+}
+
+
+.signStepsBodyIcons .man
+{
+    background-image: url(/img/iconMan.png);
+}
+
+.signStepsBodyIcons .group
+{
+    background-image: url(/img/iconGroup.png);
+}
+
+.signStepsBodyIcons .single
+{
+    background-image: url(/img/iconGroup.png);
+}
+
+.signStepsBodyIcons .csv
+{
+    background-image: url(/img/iconCsv.png);
+}
+
+.signStepsBodyIcons .signingOrder
+{
+    background-image: url(/img/iconSigningOrder.png);
+}
+
+.signStepsBodyIcons a.hand
+{
+    background-image: url(/img/iconHand.png);
+}
+
+.signStepsBodyIcons .briefcase
+{
+    background-image: url(/img/iconBriefcase.png);
+}
+
+.signViewBodyIcons a
+{
+    margin-right: 6px;
+}
+
+.signViewBodyIcons .man
+{
+    background-image: url(/img/iconMan.png);
+}
+
+.signStepsBodyIcons .plus,
+.newfield a.plus,
+#signStepsBodyFunctionsBox ul .plus
+{
+    background-image: url(/img/iconPlus.png);
+
+}
+
+.newfield {
+    position: relative;
+}
+
+.newfield input.newfieldbox {
+    width: 101px;
+    border: 0;
+    margin: 0px;
+}
+
+#personpane .newfield a.okIcon {
+    float:right;
+    margin-top:3px;
+    margin-right:0px;
+    margin-left:0px;
+}
+#personpane .newfield a.minusIcon {
+    float:right;
+    margin-top:3px;
+    margin-right:3px;
+    margin-left:3px;
+
+}
+
+
+.newfield a.minus {
+    width: 16px;
+    height: 16px;
+    display: block;
+    background-repeat: no-repeat;
+    position: absolute;
+    right: 0px;
+    top: 6px;
+}
+
+.customfield a.minus {
+    width: 16px;
+    height: 16px;
+    display: block;
+    background-repeat: no-repeat;
+    position: absolute;
+    right: 2px;
+    top: 3px;
+    background-image: url(/img/iconMinus.png);
+}
+
+.signStepsBodyAddField a.minus,
+.newfield a.minus,
+#signStepsBodyFunctionsBox ul .minus
+{
+    background-image: url(/img/iconMinus.png);
+}
+
+.signStepsBodyAddField p
+{
+    position: absolute;
+    left: 40px;
+    top: -3px;
+    margin: 0;
+}
+
+/* 013 changed */
+
+.signStepsBodyForms .inputWrapper input,
+.signStepsBodyForms .inputWrapper .fieldvalue
+{
+    padding-left: 19px;
+    position: relative;
+    top: 1px;
+    height: 18px;
+    width: 138px;
+    line-height: 18px;
+    font-size: 12px;
+    border-color: transparent;
+    outline: none;
+    background-color: transparent;
+    overflow: hidden;
+    border: none;
+    margin: 0;
+}
+
+.dragDisabled .inputWrapper input,
+.dragDisabled .inputWrapper .fieldvalue
+{
+    padding-left: 5px;
+    width: 152px;
+}
+
+
+.dragtext {
+    position: relative;
+    width: 138px;
+    height: 20px;
+    margin-bottom: 3px;
+    line-height: 20px;
+}
+
+.dragtext .fieldvalue {
+    margin-left: 19px;
+}
+
+/* For the draggable fields in signatory details */
+.dragfield {
+  position: relative;
+  overflow: hidden;
+}
+
+/* a class for the little hand in an input field */
+.draghandle {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  cursor: pointer;
+}
+
+.inputWrapper
+{
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    -khtml-border-radius: 2px;
+    border-radius: 2px;
+
+    border: 1px solid #6782a5;
+    display: block;
+    float: left;
+    margin: 3px 5px 0 0;
+    padding: 0;
+    width: 161px;
+    overflow: hidden;
+}
+
+
+/* 013 changed */
+#signStepsBodyFunctionsBox ul
+{
+    list-style-type: none;
+ 	padding-left: 0;
+	padding-bottom: 2px;
+
+}
+
+
+
+/* 013 new */
+#signStepsBodyFunctionsBox ul li
+{
+    margin-bottom: 5px;
+    height: 16px;
+    background-position: 0 1px;
+    background-repeat: no-repeat;
+
+}
+
+#signStepsBodyFunctionsBox ul a
+{
+    padding-left: 24px;
+    background-position: 0 2px;
+}
+
+/* 015 changed */
+#signStepsBodyFunctionsBox ul a.floppy,
+.signStepsBodySaveMethods label
+{
+    background-image: url(/img/iconFloppy.png);
+}
+
+#signStepsBodyFunctionsBox ul .arrowDown
+{
+    background-image: url(/img/iconArrowDown.png);
+    background-position: 2px 2px;
+}
+
+/* 008 ends */
+
+/* 015 new */
+.signStepsBodySaveMethods label
+{
+    height: 17px;
+    background-repeat: no-repeat;
+    background-position: 0 3px;
+  	padding-left: 21px;
+	margin-left: 0 !important;
+}
+
+form {
+    margin: 0px;
+}
+
+
+
+.signStepsBodyForms
+{
+    margin: 1px 0 0px 0; /* 013 changed */
+    position: relative;
+}
+
+.signViewBodyForms
+{
+    margin: 5px 0 5px 0; /* 013 changed */
+}
+
+.signStepsBodyAddField
+{
+    /*width: 50px; 008 removed */
+    /*position: relative; /* 008 new */
+    height: 14px;
+    font-size: 11px; /* 013 changed */
+    line-height: 19px; /* 013 new */
+    margin-top: 3px;
+}
+
+/* 013 new */
+.signStepsBodyAddField p
+{
+    margin-left: -2px;
+}
+
+#signStepsBodyFunctions
+{
+    width: 216px;
+    position: relative;
+    float: left;
+}
+
+/* 015 new */
+#signStepsBodyFunctions.step3
+{
+   padding-bottom: 10px;
+   padding-left:20px;
+   padding-top: 2px;
+   width: 290px;
+   float:left;
+
+}
+
+#signStepsBodyRight.step3
+{
+   padding-top: 2px;
+   padding-left: 20px;
+   padding-bottom: 7px;
+
+}
+
+/* 013 changed */
+#signStepsBodyFunctionsBox
+{
+    margin: 7px 5px 0px;
+    padding-left: 22px;
+    padding-top: 9px;
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    -khtml-border-radius: 2px;
+    border-radius: 2px;
+}
+/*
+#signStepsBodyFunctionsBox #signStepsNextButton{
+  vertical-align:center;
+  width:100%;
+  height:40px;
+  margin:15px 30% 0 30%;
+
+}
+*/
+/* 013 new */
+#signStepsBodyLeft #people,
+#signStepsBodyFunctionsBox
+{
+    border: 1px solid black;
+    border-top-color: #e6e7ef;
+    border-right-color: #f3f4f7;
+    border-bottom-color: #f0f1f5;
+    border-left-color: #f2f2f7;
+    padding-bottom: 5px;
+}
+
+/* 013 new */
+.buttonSignLarge
+{
+    background-image: url(/img/buttonSignLarge.png);
+    background-repeat: no-repeat;
+    display: block;
+    width: 252px;
+    height: 61px;
+    cursor: pointer;
+}
+
+.buttonSendLarge {
+    background-image: url(/img/button-send.png);
+    background-repeat: no-repeat;
+    display: block;
+    width: 252px;
+    height: 61px;
+    cursor: pointer;
+}
+
+/* 013 new */
+#signStepsBodyLeft #people
+{
+    width: 305px;
+    min-height: 74px;
+    padding: 10px 8px 8px 8px;
+    margin-top: 2px;
+}
+
+/* 013 new */
+#signStepsBodyLeft #people .signStepsBodyTitle .totalCount
+{
+    color: #9a9a9a;
+}
+
+/* 013 new */
+#signStepsBodyLeft #people .signStepsBodyForms a
+{
+    display: block;
+    font-size: 11px;
+}
+
+#signStepsBodyLeft #people .signStepsBodyForms a:hover
+{
+    background: #f5f5f5;
+}
+
+/* 013 new */
+#signStepsBodyLeft #people .signStepsBodyForms .signorderlist
+{
+    float: right;
+}
+
+/* 013 new */
+#signStepsBodyLeft #people .signStepsBodyAddField.partCount
+{
+    height: auto;
+}
+
+/* 013 new */
+#signStepsBodyLeft #people .signStepsBodyAddField.partCount span
+{
+    margin-right: 3px;
+}
+
+/* 013 new */
+#signStepsBodyLeft #people .signStepsBodyAddField.partCount a
+{
+    display: inline;
+    float: none;
+    width: auto;
+}
+
+#signViewBodySpacer
+{
+    width: 5px;
+    float: left;
+    position: relative;
+
+    margin-top: 15px;
+}
+
+#signViewNotificationContainer
+{
+    width: 958px;
+    height: 70px;
+    border-top: 1px solid #E2C822;
+    border-right: 1px solid #E2C822;
+    border-bottom: 1px solid #E2C822;
+    border-left: 1px solid #E2C822;
+    background-color:#FFF9D7;
+    position: absolute;
+    z-index: 10;
+}
+
+#signViewNotificationContainerRight
+{
+    width: 100px;
+    float: left;
+    position: relative;
+    margin-top: 10px;
+    padding: 0px,0px,5px,5px;
+}
+
+#signViewNotificationContainerLeft
+{
+    width: 855px;
+    float: left;
+    position: relative;
+    height: 70px;
+}
+
+#signViewNotificationContainer .title
+{
+    color:#595A59;
+    font-size: 15px;
+    font-weight: bold;
+    margin-top: 25px;
+    margin-left: 15px;
+    text-align:center;
+}
+
+#signViewNotificationContainer .text
+{
+    color:#595A59;
+    font-size: 11px;
+    margin-top: 15px;
+    margin-left: 15px;
+}
+
+#signViewNotificationContainerRight .anchor
+{
+    font-size: 11px;
+    text-align:right;
+    margin-right: 25px;
+}
+
+#signViewNotificationContainerRight .anchor a
+{
+    color: #7895BA;
+    text-decoration: none;
+}
+
+.docview .authorattachments,
+.docview .signatoryattachments
+{
+    /* 002 float: left;*/
+    margin-top: 30px;
+
+    background: none repeat scroll 0 0 white;
+    -moz-border-radius: 4px;
+    -moz-box-sizing: border-box;
+    border-color: #999999;
+    border-style: solid;
+    border-width: 1px;
+    width: 898px;
+    padding: 30px;
+}
+
+.docview .authorattachments .list .item {
+  margin-bottom: 10px;
+}
+
+.docview .authorattachments .item .icon {
+  float: left;
+  width: 13px;
+  height: 14px;
+  background: url(../img/attachment-icon.png);
+}
+
+.docview .authorattachments .item .label {
+  float: left;
+  margin-left: 10px;
+}
+
+.docview .authorattachments .item .name {
+  font-weight: bold;
+  color: black;
+}
+
+.docview .authorattachments .item a {
+  text-decoration: underline;
+}
+
+
+.docview .uploadedsignatoryattachments .item .icon {
+  float: left;
+  width: 13px;
+  height: 14px;
+  background: url(../img/attachment-icon.png);
+}
+
+.docview .uploadedsignatoryattachments .item {
+  margin-bottom: 10px;
+}
+
+.docview .uploadedsignatoryattachments .item .label {
+  float: left;
+  margin-left: 10px;
+}
+
+.docview .uploadedsignatoryattachments .list .item .name {
+  font-weight: bold;
+  color: black;
+}
+
+.docview .uploadedsignatoryattachments .list .item .from {
+  font-style: italic;
+}
+
+.docview .uploadedsignatoryattachments .list .item a {
+  text-decoration: underline;
+}
+
+.docview .attachmentstab .section {
+  float: left;
+  margin-right: 20px;
+}
+
+.docview .attachmentstab h2 {
+  font-size: small;
+  margin-bottom: 10px;
+}
+
+.docview .attachmentstab .authorattachments {
+  width: auto;
+  border: none;
+  margin: auto;
+  padding: 0px;
+}
+
+.docview .attachmentstab .list {
+  position: auto;
+  top: auto;
+  margin-left: auto;
+}
+
+.signguard {
+  height: 80px;
+  padding: 20px;
+}
+
+.signguard .check {
+  float:left;
+  width: 25px;
+}
+
+.signguard .label {
+  float: left;
+  width: 300px;
+}
+
+.docview .dragfield .label {
+  display: none;
+}
+
+#signViewBottomBox
+{
+    /* 002 float: left;*/
+    margin-top: 30px;
+
+    background: none repeat scroll 0 0 white;
+    -moz-border-radius: 4px;
+    -moz-box-sizing: border-box;
+    border-color: #999999;
+    border-style: solid;
+    border-width: 1px;
+    height: 143px;
+    width: 958px;
+}
+
+#signViewBottomBoxTop
+{
+    background-image: url(/img/box2-top.png);
+    background-repeat: no-repeat;
+    width: 960px;
+    height: 10px;
+    float: left; /* 008 new */
+}
+
+#signViewBottomBoxContainerLeft
+{
+    float: left;
+    padding: 53px 0 0 80px;
+}
+
+#signViewBottomBoxContainerMiddle
+{
+    float: left;
+    padding: 35px 0 0 25px;
+    position: relative;
+}
+
+#signGuardField {
+    float: left;
+    border-top: 1px solid #E0E0E0;
+    border-right: 1px solid #E0E0E0;
+    border-bottom: 1px solid #E8E5E5;
+    border-left: 1px solid #E8E5E5;
+    padding: 2px;
+}
+
+#signViewBottomBoxContainerMiddle #signGuardLabel
+{
+    width:300px;
+    padding-left:4px;
+    padding-top:3px;
+    padding-right:4px;
+    padding-bottom:3px;
+    display: block;
+}
+
+#signViewBottomBoxContainerRight
+{
+    float: right;
+    padding: 48px 80px 0 0;
+}
+
+#signViewBottomBoxContainerRight .button
+{
+    background-image: url(/img/button-bg.png);
+    background-repeat: no-repeat;
+    display: block;
+    width: 167px;
+    height: 43px;
+}
+
+#signViewBottomBoxBottom
+{
+    background-image: url(/img/box2-bottom.png);
+    background-repeat: no-repeat;
+    float: left;
+    height: 10px;
+    width: 960px;
+}
+
+.numbericon1 {
+    background-image: url(/img/icon1.png);
+    background-repeat: no-repeat;
+    float: left;
+    height: 24px;
+    width: 24px;
+}
+
+.numbericon2 {
+    background-image: url(/img/icon2.png);
+    background-repeat: no-repeat;
+    float: left;
+    height: 24px;
+    width: 24px;
+}
+
+.numbericon3 {
+    background-image: url(/img/icon3.png);
+    background-repeat: no-repeat;
+    float: left;
+    height: 24px;
+    width: 24px;
+}
+
+#signStepsBody.ericfix {
+    padding: 8px 39px;
+    width: 880px;
+}
+
+#signStepsBody.personPaneLargeNumberMode span.persondetails
+{
+    display: none;
+}
+
+#signStepsBody.personPaneSmallNumberMode span.persondetails
+{
+    display: block;
+    float: left;
+}
+
+#signStepsBody.personPaneSmallNumberMode #personpane
+{
+    width: 700px;
+}
+
+#personpane
+{
+    display: block;
+    float: left;
+}
+
+#signStepsBody.personPaneLargeNumberMode #signStepsBodyLeft
+{
+    display: block;
+}
+
+#signStepsBody.personPaneSmallNumberMode #signStepsBodyLeft
+{
+    display: none;
+}
+
+#signStepsBody span.persondetails.currentPerson
+{
+    display: block;
+}
+
+#signStepsBody .signorder, #authorsignorder {
+    margin-top: -2px;
+    background: #fff;
+    font-size: 11px;
+}
+
+.partyrole {
+    display: none;
+    width: 314px;
+    position: absolute;
+    background-color: white;
+    top: -2px;
+    left: 0px;
+    border: solid 1px #BDBDBD;
+    -moz-border-radius:3px 3px 3px 3px;
+    padding: 8px;
+    height: 60px;
+}
+
+.partyrole .radiolabel {
+    padding-left: 6px;
+    position: relative;
+    top: -1px;
+}
+
+.partyrole .closelink {
+    float: right;
+    margin-left: 4px;
+}
+
+.partytype {
+    display: none;
+
+    position: absolute;
+    background-color: white;
+    top: 0px;
+    left: 0px;
+    border: solid 1px;
+    padding: 4px;
+    z-index: 6000
+}
+
+
+.csv-dialog-2-container {
+        width: 900px;
+        left: -130px;
+}
+
+.csvproblemfooter {
+  padding-top: 10px;
+  padding-bottom: 40px;
+}
+
+.csvproblemcount {
+  text-align: center;
+}
+
+.csvproblemcontainer {
+   display: none;
+   padding-right: 30px;
+}
+
+.currentcsvproblem {
+   display: block;
+}
+
+.csvproblem {
+   color: red;
+}
+
+.csvpagecontents {
+   padding-right: 100px;
+   height: 220px;
+}
+
+.csvpagecontainer {
+   display: none;
+}
+
+.csvdata {
+   padding-bottom: 20px;
+   padding-right: 30px;
+}
+
+.csvpagefooter {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.currentcsvpage {
+   display: block;
+}
+
+.csvpagecontainer th {
+   text-align: left;
+   padding-top: 2px;
+   padding-bottom: 2px;
+   padding-left: 5px;
+   padding-right: 5px;
+   width: 100px;
+}
+
+.csvpagecontainer td {
+   text-align: left;
+   padding-top: 2px;
+   padding-bottom: 2px;
+   padding-left: 5px;
+   padding-right: 5px;
+   width: 100px;
+}
+
+.rownumbercol {
+   width: 30px;
+}
+.persondetails {
+    width: 350px;
+}
+
+.signViewBodyForms .dragfield input {
+    background-image: url(/img/iconPen.png);
+    background-repeat: no-repeat;
+    background-position: 3px 3px;
+}
+
+.newfield input.newfieldbox {
+    background-image: url(/img/iconPen.png);
+    background-repeat: no-repeat;
+    background-position: 3px 3px;
+    width: 105px;
+}
+
+.customfield input.customfieldbox {
+    width: 120px;
+}
+
+.redborder
+{
+    border:1px solid red;
+}
+
+.redborder input {
+    border-color: red;
+}
+
+.signStepsBodyIcons {
+    width: 333px;
+}
+
+.signStepsBodyIcons .partnumber
+{
+  width:auto;
+  display:block;
+  font-weight: bold;
+  font-size: 10pt;
+
+}
+
+.signStepsBodyIcons .man{
+  margin-top:-1px;
+}
+
+.signStepsBodyIcons .man.selected{
+  position:relative;
+  -moz-border-radius:1px 1px 0 0;
+  border-left:1px solid #BDBDBD;
+  border-right:1px solid #BDBDBD;
+  border-top:1px solid #BDBDBD;
+  border-bottom: 1px solid white;
+  z-index: 10;
+}
+
+
+.signStepsBodyIcons .plus{
+  margin-top:1px;
+}
+
+#sendinvite.btn-small {
+       padding-left:20px;
+       padding-bottom:3px;
+}
+
+
+
+.btn-small p {
+    color: #fff;
+/*    text-shadow: #41770b 0 1px 3px; */
+    margin:0px;
+}
+
+
+.btn-small.green2 {
+	background-position: -152px 0;
+}
+
+
+.btn-small.green2:hover {
+	background-position: -152px -34px;
+        background-color: transparent;
+}
+
+.btn-small.green2:active {
+	background-position: -152px -68px;
+}
+
+.btn-blue {
+	background: url(/img/btn-sign-1.png) 0 0 no-repeat;
+	color: #fff;
+	font: 18px "Helvetica Neue";
+	height: 47px;
+	letter-spacing: 0.5px;
+        padding-left:20px;
+	text-decoration: none;
+	width: 222px;
+        text-align: left;
+        border: 0;
+        margin-left: 12px;
+}
+
+#signinvite.btn-blue {
+   padding-left:20%;
+   padding-bottom:5px;
+}
+
+.btn-blue p {
+	color: #fff;
+	text-shadow: #41770b 0 1px 3px;
+        margin:0;
+}
+
+
+.btn-blue.deactivated {
+	background-position: -222px 0;
+}
+
+.btn-blue.deactivated:hover {
+	background-position: -222px 0;
+        background-color: transparent;
+}
+
+.btn-blue.deactivated:active {
+	background-position: -222px 0px;
+}
+
+
+
+
+.btn-blue {
+	background-position: 0px 0;
+}
+
+.btn-blue:hover {
+	background-position: 0px -47px;
+        background-color: transparent;
+}
+.btn-blue:active {
+	background-position: 0px -94px;
+}
+
+
+a#nextstep {
+    width: 136px;
+    color: white;
+    border: 0;
+    display: block;
+}
+
+
+.uploadButton
+{
+    width: 120px;
+    height: 25px;
+    background-image: url(/img/singStepsButton.png);
+    background-repeat: no-repeat;
+    overflow: hidden;
+    position: relative; /* 008 new */
+}
+
+
+
+/* Generic CSS reset */
+.newdesign html, .newdesign  body, .newdesign  div, .newdesign  span, .newdesign  applet, .newdesign  object, .newdesign  iframe, .newdesign  h1, .newdesign  h2, .newdesign  h3, .newdesign  h4, .newdesign  h5, .newdesign  h6, .newdesign  p, .newdesign  blockquote, .newdesign  pre, .newdesign
+a, .newdesign  abbr, .newdesign  acronym, .newdesign  address, .newdesign  big, .newdesign  cite, .newdesign  code, .newdesign  del, .newdesign  dfn, .newdesign  em, .newdesign  img, .newdesign  ins, .newdesign  kbd, .newdesign  q, .newdesign  s, .newdesign  samp, .newdesign
+small, .newdesign  strike, .newdesign  strong, .newdesign  sub, .newdesign  sup, .newdesign  tt, .newdesign  var, .newdesign  b, .newdesign  u, .newdesign  i, .newdesign  center, .newdesign  dl, .newdesign  dt, .newdesign  dd, .newdesign  ol, .newdesign  ul, .newdesign  li, .newdesign
+fieldset, .newdesign  form, .newdesign  label, .newdesign  legend, .newdesign  table, .newdesign  caption, .newdesign  tbody, .newdesign  tfoot, .newdesign  thead, .newdesign  tr, .newdesign  th, .newdesign  td, .newdesign
+article, .newdesign  aside, .newdesign  canvas, .newdesign  details, .newdesign  embed, .newdesign  figure, .newdesign  figcaption, .newdesign  footer, .newdesign  header, .newdesign  hgroup, .newdesign
+menu, .newdesign  nav, .newdesign  output, .newdesign  ruby, .newdesign  section, .newdesign  summary, .newdesign  time, .newdesign  mark, .newdesign  audio, .newdesign  video {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        /* vertical-align: baseline; */
+}
+
+body {
+  background:url("../img/bg-body.jpg") repeat scroll 0 0 transparent;
+}
+.newdesign {
+       color: #000000;
+       font-size:small;
+       line-height:1;
+       font-family:'Helvetica Neue','Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
+}
+
+@font-face {
+    font-family: 'Helvetica Neue';
+    src: url('../fonts/helveticaneueltcom-bd.eot?') format('eot'),
+         url('../fonts/helveticaneueltcom-bd.woff') format('woff'),
+         url('../fonts/helveticaneueltcom-bd.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Lucida Grande';
+    src: url('../fonts/lucida_grande.eot?') format('eot'),
+         url('../fonts/lucida_grande.woff') format('woff'),
+         url('../fonts/lucida_grande.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* HTML5 display-role reset for older browsers */
+.newdesign article, .newdesign  aside, .newdesign  details, .newdesign  figcaption, .newdesign  figure, .newdesign  footer, .newdesign  header, .newdesign  hgroup, .newdesign  menu, .newdesign  nav, .newdesign section {
+        display: block;
+}
+
+.newdesign body {
+        line-height: 1;
+}
+
+.newdesign ol, .newdesign ul {
+        list-style: none;
+}
+
+.newdesign blockquote, .newdesign q {
+        quotes: none;
+}
+
+.newdesign blockquote:before, .newdesign blockquote:after, .newdesign q:before, .newdesign q:after {
+        content: '';
+        content: none;
+}
+
+.newdesign table {
+        border-collapse: collapse;
+        border-spacing: 0;
+}
+
+input#cancel {
+    color: #2E99D3;
+    background-color: transparent;
+    border:0;
+}
+
+
+.signStepsBodyForms ol
+{
+    margin-top: 4px;
+    margin-botton: 4px;
+}
+
+.designFunctionalLink{
+    font-size: 8pt;
+}
+
+.centered {
+    margin: 10%;
+}
+.signGuard{
+    position:relative;
+    top: 2px;
+    margin:2px;
+
+}
+
+.signViewBodyRightTextContainer .icon.status{
+    margin-top: 2px;
+}
+
+.signViewBodyRightTextContainer .textstatus {
+    margin-left: 3px;
+}
+
+.signatoriesBox {
+float: right;
+width: 690px;
+}
+
+.currentSignatoryBox{
+float: left;
+width: 340px;
+}
+
+.otherSignatoriesBox{
+/*float:right;    */
+/*width: 340px;    */
+}
+.signatoryLockIcon{
+ margin-right: 5px;
+ margin-top: 5px;
+ float:right;
+}
+.signViewBodyRight .field {
+    border: 1px solid #6782A5;
+    display: block;
+    margin: 1px 0px 3px 0;
+    overflow: hidden;
+    padding: 0;
+    width: 210px;
+    height: 20px;
+    line-height: 20px;
+    -moz-border-radius: 2px 2px 2px 2px;
+    padding-left: 4px;
+}
+
+.signViewBodyRight .field input.fieldvalue{
+    margin:0px;
+    padding:0px;
+    color:#414241;
+    width:200px
+}
+
+
+.signViewBodyRight .header {
+    margin-bottom: 10px;
+}
+
+.signViewBodyForms input
+{
+    padding-left: 20px;
+    width: 194px;
+    height: 18px;
+    line-height: 18px;
+    font-size: 11px;
+    border-color: #6782a5;
+   margin: 1px 0px 3px 0;
+}
+
+.signViewBodyRight .field  .fieldvalue {
+    background-color: transparent;
+    border: medium none;
+    font-size: 12px;
+    height: 18px;
+    line-height: 18px;
+    margin: 1;
+    outline: medium none;
+    overflow: hidden;
+}
+
+.signViewBodyRight .field  .fieldvalue.grayed {
+    color: #999999;
+    font-style: italic;
+}
+
+.signViewBodyRight .field  .icon {
+    margin-top:2px;
+    margin-left:2px;
+    width:16px;
+    height:16px;
+    float:left;
+}
+
+.otherSignatoriesBox .signViewBodyRight .field .icon  {
+   background:none;
+}
+
+.reminderForSignedIcon  {
+    background: url(../img/senddoc.png) 0 0 no-repeat;
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    float:left;
+}
+.reminderForSendIcon {
+    background: url(../img/remind.png) 0 0 no-repeat;
+    margin-top: 2px;
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    float:left;
+}
+.sendLinkText{
+    padding-top: 1px;
+    padding-left:11px;
+    float:left;
+    text-transform: uppercase;
+    font-size: 10px;
+}
+
+.prepareToSendReminderMail {
+    padding-top: 6px;
+}
+.giveForSigning {
+    padding-top: 4px;
+    height: 16px;
+    display: block;
+    cursor: pointer;
+
+}
+
+.giveForSigningIcon {
+    background: url(../img/give.png) 0 0 no-repeat;
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    float:left;
+}
+.addToPad{
+    padding-top: 4px;
+    height: 16px;
+    display: block;
+    cursor: pointer;
+}
+
+.addToPadIcon {
+    background: url(../img/pad.png) 0 0 no-repeat;
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    float:left;
+}
+.removeFromPad{
+    padding-top: 4px;
+    height: 16px;
+    display: block;
+    cursor: pointer;
+}
+
+.removeFromPadIcon {
+    background: url(../img/icon-delete.png) 0 0 no-repeat;
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    float:left;
+}
+
+.prepareToSendReminderMail:hover{
+    font-weight: bold;
+}
+
+
+.nordea {
+    padding-top: 11px;
+    margin-left: 15px;
+    margin-right: 15px;
+    float: right;
+    height: 33px;
+    overflow:none;
+}
+.telia {
+    margin-left: 15px;
+    margin-right: 15px;
+    float: right;
+    height: 33px;
+    overflow:none;
+}
+
+.bankid {
+    padding-top: 3px;
+    margin-left: 15px;
+    margin-right: 15px;
+    float: right;
+    height: 33px;
+    overflow:none;
+}
+
+
+.templatedDialogContainer{
+    margin-top: 16px;
+
+}
+.templatedDialogContainer .searchBox{
+    margin-top: 40px;
+    margin-right:30px;
+}
+
+a#cancel {
+    width: 144px;
+}
+
+#possibleAttachmentsList {
+    height: 160px;
+    overflow: auto;
+}
+
+#attachedList {
+    max-height: 140px;
+    overflow: auto;
+}
+
+div.existingattachments {
+    overflow: auto;
+    height: 140px;
+    margin-top: 10px;
+}
+
+#update-sigattachments-dialog .plus {
+    background-image: url(/img/iconPlus.png);
+    background-repeat: no-repeat;
+    width: 16px;
+    height: 16px;
+    display: block;
+    float:left;
+}
+
+th.minusbutton {
+    width: 19px;
+}
+
+th.attachmentname {
+    width: 175px;
+}
+
+th.attachmentdesc {
+    width: 185px;
+}
+
+th.attachmentsigs {
+    width: 150px;
+}
+
+th.attachmentsels {
+    width: 145px;
+}
+
+table#sigattachmenttable {
+    margin: 0;
+    padding: 0;
+}
+
+table#sigattachmenttable th {
+    text-align: left;
+}
+
+table#sigattachmenttable td {
+    vertical-align: top;
+}
+
+table#sigattachmenttable td.centralised {
+    padding-top: 5px;
+}
+
+table#sigattachmenttable a.minus {
+    width: 16px;
+    height: 16px;
+    display: block;
+    background-repeat: no-repeat;
+    background-image: url(/img/iconMinus.png);
+    align: left;
+}
+
+table#sigattachmenttable textarea {
+    resize: none;
+}
+
+table#sigattachmenttable {
+    width: 100%;
+}
+
+.sigattachmentlist {
+    max-height: 230px;
+    overflow: auto;
+}
+
+input.attachmentname {
+
+}
+
+table.authorsigattachment {
+    width: 100%;
+}
+
+.docview .signatoryattachments .column {
+  float: left;
+  width: 400px;
+
+  min-height: 20px;
+}
+
+.docview .signatoryattachments .list {
+  min-height: 50px;
+  margin-top: 20px;
+}
+
+.docview .signatoryattachments .list .item {
+  min-height: 50px;
+}
+
+.docview .signatoryattachments .list .item .name {
+  font-weight: bold;
+}
+
+table#signViewSigAttachmentBoxList {
+    width: 100%;
+}
+
+table#signViewSigAttachmentBoxList td {
+    width: 33%;
+}
+
+table#signViewSigAttachmentBoxList .btn-small {
+    margin-top: 5px;
+}
+table#signViewSigAttachmentBoxList .btn-small .label {
+    text-align: center;
+    white-space: nowrap;
+}
+
+table#signatorysignatoryattachments {
+    width: 100%;
+}
+
+a#attachmentback {
+    width: 16px;
+    height: 16px;
+    float:left;
+    background-image: url(/img/back.png);
+    margin-left: -80px;
+    margin-top: -16px;
+}
+
+.totalline {
+    font-weight: 900;
+    border-top: solid 1px black;
+    border-bottom: solid 1px black;
+    height: 2em;
+}
+
+.account-body.advancedview {
+    font-size: 12px;
+}
+
+.account-body.advancedview p {
+    margin: 10px;
+}
+
+.usagestats .tab-content {
+    display: none;
+}
+
+.usagestats #jsdaytable .tab-container, .usagestats #jsmonthtable .tab-container, .usagestats .tab-table {
+    -moz-border-radius: 5px 5px 5px 5px;
+	-webkit-border-radius: 5px 5px 5px 5px;
+}
+
+.usagestats #jsdaytable, .usagestats #jsmonthtable {
+    margin-top: 20px;
+    margin-bottom: 40px;
+}
+
+.usagestats h2 {
+    text-align: center;
+}
+
+.usagestats td.num {
+
+    font-weight: bold;
+    font-family: "Courier New", Courier, monospace;
+
+}
+
+.inlineEditing .acceptIcon {
+    height:14px;
+    width:14px;
+    margin:2px;
+    display: block;
+    float:right;
+    background: url("../img/spr-icons.png") no-repeat scroll 0 0 transparent;
+    background-position: -171px 0px;
+    width: 14px;
+    float:right;
+}
+.inlineEditing {
+    border: 1px solid #DDDDDD;
+    height: 18px;
+}
+.inlineEditing input{
+    border: 0px solid #DDDDDD;
+    float: left;
+    padding: 0px;
+    margin: 0px;
+}
+.inlineEditing input:focus{
+    outline:0px;
+}

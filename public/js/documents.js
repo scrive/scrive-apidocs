@@ -84,18 +84,11 @@ window.Document = Backbone.Model.extend({
     signatories: function() {
         return this.get("signatories");
     },
-    signatoriesThatCanSignNow: function() { 
+    signatoriesThatCanSignNow: function() {
         var sigs = _.filter(this.signatories(),function(sig) {return sig.ableToSign()});
         if (sigs.length > 1) //We try not to show author on this list unless he is only one left due to sign-last functionality misdesign. |
             return _.filter(sigs,function(sig) {return !sig.author()});
         return sigs;
-    },
-    fixForBasic: function() {
-        if (this.padAuthorization())
-            this.setEmailVerification();
-        while (this.signatories().length <2 ) {
-              this.addSignatory();
-        }
     },
     addSignatory: function() {
         var document = this;
@@ -231,7 +224,6 @@ window.Document = Backbone.Model.extend({
     draftData: function() {
       return {
           title: this.title(),
-          functionality: this.get("functionality"),
           invitationmessage: this.get("invitationmessage"),
           daystosign: this.get("daystosign"),
           authorization: this.get("authorization"),
@@ -239,10 +231,6 @@ window.Document = Backbone.Model.extend({
           region: this.region().draftData(),
           template: this.isTemplate()
       };
-    },
-    switchFunctionalityToAdvanced: function() {
-          var newfunctionality = this.isBasic() ? "advanced" : "basic";
-          this.set({functionality: newfunctionality}, {silent: true});
     },
     status: function() {
           return this.get("status");
@@ -352,9 +340,6 @@ window.Document = Backbone.Model.extend({
     makeTemplate: function() {
        return this.set({"template": true}, {silent: true});
     },
-    isBasic: function() {
-       return this.get("functionality") == "basic";
-    },
     recall: function() {
        var doc = this;
        this.fetch({data: this.viewer().forFetch(),
@@ -398,13 +383,13 @@ window.Document = Backbone.Model.extend({
         return true;
     },
     authorIsOnlySignatory : function() {
-       for (var i = 0; i < this.signatories().length; ++i) 
+       for (var i = 0; i < this.signatories().length; ++i)
          if (this.signatories()[i].signs() && !this.signatories()[i].author())
                     return false;
-       return this.author().signs();  
+       return this.author().signs();
     },
     allowsDD: function() {
-        return this.preparation() && !this.isBasic();
+        return this.preparation();
     },
     isAuthorAttachments: function() {
       return this.authorattachments().length > 0;
@@ -480,7 +465,6 @@ window.Document = Backbone.Model.extend({
       signorder: args.signorder,
       authorization: args.authorization,
       template: args.template,
-      functionality: args.functionality,
       daystosign: args.daystosign,
       invitationmessage: args.invitationmessage,
       logo: args.logo,

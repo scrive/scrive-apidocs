@@ -34,3 +34,14 @@ reset-test-db:
 	PGUSER=$(DBUSER) createdb $(DBNAME)
 	psql $(DBNAME) $(DBUSER) -c "ALTER DATABASE $(DBNAME) SET TIMEZONE = 'UTC';"
 
+# Heap profiling
+
+# Consider removing all user-installed hackage libraries first, so
+# that all libraries are compiled with the additional profiling flags
+# to get detailed profiling
+
+.PHONY : profiling
+profiling:
+	cabal install --only-dependencies --enable-library-profiling --ghc-options="-auto-all -caf-all"
+	cabal configure --enable-executable-profiling --ghc-options="-auto-all -caf-all"
+	cabal build
