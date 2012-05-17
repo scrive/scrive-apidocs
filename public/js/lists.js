@@ -819,16 +819,14 @@
         },
         recall: function() {
             var list = this;
-            this.beforeFetch();
+            list.loading.start();
+            var fetching = true;
             this.model.fetch({ data: this.schema.getSchemaUrlParams(),
                                processData: true,
                                cache: false,
-                               success: this.afterFetch,
-                               error: function() {
-                                 console.error("Failed to fetch list, trying again ...");
-                                 window.setTimeout(list.recall, 1000);
-                               }
+                               success: function() {fetching = false; list.loading.stop();}
             });
+            window.setTimeout(function() {if (fetching == true) list.recall();}, 2000);
         }
     };};
 })(window);
