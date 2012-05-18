@@ -72,7 +72,7 @@ class DocHelper
     (@wait.until { @driver.find_element :css => "a.addSignatory" }).click
   end
 
-  def inFinalDesignStep
+  def gotToStep3
     (@wait.until { @driver.find_element :css => "a.nextstepbutton" }).click
     @wait.until { @driver.find_element :css => "a.finalbutton" }
   rescue Selenium::WebDriver::Error::ElementNotVisibleError
@@ -83,7 +83,7 @@ class DocHelper
   end
 
   def loadAuthorAttachment(no, filepath)
-    inFinalDesignStep
+    gotToStep3
     (@wait.until { @driver.find_element :css => "div.authorattachmentssetup span.countspan" }).click
     (@wait.until { @driver.find_element :css => "div.selectAuthorAttachmentPopupContent input.multiFileInput" }).send_keys filepath
     (@wait.until { @driver.find_element :css => "a.float-right" }).click
@@ -91,7 +91,7 @@ class DocHelper
   end
 
   def requestSigAttachment(attname, attdesc, counterparts)
-    inFinalDesignStep
+    gotToStep3
     (@wait.until { @driver.find_element :css => "div.signatoryattachmentssetup span.countspan" }).click
     counterparts.each do |counterpart|
       (@wait.until { @driver.find_elements :css => "div.designSignatoryAttachmentsPopupContent div.label" }).last.click

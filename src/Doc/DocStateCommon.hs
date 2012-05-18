@@ -4,7 +4,6 @@ import Control.Logic
 import Company.Model
 import Data.Maybe
 import Doc.DocInfo
-import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocUtils
 import InputValidation
@@ -76,7 +75,6 @@ blankDocument =
           , documentfiles                = []
           , documentstatus               = Preparation
           , documenttype                 = Signable Contract
-          , documentfunctionality        = BasicFunctionality
           , documentctime                = fromSeconds 0
           , documentmtime                = fromSeconds 0
           , documentdaystosign           = Nothing
@@ -99,19 +97,6 @@ blankDocument =
           , documentregion               = defaultValue
           , documentstatusclass          = SCDraft
           }
-
-
-{- |
-    Determines whether a new document should have either Advanced or Basic
-    functionality according to the document's type and the user's preferences.
--}
-newDocumentFunctionality :: DocumentType -> User -> DocumentFunctionality
-newDocumentFunctionality documenttype user =
-  case (getValueForProcess documenttype processbasicavailable,
-        preferreddesignmode $ usersettings user) of
-    (Just True, Nothing) -> BasicFunctionality
-    (Just True, Just BasicMode) -> BasicFunctionality
-    _ -> AdvancedFunctionality
 
 {- |
 

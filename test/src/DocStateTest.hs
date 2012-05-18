@@ -49,7 +49,6 @@ docStateTests env = testGroup "DocState" [
   testThat "RestoreArchivedDocument adds to the log" env testRestoreArchivedDocumentEvidenceLog,
   testThat "SaveDocumentForUser adds to the log" env testSaveDocumentForUserEvidenceLog,
   testThat "SetDaysToSign adds to the log" env testSetDaysToSignEvidenceLog,
-  testThat "SetDocumentAdvancedFunctionality adds to the log" env testSetDocumentAdvancedFunctionalityEvidenceLog,
   testThat "SetDocumentInviteTime adds to the log" env testSetDocumentInviteTimeEvidenceLog,
   testThat "SetDocumentLocale adds to the log" env testSetDocumentLocaleEvidenceLog,
   testThat "SetDocumentTags adds to the log" env testSetDocumentTagsEvidenceLog,
@@ -69,7 +68,7 @@ docStateTests env = testGroup "DocState" [
 
   testThat "Documents sorting SQL syntax is correct" env testGetDocumentsSQLSorted,
   testThat "Documents searching by text works" env testGetDocumentsSQLTextFiltered,
- 
+
   testThat "PreparationToPending adds to the log" env testPreparationToPendingEvidenceLog,
   testThat "MarkInvitationRead adds to the log" env testMarkInvitationReadEvidenceLog,
   testThat "MarkDocumentSeen adds to the log" env testMarkDocumentSeenEvidenceLog,
@@ -90,7 +89,7 @@ docStateTests env = testGroup "DocState" [
   testThat "AddDocumentAttachment adds to the log" env testAddDocumentAttachmentEvidenceLog,
   testThat "GetDocumentsByCompanyWithFiltering filters" env testGetDocumentsByCompanyWithFilteringFilters,
   testThat "GetDocumentsByCompanyWithFiltering finds" env testGetDocumentsByCompanyWithFilteringFinds,
-  testThat "GetDocumentsByCompanyWithFiltering finds with multiple" env testGetDocumentsByCompanyWithFilteringFindsMultiple,  
+  testThat "GetDocumentsByCompanyWithFiltering finds with multiple" env testGetDocumentsByCompanyWithFilteringFindsMultiple,
   testThat "GetDocumentsByCompanyWithFiltering finds with company filter" env testGetDocumentsByCompanyWithFilteringCompany,
   testThat "NewDocument inserts a new contract for a single user successfully" env testNewDocumentForNonCompanyUserInsertsANewContract,
   testThat "NewDocument inserts a new contract for a company user successfully" env testNewDocumentForACompanyUserInsertsANewContract,
@@ -293,7 +292,7 @@ testNewDocumentForMismatchingUserAndCompanyFails = doTimes 10 $ do
   validTest $ do
     assertLeft edoc1
     assertLeft edoc2
-    
+
 testReallyDeleteDocumentEvidenceLog :: TestEnv ()
 testReallyDeleteDocumentEvidenceLog = do
   author <- addNewRandomUser
@@ -303,17 +302,17 @@ testReallyDeleteDocumentEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == ReallyDeleteDocumentEvidence) lg
-  
+
 testRejectDocumentEvidenceLog :: TestEnv ()
 testRejectDocumentEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending &&^ ((<=) 2 . length . documentsignatorylinks))
-  let Just sl = getSigLinkFor doc (not . (isAuthor::SignatoryLink->Bool))  
+  let Just sl = getSigLinkFor doc (not . (isAuthor::SignatoryLink->Bool))
   etdoc <- randomUpdate $ \m t->RejectDocument (documentid doc) (signatorylinkid sl) m (systemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == RejectDocumentEvidence) lg
-  
+
 testRemoveDaysToSignEvidenceLog :: TestEnv ()
 testRemoveDaysToSignEvidenceLog = do
   author <- addNewRandomUser
@@ -323,7 +322,7 @@ testRemoveDaysToSignEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == RemoveDaysToSignEvidence) lg
-  
+
 testRemoveDocumentAttachmentEvidenceLog :: TestEnv ()
 testRemoveDocumentAttachmentEvidenceLog = do
   author <- addNewRandomUser
@@ -334,7 +333,7 @@ testRemoveDocumentAttachmentEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == RemoveDocumentAttachmentEvidence) lg
-  
+
 testResetSignatoryDetailsEvidenceLog :: TestEnv ()
 testResetSignatoryDetailsEvidenceLog = do
   author <- addNewRandomUser
@@ -343,7 +342,7 @@ testResetSignatoryDetailsEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == ResetSignatoryDetailsEvidence) lg
-  
+
 testRestartDocumentEvidenceLog :: TestEnv ()
 testRestartDocumentEvidenceLog = do
   author <- addNewRandomUser
@@ -357,7 +356,7 @@ testRestartDocumentEvidenceLog = do
   assertJust $ find (\e -> evType e == CancelDocumentEvidence) lg
   lg2 <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == RestartDocumentEvidence) lg2
-  
+
 testRestoreArchivedDocumentEvidenceLog :: TestEnv ()
 testRestoreArchivedDocumentEvidenceLog = do
   author <- addNewRandomUser
@@ -367,7 +366,7 @@ testRestoreArchivedDocumentEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == RestoreArchivedDocumentEvidence) lg
-  
+
 testSaveDocumentForUserEvidenceLog :: TestEnv ()
 testSaveDocumentForUserEvidenceLog = do
   author <- addNewRandomUser
@@ -378,7 +377,7 @@ testSaveDocumentForUserEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SaveDocumentForUserEvidence) lg
-  
+
 testSetDaysToSignEvidenceLog :: TestEnv ()
 testSetDaysToSignEvidenceLog = do
   author <- addNewRandomUser
@@ -387,16 +386,7 @@ testSetDaysToSignEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SetDaysToSignEvidence) lg
-  
-testSetDocumentAdvancedFunctionalityEvidenceLog :: TestEnv ()
-testSetDocumentAdvancedFunctionalityEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (((==) BasicFunctionality . documentfunctionality) &&^ isPreparation)
-  etdoc <- randomUpdate $ \t->SetDocumentFunctionality (documentid doc) AdvancedFunctionality (systemActor t)
-  assertRight etdoc
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SetDocumentAdvancedFunctionalityEvidence) lg
-  
+
 testSetDocumentInviteTimeEvidenceLog :: TestEnv ()
 testSetDocumentInviteTimeEvidenceLog = do
   author <- addNewRandomUser
@@ -405,7 +395,7 @@ testSetDocumentInviteTimeEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SetDocumentInviteTimeEvidence) lg
-  
+
 testSetDocumentLocaleEvidenceLog :: TestEnv ()
 testSetDocumentLocaleEvidenceLog = do
   author <- addNewRandomUser
@@ -415,7 +405,7 @@ testSetDocumentLocaleEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SetDocumentLocaleEvidence) lg
-  
+
 testSetDocumentTagsEvidenceLog :: TestEnv ()
 testSetDocumentTagsEvidenceLog = do
   author <- addNewRandomUser
@@ -430,7 +420,7 @@ testSetDocumentTagsEvidenceLog = do
                     then loop doc
                     else randomUpdate $ \t->SetDocumentTags (documentid doc) ts (systemActor t)
 
-  
+
 testSetDocumentTimeoutTimeEvidenceLog :: TestEnv ()
 testSetDocumentTimeoutTimeEvidenceLog = do
   author <- addNewRandomUser
@@ -440,7 +430,7 @@ testSetDocumentTimeoutTimeEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SetDocumentTimeoutTimeEvidence) lg
-  
+
 testSetDocumentTitleEvidenceLog :: TestEnv ()
 testSetDocumentTitleEvidenceLog = do
   author <- addNewRandomUser
@@ -454,7 +444,7 @@ testSetDocumentTitleEvidenceLog = do
                   if documenttitle doc == title
                     then loop doc
                     else randomUpdate $ \t->SetDocumentTitle (documentid doc) title (systemActor t)
-  
+
 testSetDocumentUIEvidenceLog :: TestEnv ()
 testSetDocumentUIEvidenceLog = do
   author <- addNewRandomUser
@@ -465,11 +455,11 @@ testSetDocumentUIEvidenceLog = do
   assertJust $ find (\e -> evType e == SetDocumentUIEvidence) lg
     where loop doc = do
                   u <- rand 10 arbitrary
-                  if documentui doc == u 
+                  if documentui doc == u
                     then loop doc
                     else randomUpdate $ \t->SetDocumentUI (documentid doc) u (systemActor t)
 
-  
+
 testSetElegitimationIdentificationEvidenceLog :: TestEnv ()
 testSetElegitimationIdentificationEvidenceLog = do
   author <- addNewRandomUser
@@ -479,7 +469,7 @@ testSetElegitimationIdentificationEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SetElegitimationIdentificationEvidence) lg
-  
+
 testSetEmailIdentificationEvidenceLog :: TestEnv ()
 testSetEmailIdentificationEvidenceLog = do
   author <- addNewRandomUser
@@ -489,7 +479,7 @@ testSetEmailIdentificationEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SetEmailIdentificationEvidence) lg
-  
+
 testSetInvitationDeliveryStatusEvidenceLog :: TestEnv ()
 testSetInvitationDeliveryStatusEvidenceLog = do
   author <- addNewRandomUser
@@ -504,7 +494,7 @@ testSetInvitationDeliveryStatusEvidenceLog = do
                   if invitationdeliverystatus sl == s
                     then loop doc sl
                     else randomUpdate $ \t->SetInvitationDeliveryStatus (documentid doc) (signatorylinkid sl) s (systemActor t)
-  
+
 testSetInviteTextEvidenceLog :: TestEnv ()
 testSetInviteTextEvidenceLog = do
   author <- addNewRandomUser
@@ -518,7 +508,7 @@ testSetInviteTextEvidenceLog = do
                   if documentinvitetext doc == i
                     then loop doc
                     else randomUpdate $ \t -> SetInviteText (documentid doc) i (systemActor t)
-  
+
 testSignDocumentEvidenceLog :: TestEnv ()
 testSignDocumentEvidenceLog = do
   author <- addNewRandomUser
@@ -529,7 +519,7 @@ testSignDocumentEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SignDocumentEvidence) lg
-    
+
 testSignableFromDocumentIDWithUpdatedAuthorEvidenceLog :: TestEnv ()
 testSignableFromDocumentIDWithUpdatedAuthorEvidenceLog = do
   author <- addNewRandomUser
@@ -541,7 +531,7 @@ testSignableFromDocumentIDWithUpdatedAuthorEvidenceLog = do
   lg <- dbQuery $ GetEvidenceLog (documentid $ fromRight etdoc)
   assertJust $ find (\e -> evType e == SignableFromDocumentIDWithUpdatedAuthorEvidence) lg
   assertJust $ find (\e -> evType e == SetInvitationTextEvidence) lg
-  
+
 testTemplateFromDocumentEvidenceLog :: TestEnv ()
 testTemplateFromDocumentEvidenceLog = do
   author <- addNewRandomUser
@@ -550,7 +540,7 @@ testTemplateFromDocumentEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == TemplateFromDocumentEvidence) lg
-  
+
 testTimeoutDocumentEvidenceLog :: TestEnv ()
 testTimeoutDocumentEvidenceLog = do
   author <- addNewRandomUser
@@ -559,7 +549,7 @@ testTimeoutDocumentEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == TimeoutDocumentEvidence) lg
-  
+
 testUpdateFieldsEvidenceLog :: TestEnv ()
 testUpdateFieldsEvidenceLog = doTimes 10 $ do
   author <- addNewRandomUser
@@ -574,7 +564,7 @@ testUpdateFieldsEvidenceLog = doTimes 10 $ do
       Left _ ->
         assertEqual "if UpdateFields did not change any rows it should not add to the evidence" Nothing
                     (find (\e -> evType e == UpdateFieldsEvidence) lg)
-  
+
 testPreparationToPendingEvidenceLog :: TestEnv ()
 testPreparationToPendingEvidenceLog = do
   author <- addNewRandomUser
@@ -593,7 +583,7 @@ testMarkInvitationReadEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == MarkInvitationReadEvidence) lg
-    
+
 testMarkDocumentSeenEvidenceLog :: TestEnv ()
 testMarkDocumentSeenEvidenceLog  = do
   author <- addNewRandomUser
@@ -619,7 +609,7 @@ testErrorDocumentEvidenceLog  = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == ErrorDocumentEvidence) lg
-    
+
 testDocumentFromSignatoryDataEvidenceLog :: TestEnv ()
 testDocumentFromSignatoryDataEvidenceLog = do
   author <- addNewRandomUser
@@ -649,7 +639,7 @@ testSaveSigAttachmentEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SaveSigAttachmentEvidence) lg
-  
+
 testDeleteSigAttachmentEvidenceLog :: TestEnv ()
 testDeleteSigAttachmentEvidenceLog = do
   author <- addNewRandomUser
@@ -673,7 +663,7 @@ testNewDocumentEvidenceLog = do
       did = documentid d
   lg <- dbQuery $ GetEvidenceLog did
   assertJust $ find (\e -> evType e == NewDocumentEvidence) lg
-  
+
 testAddDocumentAttachmentEvidenceLog :: TestEnv ()
 testAddDocumentAttachmentEvidenceLog = do
   (_, _, ed) <- performNewDocumentWithRandomUser Nothing (Signable Contract) "doc"
@@ -686,7 +676,7 @@ testAddDocumentAttachmentEvidenceLog = do
   assertRight edoc
   lg <- dbQuery $ GetEvidenceLog did
   assertJust $ find (\e -> evType e == AddDocumentAttachmentEvidence) lg
-  
+
 testAddInvitationEvidenceLog :: TestEnv ()
 testAddInvitationEvidenceLog = do
   author <- addNewRandomUser
@@ -730,7 +720,7 @@ testAttachSealedFileEvidenceLog :: TestEnv ()
 testAttachSealedFileEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isClosed
-  file <- addNewRandomFile  
+  file <- addNewRandomFile
   etdoc <- randomUpdate $ \t->AttachSealedFile (documentid doc) (fileid file) (systemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
@@ -749,7 +739,7 @@ testChangeMainfileEvidenceLog :: TestEnv ()
 testChangeMainfileEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (const True)
-  file <- addNewRandomFile  
+  file <- addNewRandomFile
   etdoc <- randomUpdate $ \t-> ChangeMainfile (documentid doc) (fileid file) (systemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
@@ -836,7 +826,7 @@ testCancelDocumentCancelsDocument = doTimes 10 $ do
     assertEqual "In canceled state" Canceled (documentstatus canceleddoc)
     assertEqual "Updated modification time" time (documentmtime canceleddoc)
     assertEqual "Matching cancellation reason" (Just ManualCancel) (documentcancelationreason canceleddoc)
-    assertEqual "Siglinks are unchanged" 
+    assertEqual "Siglinks are unchanged"
                   (map doNotCompareStatusClass (documentsignatorylinks doc))
                   (map doNotCompareStatusClass (documentsignatorylinks canceleddoc))
     assertEqual "Doc title is unchanged" (documenttitle doc) (documenttitle canceleddoc)
@@ -922,7 +912,7 @@ testRestoreArchivedDocumentAuthorRight = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (systemActor t)
   etdoc <- randomUpdate $ \t->RestoreArchivedDocument author (documentid doc) (systemActor t)
-  validTest $ do 
+  validTest $ do
     assertRight etdoc
     assertNoArchivedSigLink etdoc
 
@@ -967,7 +957,7 @@ testArchiveDocumentUnrelatedUserLeft :: TestEnv ()
 testArchiveDocumentUnrelatedUserLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  unrelateduser <- addNewRandomAdvancedUser
+  unrelateduser <- addNewRandomUser
   etdoc <- randomUpdate $ \t->ArchiveDocument unrelateduser (documentid doc) (systemActor t)
   validTest $ assertLeft etdoc
 
@@ -984,7 +974,7 @@ testRestoreArchivedDocumentUnrelatedUserLeft :: TestEnv ()
 testRestoreArchivedDocumentUnrelatedUserLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  unrelateduser <- addNewRandomAdvancedUser
+  unrelateduser <- addNewRandomUser
   _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (systemActor t)
   etdoc <- randomUpdate $ \t->RestoreArchivedDocument unrelateduser (documentid doc) (systemActor t)
   validTest $ assertLeft etdoc
@@ -1079,7 +1069,7 @@ testSetDocumentLocaleNotLeft = doTimes 10 $ do
 testNewDocumentDependencies :: TestEnv ()
 testNewDocumentDependencies = doTimes 10 $ do
   -- setup
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   -- execute
   now <- liftIO $ getMinutesTime
@@ -1093,7 +1083,7 @@ testNewDocumentDependencies = doTimes 10 $ do
 testDocumentCanBeCreatedAndFetchedByID :: TestEnv ()
 testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
   -- setup
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   now <- liftIO $ getMinutesTime
   let aa = authorActor now noIP (userid author) (getEmail author)
@@ -1112,7 +1102,7 @@ testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
 testDocumentCanBeCreatedAndFetchedByAllDocs :: TestEnv ()
 testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
   -- setup
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   -- execute
   now <- liftIO $ getMinutesTime
@@ -1132,7 +1122,7 @@ testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
 testDocumentUpdateDoesNotChangeID :: TestEnv ()
 testDocumentUpdateDoesNotChangeID = doTimes 10 $ do
   -- setup
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   (mt, a, b, c, d, e, f) <- rand 10 arbitrary
   doc <-  addRandomDocumentWithAuthorAndCondition author isPreparation
   r <- getRandomAuthorRoles doc
@@ -1149,7 +1139,7 @@ testDocumentUpdateDoesNotChangeID = doTimes 10 $ do
 testDocumentUpdateCanChangeTitle :: TestEnv ()
 testDocumentUpdateCanChangeTitle = doTimes 10 $ do
   -- setup
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   (mt, a, b, c, d, e, f) <- rand 10 arbitrary
   r <- getRandomAuthorRoles doc
@@ -1166,7 +1156,7 @@ testDocumentUpdateCanChangeTitle = doTimes 10 $ do
 testDocumentAttachNotPreparationLeft :: TestEnv ()
 testDocumentAttachNotPreparationLeft = doTimes 10 $ do
   -- setup
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
   file <- addNewRandomFile
   --execute
@@ -1178,7 +1168,7 @@ testDocumentAttachNotPreparationLeft = doTimes 10 $ do
 testDocumentAttachPreparationRight :: TestEnv ()
 testDocumentAttachPreparationRight = doTimes 10 $ do
   -- setup
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   file <- addNewRandomFile
   --execute
@@ -1203,7 +1193,7 @@ testNoDocumentAttachAlwaysLeft = doTimes 10 $ do
 testDocumentAttachHasAttachment :: TestEnv ()
 testDocumentAttachHasAttachment = doTimes 10 $ do
   -- setup
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   file <- addNewRandomFile
   --execute
@@ -1228,7 +1218,7 @@ testNoDocumentAttachSealedAlwaysLeft = doTimes 10 $ do
 testDocumentAttachSealedPendingRight :: TestEnv ()
 testDocumentAttachSealedPendingRight = doTimes 10 $ do
   -- setup
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocument ((randomDocumentAllowsDefault author) { randomDocumentAllowedTypes = [ Signable Offer
                                                                                                 , Signable Contract
                                                                                                 , Signable Offer
@@ -1248,7 +1238,7 @@ testDocumentAttachSealedPendingRight = doTimes 10 $ do
 testDocumentChangeMainFileRight :: TestEnv ()
 testDocumentChangeMainFileRight = doTimes 10 $ do
   -- setup
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (const True)
   file <- addNewRandomFile
   --execute
@@ -1275,7 +1265,7 @@ testNoDocumentChangeMainFileAlwaysLeft = doTimes 10 $ do
 testGetTimedOutButPendingDocuments :: TestEnv ()
 testGetTimedOutButPendingDocuments = doTimes 1 $ do
   -- setup
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isPending &&^ (isJust . documenttimeouttime))
   _doc2 <- addRandomDocumentWithAuthorAndCondition author (not . isPending)
 
@@ -1294,7 +1284,7 @@ testGetTimedOutButPendingDocuments = doTimes 1 $ do
 testNotPreparationUpdateDocumentAlwaysLeft :: TestEnv ()
 testNotPreparationUpdateDocumentAlwaysLeft = doTimes 10 $ do
   -- setup
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
   (mt, a, b, c, d, e, f) <- rand 10 arbitrary
 
@@ -1310,7 +1300,7 @@ testPreparationUpdateDocumentAlwaysRight = doTimes 10 $ do
   -- setup
   (mt, a, b, c, d, e, f) <- rand 10 arbitrary
 
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   r <- getRandomAuthorRoles doc
   let sd = signatoryDetailsFromUser author Nothing
@@ -1335,7 +1325,7 @@ testNoDocumentUpdateDocumentAlwaysLeft = doTimes 10 $ do
 testNotPreparationResetSignatoryDetailsAlwaysLeft :: TestEnv ()
 testNotPreparationResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
   -- setup
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
   mt <- rand 10 arbitrary
   let sd = signatoryDetailsFromUser author Nothing
@@ -1347,7 +1337,7 @@ testNotPreparationResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
 testPreparationResetSignatoryDetailsAlwaysRight :: TestEnv ()
 testPreparationResetSignatoryDetailsAlwaysRight = doTimes 10 $ do
   -- setup
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   mt <- rand 10 arbitrary
   --execute
@@ -1361,7 +1351,7 @@ testNoDocumentResetSignatoryDetailsAlwaysLeft :: TestEnv ()
 testNoDocumentResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
   -- setup
   a <- rand 10 arbitrary
-  --author <- addNewRandomAdvancedUser
+  --author <- addNewRandomUser
   mt <- rand 10 arbitrary
   --execute
   -- non-existent docid
@@ -1380,7 +1370,7 @@ testNoDocumentAttachCSVUploadAlwaysLeft = doTimes 10 $ do
 testNotPreparationAttachCSVUploadAlwaysLeft :: TestEnv ()
 testNotPreparationAttachCSVUploadAlwaysLeft = doTimes 10 $ do
   -- setup
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
   slid <- rand 10 $ elements [signatorylinkid sl | sl <- documentsignatorylinks doc, isSignatory sl]
   --execute
@@ -1391,7 +1381,7 @@ testNotPreparationAttachCSVUploadAlwaysLeft = doTimes 10 $ do
 testPreparationAttachCSVUploadAuthorIndexLeft :: TestEnv ()
 testPreparationAttachCSVUploadAuthorIndexLeft = doTimes 10 $ do
   -- setup
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   (csvupload, t) <- rand 10 arbitrary
   let Just ai = authorIndex (documentsignatorylinks doc)
@@ -1412,11 +1402,11 @@ testPreparationAttachCSVUploadNonExistingSignatoryLink :: TestEnv ()
 testPreparationAttachCSVUploadNonExistingSignatoryLink = doTimes 3 $ do
   -- setup
   (csvupload, time) <- rand 10 arbitrary
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   slid <- unsafeSignatoryLinkID <$> rand 10 arbitrary
   --execute
-  edoc <- dbUpdate $ AttachCSVUpload (documentid doc) 
+  edoc <- dbUpdate $ AttachCSVUpload (documentid doc)
           slid csvupload (systemActor time)
   --assert
   validTest $ assertLeft edoc
@@ -1427,20 +1417,20 @@ testGetDocumentsSharedInCompany = doTimes 10 $ do
   -- each having a document here
   company1 <- addNewCompany
   company2 <- addNewCompany
-  user1' <- addNewRandomAdvancedUser
-  user2' <- addNewRandomAdvancedUser
+  user1' <- addNewRandomUser
+  user2' <- addNewRandomUser
   _ <- dbUpdate $ SetUserCompany (userid user1') (Just (companyid company1))
   Just user1 <- dbQuery $ GetUserByID (userid user1')
   _ <- dbUpdate $ SetUserCompany (userid user2') (Just (companyid company1))
   Just user2 <- dbQuery $ GetUserByID (userid user2')
-  user3' <- addNewRandomAdvancedUser
-  user4' <- addNewRandomAdvancedUser
+  user3' <- addNewRandomUser
+  user4' <- addNewRandomUser
   _ <- dbUpdate $ SetUserCompany (userid user3') (Just (companyid company2))
   Just user3 <- dbQuery $ GetUserByID (userid user3')
   _ <- dbUpdate $ SetUserCompany (userid user4') (Just (companyid company2))
   Just user4 <- dbQuery $ GetUserByID (userid user4')
-  user5 <- addNewRandomAdvancedUser
-  user6 <- addNewRandomAdvancedUser
+  user5 <- addNewRandomUser
+  user6 <- addNewRandomUser
 
   docid1 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user1 (isTemplate)
   docid2 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user2 (isTemplate)
@@ -1478,7 +1468,7 @@ testGetDocumentsSharedInCompany = doTimes 10 $ do
 testGetDocumentsSQLTextFiltered :: TestEnv ()
 testGetDocumentsSQLTextFiltered = doTimes 1 $ do
   -- setup
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc1 <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
   _doc2 <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
   _doc3 <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
@@ -1509,7 +1499,7 @@ testGetDocumentsSQLTextFiltered = doTimes 1 $ do
   docs4 <- dbQuery $ GetDocuments domains filters4 [] (DocumentPagination 0 maxBound)
   docs5 <- dbQuery $ GetDocuments domains filters5 [] (DocumentPagination 0 maxBound)
   docs6 <- dbQuery $ GetDocuments domains filters6 [] (DocumentPagination 0 maxBound)
-  
+
   validTest $ do
     assertEqual ("GetDocuments fetches all documents without filter") 3 (length docs0)
     assertEqual ("Document title really got changed") (Right title) (documenttitle <$> docx)
@@ -1523,7 +1513,7 @@ testGetDocumentsSQLTextFiltered = doTimes 1 $ do
 testGetDocumentsSQLSorted :: TestEnv ()
 testGetDocumentsSQLSorted = doTimes 1 $ do
   -- setup
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   _doc <- addRandomDocumentWithAuthorAndCondition author (const True)
 
   let domains = [ DocumentsOfAuthor (userid author)
@@ -1556,14 +1546,14 @@ testGetDocumentsSQLSorted = doTimes 1 $ do
 
 testCreateFromSharedTemplate :: TestEnv ()
 testCreateFromSharedTemplate = do
-  user <- addNewRandomAdvancedUser
+  user <- addNewRandomUser
   docid <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user (not . isAttachment)
   tmpdoc <- fmap fromJust $ dbQuery $ GetDocumentByDocumentID docid
-  mt <- rand 10 arbitrary  
+  mt <- rand 10 arbitrary
   doc <- if (isTemplate tmpdoc)
          then return tmpdoc
          else fmap fromRight $ dbUpdate $ TemplateFromDocument docid (systemActor mt)
-  newuser <- addNewRandomAdvancedUser
+  newuser <- addNewRandomUser
 
   doc' <- fmap fromRight $ dbUpdate $ SignableFromDocumentIDWithUpdatedAuthor newuser Nothing (documentid doc) (systemActor mt)
   let [author1] = filter isAuthor $ documentsignatorylinks doc
@@ -1577,7 +1567,7 @@ testCreateFromSharedTemplate = do
 
 testAddDocumentAttachmentFailsIfNotPreparation :: TestEnv ()
 testAddDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
   file <- addNewRandomFile
   --execute
@@ -1587,7 +1577,7 @@ testAddDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
 
 testAddDocumentAttachmentOk :: TestEnv ()
 testAddDocumentAttachmentOk = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   file <- addNewRandomFile
   --execute
@@ -1601,7 +1591,7 @@ testAddDocumentAttachmentOk = doTimes 10 $ do
 
 testRemoveDocumentAttachmentFailsIfNotPreparation :: TestEnv ()
 testRemoveDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
   --execute
   edoc <- randomUpdate $ \t -> RemoveDocumentAttachment (documentid doc) (unsafeFileID 0) (systemActor t)
@@ -1610,7 +1600,7 @@ testRemoveDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
 
 testRemoveDocumentAttachmentOk :: TestEnv ()
 testRemoveDocumentAttachmentOk = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   --execute
   edoc <- randomUpdate $ \t -> RemoveDocumentAttachment (documentid doc) (unsafeFileID 0) (systemActor t)
@@ -1621,7 +1611,7 @@ testRemoveDocumentAttachmentOk = doTimes 10 $ do
 
 testUpdateSigAttachmentsAttachmentsOk :: TestEnv ()
 testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   file1 <- addNewRandomFile
   file2 <- addNewRandomFile
@@ -1651,7 +1641,7 @@ testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
     assertEqual "Both attachments were attached" 2 (length (signatoryattachments $ (documentsignatorylinks doc1) !! 0))
     assertRight edoc2
     let doc2 = fromRight edoc2
-    assertBool "All signatory attachments are not connected to files" (all (isNothing . signatoryattachmentfile) 
+    assertBool "All signatory attachments are not connected to files" (all (isNothing . signatoryattachmentfile)
                                                                            (signatoryattachments $ (documentsignatorylinks doc2) !! 0))
 
     assertRight edoc3
@@ -1663,7 +1653,7 @@ testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
 {-
 testRemoveDocumentAttachmentFailsIfNotPreparation :: TestEnv ()
 testRemoveDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
   --execute
   edoc <- randomUpdate $ RemoveDocumentAttachment (documentid doc) (FileID 0)
@@ -1672,7 +1662,7 @@ testRemoveDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
 
 testRemoveDocumentAttachmentOk :: TestEnv ()
 testRemoveDocumentAttachmentOk = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   --execute
   edoc <- randomUpdate $ RemoveDocumentAttachment (documentid doc) (FileID 0)
@@ -1690,7 +1680,7 @@ testDocumentFromSignatoryDataFailsDoesntExist = doTimes 10 $ do
 
 testDocumentFromSignatoryDataSucceedsExists :: TestEnv ()
 testDocumentFromSignatoryDataSucceedsExists = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthor' author
   (time, a, b, c, d, e, f, g) <- rand 10 arbitrary
   mdoc <- randomUpdate $ DocumentFromSignatoryData (documentid doc) a b c d e f g
@@ -1700,7 +1690,7 @@ testDocumentFromSignatoryDataSucceedsExists = doTimes 10 $ do
 testTimeoutDocumentNonSignableLeft :: TestEnv ()
 testTimeoutDocumentNonSignableLeft = doTimes 10 $ do
   mt <- rand 10 arbitrary
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
   -- execute
   etdoc <- dbUpdate $ TimeoutDocument (documentid doc) (systemActor mt)
@@ -1708,14 +1698,14 @@ testTimeoutDocumentNonSignableLeft = doTimes 10 $ do
 
 testTimeoutDocumentSignableNotPendingLeft :: TestEnv ()
 testTimeoutDocumentSignableNotPendingLeft = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . isPending))
   etdoc <- randomUpdate $ \t->TimeoutDocument (documentid doc) (systemActor t)
   validTest $ assertLeft etdoc
 
 testTimeoutDocumentSignablePendingRight :: TestEnv ()
 testTimeoutDocumentSignablePendingRight = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
   --execute
   etdoc <- randomUpdate $ \t->TimeoutDocument (documentid doc) (systemActor t)
@@ -1731,7 +1721,7 @@ testTimeoutDocumentSignableNotLeft = doTimes 10 $ do
 
 testSignDocumentNonSignableLeft :: TestEnv ()
 testSignDocumentNonSignableLeft = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
   let Just sl = getSigLinkFor doc author
   etdoc <- randomUpdate $ \si t -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si (systemActor t)
@@ -1739,7 +1729,7 @@ testSignDocumentNonSignableLeft = doTimes 10 $ do
 
 testSignDocumentSignableNotPendingLeft :: TestEnv ()
 testSignDocumentSignableNotPendingLeft = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . isPending))
   let Just sl = getSigLinkFor doc author
   etdoc <- randomUpdate $ \si t -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si (systemActor t)
@@ -1747,7 +1737,7 @@ testSignDocumentSignableNotPendingLeft = doTimes 10 $ do
 
 testSignDocumentSignablePendingRight :: TestEnv ()
 testSignDocumentSignablePendingRight = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
   let Just sl = find (isSignatory &&^ (not . hasSigned)) (documentsignatorylinks doc)
   time <- rand 10 arbitrary
@@ -1764,7 +1754,7 @@ testSignDocumentNotLeft = doTimes 10 $ do
 
 testPreparationToPendingNotSignableLeft :: TestEnv ()
 testPreparationToPendingNotSignableLeft = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
          }
@@ -1774,7 +1764,7 @@ testPreparationToPendingNotSignableLeft = doTimes 10 $ do
 
 testPreparationToPendingSignableNotPreparationLeft :: TestEnv ()
 testPreparationToPendingSignableNotPreparationLeft = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentAllowedTypes = documentSignableTypes
          , randomDocumentAllowedStatuses = documentAllStatuses \\ [Preparation]
@@ -1791,7 +1781,7 @@ testPreparationToPendingNotLeft = doTimes 100 $ do
 
 testPreparationToPendingSignablePreparationRight :: TestEnv ()
 testPreparationToPendingSignablePreparationRight = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentAllowedTypes = documentSignableTypes
          , randomDocumentAllowedStatuses = [Preparation]
@@ -1808,14 +1798,14 @@ testPreparationToPendingSignablePreparationRight = doTimes 10 $ do
 {-
 testAuthorSignDocumentNotSignableLeft :: TestEnv ()
 testAuthorSignDocumentNotSignableLeft = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
   etdoc <- randomUpdate $ AuthorSignDocument (documentid doc)
   validTest $ assertLeft etdoc
 
 testAuthorSignDocumentSignableNotPreparationLeft :: TestEnv ()
 testAuthorSignDocumentSignableNotPreparationLeft = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . isPreparation))
   etdoc <- randomUpdate $ AuthorSignDocument (documentid doc)
   validTest $ assertLeft etdoc
@@ -1827,7 +1817,7 @@ testAuthorSignDocumentNotLeft = doTimes 10 $ do
 
 testAuthorSignDocumentSignablePreparationRight :: TestEnv ()
 testAuthorSignDocumentSignablePreparationRight = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author
          (isSignable &&^ isPreparation &&^ (not . hasSigned . getAuthorSigLink) &&^ (isSignatory . getAuthorSigLink))
   etdoc <- randomUpdate $ AuthorSignDocument (documentid doc)
@@ -1838,21 +1828,21 @@ testAuthorSignDocumentSignablePreparationRight = doTimes 10 $ do
 
 testRejectDocumentNotSignableLeft :: TestEnv ()
 testRejectDocumentNotSignableLeft = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
   let Just sl = getSigLinkFor doc author
   time <- rand 10 arbitrary
-  etdoc <- randomUpdate $ RejectDocument (documentid doc) (signatorylinkid sl) Nothing 
+  etdoc <- randomUpdate $ RejectDocument (documentid doc) (signatorylinkid sl) Nothing
            (authorActor time noIP (userid author) (getEmail author))
   validTest $ assertLeft etdoc
 
 testRejectDocumentSignableNotPendingLeft :: TestEnv ()
 testRejectDocumentSignableNotPendingLeft = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ not . isPending)
   let Just sl = getSigLinkFor doc author
   time <- rand 10 arbitrary
-  etdoc <- randomUpdate $ RejectDocument (documentid doc) (signatorylinkid sl) Nothing 
+  etdoc <- randomUpdate $ RejectDocument (documentid doc) (signatorylinkid sl) Nothing
            (authorActor time noIP (userid author) (getEmail author))
   validTest $ assertLeft etdoc
 
@@ -1865,7 +1855,7 @@ testRejectDocumentNotLeft = doTimes 10 $ do
 
 testRejectDocumentSignablePendingRight :: TestEnv ()
 testRejectDocumentSignablePendingRight = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
   slid <- rand 10 $ elements (map signatorylinkid (documentsignatorylinks doc))
   let Just sl = getSigLinkFor doc slid
@@ -1878,14 +1868,14 @@ testRejectDocumentSignablePendingRight = doTimes 10 $ do
 
 testMarkInvitationRead :: TestEnv ()
 testMarkInvitationRead = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthorAndCondition author 
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author
          (isPending &&^ (all (isNothing . maybereadinvite) . documentsignatorylinks))
 
   sl' <- rand 10 $ elements $ documentsignatorylinks doc
   let slid = signatorylinkid sl'
   time <- getMinutesTime
-  edoc <- dbUpdate $ MarkInvitationRead (documentid doc) slid 
+  edoc <- dbUpdate $ MarkInvitationRead (documentid doc) slid
           (signatoryActor time noIP (maybesignatory sl') (getEmail sl') slid)
   validTest $ do
     assertRight edoc
@@ -1895,13 +1885,13 @@ testMarkInvitationRead = doTimes 10 $ do
 testMarkInvitationReadDocDoesntExist :: TestEnv ()
 testMarkInvitationReadDocDoesntExist = doTimes 10 $ do
   (did, slid, time, ip, eml) <- rand 10 arbitrary
-  _ <- randomUpdate $ MarkInvitationRead did slid 
+  _ <- randomUpdate $ MarkInvitationRead did slid
        (signatoryActor time ip Nothing eml slid)
   validTest $ assertSuccess
 
 testMarkDocumentSeenNotSignableLeft :: TestEnv ()
 testMarkDocumentSeenNotSignableLeft = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
          }
@@ -1915,7 +1905,7 @@ testMarkDocumentSeenNotSignableLeft = doTimes 10 $ do
 
 testMarkDocumentSeenClosedOrPreparationLeft :: TestEnv ()
 testMarkDocumentSeenClosedOrPreparationLeft = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentAllowedTypes = documentSignableTypes
          , randomDocumentAllowedStatuses = [Closed, Preparation]
@@ -1943,7 +1933,7 @@ forEachSignatoryLink doc fn =
 
 testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight :: TestEnv ()
 testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . (isClosed ||^ isPreparation)))
   validTest (forEachSignatoryLink doc $ \sl ->
               when (not $ hasSeen sl) $ do
@@ -1957,7 +1947,7 @@ testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = doTi
 
 testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft :: TestEnv ()
 testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . (isClosed ||^ isPreparation)))
   validTest (forEachSignatoryLink doc $ \sl ->
               when (not $ hasSeen sl) $ do
@@ -1969,7 +1959,7 @@ testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft = doTimes 10 $ do
 
 testSetInvitationDeliveryStatusNotSignableLeft :: TestEnv ()
 testSetInvitationDeliveryStatusNotSignableLeft = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
   actor <- unSystemActor <$> rand 10 arbitrary
   edoc <- randomUpdate $ \sl st-> SetInvitationDeliveryStatus (documentid doc) sl st actor
@@ -1984,7 +1974,7 @@ testSetInvitationDeliveryStatusNotLeft = doTimes 10 $ do
 
 testSetInvitationDeliveryStatusSignableRight :: TestEnv ()
 testSetInvitationDeliveryStatusSignableRight = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isSignable
   slid <- rand 10 $ elements (map signatorylinkid (documentsignatorylinks doc))
   (st, actor) <- rand 10 arbitrary
@@ -1993,7 +1983,7 @@ testSetInvitationDeliveryStatusSignableRight = doTimes 10 $ do
 
 testSetDocumentTimeoutTimeNotSignableLeft :: TestEnv ()
 testSetDocumentTimeoutTimeNotSignableLeft = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
   (time, actor) <- rand 10 arbitrary
   edoc <- randomUpdate $ SetDocumentTimeoutTime (documentid doc) time (unSystemActor actor)
@@ -2001,7 +1991,7 @@ testSetDocumentTimeoutTimeNotSignableLeft = doTimes 10 $ do
 
 testSetDocumentTimeoutTimeSignableRight :: TestEnv ()
 testSetDocumentTimeoutTimeSignableRight = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isSignable
   (time, actor) <- rand 10 arbitrary
   etdoc <- randomUpdate $ SetDocumentTimeoutTime (documentid doc) time (unSystemActor actor)
@@ -2021,7 +2011,7 @@ testSetDocumentTagsNotLeft = doTimes 10 $ do
 
 testSetDocumentTagsRight :: TestEnv ()
 testSetDocumentTagsRight = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthor' author
   (tags, time) <- rand 10 arbitrary
   let actor = authorActor time noIP (userid author) (getEmail author)
@@ -2037,7 +2027,7 @@ testSetDocumentUINotLeft = doTimes 10 $ do
 
 testSetDocumentUIRight :: TestEnv ()
 testSetDocumentUIRight = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthor' author
   ac <- unSystemActor <$> rand 10 arbitrary
   etdoc <- randomUpdate $ (\ui -> SetDocumentUI (documentid doc) ui ac)
@@ -2045,7 +2035,7 @@ testSetDocumentUIRight = doTimes 10 $ do
 
 testCloseDocumentSignableNotAwaitingAuthorNothing :: TestEnv ()
 testCloseDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentAllowedTypes = documentSignableTypes
          , randomDocumentAllowedStatuses = [Pending]
@@ -2059,7 +2049,7 @@ testCloseDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
 
 testCloseDocumentNotSignableNothing :: TestEnv ()
 testCloseDocumentNotSignableNothing = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
          , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
@@ -2077,7 +2067,7 @@ testCloseDocumentNotNothing = doTimes 10 $ do
 
 testCancelDocumentNotSignableNothing :: TestEnv ()
 testCancelDocumentNotSignableNothing = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   time <- rand 10 arbitrary
   doc <- addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
@@ -2100,7 +2090,7 @@ testSetDocumentTitleNotLeft = doTimes 10 $ do
 
 testSetDocumentTitleRight :: TestEnv ()
 testSetDocumentTitleRight = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentCondition = (not . isClosed)
          }
@@ -2120,7 +2110,7 @@ testSetDocumentDaysToSignNotLeft = doTimes 10 $ do
 
 testSetDocumentDaysToSignRight :: TestEnv ()
 testSetDocumentDaysToSignRight = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
+  author <- addNewRandomUser
   doc <- addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentCondition = (not . isClosed) &&^ (isNothing . documentdaystosign)
          }
@@ -2147,8 +2137,8 @@ propbitfieldDeriveConvertibleId :: [SignatoryRole] -> Bool
 propbitfieldDeriveConvertibleId ss =
   let ss' = nub (sort ss)
   in ss' == convert (convert ss' :: SqlValue)
-     
-     
+
+
 testGetDocumentsByCompanyWithFilteringCompany :: TestEnv ()
 testGetDocumentsByCompanyWithFilteringCompany = doTimes 10 $ do
   (name, value) <- rand 10 arbitrary
@@ -2165,8 +2155,8 @@ testGetDocumentsByCompanyWithFilteringCompany = doTimes 10 $ do
   docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
   validTest $ do
     assertEqual "Should have no documents returned" docs []
-    assertEqual "Should have 1 document returned" (length docs') 1    
-     
+    assertEqual "Should have 1 document returned" (length docs') 1
+
 
 testGetDocumentsByCompanyWithFilteringFilters :: TestEnv ()
 testGetDocumentsByCompanyWithFilteringFilters = doTimes 10 $ do
@@ -2180,8 +2170,8 @@ testGetDocumentsByCompanyWithFilteringFilters = doTimes 10 $ do
   docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
   validTest $ do
     assertEqual "Should have no documents returned" docs []
-    assertEqual "Should have 1 document returned" (length docs') 1    
-    
+    assertEqual "Should have 1 document returned" (length docs') 1
+
 
 testGetDocumentsByCompanyWithFilteringFinds :: TestEnv ()
 testGetDocumentsByCompanyWithFilteringFinds = doTimes 10 $ do
@@ -2199,7 +2189,7 @@ testGetDocumentsByCompanyWithFilteringFinds = doTimes 10 $ do
   validTest $ do
     assertEqual "Should have one document returned" 1 (length docs)
     assertEqual "Should have one document returned" 1 (length docs')
-  
+
 testGetDocumentsByCompanyWithFilteringFindsMultiple :: TestEnv ()
 testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
   (name1, value1) <- rand 10 arbitrary

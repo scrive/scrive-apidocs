@@ -5,6 +5,7 @@ import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertFailure, Assertion)
 import qualified Data.ByteString as BS
+import Data.List
 
 import Configuration
 import LiveDocx

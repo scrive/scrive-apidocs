@@ -6,7 +6,6 @@ module Doc.DocStateData (
   , CancelationReason(..)
   , DocStats(..)
   , Document(..)
-  , DocumentFunctionality(..)
   , DocumentHistoryEntry(..)
   , DocumentLogEntry(..)
   , DocumentSharing(..)
@@ -268,9 +267,6 @@ doctypeFromString "Template Order"     = Template Order
 doctypeFromString "Attachment"         = Attachment
 doctypeFromString _                    = error "Bad document type"
 
-data DocumentFunctionality = BasicFunctionality | AdvancedFunctionality
-  deriving (Eq, Ord, Read, Show)
-
 data DocumentSharing = Private
                      | Shared -- means that the document is shared with subaccounts, and those with same parent accounts
   deriving (Eq, Ord, Show)
@@ -401,7 +397,6 @@ data Document = Document {
   , documentsealedfiles            :: [FileID]
   , documentstatus                 :: DocumentStatus
   , documenttype                   :: DocumentType
-  , documentfunctionality          :: DocumentFunctionality
   , documentctime                  :: MinutesTime
   , documentmtime                  :: MinutesTime
   , documentdaystosign             :: Maybe Int
@@ -452,7 +447,6 @@ data MailsDeliveryStatus = Delivered
 $(bitfieldDeriveConvertible ''SignatoryRole)
 $(enumDeriveConvertible ''MailsDeliveryStatus)
 $(newtypeDeriveConvertible ''SignOrder)
-$(enumDeriveConvertible ''DocumentFunctionality)
 $(enumDeriveConvertible ''DocumentProcess)
 $(enumDeriveConvertibleIgnoreFields ''DocumentStatus)
 $(enumDeriveConvertibleIgnoreFields ''FieldType)

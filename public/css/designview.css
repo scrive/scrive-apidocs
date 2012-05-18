@@ -84,10 +84,6 @@
     float: left;
 }
 
-.basicMode .sigview .field .fieldvalue{
-    padding-left: 5px;
-}
-
 .finalbutton {
    margin-top:10px;
    margin-bottom:5px
@@ -237,26 +233,14 @@
    margin-left:10px;
 }
 
-.basicMode .editinvitemessageicon{
-   margin-top:5px;
-}
-
-.basicMode .finalbutton .label{
-    padding-left:5px;
-    padding-right:5px;
-    width:120px;
-    text-align: center
-}
-
-.advancedMode .finalbutton .label{
+.finalbutton .label{
     padding-left:20px;
     padding-right:20px;
     width:160px;
     text-align: center
 }
 
-.basicMode .finalbox,
-.advancedMode .addremovesignatorybox {
+.addremovesignatorybox {
     border-color: #E6E7EF #F3F4F7 #F0F1F5 #F2F2F7;
     border-width: 1px;
     border-style: solid;
@@ -266,17 +250,8 @@
     padding: 5px 5px 5px 17px;
 }
 
-
-.basicMode .verificationmethodselect{
-    margin-top: 5px;
-}
-
-.advancedMode .verificationmethodselect select{
+.verificationmethodselect select{
     margin-left: 5px;
-}
-
-.basicMode .finaldateselection {
-    margin-top: 5px;
 }
 
 .finaldatecheckbox{

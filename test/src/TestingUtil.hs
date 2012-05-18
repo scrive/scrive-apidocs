@@ -284,7 +284,6 @@ instance Arbitrary Document where
                else return Preparation
     sls <- arbitrary
     ids <- arbitrary
-    fnc <- arbitrary
     -- we can have any days to sign. almost
     ddaystosign <- elements [Nothing, Just 1, Just 10, Just 99]
     -- document timeout time makes sense only when days to sign was set for this document
@@ -295,7 +294,6 @@ instance Arbitrary Document where
                            , documenttype = dtype
                            , documentsignatorylinks = sls
                            , documentallowedidtypes = [ids]
-                           , documentfunctionality = fnc
                            , documenttimeouttime = TimeoutTime <$> dtimeouttime
                            , documentdaystosign = ddaystosign
                            }
@@ -363,9 +361,6 @@ instance Arbitrary SignatoryField where
 
 instance Arbitrary SignatoryRole where
   arbitrary = return SignatoryPartner
-
-instance Arbitrary DocumentFunctionality where
-  arbitrary = elements [BasicFunctionality, AdvancedFunctionality]
 
 instance Arbitrary IdentificationType where
   arbitrary = elements [EmailIdentification, ELegitimationIdentification, PadIdentification]
@@ -455,8 +450,7 @@ blankUser = User { userid                        = unsafeUserID 0
                                        , usercompanyname = []
                                        , usercompanynumber = []
                                        }
-                 , usersettings  = UserSettings { preferreddesignmode = Nothing
-                                                , locale = mkLocaleFromRegion Misc.defaultValue
+                 , usersettings  = UserSettings { locale = mkLocaleFromRegion Misc.defaultValue
                                                 , customfooter = Nothing
                                                 }
                  , userservice = Nothing
@@ -499,13 +493,6 @@ addNewRandomUser = do
     Nothing -> do
       Log.debug "Could not create user, trying again."
       addNewRandomUser
-
-addNewRandomAdvancedUser :: TestEnv User
-addNewRandomAdvancedUser = do
-  User{userid,usersettings} <- addNewRandomUser
-  True <- dbUpdate $ SetUserSettings userid (usersettings{ preferreddesignmode = Just AdvancedMode })
-  Just user <- dbQuery $ GetUserByID userid
-  return user
 
 addNewRandomCompanyUser :: CompanyID -> Bool -> TestEnv User
 addNewRandomCompanyUser cid isadmin = do

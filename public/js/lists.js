@@ -538,7 +538,7 @@
         }
     });
 
-    window.Loading = Backbone.Model.extend({
+    var Loading = Backbone.Model.extend({
         defaults: {
           loading: true,
           colcount: 0
@@ -560,7 +560,7 @@
         }
     });
 
-    window.LoadingView = Backbone.View.extend({
+    var LoadingView = Backbone.View.extend({
         model: Loading,
         initialize: function(args) {
             _.bindAll(this, 'render', 'makeLoader', 'removeLoader');
@@ -789,7 +789,7 @@
 
     window.KontraList = function() { return {
         init: function(args) {
-            _.bindAll(this, 'recall', 'beforeFetch', 'afterFetch');
+            _.bindAll(this, 'recall');
             this.schema = args.schema;
             this.loading = new Loading({
                 schema: this.schema
@@ -811,24 +811,16 @@
             this.recall();
             return this;
         },
-        beforeFetch: function() {
-            this.loading.start();
-        },
-        afterFetch: function() {
-            this.loading.stop();
-        },
         recall: function() {
             var list = this;
-            this.beforeFetch();
+            list.loading.start();
+            var fetching = true;
             this.model.fetch({ data: this.schema.getSchemaUrlParams(),
                                processData: true,
                                cache: false,
-                               success: this.afterFetch,
-                               error: function() {
-                                 console.error("Failed to fetch list, trying again ...");
-                                 window.setTimeout(list.recall, 1000);
-                               }
+                               success: function() {fetching = false; list.loading.stop();}
             });
+            window.setTimeout(function() {if (fetching == true) list.recall();}, 2000);
         }
     };};
 })(window);
