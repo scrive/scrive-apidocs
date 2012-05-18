@@ -4,6 +4,8 @@ module ELegitimation.BankID
     , verifySignatureAndGetSignInfo
     , verifySignatureAndGetSignInfoForAuthor
     , VerifySignatureResult(..)
+    , initiateMobileBankID
+    , collectMobileBankID
     )
     where
 
@@ -21,6 +23,7 @@ import MagicHash (MagicHash)
 import MinutesTime
 import Misc
 import Text.XML.HaXml.XmlContent.Parser
+import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import Doc.DocStateQuery
@@ -181,13 +184,14 @@ verifySignatureAndGetSignInfo docid signid magic provider signature transactioni
                 -- we have merged the info!
                 Right (bfn, bln, bpn) -> do
                     Log.eleg $ "Successfully merged info for transaction: " ++ show transactionid
-                    return $ Sign $ SignatureInfo    { signatureinfotext        = transactiontbs
-                                                    , signatureinfosignature   = signature
-                                                    , signatureinfocertificate = cert
-                                                    , signatureinfoprovider    = provider
-                                                    , signaturefstnameverified = bfn
-                                                    , signaturelstnameverified = bln
-                                                    , signaturepersnumverified = bpn
+                    return $ Sign $ SignatureInfo    { signatureinfotext         = transactiontbs
+                                                     , signatureinfosignature    = signature
+                                                     , signatureinfocertificate  = cert
+                                                     , signatureinfoprovider     = provider
+                                                     , signaturefstnameverified  = bfn
+                                                     , signaturelstnameverified  = bln
+                                                     , signaturepersnumverified  = bpn
+                                                     , signatureinfoocspresponse = lookup "validation.ocsp.response" attrs                                                                                 
                                                     }
 
 {- |
@@ -251,7 +255,6 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
                     Log.eleg $ ("Document " ++ show docid ) ++ "verifySignature failed: code " ++  show code ++ " message: "++  msg
                     return $ Problem $ "E-legitimationstjänsten misslyckades att verifiera din signatur"
         Right (cert, attrs) -> do
-                    Log.debug $ show attrs
                     authorsl <- guardJust $ getAuthorSigLink doc
                     -- compare information from document (and fields) to that obtained from BankID
                     case compareSigLinkToElegData authorsl attrs of
@@ -262,12 +265,66 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
                         Right (bfn, bln, bpn) -> do
                             Log.eleg "author merge succeeded. (details omitted)"
                             return $ Sign $ SignatureInfo    { signatureinfotext        = transactiontbs
-                                                            , signatureinfosignature   = signature
-                                                            , signatureinfocertificate = cert
-                                                            , signatureinfoprovider    = provider
-                                                            , signaturefstnameverified = bfn
-                                                            , signaturelstnameverified = bln
-                                                            , signaturepersnumverified = bpn
+                                                            , signatureinfosignature    = signature
+                                                            , signatureinfocertificate  = cert
+                                                            , signatureinfoprovider     = provider
+                                                            , signaturefstnameverified  = bfn
+                                                            , signaturelstnameverified  = bln
+                                                            , signaturepersnumverified  = bpn
+                                                            , signatureinfoocspresponse = lookup "validation.ocsp.response" attrs
                                                             }
 
 
+-- MobileBankID
+
+initiateMobileBankID :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
+initiateMobileBankID docid slid = do
+    magic <- guardJustM $ readField "magichash"
+    logicaconf <- ctxlogicaconf <$> getContext
+
+    -- sanity check
+    document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid slid magic
+    unless (document `allowsIdentification` ELegitimationIdentification) internalError
+
+    sl <- guardJust $ getSigLinkFor document slid
+    let pn = getPersonalNumber sl
+
+    tbs <- getTBS document
+
+    eresponse <- liftIO $ mbiRequestSignature logicaconf pn tbs
+    case eresponse of
+      Left e -> return $ runJSONGen $ J.value "error" e
+      Right (tid, _oref) -> do
+        -- store oref in transaction with tid
+        return $ runJSONGen $ J.value "transactionid" tid
+        
+collectMobileBankID :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
+collectMobileBankID docid slid = do
+  magic <- guardJustM $ readField "magichash"
+  tid <- guardJustM $ readField "transactionid"
+  logicaconf <- ctxlogicaconf <$> getContext
+
+  -- sanity check
+  document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid slid magic
+  unless (document `allowsIdentification` ELegitimationIdentification) internalError
+
+  _sl <- guardJust $ getSigLinkFor document slid
+  oref <- guardJust $ Just "123" -- get this from the database based on tid
+  eresponse <- liftIO $ mbiRequestCollect logicaconf tid oref
+  case eresponse of
+    Left e -> do
+      -- supposed to remove transaction once we get a SOAP Fault
+      return $ runJSONGen $ J.value "error" e
+    Right (CROutstanding _) -> return $ runJSONGen $ do
+      J.value "status" "outstanding"
+      J.value "message" "Starta din BankID säkerhetsapp."
+    Right (CRUserSign _) -> return $ runJSONGen $ do
+      J.value "status" "usersign"
+      J.value "message" "Skriv in säkerhetskoden till ditt BankID i din mobiltelefon eller surfplatta och välj Legitimera."
+    Right (CRComplete _ _signature _attrs) -> do
+      -- remove transaction
+      -- verify collected data (fn, ln, pn)
+      -- mark as signed
+      return $ runJSONGen $ do
+        J.value "status" "complete"
+  

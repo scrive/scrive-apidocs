@@ -5,6 +5,8 @@ module ELegitimation.BankIDRequests (
         , encodeTBS
         , verifySignature
         , mbiRequestSignature
+        , mbiRequestCollect
+        , CollectResponse(..)
         ) where
 
 import Data.Maybe
@@ -308,11 +310,11 @@ instance XmlContent (CollectResponse) where
             { transactionid <- inElementNS "transactionId" text
             ; progressStatus <- inElementNS "progressStatus" text
             ; msignature <- optional $ inElementNS "signature" text
-            ; attributes <- slurpAttributes
+            ; attrs <- slurpAttributes
             ; return $ case (progressStatus, msignature) of
                 ("OUTSTANDING_TRANSACTION", _) -> CROutstanding transactionid
                 ("USER_SIGN", _) -> CRUserSign transactionid
-                ("COMPLETE", Just signature) -> CRComplete transactionid signature attributes
+                ("COMPLETE", Just signature) -> CRComplete transactionid signature attrs
                 _ -> error $ "Trying to parse CollectResponse but did not understand it; status: " ++ show progressStatus ++ ", signature: " ++ show msignature
             }
         } `adjustErr` ("in <CollectResponse>, "++)
