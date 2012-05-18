@@ -4,7 +4,6 @@ module Doc.Model
   ( module File.File
   , isTemplate -- fromUtils
   , isShared -- fromUtils
-  , isDeletableDocument -- fromUtils
   , anyInvitationUndelivered
   , undeliveredSignatoryLinks
   , insertDocumentAsIs
