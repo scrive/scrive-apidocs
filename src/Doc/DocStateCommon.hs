@@ -192,6 +192,8 @@ replaceSignatoryData siglink@SignatoryLink{signatorydetails} fstname sndname ema
       CompanyNumberFT  -> sf { sfValue = companynumber }
       EmailFT          -> sf { sfValue = email }
       CustomFT label _ -> sf { sfType = CustomFT label (not $ null v), sfValue = v }
+      CheckboxOptionalFT   label _ -> sf { sfType = CheckboxOptionalFT   label (not $ null v), sfValue = v }
+      CheckboxObligatoryFT label _ -> sf { sfType = CheckboxObligatoryFT label (not $ null v), sfValue = v }
       SignatureFT      -> sf)
         : pumpData rest vs'
       where
