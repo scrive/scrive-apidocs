@@ -259,13 +259,13 @@ window.Signatory = Backbone.Model.extend({
         signed: false,
         signs: false,
         author: false,
-        fields: [{name: "fstname"},
-                 {name: "sndname"},
-                 {name: "email"},
-                 {name: "sigco"},
-                 {name: "sigpersnr"},
-                 {name: "sigcompnr"},
-                 {name: "signature"}
+        fields: [{name: "fstname",   type : "standard"},
+                 {name: "sndname",   type : "standard"},
+                 {name: "email",     type : "standard"},
+                 {name: "sigco",     type : "standard"},
+                 {name: "sigpersnr", type : "standard"},
+                 {name: "sigcompnr", type : "standard"},
+                 {name: "signature", type : "signature"}
         ],
         current : false,
         attachments : [],
@@ -557,7 +557,7 @@ window.Signatory = Backbone.Model.extend({
     addNewField: function() {
         var signatory = this;
         var fields = this.fields();
-        fields.push(new Field({signatory: signatory, fresh: true}));
+        fields.push(new Field({signatory: signatory, fresh: true, type : "custom"}));
         this.set({"fields": fields});
         this.trigger("change:fields");
     },
