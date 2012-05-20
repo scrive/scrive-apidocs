@@ -6,7 +6,7 @@ import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assert, Assertion)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.QuickCheck (Arbitrary(..), Property, oneof, (==>))
+import Test.QuickCheck (Arbitrary(..), Property, oneof, (==>), mapSize, forAll, elements)
 
 import InputValidation
 
@@ -184,8 +184,9 @@ testDirtyEmailNullIsEmpty = testNullIsEmpty asDirtyEmail
 propDirtyEmailWhitespaceIsEmpty :: [WhitespaceChar] -> Property
 propDirtyEmailWhitespaceIsEmpty = propWhitespaceIsEmpty asDirtyEmail
 
-propValidPasswordMustBeAtLeast8Chars :: [PasswordChar] -> Property
-propValidPasswordMustBeAtLeast8Chars xs = 
+propValidPasswordMustBeAtLeast8Chars :: Property
+propValidPasswordMustBeAtLeast8Chars =
+    mapSize (const 20) $ \xs ->
     propIsMinSize asValidPassword 8 $ map pc xs
 
 testValidPasswordNullIsEmpty :: Assertion
@@ -195,8 +196,9 @@ propValidPasswordOnlyAlphaDigitPuncAndSymbol :: String -> Property
 propValidPasswordOnlyAlphaDigitPuncAndSymbol =
    propJustAllowed asValidPassword [isAlpha, isDigit, isPunctuation, isSymbol]
 
-propValidPasswordMustContainAlphaAndDigit :: [PasswordChar] -> Property
-propValidPasswordMustContainAlphaAndDigit ps =
+propValidPasswordMustContainAlphaAndDigit :: Property
+propValidPasswordMustContainAlphaAndDigit =
+    mapSize (const 15) $ \ps ->
     let xs = map pc ps in
     length xs > 0
       && not (any isAlpha xs && any isDigit xs)
@@ -289,8 +291,9 @@ propValidCompanyNumberRestrictsChars :: String -> Property
 propValidCompanyNumberRestrictsChars =
    propJustAllowed asValidCompanyNumber [isDigit, (`elem` ['a'..'z']), (`elem` ['A'..'Z']), (=='-')]
 
-propValidCompanyNumberMustBeAtLeast4Chars :: [CompanyNumberChar] -> Property
-propValidCompanyNumberMustBeAtLeast4Chars xs = 
+propValidCompanyNumberMustBeAtLeast4Chars :: Property
+propValidCompanyNumberMustBeAtLeast4Chars =
+    mapSize (const 10) $ \xs ->
     propIsMinSize asValidCompanyNumber 4 $ map cn xs
 
 propValidCompanyNumberGoodExamples :: [CompanyNumberChar] -> Property
@@ -395,8 +398,9 @@ propValidDaysToSignIsMax99 n =
     n > 99
     ==> isBad . asValidDaysToSign $ show n
 
-propValidDaysToSignGoodExamples :: Int -> Property
-propValidDaysToSignGoodExamples n =
+propValidDaysToSignGoodExamples :: Property
+propValidDaysToSignGoodExamples =
+    forAll (elements [-200..200]) $ \(n::Int) ->
     n >= 1 && n <= 99
     ==> isGood . asValidDaysToSign $ show n
 
