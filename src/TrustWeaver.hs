@@ -24,6 +24,7 @@ module TrustWeaver
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BSC
 import Text.XML.HaXml.XmlContent.Parser
+import Text.XML.HaXml.Types (QName(N))
 
 import Control.Concurrent
 import Data.List
@@ -48,7 +49,7 @@ instance HTypeable (SignRequest) where
 instance XmlContent (SignRequest) where
     toContents (SignRequest pdfdata senderTag receiverTag) =
         let base64data = BSC.unpack (Base64.encode pdfdata) in
-        [CElem (Elem "SignRequest" [mkAttr "xmlns" "http://www.trustweaver.com/tsswitch"]
+        [CElem (Elem (N "SignRequest") [mkAttr "xmlns" "http://www.trustweaver.com/tsswitch"]
                          [ mkElemC "InputType" (toText "PDF")
                          , mkElemC "JobType" (toText "CADESA")
                          , mkElemC "OutputType" (toText "PDF")
@@ -87,7 +88,7 @@ instance HTypeable (ValidateRequest) where
 instance XmlContent (ValidateRequest) where
     toContents (ValidateRequest pdfdata) =
         let base64data = BSC.unpack (Base64.encode pdfdata) in
-        [CElem (Elem "ValidateRequest" [mkAttr "xmlns" "http://www.trustweaver.com/tsswitch"]
+        [CElem (Elem (N "ValidateRequest") [mkAttr "xmlns" "http://www.trustweaver.com/tsswitch"]
                          [ mkElemC "InputType" (toText "PDF")
                          , mkElemC "JobType" (toText "CADESA")
                          , mkElemC "OutputType" (toText "PDF")
@@ -126,7 +127,7 @@ instance HTypeable (RegisterSectionRequest) where
     toHType _ = Defined "RegisterSectionRequest" [] []
 instance XmlContent (RegisterSectionRequest) where
     toContents (RegisterSectionRequest name) =
-        [CElem (Elem "RegisterSection" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/admin/v1"]
+        [CElem (Elem (N "RegisterSection") [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/admin/v1"]
                          [mkElemC "Request"
                                       [ mkElemC "Name" (toText name)
                                       , mkElemC "StorageSectionInfo"
@@ -157,7 +158,7 @@ instance HTypeable (EnableSectionRequest) where
     toHType _ = Defined "RegisterSectionRequest" [] []
 instance XmlContent (EnableSectionRequest) where
     toContents (EnableSectionRequest name) =
-        [CElem (Elem "EnableSection" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/admin/v1"]
+        [CElem (Elem (N "EnableSection") [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/admin/v1"]
                          [mkElemC "Request"
                                       [ mkElemC "Name" (toText name)
                                       ]]) ()]
@@ -189,7 +190,7 @@ instance HTypeable (StoreInvoiceRequest) where
 instance XmlContent (StoreInvoiceRequest) where
     toContents (StoreInvoiceRequest documentid documentdate ownertwname pdfdata) =
         let base64data = BSC.unpack (Base64.encode pdfdata) in
-        [CElem (Elem "StoreInvoice" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/storage/v1"]
+        [CElem (Elem (N "StoreInvoice") [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/storage/v1"]
                          [mkElemC "Request"
                                       [ mkElemC "Document"
                                                     [ mkElemC "Data" (toText base64data)
@@ -237,7 +238,7 @@ instance HTypeable (GetInvoiceRequest) where
     toHType _ = Defined "GetInvoiceRequest" [] []
 instance XmlContent (GetInvoiceRequest) where
     toContents (GetInvoiceRequest supplierReference) =
-        [CElem (Elem "GetInvoice" [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/storage/v1"]
+        [CElem (Elem (N "GetInvoice") [mkAttr "xmlns" "http://www.trustweaver.com/trustarchive/storage/v1"]
                          [mkElemC "Request"
                                       [ mkElemC "Reference" (toText supplierReference)
                                       ]

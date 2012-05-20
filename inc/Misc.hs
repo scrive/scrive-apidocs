@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP, TupleSections #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# OPTIONS_GHC -Wwarn #-} -- ghc-7.4.1 temporary workaround
 {-| Dump bin for things that do not fit anywhere else
 
 I do not mind people sticking stuff in here. From time to time just

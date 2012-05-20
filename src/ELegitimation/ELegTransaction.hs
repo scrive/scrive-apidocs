@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-} -- ghc-7.4.1 workaround
 module ELegitimation.ELegTransaction where
 
 import Happstack.Data

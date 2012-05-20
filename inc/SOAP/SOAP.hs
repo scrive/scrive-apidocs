@@ -20,6 +20,7 @@ import Misc hiding(optional)
 import System.Exit
 import Text.XML.HaXml.XmlContent.Parser
 import Text.XML.HaXml.XmlContent
+import Text.XML.HaXml.Types (QName(N))
 import Text.XML.HaXml.Posn
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
@@ -38,8 +39,8 @@ instance HTypeable (SOAP a) where
   toHType _ = Defined "soap" [] []
 instance (XmlContent a) => XmlContent (SOAP a) where
   toContents (SOAP a) =
-    [CElem (Elem "Envelope" [mkAttr "xmlns" "http://schemas.xmlsoap.org/soap/envelope/"]
-      [CElem (Elem "Body" []
+    [CElem (Elem (N "Envelope") [mkAttr "xmlns" "http://schemas.xmlsoap.org/soap/envelope/"]
+      [CElem (Elem (N "Body") []
       (toContents a)) ()]) ()]
   toContents _ = error "Please do not serialize SOAPFault"
   parseContents = do

@@ -17,6 +17,7 @@ module Doc.DocStorage
     , preCheckPDF
     ) where
 
+import Control.Exception (catch, SomeException)
 import Control.Monad
 import Control.Monad.Error
 import Data.Typeable
@@ -26,6 +27,7 @@ import File.Model
 import ForkAction
 import Kontra
 import Misc
+import Prelude hiding (catch)
 import System.Directory
 import System.Exit
 import System.IO
@@ -169,7 +171,7 @@ convertPdfToJpgPages gs fid docid = do
                                               else return []
                     listofpages <- existingPages (1::Integer)
                     x <- forM listofpages $ \x -> resizeImageAndReturnOriginalSize (pathofx x)
-                        `catch` \_ -> do
+                        `catch` \(_ :: SomeException) -> do
                                       fcontent <- BS.readFile (pathofx x)
                                       return (fcontent,943,1335)
 

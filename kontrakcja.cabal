@@ -171,13 +171,13 @@ Executable kontrakcja-server
 
   Build-depends: Crypto == 4.2.*
   Build-depends: DRBG == 0.2.3
-  Build-depends: HDBC == 2.3.1.0
-  Build-depends: HDBC-postgresql == 2.3.2.0
+  Build-depends: HDBC == 2.3.1.1
+  Build-depends: HDBC-postgresql == 2.3.2.1
   Build-depends: HPDF == 1.4.2
   Build-depends: HStringTemplate >= 0.6.5
   Build-depends: HTTP == 4000.*
   Build-depends: HUnit
-  Build-depends: HaXml == 1.20.*
+  Build-depends: HaXml == 1.22.5
   Build-depends: MissingH == 1.1.1.0
   Build-depends: pretty-show == 1.2
   Build-depends: QuickCheck
@@ -189,7 +189,7 @@ Executable kontrakcja-server
   Build-depends: convertible == 1.0.11.0
   Build-depends: crypto-api == 0.10.1
   Build-depends: cryptocipher == 0.3.0
-  Build-depends: dataenc == 0.14.0.2
+  Build-depends: dataenc == 0.14.0.3
   Build-depends: directory
   Build-depends: explicit-exception == 0.1.6
   Build-depends: extensible-exceptions
@@ -205,8 +205,11 @@ Executable kontrakcja-server
   Build-depends: hslogger==1.1.4
   Build-depends: html == 1.0.1.2
   Build-depends: iconv == 0.4.1.0
-  Build-depends: json == 0.4.4
-  Build-depends: list-tries == 0.4.1
+  if impl(ghc >= 7.4.1)
+    Build-depends: json == 0.5
+  else
+    Build-depends: json == 0.4.4
+  Build-depends: list-tries == 0.4.1.1
   Build-depends: mime == 0.3.3.1
   Build-depends: mmap==0.5.*
   Build-depends: mtl == 2.*
@@ -220,11 +223,11 @@ Executable kontrakcja-server
   Build-depends: spreadsheet == 0.1.2
   Build-depends: tagsoup == 0.12.3
   Build-depends: template-haskell
-  Build-depends: temporary==1.1.1
+  Build-depends: temporary == 1.1.2.3
   Build-depends: test-framework
   Build-depends: test-framework-hunit
   Build-depends: test-framework-quickcheck2
-  Build-depends: text == 0.11.1.5
+  Build-depends: text == 0.11.2.0
   Build-depends: monad-control == 0.3.1.1
   Build-depends: lifted-base == 0.1.0.3
   Build-depends: transformers-base == 0.4.1
@@ -350,7 +353,7 @@ Library
 
   exposed-modules: LiveDocx
 
-  Build-depends: HaXml == 1.20.*
+  Build-depends: HaXml == 1.22.5
 
   Extensions: FlexibleContexts,
               FlexibleInstances,
