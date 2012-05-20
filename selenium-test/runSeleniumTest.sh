@@ -1,8 +1,10 @@
 #!/bin/bash
 
+errors=0
+
 function run {
   for t in "$@"; do
-    spec --colour --format specdoc "$t"
+    spec --colour --format specdoc "$t" || errors=1
   done
 }
 
@@ -15,3 +17,4 @@ if [ "$1" == "all" ]; then
 else
   run "$@"
 fi
+exit $errors
