@@ -402,13 +402,12 @@ handleCompanyChange companyid = onlySalesOrAdmin $ do
 
 handleCreateUser :: Kontrakcja m => m KontraLink
 handleCreateUser = onlySalesOrAdmin $ do
-    ctx <- getContext
     email <- map toLower <$> getAsString "email"
     fstname <- getAsString "fstname"
     sndname <- getAsString "sndname"
     custommessage <- getField "custommessage"
     region <- guardJustM $ readField "region"
-    muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage (mkLocaleFromRegion region)
+    muser <- createNewUserByAdmin email (fstname, sndname) custommessage Nothing (mkLocaleFromRegion region)
     when (isNothing muser) $
       addFlashM flashMessageUserWithSameEmailExists
     -- FIXME: where to redirect?
@@ -439,7 +438,6 @@ handlePrivateUserCompanyInvite companyid = onlySalesOrAdmin $ do
 
 handleCreateCompanyUser :: Kontrakcja m => CompanyID -> m ()
 handleCreateCompanyUser companyid = onlySalesOrAdmin $ do
-  ctx <- getContext
   email <- getCriticalField asValidEmail "email"
   fstname <- getCriticalField asValidName "fstname"
   sndname <- getCriticalField asValidName "sndname"
@@ -447,12 +445,9 @@ handleCreateCompanyUser companyid = onlySalesOrAdmin $ do
   Log.debug $ "Custom message when creating an account " ++ show custommessage
   region <- guardJustM $ readField "region"
   admin <- isFieldSet "iscompanyadmin"
-  muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage (mkLocaleFromRegion region)
-  case muser of
-    Just (User{userid}) -> do
-      _ <- dbUpdate $ SetUserCompany userid (Just companyid)
-      when_ admin $ dbUpdate $ SetUserCompanyAdmin userid True
-    Nothing -> addFlashM flashMessageUserWithSameEmailExists
+  muser <- createNewUserByAdmin email (fstname, sndname) custommessage (Just (companyid, admin)) (mkLocaleFromRegion region)
+  when (isNothing muser) $
+      addFlashM flashMessageUserWithSameEmailExists
   return ()
 
 {- | Reads params and returns function for conversion of company info.  With no param leaves fields unchanged -}

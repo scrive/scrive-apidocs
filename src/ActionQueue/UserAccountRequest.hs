@@ -69,7 +69,7 @@ newUserAccountRequest :: (MonadDB m, CryptoRNG m) => Email -> Maybe CompanyID ->
 newUserAccountRequest email mcid first_name last_name = runMaybeT $ do
   token <- random
   expires <- minutesAfter (24*60) `liftM` getMinutesTime
-  -- FIXME: possible race condition
+  -- FIXME: highly unlikely, but possible race condition
   Nothing <- dbQuery $ GetUserByEmail Nothing email
   dbUpdate $ NewAction userAccountRequest expires (email, mcid, first_name, last_name, token)
 

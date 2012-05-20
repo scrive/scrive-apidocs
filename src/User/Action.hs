@@ -1,18 +1,17 @@
-module User.Action
-    (
-     handleAccountSetupFromSign,
-     handleActivate,
-     createInvitedUser,
-     phoneMeRequest,
-     checkPasswordsMatch
-    )
-    where
+module User.Action (
+    handleAccountSetupFromSign
+  , handleActivate
+  , createUser
+  , phoneMeRequest
+  , checkPasswordsMatch
+  ) where
 
 import Control.Monad
 import Data.Functor
 import Data.Maybe
 import qualified Control.Exception.Lifted as E
 
+import Company.CompanyID
 import DB
 import Doc.Model
 import Doc.DocStateData
@@ -40,7 +39,7 @@ handleAccountSetupFromSign document signatorylink = do
       lastname = getLastName signatorylink
       email = getEmail signatorylink
   muser <- dbQuery $ GetUserByEmail (currentServiceID ctx) (Email email)
-  user <- maybe (guardJustM $ createInvitedUser (firstname, lastname) email Nothing)
+  user <- maybe (guardJustM $ createUser (Email email) (firstname, lastname) Nothing (ctxlocale ctx))
                 return
                 muser
   mactivateduser <- handleActivate (Just $ firstname) (Just $ lastname) user BySigning
@@ -107,17 +106,16 @@ handleActivate mfstname msndname actvuser signupmethod = do
           return Nothing
     _ -> return Nothing
 
-createInvitedUser :: Kontrakcja m => (String, String) -> String -> Maybe Locale -> m (Maybe User)
-createInvitedUser names email mlocale = do
-    ctx <- getContext
-    let locale = fromMaybe (ctxlocale ctx) mlocale
-    passwd <- createPassword =<< randomPassword
-    muser <- dbUpdate $ AddUser names email (Just passwd) Nothing Nothing locale
-    case muser of
-      Just user -> do
-                   _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) (Email email) (userid <$> ctxmaybeuser ctx)
-                   return muser
-      _         -> return muser
+createUser :: Kontrakcja m => Email -> (String, String) -> Maybe CompanyID -> Locale -> m (Maybe User)
+createUser email names mcompanyid locale = do
+  ctx <- getContext
+  passwd <- createPassword =<< randomPassword
+  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) Nothing mcompanyid locale
+  case muser of
+    Just user -> do
+      _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) email (userid <$> ctxmaybeuser ctx)
+      return muser
+    _ -> return muser
 
 phoneMeRequest :: Kontrakcja m => User -> String -> m ()
 phoneMeRequest user phone = do

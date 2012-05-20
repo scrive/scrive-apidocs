@@ -414,24 +414,6 @@ isUserDeletable user = do
 --there must be a better way than all of these weird user create functions
 -- TODO clean up
 
-createUser :: Kontrakcja m => Email
-                              -> String
-                              -> String
-                              -> Maybe Company
-                              -> m (Maybe User)
-createUser email fstname sndname mcompany = do
-  ctx <- getContext
-  passwd <- createPassword =<< randomPassword
-  muser <- dbUpdate $ AddUser (fstname, sndname) (unEmail email) (Just passwd) Nothing (fmap companyid mcompany) (ctxlocale ctx)
-  case muser of
-    Just user -> do
-                 _ <- dbUpdate $
-                      LogHistoryAccountCreated (userid user) (ctxipnumber ctx)
-                                               (ctxtime ctx) email (userid <$> ctxmaybeuser ctx)
-                 return muser
-    _         -> return muser
-
-
 sendNewUserMail :: Kontrakcja m => User -> m ()
 sendNewUserMail user = do
   ctx <- getContext
@@ -440,11 +422,17 @@ sendNewUserMail user = do
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
 
-createNewUserByAdmin :: Kontrakcja m => Context -> (String, String) -> String -> Maybe MinutesTime -> Maybe String -> Locale -> m (Maybe User)
-createNewUserByAdmin ctx names email _freetill custommessage locale = do
-    muser <- createInvitedUser names email (Just locale)
+createNewUserByAdmin :: Kontrakcja m => String -> (String, String) -> Maybe String -> Maybe (CompanyID, Bool) -> Locale -> m (Maybe User)
+createNewUserByAdmin email names custommessage mcompanydata locale = do
+    ctx <- getContext
+    muser <- createUser (Email email) names (fst <$> mcompanydata) locale
     case muser of
          Just user -> do
+             case mcompanydata of
+               Just (_, admin) -> do
+                 _ <- dbUpdate $ SetUserCompanyAdmin (userid user) admin
+                 return ()
+               Nothing -> return ()
              let fullname = composeFullName names
              now <- liftIO $ getMinutesTime
              _ <- dbUpdate $ SetInviteInfo (userid <$> ctxmaybeuser ctx) now Admin (userid user)
@@ -537,15 +525,14 @@ handleAccountSetupPost aid hash = do
   case maction of
     Just action -> do
       guardMagicTokenMatch hash action
-      user <- guardJustM $ getOrCreateActionUser action
+      user <- guardJustM $ getUserFromAction action
       switchLocale (getLocale user)
       if isJust $ userhasacceptedtermsofservice user
         then addFlashM flashMessageUserAlreadyActivated
         else do
           mfstname <- getRequiredField asValidName "fstname"
           msndname <- getRequiredField asValidName "sndname"
-          signupmethod <- guardJust $ getSignupMethod action
-          mactivateduser <- handleActivate mfstname msndname user signupmethod
+          mactivateduser <- handleActivate mfstname msndname user AccountRequest
           case mactivateduser of
             Just (_activateduser, docs) -> do
               dropExistingAction aid
@@ -564,26 +551,7 @@ handleAccountSetupPost aid hash = do
     Nothing ->
       getOptionalField asValidEmail "email" >>= maybe internalError generateActivationLink
   where
-    -- If this is a user activating a viral invitation then we create their user
-    -- if needed, otherwise we fetch the user indicated inside the action details.
-    getOrCreateActionUser action = do
-      mactionuser <- getUserFromAction action
-      case (mactionuser, actionType action) of
-        (Nothing, ViralInvitationSent email invtime inviterid _ _) -> do
-          muser <- createInvitedUser ("", "") (unEmail email) Nothing
-          case muser of
-            Just user -> do -- user created, we need to fill in some info
-              minviter <- dbQuery $ GetUserByID inviterid
-              _ <- dbUpdate $ SetInviteInfo (userid <$> minviter) invtime Viral (userid user)
-              return $ Just user
-            Nothing -> return Nothing
-        _ -> return mactionuser
     -- Gets the signup method for the action's type.
-    getSignupMethod action =
-      case actionType action of
-        ViralInvitationSent _ _ _ _ _ -> Just ViralInvitation
-        AccountCreated _ _ -> Just AccountRequest
-        _ -> Nothing
     -- Generates another activation link
     generateActivationLink email = do
       user <- guardJustM $ dbQuery $ GetUserByEmail Nothing (Email email)

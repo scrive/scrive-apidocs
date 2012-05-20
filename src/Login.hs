@@ -17,6 +17,7 @@ import KontraLink
 import Mails.SendMail
 import Misc
 import Redirect
+import User.Action
 import User.Model
 import User.UserView as UserView
 import qualified Log (security, debug)
@@ -96,7 +97,8 @@ handleSignup = do
         (Nothing, Nothing) -> do
           -- this email address is new to the system, so create the user
           -- and send an invite
-          mnewuser <- UserControl.createUser (Email email) "" "" Nothing
+          locale <- ctxlocale <$> getContext
+          mnewuser <- createUser (Email email) ("", "") Nothing locale
           maybe (return ()) UserControl.sendNewUserMail mnewuser
           return $ Just (Email email, userid <$> mnewuser)
         (_, _) -> return $ Just (Email email, Nothing)

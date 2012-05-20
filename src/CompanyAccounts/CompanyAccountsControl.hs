@@ -42,6 +42,7 @@ import Util.FlashUtil
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.MonadUtils
+import User.Action
 import User.Utils
 import User.UserControl
 import User.UserView
@@ -221,7 +222,7 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
     case (memail, mexistinguser, mexistingcompany) of
       (Just email, Nothing, Nothing) -> do
         --create a new company user
-        newuser' <- guardJustM $ createUser (Email email) fstname sndname (Just company)
+        newuser' <- guardJustM $ createUser (Email email) (fstname, sndname) (Just $ companyid company) (ctxlocale ctx)
         _ <- dbUpdate $ SetUserInfo (userid newuser') (userinfo newuser') {
                             userfstname = fstname
                           , usersndname = sndname
