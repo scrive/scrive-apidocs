@@ -245,6 +245,7 @@ mkContext locale = do
         , ctxmagichashes = Map.empty
         , ctxmaybepaduser = Nothing
         , ctxstaticresources = SR.ResourceSetsForImport []
+        , ctxusehttps = False
     }
 
 -- pgsql database --

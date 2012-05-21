@@ -28,7 +28,7 @@ serviceAvailabilityChecker rng dbconf (master, slave) msender = do
       when (not success) $
         error "CRITICAL: Couldn't add content to created service testing email."
       return mid
-    threadDelay $ 5 * 60 * second
+    threadDelay freq
     inDB $ do
       events <- dbQuery GetServiceTestEvents
       if any (isDelivered mid) events
@@ -39,9 +39,11 @@ serviceAvailabilityChecker rng dbconf (master, slave) msender = do
               Log.mailingServer $ "Restoring service " ++ show master ++ "."
             return master
         else do
+          Log.mailingServer $ "Service testing emails failed to be delivered within 5 minutes."
           oldsender <- liftIO $ takeMVar msender
+          Log.mailingServer $ "Current sender: " ++ show oldsender
           when (oldsender == master) $ do
-            Log.mailingServer $ "Service testing emails failed to be delivered within 5 minutes, switching to " ++ show slave ++ " and resending all emails that were sent within this time."
+            Log.mailingServer $ "Switching to " ++ show slave ++ " and resending all emails that were sent within this time."
             time <- minutesBefore 5 `fmap` getMinutesTime
             n <- dbUpdate $ ResendEmailsSentSince time
             Log.mailingServer $ show n ++ " emails set to be resent."
@@ -53,7 +55,7 @@ serviceAvailabilityChecker rng dbconf (master, slave) msender = do
     Right () -> loop
     Left (e::E.SomeException) -> do
       Log.mailingServer $ "Error while testing service availability: " ++ show e ++ ", sleeping for 5 minutes."
-      threadDelay $ 5 * 60 * second
+      threadDelay freq
       loop
   where
     inDB :: CryptoRNGT (DBT IO) a -> IO a
@@ -63,6 +65,7 @@ serviceAvailabilityChecker rng dbconf (master, slave) msender = do
     isDelivered mid (_, emid, _, MailGunEvent _ MG_Delivered) = mid == emid
     isDelivered _ _ = False
 
+    freq = 5 * 60 * second
     second = 1000000
     loop = serviceAvailabilityChecker rng dbconf (master, slave) msender
 
