@@ -114,7 +114,7 @@ import qualified ELegitimation.BankID as BankID
 import Util.Actor
 import PadQueue.Model
 import qualified Templates.Fields as F
-
+import qualified MemCache as MemCache
 {-
   Document state transitions are described in DocState.
 
@@ -535,7 +535,6 @@ handleFileGet fileid' _title = do
 handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
 handleAttachmentViewForViewer docid siglinkid mh = do
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
-  disableLocalSwitch
   let pending JpegPagesPending = True
       pending _                = False
       files                    = map authorattachmentfile (documentauthorattachments doc)
@@ -825,8 +824,8 @@ preview did fid value
   | value > 10 = return Nothing
   | otherwise  =   do
         Context{ctxnormalizeddocuments} <- getContext
-        docmap <- liftIO $ readMVar ctxnormalizeddocuments
-        case Map.lookup fid docmap of
+        jpages <- MemCache.get fid ctxnormalizeddocuments
+        case jpages of
             Just (JpegPages pages) -> do
                 let (contents,_,_) =  pages !! 0
                 scaledContent <- liftIO $ scaleForPreview did contents
@@ -841,8 +840,8 @@ preview did fid value
 showPage' :: Kontrakcja m => FileID -> Int -> m Response
 showPage' fileid pageno = do
   Context{ctxnormalizeddocuments} <- getContext
-  docmap <- liftIO $ readMVar ctxnormalizeddocuments
-  case Map.lookup fileid docmap of
+  jpages <- MemCache.get fileid ctxnormalizeddocuments
+  case jpages of
     Just (JpegPages pages) -> do
       let (contents,_,_) =  pages !! (pageno - 1)
       let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
@@ -1206,3 +1205,4 @@ switchLocaleWhenNeeded :: (Kontrakcja m) => Maybe SignatoryLink -> Document -> m
 switchLocaleWhenNeeded mslid doc = do
   cu <- ctxmaybeuser <$> getContext
   when (isNothing cu || ((isJust mslid) && not (isSigLinkFor cu mslid))) $ switchLocale (getLocale doc)
+

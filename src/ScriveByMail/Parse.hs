@@ -134,9 +134,9 @@ parseSignatory sig =
    then let ss = [SignatoryField FirstNameFT (fromJust fstname) [],
                   SignatoryField LastNameFT  (fromJust sndname) [],
                   SignatoryField EmailFT     (fromJust email  ) []] ++
-                 [SignatoryField CompanyFT   (a               ) [] | Just a <- [company]] ++
-                 [SignatoryField CompanyNumberFT   (a               ) [] | Just a <- [cmpnr]] ++
-                 [SignatoryField PersonalNumberFT   (a               ) [] | Just a <- [prsnr]]
+                 [SignatoryField CompanyFT   (a               ) [] | Just a <- [company], not $ null a] ++
+                 [SignatoryField CompanyNumberFT   (a               ) [] | Just a <- [cmpnr], not $ null a] ++
+                 [SignatoryField PersonalNumberFT   (a               ) [] | Just a <- [prsnr], not $ null a]
         in if length ss == length pairs 
            then Just $ SignatoryDetails (SignOrder 0) ss
            else Nothing

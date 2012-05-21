@@ -2,12 +2,14 @@
 
 # This script assumes the existence of BUILD_NUMBER from TeamCity
 # This script assumes the existence of TWPASSWORD as the password for trustweaver certificates
+# This script assumes the existence of PRIVATEKEY as the location of private key file
 # This script assumes TMP which is the directory as a temporary workspace
 # example:
 #DIR=/home/eric/haskell/kontrakcja
 
 echo "BUILD_NUMBER: "$BUILD_NUMBER
 echo "TMP: "$TMP
+echo "PRIVATEKEY: "$PRIVATEKEY
 
 #cd $DIR
 
@@ -39,6 +41,8 @@ tar zcf "$TMP/$ZIP"                        \
     --exclude=_locakal_ticket_backup* \
     *
 ls -lh "$TMP/$ZIP"
+
+openssl dgst -sha256 -sign $PRIVATEKEY -out "$TMP/signature.256" "$TMP/$ZIP"
 
 echo "Generating signature hash"
 hashdoc="$TMP/hash-$BUILD_ID.txt"
@@ -98,7 +102,7 @@ base64 -d "$signed64" > "$TMP/$signedmime"
 echo "Creating final enhanced deployment file"
 
 cd $TMP
-tar zcf "$finalfile" "$signedmime" "$ZIP"
+tar zcf "$finalfile" "$signedmime" "$ZIP" signature.sha256
 cd -
 ls -lh "$TMP/$finalfile"
 

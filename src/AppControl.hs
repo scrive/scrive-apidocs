@@ -57,7 +57,7 @@ import qualified Data.Map as Map
 import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
-
+import qualified Static.Resources as SR
 
 {- |
   Global application data
@@ -65,8 +65,9 @@ import qualified Network.HTTP as HTTP
 data AppGlobals
     = AppGlobals { templates       :: MVar (ClockTime, KontrakcjaGlobalTemplates)
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
-                 , docscache       :: MVar (Map.Map FileID JpegPages)
+                 , docscache       :: MemCache.MemCache FileID JpegPages
                  , cryptorng       :: CryptoRNGState
+                 , staticResources :: SR.ResourceSetsForImport
                  }
 
 
@@ -275,7 +276,6 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
         , ctxtemplates = localizedVersion userlocale templates2
         , ctxglobaltemplates = templates2
         , ctxlocale = userlocale
-        , ctxlocaleswitch = True
         , ctxmailsconfig = mailsConfig appConf
         , ctxtwconf = TW.TrustWeaverConf {
             TW.signConf = trustWeaverSign appConf
@@ -284,6 +284,7 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
           , TW.retries = 3
           , TW.timeout = 60000
           }
+        , ctxlivedocxconf = liveDocxConfig appConf
         , ctxelegtransactions = getELegTransactions session
         , ctxfilecache = filecache appGlobals
         , ctxxtoken = getSessionXToken session
@@ -294,4 +295,5 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
         , ctxsalesaccounts = sales appConf
         , ctxmagichashes = getMagicHashes session
         , ctxmaybepaduser = mpaduser
+        , ctxstaticresources = staticResources appGlobals
         }

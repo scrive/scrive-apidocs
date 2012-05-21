@@ -1,0 +1,1069 @@
+body.signview {
+  font-family: "Lucida Grande";
+  width: 100%;
+}
+
+.signview .clearfix {
+  height: 0px;
+}
+
+.signview .pageheader {
+  min-width: 1020px;
+  width: 100%;
+  background: url(../img/bg-header.jpg);
+  color: white;
+  border-bottom: solid #bababc 1px;
+}
+
+.signview .pageheader .content {
+  width: 1020px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  height: 76px;
+  display: table;
+  overflow: hidden;
+  #position: relative;
+}
+
+.signview .pageheader .logowrapper {
+  width : 200px;
+}
+
+.signview .pageheader div.logo {
+  background: url(../img/logo-scrive-small.png);
+  height: 33px;
+  width: 200px;
+  background-repeat: no-repeat;
+  margin-left: 30px;
+}
+
+.signview .logo {
+    margin-left: 30px;
+}
+
+.signview .pageheader .content .sender {
+  text-align: right;
+  #position: absolute; 
+  #top: 50%;
+  display: table-cell; 
+  vertical-align: middle;
+  width: 960px;
+}
+
+.signview .pageheader .content .sender .name {
+  font-weight: bold;
+  vertical-align: middle;
+}
+
+.signview .pageheader .content .sender .phone {
+  font-weight: bold;
+  vertical-align: middle;
+}
+
+.signview .pageheader .poweredbyscrive {
+  height: 114px;
+  width: 114px;
+  background: url(../img/powered-by-scrive-corner.png);
+  background-repeat: no-repeat;
+  position: absolute;
+  top: 0px;
+  right: 0px;
+}
+
+.signview .pageheader.withstandardlogo .poweredbyscrive {
+  display: none;
+}
+
+.signview .mainContainer960 {
+    width: 1020px;
+}
+
+.signview .body-container {
+  padding-top: 10px;
+  background-color: transparent;
+  background-image: none;
+}
+
+.signview .instructions {
+  background-color: white;
+  padding-top: 31px;
+  padding-bottom: 15px;
+  margin-bottom: 7px;
+  border: solid #bababc 1px;
+  text-align: center;
+  font-weight: bold;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.signview .instructions .headline {
+  text-transform: uppercase;
+  color: black;
+  font-size: x-large;
+  margin-bottom: 5px;
+}
+
+.signview .instructions .giveForSigning {
+  color: black;
+  font-size: small;
+  margin: auto;
+  border: 1px solid #E9E9E9;
+  height : 26px;
+  padding: 8px;
+  margin: 0 auto 5px;
+  display: inline-block;
+}
+
+
+.signview .instructions .giveForSigning span,
+.signview .instructions .giveForSigning strong,
+.signview .instructions .giveForSigning select{
+ top: -7px;
+ position: relative;
+}
+
+.signview .instructions .giveForSigning a.btn-tiny
+{
+   padding-left: 10px;
+}
+
+.signview .instructions .subheadline {
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 0px;
+  margin-bottom: 5px;
+}
+
+.signview .instructions a {
+  display: block;
+}
+
+.signview .instructions .subheadline .duedate {
+  display: inline-block;
+  margin-top: 2px;
+  margin-left: 10px;
+  margin-right: 10px;
+  position: relative;
+  top: -7px;
+  /*   believe it or not these lines do inline-blocking for IE7 */
+    zoom: 1;
+    *display: inline;
+    _height: 15px;
+  /*   end of IE7 junk */
+}
+
+.signview .instructions .subheadline .menuwrapper {
+  display: inline-block;
+  margin-left: 10px;
+  margin-right: 10px;
+  margin-top: 6px;
+  /*   believe it or not these lines do inline-blocking for IE7 */
+    zoom: 1;
+    *display: inline;
+    _height: 21px;
+  /*   end of IE7 junk */
+}
+
+.signview .menu .download .icon {
+  margin-top: 1px;
+  margin-right: 2px;
+  width: 18px;
+  height: 20px;
+  background: url(../img/download-icon.png);
+}
+
+.signview .menu .download .label {
+  display: none;
+}
+
+.signview .menu .download .docname {
+  text-align: left;
+  text-decoration: underline;
+  font-weight: normal;
+  color: grey;
+}
+
+.signview .pagejpg {
+    width: 953px;
+}
+
+.signview .save {
+  background-color: white;
+  border: solid #bababc 1px;
+  text-align: center;
+  padding: 40px;
+  overflow: none;
+}
+
+.signview .save .title {
+  font-size: large;
+  color: black;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.signview .save .subtitle {
+  margin-bottom: 20px;
+  max-width: 602px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.signview .save.saving {
+  min-height: 118px;
+  background-image: url(/img/wait30trans.gif);
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.signview .save.done {
+  background-color: white;
+  padding-top: 31px;
+  padding-bottom: 15px;
+  margin-bottom: 7px;
+  border: solid #bababc 1px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.signview .save .headline {
+  text-transform: uppercase;
+  color: black;
+  font-size: x-large;
+  margin-bottom: 5px;
+}
+
+.signview .save .subheadline {
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 0px;
+  margin-bottom: 5px;
+}
+
+
+.signview .save .highlight {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
+  padding-top: 40px;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 40px;
+  border: solid #89c041 1px;
+  background-color: #e7f6d5;
+  overflow: none;
+  width: 640px;
+}
+
+.signview .save .highlight .row {
+  clear: both;
+  margin-left: 11px;
+  margin-top: 10px;
+}
+
+.signview .save .item input {
+    background-color: white;
+    border: medium none;
+    font-size: 12px;
+    height: 18px;
+    line-height: 18px;
+    margin: 0;
+    outline: medium none;
+    overflow: hidden;
+    position: relative;
+    top: 1px;
+    width: 132px;
+    font-style: italic;
+    border: 1px solid #6782A5;
+    border-radius: 2px 2px 2px 2px;
+    display: block;
+    float: left;
+    margin: 3px 5px 0 0;
+    overflow: hidden;
+    padding: 0;
+    width: 161px;
+    position: relative;
+
+    border: 1px solid #9e9e9e;
+    font: 11px "Lucida Grande";
+    margin-bottom: 3px;
+    padding: 5px 10px;
+    width: 146px;
+
+}
+
+.signview .save .item {
+  float: left;
+  width: 172px;
+  margin-left: 11px;
+  margin-right: 11px;
+  margin-bottom: 11px;
+}
+
+.signview .save .invalid {
+  border: solid red 1px;
+}
+
+.signview .save .errormsg {
+  color: red;
+  font-size: x-small;
+}
+
+.signview .save .row {
+  float: left;
+}
+
+.signview .save .tos {
+  margin-bottom: 2px;
+  vertical-align: middle;
+}
+
+.signview .save .invalid.tos {
+  padding: 2px 10px;
+}
+
+.signview .save .tos .check {
+  float: left;
+  margin-right: 10px;
+}
+
+.signview .save .tos input {
+  background: transparent;
+}
+
+.signview .save .tos .label {
+  float: left;
+  line-height: 19px;
+}
+
+.signview .save .acceptbutton {
+  float: right;
+  margin-right: 22px;
+  margin-top: 4px;
+}
+
+.signview .share {
+  background-color: white;
+  padding-top: 45px;
+  padding-bottom: 45px;
+  margin-bottom: 7px;
+  margin-top: 7px;
+  border: solid #bababc 1px;
+  text-align: center;
+  font-weight: bold;
+  padding-left: 45px;
+  padding-right: 45px;
+}
+
+.signview .share .title {
+  font-size: 24px;
+  font-weight: normal;
+  margin-bottom: 45px;
+}
+
+.signview .share .panel {
+    margin:auto;
+    width: 728px;
+}
+
+.signview .share .item {
+  float: left;
+  margin: 10px;
+  cursor: pointer;
+  height: 82px;
+  width: 162px;
+}
+
+.signview .share .btn {
+  background-repeat: no-repeat;
+  background-position: 0px 0px;
+  height: 82px;
+  width: 162px;
+}
+
+.signview .share .btn:hover {
+  background-position: -162px 0px;
+}
+
+.signview .share .btn .label {
+  padding-left: 60px;
+  padding-top: 25px;
+  padding-bottom: 25px;
+  padding-right: 20px;
+  color: white;
+  text-align: left;
+  text-shadow: #bababc 1px 1px 1px;
+  font-weight: normal;
+}
+
+.signview .share .facebook.btn {
+  background-image: url(/img/facebook-button.png);
+}
+
+.signview .share .dropdown {
+  position: relative;
+  z-index: 5000;
+  top: -3px;
+  background-repeat: no-repeat;
+  height: 99px;
+  width: 318px;
+  padding-top: 25px;
+  padding-left: 12px;
+  padding-right: 12px;
+  background-position: 0px 0px;
+  text-align: left;
+  font-weight: normal;
+}
+
+.signview .share .dropdown.over {
+  background-position: -366px 0px;
+}
+
+.signview .share .dropdown .content {
+  background: white;
+  width: 292px;
+  height: 65px;
+  margin: 0px;
+}
+
+.signview .share .facebook.dropdown {
+  background-image: url(/img/facebook-dropdown.png);
+}
+
+.signview .share .phone.dropdown {
+  background-image: url(/img/phone-dropdown.png);
+}
+
+.signview .share .phone.dropdown .content {
+  background: transparent;
+  padding-top: 10px;
+  padding-left: 30px;
+  padding-right: 30px;
+  width: 280px;
+}
+
+.signview .share .phone.dropdown .loading {
+  background-image: url(/img/wait30trans.gif);
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 50px;
+  width: 240px;
+}
+
+.signview .share .phone.dropdown input {
+  float: left;
+}
+
+.signview .share .phone.dropdown a {
+  float: left;
+  margin-left: 20px;
+}
+
+.signview .share .twitter.btn {
+  background-image: url(/img/twitter-button.png);
+}
+
+.signview .share .phone.btn {
+  background-image: url(/img/phone-button.png);
+}
+
+.signview .share .phone.btn .label {
+  color: #666666;
+}
+
+.signview .share .start.btn {
+  background-image: url(/img/start-button.png)
+}
+
+.signview .share .start.btn .label {
+  padding-left: 50px;
+}
+
+.signview .subcontainer {
+  background-color: #e1e1e1;
+  box-shadow: inset 0px 0px 5px #505050;
+  -moz-box-shadow: inset 0px 0px 5px #505050;
+  -webkit-box-shadow: inset 0px 0px 5px #505050;
+  background-image: url(../img/horizontal-shading-bar.png);
+  background-repeat: no-repeat;
+  padding-bottom:23px;
+  padding-top:10px;
+  margin-top: 20px;
+}
+
+.signview .subcontainer .end {
+  /*background-image: url(../img/horizontal-shading-bar.png); */
+  background-repeat: no-repeat;
+  height: 2px;
+}
+
+.signview .pagediv {
+  margin-top: 10px;
+  margin-bottom: 5px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 955px;
+  box-shadow: 0px 0px 5px #505050;
+  -moz-box-shadow: 0px 0px 5px #505050;
+  -webkit-box-shadow: 0px 0px 5px #505050;
+  overflow-x: hidden;
+}
+
+.signview .section {
+  clear: both;
+  margin: 7px;
+  background-color: white;
+  /* background-image: url(../img/horizontal-shading-bar.png); */
+  background-repeat: no-repeat;
+  overflow: hidden;
+  margin-top: 17px;
+
+  width: 924px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.signview .section.highlight {
+  border: 5px solid #83bc39;
+  padding: 15px;
+  background-image: none;
+  width: 916px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.signview .section h2 {
+  float: left;
+  width: 220px;
+  margin-bottom: 20px;
+  margin-right: 20px;
+  text-transform: uppercase;
+  color: black;
+  font-weight: normal;
+  padding-left: 30px;
+  padding-right: 10px;
+  font-size: large;
+}
+
+.signview .authorattachments .list {
+  float: left;
+  width: 322px;
+
+  margin-right: 20px;
+}
+
+.signview .authorattachments .item {
+  margin-bottom: 10px;
+}
+
+.signview .authorattachments .item .icon {
+  float: left;
+  width: 13px;
+  height: 14px;
+  background: url(../img/attachment-icon.png);
+}
+
+.signview .authorattachments .item .label {
+  float: left;
+  margin-left: 10px;
+}
+
+.signview .authorattachments .item .name {
+  font-weight: bold;
+  color: black;
+}
+
+.signview .authorattachments .item a {
+  text-decoration: underline;
+}
+
+.signview .signatoryattachments .list {
+  float: left;
+  width: 605px;
+  margin-right: 20px;
+}
+
+.signview .signatoryattachments .list .item {
+  margin-bottom: 10px;
+  overflow: none;
+}
+
+.signview .signatoryattachments .list .item .first.column {
+  float: left;
+  display: block;
+  margin-right: 30px;
+}
+
+.signview .signatoryattachments .list .item .second.column {
+  float: right;
+  display: block;
+}
+
+.signview .signatoryattachments .list .item .loading {
+  margin-left: 80px;
+}
+
+.signview .signatoryattachments .list .item .upload .icon {
+  float: left;
+  width: 13px;
+  height: 14px;
+  background: url(../img/attachment-icon.png);
+}
+
+.signview .signatoryattachments .list .item .file {
+  float: left;
+  margin-left: 10px;
+}
+
+.signview .signatoryattachments .list .item .file .name {
+  color: black;
+}
+
+.signview .signatoryattachments .list .item .action {
+  float: left;
+  margin-right: 10px;
+  text-decoration: underline;
+}
+
+.signview .signatoryattachments .list .item .name {
+  font-weight: bold;
+}
+
+.signview .signatoryattachments .list .item .description {
+  font-style: italic;
+}
+
+.signview .uploadedsignatoryattachments .list {
+  float: left;
+  width: 500px;
+  margin-right: 20px;
+}
+
+.signview .uploadedsignatoryattachments .item .icon {
+  float: left;
+  width: 13px;
+  height: 14px;
+  background: url(../img/attachment-icon.png);
+}
+
+.signview .uploadedsignatoryattachments .item {
+  margin-bottom: 10px;
+}
+
+.signview .uploadedsignatoryattachments .item .label {
+  float: left;
+  margin-left: 10px;
+}
+
+.signview .uploadedsignatoryattachments .list .item .name {
+  font-weight: bold;
+  color: black;
+}
+
+.signview .uploadedsignatoryattachments .list .item .from {
+  font-style: italic;
+}
+
+.signview .uploadedsignatoryattachments .list .item a {
+  text-decoration: underline;
+}
+
+.signview .signatories a {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.signview .signatories .list .sig .statustext {
+    width: 124px;
+    float: left;
+    text-transform: uppercase;
+    font-size: 11px;
+    vertical-align: middle;
+    line-height: 11px;
+}
+
+.statustext.signed {
+    color: black;
+}
+
+.statustext.opened {
+    color: #71a0c2;
+}
+
+.statustext.sent {
+    color: #eea045;
+}
+
+.statustext.canceled {
+    color: #d55d5d;
+}
+
+.statustext.delivered {
+    color: black;
+}
+
+.signview .signatories .column {
+    width: 260px;
+    float: left;
+    border: solid #bababc 1px;
+    min-height: 185px;
+}
+
+.signview .signatories .name {
+    font-weight: bold;
+    color: black;
+    font-size: 14px;
+    height: 19px;
+}
+
+ .signview .signatories .company {
+    font-weight: bold;
+    color: black;
+    height: 15px;
+}
+
+.signview .signatories .face {
+    background-image: url('../img/missing-portrait.png');
+    background-size: cover;
+    width: 60px;
+    height: 50px;
+    float: left;
+}
+
+.signview .signatories .inner {
+    margin-top: 10px;
+    min-height: 72px;
+    color : #505050;
+    font-size: 0.9em;
+}
+
+.signview .signatories .numspace {
+    float:left;
+    height: 32px;
+    padding: 0px;
+    margin-top:0px;
+    margin-left: 12px;
+}
+
+.signview .field {
+    height: 14px;
+    width: 160px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow:hidden;
+    margin-bottom: 5px;
+}
+
+.signview .signatories .statusbox {
+    border-top: 1px dashed;
+    text-align: center;
+    font-weight: bold;
+    font-size: 14px;
+    vertical-align: middle;
+    line-height: 11px;
+    padding-top:1px;
+}
+
+.signview .signatories .statusbox .spacing {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.signview .signatories .statusbox .icon.status {
+    display: inline-block;
+    float: none;
+}
+
+/*Hide the info text on the custom fields, cos
+ * we're using labels.
+ */
+.signview .signatories .signatory .field .grayed {
+  color: white;
+}
+
+.signview .signatories .signatory .field input {
+  width: 195px;
+}
+
+.signview .signatories .signatory .fieldwrapper {
+  width: 200px;
+}
+
+.signview .rejectwrapper {
+  float: left;
+  margin-left: 30px;
+}
+
+.signview .rejectwrapper a.btn-big.red .label {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.signview .signwrapper {
+  float: right;
+  margin-right: 30px;
+}
+
+.signview .arrows .arrow {
+  display: block;
+
+  position: fixed;
+
+  z-index: 5000;
+
+  height: 112px;
+  min-width: 112px;
+}
+
+.signview .arrows .down.arrow {
+  bottom: 50px;
+  background: url(../img/sign-arrow-down.png);
+  background-repeat: no-repeat;
+}
+
+/** this is a bit of a cheat way to override the visibility stuff*/
+.signview .arrows .down.arrow.infooter {
+  height: 0px;
+}
+
+.signview .arrows .up.arrow {
+  top: 50px;
+  background: url(../img/sign-arrow-up.png);
+  background-repeat: no-repeat;
+}
+
+.signview .arrows .action.arrow {
+  position: absolute;
+}
+
+.signview .arrows .action.arrow .front {
+  background: url(../img/sign-arrow-action-front.png);
+  background-repeat: no-repeat;
+  min-width: 84px;
+  height: 28px;
+  float: left;
+}
+
+.signview .arrows .action.arrow .back {
+  background: url(../img/sign-arrow-action-back.png);
+  background-repeat: no-repeat;
+  width: 8px;
+  height: 28px;
+  float: left;
+}
+
+.signview .arrows .action.arrow .label {
+  color: white;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 5px;
+}
+
+.signview .pagefooter {
+  padding-bottom: 30px;
+  min-width: 1020px;
+  width: 100%;
+  min-height: 200px;
+  background: url(../img/bg-header.jpg);
+  color: white;
+}
+
+.signview .pagefooter .dogtooth {
+  background: url(../img/dog-tooth-transparent.png);
+  background-repeat: repeat-x;
+}
+
+.signview .pagefooter .content {
+  width: 1020px;
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+
+.signview .pagefooter .sender {
+  float: left;
+}
+
+.signview .pagefooter .sender .name {
+  font-size: x-large;
+  font-family: "Copse";
+  font-style: italic;
+}
+
+.signview .pagefooter .sender .phone {
+  margin-top: 30px;
+  font-size: large;
+  font-family: "Copse";
+  font-style: italic;
+}
+
+.signview .pagefooter .sender .position,
+.signview .pagefooter .sender .company,
+.signview .pagefooter .sender .email {
+  font-size: small;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.signview .pagefooter .poweredbyscrive {
+  float: right;
+  margin-top: 10px;
+}
+
+.signview .pagefooter .poweredbyscrive a {
+  /*  color: white; */
+  font-size: small;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+div.spacing {
+    margin: 4px;
+    padding: 8px;
+}
+
+div.spacing.butt {
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+}
+
+.sig.first {
+    margin-top: 0px;
+    padding-top: 0px;
+}
+
+.sig {
+    margin-top: 4px;
+}
+
+.sig .name {
+    margin-bottom: 2px;
+} 
+
+.sig .name.first {
+    margin-top: 0px;
+} 
+
+.column.spacing {
+    margin-right: 20px;
+}
+
+.section.spacing {
+    padding: 15px;
+}
+
+.section.signatories {
+    padding-top: 20px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.section .signatoryattachments {
+    padding-top: 20px;
+    padding-bottom: 10px; /* An extra 10px snuck in somewhere! */
+}
+
+.signatoryattachments .buttonbox {
+    float: left;
+    margin-left: 10px;
+}
+
+.signview .author {
+    margin: 0px;
+    font-size: 0.9em;
+}
+
+/* # sign is an ie hack; most browsers ignore after #*/
+/* This will vertical align */
+/* from http://www.jakpsatweb.cz/css/css-vertical-center-solution.html */
+.signview .logowrapper {
+    #position: absolute;
+    #top: 50%;
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.signview .logo {
+    #position: relative;
+    #top: -50%;
+}
+
+.signview .sender .inner {
+    #position: relative;
+    #top: -50%;
+    margin-right: 30px;
+}
+
+@media screen and (max-width: 1220px) {
+  .signview .sender .inner {
+      margin-right: 100px;
+  }
+}
+
+@media screen and (max-width: 1000px) {
+  .signview .sender .inner {
+      margin-right: 150px;
+  }
+}
+
+@media screen and (max-width: 980px) {
+  .signview .sender .inner {
+      margin-right: 180px;
+  }
+}
+
+.signview .signbuttons.section {
+    padding-top: 35px;
+    padding-bottom:35px;
+}
+
+.signview .section {
+  box-shadow: 0px 0px 5px #505050;
+  -moz-box-shadow: 0px 0px 5px #505050;
+  -webkit-box-shadow: 0px 0px 5px #505050;
+  padding-top: 35px;
+  padding-bottom:35px;
+}
+
+.signview .newaccount .inner {
+    width: 590px;
+    margin: auto;
+    padding 
+}
+
+.signview.just-signed .panel {
+    width: 182px;
+    float: left;
+}
+
+.signview .sbox {
+    padding: 10px;
+}
+
+.signview .video {
+   box-shadow: inset 0px 0px 5px #505050;
+  -moz-box-shadow: inset 0px 0px 5px #505050;
+  -webkit-box-shadow: inset 0px 0px 5px #505050;
+   background-color: #e1e1e1;
+   padding: 30px;
+   margin-left: 227px;
+   height: 328px;
+}
+
+.signview .line {
+    display: table;
+    #position: relative;
+    overflow: hidden;
+    height: 15px;
+}
+
+.signview .line .middle {
+    #position: absolute;
+    #top: 50%;
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.signview .middle * {
+    #position: relative; 
+    #top: -50%
+}

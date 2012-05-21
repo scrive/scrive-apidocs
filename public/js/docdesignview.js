@@ -326,8 +326,8 @@ var DocumentDesignView = Backbone.View.extend({
                             editText :  localization.reminder.formOwnMessage,
                             rejectText : localization.cancel,
                             onAccept : function(customtext)
-                            {
-                                document.setInvitationMessage(customtext);
+                            {   if (customtext != undefined)
+                                    document.setInvitationMessage(customtext);
                                 return true;
                             }
                             });

@@ -89,14 +89,16 @@ dcrTest = doNTimes 100 $ do
                                             ("email",   JSObject $ toJSObject $
                                                         [("value", JSString $ toJSString em)])])]])]
       dcr :: Either String DocumentCreationRequest = Right $ DocumentCreationRequest {
-        dcrTitle = title,
+        dcrTitle = Just title,
         dcrType  = Signable Contract,
         dcrTags  = [],
         dcrInvolved = [InvolvedRequest { irRole = [SignatoryPartner],
                                          irData = [SignatoryField FirstNameFT fn [],
                                                    SignatoryField LastNameFT  sn [],
                                                    SignatoryField EmailFT     em []],
-                                         irAttachments = [] }],
-        dcrMainFile = mainfile
+                                         irAttachments = [],
+                                         irSignOrder = Nothing }],
+        dcrMainFile = Just mainfile,
+        dcrAttachments = []
         }
   assertEqual ("Are not the same! " ++ show o ++ " and " ++ show dcr) o dcr

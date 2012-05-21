@@ -1,0 +1,637 @@
+/* Stuff specyfic to design view
+ * Durring backbone refactoring we changed structure and we want to get rid of bad css stuff also
+ */
+
+.sigview {
+        float: left;
+        width: 350px;
+        min-height: 100px;
+}
+.siglist {
+    border-color: #E6E7EF #F3F4F7 #F0F1F5 #F2F2F7;
+    border-width: 1px;
+    border-style: solid;
+    float: left;
+    width: 303px;
+    padding: 10px 10px 10px 10px;
+    margin-right: 25px;
+    min-height: 80px;
+
+}
+
+.siglist .signame {
+    display: block;
+    font-size: 8pt;
+    width:100%;
+}
+
+ .signame:hover{
+    background-color:#F7F7F7;
+}
+
+
+.siglist .header{
+    display: block;
+    font-size: 8pt;
+    color : #414241;
+    width:100%;
+    padding-bottom: 5px;
+}
+.sigview .top{
+    display: block;
+    font-size: 10pt;
+    font-weight: bold;
+    width: auto;
+    min-height: 18px;
+}
+
+.sigview .field{
+    border: 1px solid #6782A5;
+    border-radius: 2px 2px 2px 2px;
+    display: block;
+    float: left;
+    margin: 3px 5px 0 0;
+    overflow: hidden;
+    padding: 0;
+    width: 161px;
+    position: relative;
+}
+
+.sigview .field.redborder{
+    border: 1px solid red;
+}
+.sigview .field .fieldvalue {
+    background-color: transparent;
+    border: medium none;
+    font-size: 12px;
+    height: 18px;
+    line-height: 18px;
+    margin: 0;
+    outline: medium none;
+    overflow: hidden;
+    position: relative;
+    top: 1px;
+    width: 132px;
+    font-style: italic;
+}
+
+.sigview .field .fieldvalue.shorter {
+    width: 114px;
+}
+
+.sigview .field .fieldvalue.much-shorter {
+    width: 100px;
+    float: left;
+}
+
+.basicMode .sigview .field .fieldvalue{
+    padding-left: 5px;
+}
+
+.finalbutton {
+   margin-top:10px;
+   margin-bottom:5px
+}
+
+.addSignatory, .removeSignatory {
+    background-repeat: no-repeat;
+    display: block;
+    padding-left: 24px;
+    margin-top : 5px;
+    padding-top:1px;
+    padding-bottom:1px;
+    font-size: 8pt;
+}
+.addSignatory{
+    background-image: url("/img/iconPlus.png");
+}
+.removeSignatory{
+    background-image: url("/img/iconMinus.png");
+}
+.field .ddIcon{
+    height:16px;
+    width:12px;
+    margin:2px;
+    float:left;
+    background-image: url("/img/iconHand.png");
+    cursor: pointer;
+}
+.field .prepIcon{
+    height:15px;
+    width:15px;
+    margin:2px;
+    float:left;
+    background-image: url("/img/iconPen.png");
+}
+.field .setNameIcon{
+    height:14px;
+    width:14px;
+    margin:2px;
+    display: block;
+    float:right;
+    background: url("../img/spr-icons.png") no-repeat scroll 0 0 transparent;
+    background-position: -171px 0px;
+    width: 14px;
+}
+.field .removeField{
+    height:14px;
+    width:14px;
+    margin:2px;
+    float:right;
+    background-image: url("/img/iconMinus.png");
+}
+
+.addField{
+  background-image: url("/img/iconPlus.png");
+  width:14px;
+  height:14px;
+  margin-top: 1px;
+  margin-left: 12px;
+  display: block;
+  float: left;
+}
+.setSignOrder{
+  background-image: url("/img/iconSigningOrder.png");
+  width:16px;
+  height:16px;
+  margin-left: 12px;
+  display: block;
+  float: left;
+}
+.setCsvSignatory{
+  background-image: url("/img/iconCsv.png");
+  width:16px;
+  height:16px;
+  margin-left: 12px;
+  display: block;
+  float: left;
+}
+.setRole{
+    background-image: url("/img/iconMan.png");
+    margin-top: -1px;
+    height: 16px;
+    width: 16px;
+    display: block;
+    float: left;
+}
+.setRole.selected{
+    border-color: #BDBDBD #BDBDBD white;
+    border-left: 1px solid #BDBDBD;
+    border-radius: 1px 1px 0 0;
+    border-right: 1px solid #BDBDBD;
+    border-style: solid;
+    border-width: 1px;
+    position: relative;
+    z-index: 10;
+}
+.setRoleBox{
+    background-color: white;
+    border: 1px solid #BDBDBD;
+    border-radius: 3px 3px 3px 3px;
+    height: 60px;
+    padding: 8px;
+    position: absolute;
+    width: 316px;
+    margin-top: -2px;
+}
+.setRoleBox .close{
+    float:right;
+    margin-right: 5px;
+}
+.setRoleBox .option{
+    margin-top:3px;
+}
+.setRoleBox .option .radio{
+    margin-top:2px;
+    margin-right: 5px;
+}
+
+.setRoleBox .option .radiolabel{
+    position: relative;
+    top: -2px;
+}
+
+.selectSignOrder{
+    background: none repeat scroll 0 0 #FFFFFF;
+    font-size: 11px;
+    margin-top: -2px;
+    float: right;
+    margin-right: 20px;
+}
+
+.top .signame {
+  float: left;
+  margin-right:15px;
+}
+
+.top {
+  margin-right: 20px;
+}
+
+.nextstepbutton {
+   margin-top:10px;
+   margin-bottom:5px;
+   margin-left: 30px;
+}
+.nextstepbutton .btn-symbol {
+   margin-left:10px;
+}
+
+.basicMode .editinvitemessageicon{
+   margin-top:5px;
+}
+
+.basicMode .finalbutton .label{
+    padding-left:5px;
+    padding-right:5px;
+    width:120px;
+    text-align: center
+}
+
+.advancedMode .finalbutton .label{
+    padding-left:20px;
+    padding-right:20px;
+    width:160px;
+    text-align: center
+}
+
+.basicMode .finalbox,
+.advancedMode .addremovesignatorybox {
+    border-color: #E6E7EF #F3F4F7 #F0F1F5 #F2F2F7;
+    border-width: 1px;
+    border-style: solid;
+    float: left;
+    position: relative;
+    width: 190px;
+    padding: 5px 5px 5px 17px;
+}
+
+
+.basicMode .verificationmethodselect{
+    margin-top: 5px;
+}
+
+.advancedMode .verificationmethodselect select{
+    margin-left: 5px;
+}
+
+.basicMode .finaldateselection {
+    margin-top: 5px;
+}
+
+.finaldatecheckbox{
+    position:relative;
+    top:2px;
+    left:2px;
+    margin-right:10px;
+}
+.daystosign {
+    font-size: 11px;
+    position: relative;
+    text-align: center;
+    top: -1px;
+    width: 20px;
+    background-color: #FFFFFF;
+    border: 1px solid lightgray;
+    border-radius: 2px 2px 2px 2px;
+    margin: 3px 3px 3px 3px;
+}
+.calendarbutton {
+    cursor: pointer;
+    padding-left: 5px;
+    background-image: url("/img/calendar.png");
+    background-position: 2px 0;
+    background-repeat: no-repeat;
+    display: inline-block;
+    height: 16px;
+    position: relative;
+    top: 3px;
+    width: 16px;
+}
+.editinvitemessageicon {
+    cursor: pointer;
+    padding-left: 5px;
+    background-image: url("/img/iconPen.png");
+    background-position: 2px 0;
+    background-repeat: no-repeat;
+    display: inline-block;
+    height: 16px;
+    position: relative;
+    top: 3px;
+    width: 16px;
+}
+
+.authorattachmentssetupicon , .signatoryattachmentssetupicon {
+    cursor: pointer;
+    padding-left: 5px;
+    background-image: url("/img/attachment.gif");
+    background-position: 2px 0;
+    background-repeat: no-repeat;
+    display: inline-block;
+    height: 16px;
+    position: relative;
+    top: 3px;
+    width: 16px;
+}
+
+.editinvitemessagetext , .authorattachmentssetuptext,  .signatoryattachmentssetuptext{
+    cursor: pointer;
+    color: #007CAC;
+    text-decoration: none;
+    font-size: 8pt;
+    text-transform: uppercase;
+}
+
+.signStepsBodyPart{
+    float: left;
+    padding-bottom: 10px;
+}
+.signStepsBodyPart.first {
+    width:   286px;
+    padding-right:20px;
+}
+.signStepsBodyPart.middle {
+    width:   286px;
+    padding-left:10px;
+    padding-right:10px;
+}
+.signStepsBodyPart.last {
+    width:   285px;
+    padding-left:20px;
+}
+
+.option-box
+{
+    border-color: #E6E7EF #F3F4F7 #F0F1F5 #F2F2F7;
+    border-width: 1px;
+    border-style: solid;
+    height: 120px;
+    margin: 15px;
+    padding: 10px;
+    text-align: center;
+    width: 250px;
+}
+
+.selectAuthorAttachmentPopupContent .option-box
+{
+    margin: 15px;
+}
+
+
+.designCSVSignatoryPopupContent .option-box
+{
+    margin: auto;
+}
+
+.designCSVSignatoryPopupContent {
+    width: 840px;
+    overflow-x: auto;
+}
+
+.selectAuthorAttachmentPopupContent .header,
+.designCSVSignatoryPopupContent .header{
+    color: black;
+    font-size: 16px;
+    font-weight: bold;
+    margin: 5px;
+    height: 30px;
+}
+
+.selectAuthorAttachmentPopupContent .sheader,
+.designCSVSignatoryPopupContent .sheader{
+    margin: 5px;
+    height: 35px;
+}
+.selectAuthorAttachmentPopupContent .buttonbox,
+.designCSVSignatoryPopupContent .buttonbox
+{
+    width: 250px;
+    padding-left: 25px;
+    padding-right: 25px;
+
+}
+.selectAuthorAttachmentPopupContent .tab-table {
+    background: none;
+    border-radius: 0 0 0 0;
+    border-width: 0px;
+    padding:0px;
+}
+.selectAuthorAttachmentPopupContent .attachmentsList{
+    margin-top: 5px;
+    margin-left: 5px;
+    margin-right: 5px;
+    padding : 8px;
+    border-color: #E6E7EF #F3F4F7 #F0F1F5 #F2F2F7;
+    border-width: 1px;
+    border-style: solid;
+}
+
+.selectAuthorAttachmentPopupContent .attachmentsList .attachmentBox{
+   margin-top: 5px;
+}
+
+.selectAuthorAttachmentPopupContent .attachmentsList .header{
+   color: black;
+   font-decoration: bold;
+}
+.selectAuthorAttachmentPopupContent .attachmentsList .removeLink{
+    margin-left: 10px;
+    text-decoration: none;
+    cursor: pointer;
+    color: #35A4D6;
+
+}
+.selectAuthorAttachmentPopupContent .back{
+    background: url("../img/back.png") no-repeat scroll 0 0 transparent;
+    display: block;
+    height: 16px;
+    width: 16px;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+.removeSignatoryAttachmentIcon{
+    height:14px;
+    width:14px;
+    display: block;
+    background-image: url("/img/iconMinus.png");
+    margin-top: 2px;
+}
+
+.editSignatoryAttachmentTable {
+   margin-top : 5px;
+   margin-bottom: 5px;
+   border: 1px solid #DDDDDD;
+   }
+.editSignatoryAttachmentName{
+    width: 130px;
+    margin-right: 20px;
+}
+.editSignatoryAttachmentDescription{
+    width: 280px;
+    margin-right: 20px;
+}
+.editSignatoryAttachmentSelect{
+    width: 130px;
+    margin-right: 20px;
+}
+
+.editSignatoryAttachmentTable th, .editSignatoryAttachmentTable td {
+   text-align: left;
+   vertical-align:top;
+   padding: 5px;
+   border: 1px solid #EEEEEE;
+}
+.editSignatoryAttachmentTDName{
+    width: 150px;
+}
+.editSignatoryAttachmentTDDescription{
+    width: 300px;
+}
+.editSignatoryAttachmentTDSelect{
+    width: 150px;
+}
+.editSignatoryAttachmentTDRemove{
+    width: 30px;
+}
+.signLastCheckbox {
+    top: 2px;
+    position: relative;
+    margin-right: 5px;
+}
+.csvDataTable{
+  min-width: 600px;
+  margin-bottom : 30px;
+
+}
+.csvDataTable td{
+  min-width: 100px;
+  padding-left: 5px;
+  padding-top: 10px;
+  vertical-align: top;
+  border: 1px solid #EEEEEE;
+}
+ .csvDataTable th{
+  text-align : left;
+  padding-left: 5px;
+  border: 1px solid #EEEEEE;
+
+}
+
+.designCSVSignatoryPopupContent .problem{
+  color: red;
+  font-size: 10px;
+}
+
+.placeSignatureIcon {
+    background: url("../img/signeddoc.png") no-repeat scroll 0 0 transparent;
+    display: block;
+    height: 16px;
+    width: 16px;
+    cursor: pointer;
+    margin-left: 12px;
+    margin-top: 1px;
+    float : left;
+}
+.placeSignatureIcon.redborder {
+    margin-left: 11px;
+    margin-top: 0px;
+    border: 1px solid red;
+    border-radius: 2px 2px 2px 2px;
+
+}
+
+.signatureBox{
+    display: block;
+    min-width: 10px;
+    text-align: center;
+    border: 1px solid #999999;
+    filter: alpha(opacity=95);
+    -moz-opacity: 0.95;
+    opacity: 0.95;
+    background-color: white;
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+}
+
+.signatureBox .signatureHeader{
+    background-image: url("/img/drag.png");
+    background-position: 2px 2px;
+    background-repeat: no-repeat;
+    display: block;
+    width: 100%;
+    font-size: 12px;
+    font-style: italic;
+    color: #666666;
+    padding-top:2px;
+    padding-bottom:2px;
+    position: absolute;
+    min-height: 10px;
+
+}
+
+.signStepsBody.fixed{
+    position:fixed;
+    top:0px;
+    z-index: 1000;
+}
+
+#signStepsTitleRowTextContainer .title {
+     float: left;
+     margin-top: 4px;
+}
+
+#signStepsTitleRowTextContainer .docname-display , #signStepsTitleRowTextContainer .docname-edit{
+         float: left;
+
+}
+
+.countspan {
+    margin-left: 0.5em;
+}
+
+
+.padoptions .padoption{
+    height: 30px;
+    width: 400px;
+
+}
+.padoptions .label{
+    float:left;
+    margin-top: 5px;
+    margin-right: 10px;
+
+}
+
+.padoptions input{
+    float:left;
+    margin-top: 5px;
+    margin-bottom: 0px;
+    margin-right: 10px;
+    padding: 0px;
+}
+
+.padoptions .label span, .padoptions .label strong{
+    margin-right: 5px;
+}
+.padoptions select{
+    top: -5px;
+    position: relative;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    margin-left: 5px;
+    padding: 0px;
+}
+.ui-resizable {
+    position: relative;
+}
+.ui-resizable-handle.ui-resizable-se  {
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    cursor: se-resize;
+    background-image: url("/img/resize.png");
+    z-index: 1001;
+}

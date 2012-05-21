@@ -155,7 +155,7 @@ window.SignatoryAttachmentUploadView = Backbone.View.extend({
       var attachment = this.model;
       var container = $("<div class='upload' />");
       if (attachment.get('loading')) {
-          container.append($("<img class='loading'>").attr('src', "/theme/images/wait30trans.gif"));
+          container.append($("<img class='loading'>").attr('src', "/img/wait30trans.gif"));
       } else if (attachment.hasFile()) {
           container.append($("<div class='icon' />"));
           var label = $("<div class='file' />");

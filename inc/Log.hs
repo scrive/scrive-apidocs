@@ -8,6 +8,7 @@ module Log (
   , mail
   , mailContent
   , mailingServer
+  , docConverter
   , security
   , server
   , integration
@@ -65,10 +66,11 @@ setupLogger = do
     statsLog       <- fileHandler' "log/stats.log"       INFO >>= \lh -> return $ setFormatter lh fmt
     mailContentLog <- fileHandler' "log/mailcontent.log" INFO >>= \lh -> return $ setFormatter lh fmt
     mailingServerLog <- fileHandler' "log/mailingserver.log" INFO >>= \lh -> return $ setFormatter lh fmt
+    docConverterLog <- fileHandler' "log/docconverter.log" INFO >>= \lh -> return $ setFormatter lh fmt
     integrationLog <- fileHandler' "log/integrationapi.log" INFO >>= \lh -> return $ setFormatter lh fmt
     scriveByMailLog<- fileHandler' "log/scrivebymail.log" INFO >>= \lh -> return $ setFormatter lh fmt
-    jsonMailAPILog <- fileHandler' "log/jsonmailapi.log" INFO >>= \lh -> return $ setFormatter lh fmt    
-    mailAPILog     <- fileHandler' "log/mailapi.log" INFO >>= \lh -> return $ setFormatter lh fmt    
+    jsonMailAPILog <- fileHandler' "log/jsonmailapi.log" INFO >>= \lh -> return $ setFormatter lh fmt
+    mailAPILog     <- fileHandler' "log/mailapi.log" INFO >>= \lh -> return $ setFormatter lh fmt
     scriveByMailFailuresLog <- fileHandler' "log/scrivebymail.failures.log" INFO >>= \lh -> return $ setFormatter lh nullFormatter
     doceventLog <- fileHandler' "log/docevent.log" INFO >>= \lh -> return $ setFormatter lh fmt
     stdoutLog <- streamHandler stdout NOTICE
@@ -119,6 +121,11 @@ setupLogger = do
     updateGlobalLogger
         "Kontrakcja.MailingServer"
         (setLevel NOTICE . setHandlers [mailingServerLog, stdoutLog])
+
+    -- Doc Converter Log
+    updateGlobalLogger
+        "Kontrakcja.DocConverter"
+        (setLevel NOTICE . setHandlers [docConverterLog, stdoutLog])
 
     -- Amazon Log
     updateGlobalLogger
@@ -217,6 +224,9 @@ mailContent msg = liftIO $ noticeM "Kontrakcja.MailContent" msg
 
 mailingServer :: (MonadIO m) => String -> m ()
 mailingServer msg = liftIO $ noticeM "Kontrakcja.MailingServer" msg
+
+docConverter :: (MonadIO m) => String -> m ()
+docConverter msg = liftIO $ noticeM "Kontrakcja.DocConverter" msg
 
 amazon :: (MonadIO m) => String -> m ()
 amazon msg = liftIO $ noticeM "Kontrakcja.Amazon" msg

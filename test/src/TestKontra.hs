@@ -40,6 +40,7 @@ import qualified Network.HTTP as HTTP
 
 import AppState
 import Control.Monad.Trans.Control.Util
+import Configuration
 import Crypto.RNG
 import DB
 import Kontra
@@ -53,6 +54,8 @@ import User.Locale
 import Util.FinishWith
 import qualified Data.Map as Map
 import qualified Control.Exception.Lifted as E
+import qualified Static.Resources as SR
+import qualified Doc.JpegPages as JpegPages
 
 data TestEnvSt = TestEnvSt {
     teNexus           :: Nexus
@@ -194,7 +197,7 @@ mkContext :: Locale -> TestEnv Context
 mkContext locale = do
   globaltemplates <- teGlobalTemplates <$> ask
   liftIO $ do
-    docs <- newMVar M.empty
+    docs <- MemCache.new JpegPages.pagesCount 500
     memcache <- MemCache.new BS.length 52428800
     time <- getMinutesTime
     return Context {
@@ -220,9 +223,9 @@ mkContext locale = do
         , ctxtemplates = localizedVersion locale globaltemplates
         , ctxglobaltemplates = globaltemplates
         , ctxlocale = locale
-        , ctxlocaleswitch = False
         , ctxmailsconfig = defaultMailsConfig
         , ctxtwconf = error "twconf is not defined"
+        , ctxlivedocxconf = confDefault
         , ctxelegtransactions = []
         , ctxfilecache = memcache
         , ctxxtoken = error "xtoken is not defined"
@@ -233,6 +236,7 @@ mkContext locale = do
         , ctxsalesaccounts = []
         , ctxmagichashes = Map.empty
         , ctxmaybepaduser = Nothing
+        , ctxstaticresources = SR.ResourceSetsForImport []
     }
 
 -- pgsql database --

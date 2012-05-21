@@ -462,14 +462,23 @@ jsonMailAPI mailapi username user pdfs plains content = do
     internalError
 
   -- the mainfile is attached
-  let mpdf = getByAttachmentName (strip $ dcrMainFile dcr) pdfs
+  mpdf <- case (dcrMainFile dcr, pdfs) of
+            (Just mainfilename, _) -> return $ getByAttachmentName (strip mainfilename) pdfs
+            (Nothing, [pdf])       -> return $ Just pdf
+            _                      -> return Nothing
 
   when (isNothing mpdf) $ do
     let attnames = catMaybes $ map (lookup "name" . MIME.mimeParams . fst) pdfs 
     Log.jsonMailAPI $ (show $ toSeconds ctxtime) ++ " Missing pdf attachment: " ++ show (dcrMainFile dcr)
     Log.jsonMailAPI $ "Here are the attachments: " ++ show (map fst pdfs)
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
-    sendMailAPIErrorEmail ctx username $ "<p>In the JSON, you requested the pdf called '" ++ show (dcrMainFile dcr) ++ "' to be considered the main file of the document. I could not find the pdf called '" ++ show (dcrMainFile dcr) ++ "' in the email attachments. The following pdfs were attached: '" ++ intercalate "', '" attnames ++ "'. Please check the file names and JSON and try again.</p>"
+    case dcrMainFile dcr of
+      Just mainfilename -> 
+          sendMailAPIErrorEmail ctx username $ "<p>In the JSON, you requested the pdf called '" ++ mainfilename ++ "' to be considered the main file of the document. I could not find the pdf called '" ++ mainfilename ++ "' in the email attachments. The following pdfs were attached: '" ++ intercalate "', '" attnames ++ "'. Please check the file names and JSON and try again.</p>"
+      Nothing | length pdfs == 0 -> 
+          sendMailAPIErrorEmail ctx username $ "<p>There were no PDFs attached to the document. Please attach a PDF that will be considered the main file of the document.</p>"
+      _ ->
+          sendMailAPIErrorEmail ctx username $ "<p>There were multiple PDFs attached to the document. In order to disambiguate them, please add a JSON parameter like this: <code>\"mainfile\" : { \"name\" : \"filename.pdf\" }</code> where filename.pdf is the name of the attached file. Alternatively, please only attach one PDF.</p>"
     internalError
 
   let Just pdf = mpdf
@@ -518,7 +527,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
     internalError
 
   let doctype = dcrType dcr
-      title = dcrTitle dcr
+      title = maybe (basename $ getAttachmentFilename $ fst pdf) decodeWords $ dcrTitle dcr
       actor = mailAPIActor ctxtime (userid user) (getEmail user)
       
   edoc <- dbUpdate $ NewDocument user mcompany title doctype 0 actor
@@ -561,7 +570,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
   edoc2 <- dbUpdate $ PreparationToPending (documentid doc) actor
   when (isLeft edoc2) $ do
-    Log.jsonMailAPI $ "Could not got to pending document: " ++ (intercalate "; " errs)
+    Log.jsonMailAPI $ "Could not get to pending document: " ++ (intercalate "; " errs)
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what's wrong. Your document is created and ready to be sent. To see your document and send it yourself, <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     internalError
 
@@ -586,3 +595,10 @@ getByAttachmentName name ps =
     where byname p = case lookup "name" (MIME.mimeParams $ fst p) of
             Just n' -> name == decodeWords n'
             _       -> False
+
+getAttachmentFilename :: MIME.Type -> String
+getAttachmentFilename tp = case lookup "filename" (MIME.mimeParams tp) of
+                             Just s -> decodeWords s
+                             _ -> case lookup "name" (MIME.mimeParams tp) of
+                                    Just s -> decodeWords s
+                                    _ -> "document.pdf"

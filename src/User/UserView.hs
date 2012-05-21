@@ -49,6 +49,7 @@ module User.UserView (
 
     --utils
     userBasicFields,
+    menuFields,
 
     userStatsDayToJSON,
     userStatsMonthToJSON,

@@ -15,6 +15,8 @@ module Stats.Control
          addUserPhoneAfterTOS,
          addUserCreateCompanyStatEvent,
          addUserLoginStatEvent,
+         addUserStatAPIGrantAccess,
+         addUserStatAPINewUser,
          handleDocStatsCSV,
          handleUserStatsCSV,
          getUsageStatsForUser,
@@ -560,6 +562,27 @@ addUserIDStatEvent qty uid mt mcid msid =  do
                                                         }
     unless a $ Log.stats $ "Skipping existing user stat for userid: " ++ show uid ++ " and quantity: " ++ show qty
     return a
+
+addUserStatAPIGrantAccess :: (MonadDB m) => UserID -> MinutesTime -> Maybe CompanyID -> Maybe ServiceID -> m Bool
+addUserStatAPIGrantAccess uid mt cid sid = do
+  dbUpdate $ AddUserStatEvent $ UserStatEvent { usUserID = uid
+                                              , usTime = mt
+                                              , usQuantity = UserAPIGrantAccess
+                                              , usAmount = 1
+                                              , usCompanyID = cid
+                                              , usServiceID = sid
+                                              }
+  
+addUserStatAPINewUser :: (MonadDB m) => UserID -> MinutesTime -> Maybe CompanyID -> Maybe ServiceID -> m Bool
+addUserStatAPINewUser uid mt cid sid = do
+  dbUpdate $ AddUserStatEvent $ UserStatEvent { usUserID = uid
+                                              , usTime = mt
+                                              , usQuantity = UserAPINewUser
+                                              , usAmount = 1
+                                              , usCompanyID = cid
+                                              , usServiceID = sid
+                                              }
+                                                                  
 
 
 handleUserStatsCSV :: Kontrakcja m => m Response

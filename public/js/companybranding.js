@@ -106,7 +106,7 @@ window.CompanyBrandingColourView = Backbone.View.extend({
 window.CompanyBrandingLogo = Backbone.Model.extend({
   defaults: {
     customised: false,
-    loadinglogo: "/theme/images/wait30trans.gif",
+    loadinglogo: "/img/wait30trans.gif",
     defaultlogo: "/img/email-logo.png",
     logo: localization.customiseLogo,
     label: "",

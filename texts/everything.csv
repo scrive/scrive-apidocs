@@ -715,7 +715,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
  $email$ inte existerar. Signeringsprocessen har därmed avbrutits.
  Gör så här om du vill börja om:",,"We have not been able to deliver an invitation to sign document <strong>$documenttitle$</strong>.  This may be because the recipients mail server is experiencing difficulties, or because the address $email$ is incorrect. The signing process has been canceled. To restart it:"
 "_invitationMailUndeliveredContentInstruction","1. Kontrollera om mottagarens e-post är korrekt<br/>
-2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/><a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/><br/>                                                           3. Klicka ""starta om""<br/>                                                                                                                                                                                                                                                 4. Skriv in rätt e-postadress och skicka igen",,"1. Confirm if the counterpart's email is correct<br/>  2. Access the document from the archive or by clicking the following link<br/> <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/> <br/> 3. Click ""restart""<br/> 4. Correct the email address and send again"
+2. Klicka på dokumentet i ditt arkiv eller på följande länk<br/><a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/><br/>                                                           3. Klicka ändra e-post<br/>                                                                                                                                                                                                                                                 4. Skriv in rätt e-postadress och skicka igen",,"1. Confirm if the counterpart's email is correct<br/>  2. Access the document from the archive or by clicking the following link<br/> <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/> <br/> 3. Click change e-mail<br/> 4. Correct the email address and send again"
 "_invitationMailUndeliveredTitle","Felaktig e-post",,"Incorrect email"
 "_mailNewCompanyUserInviteContentBodyFirst","<strong>$invitername$</strong> har skapat ett konto åt dig i Scrive. Med detta konto kan du signera dokument elektroniskt inom tjänsten för organisationen $companyname$ och samtliga dokument kommer att tillhöra $companyname$. Kontot ska inte användas för privat bruk.",,"<strong>$invitername$</strong> has made you an account in Scrive.  You can use the account to get documents e-signed online. This account is intended to be used only in relation to $companyname$ and all saved documents will belong to $companyname$.  This account is not for private use."
 "_mailNewCompanyUserInviteContentBodyUserName","Användarnamn:",,"Username:"
@@ -2548,3 +2548,19 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_ordersignatorysignmodalcontentauthoronly","När du signerat avtalet <strong class='documenttitle'>$documenttitle$</strong> kommer din signatur att registreras av e-signeringstjänsten Scrive.",,"When you've signed the document <strong class='documenttitle'>$documenttitle$</strong> your signature will be register by the e-signing service Scrive"
 "_signatureMustBePlacedForPad","Signaturfält måste placeras för pad signering.",,"Signature field must be placed for pad verification method."
 "_missingPlacedAuthorFieldValue","Alla fält för avsändaren måste vara ifyllda.",,"All author fields must be filled."
+"_haveGrantedPrivileges","You have granted the following companies or individuals privileges to act on your behalf.",,"You have granted the following companies or individuals privileges to act on your behalf."
+"_haveNoGrantedPrivileges","You have granted no privileges to other companies or individuals.",,"You have granted no privileges to other companies or individuals."
+"_apiTokensMessage","API Tokens allow you to request access to other Scrive accounts using OAuth.",,"API Tokens allow you to request access to other Scrive accounts using OAuth."
+"_userPersonalAccessToken","Use this access token to access your own Scrive account through the API.",,"Use this access token to access your own Scrive account through the API."
+"_importantSecurityInformation","Important Security Information",,"Important Security Information"
+"_isRequestingPermissions","<em>$companyname$</em> is requesting permission to perform the following operations on your behalf. Please review them carefully and either confirm or deny them.",,"<em>$companyname$</em> is requesting permission to perform the following operations on your behalf. Please review them carefully and either confirm or deny them."
+"_documentCreation","Document Creation",,"Document Creation"
+"_createDocumentsMessage","If confirmed, <em>$companyname$</em> will be able to create documents for you. These documents would not be sent to anyone. They will show up in your archive.",,"If confirmed, <em>$companyname$</em> will be able to create documents for you. These documents would not be sent to anyone. They will show up in your archive."
+"_logInAndConfirm","Log in and Confirm",,"Log in and Confirm"
+"_logInAndConfirmPrivileges","Log in and confirm privileges",,"Log in and confirm privileges"
+"_denyPrivileges","Deny the privileges",,"Deny the privileges"
+"_deny","Deny",,"Deny"
+"_confirm","Confirm",,"Confirm"
+
+
+

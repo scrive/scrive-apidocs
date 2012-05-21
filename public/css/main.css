@@ -1300,6 +1300,42 @@ div.price-plan-details {
     border-radius: 5px 5px 5px 5px;
 }
 
+.partner-image div {
+  width: 180px;
+  height: 170px;
+  margin: 5px;
+  background-image:  url(../img/customer-page-logos.png);
+}
+
+.partner-image div.go-enterprise {
+  background-position-x: 0;
+}
+
+.partner-image div.account-factory {
+  background-position-x: -180px;
+}
+
+.partner-image div.green-hat-people {
+  background-position-x: -360px;
+}
+
+.partner-image div.event-book {
+  background-position-x: -540px;
+}
+
+.partner-image div.accenture {
+  background-position-x: -720px;
+}
+
+.partner-image div.coop {
+  background-position-x: -900px;
+}
+
+.partner-image div.ipas {
+  background-position-x: -1080px;
+  background-color: black;
+}
+
 .box .partner-list li .partner-image:before, .box .partner-list li .portrait-image:before {
 	bottom: 3px;
 	box-shadow: inset 0 0 5px #000;
@@ -2061,7 +2097,7 @@ a {
     display: block;
     width: 15px;
     height: 15px;
-    background-image: url(../theme/images/iconPen.png);
+    background-image: url(../img/iconPen.png);
 
 }
 .create-user {

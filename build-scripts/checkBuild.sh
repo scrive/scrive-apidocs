@@ -4,6 +4,7 @@
 # This script assumes DIR which is the directory where scripts can be found
 # This script assumes TMP which is the directory as a temporary workspace
 # This script assumes TWPASSWORD which is the trustweaver certificate password
+# This script assumes PUBLICKEY which is the public key to verify signature
 # example:
 # DIR=/home/eric/haskell/kontrakcja
 
@@ -36,6 +37,8 @@ else
     exit 1
 fi
 
+echo "Checking zip file signature."
+openssl dgst -sha256 -verify $PUBLICKEY -signature signature.sha256 *.tar.gz
 
 echo "Unzipping inner deployment"
 
@@ -49,6 +52,8 @@ cat ../*.mime | python $DIR/build-scripts/getBuildInfo.py | grep "dist/build" | 
 
 echo "Checking binary sha512 sums from files"
 find checksums -type f -exec sha512sum -c {} \;
+
+
 
 cd ..
 

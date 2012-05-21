@@ -33,130 +33,12 @@ standardHeaderContents=
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta http-equiv="content-language" content="$ctxlang$" />
         <link href='https://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
-        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/newdesign.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/designview.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/style.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/calendar.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/signaturedrawer.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$prefix$/theme/archive.css" media="screen"/>
-
-        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/symbols.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/tabs.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/lists.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/buttons.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/account.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/flash.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/docsignview.css" media="screen" />
-        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/css/main.css" media="screen"/>
-        <script src="$if(production)$https://ajax.googleapis.com/ajax/libs/jquery/1.5.1$else$$resourcehostpart$/js$endif$/jquery.min.js"
-                type="text/javascript"></script>
-        <script src="$if(production)$https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.11$else$$resourcehostpart$/js$endif$/jquery-ui.min.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/jquery.tools.min.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/jquery.MultiFile.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/tiny_mce/jquery.tinymce.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/json2.js"
-                type="text/javascript"></script>
-        <script type="text/javascript">
-                $javascriptLocalisation()$</script>
-        <script src="$resourcehostpart$/js/global.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/underscore.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/backbone.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/storage.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/browserinfo.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/livequery.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/loading.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/table.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/flashmessages.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/infotextinputs.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/buttons.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/uploadbuttons.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/tooltips.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/calendar.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/submits.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/confirmations.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/selects.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/lists.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/tabs.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/files.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/process.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/fields.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/signature.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/signatories.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/documents.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/confirmationsWithEmails.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/docview.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/docsignviewframes.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/docsignview.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/signatorydesignview.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/docdesignviewpad.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/docsignviewpad.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/docdesignview.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/bankid.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/jquery.form.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/wizard.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/uploadview.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/attachmentsdesignview.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/csvsignatorydesign.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/validation.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/signaturedrawer.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/fieldplacementview.js"
-                type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/companybranding.js"
-                type="text/javascript"></script>
-       <script src="$resourcehostpart$/js/padview.js"
-                type="text/javascript"></script>
-       <script src="$resourcehostpart$/js/changemainfile.js"
-                type="text/javascript"></script>
+        <script type="text/javascript">  $javascriptLocalisation()$</script>
+        $staticResources:noescape()$
         $if(publicsafe)$
-        <script src="$resourcehostpart$/js/jquery.tweet.js"
-                type="text/javascript"></script>
+            <script src="/libs/jquery.tweet.js"  type="text/javascript"></script>
         $if(production)$
-            <script src="$resourcehostpart$/js/analytics.js" type="text/javascript"></script>
+            <script src="/libs/analytics.js" type="text/javascript"></script>
         $endif$
         $endif$
 ####
@@ -332,7 +214,7 @@ safeReady(function() {
   if (typeof(Zenbox) !== "undefined") {
     Zenbox.init({
       dropboxID:   "20010532",
-      url:         "https://skrivapa.zendesk.com",
+      url:         "https://scrive.zendesk.com",
       tabID:       "support",
       tabColor:    "black",
       tabPosition: "Right"
@@ -401,7 +283,6 @@ header=
 ####
 localeSwitcher=
   <div class="localeSwitcher">
-    $if(islocaleswitch)$
     $if(!logged)$
     <div><a href="$linksesv$" class="icon flag swedish $if(localesweden)$active$endif$"></a></div>
     <div><a href="$linkgben$" class="icon flag british $if(localebritain)$active$endif$"></a></div>
@@ -420,7 +301,6 @@ localeSwitcher=
            $endif$
            <a href="" class="submit icon flag british $if(localebritain)$active$endif$"></a>
          </form></div>
-    $endif$
     $endif$
   </div>
 ####

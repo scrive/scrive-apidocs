@@ -2,7 +2,6 @@ module Context (
       Context(..)
     ) where
 
-import Control.Concurrent.MVar
 import File.FileID
 import Doc.JpegPages
 import Doc.SignatoryLinkID
@@ -17,10 +16,12 @@ import ELegitimation.ELegTransaction
 import qualified MemCache
 import FlashMessage
 import Mails.MailsConfig
+import LiveDocx (LiveDocxConf(..))
 import API.Service.Model
 import Company.Model
 import MagicHash (MagicHash)
 import IPAddress
+import qualified Static.Resources as SR
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
@@ -28,7 +29,7 @@ data Context = Context
     , ctxresourcehostpart    :: String -- ^ The hostname for the resources (will be https if possible)
     , ctxflashmessages       :: [FlashMessage] -- ^ The flash messages for the NEXT request.
     , ctxtime                :: MinutesTime -- ^ The time of the request.
-    , ctxnormalizeddocuments :: MVar (Map.Map FileID JpegPages) -- ^
+    , ctxnormalizeddocuments :: MemCache.MemCache FileID JpegPages -- ^ Rendered jpeg pages
     , ctxipnumber            :: IPAddress -- ^ The ip number of the client.
     , ctxdocstore            :: FilePath -- ^ The temporary document directory.
     , ctxs3action            :: AWS.S3Action -- ^
@@ -37,9 +38,9 @@ data Context = Context
     , ctxtemplates           :: KontrakcjaTemplates -- ^ The set of templates to render text for the ctxlocale
     , ctxglobaltemplates     :: KontrakcjaGlobalTemplates -- ^ All of the templates for all valid locales
     , ctxlocale              :: Locale -- ^ The current context locale
-    , ctxlocaleswitch        :: Bool -- ^ Whether locale switching is available on this page
     , ctxmailsconfig         :: MailsConfig
     , ctxtwconf              :: TW.TrustWeaverConf -- ^ TrustWeaver configuration
+    , ctxlivedocxconf        :: LiveDocxConf -- ^ LiveDocx configuration (does doc conversion)
     , ctxelegtransactions    :: [ELegTransaction] -- ^ Transactions for connections to the Logica server
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString -- ^
     , ctxxtoken              :: MagicHash -- ^ The XToken for combatting CSRF
@@ -50,4 +51,5 @@ data Context = Context
     , ctxsalesaccounts       :: [Email] -- ^
     , ctxmagichashes         :: Map.Map SignatoryLinkID MagicHash
     , ctxmaybepaduser        :: Maybe User -- ^ If we are loged in to the pad view
+    , ctxstaticresources     :: SR.ResourceSetsForImport
     }

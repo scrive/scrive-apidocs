@@ -2,7 +2,7 @@ module ELegitimation.BankIDRequests (
           ImplStatus(..)
         , generateChallenge
         , encodeTBS
-        , verifySignature 
+        , verifySignature
         ) where
 
 import Control.Monad.State
@@ -189,7 +189,7 @@ instance XmlContent (VerifySignatureResponse) where
 
 generateChallenge :: Kontrakcja m => SignatureProvider -> m (Either ImplStatus (String, String))
 generateChallenge provider = do
-    eresponse <- liftIO $ makeSoapCallCA endpoint certfile "GenerateChallenge" $ GenerateChallengeRequest provider serviceid
+    eresponse <- liftIO $ makeSoapCallWithCA endpoint certfile "GenerateChallenge" $ GenerateChallengeRequest provider serviceid
     case eresponse of
         Left msg -> do
             liftIO $ print msg
@@ -201,7 +201,7 @@ generateChallenge provider = do
 
 encodeTBS :: Kontrakcja m => SignatureProvider -> String -> String -> m (Either ImplStatus String)
 encodeTBS provider tbs transactionID = do
-    eresponse <- liftIO $ makeSoapCallCA endpoint certfile "EncodeTBS" $ EncodeTBSRequest provider serviceid tbs transactionID
+    eresponse <- liftIO $ makeSoapCallWithCA endpoint certfile "EncodeTBS" $ EncodeTBSRequest provider serviceid tbs transactionID
     case eresponse of
         Left msg -> do
             liftIO $ print msg
@@ -220,7 +220,7 @@ verifySignature :: Kontrakcja m
                 -> m (Either ImplStatus (String, [(String, String)]))
 verifySignature provider tbs signature mnonce transactionID = do
     eresponse <- liftIO $
-        makeSoapCallCA endpoint certfile
+        makeSoapCallWithCA endpoint certfile
             "VerifySignature" $
             VerifySignatureRequest provider
                 serviceid
