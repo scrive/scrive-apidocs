@@ -299,13 +299,14 @@ data CollectResponse = CROutstanding { cresTransactionID :: String }
                                   , cresSignature :: String
                                   , cresAttributes :: [(String, String)]
                                   }
+                     deriving (Show, Eq, Read, Ord)
 
 instance HTypeable (CollectResponse) where
     toHType _x = Defined "CollectResponse" [] []
 instance XmlContent (CollectResponse) where
     toContents _ = error "Do not serialize CollectResponse"
     parseContents =  do
-        { e <- elementNS "SignResponse"
+        { e <- elementNS "CollectResponse"
         ; interior e $ do
             { transactionid <- inElementNS "transactionId" text
             ; progressStatus <- inElementNS "progressStatus" text
