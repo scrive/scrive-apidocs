@@ -276,7 +276,6 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
         , ctxtemplates = localizedVersion userlocale templates2
         , ctxglobaltemplates = templates2
         , ctxlocale = userlocale
-        , ctxlocaleswitch = True
         , ctxmailsconfig = mailsConfig appConf
         , ctxtwconf = TW.TrustWeaverConf {
             TW.signConf = trustWeaverSign appConf
