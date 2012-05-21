@@ -114,7 +114,7 @@ import qualified ELegitimation.BankID as BankID
 import EvidenceLog.Model
 import PadQueue.Model
 import qualified Templates.Fields as F
-
+import qualified MemCache as MemCache
 {-
   Document state transitions are described in DocState.
 
@@ -828,8 +828,8 @@ preview did fid value
   | value > 10 = return Nothing
   | otherwise  =   do
         Context{ctxnormalizeddocuments} <- getContext
-        docmap <- liftIO $ readMVar ctxnormalizeddocuments
-        case Map.lookup fid docmap of
+        jpages <- MemCache.get fid ctxnormalizeddocuments
+        case jpages of
             Just (JpegPages pages) -> do
                 let (contents,_,_) =  pages !! 0
                 scaledContent <- liftIO $ scaleForPreview did contents
@@ -844,8 +844,8 @@ preview did fid value
 showPage' :: Kontrakcja m => FileID -> Int -> m Response
 showPage' fileid pageno = do
   Context{ctxnormalizeddocuments} <- getContext
-  docmap <- liftIO $ readMVar ctxnormalizeddocuments
-  case Map.lookup fileid docmap of
+  jpages <- MemCache.get fileid ctxnormalizeddocuments
+  case jpages of
     Just (JpegPages pages) -> do
       let (contents,_,_) =  pages !! (pageno - 1)
       let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
