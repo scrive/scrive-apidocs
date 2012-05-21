@@ -46,7 +46,8 @@ window.LoadingDialog = {
             }).load();
     },        
     close : function() {
-       LoadingDialog.dialog().overlay().close();
+       var dialog =  $('#loadingdialog');
+       if (dialog.size() > 0 ) dialog.overlay().close();
     }
 };
 });

@@ -127,8 +127,7 @@ testDocumentLocaleSwitchToSweden = do
 createTestElegDoc :: User -> MinutesTime -> TestEnv Document
 createTestElegDoc user ctxtime = do
   doc <- addRandomDocumentWithAuthorAndCondition user
-           (\d -> documentstatus d == Preparation
-                  && documentfunctionality d == AdvancedFunctionality)
+           (\d -> documentstatus d == Preparation)
   (Right elegdoc) <- dbUpdate $ SetDocumentIdentification (documentid doc) [ELegitimationIdentification] (systemActor ctxtime)
   return elegdoc
 

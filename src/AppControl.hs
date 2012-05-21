@@ -165,7 +165,10 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
         newelegtrans = ctxelegtransactions ctx'
         newmagichashes = ctxmagichashes ctx'
     F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
-    updateSessionWithContextData session newsessionuser newelegtrans newmagichashes newsessionpaduser
+    issecure <- isSecure
+    let usehttps = useHttps appConf
+    when (issecure || not usehttps) $
+      updateSessionWithContextData session newsessionuser newelegtrans newmagichashes newsessionpaduser
 
     rq <- askRq
     stats <- getNexusStats =<< getNexus
@@ -285,6 +288,7 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
           , TW.timeout = 60000
           }
         , ctxlivedocxconf = liveDocxConfig appConf
+        , ctxlogicaconf   = logicaConfig appConf
         , ctxelegtransactions = getELegTransactions session
         , ctxfilecache = filecache appGlobals
         , ctxxtoken = getSessionXToken session
@@ -296,4 +300,5 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
         , ctxmagichashes = getMagicHashes session
         , ctxmaybepaduser = mpaduser
         , ctxstaticresources = staticResources appGlobals
+        , ctxusehttps = useHttps appConf
         }

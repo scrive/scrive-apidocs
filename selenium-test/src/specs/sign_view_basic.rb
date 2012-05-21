@@ -20,11 +20,10 @@ describe "basic signing" do
     puts "Logged in"
     begin
       @h.dochelper.uploadContract
-      puts "Use basic mode"
-      @h.dochelper.useBasicMode
       puts "Fill in counterpart"
       @h.dochelper.enterCounterpart(@h.ctx.props.first_counterpart_fstname, @h.ctx.props.first_counterpart_sndname, @h.ctx.props.first_counterpart_email)
       puts "About to sign and send"
+      @h.dochelper.gotToStep3
       @h.dochelper.signAndSend
     ensure
       @h.loginhelper.logout

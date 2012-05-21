@@ -538,7 +538,7 @@
         }
     });
 
-    window.Loading = Backbone.Model.extend({
+    var Loading = Backbone.Model.extend({
         defaults: {
           loading: true,
           colcount: 0
@@ -560,7 +560,7 @@
         }
     });
 
-    window.LoadingView = Backbone.View.extend({
+    var LoadingView = Backbone.View.extend({
         model: Loading,
         initialize: function(args) {
             _.bindAll(this, 'render', 'makeLoader', 'removeLoader');
@@ -789,7 +789,7 @@
 
     window.KontraList = function() { return {
         init: function(args) {
-            _.bindAll(this, 'recall', 'beforeFetch', 'afterFetch');
+            _.bindAll(this, 'recall');
             this.schema = args.schema;
             this.loading = new Loading({
                 schema: this.schema
@@ -810,12 +810,6 @@
             this.schema.bind('change', this.recall);
             this.recall();
             return this;
-        },
-        beforeFetch: function() {
-            this.loading.start();
-        },
-        afterFetch: function() {
-            this.loading.stop();
         },
         recall: function() {
             var list = this;

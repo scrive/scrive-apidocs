@@ -4,7 +4,7 @@ module Doc.DocDraft (
     applyDraftDataToDocument
   ) where
 
-import Doc.SignatoryTMP 
+import Doc.SignatoryTMP
 import Doc.DocStateData
 import Misc
 import Control.Monad
@@ -22,7 +22,6 @@ import Text.JSON.FromJSValue
 
 data DraftData = DraftData {
       title :: String
-    , functionality :: DocumentFunctionality
     , invitationmessage :: Maybe String
     , daystosign :: Maybe Int
     , authorization :: IdentificationType
@@ -31,14 +30,8 @@ data DraftData = DraftData {
     , template :: Bool
     } deriving Show
 
-instance FromJSValue DocumentFunctionality where
-    fromJSValue j = case fromJSValue j of 
-             Just "basic" -> Just BasicFunctionality
-             Just "advanced" -> Just AdvancedFunctionality
-             _ -> Nothing
-
 instance FromJSValue IdentificationType where
-    fromJSValue j = case fromJSValue j of 
+    fromJSValue j = case fromJSValue j of
              Just "eleg" -> Just ELegitimationIdentification
              Just "pad" -> Just PadIdentification
              _ -> Just EmailIdentification
@@ -51,17 +44,15 @@ instance FromJSValue Region where
 instance FromJSValue DraftData where
    fromJSValue = do
         title' <- fromJSValueField "title"
-        functionality' <- fromJSValueField "functionality"
         invitationmessage <-  liftM join $ liftM (fmap nothingIfEmpty) $ fromJSValueField "invitationmessage"
         daystosign <- fromJSValueField "daystosign"
         authorization' <-  fromJSValueField "authorization"
         signatories' <-  fromJSValueField "signatories"
         region' <- fromJSValueField "region"
         template' <- fromJSValueField "template"
-        case (title',functionality', authorization', region') of
-            (Just t, Just f, Just a, Just r) -> return $ Just DraftData {
+        case (title', authorization', region') of
+            (Just t, Just a, Just r) -> return $ Just DraftData {
                                       title =  t
-                                    , functionality = f
                                     , invitationmessage = invitationmessage
                                     , daystosign = daystosign
                                     , authorization = a
@@ -75,7 +66,6 @@ applyDraftDataToDocument :: Kontrakcja m =>  Document -> DraftData -> Actor -> m
 applyDraftDataToDocument doc draft actor = do
     _ <- dbUpdate $ UpdateDraft (documentid doc) ( doc {
                                   documenttitle = title draft
-                                , documentfunctionality = functionality draft
                                 , documentinvitetext = fromMaybe "" $ invitationmessage draft
                                 , documentdaystosign = daystosign draft
                                 , documentallowedidtypes = [authorization draft]
@@ -88,11 +78,11 @@ applyDraftDataToDocument doc draft actor = do
          Just sigs -> dbUpdate $ ResetSignatoryDetails2 (documentid doc) sigs actor
 
 mergeSignatories :: SignatoryLink -> [SignatoryTMP] -> Maybe [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload)]
-mergeSignatories docAuthor tmps = 
+mergeSignatories docAuthor tmps =
         let (atmp, notatmps) = partition isAuthorTMP tmps
-            setAuthorConstandDetails =  setFstname (getFirstName docAuthor) . 
-                                        setSndname (getLastName docAuthor) . 
-                                        setEmail   (getEmail docAuthor) 
+            setAuthorConstandDetails =  setFstname (getFirstName docAuthor) .
+                                        setSndname (getLastName docAuthor) .
+                                        setEmail   (getEmail docAuthor)
         in case (atmp) of
                 ([authorTMP]) -> Just $ map toSignatoryDetails2 $ (setAuthorConstandDetails authorTMP) : notatmps
-                _ -> Nothing 
+                _ -> Nothing

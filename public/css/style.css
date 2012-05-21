@@ -1214,10 +1214,6 @@ input[type=submit].hidden
     background-image: url(/img/iconFloppy.png);
 }
 
-.switchIcon{
-   background-image: url(/img/iconSwitch.png);
-}
-
 .floppyIcon{
     background-image: url(/img/iconFloppy.png);
 }
@@ -2952,7 +2948,7 @@ width: 340px;
 }
 
 .addToPadIcon {
-    background: url(../img/pad.png) 0 0 no-repeat; 
+    background: url(../img/pad.png) 0 0 no-repeat;
     display: inline-block;
     height: 16px;
     width: 16px;
@@ -2966,7 +2962,7 @@ width: 340px;
 }
 
 .removeFromPadIcon {
-    background: url(../img/icon-delete.png) 0 0 no-repeat; 
+    background: url(../img/icon-delete.png) 0 0 no-repeat;
     display: inline-block;
     height: 16px;
     width: 16px;

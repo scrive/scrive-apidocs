@@ -514,6 +514,7 @@ window.DocumentStandardView = Backbone.View.extend({
       color: "red",
       size: "small",
       text: document.process().cancelbuttontext(),
+      cssClass: "s-withdraw-button",
       onClick: function() {
         Confirmation.popup({
           title: document.process().cancelmodaltitle(),
@@ -521,6 +522,7 @@ window.DocumentStandardView = Backbone.View.extend({
           acceptText: document.process().cancelbuttontext(),
           rejectText: localization.cancel,
           acceptColor: "red",
+          extraClass : "s-withdraw-confirmation",
           onAccept: function() {
               document.cancel().send();
               return true;

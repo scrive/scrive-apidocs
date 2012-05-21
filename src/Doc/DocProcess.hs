@@ -75,7 +75,6 @@ data DocProcessInfo =
   , processvalidationchoiceforbasic :: Bool
   , processexpiryforbasic :: Bool
   , processstep1text :: String
-  , processexpirywarntext :: String
   , processsendbuttontext :: String
   , processconfirmsendtitle :: String
   , processconfirmsendtext :: String
@@ -172,7 +171,6 @@ contractProcess =
   , processvalidationchoiceforbasic = True
   , processexpiryforbasic = True
   , processstep1text = "contractstep1text"
-  , processexpirywarntext = "contractexpirywarntext"
   , processsendbuttontext = "contractsendtext"
   , processconfirmsendtitle = "contractconfirmsendtitle"
   , processconfirmsendtext = "contractconfirmsendtext"
@@ -266,7 +264,6 @@ offerProcess =
   , processvalidationchoiceforbasic = False
   , processexpiryforbasic = True
   , processstep1text = "offerstep1text"
-  , processexpirywarntext = "offerexpirywarntext"
   , processsendbuttontext = "offersendtext"
   , processconfirmsendtitle = "offerconfirmsendtitle"
   , processconfirmsendtext = "offerconfirmsendtext"
@@ -362,7 +359,6 @@ orderProcess =
   , processvalidationchoiceforbasic = True
   , processexpiryforbasic = True
   , processstep1text = "orderstep1text"
-  , processexpirywarntext = "orderexpirywarntext"
   , processsendbuttontext = "ordersendtext"
   , processconfirmsendtitle = "orderconfirmsendtitle"
   , processconfirmsendtext = "orderconfirmsendtext"

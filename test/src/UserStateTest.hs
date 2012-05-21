@@ -7,6 +7,7 @@ import Test.Framework
 import Company.Model
 import DB
 import MinutesTime
+import Misc
 import User.Model
 import TestingUtil
 import TestKontra
@@ -44,11 +45,10 @@ userStateTests env = testGroup "UserState" [
   , testThat "SetUserCompany works" env test_setUserCompany
   , testThat "DeleteUser works" env test_deleteUser
   , testGroup "SetUserInfo" [
-      testThat "SetUserInfo works" env test_setUserInfo   
+      testThat "SetUserInfo works" env test_setUserInfo
     , testThat "SetUserInfo handles email correctly" env test_setUserInfoCapEmail
-    ]   
+    ]
   , testThat "SetUserSettings works" env test_setUserSettings
-  , testThat "SetPreferredDesignMode works" env test_setPreferredDesignMode
   , testThat "AcceptTermsOfService works" env test_acceptTermsOfService
   , testThat "SetSignupMethod works" env test_setSignupMethod
   ]
@@ -214,20 +214,11 @@ test_setUserInfoCapEmail = do
 test_setUserSettings :: TestEnv ()
 test_setUserSettings = do
   Just User{userid, usersettings} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  let us = usersettings { preferreddesignmode = Just AdvancedMode }
+  let us = usersettings { locale = mkLocaleFromRegion defaultValue }
   res <- dbUpdate $ SetUserSettings userid us
   assertBool "UserSettings updated correctly" res
   Just User{usersettings = us2} <- dbQuery $ GetUserByID userid
   assertBool "Updated UserSettings returned" $ us == us2
-
-test_setPreferredDesignMode :: TestEnv ()
-test_setPreferredDesignMode = do
-  Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  let mode = Just AdvancedMode
-  res <- dbUpdate $ SetPreferredDesignMode userid mode
-  assertBool "DesignMode updated correctly" res
-  Just User{usersettings = UserSettings{preferreddesignmode}} <- dbQuery $ GetUserByID userid
-  assertBool "Updated DesignMode returned" $ mode == preferreddesignmode
 
 test_acceptTermsOfService :: TestEnv ()
 test_acceptTermsOfService = do

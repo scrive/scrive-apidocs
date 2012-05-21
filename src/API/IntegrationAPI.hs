@@ -170,7 +170,7 @@ createDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 createDocument = do
    sid <- serviceid <$> service <$> ask
    mcomp_id <- fmap ExternalCompanyID <$> fromJSValueField "company_id"
-   when (isNothing mcomp_id) $ 
+   when (isNothing mcomp_id) $
     throwApiError API_ERROR_MISSING_VALUE "No company id provided"
    comp <- dbUpdate $ GetOrCreateCompanyWithExternalID  (Just sid) (fromJust mcomp_id)
    mtitle <- fromJSValueField "title"
@@ -185,7 +185,7 @@ createDocument = do
    Log.integration $ "got this template from json " ++ show mtemplateids
    involved  <- fmap (fromMaybe []) $ fromJSValueFieldCustom "involved" $ fromJSValueCustomList $
         (getSignatoryTMP [SignatoryAuthor, SignatoryPartner]) : (repeat $ getSignatoryTMP [SignatoryPartner])
-   
+
    mlocale <- fromJSValueField "locale"
    tags <- fmap (fromMaybe []) $ fromJSValueFieldCustom "tags" $ fromJSValueCustomMany $ do
      n <- fromJSValueField "name"
@@ -258,7 +258,7 @@ createDocFromFiles title doctype files user mcompany time = do
 
 updateDocumentWithDocumentUI :: Kontrakcja m => Document -> IntegrationAPIFunction m Document
 updateDocumentWithDocumentUI doc = do
-  ctx <- getContext    
+  ctx <- getContext
   sid <- serviceid <$> service <$> ask
   let actor = integrationAPIActor (ctxtime ctx) (ctxipnumber ctx) sid Nothing
   mailfooter <- fromJSValueField "mailfooter"
@@ -276,14 +276,14 @@ createAPIDocument _ [] _ _ _  =
     throwApiError API_ERROR_OTHER "One involved person must be provided"
 createAPIDocument comp' (authorTMP:signTMPS) tags mlocale createFun = do
     sid <- serviceid <$> service <$> ask
-    
+
     when (isNothing $ companyexternalid comp') $
       throwApiError API_ERROR_ILLEGAL_VALUE "The companyid must exist."
     let Just (ExternalCompanyID cid) = companyexternalid comp'
-        
+
     when (not $ isAuthorTMP authorTMP) $
       throwApiError API_ERROR_ILLEGAL_VALUE "The first involved must be an author role."
-  
+
     when (any isAuthorTMP signTMPS) $
       throwApiError API_ERROR_ILLEGAL_VALUE "Only one author is allowed."
 
@@ -295,7 +295,6 @@ createAPIDocument comp' (authorTMP:signTMPS) tags mlocale createFun = do
     when (isNothing mdoc) $ throwApiError API_ERROR_OTHER "Problem creating a document | This may be because the company and author don't match"
     let doc = fromJust mdoc
         actor = integrationAPIActor (ctxtime ctx) (ctxipnumber ctx) sid (Just cid)
-    _ <- dbUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor
     _ <- dbUpdate $ SetDocumentTags (documentid doc) tags actor
     when (isJust mlocale) $
       ignore $ dbUpdate $ SetDocumentLocale (documentid doc) (fromJust mlocale) actor
@@ -343,7 +342,7 @@ userFromTMP uTMP comp = do
                                                  ((userinfo user) { userfstname = fromMaybe (getFirstName user) $ fstname uTMP
                                                                   , usersndname = fromMaybe (getFirstName user) $ sndname uTMP
                                                                   , userpersonalnumber = fromMaybe (getPersonalNumber user) $ personalnumber uTMP
-                                                                  }) 
+                                                                  })
                                                   Nothing
     company_set <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid comp)
     when (not company_set) $ throwApiError API_ERROR_OTHER "Problem creating a user (COMPANY) | This should never happend"
@@ -360,7 +359,7 @@ setCompanyInfoFromTMP uTMP cmp = do
     when (not info_set) $ throwApiError API_ERROR_OTHER "Problem create a user (COMPANY INFO) | This should never happen"
     Just cmp' <- dbQuery $ GetCompany $ companyid cmp
     return cmp'
-    
+
 
 getDocuments :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocuments = do
@@ -405,7 +404,7 @@ getDocuments = do
                         , DocumentFilterMaxChangeTime <$> mToDate
                         , DocumentFilterStatuses<$> mstatuses
                         ])
-    api_docs <- sequence [api_document_read False d  
+    api_docs <- sequence [api_document_read False d
                          | d <- linkeddocuments
                          , not $ isAttachment d
                          ]
@@ -458,7 +457,11 @@ connectUserToSessionPost :: Kontrakcja m => ServiceID -> UserID -> SessionId -> 
 connectUserToSessionPost sid uid ssid = do
     matchingService <-sameService sid <$> (dbQuery $ GetUserByID uid)
     when (not matchingService) internalError
-    loaded <- loadServiceSession (Right uid) ssid
+    issecure <- isSecure
+    usehttps <- ctxusehttps <$> getContext
+    loaded <- if issecure || not usehttps
+              then loadServiceSession (Right uid) ssid
+              else return False
     -- just send back empty string
     if loaded
        then return $ toResponseBS (BS.fromString "text/html;charset=utf-8") (BSL.fromString "")
@@ -480,7 +483,11 @@ connectCompanyToSession :: Kontrakcja m => ServiceID -> CompanyID -> SessionId -
 connectCompanyToSession sid cid ssid = do
     matchingService <- sameService sid <$> (dbQuery $ GetCompany cid)
     when (not matchingService) internalError
-    loaded <- loadServiceSession (Left cid) ssid
+    issecure <- isSecure
+    usehttps <- ctxusehttps <$> getContext
+    loaded <- if issecure || not usehttps
+              then loadServiceSession (Left cid) ssid
+              else return False
     if (loaded)
      then return $ BackToReferer
      else internalError

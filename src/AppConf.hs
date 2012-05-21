@@ -10,6 +10,7 @@ import Data.Word
 import System.Console.GetOpt
 import qualified Data.ByteString.Char8 as BS
 import LiveDocx (LiveDocxConf(..))
+import ELegitimation.BankIDRequests (LogicaConfig(..))
 
 -- | Defines the application's configuration.  This includes amongst
 -- other things the http port number, amazon, trust weaver and email
@@ -20,6 +21,7 @@ data AppConf = AppConf {
                                                        -- (0x7f000001, 8000) localhost:8000 (default)
                                                        -- (0, 80)   all interfaces port 80
   , hostpart           :: String                       -- ^ hostname as it should looklike in emails for example
+  , useHttps           :: Bool                         -- ^ should we redirect to https?
   , store              :: FilePath                     -- ^ where to put database files
   , docstore           :: FilePath                     -- ^ where to put files (active if amazonConfig is Nothing)
   , static             :: FilePath                     -- ^ static files directory
@@ -33,6 +35,7 @@ data AppConf = AppConf {
   , trustWeaverStorage :: Maybe (String,String,String) -- ^ TrustWeaver storage service (URL,pem file path,pem private key password)
   , mailsConfig        :: MailsConfig                  -- ^ mail sendout configuration
   , liveDocxConfig     :: LiveDocxConf                 -- ^ LiveDocx doc conversion configuration
+  , logicaConfig       :: LogicaConfig                 -- ^ Logica (Elegitimation) configuration
   , aesConfig          :: AESConf                      -- ^ aes key/iv for encryption
   , admins             :: [Email]                      -- ^ email addresses of people regarded as admins
   , sales              :: [Email]                      -- ^ email addresses of people regarded as sales admins
@@ -48,6 +51,7 @@ instance Configuration AppConf where
   confDefault = AppConf {
       httpBindAddress    = (0x7f000001, 8000)
     , hostpart           = "http://localhost:8000"
+    , useHttps           = True
     , store              = "_local/kontrakcja/_state"
     , docstore           = "_local/documents"
     , static             = "public"
@@ -61,6 +65,12 @@ instance Configuration AppConf where
     , trustWeaverStorage = Nothing
     , mailsConfig        = defaultMailsConfig
     , liveDocxConfig     = confDefault
+    , logicaConfig       = LogicaConfig { logicaEndpoint = "https://eidt.funktionstjanster.se:18898/osif"
+                                        , logicaServiceID = "logtest004"
+                                        , logicaCertFile = "certs/steria3.pem"
+                                        , logicaMBIEndpoint = "http://eidt.funktionstjanster.se:18899/mbi/service"
+                                        , logicaMBIDisplayName = "Test av Mobilt BankID"
+                                        }
     , aesConfig          = AESConf {
         aesKey = BS.pack "}>\230\206>_\222\STX\218\SI\159i\DC1H\DC3Q\ENQK\r\169\183\133bu\211\NUL\251s|\207\245J"
       , aesIV = BS.pack "\205\168\250\172\CAN\177\213\EOT\254\190\157SY3i\160"

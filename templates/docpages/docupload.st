@@ -29,7 +29,10 @@ $loadingdialog()$
             <span class="numbericon1"></span><a href="#">$_step1select()$</a>
       </li>
       <li>
-            <span class="numbericon2"></span><a href="#">$_step2selectIfisbasic()$</a>
+            <span class="numbericon2"></span><a href="#">$_step2selectIfElse()$</a>
+      </li>
+      <li>
+            <span class="numbericon2"></span><a href="#">$_step3selectIfNotTemplate()$</a>
       </li>
   </ul>
   <div class="signStepsBody">

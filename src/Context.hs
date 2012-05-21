@@ -22,6 +22,7 @@ import Company.Model
 import MagicHash (MagicHash)
 import IPAddress
 import qualified Static.Resources as SR
+import ELegitimation.BankIDRequests (LogicaConfig(..))
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
@@ -41,6 +42,7 @@ data Context = Context
     , ctxmailsconfig         :: MailsConfig
     , ctxtwconf              :: TW.TrustWeaverConf -- ^ TrustWeaver configuration
     , ctxlivedocxconf        :: LiveDocxConf -- ^ LiveDocx configuration (does doc conversion)
+    , ctxlogicaconf          :: LogicaConfig -- ^ Logica configuration (eleg)
     , ctxelegtransactions    :: [ELegTransaction] -- ^ Transactions for connections to the Logica server
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString -- ^
     , ctxxtoken              :: MagicHash -- ^ The XToken for combatting CSRF
@@ -52,4 +54,5 @@ data Context = Context
     , ctxmagichashes         :: Map.Map SignatoryLinkID MagicHash
     , ctxmaybepaduser        :: Maybe User -- ^ If we are loged in to the pad view
     , ctxstaticresources     :: SR.ResourceSetsForImport
+    , ctxusehttps            :: Bool
     }

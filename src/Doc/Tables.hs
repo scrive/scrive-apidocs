@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = Table {
     tblName = "documents"
-  , tblVersion = 5
+  , tblVersion = 6
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -16,7 +16,6 @@ tableDocuments = Table {
        , ("error_text", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("type", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("process", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True})
-       , ("functionality", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("ctime", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just False})
        , ("mtime", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just False})
        , ("days_to_sign", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
@@ -50,7 +49,6 @@ tableDocuments = Table {
           ++ ", error_text TEXT NULL DEFAULT NULL"
           ++ ", type SMALLINT NOT NULL"
           ++ ", process SMALLINT NULL"
-          ++ ", functionality SMALLINT NOT NULL"
           ++ ", ctime TIMESTAMPTZ NOT NULL"
           ++ ", mtime TIMESTAMPTZ NOT NULL"
           ++ ", days_to_sign INTEGER NULL"

@@ -36,12 +36,6 @@ offerstep1text=$_offerstep1text()$
 ###
 orderstep1text=$_orderstep1text()$
 ###
-contractexpirywarntext=$_contractexpirywarntext()$
-####
-offerexpirywarntext=$_offerexpirywarntext()$
-####
-orderexpirywarntext=$_orderexpirywarntext()$
-####
 contractsendtext=$_contractsendtext()$
 ####
 offersendtext=$_offersendtext()$

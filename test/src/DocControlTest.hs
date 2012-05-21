@@ -90,7 +90,6 @@ testSendingDocumentSendsInvites = do
                         -- is being deleted.
                         , ("docname", inText "Test Doc")
                         , ("allowedsignaturetypes", inText "Email")
-                        , ("docfunctionality", inText "BasicFunctionality")
                         , ("authorrole", inText "secretary")
                         , ("signatoryrole", inText "signatory")
                         , ("sigid", inText "EDF92AA6-3595-451D-B5D1-04C823A616FF")
@@ -145,8 +144,7 @@ testNonLastPersonSigningADocumentRemainsPending = do
                      && case documenttype d of
                          Signable _ -> True
                          _ -> False
-                     && d `allowsIdentification` EmailIdentification
-                     && documentfunctionality d == AdvancedFunctionality)
+                     && d `allowsIdentification` EmailIdentification)
 
   Right _ <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
                    (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])
@@ -159,7 +157,7 @@ testNonLastPersonSigningADocumentRemainsPending = do
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
       siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
 
-  Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink) 
+  Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink)
                (signatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (getEmail $ siglink) (signatorylinkid siglink))
 
   assertEqual "Two left to sign" 2 (length $ filter isUnsigned (documentsignatorylinks doc))
@@ -186,8 +184,7 @@ testLastPersonSigningADocumentClosesIt = do
                      && case documenttype d of
                          Signable _ -> True
                          _ -> False
-                     && d `allowsIdentification` EmailIdentification
-                     && documentfunctionality d == AdvancedFunctionality)
+                     && d `allowsIdentification` EmailIdentification)
 
   Right _ <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
                    (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])
@@ -200,7 +197,7 @@ testLastPersonSigningADocumentClosesIt = do
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
       siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
 
-  Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink) 
+  Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink)
                (signatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (getEmail siglink) (signatorylinkid siglink))
 
   assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks doc))

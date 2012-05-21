@@ -42,7 +42,7 @@ import System.Random (StdGen, randomR)
 import System.Random.CryptoRNG ()
 import Crypto.RNG (CryptoRNG, random)
 import Happstack.Util.Common ( readM)
-import Misc (mkTypeOf, isSecure, isHTTPS)
+import Misc (mkTypeOf, isHTTPS, optional)
 import ELegitimation.ELegTransaction
 import Data.Typeable
 import Cookies
@@ -52,7 +52,6 @@ import MagicHash (MagicHash)
 import Util.MonadUtils
 import Doc.SignatoryLinkID
 import qualified Data.Map as Map
-import Misc (optional)
 import Data.List (find, sortBy)
 import Data.Ord
 
@@ -286,11 +285,9 @@ sessionAndCookieHashMatch session sci = (cookieSessionHash sci) == (hash $ sessi
 -- | Add a session cookie to browser.
 startSessionCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m) => Session -> m ()
 startSessionCookie session = do
-    issecure <- isSecure
     ishttps  <- isHTTPS
-    when issecure $ do
-        addHttpOnlyCookie ishttps (MaxAge (60*60*24)) $ mkCookie "sessionId" $ show $ cookieInfoFromSession session
-        addCookie ishttps (MaxAge (60*60*24)) $ mkCookie "xtoken" $ show $ xtoken $ sessionData session
+    addHttpOnlyCookie ishttps (MaxAge (60*60*24)) $ mkCookie "sessionId" $ show $ cookieInfoFromSession session
+    addCookie ishttps (MaxAge (60*60*24)) $ mkCookie "xtoken" $ show $ xtoken $ sessionData session
 
 -- | Read current session cookie from request.
 currentSessionInfoCookie:: RqData (Maybe SessionCookieInfo)
@@ -485,4 +482,5 @@ loadServiceSession userorcompany ssid  = do
               (Right uid) -> if (userID sessionData == Just uid)
                                      then startSessionCookie session >> return True
                                      else return False
+
 

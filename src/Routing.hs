@@ -125,16 +125,18 @@ hPostNoXToken = hPostWrap https
 https:: Kontra Response -> Kontra Response
 https action = do
     secure <- isSecure
-    if secure
+    useHttps <- ctxusehttps <$> getContext
+    if secure || not useHttps
        then action
        else sendSecureLoopBack
 
 allowHttp:: Kontrakcja m => m Response -> m Response
 allowHttp action = do
     secure <- isSecure
+    useHttps <- ctxusehttps <$> getContext
     loging <- isFieldSet "logging"
     logged <- isJust <$> ctxmaybeuser <$> getContext
-    if (secure || (not $ loging || logged))
+    if (secure || (not $ loging || logged) || not useHttps)
        then action
        else sendSecureLoopBack
 

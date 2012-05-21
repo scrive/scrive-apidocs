@@ -119,7 +119,7 @@ Flag test-userhistory
 Flag test-livedocx
   Description: Build livedocx testsuite
   Manual: True
-  Default: True
+  Default: False
 
 Flag test-csvutil
   Description: Build csvutil testsuite
