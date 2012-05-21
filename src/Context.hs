@@ -55,4 +55,5 @@ data Context = Context
     , ctxmagichashes         :: Map.Map SignatoryLinkID MagicHash
     , ctxmaybepaduser        :: Maybe User -- ^ If we are loged in to the pad view
     , ctxstaticresources     :: SR.ResourceSetsForImport
+    , ctxusehttps            :: Bool
     }

@@ -21,6 +21,7 @@ data AppConf = AppConf {
                                                        -- (0x7f000001, 8000) localhost:8000 (default)
                                                        -- (0, 80)   all interfaces port 80
   , hostpart           :: String                       -- ^ hostname as it should looklike in emails for example
+  , useHttps           :: Bool                         -- ^ should we redirect to https?
   , store              :: FilePath                     -- ^ where to put database files
   , docstore           :: FilePath                     -- ^ where to put files (active if amazonConfig is Nothing)
   , static             :: FilePath                     -- ^ static files directory
@@ -50,6 +51,7 @@ instance Configuration AppConf where
   confDefault = AppConf {
       httpBindAddress    = (0x7f000001, 8000)
     , hostpart           = "http://localhost:8000"
+    , useHttps           = True
     , store              = "_local/kontrakcja/_state"
     , docstore           = "_local/documents"
     , static             = "public"

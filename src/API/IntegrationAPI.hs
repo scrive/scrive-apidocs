@@ -457,7 +457,11 @@ connectUserToSessionPost :: Kontrakcja m => ServiceID -> UserID -> SessionId -> 
 connectUserToSessionPost sid uid ssid = do
     matchingService <-sameService sid <$> (dbQuery $ GetUserByID uid)
     when (not matchingService) internalError
-    loaded <- loadServiceSession (Right uid) ssid
+    issecure <- isSecure
+    usehttps <- ctxusehttps <$> getContext
+    loaded <- if issecure || not usehttps
+              then loadServiceSession (Right uid) ssid
+              else return False
     -- just send back empty string
     if loaded
        then return $ toResponseBS (BS.fromString "text/html;charset=utf-8") (BSL.fromString "")
@@ -479,7 +483,11 @@ connectCompanyToSession :: Kontrakcja m => ServiceID -> CompanyID -> SessionId -
 connectCompanyToSession sid cid ssid = do
     matchingService <- sameService sid <$> (dbQuery $ GetCompany cid)
     when (not matchingService) internalError
-    loaded <- loadServiceSession (Left cid) ssid
+    issecure <- isSecure
+    usehttps <- ctxusehttps <$> getContext
+    loaded <- if issecure || not usehttps
+              then loadServiceSession (Left cid) ssid
+              else return False
     if (loaded)
      then return $ BackToReferer
      else internalError
