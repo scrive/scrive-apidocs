@@ -29,11 +29,10 @@ dispatcher rng master msender dbconf = do
          when (not success) $
            Log.mailingServer $ "CRITICAL: couldn't remove unsendable email #" ++ show mailID ++ " from database."
        else do
-         Log.mailingServer $ "Sending email #" ++ show mailID ++ "..."
          -- we want to send service testing emails always with master service
-         success <- if mailServiceTest
-           then sendMail master mail
-           else sendMail sender mail
+         let mailer = if mailServiceTest then master else sender
+         Log.mailingServer $ "Sending email #" ++ show mailID ++ " using " ++ show mailer ++ "..."
+         success <- sendMail mailer mail
          now <- getMinutesTime
          if success
            then do
