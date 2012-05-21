@@ -30,9 +30,7 @@ module ListUtil(
             , ListParams
             , emptyListParams
             , getListParamsNew
-            , getListParams
             , getListParamsForSearch
-            , pagedListFields
             , listSortSearchPage
             , SortingFunction
             , SearchingFunction
@@ -47,14 +45,11 @@ module ListUtil(
           ) where
 import Control.Applicative ((<$>))
 import Control.Monad.Trans
-import Control.Monad
 import Data.List
 import Data.Maybe
 import Data.Foldable (foldMap)
 import Data.Ord
 import Misc
-import Templates.Templates
-import qualified Templates.Fields as F
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Char8 as BS8
 import Data.Char (toUpper)
@@ -121,46 +116,11 @@ pagingParamsJSON (PagedList{list,pageSize,params}) = JSObject $ toJSObject [
     minElementIndex = pageSize * (page params - 1) 
 
 
-{- | Getting sorting , paging and filtering params-}
-getListParams :: (ServerMonad m,Functor m,HasRqData m,MonadIO m) => m ListParams
-getListParams = do
-    page <- readField "page"
-    search <- getField "search"
-    sorting <- getFields "sorting"
-    return ListParams {
-        page     = fromMaybe 1 page
-        , search  = search
-        -- This take 1 is disabling sort by many columns functionality. There is no good spec for it now
-        , sorting  = take 1 $ reverse $ nub $ clearSortList sorting }
-    where
-    clearSortList (s:ss) =
-        if (any (\s' -> isPrefixOf s s' || isPrefixOf s' s) ss)
-         then  clearSortList ss
-         else s:(clearSortList ss)
-    clearSortList [] = []
-
 getListParamsForSearch :: (ServerMonad m,Functor m,HasRqData m,MonadIO m)  => m ListParams
 getListParamsForSearch = do
     search <- getField "search"
     return $ emptyListParams { search  = search}
 
-
-{- Standard fields-}
-pagedListFields :: Monad m => PagedList a -> Fields m ()
-pagedListFields (PagedList{list,pageSize,params}) = do
-    F.object "params" $ do
-        F.object "sorting" $ mapM_ (\sp -> F.value sp sp) $ sorting params
-        F.value "search" $ join $ nothingIfEmpty <$> search params
-    F.object "elements" $ do
-        F.value "min" $ show $ minElementIndex
-        F.value "max" $ show $ minElementIndex + length list - 1
-        F.value "none" $ null list
-        F.value "single" $ length list == 1
-        F.value "nextPage" $ show $ page params + 1
-        F.value "lastPage" $ show $ page params - 1
-        F.value "pageSize" $ show pageSize
-    where
-    minElementIndex = pageSize * (page params - 1) +1
 
 {- | Applying  params to the list -}
 type SortingFunction a = (String -> a -> a -> Ordering)
