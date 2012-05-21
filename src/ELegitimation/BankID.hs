@@ -191,7 +191,7 @@ verifySignatureAndGetSignInfo docid signid magic provider signature transactioni
                                                      , signaturefstnameverified  = bfn
                                                      , signaturelstnameverified  = bln
                                                      , signaturepersnumverified  = bpn
-                                                     , signatureinfoocspresponse = lookup "validation.ocsp.response" attrs                                                                                 
+                                                     , signatureinfoocspresponse = lookup "Validation.ocsp.response" attrs                                                                                 
                                                     }
 
 {- |
@@ -271,7 +271,7 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
                                                             , signaturefstnameverified  = bfn
                                                             , signaturelstnameverified  = bln
                                                             , signaturepersnumverified  = bpn
-                                                            , signatureinfoocspresponse = lookup "validation.ocsp.response" attrs
+                                                            , signatureinfoocspresponse = lookup "Validation.ocsp.response" attrs
                                                             }
 
 
