@@ -70,6 +70,7 @@ kontraMigrations = [
   , migrateTempCredentialRemoveEmail -- for oauth
   , deprecateDocFunctionalityCol
   , removePreferedDesignMode
+  , addOCSPResponse
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

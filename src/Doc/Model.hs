@@ -585,6 +585,7 @@ signatoryLinksSelectors = intercalate ", "
   , "signatory_links.signinfo_first_name_verified"
   , "signatory_links.signinfo_last_name_verified"
   , "signatory_links.signinfo_personal_number_verified"
+  , "signatory_links.signinfo_ocsp_response"
   , "signatory_links.roles"
   , "signatory_links.csv_title"
   , "signatory_links.csv_contents"
@@ -621,7 +622,8 @@ fetchSignatoryLinks = do
      sign_order token sign_time sign_ip seen_time seen_ip read_invitation
      invitation_delivery_status signinfo_text signinfo_signature signinfo_certificate
      signinfo_provider signinfo_first_name_verified signinfo_last_name_verified
-     signinfo_personal_number_verified roles csv_title csv_contents csv_signatory_index
+     signinfo_personal_number_verified signinfo_ocsp_response 
+     roles csv_title csv_contents csv_signatory_index
      deleted really_deleted status_class
      safileid saname sadesc
       | docid == nulldocid                      = (document_id, [link], linksmap)
@@ -664,6 +666,7 @@ fetchSignatoryLinks = do
                 , signaturefstnameverified = signinfo_first_name_verified'
                 , signaturelstnameverified = signinfo_last_name_verified'
                 , signaturepersnumverified = signinfo_personal_number_verified'
+                , signatureinfoocspresponse = signinfo_ocsp_response
                 }
           , signatoryroles = roles
           , signatorylinkdeleted = deleted
@@ -701,6 +704,7 @@ insertSignatoryLinkAsIs documentid link = do
            , sql "csv_signatory_index" $ csvsignatoryindex `fmap` signatorylinkcsvupload link
            , sql "deleted" $ signatorylinkdeleted link
            , sql "really_deleted" $ signatorylinkreallydeleted link
+           , sql "signinfo_ocsp_response" $ signatureinfoocspresponse `fmap` signatorysignatureinfo link
            ] <++> SQL " RETURNING id" []
 
   slids <- foldDB (\acc slid -> slid : acc) []
@@ -2038,6 +2042,7 @@ instance MonadDB m => DBUpdate m SignDocument (Either String Document) where
               , sql "signinfo_first_name_verified" $ signaturefstnameverified `fmap` msiginfo
               , sql "signinfo_last_name_verified" $ signaturelstnameverified `fmap` msiginfo
               , sql "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` msiginfo
+              , sql "signinfo_ocsp_response" $ signatureinfoocspresponse `fmap` msiginfo
               ] <++> SQL "WHERE id = ? AND document_id = ?" [
                 toSql slid
               , toSql docid
@@ -2049,6 +2054,9 @@ instance MonadDB m => DBUpdate m SignDocument (Either String Document) where
                                       , signaturefstnameverified
                                       , signaturelstnameverified
                                       , signaturepersnumverified
+                                      , signatureinfoocspresponse
+                                      , signatureinfosignature
+                                      , signatureinfocertificate
                                       }) -> let ps = case signatureinfoprovider of
                                                   BankIDProvider -> "BankID"
                                                   TeliaProvider  -> "Telia"
@@ -2061,10 +2069,16 @@ instance MonadDB m => DBUpdate m SignDocument (Either String Document) where
                                                 vstring = case pairstrue of
                                                   [] -> "No fields were verified."
                                                   _ -> "The following fields were verified: " ++ vs
+                                                sigstring = "Signature: " ++ signatureinfosignature ++ ". "
+                                                certstring = "Certificate: " ++ signatureinfocertificate ++ ". "
+                                                sigocsp = maybe "" (\ocsp->"OCSP Response: " ++ ocsp ++ ".") signatureinfoocspresponse
                                             in " using e-legitimation. The signed text was \""
                                                ++ signatureinfotext
                                                ++ "\". The provider was " ++ ps ++ ". "
                                                ++ vstring
+                                               ++ sigstring
+                                               ++ certstring
+                                               ++ sigocsp
             when_ (r == 1) $
               update $ InsertEvidenceEvent
               SignDocumentEvidence

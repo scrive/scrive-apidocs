@@ -221,6 +221,7 @@ instance Arbitrary SignatureInfo where
     e <- arbitrary
     f <- arbitrary
     g <- arbitrary
+    h <- arbitrary
     return $ SignatureInfo { signatureinfotext        = a
                            , signatureinfosignature   = b
                            , signatureinfocertificate = c
@@ -228,6 +229,7 @@ instance Arbitrary SignatureInfo where
                            , signaturefstnameverified = e
                            , signaturelstnameverified = f
                            , signaturepersnumverified = g
+                           , signatureinfoocspresponse = h
                            }
 
 instance Arbitrary CSVUpload where

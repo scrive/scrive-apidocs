@@ -113,6 +113,7 @@ data SignatureInfo = SignatureInfo {
   , signaturefstnameverified :: Bool
   , signaturelstnameverified :: Bool
   , signaturepersnumverified :: Bool
+  , signatureinfoocspresponse :: Maybe String -- verified legal evidence issued by BankID
   } deriving (Eq, Ord, Show)
 
 data FieldType = FirstNameFT
