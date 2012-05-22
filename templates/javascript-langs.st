@@ -39,6 +39,7 @@ javascriptLocalisation =
              , tbsGenerationMessage : function(doctitle, docid){
                     return  '$_tbsGenerationMessage1()$"' + doctitle + '"$_tbsGenerationMessage2()$"' + docid + '"$_tbsGenerationMessage3()$'
                      }
+             , startingMobileBankID : "Starta din BankID säkerhetsapp."
              , differentSignatories :  "$_differentSignatories()$"
              , ie6NotSupported : "$_ie6NotSupported()$"
              , youCanNotInviteSameEmail : "$_youCanNotInviteSameEmail()$"

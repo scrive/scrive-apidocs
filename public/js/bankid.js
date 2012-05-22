@@ -360,10 +360,14 @@ function postBack(sig, provider, formselector, transactionid, posturl) {
         defaults: {
             status: "outstanding",
             message: localization.startingSaveSigning,
+            magichash: "",
             callback: function() {},
             remaining: [10, // wait 10s before first poll
                         3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3, // then we can poll 20 times with 3s intervals
                         10,10,10,10,10,10,10,10,10] // then we finish with 10s intervals; docs say we get Fault before the end
+        },
+        magichash: function() {
+            return this.get("magichash");
         },
         status: function(s) {
             if(s) {
@@ -413,7 +417,8 @@ function postBack(sig, provider, formselector, transactionid, posturl) {
                             $.ajax(polling.url(),
                                    {
                                        "data" : {
-                                           "transactionid" : polling.trid()
+                                           "transactionid" : polling.trid(),
+                                           "magichash" : polling.magichash()
                                        },
                                        "dataType": "json",
                                        "success": function(d) {
@@ -423,7 +428,6 @@ function postBack(sig, provider, formselector, transactionid, posturl) {
                                                polling.status(d.status);
                                                polling.message(d.message);
                                                if(polling.status() === "complete") {
-                                                   console.log("done!");
                                                    polling.callback();
                                                }
                                            }
@@ -675,7 +679,7 @@ window.Eleg = {
         else 
             url = "/s/eleg/mbi/" + document.documentid() +  "/" + document.viewer().signatoryid();
         console.log(url);
-        LoadingDialog.open(localization.startingSaveSigning);
+        LoadingDialog.open(localization.startingMobileBankID);
         $.ajax({
             'url': url,
             'dataType': 'json',
@@ -694,6 +698,7 @@ window.Eleg = {
                 }
                 var m = new MobileBankIDPolling({docid: document.documentid()
                                                  , url:url
+                                                 ,magichash: document.viewer().magichash()
                                                  ,trid: data.transactionid
                                                  ,slid: document.viewer().signatoryid()
                                                  ,callback: function() {

@@ -349,7 +349,7 @@ initiateMobileBankIDForAuthor docid = do
 collectMobileBankID :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 collectMobileBankID docid slid = do
   magic <- guardJustM $ readField "magichash"
-  tid <- guardJustM $ readField "transactionid"
+  tid <- guardJustM $ getField "transactionid"
   logicaconf <- ctxlogicaconf <$> getContext
   elegtransactions  <- ctxelegtransactions <$> getContext
   -- sanity check
@@ -437,7 +437,7 @@ verifySignatureAndGetSignInfoMobile docid signid magic transactionid = do
                     , transactionstatus          = status
                     , transactiontbs
                     } <- findTransactionByIDOrFail elegtransactions transactionid
-    unless (tdocid   == docid && mtsignid == Just signid && mtmagic  == Just magic )
+    unless (tdocid == docid && mtsignid == Just signid && mtmagic == Just magic )
            internalError
     case status of
       Right (CRComplete _ signature attrs) -> do
