@@ -138,7 +138,7 @@ window.SignatoryDesignView = Backbone.View.extend({
    placeSignatureIcon : function() {
        var view = this;
        var signatory = this.model;
-       var field = signatory.field("signature");
+       var field = signatory.signature();
        var placeSignatureIcon = $("<a class='placeSignatureIcon' href='#'/>");
        field.view = placeSignatureIcon;
        field.view.redborder = function() {placeSignatureIcon.addClass('redborder')};
@@ -206,14 +206,14 @@ window.SignatoryDesignView = Backbone.View.extend({
                                           el : $("<div/>")
                                         }).el);
                             };
-        makeField(signatory.field("fstname"));
-        makeField(signatory.field("sndname"));
-        makeField(signatory.field("email"));
+        makeField(signatory.fstnameField());
+        makeField(signatory.sndnameField());
+        makeField(signatory.emailField());
         _.each(signatory.fields(),function(field){
-            if (field.name() != "fstname" &&
-                field.name() != "sndname" &&
-                field.name() != "email"   &&
-                !field.isSignature())
+            if (field != signatory.fstnameField() &&
+                field != signatory.sndnameField() &&
+                field != signatory.emailField()   &&
+                !field.isSignature() && !field.isCheckbox())
                 makeField(field);
         });
         this.container.append(fields);
