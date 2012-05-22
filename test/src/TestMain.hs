@@ -122,6 +122,11 @@ import EvidenceLogTest
 import PadTest
 #endif
 
+
+#ifndef NO_FLASHMSGS
+import FlashMessages
+#endif
+
 allTests :: [(String, [String] -> TestEnvSt -> Test)]
 allTests = tail tests
   where
@@ -217,6 +222,10 @@ allTests = tail tests
 #endif
 #ifndef NO_PAD
       , ("pad", const padTests)
+#endif
+
+#ifndef NO_FLASHMSGS
+      , ("flashmessages", const $ const flashMessagesTests)
 #endif
       ]
 
