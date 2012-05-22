@@ -134,8 +134,9 @@ var CsvSignatoryDesignView = Backbone.View.extend({
                 _.difference(_.invoke(model.signatory().fields(),  'name'),
                              this.csvheaderorder));
       _.each(fieldnames, function(e) {
-          var field = model.signatory().field(e);
-          if(!field.isSignature())
+          var field = model.signatory().field(e,"standard");
+          if (field == undefined) field =  model.signatory().field(e,"custom");
+          if(!field.isSignature() && !field.isCheckbox())
               thead.append($("<th />").text(field.nicename()));
       });
 

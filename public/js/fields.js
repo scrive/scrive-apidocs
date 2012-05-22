@@ -139,15 +139,12 @@ window.Field = Backbone.Model.extend({
     canBeIgnored: function(){
         return this.value() == "" && this.placements().length == 0 && (this.isStandard() || this.isSignature());
     },
-    hasRestrictedName : function() {
-        return this.isStandard() || this.isSignature(); //this checks are name based
-    },
     readyForSign : function(){
         return (!this.isSignature() && ((this.value() != "") || (this.canBeIgnored()))) || (this.isSignature() && (this.signature().hasImage() || this.placements().length == 0));
     },
     nicename : function() {
+        var name = this.name();
         if (this.isStandard()) {
-            var name = this.name();
             if (name == "fstname")
                 return localization.fstname;
             if (name == "sndname" )
@@ -380,13 +377,8 @@ window.FieldDesignView = Backbone.View.extend({
         var input = this.input;
         var icon =  $("<a class='setNameIcon' href='#'/>");
         var fn = function(){
-          if (!field.hasRestrictedName())
             field.makeReady();
-          else  FlashMessages.add({
-            color : "red",
-            content: localization.designview.validation.restrictedName
-          });
-          return false;
+            return false;
         };
         icon.click(fn);
         input.keypress(function(event) {

@@ -340,10 +340,46 @@ window.Signatory = Backbone.Model.extend({
     fields: function() {
         return this.get("fields");
     },
-    field: function(name) {
+    emailField : function() {
+        return this.field("email", "standard");
+    },
+    fstnameField : function() {
+        return this.field("fstname", "standard");
+    },
+    sndnameField : function() {
+        return this.field("sndname", "standard");
+    },
+    companyField : function() {
+        return this.field("sigco", "standard");
+    },
+    companynumberField : function() {
+        return this.field("sigcompnr", "standard");
+    }, 
+    personalnumberField : function() {
+        return this.field("sigpersnr", "standard");
+    },
+    email: function() {
+        return this.emailField().value();
+    },
+    fstname: function() {
+        return this.fstnameField().value();
+    },
+    sndname: function() {
+        return this.sndnameField().value();
+    },
+    personalnumber : function() {
+        return this.personalnumberField() != undefined ? (personalnumberField().value() != undefined ? personalnumberField().value() : "") : "";
+    },
+    company: function() {
+        return this.companyField() != undefined ? (companyField().value() != undefined ? companyField().value() : "") : "";
+    },
+    companynumber: function() {
+        return this.companynumberField() != undefined ? (companynumberField().value() != undefined ? companynumberField().value() : "") : "";
+    },
+    field: function(name, type) {
         var fields = this.fields();
         for (var i = 0; i < fields.length; i++)
-            if (fields[i].name() == name)
+            if (fields[i].name() == name && fields[i].type() == type)
                 return fields[i];
     },
     readyFields: function() {
@@ -355,16 +391,7 @@ window.Signatory = Backbone.Model.extend({
         for (var i = 0; i < fields.length; i++)
             if (fields[i].isCustom()) cf.push(fields[i]);
         return cf;
-    },
-    email: function() {
-        return this.field("email").value();
-    },
-    fstname: function() {
-        return this.field("fstname").value();
-    },
-    sndname: function() {
-        return this.field("sndname").value();
-    },
+    },  
     name: function() {
         var name = this.fstname() + " " + this.sndname();
         if (name != undefined && name != " ")
@@ -383,27 +410,6 @@ window.Signatory = Backbone.Model.extend({
          return this.name();
         else
          return this.email();
-    },
-    personalnumber : function() {
-        var pn = this.field("sigpersnr") != undefined ? this.field("sigpersnr").value(): undefined;
-        if (pn != undefined)
-            return pn;
-        else
-            return "";
-    },
-    company: function() {
-        var pn = this.field("sigco") != undefined ? this.field("sigco").value(): undefined;
-        if (pn != undefined)
-            return pn;
-        else
-            return "";
-    },
-    companynumber: function() {
-        var pn = this.field("sigcompnr") != undefined ? this.field("sigcompnr").value(): undefined;
-        if (pn != undefined)
-            return pn;
-        else
-            return "";
     },
     saved: function() {
       return this.get("saved");
@@ -495,7 +501,7 @@ window.Signatory = Backbone.Model.extend({
         return this.signature() == undefined || this.signature().readyForSign();
     },
     signature: function() {
-        return this.field("signature");
+        return this.field("signature", "signature");
     },
     remind: function(customtext) {
         return new Submit({
@@ -792,7 +798,7 @@ window.SignatoryStandardView = Backbone.View.extend({
         });
         container.append(fieldsbox);
         var emailview = new FieldStandardView(
-            { model: signatory.field("email"),
+            { model: signatory.emailField(),
               el: $("<div/>")
             });
         container.append($(emailview.el));

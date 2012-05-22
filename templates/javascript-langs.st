@@ -254,7 +254,6 @@ javascriptLocalisation =
                     , atLeastOnePersonMustSigns : "$_atLeastOnePersonMustSigns()$"
                     , notReadyField : "$_setAllFields()$"
                     , notPlacedField : "$_placeAllFields()$"
-                    , restrictedName : "$_fieldnameRestricted()$"
                     , notPlacedSignature : "$_signatureMustBePlacedForPad()$"
                 }
              , messages : {
