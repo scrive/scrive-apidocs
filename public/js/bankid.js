@@ -359,6 +359,7 @@ function postBack(sig, provider, formselector, transactionid, posturl) {
     window.MobileBankIDPolling = Backbone.Model.extend({
         defaults: {
             status: "outstanding",
+            message: localization.startingSaveSigning,
             callback: function() {},
             remaining: [10, // wait 10s before first poll
                         3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3, // then we can poll 20 times with 3s intervals
@@ -371,6 +372,13 @@ function postBack(sig, provider, formselector, transactionid, posturl) {
                 return this;
             } else
                 return this.get("status");
+        },
+        message: function(msg) {
+            if(msg) {
+                this.set({message:msg});
+                return this;
+            } else
+                return this.get("message");
         },
         next: function() {
             return this.get("remaining").shift();
@@ -413,6 +421,7 @@ function postBack(sig, provider, formselector, transactionid, posturl) {
                                                polling.status("error");
                                            } else {
                                                polling.status(d.status);
+                                               polling.message(d.message);
                                                if(polling.status() === "complete") {
                                                    console.log("done!");
                                                    polling.callback();
@@ -424,6 +433,17 @@ function postBack(sig, provider, formselector, transactionid, posturl) {
             }
         }
     });
+
+window.MobileBankIDPollingView = Backbone.View.extend({
+    initialize: function (args) {
+        _.bindAll(this, 'render');
+        this.model.bind('change:message', this.render);
+    },
+    render: function() {
+        var polling = this.model;
+        LoadingDialog.open(polling.message());
+    }
+});
 
 window.Eleg = {
   // generate a TBS from the available data
@@ -685,6 +705,7 @@ window.Eleg = {
                                                          callback(submit);
                                                  }
                                                 });
+                var mv = new MobileBankIDPollingView({model:m});
                 m.poll();
 
             }, error: repeatForeverWithDelay(250)});
