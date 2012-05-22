@@ -263,8 +263,7 @@ mainLinksFields locale = do
   F.value "linksignup"           $ show LinkSignup
 
 localeSwitcherFields :: Monad m => Context -> Maybe (Locale -> KontraLink) -> Fields m ()
-localeSwitcherFields Context{ctxlocale, ctxlocaleswitch} mlink = do
-  F.value "islocaleswitch" $ ctxlocaleswitch
+localeSwitcherFields Context{ctxlocale} mlink = do
   F.value "localesweden" $ getLang ctxlocale == LANG_SE
   F.value "localebritain" $ getLang ctxlocale == LANG_EN
   F.value "langsv" $ getLang ctxlocale == LANG_SE

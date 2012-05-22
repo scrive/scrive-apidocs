@@ -280,9 +280,8 @@ handleSignShow2 documentid
                    internalError
 
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
-  disableLocalSwitch
-  switchLocale (getLocale document)
   invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
+  switchLocaleWhenNeeded  (Just invitedlink) document
   _ <- dbUpdate $ MarkDocumentSeen documentid signatorylinkid magichash
        (signatoryActor ctxtime ctxipnumber (maybesignatory invitedlink) (getEmail invitedlink) signatorylinkid)
   _ <- addSignStatLinkEvent document invitedlink
@@ -299,8 +298,6 @@ handleSignShow2 documentid
 handleIssueShowGet :: Kontrakcja m => DocumentID -> m (Either KontraLink (Either Response String))
 handleIssueShowGet docid = checkUserTOSGet $ do
   document <- guardRightM $ getDocByDocID docid
-  disableLocalSwitch -- Don't show locale flag on this page
-  switchLocale (getLocale document)
   muser <- ctxmaybeuser <$> getContext
   mcompany <- ctxcompany <$> getContext
 
@@ -538,7 +535,6 @@ handleFileGet fileid' _title = do
 handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
 handleAttachmentViewForViewer docid siglinkid mh = do
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
-  disableLocalSwitch
   let pending JpegPagesPending = True
       pending _                = False
       files                    = map authorattachmentfile (documentauthorattachments doc)
@@ -1043,7 +1039,7 @@ jsonDocument did = do
     case mdoc of
          Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "No document avaible")]
          Just doc -> do
-             switchLocale (getLocale doc)
+             switchLocaleWhenNeeded msiglink doc
              documentJSON pg msiglink cttime doc
 
 jsonDocumentGetterWithPermissionCheck ::   Kontrakcja m => DocumentID -> m (Maybe Document, Maybe SignatoryLink)
@@ -1203,3 +1199,10 @@ handleParseCSV = do
         J.object "problems" $ do
           J.valueM "description" desc
         J.value "rows" ([]::[String])
+
+-- | Switch to document language. Checks first if there is not logged in user. If so it will switch only if this is a different signatory.        
+switchLocaleWhenNeeded :: (Kontrakcja m) => Maybe SignatoryLink -> Document -> m ()
+switchLocaleWhenNeeded mslid doc = do
+  cu <- ctxmaybeuser <$> getContext
+  when (isNothing cu || ((isJust mslid) && not (isSigLinkFor cu mslid))) $ switchLocale (getLocale doc)
+

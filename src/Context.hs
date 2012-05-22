@@ -39,7 +39,6 @@ data Context = Context
     , ctxtemplates           :: KontrakcjaTemplates -- ^ The set of templates to render text for the ctxlocale
     , ctxglobaltemplates     :: KontrakcjaGlobalTemplates -- ^ All of the templates for all valid locales
     , ctxlocale              :: Locale -- ^ The current context locale
-    , ctxlocaleswitch        :: Bool -- ^ Whether locale switching is available on this page
     , ctxmailsconfig         :: MailsConfig
     , ctxtwconf              :: TW.TrustWeaverConf -- ^ TrustWeaver configuration
     , ctxlivedocxconf        :: LiveDocxConf -- ^ LiveDocx configuration (does doc conversion)

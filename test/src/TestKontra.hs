@@ -224,7 +224,6 @@ mkContext locale = do
         , ctxtemplates = localizedVersion locale globaltemplates
         , ctxglobaltemplates = globaltemplates
         , ctxlocale = locale
-        , ctxlocaleswitch = False
         , ctxmailsconfig = defaultMailsConfig
         , ctxtwconf = error "twconf is not defined"
         , ctxlivedocxconf = confDefault
