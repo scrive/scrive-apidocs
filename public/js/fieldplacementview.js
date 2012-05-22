@@ -8,7 +8,9 @@ window.FieldPlacementView = Backbone.View.extend({
     initialize: function (args) {
         if (args.model.isSignature())
             return new SignaturePlacementView(args);
-        else return new StandardPlacementView(args);
+        else if (args.model.isCheckbox())
+            return new CheckboxPlacementView(args);
+        else return new TextPlacementView(args);
     }
 });
 
@@ -16,13 +18,15 @@ window.FieldPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
         if (args.model.field().isSignature())
             return new SignaturePlacementPlacedView(args);
-        else return new StandardPlacementPlacedView(args);
+        else if (args.model.field().isCheckbox())
+            return new CheckboxPlacementPlacedView(args);
+        else return new TextPlacementPlacedView(args);
     }
 });
 
 
 
-var StandardPlacementView = Backbone.View.extend({
+var TextPlacementView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'clear');
         this.model.bind('removed', this.clear);
@@ -45,7 +49,7 @@ var StandardPlacementView = Backbone.View.extend({
     }
 });
 
-var StandardPlacementPlacedView = Backbone.View.extend({
+var TextPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render' , 'clear');
         this.model.bind('removed', this.clear);
@@ -72,13 +76,13 @@ var StandardPlacementPlacedView = Backbone.View.extend({
             }
             place.empty();
             var fileview = field.signatory().document().mainfile().view;
-            place.append(new StandardPlacementView({model: placement.field(), el: $("<div/>")}).el);
+            place.append(new TextPlacementView({model: placement.field(), el: $("<div/>")}).el);
 
             if (document.allowsDD())
               place.draggable({
                     appendTo: "body",
                     helper: function(event) {
-                        return new StandardPlacementView({model: placement.field(), el: $("<div/>")}).el;
+                        return new TextPlacementView({model: placement.field(), el: $("<div/>")}).el;
                     },
                     start: function(event, ui) {
                         place.hide();
@@ -139,6 +143,60 @@ var StandardPlacementPlacedView = Backbone.View.extend({
             return this;
     }
 });
+
+
+
+
+
+
+var CheckboxPlacementView = Backbone.View.extend({
+    initialize: function (args) {
+        _.bindAll(this, 'render', 'clear');
+        this.model.bind('removed', this.clear);
+        this.render();
+    },
+    clear: function() {
+        this.off();
+        $(this.el).remove();
+    },
+    render: function() {
+            var field =   this.model;
+            var box = $(this.el);
+            box.addClass('placedfieldvalue value');
+            box.text(field.nicetext());
+            field.bind('change', function() {
+                box.text(field.nicetext());
+            });
+
+    }
+});
+
+var CheckboxPlacementPlacedView = Backbone.View.extend({
+    initialize: function (args) {
+        _.bindAll(this, 'render' , 'clear');
+        this.model.bind('removed', this.clear);
+        this.model.view = this;
+        this.render();
+    },
+    clear: function() {
+        this.off();
+        $(this.el).remove();
+    },
+    render: function() {
+            return this;
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
 
 var SignaturePlacementViewForDrawing = Backbone.View.extend({
     initialize: function (args) {
