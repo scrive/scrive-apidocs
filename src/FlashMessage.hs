@@ -24,7 +24,6 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Base64 as B64
 
 import Cookies
-import Crypto
 import Misc (isHTTPS, optional)
 import Templates.Templates
 import Templates.TemplatesLoader
@@ -84,25 +83,24 @@ instantiate (FlashTemplate ftype templatename fields) = do
   return $ toFlashMsg ftype $ renderTemplateMain ts templatename fields id
 instantiate fm = return fm
 
-updateFlashCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m, Functor m) => AESConf -> [FlashMessage] -> [FlashMessage] -> m ()
-updateFlashCookie aesconf oldflashes newflashes =
+updateFlashCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m, Functor m) => [FlashMessage] -> [FlashMessage] -> m ()
+updateFlashCookie oldflashes newflashes =
     if null oldflashes && not (null newflashes)
-       then addFlashCookie $ toCookieValue aesconf newflashes
+       then addFlashCookie $ toCookieValue newflashes
        else
            if not (null oldflashes) && null newflashes
               then removeFlashCookie
               else return ()
 
-toCookieValue :: AESConf -> [FlashMessage] -> String
-toCookieValue conf flashes =
-    BS.unpack . B64.encode . aesEncrypt conf . BS.concat
+toCookieValue :: [FlashMessage] -> String
+toCookieValue flashes =
+    BS.unpack . B64.encode . BS.concat
     . BSL.toChunks . GZip.compress . BSLU.fromString $ show flashes
 
-fromCookieValue :: AESConf -> String -> Maybe [FlashMessage]
-fromCookieValue conf flashesdata = do
+fromCookieValue :: String -> Maybe [FlashMessage]
+fromCookieValue flashesdata = do
     case B64.decode $ BS.pack flashesdata of
-         Right s -> aesDecrypt conf s >>= readM . BSLU.toString
-                    . GZip.decompress . BSL.fromChunks . \x -> [x]
+         Right s -> readM $ BSLU.toString $ GZip.decompress $ BSL.fromChunks [s]
          _       -> Nothing
 
 addFlashCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m, Functor m) => String -> m ()

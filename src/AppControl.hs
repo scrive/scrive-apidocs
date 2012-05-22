@@ -164,7 +164,7 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
         newflashmessages = ctxflashmessages ctx'
         newelegtrans = ctxelegtransactions ctx'
         newmagichashes = ctxmagichashes ctx'
-    F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
+    F.updateFlashCookie (ctxflashmessages ctx) newflashmessages
     issecure <- isSecure
     let usehttps = useHttps appConf
     when (issecure || not usehttps) $
@@ -251,7 +251,7 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
           else dbQuery $ GetServiceByLocation $ toServiceLocation clink
 
       flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval ->
-        case F.fromCookieValue (aesConfig appConf) fval of
+        case F.fromCookieValue fval of
           Just flashes -> return flashes
           Nothing -> do
             Log.error $ "Couldn't read flash messages from value: " ++ fval
