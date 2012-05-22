@@ -359,6 +359,7 @@ function postBack(sig, provider, formselector, transactionid, posturl) {
     window.MobileBankIDPolling = Backbone.Model.extend({
         defaults: {
             status: "outstanding",
+            callback: function() {},
             remaining: [10, // wait 10s before first poll
                         3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3, // then we can poll 20 times with 3s intervals
                         10,10,10,10,10,10,10,10,10] // then we finish with 10s intervals; docs say we get Fault before the end
@@ -386,6 +387,12 @@ function postBack(sig, provider, formselector, transactionid, posturl) {
         trid: function() {
             return this.get("trid");
         },
+        url: function() {
+            return this.get("url");
+        },
+        callback: function() {
+            return this.get("callback")();
+        },
         poll: function() {
             var polling = this;
             if(polling.keepPolling()) {
@@ -393,20 +400,25 @@ function postBack(sig, provider, formselector, transactionid, posturl) {
                 console.log("Setting up timer: " + next);
                 if(next)
                     setTimeout(function() { 
-                        if(polling.docid() && polling.slid() && polling.trid())
+                        if(polling.trid() && polling.url())
                             console.log("yo!");
-                        /*
-                            $.ajax("/eleg/mobile/collect/" + polling.docid() + "/" + polling.slid() + "/", 
-                                   {"transactionid" : polling.trid(),
-                                    "dataType": "json",
-                                    "success": function(d) {
-                                        if(d.error) {
-                                            polling.status("error");
-                                        } else {
-                                            polling.status(d.status);
-                                        }
-                                    }});
-                        */
+                            $.ajax(polling.url(),
+                                   {
+                                       "data" : {
+                                           "transactionid" : polling.trid()
+                                       },
+                                       "dataType": "json",
+                                       "success": function(d) {
+                                           if(d.error) {
+                                               polling.status("error");
+                                           } else {
+                                               polling.status(d.status);
+                                               if(polling.status() === "complete") {
+                                                   console.log("done!");
+                                                   polling.callback();
+                                               }
+                                           }
+                                       }});
                         polling.poll();
                     }, next * 1000);
             }
@@ -634,7 +646,49 @@ window.Eleg = {
         error: repeatForeverWithDelay(250)
             
     });
-}    
+    },
+    mobileBankIDSign: function(document, signatory, submit, callback) {
+        console.log("hello");
+        var url;
+        if(document.preparation() || (document.viewer() && document.viewer().signatoryid() === document.author().signatoryid())) // author
+            url = "/d/eleg/mbi/" + document.documentid();
+        else 
+            url = "/s/eleg/mbi/" + document.documentid() +  "/" + document.viewer().signatoryid();
+        console.log(url);
+        LoadingDialog.open(localization.startingSaveSigning);
+        $.ajax({
+            'url': url,
+            'dataType': 'json',
+            'data': { 
+                'magichash' : document.viewer().magichash()
+            }, 
+            'type': 'POST',
+            'scriptCharset': "utf-8",
+            'success': function(data) {
+                if (data && !data.error)  {
+                    LoadingDialog.open(data.msg);
+                } else if (data && data.error) {
+                    FlashMessages.add({ content: data.error, color: "red"});
+                    LoadingDialog.close();
+                    return; 
+                }
+                var m = new MobileBankIDPolling({docid: document.documentid()
+                                                 , url:url
+                                                 ,trid: data.transactionid
+                                                 ,slid: document.viewer().signatoryid()
+                                                 ,callback: function() {
+                                                     submit.add("transactionid", data.transactionid);
+                                                     submit.add("eleg" , "mobilebankid");
+                                                     if (callback == undefined)
+                                                         submit.send();
+                                                     else
+                                                         callback(submit);
+                                                 }
+                                                });
+                m.poll();
+
+            }, error: repeatForeverWithDelay(250)});
+    }
 
 };
     

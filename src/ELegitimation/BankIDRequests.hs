@@ -17,6 +17,7 @@ import Text.XML.HaXml.XmlContent.Parser
 import ELegitimation.SignatureProvider
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Base64 as Base64
+import Happstack.Data (Typeable, Version, deriveSerialize)
 
 data LogicaConfig = LogicaConfig { logicaEndpoint  :: String,  -- ^ URL to Logica
                                    logicaServiceID :: String,  -- ^ ServiceID from Logica
@@ -299,7 +300,10 @@ data CollectResponse = CROutstanding { cresTransactionID :: String }
                                   , cresSignature :: String
                                   , cresAttributes :: [(String, String)]
                                   }
-                     deriving (Show, Eq, Read, Ord)
+                     deriving (Show, Eq, Read, Ord, Typeable)
+                              
+$(deriveSerialize ''CollectResponse)
+instance Version (CollectResponse)
 
 instance HTypeable (CollectResponse) where
     toHType _x = Defined "CollectResponse" [] []

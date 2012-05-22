@@ -157,16 +157,20 @@ signDocument documentid
   edoc <- case mprovider of
            Nothing -> Right <$> signDocumentWithEmailOrPad documentid signatorylinkid magichash fields
            Just provider -> do
-               signature     <- getDataFnM $ look "signature"
-               transactionid <- getDataFnM $ look "transactionid"
-               esinfo <- BankID.verifySignatureAndGetSignInfo documentid signatorylinkid magichash provider signature transactionid
-               case esinfo of
-                    BankID.Problem msg -> return $ Left msg
-                    BankID.Mismatch msg sfn sln spn -> do
-                        document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
-                        handleMismatch document signatorylinkid msg sfn sln spn
-                        return $ Left msg
-                    BankID.Sign sinfo ->  Right <$>  signDocumentWithEleg documentid signatorylinkid magichash fields sinfo
+             transactionid <- getDataFnM $ look "transactionid"
+             esigninfo <- case provider of
+               MobileBankIDProvider -> do
+                 BankID.verifySignatureAndGetSignInfoMobile documentid signatorylinkid magichash transactionid
+               _ -> do
+                 signature <- getDataFnM $ look "signature"
+                 BankID.verifySignatureAndGetSignInfo documentid signatorylinkid magichash provider signature transactionid
+             case esigninfo of
+               BankID.Problem msg -> return $ Left msg
+               BankID.Mismatch msg sfn sln spn -> do
+                 document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
+                 handleMismatch document signatorylinkid msg sfn sln spn
+                 return $ Left msg
+               BankID.Sign sinfo -> Right <$> signDocumentWithEleg documentid signatorylinkid magichash fields sinfo
   case edoc of
     Right (Right (doc, olddoc)) -> do
       postDocumentPendingChange doc olddoc "web"
@@ -394,13 +398,17 @@ handleIssueSign document = do
         mndoc <- case mprovider of
                    Nothing ->  Right <$> authorSignDocument (documentid doc) Nothing
                    Just provider -> do
-                      signature     <- getDataFnM $ look "signature"
-                      transactionid <- getDataFnM $ look "transactionid"
-                      esinfo <- BankID.verifySignatureAndGetSignInfoForAuthor (documentid doc) provider signature transactionid
-                      case esinfo of
-                        BankID.Problem msg -> return $ Left msg
-                        BankID.Mismatch msg _ _ _ -> return $ Left msg
-                        BankID.Sign sinfo -> Right <$>  authorSignDocument (documentid doc) (Just sinfo)
+                     transactionid <- getDataFnM $ look "transactionid"
+                     esigninfo <- case provider of
+                       MobileBankIDProvider -> do
+                         BankID.verifySignatureAndGetSignInfoMobileForAuthor (documentid doc) transactionid
+                       _ -> do
+                         signature <- getDataFnM $ look "signature"
+                         BankID.verifySignatureAndGetSignInfoForAuthor (documentid doc) provider signature transactionid
+                     case esigninfo of
+                       BankID.Problem msg -> return $ Left msg
+                       BankID.Mismatch msg _ _ _ -> return $ Left msg
+                       BankID.Sign sinfo -> Right <$>  authorSignDocument (documentid doc) (Just sinfo)
         case mndoc of
           Right (Right newdocument) -> do
             postDocumentPreparationChange newdocument "web"

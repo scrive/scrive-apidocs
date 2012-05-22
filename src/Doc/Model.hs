@@ -2061,6 +2061,7 @@ instance MonadDB m => DBUpdate m SignDocument (Either String Document) where
                                                   BankIDProvider -> "BankID"
                                                   TeliaProvider  -> "Telia"
                                                   NordeaProvider -> "Nordea"
+                                                  MobileBankIDProvider -> "Mobile BankID"
                                                 pairs = [("first name", signaturefstnameverified)
                                                         ,("last name", signaturelstnameverified)
                                                         ,("personal number", signaturepersnumverified)]
@@ -2070,7 +2071,9 @@ instance MonadDB m => DBUpdate m SignDocument (Either String Document) where
                                                   [] -> "No fields were verified."
                                                   _ -> "The following fields were verified: " ++ vs
                                                 sigstring = "Signature: " ++ signatureinfosignature ++ ". "
-                                                certstring = "Certificate: " ++ signatureinfocertificate ++ ". "
+                                                certstring = if signatureinfocertificate == "" 
+                                                             then ""
+                                                             else "Certificate: " ++ signatureinfocertificate ++ ". "
                                                 sigocsp = maybe "" (\ocsp->"OCSP Response: " ++ ocsp ++ ".") signatureinfoocspresponse
                                             in " using e-legitimation. The signed text was \""
                                                ++ signatureinfotext
