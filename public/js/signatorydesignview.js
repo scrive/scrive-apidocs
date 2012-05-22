@@ -5,7 +5,7 @@
 
 (function(window){
 
-window.SignatoryDesignViewBasic = Backbone.View.extend({
+window.SignatoryDesignView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
         this.model.bind('reset', this.render);
@@ -29,49 +29,6 @@ window.SignatoryDesignViewBasic = Backbone.View.extend({
        else
         return process.nonsignatoryname();
     },
-    top : function() {
-        var top = $("<div class='top'/>");
-        top.text(this.name().toUpperCase());
-        return top;
-    },
-    fieldView : function (args) {
-        return new FieldBasicDesignView(args);
-    },
-    postRender : function() {
-        // Use this to bind extra post basic rendering in subclasses
-    },
-    render: function () {
-        var signatory = this.model;
-        this.container = $(this.el);
-        var view = this;
-        this.container.addClass('sigview');
-        this.container.children().detach();
-        this.container.append(this.top());
-        var fields = $("<div class='fields'/>");
-        var makeField = function(field) {
-                       if (field != undefined)
-                        fields.append(view.fieldView(
-                                        { model : field,
-                                          el : $("<div/>")
-                                        }).el);
-                            };
-        makeField(signatory.field("fstname"));
-        makeField(signatory.field("sndname"));
-        makeField(signatory.field("email"));
-        _.each(signatory.fields(),function(field){
-            if (field.name() != "fstname" &&
-                field.name() != "sndname" &&
-                field.name() != "email"   &&
-                !field.isSignature())
-                makeField(field);
-        });
-        this.container.append(fields);
-        this.postRender();
-        return this;
-    }
-});
-
-window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
    addFieldButton : function() {
         var signatory = this.model;
         var addFieldButton = $("<a class='addField' href='#'/>");
@@ -81,9 +38,6 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
             });
         return addFieldButton;
    } ,
-   fieldView : function (args) {
-        return new FieldAdvancedDesignView(args);
-   },
    refreshRoleSelector: function() {
        var view = this;
        var signatory = this.model;
@@ -164,7 +118,7 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
         var option = $("<option value='"+i+"'>"+i+"</option>");
         if (i == signatory.signorder())
             option.attr("selected","Yes");
-        select.append(option);
+        select.append(option);SignatoriesDesignView
       }
       select.change(function(){
             signatory.setSignOrder($(this).val());
@@ -236,36 +190,40 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
     },
     postRender : function() {
         this.refreshRoleSelector();
-    }
-
-});
-
-window.SignatoriesDesignBasicView = Backbone.View.extend({
-    initialize: function (args) {
-        _.bindAll(this, 'render');
-        this.model.bind('reset', this.render);
-        this.model.bind('change', this.render);
-        this.extra = args.extra;
-        this.render();
     },
-    render: function(){
-        var box = $(this.el);
-        box.addClass('signatoriesbox');
-        var document = this.model;
-        box.children().detach();
-        var s1view = new SignatoryDesignViewBasic({model: document.signatories()[0], el: $("<div/>")});
-        var s2view = new SignatoryDesignViewBasic({model: document.signatories()[1], el: $("<div/>")});
-        box.append(s1view.el);
-        box.append(s2view.el);
-        box.append(this.extra);
+    render: function () {
+        var signatory = this.model;
+        this.container = $(this.el);
+        var view = this;
+        this.container.addClass('sigview');
+        this.container.children().detach();
+        this.container.append(this.top());
+        var fields = $("<div class='fields'/>");
+        var makeField = function(field) {
+                       if (field != undefined)
+                        fields.append(new FieldDesignView(
+                                        { model : field,
+                                          el : $("<div/>")
+                                        }).el);
+                            };
+        makeField(signatory.field("fstname"));
+        makeField(signatory.field("sndname"));
+        makeField(signatory.field("email"));
+        _.each(signatory.fields(),function(field){
+            if (field.name() != "fstname" &&
+                field.name() != "sndname" &&
+                field.name() != "email"   &&
+                !field.isSignature())
+                makeField(field);
+        });
+        this.container.append(fields);
+        this.postRender();
         return this;
-    },
-    showSignatory : function() {
-        return true;
     }
+
 });
 
-window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
+window.SignatoriesDesignView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'signatoriesList');
         this.model.bind('reset', this.render);
@@ -343,14 +301,14 @@ window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
         var document = this.model;
         if (document.signatories().length == 1)
         {
-            var s1view = new SignatoryDesignViewAdvanced({model: document.signatories()[0], el: $("<div/>")});
+            var s1view = new SignatoryDesignView({model: document.signatories()[0], el: $("<div/>")});
             box.append(s1view.el);
             box.append($("<div class='sigview dummy'/>"));
         }
         else if (document.signatories().length == 2)
         {
-            var s1view = new SignatoryDesignViewAdvanced({model: document.signatories()[0], el: $("<div/>")});
-            var s2view = new SignatoryDesignViewAdvanced({model: document.signatories()[1], el: $("<div/>")});
+            var s1view = new SignatoryDesignView({model: document.signatories()[0], el: $("<div/>")});
+            var s2view = new SignatoryDesignView({model: document.signatories()[1], el: $("<div/>")});
             box.append(s1view.el);
             box.append(s2view.el);
 
@@ -358,7 +316,7 @@ window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
         else
         {
            box.append(this.signatoriesList());
-           var sview = new SignatoryDesignViewAdvanced({model: this.current, el: $("<div/>")});
+           var sview = new SignatoryDesignView({model: this.current, el: $("<div/>")});
            box.append(sview.el);
 
         }

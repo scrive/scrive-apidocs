@@ -70,10 +70,7 @@ data DocProcessInfo =
   , processuploadname :: String
 
   -- used in the design view
-  , processbasicavailable :: Bool
   , processauthorsend :: Bool
-  , processvalidationchoiceforbasic :: Bool
-  , processexpiryforbasic :: Bool
   , processstep1text :: String
   , processsendbuttontext :: String
   , processconfirmsendtitle :: String
@@ -166,10 +163,7 @@ contractProcess =
   , processuploadname = "contractuploadname"
 
   -- used in the design view
-  , processbasicavailable = True
   , processauthorsend = False
-  , processvalidationchoiceforbasic = True
-  , processexpiryforbasic = True
   , processstep1text = "contractstep1text"
   , processsendbuttontext = "contractsendtext"
   , processconfirmsendtitle = "contractconfirmsendtitle"
@@ -259,10 +253,7 @@ offerProcess =
   , processuploadprompttext = "offeruploadprompttext"
 
   -- used in the design view
-  , processbasicavailable = True
   , processauthorsend = True
-  , processvalidationchoiceforbasic = False
-  , processexpiryforbasic = True
   , processstep1text = "offerstep1text"
   , processsendbuttontext = "offersendtext"
   , processconfirmsendtitle = "offerconfirmsendtitle"
@@ -354,10 +345,7 @@ orderProcess =
   , processuploadname = "orderuploadname"
 
   -- used in the design view
-  , processbasicavailable = False
   , processauthorsend = True
-  , processvalidationchoiceforbasic = True
-  , processexpiryforbasic = True
   , processstep1text = "orderstep1text"
   , processsendbuttontext = "ordersendtext"
   , processconfirmsendtitle = "orderconfirmsendtitle"

@@ -128,22 +128,10 @@ var DocumentDesignView = Backbone.View.extend({
       box.append(wizardview.el);
       return box;
     },
-    finalBasicBox : function() {
-        var document = this.model;
-        var finalBox = $("<div class='finalbox'/>");
-
-        finalBox.append(this.verifikationMethodSelection());
-        finalBox.append(this.finalDateSelection());
-        finalBox.append(this.editInvitationOption());
-        finalBox.append(this.finalButton());
-
-        return finalBox;
-
-    },
     designStep1: function() {
         var document = this.model;
         var box = $("<div class='signStepsBody'/>");
-        this.signatoriesView  = new SignatoriesDesignAdvancedView({model: document, el: $("<div/>") , extra: this.nextStepButton()});
+        this.signatoriesView  = new SignatoriesDesignView({model: document, el: $("<div/>") , extra: this.nextStepButton()});
         box.append($(this.signatoriesView.el));
         return box;
     },
@@ -735,8 +723,7 @@ window.KontraDesignDocument = {
                     });
        this.view = new DocumentDesignView({
                         model: this.model,
-                        el : $("<div/>"),
-                        basic : args.basic
+                        el : $("<div/>")
                     });
        this.recall();
        return this;

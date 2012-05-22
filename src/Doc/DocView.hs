@@ -321,10 +321,7 @@ processJSON doc = do
     J.valueM "name" $ text processname
     J.valueM "corename" $ text processcorename
     -- used in the design view
-    J.value "basicavailable" $ bool processbasicavailable
     J.value "authorsend" $ bool processauthorsend
-    J.value "validationchoiceforbasic" $ bool processvalidationchoiceforbasic
-    J.value "expiryforbasic" $ bool processexpiryforbasic
     J.valueM "step1text" $ text processstep1text
     J.valueM "sendbuttontext" $ text processsendbuttontext
     J.valueM "confirmsendtitle" $ text processconfirmsendtitle
