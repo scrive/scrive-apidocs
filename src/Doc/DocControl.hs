@@ -418,6 +418,8 @@ handleIssueSign document = do
             newdocument' <- guardJustM $ dbQuery $ GetDocumentByDocumentID (documentid newdocument)
             postDocumentPendingChange newdocument' newdocument' "web" -- | We call it on same document since there was no change
             return $ Right newdocument'
+          Right (Left (DBActionNotAvailable message)) -> return $ Left message
+          Right (Left (DBDatabaseNotAvailable message)) -> return $ Left message
           Right (Left _) -> return $ Left "Server error. Please try again."
           Left s -> return $ Left s
 
