@@ -327,7 +327,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
     var telia = $("<a href='#' class='author2 telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
     var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
-    var mbi = $("<a href='#' class='mbi'>Mobilt BankID</a>");      
+    var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");      
     bankid.click(function() {
       Eleg.bankidSign(document, signatory, document.sign());
       return false;

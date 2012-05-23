@@ -88,7 +88,7 @@ compareFirstNames fnContract fnEleg
             difs = [levenshtein a b | a <- fnsc, b <- fnse]
         in if any (<= 1) difs
             then MergeMatch
-            else MergeFail $ "Förnamn matchar inte: \"" ++ fnContract ++ "\" och \"" ++ fnEleg ++ "\"."
+            else MergeFail $ "Förnamn matchar inte: '" ++ fnContract ++ "' och '" ++ fnEleg ++ "'."
 
 normalizeNumber :: String -> String
 normalizeNumber = filter isDigit
@@ -103,14 +103,14 @@ compareNumbers nContract nEleg
             dif = levenshtein nsc nse
         in if dif <= 3
             then MergeMatch
-            else MergeFail $ "Personnnummer matchar inte: \"" ++ nContract ++ "\" och \"" ++ nEleg ++ "\"."
+            else MergeFail $ "Personnnummer matchar inte: '" ++ nContract ++ "' och '" ++ nEleg ++ "'."
 
 compareLastNames :: String -> String -> MergeResult
 compareLastNames lnContract lnEleg
     | null lnContract = MergeFail "Du har inte fyllt i efternamn, vänligen försök igen."
     | null lnEleg = MergeKeep
     | levenshtein (map toLower lnContract) (map toLower lnEleg) <= 1 = MergeMatch
-    | otherwise = MergeFail $ "Efternamn matchar inte: \"" ++ lnContract ++ "\" och \"" ++ lnEleg ++"\"."
+    | otherwise = MergeFail $ "Efternamn matchar inte: '" ++ lnContract ++ "' och '" ++ lnEleg ++"'."
 
 --GHC.Unicode.toLower
 -- import GHC.Unicode ( toLower )

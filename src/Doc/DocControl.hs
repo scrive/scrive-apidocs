@@ -388,11 +388,12 @@ handleIssueSign document = do
                 Signable Order    -> return $ LinkOrders
                 _                 -> return $ LinkUpload
           (ls, _) -> do
-            Log.debug $ "handleIssueSign had lefts: " ++ intercalate ";" (map show ls)
-            return LoopBack
+            Log.debug $ "handleIssueSign had lefts: " ++ intercalate ";" ls
+            addFlash (OperationFailed, intercalate ";" ls)
+            return $ LinkIssueDoc (documentid document)
       Left link -> return link
     where
-      forIndividual :: Kontrakcja m => Document -> m (Either KontraLink Document)
+      forIndividual :: Kontrakcja m => Document -> m (Either String Document)
       forIndividual doc = do
         mprovider <- readField "eleg"
         mndoc <- case mprovider of
@@ -407,7 +408,9 @@ handleIssueSign document = do
                          BankID.verifySignatureAndGetSignInfoForAuthor (documentid doc) provider signature transactionid
                      case esigninfo of
                        BankID.Problem msg -> return $ Left msg
-                       BankID.Mismatch msg _ _ _ -> return $ Left msg
+                       BankID.Mismatch msg _ _ _ -> do
+                         Log.debug $ "got this message: " ++ msg
+                         return $ Left msg
                        BankID.Sign sinfo -> Right <$>  authorSignDocument (documentid doc) (Just sinfo)
         case mndoc of
           Right (Right newdocument) -> do
@@ -415,7 +418,8 @@ handleIssueSign document = do
             newdocument' <- guardJustM $ dbQuery $ GetDocumentByDocumentID (documentid newdocument)
             postDocumentPendingChange newdocument' newdocument' "web" -- | We call it on same document since there was no change
             return $ Right newdocument'
-          _ -> return $ Left LoopBack
+          Right (Left _) -> return $ Left "Server error. Please try again."
+          Left s -> return $ Left s
 
 
 handleIssueSend :: Kontrakcja m => Document -> m KontraLink
