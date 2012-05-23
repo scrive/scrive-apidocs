@@ -29,11 +29,11 @@ window.SignatoryDesignView = Backbone.View.extend({
        else
         return process.nonsignatoryname();
     },
-   addFieldButton : function() {
+   addCustomFieldButton : function() {
         var signatory = this.model;
         var addFieldButton = $("<a class='addField' href='#'/>");
         addFieldButton.click(function(){
-            signatory.addNewField();
+            signatory.addNewCustomField();
             return false;
             });
         return addFieldButton;
@@ -135,6 +135,39 @@ window.SignatoryDesignView = Backbone.View.extend({
        });
        return setCsvSignatoryIcon;
    },
+   placeCheckboxIcon : function() {
+       var view = this;
+       var signatory = this.model;
+       var field = signatory.newCheckbox();
+       var placeCheckboxIcon = $("<a class='placeCheckboxIcon' href='#'/>");
+       var fileview = signatory.document().mainfile().view;
+       placeCheckboxIcon.draggable({
+                    handle: ".ddIcon",
+                    appendTo: "body",
+                    helper: function(event) {
+                        return new FieldPlacementView({model: field, el : $("<div/>")}).el;
+                    },
+                    start: function(event, ui) {
+                    },
+                    stop: function() {
+                    },
+                    drag: function(event, ui) {
+                    },
+                    onDrop: function(page, x,y ){
+                          field.makeReady();
+                          signatory.addField(field);
+                          field.addPlacement(new FieldPlacement({
+                              page: page.number(),
+                              fileid: page.file().fileid(),
+                              field: field,
+                              x : x,
+                              y : y
+                            }));
+                    }
+            });
+
+       return placeCheckboxIcon;
+   },
    placeSignatureIcon : function() {
        var view = this;
        var signatory = this.model;
@@ -180,8 +213,10 @@ window.SignatoryDesignView = Backbone.View.extend({
         if (signatory.signs())
             top.append(this.setSignOrderIcon());
         if (signatory.signs())
+            top.append(this.placeCheckboxIcon());
+        if (signatory.signs())
             top.append(this.placeSignatureIcon());
-        top.append(this.addFieldButton());
+        top.append(this.addCustomFieldButton());
         if (signatory.signs() && document.view.signOrderVisible())
             top.append(this.signOrderSelector());
 

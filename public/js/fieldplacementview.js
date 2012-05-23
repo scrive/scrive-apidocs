@@ -162,10 +162,17 @@ var CheckboxPlacementView = Backbone.View.extend({
     render: function() {
             var field =   this.model;
             var box = $(this.el);
-            box.addClass('placedfieldvalue value');
-            box.text(field.nicetext());
+            box.addClass('placedcheckbox');
+            if (field.value() != "")
+                box.addClass("checked");
+            else
+                box.removeClass("checked");
+           
             field.bind('change', function() {
-                box.text(field.nicetext());
+                if (field.value() != "")
+                    box.addClass("checked");
+                else
+                    box.removeClass("checked");
             });
 
     }
@@ -183,8 +190,62 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
         $(this.el).remove();
     },
     render: function() {
-            return this;
+           var view = this;
+            var placement = this.model;
+            var field =  placement.field();
+            var document = field.signatory().document();
+            var place = $(this.el);
+            if (this.placed != true)
+            {   this.placed = true;
+                place.addClass('placedfield').css('position','absolute');
+                place.offset({
+                    left: placement.x(),
+                    top: placement.y()
+                });
+            }
+            place.empty();
+            var fileview = field.signatory().document().mainfile().view;
+            place.append(new CheckboxPlacementView({model: placement.field(), el: $("<div/>")}).el);
+
+            if (document.allowsDD())
+              place.draggable({
+                    appendTo: "body",
+                    helper: function(event) {
+                        return new CheckboxPlacementView({model: placement.field(), el: $("<div/>")}).el;
+                    },
+                    start: function(event, ui) {
+                        place.hide();
+                        fileview.showCoordinateAxes(ui.helper);
+                    },
+                    stop: function() {
+                        placement.remove();
+                        fileview.hideCoordinateAxes();
+                    },
+                    drag: function(event, ui) {
+                        fileview.moveCoordinateAxes(ui.helper);
+                    },
+                    onDrop: function(page, x,y ){
+                          field.addPlacement(new FieldPlacement({
+                              page: page.number(),
+                              fileid: page.file().fileid(),
+                              field: field,
+                              x : x,
+                              y : y
+                            }));
+                    }
+            });
+            if (field.signatory().canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true)
+                place.click(function() {
+                    if (field.value() == "")
+                        field.setValue("CHECKED");
+                    else
+                        field.setValue("");
+                    return false;
+                });
+              
+       return this;
     }
+
 });
 
 

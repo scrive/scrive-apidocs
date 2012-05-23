@@ -497,6 +497,16 @@
   color: red;
   font-size: 10px;
 }
+.placeCheckboxIcon {
+    background: url("../img/checkbox_checked.png") no-repeat scroll 0 0 transparent;
+    display: block;
+    height: 16px;
+    width: 16px;
+    cursor: pointer;
+    margin-left: 12px;
+    margin-top: 1px;
+    float : left; 
+}
 
 .placeSignatureIcon {
     background: url("../img/signeddoc.png") no-repeat scroll 0 0 transparent;
