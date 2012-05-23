@@ -9,6 +9,7 @@ import Data.Word
 import System.Console.GetOpt
 import LiveDocx (LiveDocxConf(..))
 import ELegitimation.BankIDRequests (LogicaConfig(..))
+import GuardTime (GuardTimeConf(..))
 
 -- | Defines the application's configuration.  This includes amongst
 -- other things the http port number, amazon, trust weaver and email
@@ -28,6 +29,7 @@ data AppConf = AppConf {
   , gsCmd              :: String
   , srConfig           :: String                       -- ^ static resource spec file
   , production         :: Bool                         -- ^ production flag, enables some production stuff, disables some development
+  , guardTimeConf      :: GuardTimeConf
   , trustWeaverSign    :: Maybe (String,String,String) -- ^ TrustWeaver sign service (URL,pem file path,pem private key password)
   , trustWeaverAdmin   :: Maybe (String,String,String) -- ^ TrustWeaver admin service (URL,pem file path,pem private key password)
   , trustWeaverStorage :: Maybe (String,String,String) -- ^ TrustWeaver storage service (URL,pem file path,pem private key password)
@@ -57,6 +59,7 @@ instance Configuration AppConf where
     , gsCmd              = "gs"
     , srConfig           = "public/resources.spec"
     , production         = True
+    , guardTimeConf      = GuardTimeConf { guardTimeURL = "http://stamper.guardtime.net/gt-signingservice" }
     , trustWeaverSign    = Nothing
     , trustWeaverAdmin   = Nothing
     , trustWeaverStorage = Nothing

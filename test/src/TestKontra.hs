@@ -38,6 +38,7 @@ import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 
+import GuardTime (GuardTimeConf(..))
 import AppState
 import Control.Monad.Trans.Control.Util
 import Configuration
@@ -245,6 +246,7 @@ mkContext locale = do
         , ctxmaybepaduser = Nothing
         , ctxstaticresources = SR.ResourceSetsForImport []
         , ctxusehttps = False
+        , ctxgtconf = GuardTimeConf { guardTimeURL = "http://stamper.guardtime.net/gt-signingservice" }
     }
 
 -- pgsql database --
