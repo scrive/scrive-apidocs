@@ -841,6 +841,11 @@ window.DocumentSignView = Backbone.View.extend({
     createInlineFieldTask: function(renderedPlacement) {
       var placement = renderedPlacement.placement;
       var elem = renderedPlacement.elem;
+      var label = "";
+      if (placement.field().isText())
+          label = placement.field().nicename();
+      else if (placement.field().isObligatoryCheckbox())
+          label = "Please check this field";
       return new DocumentSignViewTask({
         model: placement.field(),
         isComplete: function() {
@@ -850,7 +855,7 @@ window.DocumentSignView = Backbone.View.extend({
         beforePointing: function() {
           elem.trigger("click");
         },
-        label: placement.field().isSignature() ? "" : placement.field().nicename()
+        label:label
       });
     },
     createUploadedAttachmentsElems: function() {

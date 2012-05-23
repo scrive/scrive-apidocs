@@ -368,13 +368,13 @@ window.Signatory = Backbone.Model.extend({
         return this.sndnameField().value();
     },
     personalnumber : function() {
-        return this.personalnumberField() != undefined ? (personalnumberField().value() != undefined ? personalnumberField().value() : "") : "";
+        return this.personalnumberField() != undefined ? (this.personalnumberField().value() != undefined ? this.personalnumberField().value() : "") : "";
     },
     company: function() {
-        return this.companyField() != undefined ? (companyField().value() != undefined ? companyField().value() : "") : "";
+        return this.companyField() != undefined ? (this.companyField().value() != undefined ? this.companyField().value() : "") : "";
     },
     companynumber: function() {
-        return this.companynumberField() != undefined ? (companynumberField().value() != undefined ? companynumberField().value() : "") : "";
+        return this.companynumberField() != undefined ? (this.companynumberField().value() != undefined ? this.companynumberField().value() : "") : "";
     },
     field: function(name, type) {
         var fields = this.fields();
@@ -560,10 +560,25 @@ window.Signatory = Backbone.Model.extend({
                         type: "reject"
                        });
     },
-    addNewField: function() {
-        var signatory = this;
+    addNewField : function(t) {
+        var field = this.newField(t)
+        this.addField(field);
+        return field
+    },
+    addNewCustomField: function() {
+       return this.addNewField("custom");
+    },
+    newCheckbox: function() {
+       var checkbox =  this.newField("checkbox-obligatory");
+       checkbox.setName(new Date().getTime() + "_checkbox");
+       return checkbox;
+    },
+    newField : function(t) {
+        return new Field({signatory: this, fresh: true, type : t});
+    },
+    addField : function(f) {
         var fields = this.fields();
-        fields.push(new Field({signatory: signatory, fresh: true, type : "custom"}));
+        fields.push(f);
         this.set({"fields": fields});
         this.trigger("change:fields");
     },

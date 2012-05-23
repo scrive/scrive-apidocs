@@ -140,7 +140,19 @@ window.Field = Backbone.Model.extend({
         return this.value() == "" && this.placements().length == 0 && (this.isStandard() || this.isSignature());
     },
     readyForSign : function(){
-        return (!this.isSignature() && ((this.value() != "") || (this.canBeIgnored()))) || (this.isSignature() && (this.signature().hasImage() || this.placements().length == 0));
+        if (this.isText() && (this.value() != ""))
+            return true;
+        else if (this.canBeIgnored())
+            return true;
+        else if (this.isSignature() && (this.signature().hasImage() || this.placements().length == 0))
+            return true;
+        else if (this.isOptionalCheckbox())
+            return true;
+        else if (this.isObligatoryCheckbox() && this.value() != "")
+            return true;
+        
+
+        return false;
     },
     nicename : function() {
         var name = this.name();
@@ -212,11 +224,20 @@ window.Field = Backbone.Model.extend({
     isCustom: function() {
         return this.type() == "custom";
     },
+    isText : function() {
+        return this.isStandard() || this.isCustom();
+    },
     isSignature : function() {
         return this.type() == "signature";
     },
     isCheckbox : function() {
-        return this.type() == "checkbox-optional" || this.type() == "checkbox-obligatory";
+        return this.isOptionalCheckbox() || this.isObligatoryCheckbox();
+    },
+    isOptionalCheckbox : function() {
+        return this.type() == "checkbox-optional";
+    },
+    isObligatoryCheckbox : function() {
+        return this.type() == "checkbox-obligatory";
     },
     signature : function() {
         return this.get("signature");
