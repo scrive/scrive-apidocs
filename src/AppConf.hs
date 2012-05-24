@@ -9,6 +9,7 @@ import Data.Word
 import System.Console.GetOpt
 import LiveDocx (LiveDocxConf(..))
 
+
 -- | Defines the application's configuration.  This includes amongst
 -- other things the http port number, amazon, trust weaver and email
 -- configuraton, as well as a handy boolean indicating whether this is
