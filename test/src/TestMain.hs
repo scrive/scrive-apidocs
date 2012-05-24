@@ -232,12 +232,15 @@ allTests = tail tests
 #ifndef NO_PAD
       , ("pad", const padTests)
 #endif
+
 #ifndef NO_LIVEDOCX
       , ("livedocx", const $ const liveDocxTests)
 #endif
+
 #ifndef NO_OAUTH
       , ("oauth", const oauthTest)
 #endif
+
 #ifndef NO_FLASHMSGS
       , ("flashmessages", const $ const flashMessagesTests)
 #endif
