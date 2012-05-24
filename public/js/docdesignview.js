@@ -174,8 +174,6 @@ var DocumentDesignView = Backbone.View.extend({
     verifikationMethodSelection : function() {
         var document = this.model;
         var elegAvaible = document.region().iselegavailable() || document.elegAuthorization();;
-        var padAvaible = document.padAuthorization();
-        if (!elegAvaible && !padAvaible) return $("<div sttle='display:none;'/>");
         var box = $("<div class='verificationmethodselect'/>");
         var select= $("<select/>");
         var eleg =  $("<option value='eleg'/>").text(localization.eleg);
@@ -183,7 +181,7 @@ var DocumentDesignView = Backbone.View.extend({
         var pad = $("<option value='pad'/>").text(localization.pad.authorization);
         select.append(email);
         if (elegAvaible) select.append(eleg);
-        if (padAvaible) select.append(pad);
+        select.append(pad);
         box.text(localization.verification.selectmethod);
         box.append(select);
         if (document.elegAuthorization()) {
