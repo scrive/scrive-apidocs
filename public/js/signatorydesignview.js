@@ -118,7 +118,7 @@ window.SignatoryDesignView = Backbone.View.extend({
         var option = $("<option value='"+i+"'>"+i+"</option>");
         if (i == signatory.signorder())
             option.attr("selected","Yes");
-        select.append(option);SignatoriesDesignView
+        select.append(option);
       }
       select.change(function(){
             signatory.setSignOrder($(this).val());
