@@ -67,7 +67,9 @@ clearQueue = do
 
 -- PadQueue Pages
 showPadQueuePage::  (Kontrakcja m) =>  m Response
-showPadQueuePage = padQueuePage >>= simpleResponse
+showPadQueuePage = do
+    ctx <- getContext
+    padQueuePage ctx >>= simpleResponse
 
 
 padQueueToSignatoryData :: Kontrakcja m => PadQueue -> m (Maybe (Document,SignatoryLink))
