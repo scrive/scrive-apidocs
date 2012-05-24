@@ -31,6 +31,7 @@ module Doc.DocStateQuery
     ) where
 
 import Control.Applicative
+import Control.Monad
 import DB
 import DBError
 import Doc.Model
@@ -95,7 +96,7 @@ getDocByDocID docid = do
 {- | Same as getDocByDocID, but works only for author -}
 getDocByDocIDForAuthor :: Kontrakcja m => DocumentID -> m (Either DBError Document)
 getDocByDocIDForAuthor docid = do
-      muser <- ctxmaybeuser <$> getContext
+      muser <- liftM2 mplus (ctxmaybeuser <$> getContext) (ctxmaybepaduser <$> getContext)
       edoc <- getDocByDocID docid
       case edoc of
            Right doc -> if (isAuthor (doc, muser))
