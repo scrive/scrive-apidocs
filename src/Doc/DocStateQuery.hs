@@ -71,8 +71,8 @@ canUserViewDoc user doc =
  -}
 getDocByDocID :: Kontrakcja m => DocumentID -> m (Either DBError Document)
 getDocByDocID docid = do
-  Context { ctxmaybeuser, ctxcompany } <- getContext
-  case (ctxmaybeuser, ctxcompany) of
+  Context { ctxmaybeuser, ctxmaybepaduser , ctxcompany } <- getContext
+  case (ctxmaybeuser `mplus` ctxmaybepaduser, ctxcompany) of
     (Nothing, Nothing) -> return $ Left DBNotLoggedIn
     (Just user, _) -> do
       mdoc <- dbQuery $ GetDocumentByDocumentID docid
