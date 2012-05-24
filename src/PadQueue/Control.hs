@@ -55,6 +55,7 @@ addToQueue did slid = do
     _ <- guardJust $ getSigLinkFor doc slid
     if (doc `allowsIdentification` PadIdentification)
         then do
+            Log.debug $ "Adding signatory #" ++ (show slid) ++ "to padqueue of user #" ++ (show uid)
             actor <- guardJustM $ mkAuthorActor <$> getContext
             dbUpdate $ AddToPadQueue uid did slid actor
             runJSONGenT $ return ()
