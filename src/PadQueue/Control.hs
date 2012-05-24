@@ -48,7 +48,9 @@ padQueueState = do
 -- PadQueue ACTIONS
 addToQueue :: Kontrakcja m => DocumentID ->  SignatoryLinkID -> m JSValue
 addToQueue did slid = do
-    uid <- userid <$> (guardJustM $ ctxmaybeuser <$> getContext)
+    suid  <- fmap userid <$> (ctxmaybeuser <$> getContext)
+    pquid <- fmap userid <$> (ctxmaybepaduser <$> getContext)
+    uid   <- guardJustM $ return $ suid `mplus` pquid
     doc <- guardRightM $ getDocByDocIDForAuthor did
     _ <- guardJust $ getSigLinkFor doc slid
     if (doc `allowsIdentification` PadIdentification)
