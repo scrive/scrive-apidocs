@@ -570,15 +570,16 @@ testUpdateFieldsEvidenceLog = doTimes 10 $ do
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   validTest $ do
     case etdoc of
-      Right _ -> -- This is a hack for tests for small unconsistency with MailAPI
+      Right _ -> 
         assertBool "if UpdateFields did change document it should add to the evidence (or not affect anything) " $ (isJust (find (\e -> evType e == UpdateFieldsEvidence) lg)) || (alreadySet f v sl)
       Left _ ->
         assertEqual "if UpdateFields did not change any rows it should not add to the evidence" Nothing
                     (find (\e -> evType e == UpdateFieldsEvidence) lg)
-  where
+  where -- This is a hack for tests for small unconsistency with MailAPI. Will be changed when I'm done with checkboxes
       alreadySet "sigco"     v sl = getCompanyName sl ==  v || v == ""
       alreadySet "sigpersnr" v sl = getPersonalNumber sl ==  v  || v == ""
       alreadySet "sigcompnr" v sl = getCompanyNumber sl ==  v  || v == ""
+      alreadySet "signature" _ _ = True
       alreadySet _           _ _  = False
       
 testPreparationToPendingEvidenceLog :: TestEnv ()
