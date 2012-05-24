@@ -94,7 +94,10 @@ var UploadButtonView = Backbone.View.extend({
         button.append(label);
         button.append(right);
         var fileinput = $("<input class='multiFileInput' type='file'/>");
-        fileinput.attr("accept",model.type()).attr("maxlength",model.maxlength()).attr("name",model.name());
+        if (model.type() != "")
+            fileinput.attr("accept",model.type());
+        fileinput.attr("maxlength",model.maxlength())
+        fileinput.attr("name",model.name());
         fileinput.css("width",model.width()  + "px");
         var list = model.list();
         if (list == undefined) {
