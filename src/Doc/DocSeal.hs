@@ -34,7 +34,8 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.ByteString.Base64 as B64
 import qualified SealSpec as Seal
-import qualified TrustWeaver as TW
+--import qualified TrustWeaver as TW
+import qualified GuardTime as GT
 import qualified Log
 import System.IO.Temp
 import System.IO hiding (stderr)
@@ -268,9 +269,9 @@ sealDocumentFile :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesM
                  => Document
                  -> File
                  -> m (Either String Document)
-sealDocumentFile document@Document{documentid, documenttitle} file@File{fileid, filename} =
+sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
   withSystemTempDirectory' ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
-    Context{ctxtwconf, ctxhostpart, ctxtime} <- getContext
+    Context{ctxhostpart, ctxtime, ctxgtconf} <- getContext
     elog <- dbQuery $ GetEvidenceLog documentid
     Log.debug ("sealing: " ++ show fileid)
     let tmpin = tmppath ++ "/input.pdf"
@@ -285,24 +286,17 @@ sealDocumentFile document@Document{documentid, documenttitle} file@File{fileid, 
     Log.debug $ "Sealing completed with " ++ show code
     case code of
       ExitSuccess -> do
-        newfilepdf1 <- liftIO $ BS.readFile tmpout
-        newfilepdf <- case TW.signConf ctxtwconf of
-          Nothing -> do
-            Log.debug $ "TrustWeaver configuration empty, not doing TrustWeaver signing"
-            return newfilepdf1
-          Just _ -> do
-            Log.debug $ "About to TrustWeaver sign doc #" ++ show documentid ++ " file #" ++ show fileid
-            x <- liftIO $ TW.signDocument ctxtwconf newfilepdf1
-            case x of
-              Left errmsg -> do
-                let msg = "Cannot TrustWeaver sign doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ errmsg
-                Log.error $ msg
-                Log.trustWeaver $ msg
-                return newfilepdf1
-              Right result -> do
-                let msg = "TrustWeaver signed doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ documenttitle
-                Log.trustWeaver msg
-                return result
+        -- GuardTime signs in place
+        code2 <- liftIO $ GT.digitallySign ctxgtconf tmpout
+        newfilepdf <- case code2 of
+          ExitSuccess -> do
+            res <- liftIO $ BS.readFile tmpout
+            Log.debug $ "GuardTime signed successfully"
+            return res
+          ExitFailure _ -> do
+            res <- liftIO $ BS.readFile tmpout
+            Log.debug $ "GuardTime failed"
+            return res
         Log.debug $ "Adding new sealed file to DB"
         File{fileid = sealedfileid} <- dbUpdate $ NewFile filename newfilepdf
         Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"

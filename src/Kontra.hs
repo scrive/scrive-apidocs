@@ -21,7 +21,6 @@ module Kontra
     , currentService
     , currentServiceID
     , HasService(..)
-    , disableLocalSwitch -- Turn off the flag switcher on top bar
     , switchLocale       -- set language
     )
     where
@@ -152,10 +151,6 @@ logPadUserToContext :: Kontrakcja m => Maybe User -> m ()
 logPadUserToContext user =
     modifyContext $ \ctx -> ctx { ctxmaybepaduser = user}
     
-disableLocalSwitch :: Kontrakcja m => m ()
-disableLocalSwitch =
-    modifyContext $ \ctx -> ctx { ctxlocaleswitch = False}
-
 switchLocale :: Kontrakcja m => Locale -> m ()
 switchLocale locale =
      modifyContext $ \ctx -> ctx {

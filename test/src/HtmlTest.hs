@@ -82,14 +82,14 @@ checkXMLForNestedP templatename e =
   else assertSuccess
 
 isPOrHasP :: Content Posn -> Bool
-isPOrHasP (CElem (Elem tag _ children) _) =
+isPOrHasP (CElem (Elem (N tag) _ children) _) =
   if map toLower tag == "p"
   then True
   else any isPOrHasP children
 isPOrHasP _ = False
 
 isPAndHasP :: Content Posn -> Bool
-isPAndHasP (CElem (Elem tag _ children) _) =
+isPAndHasP (CElem (Elem (N tag) _ children) _) =
   if map toLower tag == "p"
   then any isPOrHasP children
   else any isPAndHasP children
@@ -114,7 +114,7 @@ checkXMLForUnecessaryDoubleDivs templatename e@(CElem (Elem _ _ children) _) =
       _ <- mapM (checkXMLForUnecessaryDoubleDivs templatename) children
       assertSuccess
   where isDivElem :: Content Posn -> Bool
-        isDivElem (CElem (Elem n _ _) _) = map toLower n == "div"
+        isDivElem (CElem (Elem (N n) _ _) _) = map toLower n == "div"
         isDivElem _ = False
 checkXMLForUnecessaryDoubleDivs _ _ = assertSuccess
 

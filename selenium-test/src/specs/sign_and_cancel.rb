@@ -23,6 +23,7 @@ describe "Sign a document and then cancel it" do
     @h.dochelper.useBasicMode
     puts "Fill in counterpart"
     @h.dochelper.enterCounterpart(@h.ctx.props.first_counterpart_fstname, @h.ctx.props.first_counterpart_sndname, @h.ctx.props.first_counterpart_email)
+    (@h.wait.until { @h.driver.find_element :css => ".nextstepbutton" }).click
     puts "About to sign and send"
     @h.dochelper.signAndSend
 

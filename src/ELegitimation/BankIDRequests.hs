@@ -14,6 +14,7 @@ import Misc hiding (optional)
 import SOAP.SOAP
 import Text.XML.HaXml.Posn (Posn)
 import Text.XML.HaXml.XmlContent.Parser
+import Text.XML.HaXml.Types (QName(N))
 import ELegitimation.SignatureProvider
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Base64 as Base64
@@ -39,12 +40,12 @@ instance HTypeable (GenerateChallengeRequest) where
     toHType _x = Defined "GenerateChallengeRequest" [] []
 instance XmlContent (GenerateChallengeRequest) where
     toContents (GenerateChallengeRequest provider policy) =
-        [CElem (Elem "generateChallengeRequest"
+        [CElem (Elem (N "generateChallengeRequest")
                 [mkAttr "xmlns" "urn:www.sll.se/wsdl/soap/osif"]
-                [CElem (Elem "provider"
+                [CElem (Elem (N "provider")
                                  [mkAttr "xmlns" ""]
                                  (toText $ show $ fromSafeEnumInt provider)) ()
-                ,CElem (Elem "policy"
+                ,CElem (Elem (N "policy")
                                  [mkAttr "xmlns" ""]
                                  (toText policy)) ()
                 ])
@@ -86,18 +87,18 @@ instance HTypeable (EncodeTBSRequest) where
     toHType _x = Defined "EncodeTBSRequest" [] []
 instance XmlContent (EncodeTBSRequest) where
     toContents (EncodeTBSRequest provider policy tbs transactionID) =
-        [CElem (Elem "encodeTBSRequest"
+        [CElem (Elem (N "encodeTBSRequest")
                 [mkAttr "xmlns" "urn:www.sll.se/wsdl/soap/osif"]
-                [CElem (Elem "provider"
+                [CElem (Elem (N "provider")
                                  [mkAttr "xmlns" ""]
                                  (toText $ show $ fromSafeEnumInt provider)) ()
-                ,CElem (Elem "policy"
+                ,CElem (Elem (N "policy")
                                  [mkAttr "xmlns" ""]
                                  (toText policy)) ()
-                ,CElem (Elem "transactionID"
+                ,CElem (Elem (N "transactionID")
                                  [mkAttr "xmlns" ""]
                                  (toText transactionID)) ()
-                ,CElem (Elem "tbsText"
+                ,CElem (Elem (N "tbsText")
                                  [mkAttr "xmlns" ""]
                                  (toText tbs)) ()
                 ])
@@ -139,25 +140,25 @@ instance HTypeable (VerifySignatureRequest) where
     toHType _x = Defined "VerifySignatureRequest" [] []
 instance XmlContent (VerifySignatureRequest) where
     toContents (VerifySignatureRequest provider policy tbs signature mnonce transactionID) =
-        [CElem (Elem "verifySignatureRequest"
+        [CElem (Elem (N "verifySignatureRequest")
                 [mkAttr "xmlns" "urn:www.sll.se/wsdl/soap/osif"]
-                ([CElem (Elem "provider"
+                ([CElem (Elem (N "provider")
                                  [mkAttr "xmlns" ""]
                                  (toText $ show $ fromSafeEnumInt provider)) ()
-                ,CElem (Elem "policy"
+                ,CElem (Elem (N "policy")
                                  [mkAttr "xmlns" ""]
                                  (toText policy)) ()
-                ,CElem (Elem "transactionID"
+                ,CElem (Elem (N "transactionID")
                                  [mkAttr "xmlns" ""]
                                  (toText transactionID)) ()
-                ,CElem (Elem "tbsText"
+                ,CElem (Elem (N "tbsText")
                                  [mkAttr "xmlns" ""]
                                  (toText tbs)) ()
-                ,CElem (Elem "signature"
+                ,CElem (Elem (N "signature")
                                  [mkAttr "xmlns" ""]
                                  (toText signature)) ()
                                  ]
-                                 ++ [CElem (Elem "nonce"
+                                 ++ [CElem (Elem (N "nonce")
                                                 [mkAttr "xmlns" ""]
                                                 (toText $ fromJust mnonce)) () | isJust mnonce]
                 ))
@@ -253,12 +254,12 @@ instance HTypeable (SignatureRequest) where
     toHType _x = Defined "SignatureRequest" [] []
 instance XmlContent (SignatureRequest) where
     toContents (SignatureRequest{..}) =
-        [CElem (Elem "SignRequest"
+        [CElem (Elem (N "SignRequest")
                 [mkAttr "xmlns" "http://logica.com/mbi/service/v1.0.0/"]
-                [CElem (Elem "policy" [mkAttr "xmlns" ""] $ toText srPolicy) ()
-                ,CElem (Elem "displayName" [mkAttr "xmlns" ""] $ toText srDisplayName) ()
-                ,CElem (Elem "personalNumber" [mkAttr "xmlns" ""] $ toText srPersonalNumber) ()
-                ,CElem (Elem "userVisibleData" [mkAttr "xmlns" ""] $ toText srUserVisibleData) ()]) ()]
+                [CElem (Elem (N "policy") [mkAttr "xmlns" ""] $ toText srPolicy) ()
+                ,CElem (Elem (N "displayName") [mkAttr "xmlns" ""] $ toText srDisplayName) ()
+                ,CElem (Elem (N "personalNumber") [mkAttr "xmlns" ""] $ toText srPersonalNumber) ()
+                ,CElem (Elem (N"userVisibleData") [mkAttr "xmlns" ""] $ toText srUserVisibleData) ()]) ()]
     parseContents = error "Please do not parse SignatureRequest"
 
 data SignatureResponse = SignatureResponse String String
@@ -286,12 +287,12 @@ instance HTypeable (CollectRequest) where
   toHType _ = Defined "CollectRequest" [] []
 instance XmlContent (CollectRequest) where
   toContents (CollectRequest{..}) =
-    [CElem (Elem "CollectRequest"
+    [CElem (Elem (N "CollectRequest")
             [mkAttr "xmlns" "http://logica.com/mbi/service/v1.0.0/"]
-            [CElem (Elem "policy" [mkAttr "xmlns" ""] $ toText crPolicy) ()
-            ,CElem (Elem "displayName" [mkAttr "xmlns" ""] $ toText crDisplayName) ()
-            ,CElem (Elem "transactionId" [mkAttr "xmlns" ""] $ toText crTransactionID) ()
-            ,CElem (Elem "orderRef" [mkAttr "xmlns" ""] $ toText crOrderRef) ()]) ()]
+            [CElem (Elem (N "policy") [mkAttr "xmlns" ""] $ toText crPolicy) ()
+            ,CElem (Elem (N "displayName") [mkAttr "xmlns" ""] $ toText crDisplayName) ()
+            ,CElem (Elem (N "transactionId") [mkAttr "xmlns" ""] $ toText crTransactionID) ()
+            ,CElem (Elem (N "orderRef") [mkAttr "xmlns" ""] $ toText crOrderRef) ()]) ()]
   parseContents = error "Please do not parse CollectRequest."
   
 data CollectResponse = CROutstanding { cresTransactionID :: String }

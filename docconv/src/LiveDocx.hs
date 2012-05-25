@@ -13,6 +13,7 @@ import Control.Monad()
 import Control.Monad.Reader
 import Data.Char
 import Text.XML.HaXml.XmlContent.Parser
+import Text.XML.HaXml.Types (QName(N))
 import System.CPUTime
 import System.FilePath
 import System.IO.Temp
@@ -144,7 +145,7 @@ instance HTypeable LogIn where
     toHType _ = Defined "LogIn" [] []
 instance XmlContent LogIn where
   toContents (LogIn username password) =
-    [CElem (Elem "LogIn" [mkAttr "xmlns" liveDocxNamespace]
+    [CElem (Elem (N "LogIn") [mkAttr "xmlns" liveDocxNamespace]
       [ mkElemC "username" (toText username)
       , mkElemC "password" (toText password)
       ]) ()]
@@ -171,7 +172,7 @@ instance HTypeable LogOut where
     toHType _ = Defined "LogOut" [] []
 instance XmlContent LogOut where
   toContents LogOut =
-    [CElem (Elem "LogOut" [mkAttr "xmlns" liveDocxNamespace] []) ()]
+    [CElem (Elem (N "LogOut") [mkAttr "xmlns" liveDocxNamespace] []) ()]
   parseContents = error "Please do not parse a LogOut"
 instance HasXmlNamespace LogOut where
   xmlNamespace = const "LogOut"
@@ -196,7 +197,7 @@ instance HTypeable SetLocalTemplate where
 instance XmlContent SetLocalTemplate where
   toContents (SetLocalTemplate template format) =
     let base64data = BSC.unpack (Base64.encode template) in
-    [CElem (Elem "SetLocalTemplate" [mkAttr "xmlns" liveDocxNamespace]
+    [CElem (Elem (N "SetLocalTemplate") [mkAttr "xmlns" liveDocxNamespace]
       [ mkElemC "template" (toText base64data)
       , mkElemC "format" (toText $ show format)
       ]) ()]
@@ -223,7 +224,7 @@ instance HTypeable CreateDocument where
     toHType _ = Defined "CreateDocument" [] []
 instance XmlContent CreateDocument where
   toContents CreateDocument =
-    [CElem (Elem "CreateDocument" [mkAttr "xmlns" liveDocxNamespace] []) ()]
+    [CElem (Elem (N "CreateDocument") [mkAttr "xmlns" liveDocxNamespace] []) ()]
   parseContents = error "Please do not parse a CreateDocument"
 instance HasXmlNamespace CreateDocument where
   xmlNamespace = const "CreateDocument"
@@ -247,7 +248,7 @@ instance HTypeable RetrieveDocument where
     toHType _ = Defined "RetrieveDocument" [] []
 instance XmlContent RetrieveDocument where
   toContents (RetrieveDocument format) =
-    [CElem (Elem "RetrieveDocument" [mkAttr "xmlns" liveDocxNamespace]
+    [CElem (Elem (N "RetrieveDocument") [mkAttr "xmlns" liveDocxNamespace]
       [ mkElemC "format" (toText format)
       ]) ()]
   parseContents = error "Please do not parse a RetrieveDocument"

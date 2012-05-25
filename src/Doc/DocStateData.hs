@@ -52,7 +52,9 @@ import Happstack.Data
 import IPAddress
 import MagicHash (MagicHash)
 import MinutesTime
-import User.Model
+import User.UserID
+import User.Region
+import User.Locale
 --import qualified Data.ByteString as BS
 --import qualified Data.ByteString.UTF8 as BS
 import File.FileID

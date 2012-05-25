@@ -128,22 +128,10 @@ var DocumentDesignView = Backbone.View.extend({
       box.append(wizardview.el);
       return box;
     },
-    finalBasicBox : function() {
-        var document = this.model;
-        var finalBox = $("<div class='finalbox'/>");
-
-        finalBox.append(this.verifikationMethodSelection());
-        finalBox.append(this.finalDateSelection());
-        finalBox.append(this.editInvitationOption());
-        finalBox.append(this.finalButton());
-
-        return finalBox;
-
-    },
     designStep1: function() {
         var document = this.model;
         var box = $("<div class='signStepsBody'/>");
-        this.signatoriesView  = new SignatoriesDesignAdvancedView({model: document, el: $("<div/>") , extra: this.nextStepButton()});
+        this.signatoriesView  = new SignatoriesDesignView({model: document, el: $("<div/>") , extra: this.nextStepButton()});
         box.append($(this.signatoriesView.el));
         return box;
     },
@@ -186,8 +174,6 @@ var DocumentDesignView = Backbone.View.extend({
     verifikationMethodSelection : function() {
         var document = this.model;
         var elegAvaible = document.region().iselegavailable() || document.elegAuthorization();;
-        var padAvaible = document.padAuthorization();
-        if (!elegAvaible && !padAvaible) return $("<div sttle='display:none;'/>");
         var box = $("<div class='verificationmethodselect'/>");
         var select= $("<select/>");
         var eleg =  $("<option value='eleg'/>").text(localization.eleg);
@@ -195,7 +181,7 @@ var DocumentDesignView = Backbone.View.extend({
         var pad = $("<option value='pad'/>").text(localization.pad.authorization);
         select.append(email);
         if (elegAvaible) select.append(eleg);
-        if (padAvaible) select.append(pad);
+        select.append(pad);
         box.text(localization.verification.selectmethod);
         box.append(select);
         if (document.elegAuthorization()) {
@@ -740,8 +726,7 @@ window.KontraDesignDocument = {
                     });
        this.view = new DocumentDesignView({
                         model: this.model,
-                        el : $("<div/>"),
-                        basic : args.basic
+                        el : $("<div/>")
                     });
        this.recall();
        return this;

@@ -5,12 +5,14 @@ module Amazon (
   ) where
 
 import Control.Monad.Reader
+import Control.Exception (catch, SomeException)
 import Network.AWS.Authentication
 import System.FilePath ((</>))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
+import Prelude hiding (catch)
 
 import AppConf
 import AppControl
@@ -89,7 +91,7 @@ uploadFile _ _ _ = do
 -- FIXME: This function could use much better error reporting.
 getFileContents :: S3Action -> File -> IO BS.ByteString
 getFileContents _ File{filestorage = FileStorageDisk filepath} =
-    BS.readFile filepath `catch` (\e -> do
+    BS.readFile filepath `catch` (\(e :: SomeException) -> do
         Log.debug $ show e
         return BS.empty)
 

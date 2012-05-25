@@ -326,45 +326,7 @@ window.FieldStandardView = Backbone.View.extend({
     }
 });
 
-window.FieldBasicDesignView = Backbone.View.extend({
-    initialize: function (args) {
-        _.bindAll(this, 'render', 'cleanredborder');
-        this.model.view = this;
-        this.model.bind('change', this.cleanredborder);
-        this.model.signatory().document().bind('change:authorization', this.cleanredborder);
-        this.render();
-    },
-    render: function(){
-        var field = this.model;
-        $(this.el).empty();
-        var signatory = field.signatory();
-        $(this.el).addClass("field");
-        var input = InfoTextInput.init({
-                                 infotext: field.nicename(),
-                                 value: field.value(),
-                                 cssClass :'fieldvalue',
-                                 inputname : field.name(), //Added only for selenium tests
-                                 onChange : function(value) {
-                                    field.setValue(value);
-                                  }
-                            }).input();
-        if (field.isClosed())
-        {
-            $(this.el).addClass('closed');
-            input.attr("readonly","yes");
-        }
-        $(this.el).append(input);
-        return this;
-    },
-    redborder : function() {
-        $(this.el).addClass("redborder");
-    },
-    cleanredborder : function() {
-        $(this.el).removeClass("redborder");
-    }
-});
-
-window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
+window.FieldDesignView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'cleanredborder');
         this.model.bind('change', this.cleanredborder);

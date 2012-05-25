@@ -18,17 +18,8 @@ window.Process = Backbone.Model.extend({
     title : function(){
         return this.get("title");
     },
-    basicavailable : function(){
-        return this.get("basicavailable");
-    },
     authorsend : function(){
         return this.get("authorsend");
-    },
-    validationchoiceforbasic : function(){
-        return this.get("validationchoiceforbasic");
-    },
-    expiryforbasic : function(){
-        return this.get("expiryforbasic");
     },
     step1text : function(){
         return this.get("step1text");

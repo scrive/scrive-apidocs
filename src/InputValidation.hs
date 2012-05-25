@@ -616,7 +616,7 @@ asValidInviteText input =
               (Right (Document _ _ root _)) -> return $ CElem root undefined
               _ -> bad
           checkContent :: Content Posn -> Result (Content Posn)
-          checkContent x@(CElem (Elem name atts cnt) _)
+          checkContent x@(CElem (Elem (N name) atts cnt) _)
               | isValidElemName name
                 && all (isValidAtt name) atts
                 && all isValidChild cnt = return x
@@ -635,7 +635,7 @@ asValidInviteText input =
           isValidAtt :: Name -> Attribute -> Bool
           isValidAtt elemname (attname, attvalue) =
               "span"==elemname
-              && attname=="style"
+              && attname==N "style"
               && isValidAttValue attvalue
           isValidAttValue :: AttValue -> Bool
           isValidAttValue (AttValue (Left v:[])) =

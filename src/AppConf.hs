@@ -3,14 +3,14 @@ module AppConf (
   ) where
 
 import Configuration
-import Crypto
 import User.Model
 import Mails.MailsConfig
 import Data.Word
 import System.Console.GetOpt
-import qualified Data.ByteString.Char8 as BS
 import LiveDocx (LiveDocxConf(..))
 import ELegitimation.BankIDRequests (LogicaConfig(..))
+import GuardTime (GuardTimeConf(..))
+
 
 -- | Defines the application's configuration.  This includes amongst
 -- other things the http port number, amazon, trust weaver and email
@@ -30,13 +30,13 @@ data AppConf = AppConf {
   , gsCmd              :: String
   , srConfig           :: String                       -- ^ static resource spec file
   , production         :: Bool                         -- ^ production flag, enables some production stuff, disables some development
+  , guardTimeConf      :: GuardTimeConf
   , trustWeaverSign    :: Maybe (String,String,String) -- ^ TrustWeaver sign service (URL,pem file path,pem private key password)
   , trustWeaverAdmin   :: Maybe (String,String,String) -- ^ TrustWeaver admin service (URL,pem file path,pem private key password)
   , trustWeaverStorage :: Maybe (String,String,String) -- ^ TrustWeaver storage service (URL,pem file path,pem private key password)
   , mailsConfig        :: MailsConfig                  -- ^ mail sendout configuration
   , liveDocxConfig     :: LiveDocxConf                 -- ^ LiveDocx doc conversion configuration
   , logicaConfig       :: LogicaConfig                 -- ^ Logica (Elegitimation) configuration
-  , aesConfig          :: AESConf                      -- ^ aes key/iv for encryption
   , admins             :: [Email]                      -- ^ email addresses of people regarded as admins
   , sales              :: [Email]                      -- ^ email addresses of people regarded as sales admins
   , initialUsers       :: [(Email,String)]             -- ^ email and passwords for initial users
@@ -60,6 +60,7 @@ instance Configuration AppConf where
     , gsCmd              = "gs"
     , srConfig           = "public/resources.spec"
     , production         = True
+    , guardTimeConf      = GuardTimeConf { guardTimeURL = "http://stamper.guardtime.net/gt-signingservice" }
     , trustWeaverSign    = Nothing
     , trustWeaverAdmin   = Nothing
     , trustWeaverStorage = Nothing
@@ -71,10 +72,6 @@ instance Configuration AppConf where
                                         , logicaMBIEndpoint = "http://eidt.funktionstjanster.se:18899/mbi/service"
                                         , logicaMBIDisplayName = "Test av Mobilt BankID"
                                         }
-    , aesConfig          = AESConf {
-        aesKey = BS.pack "}>\230\206>_\222\STX\218\SI\159i\DC1H\DC3Q\ENQK\r\169\183\133bu\211\NUL\251s|\207\245J"
-      , aesIV = BS.pack "\205\168\250\172\CAN\177\213\EOT\254\190\157SY3i\160"
-      }
     , admins             = map Email ["gracjanpolak@gmail.com", "lukas@skrivapa.se"]
     , sales              = []
     , initialUsers       = []
@@ -98,6 +95,4 @@ instance Configuration AppConf where
       (NoArg (\ c -> c { production = True }))
       "Turn on production environment"
     ]
-  confVerify conf = case verifyAESConf $ aesConfig conf of
-    Left err -> return $ Left err
-    _        -> return $ Right ()
+  confVerify _ = return $ Right ()

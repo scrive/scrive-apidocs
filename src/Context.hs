@@ -23,6 +23,7 @@ import MagicHash (MagicHash)
 import IPAddress
 import qualified Static.Resources as SR
 import ELegitimation.BankIDRequests (LogicaConfig(..))
+import GuardTime (GuardTimeConf(..))
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
@@ -39,11 +40,11 @@ data Context = Context
     , ctxtemplates           :: KontrakcjaTemplates -- ^ The set of templates to render text for the ctxlocale
     , ctxglobaltemplates     :: KontrakcjaGlobalTemplates -- ^ All of the templates for all valid locales
     , ctxlocale              :: Locale -- ^ The current context locale
-    , ctxlocaleswitch        :: Bool -- ^ Whether locale switching is available on this page
     , ctxmailsconfig         :: MailsConfig
     , ctxtwconf              :: TW.TrustWeaverConf -- ^ TrustWeaver configuration
     , ctxlivedocxconf        :: LiveDocxConf -- ^ LiveDocx configuration (does doc conversion)
     , ctxlogicaconf          :: LogicaConfig -- ^ Logica configuration (eleg)
+    , ctxgtconf              :: GuardTimeConf -- ^ GuardTime configuration
     , ctxelegtransactions    :: [ELegTransaction] -- ^ Transactions for connections to the Logica server
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString -- ^
     , ctxxtoken              :: MagicHash -- ^ The XToken for combatting CSRF

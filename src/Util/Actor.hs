@@ -22,9 +22,10 @@ import API.Service.Model
 import Doc.DocStateData
 import Data.Typeable
 import qualified Data.ByteString.UTF8 as BS
+import Control.Monad
 
 mkAuthorActor :: Context -> Maybe Actor
-mkAuthorActor ctx = case ctxmaybeuser ctx of
+mkAuthorActor ctx = case (ctxmaybeuser ctx) `mplus` (ctxmaybepaduser ctx) of
   Just user -> Just $ authorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user)
   Nothing   -> Nothing
 
