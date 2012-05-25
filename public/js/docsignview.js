@@ -1213,7 +1213,6 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     $(window).scroll(checkIfDownArrowInFooter);
     checkIfDownArrowInFooter();
 
-      var scrollpoint = 0;
     var updateVisibility = function() {
 
       if (!taskmodel.isIncompleteTask()) {
@@ -1248,26 +1247,12 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
           downarrow.hide();
           view.pointingAt = nextTask;
           view.mainview.trigger("change:task");
-        } else if ((elbottom + bottommargin) > scrollbottom) {
-            if(scrollpoint !== 16) {
-                scrollpoint = 6;
-                console.log("6");
-                downarrow.show();
-                uparrow.hide();
-                actionarrow.hide();
-                view.pointingAt = undefined;
-                view.mainview.trigger("change:task");
-            }
         } else {
-            if(scrollpoint !== 17) {
-                scrollpoint = 7;
-                console.log("7");
-                uparrow.show();
-                downarrow.hide();
-                actionarrow.hide();
-                view.pointingAt = undefined;
-                view.mainview.trigger("change:task");
-            }
+          downarrow.show();
+          uparrow.hide();
+          actionarrow.hide();
+          view.pointingAt = undefined;
+          view.mainview.trigger("change:task");
         }
       }
     };
