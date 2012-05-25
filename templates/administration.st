@@ -715,7 +715,7 @@ admincompanyusers=
         paging: new Paging({}),
         filtering: new Filtering({ text: "", infotext: "Company Accounts" }),
         cells: [
-          new Cell({name: "Name", width: "100px", field:"fullname"}),
+          new Cell({name: "Name", width: "100px", field:"fullname", special : "link"}),
           new Cell({name: "Email", width: "100px", field:"email"}),
           new Cell({name: "Role", width: "100px", field:"role", special: "rendered",
                     rendering: function(value, idx, user) {
