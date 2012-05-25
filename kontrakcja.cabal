@@ -101,11 +101,6 @@ Flag test-servicestate
   Manual: True
   Default: True
 
-Flag test-trust-weaver
-  Description: Build trust-weaver testsuite
-  Manual: True
-  Default: True
-
 Flag test-userstate
   Description: Build userstate testsuite
   Manual: True
@@ -408,8 +403,6 @@ Executable kontrakcja-test
     cpp-options: -DNO_MAILAPI
   if !flag(test-servicestate)
     cpp-options: -DNO_SERVICESTATE
-  if !flag(test-trust-weaver)
-    cpp-options: -DNO_TRUSTWEAVER
   if !flag(test-userstate)
     cpp-options: -DNO_USERSTATE
   if !flag(test-csvutil)
