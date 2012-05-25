@@ -30,7 +30,6 @@ import User.Model
 import qualified Log (error, debug)
 import qualified FlashMessage as F
 import qualified MemCache
-import qualified TrustWeaver as TW
 import Util.FinishWith
 import Util.FlashUtil
 import Util.KontraLinkUtils
@@ -280,13 +279,6 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
         , ctxglobaltemplates = templates2
         , ctxlocale = userlocale
         , ctxmailsconfig = mailsConfig appConf
-        , ctxtwconf = TW.TrustWeaverConf {
-            TW.signConf = trustWeaverSign appConf
-          , TW.adminConf = trustWeaverAdmin appConf
-          , TW.storageConf = trustWeaverStorage appConf
-          , TW.retries = 3
-          , TW.timeout = 60000
-          }
         , ctxgtconf = guardTimeConf appConf
         , ctxlivedocxconf = liveDocxConfig appConf
         , ctxlogicaconf   = logicaConfig appConf
