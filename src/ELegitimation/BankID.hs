@@ -85,7 +85,9 @@ generateBankIDTransactionForAuthor  docid = do
         Preparation    -> getDataFnM $ look "tbs" -- tbs will be sent as post param
         _ | canAuthorSignLast document -> getTBS document -- tbs is stored in document
         _              -> internalError
-
+    let asl = case documentstatus document of
+                Preparation    -> Nothing
+                _ -> getAuthorSigLink document
     unless (isAuthor (document, author)) internalError -- necessary because someone other than author cannot initiate eleg
 
     nonceresponse <- generateChallenge provider
@@ -104,9 +106,9 @@ generateBankIDTransactionForAuthor  docid = do
                                         , transactiontransactionid   = transactionid
                                         , transactiontbs             = tbs
                                         , transactionencodedtbs      = txt
-                                        , transactionsignatorylinkid = Nothing
+                                        , transactionsignatorylinkid = signatorylinkid <$> asl
                                         , transactiondocumentid      = docid
-                                        , transactionmagichash       = Nothing
+                                        , transactionmagichash       = signatorymagichash <$> asl
                                         , transactionnonce           = nonce
                                         }
                     return $ runJSONGen $ do
