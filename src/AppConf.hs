@@ -30,9 +30,6 @@ data AppConf = AppConf {
   , srConfig           :: String                       -- ^ static resource spec file
   , production         :: Bool                         -- ^ production flag, enables some production stuff, disables some development
   , guardTimeConf      :: GuardTimeConf
-  , trustWeaverSign    :: Maybe (String,String,String) -- ^ TrustWeaver sign service (URL,pem file path,pem private key password)
-  , trustWeaverAdmin   :: Maybe (String,String,String) -- ^ TrustWeaver admin service (URL,pem file path,pem private key password)
-  , trustWeaverStorage :: Maybe (String,String,String) -- ^ TrustWeaver storage service (URL,pem file path,pem private key password)
   , mailsConfig        :: MailsConfig                  -- ^ mail sendout configuration
   , liveDocxConfig     :: LiveDocxConf                 -- ^ LiveDocx doc conversion configuration
   , logicaConfig       :: LogicaConfig                 -- ^ Logica (Elegitimation) configuration
@@ -43,9 +40,6 @@ data AppConf = AppConf {
 
 -- | Default application configuration that does nothing.
 --
--- sign url    "https://tseiod-dev.trustweaver.com/ts/svs.asmx"
--- admin url   "https://twa-test-db.trustweaver.com/ta_hubservices/Admin/AdminService.svc"
--- storage url "https://twa-test-db.trustweaver.com/ta_hubservices/Storage/StorageService.svc"
 instance Configuration AppConf where
   confDefault = AppConf {
       httpBindAddress    = (0x7f000001, 8000)
@@ -60,9 +54,6 @@ instance Configuration AppConf where
     , srConfig           = "public/resources.spec"
     , production         = True
     , guardTimeConf      = GuardTimeConf { guardTimeURL = "http://stamper.guardtime.net/gt-signingservice" }
-    , trustWeaverSign    = Nothing
-    , trustWeaverAdmin   = Nothing
-    , trustWeaverStorage = Nothing
     , mailsConfig        = defaultMailsConfig
     , liveDocxConfig     = confDefault
     , logicaConfig       = LogicaConfig { logicaEndpoint = "https://eidt.funktionstjanster.se:18898/osif"

@@ -252,18 +252,6 @@ sealDocument document = do
   Just newdocument <- dbQuery $ GetDocumentByDocumentID (documentid document)
   return $ Right newdocument
 
-{- Someday:
-
- We have lost the ability to upload document to TrustWeaver. Resurrect
- it someday, when somebody asks.
-
-   case signeddocstorage (usersettings author) of
-       Nothing -> return ()
-       Just twsettings ->
-           do
-               _ <- forkIO $ uploadDocumentFilesToTrustWeaver ctxtwconf (BS.toString $ storagetwname twsettings) documentid
-               return ()
- -}
 
 sealDocumentFile :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
                  => Document
