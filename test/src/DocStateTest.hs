@@ -1486,18 +1486,20 @@ testGetDocumentsSharedInCompany = doTimes 10 $ do
 testGetDocumentsSQLTextFiltered :: TestEnv ()
 testGetDocumentsSQLTextFiltered = doTimes 1 $ do
   -- setup
-  author <- addNewRandomAdvancedUser
+  Just author <- addNewUser "Bob" "Blue" "bill@zonk.com"
+  Just author2 <- addNewUser "Anna" "Max" "herm@qqq.com"
   doc1 <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
   _doc2 <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
   _doc3 <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
+  _doc4 <- addRandomDocumentWithAuthorAndCondition author2 (isSignable &&^ isPreparation)
 
   let domains = [ DocumentsOfAuthor (userid author) ]
       first_name = getFirstName (head (documentsignatorylinks doc1))
       last_name = getLastName (head (documentsignatorylinks doc1))
       email = getEmail (head (documentsignatorylinks doc1))
-      filters1 = [DocumentFilterByString first_name]
-      filters2 = [DocumentFilterByString last_name]
-      filters3 = [DocumentFilterByString email]
+      filters1 = [DocumentFilterByString "Bob"]
+      filters2 = [DocumentFilterByString "Blue"]
+      filters3 = [DocumentFilterByString "bill@"]
       filters4 = [DocumentFilterByString title]
       filters5 = [DocumentFilterByString title1]
       filters6 = [DocumentFilterByString title2]
@@ -1517,16 +1519,16 @@ testGetDocumentsSQLTextFiltered = doTimes 1 $ do
   docs4 <- dbQuery $ GetDocuments domains filters4 [] (DocumentPagination 0 maxBound)
   docs5 <- dbQuery $ GetDocuments domains filters5 [] (DocumentPagination 0 maxBound)
   docs6 <- dbQuery $ GetDocuments domains filters6 [] (DocumentPagination 0 maxBound)
-  
+
   validTest $ do
     assertEqual ("GetDocuments fetches all documents without filter") 3 (length docs0)
     assertEqual ("Document title really got changed") (Right title) (documenttitle <$> docx)
     assertEqual ("GetDocuments and filter by title: " ++ title1) 1 (length docs5)
     assertEqual ("GetDocuments and filter by title: " ++ title) 1 (length docs4)
     assertEqual ("GetDocuments and filter by title: " ++ title2) 1 (length docs6)
-    assertEqual ("GetDocuments and filter by first name: " ++ first_name) 1 (length docs1)
-    assertEqual ("GetDocuments and filter by last name: " ++ last_name) 1 (length docs2)
-    assertEqual ("GetDocuments and filter by email: " ++ email) 1 (length docs3)
+    assertEqual ("GetDocuments and filter by first name: " ++ first_name) 3 (length docs1)
+    assertEqual ("GetDocuments and filter by last name: " ++ last_name) 3 (length docs2)
+    assertEqual ("GetDocuments and filter by email: " ++ email) 3 (length docs3)
 
 testGetDocumentsSQLSorted :: TestEnv ()
 testGetDocumentsSQLSorted = doTimes 1 $ do

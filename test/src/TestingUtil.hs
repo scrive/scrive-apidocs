@@ -617,7 +617,7 @@ addRandomDocument rda = do
     Just doc' -> do
               return doc'
   where
-    worker file now user p _mcompany = do
+    worker file now user p mcompany = do
       doc' <- rand 10 arbitrary
       xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
       status <- rand 10 (elements $ randomDocumentAllowedStatuses rda)
@@ -631,6 +631,7 @@ addRandomDocument rda = do
       let asl = asl' { maybesignatory = Just (userid user)
                      , maybecompany = usercompany user
                      , signatoryroles = roles
+                     , signatorydetails = signatoryDetailsFromUser user mcompany
                      }
 
       let alllinks = asl : siglinks
@@ -644,14 +645,14 @@ addRandomDocument rda = do
         (True, Nothing) -> return adoc
         (False, _)  -> do
           --liftIO $ print $ "did not pass condition; doc: " ++ show adoc
-          worker file now user p _mcompany
+          worker file now user p mcompany
 
         (_, Just _problems) -> do
                -- am I right that random document should not have invariantProblems?
                --uncomment this to find out why the doc was rejected
                --print adoc
                --liftIO $ print $ "rejecting doc: " ++ _problems
-               worker file now user p _mcompany
+               worker file now user p mcompany
       --asl <- dbUpdate $ SignLinkFromDetailsForTest asd roles
 
 
