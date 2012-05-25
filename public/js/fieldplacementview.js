@@ -178,6 +178,52 @@ var CheckboxPlacementView = Backbone.View.extend({
     }
 });
 
+var CheckboxTypeSetterView = Backbone.View.extend({
+    initialize: function (args) {
+        _.bindAll(this, 'render' , 'clear');
+        this.model.bind('removed', this.clear);
+        this.render();
+    },
+    tagname : "div",
+    clear: function() {
+        this.off();
+        $(this.el).remove();
+    },
+    obligatoryOption : function() {
+        var option = $("<div class='checkboxTypeSetter-option'/>");
+        var checkbox = $("<input type='checkbox'>");
+        var label = $("<span/>").text("Make obligatory");
+        option.append(checkbox).append(label);
+        return option;
+    },
+    checkedOption: function() {
+        var option = $("<div class='checkboxTypeSetter-option'/>");
+        var checkbox = $("<input type='checkbox'>");
+        var label = $("<span/>").text("Check it");
+        option.append(checkbox).append(label);
+        return option;
+    },
+    closeOption : function() {
+        var closeIcon = $("<div class='close popup-close float-right'/>");
+        closeIcon.click(function() {this.clear(); return false;});
+        return closeIcon;
+    },
+    render: function() {
+           var view = this;
+           var placement = this.model;
+           var container = $(this.el);
+           container.addClass("checkboxTypeSetter-container")
+           var body = $("<div class='checkboxTypeSetter-body'/>");
+           var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
+           container.append(arrow);
+           container.append(this.closeOption());
+           container.append(body);
+           body.append(this.obligatoryOption());
+           body.append(this.checkedOption());
+           return this;
+    }
+});
+
 var CheckboxPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render' , 'clear');
@@ -205,10 +251,11 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
             }
             place.empty();
             var fileview = field.signatory().document().mainfile().view;
-            place.append(new CheckboxPlacementView({model: placement.field(), el: $("<div/>")}).el);
+            var innerPlace = $(new CheckboxPlacementView({model: placement.field(), el: $("<div/>")}).el);
+            place.append(innerPlace);
 
-            if (document.allowsDD())
-              place.draggable({
+            if (document.allowsDD()) {
+              innerPlace.draggable({
                     appendTo: "body",
                     helper: function(event) {
                         return new CheckboxPlacementView({model: placement.field(), el: $("<div/>")}).el;
@@ -233,16 +280,21 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
                               y : y
                             }));
                     }
-            });
+               });
+
+            place.dblclick(function(){
+                place.prepend(new CheckboxTypeSetterView({model : placement}).el);
+            })  
+            }    
             if (field.signatory().canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true)
-                place.click(function() {
+            {  innerPlace.click(function() {
                     if (field.value() == "")
                         field.setValue("CHECKED");
                     else
                         field.setValue("");
                     return false;
                 });
-              
+            } 
        return this;
     }
 

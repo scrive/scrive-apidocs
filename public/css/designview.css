@@ -620,3 +620,62 @@
     background-image: url("/img/resize.png");
     z-index: 1001;
 }
+
+.checkboxTypeSetter-container {
+        color: #666;
+        font: 14px "Helvetica Neue";
+        position: absolute;
+        width: 225px;
+        z-index: 101;
+        left: 32px;
+        top: -20px;
+}
+
+.checkboxTypeSetter-container .checkboxTypeSetter-body {
+        background: #fff;
+        margin: 5px;
+        padding: 5px 10px 7px;
+        width: 140px;
+}
+
+.checkboxTypeSetter-container .checkboxTypeSetter-body p {
+        display: inline;
+}
+
+.checkboxTypeSetter-container:before {
+        border: 5px solid #000;
+        border-radius: 5px;
+        bottom: 0;
+        content: " ";
+        left: 0;
+        opacity: 0.55;
+        position: absolute;
+        right: 0;
+        top: 0;
+        -moz-border-radius: 5px;
+        -webkit-border-radius: 5px;
+}
+
+.checkboxTypeSetter-container .checkboxTypeSetter-arrow {
+        background: url(../img/tooltip-arrow.png);
+        height: 33px;
+        left: -17px;
+        position: absolute;
+        top: 12px;
+        width: 17px;
+        z-index: 102;
+}
+
+.checkboxTypeSetter-container .close {
+    margin : 6px;
+}
+
+.checkboxTypeSetter-option {
+        color: #414241;
+        font-size: small;
+        font-family: 'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
+        text-align : left;
+}
+.checkboxTypeSetter-option input {
+        margin-right : 6px;
+}
