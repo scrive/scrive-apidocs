@@ -87,6 +87,7 @@ set systemPage
  js   js/docdesignviewpad.js
  js   js/docsignviewpad.js
  js   js/docdesignview.js
+ js   js/mobilebankid.js
  js   js/bankid.js
  js   js/wizard.js
  js   js/uploadview.js

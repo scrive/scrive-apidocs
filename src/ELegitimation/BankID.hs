@@ -192,6 +192,7 @@ verifySignatureAndGetSignInfo docid signid magic provider signature transactioni
                 -- we have merged the info!
                 Right (bfn, bln, bpn) -> do
                     Log.eleg $ "Successfully merged info for transaction: " ++ show transactionid
+                    let mocsp = lookup "Validation.ocsp.response" attrs
                     return $ Sign $ SignatureInfo    { signatureinfotext         = transactiontbs
                                                      , signatureinfosignature    = signature
                                                      , signatureinfocertificate  = cert
@@ -199,7 +200,7 @@ verifySignatureAndGetSignInfo docid signid magic provider signature transactioni
                                                      , signaturefstnameverified  = bfn
                                                      , signaturelstnameverified  = bln
                                                      , signaturepersnumverified  = bpn
-                                                     , signatureinfoocspresponse = lookup "Validation.ocsp.response" attrs                                                                                 
+                                                     , signatureinfoocspresponse = mocsp                                                                            
                                                     }
 
 {- |
@@ -360,67 +361,79 @@ collectMobileBankID docid slid = do
 
   trans@ELegTransaction {transactionsignatorylinkid
                         ,transactionmagichash
-                        ,transactionoref = Just oref
+                        ,transactionoref
+                        ,transactionstatus
                         ,transactiondocumentid} <- findTransactionByIDOrFail elegtransactions tid
   unless (transactionsignatorylinkid == Just slid &&
           transactionmagichash       == Just magic &&
           transactiondocumentid      == docid) internalError
-  eresponse <- liftIO $ mbiRequestCollect logicaconf tid oref
-  case eresponse of
-    Left e -> do
-      addELegTransaction $ trans { transactionstatus = Left e }
-      return $ runJSONGen $ J.value "error" e
-    Right s@(CROutstanding _) -> do
-      addELegTransaction $ trans { transactionstatus = Right s}
-      return $ runJSONGen $ do
-        J.value "status" "outstanding"
-        J.value "message" "Starta din BankID säkerhetsapp."
-    Right s@(CRUserSign _) -> do
-      addELegTransaction $ trans { transactionstatus = Right s}      
-      return $ runJSONGen $ do
-        J.value "status" "usersign"
-        J.value "message" "Skriv in säkerhetskoden till ditt BankID i din mobiltelefon eller surfplatta och välj Legitimera."
-    Right s@(CRComplete _ _signature _attrs) -> do
-      addELegTransaction $ trans { transactionstatus = Right s}
-      -- save signature and attrs somewhere; 
-      return $ runJSONGen $ do
-        J.value "status" "complete"
+
+  case transactionstatus of
+    Left e -> return $ runJSONGen $ J.value "error" e
+    Right (CRComplete _ _ _) -> 
+      return $ runJSONGen $ J.value "status" "complete"
+    _ -> do
+      oref <- guardJust transactionoref
+      eresponse <- liftIO $ mbiRequestCollect logicaconf tid oref
+      case eresponse of
+        Left e -> do
+          addELegTransaction $ trans { transactionstatus = Left e }
+          return $ runJSONGen $ J.value "error" e
+        Right s@(CROutstanding _) -> do
+          addELegTransaction $ trans { transactionstatus = Right s}
+          return $ runJSONGen $ do
+            J.value "status" "outstanding"
+            J.value "message" "Starta din BankID säkerhetsapp."
+        Right s@(CRUserSign _) -> do
+          addELegTransaction $ trans { transactionstatus = Right s}      
+          return $ runJSONGen $ do
+            J.value "status" "usersign"
+            J.value "message" "Skriv in säkerhetskoden till ditt BankID i din mobiltelefon eller surfplatta och välj Legitimera."
+        Right s@(CRComplete _ _signature _attrs) -> do
+          addELegTransaction $ trans { transactionstatus = Right s}
+          -- save signature and attrs somewhere; 
+          return $ runJSONGen $ do
+            J.value "status" "complete"
   
 collectMobileBankIDForAuthor :: Kontrakcja m => DocumentID -> m JSValue
 collectMobileBankIDForAuthor docid = do
-  Log.debug "beginning"
   tid <- guardJustM $ getField "transactionid"
-  Log.debug tid
+  Log.debug $ "transactionid: " ++ tid
   logicaconf <- ctxlogicaconf <$> getContext
   elegtransactions  <- ctxelegtransactions <$> getContext
   -- sanity check
   document <- guardRightM $ getDocByDocIDForAuthor docid
   unless (document `allowsIdentification` ELegitimationIdentification) internalError
-  Log.debug "got here"
-  trans@ELegTransaction {transactionoref = Just oref
+  trans@ELegTransaction {transactionoref
+                        ,transactionstatus
                         ,transactiondocumentid} <- findTransactionByIDOrFail elegtransactions tid
-  Log.debug $ show trans
+  oref <- guardJust transactionoref
   unless (transactiondocumentid == docid) internalError
-  eresponse <- liftIO $ mbiRequestCollect logicaconf tid oref
-  case eresponse of
-    Left e -> do
-      addELegTransaction $ trans { transactionstatus = Left e }
-      return $ runJSONGen $ J.value "error" e
-    Right s@(CROutstanding _) -> do
-      addELegTransaction $ trans { transactionstatus = Right s}
-      return $ runJSONGen $ do
-        J.value "status" "outstanding"
-        J.value "message" "Starta din BankID säkerhetsapp."
-    Right s@(CRUserSign _) -> do
-      addELegTransaction $ trans { transactionstatus = Right s}      
-      return $ runJSONGen $ do
-        J.value "status" "usersign"
-        J.value "message" "Skriv in säkerhetskoden till ditt BankID i din mobiltelefon eller surfplatta och välj Legitimera."
-    Right s@(CRComplete _ _signature _attrs) -> do
-      addELegTransaction $ trans { transactionstatus = Right s}
-      -- save signature and attrs somewhere; 
-      return $ runJSONGen $ do
-        J.value "status" "complete"
+  case transactionstatus of
+    Left e -> return $ runJSONGen $ J.value "error" e
+    Right (CRComplete _ _ _) ->
+      return $ runJSONGen $ J.value "status" "complete"
+    _ -> do
+      eresponse <- liftIO $ mbiRequestCollect logicaconf tid oref
+      case eresponse of
+        Left e -> do
+          addELegTransaction $ trans { transactionstatus = Left e }
+          return $ runJSONGen $ J.value "error" e
+        Right s@(CROutstanding _) -> do
+          addELegTransaction $ trans { transactionstatus = Right s}
+          return $ runJSONGen $ do
+            J.value "status" "outstanding"
+            J.value "message" "Starta din BankID säkerhetsapp."
+        Right s@(CRUserSign _) -> do
+          addELegTransaction $ trans { transactionstatus = Right s}      
+          return $ runJSONGen $ do
+            J.value "status" "usersign"
+            J.value "message" "Skriv in säkerhetskoden till ditt BankID i din mobiltelefon eller surfplatta och välj Legitimera."
+        Right s@(CRComplete _ _signature _attrs) -> do
+          addELegTransaction $ trans { transactionstatus = Right s}
+          -- save signature and attrs somewhere; 
+          return $ runJSONGen $ do
+            J.value "status" "complete"
 
 verifySignatureAndGetSignInfoMobile :: Kontrakcja m 
                                        => DocumentID

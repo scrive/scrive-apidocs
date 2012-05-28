@@ -39,7 +39,6 @@ javascriptLocalisation =
              , tbsGenerationMessage : function(doctitle, docid){
                     return  '$_tbsGenerationMessage1()$"' + doctitle + '"$_tbsGenerationMessage2()$"' + docid + '"$_tbsGenerationMessage3()$'
                      }
-             , startingMobileBankID : "Starta din BankID säkerhetsapp."
              , differentSignatories :  "$_differentSignatories()$"
              , ie6NotSupported : "$_ie6NotSupported()$"
              , youCanNotInviteSameEmail : "$_youCanNotInviteSameEmail()$"
@@ -103,6 +102,9 @@ javascriptLocalisation =
                                    , body1: " $_pageDocumentForSignContentElegBody1()$ "
                                    , clickHere : "$_pageDocumentForSignContentElegBody2ClickHere()$"
                                    , body2 : " $_pageDocumentForSignContentElegBody3()$ "
+                                   , mobile : {
+                                       startingMobileBankID : "Starta din BankID säkerhetsapp."
+                                   }
                                  }
                     }
              , signByAuthor : {
