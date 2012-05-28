@@ -32,8 +32,7 @@ data ELegTransaction = ELegTransaction { transactiontransactionid   :: String
                      deriving (Eq, Ord, Show, Typeable)
                               
 $(deriveSerialize ''ELegTransaction1)
-instance Version (ELegTransaction1) where
-  mode = extension 1 (Proxy :: Proxy ())
+instance Version (ELegTransaction1)
 
 $(deriveSerialize ''ELegTransaction)
 instance Version (ELegTransaction) where
