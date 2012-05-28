@@ -286,8 +286,8 @@ signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{si
       CompanyNumberFT         -> fieldJSON doc "standard" "sigcompnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
       SignatureFT             -> fieldJSON doc "signature" "signature" sfValue (closedSignatureF sf  && (not $ isPreparation doc)) sfPlacements
       CustomFT label closed   -> fieldJSON doc "custom" label       sfValue (closed  && (not $ isPreparation doc))  sfPlacements
-      CheckboxOptionalFT label closed -> fieldJSON doc "checkbox-optional" label       sfValue (closed  && (not $ isPreparation doc))  sfPlacements
-      CheckboxObligatoryFT label closed -> fieldJSON doc "checkbox-obligatory" label       sfValue (closed  && (not $ isPreparation doc))  sfPlacements
+      CheckboxOptionalFT label -> fieldJSON doc "checkbox-optional" label sfValue False  sfPlacements
+      CheckboxObligatoryFT label -> fieldJSON doc "checkbox-obligatory" label sfValue  False  sfPlacements
   where
     closedF sf = ((not $ null $ sfValue sf) || (null $ sfPlacements sf))
     closedSignatureF sf = ((not $ null $ dropWhile (/= ',') $ sfValue sf) || (null $ sfPlacements sf))

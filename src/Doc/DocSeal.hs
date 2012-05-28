@@ -109,13 +109,15 @@ personsFromDocument document =
         x link = trace (show link) $ error "SignatoryLink does not have all the necessary data"
     in map x links
 
-fieldsFromSignatory :: SignatoryDetails -> [Seal.Field]
-fieldsFromSignatory SignatoryDetails{signatoryfields} =
+fieldsFromSignatory :: (BS.ByteString,BS.ByteString) -> SignatoryDetails -> [Seal.Field]
+fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signatoryfields} =
   concatMap makeSealField  signatoryfields
   where
     makeSealField :: SignatoryField -> [Seal.Field]
     makeSealField sf = case  sfType sf of
                          SignatureFT -> concatMap (maybeToList . (fieldJPEGFromPlacement (sfValue sf))) (sfPlacements sf)
+                         CheckboxOptionalFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf)
+                         CheckboxObligatoryFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf) 
                          _ -> map (fieldFromPlacement (sfValue sf)) (sfPlacements sf)
     fieldFromPlacement sf placement = Seal.Field {
         Seal.value = sf
@@ -125,6 +127,20 @@ fieldsFromSignatory SignatoryDetails{signatoryfields} =
       , Seal.w = placementpagewidth placement
       , Seal.h = placementpageheight placement
      }
+    checkedImageFromPlacement = iconWithPlacement checkedBoxImage
+    uncheckedImageFromPlacement = iconWithPlacement uncheckedBoxImage
+    iconWithPlacement image placement = Seal.FieldJPG
+                 {  valueBase64      =  BS.toString $ B64.encode image
+                  , Seal.x = placementx placement
+                  , Seal.y = placementy placement
+                  , Seal.page = placementpage placement
+                  , Seal.w = placementpagewidth placement
+                  , Seal.h = placementpageheight placement
+                  , Seal.image_w       = 16
+                  , Seal.image_h       = 16
+                  , Seal.internal_image_w = 16
+                  , Seal.internal_image_h = 16
+                 }    
     fieldJPEGFromPlacement v placement =
       case split "|" v of
               [w,h,c] -> do
@@ -144,8 +160,8 @@ fieldsFromSignatory SignatoryDetails{signatoryfields} =
                  }
               _ -> Nothing
 
-sealSpecFromDocument :: TemplatesMonad m => String -> Document -> [DocumentEvidenceEvent] -> String -> String -> m Seal.SealSpec
-sealSpecFromDocument hostpart document elog inputpath outputpath =
+sealSpecFromDocument :: TemplatesMonad m => (BS.ByteString,BS.ByteString) -> String -> Document -> [DocumentEvidenceEvent] -> String -> String -> m Seal.SealSpec
+sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog inputpath outputpath =
   let docid = documentid document
       Just authorsiglink = getAuthorSigLink document
       authorHasSigned = isSignatory authorsiglink && isJust (maybesigninfo authorsiglink)
@@ -191,7 +207,8 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
                                 _ -> return []   
       maxsigntime = maximum (map (signtime . (\(_,_,c,_,_,_) -> c)) signatories)
       concatComma = concat . intersperse ", "
-
+      -- document fields
+      fields = concatMap (fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage). signatorydetails) (documentsignatorylinks document)
       lastHistEntry = do
                        desc <- renderLocalTemplateForProcess document processlasthisentry (documentInfoFields document)
                        return $ if (Just True == getValueForProcess document processsealincludesmaxtime)
@@ -199,9 +216,6 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
                                 { Seal.histdate = show maxsigntime
                                 , Seal.histcomment = pureString desc}]
                                 else []
-
-      -- document fields
-      fields = concatMap (fieldsFromSignatory . signatorydetails) (documentsignatorylinks document)
 
   in do
       -- Log.debug "Creating seal spec from file."
@@ -266,7 +280,9 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents file
     liftIO $ BS.writeFile tmpin content
-    config <- sealSpecFromDocument ctxhostpart document elog tmpin tmpout
+    checkedBoxImage <- liftIO $ BS.readFile "public/img/checkbox_checked.jpg"
+    uncheckedBoxImage <- liftIO $  BS.readFile "public/img/checkbox_unchecked.jpg"
+    config <- sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) ctxhostpart document elog tmpin tmpout
     Log.debug $ "Config " ++ show config
     (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
     liftIO $ threadDelay 500000

@@ -838,8 +838,8 @@ daveSignatoryLink documentid siglinkid = onlyAdmin $ do
               CompanyNumberFT  -> "sigcompnr"
               SignatureFT      -> "signature"
               CustomFT label _ -> "Custom: " ++ label
-              CheckboxOptionalFT label _ -> "Checkbox*: " ++ label
-              CheckboxObligatoryFT label _ -> "Checkbox: " ++ label
+              CheckboxOptionalFT label -> "Checkbox*: " ++ label
+              CheckboxObligatoryFT label -> "Checkbox: " ++ label
 
 
 updateFields :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink

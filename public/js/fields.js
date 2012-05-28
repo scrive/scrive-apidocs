@@ -197,11 +197,15 @@ window.Field = Backbone.Model.extend({
             return new NotEmptyValidation({message: msg});
         }
 
-        if (this.signatory().author() && !this.isCustom() && !this.signature() && this.hasPlacements()) {
+        if (this.signatory().author() && this.isStandard() && this.hasPlacements()) {
           var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
           return new NotEmptyValidation({message: msg});
         }
-
+        if (this.signatory().author() && this.isObligatoryCheckbox()) {
+          var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
+          return new NotEmptyValidation({message: msg});
+        }
+        
         if (this.isCustom()) {
           var msg1 = localization.designview.validation.notReadyField;
           var msg2 = localization.designview.validation.notPlacedField;
@@ -238,6 +242,12 @@ window.Field = Backbone.Model.extend({
     },
     isObligatoryCheckbox : function() {
         return this.type() == "checkbox-obligatory";
+    },
+    makeCheckboxOptional : function() {
+        this.set({"type":"checkbox-optional"}, {silent: true});
+    },
+    makeCheckboxObligatory : function() {
+        this.set({"type":"checkbox-obligatory"}, {silent: true});
     },
     signature : function() {
         return this.get("signature");
