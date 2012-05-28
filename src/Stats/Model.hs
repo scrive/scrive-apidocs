@@ -298,6 +298,7 @@ instance MonadDB m => DBQuery m GetUsersAndStatsAndInviteInfo
     _ <- kRun $ mconcat
          [ SQL "CREATE TEMP TABLE users_and_companies_temp AS " []
          , selectUsersAndCompaniesAndInviteInfoSQL
+         , SQL " AND users.has_accepted_terms_of_service IS NOT NULL " []
          , if null filters
              then SQL "" []
              else SQL " AND " [] `mappend` sqlConcatAND (map userFilterToSQL filters)
