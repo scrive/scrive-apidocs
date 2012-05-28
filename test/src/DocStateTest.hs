@@ -1479,7 +1479,6 @@ testGetDocumentsSQLTextFiltered = doTimes 1 $ do
   -- setup
   Just author <- addNewUser "Bob" "Blue" "bill@zonk.com"
   Just author2 <- addNewUser "Anna" "Max" "herm@qqq.com"
-
   doc1 <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
   _doc2 <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
   _doc3 <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)

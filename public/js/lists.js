@@ -831,7 +831,7 @@
                                cache: false,
                                success: function() {fetching = false; list.loading.stop();}
             });
-            window.setTimeout(function() {if (fetching == true) list.recall();}, 2000);
+            window.setTimeout(function() {if (fetching == true) list.recall();}, 7000);
         }
     };};
 })(window);
