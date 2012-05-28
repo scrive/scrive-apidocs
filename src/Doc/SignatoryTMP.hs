@@ -219,8 +219,8 @@ instance FromJSValue FieldType where
          ("standard",            Just "sigcompnr")  -> Just $ CompanyNumberFT
          ("signature",           Just "signature")  -> Just $ SignatureFT
          ("custom",              Just name       )  -> Just $ CustomFT  name filled
-         ("checkbox-optional",   Just name       )  -> Just $ CheckboxOptionalFT  name filled
-         ("checkbox-obligatory", Just name       )  -> Just $ CheckboxObligatoryFT  name filled
+         ("checkbox-optional",   Just name       )  -> Just $ CheckboxOptionalFT  name 
+         ("checkbox-obligatory", Just name       )  -> Just $ CheckboxObligatoryFT  name 
          _ -> Nothing
 
 instance FromJSValue FieldPlacement where

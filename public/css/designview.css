@@ -668,6 +668,7 @@
 
 .checkboxTypeSetter-container .close {
     margin : 6px;
+    position: relative;
 }
 
 .checkboxTypeSetter-option {
@@ -678,4 +679,6 @@
 }
 .checkboxTypeSetter-option input {
         margin-right : 6px;
+        position: relative;
+
 }

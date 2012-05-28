@@ -853,8 +853,8 @@ fetchSignatoryLinkFields = foldDB decoder M.empty
           , sfPlacements = placements
           , sfType = case xtype of
                         CustomFT{} -> CustomFT custom_name is_author_filled
-                        CheckboxOptionalFT{} -> CheckboxOptionalFT custom_name is_author_filled
-                        CheckboxObligatoryFT{} -> CheckboxObligatoryFT custom_name is_author_filled
+                        CheckboxOptionalFT{} -> CheckboxOptionalFT custom_name 
+                        CheckboxObligatoryFT{} -> CheckboxObligatoryFT custom_name 
                         _   -> xtype
           }] acc
 
@@ -865,13 +865,13 @@ insertSignatoryLinkFieldAsIs slid field = do
        , sql "type" $ sfType field
        , sql "custom_name" $ case sfType field of
                                 CustomFT name _ -> name
-                                CheckboxOptionalFT name _ -> name
-                                CheckboxObligatoryFT name _ -> name
+                                CheckboxOptionalFT name -> name
+                                CheckboxObligatoryFT name -> name
                                 _ -> ""
        , sql "is_author_filled"  $ case sfType field of
                                 CustomFT _ authorfilled -> authorfilled
-                                CheckboxOptionalFT _ authorfilled -> authorfilled
-                                CheckboxObligatoryFT _ authorfilled -> authorfilled
+                                CheckboxOptionalFT _  -> False
+                                CheckboxObligatoryFT _  -> False
                                 _ -> False
        , sql "value" $ sfValue field
        , sql "placements" $ sfPlacements field
