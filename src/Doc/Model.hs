@@ -332,15 +332,24 @@ documentFilterToSQL (DocumentFilterByTags tags) =
   sqlConcatAND $ map (\tag -> SQL "EXISTS (SELECT 1 FROM document_tags WHERE name = ? AND value = ? AND document_id = documents.id)"
                               [toSql $ tagname tag, toSql $ tagvalue tag]) tags
 documentFilterToSQL (DocumentFilterByString string) =
-  SQL "documents.title ILIKE ?" [sqlpat] `sqlOR`
-     sqlJoinWithAND (map (\wordpat -> SQL "EXISTS (SELECT 1 FROM signatory_link_fields WHERE signatory_link_fields.signatory_link_id = signatory_links.id AND signatory_link_fields.value ILIKE ?)" [wordpat]) sqlwordpat)
+  result
   where
-      sqlpat = toSql $ "%" ++ concatMap escape string ++ "%"
-      sqlwordpat = map (\word -> toSql $ "%" ++ concatMap escape word ++ "%") (words string)
+      result = SQL "documents.title ILIKE ?" [sqlpat string] `sqlOR`
+         sqlJoinWithAND (map sqlMatch (words string))
+      sqlMatch word = SQL ("EXISTS (SELECT TRUE" ++
+                                   "  FROM signatory_link_fields JOIN signatory_links AS sl5" ++
+                                                                 "  ON sl5.document_id = documents.id" ++
+                                                                 " AND sl5.id = signatory_link_fields.signatory_link_id" ++
+                                   -- " FROM signatory_link_fields " ++
+                                   " WHERE signatory_link_fields.value ILIKE ?)") [sqlpat word]
+                                   --" WHERE TRUE)") []
+
+      sqlpat text = toSql $ "%" ++ concatMap escape text ++ "%"
       escape '\\' = "\\\\"
       escape '%' = "\\%"
       escape '_' = "\\_"
       escape c = [c]
+
 documentFilterToSQL (DocumentFilterByIdentification identification) =
   SQL ("(documents.allowed_id_types & ?) <> 0") [toSql [identification]]
 
@@ -1318,7 +1327,6 @@ instance MonadDB m => DBUpdate m ErrorDocument (Either String Document) where
 
 selectDocuments :: MonadDB m => SQL -> DBEnv m [Document]
 selectDocuments sqlquery = do
-
     _ <- kRun $ SQL "CREATE TEMP TABLE docs AS " [] <++> sqlquery
 
     _ <- kRun $ SQL "SELECT * FROM docs" []
