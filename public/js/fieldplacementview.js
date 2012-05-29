@@ -242,6 +242,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
            
            body.append(this.optionalOption());
            body.append(this.checkedOption());
+           container.offset($(placement.view.el).offset());
            return this;
     }
 });
@@ -283,6 +284,10 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
                         return new CheckboxPlacementView({model: placement.field(), el: $("<div/>")}).el;
                     },
                     start: function(event, ui) {
+                        if (placement.typeSetter != undefined)
+                        {   placement.typeSetter.clear();
+                            placement.typeSetter = undefined;
+                        };
                         place.hide();
                         fileview.showCoordinateAxes(ui.helper);
                     },
@@ -307,8 +312,8 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
             innerPlace.dblclick(function(){
                 if (placement.typeSetter == undefined)
                 {
-                  placement.typeSetter = new CheckboxTypeSetterView({model : placement}).el;
-                  place.prepend(placement.typeSetter);
+                  placement.typeSetter = new CheckboxTypeSetterView({model : placement});
+                  $('body').append(placement.typeSetter.el);
                 }
                 return false;
             })  

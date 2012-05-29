@@ -570,7 +570,7 @@ window.Signatory = Backbone.Model.extend({
     },
     newCheckbox: function() {
        var checkbox =  this.newField("checkbox-obligatory");
-       checkbox.setName(new Date().getTime() + "_checkbox");
+       checkbox.setName("Checkbox " + new Date().getTime());
        return checkbox;
     },
     newField : function(t) {

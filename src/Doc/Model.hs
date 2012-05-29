@@ -2312,7 +2312,7 @@ instance MonadDB m => DBUpdate m SetDocumentIdentification (Either String Docume
       actor
     getOneDocumentAffected "SetDocumentIdentification" r did
 
-data UpdateFields = UpdateFields DocumentID SignatoryLinkID [(String, String)] Actor
+data UpdateFields = UpdateFields DocumentID SignatoryLinkID [(FieldType, String)] Actor
 instance MonadDB m => DBUpdate m UpdateFields (Either String Document) where
   update (UpdateFields did slid fields actor) = do
     -- Document has to be in Pending state
@@ -2323,9 +2323,11 @@ instance MonadDB m => DBUpdate m UpdateFields (Either String Document) where
                 ++ "   AND signatory_link_fields.type = ?")
                  [toSql slid, toSql EmailFT])
 
-    let updateValue name fieldtype value = do
+    let updateValue fieldtype value = do
           let custom_name = case fieldtype of
                               CustomFT xname _ -> xname
+                              CheckboxObligatoryFT xname -> xname
+                              CheckboxOptionalFT xname -> xname
                               _ -> ""
           r <- kRun $ mkSQL UPDATE tableSignatoryLinkFields
                  [ sql "value" value ]
@@ -2341,18 +2343,13 @@ instance MonadDB m => DBUpdate m UpdateFields (Either String Document) where
           when_ (r>0) $ do
             update $ InsertEvidenceEvent
                UpdateFieldsEvidence
-               ("Information for signatory with email \"" ++ eml ++ "\" for field \"" ++ name ++ "\" was set to \"" ++ value ++ "\" by " ++ actorWho actor ++ ".")
+               ("Information for signatory with email \"" ++ eml ++ "\" for field \"" ++ (show fieldtype) ++ "\" was set to \"" ++ value ++ "\" by " ++ actorWho actor ++ ".")
                (Just did)
                actor
           return (r :: Integer)
 
-    updatedRows <- forM fields $ \(n, v) -> do
-        case n of
-          "sigco"     -> updateValue n CompanyFT v >> return 1
-          "sigpersnr" -> updateValue n PersonalNumberFT v >> return 1
-          "sigcompnr" -> updateValue n CompanyNumberFT v >> return 1
-          "signature" -> updateValue n SignatureFT v >> return 1
-          label       -> updateValue n (CustomFT label False) v
+    updatedRows <- forM fields $ \(ft, v) -> updateValue ft v
+
     getOneDocumentAffected "UpdateFields" (if (fromInteger (sum updatedRows) == length fields) then 1 else 0) did
 
 

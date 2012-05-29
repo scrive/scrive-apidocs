@@ -150,9 +150,11 @@ signDocument :: Kontrakcja m
 signDocument documentid
              signatorylinkid = do
   magichash <- guardJustM $ readField "magichash"
-  fieldnames <- getAndConcat "fieldname"
-  fieldvalues <- getAndConcat "fieldvalue"
-  let fields = zip fieldnames fieldvalues
+  fieldsJSON <- guardRightM $ liftM (runGetJSON readJSArray) $ getField' "fields"
+  fields <- guardJustM $ withJSValue fieldsJSON $ fromJSValueCustomMany $ do
+      ft <- fromJSValueM
+      value <- fromJSValueField "value"
+      return $ pairMaybe ft value
   mprovider <- readField "eleg"
   edoc <- case mprovider of
            Nothing -> Right <$> signDocumentWithEmailOrPad documentid signatorylinkid magichash fields
@@ -187,8 +189,6 @@ signDocument documentid
       addFlash  (OperationFailed, msg)
       return LoopBack
     _ -> internalError
-  where
-    getAndConcat fname = getDataFnM (lookInputList fname) >>= return . map BSL.toString
 
 handleMismatch :: Kontrakcja m => Document -> SignatoryLinkID -> String -> String -> String -> String -> m ()
 handleMismatch doc sid msg sfn sln spn = do
