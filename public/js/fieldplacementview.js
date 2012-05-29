@@ -193,7 +193,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
     optionalOption : function() {
         var option = $("<div class='checkboxTypeSetter-option'/>");
         var checkbox = $("<input type='checkbox'>");
-        var label = $("<span/>").text("Make optional");
+        var label = $("<span/>").text(localization.designview.checkboxes.makeOptional);
         var field = this.model.field();
         option.append(checkbox).append(label);
         if (field.isOptionalCheckbox())
@@ -209,7 +209,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
     checkedOption: function() {
         var option = $("<div class='checkboxTypeSetter-option'/>");
         var checkbox = $("<input type='checkbox'>");
-        var label = $("<span/>").text("Check it");
+        var label = $("<span/>").text(localization.designview.checkboxes.checked);
         var field = this.model.field();
         option.append(checkbox).append(label);
         if (field.value() != undefined && field.value()  != "")
@@ -229,6 +229,15 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         closeIcon.click(function() {view.clear(); return false;});
         return closeIcon;
     },
+    title : function() {
+        var box = $("<div class='title'/>");
+        var name = this.model.field().signatory().view.name();
+        if (this.model.field().signatory().nameOrEmail() != "")
+            name = this.model.field().signatory().nameOrEmail()
+        var text = localization.designview.checkboxes.checkboxFor + " " + name;
+        box.text(text);
+        return box;
+    },
     render: function() {
            var view = this;
            var placement = this.model;
@@ -239,7 +248,8 @@ var CheckboxTypeSetterView = Backbone.View.extend({
            container.append(arrow);
            container.append(this.closeOption());
            container.append(body);
-           
+
+           body.append(this.title());
            body.append(this.optionalOption());
            body.append(this.checkedOption());
            container.offset($(placement.view.el).offset());
