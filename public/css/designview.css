@@ -623,9 +623,9 @@
 
 .checkboxTypeSetter-container {
         color: #666;
-        font: 14px "Helvetica Neue";
+        font: 13px "Helvetica Neue";
         position: absolute;
-        width: 225px;
+        width: 250px;
         z-index: 105;
         left: 32px;
         top: -20px;
@@ -635,7 +635,6 @@
         background: #fff;
         margin: 5px;
         padding: 5px 10px 7px;
-        width: 140px;
         z-index: 105;
         width:100%
 }
@@ -681,5 +680,10 @@
         margin-right : 6px;
         position: relative;
         z-index: 107;
+
+}
+.checkboxTypeSetter-container .title {
+        color: #222222;
+        margin-bottom: 2px;
 
 }

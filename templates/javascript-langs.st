@@ -262,6 +262,11 @@ javascriptLocalisation =
                     , extraActions : "$_designViewMessageExtraActions()$"
                 }
              , sign : "$_sign()$"
+             , checkboxes : {
+                      checked : "Check it"
+                    , makeOptional: "Make optional"
+                    , checkboxFor : "Checkbox for "
+             } 
            }
 
          , validation : {
