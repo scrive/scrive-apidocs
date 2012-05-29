@@ -290,6 +290,8 @@ window.Field = Backbone.Model.extend({
           if (placement !== this.placements()[i])
              newplacements.push(this.placements()[i]);
        this.set({placements : newplacements});
+       if (this.isCheckbox() && newplacements.length == 0)
+           this.signatory().deleteField(this);
 
     },
     removeAllPlacements : function() {

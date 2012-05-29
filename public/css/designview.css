@@ -505,7 +505,7 @@
     cursor: pointer;
     margin-left: 12px;
     margin-top: 1px;
-    float : left; 
+    float : left;
 }
 
 .placeSignatureIcon {
@@ -626,7 +626,7 @@
         font: 14px "Helvetica Neue";
         position: absolute;
         width: 225px;
-        z-index: 101;
+        z-index: 105;
         left: 32px;
         top: -20px;
 }
@@ -636,10 +636,8 @@
         margin: 5px;
         padding: 5px 10px 7px;
         width: 140px;
-}
-
-.checkboxTypeSetter-container .checkboxTypeSetter-body p {
-        display: inline;
+        z-index: 105;
+        width:100%
 }
 
 .checkboxTypeSetter-container:before {
@@ -654,6 +652,7 @@
         top: 0;
         -moz-border-radius: 5px;
         -webkit-border-radius: 5px;
+        z-index: 105;
 }
 
 .checkboxTypeSetter-container .checkboxTypeSetter-arrow {
@@ -663,12 +662,13 @@
         position: absolute;
         top: 12px;
         width: 17px;
-        z-index: 102;
+        z-index: 105;
 }
 
 .checkboxTypeSetter-container .close {
     margin : 6px;
     position: relative;
+    z-index: 106;
 }
 
 .checkboxTypeSetter-option {
@@ -680,5 +680,6 @@
 .checkboxTypeSetter-option input {
         margin-right : 6px;
         position: relative;
+        z-index: 107;
 
 }

@@ -145,11 +145,13 @@ window.SignatoryDesignView = Backbone.View.extend({
                     handle: ".ddIcon",
                     appendTo: "body",
                     helper: function(event) {
-                        return new FieldPlacementView({model: field, el : $("<div/>")}).el;
+                        return new FieldPlacementView({model: field, el : $("<div style='margin-left:12px;margin-top:1px;'/>")}).el;
                     },
                     start: function(event, ui) {
+                          fileview.showCoordinateAxes(ui.helper);
                     },
                     stop: function() {
+                          fileview.hideCoordinateAxes();
                     },
                     drag: function(event, ui) {
                     },

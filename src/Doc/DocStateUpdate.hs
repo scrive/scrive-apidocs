@@ -54,7 +54,7 @@ restartDocument doc = withUser $ \user -> do
    Sign a document with email identification (typical, non-eleg).
  -}
 
-signDocumentWithEmailOrPad :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(String, String)] -> m (Either DBError (Document, Document))
+signDocumentWithEmailOrPad :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(FieldType, String)] -> m (Either DBError (Document, Document))
 signDocumentWithEmailOrPad did slid mh fields = do
   edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
   case edoc of
@@ -81,7 +81,7 @@ signDocumentWithEmailOrPad did slid mh fields = do
                 return $ Right (doc, olddoc)
 
 
-signDocumentWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(String, String)] -> SignatureInfo -> m (Either DBError (Document, Document))
+signDocumentWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(FieldType, String)] -> SignatureInfo -> m (Either DBError (Document, Document))
 signDocumentWithEleg did slid mh fields sinfo = do
   Context{ ctxtime, ctxipnumber } <- getContext
   edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
