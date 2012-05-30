@@ -186,7 +186,7 @@ instance FromJSValue SignatoryTMP where
             
 instance FromJSValue SignatoryField where
     fromJSValue = do
-        ftype <- fromJSValue -- We read field type at this lever from two different fields 
+        ftype <- fromJSValue -- We read field type at this from two different fields, so we can't use fromJSValueField
         value  <- fromJSValueField "value"
         placements <- fromJSValueField "placements"
         case (ftype,value) of 
