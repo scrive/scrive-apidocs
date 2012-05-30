@@ -226,7 +226,6 @@ mkContext locale = do
         , ctxglobaltemplates = globaltemplates
         , ctxlocale = locale
         , ctxmailsconfig = defaultMailsConfig
-        , ctxtwconf = error "twconf is not defined"
         , ctxlivedocxconf = confDefault
         , ctxlogicaconf = LogicaConfig { logicaEndpoint = "https://eidt.funktionstjanster.se:18898/osif"
                                        , logicaCertFile = "certs/steria3.pem"

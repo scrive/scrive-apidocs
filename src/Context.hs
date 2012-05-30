@@ -11,7 +11,6 @@ import qualified Data.ByteString as BS
 import qualified Data.Map as Map
 import qualified Network.AWS.Authentication as AWS
 import Templates.TemplatesLoader
-import qualified TrustWeaver as TW
 import ELegitimation.ELegTransaction
 import qualified MemCache
 import FlashMessage
@@ -41,7 +40,6 @@ data Context = Context
     , ctxglobaltemplates     :: KontrakcjaGlobalTemplates -- ^ All of the templates for all valid locales
     , ctxlocale              :: Locale -- ^ The current context locale
     , ctxmailsconfig         :: MailsConfig
-    , ctxtwconf              :: TW.TrustWeaverConf -- ^ TrustWeaver configuration
     , ctxlivedocxconf        :: LiveDocxConf -- ^ LiveDocx configuration (does doc conversion)
     , ctxlogicaconf          :: LogicaConfig -- ^ Logica configuration (eleg)
     , ctxgtconf              :: GuardTimeConf -- ^ GuardTime configuration

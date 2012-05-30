@@ -80,7 +80,6 @@ import qualified Log
 import Templates.Templates
 import Util.CSVUtil
 import Util.FlashUtil
-import Util.KontraLinkUtils
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Util.MonadUtils
