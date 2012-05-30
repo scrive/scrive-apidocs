@@ -845,7 +845,7 @@ window.DocumentSignView = Backbone.View.extend({
       if (placement.field().isText())
           label = placement.field().nicename();
       else if (placement.field().isObligatoryCheckbox())
-          label = "Please check this field";
+          label = localization.docsignview.checkboxes.pleaseCheck;
       return new DocumentSignViewTask({
         model: placement.field(),
         isComplete: function() {
@@ -1247,13 +1247,19 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
           downarrow.hide();
           view.pointingAt = nextTask;
           view.mainview.trigger("change:task");
-        } else {
-          downarrow.show();
-          uparrow.hide();
-          actionarrow.hide();
-          view.pointingAt = undefined;
-          view.mainview.trigger("change:task");
-        }
+        } else if ((elbottom + bottommargin) > scrollbottom) {
+                downarrow.show();
+                uparrow.hide();
+                actionarrow.hide();
+                view.pointingAt = undefined;
+                view.mainview.trigger("change:task");
+          } else {
+                downarrow.hide();
+                uparrow.show();
+                actionarrow.hide();
+                view.pointingAt = undefined;
+                view.mainview.trigger("change:task");
+        } 
       }
     };
     $(window).resize(updateVisibility);

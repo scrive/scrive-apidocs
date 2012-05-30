@@ -803,7 +803,7 @@ window.SignatoryStandardView = Backbone.View.extend({
                 field.name() == "sndname" ||
                 field.name() == "email")
             return;
-            if (field.canBeIgnored() || field.isSignature())
+            if (field.canBeIgnored() || field.isSignature() || field.isCheckbox())
             return;
             var fieldview = new FieldStandardView(
             { model: field,
