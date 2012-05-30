@@ -954,7 +954,7 @@ a.button {
 }
 
 .placedcheckbox{
-    background: url("../img/checkbox_unchecked.png") no-repeat scroll 0 0 transparent;
+    background: url("../img/checkbox_unchecked.jpg") no-repeat scroll 0 0 transparent;
     display: block;
     height: 16px;
     width: 16px;
@@ -962,7 +962,7 @@ a.button {
 }
 
 .placedcheckbox.checked{
-    background: url("../img/checkbox_checked.png") no-repeat scroll 0 0 transparent;
+    background: url("../img/checkbox_checked.jpg") no-repeat scroll 0 0 transparent;
 }
 /* Localized */
 

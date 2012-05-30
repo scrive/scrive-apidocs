@@ -356,6 +356,9 @@ javascriptLocalisation =
              , startButtonLabel: "$_startButtonLabel()$"
              , notEntered: "$_notEntered()$"
              , contact: "$_contact()$"
+             , checkboxes : {
+                    pleaseCheck : "Please check this field"
+               }
         }
         , poweredByScrive : "$_poweredByScrive()$"
     }

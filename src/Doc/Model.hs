@@ -2350,7 +2350,8 @@ instance MonadDB m => DBUpdate m UpdateFields (Either String Document) where
 
     updatedRows <- forM fields $ \(ft, v) -> updateValue ft v
 
-    getOneDocumentAffected "UpdateFields" (if (fromInteger (sum updatedRows) == length fields) then 1 else 0) did
+    -- We don't want to affect too many rows
+    getOneDocumentAffected "UpdateFields" (if (fromInteger (sum updatedRows) <= length fields) then 1 else 0) did
 
 
 data UpdateFieldsNoStatusCheck = UpdateFieldsNoStatusCheck DocumentID SignatoryLinkID (String, String) Actor
