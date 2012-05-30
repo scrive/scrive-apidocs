@@ -32,7 +32,7 @@ import qualified FlashMessage as F
 import qualified MemCache
 import Util.FinishWith
 import Util.FlashUtil
-import Util.KontraLinkUtils
+import KontraLink
 import File.FileID
 
 import Control.Concurrent

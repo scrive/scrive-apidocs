@@ -1,4 +1,4 @@
-module KontraLink(KontraLink(..), LoginRedirectReason(..)) where
+module KontraLink(KontraLink(..), LoginRedirectReason(..), getHomeOrUploadLink) where
 
 import Doc.DocStateData
 import MagicHash (MagicHash)
@@ -15,8 +15,9 @@ import File.FileID
 import OAuth.Model
 import Network.URI
 import Network.HTTP
-
+import KontraMonad
 import Data.Int
+import Context
 
 {- |
    Defines the reason why we are redirected to login page
@@ -248,3 +249,9 @@ setParams uri params =
       vars = urlEncodeVars $ maybe params (++ params) mvars
   in uri { uriQuery = "?" ++ vars}
   
+getHomeOrUploadLink :: KontraMonad m => m KontraLink
+getHomeOrUploadLink = do
+  ctx <- getContext
+  case ctxmaybeuser ctx of
+    Just _ -> return LinkUpload
+    Nothing -> return $ LinkHome (ctxlocale ctx)
