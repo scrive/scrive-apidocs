@@ -35,7 +35,6 @@ import Happstack.Server.SimpleHTTP
 import DB
 import User.Model
 import Util.FlashUtil
-import Util.KontraLinkUtils
 import Util.MonadUtils
 
 handleChangeServiceUI :: Kontrakcja m => ServiceID -> m KontraLink
