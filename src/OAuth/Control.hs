@@ -139,7 +139,7 @@ authorizationGrantedNewUser = do
   meu <- handleSignup
   case meu of
     Just (_, Just uid) -> 
-      ignore $ addUserStatAPINewUser uid time Nothing Nothing 
+      void $ addUserStatAPINewUser uid time Nothing Nothing 
     _ -> return ()
   return $ LinkOAuthAuthorization token
 
@@ -221,7 +221,7 @@ deleteAPIToken = do
   mtk <- getDataFn' (look "apitoken")
   case maybeRead =<< mtk of
     Nothing -> return ()
-    Just token -> ignore $ dbUpdate $ DeleteAPIToken (userid user) token
+    Just token -> void $ dbUpdate $ DeleteAPIToken (userid user) token
   return $ toJSValue $ singleton "status" "success"
       
 createPersonalToken :: Kontrakcja m => m JSValue
@@ -248,6 +248,6 @@ deletePrivilege = do
     Just tokenid -> do
       mpr <- getDataFn' (look "privilege")
       case maybeRead =<< mpr of
-        Nothing -> ignore $ dbUpdate $ DeletePrivileges (userid user) tokenid
-        Just pr -> ignore $ dbUpdate $ DeletePrivilege  (userid user) tokenid pr
+        Nothing -> void $ dbUpdate $ DeletePrivileges (userid user) tokenid
+        Just pr -> void $ dbUpdate $ DeletePrivilege  (userid user) tokenid pr
   return $ toJSValue $ singleton "status" "success"

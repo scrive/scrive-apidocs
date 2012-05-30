@@ -297,7 +297,7 @@ createAPIDocument comp' (authorTMP:signTMPS) tags mlocale createFun = do
         actor = integrationAPIActor (ctxtime ctx) (ctxipnumber ctx) sid (Just cid)
     _ <- dbUpdate $ SetDocumentTags (documentid doc) tags actor
     when (isJust mlocale) $
-      ignore $ dbUpdate $ SetDocumentLocale (documentid doc) (fromJust mlocale) actor
+      void $ dbUpdate $ SetDocumentLocale (documentid doc) (fromJust mlocale) actor
     let sigdetails s =  (fst $ toSignatoryDetails1 s,[SignatoryPartner] <| (isSignatoryTMP s) |> [])
         authordetails s = (fst $ toSignatoryDetails1 s,[SignatoryAuthor,SignatoryPartner] <| (isSignatoryTMP s) |> [SignatoryAuthor])
         sigs = (authordetails authorTMP):(sigdetails <$> signTMPS)

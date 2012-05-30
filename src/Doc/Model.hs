@@ -1721,13 +1721,13 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m RestartDocument (Either String D
         case ed of
           Left s -> return $ Left s
           Right d -> do
-            ignore $ update $ InsertEvidenceEvent
+            void $ update $ InsertEvidenceEvent
               RestartDocumentEvidence
               ("Document restarted by " ++ actorWho actor ++ ". New document has id " ++ show (documentid d) ++ ".")
               (Just $ documentid doc)
               actor
             copyEvidenceLogToNewDocument (documentid doc) (documentid d)
-            ignore $ update $ InsertEvidenceEvent
+            void $ update $ InsertEvidenceEvent
               RestartDocumentEvidence
               ("Document restarted from document with id " ++ (show $ documentid doc) ++ " by " ++ actorWho actor ++ ".")
               (Just $ documentid d)
@@ -1773,7 +1773,7 @@ instance MonadDB m => DBUpdate m RestoreArchivedDocument (Either String Document
     let txt = case (usercompany user, useriscompanyadmin user) of
           (Just _, True) -> "the company with admin email \"" ++ getEmail user ++ "\""
           _ -> "the user with email \"" ++ getEmail user ++ "\""
-    ignore $ update $ InsertEvidenceEvent
+    void $ update $ InsertEvidenceEvent
       RestoreArchivedDocumentEvidence
       ("Document restored from the rubbish bin for " ++ txt ++ " by " ++ actorWho actor ++ ".")
       (Just did)
@@ -2204,7 +2204,7 @@ instance MonadDB m => DBUpdate m SignableFromDocument Document where  -- NOTE TO
   -- conflict in a merge, get rid of this whole DBUpdate -- Eric
   update (SignableFromDocument document actor ) = do
     d <- insertNewDocument $ templateToDocument document
-    ignore $ update $ InsertEvidenceEvent
+    void $ update $ InsertEvidenceEvent
       SignableFromDocumentEvidence
       ("Document created from template by " ++ actorWho actor ++ ".")
       (Just (documentid d))
@@ -2229,7 +2229,7 @@ instance MonadDB m => DBUpdate m SignableFromDocumentIDWithUpdatedAuthor (Either
           case r of
             Right d -> do
               copyEvidenceLogToNewDocument docid (documentid d)
-              ignore $ update $ InsertEvidenceEvent
+              void $ update $ InsertEvidenceEvent
                 SignableFromDocumentIDWithUpdatedAuthorEvidence
                 ("Document created from template with id " ++ show docid ++ " by " ++ actorWho actor ++ ".")
                 (Just $ documentid d)
