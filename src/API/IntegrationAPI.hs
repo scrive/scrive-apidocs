@@ -297,7 +297,7 @@ createAPIDocument comp' (authorTMP:signTMPS) tags mlocale createFun = do
         actor = integrationAPIActor (ctxtime ctx) (ctxipnumber ctx) sid (Just cid)
     _ <- dbUpdate $ SetDocumentTags (documentid doc) tags actor
     when (isJust mlocale) $
-      ignore $ dbUpdate $ SetDocumentLocale (documentid doc) (fromJust mlocale) actor
+      void $ dbUpdate $ SetDocumentLocale (documentid doc) (fromJust mlocale) actor
     let sigdetails s =  (fst $ toSignatoryDetails1 s,[SignatoryPartner] <| (isSignatoryTMP s) |> [])
         authordetails s = (fst $ toSignatoryDetails1 s,[SignatoryAuthor,SignatoryPartner] <| (isSignatoryTMP s) |> [SignatoryAuthor])
         sigs = (authordetails authorTMP):(sigdetails <$> signTMPS)
@@ -469,6 +469,7 @@ connectUserToSessionPost sid uid ssid = do
 
 connectUserToSessionGet :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m Response
 connectUserToSessionGet _sid _uid _ssid = do
+  ctx <- getContext
   rq <- askRq
   let uri = rqUri rq
   Log.integration $ "uri: " ++ uri
@@ -477,6 +478,7 @@ connectUserToSessionGet _sid _uid _ssid = do
   bdy <- renderTemplate "connectredirect" $ do
     F.value "url" uri
     F.value "referer" referer
+    standardPageFields ctx kontrakcja Nothing False False Nothing Nothing
   simpleResponse bdy
 
 connectCompanyToSession :: Kontrakcja m => ServiceID -> CompanyID -> SessionId -> m KontraLink

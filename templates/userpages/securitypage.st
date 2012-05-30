@@ -11,7 +11,7 @@ showUserSecurity =
        $if(iscompanyadmin)$<li><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>$endif$
        <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
         <li><a href="/account/usagestats">$_HeadUsageStats()$</a></li>
-        <li><a href="/oauth/dashboard">API</a></li>
+        <!--<li><a href="/oauth/dashboard">API</a></li>-->
    </ul>
    <div class="tab-container">
        <div class="tab-content account">
@@ -89,7 +89,7 @@ showUserSecurity =
                     }
                    jQuery("#footerCheckbox").click(function(){ toogleFooterBox()  });
                    jQuery("#customfooter").tinymce({
-                                script_url: '/libs/tiny_mce/tiny_mce.js',
+                                script_url: '/tiny_mce/tiny_mce.js',
                                 theme: "advanced",
                                 theme_advanced_toolbar_location: "top",
                                 theme_advanced_buttons1: "bold,italic,underline",

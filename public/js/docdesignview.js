@@ -174,8 +174,6 @@ var DocumentDesignView = Backbone.View.extend({
     verifikationMethodSelection : function() {
         var document = this.model;
         var elegAvaible = document.region().iselegavailable() || document.elegAuthorization();;
-        var padAvaible = document.padAuthorization();
-        if (!elegAvaible && !padAvaible) return $("<div sttle='display:none;'/>");
         var box = $("<div class='verificationmethodselect'/>");
         var select= $("<select/>");
         var eleg =  $("<option value='eleg'/>").text(localization.eleg);
@@ -183,7 +181,7 @@ var DocumentDesignView = Backbone.View.extend({
         var pad = $("<option value='pad'/>").text(localization.pad.authorization);
         select.append(email);
         if (elegAvaible) select.append(eleg);
-        if (padAvaible) select.append(pad);
+        select.append(pad);
         box.text(localization.verification.selectmethod);
         box.append(select);
         if (document.elegAuthorization()) {
@@ -492,6 +490,7 @@ var DocumentDesignView = Backbone.View.extend({
             var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
             var telia = $("<a href='#' class='telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
             var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
+            var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");
             var callback = function(submit) {   submit.sendAjax(function(resp) {
                                                 var link = JSON.parse(resp).link;
                                                 window.location = link;
@@ -509,7 +508,11 @@ var DocumentDesignView = Backbone.View.extend({
                     Eleg.nordeaSign(document,signatory, document.signByAuthor(),callback);
                     return false;
             });
-            acceptButton.append(bankid).append(telia).append(nordea);
+            mbi.click(function() {
+                Eleg.mobileBankIDSign(document,signatory,document.signByAuthor(),callback);
+                return false;
+            });
+            acceptButton.append(bankid).append(telia).append(nordea).append(mbi);
         }
         else
         {

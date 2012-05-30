@@ -48,11 +48,12 @@ padQueueState = do
 -- PadQueue ACTIONS
 addToQueue :: Kontrakcja m => DocumentID ->  SignatoryLinkID -> m JSValue
 addToQueue did slid = do
-    uid <- userid <$> (guardJustM $ ctxmaybeuser <$> getContext)
+    uid   <- userid <$> (guardJustM $ liftM2 mplus (ctxmaybeuser <$> getContext) (ctxmaybepaduser <$> getContext))
     doc <- guardRightM $ getDocByDocIDForAuthor did
     _ <- guardJust $ getSigLinkFor doc slid
     if (doc `allowsIdentification` PadIdentification)
         then do
+            Log.debug $ "Adding signatory #" ++ (show slid) ++ "to padqueue of user #" ++ (show uid)
             actor <- guardJustM $ mkAuthorActor <$> getContext
             dbUpdate $ AddToPadQueue uid did slid actor
             runJSONGenT $ return ()
@@ -67,7 +68,9 @@ clearQueue = do
 
 -- PadQueue Pages
 showPadQueuePage::  (Kontrakcja m) =>  m Response
-showPadQueuePage = padQueuePage >>= simpleResponse
+showPadQueuePage = do
+    ctx <- getContext
+    padQueuePage ctx >>= simpleResponse
 
 
 padQueueToSignatoryData :: Kontrakcja m => PadQueue -> m (Maybe (Document,SignatoryLink))

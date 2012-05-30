@@ -11,7 +11,7 @@ showUserMailAPI =
        $if(iscompanyadmin)$<li><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>$endif$
        <li class="active"><a href="/account/mailapi">$_HeadMailApi()$</a></li>
        <li><a href="/account/usagestats">$_HeadUsageStats()$</a></li>
-        <li><a href="/oauth/dashboard">API</a></li>
+       <!--<li><a href="/oauth/dashboard">API</a></li>-->
    </ul>
    <div class="tab-container">
      <div class="tab-content account">
@@ -64,6 +64,7 @@ showUserMailAPI =
          </div>
        </div>
        $if(hascompanymailapi)$
+        $if(iscompanyadmin)$
        <div class="col">
          <div class="account-header"><h2>$_CompanyMailAPI()$</h2></div>
          <div class="account-body">
@@ -88,6 +89,7 @@ showUserMailAPI =
            </div>
          </div>
        </div>
+        $endif$
        $endif$
        <div class="account-footer">
          <a href="#" class="btn-small green submit">

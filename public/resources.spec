@@ -1,11 +1,11 @@
 
-ignore  libs/tiny_mce/tiny_mce.js
-ignore  libs/tiny_mce/tiny_mce_src.js
-ignore  libs/tiny_mce/tiny_mce_popup.js
-ignore  libs/tiny_mce/langs
-ignore  libs/tiny_mce/plugins
-ignore  libs/tiny_mce/themes
-ignore  libs/tiny_mce/utils
+ignore  tiny_mce/tiny_mce.js
+ignore  tiny_mce/tiny_mce_src.js
+ignore  tiny_mce/tiny_mce_popup.js
+ignore  tiny_mce/langs
+ignore  tiny_mce/plugins
+ignore  tiny_mce/themes
+ignore  tiny_mce/utils
 ignore  libs/analytics.js
 ignore  libs/postmessage.js
 ignore  js/signup.js
@@ -23,7 +23,7 @@ set firstPage
  js  libs/jquery-ui.min.js
  js  libs/jquery.tools.min.js
  js  libs/jquery.MultiFile.js
- jsx libs/tiny_mce/jquery.tinymce.js
+ jsx tiny_mce/jquery.tinymce.js
  js  libs/jquery.tweet.js
  js  libs/analytics.js
  js  libs/underscore.js
@@ -51,7 +51,7 @@ set systemPage
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js
  js   libs/jquery.MultiFile.js
- jsx  libs/tiny_mce/jquery.tinymce.js
+ jsx  tiny_mce/jquery.tinymce.js
  js   libs/json2.js
  js   libs/underscore.js
  js   libs/backbone.js
@@ -87,6 +87,7 @@ set systemPage
  js   js/docdesignviewpad.js
  js   js/docsignviewpad.js
  js   js/docdesignview.js
+ js   js/mobilebankid.js
  js   js/bankid.js
  js   js/wizard.js
  js   js/uploadview.js

@@ -102,6 +102,9 @@ javascriptLocalisation =
                                    , body1: " $_pageDocumentForSignContentElegBody1()$ "
                                    , clickHere : "$_pageDocumentForSignContentElegBody2ClickHere()$"
                                    , body2 : " $_pageDocumentForSignContentElegBody3()$ "
+                                   , mobile : {
+                                       startingMobileBankID : "Starta din BankID säkerhetsapp."
+                                   }
                                  }
                     }
              , signByAuthor : {

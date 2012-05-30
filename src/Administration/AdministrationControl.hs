@@ -271,7 +271,6 @@ jsonUsersList = do
                         ,("uploaded_docs", jsFromString . show $ doccount docstats)
                         ,("viral_invites", JSBool $ not $ isAdminInvite itype)
                         ,("admin_invites", JSBool $ isAdminInvite itype)
-                        ,("subaccounts", jsFromString "")
                         ])
                     ,("link", jsFromString . show $ LinkUserAdmin $ Just $ userid user)
                     ]) (list users)),

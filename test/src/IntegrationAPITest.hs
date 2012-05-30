@@ -560,7 +560,7 @@ createTestService = do
   case muser of
     Nothing -> error "can't create user"
     Just User{userid} ->
-      ignore $ dbUpdate $ CreateService (ServiceID $ BS.pack "test_service") (Just pwd) userid
+      void $ dbUpdate $ CreateService (ServiceID $ BS.pack "test_service") (Just pwd) userid
 
 testNewDocumentExtraFields :: TestEnv ()
 testNewDocumentExtraFields = do

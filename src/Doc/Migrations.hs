@@ -368,3 +368,11 @@ fixSignatoryLinksSwedishChars =
           in if value /= s && BS.replacement_char `notElem` value
              then value
              else s
+
+addOCSPResponse :: MonadDB m => Migration m
+addOCSPResponse =
+  Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 9
+  , mgrDo = kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN signinfo_ocsp_response VARCHAR NULL DEFAULT NULL"
+  } 

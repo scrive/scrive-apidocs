@@ -107,6 +107,7 @@ embeddedErrorPage = do
   ctx <- getContext
   content <- renderTemplate "embeddedErrorPage" $ do
     serviceFields (ctxlocation ctx) (ctxservice ctx)
+    standardPageFields ctx kontrakcja Nothing False False Nothing Nothing
   simpleResponse content
 
 notFoundPage :: Kontrakcja m => m Response
