@@ -562,17 +562,11 @@ testUpdateFieldsEvidenceLog = doTimes 10 $ do
     case etdoc of
       Right _ ->
         assertBool "if UpdateFields did change document it should add to the evidence (or not affect anything) " $
-                    (isJust (find (\e -> evType e == UpdateFieldsEvidence) lg)) || (alreadySet f v sl)  
+                    (isJust (find (\e -> evType e == UpdateFieldsEvidence) lg))  
       Left _ ->
         assertEqual "if UpdateFields did not change any rows it should not add to the evidence" Nothing
                     (find (\e -> evType e == UpdateFieldsEvidence) lg)
-  where -- This is a hack for tests for small unconsistency with MailAPI. Will be changed when I'm done with checkboxes
-    alreadySet "sigco" v sl = getCompanyName sl == v || v == ""
-    alreadySet "sigpersnr" v sl = getPersonalNumber sl == v || v == ""
-    alreadySet "sigcompnr" v sl = getCompanyNumber sl == v || v == ""
-    alreadySet "signature" _ _ = True
-    alreadySet _ _ _ = False                  
-  
+ 
 
 testPreparationToPendingEvidenceLog :: TestEnv ()
 testPreparationToPendingEvidenceLog = do
@@ -769,8 +763,8 @@ testCloseDocumentEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
   forM_ (documentsignatorylinks doc) $ \sl -> do
-    ignore $ randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
-    ignore $ randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing (systemActor t)
+    void $ randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
+    void $ randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing (systemActor t)
   etdoc <- randomUpdate $ \t-> CloseDocument (documentid doc) (systemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)

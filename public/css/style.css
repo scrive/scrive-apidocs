@@ -953,6 +953,17 @@ a.button {
     cursor: pointer;
 }
 
+.placedcheckbox{
+    background: url("../img/checkbox_unchecked.jpg") no-repeat scroll 0 0 transparent;
+    display: block;
+    height: 16px;
+    width: 16px;
+    cursor: pointer;
+}
+
+.placedcheckbox.checked{
+    background: url("../img/checkbox_checked.jpg") no-repeat scroll 0 0 transparent;
+}
 /* Localized */
 
 

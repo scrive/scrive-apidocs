@@ -259,13 +259,13 @@ window.Signatory = Backbone.Model.extend({
         signed: false,
         signs: false,
         author: false,
-        fields: [{name: "fstname"},
-                 {name: "sndname"},
-                 {name: "email"},
-                 {name: "sigco"},
-                 {name: "sigpersnr"},
-                 {name: "sigcompnr"},
-                 {name: "signature"}
+        fields: [{name: "fstname",   type : "standard"},
+                 {name: "sndname",   type : "standard"},
+                 {name: "email",     type : "standard"},
+                 {name: "sigco",     type : "standard"},
+                 {name: "sigpersnr", type : "standard"},
+                 {name: "sigcompnr", type : "standard"},
+                 {name: "signature", type : "signature"}
         ],
         current : false,
         attachments : [],
@@ -340,10 +340,46 @@ window.Signatory = Backbone.Model.extend({
     fields: function() {
         return this.get("fields");
     },
-    field: function(name) {
+    emailField : function() {
+        return this.field("email", "standard");
+    },
+    fstnameField : function() {
+        return this.field("fstname", "standard");
+    },
+    sndnameField : function() {
+        return this.field("sndname", "standard");
+    },
+    companyField : function() {
+        return this.field("sigco", "standard");
+    },
+    companynumberField : function() {
+        return this.field("sigcompnr", "standard");
+    }, 
+    personalnumberField : function() {
+        return this.field("sigpersnr", "standard");
+    },
+    email: function() {
+        return this.emailField().value();
+    },
+    fstname: function() {
+        return this.fstnameField().value();
+    },
+    sndname: function() {
+        return this.sndnameField().value();
+    },
+    personalnumber : function() {
+        return this.personalnumberField() != undefined ? (this.personalnumberField().value() != undefined ? this.personalnumberField().value() : "") : "";
+    },
+    company: function() {
+        return this.companyField() != undefined ? (this.companyField().value() != undefined ? this.companyField().value() : "") : "";
+    },
+    companynumber: function() {
+        return this.companynumberField() != undefined ? (this.companynumberField().value() != undefined ? this.companynumberField().value() : "") : "";
+    },
+    field: function(name, type) {
         var fields = this.fields();
         for (var i = 0; i < fields.length; i++)
-            if (fields[i].name() == name)
+            if (fields[i].name() == name && fields[i].type() == type)
                 return fields[i];
     },
     readyFields: function() {
@@ -355,16 +391,7 @@ window.Signatory = Backbone.Model.extend({
         for (var i = 0; i < fields.length; i++)
             if (fields[i].isCustom()) cf.push(fields[i]);
         return cf;
-    },
-    email: function() {
-        return this.field("email").value();
-    },
-    fstname: function() {
-        return this.field("fstname").value();
-    },
-    sndname: function() {
-        return this.field("sndname").value();
-    },
+    },  
     name: function() {
         var name = this.fstname() + " " + this.sndname();
         if (name != undefined && name != " ")
@@ -383,27 +410,6 @@ window.Signatory = Backbone.Model.extend({
          return this.name();
         else
          return this.email();
-    },
-    personalnumber : function() {
-        var pn = this.field("sigpersnr") != undefined ? this.field("sigpersnr").value(): undefined;
-        if (pn != undefined)
-            return pn;
-        else
-            return "";
-    },
-    company: function() {
-        var pn = this.field("sigco") != undefined ? this.field("sigco").value(): undefined;
-        if (pn != undefined)
-            return pn;
-        else
-            return "";
-    },
-    companynumber: function() {
-        var pn = this.field("sigcompnr") != undefined ? this.field("sigcompnr").value(): undefined;
-        if (pn != undefined)
-            return pn;
-        else
-            return "";
     },
     saved: function() {
       return this.get("saved");
@@ -495,7 +501,7 @@ window.Signatory = Backbone.Model.extend({
         return this.signature() == undefined || this.signature().readyForSign();
     },
     signature: function() {
-        return this.field("signature");
+        return this.field("signature", "signature");
     },
     remind: function(customtext) {
         return new Submit({
@@ -554,10 +560,25 @@ window.Signatory = Backbone.Model.extend({
                         type: "reject"
                        });
     },
-    addNewField: function() {
-        var signatory = this;
+    addNewField : function(t) {
+        var field = this.newField(t)
+        this.addField(field);
+        return field
+    },
+    addNewCustomField: function() {
+       return this.addNewField("custom");
+    },
+    newCheckbox: function() {
+       var checkbox =  this.newField("checkbox-obligatory");
+       checkbox.setName("Checkbox " + new Date().getTime());
+       return checkbox;
+    },
+    newField : function(t) {
+        return new Field({signatory: this, fresh: true, type : t});
+    },
+    addField : function(f) {
         var fields = this.fields();
-        fields.push(new Field({signatory: signatory, fresh: true}));
+        fields.push(f);
         this.set({"fields": fields});
         this.trigger("change:fields");
     },
@@ -782,7 +803,7 @@ window.SignatoryStandardView = Backbone.View.extend({
                 field.name() == "sndname" ||
                 field.name() == "email")
             return;
-            if (field.canBeIgnored() || field.isSignature())
+            if (field.canBeIgnored() || field.isSignature() || field.isCheckbox())
             return;
             var fieldview = new FieldStandardView(
             { model: field,
@@ -792,7 +813,7 @@ window.SignatoryStandardView = Backbone.View.extend({
         });
         container.append(fieldsbox);
         var emailview = new FieldStandardView(
-            { model: signatory.field("email"),
+            { model: signatory.emailField(),
               el: $("<div/>")
             });
         container.append($(emailview.el));

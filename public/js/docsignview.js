@@ -841,6 +841,11 @@ window.DocumentSignView = Backbone.View.extend({
     createInlineFieldTask: function(renderedPlacement) {
       var placement = renderedPlacement.placement;
       var elem = renderedPlacement.elem;
+      var label = "";
+      if (placement.field().isText())
+          label = placement.field().nicename();
+      else if (placement.field().isObligatoryCheckbox())
+          label = localization.docsignview.checkboxes.pleaseCheck;
       return new DocumentSignViewTask({
         model: placement.field(),
         isComplete: function() {
@@ -850,7 +855,7 @@ window.DocumentSignView = Backbone.View.extend({
         beforePointing: function() {
           elem.trigger("click");
         },
-        label: placement.field().isSignature() ? "" : placement.field().nicename()
+        label:label
       });
     },
     createUploadedAttachmentsElems: function() {
@@ -1208,7 +1213,6 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     $(window).scroll(checkIfDownArrowInFooter);
     checkIfDownArrowInFooter();
 
-      var scrollpoint = 0;
     var updateVisibility = function() {
 
       if (!taskmodel.isIncompleteTask()) {
@@ -1244,26 +1248,18 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
           view.pointingAt = nextTask;
           view.mainview.trigger("change:task");
         } else if ((elbottom + bottommargin) > scrollbottom) {
-            if(scrollpoint !== 16) {
-                scrollpoint = 6;
-                console.log("6");
                 downarrow.show();
                 uparrow.hide();
                 actionarrow.hide();
                 view.pointingAt = undefined;
                 view.mainview.trigger("change:task");
-            }
-        } else {
-            if(scrollpoint !== 17) {
-                scrollpoint = 7;
-                console.log("7");
-                uparrow.show();
+          } else {
                 downarrow.hide();
+                uparrow.show();
                 actionarrow.hide();
                 view.pointingAt = undefined;
                 view.mainview.trigger("change:task");
-            }
-        }
+        } 
       }
     };
     $(window).resize(updateVisibility);

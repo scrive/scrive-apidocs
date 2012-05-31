@@ -67,28 +67,6 @@ getFileIDContents fid = do
     Just file -> getFileContents file
     Nothing -> return BS.empty
 
-{- Upload document to TW-}
-
-{-  This function was implemented the other day, but bitrotted. Rescue it if needed.
- 
-_uploadDocumentFilesToTrustWeaver :: TW.TrustWeaverConf
-                                 -> String
-                                 -> DocumentID
-                                 -> IO ()
-_uploadDocumentFilesToTrustWeaver _ctxtwconf _twownername _documentid = do
-  error "uploadDocumentFilesToTrustWeaver is unimplemented"
-
-  Just document <- query $ GetDocumentByDocumentID documentid
-  let twdocumentid = show documentid
-  let twdocumentdate = showDateOnly (documentmtime document)
-  let File{filestorage = FileStorageMemory pdfdata} = head $ documentsealedfiles document
-
-  -- FIXME: we should retry here if the following fails
-  -- because of external reasons
-  reference <- eitherLog $ TW.storeInvoice ctxtwconf twdocumentid twdocumentdate twownername pdfdata
-  _ <- update $ SetDocumentTrustWeaverReference documentid reference
-  return ()
--}
 
 resizeImageAndReturnOriginalSize :: String -> IO (BS.ByteString, Int, Int)
 resizeImageAndReturnOriginalSize filepath = do

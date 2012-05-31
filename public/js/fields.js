@@ -109,6 +109,9 @@ window.Field = Backbone.Model.extend({
         if (this.isSignature())
             this.set({"signature" : new Signature({field: this}, {silent : true})});
     },
+    type : function() {
+        return this.get("type");
+    },
     name : function() {
         return this.get("name");
     },
@@ -134,29 +137,39 @@ window.Field = Backbone.Model.extend({
         return this.get("signatory");
     },
     canBeIgnored: function(){
-        var name = this.name();
-        return this.value() == "" && this.placements().length == 0 && (name == "fstname" || name == "sndname" || name == "sigco" || name == "sigpersnr" || name == "sigcompnr" || name == "signature");
-    },
-    hasRestrictedName : function() {
-        return this.isStandard() || this.isSignature(); //this checks are name based
+        return this.value() == "" && this.placements().length == 0 && (this.isStandard() || this.isSignature());
     },
     readyForSign : function(){
-        return (!this.isSignature() && ((this.value() != "") || (this.canBeIgnored()))) || (this.isSignature() && (this.signature().hasImage() || this.placements().length == 0));
+        if (this.isText() && (this.value() != ""))
+            return true;
+        else if (this.canBeIgnored())
+            return true;
+        else if (this.isSignature() && (this.signature().hasImage() || this.placements().length == 0))
+            return true;
+        else if (this.isOptionalCheckbox())
+            return true;
+        else if (this.isObligatoryCheckbox() && this.value() != "")
+            return true;
+        
+
+        return false;
     },
     nicename : function() {
         var name = this.name();
-        if (name == "fstname")
-            return localization.fstname;
-        if (name == "sndname" )
-            return localization.sndname;
-        if (name == "email")
-            return localization.email;
-        if (name == "sigco")
-            return localization.company;
-        if (name == "sigpersnr" )
-            return localization.personamNumber;
-        if (name == "sigcompnr")
-            return localization.companyNumber;
+        if (this.isStandard()) {
+            if (name == "fstname")
+                return localization.fstname;
+            if (name == "sndname" )
+                return localization.sndname;
+            if (name == "email")
+                return localization.email;
+            if (name == "sigco")
+                return localization.company;
+            if (name == "sigpersnr" )
+                return localization.personamNumber;
+            if (name == "sigcompnr")
+                return localization.companyNumber;
+        }
         return name;
     },
     nicetext : function() {
@@ -169,26 +182,30 @@ window.Field = Backbone.Model.extend({
         var field = this;
         var name  = this.name();
 
-        if (!this.signatory().author() && (name == "fstname" ||name == "sndname") && !this.signatory().isCsv()) {
+        if (!this.signatory().author() && this.isStandard() && (name == "fstname" ||name == "sndname") && !this.signatory().isCsv()) {
             var msg = localization.designview.validation.missingOrWrongNames;
             return new NameValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
 
-        if (!this.signatory().author() && name == "email" && !this.signatory().isCsv() ){
+        if (!this.signatory().author() && this.isStandard() && name == "email" && !this.signatory().isCsv() ){
             var msg = localization.designview.validation.missingOrWrongEmail;
             return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
 
-        if (this.signatory().document().elegAuthorization() && name == "sigpersnr" && this.signatory().signs()  && !this.signatory().isCsv() ) {
+        if (this.signatory().document().elegAuthorization() && this.isStandard() && name == "sigpersnr" && this.signatory().signs()  && !this.signatory().isCsv() ) {
             var msg = localization.designview.validation.missingOrWrongPersonalNumber;
             return new NotEmptyValidation({message: msg});
         }
 
-        if (this.signatory().author() && !this.isCustom() && !this.signature() && this.hasPlacements()) {
+        if (this.signatory().author() && this.isStandard() && this.hasPlacements()) {
           var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
           return new NotEmptyValidation({message: msg});
         }
-
+        if (this.signatory().author() && this.isObligatoryCheckbox()) {
+          var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
+          return new NotEmptyValidation({message: msg});
+        }
+        
         if (this.isCustom()) {
           var msg1 = localization.designview.validation.notReadyField;
           var msg2 = localization.designview.validation.notPlacedField;
@@ -206,19 +223,31 @@ window.Field = Backbone.Model.extend({
         return new Validation();
     },
     isStandard: function() {
-        var name = this.name();
-        return  (name == "fstname")
-             || (name == "sndname" )
-             || (name == "email")
-             || (name == "sigco")
-             || (name == "sigpersnr" )
-             || (name == "sigcompnr");
+        return  this.type() == "standard";
     },
     isCustom: function() {
-        return !this.isStandard() && !this.isSignature();
+        return this.type() == "custom";
+    },
+    isText : function() {
+        return this.isStandard() || this.isCustom();
     },
     isSignature : function() {
-        return this.name() == "signature";
+        return this.type() == "signature";
+    },
+    isCheckbox : function() {
+        return this.isOptionalCheckbox() || this.isObligatoryCheckbox();
+    },
+    isOptionalCheckbox : function() {
+        return this.type() == "checkbox-optional";
+    },
+    isObligatoryCheckbox : function() {
+        return this.type() == "checkbox-obligatory";
+    },
+    makeCheckboxOptional : function() {
+        this.set({"type":"checkbox-optional"}, {silent: true});
+    },
+    makeCheckboxObligatory : function() {
+        this.set({"type":"checkbox-obligatory"}, {silent: true});
     },
     signature : function() {
         return this.get("signature");
@@ -238,7 +267,9 @@ window.Field = Backbone.Model.extend({
       this.trigger("removed");
     },
     draftData : function() {
-      return {   name : this.name()
+      return {
+                 type : this.type()
+               , name : this.name()
                , value : this.value()
                , placements : _.map(this.placements(), function(placement) {return placement.draftData();})
              };
@@ -259,6 +290,8 @@ window.Field = Backbone.Model.extend({
           if (placement !== this.placements()[i])
              newplacements.push(this.placements()[i]);
        this.set({placements : newplacements});
+       if (this.isCheckbox() && newplacements.length == 0)
+           this.signatory().deleteField(this);
 
     },
     removeAllPlacements : function() {
@@ -377,13 +410,8 @@ window.FieldDesignView = Backbone.View.extend({
         var input = this.input;
         var icon =  $("<a class='setNameIcon' href='#'/>");
         var fn = function(){
-          if (!field.hasRestrictedName())
             field.makeReady();
-          else  FlashMessages.add({
-            color : "red",
-            content: localization.designview.validation.restrictedName
-          });
-          return false;
+            return false;
         };
         icon.click(fn);
         input.keypress(function(event) {

@@ -254,7 +254,6 @@ javascriptLocalisation =
                     , atLeastOnePersonMustSigns : "$_atLeastOnePersonMustSigns()$"
                     , notReadyField : "$_setAllFields()$"
                     , notPlacedField : "$_placeAllFields()$"
-                    , restrictedName : "$_fieldnameRestricted()$"
                     , notPlacedSignature : "$_signatureMustBePlacedForPad()$"
                 }
              , messages : {
@@ -263,6 +262,11 @@ javascriptLocalisation =
                     , extraActions : "$_designViewMessageExtraActions()$"
                 }
              , sign : "$_sign()$"
+             , checkboxes : {
+                      checked : "Check it"
+                    , makeOptional: "Make optional"
+                    , checkboxFor : "Checkbox for "
+             } 
            }
 
          , validation : {
@@ -352,6 +356,9 @@ javascriptLocalisation =
              , startButtonLabel: "$_startButtonLabel()$"
              , notEntered: "$_notEntered()$"
              , contact: "$_contact()$"
+             , checkboxes : {
+                    pleaseCheck : "Please check this field"
+               }
         }
         , poweredByScrive : "$_poweredByScrive()$"
     }

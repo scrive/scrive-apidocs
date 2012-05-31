@@ -2443,7 +2443,6 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_signaturePlaceYour","Signera här",,"Place your signature here"
 "_selectFileToUpload","Välj fil från dator",,"Select file from computer"
 "_atLeastOnePersonMustSigns","Dokumentet måste ha åtminstone en signerande part.",,"Document needs to have at least one signatory."
-"_fieldnameRestricted","Begränsat fältnamn",,"Field name restricted"
 "_PasswordValidationMessageInputExceedsMaxLength","Lösenord får max innehålla 250 tecken.",,"Password must contain max 250 characters."
 "_PasswordValidationMessageInputLessThanMinLength","Lösenord måste innehålla minst 8 tecken.",,"Password must contain at least 8 characters."
 "_PasswordValidationMessageNeedsLetterAndDigit","Lösenord måste innehålla åtminstone två bokstäver
