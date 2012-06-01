@@ -2539,6 +2539,8 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_denyPrivileges","Deny the privileges",,"Deny the privileges"
 "_deny","Deny",,"Deny"
 "_confirm","Confirm",,"Confirm"
-
-
+"_checkboxPleaseCheck","Vänligen kryssa för detta fält",,"Please check this field"
+"_checkboxChecked","Kryssa för",,"Check it"
+"_checkboxMakeOptional","Frivillig för mottagare",,"Make optional"
+"_checkboxCheckboxFor","Checkbox för ",,"Checkbox for "
 

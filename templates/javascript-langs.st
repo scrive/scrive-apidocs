@@ -263,9 +263,9 @@ javascriptLocalisation =
                 }
              , sign : "$_sign()$"
              , checkboxes : {
-                      checked : "Check it"
-                    , makeOptional: "Make optional"
-                    , checkboxFor : "Checkbox for "
+                      checked : "$_checkboxChecked()$"
+                    , makeOptional: "$_checkboxMakeOptional()$"
+                    , checkboxFor : "$_checkboxCheckboxFor()$"
              } 
            }
 
@@ -357,7 +357,7 @@ javascriptLocalisation =
              , notEntered: "$_notEntered()$"
              , contact: "$_contact()$"
              , checkboxes : {
-                    pleaseCheck : "Please check this field"
+                    pleaseCheck : "$_checkboxPleaseCheck()$" 
                }
         }
         , poweredByScrive : "$_poweredByScrive()$"
