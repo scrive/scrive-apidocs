@@ -80,7 +80,6 @@ import qualified Log
 import Templates.Templates
 import Util.CSVUtil
 import Util.FlashUtil
-import Util.KontraLinkUtils
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Util.MonadUtils
@@ -150,23 +149,29 @@ signDocument :: Kontrakcja m
 signDocument documentid
              signatorylinkid = do
   magichash <- guardJustM $ readField "magichash"
-  fieldnames <- getAndConcat "fieldname"
-  fieldvalues <- getAndConcat "fieldvalue"
-  let fields = zip fieldnames fieldvalues
+  fieldsJSON <- guardRightM $ liftM (runGetJSON readJSArray) $ getField' "fields"
+  fields <- guardJustM $ withJSValue fieldsJSON $ fromJSValueCustomMany $ do
+      ft <- fromJSValueM
+      value <- fromJSValueField "value"
+      return $ pairMaybe ft value
   mprovider <- readField "eleg"
   edoc <- case mprovider of
            Nothing -> Right <$> signDocumentWithEmailOrPad documentid signatorylinkid magichash fields
            Just provider -> do
-               signature     <- getDataFnM $ look "signature"
-               transactionid <- getDataFnM $ look "transactionid"
-               esinfo <- BankID.verifySignatureAndGetSignInfo documentid signatorylinkid magichash provider signature transactionid
-               case esinfo of
-                    BankID.Problem msg -> return $ Left msg
-                    BankID.Mismatch msg sfn sln spn -> do
-                        document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
-                        handleMismatch document signatorylinkid msg sfn sln spn
-                        return $ Left msg
-                    BankID.Sign sinfo ->  Right <$>  signDocumentWithEleg documentid signatorylinkid magichash fields sinfo
+             transactionid <- getDataFnM $ look "transactionid"
+             esigninfo <- case provider of
+               MobileBankIDProvider -> do
+                 BankID.verifySignatureAndGetSignInfoMobile documentid signatorylinkid magichash transactionid
+               _ -> do
+                 signature <- getDataFnM $ look "signature"
+                 BankID.verifySignatureAndGetSignInfo documentid signatorylinkid magichash provider signature transactionid
+             case esigninfo of
+               BankID.Problem msg -> return $ Left msg
+               BankID.Mismatch msg sfn sln spn -> do
+                 document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
+                 handleMismatch document signatorylinkid msg sfn sln spn
+                 return $ Left msg
+               BankID.Sign sinfo -> Right <$> signDocumentWithEleg documentid signatorylinkid magichash fields sinfo
   case edoc of
     Right (Right (doc, olddoc)) -> do
       postDocumentPendingChange doc olddoc "web"
@@ -183,8 +188,6 @@ signDocument documentid
       addFlash  (OperationFailed, msg)
       return LoopBack
     _ -> internalError
-  where
-    getAndConcat fname = getDataFnM (lookInputList fname) >>= return . map BSL.toString
 
 handleMismatch :: Kontrakcja m => Document -> SignatoryLinkID -> String -> String -> String -> String -> m ()
 handleMismatch doc sid msg sfn sln spn = do
@@ -381,30 +384,40 @@ handleIssueSign document = do
                 Signable Order    -> return $ LinkOrders
                 _                 -> return $ LinkUpload
           (ls, _) -> do
-            Log.debug $ "handleIssueSign had lefts: " ++ intercalate ";" (map show ls)
-            return LoopBack
+            Log.debug $ "handleIssueSign had lefts: " ++ intercalate ";" ls
+            addFlash (OperationFailed, intercalate ";" ls)
+            return $ LinkIssueDoc (documentid document)
       Left link -> return link
     where
-      forIndividual :: Kontrakcja m => Document -> m (Either KontraLink Document)
+      forIndividual :: Kontrakcja m => Document -> m (Either String Document)
       forIndividual doc = do
         mprovider <- readField "eleg"
         mndoc <- case mprovider of
                    Nothing ->  Right <$> authorSignDocument (documentid doc) Nothing
                    Just provider -> do
-                      signature     <- getDataFnM $ look "signature"
-                      transactionid <- getDataFnM $ look "transactionid"
-                      esinfo <- BankID.verifySignatureAndGetSignInfoForAuthor (documentid doc) provider signature transactionid
-                      case esinfo of
-                        BankID.Problem msg -> return $ Left msg
-                        BankID.Mismatch msg _ _ _ -> return $ Left msg
-                        BankID.Sign sinfo -> Right <$>  authorSignDocument (documentid doc) (Just sinfo)
+                     transactionid <- getDataFnM $ look "transactionid"
+                     esigninfo <- case provider of
+                       MobileBankIDProvider -> do
+                         BankID.verifySignatureAndGetSignInfoMobileForAuthor (documentid doc) transactionid
+                       _ -> do
+                         signature <- getDataFnM $ look "signature"
+                         BankID.verifySignatureAndGetSignInfoForAuthor (documentid doc) provider signature transactionid
+                     case esigninfo of
+                       BankID.Problem msg -> return $ Left msg
+                       BankID.Mismatch msg _ _ _ -> do
+                         Log.debug $ "got this message: " ++ msg
+                         return $ Left msg
+                       BankID.Sign sinfo -> Right <$>  authorSignDocument (documentid doc) (Just sinfo)
         case mndoc of
           Right (Right newdocument) -> do
             postDocumentPreparationChange newdocument "web"
             newdocument' <- guardJustM $ dbQuery $ GetDocumentByDocumentID (documentid newdocument)
             postDocumentPendingChange newdocument' newdocument' "web" -- | We call it on same document since there was no change
             return $ Right newdocument'
-          _ -> return $ Left LoopBack
+          Right (Left (DBActionNotAvailable message)) -> return $ Left message
+          Right (Left (DBDatabaseNotAvailable message)) -> return $ Left message
+          Right (Left _) -> return $ Left "Server error. Please try again."
+          Left s -> return $ Left s
 
 
 handleIssueSend :: Kontrakcja m => Document -> m KontraLink

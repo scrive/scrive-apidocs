@@ -24,7 +24,6 @@ import Util.FlashUtil
 import DBError
 import User.UserView
 import Util.FinishWith
-import Util.KontraLinkUtils
 
 seeOtherXML :: String -> Response
 seeOtherXML url = toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.fromString $ "<a href='"++url++"' alt='303 see other'>"++ url ++ "</a>"

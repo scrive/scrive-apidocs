@@ -64,6 +64,7 @@ showUserMailAPI =
          </div>
        </div>
        $if(hascompanymailapi)$
+        $if(iscompanyadmin)$
        <div class="col">
          <div class="account-header"><h2>$_CompanyMailAPI()$</h2></div>
          <div class="account-body">
@@ -88,6 +89,7 @@ showUserMailAPI =
            </div>
          </div>
        </div>
+        $endif$
        $endif$
        <div class="account-footer">
          <a href="#" class="btn-small green submit">

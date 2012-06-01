@@ -43,6 +43,7 @@ import Data.Foldable hiding (concat, elem)
 import Data.Maybe
 import Control.Monad
 import Text.JSON.FromJSValue
+import Data.Functor
 
 -- Structure definition + pointed
 data SignatoryTMP = SignatoryTMP {
@@ -185,14 +186,12 @@ instance FromJSValue SignatoryTMP where
             
 instance FromJSValue SignatoryField where
     fromJSValue = do
-        ftype <- fromJSValueField "name"
+        ftype <- fromJSValue -- We read field type at this from two different fields, so we can't use fromJSValueField
         value  <- fromJSValueField "value"
         placements <- fromJSValueField "placements"
         case (ftype,value) of 
           (Just ft, Just v) -> do
-              let fixFT (CustomFT name _)= CustomFT name (not $ null v)
-                  fixFT t = t
-              return $ Just $ SignatoryField (fixFT ft) v (concat $ maybeToList placements)
+              return $ Just $ SignatoryField ft v (concat $ maybeToList placements)
           _ -> return Nothing
         
 
@@ -208,16 +207,20 @@ instance FromJSValue SignatoryAttachment where
 
 instance FromJSValue FieldType where
    fromJSValue = do
-    s <- fromJSValue
-    return $ case s of
-         Just "fstname"   -> Just $ FirstNameFT
-         Just "sndname"   -> Just $ LastNameFT
-         Just "email"     -> Just $ EmailFT
-         Just "sigpersnr" -> Just $ PersonalNumberFT
-         Just "sigco"     -> Just $ CompanyFT
-         Just "sigcompnr" -> Just $ CompanyNumberFT
-         Just "signature" -> Just $ SignatureFT
-         Just name        -> Just $ CustomFT  name False
+    s <- fromJSValueField "name"
+    t <- fromJSValueField "type"
+    filled <- (not . null) <$> fromMaybe "" <$> fromJSValueField "value"
+    return $ case (fromMaybe "standard" t,s) of
+         ("standard",            Just "fstname")    -> Just $ FirstNameFT
+         ("standard",            Just "sndname")    -> Just $ LastNameFT
+         ("standard",            Just "email")      -> Just $ EmailFT
+         ("standard",            Just "sigpersnr")  -> Just $ PersonalNumberFT
+         ("standard",            Just "sigco")      -> Just $ CompanyFT
+         ("standard",            Just "sigcompnr")  -> Just $ CompanyNumberFT
+         ("signature",           Just "signature")  -> Just $ SignatureFT
+         ("custom",              Just name       )  -> Just $ CustomFT  name filled
+         ("checkbox-optional",   Just name       )  -> Just $ CheckboxOptionalFT  name 
+         ("checkbox-obligatory", Just name       )  -> Just $ CheckboxObligatoryFT  name 
          _ -> Nothing
 
 instance FromJSValue FieldPlacement where

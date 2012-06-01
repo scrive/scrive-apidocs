@@ -28,7 +28,6 @@ import User.UserView
 import Util.FlashUtil
 import Util.HasSomeUserInfo
 import qualified Log
-import Util.KontraLinkUtils
 import Util.MonadUtils
 import Stats.Control
 import User.Action

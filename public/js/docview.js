@@ -284,7 +284,7 @@ window.DocumentSignButtonView = Backbone.View.extend({
     if (!this.model.currentSignatoryCanSign()) {
       return this;
     }
-
+    var model = this.model;
     var sign = this;
     $(this.el).append($("<div class='sign' />").append(Button.init({
       size: "big",
@@ -294,6 +294,9 @@ window.DocumentSignButtonView = Backbone.View.extend({
       onClick: function() {
         if (sign.validate()) {
           sign.confirm();
+        } else
+        {
+          model.trigger("tried-to-sign-and-failed");
         }
       }
     }).input()));
@@ -327,6 +330,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
     var telia = $("<a href='#' class='author2 telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
     var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
+    var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");      
     bankid.click(function() {
       Eleg.bankidSign(document, signatory, document.sign());
       return false;
@@ -339,7 +343,11 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       Eleg.nordeaSign(document, signatory, document.sign());
       return false;
     });
-    return $("<span />").append(bankid).append(telia).append(nordea);
+      mbi.click(function() {
+          Eleg.mobileBankIDSign(document,signatory,document.sign());
+          return false;
+      });
+    return $("<span />").append(bankid).append(telia).append(nordea).append(mbi);
   },
   createSignButtonElems: function() {
     var document = this.model;

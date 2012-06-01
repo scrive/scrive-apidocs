@@ -355,6 +355,7 @@ function postBack(sig, provider, formselector, transactionid, posturl) {
 
 (function(window){
 
+
 window.Eleg = {
   // generate a TBS from the available data
    generateTBS : function(doctitle, docid, signatories) {
@@ -576,7 +577,55 @@ window.Eleg = {
         error: repeatForeverWithDelay(250)
             
     });
-}    
+    },
+    mobileBankIDSign: function(document, signatory, submit, callback) {
+        var eleg = this;
+        var url;
+        if(document.preparation() || (document.viewer() && document.viewer().signatoryid() === document.author().signatoryid())) // author
+            url = "/d/eleg/mbi/" + document.documentid();
+        else 
+            url = "/s/eleg/mbi/" + document.documentid() +  "/" + document.viewer().signatoryid();
+        console.log(url);
+        LoadingDialog.open(localization.sign.eleg.mobile.startingMobileBankID);
+        var fetching = true;
+        $.ajax({
+            'url': url,
+            'dataType': 'json',
+            'data': { 
+                'magichash' : document.viewer().magichash()
+            }, 
+            'type': 'POST',
+            'scriptCharset': "utf-8",
+            'success': function(data) {
+                fetching = false;
+                if (data && !data.error)  {
+                    LoadingDialog.open(data.msg);
+                } else if (data && data.error) {
+                    FlashMessages.add({ content: data.error, color: "red"});
+                    LoadingDialog.close();
+                    return; 
+                }
+                var m = new MobileBankIDPolling({docid: document.documentid()
+                                                 , collecturl:url
+                                                 ,magichash: document.viewer().magichash()
+                                                 ,trid: data.transactionid
+                                                 ,slid: document.viewer().signatoryid()
+                                                 ,callback: function() {
+                                                     submit.add("transactionid", data.transactionid);
+                                                     submit.add("eleg" , "mobilebankid");
+                                                     if (callback == undefined)
+                                                         submit.send();
+                                                     else
+                                                         callback(submit);
+                                                 }
+                                                });
+                var mv = new MobileBankIDPollingView({model:m});
+                m.poll();
+
+            }});
+        // retry after 5 seconds if it hasn't worked.
+        window.setTimeout(function() {if (fetching) eleg.mobileBankIDSign(document,signatory,submit,callback);}, 5000);
+    }
 
 };
     

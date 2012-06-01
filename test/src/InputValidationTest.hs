@@ -6,7 +6,7 @@ import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assert, Assertion)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.QuickCheck (Arbitrary(..), Property, oneof, (==>), mapSize, forAll, elements)
+import Test.QuickCheck (Arbitrary(..), Property, oneof, (==>), property, mapSize, forAll, elements)
 
 import InputValidation
 
@@ -415,8 +415,7 @@ testValidIDNullIsEmpty :: Assertion
 testValidIDNullIsEmpty = testNullIsEmpty asValidID
 
 propValidIDGoodExamples :: Int -> Property
-propValidIDGoodExamples n = 
-    (n>(-999999999) && n<999999999) ==> isGood . asValidID $ show n
+propValidIDGoodExamples n = property (isGood . asValidID $ show n)
 
 testValidPlaceNullIsEmpty :: Assertion
 testValidPlaceNullIsEmpty = testNullIsEmpty asValidPlace

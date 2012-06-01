@@ -275,7 +275,6 @@ jsonUsersList = do
                         ,("uploaded_docs", jsFromString . show $ doccount docstats)
                         ,("viral_invites", JSBool $ not $ isAdminInvite itype)
                         ,("admin_invites", JSBool $ isAdminInvite itype)
-                        ,("subaccounts", jsFromString "")
                         ])
                     ,("link", jsFromString . show $ LinkUserAdmin $ Just $ userid user)
                     ]) (list users)),
@@ -842,7 +841,9 @@ daveSignatoryLink documentid siglinkid = onlyAdmin $ do
               PersonalNumberFT -> "sigpersnr"
               CompanyNumberFT  -> "sigcompnr"
               SignatureFT      -> "signature"
-              CustomFT label _ -> label
+              CustomFT label _ -> "Custom: " ++ label
+              CheckboxOptionalFT label -> "Checkbox*: " ++ label
+              CheckboxObligatoryFT label -> "Checkbox: " ++ label
 
 
 updateFields :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink

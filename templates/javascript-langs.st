@@ -102,6 +102,9 @@ javascriptLocalisation =
                                    , body1: " $_pageDocumentForSignContentElegBody1()$ "
                                    , clickHere : "$_pageDocumentForSignContentElegBody2ClickHere()$"
                                    , body2 : " $_pageDocumentForSignContentElegBody3()$ "
+                                   , mobile : {
+                                       startingMobileBankID : "Starta din BankID säkerhetsapp."
+                                   }
                                  }
                     }
              , signByAuthor : {
@@ -251,7 +254,6 @@ javascriptLocalisation =
                     , atLeastOnePersonMustSigns : "$_atLeastOnePersonMustSigns()$"
                     , notReadyField : "$_setAllFields()$"
                     , notPlacedField : "$_placeAllFields()$"
-                    , restrictedName : "$_fieldnameRestricted()$"
                     , notPlacedSignature : "$_signatureMustBePlacedForPad()$"
                 }
              , messages : {
@@ -260,6 +262,11 @@ javascriptLocalisation =
                     , extraActions : "$_designViewMessageExtraActions()$"
                 }
              , sign : "$_sign()$"
+             , checkboxes : {
+                      checked : "$_checkboxChecked()$"
+                    , makeOptional: "$_checkboxMakeOptional()$"
+                    , checkboxFor : "$_checkboxCheckboxFor()$"
+             } 
            }
 
          , validation : {
@@ -349,6 +356,9 @@ javascriptLocalisation =
              , startButtonLabel: "$_startButtonLabel()$"
              , notEntered: "$_notEntered()$"
              , contact: "$_contact()$"
+             , checkboxes : {
+                    pleaseCheck : "$_checkboxPleaseCheck()$" 
+               }
         }
         , poweredByScrive : "$_poweredByScrive()$"
     }

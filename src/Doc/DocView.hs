@@ -278,14 +278,16 @@ signatoryFieldsJSON :: Document -> SignatoryLink -> JSValue
 signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = JSArray $
   for orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements} ->
     case sfType of
-      FirstNameFT           -> fieldJSON doc "fstname"   sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      LastNameFT            -> fieldJSON doc "sndname"   sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      EmailFT               -> fieldJSON doc "email"     sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      PersonalNumberFT      -> fieldJSON doc "sigpersnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      CompanyFT             -> fieldJSON doc "sigco"     sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      CompanyNumberFT       -> fieldJSON doc "sigcompnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      SignatureFT           -> fieldJSON doc "signature" sfValue (closedSignatureF sf  && (not $ isPreparation doc)) sfPlacements
-      CustomFT label closed -> fieldJSON doc label       sfValue (closed  && (not $ isPreparation doc))  sfPlacements
+      FirstNameFT             -> fieldJSON doc "standard" "fstname"   sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      LastNameFT              -> fieldJSON doc "standard" "sndname"   sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      EmailFT                 -> fieldJSON doc "standard" "email"     sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      PersonalNumberFT        -> fieldJSON doc "standard" "sigpersnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      CompanyFT               -> fieldJSON doc "standard" "sigco"     sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      CompanyNumberFT         -> fieldJSON doc "standard" "sigcompnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      SignatureFT             -> fieldJSON doc "signature" "signature" sfValue (closedSignatureF sf  && (not $ isPreparation doc)) sfPlacements
+      CustomFT label closed   -> fieldJSON doc "custom" label       sfValue (closed  && (not $ isPreparation doc))  sfPlacements
+      CheckboxOptionalFT label -> fieldJSON doc "checkbox-optional" label sfValue False  sfPlacements
+      CheckboxObligatoryFT label -> fieldJSON doc "checkbox-obligatory" label sfValue  False  sfPlacements
   where
     closedF sf = ((not $ null $ sfValue sf) || (null $ sfPlacements sf))
     closedSignatureF sf = ((not $ null $ dropWhile (/= ',') $ sfValue sf) || (null $ sfPlacements sf))
@@ -298,8 +300,9 @@ signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{si
     ftOrder CompanyNumberFT _ = LT
     ftOrder _ _ = EQ
 
-fieldJSON :: Document -> String -> String -> Bool -> [FieldPlacement] -> JSValue
-fieldJSON  doc name value closed placements = runJSONGen $ do
+fieldJSON :: Document -> String -> String -> String -> Bool -> [FieldPlacement] -> JSValue
+fieldJSON  doc tp name value closed placements = runJSONGen $ do
+    J.value "type" tp
     J.value "name" name
     J.value "value" value
     J.value "closed" closed

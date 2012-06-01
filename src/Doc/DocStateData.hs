@@ -115,6 +115,7 @@ data SignatureInfo = SignatureInfo {
   , signaturefstnameverified :: Bool
   , signaturelstnameverified :: Bool
   , signaturepersnumverified :: Bool
+  , signatureinfoocspresponse :: Maybe String -- verified legal evidence issued by BankID
   } deriving (Eq, Ord, Show)
 
 data FieldType = FirstNameFT
@@ -125,6 +126,8 @@ data FieldType = FirstNameFT
                | EmailFT
                | CustomFT String Bool -- label filledbyauthor
                | SignatureFT
+               | CheckboxOptionalFT String 
+               | CheckboxObligatoryFT String 
   deriving (Eq, Ord, Show, Data, Typeable)
 
 data SignatoryField = SignatoryField {

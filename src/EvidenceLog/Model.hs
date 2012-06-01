@@ -20,6 +20,7 @@ import Util.Actor
 import Version
 import Templates.Templates
 import qualified Templates.Fields as F
+import Control.Applicative
 
 data InsertEvidenceEvent = InsertEvidenceEvent
                            EvidenceEventType      -- A code for the event
@@ -64,7 +65,7 @@ htmlDocFromEvidenceLog title elog = do
     F.value "documenttitle" title
     F.objects "entries" $ for elog $ \entry -> do
       F.value "time" $ formatMinutesTimeUTC (evTime entry) ++ " UTC"
-      F.value "ip"   $ show $ evIP4 entry
+      F.value "ip"   $ show <$> evIP4 entry
       F.value "text" $ evText entry
 
 data GetEvidenceLog = GetEvidenceLog DocumentID

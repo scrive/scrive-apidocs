@@ -441,9 +441,6 @@ sortWith k ls = sortBy (\a b-> compare (k a) (k b)) ls
 groupWith :: Eq b => (a -> b) -> [a] -> [[a]]
 groupWith k ls = Data.List.groupBy (\a b -> k a == k b) ls
 
-ignore :: Monad m => m a -> m ()
-ignore a = a >> return ()
-
 mapassoc :: (a -> b) -> [a] -> [(a, b)]
 mapassoc f = map (id &&& f)
 

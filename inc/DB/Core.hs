@@ -93,11 +93,11 @@ instance WebMonad r m => WebMonad r (DBT m) where
 
 -- Class for accessing DBEnv object
 
-class MonadIO m => MonadDB m where
+class (Functor m, MonadIO m) => MonadDB m where
   getNexus   :: m Nexus
   localNexus :: (Nexus -> Nexus) -> m a -> m a
 
-instance MonadIO m => MonadDB (DBT m) where
+instance (Functor m, MonadIO m) => MonadDB (DBT m) where
   getNexus     = DBT ask
   localNexus f = DBT . local f . unDBT
 

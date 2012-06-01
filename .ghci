@@ -20,5 +20,3 @@
 :set -XTypeOperators
 :set -XTypeSynonymInstances
 :set -XUndecidableInstances
-
-:set -package containers-0.3.0.0

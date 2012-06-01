@@ -179,20 +179,17 @@ window.Document = Backbone.Model.extend({
                         });
     },
     sign: function() {
-        var fieldnames = [];
-        var fieldvalues = [];
+        var fields = [];
         _.each(this.currentSignatory().fields(), function(field) {
             if (field.isClosed()) return;
-            fieldnames.push(field.name());
-            fieldvalues.push(field.value());
+            fields.push({name: field.name(), value: field.value(), type: field.type()});
         });
           return new Submit({
               sign : "YES",
               url : "/s/" + this.documentid() + "/" + this.viewer().signatoryid(),
               method: "POST",
               magichash: this.viewer().magichash(),
-              fieldname: fieldnames,
-              fieldvalue: fieldvalues
+              fields: JSON.stringify(fields)
           });
     },
     sendByAuthor: function() {

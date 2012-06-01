@@ -29,11 +29,11 @@ window.SignatoryDesignView = Backbone.View.extend({
        else
         return process.nonsignatoryname();
     },
-   addFieldButton : function() {
+   addCustomFieldButton : function() {
         var signatory = this.model;
         var addFieldButton = $("<a class='addField' href='#'/>");
         addFieldButton.click(function(){
-            signatory.addNewField();
+            signatory.addNewCustomField();
             return false;
             });
         return addFieldButton;
@@ -135,10 +135,45 @@ window.SignatoryDesignView = Backbone.View.extend({
        });
        return setCsvSignatoryIcon;
    },
+   placeCheckboxIcon : function() {
+       var view = this;
+       var signatory = this.model;
+       var field = signatory.newCheckbox();
+       var placeCheckboxIcon = $("<a class='placeCheckboxIcon' href='#'/>");
+       var fileview = signatory.document().mainfile().view;
+       placeCheckboxIcon.draggable({
+                    handle: ".ddIcon",
+                    appendTo: "body",
+                    helper: function(event) {
+                        return new FieldPlacementView({model: field, el : $("<div style='margin-left:12px;margin-top:1px;'/>")}).el;
+                    },
+                    start: function(event, ui) {
+                          fileview.showCoordinateAxes(ui.helper);
+                    },
+                    stop: function() {
+                          fileview.hideCoordinateAxes();
+                    },
+                    drag: function(event, ui) {
+                    },
+                    onDrop: function(page, x,y ){
+                          field.makeReady();
+                          signatory.addField(field);
+                          field.addPlacement(new FieldPlacement({
+                              page: page.number(),
+                              fileid: page.file().fileid(),
+                              field: field,
+                              x : x,
+                              y : y
+                            }));
+                    }
+            });
+
+       return placeCheckboxIcon;
+   },
    placeSignatureIcon : function() {
        var view = this;
        var signatory = this.model;
-       var field = signatory.field("signature");
+       var field = signatory.signature();
        var placeSignatureIcon = $("<a class='placeSignatureIcon' href='#'/>");
        field.view = placeSignatureIcon;
        field.view.redborder = function() {placeSignatureIcon.addClass('redborder')};
@@ -180,8 +215,10 @@ window.SignatoryDesignView = Backbone.View.extend({
         if (signatory.signs())
             top.append(this.setSignOrderIcon());
         if (signatory.signs())
+            top.append(this.placeCheckboxIcon());
+        if (signatory.signs())
             top.append(this.placeSignatureIcon());
-        top.append(this.addFieldButton());
+        top.append(this.addCustomFieldButton());
         if (signatory.signs() && document.view.signOrderVisible())
             top.append(this.signOrderSelector());
 
@@ -206,14 +243,14 @@ window.SignatoryDesignView = Backbone.View.extend({
                                           el : $("<div/>")
                                         }).el);
                             };
-        makeField(signatory.field("fstname"));
-        makeField(signatory.field("sndname"));
-        makeField(signatory.field("email"));
+        makeField(signatory.fstnameField());
+        makeField(signatory.sndnameField());
+        makeField(signatory.emailField());
         _.each(signatory.fields(),function(field){
-            if (field.name() != "fstname" &&
-                field.name() != "sndname" &&
-                field.name() != "email"   &&
-                !field.isSignature())
+            if (field != signatory.fstnameField() &&
+                field != signatory.sndnameField() &&
+                field != signatory.emailField()   &&
+                !field.isSignature() && !field.isCheckbox())
                 makeField(field);
         });
         this.container.append(fields);

@@ -331,15 +331,24 @@ documentFilterToSQL (DocumentFilterByTags tags) =
   sqlConcatAND $ map (\tag -> SQL "EXISTS (SELECT 1 FROM document_tags WHERE name = ? AND value = ? AND document_id = documents.id)"
                               [toSql $ tagname tag, toSql $ tagvalue tag]) tags
 documentFilterToSQL (DocumentFilterByString string) =
-  SQL "documents.title ILIKE ?" [sqlpat] `sqlOR`
-     sqlJoinWithAND (map (\wordpat -> SQL "EXISTS (SELECT 1 FROM signatory_link_fields WHERE signatory_link_fields.signatory_link_id = signatory_links.id AND signatory_link_fields.value ILIKE ?)" [wordpat]) sqlwordpat)
+  result
   where
-      sqlpat = toSql $ "%" ++ concatMap escape string ++ "%"
-      sqlwordpat = map (\word -> toSql $ "%" ++ concatMap escape word ++ "%") (words string)
+      result = SQL "documents.title ILIKE ?" [sqlpat string] `sqlOR`
+         sqlJoinWithAND (map sqlMatch (words string))
+      sqlMatch word = SQL ("EXISTS (SELECT TRUE" ++
+                                   "  FROM signatory_link_fields JOIN signatory_links AS sl5" ++
+                                                                 "  ON sl5.document_id = documents.id" ++
+                                                                 " AND sl5.id = signatory_link_fields.signatory_link_id" ++
+                                   -- " FROM signatory_link_fields " ++
+                                   " WHERE signatory_link_fields.value ILIKE ?)") [sqlpat word]
+                                   --" WHERE TRUE)") []
+
+      sqlpat text = toSql $ "%" ++ concatMap escape text ++ "%"
       escape '\\' = "\\\\"
       escape '%' = "\\%"
       escape '_' = "\\_"
       escape c = [c]
+
 documentFilterToSQL (DocumentFilterByIdentification identification) =
   SQL ("(documents.allowed_id_types & ?) <> 0") [toSql [identification]]
 
@@ -584,6 +593,7 @@ signatoryLinksSelectors = intercalate ", "
   , "signatory_links.signinfo_first_name_verified"
   , "signatory_links.signinfo_last_name_verified"
   , "signatory_links.signinfo_personal_number_verified"
+  , "signatory_links.signinfo_ocsp_response"
   , "signatory_links.roles"
   , "signatory_links.csv_title"
   , "signatory_links.csv_contents"
@@ -620,7 +630,8 @@ fetchSignatoryLinks = do
      sign_order token sign_time sign_ip seen_time seen_ip read_invitation
      invitation_delivery_status signinfo_text signinfo_signature signinfo_certificate
      signinfo_provider signinfo_first_name_verified signinfo_last_name_verified
-     signinfo_personal_number_verified roles csv_title csv_contents csv_signatory_index
+     signinfo_personal_number_verified signinfo_ocsp_response 
+     roles csv_title csv_contents csv_signatory_index
      deleted really_deleted status_class
      safileid saname sadesc
       | docid == nulldocid                      = (document_id, [link], linksmap)
@@ -663,6 +674,7 @@ fetchSignatoryLinks = do
                 , signaturefstnameverified = signinfo_first_name_verified'
                 , signaturelstnameverified = signinfo_last_name_verified'
                 , signaturepersnumverified = signinfo_personal_number_verified'
+                , signatureinfoocspresponse = signinfo_ocsp_response
                 }
           , signatoryroles = roles
           , signatorylinkdeleted = deleted
@@ -700,6 +712,7 @@ insertSignatoryLinkAsIs documentid link = do
            , sql "csv_signatory_index" $ csvsignatoryindex `fmap` signatorylinkcsvupload link
            , sql "deleted" $ signatorylinkdeleted link
            , sql "really_deleted" $ signatorylinkreallydeleted link
+           , sql "signinfo_ocsp_response" $ signatureinfoocspresponse `fmap` signatorysignatureinfo link
            ] <++> SQL " RETURNING id" []
 
   slids <- foldDB (\acc slid -> slid : acc) []
@@ -839,6 +852,8 @@ fetchSignatoryLinkFields = foldDB decoder M.empty
           , sfPlacements = placements
           , sfType = case xtype of
                         CustomFT{} -> CustomFT custom_name is_author_filled
+                        CheckboxOptionalFT{} -> CheckboxOptionalFT custom_name 
+                        CheckboxObligatoryFT{} -> CheckboxObligatoryFT custom_name 
                         _   -> xtype
           }] acc
 
@@ -849,9 +864,13 @@ insertSignatoryLinkFieldAsIs slid field = do
        , sql "type" $ sfType field
        , sql "custom_name" $ case sfType field of
                                 CustomFT name _ -> name
+                                CheckboxOptionalFT name -> name
+                                CheckboxObligatoryFT name -> name
                                 _ -> ""
        , sql "is_author_filled"  $ case sfType field of
                                 CustomFT _ authorfilled -> authorfilled
+                                CheckboxOptionalFT _  -> False
+                                CheckboxObligatoryFT _  -> False
                                 _ -> False
        , sql "value" $ sfValue field
        , sql "placements" $ sfPlacements field
@@ -1313,7 +1332,6 @@ instance MonadDB m => DBUpdate m ErrorDocument (Either String Document) where
 
 selectDocuments :: MonadDB m => SQL -> DBEnv m [Document]
 selectDocuments sqlquery = do
-
     _ <- kRun $ SQL "CREATE TEMP TABLE docs AS " [] <++> sqlquery
 
     _ <- kRun $ SQL "SELECT * FROM docs" []
@@ -1708,13 +1726,13 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m RestartDocument (Either String D
         case ed of
           Left s -> return $ Left s
           Right d -> do
-            ignore $ update $ InsertEvidenceEvent
+            void $ update $ InsertEvidenceEvent
               RestartDocumentEvidence
               ("Document restarted by " ++ actorWho actor ++ ". New document has id " ++ show (documentid d) ++ ".")
               (Just $ documentid doc)
               actor
             copyEvidenceLogToNewDocument (documentid doc) (documentid d)
-            ignore $ update $ InsertEvidenceEvent
+            void $ update $ InsertEvidenceEvent
               RestartDocumentEvidence
               ("Document restarted from document with id " ++ (show $ documentid doc) ++ " by " ++ actorWho actor ++ ".")
               (Just $ documentid d)
@@ -1760,7 +1778,7 @@ instance MonadDB m => DBUpdate m RestoreArchivedDocument (Either String Document
     let txt = case (usercompany user, useriscompanyadmin user) of
           (Just _, True) -> "the company with admin email \"" ++ getEmail user ++ "\""
           _ -> "the user with email \"" ++ getEmail user ++ "\""
-    ignore $ update $ InsertEvidenceEvent
+    void $ update $ InsertEvidenceEvent
       RestoreArchivedDocumentEvidence
       ("Document restored from the rubbish bin for " ++ txt ++ " by " ++ actorWho actor ++ ".")
       (Just did)
@@ -2037,6 +2055,7 @@ instance MonadDB m => DBUpdate m SignDocument (Either String Document) where
               , sql "signinfo_first_name_verified" $ signaturefstnameverified `fmap` msiginfo
               , sql "signinfo_last_name_verified" $ signaturelstnameverified `fmap` msiginfo
               , sql "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` msiginfo
+              , sql "signinfo_ocsp_response" $ signatureinfoocspresponse `fmap` msiginfo
               ] <++> SQL "WHERE id = ? AND document_id = ?" [
                 toSql slid
               , toSql docid
@@ -2048,10 +2067,14 @@ instance MonadDB m => DBUpdate m SignDocument (Either String Document) where
                                       , signaturefstnameverified
                                       , signaturelstnameverified
                                       , signaturepersnumverified
+                                      , signatureinfoocspresponse
+                                      , signatureinfosignature
+                                      , signatureinfocertificate
                                       }) -> let ps = case signatureinfoprovider of
                                                   BankIDProvider -> "BankID"
                                                   TeliaProvider  -> "Telia"
                                                   NordeaProvider -> "Nordea"
+                                                  MobileBankIDProvider -> "Mobile BankID"
                                                 pairs = [("first name", signaturefstnameverified)
                                                         ,("last name", signaturelstnameverified)
                                                         ,("personal number", signaturepersnumverified)]
@@ -2060,10 +2083,18 @@ instance MonadDB m => DBUpdate m SignDocument (Either String Document) where
                                                 vstring = case pairstrue of
                                                   [] -> "No fields were verified."
                                                   _ -> "The following fields were verified: " ++ vs
+                                                sigstring = "Signature: " ++ signatureinfosignature ++ ". "
+                                                certstring = if signatureinfocertificate == "" 
+                                                             then ""
+                                                             else "Certificate: " ++ signatureinfocertificate ++ ". "
+                                                sigocsp = maybe "" (\ocsp->"OCSP Response: " ++ ocsp ++ ".") signatureinfoocspresponse
                                             in " using e-legitimation. The signed text was \""
                                                ++ signatureinfotext
                                                ++ "\". The provider was " ++ ps ++ ". "
                                                ++ vstring
+                                               ++ sigstring
+                                               ++ certstring
+                                               ++ sigocsp
             when_ (r == 1) $
               update $ InsertEvidenceEvent
               SignDocumentEvidence
@@ -2178,7 +2209,7 @@ instance MonadDB m => DBUpdate m SignableFromDocument Document where  -- NOTE TO
   -- conflict in a merge, get rid of this whole DBUpdate -- Eric
   update (SignableFromDocument document actor ) = do
     d <- insertNewDocument $ templateToDocument document
-    ignore $ update $ InsertEvidenceEvent
+    void $ update $ InsertEvidenceEvent
       SignableFromDocumentEvidence
       ("Document created from template by " ++ actorWho actor ++ ".")
       (Just (documentid d))
@@ -2203,7 +2234,7 @@ instance MonadDB m => DBUpdate m SignableFromDocumentIDWithUpdatedAuthor (Either
           case r of
             Right d -> do
               copyEvidenceLogToNewDocument docid (documentid d)
-              ignore $ update $ InsertEvidenceEvent
+              void $ update $ InsertEvidenceEvent
                 SignableFromDocumentIDWithUpdatedAuthorEvidence
                 ("Document created from template with id " ++ show docid ++ " by " ++ actorWho actor ++ ".")
                 (Just $ documentid d)
@@ -2280,7 +2311,7 @@ instance MonadDB m => DBUpdate m SetDocumentIdentification (Either String Docume
       actor
     getOneDocumentAffected "SetDocumentIdentification" r did
 
-data UpdateFields = UpdateFields DocumentID SignatoryLinkID [(String, String)] Actor
+data UpdateFields = UpdateFields DocumentID SignatoryLinkID [(FieldType, String)] Actor
 instance MonadDB m => DBUpdate m UpdateFields (Either String Document) where
   update (UpdateFields did slid fields actor) = do
     -- Document has to be in Pending state
@@ -2291,9 +2322,11 @@ instance MonadDB m => DBUpdate m UpdateFields (Either String Document) where
                 ++ "   AND signatory_link_fields.type = ?")
                  [toSql slid, toSql EmailFT])
 
-    let updateValue name fieldtype value = do
+    let updateValue fieldtype value = do
           let custom_name = case fieldtype of
                               CustomFT xname _ -> xname
+                              CheckboxObligatoryFT xname -> xname
+                              CheckboxOptionalFT xname -> xname
                               _ -> ""
           r <- kRun $ mkSQL UPDATE tableSignatoryLinkFields
                  [ sql "value" value ]
@@ -2309,19 +2342,15 @@ instance MonadDB m => DBUpdate m UpdateFields (Either String Document) where
           when_ (r>0) $ do
             update $ InsertEvidenceEvent
                UpdateFieldsEvidence
-               ("Information for signatory with email \"" ++ eml ++ "\" for field \"" ++ name ++ "\" was set to \"" ++ value ++ "\" by " ++ actorWho actor ++ ".")
+               ("Information for signatory with email \"" ++ eml ++ "\" for field \"" ++ (show fieldtype) ++ "\" was set to \"" ++ value ++ "\" by " ++ actorWho actor ++ ".")
                (Just did)
                actor
           return (r :: Integer)
 
-    updatedRows <- forM fields $ \(n, v) -> do
-        case n of
-          "sigco"     -> updateValue n CompanyFT v
-          "sigpersnr" -> updateValue n PersonalNumberFT v
-          "sigcompnr" -> updateValue n CompanyNumberFT v
-          "signature" -> updateValue n SignatureFT v
-          label       -> updateValue n (CustomFT label False) v
-    getOneDocumentAffected "UpdateFields" (if (fromInteger (sum updatedRows) == length fields) then 1 else 0) did
+    updatedRows <- forM fields $ \(ft, v) -> updateValue ft v
+
+    -- We don't want to affect too many rows
+    getOneDocumentAffected "UpdateFields" (if (fromInteger (sum updatedRows) <= length fields) then 1 else 0) did
 
 
 data UpdateFieldsNoStatusCheck = UpdateFieldsNoStatusCheck DocumentID SignatoryLinkID (String, String) Actor

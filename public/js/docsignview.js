@@ -841,6 +841,11 @@ window.DocumentSignView = Backbone.View.extend({
     createInlineFieldTask: function(renderedPlacement) {
       var placement = renderedPlacement.placement;
       var elem = renderedPlacement.elem;
+      var label = "";
+      if (placement.field().isText())
+          label = placement.field().nicename();
+      else if (placement.field().isObligatoryCheckbox())
+          label = localization.docsignview.checkboxes.pleaseCheck;
       return new DocumentSignViewTask({
         model: placement.field(),
         isComplete: function() {
@@ -850,7 +855,7 @@ window.DocumentSignView = Backbone.View.extend({
         beforePointing: function() {
           elem.trigger("click");
         },
-        label: placement.field().isSignature() ? "" : placement.field().nicename()
+        label:label
       });
     },
     createUploadedAttachmentsElems: function() {
@@ -1112,13 +1117,30 @@ window.DocumentSignViewTasks = Backbone.Model.extend({
 
 window.DocumentSignViewArrowView = Backbone.View.extend({
   initialize: function(args) {
-    _.bindAll(this, 'render');
+    _.bindAll(this, 'render', 'flip');
     var render = this.render;
     _.each(this.model.tasks(), function(task) {
       task.bind("change", render);
     });
+
     this.mainview = args.mainview;
+    
+    var flip = this.flip;
+    this.mainview.model.bind('tried-to-sign-and-failed', flip);
+
     this.render();
+  },
+  flip : function() {
+      var el = $(this.el);
+      var flip = function(i) {
+            if (i <= 0 ) return;
+            else if (i % 2 == 0 )                                            
+                el.hide();
+            else
+                el.show();
+             setTimeout(function() {flip(i - 1)},200);
+         };
+      flip(10);
   },
   render: function() {
     var view = this;
@@ -1208,7 +1230,6 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     $(window).scroll(checkIfDownArrowInFooter);
     checkIfDownArrowInFooter();
 
-      var scrollpoint = 0;
     var updateVisibility = function() {
 
       if (!taskmodel.isIncompleteTask()) {
@@ -1244,26 +1265,18 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
           view.pointingAt = nextTask;
           view.mainview.trigger("change:task");
         } else if ((elbottom + bottommargin) > scrollbottom) {
-            if(scrollpoint !== 16) {
-                scrollpoint = 6;
-                console.log("6");
                 downarrow.show();
                 uparrow.hide();
                 actionarrow.hide();
                 view.pointingAt = undefined;
                 view.mainview.trigger("change:task");
-            }
-        } else {
-            if(scrollpoint !== 17) {
-                scrollpoint = 7;
-                console.log("7");
-                uparrow.show();
+          } else {
                 downarrow.hide();
+                uparrow.show();
                 actionarrow.hide();
                 view.pointingAt = undefined;
                 view.mainview.trigger("change:task");
-            }
-        }
+        } 
       }
     };
     $(window).resize(updateVisibility);

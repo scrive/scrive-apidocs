@@ -47,7 +47,6 @@ mailMailAPIConfirm ctx document siglink = do
         F.value "issignatory" $ issignatory
         F.value "isattachments" $ False
         F.value "hassigattachments" $ False
-        F.value "ctxhostpart" $ ctxhostpart ctx
         F.value "link" $ ctxhostpart ctx ++ (show $  LinkIssueDoc (documentid document))
 
 mailMailApiError :: TemplatesMonad m => Context -> String -> m Mail

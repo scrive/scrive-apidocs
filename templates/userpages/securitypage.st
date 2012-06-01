@@ -89,7 +89,7 @@ showUserSecurity =
                     }
                    jQuery("#footerCheckbox").click(function(){ toogleFooterBox()  });
                    jQuery("#customfooter").tinymce({
-                                script_url: '/libs/tiny_mce/tiny_mce.js',
+                                script_url: '/tiny_mce/tiny_mce.js',
                                 theme: "advanced",
                                 theme_advanced_toolbar_location: "top",
                                 theme_advanced_buttons1: "bold,italic,underline",
