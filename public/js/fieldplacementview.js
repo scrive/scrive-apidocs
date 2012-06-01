@@ -253,7 +253,10 @@ var CheckboxTypeSetterView = Backbone.View.extend({
            body.append(this.title());
            body.append(this.optionalOption());
            body.append(this.checkedOption());
-           container.offset($(placement.view.el).offset());
+           var offset = $(placement.view.el).offset();
+           offset.left = offset.left + 32;
+           offset.top = offset.top - 20;
+           container.offset(offset);
            return this;
     }
 });

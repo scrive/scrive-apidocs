@@ -627,8 +627,6 @@
         position: absolute;
         width: 250px;
         z-index: 105;
-        left: 32px;
-        top: -20px;
 }
 
 .checkboxTypeSetter-container .checkboxTypeSetter-body {
