@@ -555,18 +555,21 @@ testUpdateFieldsEvidenceLog = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isPending &&^ isSignable &&^ ((<=) 2 . length . documentsignatorylinks))
   let Just sl = getSigLinkFor doc (not . (isAuthor::SignatoryLink->Bool))
-  (f,v) <- rand 10 arbitrary
-  etdoc <- randomUpdate $ \t->UpdateFields (documentid doc) (signatorylinkid sl) [(f,v)] (systemActor t)
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  validTest $ do
-    case etdoc of
-      Right _ ->
-        assertBool "if UpdateFields did change document it should add to the evidence (or not affect anything) " $
-                    (isJust (find (\e -> evType e == UpdateFieldsEvidence) lg))  
-      Left _ ->
-        assertEqual "if UpdateFields did not change any rows it should not add to the evidence" Nothing
-                    (find (\e -> evType e == UpdateFieldsEvidence) lg)
- 
+  let sf = filter (\f -> not $ (sfType f) `elem` [FirstNameFT,LastNameFT, EmailFT]) $ signatoryfields $ signatorydetails sl
+  case sf of
+   (f:_) -> do
+        v <-  rand 10 arbitrary 
+        etdoc <- randomUpdate $ \t->UpdateFields (documentid doc) (signatorylinkid sl) [(sfType f,v)] (systemActor t)
+        lg <- dbQuery $ GetEvidenceLog (documentid doc)
+        validTest $ do
+            case etdoc of
+                Right _ ->
+                    assertBool "if UpdateFields did change document it should add to the evidence (or not affect anything) " $
+                        (isJust (find (\e -> evType e == UpdateFieldsEvidence) lg))  
+                Left _ ->
+                    assertEqual "if UpdateFields did not change any rows it should not add to the evidence" Nothing
+                        (find (\e -> evType e == UpdateFieldsEvidence) lg)
+   _ -> return Nothing
 
 testPreparationToPendingEvidenceLog :: TestEnv ()
 testPreparationToPendingEvidenceLog = do
