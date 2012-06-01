@@ -114,7 +114,7 @@ handleCompanyAccountsInternal cid = do
   return $ JSObject $ toJSObject [("list",
                                    JSArray $
                                    map (\f -> JSObject $
-                                              toJSObject [ ("link", JSString $ toJSString $ show $ LinkUserAdmin $ Just $ userid user), -- | Used in admins only
+                                              toJSObject [ ("link", JSString $ toJSString $ show $ LinkUserAdmin $ camaybeuserid f), -- | Used in admins only
                                                            ("fields",
                                                            JSObject $ toJSObject [
                                                               ("id", JSString $ toJSString $ maybe "0" show $ camaybeuserid f)

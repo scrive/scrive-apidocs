@@ -561,9 +561,9 @@ window.Signatory = Backbone.Model.extend({
                        });
     },
     addNewField : function(t) {
-        var field = this.newField(t)
+        var field = this.newField(t);
         this.addField(field);
-        return field
+        return field;
     },
     addNewCustomField: function() {
        return this.addNewField("custom");

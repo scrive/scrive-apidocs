@@ -162,7 +162,8 @@ testNonLastPersonSigningADocumentRemainsPending = do
 
   assertEqual "Two left to sign" 2 (length $ filter isUnsigned (documentsignatorylinks doc))
 
-  req <- mkRequest POST [ ("magichash", inText $ show $ signatorymagichash siglink)
+  req <- mkRequest POST [  ("magichash", inText $ show $ signatorymagichash siglink)
+                         , ("fields", inText "[]")
                         ]
   (_link, _ctx') <- runTestKontra req ctx $ signDocument (documentid doc) (signatorylinkid siglink)
 
@@ -202,7 +203,8 @@ testLastPersonSigningADocumentClosesIt = do
 
   assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks doc))
 
-  req <- mkRequest POST [ ("magichash", inText $ show $ signatorymagichash siglink)
+  req <- mkRequest POST [   ("magichash", inText $ show $ signatorymagichash siglink)
+                          , ("fields", inText "[]")
                         ]
   (_link, _ctx') <- runTestKontra req ctx $ signDocument (documentid doc) (signatorylinkid siglink)
 
