@@ -189,7 +189,7 @@ window.Document = Backbone.Model.extend({
               url : "/s/" + this.documentid() + "/" + this.viewer().signatoryid(),
               method: "POST",
               magichash: this.viewer().magichash(),
-              fields: JSON.stringify(fields),
+              fields: JSON.stringify(fields)
           });
     },
     sendByAuthor: function() {
