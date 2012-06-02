@@ -474,6 +474,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_contractuploadprompttext","Välj det dokument som du vill skicka till din motpart.",,"Select a document you want to send to your counterpart."
 "_country","Land",,"Country"
 "_createNew","Skapa ny mall",,"Create new template"
+"_createNewType","Välj dokumenttyp för den nya mallen",,"Pick a document type for the new template"
 "_createaccount","Skapa konto",,"Create account"
 "_daysToSignFieldName","dagar kvar att signera",,"days to sign"
 "_daystosigncheckboxActivateExpDate","Aktivera förfallodatum",,"Activate expiration date"

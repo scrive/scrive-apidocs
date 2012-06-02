@@ -665,7 +665,8 @@ handleIssueNewDocument = withUserPost $ do
 handleCreateNewTemplate:: Kontrakcja m => m KontraLink
 handleCreateNewTemplate = withUserPost $ do
   input <- getDataFnM (lookInput "doc")
-  mdoc <- makeDocumentFromFile (Template Contract) input 1
+  docprocess <- fromMaybe Contract `fmap` getDocProcess
+  mdoc <- makeDocumentFromFile (Template docprocess) input 1
   case mdoc of
     Nothing -> return $ LinkTemplates
     Just doc -> do
