@@ -6,10 +6,12 @@ module GuardTime
        ) where
 
 import qualified Data.ByteString.Lazy as BSL hiding (length)
+import qualified Data.ByteString.Lazy.UTF8 as BSL 
 import Misc
 import Data.List
 import Control.Monad.IO.Class
 import System.Exit
+import qualified Log as Log
 
 data GuardTimeConf = GuardTimeConf
     { guardTimeURL ::  String
@@ -36,4 +38,7 @@ digitallySign conf inputFileName = do
              , inputFileName
              ]
   (code,_stdout,_stderr) <- liftIO $ readProcessWithExitCode' "java" args BSL.empty
+  Log.debug $ "GT stdout  : " ++ BSL.toString _stdout
+  Log.debug $ "GT errout  : " ++ BSL.toString _stdout
+  
   return code
