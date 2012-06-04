@@ -164,11 +164,12 @@
 
     window.Paging = Backbone.Model.extend({
         defaults: {
+            // first visible item index
             itemMin: 0,
+            // last visible item index. If itemMax < itemMin, there are no items
             itemMax: 0,
-            itemTotal: 0,
             pageCurrent: 0,
-            pageMax: 0
+            pageSize: 0
         },
         disabled: function() {
             return this.get("disabled") != undefined && this.get("disabled") == true;
@@ -179,14 +180,11 @@
         itemMax: function() {
             return this.get("itemMax");
         },
-        itemTotal: function() {
-            return this.get("itemTotal");
-        },
         pageCurrent: function() {
             return this.get("pageCurrent");
         },
-        pageMax: function() {
-            return this.get("pageMax");
+        pageSize: function() {
+            return this.get("pageSize");
         },
         changePage: function(i) {
             this.set({ "pageCurrent": i });
@@ -197,8 +195,6 @@
         },
         updateWithServerResponse: function(resp) {
             this.set(resp);
-            if (this.pageCurrent() > this.pageMax()+1)
-                this.changePage(this.pageMax()+1);
         }
     });
 
@@ -211,24 +207,37 @@
         render: function() {
             var paging = this.model;
             var main = $("<div class='pages'>");
-            var items = $("<div />");
-            items.append($("<strong />").text((paging.itemMin() + 1) + " - " + (paging.itemMax() + 1) + " " + localization.of + " " + paging.itemTotal()));
             var pages = $("<div />");
-            for (var i = 0; i <= paging.pageMax(); i++) {
-                if (i == paging.pageCurrent()) {
-                    pages.append($("<span class='page-change current'>" + (i + 1) + "</span>"));
-                } else {
-                    var a = $("<span class='page-change'>" + (i + 1) + "</span>");
-                    a.click(paging.changePageFunction(i));
-                    pages.append(a);
-                }
+            var i = paging.pageCurrent() + 1;
+            var contextCount = 2;
+            var writePage = function(n) {
+                var a = $("<span class='page-change' />").text(n + "");
+                a.click(paging.changePageFunction(n-1));
+                pages.append(a);
+                return a;
             }
-            if (paging.itemMax() >= paging.itemMin()) {
-                main.append(items);
+            if( i>1 ) {
+                writePage(1);
             }
-            if (paging.pageMax() > 0) {
-                main.append(pages);
+            if( i - contextCount > 2 ) {
+                pages.append($("<span> ... </span>"));
             }
+            var k = i - contextCount;
+            if( k<2 ) k = 2;
+            for( k = k; k<i; k++ ) {
+                writePage(k);
+            }
+            writePage(i).addClass("current");
+            var lastPage = Math.ceil(paging.itemMax()/paging.pageSize());
+
+            for( k = i+1; k <= lastPage && k - i < 3; k++ ) { //We don't want to show two much pages
+                writePage(k);
+            };
+            if (paging.itemMax() - (k-1) * paging.pageSize() > 0) { // We show ... if there are items on missed pages
+                pages.append("<span> ... </span>");
+            };
+            main.append(pages);
+
             $(this.el).append(main);
         }
     });
@@ -328,6 +337,7 @@
         getSchemaUrlParams: function() {
             var params = this.extraParams();
             params.page = this.paging().pageCurrent();
+            params.offset = params.page * this.paging().pageSize();
             params.filter = this.filtering().text();
             params.sort = this.sorting().current();
             params.sortReversed = this.sorting().isAsc();
@@ -776,11 +786,14 @@
             }
             var body = this.tbody;
             var odd = true;
-            this.model.forEach(function(e) {
+            this.model.first(this.schema.paging().pageSize()).forEach(function(e) {
                 if (e.view != undefined) {
                     body.append($(e.view.el));
                     if (odd) {
                         $(e.view.el).addClass("odd");
+                    }
+                    else {
+                        $(e.view.el).removeClass("odd");
                     }
                     odd = !odd;
                 }

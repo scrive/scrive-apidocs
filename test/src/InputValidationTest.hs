@@ -6,7 +6,7 @@ import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assert, Assertion)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.QuickCheck (Arbitrary(..), Property, oneof, (==>), property , mapSize, forAll, elements)
+import Test.QuickCheck (Arbitrary(..), Property, oneof, (==>), property, mapSize, forAll, elements)
 
 import InputValidation
 

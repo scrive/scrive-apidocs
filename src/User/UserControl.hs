@@ -12,7 +12,6 @@ import AppView
 import Crypto.RNG
 import DB hiding (update, query)
 import Doc.Action
-import Doc.Model
 import Company.Model
 import Control.Logic
 import InputValidation
@@ -423,8 +422,7 @@ handlePostUserSecurity = do
 -}
 isUserDeletable :: Kontrakcja m => User -> m Bool
 isUserDeletable user = do
-  userdocs <- dbQuery $ GetDocumentsByAuthor (userid user)
-  return $ all isDeletableDocument userdocs
+  dbQuery $ IsUserDeletable (userid user)
 
 --there must be a better way than all of these weird user create functions
 -- TODO clean up

@@ -1117,13 +1117,30 @@ window.DocumentSignViewTasks = Backbone.Model.extend({
 
 window.DocumentSignViewArrowView = Backbone.View.extend({
   initialize: function(args) {
-    _.bindAll(this, 'render');
+    _.bindAll(this, 'render', 'flip');
     var render = this.render;
     _.each(this.model.tasks(), function(task) {
       task.bind("change", render);
     });
+
     this.mainview = args.mainview;
+    
+    var flip = this.flip;
+    this.mainview.model.bind('tried-to-sign-and-failed', flip);
+
     this.render();
+  },
+  flip : function() {
+      var el = $(this.el);
+      var flip = function(i) {
+            if (i <= 0 ) return;
+            else if (i % 2 == 0 )                                            
+                el.hide();
+            else
+                el.show();
+             setTimeout(function() {flip(i - 1)},200);
+         };
+      flip(10);
   },
   render: function() {
     var view = this;
