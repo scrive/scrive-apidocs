@@ -156,7 +156,6 @@ window.SignatoryDesignView = Backbone.View.extend({
                     drag: function(event, ui) {
                     },
                     onDrop: function(page, x,y ){
-                          field.makeReady();
                           signatory.addField(field);
                           field.addPlacement(new FieldPlacement({
                               page: page.number(),

@@ -316,7 +316,8 @@ safeReady(function() {
 //does some google analytics stuff, not sure if this is working or not
 safeReady(function() {
   $("form.requestAccount").submit(function() {
-    if (window._gaq != undefined) _gaq.push(['_trackPageview', '/mal/skapa-konto']);
+    if (window._gaq != undefined) 
+        _gaq.push(['_trackEvent', 'Signup', 'Click']);
   });
 });
 

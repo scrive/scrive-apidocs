@@ -263,9 +263,11 @@ javascriptLocalisation =
                 }
              , sign : "$_sign()$"
              , checkboxes : {
-                      checked : "$_checkboxChecked()$"
-                    , makeOptional: "$_checkboxMakeOptional()$"
-                    , checkboxFor : "$_checkboxCheckboxFor()$"
+                      checkbox : "$_checkboxCheckbox()$"
+                    , prechecked : "$_checkboxPrechecked()$"
+                    , obligatory: "$_checkboxObligatory()$"
+                    , name : "$_checkboxName()$"
+                    , forThis : "$_checkboxFor()$"
              } 
            }
 

@@ -662,11 +662,6 @@
         z-index: 105;
 }
 
-.checkboxTypeSetter-container .close {
-    margin : 6px;
-    position: relative;
-    z-index: 106;
-}
 
 .checkboxTypeSetter-option {
         color: #414241;
@@ -674,14 +669,31 @@
         font-family: 'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
         text-align : left;
 }
-.checkboxTypeSetter-option input {
+.checkboxTypeSetter-option input, .checkboxTypeSetter-container .name  {
         margin-right : 6px;
         position: relative;
         z-index: 107;
 
 }
+.checkboxTypeSetter-container .name {
+        width: 160px;
+
+}
+
 .checkboxTypeSetter-container .title {
         color: #222222;
         margin-bottom: 2px;
+        font-size: 15px;
+
+}
+
+.checkboxTypeSetter-container .subtitle {
+        color: #555555;
+        font-size: 12px;
+        margin-bottom: 10px;
+
+}
+.checkboxTypeSetter-container .btn-tiny {
+        margin-top: 10px;
 
 }
