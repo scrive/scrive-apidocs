@@ -134,7 +134,6 @@ jsonCompanies = onlySalesOrAdmin $ do
     allCompanies <- dbQuery $ GetCompanies domains filters sorting offset limit
     let companies = PagedList { list       = allCompanies
                               , params     = params
-                              , totalCount = 1000
                               , pageSize   = companiesPageSize
                               }
 
@@ -181,7 +180,7 @@ companySortingFromParams params =
     x _                   = []
 
 companyPaginationFromParams :: Int -> ListParams -> (Integer,Integer)
-companyPaginationFromParams pageSize params = ( fromIntegral ((listParamsPage params - 1) * pageSize), fromIntegral pageSize)
+companyPaginationFromParams pageSize params = (fromIntegral (listParamsOffset params), fromIntegral pageSize)
 
 
 showAdminCompanyUsers :: Kontrakcja m => CompanyID -> m String
@@ -238,7 +237,7 @@ userSortingFromParams params =
     x _             = [Asc UserOrderByName]
 
 userPaginationFromParams :: Int -> ListParams -> UserPagination
-userPaginationFromParams pageSize params = UserPagination ((listParamsPage params - 1) * pageSize) pageSize
+userPaginationFromParams pageSize params = UserPagination (listParamsOffset params) (pageSize * 4)
 
 
 jsonUsersList ::Kontrakcja m => m JSValue
@@ -752,7 +751,7 @@ docSearchingFromParams params =
 
 
 docPaginationFromParams :: Int -> ListParams -> DocumentPagination
-docPaginationFromParams pageSize params = DocumentPagination ((listParamsPage params - 1) * pageSize) pageSize
+docPaginationFromParams pageSize params = DocumentPagination (listParamsOffset params) (pageSize*4)
 
 
 handleBackdoorQuery :: Kontrakcja m => String -> m String

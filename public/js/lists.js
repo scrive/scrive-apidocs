@@ -208,32 +208,35 @@
             var paging = this.model;
             var main = $("<div class='pages'>");
             var pages = $("<div />");
-            var i = paging.pageCurrent();
-            // if this is not the first page, we can go back
+            var i = paging.pageCurrent() + 1;
+            var contextCount = 2;
+            var writePage = function(n) {
+                var a = $("<span class='page-change' />").text(n + "");
+                a.click(paging.changePageFunction(n-1));
+                pages.append(a);
+                return a;
+            }
             if( i>1 ) {
-                var a = $("<span class='page-change' />").text(1 + "");
-                a.click(paging.changePageFunction(0));
-                pages.append(a);
-                if( i>2 ) {
-                    pages.append($("<span> ... </span>"));
-                }
+                writePage(1);
             }
-            if( i>0 ) {
-                var a = $("<span class='page-change' />").text(i + "");
-                a.click(paging.changePageFunction(i-1));
-                pages.append(a);
+            if( i - contextCount > 2 ) {
+                pages.append($("<span> ... </span>"));
             }
-            // number current page
-            pages.append($("<span class='page-change current'>" + (i + 1) + "</span>"));
-            // if this page is full then we have a link to next page
-            if( paging.pageSize() == paging.itemMax() - paging.itemMin() + 1 ) {
-                var a = $("<span class='page-change' />").text((i+2) + "");
-                a.click(paging.changePageFunction(i+1));
-                pages.append(a);
+            var k = i - contextCount;
+            if( k<2 ) k = 2;
+            for( k = k; k<i; k++ ) {
+                writePage(k);
             }
+            writePage(i).addClass("current");
+            var lastPage = paging.itemMax()/paging.pageSize();
+
+            for( k = i+1; k <= lastPage; k++ ) {
+                writePage(k);
+            }
+
             main.append(pages);
 
-            $(this.el).append(main);
+            this.$el.append(main);
         }
     });
 
@@ -332,6 +335,7 @@
         getSchemaUrlParams: function() {
             var params = this.extraParams();
             params.page = this.paging().pageCurrent();
+            params.offset = params.page * this.paging().pageSize();
             params.filter = this.filtering().text();
             params.sort = this.sorting().current();
             params.sortReversed = this.sorting().isAsc();
@@ -780,11 +784,14 @@
             }
             var body = this.tbody;
             var odd = true;
-            this.model.forEach(function(e) {
+            this.model.first(this.schema.paging().pageSize()).forEach(function(e) {
                 if (e.view != undefined) {
-                    body.append($(e.view.el));
+                    body.append(e.view.$el);
                     if (odd) {
-                        $(e.view.el).addClass("odd");
+                        e.view.$el.addClass("odd");
+                    }
+                    else {
+                        e.view.$el.removeClass("odd");
                     }
                     odd = !odd;
                 }

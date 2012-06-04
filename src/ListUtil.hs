@@ -41,7 +41,8 @@ module ListUtil(
 
             , listParamsSearching
             , listParamsSorting
-            , listParamsPage
+            , listParamsOffset
+            , listParamsLimit
           ) where
 import Control.Applicative ((<$>))
 import Control.Monad.Trans
@@ -58,16 +59,18 @@ import Network.HTTP.Base (urlEncode)
 import Text.JSON
 
 -- This part is responsible for sorting,searching and paging documents lists
-data PagedList a = PagedList{
-        list::[a]
-      , pageSize :: Int
-      , params::ListParams
-    } deriving Show
+data PagedList a =
+  PagedList { list     :: [a]
+            , pageSize :: Int
+            , params   :: ListParams
+            } deriving Show
 
-data ListParams = ListParams {
-      sorting      :: [String]
-    , search       :: Maybe String
-    , page         :: Int }
+data ListParams = ListParams
+  { sorting :: [String]
+  , search  :: Maybe String
+  , offset  :: Int
+  , limit   :: Int
+  }
     deriving (Eq)
 
 listParamsSorting :: ListParams -> [String]
@@ -76,47 +79,59 @@ listParamsSorting = sorting
 listParamsSearching :: ListParams -> String
 listParamsSearching params = fromMaybe "" (search params)
 
-listParamsPage :: ListParams -> Int
-listParamsPage = page
+listParamsOffset :: ListParams -> Int
+listParamsOffset = offset
+
+listParamsLimit :: ListParams -> Int
+listParamsLimit = limit
+
 
 instance Show ListParams where
-    show params = intercalate "&" $ pg ++ srch ++ srt
+    show params = intercalate "&" $ off ++ lim ++ srch ++ srt
         where
-        pg =  ["page=" ++ (toUrl  $ show $ page params)]
-        srch = map ((++) "search=") $ maybeToList $ toUrl  <$> search params
-        srt = map ((++) "sorting=") $ toUrl  <$> sorting params
+        off =  ["offset=" ++ (toUrl $ show $ offset params)]
+        lim =  ["limit=" ++ (toUrl $ show $ limit params)]
+        srch = map ((++) "search=") $ maybeToList $ toUrl <$> search params
+        srt = map ((++) "sorting=") $ toUrl <$> sorting params
         toUrl = urlEncode . BS8.unpack . BS.fromString
 
 emptyListParams :: ListParams
-emptyListParams = ListParams {sorting=[], search=Nothing, page = 1}
+emptyListParams =
+  ListParams
+  { sorting = []
+  , search = Nothing
+  , offset = 0
+  , limit = 1000
+  }
 
 {- New version working with JSON interface-}
 getListParamsNew :: (ServerMonad m,Functor m,HasRqData m,MonadIO m) => m ListParams
 getListParamsNew = do
-    page <- readField "page"
-    search <- getField "filter"
+    offset  <- readField "offset"
+    limit   <- readField "limit"
+    search  <- getField "filter"
     sorting <- getField "sort"
     sortingReversed <- joinB <$> fmap (== "true") <$> getField "sortReversed"
     let sorting'  = if (sortingReversed)
                      then sorting
                      else (++ "REV") <$> sorting
-    return ListParams {
-          page     = 1 + (fromMaybe 0 page)
-        , search  = search
-        , sorting  = maybeToList sorting' }
+
+    return ListParams
+             { offset  = fromMaybe 0 offset
+             , limit   = fromMaybe 1000 limit
+             , search  = search
+             , sorting = maybeToList sorting'
+             }
 
 pagingParamsJSON :: PagedList a -> JSValue
 pagingParamsJSON (PagedList{list,pageSize,params}) = JSObject $ toJSObject [
-    ("pageCurrent", showJSON $ (page params) - 1),
-    ("itemMin",showJSON $ minElementIndex),
-    ("itemMax",showJSON $ minElementIndex + length list - 1),
+    ("pageCurrent", showJSON $ (offset params `div` pageSize)),
+    ("itemMin", showJSON $ offset params),
+    ("itemMax", showJSON $ offset params + length list - 1),
     ("pageSize", showJSON $ pageSize)
     ]
-    where
-    minElementIndex = pageSize * (page params - 1) 
 
-
-getListParamsForSearch :: (ServerMonad m,Functor m,HasRqData m,MonadIO m)  => m ListParams
+getListParamsForSearch :: (ServerMonad m, Functor m, HasRqData m, MonadIO m) => m ListParams
 getListParamsForSearch = do
     search <- getField "search"
     return $ emptyListParams { search  = search}
@@ -138,11 +153,14 @@ listSortSearchPage sortFunc searchFunc pageSize params list =
     let
         searched = doSearching searchFunc (search params) list
         sorted = doSorting sortFunc (sorting params) searched
-        paged = doPaging pageSize (page params)  sorted
-    in  PagedList {list=paged , params = params, pageSize = pageSize}
+        paged = doPaging pageSize (offset params)  sorted
+    in  PagedList { list = paged
+                  , params = params
+                  , pageSize = pageSize
+                  }
 
-doSorting::SortingFunction a -> [String] -> [a] -> [a]
-doSorting sortFunc  = sortBy . compareList .  map sortFunc
+doSorting :: SortingFunction a -> [String] -> [a] -> [a]
+doSorting sortFunc  = sortBy . compareList . map sortFunc
     where compareList l a1 a2 = foldMap (\f -> f a1 a2) l
 
 
@@ -166,4 +184,4 @@ doSearching _ Nothing = id
 doSearching searchFunc (Just s) = filter (searchFunc s)
 
 doPaging:: Int -> Int -> [a] -> [a]
-doPaging pageSize page = (take pageSize) . (drop $ (page-1)*pageSize)
+doPaging pageSize offset = (take pageSize) . (drop offset)

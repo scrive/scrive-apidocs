@@ -216,7 +216,7 @@ docSearchingFromParams params =
 
 
 docPaginationFromParams :: Int -> ListParams -> DocumentPagination
-docPaginationFromParams pageSize params = DocumentPagination ((listParamsPage params - 1) * pageSize) pageSize
+docPaginationFromParams pageSize params = DocumentPagination (listParamsOffset params) (pageSize*4)
 
 #if 0
 -- this needs to be transferred to SQL
