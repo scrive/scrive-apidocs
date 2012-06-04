@@ -190,26 +190,41 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         $(this.el).remove();
         this.model.typeSetter = undefined;
     },
-    optionalOption : function() {
+
+    nameEditor: function() {
+      var view = this;
+      var field = this.model.field();
+      this.nameinput = InfoTextInput.init({
+                                 infotext: localization.designview.checkboxes.name,
+                                 value: field.name(),
+                                 cssClass: "name",
+                                 onChange : function(value) {
+                                     view.nameinput.removeClass('redborder');
+                                     field.setName(value);
+                                 }
+                            }).input();
+     return this.nameinput;                      
+    },
+    obligatoryOption : function() {
         var option = $("<div class='checkboxTypeSetter-option'/>");
         var checkbox = $("<input type='checkbox'>");
-        var label = $("<span/>").text(localization.designview.checkboxes.makeOptional);
+        var label = $("<span/>").text(localization.designview.checkboxes.obligatory);
         var field = this.model.field();
         option.append(checkbox).append(label);
-        if (field.isOptionalCheckbox())
+        if (field.isObligatoryCheckbox())
             checkbox.attr("checked","Yes");
         checkbox.click(function(){
-            if (field.isOptionalCheckbox())
-                    field.makeCheckboxObligatory();
-                else
+            if (field.isObligatoryCheckbox())
                     field.makeCheckboxOptional();
+                else
+                    field.makeCheckboxObligatory();
         });
         return option;
     },
-    checkedOption: function() {
+    precheckedOption: function() {
         var option = $("<div class='checkboxTypeSetter-option'/>");
         var checkbox = $("<input type='checkbox'>");
-        var label = $("<span/>").text(localization.designview.checkboxes.checked);
+        var label = $("<span/>").text(localization.designview.checkboxes.prechecked);
         var field = this.model.field();
         option.append(checkbox).append(label);
         if (field.value() != undefined && field.value()  != "")
@@ -223,21 +238,37 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         });
         return option;
     },
-    closeOption : function() {
+    doneOption : function() {
         var view = this;
-        var closeIcon = $("<div class='close popup-close float-right'/>");
-        closeIcon.click(function() {view.clear(); return false;});
-        return closeIcon;
+        var field = this.model.field();
+        return Button.init({color:"green",
+                            size: "tiny",
+                            text: "Done",
+                            style: "position: relative;  z-index: 107;",
+                            onClick : function() {
+                                if (field.name() != undefined && field.name() != ""){
+                                     field.makeReady();
+                                     view.clear();
+                                    }
+                                else
+                                    view.nameinput.addClass('redborder');
+                                    return false;
+                                }
+            }).input();
     },
     title : function() {
-        var box = $("<div class='title'/>");
+        return $("<div class='title'/>").text(localization.designview.checkboxes.checkbox);
+    },
+    subtitle : function() {
+        var box = $("<div class='subtitle'/>");
         var name = this.model.field().signatory().view.name();
         if (this.model.field().signatory().nameOrEmail() != "")
             name = this.model.field().signatory().nameOrEmail();
-        var text = localization.designview.checkboxes.checkboxFor + " " + name;
+        var text = localization.designview.checkboxes.for + " " + name;
         box.text(text);
         return box;
     },
+    
     render: function() {
            var view = this;
            var placement = this.model;
@@ -246,12 +277,15 @@ var CheckboxTypeSetterView = Backbone.View.extend({
            var body = $("<div class='checkboxTypeSetter-body'/>");
            var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
            container.append(arrow);
-           container.append(this.closeOption());
            container.append(body);
 
            body.append(this.title());
-           body.append(this.optionalOption());
-           body.append(this.checkedOption());
+           body.append(this.subtitle());
+           body.append(this.nameEditor());
+           body.append(this.precheckedOption());
+           body.append(this.obligatoryOption());
+
+           body.append(this.doneOption());  
            var offset = $(placement.view.el).offset();
            offset.left = offset.left + 32;
            offset.top = offset.top - 20;
@@ -262,7 +296,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
 
 var CheckboxPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render' , 'clear');
+        _.bindAll(this, 'render' , 'clear', 'addTypeSetter');
         this.model.bind('removed', this.clear);
         this.model.view = this;
         this.render();
@@ -270,6 +304,14 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
     clear: function() {
         this.off();
         $(this.el).remove();
+    },
+    addTypeSetter : function() {
+         var placement = this.model;
+         if (placement.typeSetter == undefined)
+                {
+                  placement.typeSetter = new CheckboxTypeSetterView({model : placement});
+                  $('body').append(placement.typeSetter.el);
+                }
     },
     render: function() {
             var view = this;
@@ -321,13 +363,14 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
                             }));
                     }
                });
-
+            if (!field.isReady())
+            {
+                setTimeout(function(){
+                    view.addTypeSetter();
+                    } ,50);
+            }    
             innerPlace.dblclick(function(){
-                if (placement.typeSetter == undefined)
-                {
-                  placement.typeSetter = new CheckboxTypeSetterView({model : placement});
-                  $('body').append(placement.typeSetter.el);
-                }
+                view.addTypeSetter();
                 return false;
             });  
             }    

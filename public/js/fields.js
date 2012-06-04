@@ -216,6 +216,12 @@ window.Field = Backbone.Model.extend({
             return validation;
           }
         }
+
+        if (this.isCheckbox()) {
+            var validation = new Validation({validates: function() {return field.name() != undefined && field.name() != "" }, message: localization.designview.validation.notReadyField});
+            return validation;  
+        }
+        
         if (this.signatory().signs() && this.signatory().document().padAuthorization() && this.isSignature()) {
             var msg = localization.designview.validation.notPlacedSignature;
             return new Validation({validates : function() {return field.hasPlacements()}, message : msg});
