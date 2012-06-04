@@ -22,13 +22,11 @@ module Doc.DocControl(
     , handleCreateNewAttachment
     , handleTemplateShare
     , handleCreateNewTemplate
-    , handleBulkOfferRemind
-    , handleBulkOrderRemind
     , handleRubbishRestore
     , handleRubbishReallyDelete
     , handleIssueShowGet
     , handleIssueNewDocument
-    , handleBulkContractRemind
+    , handleBulkDocumentRemind
     , handleIssueShowPost
     , jsonDocument
     , handleSaveDraft
@@ -755,20 +753,10 @@ handleAttachmentRename docid = withUserPost $ do
   doc <- guardRightM $ dbUpdate $ SetDocumentTitle docid newname actor
   return $ LinkIssueDoc $ documentid doc
 
-handleBulkContractRemind :: Kontrakcja m => m KontraLink
-handleBulkContractRemind = withUserPost $ do
-    _ <- handleIssueBulkRemind (Signable Contract)
+handleBulkDocumentRemind :: Kontrakcja m => m KontraLink
+handleBulkDocumentRemind = withUserPost $ do
+    _ <- handleIssueBulkRemind
     return $ LinkContracts
-
-handleBulkOfferRemind :: Kontrakcja m => m KontraLink
-handleBulkOfferRemind = withUserPost $ do
-    _ <- handleIssueBulkRemind (Signable Offer)
-    return $ LinkOffers
-
-handleBulkOrderRemind :: Kontrakcja m => m KontraLink
-handleBulkOrderRemind = withUserPost $ do
-    _ <- handleIssueBulkRemind (Signable Order)
-    return $ LinkOrders
 
 {- |
     This sends out bulk reminders.  The functionality is offered in the document
@@ -776,14 +764,14 @@ handleBulkOrderRemind = withUserPost $ do
     and send out reminders only to signatories who haven't accepted or signed on those that are
     pending.  This returns all the signatory links that were reminded.
 -}
-handleIssueBulkRemind :: Kontrakcja m => DocumentType -> m [SignatoryLink]
-handleIssueBulkRemind doctype = do
+handleIssueBulkRemind :: Kontrakcja m => m [SignatoryLink]
+handleIssueBulkRemind = do
     ctx@Context{ctxmaybeuser = Just user } <- getContext
     ids <- getCriticalFieldList asValidDocID "doccheck"
     remindedsiglinks <- fmap concat . sequence . map (\docid -> docRemind ctx user docid) $ ids
     case (length remindedsiglinks) of
-      0 -> addFlashM $ flashMessageNoBulkRemindsSent doctype
-      _ -> addFlashM $ flashMessageBulkRemindsSent doctype
+      0 -> addFlashM $ flashMessageNoBulkRemindsSent
+      _ -> addFlashM $ flashMessageBulkRemindsSent
     return remindedsiglinks
     where
       docRemind :: Kontrakcja m => Context -> User -> DocumentID -> m [SignatoryLink]

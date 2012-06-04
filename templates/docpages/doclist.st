@@ -1,5 +1,5 @@
 ####
-pageContractsList=
+pageDocumentsList=
 $loadingdialog()$
 <div>
 	<div class="tab-viewer">
@@ -12,12 +12,11 @@ $loadingdialog()$
 </div>
 <script>
 var documentsTable = KontraList().init({
-    name : "Contracts Table",
+    name : "Documents Table",
     schema: new Schema({
     url: "/docs",
-    extraParams : { documentType : "Contract" },
-    sorting: new Sorting({ fields: ["title", "status", "time",
-    "party", "author"]}),
+    extraParams : { documentType : "Document" },
+    sorting: new Sorting({ fields: ["title", "status", "time", "party", "author"]}),
     paging: new Paging({}),
     filtering: new Filtering({text: "", infotext: "$_SearchDoc()$"}),
     cells : [

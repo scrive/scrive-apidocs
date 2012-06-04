@@ -116,9 +116,6 @@ data DocProcessInfo =
   -- process specific flash message templates
   , processflashmessagecanceled :: String
   , processflashmessagerestarted :: String
-  , processflashmessagearchivedone :: String
-  , processflashmessagebulkremindssent :: String
-  , processflashmessagenobulkremindssent :: String
 
   -- process specific modal templates
   , processmodalsendconfirmation :: String
@@ -206,9 +203,6 @@ contractProcess =
   -- process specific flash messages
   , processflashmessagecanceled = "flashMessageContractCanceled"
   , processflashmessagerestarted = "flashMessageContractRestarted"
-  , processflashmessagearchivedone = "flashMessageContractArchiveDone"
-  , processflashmessagebulkremindssent = "flashMessageBulkContractRemindsSent"
-  , processflashmessagenobulkremindssent = "flashMessageNoBulkContractRemindsSent"
 
   -- process specific modal templates
   , processmodalsendconfirmation = "modalContractCreated"
@@ -297,9 +291,6 @@ offerProcess =
   -- process specific flash messages
   , processflashmessagecanceled = "flashMessageOfferCanceled"
   , processflashmessagerestarted = "flashMessageOfferRestarted"
-  , processflashmessagearchivedone = "flashMessageOfferArchiveDone"
-  , processflashmessagebulkremindssent = "flashMessageBulkOfferRemindsSent"
-  , processflashmessagenobulkremindssent = "flashMessageNoBulkOfferRemindsSent"
 
   -- process specific modal templates
   , processmodalsendconfirmation = "modalOfferCreated"
@@ -389,9 +380,6 @@ orderProcess =
   -- process specific flash messages
   , processflashmessagecanceled = "flashMessageOrderCanceled"
   , processflashmessagerestarted = "flashMessageOrderRestarted"
-  , processflashmessagearchivedone = "flashMessageOrderArchiveDone"
-  , processflashmessagebulkremindssent = "flashMessageBulkOrderRemindsSent"
-  , processflashmessagenobulkremindssent = "flashMessageNoBulkOrderRemindsSent"
 
   -- process specific modal templates
   , processmodalsendconfirmation = "modalOrderCreated"

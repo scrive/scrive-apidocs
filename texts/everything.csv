@@ -530,8 +530,6 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_docListTemplateLabel","Mall",,"Template"
 "_docListTabsAttachemtns","Bilagor",,"Attachments"
 "_docListTabsDocs","Dokument",,"Documents"
-"_docListTabsOffers","Offerter",,"Offers"
-"_docListTabsOrders","Orderbekräftelser",,"Order confirmations"
 "_docListTabsRubbishBin","Papperskorgen",,"Rubbish bin"
 "_docListTabsTemplates","Mallar",,"Templates"
 "_document","dokument",,"document"
@@ -588,8 +586,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_flashMessageActivationLinkNotValid","Vi beklagar. Länken är inte längre giltig.<br/> Vänligen gå till www.scrive.com, klicka på ""Logga in"" och använd ""Glömt lösenord"" för att generera en ny länk.",,"We are sorry. This link is no longer valid.<br/> Please go to www.scrive.com, klick on ""Login"" and use ""Forgot password"" to generate a new link."
 "_flashMessageAttachmentArchiveDone","Valda bilagor har blivit raderade.",,"The selected attachments have been deleted."
 "_flashMessageBadOldPassword","Du har skrivit in fel nuvarande lösenord.",,"Current password incorrect."
-"_flashMessageBulkContractRemindsSent","Påminnelse har skickats till alla parter som ännu inte signerat.",,"Reminders have been sent to all recipients who have not yet signed."
-"_flashMessageBulkOfferRemindsSent","Påminnelse har skickats till alla mottagare som ännu inte accepterat.",,"Reminders have been sent to all recipients who have not yet accepted."
+"_flashMessageBulkDocumentRemindsSent","Påminnelse har skickats till alla parter som ännu inte signerat.",,"Reminders have been sent to all recipients who have not yet signed."
 "_flashMessageCSVHasTooManyRows","Vi beklagar, men vi har begränsat denna fuktion til $maxrows$
  rader.<br/>Var vänlig kontakta vår support om du behöver infoga
  fler än $maxrows$ rader.",,"We are sorry, this feature has been limited to $maxrows$ rows.
@@ -598,7 +595,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_flashMessageValueNotValid","Felaktigt värde.",,"Value is not valid"
 "_flashMessageCannotCancel","Motparten har redan signerat dokumentet. Du kan inte återkalla inbjudan.",,"The counterpart has already signed the document. You can no longer withdraw the invitation."
 "_flashMessageChangePasswordEmailSend","Ett nytt lösenord har skickats till din e-post.",,"A new password has been sent to your email address."
-"_flashMessageContractArchiveDone","Valda dokument har blivit raderade.",,"The selected documents have been deleted."
+"_flashMessageDocumentArchiveDone","Valda dokument har blivit raderade.",,"The selected documents have been deleted."
 "_flashMessageEmailIsRequired","E-post krävs.",,"Email required."
 "_flashMessageFailedToParseCSV","Misslyckad tolkning av .csv, var vänlig och kontrollera och ladda
  upp igen.",,"An error occurred while reading the CSV file. Please check it
@@ -629,8 +626,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
  konto.",,"We have resent your account activation link. Please go to your inbox
  and follow the instructions in the email to activate your account."
 "_flashMessageNoAccountType","Du måste välja kontotyp.",,"You must select an account type."
-"_flashMessageNoBulkContractRemindsSent","Tyvärr, det finns inga parter som återstår att signera.",,"Sorry there are no recipients left to sign."
-"_flashMessageNoBulkOfferRemindsSent","Tyvärr, det finns inga mottagare som återstår att acceptera.",,"Sorry there are no recipients left to accept."
+"_flashMessageNoBulkDocumentRemindsSent","Tyvärr, det finns inga parter som återstår att signera.",,"Sorry there are no recipients left to sign."
 "_flashMessageNoDataInCSV","Kunde inte hitta några data i filen.",,"Scrive could not find any data in the file."
 "_flashMessageNoDataInCSVApartFromHeader","Kunde inte hitta några data i filen. Kunde endast hitta titlar.",,"Scrive could not find any data in the file apart from column
  headers."
@@ -639,7 +635,6 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_flashMessageNumberAboveMaximum","$fieldnametitlecase$ can be a maximum of $max$.",,"$fieldnametitlecase$ can be a maximum of $max$."
 "_flashMessageNumberBelowMinimum","$fieldnametitlecase$ must be a minimum of $min$.",,"$fieldnametitlecase$ must be a minimum of $min$."
 "_flashMessageNumberIsRequired","Nummer krävs.",,"Number required."
-"_flashMessageOfferArchiveDone","Valda offerter har blivit raderade.",,"The selected offers have been deleted."
 "_flashMessagePasswordChangeLinkNotValid","Vi beklagar. Länken är inte längre giltig.<br/> Vänligen gå till www.scrive.com, klicka på ""Logga in"" och använd ""Glömt lösenord"" för att generera en ny länk.",,"We are sorry. This link is no longer valid.<br/> Please go to www.scrive.com, klick on ""Login"" and use ""Forgot password"" to generate a new link."
 "_flashMessagePasswordsDontMatch","<strong>Nytt lösenord</strong> matchar inte med <strong>Upprepa lösenord</strong>",,"The two passwords do not match."
 "_flashMessagePleaseSignWithEleg","Du signerar dokumentet längst ned. Det krävs e-legitimation
