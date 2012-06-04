@@ -1539,7 +1539,7 @@ testGetDocumentsSQLSorted = doTimes 1 $ do
                 , AttachmentsOfAuthorDeleteValue (userid author) True
                 ]
       filters = []
-  docs <- dbQuery $ GetDocuments domains filters
+  _docs <- dbQuery $ GetDocuments domains filters
             [ Desc DocumentOrderByTitle
             , Desc DocumentOrderByMTime
             , Desc DocumentOrderByStatusClass

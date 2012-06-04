@@ -228,15 +228,17 @@
                 writePage(k);
             }
             writePage(i).addClass("current");
-            var lastPage = paging.itemMax()/paging.pageSize();
+            var lastPage = Math.ceil(paging.itemMax()/paging.pageSize());
 
-            for( k = i+1; k <= lastPage; k++ ) {
+            for( k = i+1; k <= lastPage && k - i < 3; k++ ) { //We don't want to show two much pages
                 writePage(k);
-            }
-
+            };
+            if (paging.itemMax() - (k-1) * paging.pageSize() > 0) { // We show ... if there are items on missed pages
+                pages.append("<span> ... </span>");
+            };
             main.append(pages);
 
-            this.$el.append(main);
+            $(this.el).append(main);
         }
     });
 
@@ -786,12 +788,12 @@
             var odd = true;
             this.model.first(this.schema.paging().pageSize()).forEach(function(e) {
                 if (e.view != undefined) {
-                    body.append(e.view.$el);
+                    body.append($(e.view.el));
                     if (odd) {
-                        e.view.$el.addClass("odd");
+                        $(e.view.el).addClass("odd");
                     }
                     else {
-                        e.view.$el.removeClass("odd");
+                        $(e.view.el).removeClass("odd");
                     }
                     odd = !odd;
                 }

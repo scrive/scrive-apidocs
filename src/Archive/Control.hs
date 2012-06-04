@@ -38,7 +38,6 @@ import Stats.Control
 import Util.Actor
 import Util.HasSomeUserInfo
 import Text.JSON
-import qualified Log as Log
 import ListUtil
 import MinutesTime
 import Misc
