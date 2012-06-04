@@ -264,7 +264,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         var name = this.model.field().signatory().view.name();
         if (this.model.field().signatory().nameOrEmail() != "")
             name = this.model.field().signatory().nameOrEmail();
-        var text = localization.designview.checkboxes.for + " " + name;
+        var text = localization.designview.checkboxes.forThis + " " + name;
         box.text(text);
         return box;
     },

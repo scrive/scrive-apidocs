@@ -267,7 +267,7 @@ javascriptLocalisation =
                     , prechecked : "$_checkboxPrechecked()$"
                     , obligatory: "$_checkboxObligatory()$"
                     , name : "$_checkboxName()$"
-                    , for : "$_checkboxFor()$"
+                    , forThis : "$_checkboxFor()$"
              } 
            }
 
