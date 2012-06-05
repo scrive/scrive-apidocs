@@ -363,6 +363,18 @@ javascriptLocalisation =
                }
         }
         , poweredByScrive : "$_poweredByScrive()$"
+        , verification : {
+                result: "Verification result"
+             ,  success: "Valid signature"
+             ,  failed: "Not digital signature"
+             ,  failedMessage: "Given document was not signed using Scrive."
+             ,  error : "Error"
+             ,  errorMessage : "Error occured while trying to verify signature. Please try again."
+             ,  time: "Time"
+             ,  gateway : "Gateway"
+             ,  reason: "Reason"
+
+          }
     }
 
 ####

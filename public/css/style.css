@@ -1401,7 +1401,8 @@ input[type=submit].hidden
 }
 
 /* HOW TO MAKE FILE INPUT LOOKING LIKE A BUTTON !!!! */
-input.multiFileInput {
+input.multiFileInput,
+.box input.multiFileInput {
     position:relative;
     z-index:10;
     cursor:pointer;
@@ -3236,4 +3237,49 @@ a#attachmentback {
 }
 .inlineEditing input:focus{
     outline:0px;
+}
+.verificationBox{
+    text-align : center;
+}
+.verificationContainer{
+    margin: 0 auto;
+    border-color:  #E0E0E0 #E0E0E0 #E8E5E5 #E8E5E5;
+    border-width : 1px;
+    border-style: solid;
+    padding: 20px 50px;
+    width: 200px;
+    display: inline-block;
+}
+
+.overlay.verificationModal, 
+.overlay.verificationModal .modal-container{
+  width: 300px;
+  min-height: 120px;
+}
+.overlay.verificationModal .modal-close{
+  z-index : 1070;
+  float:right;
+  margin: 5px;
+  position: relative;
+}
+
+.verificationSuccessIcon {
+    background: url(../img/icons.png) 0 0 no-repeat;
+    background-position: 0 -339px;
+    height: 61px;
+    margin: 0 auto;
+    width: 64px;
+    margin:15px;
+    
+}
+
+.verificationFailedIcon, .verificationErrorIcon {
+    background-image: url(/img/spr-flash-icons.png);
+    background-repeat: no-repeat;
+    height:30px;
+    width:30px;
+    display: block;
+    background-position: 0px 0px;
+    margin:15px;
+
 }
