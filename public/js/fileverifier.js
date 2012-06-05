@@ -32,12 +32,14 @@ var FileVerifierView = Backbone.View.extend({
               title.text(localization.verification.error);
               bright.append("<BR/>");
               bright.append($("<div/>").text(localization.verification.errorMessage));
+              dialog.addClass("failed");
           }
           else  {              
               bleft.append("<div class='verificationFailedIcon'>");
               title.text(localization.verification.failed);
               bright.append("<BR/>");
               bright.append($("<div/>").text(localization.verification.failedMessage));
+              dialog.addClass("failed");
           }                                  
           body.append(title).append(bleft).append(bright);
           container.append(close).append(body);                                  
@@ -47,11 +49,13 @@ var FileVerifierView = Backbone.View.extend({
             top: standardDialogTop,
             closeOnClick: true,
             closeOnEsc: true,
-            load: true,
+            load: false,
             fixed:false,
             onClose : function() {dialog.remove();}
           });
           $('body').append(dialog);
+          setTimeout(function() {dialog.overlay().load();},100);
+        
     },
     uploadButton : function() {
         var view = this;
@@ -69,16 +73,17 @@ var FileVerifierView = Backbone.View.extend({
             submit: new Submit({
               method : "POST",
               ajax: true,
-              expectedType:"json",
+              url : "/verify",
               onSend: function() {
                 LoadingDialog.open();
               },
               ajaxerror: function(d,a){
                 LoadingDialog.close();
+                view.render();
               },
               ajaxsuccess: function(res) {
                 LoadingDialog.close();
-                view.showResultDialog(res);
+                view.showResultDialog(JSON.parse(res));
                 view.render();
               }
             })

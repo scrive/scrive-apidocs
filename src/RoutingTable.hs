@@ -148,7 +148,7 @@ staticRoutes = choice
      , dir "csvlandpage" $ hGet $ toK1 $ DocControl.handleCSVLandpage
 
      , dir "verify" $ hGet  $ toK0 $ DocControl.handleShowVerificationPage
-     , dir "verify" $ hPost $ toK0 $ DocControl.handleVerify
+     , dir "verify" $ hPostNoXToken $ toK0 $ DocControl.handleVerify
      
      , dir "padqueue" $ dir "add" $ hPost $ toK2 $ PadQueue.addToQueue
      , dir "padqueue" $ dir "clear" $ hPost $ toK0 $ PadQueue.clearQueue

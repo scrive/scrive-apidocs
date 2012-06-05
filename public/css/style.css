@@ -3256,6 +3256,13 @@ a#attachmentback {
   width: 300px;
   min-height: 120px;
 }
+
+.overlay.verificationModal.failed,
+.overlay.verificationModal.failed .modal-container{
+  width: 280px;
+  min-height: 120px;
+}
+
 .overlay.verificationModal .modal-close{
   z-index : 1070;
   float:right;
