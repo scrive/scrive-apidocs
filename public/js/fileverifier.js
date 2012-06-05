@@ -39,7 +39,7 @@ var FileVerifierView = Backbone.View.extend({
               bright.append("<BR/>");
               bright.append($("<div/>").text(localization.verification.failedMessage));
           }                                  
-          body.append(title).append(bleft).append(bright)
+          body.append(title).append(bleft).append(bright);
           container.append(close).append(body);                                  
           dialog.append(container); 
           dialog.overlay({
@@ -94,7 +94,7 @@ var FileVerifierView = Backbone.View.extend({
 
 window.FileVerifier = {
     init: function (args) {
-          var model = new FileVerifierModel()
+          var model = new FileVerifierModel();
           var view = new FileVerifierView({model : model, el: $("<div/>")});
           return new Object({
               model : model,
