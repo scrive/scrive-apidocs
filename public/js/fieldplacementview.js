@@ -246,7 +246,12 @@ var CheckboxTypeSetterView = Backbone.View.extend({
                             text: "Done",
                             style: "position: relative;  z-index: 107;",
                             onClick : function() {
-                                if (field.name() != undefined && field.name() != ""){
+
+                                var done = field.name() != undefined && field.name() != "";
+                                done = done && _.all(field.signatory().fields(), function(f) {
+                                    return f.name() != field.name() || f.type() != field.type() || f == field; 
+                                });
+                                if (done){
                                      field.makeReady();
                                      view.clear();
                                     }

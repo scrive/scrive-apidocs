@@ -182,7 +182,7 @@ var DocumentDesignView = Backbone.View.extend({
         select.append(email);
         if (elegAvaible) select.append(eleg);
         select.append(pad);
-        box.text(localization.verification.selectmethod);
+        box.text(localization.designview.verification.selectmethod);
         box.append(select);
         if (document.elegAuthorization()) {
           email.attr("selected","");

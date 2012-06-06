@@ -182,9 +182,6 @@ javascriptLocalisation =
            , sortTemplate : "$_SortTemplate()$"
            , infoSelectTemplate : "$_InfoSelectTemplate()$"
            , goBack : "$_GoBack()$"
-           , verification : {
-                    selectmethod: "$_signStepsBodyFunctionsBoxChooseVerification()$"
-                }
            , eleg : "$_eleg()$"
            , finalDateCheckboxLabel : "$_daystosigncheckboxExpDate()$"
            , editInviteText :"$_editinvitetextlinkInviteText()$"
@@ -255,6 +252,9 @@ javascriptLocalisation =
                     , notReadyField : "$_setAllFields()$"
                     , notPlacedField : "$_placeAllFields()$"
                     , notPlacedSignature : "$_signatureMustBePlacedForPad()$"
+                }
+             , verification : {
+                      selectmethod: "$_signStepsBodyFunctionsBoxChooseVerification()$"
                 }
              , messages : {
                       sendingDocument: "$_designViewMessageSending()$"
