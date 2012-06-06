@@ -195,7 +195,8 @@ timeoutDocuments :: MinutesTime -> ActionScheduler ()
 timeoutDocuments now = do
     docs <- dbQuery $ GetTimeoutedButPendingDocuments now
     forM_ docs $ \doc -> do
-        edoc <- dbUpdate $ TimeoutDocument (documentid doc) (systemActor now)
+        gt <- getGlobalTemplates
+        edoc <- runReaderT (dbUpdate $ TimeoutDocument (documentid doc) (systemActor now)) gt
         case edoc of
           Left _ -> return ()
           Right doc' -> do
