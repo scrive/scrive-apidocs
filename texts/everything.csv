@@ -2541,7 +2541,7 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_confirm","Confirm",,"Confirm"
 "_checkboxPleaseCheck","Vänligen kryssa för detta fält",,"Please check this field"
 "_checkboxPrechecked","Kryssa för",,"Pre-checked"
-"_checkboxObligatory","Obligatorisk",,"Mandatory"
+"_checkboxObligatory","Obligatorisk att kryssa för",,"Mandatory to check"
 "_checkboxCheckbox","Kryssruta",,"Checkbox"
 "_checkboxName","Namnge checkboxen",,"Name the checkbox"
 "_checkboxFor","För ",,"For "
