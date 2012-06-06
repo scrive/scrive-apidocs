@@ -40,6 +40,7 @@ module Doc.DocView (
   , uploadPage
   , documentJSON
   , csvLandPage
+  , gtVerificationPage
   ) where
 
 import AppView (kontrakcja, standardPageFields)
@@ -578,3 +579,8 @@ documentsToFixView docs = do
             F.value "id" $ show $ documentid doc
             F.value "involved" $ map getEmail  $ documentsignatorylinks doc
             F.value "cdate" $  show $ documentctime doc
+
+-- Page for GT verification
+gtVerificationPage :: TemplatesMonad m => m String
+gtVerificationPage = renderTemplate_ "gtVerificationPage" 
+    

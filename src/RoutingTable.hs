@@ -147,6 +147,9 @@ staticRoutes = choice
 
      , dir "csvlandpage" $ hGet $ toK1 $ DocControl.handleCSVLandpage
 
+     , dir "verify" $ hGet  $ toK0 $ DocControl.handleShowVerificationPage
+     , dir "verify" $ hPostNoXToken $ toK0 $ DocControl.handleVerify
+     
      , dir "padqueue" $ dir "add" $ hPost $ toK2 $ PadQueue.addToQueue
      , dir "padqueue" $ dir "clear" $ hPost $ toK0 $ PadQueue.clearQueue
 
@@ -262,7 +265,7 @@ staticRoutes = choice
      , dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
      , dir "accountsetup"  $ hGet $ toK2 $ UserControl.handleAccountSetupGet
      , dir "accountsetup"  $ hPostNoXToken $ toK2 $ UserControl.handleAccountSetupPost
-
+ 
      -- question form on static pages
      , dir "question"    $ hPostAllowHttp $ toK0 $ UserControl.handleQuestion
 

@@ -99,3 +99,4 @@ set systemPage
  js   js/companybranding.js
  js   js/padview.js
  js   js/changemainfile.js
+ js   js/fileverifier.js
