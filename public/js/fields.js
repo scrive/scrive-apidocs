@@ -189,6 +189,7 @@ window.Field = Backbone.Model.extend({
 
         if (!this.signatory().author() && this.isStandard() && name == "email" && !this.signatory().isCsv() ){
             var msg = localization.designview.validation.missingOrWrongEmail;
+            this.setValue(this.value().trim());
             return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
 

@@ -239,8 +239,10 @@ a img
     background: #e6e6e6;
 }
 
-#selectable tr.ui-selected, #selectable tr.ui-selected td,
-table .selectable tr.ui-selected, table .selectable tr.ui-selected td
+table .selectable tr.ui-selected,
+table .selectable tr.ui-selected td,
+table .selectable tr.ui-selected.odd,
+table .selectable tr.ui-selected.odd td
 {
     background: #e0e0e0;
 }

@@ -625,7 +625,7 @@
         color: #666;
         font: 13px "Helvetica Neue";
         position: absolute;
-        width: 250px;
+        width: 210px;
         z-index: 105;
 }
 
@@ -696,4 +696,9 @@
 .checkboxTypeSetter-container .btn-tiny {
         margin-top: 10px;
 
+}
+.checkboxTypeSetter-container .help {
+        font-size: 9px;
+        width: 180px;
+        margin-top: 6px;
 }

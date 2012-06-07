@@ -182,9 +182,6 @@ javascriptLocalisation =
            , sortTemplate : "$_SortTemplate()$"
            , infoSelectTemplate : "$_InfoSelectTemplate()$"
            , goBack : "$_GoBack()$"
-           , verification : {
-                    selectmethod: "$_signStepsBodyFunctionsBoxChooseVerification()$"
-                }
            , eleg : "$_eleg()$"
            , finalDateCheckboxLabel : "$_daystosigncheckboxExpDate()$"
            , editInviteText :"$_editinvitetextlinkInviteText()$"
@@ -256,6 +253,9 @@ javascriptLocalisation =
                     , notPlacedField : "$_placeAllFields()$"
                     , notPlacedSignature : "$_signatureMustBePlacedForPad()$"
                 }
+             , verification : {
+                      selectmethod: "$_signStepsBodyFunctionsBoxChooseVerification()$"
+                }
              , messages : {
                       sendingDocument: "$_designViewMessageSending()$"
                     , reloadingDocument : "$_designViewMessageReloading()$"
@@ -268,6 +268,8 @@ javascriptLocalisation =
                     , obligatory: "$_checkboxObligatory()$"
                     , name : "$_checkboxName()$"
                     , forThis : "$_checkboxFor()$"
+                    , done : "$_checkboxDone()$"
+                    , help : "$_checkboxHelp()$"
              } 
            }
 
