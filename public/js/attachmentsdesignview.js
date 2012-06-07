@@ -441,7 +441,7 @@ window.DesignSignatoryAttachmentsPopup = {
                           description: att.description()
                         }));
                   });
-                  document.save().sendAjax();
+                  document.save();
                   return true;
             }
 
