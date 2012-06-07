@@ -50,7 +50,9 @@ module Doc.DocControl(
     , handlePageOfDocumentForSignatory
     , handleCSVLandpage
     , handleInvariantViolations
-    , handleUpsalesDeleted 
+    , handleUpsalesDeleted
+    , handleShowVerificationPage
+    , handleVerify
 ) where
 
 import AppView
@@ -114,6 +116,9 @@ import Util.Actor
 import PadQueue.Model
 import qualified Templates.Fields as F
 import qualified MemCache as MemCache
+import qualified GuardTime as GuardTime
+import System.IO.Temp
+import System.Directory
 {-
   Document state transitions are described in DocState.
 
@@ -1220,3 +1225,26 @@ switchLocaleWhenNeeded mslid doc = do
   cu <- ctxmaybeuser <$> getContext
   when (isNothing cu || ((isJust mslid) && not (isSigLinkFor cu mslid))) $ switchLocale (getLocale doc)
 
+
+
+-- GuardTime verification page. This can't be external since its a page in our system.
+
+
+handleShowVerificationPage :: Kontrakcja m =>  m String
+handleShowVerificationPage = gtVerificationPage
+
+
+handleVerify :: Kontrakcja m => m JSValue
+handleVerify = do
+      fileinput <- getDataFn' (lookInput "file")
+      filepath <- case fileinput of
+            Just (Input (Left filepath) _ _) -> return filepath
+            Just (Input (Right content) _ _) -> liftIO $ do
+                    systmp <- getTemporaryDirectory
+                    (pth,handle) <- openTempFile systmp ("vpath.pdf")
+                    BSL.hPutStr handle content
+                    return pth
+            _ -> internalError        
+      liftIO $ toJSValue <$> GuardTime.verify filepath
+
+                    

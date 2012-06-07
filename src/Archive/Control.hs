@@ -38,7 +38,6 @@ import Stats.Control
 import Util.Actor
 import Util.HasSomeUserInfo
 import Text.JSON
-import qualified Log as Log
 import ListUtil
 import MinutesTime
 import Misc
@@ -168,13 +167,9 @@ jsonDocumentsList = withUserGet $ do
       pagination = docPaginationFromParams docsPageSize params
 
   allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
-  totalCount <- dbQuery $ GetDocumentsCount domain (searching ++ filters)
-
-  Log.debug $ "Documents list: Number of documents found "  ++  (show $ length allDocs)
 
   let docs = PagedList { list       = allDocs
                        , params     = params
-                       , totalCount = totalCount
                        , pageSize   = docsPageSize
                        }
 
@@ -220,7 +215,7 @@ docSearchingFromParams params =
 
 
 docPaginationFromParams :: Int -> ListParams -> DocumentPagination
-docPaginationFromParams pageSize params = DocumentPagination ((listParamsPage params - 1) * pageSize) pageSize
+docPaginationFromParams pageSize params = DocumentPagination (listParamsOffset params) (pageSize*4)
 
 #if 0
 -- this needs to be transferred to SQL

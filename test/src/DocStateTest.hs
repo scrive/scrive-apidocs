@@ -1539,8 +1539,7 @@ testGetDocumentsSQLSorted = doTimes 1 $ do
                 , AttachmentsOfAuthorDeleteValue (userid author) True
                 ]
       filters = []
-  count <- dbQuery $ GetDocumentsCount domains filters
-  docs <- dbQuery $ GetDocuments domains filters
+  _docs <- dbQuery $ GetDocuments domains filters
             [ Desc DocumentOrderByTitle
             , Desc DocumentOrderByMTime
             , Desc DocumentOrderByStatusClass
@@ -1550,7 +1549,7 @@ testGetDocumentsSQLSorted = doTimes 1 $ do
             ]
             (DocumentPagination 0 maxBound)
   validTest $ do
-    assertEqual "GetDocuments and GetDocumentsCount are compatible" (length docs) count
+    return ()
 
 testCreateFromSharedTemplate :: TestEnv ()
 testCreateFromSharedTemplate = do

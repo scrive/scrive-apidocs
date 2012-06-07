@@ -30,7 +30,6 @@ module Doc.Model
   , ErrorDocument(..)
   , GetDeletedDocumentsByUser(..)
   , GetDocuments(..)
-  , GetDocumentsCount(..)
   , GetDocumentByDocumentID(..)
   , GetDocumentsByService(..)
   , GetDocumentsByCompanyWithFiltering(..)
@@ -1407,20 +1406,6 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
         else SQL "" []
       , SQL (" OFFSET " ++ show (documentOffset pagination) ++ " LIMIT " ++ show (documentLimit pagination)) []
       ]
-
-data GetDocumentsCount = GetDocumentsCount [DocumentDomain] [DocumentFilter]
-instance MonadDB m => DBQuery m GetDocumentsCount Int where
-  query (GetDocumentsCount domains filters) = $(fromJust) `liftM` getOne (mconcat
-    [ SQL "SELECT count(*) FROM documents " []
-    , SQL "WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = signatory_links.document_id AND " []
-    , SQL "(" []
-    , sqlConcatOR (map documentDomainToSQL domains)
-    , SQL ")" []
-    , if not (null filters)
-      then SQL " AND " [] `mappend` sqlConcatAND (map documentFilterToSQL filters)
-      else SQL "" []
-    , SQL ")" []
-    ])
 
 {- |
     Fetches documents by company with filtering by tags, edate, and status.
