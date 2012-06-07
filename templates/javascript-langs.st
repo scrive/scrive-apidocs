@@ -268,6 +268,8 @@ javascriptLocalisation =
                     , obligatory: "$_checkboxObligatory()$"
                     , name : "$_checkboxName()$"
                     , forThis : "$_checkboxFor()$"
+                    , done : "$_checkboxDone()$"
+                    , help : "$_checkboxHelp()$"
              } 
            }
 

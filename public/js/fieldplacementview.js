@@ -238,12 +238,15 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         });
         return option;
     },
+    help : function() {
+        return $("<div class='help'/>").text(localization.designview.checkboxes.help);
+    },
     doneOption : function() {
         var view = this;
         var field = this.model.field();
         return Button.init({color:"green",
                             size: "tiny",
-                            text: "Done",
+                            text: localization.designview.checkboxes.done,
                             style: "position: relative;  z-index: 107;",
                             onClick : function() {
 
@@ -290,7 +293,8 @@ var CheckboxTypeSetterView = Backbone.View.extend({
            body.append(this.precheckedOption());
            body.append(this.obligatoryOption());
 
-           body.append(this.doneOption());  
+           body.append(this.doneOption());
+           body.append(this.help());
            var offset = $(placement.view.el).offset();
            offset.left = offset.left + 32;
            offset.top = offset.top - 20;

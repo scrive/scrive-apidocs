@@ -697,3 +697,8 @@
         margin-top: 10px;
 
 }
+.checkboxTypeSetter-container .help {
+        font-size: 9px;
+        width: 180px;
+        margin-top: 6px;
+}

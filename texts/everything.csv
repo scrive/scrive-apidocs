@@ -2545,5 +2545,7 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_checkboxCheckbox","Kryssruta",,"Checkbox"
 "_checkboxName","Namnge kryssrutan",,"Name the checkbox"
 "_checkboxFor","För ",,"For "
+"_checkboxDone","Spara",,"Save"
+"_checkboxHelp","För att ändra inställningar senare dubbelklicka på kryssrutan.",,"To edit checkbox-settings later double tap the checkbox."
 "_verificationTitle", "Verify signature",,"Verify signature"
 "_verificationDescription", "You can check if file that you have has a valid digital signature.",,"You can check if file that you have has a valid digital signature."
