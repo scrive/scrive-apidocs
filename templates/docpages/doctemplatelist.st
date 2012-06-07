@@ -91,13 +91,14 @@ var documentsTable = KontraList().init({
                     size: "tiny",
                     width : "130",
                     text: txt, //
-                    button: jQuery('<a href="#" class="documenticon"/>').text(txt),
+                    button: jQuery('<a href="#" class="documenticon withUpload"/>').append(jQuery('<div class="documenticonText"/>').text(txt)),
                     name : "doc",
                     submitOnUpload : true,
                     submit: new Submit({
                         method : "POST",
                         doctype: type,
-                        url : "$currentlink$"
+                        url : "$currentlink$",
+                        onSend: function() {LoadingDialog.open();},
                     })
                 }).input()));
             }
