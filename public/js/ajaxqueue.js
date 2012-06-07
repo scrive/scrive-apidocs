@@ -7,9 +7,9 @@
  *  This queue guarantees that finishWith function will be called after last added submit is successfully send.
  *  Submits put in the queue should not use "ajaxsuccess" or "ajaxerror" properties as they will be overwritten.
  *  Submits requests have 10 sec timeout set. If they don't success or fail in this time queue will decide that they got lost and autoremove them.
- *  finishWith fucntion will be performed when last Submit will be send with success. If last Submit in the queue fails, it will be restarted.
- *  If ot last event in queue will fail, it will be removed from queue.
- *  After calling finishWith nothing can be added to the queue.
+ *  finishWith function will be performed when last Submit will be send with success. If last Submit in the queue fails, it will be restarted.
+ *  If last event in queue will fail, it will be removed.
+ *  After calling finishWith nothing can be added to the queue, until queue is empty and current finishWith starts executing. 
 */
 
 (function(window){
