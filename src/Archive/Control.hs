@@ -179,6 +179,7 @@ docSearchingFromParams params =
 
 
 docPaginationFromParams :: Int -> ListParams -> DocumentPagination
+-- REVIEW: Magic 4: more DRY again, please.
 docPaginationFromParams pageSize params = DocumentPagination (listParamsOffset params) (pageSize*4)
 
 #if 0
