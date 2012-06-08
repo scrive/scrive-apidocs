@@ -80,6 +80,7 @@ module Templates.Templates (
   , TemplatesMonad(..)
   , renderTemplate
   , renderTemplate_
+  , renderTemplateI
   , renderLocalTemplate
   , renderLocalTemplate_
   ) where
@@ -89,16 +90,32 @@ import Text.StringTemplate.Base hiding (ToSElem, toSElem, render)
 import User.Locale
 import Templates.Fields
 import Templates.TemplatesLoader
+import Control.Monad.Reader
+import Misc (defaultValue)
+import Control.Monad.Identity
 
 class (Functor m, Monad m) => TemplatesMonad m where
   getTemplates      :: m KontrakcjaTemplates
   getLocalTemplates :: Locale -> m KontrakcjaTemplates
 
+instance (Functor m, Monad m) => TemplatesMonad (ReaderT KontrakcjaGlobalTemplates m) where
+  getTemplates      = getLocalTemplates defaultValue 
+  getLocalTemplates locale = do
+      globaltemplates <- ask
+      return $ localizedVersion locale globaltemplates
+
+  
 renderTemplate :: TemplatesMonad m => String -> Fields m () -> m String
 renderTemplate name fields = do
   ts <- getTemplates
   renderHelper ts name fields
 
+renderTemplateI :: TemplatesMonad m => String -> Fields Identity () -> m String
+renderTemplateI name fields = do
+  ts <- getTemplates
+  return $ renderTemplateMain ts name ([]::[(String, String)]) (setManyAttrib $ runIdentity $ runFields fields)
+
+  
 renderTemplate_ :: TemplatesMonad m => String -> m String
 renderTemplate_ name = renderTemplate name $ return ()
 

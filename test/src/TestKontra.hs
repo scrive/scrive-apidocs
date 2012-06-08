@@ -49,6 +49,7 @@ import Mails.MailsConfig
 import MinutesTime
 import Misc
 import IPAddress
+import Templates.Templates
 import Templates.TemplatesLoader
 import qualified MemCache
 import User.Locale
@@ -83,6 +84,14 @@ instance MonadDB TestEnv where
   getNexus     = teNexus <$> ask
   localNexus f = local (\st -> st { teNexus = f (teNexus st) })
 
+
+instance TemplatesMonad TestEnv where
+  getTemplates = getLocalTemplates defaultValue
+  getLocalTemplates locale = do
+    globaltemplates <- teGlobalTemplates <$> ask
+    return $ localizedVersion locale globaltemplates
+
+  
 instance MonadBaseControl IO TestEnv where
   newtype StM TestEnv a = StTestEnv { unStTestEnv :: StM InnerTestEnv a }
   liftBaseWith = newtypeLiftBaseWith TestEnv unTestEnv StTestEnv
