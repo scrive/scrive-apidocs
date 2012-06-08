@@ -10,11 +10,14 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit.Base (Assertion)
 import TestingUtil
 import TestKontra
+import Templates.Templates
+import Data.List
 
 evidenceLogTests :: TestEnvSt -> Test
-evidenceLogTests _ = testGroup "Evidence Log" [
+evidenceLogTests env = testGroup "Evidence Log" [
       testCase "Testing EvidenceEventType conversions not equal" conversionNEq,
-      testCase "Testing EvidenceEventType conversions equal" conversionEq
+      testCase "Testing EvidenceEventType conversions equal" conversionEq,
+      testThat "Testing EvidenceEventType have texts templates" env evidenceLogEventsHaveTexts
       ]
 
 conversionNEq :: Assertion
@@ -31,3 +34,10 @@ conversionEq = do
     let t = safeConvert (a :: Int) :: Either ConvertError EvidenceEventType
     when (isRight t) $ do
       assertBool ("Back conversion did not work on " ++ show a) $ safeConvert (fromRight t) == Right a
+
+evidenceLogEventsHaveTexts:: TestEnv ()
+evidenceLogEventsHaveTexts = forM_ (range (0, 100)) $ \a -> do
+    let t = safeConvert (a :: Int) :: Either ConvertError EvidenceEventType
+    when (isRight t) $ do
+      text <- renderTemplate_ $ eventTextTemplateName (fromRight t)
+      assertBool ("No text provided for event " ++ (show $ fromRight t)) (not $ "No template" `isInfixOf` text)

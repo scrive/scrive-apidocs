@@ -17,11 +17,13 @@ import Data.Functor
 import Util.Actor
 import EvidenceLog.Model
 import Util.MonadUtils
+import Templates.Templates
+import Templates.Fields
 
 type PadQueue = Maybe (DocumentID,SignatoryLinkID)
 
 data AddToPadQueue = AddToPadQueue UserID DocumentID SignatoryLinkID Actor
-instance MonadDB m => DBUpdate m AddToPadQueue () where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddToPadQueue () where
   update (AddToPadQueue uid did slid a) = do
     update $ ClearPadQueue uid a
     kPrepare $ "INSERT INTO padqueue( user_id, document_id, signatorylink_id) VALUES(?,?,?)"
@@ -29,13 +31,13 @@ instance MonadDB m => DBUpdate m AddToPadQueue () where
     when_ (r == 1) $
                 update $ InsertEvidenceEvent
                 SendToPadDevice
-                ("Document send to pad device for signatory \"" ++ show slid ++ "\" by " ++ actorWho a ++ ".")
+                (value "sid" (show $ slid) >> value "actor" (actorWho a))
                 (Just did)
                 a
     return ()
 
 data ClearPadQueue = ClearPadQueue UserID Actor
-instance MonadDB m => DBUpdate m ClearPadQueue () where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m ClearPadQueue () where
   update (ClearPadQueue uid a) = do
     pq <- query $ GetPadQueue uid
     when_ (isJust pq) $ do 
@@ -44,7 +46,7 @@ instance MonadDB m => DBUpdate m ClearPadQueue () where
         when_ ((r == 1) && isJust pq ) $ do
          _ <- update $ InsertEvidenceEvent
                 RemovedFromPadDevice
-                ("Document removed from pad device for signatory \"" ++ show (snd $ $(fromJust) pq) ++ "\" by " ++ actorWho a ++ ".")
+                (value "sid" (show $ snd $ $(fromJust) pq) >> value "actor"  (actorWho a))
                 (fst <$> pq)
                 a
          return ()
