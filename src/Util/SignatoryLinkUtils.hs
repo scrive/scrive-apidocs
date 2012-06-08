@@ -145,7 +145,7 @@ instance (HasSignatoryLinks a, SignatoryLinkIdentity b) => HasSignatoryLinks (a,
    Is the Author of this Document a signatory (not a Secretary)?
  -}
 isAuthorSignatory :: HasSignatoryLinks a => a -> Bool
-isAuthorSignatory hsl = hasSigLinkFor SignatoryAuthor hsl && hasSigLinkFor SignatoryPartner hsl
+isAuthorSignatory hsl = hasSigLinkFor (SignatoryAuthor, SignatoryPartner) hsl
 
 {- |
    Get the author's signatory link.
