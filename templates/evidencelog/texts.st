@@ -36,7 +36,7 @@ SetInvitationDeliveryStatusEvidenceText=Delivery status for signatory with id $s
 ###
 SetDocumentUIEvidenceText=$if(footer)$ Document mail footer set to $footer$ by $actor$. $else$ Document mail footer removed by $actor$. $endif$
 ###
-SetDocumentLocaleEvidenceText=Document locale set $locale$ by $actor$.
+SetDocumentLocaleEvidenceText=Document locale set to $locale$ by $actor$.
 ###
 SetDocumentTitleEvidenceText=Document title set to $title$ by actor.
 ###
@@ -106,7 +106,7 @@ InvitationEvidenceText=Invitation sent to $email$ by $actor$.
 ###
 SignableFromDocumentIDWithUpdatedAuthorEvidenceText= Document created from template with id $did$ by $actor$ .
 ###
-ArchiveDocumentEvidenceText= Moved document to rubbish bin for $if(company)$ company with admin email $email$ $else$ user with email $email$ $endif$ by $actor$.)
+ArchiveDocumentEvidenceText= Moved document to rubbish bin for $if(company)$ company with admin email $email$ $else$ user with email $email$ $endif$ by $actor$.
 ###
 ResetSignatoryDetailsEvidenceText=
     $if(added)$
@@ -135,7 +135,7 @@ TemplateFromDocumentEvidenceText= Document converted to template by $actor$.
 ###
 AttachCSVUploadEvidenceText=Attached CSV $csvtitle$ to document by $actor$.
 ###
-SendToPadDeviceText=Document send to pad device for signatory $sid$ by $actor$.
+SendToPadDeviceText=Document sent to pad device for signatory $sid$ by $actor$.
 ####
 RemovedFromPadDeviceText=Document removed from pad device for signatory $sid$ by $actor$.
 ###
