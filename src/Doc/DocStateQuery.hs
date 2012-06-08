@@ -60,8 +60,7 @@ canUserViewDoc user doc =
     docIsSavedForUser =
       any (isSigLinkSavedFor user) $ documentsignatorylinks doc
     isSharedWithinCompany = isDocumentShared doc && isAuthoredWithinCompany
-    isAuthoredWithinCompany = (isJust $ getSigLinkFor doc SignatoryAuthor) 
-                              && (isJust $ getSigLinkFor doc $ usercompany user)
+    isAuthoredWithinCompany = isJust $ getSigLinkFor doc (SignatoryAuthor, usercompany user)
 
 {- |
    Securely find a document by documentid for the author or within their company.
@@ -99,7 +98,7 @@ getDocByDocIDForAuthor docid = do
       muser <- liftM2 mplus (ctxmaybeuser <$> getContext) (ctxmaybepaduser <$> getContext)
       edoc <- getDocByDocID docid
       case edoc of
-           Right doc -> if (isAuthor (doc, muser))
+           Right doc -> if isAuthor (doc, muser)
                            then return $ Right doc
                            else return $ Left DBResourceNotAvailable
            e -> return e
@@ -119,7 +118,6 @@ getDocByDocIDSigLinkIDAndMagicHash :: Kontrakcja m
 getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
   mdoc <- dbQuery $ GetDocumentByDocumentID docid
   case mdoc of
-    Just doc | (isJust $ getSigLinkFor doc mh) 
-               && (isJust $ getSigLinkFor doc sigid) -> return $ Right doc
-    _ -> return $ Left DBResourceNotAvailable
+    Just doc | isJust $ getSigLinkFor doc (sigid, mh) -> return $ Right doc
+    _                                                 -> return $ Left DBResourceNotAvailable
 

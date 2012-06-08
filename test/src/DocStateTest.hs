@@ -355,7 +355,7 @@ testRestartDocumentEvidenceLog = do
   assertJust $ find (\e -> evType e == RestartDocumentEvidence) lg
   assertJust $ find (\e -> evType e == CancelDocumentEvidence) lg
   lg2 <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == RestartDocumentEvidence) lg2
+  assertJust $ find (\e -> evType e == CancelDocumentEvidence) lg2
 
 testRestoreArchivedDocumentEvidenceLog :: TestEnv ()
 testRestoreArchivedDocumentEvidenceLog = do
