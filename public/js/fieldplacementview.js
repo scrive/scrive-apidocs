@@ -282,6 +282,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
            var placement = this.model;
            var container = $(this.el);
            container.addClass("checkboxTypeSetter-container");
+           container.css("position", "absolute");
            var body = $("<div class='checkboxTypeSetter-body'/>");
            var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
            container.append(arrow);
