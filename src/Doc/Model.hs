@@ -1845,7 +1845,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentInviteTime (Eith
     when_ (r == 1 && changed) $
       update $ InsertEvidenceEvent
       SetDocumentInviteTimeEvidence
-      (value "time" (formatMinutesTimeUTC invitetime) >> value "autor" (actorWho actor))
+      (value "time" (formatMinutesTimeUTC invitetime) >> value "actor" (actorWho actor))
       (Just did)
       actor
     getOneDocumentAffected "SetDocumentInviteTime" r did
@@ -1865,7 +1865,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTimeoutTime (Eit
     when_ (r == 1 && changed) $
       update $ InsertEvidenceEvent
       SetDocumentTimeoutTimeEvidence
-      (value "time" (formatMinutesTimeUTC timeouttime) >> value "autor" (actorWho actor))
+      (value "time" (formatMinutesTimeUTC timeouttime) >> value "actor" (actorWho actor))
       (Just did)
       actor
     getOneDocumentAffected "SetDocumentTimeoutTime" r did
@@ -1886,7 +1886,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInviteText (Either Strin
     when_ (r == 1 && changed) $
       update $ InsertEvidenceEvent
       SetInvitationTextEvidence
-      (value "text" text >> value "autor" (actorWho actor))
+      (value "text" text >> value "actor" (actorWho actor))
       (Just did)
       actor
     getOneDocumentAffected "SetInviteText" r did
@@ -1907,7 +1907,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDaysToSign (Either Strin
     when_ (r == 1 && changed) $
       update $ InsertEvidenceEvent
       (SetDaysToSignEvidence <| isJust mdays |> RemoveDaysToSignEvidence)
-      (value "mdays" (show mdays) >> value "actor" (actorWho actor))
+      (value "mdays" (show <$> mdays) >> value "actor" (actorWho actor))
       (Just did)
       actor
     getOneDocumentAffected "SetDaysToSign" r did
