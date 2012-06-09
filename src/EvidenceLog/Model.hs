@@ -92,7 +92,7 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
       ++ ", api_user"
       ++ "  FROM evidence_log "
       ++ "  WHERE document_id = ?"
-      ++ "  ORDER BY time DESC") [
+      ++ "  ORDER BY time DESC, id DESC") [
         toSql docid
       ]
     foldDB fetchEvidenceLog []
