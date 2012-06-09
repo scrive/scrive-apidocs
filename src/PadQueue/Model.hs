@@ -12,6 +12,7 @@ import DB
 import OurPrelude
 import User.Model
 import Doc.DocStateData
+import Doc.Model
 import Data.Maybe (listToMaybe, isJust)
 import Data.Functor
 import Util.Actor
@@ -19,19 +20,23 @@ import EvidenceLog.Model
 import Util.MonadUtils
 import Templates.Templates
 import Templates.Fields
+import Util.SignatoryLinkUtils
+import Util.HasSomeUserInfo
 
 type PadQueue = Maybe (DocumentID,SignatoryLinkID)
 
 data AddToPadQueue = AddToPadQueue UserID DocumentID SignatoryLinkID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddToPadQueue () where
   update (AddToPadQueue uid did slid a) = do
+    mdoc <- query $ GetDocumentByDocumentID did
+    let memail = getEmail <$> (mdoc >>= \d->getSigLinkFor d slid)
     update $ ClearPadQueue uid a
     kPrepare $ "INSERT INTO padqueue( user_id, document_id, signatorylink_id) VALUES(?,?,?)"
     r <- kExecute [toSql uid, toSql did, toSql slid]
     when_ (r == 1) $
                 update $ InsertEvidenceEvent
                 SendToPadDevice
-                (value "sid" (show $ slid) >> value "actor" (actorWho a))
+                (value "email" memail >> value "actor" (actorWho a))
                 (Just did)
                 a
     return ()
@@ -40,13 +45,16 @@ data ClearPadQueue = ClearPadQueue UserID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ClearPadQueue () where
   update (ClearPadQueue uid a) = do
     pq <- query $ GetPadQueue uid
+    let (did, slid) = $(fromJust) pq
+    mdoc <- query $ GetDocumentByDocumentID did
+    let memail = getEmail <$> (mdoc >>= \d->getSigLinkFor d slid)
     when_ (isJust pq) $ do 
         kPrepare "DELETE FROM padqueue WHERE user_id = ?"
         r <- kExecute [toSql uid]
         when_ ((r == 1) && isJust pq ) $ do
          _ <- update $ InsertEvidenceEvent
                 RemovedFromPadDevice
-                (value "sid" (show $ snd $ $(fromJust) pq) >> value "actor"  (actorWho a))
+                (value "email" memail >> value "actor"  (actorWho a))
                 (fst <$> pq)
                 a
          return ()
