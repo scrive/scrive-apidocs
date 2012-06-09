@@ -109,7 +109,7 @@ mailSystemActor time muid email slid = Actor {
   , actorEmail = Just email
   , actorSigLinkID = Just slid
   , actorAPIString = Nothing
-  , actorWho = "the signatory (" ++ email ++ ") (reported by the Mail subsystem)"
+  , actorWho = "the email subsystem"
 }
 
 -- | For actions originating from the integration api
