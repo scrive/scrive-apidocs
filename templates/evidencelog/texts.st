@@ -114,11 +114,11 @@ ResetSignatoryDetailsEvidenceText=
         $if(signatory)$
           Signatory ($email$) added to transaction by $actor$.
         $elseif(field)$
-          Field $fieldtype$ for signatory ($email$) was filled with $value$ by $actor$. Field was placed onto the page to places with coordinates $placements$.
+          Field $fieldtype$ for signatory ($email$) was filled with “$value$” by $actor$. Field was placed onto the page to places with coordinates $placements$.
         $endif$
     $elseif(changed)$
         $if(field)$
-          Field $fieldtype$ for signatory ($email$) was filled with $value$ by $actor$. Field was placed onto the page to places with coordinates $placements$.
+          Field $fieldtype$ for signatory ($email$) was filled with “$value$” by $actor$. Field was placed onto the page to places with coordinates $placements$.
         $endif$
     $elseif(removed)$
         $if(signatory)$
