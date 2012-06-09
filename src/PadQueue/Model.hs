@@ -45,18 +45,19 @@ data ClearPadQueue = ClearPadQueue UserID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ClearPadQueue () where
   update (ClearPadQueue uid a) = do
     pq <- query $ GetPadQueue uid
-    let (did, slid) = $(fromJust) pq
-    mdoc <- query $ GetDocumentByDocumentID did
-    let memail = getEmail <$> (mdoc >>= \d->getSigLinkFor d slid)
-    when_ (isJust pq) $ do 
-        kPrepare "DELETE FROM padqueue WHERE user_id = ?"
-        r <- kExecute [toSql uid]
-        when_ ((r == 1) && isJust pq ) $ do
+    case pq of
+       Nothing -> return ()
+       Just (did, slid) -> do
+         mdoc <- query $ GetDocumentByDocumentID did
+         let memail = getEmail <$> (mdoc >>= \d->getSigLinkFor d slid)
+         kPrepare "DELETE FROM padqueue WHERE user_id = ?"
+         r <- kExecute [toSql uid]
+         when_ ((r == 1) && isJust pq ) $ do
          _ <- update $ InsertEvidenceEvent
-                RemovedFromPadDevice
-                (value "email" memail >> value "actor"  (actorWho a))
-                (fst <$> pq)
-                a
+              RemovedFromPadDevice
+              (value "email" memail >> value "actor"  (actorWho a))
+              (fst <$> pq)
+              a
          return ()
 
 data GetPadQueue = GetPadQueue UserID
