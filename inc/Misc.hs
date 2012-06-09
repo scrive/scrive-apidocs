@@ -40,6 +40,11 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS
 import Network.HTTP (urlDecode)
 
+-- | Prepend a monadic action by a delay given in seconds
+delay :: MonadIO m => Double -> m a -> m a
+delay 0 = id
+delay d = (liftIO (threadDelay (round (1e6 * d))) >>)
+
 withSystemTempDirectory' :: MonadBaseControl IO m => String -> (FilePath -> m a) -> m a
 withSystemTempDirectory' dir handler =
   control $ \runInIO -> withSystemTempDirectory dir (runInIO . handler)
