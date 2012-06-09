@@ -131,15 +131,10 @@ class DocHelper
 
   def signAndSend
     puts "Sign and send"
-# FIXME: there are some unresolved race conditions lurking here
-    sleep 1
     (@wait.until { @driver.find_element :css => ".finalbutton" }).click
     puts "Final approval modal"
-    sleep 1
     acceptStandardModal
     puts "Closing confirmation modal"
-    sleep 1
-# FIXME: sometimes we are logged out when we get here.
     (@wait.until { @driver.find_element :css => "div.s-sign-confirmation" }).click
   end
 
