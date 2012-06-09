@@ -3,25 +3,25 @@ AddSigAttachmentEvidenceText=
 ###
 RemoveSigAttachmentsEvidenceText=
 ###
-RemoveDocumentAttachmentEvidenceText=File with ID $fid$ removed from document by $actor$ .
+RemoveDocumentAttachmentEvidenceText=Attachment “$name$” deleted by $actor$.
 ###
-AddDocumentAttachmentEvidenceText=File with ID $fid$ attached to Document by $actor$.
+AddDocumentAttachmentEvidenceText=Attachment “$name$” uploaded by $actor$.
 ###
-PendingToAwaitingAuthorEvidenceText=
+PendingToAwaitingAuthorEvidenceText=$actor$ emailed notification to author ($email$) that all other parties have signed and the author is next to sign.
 ###
-UpdateFieldsEvidenceText=Information for signatory with email $email$ for field $fieldtype$ was set to $value$ by $actor$.
+UpdateFieldsEvidenceText=Field $fieldtype$ for signatory ($email$) was filled with “$value$” by $actor$.
 ###
-SetElegitimationIdentificationEvidenceText=Document identification type set to $identification$ by $actor$.
+SetElegitimationIdentificationEvidenceText=$actor$ required e-legitimation verification for all signatories.
 ###
-SetEmailIdentificationEvidenceText=Document identification type set to $identification$ by $actor$.
+SetEmailIdentificationEvidenceText=$actor$ required only email verification for all signatories.
 ###
-TimeoutDocumentEvidenceText=Document timed out by $actor$.
+TimeoutDocumentEvidenceText=Signing due date passed. Possibility to sign disabled by $actor$.
 ###
-SignDocumentEvidenceText=Document signed by $actor$ $if(!eleg)$ . $else$
-        using e-legitimation. The signed text was $infotext$.
-        Provider: $provider$.
+SignDocumentEvidenceText=Signed by $actor$ $if(!eleg)$ by clicking the sign button. $else$
+        using e-legitimation. The text signed in the e-legitimation client was $infotext$.
+        E-legitimation provider: $provider$.
         $if(fieldsverified)$
-            Fields verified:
+            Information about signatory verified by $provider$:
                 $if(fstnameverified)$ First name; $endif$
                 $if(lstnameverified)$ Last name; $endif$
                 $if(persnumverified)$ Personal number; $endif$
@@ -32,21 +32,21 @@ SignDocumentEvidenceText=Document signed by $actor$ $if(!eleg)$ . $else$
 
     $endif$ 
 ###
-SetInvitationDeliveryStatusEvidenceText=Delivery status for signatory with id $sid$ set to $status$ by $actor$.
+SetInvitationDeliveryStatusEvidenceText=$actor$ reported that email invitation to sign (sent to $email$) was $status$.
 ###
-SetDocumentUIEvidenceText=$if(footer)$ Document mail footer set to $footer$ by $actor$. $else$ Document mail footer removed by $actor$. $endif$
+SetDocumentUIEvidenceText=
 ###
-SetDocumentLocaleEvidenceText=Document locale set to $locale$ by $actor$.
+SetDocumentLocaleEvidenceText=Signing process language changed to $locale$ by $actor$.
 ###
-SetDocumentTitleEvidenceText=Document title set to $title$ by actor.
+SetDocumentTitleEvidenceText=Title changed to “$title$” by $actor$.
 ###
 SetDocumentAdvancedFunctionalityEvidenceText=
 ###
-RemoveDaysToSignEvidenceText= Days to sign set to $mdays$ by $actor$.
+RemoveDaysToSignEvidenceText=$actor$ deactivated signing due date.
 ###
-SetDaysToSignEvidenceText= Days to sign set to $mdays$ by $actor$.
+SetDaysToSignEvidenceText=$actor$ set due date for signing to $mdays$ days from sending the invitation.
 ###
-SetInvitationTextEvidenceText=Invitation text set to $text$ by $actor$.
+SetInvitationTextEvidenceText=Invitation text changed to “$text$” by $actor$.
 ###
 RemoveSignatoryUserEvidenceText=
 ###
@@ -56,86 +56,87 @@ RemoveSignatoryCompanyEvidenceText=
 ###
 SetSignatoryCompanyEvidenceText=
 ###
- SetDocumentTagsEvidenceText=Document tags set to $tags$ by $actor$.
+SetDocumentTagsEvidenceText=Tags set to $tags$ by $actor$.
 ###
-SaveSigAttachmentEvidenceText=Saving attachment with name $name$ for signatory by $actor$.
+SaveSigAttachmentEvidenceText=Attachment “$name$” uploaded by $actor$.
 ###
-SaveDocumentForUserEvidenceText=Saving document to user account with email $email$ by $actor$.
+SaveDocumentForUserEvidenceText=
 ###
-RestartDocumentEvidenceText=Document restarted from document with id $did$  by $actor$.
+RestartDocumentEvidenceText=Cancelled transaction $did$ restarted by $actor$.
 ###
-ReallyDeleteDocumentEvidenceText= The document was removed from the rubbish bin for $if(company)$ the company with admin email $email$ $else$ the user with email $email$ $endif$ by $actor$.
+ReallyDeleteDocumentEvidenceText=
 ###
-NewDocumentEvidenceText=Document $title$ created by $actor$.
+NewDocumentEvidenceText=New transaction “$title$” started by $actor$.
 ###
-MarkInvitationReadEvidenceText=Invitation sent to $email$ was opened, as reported by $actor$.
+MarkInvitationReadEvidenceText=$actor$ reported that email invitation to sign (sent to $email$) was opened.
 ###
-CloseDocumentEvidenceText=The document was closed by $actor$ after all signatories had signed.
+CloseDocumentEvidenceText=$actor$ closed transaction to further modifications after all signatories signed.
 ###
-ChangeSignatoryEmailWhenUndeliveredEvidenceText=Changed the email address for signatory from $oldemail$ to $newemail$ by $actor$.
+ChangeSignatoryEmailWhenUndeliveredEvidenceText=$actor$ changed the email address for signatory from $oldemail$ to $newemail$.
 ###
-ChangeMainfileEvidenceText=Main file was changed by $actor$.
+ChangeMainfileEvidenceText=$actor$ replaced “$oldfilename$” with “$newfilename$”.
 ###
-CancelDocumenElegEvidenceText=The document was canceled due to a mismatch with e-legitimation data by $actor$. Reason: $msg$.
+CancelDocumenElegEvidenceText=$actor$ cancelled transaction due to mismatch of signatory information with e-legitimation data received from the e-legitimation provider. Reason: $msg$.
 ###
-CancelDocumentEvidenceText=The document was canceled by $actor$.
+CancelDocumentEvidenceText=Transaction cancelled and invitation to sign withdrawn by $actor$.
 ###
-AttachFileEvidenceText=Uploaded main PDF by $actor$.
+AttachFileEvidenceText=$filename$ uploaded by $actor$.
 ###
-AttachSealedFileEvidenceText=Sealed file attached by $actor$.
+AttachSealedFileEvidenceText=Transaction verification page, evidence log, and evidence documentation appended by $actor$. Document digitally signed and stored in database by $actor$.
 ###
-PreparationToPendingEvidenceText=Document was put into Pending state by $actor$. $if(timeouttime)$ Timeout time set to $timeouttime$ UTC.$endif$
+PreparationToPendingEvidenceText=$actor$ locked document from author editing.
+$if(timeouttime)$ Due date set to $timeouttime$ UTC by $actor$.$endif$
 ###
-DeleteSigAttachmentEvidenceText= Signatory attachment for signatory was deleted by $actor$.
+DeleteSigAttachmentEvidenceText=Attachment for signatory ($email$) called “$name$” deleted by $actor$ .
 ###
-AuthorUsesCSVEvidenceText=Document created from CSV file by $actor$.
+AuthorUsesCSVEvidenceText=Transaction created by $actor$ as part of a mass send out from transaction $did$.
 ###
-ErrorDocumentEvidenceText=The following error occured on the document: $errmsg$
+ErrorDocumentEvidenceText=The following error occurred: $errmsg$. Signing disabled by $actor$.
 ###
-MarkDocumentSeenEvidenceText=$if(ip)$ Document viewed by $actor$. $else$ Marking document seen for signatory with id $sid$ by $actor$. $endif$
+MarkDocumentSeenEvidenceText=$if(ip)$ Viewed by $actor$. $else$ Marked seen for signatory ($email$) by $actor$. $endif$
 ###
-RejectDocumentEvidenceText=Document rejected for signatory with email $email$ by $actor$.
+RejectDocumentEvidenceText=$actor$ clicked the reject button.
 ###
-SetDocumentInviteTimeEvidenceText=Document invite time set to $time$ UTC by $actor$.
+SetDocumentInviteTimeEvidenceText=Signing period started by $actor$.
 ###
-SetDocumentTimeoutTimeEvidenceText= Document timeout time set to $time$ UTC by $actor$ .
+SetDocumentTimeoutTimeEvidenceText=Signing due date set to $time$ UTC by $actor$.
 ###
-RestoreArchivedDocumentEvidenceText=Document restored from the rubbish bin for $if(company)$ the company with admin email $email$ $else$ the user with email $email$ $endif$ by $actor$.
+RestoreArchivedDocumentEvidenceText=
 ###
-InvitationEvidenceText=Invitation sent to $email$ by $actor$.
+InvitationEvidenceText=Invitation to sign sent to $email$ by $actor$.
 ###
-SignableFromDocumentIDWithUpdatedAuthorEvidenceText= Document created from template with id $did$ by $actor$ .
+SignableFromDocumentIDWithUpdatedAuthorEvidenceText=Transaction started from template $did$ by $actor$.
 ###
-ArchiveDocumentEvidenceText= Moved document to rubbish bin for $if(company)$ company with admin email $email$ $else$ user with email $email$ $endif$ by $actor$.
+ArchiveDocumentEvidenceText= 
 ###
 ResetSignatoryDetailsEvidenceText=
     $if(added)$
         $if(signatory)$
-          Signatory with email $email$ added by $actor$.
+          Signatory ($email$) added to transaction by $actor$.
         $elseif(field)$
-          Field $fieldtype$ for signatory with email $email$ set to $value$ with placements $placements$ by $actor$.
+          Field $fieldtype$ for signatory ($email$) was filled with $value$ by $actor$. Field was placed onto the page to places with coordinates $placements$.
         $endif$
     $elseif(changed)$
         $if(field)$
-          Field $fieldtype$ for signatory with email $email$ set to $value$ with placements $palcements$ by $actor$.
+          Field $fieldtype$ for signatory ($email$) was filled with $value$ by $actor$. Field was placed onto the page to places with coordinates $placements$.
         $endif$
     $elseif(removed)$
         $if(signatory)$
-          Signatory with email $email$ removed by $actor$.
+          Signatory ($email$) removed from transaction by $actor$.
         $elseif(field)$
-          Field $fieldtype$ for signatory with email $email$ removed by $actor$.
+          Field $fieldtype$ for signatory ($email$) removed by $actor$.
         $endif$
     $endif$
 ###
-AdminOnlySaveForUserEvidenceText=Document saved for user with email $email$ by $actor$.
+AdminOnlySaveForUserEvidenceText=
 ###
-SignableFromDocumentEvidenceText=Document created from template by $actor$.
+SignableFromDocumentEvidenceText=Transaction started from template $did$ by $actor$.
 ###
-TemplateFromDocumentEvidenceText= Document converted to template by $actor$.
+TemplateFromDocumentEvidenceText= Transaction converted to template by $actor$.
 ###
-AttachCSVUploadEvidenceText=Attached CSV $csvtitle$ to document by $actor$.
+AttachCSVUploadEvidenceText=$actor$ defined party by uploading CSV $csvtitle$.
 ###
-SendToPadDeviceText=Document sent to pad device for signatory $sid$ by $actor$.
+SendToPadDeviceText=$actor$ sent transaction to pad device for signing by signatory ($email$).
 ####
-RemovedFromPadDeviceText=Document removed from pad device for signatory $sid$ by $actor$.
+RemovedFromPadDeviceText=$actor$ removed transaction from pad device for signing by signatory ($email$).
 ###

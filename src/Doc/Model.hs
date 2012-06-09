@@ -84,6 +84,7 @@ import MagicHash
 import Crypto.RNG
 import File.File
 import File.FileID
+import File.Model
 import Doc.DocUtils
 import User.UserID
 import User.Model
@@ -981,23 +982,17 @@ newFromDocument f docid = do
 data AdminOnlySaveForUser = AdminOnlySaveForUser DocumentID User Actor
 
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AdminOnlySaveForUser (Either String Document) where
-  update (AdminOnlySaveForUser did user actor) = do
+  update (AdminOnlySaveForUser did user _actor) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryLinks [sql "company_id" $ usercompany user]
       <++> SQL "WHERE document_id = ? AND user_id = ? " [
         toSql did
       , toSql $ userid user
       ]
-    when_ (r == 1) $
-      update $ InsertEvidenceEvent
-      AdminOnlySaveForUserEvidence
-      (value "email" (getEmail user) >> value "actor" (actorWho actor))
-      (Just did)
-      actor
     getOneDocumentAffected "AdminOnlySaveForUser" r did
 
 data ArchiveDocument = ArchiveDocument User DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument (Either String Document) where
-  update (ArchiveDocument user did actor) = do
+  update (ArchiveDocument user did _actor) = do
     r <- case (usercompany user, useriscompanyadmin user) of
       (Just cid, True) -> updateArchivableDoc $ SQL "WHERE (company_id = ? OR user_id = ?)" [toSql cid,toSql $ userid user]
       _ -> updateArchivableDoc $ SQL "WHERE user_id = ?" [toSql $ userid user]
@@ -1005,12 +1000,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument (Either Str
     -- on the same document, so this would mean the sig link count affected
     -- is more than 1. see bug 1195.
     let fudgedr = if r==0 then 0 else 1
-    when_ (fudgedr == 1) $
-      update $ InsertEvidenceEvent
-      ArchiveDocumentEvidence
-      (value "email" (getEmail user) >> value "actor" (actorWho actor) >> value "company" (useriscompanyadmin user && isJust (usercompany user)))
-      (Just did)
-      actor
     getOneDocumentAffected "ArchiveDocument" fudgedr did
 
     where
@@ -1060,10 +1049,11 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachFile (Either String D
       , sql "file_id" $ fid
       , sqlLog time $ "Attached main file " ++ show fid
       ] <++> SQL "WHERE id = ? AND status = ?" [toSql did, toSql Preparation]
+    mf <- query $ GetFileByFileID fid
     when_ (r == 1) $
       update $ InsertEvidenceEvent
         AttachFileEvidence
-        (value "actor" $ actorWho a)
+        (value "actor" (actorWho a) >> value "filename" (filename <$> mf))
         (Just did)
         a
     getOneDocumentAffected "AttachFile" r did
@@ -1120,10 +1110,10 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument (Either Stri
                               ,("Last name",       getLastName       sl, ln)
                               ,("Personal number", getPersonalNumber sl, num)]
                       uneql = filter (\(_,a,b)->a/=b) trips
-                      msg = intercalate "; " $ map (\(f,s,e)->f ++ " from document was \"" ++ s ++ "\" but from e-legitimation was \"" ++ e ++ "\"") uneql
+                      msg = intercalate "; " $ map (\(f,s,e)->f ++ " from transaction was \"" ++ s ++ "\" but from e-legitimation was \"" ++ e ++ "\"") uneql
                   update $ InsertEvidenceEvent
                     CancelDocumenElegEvidence
-                    (value "actor" (actorWho actor) >> value "msg" msg)
+                    (value "actor" (actorWho actor) >> value "msg" msg )
                     (Just did)
                     actor
 
@@ -1137,18 +1127,24 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeMainfile (Either Stri
     case mdocument of
       Nothing -> return $ Left $ "Cannot ChangeMainfile document " ++ show did ++ " because it does not exist"
       Just document -> do
-        let fieldname = if (documentstatus document == Closed || allHadSigned document)
-                        then "sealed_file_id"
-                        else "file_id"
-        r <- kRun $ mkSQL UPDATE tableDocuments [sql fieldname $ fid]
-          <++> SQL "WHERE id = ?" [toSql did]
-        when_ (r == 1) $
-          update $ InsertEvidenceEvent
-            ChangeMainfileEvidence
-            (value "actor" (actorWho actor))
-            (Just did)
-            actor
-        getOneDocumentAffected "ChangeMainfile" r did
+        case getFileIDsByStatus document of
+          [ofid] -> do
+            let fieldname = if (documentstatus document == Closed || allHadSigned document)
+                            then "sealed_file_id"
+                            else "file_id"
+            r <- kRun $ mkSQL UPDATE tableDocuments [sql fieldname $ fid]
+                 <++> SQL "WHERE id = ?" [toSql did]
+        
+            mof <- query $ GetFileByFileID ofid
+            mnf <- query $ GetFileByFileID fid
+            when_ (r == 1) $
+              update $ InsertEvidenceEvent
+              ChangeMainfileEvidence
+              (value "actor" (actorWho actor) >> value "oldfilename" (filename <$> mof) >> value "newfilename" (filename <$> mnf))
+              (Just did)
+              actor
+            getOneDocumentAffected "ChangeMainfile" r did
+          fs -> return $ Left $ "Cannot ChangeMainfile document " ++ show did ++ ": non-one number of main files: " ++ show (length fs)
     where
         allHadSigned doc = all (hasSigned ||^ (not . isSignatory)) $ documentsignatorylinks doc
 
@@ -1245,18 +1241,26 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CloseDocument (Either Strin
 data DeleteSigAttachment = DeleteSigAttachment DocumentID SignatoryLinkID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m DeleteSigAttachment (Either String Document) where
   update (DeleteSigAttachment did slid fid actor) = do
-    r <- kRun $ mkSQL UPDATE tableSignatoryAttachments [sql "file_id" SqlNull]
-      <++> SQL "WHERE file_id = ? AND signatory_link_id = ?"
-      [ toSql fid
-      , toSql slid
-      ]
-    when_ (r == 1) $
-      update $ InsertEvidenceEvent
-      DeleteSigAttachmentEvidence
-      (value "actor" (actorWho actor))
-      (Just did)
-      actor
-    getOneDocumentAffected "DeleteSigAttachment" r did
+    mdoc <- query $ GetDocumentByDocumentID did
+    case mdoc of
+      Nothing -> return $ Left $ "Document does not exist. Trying to Delete Sig Attachment. docid: " ++ show did
+      Just doc -> case getSigLinkFor doc slid of
+        Nothing -> return $ Left $ "SignatoryLinkID not in document: docid: " ++ show did ++ " slid: " ++ show slid
+        Just sig -> case find (\sl->signatoryattachmentfile sl == Just fid) $ signatoryattachments sig of
+          Nothing -> return $ Left $ "No signatory attachment for that file id: " ++ show fid
+          Just sa -> do
+            r <- kRun $ mkSQL UPDATE tableSignatoryAttachments [sql "file_id" SqlNull]
+                 <++> SQL "WHERE file_id = ? AND signatory_link_id = ?"
+                 [ toSql fid
+                 , toSql slid
+                 ]
+            when_ (r == 1) $
+              update $ InsertEvidenceEvent
+              DeleteSigAttachmentEvidence
+              (value "actor" (actorWho actor) >> value "name" (signatoryattachmentname sa) >> value "email" (getEmail sig))
+              (Just did)
+              actor
+            getOneDocumentAffected "DeleteSigAttachment" r did
 
 data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID String String String String String String [String] Actor
 instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSignatoryData (Either String Document) where
@@ -1273,7 +1277,7 @@ instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSig
             copyEvidenceLogToNewDocument docid (documentid d)
             update $ InsertEvidenceEvent
                   AuthorUsesCSVEvidence
-                  (value "actor" (actorWho actor))
+                  (value "actor" (actorWho actor) >> value "did" (show docid))
                   (Just $ documentid d)
                   actor
         return ed
@@ -1312,7 +1316,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument (Either Strin
             when_ (r == 1) $
               update $ InsertEvidenceEvent
               ErrorDocumentEvidence
-              (value "errmsg" errmsg)
+              (value "errmsg" errmsg >> value "actor" (actorWho actor))
               (Just docid)
               actor
             getOneDocumentAffected "ErrorDocument" r docid
@@ -1483,7 +1487,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkDocumentSeen (Either St
       Nothing -> return $ Left $ "document does not exist with id " ++ show did
       Just doc -> case (getSigLinkFor doc (slid, mh)) of
         Nothing -> return $ Left $ "signatory link id and magic hash do not match! documentid: " ++ show did ++ " slid: " ++ show slid ++ " mh: " ++ show mh
-        Just _ -> do
+        Just sig -> do
           let time = actorTime actor
               ipnumber = fromMaybe noIP $ actorIP actor
 
@@ -1509,7 +1513,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkDocumentSeen (Either St
 
           _ <- update $ InsertEvidenceEvent
                MarkDocumentSeenEvidence
-               (value "actor" (actorWho actor) >> value "sid"  (show slid) >> value "ip" (isJust $ actorIP actor))
+               (value "actor" (actorWho actor) >> value "email"  (getEmail sig) >> value "ip" (isJust $ actorIP actor))
                (Just did)
                actor
           getOneDocumentAffected "MarkDocumentSeen" r did
@@ -1628,7 +1632,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (E
 
 data ReallyDeleteDocument = ReallyDeleteDocument User DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ReallyDeleteDocument (Either String Document) where
-  update (ReallyDeleteDocument user did actor) = do
+  update (ReallyDeleteDocument user did _actor) = do
     -- I don't like this: we should do this on the DB side, not pass
     -- in a User which could be old. It should be done within a
     -- transaction. -EN
@@ -1636,12 +1640,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ReallyDeleteDocument (Eithe
       (Just cid, True) -> deleteDoc $ SQL "WHERE (company_id = ? OR user_id = ?)" [toSql cid,toSql $ userid user]
       _ -> deleteDoc $ SQL "WHERE user_id = ? AND (company_id IS NULL OR EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?))" [toSql $ userid user,toSql did, toSql Preparation]
     let fudgedr = if r==0 then 0 else 1
-    when_ (fudgedr == 1) $ do
-      update $ InsertEvidenceEvent
-        ReallyDeleteDocumentEvidence
-        (value "email" (getEmail user) >> value "actor" (actorWho actor) >> value "company" (isJust (usercompany user) && useriscompanyadmin user))
-        (Just did)
-        actor
     getOneDocumentAffected "ReallyDeleteDocument" fudgedr did
     where
       deleteDoc whereClause = kRun $ mconcat [
@@ -1757,7 +1755,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RestoreArchivedDocument (Ei
 -}
 data SaveDocumentForUser = SaveDocumentForUser DocumentID User SignatoryLinkID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SaveDocumentForUser (Either String Document) where
-  update (SaveDocumentForUser did user@User{userid, usercompany} slid actor) = do
+  update (SaveDocumentForUser did User{userid, usercompany} slid _actor) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryLinks [
         sql "user_id" userid
       , sql "company_id" usercompany
@@ -1765,12 +1763,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SaveDocumentForUser (Either
         toSql did
       , toSql slid
       ]
-    when_ (r == 1) $
-      update $ InsertEvidenceEvent
-      SaveDocumentForUserEvidence
-      (value "email" (getEmail user) >> value "actor" (actorWho actor))
-      (Just did)
-      actor
     getOneDocumentAffected "SaveDocumentForUser" r did
 
 {- |
@@ -1941,29 +1933,19 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentLocale (Either S
 data SetDocumentUI = SetDocumentUI DocumentID DocumentUI Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentUI (Either String Document) where
   update (SetDocumentUI did docui actor) = do
-    ed <- query $ GetDocumentByDocumentID did
-    let changed = case ed of
-          Nothing -> False
-          Just d -> not $ documentui d == docui
     r <- kRun $ mkSQL UPDATE tableDocuments [
         sql "mail_footer" $ documentmailfooter docui
          , sql "mtime" $ actorTime actor
       ] <++> SQL "WHERE id = ?" [toSql did]
-    when_ (r == 1 && changed) $
-      update $ InsertEvidenceEvent
-      SetDocumentUIEvidence
-      (value "footer" (documentmailfooter docui) >> value "actor" (actorWho actor))
-      (Just did)
-      actor
     getOneDocumentAffected "SetDocumentUI" r did
 
 data SetInvitationDeliveryStatus = SetInvitationDeliveryStatus DocumentID SignatoryLinkID MailsDeliveryStatus Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInvitationDeliveryStatus (Either String Document) where
   update (SetInvitationDeliveryStatus did slid status actor) = do
     ed <- query $ GetDocumentByDocumentID did
-    let changed = case getSigLinkFor ed slid of
-          Nothing -> False
-          Just sl -> not $ invitationdeliverystatus sl == status
+    let (email, changed) = case getSigLinkFor ed slid of
+          Nothing -> ("", False)
+          Just sl -> (getEmail sl, not $ invitationdeliverystatus sl == status)
     r <- kRun $ mkSQL UPDATE tableSignatoryLinks [
         sql "invitation_delivery_status" status
       ] <++> SQL "WHERE id = ? AND document_id = ? AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND type = ?)" [
@@ -1975,7 +1957,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInvitationDeliveryStatus
     when_ (r == 1 && changed) $
       update $ InsertEvidenceEvent
       SetInvitationDeliveryStatusEvidence
-      (value "sid" (show slid) >> value "status" (show status) >> value "actor" (actorWho actor))
+      (value "email" email >> value "status" (show status) >> value "actor" (actorWho actor))
       (Just did)
       actor
     getOneDocumentAffected "SetInvitationDeliveryStatus" r did
@@ -2089,7 +2071,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
               forM_ rs $ \removedfield ->
                 update $ InsertEvidenceEvent
                   ResetSignatoryDetailsEvidence
-                  (value "removed" True >> value "field" True >> value "email" eml >> (value "fieldtype" $ show $ sfType removedfield) >> value "actor"  (actorWho actor))
+                  (value "removed" True >> value "field" True >> value "email" eml >> value "fieldtype" (show $ sfType removedfield) >> value "actor"  (actorWho actor))
                   (Just documentid)
                   actor
               forM_ cs $ \changedfield ->
@@ -2150,7 +2132,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignableFromDocument Docume
     d <- insertNewDocument $ templateToDocument document
     void $ update $ InsertEvidenceEvent
       SignableFromDocumentEvidence
-      (value "actor" $ actorWho actor)
+      (value "actor" (actorWho actor) >> value "did" (show (documentid document)))
       (Just (documentid d))
       actor
     return d
@@ -2341,6 +2323,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFieldsNoStatusCheck (
 data AddDocumentAttachment = AddDocumentAttachment DocumentID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddDocumentAttachment (Either String Document) where
   update (AddDocumentAttachment did fid actor) = do
+    mf <- query $ GetFileByFileID fid
     r <- kRun $ mkSQL INSERT tableAuthorAttachments [
         sql "document_id" did
       , sql "file_id" fid
@@ -2351,7 +2334,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddDocumentAttachment (Eith
     when_ (r == 1) $
       update $ InsertEvidenceEvent
       AddDocumentAttachmentEvidence
-      (value "fid" (show fid) >> value "actor" (actorWho actor))
+      (value "fid" (show fid) >> value "actor" (actorWho actor) >> value "name" (filename <$> mf))
       (Just did)
       actor
     getOneDocumentAffected "AddDocumentAttachment" r did
@@ -2359,6 +2342,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddDocumentAttachment (Eith
 data RemoveDocumentAttachment = RemoveDocumentAttachment DocumentID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m RemoveDocumentAttachment (Either String Document) where
   update (RemoveDocumentAttachment did fid actor) = do
+    mf <- query $ GetFileByFileID fid
     kPrepare "DELETE FROM author_attachments WHERE document_id = ? AND file_id = ? AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?)"
     r <- kExecute [
         toSql did
@@ -2369,7 +2353,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RemoveDocumentAttachment (E
     when_ (r == 1) $
       update $ InsertEvidenceEvent
       RemoveDocumentAttachmentEvidence
-      (value "fid" (show fid) >> value "actor" (actorWho actor))
+      (value "fid" (show fid) >> value "actor" (actorWho actor) >> value "name" (filename <$> mf))
       (Just did)
       actor
 
