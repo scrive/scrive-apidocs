@@ -93,7 +93,7 @@ pageList' templatename currentlink user = renderTemplate templatename $ do
 
 docForListJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> User -> PadQueue ->  Document -> m JSValue
 docForListJSON tl crtime user padqueue doc = do
-  let link = case getSigLinkFor doc (isSigLinkSavedFor user) of
+  let link = case getSigLinkFor doc user of
         Just sl | not $ isAuthor sl -> LinkSignDoc doc sl
         _                           -> LinkIssueDoc $ documentid doc
       sigFilter sl =   isSignatory sl && (documentstatus doc /= Preparation)
