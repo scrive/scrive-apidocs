@@ -172,6 +172,8 @@ userOrderByToSQL UserOrderByEmail               = SQL "users.email" []
 userOrderByToSQL UserOrderByAccountCreationDate = SQL "users.has_accepted_terms_of_service" []
 
 userOrderByAscDescToSQL :: AscDesc UserOrderBy -> SQL
+userOrderByAscDescToSQL (Asc x@UserOrderByAccountCreationDate) = userOrderByToSQL x `mappend` SQL " ASC NULLS FIRST " []
+userOrderByAscDescToSQL (Desc x@UserOrderByAccountCreationDate) = userOrderByToSQL x `mappend` SQL " DESC NULLS LAST " []
 userOrderByAscDescToSQL (Asc x) = userOrderByToSQL x
 userOrderByAscDescToSQL (Desc x) = userOrderByToSQL x `mappend` SQL " DESC" []
 
