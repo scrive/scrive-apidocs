@@ -23,6 +23,7 @@ import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Text.JSON (JSValue(..), toJSObject, toJSString)
 
+import ActionQueue.UserAccountRequest
 import AppView
 import DB
 import Company.CompanyControl (withCompanyAdmin)
@@ -295,7 +296,7 @@ handleResendToCompanyAccount = withCompanyAdmin $ \(user, company) -> do
 sendNewCompanyUserMail :: Kontrakcja m => User -> Company -> User -> m ()
 sendNewCompanyUserMail inviter company user = do
   ctx <- getContext
-  al <- newAccountCreatedLink user
+  al <- newUserAccountRequestLink $ userid user
   mail <- mailNewCompanyUserInvite (ctxhostpart ctx) user inviter company al
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getFullName user, email = getEmail user }]}
   return ()

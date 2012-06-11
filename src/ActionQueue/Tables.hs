@@ -61,28 +61,22 @@ tableUserAccountRequests = Table {
     tblName = "user_account_requests"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of
-    [  ("email", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+    [  ("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
      , ("expires", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just False})
-     , ("company_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
-     , ("first_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-     , ("last_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
      , ("token", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
      ] -> return TVRvalid
     [] -> do
       kRunRaw $ "CREATE TABLE user_account_requests ("
-        ++ "  email TEXT NOT NULL"
+        ++ "  user_id BIGINT NOT NULL"
         ++ ", expires TIMESTAMPTZ NOT NULL"
-        ++ ", company_id BIGINT NULL"
-        ++ ", first_name TEXT NOT NULL"
-        ++ ", last_name TEXT NOT NULL"
         ++ ", token BIGINT NOT NULL"
-        ++ ", CONSTRAINT pk_user_account_requests PRIMARY KEY (email)"
+        ++ ", CONSTRAINT pk_user_account_requests PRIMARY KEY (user_id)"
         ++ ")"
       return TVRcreated
     _ -> return TVRinvalid
   , tblPutProperties = do
     kRunRaw $ "ALTER TABLE user_account_requests"
-      ++ " ADD CONSTRAINT fk_user_account_requests_company_id FOREIGN KEY(company_id)"
-      ++ " REFERENCES companies(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
+      ++ " ADD CONSTRAINT fk_user_account_requests_users FOREIGN KEY(user_id)"
+      ++ " REFERENCES users(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }

@@ -107,4 +107,5 @@ kontraTables = [
   , tablePrivilege
   , tablePasswordReminders
   , tableEmailChangeRequests
+  , tableUserAccountRequests
   ] ++ mailerTables

@@ -37,6 +37,18 @@ guardJustM :: MonadBase IO m => m (Maybe b) -> m b
 guardJustM action = guardJust =<< action
 
 {- |
+   Get the value from a Just or fail if it is Nothing
+ -}
+guardJust404 :: MonadBase IO m => Maybe a -> m a
+guardJust404 = maybe respond404 return
+
+{- |
+   Get the value from a Just or fail if it is Nothing
+ -}
+guardJustM404 :: MonadBase IO m => m (Maybe b) -> m b
+guardJustM404 action = guardJust404 =<< action
+
+{- |
    Get the value from a Right or log an error and fail if it is Left
  -}
 guardRight' :: (MonadBase IO m, MonadIO m, Show msg) => Either msg a -> m a

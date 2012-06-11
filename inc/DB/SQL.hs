@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 module DB.SQL (
     SQL(..)
   , ColumnValue
@@ -45,7 +44,7 @@ sql column value = sql' column "?" value
 
 data SQLType = INSERT | UPDATE
 
-mkSQL :: SQLType -> Table -> [(String, String, SqlValue)] -> SQL
+mkSQL :: SQLType -> Table -> [ColumnValue] -> SQL
 mkSQL qtype Table{tblName} values = case qtype of
   INSERT -> SQL ("INSERT INTO " ++ tblName
     ++ " (" ++ (intercalate ", " columns) ++ ")"

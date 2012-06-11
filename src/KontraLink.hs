@@ -3,9 +3,8 @@ module KontraLink(KontraLink(..), LoginRedirectReason(..), getHomeOrUploadLink) 
 import Data.Int
 
 import Doc.DocStateData
-import MagicHash (MagicHash)
+import MagicHash
 import Misc
-import ActionSchedulerState (ActionID)
 import User.Model
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
@@ -83,7 +82,7 @@ data KontraLink
     | LinkAdminServices
     | LinkAdminQuarantine
     | LinkPasswordReminder UserID MagicHash
-    | LinkAccountCreated ActionID MagicHash String -- email
+    | LinkAccountCreated UserID MagicHash -- email
     | LinkChangeSignatoryEmail DocumentID SignatoryLinkID
     | LinkWithdrawn DocumentID
     | LoopBack
@@ -206,7 +205,7 @@ instance Show KontraLink where
     showsPrec _ (LinkAdminServices) = (++) $ "/adminonly/services"
     showsPrec _ (LinkAdminQuarantine) = (++) $ "/adminonly/quarantine"
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
-    showsPrec _ (LinkAccountCreated aid hash email) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash ++ "?email=" ++ email
+    showsPrec _ (LinkAccountCreated uid hash) = (++) $ "/accountsetup/" ++ show uid ++ "/" ++ show hash
     showsPrec _ (LinkChangeSignatoryEmail did slid ) = (++) $ "/changeemail/"++show did++"/"++show slid
     showsPrec _ (LinkWithdrawn did ) = (++) $ "/withdrawn/"++show did
     showsPrec _ LoopBack = (++) $ "/" -- this should never be used

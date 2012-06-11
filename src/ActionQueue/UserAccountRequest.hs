@@ -6,7 +6,6 @@ import Data.Typeable
 
 import ActionQueue.Core
 import ActionQueue.Tables
-import Company.CompanyID
 import Crypto.RNG
 import DB
 import KontraLink
@@ -16,64 +15,53 @@ import Misc
 import User.Model
 
 data UserAccountRequest = UserAccountRequest {
-    uarEmail :: Email
+    uarUserID :: UserID
   , uarExpires :: MinutesTime
-  , uarCompanyID :: Maybe CompanyID
-  , uarFirstName :: String
-  , uarLastName :: String
   , uarToken :: MagicHash
   } deriving (Show, Typeable)
 
-userAccountRequest :: QueueAction Email UserAccountRequest (Email, Maybe CompanyID, String, String, MagicHash) (DBT IO)
+userAccountRequest :: QueueAction UserID UserAccountRequest (UserID, MagicHash) (DBT IO)
 userAccountRequest = QueueAction {
     qaTable = tableUserAccountRequests
-  , qaFields = \(email, mcid, first_name, last_name, token) -> [
-      sql "email" email
-    , sql "company_id" mcid
-    , sql "first_name" first_name
-    , sql "last_name" last_name
+  , qaFields = \(user_id, token) -> [
+      sql "user_id" user_id
     , sql "token" token
     ]
-  , qaSelectFields = ["email", "expires", "company_id", "first_name", "last_name", "token"]
-  , qaIndexField = "email"
+  , qaSelectFields = ["user_id", "expires", "token"]
+  , qaIndexField = "user_id"
   , qaExpirationDelay = "14 days"
   , qaDecode = foldDB decoder []
   , qaUpdateSQL = \UserAccountRequest{..} -> mkSQL UPDATE tableUserAccountRequests [
       sql "expires" uarExpires
-    , sql "company_id" uarCompanyID
-    , sql "first_name" uarFirstName
-    , sql "last_name" uarLastName
     , sql "token" uarToken
-    ] <++> SQL ("WHERE " ++ qaIndexField userAccountRequest ++ " = ?") [toSql uarEmail]
-  , qaEvaluateExpired = \UserAccountRequest{uarEmail} -> do
-    _ <- dbUpdate $ DeleteAction userAccountRequest uarEmail
+    ] <++> SQL ("WHERE " ++ qaIndexField userAccountRequest ++ " = ?") [toSql uarUserID]
+  , qaEvaluateExpired = \UserAccountRequest{uarUserID} -> do
+    _ <- dbUpdate $ DeleteAction userAccountRequest uarUserID
     return ()
   }
   where
-    decoder acc email expires mcid first_name last_name token = UserAccountRequest {
-        uarEmail = email
+    decoder acc user_id expires token = UserAccountRequest {
+        uarUserID = user_id
       , uarExpires = expires
-      , uarCompanyID = mcid
-      , uarFirstName = first_name
-      , uarLastName = last_name
       , uarToken = token
       } : acc
 
-getUserAccountRequest :: MonadDB m => Email -> MagicHash -> m (Maybe UserAccountRequest)
-getUserAccountRequest email token = runMaybeT $ do
-  Just uar@UserAccountRequest{..} <- dbQuery $ GetAction userAccountRequest email
+getUserAccountRequestUser :: MonadDB m => UserID -> MagicHash -> m (Maybe User)
+getUserAccountRequestUser uid token = runMaybeT $ do
+  Just UserAccountRequest{..} <- dbQuery $ GetAction userAccountRequest uid
   guard $ uarToken == token
-  return uar
+  Just user <- dbQuery $ GetUserByID uarUserID
+  return user
 
-newUserAccountRequest :: (MonadDB m, CryptoRNG m) => Email -> Maybe CompanyID -> String -> String -> m (Maybe UserAccountRequest)
-newUserAccountRequest email mcid first_name last_name = runMaybeT $ do
+newUserAccountRequest :: (MonadDB m, CryptoRNG m) => UserID -> m UserAccountRequest
+newUserAccountRequest uid = do
   token <- random
   expires <- minutesAfter (24*60) `liftM` getMinutesTime
   -- FIXME: highly unlikely, but possible race condition
-  Nothing <- dbQuery $ GetUserByEmail Nothing email
-  dbUpdate $ NewAction userAccountRequest expires (email, mcid, first_name, last_name, token)
+  _ <- dbUpdate $ DeleteAction userAccountRequest uid
+  dbUpdate $ NewAction userAccountRequest expires (uid, token)
 
-newUserAccountRequestLink :: (MonadDB m, CryptoRNG m) => Email -> Maybe CompanyID -> String -> String -> m (Maybe KontraLink)
-newUserAccountRequestLink email mcid first_name last_name = runMaybeT $ do
-  Just uar <- newUserAccountRequest email mcid first_name last_name
-  return $ LinkAccountCreated (uarEmail uar) (uarToken uar)
+newUserAccountRequestLink :: (MonadDB m, CryptoRNG m) => UserID -> m KontraLink
+newUserAccountRequestLink uid = do
+  uar <- newUserAccountRequest uid
+  return $ LinkAccountCreated (uarUserID uar) (uarToken uar)
