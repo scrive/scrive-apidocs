@@ -1000,8 +1000,10 @@ handleDownloadFile did fid _nameForBrowser = do
            (Just sid, Just mh) -> guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
            _ ->                   guardRightM $ getDocByDocID did
   unless (fileInDocument doc fid) internalError
-  getFileIDContents fid
-    >>= respondWithPDF
+  content <- if (mainFileOfDocument doc fid)
+                then getFileIDContents fid
+                else getFileIDContents fid
+  respondWithPDF content
   where
     respondWithPDF contents = do
       let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing

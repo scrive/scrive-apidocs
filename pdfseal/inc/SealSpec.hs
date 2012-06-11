@@ -70,6 +70,13 @@ data SealSpec = SealSpec
     }
     deriving (Eq,Ord,Show,Read)
 
+data PreSealSpec = PreSealSpec
+    { pssInput :: String
+    , pssOutput :: String
+    , pssFields :: [Field]
+    }
+    deriving (Eq,Ord,Show,Read)
+    
 data HistEntry = HistEntry
     { histdate :: String
     , histcomment :: String
