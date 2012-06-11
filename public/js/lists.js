@@ -219,20 +219,21 @@
             if( i>1 ) {
                 writePage(1);
             }
-            if( i - contextCount > 2 ) {
+            var k = i - contextCount;
+            if( k > 2 ) {
                 pages.append($("<span> ... </span>"));
             }
-            var k = i - contextCount;
             if( k<2 ) k = 2;
             for( k = k; k<i; k++ ) {
                 writePage(k);
             }
             writePage(i).addClass("current");
             var lastPage = Math.ceil(paging.itemMax()/paging.pageSize());
-
-            for( k = i+1; k <= lastPage && k - i < 3; k++ ) { //We don't want to show two much pages
+            // REVIEW: What is the constant 3 below?  Any relation with contextCount above?
+            for( k = i+1; k <= lastPage && k - i < 3; k++ ) { //We don't want to show too many page numbers
                 writePage(k);
             };
+            // REVIEW: Could the condition below be simplified to (k <= lastPage) ?
             if (paging.itemMax() - (k-1) * paging.pageSize() > 0) { // We show ... if there are items on missed pages
                 pages.append("<span> ... </span>");
             };

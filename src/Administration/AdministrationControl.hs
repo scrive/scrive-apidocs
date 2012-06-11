@@ -237,6 +237,7 @@ userSortingFromParams params =
     x _             = [Asc UserOrderByName]
 
 userPaginationFromParams :: Int -> ListParams -> UserPagination
+-- REVIEW: What is the magic constant 4 below?
 userPaginationFromParams pageSize params = UserPagination (listParamsOffset params) (pageSize * 4)
 
 
@@ -751,6 +752,7 @@ docSearchingFromParams params =
 
 
 docPaginationFromParams :: Int -> ListParams -> DocumentPagination
+-- REVIEW: Another magic constant 4, what is it?  Can we have some more DRY here?  We have an opportunity to factor out "magic 4" and explain it.
 docPaginationFromParams pageSize params = DocumentPagination (listParamsOffset params) (pageSize*4)
 
 
