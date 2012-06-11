@@ -322,12 +322,16 @@ handleIssueShowGet docid = checkUserTOSGet $ do
       isauthororincompany = isauthor || isincompany
       isattachment = isAttachment document
       msiglink = find (isSigLinkFor muser) $ documentsignatorylinks document
+      
+      isadmin = Just True == (useriscompanyadmin <$> muser)
+      iscompany = hasSigLinkFor (usercompany =<< muser) document
+      isadminofcompany = isadmin && iscompany
 
   ctx <- getContext
   case (ispreparation, msiglink) of
     (True,  _) | isattachment        -> Right <$> pageAttachmentDesign document
     (True,  _)                       -> Right <$> pageDocumentDesign document
-    (False, _) | isauthororincompany -> Right <$> pageDocumentView document msiglink
+    (False, _) | isauthororincompany || isadminofcompany -> Right <$> pageDocumentView document msiglink
     (False, Just siglink)            -> Left  <$> (simpleResponse =<< pageDocumentSignView ctx document siglink)
     _                                -> internalError
 
