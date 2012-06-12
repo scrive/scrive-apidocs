@@ -68,6 +68,7 @@ import Doc.DocStorage
 import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
+import qualified Doc.DocSeal as DocSeal
 import InputValidation
 import File.Model
 import Kontra
@@ -1000,8 +1001,8 @@ handleDownloadFile did fid _nameForBrowser = do
            (Just sid, Just mh) -> guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
            _ ->                   guardRightM $ getDocByDocID did
   unless (fileInDocument doc fid) internalError
-  content <- if (mainFileOfDocument doc fid)
-                then getFileIDContents fid
+  content <- if (isPending doc && mainFileOfDocument doc fid)
+                then guardRightM $ DocSeal.presealDocumentFile doc  =<< (guardJustM $ dbQuery $ GetFileByFileID fid)
                 else getFileIDContents fid
   respondWithPDF content
   where
