@@ -32,7 +32,7 @@ window.Submit = Backbone.Model.extend({
             k == "expectedType" ||
             k == "beforeSend" ||
             k == "onSend"    ||
-            k == "ajaxtimeout"
+            k == "ajaxtimeout";
     },
     add: function(k,v)
     {

@@ -113,7 +113,7 @@ window.AjaxQueue = Backbone.Model.extend({
                 if (requestQueue[0] != qr) return; // This is a lost request and we ignore it
                 requestQueue.shift();
                 ajaxQueue.run();
-            })
+            });
        qr.bind("error", function() {
                 if (requestQueue[0] != qr) return; // This is a lost request and we ignore it
                 if (requestQueue.length == 1)
@@ -127,7 +127,7 @@ window.AjaxQueue = Backbone.Model.extend({
                     requestQueue.shift();
                     ajaxQueue.run();
                 }
-            })
+            });
        requestQueue.push(qr);
        ajaxQueue.run();
   },
