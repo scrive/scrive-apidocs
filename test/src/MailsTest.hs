@@ -28,6 +28,9 @@ import Data.Char
 import Text.XML.HaXml.Parse (xmlParse')
 import Control.Monad.Trans
 import Util.Actor
+import qualified Log as Log
+import Control.Concurrent
+import Data.Maybe
 
 mailsTests :: [String] -> TestEnvSt -> Test
 mailsTests params env  = testGroup "Mails" [
@@ -95,12 +98,13 @@ sendDocumentMails mailTo author mcompany = do
         req <- mkRequest POST []
         --Invitation Mails
         let checkMail s mg = do
+                              Log.debug $ "Checking mail " ++ s
                               m <- fst <$> (runTestKontra req ctx $ mg)
                               validMail (s ++ " "++ show doctype) m
                               sendoutForManualChecking (s ++ " " ++ show doctype ) req ctx mailTo m
         checkMail "Invitation" $ mailInvitation True ctx Sign doc (Just sl)
         -- DELIVERY MAILS
-        checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxhostpart ctx) doc
+        checkMail "Deferred invitadbCommittion"    $  mailDeferredInvitation (ctxhostpart ctx) doc
         checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxhostpart ctx) doc sl
         checkMail "Delivered invitation"   $  mailDeliveredInvitation doc sl
         --remind mails
@@ -118,6 +122,11 @@ sendDocumentMails mailTo author mcompany = do
         checkMail "Closed" $ mailDocumentClosed ctx sdoc
         -- Reminder after send
         checkMail "Reminder signed" $ mailDocumentRemind Nothing ctx doc (head $ documentsignatorylinks sdoc)
+  dbCommit
+  when (isJust mailTo) $ do
+    Log.debug "Delay for mails to get send"
+    liftIO $ threadDelay 20000000
+    Log.debug "Mails not send will be purged"
 
 
 testUserMails :: Maybe String -> TestEnv ()
@@ -129,6 +138,7 @@ testUserMails mailTo = do
 
     req <- mkRequest POST []
     let checkMail s mg = do
+                           Log.debug $ "Checking mail " ++ s
                            m <- fst <$> (runTestKontra req ctx $ mg)
                            validMail s m
                            sendoutForManualChecking s req ctx mailTo m
@@ -141,6 +151,12 @@ testUserMails mailTo = do
     checkMail "Reset password mail" $ do
           al <- newAccountCreatedLink user
           resetPasswordMail (ctxhostpart ctx) user al
+  dbCommit
+  when (isJust mailTo) $ do
+    Log.debug "Delay for mails to get send"
+    liftIO $ threadDelay 20000000
+    Log.debug "Mails not send will be purged"
+         
 
 
 -- MAIL TESTING UTILS
@@ -169,22 +185,19 @@ mailingContext locale = do
     ctx <- mkContext locale
     return $ ctx { ctxhostpart = "http://dev.skrivapa.se" }
 
-sendoutForManualChecking ::  String -> Request -> Context ->  Maybe String -> Mail -> TestEnv ()
-sendoutForManualChecking _ _ _ _ _ = assertSuccess
 
-{-
-sendoutForManualChecking ::  String -> Request -> Context ->  Maybe String -> Mail -> DB ()
+sendoutForManualChecking ::  String -> Request -> Context ->  Maybe String -> Mail -> TestEnv ()
 sendoutForManualChecking _ _ _ Nothing _ = assertSuccess
 sendoutForManualChecking _ req ctx (Just email) m = do
     _ <- runTestKontra req ctx $ do
            _ <- scheduleEmailSendout (ctxmailsconfig ctx) $ m {
-                  to = [MailAddress { fullname = BS.fromString "Tester",
-                                      email = BS.fromString email}]
+                  to = [MailAddress { fullname = "Tester",
+                                      email = email}]
                 , from = Nothing
            }
            assertSuccess
     assertSuccess
--}
+
 
 toMailAddress :: [String] -> Maybe String
 toMailAddress [] = Nothing
