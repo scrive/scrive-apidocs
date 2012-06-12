@@ -329,6 +329,22 @@ a.documenticon {
     padding-top: 55px;
     font-size: 11px;
     width: 110px;
+    text-decoration: none;
+}
+
+a.documenticon.withUpload{
+    padding-top: 0px;
+}
+
+a.documenticon.withUpload .documenticonText{
+    padding-top: 55px;
+    display: inline-block;
+}
+
+a.documenticon.withUpload input.multiFileInput {
+    font-size: 120px;
+    top: -76px;
+    
 }
 
 .backicon {

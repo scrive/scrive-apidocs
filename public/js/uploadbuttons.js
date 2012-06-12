@@ -4,6 +4,7 @@
  *                   width: 100 // Expected size of the button.
  *                   name: "Name that will be used for input element"
  *                   text: "Text that will be put inside of button",
+ *                   button: Alternate button element to use,
  *                   submitOnUpload : Bool //Submit the parent form when file selected })
  *                   list : jQuery("selector") // If you want to show list of uploaded files
  *                   maxlength : 1 // Number of files that can be selected
@@ -25,6 +26,7 @@ var UploadButtonModel = Backbone.Model.extend({
   defaults : {
       name : "",
       text : "",
+      button : null,
       width: 200,
       maxlength : 1,
       submitOnUpload : false,
@@ -39,6 +41,9 @@ var UploadButtonModel = Backbone.Model.extend({
   },
   text: function() {
        return this.get("text");
+  },
+  button: function() {
+       return this.get("button");
   },
   name: function() {
        return this.get("name");
@@ -84,15 +89,18 @@ var UploadButtonView = Backbone.View.extend({
         this.render();
     },
     render: function () {
-        var button = $("<a/>");
         var model = this.model;
-        button.addClass(model.color()).addClass("btn-" + model.size()).css("overflow", "hidden").css("width",model.width() + "px");
-        var left  = $("<div class='left'/>");
-        var label = $("<div class='label' style='text-align: center;'/>").text(model.text()).css("width",(model.width() - 2 * Button.borderWidth(model.size())) + "px");
-        var right = $("<div class='right'/>");
-        button.append(left);
-        button.append(label);
-        button.append(right);
+        var button = model.button();
+        if (!button) {
+            button = $("<a/>");
+            button.addClass(model.color()).addClass("btn-" + model.size()).css("overflow", "hidden").css("width",model.width() + "px");
+            var left  = $("<div class='left'/>");
+            var label = $("<div class='label' style='text-align: center;'/>").text(model.text()).css("width",(model.width() - 2 * Button.borderWidth(model.size())) + "px");
+            var right = $("<div class='right'/>");
+            button.append(left);
+            button.append(label);
+            button.append(right);
+        }
         var fileinput = $("<input class='multiFileInput' type='file'/>");
         if (model.type() != "")
             fileinput.attr("accept",model.type());

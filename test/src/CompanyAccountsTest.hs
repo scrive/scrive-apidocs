@@ -319,7 +319,7 @@ test_removingCompanyAccountWorks = do
                         , ("removeemail", inText $ "jony@blue.com")
                         ]
   (_res, ctx') <- runTestKontra req ctx $ handlePostCompanyAccounts
-  assertBool "Flash message is of type indicating success" $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
+  assertEqual "Flash message is of type indicating success"  OperationDone (getFlashType (head (ctxflashmessages ctx')))
   deleteduser <- dbQuery $ GetUserByID (userid standarduser)
   assertEqual "User has been deleted" Nothing deleteduser
 

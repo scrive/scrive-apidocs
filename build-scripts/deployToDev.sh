@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-tar -czf kontrakcja-master-dist-$1.tar.gz kontrakcja.cabal dist texts templates public files
+tar -czf kontrakcja-master-dist-$1.tar.gz kontrakcja.cabal dist texts templates public files GuardTime
 
 scp kontrakcja-master-dist-$1.tar.gz dev@dev.scrive.com:kontrakcja-master-dist-$1.tar.gz
 

@@ -219,6 +219,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
                 else
                     field.makeCheckboxObligatory();
         });
+
         return option;
     },
     precheckedOption: function() {

@@ -32,12 +32,6 @@ import Control.Applicative
 import MinutesTime
 
 {- |
-    Checks whether the document is deletable, this is not the case for live documents.
--}
-isDeletableDocument :: Document -> Bool
-isDeletableDocument doc = documentstatus doc /= Pending -- We dont allow to delete pending documents
-
-{- |
    Given a Document, return all of the signatory details for all signatories (exclude viewers but include author if he must sign).
    See also: partyListButAuthor to exclude the author.
  -}

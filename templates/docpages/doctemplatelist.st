@@ -79,17 +79,42 @@ var documentsTable = KontraList().init({
               ]
 
     }),
-    headerExtras: UploadButton.init({
+    headerExtras: Button.init({
+        color: "green",
+        size: "tiny",
+        text: "$_createNew()$",
+        name : "doc",
+        onClick: function() {
+            var popup;
+            function doctypebutton(txt,type) {
+                return jQuery('<td/>').append(jQuery('<div class="documentTypeBox"/>').append(UploadButton.init({
                     size: "tiny",
                     width : "130",
-                    text: "$_createNew()$",
+                    text: txt, //
+                    button: jQuery('<a href="#" class="documenticon withUpload"/>').append(jQuery('<div class="documenticonText"/>').text(txt)),
                     name : "doc",
                     submitOnUpload : true,
                     submit: new Submit({
-                          method : "POST",
-                          url : "$currentlink$"
-                        })
-                    }).input()
+                        method : "POST",
+                        doctype: type,
+                        url : "$currentlink$",
+                        onSend: function() {LoadingDialog.open();},
+                    })
+                }).input()));
+            }
+            var t = jQuery('<table style="width: 100%"/>').append(jQuery('<tbody/>').append(jQuery('<tr/>')));
+            t.append(doctypebutton(localization.process.contract.name, "Contract"));
+            t.append(doctypebutton(localization.process.offer.name, "Offer"));
+            t.append(doctypebutton(localization.process.order.name, "Order"));
+            popup = Confirmation.popup({
+                onAccept: function() { },
+                title: "$_createNewType()$",
+                content: t
+            });
+            popup.hideAccept();
+            return false;
+        }
+    }).input()
 });
 
 

@@ -4,9 +4,7 @@ module Archive.View
          flashMessageSignableArchiveDone,
          flashMessageTemplateArchiveDone,
          pageAttachmentList,
-         pageContractsList,
-         pageOffersList,
-         pageOrdersList,
+         pageDocumentsList,
          pageRubbishBinList,
          pageTemplatesList,
          pagePadDeviceArchive,
@@ -39,9 +37,9 @@ import PadQueue.Model
 import Text.JSON.Gen as J
 
 
-flashMessageSignableArchiveDone :: TemplatesMonad m => DocumentType -> m FlashMessage
-flashMessageSignableArchiveDone doctype = do
-  toFlashMsg OperationDone <$> renderTextForProcess doctype processflashmessagearchivedone
+flashMessageSignableArchiveDone :: TemplatesMonad m => m FlashMessage
+flashMessageSignableArchiveDone = do
+  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageDocumentArchiveDone"
 
 flashMessageTemplateArchiveDone :: TemplatesMonad m => m FlashMessage
 flashMessageTemplateArchiveDone =
@@ -51,20 +49,14 @@ flashMessageAttachmentArchiveDone :: TemplatesMonad m => m FlashMessage
 flashMessageAttachmentArchiveDone =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageAttachmentArchiveDone"
 
-pageContractsList :: TemplatesMonad m => User -> m String
-pageContractsList = pageList' "pageContractsList" LinkContracts 
+pageDocumentsList :: TemplatesMonad m => User -> m String
+pageDocumentsList = pageList' "pageDocumentsList" LinkContracts 
 
 pageTemplatesList :: TemplatesMonad m => User -> m String
 pageTemplatesList = pageList' "pageTemplatesList" LinkTemplates 
 
 pageAttachmentList :: TemplatesMonad m =>  User -> m String
 pageAttachmentList = pageList' "pageAttachmentList" LinkAttachments 
-
-pageOffersList :: TemplatesMonad m => User -> m String
-pageOffersList = pageList' "pageOffersList" LinkOffers
-
-pageOrdersList :: TemplatesMonad m => User -> m String
-pageOrdersList = pageList' "pageOrdersList" LinkOrders 
 
 pageRubbishBinList :: TemplatesMonad m => User ->  m String
 pageRubbishBinList = pageList' "pageRubbishBinList" LinkRubbishBin 
@@ -101,7 +93,7 @@ pageList' templatename currentlink user = renderTemplate templatename $ do
 
 docForListJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> User -> PadQueue ->  Document -> m JSValue
 docForListJSON tl crtime user padqueue doc = do
-  let link = case getSigLinkFor doc (isSigLinkSavedFor user) of
+  let link = case getSigLinkFor doc user of
         Just sl | not $ isAuthor sl -> LinkSignDoc doc sl
         _                           -> LinkIssueDoc $ documentid doc
       sigFilter sl =   isSignatory sl && (documentstatus doc /= Preparation)

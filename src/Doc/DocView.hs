@@ -143,13 +143,13 @@ flashAuthorSigned :: TemplatesMonad m => m FlashMessage
 flashAuthorSigned =
   toFlashMsg OperationDone <$> renderTemplate_ "flashAuthorSigned"
 
-flashMessageBulkRemindsSent :: TemplatesMonad m => DocumentType -> m FlashMessage
-flashMessageBulkRemindsSent doctype = do
-  toFlashMsg OperationDone <$> renderTextForProcess doctype processflashmessagebulkremindssent
+flashMessageBulkRemindsSent :: TemplatesMonad m => m FlashMessage
+flashMessageBulkRemindsSent = do
+  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageBulkDocumentRemindsSent"
 
-flashMessageNoBulkRemindsSent :: TemplatesMonad m => DocumentType -> m FlashMessage
-flashMessageNoBulkRemindsSent doctype = do
-  toFlashMsg OperationFailed <$> renderTextForProcess doctype processflashmessagenobulkremindssent
+flashMessageNoBulkRemindsSent :: TemplatesMonad m => m FlashMessage
+flashMessageNoBulkRemindsSent = do
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageNoBulkDocumentRemindsSent"
 
 flashMessageRubbishRestoreDone :: TemplatesMonad m => m FlashMessage
 flashMessageRubbishRestoreDone =

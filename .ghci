@@ -1,9 +1,7 @@
 :set -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
 :set -idist/build/autogen
 :set -iinc -idocconv/src -isrc -imailer/inc -imailer/src -ipdfseal/src -ipdfseal/inc -itest/src
-:set -XRecordWildCards
 :set -XBangPatterns
-:set -XRecordWildCards
 :set -XDeriveDataTypeable
 :set -XFlexibleContexts
 :set -XFlexibleInstances
