@@ -423,7 +423,10 @@ fileInDocument doc fid =
                  ++ (documentsealedfiles doc)
                  ++ (fmap authorattachmentfile $ documentauthorattachments doc)
                  ++ (catMaybes $ fmap signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
-
+                 
+mainFileOfDocument :: Document -> FileID -> Bool
+mainFileOfDocument doc fid = fid `elem` (documentfiles doc)
+                 
 filterPlacementsByID :: [(String, String, FieldPlacement)]
                         -> String
                         -> String

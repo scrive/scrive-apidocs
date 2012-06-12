@@ -9,7 +9,7 @@
 --
 -- All that is needed to seal a document
 -----------------------------------------------------------------------------
-module Doc.DocSeal(sealDocument) where
+module Doc.DocSeal(sealDocument, presealDocumentFile) where
 
 import Control.Monad.Trans.Control
 import Control.Monad.Reader
@@ -254,6 +254,14 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
             , Seal.attachments    = [evidenceattachment]
             }
 
+presealSpecFromDocument :: (BS.ByteString,BS.ByteString) -> Document -> String -> String -> Seal.PreSealSpec
+presealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) document inputpath outputpath =
+       Seal.PreSealSpec
+            { Seal.pssInput          = inputpath
+            , Seal.pssOutput         = outputpath
+            , Seal.pssFields         = concatMap (fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage). signatorydetails) (documentsignatorylinks document)
+            }
+            
 
 sealDocument :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
              => Document
@@ -321,3 +329,34 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
           return msg
         _ <- dbUpdate $ ErrorDocument documentid ("Could not seal document because of file #" ++ show fileid) (systemActor ctxtime)
         return $ Left msg
+
+
+-- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.
+presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
+                 => Document
+                 -> File
+                 -> m (Either String BS.ByteString)
+presealDocumentFile document@Document{documentid} file@File{fileid} =
+  withSystemTempDirectory' ("preseal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
+    Log.debug ("presealing: " ++ show fileid)
+    let tmpin = tmppath ++ "/input.pdf"
+    let tmpout = tmppath ++ "/output.pdf"
+    content <- getFileContents file
+    liftIO $ BS.writeFile tmpin content
+    checkedBoxImage <- liftIO $ BS.readFile "public/img/checkbox_checked.jpg"
+    uncheckedBoxImage <- liftIO $  BS.readFile "public/img/checkbox_unchecked.jpg"
+    let config = presealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) document tmpin tmpout
+    Log.debug $ "Config " ++ show config
+    (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
+    liftIO $ threadDelay 500000
+    Log.debug $ "PreSealing completed with " ++ show code
+    case code of
+      ExitSuccess -> do
+          res <- liftIO $ BS.readFile tmpout
+          Log.debug $ "Returning presealed content"
+          return $ Right res
+      ExitFailure _ -> do
+          Log.error $ BSL.toString stderr
+          Log.error $ "Presealing failed for configuration: " ++ show config
+          return $ Left "Error when preprinting fields on PDF"
+        
