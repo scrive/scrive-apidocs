@@ -28,15 +28,11 @@ data GuardTimeConf = GuardTimeConf
 
 guardTimeJars :: [String]
 guardTimeJars =
-  [ "GTJavaPDF-0.3.1.jar"
-  , "PdfBundler-0.3.1.jar"
+  [ "PdfBundler-0.3.1.jar"
   , "PdfExtender-0.3.1.jar"
   , "PdfSigner-0.3.1.jar"
   , "PdfVerifier-0.3.1.jar"
-  , "bcprov-ext-jdk15on-146.jar"
-  , "iText-2.1.7.jar"
   , "GTJavaSDK-0.4.4.jar"
-  , "bcprov-jdk15on-146.jar"
   ]
 
 digitallySign :: GuardTimeConf -> String -> IO ExitCode
