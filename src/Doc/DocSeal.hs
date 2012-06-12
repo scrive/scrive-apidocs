@@ -331,7 +331,7 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
         return $ Left msg
 
 
--- | Genertes file that has all placements printed on it. It will look same as final version except for page footers and verification page.
+-- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.
 presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
                  => Document
                  -> File
@@ -358,5 +358,5 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
       ExitFailure _ -> do
           Log.error $ BSL.toString stderr
           Log.error $ "Presealing failed for configuration: " ++ show config
-          return $ Left "Error when preparation PDF with printed fields"
+          return $ Left "Error when preprinting fields on PDF"
         
