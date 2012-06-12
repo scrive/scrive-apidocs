@@ -2,16 +2,12 @@
 module Archive.Control
        (
        handleAttachmentArchive,
-       handleContractArchive,
+       handleDocumentArchive,
        handleIssueArchive,
-       handleOffersArchive,
-       handleOrdersArchive,
        handleSignableArchive,
        handleTemplateArchive,
+       showDocumentsList,
        showAttachmentList,
-       showContractsList,
-       showOfferList,
-       showOrdersList,
        showRubbishBinList,
        showTemplatesList,
        showPadDeviceArchive,
@@ -44,25 +40,15 @@ import Misc
 import PadQueue.Model
 import Data.Maybe
 
-handleContractArchive :: Kontrakcja m => m KontraLink
-handleContractArchive = do
-    _ <- handleSignableArchive (Signable Contract)
+handleDocumentArchive :: Kontrakcja m => m KontraLink
+handleDocumentArchive = do
+    _ <- handleSignableArchive
     return $ LinkContracts
 
-handleOffersArchive :: Kontrakcja m => m KontraLink
-handleOffersArchive =  do
-    _ <- handleSignableArchive (Signable Offer)
-    return $ LinkOffers
-
-handleOrdersArchive :: Kontrakcja m => m KontraLink
-handleOrdersArchive =  do
-    _ <- handleSignableArchive (Signable Order)
-    return $ LinkOrders
-
-handleSignableArchive :: Kontrakcja m => DocumentType -> m ()
-handleSignableArchive doctype =  do
+handleSignableArchive :: Kontrakcja m => m ()
+handleSignableArchive =  do
     handleIssueArchive
-    addFlashM $ flashMessageSignableArchiveDone doctype
+    addFlashM $ flashMessageSignableArchiveDone
     return ()
 
 handleTemplateArchive :: Kontrakcja m => m KontraLink
@@ -92,14 +78,8 @@ handleIssueArchive = do
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
  -}
-showContractsList :: Kontrakcja m => m (Either KontraLink String)
-showContractsList = archivePage pageContractsList
-
-showOfferList :: Kontrakcja m => m (Either KontraLink String)
-showOfferList = archivePage pageOffersList
-
-showOrdersList :: Kontrakcja m => m (Either KontraLink String)
-showOrdersList = archivePage pageOrdersList
+showDocumentsList :: Kontrakcja m => m (Either KontraLink String)
+showDocumentsList = archivePage pageDocumentsList
 
 showTemplatesList :: Kontrakcja m => m (Either KontraLink String)
 showTemplatesList = archivePage pageTemplatesList
@@ -126,26 +106,10 @@ jsonDocumentsList = withUserGet $ do
   lang <- getLang . ctxlocale <$> getContext
   doctype <- getField' "documentType"
 
-#if 0
-  allDocs <- case (doctype) of
-    "Contract" -> dbQuery $ GetDocumentsBySignatory [Contract] uid
-    "Offer" -> dbQuery $ GetDocumentsBySignatory [Offer] uid
-    "Order" -> dbQuery $ GetDocumentsBySignatory [Order] uid
-    "Template" -> dbQuery $ GetTemplatesByAuthor uid
-    "Attachment" -> dbQuery $ GetAttachmentsByAuthor uid
-    "Rubbish" -> dbQuery $ GetDeletedDocumentsByUser uid
-    "Template|Contract" -> dbQuery $ GetAvailableTemplates uid [Contract]
-    "Template|Offer" ->  dbQuery $ GetAvailableTemplates uid [Offer]
-    "Template|Order" -> dbQuery $ GetAvailableTemplates uid [Order]
-    "Pad" -> (dbQuery $ GetDocumentsByAuthor [Contract,Offer,Order] uid) -- Not working and disabled. It should do filtering of only pad documents.
-    _ -> do
-      Log.error "Documents list: No valid document type provided"
-      return []
-#endif
-
   params <- getListParamsNew
 
   let (domain,filters) = case doctype of
+                          "Document"          -> ([DocumentsForSignatory uid] ++ (maybeCompanyDomain False),[])
                           "Contract"          -> ([DocumentsForSignatory uid] ++ (maybeCompanyDomain False),[DocumentFilterByProcess [Contract]])
                           "Offer"             -> ([DocumentsForSignatory uid] ++ (maybeCompanyDomain False),[DocumentFilterByProcess [Offer]])
                           "Order"             -> ([DocumentsForSignatory uid] ++ (maybeCompanyDomain False),[DocumentFilterByProcess [Order]])
@@ -215,6 +179,7 @@ docSearchingFromParams params =
 
 
 docPaginationFromParams :: Int -> ListParams -> DocumentPagination
+-- REVIEW: Magic 4: more DRY again, please.
 docPaginationFromParams pageSize params = DocumentPagination (listParamsOffset params) (pageSize*4)
 
 #if 0

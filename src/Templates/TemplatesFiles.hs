@@ -44,7 +44,6 @@ templateFiles = ["landpages.st",
                  "userpages/userotherpages.st",
                  "docpages/doclist.st",
                  "docpages/doctemplatelist.st",
-                 "docpages/docofferslist.st",
                  "docpages/docattachmentlist.st",
                  "docpages/doclistutils.st",
                  "docpages/doctexts.st",
@@ -54,7 +53,6 @@ templateFiles = ["landpages.st",
                  "docpages/docdesign.st",
                  "docpages/docupload.st",
                  "docpages/docsignatories.st",
-                 "docpages/docorderslist.st",
                  "docpages/docseal.st",
                  "docpages/attachmentpage.st",
                  "docpages/rubbishbinlist.st",
@@ -80,7 +78,8 @@ templateFiles = ["landpages.st",
                  "api/services.st",
                  "oauth.st",
                  "javascript-langs.st",
-                 "evidencelog/htmllog.st"]
+                 "evidencelog/htmllog.st",
+                 "evidencelog/texts.st"]
 
 
 getTemplates :: String -> IO [(String, String)]

@@ -7,7 +7,6 @@ module RoutingTable (
 
 import API.IntegrationAPI
 import API.Service.ServiceControl
-import AppControl (AppConf, delayResponse)
 
 import Kontra
 import KontraLink
@@ -27,7 +26,6 @@ import qualified ELegitimation.BankID as BankID
 import qualified User.UserControl as UserControl
 import qualified ScriveByMail.Control as MailAPI
 import Doc.API
-import Misc (delay)
 import OAuth.Control
 
 import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
@@ -48,233 +46,224 @@ import qualified PadQueue.Control as PadQueue
    That is, all routing logic should be in this table to ensure that we can find
    the function for any given path and method.
 -}
-staticRoutes :: AppConf -> Route (KontraPlus Response)
-staticRoutes appConf = choice
-     [ fmap (delay (delayResponse appConf)) $ choice
-       [ hGetAllowHttp $ getContext >>= (redirectKontraResponse . LinkHome . ctxlocale)
-       , publicPages
 
-       -- this is SMTP to HTTP gateway
-       , dir "mailapi" $ hPostNoXToken             $ toK0 $ MailAPI.handleMailAPI
-       , dir "mailapi" $ dir "confirmdelay" $ hGet $ toK3 $ MailAPI.handleConfirmDelay
+staticRoutes :: Route (KontraPlus Response)
+staticRoutes = choice
+     [ hGetAllowHttp $ getContext >>= (redirectKontraResponse . LinkHome . ctxlocale)
 
-       -- Only download function | unified for author and signatories
-       , dir "download"                     $ hGet  $ toK3 $ DocControl.handleDownloadFile
+     , publicPages
 
-       , dir "s" $ dir "eleg" $ hGet $ toK2 $ BankID.generateBankIDTransaction
-       , dir "s" $ dir "eleg" $ dir "mbi" $ hPostNoXToken $ toK2 $ BankID.initiateMobileBankID
-       , dir "s" $ dir "eleg" $ dir "mbi" $ hGet  $ toK2 $ BankID.collectMobileBankID
-       , dir "s" $ hGet $ toK0    $ sendRedirect $ LinkContracts
-       , dir "s" $ hGet $ toK2    $ DocControl.handleSignShow
-       , dir "s" $ hGet $ toK3    $ DocControl.handleSignShowOldRedirectToNew -- Redirect for old version to version above, remove not earlier then 31.12.2012.
+     -- this is SMTP to HTTP gateway
+     , dir "mailapi" $ hPostNoXToken             $ toK0 $ MailAPI.handleMailAPI
+     , dir "mailapi" $ dir "confirmdelay" $ hGet $ toK3 $ MailAPI.handleConfirmDelay
 
-       , dir "s" $ param "sign"           $ hPostNoXToken $ toK2 $ DocControl.signDocument
-       , dir "s" $ param "sign"           $ hPostNoXToken $ toK3 $ DocControl.signDocumentIphoneCase
-       , dir "s" $ param "reject"         $ hPostNoXToken $ toK2 $ DocControl.rejectDocument
-       , dir "s" $ param "reject"         $ hPostNoXToken $ toK3 $ DocControl.rejectDocumentIphoneCase
-       , dir "s" $ param "acceptaccount"  $ hPostNoXToken $ toK3 $ DocControl.handleAcceptAccountFromSign
-       , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK2 $ DocControl.handleSigAttach
-       , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
+     -- Only download function | unified for author and signatories
+     , dir "download"                     $ hGet  $ toK3 $ DocControl.handleDownloadFile
 
-       , dir "sv" $ hGet $ toK3 $ DocControl.handleAttachmentViewForViewer
+     , dir "s" $ dir "eleg" $ hGet $ toK2 $ BankID.generateBankIDTransaction
+     , dir "s" $ dir "eleg" $ dir "mbi" $ hPostNoXToken $ toK2 $ BankID.initiateMobileBankID
+     , dir "s" $ dir "eleg" $ dir "mbi" $ hGet  $ toK2 $ BankID.collectMobileBankID
+     , dir "s" $ hGet $ toK0    $ sendRedirect $ LinkContracts
+     , dir "s" $ hGet $ toK2    $ DocControl.handleSignShow
+     , dir "s" $ hGet $ toK3    $ DocControl.handleSignShowOldRedirectToNew -- Redirect for old version to version above, remove not earlier then 31.12.2012.
 
-       --Q: This all needs to be done by author. Why we dont check it
-       --here? MR
+     , dir "s" $ param "sign"           $ hPostNoXToken $ toK2 $ DocControl.signDocument
+     , dir "s" $ param "sign"           $ hPostNoXToken $ toK3 $ DocControl.signDocumentIphoneCase
+     , dir "s" $ param "reject"         $ hPostNoXToken $ toK2 $ DocControl.rejectDocument
+     , dir "s" $ param "reject"         $ hPostNoXToken $ toK3 $ DocControl.rejectDocumentIphoneCase
+     , dir "s" $ param "acceptaccount"  $ hPostNoXToken $ toK3 $ DocControl.handleAcceptAccountFromSign
+     , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK2 $ DocControl.handleSigAttach
+     , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
 
-       --A: Because this table only contains routing logic. The logic of
-       --what it does/access control is left to the handler. EN
-       , dir "upload" $ hGet $ toK0 $ DocControl.handleShowUploadPage
-       , dir "locale" $ hPost $ toK0 $ UserControl.handlePostUserLocale
-       , dir "a"                     $ hGet  $ toK0 $ ArchiveControl.showAttachmentList
-       , dir "a" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleAttachmentArchive
-       , dir "a" $ param "share"     $ hPost $ toK0 $ DocControl.handleAttachmentShare
-       , dir "a" $ dir "rename"      $ hPost $ toK1 $ DocControl.handleAttachmentRename
-       , dir "a"                     $ hPost $ toK0 $ DocControl.handleCreateNewAttachment
+     , dir "sv" $ hGet $ toK3 $ DocControl.handleAttachmentViewForViewer
 
-       , dir "t" $ hGet  $ toK0 $ ArchiveControl.showTemplatesList
-       , dir "t" $ param "archive" $ hPost $ toK0 $ ArchiveControl.handleTemplateArchive
-       , dir "t" $ param "share" $ hPost $ toK0 $ DocControl.handleTemplateShare
-       , dir "t" $ param "template" $ hPost $ toK0 $ DocControl.handleCreateFromTemplate
-       , dir "t" $ hPost $ toK0 $ DocControl.handleCreateNewTemplate
+     --Q: This all needs to be done by author. Why we dont check it
+     --here? MR
 
-       , dir "o" $ hGet $ toK0 $ ArchiveControl.showOfferList
-       , dir "o" $ param "archive" $ hPost $ toK0 $ ArchiveControl.handleOffersArchive
-       , dir "o" $ param "remind" $ hPost $ toK0 $ DocControl.handleBulkOfferRemind
+     --A: Because this table only contains routing logic. The logic of
+     --what it does/access control is left to the handler. EN
+     , dir "upload" $ hGet $ toK0 $ DocControl.handleShowUploadPage
+     , dir "locale" $ hPost $ toK0 $ UserControl.handlePostUserLocale
+     , dir "a"                     $ hGet  $ toK0 $ ArchiveControl.showAttachmentList
+     , dir "a" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleAttachmentArchive
+     , dir "a" $ param "share"     $ hPost $ toK0 $ DocControl.handleAttachmentShare
+     , dir "a" $ dir "rename"      $ hPost $ toK1 $ DocControl.handleAttachmentRename
+     , dir "a"                     $ hPost $ toK0 $ DocControl.handleCreateNewAttachment
 
-       , dir "or" $ hGet  $ toK0 $ ArchiveControl.showOrdersList
-       , dir "or" $ param "archive" $ hPost $ toK0 $ ArchiveControl.handleOrdersArchive
-       , dir "or" $ param "remind" $ hPost $ toK0 $ DocControl.handleBulkOrderRemind
+     , dir "t" $ hGet  $ toK0 $ ArchiveControl.showTemplatesList
+     , dir "t" $ param "archive" $ hPost $ toK0 $ ArchiveControl.handleTemplateArchive
+     , dir "t" $ param "share" $ hPost $ toK0 $ DocControl.handleTemplateShare
+     , dir "t" $ param "template" $ hPost $ toK0 $ DocControl.handleCreateFromTemplate
+     , dir "t" $ hPost $ toK0 $ DocControl.handleCreateNewTemplate
 
-       , dir "r" $ hGet $ toK0 $ ArchiveControl.showRubbishBinList
-       , dir "r" $ param "restore" $ hPost $ toK0 $ DocControl.handleRubbishRestore
-       , dir "r" $ param "reallydelete" $ hPost $ toK0 $ DocControl.handleRubbishReallyDelete
+     , dir "r" $ hGet $ toK0 $ ArchiveControl.showRubbishBinList
+     , dir "r" $ param "restore" $ hPost $ toK0 $ DocControl.handleRubbishRestore
+     , dir "r" $ param "reallydelete" $ hPost $ toK0 $ DocControl.handleRubbishReallyDelete
 
 
-       , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showContractsList
-       , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
-       , dir "d" $ dir "eleg"        $ hGet  $ toK1 $ BankID.generateBankIDTransactionForAuthor
-       , dir "d" $ dir "eleg" $ dir "mbi" $ hPostNoXToken $ toK1 $ BankID.initiateMobileBankIDForAuthor
-       , dir "d" $ dir "eleg" $ dir "mbi" $ hGet  $ toK1 $ BankID.collectMobileBankIDForAuthor
-       , dir "d" $ {- param "doc" $ -} hPost $ toK0 $ DocControl.handleIssueNewDocument
-       , dir "d" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleContractArchive
-       , dir "d" $ param "remind"    $ hPost $ toK0 $ DocControl.handleBulkContractRemind
-       , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
-       , dir "docs"                  $ hGet  $ toK0 $ ArchiveControl.jsonDocumentsList
-       , dir "doc"                   $ hGet  $ toK1 $ DocControl.jsonDocument
-       , dir "save"                  $ hPost $ toK1 $ DocControl.handleSaveDraft
-       , dir "setattachments"        $ hPost $ toK1 $ DocControl.handleSetAttachments -- Since setting attachments can have file upload, we need extra handler for it.
-       , dir "parsecsv"              $ hPost $ toK0 $ DocControl.handleParseCSV
-       , dir "mailpreview"           $ hGet  $ toK2 $ DocControl.prepareEmailPreview
+     , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showDocumentsList
+     , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
+     , dir "d" $ dir "eleg"        $ hGet  $ toK1 $ BankID.generateBankIDTransactionForAuthor
+     , dir "d" $ dir "eleg" $ dir "mbi" $ hPostNoXToken $ toK1 $ BankID.initiateMobileBankIDForAuthor
+     , dir "d" $ dir "eleg" $ dir "mbi" $ hGet  $ toK1 $ BankID.collectMobileBankIDForAuthor
+     , dir "d" $ {- param "doc" $ -} hPost $ toK0 $ DocControl.handleIssueNewDocument
+     , dir "d" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleDocumentArchive
+     , dir "d" $ param "remind"    $ hPost $ toK0 $ DocControl.handleBulkDocumentRemind
+     , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
+     , dir "docs"                  $ hGet  $ toK0 $ ArchiveControl.jsonDocumentsList
+     , dir "doc"                   $ hGet  $ toK1 $ DocControl.jsonDocument
+     , dir "save"                  $ hPost $ toK1 $ DocControl.handleSaveDraft
+     , dir "setattachments"        $ hPost $ toK1 $ DocControl.handleSetAttachments -- Since setting attachments can have file upload, we need extra handler for it.
+     , dir "parsecsv"              $ hPost $ toK0 $ DocControl.handleParseCSV
+     , dir "mailpreview"           $ hGet  $ toK2 $ DocControl.prepareEmailPreview
 
-       , dir "df"                    $ hGet  $ toK2 $ DocControl.handleFileGet
-       , dir "dv"                    $ hGet  $ toK1 $ DocControl.handleAttachmentViewForAuthor
+     , dir "df"                    $ hGet  $ toK2 $ DocControl.handleFileGet
+     , dir "dv"                    $ hGet  $ toK1 $ DocControl.handleAttachmentViewForAuthor
 
-       --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
-       , dir "resend"  $ hPost $ toK2 $ DocControl.handleResend
-       , dir "changeemail" $ hPost $ toK2 $ DocControl.handleChangeSignatoryEmail
-       -- , dir "withdrawn" $ hPost $ DocControl.handleWithdrawn
-       , dir "restart" $ hPost $ toK1 $ DocControl.handleRestart
-       , dir "cancel"  $ hPost $ toK1 $ DocControl.handleCancel
+     --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
+     , dir "resend"  $ hPost $ toK2 $ DocControl.handleResend
+     , dir "changeemail" $ hPost $ toK2 $ DocControl.handleChangeSignatoryEmail
+     -- , dir "withdrawn" $ hPost $ DocControl.handleWithdrawn
+     , dir "restart" $ hPost $ toK1 $ DocControl.handleRestart
+     , dir "cancel"  $ hPost $ toK1 $ DocControl.handleCancel
 
-       , dir "pages"  $ hGetAjax $ toK3 $ DocControl.showPage
-       -- HTMP emails can have embedded preview image
-       , dir "preview" $ hGet $ toK2 $ DocControl.showPreview
-       , dir "preview" $ hGet $ toK4 $ DocControl.showPreviewForSignatory
+     , dir "pages"  $ hGetAjax $ toK3 $ DocControl.showPage
+     -- HTMP emails can have embedded preview image
+     , dir "preview" $ hGet $ toK2 $ DocControl.showPreview
+     , dir "preview" $ hGet $ toK4 $ DocControl.showPreviewForSignatory
 
-       , dir "template"  $ hPost $ toK0 $ DocControl.handleCreateFromTemplate
+     , dir "template"  $ hPost $ toK0 $ DocControl.handleCreateFromTemplate
 
-       , dir "filepages" $ hGetAjax $  toK2 $ DocControl.handleFilePages
-       , dir "pagesofdoc" $ hGetAjax $ toK1 $ DocControl.handlePageOfDocument
-       , dir "pagesofdoc" $ hGetAjax $ toK3 $ DocControl.handlePageOfDocumentForSignatory
+     , dir "filepages" $ hGetAjax $  toK2 $ DocControl.handleFilePages
+     , dir "pagesofdoc" $ hGetAjax $ toK1 $ DocControl.handlePageOfDocument
+     , dir "pagesofdoc" $ hGetAjax $ toK3 $ DocControl.handlePageOfDocumentForSignatory
 
-       , dir "csvlandpage" $ hGet $ toK1 $ DocControl.handleCSVLandpage
+     , dir "csvlandpage" $ hGet $ toK1 $ DocControl.handleCSVLandpage
 
-       , dir "verify" $ hGet  $ toK0 $ DocControl.handleShowVerificationPage
-       , dir "verify" $ hPostNoXToken $ toK0 $ DocControl.handleVerify
+     , dir "verify" $ hGet  $ toK0 $ DocControl.handleShowVerificationPage
+     , dir "verify" $ hPostNoXToken $ toK0 $ DocControl.handleVerify
+     
+     , dir "padqueue" $ dir "add" $ hPost $ toK2 $ PadQueue.addToQueue
+     , dir "padqueue" $ dir "clear" $ hPost $ toK0 $ PadQueue.clearQueue
 
-       , dir "padqueue" $ dir "add" $ hPost $ toK2 $ PadQueue.addToQueue
-       , dir "padqueue" $ dir "clear" $ hPost $ toK0 $ PadQueue.clearQueue
+     , dir "padqueue" $ dir "state" $ hGet $ toK0 $ PadQueue.padQueueState
+     , dir "padqueue" $ hGet $ toK0 $ PadQueue.showPadQueuePage
+     , dir "padqueue" $ dir "archive" $ hGet $ toK0 $ ArchiveControl.showPadDeviceArchive
+     , dir "padqueue" $ dir "login"  $ hPostNoXToken $ toK0 $ PadQueue.handlePadLogin
+     , dir "padqueue" $ dir "logout" $ hPostNoXToken $ toK0 $ PadQueue.handlePadLogout
 
-       , dir "padqueue" $ dir "state" $ hGet $ toK0 $ PadQueue.padQueueState
-       , dir "padqueue" $ hGet $ toK0 $ PadQueue.showPadQueuePage
-       , dir "padqueue" $ dir "archive" $ hGet $ toK0 $ ArchiveControl.showPadDeviceArchive
-       , dir "padqueue" $ dir "login"  $ hPostNoXToken $ toK0 $ PadQueue.handlePadLogin
-       , dir "padqueue" $ dir "logout" $ hPostNoXToken $ toK0 $ PadQueue.handlePadLogout
+     -- UserControl
+     , dir "account"                    $ hGet  $ toK0 $ UserControl.handleUserGet
+     , dir "account"                    $ hPost $ toK0 $ UserControl.handleUserPost
+     , dir "account" $ hGet $ toK2 $ UserControl.handleGetChangeEmail
+     , dir "account" $ hPost $ toK2 $ UserControl.handlePostChangeEmail
+     , dir "account" $ dir "security" $ hGet $ toK0 $ UserControl.handleGetUserSecurity
+     , dir "account" $ dir "security" $ hPost $ toK0 $ UserControl.handlePostUserSecurity
+     , dir "account" $ dir "company" $ Company.routes
+     , dir "account" $ dir "mailapi" $ hGet $ toK0 $ UserControl.handleGetUserMailAPI
+     , dir "account" $ dir "mailapi" $ hPost $ toK0 $ UserControl.handlePostUserMailAPI
+     , dir "account" $ dir "usagestats" $ hGet $ toK0 $ UserControl.handleUsageStatsForUser
+     , dir "account" $ dir "usagestats" $ dir "days"   $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserDays
+     , dir "account" $ dir "usagestats" $ dir "months" $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserMonths
+     , dir "accepttos" $ hGet  $ toK0 $ UserControl.handleAcceptTOSGet
+     , dir "accepttos" $ hPost $ toK0 $ UserControl.handleAcceptTOSPost
+     , dir "account" $ dir "phoneme" $ hPostNoXToken $ toK0 $ UserControl.handleRequestPhoneCall
 
-       -- UserControl
-       , dir "account"                    $ hGet  $ toK0 $ UserControl.handleUserGet
-       , dir "account"                    $ hPost $ toK0 $ UserControl.handleUserPost
-       , dir "account" $ hGet $ toK2 $ UserControl.handleGetChangeEmail
-       , dir "account" $ hPost $ toK2 $ UserControl.handlePostChangeEmail
-       , dir "account" $ dir "security" $ hGet $ toK0 $ UserControl.handleGetUserSecurity
-       , dir "account" $ dir "security" $ hPost $ toK0 $ UserControl.handlePostUserSecurity
-       , dir "account" $ dir "company" $ Company.routes
-       , dir "account" $ dir "mailapi" $ hGet $ toK0 $ UserControl.handleGetUserMailAPI
-       , dir "account" $ dir "mailapi" $ hPost $ toK0 $ UserControl.handlePostUserMailAPI
-       , dir "account" $ dir "usagestats" $ hGet $ toK0 $ UserControl.handleUsageStatsForUser
-       , dir "account" $ dir "usagestats" $ dir "days"   $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserDays
-       , dir "account" $ dir "usagestats" $ dir "months" $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserMonths
-       , dir "accepttos" $ hGet  $ toK0 $ UserControl.handleAcceptTOSGet
-       , dir "accepttos" $ hPost $ toK0 $ UserControl.handleAcceptTOSPost
-       , dir "account" $ dir "phoneme" $ hPostNoXToken $ toK0 $ UserControl.handleRequestPhoneCall
+     --CompanyAccountsControl
+     , dir "account" $ dir "companyaccounts" $ hGet  $ toK0 $ CompanyAccounts.handleGetCompanyAccounts
+     , dir "account" $ dir "companyaccounts" $ hPost $ toK0 $ CompanyAccounts.handlePostCompanyAccounts
+     , dir "companyaccounts" $ hGet  $ toK0 $ CompanyAccounts.handleCompanyAccounts
+     , dir "companyaccounts" $ dir "join" $ hGet $ toK1 $ CompanyAccounts.handleGetBecomeCompanyAccount
+     , dir "companyaccounts" $ dir "join" $ hPost $ toK1 $ CompanyAccounts.handlePostBecomeCompanyAccount
+     -- these two are deprecated now, but we mailed out the links so we need to keep them hanging
+     -- around for a litte bit
+     , dir "account" $ dir "bsa" $ hGet $ toK1 $ CompanyAccounts.handleGetBecomeCompanyAccountOld
+     , dir "account" $ dir "bsa" $ hPost $ toK1 $ CompanyAccounts.handlePostBecomeCompanyAccountOld
 
-       --CompanyAccountsControl
-       , dir "account" $ dir "companyaccounts" $ hGet  $ toK0 $ CompanyAccounts.handleGetCompanyAccounts
-       , dir "account" $ dir "companyaccounts" $ hPost $ toK0 $ CompanyAccounts.handlePostCompanyAccounts
-       , dir "companyaccounts" $ hGet  $ toK0 $ CompanyAccounts.handleCompanyAccounts
-       , dir "companyaccounts" $ dir "join" $ hGet $ toK1 $ CompanyAccounts.handleGetBecomeCompanyAccount
-       , dir "companyaccounts" $ dir "join" $ hPost $ toK1 $ CompanyAccounts.handlePostBecomeCompanyAccount
-       -- these two are deprecated now, but we mailed out the links so we need to keep them hanging
-       -- around for a litte bit
-       , dir "account" $ dir "bsa" $ hGet $ toK1 $ CompanyAccounts.handleGetBecomeCompanyAccountOld
-       , dir "account" $ dir "bsa" $ hPost $ toK1 $ CompanyAccounts.handlePostBecomeCompanyAccountOld
+     -- super user only
+     , dir "createuser" $ hPost $ toK0 $ Administration.handleCreateUser
+     , dir "adminonly" $ hGet $ toK0 $ Administration.showAdminMainPage
+     , dir "adminonly" $ dir "useradminforsales" $ hGet $ toK0 $ Administration.showAdminUsersForSales
+     , dir "adminonly" $ dir "userslist" $ hGet $ toK0 $ Administration.jsonUsersList
+     , dir "adminonly" $ dir "useradmin" $ hGet $ toK1 $ Administration.showAdminUsers . Just
+     , dir "adminonly" $ dir "useradmin" $ hGet $ toK0 $ Administration.showAdminUsers Nothing
+     , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminUserUsageStats
+     , dir "adminonly" $ dir "useradmin" $ hPost $ toK1 $ Administration.handleUserChange
+     , dir "adminonly" $ dir "companyadmin" $ hGet $ toK0 $ Administration.showAdminCompanies
+     , dir "adminonly" $ dir "companyadmin" $ hGet $ toK1 $ Administration.showAdminCompany
+     , dir "adminonly" $ dir "companyadmin" $ dir "branding" $ Company.adminRoutes
+     , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hGet $ toK1 $ Administration.showAdminCompanyUsers
+     , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hPost $ toK1 $ Administration.handlePostAdminCompanyUsers
+     , dir "adminonly" $ dir "companyaccounts" $ hGet  $ toK1 $ CompanyAccounts.handleCompanyAccountsForAdminOnly
+     , dir "adminonly" $ dir "companyadmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminCompanyUsageStats
+     , dir "adminonly" $ dir "companyadmin" $ hPost $ toK1 $ Administration.handleCompanyChange
+     , dir "adminonly" $ dir "functionalitystats" $ hGet $ toK0 $ Administration.showFunctionalityStats
 
-       -- super user only
-       , dir "createuser" $ hPost $ toK0 $ Administration.handleCreateUser
-       , dir "adminonly" $ hGet $ toK0 $ Administration.showAdminMainPage
-       , dir "adminonly" $ dir "useradminforsales" $ hGet $ toK0 $ Administration.showAdminUsersForSales
-       , dir "adminonly" $ dir "userslist" $ hGet $ toK0 $ Administration.jsonUsersList
-       , dir "adminonly" $ dir "useradmin" $ hGet $ toK1 $ Administration.showAdminUsers . Just
-       , dir "adminonly" $ dir "useradmin" $ hGet $ toK0 $ Administration.showAdminUsers Nothing
-       , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminUserUsageStats
-       , dir "adminonly" $ dir "useradmin" $ hPost $ toK1 $ Administration.handleUserChange
-       , dir "adminonly" $ dir "companyadmin" $ hGet $ toK0 $ Administration.showAdminCompanies
-       , dir "adminonly" $ dir "companyadmin" $ hGet $ toK1 $ Administration.showAdminCompany
-       , dir "adminonly" $ dir "companyadmin" $ dir "branding" $ Company.adminRoutes
-       , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hGet $ toK1 $ Administration.showAdminCompanyUsers
-       , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hPost $ toK1 $ Administration.handlePostAdminCompanyUsers
-       , dir "adminonly" $ dir "companyaccounts" $ hGet  $ toK1 $ CompanyAccounts.handleCompanyAccountsForAdminOnly
-       , dir "adminonly" $ dir "companyadmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminCompanyUsageStats
-       , dir "adminonly" $ dir "companyadmin" $ hPost $ toK1 $ Administration.handleCompanyChange
-       , dir "adminonly" $ dir "functionalitystats" $ hGet $ toK0 $ Administration.showFunctionalityStats
+     , dir "adminonly" $ dir "documents" $ hGet $ toK0 $ Administration.showDocuments
+     , dir "adminonly" $ dir "documentslist" $ hGet $ toK0 $ Administration.jsonDocuments
 
-       , dir "adminonly" $ dir "documents" $ hGet $ toK0 $ Administration.showDocuments
-       , dir "adminonly" $ dir "documentslist" $ hGet $ toK0 $ Administration.jsonDocuments
+     , dir "adminonly" $ dir "allstatscsv" $ path GET id $ Stats.handleDocStatsCSV
+     , dir "adminonly" $ dir "userstatscsv" $ path GET id $ Stats.handleUserStatsCSV
+     , dir "adminonly" $ dir "signstatscsv" $ path GET id $ Stats.handleSignStatsCSV
+     , dir "adminonly" $ dir "dochistorycsv" $ path GET id $ Stats.handleDocHistoryCSV
+     , dir "adminonly" $ dir "signhistorycsv" $ path GET id $ Stats.handleSignHistoryCSV
+     , dir "adminonly" $ dir "userslistcsv" $ path GET id $ Administration.handleUsersListCSV
 
-       , dir "adminonly" $ dir "allstatscsv" $ path GET id $ Stats.handleDocStatsCSV
-       , dir "adminonly" $ dir "userstatscsv" $ path GET id $ Stats.handleUserStatsCSV
-       , dir "adminonly" $ dir "signstatscsv" $ path GET id $ Stats.handleSignStatsCSV
-       , dir "adminonly" $ dir "dochistorycsv" $ path GET id $ Stats.handleDocHistoryCSV
-       , dir "adminonly" $ dir "signhistorycsv" $ path GET id $ Stats.handleSignHistoryCSV
-       , dir "adminonly" $ dir "userslistcsv" $ path GET id $ Administration.handleUsersListCSV
+     , dir "adminonly" $ dir "statistics"        $ hGet  $ toK0 $ Stats.showAdminSystemUsageStats
 
-       , dir "adminonly" $ dir "statistics"        $ hGet  $ toK0 $ Stats.showAdminSystemUsageStats
+     , dir "adminonly" $ dir "services" $ hGet $ toK0 $ Administration.showServicesPage
+     , dir "adminonly" $ dir "services" $ param "create" $ hPost $ toK0 $ Administration.handleCreateService
 
-       , dir "adminonly" $ dir "services" $ hGet $ toK0 $ Administration.showServicesPage
-       , dir "adminonly" $ dir "services" $ param "create" $ hPost $ toK0 $ Administration.handleCreateService
+     , dir "adminonly" $ dir "companies" $ hGet $ toK0 $ Administration.jsonCompanies
 
-       , dir "adminonly" $ dir "companies" $ hGet $ toK0 $ Administration.jsonCompanies
+     , dir "adminonly" $ dir "reseal" $ hPost $ toK1 $ Administration.resealFile
+     , dir "adminonly" $ dir "replacemainfile" $ hPost $ toK1 $ Administration.replaceMainFile
 
-       , dir "adminonly" $ dir "reseal" $ hPost $ toK1 $ Administration.resealFile
-       , dir "adminonly" $ dir "replacemainfile" $ hPost $ toK1 $ Administration.replaceMainFile
+     , dir "adminonly" $ dir "docproblems" $ hGet $ toK0 $ DocControl.handleInvariantViolations
 
-       , dir "adminonly" $ dir "docproblems" $ hGet $ toK0 $ DocControl.handleInvariantViolations
+     , dir "adminonly" $ dir "backdoor" $ hGet $ toK1 $ Administration.handleBackdoorQuery
 
-       , dir "adminonly" $ dir "backdoor" $ hGet $ toK1 $ Administration.handleBackdoorQuery
+     , dir "adminonly" $ dir "upsalesdeleted" $ hGet $ toK0 $ DocControl.handleUpsalesDeleted
 
-       , dir "adminonly" $ dir "upsalesdeleted" $ hGet $ toK0 $ DocControl.handleUpsalesDeleted
+     , dir "services" $ hGet $ toK0 $ handleShowServiceList
+     , dir "services" $ hGet $ toK1 $ handleShowService
+     , dir "services" $ dir "ui" $ hPost $ toK1 $ handleChangeServiceUI
+     , dir "services" $ dir "password" $ hPost $ toK1 $ handleChangeServicePassword
+     , dir "services" $ dir "settings" $ hPost $ toK1 $ handleChangeServiceSettings
+     , dir "services" $ dir "logo" $ hGet $ toK1 $ handleServiceLogo
+     , dir "services" $ dir "buttons_body" $ hGet $ toK1 $ handleServiceButtonsBody
+     , dir "services" $ dir "buttons_rest" $ hGet $ toK1 $ handleServiceButtonsRest
 
-       , dir "services" $ hGet $ toK0 $ handleShowServiceList
-       , dir "services" $ hGet $ toK1 $ handleShowService
-       , dir "services" $ dir "ui" $ hPost $ toK1 $ handleChangeServiceUI
-       , dir "services" $ dir "password" $ hPost $ toK1 $ handleChangeServicePassword
-       , dir "services" $ dir "settings" $ hPost $ toK1 $ handleChangeServiceSettings
-       , dir "services" $ dir "logo" $ hGet $ toK1 $ handleServiceLogo
-       , dir "services" $ dir "buttons_body" $ hGet $ toK1 $ handleServiceButtonsBody
-       , dir "services" $ dir "buttons_rest" $ hGet $ toK1 $ handleServiceButtonsRest
+     -- never ever use this
+     , dir "adminonly" $ dir "neveruser" $ dir "resetservicepassword" $ hGetWrap (onlyAdmin . https) $ toK2 $ handleChangeServicePasswordAdminOnly
 
-       -- never ever use this
-       , dir "adminonly" $ dir "neveruser" $ dir "resetservicepassword" $ hGetWrap (onlyAdmin . https) $ toK2 $ handleChangeServicePasswordAdminOnly
+     , dir "adminonly" $ dir "log" $ hGetWrap (onlyAdmin . https) $ toK1 $ Administration.serveLogDirectory
 
-       , dir "adminonly" $ dir "log" $ hGetWrap (onlyAdmin . https) $ toK1 $ Administration.serveLogDirectory
+     , dir "adminonly" $ dir "updatefields" $ hPost $ toK2 $ Administration.updateFields
 
-       , dir "adminonly" $ dir "updatefields" $ hPost $ toK2 $ Administration.updateFields
+     , dir "dave" $ dir "document"      $ hGet $ toK1 $ Administration.daveDocument
+     , dir "dave" $ dir "document"      $ hGet $ toK2 $ Administration.daveSignatoryLink
+     , dir "dave" $ dir "user"          $ hGet $ toK1 $ Administration.daveUser
+     , dir "dave" $ dir "userhistory"   $ hGet $ toK1 $ Administration.daveUserHistory
+     , dir "dave" $ dir "company"       $ hGet $ toK1 $ Administration.daveCompany
+     , dir "dave" $ dir "company"       $ hGet $ toK3 $ Administration.companyClosedFilesZip
 
-       , dir "dave" $ dir "document"      $ hGet $ toK1 $ Administration.daveDocument
-       , dir "dave" $ dir "document"      $ hGet $ toK2 $ Administration.daveSignatoryLink
-       , dir "dave" $ dir "user"          $ hGet $ toK1 $ Administration.daveUser
-       , dir "dave" $ dir "userhistory"   $ hGet $ toK1 $ Administration.daveUserHistory
-       , dir "dave" $ dir "company"       $ hGet $ toK1 $ Administration.daveCompany
-       , dir "dave" $ dir "company"       $ hGet $ toK3 $ Administration.companyClosedFilesZip
+     -- account stuff
+     , dir "logout"      $ hGet  $ toK0 $ handleLogout
+     , allLocaleDirs $ const $ dir "login" $ hGet  $ toK0 $ handleLoginGet
+     , allLocaleDirs $ const $ dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
+     , dir "signup"      $ hPostAllowHttp $ toK0 $ signupPagePost
+     , dir "amnesia"     $ hPostNoXToken $ toK0 $ forgotPasswordPagePost
+     , dir "amnesia"     $ hGet $ toK2 $ UserControl.handlePasswordReminderGet
+     , dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
+     , dir "accountsetup"  $ hGet $ toK2 $ UserControl.handleAccountSetupGet
+     , dir "accountsetup"  $ hPostNoXToken $ toK2 $ UserControl.handleAccountSetupPost
+ 
+     -- question form on static pages
+     , dir "question"    $ hPostAllowHttp $ toK0 $ UserControl.handleQuestion
 
-       -- account stuff
-       , dir "logout"      $ hGet  $ toK0 $ handleLogout
-       , allLocaleDirs $ const $ dir "login" $ hGet  $ toK0 $ handleLoginGet
-       , allLocaleDirs $ const $ dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
-       , dir "signup"      $ hPostAllowHttp $ toK0 $ signupPagePost
-       , dir "amnesia"     $ hPostNoXToken $ toK0 $ forgotPasswordPagePost
-       , dir "amnesia"     $ hGet $ toK2 $ UserControl.handlePasswordReminderGet
-       , dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
-       , dir "accountsetup"  $ hGet $ toK2 $ UserControl.handleAccountSetupGet
-       , dir "accountsetup"  $ hPostNoXToken $ toK2 $ UserControl.handleAccountSetupPost
-
-       -- question form on static pages
-       , dir "question"    $ hPostAllowHttp $ toK0 $ UserControl.handleQuestion
-
-       , integrationAPI
-       , documentAPI
-       , oauthAPI
-       ]
-     -- static files
+     , integrationAPI
+     , documentAPI
+     , oauthAPI
      , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "public"
-     ]
+   ]

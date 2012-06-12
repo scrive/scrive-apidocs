@@ -120,7 +120,7 @@ handleDeliveredInvitation mc doc signlinkid = do
       return ()
     Nothing -> return ()
 
-handleOpenedInvitation :: MonadDB m => Document -> SignatoryLinkID -> String -> Maybe UserID -> m ()
+handleOpenedInvitation :: (MonadDB m, TemplatesMonad m) => Document -> SignatoryLinkID -> String -> Maybe UserID -> m ()
 handleOpenedInvitation doc signlinkid email muid = do
   now  <- getMinutesTime
   edoc <- dbUpdate $ MarkInvitationRead (documentid doc) signlinkid

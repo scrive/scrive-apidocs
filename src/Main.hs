@@ -97,7 +97,7 @@ startSystem appGlobals appConf =
         createThreads = do
           let (iface,port) = httpBindAddress appConf
           listensocket <- listenOn (htonl iface) (fromIntegral port)
-          let (routes,overlaps) = compile (staticRoutes appConf)
+          let (routes,overlaps) = compile staticRoutes
           maybe (return ()) Log.server overlaps
           t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port })  (appHandler routes appConf appGlobals)
           let scheddata = SchedulerData appConf $ templates appGlobals

@@ -37,7 +37,6 @@ data AppConf = AppConf {
   , admins             :: [Email]                      -- ^ email addresses of people regarded as admins
   , sales              :: [Email]                      -- ^ email addresses of people regarded as sales admins
   , initialUsers       :: [(Email,String)]             -- ^ email and passwords for initial users
-  , delayResponse      :: Double                       -- ^ Delay in seconds before dynamic handlers start responding
   } deriving (Read, Eq, Ord, Show)
 
 -- | Default application configuration that does nothing.
@@ -67,7 +66,6 @@ instance Configuration AppConf where
     , admins             = map Email ["gracjanpolak@gmail.com", "lukas@skrivapa.se"]
     , sales              = []
     , initialUsers       = []
-    , delayResponse      = 0
     }
   confOptions = [
   {-
@@ -87,8 +85,5 @@ instance Configuration AppConf where
     , Option [] ["production"]
       (NoArg (\ c -> c { production = True }))
       "Turn on production environment"
-    , Option [] ["delay-response"]
-      (ReqArg (\h c -> c { delayResponse = read h }) "TIME")
-      "Delay response handling for testing purposes (seconds)"
     ]
   confVerify _ = return $ Right ()

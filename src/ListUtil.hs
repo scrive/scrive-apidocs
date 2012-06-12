@@ -107,8 +107,8 @@ emptyListParams =
 {- New version working with JSON interface-}
 getListParamsNew :: (ServerMonad m,Functor m,HasRqData m,MonadIO m) => m ListParams
 getListParamsNew = do
-    offset  <- readField "offset"
-    limit   <- readField "limit"
+    offset'  <- readField "offset"
+    limit'   <- readField "limit"
     search  <- getField "filter"
     sorting <- getField "sort"
     sortingReversed <- joinB <$> fmap (== "true") <$> getField "sortReversed"
@@ -117,8 +117,9 @@ getListParamsNew = do
                      else (++ "REV") <$> sorting
 
     return ListParams
-             { offset  = fromMaybe 0 offset
-             , limit   = fromMaybe 1000 limit
+           -- REVIEW: I am assuming constants below stem from emptyListParams.
+             { offset  = fromMaybe (offset emptyListParams) offset'
+             , limit   = fromMaybe (limit emptyListParams) limit'
              , search  = search
              , sorting = maybeToList sorting'
              }

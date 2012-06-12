@@ -85,7 +85,7 @@ signatoryActor time ip muid email slid = Actor {
   , actorEmail = Just email
   , actorSigLinkID = Just slid
   , actorAPIString = Nothing
-  , actorWho = "the signatory with email \"" ++ email ++ "\""
+  , actorWho = "the signatory (" ++ email ++ ")"
 }
 
 -- | For documents created using mailapi/scrivebymail
@@ -97,7 +97,7 @@ mailAPIActor time uid email = Actor {
   , actorEmail = Just email
   , actorSigLinkID = Nothing
   , actorAPIString = Just "Mail API"
-  , actorWho = "the user with email \"" ++ email ++ "\" using the Mail API"
+  , actorWho = "the user (" ++ email ++ ") (using the Mail API)"
 }
 
 -- | For delivery/reading notifications from the mail system
@@ -109,7 +109,7 @@ mailSystemActor time muid email slid = Actor {
   , actorEmail = Just email
   , actorSigLinkID = Just slid
   , actorAPIString = Nothing
-  , actorWho = "the signatory with email \"" ++ email ++ "\" (reported by the Mail subsystem)"
+  , actorWho = "the email subsystem"
 }
 
 -- | For actions originating from the integration api
@@ -122,7 +122,7 @@ integrationAPIActor time ip sid mcompany = Actor {
   , actorSigLinkID = Nothing
   , actorAPIString = Just $ BS.toString $ unServiceID sid
   , actorWho = case mcompany of
-      Just company -> "the company \"" ++ company ++ "\" using the Integration API"
+      Just company -> "the company \"" ++ company ++ "\" (using the Integration API)"
       Nothing -> "the Integration API"
 }
 
@@ -135,7 +135,7 @@ userActor time ip uid email = Actor {
   , actorEmail = Just email
   , actorSigLinkID = Nothing
   , actorAPIString = Nothing
-  , actorWho = "the user with email \"" ++ email ++ "\""
+  , actorWho = "the user (" ++ email ++ ")"
 }
 
 -- | For actions performed by an admin
@@ -147,7 +147,7 @@ adminActor time ip uid email = Actor {
   , actorEmail = Just email
   , actorSigLinkID = Nothing
   , actorAPIString = Nothing
-  , actorWho = "the admin with email \"" ++ email ++ "\""
+  , actorWho = "the admin (" ++ email ++ ")"
 }
 
 apiActor :: MinutesTime -> IPAddress -> UserID -> String -> String -> Actor
@@ -158,5 +158,5 @@ apiActor time ip uid email apistring = Actor {
   , actorEmail = Just email
   , actorSigLinkID = Nothing
   , actorAPIString = Just apistring
-  , actorWho = "the user with email " ++ show email ++ " using the API" 
+  , actorWho = "the user (" ++ show email ++ ") (using the API)" 
   }

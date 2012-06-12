@@ -55,10 +55,6 @@ var QueueRequest = Backbone.Model.extend({
   started : function() {
      return this.get("send");
   },
-  // REVIEW: What is the purpose of 'done'?  It seems to return "I am not done"
-  done : function() {
-     return this.get("result") == undefined;
-  },
   restart : function() {
       this.set({"result" : undefined});
       this.run();
@@ -80,6 +76,7 @@ var QueueRequest = Backbone.Model.extend({
                         queueRequest.set({result:true});
                         queueRequest.trigger("success");
                        }
+                   , ajaxtimeout : 9900
                   });
        submit.send();
        setTimeout(function() {if (queueRequest.get("result") == undefined) queueRequest.trigger("error"); }, 10000);
@@ -113,10 +110,12 @@ window.AjaxQueue = Backbone.Model.extend({
        }
        var qr = new QueueRequest({submit : s});
        qr.bind("success", function() {
+                if (requestQueue[0] != qr) return; // This is a lost request and we ignore it
                 requestQueue.shift();
                 ajaxQueue.run();
             })
        qr.bind("error", function() {
+                if (requestQueue[0] != qr) return; // This is a lost request and we ignore it
                 if (requestQueue.length == 1)
                     // REVIEW: What prevents the client from getting
                     // stuck in an infinite loop here if there is

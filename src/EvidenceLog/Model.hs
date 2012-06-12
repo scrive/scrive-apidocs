@@ -1,5 +1,6 @@
 module EvidenceLog.Model (
     EvidenceEventType(..)
+  , eventTextTemplateName  
   , apiActor
   , InsertEvidenceEvent(..)
   , GetEvidenceLog(..)
@@ -21,17 +22,23 @@ import Version
 import Templates.Templates
 import qualified Templates.Fields as F
 import Control.Applicative
+import Control.Monad.Identity
+import Control.Monad.Trans
 
 data InsertEvidenceEvent = InsertEvidenceEvent
                            EvidenceEventType      -- A code for the event
-                           String                 -- Text for evidence
+                           (F.Fields Identity ()) -- Text for evidence
                            (Maybe DocumentID)     -- The documentid if this event is about a document
                            Actor                  -- Actor
-    deriving (Eq, Ord, Show, Typeable)
+    deriving (Typeable)
 
-instance MonadDB m => DBUpdate m InsertEvidenceEvent Bool where
-  update (InsertEvidenceEvent event text mdid actor) =
-    kRun01 $ mkSQL INSERT tableEvidenceLog [
+eventTextTemplateName :: EvidenceEventType -> String
+eventTextTemplateName e =  (show e) ++ "Text"
+
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool where
+  update (InsertEvidenceEvent event textFields mdid actor) = do
+   text <- lift $ renderTemplateI (eventTextTemplateName event) $ textFields
+   kRun01 $ mkSQL INSERT tableEvidenceLog [
       sql "document_id" mdid
     , sql "time" $ actorTime actor
     , sql "text" text
@@ -85,7 +92,7 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
       ++ ", api_user"
       ++ "  FROM evidence_log "
       ++ "  WHERE document_id = ?"
-      ++ "  ORDER BY time DESC") [
+      ++ "  ORDER BY time DESC, id DESC") [
         toSql docid
       ]
     foldDB fetchEvidenceLog []

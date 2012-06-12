@@ -28,11 +28,11 @@ data GuardTimeConf = GuardTimeConf
 
 guardTimeJars :: [String]
 guardTimeJars =
-  [ "GTJavaPDF-0.3.1.jar"
-  , "bcprov-ext-jdk15on-146.jar"
-  , "iText-2.1.7.jar"
+  [ "PdfBundler-0.3.1.jar"
+  , "PdfExtender-0.3.1.jar"
+  , "PdfSigner-0.3.1.jar"
+  , "PdfVerifier-0.3.1.jar"
   , "GTJavaSDK-0.4.4.jar"
-  , "bcprov-jdk15on-146.jar"
   ]
 
 digitallySign :: GuardTimeConf -> String -> IO ExitCode
@@ -41,6 +41,7 @@ digitallySign conf inputFileName = do
              , intercalate ":" (map ("GuardTime/" ++) guardTimeJars)
              , "com.guardtime.pdftools.PdfStamper"
              , "-i"
+             , "-n", " Scrive "
              , "-s", guardTimeURL conf
              , "-f"
              , inputFileName

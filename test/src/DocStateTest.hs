@@ -40,21 +40,18 @@ import EvidenceLog.Model
 docStateTests :: TestEnvSt -> Test
 docStateTests env = testGroup "DocState" [
   dataStructureProperties,
-  testThat "ReallyDeleteDocument adds to the log" env testReallyDeleteDocumentEvidenceLog,
   testThat "RejectDocument adds to the log" env testRejectDocumentEvidenceLog,
   testThat "RemoveDaysToSign adds to the log" env testRemoveDaysToSignEvidenceLog,
   testThat "RemoveDocumentAttachment adds to the log" env testRemoveDocumentAttachmentEvidenceLog,
   testThat "ResetSignatoryDetails adds to the log" env testResetSignatoryDetailsEvidenceLog,
   testThat "RestartDocument adds to the log" env testRestartDocumentEvidenceLog,
   testThat "RestoreArchivedDocument adds to the log" env testRestoreArchivedDocumentEvidenceLog,
-  testThat "SaveDocumentForUser adds to the log" env testSaveDocumentForUserEvidenceLog,
   testThat "SetDaysToSign adds to the log" env testSetDaysToSignEvidenceLog,
   testThat "SetDocumentInviteTime adds to the log" env testSetDocumentInviteTimeEvidenceLog,
   testThat "SetDocumentLocale adds to the log" env testSetDocumentLocaleEvidenceLog,
   testThat "SetDocumentTags adds to the log" env testSetDocumentTagsEvidenceLog,
   testThat "SetDocumentTimeoutTime adds to the log" env testSetDocumentTimeoutTimeEvidenceLog,
   testThat "SetDocumentTitle adds to the log" env testSetDocumentTitleEvidenceLog,
-  testThat "SetDocumentUI adds to the log" env testSetDocumentUIEvidenceLog,
   testThat "Set ElegitimationIdentification adds to the log" env testSetElegitimationIdentificationEvidenceLog,
   testThat "Set EmailIdentification adds to the log" env testSetEmailIdentificationEvidenceLog,
   testThat "SetInvitationDeliveryStatus adds to the log" env testSetInvitationDeliveryStatusEvidenceLog,
@@ -83,7 +80,6 @@ docStateTests env = testGroup "DocState" [
   testThat "AttachSealedFile adds to the log" env testAttachSealedFileEvidenceLog,
   testThat "AttachFile adds to the log" env testAttachFileEvidenceLog,
   testThat "AttachCSVUpload adds to the log" env testAttachCSVUploadEvidenceLog,
-  testThat "ArchiveDocumentEvidence adds to the log" env testArchiveDocumentEvidenceLog,
   testThat "AddInvitationEvidence adds to the log" env testAddInvitationEvidenceLog,
   testThat "NewDocument adds to the log" env testNewDocumentEvidenceLog,
   testThat "AddDocumentAttachment adds to the log" env testAddDocumentAttachmentEvidenceLog,
@@ -293,16 +289,6 @@ testNewDocumentForMismatchingUserAndCompanyFails = doTimes 10 $ do
     assertLeft edoc1
     assertLeft edoc2
 
-testReallyDeleteDocumentEvidenceLog :: TestEnv ()
-testReallyDeleteDocumentEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isClosed
-  _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (systemActor t)
-  etdoc <- randomUpdate $ \t->ReallyDeleteDocument author (documentid doc) (systemActor t)
-  assertRight etdoc
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == ReallyDeleteDocumentEvidence) lg
-
 testRejectDocumentEvidenceLog :: TestEnv ()
 testRejectDocumentEvidenceLog = do
   author <- addNewRandomUser
@@ -355,7 +341,7 @@ testRestartDocumentEvidenceLog = do
   assertJust $ find (\e -> evType e == RestartDocumentEvidence) lg
   assertJust $ find (\e -> evType e == CancelDocumentEvidence) lg
   lg2 <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == RestartDocumentEvidence) lg2
+  assertJust $ find (\e -> evType e == CancelDocumentEvidence) lg2
 
 testRestoreArchivedDocumentEvidenceLog :: TestEnv ()
 testRestoreArchivedDocumentEvidenceLog = do
@@ -366,17 +352,6 @@ testRestoreArchivedDocumentEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == RestoreArchivedDocumentEvidence) lg
-
-testSaveDocumentForUserEvidenceLog :: TestEnv ()
-testSaveDocumentForUserEvidenceLog = do
-  author <- addNewRandomUser
-  user <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isPending &&^ ((<=) 2 . length . documentsignatorylinks))
-  let Just sl = getSigLinkFor doc (not . (isAuthor::SignatoryLink->Bool))
-  etdoc <- randomUpdate $ \t->SaveDocumentForUser (documentid doc) user (signatorylinkid sl) (systemActor t)
-  assertRight etdoc
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SaveDocumentForUserEvidence) lg
 
 testSetDaysToSignEvidenceLog :: TestEnv ()
 testSetDaysToSignEvidenceLog = do
@@ -444,21 +419,6 @@ testSetDocumentTitleEvidenceLog = do
                   if documenttitle doc == title
                     then loop doc
                     else randomUpdate $ \t->SetDocumentTitle (documentid doc) title (systemActor t)
-
-testSetDocumentUIEvidenceLog :: TestEnv ()
-testSetDocumentUIEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  etdoc <- loop doc
-  assertRight etdoc
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SetDocumentUIEvidence) lg
-    where loop doc = do
-                  u <- rand 10 arbitrary
-                  if documentui doc == u
-                    then loop doc
-                    else randomUpdate $ \t->SetDocumentUI (documentid doc) u (systemActor t)
-
 
 testSetElegitimationIdentificationEvidenceLog :: TestEnv ()
 testSetElegitimationIdentificationEvidenceLog = do
@@ -692,15 +652,6 @@ testAddInvitationEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == InvitationEvidence) lg
-
-testArchiveDocumentEvidenceLog :: TestEnv ()
-testArchiveDocumentEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isClosed
-  etdoc <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (systemActor t)
-  assertRight etdoc
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == ArchiveDocumentEvidence) lg
 
 testAttachCSVUploadEvidenceLog :: TestEnv ()
 testAttachCSVUploadEvidenceLog = do
@@ -1246,6 +1197,8 @@ testDocumentChangeMainFileRight = doTimes 10 $ do
   -- setup
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (const True)
+  file' <- addNewRandomFile
+  _ <- randomUpdate $ \t->AttachFile (documentid doc) (fileid file') (systemActor t)
   file <- addNewRandomFile
   --execute
   edoc <- randomUpdate $ \t->ChangeMainfile (documentid doc) (fileid file) (systemActor t)
