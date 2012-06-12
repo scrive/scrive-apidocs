@@ -125,7 +125,7 @@ sendDocumentMails mailTo author mcompany = do
   dbCommit
   when (isJust mailTo) $ do
     Log.debug "Delay for mails to get send"
-    liftIO $ threadDelay 20000000
+    liftIO $ threadDelay 200000000
     Log.debug "Mails not send will be purged"
 
 
@@ -154,7 +154,7 @@ testUserMails mailTo = do
   dbCommit
   when (isJust mailTo) $ do
     Log.debug "Delay for mails to get send"
-    liftIO $ threadDelay 20000000
+    liftIO $ threadDelay 200000000
     Log.debug "Mails not send will be purged"
          
 
