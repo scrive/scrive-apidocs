@@ -5,6 +5,7 @@ import Control.Monad.Trans.Maybe
 import Data.Typeable
 
 import ActionQueue.Core
+import ActionQueue.Scheduler
 import ActionQueue.Tables
 import Crypto.RNG
 import DB
@@ -20,8 +21,8 @@ data UserAccountRequest = UserAccountRequest {
   , uarToken :: MagicHash
   } deriving (Show, Typeable)
 
-userAccountRequest :: QueueAction UserID UserAccountRequest (UserID, MagicHash) (DBT IO)
-userAccountRequest = QueueAction {
+userAccountRequest :: Action UserID UserAccountRequest (UserID, MagicHash) Scheduler
+userAccountRequest = Action {
     qaTable = tableUserAccountRequests
   , qaFields = \(user_id, token) -> [
       sql "user_id" user_id
@@ -29,7 +30,7 @@ userAccountRequest = QueueAction {
     ]
   , qaSelectFields = ["user_id", "expires", "token"]
   , qaIndexField = "user_id"
-  , qaExpirationDelay = "14 days"
+  , qaExpirationDelay = "1 hour"
   , qaDecode = foldDB decoder []
   , qaUpdateSQL = \UserAccountRequest{..} -> mkSQL UPDATE tableUserAccountRequests [
       sql "expires" uarExpires
@@ -56,7 +57,7 @@ getUserAccountRequestUser uid token = runMaybeT $ do
 newUserAccountRequest :: (MonadDB m, CryptoRNG m) => UserID -> m UserAccountRequest
 newUserAccountRequest uid = do
   token <- random
-  expires <- minutesAfter (24*60) `liftM` getMinutesTime
+  expires <- minutesAfter (14*24*60) `liftM` getMinutesTime
   -- FIXME: highly unlikely, but possible race condition
   _ <- dbUpdate $ DeleteAction userAccountRequest uid
   dbUpdate $ NewAction userAccountRequest expires (uid, token)

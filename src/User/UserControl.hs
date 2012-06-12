@@ -532,8 +532,7 @@ handlePasswordReminderGet uid token = do
       sendRedirect LinkUpload
     Nothing -> do
       addFlashM flashMessagePasswordChangeLinkNotValid
-      linkmain <- getHomeOrUploadLink
-      sendRedirect linkmain
+      sendRedirect =<< getHomeOrUploadLink
 
 handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m KontraLink
 handlePasswordReminderPost uid token = do

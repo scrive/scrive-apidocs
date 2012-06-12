@@ -6,6 +6,7 @@ import Data.Int
 import Data.Typeable
 
 import ActionQueue.Core
+import ActionQueue.Scheduler
 import ActionQueue.Tables
 import Crypto.RNG
 import DB
@@ -22,8 +23,8 @@ data PasswordReminder = PasswordReminder {
   , prToken :: MagicHash
   } deriving (Show, Typeable)
 
-passwordReminder :: QueueAction UserID PasswordReminder (UserID, Int32, MagicHash) (DBT IO)
-passwordReminder = QueueAction {
+passwordReminder :: Action UserID PasswordReminder (UserID, Int32, MagicHash) Scheduler
+passwordReminder = Action {
     qaTable = tablePasswordReminders
   , qaFields = \(uid, remained_emails, token) -> [
       sql "user_id" uid

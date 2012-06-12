@@ -6,6 +6,7 @@ import Control.Monad.Trans.Maybe
 import Data.Typeable
 
 import ActionQueue.Core
+import ActionQueue.Scheduler
 import ActionQueue.Tables
 import Context
 import Crypto.RNG
@@ -24,8 +25,8 @@ data EmailChangeRequest = EmailChangeRequest {
   , ecrToken :: MagicHash
   } deriving (Show, Typeable)
 
-emailChangeRequest :: QueueAction UserID EmailChangeRequest (UserID, Email, MagicHash) (DBT IO)
-emailChangeRequest = QueueAction {
+emailChangeRequest :: Action UserID EmailChangeRequest (UserID, Email, MagicHash) Scheduler
+emailChangeRequest = Action {
     qaTable = tableEmailChangeRequests
   , qaFields = \(uid, new_email, token) -> [
       sql "user_id" uid
