@@ -10,10 +10,7 @@ SealingTexts
       , eventsText="$_contractsealingtextseventsText()$"
       , dateText="$_contractsealingtextsdateText()$"
       , historyText="$_contractsealingtextshistoryText()$"
-      , verificationFooter=[
-          "$_contractsealingtextsverificationFooterRow1()$"
-        , "$_contractsealingtextsverificationFooterRow2()$"
-        , "$_contractsealingtextsverificationFooterRow3()$ $hostpart$/d/$documentid$."]
+      , verificationFooter="$_verificationFooter()$"
     }
 #####
 offersealingtexts=
@@ -27,10 +24,7 @@ SealingTexts
       , eventsText="$_offersealingtextseventsText()$"
       , dateText="$_offersealingtextsdateText()$"
       , historyText="$_offersealingtextshistoryText()$"
-      , verificationFooter=[
-          "$_offersealingtextsverificationFooterRow1()$"
-        , "$_offersealingtextsverificationFooterRow2()$."
-        , "$_offersealingtextsverificationFooterRow3()$ $hostpart$/d/$documentid$."]
+      , verificationFooter="$_verificationFooter()$"
     }
 #####
 ordersealingtexts= 
@@ -44,10 +38,7 @@ SealingTexts
       , eventsText="$_ordersealingtextseventsText()$"
       , dateText="$_ordersealingtextsdateText()$"
       , historyText="$_ordersealingtextshistoryText()$"
-      , verificationFooter=[
-          "$_ordersealingtextsverificationFooterRow1()$"
-        , "$_ordersealingtextsverificationFooterRow2()$"
-        , "$_ordersealingtextsverificationFooterRow3()$ $hostpart$/d/$documentid$."]
+      , verificationFooter="$_verificationFooter()$"
     }
 #####
 contractLastHistEntry=

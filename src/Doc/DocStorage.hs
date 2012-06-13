@@ -238,7 +238,7 @@ preCheckPDFHelper gscmd content tmppath =
                    , Seal.eventsText         = "An example text"
                    , Seal.dateText           = "An example text"
                    , Seal.historyText        = "An example text"
-                   , Seal.verificationFooter = ["An example text", "An example text", "An example text"]
+                   , Seal.verificationFooter = "An example text"
                    }
 
     checkSize = do
