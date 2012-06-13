@@ -17,6 +17,7 @@ import Redirect
 import Routing
 import Happstack.StaticRouting(Route, choice, dir, path, param, remainingPath)
 import qualified Stats.Control as Stats
+import qualified ActionQueue.UserAccountRequest as UAR
 import qualified Administration.AdministrationControl as Administration
 import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
@@ -266,4 +267,7 @@ staticRoutes = choice
      , documentAPI
      , oauthAPI
      , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "public"
+
+     -- to be removed after 15.07.2012 (see ActionQueue.UserAccountRequest)
+     , dir "populate_uar" $ hGet $ toK0 $ UAR.populateUARTable
    ]
