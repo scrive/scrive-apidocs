@@ -11,6 +11,7 @@ import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB
 import DB.PostgreSQL
+import MinutesTime
 import qualified Log
 
 type InnerAQ qd = ReaderT qd (CryptoRNGT (DBT IO))
@@ -37,16 +38,18 @@ runQueue rng dbconf qd queue =
 
 -- | Gets 'expired' actions and evaluates them
 actionQueue :: Show t => Action idx t con (ActionQueue qd) -> ActionQueue qd ()
-actionQueue qa = dbQuery (GetExpiredActions qa) >>= mapM_ (\a -> do
-  res <- E.try $ qaEvaluateExpired qa a
-  case res of
-    Left (e::E.SomeException) -> do
-      printError a e
-      dbRollback
-    Right () -> do
-      printSuccess a
-      dbCommit
-  )
+actionQueue qa = getMinutesTime
+  >>= dbQuery . GetExpiredActions qa
+  >>= mapM_ (\a -> do
+    res <- E.try $ qaEvaluateExpired qa a
+    case res of
+      Left (e::E.SomeException) -> do
+        printError a e
+        dbRollback
+      Right () -> do
+        printSuccess a
+        dbCommit
+    )
   where
     printSuccess a = Log.debug $ "Action " ++ show a ++ " evaluated successfully"
     printError a e = Log.error $ "Oops, qaEvaluateExpired with " ++ show a ++ " failed with error: " ++ show e

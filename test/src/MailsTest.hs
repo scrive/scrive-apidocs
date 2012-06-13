@@ -4,6 +4,7 @@ import Control.Applicative
 import Happstack.Server
 import Test.Framework
 
+import ActionQueue.UserAccountRequest
 import DB
 import Context
 import TestingUtil
@@ -21,7 +22,6 @@ import Control.Monad
 import MinutesTime
 import Util.SignatoryLinkUtils
 import User.UserView
-import Kontra
 import Util.HasSomeUserInfo
 import Mails.Events
 import Data.Char
@@ -143,13 +143,13 @@ testUserMails mailTo = do
                            validMail s m
                            sendoutForManualChecking s req ctx mailTo m
     checkMail "New account" $ do
-          al <- newAccountCreatedLink user
+          al <- newUserAccountRequestLink $ userid user
           newUserMail (ctxhostpart ctx) (getEmail user) (getEmail user) al
     checkMail "New account by admin" $ do
-          al <- newAccountCreatedLink user
+          al <- newUserAccountRequestLink $ userid user
           mailNewAccountCreatedByAdmin ctx (ctxlocale ctx) (getSmartName user) (getEmail user) al Nothing
     checkMail "Reset password mail" $ do
-          al <- newAccountCreatedLink user
+          al <- newUserAccountRequestLink $ userid user
           resetPasswordMail (ctxhostpart ctx) user al
   dbCommit
   when (isJust mailTo) $ do

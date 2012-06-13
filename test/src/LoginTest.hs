@@ -78,7 +78,7 @@ assertResettingPasswordRecordsALoginEvent = do
 createUserAndResetPassword :: TestEnv (User, Response, Context)
 createUserAndResetPassword = do
   pwd <- createPassword "admin"
-  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
+  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) Nothing Nothing (mkLocaleFromRegion defaultValue)
   PasswordReminder{..} <- newPasswordReminder $ userid user
   ctx <- mkContext (mkLocaleFromRegion defaultValue)
   req <- mkRequest POST [("password", inText "password123"),
@@ -105,5 +105,5 @@ loginFailureChecks res ctx = do
 createTestUser :: TestEnv UserID
 createTestUser = do
     pwd <- createPassword "admin"
-    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
+    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) Nothing Nothing (mkLocaleFromRegion defaultValue)
     return userid

@@ -60,6 +60,9 @@ getEmailChangeRequestNewEmail uid token = runMaybeT $ do
   guard $ ecrToken == token
   Context{ctxmaybeuser = Just loggeduser} <- lift getContext
   guard $ ecrUserID == userid loggeduser
+  -- check if a user didn't create an account with this email
+  -- between requesting email change and confirming the change
+  Nothing <- dbQuery $ GetUserByEmail Nothing ecrNewEmail
   return ecrNewEmail
 
 newEmailChangeRequest :: (MonadDB m, CryptoRNG m) => UserID -> Email -> m EmailChangeRequest

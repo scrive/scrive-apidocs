@@ -28,12 +28,12 @@ instance (Convertible idx SqlValue, MonadDB m) => DBQuery m (GetAction idx t con
       ]
     qaDecode >>= oneObjectReturnedGuard
 
-data GetExpiredActions idx t con n = GetExpiredActions (Action idx t con n)
+data GetExpiredActions idx t con n = GetExpiredActions (Action idx t con n) MinutesTime
 instance MonadDB m => DBQuery m (GetExpiredActions idx t con n) [t] where
-  query (GetExpiredActions Action{..}) = do
+  query (GetExpiredActions Action{..} time) = do
     _ <- kRun $ mconcat [
         SQL ("SELECT " ++ intercalate ", " qaSelectFields) []
-      , SQL (" FROM " ++ tblName qaTable ++ " WHERE expires <= now()") []
+      , SQL (" FROM " ++ tblName qaTable ++ " WHERE expires <= ?") [toSql time]
       , SQL " FOR UPDATE" []
       ]
     qaDecode
