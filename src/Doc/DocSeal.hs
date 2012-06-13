@@ -182,13 +182,17 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
                         documentInfoFields document
           let seenEvent = Seal.HistEntry
                             { Seal.histdate = show (signtime seen)
-                            , Seal.histcomment = pureString seenDesc}
+                            , Seal.histcomment = pureString seenDesc
+                            , Seal.histaddress = formatIP (signipnumber seen)
+                            }
           signDesc <- renderLocalTemplateForProcess document processsignhistentry $ do
                         personFields document personInfo
                         documentInfoFields document
           let signEvent = Seal.HistEntry
                             { Seal.histdate = show (signtime signed)
-                            , Seal.histcomment = pureString signDesc}
+                            , Seal.histcomment = pureString signDesc
+                            , Seal.histaddress = formatIP (signipnumber signed)
+                            }
           return $ if (isauthor)
                     then [signEvent]
                     else [seenEvent,signEvent]
@@ -199,10 +203,10 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
                                        documentAuthorInfo document
                                        F.value "oneSignatory"  (length signatories>1)
                                        F.value "personname" $ listToMaybe $ map getFullName  signatoriesdetails
-                                       F.value "ip" $ formatIP ipnumber
                                    return  [ Seal.HistEntry
                                       { Seal.histdate = show time
                                       , Seal.histcomment = pureString desc
+                                      , Seal.histaddress = formatIP ipnumber
                                       }]
                                 _ -> return []   
       maxsigntime = maximum (map (signtime . (\(_,_,c,_,_,_) -> c)) signatories)
@@ -214,7 +218,9 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
                        return $ if (Just True == getValueForProcess document processsealincludesmaxtime)
                                 then [Seal.HistEntry
                                 { Seal.histdate = show maxsigntime
-                                , Seal.histcomment = pureString desc}]
+                                , Seal.histcomment = pureString desc
+                                , Seal.histaddress = ""
+                                }]
                                 else []
 
   in do
