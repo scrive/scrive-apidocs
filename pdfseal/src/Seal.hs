@@ -9,11 +9,9 @@ import qualified Data.Map as Map
 import Data.List
 import Data.Ord
 import Graphics.PDF.Text
-import Graphics.PDF (PDFFloat, PDFFont(..))
+import Graphics.PDF (PDFFloat)
 import SealSpec
 import qualified Data.ByteString.Base64 as Base64
-import Debug.Trace
-import Control.Monad.State.Strict
 
 buildList :: State [a] () -> [a]
 buildList actions = reverse (execState actions [])
@@ -23,6 +21,21 @@ lm e = modify (\x -> e : x)
 
 lms :: [a] -> State [a] ()
 lms es = mapM_ lm es
+
+printableWidth :: Int
+printableWidth = 567
+
+printableHeight :: Int
+printableHeight = 673
+
+printableMargin :: Int
+printableMargin = 23
+
+frameInnerPadding :: Int
+frameInnerPadding = 16
+
+cardWidth :: Int
+cardWidth = (printableWidth - 4*frameInnerPadding - 2*printableMargin) `div` 2
 
 winAnsiPostScriptEncode :: String -> String
 winAnsiPostScriptEncode text' = concatMap charEncode text'
@@ -383,8 +396,22 @@ boxVCat sep boxes = boxDrawDebugRectAround $
       }
   where boxF box = " q " ++ boxCommands box ++ " Q 1 0 0 1 0 " ++ show (-boxHeight box - sep) ++ " cm "
 
+
+boxHCenter :: Int -> Box -> Box
+boxHCenter width box =
+  box { boxWidth = width
+      , boxCommands = " 1 0 0 1 " ++ show ((width - boxWidth box) `div` 2) ++ " 0 cm\n" ++ boxCommands box
+      }
+
+boxVCenter :: Int -> Box -> Box
+boxVCenter height box =
+  box { boxHeight = height
+      , boxCommands = " 1 0 0 1 0 " ++ show ((height - boxHeight box) `div` 2) ++ " cm\n" ++ boxCommands box
+      }
+
+
 boxEnlarge :: Int -> Int -> Int -> Int -> Box -> Box
-boxEnlarge left bottom top right box =
+boxEnlarge left bottom right top  box =
   Box { boxWidth = boxWidth box + left + right
       , boxHeight = boxHeight box + bottom + top
       , boxCommands = " 1 0 0 1 " ++ show left ++ " " ++ show (-top) ++ " cm " ++ boxCommands box
@@ -392,15 +419,22 @@ boxEnlarge left bottom top right box =
 
 boxStrokeColor :: Float -> Float -> Float -> Float -> Box -> Box
 boxStrokeColor c m y k box =
-  box { boxCommands = show c ++ " " ++ show m ++ " " ++ show y ++ " " ++ show k ++ " k " ++ boxCommands box }
+  box { boxCommands = show c ++ " " ++ show m ++ " " ++ show y ++ " " ++ show k ++ " K " ++ boxCommands box }
 
 boxFillColor :: Float -> Float -> Float -> Float -> Box -> Box
 boxFillColor c m y k box =
-  box { boxCommands = show c ++ " " ++ show m ++ " " ++ show y ++ " " ++ show k ++ " K " ++ boxCommands box }
+  box { boxCommands = show c ++ " " ++ show m ++ " " ++ show y ++ " " ++ show k ++ " k " ++ boxCommands box }
 
 boxDrawDebugRectAround :: Box -> Box
-boxDrawDebugRectAround box =
+boxDrawDebugRectAround box = box
+{-
   box { boxCommands = " q [1 5] 0 d 0 g 0 G 0 0 " ++ show (boxWidth box) ++ " " ++ show (-boxHeight box) ++ " re S Q " ++ boxCommands box
+      }
+-}
+
+boxDrawFrame :: Box -> Box
+boxDrawFrame box =
+  box { boxCommands = " q 0 0 " ++ show (boxWidth box) ++ " " ++ show (-boxHeight box) ++ " re S Q " ++ boxCommands box
       }
 
 
@@ -474,7 +508,7 @@ makeManyLines font width text' = result
 
 
 makeLeftTextBox :: PDFFont -> Int -> String -> Box
-makeLeftTextBox font@(PDFFont name size) width text' = result
+makeLeftTextBox font@(PDFFont name' size) width text' = result
   where
     result = Box { boxWidth = width
                  , boxHeight = 12 * size * length lines' `div` 10
@@ -483,17 +517,17 @@ makeLeftTextBox font@(PDFFont name size) width text' = result
     lines' = splitLinesOfLength font width text'
     textOutLine text'' = "[(" ++ winAnsiPostScriptEncode text'' ++ ")] TJ T*\n"
     commands = " BT\n" ++
-               " " ++ show (1.2 * fromIntegral size) ++ " TL\n" ++
+               " " ++ show (1.2 * fromIntegral size :: Double) ++ " TL\n" ++
                " /" ++ resourceFontName ++ " " ++ show size ++ " Tf\n" ++
                " 1 0 0 1 0 " ++  show (-size) ++ " Tm\n" ++ -- FIXME: where to start this really?
                concatMap textOutLine lines' ++
                " ET\n"
     resourceFontName =
-      case name of
+      case name' of
         Helvetica -> "TT0"
         Helvetica_Bold -> "TT1"
         Helvetica_Oblique -> "TT2"
-        _ -> error $ "Font " ++ show name ++ " not available, add to resources dictionary"
+        _ -> error $ "Font " ++ show name' ++ " not available, add to resources dictionary"
 
 verificationTextBox :: SealingTexts -> Box
 verificationTextBox staticTexts =
@@ -508,34 +542,41 @@ documentNumberTextBox staticTexts documentNumber =
 
 partnerTextBox :: SealingTexts -> Box
 partnerTextBox staticTexts =
+  boxEnlarge 5 12 0 23 $
   makeLeftTextBox (PDFFont Helvetica 12) 200
                     (partnerText staticTexts)
 
 secretaryBox :: SealingTexts -> Box
 secretaryBox staticTexts =
+  boxEnlarge 5 12 0 23 $
   makeLeftTextBox (PDFFont Helvetica 12) 200
                     (secretaryText staticTexts)
 
 signatoryBox :: SealingTexts -> Person -> Box
 signatoryBox sealingTexts (Person {fullname,company,companynumber,email}) =
   boxVCat 0 $ buildList $ do
-    lm (makeLeftTextBox (PDFFont Helvetica 10) 260 fullname)
-    lm (makeLeftTextBox (PDFFont Helvetica 10) 260 company)
+    lm (makeLeftTextBox (PDFFont Helvetica 10) width fullname)
+    lm (makeLeftTextBox (PDFFont Helvetica 10) width company)
     when (not (null companynumber)) $
-         lm (makeLeftTextBox (PDFFont Helvetica 10) 260 $ orgNumberText sealingTexts ++ " " ++ companynumber)
-    lm (makeLeftTextBox (PDFFont Helvetica_Oblique 10) 260 email)
+         lm (makeLeftTextBox (PDFFont Helvetica 10) width $ orgNumberText sealingTexts ++ " " ++ companynumber)
+    lm (makeLeftTextBox (PDFFont Helvetica_Oblique 10) width email)
+  where
+    width = cardWidth
 
 
 handlingBox :: SealingTexts -> Box
 handlingBox staticTexts =
+  boxEnlarge 5 12 0 23 $
   makeLeftTextBox (PDFFont Helvetica 12) 300
                     (eventsText staticTexts)
 
 
 makeHistoryEntryBox :: HistEntry -> Box
 makeHistoryEntryBox (HistEntry {histdate,histcomment}) =
-  boxHCat 0 [ makeLeftTextBox (PDFFont Helvetica_Oblique 10) 170 histdate
-            , makeLeftTextBox (PDFFont Helvetica_Oblique 10) 330 histcomment
+  boxHCat 0 [ boxEnlarge frameInnerPadding 5 frameInnerPadding 5 $
+              makeLeftTextBox (PDFFont Helvetica_Oblique 10) (170-2*frameInnerPadding) histdate
+            , boxEnlarge frameInnerPadding 5 frameInnerPadding 5 $
+              makeLeftTextBox (PDFFont Helvetica_Oblique 10) (330-2*frameInnerPadding) histcomment
             ]
 
 
@@ -544,27 +585,33 @@ boxHCat2 [] = []
 boxHCat2 [box] = [box]
 boxHCat2 (box1:box2:boxes) = (boxHCat 0 [box1,box2]) : boxHCat2 boxes
 
+boxP :: [Box] -> [Box]
+boxP = boxHCat2 . map (boxFillColor 0 0 0 0.7 . boxStrokeColor 0 0 0 0.5 . boxDrawFrame . boxEnlarge 16 16 16 16 )
+
+goesWithNext :: Box -> [Box] -> [Box]
+goesWithNext _ [] = []
+goesWithNext f (x:xs) = (boxVCat 0 [f,x]) : xs
+
+
 verificationPagesContents :: SealSpec -> [String]
 verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,staticTexts}) =
     let boxes = buildList $ do
-                  lm (Box 0 50 "")
+                  lm (Box 0 30 "")
                   lm (verificationTextBox staticTexts)
                   lm (documentNumberTextBox staticTexts documentNumber)
-                  lm (partnerTextBox staticTexts)
+                  lm (Box 0 20 "")
 
-                  -- every signatory on its own line
-                  lms (boxHCat2 $ map (signatoryBox staticTexts) persons)
+                  lms (goesWithNext (partnerTextBox staticTexts)
+                       (boxP $ map (signatoryBox staticTexts) persons))
 
                   when (not (null secretaries)) $ do
-                     lm (secretaryBox staticTexts)
-                     lms (boxHCat2 $ map (signatoryBox staticTexts) secretaries)
+                     lms (goesWithNext (secretaryBox staticTexts)
+                          (boxP $ map (signatoryBox staticTexts) secretaries))
 
-                  -- Datum and Handelse
-                  lm (handlingBox staticTexts)
+                  lms (goesWithNext (handlingBox staticTexts)
+                       (map (makeHistoryEntryBox) history))
 
-                  -- logentry
-                  lms (map (makeHistoryEntryBox) history)
-        groupedBoxes = groupBoxesUpToHeight 650 boxes
+        groupedBoxes = groupBoxesUpToHeight printableHeight boxes
         groupedBoxesNumbered = zip groupedBoxes [1::Int ..]
     in flip map groupedBoxesNumbered $ \(thisPageBoxes, thisNumber) ->
 
@@ -577,14 +624,21 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
     "S\n" ++
 
     "q\n" ++
-    "1 0 0 1 15 828 cm\n" ++
+    "1 0 0 1 15 808 cm\n" ++
     "0 g 0 G\n" ++
-    boxCommands (boxVCat 0 thisPageBoxes) ++
+    boxCommands (boxEnlarge printableMargin 0 0 0 $ boxVCat 0 thisPageBoxes) ++
     "Q\n" ++
 
     -- "0.039 0.024 0.02 0 k " ++
     "571.856 24.7 -548.354 64.55 re " ++
     "S " ++
+{-
+    "q\n" ++
+    "1 0 0 1 39.8198 74.2334 cm\n" ++
+    "0.625 0.537 0.53 0.257 k " ++
+    boxCommands (boxEnlarge printableMargin 0 0 0 $ boxVCat 0 thisPageBoxes) ++
+    "Q\n" ++
+-}
 
     "BT " ++
     "0.625 0.537 0.53 0.257 k " ++
@@ -671,19 +725,19 @@ attachFiles sealAttachments = do
 
     embeddedFilesNamesTreeRoot <- addObject (Dict [ (BS.pack "Kids", Array [Ref embeddedFilesNamesTree])])
 
-    document <- get
+    document' <- get
     let
-        firstBody = head (documentBodies document)
+        firstBody = head (documentBodies document')
         trailer' = bodyTrailer firstBody
         root = case Prelude.lookup (BS.pack "Root") trailer' of
                  Just (Ref root') -> root'
                  x -> error ("/Root is wrong: " ++ show x)
-        catalog = case PdfModel.lookup root document of
+        catalog = case PdfModel.lookup root document' of
                     Just (Indir (Dict catalog') _) -> catalog'
                     x -> error ("lookup of " ++ show root ++ " returned " ++ show x)
         names = case Prelude.lookup (BS.pack "Names") catalog of
                     Just (Dict names') -> names'
-                    Just (Ref namesrefid) -> case PdfModel.lookup namesrefid document of
+                    Just (Ref namesrefid) -> case PdfModel.lookup namesrefid document' of
                                                Just (Indir (Dict names') _) -> names'
                                                x -> error ("lookup of " ++ show namesrefid ++ " returned " ++ show x)
                     Nothing -> []
