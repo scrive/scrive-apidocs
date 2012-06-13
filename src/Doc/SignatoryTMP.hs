@@ -41,9 +41,8 @@ import Data.List
 import Doc.DocUtils
 import Data.Foldable hiding (concat, elem)
 import Data.Maybe
-import Control.Monad
 import Text.JSON.FromJSValue
-import Data.Functor
+import Control.Applicative
 
 -- Structure definition + pointed
 data SignatoryTMP = SignatoryTMP {
@@ -230,8 +229,15 @@ instance FromJSValue FieldPlacement where
          page       <- fromJSValueField "page"
          pagewidth  <- fromJSValueField "pagewidth"
          pageheight <- fromJSValueField "pageheight"
-         return $ liftM5 FieldPlacement x y page pagewidth pageheight
+         side       <- fromJSValueField "tip"
+         return $ (FieldPlacement <$> x <*> y <*> page <*> pagewidth <*> pageheight <*> Just side)
 
+instance FromJSValue TipSide where
+    fromJSValue js = case fromJSValue js of
+          Just "left"  -> Just LeftTip
+          Just "right" -> Just RightTip
+          _ ->            Nothing
+         
 instance FromJSValue CSVUpload  where
     fromJSValue = do
         rows <- fromJSValue

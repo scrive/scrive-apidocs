@@ -343,6 +343,7 @@ instance Arbitrary FieldPlacement where
                             , placementpage = c
                             , placementpagewidth = d
                             , placementpageheight = e
+                            , placementtipside = Nothing
                             }
 
 instance Arbitrary FieldType where

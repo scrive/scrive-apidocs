@@ -72,6 +72,7 @@ kontraMigrations = [
   , removePreferedDesignMode
   , addDefaultEmptyStringsToSomeColumnsInCompaniesTable
   , addOCSPResponse
+  , addTipSideToPlacements
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

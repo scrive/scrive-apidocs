@@ -5,6 +5,8 @@ import Control.Monad
 import Data.Int
 import Database.HDBC
 import Text.JSON
+import Text.JSON.FromJSValue
+import Misc (for)
 
 import DB
 import Doc.Tables
@@ -14,6 +16,10 @@ import Doc.DocStateData
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
+import Data.Maybe
+import Control.Applicative
+import Control.Monad.Identity
+
 
 $(jsonableDeriveConvertible [t| [SignatoryField] |])
 
@@ -91,6 +97,35 @@ dropDocumentIDColumntFromSignatoryAttachments = Migration {
   }
 
 {-
+    Adding tip side to placements
+-}
+addTipSideToPlacements :: MonadDB m => Migration m
+addTipSideToPlacements = Migration {
+    mgrTable = tableSignatoryLinkFields
+  , mgrFrom = 1
+  , mgrDo = do
+    _ <- kRun $ SQL "SELECT id, placements FROM signatory_link_fields" [];
+    values <- foldDB fetch []
+    forM_ values $ \(sfid, placements) -> do
+        when (isNothing placements) $ error $ "Can parse placements for sfid" ++ show sfid
+        1 <- kRun $ SQL "UPDATE signatory_link_fields SET placements = ? WHERE id = ?" [toSql $ fromJust placements, toSql sfid]
+        return ()
+  }
+  where
+    fetch acc sfid placementsstr = (sfid :: Int64, placements) : acc
+      where
+        Ok (JSArray arr) = decode placementsstr
+        placements :: Maybe [FieldPlacement]
+        placements = sequence $ for arr $ \json -> runIdentity $ withJSValue json $ do
+              x     <- fromJSValueField "placementx"
+              y     <- fromJSValueField "placementy"
+              page   <- fromJSValueField "placementpage"
+              pagewidth  <- fromJSValueField "placementpagewidth"
+              pageheight <- fromJSValueField  "placementpageheight"
+              return (FieldPlacement <$> x <*> y <*> page <*> pagewidth <*> pageheight <*> Just Nothing)
+
+
+{-
 - migrate padqueue - set fk referencing signatory_links to ON UPDATE CASCADE
 - migrate signatory_attachments - set fk referencing signatory_links to ON UPDATE CASCADE
 - migrate signatory_links - renumerate ids (references in padqueue/signatory_attachments are properly updated if necessary)
@@ -100,9 +135,7 @@ dropDocumentIDColumntFromSignatoryAttachments = Migration {
 - migrate padqueue - add new fk referencing signatory_links
 - migrate signatory_attachments - add new fk referencing signatory_links
 -}
-
-
-
+             
 moveSignatoryLinkFieldsToSeparateTable :: MonadDB m => Migration m
 moveSignatoryLinkFieldsToSeparateTable = Migration {
     mgrTable = tableSignatoryLinks
@@ -152,10 +185,10 @@ moveSignatoryLinkFieldsToSeparateTable = Migration {
     fetch acc slid fieldsstr = (slid :: Int64, fields) : acc
       where
         Ok (JSArray arr) = decode fieldsstr
-        fromJSValue (JSObject obj) = fromJSObject obj
-        fromJSValue x =
+        fromJSVal (JSObject obj) = fromJSObject obj
+        fromJSVal x =
           error $ "moveSignatoryLinkFieldsToSeparateTable: expected valid object, got: " ++ encode x
-        fields = map fromJSValue arr
+        fields = map fromJSVal arr
 
 moveDocumentTagsFromDocumentsTableToDocumentTagsTable :: MonadDB m => Migration m
 moveDocumentTagsFromDocumentsTableToDocumentTagsTable = Migration {
@@ -180,10 +213,10 @@ moveDocumentTagsFromDocumentsTableToDocumentTagsTable = Migration {
     fetch acc docid tagsstr = (docid :: Int64, tags) : acc
       where
         Ok (JSArray arr) = decode tagsstr
-        fromJSValue (JSObject obj) = fromJSObject obj
-        fromJSValue x =
+        fromJSVal (JSObject obj) = fromJSObject obj
+        fromJSVal x =
           error $ "moveDocumentTagsFromDocumentsTableToDocumentTagsTable: expected {tagname:'',tagvalue:''}, got: " ++ encode x
-        tags = map fromJSValue arr
+        tags = map fromJSVal arr
 
 updateDocumentStatusAfterRemovingAwaitingAuthor :: MonadDB m => Migration m
 updateDocumentStatusAfterRemovingAwaitingAuthor = Migration {

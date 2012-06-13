@@ -25,6 +25,7 @@ module Doc.DocStateData (
   , SignOrder(..)
   , SignatoryField(..)
   , FieldType(..)
+  , TipSide(..)
   , SignatoryDetails(..)
   , SignatoryLink(..)
   , SignatoryRole(..)
@@ -142,8 +143,11 @@ data FieldPlacement = FieldPlacement {
   , placementpage :: Int
   , placementpagewidth :: Int
   , placementpageheight :: Int
+  , placementtipside :: Maybe TipSide
   } deriving (Eq, Ord, Show, Data, Typeable)
 
+data TipSide = LeftTip| RightTip deriving (Eq, Ord, Show, Data, Typeable)
+    
 data SignatoryDetails = SignatoryDetails {
     signatorysignorder :: SignOrder
   , signatoryfields    :: [SignatoryField]
