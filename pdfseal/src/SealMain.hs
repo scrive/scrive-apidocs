@@ -94,10 +94,8 @@ sampleSealingTexts = SealingTexts
       , eventsText="Registrerade händelser"
       , dateText="Datum"
       , historyText="Händelser"
-      , verificationFooter=[
-          "Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att dokument nummer $documenttitle$ har undertecknats"
-        , "av parterna och är juridiskt bindande. Kursiverad information är säkert verifierad genom vår tjänst."
-        , "Kontrollera dokumentet mot vår databas genom följande länk: $hostpart$/d/$documentid$."]
+      , verificationFooter=
+           "Detta verifikat är utfärdat av Scrive. Kursiverad information är säkert verifierad. Tidsstämpeln säkerställer att dokumentets äkthet går att bevisa matematiskt och oberoende av Scrive. För mer information se den dolda juridiska bilagan. För er bekvämlighet tillhandahåller Scrive även en tjänst för att kontrollera dokumentets äkthet automatiskt på: https://scrive.com/verify/"
     }
 
 processFile :: String -> IO ()

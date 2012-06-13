@@ -89,15 +89,15 @@ data HistEntry = HistEntry
       If You change this structure sealing WILL fail, unless changes are made to docseal.st
 -}
 data SealingTexts = SealingTexts
-    {   verificationTitle :: String -- Big title at last page
-      , docPrefix ::String          -- ex. Doc. nr (last page and all footers)
-      , signedText::String          -- ex. Underteknat (all footers)
-      , partnerText ::String        -- Header for partner list
-      , secretaryText ::String      -- Header for secretary list
-      , orgNumberText :: String     -- Info about partner subtext
-      , eventsText ::String         -- history table preheader
-      , dateText ::String           -- history table date header
-      , historyText :: String       -- history table event header
-      , verificationFooter ::[String] -- Long text all the end saing that doc was verified
-    }
-    deriving (Eq,Ord,Show,Read)
+  { verificationTitle  :: String -- Big title at last page
+  , docPrefix          :: String -- ex. Doc. nr (last page and all footers)
+  , signedText         :: String -- ex. Underteknat (all footers)
+  , partnerText        :: String -- Header for partner list
+  , secretaryText      :: String -- Header for secretary list
+  , orgNumberText      :: String -- Info about partner subtext
+  , eventsText         :: String -- history table preheader
+  , dateText           :: String -- history table date header
+  , historyText        :: String -- history table event header
+  , verificationFooter :: String -- Long text all the end saying that doc was verified
+  }
+  deriving (Eq,Ord,Show,Read)

@@ -632,20 +632,16 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
     -- "0.039 0.024 0.02 0 k " ++
     "571.856 24.7 -548.354 64.55 re " ++
     "S " ++
-{-
+
     "q\n" ++
-    "1 0 0 1 39.8198 74.2334 cm\n" ++
-    "0.625 0.537 0.53 0.257 k " ++
-    boxCommands (boxEnlarge printableMargin 0 0 0 $ boxVCat 0 thisPageBoxes) ++
+    "1 0 0 1 34.8198 80.2334 cm\n" ++
+    "0.625 0.537 0.53 0.257 k\n" ++
+    boxCommands (makeLeftTextBox (PDFFont Helvetica 8) (printableWidth - 130)
+                (verificationFooter staticTexts)) ++
     "Q\n" ++
--}
 
     "BT " ++
-    "0.625 0.537 0.53 0.257 k " ++
     "/TT0 1 Tf " ++
-    "8 0 0 8 39.8198 74.2334 Tm " ++
-    "1.2 TL " ++
-    intercalate "T* " (map (\t -> "[(" ++ t ++ ")]TJ ") (verificationFooter staticTexts)) ++
     "0.546 0.469 0.454 0.113 k " ++
     "10 0 0 10 46.5522 31.5469 Tm " ++
     "(" ++ show thisNumber ++ "/" ++ show (length groupedBoxesNumbered) ++ ")Tj " ++
