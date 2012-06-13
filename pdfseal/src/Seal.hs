@@ -13,6 +13,16 @@ import Graphics.PDF (PDFFloat, PDFFont(..))
 import SealSpec
 import qualified Data.ByteString.Base64 as Base64
 import Debug.Trace
+import Control.Monad.State.Strict
+
+buildList :: State [a] () -> [a]
+buildList actions = reverse (execState actions [])
+
+lm :: a -> State [a] ()
+lm e = modify (\x -> e : x)
+
+lms :: [a] -> State [a] ()
+lms es = mapM_ lm es
 
 winAnsiPostScriptEncode :: String -> String
 winAnsiPostScriptEncode text' = concatMap charEncode text'
@@ -508,14 +518,12 @@ secretaryBox staticTexts =
 
 signatoryBox :: SealingTexts -> Person -> Box
 signatoryBox sealingTexts (Person {fullname,company,companynumber,email}) =
-  boxVCat 0 ([ makeLeftTextBox (PDFFont Helvetica 10) 260 fullname
-             , makeLeftTextBox (PDFFont Helvetica 10) 260 company
-             ] ++
-             (if companynumber == ""
-              then []
-              else [makeLeftTextBox (PDFFont Helvetica 10) 260 $ orgNumberText sealingTexts ++ " " ++ companynumber]) ++
-             [ makeLeftTextBox (PDFFont Helvetica_Oblique 10) 260 email
-             ])
+  boxVCat 0 $ buildList $ do
+    lm (makeLeftTextBox (PDFFont Helvetica 10) 260 fullname)
+    lm (makeLeftTextBox (PDFFont Helvetica 10) 260 company)
+    when (not (null companynumber)) $
+         lm (makeLeftTextBox (PDFFont Helvetica 10) 260 $ orgNumberText sealingTexts ++ " " ++ companynumber)
+    lm (makeLeftTextBox (PDFFont Helvetica_Oblique 10) 260 email)
 
 
 handlingBox :: SealingTexts -> Box
@@ -531,27 +539,31 @@ makeHistoryEntryBox (HistEntry {histdate,histcomment}) =
             ]
 
 
+boxHCat2 :: [Box] -> [Box]
+boxHCat2 [] = []
+boxHCat2 [box] = [box]
+boxHCat2 (box1:box2:boxes) = (boxHCat 0 [box1,box2]) : boxHCat2 boxes
+
 verificationPagesContents :: SealSpec -> [String]
 verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,staticTexts}) =
-    let boxes = [Box 0 50 ""] ++
-                [verificationTextBox staticTexts] ++
-                [documentNumberTextBox staticTexts documentNumber] ++
-                [partnerTextBox staticTexts] ++
+    let boxes = buildList $ do
+                  lm (Box 0 50 "")
+                  lm (verificationTextBox staticTexts)
+                  lm (documentNumberTextBox staticTexts documentNumber)
+                  lm (partnerTextBox staticTexts)
 
-                -- every signatory on its own line, repeated every 64 pixels down
-                map (signatoryBox staticTexts) persons ++
+                  -- every signatory on its own line
+                  lms (boxHCat2 $ map (signatoryBox staticTexts) persons)
 
-                (case secretaries of
-                     [] -> []
-                     _ -> [secretaryBox staticTexts] ++
-                          map (signatoryBox staticTexts) secretaries
-                ) ++
+                  when (not (null secretaries)) $ do
+                     lm (secretaryBox staticTexts)
+                     lms (boxHCat2 $ map (signatoryBox staticTexts) secretaries)
 
-                -- Datum and Handelse
-                [handlingBox staticTexts] ++
+                  -- Datum and Handelse
+                  lm (handlingBox staticTexts)
 
-                -- logentry
-                map (makeHistoryEntryBox) history
+                  -- logentry
+                  lms (map (makeHistoryEntryBox) history)
         groupedBoxes = groupBoxesUpToHeight 650 boxes
         groupedBoxesNumbered = zip groupedBoxes [1::Int ..]
     in flip map groupedBoxesNumbered $ \(thisPageBoxes, thisNumber) ->
@@ -562,13 +574,13 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
     -- Frame around whole page
     "0.081 0.058 0.068 0 k " ++
     "581.839 14.37 -567.36 813.12 re " ++
-    "S " ++
+    "S\n" ++
 
-    "q " ++
-    "1 0 0 1 15 828 cm " ++
-    "0 g 0 G " ++
+    "q\n" ++
+    "1 0 0 1 15 828 cm\n" ++
+    "0 g 0 G\n" ++
     boxCommands (boxVCat 0 thisPageBoxes) ++
-    "Q " ++
+    "Q\n" ++
 
     -- "0.039 0.024 0.02 0 k " ++
     "571.856 24.7 -548.354 64.55 re " ++
