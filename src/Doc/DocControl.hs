@@ -331,7 +331,7 @@ handleIssueShowGet docid = checkUserTOSGet $ do
   case (ispreparation, msiglink) of
     (True,  _) | isattachment        -> Right <$> pageAttachmentDesign document
     (True,  _)                       -> Right <$> pageDocumentDesign document
-    (False, _) | isauthororincompany || isadminofcompany -> Right <$> pageDocumentView document msiglink
+    (False, _) | isauthororincompany || isadminofcompany -> Right <$> pageDocumentView document msiglink (isadminofcompany || isincompany)
     (False, Just siglink)            -> Left  <$> (simpleResponse =<< pageDocumentSignView ctx document siglink)
     _                                -> internalError
 
@@ -908,9 +908,8 @@ handleRestart docid = withUserPost $ do
 
 handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleResend docid signlinkid  = withUserPost $ do
-  ctx@Context { ctxmaybeuser = Just user } <- getContext
-  doc <- guardRightM $ getDocByDocID docid
-  unless (isAuthor (doc, user)) internalError -- only author can resend
+  ctx <- getContext
+  doc <- guardRightM $ getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid
   signlink <- guardJust $ getSigLinkFor doc signlinkid
   customMessage <- getCustomTextField "customtext"
   _ <- sendReminderEmail customMessage ctx doc signlink

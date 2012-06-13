@@ -27,6 +27,7 @@
 module Doc.DocStateQuery
     ( getDocByDocID
     , getDocByDocIDForAuthor
+    , getDocByDocIDForAuthorOrAuthorsCompanyAdmin
     , getDocByDocIDSigLinkIDAndMagicHash
     ) where
 
@@ -44,7 +45,7 @@ import qualified Log
 import Doc.DocInfo
 import User.Model
 import Data.Maybe
-
+import Util.MonadUtils
 {- |
    Assuming user is the logged in user, can he view the Document?
 
@@ -95,14 +96,25 @@ getDocByDocID docid = do
 {- | Same as getDocByDocID, but works only for author -}
 getDocByDocIDForAuthor :: Kontrakcja m => DocumentID -> m (Either DBError Document)
 getDocByDocIDForAuthor docid = do
-      muser <- liftM2 mplus (ctxmaybeuser <$> getContext) (ctxmaybepaduser <$> getContext)
+      user <- guardJustM $ liftM2 mplus (ctxmaybeuser <$> getContext) (ctxmaybepaduser <$> getContext)
       edoc <- getDocByDocID docid
       case edoc of
-           Right doc -> if isAuthor (doc, muser)
+           Right doc -> if isAuthor (doc, user)
                            then return $ Right doc
                            else return $ Left DBResourceNotAvailable
            e -> return e
-
+           
+{- | Same as getDocByDocID, but works only for author or authors company admin-}
+getDocByDocIDForAuthorOrAuthorsCompanyAdmin :: Kontrakcja m => DocumentID -> m (Either DBError Document)
+getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid = do
+      user <- guardJustM $ liftM2 mplus (ctxmaybeuser <$> getContext) (ctxmaybepaduser <$> getContext)
+      edoc <- getDocByDocID docid
+      case edoc of
+           Right doc -> if (isAuthor (doc, user) || (useriscompanyadmin user  && (isJust $ getSigLinkFor doc (SignatoryAuthor, usercompany user))))
+                           then return $ Right doc
+                           else return $ Left DBResourceNotAvailable
+           e -> return e
+           
 {- |
    Get a document using docid, siglink, and magichash.
    ALWAYS FAILS THE SAME WAY FOR SECURITY PURPOSES (Left DBResourceNotAvailable).

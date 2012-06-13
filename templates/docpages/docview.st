@@ -168,6 +168,10 @@ docview = KontraStandardDocument.init({
         signatoryid : "$siglinkid$",
         magichash : "$sigmagichash$"
         })
+    $elseif(authorcompanyadmin)$
+    , viewer : new DocumentViewer({
+        authorcompanyadmin : true
+        })
     $endif$
 });
 jQuery(".body-container").replaceWith(docview.view.el)

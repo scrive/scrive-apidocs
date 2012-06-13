@@ -49,7 +49,7 @@ padQueueState = do
 addToQueue :: Kontrakcja m => DocumentID ->  SignatoryLinkID -> m JSValue
 addToQueue did slid = do
     uid   <- userid <$> (guardJustM $ liftM2 mplus (ctxmaybeuser <$> getContext) (ctxmaybepaduser <$> getContext))
-    doc <- guardRightM $ getDocByDocIDForAuthor did
+    doc <- guardRightM $ getDocByDocIDForAuthorOrAuthorsCompanyAdmin did
     _ <- guardJust $ getSigLinkFor doc slid
     if (doc `allowsIdentification` PadIdentification)
         then do
