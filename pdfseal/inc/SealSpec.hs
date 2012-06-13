@@ -78,8 +78,9 @@ data PreSealSpec = PreSealSpec
     deriving (Eq,Ord,Show,Read)
     
 data HistEntry = HistEntry
-    { histdate :: String
+    { histdate    :: String
     , histcomment :: String
+    , histaddress :: String
     }
     deriving (Eq,Ord,Show,Read)
 

@@ -572,9 +572,12 @@ handlingBox staticTexts =
 
 
 makeHistoryEntryBox :: HistEntry -> Box
-makeHistoryEntryBox (HistEntry {histdate,histcomment}) =
+makeHistoryEntryBox (HistEntry {histdate,histcomment,histaddress}) =
   boxHCat 0 [ boxEnlarge frameInnerPadding 5 frameInnerPadding 5 $
-              makeLeftTextBox (PDFFont Helvetica_Oblique 10) (170-2*frameInnerPadding) histdate
+              boxVCat 0 $ buildList $ do
+                lm (makeLeftTextBox (PDFFont Helvetica_Oblique 10) (170-2*frameInnerPadding) histdate)
+                when (not (null histaddress))$ 
+                     lm (makeLeftTextBox (PDFFont Helvetica_Oblique 8) (170-2*frameInnerPadding) histaddress)
             , boxEnlarge frameInnerPadding 5 frameInnerPadding 5 $
               makeLeftTextBox (PDFFont Helvetica_Oblique 10) (330-2*frameInnerPadding) histcomment
             ]

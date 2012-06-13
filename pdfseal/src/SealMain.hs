@@ -62,6 +62,7 @@ sealspec filename = SealSpec
     , initials = "LD, LD"
       , history = map (\num -> HistEntry { histdate = "2010-09-" ++ show num ++ " 13:34"
                                          , histcomment = "I was here and mucked around with PDFs. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good."
+                                         , histaddress = "IP: 123.34.1231.12"
                                          }) [10..99::Int]
     -- should be in 4 corners, aligned
     , fields = [ Field {value = "Gracjan Polak", x = 7, y = 7, page = 1, w = 770, h = 1085}
@@ -155,6 +156,7 @@ simple_upsales_confirmation = SealSpec
     , initials = "LD, LD"
       , history = map (\num -> HistEntry { histdate = "2010-09-" ++ show num ++ " 13:34"
                                          , histcomment = "I was here and mucked around with PDFs. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good."
+                                         , histaddress = "IP: 1123.11.131.1231"
                                          }) [10..99::Int]
     -- should be in 4 corners, aligned
     , fields = [ Field {value = "Gracjan Polak", x = 7, y = 7, page = 1, w = 770, h = 1085}

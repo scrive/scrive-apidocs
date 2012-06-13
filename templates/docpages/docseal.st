@@ -57,8 +57,6 @@ contractInvitationSentEntry=
     $else$
         $_contractInvitationSentEntryIfElse()$
     $endif$ 
-    
-    $ip$
 ###
 offerInvitationSentEntry=
     $authorfstname$ $authorsndname$ $_offerInvitationSentEntry()$
@@ -67,8 +65,6 @@ offerInvitationSentEntry=
     $else$
         $_offerInvitationSentEntryIfElse()$
     $endif$ 
-    
-    $ip$
 ###
 orderInvitationSentEntry=
     $authorfstname$ $authorsndname$ $_orderInvitationSentEntry()$
@@ -77,8 +73,6 @@ orderInvitationSentEntry=
     $else$
         $_orderInvitationSentEntryIfElse()$
     $endif$ 
-    
-    $ip$
 ###
 contractSeenHistEntry=
     $personname$ $_contractSeenHistEntry()$ $seenip$
