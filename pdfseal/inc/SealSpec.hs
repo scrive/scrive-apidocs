@@ -1,24 +1,24 @@
 
 module SealSpec where
 
-data Person = 
-    Person { fullname :: String
-           , company :: String
-           , personalnumber :: String
-           , companynumber :: String
-           , email :: String
+data Person =
+    Person { fullname         :: String
+           , company          :: String
+           , personalnumber   :: String
+           , companynumber    :: String
+           , email            :: String
            , fullnameverified :: Bool
-           , companyverified :: Bool
-           , numberverified :: Bool
-           , emailverified :: Bool
+           , companyverified  :: Bool
+           , numberverified   :: Bool
+           , emailverified    :: Bool
            }
     deriving (Eq,Ord,Show,Read)
 
 -- | Field coordinates are in screen coordinate space. That means:
--- 
--- * upper left corner is (0,0) 
--- * units are pixels 
--- * (x,y) are coordinates of upper left corner of a field. 
+--
+-- * upper left corner is (0,0)
+-- * units are pixels
+-- * (x,y) are coordinates of upper left corner of a field.
 --
 -- It is for pdfseal program to recalculate pixel coordinates into
 -- correct PDF pt coordinates. pdfseal will use pixel wise (w,h) to
@@ -55,28 +55,28 @@ data SealAttachment = SealAttachment
   }
     deriving (Eq,Ord,Show,Read)
 
-data SealSpec = SealSpec 
-    { input :: String
-    , output :: String
+data SealSpec = SealSpec
+    { input          :: String
+    , output         :: String
     , documentNumber :: String
-    , persons :: [Person]
-    , secretaries :: [Person]
-    , history :: [HistEntry]
-    , initials :: String
-    , hostpart :: String
-    , fields :: [Field]
-    , staticTexts :: SealingTexts
-    , attachments :: [SealAttachment]
+    , persons        :: [Person]
+    , secretaries    :: [Person]
+    , history        :: [HistEntry]
+    , initials       :: String
+    , hostpart       :: String
+    , fields         :: [Field]
+    , staticTexts    :: SealingTexts
+    , attachments    :: [SealAttachment]
     }
     deriving (Eq,Ord,Show,Read)
 
 data PreSealSpec = PreSealSpec
-    { pssInput :: String
+    { pssInput  :: String
     , pssOutput :: String
     , pssFields :: [Field]
     }
     deriving (Eq,Ord,Show,Read)
-    
+
 data HistEntry = HistEntry
     { histdate    :: String
     , histcomment :: String
@@ -85,7 +85,7 @@ data HistEntry = HistEntry
     deriving (Eq,Ord,Show,Read)
 
 
-{- |  Static (almoust) text for sealing document. 
+{- |  Static (almoust) text for sealing document.
       !!!! IMPORTANT Templates for sealing depends on read instance of this class
       If You change this structure sealing WILL fail, unless changes are made to docseal.st
 -}
