@@ -459,7 +459,7 @@ var DocumentDesignView = Backbone.View.extend({
                         cssClass: "finalbutton",
                         text: localization.designview.sign,
                         onClick: function() {
-                            if (!view.verificationBeforeSendingOrSigning()) return;
+                            if (!view.verificationBeforeSendingOrSigning(true)) return;
                                document.save().sendAjax();
                                view.signConfirmation();
                         }
@@ -471,7 +471,7 @@ var DocumentDesignView = Backbone.View.extend({
                         cssClass: "finalbutton",
                         text: document.process().sendbuttontext(),
                         onClick: function() {
-                            if (!view.verificationBeforeSendingOrSigning()) return;
+                            if (!view.verificationBeforeSendingOrSigning(false)) return;
                                 document.save().sendAjax();
                                 view.sendConfirmation();
                         }
@@ -594,7 +594,7 @@ var DocumentDesignView = Backbone.View.extend({
               content  : box
         });
     },
-    verificationBeforeSendingOrSigning : function() {
+    verificationBeforeSendingOrSigning : function(forSigning) {
         var view = this;
         var failed = false;
         var sigs = this.model.signatories();
@@ -611,7 +611,7 @@ var DocumentDesignView = Backbone.View.extend({
                     if (field.view != undefined)
                         field.view.redborder();
                  };
-                if (!field.validation().setCallback(validationCallback).validateData(field.value()))
+                if (!field.validation(forSigning).setCallback(validationCallback).validateData(field.value()))
                     return false;
             }
         }

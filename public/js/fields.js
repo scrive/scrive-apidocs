@@ -178,7 +178,7 @@ window.Field = Backbone.Model.extend({
         else
           return this.nicename();
     },
-    validation: function() {
+    validation: function(forSigning) {
         var field = this;
         var name  = this.name();
 
@@ -198,11 +198,11 @@ window.Field = Backbone.Model.extend({
             return new NotEmptyValidation({message: msg});
         }
 
-        if (this.signatory().author() && this.isStandard() && this.hasPlacements()) {
+        if (this.signatory().author() && this.isStandard() && this.hasPlacements() && forSigning) {
           var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
           return new NotEmptyValidation({message: msg});
         }
-        if (this.signatory().author() && this.isObligatoryCheckbox()) {
+        if (this.signatory().author() && this.isObligatoryCheckbox() && forSigning) {
           var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
           return new NotEmptyValidation({message: msg});
         }
@@ -211,7 +211,7 @@ window.Field = Backbone.Model.extend({
           var msg1 = localization.designview.validation.notReadyField;
           var msg2 = localization.designview.validation.notPlacedField;
           var validation = new Validation({validates: function() {return field.isReady()}, message: msg1}).concat(new Validation({validates: function() {return field.isPlaced()}, message: msg2}));
-          if (this.signatory().author()) {
+          if (this.signatory().author() && forSigning) {
             return validation.concat(new NotEmptyValidation({message: localization.designview.validation.missingOrWrongCustomFieldValue}));
           } else {
             return validation;
