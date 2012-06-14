@@ -790,9 +790,10 @@ process :: SealSpec -> IO ()
 process (sealSpec@SealSpec
     { input
     , output
-    , fields
+    , persons
     , attachments
     }) = do
+    let fields' = concatMap fields persons
     mdoc <- PdfModel.parseFile input
     doc <- maybe (error $ "Cannot parse input PDF " ++ input) return mdoc
     mseal <- PdfModel.parseFile sealFileName
@@ -812,7 +813,7 @@ process (sealSpec@SealSpec
               sealmarkerform <- pageToForm sealmarkerpage2
               let pagintext1 = pagintext sealSpec
               let sealtexts = verificationPagesContents sealSpec
-              placeSeals fields newsealcontents sealtexts newpagincontents pagintext1 sealmarkerform
+              placeSeals fields' newsealcontents sealtexts newpagincontents pagintext1 sealmarkerform
               when (not (null attachments)) $
                    attachFiles attachments
     putStrLn $ "Writing file " ++ output

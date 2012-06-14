@@ -11,6 +11,7 @@ data Person =
            , companyverified  :: Bool
            , numberverified   :: Bool
            , emailverified    :: Bool
+           , fields           :: [Field]
            }
     deriving (Eq,Ord,Show,Read)
 
@@ -64,7 +65,6 @@ data SealSpec = SealSpec
     , history        :: [HistEntry]
     , initials       :: String
     , hostpart       :: String
-    , fields         :: [Field]
     , staticTexts    :: SealingTexts
     , attachments    :: [SealAttachment]
     }
