@@ -117,8 +117,6 @@ var TextPlacementPlacedView = Backbone.View.extend({
                   var acceptIcon = $("<span class='acceptIcon'/>");
                   place.append(box.append(iti).append(acceptIcon));
                   iti.focus();
-                  //clear the value underneath - while they're editing it is undetermined
-                  field.setValue("");
                   field.bind('change',function() { view.inlineediting  = false; view.render();});
                   var accept =  function() {
                       view.inlineediting = false;
