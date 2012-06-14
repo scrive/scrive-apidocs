@@ -301,14 +301,23 @@ fieldstext :: Int -> Int -> [Field] -> String
 fieldstext pagew pageh fields = concatMap fieldtext fields
   where
     fontBaseline = 8
+    tellMatrix a b c d e f =
+      tell $ (concat $ intersperse " " $ map show [a::Double,b,c,d,e,f]) ++ " cm\n"
     fieldtext Field{ SealSpec.value = val
                    , x
                    , y
                    , w
                    , h
-                   } = "q 1 0 0 1 " ++ show (fromIntegral (x * pagew) / fromIntegral w :: Double) ++ " " ++
-                       show (fromIntegral ((h - y) * pageh) / fromIntegral h - fontBaseline :: Double) ++ " cm " ++
-                       "BT /SkrivaPaHelvetica 10 Tf (" ++ winAnsiPostScriptEncode val ++ ") Tj ET Q "
+                   } = execWriter $ do
+                         tell "q\n"
+                         tellMatrix 1 0 0 1
+                                      (fromIntegral (x * pagew) / fromIntegral w)
+                                      (fromIntegral ((h - y) * pageh) / fromIntegral h - fontBaseline)
+                         tell "BT\n"
+                         tell "/SkrivaPaHelvetica 10 Tf\n"
+                         tell $ "(" ++ winAnsiPostScriptEncode val ++ ") Tj\n"
+                         tell "ET\n"
+                         tell "Q\n"
     fieldtext FieldJPG{ SealSpec.valueBase64 = val
                    , x
                    , y
@@ -316,16 +325,23 @@ fieldstext pagew pageh fields = concatMap fieldtext fields
                    , h
                    , image_w, image_h
                    , internal_image_w, internal_image_h
-                   } = "q " ++ intercalate " " [  show (fromIntegral (image_w * pagew) / fromIntegral w :: Double)
-                                               , "0"
-                                               , "0"
-                                               , show (fromIntegral (image_h * pageh) / fromIntegral h :: Double)
-                                               , show (fromIntegral (x * pagew) / fromIntegral w :: Double)
-                                               , show (fromIntegral ((h - y - image_h) * pageh) / fromIntegral h :: Double)
-                                               ] ++ " cm\n" ++
-                       "BI\n/BPC 8\n/CS /RGB\n/F /DCT\n" ++
-                       "/H " ++ show internal_image_h ++ "\n/W " ++ show internal_image_w ++ "\nID " ++
-                       BS.unpack (Base64.decodeLenient (BS.pack val)) ++ "\nEI\nQ "
+                   } = execWriter $ do
+                         tell "q\n"
+                         tellMatrix (fromIntegral (image_w * pagew) / fromIntegral w)
+                                      0 0
+                                      (fromIntegral (image_h * pageh) / fromIntegral h)
+                                      (fromIntegral (x * pagew) / fromIntegral w)
+                                      (fromIntegral ((h - y - image_h) * pageh) / fromIntegral h)
+                         tell "BI\n"        -- begin image
+                         tell "/BPC 8\n"    -- 8 bits per pixel
+                         tell "/CS /RGB\n"  -- color space is RGB
+                         tell "/F /DCT\n"   -- filter is DCT, that means JPEG
+                         tell $ "/H " ++ show internal_image_h ++ "\n"  -- height is pixels
+                         tell $ "/W " ++ show internal_image_w ++ "\n"  -- width in pixels
+                         tell "ID "         -- image data follow
+                         tell $ BS.unpack (Base64.decodeLenient (BS.pack val)) ++ "\n"
+                         tell "EI\n"        -- end image
+                         tell "Q\n"
 
 placeSeals :: [Field] -> RefID -> [String] -> RefID -> String -> RefID -> State Document ()
 placeSeals fields sealrefid sealtexts paginrefid pagintext' sealmarkerformrefid = do
