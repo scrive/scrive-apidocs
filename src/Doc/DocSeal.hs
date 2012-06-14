@@ -52,8 +52,8 @@ import Data.String.Utils
 import qualified Templates.Fields as F
 import Control.Logic
 
-personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
-personFromSignatoryDetails details =
+personFromSignatoryDetails :: (BS.ByteString,BS.ByteString) -> SignatoryDetails -> Seal.Person
+personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) details =
     Seal.Person { Seal.fullname = (getFullName details) ++
                                   if not (null $ getPersonalNumber details)
                                      then " (" ++ (getPersonalNumber details) ++ ")"
@@ -66,6 +66,7 @@ personFromSignatoryDetails details =
                 , Seal.companyverified = False
                 , Seal.numberverified = False
                 , Seal.emailverified = True
+                , Seal.fields = fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) details
                 }
 
 personFields :: Monad m => Document -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String) -> Fields m ()
@@ -80,8 +81,8 @@ personFields doc (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
    F.value "email"  $ EmailIdentification `elem` (documentallowedidtypes doc)
    F.value "pad"    $ PadIdentification `elem` (documentallowedidtypes doc)
 
-personsFromDocument :: Document -> [(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String)]
-personsFromDocument document =
+personsFromDocument :: (BS.ByteString,BS.ByteString) -> Document -> [(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String)]
+personsFromDocument (checkedBoxImage,uncheckedBoxImage) document =
     let
         links = filter isSignatory $ documentsignatorylinks document
         x (sl@SignatoryLink { signatorydetails
@@ -90,7 +91,7 @@ personsFromDocument document =
                             , signatorysignatureinfo
                             })
              -- FIXME: this one should really have seentime always...
-             = ((personFromSignatoryDetails signatorydetails)
+             = ((personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) signatorydetails)
                 { Seal.emailverified = True
                 , Seal.fullnameverified = fullnameverified
                 , Seal.companyverified = False
@@ -169,7 +170,7 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
                                                 , SignatoryPartner `elem` signatoryroles sl]
       authordetails = signatorydetails authorsiglink
       signatories = personsFromDocument document
-      secretaries = if authorHasSigned then [] else [personFromSignatoryDetails authordetails]
+      secretaries = if authorHasSigned then [] else [personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) authordetails]
 
       persons = map (\(a,_,_,_,_,_) -> a) signatories
       initialsx = map (\(_,_,_,_,_,a) -> a) signatories
@@ -212,7 +213,6 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
       maxsigntime = maximum (map (signtime . (\(_,_,c,_,_,_) -> c)) signatories)
       concatComma = concat . intersperse ", "
       -- document fields
-      fields = concatMap (fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage). signatorydetails) (documentsignatorylinks document)
       lastHistEntry = do
                        desc <- renderLocalTemplateForProcess document processlasthisentry (documentInfoFields document)
                        return $ if (Just True == getValueForProcess document processsealincludesmaxtime)
@@ -255,7 +255,6 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
             , Seal.history        = history
             , Seal.initials       = initials
             , Seal.hostpart       = hostpart
-            , Seal.fields         = fields
             , Seal.staticTexts    = readtexts
             , Seal.attachments    = [evidenceattachment]
             }
