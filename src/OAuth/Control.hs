@@ -18,6 +18,9 @@ import User.Model
 import AppView
 import qualified Log
 import Stats.Control
+import Util.FlashUtil
+import User.UserView
+import ListUtil
 
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
@@ -124,7 +127,8 @@ authorizationGrantedLogin = do
   muser <- ctxmaybeuser <$> getContext  
   time <- ctxtime <$> getContext
   case muser of
-    Nothing ->
+    Nothing -> do
+      addFlashM $ flashMessageLoginRedirectReason $ InvalidLoginInfo undefined
       return $ LinkOAuthAuthorization token
     Just user -> do
       (url, verifier) <- guardJustM $ dbUpdate $ VerifyCredentials token (userid user) time
@@ -138,8 +142,9 @@ authorizationGrantedNewUser = do
   token <- guardJust $ maybeRead =<< mtk
   meu <- handleSignup
   case meu of
-    Just (_, Just uid) -> 
+    Just (email, Just uid) -> do
       void $ addUserStatAPINewUser uid time Nothing Nothing 
+      addFlashM $ modalUserSignupDone $ email
     _ -> return ()
   return $ LinkOAuthAuthorization token
 
@@ -169,12 +174,7 @@ apiDashboardPersonalTokens = do
   ls <- map jsonFromPersonalToken <$> maybeToList <$> (dbQuery $ GetPersonalToken (userid user))
   return $ runJSONGen $ do
     J.objects "list" $ map (J.value "fields") ls
-    J.object "paging" $ do
-      J.value "pageMax" (0::Int)
-      J.value "pageCurrent" (0::Int)
-      J.value "itemMin" (0::Int)
-      J.value "itemMax" $ length ls - 1
-      J.value "itemTotal" $ length ls
+    J.value "paging" $ pagingParamsJSON $ PagedList {list = ls, pageSize = 100, params = emptyListParams}
   
 apiDashboardAPITokens :: Kontrakcja m => m JSValue
 apiDashboardAPITokens = do
@@ -183,12 +183,7 @@ apiDashboardAPITokens = do
   ls <- map jsonFromAPIToken <$> (dbQuery $ GetAPITokensForUser (userid user))
   return $ runJSONGen $ do
     J.objects "list" $ map (J.value "fields") ls
-    J.object "paging" $ do
-      J.value "pageMax" (0::Int)
-      J.value "pageCurrent" (0::Int)
-      J.value "itemMin" (0::Int)
-      J.value "itemMax" $ length ls - 1
-      J.value "itemTotal" $ length ls
+    J.value "paging" $ pagingParamsJSON $ PagedList {list = ls, pageSize = 100, params = emptyListParams}
       
 apiDashboardGrantedPrivileges :: Kontrakcja m => m JSValue
 apiDashboardGrantedPrivileges = do
@@ -198,12 +193,7 @@ apiDashboardGrantedPrivileges = do
   ls <- concatMap (\p->jsonFromGrantedPrivilege p ds) <$> (dbQuery $ GetGrantedPrivileges (userid user))
   return $ runJSONGen $ do
     J.objects "list" $ map (J.value "fields") ls
-    J.object "paging" $ do
-      J.value "pageMax" (0::Int)
-      J.value "pageCurrent" (0::Int)
-      J.value "itemMin" (0::Int)
-      J.value "itemMax" $ length ls - 1
-      J.value "itemTotal" $ length ls
+    J.value "paging" $ pagingParamsJSON $ PagedList {list = ls, pageSize = 100, params = emptyListParams}
 
 -- Manipulate dashboard stuff
 
