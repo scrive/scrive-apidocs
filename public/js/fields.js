@@ -10,7 +10,8 @@ window.FieldPlacement = Backbone.Model.extend({
     defaults: {
         x : 0,
         y : 0,
-        placed : false
+        placed : false,
+        tip: undefined
 
     },
     initialize : function(args){
@@ -59,6 +60,9 @@ window.FieldPlacement = Backbone.Model.extend({
     file : function(){
         return this.get("file");
     },
+    tip : function(){
+        return this.get("tip");
+    },
     remove : function() {
        var document = this.field().signatory().document();
        var fileid = this.get("fileid");
@@ -76,7 +80,8 @@ window.FieldPlacement = Backbone.Model.extend({
             y : parseInt(this.y()),
             pagewidth : page != undefined ? page.width() : 943,
             pageheight : page != undefined ? page.height() : 1335,
-            page : page != undefined ? page.number() : this.get("page")
+            page : page != undefined ? page.number() : this.get("page"),
+            tip : this.get("tip")
         };
     }
 });
@@ -402,7 +407,8 @@ window.FieldDesignView = Backbone.View.extend({
                               fileid: page.file().fileid(),
                               field: field,
                               x : x,
-                              y : y
+                              y : y,
+                              tip : "right"
                             }));
                     }
             });

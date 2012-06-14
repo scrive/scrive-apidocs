@@ -162,7 +162,8 @@ window.SignatoryDesignView = Backbone.View.extend({
                               fileid: page.file().fileid(),
                               field: field,
                               x : x,
-                              y : y
+                              y : y,
+                              tip : "left"
                             }));
                     }
             });

@@ -101,7 +101,8 @@ var TextPlacementPlacedView = Backbone.View.extend({
                               fileid: page.file().fileid(),
                               field: field,
                               x : x,
-                              y : y
+                              y : y,
+                              tip : placement.tip()
                             }));
                     }
             });
@@ -378,7 +379,8 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
                               fileid: page.file().fileid(),
                               field: field,
                               x : x,
-                              y : y
+                              y : y,
+                              tip : placement.tip()
                             }));
                     }
                });
@@ -608,7 +610,8 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
                               fileid: page.file().fileid(),
                               field: field,
                               x : x,
-                              y : y
+                              y : y,
+                              tip : placement.tip()
                             }));
                     }
             });
