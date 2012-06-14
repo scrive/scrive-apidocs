@@ -284,6 +284,10 @@ placeFieldsOnPage (pagerefid,sealtext) document' =
         newdocument = setIndirF pagerefid newpage docx
     in newdocument
 
+tellMatrix :: (MonadWriter String m) => Double -> Double -> Double -> Double -> Double -> Double -> m ()
+tellMatrix a b c d e f =
+      tell $ (concat $ intersperse " " $ map show [a::Double,b,c,d,e,f]) ++ " cm\n"
+
 -- FIXME: here we still have font size problem. On the page it appears
 -- as some pt size font. We need to translate that size into PDF pt
 -- size. For now pretend we are using 10pt font.
@@ -301,8 +305,6 @@ fieldstext :: Int -> Int -> [Field] -> String
 fieldstext pagew pageh fields = concatMap fieldtext fields
   where
     fontBaseline = 8
-    tellMatrix a b c d e f =
-      tell $ (concat $ intersperse " " $ map show [a::Double,b,c,d,e,f]) ++ " cm\n"
     fieldtext Field{ SealSpec.value = val
                    , x
                    , y
@@ -583,7 +585,7 @@ secretaryBox staticTexts =
                     (secretaryText staticTexts)
 
 signatoryBox :: SealingTexts -> Person -> Box
-signatoryBox sealingTexts (Person {fullname,company,companynumber,email}) =
+signatoryBox sealingTexts (Person {fullname,company,companynumber,email,fields}) =
   boxVCat 0 $ buildList $ do
     lm (makeLeftTextBox (PDFFont Helvetica_Bold 10) width fullname)
     lm (makeLeftTextBox (PDFFont Helvetica 10) width company)
@@ -591,6 +593,29 @@ signatoryBox sealingTexts (Person {fullname,company,companynumber,email}) =
     when (not (null companynumber)) $
          lm (makeLeftTextBox (PDFFont Helvetica 10) width $ orgNumberText sealingTexts ++ " " ++ companynumber)
     lm (makeLeftTextBox (PDFFont Helvetica_Oblique 10) width email)
+    forM_ fields $ \field ->
+      case field of
+        FieldJPG{ SealSpec.valueBase64 = val
+                , internal_image_w, internal_image_h
+                } -> let halfWidth, halfHeight :: Int
+                         halfWidth = cardWidth `div` 2
+                         halfHeight = (halfWidth * internal_image_h `div` internal_image_w)
+                    in lm $ boxEnlarge ((cardWidth-halfWidth) `div` 2) 6 0 6 $
+                        boxDrawDebugRectAround $
+                        Box halfWidth halfHeight $ execWriter $ do
+                         tell "q\n"
+                         tellMatrix (fromIntegral halfWidth) 0 0 (fromIntegral halfHeight) 0 (-fromIntegral halfHeight)
+                         tell "BI\n"        -- begin image
+                         tell "/BPC 8\n"    -- 8 bits per pixel
+                         tell "/CS /RGB\n"  -- color space is RGB
+                         tell "/F /DCT\n"   -- filter is DCT, that means JPEG
+                         tell $ "/H " ++ show internal_image_h ++ "\n"  -- height is pixels
+                         tell $ "/W " ++ show internal_image_w ++ "\n"  -- width in pixels
+                         tell "ID "         -- image data follow
+                         tell $ BS.unpack (Base64.decodeLenient (BS.pack val)) ++ "\n"
+                         tell "EI\n"        -- end image
+                         tell "Q\n"
+        _ -> return ()
   where
     width = cardWidth
 
@@ -618,11 +643,15 @@ makeHistoryEntryBox (HistEntry {histdate,histcomment,histaddress}) =
 
 boxHCat2 :: [Box] -> [Box]
 boxHCat2 [] = []
-boxHCat2 [box] = [box]
-boxHCat2 (box1:box2:boxes) = (boxHCat 0 [box1,box2]) : boxHCat2 boxes
+boxHCat2 [box] = [setLightTextColor . setFrameColor . boxDrawFrame . boxEnlarge 16 11 16 11 $ box]
+boxHCat2 (box1:box2:boxes) = (boxHCat 0 [ (setLightTextColor . setFrameColor . boxDrawFrame . boxEnlarge 16 11 16 11) $
+                                                            box1 { boxHeight = maximum [boxHeight box1, boxHeight box2] }
+                                        , (setLightTextColor . setFrameColor . boxDrawFrame . boxEnlarge 16 11 16 11) $
+                                                            box2 { boxHeight = maximum [boxHeight box1, boxHeight box2] }
+                                        ]) : boxHCat2 boxes
 
 boxP :: [Box] -> [Box]
-boxP = boxHCat2 . map (setLightTextColor . setFrameColor . boxDrawFrame . boxEnlarge 16 11 16 11 )
+boxP = boxHCat2
 
 goesWithNext :: Box -> [Box] -> [Box]
 goesWithNext _ [] = []
