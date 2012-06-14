@@ -30,12 +30,6 @@ instance MonadBaseControl IO (ActionQueue qd) where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
--- Note: Do not define TemplatesMonad instance for ActionQueue, use
--- LocalTemplates instead. Reason? We don't have access to currently used
--- language, so we should rely on user's language settings the action is
--- assigned to and since TemplatesMonad doesn't give us the way to get
--- appropriate language version of templates, we need to do that manually.
-
 runQueue :: CryptoRNGState -> String -> qd -> ActionQueue qd () -> IO ()
 runQueue rng dbconf qd queue =
   withPostgreSQL dbconf . runCryptoRNGT rng $ runReaderT (unAQ queue) qd
