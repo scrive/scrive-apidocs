@@ -2,7 +2,7 @@
 contractsealingtexts= 
 SealingTexts
     {   verificationTitle="$_contractsealingtexts()$"
-      , docPrefix="$_contractsealingtextsdocPrefix()$"
+      , docPrefix="$_sealingtextsdocPrefix()$"
       , signedText="$_contractsealingtextssignedText()$"
       , partnerText="$_contractsealingtextspartnerText()$"
       , secretaryText="$_contractsealingtextssecretaryText()$"
@@ -16,7 +16,7 @@ SealingTexts
 offersealingtexts=
 SealingTexts
     {   verificationTitle="$_offersealingtextsverificationTitle()$"
-      , docPrefix="$_offersealingtextsdocPrefix()$"
+      , docPrefix="$_sealingtextsdocPrefix()$"
       , signedText="$_offersealingtextssignedText()$"
       , partnerText="$_offersealingtextspartnerText()$"
       , secretaryText="$_offersealingtextssecretaryText()$"
@@ -30,7 +30,7 @@ SealingTexts
 ordersealingtexts= 
 SealingTexts
     {   verificationTitle="$_ordersealingtextsverificationTitle()$"
-      , docPrefix="$_ordersealingtextsdocPrefix()$"
+      , docPrefix="$_sealingtextsdocPrefix()$"
       , signedText="$_ordersealingtextssignedText()$"
       , partnerText="$_ordersealingtextspartnerText()$"
       , secretaryText="$_ordersealingtextssecretaryText()$"
