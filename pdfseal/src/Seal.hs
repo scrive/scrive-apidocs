@@ -282,7 +282,7 @@ placeFieldsOnPage (pagerefid,sealtext) document' =
         newpage = (Indir newpagedict pagestrem)
         newdocument = setIndirF pagerefid newpage docx
     in newdocument
-   
+
 -- FIXME: here we still have font size problem. On the page it appears
 -- as some pt size font. We need to translate that size into PDF pt
 -- size. For now pretend we are using 10pt font.
@@ -357,7 +357,7 @@ placeFields fields = do
                           [(page,pagintext1 pageno) | (page,pageno) <- zip pages [1..]]
 
 
-        
+
 contentsValueListFromPageID :: Document -> RefID -> [RefID]
 contentsValueListFromPageID document' pagerefid =
     let
@@ -437,6 +437,15 @@ boxDrawFrame box =
   box { boxCommands = " q 0 0 " ++ show (boxWidth box) ++ " " ++ show (-boxHeight box) ++ " re S Q " ++ boxCommands box
       }
 
+
+setFrameColor :: Box -> Box
+setFrameColor = boxStrokeColor 0 0 0 0.333
+
+setDarkTextColor :: Box -> Box
+setDarkTextColor = boxFillColor 0.806 0.719 0.51 0.504
+
+setLightTextColor :: Box -> Box
+setLightTextColor = boxFillColor 0.597 0.512 0.508 0.201
 
 groupBoxesUpToHeight :: Int -> [Box] -> [[Box]]
 groupBoxesUpToHeight height boxes = helper boxes
@@ -531,23 +540,27 @@ makeLeftTextBox font@(PDFFont name' size) width text' = result
 
 verificationTextBox :: SealingTexts -> Box
 verificationTextBox staticTexts =
+  setDarkTextColor $
   makeLeftTextBox (PDFFont Helvetica 21) 500
                   (verificationTitle staticTexts)
 
 documentNumberTextBox :: SealingTexts -> String -> Box
 documentNumberTextBox staticTexts documentNumber =
+  setLightTextColor $
   makeLeftTextBox (PDFFont Helvetica 12) 500
                   (docPrefix staticTexts ++ " " ++ documentNumber)
 
 
 partnerTextBox :: SealingTexts -> Box
 partnerTextBox staticTexts =
+  setDarkTextColor $
   boxEnlarge 5 12 0 23 $
   makeLeftTextBox (PDFFont Helvetica 12) 200
                     (partnerText staticTexts)
 
 secretaryBox :: SealingTexts -> Box
 secretaryBox staticTexts =
+  setDarkTextColor $
   boxEnlarge 5 12 0 23 $
   makeLeftTextBox (PDFFont Helvetica 12) 200
                     (secretaryText staticTexts)
@@ -555,8 +568,9 @@ secretaryBox staticTexts =
 signatoryBox :: SealingTexts -> Person -> Box
 signatoryBox sealingTexts (Person {fullname,company,companynumber,email}) =
   boxVCat 0 $ buildList $ do
-    lm (makeLeftTextBox (PDFFont Helvetica 10) width fullname)
+    lm (makeLeftTextBox (PDFFont Helvetica_Bold 10) width fullname)
     lm (makeLeftTextBox (PDFFont Helvetica 10) width company)
+    lm (Box 0 10 "")
     when (not (null companynumber)) $
          lm (makeLeftTextBox (PDFFont Helvetica 10) width $ orgNumberText sealingTexts ++ " " ++ companynumber)
     lm (makeLeftTextBox (PDFFont Helvetica_Oblique 10) width email)
@@ -566,6 +580,7 @@ signatoryBox sealingTexts (Person {fullname,company,companynumber,email}) =
 
 handlingBox :: SealingTexts -> Box
 handlingBox staticTexts =
+  setDarkTextColor $
   boxEnlarge 5 12 0 23 $
   makeLeftTextBox (PDFFont Helvetica 12) 300
                     (eventsText staticTexts)
@@ -573,10 +588,11 @@ handlingBox staticTexts =
 
 makeHistoryEntryBox :: HistEntry -> Box
 makeHistoryEntryBox (HistEntry {histdate,histcomment,histaddress}) =
+  setLightTextColor $
   boxHCat 0 [ boxEnlarge frameInnerPadding 5 frameInnerPadding 5 $
               boxVCat 0 $ buildList $ do
                 lm (makeLeftTextBox (PDFFont Helvetica_Oblique 10) (170-2*frameInnerPadding) histdate)
-                when (not (null histaddress))$ 
+                when (not (null histaddress))$
                      lm (makeLeftTextBox (PDFFont Helvetica_Oblique 8) (170-2*frameInnerPadding) histaddress)
             , boxEnlarge frameInnerPadding 5 frameInnerPadding 5 $
               makeLeftTextBox (PDFFont Helvetica_Oblique 10) (330-2*frameInnerPadding) histcomment
@@ -589,7 +605,7 @@ boxHCat2 [box] = [box]
 boxHCat2 (box1:box2:boxes) = (boxHCat 0 [box1,box2]) : boxHCat2 boxes
 
 boxP :: [Box] -> [Box]
-boxP = boxHCat2 . map (boxFillColor 0 0 0 0.7 . boxStrokeColor 0 0 0 0.5 . boxDrawFrame . boxEnlarge 16 16 16 16 )
+boxP = boxHCat2 . map (setLightTextColor . setFrameColor . boxDrawFrame . boxEnlarge 16 11 16 11 )
 
 goesWithNext :: Box -> [Box] -> [Box]
 goesWithNext _ [] = []
@@ -619,10 +635,9 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
     in flip map groupedBoxesNumbered $ \(thisPageBoxes, thisNumber) ->
 
     "/GS0 gs " ++
-    "0.4 G " ++
 
     -- Frame around whole page
-    "0.081 0.058 0.068 0 k " ++
+    "0 0 0 0.333 K " ++
     "581.839 14.37 -567.36 813.12 re " ++
     "S\n" ++
 
