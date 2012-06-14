@@ -19,6 +19,7 @@ module User.Model (
   , GetInviteInfo(..)
   , SetUserCompany(..)
   , DeleteUser(..)
+  , RemoveInactiveUser(..)
   , AddUser(..)
   , SetUserEmail(..)
   , SetUserPassword(..)
@@ -253,6 +254,11 @@ instance MonadDB m => DBUpdate m DeleteUser Bool where
   update (DeleteUser uid) = do
     kPrepare $ "UPDATE users SET deleted = ? WHERE id = ? AND deleted = FALSE"
     kExecute01 [toSql True, toSql uid]
+
+-- | Removes user who didn't accept TOS from the database
+data RemoveInactiveUser = RemoveInactiveUser UserID
+instance MonadDB m => DBUpdate m RemoveInactiveUser Bool where
+  update (RemoveInactiveUser uid) = kRun01 $ SQL "DELETE FROM users WHERE deleted = FALSE AND id = ? AND has_accepted_terms_of_service IS NULL" [toSql uid]
 
 data AddUser = AddUser (String, String) String (Maybe Password) (Maybe ServiceID) (Maybe CompanyID) Locale
 instance MonadDB m => DBUpdate m AddUser (Maybe User) where

@@ -73,6 +73,8 @@ kontraMigrations = [
   , removePreferedDesignMode
   , addDefaultEmptyStringsToSomeColumnsInCompaniesTable
   , addOCSPResponse
+  , removeUserRefuseSaveAfterSignEvent
+  , removeDocEventsThatReferenceNotActivatedUsers
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

@@ -14,6 +14,7 @@ module Stats.Model
          AddUserStatEvent(..),
          GetUserStatEvents(..),
          UserStatQuantity(..),
+         RemoveInactiveUserLoginEvents(..),
 
          SignStatQuantity(..),
          SignStatEvent(..),
@@ -349,7 +350,6 @@ instance MonadDB m => DBUpdate m FlushDocStats () where
 
 data UserStatQuantity = UserSignTOS             -- When user signs TOS
                       | UserSaveAfterSign       -- when user accepts the save option after signing
-                      | UserRefuseSaveAfterSign -- deprecated: when user refuses the save option after signing
                       | UserPhoneAfterTOS       -- when a user requests a phone call after accepting the TOS
                       | UserCreateCompany       -- when a user creates a company
                       | UserLogin               -- when a user logs in
@@ -407,6 +407,12 @@ instance MonadDB m => DBUpdate m AddUserStatEvent Bool where
       , sql "service_id" usServiceID
       , sql "company_id" usCompanyID
       ]
+
+data RemoveInactiveUserLoginEvents = RemoveInactiveUserLoginEvents UserID
+instance MonadDB m => DBUpdate m RemoveInactiveUserLoginEvents Bool where
+  update (RemoveInactiveUserLoginEvents uid) = do
+    n <- kRun $ SQL "DELETE FROM user_stat_events WHERE quantity = ? AND EXISTS (SELECT 1 FROM users WHERE deleted = FALSE AND id = ? AND has_accepted_terms_of_service IS NULL)" [toSql UserLogin, toSql uid]
+    return $ n > 0
 
 {------ Signatory Stats ------}
 

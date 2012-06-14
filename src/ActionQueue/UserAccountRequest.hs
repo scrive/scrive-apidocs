@@ -14,7 +14,9 @@ import KontraLink
 import MagicHash
 import MinutesTime
 import Misc
+import Stats.Model
 import User.Model
+import qualified Log
 
 data UserAccountRequest = UserAccountRequest {
     uarUserID :: UserID
@@ -39,7 +41,10 @@ userAccountRequest = Action {
     ] <++> SQL ("WHERE " ++ qaIndexField userAccountRequest ++ " = ?") [toSql uarUserID]
   , qaEvaluateExpired = \UserAccountRequest{uarUserID} -> do
     _ <- dbUpdate $ DeleteAction userAccountRequest uarUserID
-    return ()
+    _ <- dbUpdate $ RemoveInactiveUserLoginEvents uarUserID
+    success <- dbUpdate $ RemoveInactiveUser uarUserID
+    when success $
+      Log.debug $ "Inactive user with id = " ++ show uarUserID ++ " successfully removed from database"
   }
   where
     decoder acc user_id expires token = UserAccountRequest {
@@ -69,7 +74,7 @@ newUserAccountRequestLink uid = do
   return $ LinkAccountCreated (uarUserID uar) (uarToken uar)
 
 -- | Populates user_account_requests table with references to all
--- inactive users so they will gradually deleted if owners won't
+-- inactive users so they will gradually be deleted if owners won't
 -- have any interest in them. To be removed after 15.07.2012.
 populateUARTable :: Kontrakcja m => m String
 populateUARTable = onlyAdmin $ do
