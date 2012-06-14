@@ -5,6 +5,7 @@ import PdfModel hiding(trace)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import Control.Monad.State.Strict
+import Control.Monad.Writer.Strict
 import qualified Data.Map as Map
 import Data.List
 import Data.Ord
@@ -614,7 +615,9 @@ goesWithNext f (x:xs) = (boxVCat 0 [f,x]) : xs
 
 verificationPagesContents :: SealSpec -> [String]
 verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,staticTexts}) =
-    let boxes = buildList $ do
+  map pageContent groupedBoxesNumbered
+    where
+      boxes = buildList $ do
                   lm (Box 0 30 "")
                   lm (verificationTextBox staticTexts)
                   lm (documentNumberTextBox staticTexts documentNumber)
@@ -630,40 +633,41 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
                   lms (goesWithNext (handlingBox staticTexts)
                        (map (makeHistoryEntryBox) history))
 
-        groupedBoxes = groupBoxesUpToHeight printableHeight boxes
-        groupedBoxesNumbered = zip groupedBoxes [1::Int ..]
-    in flip map groupedBoxesNumbered $ \(thisPageBoxes, thisNumber) ->
+      groupedBoxes = groupBoxesUpToHeight printableHeight boxes
+      groupedBoxesNumbered = zip groupedBoxes [1::Int ..]
+      pageContent (pageBoxes,pageNumber) =
+          execWriter $ do
+            tell "/GS0 gs "
 
-    "/GS0 gs " ++
+            -- Frame around whole page
+            tell "0 0 0 0.333 K "
+            tell "581.839 14.37 -567.36 813.12 re "
+            tell "S\n"
 
-    -- Frame around whole page
-    "0 0 0 0.333 K " ++
-    "581.839 14.37 -567.36 813.12 re " ++
-    "S\n" ++
+            tell "q\n"
+            tell "1 0 0 1 15 808 cm\n"
+            tell "0 g 0 G\n"
+            tell $ boxCommands (boxEnlarge printableMargin 0 0 0 $ boxVCat 0 pageBoxes)
+            tell "Q\n"
 
-    "q\n" ++
-    "1 0 0 1 15 808 cm\n" ++
-    "0 g 0 G\n" ++
-    boxCommands (boxEnlarge printableMargin 0 0 0 $ boxVCat 0 thisPageBoxes) ++
-    "Q\n" ++
+            -- "0.039 0.024 0.02 0 k "
+            tell "571.856 24.7 -548.354 64.55 re "
+            tell "S "
 
-    -- "0.039 0.024 0.02 0 k " ++
-    "571.856 24.7 -548.354 64.55 re " ++
-    "S " ++
+            tell "q\n"
+            tell "1 0 0 1 34.8198 80.2334 cm\n"
+            tell "0.625 0.537 0.53 0.257 k\n"
+            tell $ boxCommands (makeLeftTextBox (PDFFont Helvetica 8) (printableWidth - 130)
+                (verificationFooter staticTexts))
+            tell "Q\n"
 
-    "q\n" ++
-    "1 0 0 1 34.8198 80.2334 cm\n" ++
-    "0.625 0.537 0.53 0.257 k\n" ++
-    boxCommands (makeLeftTextBox (PDFFont Helvetica 8) (printableWidth - 130)
-                (verificationFooter staticTexts)) ++
-    "Q\n" ++
-
-    "BT " ++
-    "/TT0 1 Tf " ++
-    "0.546 0.469 0.454 0.113 k " ++
-    "10 0 0 10 46.5522 31.5469 Tm " ++
-    "(" ++ show thisNumber ++ "/" ++ show (length groupedBoxesNumbered) ++ ")Tj " ++
-    "ET " ++ rightcornerseal2
+            tell "BT "
+            tell "/TT0 1 Tf "
+            tell "0.546 0.469 0.454 0.113 k "
+            tell "10 0 0 10 46.5522 31.5469 Tm "
+            tell $ "(" ++ show pageNumber ++ "/" ++ show (length groupedBoxesNumbered) ++ ")Tj "
+            tell "ET "
+            tell rightcornerseal2
 
 -- To emulate a near perfect circle of radius r with cubic Bézier
 -- curves, draw four curves such that one of the line segments
