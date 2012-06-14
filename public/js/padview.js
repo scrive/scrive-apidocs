@@ -94,8 +94,8 @@ window.PadQueueView = Backbone.View.extend({
     },
     noDocumentView : function() {
         var box = $("<div class='noDocumentAvaible'> </div>");
-        var header = $("<div class='header'>No document is avaible</div>");
-        var sheader = $("<div class='sheader'>Waiting for device owner to send a document</div>");
+        var header = $("<div class='header'>Inget dokument tillgängligt</div>");
+        var sheader = $("<div class='sheader'>Inväntar dokument</div>");
         box.append(header).append(sheader);
         return box;
         
