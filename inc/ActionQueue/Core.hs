@@ -1,4 +1,11 @@
-module ActionQueue.Core where
+module ActionQueue.Core (
+    Action(..)
+  , GetAction(..)
+  , GetExpiredActions(..)
+  , NewAction(..)
+  , UpdateAction(..)
+  , DeleteAction(..)
+  ) where
 
 import Data.List
 import Data.Monoid

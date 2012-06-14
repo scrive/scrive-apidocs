@@ -1,4 +1,11 @@
-module ActionQueue.UserAccountRequest where
+module ActionQueue.UserAccountRequest (
+    UserAccountRequest(..)
+  , userAccountRequest
+  , getUserAccountRequestUser
+  , newUserAccountRequest
+  , newUserAccountRequestLink
+  , populateUARTable
+  ) where
 
 import Control.Monad
 import Control.Monad.Trans.Maybe

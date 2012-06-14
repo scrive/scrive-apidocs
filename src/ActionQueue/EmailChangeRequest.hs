@@ -1,4 +1,10 @@
-module ActionQueue.EmailChangeRequest where
+module ActionQueue.EmailChangeRequest (
+    EmailChangeRequest(..)
+  , emailChangeRequest
+  , getEmailChangeRequestNewEmail
+  , newEmailChangeRequest
+  , newEmailChangeRequestLink
+  ) where
 
 import Control.Monad
 import Control.Monad.Trans

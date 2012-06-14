@@ -1,4 +1,10 @@
-module ActionQueue.PasswordReminder where
+module ActionQueue.PasswordReminder (
+    PasswordReminder(..)
+  , passwordReminder
+  , getPasswordReminderUser
+  , newPasswordReminder
+  , newPasswordReminderLink
+  ) where
 
 import Control.Monad
 import Control.Monad.Trans.Maybe

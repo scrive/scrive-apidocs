@@ -1,4 +1,8 @@
-module ActionQueue.Monad where
+module ActionQueue.Monad (
+    ActionQueue(..)
+  , runQueue
+  , actionQueue
+  ) where
 
 import Control.Applicative
 import Control.Monad.Base
