@@ -51,6 +51,7 @@ import Control.Concurrent
 import Data.String.Utils
 import qualified Templates.Fields as F
 import Control.Logic
+import Happstack.Util.Common (readM)
 
 personFromSignatoryDetails :: (BS.ByteString,BS.ByteString) -> SignatoryDetails -> Seal.Person
 personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) details =
@@ -161,7 +162,14 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signato
                  }
               _ -> Nothing
 
-sealSpecFromDocument :: TemplatesMonad m => (BS.ByteString,BS.ByteString) -> String -> Document -> [DocumentEvidenceEvent] -> String -> String -> m Seal.SealSpec
+sealSpecFromDocument :: (MonadIO m, TemplatesMonad m)
+                     => (BS.ByteString,BS.ByteString)
+                     -> String 
+                     -> Document
+                     -> [DocumentEvidenceEvent]
+                     -> String
+                     -> String
+                     -> m Seal.SealSpec
 sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog inputpath outputpath =
   let docid = documentid document
       Just authorsiglink = getAuthorSigLink document
@@ -169,7 +177,7 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
       signatoriesdetails = [signatorydetails sl | sl <- documentsignatorylinks document
                                                 , SignatoryPartner `elem` signatoryroles sl]
       authordetails = signatorydetails authorsiglink
-      signatories = personsFromDocument document
+      signatories = personsFromDocument (checkedBoxImage,uncheckedBoxImage) document
       secretaries = if authorHasSigned then [] else [personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) authordetails]
 
       persons = map (\(a,_,_,_,_,_) -> a) signatories
@@ -238,7 +246,11 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
                         documentInfoFields document
                         F.value "hostpart" hostpart
       -- Log.debug ("finished staticTexts: " ++ show staticTexts)
-      let readtexts :: Seal.SealingTexts = read staticTexts -- this should never fail since we control templates
+      readtexts <- case readM staticTexts of
+                     Just x -> return x
+                     Nothing -> do
+                       Log.error $ "Cannot read SealingTexts: " ++ staticTexts
+                       error $ "Cannot read SealingTexts: " ++ staticTexts
       -- Log.debug ("read texts: " ++ show readtexts)
 
       -- Creating HTML Evidence Log

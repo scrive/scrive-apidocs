@@ -223,7 +223,6 @@ preCheckPDFHelper gscmd content tmppath =
                , Seal.history        = []
                , Seal.initials       = "An example text"
                , Seal.hostpart       = "An example text"
-               , Seal.fields         = []
                , Seal.staticTexts    = sealingTexts
                , Seal.attachments    = []
                }
