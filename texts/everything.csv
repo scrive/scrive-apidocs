@@ -2526,3 +2526,5 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_numberOfPages","$page$ sidor",,"$page$ pages"
 "_documentText","Dokument",,"Document"
 "_mainDocument","Huvuddokument",,"Main document"
+"_attachedDocument","Bilaga $number$",,"Attachment $number$"
+"_documentAttachedBy","Bifogat av $author$",,"Attached by $author$"
