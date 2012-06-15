@@ -267,10 +267,6 @@ window.Signatory = Backbone.Model.extend({
                  {name: "sigcompnr", type : "standard"},
                  {name: "signature", type : "signature"}
         ],
-        current : false,
-        attachments : [],
-        signorder : 1,
-        csv : undefined,
         current: false,
         attachments: [],
         signorder: 1,
@@ -833,7 +829,7 @@ window.SignatoryStandardView = Backbone.View.extend({
         container.append(textsummary);
 
 
-       if (signatory.document().currentViewerIsAuthor() &&
+       if ((signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin()) &&
                !signatory.author() &&
                ((signatory.document().signingInProcess() && signatory.canSign()) ||
                    signatory.document().closed()) && !signatory.document().padAuthorization())
@@ -842,7 +838,7 @@ window.SignatoryStandardView = Backbone.View.extend({
         if (signatory.undeliveredEmail() && signatory.document().currentViewerIsAuthor() && signatory.document().pending())
           container.append(this.changeEmailOption());
 
-        if (signatory.document().currentViewerIsAuthor()
+        if ((signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
             && signatory.document().signingInProcess()
             && signatory.canSign()
             && signatory.document().padAuthorization() && !signatory.author()) {

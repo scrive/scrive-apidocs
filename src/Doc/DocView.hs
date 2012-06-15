@@ -454,12 +454,15 @@ pageDocumentDesign document = do
 pageDocumentView :: TemplatesMonad m
                     => Document
                     -> Maybe SignatoryLink
+                    -> Bool
                     -> m String
-pageDocumentView document msiglink =
+pageDocumentView document msiglink authorcompanyadmin =
   renderTemplate "pageDocumentView" $ do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ fmap (show . signatorylinkid) msiglink
       F.value "sigmagichash" $ fmap (show .  signatorymagichash) msiglink
+      F.value "authorcompanyadmin" $ authorcompanyadmin
+      
 
 pageDocumentSignView :: TemplatesMonad m
                     => Context

@@ -6,6 +6,9 @@
 (function(window) {
 
 window.DocumentViewer = Backbone.Model.extend({
+    authorcompanyadmin : function() {
+        return this.get("authorcompanyadmin");
+    },
     signatoryid: function() {
       return this.get("signatoryid");
     },
@@ -266,6 +269,9 @@ window.Document = Backbone.Model.extend({
     currentViewerIsAuthor: function() {
         var csig = this.currentSignatory();
         return (csig != undefined && csig.author());
+    },
+    currentViewerIsAuthorsCompanyAdmin : function() {
+        return this.viewer().authorcompanyadmin() == true;  
     },
     preparation: function() {
         return this.status() == "Preparation";
