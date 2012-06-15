@@ -106,6 +106,7 @@ data SealingTexts = SealingTexts
   , secretaryText      :: String -- Header for secretary list
   , documentText       :: String -- Header for documents list
   , orgNumberText      :: String -- Info about partner subtext
+  , personalNumberText :: String -- Info about partner subtext
   , eventsText         :: String -- history table preheader
   , dateText           :: String -- history table date header
   , historyText        :: String -- history table event header

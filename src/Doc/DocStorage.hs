@@ -236,6 +236,7 @@ preCheckPDFHelper gscmd content tmppath =
                    , Seal.secretaryText      = "An example text"
                    , Seal.documentText       = "An example text"
                    , Seal.orgNumberText      = "An example text"
+                   , Seal.personalNumberText = "An example text"
                    , Seal.eventsText         = "An example text"
                    , Seal.dateText           = "An example text"
                    , Seal.historyText        = "An example text"

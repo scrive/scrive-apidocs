@@ -55,10 +55,7 @@ import Happstack.Util.Common (readM)
 
 personFromSignatoryDetails :: (BS.ByteString,BS.ByteString) -> SignatoryDetails -> Seal.Person
 personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) details =
-    Seal.Person { Seal.fullname = (getFullName details) ++
-                                  if not (null $ getPersonalNumber details)
-                                     then " (" ++ (getPersonalNumber details) ++ ")"
-                                     else ""
+    Seal.Person { Seal.fullname = getFullName details
                 , Seal.company = getCompanyName details
                 , Seal.email = getEmail details
                 , Seal.personalnumber = getPersonalNumber details
