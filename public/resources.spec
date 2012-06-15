@@ -62,6 +62,7 @@ set systemPage
  js   js/browserinfo.js
  js   js/loading.js
  js   js/table.js
+ js   js/arrows.js
  js   js/flashmessages.js
  js   js/infotextinputs.js
  js   js/buttons.js

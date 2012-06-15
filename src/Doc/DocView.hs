@@ -315,6 +315,10 @@ placementJSON doc placement = runJSONGen $ do
     J.value "y" $ placementy placement
     J.value "page" $ placementpage placement
     J.value "fileid" $ fromMaybe "" $ show <$> (listToMaybe $ documentfiles doc)
+    J.value "tip" $ case (placementtipside placement) of
+                         Just LeftTip -> Just "left"
+                         Just RightTip -> Just "right"
+                         _ -> Nothing
 
 jsonDate :: Maybe MinutesTime -> JSValue
 jsonDate mdate = toJSValue $ showDateYMD <$> mdate

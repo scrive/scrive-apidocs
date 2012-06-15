@@ -855,6 +855,7 @@ window.DocumentSignView = Backbone.View.extend({
         beforePointing: function() {
           elem.trigger("click");
         },
+        tipSide : placement.tip(),
         label:label
       });
     },
@@ -1057,7 +1058,7 @@ window.DocumentSignView = Backbone.View.extend({
 
 window.DocumentSignViewTask = Backbone.Model.extend({
   defaults: {
-    complete: false
+    complete: false,
   },
   initialize: function(args) {
     _.bindAll(this, 'update');
@@ -1065,6 +1066,12 @@ window.DocumentSignViewTask = Backbone.Model.extend({
     this.model.bind('reset', this.update);
     this.model.bind('change', this.update);
     this.update();
+  },
+  leftTip  : function() {
+    return this.get("tipSide") == "left";  
+  },
+  rightTip  : function() {
+    return this.get("tipSide") != "left"; // Right is the default value
   },
   isComplete: function() {
     var f = this.get("isComplete");
@@ -1117,7 +1124,7 @@ window.DocumentSignViewTasks = Backbone.Model.extend({
 
 window.DocumentSignViewArrowView = Backbone.View.extend({
   initialize: function(args) {
-    _.bindAll(this, 'render', 'flip');
+    _.bindAll(this, 'render');
     var render = this.render;
     _.each(this.model.tasks(), function(task) {
       task.bind("change", render);
@@ -1125,22 +1132,12 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
 
     this.mainview = args.mainview;
     
-    var flip = this.flip;
-    this.mainview.model.bind('tried-to-sign-and-failed', flip);
-
+    var view = this;
+    this.mainview.model.bind('tried-to-sign-and-failed', function() {
+        if (view.arrow != undefined)
+         view.arrow.blink(10);
+    });
     this.render();
-  },
-  flip : function() {
-      var el = $(this.el);
-      var flip = function(i) {
-            if (i <= 0 ) return;
-            else if (i % 2 == 0 )                                            
-                el.hide();
-            else
-                el.show();
-             setTimeout(function() {flip(i - 1)},200);
-         };
-      flip(10);
   },
   render: function() {
     var view = this;
@@ -1149,93 +1146,14 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     $(this.el).empty();
 
     var taskmodel = this.model;
-
     var container = $("<div class='arrows' />");
-
-    var downarrow = $("<div class='down arrow' style='display:none'/>");
-    container.append(downarrow);
-
-    var uparrow = $("<div class='up arrow' style='display:none'/>");
-    container.append(uparrow);
-
-    if (taskmodel.isIncompleteTask()) {
-      downarrow.css("cursor", "pointer");
-      downarrow.click(function() {
-        var el = taskmodel.nextIncompleteTask().el();
-        var scrollbottom = el.offset().top + el.height() + 100;
-        $('html,body').animate({
-          scrollTop: scrollbottom - $(window).height()
-        }, 2000);
-      });
-      uparrow.css("cursor", "pointer");
-      uparrow.click(function() {
-        var el = taskmodel.nextIncompleteTask().el();
-        $('html,body').animate({
-          scrollTop: el.offset().top - 100
-        }, 1000);
-      });
-    }
-
-    var actionarrow = $("<div class='action arrow'/>");
-    var setActionArrowText = function(txt) {
-      actionarrow.empty();
-      var front = $("<div class='front' />");
-      if (txt!=undefined) {
-        front.append($("<div class='label' />").text(txt));
-      }
-      actionarrow.append(front);
-      actionarrow.append($("<div class='back' />"));
-      actionarrow.append($("<div class='clearfix' />"));
-    };
-    container.append(actionarrow);
-
-    var updateRightMargin = function() {
-      var space = $(window).width() - 941;
-      var margin = 0;
-      var bigarrowmargin = 0;
-      if (space > 0) {
-        margin = space / 2;
-        bigarrowmargin = (space + 941 - 112) / 2;
-      } else {
-        bigarrowmargin = (941 - 112) / 2;
-      }
-      // I'm keeping this in case we want to revert it. -- Eric
-      //      downarrow.css("right", margin + "px");
-      downarrow.css("right", bigarrowmargin + "px");
-      uparrow.css("right", bigarrowmargin + "px");
-    };
-    $(window).resize(updateRightMargin);
-    updateRightMargin();
-
-    var updateActionArrowPosition = function() {
-      if (taskmodel.isIncompleteTask()) {
-        var el = taskmodel.nextIncompleteTask().el();
-        actionarrow.css("top", (el.offset().top + (el.height() / 2) - 14) + "px");
-        actionarrow.css("left", (el.offset().left + el.width() + 10) + "px");
-      }
-    };
-    updateActionArrowPosition();
-
-    var checkIfDownArrowInFooter = function() {
-      if ($(".pagefooter").size() == 0) return;
-      var footertop = $(".pagefooter").offset().top;
-      var downarrowbottom = downarrow.offset().top + downarrow.height();
-      if (downarrowbottom + 100 > footertop) {
-        downarrow.addClass("infooter");
-      } else {
-        downarrow.removeClass("infooter");
-      }
-    };
-    $(window).resize(checkIfDownArrowInFooter);
-    $(window).scroll(checkIfDownArrowInFooter);
-    checkIfDownArrowInFooter();
-
+    view.arrow = undefined;
     var updateVisibility = function() {
 
       if (!taskmodel.isIncompleteTask()) {
-        downarrow.show();
-        uparrow.hide();
-        actionarrow.hide();
+        if (view.arrow != undefined) view.arrow.clear();  
+        view.arrow = Arrow.init({type: 'scroll-down'});
+        container.append(view.arrow.view().el);
         view.mainview.trigger("change:task");
       } else {
         var scrolltop = $(window).scrollTop();
@@ -1257,23 +1175,24 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
           if (view.pointingAt==undefined || view.pointingAt!=nextTask) {
             nextTask.beforePointing();
           }
-          setActionArrowText(nextTask.label());
-          updateActionArrowPosition();
-          actionarrow.show();
-          uparrow.hide();
-          downarrow.hide();
+
+          if (view.arrow != undefined) view.arrow.clear();
+          view.arrow = Arrow.init({  type: taskmodel.nextIncompleteTask().leftTip() ? 'point-left' : 'point-right'
+                                   , point : $(taskmodel.nextIncompleteTask().el())
+                                   , text : taskmodel.nextIncompleteTask().label() });
+          container.append(view.arrow.view().el);
           view.pointingAt = nextTask;
           view.mainview.trigger("change:task");
         } else if ((elbottom + bottommargin) > scrollbottom) {
-                downarrow.show();
-                uparrow.hide();
-                actionarrow.hide();
+                if (view.arrow != undefined) view.arrow.clear();
+                view.arrow = new Arrow.init({type: 'scroll-down',  point : $(taskmodel.nextIncompleteTask().el())});
+                container.append(view.arrow.view().el);
                 view.pointingAt = undefined;
                 view.mainview.trigger("change:task");
           } else {
-                downarrow.hide();
-                uparrow.show();
-                actionarrow.hide();
+                if (view.arrow != undefined) view.arrow.clear();
+                view.arrow = new Arrow.init({type: 'scroll-up',  point : $(taskmodel.nextIncompleteTask().el())});
+                container.append(view.arrow.view().el);
                 view.pointingAt = undefined;
                 view.mainview.trigger("change:task");
         } 
