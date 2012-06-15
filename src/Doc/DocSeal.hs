@@ -167,10 +167,11 @@ sealSpecFromDocument :: (MonadIO m, TemplatesMonad m)
                      -> String 
                      -> Document
                      -> [DocumentEvidenceEvent]
+                     -> BS.ByteString
                      -> String
                      -> String
                      -> m Seal.SealSpec
-sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog inputpath outputpath =
+sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog content inputpath outputpath =
   let docid = documentid document
       Just authorsiglink = getAuthorSigLink document
       authorHasSigned = isSignatory authorsiglink && isJust (maybesigninfo authorsiglink)
@@ -258,6 +259,19 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
       let evidenceattachment = Seal.SealAttachment { Seal.fileName = "evidencelog.html"
                                                    , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString htmllogs }
 
+      let numberOfPages = getNumberOfPDFPages content
+      numberOfPagesText <- 
+        if numberOfPages==1
+           then renderLocalTemplate document "_numberOfPagesIs1" $ return ()
+           else renderLocalTemplate document "_numberOfPages" $ do
+             F.value "pages" numberOfPages
+
+      attachedByText <- renderLocalTemplate document "_documentSentBy" $ do
+        F.value "author" (getSmartName authordetails)
+
+      mainDocumentText <- renderLocalTemplate document "_mainDocument"
+                          $ (return ())
+
       return $ Seal.SealSpec
             { Seal.input          = inputpath
             , Seal.output         = outputpath
@@ -269,6 +283,12 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
             , Seal.hostpart       = hostpart
             , Seal.staticTexts    = readtexts
             , Seal.attachments    = [evidenceattachment]
+            , Seal.filesList      =
+              [ Seal.FileDesc { fileTitle = documenttitle document
+                              , fileRole = mainDocumentText
+                              , filePagesText = numberOfPagesText
+                              , fileAttachedBy = attachedByText
+                              } ]
             }
 
 presealSpecFromDocument :: (BS.ByteString,BS.ByteString) -> Document -> String -> String -> Seal.PreSealSpec
@@ -307,7 +327,7 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
     liftIO $ BS.writeFile tmpin content
     checkedBoxImage <- liftIO $ BS.readFile "public/img/checkbox_checked.jpg"
     uncheckedBoxImage <- liftIO $  BS.readFile "public/img/checkbox_unchecked.jpg"
-    config <- sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) ctxhostpart document elog tmpin tmpout
+    config <- sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) ctxhostpart document elog content tmpin tmpout
     Log.debug $ "Config " ++ show config
     (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
     liftIO $ threadDelay 500000
