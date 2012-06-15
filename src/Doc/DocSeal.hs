@@ -162,7 +162,44 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signato
                  }
               _ -> Nothing
 
-sealSpecFromDocument :: (MonadIO m, TemplatesMonad m)
+listAttachmentsFromDocument :: Document -> [(SignatoryAttachment,SignatoryLink)]
+listAttachmentsFromDocument document = 
+  concatMap extract (documentsignatorylinks document)
+  where extract sl = map (\at -> (at,sl)) (signatoryattachments sl)
+
+findOutAttachmentDesc :: (KontraMonad m, MonadIO m, MonadDB m, TemplatesMonad m) => Document -> m [Seal.FileDesc]
+findOutAttachmentDesc document = do
+  mapM findAttachmentsForSignatoryAttachment attAndSigsNumbered
+  where
+      attAndSigs = listAttachmentsFromDocument document
+      attAndSigsNumbered = zipWith (\num (at,sl) -> (num,at,sl)) [1::Int ..] attAndSigs
+      findAttachmentsForSignatoryAttachment (num, sigattach, sl) = do
+        let personName = getSmartName sl
+        numberOfPages <- case signatoryattachmentfile sigattach of
+                       Nothing -> return 1
+                       Just fileid' -> do
+                                   contents <- getFileIDContents fileid'
+                                   return $ getNumberOfPDFPages contents
+        numberOfPagesText <-
+          if numberOfPages==1
+           then renderLocalTemplate document "_numberOfPagesIs1" $ return ()
+           else renderLocalTemplate document "_numberOfPages" $ do
+             F.value "pages" numberOfPages
+
+        attachedByText <- renderLocalTemplate document "_documentAttachedBy" $ do
+                                     F.value "author" personName
+
+        attachmentNumText <- renderLocalTemplate document "_attachedDocument" $ do
+                                     F.value "number" num
+
+        return $ Seal.FileDesc
+                 { fileTitle      = signatoryattachmentname sigattach
+                 , fileRole       = attachmentNumText
+                 , filePagesText  = numberOfPagesText
+                 , fileAttachedBy = attachedByText
+                 }
+
+sealSpecFromDocument :: (KontraMonad m, MonadIO m, TemplatesMonad m, MonadDB m)
                      => (BS.ByteString,BS.ByteString)
                      -> String 
                      -> Document
@@ -271,6 +308,7 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
 
       mainDocumentText <- renderLocalTemplate document "_mainDocument"
                           $ (return ())
+      additionalAttachments <- findOutAttachmentDesc document
 
       return $ Seal.SealSpec
             { Seal.input          = inputpath
@@ -288,7 +326,7 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
                               , fileRole = mainDocumentText
                               , filePagesText = numberOfPagesText
                               , fileAttachedBy = attachedByText
-                              } ]
+                              } ] ++ additionalAttachments
             }
 
 presealSpecFromDocument :: (BS.ByteString,BS.ByteString) -> Document -> String -> String -> Seal.PreSealSpec
