@@ -67,6 +67,15 @@ data SealSpec = SealSpec
     , hostpart       :: String
     , staticTexts    :: SealingTexts
     , attachments    :: [SealAttachment]
+    , filesList      :: [FileDesc]
+    }
+    deriving (Eq,Ord,Show,Read)
+
+data FileDesc = FileDesc
+    { fileTitle      :: String
+    , fileRole       :: String
+    , filePagesText  :: String
+    , fileAttachedBy :: String
     }
     deriving (Eq,Ord,Show,Read)
 
@@ -95,6 +104,7 @@ data SealingTexts = SealingTexts
   , signedText         :: String -- ex. Underteknat (all footers)
   , partnerText        :: String -- Header for partner list
   , secretaryText      :: String -- Header for secretary list
+  , documentText       :: String -- Header for documents list
   , orgNumberText      :: String -- Info about partner subtext
   , eventsText         :: String -- history table preheader
   , dateText           :: String -- history table date header

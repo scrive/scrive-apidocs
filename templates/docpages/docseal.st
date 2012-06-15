@@ -6,6 +6,7 @@ SealingTexts
       , signedText="$_contractsealingtextssignedText()$"
       , partnerText="$_contractsealingtextspartnerText()$"
       , secretaryText="$_contractsealingtextssecretaryText()$"
+      , documentText="$_documentText()$"
       , orgNumberText="$_contractsealingtextsorgNumberText()$"
       , eventsText="$_contractsealingtextseventsText()$"
       , dateText="$_contractsealingtextsdateText()$"
@@ -20,6 +21,7 @@ SealingTexts
       , signedText="$_offersealingtextssignedText()$"
       , partnerText="$_offersealingtextspartnerText()$"
       , secretaryText="$_offersealingtextssecretaryText()$"
+      , documentText="$_documentText()$"
       , orgNumberText="$_offersealingtextsorgNumberText()$"
       , eventsText="$_offersealingtextseventsText()$"
       , dateText="$_offersealingtextsdateText()$"
@@ -34,6 +36,7 @@ SealingTexts
       , signedText="$_ordersealingtextssignedText()$"
       , partnerText="$_ordersealingtextspartnerText()$"
       , secretaryText="$_ordersealingtextssecretaryText()$"
+      , documentText="$_documentText()$"
       , orgNumberText="$_ordersealingtextsorgNumberText()$"
       , eventsText="$_ordersealingtextseventsText()$"
       , dateText="$_ordersealingtextsdateText()$"
@@ -75,22 +78,22 @@ orderInvitationSentEntry=
     $endif$ 
 ###
 contractSeenHistEntry=
-    $personname$ $_contractSeenHistEntry()$ $seenip$
+    $personname$ $_contractSeenHistEntry()$
 ###
 offerSeenHistEntry=
-    $personname$ $_offerSeenHistEntry()$ $seenip$
+    $personname$ $_offerSeenHistEntry()$
 ####
 orderSeenHistEntry=
-    $personname$ $_orderSeenHistEntry()$ $seenip$
+    $personname$ $_orderSeenHistEntry()$
 ####
 contractSignHistEntry=
-    $personname$ $_contractSignHistEntry()$ $signMethod()$ $signip$
+    $personname$ $_contractSignHistEntry()$ $signMethod()$
 ####
 offerSignHistEntry=
-    $personname$ $_offerSignHistEntry()$ $signMethod()$ $signip$
+    $personname$ $_offerSignHistEntry()$ $signMethod()$
 ###
 orderSignHistEntry=
-    $personname$ $_orderSignHistEntry()$ $signMethod()$ $signip$
+    $personname$ $_orderSignHistEntry()$ $signMethod()$
 ###
 signMethod=
         $if(!provider)$

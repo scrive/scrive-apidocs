@@ -2521,3 +2521,8 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_verificationTitle", "Verify signature",,"Verify signature"
 "_verificationDescription", "You can check if the file that you have has a valid digital signature.",,"You can check if the file that you have has a valid digital signature."
 "_csv","CSV",,"CSV"
+"_documentSentBy","Skickat av $author$",,"Sent by $author$"
+"_numberOfPagesIs1","1 sida",,"1 page"
+"_numberOfPages","$page$ sidor",,"$page$ pages"
+"_documentText","Dokument",,"Document"
+"_mainDocument","Huvuddokument",,"Main document"

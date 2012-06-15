@@ -584,6 +584,13 @@ secretaryBox staticTexts =
   makeLeftTextBox (PDFFont Helvetica 12) 200
                     (secretaryText staticTexts)
 
+documentTextBox :: SealingTexts -> Box
+documentTextBox staticTexts =
+  setDarkTextColor $
+  boxEnlarge 5 12 0 23 $
+  makeLeftTextBox (PDFFont Helvetica 12) 200
+                    (documentText staticTexts)
+
 signatoryBox :: SealingTexts -> Person -> Box
 signatoryBox sealingTexts (Person {fullname,company,companynumber,email,fields}) =
   boxVCat 0 $ buildList $ do
@@ -618,6 +625,16 @@ signatoryBox sealingTexts (Person {fullname,company,companynumber,email,fields})
         _ -> return ()
   where
     width = cardWidth
+
+
+fileBox :: SealingTexts -> FileDesc -> Box
+fileBox _sealingTexts (FileDesc {fileTitle,fileRole,filePagesText,fileAttachedBy}) =
+  boxVCat 0 $ buildList $ do
+    lm (makeLeftTextBox (PDFFont Helvetica_Bold 10) cardWidth fileTitle)
+    lm (makeLeftTextBox (PDFFont Helvetica 10) cardWidth fileRole)
+    lm (Box 0 10 "")
+    lm (makeLeftTextBox (PDFFont Helvetica 10) cardWidth filePagesText)
+    lm (makeLeftTextBox (PDFFont Helvetica_Oblique 10) cardWidth fileAttachedBy)
 
 
 handlingBox :: SealingTexts -> Box
@@ -659,7 +676,7 @@ goesWithNext f (x:xs) = (boxVCat 0 [f,x]) : xs
 
 
 verificationPagesContents :: SealSpec -> [String]
-verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,staticTexts}) =
+verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,staticTexts,filesList}) =
   map pageContent groupedBoxesNumbered
     where
       boxes = buildList $ do
@@ -667,6 +684,9 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
                   lm (verificationTextBox staticTexts)
                   lm (documentNumberTextBox staticTexts documentNumber)
                   lm (Box 0 20 "")
+
+                  lms (goesWithNext (documentTextBox staticTexts)
+                       (boxP $ map (fileBox staticTexts) filesList))
 
                   lms (goesWithNext (partnerTextBox staticTexts)
                        (boxP $ map (signatoryBox staticTexts) persons))
