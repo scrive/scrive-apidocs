@@ -592,11 +592,13 @@ documentTextBox staticTexts =
                     (documentText staticTexts)
 
 signatoryBox :: SealingTexts -> Person -> Box
-signatoryBox sealingTexts (Person {fullname,company,companynumber,email,fields}) =
+signatoryBox sealingTexts (Person {fullname,personalnumber,company,companynumber,email,fields}) =
   boxVCat 0 $ buildList $ do
     lm (makeLeftTextBox (PDFFont Helvetica_Bold 10) width fullname)
     lm (makeLeftTextBox (PDFFont Helvetica 10) width company)
     lm (Box 0 10 "")
+    when (not (null personalnumber)) $
+         lm (makeLeftTextBox (PDFFont Helvetica 10) width $ personalNumberText sealingTexts ++ " " ++ personalnumber)
     when (not (null companynumber)) $
          lm (makeLeftTextBox (PDFFont Helvetica 10) width $ orgNumberText sealingTexts ++ " " ++ companynumber)
     lm (makeLeftTextBox (PDFFont Helvetica_Oblique 10) width email)

@@ -445,6 +445,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_contractsealingtextseventsText","Registrerade händelser",,"Registered events"
 "_contractsealingtextshistoryText","Händelser",,"Events"
 "_contractsealingtextsorgNumberText","Org.nr.",,"Company reg no"
+"_personalNumberText","ID-nr.",,"ID no"
 "_contractsealingtextspartnerText","Parter",,"Parties"
 "_contractsealingtextssecretaryText","Ej signerande part",,"Non-signing party"
 "_contractsealingtextssignedText","Signerat",,"Signed"
