@@ -37,7 +37,7 @@ import qualified Control.Exception as C
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
-import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString.UTF8 as BS (toString,fromString)
 import Network.HTTP (urlDecode)
 
 withSystemTempDirectory' :: MonadBaseControl IO m => String -> (FilePath -> m a) -> m a
@@ -514,7 +514,7 @@ urlDecodeVars s = makeKV (splitOver "&" s) []
           (k, '=':v) -> makeKV ks ((urlDecode k, urlDecode v):a)
           (k, "") -> makeKV ks ((urlDecode k, ""):a)
           _ -> Nothing
-          
+
 containsAll :: Eq a => [a] -> [a] -> Bool
 containsAll elems inList = all (`elem` inList) elems
 
@@ -532,3 +532,16 @@ lookupAndRead k kvs = maybeRead =<< lookup k kvs
 lookupAndReadString :: (Read a, Eq k) => k -> [(k, String)] -> Maybe a
 lookupAndReadString k kvs = maybeRead =<< maybeRead =<< lookup k kvs
 
+
+getNumberOfPDFPages :: BS.ByteString -> Int
+getNumberOfPDFPages content =
+    maximum (1 : (catMaybes . map readNumber . map dropToNumber . findCounts) content)
+  where
+    count = BS.fromString "/Count"
+    countLength1 = BS.length count + 1
+    findCounts x = case BS.breakSubstring count x of
+                     (_, r) -> r : if BS.null r
+                                   then []
+                                   else findCounts (BS.drop 1 r)
+    dropToNumber = BS.drop countLength1
+    readNumber = readM . takeWhile isDigit . BS.toString
