@@ -119,10 +119,10 @@ window.Field = Backbone.Model.extend({
         return this.get("value");
     },
     setValue : function(value) {
-        return this.set({value : value});
+        this.set({"value" : value});
     },
     setName : function(name) {
-        return this.set({name : name});
+        return this.set({"name" : name});
     },
     isClosed : function() {
         return this.get("closed");
