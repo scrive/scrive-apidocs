@@ -680,7 +680,7 @@ jsonDocuments = onlySalesOrAdmin $ do
   params <- getListParamsNew
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
-      pagination = docPaginationFromParams docsPageSize params
+      pagination = docPaginationFromParams params
       filters    = []
       domain     = [DocumentsOfWholeUniverse]
       docsPageSize = 100
@@ -711,7 +711,7 @@ jsonDocuments = onlySalesOrAdmin $ do
                         , ("type", jsFromString . show $ documenttype doc)
                         , ("signs", JSArray $ map (jsFromString . getSmartName) $ documentsignatorylinks doc)
                         ])
-                    ]) (list documents))
+                    ]) (take docsPageSize $ list documents))
             , ("paging", pagingParamsJSON documents)
             ]
 
@@ -751,9 +751,8 @@ docSearchingFromParams params =
     x -> [DocumentFilterByString x]
 
 
-docPaginationFromParams :: Int -> ListParams -> DocumentPagination
--- REVIEW: Another magic constant 4, what is it?  Can we have some more DRY here?  We have an opportunity to factor out "magic 4" and explain it.
-docPaginationFromParams pageSize params = DocumentPagination (listParamsOffset params) (pageSize*4)
+docPaginationFromParams :: ListParams -> DocumentPagination
+docPaginationFromParams params = DocumentPagination (listParamsOffset params) (listParamsLimit params)
 
 
 handleBackdoorQuery :: Kontrakcja m => String -> m String
