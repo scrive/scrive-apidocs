@@ -1058,7 +1058,7 @@ window.DocumentSignView = Backbone.View.extend({
 
 window.DocumentSignViewTask = Backbone.Model.extend({
   defaults: {
-    complete: false,
+    complete: false
   },
   initialize: function(args) {
     _.bindAll(this, 'update');
