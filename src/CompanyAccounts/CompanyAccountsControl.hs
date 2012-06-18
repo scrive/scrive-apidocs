@@ -5,10 +5,6 @@ module CompanyAccounts.CompanyAccountsControl (
   , handleAddCompanyAccount
   , handleGetBecomeCompanyAccount
   , handlePostBecomeCompanyAccount
-  -- these should be deleted once we know people
-  -- aren't still using these old takeover links
-  , handleGetBecomeCompanyAccountOld
-  , handlePostBecomeCompanyAccountOld
   -- this shares some handy stuff with the adminonly section
   , handleCompanyAccountsForAdminOnly
   , sendTakeoverPrivateUserMail
@@ -363,33 +359,6 @@ handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
     _ -> do
       _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (Email removeemail)
       addFlashM flashMessageCompanyAccountDeleted
-
-{- |
-    This handles the company account takeover links that we've sent out.
-    You need a userid to use it, and it's only secure by obscurity:
-    if you were a hacker you could join a company by guessing user ids, bleurgh
-
-    Deprecated!!
- -}
-handleGetBecomeCompanyAccountOld :: Kontrakcja m => UserID -> m (Either KontraLink Response)
-handleGetBecomeCompanyAccountOld inviterid = withUserGet $ do
-  inviter <- guardJustM $ dbQuery $ GetUserByID inviterid
-  company <- guardJustM $ getCompanyForUser inviter
-  addFlashM $ modalDoYouWantToBeCompanyAccount company
-  Context{ctxmaybeuser = Just user} <- getContext
-  mcompany <- getCompanyForUser user
-  content <- showUser user mcompany False
-  renderFromBody kontrakcja content
-
-handlePostBecomeCompanyAccountOld :: Kontrakcja m => UserID -> m KontraLink
-handlePostBecomeCompanyAccountOld inviterid = withUserPost $ do
-  user <- guardJustM $ ctxmaybeuser <$> getContext
-  inviter <- guardJustM $ dbQuery $ GetUserByID inviterid
-  company <- guardJustM $ getCompanyForUser inviter
-  _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid company)
-  _ <- resaveDocsForUser (userid user)
-  addFlashM $ flashMessageUserHasBecomeCompanyAccount company
-  return $ LinkAccount
 
 {- |
     This handles the company account takeover links, and replaces
