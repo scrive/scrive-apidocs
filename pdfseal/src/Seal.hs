@@ -466,13 +466,13 @@ setDarkTextColor = boxFillColor 0.806 0.719 0.51 0.504
 setLightTextColor :: Box -> Box
 setLightTextColor = boxFillColor 0.597 0.512 0.508 0.201
 
-groupBoxesUpToHeight :: Int -> [(Bool,Box)] -> [[Box]]
+groupBoxesUpToHeight :: Int -> [(Bool,Bool,Box)] -> [[(Bool,Box)]]
 groupBoxesUpToHeight height boxes = helper boxes
     where
         worker _ currentBoxes [] = (currentBoxes,[])
-        worker currentHeight currentBoxes rest@((goesWithNext, x@(Box _ h _)):xs)
+        worker currentHeight currentBoxes rest@((goesWithNext, needsFrame, x@(Box _ h _)):xs)
                                                | currentHeight + h < height || goesWithNext
-                                                 = worker (currentHeight + h) (x:currentBoxes) xs
+                                                 = worker (currentHeight + h) ((needsFrame,x):currentBoxes) xs
                                                | otherwise = (currentBoxes, rest)
         helper boxes' = case worker 0 [] boxes' of
                             (cb, []) -> [reverse cb]
@@ -611,7 +611,8 @@ signatoryBox sealingTexts (Person {fullname,personalnumber,company,companynumber
                          halfWidth = cardWidth `div` 2
                          halfHeight = (halfWidth * internal_image_h `div` internal_image_w)
                     in lm $ boxEnlarge ((cardWidth-halfWidth) `div` 2) 6 0 6 $
-                        boxDrawDebugRectAround $
+                        setFrameColor $
+                        boxDrawFrame $
                         Box halfWidth halfHeight $ execWriter $ do
                          tell "q\n"
                          tellMatrix (fromIntegral halfWidth) 0 0 (fromIntegral halfHeight) 0 (-fromIntegral halfHeight)
@@ -673,11 +674,6 @@ boxHCat2 (box1:box2:boxes) = (boxHCat 0 [ (setLightTextColor . setFrameColor . b
 boxP :: [Box] -> [Box]
 boxP = boxHCat2
 
-goesWithNext :: Box -> [Box] -> [Box]
-goesWithNext _ [] = []
-goesWithNext f (x:xs) = (boxVCat 0 [f,x]) : xs
-
-
 verificationPagesContents :: SealSpec -> [String]
 verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,staticTexts,filesList}) =
   map pageContent groupedBoxesNumbered
@@ -685,26 +681,32 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
       histExample = makeHistoryEntryBox (HistEntry "" "" "")
 
       boxes = buildList $ do
-                  lm (True,Box 0 30 "")
-                  lm (True,verificationTextBox staticTexts)
-                  lm (True,documentNumberTextBox staticTexts documentNumber)
-                  lm (True,Box 0 20 "")
+                  lm (True,False,Box 0 30 "")
+                  lm (True,False,verificationTextBox staticTexts)
+                  lm (True,False,documentNumberTextBox staticTexts documentNumber)
+                  lm (True,False,Box 0 20 "")
 
-                  lm (True,documentTextBox staticTexts)
-                  lms (map (\x -> (False,x)) $ boxP $ map (fileBox staticTexts) filesList)
+                  lm (True,False,documentTextBox staticTexts)
+                  lms (map (\x -> (False,False,x)) $ boxP $ map (fileBox staticTexts) filesList)
 
-                  lm (True,partnerTextBox staticTexts)
-                  lms (map (\x -> (False,x)) $ boxP $ map (signatoryBox staticTexts) persons)
+                  lm (True,False,partnerTextBox staticTexts)
+                  lms (map (\x -> (False,False,x)) $ boxP $ map (signatoryBox staticTexts) persons)
 
                   when (not (null secretaries)) $ do
-                     lm (True,secretaryBox staticTexts)
-                     lms (map (\x -> (False,x)) $ boxP $ map (signatoryBox staticTexts) secretaries)
+                     lm (True,False,secretaryBox staticTexts)
+                     lms (map (\x -> (False,False,x)) $ boxP $ map (signatoryBox staticTexts) secretaries)
 
-                  lm (True,handlingBox staticTexts)
-                  lms (map (\x -> (False, makeHistoryEntryBox x)) history)
+                  lm (True,False,handlingBox staticTexts)
+                  lms (map (\x -> (False, True, makeHistoryEntryBox x)) history)
 
       groupedBoxes = groupBoxesUpToHeight printableHeight boxes
       groupedBoxesNumbered = zip groupedBoxes [1::Int ..]
+      boxize boxlist = if (fst (head boxlist))
+                       then (setLightTextColor . setFrameColor . boxDrawFrame) $ boxVCat 0 $ map snd boxlist
+                       else boxVCat 0 $ map snd boxlist
+      drawFramesAsNeeded pb =
+        map boxize $ groupBy (\x y -> fst x == fst y) pb
+
       pageContent (pageBoxes,pageNumber) =
           execWriter $ do
             tell "/GS0 gs "
@@ -717,7 +719,7 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
             tell "q\n"
             tell "1 0 0 1 15 808 cm\n"
             tell "0 g 0 G\n"
-            tell $ boxCommands (boxEnlarge printableMargin 0 0 0 $ boxVCat 0 pageBoxes)
+            tell $ boxCommands (boxEnlarge printableMargin 0 0 0 $ boxVCat 0 $ drawFramesAsNeeded pageBoxes)
             tell "Q\n"
 
             tell "q\n"
