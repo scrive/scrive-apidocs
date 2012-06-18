@@ -151,7 +151,7 @@ jsonCompanies = onlySalesOrAdmin $ do
                     ]
                  )
                 ,("link", jsFromString . show . LinkCompanyAdmin . Just . companyid $ company)
-                ]) allCompanies )
+                ]) (take companiesPageSize $ allCompanies) )
         ,("paging", pagingParamsJSON companies)
         ]
 
@@ -276,7 +276,7 @@ jsonUsersList = do
                         ,("admin_invites", JSBool $ isAdminInvite itype)
                         ])
                     ,("link", jsFromString . show $ LinkUserAdmin $ Just $ userid user)
-                    ]) (list users)),
+                    ]) (take usersPageSize $ list users)),
              ("paging", pagingParamsJSON users)]
 
 jsFromString :: String -> JSValue

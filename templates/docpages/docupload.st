@@ -52,7 +52,7 @@ $loadingdialog()$
 <script type="text/template" id="jschooseprocess">
   <td>
     <div class="documentTypeBox">
-      <a class="documenticon" href="#"></a>
+      <a class="documenticon" href="#"><span class='text'></span></a>
     </div>
   </td>
 </script>
