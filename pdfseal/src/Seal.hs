@@ -652,11 +652,11 @@ makeHistoryEntryBox (HistEntry {histdate,histcomment,histaddress}) =
   setLightTextColor $
   boxHCat 0 [ boxEnlarge frameInnerPadding 5 frameInnerPadding 5 $
               boxVCat 0 $ buildList $ do
-                lm (makeLeftTextBox (PDFFont Helvetica_Oblique 10) (170-2*frameInnerPadding) histdate)
+                lm (makeLeftTextBox (PDFFont Helvetica_Oblique 10) (140) histdate)
                 when (not (null histaddress))$
-                     lm (makeLeftTextBox (PDFFont Helvetica_Oblique 8) (170-2*frameInnerPadding) histaddress)
+                     lm (makeLeftTextBox (PDFFont Helvetica_Oblique 8) (140) histaddress)
             , boxEnlarge frameInnerPadding 5 frameInnerPadding 5 $
-              makeLeftTextBox (PDFFont Helvetica_Oblique 10) (330-2*frameInnerPadding) histcomment
+              makeLeftTextBox (PDFFont Helvetica_Oblique 10) (cardWidth*2 - 140) histcomment
             ]
 
 
@@ -681,6 +681,8 @@ verificationPagesContents :: SealSpec -> [String]
 verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,staticTexts,filesList}) =
   map pageContent groupedBoxesNumbered
     where
+      histExample = makeHistoryEntryBox (HistEntry "" "" "")
+
       boxes = buildList $ do
                   lm (Box 0 30 "")
                   lm (verificationTextBox staticTexts)
@@ -717,23 +719,21 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
             tell $ boxCommands (boxEnlarge printableMargin 0 0 0 $ boxVCat 0 pageBoxes)
             tell "Q\n"
 
-            -- "0.039 0.024 0.02 0 k "
-            tell "571.856 24.7 -548.354 64.55 re "
-            tell "S "
-
             tell "q\n"
-            tell "1 0 0 1 34.8198 80.2334 cm\n"
-            tell "0.625 0.537 0.53 0.257 k\n"
-            tell $ boxCommands (makeLeftTextBox (PDFFont Helvetica 8) (printableWidth - 130)
-                (verificationFooter staticTexts))
-            tell "Q\n"
+            tell "1 0 0 1 15 25 cm\n"
 
-            tell "BT "
-            tell "/TT0 1 Tf "
-            tell "0.546 0.469 0.454 0.113 k "
-            tell "10 0 0 10 46.5522 31.5469 Tm "
-            tell $ "(" ++ show pageNumber ++ "/" ++ show (length groupedBoxesNumbered) ++ ")Tj "
-            tell "ET "
+            let footerBox = boxEnlarge printableMargin 0 0 0 $
+                                (setLightTextColor . setFrameColor . boxDrawFrame . boxEnlarge 16 11 16 11) $
+                                boxEnlarge 0 0 90 0 $
+                                boxVCat 5
+                                          [ makeLeftTextBox (PDFFont Helvetica 8) (boxWidth histExample - 90 - 32)
+                                                              (verificationFooter staticTexts)
+                                          , makeLeftTextBox (PDFFont Helvetica 8) (boxWidth histExample - 90 - 32)
+                                                              (show pageNumber ++ "/" ++ show (length groupedBoxesNumbered))
+                                          ]
+            tell $ "1 0 0 1 0 " ++ show (boxHeight footerBox + (printableMargin `div` 2)) ++ " cm\n"
+            tell $ boxCommands footerBox
+            tell "Q\n"
             tell rightcornerseal2
 
 -- To emulate a near perfect circle of radius r with cubic Bézier
@@ -744,7 +744,7 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
 -- equals r multiplied by kappa. kappa is 0.5522847498 in our case we
 -- need: 45 + 25 = 70, 45 - 25 = 20
 rightcornerseal2 :: String
-rightcornerseal2 = "q 1 0 0 1 491.839 14.37 cm " ++
+rightcornerseal2 = "q 1 0 0 1 " ++ show (printableWidth - printableMargin - 66) ++ " 25 cm " ++
                    "1 g 1 G " ++
                    "0 45 m " ++
                    "0  20 20 0  45 0  c " ++

@@ -68,7 +68,7 @@ sealspec filename = SealSpec
                      ]
           }) [1..30::Int]
     , initials = "LD, LD"
-      , history = map (\num -> HistEntry { histdate = "2010-09-" ++ show num ++ " 13:34"
+    , history = map (\num -> HistEntry { histdate = "2010-09-" ++ show num ++ " 13:34"
                                          , histcomment = "I was here and mucked around with PDFs. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good."
                                          , histaddress = "IP: 123.34.1231.12"
                                          }) [10..99::Int]
@@ -83,6 +83,7 @@ sealspec filename = SealSpec
                                      , fileBase64Content = "2632345234534563454"
                                      }
                     ]
+    , filesList = []
     }
 
 
@@ -99,6 +100,8 @@ sampleSealingTexts = SealingTexts
       , historyText="Händelser"
       , verificationFooter=
            "Detta verifikat är utfärdat av Scrive. Kursiverad information är säkert verifierad. Tidsstämpeln säkerställer att dokumentets äkthet går att bevisa matematiskt och oberoende av Scrive. För mer information se den dolda juridiska bilagan. För er bekvämlighet tillhandahåller Scrive även en tjänst för att kontrollera dokumentets äkthet automatiskt på: https://scrive.com/verify/"
+      , documentText = "Dokument"
+      , personalNumberText = "ID-nr."
     }
 
 processFile :: String -> IO ()
@@ -164,7 +167,7 @@ simple_upsales_confirmation = SealSpec
                      ]
           }) [1..30::Int]
     , initials = "LD, LD"
-      , history = map (\num -> HistEntry { histdate = "2010-09-" ++ show num ++ " 13:34"
+    , history = map (\num -> HistEntry { histdate = "2010-09-" ++ show num ++ " 13:34"
                                          , histcomment = "I was here and mucked around with PDFs. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good."
                                          , histaddress = "IP: 1123.11.131.1231"
                                          }) [10..99::Int]
@@ -180,6 +183,7 @@ simple_upsales_confirmation = SealSpec
                                      , fileBase64Content = "2632345234534563454"
                                      }
                     ]
+    , filesList = []
     }
 
 main :: IO ()
