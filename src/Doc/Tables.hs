@@ -271,7 +271,7 @@ tableDocumentTags = Table {
 tableSignatoryLinkFields :: Table
 tableSignatoryLinkFields = Table {
     tblName = "signatory_link_fields"
-  , tblVersion = 2
+  , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of
       [ ("id",                 SqlColDesc {colType = SqlBigIntT,   colNullable = Just False})
        , ("signatory_link_id", SqlColDesc {colType = SqlBigIntT,   colNullable = Just False})
