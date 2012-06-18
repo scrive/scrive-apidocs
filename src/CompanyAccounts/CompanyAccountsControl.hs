@@ -122,7 +122,7 @@ handleCompanyAccountsInternal cid = do
                                                             , ("deletable", JSBool $ cadeletable f)
                                                             , ("activated", JSBool $ caactivated f)
                                                             , ("isctxuser", JSBool $ Just (userid user) == camaybeuserid f)])])
-                                   (list companypage))
+                                   (take companyAccountsPageSize $ list companypage))
                                  ,("paging", pagingParamsJSON companypage)]
 
 {- |

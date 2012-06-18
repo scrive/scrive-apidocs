@@ -264,20 +264,18 @@ handleUsageStatsJSONForUserDays = do
       (statsByDay, _) <- getUsageStatsForCompany (fromJust $ usercompany user) som sixm
       return $ JSObject $ toJSObject [("list", companyStatsDayToJSON totalS statsByDay),
                                       ("paging", JSObject $ toJSObject [
-                                          ("pageMax",showJSON (0::Int)),
-                                          ("pageCurrent", showJSON (0::Int)),
-                                          ("itemMin",showJSON $ (0::Int)),
-                                          ("itemMax",showJSON $ (length statsByDay) - 1),
-                                          ("itemTotal",showJSON $ (length statsByDay))])]
+                                        ("pageSize",showJSON (1000::Int)),
+                                        ("pageCurrent", showJSON (0::Int)),
+                                        ("itemMin",showJSON $ (0::Int)),
+                                        ("itemMax",showJSON $ (length statsByDay) - 1)])]
     else do
       (statsByDay, _) <- getUsageStatsForUser (userid user) som sixm
       return $ JSObject $ toJSObject [("list", userStatsDayToJSON statsByDay),
                                       ("paging", JSObject $ toJSObject [
-                                          ("pageMax",showJSON (0::Int)),
-                                          ("pageCurrent", showJSON (0::Int)),
-                                          ("itemMin",showJSON $ (0::Int)),
-                                          ("itemMax",showJSON $ (length statsByDay) - 1),
-                                          ("itemTotal",showJSON $ (length statsByDay))])]
+                                        ("pageSize",showJSON (1000::Int)),
+                                        ("pageCurrent", showJSON (0::Int)),
+                                        ("itemMin",showJSON $ (0::Int)),
+                                        ("itemMax",showJSON $ (length statsByDay) - 1)])]
 
 handleUsageStatsJSONForUserMonths :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserMonths = do
@@ -291,20 +289,18 @@ handleUsageStatsJSONForUserMonths = do
     (_, statsByMonth) <- getUsageStatsForCompany (fromJust $ usercompany user) som sixm
     return $ JSObject $ toJSObject [("list", companyStatsMonthToJSON totalS statsByMonth),
                                     ("paging", JSObject $ toJSObject [
-                                        ("pageMax",showJSON (0::Int)),
+                                        ("pageSize",showJSON (1000::Int)),
                                         ("pageCurrent", showJSON (0::Int)),
                                         ("itemMin",showJSON $ (0::Int)),
-                                        ("itemMax",showJSON $ (length statsByMonth) - 1),
-                                        ("itemTotal",showJSON $ (length statsByMonth))])]
+                                        ("itemMax",showJSON $ (length statsByMonth) - 1)])]
     else do
     (_, statsByMonth) <- getUsageStatsForUser (userid user) som sixm
     return $ JSObject $ toJSObject [("list", userStatsMonthToJSON statsByMonth),
                                     ("paging", JSObject $ toJSObject [
-                                        ("pageMax",showJSON (0::Int)),
+                                        ("pageSize",showJSON (1000::Int)),
                                         ("pageCurrent", showJSON (0::Int)),
                                         ("itemMin",showJSON $ (0::Int)),
-                                        ("itemMax",showJSON $ (length statsByMonth) - 1),
-                                        ("itemTotal",showJSON $ (length statsByMonth))])]
+                                        ("itemMax",showJSON $ (length statsByMonth) - 1)])]
 
 
 handleGetUserMailAPI :: Kontrakcja m => m (Either KontraLink Response)
