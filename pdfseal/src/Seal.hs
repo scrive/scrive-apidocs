@@ -466,12 +466,13 @@ setDarkTextColor = boxFillColor 0.806 0.719 0.51 0.504
 setLightTextColor :: Box -> Box
 setLightTextColor = boxFillColor 0.597 0.512 0.508 0.201
 
-groupBoxesUpToHeight :: Int -> [Box] -> [[Box]]
+groupBoxesUpToHeight :: Int -> [(Bool,Box)] -> [[Box]]
 groupBoxesUpToHeight height boxes = helper boxes
     where
         worker _ currentBoxes [] = (currentBoxes,[])
-        worker currentHeight currentBoxes rest@((x@(Box _ h _)):xs)
-                                               | currentHeight + h < height = worker (currentHeight + h) (x:currentBoxes) xs
+        worker currentHeight currentBoxes rest@((goesWithNext, x@(Box _ h _)):xs)
+                                               | currentHeight + h < height || goesWithNext
+                                                 = worker (currentHeight + h) (x:currentBoxes) xs
                                                | otherwise = (currentBoxes, rest)
         helper boxes' = case worker 0 [] boxes' of
                             (cb, []) -> [reverse cb]
@@ -684,23 +685,23 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
       histExample = makeHistoryEntryBox (HistEntry "" "" "")
 
       boxes = buildList $ do
-                  lm (Box 0 30 "")
-                  lm (verificationTextBox staticTexts)
-                  lm (documentNumberTextBox staticTexts documentNumber)
-                  lm (Box 0 20 "")
+                  lm (True,Box 0 30 "")
+                  lm (True,verificationTextBox staticTexts)
+                  lm (True,documentNumberTextBox staticTexts documentNumber)
+                  lm (True,Box 0 20 "")
 
-                  lms (goesWithNext (documentTextBox staticTexts)
-                       (boxP $ map (fileBox staticTexts) filesList))
+                  lm (True,documentTextBox staticTexts)
+                  lms (map (\x -> (False,x)) $ boxP $ map (fileBox staticTexts) filesList)
 
-                  lms (goesWithNext (partnerTextBox staticTexts)
-                       (boxP $ map (signatoryBox staticTexts) persons))
+                  lm (True,partnerTextBox staticTexts)
+                  lms (map (\x -> (False,x)) $ boxP $ map (signatoryBox staticTexts) persons)
 
                   when (not (null secretaries)) $ do
-                     lms (goesWithNext (secretaryBox staticTexts)
-                          (boxP $ map (signatoryBox staticTexts) secretaries))
+                     lm (True,secretaryBox staticTexts)
+                     lms (map (\x -> (False,x)) $ boxP $ map (signatoryBox staticTexts) secretaries)
 
-                  lms (goesWithNext (handlingBox staticTexts)
-                       (map (makeHistoryEntryBox) history))
+                  lm (True,handlingBox staticTexts)
+                  lms (map (\x -> (False, makeHistoryEntryBox x)) history)
 
       groupedBoxes = groupBoxesUpToHeight printableHeight boxes
       groupedBoxesNumbered = zip groupedBoxes [1::Int ..]
