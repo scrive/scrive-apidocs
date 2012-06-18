@@ -17,6 +17,7 @@ import Redirect
 import Routing
 import Happstack.StaticRouting(Route, choice, dir, path, param, remainingPath)
 import qualified Stats.Control as Stats
+import qualified ActionQueue.UserAccountRequest as UAR
 import qualified Administration.AdministrationControl as Administration
 import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
@@ -175,10 +176,6 @@ staticRoutes = choice
      , dir "companyaccounts" $ hGet  $ toK0 $ CompanyAccounts.handleCompanyAccounts
      , dir "companyaccounts" $ dir "join" $ hGet $ toK1 $ CompanyAccounts.handleGetBecomeCompanyAccount
      , dir "companyaccounts" $ dir "join" $ hPost $ toK1 $ CompanyAccounts.handlePostBecomeCompanyAccount
-     -- these two are deprecated now, but we mailed out the links so we need to keep them hanging
-     -- around for a litte bit
-     , dir "account" $ dir "bsa" $ hGet $ toK1 $ CompanyAccounts.handleGetBecomeCompanyAccountOld
-     , dir "account" $ dir "bsa" $ hPost $ toK1 $ CompanyAccounts.handlePostBecomeCompanyAccountOld
 
      -- super user only
      , dir "createuser" $ hPost $ toK0 $ Administration.handleCreateUser
@@ -266,4 +263,7 @@ staticRoutes = choice
      , documentAPI
      , oauthAPI
      , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "public"
+
+     -- to be removed after 15.07.2012 (see ActionQueue.UserAccountRequest)
+     , dir "populate_uar" $ hGet $ toK0 $ UAR.populateUARTable
    ]

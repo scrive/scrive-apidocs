@@ -274,6 +274,10 @@ clearTables = runDBEnv $ do
   kRunRaw "DELETE FROM sign_stat_events"
   kRunRaw "DELETE FROM companyinvites"
 
+  kRunRaw "DELETE FROM email_change_requests"
+  kRunRaw "DELETE FROM password_reminders"
+  kRunRaw "DELETE FROM user_account_requests"
+
   kRunRaw "DELETE FROM author_attachments"
   kRunRaw "DELETE FROM signatory_attachments"
   kRunRaw "DELETE FROM signatory_links"

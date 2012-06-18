@@ -25,7 +25,7 @@
                     wiz.nextStep();
                     return false;
                 });
-                a.text(v.localname);
+                $(".text",a).text(v.localname);
                 $(view.el).append(n);
             });
         }

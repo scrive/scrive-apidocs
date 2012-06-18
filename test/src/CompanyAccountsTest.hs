@@ -4,10 +4,10 @@ import Control.Applicative
 import Data.List
 import Data.Ord
 import Happstack.Server hiding (simpleHTTP)
-import Happstack.State (query)
 import Test.Framework
 
-import ActionSchedulerState
+import ActionQueue.Core
+import ActionQueue.UserAccountRequest
 import Company.Model
 import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model
@@ -405,15 +405,7 @@ mkInvite company email fstname sndname =
     , invitingcompany = companyid company
   }
 
-getAccountCreatedActions :: TestEnv [Action]
+getAccountCreatedActions :: TestEnv [UserAccountRequest]
 getAccountCreatedActions = do
-  now <- getMinutesTime
-  let expirytime = (24 * 60 + 1) `minutesAfter` now
-  allactions <- query $ GetExpiredActions LeisureAction expirytime
-  return $ filter isAccountCreated allactions
-
-isAccountCreated :: Action -> Bool
-isAccountCreated action =
-  case actionType action of
-    (AccountCreated _ _ ) ->  True
-    _ -> False
+  expirytime <- minutesAfter (30*24*60) <$> getMinutesTime
+  dbQuery $ GetExpiredActions userAccountRequest expirytime

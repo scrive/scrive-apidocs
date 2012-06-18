@@ -1,5 +1,6 @@
 module UserHistoryTest (userHistoryTests) where
 
+import ActionQueue.UserAccountRequest
 import Test.Framework
 import TestingUtil
 import IPAddress
@@ -14,7 +15,6 @@ import TestKontra as T
 import Control.Applicative
 import Happstack.Server
 import Text.JSON
-import ActionSchedulerState
 import Login
 import SignupTest (getAccountCreatedActions)
 
@@ -184,17 +184,15 @@ testHandlerForTOSAccept = do
     ctx <- mkContext (mkLocaleFromRegion defaultValue)
     req1 <- mkRequest POST [("email", inText "karol@skrivapa.se")]
     (_, ctx1) <- runTestKontra req1 ctx $ signupPagePost
-    actions <- getAccountCreatedActions
-    let aid = actionID (head actions)
-        (AccountCreated uid token) = actionType (head actions)
+    UserAccountRequest{..} <- head <$> getAccountCreatedActions
     req2 <- mkRequest POST [ ("tos", inText "on")
                            , ("fstname", inText "Karol")
                            , ("sndname", inText "Samborski")
                            , ("password", inText "test1111test")
                            , ("password2", inText "test1111test")
                            ]
-    _ <- runTestKontra req2 ctx1 $ handleAccountSetupPost aid token 
-    history <- dbQuery $ GetUserHistoryByUserID uid
+    _ <- runTestKontra req2 ctx1 $ handleAccountSetupPost uarUserID uarToken
+    history <- dbQuery $ GetUserHistoryByUserID uarUserID
     assertBool "History log exists" (not . null $ history)
     assertBool "History log contains TOS accept event"
                $ compareEventTypeFromList UserTOSAccept $ history
@@ -242,7 +240,6 @@ createTestUser = do
     muser <- dbUpdate $ AddUser ("", "")
                                 "karol@skrivapa.se"
                                 (Just pwd) 
-                                False 
                                 Nothing 
                                 Nothing 
                                 (mkLocaleFromRegion defaultValue)

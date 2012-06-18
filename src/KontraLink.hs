@@ -1,9 +1,10 @@
 module KontraLink(KontraLink(..), LoginRedirectReason(..), getHomeOrUploadLink) where
 
+import Data.Int
+
 import Doc.DocStateData
-import MagicHash (MagicHash)
+import MagicHash
 import Misc
-import ActionSchedulerState (ActionID)
 import User.Model
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
@@ -16,7 +17,6 @@ import OAuth.Model
 import Network.URI
 import Network.HTTP
 import KontraMonad
-import Data.Int
 import Context
 
 {- |
@@ -59,7 +59,7 @@ data KontraLink
     | LinkAccount
     | LinkAccountCompany (Maybe CompanyID)
     | LinkCompanyLogo CompanyID
-    | LinkChangeUserEmail ActionID MagicHash
+    | LinkChangeUserEmail UserID MagicHash
     | LinkAccountSecurity
     | LinkUserMailAPI
     | LinkSignDoc Document SignatoryLink
@@ -81,8 +81,8 @@ data KontraLink
     | LinkCompanyUserAdmin CompanyID
     | LinkAdminServices
     | LinkAdminQuarantine
-    | LinkPasswordReminder ActionID MagicHash
-    | LinkAccountCreated ActionID MagicHash String -- email
+    | LinkPasswordReminder UserID MagicHash
+    | LinkAccountCreated UserID MagicHash -- email
     | LinkChangeSignatoryEmail DocumentID SignatoryLinkID
     | LinkWithdrawn DocumentID
     | LoopBack
@@ -205,7 +205,7 @@ instance Show KontraLink where
     showsPrec _ (LinkAdminServices) = (++) $ "/adminonly/services"
     showsPrec _ (LinkAdminQuarantine) = (++) $ "/adminonly/quarantine"
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
-    showsPrec _ (LinkAccountCreated aid hash email) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash ++ "?email=" ++ email
+    showsPrec _ (LinkAccountCreated uid hash) = (++) $ "/accountsetup/" ++ show uid ++ "/" ++ show hash
     showsPrec _ (LinkChangeSignatoryEmail did slid ) = (++) $ "/changeemail/"++show did++"/"++show slid
     showsPrec _ (LinkWithdrawn did ) = (++) $ "/withdrawn/"++show did
     showsPrec _ LoopBack = (++) $ "/" -- this should never be used

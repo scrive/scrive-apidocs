@@ -5,7 +5,7 @@ import Data.List
 import Happstack.Server
 import Test.Framework
 
-import ActionSchedulerState
+import ActionQueue.PasswordReminder
 import DB
 import Context
 import FlashMessage
@@ -78,12 +78,12 @@ assertResettingPasswordRecordsALoginEvent = do
 createUserAndResetPassword :: TestEnv (User, Response, Context)
 createUserAndResetPassword = do
   pwd <- createPassword "admin"
-  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
-  Action{ actionID, actionType = PasswordReminder { prToken } } <- newPasswordReminder user
+  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) Nothing Nothing (mkLocaleFromRegion defaultValue)
+  PasswordReminder{..} <- newPasswordReminder $ userid user
   ctx <- mkContext (mkLocaleFromRegion defaultValue)
   req <- mkRequest POST [("password", inText "password123"),
                          ("password2", inText "password123")]
-  (res, ctx') <- runTestKontra req ctx $ handlePasswordReminderPost actionID prToken >>= sendRedirect
+  (res, ctx') <- runTestKontra req ctx $ handlePasswordReminderPost prUserID prToken >>= sendRedirect
   return (user, res, ctx')
 
 assertLoginEventRecordedFor :: UserID -> TestEnv ()
@@ -105,5 +105,5 @@ loginFailureChecks res ctx = do
 createTestUser :: TestEnv UserID
 createTestUser = do
     pwd <- createPassword "admin"
-    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
+    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) Nothing Nothing (mkLocaleFromRegion defaultValue)
     return userid

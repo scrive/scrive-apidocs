@@ -184,7 +184,7 @@ instance MonadIO m => CryptoRNG (CryptoRNGT m) where
   getCryptoRNGState = CryptoRNGT ask
 
 instance CryptoRNG m => CryptoRNG (ReaderT r m) where
-  getCryptoRNGState     = lift getCryptoRNGState
+  getCryptoRNGState = lift getCryptoRNGState
 
 instance CryptoRNG m => CryptoRNG (ContT r m) where
   getCryptoRNGState = lift getCryptoRNGState

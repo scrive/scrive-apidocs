@@ -151,7 +151,7 @@ jsonCompanies = onlySalesOrAdmin $ do
                     ]
                  )
                 ,("link", jsFromString . show . LinkCompanyAdmin . Just . companyid $ company)
-                ]) allCompanies )
+                ]) (take companiesPageSize $ allCompanies) )
         ,("paging", pagingParamsJSON companies)
         ]
 
@@ -276,7 +276,7 @@ jsonUsersList = do
                         ,("admin_invites", JSBool $ isAdminInvite itype)
                         ])
                     ,("link", jsFromString . show $ LinkUserAdmin $ Just $ userid user)
-                    ]) (list users)),
+                    ]) (take usersPageSize $ list users)),
              ("paging", pagingParamsJSON users)]
 
 jsFromString :: String -> JSValue
@@ -402,13 +402,12 @@ handleCompanyChange companyid = onlySalesOrAdmin $ do
 
 handleCreateUser :: Kontrakcja m => m KontraLink
 handleCreateUser = onlySalesOrAdmin $ do
-    ctx <- getContext
     email <- map toLower <$> getAsString "email"
     fstname <- getAsString "fstname"
     sndname <- getAsString "sndname"
     custommessage <- getField "custommessage"
     region <- guardJustM $ readField "region"
-    muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage (mkLocaleFromRegion region)
+    muser <- createNewUserByAdmin email (fstname, sndname) custommessage Nothing (mkLocaleFromRegion region)
     when (isNothing muser) $
       addFlashM flashMessageUserWithSameEmailExists
     -- FIXME: where to redirect?
@@ -439,7 +438,6 @@ handlePrivateUserCompanyInvite companyid = onlySalesOrAdmin $ do
 
 handleCreateCompanyUser :: Kontrakcja m => CompanyID -> m ()
 handleCreateCompanyUser companyid = onlySalesOrAdmin $ do
-  ctx <- getContext
   email <- getCriticalField asValidEmail "email"
   fstname <- getCriticalField asValidName "fstname"
   sndname <- getCriticalField asValidName "sndname"
@@ -447,12 +445,9 @@ handleCreateCompanyUser companyid = onlySalesOrAdmin $ do
   Log.debug $ "Custom message when creating an account " ++ show custommessage
   region <- guardJustM $ readField "region"
   admin <- isFieldSet "iscompanyadmin"
-  muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage (mkLocaleFromRegion region)
-  case muser of
-    Just (User{userid}) -> do
-      _ <- dbUpdate $ SetUserCompany userid (Just companyid)
-      when_ admin $ dbUpdate $ SetUserCompanyAdmin userid True
-    Nothing -> addFlashM flashMessageUserWithSameEmailExists
+  muser <- createNewUserByAdmin email (fstname, sndname) custommessage (Just (companyid, admin)) (mkLocaleFromRegion region)
+  when (isNothing muser) $
+      addFlashM flashMessageUserWithSameEmailExists
   return ()
 
 {- | Reads params and returns function for conversion of company info.  With no param leaves fields unchanged -}
@@ -680,7 +675,7 @@ jsonDocuments = onlySalesOrAdmin $ do
   params <- getListParamsNew
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
-      pagination = docPaginationFromParams docsPageSize params
+      pagination = docPaginationFromParams params
       filters    = []
       domain     = [DocumentsOfWholeUniverse]
       docsPageSize = 100
@@ -711,7 +706,7 @@ jsonDocuments = onlySalesOrAdmin $ do
                         , ("type", jsFromString . show $ documenttype doc)
                         , ("signs", JSArray $ map (jsFromString . getSmartName) $ documentsignatorylinks doc)
                         ])
-                    ]) (list documents))
+                    ]) (take docsPageSize $ list documents))
             , ("paging", pagingParamsJSON documents)
             ]
 
@@ -751,9 +746,8 @@ docSearchingFromParams params =
     x -> [DocumentFilterByString x]
 
 
-docPaginationFromParams :: Int -> ListParams -> DocumentPagination
--- REVIEW: Another magic constant 4, what is it?  Can we have some more DRY here?  We have an opportunity to factor out "magic 4" and explain it.
-docPaginationFromParams pageSize params = DocumentPagination (listParamsOffset params) (pageSize*4)
+docPaginationFromParams :: ListParams -> DocumentPagination
+docPaginationFromParams params = DocumentPagination (listParamsOffset params) (listParamsLimit params)
 
 
 handleBackdoorQuery :: Kontrakcja m => String -> m String

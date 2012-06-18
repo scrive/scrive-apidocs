@@ -16,8 +16,7 @@ import Prelude hiding (catch)
 
 import AppConf
 import AppControl
-import ActionScheduler
-import ActionSchedulerState
+import ActionQueue.Scheduler
 import DB
 import File.File
 import File.Model
@@ -26,7 +25,7 @@ import qualified Log
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
 
-uploadFilesToAmazon :: ActionScheduler ()
+uploadFilesToAmazon :: Scheduler ()
 uploadFilesToAmazon = do
   mfile <- dbQuery GetFileThatShouldBeMovedToAmazon
   case mfile of
