@@ -258,28 +258,30 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
 
       initials = concatComma initialsx
       makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isauthor, _, _)  = do
-          seenDesc <- renderLocalTemplateForProcess document processseenhistentry $ do
+          seenDesc <- renderLocalTemplate document "_seenHistEntry" $ do
                         personFields document personInfo
                         documentInfoFields document
           let seenEvent = Seal.HistEntry
                             { Seal.histdate = show (signtime seen)
                             , Seal.histcomment = pureString seenDesc
-                            , Seal.histaddress = formatIP (signipnumber seen)
+                            , Seal.histaddress = "IP: " ++ show (signipnumber seen)
                             }
-          signDesc <- renderLocalTemplateForProcess document processsignhistentry $ do
+          signDesc <- renderLocalTemplate document "_signHistEntry" $ do
                         personFields document personInfo
                         documentInfoFields document
           let signEvent = Seal.HistEntry
                             { Seal.histdate = show (signtime signed)
                             , Seal.histcomment = pureString signDesc
-                            , Seal.histaddress = formatIP (signipnumber signed)
+                            , Seal.histaddress = "IP: " ++ show (signipnumber signed)
                             }
           return $ if (isauthor)
                     then [signEvent]
                     else [seenEvent,signEvent]
       invitationSentEntry = case (documentinvitetime document,(sendMailsDurringSigning &&^ hasOtherSignatoriesThenAuthor) document ) of
                                 (Just (SignInfo time ipnumber),True) -> do
-                                   desc <-  renderLocalTemplateForProcess document processinvitationsententry $ do
+                                   desc <-  renderLocalTemplate document "_invitationSentEntry" $ do
+                                       partylist <- lift $ renderListTemplateNormal . map getSmartName $ partyList document
+                                       F.value "partyList" partylist
                                        documentInfoFields document
                                        documentAuthorInfo document
                                        F.value "oneSignatory"  (length signatories>1)
@@ -287,21 +289,19 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
                                    return  [ Seal.HistEntry
                                       { Seal.histdate = show time
                                       , Seal.histcomment = pureString desc
-                                      , Seal.histaddress = formatIP ipnumber
+                                      , Seal.histaddress = "IP: " ++ show ipnumber
                                       }]
-                                _ -> return []   
+                                _ -> return []
       maxsigntime = maximum (map (signtime . (\(_,_,c,_,_,_) -> c)) signatories)
       concatComma = concat . intersperse ", "
       -- document fields
       lastHistEntry = do
-                       desc <- renderLocalTemplateForProcess document processlasthisentry (documentInfoFields document)
-                       return $ if (Just True == getValueForProcess document processsealincludesmaxtime)
-                                then [Seal.HistEntry
+                       desc <- renderLocalTemplate document "_lastHistEntry" (documentInfoFields document)
+                       return $ [Seal.HistEntry
                                 { Seal.histdate = show maxsigntime
                                 , Seal.histcomment = pureString desc
                                 , Seal.histaddress = ""
                                 }]
-                                else []
 
   in do
       -- Log.debug "Creating seal spec from file."

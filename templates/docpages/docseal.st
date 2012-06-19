@@ -80,24 +80,6 @@ orderInvitationSentEntry=
         $_orderInvitationSentEntryIfElse()$
     $endif$ 
 ###
-contractSeenHistEntry=
-    $personname$ $_contractSeenHistEntry()$
-###
-offerSeenHistEntry=
-    $personname$ $_offerSeenHistEntry()$
-####
-orderSeenHistEntry=
-    $personname$ $_orderSeenHistEntry()$
-####
-contractSignHistEntry=
-    $personname$ $_contractSignHistEntry()$ $signMethod()$
-####
-offerSignHistEntry=
-    $personname$ $_offerSignHistEntry()$ $signMethod()$
-###
-orderSignHistEntry=
-    $personname$ $_orderSignHistEntry()$ $signMethod()$
-###
 signMethod=
         $if(!provider)$
           $if(email)$
