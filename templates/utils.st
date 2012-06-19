@@ -6,9 +6,14 @@ strong=
 morethenonelist=
     $list:strong(); separator=", "$ $_listand()$ $last:strong()$
 ###
-###
 nomorethanonelist=
     $list:strong()$
+###
+morethenonelistnormal=
+    $list; separator=", "$ $_listand()$ $last$
+###
+nomorethanonelistnormal=
+    $list$
 ###
 listyou=
     $_listyou()$

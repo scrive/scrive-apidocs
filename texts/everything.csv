@@ -405,14 +405,10 @@
 "_close","Stäng",,"Close"
 "_company","Företag",,"Company"
 "_companyposition","Befattning",,"Position"
-"_contractInvitationSentEntry","skickar en inbjudan att signera till",,"sends an invitation to sign to"
-"_contractInvitationSentEntryIfElse","parterna",,"the parties"
-"_contractInvitationSentEntryIfoneSignatory","parten",,"the party"
-"_contractLastHistEntry","Samtliga parter har signerat dokumentet och avtalet är
- nu juridiskt bindande.",,"All parties have signed the document, the contract is now
- legally binding."
-"_contractSeenHistEntry","granskar dokumentet online",,"reviews the document online"
-"_contractSignHistEntry","signerar dokumentet online med",,"signs the document online with"
+"_invitationSentEntry","Scrive skickar en inbjudan att signera till $partyList$",,"Scrive sends an invitation to sign to $partyList$"
+"_lastHistEntry","Dokumentet förseglas och signeras digitalt av Scrive.",,"The document is sealed and digitally signed by Scrive."
+"_seenHistEntry","$personname$ granskar dokumentet online.",,"$personname$ reviews the document online."
+"_signHistEntry","$personname$ signerar dokumentet online med $signMethod()$ som verifieringsmetod.",,"$personname$ signs the document online with $signMethod()$ as verification method."
 "_contractSignatory","Part",,"Party"
 "_contractauthorissecretarytext","Avsändare: Ej signerande part",,"Sender: Non-signing party"
 "_contractcancelbuttontext","Återkalla inbjudan",,"Withdraw invitation"
