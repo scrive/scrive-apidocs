@@ -477,7 +477,7 @@ window.Eleg = {
                 signer.SetIncludeRootCaCert('true');
                 signer.SetBase64('true');
                 signer.SetCharacterEncoding('UTF8');
-                signer.SetMimeType('text/plain;charset=UTF-8');
+                signer.SetMimeType('text/plain');
                 signer.SetViewData('false');
                 var res = signer.Sign();
                 if (res !== 0) // 0 means success
