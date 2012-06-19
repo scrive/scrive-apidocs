@@ -129,6 +129,7 @@ pagingParamsJSON (PagedList{list,pageSize,params}) = JSObject $ toJSObject [
     ("pageCurrent", showJSON $ (offset params `div` pageSize)),
     ("itemMin", showJSON $ offset params),
     ("itemMax", showJSON $ offset params + length list - 1),
+    ("maxNextPages", showJSON $ (limit params) `div` pageSize),
     ("pageSize", showJSON $ pageSize)
     ]
 

@@ -169,7 +169,9 @@
             // last visible item index. If itemMax < itemMin, there are no items
             itemMax: 0,
             pageCurrent: 0,
-            pageSize: 0
+            pageSize: 0,
+            // Maximal number of pages that are sown
+            maxNextPages : 5
         },
         disabled: function() {
             return this.get("disabled") != undefined && this.get("disabled") == true;
@@ -179,6 +181,9 @@
         },
         itemMax: function() {
             return this.get("itemMax");
+        },
+        maxNextPages:function() {
+            return this.get("maxNextPages");
         },
         pageCurrent: function() {
             return this.get("pageCurrent");
@@ -208,35 +213,22 @@
             var paging = this.model;
             var main = $("<div class='pages'>");
             var pages = $("<div />");
-            var i = paging.pageCurrent() + 1;
-            var contextCount = 2;
-            var writePage = function(n) {
-                var a = $("<span class='page-change' />").text(n + "");
-                a.click(paging.changePageFunction(n-1));
+            var writePage = function(t,n) {
+                var a = $("<span class='page-change' />").text(t);
+                a.click(paging.changePageFunction(n));
                 pages.append(a);
                 return a;
             }
-            if( i>1 ) {
-                writePage(1);
+            var maxNextPages = paging.maxNextPages();
+            var maxPage = paging.pageCurrent() + maxNextPages - 1;
+            for(var i=0;i < maxPage && i*paging.pageSize() < paging.itemMax();i++) {
+                var a = writePage((i+1)+"", i);
+                if (i == paging.pageCurrent())
+                    a.addClass("current");
             }
-            var k = i - contextCount;
-            if( k > 2 ) {
-                pages.append($("<span> ... </span>"));
-            }
-            if( k<2 ) k = 2;
-            for( k = k; k<i; k++ ) {
-                writePage(k);
-            }
-            writePage(i).addClass("current");
-            var lastPage = Math.ceil(paging.itemMax()/paging.pageSize());
-            // REVIEW: What is the constant 3 below?  Any relation with contextCount above?
-            for( k = i+1; k <= lastPage && k - i < 3; k++ ) { //We don't want to show too many page numbers
-                writePage(k);
-            };
-            // REVIEW: Could the condition below be simplified to (k <= lastPage) ?
-            if (paging.itemMax() - (k-1) * paging.pageSize() > 0) { // We show ... if there are items on missed pages
-                pages.append("<span> ... </span>");
-            };
+            if (maxPage*paging.pageSize() < paging.itemMax())
+                writePage(" > ", maxPage);
+    
             main.append(pages);
 
             $(this.el).append(main);

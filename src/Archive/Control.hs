@@ -128,7 +128,7 @@ jsonDocumentsList = withUserGet $ do
 
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
-      pagination = docPaginationFromParams docsPageSize params
+      pagination = docPaginationFromParams params
 
   allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
 
@@ -139,7 +139,7 @@ jsonDocumentsList = withUserGet $ do
 
   cttime <- getMinutesTime
   padqueue <- dbQuery $ GetPadQueue $ userid user
-  docsJSONs <- mapM (docForListJSON (timeLocaleForLang lang) cttime user padqueue) $ list docs
+  docsJSONs <- mapM (docForListJSON (timeLocaleForLang lang) cttime user padqueue) $ take docsPageSize $ list docs
   return $ JSObject $ toJSObject [
       ("list", JSArray docsJSONs)
     , ("paging", pagingParamsJSON docs)
@@ -178,9 +178,8 @@ docSearchingFromParams params =
     x -> [DocumentFilterByString x]
 
 
-docPaginationFromParams :: Int -> ListParams -> DocumentPagination
--- REVIEW: Magic 4: more DRY again, please.
-docPaginationFromParams pageSize params = DocumentPagination (listParamsOffset params) (pageSize*4)
+docPaginationFromParams :: ListParams -> DocumentPagination
+docPaginationFromParams params = DocumentPagination (listParamsOffset params) (listParamsLimit params)
 
 #if 0
 -- this needs to be transferred to SQL

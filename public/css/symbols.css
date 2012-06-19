@@ -332,6 +332,14 @@ a.documenticon {
     text-decoration: none;
 }
 
+.documenticon .text{
+    width: 100px;
+    display: inline-block;
+
+}
+
+
+
 a.documenticon.withUpload{
     padding-top: 0px;
 }

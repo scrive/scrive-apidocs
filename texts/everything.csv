@@ -265,7 +265,7 @@
 "_SortCompany","Företag",,"Company"
 "_SortDoc","Dokument",,"Document"
 "_SortEmail","E-postadress",,"Email address"
-"_SortParty","Parter",,"Parties"
+"_SortParty","Signerande parter",,"Signing parties"
 "_SortReciever","Mottagare",,"Recipient"
 "_SortSender","Avsändare",,"Sender"
 "_SortStatus","Status",,"Status"

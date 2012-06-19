@@ -91,7 +91,7 @@ var documentsTable = KontraList().init({
                     size: "tiny",
                     width : "130",
                     text: txt, //
-                    button: jQuery('<a href="#" class="documenticon withUpload"/>').append(jQuery('<div class="documenticonText"/>').text(txt)),
+                    button: jQuery('<a href="#" class="documenticon withUpload"/>').append(jQuery('<div class="documenticonText"/>').append(jQuery("<span class='text'/>").text(txt))),
                     name : "doc",
                     submitOnUpload : true,
                     submit: new Submit({
@@ -102,14 +102,15 @@ var documentsTable = KontraList().init({
                     })
                 }).input()));
             }
-            var t = jQuery('<table style="width: 100%"/>').append(jQuery('<tbody/>').append(jQuery('<tr/>')));
+            var t = jQuery('<tr/>') ;
             t.append(doctypebutton(localization.process.contract.name, "Contract"));
             t.append(doctypebutton(localization.process.offer.name, "Offer"));
             t.append(doctypebutton(localization.process.order.name, "Order"));
+            var table = jQuery('<table style="width: 100%"/>').append(jQuery('<tbody/>').append(t));
             popup = Confirmation.popup({
                 onAccept: function() { },
                 title: "$_createNewType()$",
-                content: t
+                content: table
             });
             popup.hideAccept();
             return false;
