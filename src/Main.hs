@@ -99,7 +99,7 @@ startSystem appGlobals appConf =
           listensocket <- listenOn (htonl iface) (fromIntegral port)
           let (routes,overlaps) = compile staticRoutes
           maybe (return ()) Log.server overlaps
-          t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port })  (appHandler routes appConf appGlobals)
+          t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port  , timeout   = 120})  (appHandler routes appConf appGlobals)
           let scheddata = SchedulerData appConf $ templates appGlobals
               rng = cryptorng appGlobals
           t2 <- forkIO $ cron 60 $ (runScheduler rng (oldScheduler >> actionScheduler UrgentAction) scheddata) >> Log.debug "Running scheduler for UA"
