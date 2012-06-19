@@ -79,7 +79,7 @@ viewCompanyAccounts =
                                       "activated",
                                       "deletable"] }),
       paging: new Paging({}),
-      filtering: new Filtering({ text: "", infotext: "$_SearchCompanyAccount()$" }),
+      textfiltering: new TextFiltering({ text: "", infotext: "$_SearchCompanyAccount()$" }),
       cells : [
         new Cell({name: "$_name()$", width: "100px", field:"fullname"}),
         new Cell({name: "$_email()$", width: "100px", field:"email" }),

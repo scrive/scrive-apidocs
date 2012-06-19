@@ -283,6 +283,7 @@
             $(this.el).append(this.main);
         },
         prerender: function() {
+            var view = this;
             this.main = $("<div class='tab-container'/>");
             this.pretableboxleft = $("<div class='col float-left'/>");
             this.pretableboxright = $("<div class='col float-right'/>");
@@ -303,8 +304,13 @@
                     this.pretableboxleft.append(this.headerExtras);
                 }
             }
-            if (!this.schema.filtering().disabled()) {
-                var filter = new FilteringView({model: this.schema.filtering(), el: $("<div class='searchBox float-right'/>")});
+            _.each(this.schema.selectfiltering(),function(f) {
+                var filter = new SelectFilteringView({model: f, el: $("<div class='float-left'/>")});
+                view.pretableboxright.append(filter.el);
+            })
+            
+            if (!this.schema.textfiltering().disabled()) {
+                var filter = new TextFilteringView({model: this.schema.textfiltering(), el: $("<div class='searchBox float-right'/>")});
                 this.pretableboxright.append(filter.el);
             }
             if (this.bottomExtras != undefined) {

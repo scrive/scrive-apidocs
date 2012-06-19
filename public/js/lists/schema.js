@@ -55,7 +55,8 @@
     window.Schema = Backbone.Model.extend({
         defaults: {
             sorting: new Sorting({ disabled: true }),
-            filtering: new Filtering({ disabled: true}),
+            textfiltering: new TextFiltering({ disabled: true}),
+            selectfiltering : [],                              
             paging: new Paging({ disabled: true }),
             options: [],
             extraParams: {}
@@ -67,11 +68,14 @@
           // we reset the page to 0 when we change the filtering
           // if we do this first, the right thing happens, otherwise,
           // it goes into infinite loop -- Eric
-          this.filtering().bind('change', function(){paging.changePage(0);});
-
-            this.filtering().bind('change', function() {schema.trigger('change')});
-            this.sorting().bind('change', function() {schema.trigger('change')});
-            this.paging().bind('change:pageCurrent', function() {schema.trigger('change')});
+          this.textfiltering().bind('change', function(){paging.changePage(0);});
+          this.textfiltering().bind('change', function() {schema.trigger('change')});
+          _.each(this.selectfiltering(), function(f) {
+              f.bind('change', function(){ paging.changePage(0);});
+              f.bind('change', function() {schema.trigger('change')});
+          });
+          this.sorting().bind('change', function() {schema.trigger('change')});
+          this.paging().bind('change:pageCurrent', function() {schema.trigger('change')});
         },
         cell: function(i) {
             return this.get("cells")[i];
@@ -87,8 +91,11 @@
             }
             return false;
         },
-        filtering: function() {
-            return this.get("filtering");
+        textfiltering: function() {
+            return this.get("textfiltering");
+        },
+        selectfiltering: function() {
+            return this.get("selectfiltering");
         },
         sorting: function() {
             return this.get("sorting");
@@ -113,14 +120,15 @@
         },
         initSessionStorageNamespace: function(name) {
             this.set({ namespace: name });
-            this.filtering().setSessionStorageNamespace(name);
+            this.textfiltering().setSessionStorageNamespace(name);
+            _.each(this.selectfiltering(), function(f) {f.setSessionStorageNamespace(name)});
             this.sorting().setSessionStorageNamespace(name);
         },
         getSchemaUrlParams: function() {
             var params = this.extraParams();
             params.page = this.paging().pageCurrent();
             params.offset = params.page * this.paging().pageSize();
-            params.filter = this.filtering().text();
+            params.textfilter = this.textfiltering().text();
             params.sort = this.sorting().current();
             params.sortReversed = this.sorting().isAsc();
             return params;

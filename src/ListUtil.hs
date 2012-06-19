@@ -109,7 +109,7 @@ getListParamsNew :: (ServerMonad m,Functor m,HasRqData m,MonadIO m) => m ListPar
 getListParamsNew = do
     offset'  <- readField "offset"
     limit'   <- readField "limit"
-    search  <- getField "filter"
+    search  <- getField "textfilter"
     sorting <- getField "sort"
     sortingReversed <- joinB <$> fmap (== "true") <$> getField "sortReversed"
     let sorting'  = if (sortingReversed)
