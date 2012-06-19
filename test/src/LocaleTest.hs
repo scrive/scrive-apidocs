@@ -134,5 +134,5 @@ createTestElegDoc user ctxtime = do
 createTestUser :: Region -> Lang -> TestEnv User
 createTestUser region lang = do
     pwd <- createPassword "admin"
-    Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) False Nothing Nothing (mkLocale region lang)
+    Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) Nothing Nothing (mkLocale region lang)
     return user

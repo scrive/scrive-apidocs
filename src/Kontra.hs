@@ -14,8 +14,6 @@ module Kontra
     , onlyAdmin
     , onlySalesOrAdmin
     , onlyBackdoorOpen
-    , newPasswordReminderLink
-    , newAccountCreatedLink
     , getAsString
     , getDataFnM
     , currentService
@@ -26,7 +24,6 @@ module Kontra
     where
 
 import API.Service.Model
-import ActionSchedulerState
 import Context
 import Control.Applicative
 import Control.Logic
@@ -41,13 +38,11 @@ import ELegitimation.ELegTransaction
 import Doc.DocStateData
 import Happstack.Server
 import KontraError
-import KontraLink
 import KontraMonad
 import Mails.MailsConfig
 import Templates.Templates
 import Templates.TemplatesLoader
 import User.Model
-import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Misc
 
@@ -157,19 +152,6 @@ switchLocale locale =
          ctxlocale     = locale,
          ctxtemplates  = localizedVersion locale (ctxglobaltemplates ctx)
      }
-
-newPasswordReminderLink :: (MonadIO m, CryptoRNG m) => User -> m KontraLink
-newPasswordReminderLink user = do
-    action <- newPasswordReminder user
-    return $ LinkPasswordReminder (actionID action)
-                                  (prToken $ actionType action)
-
-newAccountCreatedLink :: (MonadIO m, CryptoRNG m) => User -> m KontraLink
-newAccountCreatedLink user = do
-    action <- newAccountCreated user
-    return $ LinkAccountCreated (actionID action)
-                                (acToken $ actionType action)
-                                (getEmail user)
 
 -- data fetchers specific to Kontra
 

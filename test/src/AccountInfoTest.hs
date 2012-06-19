@@ -3,10 +3,10 @@ module AccountInfoTest (accountInfoTests) where
 import Control.Applicative
 import Data.Maybe
 import Happstack.Server
-import Happstack.State (query)
 import Test.Framework
 
-import ActionSchedulerState
+import ActionQueue.Core
+import ActionQueue.EmailChangeRequest
 import Context
 import DB hiding (query, update)
 import FlashMessage
@@ -107,16 +107,15 @@ testChangeEmailAddress = do
 
   actions <- getRequestChangeEmailActions
   assertEqual "A request change email action was made" 1 (length $ actions)
-  let action = head actions
-      (RequestEmailChange inviterid invitedemail token) = actionType action
-  assertEqual "Inviter id is correct" (userid user) inviterid
-  assertEqual "Action email is correct" (Email "jim@bob.com") invitedemail
+  let EmailChangeRequest{..} = head actions
+  assertEqual "Inviter id is correct" (userid user) ecrUserID
+  assertEqual "Action email is correct" (Email "jim@bob.com") ecrNewEmail
 
   emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
 
   req2 <- mkRequest POST [("password", inText "abc123")]
-  (res2, ctx2) <- runTestKontra req2 ctx1 $ handlePostChangeEmail (actionID action) token >>= sendRedirect
+  (res2, ctx2) <- runTestKontra req2 ctx1 $ handlePostChangeEmail ecrUserID ecrToken >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res2)
   assertEqual "Location is /account" (Just "/account") (T.getHeader "location" (rsHeaders res2))
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx2)
@@ -185,9 +184,8 @@ testEmailChangeFailsIfActionIDIsWrong = do
     <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [("password", inText "abc123")]
-  action <- newRequestEmailChange user (Email "jim@bob.com")
-  let (RequestEmailChange _inviterid _invitedemail token) = actionType action
-  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (ActionID 123) token >>= sendRedirect
+  EmailChangeRequest{..} <- newEmailChangeRequest (userid user) (Email "jim@bob.com")
+  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (unsafeUserID 0) ecrToken >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
@@ -202,8 +200,11 @@ testEmailChangeFailsIfMagicHashIsWrong = do
     <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [("password", inText "abc123")]
-  action <- newRequestEmailChange user (Email "jim@bob.com")
-  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (unsafeMagicHash 123) >>= sendRedirect
+  EmailChangeRequest{..} <- newEmailChangeRequest (userid user) (Email "jim@bob.com")
+  let wrongtoken = if ecrToken == unsafeMagicHash 123
+                     then unsafeMagicHash 12345
+                     else unsafeMagicHash 123
+  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID wrongtoken >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
@@ -219,9 +220,8 @@ testEmailChangeIfForAnotherUser = do
     <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [("password", inText "abc123")]
-  action <- newRequestEmailChange anotheruser (Email "jim@bob.com")
-  let (RequestEmailChange _inviterid _invitedemail token) = actionType action
-  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) token >>= sendRedirect
+  EmailChangeRequest{..} <- newEmailChangeRequest (userid anotheruser) (Email "jim@bob.com")
+  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID ecrToken >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
@@ -236,10 +236,10 @@ testEmailChangeFailsIfEmailInUse = do
     <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [("password", inText "abc123")]
-  action <- newRequestEmailChange user (Email "jim@bob.com")
+  EmailChangeRequest{..} <- newEmailChangeRequest (userid user) (Email "jim@bob.com")
 
   Just _ <- addNewUser "Jim" "Bob" "jim@bob.com"
-  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (unsafeMagicHash 123) >>= sendRedirect
+  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID ecrToken >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
@@ -254,10 +254,10 @@ testEmailChangeFailsIfPasswordWrong = do
     <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [("password", inText "wrongpassword")]
-  action <- newRequestEmailChange user (Email "jim@bob.com")
+  EmailChangeRequest{..} <- newEmailChangeRequest (userid user) (Email "jim@bob.com")
 
   Just _ <- addNewUser "Jim" "Bob" "jim@bob.com"
-  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (unsafeMagicHash 123) >>= sendRedirect
+  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID ecrToken >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
@@ -272,23 +272,15 @@ testEmailChangeFailsIfNoPassword = do
     <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [("password", inText "")]
-  action <- newRequestEmailChange user (Email "jim@bob.com")
+  EmailChangeRequest{..} <- newEmailChangeRequest (userid user) (Email "jim@bob.com")
 
   Just _ <- addNewUser "Jim" "Bob" "jim@bob.com"
-  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (unsafeMagicHash 123) >>= sendRedirect
+  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID ecrToken >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
-getRequestChangeEmailActions :: TestEnv [Action]
+getRequestChangeEmailActions :: TestEnv [EmailChangeRequest]
 getRequestChangeEmailActions = do
-  now <- getMinutesTime
-  let expirytime = (7 * 24 * 60 + 1) `minutesAfter` now
-  allactions <- query $ GetExpiredActions LeisureAction expirytime
-  return $ filter isRequestChangeEmailAction allactions
-
-isRequestChangeEmailAction :: Action -> Bool
-isRequestChangeEmailAction action =
-  case actionType action of
-    (RequestEmailChange _ _ _) ->  True
-    _ -> False
+  expirytime <- minutesAfter (30*24*60) <$> getMinutesTime
+  dbQuery $ GetExpiredActions emailChangeRequest expirytime

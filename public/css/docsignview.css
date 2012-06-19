@@ -836,21 +836,38 @@ body.signview {
   position: absolute;
 }
 
-.signview .arrows .action.arrow .front {
-  background: url(../img/sign-arrow-action-front.png);
+.signview .arrows .action.arrow.right .front {
+  background: url(../img/sign-arrow-action-right-front.png);
   background-repeat: no-repeat;
   min-width: 84px;
   height: 28px;
   float: left;
 }
 
-.signview .arrows .action.arrow .back {
-  background: url(../img/sign-arrow-action-back.png);
+.signview .arrows .action.arrow.right .back {
+  background: url(../img/sign-arrow-action-right-back.png);
   background-repeat: no-repeat;
   width: 8px;
   height: 28px;
   float: left;
 }
+
+.signview .arrows .action.arrow.left .front {
+  background: url(../img/sign-arrow-action-left-front.png);
+  background-repeat: no-repeat;
+  min-width: 84px;
+  height: 28px;
+  float: left;
+}
+
+.signview .arrows .action.arrow.left .back {
+  background: url(../img/sign-arrow-action-left-back.png);
+  background-repeat: no-repeat;
+  width: 20px;
+  height: 28px;
+  float: left;
+}
+
 
 .signview .arrows .action.arrow .label {
   color: white;

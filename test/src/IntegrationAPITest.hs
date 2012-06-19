@@ -556,7 +556,7 @@ makeAPIRequest handler req = do
 createTestService :: TestEnv ()
 createTestService = do
   pwd <- createPassword "test_password"
-  muser <- dbUpdate $ AddUser ("", "") "mariusz@skrivapa.se" (Just pwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
+  muser <- dbUpdate $ AddUser ("", "") "mariusz@skrivapa.se" (Just pwd) Nothing Nothing (mkLocaleFromRegion defaultValue)
   case muser of
     Nothing -> error "can't create user"
     Just User{userid} ->

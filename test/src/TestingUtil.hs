@@ -41,7 +41,6 @@ import API.Service.Model
 import Data.Typeable
 import Doc.Invariants
 import Doc.DocProcess
-import ActionSchedulerState
 import Text.JSON
 import TestKontra
 
@@ -135,9 +134,6 @@ instance Arbitrary MinutesTime where
 
 instance Arbitrary DocumentUI where
   arbitrary = DocumentUI <$> arbitrary
-
-instance Arbitrary ActionID where
-  arbitrary = ActionID <$> arbitrary
 
 {- | Sometimes we get and object that is not as random as we would expect (from some reason)
      Like author signatorylink that by default does not have any fields attached
@@ -343,6 +339,7 @@ instance Arbitrary FieldPlacement where
                             , placementpage = c
                             , placementpagewidth = d
                             , placementpageheight = e
+                            , placementtipside = Nothing
                             }
 
 instance Arbitrary FieldType where
@@ -478,11 +475,11 @@ addNewRandomFile = do
 
 addNewUser :: String -> String -> String -> TestEnv (Maybe User)
 addNewUser firstname secondname email =
-  dbUpdate $ AddUser (firstname, secondname) email Nothing False Nothing Nothing (mkLocaleFromRegion defaultValue)
+  dbUpdate $ AddUser (firstname, secondname) email Nothing Nothing Nothing (mkLocaleFromRegion defaultValue)
 
 addNewCompanyUser :: String -> String -> String -> CompanyID -> TestEnv (Maybe User)
 addNewCompanyUser firstname secondname email cid =
-  dbUpdate $ AddUser (firstname, secondname) email Nothing False Nothing (Just cid) (mkLocaleFromRegion defaultValue)
+  dbUpdate $ AddUser (firstname, secondname) email Nothing Nothing (Just cid) (mkLocaleFromRegion defaultValue)
 
 addNewRandomUser :: TestEnv User
 addNewRandomUser = do

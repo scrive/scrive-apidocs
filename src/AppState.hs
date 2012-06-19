@@ -8,7 +8,6 @@ module AppState
 import Happstack.Data
 import Happstack.State
 import Session
-import ActionSchedulerState
 import Data.Data
 import Misc
 
@@ -23,9 +22,8 @@ instance Version AppState
 
 -- |top-level application component
 instance Component AppState where
-  type Dependencies AppState = Sessions :+: Actions :+: End
+  type Dependencies AppState = Sessions :+: End
   initialValue = AppState
-
 
 -- create types for event serialization
 $(mkMethods ''AppState [])

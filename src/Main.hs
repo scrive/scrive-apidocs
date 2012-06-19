@@ -14,8 +14,11 @@ import System.IO
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 
-import ActionScheduler
-import ActionSchedulerState
+import ActionQueue.EmailChangeRequest
+import ActionQueue.Monad
+import ActionQueue.PasswordReminder
+import ActionQueue.Scheduler
+import ActionQueue.UserAccountRequest
 import AppControl
 import AppDB
 import AppState
@@ -100,17 +103,23 @@ startSystem appGlobals appConf =
           let (routes,overlaps) = compile staticRoutes
           maybe (return ()) Log.server overlaps
           t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port })  (appHandler routes appConf appGlobals)
-          let scheddata = SchedulerData appConf $ templates appGlobals
-              rng = cryptorng appGlobals
-          t2 <- forkIO $ cron 60 $ (runScheduler rng (oldScheduler >> actionScheduler UrgentAction) scheddata) >> Log.debug "Running scheduler for UA"
-          t3 <- forkIO $ cron 600 $ (runScheduler rng (actionScheduler LeisureAction) scheddata) >> Log.debug "Running scheduler for LA"
-          --t4 <- forkIO $ cron (60 * 60 * 4) $ runScheduler rng runDocumentProblemsCheck scheddata
-          --t5 <- forkIO $ cron (60 * 60 * 24) $ runScheduler rng runArchiveProblemsCheck scheddata
-          t6 <- forkIO $ cron 5 $ runScheduler rng processEvents scheddata
-          t7 <- forkIO $ cron 60 $ (runScheduler rng AWS.uploadFilesToAmazon scheddata) >>  Log.debug "Running scheduler for AU"
-          t8 <- forkIO $ cron (60 * 60) (System.Mem.performGC >> Log.debug "Performing GC")
-          --return [t1, t2, t3, t4, t5, t6, t7, t8]
-          return [t1, t2, t3, t6, t7, t8]
+          let runScheduler = runQueue (cryptorng appGlobals) (dbConfig appConf) (SchedulerData appConf $ templates appGlobals)
+          t2 <- forkIO $ cron 60 $ do
+            Log.debug "Running oldScheduler..."
+            runScheduler oldScheduler
+          t3 <- forkIO $ cron (60 * 60) $ do
+            Log.debug "Evaluating EmailChangeRequest actions..."
+            runScheduler $ actionQueue emailChangeRequest
+          t4 <- forkIO $ cron (60 * 60) $ do
+            Log.debug "Evaluating PasswordReminder actions..."
+            runScheduler $ actionQueue passwordReminder
+          t5 <- forkIO $ cron (60 * 60) $ do
+            Log.debug "Evaluating UserAccountRequest actions..."
+            runScheduler $ actionQueue userAccountRequest
+          t6 <- forkIO $ cron 5 $ runScheduler processEvents
+          t7 <- forkIO $ cron 60 $ runScheduler AWS.uploadFilesToAmazon
+          t8 <- forkIO $ cron (60 * 60) (System.Mem.performGC >> Log.debug "Performing GC...")
+          return [t1, t2, t3, t4, t5, t6, t7, t8]
 
         waitForTerm _ = E.bracket
           -- checkpoint the state once a day
@@ -130,6 +139,6 @@ initDatabaseEntries = mapM_ $ \(email, passwordstring) -> do
   maybeuser <- dbQuery $ GetUserByEmail Nothing email
   case maybeuser of
     Nothing -> do
-      _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
+      _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) Nothing Nothing (mkLocaleFromRegion defaultValue)
       return ()
     Just _ -> return () -- user exist, do not add it

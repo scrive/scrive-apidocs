@@ -15,6 +15,8 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
 
+
+
 $(jsonableDeriveConvertible [t| [SignatoryField] |])
 
 deprecateDocFunctionalityCol :: MonadDB m => Migration m
@@ -90,6 +92,7 @@ dropDocumentIDColumntFromSignatoryAttachments = Migration {
       ++ " DROP COLUMN document_id"
   }
 
+
 {-
 - migrate padqueue - set fk referencing signatory_links to ON UPDATE CASCADE
 - migrate signatory_attachments - set fk referencing signatory_links to ON UPDATE CASCADE
@@ -100,9 +103,7 @@ dropDocumentIDColumntFromSignatoryAttachments = Migration {
 - migrate padqueue - add new fk referencing signatory_links
 - migrate signatory_attachments - add new fk referencing signatory_links
 -}
-
-
-
+             
 moveSignatoryLinkFieldsToSeparateTable :: MonadDB m => Migration m
 moveSignatoryLinkFieldsToSeparateTable = Migration {
     mgrTable = tableSignatoryLinks
@@ -152,10 +153,10 @@ moveSignatoryLinkFieldsToSeparateTable = Migration {
     fetch acc slid fieldsstr = (slid :: Int64, fields) : acc
       where
         Ok (JSArray arr) = decode fieldsstr
-        fromJSValue (JSObject obj) = fromJSObject obj
-        fromJSValue x =
+        fromJSVal (JSObject obj) = fromJSObject obj
+        fromJSVal x =
           error $ "moveSignatoryLinkFieldsToSeparateTable: expected valid object, got: " ++ encode x
-        fields = map fromJSValue arr
+        fields = map fromJSVal arr
 
 moveDocumentTagsFromDocumentsTableToDocumentTagsTable :: MonadDB m => Migration m
 moveDocumentTagsFromDocumentsTableToDocumentTagsTable = Migration {
@@ -180,10 +181,10 @@ moveDocumentTagsFromDocumentsTableToDocumentTagsTable = Migration {
     fetch acc docid tagsstr = (docid :: Int64, tags) : acc
       where
         Ok (JSArray arr) = decode tagsstr
-        fromJSValue (JSObject obj) = fromJSObject obj
-        fromJSValue x =
+        fromJSVal (JSObject obj) = fromJSObject obj
+        fromJSVal x =
           error $ "moveDocumentTagsFromDocumentsTableToDocumentTagsTable: expected {tagname:'',tagvalue:''}, got: " ++ encode x
-        tags = map fromJSValue arr
+        tags = map fromJSVal arr
 
 updateDocumentStatusAfterRemovingAwaitingAuthor :: MonadDB m => Migration m
 updateDocumentStatusAfterRemovingAwaitingAuthor = Migration {

@@ -6,6 +6,7 @@ module AppDB (
 import DB.Core
 import DB.Model
 
+import ActionQueue.Tables
 import API.Service.Tables
 import Company.Tables
 import Company.Migrations
@@ -72,6 +73,8 @@ kontraMigrations = [
   , removePreferedDesignMode
   , addDefaultEmptyStringsToSomeColumnsInCompaniesTable
   , addOCSPResponse
+  , removeUserRefuseSaveAfterSignEvent
+  , removeDocEventsThatReferenceNotActivatedUsers
   ] ++ mailerMigrations
 
 kontraTables :: [Table]
@@ -104,4 +107,7 @@ kontraTables = [
   , tableAPIToken
   , tableAccessToken
   , tablePrivilege
+  , tablePasswordReminders
+  , tableEmailChangeRequests
+  , tableUserAccountRequests
   ] ++ mailerTables

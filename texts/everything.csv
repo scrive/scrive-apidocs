@@ -265,7 +265,7 @@
 "_SortCompany","Företag",,"Company"
 "_SortDoc","Dokument",,"Document"
 "_SortEmail","E-postadress",,"Email address"
-"_SortParty","Parter",,"Parties"
+"_SortParty","Signerande parter",,"Signing parties"
 "_SortReciever","Mottagare",,"Recipient"
 "_SortSender","Avsändare",,"Sender"
 "_SortStatus","Status",,"Status"
@@ -1608,10 +1608,8 @@ the document <strong>$documenttitle$</strong>. The signing
 "_mustFillFieldsBeforeSigning","Du måste fylla i tomma fält innan du kan signera.",,"You must fill in the empty fields before you sign."
 "_name","Namn",,"Name"
 "_nameFieldName","namn",,"name"
-"_newUserMailContentBodyFirst","Tack för att
-du skapat ett konto hos oss.",,"Thank you for creating an account with us."
-"_newUserMailContentBodySecond","Klicka på länken för att aktivera ditt konto. Länken
- är  giltig i 12 timmar:",,"Click to activate the account. The link is valid for 12 hours:"
+"_newUserMailContentBodyFirst","Tack för att du skapat ett konto hos oss.",,"Thank you for creating an account with us."
+"_newUserMailContentBodySecond","Klicka på länken för att aktivera ditt konto. Länken är giltig i 14 dagar:",,"Click to activate the account. The link is valid for 14 days:"
 "_newUserMailContentBodyUserName","Användarnamn:<br/>",,"Username:<br/>"
 "_newUserMailTitle","Nytt konto",,"New account"
 "_niceEmail","E-post",,"The person's email"

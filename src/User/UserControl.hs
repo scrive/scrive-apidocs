@@ -4,10 +4,12 @@ import Control.Monad.State
 import Data.Functor
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
-import Happstack.State (update, query)
 import Text.JSON (JSValue(..), toJSObject, showJSON)
 
-import ActionSchedulerState
+import ActionQueue.Core
+import ActionQueue.EmailChangeRequest
+import ActionQueue.PasswordReminder
+import ActionQueue.UserAccountRequest
 import AppView
 import Crypto.RNG
 import DB hiding (update, query)
@@ -26,9 +28,9 @@ import Templates.Templates
 import User.Model
 import User.UserView
 import Util.FlashUtil
+import Util.MonadUtils
 import Util.HasSomeUserInfo
 import qualified Log
-import Util.MonadUtils
 import Stats.Control
 import User.Action
 import User.Utils
@@ -140,19 +142,12 @@ sendChangeToExistingEmailInternalWarningMail user newemail = do
 sendRequestChangeEmailMail :: Kontrakcja m => User -> Email -> m ()
 sendRequestChangeEmailMail user newemail = do
   ctx <- getContext
-  changeemaillink <- newRequestChangeEmailLink user newemail
-  mail <- mailRequestChangeEmail (ctxhostpart ctx) user newemail changeemaillink
+  changeemaillink <- newEmailChangeRequestLink (userid user) newemail
+  mail <- mailEmailChangeRequest (ctxhostpart ctx) user newemail changeemaillink
   scheduleEmailSendout (ctxmailsconfig ctx)
                         (mail{to = [MailAddress{
                                     fullname = getFullName user
                                   , email = unEmail newemail }]})
-
-newRequestChangeEmailLink :: (MonadIO m, CryptoRNG m) => User -> Email -> m KontraLink
-newRequestChangeEmailLink user newemail = do
-    action <- newRequestEmailChange user newemail
-    return $ LinkChangeUserEmail (actionID action)
-                                 (recToken $ actionType action)
-
 
 handleCreateCompany :: Kontrakcja m => m KontraLink
 handleCreateCompany = do
@@ -173,9 +168,9 @@ handleCreateCompany = do
   addFlashM flashMessageCompanyCreated
   return LoopBack
 
-handleGetChangeEmail :: Kontrakcja m => ActionID -> MagicHash -> m (Either KontraLink Response)
-handleGetChangeEmail actionid hash = withUserGet $ do
-  mnewemail <- getNewEmailFromAction actionid hash
+handleGetChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink Response)
+handleGetChangeEmail uid hash = withUserGet $ do
+  mnewemail <- getEmailChangeRequestNewEmail uid hash
   case mnewemail of
     Nothing -> addFlashM $ flashMessageProblemWithEmailChange
     Just newemail -> addFlashM $ modalDoYouWantToChangeEmail newemail
@@ -184,9 +179,9 @@ handleGetChangeEmail actionid hash = withUserGet $ do
   content <- showUser user mcompany False
   renderFromBody kontrakcja content
 
-handlePostChangeEmail :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
-handlePostChangeEmail actionid hash = withUserPost $ do
-  mnewemail <- getNewEmailFromAction actionid hash
+handlePostChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m KontraLink
+handlePostChangeEmail uid hash = withUserPost $ do
+  mnewemail <- getEmailChangeRequestNewEmail uid hash
   Context{ctxmaybeuser = Just user, ctxipnumber, ctxtime} <- getContext
   mpassword <- getRequiredField asDirtyPassword "password"
   case mpassword of
@@ -202,20 +197,11 @@ handlePostChangeEmail actionid hash = withUserPost $ do
                                                      (Just $ userid user)
             addFlashM $ flashMessageYourEmailHasChanged
         else addFlashM $ flashMessageProblemWithEmailChange
+      _ <- dbUpdate $ DeleteAction emailChangeRequest uid
+      return ()
     Just _password -> do
       addFlashM $ flashMessageProblemWithPassword
   return $ LinkAccount
-
-getNewEmailFromAction :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe Email)
-getNewEmailFromAction actionid hash = do
-  Context{ctxmaybeuser = Just user} <- getContext
-  maction <- getActionByActionID actionid
-  case actionType <$> maction of
-    Just (RequestEmailChange recUser recNewEmail recToken)
-      | hash == recToken
-        && userid user == recUser -> do
-      return $ Just recNewEmail
-    _ -> return Nothing
 
 getUserInfoUpdate :: Kontrakcja m => m (UserInfo -> UserInfo)
 getUserInfoUpdate  = do
@@ -278,20 +264,18 @@ handleUsageStatsJSONForUserDays = do
       (statsByDay, _) <- getUsageStatsForCompany (fromJust $ usercompany user) som sixm
       return $ JSObject $ toJSObject [("list", companyStatsDayToJSON totalS statsByDay),
                                       ("paging", JSObject $ toJSObject [
-                                          ("pageMax",showJSON (0::Int)),
-                                          ("pageCurrent", showJSON (0::Int)),
-                                          ("itemMin",showJSON $ (0::Int)),
-                                          ("itemMax",showJSON $ (length statsByDay) - 1),
-                                          ("itemTotal",showJSON $ (length statsByDay))])]
+                                        ("pageSize",showJSON (1000::Int)),
+                                        ("pageCurrent", showJSON (0::Int)),
+                                        ("itemMin",showJSON $ (0::Int)),
+                                        ("itemMax",showJSON $ (length statsByDay) - 1)])]
     else do
       (statsByDay, _) <- getUsageStatsForUser (userid user) som sixm
       return $ JSObject $ toJSObject [("list", userStatsDayToJSON statsByDay),
                                       ("paging", JSObject $ toJSObject [
-                                          ("pageMax",showJSON (0::Int)),
-                                          ("pageCurrent", showJSON (0::Int)),
-                                          ("itemMin",showJSON $ (0::Int)),
-                                          ("itemMax",showJSON $ (length statsByDay) - 1),
-                                          ("itemTotal",showJSON $ (length statsByDay))])]
+                                        ("pageSize",showJSON (1000::Int)),
+                                        ("pageCurrent", showJSON (0::Int)),
+                                        ("itemMin",showJSON $ (0::Int)),
+                                        ("itemMax",showJSON $ (length statsByDay) - 1)])]
 
 handleUsageStatsJSONForUserMonths :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserMonths = do
@@ -305,20 +289,18 @@ handleUsageStatsJSONForUserMonths = do
     (_, statsByMonth) <- getUsageStatsForCompany (fromJust $ usercompany user) som sixm
     return $ JSObject $ toJSObject [("list", companyStatsMonthToJSON totalS statsByMonth),
                                     ("paging", JSObject $ toJSObject [
-                                        ("pageMax",showJSON (0::Int)),
+                                        ("pageSize",showJSON (1000::Int)),
                                         ("pageCurrent", showJSON (0::Int)),
                                         ("itemMin",showJSON $ (0::Int)),
-                                        ("itemMax",showJSON $ (length statsByMonth) - 1),
-                                        ("itemTotal",showJSON $ (length statsByMonth))])]
+                                        ("itemMax",showJSON $ (length statsByMonth) - 1)])]
     else do
     (_, statsByMonth) <- getUsageStatsForUser (userid user) som sixm
     return $ JSObject $ toJSObject [("list", userStatsMonthToJSON statsByMonth),
                                     ("paging", JSObject $ toJSObject [
-                                        ("pageMax",showJSON (0::Int)),
+                                        ("pageSize",showJSON (1000::Int)),
                                         ("pageCurrent", showJSON (0::Int)),
                                         ("itemMin",showJSON $ (0::Int)),
-                                        ("itemMax",showJSON $ (length statsByMonth) - 1),
-                                        ("itemTotal",showJSON $ (length statsByMonth))])]
+                                        ("itemMax",showJSON $ (length statsByMonth) - 1)])]
 
 
 handleGetUserMailAPI :: Kontrakcja m => m (Either KontraLink Response)
@@ -427,41 +409,29 @@ isUserDeletable user = do
 --there must be a better way than all of these weird user create functions
 -- TODO clean up
 
-createUser :: Kontrakcja m => Email
-                              -> String
-                              -> String
-                              -> Maybe Company
-                              -> m (Maybe User)
-createUser email fstname sndname mcompany = do
-  ctx <- getContext
-  passwd <- createPassword =<< randomPassword
-  muser <- dbUpdate $ AddUser (fstname, sndname) (unEmail email) (Just passwd) False Nothing (fmap companyid mcompany) (ctxlocale ctx)
-  case muser of
-    Just user -> do
-                 _ <- dbUpdate $
-                      LogHistoryAccountCreated (userid user) (ctxipnumber ctx)
-                                               (ctxtime ctx) email (userid <$> ctxmaybeuser ctx)
-                 return muser
-    _         -> return muser
-
-
 sendNewUserMail :: Kontrakcja m => User -> m ()
 sendNewUserMail user = do
   ctx <- getContext
-  al <- newAccountCreatedLink user
+  al <- newUserAccountRequestLink $ userid user
   mail <- newUserMail (ctxhostpart ctx) (getEmail user) (getSmartName user) al
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
 
-createNewUserByAdmin :: Kontrakcja m => Context -> (String, String) -> String -> Maybe MinutesTime -> Maybe String -> Locale -> m (Maybe User)
-createNewUserByAdmin ctx names email _freetill custommessage locale = do
-    muser <- createInvitedUser names email (Just locale)
+createNewUserByAdmin :: Kontrakcja m => String -> (String, String) -> Maybe String -> Maybe (CompanyID, Bool) -> Locale -> m (Maybe User)
+createNewUserByAdmin email names custommessage mcompanydata locale = do
+    ctx <- getContext
+    muser <- createUser (Email email) names (fst <$> mcompanydata) locale
     case muser of
          Just user -> do
+             case mcompanydata of
+               Just (_, admin) -> do
+                 _ <- dbUpdate $ SetUserCompanyAdmin (userid user) admin
+                 return ()
+               Nothing -> return ()
              let fullname = composeFullName names
              now <- liftIO $ getMinutesTime
              _ <- dbUpdate $ SetInviteInfo (userid <$> ctxmaybeuser ctx) now Admin (userid user)
-             chpwdlink <- newAccountCreatedLink user
+             chpwdlink <- newUserAccountRequestLink $ userid user
              mail <- mailNewAccountCreatedByAdmin ctx (getLocale user) fullname email chpwdlink custommessage
              scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
@@ -510,226 +480,89 @@ handleQuestion = do
              addFlashM flashMessageThanksForTheQuestion
              return LoopBack
 
-handleAccountSetupGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
-handleAccountSetupGet aid hash = do
-  maction <- getActionByActionID aid
-  muser <-
-    case maction of
-      Just action -> do
-        guardMagicTokenMatch hash action
-        getUserFromAction action
-      Nothing -> getUserByEmail
-  when (isJust muser) $ switchLocale (getLocale $ fromJust muser)
-  case (maybe False (isJust . userhasacceptedtermsofservice) muser, maction) of
-    (True, _) -> do
-      -- seems like a security risk.  you can just feed random numbers with emails in the get param
-      -- and work out who has an account or not
-      sendRedirect LinkUpload
-    (False, Just _action) -> do
-      extendActionEvalTimeToOneDayMinimum aid
-      addFlashM $ modalAccountSetup (LinkAccountCreated aid hash $ maybe "" getEmail muser)
-                                    (maybe "" getFirstName muser)
-                                    (maybe "" getLastName muser)
-      ctx <- getContext
-      sendRedirect $ LinkHome (ctxlocale ctx)
-    (False, Nothing) -> do
-      -- this is a very disgusting page.  i didn't even know it existed
-      content <- activatePageViewNotValidLink ""
-      renderFromBody kontrakcja content
-  where
-    -- looks up the user using the value in the optional email param
-    getUserByEmail = do
-      memail <- getOptionalField asValidEmail "email"
-      case memail of
-        Nothing -> return Nothing
-        Just email -> dbQuery $ GetUserByEmail Nothing (Email email)
+handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> m Response
+handleAccountSetupGet uid token = do
+  user <- guardJustM404 $ getUserAccountRequestUser uid token
+  let locale = getLocale user
+  switchLocale locale
+  if isJust $ userhasacceptedtermsofservice user
+    then respond404
+    else do
+      addFlashM $ modalAccountSetup (LinkAccountCreated uid token)
+                                    (getFirstName user)
+                                    (getLastName user)
+      sendRedirect $ LinkHome locale
 
-handleAccountSetupPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
-handleAccountSetupPost aid hash = do
-  maction <- getActionByActionID aid
-  case maction of
-    Just action -> do
-      guardMagicTokenMatch hash action
-      user <- guardJustM $ getOrCreateActionUser action
-      switchLocale (getLocale user)
-      if isJust $ userhasacceptedtermsofservice user
-        then addFlashM flashMessageUserAlreadyActivated
-        else do
-          mfstname <- getRequiredField asValidName "fstname"
-          msndname <- getRequiredField asValidName "sndname"
-          signupmethod <- guardJust $ getSignupMethod action
-          mactivateduser <- handleActivate mfstname msndname user signupmethod
-          case mactivateduser of
-            Just (_activateduser, docs) -> do
-              dropExistingAction aid
-
-              forM_ docs (\d->postDocumentPreparationChange d "mailapi")
-
-              addFlashM flashMessageUserActivated
-              return ()
-            Nothing -> do
-              addFlashM $ modalAccountSetup (LinkAccountCreated aid hash $ getEmail user)
-                                            (fromMaybe "" mfstname)
-                                            (fromMaybe "" msndname)
-              return ()
-          return ()
-      getHomeOrUploadLink
-    Nothing ->
-      getOptionalField asValidEmail "email" >>= maybe internalError generateActivationLink
-  where
-    -- If this is a user activating a viral invitation then we create their user
-    -- if needed, otherwise we fetch the user indicated inside the action details.
-    getOrCreateActionUser action = do
-      mactionuser <- getUserFromAction action
-      case (mactionuser, actionType action) of
-        (Nothing, ViralInvitationSent email invtime inviterid _ _) -> do
-          muser <- createInvitedUser ("", "") (unEmail email) Nothing
-          case muser of
-            Just user -> do -- user created, we need to fill in some info
-              minviter <- dbQuery $ GetUserByID inviterid
-              _ <- dbUpdate $ SetInviteInfo (userid <$> minviter) invtime Viral (userid user)
-              return $ Just user
-            Nothing -> return Nothing
-        _ -> return mactionuser
-    -- Gets the signup method for the action's type.
-    getSignupMethod action =
-      case actionType action of
-        ViralInvitationSent _ _ _ _ _ -> Just ViralInvitation
-        AccountCreated _ _ -> Just AccountRequest
-        _ -> Nothing
-    -- Generates another activation link
-    generateActivationLink email = do
-      user <- guardJustM $ dbQuery $ GetUserByEmail Nothing (Email email)
-      if isNothing $ userhasacceptedtermsofservice user
-        then do
-          ctx <- getContext
-          al <- newAccountCreatedLink user
-          mail <- newUserMail (ctxhostpart ctx) email email al
-          scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = email, email = email}] }
-          addFlashM flashMessageNewActivationLinkSend
-          getHomeOrUploadLink
-        else internalError
-
- -- Retrieves the action for the given id
-getActionByActionID :: Kontrakcja m => ActionID -> m (Maybe Action)
-getActionByActionID actionid = do
-  now <- liftIO $ getMinutesTime
-  (query $ GetAction actionid) >>= maybe (return Nothing) (\action -> do
-  -- action may be in state when it has expired, but hasn't yet been
-  -- transformed into next form. below code checks for that.
-  return $ checkValidity now $ Just action)
-
--- Looks up any user id on the action, and then returns the relevant user
-getUserFromAction :: Kontrakcja m => Action -> m (Maybe User)
-getUserFromAction action =
-  case actionType action of
-    (ViralInvitationSent email _ _ _ _) -> dbQuery $ GetUserByEmail Nothing email
-    (AccountCreated uid _) ->  dbQuery $ GetUserByID uid
-    _ -> return Nothing
-
--- Guards so that the token in the given action matches the given magic hash.
-guardMagicTokenMatch :: Kontrakcja m => MagicHash -> Action -> m ()
-guardMagicTokenMatch expectedtoken action =
-  unless (getMagicTokenFromAction == Just expectedtoken) internalError
-  where
-    getMagicTokenFromAction =
-      case actionType action of
-        ViralInvitationSent _ _ _ _ token -> Just token
-        AccountCreated _ token -> Just token
-        _ -> Nothing
+handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m KontraLink
+handleAccountSetupPost uid token = do
+  user <- guardJustM404 $ getUserAccountRequestUser uid token
+  switchLocale $ getLocale user
+  if isJust $ userhasacceptedtermsofservice user
+    then addFlashM flashMessageUserAlreadyActivated
+    else do
+      mfstname <- getRequiredField asValidName "fstname"
+      msndname <- getRequiredField asValidName "sndname"
+      mactivateduser <- handleActivate mfstname msndname user AccountRequest
+      case mactivateduser of
+        Nothing -> addFlashM $ modalAccountSetup (LinkAccountCreated uid token)
+                                                 (fromMaybe "" mfstname)
+                                                 (fromMaybe "" msndname)
+        Just (_, docs) -> do
+          _ <- dbUpdate $ DeleteAction userAccountRequest uid
+          forM_ docs (\d -> postDocumentPreparationChange d "mailapi")
+          addFlashM flashMessageUserActivated
+  getHomeOrUploadLink
 
 {- |
     This is where we get to when the user clicks the link in their password reminder
     email.  This'll show them the usual landing page, but with a modal dialog
     for changing their password.
 -}
-handlePasswordReminderGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
-handlePasswordReminderGet aid hash = do
-    muser <- getUserFromActionOfType PasswordReminderID aid hash
-    case muser of
-         Just user -> do
-             switchLocale (getLocale user)
-             extendActionEvalTimeToOneDayMinimum aid
-             addFlashM $ modalNewPasswordView aid hash
-             sendRedirect LinkUpload
-         Nothing -> do
-             addFlashM flashMessagePasswordChangeLinkNotValid
-             linkmain <- getHomeOrUploadLink
-             sendRedirect linkmain
+handlePasswordReminderGet :: Kontrakcja m => UserID -> MagicHash -> m Response
+handlePasswordReminderGet uid token = do
+  muser <- getPasswordReminderUser uid token
+  case muser of
+    Just user -> do
+      switchLocale (getLocale user)
+      addFlashM $ modalNewPasswordView uid token
+      sendRedirect LinkUpload
+    Nothing -> do
+      addFlashM flashMessagePasswordChangeLinkNotValid
+      sendRedirect =<< getHomeOrUploadLink
 
-handlePasswordReminderPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
-handlePasswordReminderPost aid hash = do
-    muser <- getUserFromActionOfType PasswordReminderID aid hash
-    case muser of
-         Just user -> do
-             switchLocale (getLocale user)
-             handleChangePassword user
-         Nothing   -> do
-             addFlashM flashMessagePasswordChangeLinkNotValid
-             getHomeOrUploadLink
-    where
-        handleChangePassword user = do
-            Context{ctxtime, ctxipnumber, ctxmaybeuser} <- getContext
-            mpassword <- getRequiredField asValidPassword "password"
-            mpassword2 <- getRequiredField asDirtyPassword "password2"
-            case (mpassword, mpassword2) of
-                 (Just password, Just password2) -> do
-                     case (checkPasswordsMatch password password2) of
-                          Right () -> do
-                              dropExistingAction aid
-                              passwordhash <- createPassword password
-                              _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
-                              _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
-                              addFlashM flashMessageUserPasswordChanged
-                              _ <- addUserLoginStatEvent ctxtime user
-                              logUserToContext $ Just user
-                              return LinkUpload
-                          Left flash -> do
-                              _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
-                              addFlashM flash
-                              addFlashM $ modalNewPasswordView aid hash
-                              getHomeOrUploadLink
-                 _ -> do
-                   _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
-                   addFlashM $ modalNewPasswordView aid hash
-                   getHomeOrUploadLink
-
-getUserFromActionOfType :: Kontrakcja m => ActionTypeID -> ActionID -> MagicHash -> m (Maybe User)
-getUserFromActionOfType atypeid aid hash = do
-    now <- liftIO $ getMinutesTime
-    maction <- checkValidity now <$> query (GetAction aid)
-    case maction of
-         Just action -> do
-             if atypeid == (actionTypeID $ actionType action)
-                then getUID action >>= maybe
-                         (return Nothing)
-                         (dbQuery . GetUserByID)
-                else return Nothing
-         Nothing -> return Nothing
-    where
-        getUID action =
-            case actionType action of
-                 PasswordReminder uid _ token -> verifyToken token uid
-                 AccountCreated uid token     -> verifyToken token uid
-                 _                            -> return Nothing
-        verifyToken token uid = return $
-            if hash == token
-               then Just uid
-               else Nothing
-
--- | Postpone link removal. Needed to make sure that between
--- GET and POST requests action won't be removed from the system.
-extendActionEvalTimeToOneDayMinimum :: Kontrakcja m => ActionID -> m ()
-extendActionEvalTimeToOneDayMinimum aid = do
-    dayAfterNow <- minutesAfter (60*24) <$> liftIO getMinutesTime
-    maction <- checkValidity dayAfterNow <$> query (GetAction aid)
-    when_ (isNothing maction) $
-        update $ UpdateActionEvalTime aid dayAfterNow
-
-dropExistingAction :: Kontrakcja m => ActionID -> m ()
-dropExistingAction aid = do
-  _ <- update $ DeleteAction aid
-  return ()
+handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m KontraLink
+handlePasswordReminderPost uid token = do
+  muser <- getPasswordReminderUser uid token
+  case muser of
+    Just user -> do
+      switchLocale (getLocale user)
+      Context{ctxtime, ctxipnumber, ctxmaybeuser} <- getContext
+      mpassword <- getRequiredField asValidPassword "password"
+      mpassword2 <- getRequiredField asDirtyPassword "password2"
+      case (mpassword, mpassword2) of
+        (Just password, Just password2) -> do
+          case (checkPasswordsMatch password password2) of
+            Right () -> do
+              _ <- dbUpdate $ DeleteAction passwordReminder uid
+              passwordhash <- createPassword password
+              _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
+              _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
+              addFlashM flashMessageUserPasswordChanged
+              _ <- addUserLoginStatEvent ctxtime user
+              logUserToContext $ Just user
+              return LinkUpload
+            Left flash -> do
+              _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) ctxipnumber (ctxtime) (userid <$> ctxmaybeuser)
+              addFlashM flash
+              addFlashM $ modalNewPasswordView uid token
+              getHomeOrUploadLink
+        _ -> do
+          _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
+          addFlashM $ modalNewPasswordView uid token
+          getHomeOrUploadLink
+    Nothing   -> do
+      addFlashM flashMessagePasswordChangeLinkNotValid
+      getHomeOrUploadLink
 
 {- |
    Fetch the xtoken param and double read it. Once as String and once as MagicHash.
