@@ -71,25 +71,30 @@
         options: function() {
             return this.get("options");
         },
-        selected: function() {
-            return this.get("selected");
-        },
         description: function() {
             return this.get("description");
         },
         name: function() {
             return this.get("name");
         },
-        isSelected : function(o) {
-            return this.set({"selected" : undefined} );
+        selected: function() {
+            return this.find(this.get("selected"));
         },
-        select: function(n) {
-           SessionStorage.set(this.get("namespace"), "select-filtering" + this.value(), n );
-           this.set({"selected" : _.filter(this.options(), function() {return this.name == n})[0]} );
+        find : function(v){
+            return _.filter(this.options(), function(o) {return o.value == v})[0];
         },
-        deselect: function(o) {
-            SessionStorage.set(this.get("namespace"), "select-filtering" + this.value(), "" );
-            this.set({"selected" : _.without(this.selected(),[o])});
+        select: function(v) {
+            if (this.find(v) != undefined) {
+               SessionStorage.set(this.get("namespace"), "select-filtering" + this.name(), this.find(v).value );
+               this.set({"selected" : this.find(v).value});
+            }
+            else
+                this.deselect();
+                 
+        },
+        deselect: function() {
+            SessionStorage.set(this.get("namespace"), "select-filtering" + this.name(), "" );
+            this.set({"selected" : undefined});
         },
         setSessionStorageNamespace: function(namespace) {
             this.set({ namespace: namespace });
@@ -105,13 +110,30 @@
         initialize: function(args) {
             _.bindAll(this, 'render');
             var view = this;
+            this.model.bind('change', function() {view.render();})
             this.render();
         },
         render: function() {
+            $(this.el).children().detach();
             var selectFiltering = this.model;
+            var name = this.model.description();
+            var options = this.model.options();
+
+            if (selectFiltering.selected() != undefined)
+            {
+                var selected = selectFiltering.selected()
+                name = selected.name;
+                var options_ = [];
+                options_.push({name:  this.model.description(), value: "", onSelect: function(value) {selectFiltering.deselect();} });
+                for(var i=0;i< options.length;i++)
+                    if (options[i] != selected)
+                         options_.push(options[i])
+                options = options_;         
+                
+            }
             var select = Select.init({
-                options : this.model.options(),
-                name : this.model.description(),
+                options : options,
+                name : name,
                 onSelect : function(value) {
                     selectFiltering.select(value);
                 }

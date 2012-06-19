@@ -129,6 +129,7 @@
             params.page = this.paging().pageCurrent();
             params.offset = params.page * this.paging().pageSize();
             params.textfilter = this.textfiltering().text();
+            params.selectfilter = JSON.stringify(_.map(this.selectfiltering(),function(f) {return {name: f.name(),value: (f.selected() != undefined) ? f.selected().value : ""}; }));
             params.sort = this.sorting().current();
             params.sortReversed = this.sorting().isAsc();
             return params;
