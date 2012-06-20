@@ -100,7 +100,7 @@ archivePage :: Kontrakcja m => (User -> m String) -> m (Either KontraLink String
 archivePage page = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >>= page
 
 
-jsonDocumentsList ::  Kontrakcja m => m (Either KontraLink JSValue)
+jsonDocumentsList ::  Kontrakcja m => m (Either KontraLink (Either Response JSValue))
 jsonDocumentsList = withUserGet $ do
   Just user@User{userid = uid} <- ctxmaybeuser <$> getContext
   lang <- getLang . ctxlocale <$> getContext
@@ -129,21 +129,29 @@ jsonDocumentsList = withUserGet $ do
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
       pagination = docPaginationFromParams params
-
-  allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
-
-  let docs = PagedList { list       = allDocs
+      
+  cttime <- getMinutesTime
+  padqueue <- dbQuery $ GetPadQueue $ userid user
+  format <- getField "format"
+  case format of
+       Just "csv" -> do
+          allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting (DocumentPagination 0 maxBound)
+          docsCSVs <- mapM (docForListCSV (timeLocaleForLang lang) cttime user padqueue) $ take docsPageSize $ list docs
+          header <- docForListCSVHeader
+          ok $ setHeader "Content-Disposition" "attachment;filename=documents.csv"
+             $ setHeader "Content-Type" "text/csv"
+             $ toResponse (toCSV header docsCSVs)
+       _ -> do
+          allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
+          let docs = PagedList { list       = allDocs
                        , params     = params
                        , pageSize   = docsPageSize
                        }
-
-  cttime <- getMinutesTime
-  padqueue <- dbQuery $ GetPadQueue $ userid user
-  docsJSONs <- mapM (docForListJSON (timeLocaleForLang lang) cttime user padqueue) $ take docsPageSize $ list docs
-  return $ JSObject $ toJSObject [
-      ("list", JSArray docsJSONs)
-    , ("paging", pagingParamsJSON docs)
-    ]
+          docsJSONs <- mapM (docForListJSON (timeLocaleForLang lang) cttime user padqueue) $ take docsPageSize $ list docs
+          return $ Right $ JSObject $ toJSObject [
+              ("list", JSArray docsJSONs)
+            , ("paging", pagingParamsJSON docs)
+            ]
 
 docSortingFromParams :: ListParams -> [AscDesc DocumentOrderBy]
 docSortingFromParams params =
