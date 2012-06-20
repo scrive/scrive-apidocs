@@ -25,6 +25,11 @@ var documentsTable = KontraList().init({
                                                                   {name: "Only offers",    value : "Offers"},
                                                                   {name: "Only orders",    value : "Orders"}
                                                                  ]}),
+        new SelectFiltering({description: "All types", name : "type", options :
+                                                                [ {name: "Only contracts", value : "Contract"},
+                                                                  {name: "Only offers",    value : "Offers"},
+                                                                  {name: "Only orders",    value : "Orders"}
+                                                                 ]}),
         ],
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
