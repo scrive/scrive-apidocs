@@ -117,7 +117,16 @@ var documentsTable = KontraList().init({
                                 content: confirmtext
                               });
                           }
+                },
+               {name : "$_csv()$",
+                onSelect: function(){
+                        var url =  documentsTable.schema.url() + "?"
+                        var params = documentsTable.schema.getSchemaUrlParams();
+                        params.format = "csv";
+                        _.each(params,function(a,b){url+=(b+"="+a+"&")})
+                        window.location = url;
                 }
+               } 
               ]
     }),
     bottomExtras : jQuery("<div class='table-statuses'>" +

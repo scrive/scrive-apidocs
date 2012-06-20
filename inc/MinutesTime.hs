@@ -24,6 +24,7 @@ module MinutesTime
        , showAsDate
        , formatMinutesTimeUTC
        , formatMinutesTimeISO
+       , formatMinutesTime
        , parseMinutesTimeUTC
        , parseMinutesTimeISO
        , monthsBefore

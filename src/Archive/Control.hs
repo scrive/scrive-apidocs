@@ -39,6 +39,7 @@ import MinutesTime
 import Misc
 import PadQueue.Model
 import Data.Maybe
+import Happstack.Server.SimpleHTTP
 
 handleDocumentArchive :: Kontrakcja m => m KontraLink
 handleDocumentArchive = do
@@ -134,13 +135,12 @@ jsonDocumentsList = withUserGet $ do
   padqueue <- dbQuery $ GetPadQueue $ userid user
   format <- getField "format"
   case format of
-       Just "csv" -> do
+       Just "csv" -> Left <$> do
           allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting (DocumentPagination 0 maxBound)
-          docsCSVs <- mapM (docForListCSV (timeLocaleForLang lang) cttime user padqueue) $ take docsPageSize $ list docs
-          header <- docForListCSVHeader
+          let docsCSVs = concat $ zipWith (docForListCSV (timeLocaleForLang lang)) [1..maxBound] allDocs
           ok $ setHeader "Content-Disposition" "attachment;filename=documents.csv"
              $ setHeader "Content-Type" "text/csv"
-             $ toResponse (toCSV header docsCSVs)
+             $ toResponse (toCSV docForListCSVHeader docsCSVs)
        _ -> do
           allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
           let docs = PagedList { list       = allDocs

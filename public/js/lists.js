@@ -723,11 +723,7 @@
                 var onSelectFunction = e.onSelect;
                 if (onSelectFunction != undefined) {
                     e.onSelect = function() {
-                        if (model.hasSelected()) {
                             return onSelectFunction(model.getSelected());
-                        } else {
-                            return function() {};
-                        }
                     }
                 }
                 return e;

@@ -8,7 +8,9 @@ module Archive.View
          pageRubbishBinList,
          pageTemplatesList,
          pagePadDeviceArchive,
-         docForListJSON
+         docForListJSON,
+         docForListCSV,
+         docForListCSVHeader
        )
        where
 
@@ -143,3 +145,39 @@ signatoryFieldsListForJSON tl crtime padqueue doc sl = do
           _                                               -> Nothing
         open = maybereadinvite sl
 
+docForListCSV:: KontraTimeLocale -> Int -> Document -> [[String]]
+docForListCSV ktl agr doc = map (signatoryForListCSV ktl agr doc) $ filter (\x-> isSignatory x && getSmartName x /= "") (documentsignatorylinks doc)
+    
+signatoryForListCSV:: KontraTimeLocale ->  Int -> Document -> SignatoryLink -> [String]
+signatoryForListCSV ktl agr doc sl = [
+              show agr
+            , documenttitle doc
+            , show $ documentstatusclass doc
+            , csvTime $ (documentctime doc)
+            , maybe "" csvTime $ signtime <$> documentinvitetime doc
+            , maybe "" csvTime $ maybereadinvite sl
+            , maybe "" csvTime $ signtime <$> maybeseeninfo sl
+            , maybe "" csvTime $ signtime <$> maybesigninfo sl
+            , getFullName sl
+            , getEmail sl
+            , getPersonalNumber sl
+            , getCompanyName sl
+            ]
+    where
+        csvTime = formatMinutesTime ktl "%Y-%m-%d %H:%M"
+
+docForListCSVHeader :: [String]
+docForListCSVHeader = [
+                          "Id"
+                        , "Title"
+                        , "Status"
+                        , "Creation"
+                        , "Started"
+                        , "Invitation read"
+                        , "Document seen"
+                        , "Document signed"
+                        , "Name"
+                        , "Mail"
+                        , "Personal number"
+                        , "Company"
+                       ]
