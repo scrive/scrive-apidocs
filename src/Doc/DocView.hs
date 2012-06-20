@@ -20,7 +20,6 @@ module Doc.DocView (
   , flashRemindMailSent
   , getDataMismatchMessage
   , modalMismatch
-  , modalPdfTooLarge
   , mailDocumentAwaitingForAuthor
   , mailDocumentClosed
   , mailDocumentRejected
@@ -82,9 +81,6 @@ modalMismatch msg author = toModal <$>  do
                     F.value "authorname"  $ getSmartName author
                     F.value "authoremail" $ getEmail author
                     F.value "message"     $ concatMap para $ lines msg
-
-modalPdfTooLarge :: TemplatesMonad m => m FlashMessage
-modalPdfTooLarge = toModal <$> renderTemplate_ "pdfTooBigModal"
 
 modalSignAwaitingAuthorLast :: TemplatesMonad m => m FlashMessage
 modalSignAwaitingAuthorLast = toModal <$> renderTemplate_ "signAwaitingAuthorLast"
@@ -553,24 +549,8 @@ documentStatusFields document = do
            Just (ELegDataMismatch _ _ _ _ _) -> True
            _ -> False)
 
-uploadPage :: TemplatesMonad m => (Maybe DocumentProcess) -> Bool -> m String
-uploadPage mdocprocess showTemplates = renderTemplate "uploadPage" $ do
-    F.value "isprocessselected" $ isJust mdocprocess
-    F.value "showTemplates" showTemplates
-    F.objects "processes" $ map processFields [Contract,Offer,Order]
-    F.value "processid" $ show <$> mdocprocess
-    F.value "linkupload" $ show LinkUpload
-    case mdocprocess of
-      Just selecteprocess -> do
-        F.object "selectedprocess" $ processFields selecteprocess
-      _ -> return ()
-    where
-      processFields process = do
-        F.value "id" $ show process
-        F.value "selected" $ (Just process == mdocprocess)
-        F.valueM "name" $ renderTextForProcess (Signable process) processuploadname
-        F.valueM "uploadprompttext" $ renderTextForProcess (Signable process) processuploadprompttext
-        F.value "apiid" $ fromSafeEnumInt (Signable process)
+uploadPage :: TemplatesMonad m => m String
+uploadPage = renderTemplate_ "uploadPage"
 
 
 getDataMismatchMessage :: Maybe CancelationReason -> Maybe String

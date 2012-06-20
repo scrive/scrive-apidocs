@@ -938,12 +938,7 @@ checkLinkIDAndMagicHash document linkid magichash1 = do
   return ()
 
 handleShowUploadPage :: Kontrakcja m => m (Either KontraLink String)
-handleShowUploadPage = checkUserTOSGet $ do
-    showTemplates <- isFieldSet "showTemplates"
-    tooLarge <- isFieldSet "tooLarge"
-    mdocprocess <- getDocProcess
-    when tooLarge $ addFlashM modalPdfTooLarge
-    uploadPage mdocprocess showTemplates
+handleShowUploadPage = checkUserTOSGet $ uploadPage
 
 getDocProcess :: Kontrakcja m => m (Maybe DocumentProcess)
 getDocProcess = getOptionalField asDocType "doctype"
