@@ -1599,8 +1599,6 @@ the document <strong>$documenttitle$</strong>. The signing
  till $partyListButAuthor:noescape()$.",,"The order confirmation <strong>$documenttitle$</strong> has been
  sent to $partyListButAuthor:noescape()$."
 "_modalOrderCreatedHeader","Orderbekräftelsen skickad!",,"The order confirmation has been sent!"
-"_modalPdfTooBigBody","Du har valt att bifoga en fil som överstiger 2 MB. Var vänlig och bifoga ett mindre dokument.",,"You have tried to upload a PDF over 2 MB. Please try again with a smaller document."
-"_modalPdfTooBigTitle","För stora fil",,"Cannot store file"
 "_modalRejectedViewBody","Ett meddelande har skickats till $partyList:noescape()$.",,"A message has been sent to $partyList:noescape()$."
 "_modalRejectedViewHeader","Du har avvisat dokumentet $documenttitle$",,"You have returned the document $documenttitle$"
 "_modalContractCreatedBodyIfElse","En inbjudan att signera har nu skickats till        $partyListButAuthor:noescape()$.",,"An invitation to sign has been sent to $partyListButAuthor:noescape()$."

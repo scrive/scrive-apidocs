@@ -477,7 +477,7 @@ var DocumentDesignView = Backbone.View.extend({
                         cssClass: "finalbutton",
                         text: document.process().sendbuttontext(),
                         onClick: function() {
-                            if (!view.verificationBeforeSendingOrSigning(false) return;
+                            if (!view.verificationBeforeSendingOrSigning(false)) return;
                                 document.save();
                                 view.sendConfirmation();
                         }
