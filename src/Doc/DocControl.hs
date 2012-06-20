@@ -399,6 +399,7 @@ handleIssueSign document = do
     where
       forIndividual :: Kontrakcja m => Document -> m (Either String Document)
       forIndividual doc = do
+        Log.debug $ "handleIssueSign for forIndividual " ++ show (documentid doc)  
         mprovider <- readField "eleg"
         mndoc <- case mprovider of
                    Nothing ->  Right <$> authorSignDocument (documentid doc) Nothing
@@ -461,6 +462,7 @@ handleIssueSend document = do
       Left link -> return link
     where
       forIndividual doc = do
+        Log.debug $ "handleIssueSign for forIndividual " ++ show (documentid doc)
         mndoc <- authorSendDocument (documentid doc)
         case mndoc of
           Right newdocument -> postDocumentPreparationChange newdocument "web"

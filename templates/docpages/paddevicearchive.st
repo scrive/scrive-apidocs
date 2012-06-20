@@ -98,7 +98,7 @@ var padTable = KontraList().init({
                         }
 
                     return actionIcon;
-                 }}),
+                 }})
         ]
     })
 });
