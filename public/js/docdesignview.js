@@ -245,12 +245,13 @@ var DocumentDesignView = Backbone.View.extend({
               var calendarbutton = $("<div class='calendarbutton'/>");
               var calendar = new Calendar({on : calendarbutton,
                                           change: function(days) {
+                                             document.setDaystosign(days);
                                              daysinput.val(days);
                                             }
                               });
               daysinput.change(function() {
-                  var days = parseInt($(this).val());
-                  if (days != undefined)
+                  var days = parseInt(daysinput.val());
+                  if (days != undefined && !isNaN(days) && days != document.daystosign())
                   {
                       document.setDaystosign(days);
                       calendar.setDays(days);
@@ -464,7 +465,7 @@ var DocumentDesignView = Backbone.View.extend({
                         cssClass: "finalbutton",
                         text: localization.designview.sign,
                         onClick: function() {
-                            if (!view.verificationBeforeSendingOrSigning()) return;
+                            if (!view.verificationBeforeSendingOrSigning(true)) return;
                                document.save();
                                view.signConfirmation();
                         }
@@ -476,7 +477,7 @@ var DocumentDesignView = Backbone.View.extend({
                         cssClass: "finalbutton",
                         text: document.process().sendbuttontext(),
                         onClick: function() {
-                            if (!view.verificationBeforeSendingOrSigning()) return;
+                            if (!view.verificationBeforeSendingOrSigning(false) return;
                                 document.save();
                                 view.sendConfirmation();
                         }
@@ -605,7 +606,7 @@ var DocumentDesignView = Backbone.View.extend({
               content  : box
         });
     },
-    verificationBeforeSendingOrSigning : function() {
+    verificationBeforeSendingOrSigning : function(forSigning) {
         var view = this;
         var failed = false;
         var sigs = this.model.signatories();
@@ -622,7 +623,7 @@ var DocumentDesignView = Backbone.View.extend({
                     if (field.view != undefined)
                         field.view.redborder();
                  };
-                if (!field.validation().setCallback(validationCallback).validateData(field.value()))
+                if (!field.validation(forSigning).setCallback(validationCallback).validateData(field.value()))
                     return false;
             }
         }
