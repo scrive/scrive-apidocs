@@ -244,12 +244,13 @@ var DocumentDesignView = Backbone.View.extend({
               var calendarbutton = $("<div class='calendarbutton'/>");
               var calendar = new Calendar({on : calendarbutton,
                                           change: function(days) {
+                                             document.setDaystosign(days);
                                              daysinput.val(days);
                                             }
                               });
               daysinput.change(function() {
-                  var days = parseInt($(this).val());
-                  if (days != undefined)
+                  var days = parseInt(daysinput.val());
+                  if (days != undefined && !isNaN(days) && days != document.daystosign())
                   {
                       document.setDaystosign(days);
                       calendar.setDays(days);
