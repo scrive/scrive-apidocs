@@ -125,7 +125,7 @@
                 wiz.nextStep();
                 return false;
             }
-          })
+          });
           var buttonbox = $("<div class='signStepsButtonContainer' style='height:34px'/>");
           buttonbox.append(button.input().addClass("selectTemplateButton"));
           var div = $("<div class='signStepsBodyUploadBox'/>").append(header).append("<BR/>").append(subheader).append("<BR/>").append(buttonbox);
