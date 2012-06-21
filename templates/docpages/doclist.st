@@ -21,7 +21,7 @@ var documentsTable = KontraList().init({
     filtering: new Filtering({text: "", infotext: "$_SearchDoc()$"}),
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
-        new Cell({name: "$_SortStatus()$", width:"40px", field:"status", special: "rendered",
+        new Cell({name: "$_SortStatus()$", width:"50px", field:"status", special: "rendered",
                  rendering: function(status,idx,listobject) {
                     var icon = jQuery("<div class='icon status "+status+"'></div>")
                     var tip = jQuery("<div id='tooltip-"+status+"'> <div class='icon status "+status+"'></div><p>"+
@@ -37,12 +37,12 @@ var documentsTable = KontraList().init({
                     return icon;
                  }
         }),
-        new Cell({name: "$_SortTime()$", width:"100px", field:"time"}),
+        new Cell({name: "$_SortTime()$", width:"116px", field:"time"}),
         new Cell({name: "$_SortSender()$", width:"110px", field:"author",  special: "link"}),
         new Cell({width:"5px" }),
         new Cell({name: "$_SortParty()$", width:"200px", field:"party", special: "expandable", subfield : "name"}),
         new Cell({width:"5px" }),
-        new Cell({name: "$_SortDoc()$", width:"200px", field:"title",  special: "link"}),
+        new Cell({name: "$_SortDoc()$", width:"170px", field:"title",  special: "link"}),
         new Cell({width:"5px" }),
         new Cell({name: "$_SortType()$", width:"100px", field:"process"})
         ],

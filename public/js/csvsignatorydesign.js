@@ -236,7 +236,7 @@ window.CsvSignatoryDesignPopup = {
               acceptVisible : model.ready(),
               onAccept : function() {
                   signatory.makeCsv(model.rows());
-                  signatory.document().save().sendAjax();
+                  signatory.document().save();
                   return true;
             }
         });
