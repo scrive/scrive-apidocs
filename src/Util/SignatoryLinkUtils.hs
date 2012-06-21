@@ -159,9 +159,8 @@ getAuthorSigLink doc = getSigLinkFor doc SignatoryAuthor
      * email address if no name info
 -}
 getAuthorName :: Document -> String
-getAuthorName doc =
-  let Just authorsiglink = getAuthorSigLink doc
-  in getSmartName authorsiglink
+getAuthorName doc = maybe "" getSmartName $ getAuthorSigLink doc
+
 
 {- |
    Is this SignatoryLink undelivered?

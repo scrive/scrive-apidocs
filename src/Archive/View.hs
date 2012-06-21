@@ -146,22 +146,25 @@ signatoryFieldsListForJSON tl crtime padqueue doc sl = do
         open = maybereadinvite sl
 
 docForListCSV:: KontraTimeLocale -> Int -> Document -> [[String]]
-docForListCSV ktl agr doc = map (signatoryForListCSV ktl agr doc) $ filter (\x-> isSignatory x && getSmartName x /= "") (documentsignatorylinks doc)
-    
-signatoryForListCSV:: KontraTimeLocale ->  Int -> Document -> SignatoryLink -> [String]
-signatoryForListCSV ktl agr doc sl = [
+docForListCSV ktl agr doc = map (signatoryForListCSV ktl agr doc) $ [Nothing] <| null interestingLinks |> map Just interestingLinks
+    where interestingLinks = filter (\x-> isSignatory x && getSmartName x /= "") (documentsignatorylinks doc)
+          
+signatoryForListCSV:: KontraTimeLocale ->  Int -> Document -> (Maybe SignatoryLink) -> [String]
+signatoryForListCSV ktl agr doc msl = [
               show agr
             , documenttitle doc
             , show $ documentstatusclass doc
+            , getAuthorName $ doc
             , csvTime $ (documentctime doc)
             , maybe "" csvTime $ signtime <$> documentinvitetime doc
-            , maybe "" csvTime $ maybereadinvite sl
-            , maybe "" csvTime $ signtime <$> maybeseeninfo sl
-            , maybe "" csvTime $ signtime <$> maybesigninfo sl
-            , getFullName sl
-            , getEmail sl
-            , getPersonalNumber sl
-            , getCompanyName sl
+            , maybe "" csvTime $ join $ maybereadinvite <$> msl
+            , maybe "" csvTime $ signtime <$> (join $ maybeseeninfo <$> msl)
+            , maybe "" csvTime $ signtime <$> (join $ maybesigninfo <$> msl)
+            , fromMaybe  "" $ getFullName <$> msl
+            , fromMaybe  "" $ getEmail <$> msl
+            , fromMaybe  "" $ getPersonalNumber <$> msl
+            , fromMaybe  "" $ getCompanyName <$> msl
+            , fromMaybe  "" $ getCompanyNumber <$> msl
             ]
     where
         csvTime = formatMinutesTime ktl "%Y-%m-%d %H:%M"
@@ -171,13 +174,15 @@ docForListCSVHeader = [
                           "Id"
                         , "Title"
                         , "Status"
+                        , "Author"
                         , "Creation"
                         , "Started"
-                        , "Invitation read"
-                        , "Document seen"
-                        , "Document signed"
-                        , "Name"
-                        , "Mail"
-                        , "Personal number"
-                        , "Company"
+                        , "Party read invitation"
+                        , "Party seen document"
+                        , "Party signed document"
+                        , "Party name"
+                        , "Party mail"
+                        , "Party personal number"
+                        , "Party company name"
+                        , "Party company number"
                        ]
