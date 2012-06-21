@@ -269,7 +269,8 @@
             filtering: new Filtering({ disabled: true}),
             paging: new Paging({ disabled: true }),
             options: [],
-            extraParams: {}
+            extraParams: {},
+            expandedByDefault : false
         },
         initialize: function() {
             _.bindAll(this, 'change');
@@ -316,6 +317,9 @@
         extraParams: function() {
             return this.get("extraParams");
         },
+        expandedByDefault : function() {
+            return this.get("expandedByDefault") == true;
+        },
         url: function() {
             return this.get("url");
         },
@@ -347,10 +351,16 @@
             unsaved: false
         },
         initialize: function (args) {
+            if (this.collection != undefined && this.collection.schema && this.collection.schema.expandedByDefault())
+            {
+                this.set({expanded : true});
+            }
             if (this.collection != undefined && this.collection.schema != undefined &&  this.field("id") != undefined)
             {
                 var namespace = this.collection.schema.namespace();
-                this.set({ "expanded": SessionStorage.get(namespace, "expanded" + this.field("id")) == "true" });
+                var val = SessionStorage.get(namespace, "expanded" + this.field("id"));
+                if (val != undefined && val != "")
+                this.set({ "expanded": val == "true" });
             }
         },
         field: function(name) {
