@@ -89,9 +89,9 @@ makeSoapCall :: (XmlContent request, XmlContent result)
                 -> request
                 -> IO (Either String result)
 makeSoapCall url action extraargs request = tryAndJoinEither $ do
-  let input = fpsShowXml False (SOAP request)
+  let input = showXml False (SOAP request)
   -- BSL.appendFile "soap.xml" input
-
+  Log.debug $ input
   let args = [ "-X", "POST",
                "-k", "--show-error" ] ++ extraargs ++
              [ "--data-binary", "@-",
@@ -101,7 +101,7 @@ makeSoapCall url action extraargs request = tryAndJoinEither $ do
                url
              ]
 
-  (code,stdout,stderr) <- readCurl args input
+  (code,stdout,stderr) <- readCurl args $ BSL.fromString input
   -- BSL.appendFile "soap.xml" stdout
 
   {-
