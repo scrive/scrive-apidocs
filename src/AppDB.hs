@@ -80,7 +80,6 @@ kontraMigrations = [
 kontraTables :: [Table]
 kontraTables = [
     tableUsers
-  , tableUserFriends
   , tableUserMailAPIs
   , tableUserInviteInfos
   , tableUsersHistory

@@ -2,33 +2,6 @@ module User.Tables where
 
 import DB
 
-tableUserFriends :: Table
-tableUserFriends = Table {
-    tblName = "user_friends"
-  , tblVersion = 1
-  , tblCreateOrValidate = \desc -> case desc of
-      [  ("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("friend_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       ] -> return TVRvalid
-      [] -> do
-        kRunRaw $ "CREATE TABLE user_friends ("
-          ++ "  user_id BIGINT NOT NULL"
-          ++ ", friend_id BIGINT NOT NULL"
-          ++ ", CONSTRAINT pk_user_friends PRIMARY KEY (user_id, friend_id)"
-          ++ ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE user_friends"
-      ++ " ADD CONSTRAINT fk_user_friends_users FOREIGN KEY(user_id)"
-      ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE user_friends"
-      ++ " ADD CONSTRAINT fk_user_friends_users_2 FOREIGN KEY(friend_id)"
-      ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
-  }
-
 tableUsers :: Table
 tableUsers = Table {
     tblName = "users"
