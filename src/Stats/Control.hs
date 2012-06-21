@@ -207,6 +207,7 @@ statEventToDocStatTuple (DocStatEvent {seTime, seQuantity, seAmount}) = case seQ
   DocStatClose           -> Just (asInt seTime, [seAmount, 0, 0, 0])
   DocStatEmailSignatures -> Just (asInt seTime, [0, seAmount, 0, 0])
   DocStatElegSignatures  -> Just (asInt seTime, [0, seAmount, 0, 0])
+  DocStatPadSignatures   -> Just (asInt seTime, [0, seAmount, 0, 0])
   DocStatSend            -> Just (asInt seTime, [0, 0, seAmount, 0])
   _                      -> Nothing
 
@@ -215,6 +216,7 @@ statCompanyEventToDocStatTuple (DocStatEvent {seTime, seUserID, seQuantity, seAm
   DocStatClose           -> Just (asInt seTime, seUserID, [seAmount, 0, 0, 0])
   DocStatEmailSignatures -> Just (asInt seTime, seUserID, [0, seAmount, 0, 0])
   DocStatElegSignatures  -> Just (asInt seTime, seUserID, [0, seAmount, 0, 0])
+  DocStatPadSignatures   -> Just (asInt seTime, seUserID, [0, seAmount, 0, 0])
   DocStatSend            -> Just (asInt seTime, seUserID, [0, 0, seAmount, 0])
   _                      -> Nothing
 
@@ -656,6 +658,7 @@ tuplesFromUsageStatsForUser = catMaybes . map toTuple
   where toTuple (DocStatEvent {seTime, seQuantity, seAmount}) = case seQuantity of
           DocStatEmailSignatures -> Just (asInt seTime, [seAmount, 0, 0])
           DocStatElegSignatures  -> Just (asInt seTime, [seAmount, 0, 0])
+          DocStatPadSignatures   -> Just (asInt seTime, [seAmount, 0, 0])
           DocStatClose           -> Just (asInt seTime, [0, seAmount, 0])
           DocStatSend            -> Just (asInt seTime, [0, 0, seAmount])
           _                      -> Nothing
@@ -665,6 +668,7 @@ tuplesFromUsageStatsForCompany = catMaybes . map toTuple
   where toTuple (DocStatEvent {seTime, seUserID, seQuantity, seAmount}) = case seQuantity of
           DocStatEmailSignatures -> Just (asInt seTime, seUserID, [seAmount, 0, 0])
           DocStatElegSignatures  -> Just (asInt seTime, seUserID, [seAmount, 0, 0])
+          DocStatPadSignatures   -> Just (asInt seTime, seUserID, [seAmount, 0, 0])
           DocStatClose           -> Just (asInt seTime, seUserID, [0, seAmount, 0])
           DocStatSend            -> Just (asInt seTime, seUserID, [0, 0, seAmount])
           _                      -> Nothing
