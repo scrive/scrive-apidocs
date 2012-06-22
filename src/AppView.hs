@@ -323,7 +323,11 @@ flashMessageFields flash = do
     OperationDone   -> "green"
     OperationFailed -> "red"
     _               -> "") <$> ftype
-  F.valueM "message" $ replace "\"" "'" <$>  filter (not . isControl) <$> msg
+  F.valueM "message" $ do
+      isModal <- (== Modal) <$> ftype
+      if (isModal )
+         then filter (not . isControl) <$> msg 
+         else replace "\"" "'" <$> filter (not . isControl) <$> msg
   F.valueM "isModal" $ (== Modal) <$> ftype
   where
     fm :: TemplatesMonad m => m (FlashType, String)

@@ -76,8 +76,6 @@ priceplanPageContents=
                             </tr>
                             <tr>$_priceplanPageTableRow3()$
                             </tr>
-                            <tr class="odd-row">$_priceplanPageTableRow4()$
-                            </tr>
                             <tr>$_priceplanPageTableRow5()$
                             </tr>
                             <tr class="odd-row">$_priceplanPageTableRow6()$
