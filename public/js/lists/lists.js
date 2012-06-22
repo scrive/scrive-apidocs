@@ -459,7 +459,8 @@
             this.model.fetch({ data: this.schema.getSchemaUrlParams(),
                                processData: true,
                                cache: false,
-                               success: function() {fetching = false; list.view.stopLoading();}
+                               success: function() {fetching = false; list.view.stopLoading(); },
+                               timeout: 6000
             });
             window.setTimeout(function() {if (fetching == true) list.recall();}, 7000);
         }
