@@ -785,7 +785,7 @@
             }
             var body = this.tbody;
             var odd = true;
-            this.model.first(this.schema.paging().pageSize()).forEach(function(e) {
+            _.each(this.model.first(this.schema.paging().pageSize()),function(e) {
                 if (e.view != undefined) {
                     body.append($(e.view.el));
                     if (odd) {
