@@ -771,7 +771,7 @@ resealFile docid = onlyAdmin $ do
 
 replaceMainFile :: Kontrakcja m => DocumentID -> m KontraLink
 replaceMainFile did = onlyAdmin $ do
-  Log.debug $ "Replaing main file | SUPER CRITICAL | If you see this check who did this ask who did this and why"
+  Log.debug $ "Replaing main file | SUPER CRITICAL | If you see this check who did this and ask why"
   doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID did
   input <- getDataFnM (lookInput "file")
   case (input, documentfiles doc) of
@@ -782,7 +782,7 @@ replaceMainFile did = onlyAdmin $ do
             fn <- fromMaybe "file" <$> fmap filename <$> (dbQuery $ GetFileByFileID cf)
             Context{ctxipnumber,ctxtime, ctxmaybeuser = Just user} <- getContext
             let actor = adminActor ctxtime ctxipnumber (userid user) (getEmail user)
-            file <- dbUpdate $ NewFile fn (concatChunks content)
+            file <- dbUpdate $ NewFile fn (Binary $ concatChunks content)
             _ <- dbUpdate $ ChangeMainfile did (fileid file) actor
             return LoopBack
        _ -> internalError

@@ -408,7 +408,7 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
       ExitSuccess -> do
         -- GuardTime signs in place
         code2 <- liftIO $ GT.digitallySign ctxgtconf tmpout
-        newfilepdf <- case code2 of
+        newfilepdf <- Binary <$> case code2 of
           ExitSuccess -> do
             res <- liftIO $ BS.readFile tmpout
             Log.debug $ "GuardTime signed successfully"

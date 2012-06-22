@@ -1,5 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 module File.Model (
       module File.FileID
     , FileMovedToAWS(..)
@@ -7,7 +5,6 @@ module File.Model (
     , GetFileByFileID(..)
     , GetFileThatShouldBeMovedToAmazon(..)
     , NewFile(..)
-    , PutFileUnchecked(..)
     ) where
 
 import Database.HDBC
@@ -16,8 +13,6 @@ import qualified Data.ByteString.Char8 as BS
 import DB
 import File.File
 import File.FileID
-import OurPrelude
-import DB.SQL2
 
 data GetFileByFileID = GetFileByFileID FileID
 instance MonadDB m => DBQuery m GetFileByFileID (Maybe File) where
@@ -26,7 +21,7 @@ instance MonadDB m => DBQuery m GetFileByFileID (Maybe File) where
     _ <- kExecute [toSql fid]
     fetchFiles >>= oneObjectReturnedGuard
 
-data NewFile = NewFile String BS.ByteString
+data NewFile = NewFile String Binary
 instance MonadDB m => DBUpdate m NewFile File where
   update (NewFile filename content) = do
      kPrepare $ "INSERT INTO files"
@@ -36,28 +31,12 @@ instance MonadDB m => DBUpdate m NewFile File where
        ++ " RETURNING id, name, encode(content,'base64'), amazon_bucket, amazon_url, disk_path"
      _ <- kExecute
       [ toSql filename
-      , toSql (Binary content)
+      , toSql content
       ]
      fs <- fetchFiles
      case fs of
             [file] -> return file
             _ ->  update (NewFile filename content)
-
-data PutFileUnchecked = PutFileUnchecked File
-instance MonadDB m => DBUpdate m PutFileUnchecked () where
-  update (PutFileUnchecked file) = do
-    kRun_ $ sqlInsert "files" $ do
-      sqlSet "id" $ fileid file
-      sqlSet "name" $ filename file
-      case filestorage file of
-        FileStorageMemory mem -> do
-          sqlSetCmd "content" $ SQL "decode(?,'base64')" [toSql $ Binary mem]
-        FileStorageAWS bucket url -> do
-          sqlSet "amazon_url" url
-          sqlSet "amazon_bucket" bucket
-        FileStorageDisk path ->
-          sqlSet "disk_path" path
-    return ()
 
 data FileMovedToAWS = FileMovedToAWS FileID String String
 instance MonadDB m => DBUpdate m FileMovedToAWS () where
