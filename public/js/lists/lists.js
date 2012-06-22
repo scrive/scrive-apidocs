@@ -408,7 +408,7 @@
             var body = this.tbody;
             var odd = true;
             var schema = this.schema
-            this.model.first(schema.paging().pageSize()).forEach(function(e) {
+            _.each(this.model.first(this.schema.paging().pageSize()),function(e) {
                 if (e.view == undefined)
                   new ListObjectView({
                         model: e,
