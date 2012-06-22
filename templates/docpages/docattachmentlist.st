@@ -18,7 +18,7 @@ var documentsTable = KontraList().init({
     extraParams : { documentType : "Attachment" },
     sorting: new Sorting({ fields: ["title", "time", "type"]}),
     paging: new Paging({}),
-    filtering: new Filtering({text: "", infotext: "$_pageAttachmentListSearchInfo()$"}),
+    textfiltering: new TextFiltering({text: "", infotext: "$_pageAttachmentListSearchInfo()$"}),
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
         new Cell({name: "$_SortTime()$", width:"140px", field:"time"}),

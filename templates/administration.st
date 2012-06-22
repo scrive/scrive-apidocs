@@ -98,7 +98,7 @@ adminusers=
                     , "signed_12m"
                     ]}),
             paging: new Paging({}),
-            filtering: new Filtering({text: "", infotext: "Username, email or company name."}),
+            textfiltering: new TextFiltering({text: "", infotext: "Username, email or company name."}),
             cells : [
                 new Cell({name: "Username"     , width:"100px", field:"username", special:"link"}),
                 new Cell({name: "Email"        , width:"140px", field:"email", special:"link"}),
@@ -145,7 +145,7 @@ admincompanies=
                                        "companycity",
                                        "companycountry"  ] }),
       paging: new Paging({}),
-      filtering: new Filtering({ text: "", infotext: "Search companies" }),
+      textfiltering: new TextFiltering({ text: "", infotext: "Search companies" }),
       cells : [
         new Cell({name: "Name",   width:"120px", field:"companyname"   , special:"link"}),
         new Cell({name: "Number", width:"100px", field:"companynumber" , special:"link"}),
@@ -275,7 +275,7 @@ adminUsersForSales=
             url: "/adminonly/userslist",
             sorting: new Sorting({ fields: ["username", "email", "company", "phone", "tos", "signed_docs"]}),
             paging: new Paging({}),
-            filtering: new Filtering({text: "", infotext: "Username, email or company name."}),
+            textfiltering: new TextFiltering({text: "", infotext: "Username, email or company name."}),
             cells : [
                 new Cell({name: "Username", width:"130px", field:"username", special:"link"}),
                 new Cell({name: "Email", width:"130px", field:"email", special:"link"}),
@@ -713,7 +713,7 @@ admincompanyusers=
                                         "id",
                                         "deletable"] }),
         paging: new Paging({}),
-        filtering: new Filtering({ text: "", infotext: "Company Accounts" }),
+        textfiltering: new TextFiltering({ text: "", infotext: "Company Accounts" }),
         cells: [
           new Cell({name: "Name", width: "100px", field:"fullname", special : "link"}),
           new Cell({name: "Email", width: "100px", field:"email"}),
@@ -958,7 +958,7 @@ admindocumentslist =
                     , "signs"
                     ]}),
             paging: new Paging({}),
-            filtering: new Filtering({infotext: "Filter documents"}),
+            textfiltering: new TextFiltering({infotext: "Filter documents"}),
             cells : [
                 new Cell({name: "Dates", width:"80px", field: "ctime", special: "rendered",
                         rendering: function(_, _, doc) {

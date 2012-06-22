@@ -19,7 +19,7 @@ var documentsTable = KontraList().init({
     extraParams : { documentType : "Template" },
     sorting: new Sorting({ fields: ["title", "time", "process"]}),
     paging: new Paging({}),
-    filtering: new Filtering({text: "", infotext: "$_SearchDoc()$"}),
+    textfiltering: new TextFiltering({text: "", infotext: "$_SearchDoc()$"}),
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
         new Cell({name: "$_SortTime()$", width:"140px", field:"time"}),

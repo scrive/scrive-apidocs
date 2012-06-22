@@ -18,7 +18,17 @@ var documentsTable = KontraList().init({
     extraParams : { documentType : "Document" },
     sorting: new Sorting({ fields: ["title", "status", "time", "party", "author"]}),
     paging: new Paging({}),
-    filtering: new Filtering({text: "", infotext: "$_SearchDoc()$"}),
+    textfiltering: new TextFiltering({text: "", infotext: "$_SearchDoc()$"}),
+    selectfiltering : [
+        new SelectFiltering({description: "All types", name : "type", options :
+                                                                [ {name: "Only contracts", value : "Contract"},
+                                                                  {name: "Only offers",    value : "Offers"},
+                                                                  {name: "Only orders",    value : "Orders"}
+                                                                 ]}),
+        new SelectFiltering({description: "All authors", name : "owner", options :
+                                                                [ {name: "Only mine", value : "user"}
+                                                                 ]}),
+        ],
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
         new Cell({name: "$_SortStatus()$", width:"50px", field:"status", special: "rendered",

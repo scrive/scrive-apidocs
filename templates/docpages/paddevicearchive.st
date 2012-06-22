@@ -22,6 +22,7 @@ var padTable = KontraList().init({
     sorting: new Sorting({ fields: ["status", "time", "title","party"]}),
     paging: new Paging({}),
     filtering: new Filtering({text: "", infotext: "$_SearchDoc()$"}),
+    textfiltering: new TextFiltering({text: "", infotext: "$_SearchDoc()$"}),
     expandedByDefault: true,
     cells : [
          new Cell({name: "$_SortStatus()$", width:"65px", field:"status", special: "rendered",
