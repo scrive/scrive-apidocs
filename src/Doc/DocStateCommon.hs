@@ -22,9 +22,10 @@ trueOrMessage True  _ = Nothing
 
 signLinkFromDetails' :: SignatoryDetails
                      -> [SignatoryRole]
+                     -> [SignatoryAttachment]
                      -> MagicHash
                      -> SignatoryLink
-signLinkFromDetails' details roles magichash =
+signLinkFromDetails' details roles attachments magichash =
   SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 0
                 , signatorydetails = signatoryLinkClearDetails details
                 , signatorymagichash = magichash
@@ -39,7 +40,7 @@ signLinkFromDetails' details roles magichash =
                 , signatorylinkdeleted = False
                 , signatorylinkreallydeleted = False
                 , signatorylinkcsvupload = Nothing
-                , signatoryattachments = []
+                , signatoryattachments = attachments
                 , signatorylinkstatusclass = SCDraft
                 }
 

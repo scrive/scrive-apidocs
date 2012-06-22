@@ -1583,7 +1583,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (E
 
       let authorlink0 = signLinkFromDetails'
                         (signatoryDetailsFromUser user mcompany)
-                        authorRoles magichash
+                        authorRoles [] magichash
 
       let authorlink = authorlink0 {
                          maybesignatory = Just $ userid user,
@@ -1596,7 +1596,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (E
                                                 {  signatorysignorder = SignOrder 1
                                                  , signatoryfields   = emptySignatoryFields
                                                 }
-                                [SignatoryPartner] mh
+                                [SignatoryPartner] [] mh
 
       let doc = blankDocument
                 { documenttitle                = title
@@ -1711,11 +1711,11 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocumen
              return $ Right doc''
 
     clearSignInfofromDoc = do
-      let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x, signatorylinkid x)) $ documentsignatorylinks doc
+      let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x, signatorylinkid x, signatoryattachments x)) $ documentsignatorylinks doc
           Just asl = getAuthorSigLink doc
-      newSignLinks <- forM signatoriesDetails $ \(details,roles,linkid) -> do
+      newSignLinks <- forM signatoriesDetails $ \(details,roles,linkid, atts) -> do
                            magichash <- lift random
-                           return $ (signLinkFromDetails' details roles magichash) { signatorylinkid = linkid }
+                           return $ (signLinkFromDetails' details roles atts magichash) { signatorylinkid = linkid }
       let Just authorsiglink0 = find isAuthor newSignLinks
           authorsiglink = authorsiglink0 {
                             maybesignatory = maybesignatory asl,
@@ -2046,9 +2046,8 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
             let mauthorsiglink = getAuthorSigLink document
             forM_ signatories $ \(details, roles, atts, mcsvupload) -> do
                      magichash <- lift random
-                     let link' = (signLinkFromDetails' details roles magichash)
-                                 { signatorylinkcsvupload = mcsvupload
-                                 , signatoryattachments   = atts }
+                     let link' = (signLinkFromDetails' details roles atts magichash)
+                                 { signatorylinkcsvupload = mcsvupload }
                          link = if isAuthor link'
                                 then link' { maybesignatory = maybe Nothing maybesignatory mauthorsiglink
                                            , maybecompany   = maybe Nothing maybecompany   mauthorsiglink
@@ -2121,7 +2120,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m SignLinkFromDe
       magichash <- lift random
 
       let link = signLinkFromDetails' details
-                        roles magichash
+                        roles [] magichash
 
       return link
 
