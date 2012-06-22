@@ -47,6 +47,8 @@ import qualified Templates.Fields as F
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified Data.ByteString.UTF8 as BS (fromString)
 import qualified Static.Resources as SR
+import Data.Char
+import Data.String.Utils
 
 {- |
    The name of our application (the codebase is known as kontrakcja,
@@ -321,7 +323,7 @@ flashMessageFields flash = do
     OperationDone   -> "green"
     OperationFailed -> "red"
     _               -> "") <$> ftype
-  F.valueM "message" $ jsText <$> msg
+  F.valueM "message" $ replace "\"" "'" <$>  filter (not . isControl) <$> msg
   F.valueM "isModal" $ (== Modal) <$> ftype
   where
     fm :: TemplatesMonad m => m (FlashType, String)
