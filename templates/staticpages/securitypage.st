@@ -33,10 +33,6 @@ securityPageContents=
 <br />
 <p>$_securityPageH2HaskellBody()$</p>
 <br />
-<h2>$_securityPageH2TW()$</h2>
-<br />
-<p>$_securityPageH2TWBody()$</p>
-<br />
 <h2>$_securityPageH2SSL()$</h2>
 <br />
 <p>$_securityPageH2SSLBody()$</p>

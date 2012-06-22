@@ -707,68 +707,10 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_legalPageH1","JURIDIK",,"LEGAL"
 "_legalPageH2DocHandeling","Hantering av signerade dokument",,"Handling of signed documents"
 "_legalPageH2DocHandelingH31","Stämpling",,"Stamping"
-"_legalPageH2DocHandelingH31Body1","Då alla parter skrivit på ett dokument skickar vi dokumentet
- (kraftigt krypterat) till TrustWeaver där det förses med en
- kvalificerad signatur. Den kvalificerade signaturen går inte
- att förvanska och därmed säkerställer den att dokumentet inte
- förvanskats efter stämpling. Den kvalificerade signaturen går
- att kontrollera i bland annat Adobe Reader.",,"When all parties have signed a document, we encrypt it and send
- it to TrustWeaver where it is supplied with a qualified signature.
- The qualified signature is impossible to impair, and the document
- is thereby protected against distortion after stamping. The qualified
- signature is controllable when using, amongst others, Adobe
- Reader."
-"_legalPageH2DocHandelingH32","Lagring",,"Storage"
-"_legalPageH2DocHandelingH32Body1","Utan tillgång till originaldokumentet är det svårt att bevisa
- dokumentets innehåll. Av erfarenhet från våra kunder och kundprospekt
- vet vi att det finns många olika situationer som kan göra att
- dokument kommer bort. Man skulle kunna tro att detta inte är
- fallet för viktigare dokument som till exempel rör gjorda investeringar
- på många miljoner. Så är dock inte fallet, det slarvas med dokument
- av såväl mindre som större värde. Därmed rekommenderar vi våra
- kunder starkt att använda en lämplig lagringsplats för sina
- dokument. Vi erbjuder två noggrant valda typer av lagring med
- olika säkerhetsnivå:",,"Without access to the original document, it is hard to prove
- the content of the document. Through experiences shared by our
- customers, we know that there are many different situations
- that can result in lost documents. One could believe that this
- is not the case when dealing with more important documents,
- such as investment contracts worth millions, but our studies
- have shown that more important documents are lost almost as
- often as less importunate ones. Because of this, we recommend
- our customers to select an appropriate storage for their documents.
- We offer two carefully selected types of storage with different
- levels of security:"
-"_legalPageH2DocHandelingH32Body2","<h4>TrustWeaver:</h4> Som beskrivet i säkerhetsdelen av detta
- dokument är TrustWeaver vår högsäkerhetslösning för lagring.
- Bortsett från det tekniska som är beskrivet under rubriken säkerhet
- skiljer sig TrustWeaver från andra lagringslösningar framförallt
- vad gäller hur dokumenten lagras:",,"<h4>TrustWeaver:</h4> As described in the security part of this
- document, TrustWeaver is our top security solution for storage.
- Except for the technical aspects described under Security, TrustWeaver
- differs from other storage solutions mostly in the way the documents
- are stored:"
-"_legalPageH2DocHandelingH32Body21","<li>För att få lagra material på TrustWeaver måste man genomgå
- rigorösa kontroller för att hindra användare från att äventyra
- andra användares datasäkerhet.</li>                    <li>Tjänsten är utformad
- på sådant sätt att dokument inte kan tas ut och stoppas in igen.
- Därmed garanteras dokumentens integritet i ytterligare ett steg
- efter stämplingen med den kvalificerade signaturen.</li>",,"<li>To qualify as a TrustWeaver user, one has to go through rigorous
- controls to prevent users from endangering other user's data
- security.</li>                 <li>The service was created in a way that makes
- it impossible to remove a document and then put it back in.
- Therefore, the integrity of the document is further secured in
- addition to the stamping with the qualified signature.</li>"
-"_legalPageH2DocHandelingH32Body3","<h4>Amazon:</h4> Denna typ av lagring sker hos den världsledande
- molnbaserade lagringslösningen Amazon S3. Precis som TrustWeaver
- är Amazon S3 säkerhetscertifierad enligt SAS 70 II och följer
- en strikt policy kring datasäkerhet. Trots detta saknar den
- TrustWeavers rigorösa användarkontroller och garantier av dataintegritet.",,"<h4>Amazon:</h4> This storage alternative is hosted by the world
- leading cloud based storage solution, Amazon S3. As TrustWeaver,
- Amazon S3 is certified according to the SAS 70 II standards,
- and follows a strict data security policy. Despite this, Amazon
- is not able to provide the rigorous user controls and guaranties
- supplied by TrustWeaver."
+"_legalPageH2DocHandelingH31Body1","Då alla parter signerat dokumentet stämplar Scrive dokumentet med en tidsstämpel och en digital signatur från Guardtime. Tidsstämpeln säkerställer att dokumentets äkthet går att bevisa matematiskt och oberoende av Scrive. Den kvalificerade signaturen går
+ att kontrollera i bland annat Adobe Reader.  För er bekvämlighet tillhandahåller Scrive även en tjänst för att kontrollera dokumentets äkthet automatiskt på: <a href='http://www.scrive.com/verify'>www.scrive.com/verify/</a>.",,"When all parties have signed a document, we digitally sign it and apply a time stamp with Guardtime. The time stamp ensures that the originality of the document can be proven mathematically and independently of Scrive. The qualified
+ signature is available when using, amongst others, Adobe
+ Reader. For your convenience, Scrive also provides a service that enables you to automatically verify the document's originality at: <a href='http://www.scrive.com/verify/'>www.scrive.com/verify/</a>."
 "_legalPageH2Intro","Inledning",,"Introduction"
 "_legalPageH2IntroBody","Scrive är en tjänst för att signera och arkivera avtal
  elektroniskt. Vi hjälper våra kunder att minska sina kostnader,
@@ -1798,20 +1740,10 @@ If the other party clicks on the signing link after you have withdrawn the invit
  the largest companies and organisations in Europe."
 "_partnersPagePartner1Area","Identifieringsteknik",,"Identification technology"
 "_partnersPagePartner1Web","www.logica.se",,"www.logica.se"
-"_partnersPagePartner2","Trustweaver",,"Trustweaver"
-"_partnersPagePartner2About","TrustWeaver är ett specialiserat IT-säkerhetsföretag som tillhandahåller
- e-signerings-, tidsstämplings-, arkivering- och fakturainnehållslösningar
- som gör det möjligt för företag att vara 100% säkra att deras
- e-fakturor och andra företagskritiska elektroniska dokument
- godkänns av kontrollinstitut och domstolar som fullständiga
- och oändrade över väldigt långa tidsperioder.",,"TrustWeaver is a specialist IT-security company providing e-signature,
- time stamping, archiving and invoice solutions. TrustWeaver
- makes it possible for companies to be 100% confident that e-invoices
- and other critical documents will be approved by regulatory authorities
- and courts as complete and unchanged over very long periods
- of time."
-"_partnersPagePartner2Area","Dokumentsäkerhet och signering",,"Document security and signing"
-"_partnersPagePartner2Web","www.trustweaver.com",,"www.trustweaver.com"
+"_partnersPagePartner2","Guardtime",,"Guardtime"
+"_partnersPagePartner2About","Guardtimes Nyckellösa Signaturer är en patenterad teknologi som möjliggör att man algoritmiskt kan bevisa tid, ursprung och integritet för elektronisk data. Scrive använder Guardtime för att säkerställa att signerade dokuments integritet är matematiskt bevisbar oberoende av Scrive.",,"Guardtime Keyless Signatures is a patented technology to algorithmically prove the time, origin and integrity of electronic data. Scrive uses Guardtime Keyless Signatures to guarantee that the document's originality is mathematically provable independently of Scrive."
+"_partnersPagePartner2Area","Dokument integritiet",,"Document integrity"
+"_partnersPagePartner2Web","www.guardtime.com",,"www.guardtime.com"
 "_partnersPagePartner3","Chalmers",,"Chalmers"
 "_partnersPagePartner3About","Chalmers är ett av världens mest prestigefyllda tekniska universitet.
  Scrive har ett nära samarbete med Chalmers Datasäkerhetsgrupp
@@ -1867,7 +1799,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_priceplanPageTableRow29","<td>Fullt API</td><td>$_descriptionSoon()$</td>",,"<td>Full API</td><td>$_descriptionSoon()$</td>"
 "_priceplanPageTableRow3","<td>Standardlagring</td><td>$_descriptionSoon()$</td>",,"<td>Standard storage</td><td>$_descriptionSoon()$</td>"
 "_priceplanPageTableRow30","<td>Skapa egen process</td><td>$_descriptionSoon()$</td>",,"<td>Custom workflow</td><td>$_descriptionSoon()$</td>"
-"_priceplanPageTableRow4","<td>Trustweaver premiumlagring</td><td>$_descriptionSoon()$</td>",,"<td>Trustweaver premium storage</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow4","<td></td><td>$_descriptionSoon()$</td>",,"<td></td><td>$_descriptionSoon()$</td>"
 "_priceplanPageTableRow5","<td>Uppstartsutbildning</td><td>$_descriptionSoon()$</td>",,"<td>Startup training</td><td>$_descriptionSoon()$</td>"
 "_priceplanPageTableRow6","<td>Hjälp med konfiguration</td><td>$_descriptionSoon()$</td>",,"<td>Configuration help</td><td>$_descriptionSoon()$</td>"
 "_priceplanPageTableRow7","<td>Support</td><td>$_descriptionSoon()$</td>",,"<td>Support</td><td>$_descriptionSoon()$</td>"
@@ -2051,15 +1983,13 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
  idag:",,"We always strive for using the latest technology in our service
  and being the market leader in security. These are some of the
  most important security action taken by us today:"
-"_securityPageH2IntroBody4","<li> Haskell utgör själva grunden för vårt system</li>       <li>    TrustWeaver
- säkerhetsklassad premiumlagring</li>   <li>    Högsta möjliga SSL
+"_securityPageH2IntroBody4","<li> Haskell utgör själva grunden för vårt system</li>   <li>    Högsta möjliga SSL
  256 bit kryptering för kommunikation med användare via webb
  och e-mail</li>        <li>    2048 bit kryptering, AES certifikat och
  RSA-nycklar för intern datatransfer mellan oss och våra partners</li>  <li>    Förändringshantering
  med flera steg av ändringsacceptans</li>       <li>    Strikt säkerhetspolicy
  för all Scrive personal</li>   <li>    Del i ledande säkerhetsforskning
- via partnerskap med Chalmers datasäkerhetsgrupp</li>",,"<li>   Haskell forms the base of our system</li>       <li>    TrustWeaver
- secure premium storage</li>    <li>    Most powerful SSL 256 bit encryption
+ via partnerskap med Chalmers datasäkerhetsgrupp</li>",,"<li>   Haskell forms the base of our system</li>   <li>    Most powerful SSL 256 bit encryption
  for communication with our users through webb and email</li>   <li>    2048
  bit encryption, AES certificate and RSA-keys for internal data
  transfer between Scrive and our partners.</li> <li>    Change management
@@ -2087,39 +2017,6 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
  employees, who also are required to sign strict and economically
  powerful privacy contract concerning all sensitive information
  that could endanger the security of the company or our customers."
-"_securityPageH2TW","TrustWeaver lagring",,"TrustWeaver storage"
-"_securityPageH2TWBody","Scrive lagrar all juridisk data (läs mer under ”juridik”) hos
- TrustWeaver och vi erbjuder även våra kunder att lagra sina
- dokument hos dem. TrustWeavers tjänst, TrustWeaver On Demand,
- är installerad på två datacenter som är geografiskt separerade
- på ett avstånd större än 30 km. De atomsäkra serverhallarna
- där TrustWeaver On Demands servrar är placerade håller högsta
- säkerhetsstandard. De finns i bergrum som tidigare varit faciliteter
- åt den svenska militären och det huvudsakliga datacentret är
- klassat som skyddat objekt enligt svensk lag ”Lagen (1990:217)
- om skyddet av kritiska samhällsfunktioner, etc”. Anläggningarna
- är skyddade genom accesskortskontroll, slutna videoövervakningssystem,
- alarm med rörelsesensorer, brandskyddsystem, UPS energi system
- med dieselgeneratorer för backup, låsta och förseglade serverracket
- som endast kan öppnas med kopieringsskyddade nycklar. Alla ICC-kort
- är förseglade till ICC-kortsracket genom att använda specialdesignad
- säkerhetstejp.",,"Scrive stores all legal data (read more under ""Legal"") at TrustWeaver
- and we offer our customers to also save their documents in their
- storage. The TrustWeaver service, TrustWeaver On Demand, is
- installed in two data centers, geographically separated from
- each other at a distans larger than 30 km. The atom bomb proof
- server halls where the TrustWeaver On Demand servers are kept
- maintains the highest security standards available. They are
- located in caverns previously used by the Swedish military, and
- the main data center is classified as secured object according
- to the Swedish law (1990:217) concerning the protection of critical
- functions in society. The facilities are guarded by access card
- controls, closed circuit surveillance camera systems, alarm with
- motion detectors, fire protection systems, UPS power system
- with diesel back-up generators, and locked and sealed server
- rackets which can only be opened with copy protected keys. All
- ICC-cards are sealed in a ICC-card racket by specially designed
- adhesive security tape."
 "_securityPageMetaDescription","Signera och arkivera dina avtal elektroniskt. Scrive bevarar
  din säkerhet och integritet så att du kan koncentrera dig på
  ditt arbete.",,"Sign and store your contracts online. Scrive preserves your security
