@@ -166,15 +166,18 @@ javascriptLocalisation =
             , process : {
                 contract: {
                    uploadprompt: "$_contractuploadprompttext()$",
-                   name: "$_contractname()$"
+                   name: "$_contractname()$",
+                   shortName: "$_contractshortname()$"
                 },
                 offer: {
                    uploadprompt: "$_offeruploadprompttext()$",
-                   name: "$_offername()$"
+                   name: "$_offername()$",
+                   shortName: "$_offershortname()$"
                 },
                 order: {
                    uploadprompt: "$_orderuploadprompttext()$",
-                   name: "$_ordername()$"
+                   name: "$_ordername()$",
+                   shortName: "$_ordershortname()$"
                 }
 
               }
