@@ -31,7 +31,7 @@ var documentsTable = KontraList().init({
         ],
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
-        new Cell({name: "$_SortStatus()$", width:"50px", field:"status", 
+        new Cell({name: "$_SortStatus()$", width:"40px", field:"status", 
                  rendering: function(status,idx,listobject) {
                     var icon = jQuery("<div class='icon status "+status+"'></div>")
                     var tip = jQuery("<div id='tooltip-"+status+"'> <div class='icon status "+status+"'></div><p>"+
