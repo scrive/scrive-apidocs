@@ -181,6 +181,12 @@ javascriptLocalisation =
                 }
 
               }
+            , filterByProcess: {
+                showAllProcesses: "$_showAllProcesses()$",
+                showContractsOnly: "$_showContractsOnly()$",
+                showOrdersOnly: "$_showOrdersOnly()$",
+                showOffersOnly: "$_showOffersOnly()$"
+            }
            , searchTemplate : "$_SearchTemplate()$"
            , sortTemplate : "$_SortTemplate()$"
            , infoSelectTemplate : "$_InfoSelectTemplate()$"
