@@ -21,9 +21,6 @@
         width: function() {
             return this.get("width");
         },
-        isSpecial: function() {
-            return this.has("special");
-        },
         isLink: function() {
             return this.get("special") != undefined && this.get("special") == "link";
         },
@@ -34,7 +31,7 @@
             return this.get("special") != undefined && this.get("special") == "select";
         },
         isRendered: function() {
-            return this.get("special") != undefined && this.get("special") == "rendered";
+            return this.get("rendering") != undefined;
         },
         isBool : function() {
             return this.get("special") != undefined && this.get("special") == "bool";

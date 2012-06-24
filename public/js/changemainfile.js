@@ -127,7 +127,6 @@
                         new Cell({name: localization.sortTemplate,
                                   width:"400px",
                                   field:"title",
-                                  special: "rendered",
                                   rendering : function(title, _mainrow, listobject) {
                                       var link = jQuery("<a />").text(title);
                                       link.click(function(){

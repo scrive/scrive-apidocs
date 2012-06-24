@@ -23,7 +23,7 @@ var documentsTable = KontraList().init({
         ],
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
-        new Cell({name: "$_SortStatus()$", width:"50px", field:"status", special: "rendered",
+        new Cell({name: "$_SortStatus()$", width:"50px", field:"status", 
                  rendering: function(status,idx,listobject) {
                     var icon = jQuery("<div class='icon status "+status+"'></div>")
                     var tip = jQuery("<div id='tooltip-"+status+"'> <div class='icon status "+status+"'></div><p>"+
@@ -44,9 +44,17 @@ var documentsTable = KontraList().init({
         new Cell({width:"5px" }),
         new Cell({name: "$_SortParty()$", width:"200px", field:"party", special: "expandable", subfield : "name"}),
         new Cell({width:"5px" }),
-        new Cell({name: "$_SortDoc()$", width:"170px", field:"title",  special: "link"}),
+        new Cell({name: "$_SortDoc()$", width:"250px", field:"title",  special: "link"}),
         new Cell({width:"5px" }),
-        new Cell({name: "$_SortType()$", width:"100px", field:"process"})
+        new Cell({name: "$_SortType()$", width:"40px", field:"process",
+                  rendering: function(value, _idx, _model) {
+                      var txt = "";
+                      if( localization.process[value] !== undefined ) {
+                          txt = localization.process[value].shortName;
+                      }
+                      return jQuery("<span />").text(txt);
+                    }
+                 })
         ],
     options : [{name : "$_SendReminder()$",
                 onSelect: function(docs){
