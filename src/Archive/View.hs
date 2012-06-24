@@ -12,7 +12,6 @@ module Archive.View
        )
        where
 
-import Doc.DocProcess
 import Doc.DocStateData
 import FlashMessage
 import KontraLink
@@ -112,19 +111,19 @@ docFieldsListForJSON tl crtime padqueue doc = do
     J.value "partnercomp" $ intercalate ", " $ map getCompanyName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
     J.value "author" $ intercalate ", " $ map getSmartName $ filter isAuthor $ (documentsignatorylinks doc)
     J.value "time" $ showDateAbbrev tl crtime (documentmtime doc)
-    J.valueM "process" $ renderTextForProcess doc processname
-    J.valueM "type" renderDocType
+    J.value "type" $ case documenttype doc of
+                        Attachment -> "attachment"
+                        Template _ -> "template"
+                        Signable _ -> "signable"
+    case toDocumentProcess (documenttype doc) of
+      Nothing       -> return ()
+      Just Contract -> J.value "process" "contract"
+      Just Offer    -> J.value "process" "offer"
+      Just Order    -> J.value "process" "order"
     J.value "anyinvitationundelivered" $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc
     J.value "shared" $ show $ documentsharing doc == Shared
     J.value "file" $ fromMaybe "" $ show <$> (listToMaybe $ (documentsealedfiles doc) ++ (documentfiles doc))
     J.value "inpadqueue" $ "true" <| (fmap fst padqueue == Just (documentid doc)) |> "false"
-  where
-    renderDocType = do
-      pn <- renderTextForProcess doc processname
-      case documenttype doc of
-        Attachment -> renderTemplate_ "docListAttachmentLabel"
-        Template _ -> renderTemplate "docListTemplateLabel" $ F.value "processname" pn
-        Signable _ -> return pn
 
 signatoryFieldsListForJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> PadQueue -> Document -> SignatoryLink -> JSONGenT m ()
 signatoryFieldsListForJSON tl crtime padqueue doc sl = do
