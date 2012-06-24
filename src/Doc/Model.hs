@@ -2124,18 +2124,6 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m SignLinkFromDe
 
       return link
 
-data SignableFromDocument = SignableFromDocument Document Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignableFromDocument Document where  -- NOTE TO MERGER: I removed this in another branch. If there's a
-  -- conflict in a merge, get rid of this whole DBUpdate -- Eric
-  update (SignableFromDocument document actor ) = do
-    d <- insertNewDocument $ templateToDocument document
-    void $ update $ InsertEvidenceEvent
-      SignableFromDocumentEvidence
-      (value "actor" (actorWho actor) >> value "did" (show (documentid document)))
-      (Just (documentid d))
-      actor
-    return d
-
 data SignableFromDocumentIDWithUpdatedAuthor = SignableFromDocumentIDWithUpdatedAuthor User (Maybe Company) DocumentID Actor
 instance (MonadDB m, TemplatesMonad m)=> DBUpdate m SignableFromDocumentIDWithUpdatedAuthor (Either String Document) where
   update (SignableFromDocumentIDWithUpdatedAuthor user mcompany docid actor) =
