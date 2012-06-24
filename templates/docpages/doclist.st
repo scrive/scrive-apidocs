@@ -20,6 +20,14 @@ var documentsTable = KontraList().init({
     paging: new Paging({}),
     textfiltering: new TextFiltering({text: "", infotext: "$_SearchDoc()$"}),
     selectfiltering : [
+        new SelectFiltering({description: localization.filterByProcess.showAllProcesses, name: "type",
+                             options: [ {name: localization.filterByProcess.showContractsOnly, value: "contract"},
+                                        {name: localization.filterByProcess.showOffersOnly,    value: "offer"},
+                                        {name: localization.filterByProcess.showOrdersOnly,    value: "order"}
+                                      ]})
+        // new SelectFiltering({description: "All authors", name: "owner", 
+        //                     options : [ {name: "Only mine", value : "user"}
+        //                               ]}),
         ],
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),

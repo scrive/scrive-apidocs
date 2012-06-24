@@ -2389,6 +2389,11 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_offersignatorysignmodalcontentsignvieweleg","När du undertecknat blir dokumentet juridiskt bindande och det färdigställda dokumentet skickas till din e-post.",,"When you signed the document becomes legally binding and the document will be sent to your email."
 "_ordersignatorysignmodalcontentsignvieweleg","När du undertecknat blir dokumentet juridiskt bindande och det färdigställda dokumentet skickas till din e-post.",,"When you signed the document becomes legally binding and the document will be sent to your email."
 "_contact","Kontakt",,"Contact"
+"_showAllProcesses","Alla dokument",,"All documents"
+"_showContractsOnly","Endast avtal",,"Only contracts"
+"_showOrdersOnly","Endast orderbekräftelser",,"Only orders"
+"_showOffersOnly","Endast offerter",,"Only offers"
+
 "_contractsignatorysignmodalcontentauthoronly","När du signerat dokumentet <strong class='documenttitle'>$documenttitle$</strong> kommer din signatur att registreras av e-signeringstjänsten Scrive.",,"When you've signed the document <strong class='documenttitle'>$documenttitle$</strong> your signature will be registered by the e-signing service Scrive"
 "_offersignatorysignmodalcontentauthoronly","När du signerat dokumentet <strong class='documenttitle'>$documenttitle$</strong> kommer din signatur att registreras av e-signeringstjänsten Scrive.",,"When you've signed the document <strong class='documenttitle'>$documenttitle$</strong> your signature will be registered by the e-signing service Scrive"
 "_ordersignatorysignmodalcontentauthoronly","När du signerat dokumentet <strong class='documenttitle'>$documenttitle$</strong> kommer din signatur att registreras av e-signeringstjänsten Scrive.",,"When you've signed the document <strong class='documenttitle'>$documenttitle$</strong> your signature will be registered by the e-signing service Scrive"
