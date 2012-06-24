@@ -4,6 +4,7 @@ module Amazon (
   , getFileContents
   ) where
 
+import Control.Applicative
 import Control.Monad.Reader
 import Control.Exception (catch, SomeException)
 import Network.AWS.Authentication
@@ -17,6 +18,8 @@ import Prelude hiding (catch)
 import AppConf
 import AppControl
 import ActionQueue.Scheduler
+import Crypto
+import Crypto.RNG
 import DB
 import File.File
 import File.Model
@@ -32,7 +35,10 @@ uploadFilesToAmazon = do
     Nothing -> return ()
     Just file -> do
       conf <- sdAppConf `fmap` ask
-      uploadFile (docstore conf) (defaultAWSAction conf) file
+      success <- uploadFile (docstore conf) (defaultAWSAction conf) file
+      if success
+        then dbCommit
+        else dbRollback
       uploadFilesToAmazon
 
 -- | Convert a file to Amazon URL. We use the following format:
@@ -51,18 +57,19 @@ urlFromFile File{filename, fileid} =
 -- - upload a file to Amazon storage
 -- - save a file in a local directory
 -- - do nothing and keep it in memory database
-uploadFile :: MonadDB m => FilePath -> S3Action -> File -> m ()
+uploadFile :: FilePath -> S3Action -> File -> Scheduler Bool
 uploadFile docstore@(_:_) AWS.S3Action{AWS.s3bucket = ""} File{fileid, filename, filestorage = FileStorageMemory content} = do
     let filepath = docstore </> show fileid ++ '-' : filename ++ ".pdf"
     liftIO $ BS.writeFile filepath content
     Log.debug $ "Document file #" ++ show fileid ++ " saved as " ++ filepath
     dbUpdate $ FileMovedToDisk fileid filepath
-    dbCommit -- commit after file was handled properly
+    return True
 
 uploadFile _ ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, filestorage = FileStorageMemory content} = do
+    Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
     let action = ctxs3action { AWS.s3object = url
                              , AWS.s3operation = HTTP.PUT
-                             , AWS.s3body = BSL.fromChunks [content]
+                             , AWS.s3body = BSL.fromChunks [aesEncrypt aes content]
                              , AWS.s3metadata = [("Content-Type","application/pdf")]
                              }
         url = urlFromFile file
@@ -71,15 +78,15 @@ uploadFile _ ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, fi
     case result of
          Right _ -> do
              Log.debug $ "AWS uploaded " ++ bucket </> url
-             _ <- dbUpdate $ FileMovedToAWS fileid bucket url
-             dbCommit -- commit after file was handled properly
+             _ <- dbUpdate $ FileMovedToAWS fileid bucket url aes
+             return True
          Left err -> do -- FIXME: do much better error handling
              Log.debug $ "AWS failed to upload of " ++ bucket </> url ++ " failed with error: " ++ show err
-             return ()
+             return False
 
 uploadFile _ _ _ = do
     Log.debug "No uploading/saving to disk as bucket/docstore is ''"
-    return ()
+    return True
 
 -- | Get file contents as strict 'BS.ByteString'. Either reads a file
 -- from disk or memory or downloads from Amazon.
@@ -97,11 +104,11 @@ getFileContents _ File{filestorage = FileStorageDisk filepath} =
 getFileContents _ File{filestorage = FileStorageMemory content} =
     return content
 
-getFileContents s3action File{filestorage = FileStorageAWS bucket url} = do
+getFileContents s3action File{filestorage = FileStorageAWS bucket url aes} = do
   let action = s3action { AWS.s3object = url
                         , AWS.s3bucket = bucket
                         }
   result <- AWS.runAction action
   case result of
-       Right rsp -> return $ concatChunks $ HTTP.rspBody rsp
+       Right rsp -> return . aesDecrypt aes . concatChunks $ HTTP.rspBody rsp
        _ -> error (show result)

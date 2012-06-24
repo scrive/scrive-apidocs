@@ -3,20 +3,24 @@ module File.File
     , FileStorage(..)
     ) where
 
-import File.FileID
+import Data.Typeable
 import qualified Data.ByteString.UTF8 as BS
+
+import Crypto
+import File.FileID
 
 data FileStorage =
     FileStorageMemory BS.ByteString
-  | FileStorageAWS String String -- ^ bucket, url inside bucket
+  | FileStorageAWS String String AESConf -- ^ bucket, url inside bucket, aes key/iv
   | FileStorageDisk FilePath -- ^ filepath
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord, Show, Typeable)
 
 data File = File {
-    fileid      :: FileID
-  , filename    :: String
-  , filestorage :: FileStorage
-  }
+    fileid       :: FileID
+  , filename     :: String
+  , filestorage  :: FileStorage
+  , filechecksum :: BS.ByteString
+  } deriving (Typeable)
 
 instance Eq File where
     a == b = fileid a == fileid b

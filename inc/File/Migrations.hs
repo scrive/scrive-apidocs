@@ -6,6 +6,16 @@ import DB
 import File.Tables
 import qualified Log
 
+addCryptoColumnsToFilesTable :: MonadDB m => Migration m
+addCryptoColumnsToFilesTable = Migration {
+    mgrTable = tableFiles
+  , mgrFrom = 2
+  , mgrDo = do
+    kRunRaw "ALTER TABLE files ADD COLUMN checksum BYTEA NULL"
+    kRunRaw "ALTER TABLE files ADD COLUMN aes_key BYTEA NULL"
+    kRunRaw "ALTER TABLE files ADD COLUMN aes_iv BYTEA NULL"
+  }
+
 addFileIdSequence :: MonadDB m => Migration m
 addFileIdSequence = Migration {
     mgrTable = tableFiles

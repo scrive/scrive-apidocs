@@ -7,18 +7,23 @@ module File.Model (
     , NewFile(..)
     ) where
 
+import Control.Applicative
+import Data.List
 import Database.HDBC
 import qualified Data.ByteString.Char8 as BS
 
+import Crypto
 import DB
 import File.File
 import File.FileID
+import File.Tables
+import Misc
+import qualified Crypto.Hash.SHA1 as SHA1
 
 data GetFileByFileID = GetFileByFileID FileID
 instance MonadDB m => DBQuery m GetFileByFileID (Maybe File) where
   query (GetFileByFileID fid) = do
-    kPrepare $ "SELECT id, name, encode(content,'base64'), amazon_bucket, amazon_url, disk_path FROM files WHERE id = ?"
-    _ <- kExecute [toSql fid]
+    kRun_ $ selectFilesSQL <++> SQL "WHERE id = ?" [toSql fid]
     fetchFiles >>= oneObjectReturnedGuard
 
 data NewFile = NewFile String Binary
@@ -27,23 +32,26 @@ instance MonadDB m => DBUpdate m NewFile File where
      kPrepare $ "INSERT INTO files"
        ++ "( name"
        ++ ", content"
-       ++ ") SELECT ?, decode(?,'base64')"
-       ++ " RETURNING id, name, encode(content,'base64'), amazon_bucket, amazon_url, disk_path"
+       ++ ", checksum"
+       ++ ") SELECT ?, decode(?,'base64'), decode(?,'base64')"
+       ++ " RETURNING " ++ filesSelectors
      _ <- kExecute
       [ toSql filename
       , toSql content
+      , toSql . Binary . SHA1.hash $ unBinary content
       ]
-     fs <- fetchFiles
-     case fs of
-            [file] -> return file
-            _ ->  update (NewFile filename content)
+     fetchFiles >>= exactlyOneObjectReturnedGuard
 
-data FileMovedToAWS = FileMovedToAWS FileID String String
+data FileMovedToAWS = FileMovedToAWS FileID String String AESConf
 instance MonadDB m => DBUpdate m FileMovedToAWS () where
-  update (FileMovedToAWS fid bucket url) = do
-    kPrepare "UPDATE files SET content = NULL, amazon_bucket = ?, amazon_url = ? WHERE id = ?"
-    _ <- kExecute1 [toSql bucket, toSql url, toSql fid]
-    return ()
+  update (FileMovedToAWS fid bucket url aes) =
+    kRun_ $ mkSQL UPDATE tableFiles [
+        sql "content" SqlNull
+      , sql "amazon_bucket" bucket
+      , sql "amazon_url" url
+      , sql "aes_key" $ aesKey aes
+      , sql "aes_iv" $ aesIV aes
+      ] <++> SQL "WHERE id = ?" [toSql fid]
 
 data FileMovedToDisk = FileMovedToDisk FileID FilePath
 instance MonadDB m => DBUpdate m FileMovedToDisk () where
@@ -55,14 +63,29 @@ instance MonadDB m => DBUpdate m FileMovedToDisk () where
 data GetFileThatShouldBeMovedToAmazon = GetFileThatShouldBeMovedToAmazon
 instance MonadDB m => DBQuery m GetFileThatShouldBeMovedToAmazon (Maybe File) where
   query GetFileThatShouldBeMovedToAmazon = do
-    kPrepare $ "SELECT id, name, encode(content,'base64'), amazon_bucket, amazon_url, disk_path FROM files WHERE content IS NOT NULL LIMIT 1"
-    _ <- kExecute []
+    kRun_ $ selectFilesSQL <++> SQL "WHERE content IS NOT NULL LIMIT 1" []
     fetchFiles >>= oneObjectReturnedGuard
+
+selectFilesSQL :: SQL
+selectFilesSQL = SQL ("SELECT " ++ filesSelectors ++ " FROM files ") []
+
+filesSelectors :: String
+filesSelectors = intercalate ", " [
+    "id"
+  , "name"
+  , "encode(content, 'base64')"
+  , "amazon_bucket"
+  , "amazon_url"
+  , "disk_path"
+  , "encode(checksum, 'base64')"
+  , "encode(aes_key, 'base64')"
+  , "encode(aes_iv, 'base64')"
+  ]
 
 fetchFiles :: MonadDB m => DBEnv m [File]
 fetchFiles = foldDB decoder []
   where
-    decoder acc fid fname content amazon_bucket amazon_url disk_path = File {
+    decoder acc fid fname content amazon_bucket amazon_url disk_path checksum aes_key aes_iv = File {
         fileid = fid
       , filename = fname
       , filestorage =
@@ -70,7 +93,8 @@ fetchFiles = foldDB decoder []
           Just mem -> FileStorageMemory (unBinary mem)
           Nothing -> case disk_path of
             Just path -> FileStorageDisk path
-            Nothing -> case (amazon_bucket, amazon_url) of
-              (Just bucket, Just url) -> FileStorageAWS bucket url
+            Nothing -> case (amazon_bucket, amazon_url, mkAESConf <$> unBinary `fmap` aes_key <*> unBinary `fmap` aes_iv) of
+              (Just bucket, Just url, Just (Right aes)) -> FileStorageAWS bucket url aes
               _ -> FileStorageMemory BS.empty
+      , filechecksum = checksum
     } : acc
