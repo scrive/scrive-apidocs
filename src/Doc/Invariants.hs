@@ -171,7 +171,10 @@ maxLengthOnFields :: MinutesTime -> Document -> Maybe String
 maxLengthOnFields _ document =
   let maxlength = 512 :: Int
       lengths :: [Int] 
-      lengths = concatMap (map (length . sfValue) . signatoryfields . signatorydetails) (documentsignatorylinks document)
+      -- signature field can be longer than max
+      lengths = [length $ sfValue f | s <- documentsignatorylinks document
+                                    , f <- signatoryfields $ signatorydetails s
+                                    , SignatureFT /= sfType f ]
       m = maximum (0 : lengths) in
   assertInvariant ("some fields were too long: " ++ show m ++ ". max is " ++ show maxlength) $ m <= maxlength
     
