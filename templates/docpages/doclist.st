@@ -20,7 +20,7 @@ var documentsTable = KontraList().init({
     paging: new Paging({}),
     textfiltering: new TextFiltering({text: "", infotext: "$_SearchDoc()$"}),
     selectfiltering : [
-        new SelectFiltering({description: localization.filterByProcess.showAllProcesses, name: "type",
+        new SelectFiltering({description: localization.filterByProcess.showAllProcesses, name: "process",
                              options: [ {name: localization.filterByProcess.showContractsOnly, value: "contract"},
                                         {name: localization.filterByProcess.showOffersOnly,    value: "offer"},
                                         {name: localization.filterByProcess.showOrdersOnly,    value: "order"}

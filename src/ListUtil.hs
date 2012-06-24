@@ -43,6 +43,7 @@ module ListUtil(
             , listParamsSorting
             , listParamsOffset
             , listParamsLimit
+            , listParamsFilters
           ) where
 import Control.Applicative ((<$>))
 import Control.Monad.Trans
@@ -91,6 +92,8 @@ listParamsOffset = offset
 listParamsLimit :: ListParams -> Int
 listParamsLimit = limit
 
+listParamsFilters :: ListParams -> [(String,String)]
+listParamsFilters = filters
 
 instance Show ListParams where
     show params = intercalate "&" $ off ++ lim ++ srch ++ srt
