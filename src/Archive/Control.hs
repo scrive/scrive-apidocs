@@ -108,7 +108,7 @@ jsonDocumentsList = withUserGet $ do
 
   params <- getListParamsNew
 
-  let (domain,filters) = case doctype of
+  let (domain,filters1) = case doctype of
                           "Document"          -> ([DocumentsForSignatory uid] ++ (maybeCompanyDomain False),[])
                           "Contract"          -> ([DocumentsForSignatory uid] ++ (maybeCompanyDomain False),[DocumentFilterByProcess [Contract]])
                           "Offer"             -> ([DocumentsForSignatory uid] ++ (maybeCompanyDomain False),[DocumentFilterByProcess [Offer]])
@@ -125,10 +125,15 @@ jsonDocumentsList = withUserGet $ do
                              maybeCompanyDomain d = if (useriscompanyadmin user && (isJust $ usercompany user))
                                                    then [DocumentsOfCompany (fromJust $ usercompany user) False d]
                                                    else []
-
+      filters2 = concatMap fltSpec (listParamsFilters params)
+      fltSpec ("process", "contract") = [DocumentFilterByProcess [Contract]]
+      fltSpec ("process", "order") = [DocumentFilterByProcess [Order]]
+      fltSpec ("process", "offer") = [DocumentFilterByProcess [Offer]]
+      fltSpec _ = []
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
       pagination = docPaginationFromParams params
+      filters = filters1 ++ filters2
 
   allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
 
