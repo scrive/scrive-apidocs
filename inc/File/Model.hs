@@ -38,7 +38,7 @@ instance MonadDB m => DBUpdate m NewFile File where
      _ <- kExecute
       [ toSql filename
       , toSql content
-      , toSql . Binary . SHA1.hash $ unBinary content
+      , toSql $ SHA1.hash `binApp` content
       ]
      fetchFiles >>= exactlyOneObjectReturnedGuard
 

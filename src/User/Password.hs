@@ -7,7 +7,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Digest.SHA256 as D
 
-import DB.Types
+import DB.Binary
 
 data Password = Password {
     pwdHash :: Binary
@@ -23,8 +23,7 @@ createPassword password = do
   }
 
 hashPassword :: String -> Binary -> Binary
-hashPassword password salt =
-  Binary . BS.pack . D.hash . BS.unpack $ unBinary salt `BS.append` BSU.fromString password
+hashPassword password = binApp (BS.pack . D.hash . BS.unpack . (`BS.append` BSU.fromString password))
 
 verifyPassword :: Maybe Password -> String -> Bool
 verifyPassword Nothing _ = False

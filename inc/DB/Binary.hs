@@ -1,5 +1,6 @@
-module DB.Types (
+module DB.Binary (
     Binary(..)
+  , binApp
   ) where
 
 import Data.Convertible
@@ -8,6 +9,9 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Base16 as B16
 
 import DB.Derive
+
+binApp :: (BS.ByteString -> BS.ByteString) -> Binary -> Binary
+binApp f = Binary . f . unBinary
 
 -- | Used for serializing binary data (as bytea type in postgres) for convenience
 newtype Binary = Binary { unBinary :: BS.ByteString }
