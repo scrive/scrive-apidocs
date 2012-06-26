@@ -413,11 +413,15 @@ window.FieldDesignView = Backbone.View.extend({
         return $("<a class='prepIcon' href='#'/>");
     },
     setNameIcon : function() {
+        var view = this;
         var field = this.model;
         var input = this.input;
         var icon =  $("<a class='setNameIcon' href='#'/>");
         var fn = function(){
-            field.makeReady();
+            if (field.name() != undefined && field.name() != "")
+               field.makeReady();
+            else
+               view.redborder();
             return false;
         };
         icon.click(fn);
