@@ -13,9 +13,9 @@ tableFiles = Table {
        , ("amazon_bucket", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("amazon_url", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("disk_path", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("checksum", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("aes_key", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("aes_iv", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("checksum", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
+       , ("aes_key", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
+       , ("aes_iv", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE files ("
