@@ -36,7 +36,7 @@ uploadFilesToAmazon = do
     Nothing -> return ()
     Just file -> do
       conf <- sdAppConf `fmap` ask
-      success <- uploadFile (docstore conf) (defaultAWSAction conf) file
+      success <- exportFile (docstore conf) (defaultAWSAction conf) file
       if success
         then dbCommit
         else dbRollback
@@ -49,51 +49,50 @@ uploadFilesToAmazon = do
 -- where filename is urlencoded (percent encoded in utf-8)
 urlFromFile :: File -> String
 urlFromFile File{filename, fileid} =
-    -- here we use BSC.unpack, as HTTP.urlEncode
-    -- does only %-escaping for 8bit values
-    "file" </> show fileid </> (HTTP.urlEncode . BSC.unpack . BS.fromString $ filename) ++ ".pdf"
+  -- here we use BSC.unpack, as HTTP.urlEncode
+  -- does only %-escaping for 8bit values
+  "file" </> show fileid </> (HTTP.urlEncode . BSC.unpack . BS.fromString $ filename) ++ ".pdf"
 
 -- | Upload a document file. This means one of:
 --
 -- - upload a file to Amazon storage
 -- - save a file in a local directory
 -- - do nothing and keep it in memory database
-uploadFile :: FilePath -> S3Action -> File -> Scheduler Bool
-uploadFile docstore@(_:_) AWS.S3Action{AWS.s3bucket = ""} File{fileid, filename, filestorage = FileStorageMemory content} = do
-    let filepath = docstore </> show fileid ++ '-' : filename ++ ".pdf"
-    liftIO $ BS.writeFile filepath content
-    Log.debug $ "Document file #" ++ show fileid ++ " saved as " ++ filepath
-    dbUpdate $ FileMovedToDisk fileid filepath
-    return True
+exportFile :: FilePath -> S3Action -> File -> Scheduler Bool
+exportFile docstore@(_:_) AWS.S3Action{AWS.s3bucket = ""} File{fileid, filename, filestorage = FileStorageMemory content} = do
+  let filepath = docstore </> show fileid ++ '-' : filename ++ ".pdf"
+  liftIO $ BS.writeFile filepath content
+  Log.debug $ "Document file #" ++ show fileid ++ " saved as " ++ filepath
+  dbUpdate $ FileMovedToDisk fileid filepath
+  return True
 
-uploadFile _ ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, filestorage = FileStorageMemory content} = do
-    Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
-    let action = ctxs3action { AWS.s3object = url
-                             , AWS.s3operation = HTTP.PUT
-                             , AWS.s3body = BSL.fromChunks [aesEncrypt aes content]
-                             , AWS.s3metadata = [("Content-Type","application/pdf")]
-                             }
-        url = urlFromFile file
-        bucket = AWS.s3bucket ctxs3action
-    result <- liftIO $ AWS.runAction action
-    case result of
-         Right _ -> do
-             Log.debug $ "AWS uploaded " ++ bucket </> url
-             _ <- dbUpdate $ FileMovedToAWS fileid bucket url aes
-             return True
-         Left err -> do -- FIXME: do much better error handling
-             Log.debug $ "AWS failed to upload of " ++ bucket </> url ++ " failed with error: " ++ show err
-             return False
+exportFile _ ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, filestorage = FileStorageMemory content} = do
+  Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
+  let action = ctxs3action {
+        AWS.s3object = url
+      , AWS.s3operation = HTTP.PUT
+      , AWS.s3body = BSL.fromChunks [aesEncrypt aes content]
+      , AWS.s3metadata = [("Content-Type","application/pdf")]
+      }
+      url = urlFromFile file
+      bucket = AWS.s3bucket ctxs3action
+  result <- liftIO $ AWS.runAction action
+  case result of
+    Right _ -> do
+      Log.debug $ "AWS uploaded " ++ bucket </> url
+      _ <- dbUpdate $ FileMovedToAWS fileid bucket url aes
+      return True
+    Left err -> do -- FIXME: do much better error handling
+      Log.debug $ "AWS failed to upload of " ++ bucket </> url ++ " failed with error: " ++ show err
+      return False
 
-uploadFile _ _ _ = do
-    Log.debug "No uploading/saving to disk as bucket/docstore is ''"
-    return True
+exportFile _ _ _ = do
+  Log.debug "No uploading/saving to disk as bucket/docstore is ''"
+  return True
 
 getFileContents :: S3Action -> File -> IO BS.ByteString
 getFileContents s3action File{..} = do
   content <- getContent filestorage
-  Log.debug $ show $ SHA1.hash content
-  Log.debug $ show filechecksum
   if SHA1.hash content /= filechecksum
      then do
        Log.debug $ "CRITICAL: SHA1 checksum of file with id = " ++ show fileid ++ " doesn't match the one in the database"
@@ -102,7 +101,7 @@ getFileContents s3action File{..} = do
   where
     getContent (FileStorageDisk filepath) = do
       BS.readFile filepath `catch` (\(e :: SomeException) -> do
-        Log.debug $ show e
+        Log.debug $ "Reading file " ++ filepath ++ " failed with: " ++ show e
         return BS.empty)
     getContent (FileStorageMemory content) = return content
     getContent (FileStorageAWS bucket url aes) = do
