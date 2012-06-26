@@ -8,12 +8,15 @@ import Control.Applicative
 import Control.Monad.Reader
 import Control.Exception (catch, SomeException)
 import Network.AWS.Authentication
+import Prelude hiding (catch)
 import System.FilePath ((</>))
+import qualified Crypto.Hash.SHA1 as SHA1
+import qualified Data.ByteString.Char8 as BSC
+import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
-import Prelude hiding (catch)
 
 import AppConf
 import AppControl
@@ -25,8 +28,6 @@ import File.File
 import File.Model
 import Misc (concatChunks)
 import qualified Log
-import qualified Data.ByteString.Char8 as BSC
-import qualified Data.ByteString.UTF8 as BS
 
 uploadFilesToAmazon :: Scheduler ()
 uploadFilesToAmazon = do
@@ -88,27 +89,29 @@ uploadFile _ _ _ = do
     Log.debug "No uploading/saving to disk as bucket/docstore is ''"
     return True
 
--- | Get file contents as strict 'BS.ByteString'. Either reads a file
--- from disk or memory or downloads from Amazon.
---
--- In case there are problems uses plain and old 'error'
--- function. Sorry for that.
---
--- FIXME: This function could use much better error reporting.
 getFileContents :: S3Action -> File -> IO BS.ByteString
-getFileContents _ File{filestorage = FileStorageDisk filepath} =
-    BS.readFile filepath `catch` (\(e :: SomeException) -> do
+getFileContents s3action File{..} = do
+  content <- getContent filestorage
+  Log.debug $ show $ SHA1.hash content
+  Log.debug $ show filechecksum
+  if SHA1.hash content /= filechecksum
+     then do
+       Log.debug $ "CRITICAL: SHA1 checksum of file with id = " ++ show fileid ++ " doesn't match the one in the database"
+       return BS.empty
+     else return content
+  where
+    getContent (FileStorageDisk filepath) = do
+      BS.readFile filepath `catch` (\(e :: SomeException) -> do
         Log.debug $ show e
         return BS.empty)
-
-getFileContents _ File{filestorage = FileStorageMemory content} =
-    return content
-
-getFileContents s3action File{filestorage = FileStorageAWS bucket url aes} = do
-  let action = s3action { AWS.s3object = url
-                        , AWS.s3bucket = bucket
-                        }
-  result <- AWS.runAction action
-  case result of
-       Right rsp -> return . aesDecrypt aes . concatChunks $ HTTP.rspBody rsp
-       _ -> error (show result)
+    getContent (FileStorageMemory content) = return content
+    getContent (FileStorageAWS bucket url aes) = do
+      result <- AWS.runAction $ s3action {
+          AWS.s3object = url
+        , AWS.s3bucket = bucket
+      }
+      case result of
+        Right rsp -> return . aesDecrypt aes . concatChunks $ HTTP.rspBody rsp
+        Left err -> do
+          Log.error $ "AWS.runAction failed with: " ++ show err
+          return BS.empty

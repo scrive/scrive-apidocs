@@ -4,7 +4,7 @@ module File.File
     ) where
 
 import Data.Typeable
-import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString as BS
 
 import Crypto
 import File.FileID

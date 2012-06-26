@@ -90,11 +90,11 @@ fetchFiles = foldDB decoder []
       , filename = fname
       , filestorage =
         case content of
-          Just mem -> FileStorageMemory (unBinary mem)
+          Just mem -> FileStorageMemory $ unBinary mem
           Nothing -> case disk_path of
             Just path -> FileStorageDisk path
             Nothing -> case (amazon_bucket, amazon_url, mkAESConf <$> unBinary `fmap` aes_key <*> unBinary `fmap` aes_iv) of
               (Just bucket, Just url, Just (Right aes)) -> FileStorageAWS bucket url aes
               _ -> FileStorageMemory BS.empty
-      , filechecksum = checksum
+      , filechecksum = unBinary checksum
     } : acc
