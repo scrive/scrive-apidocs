@@ -109,7 +109,7 @@ instance MonadDB m => DBUpdate m CreateService (Maybe Service) where
           ++ "  id"
           ++ ", password"
           ++ ", salt"
-          ++ ", admin_id) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?)"
+          ++ ", admin_id) VALUES (?, ?, ?, ?)"
         _ <- kExecute [
             toSql sid
           , toSql $ pwdHash <$> pwd
@@ -123,13 +123,13 @@ instance MonadDB m => DBUpdate m UpdateServiceUI Bool where
   update (UpdateServiceUI sid sui) = do
     kPrepare $ "UPDATE services SET"
         ++ "  mail_footer = ?"
-        ++ ", button1 = decode(?, 'base64')"
-        ++ ", button2 = decode(?, 'base64')"
+        ++ ", button1 = ?"
+        ++ ", button2 = ?"
         ++ ", buttons_text_color = ?"
         ++ ", background = ?"
         ++ ", overlay_background = ?"
         ++ ", bars_background = ?"
-        ++ ", logo = decode(?, 'base64')"
+        ++ ", logo = ?"
         ++ "  WHERE id = ?"
     kExecute01 [
         toSql $ servicemailfooter sui
@@ -147,8 +147,8 @@ data UpdateServiceSettings = UpdateServiceSettings ServiceID ServiceSettings
 instance MonadDB m => DBUpdate m UpdateServiceSettings Bool where
   update (UpdateServiceSettings sid ss) = do
     kPrepare $ "UPDATE services SET"
-        ++ "  password = decode(?, 'base64')"
-        ++ ", salt = decode(?, 'base64')"
+        ++ "  password = ?"
+        ++ ", salt = ?"
         ++ ", admin_id = ?"
         ++ ", location = ?"
         ++ ", email_from_address = ?"
@@ -171,19 +171,19 @@ checkIfServiceExists uid = checkIfAnyReturned
 selectServicesSQL :: String
 selectServicesSQL = "SELECT"
   ++ "  s.id"
-  ++ ", encode(s.password, 'base64')"
-  ++ ", encode(s.salt, 'base64')"
+  ++ ", s.password"
+  ++ ", s.salt"
   ++ ", s.admin_id"
   ++ ", s.location"
   ++ ", s.email_from_address"
   ++ ", s.mail_footer"
-  ++ ", encode(s.button1, 'base64')"
-  ++ ", encode(s.button2, 'base64')"
+  ++ ", s.button1"
+  ++ ", s.button2"
   ++ ", s.buttons_text_color"
   ++ ", s.background"
   ++ ", s.overlay_background"
   ++ ", s.bars_background"
-  ++ ", encode(s.logo, 'base64')"
+  ++ ", s.logo"
   ++ "  FROM services s"
   ++ " "
 

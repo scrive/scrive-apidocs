@@ -33,7 +33,7 @@ instance MonadDB m => DBUpdate m NewFile File where
        ++ "( name"
        ++ ", content"
        ++ ", checksum"
-       ++ ") SELECT ?, decode(?,'base64'), decode(?,'base64')"
+       ++ ") SELECT ?, ?, ?"
        ++ " RETURNING " ++ filesSelectors
      _ <- kExecute
       [ toSql filename
@@ -73,13 +73,13 @@ filesSelectors :: String
 filesSelectors = intercalate ", " [
     "id"
   , "name"
-  , "encode(content, 'base64')"
+  , "content"
   , "amazon_bucket"
   , "amazon_url"
   , "disk_path"
-  , "encode(checksum, 'base64')"
-  , "encode(aes_key, 'base64')"
-  , "encode(aes_iv, 'base64')"
+  , "checksum"
+  , "aes_key"
+  , "aes_iv"
   ]
 
 fetchFiles :: MonadDB m => DBEnv m [File]
