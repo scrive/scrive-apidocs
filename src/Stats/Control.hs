@@ -33,7 +33,8 @@ module Stats.Control
          addSignStatPurgeEvent,
          handleSignStatsCSV,
          handleDocHistoryCSV,
-         handleSignHistoryCSV
+         handleSignHistoryCSV,
+         handleDocStatCSVNew
        )
 
        where
@@ -104,6 +105,18 @@ showAdminSystemUsageStats = onlySalesOrAdmin $ do
     F.objects "statisticsbyday" $ statisticsFieldsByDay statsByDay
     F.objects "statisticsbymonth" $ statisticsFieldsByMonth statsByMonth
   renderFromBody kontrakcja content
+
+handleDocStatCSVNew :: Kontrakcja m => m Response
+handleDocStatCSVNew = onlySalesOrAdmin $ do
+  let start = fromSeconds 0
+  end <- ctxtime <$> getContext
+  stats <- dbQuery $ GetDocStatCSV start end
+  let docstatsheader = map BS.fromString ["userid", "user", "date", "event", "count", "docid", "serviceid", "company", "companyid", "doctype", "api"]
+  let res = Response 200 Map.empty nullRsFlags (toCSVBS docstatsheader stats) Nothing
+  Log.debug $ "All doc stats length with bytestring" ++ (show $ length stats) ++ " " ++ (show $ length $ show $ rsBody res)
+  ok $ setHeader "Content-Disposition" "attachment;filename=docstats.csv"
+     $ setHeader "Content-Type" "text/csv"
+     $ res
 
 handleDocStatsCSV :: Kontrakcja m => m Response
 handleDocStatsCSV = onlySalesOrAdmin $ do

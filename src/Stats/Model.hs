@@ -9,6 +9,7 @@ module Stats.Model
          GetDocStatEvents(..),
          GetDocStatEventsByCompanyID(..),
          GetDocStatEventsByUserID(..),
+         GetDocStatCSV(..),
 
          UserStatEvent(..),
          AddUserStatEvent(..),
@@ -41,7 +42,10 @@ import Stats.Tables
 import Company.Model
 import API.Service.Model
 import OurPrelude
+import Data.Maybe (fromMaybe)
 import qualified Data.Map as M
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BS
 
 {------ Doc Stats ------}
 
@@ -166,6 +170,30 @@ instance MonadDB m => DBQuery m GetDocStatEventsByCompanyID [DocStatEvent] where
     _ <- kRun $ selectDocStatEventsSQL
       <++> SQL "WHERE e.company_id = ?" [toSql companyid]
     fetchDocStats
+
+data GetDocStatCSV = GetDocStatCSV MinutesTime MinutesTime
+instance MonadDB m => DBQuery m GetDocStatCSV [[BS.ByteString]] where
+  query (GetDocStatCSV start end) = do
+    _ <- kRun $ SQL ("SELECT doc_stat_events.user_id, trim(users.first_name), trim(users.last_name), trim(users.email), " ++
+                    "       doc_stat_events.time, doc_stat_events.quantity, doc_stat_events.amount,  " ++
+                    "       doc_stat_events.document_id, doc_stat_events.service_id, trim(companies.name), " ++
+                    "       doc_stat_events.company_id, doc_stat_events.document_type, doc_stat_events.api_string " ++
+                    "FROM doc_stat_events " ++
+                    "LEFT JOIN users ON doc_stat_events.user_id = users.id " ++
+                    "LEFT JOIN companies ON doc_stat_events.company_id = companies.id " ++
+                    "WHERE doc_stat_events.time > ? AND doc_stat_events.time <= ?" ++
+                    "ORDER BY doc_stat_events.time DESC") [toSql start, toSql end]
+    foldDB f []
+      where f :: [[BS.ByteString]] -> UserID -> BS.ByteString -> BS.ByteString -> BS.ByteString -> MinutesTime -> DocStatQuantity -> Int -> DocumentID -> Maybe BS.ByteString -> Maybe BS.ByteString -> Maybe CompanyID -> BS.ByteString -> BS.ByteString -> [[BS.ByteString]]
+            f acc uid fn ln em t q a did sid cn cid tp api =
+              let smartname = case undefined of
+                    _ | fn == BS.empty && ln == BS.empty -> em
+                      | fn == BS.empty -> ln
+                      | ln == BS.empty -> fn
+                      | otherwise -> BS.intercalate (BS.fromString " ") [fn, ln]
+              in [BS.fromString $ show uid, smartname, BS.fromString $ showDateYMD t, BS.fromString $ show q, 
+                  BS.fromString $ show a, BS.fromString $ show did, fromMaybe (BS.fromString "scrive") sid, fromMaybe (BS.fromString "none") cn, BS.fromString $ maybe "" show cid, tp, api] : acc
+                    
 
 selectUsersAndCompaniesAndInviteInfoSQL :: SQL
 selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
@@ -485,3 +513,4 @@ instance MonadDB m => DBUpdate m AddSignStatEvent Bool where
       , toSql ssQuantity
       , toSql ssSignatoryLinkID
       ]
+

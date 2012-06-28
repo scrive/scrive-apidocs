@@ -192,6 +192,7 @@ staticRoutes = choice
      , dir "adminonly" $ dir "documentslist" $ hGet $ toK0 $ Administration.jsonDocuments
 
      , dir "adminonly" $ dir "allstatscsv" $ path GET id $ Stats.handleDocStatsCSV
+     , dir "adminonly" $ dir "docstats.csv" $ path GET id $ Stats.handleDocStatCSVNew
      , dir "adminonly" $ dir "userstatscsv" $ path GET id $ Stats.handleUserStatsCSV
      , dir "adminonly" $ dir "signstatscsv" $ path GET id $ Stats.handleSignStatsCSV
      , dir "adminonly" $ dir "dochistorycsv" $ path GET id $ Stats.handleDocHistoryCSV
