@@ -5,6 +5,8 @@ module File.Model (
     , GetFileByFileID(..)
     , GetFileThatShouldBeMovedToAmazon(..)
     , NewFile(..)
+    , GetFileWithNoChecksum(..)
+    , SetChecksum(..)
     ) where
 
 import Control.Applicative
@@ -66,6 +68,20 @@ instance MonadDB m => DBQuery m GetFileThatShouldBeMovedToAmazon (Maybe File) wh
     kRun_ $ selectFilesSQL <++> SQL "WHERE content IS NOT NULL LIMIT 1" []
     fetchFiles >>= oneObjectReturnedGuard
 
+-- | Needed for encrypting/calculating checksum for old files. To be removed.
+data GetFileWithNoChecksum = GetFileWithNoChecksum
+instance MonadDB m => DBQuery m GetFileWithNoChecksum (Maybe File) where
+  query GetFileWithNoChecksum = do
+    kRun_ $ selectFilesSQL <++> SQL "WHERE checksum IS NULL LIMIT 1" []
+    fetchFiles >>= oneObjectReturnedGuard
+
+-- | Needed for encrypting/calculating checksum for old files. To be removed.
+data SetChecksum = SetChecksum FileID Binary
+instance MonadDB m => DBUpdate m SetChecksum Bool where
+  update (SetChecksum fid checksum) = do
+    kRun01 $ mkSQL UPDATE tableFiles [sql "checksum" checksum]
+      <++> SQL "WHERE id = ?" [toSql fid]
+
 selectFilesSQL :: SQL
 selectFilesSQL = SQL ("SELECT " ++ filesSelectors ++ " FROM files ") []
 
@@ -94,7 +110,9 @@ fetchFiles = foldDB decoder []
           Nothing -> case disk_path of
             Just path -> FileStorageDisk path
             Nothing -> case (amazon_bucket, amazon_url, mkAESConf <$> unBinary `fmap` aes_key <*> unBinary `fmap` aes_iv) of
-              (Just bucket, Just url, Just (Right aes)) -> FileStorageAWS bucket url aes
+              (Just bucket, Just url, Just (Right aes)) -> FileStorageAWS bucket url (Just aes)
+              -- To be removed after we encrypt old files
+              (Just bucket, Just url, Nothing) -> FileStorageAWS bucket url Nothing
               _ -> FileStorageMemory BS.empty
       , filechecksum = unBinary checksum
     } : acc

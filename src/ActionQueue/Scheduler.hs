@@ -13,7 +13,7 @@ import System.Time
 
 import Acid.Monad
 import ActionQueue.Monad
-import AppControl
+import AppConf
 import AppState
 import DB hiding (update, query)
 import Doc.DocStateData

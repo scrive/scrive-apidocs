@@ -2,10 +2,8 @@
    Initialises contexts and sessions, and farms requests out to the appropriate handlers.
  -}
 module AppControl
-    ( module AppConf
-    , appHandler
+    ( appHandler
     , AppGlobals(..)
-    , defaultAWSAction
 
     -- exported for the sake of unit tests
     , getStandardLocale
@@ -15,6 +13,7 @@ import AppConf
 import API.Service.Model
 
 import Acid.Monad
+import Amazon
 import AppView as V
 import AppState
 import Crypto.RNG
@@ -51,13 +50,9 @@ import System.Time
 
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
-import qualified Network.AWS.AWSConnection as AWS
-import qualified Network.AWS.Authentication as AWS
-import qualified Network.HTTP as HTTP
 import qualified Static.Resources as SR
 
 {- |
@@ -91,25 +86,6 @@ getStandardLocale muser = do
       newlocalecookie = mkCookie "locale" (show newlocale)
   addCookie (MaxAge (60*60*24*366)) newlocalecookie
   return newlocale
-
-{- |
-   Creates a default amazon configuration based on the
-   given AppConf
--}
-defaultAWSAction :: AppConf -> AWS.S3Action
-defaultAWSAction appConf =
-    let (bucket,accessKey,secretKey) = maybe ("","","") id (amazonConfig appConf)
-    in
-    AWS.S3Action
-           { AWS.s3conn = AWS.amazonS3Connection accessKey secretKey
-           , AWS.s3bucket = bucket
-           , AWS.s3object = ""
-           , AWS.s3query = ""
-           , AWS.s3metadata = []
-           , AWS.s3body = BSL.empty
-           , AWS.s3operation = HTTP.GET
-           }
-
 
 maybeReadTemplates :: MVar (ClockTime, KontrakcjaGlobalTemplates)
                       -> IO KontrakcjaGlobalTemplates
@@ -274,7 +250,7 @@ appHandler handleRoutes appConf appGlobals appState = measureResponseTime $
         , ctxnormalizeddocuments = docscache appGlobals
         , ctxipnumber = peerip
         , ctxdocstore = docstore appConf
-        , ctxs3action = defaultAWSAction appConf
+        , ctxs3action = mkAWSAction appConf
         , ctxgscmd = gsCmd appConf
         , ctxproduction = production appConf
         , ctxtemplates = localizedVersion userlocale templates2

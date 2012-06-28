@@ -1,15 +1,19 @@
 {- All function related to Amazon Web Services -}
 module Amazon (
-    uploadFilesToAmazon
+    mkAWSAction
+  , uploadFilesToAmazon
   , getFileContents
+  , calculateChecksumAndEncryptOldFiles
   ) where
 
 import Control.Applicative
 import Control.Monad.Reader
 import Control.Exception (catch, SomeException)
+import Data.Maybe
 import Network.AWS.Authentication
 import Prelude hiding (catch)
 import System.FilePath ((</>))
+import qualified Network.AWS.AWSConnection as AWS
 import qualified Crypto.Hash.SHA1 as SHA1
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
@@ -19,7 +23,6 @@ import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 
 import AppConf
-import AppControl
 import ActionQueue.Scheduler
 import Crypto
 import Crypto.RNG
@@ -29,18 +32,55 @@ import File.Model
 import Misc (concatChunks)
 import qualified Log
 
+mkAWSAction :: AppConf -> AWS.S3Action
+mkAWSAction appConf = AWS.S3Action {
+    AWS.s3conn = AWS.amazonS3Connection accessKey secretKey
+  , AWS.s3bucket = bucket
+  , AWS.s3object = ""
+  , AWS.s3query = ""
+  , AWS.s3metadata = []
+  , AWS.s3body = BSL.empty
+  , AWS.s3operation = HTTP.GET
+  }
+  where
+    (bucket, accessKey, secretKey) = fromMaybe ("","","") $ amazonConfig appConf
+
 uploadFilesToAmazon :: Scheduler ()
 uploadFilesToAmazon = do
   mfile <- dbQuery GetFileThatShouldBeMovedToAmazon
   case mfile of
     Nothing -> return ()
     Just file -> do
-      conf <- sdAppConf `fmap` ask
-      success <- exportFile (docstore conf) (defaultAWSAction conf) file
+      conf <- sdAppConf <$> ask
+      success <- exportFile (docstore conf) (mkAWSAction conf) file
       if success
         then dbCommit
         else dbRollback
       uploadFilesToAmazon
+
+calculateChecksumAndEncryptOldFiles :: Scheduler ()
+calculateChecksumAndEncryptOldFiles = do
+  mfile <- dbQuery GetFileWithNoChecksum
+  case mfile of
+    Nothing -> Log.debug "Encrypting old files done."
+    Just file -> do
+      let fid = fileid file
+      Log.debug $ "Generating checksum for file with id = " ++ show fid ++ "..."
+      conf <- sdAppConf <$> ask
+      content <- getFileContents (mkAWSAction conf) file
+      True <- dbUpdate $ SetChecksum fid $ Binary $ SHA1.hash content
+      Log.debug $ "Encrypting file with id = " ++ show fid ++ "..."
+      -- pretend that file is in memory so it gets reuploaded to amazon
+      let memfile = file { filestorage = FileStorageMemory content }
+      success <- exportFile (docstore conf) (mkAWSAction conf) memfile
+      if success
+        then do
+          Log.debug $ "Encrypting succeeded."
+          dbCommit
+        else do
+          Log.debug $ "Encrypting failed."
+          dbRollback
+      calculateChecksumAndEncryptOldFiles
 
 -- | Convert a file to Amazon URL. We use the following format:
 --
@@ -90,9 +130,9 @@ exportFile _ _ _ = do
   Log.debug "No uploading/saving to disk as bucket/docstore is ''"
   return True
 
-getFileContents :: S3Action -> File -> IO BS.ByteString
+getFileContents :: MonadIO m => S3Action -> File -> m BS.ByteString
 getFileContents s3action File{..} = do
-  content <- getContent filestorage
+  content <- liftIO $ getContent filestorage
   if SHA1.hash content /= filechecksum
      then do
        Log.debug $ "CRITICAL: SHA1 checksum of file with id = " ++ show fileid ++ " doesn't match the one in the database"
@@ -110,7 +150,7 @@ getFileContents s3action File{..} = do
         , AWS.s3bucket = bucket
       }
       case result of
-        Right rsp -> return . aesDecrypt aes . concatChunks $ HTTP.rspBody rsp
+        Right rsp -> return . maybe id aesDecrypt aes . concatChunks $ HTTP.rspBody rsp
         Left err -> do
           Log.error $ "AWS.runAction failed with: " ++ show err
           return BS.empty

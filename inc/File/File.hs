@@ -11,7 +11,7 @@ import File.FileID
 
 data FileStorage =
     FileStorageMemory BS.ByteString
-  | FileStorageAWS String String AESConf -- ^ bucket, url inside bucket, aes key/iv
+  | FileStorageAWS String String (Maybe AESConf) -- ^ bucket, url inside bucket, aes key/iv
   | FileStorageDisk FilePath -- ^ filepath
     deriving (Eq, Ord, Show, Typeable)
 
