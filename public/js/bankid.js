@@ -16,15 +16,11 @@ function hasSign2PluginIE() {
 }
 
 function hasNetIDPluginIE() {
-    // This function always returns true. The detection does not work.
-    // Eric
-    return true;
-    /**
     try {
-        return !!(new ActiveXObject('Nexus.AuthenticationCtl'));
+        return !!(new ActiveXObject('IID.iIDCtl'));
     } catch(e) {
         return false;
-    }*/
+    }
 }
 
 // checks for others
