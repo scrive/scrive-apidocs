@@ -402,6 +402,8 @@ window.FieldDesignView = Backbone.View.extend({
                         fileview.moveCoordinateAxes(ui.helper);
                     },
                     onDrop: function(page, x,y ){
+                          x = page.fixedX(x,y);
+                          y = page.fixedY(x,y);
                           field.addPlacement(new FieldPlacement({
                               page: page.number(),
                               fileid: page.file().fileid(),

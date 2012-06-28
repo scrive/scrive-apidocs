@@ -113,8 +113,20 @@ var FilePage = Backbone.Model.extend({
              newplacements.push(this.placements()[i]);
        this.set({placements : newplacements}, {silent : true});
        this.trigger("change:dragables");
-
-
+    },
+    fixedX : function(x,y,field){
+     _.each(this.placements(), function(p) {
+             if (Math.abs(p.x()-x) < 8 && (Math.abs(p.x()-x) + Math.abs(p.y()-y) < 400))
+                  x =  p.x();
+     });
+     return x;
+    },
+    fixedY : function(x,y,field){
+          _.each(this.placements(), function(p) {
+             if (Math.abs(p.y()-y) < 8 && (Math.abs(p.x()-x) + Math.abs(p.y()-y) < 400))
+                  y =  p.y();
+     });
+     return y;
     }
 });
 
