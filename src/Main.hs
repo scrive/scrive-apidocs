@@ -81,8 +81,11 @@ main = Log.withLogger $ do
 
 startSystem :: AppGlobals -> AppConf -> IO ()
 startSystem appGlobals appConf = E.bracket
-  (startAcidStateSystem Log.server $ store appConf)
-  (stopAcidStateSystem Log.server)
+  (openAcidState Log.server $ store appConf)
+  (\st -> do
+    createCheckpoint Log.server st
+    closeAcidState Log.server st
+  )
   startHttpServer
   where
     startHttpServer appState =
@@ -114,7 +117,7 @@ startSystem appGlobals appConf = E.bracket
         waitForTerm _ = E.bracket
           -- checkpoint the state once a day
           -- FIXME: make it checkpoint always at the same time
-          (forkIO $ cron (60*60*24) (createStateCheckpoint appState))
+          (forkIO $ cron (60*60*24) (createCheckpoint Log.server appState))
           killThread $ \_ -> do
             withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) $
               initDatabaseEntries $ initialUsers appConf

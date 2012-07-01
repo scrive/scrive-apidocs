@@ -266,6 +266,7 @@ testMany (args, ts) = Log.withLogger $ do
           teNexus = nex
         , teRNGState = rng
         , teGlobalTemplates = templates
+        , teAppState = error "teAppState is not defined"
         }
     liftIO $ E.finally (defaultMainWithArgs (map ($ env) ts) args) $ do
       stats <- getNexusStats nex
