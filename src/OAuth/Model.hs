@@ -3,14 +3,11 @@ module OAuth.Model where
 import DB.Derive
 import MinutesTime
 import DB
---import qualified Log
 import User.Model
 import MagicHash
 
 import Crypto.RNG
 import Data.Int
-import Data.Data (Data)
-import Happstack.Data
 import Data.List
 import Control.Monad.Trans
 import Network.URI
@@ -19,7 +16,7 @@ import Data.Maybe
 data APIToken = APIToken { atID    :: Int64     -- autoincrement for uniqueness
                          , atToken :: MagicHash -- random part for security
                          }
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord)
 
 instance Show APIToken where
     showsPrec _ token = (++) $ show (atToken token) ++ "_" ++ show (atID token)

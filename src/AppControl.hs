@@ -14,7 +14,9 @@ module AppControl
 import AppConf
 import API.Service.Model
 
+import Acid.Monad
 import AppView as V
+import AppState
 import Crypto.RNG
 import DB
 import DB.PostgreSQL
@@ -147,9 +149,9 @@ showRequest rq maybeInputsBody =
 {- |
    Creates a context, routes the request, and handles the session.
 -}
-appHandler :: KontraPlus Response -> AppConf -> AppGlobals -> ServerPartT IO Response
-appHandler handleRoutes appConf appGlobals = measureResponseTime $
-  withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) $ do
+appHandler :: KontraPlus Response -> AppConf -> AppGlobals -> AppState -> ServerPartT IO Response
+appHandler handleRoutes appConf appGlobals appState = measureResponseTime $
+  withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) . runAcidT appState $ do
     let quota = 10000000
     temp <- liftIO getTemporaryDirectory
     decodeBody (defaultBodyPolicy temp quota quota quota)

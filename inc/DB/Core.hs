@@ -24,6 +24,7 @@ import qualified Control.Monad.Writer.Lazy as LW
 import qualified Control.Monad.Writer.Strict as SW
 
 import Control.Monad.Trans.Control.Util
+import Acid.Monad
 import Crypto.RNG
 import DB.Nexus
 
@@ -104,6 +105,10 @@ instance (Functor m, MonadIO m) => MonadDB (DBT m) where
 instance MonadDB m => MonadDB (CryptoRNGT m) where
   getNexus     = lift getNexus
   localNexus f = mapCryptoRNGT $ localNexus f
+
+instance MonadDB m => MonadDB (AcidT st m) where
+  getNexus     = lift getNexus
+  localNexus f = mapAcidT $ localNexus f
 
 instance MonadDB m => MonadDB (ReaderT r m) where
   getNexus     = lift getNexus

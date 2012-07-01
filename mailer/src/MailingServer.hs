@@ -4,7 +4,6 @@ module MailingServer where
 import Control.Concurrent
 import System.Environment
 import Happstack.Server
-import Happstack.State
 import qualified Happstack.StaticRouting as R
 import qualified Control.Exception as E
 
@@ -17,6 +16,7 @@ import Handlers
 import Mails.Migrations
 import Mails.Tables
 import MailingServerConf
+import Misc
 import Network
 import Sender
 import ServiceChecker

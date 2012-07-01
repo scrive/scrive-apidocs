@@ -45,19 +45,16 @@ module Doc.DocStateData (
 
 import API.Service.Model
 import Company.Model
-import Data.Data (Data)
+import Data.Data
 import Data.Either
 import Data.Maybe
 import DB.Derive
-import Happstack.Data
 import IPAddress
-import MagicHash (MagicHash)
+import MagicHash
 import MinutesTime
 import User.UserID
 import User.Region
 import User.Locale
---import qualified Data.ByteString as BS
---import qualified Data.ByteString.UTF8 as BS
 import File.FileID
 import File.File
 import Doc.DocumentID
@@ -152,8 +149,9 @@ data FieldPlacement = FieldPlacement {
   , placementtipside :: Maybe TipSide
   } deriving (Eq, Ord, Show, Data, Typeable)
 
-data TipSide = LeftTip| RightTip deriving (Eq, Ord, Show,Read, Data, Typeable)
-    
+data TipSide = LeftTip | RightTip
+  deriving (Eq, Ord, Show, Read, Data, Typeable)
+
 data SignatoryDetails = SignatoryDetails {
     signatorysignorder :: SignOrder
   , signatoryfields    :: [SignatoryField]
