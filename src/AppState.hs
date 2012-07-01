@@ -1,14 +1,15 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module AppState (
     AppState
-  , startAcidStateSystem
-  , stopAcidStateSystem
-  , createStateCheckpoint
+  , openAcidState
+  , closeAcidState
+  , createCheckpoint
   ) where
 
 import Control.Monad
-import Data.Acid
+import Data.Acid (AcidState)
 import System.FilePath
+import qualified Data.Acid as ACID
 import qualified Data.IxSet as I
 
 import Acid.Monad
@@ -21,22 +22,21 @@ data AppState = AppState {
 instance AcidStore AppState m => HasAcidState Sessions m where
   getAcidState = asSessions `liftM` getAcidStore
 
-startAcidStateSystem :: (String -> IO ()) -> FilePath -> IO AppState
-startAcidStateSystem logger path = do
+openAcidState :: (String -> IO ()) -> FilePath -> IO AppState
+openAcidState logger path = do
   let sessionsPath = path </> "sessions"
   logger $ "Using store for Sessions: " ++ sessionsPath
-  sessions <- openLocalStateFrom sessionsPath I.empty
+  sessions <- ACID.openLocalStateFrom sessionsPath I.empty
   return AppState {
     asSessions = sessions
   }
 
-stopAcidStateSystem :: (String -> IO ()) -> AppState -> IO ()
-stopAcidStateSystem logger AppState{..} = do
-  logger $ "Creating checkpoint before exit..."
-  createCheckpoint asSessions
+closeAcidState :: (String -> IO ()) -> AppState -> IO ()
+closeAcidState logger AppState{..} = do
   logger $ "Closing acid-state system..."
-  closeAcidState asSessions
+  ACID.closeAcidState asSessions
 
-createStateCheckpoint :: AppState -> IO ()
-createStateCheckpoint AppState{..} = do
-  createCheckpoint asSessions
+createCheckpoint :: (String -> IO ()) -> AppState -> IO ()
+createCheckpoint logger AppState{..} = do
+  logger $ "Creating checkpoint..."
+  ACID.createCheckpoint asSessions
