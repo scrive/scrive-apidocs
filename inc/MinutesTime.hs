@@ -1,11 +1,9 @@
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-} -- ghc-7.4.1 workaround for deriveSerialize warning
 module MinutesTime
        ( MinutesTime
        , KontraTimeLocale (..)
        , asInt
        , fromSeconds
        , fromMinutes
-       , getMinuteTimeDB
        , getMinutesTime
        , minutesAfter
        , minutesBefore
@@ -34,54 +32,25 @@ module MinutesTime
 import Control.Monad.IO.Class
 import Data.Char
 import Data.Convertible
-import Data.Data
+import Data.SafeCopy
 import Data.Time
 import Data.Time.Clock.POSIX
 import Database.HDBC
-import Happstack.Data
-import Happstack.State
 import System.Locale
 import System.Time hiding (toClockTime, toUTCTime, toCalendarTime)
 import qualified System.Time as System.Time (toUTCTime, toCalendarTime)
 import Text.Printf
 import System.IO.Unsafe
 
-
--- | Time in minutes from 1970-01-01 00:00 in UTC coordinates
-newtype MinutesTime0 = MinutesTime0 Int
-       deriving (Eq, Ord, Typeable)
-
--- | Time in seconds from 1970-01-01 00:00:00 in UTC coordinates
-data MinutesTime1 = MinutesTime1
-    { minutes :: Int
-    , secs :: Int
-    }
-    deriving (Eq, Ord, Typeable)
-
 -- | Time in seconds from 1970-01-01 00:00:00 in UTC coordinates
 -- Same as POSIX seconds and what every other database uses as TIMESTAMP time type.
 newtype MinutesTime = MinutesTime Int
-    deriving (Eq, Ord, Typeable, Data)
+    deriving (Eq, Ord)
 
-instance Version MinutesTime0
-$(deriveSerialize ''MinutesTime0)
-
-$(deriveSerialize ''MinutesTime1)
-instance Version MinutesTime1 where
-   mode = extension 1 (Proxy :: Proxy MinutesTime0)
-
-$(deriveSerialize ''MinutesTime)
-instance Version MinutesTime where
-   mode = extension 2 (Proxy :: Proxy MinutesTime1)
-
-instance Migrate MinutesTime0 MinutesTime1 where
-      migrate (MinutesTime0 m) = MinutesTime1 {minutes = m, secs = 0 }
-
-instance Migrate MinutesTime1 MinutesTime where
-      migrate (MinutesTime1 m s) = fromSeconds (m*60 + s)
+$(deriveSafeCopy 0 'base ''MinutesTime)
 
 instance Show MinutesTime where
-    showsPrec _prec mt = (++) $ formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d, %H:%M:%S %Z" mt
+    show = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d, %H:%M:%S %Z"
 
 -- | Show time in %Y-%m-%d %H:%M:%S %Z format.
 -- This change was requested by Upsales. Should not affect much.
@@ -182,16 +151,6 @@ showDateAbbrev locale current time
 -- | Get current time as 'MinutesTime'. Warning: server should work in UTC time.
 getMinutesTime :: MonadIO m => m MinutesTime
 getMinutesTime = liftIO $ (return . fromClockTime) =<< getClockTime
-
--- | Get event time as 'MinutesTime'. Warning: server should work in UTC time.
---
--- Avoid this function. Soon we will need virtual time, not time taken
--- globally. Simulation and unit testing requires time to be specified
--- explicitely.
---
--- FIXME: rename to 'getMinutesTimeDB'
-getMinuteTimeDB :: AnyEv MinutesTime
-getMinuteTimeDB = (return . fromClockTime) =<< getEventClockTime
 
 -- | Convert 'ClockTime' to 'MinutesTime'. Uses just seconds, picoseconds are ignored.
 fromClockTime :: ClockTime -> MinutesTime

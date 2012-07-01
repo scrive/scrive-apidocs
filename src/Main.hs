@@ -6,7 +6,6 @@ import Data.List
 import Data.Version
 import Happstack.Server
 import Happstack.StaticRouting
-import Happstack.State
 import Happstack.Util.Cron
 import System.Directory
 import System.Environment
@@ -81,20 +80,12 @@ main = Log.withLogger $ do
   startSystem appGlobals appConf
 
 startSystem :: AppGlobals -> AppConf -> IO ()
-startSystem appGlobals appConf =
-  E.bracket startStateSystem createCheckpointAndExit startHttpServer
+startSystem appGlobals appConf = E.bracket
+  (startAcidStateSystem Log.server $ store appConf)
+  (stopAcidStateSystem Log.server)
+  startHttpServer
   where
-    startStateSystem = do
-      Log.server $ "Using store " ++ store appConf
-      runTxSystem (Queue $ FileSaver (store appConf)) (Proxy :: Proxy AppState)
-
-    createCheckpointAndExit control = do
-      Log.server $ "Creating checkpoint before exit"
-      createCheckpoint control
-      Log.server $ "Closing transaction system"
-      shutdownSystem control
-
-    startHttpServer control =
+    startHttpServer appState =
       E.bracket createThreads (mapM_ killThread) waitForTerm
       where
         createThreads = do
@@ -102,8 +93,8 @@ startSystem appGlobals appConf =
           listensocket <- listenOn (htonl iface) (fromIntegral port)
           let (routes,overlaps) = compile staticRoutes
           maybe (return ()) Log.server overlaps
-          t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port , timeout   = 120})  (appHandler routes appConf appGlobals)
-          let runScheduler = runQueue (cryptorng appGlobals) (dbConfig appConf) (SchedulerData appConf $ templates appGlobals)
+          t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port, timeout = 120}) (appHandler routes appConf appGlobals appState)
+          let runScheduler = runQueue (cryptorng appGlobals) (dbConfig appConf) (SchedulerData appConf (templates appGlobals) appState)
           t2 <- forkIO $ cron 60 $ do
             Log.debug "Running oldScheduler..."
             runScheduler oldScheduler
@@ -123,7 +114,7 @@ startSystem appGlobals appConf =
         waitForTerm _ = E.bracket
           -- checkpoint the state once a day
           -- FIXME: make it checkpoint always at the same time
-          (forkIO $ cron (60*60*24) (createCheckpoint control))
+          (forkIO $ cron (60*60*24) (createStateCheckpoint appState))
           killThread $ \_ -> do
             withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) $
               initDatabaseEntries $ initialUsers appConf

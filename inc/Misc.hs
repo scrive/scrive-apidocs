@@ -1,6 +1,5 @@
 {-# LANGUAGE CPP, TupleSections #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# OPTIONS_GHC -Wwarn #-} -- ghc-7.4.1 temporary workaround
 {-| Dump bin for things that do not fit anywhere else
 
 I do not mind people sticking stuff in here. From time to time just
@@ -17,7 +16,6 @@ import Control.Concurrent
 import Control.Monad.State
 import Control.Monad.Trans.Control
 import Data.Char
-import Data.Data
 import Data.List
 import Data.Maybe
 import Data.Monoid
@@ -30,6 +28,9 @@ import System.IO
 import System.IO.Temp
 import System.Process
 import Crypto.RNG (CryptoRNG, randomR)
+import System.Posix.Signals hiding (Handler)
+import System.Posix.IO ( stdInput )
+import System.Posix.Terminal ( queryTerminal )
 import System.Time
 import qualified Log
 import qualified Codec.Binary.Url as URL
@@ -39,6 +40,17 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS (toString,fromString)
 import Network.HTTP (urlDecode)
+
+-- | Wait for a signal (sigINT or sigTERM).
+waitForTermination :: IO ()
+waitForTermination = do
+  istty <- queryTerminal stdInput
+  mv <- newEmptyMVar
+  _ <- installHandler softwareTermination (CatchOnce (putMVar mv ())) Nothing
+  when istty $ do
+    _ <- installHandler keyboardSignal (CatchOnce (putMVar mv ())) Nothing
+    return ()
+  takeMVar mv
 
 withSystemTempDirectory' :: MonadBaseControl IO m => String -> (FilePath -> m a) -> m a
 withSystemTempDirectory' dir handler =
@@ -218,15 +230,6 @@ joinEmpty m = do
                 if mv == mempty
                  then mzero
                  else return mv
-
-{-| This function is useful when creating 'Typeable' instance when we
-want a specific name for type.  Example of use:
-
-  > instance Typeable Author where typeOf _ = mkTypeOf "XX_Author"
-
--}
-mkTypeOf :: String -> TypeRep
-mkTypeOf name = mkTyConApp (mkTyCon name) []
 
 -- | Pad string with zeros at the beginning.
 pad0 :: Int         -- ^ how long should be the number

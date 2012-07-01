@@ -45,9 +45,7 @@ import Control.Applicative
 import Data.Monoid
 import Data.List
 import Data.Char
-import Data.Data
 import Database.HDBC
-import Happstack.State (Version, deriveSerialize)
 
 import API.Service.Model
 import Company.Model
@@ -65,7 +63,7 @@ import Doc.DocStateData (DocumentStatus(..), SignatoryRole(..), DocumentID)
 
 -- newtypes
 newtype Email = Email { unEmail :: String }
-  deriving (Eq, Ord, Typeable)
+  deriving (Eq, Ord)
 $(newtypeDeriveConvertible ''Email)
 $(newtypeDeriveUnderlyingReadShow ''Email)
 
@@ -488,11 +486,3 @@ fetchUsers = foldDB decoder []
         , userservice = service_id
         , usercompany = company_id
         } : acc
-
--- this will not be needed when we move documents to pgsql. for now it's needed
--- for document handlers - it seems that types of arguments that handlers take
--- need to be serializable. I don't know wtf, but I'll gladly dispose of these
--- instances when we're done with the migration.
-
-instance Version Email
-$(deriveSerialize ''Email)

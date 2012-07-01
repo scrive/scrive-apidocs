@@ -15,10 +15,8 @@ module API.Service.Model (
   ) where
 
 import Control.Applicative
-import Data.Data
 import Database.HDBC
 import Happstack.Server
-import Happstack.State (Version, deriveSerialize)
 import qualified Codec.Binary.Base16 as B16
 import qualified Data.ByteString as BS
 
@@ -28,12 +26,9 @@ import User.Password
 import User.UserID
 
 newtype ServiceID = ServiceID { unServiceID :: BS.ByteString }
-  deriving (Eq, Ord, Typeable)
+  deriving (Eq, Ord)
 $(newtypeDeriveConvertible ''ServiceID)
 $(newtypeDeriveUnderlyingReadShow ''ServiceID)
-
-$(deriveSerialize ''ServiceID)
-instance Version ServiceID
 
 instance URLAble ServiceID where
   encodeForURL = B16.encode . BS.unpack . unServiceID

@@ -18,3 +18,4 @@
 :set -XTypeOperators
 :set -XTypeSynonymInstances
 :set -XUndecidableInstances
+:set -hide-package monads-tf

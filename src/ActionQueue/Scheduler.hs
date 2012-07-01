@@ -11,8 +11,10 @@ import Control.Monad.Reader
 import Data.List
 import System.Time
 
+import Acid.Monad
 import ActionQueue.Monad
-import AppControl (AppConf(..))
+import AppControl
+import AppState
 import DB hiding (update, query)
 import Doc.DocStateData
 import Doc.Invariants
@@ -29,9 +31,13 @@ import qualified Log
 data SchedulerData = SchedulerData {
     sdAppConf   :: AppConf
   , sdTemplates :: MVar (ClockTime, KontrakcjaGlobalTemplates)
+  , sdAppStore  :: AppState
   }
 
 type Scheduler = ActionQueue SchedulerData
+
+instance AcidStore AppState Scheduler where
+  getAcidStore = sdAppStore `liftM` ask
 
 -- Note: Do not define TemplatesMonad instance for Scheduler, use
 -- TemplatesT instead. Reason? We don't have access to currently used

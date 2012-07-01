@@ -54,7 +54,6 @@ import Doc.DocUtils
 import Company.Model
 import User.Model
 import Data.Foldable (fold)
-import Crypto.RNG
 import Util.Actor
 import Util.SignatoryLinkUtils
 import Util.HasSomeCompanyInfo
@@ -133,7 +132,7 @@ documentFromParam = do
     when (isNothing mdocument || (not $ sameService srvs mdocument)) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists"
     return $ fromJust mdocument
 
-embeddDocumentFrame :: (CryptoRNG m, Kontrakcja m) => IntegrationAPIFunction m APIResponse
+embeddDocumentFrame :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 embeddDocumentFrame = do
     ctx <- getContext
     srvs <-  service <$> ask
