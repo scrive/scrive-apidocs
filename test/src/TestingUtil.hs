@@ -41,6 +41,7 @@ import API.Service.Model
 import Data.Typeable
 import Doc.Invariants
 import Doc.DocProcess
+import System.Random.CryptoRNG ()
 import Text.JSON
 import TestKontra
 
