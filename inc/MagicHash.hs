@@ -14,7 +14,6 @@ import Data.Int
 import Data.SafeCopy
 import Data.Word
 import Happstack.Server
-import Happstack.Util.Common
 import Numeric
 
 import Crypto.RNG

@@ -6,11 +6,11 @@ module Doc.DocumentID (
 import Control.Monad
 import Data.Int
 import Data.SafeCopy
+import Happstack.Server
 
 import Crypto.RNG
 import DB.Derive
-import Happstack.Server
-import Happstack.Util.Common
+import Misc
 
 newtype DocumentID = DocumentID Int64
   deriving (Eq, Ord)

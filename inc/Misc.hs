@@ -21,7 +21,6 @@ import Data.Maybe
 import Data.Monoid
 import Numeric (readDec)
 import Happstack.Server hiding (simpleHTTP,dir)
-import Happstack.Util.Common hiding  (mapFst,mapSnd)
 import System.Directory
 import System.Exit
 import System.IO
@@ -40,6 +39,28 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS (toString,fromString)
 import Network.HTTP (urlDecode)
+
+-- | Given an action f and a number of seconds t, cron will execute
+-- f every t seconds with the first execution t seconds after cron is called.
+-- cron does not spawn a new thread.
+cron :: Int -> IO () -> IO a
+cron seconds0 action = go seconds0
+  where
+    maxSeconds = (maxBound :: Int) `div`  10^(6 ::Int)
+    go seconds = if seconds <= maxSeconds
+      then do
+        threadDelay (10^(6 :: Int) * seconds)
+        action
+        go seconds0
+      else do
+        threadDelay (10^(6 :: Int) * maxSeconds)
+        go (seconds - maxSeconds)
+
+-- | Read in any monad.
+readM :: (Monad m, Read t) => String -> m t
+readM s = case reads s of
+  [(v,"")] -> return v
+  _        -> fail "readM: parse error"
 
 -- | Wait for a signal (sigINT or sigTERM).
 waitForTermination :: IO ()

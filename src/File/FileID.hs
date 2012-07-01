@@ -6,10 +6,10 @@ module File.FileID (
 import Control.Monad
 import Data.Int
 import Happstack.Server
-import Happstack.Util.Common
 
 import Crypto.RNG
 import DB.Derive
+import Misc
 
 newtype FileID = FileID Int64
   deriving (Eq, Ord)
