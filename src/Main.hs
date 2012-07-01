@@ -6,7 +6,6 @@ import Data.List
 import Data.Version
 import Happstack.Server
 import Happstack.StaticRouting
-import Happstack.Util.Cron
 import System.Directory
 import System.Environment
 import System.IO

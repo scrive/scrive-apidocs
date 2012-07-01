@@ -11,11 +11,11 @@ import Control.Monad
 import Data.Data
 import Data.Int
 import Data.SafeCopy
+import Happstack.Server
 
 import Crypto.RNG
 import DB.Derive
-import Happstack.Server
-import Happstack.Util.Common
+import Misc
 
 -- | 'SignatoryLinkID' is and integer that identifies
 -- a signatory inside a document scope.

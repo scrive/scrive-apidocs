@@ -39,8 +39,7 @@ import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie,
 import System.Random (mkStdGen, randomR)
 import System.Random.CryptoRNG ()
 import Crypto.RNG (CryptoRNG, random)
-import Happstack.Util.Common ( readM)
-import Misc (isHTTPS, optional)
+import Misc
 import ELegitimation.ELegTransaction
 import Data.Typeable
 import Cookies
