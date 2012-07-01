@@ -3,13 +3,11 @@ module Company.CompanyID (
   , unsafeCompanyID
   ) where
 
-import Control.Monad
 import Data.Int
 import Data.SafeCopy
 import Data.Typeable
 import Happstack.Server
 
-import Crypto.RNG
 import DB.Derive
 import Misc
 
@@ -22,9 +20,6 @@ $(deriveSafeCopy 0 'base ''CompanyID)
 
 instance FromReqURI CompanyID where
   fromReqURI = readM
-
-instance Random CompanyID where
-  random = CompanyID `liftM` randomR (10000000, 10000000000)
 
 unsafeCompanyID :: Int64 -> CompanyID
 unsafeCompanyID = CompanyID

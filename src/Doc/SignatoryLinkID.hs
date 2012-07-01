@@ -7,13 +7,11 @@ module Doc.SignatoryLinkID (
   , unsafeSignatoryLinkID
   ) where
 
-import Control.Monad
 import Data.Data
 import Data.Int
 import Data.SafeCopy
 import Happstack.Server
 
-import Crypto.RNG
 import DB.Derive
 import Misc
 
@@ -25,9 +23,6 @@ $(newtypeDeriveUnderlyingReadShow ''SignatoryLinkID)
 $(newtypeDeriveConvertible ''SignatoryLinkID)
 
 $(deriveSafeCopy 0 'base ''SignatoryLinkID)
-
-instance Random SignatoryLinkID where
-  random = SignatoryLinkID `liftM` randomR (10000000, 10000000000)
 
 instance FromReqURI SignatoryLinkID where
   fromReqURI = readM

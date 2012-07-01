@@ -37,7 +37,6 @@ import MinutesTime
 import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie,
   readCookieValue, withDataFn, HasRqData, CookieLife(MaxAge), FromReqURI(..))
 import System.Random (mkStdGen, randomR)
-import System.Random.CryptoRNG ()
 import Crypto.RNG (CryptoRNG, random)
 import Misc
 import ELegitimation.ELegTransaction
