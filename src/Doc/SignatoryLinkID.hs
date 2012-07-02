@@ -25,7 +25,7 @@ $(newtypeDeriveConvertible ''SignatoryLinkID)
 $(deriveSafeCopy 0 'base ''SignatoryLinkID)
 
 instance FromReqURI SignatoryLinkID where
-  fromReqURI = readM
+  fromReqURI = maybeRead
 
 unsafeSignatoryLinkID :: Int64 -> SignatoryLinkID
 unsafeSignatoryLinkID = SignatoryLinkID

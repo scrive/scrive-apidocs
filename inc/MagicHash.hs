@@ -42,7 +42,7 @@ instance Read MagicHash where
   readsPrec _ s = first MagicHash <$> readHex s
 
 instance FromReqURI MagicHash where
-  fromReqURI = readM
+  fromReqURI = maybeRead
 
 -- | Construct a magic hash manually.  It is up to the caller to
 -- reason about the consequences if the argument is not generated from

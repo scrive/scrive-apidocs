@@ -19,7 +19,7 @@ $(newtypeDeriveUnderlyingReadShow ''CompanyID)
 $(deriveSafeCopy 0 'base ''CompanyID)
 
 instance FromReqURI CompanyID where
-  fromReqURI = readM
+  fromReqURI = maybeRead
 
 unsafeCompanyID :: Int64 -> CompanyID
 unsafeCompanyID = CompanyID

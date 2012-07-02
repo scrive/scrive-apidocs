@@ -99,7 +99,7 @@ toCookieValue flashes =
 fromCookieValue :: String -> Maybe [FlashMessage]
 fromCookieValue flashesdata = do
     case B64.decode $ BS.pack flashesdata of
-         Right s -> readM $ BSLU.toString $ GZip.decompress $ BSL.fromChunks [s]
+         Right s -> maybeRead $ BSLU.toString $ GZip.decompress $ BSL.fromChunks [s]
          _       -> Nothing
 
 addFlashCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m, Functor m) => String -> m ()

@@ -23,7 +23,8 @@ module Session
     )
     where
 
-import Control.Arrow (first)
+import Control.Applicative hiding (optional)
+import Control.Arrow (first, second)
 import Control.Monad.Reader (ask)
 import Control.Monad.State hiding (State)
 import Acid.Monad
@@ -64,7 +65,7 @@ instance Read SessionId where
         [(SessionId k,v) | (k,v) <- readSigned readDec string]
 
 instance FromReqURI SessionId where
-    fromReqURI = readM
+    fromReqURI = maybeRead
 
 data SessionData = SessionData
     { userID           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
@@ -197,13 +198,13 @@ instance Show (SessionCookieInfo) where
 
 instance Read (SessionCookieInfo) where
     readsPrec _ s = do
-        let (sid,sh) = break (== '-') s
-        sid' <- readM sid  --if need to understand that just read about list monad
-        sh' <- readM (drop 1 sh)
-        return $ (SessionCookieInfo {cookieSessionId = sid', cookieSessionHash=sh'},"")
+        let (sid, sh) = second (drop 1) $ break (== '-') s
+        case SessionCookieInfo <$> maybeRead sid <*> maybeRead sh of
+          Just res -> [(res, "")]
+          Nothing  -> []
 
 instance FromReqURI SessionCookieInfo where
-    fromReqURI = readM
+    fromReqURI = maybeRead
 
 -- | Extract cookie from session.
 cookieInfoFromSession :: Session -> SessionCookieInfo
