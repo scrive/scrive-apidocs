@@ -17,7 +17,7 @@ $(newtypeDeriveUnderlyingReadShow ''DocumentID)
 $(deriveSafeCopy 0 'base ''DocumentID)
 
 instance FromReqURI DocumentID where
-  fromReqURI = readM
+  fromReqURI = maybeRead
 
 unsafeDocumentID :: Int64 -> DocumentID
 unsafeDocumentID = DocumentID

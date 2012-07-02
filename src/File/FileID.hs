@@ -15,7 +15,7 @@ $(newtypeDeriveUnderlyingReadShow ''FileID)
 $(newtypeDeriveConvertible ''FileID)
 
 instance FromReqURI FileID where
-  fromReqURI = readM
+  fromReqURI = maybeRead
 
 unsafeFileID :: Int64 -> FileID
 unsafeFileID = FileID

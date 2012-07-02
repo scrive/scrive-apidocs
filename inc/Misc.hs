@@ -44,23 +44,12 @@ import Network.HTTP (urlDecode)
 -- f every t seconds with the first execution t seconds after cron is called.
 -- cron does not spawn a new thread.
 cron :: Int -> IO () -> IO a
-cron seconds0 action = go seconds0
-  where
-    maxSeconds = (maxBound :: Int) `div`  10^(6 ::Int)
-    go seconds = if seconds <= maxSeconds
-      then do
-        threadDelay (10^(6 :: Int) * seconds)
-        action
-        go seconds0
-      else do
-        threadDelay (10^(6 :: Int) * maxSeconds)
-        go (seconds - maxSeconds)
-
--- | Read in any monad.
-readM :: (Monad m, Read t) => String -> m t
-readM s = case reads s of
-  [(v,"")] -> return v
-  _        -> fail "readM: parse error"
+cron seconds action = forever $ do
+  let freq = seconds * 1000000
+  when (freq < 0) $
+    error $ "cron: seconds values is " ++ if seconds < 0 then "too big" else "negative" ++ ": " ++ show seconds
+  threadDelay freq
+  action
 
 -- | Wait for a signal (sigINT or sigTERM).
 waitForTermination :: IO ()
@@ -223,7 +212,7 @@ getField' :: (HasRqData m, MonadIO m, ServerMonad m) => String -> m String
 getField' name = fromMaybe "" `liftM` getField name
 
 readField :: (HasRqData f, MonadIO f, Read a, Functor f, ServerMonad f) => String -> f (Maybe a)
-readField name =  (join . (fmap readM)) <$> getField name
+readField name =  (join . (fmap maybeRead)) <$> getField name
 
 whenMaybe :: Monad m => Bool -> m a -> m (Maybe a)
 whenMaybe True  c = liftM Just c
