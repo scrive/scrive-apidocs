@@ -53,7 +53,7 @@ type InnerKontraPlus = StateT Context (AcidT AppState (CryptoRNGT (DBT (ServerPa
 -- | KontraPlus is 'MonadPlus', but it should only be used on toplevel
 -- for interfacing with static routing.
 newtype KontraPlus a = KontraPlus { unKontraPlus :: InnerKontraPlus a }
-  deriving (MonadPlus, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, ServerMonad, WebMonad Response)
+  deriving (AcidStore AppState, MonadPlus, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, ServerMonad, WebMonad Response)
 
 runKontraPlus :: Context -> KontraPlus a -> AcidT AppState (CryptoRNGT (DBT (ServerPartT IO))) a
 runKontraPlus ctx f = evalStateT (unKontraPlus f) ctx
@@ -67,9 +67,6 @@ instance MonadBaseControl IO KontraPlus where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-instance AcidStore AppState KontraPlus where
-  getAcidStore = KontraPlus getAcidStore
-  
 instance KontraMonad KontraPlus where
   getContext    = KontraPlus get
   modifyContext = KontraPlus . modify

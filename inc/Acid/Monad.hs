@@ -1,3 +1,6 @@
+-- | This module provides simple monad transformer for carrying
+-- acidic state around and overrides update/query functions from
+-- Data.Acid so they don't require passing state as parameter.
 module Acid.Monad where
 
 import Control.Applicative
@@ -21,7 +24,7 @@ import qualified Control.Monad.Writer.Strict as SW
 
 import Control.Monad.Trans.Control.Util
 
--- | Monad transformer with RNG state.
+-- | Monad transformer with acidic state.
 newtype AcidT st m a = AcidT { unAcidT :: ReaderT st m a }
   deriving (Applicative, Functor, Monad, MonadBase b, MonadIO, MonadPlus, MonadTrans)
 
@@ -84,7 +87,7 @@ instance ServerMonad m => ServerMonad (AcidT st m) where
 instance WebMonad r m => WebMonad r (AcidT st m) where
   finishWith = lift . finishWith
 
--- | Monads carrying around acid store
+-- | Monads carrying around acid store.
 class Monad m => AcidStore st m where
   getAcidStore :: m st
 
@@ -121,7 +124,28 @@ instance (AcidStore st m, Monoid w) => AcidStore st (LW.WriterT w m) where
 instance (AcidStore st m, Monoid w) => AcidStore st (SW.WriterT w m) where
   getAcidStore = lift getAcidStore
 
--- | Class indicating whether given monad contains given AcidState
+-- | Class indicating whether given monad contains given AcidState.
+-- Note that this is different than AcidStore typeclass, because
+-- HasAcidState gives a way to get whole acid store, which can have
+-- multiple AcidState components or additional fields.
+-- Example:
+--
+-- newtype T = T Int
+-- newtype S = S String
+-- data Store = Store { t :: AcidState T, s :: AcidState S }
+-- type M = AcidT Store IO
+--
+-- Then you can get underlying store object in M monad by executing
+-- getAcidStore, but to be able to get specific component (and make
+-- query/update functions work), you need to define HasAcidState T M
+-- and HasAcidState S M instances yourself. Alternatively, you could
+-- write general instances:
+--
+-- instance AcidStore Store m => HasAcidState T m where
+--   getAcidState = t `liftM` getAcidStore
+-- instance AcidStore Store m => HasAcidState S m where
+--   getAcidState = s `liftM` getAcidStore
+--
 class HasAcidState st m where
   getAcidState :: m (AcidState st)
 
