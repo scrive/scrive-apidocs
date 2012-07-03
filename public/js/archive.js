@@ -23,7 +23,7 @@ var DocumentsListDefinition = {
         ],
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
-        new Cell({name: "$_SortStatus()$", width:"40px", field:"status",
+        new Cell({name: localization.archive.documents.columns.status, width:"40px", field:"status",
                  rendering: function(status,idx,listobject) {
                     var icon = jQuery("<div class='icon status "+status+"'></div>")
                     var tip = jQuery("<div id='tooltip-"+status+"'> <div class='icon status "+status+"'></div><p>"+
@@ -39,14 +39,14 @@ var DocumentsListDefinition = {
                     return icon;
                  }
         }),
-        new Cell({name: "$_SortTime()$", width:"116px", field:"time"}),
-        new Cell({name: "$_SortSender()$", width:"110px", field:"author",  special: "link"}),
+        new Cell({name: localization.archive.documents.columns.time, width:"116px", field:"time"}),
+        new Cell({name: localization.archive.documents.columns.sender, width:"110px", field:"author",  special: "link"}),
         new Cell({width:"5px" }),
-        new Cell({name: "$_SortParty()$", width:"200px", field:"party", special: "expandable", subfield : "name"}),
+        new Cell({name: localization.archive.documents.columns.party, width:"200px", field:"party", special: "expandable", subfield : "name"}),
         new Cell({width:"5px" }),
-        new Cell({name: "$_SortDoc()$", width:"250px", field:"title",  special: "link"}),
+        new Cell({name: localization.archive.documents.columns.title, width:"250px", field:"title",  special: "link"}),
         new Cell({width:"5px" }),
-        new Cell({name: "$_SortType()$", width:"40px", field:"process",
+        new Cell({name: localization.archive.documents.columns.type, width:"40px", field:"process",
                   rendering: function(value, _idx, _model) {
                       var txt = "";
                       if( localization.process[value] !== undefined ) {
@@ -130,15 +130,22 @@ var DocumentsListDefinition = {
                 }
               ]
     }),
-    bottomExtras : jQuery("<div class='table-statuses'>" +
-                    "<div class='icon status draft float-left'></div><div class='float-left'>$_tablestatusesDraft()$&nbsp;</div>" +
-                    "<div class='icon status cancelled float-left'></div><div class='float-left'>$_tablestatusesCancelled()$&nbsp;</div>" +
-                    "<div class='icon status sent float-left'></div><div class='float-left'>$_tablestatusesSent()$&nbsp;</div>" +
-                    "<div class='icon status delivered float-left'></div><div class='float-left'>$_tablestatusesDelivered()$&nbsp;</div>" +
-                    "<div class='icon status read float-left'></div><div class='float-left'>$_tablestatusesEmailOpened()$&nbsp;</div>" +
-                    "<div class='icon status opened float-left'></div><div class='float-left'>$_tablestatusesViewedOnline()$&nbsp;</div>" +
-                    "<div class='icon status signed float-left'></div><div class='float-left'>$_tablestatusesSigned()$&nbsp;</div>" +
-                    "</div>")
+    bottomExtras : function() {
+                        var box = $("<div class='table-statuses'/>");
+                        var description = function(cssClass,text) {
+                            var icon = $("<div class='icon status float-left'></div>").addClass(cssClass);
+                            var text = $("<div class='float-left'/>").text(text);
+                            return $.merge(icon,text);
+                        };
+                        box.append(description("draft",localization.archive.documents.statusDescription.draft));
+                        box.append(description("cancelled",localization.archive.documents.statusDescription.cancelled));
+                        box.append(description("sent",localization.archive.documents.statusDescription.sent));
+                        box.append(description("delivered",localization.archive.documents.statusDescription.delivered));
+                        box.append(description("read",localization.archive.documents.statusDescription.read));
+                        box.append(description("opened",localization.archive.documents.statusDescription.opened));
+                        box.append(description("signed",localization.archive.documents.statusDescription.signed));
+                        return box;
+                    }()
  };
 
 var TemplatesListDefinition = {
