@@ -549,7 +549,8 @@ window.DocumentStandardView = Backbone.View.extend({
       file: document.mainfile(),
       document: document
     });
-    var tabs = KontraTabs.init({
+    var tabs = new KontraTabs({
+    numbers : false,
     title: jQuery.merge(titlepart, this.createMenuElems()),
     tabs: [
       new Tab({
