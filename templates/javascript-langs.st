@@ -394,6 +394,29 @@ javascriptLocalisation =
              ,  savedTemplate  : "$_signStepsBodyUploadBoxStep1TemplateSaved()$"
              ,  chooseTemplateButton : "$_signStepsBodyUploadBoxStep1ButtonChooseTemplate()$"
         }
+      , archive : {
+                documents : {
+                       name :  "$_docListTabsDocs()$"
+                    ,  sendReminder : "$_SendReminder()$"
+                    ,  delete : "$_delete()$"
+                    ,  search : "$_SearchDoc()$"
+                    ,  statusDescription : {
+                              draft :     "$_tablestatusesDraft()$"
+                            , cancelled : "$_tablestatusesCancelled()$"
+                            , sent :      "$_tablestatusesSent()$"
+                            , delivered:  "$_tablestatusesDelivered()$"
+                            , opened :    "$_tablestatusesEmailOpened()$"
+                            , viewed :    "$_tablestatusesViewedOnline()$"
+                            , signed :    "$_tablestatusesSigned()$"
+                       }
+                }
+            ,  templates : {
+                    name :  "$_docListTabsTemplates()$"
+                }
+            ,  attachments : {
+                    name : "$_docListTabsAttachemtns()$"
+                }
+            ,  bin: {}
+        } 
     }
-
 ####

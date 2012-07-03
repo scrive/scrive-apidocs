@@ -304,10 +304,11 @@ adminuser=
 	<div class="tab-header">
 	</div>
 	<ul class="tabs">
-	  <li class="active"><a href="$adminuserslink$/$user.id$">Användaruppgifter</a></li>
-	  <li><a href="#">Payment info</a></li>
-	  <li><a href="#">Payment list</a></li>
-	  <li><a href="$adminuserslink$/usagestats/$user.id$">Statistics</a></li>
+	  <li class="active float-left"><a href="$adminuserslink$/$user.id$">Användaruppgifter</a></li>
+	  <li class="float-left"><a href="#">Payment info</a></li>
+	  <li class="float-left"><a href="#">Payment list</a></li>
+	  <li class="float-left"><a href="$adminuserslink$/usagestats/$user.id$">Statistics</a></li>
+          <li class="float-right"/>
 	</ul>
 	<div class="tab-container">
 	  <div class="tab-content account">
@@ -414,10 +415,11 @@ admincompany=
 	<div class="tab-header">
 	</div>
 	<ul class="tabs">
-	  <li class="active"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
-	  <li><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
-	  <li><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
-	  <li><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
+	  <li class="active float-left"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li class="float-left"><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
+	  <li class="float-left"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
+	  <li class="float-left"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
+          <li class="float-right"/>
 	</ul>
 	<div class="tab-container">
 	  <div class="tab-content account">
@@ -511,10 +513,11 @@ admincompanybranding=
 	<div class="tab-header">
 	</div>
 	<ul class="tabs">
-	  <li><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
-	  <li class="active"><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
-	  <li><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
-	  <li><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
+	  <li class="float-left"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li class="active float-left"><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
+	  <li class="float-left"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
+	  <li class="float-left"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
+          <li class="float-right"/>
 	</ul>
       <div class="tab-container">
 	<div class="tab-content account">
@@ -538,10 +541,11 @@ admincompanyusers=
   <div class="tab-header">
   </div>
   <ul class="tabs">
-    <li><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
-    <li><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
-    <li class="active"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
-    <li><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
+    <li class="float-left"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+    <li class="float-left"><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
+    <li class="active float-left"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
+    <li class="float-left"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
+    <li class="float-right"/>
   </ul>
 </div>
 <script>
@@ -744,10 +748,11 @@ userusagestats=
       <div class="tab-header">
       </div>
       <ul class="tabs">
-	<li><a href="$adminuserslink$/$user.id$">Användaruppgifter</a></li>
-	<li><a href="#">Payment info</a></li>
-	<li><a href="#">Payment list</a></li>
-	<li class="active"><a href="$adminuserslink$/usagestats/$user.id$">Statistics</a></li>
+	<li class="float-left"><a href="$adminuserslink$/$user.id$">Användaruppgifter</a></li>
+	<li class="float-left"><a href="#">Payment info</a></li>
+	<li class="float-left"><a href="#">Payment list</a></li>
+	<li class="active float-left"><a href="$adminuserslink$/usagestats/$user.id$">Statistics</a></li>
+        <li class="float-right"/>
       </ul>
       <div class="tab-container">
 	<div class="tab-content account">
@@ -780,10 +785,11 @@ companyusagestats=
 	<div class="tab-header">
 	</div>
 	<ul class="tabs">
-	  <li><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
-	  <li><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
-	  <li><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
-	  <li class="active"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
+	  <li class="float-left"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li class="float-left"><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
+	  <li class="float-left"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
+	  <li class="active float-left"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
+          <li class="float-right" />
 	</ul>
       <div class="tab-container">
 	<div class="tab-content account">

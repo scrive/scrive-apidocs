@@ -667,7 +667,8 @@ var DocumentDesignView = Backbone.View.extend({
         var changemainfile = this.designChangeMainFile();
 
         var file = KontraFile.init({file: document.mainfile()});
-        this.tabs = KontraTabs.init({
+        this.tabs = new KontraTabs({
+            numbers : true,
             title : this.titlerow(),
             tabsTail : (!document.isTemplate()) ?  [this.saveAsTemplateOption()] : [] ,
             tabs: [
