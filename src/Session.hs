@@ -156,8 +156,8 @@ newSession sessData = do
 -- We need to clean db once in a while since sessions are created in db for each sessionless request.
 dropExpiredSessions :: MinutesTime -> Update Sessions ()
 dropExpiredSessions time = do
-  expired <- (@<= time) . sessions <$> get
-  modify $ \s -> s { sessions = difference (sessions s) expired }
+  expired <- toList . (@<= time) . sessions <$> get
+  modify $ \s -> s { sessions = foldr (\ss acc -> deleteIx (sessionID ss) acc) (sessions s) expired }
 
 $(makeAcidic ''Sessions [
     'getSession
