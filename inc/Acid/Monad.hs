@@ -1,7 +1,16 @@
 -- | This module provides simple monad transformer for carrying
 -- acidic state around and overrides update/query functions from
 -- Data.Acid so they don't require passing state as parameter.
-module Acid.Monad where
+module Acid.Monad (
+    AcidT(..)
+  , mapAcidT
+  , runAcidT
+  , withAcidStore
+  , AcidStore(..)
+  , HasAcidState(..)
+  , query
+  , update
+  ) where
 
 import Control.Applicative
 import Control.Monad.Base
