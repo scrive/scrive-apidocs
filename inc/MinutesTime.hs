@@ -36,6 +36,7 @@ import Data.Convertible
 import Data.SafeCopy
 import Data.Time
 import Data.Time.Clock.POSIX
+import Data.Typeable
 import Database.HDBC
 import System.Locale
 import System.Time hiding (toClockTime, toUTCTime, toCalendarTime)
@@ -46,7 +47,7 @@ import System.IO.Unsafe
 -- | Time in seconds from 1970-01-01 00:00:00 in UTC coordinates
 -- Same as POSIX seconds and what every other database uses as TIMESTAMP time type.
 newtype MinutesTime = MinutesTime Int
-    deriving (Eq, Ord)
+    deriving (Eq, Ord, Typeable)
 
 $(deriveSafeCopy 0 'base ''MinutesTime)
 
