@@ -1,6 +1,7 @@
 -- | Simple session support
 module Session (
     Sessions
+  , initialSessions
   , Session
   , SessionID
   , DropExpiredSessions(..)
@@ -22,36 +23,39 @@ module Session (
   ) where
 
 import Control.Applicative hiding (optional)
-import Control.Arrow (first, second)
-import Control.Monad.Reader (ask)
-import Control.Monad.State hiding (State)
-import Acid.Monad
-import Data.Acid hiding (update, query)
-import Data.Maybe (isNothing, isJust, fromJust)
-import Data.IxSet
+import Control.Arrow
+import Control.Monad.Reader
+import Control.Monad.State
+import Data.Acid (makeAcidic, Update, Query)
+import Data.IxSet as I
+import Data.List hiding (insert)
+import Data.Maybe
+import Data.Ord
 import Data.SafeCopy
-import User.Model
-import MinutesTime
-import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie,
-  readCookieValue, withDataFn, HasRqData, CookieLife(MaxAge), FromReqURI(..))
-import System.Random (mkStdGen, randomR)
-import Crypto.RNG (CryptoRNG, random)
-import Misc
-import ELegitimation.ELegTransaction
 import Data.Typeable
+import Data.Word
+import Happstack.Server hiding (addCookie, Session)
+import qualified Data.Map as M
+
+import Acid.Monad
 import Cookies
 import Company.Model
+import Crypto.RNG
 import DB hiding (getOne, query, update)
-import MagicHash (MagicHash)
 import Doc.SignatoryLinkID
-import qualified Data.Map as Map
-import Data.List (find, sortBy)
-import Data.Ord
+import ELegitimation.ELegTransaction
+import MagicHash
+import MinutesTime
+import Misc
+import User.Model
 
-newtype SessionID = SessionID Integer
-  deriving (Eq, Ord, Num, Typeable)
+newtype SessionID = SessionID Word64
+  deriving (Eq, Ord, Typeable)
 $(newtypeDeriveUnderlyingReadShow ''SessionID)
 $(deriveSafeCopy 0 'base ''SessionID)
+
+nextSID :: SessionID -> SessionID
+nextSID (SessionID n) = SessionID $ if n == maxBound then 1 else succ n
 
 instance FromReqURI SessionID where
   fromReqURI = maybeRead
@@ -68,7 +72,7 @@ data SessionData = SessionData {
                                           -- that embeds it (hash
                                           -- location hack)
   , company          :: Maybe CompanyID
-  , magichashes      :: Map.Map SignatoryLinkID MagicHash
+  , magichashes      :: M.Map SignatoryLinkID MagicHash
   , padUserID        :: Maybe UserID      -- Other version of login - for pad devices, when you don't want to give control over a device.
   } deriving (Ord, Eq, Show, Typeable)
 $(deriveSafeCopy 0 'base ''SessionData)
@@ -80,7 +84,11 @@ data Session = Session {
   } deriving (Ord, Eq, Show, Typeable)
 $(deriveSafeCopy 0 'base ''Session)
 
-type Sessions = IxSet Session
+data Sessions = Sessions {
+    nextSessionID :: SessionID
+  , sessions      :: IxSet Session
+  }
+$(deriveSafeCopy 0 'base ''Sessions)
 
 instance Indexable Session where
   empty = ixSet [
@@ -96,70 +104,60 @@ instance Indexable Session where
             )
     ]
 
-testAndInsert :: (MonadState (IxSet a) m, Typeable a, Ord a, Indexable a) =>(IxSet a -> Bool) -> a -> m Bool
-testAndInsert test a =
-    maybeModify $ \ixset ->
-        if test ixset
-          then Just (insert a ixset)
-          else Nothing
-
--- | this should be sent upstream to mtl
-maybeModify :: (MonadState s m) => (s -> Maybe s) -> m Bool
-maybeModify f = do
-    s <- get
-    case f s of
-         Nothing -> return False
-         Just s' -> do
-             put s'
-             return True
+initialSessions :: Sessions
+initialSessions = Sessions {
+    nextSessionID = SessionID 1
+  , sessions = I.empty
+  }
 
 -- | Get the session data associated with the supplied 'SessionID'.
 getSession :: SessionID -> Query Sessions (Maybe Session)
-getSession sid = return . getOne . (@= sid) =<< ask
+getSession sid = return . getOne . (@= sid) =<< sessions `fmap` ask
 
 -- | Get the session data associated with the supplied 'UserID'.
 getSessionsByUserID :: UserID -> Query Sessions [Session]
-getSessionsByUserID uid = return . toList . (@= uid) =<< ask
+getSessionsByUserID uid = return . toList . (@= uid) =<< sessions `fmap` ask
 
 -- | Get the session data associated with the supplied 'UserID'.
 getSessionsByCompanyID :: CompanyID -> Query Sessions [Session]
-getSessionsByCompanyID cid = return . toList . (@= cid) =<< ask
+getSessionsByCompanyID cid = return . toList . (@= cid) =<< sessions `fmap` ask
 
 -- | Update the 'Session'.
 updateSession :: Session -> Update Sessions ()
-updateSession session = modify $ updateIx (sessionID session) session
+updateSession session@Session{sessionID} = modify $
+  \s -> s { sessions = updateIx sessionID session $ sessions s }
 
 -- | Delete the session associated with the 'SessionID'.
 -- Returns the deleted session.
 deleteSession :: SessionID -> Update Sessions (Maybe (Session))
-deleteSession sessionID = do
-  msession <- return . getOne . (@= sessionID) =<< get
+deleteSession sid = do
+  msession <- return . getOne . (@= sid) =<< sessions `fmap` get
   case msession of
     Nothing -> return Nothing
     Just session -> do
-      modify $ delete session
+      modify $ \s -> s { sessions = deleteIx sid $ sessions s }
       return $ Just session
 
 -- | Start a new session with the supplied session data
--- returns: the 'SessionID'
-newSession :: Int -> SessionData -> Update Sessions Session
-newSession seed sessData = loop $ mkStdGen seed
-  where
-    loop rng = do
-      let (sessId, rng') = first SessionID $ randomR (0,1000000000) rng
-      let session = (Session sessId sessData)
-      r <- testAndInsert (isNothing . getOne . (@= sessId)) session
-      if r
-        then return (Session sessId sessData)
-        else loop rng'
+newSession :: SessionData -> Update Sessions Session
+newSession sessData = do
+  Sessions{..} <- get
+  let session = Session {
+          sessionID = nextSessionID
+        , sessionData = sessData
+        }
+  put Sessions {
+      nextSessionID = nextSID nextSessionID
+    , sessions = insert session sessions
+    }
+  return session
 
 -- | Drops expired session from database, to be used with scheduler
 -- We need to clean db once in a while since sessions are created in db for each sessionless request.
 dropExpiredSessions :: MinutesTime -> Update Sessions ()
 dropExpiredSessions time = do
-  sessions <- get
-  let expired = sessions @<= time
-  modify (\s -> difference s expired)
+  expired <- (@<= time) . sessions <$> get
+  modify $ \s -> s { sessions = difference (sessions s) expired }
 
 $(makeAcidic ''Sessions [
     'getSession
@@ -239,7 +237,7 @@ emptySessionData = do
     , xtoken = xhash
     , location = ""
     , company = Nothing
-    , magichashes = Map.empty
+    , magichashes = M.empty
     , padUserID = Nothing
     }
 
@@ -249,11 +247,11 @@ isSessionDataEmpty SessionData{..} =
      userID == Nothing
   && padUserID == Nothing
   && Prelude.null elegtransactions && location == "" && company == Nothing
-  && Map.null magichashes
+  && M.null magichashes
 
 -- | Return ID for temporary session (not written to db)
 tempSessionID :: SessionID
-tempSessionID = SessionID $ -1
+tempSessionID = SessionID 0
 
 -- | Return empty, temporary session
 startSession :: (MonadIO m, CryptoRNG m) => m Session
@@ -290,16 +288,15 @@ handleSession = do
 -- session data is non-empty, register session in the system
 -- and add a cookie. Is user loggs in, check whether there is
 -- an old session with his userid and throw it away.
-updateSessionWithContextData :: (FilterMonad Response m, HasAcidState Sessions m, ServerMonad m, MonadDB m, CryptoRNG m)
+updateSessionWithContextData :: (FilterMonad Response m, HasAcidState Sessions m, ServerMonad m, MonadDB m)
                              => Session
                              -> Maybe UserID
                              -> [ELegTransaction]
-                             -> Map.Map SignatoryLinkID MagicHash
+                             -> M.Map SignatoryLinkID MagicHash
                              -> Maybe UserID
                              -> m ()
 updateSessionWithContextData (Session i sd) u trans magichashes' pu = do
   now <- getMinutesTime
-  rng <- random
   let newsd = sd {
           userID = u
         , expires = 120 `minutesAfter` now
@@ -313,7 +310,7 @@ updateSessionWithContextData (Session i sd) u trans magichashes' pu = do
         us <- query $ GetSessionsByUserID $ fromJust u
         mapM_ (update . DeleteSession . sessionID) $
          drop 5 $ reverse $ sortBy (comparing $ expires . sessionData) us
-      update (NewSession rng newsd) >>= startSessionCookie
+      update (NewSession newsd) >>= startSessionCookie
     else update $ UpdateSession (Session i newsd)
 
 -- | Get session ID from Session.
@@ -333,7 +330,7 @@ getELegTransactions :: Session -> [ELegTransaction]
 getELegTransactions = elegtransactions . sessionData
 
 -- | Get recorded magic hashes from session object.
-getMagicHashes :: Session -> Map.Map SignatoryLinkID MagicHash
+getMagicHashes :: Session -> M.Map SignatoryLinkID MagicHash
 getMagicHashes = magichashes . sessionData
 
 -- | Get the xtoken from the session data
@@ -341,7 +338,8 @@ getSessionXToken :: Session -> MagicHash
 getSessionXToken = xtoken . sessionData
 
 -- | Creates a session for user and service
-createServiceSession :: (MonadIO m, CryptoRNG m, HasAcidState Sessions m) => Either CompanyID UserID -> String -> m SessionID
+createServiceSession :: (MonadIO m, CryptoRNG m, HasAcidState Sessions m)
+                     => Either CompanyID UserID -> String -> m SessionID
 createServiceSession userorcompany loc = do
   now <- getMinutesTime
   moldsession <- case userorcompany of
@@ -351,9 +349,8 @@ createServiceSession userorcompany loc = do
     Just s  -> return $ sessionID s
     Nothing -> do
       sd <- emptySessionData
-      rng <- random
-      session <-  update $ NewSession rng $  sd {
-        userID = either (const Nothing) Just userorcompany
+      session <-  update $ NewSession sd {
+          userID = either (const Nothing) Just userorcompany
         , company = either Just (const Nothing) userorcompany
         , location = loc
         }
