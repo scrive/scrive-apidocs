@@ -50,7 +50,7 @@ oldScheduler :: Scheduler ()
 oldScheduler = do
   now <- getMinutesTime
   timeoutDocuments now
-  dropExpiredSessions now
+  update $ DropExpiredSessions now
   where
     timeoutDocuments now = do
       docs <- dbQuery $ GetTimeoutedButPendingDocuments now

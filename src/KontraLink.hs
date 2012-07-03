@@ -91,8 +91,8 @@ data KontraLink
     | LinkFile FileID String
     | LinkAskQuestion
     | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
-    | LinkConnectUserSession ServiceID UserID SessionId KontraLink
-    | LinkConnectCompanySession ServiceID CompanyID SessionId KontraLink
+    | LinkConnectUserSession ServiceID UserID SessionID KontraLink
+    | LinkConnectCompanySession ServiceID CompanyID SessionID KontraLink
     | LinkAttachmentForAuthor DocumentID FileID
     | LinkAttachmentForViewer DocumentID SignatoryLinkID MagicHash FileID
     | LinkServiceLogo ServiceID
