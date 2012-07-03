@@ -405,9 +405,18 @@ javascriptLocalisation =
                             , cancelled : "$_tablestatusesCancelled()$"
                             , sent :      "$_tablestatusesSent()$"
                             , delivered:  "$_tablestatusesDelivered()$"
-                            , opened :    "$_tablestatusesEmailOpened()$"
-                            , viewed :    "$_tablestatusesViewedOnline()$"
+                            , read :      "$_tablestatusesEmailOpened()$"
+                            , opened :    "$_tablestatusesViewedOnline()$"
                             , signed :    "$_tablestatusesSigned()$"
+                       }
+                    , columns :{
+                              status : "$_SortStatus()$"
+                            , time   : "$_SortTime()$"
+                            , sender : "$_SortSender()$"
+                            , party  : "$_SortParty()$"
+                            , title  : "$_SortDoc()$"
+                            , type   : "$_SortType()$"
+                            
                        }
                 }
             ,  templates : {
