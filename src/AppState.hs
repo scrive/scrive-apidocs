@@ -10,7 +10,6 @@ import Control.Monad
 import Data.Acid (AcidState)
 import System.FilePath
 import qualified Data.Acid as ACID
-import qualified Data.IxSet as I
 
 import Acid.Monad
 import Session
@@ -26,7 +25,7 @@ openAcidState :: (String -> IO ()) -> FilePath -> IO AppState
 openAcidState logger path = do
   let sessionsPath = path </> "sessions"
   logger $ "Using store for Sessions: " ++ sessionsPath
-  sessions <- ACID.openLocalStateFrom sessionsPath I.empty
+  sessions <- ACID.openLocalStateFrom sessionsPath initialSessions
   return AppState {
     asSessions = sessions
   }
