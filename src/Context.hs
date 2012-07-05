@@ -21,7 +21,7 @@ import Company.Model
 import MagicHash (MagicHash)
 import IPAddress
 import qualified Static.Resources as SR
-import ELegitimation.BankIDRequests (LogicaConfig(..))
+import ELegitimation.Config (LogicaConfig(..))
 import GuardTime (GuardTimeConf(..))
 
 data Context = Context

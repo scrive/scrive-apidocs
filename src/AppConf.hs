@@ -8,7 +8,7 @@ import Mails.MailsConfig
 import Data.Word
 import System.Console.GetOpt
 import LiveDocx (LiveDocxConf(..))
-import ELegitimation.BankIDRequests (LogicaConfig(..))
+import ELegitimation.Config (LogicaConfig(..))
 import GuardTime (GuardTimeConf(..))
 
 

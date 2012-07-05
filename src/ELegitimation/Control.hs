@@ -1,4 +1,4 @@
-module ELegitimation.BankID
+module ELegitimation.Control
     ( generateBankIDTransaction
     , generateBankIDTransactionForAuthor
     , verifySignatureAndGetSignInfo
@@ -36,25 +36,38 @@ import ELegitimation.BankIDUtils
 import ELegitimation.BankIDRequests
 import Text.JSON.Gen as J
 
-{- |
-   Handle the Ajax request for initiating a BankID transaction.
- -}
+{- 
+  There are two versions of almost everything for historical reasons.
+  Before, the document was not saved before the document was sent or signed.
+  So the complete document was not available to Haskell. The Text to be Signed 
+  (which shows up in the BankID plugin) had to be generated on the client in JS
+  for the author. It contains a list of all signatories and other info. 
+  Also, the Text to be Signed was not available in JS for the signatory because
+  we did not have all of that information in sign view in JS.
 
+  We should clean this up because it is a mess! But it needs to be a part of the ajaxification
+  of document creation/sending/signing.
+
+ -}
+{- |
+   Handle the Ajax request for initiating a BankID transaction for a non-author.
+ -}
 generateBankIDTransaction :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 generateBankIDTransaction docid signid = do
-    magic <- guardJustM $ readField "magichash"
-    provider <- guardJustM $ readField "provider"
-    Context{ctxtime,ctxlogicaconf} <- getContext
-    let seconds = toSeconds ctxtime
+  Context{ctxtime,ctxlogicaconf} <- getContext
+  
+  magic    <- guardJustM $ readField "magichash"
+  provider <- guardJustM $ readField "provider"
+  let seconds = toSeconds ctxtime
+      
+  -- sanity check
+  document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
 
-    -- sanity check
-    document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
-
-    unless (document `allowsIdentification` ELegitimationIdentification) internalError
+  unless (document `allowsIdentification` ELegitimationIdentification) internalError
     -- request a nonce
 
-    nonceresponse <- liftIO $ generateChallenge ctxlogicaconf provider
-    case nonceresponse of
+  nonceresponse <- liftIO $ generateChallenge ctxlogicaconf provider
+  case nonceresponse of
         Left (ImplStatus _a _b code msg) -> generationFailed "Generate Challenge failed" code msg
         Right (nonce, transactionid) -> do
             -- encode the text to be signed
@@ -65,31 +78,31 @@ generateBankIDTransaction docid signid = do
                 Right txt -> do
                     -- store in session
                     addELegTransaction ELegTransaction
-                                            { transactiontransactionid = transactionid
-                                            , transactiontbs = tbs
-                                            , transactionencodedtbs = Just txt
+                                            { transactiontransactionid   = transactionid
+                                            , transactiontbs             = tbs
+                                            , transactionencodedtbs      = Just txt
                                             , transactionsignatorylinkid = Just signid
-                                            , transactiondocumentid = docid
-                                            , transactionmagichash = Just magic
-                                            , transactionnonce = Just nonce
-                                            , transactionstatus = Left "Only necessary for mobile bankid"
-                                            , transactionoref = Nothing
+                                            , transactiondocumentid      = docid
+                                            , transactionmagichash       = Just magic
+                                            , transactionnonce           = Just nonce
+                                            , transactionstatus          = Left "Only necessary for mobile bankid"
+                                            , transactionoref            = Nothing
                                             }
-                    Log.eleg "Eleg chalenge generation sucessfull"
+                    Log.eleg "Eleg challenge generation sucessfull"
                     return $ runJSONGen $ do
-                        J.value "status" (0::Int)
-                        J.value "servertime" $ show seconds
-                        J.value "nonce" nonce
-                        J.value "tbs" txt
+                        J.value "status"        (0::Int)
+                        J.value "servertime" $  show seconds
+                        J.value "nonce"         nonce
+                        J.value "tbs"           txt
                         J.value "transactionid" transactionid
 
 generateBankIDTransactionForAuthor :: Kontrakcja m => DocumentID -> m JSValue
 generateBankIDTransactionForAuthor  docid = do
-    provider <- guardJustM $ readField "provider"
-    author <- guardJustM $ ctxmaybeuser <$> getContext
-    time <- ctxtime <$> getContext
+    provider   <- guardJustM $ readField "provider"
+    author     <- guardJustM $ ctxmaybeuser <$> getContext
+    time       <- ctxtime <$> getContext
     logicaconf <-ctxlogicaconf <$> getContext
-    document <- guardRightM $ getDocByDocID docid
+    document   <- guardRightM $ getDocByDocID docid
     tbs <- case documentstatus document of
         Preparation    -> getDataFnM $ look "tbs" -- tbs will be sent as post param
         _ | canAuthorSignLast document -> getTBS document -- tbs is stored in document
@@ -135,7 +148,7 @@ generationFailed desc code msg = do
   Log.eleg $ desc ++  " | code: " ++ show code ++" msg: "++ msg ++ " |"
   return $ runJSONGen $ do
     J.value "status" code
-    J.value "msg" msg
+    J.value "msg"    msg
 
 {- |
    Validating eleg-data passed when signing
@@ -145,6 +158,7 @@ data VerifySignatureResult  = Problem String
                             | Mismatch String String String String
                             | Sign SignatureInfo
 
+-- Just a note: we should not pass these in the url; these url parameters should be passed as JSON
 verifySignatureAndGetSignInfo ::  Kontrakcja m =>
                                    DocumentID
                                    -> SignatoryLinkID
@@ -154,21 +168,17 @@ verifySignatureAndGetSignInfo ::  Kontrakcja m =>
                                    -> String
                                    -> m VerifySignatureResult
 verifySignatureAndGetSignInfo docid signid magic provider signature transactionid = do
-    elegtransactions  <- ctxelegtransactions <$> getContext
-    document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
-    siglink <- guardJust $ getSigLinkFor document signid
-    logicaconf <- ctxlogicaconf <$> getContext
-    -- valid transaction?
-    ELegTransaction { transactionsignatorylinkid = mtsignid
-                    , transactionmagichash       = mtmagic
-                    , transactiondocumentid      = tdocid
-                    , transactiontbs
-                    , transactionencodedtbs      = Just etbs
-                    , transactionnonce
-                    } <- findTransactionByIDOrFail elegtransactions transactionid
+    ELegTransaction{..} <- guardJustM404  $ findTransactionByID transactionid <$> ctxelegtransactions <$> getContext
+    document            <- guardRightM    $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
+    siglink             <- guardJust404   $ getSigLinkFor document signid
+    logicaconf          <-               ctxlogicaconf <$> getContext
 
-    unless (tdocid   == docid && mtsignid == Just signid && mtmagic  == Just magic )
+    -- valid transaction?
+    unless (transactiondocumentid == docid && transactionsignatorylinkid == Just signid && transactionmagichash == Just magic )
            internalError
+    -- our encodedtbs should be a Just at this point
+    etbs <- guardJust transactionencodedtbs
+
      -- end validation
     Log.eleg $ "Successfully found eleg transaction: " ++ show transactionid
     -- send signature to ELeg
@@ -247,7 +257,7 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
                     , transactiontbs
                     , transactionencodedtbs = Just etbs
                     , transactionnonce
-                    } <- findTransactionByIDOrFail elegtransactions transactionid
+                    } <- guardJust $ findTransactionByID transactionid elegtransactions
 
     unless (transactiondocumentid == docid) internalError
     Log.eleg $ ("Document " ++ show docid ) ++ ": Transaction validated"
@@ -364,7 +374,7 @@ collectMobileBankID docid slid = do
                         ,transactionmagichash
                         ,transactionoref
                         ,transactionstatus
-                        ,transactiondocumentid} <- findTransactionByIDOrFail elegtransactions tid
+                        ,transactiondocumentid} <- guardJust $ findTransactionByID tid elegtransactions
   unless (transactionsignatorylinkid == Just slid &&
           transactionmagichash       == Just magic &&
           transactiondocumentid      == docid) internalError
@@ -407,7 +417,7 @@ collectMobileBankIDForAuthor docid = do
   unless (document `allowsIdentification` ELegitimationIdentification) internalError
   trans@ELegTransaction {transactionoref
                         ,transactionstatus
-                        ,transactiondocumentid} <- findTransactionByIDOrFail elegtransactions tid
+                        ,transactiondocumentid} <- guardJust $ findTransactionByID tid elegtransactions
   oref <- guardJust transactionoref
   unless (transactiondocumentid == docid) internalError
   case transactionstatus of
@@ -452,7 +462,7 @@ verifySignatureAndGetSignInfoMobile docid signid magic transactionid = do
                     , transactiondocumentid      = tdocid
                     , transactionstatus          = status
                     , transactiontbs
-                    } <- findTransactionByIDOrFail elegtransactions transactionid
+                    } <- guardJust $ findTransactionByID transactionid elegtransactions
     unless (tdocid == docid && mtsignid == Just signid && mtmagic == Just magic )
            internalError
     case status of
@@ -490,7 +500,7 @@ verifySignatureAndGetSignInfoMobileForAuthor docid transactionid = do
     ELegTransaction { transactiondocumentid      = tdocid
                     , transactionstatus          = status
                     , transactiontbs
-                    } <- findTransactionByIDOrFail elegtransactions transactionid
+                    } <- guardJust $ findTransactionByID transactionid elegtransactions
     unless (tdocid == docid) internalError
     case status of
       Right (CRComplete _ signature attrs) -> do

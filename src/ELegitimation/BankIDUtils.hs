@@ -1,6 +1,6 @@
 module ELegitimation.BankIDUtils (
              mergeInfo
-           , findTransactionByIDOrFail
+           , findTransactionByID
            , getTBS
            , getSigEntries
            , getSigEntry
@@ -16,10 +16,8 @@ import Data.Char
 import Data.List
 import Doc.DocStateData as D
 import ELegitimation.ELegTransaction 
-import Kontra
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import Util.MonadUtils
 import Util.StringUtil
 
 import Templates.Templates
@@ -47,17 +45,14 @@ mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, el
         then Left  (intercalate "\n" failmsgs, elegFirst, elegLast, elegNumber)
         else Right (matches !! 0, matches !! 1, matches !! 2)
 
-findTransactionByIDOrFail :: Kontrakcja m => [ELegTransaction] -> String -> m ELegTransaction
-findTransactionByIDOrFail transactions transactionsid =
-    guardJust $ find ((==) transactionsid . transactiontransactionid) transactions
+findTransactionByID :: String -> [ELegTransaction] -> Maybe ELegTransaction
+findTransactionByID transactionsid = find ((==) transactionsid . transactiontransactionid)
 
 getTBS :: TemplatesMonad m => D.Document -> m String
-getTBS doc = do
-    entries <- getSigEntries doc
-    renderTemplate "tbs" $ do
-        F.value "documentname"   $ documenttitle doc
-        F.value "documentnumber" $ show $ documentid doc
-        F.value "tbssigentries"  entries
+getTBS doc = renderTemplate "tbs" $ do
+  F.value "documentname"   $ documenttitle doc
+  F.value "documentnumber" $ show $ documentid doc
+  F.valueM "tbssigentries" $ getSigEntries doc
 
 getSigEntries :: TemplatesMonad m => D.Document -> m String
 getSigEntries doc = do
