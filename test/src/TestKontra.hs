@@ -54,7 +54,7 @@ import Templates.TemplatesLoader
 import qualified MemCache
 import User.Locale
 import Util.FinishWith
-import ELegitimation.BankIDRequests (LogicaConfig(..))
+import ELegitimation.Config (LogicaConfig(..))
 import qualified Data.Map as Map
 import qualified Control.Exception.Lifted as E
 import qualified Static.Resources as SR

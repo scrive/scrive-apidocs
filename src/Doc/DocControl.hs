@@ -110,7 +110,7 @@ import qualified Text.JSON.Gen as J
 import Text.JSON.FromJSValue
 import Doc.DocDraft as Draft
 import qualified User.Action
-import qualified ELegitimation.BankID as BankID
+import qualified ELegitimation.Control as BankID
 import Util.Actor
 import PadQueue.Model
 import qualified Templates.Fields as F
