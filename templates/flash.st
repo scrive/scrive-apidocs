@@ -181,23 +181,11 @@ flashMessageEmailIsRequired=	$_flashMessageEmailIsRequired()$
 ###
 flashMessageNumberIsRequired=	$_flashMessageNumberIsRequired()$
 ###
-flashMessageBulkContractRemindsSent=	$_flashMessageBulkContractRemindsSent()$
+flashMessageBulkDocumentRemindsSent=	$_flashMessageBulkDocumentRemindsSent()$
 ###
-flashMessageNoBulkContractRemindsSent=	$_flashMessageNoBulkContractRemindsSent()$
+flashMessageNoBulkDocumentRemindsSent=	$_flashMessageNoBulkDocumentRemindsSent()$
 ###
-flashMessageBulkOfferRemindsSent=	$_flashMessageBulkOfferRemindsSent()$
-###
-flashMessageNoBulkOfferRemindsSent=	$_flashMessageNoBulkOfferRemindsSent()$
-###
-flashMessageBulkOrderRemindsSent=Påminnelse har skickats till alla parter som ännu inte bekräftat.
-###
-flashMessageNoBulkOrderRemindsSent=Tyvärr, det finns inga parter som återstår att bekräfta.
-###
-flashMessageContractArchiveDone=	$_flashMessageContractArchiveDone()$
-###
-flashMessageOfferArchiveDone=	$_flashMessageOfferArchiveDone()$
-###
-flashMessageOrderArchiveDone=Valda orderbekräftelse har blivit raderade.
+flashMessageDocumentArchiveDone=	$_flashMessageDocumentArchiveDone()$
 ###
 flashMessageTemplateArchiveDone=	$_flashMessageTemplateArchiveDone()$
 ###

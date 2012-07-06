@@ -321,6 +321,14 @@ safeReady(function() {
   });
 });
 
+// shows avanza demo video
+safeReady(function() {
+  $(".avanza-play-video").click(function() {
+    window.open('https://player.vimeo.com/video/44888641', '', 'scrollbars=no,menubar=no,height=500,width=700,resizable=yes,toolbar=no,location=no,status=no');
+    return false;
+  });
+});
+
 //shows the video on the front page
 safeReady(function() {
   $(".campaign-play-video").click(function() {

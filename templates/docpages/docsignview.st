@@ -137,6 +137,7 @@ $endif$
   </head>
   <body class="signview">
     <div class="mainContainer960" >
+      $flashmessages()$
       <div class="body-container">
         <script>
             

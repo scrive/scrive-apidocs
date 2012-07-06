@@ -10,7 +10,7 @@ import Control.Exception
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
-
+import Data.Maybe
 
 addBarackObamaField :: IO Field
 addBarackObamaField = do
@@ -180,5 +180,8 @@ simple_upsales_confirmation = SealSpec
 main :: IO ()
 main = do
     inp <- getContents
-    let spec = read inp
-    process spec
+    case (listToMaybe . map fst . reads $ inp) of -- Don't try to factor out this to maybeRead, not worth it
+        Just spec -> process spec
+        Nothing -> case (listToMaybe . map fst . reads $  inp) of
+                      Just prespec -> preprocess prespec
+                      Nothing -> error "Wrong spec for pdfseal"

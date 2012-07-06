@@ -67,7 +67,8 @@ window.Document = Backbone.Model.extend({
         viewer: new DocumentViewer(),
         infotext: "",
         authorization: "email",
-        template: false
+        template: false,
+        saveQueue : new AjaxQueue()
     },
     initialize: function(args) {
         this.url = "/doc/" + args.id;
@@ -208,11 +209,14 @@ window.Document = Backbone.Model.extend({
           });
     },
     save: function() {
-         return new Submit({
+         this.get("saveQueue").add(new Submit({
               url: "/save/" + this.documentid(),
               method: "POST",
               draft: JSON.stringify(this.draftData())
-          });
+          }));
+    },
+    afterSave: function(f) {
+         this.get("saveQueue").finishWith(f);
     },
     setAttachments: function() {
         return new Submit({

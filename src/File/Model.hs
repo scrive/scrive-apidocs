@@ -17,6 +17,7 @@ import DB
 import File.File
 import File.FileID
 import OurPrelude
+import DB.SQL2
 
 data GetFileByFileID = GetFileByFileID FileID
 instance MonadDB m => DBQuery m GetFileByFileID (Maybe File) where
@@ -45,16 +46,17 @@ instance MonadDB m => DBUpdate m NewFile File where
 data PutFileUnchecked = PutFileUnchecked File
 instance MonadDB m => DBUpdate m PutFileUnchecked () where
   update (PutFileUnchecked file) = do
-    kPrepare ("INSERT INTO files (id, name, content, amazon_bucket, amazon_url, disk_path) VALUES (?,?,decode(?,'base64'),?,?,?)") 
-    _ <- kExecute1 $ [ toSql (fileid file)
-                     , toSql (filename file)
-                     ] ++ case filestorage file of
-                            FileStorageMemory mem ->
-                              [toSql (Binary mem),SqlNull,SqlNull,SqlNull]
-                            FileStorageAWS bucket url ->
-                              [SqlNull,toSql bucket,toSql url,SqlNull]
-                            FileStorageDisk path ->
-                              [SqlNull,SqlNull,SqlNull,toSql path]
+    kRun_ $ sqlInsert "files" $ do
+      sqlSet "id" $ fileid file
+      sqlSet "name" $ filename file
+      case filestorage file of
+        FileStorageMemory mem -> do
+          sqlSetCmd "content" $ SQL "decode(?,'base64')" [toSql $ Binary mem]
+        FileStorageAWS bucket url -> do
+          sqlSet "amazon_url" url
+          sqlSet "amazon_bucket" bucket
+        FileStorageDisk path ->
+          sqlSet "disk_path" path
     return ()
 
 data FileMovedToAWS = FileMovedToAWS FileID String String

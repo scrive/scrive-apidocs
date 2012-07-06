@@ -12,7 +12,6 @@ import AppView
 import Crypto.RNG
 import DB hiding (update, query)
 import Doc.Action
-import Doc.Model
 import Company.Model
 import Control.Logic
 import InputValidation
@@ -279,20 +278,18 @@ handleUsageStatsJSONForUserDays = do
       (statsByDay, _) <- getUsageStatsForCompany (fromJust $ usercompany user) som sixm
       return $ JSObject $ toJSObject [("list", companyStatsDayToJSON totalS statsByDay),
                                       ("paging", JSObject $ toJSObject [
-                                          ("pageMax",showJSON (0::Int)),
-                                          ("pageCurrent", showJSON (0::Int)),
-                                          ("itemMin",showJSON $ (0::Int)),
-                                          ("itemMax",showJSON $ (length statsByDay) - 1),
-                                          ("itemTotal",showJSON $ (length statsByDay))])]
+                                        ("pageSize",showJSON (1000::Int)),
+                                        ("pageCurrent", showJSON (0::Int)),
+                                        ("itemMin",showJSON $ (0::Int)),
+                                        ("itemMax",showJSON $ (length statsByDay) - 1)])]
     else do
       (statsByDay, _) <- getUsageStatsForUser (userid user) som sixm
       return $ JSObject $ toJSObject [("list", userStatsDayToJSON statsByDay),
                                       ("paging", JSObject $ toJSObject [
-                                          ("pageMax",showJSON (0::Int)),
-                                          ("pageCurrent", showJSON (0::Int)),
-                                          ("itemMin",showJSON $ (0::Int)),
-                                          ("itemMax",showJSON $ (length statsByDay) - 1),
-                                          ("itemTotal",showJSON $ (length statsByDay))])]
+                                        ("pageSize",showJSON (1000::Int)),
+                                        ("pageCurrent", showJSON (0::Int)),
+                                        ("itemMin",showJSON $ (0::Int)),
+                                        ("itemMax",showJSON $ (length statsByDay) - 1)])]
 
 handleUsageStatsJSONForUserMonths :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserMonths = do
@@ -306,20 +303,18 @@ handleUsageStatsJSONForUserMonths = do
     (_, statsByMonth) <- getUsageStatsForCompany (fromJust $ usercompany user) som sixm
     return $ JSObject $ toJSObject [("list", companyStatsMonthToJSON totalS statsByMonth),
                                     ("paging", JSObject $ toJSObject [
-                                        ("pageMax",showJSON (0::Int)),
+                                        ("pageSize",showJSON (1000::Int)),
                                         ("pageCurrent", showJSON (0::Int)),
                                         ("itemMin",showJSON $ (0::Int)),
-                                        ("itemMax",showJSON $ (length statsByMonth) - 1),
-                                        ("itemTotal",showJSON $ (length statsByMonth))])]
+                                        ("itemMax",showJSON $ (length statsByMonth) - 1)])]
     else do
     (_, statsByMonth) <- getUsageStatsForUser (userid user) som sixm
     return $ JSObject $ toJSObject [("list", userStatsMonthToJSON statsByMonth),
                                     ("paging", JSObject $ toJSObject [
-                                        ("pageMax",showJSON (0::Int)),
+                                        ("pageSize",showJSON (1000::Int)),
                                         ("pageCurrent", showJSON (0::Int)),
                                         ("itemMin",showJSON $ (0::Int)),
-                                        ("itemMax",showJSON $ (length statsByMonth) - 1),
-                                        ("itemTotal",showJSON $ (length statsByMonth))])]
+                                        ("itemMax",showJSON $ (length statsByMonth) - 1)])]
 
 
 handleGetUserMailAPI :: Kontrakcja m => m (Either KontraLink Response)
@@ -423,8 +418,7 @@ handlePostUserSecurity = do
 -}
 isUserDeletable :: Kontrakcja m => User -> m Bool
 isUserDeletable user = do
-  userdocs <- dbQuery $ GetDocumentsByAuthor (userid user)
-  return $ all isDeletableDocument userdocs
+  dbQuery $ IsUserDeletable (userid user)
 
 --there must be a better way than all of these weird user create functions
 -- TODO clean up

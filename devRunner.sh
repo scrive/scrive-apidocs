@@ -11,7 +11,7 @@ echo "STARTING MAILER SERVER"
 
 echo ""
 echo "STARTING MAIN SERVER"
-    dist/build/kontrakcja-server/kontrakcja-server  &
+    dist/build/kontrakcja-server/kontrakcja-server "$@" &
     echo $! > _server_pid
     echo "started server with pid" 
     more _pid

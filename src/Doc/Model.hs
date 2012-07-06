@@ -4,7 +4,6 @@ module Doc.Model
   ( module File.File
   , isTemplate -- fromUtils
   , isShared -- fromUtils
-  , isDeletableDocument -- fromUtils
   , anyInvitationUndelivered
   , undeliveredSignatoryLinks
   , insertDocumentAsIs
@@ -31,7 +30,6 @@ module Doc.Model
   , ErrorDocument(..)
   , GetDeletedDocumentsByUser(..)
   , GetDocuments(..)
-  , GetDocumentsCount(..)
   , GetDocumentByDocumentID(..)
   , GetDocumentsByService(..)
   , GetDocumentsByCompanyWithFiltering(..)
@@ -340,7 +338,7 @@ documentFilterToSQL (DocumentFilterByString string) =
          sqlJoinWithAND (map sqlMatch (words string))
       sqlMatch word = SQL ("EXISTS (SELECT TRUE" ++
                                    "  FROM signatory_link_fields JOIN signatory_links AS sl5" ++
-                                                                 "  ON sl5.document_id = documents.id" ++
+                                                                 "  ON sl5.document_id = signatory_links.document_id" ++
                                                                  " AND sl5.id = signatory_link_fields.signatory_link_id" ++
                                    -- " FROM signatory_link_fields " ++
                                    " WHERE signatory_link_fields.value ILIKE ?)") [sqlpat word]
@@ -1402,20 +1400,6 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
       , SQL (" OFFSET " ++ show (documentOffset pagination) ++ " LIMIT " ++ show (documentLimit pagination)) []
       ]
 
-data GetDocumentsCount = GetDocumentsCount [DocumentDomain] [DocumentFilter]
-instance MonadDB m => DBQuery m GetDocumentsCount Int where
-  query (GetDocumentsCount domains filters) = $(fromJust) `liftM` getOne (mconcat
-    [ SQL "SELECT count(*) FROM documents " []
-    , SQL "WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = signatory_links.document_id AND " []
-    , SQL "(" []
-    , sqlConcatOR (map documentDomainToSQL domains)
-    , SQL ")" []
-    , if not (null filters)
-      then SQL " AND " [] `mappend` sqlConcatAND (map documentFilterToSQL filters)
-      else SQL "" []
-    , SQL ")" []
-    ])
-
 {- |
     Fetches documents by company with filtering by tags, edate, and status.
     this won't return documents that have been deleted (so ones
@@ -1599,7 +1583,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (E
 
       let authorlink0 = signLinkFromDetails'
                         (signatoryDetailsFromUser user mcompany)
-                        authorRoles magichash
+                        authorRoles [] magichash
 
       let authorlink = authorlink0 {
                          maybesignatory = Just $ userid user,
@@ -1612,7 +1596,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (E
                                                 {  signatorysignorder = SignOrder 1
                                                  , signatoryfields   = emptySignatoryFields
                                                 }
-                                [SignatoryPartner] mh
+                                [SignatoryPartner] [] mh
 
       let doc = blankDocument
                 { documenttitle                = title
@@ -1727,11 +1711,11 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocumen
              return $ Right doc''
 
     clearSignInfofromDoc = do
-      let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x, signatorylinkid x)) $ documentsignatorylinks doc
+      let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x, signatorylinkid x, signatoryattachments x)) $ documentsignatorylinks doc
           Just asl = getAuthorSigLink doc
-      newSignLinks <- forM signatoriesDetails $ \(details,roles,linkid) -> do
+      newSignLinks <- forM signatoriesDetails $ \(details,roles,linkid, atts) -> do
                            magichash <- lift random
-                           return $ (signLinkFromDetails' details roles magichash) { signatorylinkid = linkid }
+                           return $ (signLinkFromDetails' details roles atts magichash) { signatorylinkid = linkid }
       let Just authorsiglink0 = find isAuthor newSignLinks
           authorsiglink = authorsiglink0 {
                             maybesignatory = maybesignatory asl,
@@ -2062,9 +2046,8 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
             let mauthorsiglink = getAuthorSigLink document
             forM_ signatories $ \(details, roles, atts, mcsvupload) -> do
                      magichash <- lift random
-                     let link' = (signLinkFromDetails' details roles magichash)
-                                 { signatorylinkcsvupload = mcsvupload
-                                 , signatoryattachments   = atts }
+                     let link' = (signLinkFromDetails' details roles atts magichash)
+                                 { signatorylinkcsvupload = mcsvupload }
                          link = if isAuthor link'
                                 then link' { maybesignatory = maybe Nothing maybesignatory mauthorsiglink
                                            , maybecompany   = maybe Nothing maybecompany   mauthorsiglink
@@ -2137,7 +2120,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m SignLinkFromDe
       magichash <- lift random
 
       let link = signLinkFromDetails' details
-                        roles magichash
+                        roles [] magichash
 
       return link
 

@@ -736,6 +736,9 @@ body.signview {
     color : #505050;
     font-size: 0.9em;
 }
+.signview .signatories .inner .email:hover{
+        overflow: visible;
+}
 
 .signview .signatories .numspace {
     float:left;

@@ -27,7 +27,7 @@ test_createCompany = do
 test_getCompanies :: TestEnv ()
 test_getCompanies = do
   companies <- forM ["", "external_id"] addTestCompany
-  result <- dbQuery $ GetCompanies Nothing
+  result <- dbQuery $ GetCompanies [CompaniesOfService Nothing] [] [] 0 (-1)
   assertBool "GetCompanies returned correct result" $ and $ map (`elem` result) companies
 
 test_getCompany :: TestEnv ()

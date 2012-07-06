@@ -141,22 +141,5 @@ $_legalPageH2KeyLegalH33Body1()$
 <h3>$_legalPageH2DocHandelingH31()$</h3>
 <br />
 <p>$_legalPageH2DocHandelingH31Body1()$</p>
-<br />
-<h3>$_legalPageH2DocHandelingH32()$</h3>
-<br />
-<p>$_legalPageH2DocHandelingH32Body1()$</p>
-<br />
-<ol class="numbers">
-	<li>
-		<p>$_legalPageH2DocHandelingH32Body2()$</p>
-		<ol class="letters">
-			$_legalPageH2DocHandelingH32Body21()$
-		</ol>
-	</li>
-	<br />
-	<li>
-		<p>$_legalPageH2DocHandelingH32Body3()$</p>
-	</li>
-</ol>
 </div>
 ###

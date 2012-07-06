@@ -31,7 +31,8 @@ window.Submit = Backbone.Model.extend({
             k == "ajaxerror" ||
             k == "expectedType" ||
             k == "beforeSend" ||
-            k == "onSend";
+            k == "onSend"    ||
+            k == "ajaxtimeout";
     },
     add: function(k,v)
     {
@@ -84,7 +85,9 @@ window.Submit = Backbone.Model.extend({
         if (this.get('ajax'))
             form.ajaxForm({success: this.get('ajaxsuccess'),
                            error: this.get('ajaxerror'),
-                           dataType: this.get('expectedType')});
+                           dataType: this.get('expectedType'),
+                           timeout : this.get('ajaxtimeout')
+            });
 
         this.get('beforeSend')();
         form.submit();

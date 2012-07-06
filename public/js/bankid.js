@@ -391,6 +391,9 @@ window.Eleg = {
             'scriptCharset': "utf-8",
             'success': function(data) {
               if (data && data.status === 0)  {
+	       console.log("before");
+	       console.log(data.tbs);
+ 	       console.log("after");
                LoadingDialog.close(); // this was opened just before starting
                 if ($.browser.msie && hasSign2PluginIE())
                     installSign2IE();
@@ -409,7 +412,7 @@ window.Eleg = {
                signer.SetParam('TextToBeSigned', data.tbs);
                signer.SetParam('Nonce', data.nonce);
                signer.SetParam('ServerTime', data.servertime);
-               signer.SetParam('TextCharacterEncoding', "UTF-8");
+               //signer.SetParam('TextCharacterEncoding', "UTF-8");
                var res = signer.PerformAction('Sign');
                if (res !== 0) // 0 means success
                 {
@@ -477,7 +480,7 @@ window.Eleg = {
                 signer.SetIncludeRootCaCert('true');
                 signer.SetBase64('true');
                 signer.SetCharacterEncoding('UTF8');
-                signer.SetMimeType('text/plain;charset=UTF-8');
+                signer.SetMimeType('text/plain');
                 signer.SetViewData('false');
                 var res = signer.Sign();
                 if (res !== 0) // 0 means success

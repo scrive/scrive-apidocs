@@ -46,6 +46,7 @@ import qualified PadQueue.Control as PadQueue
    That is, all routing logic should be in this table to ensure that we can find
    the function for any given path and method.
 -}
+
 staticRoutes :: Route (KontraPlus Response)
 staticRoutes = choice
      [ hGetAllowHttp $ getContext >>= (redirectKontraResponse . LinkHome . ctxlocale)
@@ -95,27 +96,19 @@ staticRoutes = choice
      , dir "t" $ param "template" $ hPost $ toK0 $ DocControl.handleCreateFromTemplate
      , dir "t" $ hPost $ toK0 $ DocControl.handleCreateNewTemplate
 
-     , dir "o" $ hGet $ toK0 $ ArchiveControl.showOfferList
-     , dir "o" $ param "archive" $ hPost $ toK0 $ ArchiveControl.handleOffersArchive
-     , dir "o" $ param "remind" $ hPost $ toK0 $ DocControl.handleBulkOfferRemind
-
-     , dir "or" $ hGet  $ toK0 $ ArchiveControl.showOrdersList
-     , dir "or" $ param "archive" $ hPost $ toK0 $ ArchiveControl.handleOrdersArchive
-     , dir "or" $ param "remind" $ hPost $ toK0 $ DocControl.handleBulkOrderRemind
-
      , dir "r" $ hGet $ toK0 $ ArchiveControl.showRubbishBinList
      , dir "r" $ param "restore" $ hPost $ toK0 $ DocControl.handleRubbishRestore
      , dir "r" $ param "reallydelete" $ hPost $ toK0 $ DocControl.handleRubbishReallyDelete
 
 
-     , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showContractsList
+     , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showDocumentsList
      , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
      , dir "d" $ dir "eleg"        $ hGet  $ toK1 $ BankID.generateBankIDTransactionForAuthor
      , dir "d" $ dir "eleg" $ dir "mbi" $ hPostNoXToken $ toK1 $ BankID.initiateMobileBankIDForAuthor
      , dir "d" $ dir "eleg" $ dir "mbi" $ hGet  $ toK1 $ BankID.collectMobileBankIDForAuthor
      , dir "d" $ {- param "doc" $ -} hPost $ toK0 $ DocControl.handleIssueNewDocument
-     , dir "d" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleContractArchive
-     , dir "d" $ param "remind"    $ hPost $ toK0 $ DocControl.handleBulkContractRemind
+     , dir "d" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleDocumentArchive
+     , dir "d" $ param "remind"    $ hPost $ toK0 $ DocControl.handleBulkDocumentRemind
      , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
      , dir "docs"                  $ hGet  $ toK0 $ ArchiveControl.jsonDocumentsList
      , dir "doc"                   $ hGet  $ toK1 $ DocControl.jsonDocument
@@ -272,6 +265,5 @@ staticRoutes = choice
      , integrationAPI
      , documentAPI
      , oauthAPI
-     -- static files
      , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "public"
-     ]
+   ]

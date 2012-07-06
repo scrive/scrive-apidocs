@@ -69,6 +69,7 @@ set systemPage
  js   js/tooltips.js
  js   js/calendar.js
  js   js/submits.js
+ js   js/ajaxqueue.js
  js   js/confirmations.js
  js   js/selects.js
  js   js/lists.js

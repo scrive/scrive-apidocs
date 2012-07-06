@@ -110,6 +110,7 @@ generateBankIDTransactionForAuthor  docid = do
                 Left (ImplStatus _a _b code msg) -> generationFailed "EncodeTBS failed" code msg
                 Right txt -> do
                     -- store in session
+                    Log.debug txt
                     addELegTransaction ELegTransaction
                                         { transactiontransactionid   = transactionid
                                         , transactiontbs             = tbs

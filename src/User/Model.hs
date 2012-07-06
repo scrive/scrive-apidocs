@@ -29,6 +29,8 @@ module User.Model (
   , SetSignupMethod(..)
   , SetUserCompanyAdmin(..)
   , UserFilter(..)
+
+  , IsUserDeletable(..)
   , composeFullName
   , userFilterToSQL
 
@@ -55,6 +57,8 @@ import User.Locale
 import User.Password
 import User.Region
 import User.UserID
+import DB.SQL2
+import Doc.DocStateData (DocumentStatus(..), SignatoryRole(..), DocumentID)
 
 -- newtypes
 newtype Email = Email { unEmail :: String }
@@ -223,6 +227,22 @@ instance MonadDB m => DBUpdate m SetUserCompany Bool where
     Just cid -> do
       kPrepare "UPDATE users SET company_id = ? WHERE id = ? AND deleted = FALSE"
       kExecute01 [toSql cid, toSql uid]
+
+data IsUserDeletable = IsUserDeletable UserID
+instance MonadDB m => DBQuery m IsUserDeletable Bool where
+  query (IsUserDeletable uid) = do
+    kRun_ $ sqlSelect "users" $ do
+      sqlWhereEq "users.deleted" False
+      sqlWhereEq "users.id" uid
+      sqlJoinOn "signatory_links" "users.id = signatory_links.user_id"
+      sqlWhereEq "signatory_links.deleted" False
+      sqlWhere $ SQL "(signatory_links.roles & ?) <> 0" [toSql [SignatoryAuthor]]
+      sqlJoinOn "documents" "documents.id = signatory_links.document_id"
+      sqlWhereEq "documents.status" Pending
+      sqlResult "documents.id"
+      sqlLimit 1
+    (results :: [DocumentID]) <- foldDB (flip (:)) []
+    return (null results)
 
 -- | Marks a user as deleted so that queries won't return them any more.
 -- TODO: change deleted to time

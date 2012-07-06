@@ -30,13 +30,13 @@ partnersPageContents=
 							</li>
 							<li>
 								<div class="partner-image">
-									<img src="/img/partner-trustweaver.png" />
+									<img src="/img/logo/guardtime_logo.png" />
 								</div>
 								<div class="partner-info">
 									<h2>$_partnersPagePartner2()$</h2>
 									<em>$_partnersPagePartner2Area()$</em>
 									<p>$_partnersPagePartner2About()$</p>
-									<a href="http://www.trustweaver.com">$_partnersPagePartner2Web()$</a>
+									<a href="http://www.guardtime.com">$_partnersPagePartner2Web()$</a>
 								</div>
 							</li>
 							<li>

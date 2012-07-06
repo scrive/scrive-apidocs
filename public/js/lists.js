@@ -164,11 +164,14 @@
 
     window.Paging = Backbone.Model.extend({
         defaults: {
+            // first visible item index
             itemMin: 0,
+            // last visible item index. If itemMax < itemMin, there are no items
             itemMax: 0,
-            itemTotal: 0,
             pageCurrent: 0,
-            pageMax: 0
+            pageSize: 0,
+            // Maximal number of pages that are sown
+            maxNextPages : 5
         },
         disabled: function() {
             return this.get("disabled") != undefined && this.get("disabled") == true;
@@ -179,14 +182,14 @@
         itemMax: function() {
             return this.get("itemMax");
         },
-        itemTotal: function() {
-            return this.get("itemTotal");
+        maxNextPages:function() {
+            return this.get("maxNextPages");
         },
         pageCurrent: function() {
             return this.get("pageCurrent");
         },
-        pageMax: function() {
-            return this.get("pageMax");
+        pageSize: function() {
+            return this.get("pageSize");
         },
         changePage: function(i) {
             this.set({ "pageCurrent": i });
@@ -197,8 +200,6 @@
         },
         updateWithServerResponse: function(resp) {
             this.set(resp);
-            if (this.pageCurrent() > this.pageMax()+1)
-                this.changePage(this.pageMax()+1);
         }
     });
 
@@ -211,24 +212,25 @@
         render: function() {
             var paging = this.model;
             var main = $("<div class='pages'>");
-            var items = $("<div />");
-            items.append($("<strong />").text((paging.itemMin() + 1) + " - " + (paging.itemMax() + 1) + " " + localization.of + " " + paging.itemTotal()));
             var pages = $("<div />");
-            for (var i = 0; i <= paging.pageMax(); i++) {
-                if (i == paging.pageCurrent()) {
-                    pages.append($("<span class='page-change current'>" + (i + 1) + "</span>"));
-                } else {
-                    var a = $("<span class='page-change'>" + (i + 1) + "</span>");
-                    a.click(paging.changePageFunction(i));
-                    pages.append(a);
-                }
+            var writePage = function(t,n) {
+                var a = $("<span class='page-change' />").text(t);
+                a.click(paging.changePageFunction(n));
+                pages.append(a);
+                return a;
             }
-            if (paging.itemMax() >= paging.itemMin()) {
-                main.append(items);
+            var maxNextPages = paging.maxNextPages();
+            var maxPage = paging.pageCurrent() + maxNextPages - 1;
+            for(var i=0;i < maxPage && i*paging.pageSize() < paging.itemMax();i++) {
+                var a = writePage((i+1)+"", i);
+                if (i == paging.pageCurrent())
+                    a.addClass("current");
             }
-            if (paging.pageMax() > 0) {
-                main.append(pages);
-            }
+            if (maxPage*paging.pageSize() < paging.itemMax())
+                writePage(" > ", maxPage);
+    
+            main.append(pages);
+
             $(this.el).append(main);
         }
     });
@@ -332,6 +334,7 @@
         getSchemaUrlParams: function() {
             var params = this.extraParams();
             params.page = this.paging().pageCurrent();
+            params.offset = params.page * this.paging().pageSize();
             params.filter = this.filtering().text();
             params.sort = this.sorting().current();
             params.sortReversed = this.sorting().isAsc();
@@ -786,11 +789,14 @@
             }
             var body = this.tbody;
             var odd = true;
-            this.model.forEach(function(e) {
+            _.each(this.model.first(this.schema.paging().pageSize()),function(e) {
                 if (e.view != undefined) {
                     body.append($(e.view.el));
                     if (odd) {
                         $(e.view.el).addClass("odd");
+                    }
+                    else {
+                        $(e.view.el).removeClass("odd");
                     }
                     odd = !odd;
                 }

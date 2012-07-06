@@ -48,7 +48,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                   class="toplink ">$_pageHeaderContactUs()$</a>
                                   <a href="$linkabout$"
                                   class="toplink ">$_pageFooterAbout()$</a>
-                                  <a href="$linklegal$" class="toplink ">$_pageFooterLaw()$</a>
+                                  <a href="$linkclients$" class="toplink ">$_customerCases()$</a>
                                   <a href="$linkpriceplan$"
                                   class="toplink ">$_pageFooterPrices()$</a>
                                   $localeSwitcher()$

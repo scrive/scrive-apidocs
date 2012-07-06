@@ -5,7 +5,7 @@ import DB
 tableCompanies :: Table
 tableCompanies = Table {
     tblName = "companies"
-  , tblVersion = 5
+  , tblVersion = 6
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("external_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -23,19 +23,19 @@ tableCompanies = Table {
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE companies ("
-          ++ "  id BIGINT NOT NULL"
-          ++ ", external_id TEXT NULL"
-          ++ ", service_id TEXT NULL"
-          ++ ", name TEXT NOT NULL"
-          ++ ", number TEXT NOT NULL"
-          ++ ", address TEXT NOT NULL"
-          ++ ", zip TEXT NOT NULL"
-          ++ ", city TEXT NOT NULL"
-          ++ ", country TEXT NOT NULL"
-          ++ ", bars_background TEXT NULL"
-          ++ ", logo BYTEA NULL"
-          ++ ", bars_textcolour TEXT NULL"
-          ++ ", email_domain TEXT NULL"
+          ++ "  id              BIGINT NOT NULL"
+          ++ ", external_id     TEXT       NULL"
+          ++ ", service_id      TEXT       NULL"
+          ++ ", name            TEXT   NOT NULL DEFAULT ''"
+          ++ ", number          TEXT   NOT NULL DEFAULT ''"
+          ++ ", address         TEXT   NOT NULL DEFAULT ''"
+          ++ ", zip             TEXT   NOT NULL DEFAULT ''"
+          ++ ", city            TEXT   NOT NULL DEFAULT ''"
+          ++ ", country         TEXT   NOT NULL DEFAULT ''"
+          ++ ", bars_background TEXT       NULL"
+          ++ ", logo            BYTEA      NULL"
+          ++ ", bars_textcolour TEXT       NULL"
+          ++ ", email_domain    TEXT       NULL"
           ++ ", CONSTRAINT pk_companies PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated

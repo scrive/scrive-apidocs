@@ -135,7 +135,7 @@ docStatsToString (e:es) usernames companynames = do
            , companyname
            , maybe "" show $ seCompanyID e
            , show $ seDocumentType e
-           , show $ seAPIString e
+           , seAPIString e
            ] : rest
 
 dbUserIDLookup :: (Kontrakcja m) => UserID -> [(UserID, String)] -> m (String, [(UserID, String)])

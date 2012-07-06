@@ -98,7 +98,8 @@ var DocumentDesignView = Backbone.View.extend({
         var a = $("<a href='#' class='extraLink saveIcon'/>").html(localization.saveAsTemplate);
         a.click(function() {
               document.makeTemplate();
-              document.save().sendAjax(function() {
+              document.save();
+              document.afterSave(function() {
                                new Submit().send();
                             });
               return false;
@@ -272,7 +273,8 @@ var DocumentDesignView = Backbone.View.extend({
         var text = $("<span class='editinvitemessagetext'/>").text(localization.editInviteText);
         box.append(icon).append(text);
         icon.add(text).click(function() {
-              document.save().sendAjax( function() {
+              document.save();
+              document.afterSave( function() {
                          ConfirmationWithEmail.popup({
                             title :localization.editInviteDialogHead,
                             mail : document.inviteMail(),
@@ -323,7 +325,8 @@ var DocumentDesignView = Backbone.View.extend({
                     onAccept : function() {
                        document.region().setGB();
                        LoadingDialog.open();
-                       document.save().sendAjax(function() {
+                       document.save();
+                       document.afterSave(function() {
                           LoadingDialog.close();
                           window.location = window.location;
                         });
@@ -342,7 +345,8 @@ var DocumentDesignView = Backbone.View.extend({
                     onAccept : function() {
                        document.region().setSE();
                        LoadingDialog.open();
-                       document.save().sendAjax(function() {
+                       document.save();
+                       document.afterSave(function() {
                           LoadingDialog.close();
                           window.location = window.location;
                         });
@@ -363,7 +367,7 @@ var DocumentDesignView = Backbone.View.extend({
         box.append(icon).append(text);
 
         icon.add(text).click(function() {
-            document.save().sendAjax();
+            document.save();
             DesignAuthorAttachmentsPopup.popup({document: document});
             return false;
         });
@@ -384,7 +388,7 @@ var DocumentDesignView = Backbone.View.extend({
           countspan.text("(" + document.signatoryattachments().length + ")");
         });
         icon.add(text).click(function() {
-            document.save().sendAjax();
+            document.save();
             DesignSignatoryAttachmentsPopup.popup({document: document});
             return false;
         });
@@ -450,7 +454,8 @@ var DocumentDesignView = Backbone.View.extend({
                         cssClass: "finalbutton",
                         text: localization.saveTemplate,
                         onClick: function() {
-                                document.save().sendAjax( function() {new Submit().send();});
+                                document.save();
+                                document.afterSave( function() {new Submit().send();});
                         }
                       });
         else if (!this.signLast() && document.authorCanSignFirst())
@@ -461,7 +466,7 @@ var DocumentDesignView = Backbone.View.extend({
                         text: localization.designview.sign,
                         onClick: function() {
                             if (!view.verificationBeforeSendingOrSigning(true)) return;
-                               document.save().sendAjax();
+                               document.save();
                                view.signConfirmation();
                         }
                       });
@@ -473,7 +478,7 @@ var DocumentDesignView = Backbone.View.extend({
                         text: document.process().sendbuttontext(),
                         onClick: function() {
                             if (!view.verificationBeforeSendingOrSigning(false)) return;
-                                document.save().sendAjax();
+                                document.save();
                                 view.sendConfirmation();
                         }
                       });
@@ -492,10 +497,12 @@ var DocumentDesignView = Backbone.View.extend({
             var telia = $("<a href='#' class='telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
             var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
             var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");
-            var callback = function(submit) {   submit.sendAjax(function(resp) {
-                                                var link = JSON.parse(resp).link;
-                                                window.location = link;
-                                            });
+            var callback = function(submit) {   document.afterSave(function(){
+                                                    submit.sendAjax(function(resp) {
+                                                        var link = JSON.parse(resp).link;
+                                                        window.location = link;
+                                                    });
+                                                 });
                             }
             bankid.click(function() {
                     Eleg.bankidSign(document,signatory, document.signByAuthor(),callback);
@@ -523,10 +530,12 @@ var DocumentDesignView = Backbone.View.extend({
                   icon : $("<span class='btn-symbol cross' />"),
                   text : document.process().signbuttontext(),
                   onClick : function() {
-                      document.signByAuthor().sendAjax(function(resp) {
+                      document.afterSave(function() {
+                          document.signByAuthor().sendAjax(function(resp) {
                                         var link = JSON.parse(resp).link;
                                         window.location = link;
                                     });;
+                           });         
                     }
                 }).input();
         }
@@ -567,7 +576,7 @@ var DocumentDesignView = Backbone.View.extend({
        var content = $("<p/>").append(confirmtext);
        if (!document.authorIsOnlySignatory())
            content.append($("<span/>").text(localization.to)).append("<span class='unsignedpartynotcurrent'/>");
-       content.append($("<span>.</span>"));
+       content.append($("<span>?</span>"));
        box.append(DocumentDataFiller.fill(document,content));
        var padDesignViewUtil = undefined;
        if (document.padAuthorization())
@@ -582,13 +591,15 @@ var DocumentDesignView = Backbone.View.extend({
                                 text : document.process().sendbuttontext(),
                                 onClick : function() {
                                     LoadingDialog.open(localization.designview.messages.sendingDocument);
-                                    document.sendByAuthor().sendAjax(function(resp) {
-                                        var link = JSON.parse(resp).link;
-                                        if (padDesignViewUtil != undefined)
-                                            padDesignViewUtil.postSendAction(link);
-                                        else
-                                            window.location = link;
-                                    });
+                                    document.afterSave(function() {
+                                        document.sendByAuthor().sendAjax(function(resp) {
+                                            var link = JSON.parse(resp).link;
+                                            if (padDesignViewUtil != undefined)
+                                                padDesignViewUtil.postSendAction(link);
+                                            else
+                                                window.location = link;
+                                        });
+                                    });    
                                 }
                               }).input(),
               rejectText: localization.cancel,
@@ -664,7 +675,7 @@ var DocumentDesignView = Backbone.View.extend({
                     name : document.isTemplate() ? localization.step1template : document.process().step1text(),
                     active :  SessionStorage.get(document.documentid(), "step") == "1",
                     onActivate : function() {
-                      KontraDesignDocument.model.save().sendAjax();
+                      KontraDesignDocument.model.save();
                       SessionStorage.set(document.documentid(), "step", "1");
                       window.UploadWizardView.model.setStepIndex(0);
                     },

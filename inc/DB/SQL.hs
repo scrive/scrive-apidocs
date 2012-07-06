@@ -6,6 +6,7 @@ module DB.SQL (
   , SQLType(..)
   , mkSQL
   , AscDesc(..)
+  , IsSQL(..)
   ) where
 
 import Data.Convertible
@@ -21,6 +22,16 @@ data SQL = SQL String [SqlValue]
 instance Monoid SQL where
   mempty = SQL [] []
   (SQL q v) `mappend` (SQL q' v') = SQL (q ++ q') (v ++ v')
+
+
+class IsSQL a where
+  toSQLCommand :: a -> SQL
+
+instance IsSQL SQL where
+  toSQLCommand = id
+
+instance IsSQL String where
+  toSQLCommand cmd = SQL cmd []
 
 sql' :: Convertible a SqlValue => String -> String -> a -> (String, String, SqlValue)
 sql' column placeholder value = (column, placeholder, toSql value)

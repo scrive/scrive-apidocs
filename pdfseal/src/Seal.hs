@@ -207,6 +207,58 @@ placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document
         newdocument = setIndirF pagerefid newpage docx
     in newdocument
 
+placeFieldsOnPage :: (RefID,String) -> Document -> Document
+placeFieldsOnPage (pagerefid,sealtext) document' =
+    let
+        Just (Indir (Dict pagedict) pagestrem) =
+            PdfModel.lookup pagerefid document'
+        Just contentvalue = {- trace (show pagedict) $ -} Prelude.lookup (BS.pack "Contents") pagedict
+        contentlist = case contentvalue of
+                        Ref{} -> [contentvalue]
+                        Array arr -> arr
+                        _ -> error "/Contents must be either ref or array of refs"
+
+        ([q,qQ,rr], docx) = flip runState document' $ do
+            q' <- addStream (Dict []) $ BSL.pack "q "
+            qQ' <- addStream (Dict []) $ BSL.pack (" Q " ++ normalizeToA4 ++ " " ++ rotationtext ++ " % here\n")
+            rr' <- addStream (Dict []) $ BSL.pack (sealtext)
+            return [q',qQ',rr']
+
+        rotatekey = Prelude.lookup (BS.pack "Rotate") pagedict
+        ([cropbox_l, cropbox_b, cropbox_r, cropbox_t] {- :: Double -})
+            = case (Prelude.lookup (BS.pack "CropBox") pagedict `mplus` Prelude.lookup (BS.pack "MediaBox") pagedict) of
+                  Just (PdfModel.Array [PdfModel.Number l, PdfModel.Number b, PdfModel.Number r, PdfModel.Number t]) ->
+                       [l :: Double, b, r, t]
+                  _ -> [0, 0, 595, 842]
+
+        cropbox_w = cropbox_r - cropbox_l
+        cropbox_h = cropbox_t - cropbox_b
+
+        normalizeToA4 = show (Number (cropbox_w/595)) ++ " " ++
+                        show (Number (0)) ++ " " ++
+                        show (Number (0)) ++ " " ++
+                        show (Number (cropbox_h/842)) ++ " " ++
+                        show (Number (-cropbox_l)) ++ " " ++
+                        show (Number (-cropbox_b)) ++ " cm"
+
+        rotationtext = case rotatekey of -- 595 842
+                         Just (Number 90) -> "0 1 -1 0 " ++ show (Number cropbox_w) ++ " 0 cm"
+                         Just (Number 180) -> "-1 0 0 -1 " ++ show (Number cropbox_w) ++ " " ++ show (Number cropbox_h) ++ " cm"
+                         Just (Number 270) -> "0 -1 1 0 0 " ++ show (Number cropbox_h) ++ " cm"
+                         _ -> ""
+
+        pageresdict = getResDict document' pagerefid
+
+
+        newcontentarray = Array ([Ref q] ++ contentlist ++ [Ref qQ] ++ [Ref rr])
+        skipkey x = BS.pack "Contents" == x || BS.pack "Resources" == x
+        pagedict2 = filter (not . skipkey . fst) pagedict
+        newpagedict = Dict pagedict2 `ext` [(BS.pack "Contents", newcontentarray)
+                                           ,(BS.pack "Resources", Dict pageresdict)]
+        newpage = (Indir newpagedict pagestrem)
+        newdocument = setIndirF pagerefid newpage docx
+    in newdocument
+   
 -- FIXME: here we still have font size problem. On the page it appears
 -- as some pt size font. We need to translate that size into PDF pt
 -- size. For now pretend we are using 10pt font.
@@ -268,7 +320,20 @@ placeSeals fields sealrefid sealtexts paginrefid pagintext' sealmarkerformrefid 
         lastpage' <- addPageToDocument pagevalue
         modify $ \document' -> foldr (placeSealOnPageRefID sealrefid sealmarkerformrefid) document' [(lastpage',sealtext)]
 
+placeFields :: [Field] -> State Document ()
+placeFields fields = do
+    pages <- gets listPageRefIDs
+    let pagew = 595
+        pageh = 842
+    -- should optimize pagintext' into one stream
+    let findFields pageno = filter (\x -> page x == pageno) fields
+    let pagintext1 pageno = fieldstext pagew pageh (findFields pageno)
 
+    modify $ \document' -> foldr (placeFieldsOnPage) document'
+                          [(page,pagintext1 pageno) | (page,pageno) <- zip pages [1..]]
+
+
+        
 contentsValueListFromPageID :: Document -> RefID -> [RefID]
 contentsValueListFromPageID document' pagerefid =
     let
@@ -666,4 +731,16 @@ process (sealSpec@SealSpec
                    attachFiles attachments
     putStrLn $ "Writing file " ++ output
     writeFileX output outputdoc
+    return ()
+
+preprocess :: PreSealSpec -> IO ()
+preprocess (PreSealSpec{ pssInput, pssOutput, pssFields }) = do
+    mdoc <- PdfModel.parseFile pssInput
+    doc <- maybe (error $ "Cannot parse input PDF " ++ pssInput) return mdoc
+
+    let ((),outputdoc) =
+            flip runState doc $ do
+              placeFields pssFields
+    putStrLn $ "Writing file " ++ pssOutput
+    writeFileX pssOutput outputdoc
     return ()
