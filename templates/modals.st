@@ -3,34 +3,34 @@ modalContractCreated=
 <div class="modal-container">
   <div class="modal-header">
     <span class="modal-icon message"></span>
-    $if(signed)$
+    $if(signedAndCompleted)$
     <span class="modal-title">
-      <h3>$_modalContractCreatedHeaderIfSigned()$</h3>
+      <h3>$_modalContractCreatedHeaderIfSignedAndCompleted()$</h3>
     </span>
-    $elseif(willBeSigned)$
+    $elseif(signedByAuthor)$
     <span class="modal-title">
-      <h3>$_modalContractCreatedHeaderIfSigned()$</h3>
+      <h3>$_modalContractCreatedHeaderIfSignedAndSent()$</h3>
     </span>
     $else$
     <span class="modal-title">
-      <h3>$_modalContractCreatedHeaderIfElse()$</h3>
+      <h3>$_modalContractCreatedHeaderIfSent()$</h3>
     </span>
     $endif$
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
     <div class="modal-content">
-      $if(signed)$
+      $if(signedAndCompleted)$
       <p>
-        $_modalContractCreatedBodyIfSigned()$
+        $_modalContractCreatedBodyIfSignedAndCompleted()$
       </p>
-      $elseif(willBeSigned)$
+      $elseif(signedByAuthor)$
       <p>
-        $_modalContractCreatedBodyIfSigned()$
+        $_modalContractCreatedBodyIfSignedAndSent()$
       </p>
       $else$
       <p>
-        $_modalContractCreatedBodyIfElse()$
+        $_modalContractCreatedBodyIfSent()$
       </p>
       $endif$
     </div>
