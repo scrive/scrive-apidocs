@@ -269,7 +269,7 @@ header=
                                     <a href="#" class="login-button"><p>$_login()$</p></a>
                                     <a href="$linkcontactus$" class="toplink">$_pageHeaderContactUs()$</a>
                                     <a href="$linkabout$" class="toplink">$_pageFooterAbout()$</a>
-                                    <a href="$linklegal$" class="toplink">$_pageFooterLaw()$</a>
+                                    <a href="$linkclients$" class="toplink">$_customerCases()$</a>
                                     <a href="$linkpriceplan$" class="toplink">$_pageFooterPrices()$</a>
                                 $localeSwitcher()$
                                   </span>

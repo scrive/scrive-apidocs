@@ -576,7 +576,7 @@ var DocumentDesignView = Backbone.View.extend({
        var content = $("<p/>").append(confirmtext);
        if (!document.authorIsOnlySignatory())
            content.append($("<span/>").text(localization.to)).append("<span class='unsignedpartynotcurrent'/>");
-       content.append($("<span>.</span>"));
+       content.append($("<span>?</span>"));
        box.append(DocumentDataFiller.fill(document,content));
        var padDesignViewUtil = undefined;
        if (document.padAuthorization())

@@ -338,7 +338,7 @@ documentFilterToSQL (DocumentFilterByString string) =
          sqlJoinWithAND (map sqlMatch (words string))
       sqlMatch word = SQL ("EXISTS (SELECT TRUE" ++
                                    "  FROM signatory_link_fields JOIN signatory_links AS sl5" ++
-                                                                 "  ON sl5.document_id = documents.id" ++
+                                                                 "  ON sl5.document_id = signatory_links.document_id" ++
                                                                  " AND sl5.id = signatory_link_fields.signatory_link_id" ++
                                    -- " FROM signatory_link_fields " ++
                                    " WHERE signatory_link_fields.value ILIKE ?)") [sqlpat word]
