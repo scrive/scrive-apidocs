@@ -23,11 +23,11 @@ clientsPageContents=
 								<div class="partner-image">
 									<div class="go-enterprise"></div>
 								</div>
-								<h2>$_clientsPageCusomerVid()$</h2>
-								<blockquote>$_QuoteOnVid()$</blockquote>
-								<em>$_QuoteOnVidBy()$</em>
-								<p>$_clientsPageCusomerVidAbout()$</p>
-								<a href="http://www.goenterprise.se">$_clientsPageCusomerVidWeb()$</a>
+								<h2>$_clientsPageCusomer0()$</h2>
+								<blockquote>$_Quote0()$</blockquote>
+								<em>$_Quote0By()$</em>
+								<p>$_clientsPageCusomer0About()$</p>
+								<a href="http://www.avanza.se">$_clientsPageCusomer0Web()$</a>
 							</li>
 							<li>
 								<div class="partner-image">
@@ -37,7 +37,7 @@ clientsPageContents=
 								<blockquote>$_Quote1()$</blockquote>
 								<em>$_Quote1By()$</em>
 								<p>$_clientsPageCusomer1About()$</p>
-								<a href="http://www.accountfactory.com">$_clientsPageCusomer1Web()$</a>
+								<a href="http://www.hemnet.se">$_clientsPageCusomer1Web()$</a>
 							</li>
 							<li>
 								<div class="partner-image">
@@ -47,7 +47,7 @@ clientsPageContents=
 								<blockquote>$_Quote2()$</blockquote>
 								<em>$_Quote2By()$</em>
 								<p>$_clientsPageCusomer2About()$</p>
-								<a href="http://www.greenhatpeople.se">$_clientsPageCusomer2Web()$</a>
+								<a href="http://www.mynewsdesk.com">$_clientsPageCusomer2Web()$</a>
 							</li>
 							<li>
 								<div class="partner-image">
@@ -57,36 +57,15 @@ clientsPageContents=
 								<blockquote>$_Quote3()$</blockquote>
 								<em>$_Quote3By()$</em>
 								<p>$_clientsPageCusomer3About()$</p>
-								<a href="http://www.eventbook.se">$_clientsPageCusomer3Web()$</a>
+								<a href="http://www.coop.se/coopnord">$_clientsPageCusomer3Web()$</a>
 							</li>
                                                         <li>
 								<div class="partner-image">
                                                                         <div class="accenture"></div>
 								</div>
 								<h2>$_clientsPageCusomer4()$</h2>
-								<blockquote>$_Quote4()$</blockquote>
-								<em>$_Quote4By()$</em>
 								<p>$_clientsPageCusomer4About()$</p>
-								<a href="http://www.accenture.com/se-en/Pages/index.aspx">$_clientsPageCusomer4Web()$</a>
-							</li>
-                                                        <li>
-								<div class="partner-image">
-                                                                        <div class="coop"></div>
-								</div>
-								<h2>$_clientsPageCusomer5()$</h2>
-								<blockquote>$_Quote5()$</blockquote>
-								<em>$_Quote5By()$</em>
-								<p>$_clientsPageCusomer5About()$</p>
-								<a href="http://www.coop.se/coopnord">$_clientsPageCusomer5Web()$</a>
-							</li>                                                        <li>
-								<div class="partner-image">
-                                                                        <div class="ipas"></div>
-								</div>
-								<h2>$_clientsPageCusomer6()$</h2>
-								<blockquote>$_Quote6()$</blockquote>
-								<em>$_Quote6By()$</em>
-								<p>$_clientsPageCusomer6About()$</p>
-								<a href="http://www.ipas.se/">$_clientsPageCusomer6Web()$</a>
+								<a href="http://peaceandlove.se">$_clientsPageCusomer4Web()$</a>
 							</li>
 						</ul>
 					</div>
