@@ -1991,6 +1991,10 @@ input.grayed, textarea.grayed
     text-align: center;
 }
 
+.logos img {
+    height: 97px;
+}
+
 /* Benefits and products box */
 
 .benefitstitle , .productdescriptiontitle {
