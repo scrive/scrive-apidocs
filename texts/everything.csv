@@ -219,19 +219,16 @@
                    <td></td>
                    <td></td>
                    <td>Mass-signing</td>"
-"_Quote1","”Skönt. Snabbare vändor med kund och man slipper arkivera papper.”",,"""Nice. Faster responses from customers and no paper archiving."""
-"_Quote1By","Mikael Green, VD, Account Factory, Redovisningsbyrå",,"Mikael Green, CEO, Account Factory, Accounting firm"
-"_Quote2","”Man har mycket bättre koll på de avtal som ingåtts. Det är grejen
- tycker jag.”",,"""It's easy to track the progress of each agreement. For me, that's been invaluable."""
-"_Quote2By","Alexis Barnekow, Försäljningschef, Green Hat People, Teambuilding
- Events",,"Alexis Barnekow, Sales Manager, Green Hat People, Team building
- Events"
-"_Quote3","”Smart lösning.”",,"”A smart solution.”"
-"_Quote3By","Christoffer Lindquist, VD, Eventbook, Eventpartner",,"Christoffer Lindquist, CEO, Eventbook, Eventpartner"
-"_Quote4","”Tjänsten är väldigt smidig och det visar verkligen hur mycket
- man kan effektivisera avtalsprocessen.”",,"""The service is very smooth. It really shows how
- efficient the signing process can become."""
-"_Quote4By","Ola Brundin, Accenture Management Consulting",,"Ola Brundin, Accenture Management Consulting"
+"_Quote0","”Vi fastnade för Scrive eftersom de hade den mest moderna tjänsten och den kunde vara på plats på bara en månad.”",,"”We fell for Scrive because they had the most modern service and it could be in place in just one month.”"
+"_Quote0By","Ronnie Bodinger, IT-chef, Avanza Bank",,"Ronnie Bodinger, IT manager, Avanza Bank"
+"_Quote1","“Vi valde scrive för att vi var trötta på papper, kort och gott. Scrive levererar snabbhet och enkelhet vilket leder till effektivare avtal.”",,"“We chose Scrive because we were sick of paper, that's it. Scrive delivers speed and simplicity which give us more efficient contracting.”"
+"_Quote1By","Linus Lennstrand, CTO, Hemnet",,"Linus Lennstrand, CTO, Hemnet"
+"_Quote2","“Tjänsten är väldigt användarvänlig och vi var igång på nolltid. Nu stänger vi affärer snabbare och kan fokusera på att sälja istället för att jaga signaturer.”",,"“Very user-friendly and we were up and running in no-time. We're closing deals faster and can focus in selling instead of chasing signatures.”"
+"_Quote2By","Carl-Fredrik Wållgren, Business Development, Mynewsdesk",,"Carl-Fredrik Wållgren, Business Development, Mynewsdesk"
+"_Quote3","“Snabbt och överskådligt.”",,"”Fast and efficient.”"
+"_Quote3By","Michael Burman, Marknadschef, Coop Nord",,"Michael Burman, Marketing Manager, Coop Nord"
+"_Quote4","",,""
+"_Quote4By","",,""
 "_Quote5","”Snabbt och överskådligt.”",,"”Fast and efficient.”"
 "_Quote5By","Michael Burman, Marknadschef, Coop Nord",,"Michael Burman, Marketing Manager, Coop Nord"
 "_Quote6","”Notera: efter 1 veckas användning börjar era kunder visa produkten
@@ -362,32 +359,21 @@
 "_cantSendReminder2"," som inte är skickade eller öppna.",," which have not been sent or opened."
 "_checkBoxFieldName","check box",,"check box"
 "_city","Postort",,"City"
-"_clientsPageCusomer1","Account Factory",,"Account Factory"
-"_clientsPageCusomer1About","Account Factory sköter bokföringen för småföretag. Bara fasta
- priser och allt på webben.",,"Account Factory manage accounting for small companies. Only fixed
- prices and everything is online."
-"_clientsPageCusomer1Web","www.accountfactory.com",,"www.accountfactory.com"
-"_clientsPageCusomer2","Green Hat People",,"Green Hat People"
-"_clientsPageCusomer2About","Green hat People genomför oslagbara teambuildingaktiviteter i
- form av mobilstyrda spel där omgivningen utgör spelplanen. De
- finns representerade i hela Sverige och genomför teambuilding
- över hela Europa.",,"Green Hat People does unbeatable team building activities through
- mobile phone controlled games where the game board consists
- of the surroundings. Green Hat People is represented all over
- Sweden and preforms team building activities all over Europe."
-"_clientsPageCusomer2Web","www.greenhatpeople.se",,"www.greenhatpeople.se"
-"_clientsPageCusomer3","EventBook",,"EventBook"
-"_clientsPageCusomer3About","Din partner för konferens, kick-off och företagsresor.",,"Your partner in conferences, kick-offs and company travels."
-"_clientsPageCusomer3Web","www.eventbook.se",,"www.eventbook.se"
-"_clientsPageCusomer4","Accenture Management Consulting",,"Accenture Management Consulting"
-"_clientsPageCusomer4About","Accenture är ett globalt företag inom managementkonsulting, IT och outsourcing, med mer än 246.000 medarbetare och kunder i fler än 120 länder.",," Accenture is a global management consulting, technology services and outsourcing company, with more than 246,000 people serving clients in more than 120 countries."
-"_clientsPageCusomer4Web","www.accenture.com",,"www.accenture.com"
-"_clientsPageCusomer5","COOP Nord",,"COOP Nord"
-"_clientsPageCusomer5About","Dagligvaruaktör som ägs av konsumentkooperationen, och som äger ett antal företag inklusive Coop Forum, Konsum och Coop Nära.",,"Grocery Trader owned by consumer cooperatives, which own a number of companies including Coop Forum, Coop Konsum and Coop Nära."
-"_clientsPageCusomer5Web","www.coop.se/coopnord",,"www.coop.se/coopnord"
-"_clientsPageCusomer6","IPAS",,"IPAS"
-"_clientsPageCusomer6About","IPAS är ett kunskapsföretag som projekterar, driftsätter och underhåller kameraövervakningssystem.",,"IPAS is a company that installs and maintains CCTV systems."
-"_clientsPageCusomer6Web","www.ipas.se",,"www.ipas.se"
+"_clientsPageCusomer0","Avanza Bank",,"Avanza Bank"
+"_clientsPageCusomer0About",".Avanza Bank är ledande svensk internetbank. Avanza Bank har integrerat Scrive i sin internetbank och alla kontoavtal kan signeras genom Scrive med e-legitimation. Avanza Bank planerar att alla kontrakt på sikt ska signeras elektroniskt via Scrive.",,"Avanza Bank is a leading Swedish internet bank. Avanza Bank has integrated Scrive in their internet bank and all account creation contracts are signed through Scrive by using Swedish e-legitimation. Avanza Bank plans to implement Scrive for all contract signing processes."
+"_clientsPageCusomer0Web","www.avanza.se",,"www.avanza.se"
+"_clientsPageCusomer1","Hemnet",,"Hemnet"
+"_clientsPageCusomer1About","Hemnet är Sveriges populäraste sajt för bostadsök med upp till 1,4 miljoner unika besökare i veckan. Hemnet använder Scrive för att sluta avtal med fastighetsmäklare som vill ansluta sig till Hemnets partnerportal.",,"Hemnet is Sweden's most popular site for searching for homes with up to 1.4 milion unique visitors per week. Hemnet uses Scrive to conclude agreements with real estate agents that want to partner with Hemnet."
+"_clientsPageCusomer1Web","www.hemnet.se",,"www.hemnet.se"
+"_clientsPageCusomer2","Mynewsdesk",,"Mynewsdesk"
+"_clientsPageCusomer2About","Mynewsdesk är Nordens största site för att publicera pressreleaser. Mynewsdesks svenska säljorganisation var först med att använda Scrive för alla sina kundavtal och offerter. Tjänsten blev snabbt så uppskattad att den snabbt spred sig till kontoren i Norge, Danmark, Finland, England och USA.",,"Mynewsdesk is the Nordics' largest site for publishing press releases. Mynewsdesk's Swedish sales organization was the first to use Scrive for all of its customer contracts and quotations. The service became so popular that it quickly spread to the offices in Norway, Denmark, Finland, UK, and USA."
+"_clientsPageCusomer2Web","www.mynewsdesk.com",,"www.mynewsdesk.com"
+"_clientsPageCusomer3","COOP",,"COOP"
+"_clientsPageCusomer3About","Coop Nord är del av Coop som är Sveriges andra största matvarukedja. Coop Nord använder Scrive för att signera sina sponsoravtal. Tidigare hade man en kostsam process där avtalen skickades fysiskt mellan fyra parter. Scrive gjorde en ROI där vi fann att Coop Nord skulle spara 300-400 kronor för varje dokument genom att använda Scrive.",,"Coop Nord is part of Coop, Sweden's second largest food retail chain. Coop Nord uses Scrive for their sponsorship contracts. Before Scrive, Coop Nord had an expensive process where the contracts were sent between four different parties. Scrive's research determined that Coop Nord would save 30-40 euro for each document by using Scrive."
+"_clientsPageCusomer3Web","www.coop.se/coopnord",,"www.coop.se/coopnord"
+"_clientsPageCusomer4","Peace & Love",,"Peace & Love"
+"_clientsPageCusomer4About","Peace & Love är Sveriges är en av Sveriges största festivaler med mer än 50 000 besökare. Under festivalen 2012 användes Scrive på Peace & Love för att checka in samtliga funktionärer för festivalbygget.",,"Peace & Love is one of Sweden's largest festivals with more than 50,000 visitors. During the 2012 festival Scrive was used by Peace & Love to check in all voluntary workers building the festival."
+"_clientsPageCusomer4Web","www.peaceandlove.se",,"www.peaceandlove.se"
 "_clientsPageCusomerVid","Go Enterprise",,"Go Enterprise"
 "_clientsPageCusomerVidAbout","Go Enterprise är ett ungt managementbolag där vi brinner för
  tillväxt, entreprenörskap och samhällsutveckling. Genom våra
