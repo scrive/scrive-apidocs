@@ -102,7 +102,7 @@ startSystem appGlobals appConf =
           listensocket <- listenOn (htonl iface) (fromIntegral port)
           let (routes,overlaps) = compile staticRoutes
           maybe (return ()) Log.server overlaps
-          t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port })  (appHandler routes appConf appGlobals)
+          t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port , timeout   = 120})  (appHandler routes appConf appGlobals)
           let runScheduler = runQueue (cryptorng appGlobals) (dbConfig appConf) (SchedulerData appConf $ templates appGlobals)
           t2 <- forkIO $ cron 60 $ do
             Log.debug "Running oldScheduler..."
@@ -120,7 +120,6 @@ startSystem appGlobals appConf =
           t7 <- forkIO $ cron 60 $ runScheduler AWS.uploadFilesToAmazon
           t8 <- forkIO $ cron (60 * 60) (System.Mem.performGC >> Log.debug "Performing GC...")
           return [t1, t2, t3, t4, t5, t6, t7, t8]
-
         waitForTerm _ = E.bracket
           -- checkpoint the state once a day
           -- FIXME: make it checkpoint always at the same time

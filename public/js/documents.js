@@ -139,7 +139,7 @@ window.Document = Backbone.Model.extend({
           return this.get("daystosign");
     },
     setDaystosign: function(daystosign) {
-         this.set({daystosign: daystosign}, {silent: true});
+         this.set({"daystosign": daystosign}, {silent: true});
     },
     infotext: function() {
         return this.get("infotext");

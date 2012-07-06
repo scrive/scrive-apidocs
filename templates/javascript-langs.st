@@ -166,18 +166,27 @@ javascriptLocalisation =
             , process : {
                 contract: {
                    uploadprompt: "$_contractuploadprompttext()$",
-                   name: "$_contractname()$"
+                   name: "$_contractname()$",
+                   shortName: "$_contractshortname()$"
                 },
                 offer: {
                    uploadprompt: "$_offeruploadprompttext()$",
-                   name: "$_offername()$"
+                   name: "$_offername()$",
+                   shortName: "$_offershortname()$"
                 },
                 order: {
                    uploadprompt: "$_orderuploadprompttext()$",
-                   name: "$_ordername()$"
+                   name: "$_ordername()$",
+                   shortName: "$_ordershortname()$"
                 }
 
               }
+            , filterByProcess: {
+                showAllProcesses: "$_showAllProcesses()$",
+                showContractsOnly: "$_showContractsOnly()$",
+                showOrdersOnly: "$_showOrdersOnly()$",
+                showOffersOnly: "$_showOffersOnly()$"
+            }
            , searchTemplate : "$_SearchTemplate()$"
            , sortTemplate : "$_SortTemplate()$"
            , infoSelectTemplate : "$_InfoSelectTemplate()$"
@@ -377,6 +386,14 @@ javascriptLocalisation =
              ,  reason: "Reason"
 
           }
+       , uploadView : {
+                signStepsBodyUpload : "$_signStepsBodyUploadBoxStep1Info()$"
+             ,  back : "$_GoBack()$"
+             ,  chooseFile : "$_signStepsBodyUploadBoxStep1UpLoadChooseFile()$"
+             ,  chooseTemplate : "$_signStepsBodyUploadBoxStep1ChooseTemplate()$"
+             ,  savedTemplate  : "$_signStepsBodyUploadBoxStep1TemplateSaved()$"
+             ,  chooseTemplateButton : "$_signStepsBodyUploadBoxStep1ButtonChooseTemplate()$"
+        }
     }
 
 ####

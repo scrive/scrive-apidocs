@@ -1,20 +1,7 @@
-/* Simple control letting you select one of options
- * Usage
- *  var button =  Button.init({
- *                   color: "red | green | blue | black",
- *                   size: "tiny | small | big",
- *                   text: "Text that will be put inside of button"
- *                   onClick* : "Function to be called when button is clicked" })
- *  will return Button object. 
- *
- * It exports method input that returns jQuery object to be inserted anywere you want
- *
- * button.input()
-*/
+/* Select box - as in top-left of archive*/
   
 (function( window){
 
-/* InfoTextInput model. Has value, infotext and information if its focused  */
 window.SelectOptionModel = Backbone.Model.extend({
   defaults : {
     onSelect : function(){return false;}    
@@ -28,7 +15,7 @@ window.SelectOptionModel = Backbone.Model.extend({
        return this.get("value");
   },
   selected : function() {
-       this.get("onSelect")();
+       this.get("onSelect")(this.value());
   }
 });
 
@@ -40,6 +27,8 @@ window.SelectModel = Backbone.Model.extend({
   },
   initialize: function(args){
       var options = _.map(args.options,function(e) {
+                        if (e.onSelect == undefined)
+                            e.onSelect = args.onSelect;
                         return new SelectOptionModel(e);
                     });
       this.set({"options" : options});
@@ -125,7 +114,8 @@ window.Select = {
     init: function (args) {
           var model = new SelectModel ({
                                         options: args.options,
-                                        name : args.name
+                                        name : args.name,
+                                        onSelect : args.onSelect
                                        });
           var input = $("<div/>");
           if (args.cssClass!= undefined)

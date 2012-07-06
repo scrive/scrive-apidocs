@@ -141,7 +141,6 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
                         new Cell({name: localization.attachments.selectAttachment,
                                   width:"400px",
                                   field:"title",
-                                  special: "rendered",
                                   rendering : function(title, _mainrow, listobject) {
                                       var link = jQuery("<a/>").text(title);
                                       var attachment_file = listobject.field("file");

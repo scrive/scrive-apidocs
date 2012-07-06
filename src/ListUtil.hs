@@ -43,6 +43,7 @@ module ListUtil(
             , listParamsSorting
             , listParamsOffset
             , listParamsLimit
+            , listParamsFilters
           ) where
 import Control.Applicative ((<$>))
 import Control.Monad.Trans
@@ -57,7 +58,12 @@ import Data.Char (toUpper)
 import Happstack.Server hiding (simpleHTTP)
 import Network.HTTP.Base (urlEncode)
 import Text.JSON
-
+import Text.JSON.String (runGetJSON)
+import Text.JSON.FromJSValue
+import Control.Monad
+import Control.Monad.Identity
+import qualified Log 
+ 
 -- This part is responsible for sorting,searching and paging documents lists
 data PagedList a =
   PagedList { list     :: [a]
@@ -68,6 +74,7 @@ data PagedList a =
 data ListParams = ListParams
   { sorting :: [String]
   , search  :: Maybe String
+  , filters :: [(String,String)]
   , offset  :: Int
   , limit   :: Int
   }
@@ -85,6 +92,8 @@ listParamsOffset = offset
 listParamsLimit :: ListParams -> Int
 listParamsLimit = limit
 
+listParamsFilters :: ListParams -> [(String,String)]
+listParamsFilters = filters
 
 instance Show ListParams where
     show params = intercalate "&" $ off ++ lim ++ srch ++ srt
@@ -100,6 +109,7 @@ emptyListParams =
   ListParams
   { sorting = []
   , search = Nothing
+  , filters = []
   , offset = 0
   , limit = 1000
   }
@@ -109,18 +119,27 @@ getListParamsNew :: (ServerMonad m,Functor m,HasRqData m,MonadIO m) => m ListPar
 getListParamsNew = do
     offset'  <- readField "offset"
     limit'   <- readField "limit"
-    search  <- getField "filter"
+    search  <- getField "textfilter"
+    filters  <- do
+                  eja <- liftM (runGetJSON readJSArray) $ getField' "selectfilter"
+                  return $ case eja of
+                    Left _ -> []
+                    Right ja -> fromMaybe [] $ runIdentity $ withJSValue ja $ fromJSValueCustomMany $ do
+                        n <- fromJSValueField "name"
+                        v <- fromJSValueField "value"
+                        return $ liftM2 (\x y -> (x,y)) n v
     sorting <- getField "sort"
     sortingReversed <- joinB <$> fmap (== "true") <$> getField "sortReversed"
     let sorting'  = if (sortingReversed)
                      then sorting
                      else (++ "REV") <$> sorting
-
+    Log.debug $ "Filters : " ++ show filters
     return ListParams
            -- REVIEW: I am assuming constants below stem from emptyListParams.
              { offset  = fromMaybe (offset emptyListParams) offset'
              , limit   = fromMaybe (limit emptyListParams) limit'
              , search  = search
+             , filters = filters
              , sorting = maybeToList sorting'
              }
 

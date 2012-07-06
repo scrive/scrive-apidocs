@@ -421,9 +421,6 @@ getRecursiveMTime dir = do
           mt <- getModificationTime dir
           return $ maximum $ mt:mts
 
-jsText :: String -> String
-jsText  = filter (not . isControl)
-
 instance (Enum a, Bounded a, Enum b, Bounded b) => Enum (a,b) where
     toEnum  l = let
                    block = length (allValues::[a])

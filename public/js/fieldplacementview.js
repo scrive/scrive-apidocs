@@ -96,6 +96,8 @@ var TextPlacementPlacedView = Backbone.View.extend({
                         fileview.moveCoordinateAxes(ui.helper);
                     },
                     onDrop: function(page, x,y ){
+                          x = page.fixedX(x,y);
+                          y = page.fixedY(x,y);
                           field.addPlacement(new FieldPlacement({
                               page: page.number(),
                               fileid: page.file().fileid(),
@@ -118,8 +120,6 @@ var TextPlacementPlacedView = Backbone.View.extend({
                   var acceptIcon = $("<span class='acceptIcon'/>");
                   place.append(box.append(iti).append(acceptIcon));
                   iti.focus();
-                  //clear the value underneath - while they're editing it is undetermined
-                  field.setValue("");
                   field.bind('change',function() { view.inlineediting  = false; view.render();});
                   var accept =  function() {
                       view.inlineediting = false;
@@ -183,12 +183,20 @@ var CheckboxTypeSetterView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render' , 'clear');
         this.model.bind('removed', this.clear);
+        var view = this;
+        this.fixPlaceFunction = function(){
+            view.place();
+        }
+        $(window).scroll(view.fixPlaceFunction); // To deal with resize;
+        $(window).resize(view.fixPlaceFunction);
         this.render();
     },
     tagname : "div",
     clear: function() {
         this.off();
         $(this.el).remove();
+        $(window).unbind('scroll',this.fixPlaceFunction);
+        $(window).unbind('resize',this.fixPlaceFunction);
         this.model.typeSetter = undefined;
     },
 
@@ -278,10 +286,14 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         box.text(text);
         return box;
     },
-    
+    place : function() {
+        var placement = this.model;
+        var offset = $(placement.view.el).offset();
+        $(this.el).css("left",offset.left + 32);
+        $(this.el).css("top",offset.top - 20);
+    },
     render: function() {
            var view = this;
-           var placement = this.model;
            var container = $(this.el);
            container.addClass("checkboxTypeSetter-container");
            container.css("position", "absolute");
@@ -298,10 +310,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
 
            body.append(this.doneOption());
            body.append(this.help());
-           var offset = $(placement.view.el).offset();
-           offset.left = offset.left + 32;
-           offset.top = offset.top - 20;
-           container.offset(offset);
+           this.place();
            return this;
     }
 });

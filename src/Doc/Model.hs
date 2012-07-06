@@ -1583,7 +1583,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (E
 
       let authorlink0 = signLinkFromDetails'
                         (signatoryDetailsFromUser user mcompany)
-                        authorRoles magichash
+                        authorRoles [] magichash
 
       let authorlink = authorlink0 {
                          maybesignatory = Just $ userid user,
@@ -1596,7 +1596,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (E
                                                 {  signatorysignorder = SignOrder 1
                                                  , signatoryfields   = emptySignatoryFields
                                                 }
-                                [SignatoryPartner] mh
+                                [SignatoryPartner] [] mh
 
       let doc = blankDocument
                 { documenttitle                = title
@@ -1711,11 +1711,11 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocumen
              return $ Right doc''
 
     clearSignInfofromDoc = do
-      let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x, signatorylinkid x)) $ documentsignatorylinks doc
+      let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x, signatorylinkid x, signatoryattachments x)) $ documentsignatorylinks doc
           Just asl = getAuthorSigLink doc
-      newSignLinks <- forM signatoriesDetails $ \(details,roles,linkid) -> do
+      newSignLinks <- forM signatoriesDetails $ \(details,roles,linkid, atts) -> do
                            magichash <- lift random
-                           return $ (signLinkFromDetails' details roles magichash) { signatorylinkid = linkid }
+                           return $ (signLinkFromDetails' details roles atts magichash) { signatorylinkid = linkid }
       let Just authorsiglink0 = find isAuthor newSignLinks
           authorsiglink = authorsiglink0 {
                             maybesignatory = maybesignatory asl,
@@ -2046,9 +2046,8 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
             let mauthorsiglink = getAuthorSigLink document
             forM_ signatories $ \(details, roles, atts, mcsvupload) -> do
                      magichash <- lift random
-                     let link' = (signLinkFromDetails' details roles magichash)
-                                 { signatorylinkcsvupload = mcsvupload
-                                 , signatoryattachments   = atts }
+                     let link' = (signLinkFromDetails' details roles atts magichash)
+                                 { signatorylinkcsvupload = mcsvupload }
                          link = if isAuthor link'
                                 then link' { maybesignatory = maybe Nothing maybesignatory mauthorsiglink
                                            , maybecompany   = maybe Nothing maybecompany   mauthorsiglink
@@ -2078,7 +2077,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                 update $ InsertEvidenceEvent
                   ResetSignatoryDetailsEvidence
                   (value "changed" True >> value "field" True >> value "email" eml >> (value "fieldtype" $ show (sfType changedfield)) >>
-                   value "value" (sfValue changedfield) >> value "placements" (show $ sfPlacements changedfield) >> value "actor"  (actorWho actor))
+                   value "value" (sfValue changedfield) >> value "hasplacements" (not $ null $ sfPlacements changedfield) >> value "placements" (show $ sfPlacements changedfield) >> value "actor"  (actorWho actor))
                   (Just documentid)
                   actor
 
@@ -2092,7 +2091,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                     update $ InsertEvidenceEvent
                         ResetSignatoryDetailsEvidence
                         (value "added" True >> value "field" True >> value "email" eml >> (value "fieldtype" $ show (sfType changedfield)) >>
-                         value "value" (sfValue changedfield) >> value "placements" (show $ sfPlacements changedfield) >> value "actor" (actorWho actor))
+                         value "value" (sfValue changedfield) >> value "hasplacements" (not $ null $ sfPlacements changedfield) >> value "placements" (show $ sfPlacements changedfield) >> value "actor" (actorWho actor))
                         (Just documentid)
                         actor
 
@@ -2108,7 +2107,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
           s -> return $ Left $ "cannot reset signatory details on document " ++ show documentid ++ " because " ++ intercalate ";" s
           where emailsOfRemoved old new = [getEmail x | x <- removedSigs old new, "" /= getEmail x]
                 changedStuff    old new = [(getEmail x, removedFields x y, changedFields x y) | (x, y) <- changedSigs old new, not $ null $ getEmail x]
-                fieldsOfNew     old new = [(getEmail x, signatoryfields x) | x <- newSigs old new, not $ null $ getEmail x]
+                fieldsOfNew     old new = [(getEmail x, [f| f <- signatoryfields x, not $ null $ sfValue f]) | x <- newSigs old new, not $ null $ getEmail x]
                 removedSigs     old new = [x      | x <- old, getEmail x `notElem` map getEmail new, not $ null $ getEmail x]
                 changedSigs     old new = [(x, y) | x <- new, y <- old, getEmail x == getEmail y,    not $ null $ getEmail x]
                 newSigs         old new = [x      | x <- new, getEmail x `notElem` map getEmail old, not $ null $ getEmail x]
@@ -2121,21 +2120,9 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m SignLinkFromDe
       magichash <- lift random
 
       let link = signLinkFromDetails' details
-                        roles magichash
+                        roles [] magichash
 
       return link
-
-data SignableFromDocument = SignableFromDocument Document Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignableFromDocument Document where  -- NOTE TO MERGER: I removed this in another branch. If there's a
-  -- conflict in a merge, get rid of this whole DBUpdate -- Eric
-  update (SignableFromDocument document actor ) = do
-    d <- insertNewDocument $ templateToDocument document
-    void $ update $ InsertEvidenceEvent
-      SignableFromDocumentEvidence
-      (value "actor" (actorWho actor) >> value "did" (show (documentid document)))
-      (Just (documentid d))
-      actor
-    return d
 
 data SignableFromDocumentIDWithUpdatedAuthor = SignableFromDocumentIDWithUpdatedAuthor User (Maybe Company) DocumentID Actor
 instance (MonadDB m, TemplatesMonad m)=> DBUpdate m SignableFromDocumentIDWithUpdatedAuthor (Either String Document) where

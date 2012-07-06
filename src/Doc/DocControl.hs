@@ -399,6 +399,7 @@ handleIssueSign document = do
     where
       forIndividual :: Kontrakcja m => Document -> m (Either String Document)
       forIndividual doc = do
+        Log.debug $ "handleIssueSign for forIndividual " ++ show (documentid doc)  
         mprovider <- readField "eleg"
         mndoc <- case mprovider of
                    Nothing ->  Right <$> authorSignDocument (documentid doc) Nothing
@@ -461,6 +462,7 @@ handleIssueSend document = do
       Left link -> return link
     where
       forIndividual doc = do
+        Log.debug $ "handleIssueSign for forIndividual " ++ show (documentid doc)
         mndoc <- authorSendDocument (documentid doc)
         case mndoc of
           Right newdocument -> postDocumentPreparationChange newdocument "web"
@@ -936,12 +938,7 @@ checkLinkIDAndMagicHash document linkid magichash1 = do
   return ()
 
 handleShowUploadPage :: Kontrakcja m => m (Either KontraLink String)
-handleShowUploadPage = checkUserTOSGet $ do
-    showTemplates <- isFieldSet "showTemplates"
-    tooLarge <- isFieldSet "tooLarge"
-    mdocprocess <- getDocProcess
-    when tooLarge $ addFlashM modalPdfTooLarge
-    uploadPage mdocprocess showTemplates
+handleShowUploadPage = checkUserTOSGet $ uploadPage
 
 getDocProcess :: Kontrakcja m => m (Maybe DocumentProcess)
 getDocProcess = getOptionalField asDocType "doctype"
