@@ -1276,7 +1276,7 @@ div.price-plan-details {
 	margin-bottom: 8px;
 }
 
-.box .partner-list li a {
+.box .partner-list li a.home-link {
 	color: #1580cb;
 	font: 11px/11px "Arial";
 }
