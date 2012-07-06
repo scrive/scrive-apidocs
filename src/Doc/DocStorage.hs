@@ -223,9 +223,9 @@ preCheckPDFHelper gscmd content tmppath =
                , Seal.history        = []
                , Seal.initials       = "An example text"
                , Seal.hostpart       = "An example text"
-               , Seal.fields         = []
                , Seal.staticTexts    = sealingTexts
                , Seal.attachments    = []
+               , Seal.filesList      = []
                }
 
     sealingTexts = Seal.SealingTexts
@@ -234,11 +234,13 @@ preCheckPDFHelper gscmd content tmppath =
                    , Seal.signedText         = "An example text"
                    , Seal.partnerText        = "An example text"
                    , Seal.secretaryText      = "An example text"
+                   , Seal.documentText       = "An example text"
                    , Seal.orgNumberText      = "An example text"
+                   , Seal.personalNumberText = "An example text"
                    , Seal.eventsText         = "An example text"
                    , Seal.dateText           = "An example text"
                    , Seal.historyText        = "An example text"
-                   , Seal.verificationFooter = ["An example text", "An example text", "An example text"]
+                   , Seal.verificationFooter = "An example text"
                    }
 
     checkSize = do

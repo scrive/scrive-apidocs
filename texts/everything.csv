@@ -405,14 +405,10 @@
 "_close","Stäng",,"Close"
 "_company","Företag",,"Company"
 "_companyposition","Befattning",,"Position"
-"_contractInvitationSentEntry","skickar en inbjudan att signera till",,"sends an invitation to sign to"
-"_contractInvitationSentEntryIfElse","parterna",,"the parties"
-"_contractInvitationSentEntryIfoneSignatory","parten",,"the party"
-"_contractLastHistEntry","Samtliga parter har signerat dokumentet och avtalet är
- nu juridiskt bindande.",,"All parties have signed the document, the contract is now
- legally binding."
-"_contractSeenHistEntry","granskar dokumentet online",,"reviews the document online"
-"_contractSignHistEntry","signerar dokumentet online med",,"signs the document online with"
+"_invitationSentEntry","Scrive skickar en inbjudan att signera till $partyList$",,"Scrive sends an invitation to sign to $partyList$"
+"_lastHistEntry","Dokumentet förseglas och signeras digitalt av Scrive.",,"The document is sealed and digitally signed by Scrive."
+"_seenHistEntry","$personname$ granskar dokumentet online.",,"$personname$ reviews the document online."
+"_signHistEntry","$personname$ signerar dokumentet online med $signMethod()$ som verifieringsmetod.",,"$personname$ signs the document online with $signMethod()$ as verification method."
 "_contractSignatory","Part",,"Party"
 "_contractauthorissecretarytext","Avsändare: Ej signerande part",,"Sender: Non-signing party"
 "_contractcancelbuttontext","Återkalla inbjudan",,"Withdraw invitation"
@@ -442,19 +438,14 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_contractrestartbuttontext","Starta om dokument",,"Restart the document"
 "_contractsealingtexts","Verifikat",,"Verification"
 "_contractsealingtextsdateText","Datum",,"Date"
-"_contractsealingtextsdocPrefix","Dokumentnummer",,"Document number"
+"_sealingtextsdocPrefix","Transaktion",,"Transaction"
 "_contractsealingtextseventsText","Registrerade händelser",,"Registered events"
 "_contractsealingtextshistoryText","Händelser",,"Events"
 "_contractsealingtextsorgNumberText","Org.nr.",,"Company reg no"
+"_personalNumberText","ID-nr.",,"ID no"
 "_contractsealingtextspartnerText","Parter",,"Parties"
 "_contractsealingtextssecretaryText","Ej signerande part",,"Non-signing party"
 "_contractsealingtextssignedText","Signerat",,"Signed"
-"_contractsealingtextsverificationFooterRow1","Detta verifikat är utfärdat av Scrive och styrker att
- dokument nummer $documentid$ har signerats av parterna.",,"This verification was issued by Scrive and supports that the
- document $documentid$ has been signed by the parties."
-"_contractsealingtextsverificationFooterRow2","Kursiverad information är säkert verifierad genom Scrive. Dokumentet är en fristående handling oberoende av Scrive.",,"Italic data has been safely verified by Scrive. The document is an independent act independent of Scrive."
-"_contractsealingtextsverificationFooterRow3","Du kan dock kontrollera dokumentets äkthet genom följande länk:",,"You can nevertheless verify the documents originality by following
- the link:"
 "_contractsendtext","Skicka",,"Send"
 "_contractsignatorycancelmodaltitleBody","När du avvisat kommer Scrive att skicka ett e-post för
  att meddela",,"When you have rejected, Scrive will send an email to notify"
@@ -1597,21 +1588,12 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_offerremindagainbuttontext","Skicka offert igen",,"Send offer again"
 "_offerrestartbuttontext","Starta om offert",,"Restart offer"
 "_offersealingtextsdateText","Datum",,"Date"
-"_offersealingtextsdocPrefix","Offertnummer",,"Offer number"
 "_offersealingtextseventsText","Registrerade händelser",,"Registered events"
 "_offersealingtextshistoryText","Händelser",,"Events"
 "_offersealingtextsorgNumberText","Org.nr.",,"Company Reg No"
 "_offersealingtextspartnerText","Mottagare",,"Recipient"
 "_offersealingtextssecretaryText","Avsändare",,"Sender"
 "_offersealingtextssignedText","Offert accepterad",,"Offer accepted"
-"_offersealingtextsverificationFooterRow1","Detta verifikat är utfärdat av Scrive och styrker att
- dokument nummer $documentid$ har signerats av parterna.",,"This verification was issued by Scrive and supports that the
- document $documentid$ has been signed by the parties."
-"_offersealingtextsverificationFooterRow2","Kursiverad information
- är säkert verifierad genom Scrive. Dokumentet är en fristående handling oberoende av Scrive.",,"Italic data has been safely
- verified by Scrive. The document is an independent act independent of Scrive."
-"_offersealingtextsverificationFooterRow3","Du kan dock kontrollera dokumentets äkthet genom följande länk:",,"You can nevertheless verify the documents originality by following
- the link:"
 "_offersealingtextsverificationTitle","Acceptverifikat",,"Acceptance verification"
 "_offersendtext","Skicka",,"Send"
 "_offersignatorycancelmodaltitleBody","När du avvisat kommer vi att skicka ett e-postmeddelande för
@@ -1665,19 +1647,13 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_orderremindagainbuttontext","Skicka orderbekräftelse igen",,"Send order confirmation again"
 "_orderrestartbuttontext","Starta om order",,"Restart the order"
 "_ordersealingtextsdateText","Datum",,"Date"
-"_ordersealingtextsdocPrefix","Orderbekräftelsenummer",,"Order confirmation number"
 "_ordersealingtextseventsText","Registrerade händelser",,"Registered events"
 "_ordersealingtextshistoryText","Händelser",,"Events"
 "_ordersealingtextsorgNumberText","Org.nr.",,"Company Reg No"
 "_ordersealingtextspartnerText","Mottagare",,"Recipient"
 "_ordersealingtextssecretaryText","Avsändare",,"Sender"
 "_ordersealingtextssignedText","Ordern bekräftad",,"Order confirmed"
-"_ordersealingtextsverificationFooterRow1","Detta verifikat är utfärdat av Scrive och styrker att
- dokument nummer $documentid$ har signerats av parterna.",,"This verification was issued by Scrive and supports that the document $documentid$ has been signed by the parties."
-"_ordersealingtextsverificationFooterRow2","Kursiverad information är säkert verifierad genom Scrive. Dokumentet är en fristående handling oberoende av Scrive.",,"Italic data has been safely
- verified by Scrive. The document is an independent act independent of Scrive."
-"_ordersealingtextsverificationFooterRow3","Du kan dock kontrollera dokumentets äkthet genom följande länk:",,"You can nevertheless verify the documents originality by following
- the link:"
+"_verificationFooter","Detta verifikat är utfärdat av Scrive. Kursiverad information är säkert verifierad. Tidsstämpeln säkerställer att dokumentets äkthet går att bevisa matematiskt och oberoende av Scrive. För mer information se den juridiska bilagan (använd en PDF-läsare som kan visa dolda bilagor). För er bekvämlighet tillhandahåller Scrive även en tjänst för att kontrollera dokumentets äkthet automatiskt på: https://scrive.com/verify",,"This verification was issued by Scrive. Information in italics has been safely verified by Scrive. The time stamp ensures that the originality of this document can be proven mathematically and independently of Scrive. For more information see the legal attachment (use a PDF-reader that can show concealed attachments). For your convenience Scrive also provides a service that enables you to automatically verify the documents originality at: https://scrive.com/verify"
 "_ordersealingtextsverificationTitle","Orderbekräftelse",,"Order confirmation"
 "_ordersendtext","Skicka",,"Send"
 "_ordersignatorycancelmodaltitleBody","När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela",,"When you return a document, an email is sent to notify"
@@ -2446,3 +2422,10 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_checkboxHelp","För att ändra inställningar senare dubbelklicka på kryssrutan.",,"To edit checkbox-settings later double tap the checkbox."
 "_verificationTitle", "Verify signature",,"Verify signature"
 "_verificationDescription", "You can check if the file that you have has a valid digital signature.",,"You can check if the file that you have has a valid digital signature."
+"_documentSentBy","Skickat av $author$",,"Sent by $author$"
+"_numberOfPagesIs1","1 sida",,"1 page"
+"_numberOfPages","$pages$ sidor",,"$pages$ pages"
+"_documentText","Dokument",,"Document"
+"_mainDocument","Huvuddokument",,"Main document"
+"_attachedDocument","Bilaga $number$",,"Attachment $number$"
+"_documentAttachedBy","Bifogat av $author$",,"Attached by $author$"

@@ -1,24 +1,25 @@
 
 module SealSpec where
 
-data Person = 
-    Person { fullname :: String
-           , company :: String
-           , personalnumber :: String
-           , companynumber :: String
-           , email :: String
+data Person =
+    Person { fullname         :: String
+           , company          :: String
+           , personalnumber   :: String
+           , companynumber    :: String
+           , email            :: String
            , fullnameverified :: Bool
-           , companyverified :: Bool
-           , numberverified :: Bool
-           , emailverified :: Bool
+           , companyverified  :: Bool
+           , numberverified   :: Bool
+           , emailverified    :: Bool
+           , fields           :: [Field]
            }
     deriving (Eq,Ord,Show,Read)
 
 -- | Field coordinates are in screen coordinate space. That means:
--- 
--- * upper left corner is (0,0) 
--- * units are pixels 
--- * (x,y) are coordinates of upper left corner of a field. 
+--
+-- * upper left corner is (0,0)
+-- * units are pixels
+-- * (x,y) are coordinates of upper left corner of a field.
 --
 -- It is for pdfseal program to recalculate pixel coordinates into
 -- correct PDF pt coordinates. pdfseal will use pixel wise (w,h) to
@@ -55,49 +56,60 @@ data SealAttachment = SealAttachment
   }
     deriving (Eq,Ord,Show,Read)
 
-data SealSpec = SealSpec 
-    { input :: String
-    , output :: String
+data SealSpec = SealSpec
+    { input          :: String
+    , output         :: String
     , documentNumber :: String
-    , persons :: [Person]
-    , secretaries :: [Person]
-    , history :: [HistEntry]
-    , initials :: String
-    , hostpart :: String
-    , fields :: [Field]
-    , staticTexts :: SealingTexts
-    , attachments :: [SealAttachment]
+    , persons        :: [Person]
+    , secretaries    :: [Person]
+    , history        :: [HistEntry]
+    , initials       :: String
+    , hostpart       :: String
+    , staticTexts    :: SealingTexts
+    , attachments    :: [SealAttachment]
+    , filesList      :: [FileDesc]
+    }
+    deriving (Eq,Ord,Show,Read)
+
+data FileDesc = FileDesc
+    { fileTitle      :: String
+    , fileRole       :: String
+    , filePagesText  :: String
+    , fileAttachedBy :: String
     }
     deriving (Eq,Ord,Show,Read)
 
 data PreSealSpec = PreSealSpec
-    { pssInput :: String
+    { pssInput  :: String
     , pssOutput :: String
     , pssFields :: [Field]
     }
     deriving (Eq,Ord,Show,Read)
-    
+
 data HistEntry = HistEntry
-    { histdate :: String
+    { histdate    :: String
     , histcomment :: String
+    , histaddress :: String
     }
     deriving (Eq,Ord,Show,Read)
 
 
-{- |  Static (almoust) text for sealing document. 
+{- |  Static (almoust) text for sealing document.
       !!!! IMPORTANT Templates for sealing depends on read instance of this class
       If You change this structure sealing WILL fail, unless changes are made to docseal.st
 -}
 data SealingTexts = SealingTexts
-    {   verificationTitle :: String -- Big title at last page
-      , docPrefix ::String          -- ex. Doc. nr (last page and all footers)
-      , signedText::String          -- ex. Underteknat (all footers)
-      , partnerText ::String        -- Header for partner list
-      , secretaryText ::String      -- Header for secretary list
-      , orgNumberText :: String     -- Info about partner subtext
-      , eventsText ::String         -- history table preheader
-      , dateText ::String           -- history table date header
-      , historyText :: String       -- history table event header
-      , verificationFooter ::[String] -- Long text all the end saing that doc was verified
-    }
-    deriving (Eq,Ord,Show,Read)
+  { verificationTitle  :: String -- Big title at last page
+  , docPrefix          :: String -- ex. Doc. nr (last page and all footers)
+  , signedText         :: String -- ex. Underteknat (all footers)
+  , partnerText        :: String -- Header for partner list
+  , secretaryText      :: String -- Header for secretary list
+  , documentText       :: String -- Header for documents list
+  , orgNumberText      :: String -- Info about partner subtext
+  , personalNumberText :: String -- Info about partner subtext
+  , eventsText         :: String -- history table preheader
+  , dateText           :: String -- history table date header
+  , historyText        :: String -- history table event header
+  , verificationFooter :: String -- Long text all the end saying that doc was verified
+  }
+  deriving (Eq,Ord,Show,Read)

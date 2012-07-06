@@ -72,6 +72,21 @@ joinWith _ [] = []
 joinWith _ [x] = x
 joinWith s (x:xs) = x ++ s ++ joinWith s xs
 
+renderListTemplateNormal :: TemplatesMonad m => [String] -> m String
+renderListTemplateNormal = renderListTemplateNormalHelper renderTemplate
+
+renderListTemplateNormalHelper :: TemplatesMonad m
+                         => (String -> Fields m () -> m String)
+                         -> [String]
+                         -> m String
+renderListTemplateNormalHelper renderFunc list =
+  if length list > 1
+     then renderFunc "morethenonelistnormal" $ do
+         F.value "list" $ init list
+         F.value "last" $ last list
+     else renderFunc "nomorethanonelistnormal" $ F.value "list" list
+
+
 -- where does this go? -EN
 renderListTemplate :: TemplatesMonad m => [String] -> m String
 renderListTemplate = renderListTemplateHelper renderTemplate
