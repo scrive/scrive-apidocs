@@ -479,7 +479,7 @@ verifySignatureAndGetSignInfoMobile docid signid magic transactionid = do
                     Log.eleg $ "Successfully merged info for transaction: " ++ show transactionid
                     return $ Sign $ SignatureInfo    { signatureinfotext         = transactiontbs
                                                      , signatureinfosignature    = signature
-                                                     , signatureinfocertificate  = ""
+                                                     , signatureinfocertificate  = "" -- it appears that Mobile BankID returns no certificate
                                                      , signatureinfoprovider     = MobileBankIDProvider
                                                      , signaturefstnameverified  = bfn
                                                      , signaturelstnameverified  = bln
@@ -516,7 +516,7 @@ verifySignatureAndGetSignInfoMobileForAuthor docid transactionid = do
                     Log.eleg $ "Successfully merged info for transaction: " ++ show transactionid
                     return $ Sign $ SignatureInfo    { signatureinfotext         = transactiontbs
                                                      , signatureinfosignature    = signature
-                                                     , signatureinfocertificate  = ""
+                                                     , signatureinfocertificate  = "" -- it appears that Mobile BankID returns no certificate
                                                      , signatureinfoprovider     = MobileBankIDProvider
                                                      , signaturefstnameverified  = bfn
                                                      , signaturelstnameverified  = bln
