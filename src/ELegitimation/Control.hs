@@ -35,6 +35,7 @@ import Text.JSON
 import ELegitimation.BankIDUtils
 import ELegitimation.BankIDRequests
 import Text.JSON.Gen as J
+import Data.List
 
 {- 
   There are two versions of almost everything for historical reasons.
@@ -313,7 +314,7 @@ initiateMobileBankID docid slid = do
 
     eresponse <- liftIO $ mbiRequestSignature logicaconf pn tbs
     case eresponse of
-      Left e -> return $ runJSONGen $ J.value "error" e
+      Left e -> return $ mobileBankIDErrorJSON e
       Right (tid, oref) -> do
         addELegTransaction ELegTransaction { transactiontransactionid   = tid
                                            , transactiondocumentid      = docid
@@ -343,7 +344,7 @@ initiateMobileBankIDForAuthor docid = do
     Log.debug $ tbs
     eresponse <- liftIO $ mbiRequestSignature logicaconf pn tbs
     case eresponse of
-      Left e -> return $ runJSONGen $ J.value "error" e
+      Left e -> return $ mobileBankIDErrorJSON e
       Right (tid, oref) -> do
         addELegTransaction ELegTransaction { transactiontransactionid   = tid
                                            , transactiondocumentid      = docid
@@ -380,7 +381,7 @@ collectMobileBankID docid slid = do
           transactiondocumentid      == docid) internalError
 
   case transactionstatus of
-    Left e -> return $ runJSONGen $ J.value "error" e
+    Left e -> return $ mobileBankIDErrorJSON e
     Right (CRComplete _ _ _) -> 
       return $ runJSONGen $ J.value "status" "complete"
     _ -> do
@@ -421,7 +422,7 @@ collectMobileBankIDForAuthor docid = do
   oref <- guardJust transactionoref
   unless (transactiondocumentid == docid) internalError
   case transactionstatus of
-    Left e -> return $ runJSONGen $ J.value "error" e
+    Left e -> return $ mobileBankIDErrorJSON e
     Right (CRComplete _ _ _) ->
       return $ runJSONGen $ J.value "status" "complete"
     _ -> do
@@ -524,3 +525,17 @@ verifySignatureAndGetSignInfoMobileForAuthor docid transactionid = do
                                                     }
       Left s -> return $ Problem s
       _ -> return $ Problem "Signature is not yet complete."
+
+mobileBankIDErrorJSON :: String -> JSValue
+mobileBankIDErrorJSON e = runJSONGen $ J.value "error" errormessage
+  where errormessage = case e of
+          _ | "INVALID_PARAMETERS"     `isInfixOf` e -> "Ogiltigt personnummer"
+            | "SIGN_VALIDATION_FAILED" `isInfixOf` e -> "Det har inträffat ett internt tekniskt fel i systemet. Försök igen."
+            | "RETRY"                  `isInfixOf` e -> "Det har inträffat ett internt tekniskt fel i systemet. Försök igen."
+            | "INTERNAL_ERROR"         `isInfixOf` e -> "Det har inträffat ett internt tekniskt fel i systemet. Försök igen."
+            | "UNKNOWN_USER"           `isInfixOf` e -> "Det BankID du valde går inte att använda. Välj att använda ett annat BankID eller kontakta din bank för att beställa ett nytt."
+            | "EXPIRED_TRANSACTION"    `isInfixOf` e -> "Inget svar från mobiltelefonen eller surfplattan. Kontrollera att du har startat din BankID säkerhetsapp och att du har täckning. Följ instruktionerna i mobiltelefonen och försök igen."
+            | "INVALID_DEVICES"        `isInfixOf` e -> "Det har inträffat ett internt tekniskt fel. Uppdatera din BankID säkerhetsapp och försök igen."
+            | "ALREADY_IN_PROGRESS"    `isInfixOf` e -> "En inloggning för det här personnumret är redan påbörjad, tryck avbryt i BankID säkerhetsapp och försök igen."
+            | "USER_CANCEL"            `isInfixOf` e -> "Åtgärden avbruten"
+            | otherwise                              -> e
