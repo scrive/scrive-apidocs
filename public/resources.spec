@@ -106,4 +106,8 @@ set systemPage
  js   js/padview.js
  js   js/changemainfile.js
  js   js/fileverifier.js
- js   js/archive.js
+ js   js/archive/documents.js
+ js   js/archive/templates.js
+ js   js/archive/attachments.js
+ js   js/archive/bin.js
+ js   js/archive/archive.js
