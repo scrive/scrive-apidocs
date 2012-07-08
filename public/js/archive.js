@@ -56,7 +56,7 @@ var DocumentsListDefinition = {
                     }
                  })
         ],
-    options : [{name : localization.archive.documents.sendReminder,
+    options : [{name : localization.archive.documents.sendreminder.action,
                 onSelect: function(docs){
                             allSendOrOpenSelected = _.all(docs, function(doc) {
                                                 return doc.field("status") == "sent"      ||
@@ -65,7 +65,7 @@ var DocumentsListDefinition = {
                                                        doc.field("status") == "opened"
                                             })
                              if (!allSendOrOpenSelected) {
-                                FlashMessages.add({content: localization.cantSendReminder('$_docListTabsDocs()$'.toLowerCase()), color: "red"});
+                                FlashMessages.add({content: localization.cantSendReminder(localization.documents.toLowerCase()), color: "red"});
                                 return;
                              }
                              var submit = new Submit({
@@ -76,22 +76,22 @@ var DocumentsListDefinition = {
                                           });
                              var content = jQuery("<p/>");
                              if (docs.length == 1) {
-                               content.append("$_ContractReminderBodySingel()$ ");
+                               content.append(localization.archive.documents.sendreminder.bodysingle + " ");
                                content.append(jQuery("<strong/>").text(docs[0].field("title")));
                                content.append("?");
                              } else {
-                               content.text("$_ContractReminderBodyMulti()$ "+ docs.length + (" $_docListTabsDocs()$?").toLowerCase());
+                               content.text(localization.archive.documents.sendreminder.bodymulti + " "+ docs.length + (" " + localization.documents +"?").toLowerCase());
                              }
                              Confirmation.popup({
                                 submit: submit,
-                                acceptText: "$_ok()$",
-                                rejectText: "$_cancel()$",
-                                title: "$_SendReminder()$",
+                                acceptText: localization.ok,
+                                rejectText: localization.cancel,
+                                title: localization.archive.documents.sendreminder.action,
                                 content: content
                               })
                           }
                },
-               {name : localization.archive.documents.delete,
+               {name : localization.archive.documents.delete.action,
                 onSelect: function(docs){
                             anySendOrOpenSelected = _.any(docs, function(doc) {
                                                 return doc.field("status") == "sent"      ||
@@ -101,7 +101,7 @@ var DocumentsListDefinition = {
                                                        doc.field("anyinvitationundelivered") == "True"
                                             })
                              if (anySendOrOpenSelected) {
-                                FlashMessages.add({content: "$_CantRemoveActiveDocuments()$", color: "red"});
+                                FlashMessages.add({content: localization.archive.documents.delete.cantremoveactive, color: "red"});
                                 return;
                              }
                              var submit = new Submit({
@@ -111,19 +111,19 @@ var DocumentsListDefinition = {
                                                 archive: "true",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");})
                                           });
-                             var confirmtext = jQuery("<p/>").append("$_listLocalDialogsBody()$ ");
+                             var confirmtext = jQuery("<p/>").append(localization.archive.documents.delete.body + " ");
                              var label = jQuery("<strong/>");
                              if (docs.length == 1) {
                                confirmtext.append(jQuery("<strong/>").text(docs[0].field("title")));
                              } else {
-                               confirmtext.append(docs.length + (" $_docListTabsDocs()$").toLowerCase());
+                               confirmtext.append(docs.length + (" " + localization.documents).toLowerCase());
                              }
                              confirmtext.append("?");
                              Confirmation.popup({
                                 submit: submit,
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
-                                title: localization.archive.documents.delete,
+                                title: localization.archive.documents.delete.action,
                                 content: confirmtext
                               });
                           }
@@ -155,21 +155,21 @@ var TemplatesListDefinition = {
     extraParams : { documentType : "Template" },
     sorting: new Sorting({ fields: ["title", "time", "process"]}),
     paging: new Paging({}),
-    textfiltering: new TextFiltering({text: "", infotext: "$_SearchDoc()$"}),
+    textfiltering: new TextFiltering({text: "", infotext: localization.archive.templates.search}),
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
-        new Cell({name: "$_SortTime()$", width:"140px", field:"time"}),
-        new Cell({name: "$_SortType()$", width:"120px", field:"process"}),
-        new Cell({name: "$_SortTemplate()$", width:"400px", field:"title",  special: "link"}),
+        new Cell({name: localization.archive.templates.columns.time, width:"140px", field:"time"}),
+        new Cell({name: localization.archive.templates.columns.type, width:"120px", field:"process"}),
+        new Cell({name: localization.archive.templates.columns.template, width:"400px", field:"title",  special: "link"}),
         new Cell({name: "", width:"100px", field:"shared", special: "rendered",
                   rendering: function(shared) {
                          var res = jQuery("<p/>")
                          if (shared == "True")
-                          return res.text("$_shared()$");
+                          return res.text(localization.archive.templates.shared);
                          return res;
                   }})
         ],
-    options : [{name : "$_share()$",
+    options : [{name : localization.archive.templates.share.action,
                 onSelect: function(docs){
                              var submit = new Submit({
                                                 url: "$currentlink$",
@@ -179,14 +179,14 @@ var TemplatesListDefinition = {
                                           });
                             Confirmation.popup({
                                 submit: submit,
-                                acceptText: "$_ok()$",
-                                rejectText: "$_cancel()$",
-                                title: "$_listShareDialogHead()$",
-                                content: jQuery("<p/>").text("$_listShareDialogBody()$")
+                                acceptText: localization.ok,
+                                rejectText: localization.cancel,
+                                title: localization.archive.templates.share.head,
+                                content: jQuery("<p/>").text(localization.archive.templates.share.body)
                               })
                           }
                },
-               {name : "$_delete()$",
+               {name : localization.archive.templates.delete.action ,
                 onSelect: function(docs){
                              var submit = new Submit({
                                                 url: "$currentlink$",
@@ -195,19 +195,19 @@ var TemplatesListDefinition = {
                                                 archive: "true",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");})
                                           });
-                             var confirmtext = jQuery("<p/>").append("$_listLocalDialogsBody()$ ");
+                             var confirmtext = jQuery("<p/>").append(localization.archive.templates.delete.body + " ");
                              var label = jQuery("<strong/>");
                              if (docs.length == 1) {
                                confirmtext.append(jQuery("<strong/>").text(docs[0].field("title")));
                              } else {
-                               confirmtext.append(docs.length + (" $_docListTabsTemplates()$").toLowerCase());
+                               confirmtext.append(docs.length + (" " + localization.templates).toLowerCase());
                              }
                              confirmtext.append("?");
                              Confirmation.popup({
                                 submit: submit,
-                                acceptText: "$_ok()$",
-                                rejectText: "$_cancel()$",
-                                title: "$_delete()$",
+                                acceptText: localization.ok,
+                                rejectText: localization.cancel,
+                                title: localization.archive.templates.delete.action,
                                 content: confirmtext
                               });
                           }
@@ -218,7 +218,7 @@ var TemplatesListDefinition = {
     headerExtras: Button.init({
         color: "green",
         size: "tiny",
-        text: "$_createNew()$",
+        text: localization.archive.templates.createnew,
         name : "doc",
         onClick: function() {
             var popup;
@@ -245,7 +245,7 @@ var TemplatesListDefinition = {
             var table = jQuery('<table style="width: 100%"/>').append(jQuery('<tbody/>').append(t));
             popup = Confirmation.popup({
                 onAccept: function() { },
-                title: "$_createNewType()$",
+                title: localization.archive.templates.createnewtype,
                 content: table
             });
             popup.hideAccept();
@@ -261,20 +261,20 @@ var AttachmentsListDefinition = {
     extraParams : { documentType : "Attachment" },
     sorting: new Sorting({ fields: ["title", "time", "type"]}),
     paging: new Paging({}),
-    textfiltering: new TextFiltering({text: "", infotext: "$_pageAttachmentListSearchInfo()$"}),
+    textfiltering: new TextFiltering({text: "", infotext: localization.archive.attachments.search}),
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
-        new Cell({name: "$_SortTime()$", width:"140px", field:"time"}),
-        new Cell({name: "$_SortAttachment()$", width:"400px", field:"title",  special: "link"}),
+        new Cell({name: localization.archive.attachments.columns.time, width:"140px", field:"time"}),
+        new Cell({name: localization.archive.attachments.columns.attachment, width:"400px", field:"title",  special: "link"}),
         new Cell({name: "", width:"100px", field:"shared", special: "rendered",
                   rendering: function(shared) {
                          var res = jQuery("<p/>")
                          if (shared == "True")
-                          return res.text("$_pageAttachmentListIfShared()$");
+                          return res.text(localization.archive.attachments.shared);
                          return res;
                   }})
         ],
-    options : [{name : "$_pageAttachmentListShare()$",
+    options : [{name :  localization.archive.attachments.share.action,
                 onSelect: function(docs){
                              var submit = new Submit({
                                                 url: "$currentlink$",
@@ -284,14 +284,14 @@ var AttachmentsListDefinition = {
                                           });
                             Confirmation.popup({
                                 submit: submit,
-                                acceptText: "$_ok()$",
-                                rejectText: "$_cancel()$",
-                                title: "$_listShareDialogHead()$",
-                                content: jQuery("<p/>").text("$_listShareDialogBody()$")
+                                acceptText: localization.ok,
+                                rejectText: localization.cancel,
+                                title: localization.archive.attachments.share.head,
+                                content: jQuery("<p/>").text(localization.archive.attachments.share.body)
                               })
                           }
                },
-               {name : "$_delete()$",
+               {name :  localization.archive.attachments.delete.action,
                 onSelect: function(docs){
                              var submit = new Submit({
                                                 url: "$currentlink$",
@@ -300,19 +300,19 @@ var AttachmentsListDefinition = {
                                                 archive: "true",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");})
                                           });
-                             var confirmtext = jQuery("<p/>").append("$_listLocalDialogsBody()$ ");
+                             var confirmtext = jQuery("<p/>").append(localization.archive.attachments.delete.body + " ");
                              var label = jQuery("<strong/>");
                              if (docs.length == 1) {
                                confirmtext.append(jQuery("<strong/>").text(docs[0].field("title")));
                              } else {
-                               confirmtext.append(docs.length + (" $_docListTabsAttachemtns()$").toLowerCase());
+                               confirmtext.append(docs.length + (" " + localization.attachments).toLowerCase());
                              }
                              confirmtext.append("?");
                              Confirmation.popup({
                                 submit: submit,
-                                acceptText: "$_ok()$",
-                                rejectText: "$_cancel()$",
-                                title: "$_delete()$",
+                                acceptText: localization.ok,
+                                rejectText: localization.cancel,
+                                title: localization.archive.attachments.delete.action,
                                 content: confirmtext
                               });
                           }
@@ -323,7 +323,7 @@ var AttachmentsListDefinition = {
     headerExtras: UploadButton.init({
                     size: "tiny",
                     width : "110",
-                    text: "$_pageAttachmentListNewAttachment()$",
+                    text: localization.archive.attachments.createnew,
                     name : "doc",
                     submitOnUpload : true,
                     submit: new Submit({
@@ -340,14 +340,14 @@ var BinListDefinition = {
     extraParams : { documentType : "Rubbish" },
     sorting: new Sorting({ fields: ["title", "time", "type"]}),
     paging: new Paging({}),
-    textfiltering: new TextFiltering({text: "", infotext: "$_SearchDoc()$"}),
+    textfiltering: new TextFiltering({text: "", infotext: localization.archive.bin.search}),
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
-        new Cell({name: "$_SortTime()$", width:"140px", field:"time"}),
-        new Cell({name: "$_SortType()$", width:"120px", field:"type"}),
-        new Cell({name: "$_SortDoc()$", width:"400px", field:"title",  special: "link"})
+        new Cell({name: localization.archive.bin.columns.time, width:"140px", field:"time"}),
+        new Cell({name: localization.archive.bin.columns.type, width:"120px", field:"type"}),
+        new Cell({name: localization.archive.bin.columns.title, width:"400px", field:"title",  special: "link"})
         ],
-    options : [{name : "$_restore()$",
+    options : [{name : localization.archive.bin.restore.action,
                 onSelect: function(docs){
                              var submit = new Submit({
                                                 url: "$currentlink$",
@@ -357,14 +357,14 @@ var BinListDefinition = {
                                           });
                             Confirmation.popup({
                                 submit: submit,
-                                acceptText: "$_ok()$",
-                                rejectText: "$_cancel()$",
-                                title: "$_listRestoreDialogHead()$",
-                                content: jQuery("<p/>").text("$_listRestoreDialogBody()$")
+                                acceptText: localization.ok,
+                                rejectText: localization.cancel,
+                                title: localization.archive.bin.restore.head,
+                                content: jQuery("<p/>").text(localization.archive.bin.restore.body)
                               })
                           }
                },
-               {name : "$_delete()$",
+               {name : localization.archive.bin.delete.action,
                 onSelect: function(docs){
                              var submit = new Submit({
                                                 url: "$currentlink$",
@@ -374,10 +374,10 @@ var BinListDefinition = {
                                           });
                               Confirmation.popup({
                                 submit: submit,
-                                acceptText: "$_ok()$",
-                                rejectText: "$_cancel()$",
-                                title: "$_listReallyDeleteDialogHead()$",
-                                content: jQuery("<p/>").text("$_listReallyDeleteDialogBody()$")
+                                acceptText: localization.ok,
+                                rejectText: localization.cancel,
+                                title: localization.archive.bin.delete.head,
+                                content: jQuery("<p/>").text(localization.archive.bin.delete.body)
                               })
                           }
                 }

@@ -206,7 +206,7 @@ javascriptLocalisation =
            , isNotSigningParty : "$_authorsignatoryradioSenderNotSign()$"
            , signatoryListPartner : "$_signStep2ContentPersons()$"
            , signatoryListSignOrder : "$_signStep2ContentSignOrder()$"
-           , attachments: {
+           , authorattachments: {
                   changeAuthorAttachments : "$_addattachmentlink()$"
                 , attach: "$_updateAttachmentsDialogUpLoadFooterAttach()$"
                 , selectAttachments: "$_updateAttachmentsDialogHead()$"
@@ -394,10 +394,13 @@ javascriptLocalisation =
              ,  savedTemplate  : "$_signStepsBodyUploadBoxStep1TemplateSaved()$"
              ,  chooseTemplateButton : "$_signStepsBodyUploadBoxStep1ButtonChooseTemplate()$"
         }
+      , documents : "$_docListTabsDocs()$"
+      , templates : "$_docListTabsTemplates()$"
+      , attachments : "$_docListTabsAttachemtns()$"
       , archive : {
                 documents : {
                        name :  "$_docListTabsDocs()$"
-                    ,  sendReminder : "$_SendReminder()$"
+                    ,  sendreminder : "$_SendReminder()$"
                     ,  delete : "$_delete()$"
                     ,  search : "$_SearchDoc()$"
                     ,  statusDescription : {
@@ -409,6 +412,16 @@ javascriptLocalisation =
                             , opened :    "$_tablestatusesViewedOnline()$"
                             , signed :    "$_tablestatusesSigned()$"
                        }
+                    ,  sendreminder : {
+                              action: "$_SendReminder()$"
+                            , bodymulti : "$_ContractReminderBodyMulti()$"
+                            , bodysingle : "$_ContractReminderBodySingel()$"
+                        }
+                    ,  delete : {
+                              action: "$_delete()$"
+                            , body : "$_listLocalDialogsBody()$"
+                            , cantremoveactive : "$_CantRemoveActiveDocuments()$"
+                        }
                     , columns :{
                               status : "$_SortStatus()$"
                             , time   : "$_SortTime()$"
@@ -420,12 +433,66 @@ javascriptLocalisation =
                        }
                 }
             ,  templates : {
-                    name :  "$_docListTabsTemplates()$"
+                       name :  "$_docListTabsTemplates()$"
+                    ,  delete : {
+                              action: "$_delete()$"
+                            , body : "$_listLocalDialogsBody()$"
+                        }
+                    ,  share : {
+                              action: "$_share()$"
+                            , head : "$_listShareDialogHead()$"
+                            , body : "$_listShareDialogBody()$"
+                        }
+                    ,  createnew : "$_createNew()$"
+                    ,  createnewtype : "$_createNewType()$"
+                    ,  shared : "$_shared()$"
+                    ,  search : "$_SearchDoc()$"
+                    ,  columns :{
+                              time       : "$_SortTime()$"
+                            , type       : "$_SortType()$"
+                            , template   : "$_SortTemplate()$"
+
+                       }
                 }
             ,  attachments : {
-                    name : "$_docListTabsAttachemtns()$"
+                       name : "$_docListTabsAttachemtns()$"
+                    ,  delete : {
+                              action: "$_delete()$"
+                            , body : "$_listLocalDialogsBody()$"
+                        }
+                    ,  share : {
+                              action: "$_pageAttachmentListShare()$"
+                            , head : "$_listShareDialogHead()$"
+                            , body : "$_listShareDialogBody()$"
+                        }
+                    ,  createnew : "$_pageAttachmentListNewAttachment()$"
+                    ,  shared : "$_pageAttachmentListIfShared()$"
+                    ,  search : "$_pageAttachmentListSearchInfo()$"
+                    ,  columns :{
+                              time       : "$_SortTime()$"
+                            , attachment   : "$_SortAttachment()$"
+
+                       }
                 }
-            ,  bin: {}
+            ,  bin: {
+                       delete : {
+                              action: "$_delete()$"
+                            , head : "$_listReallyDeleteDialogHead()$"
+                            , body : "$_listReallyDeleteDialogBody()$"
+                        }
+                    ,  restore : {
+                              action: "$_restore()$"
+                            , head : "$_listRestoreDialogHead()$"
+                            , body : "$_listRestoreDialogBody()$"
+                        } 
+                    ,  search : "$_SearchDoc()$"                     
+                    ,  columns :{
+                              time   : "$_SortTime()$"
+                            , title  : "$_SortDoc()$"
+                            , type   : "$_SortType()$"
+
+                       }
+               }
         } 
     }
 ####
