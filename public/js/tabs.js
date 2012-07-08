@@ -159,12 +159,15 @@ var TabsView = Backbone.View.extend({
         titlepart.append(this.model.title());
         var tabsrow = $("<ul class='tabs'/>");
         var model = this.model;
+        var hasRight = false;
         _.each(this.model.tabs(), function(tab)
         {
             if (tab.disabled()) return;
             var li = $("<li/>");
-            if (tab.right()) 
-                li.addClass("float-right"); 
+            if (tab.right()) {
+                li.addClass("float-right");
+                hasRight = true;
+            }
             else
                 li.addClass("float-left");
             if (tab.hasNumber())
@@ -186,6 +189,8 @@ var TabsView = Backbone.View.extend({
                     });
             tabsrow.append(li);
         });
+        if (!hasRight)
+            tabsrow.append("<li class='float-right'/>");
         this.toprow.append(titlepart);
         if (model.hasManyTabs())
             this.toprow.append(tabsrow);
@@ -194,7 +199,7 @@ var TabsView = Backbone.View.extend({
            var li = $("<li style= 'float:right;padding-left:0px;padding-right:20px;'/>").append(elem);
            tabsrow.append(li);
         });
-
+        
 
         this.model.hideAll();
         this.model.activeTab().initateAll();
@@ -221,7 +226,7 @@ window.KontraTabs = function(args){
         return {
               model    : this.model
             , view     : this.view
-            , next     : function()    { model.activateNext();}
+            , next     : function()    { this.model.activateNext();}
             , activate : function(tab) { this.model.activate(tab);}
          };
 };
