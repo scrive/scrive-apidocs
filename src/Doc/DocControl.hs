@@ -17,13 +17,9 @@ module Doc.DocControl(
     , handleDeleteSigAttach
     , handleAttachmentViewForViewer
     , handleShowUploadPage
-    , handleAttachmentShare
     , handleAttachmentRename
     , handleCreateNewAttachment
-    , handleTemplateShare
     , handleCreateNewTemplate
-    , handleRubbishRestore
-    , handleRubbishReallyDelete
     , handleIssueShowGet
     , handleIssueNewDocument
     , handleIssueShowPost
@@ -709,54 +705,6 @@ makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) nr
           handleDocumentUpload (documentid doc) (concatChunks content) title
           return $ Just doc
 makeDocumentFromFile _ _ _ = internalError -- to complete the patterns
-
-
-handleRubbishRestore :: Kontrakcja m => m KontraLink
-handleRubbishRestore = do
-  user <- guardJustM $ ctxmaybeuser <$> getContext
-  actor <- guardJustM $ mkAuthorActor <$> getContext
-  docids <- getCriticalFieldList asValidDocID "doccheck"
-  mapM_ (\did -> guardRightM $ dbUpdate $ RestoreArchivedDocument user did actor) docids
-  addFlashM flashMessageRubbishRestoreDone
-  return $ LinkRubbishBin
-
-handleRubbishReallyDelete :: Kontrakcja m => m KontraLink
-handleRubbishReallyDelete = do
-  user <- guardJustM $ ctxmaybeuser <$> getContext
-  actor <- guardJustM $ mkAuthorActor <$> getContext
-  ctx <- getContext
-  docids <- getCriticalFieldList asValidDocID "doccheck"
-  mapM_ (\did -> do
-            doc <- guardRightM $ dbUpdate $ ReallyDeleteDocument user did actor
-            case getSigLinkFor doc user of
-              Just sl -> addSignStatPurgeEvent doc sl (ctxtime ctx)
-              _ -> return False)
-    docids
-  addFlashM flashMessageRubbishHardDeleteDone
-  return $ LinkRubbishBin
-
-handleTemplateShare :: Kontrakcja m => m KontraLink
-handleTemplateShare = withUserPost $ do
-    docs <- handleIssueShare
-    case docs of
-      (d:[]) -> addFlashM $ flashMessageSingleTemplateShareDone $ documenttitle d
-      _ -> addFlashM flashMessageMultipleTemplateShareDone
-    return $ LinkTemplates
-
-handleAttachmentShare :: Kontrakcja m => m KontraLink
-handleAttachmentShare = withUserPost $ do
-    docs <- handleIssueShare
-    case docs of
-      (d:[]) -> addFlashM $ flashMessageSingleAttachmentShareDone $ documenttitle d
-      _ -> addFlashM  flashMessageMultipleAttachmentShareDone
-    return $ LinkAttachments
-
-handleIssueShare :: Kontrakcja m => m [Document]
-handleIssueShare = do
-  ids <- getCriticalFieldList asValidDocID "doccheck"
-  _ <- dbUpdate $ SetDocumentSharing ids True
-  w <- flip mapM ids $ (dbQuery . GetDocumentByDocumentID)
-  return (catMaybes w)
 
 handleAttachmentRename :: Kontrakcja m => DocumentID -> m KontraLink
 handleAttachmentRename docid = withUserPost $ do

@@ -17,37 +17,49 @@ window.BinListDefinition = {
         new Cell({name: localization.archive.bin.columns.title, width:"400px", field:"title",  special: "link"})
         ],
     options : [{name : localization.archive.bin.restore.action,
-                onSelect: function(docs){
-                             var submit = new Submit({
-                                                url: "$currentlink$",
-                                                method: "POST",
-                                                restore: "true",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");})
-                                          });
-                            Confirmation.popup({
-                                submit: submit,
+                onSelect: function(docs,list){
+                            var confirmationPopup = Confirmation.popup({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.bin.restore.head,
-                                content: jQuery("<p/>").text(localization.archive.bin.restore.body)
-                              })
+                                content: jQuery("<p/>").text(localization.archive.bin.restore.body),
+                                onAccept : function() {
+                                  new Submit({
+                                                url: "/d/restore",
+                                                method: "POST",
+                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                ajaxsuccess : function() {
+                                                    FlashMessages.add({color : "green", content : localization.archive.bin.restore.successMessage});
+                                                    list.trigger('changedWithAction');
+                                                    confirmationPopup.view.clear();
+                                                }
+                                          }).sendAjax();
+                                }
+                              });
+                            return true;
                           }
                },
                {name : localization.archive.bin.delete.action,
-                onSelect: function(docs){
-                             var submit = new Submit({
-                                                url: "$currentlink$",
-                                                method: "POST",
-                                                reallydelete: "true",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");})
-                                          });
-                              Confirmation.popup({
-                                submit: submit,
+                onSelect: function(docs,list){
+                              var confirmationPopup = Confirmation.popup({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.bin.delete.head,
-                                content: jQuery("<p/>").text(localization.archive.bin.delete.body)
-                              })
+                                content: jQuery("<p/>").text(localization.archive.bin.delete.body),
+                                onAccept : function() {
+                                  new Submit({
+                                                url: "/d/reallydelete",
+                                                method: "POST",
+                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                ajaxsuccess : function() {
+                                                    FlashMessages.add({color : "green", content : localization.archive.bin.delete.successMessage});
+                                                    list.trigger('changedWithAction');
+                                                    confirmationPopup.view.clear();
+                                                }
+                                          }).sendAjax();
+                                }
+                              });
+                            return true;
                           }
                 }
               ]

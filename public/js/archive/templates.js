@@ -26,20 +26,27 @@ window.TemplatesListDefinition = {
                   }})
         ],
     options : [{name : localization.archive.templates.share.action,
-                onSelect: function(docs){
-                             var submit = new Submit({
-                                                url: "$currentlink$",
-                                                method: "POST",
-                                                share: "true",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");})
-                                          });
-                            Confirmation.popup({
+                onSelect: function(docs,list){
+                            var confirmationPopup = Confirmation.popup({
                                 submit: submit,
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.templates.share.head,
-                                content: jQuery("<p/>").text(localization.archive.templates.share.body)
-                              })
+                                content: jQuery("<p/>").text(localization.archive.templates.share.body),
+                                onAccept : function() {
+                                    new Submit({
+                                                url: "/d/share",
+                                                method: "POST",
+                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                ajaxsuccess : function() {
+                                                    FlashMessages.add({color : "green", content : localization.archive.templates.share.successMessage});
+                                                    list.trigger('changedWithAction');
+                                                    confirmationPopup.view.clear();
+                                                }
+                                          }).sendAjax();
+                                }
+                              });
+                            return true;
                           }
                },
                {name : localization.archive.templates.delete.action ,
@@ -94,7 +101,7 @@ window.TemplatesListDefinition = {
                     submit: new Submit({
                         method : "POST",
                         doctype: type,
-                        url : "$currentlink$",
+                        url : "/t",
                         onSend: function() {LoadingDialog.open();},
                     })
                 }).input()));

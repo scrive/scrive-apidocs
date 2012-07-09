@@ -3,6 +3,9 @@ module Archive.Control
        (
        handleDelete,
        handleSendReminders,
+       handleRestore,
+       handleReallyDelete,
+       handleShare,
        showArchive,
        showPadDeviceArchive,
        jsonDocumentsList
@@ -69,6 +72,38 @@ handleSendReminders = do
           _ -> return []
     
 
+handleRestore :: Kontrakcja m => m JSValue
+handleRestore = do
+  user <- guardJustM $ ctxmaybeuser <$> getContext
+  actor <- guardJustM $ mkAuthorActor <$> getContext
+  docids <- getCriticalFieldList asValidDocID "doccheck"
+  mapM_ (\did -> guardRightM'  $ dbUpdate $ RestoreArchivedDocument user did actor) docids
+  J.runJSONGenT $ return ()
+
+handleReallyDelete :: Kontrakcja m => m JSValue
+handleReallyDelete = do
+  user <- guardJustM $ ctxmaybeuser <$> getContext
+  actor <- guardJustM $ mkAuthorActor <$> getContext
+  ctx <- getContext
+  docids <- getCriticalFieldList asValidDocID "doccheck"
+  mapM_ (\did -> do
+            doc <- guardRightM'  $ dbUpdate $ ReallyDeleteDocument user did actor
+            case getSigLinkFor doc user of
+              Just sl -> addSignStatPurgeEvent doc sl (ctxtime ctx)
+              _ -> return False)
+    docids
+  J.runJSONGenT $ return ()
+
+
+handleShare :: Kontrakcja m => m JSValue
+handleShare =  do
+    _ <- guardJustM $ ctxmaybeuser <$> getContext
+    ids <- getCriticalFieldList asValidDocID "doccheck"
+    _ <- dbUpdate $ SetDocumentSharing ids True
+    w <- flip mapM ids $ (dbQuery . GetDocumentByDocumentID)
+    when_ (null $ catMaybes w) internalError
+    J.runJSONGenT $ return ()
+    
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
  -}

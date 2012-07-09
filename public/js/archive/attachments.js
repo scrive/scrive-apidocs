@@ -23,31 +23,30 @@ window.AttachmentsListDefinition = {
                   }})
         ],
     options : [{name :  localization.archive.attachments.share.action,
-                onSelect: function(docs){
-                             var submit = new Submit({
-                                                url: "$currentlink$",
-                                                method: "POST",
-                                                share: "true",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");})
-                                          });
-                            Confirmation.popup({
-                                submit: submit,
+                onSelect: function(docs,list){
+                            var confirmationPopup = Confirmation.popup({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.attachments.share.head,
-                                content: jQuery("<p/>").text(localization.archive.attachments.share.body)
-                              })
+                                content: jQuery("<p/>").text(localization.archive.attachments.share.body),
+                                onAccept : function() {
+                                    new Submit({
+                                                url: "/d/share",
+                                                method: "POST",
+                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                ajaxsuccess : function() {
+                                                    FlashMessages.add({color : "green", content : localization.archive.attachments.share.successMessage});
+                                                    list.trigger('changedWithAction');
+                                                    confirmationPopup.view.clear();
+                                                }
+                                          }).sendAjax();
+                                }
+                              });
+                            return true;
                           }
                },
                {name :  localization.archive.attachments.delete.action,
-                onSelect: function(docs){
-                             var submit = new Submit({
-                                                url: "$currentlink$",
-                                                method: "POST",
-                                                remove: "true",
-                                                archive: "true",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");})
-                                          });
+                onSelect: function(docs,list){
                              var confirmtext = jQuery("<p/>").append(localization.archive.attachments.delete.body + " ");
                              var label = jQuery("<strong/>");
                              if (docs.length == 1) {
@@ -56,13 +55,25 @@ window.AttachmentsListDefinition = {
                                confirmtext.append(docs.length + (" " + localization.attachments).toLowerCase());
                              }
                              confirmtext.append("?");
-                             Confirmation.popup({
-                                submit: submit,
+                             var confirmationPopup = Confirmation.popup({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.attachments.delete.action,
-                                content: confirmtext
+                                content: confirmtext,
+                                onAccept : function() {
+                                    var confirmationPopup = new Submit({
+                                                url: "/d/delete",
+                                                method: "POST",
+                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                ajaxsuccess : function() {
+                                                    FlashMessages.add({color : "green", content : localization.archive.attachments.delete.successMessage});
+                                                    list.trigger('changedWithAction');
+                                                    confirmationPopup.view.clear();
+                                                }
+                                          }).sendAjax(); 
+                                }
                               });
+                              return true;
                           }
                 }
               ]
@@ -76,63 +87,11 @@ window.AttachmentsListDefinition = {
                     submitOnUpload : true,
                     submit: new Submit({
                           method : "POST",
-                          url : "$currentlink$"
+                          url : "/a",
+                          ajax : true,
+                          ajaxsuccess : function() {window.location = window.location;}
                         })
                     }).input()
  };
-
-var BinListDefinition = {
-    name : "Trash table",
-    schema: new Schema({
-    url: "/docs",
-    extraParams : { documentType : "Rubbish" },
-    sorting: new Sorting({ fields: ["title", "time", "type"]}),
-    paging: new Paging({}),
-    textfiltering: new TextFiltering({text: "", infotext: localization.archive.bin.search}),
-    cells : [
-        new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
-        new Cell({name: localization.archive.bin.columns.time, width:"140px", field:"time"}),
-        new Cell({name: localization.archive.bin.columns.type, width:"120px", field:"type"}),
-        new Cell({name: localization.archive.bin.columns.title, width:"400px", field:"title",  special: "link"})
-        ],
-    options : [{name : localization.archive.bin.restore.action,
-                onSelect: function(docs){
-                             var submit = new Submit({
-                                                url: "$currentlink$",
-                                                method: "POST",
-                                                restore: "true",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");})
-                                          });
-                            Confirmation.popup({
-                                submit: submit,
-                                acceptText: localization.ok,
-                                rejectText: localization.cancel,
-                                title: localization.archive.bin.restore.head,
-                                content: jQuery("<p/>").text(localization.archive.bin.restore.body)
-                              })
-                          }
-               },
-               {name : localization.archive.bin.delete.action,
-                onSelect: function(docs){
-                             var submit = new Submit({
-                                                url: "$currentlink$",
-                                                method: "POST",
-                                                reallydelete: "true",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");})
-                                          });
-                              Confirmation.popup({
-                                submit: submit,
-                                acceptText: localization.ok,
-                                rejectText: localization.cancel,
-                                title: localization.archive.bin.delete.head,
-                                content: jQuery("<p/>").text(localization.archive.bin.delete.body)
-                              })
-                          }
-                }
-              ]
-
-    })
-
-};
 
 })(window);

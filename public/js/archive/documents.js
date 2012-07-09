@@ -78,7 +78,7 @@ window.DocumentsListDefinition = {
                                 rejectText: localization.cancel,
                                 title: localization.archive.documents.sendreminder.action,
                                 content: content,
-                                 onAccept : function() {
+                                onAccept : function() {
                                     new Submit({
                                                 url: "/d/remind",
                                                 method: "POST",
