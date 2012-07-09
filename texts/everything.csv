@@ -594,8 +594,8 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_flashMessageLoginPageRedirectReasonNotLoggedIn","Du är inte inloggad.",,"You are not logged in."
 "_flashMessageLoginPageRedirectReasonWrongMailOrPassword","Felaktig e-post eller lösenord.",,"Incorrect email or password."
 "_flashMessageMissingRequiredField","Du har missat att fylla i ett obligatoriskt fält.",,"You missed some mandatory fields."
-"_flashMessageMultipleAttachmentShareDone","Valda bilagor har blivit delade inom din organisation.",,"The selected attachments have been shared with your organisation."
-"_flashMessageMultipleTemplateShareDone","Valda mallar har blivit delade inom din organisation.",,"The selected templates have been shared with your organisation."
+"_flashMessageAttachmentShareDone","Valda bilagor har blivit delade inom din organisation.",,"The selected attachments have been shared with your organisation."
+"_flashMessageTemplateShareDone","Valda mallar har blivit delade inom din organisation.",,"The selected templates have been shared with your organisation."
 "_flashMessageMustAcceptTOS","Vänligen acceptera Scrive Allmänna Villkor för att komma igång.",,"Please accept the Scrive Terms of Service to get started."
 "_flashMessageNeedsLetterAndDigit","$fieldnametitlecase$ måste innehålla åtminstone två bokstäver
  och två nummer.",,"$fieldnametitlecase$ must contain at least two letters and two
@@ -625,8 +625,6 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_flashMessageRubbishRestoreDone","De valda dokumenten har återförts till ditt arkiv.",,"The selected documents have been restored to your archive."
 "_flashMessageSecondNameIsRequired","Efternamn krävs.",,"Last name required."
 "_flashMessagePhoneIsRequired","Telefonnummer krävs.",,"Phone number is required if you want more information."
-"_flashMessageSingleAttachmentShareDone","$docname$ har blivit delad inom din organisation.",,"$docname$ has been shared with your organisation."
-"_flashMessageSingleTemplateShareDone","$docname$ har blivit delad inom din organisation.",,"$docname$ has been shared with your organisation."
 "_flashMessageTemplateArchiveDone","Valda mallar har blivit raderade.",,"The selected templates have been deleted."
 "_flashMessageThanksForTheQuestion","Ditt meddelande har skickats! Vi återkommer inom 24h.",,"Your message has been sent! We will get back to you within 24
  hours."

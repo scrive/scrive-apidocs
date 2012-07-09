@@ -446,6 +446,7 @@ javascriptLocalisation =
                               action: "$_share()$"
                             , head : "$_listShareDialogHead()$"
                             , body : "$_listShareDialogBody()$"
+                            , successMessage : "$_flashMessageTemplateShareDone()$"
                         }
                     ,  createnew : "$_createNew()$"
                     ,  createnewtype : "$_createNewType()$"
@@ -469,6 +470,7 @@ javascriptLocalisation =
                               action: "$_pageAttachmentListShare()$"
                             , head : "$_listShareDialogHead()$"
                             , body : "$_listShareDialogBody()$"
+                            , successMessage : "$_flashMessageAttachmentShareDone()$"
                         }
                     ,  createnew : "$_pageAttachmentListNewAttachment()$"
                     ,  shared : "$_pageAttachmentListIfShared()$"
@@ -484,11 +486,13 @@ javascriptLocalisation =
                               action: "$_delete()$"
                             , head : "$_listReallyDeleteDialogHead()$"
                             , body : "$_listReallyDeleteDialogBody()$"
+                            , successMessage : "$_flashMessageRubbishHardDeleteDone()$"
                         }
                     ,  restore : {
                               action: "$_restore()$"
                             , head : "$_listRestoreDialogHead()$"
                             , body : "$_listRestoreDialogBody()$"
+                            , successMessage : "$_flashMessageRubbishRestoreDone()$"
                         } 
                     ,  search : "$_SearchDoc()$"                     
                     ,  columns :{
