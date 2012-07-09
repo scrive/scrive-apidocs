@@ -56,7 +56,8 @@
             selectfiltering : [],                              
             paging: new Paging({ disabled: true }),
             options: [],
-            extraParams: {}
+            extraParams: {},
+            expandedByDefault : false
         },
         initialize: function() {
             _.bindAll(this, 'change');
@@ -109,6 +110,12 @@
         extraParams: function() {
             return this.get("extraParams");
         },
+<<<<<<< HEAD
+=======
+        expandedByDefault : function() {
+            return this.get("expandedByDefault") == true;
+        },
+>>>>>>> 8f8b40adc88cfd4836680e3bdf1352e7eba9a1a7
         url: function() {
             return this.get("url");
         },

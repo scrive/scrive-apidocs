@@ -45,10 +45,23 @@
             unsaved: false
         },
         initialize: function (args) {
+<<<<<<< HEAD
             if (this.collection != undefined && this.collection.schema != undefined &&  this.field("id") != undefined)
             {
                 var namespace = this.collection.schema.namespace();
                 this.set({ "expanded": SessionStorage.get(namespace, "expanded" + this.field("id")) == "true" });
+=======
+            if (this.collection != undefined && this.collection.schema && this.collection.schema.expandedByDefault())
+            {
+                this.set({expanded : true});
+            }
+            if (this.collection != undefined && this.collection.schema != undefined &&  this.field("id") != undefined)
+            {
+                var namespace = this.collection.schema.namespace();
+                var val = SessionStorage.get(namespace, "expanded" + this.field("id"));
+                if (val != undefined && val != "")
+                this.set({ "expanded": val == "true" });
+>>>>>>> 8f8b40adc88cfd4836680e3bdf1352e7eba9a1a7
             }
         },
         field: function(name) {
@@ -403,7 +416,11 @@
             var body = this.tbody;
             var odd = true;
             var schema = this.schema
+<<<<<<< HEAD
             this.model.first(schema.paging().pageSize()).forEach(function(e) {
+=======
+            _.each(this.model.first(this.schema.paging().pageSize()),function(e) {
+>>>>>>> 8f8b40adc88cfd4836680e3bdf1352e7eba9a1a7
                 if (e.view == undefined)
                   new ListObjectView({
                         model: e,
