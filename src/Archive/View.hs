@@ -3,10 +3,7 @@ module Archive.View
          flashMessageAttachmentArchiveDone,
          flashMessageSignableArchiveDone,
          flashMessageTemplateArchiveDone,
-         pageAttachmentList,
-         pageDocumentsList,
-         pageRubbishBinList,
-         pageTemplatesList,
+         pageArchive,
          pagePadDeviceArchive,
          docForListJSON,
          docForListCSV,
@@ -50,48 +47,12 @@ flashMessageAttachmentArchiveDone :: TemplatesMonad m => m FlashMessage
 flashMessageAttachmentArchiveDone =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageAttachmentArchiveDone"
 
-pageDocumentsList :: TemplatesMonad m => User -> m String
-pageDocumentsList = pageList' "pageDocumentsList" LinkContracts 
-
-pageTemplatesList :: TemplatesMonad m => User -> m String
-pageTemplatesList = pageList' "pageTemplatesList" LinkTemplates 
-
-pageAttachmentList :: TemplatesMonad m =>  User -> m String
-pageAttachmentList = pageList' "pageAttachmentList" LinkAttachments 
-
-pageRubbishBinList :: TemplatesMonad m => User ->  m String
-pageRubbishBinList = pageList' "pageRubbishBinList" LinkRubbishBin 
+pageArchive :: TemplatesMonad m => User -> m String
+pageArchive = renderTemplate "pageDocumentsList" $ return () 
 
 pagePadDeviceArchive :: TemplatesMonad m => User ->  m String
-pagePadDeviceArchive = pageList' "pagePadDeviceArchive" LinkPadDeviceArchive
+pagePadDeviceArchive = renderTemplate "pagePadDeviceArchive" $ return ()
     
-
-{- |
-    Helper function for list pages
--}
-pageList' :: TemplatesMonad m
-          => String
-          -> KontraLink
-          -> User
-          -> m String
-pageList' templatename currentlink user = renderTemplate templatename $ do
-  F.value "canReallyDeleteDocs" $ useriscompanyadmin user || isNothing (usercompany user)
-  F.value "currentlink" $ show $ currentlink
-  F.value "linkdoclist" $ show $ LinkContracts
-  F.value "documentactive" $ (LinkContracts == currentlink)
-  F.value "linkofferlist" $ show $ LinkOffers
-  F.value "offeractive" $ (LinkOffers == currentlink)
-  F.value "linkorderlist" $ show $ LinkOrders
-  F.value "orderactive" $ (LinkOrders == currentlink)
-  F.value "linktemplatelist" $ show $ LinkTemplates
-  F.value "templateactive" $ (LinkTemplates == currentlink)
-  F.value "linkattachmentlist" $ show $ LinkAttachments
-  F.value "attachmentactive" $ (LinkAttachments == currentlink)
-  F.value "linkrubbishbinlist" $ show $ LinkRubbishBin
-  F.value "rubbishbinactive" $ (LinkRubbishBin == currentlink)
-  F.value "linkpaddevicearchive" $ show LinkPadDeviceArchive
-  F.value "paddevicearchiveactive" $ (LinkPadDeviceArchive == currentlink)
-
 docForListJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> User -> PadQueue ->  Document -> m JSValue
 docForListJSON tl crtime user padqueue doc = do
   let link = case getSigLinkFor doc user of

@@ -79,27 +79,11 @@ handleIssueArchive = do
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
  -}
-showDocumentsList :: Kontrakcja m => m (Either KontraLink String)
-showDocumentsList = archivePage pageDocumentsList
-
-showTemplatesList :: Kontrakcja m => m (Either KontraLink String)
-showTemplatesList = archivePage pageTemplatesList
-
-showAttachmentList :: Kontrakcja m => m (Either KontraLink String)
-showAttachmentList = archivePage pageAttachmentList
-
-showRubbishBinList :: Kontrakcja m => m (Either KontraLink String)
-showRubbishBinList = archivePage pageRubbishBinList
+showArchive :: Kontrakcja m => m (Either KontraLink String)
+showArchive = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >>= \_ -> pageArchive
 
 showPadDeviceArchive :: Kontrakcja m => m (Either KontraLink String)
-showPadDeviceArchive = archivePage pagePadDeviceArchive
-
-{- |
-    Helper function for showing lists of documents.
--}
-archivePage :: Kontrakcja m => (User -> m String) -> m (Either KontraLink String)
-archivePage page = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >>= page
-
+showPadDeviceArchive = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >>= \_ -> pageArchive pagePadDeviceArchive
 
 jsonDocumentsList ::  Kontrakcja m => m (Either KontraLink (Either Response JSValue))
 jsonDocumentsList = withUserGet $ do

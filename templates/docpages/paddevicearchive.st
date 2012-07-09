@@ -2,9 +2,10 @@ pagePadDeviceArchive=
 <div>
   <div class="tab-viewer paddevicearchive">
         <div class="tab-header">
-      $docListRubbishBinLink()$
         </div>
-        $docListTabs()$
+        <ul class="tabs">
+            <li class="active"><a href="$link$" class="listtype">$_PadDevice()$</a></li>
+        </ul>
   </div>
 </div>
 <script>

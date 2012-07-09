@@ -85,24 +85,21 @@ staticRoutes = choice
      --what it does/access control is left to the handler. EN
      , dir "upload" $ hGet $ toK0 $ DocControl.handleShowUploadPage
      , dir "locale" $ hPost $ toK0 $ UserControl.handlePostUserLocale
-     , dir "a"                     $ hGet  $ toK0 $ ArchiveControl.showAttachmentList
      , dir "a" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleAttachmentArchive
      , dir "a" $ param "share"     $ hPost $ toK0 $ DocControl.handleAttachmentShare
      , dir "a" $ dir "rename"      $ hPost $ toK1 $ DocControl.handleAttachmentRename
      , dir "a"                     $ hPost $ toK0 $ DocControl.handleCreateNewAttachment
 
-     , dir "t" $ hGet  $ toK0 $ ArchiveControl.showTemplatesList
      , dir "t" $ param "archive" $ hPost $ toK0 $ ArchiveControl.handleTemplateArchive
      , dir "t" $ param "share" $ hPost $ toK0 $ DocControl.handleTemplateShare
      , dir "t" $ param "template" $ hPost $ toK0 $ DocControl.handleCreateFromTemplate
      , dir "t" $ hPost $ toK0 $ DocControl.handleCreateNewTemplate
 
-     , dir "r" $ hGet $ toK0 $ ArchiveControl.showRubbishBinList
      , dir "r" $ param "restore" $ hPost $ toK0 $ DocControl.handleRubbishRestore
      , dir "r" $ param "reallydelete" $ hPost $ toK0 $ DocControl.handleRubbishReallyDelete
 
 
-     , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showDocumentsList
+     , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showArchive
      , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
      , dir "d" $ dir "eleg"        $ hGet  $ toK1 $ BankID.generateBankIDTransactionForAuthor
      , dir "d" $ dir "eleg" $ dir "mbi" $ hPostNoXToken $ toK1 $ BankID.initiateMobileBankIDForAuthor
