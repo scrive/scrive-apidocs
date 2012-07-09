@@ -416,11 +416,14 @@ javascriptLocalisation =
                               action: "$_SendReminder()$"
                             , bodymulti : "$_ContractReminderBodyMulti()$"
                             , bodysingle : "$_ContractReminderBodySingel()$"
+                            , successMessage : "$_flashMessageBulkDocumentRemindsSent()$"
+                            , errorMessage   : "$_flashMessageNoBulkDocumentRemindsSent()$"
                         }
                     ,  delete : {
                               action: "$_delete()$"
                             , body : "$_listLocalDialogsBody()$"
                             , cantremoveactive : "$_CantRemoveActiveDocuments()$"
+                            , successMessage : "$_flashMessageDocumentArchiveDone()$"
                         }
                     , columns :{
                               status : "$_SortStatus()$"
@@ -437,6 +440,7 @@ javascriptLocalisation =
                     ,  delete : {
                               action: "$_delete()$"
                             , body : "$_listLocalDialogsBody()$"
+                            , successMessage : "$_flashMessageTemplateArchiveDone()$"
                         }
                     ,  share : {
                               action: "$_share()$"
@@ -459,6 +463,7 @@ javascriptLocalisation =
                     ,  delete : {
                               action: "$_delete()$"
                             , body : "$_listLocalDialogsBody()$"
+                            , successMessage : "$_flashMessageAttachmentArchiveDone()$"
                         }
                     ,  share : {
                               action: "$_pageAttachmentListShare()$"

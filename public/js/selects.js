@@ -15,7 +15,8 @@ window.SelectOptionModel = Backbone.Model.extend({
        return this.get("value");
   },
   selected : function() {
-       this.get("onSelect")(this.value());
+       if (this.get("onSelect")(this.value()) == true)
+           this.trigger("done");
   }
 });
 
@@ -26,10 +27,13 @@ window.SelectModel = Backbone.Model.extend({
       expanded : false
   },
   initialize: function(args){
+      var model = this;
       var options = _.map(args.options,function(e) {
                         if (e.onSelect == undefined)
                             e.onSelect = args.onSelect;
-                        return new SelectOptionModel(e);
+                        var option = new SelectOptionModel(e);
+                        option.bind("done", function() {model.set({"expanded" : false});});
+                        return option;
                     });
       this.set({"options" : options});
   },

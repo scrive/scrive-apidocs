@@ -26,7 +26,6 @@ module Doc.DocControl(
     , handleRubbishReallyDelete
     , handleIssueShowGet
     , handleIssueNewDocument
-    , handleBulkDocumentRemind
     , handleIssueShowPost
     , jsonDocument
     , handleSaveDraft
@@ -765,37 +764,6 @@ handleAttachmentRename docid = withUserPost $ do
   actor <- guardJustM $ mkAuthorActor <$> getContext
   doc <- guardRightM $ dbUpdate $ SetDocumentTitle docid newname actor
   return $ LinkIssueDoc $ documentid doc
-
-handleBulkDocumentRemind :: Kontrakcja m => m KontraLink
-handleBulkDocumentRemind = withUserPost $ do
-    _ <- handleIssueBulkRemind
-    return $ LinkContracts
-
-{- |
-    This sends out bulk reminders.  The functionality is offered in the document
-    and offers list page.  It will make sure the user is actually the author of everything,
-    and send out reminders only to signatories who haven't accepted or signed on those that are
-    pending.  This returns all the signatory links that were reminded.
--}
-handleIssueBulkRemind :: Kontrakcja m => m [SignatoryLink]
-handleIssueBulkRemind = do
-    ctx@Context{ctxmaybeuser = Just user } <- getContext
-    ids <- getCriticalFieldList asValidDocID "doccheck"
-    remindedsiglinks <- fmap concat . sequence . map (\docid -> docRemind ctx user docid) $ ids
-    case (length remindedsiglinks) of
-      0 -> addFlashM $ flashMessageNoBulkRemindsSent
-      _ -> addFlashM $ flashMessageBulkRemindsSent
-    return remindedsiglinks
-    where
-      docRemind :: Kontrakcja m => Context -> User -> DocumentID -> m [SignatoryLink]
-      docRemind ctx user docid = do
-        doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
-        case (documentstatus doc) of
-          Pending -> do
-            let isEligible = isEligibleForReminder user doc
-                unsignedsiglinks = filter isEligible $ documentsignatorylinks doc
-            sequence . map (sendReminderEmail Nothing ctx doc) $ unsignedsiglinks
-          _ -> return []
 
 {- |
    Get some html to display the images of the files

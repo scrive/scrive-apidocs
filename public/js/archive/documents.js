@@ -54,7 +54,7 @@ window.DocumentsListDefinition = {
                  })
         ],
     options : [{name : localization.archive.documents.sendreminder.action,
-                onSelect: function(docs){
+                onSelect: function(docs,list){
                             allSendOrOpenSelected = _.all(docs, function(doc) {
                                                 return doc.field("status") == "sent"      ||
                                                        doc.field("status") == "delivered" ||
@@ -65,12 +65,6 @@ window.DocumentsListDefinition = {
                                 FlashMessages.add({content: localization.cantSendReminder(localization.documents.toLowerCase()), color: "red"});
                                 return;
                              }
-                             var submit = new Submit({
-                                                url: "$currentlink$",
-                                                method: "POST",
-                                                remind: "true",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");})
-                                          });
                              var content = jQuery("<p/>");
                              if (docs.length == 1) {
                                content.append(localization.archive.documents.sendreminder.bodysingle + " ");
@@ -79,17 +73,34 @@ window.DocumentsListDefinition = {
                              } else {
                                content.text(localization.archive.documents.sendreminder.bodymulti + " "+ docs.length + (" " + localization.documents +"?").toLowerCase());
                              }
-                             Confirmation.popup({
-                                submit: submit,
+                             var confirmationPopup = Confirmation.popup({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.documents.sendreminder.action,
-                                content: content
-                              })
+                                content: content,
+                                 onAccept : function() {
+                                    new Submit({
+                                                url: "/d/remind",
+                                                method: "POST",
+                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                ajaxsuccess : function() {
+                                                    FlashMessages.add({color : "green", content : localization.archive.documents.sendreminder.successMessage});
+                                                    list.trigger('changedWithAction');
+                                                    confirmationPopup.view.clear();
+                                                },
+                                                ajaxerror : function() {
+                                                    FlashMessages.add({color : "red", content : localization.archive.documents.sendreminder.errorMessage});
+                                                    list.trigger('changedWithAction');
+                                                    confirmationPopup.view.clear();
+                                                }
+                                          }).sendAjax();
+                                }
+                              });
+                             return true;
                           }
                },
                {name : localization.archive.documents.delete.action,
-                onSelect: function(docs){
+                onSelect: function(docs, list){
                             anySendOrOpenSelected = _.any(docs, function(doc) {
                                                 return doc.field("status") == "sent"      ||
                                                        doc.field("status") == "delivered" ||
@@ -99,15 +110,8 @@ window.DocumentsListDefinition = {
                                             })
                              if (anySendOrOpenSelected) {
                                 FlashMessages.add({content: localization.archive.documents.delete.cantremoveactive, color: "red"});
-                                return;
+                                return false;
                              }
-                             var submit = new Submit({
-                                                url: "$currentlink$",
-                                                method: "POST",
-                                                remove: "true",
-                                                archive: "true",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");})
-                                          });
                              var confirmtext = jQuery("<p/>").append(localization.archive.documents.delete.body + " ");
                              var label = jQuery("<strong/>");
                              if (docs.length == 1) {
@@ -116,13 +120,25 @@ window.DocumentsListDefinition = {
                                confirmtext.append(docs.length + (" " + localization.documents).toLowerCase());
                              }
                              confirmtext.append("?");
-                             Confirmation.popup({
-                                submit: submit,
+                             var confirmationPopup = Confirmation.popup({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.documents.delete.action,
-                                content: confirmtext
+                                content: confirmtext,
+                                onAccept : function() {
+                                    new Submit({
+                                                url: "/d/delete",
+                                                method: "POST",
+                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                ajaxsuccess : function() {
+                                                    FlashMessages.add({color : "green", content : localization.archive.documents.delete.successMessage});
+                                                    list.trigger('changedWithAction');
+                                                    confirmationPopup.view.clear();
+                                                }
+                                          }).sendAjax();
+                                }
                               });
+                             return true;
                           }
                 }
               ]

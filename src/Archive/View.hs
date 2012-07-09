@@ -16,7 +16,6 @@ import FlashMessage
 import KontraLink
 import Templates.Templates
 import User.Model
-import qualified Templates.Fields as F
 
 import Control.Applicative
 import Data.Maybe
@@ -47,11 +46,11 @@ flashMessageAttachmentArchiveDone :: TemplatesMonad m => m FlashMessage
 flashMessageAttachmentArchiveDone =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageAttachmentArchiveDone"
 
-pageArchive :: TemplatesMonad m => User -> m String
-pageArchive = renderTemplate "pageDocumentsList" $ return () 
+pageArchive :: TemplatesMonad m => m String
+pageArchive = renderTemplate_ "pageDocumentsList" 
 
-pagePadDeviceArchive :: TemplatesMonad m => User ->  m String
-pagePadDeviceArchive = renderTemplate "pagePadDeviceArchive" $ return ()
+pagePadDeviceArchive :: TemplatesMonad m =>  m String
+pagePadDeviceArchive = renderTemplate_ "pagePadDeviceArchive"
     
 docForListJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> User -> PadQueue ->  Document -> m JSValue
 docForListJSON tl crtime user padqueue doc = do

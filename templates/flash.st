@@ -181,16 +181,6 @@ flashMessageEmailIsRequired=	$_flashMessageEmailIsRequired()$
 ###
 flashMessageNumberIsRequired=	$_flashMessageNumberIsRequired()$
 ###
-flashMessageBulkDocumentRemindsSent=	$_flashMessageBulkDocumentRemindsSent()$
-###
-flashMessageNoBulkDocumentRemindsSent=	$_flashMessageNoBulkDocumentRemindsSent()$
-###
-flashMessageDocumentArchiveDone=	$_flashMessageDocumentArchiveDone()$
-###
-flashMessageTemplateArchiveDone=	$_flashMessageTemplateArchiveDone()$
-###
-flashMessageAttachmentArchiveDone=	$_flashMessageAttachmentArchiveDone()$
-###
 flashMessageRubbishRestoreDone= $_flashMessageRubbishRestoreDone()$
 ###
 flashMessageRubbishHardDeleteDone= $_flashMessageRubbishHardDeleteDone()$
