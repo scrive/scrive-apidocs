@@ -7,14 +7,12 @@ module Doc.DocView (
   , flashDocumentTemplateSaved
   , flashMessageRubbishRestoreDone
   , flashMessageRubbishHardDeleteDone
-  , flashMessageBulkRemindsSent
   , flashMessageCSVSent
   , flashMessageCanceled
   , flashMessageCannotCancel
   , flashMessageInvalidCSV
   , flashMessageMultipleAttachmentShareDone
   , flashMessageMultipleTemplateShareDone
-  , flashMessageNoBulkRemindsSent
   , flashMessageSingleAttachmentShareDone
   , flashMessageSingleTemplateShareDone
   , flashRemindMailSent
@@ -138,14 +136,6 @@ flashMessageCanceled document = do
 flashAuthorSigned :: TemplatesMonad m => m FlashMessage
 flashAuthorSigned =
   toFlashMsg OperationDone <$> renderTemplate_ "flashAuthorSigned"
-
-flashMessageBulkRemindsSent :: TemplatesMonad m => m FlashMessage
-flashMessageBulkRemindsSent = do
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageBulkDocumentRemindsSent"
-
-flashMessageNoBulkRemindsSent :: TemplatesMonad m => m FlashMessage
-flashMessageNoBulkRemindsSent = do
-  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageNoBulkDocumentRemindsSent"
 
 flashMessageRubbishRestoreDone :: TemplatesMonad m => m FlashMessage
 flashMessageRubbishRestoreDone =

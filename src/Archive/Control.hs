@@ -1,15 +1,9 @@
 {-# LANGUAGE CPP #-}
 module Archive.Control
        (
-       handleAttachmentArchive,
-       handleDocumentArchive,
-       handleIssueArchive,
-       handleSignableArchive,
-       handleTemplateArchive,
-       showDocumentsList,
-       showAttachmentList,
-       showRubbishBinList,
-       showTemplatesList,
+       handleDelete,
+       handleSendReminders,
+       showArchive,
        showPadDeviceArchive,
        jsonDocumentsList
        )
@@ -25,7 +19,6 @@ import Doc.DocStateData
 import Doc.Model
 import User.Model
 import User.Utils
-import Util.FlashUtil
 import Util.MonadUtils
 
 import Control.Applicative
@@ -39,32 +32,12 @@ import MinutesTime
 import Misc
 import PadQueue.Model
 import Data.Maybe
+import Text.JSON.Gen as J
+import Doc.DocUtils
+import Doc.Action
 
-handleDocumentArchive :: Kontrakcja m => m KontraLink
-handleDocumentArchive = do
-    _ <- handleSignableArchive
-    return $ LinkContracts
-
-handleSignableArchive :: Kontrakcja m => m ()
-handleSignableArchive =  do
-    handleIssueArchive
-    addFlashM $ flashMessageSignableArchiveDone
-    return ()
-
-handleTemplateArchive :: Kontrakcja m => m KontraLink
-handleTemplateArchive = do
-    handleIssueArchive
-    addFlashM flashMessageTemplateArchiveDone
-    return $ LinkTemplates
-
-handleAttachmentArchive :: Kontrakcja m => m KontraLink
-handleAttachmentArchive = do
-    handleIssueArchive
-    addFlashM flashMessageAttachmentArchiveDone
-    return $ LinkAttachments
-
-handleIssueArchive :: Kontrakcja m => m ()
-handleIssueArchive = do
+handleDelete :: Kontrakcja m => m JSValue
+handleDelete = do
     Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
     docids <- getCriticalFieldList asValidDocID "doccheck"
     let actor = userActor ctxtime ctxipnumber (userid user) (getEmail user)
@@ -74,15 +47,36 @@ handleIssueArchive = do
                 Just sl -> addSignStatDeleteEvent doc sl ctxtime
                 _ -> return False) 
       docids
+    J.runJSONGenT $ return ()
+
+handleSendReminders :: Kontrakcja m => m JSValue
+handleSendReminders = do
+    ctx@Context{ctxmaybeuser = Just user } <- getContext
+    ids <- getCriticalFieldList asValidDocID "doccheck"
+    remindedsiglinks <- fmap concat . sequence . map (\docid -> docRemind ctx user docid) $ ids
+    case (length remindedsiglinks) of
+      0 -> internalError
+      _ -> J.runJSONGenT $ return ()
+    where
+      docRemind :: Kontrakcja m => Context -> User -> DocumentID -> m [SignatoryLink]
+      docRemind ctx user docid = do
+        doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
+        case (documentstatus doc) of
+          Pending -> do
+            let isEligible = isEligibleForReminder user doc
+                unsignedsiglinks = filter isEligible $ documentsignatorylinks doc
+            sequence . map (sendReminderEmail Nothing ctx doc) $ unsignedsiglinks
+          _ -> return []
+    
 
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
  -}
 showArchive :: Kontrakcja m => m (Either KontraLink String)
-showArchive = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >>= \_ -> pageArchive
+showArchive = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >> pageArchive
 
 showPadDeviceArchive :: Kontrakcja m => m (Either KontraLink String)
-showPadDeviceArchive = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >>= \_ -> pageArchive pagePadDeviceArchive
+showPadDeviceArchive = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >> pagePadDeviceArchive
 
 jsonDocumentsList ::  Kontrakcja m => m (Either KontraLink JSValue)
 jsonDocumentsList = withUserGet $ do

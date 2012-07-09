@@ -338,7 +338,7 @@
                 if (onSelectFunction != undefined) {
                     e.onSelect = function() {
                         if (model.hasSelected()) {
-                            return onSelectFunction(model.getSelected());
+                            return onSelectFunction(model.getSelected(),model);
                         } else {
                             return function() {};
                         }
@@ -456,6 +456,7 @@
                 emptyAlternative: args.emptyAlternative
             });
             this.schema.bind('change', this.recall);
+            this.model.bind('changedWithAction', this.recall);
             this.recall();
             return this;
         },

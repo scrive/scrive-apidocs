@@ -43,14 +43,7 @@ window.TemplatesListDefinition = {
                           }
                },
                {name : localization.archive.templates.delete.action ,
-                onSelect: function(docs){
-                             var submit = new Submit({
-                                                url: "$currentlink$",
-                                                method: "POST",
-                                                remove: "true",
-                                                archive: "true",
-                                                doccheck: _.map(docs, function(doc){return doc.field("id");})
-                                          });
+                onSelect: function(docs,list){
                              var confirmtext = jQuery("<p/>").append(localization.archive.templates.delete.body + " ");
                              var label = jQuery("<strong/>");
                              if (docs.length == 1) {
@@ -59,15 +52,27 @@ window.TemplatesListDefinition = {
                                confirmtext.append(docs.length + (" " + localization.templates).toLowerCase());
                              }
                              confirmtext.append("?");
-                             Confirmation.popup({
-                                submit: submit,
+                             var confirmationPopup = Confirmation.popup({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.templates.delete.action,
-                                content: confirmtext
+                                content: confirmtext,
+                                onAccept : function() {
+                                    new Submit({
+                                                url: "/d/delete",
+                                                method: "POST",
+                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                ajaxsuccess : function() {
+                                                    FlashMessages.add({color : "green", content : localization.archive.templates.delete.successMessage});
+                                                    list.trigger('changedWithAction');
+                                                    confirmationPopup.view.clear();
+                                                }
+                                          }).sendAjax();
+                                }
                               });
+                            return true;
                           }
-                }
+                       }
               ]
 
     }),

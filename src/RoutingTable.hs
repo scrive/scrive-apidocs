@@ -85,12 +85,10 @@ staticRoutes = choice
      --what it does/access control is left to the handler. EN
      , dir "upload" $ hGet $ toK0 $ DocControl.handleShowUploadPage
      , dir "locale" $ hPost $ toK0 $ UserControl.handlePostUserLocale
-     , dir "a" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleAttachmentArchive
      , dir "a" $ param "share"     $ hPost $ toK0 $ DocControl.handleAttachmentShare
      , dir "a" $ dir "rename"      $ hPost $ toK1 $ DocControl.handleAttachmentRename
      , dir "a"                     $ hPost $ toK0 $ DocControl.handleCreateNewAttachment
 
-     , dir "t" $ param "archive" $ hPost $ toK0 $ ArchiveControl.handleTemplateArchive
      , dir "t" $ param "share" $ hPost $ toK0 $ DocControl.handleTemplateShare
      , dir "t" $ param "template" $ hPost $ toK0 $ DocControl.handleCreateFromTemplate
      , dir "t" $ hPost $ toK0 $ DocControl.handleCreateNewTemplate
@@ -105,8 +103,8 @@ staticRoutes = choice
      , dir "d" $ dir "eleg" $ dir "mbi" $ hPostNoXToken $ toK1 $ BankID.initiateMobileBankIDForAuthor
      , dir "d" $ dir "eleg" $ dir "mbi" $ hGet  $ toK1 $ BankID.collectMobileBankIDForAuthor
      , dir "d" $ {- param "doc" $ -} hPost $ toK0 $ DocControl.handleIssueNewDocument
-     , dir "d" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleDocumentArchive
-     , dir "d" $ param "remind"    $ hPost $ toK0 $ DocControl.handleBulkDocumentRemind
+     , dir "d" $ dir "delete"    $ hPost $ toK0 $ ArchiveControl.handleDelete
+     , dir "d" $ dir "remind"    $ hPost $ toK0 $ ArchiveControl.handleSendReminders
      , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
      , dir "docs"                  $ hGet  $ toK0 $ ArchiveControl.jsonDocumentsList
      , dir "doc"                   $ hGet  $ toK1 $ DocControl.jsonDocument
