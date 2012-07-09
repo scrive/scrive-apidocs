@@ -47,7 +47,7 @@ cron :: Int -> IO () -> IO a
 cron seconds action = forever $ do
   let freq = seconds * 1000000
   when (freq < 0) $
-    error $ "cron: seconds values is " ++ if seconds < 0 then "too big" else "negative" ++ ": " ++ show seconds
+    error $ "cron: seconds value (" ++ show seconds ++ ") is invalid"
   threadDelay freq
   action
 
