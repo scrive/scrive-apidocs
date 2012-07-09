@@ -554,4 +554,4 @@ getNumberOfPDFPages content =
                                    then []
                                    else findCounts (BS.drop 1 r)
     dropToNumber = BS.drop countLength1
-    readNumber = readM . takeWhile isDigit . BS.toString
+    readNumber = maybeRead . takeWhile isDigit . BS.toString
