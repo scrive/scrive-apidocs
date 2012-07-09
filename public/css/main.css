@@ -1308,31 +1308,31 @@ div.price-plan-details {
 }
 
 .partner-image div.go-enterprise {
-  background-position-x: 0;
+  background-position: 0 0;
 }
 
 .partner-image div.account-factory {
-  background-position-x: -180px;
+  background-position: -180px 0;
 }
 
 .partner-image div.green-hat-people {
-  background-position-x: -360px;
+  background-position: -360px 0;
 }
 
 .partner-image div.event-book {
-  background-position-x: -540px;
+  background-position: -540px 0;
 }
 
 .partner-image div.accenture {
-  background-position-x: -720px;
+  background-position: -720px 0;
 }
 
 .partner-image div.coop {
-  background-position-x: -900px;
+  background-position: -900px 0;
 }
 
 .partner-image div.ipas {
-  background-position-x: -1080px;
+  background-position: -1080px 0;
   background-color: black;
 }
 
