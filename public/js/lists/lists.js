@@ -331,7 +331,7 @@
                 var onSelectFunction = e.onSelect;
                 if (onSelectFunction != undefined) {
                     e.onSelect = function() {
-                        if (model.hasSelected()) {
+                        if (model.hasSelected() || e.acceptEmpty == true) {
                             return onSelectFunction(model.getSelected());
                         } else {
                             return function() {};

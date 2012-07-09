@@ -149,8 +149,8 @@ docForListCSV ktl agr doc = map (signatoryForListCSV ktl agr doc) $ [Nothing] <|
     where interestingLinks = filter (\x-> isSignatory x && getSmartName x /= "") (documentsignatorylinks doc)
           
 signatoryForListCSV:: KontraTimeLocale ->  Int -> Document -> (Maybe SignatoryLink) -> [String]
-signatoryForListCSV ktl agr doc msl = [
-              show agr
+signatoryForListCSV ktl _agr doc msl = [
+              ("'" ++ show (documentid doc) ++ "'") -- Exel trick
             , documenttitle doc
             , show $ documentstatusclass doc
             , getAuthorName $ doc

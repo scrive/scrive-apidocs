@@ -696,7 +696,7 @@ jsonDocuments = onlySalesOrAdmin $ do
                         , ("ctime", jsFromString . showMinutesTimeForAPI $ documentctime doc) 
                         , ("mtime", jsFromString . showMinutesTimeForAPI $ documentmtime doc) 
                         , ("author", JSObject $ toJSObject [
-                              ("name", jsFromString $ maybe "" getSmartName $ getAuthorSigLink doc)
+                              ("name", jsFromString $ getAuthorName doc)
                             , ("email", jsFromString $ maybe "" getEmail $ getAuthorSigLink doc)
                             , ("company", jsFromString $ maybe "" getCompanyName $ getAuthorSigLink doc)
                             ])

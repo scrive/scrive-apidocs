@@ -137,6 +137,7 @@ var documentsTable = KontraList().init({
                           }
                 },
                {name : "$_csv()$",
+                acceptEmpty : true,
                 onSelect: function(){
                         var url =  documentsTable.schema.url() + "?"
                         var params = documentsTable.schema.getSchemaUrlParams();
