@@ -34,7 +34,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.ByteString.Base64 as B64
 import qualified SealSpec as Seal
---import qualified TrustWeaver as TW
 import qualified GuardTime as GT
 import qualified Log
 import System.IO.Temp
@@ -43,6 +42,7 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import File.Model
+import Crypto.RNG
 import DB
 import Control.Applicative
 import EvidenceLog.Model
@@ -371,7 +371,7 @@ presealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) document inputpath o
             }
             
 
-sealDocument :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
+sealDocument :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
              => Document
              -> m (Either String Document)
 sealDocument document = do
@@ -383,7 +383,7 @@ sealDocument document = do
   return $ Right newdocument
 
 
-sealDocumentFile :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
+sealDocumentFile :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
                  => Document
                  -> File
                  -> m (Either String Document)

@@ -10,7 +10,7 @@ import Crypto
 import File.FileID
 
 data FileStorage =
-    FileStorageMemory BS.ByteString
+    FileStorageMemory BS.ByteString AESConf
   | FileStorageAWS String String (Maybe AESConf) -- ^ bucket, url inside bucket, aes key/iv
   | FileStorageDisk FilePath -- ^ filepath
     deriving (Eq, Ord, Show, Typeable)
@@ -19,15 +19,15 @@ data File = File {
     fileid       :: FileID
   , filename     :: String
   , filestorage  :: FileStorage
-  , filechecksum :: BS.ByteString
+  , filechecksum :: Maybe BS.ByteString
   } deriving (Typeable)
 
 instance Eq File where
-    a == b = fileid a == fileid b
+  a == b = fileid a == fileid b
 
 instance Ord File where
-    compare a b | fileid a == fileid b = EQ
-                | otherwise = compare (fileid a,filename a)
-                                      (fileid b,filename b)
+  compare a b | fileid a == fileid b = EQ
+              | otherwise = compare (fileid a, filename a)
+                                    (fileid b, filename b)
 instance Show File where
-    showsPrec _prec file = (++) (filename file)
+  show = filename

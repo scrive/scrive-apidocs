@@ -25,7 +25,6 @@ import qualified Network.HTTP as HTTP
 import AppConf
 import ActionQueue.Scheduler
 import Crypto
-import Crypto.RNG
 import DB
 import File.File
 import File.Model
@@ -58,6 +57,8 @@ uploadFilesToAmazon = do
         else dbRollback
       uploadFilesToAmazon
 
+-- | Transition function between non-cnrypted and ecnrypted files.
+-- To be removed after 15.08.2012.
 calculateChecksumAndEncryptOldFiles :: Scheduler ()
 calculateChecksumAndEncryptOldFiles = do
   mfile <- dbQuery GetFileWithNoChecksum
@@ -65,20 +66,17 @@ calculateChecksumAndEncryptOldFiles = do
     Nothing -> Log.debug "Encrypting old files done."
     Just file -> do
       let fid = fileid file
-      Log.debug $ "Generating checksum for file with id = " ++ show fid ++ "..."
+      Log.debug $ "Generating checksum, encrypting and saving in the database file with id = " ++ show fid ++ "..."
       conf <- sdAppConf <$> ask
-      content <- getFileContents (mkAWSAction conf) file
-      True <- dbUpdate $ SetChecksum fid $ Binary $ SHA1.hash content
-      Log.debug $ "Encrypting file with id = " ++ show fid ++ "..."
-      -- pretend that file is in memory so it gets reuploaded to amazon
-      let memfile = file { filestorage = FileStorageMemory content }
-      success <- exportFile (docstore conf) (mkAWSAction conf) memfile
-      if success
+      content <- Binary <$> getFileContents (mkAWSAction conf) file
+      op1 <- dbUpdate $ SetChecksum fid $ SHA1.hash `binApp` content
+      op2 <- dbUpdate $ SetContentToMemoryAndEncryptIt fid content
+      if op1 && op2
         then do
-          Log.debug $ "Encrypting succeeded."
+          Log.debug $ "Operation succeeded."
           dbCommit
         else do
-          Log.debug $ "Encrypting failed."
+          Log.debug $ "Operation failed."
           dbRollback
       calculateChecksumAndEncryptOldFiles
 
@@ -99,19 +97,18 @@ urlFromFile File{filename, fileid} =
 -- - save a file in a local directory
 -- - do nothing and keep it in memory database
 exportFile :: FilePath -> S3Action -> File -> Scheduler Bool
-exportFile docstore@(_:_) AWS.S3Action{AWS.s3bucket = ""} File{fileid, filename, filestorage = FileStorageMemory content} = do
+exportFile docstore@(_:_) AWS.S3Action{AWS.s3bucket = ""} File{fileid, filename, filestorage = FileStorageMemory content aes} = do
   let filepath = docstore </> show fileid ++ '-' : filename ++ ".pdf"
-  liftIO $ BS.writeFile filepath content
+  liftIO $ BS.writeFile filepath $ aesDecrypt aes content
   Log.debug $ "Document file #" ++ show fileid ++ " saved as " ++ filepath
   dbUpdate $ FileMovedToDisk fileid filepath
   return True
 
-exportFile _ ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, filestorage = FileStorageMemory content} = do
-  Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
+exportFile _ ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, filestorage = FileStorageMemory content _} = do
   let action = ctxs3action {
         AWS.s3object = url
       , AWS.s3operation = HTTP.PUT
-      , AWS.s3body = BSL.fromChunks [aesEncrypt aes content]
+      , AWS.s3body = BSL.fromChunks [content]
       , AWS.s3metadata = [("Content-Type","application/pdf")]
       }
       url = urlFromFile file
@@ -120,7 +117,7 @@ exportFile _ ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, fi
   case result of
     Right _ -> do
       Log.debug $ "AWS uploaded " ++ bucket </> url
-      _ <- dbUpdate $ FileMovedToAWS fileid bucket url aes
+      _ <- dbUpdate $ FileMovedToAWS fileid bucket url
       return True
     Left err -> do -- FIXME: do much better error handling
       Log.debug $ "AWS failed to upload of " ++ bucket </> url ++ " failed with error: " ++ show err
@@ -133,7 +130,7 @@ exportFile _ _ _ = do
 getFileContents :: MonadIO m => S3Action -> File -> m BS.ByteString
 getFileContents s3action File{..} = do
   content <- liftIO $ getContent filestorage
-  if SHA1.hash content /= filechecksum
+  if isJust filechecksum && Just (SHA1.hash content) /= filechecksum
      then do
        Log.debug $ "CRITICAL: SHA1 checksum of file with id = " ++ show fileid ++ " doesn't match the one in the database"
        return BS.empty
@@ -143,7 +140,7 @@ getFileContents s3action File{..} = do
       BS.readFile filepath `catch` (\(e :: SomeException) -> do
         Log.debug $ "Reading file " ++ filepath ++ " failed with: " ++ show e
         return BS.empty)
-    getContent (FileStorageMemory content) = return content
+    getContent (FileStorageMemory content aes) = return $ aesDecrypt aes content
     getContent (FileStorageAWS bucket url aes) = do
       result <- AWS.runAction $ s3action {
           AWS.s3object = url
