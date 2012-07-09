@@ -51,7 +51,6 @@ import Control.Concurrent
 import Data.String.Utils
 import qualified Templates.Fields as F
 import Control.Logic
-import Happstack.Util.Common (readM)
 
 personFromSignatoryDetails :: (BS.ByteString,BS.ByteString) -> SignatoryDetails -> Seal.Person
 personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) details =
@@ -318,7 +317,7 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
                         documentInfoFields document
                         F.value "hostpart" hostpart
       -- Log.debug ("finished staticTexts: " ++ show staticTexts)
-      readtexts <- case readM staticTexts of
+      readtexts <- case maybeRead staticTexts of
                      Just x -> return x
                      Nothing -> do
                        Log.error $ "Cannot read SealingTexts: " ++ staticTexts
