@@ -3,32 +3,60 @@
 (function(window){
  
 var ArchiveModel = Backbone.Model.extend({
-  defaults : {
-      step : "documents"
+  documents : function() {
+        if (this.get("documents") != undefined) return this.get("documents");
+        this.set({ "documents" : KontraList().init(DocumentsListDefinition) });
+        return this.documents();
   },
-  documents : function(){
-       return this.get("step") == "documents" ;
+  templates : function() {
+        if (this.get("templates") != undefined) return this.get("templates");
+        this.set({ "templates" : KontraList().init(TemplatesListDefinition) });
+        return this.templates();
   },
-  templates : function(){
-       return this.get("step") == "templates";
+  attachments : function() {
+        if (this.get("attachments") != undefined) return this.get("attachments");
+        this.set({ "attachments" : KontraList().init(AttachmentsListDefinition) });
+        return this.attachments();
   },
-  attachments: function() {
-       return this.get("step") == "attachments" ;
+  bin : function() {
+        if (this.get("bin") != undefined) return this.get("bin");
+        this.set({ "bin" : KontraList().init(BinListDefinition) });
+        return this.bin();
+
   },
-  bin: function() {
-       return this.get("step") == "bin" ;
+  documentsTab : function() {
+                    var archive = this;    
+                    return new Tab({
+                        name: localization.archive.documents.name,
+                        elems: [function() {return $(archive.documents().view.el);}],
+                        onActivate : function() {archive.documents().recall();}
+                    });
   },
-  goToDocuments : function() {
-      this.set({step: "documents"});
+  templatesTab : function() {
+                    var archive = this;    
+                    return  new Tab({
+                        name: localization.archive.templates.name,
+                        elems: [function() {return $(archive.templates().view.el);}],
+                        onActivate : function() {archive.templates().recall();}
+                    })
   },
-  goToTemplates : function() {
-      this.set({step: "templates"});
+  attachmentsTab : function() {
+                    var archive = this;
+                    return  new Tab({
+                        name: localization.archive.attachments.name,
+                        elems: [function() {return $(archive.attachments().view.el);}],
+                        onActivate : function() {archive.attachments().recall();}
+                    });
   },
-  goToAttachments : function() {
-      this.set({step: "attachments"});
-  },
-  goToBin : function() {
-      this.set({step: "bin"});
+  binTab : function() {
+                    var archive = this;
+                    return  new Tab({
+                        name: "",
+                        iconClass : "rubbishbin",
+                        right: true,
+                        elems: [function() {return $(archive.bin().view.el);}],
+                        onActivate : function() {archive.bin().recall();}
+                    });
   }
 });
 
@@ -38,54 +66,14 @@ var ArchiveView = Backbone.View.extend({
         this.model.view = this;
         this.render();
     },
-    documents : function() {
-        return $(KontraList().init(DocumentsListDefinition).view.el);
-
-    },
-    templates : function() {
-        return $(KontraList().init(TemplatesListDefinition).view.el);
-
-    },
-    attachments : function() {
-        return $(KontraList().init(AttachmentsListDefinition).view.el);
-
-    },
-    bin : function() {
-        return $(KontraList().init(BinListDefinition).view.el);
-
-    },
     render: function () {
        var container = $(this.el);
        var archive = this.model;
        var view = this;
        var tabs = new KontraTabs({
         title: "",
-        tabs: [
-            new Tab({
-                active : true,
-                name: localization.archive.documents.name,
-                elems: [function() {return view.documents();}],
-                onActivate : function() {archive.goToDocuments()}
-               }),
-            new Tab({
-                name: localization.archive.templates.name,
-                elems: [function() {return view.templates();}],
-                onActivate : function() {archive.goToTemplates()}
-               }),
-            new Tab({
-                name: localization.archive.attachments.name,
-                elems: [function() {return view.attachments();}],
-                onActivate : function() {archive.goToAttachments()}
-               }),
-            new Tab({
-                name: "",
-                iconClass : "rubbishbin",
-                right: true,
-                elems: [function() {return view.bin();}],
-                onActivate : function() {archive.goToBin()}
-               })
-               
-       ]});
+        tabs: [ archive.documentsTab(), archive.templatesTab(), archive.attachmentsTab(), archive.binTab() ]
+       });
        container.append(tabs.view.el);
        return this;
     }
