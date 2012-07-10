@@ -678,14 +678,13 @@ handleCreateNewTemplate = withUserPost $ do
       _ <- addDocumentCreateStatEvents doc "web"
       return $ LinkIssueDoc $ documentid doc
 
-handleCreateNewAttachment:: Kontrakcja m => m KontraLink
-handleCreateNewAttachment = withUserPost $ do
+handleCreateNewAttachment:: Kontrakcja m => m JSValue
+handleCreateNewAttachment = do
+  guardLoggedIn
   input <- getDataFnM (lookInput "doc")
   mdoc <- makeDocumentFromFile Attachment input 0
-  when (isJust mdoc) $ do
-    _<- addDocumentCreateStatEvents (fromJust mdoc) "web"
-    return ()
-  return LinkAttachments
+  when_ (isJust mdoc) $ addDocumentCreateStatEvents (fromJust mdoc) "web"
+  J.runJSONGenT $ return ()
 
 makeDocumentFromFile :: Kontrakcja m => DocumentType -> Input -> Int -> m (Maybe Document)
 makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) nrOfExtraSigs  = do

@@ -2,7 +2,8 @@
 
 (function(window){
 
-window.AttachmentsListDefinition = {
+window.AttachmentsListDefinition = function(archive) {
+ return {
     name : "Attachments Table",
     schema: new Schema({
     url: "/docs",
@@ -84,14 +85,16 @@ window.AttachmentsListDefinition = {
                     width : "110",
                     text: localization.archive.attachments.createnew,
                     name : "doc",
-                    submitOnUpload : true,
-                    submit: new Submit({
+                    onAppend : function(input) {
+                       setTimeout(function() {
+                        new Submit({
                           method : "POST",
                           url : "/a",
-                          ajax : true,
-                          ajaxsuccess : function() {window.location = window.location;}
-                        })
+                          ajaxsuccess : function() {archive.attachments().recall();}
+                        }).addInputs($(input)).sendAjax() },100);
+                    }
                     }).input()
  };
-
+ 
+};
 })(window);
