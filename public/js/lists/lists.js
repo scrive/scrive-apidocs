@@ -45,12 +45,6 @@
             unsaved: false
         },
         initialize: function (args) {
-<<<<<<< HEAD
-            if (this.collection != undefined && this.collection.schema != undefined &&  this.field("id") != undefined)
-            {
-                var namespace = this.collection.schema.namespace();
-                this.set({ "expanded": SessionStorage.get(namespace, "expanded" + this.field("id")) == "true" });
-=======
             if (this.collection != undefined && this.collection.schema && this.collection.schema.expandedByDefault())
             {
                 this.set({expanded : true});
@@ -61,7 +55,6 @@
                 var val = SessionStorage.get(namespace, "expanded" + this.field("id"));
                 if (val != undefined && val != "")
                 this.set({ "expanded": val == "true" });
->>>>>>> 8f8b40adc88cfd4836680e3bdf1352e7eba9a1a7
             }
         },
         field: function(name) {
