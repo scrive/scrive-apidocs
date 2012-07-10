@@ -28,7 +28,6 @@ window.TemplatesListDefinition = {
     options : [{name : localization.archive.templates.share.action,
                 onSelect: function(docs,list){
                             var confirmationPopup = Confirmation.popup({
-                                submit: submit,
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
                                 title: localization.archive.templates.share.head,

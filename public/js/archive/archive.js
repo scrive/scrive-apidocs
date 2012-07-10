@@ -15,7 +15,7 @@ var ArchiveModel = Backbone.Model.extend({
   },
   attachments : function() {
         if (this.get("attachments") != undefined) return this.get("attachments");
-        this.set({ "attachments" : KontraList().init(AttachmentsListDefinition) });
+        this.set({ "attachments" : KontraList().init(AttachmentsListDefinition(this)) });
         return this.attachments();
   },
   bin : function() {
