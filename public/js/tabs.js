@@ -69,7 +69,7 @@ var Tabs = Backbone.Model.extend({
        numbers : false
     },
    title: function(){
-     return this.get("title");
+     return this.get("title") != undefined ? this.get("title") : "";
     },
    numbers : function() {
      return   this.get("numbers") == true;
