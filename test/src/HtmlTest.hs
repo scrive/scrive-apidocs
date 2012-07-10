@@ -192,5 +192,5 @@ assertSuccess = assertBool "not success?!" True
 -- Library testing if all js and css are listed and if config file is valid
 testStaticResources :: Assertion
 testStaticResources = do
-    v <- SR.getResourceSetsForImport SR.Development "public/resources.spec"
+    v <- SR.getResourceSetsForImport SR.Development "public/resources.spec" ""
     assertRight $ v
