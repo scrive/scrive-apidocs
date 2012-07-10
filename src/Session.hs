@@ -206,12 +206,12 @@ sessionAndCookieHashMatch session sci =
 startSessionCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m) => Session -> m ()
 startSessionCookie session = do
   ishttps  <- isHTTPS
-  addHttpOnlyCookie ishttps (MaxAge (60*60*24)) $ mkCookie "sessionID" $ show $ cookieInfoFromSession session
+  addHttpOnlyCookie ishttps (MaxAge (60*60*24)) $ mkCookie "sessionId" $ show $ cookieInfoFromSession session
   addCookie ishttps (MaxAge (60*60*24)) $ mkCookie "xtoken" $ show $ xtoken $ sessionData session
 
 -- | Read current session cookie from request.
 currentSessionInfoCookie :: RqData (Maybe SessionCookieInfo)
-currentSessionInfoCookie = optional (readCookieValue "sessionID")
+currentSessionInfoCookie = optional (readCookieValue "sessionId")
 
 -- | Get current session based on cookies set.
 currentSession :: (HasAcidState Sessions m, HasRqData m, MonadIO m, ServerMonad m, MonadPlus m, FilterMonad Response m) => m (Maybe Session)
