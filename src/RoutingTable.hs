@@ -26,6 +26,7 @@ import qualified Archive.Control as ArchiveControl
 import qualified ELegitimation.Control as BankID
 import qualified User.UserControl as UserControl
 import qualified ScriveByMail.Control as MailAPI
+import qualified Payments.Control as Payments
 import qualified Attachment.Control as AttachmentControl
 import Doc.API
 import OAuth.Control
@@ -171,6 +172,9 @@ staticRoutes = choice
      , dir "companyaccounts" $ hGet  $ toK0 $ CompanyAccounts.handleCompanyAccounts
      , dir "companyaccounts" $ dir "join" $ hGet $ toK1 $ CompanyAccounts.handleGetBecomeCompanyAccount
      , dir "companyaccounts" $ dir "join" $ hPost $ toK1 $ CompanyAccounts.handlePostBecomeCompanyAccount
+     -- payments dashboard
+     , dir "payments" $ dir "dashboard" $ hGet $ toK0 $ Payments.handleSubscriptionDashboard
+     , dir "payments" $ dir "info.json" $ hGet $ toK0 $ Payments.handleSubscriptionDashboardInfo
 
      -- super user only
      , dir "createuser" $ hPost $ toK0 $ Administration.handleCreateUser

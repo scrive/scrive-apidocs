@@ -123,6 +123,7 @@ set systemPage
  js   js/padview.js
  js   js/changemainfile.js
  js   js/fileverifier.js
+ js   js/payments.js
  js   js/archive/documents.js
  js   js/archive/templates.js
  js   js/archive/attachments.js
