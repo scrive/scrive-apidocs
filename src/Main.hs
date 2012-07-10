@@ -54,7 +54,7 @@ main = Log.withLogger $ do
     >>= \args -> readConfig Log.server appname args "kontrakcja.conf"
 
   -- Generating static resources (JS and CSS). For development this does nothing. For production it generates joins.
-  staticResources' <- SR.getResourceSetsForImport (SR.Production <| production appConf |> SR.Development) (srConfig appConf) (srPathPrefix appConf)
+  staticResources' <- SR.getResourceSetsForImport (SR.Production <| production appConf |> SR.Development) (srConfig appConf) ""
   staticResources <- case staticResources' of
                           Right r -> return r
                           Left s -> error $ "Error while generating static resources: " ++ s

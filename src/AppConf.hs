@@ -29,7 +29,6 @@ data AppConf = AppConf {
   , dbConfig           :: String                       -- ^ postgresql configuration
   , gsCmd              :: String
   , srConfig           :: String                       -- ^ static resource spec file
-  , srPathPrefix       :: String                       -- ^ static resource path prefix
   , production         :: Bool                         -- ^ production flag, enables some production stuff, disables some development
   , guardTimeConf      :: GuardTimeConf
   , mailsConfig        :: MailsConfig                  -- ^ mail sendout configuration
@@ -54,7 +53,6 @@ instance Configuration AppConf where
     , dbConfig           = "user='kontra' password='kontra' dbname='kontrakcja'"
     , gsCmd              = "gs"
     , srConfig           = "public/resources.spec"
-    , srPathPrefix       = ""
     , production         = True
     , guardTimeConf      = GuardTimeConf { guardTimeURL = "http://stamper.guardtime.net/gt-signingservice" }
     , mailsConfig        = defaultMailsConfig
