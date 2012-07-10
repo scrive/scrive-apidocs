@@ -11,6 +11,7 @@ addCryptoColumnsToFilesTable = Migration {
     mgrTable = tableFiles
   , mgrFrom = 2
   , mgrDo = do
+    kRunRaw "ALTER TABLE files ADD COLUMN size INTEGER NULL"
     kRunRaw "ALTER TABLE files ADD COLUMN checksum BYTEA NULL"
     kRunRaw "ALTER TABLE files ADD COLUMN aes_key BYTEA NULL"
     kRunRaw "ALTER TABLE files ADD COLUMN aes_iv BYTEA NULL"

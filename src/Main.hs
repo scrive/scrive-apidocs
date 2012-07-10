@@ -113,7 +113,9 @@ startSystem appGlobals appConf = E.bracket
           t6 <- forkIO $ cron 5 $ runScheduler processEvents
           t7 <- forkIO $ cron 60 $ runScheduler AWS.uploadFilesToAmazon
           t8 <- forkIO $ cron (60 * 60) (System.Mem.performGC >> Log.debug "Performing GC...")
-          return [t1, t2, t3, t4, t5, t6, t7, t8]
+          -- transition function between non-encrypted and encrypted files.
+          t9 <- forkIO $ runScheduler AWS.calculateChecksumAndEncryptOldFiles
+          return [t1, t2, t3, t4, t5, t6, t7, t8, t9]
         waitForTerm _ = E.bracket
           -- checkpoint the state once a day
           -- FIXME: make it checkpoint always at the same time

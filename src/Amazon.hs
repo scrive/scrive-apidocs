@@ -7,6 +7,7 @@ module Amazon (
   ) where
 
 import Control.Applicative
+import Control.Concurrent
 import Control.Monad.Reader
 import Control.Exception (catch, SomeException)
 import Data.Maybe
@@ -57,7 +58,7 @@ uploadFilesToAmazon = do
         else dbRollback
       uploadFilesToAmazon
 
--- | Transition function between non-cnrypted and ecnrypted files.
+-- | Transition function between non-encrypted and encrypted files.
 -- To be removed after 15.08.2012.
 calculateChecksumAndEncryptOldFiles :: Scheduler ()
 calculateChecksumAndEncryptOldFiles = do
@@ -78,6 +79,7 @@ calculateChecksumAndEncryptOldFiles = do
         else do
           Log.debug $ "Operation failed."
           dbRollback
+      liftIO $ threadDelay 500000 -- 0.5 sec
       calculateChecksumAndEncryptOldFiles
 
 -- | Convert a file to Amazon URL. We use the following format:

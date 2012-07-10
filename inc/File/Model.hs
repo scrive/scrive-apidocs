@@ -22,6 +22,7 @@ import File.File
 import File.FileID
 import File.Tables
 import Misc
+import qualified Data.ByteString as BS
 import qualified Crypto.Hash.SHA1 as SHA1
 
 data GetFileByFileID = GetFileByFileID FileID
@@ -38,6 +39,7 @@ instance (Applicative m, CryptoRNG m, MonadDB m) => DBUpdate m NewFile File wher
         sql "name" filename
       , sql "content" $ aesEncrypt aes `binApp` content
       , sql "checksum" $ SHA1.hash `binApp` content
+      , sql "size" $ BS.length $ unBinary content
       , sql "aes_key" $ aesKey aes
       , sql "aes_iv" $ aesIV aes
       ] <++> SQL ("RETURNING " ++ filesSelectors) []
@@ -86,6 +88,7 @@ instance (Applicative m, CryptoRNG m, MonadDB m) => DBUpdate m SetContentToMemor
     Right aes <- lift $ mkAESConf <$> randomBytes 32 <*> randomBytes 16
     kRun01 $ mkSQL UPDATE tableFiles [
         sql "content" $ aesEncrypt aes `binApp` content
+      , sql "size" $ BS.length $ unBinary content
       , sql "aes_key" $ aesKey aes
       , sql "aes_iv" $ aesIV aes
       ] <++> SQL "WHERE id = ?" [toSql fid]

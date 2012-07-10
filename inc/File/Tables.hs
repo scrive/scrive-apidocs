@@ -13,6 +13,7 @@ tableFiles = Table {
        , ("amazon_bucket", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("amazon_url", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("disk_path", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("size", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("checksum", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
        , ("aes_key", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
        , ("aes_iv", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
@@ -25,6 +26,7 @@ tableFiles = Table {
           ++ ", amazon_bucket TEXT NULL"
           ++ ", amazon_url TEXT NULL"
           ++ ", disk_path TEXT NULL"
+          ++ ", size INTEGER NULL"
           ++ ", checksum BYTEA NULL"
           ++ ", aes_key BYTEA NULL"
           ++ ", aes_iv BYTEA NULL"
