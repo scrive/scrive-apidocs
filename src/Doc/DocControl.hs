@@ -352,7 +352,7 @@ handleIssueShowPost docid = do
     Preparation | sign              -> Right <$> (linkAsJSON $ handleIssueSign document)
     Preparation | send              -> Right <$> (linkAsJSON $ handleIssueSend document)
     _ | canAuthorSignLast document  -> Left  <$> handleIssueSignByAuthor document
-    _ -> return $ Left LinkContracts
+    _ -> return $ Left LinkArchive
  where
      linkAsJSON :: (Kontrakcja m) => m KontraLink -> m JSValue
      linkAsJSON lg = do
@@ -382,10 +382,8 @@ handleIssueSign document = do
               addFlashM $ flashMessageCSVSent $ length ds
               Log.debug (show $ map documenttype ds)
               case documenttype (head ds) of
-                Signable Contract -> return $ LinkContracts
-                Signable Offer    -> return $ LinkOffers
-                Signable Order    -> return $ LinkOrders
-                _                 -> return $ LinkUpload
+                Signable _ -> return $ LinkArchive
+                _          -> return $ LinkUpload
           (ls, _) -> do
             Log.debug $ "handleIssueSign had lefts: " ++ intercalate ";" ls
             addFlash (OperationFailed, intercalate ";" ls)
@@ -447,9 +445,7 @@ handleIssueSend document = do
               addFlashM $ flashMessageCSVSent $ length ds
               Log.debug (show $ map documenttype ds)
               case documenttype (head ds) of
-                Signable Contract -> return $ LinkContracts
-                Signable Offer    -> return $ LinkOffers
-                Signable Order    -> return $ LinkOrders
+                Signable _ -> return $ LinkArchive
                 _ -> return $ LinkUpload
           (ls, _) -> do
             Log.debug $ "handleIssueSend had lefts: " ++ intercalate ";" (map show ls)
@@ -673,7 +669,7 @@ handleCreateNewTemplate = withUserPost $ do
   docprocess <- fromMaybe Contract `fmap` getDocProcess
   mdoc <- makeDocumentFromFile (Template docprocess) input 1
   case mdoc of
-    Nothing -> return $ LinkTemplates
+    Nothing -> return $ LinkArchive
     Just doc -> do
       _ <- addDocumentCreateStatEvents doc "web"
       return $ LinkIssueDoc $ documentid doc

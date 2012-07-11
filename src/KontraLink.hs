@@ -50,12 +50,7 @@ data KontraLink
     | LinkForgotPassword
     | LinkUpload
     | LinkLocaleSwitch
-    | LinkContracts
-    | LinkTemplates
-    | LinkOffers
-    | LinkOrders
-    | LinkAttachments
-    | LinkRubbishBin
+    | LinkArchive
     | LinkAccount
     | LinkAccountCompany (Maybe CompanyID)
     | LinkCompanyLogo CompanyID
@@ -158,12 +153,7 @@ instance Show KontraLink where
     showsPrec _ LinkForgotPassword = (++) "/amnesia"
     showsPrec _ LinkUpload = (++) "/upload"
     showsPrec _ LinkLocaleSwitch = (++) "/locale"
-    showsPrec _ (LinkContracts) = (++) $ "/d"
-    showsPrec _ (LinkTemplates) = (++) $ "/t"
-    showsPrec _ (LinkOffers) = (++) $ "/o"
-    showsPrec _ (LinkOrders) = (++) $ "/or"
-    showsPrec _ (LinkAttachments) = (++) $ "/a"
-    showsPrec _ (LinkRubbishBin) = (++) $ "/r"
+    showsPrec _ (LinkArchive) = (++) $ "/d"
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ (LinkAccount) = (++) "/account"
     showsPrec _ (LinkAccountCompany Nothing) = (++) "/account/company"
