@@ -11,7 +11,7 @@ viewCompany =
       <li class='float-left'><a href="/account/mailapi">$_HeadMailApi()$</a></li>
       <li class='float-left'><a href="/account/usagestats">$_HeadUsageStats()$</a></li>
       <!--<li><a href="/oauth/dashboard">API</a></li>-->
-      <li class='float-right'>
+      <li class='float-right'/>
   </ul>
   <div class="tab-container">
       <div class="tab-content account">
