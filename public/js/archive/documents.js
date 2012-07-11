@@ -140,7 +140,18 @@ window.DocumentsListDefinition = function(archive) { return {
                               });
                              return true;
                           }
-                }
+                },
+                {name : localization.archive.documents.csv.action,
+                 acceptEmpty : true,
+                 onSelect: function(){
+                        var url =  archive.documents().model.schema.url() + "?"
+                        var params =  archive.documents().model.schema.getSchemaUrlParams();
+                        params.format = "csv";
+                        _.each(params,function(a,b){url+=(b+"="+a+"&")})
+                        window.location = url;
+                        return true;
+                 }
+                } 
               ]
     }),
     bottomExtras : function() {

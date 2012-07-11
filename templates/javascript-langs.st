@@ -425,6 +425,9 @@ javascriptLocalisation =
                             , cantremoveactive : "$_CantRemoveActiveDocuments()$"
                             , successMessage : "$_flashMessageDocumentArchiveDone()$"
                         }
+                    , csv : {
+                              action : "$_csv()$"
+                        } 
                     , columns :{
                               status : "$_SortStatus()$"
                             , time   : "$_SortTime()$"
