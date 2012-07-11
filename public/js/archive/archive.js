@@ -29,6 +29,7 @@ var ArchiveModel = Backbone.Model.extend({
                     return new Tab({
                         name: localization.archive.documents.name,
                         elems: [function() {return $(archive.documents().view.el);}],
+                        active : window.location.hash == "#documents",           
                         onActivate : function() {
                             window.location.hash = "documents";
                             archive.documents().recall();}
@@ -39,6 +40,7 @@ var ArchiveModel = Backbone.Model.extend({
                     return  new Tab({
                         name: localization.archive.templates.name,
                         elems: [function() {return $(archive.templates().view.el);}],
+                        active : window.location.hash == "#templates",
                         onActivate : function() {
                             window.location.hash = "templates";
                             archive.templates().recall();}
@@ -49,6 +51,7 @@ var ArchiveModel = Backbone.Model.extend({
                     return  new Tab({
                         name: localization.archive.attachments.name,
                         elems: [function() {return $(archive.attachments().view.el);}],
+                        active : window.location.hash == "#attachments",
                         onActivate : function() {
                             window.location.hash = "attachments";
                             archive.attachments().recall();}
@@ -61,6 +64,7 @@ var ArchiveModel = Backbone.Model.extend({
                         iconClass : "rubbishbin",
                         right: true,
                         elems: [function() {return $(archive.bin().view.el);}],
+                        active : window.location.hash == "#bin",
                         onActivate : function() {
                             window.location.hash = "bin";
                             archive.bin().recall();}
