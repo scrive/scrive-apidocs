@@ -1,6 +1,7 @@
 {- All function related to Amazon Web Services -}
 module Amazon (
-    mkAWSAction
+    isAWSConfigOk
+  , mkAWSAction
   , uploadFilesToAmazon
   , getFileContents
   , calculateChecksumAndEncryptOldFiles
@@ -32,6 +33,11 @@ import File.Model
 import Misc (concatChunks)
 import qualified Log
 
+isAWSConfigOk :: AppConf -> Bool
+isAWSConfigOk conf = case amazonConfig conf of
+  Just ((_:_), (_:_), (_:_)) -> True
+  _ -> False
+
 mkAWSAction :: AppConf -> AWS.S3Action
 mkAWSAction appConf = AWS.S3Action {
     AWS.s3conn = AWS.amazonS3Connection accessKey secretKey
@@ -55,7 +61,10 @@ uploadFilesToAmazon = do
       success <- exportFile (mkAWSAction conf) file
       if success
         then dbCommit
-        else dbRollback
+        else do
+          dbRollback
+          Log.debug "Uploading to Amazon failed, sleeping for 5 minutes."
+          liftIO $ threadDelay $ 5 * 60 * 1000000
       uploadFilesToAmazon
 
 -- | Transition function between non-encrypted and encrypted files.
@@ -118,8 +127,8 @@ exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, file
       return False
 
 exportFile _ _ = do
-  Log.debug "No uploading/saving to disk as bucket/docstore is ''"
-  return True
+  Log.debug "No uploading to Amazon as bucket is ''"
+  return False
 
 getFileContents :: MonadIO m => S3Action -> File -> m BS.ByteString
 getFileContents s3action File{..} = do

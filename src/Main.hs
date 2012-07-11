@@ -111,7 +111,9 @@ startSystem appGlobals appConf = E.bracket
             Log.debug "Evaluating UserAccountRequest actions..."
             runScheduler $ actionQueue userAccountRequest
           t6 <- forkIO $ cron 5 $ runScheduler processEvents
-          t7 <- forkIO $ cron 60 $ runScheduler AWS.uploadFilesToAmazon
+          t7 <- forkIO $ if AWS.isAWSConfigOk appConf
+                           then cron 60 $ runScheduler AWS.uploadFilesToAmazon
+                           else return ()
           t8 <- forkIO $ cron (60 * 60) (System.Mem.performGC >> Log.debug "Performing GC...")
           -- transition function between non-encrypted and encrypted files.
           t9 <- forkIO $ runScheduler AWS.calculateChecksumAndEncryptOldFiles
