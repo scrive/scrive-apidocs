@@ -19,7 +19,8 @@ set firstPage
  css css/symbols.css
  css css/newdesign.css
  css css/buttons.css
- less css/demo.less
+ less less/demo.less
+ less less/anotherdemo.less
  js  libs/jquery.min.js
  js  libs/jquery-ui.min.js
  js  libs/jquery.tools.min.js
@@ -32,7 +33,6 @@ set firstPage
  js  js/global.js
  js  js/flashmessages.js
  js  js/validation.js
- js  js/less.js
 
 set systemPage
  css css/newdesign.css
