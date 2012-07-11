@@ -52,7 +52,7 @@ uploadFilesToAmazon = do
     Nothing -> return ()
     Just file -> do
       conf <- sdAppConf <$> ask
-      success <- exportFile (docstore conf) (mkAWSAction conf) file
+      success <- exportFile (mkAWSAction conf) file
       if success
         then dbCommit
         else dbRollback
@@ -96,17 +96,9 @@ urlFromFile File{filename, fileid} =
 -- | Upload a document file. This means one of:
 --
 -- - upload a file to Amazon storage
--- - save a file in a local directory
 -- - do nothing and keep it in memory database
-exportFile :: FilePath -> S3Action -> File -> Scheduler Bool
-exportFile docstore@(_:_) AWS.S3Action{AWS.s3bucket = ""} File{fileid, filename, filestorage = FileStorageMemory content aes} = do
-  let filepath = docstore </> show fileid ++ '-' : filename ++ ".pdf"
-  liftIO $ BS.writeFile filepath $ aesDecrypt aes content
-  Log.debug $ "Document file #" ++ show fileid ++ " saved as " ++ filepath
-  dbUpdate $ FileMovedToDisk fileid filepath
-  return True
-
-exportFile _ ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, filestorage = FileStorageMemory content _} = do
+exportFile :: S3Action -> File -> Scheduler Bool
+exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, filestorage = FileStorageMemory content _} = do
   let action = ctxs3action {
         AWS.s3object = url
       , AWS.s3operation = HTTP.PUT
@@ -125,7 +117,7 @@ exportFile _ ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, fi
       Log.debug $ "AWS failed to upload of " ++ bucket </> url ++ " failed with error: " ++ show err
       return False
 
-exportFile _ _ _ = do
+exportFile _ _ = do
   Log.debug "No uploading/saving to disk as bucket/docstore is ''"
   return True
 
