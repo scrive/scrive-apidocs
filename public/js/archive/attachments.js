@@ -24,7 +24,7 @@ window.AttachmentsListDefinition = function(archive) {
                   }})
         ],
     options : [{name :  localization.archive.attachments.share.action,
-                onSelect: function(docs,list){
+                onSelect: function(docs){
                             var confirmationPopup = Confirmation.popup({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
@@ -37,7 +37,7 @@ window.AttachmentsListDefinition = function(archive) {
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
                                                     FlashMessages.add({color : "green", content : localization.archive.attachments.share.successMessage});
-                                                    list.trigger('changedWithAction');
+                                                    archive.attachments().recall();
                                                     confirmationPopup.view.clear();
                                                 }
                                           }).sendAjax();
@@ -47,7 +47,7 @@ window.AttachmentsListDefinition = function(archive) {
                           }
                },
                {name :  localization.archive.attachments.delete.action,
-                onSelect: function(docs,list){
+                onSelect: function(docs){
                              var confirmtext = jQuery("<p/>").append(localization.archive.attachments.delete.body + " ");
                              var label = jQuery("<strong/>");
                              if (docs.length == 1) {
@@ -68,7 +68,7 @@ window.AttachmentsListDefinition = function(archive) {
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
                                                     FlashMessages.add({color : "green", content : localization.archive.attachments.delete.successMessage});
-                                                    list.trigger('changedWithAction');
+                                                    archive.attachments().recall();
                                                     confirmationPopup.view.clear();
                                                 }
                                           }).sendAjax(); 
@@ -83,7 +83,7 @@ window.AttachmentsListDefinition = function(archive) {
     headerExtras: UploadButton.init({
                     size: "tiny",
                     width : "110",
-                    text: localization.archive.attachments.createnew,
+                    text: localization.archive.attachments.createnew.action,
                     name : "doc",
                     onAppend : function(input) {
                        setTimeout(function() {
@@ -91,7 +91,7 @@ window.AttachmentsListDefinition = function(archive) {
                           method : "POST",
                           url : "/a",
                           ajaxsuccess : function() {archive.attachments().recall();}
-                        }).addInputs($(input)).sendAjax() },100);
+                        }).addInputs($(input)).sendAjax(); },100);
                     }
                     }).input()
  };

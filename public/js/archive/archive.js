@@ -5,12 +5,12 @@
 var ArchiveModel = Backbone.Model.extend({
   documents : function() {
         if (this.get("documents") != undefined) return this.get("documents");
-        this.set({ "documents" : KontraList().init(DocumentsListDefinition) });
+        this.set({ "documents" : KontraList().init(DocumentsListDefinition(this)) });
         return this.documents();
   },
   templates : function() {
         if (this.get("templates") != undefined) return this.get("templates");
-        this.set({ "templates" : KontraList().init(TemplatesListDefinition) });
+        this.set({ "templates" : KontraList().init(TemplatesListDefinition(this)) });
         return this.templates();
   },
   attachments : function() {
@@ -20,7 +20,7 @@ var ArchiveModel = Backbone.Model.extend({
   },
   bin : function() {
         if (this.get("bin") != undefined) return this.get("bin");
-        this.set({ "bin" : KontraList().init(BinListDefinition) });
+        this.set({ "bin" : KontraList().init(BinListDefinition(this)) });
         return this.bin();
 
   },

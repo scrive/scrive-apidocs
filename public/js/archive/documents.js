@@ -3,7 +3,7 @@
 
 (function(window){
 
-window.DocumentsListDefinition = {
+window.DocumentsListDefinition = function(archive) { return {
     name : "Documents Table",
     schema: new Schema({
     url: "/docs",
@@ -20,7 +20,7 @@ window.DocumentsListDefinition = {
         ],
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
-        new Cell({name: localization.archive.documents.columns.status, width:"40px", field:"status",
+        new Cell({name: localization.archive.documents.columns.status, width:"52px", field:"status",
                  rendering: function(status,idx,listobject) {
                     var icon = jQuery("<div class='icon status "+status+"'></div>")
                     var tip = jQuery("<div id='tooltip-"+status+"'> <div class='icon status "+status+"'></div><p>"+
@@ -39,9 +39,9 @@ window.DocumentsListDefinition = {
         new Cell({name: localization.archive.documents.columns.time, width:"116px", field:"time"}),
         new Cell({name: localization.archive.documents.columns.sender, width:"110px", field:"author",  special: "link"}),
         new Cell({width:"5px" }),
-        new Cell({name: localization.archive.documents.columns.party, width:"200px", field:"party", special: "expandable", subfield : "name"}),
+        new Cell({name: localization.archive.documents.columns.party, width:"190px", field:"party", special: "expandable", subfield : "name"}),
         new Cell({width:"5px" }),
-        new Cell({name: localization.archive.documents.columns.title, width:"250px", field:"title",  special: "link"}),
+        new Cell({name: localization.archive.documents.columns.title, width:"240px", field:"title",  special: "link"}),
         new Cell({width:"5px" }),
         new Cell({name: localization.archive.documents.columns.type, width:"40px", field:"process",
                   rendering: function(value, _idx, _model) {
@@ -54,7 +54,7 @@ window.DocumentsListDefinition = {
                  })
         ],
     options : [{name : localization.archive.documents.sendreminder.action,
-                onSelect: function(docs,list){
+                onSelect: function(docs){
                             allSendOrOpenSelected = _.all(docs, function(doc) {
                                                 return doc.field("status") == "sent"      ||
                                                        doc.field("status") == "delivered" ||
@@ -85,12 +85,12 @@ window.DocumentsListDefinition = {
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
                                                     FlashMessages.add({color : "green", content : localization.archive.documents.sendreminder.successMessage});
-                                                    list.trigger('changedWithAction');
+                                                    archive.documents().recall();
                                                     confirmationPopup.view.clear();
                                                 },
                                                 ajaxerror : function() {
                                                     FlashMessages.add({color : "red", content : localization.archive.documents.sendreminder.errorMessage});
-                                                    list.trigger('changedWithAction');
+                                                    archive.documents().recall();
                                                     confirmationPopup.view.clear();
                                                 }
                                           }).sendAjax();
@@ -100,7 +100,7 @@ window.DocumentsListDefinition = {
                           }
                },
                {name : localization.archive.documents.delete.action,
-                onSelect: function(docs, list){
+                onSelect: function(docs){
                             anySendOrOpenSelected = _.any(docs, function(doc) {
                                                 return doc.field("status") == "sent"      ||
                                                        doc.field("status") == "delivered" ||
@@ -132,7 +132,7 @@ window.DocumentsListDefinition = {
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
                                                     FlashMessages.add({color : "green", content : localization.archive.documents.delete.successMessage});
-                                                    list.trigger('changedWithAction');
+                                                    archive.documents().recall();
                                                     confirmationPopup.view.clear();
                                                 }
                                           }).sendAjax();
@@ -159,6 +159,7 @@ window.DocumentsListDefinition = {
                         box.append(description("signed",localization.archive.documents.statusDescription.signed));
                         return box;
                     }()
- };
+};};
+
 
 })(window);

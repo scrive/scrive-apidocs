@@ -4,7 +4,7 @@
 (function(window){
 
 
-window.TemplatesListDefinition = {
+window.TemplatesListDefinition = function(archive) { return {
     name : "Templatesarchive table",
     schema: new Schema({
     url: "/docs",
@@ -26,7 +26,7 @@ window.TemplatesListDefinition = {
                   }})
         ],
     options : [{name : localization.archive.templates.share.action,
-                onSelect: function(docs,list){
+                onSelect: function(docs){
                             var confirmationPopup = Confirmation.popup({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
@@ -39,7 +39,7 @@ window.TemplatesListDefinition = {
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
                                                     FlashMessages.add({color : "green", content : localization.archive.templates.share.successMessage});
-                                                    list.trigger('changedWithAction');
+                                                    archive.templates().recall();
                                                     confirmationPopup.view.clear();
                                                 }
                                           }).sendAjax();
@@ -49,7 +49,7 @@ window.TemplatesListDefinition = {
                           }
                },
                {name : localization.archive.templates.delete.action ,
-                onSelect: function(docs,list){
+                onSelect: function(docs){
                              var confirmtext = jQuery("<p/>").append(localization.archive.templates.delete.body + " ");
                              var label = jQuery("<strong/>");
                              if (docs.length == 1) {
@@ -70,7 +70,7 @@ window.TemplatesListDefinition = {
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
                                                     FlashMessages.add({color : "green", content : localization.archive.templates.delete.successMessage});
-                                                    list.trigger('changedWithAction');
+                                                    archive.templates().recall();
                                                     confirmationPopup.view.clear();
                                                 }
                                           }).sendAjax();
@@ -119,6 +119,7 @@ window.TemplatesListDefinition = {
             return false;
         }
     }).input()
- };
+};};
+
 
 })(window);

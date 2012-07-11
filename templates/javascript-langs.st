@@ -472,7 +472,9 @@ javascriptLocalisation =
                             , body : "$_listShareDialogBody()$"
                             , successMessage : "$_flashMessageAttachmentShareDone()$"
                         }
-                    ,  createnew : "$_pageAttachmentListNewAttachment()$"
+                    ,  createnew : {
+                              action: "$_pageAttachmentListNewAttachment()$"
+                       }
                     ,  shared : "$_pageAttachmentListIfShared()$"
                     ,  search : "$_pageAttachmentListSearchInfo()$"
                     ,  columns :{
