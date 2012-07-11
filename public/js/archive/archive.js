@@ -29,7 +29,9 @@ var ArchiveModel = Backbone.Model.extend({
                     return new Tab({
                         name: localization.archive.documents.name,
                         elems: [function() {return $(archive.documents().view.el);}],
-                        onActivate : function() {archive.documents().recall();}
+                        onActivate : function() {
+                            window.location.hash = "documents";
+                            archive.documents().recall();}
                     });
   },
   templatesTab : function() {
@@ -37,7 +39,9 @@ var ArchiveModel = Backbone.Model.extend({
                     return  new Tab({
                         name: localization.archive.templates.name,
                         elems: [function() {return $(archive.templates().view.el);}],
-                        onActivate : function() {archive.templates().recall();}
+                        onActivate : function() {
+                            window.location.hash = "templates";
+                            archive.templates().recall();}
                     })
   },
   attachmentsTab : function() {
@@ -45,7 +49,9 @@ var ArchiveModel = Backbone.Model.extend({
                     return  new Tab({
                         name: localization.archive.attachments.name,
                         elems: [function() {return $(archive.attachments().view.el);}],
-                        onActivate : function() {archive.attachments().recall();}
+                        onActivate : function() {
+                            window.location.hash = "attachments";
+                            archive.attachments().recall();}
                     });
   },
   binTab : function() {
@@ -55,7 +61,9 @@ var ArchiveModel = Backbone.Model.extend({
                         iconClass : "rubbishbin",
                         right: true,
                         elems: [function() {return $(archive.bin().view.el);}],
-                        onActivate : function() {archive.bin().recall();}
+                        onActivate : function() {
+                            window.location.hash = "bin";
+                            archive.bin().recall();}
                     });
   }
 });
