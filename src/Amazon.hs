@@ -72,15 +72,15 @@ calculateChecksumAndEncryptOldFiles = do
       content <- Binary <$> getFileContents (mkAWSAction conf) file
       op1 <- dbUpdate $ SetChecksum fid $ SHA1.hash `binApp` content
       op2 <- dbUpdate $ SetContentToMemoryAndEncryptIt fid content
-      if op1 && op2
-        then do
-          Log.debug $ "Operation succeeded."
+      case (unBinary content /= BS.empty, op1, op2) of
+        (True, True, True) -> do
+          Log.debug $ "Operation succeeded for file " ++ show fid ++ "."
           dbCommit
-        else do
-          Log.debug $ "Operation failed."
+          liftIO $ threadDelay 500000 -- 0.5 sec
+          calculateChecksumAndEncryptOldFiles
+        res -> do
+          Log.debug $ "Operation failed for file " ++ show fid ++ " - (content not empty, op1, op2) = " ++ show res ++ ", aborting."
           dbRollback
-      liftIO $ threadDelay 500000 -- 0.5 sec
-      calculateChecksumAndEncryptOldFiles
 
 -- | Convert a file to Amazon URL. We use the following format:
 --
