@@ -40,7 +40,6 @@ import Text.JSON.Gen as J
 import Doc.DocUtils
 import Doc.Action
 
-
 handleDelete :: Kontrakcja m => m JSValue
 handleDelete = do
     Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
