@@ -456,7 +456,6 @@
                 emptyAlternative: args.emptyAlternative
             });
             this.schema.bind('change', this.recall);
-            this.model.bind('changedWithAction', this.recall);
             this.recall();
             return this;
         },

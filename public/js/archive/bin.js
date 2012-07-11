@@ -2,7 +2,7 @@
 
 (function(window){
 
-window.BinListDefinition = {
+window.BinListDefinition = function(archive) { return {
     name : "Trash table",
     schema: new Schema({
     url: "/docs",
@@ -17,7 +17,7 @@ window.BinListDefinition = {
         new Cell({name: localization.archive.bin.columns.title, width:"400px", field:"title",  special: "link"})
         ],
     options : [{name : localization.archive.bin.restore.action,
-                onSelect: function(docs,list){
+                onSelect: function(docs){
                             var confirmationPopup = Confirmation.popup({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
@@ -30,7 +30,7 @@ window.BinListDefinition = {
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
                                                     FlashMessages.add({color : "green", content : localization.archive.bin.restore.successMessage});
-                                                    list.trigger('changedWithAction');
+                                                    archive.bin().recall();
                                                     confirmationPopup.view.clear();
                                                 }
                                           }).sendAjax();
@@ -40,7 +40,7 @@ window.BinListDefinition = {
                           }
                },
                {name : localization.archive.bin.delete.action,
-                onSelect: function(docs,list){
+                onSelect: function(docs){
                               var confirmationPopup = Confirmation.popup({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
@@ -53,7 +53,7 @@ window.BinListDefinition = {
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
                                                     FlashMessages.add({color : "green", content : localization.archive.bin.delete.successMessage});
-                                                    list.trigger('changedWithAction');
+                                                    archive.bin().recall();
                                                     confirmationPopup.view.clear();
                                                 }
                                           }).sendAjax();
@@ -66,6 +66,6 @@ window.BinListDefinition = {
 
     })
 
-};
+};};
 
 })(window);
