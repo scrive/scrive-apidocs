@@ -38,6 +38,7 @@ describe "sign view all functionalities" do
       @h.dochelper.enterCounterpart(@h.ctx.props.third_counterpart_fstname, @h.ctx.props.third_counterpart_sndname, @h.ctx.props.third_counterpart_email)
       @h.dochelper.addCustomField(2,"part3FN1","part3FV1")
 
+      @h.dochelper.gotToStep3
       puts "Loading first author attachment"
       @h.dochelper.loadAuthorAttachment(1, @h.ctx.props.first_author_attachment_pdf_path)
       puts "Loading second author attachment"
