@@ -38,6 +38,7 @@ import File.FileID
 
 import Control.Concurrent
 import Control.Concurrent.MVar.Util (tryReadMVar)
+import Control.Logic
 import Control.Monad.Error
 import Data.Functor
 import Data.List
@@ -45,6 +46,7 @@ import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.Server.Internal.Cookie
 import Network.Socket
+
 import System.Directory
 import System.Time
 
@@ -237,6 +239,10 @@ appHandler handleRoutes appConf appGlobals appState = measureResponseTime $
 
       -- do reload templates in non-production code
       templates2 <- liftIO $ maybeReadTemplates (templates appGlobals)
+      
+      -- regenerate static files that need to be regenerated in development mode
+      liftIO $ SR.regenerateChangedResources (SR.Production <| production appConf |> SR.Development)
+                                             (srConfig appConf)
 
       -- work out the region and language
       userlocale <- getStandardLocale muser
