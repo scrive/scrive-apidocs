@@ -4,18 +4,33 @@
 
 (function(window) {
 
-
-window.DocumentSignView = Backbone.View.extend({
+var DocumentSignViewModel = Backbone.Model.extend({
+  defaults : {
+  },
+  initialize : function(args){
+      var model = this;
+      var document = args.document;
+      document.bind("reset", function() {model.trigger("change");});
+      document.bind("change", function() {model.trigger("change");});
+      document.bind("file:change", function() {model.trigger("change-with-delay");});
+      
+  },
+  document : function(){
+       return this.get("document");
+  },
+  recall : function() {
+      this.document().recall();
+  }
+});
+var DocumentSignViewView = Backbone.View.extend({
     initialize: function(args) {
         _.bindAll(this, 'render');
         var view = this;
-        this.model.bind('reset', this.render);
         this.model.bind('change', this.render);
-        //kind of icky.  this is required because the of the timeouts in FieldPlacement
-        this.model.bind('file:change', function() { window.setTimeout(view.render, 500); });
+        this.model.bind('change-with-delay', function() { window.setTimeout(view.render, 500); });
         this.model.view = this;
         this.saveAfterSignModel = new DocumentSaveAfterSignModel({
-          document: this.model
+          document: this.model.document()
         });
         this.prerender();
         this.render();
@@ -35,14 +50,14 @@ window.DocumentSignView = Backbone.View.extend({
       }).el);
     },
     createSaveAfterSignViewElems: function() {
-      if (this.model.padAuthorization()) return $("<div/>"); 
+      if (this.model.document().padAuthorization()) return $("<div/>"); 
       return $(new DocumentSaveAfterSignView({
        model: this.saveAfterSignModel,
        el: $("<div />")
       }).el);
     },
     createShareAfterSignViewElems: function() {
-      if (this.model.padAuthorization()) return $("<div/>");
+      if (this.model.document().padAuthorization()) return $("<div/>");
       return $(new DocumentShareAfterSignView({
         model: this.saveAfterSignModel,
         el: $("<div />")
@@ -51,8 +66,8 @@ window.DocumentSignView = Backbone.View.extend({
     getOrCreateMainFileView: function() {
       if (this.mainfileview == undefined) {
         var file = KontraFile.init({
-          file: this.model.mainfile(),
-          document: this.model
+          file: this.model.document().mainfile(),
+          document: this.model.document()
         });
         this.mainfileview = file.view;
       }
@@ -80,16 +95,16 @@ window.DocumentSignView = Backbone.View.extend({
       return renderedPlacements;
     },
     authorAttachmentsTitle: function() {
-      if (!this.model.signingInProcess() || !this.model.currentSignatoryCanSign()) {
+      if (!this.model.document().signingInProcess() || !this.model.document().currentSignatoryCanSign()) {
         return undefined;
-      } else if (this.model.authorattachments().length > 1) {
+      } else if (this.model.document().authorattachments().length > 1) {
         return localization.docsignview.authorAttachmentsTitleForLots;
       } else {
         return localization.docsignview.authorAttachmentsTitleForOne;
       }
     },
     unPlacedFieldTasks: function(fieldels) {
-      var allfields = this.model.currentSignatory().customFields();
+      var allfields = this.model.document().currentSignatory().customFields();
       //calling .filter will fail in IE7.  so have to do this instead
       var fields = [];
       _.each(allfields, function(field) {
@@ -128,8 +143,7 @@ window.DocumentSignView = Backbone.View.extend({
           update();
         }, 500);
       };
-      return new DocumentSignViewTask({
-        model: field,
+      var task = new PageTask({
         isComplete: function() {
           var newvalue = field.value() != "";
           var returnvalue = lastvalue;
@@ -159,32 +173,37 @@ window.DocumentSignView = Backbone.View.extend({
         },
         el: el
       });
+      field.bind("change", function() {task.update()});
+      field.bind("reset", function() {task.update()});
+      return task;
     },
     createAuthorAttachmentsElems: function() {
-      return $(new DocumentAuthorAttachmentsView({
-        model: this.model,
+      this.authorattachmentview =  new DocumentAuthorAttachmentsView({
+        model: this.model.document(),
         el: $("<div class='section spacing'/>"),
         title: this.authorAttachmentsTitle()
-      }).el);
+      });
+      return $(this.authorattachmentview.el)
     },
     signatoryAttachmentsTitle: function() {
-      if (!this.model.signingInProcess() || !this.model.currentSignatoryCanSign()) {
+      if (!this.model.document().signingInProcess() || !this.model.document().currentSignatoryCanSign()) {
         return undefined;
-      } else if (this.model.currentSignatory().attachments().length > 1) {
+      } else if (this.model.document().currentSignatory().attachments().length > 1) {
         return localization.docsignview.signatoryAttachmentsTitleForLots;
       } else {
         return localization.docsignview.signatoryAttachmentsTitleForOne;
       }
     },
     createSignatoryAttachmentsView: function() {
-      return new DocumentSignatoryAttachmentsView({
-        model: this.model,
+      this.signatoryattachmentview =  new DocumentSignatoryAttachmentsView({
+        model: this.model.document(),
         el: $("<div class='section spacing'/>"),
         title: this.signatoryAttachmentsTitle()
       });
+      return this.signatoryattachmentview;
     },
     signatoryAttachmentTasks: function(attachmentels) {
-      var attachments = this.model.currentSignatory().attachments();
+      var attachments = this.model.document().currentSignatory().attachments();
       if (attachments.length != attachmentels.length) {
         console.error("expected to find an element per attachment");
         return;
@@ -195,13 +214,15 @@ window.DocumentSignView = Backbone.View.extend({
       return tasks;
     },
     signatoryAttachmentTask: function(attachment, el) {
-      return new DocumentSignViewTask({
-        model: attachment,
+      var task = new PageTask({
         isComplete: function() {
           return attachment.hasFile() && attachment.isReviewed();
         },
         el: el
       });
+      attachment.bind("change", function() {task.update()});
+      attachment.bind("reset", function() {task.update()});
+      return task;
     },
     createInlineFieldTask: function(renderedPlacement) {
       var placement = renderedPlacement.placement;
@@ -211,22 +232,24 @@ window.DocumentSignView = Backbone.View.extend({
           label = placement.field().nicename();
       else if (placement.field().isObligatoryCheckbox())
           label = localization.docsignview.checkboxes.pleaseCheck;
-      return new DocumentSignViewTask({
-        model: placement.field(),
+      var task = new PageTask({
         isComplete: function() {
           return placement.field().readyForSign();
         },
         el: elem,
-        beforePointing: function() {
+        onActivate: function() {
           elem.trigger("click");
         },
         tipSide : placement.tip(),
         label:label
       });
+      placement.field().bind("change", function() {task.update()});
+      placement.field().bind("reset", function() {task.update()});
+      return task;
     },
     createUploadedAttachmentsElems: function() {
       return $(new DocumentUploadedSignatoryAttachmentsView({
-        model: this.model,
+        model: this.model.document(),
         el: $("<div class='section spacing' />"),
         title: localization.docsignview.uploadedAttachmentsTitle
       }).el);
@@ -236,12 +259,12 @@ window.DocumentSignView = Backbone.View.extend({
           // I apologize for putting this model in the view, but 
           // the model/view split was already messed up when I got
           // here. --Eric
-        model: new DocumentSignSignatoryBox({document:this.model}),
+        model: new DocumentSignSignatoryBox({document:this.model.document()}),
         el: $("<div class='section signatories spacing'/>")
       });
     },
     createRejectButtonElems: function() {
-      var document = this.model;
+      var document = this.model.document();
       var signatory = document.currentSignatory();
       return $("<div class='rejectwrapper'>").append(Button.init({
         size: "big",
@@ -263,52 +286,48 @@ window.DocumentSignView = Backbone.View.extend({
       }).input());
     },
     createSignButtonElems: function(othertasks) {
-      return $(new DocumentSignButtonView({
-        model: this.model,
+      var view = this;
+      this.signbuttonview =  new DocumentSignButtonView({
+        model: this.model.document(),
         validate: function() {
-          var complete = true;
-          _.each(othertasks, function(task) {
-            if (!task.complete()) {
-              complete = false;
-            }
-          });
-          return complete;
+            return view.tasks.notCompleatedTasks().length == 1 && view.tasks.notCompleatedTasks()[0] == view.signtask;
         },
         el: $("<div class='signwrapper'/>")
-      }).el);
+      });
+      return $(this.signbuttonview.el);
     },
     signButtonTask: function(el) {
-      var document = this.model;
-      return new DocumentSignViewTask({
-        model: document,
+      var view = this;
+      var document = this.model.document();
+      view.signtask =  new PageTask({
         isComplete: function() {
           return !document.currentSignatoryCanSign();
         },
-        el: el
+        el: el,
+        onActivate   : function() {view.signsection.addClass("highlight");},
+        onDeactivate : function() {view.signsection.removeClass("highlight");}
+        
       });
+      return view.signtask;
     },
     createArrowsElems: function(tasks) {
-      var model = new DocumentSignViewTasks({
-        tasks: tasks
-      });
-      return $(new DocumentSignViewArrowView({
-        model: model,
-        mainview : this,
-        el: $("<div />")
-      }).el);
+      this.tasks = new PageTasks({ tasks: tasks });
+      return $(new PageTasksArrowView({
+        model: this.tasks,
+        el: $("<div />")  }).el);
     },
     isDisplaySignatories: function() {
-      return !this.model.closed();
+      return !this.model.document().closed();
     },
     isBottomStuff: function() {
-      return this.model.isAuthorAttachments() ||
-               this.model.isSignatoryAttachments() ||
-               this.model.isUploadedAttachments() ||
+      return this.model.document().isAuthorAttachments() ||
+               this.model.document().isSignatoryAttachments() ||
+               this.model.document().isUploadedAttachments() ||
                this.isDisplaySignatories();
     },
     render: function() {
       var view = this;
-      var document = this.model;
+      var document = this.model.document();
       if (!document.ready() || document.mainfile()==undefined) {
           this.mainfileview = undefined;
           return this;
@@ -366,18 +385,18 @@ window.DocumentSignView = Backbone.View.extend({
       if (this.isBottomStuff()) {
         var bottomstuff = $("<div class='bottomstuff' />");
 
-        if (this.model.isAuthorAttachments()) {
+        if (this.model.document().isAuthorAttachments()) {
           bottomstuff.append(this.createAuthorAttachmentsElems());
         }
 
-        if (this.model.isSignatoryAttachments()) {
+        if (this.model.document().isSignatoryAttachments()) {
           var attachmentsview = this.createSignatoryAttachmentsView();
-          if (this.model.currentSignatoryCanSign())
+          if (this.model.document().currentSignatoryCanSign())
             _.each(this.signatoryAttachmentTasks(attachmentsview.uploadElems), function(task) { tasks.push(task); });
           bottomstuff.append($(attachmentsview.el));
         }
 
-        if (this.model.isUploadedAttachments()) {
+        if (this.model.document().isUploadedAttachments()) {
           bottomstuff.append(this.createUploadedAttachmentsElems());
         }
 
@@ -385,7 +404,7 @@ window.DocumentSignView = Backbone.View.extend({
           //triggerArrowChange will cause the arrow to repaint if the signatories
           //are expanded or compressed, because this means any sign arrow may need to move
           var signatoriesview = this.createSignatoriesView(triggerArrowChange);
-          if (this.model.currentSignatoryCanSign()) {
+          if (this.model.document().currentSignatoryCanSign()) {
             //_.each(this.unPlacedFieldTasks(signatoriesview.customfieldelems), function(task) {
             //  tasks.push(task);
             //});
@@ -393,16 +412,16 @@ window.DocumentSignView = Backbone.View.extend({
           bottomstuff.append($(signatoriesview.el));
         }
 
-        if (this.model.currentSignatoryCanSign() && (!this.model.currentSignatory().canPadSignQuickSign())) {
-          var signsection = $("<div class='section spacing signbuttons' />");
-          signsection.append(this.createRejectButtonElems());
+        if (this.model.document().currentSignatoryCanSign() && (!this.model.document().currentSignatory().canPadSignQuickSign())) {
+          this.signsection = $("<div class='section spacing signbuttons' />");
+          this.signsection.append(this.createRejectButtonElems());
           var signButton = this.createSignButtonElems(jQuery.extend({}, tasks));
           var signButtonTask = this.signButtonTask(signButton);
           triggerTask = signButtonTask;
           tasks.push(signButtonTask);
-          signsection.append(signButton);
-          signsection.append($("<div class='clearfix' />"));
-          bottomstuff.append(signsection);
+          this.signsection.append(signButton);
+          this.signsection.append($("<div class='clearfix' />"));
+          bottomstuff.append(this.signsection);
         }
 
         subcontainer.append(bottomstuff);
@@ -411,9 +430,9 @@ window.DocumentSignView = Backbone.View.extend({
       }
       this.container.append(subcontainer);
       }
-      if ((this.model.signingInProcess() &&
-           !this.model.currentSignatory().hasSigned()) ||
-             !this.model.currentSignatory().signs()) {
+      if ((this.model.document().signingInProcess() &&
+           !this.model.document().currentSignatory().hasSigned()) ||
+             !this.model.document().currentSignatory().signs()) {
         this.container.prepend(this.createArrowsElems(tasks));
       }
 
@@ -423,21 +442,20 @@ window.DocumentSignView = Backbone.View.extend({
 
 
 
-window.KontraSignDocument = {
-  init: function(args) {
-    this.model = new Document({
-                    id: args.id,
-                    viewer: args.viewer
-                });
-    this.view = new DocumentSignView({
-                    model: this.model,
-                    el: $("<div/>")
-                });
-    this.recall();
-    return this;
-  },
-  recall: function() {
-    this.model.recall();
-  }
+window.DocumentSignView = function(args){
+        this.model = new DocumentSignViewModel( {
+                        document : new Document({ id: args.id, viewer: args.viewer })
+                    });   
+        this.view = new DocumentSignViewView({
+                        model: this.model,
+                        el: $("<div/>")
+                    });
+        this.model.recall();
+        return {
+              model    : this.model
+            , view     : this.view
+            , recall     : function()    { this.model.recall();}
+         };
 };
+
 })(window);

@@ -88,7 +88,9 @@ set systemPage
  js   js/confirmationsWithEmails.js
  js   js/docview.js
  js   js/docsignviewframes.js
- js   js/docsignview.js
+ js   js/signview/tasks.js
+ js   js/signview/docsignviewelements.js
+ js   js/signview/docsignview.js
  js   js/signatorydesignview.js
  js   js/docdesignviewpad.js
  js   js/docsignviewpad.js
