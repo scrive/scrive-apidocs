@@ -155,6 +155,19 @@ javascriptLocalisation =
             , saveTemplate : "$_signStepsBodyFunctionssaveTemplate()$"
             , skrivapa : "$_skrivapa()$"
 
+            , months : { january: "$_january()$",
+                         february: "$_february()$",
+                         march: "$_march()$",
+                         april: "$_april()$",
+                         may: "$_may()$",
+                         june: "$_june()$",
+                         july: "$_july()$",
+                         august: "$_august()$",
+                         september: "$_september()$",
+                         october: "$_october()$",
+                         november: "$_november()$",
+                         december: "$_december()$"
+                       }
 
             , tweetAccount : "$_tweetAccount()$"
             , selectFileToUpload : "$_selectFileToUpload()$"
@@ -189,6 +202,9 @@ javascriptLocalisation =
             }
             , filterByYear: {
                 showAnyYear: "$_showAnyYear()$"
+            }
+            , filterByMonth: {
+                showAnyMonth: "$_showAnyMonth()$"
             }
            , searchTemplate : "$_SearchTemplate()$"
            , sortTemplate : "$_SortTemplate()$"

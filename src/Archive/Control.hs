@@ -144,7 +144,10 @@ jsonDocumentsList = withUserGet $ do
       fltSpec ("process", "order") = [DocumentFilterByProcess [Order]]
       fltSpec ("process", "offer") = [DocumentFilterByProcess [Offer]]
       fltSpec ("year", yearstr) = case reads yearstr of
-                                    ((year,""):_) -> [DocumentFilterByYear year]
+                                    ((year,""):_) -> [DocumentFilterByYears [year]]
+                                    _ -> []
+      fltSpec ("month", monthstr) = case reads monthstr of
+                                    ((month,""):_) -> [DocumentFilterByMonths [month]]
                                     _ -> []
       fltSpec _ = []
   let sorting    = docSortingFromParams params

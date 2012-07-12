@@ -3,6 +3,11 @@
 
 (function(window){
 
+function capitaliseFirstLetter(string)
+{
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 window.DocumentsListDefinition = function(archive) { return {
     name : "Documents Table",
     schema: new Schema({
@@ -22,6 +27,20 @@ window.DocumentsListDefinition = function(archive) { return {
                                         {name: "2011",    value: "2011"},
                                         {name: "2012",    value: "2012"},
                                         {name: "2013",    value: "2013"}
+                                      ]}),
+        new SelectFiltering({description: localization.filterByMonth.showAnyMonth, name: "month",
+                             options: [ {name: capitaliseFirstLetter(localization.months.january),   value: "1"},
+                                        {name: capitaliseFirstLetter(localization.months.february),  value: "2"},
+                                        {name: capitaliseFirstLetter(localization.months.march),     value: "3"},
+                                        {name: capitaliseFirstLetter(localization.months.april),     value: "4"},
+                                        {name: capitaliseFirstLetter(localization.months.may),       value: "5"},
+                                        {name: capitaliseFirstLetter(localization.months.june),      value: "6"},
+                                        {name: capitaliseFirstLetter(localization.months.july),      value: "7"},
+                                        {name: capitaliseFirstLetter(localization.months.august),    value: "8"},
+                                        {name: capitaliseFirstLetter(localization.months.september), value: "9"},
+                                        {name: capitaliseFirstLetter(localization.months.october),   value: "10"},
+                                        {name: capitaliseFirstLetter(localization.months.november),  value: "11"},
+                                        {name: capitaliseFirstLetter(localization.months.december),  value: "12"}
                                       ]})
         ],
     cells : [
