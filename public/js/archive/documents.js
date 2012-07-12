@@ -17,6 +17,15 @@ window.DocumentsListDefinition = function(archive) { return {
     paging: new Paging({}),
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.documents.search}),
     selectfiltering : [
+        new SelectFiltering({description: localization.filterByStatusClass.showAnyStatusClass, name: "statusclass",
+                             options: [ {name: localization.filterByStatusClass.showDraft,     value: "draft"},
+                                        {name: localization.filterByStatusClass.showCancelled, value: "cancelled"},
+                                        {name: localization.filterByStatusClass.showSent,      value: "sent"},
+                                        {name: localization.filterByStatusClass.showDelivered, value: "delivered"},
+                                        {name: localization.filterByStatusClass.showRead,      value: "read"},
+                                        {name: localization.filterByStatusClass.showOpened,    value: "opened"},
+                                        {name: localization.filterByStatusClass.showSigned,    value: "signed"}
+                                      ]}),
         new SelectFiltering({description: localization.filterByProcess.showAllProcesses, name: "process",
                              options: [ {name: localization.filterByProcess.showContractsOnly, value: "contract"},
                                         {name: localization.filterByProcess.showOffersOnly,    value: "offer"},

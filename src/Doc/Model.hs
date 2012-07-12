@@ -123,6 +123,7 @@ data DocumentPagination =
 
 data DocumentFilter
   = DocumentFilterStatuses [DocumentStatus]   -- ^ Any of listed statuses
+  | DocumentFilterByStatusClass [StatusClass] -- ^ Any of listed status classes
   | DocumentFilterByTags [DocumentTag]        -- ^ All of listed tags
   | DocumentFilterMinChangeTime MinutesTime   -- ^ Minimal mtime
   | DocumentFilterMaxChangeTime MinutesTime   -- ^ Maximum mtime
@@ -318,6 +319,11 @@ documentFilterToSQL (DocumentFilterStatuses []) =
 documentFilterToSQL (DocumentFilterStatuses statuses) =
   SQL ("documents.status IN (" ++ intercalate "," (map (const "?") statuses) ++ ")")
                                (map toSql statuses)
+documentFilterToSQL (DocumentFilterByStatusClass []) =
+  SQL "FALSE" []
+documentFilterToSQL (DocumentFilterByStatusClass statuses) =
+  SQL (documentStatusClassExpression ++ " IN (" ++ intercalate "," (map (const "?") statuses) ++ ")")
+                               (map (toSql . fromEnum) statuses)
 documentFilterToSQL (DocumentFilterMinChangeTime ctime) =
   SQL (maxselect ++ " >= ?") [toSql ctime]
 documentFilterToSQL (DocumentFilterMaxChangeTime ctime) =

@@ -149,6 +149,9 @@ jsonDocumentsList = withUserGet $ do
       fltSpec ("month", monthstr) = case reads monthstr of
                                     ((month,""):_) -> [DocumentFilterByMonths [month]]
                                     _ -> []
+      fltSpec ("statusclass", scstr) = case reads scstr of
+                                    ((statusclass,""):_) -> [DocumentFilterByStatusClass [statusclass]]
+                                    _ -> []
       fltSpec _ = []
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params

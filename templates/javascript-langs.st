@@ -206,6 +206,16 @@ javascriptLocalisation =
             , filterByMonth: {
                 showAnyMonth: "$_showAnyMonth()$"
             }
+            , filterByStatusClass: {
+                showAnyStatusClass: "$_showAnyStatusClass()$",
+                showDraft: "$_tablestatusesDraft()$",
+                showCancelled: "$_tablestatusesCancelled()$",
+                showSent: "$_tablestatusesSent()$",
+                showDelivered: "$_tablestatusesDelivered()$",
+                showRead: "$_tablestatusesViewedOnline()$",
+                showOpened: "$_tablestatusesEmailOpened()$",
+                showSigned: "$_tablestatusesSigned()$"
+            }
            , searchTemplate : "$_SearchTemplate()$"
            , sortTemplate : "$_SortTemplate()$"
            , infoSelectTemplate : "$_InfoSelectTemplate()$"

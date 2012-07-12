@@ -95,7 +95,7 @@ data StatusClass = SCDraft
                   | SCRead
                   | SCOpened
                   | SCSigned
-                  deriving (Eq, Ord, Enum)
+                  deriving (Eq, Ord, Enum, Bounded)
 
 instance Show StatusClass where
   show SCDraft = "draft"
@@ -105,6 +105,11 @@ instance Show StatusClass where
   show SCRead = "read"
   show SCOpened = "opened"
   show SCSigned = "signed"
+
+instance Read StatusClass where
+  readsPrec _ str =
+    [(v,drop (length (show v)) str) | v <- [minBound .. maxBound], show v `isPrefixOf` str]
+
 
 data IdentificationType = EmailIdentification
                         | ELegitimationIdentification
