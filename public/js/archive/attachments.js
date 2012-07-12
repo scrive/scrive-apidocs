@@ -93,7 +93,7 @@ window.AttachmentsListDefinition = function(archive) {
                           ajaxsuccess : function() {archive.attachments().recall();}
                         }).addInputs($(input)).sendAjax(); },100);
                     }
-                    }).input()
+                  }).input().addClass("float-left")
  };
  
 };

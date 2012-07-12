@@ -118,7 +118,7 @@ window.TemplatesListDefinition = function(archive) { return {
             popup.hideAccept();
             return false;
         }
-    }).input()
+    }).input().addClass("float-left")
 };};
 
 
