@@ -16,6 +16,12 @@ window.DocumentsListDefinition = function(archive) { return {
                              options: [ {name: localization.filterByProcess.showContractsOnly, value: "contract"},
                                         {name: localization.filterByProcess.showOffersOnly,    value: "offer"},
                                         {name: localization.filterByProcess.showOrdersOnly,    value: "order"}
+                                      ]}),
+        new SelectFiltering({description: localization.filterByYear.showAnyYear, name: "year",
+                             options: [ {name: "2010",    value: "2010"},
+                                        {name: "2011",    value: "2011"},
+                                        {name: "2012",    value: "2012"},
+                                        {name: "2013",    value: "2013"}
                                       ]})
         ],
     cells : [

@@ -131,6 +131,7 @@ data DocumentFilter
   | DocumentFilterByProcess [DocumentProcess] -- ^ Any of listed processes
   | DocumentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
   | DocumentFilterByIdentification IdentificationType -- ^ Only documents that use selected identification type
+  | DocumentFilterByYear Int                  -- ^ Document time fits in a year
 
 data DocumentDomain
   = DocumentsOfWholeUniverse                     -- ^ All documents in the system. Only for admin view.
@@ -326,6 +327,16 @@ documentFilterToSQL (DocumentFilterByProcess processes) =
   sqlConcatOR $ map (\process -> SQL "documents.process = ?" [toSql process]) processes
 documentFilterToSQL (DocumentFilterByRole role) =
   SQL "(signatory_links.roles & ?) <> 0" [toSql [role]]
+documentFilterToSQL (DocumentFilterByYear year) =
+  -- Filtering by year is supposed to show all documents with time in
+  -- a year, for example for year 2011 it will show all documents from
+  -- 2011-01-01 00:00 to 2012-01-01 00:00 last date should be
+  -- excluded, but to use BETWEEN we skip this small issue
+  --
+  -- Note: using mtime isn't the smartest thing we could do here. We
+  -- have some times associated with document and we need to sort out
+  -- which of times should be used for filtering.
+  SQL ("documents.mtime BETWEEN '" ++ show year ++ "-01-01' AND '" ++ show (year+1) ++ "-01-01'") []
 documentFilterToSQL (DocumentFilterByTags []) =
   SQL "TRUE" []
 documentFilterToSQL (DocumentFilterByTags tags) =

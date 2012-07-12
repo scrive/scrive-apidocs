@@ -187,6 +187,9 @@ javascriptLocalisation =
                 showOrdersOnly: "$_showOrdersOnly()$",
                 showOffersOnly: "$_showOffersOnly()$"
             }
+            , filterByYear: {
+                showAnyYear: "$_showAnyYear()$"
+            }
            , searchTemplate : "$_SearchTemplate()$"
            , sortTemplate : "$_SortTemplate()$"
            , infoSelectTemplate : "$_InfoSelectTemplate()$"
