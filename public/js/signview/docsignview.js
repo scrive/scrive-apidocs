@@ -195,12 +195,12 @@ var DocumentSignViewView = Backbone.View.extend({
       }
     },
     createSignatoryAttachmentsView: function() {
-      this.signatoryattachmentview =  new DocumentSignatoryAttachmentsView({
+      this.signatoryattachmentsection =  new DocumentSignatoryAttachmentsView({
         model: this.model.document(),
         el: $("<div class='section spacing'/>"),
         title: this.signatoryAttachmentsTitle()
       });
-      return this.signatoryattachmentview;
+      return this.signatoryattachmentsection;
     },
     signatoryAttachmentTasks: function(attachmentels) {
       var attachments = this.model.document().currentSignatory().attachments();
@@ -214,11 +214,14 @@ var DocumentSignViewView = Backbone.View.extend({
       return tasks;
     },
     signatoryAttachmentTask: function(attachment, el) {
+      var view = this;
       var task = new PageTask({
         isComplete: function() {
           return attachment.hasFile() && attachment.isReviewed();
         },
-        el: el
+        el: el,
+        onActivate   : function() {$(view.signatoryattachmentsection.el).addClass("highlight");},
+        onDeactivate : function() {$(view.signatoryattachmentsection.el).removeClass("highlight");}
       });
       attachment.bind("change", function() {task.update()});
       attachment.bind("reset", function() {task.update()});
@@ -290,7 +293,10 @@ var DocumentSignViewView = Backbone.View.extend({
       this.signbuttonview =  new DocumentSignButtonView({
         model: this.model.document(),
         validate: function() {
-            return view.tasks.notCompleatedTasks().length == 1 && view.tasks.notCompleatedTasks()[0] == view.signtask;
+            var valid =  view.tasks.notCompleatedTasks().length == 1 && view.tasks.notCompleatedTasks()[0] == view.signtask;
+            if (!valid)
+                view.arrowview.blink();
+            return valid;
         },
         el: $("<div class='signwrapper'/>")
       });
@@ -312,9 +318,10 @@ var DocumentSignViewView = Backbone.View.extend({
     },
     createArrowsElems: function(tasks) {
       this.tasks = new PageTasks({ tasks: tasks });
-      return $(new PageTasksArrowView({
+      this.arrowview =  new PageTasksArrowView({
         model: this.tasks,
-        el: $("<div />")  }).el);
+        el: $("<div />")  });
+      return this.arrowview.el;
     },
     isDisplaySignatories: function() {
       return !this.model.document().closed();
@@ -328,6 +335,8 @@ var DocumentSignViewView = Backbone.View.extend({
     render: function() {
       var view = this;
       var document = this.model.document();
+
+      
       if (!document.ready() || document.mainfile()==undefined) {
           this.mainfileview = undefined;
           return this;

@@ -195,9 +195,6 @@ window.DocumentSignButtonView = Backbone.View.extend({
       onClick: function() {
         if (sign.validate()) {
           sign.confirm();
-        } else
-        {
-          model.trigger("tried-to-sign-and-failed");
         }
       }
     }).input()));

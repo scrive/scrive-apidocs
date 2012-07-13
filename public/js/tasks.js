@@ -95,7 +95,7 @@ window.PageTasksArrowView = Backbone.View.extend({
     this.render();
   },
   blink : function() {
-    if (view.arrow != undefined)
+    if (this.arrow != undefined)
         this.arrow.blink(10);  
   },
   taskArrow : function(task) {
