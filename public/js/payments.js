@@ -41,6 +41,24 @@
         return table;
     };
 
+    var invoicelist = function() {
+        return KontraList().init({
+            name : "Invoice Table",
+            schema: new Schema({
+                url: "/payments/invoices",
+                sorting: new Sorting({ fields: ["date", "invoice_number", "total_in_cents", "currency", "state"]}),
+                paging: new Paging({}),
+                cells : [
+                    new Cell({name: "Date",      width:"30px", field:"date"}),
+                    new Cell({name: "Invoice #", width:"30px", field:"invoice_number"}),
+                    new Cell({name: "Total",     width:"30px", field:"total_in_cents"}),
+                    new Cell({name: "Currency",  width:"30px", field:"currency"}),
+                    new Cell({name: "Status",    width:"30px", field:"state"})
+                ]
+            })
+        });
+    };
+
     var PaymentsContactModel = Backbone.Model.extend({
         firstName: function() {
             return this.get("first_name");
@@ -93,7 +111,7 @@
         },
         companyid: function() {
             return this.get("companyid");
-        }
+        }        
     });
 
     var PaymentsModel = Backbone.Model.extend({
@@ -102,6 +120,8 @@
                       server:  new PaymentsServerInfoModel(args.server),
                       account: new PaymentsAccountModel(args.account)
                      });
+            if(!this.account().newSignup() && !this.invoicelist())
+                this.set({invoicelist: invoicelist()});
         },
         contact: function() {
             return this.get("contact");
@@ -111,6 +131,9 @@
         },
         account: function() {
             return this.get("account");
+        },
+        invoicelist: function() {
+            return this.get("invoicelist");
         }
     });
 
@@ -219,6 +242,12 @@
 
             plan.append(planheader).append(plantable);
             $el.append(plan);
+            $el.append(model.invoicelist().view.el);
+        },
+        showInvoices: function() {
+            var ret = $('<div />').addClass('invoices');
+            
+            return ret;
         },
         render: function() {
             var view = this;

@@ -1,7 +1,8 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Payments.Control where
 
 import Control.Monad.State
-import Data.Convertible
+--import Data.Convertible
 import Data.Functor
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
@@ -23,8 +24,9 @@ import User.Utils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.MonadUtils
-import qualified Log
+--import qualified Log
 import qualified Text.JSON.Gen as J
+import ListUtil
 
 import Payments.Model
 import Payments.View
@@ -129,7 +131,25 @@ handleSubscriptionResult = checkUserTOSGet $ do
                     case plan of
                       UserPaymentPlan    {} -> J.value "userid"    $ show $ ppUserID plan
                       CompanyPaymentPlan {} -> J.value "companyid" $ show $ ppCompanyID plan
-                        
+
+handleGetInvoices :: Kontrakcja m => m (Either KontraLink JSValue)
+handleGetInvoices = checkUserTOSGet $ do
+  params <- getListParamsNew
+  user <- guardJustM $ ctxmaybeuser <$> getContext
+  mplan <- dbQuery $ GetPaymentPlan (maybe (Left (userid user)) Right (usercompany user))
+  case mplan of
+    Nothing   -> runJSONGenT $ J.value "error" "No plan for logged in user."
+    Just plan -> do
+      einvoices <- liftIO $ getInvoicesForAccount curl_exe recurlyApiKey (show $ ppAccountCode plan)
+      case einvoices of
+        Left s -> runJSONGenT $ J.value "error" $ "Could not fetch invoices: " ++ s
+        Right invoices -> runJSONGenT $ do
+          J.value "list" $ for invoices $ \i -> runJSONGen $ J.value "fields" i
+          J.value "paging" $ pagingParamsJSON $ PagedList { list       = invoices
+                                                          , params     = params
+                                                          , pageSize   = 12
+                                                          }
+
 -- to call this, user must not have an account code yet (no payment plan in table)
 syncSubscriptionWithRecurly :: Kontrakcja m => AccountCode -> User -> m (Either String PaymentPlan)
 syncSubscriptionWithRecurly ac u = do
@@ -159,3 +179,12 @@ fromRecurlyPricePlan "basic" = BasicPricePlan
 fromRecurlyPricePlan "branded" = BrandingPricePlan
 fromRecurlyPricePlan "advanced" = AdvancedPricePlan
 fromRecurlyPricePlan _ = AdvancedPricePlan
+
+instance ToJSValue Invoice where
+  toJSValue (Invoice{..}) = runJSONGen $ do
+    J.value "invoice_number" inNumber
+    J.value "total_in_cents" inTotalInCents
+    J.value "currency"       inCurrency
+    J.value "state"          inState
+    J.value "account_code"   inAccount
+    J.value "date"           inDate
