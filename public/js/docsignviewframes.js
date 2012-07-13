@@ -8,8 +8,8 @@ window.DocumentSignViewHeader = Backbone.View.extend({
  initialize: function(args) {
      this.mainview = args.mainview;
      _.bindAll(this, 'render' ,'refresh');
-     this.model.document.bind('reset', this.render);
-     this.model.document.bind('change', this.render);
+     this.model.document().bind('reset', this.render);
+     this.model.document().bind('change', this.render);
      this.model.bind('change', this.render);
      this.mainview.bind('change:task', this.refresh);
      this.render();
@@ -43,7 +43,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
   render: function() {
     var view = this;
     var model = this.model;
-    var document = this.model.document;
+    var document = this.model.document();
     if (!document.ready()) return this;
     var maindiv = $(this.el);
     maindiv.empty();
@@ -122,8 +122,8 @@ window.DocumentSignViewFooter = Backbone.View.extend({
   initialize: function(args) {
     this.mainview = args.mainview;
     _.bindAll(this, 'render' , 'refresh');
-    this.model.document.bind('reset', this.render);
-    this.model.document.bind('change', this.render);
+    this.model.document().bind('reset', this.render);
+    this.model.document().bind('change', this.render);
     this.mainview.bind('change:task', this.refresh);
     this.render();
   },
@@ -141,7 +141,7 @@ window.DocumentSignViewFooter = Backbone.View.extend({
   tagName: "div",
   render: function() {
     var model = this.model;
-    var document = this.model.document;
+    var document = this.model.document();
     if (!document.ready()) return this;
     var maindiv = $(this.el);
     maindiv.empty();

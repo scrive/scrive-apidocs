@@ -6,6 +6,9 @@
 
 var DocumentSignViewModel = Backbone.Model.extend({
   defaults : {
+    saved: false,
+    saving: false,
+    justsaved: false
   },
   initialize : function(args){
       var model = this;
@@ -18,6 +21,36 @@ var DocumentSignViewModel = Backbone.Model.extend({
   document : function(){
        return this.get("document");
   },
+  email: function() {
+    return this.document().currentSignatory().email();
+  },
+  hasSigned: function() {
+    return this.document().currentSignatory().hasSigned();
+  },
+  justSaved: function() {
+    return this.get('justsaved');
+  },
+  saved: function() {
+    return this.document().currentSignatory().saved() || this.get("saved");
+  },
+  saving: function() {
+    return this.get("saving");
+  },
+  setSaving: function(saving) {
+    this.set({ saving: saving });
+  },
+  setSaved: function() {
+    this.set({ saved: true,
+               saving: false,
+               justsaved: true});
+    this.document().trigger('change');
+  },
+  saveurl: function() {
+    return this.document().currentSignatory().saveurl();
+  },
+  phoneurl: function() {
+    return "/account/phoneme";
+  },
   recall : function() {
       this.document().recall();
   }
@@ -29,9 +62,6 @@ var DocumentSignViewView = Backbone.View.extend({
         this.model.bind('change', this.render);
         this.model.bind('change-with-delay', function() { window.setTimeout(view.render, 500); });
         this.model.view = this;
-        this.saveAfterSignModel = new DocumentSaveAfterSignModel({
-          document: this.model.document()
-        });
         this.prerender();
         this.render();
     },
@@ -45,21 +75,21 @@ var DocumentSignViewView = Backbone.View.extend({
     },
     createSignInstructionElems: function() {
       return $(new DocumentSignInstructionsView({
-        model: this.saveAfterSignModel,
+        model: this.model,
         el: $("<div />")
       }).el);
     },
     createSaveAfterSignViewElems: function() {
       if (this.model.document().padAuthorization()) return $("<div/>"); 
       return $(new DocumentSaveAfterSignView({
-       model: this.saveAfterSignModel,
+       model: this.model,
        el: $("<div />")
       }).el);
     },
     createShareAfterSignViewElems: function() {
       if (this.model.document().padAuthorization()) return $("<div/>");
       return $(new DocumentShareAfterSignView({
-        model: this.saveAfterSignModel,
+        model: this.model,
         el: $("<div />")
       }).el);
     },
@@ -349,13 +379,13 @@ var DocumentSignViewView = Backbone.View.extend({
 
       this.container.append(this.createSignInstructionElems());
       if (document.currentSignatory().hasSigned()) {
-        if (!document.currentSignatory().saved() || view.saveAfterSignModel.justSaved()) {
+        if (!document.currentSignatory().saved() || view.model.justSaved()) {
           this.container.append(this.createSaveAfterSignViewElems());
         }
         this.container.append(this.createShareAfterSignViewElems());
       }
 
-      if(view.saveAfterSignModel.justSaved() && !document.isWhiteLabeled()) {
+      if(view.model.justSaved() && !document.isWhiteLabeled()) {
           var sbox = $('<div class="sbox" />');
           var video = $('<div class="video" />');
           sbox.append(video);

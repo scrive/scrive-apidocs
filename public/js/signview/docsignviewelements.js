@@ -9,35 +9,16 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     this.model.bind('change', this.render);
     this.render();
   },
-  isSigning: function() {
-    var signatory = this.model.document.currentSignatory();
-    return this.model.document.signingInProcess() && signatory.signs() && !signatory.hasSigned();
-  },
-  isReviewing: function() {
-    var signatory = this.model.document.currentSignatory();
-    return (this.model.document.signingInProcess() || this.model.document.closed()) && !signatory.signs();
-  },
-  isSignedNotClosed: function() {
-    var signatory = this.model.document.currentSignatory();
-    return this.model.document.signingInProcess() && signatory.hasSigned() && !this.model.document.closed();
-  },
-  isSignedAndClosed: function() {
-    var signatory = this.model.document.currentSignatory();
-    return signatory.hasSigned() && this.model.document.closed();
-  },
-  isUnavailableForSign: function() {
-    return !this.model.document.signingInProcess() && !this.model.document.closed();
-  },
   text: function() {
-    if (this.isSigning()) {
+    if (document.isSigning()) {
       return localization.docsignview.followArrowToSign;
-    } else if (this.isReviewing()) {
+    } else if (document.isReviewing()) {
       return localization.docsignview.followArrowToReview;
-    } else if (this.isSignedAndClosed()) {
+    } else if (document.isSignedAndClosed()) {
       return localization.docsignview.signedAndClosed;
-    } else if (this.isSignedNotClosed()) {
+    } else if (document.isSignedNotClosed()) {
       return localization.docsignview.signedNotClosed;
-    } else if (this.isUnavailableForSign()) {
+    } else if (document.isUnavailableForSign()) {
       return localization.docsignview.unavailableForSign;
     } else {
       console.error("Unsure what state we're in");
@@ -45,37 +26,38 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     }
   },
   subtext: function() {
-    if (this.isSignedAndClosed()) {
+    var document = this.model.document();
+    if (document.isSignedAndClosed()) {
       return localization.docsignview.signedAndClosedSubText;
-    } else if (this.isSignedNotClosed()) {
+    } else if (document.isSignedNotClosed()) {
       return localization.docsignview.signedNotClosedSubText;
     } else {
       return "";
     }
   },
   createMenuElems: function() {
-    if (this.model.document.padAuthorization()) return $("<div>");  
+    if (this.model.document().padAuthorization()) return $("<div>");
     return $(new DocumentActionMenuView({
-      model: this.model.document,
+      model: this.model.document(),
       el: $("<div class='menuwrapper'/>")
     }).el);
   },
   render: function() {
+    var document = this.model.document();
     $(this.el).empty();
-
     if(this.model.justSaved())
       return this;
 
     var container = $("<div class='instructions' />");
     container.append($("<div class='headline' />").text(this.text()));
     container.append($("<div class='subheadline' />").text(this.subtext()));
-    if (this.model.document.padAuthorization() && this.isSignedNotClosed() && BrowserInfo.isPadDevice())
-    {    var padGiveToNextSignatoryModel = new PadGiveToNextSignatoryModel({document : this.model.document});
+    if (document.padAuthorization() && document.isSignedNotClosed() && BrowserInfo.isPadDevice())
+    {    var padGiveToNextSignatoryModel = new PadGiveToNextSignatoryModel({document : document});
          container.append(new PadGiveToNextSignatoryView({model : padGiveToNextSignatoryModel}).el);
     }
     var smallerbit = $("<div />");
-    var timeout = this.model.document.timeouttime();
-    if (timeout != undefined && this.model.document.signingInProcess()) {
+    var timeout = document.timeouttime();
+    if (timeout != undefined && document.signingInProcess()) {
       smallerbit.append($("<div class='duedate' />").text(localization.docsignview.dueDate + " " + timeout.getFullYear() + "-" + timeout.getMonth() + "-" + timeout.getDate()));
     }
     smallerbit.append(this.createMenuElems());

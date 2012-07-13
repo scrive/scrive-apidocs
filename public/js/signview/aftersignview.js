@@ -3,48 +3,6 @@
 
 (function(window) {
 
-
-window.DocumentSaveAfterSignModel = Backbone.Model.extend({
-  defaults: {
-    saved: false,
-    saving: false,
-    justsaved: false
-  },
-  initialize: function(args) {
-    this.document = args.document;
-  },
-  email: function() {
-    return this.document.currentSignatory().email();
-  },
-  hasSigned: function() {
-    return this.document.currentSignatory().hasSigned();
-  },
-  justSaved: function() {
-    return this.get('justsaved');
-  },
-  saved: function() {
-    return this.document.currentSignatory().saved() || this.get("saved");
-  },
-  saving: function() {
-    return this.get("saving");
-  },
-  setSaving: function(saving) {
-    this.set({ saving: saving });
-  },
-  setSaved: function() {
-    this.set({ saved: true,
-               saving: false,
-               justsaved: true});
-    this.document.trigger('change');
-  },
-  saveurl: function() {
-    return this.document.currentSignatory().saveurl();
-  },
-  phoneurl: function() {
-    return "/account/phoneme";
-  }
-});
-
 window.DocumentSaveAfterSignView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
@@ -186,7 +144,7 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
              console.log("successfully created account");
              model.setSaved();
              console.log(
-               model.document.currentSignatory());
+               model.document().currentSignatory());
            }
          }).send();
         }
@@ -202,7 +160,7 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
   render: function() {
     $(this.el).empty();
 
-    if (!this.model.hasSigned() || this.model.document.isWhiteLabeled()) {
+    if (!this.model.hasSigned() || this.model.document().isWhiteLabeled()) {
       console.log("not rendering save view");
       return this;
     }
@@ -376,7 +334,7 @@ window.DocumentShareAfterSignView = Backbone.View.extend({
   render: function() {
     $(this.el).empty();
 
-    if (!this.model.hasSigned() || !this.model.saved() || this.model.document.isWhiteLabeled() || this.model.document.currentSignatory().hasUser()) {
+    if (!this.model.hasSigned() || !this.model.saved() || this.model.document().isWhiteLabeled() || this.model.document().currentSignatory().hasUser()) {
       return this;
     }
 
