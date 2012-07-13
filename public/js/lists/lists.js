@@ -337,7 +337,7 @@
                 var onSelectFunction = e.onSelect;
                 if (onSelectFunction != undefined) {
                     e.onSelect = function() {
-                        if (model.hasSelected()) {
+                        if (model.hasSelected() || e.acceptEmpty) {
                             return onSelectFunction(model.getSelected());
                         } else {
                             return function() {};
@@ -460,16 +460,17 @@
             return this;
         },
         recall: function() {
+            if (this.fetching == true) return;
             var list = this;
             list.view.startLoading();
-            var fetching = true;
+            this.fetching = true;
             this.model.fetch({ data: this.schema.getSchemaUrlParams(),
                                processData: true,
                                cache: false,
-                               success: function() {fetching = false; list.view.stopLoading(); },
+                               success: function() {list.fetching = false; list.view.stopLoading(); },
                                timeout: 6000
             });
-            window.setTimeout(function() {if (fetching == true) list.recall();}, 7000);
+            window.setTimeout(function() {if (this.fetching == true) {this.fetching = false; list.recall();} }, 7000);
         }
     };};
 })(window);

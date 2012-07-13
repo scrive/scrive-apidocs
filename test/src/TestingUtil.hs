@@ -41,6 +41,7 @@ import API.Service.Model
 import Data.Typeable
 import Doc.Invariants
 import Doc.DocProcess
+import System.Random.CryptoRNG ()
 import Text.JSON
 import TestKontra
 
@@ -465,7 +466,7 @@ addNewCompany = do
     dbUpdate $ CreateCompany Nothing eid
 
 addNewFile :: String -> BS.ByteString -> TestEnv File
-addNewFile filename content = dbUpdate $ NewFile filename content
+addNewFile filename content = dbUpdate $ NewFile filename $ Binary content
 
 addNewRandomFile :: TestEnv File
 addNewRandomFile = do
@@ -762,14 +763,6 @@ instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbit
 
 instance Arbitrary FileID where
   arbitrary = unsafeFileID . abs <$> arbitrary
-
-instance Arbitrary File where
-  arbitrary = do
-    (a, b, c) <- arbitrary
-    return $ File { fileid = a
-                  , filename = b
-                  , filestorage = FileStorageMemory c
-                  }
 
 instance Arbitrary IPAddress where
   arbitrary = unsafeIPAddress <$> arbitrary

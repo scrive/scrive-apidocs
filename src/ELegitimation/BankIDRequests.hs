@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 module ELegitimation.BankIDRequests (
           ImplStatus(..)
         , generateChallenge
@@ -10,6 +9,7 @@ module ELegitimation.BankIDRequests (
         ) where
 
 import Data.Maybe
+import Data.SafeCopy
 import Misc hiding (optional)
 import SOAP.SOAP
 import Text.XML.HaXml.Posn (Posn)
@@ -19,7 +19,6 @@ import ELegitimation.Config
 import ELegitimation.SignatureProvider
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Base64 as Base64
-import Happstack.Data (Typeable, Version, deriveSerialize)
 
 data ImplStatus = ImplStatus { errorGroup            :: Int, 
                                errorGroupDescription :: String, 
@@ -242,7 +241,7 @@ data SignatureRequest = SignatureRequest { srPolicy            :: String
                                          , srPersonalNumber    :: String
                                          , srUserVisibleData   :: String
                                          }
-                        
+
 instance HTypeable (SignatureRequest) where
     toHType _x = Defined "SignatureRequest" [] []
 instance XmlContent (SignatureRequest) where
@@ -256,7 +255,7 @@ instance XmlContent (SignatureRequest) where
     parseContents = error "Please do not parse SignatureRequest"
 
 data SignatureResponse = SignatureResponse String String
-                         
+
 instance HTypeable (SignatureResponse) where
     toHType _x = Defined "SignatureResponse" [] []
 instance XmlContent (SignatureResponse) where
@@ -287,17 +286,16 @@ instance XmlContent (CollectRequest) where
             ,CElem (Elem (N "transactionId") [mkAttr "xmlns" ""] $ toText crTransactionID) ()
             ,CElem (Elem (N "orderRef") [mkAttr "xmlns" ""] $ toText crOrderRef) ()]) ()]
   parseContents = error "Please do not parse CollectRequest."
-  
+
 data CollectResponse = CROutstanding { cresTransactionID :: String }
                      | CRUserSign { cresTransactionID :: String }
                      | CRComplete { cresTransactionID :: String
                                   , cresSignature :: String
                                   , cresAttributes :: [(String, String)]
                                   }
-                     deriving (Show, Eq, Read, Ord, Typeable)
-                              
-$(deriveSerialize ''CollectResponse)
-instance Version (CollectResponse)
+                     deriving (Show, Eq, Read, Ord)
+
+$(deriveSafeCopy 0 'base ''CollectResponse)
 
 instance HTypeable (CollectResponse) where
     toHType _x = Defined "CollectResponse" [] []
@@ -317,7 +315,7 @@ instance XmlContent (CollectResponse) where
                 _ -> error $ "Trying to parse CollectResponse but did not understand it; status: " ++ show progressStatus ++ ", signature: " ++ show msignature
             }
         } `adjustErr` ("in <CollectResponse>, "++)
-                     
+
 mbiRequestSignature :: LogicaConfig -> String -> String -> IO (Either String (String, String))
 mbiRequestSignature LogicaConfig{..} personalnumber uvd = do
   eresponse <- makeSoapCallWithCA logicaMBIEndpoint logicaCertFile "Sign" $ SignatureRequest logicaServiceID logicaMBIDisplayName personalnumber (BS.toString $ Base64.encode $ BS.fromString uvd)
@@ -328,5 +326,3 @@ mbiRequestSignature LogicaConfig{..} personalnumber uvd = do
 mbiRequestCollect :: LogicaConfig -> String -> String -> IO (Either String CollectResponse)
 mbiRequestCollect LogicaConfig{..} tid oref = do
   makeSoapCallWithCA logicaMBIEndpoint logicaCertFile "Collect" $ CollectRequest logicaServiceID tid oref logicaMBIDisplayName
-  
-  

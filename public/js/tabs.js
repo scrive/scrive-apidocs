@@ -14,11 +14,18 @@ window.Tab = Backbone.Model.extend({
     active : false,
     disabled : false,
     clickable : true,
+    iconClass : undefined,
     onActivate : function() {}
     }
   ,
   name : function() {
       return this.get("name");
+  },
+  iconClass : function() {
+      return this.get("iconClass");  
+  },
+  right : function() {
+      return this.get("right") == true;  
   },
   elems : function() {
       return this.get("elems");
@@ -46,6 +53,12 @@ window.Tab = Backbone.Model.extend({
   setNumber: function(number)
   {
        this.set({number:number});
+  },
+  initateAll: function() {
+      var elems = this.elems();
+      for(var i = 0; i< elems.length; i ++ )
+          if (!(elems[i] instanceof jQuery))
+              elems[i] = elems[i]();
   }
 });
 
@@ -53,10 +66,10 @@ window.Tab = Backbone.Model.extend({
 
 var Tabs = Backbone.Model.extend({
    defaults: {
-       numbers : true
+       numbers : false
     },
    title: function(){
-     return this.get("title");
+     return this.get("title") != undefined ? this.get("title") : "";
     },
    numbers : function() {
      return   this.get("numbers") == true;
@@ -86,7 +99,7 @@ var Tabs = Backbone.Model.extend({
    {    var tabs = this.tabs();
         for(var i=0;i<tabs.length;i++)
         {
-            _.each(tabs[i].elems(), function(e) {e.hide();});
+            _.each(tabs[i].elems(), function(e) {if (e instanceof jQuery) e.hide();});
         }
    },
    activeTab : function()
@@ -136,11 +149,9 @@ var TabsView = Backbone.View.extend({
         container.addClass("tab-viewer");
         this.toprow = $("<div id='signStepsContainer'/>");
         container.append(this.toprow);
-        _.each(this.model.tabs(), function(t) {
-            _.each(t.elems(), function(e) {container.append(e);});
-        });
     },
     render: function () {
+        var container = $(this.el);
         var tabsview = this;
         this.toprow.children().detach();
         // Top part , with title and the tabs
@@ -148,13 +159,27 @@ var TabsView = Backbone.View.extend({
         titlepart.append(this.model.title());
         var tabsrow = $("<ul class='tabs'/>");
         var model = this.model;
+        var hasRight = false;
         _.each(this.model.tabs(), function(tab)
         {
             if (tab.disabled()) return;
             var li = $("<li/>");
+            if (tab.right()) {
+                li.addClass("float-right");
+                hasRight = true;
+            }
+            else
+                li.addClass("float-left");
             if (tab.hasNumber())
                 li.append(tabsview.numberIcon(tab.number()));
-            li.append($("<a href='#'/>").html(tab.name()));
+            var icon = $("<a href='#'/>");
+            icon.text(tab.name());
+            if (tab.iconClass() != undefined){
+                icon.addClass(tab.iconClass());
+                li.addClass('withIcon');
+            }
+            li.append(icon);
+            
             if (tab.active())
                 li.addClass("active");
             li.click(function() {
@@ -164,6 +189,8 @@ var TabsView = Backbone.View.extend({
                     });
             tabsrow.append(li);
         });
+        if (!hasRight)
+            tabsrow.append("<li class='float-right'/>");
         this.toprow.append(titlepart);
         if (model.hasManyTabs())
             this.toprow.append(tabsrow);
@@ -172,10 +199,14 @@ var TabsView = Backbone.View.extend({
            var li = $("<li style= 'float:right;padding-left:0px;padding-right:20px;'/>").append(elem);
            tabsrow.append(li);
         });
-
+        
 
         this.model.hideAll();
-        _.each(this.model.activeTab().elems(), function(e) {e.show();});
+        this.model.activeTab().initateAll();
+        _.each(this.model.activeTab().elems(), function(e) {
+            container.append(e);
+            e.show();
+        });
         return this;
     },
     numberIcon : function(number) {
@@ -186,21 +217,18 @@ var TabsView = Backbone.View.extend({
 });
 
 
-window.KontraTabs = {
-    init : function(args){
+window.KontraTabs = function(args){
         this.model = new Tabs(args);
         this.view = new TabsView({
                         model: this.model,
                         el : $("<div/>")
                     });
-        return this;
-    },
-    next : function() {
-        this.model.activateNext();
-    },
-    activate : function(tab) {
-        this.model.activate(tab);
-    }
+        return {
+              model    : this.model
+            , view     : this.view
+            , next     : function()    { this.model.activateNext();}
+            , activate : function(tab) { this.model.activate(tab);}
+         };
 };
 
 

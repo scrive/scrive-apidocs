@@ -1,15 +1,12 @@
 {-# LANGUAGE CPP #-}
 module Archive.Control
        (
-       handleAttachmentArchive,
-       handleDocumentArchive,
-       handleIssueArchive,
-       handleSignableArchive,
-       handleTemplateArchive,
-       showDocumentsList,
-       showAttachmentList,
-       showRubbishBinList,
-       showTemplatesList,
+       handleDelete,
+       handleSendReminders,
+       handleRestore,
+       handleReallyDelete,
+       handleShare,
+       showArchive,
        showPadDeviceArchive,
        jsonDocumentsList
        )
@@ -25,7 +22,6 @@ import Doc.DocStateData
 import Doc.Model
 import User.Model
 import User.Utils
-import Util.FlashUtil
 import Util.MonadUtils
 
 import Control.Applicative
@@ -39,32 +35,13 @@ import MinutesTime
 import Misc
 import PadQueue.Model
 import Data.Maybe
+import Happstack.Server.SimpleHTTP
+import Text.JSON.Gen as J
+import Doc.DocUtils
+import Doc.Action
 
-handleDocumentArchive :: Kontrakcja m => m KontraLink
-handleDocumentArchive = do
-    _ <- handleSignableArchive
-    return $ LinkContracts
-
-handleSignableArchive :: Kontrakcja m => m ()
-handleSignableArchive =  do
-    handleIssueArchive
-    addFlashM $ flashMessageSignableArchiveDone
-    return ()
-
-handleTemplateArchive :: Kontrakcja m => m KontraLink
-handleTemplateArchive = do
-    handleIssueArchive
-    addFlashM flashMessageTemplateArchiveDone
-    return $ LinkTemplates
-
-handleAttachmentArchive :: Kontrakcja m => m KontraLink
-handleAttachmentArchive = do
-    handleIssueArchive
-    addFlashM flashMessageAttachmentArchiveDone
-    return $ LinkAttachments
-
-handleIssueArchive :: Kontrakcja m => m ()
-handleIssueArchive = do
+handleDelete :: Kontrakcja m => m JSValue
+handleDelete = do
     Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
     docids <- getCriticalFieldList asValidDocID "doccheck"
     let actor = userActor ctxtime ctxipnumber (userid user) (getEmail user)
@@ -74,33 +51,70 @@ handleIssueArchive = do
                 Just sl -> addSignStatDeleteEvent doc sl ctxtime
                 _ -> return False) 
       docids
+    J.runJSONGenT $ return ()
 
+handleSendReminders :: Kontrakcja m => m JSValue
+handleSendReminders = do
+    ctx@Context{ctxmaybeuser = Just user } <- getContext
+    ids <- getCriticalFieldList asValidDocID "doccheck"
+    remindedsiglinks <- fmap concat . sequence . map (\docid -> docRemind ctx user docid) $ ids
+    case (length remindedsiglinks) of
+      0 -> internalError
+      _ -> J.runJSONGenT $ return ()
+    where
+      docRemind :: Kontrakcja m => Context -> User -> DocumentID -> m [SignatoryLink]
+      docRemind ctx user docid = do
+        doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
+        case (documentstatus doc) of
+          Pending -> do
+            let isEligible = isEligibleForReminder user doc
+                unsignedsiglinks = filter isEligible $ documentsignatorylinks doc
+            sequence . map (sendReminderEmail Nothing ctx doc) $ unsignedsiglinks
+          _ -> return []
+    
+
+handleRestore :: Kontrakcja m => m JSValue
+handleRestore = do
+  user <- guardJustM $ ctxmaybeuser <$> getContext
+  actor <- guardJustM $ mkAuthorActor <$> getContext
+  docids <- getCriticalFieldList asValidDocID "doccheck"
+  mapM_ (\did -> guardRightM'  $ dbUpdate $ RestoreArchivedDocument user did actor) docids
+  J.runJSONGenT $ return ()
+
+handleReallyDelete :: Kontrakcja m => m JSValue
+handleReallyDelete = do
+  user <- guardJustM $ ctxmaybeuser <$> getContext
+  actor <- guardJustM $ mkAuthorActor <$> getContext
+  ctx <- getContext
+  docids <- getCriticalFieldList asValidDocID "doccheck"
+  mapM_ (\did -> do
+            doc <- guardRightM'  $ dbUpdate $ ReallyDeleteDocument user did actor
+            case getSigLinkFor doc user of
+              Just sl -> addSignStatPurgeEvent doc sl (ctxtime ctx)
+              _ -> return False)
+    docids
+  J.runJSONGenT $ return ()
+
+
+handleShare :: Kontrakcja m => m JSValue
+handleShare =  do
+    _ <- guardJustM $ ctxmaybeuser <$> getContext
+    ids <- getCriticalFieldList asValidDocID "doccheck"
+    _ <- dbUpdate $ SetDocumentSharing ids True
+    w <- flip mapM ids $ (dbQuery . GetDocumentByDocumentID)
+    when_ (null $ catMaybes w) internalError
+    J.runJSONGenT $ return ()
+    
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
  -}
-showDocumentsList :: Kontrakcja m => m (Either KontraLink String)
-showDocumentsList = archivePage pageDocumentsList
-
-showTemplatesList :: Kontrakcja m => m (Either KontraLink String)
-showTemplatesList = archivePage pageTemplatesList
-
-showAttachmentList :: Kontrakcja m => m (Either KontraLink String)
-showAttachmentList = archivePage pageAttachmentList
-
-showRubbishBinList :: Kontrakcja m => m (Either KontraLink String)
-showRubbishBinList = archivePage pageRubbishBinList
+showArchive :: Kontrakcja m => m (Either KontraLink String)
+showArchive = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >> pageArchive
 
 showPadDeviceArchive :: Kontrakcja m => m (Either KontraLink String)
-showPadDeviceArchive = archivePage pagePadDeviceArchive
+showPadDeviceArchive = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >> pagePadDeviceArchive
 
-{- |
-    Helper function for showing lists of documents.
--}
-archivePage :: Kontrakcja m => (User -> m String) -> m (Either KontraLink String)
-archivePage page = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >>= page
-
-
-jsonDocumentsList ::  Kontrakcja m => m (Either KontraLink JSValue)
+jsonDocumentsList ::  Kontrakcja m => m (Either KontraLink (Either Response JSValue))
 jsonDocumentsList = withUserGet $ do
   Just user@User{userid = uid} <- ctxmaybeuser <$> getContext
   lang <- getLang . ctxlocale <$> getContext
@@ -129,26 +143,41 @@ jsonDocumentsList = withUserGet $ do
       fltSpec ("process", "contract") = [DocumentFilterByProcess [Contract]]
       fltSpec ("process", "order") = [DocumentFilterByProcess [Order]]
       fltSpec ("process", "offer") = [DocumentFilterByProcess [Offer]]
+      fltSpec ("year", yearstr) = case reads yearstr of
+                                    ((year,""):_) -> [DocumentFilterByYears [year]]
+                                    _ -> []
+      fltSpec ("month", monthstr) = case reads monthstr of
+                                    ((month,""):_) -> [DocumentFilterByMonths [month]]
+                                    _ -> []
+      fltSpec ("statusclass", scstr) = case reads scstr of
+                                    ((statusclass,""):_) -> [DocumentFilterByStatusClass [statusclass]]
+                                    _ -> []
       fltSpec _ = []
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
       pagination = docPaginationFromParams params
-      filters = filters1 ++ filters2
-
-  allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
-
-  let docs = PagedList { list       = allDocs
-                       , params     = params
-                       , pageSize   = docsPageSize
-                       }
-
+      filters = filters1 ++ filters2      
   cttime <- getMinutesTime
   padqueue <- dbQuery $ GetPadQueue $ userid user
-  docsJSONs <- mapM (docForListJSON (timeLocaleForLang lang) cttime user padqueue) $ take docsPageSize $ list docs
-  return $ JSObject $ toJSObject [
-      ("list", JSArray docsJSONs)
-    , ("paging", pagingParamsJSON docs)
-    ]
+  format <- getField "format"
+  case format of
+       Just "csv" -> Left <$> do
+          allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting (DocumentPagination 0 maxBound)
+          let docsCSVs = concat $ zipWith (docForListCSV (timeLocaleForLang lang)) [1..maxBound] allDocs
+          ok $ setHeader "Content-Disposition" "attachment;filename=documents.csv"
+             $ setHeader "Content-Type" "text/csv"
+             $ toResponse (toCSV docForListCSVHeader docsCSVs)
+       _ -> do
+          allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
+          let docs = PagedList {  list       = allDocs
+                                , params     = params
+                                , pageSize   = docsPageSize
+                                }
+          docsJSONs <- mapM (docForListJSON (timeLocaleForLang lang) cttime user padqueue) $ take docsPageSize $ list docs
+          return $ Right $ JSObject $ toJSObject [
+              ("list", JSArray docsJSONs)
+            , ("paging", pagingParamsJSON docs)
+            ]
 
 docSortingFromParams :: ListParams -> [AscDesc DocumentOrderBy]
 docSortingFromParams params =

@@ -26,6 +26,8 @@ module API.API(
       ) where
 
 import Control.Applicative
+import Acid.Monad
+import AppState
 import AppView as V
 import Happstack.Server (Response, Method(POST)) -- GHC 6.12.3 workaround hack
 import Happstack.StaticRouting (Route, Path, dir, path, remainingPath)
@@ -50,15 +52,6 @@ type APIRequestBody = JSValue
 newtype APIFunction c m a = AF { unAF :: ReaderT c (ErrorT (API_ERROR, String) m) a }
     deriving (Applicative, CryptoRNG, Functor, Monad, MonadBase b, MonadDB, MonadError (API_ERROR, String), MonadIO, MonadReader c)
 
-{-
-instance (MonadBase IO m, MonadBaseControl IO m) => MonadBaseControl IO (APIFunction m c) where
-  newtype StM (APIFunction m c) a = StAPIFunction { unStAPIFunction :: StM (ReaderT c (ErrorT (API_ERROR, String) m)) a }
-  liftBaseWith = newtypeLiftBaseWith AF unStAPIFunction StAPIFunction
-  restoreM     = newtypeRestoreM AF unAF
-  {-# INLINE liftBaseWith #-}
-  {-# INLINE restoreM #-}
--}
-
 instance MonadTrans (APIFunction c) where
     lift = AF . lift . lift
 
@@ -76,6 +69,9 @@ instance MonadBaseControl b m => MonadBaseControl b (APIFunction c m) where
     restoreM     = defaultRestoreM unStMAF
     {-# INLINE liftBaseWith #-}
     {-# INLINE restoreM #-}
+
+instance AcidStore AppState m => AcidStore AppState (APIFunction c m) where
+    getAcidStore = lift getAcidStore
 
 instance TemplatesMonad m => TemplatesMonad (APIFunction c m) where
     getTemplates = lift getTemplates

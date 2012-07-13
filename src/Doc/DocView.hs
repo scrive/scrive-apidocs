@@ -5,18 +5,10 @@ module Doc.DocView (
   , flashDocumentDraftSaved
   , flashDocumentRestarted
   , flashDocumentTemplateSaved
-  , flashMessageRubbishRestoreDone
-  , flashMessageRubbishHardDeleteDone
-  , flashMessageBulkRemindsSent
   , flashMessageCSVSent
   , flashMessageCanceled
   , flashMessageCannotCancel
   , flashMessageInvalidCSV
-  , flashMessageMultipleAttachmentShareDone
-  , flashMessageMultipleTemplateShareDone
-  , flashMessageNoBulkRemindsSent
-  , flashMessageSingleAttachmentShareDone
-  , flashMessageSingleTemplateShareDone
   , flashRemindMailSent
   , getDataMismatchMessage
   , modalMismatch
@@ -141,22 +133,6 @@ flashAuthorSigned :: TemplatesMonad m => m FlashMessage
 flashAuthorSigned =
   toFlashMsg OperationDone <$> renderTemplate_ "flashAuthorSigned"
 
-flashMessageBulkRemindsSent :: TemplatesMonad m => m FlashMessage
-flashMessageBulkRemindsSent = do
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageBulkDocumentRemindsSent"
-
-flashMessageNoBulkRemindsSent :: TemplatesMonad m => m FlashMessage
-flashMessageNoBulkRemindsSent = do
-  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageNoBulkDocumentRemindsSent"
-
-flashMessageRubbishRestoreDone :: TemplatesMonad m => m FlashMessage
-flashMessageRubbishRestoreDone =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageRubbishRestoreDone"
-
-flashMessageRubbishHardDeleteDone :: TemplatesMonad m => m FlashMessage
-flashMessageRubbishHardDeleteDone =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageRubbishHardDeleteDone"
-
 flashMessageInvalidCSV :: TemplatesMonad m => m FlashMessage
 flashMessageInvalidCSV =
   toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageInvalidCSV"
@@ -164,22 +140,6 @@ flashMessageInvalidCSV =
 flashMessageCSVSent :: TemplatesMonad m => Int -> m FlashMessage
 flashMessageCSVSent doccount =
   toFlashMsg OperationDone <$> (renderTemplate "flashMessageCSVSent" $ F.value "doccount" doccount)
-
-flashMessageSingleTemplateShareDone :: TemplatesMonad m => String -> m FlashMessage
-flashMessageSingleTemplateShareDone docname =
-  toFlashMsg OperationDone <$> (renderTemplate "flashMessageSingleTemplateShareDone" $ F.value "docname" docname)
-
-flashMessageMultipleTemplateShareDone :: TemplatesMonad m => m FlashMessage
-flashMessageMultipleTemplateShareDone =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageMultipleTemplateShareDone"
-
-flashMessageSingleAttachmentShareDone :: TemplatesMonad m => String -> m FlashMessage
-flashMessageSingleAttachmentShareDone docname =
-  toFlashMsg OperationDone <$> (renderTemplate "flashMessageSingleAttachmentShareDone" $ F.value "docname" docname)
-
-flashMessageMultipleAttachmentShareDone :: TemplatesMonad m => m FlashMessage
-flashMessageMultipleAttachmentShareDone =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageMultipleAttachmentShareDone"
 
 documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m) => PadQueue -> Maybe SignatoryLink -> MinutesTime -> Document -> m JSValue
 documentJSON pq msl _crttime doc = do

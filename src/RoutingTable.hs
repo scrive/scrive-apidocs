@@ -64,7 +64,7 @@ staticRoutes = choice
      , dir "s" $ dir "eleg" $ hGet $ toK2 $ BankID.generateBankIDTransaction
      , dir "s" $ dir "eleg" $ dir "mbi" $ hPostNoXToken $ toK2 $ BankID.initiateMobileBankID
      , dir "s" $ dir "eleg" $ dir "mbi" $ hGet  $ toK2 $ BankID.collectMobileBankID
-     , dir "s" $ hGet $ toK0    $ sendRedirect $ LinkContracts
+     , dir "s" $ hGet $ toK0    $ sendRedirect $ LinkArchive
      , dir "s" $ hGet $ toK2    $ DocControl.handleSignShow
      , dir "s" $ hGet $ toK3    $ DocControl.handleSignShowOldRedirectToNew -- Redirect for old version to version above, remove not earlier then 31.12.2012.
 
@@ -85,31 +85,23 @@ staticRoutes = choice
      --what it does/access control is left to the handler. EN
      , dir "upload" $ hGet $ toK0 $ DocControl.handleShowUploadPage
      , dir "locale" $ hPost $ toK0 $ UserControl.handlePostUserLocale
-     , dir "a"                     $ hGet  $ toK0 $ ArchiveControl.showAttachmentList
-     , dir "a" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleAttachmentArchive
-     , dir "a" $ param "share"     $ hPost $ toK0 $ DocControl.handleAttachmentShare
      , dir "a" $ dir "rename"      $ hPost $ toK1 $ DocControl.handleAttachmentRename
      , dir "a"                     $ hPost $ toK0 $ DocControl.handleCreateNewAttachment
 
-     , dir "t" $ hGet  $ toK0 $ ArchiveControl.showTemplatesList
-     , dir "t" $ param "archive" $ hPost $ toK0 $ ArchiveControl.handleTemplateArchive
-     , dir "t" $ param "share" $ hPost $ toK0 $ DocControl.handleTemplateShare
      , dir "t" $ param "template" $ hPost $ toK0 $ DocControl.handleCreateFromTemplate
      , dir "t" $ hPost $ toK0 $ DocControl.handleCreateNewTemplate
 
-     , dir "r" $ hGet $ toK0 $ ArchiveControl.showRubbishBinList
-     , dir "r" $ param "restore" $ hPost $ toK0 $ DocControl.handleRubbishRestore
-     , dir "r" $ param "reallydelete" $ hPost $ toK0 $ DocControl.handleRubbishReallyDelete
-
-
-     , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showDocumentsList
+     , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showArchive
      , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
      , dir "d" $ dir "eleg"        $ hGet  $ toK1 $ BankID.generateBankIDTransactionForAuthor
      , dir "d" $ dir "eleg" $ dir "mbi" $ hPostNoXToken $ toK1 $ BankID.initiateMobileBankIDForAuthor
      , dir "d" $ dir "eleg" $ dir "mbi" $ hGet  $ toK1 $ BankID.collectMobileBankIDForAuthor
      , dir "d" $ {- param "doc" $ -} hPost $ toK0 $ DocControl.handleIssueNewDocument
-     , dir "d" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleDocumentArchive
-     , dir "d" $ param "remind"    $ hPost $ toK0 $ DocControl.handleBulkDocumentRemind
+     , dir "d" $ dir "delete"       $ hPost $ toK0 $ ArchiveControl.handleDelete
+     , dir "d" $ dir "remind"       $ hPost $ toK0 $ ArchiveControl.handleSendReminders
+     , dir "d" $ dir "restore"      $ hPost $ toK0 $ ArchiveControl.handleRestore
+     , dir "d" $ dir "reallydelete" $ hPost $ toK0 $ ArchiveControl.handleReallyDelete
+     , dir "d" $ dir "share"        $ hPost $ toK0 $ ArchiveControl.handleShare
      , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
      , dir "docs"                  $ hGet  $ toK0 $ ArchiveControl.jsonDocumentsList
      , dir "doc"                   $ hGet  $ toK1 $ DocControl.jsonDocument

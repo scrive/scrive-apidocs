@@ -181,33 +181,11 @@ flashMessageEmailIsRequired=	$_flashMessageEmailIsRequired()$
 ###
 flashMessageNumberIsRequired=	$_flashMessageNumberIsRequired()$
 ###
-flashMessageBulkDocumentRemindsSent=	$_flashMessageBulkDocumentRemindsSent()$
-###
-flashMessageNoBulkDocumentRemindsSent=	$_flashMessageNoBulkDocumentRemindsSent()$
-###
-flashMessageDocumentArchiveDone=	$_flashMessageDocumentArchiveDone()$
-###
-flashMessageTemplateArchiveDone=	$_flashMessageTemplateArchiveDone()$
-###
-flashMessageAttachmentArchiveDone=	$_flashMessageAttachmentArchiveDone()$
-###
-flashMessageRubbishRestoreDone= $_flashMessageRubbishRestoreDone()$
-###
-flashMessageRubbishHardDeleteDone= $_flashMessageRubbishHardDeleteDone()$
-###
 flashMessageThanksForTheQuestion=	$_flashMessageThanksForTheQuestion()$
 ###
 flashMessageInvalidCSV=	$_flashMessageInvalidCSV()$
 ###
 flashMessageCSVSent=	$_flashMessageCSVSent()$
-###
-flashMessageSingleTemplateShareDone=	$_flashMessageSingleTemplateShareDone()$
-###
-flashMessageMultipleTemplateShareDone=	$_flashMessageMultipleTemplateShareDone()$
-###
-flashMessageSingleAttachmentShareDone=	$_flashMessageSingleAttachmentShareDone()$
-###
-flashMessageMultipleAttachmentShareDone=	$_flashMessageMultipleAttachmentShareDone()$
 ###
 flashMessageUserHasBecomeCompanyAccount=$_flashMessageUserHasBecomeCompanyAccount()$
 ###

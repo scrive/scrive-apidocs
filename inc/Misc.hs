@@ -1,6 +1,5 @@
 {-# LANGUAGE CPP, TupleSections #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# OPTIONS_GHC -Wwarn #-} -- ghc-7.4.1 temporary workaround
 {-| Dump bin for things that do not fit anywhere else
 
 I do not mind people sticking stuff in here. From time to time just
@@ -17,19 +16,20 @@ import Control.Concurrent
 import Control.Monad.State
 import Control.Monad.Trans.Control
 import Data.Char
-import Data.Data
 import Data.List
 import Data.Maybe
 import Data.Monoid
 import Numeric (readDec)
 import Happstack.Server hiding (simpleHTTP,dir)
-import Happstack.Util.Common hiding  (mapFst,mapSnd)
 import System.Directory
 import System.Exit
 import System.IO
 import System.IO.Temp
 import System.Process
 import Crypto.RNG (CryptoRNG, randomR)
+import System.Posix.Signals hiding (Handler)
+import System.Posix.IO ( stdInput )
+import System.Posix.Terminal ( queryTerminal )
 import System.Time
 import qualified Log
 import qualified Codec.Binary.Url as URL
@@ -39,6 +39,28 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS (toString,fromString)
 import Network.HTTP (urlDecode)
+
+-- | Given an action f and a number of seconds t, cron will execute
+-- f every t seconds with the first execution t seconds after cron is called.
+-- cron does not spawn a new thread.
+cron :: Int -> IO () -> IO a
+cron seconds action = forever $ do
+  let freq = seconds * 1000000
+  when (freq < 0) $
+    error $ "cron: seconds value (" ++ show seconds ++ ") is invalid"
+  threadDelay freq
+  action
+
+-- | Wait for a signal (sigINT or sigTERM).
+waitForTermination :: IO ()
+waitForTermination = do
+  istty <- queryTerminal stdInput
+  mv <- newEmptyMVar
+  _ <- installHandler softwareTermination (CatchOnce (putMVar mv ())) Nothing
+  when istty $ do
+    _ <- installHandler keyboardSignal (CatchOnce (putMVar mv ())) Nothing
+    return ()
+  takeMVar mv
 
 withSystemTempDirectory' :: MonadBaseControl IO m => String -> (FilePath -> m a) -> m a
 withSystemTempDirectory' dir handler =
@@ -190,7 +212,7 @@ getField' :: (HasRqData m, MonadIO m, ServerMonad m) => String -> m String
 getField' name = fromMaybe "" `liftM` getField name
 
 readField :: (HasRqData f, MonadIO f, Read a, Functor f, ServerMonad f) => String -> f (Maybe a)
-readField name =  (join . (fmap readM)) <$> getField name
+readField name =  (join . (fmap maybeRead)) <$> getField name
 
 whenMaybe :: Monad m => Bool -> m a -> m (Maybe a)
 whenMaybe True  c = liftM Just c
@@ -218,15 +240,6 @@ joinEmpty m = do
                 if mv == mempty
                  then mzero
                  else return mv
-
-{-| This function is useful when creating 'Typeable' instance when we
-want a specific name for type.  Example of use:
-
-  > instance Typeable Author where typeOf _ = mkTypeOf "XX_Author"
-
--}
-mkTypeOf :: String -> TypeRep
-mkTypeOf name = mkTyConApp (mkTyCon name) []
 
 -- | Pad string with zeros at the beginning.
 pad0 :: Int         -- ^ how long should be the number
@@ -541,4 +554,4 @@ getNumberOfPDFPages content =
                                    then []
                                    else findCounts (BS.drop 1 r)
     dropToNumber = BS.drop countLength1
-    readNumber = readM . takeWhile isDigit . BS.toString
+    readNumber = maybeRead . takeWhile isDigit . BS.toString

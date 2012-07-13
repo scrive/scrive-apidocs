@@ -155,6 +155,19 @@ javascriptLocalisation =
             , saveTemplate : "$_signStepsBodyFunctionssaveTemplate()$"
             , skrivapa : "$_skrivapa()$"
 
+            , months : { january: "$_january()$",
+                         february: "$_february()$",
+                         march: "$_march()$",
+                         april: "$_april()$",
+                         may: "$_may()$",
+                         june: "$_june()$",
+                         july: "$_july()$",
+                         august: "$_august()$",
+                         september: "$_september()$",
+                         october: "$_october()$",
+                         november: "$_november()$",
+                         december: "$_december()$"
+                       }
 
             , tweetAccount : "$_tweetAccount()$"
             , selectFileToUpload : "$_selectFileToUpload()$"
@@ -187,6 +200,22 @@ javascriptLocalisation =
                 showOrdersOnly: "$_showOrdersOnly()$",
                 showOffersOnly: "$_showOffersOnly()$"
             }
+            , filterByYear: {
+                showAnyYear: "$_showAnyYear()$"
+            }
+            , filterByMonth: {
+                showAnyMonth: "$_showAnyMonth()$"
+            }
+            , filterByStatusClass: {
+                showAnyStatusClass: "$_showAnyStatusClass()$",
+                showDraft: "$_tablestatusesDraft()$",
+                showCancelled: "$_tablestatusesCancelled()$",
+                showSent: "$_tablestatusesSent()$",
+                showDelivered: "$_tablestatusesDelivered()$",
+                showRead: "$_tablestatusesViewedOnline()$",
+                showOpened: "$_tablestatusesEmailOpened()$",
+                showSigned: "$_tablestatusesSigned()$"
+            }
            , searchTemplate : "$_SearchTemplate()$"
            , sortTemplate : "$_SortTemplate()$"
            , infoSelectTemplate : "$_InfoSelectTemplate()$"
@@ -206,7 +235,7 @@ javascriptLocalisation =
            , isNotSigningParty : "$_authorsignatoryradioSenderNotSign()$"
            , signatoryListPartner : "$_signStep2ContentPersons()$"
            , signatoryListSignOrder : "$_signStep2ContentSignOrder()$"
-           , attachments: {
+           , authorattachments: {
                   changeAuthorAttachments : "$_addattachmentlink()$"
                 , attach: "$_updateAttachmentsDialogUpLoadFooterAttach()$"
                 , selectAttachments: "$_updateAttachmentsDialogHead()$"
@@ -394,6 +423,119 @@ javascriptLocalisation =
              ,  savedTemplate  : "$_signStepsBodyUploadBoxStep1TemplateSaved()$"
              ,  chooseTemplateButton : "$_signStepsBodyUploadBoxStep1ButtonChooseTemplate()$"
         }
-    }
+      , documents : "$_docListTabsDocs()$"
+      , templates : "$_docListTabsTemplates()$"
+      , attachments : "$_docListTabsAttachemtns()$"
+      , archive : {
+                documents : {
+                       name :  "$_docListTabsDocs()$"
+                    ,  sendreminder : "$_SendReminder()$"
+                    ,  delete : "$_delete()$"
+                    ,  search : "$_SearchDoc()$"
+                    ,  statusDescription : {
+                              draft :     "$_tablestatusesDraft()$"
+                            , cancelled : "$_tablestatusesCancelled()$"
+                            , sent :      "$_tablestatusesSent()$"
+                            , delivered:  "$_tablestatusesDelivered()$"
+                            , read :      "$_tablestatusesEmailOpened()$"
+                            , opened :    "$_tablestatusesViewedOnline()$"
+                            , signed :    "$_tablestatusesSigned()$"
+                       }
+                    ,  sendreminder : {
+                              action: "$_SendReminder()$"
+                            , bodymulti : "$_ContractReminderBodyMulti()$"
+                            , bodysingle : "$_ContractReminderBodySingel()$"
+                            , successMessage : "$_flashMessageBulkDocumentRemindsSent()$"
+                            , errorMessage   : "$_flashMessageNoBulkDocumentRemindsSent()$"
+                        }
+                    ,  delete : {
+                              action: "$_delete()$"
+                            , body : "$_listLocalDialogsBody()$"
+                            , cantremoveactive : "$_CantRemoveActiveDocuments()$"
+                            , successMessage : "$_flashMessageDocumentArchiveDone()$"
+                        }
+                    , csv : {
+                              action : "$_csv()$"
+                        } 
+                    , columns :{
+                              status : "$_SortStatus()$"
+                            , time   : "$_SortTime()$"
+                            , sender : "$_SortSender()$"
+                            , party  : "$_SortParty()$"
+                            , title  : "$_SortDoc()$"
+                            , type   : "$_SortType()$"
+                            
+                       }
+                }
+            ,  templates : {
+                       name :  "$_docListTabsTemplates()$"
+                    ,  delete : {
+                              action: "$_delete()$"
+                            , body : "$_listLocalDialogsBody()$"
+                            , successMessage : "$_flashMessageTemplateArchiveDone()$"
+                        }
+                    ,  share : {
+                              action: "$_share()$"
+                            , head : "$_listShareDialogHead()$"
+                            , body : "$_listShareDialogBody()$"
+                            , successMessage : "$_flashMessageTemplateShareDone()$"
+                        }
+                    ,  createnew : "$_createNew()$"
+                    ,  createnewtype : "$_createNewType()$"
+                    ,  shared : "$_shared()$"
+                    ,  search : "$_SearchDoc()$"
+                    ,  columns :{
+                              time       : "$_SortTime()$"
+                            , type       : "$_SortType()$"
+                            , template   : "$_SortTemplate()$"
 
+                       }
+                }
+            ,  attachments : {
+                       name : "$_docListTabsAttachemtns()$"
+                    ,  delete : {
+                              action: "$_delete()$"
+                            , body : "$_listLocalDialogsBody()$"
+                            , successMessage : "$_flashMessageAttachmentArchiveDone()$"
+                        }
+                    ,  share : {
+                              action: "$_pageAttachmentListShare()$"
+                            , head : "$_listShareDialogHead()$"
+                            , body : "$_listShareDialogBody()$"
+                            , successMessage : "$_flashMessageAttachmentShareDone()$"
+                        }
+                    ,  createnew : {
+                              action: "$_pageAttachmentListNewAttachment()$"
+                       }
+                    ,  shared : "$_pageAttachmentListIfShared()$"
+                    ,  search : "$_pageAttachmentListSearchInfo()$"
+                    ,  columns :{
+                              time       : "$_SortTime()$"
+                            , attachment   : "$_SortAttachment()$"
+
+                       }
+                }
+            ,  bin: {
+                       delete : {
+                              action: "$_delete()$"
+                            , head : "$_listReallyDeleteDialogHead()$"
+                            , body : "$_listReallyDeleteDialogBody()$"
+                            , successMessage : "$_flashMessageRubbishHardDeleteDone()$"
+                        }
+                    ,  restore : {
+                              action: "$_restore()$"
+                            , head : "$_listRestoreDialogHead()$"
+                            , body : "$_listRestoreDialogBody()$"
+                            , successMessage : "$_flashMessageRubbishRestoreDone()$"
+                        } 
+                    ,  search : "$_SearchDoc()$"                     
+                    ,  columns :{
+                              time   : "$_SortTime()$"
+                            , title  : "$_SortDoc()$"
+                            , type   : "$_SortType()$"
+
+                       }
+               }
+        } 
+    }
 ####

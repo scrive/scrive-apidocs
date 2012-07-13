@@ -34,7 +34,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.ByteString.Base64 as B64
 import qualified SealSpec as Seal
---import qualified TrustWeaver as TW
 import qualified GuardTime as GT
 import qualified Log
 import System.IO.Temp
@@ -43,6 +42,7 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import File.Model
+import Crypto.RNG
 import DB
 import Control.Applicative
 import EvidenceLog.Model
@@ -51,7 +51,6 @@ import Control.Concurrent
 import Data.String.Utils
 import qualified Templates.Fields as F
 import Control.Logic
-import Happstack.Util.Common (readM)
 
 personFromSignatoryDetails :: (BS.ByteString,BS.ByteString) -> SignatoryDetails -> Seal.Person
 personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) details =
@@ -318,7 +317,7 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
                         documentInfoFields document
                         F.value "hostpart" hostpart
       -- Log.debug ("finished staticTexts: " ++ show staticTexts)
-      readtexts <- case readM staticTexts of
+      readtexts <- case maybeRead staticTexts of
                      Just x -> return x
                      Nothing -> do
                        Log.error $ "Cannot read SealingTexts: " ++ staticTexts
@@ -372,7 +371,7 @@ presealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) document inputpath o
             }
             
 
-sealDocument :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
+sealDocument :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
              => Document
              -> m (Either String Document)
 sealDocument document = do
@@ -384,7 +383,7 @@ sealDocument document = do
   return $ Right newdocument
 
 
-sealDocumentFile :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
+sealDocumentFile :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
                  => Document
                  -> File
                  -> m (Either String Document)
@@ -409,7 +408,7 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
       ExitSuccess -> do
         -- GuardTime signs in place
         code2 <- liftIO $ GT.digitallySign ctxgtconf tmpout
-        newfilepdf <- case code2 of
+        newfilepdf <- Binary <$> case code2 of
           ExitSuccess -> do
             res <- liftIO $ BS.readFile tmpout
             Log.debug $ "GuardTime signed successfully"

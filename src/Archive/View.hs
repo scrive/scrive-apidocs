@@ -3,12 +3,11 @@ module Archive.View
          flashMessageAttachmentArchiveDone,
          flashMessageSignableArchiveDone,
          flashMessageTemplateArchiveDone,
-         pageAttachmentList,
-         pageDocumentsList,
-         pageRubbishBinList,
-         pageTemplatesList,
+         pageArchive,
          pagePadDeviceArchive,
-         docForListJSON
+         docForListJSON,
+         docForListCSV,
+         docForListCSVHeader
        )
        where
 
@@ -17,7 +16,6 @@ import FlashMessage
 import KontraLink
 import Templates.Templates
 import User.Model
-import qualified Templates.Fields as F
 
 import Control.Applicative
 import Data.Maybe
@@ -48,48 +46,12 @@ flashMessageAttachmentArchiveDone :: TemplatesMonad m => m FlashMessage
 flashMessageAttachmentArchiveDone =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageAttachmentArchiveDone"
 
-pageDocumentsList :: TemplatesMonad m => User -> m String
-pageDocumentsList = pageList' "pageDocumentsList" LinkContracts 
+pageArchive :: TemplatesMonad m => m String
+pageArchive = renderTemplate_ "pageDocumentsList" 
 
-pageTemplatesList :: TemplatesMonad m => User -> m String
-pageTemplatesList = pageList' "pageTemplatesList" LinkTemplates 
-
-pageAttachmentList :: TemplatesMonad m =>  User -> m String
-pageAttachmentList = pageList' "pageAttachmentList" LinkAttachments 
-
-pageRubbishBinList :: TemplatesMonad m => User ->  m String
-pageRubbishBinList = pageList' "pageRubbishBinList" LinkRubbishBin 
-
-pagePadDeviceArchive :: TemplatesMonad m => User ->  m String
-pagePadDeviceArchive = pageList' "pagePadDeviceArchive" LinkPadDeviceArchive
+pagePadDeviceArchive :: TemplatesMonad m =>  m String
+pagePadDeviceArchive = renderTemplate_ "pagePadDeviceArchive"
     
-
-{- |
-    Helper function for list pages
--}
-pageList' :: TemplatesMonad m
-          => String
-          -> KontraLink
-          -> User
-          -> m String
-pageList' templatename currentlink user = renderTemplate templatename $ do
-  F.value "canReallyDeleteDocs" $ useriscompanyadmin user || isNothing (usercompany user)
-  F.value "currentlink" $ show $ currentlink
-  F.value "linkdoclist" $ show $ LinkContracts
-  F.value "documentactive" $ (LinkContracts == currentlink)
-  F.value "linkofferlist" $ show $ LinkOffers
-  F.value "offeractive" $ (LinkOffers == currentlink)
-  F.value "linkorderlist" $ show $ LinkOrders
-  F.value "orderactive" $ (LinkOrders == currentlink)
-  F.value "linktemplatelist" $ show $ LinkTemplates
-  F.value "templateactive" $ (LinkTemplates == currentlink)
-  F.value "linkattachmentlist" $ show $ LinkAttachments
-  F.value "attachmentactive" $ (LinkAttachments == currentlink)
-  F.value "linkrubbishbinlist" $ show $ LinkRubbishBin
-  F.value "rubbishbinactive" $ (LinkRubbishBin == currentlink)
-  F.value "linkpaddevicearchive" $ show LinkPadDeviceArchive
-  F.value "paddevicearchiveactive" $ (LinkPadDeviceArchive == currentlink)
-
 docForListJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> User -> PadQueue ->  Document -> m JSValue
 docForListJSON tl crtime user padqueue doc = do
   let link = case getSigLinkFor doc user of
@@ -142,3 +104,44 @@ signatoryFieldsListForJSON tl crtime padqueue doc sl = do
           _                                               -> Nothing
         open = maybereadinvite sl
 
+docForListCSV:: KontraTimeLocale -> Int -> Document -> [[String]]
+docForListCSV ktl agr doc = map (signatoryForListCSV ktl agr doc) $ [Nothing] <| null interestingLinks |> map Just interestingLinks
+    where interestingLinks = filter (\x-> isSignatory x && getSmartName x /= "") (documentsignatorylinks doc)
+          
+signatoryForListCSV:: KontraTimeLocale ->  Int -> Document -> (Maybe SignatoryLink) -> [String]
+signatoryForListCSV ktl _agr doc msl = [
+              ("'" ++ show (documentid doc) ++ "'") -- Exel trick
+            , documenttitle doc
+            , show $ documentstatusclass doc
+            , getAuthorName $ doc
+            , csvTime $ (documentctime doc)
+            , maybe "" csvTime $ signtime <$> documentinvitetime doc
+            , maybe "" csvTime $ join $ maybereadinvite <$> msl
+            , maybe "" csvTime $ signtime <$> (join $ maybeseeninfo <$> msl)
+            , maybe "" csvTime $ signtime <$> (join $ maybesigninfo <$> msl)
+            , fromMaybe  "" $ getFullName <$> msl
+            , fromMaybe  "" $ getEmail <$> msl
+            , fromMaybe  "" $ getPersonalNumber <$> msl
+            , fromMaybe  "" $ getCompanyName <$> msl
+            , fromMaybe  "" $ getCompanyNumber <$> msl
+            ]
+    where
+        csvTime = formatMinutesTime ktl "%Y-%m-%d %H:%M"
+
+docForListCSVHeader :: [String]
+docForListCSVHeader = [
+                          "Id"
+                        , "Title"
+                        , "Status"
+                        , "Author"
+                        , "Creation"
+                        , "Started"
+                        , "Party read invitation"
+                        , "Party seen document"
+                        , "Party signed document"
+                        , "Party name"
+                        , "Party mail"
+                        , "Party personal number"
+                        , "Party company name"
+                        , "Party company number"
+                       ]

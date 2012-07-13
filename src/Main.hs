@@ -6,8 +6,6 @@ import Data.List
 import Data.Version
 import Happstack.Server
 import Happstack.StaticRouting
-import Happstack.State
-import Happstack.Util.Cron
 import System.Directory
 import System.Environment
 import System.IO
@@ -19,6 +17,7 @@ import ActionQueue.Monad
 import ActionQueue.PasswordReminder
 import ActionQueue.Scheduler
 import ActionQueue.UserAccountRequest
+import AppConf
 import AppControl
 import AppDB
 import AppState
@@ -81,20 +80,15 @@ main = Log.withLogger $ do
   startSystem appGlobals appConf
 
 startSystem :: AppGlobals -> AppConf -> IO ()
-startSystem appGlobals appConf =
-  E.bracket startStateSystem createCheckpointAndExit startHttpServer
+startSystem appGlobals appConf = E.bracket
+  (openAcidState Log.server $ store appConf)
+  (\st -> do
+    createCheckpoint Log.server st
+    closeAcidState Log.server st
+  )
+  startHttpServer
   where
-    startStateSystem = do
-      Log.server $ "Using store " ++ store appConf
-      runTxSystem (Queue $ FileSaver (store appConf)) (Proxy :: Proxy AppState)
-
-    createCheckpointAndExit control = do
-      Log.server $ "Creating checkpoint before exit"
-      createCheckpoint control
-      Log.server $ "Closing transaction system"
-      shutdownSystem control
-
-    startHttpServer control =
+    startHttpServer appState =
       E.bracket createThreads (mapM_ killThread) waitForTerm
       where
         createThreads = do
@@ -102,8 +96,8 @@ startSystem appGlobals appConf =
           listensocket <- listenOn (htonl iface) (fromIntegral port)
           let (routes,overlaps) = compile staticRoutes
           maybe (return ()) Log.server overlaps
-          t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port , timeout   = 120})  (appHandler routes appConf appGlobals)
-          let runScheduler = runQueue (cryptorng appGlobals) (dbConfig appConf) (SchedulerData appConf $ templates appGlobals)
+          t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port, timeout = 120}) (appHandler routes appConf appGlobals appState)
+          let runScheduler = runQueue (cryptorng appGlobals) (dbConfig appConf) (SchedulerData appConf (templates appGlobals) appState)
           t2 <- forkIO $ cron 60 $ do
             Log.debug "Running oldScheduler..."
             runScheduler oldScheduler
@@ -117,13 +111,17 @@ startSystem appGlobals appConf =
             Log.debug "Evaluating UserAccountRequest actions..."
             runScheduler $ actionQueue userAccountRequest
           t6 <- forkIO $ cron 5 $ runScheduler processEvents
-          t7 <- forkIO $ cron 60 $ runScheduler AWS.uploadFilesToAmazon
+          t7 <- forkIO $ if AWS.isAWSConfigOk appConf
+                           then cron 60 $ runScheduler AWS.uploadFilesToAmazon
+                           else return ()
           t8 <- forkIO $ cron (60 * 60) (System.Mem.performGC >> Log.debug "Performing GC...")
-          return [t1, t2, t3, t4, t5, t6, t7, t8]
+          -- transition function between non-encrypted and encrypted files.
+          t9 <- forkIO $ runScheduler AWS.calculateChecksumAndEncryptOldFiles
+          return [t1, t2, t3, t4, t5, t6, t7, t8, t9]
         waitForTerm _ = E.bracket
           -- checkpoint the state once a day
           -- FIXME: make it checkpoint always at the same time
-          (forkIO $ cron (60*60*24) (createCheckpoint control))
+          (forkIO $ cron (60*60*24) (createCheckpoint Log.server appState))
           killThread $ \_ -> do
             withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) $
               initDatabaseEntries $ initialUsers appConf

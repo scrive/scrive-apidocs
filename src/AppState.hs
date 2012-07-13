@@ -1,29 +1,41 @@
-{- |
-   Stores the top-level application state
- -}
-module AppState
-    ( AppState
-    ) where
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+module AppState (
+    AppState
+  , openAcidState
+  , closeAcidState
+  , createCheckpoint
+  ) where
 
-import Happstack.Data
-import Happstack.State
+import Control.Monad
+import Data.Acid (AcidState)
+import System.FilePath
+import qualified Data.Acid as ACID
+
+import Acid.Monad
 import Session
-import Data.Data
-import Misc
 
--- |top-level application state
-data AppState = AppState
-                deriving (Eq, Ord, Show, Data)
+data AppState = AppState {
+  asSessions :: AcidState Sessions
+}
 
-instance Typeable AppState where typeOf _ = mkTypeOf "AppState"
+instance AcidStore AppState m => HasAcidState Sessions m where
+  getAcidState = asSessions `liftM` getAcidStore
 
-$(deriveSerialize ''AppState)
-instance Version AppState
+openAcidState :: (String -> IO ()) -> FilePath -> IO AppState
+openAcidState logger path = do
+  let sessionsPath = path </> "sessions"
+  logger $ "Using store for Sessions: " ++ sessionsPath
+  sessions <- ACID.openLocalStateFrom sessionsPath initialSessions
+  return AppState {
+    asSessions = sessions
+  }
 
--- |top-level application component
-instance Component AppState where
-  type Dependencies AppState = Sessions :+: End
-  initialValue = AppState
+closeAcidState :: (String -> IO ()) -> AppState -> IO ()
+closeAcidState logger AppState{..} = do
+  logger $ "Closing acid-state system..."
+  ACID.closeAcidState asSessions
 
--- create types for event serialization
-$(mkMethods ''AppState [])
+createCheckpoint :: (String -> IO ()) -> AppState -> IO ()
+createCheckpoint logger AppState{..} = do
+  logger $ "Creating checkpoint..."
+  ACID.createCheckpoint asSessions

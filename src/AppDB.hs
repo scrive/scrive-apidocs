@@ -75,6 +75,7 @@ kontraMigrations = [
   , addOCSPResponse
   , removeUserRefuseSaveAfterSignEvent
   , removeDocEventsThatReferenceNotActivatedUsers
+  , addCryptoColumnsToFilesTable
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

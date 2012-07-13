@@ -362,7 +362,7 @@ var DocumentDesignView = Backbone.View.extend({
         var document = this.model;
         var box = $("<div class='authorattachmentssetup'/>");
         var icon = $("<span class='authorattachmentssetupicon'/>");
-        var text = $("<span class='authorattachmentssetuptext'/>").text(localization.attachments.changeAuthorAttachments);
+        var text = $("<span class='authorattachmentssetuptext'/>").text(localization.authorattachments.changeAuthorAttachments);
         var countspan = $("<span class='countspan' />").text("(" + document.authorattachments().length + ")").appendTo(text);
         box.append(icon).append(text);
 
@@ -667,7 +667,8 @@ var DocumentDesignView = Backbone.View.extend({
         var changemainfile = this.designChangeMainFile();
 
         var file = KontraFile.init({file: document.mainfile()});
-        this.tabs = KontraTabs.init({
+        this.tabs = new KontraTabs({
+            numbers : true,
             title : this.titlerow(),
             tabsTail : (!document.isTemplate()) ?  [this.saveAsTemplateOption()] : [] ,
             tabs: [

@@ -54,7 +54,6 @@ import Doc.DocUtils
 import Company.Model
 import User.Model
 import Data.Foldable (fold)
-import Crypto.RNG
 import Util.Actor
 import Util.SignatoryLinkUtils
 import Util.HasSomeCompanyInfo
@@ -133,7 +132,7 @@ documentFromParam = do
     when (isNothing mdocument || (not $ sameService srvs mdocument)) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists"
     return $ fromJust mdocument
 
-embeddDocumentFrame :: (CryptoRNG m, Kontrakcja m) => IntegrationAPIFunction m APIResponse
+embeddDocumentFrame :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 embeddDocumentFrame = do
     ctx <- getContext
     srvs <-  service <$> ask
@@ -453,7 +452,7 @@ removeDocument = do
 {- | Call connect user to session (all passed as URL params)
      and redirect user to referer
 -}
-connectUserToSessionPost :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m Response
+connectUserToSessionPost :: Kontrakcja m => ServiceID -> UserID -> SessionID -> m Response
 connectUserToSessionPost sid uid ssid = do
     matchingService <-sameService sid <$> (dbQuery $ GetUserByID uid)
     when (not matchingService) internalError
@@ -467,7 +466,7 @@ connectUserToSessionPost sid uid ssid = do
        then return $ toResponseBS (BS.fromString "text/html;charset=utf-8") (BSL.fromString "")
        else internalError
 
-connectUserToSessionGet :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m Response
+connectUserToSessionGet :: Kontrakcja m => ServiceID -> UserID -> SessionID -> m Response
 connectUserToSessionGet _sid _uid _ssid = do
   ctx <- getContext
   rq <- askRq
@@ -481,7 +480,7 @@ connectUserToSessionGet _sid _uid _ssid = do
     standardPageFields ctx kontrakcja Nothing False False Nothing Nothing
   simpleResponse bdy
 
-connectCompanyToSession :: Kontrakcja m => ServiceID -> CompanyID -> SessionId -> m KontraLink
+connectCompanyToSession :: Kontrakcja m => ServiceID -> CompanyID -> SessionID -> m KontraLink
 connectCompanyToSession sid cid ssid = do
     matchingService <- sameService sid <$> (dbQuery $ GetCompany cid)
     when (not matchingService) internalError

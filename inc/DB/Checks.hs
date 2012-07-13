@@ -20,6 +20,10 @@ import DB.Versions
 performDBChecks :: MonadDB m => (String -> m ()) -> [Table] -> [Migration m] -> m ()
 performDBChecks logger tables migrations = runDBEnv $ do
   let liftedLogger = lift . logger
+  set <- setByteaOutput liftedLogger
+  when set $ do
+    lift dbCommit
+    error $ "Bytea_output was changed to 'hex'. Restart application so the change is visible."
   checkDBTimeZone liftedLogger
   checkDBConsistency liftedLogger (tableVersions : tables) migrations
   -- everything is OK, commit changes
@@ -29,10 +33,21 @@ performDBChecks logger tables migrations = runDBEnv $ do
 -- |  Checks whether database returns timestamps in UTC
 checkDBTimeZone :: MonadDB m => (String -> DBEnv m ()) -> DBEnv m ()
 checkDBTimeZone logger = do
-  Just dbname <- getOne (SQL "SELECT current_catalog" [])
+  Just dbname <- getOne "SELECT current_catalog"
   logger $ "Setting '" ++ dbname ++ "' database to return timestamps in UTC"
   _ <- kRun $ SQL ("ALTER DATABASE \"" ++ dbname ++ "\" SET TIMEZONE = 'UTC'") []
   return ()
+
+setByteaOutput :: MonadDB m => (String -> DBEnv m ()) -> DBEnv m Bool
+setByteaOutput logger = do
+  Just dbname <- getOne "SELECT current_catalog"
+  Just bytea_output <- getOne "SHOW bytea_output"
+  if bytea_output /= "hex"
+    then do
+      logger $ "Setting bytea_output to 'hex'..."
+      kRunRaw $ "ALTER DATABASE \"" ++ dbname ++ "\" SET bytea_output = 'hex'"
+      return True
+    else return False
 
 -- | Checks whether database is consistent (performs migrations if necessary)
 checkDBConsistency :: MonadDB m => (String -> DBEnv m ()) -> [Table] -> [Migration m] -> DBEnv m ()

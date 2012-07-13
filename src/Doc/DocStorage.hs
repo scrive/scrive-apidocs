@@ -17,6 +17,7 @@ module Doc.DocStorage
     , preCheckPDF
     ) where
 
+import Control.Applicative
 import Control.Exception (catch, SomeException)
 import Control.Monad
 import Control.Monad.Error
@@ -306,7 +307,7 @@ preCheckPDFHelper gscmd content tmppath =
 --
 preCheckPDF :: String
             -> BS.ByteString
-            -> IO (Either FileError BS.ByteString)
+            -> IO (Either FileError Binary)
 preCheckPDF gscmd content =
   withSystemTempDirectory "precheck" $ \tmppath -> do
     value <- preCheckPDFHelper gscmd content tmppath
@@ -314,4 +315,4 @@ preCheckPDF gscmd content =
     case value of
       Left x -> Log.error $ "preCheckPDF: " ++ show x
       Right _ -> return ()
-    return value
+    return $ Binary <$> value

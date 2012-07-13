@@ -23,6 +23,8 @@ module Kontra
     )
     where
 
+import Acid.Monad
+import AppState
 import API.Service.Model
 import Context
 import Control.Applicative
@@ -46,14 +48,14 @@ import User.Model
 import Util.MonadUtils
 import Misc
 
-type InnerKontraPlus = StateT Context (CryptoRNGT (DBT (ServerPartT IO)))
+type InnerKontraPlus = StateT Context (AcidT AppState (CryptoRNGT (DBT (ServerPartT IO))))
 
 -- | KontraPlus is 'MonadPlus', but it should only be used on toplevel
 -- for interfacing with static routing.
 newtype KontraPlus a = KontraPlus { unKontraPlus :: InnerKontraPlus a }
-  deriving (MonadPlus, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, ServerMonad, WebMonad Response)
+  deriving (AcidStore AppState, MonadPlus, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, ServerMonad, WebMonad Response)
 
-runKontraPlus :: Context -> KontraPlus a -> CryptoRNGT (DBT (ServerPartT IO)) a
+runKontraPlus :: Context -> KontraPlus a -> AcidT AppState (CryptoRNGT (DBT (ServerPartT IO))) a
 runKontraPlus ctx f = evalStateT (unKontraPlus f) ctx
 
 instance Kontrakcja KontraPlus
@@ -81,7 +83,7 @@ instance TemplatesMonad KontraPlus where
 -- Since we use static routing, there is no need for mzero inside a
 -- handler. Instead we signal errors explicitly through 'KontraError'.
 newtype Kontra a = Kontra { unKontra :: KontraPlus a }
-  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadIO, MonadDB, ServerMonad, KontraMonad, TemplatesMonad)
+  deriving (AcidStore AppState, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadIO, MonadDB, ServerMonad, KontraMonad, TemplatesMonad)
 
 instance Kontrakcja Kontra
 

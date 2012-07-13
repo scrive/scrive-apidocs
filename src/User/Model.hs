@@ -45,9 +45,7 @@ import Control.Applicative
 import Data.Monoid
 import Data.List
 import Data.Char
-import Data.Data
 import Database.HDBC
-import Happstack.State (Version, deriveSerialize)
 
 import API.Service.Model
 import Company.Model
@@ -65,7 +63,7 @@ import Doc.DocStateData (DocumentStatus(..), SignatoryRole(..), DocumentID)
 
 -- newtypes
 newtype Email = Email { unEmail :: String }
-  deriving (Eq, Ord, Typeable)
+  deriving (Eq, Ord)
 $(newtypeDeriveConvertible ''Email)
 $(newtypeDeriveUnderlyingReadShow ''Email)
 
@@ -268,8 +266,8 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
       Just _ -> return Nothing -- user with the same email address exists
       Nothing -> do
         _ <- kRun $ mkSQL INSERT tableUsers [
-            sql' "password" "decode(?, 'base64')" $ pwdHash <$> mpwd
-          , sql' "salt" "decode(?, 'base64')" $ pwdSalt <$> mpwd
+            sql "password" $ pwdHash <$> mpwd
+          , sql "salt" $ pwdSalt <$> mpwd
           , sql "is_company_admin" False
           , sql "account_suspended" False
           , sql "has_accepted_terms_of_service" SqlNull
@@ -302,8 +300,8 @@ data SetUserPassword = SetUserPassword UserID Password
 instance MonadDB m => DBUpdate m SetUserPassword Bool where
   update (SetUserPassword uid pwd) = do
     kPrepare $ "UPDATE users SET"
-      ++ "  password = decode(?, 'base64')"
-      ++ ", salt = decode(?, 'base64')"
+      ++ "  password = ?"
+      ++ ", salt = ?"
       ++ "  WHERE id = ? AND deleted = FALSE"
     kExecute01 [toSql $ pwdHash pwd, toSql $ pwdSalt pwd, toSql uid]
 
@@ -433,8 +431,8 @@ selectUsersSQL = "SELECT " ++ selectUsersSelectors ++ " FROM users"
 selectUsersSelectors :: String
 selectUsersSelectors =
  "  id"
- ++ ", encode(password, 'base64')"
- ++ ", encode(salt, 'base64')"
+ ++ ", password"
+ ++ ", salt"
  ++ ", is_company_admin"
  ++ ", account_suspended"
  ++ ", has_accepted_terms_of_service"
@@ -488,11 +486,3 @@ fetchUsers = foldDB decoder []
         , userservice = service_id
         , usercompany = company_id
         } : acc
-
--- this will not be needed when we move documents to pgsql. for now it's needed
--- for document handlers - it seems that types of arguments that handlers take
--- need to be serializable. I don't know wtf, but I'll gladly dispose of these
--- instances when we're done with the migration.
-
-instance Version Email
-$(deriveSerialize ''Email)
