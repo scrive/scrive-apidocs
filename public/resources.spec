@@ -89,6 +89,7 @@ set systemPage
  js   js/docview.js
  js   js/tasks.js
  js   js/docsignviewframes.js
+ js   js/signview/docsignviewinstructions.js
  js   js/signview/docsignviewelements.js
  js   js/signview/aftersignview.js
  js   js/signview/docsignview.js
