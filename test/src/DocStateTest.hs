@@ -165,10 +165,9 @@ docStateTests env = testGroup "DocState" [
   testThat "can create new document and read it back with the returned id" env testDocumentCanBeCreatedAndFetchedByID,
   testThat "can create new document and read it back with GetDocumentsByService" env testDocumentCanBeCreatedAndFetchedByAllDocs,
 
-{-
-  testThat "when I call update document, it doesn't change the document id" env testDocumentUpdateDoesNotChangeID,
-  testThat "when I call update document, i can change the title" env testDocumentUpdateCanChangeTitle,
-  -}
+  --testThat "when I call update document, it doesn't change the document id" env testDocumentUpdateDoesNotChangeID,
+  --testThat "when I call update document, i can change the title" env testDocumentUpdateCanChangeTitle,
+
   testThat "when I attach a file to a real document in preparation, it returns Right" env testDocumentAttachPreparationRight,
   testThat "when I attach a file to a real document not in preparation, it returns Right" env testDocumentAttachNotPreparationLeft,
   testThat "when I attach a file to a bad docid, it ALWAYS returns Left" env testNoDocumentAttachAlwaysLeft,
@@ -177,15 +176,13 @@ docStateTests env = testGroup "DocState" [
   testThat "when I attach a sealed file to a bad docid, it always returns left" env testNoDocumentAttachSealedAlwaysLeft,
   testThat "when I attach a sealed file to a real doc, it always returns Right" env testDocumentAttachSealedPendingRight,
 
-
   testThat "when I ChangeMainFile of a real document returns Right" env testDocumentChangeMainFileRight,
   testThat "when I ChangeMainFile of a bad docid, it ALWAYS returns Left" env testNoDocumentChangeMainFileAlwaysLeft,
 
-  {-
-  testThat "when I call updateDocument, it fails when the doc doesn't exist" env testNoDocumentUpdateDocumentAlwaysLeft,
-  testThat "When I call updateDocument with a doc that is not in Preparation, always returns left" env testNotPreparationUpdateDocumentAlwaysLeft,
-  testThat "when I call updatedocument with a doc that is in Preparation, it always returns Right" env testPreparationUpdateDocumentAlwaysRight,
--}
+  --testThat "when I call updateDocument, it fails when the doc doesn't exist" env testNoDocumentUpdateDocumentAlwaysLeft,
+  --testThat "When I call updateDocument with a doc that is not in Preparation, always returns left" env testNotPreparationUpdateDocumentAlwaysLeft,
+  --testThat "when I call updatedocument with a doc that is in Preparation, it always returns Right" env testPreparationUpdateDocumentAlwaysRight,
+
   testThat "when I create document from shared template author custom fields are stored" env testCreateFromSharedTemplate,
 
   testThat "when I call ResetSignatoryDetails, it fails when the doc doesn't exist" env testNoDocumentResetSignatoryDetailsAlwaysLeft,
@@ -232,7 +229,6 @@ docStateTests env = testGroup "DocState" [
   testThat "GetDocumentsByCompanyWithFiltering doesn't return archived docs" env testGetDocumentsByCompanyWithFilteringNoArchivedDocs,
   testThat "GetDocumentsBySignatory doesn't return archived docs" env testGetDocumentsBySignatoryNoArchivedDocs,
   testThat "GetDeletedDocumentsByUser returns archived docs" env testGetDeletedDocumentsByUserArchivedDocs
-
   ]
 
 dataStructureProperties :: Test
@@ -1196,9 +1192,7 @@ testDocumentChangeMainFileRight :: TestEnv ()
 testDocumentChangeMainFileRight = doTimes 10 $ do
   -- setup
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (const True)
-  file' <- addNewRandomFile
-  _ <- randomUpdate $ \t->AttachFile (documentid doc) (fileid file') (systemActor t)
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (isPending ||^ isClosed))
   file <- addNewRandomFile
   --execute
   edoc <- randomUpdate $ \t->ChangeMainfile (documentid doc) (fileid file) (systemActor t)
