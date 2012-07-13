@@ -189,14 +189,14 @@ var TabsView = Backbone.View.extend({
                     });
             tabsrow.append(li);
         });
-        if (!hasRight)
+        if (!hasRight && model.tabsTail() == undefined)
             tabsrow.append("<li class='float-right'/>");
         this.toprow.append(titlepart);
         if (model.hasManyTabs())
             this.toprow.append(tabsrow);
         if (model.tabsTail() != undefined)
            _.each(model.tabsTail(), function (elem) {
-           var li = $("<li style= 'float:right;padding-left:0px;padding-right:20px;'/>").append(elem);
+           var li = $("<li class='float-right' style='padding-left:0px;padding-right:20px;'/>").append(elem);
            tabsrow.append(li);
         });
         
