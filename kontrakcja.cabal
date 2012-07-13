@@ -203,7 +203,7 @@ Executable kontrakcja-server
   Build-depends: list-tries == 0.4.1.1
   Build-depends: mime == 0.3.3.2
   Build-depends: mmap==0.5.*
-  Build-depends: mtl == 2.*
+  Build-depends: mtl == 2.0.*
   Build-depends: network == 2.3.0.11
   Build-depends: old-locale
   Build-depends: old-time
