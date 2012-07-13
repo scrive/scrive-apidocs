@@ -424,6 +424,20 @@ javascriptLocalisation =
              ,  savedTemplate  : "$_signStepsBodyUploadBoxStep1TemplateSaved()$"
              ,  chooseTemplateButton : "$_signStepsBodyUploadBoxStep1ButtonChooseTemplate()$"
         }
+        , payments: {
+             user: "$_CompanyAccounts()$"
+           , plans: { basic : "$_paymentPlanBasic()$"
+                    , branding : "$_paymentPlanBranding()$"
+                    , advanced : "$_paymentPlanAdvanced()$"
+                    }
+           , table: { currentplan : "$_paymentPlanCurrentPlan()$"
+                    , item        : "$_paymentPlanItem()$"
+                    , price       : "$_paymentPlanPrice()$"
+                    , quantity    : "$_paymentPlanQuantity()$"
+                    , subtotal    : "$_paymentPlanSubtotal()$"
+                    , total       : "$_paymentPlanTotal()$"
+                    }
+        }
       , documents : "$_docListTabsDocs()$"
       , templates : "$_docListTabsTemplates()$"
       , attachments : "$_docListTabsAttachemtns()$"

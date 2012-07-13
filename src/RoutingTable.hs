@@ -175,6 +175,7 @@ staticRoutes = choice
      -- payments dashboard
      , dir "payments" $ dir "dashboard" $ hGet $ toK0 $ Payments.handleSubscriptionDashboard
      , dir "payments" $ dir "info.json" $ hGet $ toK0 $ Payments.handleSubscriptionDashboardInfo
+     , dir "payments" $ dir "subscription" $ dir "result" $ hPost $ toK0 $ Payments.handleSubscriptionResult
 
      -- super user only
      , dir "createuser" $ hPost $ toK0 $ Administration.handleCreateUser

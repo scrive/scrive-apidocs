@@ -217,7 +217,12 @@ pageAcceptTOS :: TemplatesMonad m => m String
 pageAcceptTOS = renderTemplate_ "pageAcceptTOS"
 
 menuFields :: Monad m => User -> Fields m ()
-menuFields user = F.value "iscompanyadmin" $ useriscompanyadmin user
+menuFields user = do
+  F.value "iscompanyadmin" $ useriscompanyadmin user
+  F.value "seessubscriptiondashboard" $ userSeesSubscriptionDashboard user
+
+userSeesSubscriptionDashboard :: User -> Bool
+userSeesSubscriptionDashboard user = useriscompanyadmin user || isNothing (usercompany user)
 
 activatePageViewNotValidLink :: TemplatesMonad m => String -> m String
 activatePageViewNotValidLink email =

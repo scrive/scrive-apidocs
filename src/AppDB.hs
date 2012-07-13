@@ -27,6 +27,7 @@ import Mails.Migrations
 import OAuth.Tables
 import ScriveByMail.Tables
 import EvidenceLog.Tables
+import Payments.Tables
 import Attachment.Tables
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
@@ -115,5 +116,6 @@ kontraTables = [
   , tablePasswordReminders
   , tableEmailChangeRequests
   , tableUserAccountRequests
+  , tablePaymentPlans
   , tableAttachments
   ] ++ mailerTables

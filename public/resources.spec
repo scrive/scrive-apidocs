@@ -9,9 +9,7 @@ ignore  tiny_mce/utils
 ignore  libs/analytics.js
 ignore  libs/postmessage.js
 ignore  js/signup.js
-
-
-
+ignore  libs/recurly/recurly.css
 
 set firstPage
  css css/main.css
@@ -55,6 +53,7 @@ set systemPage
  css css/docsignview.css
  css css/main.css
  css css/selects.css
+ css css/payments.css
  js   libs/jquery.min.js
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js
@@ -65,6 +64,7 @@ set systemPage
  js   libs/backbone.js
  js   libs/jquery.form.js
  js   libs/livequery.js
+ js   libs/recurly.js
  js   js/global.js
  js   js/storage.js
  js   js/browserinfo.js

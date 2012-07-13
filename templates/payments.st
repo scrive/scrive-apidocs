@@ -14,11 +14,10 @@ subscriptionDashboard =
     <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
     <li><a href="/account/usagestats">$_HeadUsageStats()$</a></li>
     <li><a href="/oauth/dashboard">API</a></li>
-    <li class="active"><a href="/payments/dashboard">Subscription</a></li>
+    <li class="active"><a href="/payments/dashboard">$_Subscription()$</a></li>
   </ul>
   <div class="tab-container">
-    <div class="tab-content account js-paymentsdashboard">
-
+    <div class="tab-content account js-paymentsdashboard payments-dashboard">
     </div>
   </div>
 </div>
