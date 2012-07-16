@@ -25,7 +25,7 @@ module Routing ( hGet
 import Data.Functor
 import AppView as V
 import Data.Maybe
-import Happstack.Server(Response, Method(GET, POST, DELETE, PUT), rsCode)
+import Happstack.Server(Response, Method(GET, POST, DELETE, PUT), rsCode, ToMessage(..))
 import Happstack.StaticRouting
 import KontraLink
 import Misc
@@ -34,6 +34,7 @@ import qualified User.UserControl as UserControl
 import Redirect
 import Text.JSON
 import qualified Control.Exception.Lifted as E
+import Util.CSVUtil
 
 type RedirectOrContent = Either KontraLink String
 
@@ -61,6 +62,9 @@ instance ToResp JSValue where
 
 instance (ToResp a , ToResp b) => ToResp (Either a b) where
     toResp = either toResp toResp
+
+instance ToResp CSV where
+    toResp = return . toResponse
 
 hPostWrap :: Path Kontra KontraPlus a Response => (Kontra Response -> Kontra Response) -> a -> Route (KontraPlus Response)
 hPostWrap = kpath POST

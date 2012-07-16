@@ -15,7 +15,7 @@ import Login
 import PublicPages (publicPages)
 import Redirect
 import Routing
-import Happstack.StaticRouting(Route, choice, dir, path, param, remainingPath)
+import Happstack.StaticRouting(Route, choice, dir, param, remainingPath)
 import qualified Stats.Control as Stats
 import qualified ActionQueue.UserAccountRequest as UAR
 import qualified Administration.AdministrationControl as Administration
@@ -191,13 +191,12 @@ staticRoutes = choice
      , dir "adminonly" $ dir "documents" $ hGet $ toK0 $ Administration.showDocuments
      , dir "adminonly" $ dir "documentslist" $ hGet $ toK0 $ Administration.jsonDocuments
 
-     , dir "adminonly" $ dir "allstatscsv" $ path GET id $ Stats.handleDocStatsCSV
-     , dir "adminonly" $ dir "docstats.csv" $ path GET id $ Stats.handleDocStatCSVNew
-     , dir "adminonly" $ dir "userstatscsv" $ path GET id $ Stats.handleUserStatsCSV
-     , dir "adminonly" $ dir "signstatscsv" $ path GET id $ Stats.handleSignStatsCSV
-     , dir "adminonly" $ dir "dochistorycsv" $ path GET id $ Stats.handleDocHistoryCSV
-     , dir "adminonly" $ dir "signhistorycsv" $ path GET id $ Stats.handleSignHistoryCSV
-     , dir "adminonly" $ dir "userslistcsv" $ path GET id $ Administration.handleUsersListCSV
+     , dir "adminonly" $ dir "allstatscsv" $ hGet $ toK0 $ Stats.handleDocStatsCSV
+     , dir "adminonly" $ dir "userstatscsv" $ hGet $ toK0 $ Stats.handleUserStatsCSV
+     , dir "adminonly" $ dir "signstatscsv" $ hGet $ toK0 $ Stats.handleSignStatsCSV
+     , dir "adminonly" $ dir "dochistorycsv" $ hGet $ toK0 $ Stats.handleDocHistoryCSV
+     , dir "adminonly" $ dir "signhistorycsv" $ hGet $ toK0 $ Stats.handleSignHistoryCSV
+     , dir "adminonly" $ dir "userslistcsv" $ hGet $ toK0 $ Administration.handleUsersListCSV
 
      , dir "adminonly" $ dir "statistics"        $ hGet  $ toK0 $ Stats.showAdminSystemUsageStats
 
@@ -212,8 +211,6 @@ staticRoutes = choice
      , dir "adminonly" $ dir "docproblems" $ hGet $ toK0 $ DocControl.handleInvariantViolations
 
      , dir "adminonly" $ dir "backdoor" $ hGet $ toK1 $ Administration.handleBackdoorQuery
-
-     , dir "adminonly" $ dir "upsalesdeleted" $ hGet $ toK0 $ DocControl.handleUpsalesDeleted
 
      , dir "services" $ hGet $ toK0 $ handleShowServiceList
      , dir "services" $ hGet $ toK1 $ handleShowService

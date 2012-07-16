@@ -191,18 +191,14 @@ showAdminCompanyUsers cid = onlySalesOrAdmin $ adminCompanyUsersPage cid
 showAdminUsersForSales :: Kontrakcja m => m String
 showAdminUsersForSales = onlySalesOrAdmin $ adminUsersPageForSales
 
-handleUsersListCSV :: Kontrakcja m => m Response
+handleUsersListCSV :: Kontrakcja m => m CSV
 handleUsersListCSV = onlySalesOrAdmin $ do
   users <- getUsersAndStatsInv [] [] (UserPagination 0 maxBound)
-  ok $ setHeader "Content-Disposition" "attachment;filename=userslist.csv"
-     $ setHeader "Content-Type" "text/csv"
-     $ toResponse (usersListCSV users)
-
-usersListCSV :: [(User, Maybe Company, DocStats, InviteType)] -> BSL.ByteString
-usersListCSV users = renderCSV $
-  ["id", "fstname", "sndname", "email", "company", "position","tos"] :
-  (map csvline $ filter active users)
-    where
+  return $ CSV { csvHeader = ["id", "fstname", "sndname", "email", "company", "position","tos"] 
+               , csvFilename = "userslist.csv"
+               , csvContent = map csvline $ filter active users
+               }
+  where
         active (u,_,_,_) =   (not (useraccountsuspended u)) && (isJust $ userhasacceptedtermsofservice u) && (isNothing $ userservice u)
         csvline (u,mc,_,_) =
                           [ show $ userid u

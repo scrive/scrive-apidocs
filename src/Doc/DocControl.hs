@@ -43,7 +43,6 @@ module Doc.DocControl(
     , handlePageOfDocumentForSignatory
     , handleCSVLandpage
     , handleInvariantViolations
-    , handleUpsalesDeleted
     , handleShowVerificationPage
     , handleVerify
 ) where
@@ -82,7 +81,6 @@ import Util.MonadUtils
 import Doc.Invariants
 import Stats.Control
 import User.Utils
-import API.Service.Model
 import Company.Model
 import Control.Applicative
 import Control.Concurrent
@@ -1068,19 +1066,6 @@ handleSetAttachments did = do
                           Just fid -> (fmap fileid) <$> (dbQuery $ GetFileByFileID fid)
                           Nothing -> return $ Nothing
                  _ -> return Nothing
-
-handleUpsalesDeleted :: Kontrakcja m => m Response
-handleUpsalesDeleted = onlyAdmin $ do
-  docs <- dbQuery $ GetDocumentsByService $ Just $ ServiceID $ BS.fromString "upsales"
-  let deleteddocs = [[show $ documentid d, showDateYMD $ documentctime d, documenttitle d]
-                    | d <- docs
-                    , isDeletedFor $ getAuthorSigLink d
-                    , (isJust $ getSigLinkFor d SignatoryAuthor) && (isJust $ getSigLinkFor d $ unsafeCompanyID 1849610088)]
-  let header = ["document_id", "date created", "document_title"]
-  let csv = renderCSV (header:deleteddocs)
-  ok $ setHeader "Content-Disposition" "attachment;filename=upsalesdocsdeleted.csv"
-     $ setHeader "Content-Type" "text/csv"
-     $ toResponse csv
 
 handleParseCSV :: Kontrakcja m => m JSValue
 handleParseCSV = do

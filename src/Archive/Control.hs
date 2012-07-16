@@ -36,7 +36,6 @@ import MinutesTime
 import Misc
 import PadQueue.Model
 import Data.Maybe
-import Happstack.Server.SimpleHTTP
 import Text.JSON.Gen as J
 import Doc.DocUtils
 import Doc.Action
@@ -115,7 +114,7 @@ showArchive = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >> pa
 showPadDeviceArchive :: Kontrakcja m => m (Either KontraLink String)
 showPadDeviceArchive = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >> pagePadDeviceArchive
 
-jsonDocumentsList ::  Kontrakcja m => m (Either KontraLink (Either Response JSValue))
+jsonDocumentsList ::  Kontrakcja m => m (Either KontraLink (Either CSV JSValue))
 jsonDocumentsList = withUserGet $ do
   Just user@User{userid = uid} <- ctxmaybeuser <$> getContext
   lang <- getLang . ctxlocale <$> getContext
@@ -162,12 +161,13 @@ jsonDocumentsList = withUserGet $ do
   padqueue <- dbQuery $ GetPadQueue $ userid user
   format <- getField "format"
   case format of
-       Just "csv" -> Left <$> do
+       Just "csv" -> do
           allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting (DocumentPagination 0 maxBound)
           let docsCSVs = concat $ zipWith (docForListCSV (timeLocaleForLang lang)) [1..maxBound] allDocs
-          ok $ setHeader "Content-Disposition" "attachment;filename=documents.csv"
-             $ setHeader "Content-Type" "text/csv"
-             $ toResponse (renderCSV (docForListCSVHeader:docsCSVs))
+          return $ Left $ CSV { csvFilename = "documents.csv"
+                              , csvHeader = docForListCSVHeader
+                              , csvContent = docsCSVs
+                              }
        _ -> do
           allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
           let docs = PagedList {  list       = allDocs
