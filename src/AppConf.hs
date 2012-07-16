@@ -10,7 +10,7 @@ import System.Console.GetOpt
 import LiveDocx (LiveDocxConf(..))
 import ELegitimation.Config (LogicaConfig(..))
 import GuardTime (GuardTimeConf(..))
-
+import Payments.Config (RecurlyConfig(..))
 
 -- | Defines the application's configuration.  This includes amongst
 -- other things the http port number, amazon, trust weaver and email
@@ -37,6 +37,7 @@ data AppConf = AppConf {
   , admins             :: [Email]                      -- ^ email addresses of people regarded as admins
   , sales              :: [Email]                      -- ^ email addresses of people regarded as sales admins
   , initialUsers       :: [(Email,String)]             -- ^ email and passwords for initial users
+  , recurlyConfig      :: RecurlyConfig                -- ^ for payments (api key + private key)
   } deriving (Read, Eq, Ord, Show)
 
 -- | Default application configuration that does nothing.
@@ -66,6 +67,10 @@ instance Configuration AppConf where
     , admins             = map Email ["gracjanpolak@gmail.com", "lukas@skrivapa.se"]
     , sales              = []
     , initialUsers       = []
+    , recurlyConfig      = RecurlyConfig { recurlySubdomain  = "scrive-test"
+                                         , recurlyAPIKey     = "c31afaf14af3457895ee93e7e08e4451"
+                                         , recurlyPrivateKey = "49c1b30592fa475b8535a0ca04f88e65"
+                                         }
     }
   confOptions = [
   {-

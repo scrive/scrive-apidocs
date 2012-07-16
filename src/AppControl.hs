@@ -294,4 +294,5 @@ appHandler handleRoutes appConf appGlobals appState = runOurServerPartT . measur
         , ctxmaybepaduser = mpaduser
         , ctxstaticresources = staticRes
         , ctxusehttps = useHttps appConf
+        , ctxrecurlyconfig = recurlyConfig appConf
         }

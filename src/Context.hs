@@ -23,6 +23,7 @@ import IPAddress
 import qualified Static.Resources as SR
 import ELegitimation.Config (LogicaConfig(..))
 import GuardTime (GuardTimeConf(..))
+import Payments.Config (RecurlyConfig)
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
@@ -55,4 +56,5 @@ data Context = Context
     , ctxmaybepaduser        :: Maybe User -- ^ If we are loged in to the pad view
     , ctxstaticresources     :: SR.ResourceSetsForImport
     , ctxusehttps            :: Bool
+    , ctxrecurlyconfig       :: RecurlyConfig
     }

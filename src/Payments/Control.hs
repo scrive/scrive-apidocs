@@ -30,12 +30,14 @@ import ListUtil
 
 import Payments.Model
 import Payments.View
+import Payments.Config (RecurlyConfig(..))
 
-recurlyApiKey :: String
-recurlyApiKey = "efab03eb45ca4666bc907b81c1dc7efc"
+-- these should go to config
+--recurlyApiKey :: String
+--recurlyApiKey = "efab03eb45ca4666bc907b81c1dc7efc"
 
-recurlyPrivateKey :: String
-recurlyPrivateKey = "10e6c073926c402f9e89a8f8c4d14082"
+--recurlyPrivateKey :: String
+--recurlyPrivateKey = "10e6c073926c402f9e89a8f8c4d14082"
 
 {-
 recurlyUsername :: User -> String
@@ -52,6 +54,7 @@ handleSubscriptionDashboardInfo :: Kontrakcja m => m (Either KontraLink JSValue)
 handleSubscriptionDashboardInfo = checkUserTOSGet $ do
   wantedplan <- guardJustM $ getField "plan"
   user <- guardJustM $ ctxmaybeuser <$> getContext
+  privateKey <- recurlyPrivateKey . ctxrecurlyconfig <$> getContext
   mcompany <- case usercompany user of
     Nothing -> return Nothing
     Just cid -> dbQuery $ GetCompany cid
@@ -63,7 +66,7 @@ handleSubscriptionDashboardInfo = checkUserTOSGet $ do
     Nothing   -> dbUpdate GetAccountCode
     Just plan -> return $ ppAccountCode plan
   let currency = "EUR" -- for now, we only support euros in the test account
-  sig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", wantedplan)
+  sig <- liftIO $ genSignature privateKey [("subscription[plan_code]", wantedplan)
                                                  ,("subscription[currency]",  currency)]
   runJSONGenT $ do
     J.object "contact" $ do
@@ -136,6 +139,7 @@ handleGetInvoices :: Kontrakcja m => m (Either KontraLink JSValue)
 handleGetInvoices = checkUserTOSGet $ do
   params <- getListParamsNew
   user <- guardJustM $ ctxmaybeuser <$> getContext
+  recurlyApiKey <- recurlyAPIKey . ctxrecurlyconfig <$> getContext
   mplan <- dbQuery $ GetPaymentPlan (maybe (Left (userid user)) Right (usercompany user))
   case mplan of
     Nothing   -> runJSONGenT $ J.value "error" "No plan for logged in user."
@@ -153,6 +157,7 @@ handleGetInvoices = checkUserTOSGet $ do
 -- to call this, user must not have an account code yet (no payment plan in table)
 syncSubscriptionWithRecurly :: Kontrakcja m => AccountCode -> User -> m (Either String PaymentPlan)
 syncSubscriptionWithRecurly ac u = do
+  recurlyApiKey <- recurlyAPIKey . ctxrecurlyconfig <$> getContext
   esubscriptions <- liftIO $ getSubscriptionsForAccount curl_exe recurlyApiKey $ show ac
   case esubscriptions of
     Left s -> return $ Left s

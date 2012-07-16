@@ -48,6 +48,7 @@ import Mails.MailsConfig
 import MinutesTime
 import Utils.Default
 import Utils.Directory
+import Payments.Config (RecurlyConfig(..))
 import IPAddress
 import OurServerPart
 import Templates.Templates
@@ -262,6 +263,10 @@ mkContext locale = do
         , ctxstaticresources = SR.ResourceSetsForImport [] (TOD 0 0)
         , ctxusehttps = False
         , ctxgtconf = GuardTimeConf { guardTimeURL = "http://stamper.guardtime.net/gt-signingservice" }
+        , ctxrecurlyconfig = RecurlyConfig { recurlySubdomain  = "scrive-test"
+                                           , recurlyAPIKey     = "c31afaf14af3457895ee93e7e08e4451"
+                                           , recurlyPrivateKey = "49c1b30592fa475b8535a0ca04f88e65"
+                                           }
     }
 
 -- pgsql database --
