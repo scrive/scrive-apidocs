@@ -105,61 +105,16 @@ showAdminSystemUsageStats = onlySalesOrAdmin $ do
     F.objects "statisticsbymonth" $ statisticsFieldsByMonth statsByMonth
   renderFromBody kontrakcja content
 
-handleDocStatCSV :: Kontrakcja m => m CSV
-handleDocStatCSV = onlySalesOrAdmin $ do
+handleDocStatsCSV :: Kontrakcja m => m CSV
+handleDocStatsCSV = onlySalesOrAdmin $ do
   let start = fromSeconds 0
   end <- ctxtime <$> getContext
   stats <- dbQuery $ GetDocStatCSV start end
-  let docstatsheader = map BS.fromString ["userid", "user", "date", "event", "count", "docid", "serviceid", "company", "companyid", "doctype", "api"]
+  let docstatsheader = ["userid", "user", "date", "event", "count", "docid", "serviceid", "company", "companyid", "doctype", "api"]
   return $ CSV { csvFilename = "docstats.csv"
                , csvHeader = docstatsheader
-               , csvContent = stats
+               , csvContent = map (map BS.toString) stats
                }
-
-docStatsToString :: Kontrakcja m => [DocStatEvent] -> [(UserID, String)] -> [(CompanyID, String)] -> m [[String]]
-docStatsToString [] _ _ = return []
-docStatsToString (e:es) usernames companynames = do
-  (username, usernames') <- dbUserIDLookup (seUserID e) usernames
-  (companyname, companynames') <- maybe (return ("none", companynames))
-                                  (\i -> dbCompanyIDLookup i companynames)
-                                  (seCompanyID e)
-  let servicename = maybe "scrive" (BS.toString . unServiceID) (seServiceID e)
-  rest <- docStatsToString es usernames' companynames'
-  return $ [ show $ seUserID e
-           , username
-           , showDateYMD $ seTime e
-           , show $ seQuantity e
-           , show $ seAmount e
-           , show $ seDocumentID e
-           , servicename
-           , companyname
-           , maybe "" show $ seCompanyID e
-           , show $ seDocumentType e
-           , seAPIString e
-           ] : rest
-
-dbUserIDLookup :: (Kontrakcja m) => UserID -> [(UserID, String)] -> m (String, [(UserID, String)])
-dbUserIDLookup uid tbl =
-  case lookup uid tbl of
-    Nothing -> do
-      name <- maybe "Unknown user" getSmartName <$> (dbQuery $ GetUserByID uid)
-      return (name, (uid, name):tbl)
-    Just name -> return (name, tbl)
-
-dbCompanyIDLookup :: (Kontrakcja m) => CompanyID -> [(CompanyID, String)] -> m (String, [(CompanyID, String)])
-dbCompanyIDLookup cid tbl =
-  case lookup cid tbl of
-    Nothing -> do
-      mcompany <- dbQuery $ GetCompany cid
-      let name = case mcompany of
-            Nothing -> "Unknown Company"
-            Just company -> case companyexternalid company of
-              Just eid -> unExternalCompanyID eid
-              Nothing -> case companyname $ companyinfo company of
-                "" -> "no company name"
-                a -> a
-      return (name, (cid, name):tbl)
-    Just name -> return (name, tbl)
 
 
 

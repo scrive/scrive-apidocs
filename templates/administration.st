@@ -1,7 +1,6 @@
 ###
 adminsmain=
 <strong>Stats CSVs</strong>
-<p><a href="/adminonly/docstats.csv">Download the CSV containing  all signature stats (new and faster!)</a></p>
 <p><a href="/adminonly/allstatscsv">Download the CSV containing  all signature stats</a></p>
 <p><a href="/adminonly/userstatscsv">Download the CSV containing all
     user stats</a></p>
