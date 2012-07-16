@@ -66,8 +66,10 @@ handleSubscriptionDashboardInfo = checkUserTOSGet $ do
     Nothing   -> dbUpdate GetAccountCode
     Just plan -> return $ ppAccountCode plan
   let currency = "SEK" -- for now, we only support euros in the test account
-  sig <- liftIO $ genSignature privateKey [("subscription[plan_code]", wantedplan)
-                                          ,("subscription[currency]",  currency)]
+  basicsig    <- liftIO $ genSignature privateKey [("subscription[plan_code]",    "basic")]
+  brandingsig <- liftIO $ genSignature privateKey [("subscription[plan_code]", "branding")]
+  advancedsig <- liftIO $ genSignature privateKey [("subscription[plan_code]", "advanced")]
+  billingsig  <- liftIO $ genSignature privateKey [("account[account_code]",    show code)]
   runJSONGenT $ do
     J.object "contact" $ do
       J.value "first_name"   $ getFirstName user
@@ -85,11 +87,16 @@ handleSubscriptionDashboardInfo = checkUserTOSGet $ do
           J.value "code" $ show code
           J.value "plan" $ wantedplan
           J.value "status" "none"
-          J.value "signature"    $ sig
+          J.object "signatures" $ do
+            J.value "basic"    basicsig
+            J.value "branding" brandingsig
+            J.value "advanced" advancedsig
         Just plan -> do
           J.value "code"   $ show $ ppAccountCode plan
           J.value "plan"   $ show $ ppPricePlan plan
           J.value "status" $ show $ ppStatus plan
+          J.object "signatures" $ do
+            J.value "billing"  billingsig          
           case plan of
             UserPaymentPlan    {} -> J.value "userid"    $ show $ ppUserID plan
             CompanyPaymentPlan {} -> J.value "companyid" $ show $ ppCompanyID plan
@@ -99,6 +106,7 @@ handleSubscriptionResult = checkUserTOSGet $ do
   let currency = "SEK" -- for now, we only support euros in the test account
   user <- guardJustM $ ctxmaybeuser <$> getContext
   mplan <- dbQuery $ GetPaymentPlan (maybe (Left (userid user)) Right (usercompany user))
+  privateKey <- recurlyPrivateKey . ctxrecurlyconfig <$> getContext  
   case mplan of
     Just _ -> runJSONGenT $ J.value "error" "Already have a plan."
     Nothing -> do
@@ -113,6 +121,7 @@ handleSubscriptionResult = checkUserTOSGet $ do
               mcompany <- case usercompany user of
                 Nothing -> return Nothing
                 Just cid -> dbQuery $ GetCompany cid
+              billingsig  <- liftIO $ genSignature privateKey [("account[account_code]", show ac)]
               quantity <- case (usercompany user, useriscompanyadmin user) of
                 (Just cid, True) -> length <$> (dbQuery $ GetCompanyAccounts cid)
                 _ -> return 1
@@ -131,6 +140,8 @@ handleSubscriptionResult = checkUserTOSGet $ do
                     J.value "code"   $ show $ ppAccountCode plan
                     J.value "plan"   $ show $ ppPricePlan   plan
                     J.value "status" $ show $ ppStatus      plan
+                    J.object "signatures" $ do
+                      J.value "billing"  billingsig
                     case plan of
                       UserPaymentPlan    {} -> J.value "userid"    $ show $ ppUserID plan
                       CompanyPaymentPlan {} -> J.value "companyid" $ show $ ppCompanyID plan

@@ -60,13 +60,25 @@
     };
 
     var PaymentsContactModel = Backbone.Model.extend({
-        firstName: function() {
+        firstName: function(n) {
+            if(n || n === '') {
+                this.set({first_name:n});
+                return this;
+            }
             return this.get("first_name");
         },
-        lastName: function() {
+        lastName: function(n) {
+            if(n || n === '') {
+                this.set({last_name:n});
+                return this;
+            }
             return this.get("last_name");
         },
-        email: function() {
+        email: function(e) {
+            if(e || e === '') {
+                this.set({email:e});
+                return this;
+            }
             return this.get("email");
         },
         companyName: function() {
@@ -94,8 +106,8 @@
         quantity: function() {
             return this.get("quantity");
         },
-        signature: function() {
-            return this.get("signature");
+        signatures: function() {
+            return this.get("signatures");
         },
         status: function() {
             return this.get("status");
@@ -103,7 +115,11 @@
         newSignup: function() {
             return this.status() === "none";
         },
-        plan: function() {
+        plan: function(p) {
+            if(p) {
+                this.set({plan:p});
+                return this;
+            }
             return this.get("plan");
         },
         userid: function() {
@@ -134,6 +150,34 @@
         },
         invoicelist: function() {
             return this.get("invoicelist");
+        },
+        creditcard: function(c) {
+            if(c || c === "") {
+                this.set({creditcard:c});
+                return this;
+            }
+            return this.get("creditcard");
+        },
+        cvv: function(c) {
+            if(c || c === "") {
+                this.set({cvv:c});
+                return this;
+            }
+            return this.get("cvv");
+        },
+        month: function(c) {
+            if(c || c === "") {
+                this.set({month:c});
+                return this;
+            }
+            return this.get("month");
+        },
+        year: function(c) {
+            if(c || c === "") {
+                this.set({year:c});
+                return this;
+            }
+            return this.get("year");
         }
     });
 
@@ -147,8 +191,34 @@
             var view = this;
             var model = view.model;
             var $el = $(view.el);
+            
+            var plans = $('<div />').addClass('plans');
+
+            plans.append(Button.init({color: 'blue', size: 'small', text: 'Basic',
+                                      onClick: function() {
+                                          model.account().plan('basic');
+                                          view.render();
+                                          return false;
+                                      }}).input().addClass('float-left'))
+                .append(Button.init({color: 'blue', size: 'small', text: 'Branding',
+                                      onClick: function() {
+                                          model.account().plan('branding');
+                                          view.render();
+                                          return false;
+                                      }}).input().addClass('float-left'))
+                .append(Button.init({color: 'blue', size: 'big', text: 'Advanced',
+                                      onClick: function() {
+                                          model.account().plan('advanced');
+                                          view.render();
+                                          return false;
+                                      }}).input().addClass('float-left'))
+                .height(50);
+            
+            $el.append(plans);
+
             var form = $('<div id="js-recurly-form"></div>');
             $el.append(form);
+            $el.append($('<div class="clear-fix" />'));
             Recurly.config({
                 subdomain: model.server().subdomain()
                 , currency: model.account().currency()
@@ -158,7 +228,7 @@
                 target: '#js-recurly-form'
                 , enableAddons: false
                 , enableCoupons: false
-                , planCode: 'advanced'
+                , planCode: model.account().plan()
                 , addressRequirement: 'none'
                 //, successURL: 'http://requestb.in/1hxgzae1'
                 , distinguishContactFromBillingInfo: false
@@ -176,7 +246,7 @@
                     , lastName: model.contact().lastName()
                     , country: model.contact().country()
                 }
-                , signature: model.account().signature()
+                , signature: model.account().signatures()[model.account().plan()]
                 , afterInject: function(form) {
                     if(model.account().quantity() === 1)
                         $('.quantity').hide();
@@ -189,6 +259,49 @@
                         usersbox.append(model.account().quantity() + " " + localization.payments.user);
                         $('.quantity').append(usersbox);
                     }
+                    var c = model.creditcard();
+                    var cc = $('.card_number input');
+                    cc.val(model.creditcard());
+                    cc.change();
+                    cc.change(function(e) { 
+                        model.creditcard($(e.target).val()); 
+                    });
+                    var cvv = $('.cvv input');
+                    cvv.val(model.cvv());
+                    cvv.change();
+                    cvv.change(function(e) {
+                        model.cvv($(e.target).val());
+                    });
+                    var fn = $('.first_name input');
+                    fn.val(model.contact().firstName());
+                    fn.change();
+                    fn.change(function(e) {
+                        model.contact().firstName($(e.target).val());
+                    });
+                    var ln = $('.last_name input');
+                    ln.val(model.contact().lastName());
+                    ln.change();
+                    ln.change(function(e) {
+                        model.contact().lastName($(e.target).val());
+                    });
+                    var en = $('.email input');
+                    en.val(model.contact().email());
+                    en.change();
+                    en.change(function(e) {
+                        model.contact().email($(e.target).val());
+                    });
+                    var m = $('.month select');
+                    m.val(model.month());
+                    m.change();
+                    m.change(function(e) {
+                        model.month($(e.target).val());
+                    });
+                    var y = $('.year select');
+                    y.val(model.year());
+                    y.change();
+                    y.change(function(e) {
+                        model.year($(e.target).val());
+                    });
                 }
                 , successHandler: function(stuff) {
                     $.ajax("/payments/subscription/result",
@@ -219,6 +332,17 @@
                 return planPrices[p];
             return -1;
         },
+        pricePlanTable: function() {
+            return maketable(
+                [$("<span />").append($('<h3 />').append("Basic")).append($('<p />').append("För distanssignering.")),
+                 $("<span />").append($('<h3 />').append("Branding")).append($('<p />').append("För distanssignering.")),
+                 $("<span />").append($('<h3 />').append("Advanced")).append($('<p />').append("För distanssignering."))
+                ],
+                [["Fria signaturer *", "Fria signaturer *", "Fria signaturer *"]
+
+                ]
+            );
+        },
         showCurrentSubscription: function () {
             var view = this;
             var model = view.model;
@@ -239,11 +363,12 @@
                             model.account().quantity()  + " " + localization.payments.user,
                             view.planPrice(model.account().plan()) * model.account().quantity() + "kr"]],
                           ["", "", localization.payments.table.total, view.planPrice(model.account().plan()) * model.account().quantity() + "kr"]));
-
+            
             plan.append(planheader).append(plantable);
             $el.append(plan);
             $el.append(model.invoicelist().view.el);
             $el.append(view.cancelButton());
+            $el.append($('<div />').addClass('js-billing-button').append(view.changeBillingButton()));
         },
         cancelButton: function() {
             var view = this;
@@ -269,6 +394,53 @@
                                                  }
                                                 });
                                          return false;
+                                     }});
+            return button.input();
+        },
+        changeBillingButton: function() {
+            var view = this;
+            var model = view.model;
+            var button = Button.init({color: "green"
+                                     ,size: "small"
+                                     ,text: "Change billing info"
+                                     ,onClick: function() {
+                                         Recurly.config({
+                                             subdomain: model.server().subdomain()
+                                             , currency: model.account().currency()
+                                             , country: model.contact().country()
+                                         });
+                                         Recurly.buildBillingInfoUpdateForm(
+                                             {target: ".js-billing-button", 
+                                              signature: model.account().signatures().billing, 
+                                              accountCode: model.account().accountCode(),
+                                              account: {
+                                                  firstName: model.contact().firstName()
+                                                  , lastName: model.contact().lastName()
+                                                  , email: model.contact().email()
+                                                  , companyName: model.contact().companyName()
+                                              },
+                                              billingInfo: {
+                                                  firstName: model.contact().firstName()
+                                                  , lastName: model.contact().lastName()
+                                                  , country: model.contact().country()
+                                              },
+                                              addressRequirement: 'none',
+                                              distinguishContactFromBillingInfo: false,
+                                              collectCompany: false,
+                                              successHandler: function(stuff) {
+                                                  $.ajax("/payments/info.json",
+                                                         {
+                                                             dataType: "json",
+                                                             data: {plan:"advanced"},
+                                                             success: function(data) {
+                                                                 model.initialize(data);
+                                                                 view.render();
+                                                             }
+                                                         });
+                                                  
+                                              }
+                                             }
+                                         );
                                      }});
             return button.input();
         },
