@@ -79,13 +79,6 @@ var DocumentSignViewView = Backbone.View.extend({
         el: $("<div />")
       }).el);
     },
-    createSaveAfterSignViewElems: function() {
-      if (this.model.document().padAuthorization()) return $("<div/>"); 
-      return $(new DocumentSaveAfterSignView({
-       model: this.model,
-       el: $("<div />")
-      }).el);
-    },
     createShareAfterSignViewElems: function() {
       if (this.model.document().padAuthorization()) return $("<div/>");
       return $(new DocumentShareAfterSignView({
@@ -292,8 +285,7 @@ var DocumentSignViewView = Backbone.View.extend({
           // I apologize for putting this model in the view, but 
           // the model/view split was already messed up when I got
           // here. --Eric
-        model: new DocumentSignSignatoryBox({document:this.model.document()}),
-        el: $("<div class='section signatories spacing'/>")
+        model: new DocumentSignSignatoriesModel({document:this.model.document()}),
       });
     },
     createRejectButtonElems: function() {
@@ -378,12 +370,15 @@ var DocumentSignViewView = Backbone.View.extend({
       this.container.empty();
 
       this.container.append(this.createSignInstructionElems());
-      if (document.currentSignatory().hasSigned()) {
-        if (!document.currentSignatory().saved() || view.model.justSaved()) {
-          this.container.append(this.createSaveAfterSignViewElems());
-        }
+      if (document.currentSignatory().hasSigned() && (!document.currentSignatory().saved() || view.model.justSaved()) && !document.padAuthorization() && !document.isWhiteLabeled())
+          this.container.append(new CreateAccountAfterSignView({
+                                    model: this.model,
+                                    el: $("<div />")
+                                }).el);
+        
+      if (document.currentSignatory().hasSigned()) 
         this.container.append(this.createShareAfterSignViewElems());
-      }
+      
 
       if(view.model.justSaved() && !document.isWhiteLabeled()) {
           var sbox = $('<div class="sbox" />');
