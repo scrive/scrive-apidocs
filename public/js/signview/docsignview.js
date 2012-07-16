@@ -79,13 +79,6 @@ var DocumentSignViewView = Backbone.View.extend({
         el: $("<div />")
       }).el);
     },
-    createShareAfterSignViewElems: function() {
-      if (this.model.document().padAuthorization()) return $("<div/>");
-      return $(new DocumentShareAfterSignView({
-        model: this.model,
-        el: $("<div />")
-      }).el);
-    },
     getOrCreateMainFileView: function() {
       if (this.mainfileview == undefined) {
         var file = KontraFile.init({
@@ -370,24 +363,19 @@ var DocumentSignViewView = Backbone.View.extend({
       this.container.empty();
 
       this.container.append(this.createSignInstructionElems());
-      if (document.currentSignatory().hasSigned() && (!document.currentSignatory().saved() || view.model.justSaved()) && !document.padAuthorization() && !document.isWhiteLabeled())
+      if (document.currentSignatory() != undefined && document.currentSignatory().hasSigned() && !document.currentSignatory().saved() && !document.padAuthorization() && !document.isWhiteLabeled())
           this.container.append(new CreateAccountAfterSignView({
                                     model: this.model,
                                     el: $("<div />")
                                 }).el);
         
-      if (document.currentSignatory().hasSigned()) 
-        this.container.append(this.createShareAfterSignViewElems());
-      
+      if (document.currentSignatory() != undefined && document.currentSignatory().hasSigned() && this.model.justSaved() && !this.model.document().isWhiteLabeled() && !this.model.document().padAuthorization())
+        this.container.append(new PromoteScriveView({
+                                    model: this.model,
+                                    el: $("<div />")
+                                }).el);
 
-      if(view.model.justSaved() && !document.isWhiteLabeled()) {
-          var sbox = $('<div class="sbox" />');
-          var video = $('<div class="video" />');
-          sbox.append(video);
-          video.append('<iframe src="https://player.vimeo.com/video/41846881" width="620" height="330" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>');
-          this.container.find(".share").append(sbox);
-          this.container.addClass("just-signed");
-      } else {
+      else {
           var subcontainer = $("<div class='subcontainer'/>");
           
           var mainfileelems = $(this.getOrCreateMainFileView().el);

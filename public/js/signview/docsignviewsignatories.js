@@ -5,9 +5,6 @@
 
     
 window.DocumentSignSignatoriesModel = Backbone.Model.extend({
-    defaults: {
-        current : 0
-    },
     initialize: function(args) {
         var me = this;
         this.setCurrentSignatory(this.signatories()[0]);
