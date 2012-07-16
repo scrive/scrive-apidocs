@@ -1,5 +1,6 @@
 module Util.CSVUtil ( parseCSV
                     , renderCSV
+                    , CSV(..)
                     ) where
 
 import qualified Data.ByteString.Lazy.UTF8 as BSL
@@ -10,7 +11,7 @@ import Data.List
 import Data.Ord
 import Data.Spreadsheet as SS
 import Control.Monad.Exception.Asynchronous (Exceptional(..))
-
+import Happstack.Server (ToMessage(..), setHeaderBS, setHeader)
 import Codec.Text.IConv
 import Misc
 
@@ -76,3 +77,19 @@ spearator and '"' as quote.
 -}
 renderCSV :: [[String]] -> BSL.ByteString
 renderCSV content = BSL.fromString $ SS.toString '"' ';' content
+
+
+data CSV = CSV
+         { csvHeader   :: [String]
+         , csvContent  :: [[String]]
+         , csvFilename :: String
+         }
+
+instance ToMessage CSV where
+  toMessage csv = renderCSV (csvHeader csv : csvContent csv)
+  toContentType _ = BS.fromString "text/csv"
+  toResponse csv = (if not (null (csvFilename csv))
+                    then setHeader "Content-Disposition" ("attachment;filename=" ++ csvFilename csv)
+                    else id)
+                       $ setHeaderBS (BS.fromString "Content-Type") (toContentType csv)
+                       $ toResponse (toMessage csv)
