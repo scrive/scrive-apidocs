@@ -99,7 +99,7 @@ instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
       sqlResult "account_code"
     (results :: [AccountCode]) <- foldDB (flip (:)) []
     return (1 == length results)
-    
+
 -- how do things look as a string?
     
 instance Show PricePlan where

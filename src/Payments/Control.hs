@@ -24,7 +24,7 @@ import User.Utils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.MonadUtils
---import qualified Log
+import qualified Log
 import qualified Text.JSON.Gen as J
 import ListUtil
 
@@ -65,9 +65,9 @@ handleSubscriptionDashboardInfo = checkUserTOSGet $ do
   code <- case mplan of
     Nothing   -> dbUpdate GetAccountCode
     Just plan -> return $ ppAccountCode plan
-  let currency = "EUR" -- for now, we only support euros in the test account
+  let currency = "SEK" -- for now, we only support euros in the test account
   sig <- liftIO $ genSignature privateKey [("subscription[plan_code]", wantedplan)
-                                                 ,("subscription[currency]",  currency)]
+                                          ,("subscription[currency]",  currency)]
   runJSONGenT $ do
     J.object "contact" $ do
       J.value "first_name"   $ getFirstName user
@@ -76,7 +76,7 @@ handleSubscriptionDashboardInfo = checkUserTOSGet $ do
       J.value "company_name" $ getCompanyName (user, mcompany)
       J.value "country"      $ "SE"    
     J.object "server" $ do
-      J.value "subdomain"    $ "scrive"
+      J.value "subdomain"    $ "scrive-test"
     J.object "account" $ do
       J.value "quantity"     $ quantity
       J.value "currency"     $ currency
@@ -96,7 +96,7 @@ handleSubscriptionDashboardInfo = checkUserTOSGet $ do
     
 handleSubscriptionResult :: Kontrakcja m => m (Either KontraLink JSValue)
 handleSubscriptionResult = checkUserTOSGet $ do
-  let currency = "EUR" -- for now, we only support euros in the test account
+  let currency = "SEK" -- for now, we only support euros in the test account
   user <- guardJustM $ ctxmaybeuser <$> getContext
   mplan <- dbQuery $ GetPaymentPlan (maybe (Left (userid user)) Right (usercompany user))
   case mplan of
@@ -124,7 +124,7 @@ handleSubscriptionResult = checkUserTOSGet $ do
                     J.value "company_name" $ getCompanyName (user, mcompany)
                     J.value "country"      $ "SE"    
                   J.object "server" $ do
-                    J.value "subdomain"    $ "scrive"
+                    J.value "subdomain"    $ "scrive-test"
                   J.object "account" $ do
                     J.value "quantity"     $ quantity
                     J.value "currency"     $ currency
@@ -173,6 +173,21 @@ syncSubscriptionWithRecurly ac u = do
                 Just cid -> CompanyPaymentPlan ac cid        pricePlan status
           r <- dbUpdate $ SavePaymentPlan pp
           if r then return (Right pp) else return $ Left "Could not save subscription"
+
+handleCancelAccount :: Kontrakcja m => m (Either KontraLink JSValue)
+handleCancelAccount = checkUserTOSGet $ do
+  recurlyApiKey <- recurlyAPIKey . ctxrecurlyconfig <$> getContext
+  user <- guardJustM $ ctxmaybeuser <$> getContext
+  mplan <- dbQuery $ GetPaymentPlan (maybe (Left (userid user)) Right (usercompany user))
+  case mplan of
+    Nothing -> runJSONGenT $ J.value "error" "No plan for logged in user."
+    Just plan -> do
+      res <- liftIO $ deleteAccount curl_exe recurlyApiKey $ show $ ppAccountCode plan
+      case res of
+        False -> runJSONGenT $ J.value "error" "Could not delete plan at Recurly."
+        True  -> do
+          _ <- dbUpdate $ DeletePaymentPlan $ maybe (Left $ userid user) Right $ usercompany user
+          runJSONGenT $ J.value "success" "Deleted."
           
 fromRecurlyStatus :: String -> PaymentPlanStatus
 fromRecurlyStatus "active" = ActiveStatus

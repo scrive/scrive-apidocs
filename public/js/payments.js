@@ -159,10 +159,10 @@
                 , enableAddons: false
                 , enableCoupons: false
                 , planCode: 'advanced'
-                , addressRequirement: 'full'
+                , addressRequirement: 'none'
                 //, successURL: 'http://requestb.in/1hxgzae1'
                 , distinguishContactFromBillingInfo: false
-                , collectCompany: true
+                , collectCompany: false
                 , accountCode: model.account().accountCode()
                 //, termsOfServiceURL: 'http://example.com/tos'
                 , account: {
@@ -243,11 +243,34 @@
             plan.append(planheader).append(plantable);
             $el.append(plan);
             $el.append(model.invoicelist().view.el);
+            $el.append(view.cancelButton());
         },
-        showInvoices: function() {
-            var ret = $('<div />').addClass('invoices');
-            
-            return ret;
+        cancelButton: function() {
+            var view = this;
+            var model = view.model;
+            var button = Button.init({color: "red"
+                                     ,size: "small"
+                                     ,text: "Cancel account"
+                                     ,onClick: function() {
+                                         $.ajax("/payments/cancel",
+                                                {dataType: "json",
+                                                 type: "POST",
+                                                 data: {xtoken: readCookie("xtoken")},
+                                                 success: function() {
+                                                     $.ajax("/payments/info.json",
+                                                            {
+                                                                dataType: "json",
+                                                                data: {plan:"advanced"},
+                                                                success: function(data) {
+                                                                    model.initialize(data);
+                                                                    view.render();
+                                                                }
+                                                            });
+                                                 }
+                                                });
+                                         return false;
+                                     }});
+            return button.input();
         },
         render: function() {
             var view = this;
