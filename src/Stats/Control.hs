@@ -68,6 +68,7 @@ import Control.Monad.Trans.Control
 import Control.Applicative
 import qualified Data.Map as Map
 import User.Utils
+import Util.CSVUtil
 
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
 showAdminUserUsageStats userid = onlySalesOrAdmin $ do
@@ -123,7 +124,7 @@ handleDocStatsCSV = onlySalesOrAdmin $ do
   stats <- dbQuery GetDocStatEvents
   let docstatsheader = ["userid", "user", "date", "event", "count", "docid", "serviceid", "company", "companyid", "doctype", "api"]
   csvstrings <- docStatsToString stats [] []
-  let res = Response 200 Map.empty nullRsFlags (toCSV docstatsheader csvstrings) Nothing
+  let res = Response 200 Map.empty nullRsFlags (renderCSV (docstatsheader:csvstrings)) Nothing
   Log.debug $ "All doc stats length with bytestring" ++ (show $ length stats) ++ " " ++ (show $ length $ show $ rsBody res)
   ok $ setHeader "Content-Disposition" "attachment;filename=docstats.csv"
      $ setHeader "Content-Type" "text/csv"

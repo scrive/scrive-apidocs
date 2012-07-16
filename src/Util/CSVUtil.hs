@@ -1,7 +1,8 @@
 module Util.CSVUtil ( parseCSV
+                    , renderCSV
                     ) where
 
-import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import Data.Char
 import Data.Either
@@ -69,3 +70,9 @@ decodeByteString bs =
     nordicCharCountOrdering a b = compare (nordicCharCount a) (nordicCharCount b)
     nordicCharCount = length . filter (\c -> c `elem` "äÄöÖåÅ")
 
+
+{- | Render a BSL.ByteString representation of CSV. Uses ';' as
+spearator and '"' as quote.
+-}
+renderCSV :: [[String]] -> BSL.ByteString
+renderCSV content = BSL.fromString $ SS.toString '"' ';' content

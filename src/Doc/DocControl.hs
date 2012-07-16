@@ -1077,7 +1077,7 @@ handleUpsalesDeleted = onlyAdmin $ do
                     , isDeletedFor $ getAuthorSigLink d
                     , (isJust $ getSigLinkFor d SignatoryAuthor) && (isJust $ getSigLinkFor d $ unsafeCompanyID 1849610088)]
   let header = ["document_id", "date created", "document_title"]
-  let csv = toCSV header deleteddocs
+  let csv = renderCSV (header:deleteddocs)
   ok $ setHeader "Content-Disposition" "attachment;filename=upsalesdocsdeleted.csv"
      $ setHeader "Content-Type" "text/csv"
      $ toResponse csv

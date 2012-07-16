@@ -30,6 +30,7 @@ import Stats.Control
 import Util.Actor
 import Util.HasSomeUserInfo
 import Text.JSON
+import Util.CSVUtil
 import ListUtil
 import MinutesTime
 import Misc
@@ -166,7 +167,7 @@ jsonDocumentsList = withUserGet $ do
           let docsCSVs = concat $ zipWith (docForListCSV (timeLocaleForLang lang)) [1..maxBound] allDocs
           ok $ setHeader "Content-Disposition" "attachment;filename=documents.csv"
              $ setHeader "Content-Type" "text/csv"
-             $ toResponse (toCSV docForListCSVHeader docsCSVs)
+             $ toResponse (renderCSV (docForListCSVHeader:docsCSVs))
        _ -> do
           allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
           let docs = PagedList {  list       = allDocs

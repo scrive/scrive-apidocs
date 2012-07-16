@@ -80,6 +80,7 @@ import Util.Actor
 import InspectXMLInstances ()
 import InspectXML
 import File.Model
+import Util.CSVUtil
 import ListUtil
 import Text.JSON
 import Mails.Model
@@ -197,15 +198,13 @@ handleUsersListCSV = onlySalesOrAdmin $ do
      $ setHeader "Content-Type" "text/csv"
      $ toResponse (usersListCSV users)
 
-usersListCSV :: [(User, Maybe Company, DocStats, InviteType)] -> String
-usersListCSV users = 
-  "\"" ++ intercalate "\";\""  
-  ["id", "fstname", "sndname", "email", "company", "position","tos"]
-  ++ "\"\n" ++
-  (concat $ map csvline $ filter active users)
+usersListCSV :: [(User, Maybe Company, DocStats, InviteType)] -> BSL.ByteString
+usersListCSV users = renderCSV $
+  ["id", "fstname", "sndname", "email", "company", "position","tos"] :
+  (map csvline $ filter active users)
     where
         active (u,_,_,_) =   (not (useraccountsuspended u)) && (isJust $ userhasacceptedtermsofservice u) && (isNothing $ userservice u)
-        csvline (u,mc,_,_) = "\"" ++ intercalate "\";\""
+        csvline (u,mc,_,_) =
                           [ show $ userid u
                           , getFirstName u
                           , getLastName u
@@ -214,7 +213,7 @@ usersListCSV users =
                           , usercompanyposition $ userinfo u
                           , show $ fromJust $ userhasacceptedtermsofservice u
                           ]
-                          ++ "\"\n"
+
 
 userSearchingFromParams :: ListParams -> [UserFilter]
 userSearchingFromParams params =
