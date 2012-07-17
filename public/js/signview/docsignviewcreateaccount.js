@@ -51,11 +51,7 @@ window.CreateAccountAfterSignView = Backbone.View.extend({
     var container = $("<div class='save'>")
     $(this.el).empty().append(container);
 
-    if (this.model.saving()) { 
-      container.append("<div class='saving'/>");
-      return;
-    }
-    else if (this.model.saved()) {
+    if (this.model.document().currentSignatory().saved() || this.model.justSaved()) {
       container.append($("<div class='headline'/>").text(localization.docsignview.createdAccountTitle));
       container.append($("<div class='subheadline'/>").text(localization.docsignview.createdAccountSubtitle));
       container.addClass('done');
@@ -125,18 +121,10 @@ window.CreateAccountAfterSignView = Backbone.View.extend({
            tos: view.checkbox.val(),
            ajax: true,
            onSend: function() {
-             console.log("creating account");
-             model.setSaving(true);
-           },
-           ajaxerror: function(d, a) {
-             console.error("failed to create an account");
-             model.setSaving(false);
+             container.empty().append("<div class='saving'/>");
            },
            ajaxsuccess: function(d) {
-             console.log("successfully created account");
-             model.setSaved();
-             console.log(
-               model.document().currentSignatory());
+             model.setJustSaved();
            }
          }).send();
         }

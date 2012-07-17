@@ -6,8 +6,6 @@
 
 var DocumentSignViewModel = Backbone.Model.extend({
   defaults : {
-    saved: false,
-    saving: false,
     justsaved: false
   },
   initialize : function(args){
@@ -24,25 +22,11 @@ var DocumentSignViewModel = Backbone.Model.extend({
   email: function() {
     return this.document().currentSignatory().email();
   },
-  hasSigned: function() {
-    return this.document().currentSignatory().hasSigned();
-  },
   justSaved: function() {
     return this.get('justsaved');
   },
-  saved: function() {
-    return this.document().currentSignatory().saved() || this.get("saved");
-  },
-  saving: function() {
-    return this.get("saving");
-  },
-  setSaving: function(saving) {
-    this.set({ saving: saving });
-  },
-  setSaved: function() {
-    this.set({ saved: true,
-               saving: false,
-               justsaved: true});
+  setJustSaved: function() {
+    this.set({justsaved: true});
     this.document().trigger('change');
   },
   saveurl: function() {
@@ -72,12 +56,6 @@ var DocumentSignViewView = Backbone.View.extend({
       $(this.el).append("<div class='clearfix'/>");
       $(this.el).append("<div class='spacer40'/>");
       return this;
-    },
-    createSignInstructionElems: function() {
-      return $(new DocumentSignInstructionsView({
-        model: this.model,
-        el: $("<div />")
-      }).el);
     },
     getOrCreateMainFileView: function() {
       if (this.mainfileview == undefined) {
@@ -303,34 +281,6 @@ var DocumentSignViewView = Backbone.View.extend({
         }
       }).input());
     },
-    createSignButtonElems: function(othertasks) {
-      var view = this;
-      this.signbuttonview =  new DocumentSignButtonView({
-        model: this.model.document(),
-        validate: function() {
-            var valid =  view.tasks.notCompleatedTasks().length == 1 && view.tasks.notCompleatedTasks()[0] == view.signtask;
-            if (!valid)
-                view.arrowview.blink();
-            return valid;
-        },
-        el: $("<div class='signwrapper'/>")
-      });
-      return $(this.signbuttonview.el);
-    },
-    signButtonTask: function(el) {
-      var view = this;
-      var document = this.model.document();
-      view.signtask =  new PageTask({
-        isComplete: function() {
-          return !document.currentSignatoryCanSign();
-        },
-        el: el,
-        onActivate   : function() {view.signsection.addClass("highlight");},
-        onDeactivate : function() {view.signsection.removeClass("highlight");}
-        
-      });
-      return view.signtask;
-    },
     createArrowsElems: function(tasks) {
       this.tasks = new PageTasks({ tasks: tasks });
       this.arrowview =  new PageTasksArrowView({
@@ -362,7 +312,11 @@ var DocumentSignViewView = Backbone.View.extend({
 
       this.container.empty();
 
-      this.container.append(this.createSignInstructionElems());
+      this.container.append(new DocumentSignInstructionsView({
+                            model: this.model,
+                            el: $("<div />")
+                            }).el);
+      
       if (document.currentSignatory() != undefined && document.currentSignatory().hasSigned() && !document.currentSignatory().saved() && !document.padAuthorization() && !document.isWhiteLabeled())
           this.container.append(new CreateAccountAfterSignView({
                                     model: this.model,
@@ -437,11 +391,29 @@ var DocumentSignViewView = Backbone.View.extend({
         if (this.model.document().currentSignatoryCanSign() && (!this.model.document().currentSignatory().canPadSignQuickSign())) {
           this.signsection = $("<div class='section spacing signbuttons' />");
           this.signsection.append(this.createRejectButtonElems());
-          var signButton = this.createSignButtonElems(jQuery.extend({}, tasks));
-          var signButtonTask = this.signButtonTask(signButton);
-          triggerTask = signButtonTask;
-          tasks.push(signButtonTask);
-          this.signsection.append(signButton);
+          var signButton = new DocumentSignButtonView({
+                            model: this.model.document(),
+                            validate: function() {
+                                var valid =  view.tasks.notCompleatedTasks().length == 1 && view.tasks.notCompleatedTasks()[0] == view.signtask;
+                                if (!valid)
+                                    view.arrowview.blink();
+                                return valid;
+                                },
+                            el: $("<div class='signwrapper'/>")
+                            });
+
+
+          
+          this.signtask = new PageTask({
+                            isComplete: function() {
+                                return !document.currentSignatoryCanSign();
+                            },
+                            el: $(signButton.el),
+                            onActivate   : function() {view.signsection.addClass("highlight");},
+                            onDeactivate : function() {view.signsection.removeClass("highlight");}
+                            });
+          tasks.push(view.signtask);
+          this.signsection.append($(signButton.el));
           this.signsection.append($("<div class='clearfix' />"));
           bottomstuff.append(this.signsection);
         }
