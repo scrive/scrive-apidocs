@@ -93,6 +93,7 @@ set systemPage
  js   js/signview/docsignviewsignatories.js
  js   js/signview/docsignviewcreateaccount.js
  js   js/signview/docsignviewpromotescrive.js
+ js   js/signview/docsignviewsignsection.js
  js   js/signview/docsignview.js
  js   js/signatorydesignview.js
  js   js/docdesignviewpad.js

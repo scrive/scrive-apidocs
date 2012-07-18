@@ -8,19 +8,24 @@ var DocumentSignViewModel = Backbone.Model.extend({
   defaults : {
     justsaved: false
   },
+  cleartasks : function() {
+      this.set({"filltasks" : undefined,
+                 "signtask" : undefined,
+                 "signatoryattachmentasks" : undefined,
+                 "tasks" : undefined,
+                 "arrowview": undefined });
+  },
   initialize : function(args){
       var model = this;
       var document = args.document;
-      document.bind("reset", function() {model.trigger("change");});
-      document.bind("change", function() {model.trigger("change");});
-      document.bind("file:change", function() {model.trigger("change-with-delay");});
-      
+      document.bind("reset", function() {model.cleartasks(); });
+      document.bind("change", function() {model.cleartasks(); });
+      document.bind("file:change", function() {window.setTimeout(function() {
+          model.cleartasks();
+    }, 500); });
   },
   document : function(){
        return this.get("document");
-  },
-  email: function() {
-    return this.document().currentSignatory().email();
   },
   justSaved: function() {
     return this.get('justsaved');
@@ -29,11 +34,215 @@ var DocumentSignViewModel = Backbone.Model.extend({
     this.set({justsaved: true});
     this.document().trigger('change');
   },
-  saveurl: function() {
-    return this.document().currentSignatory().saveurl();
+  tasks : function() {
+      if (this.get("tasks") != undefined)
+            return this.get('tasks');
+      this.set({'tasks' :
+            new PageTasks({ tasks : _.flatten([this.filltasks(),this.signatoryattachmentasks(),this.signtask()])})
+      });
+      return this.tasks();
   },
-  phoneurl: function() {
-    return "/account/phoneme";
+  isReady : function() {
+      return this.document().ready() && this.document().mainfile() != undefined;
+  },
+  hasMainFileSection : function() {
+      return this.document().ready() && this.document().mainfile() != undefined;
+  },
+  hasSignSection : function() {
+      return this.document().currentSignatoryCanSign() && (!this.document().currentSignatory().canPadSignQuickSign());
+  },
+  hasSignatoriesSection : function() {
+      return !this.document().closed();
+  },
+  hasAuthorAttachmentsSection : function() {
+      return this.document().isAuthorAttachments();
+  },
+  hasSignatoriesAttachmentsSection : function() {
+      return this.document().isSignatoryAttachments();
+  },
+  hasArrows : function() {
+      return this.document().currentSignatoryCanSign();
+  },
+  hasPromoteScriveSection : function() {
+      return    this.document().currentSignatory() != undefined
+             && this.document().currentSignatory().hasSigned()
+             && this.justSaved()
+             && !this.document().isWhiteLabeled()
+             && !this.document().padAuthorization();
+  },
+  hasCreateAccountSection : function() {
+      return    this.document().currentSignatory() != undefined
+             && this.document().currentSignatory().hasSigned()
+             && !this.document().currentSignatory().saved()
+             && !this.document().padAuthorization()
+             && !this.document().isWhiteLabeled();
+  },
+  instructionssection : function() {
+        if (this.get("instructionssection") != undefined)
+            return this.get('instructionssection');
+        this.set({'instructionssection' :
+            new DocumentSignInstructionsView({
+                   model: this,
+                   el: $("<div />")
+            })
+        });
+        return this.instructionssection();
+  },
+  createaccountsection : function() {
+        if (this.get("createaccountsection") != undefined)
+            return this.get('createaccountsection');
+        this.set({'createaccountsection' :
+            new CreateAccountAfterSignView({
+                   model: this,
+                   el: $("<div />")
+            })
+        });
+        return this.createaccountsection();
+  },
+  promotescrivesection : function() {
+        if (this.get("promotescrivesection") != undefined)
+            return this.get('promotescrivesection');
+        this.set({'promotescrivesection' :
+            new PromoteScriveView({
+                   model: this,
+                   el: $("<div />")
+            })
+        });
+        return this.signsection();
+  },
+  signsection : function() {
+        if (this.get("signsection") != undefined)
+            return this.get('signsection');
+        this.set({'signsection' : new DocumentSignSignSection({model : this}) });
+        return this.signsection();
+  },
+  signtask : function() {
+        var model = this;
+        if (this.get("signtask") != undefined)
+            return this.get('signtask');
+        this.set({'signtask' :
+                        new PageTask({
+                            isComplete: function() {
+                                return !model.document().currentSignatoryCanSign();
+                            },
+                            el:  model.signsection().signButton.input(),
+                            onActivate   : function() {$(model.signsection().el).addClass("highlight");},
+                            onDeactivate : function() {$(model.signsection().el).removeClass("highlight");}
+                            })
+                });
+        return this.signtask();
+  },
+  signatoriessection : function() {
+       if (this.get("signatoriessection") != undefined)
+            return this.get('signatoriessection');
+       this.set({'signatoriessection' : new DocumentSignSignatoriesView({ model: new DocumentSignSignatoriesModel({document:this.document()}) })});
+       return this.signatoriessection();
+  },
+  signatoryattachmentsection : function() {
+        if (this.get("signatoryattachmentsection") != undefined)
+            return this.get('signatoryattachmentsection');
+        this.set({'signatoryattachmentsection' :
+                        new DocumentSignatoryAttachmentsView({
+                            model: this.document(),
+                            el: $("<div class='section spacing'/>"),
+                            title:(this.document().currentSignatory().attachments().length > 1) ?
+                                        localization.docsignview.signatoryAttachmentsTitleForLots :
+                                        localization.docsignview.signatoryAttachmentsTitleForOne
+                        })
+                });
+        return this.signatoryattachmentsection();
+  },
+  signatoryattachmentasks: function() {
+      var model = this;
+      if (this.get("signatoryattachmentasks") != undefined)
+            return this.get('signatoryattachmentasks');
+      var els = model.signatoryattachmentsection().uploadElems;
+      var attachments = model.document().currentSignatory().attachments();
+      var tasks = [];
+      _.each(attachments, function(attachment,i) {
+            var task = new PageTask({
+                        isComplete: function() {
+                            return attachment.hasFile() && attachment.isReviewed();
+                        },
+                        el: els[i],
+                        onActivate   : function() {$(model.signatoryattachmentsection().el).addClass("highlight");},
+                        onDeactivate : function() {$(model.signatoryattachmentsection().el).removeClass("highlight");}
+                     })
+          attachment.bind("change", function() {
+              task.update();
+            });
+          attachment.bind("reset", function() {task.update()});
+          tasks.push(task);
+      });
+      this.set({'signatoryattachmentasks' : tasks });
+      return this.signatoryattachmentasks();
+  },
+  authorattachmentssection : function() {
+      if (this.get("authorattachmentssection") != undefined)
+            return this.get('authorattachmentssection');
+      this.set({'authorattachmentssection' :
+                    new DocumentAuthorAttachmentsView({
+                        model: this.document(),
+                        el: $("<div class='section spacing'/>"),
+                        title: (this.document().currentSignatory().attachments().length > 1) ?
+                                localization.docsignview.authorAttachmentsTitleForLots :
+                                localization.docsignview.authorAttachmentsTitleForOne
+                    })
+          });
+      return this.authorattachmentssection();
+  },
+  mainfile : function() {
+      if (this.get("mainfile") != undefined)
+            return this.get('mainfile');
+      this.set({'mainfile' :
+                   KontraFile.init({
+                        file: this.document().mainfile(),
+                        document: this.document()
+                    })
+          });
+      return this.mainfile();
+  },
+  filltasks : function() {
+       if (this.get("filltasks") != undefined)
+            return this.get('filltasks');
+       var tasks = [];
+       _.each(this.mainfile().model.placements(), function(placement) {
+            if (!placement.field().signatory().current()) return;
+            var elem = $(placement.view.el);
+            var label = "";
+            if (placement.field().isText())
+                label = placement.field().nicename();
+            else if (placement.field().isObligatoryCheckbox())
+                label = localization.docsignview.checkboxes.pleaseCheck;
+            var task = new PageTask({
+                isComplete: function() {
+                return placement.field().readyForSign();
+                },
+                el: elem,
+                onActivate: function() {
+                    if (placement.view != undefined && placement.view.startinlineediting != undefined)
+                        placement.view.startinlineediting()
+                },
+                tipSide : placement.tip(),
+                label:label
+            });
+            placement.field().bind("change", function() {task.update()});
+            placement.field().bind("reset", function() {task.update()});
+            tasks.push(task);
+        });
+       this.set({'filltasks' : tasks });
+       return this.filltasks();
+  },
+  arrowview : function() {
+      if (this.get("arrowview") != undefined)
+            return this.get('arrowview');
+      this.set({'arrowview' :
+                   new PageTasksArrowView({
+                            model: this.tasks(),
+                            el: $("<div />")
+                          })
+          });
+      return this.arrowview();
   },
   recall : function() {
       this.document().recall();
@@ -44,396 +253,58 @@ var DocumentSignViewView = Backbone.View.extend({
         _.bindAll(this, 'render');
         var view = this;
         this.model.bind('change', this.render);
-        this.model.bind('change-with-delay', function() { window.setTimeout(view.render, 500); });
         this.model.view = this;
-        this.prerender();
         this.render();
     },
-    prerender: function() {
+    render: function() {
+      var view = this;
+      $(this.el).children().detach();
       this.container = $("<div class='mainContainer signview' />");
       $(this.el).append(this.container);
       $(this.el).addClass("body-container");
       $(this.el).append("<div class='clearfix'/>");
       $(this.el).append("<div class='spacer40'/>");
-      return this;
-    },
-    getOrCreateMainFileView: function() {
-      if (this.mainfileview == undefined) {
-        var file = KontraFile.init({
-          file: this.model.document().mainfile(),
-          document: this.model.document()
-        });
-        this.mainfileview = file.view;
-      }
-      return this.mainfileview;
-    },
-    getRenderedPlacements: function() {
-      var renderedPlacements = [];
-      _.each(this.getOrCreateMainFileView().pageviews, function(pageview) {
-        _.each(pageview.renderedPlacements, function(placement) {
-          renderedPlacements.push(placement);
-        });
-      });
-      renderedPlacements = renderedPlacements.sort(function(a, b) {
-        var pdiff = a.placement.page() - b.placement.page();
-        if (pdiff!=0) {
-          return pdiff;
-        }
-        //put a fudge into the y, so it doesnt matter if people don't line things up
-        var ydiff = a.placement.y() - b.placement.y();
-        if (ydiff>10 || ydiff<(-10)) {
-          return ydiff;
-        }
-        return a.placement.x() - b.placement.x();
-      });
-      return renderedPlacements;
-    },
-    authorAttachmentsTitle: function() {
-      if (!this.model.document().signingInProcess() || !this.model.document().currentSignatoryCanSign()) {
-        return undefined;
-      } else if (this.model.document().authorattachments().length > 1) {
-        return localization.docsignview.authorAttachmentsTitleForLots;
-      } else {
-        return localization.docsignview.authorAttachmentsTitleForOne;
-      }
-    },
-    unPlacedFieldTasks: function(fieldels) {
-      var allfields = this.model.document().currentSignatory().customFields();
-      //calling .filter will fail in IE7.  so have to do this instead
-      var fields = [];
-      _.each(allfields, function(field) {
-        if (!field.isPlaced()) {
-          fields.push(field);
-        }
-      });
-      if (fields.length != fieldels.length) {
-        console.error("expected to find an element per custom field");
-        console.log("****info*****");
-        console.log("fields");
-        console.log(fields);
-        console.log("fieldels");
-        console.log(fieldels);
-        console.log("*****");
-        return;
-      }
-      var tasks = [];
-      for (var i = 0; i < fields.length; i++) {
-        tasks.push(this.unPlacedFieldTask(fields[i], fieldels[i]));
-      }
-      return tasks;
-    },
-    unPlacedFieldTask: function(field, el) {
-      /**
-       * this stuff is kind of disgusting
-       * the idea is to delay completing a field for
-       * a little while to give the person a change
-       * to type it all in before moving the arrow
-       */
-      var completiontime = undefined;
-      var lastvalue = undefined;
-      var queueChange = function(update) {
-        console.log("Delaying field completion...");
-        window.setTimeout(function() {
-          update();
-        }, 500);
-      };
-      var task = new PageTask({
-        isComplete: function() {
-          var newvalue = field.value() != "";
-          var returnvalue = lastvalue;
-          if (lastvalue == undefined ||
-                !newvalue ||
-                (lastvalue && newvalue)) {
-            returnvalue = newvalue;
-          } else if (!lastvalue &&
-                       newvalue &&
-                       completiontime == undefined) {
-            completiontime = new Date();
-            queueChange(this.update);
-          } else if (!lastvalue &&
-                       newvalue &&
-                       completiontime != undefined) {
-            var elapsedtime = (new Date()).getTime() - completiontime.getTime();
-            if (elapsedtime >= 2000) {
-              completiontime = undefined;
-              returnvalue = newvalue;
-            } else {
-              queueChange(this.update);
-            }
-          }
-
-          lastvalue = returnvalue;
-          return returnvalue;
-        },
-        el: el
-      });
-      field.bind("change", function() {task.update()});
-      field.bind("reset", function() {task.update()});
-      return task;
-    },
-    createAuthorAttachmentsElems: function() {
-      this.authorattachmentview =  new DocumentAuthorAttachmentsView({
-        model: this.model.document(),
-        el: $("<div class='section spacing'/>"),
-        title: this.authorAttachmentsTitle()
-      });
-      return $(this.authorattachmentview.el)
-    },
-    signatoryAttachmentsTitle: function() {
-      if (!this.model.document().signingInProcess() || !this.model.document().currentSignatoryCanSign()) {
-        return undefined;
-      } else if (this.model.document().currentSignatory().attachments().length > 1) {
-        return localization.docsignview.signatoryAttachmentsTitleForLots;
-      } else {
-        return localization.docsignview.signatoryAttachmentsTitleForOne;
-      }
-    },
-    createSignatoryAttachmentsView: function() {
-      this.signatoryattachmentsection =  new DocumentSignatoryAttachmentsView({
-        model: this.model.document(),
-        el: $("<div class='section spacing'/>"),
-        title: this.signatoryAttachmentsTitle()
-      });
-      return this.signatoryattachmentsection;
-    },
-    signatoryAttachmentTasks: function(attachmentels) {
-      var attachments = this.model.document().currentSignatory().attachments();
-      if (attachments.length != attachmentels.length) {
-        console.error("expected to find an element per attachment");
-        return;
-      }
-      var tasks = [];
-      for (var i = 0; i < attachments.length; i++)
-          tasks.push(this.signatoryAttachmentTask(attachments[i], attachmentels[i]));
-      return tasks;
-    },
-    signatoryAttachmentTask: function(attachment, el) {
-      var view = this;
-      var task = new PageTask({
-        isComplete: function() {
-          return attachment.hasFile() && attachment.isReviewed();
-        },
-        el: el,
-        onActivate   : function() {$(view.signatoryattachmentsection.el).addClass("highlight");},
-        onDeactivate : function() {$(view.signatoryattachmentsection.el).removeClass("highlight");}
-      });
-      attachment.bind("change", function() {task.update()});
-      attachment.bind("reset", function() {task.update()});
-      return task;
-    },
-    createInlineFieldTask: function(renderedPlacement) {
-      var placement = renderedPlacement.placement;
-      var elem = renderedPlacement.elem;
-      var label = "";
-      if (placement.field().isText())
-          label = placement.field().nicename();
-      else if (placement.field().isObligatoryCheckbox())
-          label = localization.docsignview.checkboxes.pleaseCheck;
-      var task = new PageTask({
-        isComplete: function() {
-          return placement.field().readyForSign();
-        },
-        el: elem,
-        onActivate: function() {
-          elem.trigger("click");
-        },
-        tipSide : placement.tip(),
-        label:label
-      });
-      placement.field().bind("change", function() {task.update()});
-      placement.field().bind("reset", function() {task.update()});
-      return task;
-    },
-    createUploadedAttachmentsElems: function() {
-      return $(new DocumentUploadedSignatoryAttachmentsView({
-        model: this.model.document(),
-        el: $("<div class='section spacing' />"),
-        title: localization.docsignview.uploadedAttachmentsTitle
-      }).el);
-    },
-    createSignatoriesView: function(triggerArrowChange) {
-      return new DocumentSignSignatoriesView({
-          // I apologize for putting this model in the view, but 
-          // the model/view split was already messed up when I got
-          // here. --Eric
-        model: new DocumentSignSignatoriesModel({document:this.model.document()}),
-      });
-    },
-    createRejectButtonElems: function() {
       var document = this.model.document();
-      var signatory = document.currentSignatory();
-      return $("<div class='rejectwrapper'>").append(Button.init({
-        size: "big",
-        color: "red",
-        text: document.process().rejectbuttontext(),
-        onClick: function() {
-          ConfirmationWithEmail.popup({
-            title: document.process().signatorycancelmodaltitle(),
-            mail: signatory.rejectMail(),
-            acceptText: localization.reject.send,
-            editText: localization.reject.editMessage,
-            rejectText: localization.cancel,
-            acceptColor: "red",
-            onAccept: function(customtext) {
-              signatory.reject(customtext).send();
-            }
-          });
-        }
-      }).input());
-    },
-    createArrowsElems: function(tasks) {
-      this.tasks = new PageTasks({ tasks: tasks });
-      this.arrowview =  new PageTasksArrowView({
-        model: this.tasks,
-        el: $("<div />")  });
-      return this.arrowview.el;
-    },
-    isDisplaySignatories: function() {
-      return !this.model.document().closed();
-    },
-    isBottomStuff: function() {
-      return this.model.document().isAuthorAttachments() ||
-               this.model.document().isSignatoryAttachments() ||
-               this.model.document().isUploadedAttachments() ||
-               this.isDisplaySignatories();
-    },
-    render: function() {
-      var view = this;
-      var document = this.model.document();
-
       
-      if (!document.ready() || document.mainfile()==undefined) {
-          this.mainfileview = undefined;
-          return this;
-      }
-
-      var mainfileelems = $(this.getOrCreateMainFileView().el);
-      mainfileelems.detach();
-
-      this.container.empty();
-
-      this.container.append(new DocumentSignInstructionsView({
-                            model: this.model,
-                            el: $("<div />")
-                            }).el);
       
-      if (document.currentSignatory() != undefined && document.currentSignatory().hasSigned() && !document.currentSignatory().saved() && !document.padAuthorization() && !document.isWhiteLabeled())
-          this.container.append(new CreateAccountAfterSignView({
-                                    model: this.model,
-                                    el: $("<div />")
-                                }).el);
+     if (!this.model.isReady())  return this;
+
+     this.container.append(this.model.instructionssection().el)
+      
+     if (this.model.hasCreateAccountSection())
+         this.container.append(this.model.createaccountsection().el);
         
-      if (document.currentSignatory() != undefined && document.currentSignatory().hasSigned() && this.model.justSaved() && !this.model.document().isWhiteLabeled() && !this.model.document().padAuthorization())
-        this.container.append(new PromoteScriveView({
-                                    model: this.model,
-                                    el: $("<div />")
-                                }).el);
+     if (this.model.hasPromoteScriveSection())
+         this.container.append(this.model.promotescrivesection().el);
+     
+     var subcontainer = $("<div class='subcontainer'/>");
+     
+     if (this.model.hasMainFileSection())
+         subcontainer.append(this.model.mainfile().view.el);
+       
+     if (this.model.hasAuthorAttachmentsSection()) 
+          subcontainer.append(this.model.authorattachmentssection().el);
 
-      else {
-          var subcontainer = $("<div class='subcontainer'/>");
-          
-          var mainfileelems = $(this.getOrCreateMainFileView().el);
-          subcontainer.append(mainfileelems);
-          
-          if (!document.mainfile().ready()) {
-              this.container.append(subcontainer);
-              return this;
-          }
-          
-          mainfileelems.css("min-height", "1352px");
-          
-          var tasks = [];
-          
-          var triggerTask = undefined;
-          var triggerArrowChange = function() {
-              if (triggerTask != undefined) {
-                  triggerTask.trigger("change");
-              }
-          };
+     if (this.model.hasSignatoriesAttachmentsSection()) 
+           subcontainer.append(this.model.signatoryattachmentsection().el);
 
-      _.each(this.getRenderedPlacements(), function(renderedPlacement) {
-        //the signatory only needs to fill in their own tasks
-        if (renderedPlacement.placement.field().signatory().current()) {
-          tasks.push(view.createInlineFieldTask(renderedPlacement));
-        }
-      });
+     if (this.model.hasSignatoriesSection())
+          subcontainer.append(this.model.signatoriessection());
 
-      if (this.isBottomStuff()) {
-        var bottomstuff = $("<div class='bottomstuff' />");
+     if (this.model.hasSignSection())
+        subcontainer.append(this.model.signsection().el);
+     
+     subcontainer.append($("<div class='cleafix' />"));
 
-        if (this.model.document().isAuthorAttachments()) {
-          bottomstuff.append(this.createAuthorAttachmentsElems());
-        }
-
-        if (this.model.document().isSignatoryAttachments()) {
-          var attachmentsview = this.createSignatoryAttachmentsView();
-          if (this.model.document().currentSignatoryCanSign())
-            _.each(this.signatoryAttachmentTasks(attachmentsview.uploadElems), function(task) { tasks.push(task); });
-          bottomstuff.append($(attachmentsview.el));
-        }
-
-        if (this.model.document().isUploadedAttachments()) {
-          bottomstuff.append(this.createUploadedAttachmentsElems());
-        }
-
-        if (this.isDisplaySignatories()) {
-          //triggerArrowChange will cause the arrow to repaint if the signatories
-          //are expanded or compressed, because this means any sign arrow may need to move
-          var signatoriesview = this.createSignatoriesView(triggerArrowChange);
-          if (this.model.document().currentSignatoryCanSign()) {
-            //_.each(this.unPlacedFieldTasks(signatoriesview.customfieldelems), function(task) {
-            //  tasks.push(task);
-            //});
-          }
-          bottomstuff.append($(signatoriesview.el));
-        }
-
-        if (this.model.document().currentSignatoryCanSign() && (!this.model.document().currentSignatory().canPadSignQuickSign())) {
-          this.signsection = $("<div class='section spacing signbuttons' />");
-          this.signsection.append(this.createRejectButtonElems());
-          var signButton = new DocumentSignButtonView({
-                            model: this.model.document(),
-                            validate: function() {
-                                var valid =  view.tasks.notCompleatedTasks().length == 1 && view.tasks.notCompleatedTasks()[0] == view.signtask;
-                                if (!valid)
-                                    view.arrowview.blink();
-                                return valid;
-                                },
-                            el: $("<div class='signwrapper'/>")
-                            });
-
-
-          
-          this.signtask = new PageTask({
-                            isComplete: function() {
-                                return !document.currentSignatoryCanSign();
-                            },
-                            el: $(signButton.el),
-                            onActivate   : function() {view.signsection.addClass("highlight");},
-                            onDeactivate : function() {view.signsection.removeClass("highlight");}
-                            });
-          tasks.push(view.signtask);
-          this.signsection.append($(signButton.el));
-          this.signsection.append($("<div class='clearfix' />"));
-          bottomstuff.append(this.signsection);
-        }
-
-        subcontainer.append(bottomstuff);
-
-        subcontainer.append($("<div class='cleafix' />"));
-      }
-      this.container.append(subcontainer);
-      }
-      if ((this.model.document().signingInProcess() &&
-           !this.model.document().currentSignatory().hasSigned()) ||
-             !this.model.document().currentSignatory().signs()) {
-        this.container.prepend(this.createArrowsElems(tasks));
-      }
-
-      return this;
+     this.container.append(subcontainer);
+     
+     if (this.model.hasArrows()) 
+        this.container.prepend(this.model.arrowview().el);
+     
+     return this;
+     
     }
 });
-
 
 
 window.DocumentSignView = function(args){

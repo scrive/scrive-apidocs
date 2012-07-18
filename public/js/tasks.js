@@ -21,9 +21,11 @@ window.PageTask = Backbone.Model.extend({
     return this.get("el");
   },
   onActivate: function() {
+    console.log("Activating task with " + this.label());
     return this.get("onActivate")();
   },
   onDeactivate : function() {
+    console.log("Deactivating task with " + this.label());
     return this.get("onDeactivate")();
   },
   isComplete: function() {
@@ -36,6 +38,7 @@ window.PageTask = Backbone.Model.extend({
     return this.get("tipSide");
   },
   update: function() {
+    console.log("Updating task with label " + this.label());
     this.set({ complete: this.get("isComplete")()});
   }
 });
@@ -47,16 +50,8 @@ window.PageTasks = Backbone.Model.extend({
   },
   initialize: function(args) {
     var model = this;  
-    var tasks = args.tasks;
-    for (var i=0;i< tasks.length ; i++ ) // BB sort on tasks
-        for(var j=0; j< tasks.length-1; j++ )
-            if (tasks[j].el().offset().top > tasks[j+1].el().offset().top)
-            {
-                var t = tasks[j];
-                tasks[j] = tasks[j+1];
-                tasks[j+1] = t;
-            }
-   _.each(tasks, function(t) {t.bind('change', function() {model.activateTask();})});
+    var tasks = args.tasks.sort(function(t1,t2) {return t1.el().offset().top > t2.el().offset().top} );
+   _.each(tasks, function(t) {t.bind('change', function() { model.activateTask();})});
    this.activateTask();
   },
   active : function() {
@@ -66,17 +61,16 @@ window.PageTasks = Backbone.Model.extend({
     return this.get("tasks");
   },
   activateTask: function() {
+     console.log("We will activate task");
      for (var i=0;i< this.tasks().length ; i++ )
-         if (!this.tasks()[i].isComplete())
-             if (this.tasks()[i] != this.get("active"))
-             {
-                if (this.get("active") != undefined)
-                    this.get("active").onDeactivate();
-                this.set({"active" : this.tasks()[i]});
-                this.tasks()[i].onActivate();
-                this.trigger("change");
-                break;
-             }
+         if (!this.tasks()[i].isComplete()) {
+             if (this.tasks()[i] == this.active()) break;
+             if (this.active() != undefined) this.active().onDeactivate();
+             this.set({"active" : this.tasks()[i]});
+             this.tasks()[i].onActivate();
+             this.trigger("change");
+             break;
+         }
   },
   notCompleatedTasks : function() {
          var tasks = []
@@ -91,7 +85,7 @@ window.PageTasksArrowView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
     var view = this;
-    this.model.bind("change", function() {view.render()});
+    this.model.bind("change", function() {console.log("Tasks list has changed"); view.render()});
     this.render();
   },
   blink : function() {

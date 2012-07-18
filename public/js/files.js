@@ -26,6 +26,9 @@ window.File = Backbone.Model.extend({
     pages : function(){
         return this.get("pages");
     },
+    placements : function() {
+       return _.flatten(_.map(this.pages(), function(p) {return p.placements();}));
+    },
     page : function(number){
         var pages = this.pages();
         for(var i=0;i<pages.length;i++)

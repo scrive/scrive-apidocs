@@ -70,9 +70,9 @@ window.PromoteScriveView = Backbone.View.extend({
         var phone = numberinput.val();
         if (phone.trim().length == 0) return;
         new Submit({
-            url: model.phoneurl,
+            url: "/account/phoneme",
             method: "POST",
-            email: model.email(),
+            email: model.document().currentSignatory().email(),
             phone: phone,
             ajax: true,
             onSend: function() {

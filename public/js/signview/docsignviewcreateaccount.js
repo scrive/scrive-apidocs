@@ -113,7 +113,7 @@ window.CreateAccountAfterSignView = Backbone.View.extend({
         view.clearTOSValidationErrors();
         if (view.filledAndValid()) {
          new Submit({
-           url: model.saveurl(),
+           url: model.document().currentSignatory().saveurl(),
            method: "POST",
            acceptaccount: true,
            password: view.passwordinput.val(),

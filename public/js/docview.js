@@ -170,39 +170,6 @@ window.DocumentUploadedSignatoryAttachmentsView = Backbone.View.extend({
   }
 });
 
-window.DocumentSignButtonView = Backbone.View.extend({
-  initialize: function(args) {
-    _.bindAll(this, 'render');
-    this.validate = args.validate;
-    this.render();
-  },
-  confirm: function() {
-    return new DocumentSignConfirmation({
-      model: this.model
-    }).popup();
-  },
-  render: function() {
-    if (!this.model.currentSignatoryCanSign()) {
-      return this;
-    }
-    var model = this.model;
-    var sign = this;
-    $(this.el).append($("<div class='sign' />").append(Button.init({
-      size: "big",
-      color: "blue",
-      text: this.model.process().signbuttontext(),
-      icon: $("<span class='icon cross'></span>"),
-      onClick: function() {
-        if (sign.validate()) {
-          sign.confirm();
-        }
-      }
-    }).input()));
-
-    return this;
-  }
-});
-
 window.DocumentSignConfirmation = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'popup');

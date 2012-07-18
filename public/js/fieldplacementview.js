@@ -60,6 +60,41 @@ var TextPlacementPlacedView = Backbone.View.extend({
         this.off();
         $(this.el).remove();
     },
+    startinlineediting : function() {
+        var placement = this.model;
+        var field =  placement.field();
+        var document = field.signatory().document();
+        var place = $(this.el);
+        var view = this;
+        if (view.inlineediting == true) return false;
+        view.inlineediting = true;
+        var width = place.width() > 80 ? place.width() : 80;
+        place.empty();
+        var box = $("<div class='inlineEditing'/>").width(width+24);
+        var iti = $("<input type='text' autofocus='autofocus'/>").val(field.value()).width(width+5);
+        var acceptIcon = $("<span class='acceptIcon'/>");
+        place.append(box.append(iti).append(acceptIcon));
+        field.bind('change',function() { view.inlineediting  = false; view.render();});
+        var accept =  function() {
+                      view.inlineediting = false;
+                      var val = iti.val();
+                      field.setValue(val);
+                      SessionStorage.set(field.signatory().document().documentid(),field.name(),val);
+                      field.trigger('change:inlineedited');
+                      view.render();
+        }
+        acceptIcon.click(function() {
+                      accept();
+                      return false;
+        });
+        iti.keydown(function(event) {
+                    if(event.which === 13 || event.which === 9)
+                    {   accept();
+                        return false;
+                    }
+        });
+        return false;
+    },
     render: function() {
             var view = this;
             var placement = this.model;
@@ -110,36 +145,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
             });
             if (field.signatory().canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true)
             place.click(function() {
-                  if (view.inlineediting == true) return false;
-                  view.inlineediting = true;
-                  console.log('Input was clicked');
-                  var width = place.width() > 80 ? place.width() : 80;
-                  place.empty();
-                  var box = $("<div class='inlineEditing'/>").width(width+24);
-                  var iti = $("<input type='text'/>").val(field.value()).width(width+5);
-                  var acceptIcon = $("<span class='acceptIcon'/>");
-                  place.append(box.append(iti).append(acceptIcon));
-                  iti.focus();
-                  field.bind('change',function() { view.inlineediting  = false; view.render();});
-                  var accept =  function() {
-                      view.inlineediting = false;
-                      var val = iti.val();
-                      field.setValue(val);
-                      SessionStorage.set(field.signatory().document().documentid(),field.name(),val);
-                      field.trigger('change:inlineedited');
-                      view.render();
-                  }
-                  acceptIcon.click(function() {
-                      accept();
-                      return false;
-                  });
-                  iti.keydown(function(event) {
-                    if(event.which === 13 || event.which === 9)
-                    {   accept();
-                        return false;
-                    }
-                  });
-                  return false;
+                return view.startinlineediting();
             });
             return this;
     }
