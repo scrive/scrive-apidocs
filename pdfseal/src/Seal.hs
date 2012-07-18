@@ -607,6 +607,7 @@ signatoryBox sealingTexts (Person {fullname,personalnumber,company,companynumber
       case field of
         FieldJPG{ SealSpec.valueBase64 = val
                 , internal_image_w, internal_image_h
+                , includeInSummary = True
                 } -> let halfWidth, halfHeight :: Int
                          halfWidth = cardWidth `div` 2
                          halfHeight = (halfWidth * internal_image_h `div` internal_image_w)
