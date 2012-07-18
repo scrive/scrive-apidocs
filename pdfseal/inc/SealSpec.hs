@@ -25,26 +25,29 @@ data Person =
 -- correct PDF pt coordinates. pdfseal will use pixel wise (w,h) to
 -- translate (x,y).  pdfseal is also responsible to take into account
 -- PDF's way of baseline calculation for font used.
-data Field =
-    Field { value :: String -- ^ text to put into a field
-          , x     :: Int    -- ^ left coordinate of field
-          , y     :: Int    -- ^ upper coordinate of field in screen coordinate space
-          , page  :: Int    -- ^ on which page should the field be placed
-          , w     :: Int    -- ^ page width in pixels
-          , h     :: Int    -- ^ page height in pixels
-          }
-    | FieldJPG
-      { valueBase64      :: String -- ^ binary content of image to put into a field
-      , x                :: Int    -- ^ left coordinate of field
-      , y                :: Int    -- ^ upper coordinate of field in screen coordinate space
-      , page             :: Int    -- ^ on which page should the field be placed
-      , w                :: Int    -- ^ page width in pixels
-      , h                :: Int    -- ^ page height in pixels
-      , image_w          :: Int    -- ^ image width in pixels as appears on te screen
-      , image_h          :: Int    -- ^ image height in pixels as appears on te screen
-      , internal_image_w :: Int    -- ^ pixels horizontal of image, if it was not scaled this is same as image_w
-      , internal_image_h :: Int    -- ^ pixels vertical of image, if it was not scaled this is same as image_h
-      }
+data Field
+  = Field
+    { value            :: String -- ^ text to put into a field
+    , x                :: Int    -- ^ left coordinate of field
+    , y                :: Int    -- ^ upper coordinate of field in screen coordinate space
+    , page             :: Int    -- ^ on which page should the field be placed
+    , w                :: Int    -- ^ page width in pixels
+    , h                :: Int    -- ^ page height in pixels
+    , includeInSummary :: Bool   -- ^ add this field to report at the very end of document
+    }
+  | FieldJPG
+    { valueBase64      :: String -- ^ binary content of image to put into a field
+    , x                :: Int    -- ^ left coordinate of field
+    , y                :: Int    -- ^ upper coordinate of field in screen coordinate space
+    , page             :: Int    -- ^ on which page should the field be placed
+    , w                :: Int    -- ^ page width in pixels
+    , h                :: Int    -- ^ page height in pixels
+    , image_w          :: Int    -- ^ image width in pixels as appears on te screen
+    , image_h          :: Int    -- ^ image height in pixels as appears on te screen
+    , internal_image_w :: Int    -- ^ pixels horizontal of image, if it was not scaled this is same as image_w
+    , internal_image_h :: Int    -- ^ pixels vertical of image, if it was not scaled this is same as image_h
+    , includeInSummary :: Bool   -- ^ add this field to report at the very end of document
+    }
     deriving (Eq, Ord, Show, Read)
 
 -- | An attachment that will be put into a PDF. Attachments are put in
