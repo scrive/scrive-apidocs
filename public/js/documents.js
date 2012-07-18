@@ -417,15 +417,6 @@ window.Document = Backbone.Model.extend({
     isUnavailableForSign: function() {
         return !this.signingInProcess() && !this.closed();
     },
-    isAuthorAttachments: function() {
-      return this.authorattachments().length > 0;
-    },
-    isSignatoryAttachments: function() {
-      return this.currentSignatory().attachments().length > 0;
-    },
-    isUploadedAttachments: function() {
-      return this.canseeallattachments() && this.signatoryattachments().length > 0;
-    },
     currentSignatoryCanSign: function() {
       var canSignAsSig = !this.currentViewerIsAuthor() &&
                               this.currentSignatory() != undefined &&

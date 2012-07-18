@@ -72,7 +72,7 @@ window.DocumentAuthorAttachmentsView = Backbone.View.extend({
   render: function() {
     $(this.el).empty();
 
-    if (!this.model.isAuthorAttachments()) {
+    if (!this.model.authorattachments().length > 0) {
       return this;
     }
 
@@ -111,7 +111,7 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     $(this.el).empty();
     var view = this;
 
-    if (!this.model.isSignatoryAttachments()) {
+    if (!this.model.currentSignatory().attachments().length > 0) {
       return this;
     }
 
@@ -149,7 +149,7 @@ window.DocumentUploadedSignatoryAttachmentsView = Backbone.View.extend({
   render: function() {
     $(this.el).empty();
 
-    if (!this.model.isUploadedAttachments()) {
+    if (!this.model.canseeallattachments() && this.model.signatoryattachments().length > 0) {
       return this;
     }
 

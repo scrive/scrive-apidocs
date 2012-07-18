@@ -66,7 +66,7 @@ window.CreateAccountAfterSignView = Backbone.View.extend({
 
     var emailrow = $("<div class='item' />");
     emailrow.append($("<div />").append($("<div class='label' />").text(localization.docsignview.emailLabel)));
-    emailrow.append($("<div />").append($("<input type='text' class='email' disabled='true'/>").val(this.model.email())));
+    emailrow.append($("<div />").append($("<input type='text' class='email' disabled='true'/>").val(this.model.document().currentSignatory().email())));
     form.append(emailrow);
 
     this.passwordinput = $("<input type='password' name='password' autocomplete='off' />");
