@@ -1,0 +1,42 @@
+.payments-dashboard {
+    font-size: 24px;
+    font-color: #666;
+}
+
+.payments-dashboard .plan-name {
+    font-weight: bold;
+}
+
+.payments-dashboard .plan-table {
+    border: 1px solid #CCC;
+    margin-top: 34px;
+    border-radius: 5px 5px 5px 5px;
+    -webkit-border-radius: 5px 5px 5px 5px;
+    -moz-border-radius: 5px 5px 5px 5px;
+}
+
+.payments-dashboard table {
+
+    width: 100%;
+
+}
+
+.payments-dashboard thead {
+
+    border-bottom: 1px solid #CCC;
+    font-weight: bold;
+}
+
+.payments-dashboard tbody {
+    font-size: 18px;
+}
+
+.payments-dashboard tfoot {
+    border-top: 1px solid #CCC;
+    font-weight: bold;
+}
+
+.payments-dashboard td, .payments-dashboard th {
+    padding: 20px;
+    text-align: left;
+}

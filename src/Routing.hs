@@ -63,6 +63,9 @@ instance ToResp String where
 instance ToResp JSValue where
     toResp = simpleResponse . encode
 
+instance ToResp () where
+    toResp _ = simpleResponse ""
+
 instance (ToResp a , ToResp b) => ToResp (Either a b) where
     toResp = either toResp toResp
 

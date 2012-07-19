@@ -5,7 +5,7 @@ import DB
 tableUsers :: Table
 tableUsers = Table {
     tblName = "users"
-  , tblVersion = 8
+  , tblVersion = 9
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
@@ -28,6 +28,7 @@ tableUsers = Table {
        , ("customfooter", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("company_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("company_number", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("is_free", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE users ("
@@ -54,6 +55,7 @@ tableUsers = Table {
           ++ ", company_name   TEXT NOT NULL"
           ++ ", company_number TEXT NOT NULL"
           ++ ", CONSTRAINT pk_users PRIMARY KEY (id)"
+          ++ ", is_free BOOL NOT NULL DEFAULT FALSE"
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid

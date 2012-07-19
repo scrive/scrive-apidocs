@@ -79,3 +79,13 @@ removePreferedDesignMode =
       _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN preferred_design_mode"
       return ()
   }  
+
+addIsFree :: MonadDB m => Migration m
+addIsFree =
+  Migration {
+      mgrTable = tableUsers
+    , mgrFrom = 8
+    , mgrDo = do
+      _ <- kRunRaw $ "ALTER TABLE users ADD COLUMN is_free BOOL NOT NULL DEFAULT FALSE"
+      return ()
+    }

@@ -12,15 +12,16 @@ import Company.Model
 import DB
 import DB.SQL2
 import KontraError
+--import Misc
 
 -- new data types
 
-data PricePlan = FreePricePlan     -- when a user has downgraded
+data PricePlan = FreePricePlan
                | BasicPricePlan    
                | BrandingPricePlan
                | AdvancedPricePlan
-               | InvoicePricePlan  -- when they are invoiced
-               deriving (Eq)
+               | EnterprisePricePlan  -- when they are invoiced
+               deriving (Eq, Ord)
                  
 newtype AccountCode = AccountCode Int64
                     deriving (Eq, Ord, Typeable)
@@ -42,6 +43,8 @@ data PaymentPlanStatus = ActiveStatus   -- everything is great (unblocked)
                        deriving (Eq)
                                 
 -- db operations
+
+{- | Get a new, unique account code. -}
 data GetAccountCode = GetAccountCode
 instance (MonadBase IO m, MonadDB m) => DBUpdate m GetAccountCode AccountCode where
   update GetAccountCode = do
@@ -52,6 +55,19 @@ instance (MonadBase IO m, MonadDB m) => DBUpdate m GetAccountCode AccountCode wh
       [x] -> return x
       _ -> internalError -- should never happen
       
+{- | Get the quantity of users that should be charged in a company. -}
+data GetCompanyQuantity = GetCompanyQuantity CompanyID
+instance (MonadBase IO m, MonadDB m) => DBQuery m GetCompanyQuantity Int where
+  query (GetCompanyQuantity cid) = do
+    kRun_ $ sqlSelect "users" $ do
+      sqlWhereEq "company_id" cid
+      sqlWhereEq "is_free"    False
+      sqlResult "count(id)"
+    res <- foldDB (flip (:)) []
+    case res of
+      [x] -> return x
+      _   -> internalError
+
 data DeletePaymentPlan = DeletePaymentPlan (Either UserID CompanyID)
 instance (MonadDB m) => DBUpdate m DeletePaymentPlan () where
   update (DeletePaymentPlan eid) = do
@@ -85,37 +101,47 @@ instance (MonadDB m) => DBQuery m GetPaymentPlan (Maybe PaymentPlan) where
 data SavePaymentPlan = SavePaymentPlan PaymentPlan
 instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
   update (SavePaymentPlan pp) = do
-    kRun_ $ sqlInsert "payment_plans" $ do
-      sqlSet "account_code" $ ppAccountCode pp
-      sqlSet "plan" $ ppPricePlan pp
-      sqlSet "status" $ ppStatus pp
-      case pp of
-        UserPaymentPlan {} -> do
-          sqlSet "account_type" (1 :: Int)
-          sqlSet "user_id" $ ppUserID pp
-        CompanyPaymentPlan {} -> do
-          sqlSet "account_type" (2 :: Int)
-          sqlSet "company_id" $ ppCompanyID pp
-      sqlResult "account_code"
-    (results :: [AccountCode]) <- foldDB (flip (:)) []
-    return (1 == length results)
+    kPrepare $ "UPDATE payment_plans " ++
+               "SET plan = ?, status = ? " ++ 
+               "WHERE account_code = ? "
+    r <- kExecute [toSql $ ppPricePlan pp
+                  ,toSql $ ppStatus pp
+                  ,toSql $ ppAccountCode pp]
+    case r of
+      1 -> return True
+      _ -> do
+        kPrepare $ "INSERT INTO payment_plans (account_code, plan, status, account_type, user_id, company_id) " ++
+          "SELECT ?, ?, ?, ?, ?, ? " ++
+          "WHERE ? NOT IN (SELECT account_code FROM payment_plans) "
+        r' <- kExecute $ [toSql $ ppAccountCode pp
+                         ,toSql $ ppPricePlan pp
+                         ,toSql $ ppStatus pp] ++
+              case pp of
+                UserPaymentPlan {} -> [toSql (1::Int)
+                                      ,toSql $ ppUserID pp
+                                      ,toSql (Nothing :: Maybe CompanyID)]
+                CompanyPaymentPlan {} -> [toSql (2::Int)
+                                         ,toSql (Nothing :: Maybe UserID)
+                                         ,toSql $ ppCompanyID pp]
+              ++ [toSql $ ppAccountCode pp]
+        return $ r' == 1
 
 -- how do things look as a string?
     
 instance Show PricePlan where
-  showsPrec _ FreePricePlan     = (++) "free"
-  showsPrec _ BasicPricePlan    = (++) "basic"
-  showsPrec _ BrandingPricePlan = (++) "branding"
-  showsPrec _ AdvancedPricePlan = (++) "advanced"
-  showsPrec _ InvoicePricePlan  = (++) "invoiced"
+  showsPrec _ FreePricePlan       = (++) "free"
+  showsPrec _ BasicPricePlan      = (++) "basic"
+  showsPrec _ BrandingPricePlan   = (++) "branding"
+  showsPrec _ AdvancedPricePlan   = (++) "advanced"
+  showsPrec _ EnterprisePricePlan = (++) "enterprise"
 
 instance Read PricePlan where
-  readsPrec _ "free"     = [(FreePricePlan,     "")]
-  readsPrec _ "basic"    = [(BasicPricePlan,    "")]
-  readsPrec _ "branding" = [(BrandingPricePlan, "")]
-  readsPrec _ "advanced" = [(AdvancedPricePlan, "")]
-  readsPrec _ "invoiced" = [(InvoicePricePlan,  "")]
-  readsPrec _ _          = []
+  readsPrec _ "free"       = [(FreePricePlan,     "")]
+  readsPrec _ "basic"      = [(BasicPricePlan,    "")]
+  readsPrec _ "branding"   = [(BrandingPricePlan, "")]
+  readsPrec _ "advanced"   = [(AdvancedPricePlan, "")]
+  readsPrec _ "enterprise" = [(EnterprisePricePlan,  "")]
+  readsPrec _ _            = []
 
 instance Show PaymentPlanStatus where
   showsPrec _ ActiveStatus   = (++) "active"
@@ -128,14 +154,14 @@ instance Convertible PricePlan Int where
   safeConvert BasicPricePlan    = return 10
   safeConvert BrandingPricePlan = return 11
   safeConvert AdvancedPricePlan = return 12
-  safeConvert InvoicePricePlan  = return 100
+  safeConvert EnterprisePricePlan  = return 100
 
 instance Convertible Int PricePlan where
   safeConvert 0   = return FreePricePlan
   safeConvert 10  = return BasicPricePlan
   safeConvert 11  = return BrandingPricePlan
   safeConvert 12  = return AdvancedPricePlan
-  safeConvert 100 = return InvoicePricePlan
+  safeConvert 100 = return EnterprisePricePlan
   safeConvert s = Left ConvertError { convSourceValue  = show s
                                     , convSourceType   = "Int"
                                     , convDestType     = "PricePlan"

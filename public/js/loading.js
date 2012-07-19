@@ -4,7 +4,7 @@
  * Close with LoadingDialog.close();
 */
   
-$(function(){
+(function(){
 
 window.LoadingDialog = {
     dialog : function() {
@@ -50,5 +50,5 @@ window.LoadingDialog = {
        if (dialog.size() > 0 ) dialog.overlay().close();
     }
 };
-});
+})();
 

@@ -79,6 +79,7 @@ kontraMigrations = [
   , removeDocEventsThatReferenceNotActivatedUsers
   , addCryptoColumnsToFilesTable
   , addForeignKeyToDocumentTags
+  , addIsFree
   , moveAttachmentsFromDocumentsToAttachments
   , removeOldDocumentLog
   , splitIdentificationTypes
