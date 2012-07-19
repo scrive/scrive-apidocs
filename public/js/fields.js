@@ -16,7 +16,7 @@ window.FieldPlacement = Backbone.Model.extend({
     },
     initialize : function(args){
         var placement = this;
-        setTimeout(function() {placement.addToPage();},100);
+        placement.addToPage();
         args.field.bind('removed', function() {
             placement.trigger("removed");
             placement.remove();
@@ -32,18 +32,16 @@ window.FieldPlacement = Backbone.Model.extend({
          var signatory = field.signatory();
          var document = signatory.document();
          var fileid = this.get("fileid");
-         if ( document.getFile(fileid) != undefined)
-         {
-             var page = document.getFile(fileid).page(this.get("page"));
-             if (page != undefined)
-             {
-                this.set({placed : true});
-                page.addPlacement(placement);
-             }
-
-          }
-         return setTimeout(function() {placement.addToPage();},100);
-
+         var pageno = this.get("page");
+         var tryToAddToPage = function() {
+                if (document.getFile(fileid) != undefined && document.getFile(fileid).page(pageno) != undefined) {
+                    placement.set({placed : true});
+                    document.getFile(fileid).page(pageno).addPlacement(placement);
+                    document.off('file:change',tryToAddToPage);
+                }
+         };
+         document.bind('file:change',tryToAddToPage);
+         tryToAddToPage();
     },
     x : function() {
         return this.get("x");

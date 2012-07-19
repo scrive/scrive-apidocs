@@ -80,12 +80,12 @@ window.File = Backbone.Model.extend({
 */
 
 var FilePage = Backbone.Model.extend({
-    defaults: {
+    defaults: function() { return {
         number : 0,
         placements : [],
         width: 943,
         height: 1335
-    },
+    }},
     initialize: function (args) {
     },
     file : function(){
@@ -219,6 +219,9 @@ var FilePageView = Backbone.View.extend({
             }
         });
     },
+    ready : function() {
+        return this.pagejpg != undefined && this.pagejpg.width() > 100 && this.pagejpg.height() > 100;
+    },
     render: function () {
         var page = this.model;
         var file = page.file();
@@ -268,9 +271,25 @@ var FileView = Backbone.View.extend({
                  view.pageviews.push(pageview);
                  docbox.append($(pageview.el));
             });
+            view.startReadyChecker();
+
         }
         return this;
 
+    },
+    startReadyChecker : function() {
+        var view = this;
+        if (view.ready())
+         view.trigger('ready');
+        else
+         setTimeout(function() {view.startReadyChecker()},1000);
+    },
+    ready : function() {
+        //console.log("Document view checking ...")
+        //console.log("File is ready " + this.model.ready())
+        //console.log("Pages length "  +  (this.pageviews.length) + " " + (this.model.pages().length))
+        //console.log("All pages ready "  +  _.all(this.pageviews, function(pv) {return pv.ready();}))
+        return this.model.ready() && (this.model.pages().length > 0) && (this.pageviews.length == this.model.pages().length) && _.all(this.pageviews, function(pv) {return pv.ready();});
     },
     moveCoordinateAxes : function(helper) {
         var file = this.model;
