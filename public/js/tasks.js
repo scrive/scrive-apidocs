@@ -13,7 +13,6 @@ window.PageTask = Backbone.Model.extend({
     label:""
   },
   initialize: function(args) {
-   console.log("Creating page task " + args.label);
     _.bindAll(this, 'update');
     this.model = args.model;
     this.update();
@@ -47,7 +46,6 @@ window.PageTasks = Backbone.Model.extend({
     active : undefined
   },
   initialize: function(args) {
-    console.log("Creating task view");
     var model = this;  
     var tasks = args.tasks.sort(function(t1,t2) {return t1.el().offset().top > t2.el().offset().top} );
    _.each(tasks, function(t) {t.bind('change', function() { model.activateTask();})});

@@ -39,7 +39,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
             && this.document().ready() && this.document().mainfile() != undefined;
   },
   hasSignSection : function() {
-      return this.document().currentSignatoryCanSign() && (!this.document().currentSignatory().canPadSignQuickSign());
+      return this.document().currentSignatoryCanSign() && (!this.document().currentSignatory().canPadSignQuickSign()) && this.hasArrows();
   },
   hasSignatoriesSection : function() {
       return    !this.justSaved()
@@ -259,15 +259,19 @@ var DocumentSignViewView = Backbone.View.extend({
         var view = this;
         this.model.bind('change', this.render);
         this.model.view = this;
+        this.prerender();
         this.render();
     },
-    render: function() {
-      var view = this;
+    prerender : function() {
       $(this.el).addClass("body-container");
-      $(this.el).children().detach();
       this.container = $("<div class='mainContainer signview' />");
+      $(this.el).append(this.container);
       $(this.el).append("<div class='clearfix'/>");
       $(this.el).append("<div class='spacer40'/>");
+    },
+    render: function() {
+     var view = this;
+     this.container.children().detach();
       
      if (!this.model.isReady())  return this;
 
@@ -284,29 +288,27 @@ var DocumentSignViewView = Backbone.View.extend({
          || this.model.hasSignatoriesAttachmentsSection()
          || this.model.hasSignSection())
      {
-        var subcontainer = $("<div class='subcontainer'/>");
+        if (this.subcontainer != undefined) this.subcontainer.detach();
+        this.subcontainer = $("<div class='subcontainer'/>");
 
         if (this.model.hasMainFileSection())
-            subcontainer.append(this.model.mainfile().view.el);
+            this.subcontainer.append(this.model.mainfile().view.el);
 
         if (this.model.hasAuthorAttachmentsSection())
-            subcontainer.append(this.model.authorattachmentssection().el);
+            this.subcontainer.append(this.model.authorattachmentssection().el);
 
         if (this.model.hasSignatoriesAttachmentsSection())
-            subcontainer.append(this.model.signatoryattachmentsection().el);
+            this.subcontainer.append(this.model.signatoryattachmentsection().el);
 
         if (this.model.hasSignatoriesSection())
-            subcontainer.append(this.model.signatoriessection());
+            this.subcontainer.append(this.model.signatoriessection());
 
         if (this.model.hasSignSection())
-            subcontainer.append(this.model.signsection().el);
+            this.subcontainer.append(this.model.signsection().el);
 
-        subcontainer.append($("<div class='cleafix' />"));
-
-        this.container.append(subcontainer);
-     }
-     $(this.el).append(this.container);
-     
+        this.subcontainer.append($("<div class='cleafix' />"));
+        this.container.append(this.subcontainer);
+     }    
      if (this.model.hasArrows())
          view.container.prepend(view.model.arrowview().el);
      return this;
