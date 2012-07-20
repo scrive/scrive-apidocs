@@ -39,20 +39,20 @@ window.BinListDefinition = function(archive) { return {
                             return true;
                           }
                },
-               {name : localization.archive.bin.delete.action,
+               {name : localization.archive.bin.remove.action,
                 onSelect: function(docs){
                               var confirmationPopup = Confirmation.popup({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
-                                title: localization.archive.bin.delete.head,
-                                content: jQuery("<p/>").text(localization.archive.bin.delete.body),
+                                title: localization.archive.bin.remove.head,
+                                content: jQuery("<p/>").text(localization.archive.bin.remove.body),
                                 onAccept : function() {
                                   new Submit({
                                                 url: "/d/reallydelete",
                                                 method: "POST",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
-                                                    FlashMessages.add({color : "green", content : localization.archive.bin.delete.successMessage});
+                                                    FlashMessages.add({color : "green", content : localization.archive.bin.remove.successMessage});
                                                     archive.bin().recall();
                                                     confirmationPopup.view.clear();
                                                 }

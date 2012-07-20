@@ -48,9 +48,9 @@ window.TemplatesListDefinition = function(archive) { return {
                             return true;
                           }
                },
-               {name : localization.archive.templates.delete.action ,
+               {name : localization.archive.templates.remove.action ,
                 onSelect: function(docs){
-                             var confirmtext = jQuery("<p/>").append(localization.archive.templates.delete.body + " ");
+                             var confirmtext = jQuery("<p/>").append(localization.archive.templates.remove.body + " ");
                              var label = jQuery("<strong/>");
                              if (docs.length == 1) {
                                confirmtext.append(jQuery("<strong/>").text(docs[0].field("title")));
@@ -61,7 +61,7 @@ window.TemplatesListDefinition = function(archive) { return {
                              var confirmationPopup = Confirmation.popup({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
-                                title: localization.archive.templates.delete.action,
+                                title: localization.archive.templates.remove.action,
                                 content: confirmtext,
                                 onAccept : function() {
                                     new Submit({
@@ -69,7 +69,7 @@ window.TemplatesListDefinition = function(archive) { return {
                                                 method: "POST",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
-                                                    FlashMessages.add({color : "green", content : localization.archive.templates.delete.successMessage});
+                                                    FlashMessages.add({color : "green", content : localization.archive.templates.remove.successMessage});
                                                     archive.templates().recall();
                                                     confirmationPopup.view.clear();
                                                 }

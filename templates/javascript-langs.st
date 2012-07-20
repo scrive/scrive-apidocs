@@ -430,7 +430,7 @@ javascriptLocalisation =
                 documents : {
                        name :  "$_docListTabsDocs()$"
                     ,  sendreminder : "$_SendReminder()$"
-                    ,  delete : "$_delete()$"
+                    ,  remove : "$_delete()$"
                     ,  search : "$_SearchDoc()$"
                     ,  statusDescription : {
                               draft :     "$_tablestatusesDraft()$"
@@ -448,7 +448,7 @@ javascriptLocalisation =
                             , successMessage : "$_flashMessageBulkDocumentRemindsSent()$"
                             , errorMessage   : "$_flashMessageNoBulkDocumentRemindsSent()$"
                         }
-                    ,  delete : {
+                    ,  remove : {
                               action: "$_delete()$"
                             , body : "$_listLocalDialogsBody()$"
                             , cantremoveactive : "$_CantRemoveActiveDocuments()$"
@@ -469,7 +469,7 @@ javascriptLocalisation =
                 }
             ,  templates : {
                        name :  "$_docListTabsTemplates()$"
-                    ,  delete : {
+                    ,  remove : {
                               action: "$_delete()$"
                             , body : "$_listLocalDialogsBody()$"
                             , successMessage : "$_flashMessageTemplateArchiveDone()$"
@@ -493,7 +493,7 @@ javascriptLocalisation =
                 }
             ,  attachments : {
                        name : "$_docListTabsAttachemtns()$"
-                    ,  delete : {
+                    ,  remove : {
                               action: "$_delete()$"
                             , body : "$_listLocalDialogsBody()$"
                             , successMessage : "$_flashMessageAttachmentArchiveDone()$"
@@ -516,7 +516,7 @@ javascriptLocalisation =
                        }
                 }
             ,  bin: {
-                       delete : {
+                       remove : {
                               action: "$_delete()$"
                             , head : "$_listReallyDeleteDialogHead()$"
                             , body : "$_listReallyDeleteDialogBody()$"

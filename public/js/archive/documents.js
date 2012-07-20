@@ -133,7 +133,7 @@ window.DocumentsListDefinition = function(archive) { return {
                              return true;
                           }
                },
-               {name : localization.archive.documents.delete.action,
+               {name : localization.archive.documents.remove.action,
                 onSelect: function(docs){
                             anySendOrOpenSelected = _.any(docs, function(doc) {
                                                 return doc.field("status") == "sent"      ||
@@ -143,10 +143,10 @@ window.DocumentsListDefinition = function(archive) { return {
                                                        doc.field("anyinvitationundelivered") == "True"
                                             })
                              if (anySendOrOpenSelected) {
-                                FlashMessages.add({content: localization.archive.documents.delete.cantremoveactive, color: "red"});
+                                FlashMessages.add({content: localization.archive.documents.remove.cantremoveactive, color: "red"});
                                 return false;
                              }
-                             var confirmtext = jQuery("<p/>").append(localization.archive.documents.delete.body + " ");
+                             var confirmtext = jQuery("<p/>").append(localization.archive.documents.remove.body + " ");
                              var label = jQuery("<strong/>");
                              if (docs.length == 1) {
                                confirmtext.append(jQuery("<strong/>").text(docs[0].field("title")));
@@ -157,7 +157,7 @@ window.DocumentsListDefinition = function(archive) { return {
                              var confirmationPopup = Confirmation.popup({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
-                                title: localization.archive.documents.delete.action,
+                                title: localization.archive.documents.remove.action,
                                 content: confirmtext,
                                 onAccept : function() {
                                     new Submit({
@@ -165,7 +165,7 @@ window.DocumentsListDefinition = function(archive) { return {
                                                 method: "POST",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
-                                                    FlashMessages.add({color : "green", content : localization.archive.documents.delete.successMessage});
+                                                    FlashMessages.add({color : "green", content : localization.archive.documents.remove.successMessage});
                                                     archive.documents().recall();
                                                     confirmationPopup.view.clear();
                                                 }

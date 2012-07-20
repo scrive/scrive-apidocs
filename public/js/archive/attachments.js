@@ -46,9 +46,9 @@ window.AttachmentsListDefinition = function(archive) {
                             return true;
                           }
                },
-               {name :  localization.archive.attachments.delete.action,
+               {name :  localization.archive.attachments.remove.action,
                 onSelect: function(docs){
-                             var confirmtext = jQuery("<p/>").append(localization.archive.attachments.delete.body + " ");
+                             var confirmtext = jQuery("<p/>").append(localization.archive.attachments.remove.body + " ");
                              var label = jQuery("<strong/>");
                              if (docs.length == 1) {
                                confirmtext.append(jQuery("<strong/>").text(docs[0].field("title")));
@@ -59,7 +59,7 @@ window.AttachmentsListDefinition = function(archive) {
                              var confirmationPopup = Confirmation.popup({
                                 acceptText: localization.ok,
                                 rejectText: localization.cancel,
-                                title: localization.archive.attachments.delete.action,
+                                title: localization.archive.attachments.remove.action,
                                 content: confirmtext,
                                 onAccept : function() {
                                     var confirmationPopup = new Submit({
@@ -67,7 +67,7 @@ window.AttachmentsListDefinition = function(archive) {
                                                 method: "POST",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
-                                                    FlashMessages.add({color : "green", content : localization.archive.attachments.delete.successMessage});
+                                                    FlashMessages.add({color : "green", content : localization.archive.attachments.remove.successMessage});
                                                     archive.attachments().recall();
                                                     confirmationPopup.view.clear();
                                                 }
