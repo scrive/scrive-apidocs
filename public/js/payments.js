@@ -401,7 +401,7 @@
                     });
                 }
                 , successHandler: function(stuff) {
-                    LoadingDialog.open("Saving subscription.");
+                    LoadingDialog.open("Saving subscription");
                     $.ajax("/payments/newsubscription",
                            { type: "POST"
                              ,data: {account_code: model.signup().code(), 

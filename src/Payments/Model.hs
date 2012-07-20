@@ -7,6 +7,7 @@ import Data.Typeable
 import Control.Applicative
 import Data.Maybe
 
+import MinutesTime
 import User.Model
 import Company.Model
 import DB
@@ -26,20 +27,32 @@ data PricePlan = FreePricePlan
 newtype AccountCode = AccountCode Int64
                     deriving (Eq, Ord, Typeable)
 
-data PaymentPlan = UserPaymentPlan    { ppAccountCode :: AccountCode
-                                      , ppUserID      :: UserID
-                                      , ppPricePlan   :: PricePlan 
-                                      , ppStatus      :: PaymentPlanStatus
+data PaymentPlan = UserPaymentPlan    { ppAccountCode      :: AccountCode
+                                      , ppUserID           :: UserID
+                                      , ppPricePlan        :: PricePlan 
+                                      , ppPendingPricePlan :: PricePlan    -- plan next month
+                                      , ppStatus           :: PaymentPlanStatus
+                                      , ppPendingStatus    :: PaymentPlanStatus -- status next month
+                                      , ppQuantity         :: Int
+                                      , ppPendingQuantity  :: Int
                                       }
-                 | CompanyPaymentPlan { ppAccountCode :: AccountCode
-                                      , ppCompanyID   :: CompanyID
-                                      , ppPricePlan   :: PricePlan 
-                                      , ppStatus      :: PaymentPlanStatus
+                 | CompanyPaymentPlan { ppAccountCode      :: AccountCode
+                                      , ppCompanyID        :: CompanyID
+                                      , ppPricePlan        :: PricePlan 
+                                      , ppPendingPricePlan :: PricePlan    -- plan next month
+                                      , ppStatus           :: PaymentPlanStatus
+                                      , ppPendingStatus    :: PaymentPlanStatus -- status next month
+                                      , ppQuantity         :: Int
+                                      , ppPendingQuantity  :: Int
                                       }
+accountType :: PaymentPlan -> Int
+accountType (UserPaymentPlan   {}) = 1
+accountType (CompanyPaymentPlan{}) = 2                   
                    
-data PaymentPlanStatus = ActiveStatus   -- everything is great (unblocked)
-                       | InactiveStatus -- account overdue, something went wrong
-                       | PendingStatus  -- pending approval (and push notification)
+data PaymentPlanStatus = ActiveStatus      -- everything is great (unblocked)
+                       | OverdueStatus     -- didn't pay!
+                       | CanceledStatus    -- they canceled
+                       | DeactivatedStatus -- account overdue, something went wrong
                        deriving (Eq)
                                 
 -- db operations
@@ -86,26 +99,58 @@ instance (MonadDB m) => DBQuery m GetPaymentPlan (Maybe PaymentPlan) where
       sqlResult "company_id"
       sqlResult "plan"
       sqlResult "status"
+      sqlResult "quantity"
+      sqlResult "plan_pending"
+      sqlResult "status_pending"
+      sqlResult "quantity_pending"
       case eid of
         Left  uid -> sqlWhereEq "user_id"    uid
         Right cid -> sqlWhereEq "company_id" cid
     listToMaybe <$> foldDB f []
-      where f :: [PaymentPlan] -> AccountCode -> Int -> Maybe UserID -> Maybe CompanyID -> PricePlan -> PaymentPlanStatus -> [PaymentPlan]
-            f acc ac 1 (Just uid) _ p s = UserPaymentPlan    ac uid p s : acc
-            f acc ac 2 _ (Just cid) p s = CompanyPaymentPlan ac cid p s : acc
-            f acc _  _ _ _   _ _ = acc -- ignore other codes to get rid of warning
+      where f :: [PaymentPlan] -> AccountCode -> Int -> Maybe UserID -> Maybe CompanyID -> PricePlan -> PaymentPlanStatus -> Int -> PricePlan -> PaymentPlanStatus -> Int -> [PaymentPlan]
+            f acc ac 1 (Just uid) _ p s q pp sp qp = 
+              UserPaymentPlan    { ppAccountCode      = ac
+                                 , ppUserID           = uid
+                                 , ppPricePlan        = p
+                                 , ppPendingPricePlan = pp
+                                 , ppStatus           = s
+                                 , ppPendingStatus    = sp
+                                 , ppQuantity         = q
+                                 , ppPendingQuantity  = qp } : acc
+            f acc ac 2 _ (Just cid) p s q pp sp qp = 
+              CompanyPaymentPlan { ppAccountCode      = ac
+                                 , ppCompanyID        = cid
+                                 , ppPricePlan        = p
+                                 , ppPendingPricePlan = pp
+                                 , ppStatus           = s
+                                 , ppPendingStatus    = sp
+                                 , ppQuantity         = q
+                                 , ppPendingQuantity  = qp } : acc
+            f acc _  _ _ _   _ _ _ _ _ _ = acc -- ignore other codes to get rid of warning
 
 
 -- update payment_plans set 
 
-data SavePaymentPlan = SavePaymentPlan PaymentPlan
+data SavePaymentPlan = SavePaymentPlan PaymentPlan MinutesTime
 instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
-  update (SavePaymentPlan pp) = do
+  update (SavePaymentPlan pp tm) = do
     kPrepare $ "UPDATE payment_plans " ++
-               "SET plan = ?, status = ? " ++ 
+               "SET account_type = ?, user_id = ?, company_id = ? " ++
+               ",   plan = ?, status = ? " ++ 
+               ",   plan_pending = ?, status_pending = ? " ++
+               ",   quantity = ?, quantity_pending = ? " ++
+               ",   sync_date = ? " ++
                "WHERE account_code = ? "
-    r <- kExecute [toSql $ ppPricePlan pp
+    r <- kExecute [toSql $ accountType pp
+                  ,toSql $ if 1 == accountType pp then Just $ ppUserID    pp else Nothing
+                  ,toSql $ if 2 == accountType pp then Just $ ppCompanyID pp else Nothing
+                  ,toSql $ ppPricePlan pp
                   ,toSql $ ppStatus pp
+                  ,toSql $ ppPendingPricePlan pp
+                  ,toSql $ ppPendingStatus pp
+                  ,toSql $ ppQuantity pp
+                  ,toSql $ ppPendingQuantity pp
+                  ,toSql $ tm
                   ,toSql $ ppAccountCode pp]
     case r of
       1 -> return True
@@ -144,9 +189,10 @@ instance Read PricePlan where
   readsPrec _ _            = []
 
 instance Show PaymentPlanStatus where
-  showsPrec _ ActiveStatus   = (++) "active"
-  showsPrec _ InactiveStatus = (++) "inactive"
-  showsPrec _ PendingStatus  = (++) "pending"
+  showsPrec _ ActiveStatus      = (++) "active"
+  showsPrec _ OverdueStatus     = (++) "overdue"
+  showsPrec _ CanceledStatus    = (++) "canceled"
+  showsPrec _ DeactivatedStatus = (++) "deactivated"  
 
 -- conversions for cramming values into the database
 instance Convertible PricePlan Int where
@@ -178,19 +224,21 @@ $(newtypeDeriveConvertible ''AccountCode)
 $(newtypeDeriveUnderlyingReadShow ''AccountCode)
 
 instance Convertible PaymentPlanStatus Int where
-  safeConvert ActiveStatus   = return 0
-  safeConvert InactiveStatus = return 10
-  safeConvert PendingStatus  = return 100
+  safeConvert ActiveStatus      = return 1
+  safeConvert OverdueStatus     = return 2
+  safeConvert CanceledStatus    = return 3
+  safeConvert DeactivatedStatus = return 4
 
 instance Convertible Int PaymentPlanStatus where
-  safeConvert 0   = return ActiveStatus
-  safeConvert 10  = return InactiveStatus
-  safeConvert 100 = return PendingStatus
-  safeConvert s   = Left ConvertError { convSourceValue  = show s
-                                      , convSourceType   = "Int"
-                                      , convDestType     = "PaymentPlanStatus"
-                                      , convErrorMessage = "Convertion error: value " ++ show s ++ " not mapped"
-                                      }
+  safeConvert 1 = return ActiveStatus
+  safeConvert 2 = return OverdueStatus
+  safeConvert 3 = return CanceledStatus
+  safeConvert 4 = return DeactivatedStatus
+  safeConvert s = Left ConvertError { convSourceValue  = show s
+                                    , convSourceType   = "Int"
+                                    , convDestType     = "PaymentPlanStatus"
+                                    , convErrorMessage = "Convertion error: value " ++ show s ++ " not mapped"
+                                    }
 
 instance Convertible PaymentPlanStatus SqlValue where
   safeConvert e = fmap toSql (safeConvert e :: Either ConvertError Int)

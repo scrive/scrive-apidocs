@@ -113,17 +113,8 @@ handleSyncNewSubscriptionWithRecurly = do
   user <- guardJustM $ ctxmaybeuser <$> getContext
   subscriptions <- guardRightM' $ liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show ac
   subscription <- guardRight' $ toEither "No subscription." $ listToMaybe subscriptions
-  let pricePlan = fromRecurlyPricePlan $ subPricePlan subscription
-      status    = fromRecurlyStatus    $ subState     subscription
-      eid       = maybe (Left $ userid user) Right $ usercompany user
-  let pp = case eid of
-        Left  uid -> UserPaymentPlan    ac uid pricePlan status
-        Right cid -> CompanyPaymentPlan ac cid pricePlan status
-  r <- dbUpdate $ SavePaymentPlan pp
-  when (not r) $ do
-    Log.debug "Could not save payment plan."
-    internalError
-  return ()
+  let eid = maybe (Left $ userid user) Right $ usercompany user
+  cachePlan ac subscription eid
 
 handleChangePlan :: Kontrakcja m => m ()
 handleChangePlan = do
@@ -136,31 +127,69 @@ handleChangePlan = do
   pp <- guardRight' $ toEither ("Unknown price plan " ++ subPricePlan subscription) $ maybeRead $ subPricePlan subscription
   let ppp = fromMaybe pp (maybeRead . penPricePlan =<< subPending subscription)
   quantity <- maybe (return 1) (dbQuery . GetCompanyQuantity) $ usercompany user
+  let eid = maybe (Left $ userid user) Right $ usercompany user
+      ac  = ppAccountCode plan
   case syncAction (quantity, newplan) 
-                  (subQuantity subscription, maybe (subQuantity subscription) penQuantity (subPending subscription),
-                   ppPricePlan plan,         ppp) of
+                          (subQuantity subscription, maybe (subQuantity subscription) penQuantity (subPending subscription),
+                           ppPricePlan plan,         ppp) of
     RNoAction -> return ()
     RUpdateNow -> do
-      _ <- guardRightM' $ liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity True
-      return ()
+      s <- guardRightM' $ liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity True
+      cachePlan ac s eid
     RUpdateRenewal -> do
-      _ <- guardRightM' $ liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity False
-      return ()
+      s <- guardRightM' $ liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity False
+      cachePlan ac s eid
     RCancel -> do
       r <- liftIO $ cancelSubscription curl_exe recurlyAPIKey $ show $ ppAccountCode plan
-      when (not r) $ Log.debug "Could not cancel subscription."
-      return ()
+      when (not r) $ do
+        Log.debug "Could not cancel subscription."
+        internalError
+      cachePlan ac subscription { subState = "canceled" } eid
 
-fromRecurlyStatus :: String -> PaymentPlanStatus
-fromRecurlyStatus "active" = ActiveStatus
-fromRecurlyStatus "expired" = InactiveStatus
-fromRecurlyStatus _ = ActiveStatus
+cachePlan :: Kontrakcja m => AccountCode -> Subscription -> Either UserID CompanyID -> m ()
+cachePlan ac subscription eid = do
+  time <- ctxtime <$> getContext
+  let p       = fromRecurlyPricePlan $ subPricePlan subscription
+      (s, sp) = fromRecurlyStatus    $ subState     subscription
+      q       = subQuantity subscription
+      pp      = maybe p (fromRecurlyPricePlan . penPricePlan) $ subPending subscription
+      qp      = maybe q penQuantity                           $ subPending subscription
+  let paymentplan = case eid of
+        Left  uid -> UserPaymentPlan { ppAccountCode      = ac
+                                     , ppUserID           = uid
+                                     , ppPricePlan        = p
+                                     , ppPendingPricePlan = pp
+                                     , ppStatus           = s
+                                     , ppPendingStatus    = sp
+                                     , ppQuantity         = q
+                                     , ppPendingQuantity  = qp }
+        Right cid -> CompanyPaymentPlan { ppAccountCode      = ac
+                                        , ppCompanyID        = cid
+                                        , ppPricePlan        = p
+                                        , ppPendingPricePlan = pp
+                                        , ppStatus           = s
+                                        , ppPendingStatus    = sp
+                                        , ppQuantity         = q
+                                        , ppPendingQuantity  = qp }
+  r <- dbUpdate $ SavePaymentPlan paymentplan time
+  when (not r) $ do
+    Log.debug "Could not save payment plan."
+    internalError
+  return ()
+  
+
+fromRecurlyStatus :: String -> (PaymentPlanStatus, PaymentPlanStatus)
+fromRecurlyStatus "active"   = (ActiveStatus, ActiveStatus)
+fromRecurlyStatus "canceled" = (ActiveStatus, CanceledStatus)
+fromRecurlyStatus "expired"  = (CanceledStatus, CanceledStatus)
+fromRecurlyStatus "future"   = (DeactivatedStatus, ActiveStatus)
+fromRecurlyStatus _          = (ActiveStatus, ActiveStatus)
 
 fromRecurlyPricePlan :: String -> PricePlan
-fromRecurlyPricePlan "basic" = BasicPricePlan
-fromRecurlyPricePlan "branded" = BrandingPricePlan
+fromRecurlyPricePlan "basic"    = BasicPricePlan
+fromRecurlyPricePlan "branded"  = BrandingPricePlan
 fromRecurlyPricePlan "advanced" = AdvancedPricePlan
-fromRecurlyPricePlan _ = AdvancedPricePlan
+fromRecurlyPricePlan _          = AdvancedPricePlan
 
 instance ToJSValue Invoice where
   toJSValue (Invoice{..}) = runJSONGen $ do
