@@ -108,7 +108,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
   signatoriessection : function() {
        if (this.get("signatoriessection") != undefined)
             return this.get('signatoriessection');
-       this.set({'signatoriessection' : new DocumentSignSignatoriesView({ model: new DocumentSignSignatoriesModel({document:this.document()}) }) }, {silent : true} );
+       this.set({'signatoriessection' : new DocumentSignSignatories({document:this.document()}) }, {silent : true} );
        return this.signatoriessection();
   },
   signatoryattachmentsection : function() {
@@ -239,15 +239,12 @@ var DocumentSignViewModel = Backbone.Model.extend({
         }
       return this.get('tasks');
   },
-  arrowview : function() {
-      if (this.get("arrowview") == undefined)
-        this.set({'arrowview' :
-                    new PageTasksArrowView({
-                                model: this.tasks(),
-                                el: $("<div />")
-                            })
+  arrow : function() {
+      if (this.get("arrow") == undefined)
+        this.set({'arrow' :
+                    new PageTasksArrow({ tasks: this.tasks()})
         }, {silent : true} );
-      return this.get('arrowview');
+      return this.get('arrow');
   },
   recall : function() {
       this.document().recall();
@@ -289,7 +286,7 @@ var DocumentSignViewView = Backbone.View.extend({
          || this.model.hasSignSection())
      {
         if (this.subcontainer != undefined) this.subcontainer.detach();
-        this.subcontainer = $("<div class='subcontainer'/>");
+        this.subcontainer = $("<div class='subcontainer'/>").appendTo(this.container);
 
         if (this.model.hasMainFileSection())
             this.subcontainer.append(this.model.mainfile().view.el);
@@ -301,16 +298,15 @@ var DocumentSignViewView = Backbone.View.extend({
             this.subcontainer.append(this.model.signatoryattachmentsection().el);
 
         if (this.model.hasSignatoriesSection())
-            this.subcontainer.append(this.model.signatoriessection());
+            this.subcontainer.append(this.model.signatoriessection().el);
 
         if (this.model.hasSignSection())
             this.subcontainer.append(this.model.signsection().el);
 
         this.subcontainer.append($("<div class='cleafix' />"));
-        this.container.append(this.subcontainer);
-     }    
+     }
      if (this.model.hasArrows())
-         view.container.prepend(view.model.arrowview().el);
+         view.container.prepend(view.model.arrow().view().el);
      return this;
      
     }

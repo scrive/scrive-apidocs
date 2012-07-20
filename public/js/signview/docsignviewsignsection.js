@@ -1,4 +1,7 @@
 /* Signatory view of document
+ * Usage:
+ * 
+ *   $('body').append(new DocumentSignSignSection(model : document).el);
  */
 
 
@@ -39,7 +42,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                             onClick: function() {
                                 var valid =  model.tasks().notCompleatedTasks().length == 1 && model.tasks().notCompleatedTasks()[0] == model.signtask();
                                 if (!valid) {
-                                        model.arrowview().blink();
+                                        model.arrow().blink();
                                         return false;
                                     }
                                 new DocumentSignConfirmation({

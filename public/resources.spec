@@ -94,10 +94,10 @@ set systemPage
  js   js/signview/docsignviewcreateaccount.js
  js   js/signview/docsignviewpromotescrive.js
  js   js/signview/docsignviewsignsection.js
+ js   js/signview/docsignviewpad.js
  js   js/signview/docsignview.js
  js   js/signatorydesignview.js
  js   js/docdesignviewpad.js
- js   js/docsignviewpad.js
  js   js/docdesignview.js
  js   js/mobilebankid.js
  js   js/bankid.js

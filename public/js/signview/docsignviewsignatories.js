@@ -1,10 +1,15 @@
-/* Signatory view - subviews  */
+/* Section for signatories in sign view.
+   
+   Usage:
+    var docsig = new DocumentSignSignatories({document : doc});
+    $('body').append(docsig.view().el);
+*/
 
 
 (function(window) {
 
     
-window.DocumentSignSignatoriesModel = Backbone.Model.extend({
+var DocumentSignSignatoriesModel = Backbone.Model.extend({
     initialize: function(args) {
         var me = this;
         this.setCurrentSignatory(this.signatories()[0]);
@@ -163,7 +168,7 @@ var DocumentSignSignatoryView = Backbone.View.extend({
   }
 });
 
-window.DocumentSignSignatoriesView = Backbone.View.extend({
+var DocumentSignSignatoriesView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
     this.model.bind('change', this.render);
@@ -199,5 +204,15 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
       return this;
   }
 });
+
+
+window.DocumentSignSignatories = function(args){
+        var model = new DocumentSignSignatoriesModel({document:args.document});
+        var view  = new DocumentSignSignatoriesView({model: model });
+        return {
+              model    : function()    { return model;}
+            , view     : function()    { return view;}
+         };
+};
 
 })(window);
