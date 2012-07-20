@@ -172,7 +172,7 @@
                     extraParams : { documentType : "Template|" + wiz.get('process').name },
                     sorting: new Sorting({ fields: ["title"]}),
                     paging: new Paging({}),
-                    filtering: new Filtering({text: "", infotext: localization.searchTemplate}),
+                    filtering: new TextFiltering({text: "", infotext: localization.searchTemplate}),
                     cells : [
                         new Cell({name: localization.sortTemplate,
                                   width:"400px",

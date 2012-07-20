@@ -145,7 +145,7 @@ var ScrollUpArrowView = Backbone.View.extend({
        var task = this.model.point();
        if (task == undefined) return;
        $('html,body').animate({
-          scrollTop: task.offset().top - 100
+          scrollTop: task.offset().top - 150
        }, 1000);
        return false;
     }
@@ -204,7 +204,7 @@ var ScrollDownArrowView = Backbone.View.extend({
     scroll: function(){
         var task = this.model.point();
         if (task == undefined) return;
-        var scrollbottom = task.offset().top + task.height() + 100;
+        var scrollbottom = task.offset().top + task.height() + 150;
         $('html,body').animate({
           scrollTop: scrollbottom - $(window).height()
         }, 2000);
