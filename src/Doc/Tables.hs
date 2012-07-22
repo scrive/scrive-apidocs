@@ -2,10 +2,11 @@ module Doc.Tables where
 
 import DB
 
+{-# NOINLINE tableDocuments #-}
 tableDocuments :: Table
 tableDocuments = Table {
     tblName = "documents"
-  , tblVersion = 6
+  , tblVersion = 7
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})

@@ -375,3 +375,19 @@ addOCSPResponse =
   , mgrFrom = 9
   , mgrDo = kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN signinfo_ocsp_response VARCHAR NULL DEFAULT NULL"
   } 
+
+
+moveAttachmentsFromDocumentsToAttachments :: MonadDB m => Migration m
+moveAttachmentsFromDocumentsToAttachments =
+  Migration
+  { mgrTable = tableDocuments
+  , mgrFrom = 6
+  , mgrDo = do
+      inserted <- kRun $ SQL ("INSERT INTO attachments(title,file_id,deleted,shared,ctime,mtime, user_id)"
+                              ++ " SELECT title, file_id, signatory_links.deleted, sharing=2, ctime, mtime, user_id"
+                              ++ " FROM documents JOIN signatory_links ON document_id = documents.id AND (roles&2)<>0"
+                              ++ " WHERE type = 3") []
+      deleted <- kRun $ SQL ("DELETE FROM documents WHERE type = 3") []
+      when (deleted /= inserted) $
+           error $ "migration from documents to attachments lost some files: " ++ show inserted ++ "/" ++ show deleted
+  }

@@ -27,6 +27,7 @@ import Mails.Migrations
 import OAuth.Tables
 import ScriveByMail.Tables
 import EvidenceLog.Tables
+import Attachment.Tables
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
 -- (mailerMigrations always stay at the end though. They are
@@ -76,6 +77,7 @@ kontraMigrations = [
   , removeUserRefuseSaveAfterSignEvent
   , removeDocEventsThatReferenceNotActivatedUsers
   , addCryptoColumnsToFilesTable
+  , moveAttachmentsFromDocumentsToAttachments
   ] ++ mailerMigrations
 
 kontraTables :: [Table]
@@ -110,4 +112,5 @@ kontraTables = [
   , tablePasswordReminders
   , tableEmailChangeRequests
   , tableUserAccountRequests
+  , tableAttachments
   ] ++ mailerTables
