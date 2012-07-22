@@ -26,6 +26,7 @@ import qualified Archive.Control as ArchiveControl
 import qualified ELegitimation.BankID as BankID
 import qualified User.UserControl as UserControl
 import qualified ScriveByMail.Control as MailAPI
+import qualified Attachment.Control as AttachmentControl
 import Doc.API
 import OAuth.Control
 
@@ -86,11 +87,11 @@ staticRoutes = choice
      --what it does/access control is left to the handler. EN
      , dir "upload" $ hGet $ toK0 $ DocControl.handleShowUploadPage
      , dir "locale" $ hPost $ toK0 $ UserControl.handlePostUserLocale
-     , dir "a" $ dir "rename"      $ hPost $ toK1 $ DocControl.handleAttachmentRename
-     , dir "a" $ dir "share"       $ hPost $ toK0 $ ArchiveControl.handleShare
-     , dir "a" $ dir "delete"      $ hPost $ toK0 $ ArchiveControl.handleDelete
-     , dir "a"                     $ hPost $ toK0 $ DocControl.handleCreateNewAttachment
-     , dir "a"                     $ hGet  $ toK0 $ ArchiveControl.jsonDocumentsList
+     , dir "a" $ dir "rename"      $ hPost $ toK1 $ AttachmentControl.handleRename
+     , dir "a" $ dir "share"       $ hPost $ toK0 $ AttachmentControl.handleShare
+     , dir "a" $ dir "delete"      $ hPost $ toK0 $ AttachmentControl.handleDelete
+     , dir "a"                     $ hPost $ toK0 $ AttachmentControl.handleCreateNew
+     , dir "a"                     $ hGet  $ toK0 $ AttachmentControl.jsonAttachmentsList
 
      , dir "t" $ param "template" $ hPost $ toK0 $ DocControl.handleCreateFromTemplate
      , dir "t" $ hPost $ toK0 $ DocControl.handleCreateNewTemplate

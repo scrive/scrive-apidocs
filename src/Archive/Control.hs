@@ -5,7 +5,6 @@ module Archive.Control
        handleSendReminders,
        handleRestore,
        handleReallyDelete,
-       handleShare,
        showArchive,
        showPadDeviceArchive,
        jsonDocumentsList
@@ -95,15 +94,6 @@ handleReallyDelete = do
     docids
   J.runJSONGenT $ return ()
 
-
-handleShare :: Kontrakcja m => m JSValue
-handleShare =  do
-    _ <- guardJustM $ ctxmaybeuser <$> getContext
-    ids <- getCriticalFieldList asValidDocID "doccheck"
-    _ <- dbUpdate $ SetDocumentSharing ids True
-    w <- flip mapM ids $ (dbQuery . GetDocumentByDocumentID)
-    when_ (null $ catMaybes w) internalError
-    J.runJSONGenT $ return ()
     
 {- |
    Constructs a list of documents (Arkiv) to show to the user.

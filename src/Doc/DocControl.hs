@@ -18,8 +18,6 @@ module Doc.DocControl(
     , handleDeleteSigAttach
     , handleAttachmentViewForViewer
     , handleShowUploadPage
-    , handleAttachmentRename
-    , handleCreateNewAttachment
     , handleCreateNewTemplate
     , handleIssueShowGet
     , handleIssueNewDocument
@@ -687,14 +685,6 @@ handleCreateNewTemplate = withUserPost $ do
       _ <- addDocumentCreateStatEvents doc "web"
       return $ LinkIssueDoc $ documentid doc
 
-handleCreateNewAttachment:: Kontrakcja m => m JSValue
-handleCreateNewAttachment = do
-  guardLoggedIn
-  input <- getDataFnM (lookInput "doc")
-  mdoc <- makeDocumentFromFile Attachment input 0
-  when_ (isJust mdoc) $ addDocumentCreateStatEvents (fromJust mdoc) "web"
-  J.runJSONGenT $ return ()
-
 makeDocumentFromFile :: Kontrakcja m => DocumentType -> Input -> Int -> m (Maybe Document)
 makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) nrOfExtraSigs  = do
     Log.debug $ "makeDocumentFromFile: beggining"
@@ -713,13 +703,6 @@ makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) nr
           handleDocumentUpload (documentid doc) (concatChunks content) title
           return $ Just doc
 makeDocumentFromFile _ _ _ = internalError -- to complete the patterns
-
-handleAttachmentRename :: Kontrakcja m => DocumentID -> m KontraLink
-handleAttachmentRename docid = withUserPost $ do
-  newname <- getCriticalField return "docname"
-  actor <- guardJustM $ mkAuthorActor <$> getContext
-  doc <- guardRightM $ dbUpdate $ SetDocumentTitle docid newname actor
-  return $ LinkIssueDoc $ documentid doc
 
 {- |
    Get some html to display the images of the files
