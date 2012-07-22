@@ -6,7 +6,7 @@ window.AttachmentsListDefinition = function(archive) {
  return {
     name : "Attachments Table",
     schema: new Schema({
-    url: "/docs",
+    url: "/a",
     extraParams : { documentType : "Attachment" },
     sorting: new Sorting({ fields: ["title", "time", "type"]}),
     paging: new Paging({}),
@@ -32,7 +32,7 @@ window.AttachmentsListDefinition = function(archive) {
                                 content: jQuery("<p/>").text(localization.archive.attachments.share.body),
                                 onAccept : function() {
                                     new Submit({
-                                                url: "/d/share",
+                                                url: "/a/share",
                                                 method: "POST",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
@@ -63,7 +63,7 @@ window.AttachmentsListDefinition = function(archive) {
                                 content: confirmtext,
                                 onAccept : function() {
                                     var confirmationPopup = new Submit({
-                                                url: "/d/delete",
+                                                url: "/a/delete",
                                                 method: "POST",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {

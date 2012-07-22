@@ -87,7 +87,10 @@ staticRoutes = choice
      , dir "upload" $ hGet $ toK0 $ DocControl.handleShowUploadPage
      , dir "locale" $ hPost $ toK0 $ UserControl.handlePostUserLocale
      , dir "a" $ dir "rename"      $ hPost $ toK1 $ DocControl.handleAttachmentRename
+     , dir "a" $ dir "share"       $ hPost $ toK0 $ ArchiveControl.handleShare
+     , dir "a" $ dir "delete"      $ hPost $ toK0 $ ArchiveControl.handleDelete
      , dir "a"                     $ hPost $ toK0 $ DocControl.handleCreateNewAttachment
+     , dir "a"                     $ hGet  $ toK0 $ ArchiveControl.jsonDocumentsList
 
      , dir "t" $ param "template" $ hPost $ toK0 $ DocControl.handleCreateFromTemplate
      , dir "t" $ hPost $ toK0 $ DocControl.handleCreateNewTemplate
@@ -102,7 +105,6 @@ staticRoutes = choice
      , dir "d" $ dir "remind"       $ hPost $ toK0 $ ArchiveControl.handleSendReminders
      , dir "d" $ dir "restore"      $ hPost $ toK0 $ ArchiveControl.handleRestore
      , dir "d" $ dir "reallydelete" $ hPost $ toK0 $ ArchiveControl.handleReallyDelete
-     , dir "d" $ dir "share"        $ hPost $ toK0 $ ArchiveControl.handleShare
      , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
      , dir "docs"                  $ hGet  $ toK0 $ ArchiveControl.jsonDocumentsList
      , dir "doc"                   $ hGet  $ toK1 $ DocControl.jsonDocument
