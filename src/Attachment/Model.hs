@@ -3,6 +3,7 @@
 module Attachment.Model
   ( NewAttachment(..)
   , Attachment(..)
+  , DeleteAttachments(..)
   )
 where
 
@@ -75,3 +76,15 @@ instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m NewAttachment (Ei
   case atts of
     [att] -> return (Right att)
     _ -> return (Left $ "NewAttachment of file " ++ title ++ " failed")
+
+data DeleteAttachments = DeleteAttachments UserID [AttachmentID] Actor
+instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m DeleteAttachments (Either String ()) where
+  update (DeleteAttachments uid attids actor) = do
+  let atime = actorTime actor
+  kRun_ $ sqlUpdate "attachments" $ do
+    sqlSet "mtime" atime
+    sqlSet "deleted" True
+    sqlWhereIn "id" attids
+    sqlWhereEq "user_id" uid
+    sqlWhereEq "deleted" False
+  return $ Right ()

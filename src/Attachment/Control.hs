@@ -12,8 +12,6 @@ import Util.MonadUtils
 import Happstack.Server hiding (simpleHTTP)
 
 import Control.Applicative
-import Util.SignatoryLinkUtils
-import Stats.Control
 import Util.Actor
 import Util.HasSomeUserInfo
 import Text.JSON
@@ -28,7 +26,6 @@ import Archive.View
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Log
-import Doc.DocStateUpdate
 import Control.Monad.IO.Class
 import User.Utils
 import Attachment.Model
@@ -53,14 +50,9 @@ handleShare =  do
 handleDelete :: Kontrakcja m => m JSValue
 handleDelete = do
     Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
-    docids <- getCriticalFieldList asValidDocID "doccheck"
+    attids <- getCriticalFieldList asValidAttachmentID "doccheck"
     let actor = userActor ctxtime ctxipnumber (userid user) (getEmail user)
-    mapM_ (\did -> do
-              doc <- guardRightM' $ dbUpdate $ ArchiveDocument user did actor
-              case getSigLinkFor doc user of
-                Just sl -> addSignStatDeleteEvent doc sl ctxtime
-                _ -> return False)
-      docids
+    _ <- guardRightM' $ dbUpdate $ DeleteAttachments (userid user) attids actor
     J.runJSONGenT $ return ()
 
 handleCreateNew :: Kontrakcja m => m JSValue
