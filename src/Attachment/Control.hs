@@ -1,11 +1,11 @@
 
 module Attachment.Control
 where
+import Attachment.AttachmentID
 import InputValidation
 import KontraLink
 import Kontra
 import DB
-import Doc.DocStateData
 import Doc.Model
 import User.Model
 import Util.MonadUtils
@@ -30,12 +30,13 @@ import Control.Monad.IO.Class
 import User.Utils
 import Attachment.Model
 
-handleRename :: Kontrakcja m => DocumentID -> m KontraLink
-handleRename docid = withUserPost $ do
-  newname <- getCriticalField return "docname"
+handleRename :: Kontrakcja m => AttachmentID -> m JSValue
+handleRename attid = do
+  _ <- guardJustM $ ctxmaybeuser <$> getContext
+  title <- getCriticalField return "docname"
   actor <- guardJustM $ mkAuthorActor <$> getContext
-  doc <- guardRightM $ dbUpdate $ SetDocumentTitle docid newname actor
-  return $ LinkIssueDoc $ documentid doc
+  _ <- guardRightM $ dbUpdate $ SetAttachmentTitle attid title actor
+  J.runJSONGenT $ return ()
 
 
 handleShare :: Kontrakcja m => m JSValue

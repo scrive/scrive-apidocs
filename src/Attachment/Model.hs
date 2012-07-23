@@ -4,6 +4,7 @@ module Attachment.Model
   ( NewAttachment(..)
   , Attachment(..)
   , DeleteAttachments(..)
+  , SetAttachmentTitle(..)
   )
 where
 
@@ -87,4 +88,14 @@ instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m DeleteAttachments
     sqlWhereIn "id" attids
     sqlWhereEq "user_id" uid
     sqlWhereEq "deleted" False
+  return $ Right ()
+
+data SetAttachmentTitle = SetAttachmentTitle AttachmentID String Actor
+instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m SetAttachmentTitle (Either String ()) where
+  update (SetAttachmentTitle attid title actor) = do
+  let atime = actorTime actor
+  kRun_ $ sqlUpdate "attachments" $ do
+    sqlSet "mtime" atime
+    sqlSet "title" title
+    sqlWhereEq "id" attid
   return $ Right ()
