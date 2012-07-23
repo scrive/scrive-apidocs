@@ -92,6 +92,7 @@ staticRoutes = choice
      , dir "a" $ dir "delete"      $ hPost $ toK0 $ AttachmentControl.handleDelete
      , dir "a"                     $ hPost $ toK0 $ AttachmentControl.handleCreateNew
      , dir "a"                     $ hGet  $ toK0 $ AttachmentControl.jsonAttachmentsList
+     , dir "a"                     $ hGet  $ toK1 $ AttachmentControl.handleShow
 
      , dir "t" $ param "template" $ hPost $ toK0 $ DocControl.handleCreateFromTemplate
      , dir "t" $ hPost $ toK0 $ DocControl.handleCreateNewTemplate

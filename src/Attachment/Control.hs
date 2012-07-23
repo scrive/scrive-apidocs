@@ -29,6 +29,7 @@ import qualified Log
 import Control.Monad.IO.Class
 import User.Utils
 import Templates.Templates
+import qualified Templates.Fields as F
 
 handleRename :: Kontrakcja m => AttachmentID -> m JSValue
 handleRename attid = do
@@ -90,7 +91,7 @@ jsonAttachmentsList = withUserGet $ do
 
 attForListJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> User -> Attachment -> m JSValue
 attForListJSON tl crtime _user att = do
-  let link = "xxx"
+  let link = LinkAttachmentView (attachmentid att)
   runJSONGenT $ do
     J.object "fields" $ attFieldsListForJSON tl crtime att
     J.value "link" $ show link
@@ -144,3 +145,26 @@ makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do
           att <- guardRightM $ dbUpdate $ NewAttachment (userid $ fromJust $ ctxmaybeuser ctx) title filename (Binary $ BS.concat $ BSL.toChunks content) actor
           return $ Just att
 makeAttachmentFromFile _ = internalError -- to complete the patterns
+
+{- |
+   Handles the request to show an attachment to a logged in user.
+   URL: /a/{attachmentid}
+   Method: GET
+ -}
+handleShow :: Kontrakcja m => AttachmentID -> m (Either KontraLink (Either Response String))
+handleShow attid = checkUserTOSGet $ do
+  ctx <- getContext
+  let Just user = ctxmaybeuser ctx
+  [attachment] <- dbQuery $ GetAttachments [AttachmentsSharedInUsersCompany (userid user)]
+                                         [AttachmentFilterByID [attid]] [] (AttachmentPagination 0 1)
+  Right <$> pageAttachment' attachment
+
+pageAttachment' :: TemplatesMonad m
+                => Attachment
+                -> m String
+pageAttachment' Attachment{attachmentid, attachmenttitle} =
+    renderTemplate "pageAttachment" $ do
+      F.value "id" $ show attachmentid
+      F.value "title" attachmenttitle
+      F.value "editable" $ True
+      F.value "renamelink" $ show $ LinkRenameAttachment attachmentid

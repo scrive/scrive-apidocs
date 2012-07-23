@@ -312,7 +312,6 @@ handleIssueShowGet docid = checkUserTOSGet $ do
                       ((usercompany =<< muser) == maybecompany authorsiglink || 
                        (companyid <$> mcompany) == maybecompany authorsiglink)
       isauthororincompany = isauthor || isincompany
-      isattachment = isAttachment document
       msiglink = find (isSigLinkFor muser) $ documentsignatorylinks document
       
       isadmin = Just True == (useriscompanyadmin <$> muser)
@@ -321,7 +320,6 @@ handleIssueShowGet docid = checkUserTOSGet $ do
 
   ctx <- getContext
   case (ispreparation, msiglink) of
-    (True,  _) | isattachment        -> Right <$> pageAttachmentDesign document
     (True,  _)                       -> Right <$> pageDocumentDesign document
     (False, _) | isauthororincompany || isadminofcompany -> Right <$> pageDocumentView document msiglink (isadminofcompany || isincompany)
     (False, Just siglink)            -> Left  <$> (simpleResponse =<< pageDocumentSignView ctx document siglink)

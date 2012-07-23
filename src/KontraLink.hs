@@ -18,6 +18,7 @@ import Network.URI
 import Network.HTTP
 import KontraMonad
 import Context
+import Attachment.AttachmentID
 
 {- |
    Defines the reason why we are redirected to login page
@@ -62,7 +63,7 @@ data KontraLink
     | LinkAccountFromSign Document SignatoryLink
     | LinkIssueDoc DocumentID
     | LinkDesignDoc DocumentID
-    | LinkRenameAttachment DocumentID
+    | LinkRenameAttachment AttachmentID
     | LinkIssueDocPDF (Maybe SignatoryLink) Document {- Which file? -}
     | LinkCompanyAccounts ListParams
     | LinkCompanyTakeover CompanyID
@@ -90,6 +91,7 @@ data KontraLink
     | LinkConnectCompanySession ServiceID CompanyID SessionID KontraLink
     | LinkAttachmentForAuthor DocumentID FileID
     | LinkAttachmentForViewer DocumentID SignatoryLinkID MagicHash FileID
+    | LinkAttachmentView AttachmentID
     | LinkServiceLogo ServiceID
     | LinkServiceButtonsBody ServiceID
     | LinkServiceButtonsRest ServiceID
@@ -232,6 +234,7 @@ instance Show KontraLink where
     showsPrec _ (LinkOAuthCallback url token Nothing) = 
       (++) (show $ setParams url [("oauth_token", show token), ("denied", "true")])
     showsPrec _ LinkOAuthDashboard = (++) ("/oauth/dashboard")
+    showsPrec _ (LinkAttachmentView attid) = (++) ("/a/" ++ show attid)
 
 setParams :: URI -> [(String, String)] -> URI
 setParams uri params = 

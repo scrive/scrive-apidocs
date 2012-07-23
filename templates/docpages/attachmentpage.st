@@ -2,13 +2,7 @@
 pageAttachment=
 <div style="display: none">
   <script type="text/javascript"> 
-    var documentid = "$documentid$";
-    $if(siglinkid)$
-      var siglinkid = "$siglinkid$";
-    $endif$
-    $if(sigmagichash)$
-      var sigmagichash = "$sigmagichash$";
-    $endif$
+    var documentid = "$id$";
   </script>
 </div>
 
@@ -22,7 +16,7 @@ pageAttachment=
           <span class="docname">
             <span class="docname-display">
               <a href="#" class="icon edit" style="margin-right: 2px"></a>
-              <span class="visible-docname">$documenttitle$</span>
+              <span class="visible-docname">$title$</span>
             </span>     
             <span class="docname-edit" style="display:none;">
               <a href="#" class="icon small ok submitafterdone" style="margin-right: 2px; float: none"></a>
@@ -49,5 +43,4 @@ pageAttachment=
 <div id="documentBox">
   <div class="waiting4page"></div>
 </div>
-
 

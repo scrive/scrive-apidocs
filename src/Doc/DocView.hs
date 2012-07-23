@@ -21,7 +21,6 @@ module Doc.DocView (
   , modalRejectedView
   , modalSignAwaitingAuthorLast
   , modalSendConfirmationView
-  , pageAttachmentDesign
   , pageDocumentDesign
   , pageDocumentView
   , pageDocumentSignView
@@ -382,25 +381,6 @@ showFilesImages2 docid mtokens files = do
   renderTemplate "spanNoEscape" $ F.value "it" (concat filesPages)
 
 
-pageAttachmentDesign :: TemplatesMonad m
-                     => Document
-                     -> m String
-pageAttachmentDesign = pageAttachment' True Nothing
-
-pageAttachment' :: TemplatesMonad m
-                => Bool
-                -> Maybe SignatoryLink
-                -> Document
-                -> m String
-pageAttachment' iseditable msiglink doc@Document {documentid, documenttitle} =
-    renderTemplate "pageAttachment" $ do
-      F.value "documentid" $ show documentid
-      F.value "documenttitle" documenttitle
-      F.value "editable" $ iseditable
-      F.value "renamelink" $ show $ LinkRenameAttachment documentid
-      F.value "siglinkid" $ fmap (show . signatorylinkid) msiglink
-      F.value "sigmagichash" $ fmap (show . signatorymagichash) msiglink
-      F.value "linkissuedocpdf" $ show (LinkIssueDocPDF msiglink doc)
 
 pageDocumentDesign :: TemplatesMonad m
                    => Document

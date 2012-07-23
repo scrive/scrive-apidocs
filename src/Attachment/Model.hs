@@ -113,10 +113,17 @@ data AttachmentPagination =
 
 data AttachmentFilter
   = AttachmentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
+  | AttachmentFilterByID [AttachmentID]         -- ^ Attachments with IDs on the list
 
 instance IsSQL AttachmentFilter where
   toSQLCommand (AttachmentFilterByString string) =
     SQL "attachments.title ILIKE ?" [toSql ("%" ++ string ++ "%")]
+  toSQLCommand (AttachmentFilterByID []) =
+    SQL "FALSE" []
+  toSQLCommand (AttachmentFilterByID [attid]) =
+    SQL "attachments.id = ?" [toSql attid]
+  toSQLCommand (AttachmentFilterByID _) =
+    error "not implemented"
 
 data AttachmentDomain
   = AttachmentsOfAuthorDeleteValue UserID Bool   -- ^ Attachments of user, with deleted flag
