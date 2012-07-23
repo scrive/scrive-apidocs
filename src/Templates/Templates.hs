@@ -85,6 +85,7 @@ module Templates.Templates (
   , renderLocalTemplate_
   ) where
 
+import Control.Monad.Trans.Maybe
 import Text.StringTemplate.Base hiding (ToSElem, toSElem, render)
 
 import User.Locale
@@ -97,6 +98,10 @@ import Control.Monad.Identity
 class (Functor m, Monad m) => TemplatesMonad m where
   getTemplates      :: m KontrakcjaTemplates
   getLocalTemplates :: Locale -> m KontrakcjaTemplates
+
+instance TemplatesMonad m => TemplatesMonad (MaybeT m) where
+  getTemplates = lift getTemplates
+  getLocalTemplates = lift . getLocalTemplates
 
 instance (Functor m, Monad m) => TemplatesMonad (ReaderT KontrakcjaGlobalTemplates m) where
   getTemplates      = getLocalTemplates defaultValue 

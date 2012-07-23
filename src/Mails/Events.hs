@@ -122,13 +122,15 @@ handleDeliveredInvitation mc doc signlinkid = do
 handleOpenedInvitation :: (MonadDB m, TemplatesMonad m) => Document -> SignatoryLinkID -> String -> Maybe UserID -> m ()
 handleOpenedInvitation doc signlinkid email muid = do
   now  <- getMinutesTime
-  edoc <- dbUpdate $ MarkInvitationRead (documentid doc) signlinkid
+  success <- dbUpdate $ MarkInvitationRead (documentid doc) signlinkid
           (mailSystemActor now muid email signlinkid)
-  case edoc of
-    Right doc' -> case getSigLinkFor doc' signlinkid of
-      Just sl -> addSignStatOpenEvent doc' sl >> return ()
+  when success $ do
+    Just d <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+    case getSigLinkFor d signlinkid of
+      Just sl -> do
+        _ <- addSignStatOpenEvent d sl
+        return ()
       _ -> return ()
-    _ -> return ()
 
 handleDeferredInvitation :: (CryptoRNG m, MonadDB m, TemplatesMonad m) => (String, MailsConfig) -> Document -> SignatoryLinkID -> String -> m ()
 handleDeferredInvitation (hostpart, mc) doc signlinkid email = do
@@ -136,14 +138,13 @@ handleDeferredInvitation (hostpart, mc) doc signlinkid email = do
   case getSigLinkFor doc signlinkid of
     Just sl -> do
       let actor = mailSystemActor time (maybesignatory sl) email signlinkid
-      mdoc <- dbUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid Deferred actor
-      case mdoc of
-        Right doc' -> do
-          mail <- mailDeferredInvitation hostpart doc'
-          scheduleEmailSendout mc $ mail {
-            to = [getMailAddress $ fromJust $ getAuthorSigLink doc']
-            }
-        Left _ -> return ()
+      success <- dbUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid Deferred actor
+      when success $ do
+        Just d <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+        mail <- mailDeferredInvitation hostpart d
+        scheduleEmailSendout mc $ mail {
+          to = [getMailAddress $ fromJust $ getAuthorSigLink d]
+        }
     Nothing -> return ()
 
 handleUndeliveredInvitation :: (CryptoRNG m, MonadDB m, TemplatesMonad m) => (String, MailsConfig) -> Document -> SignatoryLinkID -> m ()

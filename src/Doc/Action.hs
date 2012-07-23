@@ -9,6 +9,7 @@ module Doc.Action (
   , sendInvitationEmail1
   ) where
 
+import Control.Monad.Trans.Maybe
 import Control.Logic
 import Crypto.RNG
 import Data.Char
@@ -27,7 +28,6 @@ import Kontra
 import KontraLink
 import Mails.SendMail
 import OurPrelude
-import Redirect
 import User.Model
 import Util.HasSomeUserInfo
 import qualified Log
@@ -84,7 +84,10 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistri
     _ | allSignatoriesSigned doc -> do
       Log.docevent $ "All have signed; " ++ show documentstatus ++ " -> Closed: " ++ show documentid
       time <- ctxtime `liftM` getContext
-      closeddoc <- guardRightM $ dbUpdate $ CloseDocument documentid (systemActor time)
+      closeddoc <- guardJustM . runMaybeT $ do
+        True <- dbUpdate $ CloseDocument documentid (systemActor time)
+        Just newdoc <- dbQuery $ GetDocumentByDocumentID documentid
+        return newdoc
       Log.docevent $ "Pending -> Closed; Sending emails: " ++ show documentid
       _ <- addDocumentCloseStatEvents closeddoc apistring
       author <- getDocAuthor closeddoc
@@ -175,7 +178,12 @@ saveDocumentForSignatories doc@Document{documentsignatorylinks} =
         Just user -> do
           Context{ctxtime, ctxipnumber} <- getContext
           let actor = signatoryActor ctxtime ctxipnumber (Just $ userid user) sigemail signatorylinkid
-          udoc <- dbUpdate $ SaveDocumentForUser documentid user signatorylinkid actor
+          udoc <- do
+            mdoc <- runMaybeT $ do
+              True <- dbUpdate $ SaveDocumentForUser documentid user signatorylinkid actor
+              Just newdoc <- dbQuery $ GetDocumentByDocumentID documentid
+              return newdoc
+            return $ maybe (Left "saveDocumentForSignatory failed") Right mdoc
           return udoc
 
 -- EMAILS
@@ -285,7 +293,11 @@ sendInvitationEmail1 ctx document signatorylink = do
       , mailInfo = Invitation documentid signatorylinkid
       , from = documentservice document
   }
-  dbUpdate $ AddInvitationEvidence documentid signatorylinkid (systemActor (ctxtime ctx))
+  mdoc <- runMaybeT $ do
+    True <- dbUpdate $ AddInvitationEvidence documentid signatorylinkid $ systemActor $ ctxtime ctx
+    Just doc <- dbQuery $ GetDocumentByDocumentID documentid
+    return doc
+  return $ maybe (Left "sendInvitationEmail1 failed") Right mdoc
 
 {- |
     Send a reminder email (and update the modification time on the document)

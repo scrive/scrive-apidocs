@@ -25,6 +25,7 @@ import User.Utils
 import Util.MonadUtils
 
 import Control.Applicative
+import Control.Monad.Trans.Maybe
 import Util.SignatoryLinkUtils
 import Stats.Control
 import Util.Actor
@@ -46,7 +47,10 @@ handleDelete = do
     docids <- getCriticalFieldList asValidDocID "doccheck"
     let actor = userActor ctxtime ctxipnumber (userid user) (getEmail user)
     mapM_ (\did -> do
-              doc <- guardRightM' $ dbUpdate $ ArchiveDocument user did actor
+              doc <- guardJustM . runMaybeT $ do
+                True <- dbUpdate $ ArchiveDocument user did actor
+                Just doc <- dbQuery $ GetDocumentByDocumentID did
+                return doc
               case getSigLinkFor doc user of
                 Just sl -> addSignStatDeleteEvent doc sl ctxtime
                 _ -> return False) 
@@ -79,7 +83,7 @@ handleRestore = do
   user <- guardJustM $ ctxmaybeuser <$> getContext
   actor <- guardJustM $ mkAuthorActor <$> getContext
   docids <- getCriticalFieldList asValidDocID "doccheck"
-  mapM_ (\did -> guardRightM'  $ dbUpdate $ RestoreArchivedDocument user did actor) docids
+  mapM_ (\did -> guardTrueM $ dbUpdate $ RestoreArchivedDocument user did actor) docids
   J.runJSONGenT $ return ()
 
 handleReallyDelete :: Kontrakcja m => m JSValue
@@ -89,7 +93,10 @@ handleReallyDelete = do
   ctx <- getContext
   docids <- getCriticalFieldList asValidDocID "doccheck"
   mapM_ (\did -> do
-            doc <- guardRightM'  $ dbUpdate $ ReallyDeleteDocument user did actor
+            doc <- guardJustM . runMaybeT $ do
+              True <- dbUpdate $ ReallyDeleteDocument user did actor
+              Just doc <- dbQuery $ GetDocumentByDocumentID did
+              return doc
             case getSigLinkFor doc user of
               Just sl -> addSignStatPurgeEvent doc sl (ctxtime ctx)
               _ -> return False)

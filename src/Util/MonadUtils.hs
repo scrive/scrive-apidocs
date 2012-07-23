@@ -24,6 +24,13 @@ ifM ma mb mc = do
     b <- ma
     if b then mb else mc
 
+guardTrue :: MonadBase IO m => Bool -> m ()
+guardTrue True  = return ()
+guardTrue False = internalError
+
+guardTrueM :: MonadBase IO m => m Bool -> m ()
+guardTrueM action = guardTrue =<< action
+
 {- |
    Get the value from a Just or fail if it is Nothing
  -}

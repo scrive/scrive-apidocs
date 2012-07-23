@@ -56,12 +56,11 @@ oldScheduler = do
       docs <- dbQuery $ GetTimeoutedButPendingDocuments now
       forM_ docs $ \doc -> do
         gt <- getGlobalTemplates
-        edoc <- runReaderT (dbUpdate $ TimeoutDocument (documentid doc) (systemActor now)) gt
-        case edoc of
-          Left _ -> return ()
-          Right doc' -> do
-            _ <- addDocumentTimeoutStatEvents doc' "scheduler"
-            return ()
+        success <- runReaderT (dbUpdate $ TimeoutDocument (documentid doc) (systemActor now)) gt
+        when success $ do
+          Just d <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+          _ <- addDocumentTimeoutStatEvents d "scheduler"
+          return ()
         Log.debug $ "Document timedout " ++ (show $ documenttitle doc)
 
 runDocumentProblemsCheck :: Scheduler ()
