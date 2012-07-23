@@ -86,9 +86,9 @@ resizeImageAndReturnOriginalSize filepath = do
     fcontent <- BS.readFile filepath
     return (fcontent,943,1335)
 
-scaleForPreview :: DocumentID -> BS.ByteString -> IO BS.ByteString
-scaleForPreview did image = withSystemTempDirectory "preview" $ \tmppath -> do
-    let fpath = tmppath ++ "/" ++ show did ++ ".jpg"
+scaleForPreview :: BS.ByteString -> IO BS.ByteString
+scaleForPreview image = withSystemTempDirectory "preview" $ \tmppath -> do
+    let fpath = tmppath ++ "/source.jpg"
     BS.writeFile fpath image
     (_,_,_, resizer) <- createProcess $  proc "convert" ["-scale","190x270!", fpath, fpath]
     resizerexitcode <- waitForProcess resizer
@@ -104,9 +104,8 @@ scaleForPreview did image = withSystemTempDirectory "preview" $ \tmppath -> do
 convertPdfToJpgPages :: (KontraMonad m, MonadDB m)
                      => String
                      -> FileID
-                     -> DocumentID
                      -> m JpegPages
-convertPdfToJpgPages gs fid docid = do
+convertPdfToJpgPages gs fid = do
   content <- getFileIDContents fid
   liftIO $ withSystemTempDirectory "pdf2jpeg" $ \tmppath -> do
     let sourcepath = tmppath ++ "/source.pdf"
@@ -136,7 +135,7 @@ convertPdfToJpgPages gs fid docid = do
       ExitFailure _ -> do
           systmp <- getTemporaryDirectory
           (path,handle) <- openTempFile systmp ("pdf2jpg-failed-" ++ show fid ++ "-.pdf")
-          Log.error $ "Cannot pdf2jpg (doc #" ++ show docid ++ ", file #" ++ show fid ++ "): " ++ path
+          Log.error $ "Cannot pdf2jpg of file #" ++ show fid ++ ": " ++ path
           BS.hPutStr handle content
           hClose handle
 
@@ -162,13 +161,12 @@ convertPdfToJpgPages gs fid docid = do
  -}
 maybeScheduleRendering :: Kontrakcja m
                        => FileID
-                       -> DocumentID
                        -> m JpegPages
-maybeScheduleRendering fileid docid = do
+maybeScheduleRendering fileid = do
   Context{ctxgscmd,ctxnormalizeddocuments} <- getContext
 
   -- Some debugs
-  Log.debug $ "Rendering is being scheduled for document " ++ show docid
+  Log.debug $ "Rendering is being scheduled for file #" ++ show fileid
   pgs <- MemCache.size ctxnormalizeddocuments
   Log.debug $ "Total rendered pages count: " ++ show (pgs)
 
@@ -178,8 +176,8 @@ maybeScheduleRendering fileid docid = do
       Just pages -> return pages
       Nothing -> do
           MemCache.put fileid JpegPagesPending ctxnormalizeddocuments
-          forkAction ("Rendering file #" ++ show fileid ++ " of doc #" ++ show docid) $ do
-                   jpegpages <- convertPdfToJpgPages ctxgscmd fileid docid             -- FIXME: We should report error somewere
+          forkAction ("Rendering file #" ++ show fileid) $ do
+                   jpegpages <- convertPdfToJpgPages ctxgscmd fileid             -- FIXME: We should report error somewere
                    MemCache.put fileid jpegpages ctxnormalizeddocuments
           return JpegPagesPending
 

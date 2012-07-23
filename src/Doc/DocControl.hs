@@ -553,7 +553,7 @@ handleAttachmentViewForViewer docid siglinkid mh = do
   case files of
     [] -> return $ toResponse ""
     f  -> do
-      b <- mapM (\file -> maybeScheduleRendering file (documentid doc)) f
+      b <- mapM maybeScheduleRendering f
       if any pending b
         then notFound (toResponse "temporary unavailable (document has files pending for process)")
         else do
@@ -569,7 +569,7 @@ handleAttachmentViewForAuthor docid = do
   case files of
     [] -> return $ toResponse ""
     f  -> do
-      b <- mapM (\file -> maybeScheduleRendering file (documentid doc)) f
+      b <- mapM maybeScheduleRendering f
       if any pending b
         then notFound (toResponse "temporary unavailable (document has files pending for process)")
         else do
@@ -586,7 +586,7 @@ handleFilePages did fid = do
   case find (== fid) allfiles of
     Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString $ "File #" ++ show fid ++ " not found in document #" ++ show did)]
     Just _  -> do
-      jpages <- maybeScheduleRendering fid did
+      jpages <- maybeScheduleRendering fid
       case jpages of
        JpegPagesPending -> return $ JSObject $ toJSObject [("wait",JSString $ toJSString "Temporary unavailable (file is still pending)")]
        JpegPagesError _ -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "rendering failed")]
@@ -627,7 +627,7 @@ handlePageOfDocument' documentid mtokens = do
       case files of
          [] -> notFound $ toResponse "temporarily unavailable (document has no files)"
          f  -> do
-             b <- mapM (\file -> maybeScheduleRendering file documentid) f
+             b <- mapM maybeScheduleRendering f
              if any pending b
                 then notFound (toResponse "temporarily unavailable (document has files pending for process)")
                 else do
@@ -728,7 +728,7 @@ showPage docid fileid pageno = do
 
 showPreview:: Kontrakcja m => DocumentID -> FileID -> m (Either KontraLink Response)
 showPreview docid fileid = withAuthorisedViewer docid $ do
-    iprev <- preview docid fileid 0
+    iprev <- preview fileid 0
     case iprev of
          Just res -> return $ Right res
          Nothing ->   return $ Left $ LinkDocumentPreview docid Nothing fileid
@@ -737,13 +737,13 @@ showPreviewForSignatory:: Kontrakcja m => DocumentID -> SignatoryLinkID -> Magic
 showPreviewForSignatory docid siglinkid sigmagichash fileid = do
     doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
     checkLinkIDAndMagicHash doc siglinkid sigmagichash
-    iprev <- preview docid fileid 0
+    iprev <- preview fileid 0
     case iprev of
          Just res -> return $ Right res
          Nothing ->   return $ Left $ LinkDocumentPreview docid (getMaybeSignatoryLink (doc,siglinkid)) fileid
 
-preview :: Kontrakcja m =>  DocumentID -> FileID -> Int -> m (Maybe Response)
-preview did fid value
+preview :: Kontrakcja m => FileID -> Int -> m (Maybe Response)
+preview fid value
   | value > 10 = return Nothing
   | otherwise  =   do
         Context{ctxnormalizeddocuments} <- getContext
@@ -751,13 +751,13 @@ preview did fid value
         case jpages of
             Just (JpegPages pages) -> do
                 let (contents,_,_) =  pages !! 0
-                scaledContent <- liftIO $ scaleForPreview did contents
+                scaledContent <- liftIO $ scaleForPreview contents
                 let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [scaledContent]) Nothing
                 return $ Just $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
             other -> do
-                when_ (other == Nothing) $ maybeScheduleRendering fid did
+                when_ (other == Nothing) $ maybeScheduleRendering fid
                 liftIO $ threadDelay 500000
-                preview did fid (value+1)
+                preview fid (value+1)
 
 
 showPage' :: Kontrakcja m => FileID -> Int -> m Response
