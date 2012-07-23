@@ -35,6 +35,7 @@ import qualified Log
 import qualified Codec.Binary.Url as URL
 import qualified Control.Exception as C
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS (toString,fromString)
@@ -538,15 +539,52 @@ lookupAndReadString :: (Read a, Eq k) => k -> [(k, String)] -> Maybe a
 lookupAndReadString k kvs = maybeRead =<< maybeRead =<< lookup k kvs
 
 
-getNumberOfPDFPages :: BS.ByteString -> Int
-getNumberOfPDFPages content =
-    maximum (1 : (catMaybes . map readNumber . map dropToNumber . findCounts) content)
+findStringAfterKey :: String -> BS.ByteString -> [String]
+findStringAfterKey key content =
+    (map (BSC.unpack . dropAfterKey) . findKeys) content
   where
-    count = BS.fromString "/Count"
-    countLength1 = BS.length count + 1
-    findCounts x = case BS.breakSubstring count x of
+    keyPacked = BSC.pack ("/" ++ key)
+    keyLength1 = BSC.length keyPacked
+    findKeys x = case BSC.breakSubstring keyPacked x of
                      (_, r) -> r : if BS.null r
                                    then []
-                                   else findCounts (BS.drop 1 r)
-    dropToNumber = BS.drop countLength1
-    readNumber = maybeRead . takeWhile isDigit . BS.toString
+                                   else findKeys (BSC.drop 1 r)
+    dropAfterKey = BSC.drop keyLength1
+
+getNumberOfPDFPages :: BS.ByteString -> Int
+getNumberOfPDFPages content =
+    maximum (1 : (catMaybes . map readNumber . findStringAfterKey "Count") content)
+  where
+    readNumber = maybeRead . takeWhile isDigit . dropWhile isSpace
+
+getRotateOfPDFPages :: BS.ByteString -> [Int]
+getRotateOfPDFPages content =
+    (catMaybes . map readNumber . findStringAfterKey "Rotate") content
+  where
+    readNumber = maybeRead . takeWhile isDigit . dropWhile isSpace
+
+getBoxSizesOfPDFPages :: String -> BS.ByteString -> [(Double,Double)]
+getBoxSizesOfPDFPages box content =
+  catMaybes (map maybeReadBox boxStrings)
+  where
+    boxStrings = findStringAfterKey box content
+    maybeReadBox = x . catMaybes . map maybeRead . words . takeWhile (/=']') . drop 1 . dropWhile (/='[') . take 1000
+    x [l,b,r,t] = Just (r-l,t-b)
+    x _ = Nothing
+
+getPageSizeOfPDFInPoints :: BS.ByteString -> (Double,Double)
+getPageSizeOfPDFInPoints content =
+  head (getPageSizeOfPDFInPointsList content ++ [(595, 842)])
+     -- Defaults to A4
+
+getPageSizeOfPDFInPointsList :: BS.ByteString -> [(Double,Double)]
+getPageSizeOfPDFInPointsList content =
+  if any isSwapping rotates
+     then map swap (cropBoxes ++ mediaBoxes)
+     else cropBoxes ++ mediaBoxes
+  where
+     mediaBoxes = getBoxSizesOfPDFPages "MediaBox" content
+     cropBoxes = getBoxSizesOfPDFPages "CropBox" content
+     rotates = getRotateOfPDFPages content
+     swap (w,h) = (h,w)
+     isSwapping rot = rot == 270 || rot == 90
