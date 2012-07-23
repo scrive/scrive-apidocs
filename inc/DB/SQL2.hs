@@ -47,6 +47,7 @@ Module SQL2 offers some nice monadic function that build SQL commands on the fly
 module DB.SQL2
   ( sqlWhere
   , sqlWhereEq
+  , sqlWhereIn
   , sqlFrom
   , sqlJoin
   , sqlJoinOn
@@ -218,6 +219,12 @@ sqlWhere sql = modify (\cmd -> sqlWhere1 cmd (toSQLCommand sql))
 sqlWhereEq :: (MonadState v m, SqlWhere v, Convertible sql SqlValue) => String -> sql -> m ()
 sqlWhereEq name value =
   sqlWhere (SQL (name ++ "=?") [toSql value])
+
+sqlWhereIn :: (MonadState v m, SqlWhere v, Convertible sql SqlValue) => String -> [sql] -> m ()
+sqlWhereIn _name [] = sqlWhere (SQL "FALSE" [])
+sqlWhereIn name [value] = sqlWhereEq name value
+sqlWhereIn name values =
+  sqlWhere (SQL (name ++ " IN (" ++ concat (intersperse "," (map (const "?") values)) ++ ")") (map toSql values))
 
 class SqlFrom a where
   sqlFrom1 :: a -> SQL -> a
