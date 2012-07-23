@@ -150,15 +150,3 @@ makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do
           att <- guardRightM $ dbUpdate $ NewAttachment (userid $ fromJust $ ctxmaybeuser ctx) title filename (Binary $ BS.concat $ BSL.toChunks content) actor
           return $ Just att
 makeAttachmentFromFile _ = internalError -- to complete the patterns
-
-handleAttachmentUpload :: Kontrakcja m => DocumentID -> BS.ByteString -> String -> m ()
-handleAttachmentUpload docid content1 filename = do
-  Log.debug $ "Uploading file for doc #" ++ show docid
-  fileresult <- attachFile docid filename content1
-  case fileresult of
-    Left err -> do
-      Log.debug $ "Got an error in handleDocumentUpload: " ++ show err
-      return ()
-    Right _document ->
-        return ()
-  return ()
