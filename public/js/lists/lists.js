@@ -294,12 +294,14 @@
             this.main = $("<div class='tab-container'/>");
             this.pretableboxleft = $("<div class='col float-left'/>");
             this.pretableboxright = $("<div class='col float-right'/>");
+            this.pretableboxrightsearchbox = $("<div class='searchBox float-right'/>");
             this.pretablebox = $("<div class='tab-content'/>");
+            this.pretableboxadvancedsearchbox = $("<div class='advanced-search'/>");
             this.tablebox = $("<div class='tab-table'/>");
             this.tableboxfooter = $("<div/>");
             this.tablebox.append(this.tableboxfooter);
             this.pretablebox.append(this.pretableboxleft).append(this.pretableboxright).append("<div class='clearfix'/>");
-            this.main.append(this.pretablebox).append(this.tablebox);
+            this.main.append(this.pretablebox).append(this.pretableboxadvancedsearchbox).append(this.tablebox);
 
             if (this.schema.optionsAvaible()) {
                 this.prepareOptions();
@@ -317,9 +319,18 @@
             })
             
             if (!this.schema.textfiltering().disabled()) {
-                var filter = new TextFilteringView({model: this.schema.textfiltering(), el: $("<div class='searchBox float-right'/>")});
-                this.pretableboxright.append(filter.el);
+                var filter = new TextFilteringView({model: this.schema.textfiltering(), el: $("<div style='height:30px'/>")});
+                this.pretableboxrightsearchbox.append(filter.el);
             }
+            if (this.schema.advancedselectfiltering() != undefined) {
+                var toogler = new AdvancedSelectFilteringToogleView({model: this.schema.advancedselectfiltering(), el: $("<div class='float-right'>")});
+                this.pretableboxrightsearchbox.append(toogler.el);
+            }
+            if (!this.schema.textfiltering().disabled() || this.schema.advancedselectfiltering() != undefined)
+                this.pretableboxright.append(this.pretableboxrightsearchbox);
+            if (this.schema.advancedselectfiltering() != undefined)
+                new AdvancedSelectFilteringView({model : this.schema.advancedselectfiltering(), el : this.pretableboxadvancedsearchbox}).el;
+                
             if (this.bottomExtras != undefined) {
                 this.tableboxfooter.append(this.bottomExtras);
             }
@@ -346,10 +357,13 @@
                 }
                 return e;
             });
-            var select = Select.init({ name: localization.select,
+            var select = new Select({  name: "",
                                        options: options,
-                                       cssClass: "float-left"});
-            this.pretableboxleft.append(select.input());
+                                       cssClass: "float-left",
+                                       iconClass : "gearImage",
+                                       theme : "white"
+            });
+            this.pretableboxleft.append(select.view().el);
         },
         renderheader: function() {
             var headline = $("<tr/>");

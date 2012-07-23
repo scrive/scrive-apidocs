@@ -47,6 +47,7 @@ set systemPage
  css css/flash.css
  css css/docsignview.css
  css css/main.css
+ css css/selects.css
  js   libs/jquery.min.js
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js

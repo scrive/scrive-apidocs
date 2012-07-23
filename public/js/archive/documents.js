@@ -16,8 +16,9 @@ window.DocumentsListDefinition = function(archive) { return {
     sorting: new Sorting({ fields: ["title", "status", "time", "party", "author"]}),
     paging: new Paging({}),
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.documents.search}),
-    selectfiltering : [
-        new SelectFiltering({description: localization.filterByStatusClass.showAnyStatusClass, name: "statusclass",
+    selectfiltering : [  new SelectFiltering({description: localization.filterByStatusClass.showAnyStatusClass,
+                             name: "statusclass",
+                             textWidth : "120px",
                              options: [ {name: localization.filterByStatusClass.showDraft,     value: "draft"},
                                         {name: localization.filterByStatusClass.showCancelled, value: "cancelled"},
                                         {name: localization.filterByStatusClass.showSent,      value: "sent"},
@@ -26,18 +27,39 @@ window.DocumentsListDefinition = function(archive) { return {
                                         {name: localization.filterByStatusClass.showOpened,    value: "opened"},
                                         {name: localization.filterByStatusClass.showSigned,    value: "signed"}
                                       ]}),
-        new SelectFiltering({description: localization.filterByProcess.showAllProcesses, name: "process",
+            new SelectFiltering({description: localization.filterByStatusClass.showAnyStatusClass,
+                             name: "statusclass",
+                             textWidth : "120px",
+                             options: [ {name: localization.filterByStatusClass.showDraft,     value: "draft"},
+                                        {name: localization.filterByStatusClass.showCancelled, value: "cancelled"},
+                                        {name: localization.filterByStatusClass.showSent,      value: "sent"},
+                                        {name: localization.filterByStatusClass.showDelivered, value: "delivered"},
+                                        {name: localization.filterByStatusClass.showRead,      value: "read"},
+                                        {name: localization.filterByStatusClass.showOpened,    value: "opened"},
+                                        {name: localization.filterByStatusClass.showSigned,    value: "signed"}
+                                      ]})   ],
+    advancedselectfiltering : new AdvancedSelectFiltering({
+        selectfilterings : [
+            new SelectFiltering({description: localization.filterByProcess.showAllProcesses,
+                             name: "process",
+                             textWidth : "90px",
                              options: [ {name: localization.filterByProcess.showContractsOnly, value: "contract"},
                                         {name: localization.filterByProcess.showOffersOnly,    value: "offer"},
                                         {name: localization.filterByProcess.showOrdersOnly,    value: "order"}
                                       ]}),
-        new SelectFiltering({description: localization.filterByYear.showAnyYear, name: "year",
+            new SelectFiltering({
+                             description: localization.filterByYear.showAnyYear,
+                             name: "year",
+                             textWidth : "60px",
                              options: [ {name: "2010",    value: "2010"},
                                         {name: "2011",    value: "2011"},
                                         {name: "2012",    value: "2012"},
                                         {name: "2013",    value: "2013"}
                                       ]}),
-        new SelectFiltering({description: localization.filterByMonth.showAnyMonth, name: "month",
+            new SelectFiltering({
+                             description: localization.filterByMonth.showAnyMonth,
+                             name: "month",
+                             textWidth : "70px",
                              options: [ {name: capitaliseFirstLetter(localization.months.january),   value: "1"},
                                         {name: capitaliseFirstLetter(localization.months.february),  value: "2"},
                                         {name: capitaliseFirstLetter(localization.months.march),     value: "3"},
@@ -51,7 +73,8 @@ window.DocumentsListDefinition = function(archive) { return {
                                         {name: capitaliseFirstLetter(localization.months.november),  value: "11"},
                                         {name: capitaliseFirstLetter(localization.months.december),  value: "12"}
                                       ]})
-        ],
+            ]
+    }), 
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
         new Cell({name: localization.archive.documents.columns.status, width:"52px", field:"status",

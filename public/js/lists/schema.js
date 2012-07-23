@@ -72,6 +72,11 @@
               f.bind('change', function(){ paging.changePage(0);});
               f.bind('change', function() {schema.trigger('change')});
           });
+          if (this.advancedselectfiltering() != undefined)
+          _.each(this.advancedselectfiltering().selectfilterings(), function(f) {
+              f.bind('change', function(){ paging.changePage(0);});
+              f.bind('change', function() {schema.trigger('change')});
+          });
           this.sorting().bind('change', function() {schema.trigger('change')});
           this.paging().bind('change:pageCurrent', function() {schema.trigger('change')});
         },
@@ -94,6 +99,9 @@
         },
         selectfiltering: function() {
             return this.get("selectfiltering");
+        },
+        advancedselectfiltering : function() {
+            return this.get("advancedselectfiltering");  
         },
         sorting: function() {
             return this.get("sorting");
@@ -119,10 +127,20 @@
         namespace: function() {
             return this.get('namespace');
         },
+        allFiltering : function() {
+            var selectF = this.selectfiltering();
+            var aselectF = this.advancedselectfiltering() != undefined ? this.advancedselectfiltering().selectfilterings() : [];
+            return _.union(selectF,aselectF);
+            
+        },
         initSessionStorageNamespace: function(name) {
             this.set({ namespace: name });
             this.textfiltering().setSessionStorageNamespace(name);
             _.each(this.selectfiltering(), function(f) {f.setSessionStorageNamespace(name)});
+            if (this.advancedselectfiltering() != undefined) {
+                this.advancedselectfiltering().setSessionStorageNamespace(name);
+                _.each(this.advancedselectfiltering().selectfilterings(), function(f) {f.setSessionStorageNamespace(name)});
+            }
             this.sorting().setSessionStorageNamespace(name);
         },
         getSchemaUrlParams: function() {
@@ -130,7 +148,7 @@
             params.page = this.paging().pageCurrent();
             params.offset = params.page * this.paging().pageSize();
             params.textfilter = this.textfiltering().text();
-            params.selectfilter = JSON.stringify(_.map(this.selectfiltering(),function(f) {return {name: f.name(),value: (f.selected() != undefined) ? f.selected().value : ""}; }));
+            params.selectfilter = JSON.stringify(_.map(this.allFiltering(),function(f) {return {name: f.name(),value: (f.selected() != undefined) ? f.selected().value : ""}; }));              
             params.sort = this.sorting().current();
             params.sortReversed = this.sorting().isAsc();
             return params;

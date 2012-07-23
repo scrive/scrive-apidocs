@@ -77,6 +77,9 @@
         name: function() {
             return this.get("name");
         },
+        textWidth: function() {
+            return this.get("textWidth");
+        }, 
         selected: function() {
             return this.find(this.get("selected"));
         },
@@ -131,19 +134,88 @@
                 options = options_;         
                 
             }
-            var select = Select.init({
+            var select = new Select({
                 options : options,
                 name : name,
+                theme : selectFiltering.selected() != undefined ? "dark" : "warm",
+                textWidth : selectFiltering.textWidth(),
                 onSelect : function(value) {
                     selectFiltering.select(value);
                 }
-            })
-            $(this.el).empty();
-            $(this.el).append(select.input());;
+            });
+            $(this.el).empty().append(select.view().el);
         }
     });
 
 
 
+  window.AdvancedSelectFiltering = Backbone.Model.extend({
+        defaults : {
+            selectfilterings : [],
+            on : false
+        },
+        initialize: function(args) {
+        },
+        toogle: function() {
+            var val = !this.on();
+            SessionStorage.set(this.get("namespace"), "advanced-filtering", "" + val);
+            this.set({"on" : val});
+        },
+        on : function() {
+            return this.get("on") == true;
+        },
+        selectfilterings : function() {
+            return this.get("selectfilterings");
+        },
+        setSessionStorageNamespace: function(namespace) {
+            this.set({ namespace: namespace });
+            var fss = SessionStorage.get(namespace, "advanced-filtering");
+            if ((fss == "true" && this.get("on") == false) || fss == "false" && this.get("on") == true)
+                this.toogle();
+        }
+    });
+  
+    window.AdvancedSelectFilteringToogleView = Backbone.View.extend({
+        model: AdvancedSelectFiltering,
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            var view = this;
+            this.model.bind('change', function() {view.render();})
+            this.render();
+        },
+        render: function() {
+            var model = this.model;
+            $(this.el).empty();
+            var a = $("<a href='#'/>");
+            a.click(function() {model.toogle();return false;});
+            if (!this.model.on())
+                a.text("Show advanced search");
+            else
+                a.text("Hide advanced search");
+            $(this.el).append(a);
+        }
+    });
     
+    window.AdvancedSelectFilteringView = Backbone.View.extend({
+        model: AdvancedSelectFiltering,
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            var view = this;
+            this.model.bind('change', function() {view.render();})
+            this.render();
+        },
+        render: function() {
+            var model = this.model;
+            var container = $("<div class='advanced-search-box'/>");
+            $(this.el).children().detach();
+            if (!model.on()) return;
+            $(this.el).append(container);
+            var tr = $("<tr/>");
+            container.append($("<table/>").append($("<tbody/>").append(tr)))
+            _.each(model.selectfilterings(), function(f) {
+                tr.append($("<td/>").append(new SelectFilteringView({model: f, el: $("<div class='advanced-select'/>")}).el));
+            })
+            return;
+        }
+    });
 })(window);

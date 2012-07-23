@@ -24,7 +24,7 @@ window.SelectModel = Backbone.Model.extend({
   defaults : {
       name  : "",
       options : [],
-      expanded : false
+      expanded : false,
   },
   initialize: function(args){
       var model = this;
@@ -43,8 +43,17 @@ window.SelectModel = Backbone.Model.extend({
   name : function(){
        return this.get("name");
   },
+  iconClass : function(){
+       return this.get("iconClass");
+  }, 
   expanded : function(){
        return this.get("expanded");
+  },
+  theme : function(){
+       return this.get("theme");
+  },
+  textWidth : function(){
+       return this.get("textWidth");
   },
   toggleExpand: function() {
        this.set({"expanded" : !this.expanded()});    
@@ -64,7 +73,7 @@ window.SelectOptionView = Backbone.View.extend({
         this.render();
     },
     render: function () {
-        var a = $("<a/>").text(this.model.name());
+        var a = $("<span/>").text(this.model.name());
         $(this.el).append(a);
         return this;
     },
@@ -80,56 +89,84 @@ var SelectView = Backbone.View.extend({
         _.bindAll(this, 'render');
         this.model.bind('change', this.render);
         this.model.view = this;
+        var view = this;
+        $(this.el).mouseout(function() {
+                 setTimeout(function() {view.closeIfNeeded();}, 1000)
+              });
+        $(this.el).mouseenter(function() {view.enterdate = new Date().getTime();});
         this.render();
+    },
+    closeIfNeeded : function() {
+        if (   $(":hover", this.el).size() == 0
+            && this.model.expanded()
+            && new Date().getTime() - this.enterdate > 900
+        )   this.model.toggleExpand();
+    },
+    button : function() {
+        var button = $("<div class='select-button' />");
+        button.append("<div class='select-button-left' />");
+        var label = $("<div class='select-button-label' />");
+        if (this.model.iconClass() != undefined)
+            label.append($("<div class='select-icon'>").addClass(this.model.iconClass()));
+        else
+            label.text(this.model.name());
+        if (this.model.textWidth() != undefined)
+            label.css("width",this.model.textWidth());
+        button.append(label);
+        button.append("<div class='select-button-right' />");
+        return button;
     },
     render: function () {
         $(this.el).empty();
-        var options = $("<ul class='list-dd-opts'/>");
+        $(this.el).addClass(this.model.theme() + "-theme");
+        var view = this;
+        var options = $("<ul class='select-opts'/>");
         var model = this.model;
-        var o = this.model.options();
+        var button = this.button();
         _.each(model.options(),function(e){
                 var li = $("<li/>");
                 new SelectOptionView({model : e, el : li});
                 options.append(li);
         });
-        var button = $("<div class='list-dd-button'><a><p>"+model.name()+"</p></a></div>");
+
         button.click(function(){
             model.toggleExpand();
         });
         if (model.expanded())
             {
-              button.addClass("list-dd-exp");
+              button.addClass("select-exp");
               options.css("display", "block");
             }
         else
             {
-              button.removeClass("list-dd-exp");
+              button.removeClass("select-exp");
               options.css("display", "none");
             }
-        $(this.el).addClass("list-dd");
         $(this.el).append(button).append(options);
+        view.close = false;
         return this;
     }
 });
 
 
 
-window.Select = {
-    init: function (args) {
+window.Select = function(args) {
           var model = new SelectModel ({
                                         options: args.options,
                                         name : args.name,
-                                        onSelect : args.onSelect
+                                        iconClass : args.iconClass,
+                                        onSelect : args.onSelect,
+                                        theme : args.theme != undefined ? args.theme : "standard",
+                                        textWidth : args.textWidth
                                        });
-          var input = $("<div/>");
+          var input = $("<div class='select'/>");
           if (args.cssClass!= undefined)
               input.addClass(args.cssClass);
           var view = new SelectView({model : model, el : input});
           return new Object({
-              input : function() {return input;}
-            });
-        }
-    
+              model : function() {return model;},
+              view : function()  {return view;}
+            });    
 };
 
 })(window); 

@@ -157,7 +157,9 @@
 
 .list-container .col {
        margin: 0 20px;
-       padding: 15px 0;
+       padding-top: 15px;
+       padding-bottom: 10px;
+       max-width: 800px;
 }
 
 /* Select boxes and search boxes for lists */
@@ -173,53 +175,37 @@
         -webkit-border-radius: 3px;
 }
 
-
-.list-dd {
-    font: 12px/24px "Lucida Grande";
-        text-indent: 9px;
-        position: relative;
-    margin-right: 15px;
+.gearImage  {
+    background-image: url(../img/gear.png);
+    display: block;
+    height: 16px;
+    width: 16px;
 }
 
-.list-dd-button {
-        background: url(../img/dropdown.png) no-repeat;
-        height: 25px;
-        position: relative;
-        width: 109px;
-        z-index: 2;
+/* Advanced filtering */
+.advanced-search {
+    background: #ffffff;
+    width : 100%;
+}
+.advanced-search .advanced-search-box {
+    border-top: 1px solid #ccc;
+    padding-top: 5px;
+    padding-bottom: 2px;
+    margin-left: auto;
+    margin-right: auto;
+    display : block;
+    text-align : center;
 }
 
-.list-dd-exp {
-       height: 21px;
+.advanced-search-box table {
+    margin-left: auto;
+    margin-right: auto;
+    width: 95%
 }
 
-.list-dd-button > a {
-        color: #000;
-        text-decoration: none;
-}
-
-.list-dd {
-    width: 110px !important;
-}
-
-.list-dd .list-dd-opts {
-        background: #e9e9e9;
-        display: none;
-        left: 0;
-        position: absolute;
-        top: 20px;
-        width: 200px;
-        border: 1px solid #bbbbbb;
-        z-index: 1;
-        padding-top: 5px;
-}
-
-.list-dd .list-dd-opts a {
-        color: #999;
-        display: block;
-        text-decoration: none;
-}
-
-.list-dd .list-dd-opts a:hover {
-        color: #000;
+.advanced-select{
+  display: inline-block;
+  margin-left: auto;
+  margin-right: auto;
+  text-align : center;
 }
