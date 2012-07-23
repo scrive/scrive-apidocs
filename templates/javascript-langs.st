@@ -437,10 +437,11 @@ javascriptLocalisation =
                     , subtotal    : "$_paymentPlanSubtotal()$"
                     , total       : "$_paymentPlanTotal()$"
                     , payments    : "$_paymentPlanPayments()$"
-                    , nextpayments : "$_paymentPlanNextPayments()$"
+                    , nextpayment : "$_paymentPlanNextPayment()$"
                     , previouspayments : "$_paymentPlanPreviousPayments()$"
-                    , changesubscription : "change subscription"
-                    , changebilling: "change billing"
+                    , changesubscription : "$_paymentPlanChangeSubscription()$"
+                    , changebilling: "$_paymentPlanChangeBilling()$"
+                    , none: "$_paymentPlanNone()$"
                     }
         }
       , documents : "$_docListTabsDocs()$"

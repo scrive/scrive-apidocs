@@ -282,6 +282,7 @@
 
     var PaymentsView = Backbone.View.extend({
         tagName: "div",
+        className: "payments",
         initialize: function(args){
             _.bindAll(this);
         },
@@ -449,7 +450,7 @@
             var currency = this.model.plan().subscription().currency();
             var quantity = pOrS.quantity();
             var txt = 
-                amountf + " " + currency + " / month x " + quantity + localization.payments.user;
+                amountf + " " + currency + " x " + quantity + " " + localization.payments.user;
             return $('<div class="plan-price" />').text(txt);
         },
         planTotal: function() {
@@ -460,12 +461,12 @@
             var total    = amount * quantity;
             var totalf   = view.addMark(total);
             var currency = this.model.plan().subscription().currency();
-            var txt      = totalf + " " + currency;
+            var txt      = "Total: " + totalf + " " + currency + " " + "billed monthly." ;
             return $('<div class="plan-total" />').text(txt);
         },
         pendingLine: function() {
             var plan = this.model.plan().subscription();
-            var txt = "You have " + plan.name() + " access until " + plan.billingEnds + ".";
+            var txt = "You have " + plan.name() + " access until " + plan.billingEnds() + ".";
             return $('<div class="plan-pending" />').text(txt);
         },
         currentSubscriptionTable: function() {
@@ -473,10 +474,10 @@
             var model = view.model;
             
             var plan = $('<div class="plan" />');
-            var planheader = $('<div class="plan-header" />')
+            var planheader = $('<div class="header" />')
                 .text(localization.payments.table.currentplan);
             
-            var plantable = $('<div class="plan-table" />')
+            var plantable = $('<div class="table" />')
                 .append(view.planName())
                 .append(view.planPrice())
                 .append(view.planTotal());
@@ -497,13 +498,14 @@
             var price        = pOrS.unitAmountInCents();
             var quantity     = pOrS.quantity();
             var total        = price * quantity;
-            var totalf       = view.addMark(total);
+            var currency     = model.plan().subscription().currency();
+            var totalf       = view.addMark(total) + " " + currency;
 
             var div = $('<div class="next-payment" />');
-            var header = $('<div class="header" />')
+            var header = $('<div class="subheader" />')
                 .text(localization.payments.table.nextpayment);
             var line = $('<div class="line" />')
-                .append($('<span class="date" />').text(billingEndsf))
+                .append($('<span class="invoice-date" />').text(billingEndsf))
                 .append($('<span class="total" />').text(totalf));
 
             return div.append(header).append(line);
@@ -513,19 +515,23 @@
             var model = view.model;
 
             var div = $('<div class="previous-payments" />');
-            var header = $('<div class="next-payment-header" />')
-                .text(localization.payments.table.nextpayment);
+            var header = $('<div class="subheader" />')
+                .text(localization.payments.table.previouspayments);
             var lines = $([]);
             _.each(model.plan().invoices(), function(invoice) {
                 var date   = invoice.date();
                 var datef  = date.toString(); // todo: change to something better
                 var total  = invoice.totalInCents();
-                var totalf = view.addMark(total);
-                var line   = $('<div class="next-payment-line" />')
-                    .append($('<span class="date" />').text(datef))
+                var currency     = model.plan().subscription().currency();
+                var totalf = view.addMark(total) + " " + currency;
+                var line   = $('<div class="line" />')
+                    .append($('<span class="invoice-date" />').text(datef))
                     .append($('<span class="total" />').text(totalf));
                 lines.add(line);
             });
+
+            if(lines.length === 0)
+                lines = $('<div class="line" />').text(localization.payments.table.none);
 
             return div
                 .append(header)
@@ -536,9 +542,9 @@
             var model = view.model;
             
             var payments = $('<div class="payments" />');
-            var paymentsheader = $('<div class="payments-header" />')
+            var paymentsheader = $('<div class="header" />')
                 .text(localization.payments.table.payments);
-            var paymentstable = $('<div class="payments-table" />')
+            var paymentstable = $('<div class="table" />')
                 .append(view.nextPayment())
                 .append(view.previousPayments());
 
@@ -550,9 +556,9 @@
             //var pOrS = model.plan().subscription().pending() || model.plan().subscription();
 
             var changesub = $('<div class="changesubscription" />');
-            var changesubheader = $('<div class="changesub-header" />')
+            var changesubheader = $('<div class="header" />')
                 .text(localization.payments.table.changesubscription);
-            var changesubtable = $('<div class="changesub-table" />');
+            var changesubtable = $('<div class="table" />');
 
             var select = $('<select name="plan" id="js-select-subscription" />');
             
@@ -586,11 +592,14 @@
                                   " / month x " + quantity  + 
                                   " " + localization.payments.user))
                     .append($('<div class="plan-total" />')
-                            .text(totalf + " " + currency));
+                            .text("Total: " + totalf + " " + currency + " " + "billed monthly"));
             });
+
+            select.change();
 
             var button = Button.init({color: 'green',
                                       size: 'small',
+                                      cssClass: 'savechanges',
                                       text: 'Save Changes',
                                       onClick: function() {
                                           var message = "Your card will be credited for the remaining time this month and charged the new amount.";
@@ -627,16 +636,17 @@
             return changesub
                 .append(changesubheader)
                 .append(changesubtable
-                        .append(select)
-                        .append(totaltable)
-                        .append(button.input()));
+                        .append($('<span />').text("Select Plan: ").append(select))
+                        .append(totaltable))
+                .append(button.input())
+                .append($('<div class="clearfix" />'));
         },
         changeBillingForm: function() {
             var view = this;
             var model = view.model;
             
             var billing = $('<div class="changebilling" />');
-            var billingheader = $('<div class="changebilling-header" />')
+            var billingheader = $('<div class="header" />')
                 .text(localization.payments.table.changebilling);
             var billingform = $('<div class="changebilling-form" />');
             Recurly.config({
@@ -683,6 +693,7 @@
             $el.append(view.currentSubscriptionTable())
                 .append(view.paymentsTable())
                 .append(view.cancelButton())
+                .append($('<div class="clearfix" />'))
                 .append(view.changeSubscription())
                 .append(view.changeBillingForm());
 
@@ -711,7 +722,8 @@
             var button = Button.init({color: "red"
                                       ,size: "small"
                                       ,text: "Cancel account"
-                                      ,onClick: action});
+                                      ,onClick: action
+                                      ,cssClass: "cancel"});
             return button.input();
         },
         render: function() {
