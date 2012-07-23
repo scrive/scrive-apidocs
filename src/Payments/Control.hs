@@ -4,7 +4,7 @@ module Payments.Control where
 import Control.Monad.State
 --import Data.Convertible
 import Data.Functor
-import Data.List
+--import Data.List
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 
@@ -64,13 +64,20 @@ handleSubscriptionDashboardInfo = do
           billingsig  <- liftIO $ genSignature recurlyPrivateKey [("account[account_code]", show $ ppAccountCode plan)]
           -- we should be syncing somewhere else
           esub <- liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show $ ppAccountCode plan
+          einvoices <- liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey (show $ ppAccountCode plan)
           msub <- case esub of
             Left e -> do
               Log.debug $ "When fetching subscriptions for payment plan: " ++ e
               return Nothing
-            Right subs -> return $ find (\s -> subState s == "active") subs
+            Right (sub:_) -> return $ Just sub
+            Right _ -> do
+              Log.debug $ "No subscriptions returned."
+              return Nothing
+          when (isLeft einvoices) $
+            Log.debug $ "When fetching invoices for payment plan: " ++ fromLeft einvoices
           return $ J.object "plan" $ do
             J.value "subscription" $ msub
+            J.value "invoices" $ toMaybe einvoices
             J.value "code"   $ show $ ppAccountCode plan
             J.value "plan"   $ show $ ppPricePlan plan
             J.value "status" $ show $ ppStatus plan
@@ -130,8 +137,10 @@ handleChangePlan = do
   let eid = maybe (Left $ userid user) Right $ usercompany user
       ac  = ppAccountCode plan
   case syncAction (quantity, newplan) 
-                          (subQuantity subscription, maybe (subQuantity subscription) penQuantity (subPending subscription),
-                           ppPricePlan plan,         ppp) of
+                  (subQuantity subscription, 
+                   maybe (subQuantity subscription) penQuantity (subPending subscription),
+                   ppPricePlan plan,
+                   ppp) of
     RNoAction -> return ()
     RUpdateNow -> do
       s <- guardRightM' $ liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity True

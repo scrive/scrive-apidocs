@@ -155,12 +155,17 @@ instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
     case r of
       1 -> return True
       _ -> do
-        kPrepare $ "INSERT INTO payment_plans (account_code, plan, status, account_type, user_id, company_id) " ++
-          "SELECT ?, ?, ?, ?, ?, ? " ++
+        kPrepare $ "INSERT INTO payment_plans (account_code, plan, status, plan_pending, status_pending, quantity, quantity_pending, sync_date, account_type, user_id, company_id) " ++
+          "SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? " ++
           "WHERE ? NOT IN (SELECT account_code FROM payment_plans) "
         r' <- kExecute $ [toSql $ ppAccountCode pp
                          ,toSql $ ppPricePlan pp
-                         ,toSql $ ppStatus pp] ++
+                         ,toSql $ ppStatus pp
+                         ,toSql $ ppPendingPricePlan pp 
+                         ,toSql $ ppPendingStatus pp
+                         ,toSql $ ppQuantity pp
+                         ,toSql $ ppPendingQuantity pp
+                         ,toSql $ tm] ++
               case pp of
                 UserPaymentPlan {} -> [toSql (1::Int)
                                       ,toSql $ ppUserID pp

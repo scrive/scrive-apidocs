@@ -9,9 +9,15 @@
 (function(window) {
 
     var planPrices = {
-        basic :   199,
-        branding: 279,
-        advanced: 299
+        basic :   19900,
+        branding: 27900,
+        advanced: 29900
+    };
+
+    var planPrice = function(p) {
+        if(p in planPrices)
+            return planPrices[p];
+        return -1;
     };
 
     var maketable = function(header, rows, footer) {
@@ -41,31 +47,23 @@
         return table;
     };
 
-    var invoicelist = function() {
-        return KontraList().init({
-            name : "Invoice Table",
-            schema: new Schema({
-                url: "/payments/invoices",
-                sorting: new Sorting({ fields: ["date", "invoice_number", "total_in_cents", "currency", "state"]}),
-                paging: new Paging({}),
-                cells : [
-                    new Cell({name: "Date",      width:"30px", field:"date",
-                              rendering: function(value, _idx, _model) {
-                                  var date = new Date(value);
-                                  var curr_date  = date.getDate();
-                                  var curr_month = date.getMonth() + 1; //Months are zero based
-                                  var curr_year  = date.getFullYear();
-                                  return curr_date + "-" + curr_month + "-" + curr_year;
-                              }
-                             }),
-                    new Cell({name: "Invoice #", width:"30px", field:"invoice_number"}),
-                    new Cell({name: "Total",     width:"30px", field:"total_in_cents"}),
-                    new Cell({name: "Currency",  width:"30px", field:"currency"}),
-                    new Cell({name: "Status",    width:"30px", field:"state"})
-                ]
-            })
-        });
-    };
+    var PaymentsInvoiceModel = Backbone.Model.extend({
+        number: function() {
+            return this.get('invoice_number');
+        },
+        totalInCents: function() {
+            return this.get('total_in_cents');
+        },
+        currency: function() {
+            return this.get('currency');
+        },
+        state: function() {
+            return this.get('state');
+        },
+        date: function() {
+            return new Date(this.get('date'));
+        }
+    });
 
     var PaymentsContactModel = Backbone.Model.extend({
         firstName: function(n) {
@@ -188,6 +186,10 @@
                 this.set({subscription: new PaymentsSubscriptionModel(args.subscription)});
             else
                 this.set({subscription: undefined});
+            if(args.invoices)
+                this.set({invoices: _.map(args.invoices, function(i) { return new PaymentsInvoiceModel(i) })});
+            else
+                this.set({invoices: undefined});
         },
         accountCode: function() {
             return this.get("code");
@@ -213,6 +215,9 @@
         },
         subscription: function() {
             return this.get("subscription");
+        },
+        invoices: function() {
+            return this.get("invoices");
         }
     });
 
@@ -229,10 +234,6 @@
                 this.set({signup: new PaymentsSignupModel(args.signup)});
             else
                 this.set({signup: undefined});
-            if(this.plan() && !this.invoicelist())
-                this.set({invoicelist: invoicelist()});
-            else
-                this.set({invoicelist: undefined});
         },
         contact: function() {
             return this.get("contact");
@@ -283,7 +284,6 @@
         tagName: "div",
         initialize: function(args){
             _.bindAll(this);
-            
         },
         showRecurlySubscriptionForm: function() {
             var view = this;
@@ -423,11 +423,6 @@
                 return localization.payments.plans[p];
             return "Unknown";
         },
-        planPrice: function(p) {
-            if(p in planPrices)
-                return planPrices[p];
-            return -1;
-        },
         addMark: function(p) {
             return (""+p).slice(0,-2) + "," + (""+p).slice(-2);
         },
@@ -442,17 +437,320 @@
                 ]
             );
         },
+        planName: function() {
+            var pOrS = this.model.plan().subscription().pending() || this.model.plan().subscription();
+            return $('<div class="plan-name" />').text(pOrS.name());
+        },
+        planPrice: function() {
+            var view = this;
+            var pOrS = this.model.plan().subscription().pending() || this.model.plan().subscription();
+            var amount   = pOrS.unitAmountInCents();
+            var amountf  = view.addMark(amount);
+            var currency = this.model.plan().subscription().currency();
+            var quantity = pOrS.quantity();
+            var txt = 
+                amountf + " " + currency + " / month x " + quantity + localization.payments.user;
+            return $('<div class="plan-price" />').text(txt);
+        },
+        planTotal: function() {
+            var view = this;
+            var pOrS = this.model.plan().subscription().pending() || this.model.plan().subscription();
+            var amount   = pOrS.unitAmountInCents();
+            var quantity = pOrS.quantity();
+            var total    = amount * quantity;
+            var totalf   = view.addMark(total);
+            var currency = this.model.plan().subscription().currency();
+            var txt      = totalf + " " + currency;
+            return $('<div class="plan-total" />').text(txt);
+        },
+        pendingLine: function() {
+            var plan = this.model.plan().subscription();
+            var txt = "You have " + plan.name() + " access until " + plan.billingEnds + ".";
+            return $('<div class="plan-pending" />').text(txt);
+        },
+        currentSubscriptionTable: function() {
+            var view = this;
+            var model = view.model;
+            
+            var plan = $('<div class="plan" />');
+            var planheader = $('<div class="plan-header" />')
+                .text(localization.payments.table.currentplan);
+            
+            var plantable = $('<div class="plan-table" />')
+                .append(view.planName())
+                .append(view.planPrice())
+                .append(view.planTotal());
+
+            if(model.plan().subscription().pending())
+                plantable.append(view.pendingLine());
+
+            return plan.append(planheader).append(plantable);
+        },
+        nextPayment: function() {
+            var view = this;
+            var model = view.model;
+
+            var pOrS = model.plan().subscription().pending() 
+                || model.plan().subscription();
+            var billingEnds  = model.plan().subscription().billingEnds();
+            var billingEndsf = billingEnds.toString(); // todo: change to something better
+            var price        = pOrS.unitAmountInCents();
+            var quantity     = pOrS.quantity();
+            var total        = price * quantity;
+            var totalf       = view.addMark(total);
+
+            var div = $('<div class="next-payment" />');
+            var header = $('<div class="header" />')
+                .text(localization.payments.table.nextpayment);
+            var line = $('<div class="line" />')
+                .append($('<span class="date" />').text(billingEndsf))
+                .append($('<span class="total" />').text(totalf));
+
+            return div.append(header).append(line);
+        },
+        previousPayments: function() {
+            var view = this;
+            var model = view.model;
+
+            var div = $('<div class="previous-payments" />');
+            var header = $('<div class="next-payment-header" />')
+                .text(localization.payments.table.nextpayment);
+            var lines = $([]);
+            _.each(model.plan().invoices(), function(invoice) {
+                var date   = invoice.date();
+                var datef  = date.toString(); // todo: change to something better
+                var total  = invoice.totalInCents();
+                var totalf = view.addMark(total);
+                var line   = $('<div class="next-payment-line" />')
+                    .append($('<span class="date" />').text(datef))
+                    .append($('<span class="total" />').text(totalf));
+                lines.add(line);
+            });
+
+            return div
+                .append(header)
+                .append(lines);
+        },
+        paymentsTable: function() {
+            var view = this;
+            var model = view.model;
+            
+            var payments = $('<div class="payments" />');
+            var paymentsheader = $('<div class="payments-header" />')
+                .text(localization.payments.table.payments);
+            var paymentstable = $('<div class="payments-table" />')
+                .append(view.nextPayment())
+                .append(view.previousPayments());
+
+            return payments.append(paymentsheader).append(paymentstable);
+        },
+        changeSubscription: function() {
+            var view = this;
+            var model = view.model;
+            //var pOrS = model.plan().subscription().pending() || model.plan().subscription();
+
+            var changesub = $('<div class="changesubscription" />');
+            var changesubheader = $('<div class="changesub-header" />')
+                .text(localization.payments.table.changesubscription);
+            var changesubtable = $('<div class="changesub-table" />');
+
+            var select = $('<select name="plan" id="js-select-subscription" />');
+            
+            _.each(['basic', 'branding', 'advanced'], function(value) {
+                var name = localization.payments.plans[value];
+                var price = planPrice(value);
+                var pricef = view.addMark(price);
+                var currency = model.plan().subscription().currency();
+                var txt = 
+                    name + " " + pricef + " " + currency;
+                select.append($("<option />").attr("value", value).text(txt));
+            });
+
+            // todo: make advanced selected
+
+            var totaltable = $('<div class="totaltable" />');
+
+            select.change(function() {
+                var plan     = select.val();
+                var quantity = model.plan().subscription().quantity();
+                var price    = planPrice(plan);
+                var pricef   = view.addMark(price);
+                var total    = price * quantity;
+                var totalf   = view.addMark(total);
+                var currency = model.plan().subscription().currency();
+                
+                totaltable.empty();
+                totaltable
+                    .append($('<div class="plan-price" />')
+                            .text(pricef + " " + currency +
+                                  " / month x " + quantity  + 
+                                  " " + localization.payments.user))
+                    .append($('<div class="plan-total" />')
+                            .text(totalf + " " + currency));
+            });
+
+            var button = Button.init({color: 'green',
+                                      size: 'small',
+                                      text: 'Save Changes',
+                                      onClick: function() {
+                                          var message = "Your card will be credited for the remaining time this month and charged the new amount.";
+                                          
+                                          var conf = Confirmation.popup({
+                                              title: "Change account",
+                                              acceptText: "Change account",
+                                              content: $('<p />').text(message),
+                                              submit: new Submit({url: "/payments/changeplan",
+                                                                  method: "POST",
+                                                                  inputs: select,
+                                                                  ajax: true,
+                                                                  ajaxsuccess: function() {
+                                                                      // Put a popup here?
+                                                                      $.ajax("/payments/info.json",
+                                                                             {dataType:'json',
+                                                                              success: function(data) {
+                                                                                  model.initialize(data);
+                                                                                  view.render();
+                                                                              }
+                                                                             });
+                                                                  },
+                                                                  onSend: function() {
+                                                                      conf.view.clear();
+                                                                      LoadingDialog.open("Saving");
+                                                                  }
+                                                                 })
+                                          });
+                                          return false;
+                                          
+                                      }
+                                     });
+
+            return changesub
+                .append(changesubheader)
+                .append(changesubtable
+                        .append(select)
+                        .append(totaltable)
+                        .append(button.input()));
+        },
+        changeBillingForm: function() {
+            var view = this;
+            var model = view.model;
+            
+            var billing = $('<div class="changebilling" />');
+            var billingheader = $('<div class="changebilling-header" />')
+                .text(localization.payments.table.changebilling);
+            var billingform = $('<div class="changebilling-form" />');
+            Recurly.config({
+                subdomain: model.server().subdomain()
+                , currency: 'SEK'
+                , country: model.contact().country()
+            });
+            Recurly.buildBillingInfoUpdateForm(
+                {target: billingform, // will this work?
+                 signature: model.plan().signatures().billing, 
+                 accountCode: model.plan().accountCode(),
+                 account: {
+                     firstName: model.contact().firstName()
+                     , lastName: model.contact().lastName()
+                     , email: model.contact().email()
+                     , companyName: model.contact().companyName()
+                 },
+                 billingInfo: {
+                     firstName: model.contact().firstName()
+                     , lastName: model.contact().lastName()
+                     , country: model.contact().country()
+                 },
+                 addressRequirement: 'none',
+                 distinguishContactFromBillingInfo: false,
+                 collectCompany: true,
+                 successHandler: function(stuff) {
+                     $.ajax("/payments/info.json",
+                            { dataType: "json",
+                              success: function(data) {
+                                  model.initialize(data);
+                                  view.render();
+                              }
+                            });
+                 }
+                }
+            );
+            return billing.append(billingheader).append(billingform);
+        },
         showCurrentSubscription: function () {
             var view = this;
             var model = view.model;
             var $el = $(view.el);
 
-            var plan = $('<div class="plan" />');
-            var planheader = $('<div class="plan-header" />')
-                .append(localization.payments.table.currentplan + ": ")
-                .append($('<span class="plan-name" />').append(model.plan().subscription().name()));
-            
-            var plantable = $('<div class="plan-table" />').append(
+            $el.append(view.currentSubscriptionTable())
+                .append(view.paymentsTable())
+                .append(view.cancelButton())
+                .append(view.changeSubscription())
+                .append(view.changeBillingForm());
+
+        },
+        cancelButton: function() {
+            var view   = this;
+            var model  = view.model;
+            var action = function() {
+                $.ajax("/payments/changeplan",
+                       {dataType: "json",
+                        type: "POST",
+                        data: {xtoken: readCookie("xtoken"),
+                               plan: 'free'},
+                        success: function() {
+                            $.ajax("/payments/info.json",
+                                   {dataType: "json",
+                                    success: function(data) {
+                                        model.initialize(data);
+                                        view.render();
+                                    }
+                                   });
+                        }
+                       });
+                return false;
+            };
+            var button = Button.init({color: "red"
+                                      ,size: "small"
+                                      ,text: "Cancel account"
+                                      ,onClick: action});
+            return button.input();
+        },
+        render: function() {
+            var view = this;
+            var model = view.model;
+            var $el = $(view.el);
+            $el.empty();
+            if(model.signup())
+                view.showRecurlySubscriptionForm();
+            else
+                view.showCurrentSubscription();
+            LoadingDialog.close();
+        }
+    });
+
+    window.paymentsDashboardModel = null;
+    window.paymentsDashboardView  = null;
+
+    window.bootPaymentsDashboard = function(selector) {
+        LoadingDialog.open("Loading");
+        $("head").append('<link rel="stylesheet" href="/libs/recurly/recurly.css"></link>');
+
+        $.ajax("/payments/info.json", 
+               {
+                   dataType: "json",
+                   success: function(data) {
+                       window.paymentsDashboardModel = new PaymentsModel(data);
+                       window.paymentsDashboardView  = new PaymentsView({model:window.paymentsDashboardModel});
+                       window.paymentsDashboardView.render();
+                       $(selector).append(window.paymentsDashboardView.el);
+                   }
+               });
+    };
+
+})(window);
+
+// spare code
+
+/*
                 maketable([localization.payments.table.item,
                            localization.payments.table.price,
                            localization.payments.table.quantity,
@@ -462,11 +760,9 @@
                             model.plan().subscription().quantity()  + " " + localization.payments.user,
                             view.addMark(model.plan().subscription().unitAmountInCents() * model.plan().subscription().quantity()) + "kr"]],
                           ["", "", localization.payments.table.total, view.addMark(model.plan().subscription().unitAmountInCents() * model.plan().subscription().quantity()) + "kr"]));
-            
-            plan.append(planheader).append(plantable);
-            $el.append(plan);
+*/
 
-            $el.append(model.invoicelist().view.el);
+/*
 
             var plans = $('<div />').addClass('plans');
             plans.append($('<h3>').append('Change account type:'));
@@ -559,34 +855,36 @@
 
             $el.append(view.cancelButton());
             $el.append($('<div />').addClass('js-billing-button').append(view.changeBillingButton()));
-        },
-        cancelButton: function() {
-            var view = this;
-            var model = view.model;
-            var button = Button.init({color: "red"
-                                     ,size: "small"
-                                     ,text: "Cancel account"
-                                     ,onClick: function() {
-                                         $.ajax("/payments/changeplan",
-                                                {dataType: "json",
-                                                 type: "POST",
-                                                 data: {xtoken: readCookie("xtoken"),
-                                                        plan: 'free'},
-                                                 success: function() {
-                                                     $.ajax("/payments/info.json",
-                                                            {
-                                                                dataType: "json",
-                                                                success: function(data) {
-                                                                    model.initialize(data);
-                                                                    view.render();
-                                                                }
-                                                            });
-                                                 }
-                                                });
-                                         return false;
-                                     }});
-            return button.input();
-        },
+
+*/
+/*
+    var invoicelist = function() {
+        return KontraList().init({
+            name : "Invoice Table",
+            schema: new Schema({
+                url: "/payments/invoices",
+                sorting: new Sorting({ fields: ["date", "invoice_number", "total_in_cents", "currency", "state"]}),
+                paging: new Paging({}),
+                cells : [
+                    new Cell({name: "Date",      width:"30px", field:"date",
+                              rendering: function(value, _idx, _model) {
+                                  var date = new Date(value);
+                                  var curr_date  = date.getDate();
+                                  var curr_month = date.getMonth() + 1; //Months are zero based
+                                  var curr_year  = date.getFullYear();
+                                  return curr_date + "-" + curr_month + "-" + curr_year;
+                              }
+                             }),
+                    new Cell({name: "Invoice #", width:"30px", field:"invoice_number"}),
+                    new Cell({name: "Total",     width:"30px", field:"total_in_cents"}),
+                    new Cell({name: "Currency",  width:"30px", field:"currency"}),
+                    new Cell({name: "Status",    width:"30px", field:"state"})
+                ]
+            })
+        });
+    };
+*/
+/*
         changeBillingButton: function() {
             var view = this;
             var model = view.model;
@@ -633,36 +931,4 @@
                                      }});
             return button.input();
         },
-        render: function() {
-            var view = this;
-            var model = view.model;
-            var $el = $(view.el);
-            $el.empty();
-            if(model.signup())
-                view.showRecurlySubscriptionForm();
-            else
-                view.showCurrentSubscription();
-            LoadingDialog.close();
-        }
-    });
-
-    window.paymentsDashboardModel = null;
-    window.paymentsDashboardView  = null;
-
-    window.bootPaymentsDashboard = function(selector) {
-        LoadingDialog.open("Loading");
-        $("head").append('<link rel="stylesheet" href="/libs/recurly/recurly.css"></link>');
-
-        $.ajax("/payments/info.json", 
-               {
-                   dataType: "json",
-                   success: function(data) {
-                       window.paymentsDashboardModel = new PaymentsModel(data);
-                       window.paymentsDashboardView  = new PaymentsView({model:window.paymentsDashboardModel});
-                       window.paymentsDashboardView.render();
-                       $(selector).append(window.paymentsDashboardView.el);
-                   }
-               });
-    };
-
-})(window);
+*/

@@ -436,6 +436,11 @@ javascriptLocalisation =
                     , quantity    : "$_paymentPlanQuantity()$"
                     , subtotal    : "$_paymentPlanSubtotal()$"
                     , total       : "$_paymentPlanTotal()$"
+                    , payments    : "$_paymentPlanPayments()$"
+                    , nextpayments : "$_paymentPlanNextPayments()$"
+                    , previouspayments : "$_paymentPlanPreviousPayments()$"
+                    , changesubscription : "change subscription"
+                    , changebilling: "change billing"
                     }
         }
       , documents : "$_docListTabsDocs()$"
