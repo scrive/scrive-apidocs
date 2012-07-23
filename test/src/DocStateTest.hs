@@ -1483,7 +1483,6 @@ testGetDocumentsSQLSorted = doTimes 1 $ do
                 , TemplatesSharedInUsersCompany (userid author)
                   -- , DocumentsOfService (Maybe ServiceID)
                   -- , DocumentsOfCompany CompanyID
-                , AttachmentsOfAuthorDeleteValue (userid author) True
                 ]
       filters = []
   _docs <- dbQuery $ GetDocuments domains filters

@@ -354,9 +354,8 @@ test_privateUserTakoverWorks = do
   assertEqual "Company owns users docs" 1 (length companydocs)
   assertEqual "Docid matches" docid (documentid $ head companydocs)
   docs <- dbQuery $ GetDocumentsBySignatory [Contract, Offer, Order] $ userid user
-  templates <- dbQuery $ GetAttachmentsByAuthor $ userid user
-  attachments <- dbQuery $ GetTemplatesByAuthor $ userid user
-  let userdocs = docs ++ templates ++ attachments
+  templates <- dbQuery $ GetTemplatesByAuthor $ userid user
+  let userdocs = docs ++ templates
   assertEqual "User is still linked to their docs" 1 (length userdocs)
   assertEqual "Docid matches" docid (documentid $ head userdocs)
 

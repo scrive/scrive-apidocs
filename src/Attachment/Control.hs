@@ -6,6 +6,7 @@ import InputValidation
 import KontraLink
 import Kontra
 import DB
+import Attachment.Model
 import Doc.Model
 import User.Model
 import Util.MonadUtils
@@ -22,13 +23,12 @@ import Data.Maybe
 import Text.JSON.Gen as J
 import Redirect
 
-import Archive.View
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Log
 import Control.Monad.IO.Class
 import User.Utils
-import Attachment.Model
+import Templates.Templates
 
 handleRename :: Kontrakcja m => AttachmentID -> m JSValue
 handleRename attid = do
@@ -77,52 +77,53 @@ jsonAttachmentsList = withUserGet $ do
       pagination = attachmentPaginationFromParams params
       attachmentsPageSize = 100 :: Int
   cttime <- getMinutesTime
-  allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
-  let docs = PagedList { list       = allDocs
+  allAtts <- dbQuery $ GetAttachments domain (searching ++ filters) sorting pagination
+  let atts = PagedList { list       = allAtts
                        , params     = params
                        , pageSize   = attachmentsPageSize
                        }
-  docsJSONs <- mapM (docForListJSON (timeLocaleForLang lang) cttime user Nothing) $ take attachmentsPageSize $ list docs
+  attsJSONs <- mapM (attForListJSON (timeLocaleForLang lang) cttime user) $ take attachmentsPageSize $ list atts
   return $ JSObject $ toJSObject
-           [ ("list", JSArray docsJSONs)
-           , ("paging", pagingParamsJSON docs)
+           [ ("list", JSArray attsJSONs)
+           , ("paging", pagingParamsJSON atts)
            ]
 
-attachmentSortingFromParams :: ListParams -> [AscDesc DocumentOrderBy]
+attForListJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> User -> Attachment -> m JSValue
+attForListJSON tl crtime _user att = do
+  let link = "xxx"
+  runJSONGenT $ do
+    J.object "fields" $ attFieldsListForJSON tl crtime att
+    J.value "link" $ show link
+
+attFieldsListForJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> Attachment -> JSONGenT m ()
+attFieldsListForJSON tl crtime att = do
+    J.value "id" $ show $ attachmentid att
+    J.value "title" $ attachmenttitle att
+    J.value "time" $ showDateAbbrev tl crtime (attachmentmtime att)
+    J.value "shared" $ show $ attachmentshared att
+
+attachmentSortingFromParams :: ListParams -> [AscDesc AttachmentOrderBy]
 attachmentSortingFromParams params =
-   (concatMap x (listParamsSorting params)) ++ [Desc DocumentOrderByMTime] -- default order by mtime
+   (concatMap x (listParamsSorting params)) ++ [Desc AttachmentOrderByMTime] -- default order by mtime
   where
-    x "status"            = [Asc DocumentOrderByStatusClass]
-    x "statusREV"         = [Desc DocumentOrderByStatusClass]
-    x "title"             = [Asc DocumentOrderByTitle]
-    x "titleREV"          = [Desc DocumentOrderByTitle]
-    x "time"              = [Asc DocumentOrderByMTime]
-    x "timeREV"           = [Desc DocumentOrderByMTime]
-    x "party"             = [Asc DocumentOrderByPartners]
-    x "partyREV"          = [Desc DocumentOrderByPartners]
-    x "partner"           = [Asc DocumentOrderByPartners]
-    x "partnerREV"        = [Desc DocumentOrderByPartners]
-    -- x "partnercomp"    = viewComparing partnerComps
-    -- x "partnercompREV" = viewComparingRev partnerComps
-    x "process"           = [Asc DocumentOrderByProcess]
-    x "processREV"        = [Desc DocumentOrderByProcess]
-    x "type"              = [Asc DocumentOrderByType]
-    x "typeREV"           = [Desc DocumentOrderByType]
-    x "author"            = [Asc DocumentOrderByAuthor]
-    x "authorRev"         = [Desc DocumentOrderByAuthor]
+    x "title"             = [Asc AttachmentOrderByTitle]
+    x "titleREV"          = [Desc AttachmentOrderByTitle]
+    x "mtime"             = [Asc AttachmentOrderByMTime]
+    x "mtimeREV"          = [Desc AttachmentOrderByMTime]
+    x "ctime"             = [Asc AttachmentOrderByCTime]
+    x "ctimeREV"          = [Desc AttachmentOrderByCTime]
     x _                   = []
 
 
-
-attachmentSearchingFromParams :: ListParams -> [DocumentFilter]
+attachmentSearchingFromParams :: ListParams -> [AttachmentFilter]
 attachmentSearchingFromParams params =
   case listParamsSearching params of
     "" -> []
-    x -> [DocumentFilterByString x]
+    x -> [AttachmentFilterByString x]
 
 
-attachmentPaginationFromParams :: ListParams -> DocumentPagination
-attachmentPaginationFromParams params = DocumentPagination (listParamsOffset params) (listParamsLimit params)
+attachmentPaginationFromParams :: ListParams -> AttachmentPagination
+attachmentPaginationFromParams params = AttachmentPagination (listParamsOffset params) (listParamsLimit params)
 
 makeAttachmentFromFile :: Kontrakcja m => Input -> m (Maybe Attachment)
 makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do

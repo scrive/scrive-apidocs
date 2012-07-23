@@ -37,7 +37,6 @@ module Doc.Model
   , GetDocumentsByAuthor(..)
   , GetTemplatesByAuthor(..)
   , GetAvailableTemplates(..)
-  , GetAttachmentsByAuthor(..)
   , GetDocumentsBySignatory(..)
   , GetTimeoutedButPendingDocuments(..)
   , MarkDocumentSeen(..)
@@ -150,8 +149,6 @@ data DocumentDomain
   | DocumentsOfService (Maybe ServiceID)         -- ^ All documents of service
   | DocumentsOfCompany CompanyID Bool Bool       -- ^ All documents of a company, with flag for selecting also drafts and deleted
   | DocumentsOfAuthorCompany CompanyID Bool Bool -- ^ All documents of a company by author, with flag for selecting also drafts and deleted
-  | AttachmentsOfAuthorDeleteValue UserID Bool   -- ^ Attachments of user, with deleted flag
-  | AttachmentsSharedInUsersCompany UserID       -- ^ Attachments shared in the user company
 
 -- | These are possible order by clauses that make documents sorted by.
 data DocumentOrderBy
@@ -285,22 +282,6 @@ documentDomainToSQL (DocumentsOfCompany cid preparation deleted) =
 documentDomainToSQL (DocumentsOfAuthorCompany cid preparation deleted) =
   SQL "(signatory_links.roles & ?) <> 0 AND signatory_links.company_id = ? AND (? OR documents.status <> ?) AND signatory_links.deleted = ? AND signatory_links.really_deleted = FALSE"
         [toSql [SignatoryAuthor], toSql cid, toSql preparation, toSql Preparation, toSql deleted]
-documentDomainToSQL (AttachmentsOfAuthorDeleteValue uid deleted) =
-  SQL ("signatory_links.user_id = ?"
-       ++ " AND signatory_links.deleted = ?"
-       ++ " AND signatory_links.really_deleted = FALSE"
-       ++ " AND documents.type = 3")
-        [toSql uid, toSql deleted]
-documentDomainToSQL (AttachmentsSharedInUsersCompany uid) =
-  SQL ("signatory_links.deleted = FALSE"
-       ++ " AND documents.type = 3"
-       ++ " AND documents.sharing = ?"
-       ++ " AND signatory_links.really_deleted = FALSE"
-       ++ " AND EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 "
-       ++ "                WHERE signatory_links.user_id = usr2.id "
-       ++ "                  AND usr2.company_id = usr1.company_id "
-       ++ "                  AND usr1.id = ?)")
-        [toSql Shared, toSql uid]
 
 
 maxselect :: String
@@ -1458,11 +1439,6 @@ data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
 instance MonadDB m => DBQuery m GetDocumentsByAuthor [Document] where
   query (GetDocumentsByAuthor uid) =
     query (GetDocuments [DocumentsOfAuthor uid, TemplatesOfAuthor uid] [] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
-
-data GetAttachmentsByAuthor = GetAttachmentsByAuthor UserID
-instance MonadDB m => DBQuery m GetAttachmentsByAuthor [Document] where
-  query (GetAttachmentsByAuthor uid) =
-    query (GetDocuments [AttachmentsOfAuthorDeleteValue uid False] [] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
 data GetTemplatesByAuthor = GetTemplatesByAuthor UserID
 instance MonadDB m => DBQuery m GetTemplatesByAuthor [Document] where

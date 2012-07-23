@@ -394,10 +394,9 @@ resaveDocsForUser :: Kontrakcja m => UserID -> m ()
 resaveDocsForUser uid = do
   user <- guardJustM $ dbQuery $ GetUserByID uid
   userdocs <- dbQuery $ GetDocumentsByAuthor uid
-  attachments <- dbQuery $ GetAttachmentsByAuthor uid
   time <- ctxtime <$> getContext
   let actor = systemActor time
-  mapM_ (\doc -> dbUpdate $ AdminOnlySaveForUser (documentid doc) user actor) (userdocs ++ attachments)
+  mapM_ (\doc -> dbUpdate $ AdminOnlySaveForUser (documentid doc) user actor) userdocs
   return ()
 
 {- |

@@ -5,6 +5,11 @@ module Attachment.Model
   , Attachment(..)
   , DeleteAttachments(..)
   , SetAttachmentTitle(..)
+  , GetAttachments(..)
+  , AttachmentPagination(..)
+  , AttachmentDomain(..)
+  , AttachmentFilter(..)
+  , AttachmentOrderBy(..)
   )
 where
 
@@ -99,3 +104,61 @@ instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m SetAttachmentTitl
     sqlSet "title" title
     sqlWhereEq "id" attid
   return $ Right ()
+
+data AttachmentPagination =
+  AttachmentPagination
+  { attachmentOffset :: Int        -- ^ use for SQL OFFSET command
+  , attachmentLimit  :: Int        -- ^ use for SQL LIMIT command
+  }
+
+data AttachmentFilter
+  = AttachmentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
+
+instance IsSQL AttachmentFilter where
+  toSQLCommand (AttachmentFilterByString string) =
+    SQL "attachments.title ILIKE ?" [toSql ("%" ++ string ++ "%")]
+
+data AttachmentDomain
+  = AttachmentsOfAuthorDeleteValue UserID Bool   -- ^ Attachments of user, with deleted flag
+  | AttachmentsSharedInUsersCompany UserID       -- ^ Attachments shared in the user company
+
+instance IsSQL AttachmentDomain where
+  toSQLCommand (AttachmentsOfAuthorDeleteValue uid del) =
+    SQL "attachments.user_id = ? AND attachments.deleted = ?" [toSql uid, toSql del]
+  toSQLCommand (AttachmentsSharedInUsersCompany uid) =
+    SQL "attachments.deleted = FALSE AND EXISTS (SELECT 1 FROM users, users AS users_2 WHERE attachments.user_id = users.id AND users.company_id = users_2.company_id AND users_2.id = ?)" [toSql uid]
+
+-- | These are possible order by clauses that make documents sorted by.
+data AttachmentOrderBy
+  = AttachmentOrderByTitle       -- ^ Order by title, alphabetically, case insensitive
+  | AttachmentOrderByMTime       -- ^ Order by modification time
+  | AttachmentOrderByCTime       -- ^ Order by creation time
+
+instance IsSQL (AscDesc AttachmentOrderBy) where
+  toSQLCommand (Asc AttachmentOrderByTitle) = SQL "attachments.title ASC" []
+  toSQLCommand (Desc AttachmentOrderByTitle) = SQL "attachments.title DESC" []
+  toSQLCommand (Asc AttachmentOrderByMTime) = SQL "attachments.mtime ASC" []
+  toSQLCommand (Desc AttachmentOrderByMTime) = SQL "attachments.mtime DESC" []
+  toSQLCommand (Asc AttachmentOrderByCTime) = SQL "attachments.ctime ASC" []
+  toSQLCommand (Desc AttachmentOrderByCTime) = SQL "attachments.ctime DESC" []
+
+-- | GetAttachments is central switch for attachments list queries.
+--
+-- GetAttachments domains filters sorting pagination
+--
+-- * domains are connected with OR, so attachments falling into ANY of domains will be returned
+-- * filters weed out attachments from domains, are connected with AND so a attachments must pass through ALL filters
+-- * sortings returns attachments in order
+-- * pagination is a place to put OFFSET and LIMIT values
+--
+-- GetAttachments returns attachments in proper order, no reverse is needed.
+--
+data GetAttachments = GetAttachments [AttachmentDomain] [AttachmentFilter] [AscDesc AttachmentOrderBy] AttachmentPagination
+instance MonadDB m => DBQuery m GetAttachments [Attachment] where
+  query (GetAttachments domains filters orderbys _pagination) = do
+    kRun_ $ sqlSelect "attachments" $ do
+      sqlAttachmentResults
+      sqlWhereOr domains
+      mapM_ sqlWhere filters
+      mapM_ sqlOrderBy orderbys
+    fetchAttachments
