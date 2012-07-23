@@ -235,8 +235,6 @@ var FilePageView = Backbone.View.extend({
         this.pagejpg = $("<div class='pagejpg'/>");
         var pagelink = location.protocol + "//" + location.host + "/pages/" + document.documentid() + "/" + file.fileid()  + "/" + page.number() + document.viewer().urlPart() ;
         this.pagejpg.css("background-image", "url(" +pagelink +")");
-        this.pagejpg.append($("<input type='hidden' name='width'/>").val(page.width()));
-        this.pagejpg.append($("<input type='hidden' name='height'/>").val(page.height()));
         container.append(this.pagejpg);
         this.makeDropable();
         // Fields for the page
