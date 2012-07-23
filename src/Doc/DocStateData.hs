@@ -253,25 +253,21 @@ data DocumentProcess = Contract | Offer | Order
 
 data DocumentType = Signable DocumentProcess
                   | Template DocumentProcess
-                  | Attachment
   deriving (Eq, Ord, Show)
 
 instance Convertible DocumentType SqlValue where
   safeConvert v = Right . SqlInteger $ case v of
     Signable _ -> 1
     Template _ -> 2
-    Attachment -> 3
 
 documentType :: (Int, Maybe DocumentProcess) -> DocumentType
 documentType (1, Just p) = Signable p
 documentType (2, Just p) = Template p
-documentType (3, Nothing) = Attachment
 documentType v = error $ "documentType: wrong values: " ++ show v
 
 toDocumentProcess :: DocumentType -> Maybe DocumentProcess
 toDocumentProcess (Signable p) = Just p
 toDocumentProcess (Template p) = Just p
-toDocumentProcess (Attachment) = Nothing
 
 -- | Terrible, I know. Better idea?
 -- | TODO: to be KILLED.
@@ -282,8 +278,7 @@ doctypeFromString "Signable Order"     = Signable Order
 doctypeFromString "Template Contract"  = Template Contract
 doctypeFromString "Template Offer"     = Template Offer
 doctypeFromString "Template Order"     = Template Order
-doctypeFromString "Attachment"         = Attachment
-doctypeFromString _                    = error "Bad document type"
+doctypeFromString x                    = error $ "Bad document type " ++ x
 
 data DocumentSharing = Private
                      | Shared -- means that the document is shared with subaccounts, and those with same parent accounts
@@ -469,7 +464,6 @@ $(enumDeriveConvertible ''DocumentProcess)
 $(enumDeriveConvertibleIgnoreFields ''DocumentStatus)
 $(enumDeriveConvertibleIgnoreFields ''FieldType)
 $(bitfieldDeriveConvertible ''IdentificationType)
-$(newtypeDeriveConvertible ''DocumentID)
 $(enumDeriveConvertible ''DocumentSharing)
 $(jsonableDeriveConvertible [t| [DocumentTag] |])
 $(jsonableDeriveConvertible [t| CancelationReason |])

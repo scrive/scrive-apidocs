@@ -147,10 +147,10 @@ class MaybeAttachment a where
    isAttachment :: a -> Bool
 
 instance  MaybeAttachment DocumentType where
-   isAttachment t = (t == Attachment)
+   isAttachment _ = False
 
 instance  MaybeAttachment Document where
-   isAttachment =  isAttachment . documenttype
+   isAttachment _ = False
 
 class MaybeShared a where
     isShared :: a -> Bool

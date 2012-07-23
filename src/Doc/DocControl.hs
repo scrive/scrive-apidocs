@@ -1070,6 +1070,8 @@ handleSaveDraft did = do
 
 
 handleSetAttachments :: Kontrakcja m => DocumentID -> m KontraLink
+handleSetAttachments = error "handleSetAttachments is madness"
+{-
 handleSetAttachments did = do
     doc <- guardRightM $ getDocByDocIDForAuthor did
     attachments <- getAttachments 0
@@ -1100,6 +1102,7 @@ handleSetAttachments did = do
                           Just fid -> (fmap fileid) <$> (dbQuery $ GetFileByFileID fid)
                           Nothing -> return $ Nothing
                  _ -> return Nothing
+-}
 
 handleParseCSV :: Kontrakcja m => m JSValue
 handleParseCSV = do

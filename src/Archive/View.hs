@@ -74,7 +74,6 @@ docFieldsListForJSON tl crtime padqueue doc = do
     J.value "author" $ intercalate ", " $ map getSmartName $ filter isAuthor $ (documentsignatorylinks doc)
     J.value "time" $ showDateAbbrev tl crtime (documentmtime doc)
     J.value "type" $ case documenttype doc of
-                        Attachment -> "attachment"
                         Template _ -> "template"
                         Signable _ -> "signable"
     case toDocumentProcess (documenttype doc) of

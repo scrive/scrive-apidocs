@@ -31,6 +31,7 @@ import qualified Log
 import Doc.DocStateUpdate
 import Control.Monad.IO.Class
 import User.Utils
+import Attachment.Model
 
 handleRename :: Kontrakcja m => DocumentID -> m KontraLink
 handleRename docid = withUserPost $ do
@@ -130,23 +131,24 @@ attachmentSearchingFromParams params =
 attachmentPaginationFromParams :: ListParams -> DocumentPagination
 attachmentPaginationFromParams params = DocumentPagination (listParamsOffset params) (listParamsLimit params)
 
-makeAttachmentFromFile :: Kontrakcja m => Input -> m (Maybe Document)
+makeAttachmentFromFile :: Kontrakcja m => Input -> m (Maybe Attachment)
 makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do
-    Log.debug $ "makeDocumentFromFile: beggining"
+    Log.debug $ "makeAttachmentFromFile: beggining"
     guardLoggedIn
     content <- case contentspec of
         Left filepath -> liftIO $ BSL.readFile filepath
         Right content -> return content
     if BSL.null content
       then do
-        Log.debug "makeDocumentFromFile: no content"
+        Log.debug "makeAttachmentFromFile: no content"
         return Nothing
       else do
           Log.debug "Got the content, creating document"
           let title = basename filename
-          doc <- guardRightM $ newDocument title Attachment 0
-          handleAttachmentUpload (documentid doc) (concatChunks content) title
-          return $ Just doc
+          actor <- guardJustM $ mkAuthorActor <$> getContext
+          ctx <- getContext
+          att <- guardRightM $ dbUpdate $ NewAttachment (userid $ fromJust $ ctxmaybeuser ctx) title filename (Binary $ BS.concat $ BSL.toChunks content) actor
+          return $ Just att
 makeAttachmentFromFile _ = internalError -- to complete the patterns
 
 handleAttachmentUpload :: Kontrakcja m => DocumentID -> BS.ByteString -> String -> m ()

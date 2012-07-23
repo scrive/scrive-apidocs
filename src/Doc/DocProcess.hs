@@ -53,7 +53,6 @@ instance HasProcess DocumentType where
   getProcess (Template Offer) = Just offerProcess
   getProcess (Signable Order) = Just orderProcess
   getProcess (Template Order) = Just orderProcess
-  getProcess _ = Nothing
 
 instance HasProcess Document where
   getProcess = getProcess . documenttype

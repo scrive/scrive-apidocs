@@ -251,7 +251,6 @@ documentAllTypes = [ Signable Contract
                    , Template Contract
                    , Template Order
                    , Template Offer
-                   , Attachment
                    ]
 
 documentSignableTypes :: [DocumentType]
@@ -527,7 +526,6 @@ randomDocumentAllowsDefault user = RandomDocumentAllows
                                                              , Template Contract
                                                              , Template Order
                                                              , Template Offer
-                                                             , Attachment
                                                              ]
                               , randomDocumentAllowedStatuses = [ Preparation
                                                                 , Pending

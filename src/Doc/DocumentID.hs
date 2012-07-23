@@ -21,3 +21,5 @@ instance FromReqURI DocumentID where
 
 unsafeDocumentID :: Int64 -> DocumentID
 unsafeDocumentID = DocumentID
+
+$(newtypeDeriveConvertible ''DocumentID)

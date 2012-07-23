@@ -1312,7 +1312,6 @@ instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSig
      newDocType :: DocumentType -> DocumentType
      newDocType (Signable p) = Signable p
      newDocType (Template p) = Signable p
-     newDocType dt = dt
      toNewSigLink :: MagicHash -> SignatoryLink -> SignatoryLink
      toNewSigLink mh sl
          | isJust (signatorylinkcsvupload sl) = (pumpData sl) { signatorylinkcsvupload = Nothing, signatorymagichash = mh }
