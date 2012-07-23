@@ -69,6 +69,7 @@ getFileIDContents fid = do
     Nothing -> return BS.empty
 
 
+{-
 resizeImageAndReturnOriginalSize :: String -> IO (BS.ByteString, Int, Int)
 resizeImageAndReturnOriginalSize filepath = do
     (_,Just sizerouthandle,_, sizechecker) <- createProcess $ ( proc "identify" [filepath])
@@ -85,6 +86,7 @@ resizeImageAndReturnOriginalSize filepath = do
         ExitSuccess -> return ()
     fcontent <- BS.readFile filepath
     return (fcontent,943,1335)
+-}
 
 scaleForPreview :: BS.ByteString -> IO BS.ByteString
 scaleForPreview image = withSystemTempDirectory "preview" $ \tmppath -> do
@@ -104,13 +106,37 @@ scaleForPreview image = withSystemTempDirectory "preview" $ \tmppath -> do
 convertPdfToJpgPages :: (KontraMonad m, MonadDB m)
                      => String
                      -> FileID
+                     -> Int
                      -> m JpegPages
-convertPdfToJpgPages gs fid = do
+convertPdfToJpgPages gs fid widthInPixels = do
   content <- getFileIDContents fid
   liftIO $ withSystemTempDirectory "pdf2jpeg" $ \tmppath -> do
     let sourcepath = tmppath ++ "/source.pdf"
 
     BS.writeFile sourcepath content
+
+    let (pageWidth,pageHeight) = getPageSizeOfPDFInPoints content
+
+    -- Resultion in PDF should be interpreted as follows:
+    --
+    -- Dimensions in PDF are in printers points, where 1pt is 1/72 of
+    -- 1 inch.  This is real world size. Wise men established that
+    -- screen is considered to have 72dpi, that is 72 dots (pixels)
+    -- per inch. Therefore rendering at resolution 72 maps 1pt to
+    -- 1pixel.
+    --
+    -- To get an image that has width BITMAP_W (in pixels) we need to
+    -- know PAGE_W (in points) and do the resolution calculation:
+    --
+    -- RESOLUTON = BITMAP_W/PAGE_W*72
+    --
+    -- See that if BITMAP_W and PAGE_W are equal then RESOLUTON is the
+    -- default 72. See also that if BITMAP_W grows then RESOLUTON
+    -- grows too.
+    --
+    -- Bitmap height accommodates to preserve aspect ratio.
+
+    let resolution = fromIntegral widthInPixels / pageWidth * 72
 
     let gsproc = (proc gs [ "-sDEVICE=jpeg"
                           , "-sOutputFile=" ++ tmppath ++ "/output-%d.jpg"
@@ -119,41 +145,38 @@ convertPdfToJpgPages gs fid = do
                           , "-dNOPAUSE"
                           , "-dTextAlphaBits=4"
                           , "-dGraphicsAlphaBits=4"
-                          --, "-r91.361344537815126050420168067227"
-                          , "-r190"
+                          , "-r" ++ show resolution
                           , sourcepath
                           ]) { std_out = CreatePipe
-                            , std_err = CreatePipe
-                            }
+                             , std_err = CreatePipe
+                             }
     (_, Just outhandle, Just errhandle, gsProcHandle) <- createProcess gsproc
     errcontent <- BS.hGetContents errhandle
     outcontent <- BS.hGetContents outhandle
 
     exitcode <- waitForProcess gsProcHandle
+ 
+    let pathOfPage n = tmppath ++ "/output-" ++ show n ++ ".jpg"
+    let readPagesFrom n = (do
+                       contentx <- BS.readFile (pathOfPage n)
+                       followingPages <- readPagesFrom (n+1 :: Int)
+                       let w = widthInPixels
+                           h = round $ pageHeight * fromIntegral w / pageWidth
+                       return $ (contentx, w, h) : followingPages)
+             `catch` \(_ :: SomeException) -> return []
 
     result <- case exitcode of
       ExitFailure _ -> do
-          systmp <- getTemporaryDirectory
-          (path,handle) <- openTempFile systmp ("pdf2jpg-failed-" ++ show fid ++ "-.pdf")
-          Log.error $ "Cannot pdf2jpg of file #" ++ show fid ++ ": " ++ path
-          BS.hPutStr handle content
-          hClose handle
+        systmp <- getTemporaryDirectory
+        (path,handle) <- openTempFile systmp ("pdf2jpg-failed-" ++ show fid ++ "-.pdf")
+        Log.error $ "Cannot pdf2jpg of file #" ++ show fid ++ ": " ++ path
+        BS.hPutStr handle content
+        hClose handle
 
-          return $ JpegPagesError (errcontent `BS.append` outcontent)
+        return $ JpegPagesError (errcontent `BS.append` outcontent)
       ExitSuccess -> do
-                    let pathofx x = tmppath ++ "/output-" ++ show x ++ ".jpg"
-                    let existingPages x = do
-                                            exists <- doesFileExist (pathofx x)
-                                            if exists
-                                              then  fmap (x:) $ existingPages (x+1)
-                                              else return []
-                    listofpages <- existingPages (1::Integer)
-                    x <- forM listofpages $ \x -> resizeImageAndReturnOriginalSize (pathofx x)
-                        `catch` \(_ :: SomeException) -> do
-                                      fcontent <- BS.readFile (pathofx x)
-                                      return (fcontent,943,1335)
-
-                    return (JpegPages x)
+        pages <- readPagesFrom 1
+        return (JpegPages pages)
     return result
 
 {- | Shedules rendering od a file. After forked process is done, images will be put in shared memory.
@@ -177,7 +200,7 @@ maybeScheduleRendering fileid = do
       Nothing -> do
           MemCache.put fileid JpegPagesPending ctxnormalizeddocuments
           forkAction ("Rendering file #" ++ show fileid) $ do
-                   jpegpages <- convertPdfToJpgPages ctxgscmd fileid             -- FIXME: We should report error somewere
+                   jpegpages <- convertPdfToJpgPages ctxgscmd fileid 943            -- FIXME: We should report error somewere
                    MemCache.put fileid jpegpages ctxnormalizeddocuments
           return JpegPagesPending
 
