@@ -48,6 +48,7 @@ module DB.SQL2
   ( sqlWhere
   , sqlWhereEq
   , sqlWhereIn
+  , sqlWhereOr
   , sqlFrom
   , sqlJoin
   , sqlJoinOn
@@ -215,6 +216,14 @@ instance SqlWhere SqlDelete where
 
 sqlWhere :: (MonadState v m, SqlWhere v, IsSQL sql) => sql -> m ()
 sqlWhere sql = modify (\cmd -> sqlWhere1 cmd (toSQLCommand sql))
+
+sqlWhereOr :: (MonadState v m, SqlWhere v, IsSQL sql) => [sql] -> m ()
+sqlWhereOr [] = sqlWhere "FALSE"
+sqlWhereOr [sql] = sqlWhere sql
+sqlWhereOr sqls = sqlWhere $
+                  SQL "(" [] `mappend`
+                  mconcat (intersperse (SQL " OR " []) (map toSQLCommand sqls)) `mappend`
+                  SQL ")" []
 
 sqlWhereEq :: (MonadState v m, SqlWhere v, Convertible sql SqlValue) => String -> sql -> m ()
 sqlWhereEq name value =
