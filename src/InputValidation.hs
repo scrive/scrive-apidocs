@@ -41,6 +41,7 @@ module InputValidation
     , asValidID
     , asValidNumber
     , asValidDocID
+    , asValidAttachmentID
     , asValidUserID
     , asValidBool
     , asValidFieldName
@@ -63,6 +64,7 @@ import Text.XML.HaXml.Types
 
 import Kontra
 import Doc.DocumentID
+import Attachment.AttachmentID
 import Numeric
 import qualified Log (security)
 import Misc hiding (getFields)
@@ -507,6 +509,21 @@ asValidDocID input =
     >>= parseAsDocID
     where fieldtemplate = "idFieldName"
           parseAsDocID xs =
+            case reads xs of
+              (val,[]):[] -> return val
+              _ -> Bad $ flashMessageNotAValidInteger fieldtemplate
+
+{- |
+    Gets a cleaned up doc id. Useful for validating
+    you're not getting fed complete garbage from hidden fields,
+    this makes sure the result parses as a Int64.
+-}
+asValidAttachmentID :: String -> Result AttachmentID
+asValidAttachmentID input =
+    checkIfEmpty input
+    >>= parseAsAttachmentID
+    where fieldtemplate = "idFieldName"
+          parseAsAttachmentID xs =
             case reads xs of
               (val,[]):[] -> return val
               _ -> Bad $ flashMessageNotAValidInteger fieldtemplate
