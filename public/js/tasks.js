@@ -116,7 +116,7 @@ window.PageTasks = Backbone.Model.extend({
         
   },
   notCompleatedTasks : function() {
-         var tasks = []
+         var tasks = [];
          for (var i=0;i< this.tasks().length ; i++ )
                if (!this.tasks()[i].isComplete()) tasks.push(this.tasks()[i]);
          return tasks;                             
@@ -176,7 +176,7 @@ var PageTasksArrowView = Backbone.View.extend({
     $(this.el).addClass('arrows');
     $(window).resize(function() {view.updateArrow();});
     $(window).scroll(function() {view.updateArrow();});
-    view.updateArrow()
+    view.updateArrow();
   }
 });
 
