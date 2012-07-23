@@ -7,7 +7,6 @@ window.AttachmentsListDefinition = function(archive) {
     name : "Attachments Table",
     schema: new Schema({
     url: "/a",
-    extraParams : { documentType : "Attachment" },
     sorting: new Sorting({ fields: ["title", "time", "type"]}),
     paging: new Paging({}),
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.attachments.search}),
