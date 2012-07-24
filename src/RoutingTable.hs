@@ -127,7 +127,7 @@ staticRoutes = choice
 
      , dir "template"  $ hPost $ toK0 $ DocControl.handleCreateFromTemplate
 
-     , dir "filepages" $ hGetAjax $  toK2 $ DocControl.handleFilePages
+     , dir "filepages" $ hGetAjax $  toK1 $ DocControl.handleFilePages
      , dir "pagesofdoc" $ hGetAjax $ toK1 $ DocControl.handlePageOfDocument
      , dir "pagesofdoc" $ hGetAjax $ toK3 $ DocControl.handlePageOfDocumentForSignatory
 

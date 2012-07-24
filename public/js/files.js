@@ -14,7 +14,7 @@ window.File = Backbone.Model.extend({
         broken : false
     },
     initialize: function (args) {
-        this.url = "/filepages/" + args.document.documentid() + "/" + args.id;
+        this.url = "/filepages/" + args.id;
         this.bind('change:pages', function() { args.document.trigger('file:change'); });
     },
     downloadLink : function() {

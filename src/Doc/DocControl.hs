@@ -578,24 +578,37 @@ handleAttachmentViewForAuthor docid = do
         simpleResponse pages
 
 {- We return pending message if file is still pending, else we return JSON with number of pages-}
-handleFilePages :: Kontrakcja m => DocumentID -> FileID -> m JSValue
-handleFilePages did fid = do
-  (mdoc,_) <- jsonDocumentGetterWithPermissionCheck did
-  when (isNothing mdoc) internalError
-  let doc = fromJust mdoc
-  let allfiles = (documentfiles doc) ++ (documentsealedfiles doc)  ++ (authorattachmentfile <$> documentauthorattachments doc)
-  case find (== fid) allfiles of
-    Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString $ "File #" ++ show fid ++ " not found in document #" ++ show did)]
-    Just _  -> do
-      jpages <- maybeScheduleRendering fid
-      case jpages of
-       JpegPagesPending -> return $ JSObject $ toJSObject [("wait",JSString $ toJSString "Temporary unavailable (file is still pending)")]
-       JpegPagesError _ -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "rendering failed")]
-       JpegPages pages  -> return $ JSObject $ toJSObject [("pages",JSArray $ map pageinfo pages)]
-  where
-      pageinfo (_,width,height) = JSObject $ toJSObject [("width",JSRational True $ toRational width),
-                                                         ("height",JSRational True $ toRational height)
-                                                        ]
+handleFilePages :: Kontrakcja m => FileID -> m JSValue
+handleFilePages fid = do
+  -- Here we need to implement access rights, this will go as follows:
+  --
+  -- If we have documentid then we look for logged in user and
+  -- signatorylinkid and magichash (in cookie). Then we check if file is
+  -- reachable as document file, document sealed file, document author
+  -- attachment or document signatory attachment.
+  --
+  -- If we have attachmentid then we look for logged in user and see
+  -- if user owns the file or file is shared in user's company.
+  --
+  -- URLs look like:
+  -- /filepages/#fileid/This%20is%file.pdf?documentid=34134124
+  -- /filepages/#fileid/This%20is%file.pdf?documentid=34134124&signatorylinkid=412413
+  -- /filepages/#fileid/This%20is%file.pdf?attachmentid=34134124
+  --
+  -- Warning take into account when somebody has saved document into
+  -- hers account but we still refer using signatorylinkid.
+  --
+  -- Exactly same access rights should apply to file download and to individual pages.
+  jpages <- maybeScheduleRendering fid
+  runJSONGenT $ case jpages of
+    JpegPagesPending -> do
+      J.value "wait" "Rendering in progress"
+    JpegPagesError _ -> do
+      J.value "error" "Rendering failed"
+    JpegPages pages  -> do
+      J.objects "pages" $ for pages $ \(_,width,height) -> do
+        J.value "width"  width
+        J.value "height" height
 
 handlePageOfDocument :: Kontrakcja m => DocumentID -> m (Either KontraLink Response)
 handlePageOfDocument docid = checkUserTOSGet $ handlePageOfDocument' docid Nothing
