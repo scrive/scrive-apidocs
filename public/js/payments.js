@@ -745,6 +745,7 @@
 
             var col2 = $('<div class="col2" />')
                 .append(view.changeSubscription())
+                .append('<div class="clearfix" />')
                 .append(view.changeBillingForm());
             
             $el.append(col1).append(col2);
