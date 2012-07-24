@@ -27,6 +27,7 @@ data PricePlan = FreePricePlan
 newtype AccountCode = AccountCode Int64
                     deriving (Eq, Ord, Typeable)
 
+-- | Data structure for storing in DB
 data PaymentPlan = UserPaymentPlan    { ppAccountCode      :: AccountCode
                                       , ppUserID           :: UserID
                                       , ppPricePlan        :: PricePlan 
@@ -54,7 +55,7 @@ data PaymentPlanStatus = ActiveStatus      -- everything is great (unblocked)
                        | CanceledStatus    -- they canceled
                        | DeactivatedStatus -- account overdue, something went wrong
                        deriving (Eq)
-                                
+
 -- db operations
 
 {- | Get a new, unique account code. -}
@@ -202,17 +203,17 @@ instance Show PaymentPlanStatus where
 -- conversions for cramming values into the database
 instance Convertible PricePlan Int where
   safeConvert FreePricePlan     = return 0
-  safeConvert BasicPricePlan    = return 10
-  safeConvert BrandingPricePlan = return 11
-  safeConvert AdvancedPricePlan = return 12
-  safeConvert EnterprisePricePlan  = return 100
+  safeConvert BasicPricePlan    = return 1
+  safeConvert BrandingPricePlan = return 2
+  safeConvert AdvancedPricePlan = return 3
+  safeConvert EnterprisePricePlan  = return 4
 
 instance Convertible Int PricePlan where
-  safeConvert 0   = return FreePricePlan
-  safeConvert 10  = return BasicPricePlan
-  safeConvert 11  = return BrandingPricePlan
-  safeConvert 12  = return AdvancedPricePlan
-  safeConvert 100 = return EnterprisePricePlan
+  safeConvert 0  = return FreePricePlan
+  safeConvert 1  = return BasicPricePlan
+  safeConvert 2  = return BrandingPricePlan
+  safeConvert 3  = return AdvancedPricePlan
+  safeConvert 4  = return EnterprisePricePlan
   safeConvert s = Left ConvertError { convSourceValue  = show s
                                     , convSourceType   = "Int"
                                     , convDestType     = "PricePlan"
@@ -250,4 +251,4 @@ instance Convertible PaymentPlanStatus SqlValue where
 
 instance Convertible SqlValue PaymentPlanStatus where
   safeConvert s = safeConvert (fromSql s :: Int)
-  
+

@@ -1,16 +1,15 @@
 .payments-dashboard {
-    font-size: 18px;
-    font-color: #666;
+    font-size: 14px;
+    color: #666;
 }
 
 .payments-dashboard .payments {
-    width: 480px;
     margin: auto;
+    height: 620px;
 }
 
 .payments-dashboard .header {
-    font-size: 24px;
-    margin-top: 32px;
+    font-size: 18px;
     margin-bottom: 12px;
 }
 
@@ -34,31 +33,6 @@
     padding-top: 12px;
 }
 
-.payments-dashboard table {
-
-    width: 100%;
-
-}
-
-.payments-dashboard thead {
-
-    border-bottom: 1px solid #CCC;
-    font-weight: bold;
-}
-
-.payments-dashboard tbody {
-    font-size: 18px;
-}
-
-.payments-dashboard tfoot {
-    border-top: 1px solid #CCC;
-    font-weight: bold;
-}
-
-.payments-dashboard td, .payments-dashboard th {
-    padding: 20px;
-    text-align: left;
-}
 
 .payments-dashboard .subheader {
     /* cascading this from somewhere else; have to reset it */
@@ -84,19 +58,29 @@
 }
 
 .payments-dashboard .changesubscription select {
-    font-size: 18px;
+    font-size: 14px;
 }
 
 .payments-dashboard .changesubscription .totaltable {
-    margin-top: 24px;
+    margin-top: 16px;
 }
+
+.payments-dashboard .payments .payments .header {
+    margin-top:80px;
+}
+
 
 .payments-dashboard .plan .header {
     margin-top:0px;
 }
 
+.payments-dashboard .changesubscription .header {
+    margin-top:0px;
+}
+
 .payments-dashboard .cancel {
     margin-top: 12px;
+    margin-right: 0px;
 }
 
 .payments-dashboard .savechanges {
@@ -105,4 +89,112 @@
 
 .payments-dashboard .plan-pending {
     font-size: 12px;
+}
+
+.payments-dashboard .invoice-date {
+    width: 120px;
+    display: inline-block;
+}
+
+.payments-dashboard .recurly .due_now {
+    display: none;
+}
+
+.payments-dashboard .recurly .subscription {
+    display: none;
+}
+
+.payments-dashboard .plan-price {
+    margin-top: 16px;
+}
+
+.payments-dashboard .select-plan {
+    font-weight: bold;
+}
+
+.payments-dashboard .recurly.update_billing_info .billing_info {
+    border: 1px solid #CCC;
+    border-radius: 5px 5px 5px 5px;
+    -webkit-border-radius: 5px 5px 5px 5px;
+    -moz-border-radius: 5px 5px 5px 5px;
+    padding: 12px;
+    line-height: 28px;
+}
+
+.payments-dashboard .recurly.update_billing_info {
+    width: 480px;
+}
+
+.payments-dashboard .plan, .payments-dashboard .payments {
+//    float:left;
+}
+
+.payments-dashboard .changesubscription, .payments-dashboard .changebilling {
+//    float:right;
+}
+
+.payments-dashboard .recurly .accepted_cards {
+    right: 28px;
+}
+
+.payments-dashboard .col1 {
+    width: 350px;
+    float: left;
+}
+
+.payments-dashboard .col2 {
+    width: 480px;
+    float: right;
+}
+
+.payments-dashboard .recurly .contact_info {
+    background: transparent;
+}
+
+.payments-dashboard .recurly div.title {
+    color: #666;
+    font-weight: normal;
+}
+
+.payments-dashboard .subscribing .recurly div.title {
+    margin-left: -20px;
+}
+
+.payments-dashboard .payments.subscribing {
+    width:460px;
+    margin: auto;
+}
+
+.payments-dashboard .recurly input[type=text] {
+    font-size: 14px;
+    height: 20px;
+}
+
+.payments-dashboard .recurly .field .placeholder {
+    font-size: 14px;
+}
+
+.recurly .field.card_number input[type="text"] {
+    width: 180px;
+}
+
+.recurly .field.cvv input[type="text"] {
+    width: 40px;
+}
+
+.payments-dashboad .recurly .footer {
+    padding-right: 0px;
+}
+
+.payments-dashboard .payments.subscribing {
+    height: 680px;
+}
+
+.payments-dashboard .btn-big {
+    display:inline-block;
+    margin:auto;
+}
+
+.payments-dashboard .subscribing .table {
+    border: 0px;
 }

@@ -9,6 +9,7 @@
 (function(window) {
 
     var planPrices = {
+        free  :       0,
         basic :   19900,
         branding: 27900,
         advanced: 29900
@@ -92,10 +93,6 @@
         },
         country: function() {
             return this.get("country");
-        },
-        // the number of users in the company
-        quantity: function() {
-            return this.get("quantity");
         }
     });
 
@@ -110,7 +107,7 @@
         defaults: {
             plan_code: 'advanced'
         },
-        planCode: function(p) {
+        plan: function(p) {
             if(p) {
                 this.set({plan_code: p});
                 return this;
@@ -118,11 +115,18 @@
             return this.get("plan_code");
         },
         // code for account stored on both Scrive db and Recurly
-        code: function(p) {
+        accountCode: function(p) {
             return this.get('code');
         },
         signatures: function() {
             return this.get("signatures");
+        },
+        currency: function() {
+            return this.get('currency');
+        },
+        // the number of users in the company
+        quantity: function() {
+            return this.get("quantity");
         }
     });
 
@@ -286,11 +290,34 @@
         initialize: function(args){
             _.bindAll(this);
         },
+        dateString: function(d) {
+            return moment(d).format("YYYY-MM-DD");
+        },
+        showSubscribeForm: function() {
+            var view = this;
+            var model = view.model;
+            var $el = $(view.el);
+            $el.removeClass("subscribed").addClass("subscribing");
+            
+            var header = $('<div class="header" />').text("Subscribe");
+            var subs = view.subscriptionChooser();
+            subs.find('select').change(function() {
+                model.signup().plan($(this).val());
+                view.showRecurlySubscriptionForm();
+            });
+            $el.append(header);
+            $el.append(subs);
+
+            var form = $('<div id="js-recurly-form"></div>');
+            $el.append(form);
+            $el.append($('<div class="clear-fix" />'));
+            view.showRecurlySubscriptionForm();
+        },
         showRecurlySubscriptionForm: function() {
             var view = this;
             var model = view.model;
             var $el = $(view.el);
-            
+/*
             var plans = $('<div />').addClass('plans');
 
             plans.append(Button.init({color: 'blue', size: 'small', text: 'Basic',
@@ -312,12 +339,8 @@
                                           return false;
                                       }}).input().addClass('float-left'))
                 .height(50);
-            
-            $el.append(plans);
+  */          
 
-            var form = $('<div id="js-recurly-form"></div>');
-            $el.append(form);
-            $el.append($('<div class="clear-fix" />'));
             Recurly.config({
                 subdomain: model.server().subdomain()
                 , currency: 'SEK'
@@ -327,11 +350,11 @@
                 target: '#js-recurly-form'
                 , enableAddons: false
                 , enableCoupons: false
-                , planCode: model.signup().planCode()
+                , planCode: model.signup().plan()
                 , addressRequirement: 'none'
                 , distinguishContactFromBillingInfo: false
                 , collectCompany: true
-                , accountCode: model.signup().code()
+                , accountCode: model.signup().accountCode()
                 , account: {
                     firstName: model.contact().firstName()
                     , lastName: model.contact().lastName()
@@ -343,58 +366,58 @@
                     , lastName: model.contact().lastName()
                     , country: model.contact().country()
                 }
-                , signature: model.signup().signatures()[model.signup().planCode()]
-                , afterInject: function(form) {
-                    if(model.contact().quantity() === 1)
-                        $('.quantity').hide();
-                    else {
-                        var j = $('.quantity input');
-                        j.val(model.contact().quantity());
-                        j.change();
-                        j.hide();
-                        var usersbox = $('<div class="users-count"></div>');
-                        usersbox.append(model.contact().quantity() + " " + localization.payments.user);
-                        $('.quantity').append(usersbox);
-                    }
+                , signature: model.signup().signatures()[model.signup().plan()]
+                , beforeInject: function(form) {
+                    form = $(form);
+                    // set the quantity that we found from the db
+                    form.find('.quantity input').val(model.signup().quantity());
+                    // replace button with our own
+                    var button = Button.init({color:'green',
+                                              size:'big',
+                                              text:'Subscribe',
+                                              onClick: function() {
+                                                  form.submit();
+                                              }});
+                    form.find('button').replaceWith(button.input());
                     // we can store the field values so they won't have to type them again
                     var c = model.creditcard();
-                    var cc = $('.card_number input');
+                    var cc = form.find('.card_number input');
                     cc.val(model.creditcard());
                     cc.change();
                     cc.change(function(e) { 
                         model.creditcard($(e.target).val()); 
                     });
-                    var cvv = $('.cvv input');
+                    var cvv = form.find('.cvv input');
                     cvv.val(model.cvv());
                     cvv.change();
                     cvv.change(function(e) {
                         model.cvv($(e.target).val());
                     });
-                    var fn = $('.first_name input');
+                    var fn = form.find('.first_name input');
                     fn.val(model.contact().firstName());
                     fn.change();
                     fn.change(function(e) {
                         model.contact().firstName($(e.target).val());
                     });
-                    var ln = $('.last_name input');
+                    var ln = form.find('.last_name input');
                     ln.val(model.contact().lastName());
                     ln.change();
                     ln.change(function(e) {
                         model.contact().lastName($(e.target).val());
                     });
-                    var en = $('.email input');
+                    var en = form.find('.email input');
                     en.val(model.contact().email());
                     en.change();
                     en.change(function(e) {
                         model.contact().email($(e.target).val());
                     });
-                    var m = $('.month select');
+                    var m = form.find('.month select');
                     m.val(model.month());
                     m.change();
                     m.change(function(e) {
                         model.month($(e.target).val());
                     });
-                    var y = $('.year select');
+                    var y = form.find('.year select');
                     y.val(model.year());
                     y.change();
                     y.change(function(e) {
@@ -405,7 +428,7 @@
                     LoadingDialog.open("Saving subscription");
                     $.ajax("/payments/newsubscription",
                            { type: "POST"
-                             ,data: {account_code: model.signup().code(), 
+                             ,data: {account_code: model.signup().accountCode(), 
                                      xtoken: readCookie("xtoken")}
                              ,success: function() {
                                  $.ajax("/payments/info.json",
@@ -425,6 +448,8 @@
             return "Unknown";
         },
         addMark: function(p) {
+            if(p === 0)
+                return "0,00";
             return (""+p).slice(0,-2) + "," + (""+p).slice(-2);
         },
         pricePlanTable: function() {
@@ -461,12 +486,12 @@
             var total    = amount * quantity;
             var totalf   = view.addMark(total);
             var currency = this.model.plan().subscription().currency();
-            var txt      = "Total: " + totalf + " " + currency + " " + "billed monthly." ;
+            var txt      = "Total: " + totalf + " " + currency + " " + "per month." ;
             return $('<div class="plan-total" />').text(txt);
         },
         pendingLine: function() {
             var plan = this.model.plan().subscription();
-            var txt = "You have " + plan.name() + " access until " + plan.billingEnds() + ".";
+            var txt = "You have " + plan.name() + " access until " + this.dateString(plan.billingEnds()) + ".";
             return $('<div class="plan-pending" />').text(txt);
         },
         currentSubscriptionTable: function() {
@@ -482,7 +507,8 @@
                 .append(view.planPrice())
                 .append(view.planTotal());
 
-            if(model.plan().subscription().pending())
+            if(model.plan().subscription().pending() && 
+               model.plan().subscription().pending().code() !== model.plan().subscription().code())
                 plantable.append(view.pendingLine());
 
             return plan.append(planheader).append(plantable);
@@ -494,7 +520,7 @@
             var pOrS = model.plan().subscription().pending() 
                 || model.plan().subscription();
             var billingEnds  = model.plan().subscription().billingEnds();
-            var billingEndsf = billingEnds.toString(); // todo: change to something better
+            var billingEndsf = view.dateString(billingEnds); // todo: change to something better
             var price        = pOrS.unitAmountInCents();
             var quantity     = pOrS.quantity();
             var total        = price * quantity;
@@ -508,6 +534,9 @@
                 .append($('<span class="invoice-date" />').text(billingEndsf))
                 .append($('<span class="total" />').text(totalf));
 
+            if(total === 0)
+                line = $('<div class="line" />').text(localization.payments.table.none);
+
             return div.append(header).append(line);
         },
         previousPayments: function() {
@@ -517,17 +546,19 @@
             var div = $('<div class="previous-payments" />');
             var header = $('<div class="subheader" />')
                 .text(localization.payments.table.previouspayments);
-            var lines = $([]);
+            var lines = $();
             _.each(model.plan().invoices(), function(invoice) {
                 var date   = invoice.date();
-                var datef  = date.toString(); // todo: change to something better
+                var datef  = view.dateString(date);
                 var total  = invoice.totalInCents();
                 var currency     = model.plan().subscription().currency();
                 var totalf = view.addMark(total) + " " + currency;
+                var status = invoice.state();
                 var line   = $('<div class="line" />')
                     .append($('<span class="invoice-date" />').text(datef))
+                    .append($('<span class="invoice-status" />').text(status))
                     .append($('<span class="total" />').text(totalf));
-                lines.add(line);
+                lines = lines.add(line);
             });
 
             if(lines.length === 0)
@@ -550,52 +581,60 @@
 
             return payments.append(paymentsheader).append(paymentstable);
         },
-        changeSubscription: function() {
+        
+        subscriptionChooser: function() {
             var view = this;
             var model = view.model;
-            //var pOrS = model.plan().subscription().pending() || model.plan().subscription();
+            var sOrS = model.signup() || model.plan().subscription();
 
-            var changesub = $('<div class="changesubscription" />');
-            var changesubheader = $('<div class="header" />')
-                .text(localization.payments.table.changesubscription);
             var changesubtable = $('<div class="table" />');
 
             var select = $('<select name="plan" id="js-select-subscription" />');
             
-            _.each(['basic', 'branding', 'advanced'], function(value) {
-                var name = localization.payments.plans[value];
-                var price = planPrice(value);
-                var pricef = view.addMark(price);
-                var currency = model.plan().subscription().currency();
+            _.each(['free', 'basic', 'branding', 'advanced'], function(value) {
+                var name     = localization.payments.plans[value];
+                var price    = planPrice(value);
+                var pricef   = view.addMark(price);
+                var currency = sOrS.currency();
                 var txt = 
                     name + " " + pricef + " " + currency;
                 select.append($("<option />").attr("value", value).text(txt));
             });
 
-            // todo: make advanced selected
-
             var totaltable = $('<div class="totaltable" />');
 
             select.change(function() {
                 var plan     = select.val();
-                var quantity = model.plan().subscription().quantity();
+                var quantity = sOrS.quantity();
                 var price    = planPrice(plan);
                 var pricef   = view.addMark(price);
                 var total    = price * quantity;
                 var totalf   = view.addMark(total);
-                var currency = model.plan().subscription().currency();
+                var currency = sOrS.currency();
                 
                 totaltable.empty();
                 totaltable
                     .append($('<div class="plan-price" />')
                             .text(pricef + " " + currency +
-                                  " / month x " + quantity  + 
+                                  " x " + quantity  + 
                                   " " + localization.payments.user))
                     .append($('<div class="plan-total" />')
-                            .text("Total: " + totalf + " " + currency + " " + "billed monthly"));
+                            .text("Total: " + totalf + " " + currency + " " + "per month"));
             });
-
+            select.val('advanced');
             select.change();
+            
+            return changesubtable
+                .append($('<span />').append($('<span class="select-plan" />').text("Select Plan: ")).append(select))
+                .append(totaltable);
+        },
+        changeSubscription: function() {
+            var view = this;
+            var model = view.model;
+
+            var changesub = $('<div class="changesubscription" />');
+            var changesubheader = $('<div class="header" />')
+                .text(localization.payments.table.changesubscription);
 
             var button = Button.init({color: 'green',
                                       size: 'small',
@@ -610,7 +649,7 @@
                                               content: $('<p />').text(message),
                                               submit: new Submit({url: "/payments/changeplan",
                                                                   method: "POST",
-                                                                  inputs: select,
+                                                                  inputs: $('.changesubscription select'),
                                                                   ajax: true,
                                                                   ajaxsuccess: function() {
                                                                       // Put a popup here?
@@ -632,12 +671,10 @@
                                           
                                       }
                                      });
-
+            
             return changesub
                 .append(changesubheader)
-                .append(changesubtable
-                        .append($('<span />').text("Select Plan: ").append(select))
-                        .append(totaltable))
+                .append(view.subscriptionChooser())
                 .append(button.input())
                 .append($('<div class="clearfix" />'));
         },
@@ -655,7 +692,7 @@
                 , country: model.contact().country()
             });
             Recurly.buildBillingInfoUpdateForm(
-                {target: billingform, // will this work?
+                {target: billingform,
                  signature: model.plan().signatures().billing, 
                  accountCode: model.plan().accountCode(),
                  account: {
@@ -669,9 +706,19 @@
                      , lastName: model.contact().lastName()
                      , country: model.contact().country()
                  },
+                 beforeInject: function(el) {
+                     el = $(el);
+                     var button = Button.init({color:'green',
+                                               size:'small',
+                                               text:'Save Changes',
+                                               onClick: function() {
+                                                   $('.changebilling-form form').submit();
+                                                   return false;
+                                               }
+                                              });
+                     el.find('button').replaceWith(button.input());
+                 },
                  addressRequirement: 'none',
-                 distinguishContactFromBillingInfo: false,
-                 collectCompany: true,
                  successHandler: function(stuff) {
                      $.ajax("/payments/info.json",
                             { dataType: "json",
@@ -689,42 +736,18 @@
             var view = this;
             var model = view.model;
             var $el = $(view.el);
+            $el.addClass("subscribed").removeClass("subscribing");
 
-            $el.append(view.currentSubscriptionTable())
-                .append(view.paymentsTable())
-                .append(view.cancelButton())
-                .append($('<div class="clearfix" />'))
+            var col1 = $('<div class="col1" />')
+                .append(view.currentSubscriptionTable())
+                .append(view.paymentsTable());
+
+
+            var col2 = $('<div class="col2" />')
                 .append(view.changeSubscription())
                 .append(view.changeBillingForm());
-
-        },
-        cancelButton: function() {
-            var view   = this;
-            var model  = view.model;
-            var action = function() {
-                $.ajax("/payments/changeplan",
-                       {dataType: "json",
-                        type: "POST",
-                        data: {xtoken: readCookie("xtoken"),
-                               plan: 'free'},
-                        success: function() {
-                            $.ajax("/payments/info.json",
-                                   {dataType: "json",
-                                    success: function(data) {
-                                        model.initialize(data);
-                                        view.render();
-                                    }
-                                   });
-                        }
-                       });
-                return false;
-            };
-            var button = Button.init({color: "red"
-                                      ,size: "small"
-                                      ,text: "Cancel account"
-                                      ,onClick: action
-                                      ,cssClass: "cancel"});
-            return button.input();
+            
+            $el.append(col1).append(col2);
         },
         render: function() {
             var view = this;
@@ -732,7 +755,7 @@
             var $el = $(view.el);
             $el.empty();
             if(model.signup())
-                view.showRecurlySubscriptionForm();
+                view.showSubscribeForm();
             else
                 view.showCurrentSubscription();
             LoadingDialog.close();

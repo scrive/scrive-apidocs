@@ -429,6 +429,7 @@ javascriptLocalisation =
            , plans: { basic : "$_paymentPlanBasic()$"
                     , branding : "$_paymentPlanBranding()$"
                     , advanced : "$_paymentPlanAdvanced()$"
+                    , free     : "$_paymentPlanFree()$"
                     }
            , table: { currentplan : "$_paymentPlanCurrentPlan()$"
                     , item        : "$_paymentPlanItem()$"

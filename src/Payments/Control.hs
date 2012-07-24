@@ -50,13 +50,17 @@ handleSubscriptionDashboardInfo = do
   --let currency = "SEK" -- we only support SEK for now
   plan <- case mplan of
     Nothing -> do
+          freesig    <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]",    "free")]          
           basicsig    <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]",    "basic")]
           brandingsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "branding")]
           advancedsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "advanced")]
           code <- dbUpdate GetAccountCode
           return $ J.object "signup" $ do
             J.value "code" $ show code
+            J.value "currency" "SEK"
+            J.value "quantity" quantity
             J.object "signatures" $ do
+              J.value "free"     freesig
               J.value "basic"    basicsig
               J.value "branding" brandingsig
               J.value "advanced" advancedsig
@@ -73,11 +77,14 @@ handleSubscriptionDashboardInfo = do
             Right _ -> do
               Log.debug $ "No subscriptions returned."
               return Nothing
-          when (isLeft einvoices) $
-            Log.debug $ "When fetching invoices for payment plan: " ++ fromLeft einvoices
+          minvoices <- case einvoices of
+            Left e -> do
+              Log.debug $ "When fetching invoices for payment plan: " ++ e
+              return Nothing
+            Right i -> return $ Just i
           return $ J.object "plan" $ do
             J.value "subscription" $ msub
-            J.value "invoices" $ toMaybe einvoices
+            J.value "invoices" $ minvoices
             J.value "code"   $ show $ ppAccountCode plan
             J.value "plan"   $ show $ ppPricePlan plan
             J.value "status" $ show $ ppStatus plan
@@ -93,7 +100,6 @@ handleSubscriptionDashboardInfo = do
       J.value "email"        $ getEmail user
       J.value "company_name" $ getCompanyName (user, mcompany)
       J.value "country"      $ "SE" -- only one supported for now? Not important
-      J.value "quantity"     quantity
     J.object "server" $ do
       J.value "subdomain"    $ recurlySubdomain
     plan
@@ -127,32 +133,41 @@ handleChangePlan :: Kontrakcja m => m ()
 handleChangePlan = do
   RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
   newplan :: PricePlan <- guardJustM $ readField "plan"
+  Log.debug $ show newplan
   user <- guardJustM $ ctxmaybeuser <$> getContext
   plan <- guardRightM' $ toEither "No plan for logged in user." <$> (dbQuery $ GetPaymentPlan (maybe (Left (userid user)) Right (usercompany user)))
   subscriptions <- guardRightM' $ liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show $ ppAccountCode plan
   subscription <- guardRight' $ toEither "No subscriptions for Recurly account." $ listToMaybe subscriptions
-  pp <- guardRight' $ toEither ("Unknown price plan " ++ subPricePlan subscription) $ maybeRead $ subPricePlan subscription
-  let ppp = fromMaybe pp (maybeRead . penPricePlan =<< subPending subscription)
   quantity <- maybe (return 1) (dbQuery . GetCompanyQuantity) $ usercompany user
   let eid = maybe (Left $ userid user) Right $ usercompany user
       ac  = ppAccountCode plan
-  case syncAction (quantity, newplan) 
-                  (subQuantity subscription, 
-                   maybe (subQuantity subscription) penQuantity (subPending subscription),
-                   ppPricePlan plan,
-                   ppp) of
-    RNoAction -> return ()
+  subinfo <- guardRight' $ subInfo subscription
+  Log.debug $ show subinfo
+  case syncAction (quantity, newplan) subinfo of
+    RNoAction -> do
+      Log.debug "no action"
+      return ()
     RUpdateNow -> do
+      Log.debug "renewing now"
       s <- guardRightM' $ liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity True
       cachePlan ac s eid
     RUpdateRenewal -> do
+      Log.debug $ "renewing at end of term"
+      s <- guardRightM' $ liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity False
+      cachePlan ac s eid
+    RReactivateNow -> do
+      Log.debug $ "renewing now"
+      _ <- liftIO $ reactivateSubscription curl_exe recurlyAPIKey (subID subscription)
+      s <- guardRightM' $ liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity True
+      cachePlan ac s eid
+    RReactivateRenewal -> do
+      Log.debug $ "renewing later"
+      _ <- liftIO $ reactivateSubscription curl_exe recurlyAPIKey (subID subscription)
       s <- guardRightM' $ liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity False
       cachePlan ac s eid
     RCancel -> do
-      r <- liftIO $ cancelSubscription curl_exe recurlyAPIKey $ show $ ppAccountCode plan
-      when (not r) $ do
-        Log.debug "Could not cancel subscription."
-        internalError
+      Log.debug "canceling"
+      _ <- guardRightM' $ liftIO $ cancelSubscription curl_exe recurlyAPIKey $ subID subscription
       cachePlan ac subscription { subState = "canceled" } eid
 
 cachePlan :: Kontrakcja m => AccountCode -> Subscription -> Either UserID CompanyID -> m ()
@@ -185,7 +200,6 @@ cachePlan ac subscription eid = do
     Log.debug "Could not save payment plan."
     internalError
   return ()
-  
 
 fromRecurlyStatus :: String -> (PaymentPlanStatus, PaymentPlanStatus)
 fromRecurlyStatus "active"   = (ActiveStatus, ActiveStatus)
@@ -195,10 +209,42 @@ fromRecurlyStatus "future"   = (DeactivatedStatus, ActiveStatus)
 fromRecurlyStatus _          = (ActiveStatus, ActiveStatus)
 
 fromRecurlyPricePlan :: String -> PricePlan
+fromRecurlyPricePlan "free"     = FreePricePlan
 fromRecurlyPricePlan "basic"    = BasicPricePlan
 fromRecurlyPricePlan "branded"  = BrandingPricePlan
 fromRecurlyPricePlan "advanced" = AdvancedPricePlan
 fromRecurlyPricePlan _          = AdvancedPricePlan
+  
+instance ToJSValue Subscription where
+  toJSValue (Subscription{..}) = runJSONGen $ do
+    case subState of
+      "expired" -> do
+        J.value "plan_name" "Free"
+        J.value "plan_code" "free"
+        J.value "unit_amount_in_cents" (0 :: Int)
+      _ -> do
+        J.value "plan_name" subName
+        J.value "plan_code" subPricePlan
+        J.value "unit_amount_in_cents" subUnitAmountInCents
+    J.value "quantity"  subQuantity
+    J.value "currency"  subCurrency
+    J.value "activated" subActivateDate
+    J.value "cancelled" subCancelledDate
+    J.value "billing_started" subCurrentBillingStarted
+    J.value "billing_ends" subCurrentBillingEnds
+    case subState of
+      "canceled" -> J.value "pending" $ PendingSubscription { penName = "Free"
+                                                            , penPricePlan = "free"
+                                                            , penUnitAmountInCents = 0
+                                                            , penQuantity = subQuantity }
+      _ -> J.value "pending" $ subPending
+    
+instance ToJSValue PendingSubscription where
+  toJSValue (PendingSubscription{..}) = runJSONGen $ do
+    J.value "plan_name" penName
+    J.value "plan_code" penPricePlan
+    J.value "unit_amount_in_cents" penUnitAmountInCents
+    J.value "quantity" penQuantity
 
 instance ToJSValue Invoice where
   toJSValue (Invoice{..}) = runJSONGen $ do
@@ -209,22 +255,3 @@ instance ToJSValue Invoice where
     J.value "account_code"   inAccount
     J.value "date"           inDate
     
-instance ToJSValue Subscription where
-  toJSValue (Subscription{..}) = runJSONGen $ do
-    J.value "plan_name" subName
-    J.value "plan_code" subPricePlan
-    J.value "quantity"  subQuantity
-    J.value "unit_amount_in_cents" subUnitAmountInCents
-    J.value "currency"  subCurrency
-    J.value "activated" subActivateDate
-    J.value "cancelled" subCancelledDate
-    J.value "billing_started" subCurrentBillingStarted
-    J.value "billing_ends" subCurrentBillingEnds
-    J.value "pending" subPending
-    
-instance ToJSValue PendingSubscription where
-  toJSValue (PendingSubscription{..}) = runJSONGen $ do
-    J.value "plan_name" penName
-    J.value "plan_code" penPricePlan
-    J.value "unit_amount_in_cents" penUnitAmountInCents
-    J.value "quantity" penQuantity

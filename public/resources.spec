@@ -65,6 +65,7 @@ set systemPage
  js   libs/jquery.form.js
  js   libs/livequery.js
  js   libs/recurly.js
+ js   libs/moment.min.js
  js   js/global.js
  js   js/storage.js
  js   js/browserinfo.js
