@@ -56,13 +56,14 @@ import Doc.Model
 import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocStateUpdate
-import Doc.DocStorage
+import Doc.Rendering
 import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
 import qualified Doc.DocSeal as DocSeal
 import InputValidation
 import File.Model
+import File.Storage
 import Kontra
 import KontraLink
 import MagicHash

@@ -24,7 +24,7 @@ import Util.Actor
 import Util.SignatoryLinkUtils
 import Util.HasSomeUserInfo
 import Happstack.Server.RqData
-import Doc.DocStorage
+import Doc.Rendering
 import DB
 --import Doc.DocControl
 --import Control.Concurrent.MVar

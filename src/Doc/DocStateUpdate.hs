@@ -25,7 +25,7 @@ import Doc.DocUtils
 import Control.Applicative
 import User.Model
 import Control.Monad.Trans
-import Doc.DocStorage
+import Doc.Rendering
 import User.Utils
 import File.Model
 import Redirect

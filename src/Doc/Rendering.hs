@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Doc.DocStorage
+-- Module      :  Doc.Rendering
 -- Maintainer  :  all
 -- Stability   :  development
 -- Portability :  not portable
@@ -8,13 +8,13 @@
 -- Most of what is connected to storage of documents - getting files from TW and Amazon
 -- Also stuff for generating JPEGS from PDF's
 -----------------------------------------------------------------------------
-module Doc.DocStorage
-    ( getFileContents
-    , getFileIDContents
-    , maybeScheduleRendering
+module Doc.Rendering
+    ( maybeScheduleRendering
     , scaleForPreview
     , FileError(..)
     , preCheckPDF
+    , getNumberOfPDFPages
+    , getPageSizeOfPDFInPoints
     ) where
 
 import Control.Applicative
@@ -34,14 +34,17 @@ import System.Exit
 import System.IO
 import System.IO.Temp
 import System.Process
-import qualified Amazon as AWS
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
+import qualified Data.ByteString.Char8 as BSC
 import qualified Log
 import qualified MemCache as MemCache
 import qualified SealSpec as Seal
 import Redirect
+import File.Storage
+import Data.Char
+import Data.Maybe
 
 instance GuardRight FileError where
   guardRight (Right b)            = return b
@@ -49,44 +52,6 @@ instance GuardRight FileError where
                                      Log.error $ show fe
                                      internalError
 
-{- Gets file content from somewere (Amazon for now), putting it to cache and returning as BS -}
-getFileContents :: (KontraMonad m, MonadIO m) => File -> m BS.ByteString
-getFileContents file = do
-  ctx <- getContext
-  mcontent <- MemCache.get (fileid file) (ctxfilecache ctx)
-  case mcontent of
-      Just content -> return content
-      Nothing -> do
-        mcontentAWS <- liftIO $ AWS.getFileContents (ctxs3action ctx) file
-        MemCache.put (fileid file) mcontentAWS (ctxfilecache ctx)
-        return mcontentAWS
-
-getFileIDContents :: (KontraMonad m, MonadDB m) => FileID -> m BS.ByteString
-getFileIDContents fid = do
-  mfile <- dbQuery $ GetFileByFileID fid
-  case mfile of
-    Just file -> getFileContents file
-    Nothing -> return BS.empty
-
-
-{-
-resizeImageAndReturnOriginalSize :: String -> IO (BS.ByteString, Int, Int)
-resizeImageAndReturnOriginalSize filepath = do
-    (_,Just sizerouthandle,_, sizechecker) <- createProcess $ ( proc "identify" [filepath])
-                                              { std_out = CreatePipe }
-    _out <- hGetContents sizerouthandle
-    sizerexitcode <- waitForProcess sizechecker
-    case sizerexitcode of
-        ExitFailure _ -> return ()
-        ExitSuccess -> return ()
-    (_,_,_, resizer) <- createProcess $  proc "convert" ["-scale","943x1335!", filepath, filepath]
-    resizerexitcode <- waitForProcess resizer
-    case resizerexitcode of
-        ExitFailure _ -> return ()
-        ExitSuccess -> return ()
-    fcontent <- BS.readFile filepath
-    return (fcontent,943,1335)
--}
 
 scaleForPreview :: BS.ByteString -> IO BS.ByteString
 scaleForPreview image = withSystemTempDirectory "preview" $ \tmppath -> do
@@ -337,3 +302,54 @@ preCheckPDF gscmd content =
       Left x -> Log.error $ "preCheckPDF: " ++ show x
       Right _ -> return ()
     return $ Binary <$> value
+
+
+findStringAfterKey :: String -> BS.ByteString -> [String]
+findStringAfterKey key content =
+    (map (BSC.unpack . dropAfterKey) . findKeys) content
+  where
+    keyPacked = BSC.pack ("/" ++ key)
+    keyLength1 = BSC.length keyPacked
+    findKeys x = case BSC.breakSubstring keyPacked x of
+                     (_, r) -> r : if BS.null r
+                                   then []
+                                   else findKeys (BSC.drop 1 r)
+    dropAfterKey = BSC.drop keyLength1
+
+getNumberOfPDFPages :: BS.ByteString -> Int
+getNumberOfPDFPages content =
+    maximum (1 : (catMaybes . map readNumber . findStringAfterKey "Count") content)
+  where
+    readNumber = maybeRead . takeWhile isDigit . dropWhile isSpace
+
+getRotateOfPDFPages :: BS.ByteString -> [Int]
+getRotateOfPDFPages content =
+    (catMaybes . map readNumber . findStringAfterKey "Rotate") content
+  where
+    readNumber = maybeRead . takeWhile isDigit . dropWhile isSpace
+
+getBoxSizesOfPDFPages :: String -> BS.ByteString -> [(Double,Double)]
+getBoxSizesOfPDFPages box content =
+  catMaybes (map maybeReadBox boxStrings)
+  where
+    boxStrings = findStringAfterKey box content
+    maybeReadBox = x . catMaybes . map maybeRead . words . takeWhile (/=']') . drop 1 . dropWhile (/='[') . take 1000
+    x [l,b,r,t] = Just (r-l,t-b)
+    x _ = Nothing
+
+getPageSizeOfPDFInPoints :: BS.ByteString -> (Double,Double)
+getPageSizeOfPDFInPoints content =
+  head (getPageSizeOfPDFInPointsList content ++ [(595, 842)])
+     -- Defaults to A4
+
+getPageSizeOfPDFInPointsList :: BS.ByteString -> [(Double,Double)]
+getPageSizeOfPDFInPointsList content =
+  if any isSwapping rotates
+     then map swap (cropBoxes ++ mediaBoxes)
+     else cropBoxes ++ mediaBoxes
+  where
+     mediaBoxes = getBoxSizesOfPDFPages "MediaBox" content
+     cropBoxes = getBoxSizesOfPDFPages "CropBox" content
+     rotates = getRotateOfPDFPages content
+     swap (w,h) = (h,w)
+     isSwapping rot = rot == 270 || rot == 90

@@ -10,7 +10,7 @@ import Company.Model
 import Control.Logic
 import DB
 import Doc.DocStateData
-import Doc.DocStorage
+import Doc.Rendering
 import Doc.DocUtils
 import Doc.JSON
 import Doc.Model

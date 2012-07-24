@@ -47,7 +47,7 @@ import Util.HasSomeUserInfo
 
 import OAuth.Util
 import OAuth.Model
-import Doc.DocStorage
+import Doc.Rendering
 import Util.Actor
 
 import qualified Log

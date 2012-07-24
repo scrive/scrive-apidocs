@@ -20,7 +20,8 @@ import Debug.Trace
 import Doc.DocProcess
 import Doc.DocStateData
 import Doc.Model
-import Doc.DocStorage
+import Doc.Rendering
+import File.Storage
 import Doc.DocView
 import Doc.DocUtils
 import IPAddress

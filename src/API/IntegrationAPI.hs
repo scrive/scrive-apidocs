@@ -67,7 +67,7 @@ import Text.JSON.String
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import Doc.SignatoryTMP
 import qualified Log (integration)
-import Doc.DocStorage
+import Doc.Rendering
 import User.History.Model
 import qualified Templates.Fields as F
 

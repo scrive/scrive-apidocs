@@ -17,12 +17,12 @@ import Doc.DocSeal
 import Doc.Model
 import Doc.DocInfo
 import Doc.DocStateData
-import Doc.DocStorage
 import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
 import InputValidation
 import File.Model
+import File.Storage
 import Kontra
 import KontraLink
 import Mails.SendMail

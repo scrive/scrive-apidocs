@@ -38,7 +38,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Base64 as Base64 
 import API.API
-import Doc.DocStorage
+import File.Storage
 import Doc.DocUtils
 import Kontra
 import Misc
