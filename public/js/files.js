@@ -27,14 +27,10 @@ window.File = Backbone.Model.extend({
         return this.get("pages");
     },
     placements : function() {
-       return _.flatten(_.map(this.pages(), function(p) {return p.placements();}));
+        return _.flatten(_.map(this.pages(), function(p) {return p.placements();}));
     },
     page : function(number){
-        var pages = this.pages();
-        for(var i=0;i<pages.length;i++)
-            if (pages[i].number() == number)
-                return pages[i];
-
+        return this.pages()[number - 1];
     },
     document : function(){
         return this.get("document");
@@ -52,25 +48,23 @@ window.File = Backbone.Model.extend({
     {
         var document = this.document();
         if (response.error != undefined)
-        { this.set({broken: true});
-          return this;
+        {
+            this.set({broken: true});
         }
         else if (response.wait != undefined)
         {
-          var current = this;
-          setTimeout(function(){current.fetch({data: document.viewer().forFetch(),   processData:  true, cache : false});},2000);
-          return this;
+            var current = this;
+            setTimeout(function(){current.fetch({data: document.viewer().forFetch(),   processData:  true, cache : false});},2000);
         }
-        else {
-          var pages  = new Array();
-          for(var i = 0;i < response.pages.length; i++){
-              pages[i] = new FilePage({number : i + 1, file: this, width: response.pages[i].width, height: response.pages[i].height});
-          }
-          this.set({pages: pages});
-          return this;
+        else
+        {
+            var file = this;
+            var pages = _.map(response.pages, function(page,i) {
+                return new FilePage({number : i + 1, file: file, width: page.width, height: page.height});
+            });
+            this.set({pages: pages});
         }
-
-
+        return this;
     }
 });
 
