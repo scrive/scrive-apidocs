@@ -59,7 +59,8 @@ staticRoutes = choice
      , dir "mailapi" $ dir "confirmdelay" $ hGet $ toK3 $ MailAPI.handleConfirmDelay
 
      -- Only download function | unified for author and signatories
-     , dir "download"                     $ hGet  $ toK3 $ DocControl.handleDownloadFile
+     , dir "download"                     $ hGet  $ toK2 $ DocControl.handleDownloadFile
+     , dir "downloadmainfile"             $ hGet  $ toK2 $ DocControl.handleDownloadMainFile
 
      , dir "s" $ dir "eleg" $ hGet $ toK2 $ BankID.generateBankIDTransaction
      , dir "s" $ dir "eleg" $ dir "mbi" $ hPostNoXToken $ toK2 $ BankID.initiateMobileBankID
