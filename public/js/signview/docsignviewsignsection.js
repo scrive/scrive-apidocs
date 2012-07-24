@@ -50,8 +50,8 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                     }).popup();
                                 }
                             });
-      box.append($("<div class='rejectwrapper'>").append(this.rejectButton.input()));
-      box.append($("<div class='signwrapper'>").append(this.signButton.input()));
+      box.append($("<div class='rejectwrapper reject'>").append(this.rejectButton.input()));
+      box.append($("<div class='signwrapper sign'>").append(this.signButton.input()));
       box.append($("<div class='clearfix' />"));
    } 
 });

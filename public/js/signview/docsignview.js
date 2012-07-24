@@ -297,8 +297,8 @@ var DocumentSignViewView = Backbone.View.extend({
         if (this.model.hasSignatoriesAttachmentsSection())
             this.subcontainer.append(this.model.signatoryattachmentsection().el);
 
-        if (this.model.hasSignatoriesSection())
-            this.subcontainer.append(this.model.signatoriessection().el);
+        if (this.model.hasSignatoriesSection()) 
+            this.subcontainer.append(this.model.signatoriessection().view().el);
 
         if (this.model.hasSignSection())
             this.subcontainer.append(this.model.signsection().el);
