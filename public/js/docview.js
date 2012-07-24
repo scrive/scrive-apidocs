@@ -510,8 +510,7 @@ window.DocumentStandardView = Backbone.View.extend({
     }
 
     var file = KontraFile.init({
-      file: document.mainfile(),
-      document: document
+      file: document.mainfile()
     });
     var tabs = new KontraTabs({
     numbers : false,

@@ -447,8 +447,12 @@ window.Document = Backbone.Model.extend({
             document.recall();
      },1000);
      var extendedWithDocument = function(hash) {
-                hash.document = document;
-                return hash; };
+         hash.documentid = document.documentid();
+         hash.signatoryid = document.viewer().signatoryid();
+         hash.magichash = document.viewer().magichash();
+         hash.document = document;
+         return hash; 
+     };
      /**this way of doing it is safe for IE7 which doesnt
       * naturally parse stuff like 2012-03-29 so new Date(datestr)
       * doesnt work*/

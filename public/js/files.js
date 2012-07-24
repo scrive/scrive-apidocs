@@ -18,7 +18,37 @@ window.File = Backbone.Model.extend({
         this.bind('change:pages', function() { args.document.trigger('file:change'); });
     },
     downloadLink : function() {
-        return "/downloadmainfile/"+ this.document().documentid() + "/" + this.name() + ".pdf" + this.document().viewer().urlPart();
+        var link = null;
+        var addedQM = false;
+        var addPart = function(key,value) {
+            if( value!==undefined ) {
+                if( addedQM ) {
+                    link = link + "&" + key + "=" + value;
+                }
+                else {
+                    addedQM = true;
+                    link = link + "?" + key + "=" + value;
+                }
+            }
+        }
+        /* FIXME: this is wrong that we add .pdf as default extension. File should just know better. */
+        if( this.fileid()!==undefined ) {
+            link = "/download/"+ this.fileid() + "/" + this.name() + ".pdf";
+            addPart("documentid",this.documentid());
+            addPart("attachmentid",this.attachmentid());
+            addPart("signatorylinkid",this.signatoryid());
+            addPart("magichash",this.magichash());
+        }
+        else if( this.documentid()!==undefined ) {
+            link = "/downloadmainfile/"+ this.documentid() + "/" + this.name() + ".pdf";
+            addPart("attachmentid",this.attachmentid());
+            addPart("signatorylinkid",this.signatoryid());
+            addPart("magichash",this.magichash());
+        }
+        else {
+            console.log("File with neither documentid nor fileid, do not know where does it link to");
+        }
+        return link;
     },
     fileid : function(){
         return this.get("id");
@@ -32,8 +62,17 @@ window.File = Backbone.Model.extend({
     page : function(number){
         return this.pages()[number - 1];
     },
-    document : function(){
-        return this.get("document");
+    documentid : function(){
+        return this.get("documentid");
+    },
+    attachmentid : function(){
+        return this.get("attachmentid");
+    },
+    signatoryid : function(){
+        return this.get("signatoryid");
+    },
+    magichash : function(){
+        return this.get("magichash");
     },
     name : function(){
         return this.get("name");
@@ -46,7 +85,6 @@ window.File = Backbone.Model.extend({
     },
     parse : function(response)
     {
-        var document = this.document();
         if (response.error != undefined)
         {
             this.set({broken: true});
@@ -54,7 +92,12 @@ window.File = Backbone.Model.extend({
         else if (response.wait != undefined)
         {
             var current = this;
-            setTimeout(function(){current.fetch({data: document.viewer().forFetch(),   processData:  true, cache : false});},2000);
+            setTimeout(function() {
+                current.fetch({data: { signatoryid: this.signatoryid(),
+                                       magichash: this.magichash()},
+                               processData:  true,
+                               cache : false});
+            },2000);
         }
         else
         {
@@ -196,7 +239,7 @@ var FilePageView = Backbone.View.extend({
         var page = this.model;
         var container = $(this.el);
         var file = page.file();
-        var document =file.document();
+
         this.renderedPlacements = [];
         $(".placedfield",container).remove();
         _.each(page.placements(), function(placement) {
@@ -219,7 +262,10 @@ var FilePageView = Backbone.View.extend({
     render: function () {
         var page = this.model;
         var file = page.file();
-        var document =file.document();
+        var fileid = file.fileid();
+        var documentid = file.documentid();
+        var signatoryid = file.signatoryid();
+        var magichash = file.magichash();
         var container = $(this.el);
         container.empty();
         container.attr("id", "page" + page.number());
@@ -227,7 +273,10 @@ var FilePageView = Backbone.View.extend({
 
         // Page part with image
         this.pagejpg = $("<div class='pagejpg'/>");
-        var pagelink = location.protocol + "//" + location.host + "/pages/" + document.documentid() + "/" + file.fileid()  + "/" + page.number() + document.viewer().urlPart() ;
+        var pagelink = location.protocol + "//" + location.host + "/pages/" + documentid + "/" + fileid  + "/" + page.number();
+        if( signatoryid!=undefined && magichash!=undefined ) {
+            pagelink = pagelink + "?signatorylinkid=" + signatoryid + "&magichash=" + magichash;
+        }
         this.pagejpg.css("background-image", "url(" +pagelink +")");
         container.append(this.pagejpg);
         this.makeDropable();
@@ -244,7 +293,10 @@ var FileView = Backbone.View.extend({
         this.model.bind('change', this.render);
         this.model.view = this;
         this.pageviews = [];
-        this.model.fetch({data: this.model.document().viewer().forFetch(),   processData:  true, cache : false});
+        this.model.fetch({data: { signatoryid: this.model.signatoryid(),
+                                  magichash: this.model.magichash()},
+                          processData:  true,
+                          cache : false});
         this.render();
     },
     render: function () {
@@ -308,18 +360,23 @@ var FileView = Backbone.View.extend({
 
 window.KontraFile = {
     init : function(args){
-        if (args.file != undefined)
-           this.model = args.file;
-        else
+        if (args.file != undefined) {
+            this.model = args.file;
+        }
+        else {
             this.model = new File({
-                        id : args.id,
-                        name : args.name,
-                        document : args.document
-                    });
+                id: args.id,
+                name: args.name,
+                documentid: args.documentid,
+                attachmentid: args.attachmentid,
+                signatoryid: args.signatoryid,
+                magichash: args.magichash
+            });
+        }
         this.view = new FileView({
-                        model: this.model,
-                        el : $("<div/>")
-                    });
+            model: this.model,
+            el : $("<div/>")
+        });
         return this;
     }
 };
