@@ -28,6 +28,7 @@ import qualified User.UserControl as UserControl
 import qualified ScriveByMail.Control as MailAPI
 import qualified Payments.Control as Payments
 import qualified Attachment.Control as AttachmentControl
+import qualified Payments.Stats
 import Doc.API
 import OAuth.Control
 

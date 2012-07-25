@@ -6,6 +6,7 @@ module Payments.Stats (record
 
 import Control.Applicative
 import Control.Monad.Base
+import Data.Maybe
 
 import MinutesTime
 import DB
@@ -63,10 +64,10 @@ instance (MonadBase IO m, MonadDB m) => DBUpdate m AddPaymentsStat Bool where
 data GetPaymentsStats = GetPaymentsStats
 instance (MonadBase IO m, MonadDB m) => DBQuery m GetPaymentsStats [[String]] where
   query GetPaymentsStats = do
-    _ <- kRun $ SQL ("SELECT payment_stats.time, payment_stats.account_code, payment_stats.user_id, payment_stats.company_id, "
-                     "       payment_stats.quantity, payment_stats.plan, payment_stats.action, payment_stats.provider, "
+    _ <- kRun $ SQL ("SELECT payment_stats.time, payment_stats.account_code, payment_stats.user_id, payment_stats.company_id, " ++
+                     "       payment_stats.quantity, payment_stats.plan, payment_stats.action, payment_stats.provider, " ++
                      "       trim(trim(users.first_name) || ' ' || trim(users.last_name)), trim(users.email), " ++
-                     "       trim(users.company_name), trim(companies.name) "
+                     "       trim(users.company_name), trim(companies.name) " ++
                      "FROM payment_stats " ++
                      "LEFT OUTER JOIN users     ON payment_stats.user_id    = users.id " ++
                      "LEFT OUTER JOIN companies ON payment_stats.company_id = companies.id " ++
@@ -80,7 +81,7 @@ instance (MonadBase IO m, MonadDB m) => DBQuery m GetPaymentsStats [[String]] wh
                       Just name | not $ null name -> name
                       _ -> case un of
                         Just name | not $ null name -> name
-                        _ -> em
+                        _ -> fromMaybe "" em                        
               in [formatMinutesTimeISO t, show ac, maybe "" show muid, maybe "" show mcid, show q, show pp, show pa, show pr, smartname] : acc
 
 
