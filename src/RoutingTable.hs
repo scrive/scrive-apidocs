@@ -211,6 +211,7 @@ staticRoutes = choice
      , dir "adminonly" $ dir "dochistorycsv" $ hGet $ toK0 $ Stats.handleDocHistoryCSV
      , dir "adminonly" $ dir "signhistorycsv" $ hGet $ toK0 $ Stats.handleSignHistoryCSV
      , dir "adminonly" $ dir "userslistcsv" $ hGet $ toK0 $ Administration.handleUsersListCSV
+     , dir "adminonly" $ dir "paymentsstats.csv" $ hGet $ toK0 $ Payments.Stats.handlePaymentsStatsCSV
 
      , dir "adminonly" $ dir "statistics"        $ hGet  $ toK0 $ Stats.showAdminSystemUsageStats
 
