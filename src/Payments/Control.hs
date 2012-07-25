@@ -1,15 +1,17 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module Payments.Control where
+module Payments.Control (handleSubscriptionDashboard
+                        ,handleSubscriptionDashboardInfo
+                        ,handleGetInvoices
+                        ,handleSyncNewSubscriptionWithRecurly
+                        ,handleChangePlan)
+       where
 
 import Control.Monad.State
---import Data.Convertible
 import Data.Functor
---import Data.List
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
+import Control.Monad.Base
 
---import MinutesTime
---import Templates.Templates
 import AppView
 import Company.Model
 import DB hiding (update, query)
@@ -24,8 +26,7 @@ import User.Model
 import User.Utils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import Util.MonadUtils
-import qualified Log
+import qualified Log (payments)
 import qualified Text.JSON.Gen as J
 import ListUtil
 
@@ -37,13 +38,15 @@ import Payments.Config (RecurlyConfig(..))
 -- bootstrap the payments dashboard
 handleSubscriptionDashboard :: Kontrakcja m => m (Either KontraLink Response)
 handleSubscriptionDashboard = checkUserTOSGet $ do
-  user <- guardJustM $ ctxmaybeuser <$> getContext
+  user <- pguardM' "handleSubscriptionDashboardInfo: No user logged in." $ 
+          ctxmaybeuser <$> getContext
   showSubscriptionDashboard user >>= renderFromBody kontrakcja
   
 handleSubscriptionDashboardInfo :: Kontrakcja m => m JSValue
 handleSubscriptionDashboardInfo = do
   RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext  
-  user <- guardJustM $ ctxmaybeuser <$> getContext
+  user <- pguardM' "handleSubscriptionDashboardInfo: No user logged in." $ 
+          ctxmaybeuser <$> getContext
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany user
   quantity <- (maybe (return 1) (dbQuery . GetCompanyQuantity) $ usercompany user)
   mplan <- dbQuery $ GetPaymentPlan (maybe (Left (userid user)) Right (usercompany user))
@@ -71,15 +74,15 @@ handleSubscriptionDashboardInfo = do
           einvoices <- liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey (show $ ppAccountCode plan)
           msub <- case esub of
             Left e -> do
-              Log.debug $ "When fetching subscriptions for payment plan: " ++ e
+              Log.payments $ "handleSubscriptionDashboardInfo: When fetching subscriptions for payment plan: " ++ e
               return Nothing
             Right (sub:_) -> return $ Just sub
             Right _ -> do
-              Log.debug $ "No subscriptions returned."
+              Log.payments $ "handleSubscriptionDashboardInfo: No subscriptions returned."
               return Nothing
           minvoices <- case einvoices of
             Left e -> do
-              Log.debug $ "When fetching invoices for payment plan: " ++ e
+              Log.payments $ "handleSubscriptionDashboardInfo: When fetching invoices for payment plan: " ++ e
               return Nothing
             Right i -> return $ Just i
           return $ J.object "plan" $ do
@@ -114,9 +117,12 @@ handleGetInvoices :: Kontrakcja m => m JSValue
 handleGetInvoices = do
   RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext  
   params <- getListParamsNew
-  user <- guardJustM $ ctxmaybeuser <$> getContext
-  plan <- guardRightM' $ toEither "No plan for logged in user." <$> (dbQuery $ GetPaymentPlan (maybe (Left (userid user)) Right (usercompany user)))
-  invoices <- guardRightM' $ liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey (show $ ppAccountCode plan)
+  user <- pguardM' "handleGetInvoices: No user logged in." $ 
+          ctxmaybeuser <$> getContext
+  plan <- pguardM' "No plan for logged in user." $ 
+          dbQuery $ GetPaymentPlan (maybe (Left (userid user)) Right (usercompany user))
+  invoices <- pguardM "handleGetInvoices" $ 
+              liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey (show $ ppAccountCode plan)
   runJSONGenT $ do
     J.value "list" $ for invoices $ runJSONGen . J.value "fields"
     J.value "paging" $ pagingParamsJSON $ PagedList { list     = invoices
@@ -128,52 +134,58 @@ handleGetInvoices = do
 handleSyncNewSubscriptionWithRecurly :: Kontrakcja m => m ()
 handleSyncNewSubscriptionWithRecurly = do
   RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
-  ac <- guardJustM $ readField "account_code"
-  user <- guardJustM $ ctxmaybeuser <$> getContext
-  subscriptions <- guardRightM' $ liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show ac
-  subscription <- guardRight' $ toEither "No subscription." $ listToMaybe subscriptions
+  ac <- pguardM' "handleSyncNewSubscriptionWithRecurly: account_code must exist and be an integer." $ 
+        readField "account_code"
+  user <- pguardM' "handleSyncNewSubscriptionWithRecurly: No user logged in." $ 
+          ctxmaybeuser <$> getContext
+  subscriptions <- pguardM "handleSyncNewSubscriptionWithRecurly" $ 
+                   liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show ac
+  subscription <- pguard' "handleSyncNewSubscriptionWithRecurly: No subscription." $ 
+                  listToMaybe subscriptions
   let eid = maybe (Left $ userid user) Right $ usercompany user
   cachePlan ac subscription eid
 
 handleChangePlan :: Kontrakcja m => m ()
 handleChangePlan = do
   RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
-  newplan :: PricePlan <- guardJustM $ readField "plan"
-  Log.debug $ show newplan
-  user <- guardJustM $ ctxmaybeuser <$> getContext
-  plan <- guardRightM' $ toEither "No plan for logged in user." <$> (dbQuery $ GetPaymentPlan (maybe (Left (userid user)) Right (usercompany user)))
-  subscriptions <- guardRightM' $ liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show $ ppAccountCode plan
-  subscription <- guardRight' $ toEither "No subscriptions for Recurly account." $ listToMaybe subscriptions
+  newplan :: PricePlan <- pguardM' "handleChangePlan: field plan must exist and be a recurly plan code (String)" $ 
+                          readField "plan"
+  user <- pguardM' "handleChangePlan: No user logged in." $ 
+          ctxmaybeuser <$> getContext
+  plan <- pguardM' "handleChangePlan: No plan for logged in user." $ 
+          dbQuery $ GetPaymentPlan (maybe (Left (userid user)) Right (usercompany user))
+  subscriptions <- pguardM "handleChangePlan" $ 
+                   liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show $ ppAccountCode plan
+  subscription <- pguard' "handleChangePlan: No subscriptions for Recurly account." $ 
+                  listToMaybe subscriptions
   quantity <- maybe (return 1) (dbQuery . GetCompanyQuantity) $ usercompany user
   let eid = maybe (Left $ userid user) Right $ usercompany user
       ac  = ppAccountCode plan
-  subinfo <- guardRight' $ subInfo subscription
-  Log.debug $ show subinfo
+  subinfo <- pguard "handleChangePlan" $ subInfo subscription
   case syncAction (quantity, newplan) subinfo of
     RNoAction -> do
-      Log.debug "no action"
       return ()
     RUpdateNow -> do
-      Log.debug "renewing now"
-      s <- guardRightM' $ liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity True
+      s <- pguardM "handleChangePlan" $ 
+           liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity True
       cachePlan ac s eid
     RUpdateRenewal -> do
-      Log.debug $ "renewing at end of term"
-      s <- guardRightM' $ liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity False
+      s <- pguardM "handleChangePlan" $ 
+           liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity False
       cachePlan ac s eid
     RReactivateNow -> do
-      Log.debug $ "renewing now"
       _ <- liftIO $ reactivateSubscription curl_exe recurlyAPIKey (subID subscription)
-      s <- guardRightM' $ liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity True
+      s <- pguardM "handleChangePlan" $ 
+           liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity True
       cachePlan ac s eid
     RReactivateRenewal -> do
-      Log.debug $ "renewing later"
       _ <- liftIO $ reactivateSubscription curl_exe recurlyAPIKey (subID subscription)
-      s <- guardRightM' $ liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity False
+      s <- pguardM "handleChangePlan" $ 
+           liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity False
       cachePlan ac s eid
     RCancel -> do
-      Log.debug "canceling"
-      _ <- guardRightM' $ liftIO $ cancelSubscription curl_exe recurlyAPIKey $ subID subscription
+      _ <- pguardM "handleChangePlan" $ 
+           liftIO $ cancelSubscription curl_exe recurlyAPIKey $ subID subscription
       cachePlan ac subscription { subState = "canceled" } eid
 
 cachePlan :: Kontrakcja m => AccountCode -> Subscription -> Either UserID CompanyID -> m ()
@@ -195,7 +207,7 @@ cachePlan ac subscription eid = do
                                 , ppPaymentPlanProvider = RecurlyProvider }
   r <- dbUpdate $ SavePaymentPlan paymentplan time
   when (not r) $ do
-    Log.debug "Could not save payment plan."
+    Log.payments "cachePlan: Could not save payment plan."
     internalError
   return ()
 
@@ -253,3 +265,21 @@ instance ToJSValue Invoice where
     J.value "account_code"   inAccount
     J.value "date"           inDate
     
+-- factor out error logging
+pguard :: (MonadBase IO m, MonadIO m) => String -> Either String a -> m a
+pguard _   (Right v) = return v
+pguard pre (Left msg) = do
+  Log.payments $ pre ++ ": " ++ msg
+  internalError
+  
+pguardM :: (MonadBase IO m, MonadIO m) => String -> m (Either String a) -> m a
+pguardM pre action = pguard pre =<< action
+
+pguard' :: (MonadBase IO m, MonadIO m) => String -> Maybe a -> m a
+pguard' _ (Just v) = return v
+pguard' msg Nothing = do
+  Log.payments msg
+  internalError
+  
+pguardM' :: (MonadBase IO m, MonadIO m) => String -> m (Maybe a) -> m a
+pguardM' msg action = pguard' msg =<< action

@@ -21,6 +21,7 @@ module Log (
   , docevent
   , jsonMailAPI
   , mailAPI
+  , payments
   ) where
 
 import Control.Exception.Extensible (bracket)
@@ -73,6 +74,7 @@ setupLogger = do
     mailAPILog     <- fileHandler' "log/mailapi.log" INFO >>= \lh -> return $ setFormatter lh fmt
     scriveByMailFailuresLog <- fileHandler' "log/scrivebymail.failures.log" INFO >>= \lh -> return $ setFormatter lh nullFormatter
     doceventLog <- fileHandler' "log/docevent.log" INFO >>= \lh -> return $ setFormatter lh fmt
+    paymentsLog <- fileHandler' "log/payments.log" INFO >>= \lh -> return $ setFormatter lh fmt
     stdoutLog <- streamHandler stdout NOTICE
 
     let allLoggers = [ appLog
@@ -93,6 +95,7 @@ setupLogger = do
                      , doceventLog
                      , jsonMailAPILog
                      , mailAPILog
+                     , paymentsLog
                      ]
 
     mapM_ (\lg -> hSetEncoding (privData lg) utf8) allLoggers
@@ -197,6 +200,10 @@ setupLogger = do
         "Kontrakcja.MailAPI"
         (setLevel NOTICE . setHandlers [mailAPILog])
 
+    updateGlobalLogger
+        "Kontrakcja.Payments"
+        (setLevel NOTICE . setHandlers [paymentsLog])
+
     return $ LoggerHandle allLoggers
 
 -- | Tear down the application logger; i.e. close all associated log handlers.
@@ -263,6 +270,9 @@ scrivebymailfailure msg = liftIO $ errorM "Kontrakcja.ScriveByMailFailures" msg
 
 docevent :: (MonadIO m) => String -> m ()
 docevent msg = liftIO $ noticeM "Kontrakcja.DocEvent" msg
+
+payments :: MonadIO m => String -> m ()
+payments msg = liftIO $ noticeM "Kontrakcja.Payments" msg
 
 -- | FIXME: use forkAction
 forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()
