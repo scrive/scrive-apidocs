@@ -1,5 +1,11 @@
 ####
 pageAttachment=
+<div class='attachment'></div>
+<script type="text/javascript">
+    jQuery(".attachment").append(new KontraAttachment({documentid : "$documentid$"}).view().el);
+</script>
+</div>
+<!--
 <div style="display: none">
   <script type="text/javascript"> 
     var documentid = "$id$";
@@ -43,4 +49,4 @@ pageAttachment=
 <div id="documentBox">
   <div class="waiting4page"></div>
 </div>
-
+-->

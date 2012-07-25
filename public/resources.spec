@@ -87,6 +87,7 @@ set systemPage
  js   js/documents.js
  js   js/confirmationsWithEmails.js
  js   js/docview.js
+ js   js/attachmentview.js
  js   js/tasks.js
  js   js/docsignviewframes.js
  js   js/signview/docsignviewinstructions.js
