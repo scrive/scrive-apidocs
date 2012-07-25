@@ -302,7 +302,7 @@
             var $el = $(view.el);
             $el.removeClass("subscribed").addClass("subscribing");
             
-            var header = $('<div class="header" />').text("Subscribe");
+            var header = $('<div class="header" />').text(localization.payments.subscribe);
             var subs = view.subscriptionChooser();
             subs.find('select').change(function() {
                 model.signup().plan($(this).val());
@@ -320,29 +320,6 @@
             var view = this;
             var model = view.model;
             var $el = $(view.el);
-/*
-            var plans = $('<div />').addClass('plans');
-
-            plans.append(Button.init({color: 'blue', size: 'small', text: 'Basic',
-                                      onClick: function() {
-                                          model.signup().planCode('basic');
-                                          view.render();
-                                          return false;
-                                      }}).input().addClass('float-left'))
-                .append(Button.init({color: 'blue', size: 'small', text: 'Branding',
-                                      onClick: function() {
-                                          model.signup().planCode('branding');
-                                          view.render();
-                                          return false;
-                                      }}).input().addClass('float-left'))
-                .append(Button.init({color: 'blue', size: 'big', text: 'Advanced',
-                                      onClick: function() {
-                                          model.signup().planCode('advanced');
-                                          view.render();
-                                          return false;
-                                      }}).input().addClass('float-left'))
-                .height(50);
-  */          
 
             Recurly.config({
                 subdomain: model.server().subdomain()
@@ -378,7 +355,7 @@
                     // replace button with our own
                     var button = Button.init({color:'green',
                                               size:'big',
-                                              text:'Subscribe',
+                                              text:localization.payments.subscribe,
                                               onClick: function() {
                                                   form.submit();
                                               }});
@@ -429,7 +406,7 @@
                     });
                 }
                 , successHandler: function(stuff) {
-                    LoadingDialog.open("Saving subscription");
+                    LoadingDialog.open(localization.payments.savingsubscription);
                     $.ajax("/payments/newsubscription",
                            { type: "POST"
                              ,data: {account_code: model.signup().accountCode(), 
@@ -490,12 +467,15 @@
             var total    = amount * quantity;
             var totalf   = view.addMark(total);
             var currency = this.model.plan().subscription().currency();
-            var txt      = "Total: " + totalf + " " + currency + " " + "per month." ;
+            var txt      = 
+                localization.payments.table.total + ": " + totalf + " " + currency + " " + localization.payments.table.permonth + "." ;
             return $('<div class="plan-total" />').text(txt);
         },
         pendingLine: function() {
             var plan = this.model.plan().subscription();
-            var txt = "You have " + plan.name() + " access until " + this.dateString(plan.billingEnds()) + ".";
+            var txt = 
+                localization.payments.pendingline.part1 + " " + plan.name() + " " + 
+                localization.payments.pendingline.part2 + " " + this.dateString(plan.billingEnds()) + ".";
             return $('<div class="plan-pending" />').text(txt);
         },
         currentSubscriptionTable: function() {
@@ -524,7 +504,7 @@
             var pOrS = model.plan().subscription().pending() 
                 || model.plan().subscription();
             var billingEnds  = model.plan().subscription().billingEnds();
-            var billingEndsf = view.dateString(billingEnds); // todo: change to something better
+            var billingEndsf = view.dateString(billingEnds);
             var price        = pOrS.unitAmountInCents();
             var quantity     = pOrS.quantity();
             var total        = price * quantity;
@@ -623,13 +603,13 @@
                                   " x " + quantity  + 
                                   " " + localization.payments.user))
                     .append($('<div class="plan-total" />')
-                            .text("Total: " + totalf + " " + currency + " " + "per month"));
+                            .text(localization.payments.table.total + ": " + totalf + " " + currency + " " + "per month"));
             });
             select.val('advanced');
             select.change();
             
             return changesubtable
-                .append($('<span />').append($('<span class="select-plan" />').text("Select Plan: ")).append(select))
+                .append($('<span />').append($('<span class="select-plan" />').text(localization.payments.selectplan + ": ")).append(select))
                 .append(totaltable);
         },
         changeSubscription: function() {
@@ -643,13 +623,13 @@
             var button = Button.init({color: 'green',
                                       size: 'small',
                                       cssClass: 'savechanges',
-                                      text: 'Save Changes',
+                                      text: localization.payments.savechanges,
                                       onClick: function() {
-                                          var message = "Your card will be credited for the remaining time this month and charged the new amount.";
+                                          var message = localization.payments.changeconfirm;
                                           
                                           var conf = Confirmation.popup({
-                                              title: "Change account",
-                                              acceptText: "Change account",
+                                              title: localization.payments.changeaccount,
+                                              acceptText: localization.payments.changeaccount,
                                               content: $('<p />').text(message),
                                               submit: new Submit({url: "/payments/changeplan",
                                                                   method: "POST",
@@ -667,7 +647,7 @@
                                                                   },
                                                                   onSend: function() {
                                                                       conf.view.clear();
-                                                                      LoadingDialog.open("Saving");
+                                                                      LoadingDialog.open(localization.payments.savingsubscription);
                                                                   }
                                                                  })
                                           });
@@ -715,7 +695,7 @@
                      el = $(el);
                      var button = Button.init({color:'green',
                                                size:'small',
-                                               text:'Save Changes',
+                                               text:localization.payments.savechanges,
                                                onClick: function() {
                                                    $('.changebilling-form form').submit();
                                                    return false;
@@ -797,7 +777,7 @@
     window.paymentsDashboardView  = null;
 
     window.bootPaymentsDashboard = function(selector) {
-        LoadingDialog.open("Loading");
+        LoadingDialog.open(localization.payments.loading);
         $("head").append('<link rel="stylesheet" href="/libs/recurly/recurly.css"></link>');
 
         $.ajax("/payments/info.json", 
@@ -814,187 +794,3 @@
 
 })(window);
 
-// spare code
-
-/*
-                maketable([localization.payments.table.item,
-                           localization.payments.table.price,
-                           localization.payments.table.quantity,
-                           localization.payments.table.subtotal],
-                          [[model.plan().subscription().name(),
-                            view.addMark(model.plan().subscription().unitAmountInCents()) + "kr",
-                            model.plan().subscription().quantity()  + " " + localization.payments.user,
-                            view.addMark(model.plan().subscription().unitAmountInCents() * model.plan().subscription().quantity()) + "kr"]],
-                          ["", "", localization.payments.table.total, view.addMark(model.plan().subscription().unitAmountInCents() * model.plan().subscription().quantity()) + "kr"]));
-*/
-
-/*
-
-            var plans = $('<div />').addClass('plans');
-            plans.append($('<h3>').append('Change account type:'));
-
-            plans.append(Button.init({color: 'blue', size: 'small', text: 'Basic',
-                                      onClick: function() {
-                                          if(model.plan().subscription().code() !== 'basic')
-                                              var conf = Confirmation.popup({
-                                                  title: "Change account",
-                                                  acceptText: "Change account",
-                                                  content: $('<p />').append("Your card will be credited for the remaining time this month and charged the new amount."),
-                                                  submit: new Submit({url: "/payments/changeplan",
-                                                                      method: "POST",
-                                                                      plan: 'basic',
-                                                                      ajax: true,
-                                                                      ajaxsuccess: function() {
-                                                                          $.ajax("/payments/info.json",
-                                                                                 {dataType:'json',
-                                                                                  success: function(data) {
-                                                                                      model.initialize(data);
-                                                                                      view.render();
-                                                                                  }
-                                                                                 });
-                                                                      },
-                                                                      onSend: function() {
-                                                                          conf.view.clear();
-                                                                      }
-                                                                     })
-                                              });
-                                          return false;
-                                      }}).input().addClass('float-left'))
-                .append(Button.init({color: 'blue', size: 'small', text: 'Branding',
-                                      onClick: function() {
-                                          if(model.plan().subscription().code() !== 'branding')
-                                          var conf = Confirmation.popup({
-                                              title: "Change account",
-                                              acceptText: "Change account",
-                                              content: $('<p />').append("Your card will be credited for the remaining time this month and charged the new amount."),
-                                              submit: new Submit({url: "/payments/changeplan",
-                                                                  method: "POST",
-                                                                  plan: 'branding',
-                                                                  ajax: true,
-                                                                  ajaxsuccess: function() {
-                                                                          $.ajax("/payments/info.json",
-                                                                                 {dataType:'json',
-                                                                                  success: function(data) {
-                                                                                      model.initialize(data);
-                                                                                      view.render();
-                                                                                  }
-                                                                                 });
-                                                                      },
-                                                                      onSend: function() {
-                                                                          conf.view.clear();
-                                                                      }
-                                                                 })
-                                          });
-                                          return false;
-                                      }}).input().addClass('float-left'))
-                .append(Button.init({color: 'blue', size: 'big', text: 'Advanced',
-                                      onClick: function() {
-                                          if(model.plan().subscription().code() !== 'advanced')
-                                          var conf = Confirmation.popup({
-                                              title: "Change account",
-                                              acceptText: "Change account",
-                                              content: $('<p />').append("Your card will be credited for the remaining time this month and charged the new amount."),
-                                              submit: new Submit({url: "/payments/changeplan",
-                                                                  method: "POST",
-                                                                  plan: 'advanced',
-                                                                  ajax: true,
-                                                                  ajaxsuccess: function() {
-                                                                      $.ajax("/payments/info.json",
-                                                                             {dataType:'json',
-                                                                              success: function(data) {
-                                                                                  model.initialize(data);
-                                                                                  view.render();
-                                                                              }
-                                                                             });
-                                                                  },
-                                                                  onSend: function() {
-                                                                      conf.view.clear();
-                                                                  }
-                                                                 })
-                                          });
-                                          return false;
-                                      }}).input().addClass('float-left'))
-                .height(90);
-            
-            $el.append(plans);
-
-
-            $el.append(view.cancelButton());
-            $el.append($('<div />').addClass('js-billing-button').append(view.changeBillingButton()));
-
-*/
-/*
-    var invoicelist = function() {
-        return KontraList().init({
-            name : "Invoice Table",
-            schema: new Schema({
-                url: "/payments/invoices",
-                sorting: new Sorting({ fields: ["date", "invoice_number", "total_in_cents", "currency", "state"]}),
-                paging: new Paging({}),
-                cells : [
-                    new Cell({name: "Date",      width:"30px", field:"date",
-                              rendering: function(value, _idx, _model) {
-                                  var date = new Date(value);
-                                  var curr_date  = date.getDate();
-                                  var curr_month = date.getMonth() + 1; //Months are zero based
-                                  var curr_year  = date.getFullYear();
-                                  return curr_date + "-" + curr_month + "-" + curr_year;
-                              }
-                             }),
-                    new Cell({name: "Invoice #", width:"30px", field:"invoice_number"}),
-                    new Cell({name: "Total",     width:"30px", field:"total_in_cents"}),
-                    new Cell({name: "Currency",  width:"30px", field:"currency"}),
-                    new Cell({name: "Status",    width:"30px", field:"state"})
-                ]
-            })
-        });
-    };
-*/
-/*
-        changeBillingButton: function() {
-            var view = this;
-            var model = view.model;
-            var button = Button.init({color: "green"
-                                     ,size: "small"
-                                     ,text: "Change billing info"
-                                     ,onClick: function() {
-                                         Recurly.config({
-                                             subdomain: model.server().subdomain()
-                                             , currency: 'SEK'
-                                             , country: model.contact().country()
-                                         });
-                                         Recurly.buildBillingInfoUpdateForm(
-                                             {target: ".js-billing-button", 
-                                              signature: model.plan().signatures().billing, 
-                                              accountCode: model.plan().accountCode(),
-                                              account: {
-                                                  firstName: model.contact().firstName()
-                                                  , lastName: model.contact().lastName()
-                                                  , email: model.contact().email()
-                                                  , companyName: model.contact().companyName()
-                                              },
-                                              billingInfo: {
-                                                  firstName: model.contact().firstName()
-                                                  , lastName: model.contact().lastName()
-                                                  , country: model.contact().country()
-                                              },
-                                              addressRequirement: 'none',
-                                              distinguishContactFromBillingInfo: false,
-                                              collectCompany: true,
-                                              successHandler: function(stuff) {
-                                                  $.ajax("/payments/info.json",
-                                                         {
-                                                             dataType: "json",
-                                                             success: function(data) {
-                                                                 model.initialize(data);
-                                                                 view.render();
-                                                             }
-                                                         });
-                                                  
-                                              }
-                                             }
-                                         );
-                                     }});
-            return button.input();
-        },
-*/

@@ -445,7 +445,18 @@ javascriptLocalisation =
                     , changebilling: "$_paymentPlanChangeBilling()$"
                     , none: "$_paymentPlanNone()$"
                     }
-        }
+            , subscribe: "$_paymentPlanSubscribe()$"
+            , selectplan: "$_paymentPlanSelectPlan()$"
+            , savechanges : "$_SaveChanges()$"
+            , changeconfirm: "$_paymentPlanChangeConfirmMessage()$"
+            , changeaccount: "$_paymentPlanChangeAccount()$"
+            , permonth: "$_paymentPlanPerMonth()$"
+            , pendingline : {part1: "$_paymentPlanPendingLinePart1()$",
+                             part2: "$_paymentPlanPendingLinePart2()$"}
+            , savingsubscription : "$_paymentPlanSavingSubscription()$"
+            , loading : "$_paymentPlanLoading()$"
+
+        }  
       , documents : "$_docListTabsDocs()$"
       , templates : "$_docListTabsTemplates()$"
       , attachments : "$_docListTabsAttachemtns()$"
