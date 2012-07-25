@@ -541,6 +541,7 @@ admincompany=
 	  <li class="float-left"><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
 	  <li class="float-left"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
 	  <li class="float-left"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
+          <li class="float-left"><a href="$admincompanieslink$/payments/$companyid$">Payments</a></li>
           <li class="float-right"/>
 	</ul>
 	<div class="tab-container">
@@ -639,6 +640,7 @@ admincompanybranding=
 	  <li class="active float-left"><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
 	  <li class="float-left"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
 	  <li class="float-left"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
+          <li class="float-left"><a href="$admincompanieslink$/payments/$companyid$">Payments</a></li>
           <li class="float-right"/>
 	</ul>
       <div class="tab-container">
@@ -742,6 +744,7 @@ admincompanyusers=
     <li class="float-left"><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
     <li class="active float-left"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
     <li class="float-left"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
+    <li class="float-left"><a href="$admincompanieslink$/payments/$companyid$">Payments</a></li>
     <li class="float-right"/>
   </ul>
 </div>
@@ -985,6 +988,7 @@ companyusagestats=
 	  <li class="float-left"><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
 	  <li class="float-left"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
 	  <li class="active float-left"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
+          <li class="float-left"><a href="$admincompanieslink$/payments/$companyid$">Payments</a></li>
           <li class="float-right" />
 	</ul>
       <div class="tab-container">
