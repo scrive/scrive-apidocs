@@ -357,6 +357,7 @@
                 , addressRequirement: 'none'
                 , distinguishContactFromBillingInfo: false
                 , collectCompany: true
+                , acceptedCards : ['mastercard', 'visa']
                 , accountCode: model.signup().accountCode()
                 , account: {
                     firstName: model.contact().firstName()
@@ -698,6 +699,7 @@
                 {target: billingform,
                  signature: model.plan().signatures().billing, 
                  accountCode: model.plan().accountCode(),
+                 acceptedCards : ['mastercard', 'visa'],
                  account: {
                      firstName: model.contact().firstName()
                      , lastName: model.contact().lastName()
