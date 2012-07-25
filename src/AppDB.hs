@@ -119,4 +119,5 @@ kontraTables = [
   , tableUserAccountRequests
   , tablePaymentPlans
   , tableAttachments
+  , tablePaymentStats
   ] ++ mailerTables

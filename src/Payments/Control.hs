@@ -3,7 +3,8 @@ module Payments.Control (handleSubscriptionDashboard
                         ,handleSubscriptionDashboardInfo
                         ,handleGetInvoices
                         ,handleSyncNewSubscriptionWithRecurly
-                        ,handleChangePlan)
+                        ,handleChangePlan
+                        ,switchPlanToCompany)
        where
 
 import Control.Monad.State
@@ -34,6 +35,7 @@ import Payments.Model
 import Payments.Rules
 import Payments.View
 import Payments.Config (RecurlyConfig(..))
+import qualified Payments.Stats as Stats
 
 -- bootstrap the payments dashboard
 handleSubscriptionDashboard :: Kontrakcja m => m (Either KontraLink Response)
@@ -143,7 +145,7 @@ handleSyncNewSubscriptionWithRecurly = do
   subscription <- pguard' "handleSyncNewSubscriptionWithRecurly: No subscription." $ 
                   listToMaybe subscriptions
   let eid = maybe (Left $ userid user) Right $ usercompany user
-  cachePlan ac subscription eid
+  cachePlan Stats.SignupAction ac subscription eid
 
 handleChangePlan :: Kontrakcja m => m ()
 handleChangePlan = do
@@ -168,28 +170,28 @@ handleChangePlan = do
     RUpdateNow -> do
       s <- pguardM "handleChangePlan" $ 
            liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity True
-      cachePlan ac s eid
+      cachePlan Stats.ChangeAction ac s eid
     RUpdateRenewal -> do
       s <- pguardM "handleChangePlan" $ 
            liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity False
-      cachePlan ac s eid
+      cachePlan Stats.ChangeAction ac s eid
     RReactivateNow -> do
       _ <- liftIO $ reactivateSubscription curl_exe recurlyAPIKey (subID subscription)
       s <- pguardM "handleChangePlan" $ 
            liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity True
-      cachePlan ac s eid
+      cachePlan Stats.ReactivateAction ac s eid
     RReactivateRenewal -> do
       _ <- liftIO $ reactivateSubscription curl_exe recurlyAPIKey (subID subscription)
       s <- pguardM "handleChangePlan" $ 
            liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity False
-      cachePlan ac s eid
+      cachePlan Stats.ReactivateAction ac s eid
     RCancel -> do
       _ <- pguardM "handleChangePlan" $ 
            liftIO $ cancelSubscription curl_exe recurlyAPIKey $ subID subscription
-      cachePlan ac subscription { subState = "canceled" } eid
+      cachePlan Stats.CancelAction ac subscription { subState = "canceled" } eid
 
-cachePlan :: Kontrakcja m => AccountCode -> Subscription -> Either UserID CompanyID -> m ()
-cachePlan ac subscription eid = do
+cachePlan :: Kontrakcja m => Stats.PaymentsAction -> AccountCode -> Subscription -> Either UserID CompanyID -> m ()
+cachePlan pa ac subscription eid = do
   time <- ctxtime <$> getContext
   let p       = fromRecurlyPricePlan $ subPricePlan subscription
       (s, sp) = fromRecurlyStatus    $ subState     subscription
@@ -209,7 +211,21 @@ cachePlan ac subscription eid = do
   when (not r) $ do
     Log.payments "cachePlan: Could not save payment plan."
     internalError
+  _ <- Stats.record pa RecurlyProvider (subQuantity subscription) (fromRecurlyPricePlan $ subPricePlan subscription) eid ac
   return ()
+  
+switchPlanToCompany :: Kontrakcja m => UserID -> CompanyID -> m Bool
+switchPlanToCompany uid cid = do
+  time <- ctxtime <$> getContext
+  mplan <- dbQuery $ GetPaymentPlan (Left uid)
+  case mplan of
+    Just pp | isLeft $ ppID pp -> do
+      let pp' = pp { ppID = Right cid }
+      b <- dbUpdate $ SavePaymentPlan pp' time
+      _ <- Stats.record Stats.CompanySwitchAction RecurlyProvider (ppQuantity pp') (ppPricePlan pp') (Right cid) (ppAccountCode pp)
+      return b
+    _ -> return False
+
 
 fromRecurlyStatus :: String -> (PaymentPlanStatus, PaymentPlanStatus)
 fromRecurlyStatus "active"   = (ActiveStatus, ActiveStatus)

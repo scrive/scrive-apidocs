@@ -83,8 +83,10 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
 import Crypto.RNG(random)
 import Util.Actor
+import Payments.Control
 import Payments.Model
 import Payments.Config
+import qualified Payments.Stats
 import Recurly
 
 import InspectXMLInstances ()
@@ -343,13 +345,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
                                              [("company_id", "null", show $ companyid company)] 
                                              (userid <$> ctxmaybeuser ctx)
         _ <- dbUpdate $ SetUserCompanyAdmin uid True
-        mplan <- dbQuery $ GetPaymentPlan (Left uid)
-        case mplan of
-          Just pp | isLeft $ ppID pp -> do
-            let pp' = pp { ppID = Right $ companyid company }
-            _ <- dbUpdate $ SavePaymentPlan pp' (ctxtime ctx)
-            return ()
-          _ -> return ()
+        _ <- switchPlanToCompany uid (companyid company) -- migrate payment plan to company
         _ <- dbUpdate 
                   $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
                                              [("is_company_admin", "false", "true")] 
@@ -400,13 +396,12 @@ handleUserChange uid = onlySalesOrAdmin $ do
         case mplan of
           Just pp -> do
             cas <- dbQuery $ GetCompanyAccounts companyid
-            case length cas of
-              0 -> do -- no users left, we delete the plan!
-                _ <- liftIO $ deleteAccount curl_exe (recurlyAPIKey $ ctxrecurlyconfig ctx) (show $ ppAccountCode pp)
-                _ <- dbUpdate $ DeletePaymentPlan (Left uid)
-                return ()
-              _ -> return ()
+            when_ (null cas) $ do -- no users left, we delete the plan!
+                when_ (ppPaymentPlanProvider pp == RecurlyProvider) $
+                  liftIO $ deleteAccount curl_exe (recurlyAPIKey $ ctxrecurlyconfig ctx) (show $ ppAccountCode pp)
+                dbUpdate $ DeletePaymentPlan (Right companyid)
           Nothing -> return ()
+        
         _ <- dbUpdate 
                  $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
                                             [("company_id", show companyid, "null")] 
@@ -482,6 +477,7 @@ handleCompanyPaymentsChange companyid = onlySalesOrAdmin $ do
                                         , ppPaymentPlanProvider = NoProvider
                                         }
           _ <- dbUpdate $ SavePaymentPlan paymentplan time
+          _ <- Payments.Stats.record Payments.Stats.SignupAction NoProvider quantity plan (Right companyid) ac
           return $ LinkCompanyAdminPayments companyid
         Just paymentplan | ppPaymentPlanProvider paymentplan == NoProvider -> do
           let paymentplan' = paymentplan { ppPricePlan        = plan
@@ -492,6 +488,7 @@ handleCompanyPaymentsChange companyid = onlySalesOrAdmin $ do
                                          , ppPendingQuantity  = quantity
                                          }
           _ <- dbUpdate $ SavePaymentPlan paymentplan' time
+          _ <- Payments.Stats.record Payments.Stats.ChangeAction NoProvider quantity plan (Right companyid) (ppAccountCode paymentplan')
           return $ LinkCompanyAdminPayments companyid
         Just _ -> do -- must be a Recurly payment plan; maybe flash message?
           return $ LinkCompanyAdminPayments companyid
@@ -529,6 +526,7 @@ handleUserPaymentsChange userid = onlySalesOrAdmin $ do
                                         , ppPaymentPlanProvider = NoProvider
                                         }
           _ <- dbUpdate $ SavePaymentPlan paymentplan time
+          _ <- Payments.Stats.record Payments.Stats.SignupAction NoProvider quantity plan (Left userid) ac
           return $ LinkUserAdminPayments userid
         Just paymentplan | ppPaymentPlanProvider paymentplan == NoProvider -> do
           let paymentplan' = paymentplan { ppPricePlan        = plan
@@ -539,6 +537,7 @@ handleUserPaymentsChange userid = onlySalesOrAdmin $ do
                                          , ppPendingQuantity  = quantity
                                          }
           _ <- dbUpdate $ SavePaymentPlan paymentplan' time
+          _ <- Payments.Stats.record Payments.Stats.ChangeAction NoProvider quantity plan (Left userid) (ppAccountCode paymentplan')
           return $ LinkUserAdminPayments userid
         Just _ -> do -- must be a Recurly payment plan; maybe flash message?
           return $ LinkUserAdminPayments userid

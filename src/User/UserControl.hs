@@ -38,7 +38,7 @@ import User.Action
 import User.Utils
 import User.History.Model
 import ScriveByMail.Model
-import Payments.Model
+import Payments.Control
 
 handleUserGet :: Kontrakcja m => m (Either KontraLink Response)
 handleUserGet = checkUserTOSGet $ do
@@ -161,13 +161,8 @@ handleCreateCompany = do
   _ <- dbUpdate $ SetCompanyMailAPIKey (companyid company) mailapikey 1000
   _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid company)
   _ <- dbUpdate $ SetUserCompanyAdmin (userid user) True
-  mplan <- dbQuery $ GetPaymentPlan (Left $ userid user)
-  case mplan of
-    Just pp | isLeft $ ppID pp -> do
-      let pp' = pp { ppID = Right $ companyid company }
-      _ <- dbUpdate $ SavePaymentPlan pp' (ctxtime ctx)
-      return ()
-    _ -> return ()
+  -- payment plan needs to migrate to company
+  _ <- switchPlanToCompany (userid user) (companyid company)
   upgradeduser <- guardJustM $ dbQuery $ GetUserByID $ userid user
   _ <- addUserCreateCompanyStatEvent (ctxtime ctx) upgradeduser
   _ <- dbUpdate $ LogHistoryDetailsChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
