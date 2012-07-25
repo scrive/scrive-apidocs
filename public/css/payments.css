@@ -133,6 +133,10 @@
 //    float:right;
 }
 
+.payments-dashboard .noprovider {
+    width: 480px;
+}
+
 .payments-dashboard .changebilling .header {
     margin-top: 32px;
 }
@@ -191,7 +195,7 @@
 }
 
 .payments-dashboard .payments.subscribing {
-    height: 680px;
+    height: 720px;
 }
 
 .payments-dashboard .btn-big {

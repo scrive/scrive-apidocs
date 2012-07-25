@@ -16,11 +16,15 @@ module Administration.AdministrationControl(
           , showAdminCompany
           , showAdminCompanyUsers
           , showAdminUsersForSales
+          , showAdminUserPayments
+          , showAdminCompanyPayments
           , showAllUsersTable
           , showServicesPage
           , showDocuments
           , handleUserChange
           , handleCompanyChange
+          , handleCompanyPaymentsChange
+          , handleUserPaymentsChange
           , handleCreateUser
           , handlePostAdminCompanyUsers
           , handleCreateService
@@ -79,6 +83,9 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
 import Crypto.RNG(random)
 import Util.Actor
+import Payments.Model
+import Payments.Config
+import Recurly
 
 import InspectXMLInstances ()
 import InspectXML
@@ -124,6 +131,20 @@ showAdminCompany companyid = onlySalesOrAdmin $ do
   company  <- guardJustM . dbQuery $ GetCompany companyid
   mmailapi <- dbQuery $ GetCompanyMailAPI companyid
   adminCompanyPage company mmailapi
+
+showAdminCompanyPayments :: Kontrakcja m => CompanyID -> m String
+showAdminCompanyPayments companyid = onlySalesOrAdmin $ do
+  RecurlyConfig {..} <- ctxrecurlyconfig <$> getContext
+  mpaymentplan <- dbQuery $ GetPaymentPlan (Right companyid)
+  quantity <- dbQuery $ GetCompanyQuantity companyid
+  adminCompanyPaymentPage mpaymentplan quantity companyid recurlySubdomain
+
+showAdminUserPayments :: Kontrakcja m => UserID -> m String
+showAdminUserPayments userid = onlySalesOrAdmin $ do
+  RecurlyConfig {..} <- ctxrecurlyconfig <$> getContext
+  mpaymentplan <- dbQuery $ GetPaymentPlan (Left userid)
+  user <- guardJustM $ dbQuery $ GetUserByID userid
+  adminUserPaymentPage userid mpaymentplan (usercompany user) recurlySubdomain
 
 jsonCompanies :: Kontrakcja m => m JSValue
 jsonCompanies = onlySalesOrAdmin $ do
@@ -322,6 +343,13 @@ handleUserChange uid = onlySalesOrAdmin $ do
                                              [("company_id", "null", show $ companyid company)] 
                                              (userid <$> ctxmaybeuser ctx)
         _ <- dbUpdate $ SetUserCompanyAdmin uid True
+        mplan <- dbQuery $ GetPaymentPlan (Left uid)
+        case mplan of
+          Just pp | isLeft $ ppID pp -> do
+            let pp' = pp { ppID = Right $ companyid company }
+            _ <- dbUpdate $ SavePaymentPlan pp' (ctxtime ctx)
+            return ()
+          _ -> return ()
         _ <- dbUpdate 
                   $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
                                              [("is_company_admin", "false", "true")] 
@@ -345,6 +373,14 @@ handleUserChange uid = onlySalesOrAdmin $ do
       newuser <- guardJustM $ do
         company <- dbUpdate $ CreateCompany Nothing Nothing
         _ <- dbUpdate $ SetUserCompany uid (Just $ companyid company)
+        -- cancel payment plan since they are now not admin
+        mplan <- dbQuery $ GetPaymentPlan (Left uid)
+        case mplan of
+          Just pp -> do
+            _ <- liftIO $ deleteAccount curl_exe (recurlyAPIKey $ ctxrecurlyconfig ctx) (show $ ppAccountCode pp)
+            _ <- dbUpdate $ DeletePaymentPlan (Left uid)
+            return ()
+          Nothing -> return ()
         _ <- dbUpdate 
                  $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
                                             [("company_id", "null", show $ companyid company)] 
@@ -352,15 +388,28 @@ handleUserChange uid = onlySalesOrAdmin $ do
         dbQuery $ GetUserByID uid
       _ <- resaveDocsForUser uid
       return newuser
-    (Just "privateaccount", Just _companyid, _) -> do
+    (Just "privateaccount", Just companyid, _) -> do
       --then we need to downgrade this user and possibly delete their company
       --we also need to untie all their existing docs from the company
       --we may also need to delete the company if it's empty, but i haven't implemented this bit
       newuser <- guardJustM $ do
         _ <- dbUpdate $ SetUserCompany uid Nothing
+        -- moving from company to private account, we should cancel payment plan
+        -- if there are no more users in the company
+        mplan <- dbQuery $ GetPaymentPlan (Right companyid)
+        case mplan of
+          Just pp -> do
+            cas <- dbQuery $ GetCompanyAccounts companyid
+            case length cas of
+              0 -> do -- no users left, we delete the plan!
+                _ <- liftIO $ deleteAccount curl_exe (recurlyAPIKey $ ctxrecurlyconfig ctx) (show $ ppAccountCode pp)
+                _ <- dbUpdate $ DeletePaymentPlan (Left uid)
+                return ()
+              _ -> return ()
+          Nothing -> return ()
         _ <- dbUpdate 
                  $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
-                                            [("company_id", show _companyid, "null")] 
+                                            [("company_id", show companyid, "null")] 
                                             (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       _ <-resaveDocsForUser uid
@@ -374,6 +423,8 @@ handleUserChange uid = onlySalesOrAdmin $ do
                                        (userid <$> ctxmaybeuser ctx)
   settingsChange <- getUserSettingsChange
   _ <- dbUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
+  isfree <- isFieldSet "freeuser"
+  _ <- dbUpdate $ SetUserIsFree uid isfree
   return $ LinkUserAdmin $ Just uid
 
 resaveDocsForUser :: Kontrakcja m => UserID -> m ()
@@ -398,6 +449,100 @@ handleCompanyChange companyid = onlySalesOrAdmin $ do
     dbUpdate $ SetCompanyMailAPIKey companyid key 1000
   return $ LinkCompanyAdmin $ Just companyid
 
+handleCompanyPaymentsChange :: Kontrakcja m => CompanyID -> m KontraLink
+handleCompanyPaymentsChange companyid = onlySalesOrAdmin $ do
+  mplan <- readField "priceplan"
+  mstatus <- readField "status"
+  let status = fromMaybe ActiveStatus mstatus
+  case mplan of
+    Nothing -> return $ LinkCompanyAdminPayments companyid
+    Just FreePricePlan -> do
+      mpaymentplan <- dbQuery $ GetPaymentPlan (Right companyid)
+      case mpaymentplan of
+        Nothing -> return $ LinkCompanyAdminPayments companyid
+        Just PaymentPlan {ppPaymentPlanProvider = NoProvider} -> do
+          _ <- dbUpdate $ DeletePaymentPlan (Right companyid)
+          return $ LinkCompanyAdminPayments companyid
+        Just _ -> return $ LinkCompanyAdminPayments companyid
+    Just plan -> do
+      mpaymentplan <- dbQuery $ GetPaymentPlan (Right companyid)
+      quantity <- dbQuery $ GetCompanyQuantity companyid
+      time <- ctxtime <$> getContext
+      case mpaymentplan of
+        Nothing -> do
+          ac <- dbUpdate $ GetAccountCode
+          let paymentplan = PaymentPlan { ppAccountCode         = ac
+                                        , ppID                  = Right companyid
+                                        , ppPricePlan           = plan
+                                        , ppPendingPricePlan    = plan
+                                        , ppStatus              = status
+                                        , ppPendingStatus       = status
+                                        , ppQuantity            = quantity
+                                        , ppPendingQuantity     = quantity
+                                        , ppPaymentPlanProvider = NoProvider
+                                        }
+          _ <- dbUpdate $ SavePaymentPlan paymentplan time
+          return $ LinkCompanyAdminPayments companyid
+        Just paymentplan | ppPaymentPlanProvider paymentplan == NoProvider -> do
+          let paymentplan' = paymentplan { ppPricePlan        = plan
+                                         , ppPendingPricePlan = plan
+                                         , ppStatus           = status
+                                         , ppPendingStatus    = status
+                                         , ppQuantity         = quantity
+                                         , ppPendingQuantity  = quantity
+                                         }
+          _ <- dbUpdate $ SavePaymentPlan paymentplan' time
+          return $ LinkCompanyAdminPayments companyid
+        Just _ -> do -- must be a Recurly payment plan; maybe flash message?
+          return $ LinkCompanyAdminPayments companyid
+
+handleUserPaymentsChange :: Kontrakcja m => UserID -> m KontraLink
+handleUserPaymentsChange userid = onlySalesOrAdmin $ do
+  mplan <- readField "priceplan"
+  mstatus <- readField "status"
+  let status = fromMaybe ActiveStatus mstatus
+  case mplan of
+    Nothing -> return $ LinkUserAdminPayments userid
+    Just FreePricePlan -> do
+      mpaymentplan <- dbQuery $ GetPaymentPlan $ Left userid
+      case mpaymentplan of
+        Just PaymentPlan{ppPaymentPlanProvider = NoProvider} -> do
+          _ <- dbUpdate $ DeletePaymentPlan $ Left userid
+          return $ LinkUserAdminPayments userid
+        _ -> do
+          return $ LinkUserAdminPayments userid
+    Just plan -> do
+      mpaymentplan <- dbQuery $ GetPaymentPlan $ Left userid
+      let quantity = 1
+      time <- ctxtime <$> getContext
+      case mpaymentplan of
+        Nothing -> do
+          ac <- dbUpdate $ GetAccountCode
+          let paymentplan = PaymentPlan { ppAccountCode         = ac
+                                        , ppID                  = Left userid
+                                        , ppPricePlan           = plan
+                                        , ppPendingPricePlan    = plan
+                                        , ppStatus              = status
+                                        , ppPendingStatus       = status
+                                        , ppQuantity            = quantity
+                                        , ppPendingQuantity     = quantity
+                                        , ppPaymentPlanProvider = NoProvider
+                                        }
+          _ <- dbUpdate $ SavePaymentPlan paymentplan time
+          return $ LinkUserAdminPayments userid
+        Just paymentplan | ppPaymentPlanProvider paymentplan == NoProvider -> do
+          let paymentplan' = paymentplan { ppPricePlan        = plan
+                                         , ppPendingPricePlan = plan
+                                         , ppStatus           = status
+                                         , ppPendingStatus    = status
+                                         , ppQuantity         = quantity
+                                         , ppPendingQuantity  = quantity
+                                         }
+          _ <- dbUpdate $ SavePaymentPlan paymentplan' time
+          return $ LinkUserAdminPayments userid
+        Just _ -> do -- must be a Recurly payment plan; maybe flash message?
+          return $ LinkUserAdminPayments userid
+
 handleCreateUser :: Kontrakcja m => m KontraLink
 handleCreateUser = onlySalesOrAdmin $ do
     email <- map toLower <$> getAsString "email"
@@ -418,6 +563,7 @@ handlePostAdminCompanyUsers companyid = onlySalesOrAdmin $ do
     then handlePrivateUserCompanyInvite companyid
     else handleCreateCompanyUser companyid
   return $ LinkCompanyUserAdmin companyid
+
 
 handlePrivateUserCompanyInvite :: Kontrakcja m => CompanyID -> m ()
 handlePrivateUserCompanyInvite companyid = onlySalesOrAdmin $ do
@@ -501,6 +647,7 @@ getUserInfoChange = do
       , usercompanyname     = fromMaybe usercompanyname musercompanyname
       , usercompanynumber   = fromMaybe usercompanynumber musercompanynumber
     }
+
 
 
 {- Create service-}

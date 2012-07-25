@@ -222,6 +222,9 @@
         },
         invoices: function() {
             return this.get("invoices");
+        },
+        provider: function() {
+            return this.get("provider");
         }
     });
 
@@ -442,7 +445,7 @@
                 }
             });
         },
-        planName: function(p) {
+        getPlanName: function(p) {
             if(p in localization.payments.plans)
                 return localization.payments.plans[p];
             return "Unknown";
@@ -750,6 +753,29 @@
             
             $el.append(col1).append(col2);
         },
+        currentPlan: function() {
+            var view = this;
+            var model = view.model;
+
+            return $('<div class="plan-name" />')
+                .text(view.getPlanName(model.plan().plan()));
+        },
+        showCurrentPlan: function() {
+            var view = this;
+            var model = view.model;
+            var $el = $(view.el);
+
+            $el.addClass("noprovider");
+
+            var div = $('<div class="plan" />');
+            var header = $('<div class="header" />')
+                .text(localization.payments.table.currentplan);
+            var table = $('<div class="table" />')
+                .append(view.currentPlan());
+
+            $el.append(div.append(header).append(table));
+
+        },
         render: function() {
             var view = this;
             var model = view.model;
@@ -757,8 +783,10 @@
             $el.empty();
             if(model.signup())
                 view.showSubscribeForm();
-            else
+            else if(model.plan() && model.plan().provider() === "recurly")
                 view.showCurrentSubscription();
+            else if(model.plan() && model.plan().provider() === "none")
+                view.showCurrentPlan();
             LoadingDialog.close();
         }
     });

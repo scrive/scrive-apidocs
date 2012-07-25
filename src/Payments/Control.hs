@@ -64,7 +64,7 @@ handleSubscriptionDashboardInfo = do
               J.value "basic"    basicsig
               J.value "branding" brandingsig
               J.value "advanced" advancedsig
-    Just plan -> do
+    Just plan | ppPaymentPlanProvider plan == RecurlyProvider -> do
           billingsig  <- liftIO $ genSignature recurlyPrivateKey [("account[account_code]", show $ ppAccountCode plan)]
           -- we should be syncing somewhere else
           esub <- liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show $ ppAccountCode plan
@@ -88,11 +88,17 @@ handleSubscriptionDashboardInfo = do
             J.value "code"   $ show $ ppAccountCode plan
             J.value "plan"   $ show $ ppPricePlan plan
             J.value "status" $ show $ ppStatus plan
+            J.value "provider" "recurly"
             J.object "signatures" $ do
               J.value "billing"  billingsig          
-            case plan of
-              UserPaymentPlan    {} -> J.value "userid"    $ show $ ppUserID plan
-              CompanyPaymentPlan {} -> J.value "companyid" $ show $ ppCompanyID plan
+            either (J.value "userid" . show) (J.value "companyid" . show) $ ppID plan              
+    Just plan -> do -- no provider
+      return $ J.object "plan" $ do
+        J.value "code"   $ show $ ppAccountCode plan
+        J.value "plan"   $ show $ ppPricePlan plan
+        J.value "status" $ show $ ppStatus plan
+        J.value "provider" "none"
+        either (J.value "userid" . show) (J.value "companyid" . show) $ ppID plan
   runJSONGenT $ do
     J.object "contact" $ do
       J.value "first_name"   $ getFirstName user
@@ -178,23 +184,15 @@ cachePlan ac subscription eid = do
       q       = subQuantity subscription
       pp      = maybe p (fromRecurlyPricePlan . penPricePlan) $ subPending subscription
       qp      = maybe q penQuantity                           $ subPending subscription
-  let paymentplan = case eid of
-        Left  uid -> UserPaymentPlan { ppAccountCode      = ac
-                                     , ppUserID           = uid
-                                     , ppPricePlan        = p
-                                     , ppPendingPricePlan = pp
-                                     , ppStatus           = s
-                                     , ppPendingStatus    = sp
-                                     , ppQuantity         = q
-                                     , ppPendingQuantity  = qp }
-        Right cid -> CompanyPaymentPlan { ppAccountCode      = ac
-                                        , ppCompanyID        = cid
-                                        , ppPricePlan        = p
-                                        , ppPendingPricePlan = pp
-                                        , ppStatus           = s
-                                        , ppPendingStatus    = sp
-                                        , ppQuantity         = q
-                                        , ppPendingQuantity  = qp }
+  let paymentplan = PaymentPlan { ppAccountCode      = ac
+                                , ppID               = eid
+                                , ppPricePlan        = p
+                                , ppPendingPricePlan = pp
+                                , ppStatus           = s
+                                , ppPendingStatus    = sp
+                                , ppQuantity         = q
+                                , ppPendingQuantity  = qp 
+                                , ppPaymentPlanProvider = RecurlyProvider }
   r <- dbUpdate $ SavePaymentPlan paymentplan time
   when (not r) $ do
     Log.debug "Could not save payment plan."

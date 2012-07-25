@@ -40,7 +40,9 @@ tablePaymentPlans = Table {
                                        , colSize = Just 4
                               , colNullable = Just False}),
        ("sync_date", SqlColDesc { colType = SqlTimestampWithZoneT
-                               , colNullable = Just False})       
+                               , colNullable = Just False}),
+       ("provider", SqlColDesc { colType = SqlSmallIntT
+                               , colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE payment_plans ("
@@ -55,6 +57,7 @@ tablePaymentPlans = Table {
           ++ ", quantity     INTEGER NOT NULL"
           ++ ", quantity_pending INTEGER NOT NULL"
           ++ ", sync_date TIMESTAMPTZ NOT NULL"
+          ++ ", provider SMALLINT NOT NULL"
           ++ ", CONSTRAINT pk_payment_plans PRIMARY KEY (account_code)"
           ++ ", CONSTRAINT un_payment_plans_user_id UNIQUE (user_id)"
           ++ ", CONSTRAINT un_payment_plans_company_id UNIQUE (company_id)"

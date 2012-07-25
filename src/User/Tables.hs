@@ -54,8 +54,8 @@ tableUsers = Table {
           ++ ", customfooter TEXT NULL"
           ++ ", company_name   TEXT NOT NULL"
           ++ ", company_number TEXT NOT NULL"
-          ++ ", CONSTRAINT pk_users PRIMARY KEY (id)"
           ++ ", is_free BOOL NOT NULL DEFAULT FALSE"
+          ++ ", CONSTRAINT pk_users PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid

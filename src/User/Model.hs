@@ -30,6 +30,7 @@ module User.Model (
   , SetSignupMethod(..)
   , SetUserCompanyAdmin(..)
   , UserFilter(..)
+  , SetUserIsFree(..)
 
   , IsUserDeletable(..)
   , composeFullName
@@ -92,6 +93,7 @@ data User = User {
   , usersettings                  :: UserSettings
   , userservice                   :: Maybe ServiceID
   , usercompany                   :: Maybe CompanyID
+  , userisfree          :: Bool
   } deriving (Eq, Ord, Show)
 
 data UserInfo = UserInfo {
@@ -285,6 +287,7 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
           , sql "lang" $ getLang l
           , sql "region" $ getRegion l
           , sql "deleted" False
+          , sql "is_free" False
           ] <> SQL ("RETURNING " ++ selectUsersSelectors) []
         fetchUsers >>= oneObjectReturnedGuard
 
@@ -413,6 +416,12 @@ instance MonadDB m => DBUpdate m SetUserCompanyAdmin Bool where
         "UPDATE users SET is_company_admin = ? WHERE id = ? AND deleted = FALSE"
         [toSql iscompanyadmin, toSql uid]
 
+data SetUserIsFree = SetUserIsFree UserID Bool
+instance MonadDB m => DBUpdate m SetUserIsFree Bool where
+  update (SetUserIsFree uid isfree) = do
+    kRun01 $ SQL "UPDATE users SET is_free = ? WHERE id = ? AND deleted = FALSE"
+      [toSql isfree, toSql uid]
+
 -- helpers
 
 composeFullName :: (String, String) -> String
@@ -450,6 +459,7 @@ selectUsersSelectors =
  ++ ", customfooter"
  ++ ", company_name"
  ++ ", company_number"
+ ++ ", is_free"
 
 fetchUsers :: MonadDB m => DBEnv m [User]
 fetchUsers = foldDB decoder []
@@ -460,7 +470,7 @@ fetchUsers = foldDB decoder []
       has_accepted_terms_of_service signup_method service_id company_id
       first_name last_name personal_number company_position phone mobile
       email lang region customfooter
-      company_name company_number = User {
+      company_name company_number is_free = User {
           userid = uid
         , userpassword = maybePassword (password, salt)
         , useriscompanyadmin = is_company_admin
@@ -484,4 +494,5 @@ fetchUsers = foldDB decoder []
           }
         , userservice = service_id
         , usercompany = company_id
+        , userisfree = is_free
         } : acc

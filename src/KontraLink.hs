@@ -102,6 +102,8 @@ data KontraLink
     | LinkOAuthAuthorization APIToken
     | LinkOAuthCallback URI APIToken (Maybe MagicHash)
     | LinkOAuthDashboard
+    | LinkCompanyAdminPayments CompanyID
+    | LinkUserAdminPayments UserID
     deriving (Eq)
 
 localeFolder :: Locale -> String
@@ -225,6 +227,10 @@ instance Show KontraLink where
       (++) (show $ setParams url [("oauth_token", show token), ("denied", "true")])
     showsPrec _ LinkOAuthDashboard = (++) ("/oauth/dashboard")
     showsPrec _ (LinkAttachmentView attid) = (++) ("/a/" ++ show attid)
+    showsPrec _ (LinkCompanyAdminPayments cid) = 
+      (++) ("/adminonly/companyadmin/payments/" ++ show cid)
+    showsPrec _ (LinkUserAdminPayments uid) = 
+      (++) ("/adminonly/useradmin/payments/" ++ show uid)
 
 setParams :: URI -> [(String, String)] -> URI
 setParams uri params = uri { uriQuery = "?" ++ vars }

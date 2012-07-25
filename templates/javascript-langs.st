@@ -430,6 +430,7 @@ javascriptLocalisation =
                     , branding : "$_paymentPlanBranding()$"
                     , advanced : "$_paymentPlanAdvanced()$"
                     , free     : "$_paymentPlanFree()$"
+                    , enterprise : "$_paymentPlanEnterprise()$"
                     }
            , table: { currentplan : "$_paymentPlanCurrentPlan()$"
                     , item        : "$_paymentPlanItem()$"

@@ -188,11 +188,15 @@ staticRoutes = choice
      , dir "adminonly" $ dir "useradmin" $ hGet $ toK0 $ Administration.showAdminUsers Nothing
      , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminUserUsageStats
      , dir "adminonly" $ dir "useradmin" $ hPost $ toK1 $ Administration.handleUserChange
+     , dir "adminonly" $ dir "useradmin" $ dir "payments" $ hGet $ toK1 $ Administration.showAdminUserPayments
+     , dir "adminonly" $ dir "useradmin" $ dir "payments" $ hPost $ toK1 $ Administration.handleUserPaymentsChange
      , dir "adminonly" $ dir "companyadmin" $ hGet $ toK0 $ Administration.showAdminCompanies
      , dir "adminonly" $ dir "companyadmin" $ hGet $ toK1 $ Administration.showAdminCompany
      , dir "adminonly" $ dir "companyadmin" $ dir "branding" $ Company.adminRoutes
      , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hGet $ toK1 $ Administration.showAdminCompanyUsers
      , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hPost $ toK1 $ Administration.handlePostAdminCompanyUsers
+     , dir "adminonly" $ dir "companyadmin" $ dir "payments" $ hGet $ toK1 $ Administration.showAdminCompanyPayments
+     , dir "adminonly" $ dir "companyadmin" $ dir "payments" $ hPost $ toK1 $ Administration.handleCompanyPaymentsChange
      , dir "adminonly" $ dir "companyaccounts" $ hGet  $ toK1 $ CompanyAccounts.handleCompanyAccountsForAdminOnly
      , dir "adminonly" $ dir "companyadmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminCompanyUsageStats
      , dir "adminonly" $ dir "companyadmin" $ hPost $ toK1 $ Administration.handleCompanyChange

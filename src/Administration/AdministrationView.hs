@@ -16,6 +16,7 @@ module Administration.AdministrationView(
             , adminCompaniesPage
             , adminCompanyBrandingPage
             , adminCompanyUsersPage
+            , adminCompanyPaymentPage
             , adminUsersPageForSales
             , allUsersTable
             , servicesAdminPage
@@ -24,6 +25,7 @@ module Administration.AdministrationView(
             , adminUserUsageStatsPage
             , adminCompanyUsageStatsPage
             , adminUserStatisticsPage
+            , adminUserPaymentPage
           ) where
 
 import KontraLink
@@ -43,6 +45,7 @@ import Kontra
 import ScriveByMail.Model
 import ScriveByMail.View
 import qualified Templates.Fields as F
+import Payments.Model
 
 import Control.Monad
 
@@ -95,6 +98,36 @@ adminUserPage user mcompany =
         F.object "company" $ companyFields mcompany
         F.value "adminlink" $ show $ LinkAdminOnly
 
+adminUserPaymentPage :: TemplatesMonad m => UserID -> Maybe PaymentPlan -> Maybe CompanyID -> String -> m String
+adminUserPaymentPage userid mpaymentplan mcompanyid recurlysubdomain =  
+  renderTemplate "adminuserpayments" $ do
+    F.value "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
+    F.value "adminuserslink" $ show $ LinkUserAdmin Nothing
+    F.value "companyid" $ show <$> mcompanyid
+    F.value "adminlink" $ show $ LinkAdminOnly
+    F.value "recurlysubdomain" recurlysubdomain
+    F.value "userid" $ show userid
+    case mpaymentplan of
+      Nothing -> do
+        F.value "haspaymentplan" False
+        F.value "freeplan" True
+      Just paymentplan -> do
+        F.value "recurlyplan" $ ppPaymentPlanProvider paymentplan == RecurlyProvider        
+        F.value "accountcode" $ show $ ppAccountCode paymentplan
+        F.value "priceplan" $ show $ ppPricePlan paymentplan
+        F.value "haspaymentplan" True
+        case ppPricePlan paymentplan of
+          FreePricePlan       -> F.value "freeplan"       True
+          BasicPricePlan      -> F.value "basicplan"      True
+          BrandingPricePlan   -> F.value "brandingplan"   True
+          AdvancedPricePlan   -> F.value "advancedplan"   True
+          EnterprisePricePlan -> F.value "enterpriseplan" True
+        case ppStatus paymentplan of
+          ActiveStatus -> F.value "activestatus" True
+          OverdueStatus -> F.value "overduestatus" True
+          CanceledStatus -> F.value "canceledstatus" True
+          DeactivatedStatus -> F.value "deactivatedstatus" True
+
 {- | Manager company page - can change company info and settings here -}
 adminCompanyPage :: TemplatesMonad m => Company -> Maybe MailAPIInfo -> m String
 adminCompanyPage company mmailapiinfo =
@@ -104,6 +137,35 @@ adminCompanyPage company mmailapiinfo =
     when (isJust mmailapiinfo) $ mailAPIInfoFields (fromJust mmailapiinfo)
     F.value "hasmailapi" $ isJust mmailapiinfo
     F.value "adminlink" $ show $ LinkAdminOnly
+
+adminCompanyPaymentPage :: TemplatesMonad m => Maybe PaymentPlan -> Int -> CompanyID -> String -> m String
+adminCompanyPaymentPage mpaymentplan quantity companyid recurlysubdomain =  
+  renderTemplate "admincompanypayments" $ do
+    F.value "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
+    F.value "companyid" $ show companyid
+    F.value "adminlink" $ show $ LinkAdminOnly
+    F.value "recurlysubdomain" recurlysubdomain
+    F.value "quantity" quantity
+    case mpaymentplan of
+      Nothing -> do
+        F.value "haspaymentplan" False
+        F.value "freeplan" True
+      Just paymentplan -> do
+        F.value "recurlyplan" $ ppPaymentPlanProvider paymentplan == RecurlyProvider        
+        F.value "accountcode" $ show $ ppAccountCode paymentplan
+        F.value "priceplan" $ show $ ppPricePlan paymentplan
+        F.value "haspaymentplan" True
+        case ppPricePlan paymentplan of
+          FreePricePlan       -> F.value "freeplan"       True
+          BasicPricePlan      -> F.value "basicplan"      True
+          BrandingPricePlan   -> F.value "brandingplan"   True
+          AdvancedPricePlan   -> F.value "advancedplan"   True
+          EnterprisePricePlan -> F.value "enterpriseplan" True
+        case ppStatus paymentplan of
+          ActiveStatus -> F.value "activestatus" True
+          OverdueStatus -> F.value "overduestatus" True
+          CanceledStatus -> F.value "canceledstatus" True
+          DeactivatedStatus -> F.value "deactivatedstatus" True
 
 adminUserStatisticsPage :: TemplatesMonad m => Fields m () -> m String
 adminUserStatisticsPage morefields =
@@ -203,3 +265,4 @@ userFields u =  do
         F.value "id"               $ show (userid u)
         F.value "companynumber"    $ getCompanyNumber u
         F.value "companyname"      $ getCompanyName   u
+        F.value "isfree"           $ userisfree u

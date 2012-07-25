@@ -305,8 +305,7 @@ adminuser=
 	</div>
 	<ul class="tabs">
 	  <li class="active float-left"><a href="$adminuserslink$/$user.id$">Användaruppgifter</a></li>
-	  <li class="float-left"><a href="#">Payment info</a></li>
-	  <li class="float-left"><a href="#">Payment list</a></li>
+	  <li class="float-left"><a href="$adminuserslink$/payments/$user.id$">Payment info</a></li>
 	  <li class="float-left"><a href="$adminuserslink$/usagestats/$user.id$">Statistics</a></li>
           <li class="float-right"/>
 	</ul>
@@ -396,6 +395,12 @@ adminuser=
 		    </select>
 		  </td>
 		</tr>
+               <tr> <td>Free user:</td>
+                 <td>
+                   <input type="checkbox" $if(user.isfree)$checked="checked"$endif$  name="freeuser" />
+                 </td>
+               </tr>
+
 	    </tbody></table>
 	    <br/>
 	    <input type="submit" style="width:200px;font-weight:bold"
@@ -404,6 +409,122 @@ adminuser=
 	</div>
       </div>
     </form>
+####
+adminuserpayments=
+    <a href="$adminlink$">Go back to main admin page</a>
+    <a style="padding-left:100px" href="$adminuserslink$">Go back to user admin page</a>
+    <br/>
+    <br/>
+      <div class="tab-viewer">
+	<div class="tab-header">
+	</div>
+	<ul class="tabs">
+	  <li class="float-left"><a href="$adminuserslink$/$userid$">Användaruppgifter</a></li>
+	  <li class="active float-left"><a href="$adminuserslink$/payments/$userid$">Payment info</a></li>
+	  <li class="float-left"><a href="$adminuserslink$/usagestats/$userid$">Statistics</a></li>
+          <li class="float-right"/>
+	</ul>
+      <div class="tab-container">
+	<div class="tab-content account">
+          <form method="POST">
+	    <table><tbody>
+		<tr> <th style="width:200px"></th> <th> </th></tr>
+		<tr> <td style="padding-top:10px"><strong>Payment Info</strong></td> <td> </td></tr>
+                $if(haspaymentplan)$
+                $if(companyid)$
+		<tr> 
+                  <td><em>Warning:</em> </td>
+		  <td>
+                    This user has a personal (user) payment plan and is part of a company. Something has gone wrong.
+		  </td>
+		</tr>
+                $endif$
+                $if(recurlyplan)$
+		<tr> 
+                  <td>Price plan on Recurly: </td>
+		  <td>
+                    <a href="https://$recurlysubdomain$.recurly.com/accounts/$accountcode$">$priceplan$</a>
+		  </td>
+		</tr>
+                $else$
+		<tr> 
+                  <td>Price plan (selected by admin):</td>
+		  <td>
+		    <select name="priceplan">
+                      <option value="free"       $if(freeplan)$selected="selected"$endif$>Free (no plan)</option>
+                      <option value="basic"      $if(basicplan)$selected="selected"$endif$>Basic</option>
+                      <option value="branding"   $if(brandingplan)$selected="selected"$endif$>Branding</option>
+                      <option value="advanced"   $if(advancedplan)$selected="selected"$endif$>Advanced</option>
+                      <option value="enterprise" $if(enterpriseplan)$selected="selected"$endif$>Enterprise</option>
+                    </select>
+		  </td>
+		</tr>
+		<tr> 
+                  <td>Status (selected by admin):</td>
+		  <td>
+		    <select name="status">
+                      <option value="active"      $if(activestatus)$selected="selected"$endif$>Active</option>
+                      <option value="overdue"     $if(overduestatus)$selected="selected"$endif$>Overdue</option>
+                      <option value="canceled"    $if(canceledstatus)$selected="selected"$endif$>Canceled</option>
+                      <option value="deactivated" $if(deactivatedstatus)$selected="selected"$endif$>Deactivated</option>
+                    </select>
+		  </td>
+		</tr>
+		<tr> 
+                  <td><input type="submit" style="width:200px;font-weight:bold"
+	           value="Change" name="change" /></td>
+		  <td>
+		  </td>
+		</tr>
+                $endif$
+                $else$
+                $if(companyid)$
+		<tr> 
+                  <td>Company price plan: </td>
+		  <td>
+                    This user is part of a company. <a href="$admincompanieslink$/payments/$companyid$">Visit the company price plan.</a>
+		  </td>
+		</tr>
+                $else$
+		<tr> 
+                  <td>Price plan (selected by admin):</td>
+		  <td>
+		    <select name="priceplan">
+                      <option value="free"       $if(freeplan)$selected="selected"$endif$>Free (no plan)</option>
+                      <option value="basic"      $if(basicplan)$selected="selected"$endif$>Basic</option>
+                      <option value="branding"   $if(brandingplan)$selected="selected"$endif$>Branding</option>
+                      <option value="advanced"   $if(advancedplan)$selected="selected"$endif$>Advanced</option>
+                      <option value="enterprise" $if(enterpriseplan)$selected="selected"$endif$>Enterprise</option>
+                    </select>
+		  </td>
+		</tr>
+		<tr> 
+                  <td>Status (selected by admin):</td>
+		  <td>
+		    <select name="status">
+                      <option value="active"      $if(activestatus)$selected="selected"$endif$>Active</option>
+                      <option value="overdue"     $if(overduestatus)$selected="selected"$endif$>Overdue</option>
+                      <option value="canceled"    $if(canceledstatus)$selected="selected"$endif$>Canceled</option>
+                      <option value="deactivated" $if(deactivatedstatus)$selected="selected"$endif$>Deactivated</option>
+                    </select>
+		  </td>
+		</tr>
+		<tr> 
+                  <td><input type="submit" style="width:200px;font-weight:bold"
+	           value="Change" name="change" /></td>
+		  <td>
+		  </td>
+		</tr>
+                $endif$
+                $endif$
+	    </tbody></table>
+            
+          </form>
+	</div>
+      </div>
+    </div>
+<script>
+</script>
 ####
 admincompany=
     <a href="$adminlink$">Go back to main admin page</a>
@@ -529,6 +650,81 @@ var company = CompanyBranding.init({ companyid: "$companyid$" });
 var tabcontent = jQuery(".tab-content");
 tabcontent.append(company.input());
 tabcontent.append(jQuery("<div class='clearfix' />"));
+</script>
+####
+admincompanypayments=
+    <a href="$adminlink$">Go back to main admin page</a>
+    <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
+    <br/>
+    <br/>
+      <div class="tab-viewer">
+	<div class="tab-header">
+	</div>
+	<ul class="tabs">
+	  <li class="float-left"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li class="float-left"><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
+	  <li class="float-left"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
+	  <li class="float-left"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
+          <li class="float-left active"><a href="$admincompanieslink$/payments/$companyid$">Payments</a></li>
+          <li class="float-right"/>
+	</ul>
+      <div class="tab-container">
+	<div class="tab-content account">
+          <form method="POST">
+	    <table><tbody>
+		<tr> <th style="width:200px"></th> <th> </th></tr>
+		<tr> <td style="padding-top:10px"><strong>Payment Info</strong></td> <td> </td></tr>
+		<tr> 
+                  <td>Company Users: </td>
+		  <td>
+                    $quantity$
+		  </td>
+		</tr>
+                $if(recurlyplan)$
+		<tr> 
+                  <td>Price plan on Recurly: </td>
+		  <td>
+                    <a href="https://$recurlysubdomain$.recurly.com/accounts/$accountcode$">$priceplan$</a>
+		  </td>
+		</tr>
+                $else$
+		<tr> 
+                  <td>Price plan (selected by admin):</td>
+		  <td>
+		    <select name="priceplan">
+                      <option value="free"       $if(freeplan)$selected="selected"$endif$>Free (no plan)</option>
+                      <option value="basic"      $if(basicplan)$selected="selected"$endif$>Basic</option>
+                      <option value="branding"   $if(brandingplan)$selected="selected"$endif$>Branding</option>
+                      <option value="advanced"   $if(advancedplan)$selected="selected"$endif$>Advanced</option>
+                      <option value="enterprise" $if(enterpriseplan)$selected="selected"$endif$>Enterprise</option>
+                    </select>
+		  </td>
+		</tr>
+		<tr> 
+                  <td>Status (selected by admin):</td>
+		  <td>
+		    <select name="status">
+                      <option value="active"      $if(activestatus)$selected="selected"$endif$>Active</option>
+                      <option value="overdue"     $if(overduestatus)$selected="selected"$endif$>Overdue</option>
+                      <option value="canceled"    $if(canceledstatus)$selected="selected"$endif$>Canceled</option>
+                      <option value="deactivated" $if(deactivatedstatus)$selected="selected"$endif$>Deactivated</option>
+                    </select>
+		  </td>
+		</tr>
+		<tr> 
+                  <td><input type="submit" style="width:200px;font-weight:bold"
+	           value="Change" name="change" /></td>
+		  <td>
+		  </td>
+		</tr>
+                $endif$
+	    </tbody></table>
+            
+          </form>
+	</div>
+      </div>
+    </div>
+<script>
 </script>
 ####
 admincompanyusers=
@@ -749,8 +945,7 @@ userusagestats=
       </div>
       <ul class="tabs">
 	<li class="float-left"><a href="$adminuserslink$/$user.id$">Användaruppgifter</a></li>
-	<li class="float-left"><a href="#">Payment info</a></li>
-	<li class="float-left"><a href="#">Payment list</a></li>
+	<li class="float-left"><a href="$adminuserslink$/payments/$user.id$">Payment info</a></li>
 	<li class="active float-left"><a href="$adminuserslink$/usagestats/$user.id$">Statistics</a></li>
         <li class="float-right"/>
       </ul>

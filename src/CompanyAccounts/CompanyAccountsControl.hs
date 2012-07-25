@@ -44,6 +44,9 @@ import User.Utils
 import User.UserControl
 import User.UserView
 import User.History.Model
+import Payments.Model
+import Recurly
+import Payments.Config
 
 {- |
     Handles the showing of the company accounts page.
@@ -378,9 +381,17 @@ handleGetBecomeCompanyAccount companyid = withUserGet $ do
 handlePostBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m KontraLink
 handlePostBecomeCompanyAccount cid = withUserPost $ do
   _ <- guardGoodForTakeover cid
-  Context{ctxmaybeuser = Just user} <- getContext
+  Context{ctxmaybeuser = Just user,
+          ctxrecurlyconfig} <- getContext
   newcompany <- guardJustM $ dbQuery $ GetCompany cid
   _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid newcompany)
+  mplan <- dbQuery $ GetPaymentPlan (Left $ userid user)
+  case mplan of
+    Just pp -> do
+      _ <- liftIO $ deleteAccount curl_exe (recurlyAPIKey ctxrecurlyconfig) (show $ ppAccountCode pp)
+      _ <- dbUpdate $ DeletePaymentPlan (Left $ userid user)
+      return ()
+    Nothing -> return ()
   _ <- resaveDocsForUser (userid user)
   addFlashM $ flashMessageUserHasBecomeCompanyAccount newcompany
   return $ LinkAccount
