@@ -157,8 +157,8 @@
 
 .list-container .col {
        margin: 0 20px;
-       padding-top: 15px;
-       padding-bottom: 10px;
+       padding-top: 12px;
+       padding-bottom: 6px;
        max-width: 800px;
 }
 
@@ -208,4 +208,20 @@
   margin-left: auto;
   margin-right: auto;
   text-align : center;
+}
+
+.listcheckbox{
+    background: url("../img/checkbox_unchecked.png") no-repeat scroll 0 0 transparent;
+    display: block;
+    height: 16px;
+    width: 16px;
+    cursor: pointer;
+}
+
+.listcheckbox.checked{
+    background: url("../img/checkbox_checked.png") no-repeat scroll 0 0 transparent;
+}
+
+.actionButton {
+    margin-right : 5px;
 }

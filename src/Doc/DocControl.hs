@@ -30,7 +30,6 @@ module Doc.DocControl(
     , handleResend
     , handleChangeSignatoryEmail
     , handleRestart
-    , handleCancel
     , showPage
     , showPreview
     , showPreviewForSignatory
@@ -685,35 +684,6 @@ showPage' fileid pageno = do
     _ -> do
       Log.debug $ "JPEG page not found in cache, responding 404 for file " ++ show fileid ++ " and page " ++ show pageno
       notFound (toResponse "temporarily unavailable (document has files pending for process)")
-
-handleCancel :: Kontrakcja m => DocumentID -> m KontraLink
-handleCancel docid = withUserPost $ do
-  doc <- guardRightM $ getDocByDocID docid
-  actor <- guardJustM $ mkAuthorActor <$> getContext
-  if isPending doc
-    then do
-    mdoc <- runMaybeT $ do
-      True <- dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
-      Just newdoc <- dbQuery $ GetDocumentByDocumentID docid
-      return newdoc
-    case mdoc of
-      Just doc' ->  do
-          Log.debug $ "Canceling document #" ++ show docid
-          addFlashM $ flashMessageCanceled doc'
-      Nothing -> addFlashM flashMessageCannotCancel
-    else addFlashM flashMessageCannotCancel
-  return (LinkIssueDoc $ documentid doc)
-
-{-
-handleWithdrawn:: DocumentID -> Kontra KontraLink
-handleWithdrawn docid = do
-  mdoc <- dbQuery $ GetDocumentByDocumentID docid
-  case (mdoc) of
-    Just doc -> withDocumentAutho doc $ do
-                          dbUpdate $ WithdrawnDocument $ documentid doc
-                          return (LinkIssueDoc $ documentid doc)
-    Nothing -> return LinkMain
--}
 
 handleRestart :: Kontrakcja m => DocumentID -> m KontraLink
 handleRestart docid = withUserPost $ do

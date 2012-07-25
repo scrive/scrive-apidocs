@@ -107,6 +107,7 @@ staticRoutes = choice
      , dir "d" $ dir "restore"      $ hPost $ toK0 $ ArchiveControl.handleRestore
      , dir "d" $ dir "reallydelete" $ hPost $ toK0 $ ArchiveControl.handleReallyDelete
      , dir "d" $ dir "share"        $ hPost $ toK0 $ ArchiveControl.handleShare
+     , dir "d" $ dir "cancel"       $ hPost $ toK0 $ ArchiveControl.handleCancel
      , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
      , dir "docs"                  $ hGet  $ toK0 $ ArchiveControl.jsonDocumentsList
      , dir "doc"                   $ hGet  $ toK1 $ DocControl.jsonDocument
@@ -122,7 +123,6 @@ staticRoutes = choice
      , dir "changeemail" $ hPost $ toK2 $ DocControl.handleChangeSignatoryEmail
      -- , dir "withdrawn" $ hPost $ DocControl.handleWithdrawn
      , dir "restart" $ hPost $ toK1 $ DocControl.handleRestart
-     , dir "cancel"  $ hPost $ toK1 $ DocControl.handleCancel
 
      , dir "pages"  $ hGetAjax $ toK2 $ DocControl.showPage
      -- HTMP emails can have embedded preview image

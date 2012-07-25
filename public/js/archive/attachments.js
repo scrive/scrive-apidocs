@@ -22,7 +22,29 @@ window.AttachmentsListDefinition = function(archive) {
                          return res;
                   }})
         ],
-    options : [{name :  localization.archive.attachments.share.action,
+    actions : [
+        new ListAction({
+                name :  localization.archive.attachments.createnew.action,
+                avaible : function(){return true;},
+                acceptEmpty : true,
+                button: UploadButton.init({
+                            size: "tiny",
+                            width : "110",
+                            text: localization.archive.attachments.createnew.action,
+                            name : "doc",
+                            onAppend : function(input) {
+                            setTimeout(function() {
+                                new Submit({
+                                method : "POST",
+                                url : "/a",
+                                ajaxsuccess : function() {archive.attachments().recall();}
+                                }).addInputs($(input)).sendAjax(); },100);
+                            }
+                        })
+               }),
+        new ListAction({
+                name :  localization.archive.attachments.share.action,
+                avaible : function(){return true;},
                 onSelect: function(docs){
                             var confirmationPopup = Confirmation.popup({
                                 acceptText: localization.ok,
@@ -40,12 +62,15 @@ window.AttachmentsListDefinition = function(archive) {
                                                     confirmationPopup.view.clear();
                                                 }
                                           }).sendAjax();
+                                    return true;
                                 }
                               });
                             return true;
                           }
-               },
-               {name :  localization.archive.attachments.remove.action,
+               }),
+        new ListAction({
+                name :  localization.archive.attachments.remove.action,
+                avaible : function(){return true;},
                 onSelect: function(docs){
                              var confirmtext = jQuery("<p/>").append(localization.archive.attachments.remove.body + " ");
                              var label = jQuery("<strong/>");
@@ -70,29 +95,16 @@ window.AttachmentsListDefinition = function(archive) {
                                                     archive.attachments().recall();
                                                     confirmationPopup.view.clear();
                                                 }
-                                          }).sendAjax(); 
+                                          }).sendAjax();
+                                    return true;
                                 }
                               });
                               return true;
                           }
-                }
+                })
               ]
 
     }),
-    headerExtras: UploadButton.init({
-                    size: "tiny",
-                    width : "110",
-                    text: localization.archive.attachments.createnew.action,
-                    name : "doc",
-                    onAppend : function(input) {
-                       setTimeout(function() {
-                        new Submit({
-                          method : "POST",
-                          url : "/a",
-                          ajaxsuccess : function() {archive.attachments().recall();}
-                        }).addInputs($(input)).sendAjax(); },100);
-                    }
-                  }).input().addClass("float-left")
  };
  
 };

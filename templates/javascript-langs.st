@@ -444,12 +444,19 @@ javascriptLocalisation =
                             , opened :    "$_tablestatusesViewedOnline()$"
                             , signed :    "$_tablestatusesSigned()$"
                        }
+                    ,  createnew : "$_createNewDocument()$"
+                    ,  createnewtype : "$_createNewDocumentType()$"
                     ,  sendreminder : {
                               action: "$_SendReminder()$"
                             , bodymulti : "$_ContractReminderBodyMulti()$"
                             , bodysingle : "$_ContractReminderBodySingel()$"
                             , successMessage : "$_flashMessageBulkDocumentRemindsSent()$"
                             , errorMessage   : "$_flashMessageNoBulkDocumentRemindsSent()$"
+                        }
+                    , cancel : {
+                              action: "$_listcancelbuttontext()$"
+                            , body : "$_listcancelbody()$"
+                            , successMessage : "$_listcanceledflashmessagesuccess()$"
                         }
                     ,  remove : {
                               action: "$_delete()$"
@@ -483,8 +490,8 @@ javascriptLocalisation =
                             , body : "$_listShareDialogBody()$"
                             , successMessage : "$_flashMessageTemplateShareDone()$"
                         }
-                    ,  createnew : "$_createNew()$"
-                    ,  createnewtype : "$_createNewType()$"
+                    ,  createnew : "$_createNewTemplate()$"
+                    ,  createnewtype : "$_createNewTemplateType()$"
                     ,  shared : "$_shared()$"
                     ,  search : "$_SearchDoc()$"
                     ,  columns :{

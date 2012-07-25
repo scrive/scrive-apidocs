@@ -113,7 +113,6 @@ data DocProcessInfo =
   , processwhohadsignedinfoformail :: String
 
   -- process specific flash message templates
-  , processflashmessagecanceled :: String
   , processflashmessagerestarted :: String
 
   -- process specific modal templates
@@ -200,7 +199,6 @@ contractProcess =
   , processwhohadsignedinfoformail = "whohadsignedcontractinfoformail"
 
   -- process specific flash messages
-  , processflashmessagecanceled = "flashMessageContractCanceled"
   , processflashmessagerestarted = "flashMessageContractRestarted"
 
   -- process specific modal templates
@@ -288,7 +286,6 @@ offerProcess =
   , processwhohadsignedinfoformail = "whohadsignedofferinfoformail"
 
   -- process specific flash messages
-  , processflashmessagecanceled = "flashMessageOfferCanceled"
   , processflashmessagerestarted = "flashMessageOfferRestarted"
 
   -- process specific modal templates
@@ -377,7 +374,6 @@ orderProcess =
   , processwhohadsignedinfoformail = "whohadsignedorderinfoformail"
 
   -- process specific flash messages
-  , processflashmessagecanceled = "flashMessageOrderCanceled"
   , processflashmessagerestarted = "flashMessageOrderRestarted"
 
   -- process specific modal templates

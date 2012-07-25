@@ -97,6 +97,7 @@
             SessionStorage.set(namespace, "expanded" + id, "" + !val);
             this.set({ "expanded": !val }, {silent : true});
             this.trigger("change");
+            return false;
         }
     });
 
@@ -148,21 +149,19 @@
 
     var ListObjectView = Backbone.View.extend({
         model: ListObject,
-        events: {
-            'click .selectme': 'selectCheck',
-            'click .expand': 'toggleExpand',
-            'click .row': 'selectRow'
-        },
         initialize: function(args) {
-            _.bindAll(this, 'render', 'renderSelection');
+            _.bindAll(this, 'render', 'renderSelection', 'updateActions');
             this.model.bind('change', this.render);
             this.model.bind('selected:change', this.renderSelection);
+            this.model.bind('selected:change', this.updateActions);
             this.schema = args.schema;
             this.model.view = this;
             this.render();
         },
         render: function() {
-            $(this.el).empty();
+            $(this.el).children().detach();
+            var view = this;
+            var model = this.model;
             var mainrow = $(this.el).first();
             for (var i = 0; i < this.schema.size(); i++) {
                 var td = $("<td class='row'></td>");
@@ -172,12 +171,17 @@
                 var elem = undefined;
 
                 if (cell.isSelect()) {
-                    this.checkbox = $("<input type='checkbox' class='selectme check'/>");
+                    td.click(function(){view.selectCheck(); return false;});
+                    this.checkbox = $("<div class='listcheckbox'/>");
+                    this.renderSelection();
+                    this.updateActions();
+                    this.checkbox.click(function(){view.selectCheck();return false;})
                     elem = this.checkbox;
                 } else if (cell.isRendered() && value != undefined) {
                     elem = cell.rendering(value, undefined, this.model);
                 } else if (cell.isExpandable() && value != undefined) {
-                    elem = $("<a href='#' class='expand' />").text(value);
+                    console.log('Rendering expandable')
+                    elem = $("<a href='#'/>").text(value).click(function() {model.toggleExpand(); return false;});
                 } else if (cell.isBool()) {
                     if (value) {
                         elem = $("<center />").append( $("<a>&#10003;</a>").attr("href", this.model.link()));
@@ -222,47 +226,33 @@
              }
             }
             this.renderSelection();
+            this.updateActions();
             return this;
         },
         renderSelection: function() {
             if (this.model.isSelected()) {
                 $(this.el).addClass("ui-selected");
-                if (this.checkbox != undefined) {
-                    this.checkbox.attr("checked", "true");
-                }
+                if (this.checkbox != undefined) this.checkbox.addClass("checked");
             } else {
                 $(this.el).removeClass("ui-selected");
-                if (this.checkbox != undefined) {
-                    this.checkbox.removeAttr("checked");
-                }
+                if (this.checkbox != undefined) this.checkbox.removeClass("checked");
             }
         },
-        selectCheck: function(e) {
-          if(e.target.checked)
+        updateActions : function() {
+            if (this.schema.actionsAvaible())
+                _.each(this.schema.actions(), function(a) {a.update(); return false;});
+        },
+        selectCheck: function() {
+          if(!this.model.isSelected())
             this.model.select();
           else
             this.model.unselect();
-        },
-        selectRow: function(e) {
-            // ignore checkboxes and links
-            if (!$(e.target).is(":checkbox, a")) {
-                // select only this one
-                this.model.collection.selectNone();
-                this.model.select();
-            }
-        },
-        toggleExpand: function() {
-            this.model.toggleExpand();
-            return false;
         }
     });
 
     var ListView = Backbone.View.extend({
-        events: {
-            "click .selectall": "toggleSelectAll"
-        },
         initialize: function(args) {
-            _.bindAll(this, 'render', 'toggleSelectAll');
+            _.bindAll(this, 'render');
             this.model.bind('reset', this.render);
             this.model.bind('change', this.render);
             this.model.view = this;
@@ -296,13 +286,17 @@
             this.pretableboxright = $("<div class='col float-right'/>");
             this.pretableboxrightsearchbox = $("<div class='searchBox float-right'/>");
             this.pretablebox = $("<div class='tab-content'/>");
+            this.tableoptionbox = $("<div class='option-top-box' />");
             this.pretableboxadvancedsearchbox = $("<div class='advanced-search'/>");
             this.tablebox = $("<div class='tab-table'/>");
             this.tableboxfooter = $("<div/>");
             this.tablebox.append(this.tableboxfooter);
             this.pretablebox.append(this.pretableboxleft).append(this.pretableboxright).append("<div class='clearfix'/>");
-            this.main.append(this.pretablebox).append(this.pretableboxadvancedsearchbox).append(this.tablebox);
+            this.main.append(this.tableoptionbox.append(this.pretablebox).append(this.pretableboxadvancedsearchbox)).append(this.tablebox);
 
+            if (this.schema.actionsAvaible()) {
+                this.prepareActions();
+            }
             if (this.schema.optionsAvaible()) {
                 this.prepareOptions();
             }
@@ -360,19 +354,30 @@
             var select = new Select({  name: "",
                                        options: options,
                                        cssClass: "float-left",
-                                       iconClass : "gearImage",
-                                       theme : "white"
+                                       name : "More ▼",
+                                       theme : "green-button"
             });
             this.pretableboxleft.append(select.view().el);
+        },
+        prepareActions : function() {
+           var actions = this.schema.actions();
+           var model = this.model;
+           var view = this
+           _.each(actions, function(a) {
+                a.set({"list" : model});
+                view.pretableboxleft.append(new ListActionView({model : a, el : $("<div class='float-left actionButton'>")}).el);
+            })
         },
         renderheader: function() {
             var headline = $("<tr/>");
             var schema = this.schema;
+            var view = this;
             for (var i = 0; i < schema.size(); i++) {
                var cell = schema.cell(i);
                var th = $("<th>");
                if (cell.isSelect()) {
-                   th.append(this.checkbox = $("<input type='checkbox' class='selectall'>"));
+                   th.append(this.checkbox = $("<div class='listcheckbox' class='selectall'/>"));
+                   th.click(function() {view.toggleSelectAll();return false;});
                } else {
                    var a = $("<a/>");
                    var makeText = function() {
@@ -404,7 +409,7 @@
         },
         render: function() {           
             if (this.table != undefined)
-                this.table.remove();
+                this.table.children().detach();
 
             if (this.model.length > 0 || this.emptyAlternative == undefined) {
                 this.table = $("<table />");

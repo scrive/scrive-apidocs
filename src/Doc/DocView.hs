@@ -6,8 +6,6 @@ module Doc.DocView (
   , flashDocumentRestarted
   , flashDocumentTemplateSaved
   , flashMessageCSVSent
-  , flashMessageCanceled
-  , flashMessageCannotCancel
   , flashMessageInvalidCSV
   , flashRemindMailSent
   , getDataMismatchMessage
@@ -117,14 +115,6 @@ flashRemindMailSent signlink@SignatoryLink{maybesigninfo} =
     template_name =
       maybe "flashRemindMailSentNotSigned"
       (const "flashRemindMailSentSigned")
-
-flashMessageCannotCancel :: TemplatesMonad m => m FlashMessage
-flashMessageCannotCancel =
-  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageCannotCancel"
-
-flashMessageCanceled :: TemplatesMonad m => Document -> m FlashMessage
-flashMessageCanceled document = do
-  toFlashMsg SigningRelated <$> (renderTemplateForProcess document processflashmessagecanceled $ documentInfoFields document)
 
 flashAuthorSigned :: TemplatesMonad m => m FlashMessage
 flashAuthorSigned =

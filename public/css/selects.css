@@ -8,7 +8,7 @@
 }
 
 .select-button {
-        height: 25px;
+        height: 26px;
         position: relative;
         z-index: 0;
 }
@@ -43,6 +43,7 @@
 .select-button .select-button-label {
         color: #000;
         background: url(../img/dropdown-themes.png) no-repeat;
+        background-repeat:repeat-y;
         height: 25px;
         text-decoration: none;
         float: left;
@@ -153,4 +154,58 @@
 }
 .select.white-theme .select-opts :hover {
         color: #000;
+}
+
+/* Green button */
+.select.green-button-theme .select-button{
+    float : left;
+}
+.select.green-button-theme  .select-button .select-button-left {
+        background-image: url(../img/spr-btn-borders.png);
+        background-position: -330px 0px;
+        width: 6px;
+}
+
+.select.green-button-theme .select-button .select-button-right {
+        background-image: url(../img/spr-btn-borders.png);
+        background-position: -334px 0px;
+        width: 6px;
+}
+
+.select.green-button-theme .select-button .select-button-label {
+        background: url(../img/spr-btn-bg.png) 0 0;
+        background-position: 0 -160px;
+        font: 11px/26px "Helvetica Neue";
+        position: relative;
+        text-shadow: 0 1px 3px #41770B;
+        color: #fff;
+        padding-right: 5px;
+}
+.select.green-button-theme:hover  .select-button .select-button-left {
+        background-position: -330px -27px;
+}
+.select.green-button-theme:hover  .select-button .select-button-right {
+        background-position: -334px -27px;
+}
+.select.green-button-theme:hover  .select-button .select-button-label {
+        background-position: 0 -187px;
+}
+
+.select.green-button-theme .select-opts {
+        background: #44CF39;
+        border: 1px solid #60A467;
+        font: 11px/26px "Helvetica Neue";
+        height: 26px;
+        color: #fff;
+        text-shadow: 0 1px 3px #41770B;
+}
+.select.green-button-theme:hover .select-opts {
+        background: #61DE3F;
+        
+}
+
+.select.green-button-theme .select-opts :hover {
+        color: #fefefe;
+        text-shadow: 0 2px 4px #222222;
+
 }

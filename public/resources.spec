@@ -74,6 +74,7 @@ set systemPage
  js   js/ajaxqueue.js
  js   js/confirmations.js
  js   js/selects.js
+ js   js/lists/action.js
  js   js/lists/sorting.js
  js   js/lists/filtering.js
  js   js/lists/paging.js

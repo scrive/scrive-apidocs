@@ -16,7 +16,10 @@ window.BinListDefinition = function(archive) { return {
         new Cell({name: localization.archive.bin.columns.type, width:"120px", field:"type"}),
         new Cell({name: localization.archive.bin.columns.title, width:"400px", field:"title",  special: "link"})
         ],
-    options : [{name : localization.archive.bin.restore.action,
+    actions : [
+      new ListAction({
+                name : localization.archive.bin.restore.action,
+                avaible : function() {return true;},
                 onSelect: function(docs){
                             var confirmationPopup = Confirmation.popup({
                                 acceptText: localization.ok,
@@ -38,8 +41,10 @@ window.BinListDefinition = function(archive) { return {
                               });
                             return true;
                           }
-               },
-               {name : localization.archive.bin.remove.action,
+               }),
+     new ListAction({ 
+                name : localization.archive.bin.remove.action,
+                avaible : function() {return true;},
                 onSelect: function(docs){
                               var confirmationPopup = Confirmation.popup({
                                 acceptText: localization.ok,
@@ -61,7 +66,7 @@ window.BinListDefinition = function(archive) { return {
                               });
                             return true;
                           }
-                }
+                })
               ]
 
     })

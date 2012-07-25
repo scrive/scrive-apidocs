@@ -18,7 +18,7 @@ window.DocumentsListDefinition = function(archive) { return {
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.documents.search}),
     selectfiltering : [  new SelectFiltering({description: localization.filterByStatusClass.showAnyStatusClass,
                              name: "statusclass",
-                             textWidth : "120px",
+                             textWidth : "130px",
                              options: [ {name: localization.filterByStatusClass.showDraft,     value: "draft"},
                                         {name: localization.filterByStatusClass.showCancelled, value: "cancelled"},
                                         {name: localization.filterByStatusClass.showSent,      value: "sent"},
@@ -26,23 +26,12 @@ window.DocumentsListDefinition = function(archive) { return {
                                         {name: localization.filterByStatusClass.showRead,      value: "read"},
                                         {name: localization.filterByStatusClass.showOpened,    value: "opened"},
                                         {name: localization.filterByStatusClass.showSigned,    value: "signed"}
-                                      ]}),
-            new SelectFiltering({description: localization.filterByStatusClass.showAnyStatusClass,
-                             name: "statusclass",
-                             textWidth : "120px",
-                             options: [ {name: localization.filterByStatusClass.showDraft,     value: "draft"},
-                                        {name: localization.filterByStatusClass.showCancelled, value: "cancelled"},
-                                        {name: localization.filterByStatusClass.showSent,      value: "sent"},
-                                        {name: localization.filterByStatusClass.showDelivered, value: "delivered"},
-                                        {name: localization.filterByStatusClass.showRead,      value: "read"},
-                                        {name: localization.filterByStatusClass.showOpened,    value: "opened"},
-                                        {name: localization.filterByStatusClass.showSigned,    value: "signed"}
-                                      ]})   ],
+                                      ]})  ],
     advancedselectfiltering : new AdvancedSelectFiltering({
         selectfilterings : [
             new SelectFiltering({description: localization.filterByProcess.showAllProcesses,
                              name: "process",
-                             textWidth : "90px",
+                             textWidth : "130px",
                              options: [ {name: localization.filterByProcess.showContractsOnly, value: "contract"},
                                         {name: localization.filterByProcess.showOffersOnly,    value: "offer"},
                                         {name: localization.filterByProcess.showOrdersOnly,    value: "order"}
@@ -50,7 +39,7 @@ window.DocumentsListDefinition = function(archive) { return {
             new SelectFiltering({
                              description: localization.filterByYear.showAnyYear,
                              name: "year",
-                             textWidth : "60px",
+                             textWidth : "130px",
                              options: [ {name: "2010",    value: "2010"},
                                         {name: "2011",    value: "2011"},
                                         {name: "2012",    value: "2012"},
@@ -59,7 +48,7 @@ window.DocumentsListDefinition = function(archive) { return {
             new SelectFiltering({
                              description: localization.filterByMonth.showAnyMonth,
                              name: "month",
-                             textWidth : "70px",
+                             textWidth : "130px",
                              options: [ {name: capitaliseFirstLetter(localization.months.january),   value: "1"},
                                         {name: capitaliseFirstLetter(localization.months.february),  value: "2"},
                                         {name: capitaliseFirstLetter(localization.months.march),     value: "3"},
@@ -110,19 +99,53 @@ window.DocumentsListDefinition = function(archive) { return {
                     }
                  })
         ],
-    options : [{name : localization.archive.documents.sendreminder.action,
-                onSelect: function(docs){
-                            allSendOrOpenSelected = _.all(docs, function(doc) {
-                                                return doc.field("status") == "sent"      ||
-                                                       doc.field("status") == "delivered" ||
-                                                       doc.field("status") == "read"      ||
-                                                       doc.field("status") == "opened"
-                                            })
-                             if (!allSendOrOpenSelected) {
-                                FlashMessages.add({content: localization.cantSendReminder(localization.documents.toLowerCase()), color: "red"});
-                                return;
-                             }
-                             var content = jQuery("<p/>");
+    actions : [
+           new ListAction({
+                name : localization.archive.documents.createnew,
+                avaible : function() {return true;},
+                acceptEmpty : true,
+                onSelect: function() {
+                        var popup;
+                        function doctypebutton(txt,type) {
+                            return jQuery('<td/>').append(jQuery('<div class="documentTypeBox"/>').append(UploadButton.init({
+                                size: "tiny",
+                                width : "130",
+                                text: txt, //
+                                button: jQuery('<a href="#" class="documenticon withUpload"/>').append(jQuery('<div class="documenticonText"/>').append(jQuery("<span class='text'/>").text(txt))),
+                                name : "doc",
+                                submitOnUpload : true,
+                                submit: new Submit({
+                                    method : "POST",
+                                    doctype: type,
+                                    url : "/d",
+                                    onSend: function() {LoadingDialog.open();},
+                                })
+                            }).input()));
+                        }
+                        var t = jQuery('<tr/>') ;
+                        t.append(doctypebutton(localization.process.contract.name, "Contract"));
+                        t.append(doctypebutton(localization.process.offer.name, "Offer"));
+                        t.append(doctypebutton(localization.process.order.name, "Order"));
+                        var table = jQuery('<table style="width: 100%"/>').append(jQuery('<tbody/>').append(t));
+                        popup = Confirmation.popup({
+                            onAccept: function() { },
+                            title: localization.archive.documents.createnewtype,
+                            content: table
+                        });
+                        popup.hideAccept();
+                        return false;
+                    }
+            }),
+        new ListAction({
+            name :  localization.archive.documents.sendreminder.action,
+            avaible : function(doc){
+              return doc.field("status") == "sent"      ||
+                     doc.field("status") == "delivered" ||
+                     doc.field("status") == "read"      ||
+                     doc.field("status") == "opened"
+            },
+            onSelect : function(docs) {
+                 var content = jQuery("<p/>");
                              if (docs.length == 1) {
                                content.append(localization.archive.documents.sendreminder.bodysingle + " ");
                                content.append(jQuery("<strong/>").text(docs[0].field("title")));
@@ -154,22 +177,53 @@ window.DocumentsListDefinition = function(archive) { return {
                                 }
                               });
                              return true;
-                          }
-               },
-               {name : localization.archive.documents.remove.action,
-                onSelect: function(docs){
-                            anySendOrOpenSelected = _.any(docs, function(doc) {
-                                                return doc.field("status") == "sent"      ||
-                                                       doc.field("status") == "delivered" ||
-                                                       doc.field("status") == "read"      ||
-                                                       doc.field("status") == "opened"    ||
-                                                       doc.field("anyinvitationundelivered") == "True"
-                                            })
-                             if (anySendOrOpenSelected) {
-                                FlashMessages.add({content: localization.archive.documents.remove.cantremoveactive, color: "red"});
-                                return false;
-                             }
-                             var confirmtext = jQuery("<p/>").append(localization.archive.documents.remove.body + " ");
+            }
+        }),
+        new ListAction({
+            name :  localization.archive.documents.cancel.action,
+            avaible : function(doc){
+              return doc.field("status") == "sent"      ||
+                     doc.field("status") == "delivered" ||
+                     doc.field("status") == "read"      ||
+                     doc.field("status") == "opened"
+            },
+            onSelect : function(docs) {
+                             var confirmationPopup = Confirmation.popup({
+                                acceptText: localization.ok,
+                                rejectText: localization.cancel,
+                                title: localization.archive.documents.cancel.action,
+                                content: jQuery("<p/>").text(localization.archive.documents.cancel.body),
+                                onAccept : function() {
+                                    new Submit({
+                                                url: "/d/cancel",
+                                                method: "POST",
+                                                doccheck: _.map(docs, function(doc){return doc.field("id");}),
+                                                ajaxsuccess : function() {
+                                                    FlashMessages.add({color : "green", content : localization.archive.documents.cancel.successMessage});
+                                                    archive.documents().recall();
+                                                    confirmationPopup.view.clear();
+                                                },
+                                                ajaxerror : function() {
+                                                    archive.documents().recall();
+                                                    confirmationPopup.view.clear();
+                                                }
+                                          }).sendAjax();
+                                }
+                              });
+                             return true;
+            }
+        }),
+        new ListAction({
+            name : localization.archive.documents.remove.action,
+            avaible : function(doc){
+              return doc.field("status") != "sent"      &&
+                     doc.field("status") != "delivered" &&
+                     doc.field("status") != "read"      &&
+                     doc.field("status") != "opened"    &&
+                     doc.field("anyinvitationundelivered") != "True"
+            },
+            onSelect : function(docs) {
+                         var confirmtext = jQuery("<p/>").append(localization.archive.documents.remove.body + " ");
                              var label = jQuery("<strong/>");
                              if (docs.length == 1) {
                                confirmtext.append(jQuery("<strong/>").text(docs[0].field("title")));
@@ -196,16 +250,17 @@ window.DocumentsListDefinition = function(archive) { return {
                                 }
                               });
                              return true;
-                          }
-                },
+            }
+        })
+    ],
+    options : [
                 {name : localization.archive.documents.csv.action,
                  acceptEmpty : true,
                  onSelect: function(){
                         var url =  archive.documents().model.schema.url() + "?"
                         var params =  archive.documents().model.schema.getSchemaUrlParams();
-                        params.format = "csv";
                         _.each(params,function(a,b){url+=(b+"="+a+"&")})
-                        window.location = url;
+                        window.open(url + "format=csv");
                         return true;
                  }
                 } 

@@ -158,7 +158,8 @@ window.Document = Backbone.Model.extend({
     },
     cancel: function() {
           return new Submit({
-              url: "/cancel/" + this.documentid(),
+              url: "/d/cancel",
+              doccheck : this.documentid(),
               method: "POST"
           });
     },

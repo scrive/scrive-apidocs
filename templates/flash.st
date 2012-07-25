@@ -15,16 +15,6 @@ flashRemindMailSentSigned=
 	$_flashRemindMailSentSigned()$ $personname$
 
 ######
-flashMessageCannotCancel=
-	$_flashMessageCannotCancel()$
-
-######
-flashMessageContractCanceled= $_contractcancelflashmessage()$
-######
-flashMessageOfferCanceled= $_offercancelflashmessage()$
-#####
-flashMessageOrderCanceled= $_ordercancelflashmessage()$
-#####
 flashMessageNoAccountType=
 	$_flashMessageNoAccountType()$
 #####

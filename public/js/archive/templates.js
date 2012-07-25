@@ -25,7 +25,46 @@ window.TemplatesListDefinition = function(archive) { return {
                          return res;
                   }})
         ],
-    options : [{name : localization.archive.templates.share.action,
+    actions : [
+       new ListAction({
+                name : localization.archive.templates.createnew,
+                avaible : function() {return true;},
+                acceptEmpty : true,
+                onSelect: function() {
+                        var popup;
+                        function doctypebutton(txt,type) {
+                            return jQuery('<td/>').append(jQuery('<div class="documentTypeBox"/>').append(UploadButton.init({
+                                size: "tiny",
+                                width : "130",
+                                text: txt, //
+                                button: jQuery('<a href="#" class="documenticon withUpload"/>').append(jQuery('<div class="documenticonText"/>').append(jQuery("<span class='text'/>").text(txt))),
+                                name : "doc",
+                                submitOnUpload : true,
+                                submit: new Submit({
+                                    method : "POST",
+                                    doctype: type,
+                                    url : "/t",
+                                    onSend: function() {LoadingDialog.open();},
+                                })
+                            }).input()));
+                        }
+                        var t = jQuery('<tr/>') ;
+                        t.append(doctypebutton(localization.process.contract.name, "Contract"));
+                        t.append(doctypebutton(localization.process.offer.name, "Offer"));
+                        t.append(doctypebutton(localization.process.order.name, "Order"));
+                        var table = jQuery('<table style="width: 100%"/>').append(jQuery('<tbody/>').append(t));
+                        popup = Confirmation.popup({
+                            onAccept: function() { },
+                            title: localization.archive.templates.createnewtype,
+                            content: table
+                        });
+                        popup.hideAccept();
+                        return false;
+                    }
+            }),
+        new ListAction({
+                name : localization.archive.templates.share.action,
+                avaible : function() {return true;},
                 onSelect: function(docs){
                             var confirmationPopup = Confirmation.popup({
                                 acceptText: localization.ok,
@@ -47,8 +86,11 @@ window.TemplatesListDefinition = function(archive) { return {
                               });
                             return true;
                           }
-               },
-               {name : localization.archive.templates.remove.action ,
+    
+            }),
+        new ListAction({
+                name : localization.archive.templates.remove.action,
+                avaible : function() {return true;},
                 onSelect: function(docs){
                              var confirmtext = jQuery("<p/>").append(localization.archive.templates.remove.body + " ");
                              var label = jQuery("<strong/>");
@@ -78,47 +120,9 @@ window.TemplatesListDefinition = function(archive) { return {
                               });
                             return true;
                           }
-                       }
-              ]
-
-    }),
-    headerExtras: Button.init({
-        color: "green",
-        size: "tiny",
-        text: localization.archive.templates.createnew,
-        name : "doc",
-        onClick: function() {
-            var popup;
-            function doctypebutton(txt,type) {
-                return jQuery('<td/>').append(jQuery('<div class="documentTypeBox"/>').append(UploadButton.init({
-                    size: "tiny",
-                    width : "130",
-                    text: txt, //
-                    button: jQuery('<a href="#" class="documenticon withUpload"/>').append(jQuery('<div class="documenticonText"/>').append(jQuery("<span class='text'/>").text(txt))),
-                    name : "doc",
-                    submitOnUpload : true,
-                    submit: new Submit({
-                        method : "POST",
-                        doctype: type,
-                        url : "/t",
-                        onSend: function() {LoadingDialog.open();},
-                    })
-                }).input()));
-            }
-            var t = jQuery('<tr/>') ;
-            t.append(doctypebutton(localization.process.contract.name, "Contract"));
-            t.append(doctypebutton(localization.process.offer.name, "Offer"));
-            t.append(doctypebutton(localization.process.order.name, "Order"));
-            var table = jQuery('<table style="width: 100%"/>').append(jQuery('<tbody/>').append(t));
-            popup = Confirmation.popup({
-                onAccept: function() { },
-                title: localization.archive.templates.createnewtype,
-                content: table
-            });
-            popup.hideAccept();
-            return false;
-        }
-    }).input().addClass("float-left")
+            })           
+        ]
+    }),    
 };};
 
 

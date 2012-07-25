@@ -344,7 +344,7 @@ window.DocumentStandardView = Backbone.View.extend({
           acceptColor: "red",
           extraClass : "s-withdraw-confirmation",
           onAccept: function() {
-              document.cancel().send();
+              document.cancel().sendAjax(function() {window.location = window.location;});
               return true;
             }
           });

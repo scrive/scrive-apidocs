@@ -6,6 +6,7 @@ module Archive.Control
        handleRestore,
        handleReallyDelete,
        handleShare,
+       handleCancel,
        showArchive,
        showPadDeviceArchive,
        jsonDocumentsList
@@ -40,6 +41,9 @@ import Data.Maybe
 import Text.JSON.Gen as J
 import Doc.DocUtils
 import Doc.Action
+import Doc.DocStateQuery
+import Control.Monad
+ 
 
 handleDelete :: Kontrakcja m => m JSValue
 handleDelete = do
@@ -77,7 +81,21 @@ handleSendReminders = do
             sequence . map (sendReminderEmail Nothing ctx doc) $ unsignedsiglinks
           _ -> return []
     
+handleCancel :: Kontrakcja m =>  m JSValue
+handleCancel = do
+  docids <- getCriticalFieldList asValidDocID "doccheck"
+  forM_ docids $ \docid -> do
+      doc <- guardRightM' $ getDocByDocID docid
+      actor <- guardJustM $ mkAuthorActor <$> getContext
+      if (documentstatus doc == Pending)
+        then do
+            mdoc' <- dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
+            when (isLeft mdoc') internalError
+        else internalError
+  J.runJSONGenT $ return ()
 
+
+  
 handleRestore :: Kontrakcja m => m JSValue
 handleRestore = do
   user <- guardJustM $ ctxmaybeuser <$> getContext

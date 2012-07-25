@@ -56,6 +56,7 @@
             selectfiltering : [],                              
             paging: new Paging({ disabled: true }),
             options: [],
+            actions: [],
             extraParams: {},
             expandedByDefault : false
         },
@@ -112,8 +113,14 @@
         options: function() {
             return this.get("options");
         },
+        actions : function() {
+            return this.get("actions");
+        },
         optionsAvaible: function() {
             return this.options().length > 0;
+        },
+        actionsAvaible: function() {
+            return this.actions().length > 0;
         },
         extraParams: function() {
             return this.get("extraParams");
