@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Payments.Control (handleSubscriptionDashboard
                         ,handleSubscriptionDashboardInfo
-                        ,handleGetInvoices
                         ,handleSyncNewSubscriptionWithRecurly
                         ,handleChangePlan
                         ,switchPlanToCompany
@@ -30,7 +29,6 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import qualified Log (payments)
 import qualified Text.JSON.Gen as J
-import ListUtil
 import MinutesTime
 
 import Payments.Model
@@ -117,23 +115,6 @@ handleSubscriptionDashboardInfo = do
       J.value "subdomain"    $ recurlySubdomain
     plan
     
-handleGetInvoices :: Kontrakcja m => m JSValue
-handleGetInvoices = do
-  RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext  
-  params <- getListParamsNew
-  user <- pguardM' "handleGetInvoices: No user logged in." $ 
-          ctxmaybeuser <$> getContext
-  plan <- pguardM' "No plan for logged in user." $ 
-          dbQuery $ GetPaymentPlan (maybe (Left (userid user)) Right (usercompany user))
-  invoices <- pguardM "handleGetInvoices" $ 
-              liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey (show $ ppAccountCode plan)
-  runJSONGenT $ do
-    J.value "list" $ for invoices $ runJSONGen . J.value "fields"
-    J.value "paging" $ pagingParamsJSON $ PagedList { list     = invoices
-                                                    , params   = params
-                                                    , pageSize = 12
-                                                    }
-
 -- to call this, user must not have an account code yet (no payment plan in table)
 handleSyncNewSubscriptionWithRecurly :: Kontrakcja m => m ()
 handleSyncNewSubscriptionWithRecurly = do

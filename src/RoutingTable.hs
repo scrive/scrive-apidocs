@@ -177,7 +177,6 @@ staticRoutes = choice
      , dir "payments" $ dir "dashboard" $ hGet $ toK0 $ Payments.handleSubscriptionDashboard
      , dir "payments" $ dir "info.json" $ hGet $ toK0 $ Payments.handleSubscriptionDashboardInfo
      , dir "payments" $ dir "newsubscription" $ hPost $ toK0 $ Payments.handleSyncNewSubscriptionWithRecurly
-     , dir "payments" $ dir "invoices" $ hGet $ toK0 $ Payments.handleGetInvoices
      , dir "payments" $ dir "changeplan" $ hPost $ toK0 $ Payments.handleChangePlan
 
      -- super user only
