@@ -102,30 +102,41 @@ instance (MonadDB m) => DBQuery m GetPaymentPlan (Maybe PaymentPlan) where
       case eid of
         Left  uid -> sqlWhereEq "user_id"    uid
         Right cid -> sqlWhereEq "company_id" cid
-    listToMaybe <$> foldDB f []
-      where f :: [PaymentPlan] -> AccountCode -> Int -> Maybe UserID -> Maybe CompanyID -> PricePlan -> PaymentPlanStatus -> Int -> PricePlan -> PaymentPlanStatus -> Int -> PaymentPlanProvider -> [PaymentPlan]
-            f acc ac 1 (Just uid) _ p s q pp sp qp pr = 
-              PaymentPlan    { ppAccountCode      = ac
-                             , ppID               = Left uid
-                             , ppPricePlan        = p
-                             , ppPendingPricePlan = pp
-                             , ppStatus           = s
-                             , ppPendingStatus    = sp
-                             , ppQuantity         = q
-                             , ppPendingQuantity  = qp 
-                             , ppPaymentPlanProvider = pr} : acc
-            f acc ac 2 _ (Just cid) p s q pp sp qp pr = 
-              PaymentPlan { ppAccountCode      = ac
-                          , ppID               = Right cid
-                          , ppPricePlan        = p
-                          , ppPendingPricePlan = pp
-                          , ppStatus           = s
-                          , ppPendingStatus    = sp
-                          , ppQuantity         = q
-                          , ppPendingQuantity  = qp 
-                          , ppPaymentPlanProvider = pr} : acc
-            f acc _  _ _ _   _ _ _ _ _ _ _ = acc -- ignore other codes to get rid of warning
+    listToMaybe <$> foldDB fetchPaymentPlans []
 
+fetchPaymentPlans :: [PaymentPlan] -> AccountCode -> Int -> Maybe UserID -> Maybe CompanyID -> PricePlan -> PaymentPlanStatus -> Int -> PricePlan -> PaymentPlanStatus -> Int -> PaymentPlanProvider -> [PaymentPlan]
+fetchPaymentPlans acc ac t muid mcid p s q pp sp qp pr = 
+  let mid = case (t, muid, mcid) of
+        (1, Just uid, _) -> Just $ Left  uid
+        (2, _, Just cid) -> Just $ Right cid
+        _                -> Nothing
+  in case mid of
+    Nothing -> acc
+    Just eid -> PaymentPlan { ppAccountCode      = ac
+                            , ppID               = eid
+                            , ppPricePlan        = p
+                            , ppPendingPricePlan = pp
+                            , ppStatus           = s
+                            , ppPendingStatus    = sp
+                            , ppQuantity         = q
+                            , ppPendingQuantity  = qp 
+                            , ppPaymentPlanProvider = pr} : acc
+
+{- | How often, in days, do we sync with recurly? -}
+daysBeforeSync :: Int
+daysBeforeSync = 7
+
+data PaymentPlansRequiringSync = PaymentPlansRequiringSync
+instance MonadDB m => DBQuery m PaymentPlansRequiringSync [PaymentPlan] where
+  query PaymentPlansRequiringSync = do
+    kPrepare $ "SELECT account_code, account_type, user_id, company_id, plan, status, quantity, plan_pending, status_pending, quantity_pending, provider " ++
+             "  FROM payment_plans " ++ 
+             "  LEFT OUTER JOIN (SELECT company_id as cid, count(id) as q FROM users GROUP BY cid) as ccount ON cid = company_id " ++ 
+             "  WHERE ((account_type = 2 AND NOT quantity = q) " ++
+             "     OR sync_date < now() - interval '? days')" ++
+             "    AND provider = ?"
+    _ <- kExecute [toSql daysBeforeSync, toSql RecurlyProvider]
+    foldDB fetchPaymentPlans []
 
 -- update payment_plans set 
 

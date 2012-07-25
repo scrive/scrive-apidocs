@@ -4,7 +4,8 @@ module Payments.Control (handleSubscriptionDashboard
                         ,handleGetInvoices
                         ,handleSyncNewSubscriptionWithRecurly
                         ,handleChangePlan
-                        ,switchPlanToCompany)
+                        ,switchPlanToCompany
+                        ,handleSyncWithRecurly)
        where
 
 import Control.Monad.State
@@ -226,6 +227,21 @@ switchPlanToCompany uid cid = do
       return b
     _ -> return False
 
+handleSyncWithRecurly :: Kontrakcja m => m ()
+handleSyncWithRecurly = do
+  RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
+  Log.payments "Syncing with Recurly."
+  plans <- dbQuery $ PaymentPlansRequiringSync
+  Log.payments $ "Found " ++ show (length plans) ++ " plans requiring sync."
+  forM_ plans $ \plan -> do
+    esubscriptions <- liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show $ ppAccountCode plan
+    case esubscriptions of
+      Left s ->
+        Log.payments $ "syncing: " ++ s
+      Right [] ->
+        Log.payments $ "syncing: no subscriptions for Recurly account; skipping."
+      Right (subscription:_) ->
+        cachePlan Stats.SyncAction (ppAccountCode plan) subscription (ppID plan)
 
 fromRecurlyStatus :: String -> (PaymentPlanStatus, PaymentPlanStatus)
 fromRecurlyStatus "active"   = (ActiveStatus, ActiveStatus)
