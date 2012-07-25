@@ -477,7 +477,7 @@ handleCompanyPaymentsChange companyid = onlySalesOrAdmin $ do
                                         , ppPaymentPlanProvider = NoProvider
                                         }
           _ <- dbUpdate $ SavePaymentPlan paymentplan time
-          _ <- Payments.Stats.record Payments.Stats.SignupAction NoProvider quantity plan (Right companyid) ac
+          _ <- Payments.Stats.record time Payments.Stats.SignupAction NoProvider quantity plan (Right companyid) ac
           return $ LinkCompanyAdminPayments companyid
         Just paymentplan | ppPaymentPlanProvider paymentplan == NoProvider -> do
           let paymentplan' = paymentplan { ppPricePlan        = plan
@@ -488,7 +488,7 @@ handleCompanyPaymentsChange companyid = onlySalesOrAdmin $ do
                                          , ppPendingQuantity  = quantity
                                          }
           _ <- dbUpdate $ SavePaymentPlan paymentplan' time
-          _ <- Payments.Stats.record Payments.Stats.ChangeAction NoProvider quantity plan (Right companyid) (ppAccountCode paymentplan')
+          _ <- Payments.Stats.record time Payments.Stats.ChangeAction NoProvider quantity plan (Right companyid) (ppAccountCode paymentplan')
           return $ LinkCompanyAdminPayments companyid
         Just _ -> do -- must be a Recurly payment plan; maybe flash message?
           return $ LinkCompanyAdminPayments companyid
@@ -526,7 +526,7 @@ handleUserPaymentsChange userid = onlySalesOrAdmin $ do
                                         , ppPaymentPlanProvider = NoProvider
                                         }
           _ <- dbUpdate $ SavePaymentPlan paymentplan time
-          _ <- Payments.Stats.record Payments.Stats.SignupAction NoProvider quantity plan (Left userid) ac
+          _ <- Payments.Stats.record time Payments.Stats.SignupAction NoProvider quantity plan (Left userid) ac
           return $ LinkUserAdminPayments userid
         Just paymentplan | ppPaymentPlanProvider paymentplan == NoProvider -> do
           let paymentplan' = paymentplan { ppPricePlan        = plan
@@ -537,7 +537,7 @@ handleUserPaymentsChange userid = onlySalesOrAdmin $ do
                                          , ppPendingQuantity  = quantity
                                          }
           _ <- dbUpdate $ SavePaymentPlan paymentplan' time
-          _ <- Payments.Stats.record Payments.Stats.ChangeAction NoProvider quantity plan (Left userid) (ppAccountCode paymentplan')
+          _ <- Payments.Stats.record time Payments.Stats.ChangeAction NoProvider quantity plan (Left userid) (ppAccountCode paymentplan')
           return $ LinkUserAdminPayments userid
         Just _ -> do -- must be a Recurly payment plan; maybe flash message?
           return $ LinkUserAdminPayments userid

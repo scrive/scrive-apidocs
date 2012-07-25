@@ -4,7 +4,6 @@ module Payments.Stats (record
        
        where
 
-import Control.Applicative
 import Control.Monad.Base
 import Data.Maybe
 
@@ -17,9 +16,8 @@ import Company.Model
 import Payments.Model
 import Util.CSVUtil
 
-record :: Kontrakcja m => PaymentsAction -> PaymentPlanProvider -> Int -> PricePlan -> Either UserID CompanyID -> AccountCode -> m Bool
-record action provider quantity plan eid ac = do
-  time <- ctxtime <$> getContext
+record :: MonadDB m => MinutesTime -> PaymentsAction -> PaymentPlanProvider -> Int -> PricePlan -> Either UserID CompanyID -> AccountCode -> m Bool
+record time action provider quantity plan eid ac =
   dbUpdate $ AddPaymentsStat time provider action quantity plan eid ac
   
 handlePaymentsStatsCSV :: Kontrakcja m => m CSV
@@ -39,7 +37,7 @@ data AddPaymentsStat = AddPaymentsStat { psTime        :: MinutesTime
                                        , psID          :: Either UserID CompanyID
                                        , psAccountCode :: AccountCode
                                        }
-instance (MonadBase IO m, MonadDB m) => DBUpdate m AddPaymentsStat Bool where
+instance MonadDB m => DBUpdate m AddPaymentsStat Bool where
   update AddPaymentsStat{..} = do
     kPrepare $ "INSERT INTO payment_stats (time, provider, action, quantity, plan, account_type, user_id, company_id, account_code) "
       ++ "      SELECT ?, ?, ?, ?, ?, ?, ?, ?, ? "
