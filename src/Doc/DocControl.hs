@@ -1068,8 +1068,6 @@ handleSaveDraft did = do
 
 
 handleSetAttachments :: Kontrakcja m => DocumentID -> m KontraLink
-handleSetAttachments = error "handleSetAttachments is madness"
-{-
 handleSetAttachments did = do
     doc <- guardRightM $ getDocByDocIDForAuthor did
     attachments <- getAttachments 0
@@ -1091,16 +1089,13 @@ handleSetAttachments did = do
             case inp of
                  Just (Input (Left filepath) (Just filename) _contentType) -> do
                      content <- liftIO $ BSL.readFile filepath
-                     let title = basename filename
-                     doc <- guardRightM $ newDocument title Attachment 0
-                     doc' <- guardRightM $  attachFile (documentid doc) title (concatChunks content)
-                     return $ listToMaybe $ documentfiles  doc'
+                     file <- dbUpdate $ NewFile filename (Binary $ BS.concat (BSL.toChunks content))
+                     return (Just (fileid file))
                  Just (Input  (Right c)  _ _)  -> do
                       case maybeRead (BSL.toString c) of
                           Just fid -> (fmap fileid) <$> (dbQuery $ GetFileByFileID fid)
                           Nothing -> return $ Nothing
                  _ -> return Nothing
--}
 
 handleParseCSV :: Kontrakcja m => m JSValue
 handleParseCSV = do

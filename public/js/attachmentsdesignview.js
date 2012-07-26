@@ -133,10 +133,9 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         box.append(arrowBack);
 
         var documentsTable = KontraList().init({
-                name : "Templates table",
+                name : "Attachments table",
                 schema: new Schema({
-                    url: "/docs",
-                    extraParams : { documentType : "Attachment" },
+                    url: "/a",
                     cells : [
                         new Cell({name: localization.authorattachments.selectAttachment,
                                   width:"400px",

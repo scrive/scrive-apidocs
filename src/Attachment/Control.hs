@@ -102,6 +102,7 @@ attFieldsListForJSON tl crtime att = do
     J.value "title" $ attachmenttitle att
     J.value "time" $ showDateAbbrev tl crtime (attachmentmtime att)
     J.value "shared" $ show $ attachmentshared att
+    J.value "file" $ show $ attachmentfile att
 
 attachmentSortingFromParams :: ListParams -> [AscDesc AttachmentOrderBy]
 attachmentSortingFromParams params =
