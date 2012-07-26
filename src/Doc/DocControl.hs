@@ -897,7 +897,9 @@ handleDownloadFile fid _nameForBrowser = do
            (_,_,Just did)                -> guardRightM $ getDocByDocID did
            _                             -> internalError
 
-  let allfiles = (documentfiles doc) ++ (documentsealedfiles doc)  ++ (authorattachmentfile <$> documentauthorattachments doc)
+  let allfiles = documentfiles doc ++ documentsealedfiles doc  ++ 
+                 (authorattachmentfile <$> documentauthorattachments doc) ++
+                 (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
   when (all (/= fid) allfiles) $ 
        internalError
   content <- getFileIDContents fid
