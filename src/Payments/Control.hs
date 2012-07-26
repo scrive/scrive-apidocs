@@ -30,6 +30,7 @@ import Util.HasSomeUserInfo
 import qualified Log (payments)
 import qualified Text.JSON.Gen as J
 import MinutesTime
+import Util.MonadUtils (when_)
 
 import Payments.Model
 import Payments.Rules
@@ -220,7 +221,7 @@ switchPlanToCompany uid cid = do
 handleSyncWithRecurly :: (MonadIO m, MonadDB m) => String -> MinutesTime -> m ()
 handleSyncWithRecurly recurlyapikey time = do
   Log.payments "Syncing with Recurly."
-  plans <- dbQuery $ PaymentPlansRequiringSync
+  plans <- dbQuery $ PaymentPlansRequiringSync time
   Log.payments $ "Found " ++ show (length plans) ++ " plans requiring sync."
   forM_ plans $ \plan -> do
     esubscriptions <- liftIO $ getSubscriptionsForAccount curl_exe recurlyapikey $ show $ ppAccountCode plan
@@ -229,9 +230,27 @@ handleSyncWithRecurly recurlyapikey time = do
         Log.payments $ "syncing: " ++ s
       Right [] ->
         Log.payments $ "syncing: no subscriptions for Recurly account; skipping."
-      Right (subscription:_) -> do
-        _ <- cachePlan time Stats.SyncAction (ppAccountCode plan) subscription (ppID plan)
-        return ()
+      Right (subscription:_) -> case subInfo subscription of
+        Right subinfo@(_,_,_,newplan) -> do
+          let eid = ppID plan
+              ac = ppAccountCode plan
+          _ <- cachePlan time Stats.SyncAction ac subscription eid              
+          quantity <- maybe (return 1) (dbQuery . GetCompanyQuantity) $ toMaybe $ ppID plan
+          Log.payments $ "Here is the db quantity: " ++ show quantity
+          case syncAction (quantity, newplan) subinfo of
+            RUpdateNow -> do
+              ms <- liftIO $ changeAccount curl_exe recurlyapikey (subID subscription) (show newplan) quantity True
+              when_ (isRight ms) $
+                cachePlan time Stats.ChangeAction ac (fromRight ms) eid
+            RUpdateRenewal -> do
+              ms <- liftIO $ changeAccount curl_exe recurlyapikey (subID subscription) (show newplan) quantity False
+              when_ (isRight ms) $
+                cachePlan time Stats.ChangeAction ac (fromRight ms) eid
+            _ -> do
+              _ <- cachePlan time Stats.SyncAction ac subscription eid
+              return ()
+        _ -> Log.payments $ "Could not parse subscription from Recurly."
+        
 
 fromRecurlyStatus :: String -> (PaymentPlanStatus, PaymentPlanStatus)
 fromRecurlyStatus "active"   = (ActiveStatus, ActiveStatus)

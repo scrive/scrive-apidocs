@@ -28,6 +28,7 @@ module MinutesTime
        , monthsBefore
        , daysBefore
        , daysAfter
+       , toClockTime
        , mtMonth
        , mtYear
        ) where

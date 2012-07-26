@@ -64,7 +64,7 @@ instance (MonadBase IO m, MonadDB m) => DBUpdate m GetAccountCode AccountCode wh
       
 {- | Get the quantity of users that should be charged in a company. -}
 data GetCompanyQuantity = GetCompanyQuantity CompanyID
-instance (MonadBase IO m, MonadDB m) => DBQuery m GetCompanyQuantity Int where
+instance MonadDB m => DBQuery m GetCompanyQuantity Int where
   query (GetCompanyQuantity cid) = do
     kRun_ $ sqlSelect "users" $ do
       sqlWhereEq "company_id" cid
@@ -74,7 +74,7 @@ instance (MonadBase IO m, MonadDB m) => DBQuery m GetCompanyQuantity Int where
     res <- foldDB (flip (:)) []
     case res of
       [x] -> return x
-      _   -> internalError
+      _   -> return 0
 
 data DeletePaymentPlan = DeletePaymentPlan (Either UserID CompanyID)
 instance (MonadDB m) => DBUpdate m DeletePaymentPlan () where
@@ -126,16 +126,19 @@ fetchPaymentPlans acc ac t muid mcid p s q pp sp qp pr =
 daysBeforeSync :: Int
 daysBeforeSync = 7
 
-data PaymentPlansRequiringSync = PaymentPlansRequiringSync
+data PaymentPlansRequiringSync = PaymentPlansRequiringSync MinutesTime
 instance MonadDB m => DBQuery m PaymentPlansRequiringSync [PaymentPlan] where
-  query PaymentPlansRequiringSync = do
+  query (PaymentPlansRequiringSync time) = do
+    let past = daysBefore daysBeforeSync time 
     kPrepare $ "SELECT account_code, account_type, user_id, company_id, plan, status, quantity, plan_pending, status_pending, quantity_pending, provider " ++
              "  FROM payment_plans " ++ 
-             "  LEFT OUTER JOIN (SELECT company_id as cid, count(id) as q FROM users GROUP BY cid) as ccount ON cid = company_id " ++ 
-             "  WHERE ((account_type = 2 AND NOT quantity = q) " ++
-             "     OR sync_date < now() - interval '? days')" ++
+             "  LEFT OUTER JOIN (SELECT company_id as cid, count(id) as q FROM users WHERE NOT deleted AND NOT is_free GROUP BY cid) as ccount ON cid = company_id " ++ 
+             "  WHERE ((account_type = 2 " ++ 
+             "    AND  (q > quantity " ++
+             "     OR   (q <= quantity AND NOT q = quantity_pending ))) " ++
+             "     OR sync_date < ? )" ++
              "    AND provider = ?"
-    _ <- kExecute [toSql daysBeforeSync, toSql RecurlyProvider]
+    _ <- kExecute [toSql past, toSql RecurlyProvider]
     foldDB fetchPaymentPlans []
 
 -- update payment_plans set 

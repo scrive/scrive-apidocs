@@ -468,7 +468,7 @@
             var totalf   = view.addMark(total);
             var currency = this.model.plan().subscription().currency();
             var txt      = 
-                localization.payments.table.total + ": " + totalf + " " + currency + " " + localization.payments.table.permonth + "." ;
+                localization.payments.table.total + ": " + totalf + " " + currency + " " + localization.payments.permonth + "." ;
             return $('<div class="plan-total" />').text(txt);
         },
         pendingLine: function() {
@@ -603,7 +603,7 @@
                                   " x " + quantity  + 
                                   " " + localization.payments.user))
                     .append($('<div class="plan-total" />')
-                            .text(localization.payments.table.total + ": " + totalf + " " + currency + " " + "per month"));
+                            .text(localization.payments.table.total + ": " + totalf + " " + currency + " " + localization.payments.permonth + "."));
             });
             select.val('advanced');
             select.change();

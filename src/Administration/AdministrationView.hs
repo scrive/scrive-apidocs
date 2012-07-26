@@ -116,6 +116,7 @@ adminUserPaymentPage userid mpaymentplan mcompanyid recurlysubdomain =
         F.value "accountcode" $ show $ ppAccountCode paymentplan
         F.value "priceplan" $ show $ ppPricePlan paymentplan
         F.value "haspaymentplan" True
+        F.value "status" $ show $ ppStatus paymentplan
         case ppPricePlan paymentplan of
           FreePricePlan       -> F.value "freeplan"       True
           BasicPricePlan      -> F.value "basicplan"      True
@@ -155,6 +156,7 @@ adminCompanyPaymentPage mpaymentplan quantity companyid recurlysubdomain =
         F.value "accountcode" $ show $ ppAccountCode paymentplan
         F.value "priceplan" $ show $ ppPricePlan paymentplan
         F.value "haspaymentplan" True
+        F.value "status" $ show $ ppStatus paymentplan
         case ppPricePlan paymentplan of
           FreePricePlan       -> F.value "freeplan"       True
           BasicPricePlan      -> F.value "basicplan"      True

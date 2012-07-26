@@ -447,6 +447,12 @@ adminuserpayments=
                     <a href="https://$recurlysubdomain$.recurly.com/accounts/$accountcode$">$priceplan$</a>
 		  </td>
 		</tr>
+		<tr> 
+                  <td>Status: </td>
+		  <td>
+                    $status$
+		  </td>
+		</tr>
                 $else$
 		<tr> 
                   <td>Price plan (selected by admin):</td>
@@ -688,6 +694,12 @@ admincompanypayments=
                   <td>Price plan on Recurly: </td>
 		  <td>
                     <a href="https://$recurlysubdomain$.recurly.com/accounts/$accountcode$">$priceplan$</a>
+		  </td>
+		</tr>
+		<tr> 
+                  <td>Status: </td>
+		  <td>
+                    $status$
 		  </td>
 		</tr>
                 $else$

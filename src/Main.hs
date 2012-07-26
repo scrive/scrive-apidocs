@@ -2,6 +2,7 @@ module Main where
 
 import Control.Concurrent
 import Control.Monad
+import Control.Monad.Trans
 import Data.List
 import Data.Version
 import Happstack.Server
@@ -9,6 +10,7 @@ import Happstack.StaticRouting
 import System.Directory
 import System.Environment
 import System.IO
+import qualified System.Time
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 
@@ -30,7 +32,10 @@ import Utils.Cron
 import Utils.Default
 import Mails.Events
 import Utils.IO
+import MinutesTime
 import Utils.Network
+import Payments.Config
+import Payments.Control
 import RoutingTable
 import Templates.TemplatesLoader
 import User.Model
@@ -119,7 +124,12 @@ startSystem appGlobals appConf = E.bracket
           t8 <- forkIO $ cron (60 * 60) (System.Mem.performGC >> Log.debug "Performing GC...")
           -- transition function between non-encrypted and encrypted files.
           t9 <- forkIO $ runScheduler AWS.calculateChecksumAndEncryptOldFiles
-          return [t1, t2, t3, t4, t5, t6, t7, t8, t9]
+          t10 <- forkIO $ cron (60 * 60) $ withPostgreSQL (dbConfig appConf) $ do
+            mtime <- getMinutesTime
+            ctime <- liftIO $ System.Time.toCalendarTime (toClockTime mtime)
+            when (System.Time.ctHour ctime == 0) $ -- midnight
+              handleSyncWithRecurly (recurlyAPIKey $ recurlyConfig appConf) mtime
+          return [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10]
         waitForTerm _ = E.bracket
           -- checkpoint the state once a day
           -- FIXME: make it checkpoint always at the same time
