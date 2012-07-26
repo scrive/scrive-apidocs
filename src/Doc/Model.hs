@@ -3,7 +3,6 @@
 module Doc.Model
   ( module File.File
   , isTemplate -- fromUtils
-  , isShared -- fromUtils
   , anyInvitationUndelivered
   , undeliveredSignatoryLinks
   , insertDocumentAsIs

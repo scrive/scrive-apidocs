@@ -143,12 +143,6 @@ instance MaybeTemplate Document where
    isTemplate = isTemplate . documenttype
    isSignable = isSignable . documenttype
 
-class MaybeShared a where
-    isShared :: a -> Bool
-
-instance  MaybeShared Document where
-    isShared doc = documentsharing doc == Shared
-
 class HasFieldType a where
     fieldType :: a -> FieldType
 
