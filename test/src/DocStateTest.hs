@@ -1500,7 +1500,7 @@ testGetDocumentsSQLSorted = doTimes 1 $ do
 testCreateFromSharedTemplate :: TestEnv ()
 testCreateFromSharedTemplate = do
   user <- addNewRandomUser
-  docid <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user (not . isAttachment)
+  docid <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user (const True)
   tmpdoc <- fmap fromJust $ dbQuery $ GetDocumentByDocumentID docid
   mt <- rand 10 arbitrary
   doc <- if (isTemplate tmpdoc)

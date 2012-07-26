@@ -405,7 +405,6 @@ getDocuments = do
                         ])
     api_docs <- sequence [api_document_read False d
                          | d <- linkeddocuments
-                         , not $ isAttachment d
                          ]
     return $ toJSObject $ [("documents"  , JSArray $ api_docs)] ++
                           ([] <| isNothing mFromDate  |> [("from_date",  showJSON $ showMinutesTimeForAPI (fromJust mFromDate ))]) ++
