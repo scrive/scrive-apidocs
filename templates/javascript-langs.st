@@ -85,6 +85,7 @@ javascriptLocalisation =
              , deletePDF: "$_DeletePDF()$"
              , document : "$_Document()$"
              , onlyPDFAllowed : "$_updateAttachmentsDialogUpLoadOnlyPDF()$"
+             , attachmentType : "$_pageAttachmentAttachments()$" 
              , attachment : "$_Attachment()$"
              , attachmentsWord : "$_Attachments()$"
              , requestedAttachments : "$_RequestedAttachments()$"

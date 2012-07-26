@@ -1174,7 +1174,7 @@ input[type=submit].hidden
     display: inline-block;
 }
 
-#signStepsTitleRow .docname .docname-display .icon.edit {
+#signStepsTitleRow .docname .icon.edit {
     background-image: url(/img/iconPen.png);
 }
 
@@ -1182,7 +1182,8 @@ input[type=submit].hidden
     display: inline-block;
 }
 
-#signStepsTitleRow .docname .docname-edit input {
+#signStepsTitleRow .docname .docname-edit input,
+#signStepsTitleRow .docname input.docname-edit {
     -moz-border-radius:0px;
     background:transparent;
     border:0 none;
