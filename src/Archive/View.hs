@@ -76,11 +76,10 @@ docFieldsListForJSON tl crtime padqueue doc = do
     J.value "type" $ case documenttype doc of
                         Template _ -> "template"
                         Signable _ -> "signable"
-    case toDocumentProcess (documenttype doc) of
-      Nothing       -> return ()
-      Just Contract -> J.value "process" "contract"
-      Just Offer    -> J.value "process" "offer"
-      Just Order    -> J.value "process" "order"
+    J.value "process" $ case toDocumentProcess (documenttype doc) of
+                          Contract -> "contract"
+                          Offer    -> "offer"
+                          Order    -> "order"
     J.value "anyinvitationundelivered" $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc
     J.value "shared" $ show $ documentsharing doc == Shared
     J.value "file" $ fromMaybe "" $ show <$> (listToMaybe $ (documentsealedfiles doc) ++ (documentfiles doc))

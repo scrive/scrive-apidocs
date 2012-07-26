@@ -265,9 +265,9 @@ documentType (1, Just p) = Signable p
 documentType (2, Just p) = Template p
 documentType v = error $ "documentType: wrong values: " ++ show v
 
-toDocumentProcess :: DocumentType -> Maybe DocumentProcess
-toDocumentProcess (Signable p) = Just p
-toDocumentProcess (Template p) = Just p
+toDocumentProcess :: DocumentType -> DocumentProcess
+toDocumentProcess (Signable p) = p
+toDocumentProcess (Template p) = p
 
 -- | Terrible, I know. Better idea?
 -- | TODO: to be KILLED.

@@ -640,12 +640,11 @@ tuplesFromUsageStatsForCompany = catMaybes . map toTuple
 
 addSignStatInviteEvent :: MonadDB m => Document -> SignatoryLink -> MinutesTime -> m Bool
 addSignStatInviteEvent doc sl time =
-  let mdp = toDocumentProcess $ documenttype doc
+  let dp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
       sid = documentservice doc
       cid = maybe Nothing maybecompany mal
-  in case mdp of
-    Just dp -> do
+  in  do
       a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
                                                           , ssSignatoryLinkID = signatorylinkid sl
                                                           , ssTime            = time
@@ -657,19 +656,15 @@ addSignStatInviteEvent doc sl time =
       unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
         show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatInvite
       return a
-    _ -> do
-      Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
-      return False
-
 
 addSignStatReceiveEvent :: MonadDB m => Document -> SignatoryLink -> MinutesTime -> m Bool
 addSignStatReceiveEvent doc sl time =
-  let mdp = toDocumentProcess $ documenttype doc
+  let dp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
       sid = documentservice doc
       cid = maybe Nothing maybecompany mal
-  in case (invitationdeliverystatus sl, mdp) of
-    (Delivered, Just dp) -> do
+  in case invitationdeliverystatus sl of
+    Delivered -> do
       a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
                                                           , ssSignatoryLinkID = signatorylinkid sl
                                                           , ssTime            = time
@@ -681,22 +676,19 @@ addSignStatReceiveEvent doc sl time =
       unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
         show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatReceive
       return a
-    (_, Just _) -> do
+    _ -> do
       Log.stats $ "Cannot add receive stat because document is not delivered: " ++ show (signatorylinkid sl)
-      return False
-    (_, Nothing) -> do
-      Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
       return False
 
 
 addSignStatOpenEvent :: MonadDB m => Document -> SignatoryLink -> m Bool
 addSignStatOpenEvent doc sl =
-  let mdp = toDocumentProcess $ documenttype doc
+  let dp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
       sid = documentservice doc
       cid = maybe Nothing maybecompany mal
-  in case (maybereadinvite sl, mdp) of
-    (Just time, Just dp) -> do
+  in case maybereadinvite sl of
+    Just time -> do
         a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
                                                             , ssSignatoryLinkID = signatorylinkid sl
                                                             , ssTime            = time
@@ -708,21 +700,18 @@ addSignStatOpenEvent doc sl =
         unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
           show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatOpen
         return a
-    (Nothing, _) -> do
+    Nothing -> do
       Log.stats $ "Cannot add open stat because document is not opened: " ++ show (signatorylinkid sl)
-      return False
-    (_, Nothing) -> do
-      Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
       return False
 
 addSignStatLinkEvent :: MonadDB m => Document -> SignatoryLink -> m Bool
 addSignStatLinkEvent doc sl =
-  let mdp = toDocumentProcess $ documenttype doc
+  let dp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
       sid = documentservice doc
       cid = maybe Nothing maybecompany mal
-  in case (maybeseeninfo sl, mdp) of
-    (Just (SignInfo {signtime}), Just dp) -> do
+  in case maybeseeninfo sl of
+    Just (SignInfo {signtime}) -> do
         a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
                                                             , ssSignatoryLinkID = signatorylinkid sl
                                                             , ssTime            = signtime
@@ -734,21 +723,18 @@ addSignStatLinkEvent doc sl =
         unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
           show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatLink
         return a
-    (Nothing, _) -> do
+    Nothing -> do
       Log.stats $ "Cannot add link stat because document is not seen: " ++ show (signatorylinkid sl)
-      return False
-    (_, Nothing) -> do
-      Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
       return False
 
 addSignStatSignEvent :: MonadDB m => Document -> SignatoryLink -> m Bool
 addSignStatSignEvent doc sl =
-  let mdp = toDocumentProcess $ documenttype doc
+  let dp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
       sid = documentservice doc
       cid = maybe Nothing maybecompany mal
-  in case (maybesigninfo sl, mdp) of
-    (Just (SignInfo {signtime}), Just dp) -> do
+  in case maybesigninfo sl of
+    Just (SignInfo {signtime}) -> do
         a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
                                                             , ssSignatoryLinkID = signatorylinkid sl
                                                             , ssTime            = signtime
@@ -760,21 +746,18 @@ addSignStatSignEvent doc sl =
         unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
           show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatSign
         return a
-    (Nothing, _) -> do
+    Nothing -> do
       Log.stats $ "Cannot add sign stat because document is not signed: " ++ show (signatorylinkid sl)
-      return False
-    (_, Nothing) -> do
-      Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
       return False
 
 addSignStatRejectEvent :: MonadDB m => Document -> SignatoryLink -> m Bool
 addSignStatRejectEvent doc sl =
-  let mdp = toDocumentProcess $ documenttype doc
+  let dp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
       sid = documentservice doc
       cid = maybe Nothing maybecompany mal
-  in case (documentrejectioninfo doc, mdp) of
-    (Just (signtime, slid, _), Just dp) | slid == signatorylinkid sl -> do
+  in case documentrejectioninfo doc of
+    Just (signtime, slid, _) | slid == signatorylinkid sl -> do
       a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
                                                           , ssSignatoryLinkID = signatorylinkid sl
                                                           , ssTime            = signtime
@@ -786,24 +769,21 @@ addSignStatRejectEvent doc sl =
       unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
         show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatReject
       return a
-    (Just _, Just _) -> do
+    Just _ -> do
       Log.stats $ "Cannot add reject stat because document is not rejected by this sl: " ++ show (signatorylinkid sl)
       return False
-    (Nothing, _) -> do
+    Nothing -> do
       Log.stats $ "Cannot add reject stat because document is not rejected: " ++ show (signatorylinkid sl)
-      return False
-    (_, Nothing) -> do
-      Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
       return False
 
 addSignStatDeleteEvent :: MonadDB m => Document -> SignatoryLink -> MinutesTime -> m Bool
 addSignStatDeleteEvent doc sl time =
-  let mdp = toDocumentProcess $ documenttype doc
+  let dp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
       sid = documentservice doc
       cid = maybe Nothing maybecompany mal
-  in case (signatorylinkdeleted sl, mdp) of
-    (True, Just dp) -> do
+  in case signatorylinkdeleted sl of
+    True -> do
       a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
                                                           , ssSignatoryLinkID = signatorylinkid sl
                                                           , ssTime            = time
@@ -815,21 +795,18 @@ addSignStatDeleteEvent doc sl time =
       unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
         show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatDelete
       return a
-    (False, _) -> do
+    False -> do
       Log.stats $ "Cannot add delete stat because document is not deleted: " ++ show (signatorylinkid sl)
-      return False
-    (_, Nothing) -> do
-      Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
       return False
 
 addSignStatPurgeEvent :: MonadDB m => Document -> SignatoryLink -> MinutesTime -> m Bool
 addSignStatPurgeEvent doc sl time =
-  let mdp = toDocumentProcess $ documenttype doc
+  let dp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
       sid = documentservice doc
       cid = maybe Nothing maybecompany mal
-  in case (signatorylinkreallydeleted sl, mdp) of
-    (True, Just dp) -> do
+  in case signatorylinkreallydeleted sl of
+    True -> do
       a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
                                                           , ssSignatoryLinkID = signatorylinkid sl
                                                           , ssTime            = time
@@ -841,11 +818,8 @@ addSignStatPurgeEvent doc sl time =
       unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
         show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatPurge
       return a
-    (False, _) -> do
+    False -> do
       Log.stats $ "Cannot add purge stat because document is not really deleted: " ++ show (signatorylinkid sl)
-      return False
-    (_, Nothing) -> do
-      Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
       return False
 
 
