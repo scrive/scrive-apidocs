@@ -91,6 +91,7 @@ data PaymentsAction = SignupAction
                     | CompanySwitchAction -- switch from user to company
                     | UserSwitchAction    -- switch from company to user
                     | SyncAction
+                    | PushAction          -- from recurly push notifications
                     deriving (Show, Eq)
 
 instance Convertible PaymentsAction Int where
@@ -101,6 +102,7 @@ instance Convertible PaymentsAction Int where
   safeConvert CompanySwitchAction = return 5
   safeConvert UserSwitchAction    = return 6
   safeConvert SyncAction          = return 7
+  safeConvert PushAction          = return 8
 
 instance Convertible Int PaymentsAction where
   safeConvert 1 = return SignupAction
@@ -110,6 +112,7 @@ instance Convertible Int PaymentsAction where
   safeConvert 5 = return CompanySwitchAction
   safeConvert 6 = return UserSwitchAction
   safeConvert 7 = return SyncAction
+  safeConvert 8 = return PushAction
   safeConvert s = Left ConvertError { convSourceValue  = show s
                                     , convSourceType   = "Int"
                                     , convDestType     = "PaymentsAction"

@@ -4,7 +4,8 @@ module Payments.Control (handleSubscriptionDashboard
                         ,handleSyncNewSubscriptionWithRecurly
                         ,handleChangePlan
                         ,switchPlanToCompany
-                        ,handleSyncWithRecurly)
+                        ,handleSyncWithRecurly
+                        ,handleRecurlyPostBack)
        where
 
 import Control.Monad.State
@@ -12,6 +13,8 @@ import Data.Functor
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Control.Monad.Base
+import Control.Concurrent.MVar
+import qualified Data.ByteString.Lazy.UTF8 as BSL
 
 import AppView
 import Company.Model
@@ -21,6 +24,7 @@ import KontraLink
 import Misc
 import Recurly
 import Recurly.JS
+import Recurly.Push
 import Text.JSON
 import Text.JSON.Gen hiding (value)
 import User.Model
@@ -129,8 +133,11 @@ handleSyncNewSubscriptionWithRecurly = do
                    liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show ac
   subscription <- pguard' "handleSyncNewSubscriptionWithRecurly: No subscription." $ 
                   listToMaybe subscriptions
+  invoices <- pguardM "handleChangePlan" $ 
+              liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey $ show ac
+  let is = maybe "collected" inState $ listToMaybe invoices
   let eid = maybe (Left $ userid user) Right $ usercompany user
-  _ <- cachePlan time Stats.SignupAction ac subscription eid
+  _ <- cachePlan time Stats.SignupAction ac subscription is eid 
   return ()
 
 handleChangePlan :: Kontrakcja m => m ()
@@ -151,41 +158,46 @@ handleChangePlan = do
   let eid = maybe (Left $ userid user) Right $ usercompany user
       ac  = ppAccountCode plan
   subinfo <- pguard "handleChangePlan" $ subInfo subscription
+  invoices <- pguardM "handleChangePlan" $ 
+              liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey $ show $ ppAccountCode plan
+  let is = maybe "collected" inState $ listToMaybe invoices
   case syncAction (quantity, newplan) subinfo of
     RNoAction -> do
       return ()
     RUpdateNow -> do
       s <- pguardM "handleChangePlan" $ 
            liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity True
-      _ <- cachePlan time Stats.ChangeAction ac s eid
+      _ <- cachePlan time Stats.ChangeAction ac s is eid
       return ()
     RUpdateRenewal -> do
       s <- pguardM "handleChangePlan" $ 
            liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity False
-      _ <- cachePlan time Stats.ChangeAction ac s eid
+      _ <- cachePlan time Stats.ChangeAction ac s is eid
       return ()
     RReactivateNow -> do
       _ <- liftIO $ reactivateSubscription curl_exe recurlyAPIKey (subID subscription)
       s <- pguardM "handleChangePlan" $ 
            liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity True
-      _ <- cachePlan time Stats.ReactivateAction ac s eid
+      _ <- cachePlan time Stats.ReactivateAction ac s is eid
       return ()
     RReactivateRenewal -> do
       _ <- liftIO $ reactivateSubscription curl_exe recurlyAPIKey (subID subscription)
       s <- pguardM "handleChangePlan" $ 
            liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity False
-      _ <- cachePlan time Stats.ReactivateAction ac s eid
+      _ <- cachePlan time Stats.ReactivateAction ac s is eid
       return ()
     RCancel -> do
       _ <- pguardM "handleChangePlan" $ 
            liftIO $ cancelSubscription curl_exe recurlyAPIKey $ subID subscription
-      _ <- cachePlan time Stats.CancelAction ac subscription { subState = "canceled" } eid
+      _ <- cachePlan time Stats.CancelAction ac subscription { subState = "canceled" } is eid
       return ()
 
-cachePlan :: (MonadDB m, MonadIO m) => MinutesTime -> Stats.PaymentsAction -> AccountCode -> Subscription -> Either UserID CompanyID -> m Bool
-cachePlan time pa ac subscription eid = do
+cachePlan :: (MonadDB m) => MinutesTime -> Stats.PaymentsAction -> AccountCode -> Subscription -> String -> Either UserID CompanyID -> m Bool
+cachePlan time pa ac subscription invoicestatus eid = do
   let p       = fromRecurlyPricePlan $ subPricePlan subscription
-      (s, sp) = fromRecurlyStatus    $ subState     subscription
+      (s, sp) = if invoicestatus == "failed" 
+                then (OverdueStatus, OverdueStatus)
+                else fromRecurlyStatus $ subState subscription
       q       = subQuantity subscription
       pp      = maybe p (fromRecurlyPricePlan . penPricePlan) $ subPending subscription
       qp      = maybe q penQuantity                           $ subPending subscription
@@ -226,32 +238,61 @@ handleSyncWithRecurly recurlyapikey time = do
   forM_ plans $ \plan -> do
     esubscriptions <- liftIO $ getSubscriptionsForAccount curl_exe recurlyapikey $ show $ ppAccountCode plan
     case esubscriptions of
-      Left s ->
+      Left s -> do
         Log.payments $ "syncing: " ++ s
       Right [] ->
         Log.payments $ "syncing: no subscriptions for Recurly account; skipping."
       Right (subscription:_) -> case subInfo subscription of
         Right subinfo@(_,_,_,newplan) -> do
-          let eid = ppID plan
-              ac = ppAccountCode plan
-          _ <- cachePlan time Stats.SyncAction ac subscription eid              
-          quantity <- maybe (return 1) (dbQuery . GetCompanyQuantity) $ toMaybe $ ppID plan
-          Log.payments $ "Here is the db quantity: " ++ show quantity
-          case syncAction (quantity, newplan) subinfo of
-            RUpdateNow -> do
-              ms <- liftIO $ changeAccount curl_exe recurlyapikey (subID subscription) (show newplan) quantity True
-              when_ (isRight ms) $
-                cachePlan time Stats.ChangeAction ac (fromRight ms) eid
-            RUpdateRenewal -> do
-              ms <- liftIO $ changeAccount curl_exe recurlyapikey (subID subscription) (show newplan) quantity False
-              when_ (isRight ms) $
-                cachePlan time Stats.ChangeAction ac (fromRight ms) eid
-            _ -> do
-              _ <- cachePlan time Stats.SyncAction ac subscription eid
-              return ()
+          einvoices <- liftIO $ getInvoicesForAccount curl_exe recurlyapikey $ show $ ppAccountCode plan
+          case einvoices of
+            Left s -> do
+              Log.payments $ "syncing: " ++ s
+            Right invoices -> do
+              let is = maybe "collected" inState $ listToMaybe invoices
+                  eid = ppID plan
+                  ac = ppAccountCode plan
+              _ <- cachePlan time Stats.SyncAction ac subscription is eid              
+              quantity <- maybe (return 1) (dbQuery . GetCompanyQuantity) $ toMaybe $ ppID plan
+              Log.payments $ "Here is the db quantity: " ++ show quantity
+              case syncAction (quantity, newplan) subinfo of
+                RUpdateNow -> do
+                  ms <- liftIO $ changeAccount curl_exe recurlyapikey (subID subscription) (show newplan) quantity True
+                  when_ (isRight ms) $
+                    cachePlan time Stats.ChangeAction ac (fromRight ms) is eid
+                RUpdateRenewal -> do
+                  ms <- liftIO $ changeAccount curl_exe recurlyapikey (subID subscription) (show newplan) quantity False
+                  when_ (isRight ms) $
+                    cachePlan time Stats.ChangeAction ac (fromRight ms) is eid
+                _ -> do
+                  _ <- cachePlan time Stats.SyncAction ac subscription is eid
+                  return ()
         _ -> Log.payments $ "Could not parse subscription from Recurly."
         
+postBackCache :: Kontrakcja m => String -> m ()
+postBackCache sac = do
+  time <- ctxtime <$> getContext
+  recurlyapikey <- recurlyAPIKey . ctxrecurlyconfig <$> getContext
+  -- we need to ask recurly for the info again for security
+  ac <- pguard' "post back: Could not parse account code (should be int)." $ maybeRead sac
+  plan <- pguardM' "post back: Could not find plan for account." $ dbQuery $ GetPaymentPlanByAccountCode ac
+  esubscriptions <- pguardM "post back:" $ liftIO $ getSubscriptionsForAccount curl_exe recurlyapikey $ show $ ac
+  s <- pguard' "post back: no subscriptions for account" $ listToMaybe esubscriptions
+  ins <- pguardM "post back:" $ liftIO $ getInvoicesForAccount curl_exe recurlyapikey (show ac)
+  let is = maybe "collected" inState $ listToMaybe ins
+  _ <- cachePlan time Stats.PushAction ac s is (ppID plan)
+  return ()
+        
+handleRecurlyPostBack :: Kontrakcja m => m ()
+handleRecurlyPostBack = do
+  Log.payments "Got a Push notification from Recurly"
+  vbody <- rqBody <$> askRq
+  bdy <- liftIO $ BSL.toString <$> unBody <$> takeMVar vbody      
+  case parsePush bdy of
+    Just ps -> postBackCache $ pushAccountCode ps
+    _       -> return ()
 
+  
 fromRecurlyStatus :: String -> (PaymentPlanStatus, PaymentPlanStatus)
 fromRecurlyStatus "active"   = (ActiveStatus, ActiveStatus)
 fromRecurlyStatus "canceled" = (ActiveStatus, CanceledStatus)

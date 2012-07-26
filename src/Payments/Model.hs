@@ -104,6 +104,24 @@ instance (MonadDB m) => DBQuery m GetPaymentPlan (Maybe PaymentPlan) where
         Right cid -> sqlWhereEq "company_id" cid
     listToMaybe <$> foldDB fetchPaymentPlans []
 
+data GetPaymentPlanByAccountCode = GetPaymentPlanByAccountCode AccountCode
+instance (MonadDB m) => DBQuery m GetPaymentPlanByAccountCode (Maybe PaymentPlan) where
+  query (GetPaymentPlanByAccountCode ac) = do
+    kRun_ $ sqlSelect "payment_plans" $ do
+      sqlResult "account_code"
+      sqlResult "account_type"
+      sqlResult "user_id"
+      sqlResult "company_id"
+      sqlResult "plan"
+      sqlResult "status"
+      sqlResult "quantity"
+      sqlResult "plan_pending"
+      sqlResult "status_pending"
+      sqlResult "quantity_pending"
+      sqlResult "provider"
+      sqlWhereEq "account_code" ac
+    listToMaybe <$> foldDB fetchPaymentPlans []
+
 fetchPaymentPlans :: [PaymentPlan] -> AccountCode -> Int -> Maybe UserID -> Maybe CompanyID -> PricePlan -> PaymentPlanStatus -> Int -> PricePlan -> PaymentPlanStatus -> Int -> PaymentPlanProvider -> [PaymentPlan]
 fetchPaymentPlans acc ac t muid mcid p s q pp sp qp pr = 
   let mid = case (t, muid, mcid) of
