@@ -14,18 +14,21 @@ window.File = Backbone.Model.extend({
         broken : false
     },
     queryPart: function () {
-        var query = $.param({ documentid: this.documentid(),
-                              attachmentid: this.attachmentid(),
-                              signatorylinkid: this.signatoryid(),
-                              magichash: this.magichash(),
-                              attachmentid: this.attachmentid()},
-                           true);
-        if( query!="" ) {
-            return "?" + query;
-        }
-        else {
-            return "";
-        }
+      var params = { documentid: this.documentid(),
+                     attachmentid: this.attachmentid(),
+                     signatorylinkid: this.signatoryid(),
+                     magichash: this.magichash()
+                   };
+      /* This construct removes undefined values from params */
+      params = _.defaults({}, params);
+
+      var query = $.param(params, true);
+      if( query!="" ) {
+        return "?" + query;
+      }
+      else {
+        return "";
+      }
     },
     initialize: function (args) {
         this.url = "/filepages/" + args.id + this.queryPart();
