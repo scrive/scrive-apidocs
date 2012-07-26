@@ -92,45 +92,6 @@ safeReady(function() {
   enableInfoTextOnce();
 });
 
-//load pages is used when looking at attachment view
-safeReady(function() {
-  loadpages();
-});
-
-function loadpages() {
-  console.log("loading pages . . .");
-  if (typeof(window.documentid) != "undefined") {
-    var myurl;
-    if (typeof(window.siglinkid) != "undefined" && typeof(window.sigmagichash) != "undefined")
-      myurl = "/pagesofdoc/" + documentid + "/" + siglinkid + "/" + sigmagichash;
-    else
-      myurl = "/pagesofdoc/" + documentid;
-    $.ajax({
-      url: myurl,
-      success: function(data) {
-        var content = $(data);
-        var errormsg = content.find(".errormsg");
-        if (errormsg.length > 0) {
-          Confirmation.popup({
-              submit: new Submit({url: '/d' }) ,
-              title: localization.problemWithPDF,
-              content: errormsg.text(),
-              cantCancel: true,
-              acceptColor: "red",
-              acceptText: localization.backToArchive
-          });
-        } else {
-          $('#documentBox').html(content);
-          bgok = true;
-          console.log("bgok: " + bgok);
-          $('.pagejpg').each(checkbgimageok);
-        }
-      },
-      error: repeatForeverWithDelay(1000)
-    });
-  }
-}
-
 var bgok = true;
 
 function checkbgimageok(i, el) {
@@ -279,38 +240,6 @@ safeReady(function() {
       form.append(tokenTag);
     }
   });
-});
-
-// i haven't the foggiest what this is doing, it says it adds attachment images
-// add attachment images
-safeReady(function() {
-  if (typeof(window.documentid) != "undefined") {
-    var myurl;
-    if (typeof(window.siglinkid) != "undefined" && typeof(window.sigmagichash) != "undefined")
-      myurl = "/sv/" + documentid + "/" + siglinkid + "/" + sigmagichash;
-    else
-      myurl = "/dv/" + documentid;
-    $.ajax({
-      url: myurl,
-      success: function(data) {
-        var content = $(data);
-        var errormsg = content.find(".errormsg");
-        if (errormsg.length > 0) {
-          Confirmation.popup({
-            submit: new Submit({url: '/d' }) ,
-            title: localization.problemWithPDF,
-            content: errormsg.text(),
-            cantCancel: true,
-            acceptColor: "red",
-            acceptText: localization.backToArchive
-          });
-        } else {
-          $('#attachmentbox').html(content);
-        }
-      },
-      error: repeatForeverWithDelay(1000)
-    });
-  }
 });
 
 //does some google analytics stuff, not sure if this is working or not
