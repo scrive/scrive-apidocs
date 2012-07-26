@@ -13,37 +13,32 @@ window.File = Backbone.Model.extend({
         name: "",
         broken : false
     },
+    queryPart: function () {
+        var query = $.param({ documentid: this.documentid(),
+                              attachmentid: this.attachmentid(),
+                              signatorylinkid: this.signatoryid(),
+                              magichash: this.magichash(),
+                              attachmentid: this.attachmentid()},
+                           true);
+        if( query!="" ) {
+            return "?" + query;
+        }
+        else {
+            return "";
+        }
+    },
     initialize: function (args) {
-        this.url = "/filepages/" + args.id;
+        this.url = "/filepages/" + args.id + this.queryPart();
         this.bind('change:pages', function() { args.document.trigger('file:change'); });
     },
     downloadLink : function() {
         var link = null;
-        var addedQM = false;
-        var addPart = function(key,value) {
-            if( value!==undefined ) {
-                if( addedQM ) {
-                    link = link + "&" + key + "=" + value;
-                }
-                else {
-                    addedQM = true;
-                    link = link + "?" + key + "=" + value;
-                }
-            }
-        }
         /* FIXME: this is wrong that we add .pdf as default extension. File should just know better. */
         if( this.fileid()!==undefined ) {
-            link = "/download/"+ this.fileid() + "/" + this.name() + ".pdf";
-            addPart("documentid",this.documentid());
-            addPart("attachmentid",this.attachmentid());
-            addPart("signatorylinkid",this.signatoryid());
-            addPart("magichash",this.magichash());
+            link = "/download/" + this.fileid() + "/" + this.name() + ".pdf" + this.queryPart();
         }
         else if( this.documentid()!==undefined ) {
-            link = "/downloadmainfile/"+ this.documentid() + "/" + this.name() + ".pdf";
-            addPart("attachmentid",this.attachmentid());
-            addPart("signatorylinkid",this.signatoryid());
-            addPart("magichash",this.magichash());
+            link = "/downloadmainfile/"+ this.documentid() + "/" + this.name() + ".pdf" + this.queryPart();
         }
         else {
             console.log("File with neither documentid nor fileid, do not know where does it link to");

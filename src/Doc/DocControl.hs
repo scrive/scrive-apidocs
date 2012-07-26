@@ -908,6 +908,17 @@ handleCreateFromTemplate = withUserPost $ do
 -- 'handleDownloadMainFile'.
 handleDownloadFile :: Kontrakcja m => FileID -> String -> m Response
 handleDownloadFile fid _nameForBrowser = do
+  msid <- readField "signatorylinkid"
+  mmh <- readField "magichash"
+  mdid <- readField "documentid"
+  doc <- case (msid, mmh, mdid) of
+           (Just sid, Just mh, Just did) -> guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
+           (_,_,Just did)                -> guardRightM $ getDocByDocID did
+           _                             -> internalError
+
+  let allfiles = (documentfiles doc) ++ (documentsealedfiles doc)  ++ (authorattachmentfile <$> documentauthorattachments doc)
+  when (all (/= fid) allfiles) $ 
+       internalError
   content <- getFileIDContents fid
   respondWithPDF content
   where
