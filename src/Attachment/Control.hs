@@ -61,6 +61,28 @@ handleCreateNew = do
   _mdoc <- makeAttachmentFromFile input
   J.runJSONGenT $ return ()
 
+attachmentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m) => Attachment -> m JSValue
+attachmentJSON att = do
+    runJSONGenT $ do
+      J.value "id" $ show $ attachmentid att
+      J.value "title" $ attachmenttitle att
+      J.value "file" $ show $ attachmentfile att
+      J.value "user" $ show $ attachmentuser att
+      --J.value "ctime" $ attachmentctime att
+      --J.value "mtime" $ attachmentmtime att
+      J.value "shared" $ attachmentshared att
+      J.value "deleted" $ attachmentdeleted att
+
+jsonAttachment :: Kontrakcja m => AttachmentID -> m JSValue
+jsonAttachment attid = do
+    ctx <- getContext
+    atts <- dbQuery $ GetAttachments [AttachmentsSharedInUsersCompany (userid $ fromJust $ ctxmaybeuser ctx)]
+            [AttachmentFilterByID [attid]] [] (AttachmentPagination 0 10)
+    case atts of
+      [att] -> attachmentJSON att
+      _ -> error "not found"
+
+
 jsonAttachmentsList ::  Kontrakcja m => m (Either KontraLink JSValue)
 jsonAttachmentsList = withUserGet $ do
   Just user@User{userid = uid} <- ctxmaybeuser <$> getContext

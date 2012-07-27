@@ -93,6 +93,7 @@ staticRoutes = choice
      , dir "a"                     $ hPost $ toK0 $ AttachmentControl.handleCreateNew
      , dir "a"                     $ hGet  $ toK0 $ AttachmentControl.jsonAttachmentsList
      , dir "a"                     $ hGet  $ toK1 $ AttachmentControl.handleShow
+     , dir "att"                   $ hGet  $ toK1 $ AttachmentControl.jsonAttachment
 
      , dir "t" $ param "template" $ hPost $ toK0 $ DocControl.handleCreateFromTemplate
      , dir "t" $ hPost $ toK0 $ DocControl.handleCreateNewTemplate
@@ -125,7 +126,7 @@ staticRoutes = choice
      , dir "restart" $ hPost $ toK1 $ DocControl.handleRestart
      , dir "cancel"  $ hPost $ toK1 $ DocControl.handleCancel
 
-     , dir "pages"  $ hGetAjax $ toK3 $ DocControl.showPage
+     , dir "pages"  $ hGetAjax $ toK2 $ DocControl.showPage
      -- HTMP emails can have embedded preview image
      , dir "preview" $ hGet $ toK2 $ DocControl.showPreview
      , dir "preview" $ hGet $ toK4 $ DocControl.showPreviewForSignatory
