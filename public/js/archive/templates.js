@@ -12,6 +12,14 @@ window.TemplatesListDefinition = function(archive) { return {
     sorting: new Sorting({ fields: ["title", "time", "process"]}),
     paging: new Paging({}),
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.templates.search}),
+    selectfiltering : [ new SelectFiltering({description: localization.filterByProcess.showAllProcesses,
+                             name: "process",
+                             textWidth : "100px",
+                             options: [ {name: localization.filterByProcess.showContractsOnly, value: "contract"},
+                                        {name: localization.filterByProcess.showOffersOnly,    value: "offer"},
+                                        {name: localization.filterByProcess.showOrdersOnly,    value: "order"}
+                                      ]})
+            ], 
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
         new Cell({name: localization.archive.templates.columns.time, width:"140px", field:"time"}),
@@ -29,6 +37,7 @@ window.TemplatesListDefinition = function(archive) { return {
        new ListAction({
                 name : localization.archive.templates.createnew,
                 avaible : function() {return true;},
+                color : "green",      
                 acceptEmpty : true,
                 onSelect: function() {
                         var popup;

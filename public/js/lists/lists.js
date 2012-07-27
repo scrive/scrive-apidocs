@@ -90,7 +90,6 @@
             return this.get("expanded") == true;
         },
         toggleExpand: function() {
-            console.log("toggling");
             var val = this.isExpanded();
             var namespace = this.collection.schema.namespace();
             var id = this.field("id");
@@ -180,7 +179,6 @@
                 } else if (cell.isRendered() && value != undefined) {
                     elem = cell.rendering(value, undefined, this.model);
                 } else if (cell.isExpandable() && value != undefined) {
-                    console.log('Rendering expandable')
                     elem = $("<a href='#'/>").text(value).click(function() {model.toggleExpand(); return false;});
                 } else if (cell.isBool()) {
                     if (value) {
@@ -284,22 +282,15 @@
             this.main = $("<div class='tab-container'/>");
             this.pretableboxleft = $("<div class='col float-left'/>");
             this.pretableboxright = $("<div class='col float-right'/>");
-            this.pretableboxrightsearchbox = $("<div class='searchBox float-right'/>");
-            this.pretablebox = $("<div class='tab-content'/>");
+              this.pretablebox = $("<div class='tab-content'/>");
             this.tableoptionbox = $("<div class='option-top-box' />");
-            this.pretableboxadvancedsearchbox = $("<div class='advanced-search'/>");
+            this.pretableboxsubbox = $("<div class='subbox'/>");
             this.tablebox = $("<div class='tab-table'/>");
             this.tableboxfooter = $("<div/>");
             this.tablebox.append(this.tableboxfooter);
             this.pretablebox.append(this.pretableboxleft).append(this.pretableboxright).append("<div class='clearfix'/>");
-            this.main.append(this.tableoptionbox.append(this.pretablebox).append(this.pretableboxadvancedsearchbox)).append(this.tablebox);
+            this.main.append(this.tableoptionbox.append(this.pretablebox).append(this.pretableboxsubbox)).append(this.tablebox);
 
-            if (this.schema.actionsAvaible()) {
-                this.prepareActions();
-            }
-            if (this.schema.optionsAvaible()) {
-                this.prepareOptions();
-            }
             if (this.headerExtras != undefined) {
                 if (typeof(this.headerExtras) == "function") {
                     this.pretableboxleft.append(this.headerExtras());
@@ -307,24 +298,25 @@
                     this.pretableboxleft.append(this.headerExtras);
                 }
             }
-            _.each(this.schema.selectfiltering(),function(f) {
+            _.each(this.schema.allFiltering(),function(f) {
+                console.log("Generating new view for filtering");
                 var filter = new SelectFilteringView({model: f, el: $("<div class='float-left'/>")});
-                view.pretableboxright.append(filter.el);
+                view.pretableboxleft.append(filter.el);
             })
             
             if (!this.schema.textfiltering().disabled()) {
-                var filter = new TextFilteringView({model: this.schema.textfiltering(), el: $("<div style='height:30px'/>")});
-                this.pretableboxrightsearchbox.append(filter.el);
+                console.log("Generating new view for text-filtering");
+                var filter = new TextFilteringView({model: this.schema.textfiltering(), el: $("<div style='searchBox height:30px'/>")});
+                this.pretableboxright.append(filter.el);
             }
-            if (this.schema.advancedselectfiltering() != undefined) {
-                var toogler = new AdvancedSelectFilteringToogleView({model: this.schema.advancedselectfiltering(), el: $("<div class='float-right'>")});
-                this.pretableboxrightsearchbox.append(toogler.el);
+
+            if (this.schema.actionsAvaible()) {
+                this.prepareActions();
             }
-            if (!this.schema.textfiltering().disabled() || this.schema.advancedselectfiltering() != undefined)
-                this.pretableboxright.append(this.pretableboxrightsearchbox);
-            if (this.schema.advancedselectfiltering() != undefined)
-                new AdvancedSelectFilteringView({model : this.schema.advancedselectfiltering(), el : this.pretableboxadvancedsearchbox}).el;
-                
+            if (this.schema.optionsAvaible()) {
+                this.prepareOptions();
+            }
+            
             if (this.bottomExtras != undefined) {
                 this.tableboxfooter.append(this.bottomExtras);
             }
@@ -354,19 +346,24 @@
             var select = new Select({  name: "",
                                        options: options,
                                        cssClass: "float-left",
-                                       name : "More ▼",
-                                       theme : "green-button"
+                                       name : "More",
+                                       theme : "standard"
             });
-            this.pretableboxleft.append(select.view().el);
+            console.log("Generating selects for options");
+
+            this.pretableboxsubbox.append($("<div class='options-box'/>").append(select.view().el));
         },
         prepareActions : function() {
            var actions = this.schema.actions();
            var model = this.model;
            var view = this
+           var div = $("<div class='actions-box'/>");
            _.each(actions, function(a) {
                 a.set({"list" : model});
-                view.pretableboxleft.append(new ListActionView({model : a, el : $("<div class='float-left actionButton'>")}).el);
+                div.append(new ListActionView({model : a, el : $("<div class='float-left actionButton'>")}).el);
             })
+           console.log("Generating buttons for actions");
+           view.pretableboxsubbox.append(div);
         },
         renderheader: function() {
             var headline = $("<tr/>");
@@ -407,9 +404,10 @@
             }
             return $("<thead />").append(headline);
         },
-        render: function() {           
+        render: function() {
+            console.log("Rendering main list");
             if (this.table != undefined)
-                this.table.children().detach();
+                this.table.detach();
 
             if (this.model.length > 0 || this.emptyAlternative == undefined) {
                 this.table = $("<table />");
@@ -460,6 +458,8 @@
 
     window.KontraList = function() { return {
         init: function(args) {
+            $("body").append("KontraList init");
+
             _.bindAll(this, 'recall');
             this.schema = args.schema;
             this.schema.initSessionStorageNamespace(args.name);
@@ -479,17 +479,15 @@
             return this;
         },
         recall: function() {
-            if (this.fetching == true) return;
             var list = this;
             list.view.startLoading();
-            this.fetching = true;
             this.model.fetch({ data: this.schema.getSchemaUrlParams(),
                                processData: true,
                                cache: false,
-                               success: function() {list.fetching = false; list.view.stopLoading(); },
+                               success: function() {list.view.stopLoading(); },
+                               error : function() {list.recall();},
                                timeout: 6000
             });
-            window.setTimeout(function() {if (this.fetching == true) {this.fetching = false; list.recall();} }, 7000);
         }
     };};
 })(window);

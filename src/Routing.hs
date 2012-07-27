@@ -35,6 +35,8 @@ import Redirect
 import Text.JSON
 import qualified Control.Exception.Lifted as E
 import Util.CSVUtil
+import Util.ZipUtil
+
 
 type RedirectOrContent = Either KontraLink String
 
@@ -64,6 +66,9 @@ instance (ToResp a , ToResp b) => ToResp (Either a b) where
     toResp = either toResp toResp
 
 instance ToResp CSV where
+    toResp = return . toResponse
+
+instance ToResp ZipArchive where
     toResp = return . toResponse
 
 hPostWrap :: Path Kontra KontraPlus a Response => (Kontra Response -> Kontra Response) -> a -> Route (KontraPlus Response)

@@ -465,7 +465,10 @@ javascriptLocalisation =
                             , successMessage : "$_flashMessageDocumentArchiveDone()$"
                         }
                     , csv : {
-                              action : "$_csv()$"
+                              action : "$_archiveCSV()$"
+                        }
+                    , zip : {
+                              action : "$_archiveZIP()$"
                         } 
                     , columns :{
                               status : "$_SortStatus()$"

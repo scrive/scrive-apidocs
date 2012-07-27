@@ -53,11 +53,9 @@
 
 .archive .scrolled .option-top-box{
     position: fixed;
-    top:0px;
+    top: -47px;
     background : #ffffff;
-    width: 956px;
-    border-bottom : 2px solid #808080;
-    border-left : 1px solid #808080;
-    border-right : 1px solid #808080;
+    width: 958px;
+    border-bottom : 1px solid #808080;
 
 }

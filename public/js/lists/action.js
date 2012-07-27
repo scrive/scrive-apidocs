@@ -11,6 +11,7 @@
             name : "",
             visible : false,
             acceptEmpty : false,
+            color : "black",
             button : undefined //Custom button, jQuery object. We don't control it's visability.
         },
         initialize: function (args) {
@@ -34,6 +35,9 @@
         },
         button : function() {
           return this.get("button");
+        },
+        color : function() {
+          return this.get("color");
         },
         update : function() {
             if (this.get('list') == undefined) return;
@@ -63,7 +67,7 @@
             var button = model.button();
             if (button == undefined)
                 button = Button.init({
-                                      color : "green",
+                                      color : model.color(),
                                       size : "tiny",
                                       text  : model.name(),
                                       onClick : function() {if (model.visible()) model.onSelect(); return false;}

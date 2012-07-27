@@ -16,9 +16,10 @@ window.DocumentsListDefinition = function(archive) { return {
     sorting: new Sorting({ fields: ["title", "status", "time", "party", "author"]}),
     paging: new Paging({}),
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.documents.search}),
-    selectfiltering : [  new SelectFiltering({description: localization.filterByStatusClass.showAnyStatusClass,
+    selectfiltering : [
+            new SelectFiltering({description: localization.filterByStatusClass.showAnyStatusClass,
                              name: "statusclass",
-                             textWidth : "130px",
+                             textWidth : "100px",
                              options: [ {name: localization.filterByStatusClass.showDraft,     value: "draft"},
                                         {name: localization.filterByStatusClass.showCancelled, value: "cancelled"},
                                         {name: localization.filterByStatusClass.showSent,      value: "sent"},
@@ -26,12 +27,10 @@ window.DocumentsListDefinition = function(archive) { return {
                                         {name: localization.filterByStatusClass.showRead,      value: "read"},
                                         {name: localization.filterByStatusClass.showOpened,    value: "opened"},
                                         {name: localization.filterByStatusClass.showSigned,    value: "signed"}
-                                      ]})  ],
-    advancedselectfiltering : new AdvancedSelectFiltering({
-        selectfilterings : [
+                                      ]}),
             new SelectFiltering({description: localization.filterByProcess.showAllProcesses,
                              name: "process",
-                             textWidth : "130px",
+                             textWidth : "100px",
                              options: [ {name: localization.filterByProcess.showContractsOnly, value: "contract"},
                                         {name: localization.filterByProcess.showOffersOnly,    value: "offer"},
                                         {name: localization.filterByProcess.showOrdersOnly,    value: "order"}
@@ -39,7 +38,7 @@ window.DocumentsListDefinition = function(archive) { return {
             new SelectFiltering({
                              description: localization.filterByYear.showAnyYear,
                              name: "year",
-                             textWidth : "130px",
+                             textWidth : "100px",
                              options: [ {name: "2010",    value: "2010"},
                                         {name: "2011",    value: "2011"},
                                         {name: "2012",    value: "2012"},
@@ -48,7 +47,7 @@ window.DocumentsListDefinition = function(archive) { return {
             new SelectFiltering({
                              description: localization.filterByMonth.showAnyMonth,
                              name: "month",
-                             textWidth : "130px",
+                             textWidth : "100px",
                              options: [ {name: capitaliseFirstLetter(localization.months.january),   value: "1"},
                                         {name: capitaliseFirstLetter(localization.months.february),  value: "2"},
                                         {name: capitaliseFirstLetter(localization.months.march),     value: "3"},
@@ -62,8 +61,7 @@ window.DocumentsListDefinition = function(archive) { return {
                                         {name: capitaliseFirstLetter(localization.months.november),  value: "11"},
                                         {name: capitaliseFirstLetter(localization.months.december),  value: "12"}
                                       ]})
-            ]
-    }), 
+            ], 
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
         new Cell({name: localization.archive.documents.columns.status, width:"52px", field:"status",
@@ -102,6 +100,7 @@ window.DocumentsListDefinition = function(archive) { return {
     actions : [
            new ListAction({
                 name : localization.archive.documents.createnew,
+                color : "green",
                 avaible : function() {return true;},
                 acceptEmpty : true,
                 onSelect: function() {
@@ -138,6 +137,7 @@ window.DocumentsListDefinition = function(archive) { return {
             }),
         new ListAction({
             name :  localization.archive.documents.sendreminder.action,
+            color : "green",
             avaible : function(doc){
               return doc.field("status") == "sent"      ||
                      doc.field("status") == "delivered" ||
@@ -181,6 +181,7 @@ window.DocumentsListDefinition = function(archive) { return {
         }),
         new ListAction({
             name :  localization.archive.documents.cancel.action,
+            color : "red",
             avaible : function(doc){
               return doc.field("status") == "sent"      ||
                      doc.field("status") == "delivered" ||
@@ -215,13 +216,8 @@ window.DocumentsListDefinition = function(archive) { return {
         }),
         new ListAction({
             name : localization.archive.documents.remove.action,
-            avaible : function(doc){
-              return doc.field("status") != "sent"      &&
-                     doc.field("status") != "delivered" &&
-                     doc.field("status") != "read"      &&
-                     doc.field("status") != "opened"    &&
-                     doc.field("anyinvitationundelivered") != "True"
-            },
+            color : "black",
+            avaible : function(doc){ return true;},
             onSelect : function(docs) {
                          var confirmtext = jQuery("<p/>").append(localization.archive.documents.remove.body + " ");
                              var label = jQuery("<strong/>");
@@ -261,6 +257,16 @@ window.DocumentsListDefinition = function(archive) { return {
                         var params =  archive.documents().model.schema.getSchemaUrlParams();
                         _.each(params,function(a,b){url+=(b+"="+a+"&")})
                         window.open(url + "format=csv");
+                        return true;
+                 }
+                } ,
+               {name : localization.archive.documents.zip.action,
+                 acceptEmpty : true,
+                 onSelect: function(){
+                        var url =  archive.documents().model.schema.url() + "?"
+                        var params =  archive.documents().model.schema.getSchemaUrlParams();
+                        _.each(params,function(a,b){url+=(b+"="+a+"&")})
+                        window.open(url + "format=zip");
                         return true;
                  }
                 } 

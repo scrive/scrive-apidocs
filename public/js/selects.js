@@ -64,21 +64,21 @@ window.SelectModel = Backbone.Model.extend({
  * Updates object on focus, blur and change. Sets the grey class for input and fills infotext if needed.
  */
 window.SelectOptionView = Backbone.View.extend({
-    events: {
-        'click'  :  'selected'
-    },
     initialize: function (args) {
-        _.bindAll(this, 'render', 'selected');
+        _.bindAll(this, 'render');
         this.model.view = this;
         this.render();
     },
+    clear : function() {
+        this.off();
+        $(this.el).remove();
+    },
     render: function () {
+        var model = this.model;
         var a = $("<span/>").text(this.model.name());
         $(this.el).append(a);
+        $(this.el).click(function() {model.selected(); return false;})
         return this;
-    },
-    selected: function(){
-        this.model.selected();
     }
     
 });
@@ -97,10 +97,12 @@ var SelectView = Backbone.View.extend({
         this.render();
     },
     closeIfNeeded : function() {
-        if (   $(":hover", this.el).size() == 0
+        if ( this.dead != true 
             && this.model.expanded()
             && new Date().getTime() - this.enterdate > 900
-        )   this.model.toggleExpand();
+            && $(":hover", this.el).size() == 0
+           )
+          this.model.toggleExpand();
     },
     button : function() {
         var button = $("<div class='select-button' />");
@@ -115,6 +117,16 @@ var SelectView = Backbone.View.extend({
         button.append(label);
         button.append("<div class='select-button-right' />");
         return button;
+    },
+    clear : function() {
+        this.dead;
+        _.each(this.model.options(),function(o) {
+            if (o.view != undefined)
+                o.view.clear();
+            o.destroy();
+        });
+        this.off();
+        $(this.el).remove();
     },
     render: function () {
         $(this.el).empty();
@@ -165,7 +177,8 @@ window.Select = function(args) {
           var view = new SelectView({model : model, el : input});
           return new Object({
               model : function() {return model;},
-              view : function()  {return view;}
+              view : function()  {return view;},
+              clear : function() {view.clear(); model.destroy();}
             });    
 };
 

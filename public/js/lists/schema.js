@@ -73,11 +73,6 @@
               f.bind('change', function(){ paging.changePage(0);});
               f.bind('change', function() {schema.trigger('change')});
           });
-          if (this.advancedselectfiltering() != undefined)
-          _.each(this.advancedselectfiltering().selectfilterings(), function(f) {
-              f.bind('change', function(){ paging.changePage(0);});
-              f.bind('change', function() {schema.trigger('change')});
-          });
           this.sorting().bind('change', function() {schema.trigger('change')});
           this.paging().bind('change:pageCurrent', function() {schema.trigger('change')});
         },
@@ -100,9 +95,6 @@
         },
         selectfiltering: function() {
             return this.get("selectfiltering");
-        },
-        advancedselectfiltering : function() {
-            return this.get("advancedselectfiltering");  
         },
         sorting: function() {
             return this.get("sorting");
@@ -135,19 +127,12 @@
             return this.get('namespace');
         },
         allFiltering : function() {
-            var selectF = this.selectfiltering();
-            var aselectF = this.advancedselectfiltering() != undefined ? this.advancedselectfiltering().selectfilterings() : [];
-            return _.union(selectF,aselectF);
-            
+            return this.selectfiltering();
         },
         initSessionStorageNamespace: function(name) {
             this.set({ namespace: name });
             this.textfiltering().setSessionStorageNamespace(name);
             _.each(this.selectfiltering(), function(f) {f.setSessionStorageNamespace(name)});
-            if (this.advancedselectfiltering() != undefined) {
-                this.advancedselectfiltering().setSessionStorageNamespace(name);
-                _.each(this.advancedselectfiltering().selectfilterings(), function(f) {f.setSessionStorageNamespace(name)});
-            }
             this.sorting().setSessionStorageNamespace(name);
         },
         getSchemaUrlParams: function() {

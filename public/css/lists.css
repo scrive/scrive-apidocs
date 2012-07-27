@@ -157,7 +157,7 @@
 
 .list-container .col {
        margin: 0 20px;
-       padding-top: 12px;
+       padding-top: 20px;
        padding-bottom: 6px;
        max-width: 800px;
 }
@@ -165,6 +165,7 @@
 /* Select boxes and search boxes for lists */
 
 .list-search {
+        font: 12px/24px "Lucida Grande";
         border: 1px solid #e4e4e4;
         border-radius: 3px;
         height: 17px;
@@ -175,39 +176,35 @@
         -webkit-border-radius: 3px;
 }
 
+.subbox {
+   padding-top: 5px;
+   background: #fff;
+   height : 40px;
+   padding-bottom: 10px;
+   display : block;
+   padding-right: 10px;
+   padding-left: 20px;
+   display : block;
+}
+
+.subbox .actions-box  {
+    float: left;
+
+}
+.subbox .options-box  {
+    float: right;
+
+}
+
+.subbox .actions-box .actionButton{
+    margin-right : 8px;
+}
+
 .gearImage  {
     background-image: url(../img/gear.png);
     display: block;
     height: 16px;
     width: 16px;
-}
-
-/* Advanced filtering */
-.advanced-search {
-    background: #ffffff;
-    width : 100%;
-}
-.advanced-search .advanced-search-box {
-    border-top: 1px solid #ccc;
-    padding-top: 5px;
-    padding-bottom: 2px;
-    margin-left: auto;
-    margin-right: auto;
-    display : block;
-    text-align : center;
-}
-
-.advanced-search-box table {
-    margin-left: auto;
-    margin-right: auto;
-    width: 95%
-}
-
-.advanced-select{
-  display: inline-block;
-  margin-left: auto;
-  margin-right: auto;
-  text-align : center;
 }
 
 .listcheckbox{
@@ -222,6 +219,3 @@
     background: url("../img/checkbox_checked.png") no-repeat scroll 0 0 transparent;
 }
 
-.actionButton {
-    margin-right : 5px;
-}

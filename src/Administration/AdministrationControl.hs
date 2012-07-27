@@ -39,7 +39,6 @@ module Administration.AdministrationControl(
           , jsonUsersList
           , jsonCompanies
           , jsonDocuments
-          , companyClosedFilesZip
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -72,7 +71,6 @@ import InputValidation
 import User.Utils
 import ScriveByMail.Model
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString as BSS
 import qualified Data.ByteString.UTF8 as BS
 import Crypto.RNG(random)
 import Util.Actor
@@ -875,39 +873,3 @@ serveLogDirectory filename = onlyAdmin $ do
         respond404
     (_,bsstdout,_) <- liftIO $ readProcessWithExitCode' "tail" ["log/" ++ filename, "-n", "40"] BSL.empty
     ok $ addHeader "Refresh" "5" $ toResponseBS (BS.fromString "text/plain; charset=utf-8") $ bsstdout
-
-
-companyClosedFilesZip :: Kontrakcja m => CompanyID -> Int  -> String -> m Response
-companyClosedFilesZip cid start _filenamefordownload = onlyAdmin $ do
-  archive <- companyFilesArchive cid start
-  let res = Response 200 Map.empty nullRsFlags (fromArchive archive) Nothing
-  return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "archive/zip") res
-
-
-companyFilesArchive :: Kontrakcja m => CompanyID -> Int -> m Archive
-companyFilesArchive cid start = do
-    Log.debug $ "Getting all files archive for company " ++ show cid
-    docs <- dbQuery $ GetDocumentsByCompanyWithFiltering cid [
-        DocumentFilterByService Nothing
-      , DocumentFilterStatuses [Closed]
-      ]
-    let cdocs = sortBy (\d1 d2 -> compare (documentid d1) (documentid d2)) $ filter (\doc -> documentstatus doc == Closed)  $ docs
-    let sdocs = take zipCount $ drop (zipCount*start) $ cdocs
-    Log.debug $ "Found  " ++ show (length $ filter (\doc -> documentstatus doc == Closed)  $ docs) ++ "document"
-    mentries <- mapM docToEntry $  sdocs
-    return $ foldr addEntryToArchive emptyArchive $ map fromJust $ filter isJust $ mentries
-  where
-    zipCount = 80
-
-docToEntry ::  Kontrakcja m => Document -> m (Maybe Entry)
-docToEntry doc = do
-      let snpart = concat $ for (take 5 $ documentsignatorylinks doc) $ \sl -> (take 8 $ getFirstName sl) ++ "_"++(take 8 $ getFirstName sl) ++ "_"
-      let name = filter ((/= ' ')) $ filter (isAscii) $ (documenttitle doc) ++ "_" ++ (show $ documentmtime doc) ++ "_" ++ snpart ++".pdf"
-      case (documentsealedfiles doc) of
-        [fid] -> do
-            Log.debug $ "Getting content for the file " ++ show fid
-            content <- getFileIDContents fid
-            return $ Just $ toEntry name 0 $ BSL.pack $ BSS.unpack content
-        _ -> do
-            Log.debug $ "Bad sealed file number " ++ show (documentid doc)
-            return Nothing

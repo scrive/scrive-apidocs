@@ -93,13 +93,13 @@
 
 .tab-viewer .tabs li a {
     color: #000;
-    font: 11px "Helvetica Neue";
+    font: 12px "Helvetica Neue";
     display: inline-block;
-    padding-top:2px;
+    padding-top:1px;
 }
 
 .tab-viewer .tabs li.active a {
-	color: #fff;
+    color: #fff;
     padding-top:0px;
 
 }

@@ -43,23 +43,40 @@ import Doc.DocUtils
 import Doc.Action
 import Doc.DocStateQuery
 import Control.Monad
- 
+import Codec.Archive.Zip
+import Util.ZipUtil
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString as BSS
+import Data.Char
+import Doc.DocStorage
+import qualified Log as Log
+import Data.List (find)
+import Control.Logic
 
 handleDelete :: Kontrakcja m => m JSValue
 handleDelete = do
     Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
     docids <- getCriticalFieldList asValidDocID "doccheck"
     let actor = userActor ctxtime ctxipnumber (userid user) (getEmail user)
-    mapM_ (\did -> do
-              doc <- guardJustM . runMaybeT $ do
-                True <- dbUpdate $ ArchiveDocument user did actor
-                Just doc <- dbQuery $ GetDocumentByDocumentID did
-                return doc
-              case getSigLinkFor doc user of
-                Just sl -> addSignStatDeleteEvent doc sl ctxtime
-                _ -> return False) 
-      docids
+    forM_ docids $ \did -> do
+              doc <- guardRightM' $ getDocByDocID $ did
+              let usl = (find (isSigLinkFor user) $ documentsignatorylinks doc)
+                  csl = (find (isSigLinkFor (usercompany user)) $ documentsignatorylinks doc) <| (useriscompanyadmin user) |> Nothing
+                  msl =  usl `mplus` csl
+              when (isNothing msl) internalError    
+              case (documentstatus doc) of
+                  Pending -> if (isAuthor msl)
+                                then do 
+                                   doc' <- guardRightM' $ dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
+                                   postDocumentCanceledChange doc' "web+archive"
+                                else do
+                                   doc' <- guardRightM' $ dbUpdate $ RejectDocument did (signatorylinkid $ fromJust msl) Nothing actor
+                                   postDocumentRejectedChange doc' (signatorylinkid $ fromJust msl) "web+archive"
+                  _ -> return ()
+              doc' <- guardRightM' $ dbUpdate $ ArchiveDocument user did actor
+              addSignStatDeleteEvent doc' (fromJust msl) ctxtime
     J.runJSONGenT $ return ()
+            
 
 
 handleSendReminders :: Kontrakcja m => m JSValue
@@ -89,8 +106,8 @@ handleCancel = do
       actor <- guardJustM $ mkAuthorActor <$> getContext
       if (documentstatus doc == Pending)
         then do
-            mdoc' <- dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
-            when (isLeft mdoc') internalError
+           doc' <- guardRightM' $ dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
+           postDocumentCanceledChange doc' "web+archive"
         else internalError
   J.runJSONGenT $ return ()
 
@@ -142,7 +159,7 @@ showArchive = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >> pa
 showPadDeviceArchive :: Kontrakcja m => m (Either KontraLink String)
 showPadDeviceArchive = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >> pagePadDeviceArchive
 
-jsonDocumentsList ::  Kontrakcja m => m (Either KontraLink (Either CSV JSValue))
+jsonDocumentsList ::  Kontrakcja m => m (Either KontraLink (Either CSV (Either ZipArchive JSValue)))
 jsonDocumentsList = withUserGet $ do
   Just user@User{userid = uid} <- ctxmaybeuser <$> getContext
   lang <- getLang . ctxlocale <$> getContext
@@ -195,6 +212,12 @@ jsonDocumentsList = withUserGet $ do
                               , csvHeader = docForListCSVHeader
                               , csvContent = docsCSVs
                               }
+       Just "zip" -> do
+          Log.debug "Returning zip" 
+          allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting (DocumentPagination 0 maxBound)
+          mentries <- mapM docToEntry $  allDocs
+          Log.debug "We have all files"
+          return $ Right $ Left $ ZipArchive "allfiles.zip" $ foldr addEntryToArchive emptyArchive $ map fromJust $ filter isJust $ mentries
        _ -> do
           allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
           let docs = PagedList {  list       = allDocs
@@ -202,7 +225,7 @@ jsonDocumentsList = withUserGet $ do
                                 , pageSize   = docsPageSize
                                 }
           docsJSONs <- mapM (docForListJSON (timeLocaleForLang lang) cttime user padqueue) $ take docsPageSize $ list docs
-          return $ Right $ JSObject $ toJSObject [
+          return $ Right $ Right $ JSObject $ toJSObject [
               ("list", JSArray docsJSONs)
             , ("paging", pagingParamsJSON docs)
             ]
@@ -271,3 +294,13 @@ comparePartners doc1 doc2 =
 docsPageSize :: Int
 docsPageSize = 100
 
+-- Zip utils
+
+docToEntry ::  Kontrakcja m => Document -> m (Maybe Entry)
+docToEntry doc = do
+      let name = filter ((/= ' ')) $ filter (isAscii) $ (documenttitle doc) ++ "_" ++ (show $ documentid doc) ++".pdf"
+      case (documentsealedfiles doc ++ documentfiles doc) of
+        (fid:_) -> do
+            content <- getFileIDContents fid
+            return $ Just $ toEntry name 0 $ BSL.pack $ BSS.unpack content
+        [] -> return Nothing
