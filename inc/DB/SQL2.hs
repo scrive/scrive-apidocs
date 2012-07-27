@@ -47,8 +47,11 @@ Module SQL2 offers some nice monadic function that build SQL commands on the fly
 module DB.SQL2
   ( sqlWhere
   , sqlWhereEq
+  , sqlWhereNotEq
   , sqlWhereIn
+  , sqlWhereNotIn
   , sqlWhereOr
+  , sqlWhereExists
   , sqlFrom
   , sqlJoin
   , sqlJoinOn
@@ -229,11 +232,25 @@ sqlWhereEq :: (MonadState v m, SqlWhere v, Convertible sql SqlValue) => String -
 sqlWhereEq name value =
   sqlWhere (SQL (name ++ "=?") [toSql value])
 
+sqlWhereNotEq :: (MonadState v m, SqlWhere v, Convertible sql SqlValue) => String -> sql -> m ()
+sqlWhereNotEq name value =
+  sqlWhere (SQL (name ++ "<>?") [toSql value])
+
 sqlWhereIn :: (MonadState v m, SqlWhere v, Convertible sql SqlValue) => String -> [sql] -> m ()
 sqlWhereIn _name [] = sqlWhere (SQL "FALSE" [])
 sqlWhereIn name [value] = sqlWhereEq name value
 sqlWhereIn name values =
   sqlWhere (SQL (name ++ " IN (" ++ concat (intersperse "," (map (const "?") values)) ++ ")") (map toSql values))
+
+sqlWhereNotIn :: (MonadState v m, SqlWhere v, Convertible sql SqlValue) => String -> [sql] -> m ()
+sqlWhereNotIn _name [] = sqlWhere (SQL "TRUE" [])
+sqlWhereNotIn name [value] = sqlWhereNotEq name value
+sqlWhereNotIn name values =
+  sqlWhere (SQL (name ++ " NOT IN (" ++ concat (intersperse "," (map (const "?") values)) ++ ")") (map toSql values))
+
+sqlWhereExists :: (MonadState v m, SqlWhere v) => SqlSelect -> m ()
+sqlWhereExists sqlSelectD = do
+  sqlWhere (SQL "EXISTS (" [] `mappend` toSQLCommand (sqlSelectD { sqlSelectResult = [SQL "TRUE" []] }) `mappend` SQL ")" [])
 
 class SqlFrom a where
   sqlFrom1 :: a -> SQL -> a
