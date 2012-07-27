@@ -92,39 +92,6 @@ safeReady(function() {
   enableInfoTextOnce();
 });
 
-var bgok = true;
-
-function checkbgimageok(i, el) {
-  console.log("checking bg image");
-  var url = $(el).css('background-image').replace('url(', '').replace(')', '').replace(/'/g, '').replace(/"/g, '');
-  console.log(url);
-  var bgImg = $('<img />');
-  bgImg.hide();
-  bgImg.load(function() {
-    console.log("finished loading bg for check");
-    var complete = $(this)[0].complete;
-    var width = $(this).width();
-    console.log("width of bg image: " + width);
-
-    if (bgok && (!complete || !width)) {
-      bgok = false;
-//       loadpages();
-    }
-    bgImg.remove();
-  }).error(function() {
-    console.log("here");
-    bgImg.remove();
-    if (bgok) {
-      bgok = false;
-      loadpages();
-    }
-  });
-  console.log("appending");
-  $('body').append(bgImg);
-  bgImg.attr('src', url);
-  console.log("finished");
-}
-
 //used by the tos you get when you enter as an initial
 //system user
 safeReady(function() {
