@@ -225,6 +225,9 @@
         },
         provider: function() {
             return this.get("provider");
+        },
+        quantity: function() {
+            return this.get("quantity");
         }
     });
 
@@ -302,18 +305,23 @@
             var $el = $(view.el);
             $el.removeClass("subscribed").addClass("subscribing");
             
-            var header = $('<div class="header" />').text(localization.payments.subscribe);
+            var header = $('<div class="account-header" />')
+                .append($('<h2 />').text(localization.payments.subscribe));
             var subs = view.subscriptionChooser();
             subs.find('select').change(function() {
                 model.signup().plan($(this).val());
                 view.showRecurlySubscriptionForm();
             });
-            $el.append(header);
-            $el.append(subs);
-
             var form = $('<div id="js-recurly-form"></div>');
-            $el.append(form);
-            $el.append($('<div class="clear-fix" />'));
+
+            var col = $('<div class="col" />')
+                .append(header)
+                .append($('<div class="account-body" />')
+                        .append(subs)
+                        .append(form));
+
+            $el.append(col);
+
             view.showRecurlySubscriptionForm();
         },
         showRecurlySubscriptionForm: function() {
@@ -353,11 +361,16 @@
                     // set the quantity that we found from the db
                     form.find('.quantity input').val(model.signup().quantity());
                     // replace button with our own
+                    var work = true;
                     var button = Button.init({color:'green',
                                               size:'big',
                                               text:localization.payments.subscribe,
                                               onClick: function() {
-                                                  form.submit();
+                                                  if(work) {
+                                                      work = false;
+                                                      form.submit();
+                                                      work = true;
+                                                  }
                                               }});
                     form.find('button').replaceWith(button.input());
                     // we can store the field values so they won't have to type them again
@@ -576,7 +589,7 @@
             var model = view.model;
             var sOrS = model.signup() || model.plan().subscription();
 
-            var changesubtable = $('<div class="account-body" />');
+            var changesubtable = $('<div />');
 
             var select = $('<select name="plan" id="js-select-subscription" />');
             
@@ -639,7 +652,7 @@
                                               content: $('<p />').text(message),
                                               submit: new Submit({url: "/payments/changeplan",
                                                                   method: "POST",
-                                                                  inputs: $('.changesubscription select'),
+                                                                  inputs: $('.change-subscription select'),
                                                                   ajax: true,
                                                                   ajaxsuccess: function() {
                                                                       // Put a popup here?
@@ -664,7 +677,8 @@
             
             changesub
                 .append(changesubheader)
-                .append(view.subscriptionChooser())
+                .append($('<div class="account-body" />')
+                        .append(view.subscriptionChooser()))
                 .append(button.input())
                 .append($('<div class="clearfix" />'));
 
@@ -702,12 +716,17 @@
                  },
                  beforeInject: function(el) {
                      el = $(el);
+                     var work = true;
                      var button = Button.init({color:'green',
                                                size:'small',
                                                text:localization.payments.savechanges,
                                                onClick: function() {
-                                                   $('.changebilling-form form').submit();
-                                                   return false;
+                                                   if(work) {
+                                                       work = false;
+                                                       $('.changebilling-form form').submit();
+                                                       work = true;
+                                                       return false;
+                                                   }
                                                }
                                               });
                      el.find('button').replaceWith(button.input());
@@ -757,11 +776,16 @@
 
             $el.addClass("noprovider");
 
-            var div = $('<div class="plan" />');
-            var header = $('<div class="header" />')
-                .text(localization.payments.table.currentplan);
-            var table = $('<div class="table" />')
-                .append(view.currentPlan());
+            var div = $('<div class="col" />');
+            var header = $('<div class="account-header" />')
+                .append($('<h2 />')
+                        .text(localization.payments.table.currentplan));
+            var table = $('<div class="account-body" />')
+                .append(view.currentPlan())
+                .append($('<p />')
+                       .text(model.plan().quantity() + " " + localization.payments.user))
+                .append($('<p class="askviktor" />')
+                        .html(localization.payments.askviktor));
 
             $el.append(div.append(header).append(table));
 

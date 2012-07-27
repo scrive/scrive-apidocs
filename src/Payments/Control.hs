@@ -60,7 +60,7 @@ handleSubscriptionDashboardInfo = do
   --let currency = "SEK" -- we only support SEK for now
   plan <- case mplan of
     Nothing -> do
-          freesig    <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]",    "free")]          
+          freesig     <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]",     "free")]          
           basicsig    <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]",    "basic")]
           brandingsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "branding")]
           advancedsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "advanced")]
@@ -108,6 +108,7 @@ handleSubscriptionDashboardInfo = do
         J.value "plan"   $ show $ ppPricePlan plan
         J.value "status" $ show $ ppStatus plan
         J.value "provider" "none"
+        J.value "quantity" quantity
         either (J.value "userid" . show) (J.value "companyid" . show) $ ppID plan
   runJSONGenT $ do
     J.object "contact" $ do

@@ -455,6 +455,7 @@ javascriptLocalisation =
                              part2: "$_paymentPlanPendingLinePart2()$"}
             , savingsubscription : "$_paymentPlanSavingSubscription()$"
             , loading : "$_paymentPlanLoading()$"
+            , askviktor : "$_paymentPlanAskViktor()$"
 
         }  
       , documents : "$_docListTabsDocs()$"

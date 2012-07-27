@@ -37,7 +37,7 @@
 }
 
 .payments-dashboard .next-payment {
-    border-bottom: 2px dashed #666;
+    border-bottom: 1px dashed #CCC;
     padding-bottom: 12px;
     margin-top: 16px;
 }
@@ -103,6 +103,7 @@
 
 .payments-dashboard .select-plan {
     font-weight: bold;
+    font-size: 14px;
 }
 
 .payments-dashboard .recurly.update_billing_info .billing_info {
@@ -157,11 +158,9 @@
 
 .payments-dashboard .recurly div.title {
     color: #666;
-    font-weight: normal;
-}
-
-.payments-dashboard .subscribing .recurly div.title {
-    margin-left: -20px;
+    font-weight: bold;
+    padding-bottom: 0;
+    font-size: 14px;
 }
 
 .payments-dashboard .payments.subscribing {
@@ -182,12 +181,14 @@
     width: 40px;
 }
 
-.payments-dashboad .recurly .footer {
-    padding-right: 0px;
+.payments-dashboard .recurly .footer {
+    padding:0px;
+    padding-bottom:12px;
+    text-align: center;
 }
 
 .payments-dashboard .payments.subscribing {
-    height: 720px;
+    height: 640px;
 }
 
 .payments-dashboard .btn-big {
@@ -233,7 +234,7 @@
     position: relative;
 }
 
-.payments-dashboard .recurly input[type=text] {
+.payments-dashboard .recurly .field input[type=text] {
     background-color: #fff;
     border: 1px solid lightgray;
     border-radius: 2px;
@@ -242,6 +243,7 @@
     height: 17px;
     padding: 1px;
     box-shadow: none;
+    width: 268px;
 }
 
 .payments-dashboard .recurly .field.expires .title {
@@ -253,14 +255,18 @@
     padding-bottom: 6px;
 }
 
-.payments-dashboard .recurly .credit_card .field {
+.payments-dashboard .payments .recurly .field {
     margin-bottom: 0;
     margin-left: 0;
 }
 
 .payments-dashboard .recurly .contact_info, .payments-dashboard .recurly .billing_info, .payments-dashboard .recurly .accept_tos {
     padding: 0;
-    
+    margin-top: 0;
+}
+
+.payments-dashboard .subscribing .recurly .contact_info {
+    margin-top: 24px;
 }
 
 .payments-dashboard .recurly .field .placeholder {
@@ -304,4 +310,12 @@
 .payments-dashboard .subscription-payments .account-body {
     min-height: 124px;
     
+}
+
+.payments-dashboard .payments form.recurly.subscribe {
+    width: 348px;
+}
+
+.payments-dashboard .askviktor {
+    margin-top: 16px;
 }

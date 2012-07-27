@@ -2486,3 +2486,4 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_paymentPlanPendingLinePart2","access until",,"access until"
 "_paymentPlanSavingSubscription","Saving subscription",,"Saving subscription"
 "_paymentPlanLoading","Loading",,"Loading"
+"_paymentPlanAskViktor","To change your plan, please contact <a href='mailto:viktor@scrive.com'>our sales department</a>.",,"To change your plan, please contact <a href='mailto:viktor@scrive.com'>our sales department</a>."
