@@ -36,7 +36,8 @@ import Text.JSON.FromJSValue
 import MinutesTime
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString.Base64 as Base64 
+import qualified Data.ByteString.Base64 as Base64
+import qualified Data.Set as S
 import API.API
 import File.Storage
 import Doc.DocUtils
@@ -107,7 +108,7 @@ api_document mfiles doc = JSObject $ toJSObject $ [
   , ("type", showJSON  $ fromSafeEnumInt $ documenttype doc)
   , ("state", showJSON  $ fromSafeEnumInt $ documentstatus doc)
   , ("involved", JSArray $ map api_signatory $ documentsignatorylinks doc)
-  , ("tags", JSArray $ map api_document_tag $ documenttags doc)
+  , ("tags", JSArray $ map api_document_tag $ S.toList $ documenttags doc)
   , ("authorization", showJSON  $ fromSafeEnumInt $ documentallowedidtypes doc)
   , ("mdate", api_date $ documentmtime doc)
   , ("edate", api_date $ recentDate doc)

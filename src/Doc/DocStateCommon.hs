@@ -14,6 +14,7 @@ import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import qualified Data.Set as S
 
 trueOrMessage :: Bool -> String -> Maybe String
 trueOrMessage False s = Just s
@@ -89,7 +90,7 @@ blankDocument =
           , documentinvitetime           = Nothing
           , documentsharing              = Private
           , documentrejectioninfo        = Nothing
-          , documenttags                 = []
+          , documenttags                 = S.empty
           , documentui                   = emptyDocumentUI
           , documentservice              = Nothing
           , documentauthorattachments    = []

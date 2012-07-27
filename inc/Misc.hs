@@ -520,12 +520,6 @@ urlDecodeVars s = makeKV (splitOver "&" s) []
           (k, "") -> makeKV ks ((urlDecode k, ""):a)
           _ -> Nothing
 
-containsAll :: Eq a => [a] -> [a] -> Bool
-containsAll elems inList = all (`elem` inList) elems
-
-listsEqualNoOrder :: Eq a => [a] -> [a] -> Bool
-listsEqualNoOrder a b = containsAll a b && containsAll b a
-
 listDiff :: Eq a => [a] -> [a] -> ([a], [a], [a])
 listDiff a b = ([x|x <- a, x `notElem` b],
                 [x|x <- a, x `elem`    b],

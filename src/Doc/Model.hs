@@ -97,7 +97,9 @@ import Misc
 import IPAddress
 import Data.List hiding (tail, head)
 import Data.Monoid
+import qualified Data.Foldable as F
 import qualified Data.Map as M
+import qualified Data.Set as S
 import Doc.Tables
 import Control.Applicative
 import Util.SignatoryLinkUtils
@@ -442,7 +444,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentcancelationreason" documentcancelationreason
                    , checkEqualBy "documentsharing" documentsharing
                    , checkEqualBy "documentrejectioninfo" documentrejectioninfo
-                   , checkEqualBy "documenttags" (sort . documenttags)
+                   , checkEqualBy "documenttags" documenttags
                    , checkEqualBy "documentservice" documentservice
                    , checkEqualBy "documentdeleted" documentdeleted
                    , checkEqualBy "documentauthorattachments" documentauthorattachments
@@ -525,7 +527,7 @@ fetchDocuments = foldDB decoder []
        , documentrejectioninfo = case (rejection_time, rejection_signatory_link_id, rejection_reason) of
            (Just t, Just sl, mr) -> Just (t, sl, fromMaybe "" mr)
            _ -> Nothing
-       , documenttags = []
+       , documenttags = S.empty
        , documentservice = service
        , documentdeleted = deleted
        , documentauthorattachments = []
@@ -748,12 +750,12 @@ selectDocumentTagsSQL = SQL ("SELECT "
   ++ documentTagsSelectors
   ++ " FROM document_tags ") []
 
-fetchDocumentTags :: MonadDB m => DBEnv m (M.Map DocumentID [DocumentTag])
+fetchDocumentTags :: MonadDB m => DBEnv m (M.Map DocumentID (S.Set DocumentTag))
 fetchDocumentTags = foldDB decoder M.empty
   where
     decoder acc document_id name v =
-      M.insertWith' (++) document_id
-         [DocumentTag name v] acc
+      M.insertWith' S.union document_id
+         (S.singleton $ DocumentTag name v) acc
 
 insertDocumentTagAsIs :: MonadDB m => DocumentID -> DocumentTag -> DBEnv m (Maybe DocumentTag)
 insertDocumentTagAsIs documentid tag = do
@@ -764,7 +766,7 @@ insertDocumentTagAsIs documentid tag = do
        ] <++> SQL ("RETURNING " ++ documentTagsSelectors) []
 
   fetchDocumentTags
-    >>= oneObjectReturnedGuard . concatMap snd . M.toList
+    >>= oneObjectReturnedGuard . concatMap (S.toList . snd) . M.toList
 
 
 authorAttachmentsSelectors :: String
@@ -924,13 +926,14 @@ insertDocumentAsIs document = do
       Just doc -> do
         mlinks <- mapM (insertSignatoryLinkAsIs (documentid doc)) documentsignatorylinks
         mauthorattachments <- mapM (insertAuthorAttachmentAsIs (documentid doc)) documentauthorattachments
-        mtags <- mapM (insertDocumentTagAsIs (documentid doc)) documenttags
-        if any isNothing mlinks || any isNothing mauthorattachments || any isNothing mtags
+        newtags <- F.foldlM (\acc tag -> insertDocumentTagAsIs (documentid doc) tag
+          >>= return . maybe acc (flip S.insert acc)) S.empty documenttags
+        if any isNothing mlinks || any isNothing mauthorattachments || S.size documenttags /= S.size newtags
          then return Nothing
          else do
           let newdocument = doc { documentsignatorylinks    = catMaybes mlinks
                                 , documentauthorattachments = catMaybes mauthorattachments
-                                , documenttags              = catMaybes mtags
+                                , documenttags              = newtags
                                 }
           assertEqualDocuments document newdocument
           return (Just newdocument)
@@ -1356,7 +1359,7 @@ selectDocuments sqlquery = do
     let fill doc = doc
                    { documentsignatorylinks       = M.findWithDefault [] (documentid doc) sls2
                    , documentauthorattachments    = M.findWithDefault [] (documentid doc) ats
-                   , documenttags                 = M.findWithDefault [] (documentid doc) tags
+                   , documenttags                 = M.findWithDefault S.empty (documentid doc) tags
                    }
 
     return $ map fill docs
@@ -1801,19 +1804,18 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SaveSigAttachment Bool wher
         actor
     return success
 
-data SetDocumentTags = SetDocumentTags DocumentID [DocumentTag] Actor
+data SetDocumentTags = SetDocumentTags DocumentID (S.Set DocumentTag) Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTags Bool where
   update (SetDocumentTags did doctags actor) = do
     -- check if the tags are changed
     ed <- query $ GetDocumentByDocumentID did
     let changed = case ed of
           Nothing -> True
-          Just d -> not $ listsEqualNoOrder doctags $ documenttags d
+          Just d -> doctags /= documenttags d
     _ <- kRun $ SQL "DELETE FROM document_tags WHERE document_id = ?" [toSql did]
-    mtags <- mapM (insertDocumentTagAsIs did) doctags
-    let tagstr = intercalate "; " $ map (\(DocumentTag k v)-> k ++ "=" ++ v) doctags
-    let success = not (any isNothing mtags)
-    when_ (success && changed) $
+    success <- F.foldlM (\acc tag -> insertDocumentTagAsIs did tag >>= return . maybe False (const acc)) True doctags
+    when_ (success && changed) $ do
+      tagstr <- intercalate "; " <$> F.foldrM (\(DocumentTag k v) acc -> return $ (k ++ "=" ++ v) : acc) [] doctags
       update $ InsertEvidenceEvent
         SetDocumentTagsEvidence
         (value "tags" tagstr >> value "actor" (actorWho actor))

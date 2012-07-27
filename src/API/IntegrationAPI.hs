@@ -23,9 +23,9 @@ module API.IntegrationAPI (
     , getDaveDoc
     ) where
 
+import Control.Applicative
 import Control.Monad.State
 import Control.Logic
-import Data.Functor
 import Data.Maybe
 import DB
 import Doc.Model
@@ -71,6 +71,7 @@ import qualified Log (integration)
 import Doc.Rendering
 import User.History.Model
 import qualified Templates.Fields as F
+import qualified Data.Set as S
 
 
 {- |
@@ -203,7 +204,7 @@ createDocument = do
              Just _template ->
                return $ createDocFromTemplate templateid title
      Nothing -> return $ createDocFromFiles title doctype files
-   d <- createAPIDocument comp involved tags mlocale createFun
+   d <- createAPIDocument comp involved (S.fromList tags) mlocale createFun
    doc <- updateDocumentWithDocumentUI d
    _ <- lift $ addDocumentCreateStatEvents doc "integration api"
    return $ toJSObject [ ("document_id",JSString $ toJSString $ show $ documentid doc)]
@@ -275,7 +276,7 @@ updateDocumentWithDocumentUI doc = do
 createAPIDocument :: Kontrakcja m
                   => Company
                   -> [SignatoryTMP]
-                  -> [DocumentTag]
+                  -> S.Set DocumentTag
                   -> Maybe Locale
                   -> (User -> Maybe Company -> MinutesTime -> IntegrationAPIFunction m (Maybe Document))
                   -> IntegrationAPIFunction m Document
@@ -433,12 +434,11 @@ getDocument = do
 setDocumentTag :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 setDocumentTag =  do
   doc <- documentFromParam
-  mtag <- fromJSValueFieldCustom "tag" $ do
-    liftM2 pairMaybe (fromJSValueField "name") (fromJSValueField "value")
+  mtag <- maybe Nothing (Just . uncurry DocumentTag) <$> fromJSValueFieldCustom "tag" (pairMaybe <$> fromJSValueField "name" <*> fromJSValueField "value")
   when (isNothing mtag) $ throwApiError API_ERROR_MISSING_VALUE "Could not read tag name or value"
   sid <- serviceid <$> service <$> ask
   Context{ctxtime,ctxipnumber} <- getContext
-  let tags = addTag (documenttags doc) (fromJust mtag)
+  let tags = S.insert (fromJust mtag) (documenttags doc)
       actor = integrationAPIActor ctxtime ctxipnumber sid Nothing
   res <- dbUpdate $ SetDocumentTags (documentid doc) tags actor
   when (not res) $
