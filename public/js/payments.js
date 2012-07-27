@@ -482,11 +482,12 @@
             var view = this;
             var model = view.model;
             
-            var plan = $('<div class="plan" />');
-            var planheader = $('<div class="header" />')
-                .text(localization.payments.table.currentplan);
+            var plan = $('<div class="col " />');
+            var planheader = $('<div class="account-header" />')
+                .append($('<h2 />')
+                        .text(localization.payments.table.currentplan));
             
-            var plantable = $('<div class="table" />')
+            var plantable = $('<div class="account-body" />')
                 .append(view.planName())
                 .append(view.planPrice())
                 .append(view.planTotal());
@@ -495,7 +496,8 @@
                model.plan().subscription().pending().code() !== model.plan().subscription().code())
                 plantable.append(view.pendingLine());
 
-            return plan.append(planheader).append(plantable);
+            return $('<div class="current-subscription" />')
+                .append(plan.append(planheader).append(plantable));
         },
         nextPayment: function() {
             var view = this;
@@ -556,14 +558,17 @@
             var view = this;
             var model = view.model;
             
-            var payments = $('<div class="payments" />');
-            var paymentsheader = $('<div class="header" />')
-                .text(localization.payments.table.payments);
-            var paymentstable = $('<div class="table" />')
+            var payments = $('<div class="col" />');
+            var paymentsheader = $('<div class="account-header" />')
+                .append($('<h2 />')
+                        .text(localization.payments.table.payments));
+            var paymentstable = $('<div class="account-body" />')
                 .append(view.nextPayment())
                 .append(view.previousPayments());
 
-            return payments.append(paymentsheader).append(paymentstable);
+            payments.append(paymentsheader).append(paymentstable);
+            return $('<div class="subscription-payments" />')
+                .append(payments);
         },
         
         subscriptionChooser: function() {
@@ -571,7 +576,7 @@
             var model = view.model;
             var sOrS = model.signup() || model.plan().subscription();
 
-            var changesubtable = $('<div class="table" />');
+            var changesubtable = $('<div class="account-body" />');
 
             var select = $('<select name="plan" id="js-select-subscription" />');
             
@@ -609,16 +614,17 @@
             select.change();
             
             return changesubtable
-                .append($('<span />').append($('<span class="select-plan" />').text(localization.payments.selectplan + ": ")).append(select))
+                .append($('<span class="subscription-chooser" />').append($('<span class="select-plan" />').text(localization.payments.selectplan + ": ")).append(select))
                 .append(totaltable);
         },
         changeSubscription: function() {
             var view = this;
             var model = view.model;
 
-            var changesub = $('<div class="changesubscription" />');
-            var changesubheader = $('<div class="header" />')
-                .text(localization.payments.table.changesubscription);
+            var changesub = $('<div class="col" />');
+            var changesubheader = $('<div class="account-header" />')
+                .append($('<h2 />')
+                        .text(localization.payments.table.changesubscription));
 
             var button = Button.init({color: 'green',
                                       size: 'small',
@@ -656,20 +662,23 @@
                                       }
                                      });
             
-            return changesub
+            changesub
                 .append(changesubheader)
                 .append(view.subscriptionChooser())
                 .append(button.input())
                 .append($('<div class="clearfix" />'));
+
+            return $('<div class="change-subscription" />').append(changesub);
         },
         changeBillingForm: function() {
             var view = this;
             var model = view.model;
             
-            var billing = $('<div class="changebilling" />');
-            var billingheader = $('<div class="header" />')
-                .text(localization.payments.table.changebilling);
-            var billingform = $('<div class="changebilling-form" />');
+            var billing = $('<div class="col" />');
+            var billingheader = $('<div class="account-header" />')
+                .append($('<h2 />')
+                        .text(localization.payments.table.changebilling));
+            var billingform = $('<div class="account-body changebilling-form" />');
             Recurly.config({
                 subdomain: model.server().subdomain()
                 , currency: 'SEK'
@@ -730,7 +739,6 @@
 
             var col2 = $('<div class="col2" />')
                 .append(view.changeSubscription())
-                .append('<div class="clearfix" />')
                 .append(view.changeBillingForm());
             
             $el.append(col1).append(col2);

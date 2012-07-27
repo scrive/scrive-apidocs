@@ -1,11 +1,10 @@
 .payments-dashboard {
-    font-size: 14px;
     color: #666;
 }
 
 .payments-dashboard .payments {
     margin: auto;
-    height: 620px;
+    height: 780px;
 }
 
 .payments-dashboard .header {
@@ -13,24 +12,17 @@
     margin-bottom: 12px;
 }
 
-.payments-dashboard .plan-name {
-    font-weight: bold;
-}
 
 .payments-dashboard .table {
-    border: 1px solid #CCC;
-    border-radius: 5px 5px 5px 5px;
-    -webkit-border-radius: 5px 5px 5px 5px;
-    -moz-border-radius: 5px 5px 5px 5px;
     padding: 12px;
-    line-height: 28px;
 }
 
 .payments-dashboard .plan-total {
     border-top: 1px dashed #CCC;
     width: 100%;
-    margin-top:8px;
+    margin-top:16px;
     padding-top: 12px;
+    font-weight: bold;
 }
 
 
@@ -45,8 +37,9 @@
 }
 
 .payments-dashboard .next-payment {
-    border-bottom: 1px dashed #CCC;
+    border-bottom: 2px dashed #666;
     padding-bottom: 12px;
+    margin-top: 16px;
 }
 
 .payments-dashboard .previous-payments {
@@ -88,7 +81,7 @@
 }
 
 .payments-dashboard .plan-pending {
-    font-size: 12px;
+    margin-top: 8px;
 }
 
 .payments-dashboard .invoice-date {
@@ -113,16 +106,19 @@
 }
 
 .payments-dashboard .recurly.update_billing_info .billing_info {
-    border: 1px solid #CCC;
-    border-radius: 5px 5px 5px 5px;
-    -webkit-border-radius: 5px 5px 5px 5px;
-    -moz-border-radius: 5px 5px 5px 5px;
-    padding: 12px;
-    line-height: 28px;
+    
 }
 
 .payments-dashboard .recurly.update_billing_info {
-    width: 480px;
+    width: 458px;
+}
+
+.payments-dashboard .col1 .col {
+    width: 320px;
+}
+
+.payments-dashboard .col2 .col {
+    width: 460px;
 }
 
 .payments-dashboard .plan, .payments-dashboard .payments {
@@ -146,7 +142,7 @@
 }
 
 .payments-dashboard .col1 {
-    width: 350px;
+    width: 320px;
     float: left;
 }
 
@@ -173,13 +169,9 @@
     margin: auto;
 }
 
-.payments-dashboard .recurly input[type=text] {
-    font-size: 14px;
-    height: 20px;
-}
 
 .payments-dashboard .recurly .field .placeholder {
-    font-size: 14px;
+    font-size: 10px;
 }
 
 .recurly .field.card_number input[type="text"] {
@@ -205,4 +197,111 @@
 
 .payments-dashboard .subscribing .table {
     border: 0px;
+}
+
+.payments-dashboard .subscribed .billing_info .title {
+    font-size: 0px;
+    padding: 0;
+    height: 16px;
+}
+
+.payments-dashboard span.subscription-chooser {
+    padding-top: 16px;
+    display: block;
+}
+
+.payments-dashboard .plan-name {
+    padding-top: 16px;
+    line-height: 25px;
+    height: 25px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.payments-dashboard .current-subscription {
+    height: 350px;
+}
+
+.payments-dashboard .change-subscription {
+    height: 350px;
+}
+
+.payments-dashboard .subscribed .recurly .footer {
+    height: 0px;
+    padding: 0px;
+    width: 443px;
+    position: relative;
+}
+
+.payments-dashboard .recurly input[type=text] {
+    background-color: #fff;
+    border: 1px solid lightgray;
+    border-radius: 2px;
+    margin: 3px auto 3px 0;
+    font: 10px "Lucida Grande";
+    height: 17px;
+    padding: 1px;
+    box-shadow: none;
+}
+
+.payments-dashboard .recurly .field.expires .title {
+    font: 10px "Lucida Grande";
+    line-height: 25px;
+}
+
+.payments-dashboard .recurly .field.expires {
+    padding-bottom: 6px;
+}
+
+.payments-dashboard .recurly .credit_card .field {
+    margin-bottom: 0;
+    margin-left: 0;
+}
+
+.payments-dashboard .recurly .contact_info, .payments-dashboard .recurly .billing_info, .payments-dashboard .recurly .accept_tos {
+    padding: 0;
+    
+}
+
+.payments-dashboard .recurly .field .placeholder {
+    line-height: 30px;
+    padding-left: 4px;
+}
+
+.payments-dashboard .recurly .server_errors.any {
+    margin: 16px 28px 0 0;
+}
+
+.payments-dashboard .recurly .field .error {
+    font-size: 10px;
+    margin-left: 0px;
+    line-height: 13px;
+}
+
+.payments-dashboard .changebilling-form {
+    min-height: 124px;
+}
+
+.payments-dashboard .recurly .field.card_number .error {
+    left: 280px;
+}
+
+.payments-dashboard .changebilling-form .btn-small {
+    position: relative;
+    bottom: -14px;
+    right: 0px;
+}
+
+.payments-dashboard .accepted_cards {
+    display: none;
+}
+
+.payments-dashboard .subheader {
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+.payments-dashboard .subscription-payments .account-body {
+    min-height: 124px;
+    
 }
