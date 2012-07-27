@@ -7,7 +7,6 @@ import KontraLink
 import Kontra
 import DB
 import Attachment.Model
-import Doc.Model
 import User.Model
 import Util.MonadUtils
 import Happstack.Server hiding (simpleHTTP)
@@ -43,10 +42,8 @@ handleRename attid = do
 handleShare :: Kontrakcja m => m JSValue
 handleShare =  do
     _ <- guardJustM $ ctxmaybeuser <$> getContext
-    ids <- getCriticalFieldList asValidDocID "doccheck"
-    _ <- dbUpdate $ SetDocumentSharing ids True
-    w <- flip mapM ids $ (dbQuery . GetDocumentByDocumentID)
-    when_ (null $ catMaybes w) internalError
+    ids <- getCriticalFieldList asValidAttachmentID "doccheck"
+    _ <- dbUpdate $ SetAttachmentsSharing ids True
     J.runJSONGenT $ return ()
 
 handleDelete :: Kontrakcja m => m JSValue
