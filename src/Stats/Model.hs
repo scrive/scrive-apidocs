@@ -214,6 +214,7 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   ++ ", users.customfooter"
   ++ ", users.company_name"
   ++ ", users.company_number"
+  ++ ", users.is_free"
   -- Company:
   ++ ", c.id AS company_id"
   ++ ", c.external_id"
@@ -247,7 +248,7 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` foldDB decoder []
      first_name last_name personal_number company_position phone mobile
      email lang region customfooter company_name company_number cid eid sid
      name number address zip' city country bars_background bars_textcolour logo email_domain
-     inviter_id invite_time invite_type
+     inviter_id invite_time invite_type is_free
      = (
        User {
            userid = uid
@@ -273,6 +274,7 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` foldDB decoder []
            }
          , userservice = service_id
          , usercompany = company_id
+         , userisfree = is_free
          }
         , case cid of
             (Just _) -> Just Company {

@@ -459,6 +459,7 @@ blankUser = User { userid                        = unsafeUserID 0
                                                 }
                  , userservice = Nothing
                  , usercompany = Nothing
+                 , userisfree  = False
                  }
 
 testThat :: String -> TestEnvSt -> TestEnv () -> Test
