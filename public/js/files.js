@@ -32,7 +32,6 @@ window.File = Backbone.Model.extend({
     },
     initialize: function (args) {
         this.url = "/filepages/" + args.id + this.queryPart();
-        this.bind('change:pages', function() { args.document.trigger('file:change'); });
     },
     downloadLink : function() {
         var link = null;
@@ -89,13 +88,11 @@ window.File = Backbone.Model.extend({
         }
         else if (response.wait != undefined)
         {
-            var current = this;
-            setTimeout(function() {
-                current.fetch({data: { signatoryid: this.signatoryid(),
-                                       magichash: this.magichash()},
-                               processData:  true,
-                               cache : false});
-            },2000);
+          _.delay(_.bind(this.fetch, this), 2000,
+                  {data: { signatoryid: this.signatoryid(),
+                           magichash: this.magichash()},
+                   processData:  true,
+                   cache : false});
         }
         else
         {
@@ -261,9 +258,7 @@ var FilePageView = Backbone.View.extend({
         var page = this.model;
         var file = page.file();
         var fileid = file.fileid();
-        var documentid = file.documentid();
-        var signatoryid = file.signatoryid();
-        var magichash = file.magichash();
+
         var container = $(this.el);
         container.empty();
         container.attr("id", "page" + page.number());
@@ -271,10 +266,8 @@ var FilePageView = Backbone.View.extend({
 
         // Page part with image
         this.pagejpg = $("<div class='pagejpg'/>");
-        var pagelink = location.protocol + "//" + location.host + "/pages/" + documentid + "/" + fileid  + "/" + page.number();
-        if( signatoryid!=undefined && magichash!=undefined ) {
-            pagelink = pagelink + "?signatorylinkid=" + signatoryid + "&magichash=" + magichash;
-        }
+        var pagelink = location.protocol + "//" + location.host + "/pages/" + fileid  + "/" + page.number() + file.queryPart();
+
         this.pagejpg.css("background-image", "url(" +pagelink +")");
         container.append(this.pagejpg);
         this.makeDropable();
