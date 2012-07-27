@@ -130,8 +130,4 @@ tablePaymentStats = Table {
       ++ " ADD CONSTRAINT fk_payment_stats_companies FOREIGN KEY(company_id)"
       ++ " REFERENCES companies(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE payment_stats"
-      ++ " ADD CONSTRAINT fk_payment_stats_account_code FOREIGN KEY(account_code)"
-      ++ " REFERENCES payment_plans(account_code) ON UPDATE RESTRICT ON DELETE NO ACTION"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
