@@ -71,9 +71,10 @@
     margin-top:0px;
 }
 
-.payments-dashboard .cancel {
+.payments-dashboard .cancel-button {
     margin-top: 12px;
     margin-right: 0px;
+    float: left;
 }
 
 .payments-dashboard .savechanges {
@@ -323,3 +324,4 @@
 .payments-dashboard .askviktor {
     margin-top: 16px;
 }
+

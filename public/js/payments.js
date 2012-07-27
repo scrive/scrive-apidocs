@@ -583,7 +583,46 @@
             return $('<div class="subscription-payments" />')
                 .append(payments);
         },
-        
+        cancelButton: function() {
+            var view = this;
+            var model = view.model;
+
+            var button = Button.init({color:'red',
+                                      size: 'small',
+                                      cssClass: 'cancel-button',
+                                      text: localization.payments.cancelsubscription,
+                                      onClick: function() {
+                                          var message = localization.payments.changeconfirm;
+                                          
+                                          var conf = Confirmation.popup({
+                                              title: localization.payments.changeaccount,
+                                              acceptText: localization.payments.changeaccount,
+                                              content: $('<p />').text(message),
+                                              submit: new Submit({url: "/payments/changeplan",
+                                                                  method: "POST",
+                                                                  plan: "free",
+                                                                  ajax: true,
+                                                                  ajaxsuccess: function() {
+                                                                      // Put a popup here?
+                                                                      $.ajax("/payments/info.json",
+                                                                             {dataType:'json',
+                                                                              success: function(data) {
+                                                                                  model.initialize(data);
+                                                                                  view.render();
+                                                                              }
+                                                                             });
+                                                                  },
+                                                                  onSend: function() {
+                                                                      conf.view.clear();
+                                                                      LoadingDialog.open(localization.payments.savingsubscription);
+                                                                  }
+                                                                 })
+                                          });
+                                          return false;
+                                      }
+                                     });
+            return button.input();
+        },
         subscriptionChooser: function() {
             var view = this;
             var model = view.model;
@@ -593,7 +632,7 @@
 
             var select = $('<select name="plan" id="js-select-subscription" />');
             
-            _.each(['free', 'basic', 'branding', 'advanced'], function(value) {
+            _.each(['basic', 'branding', 'advanced'], function(value) {
                 var name     = localization.payments.plans[value];
                 var price    = planPrice(value);
                 var pricef   = view.addMark(price);
@@ -678,7 +717,14 @@
             changesub
                 .append(changesubheader)
                 .append($('<div class="account-body" />')
-                        .append(view.subscriptionChooser()))
+                        .append(view.subscriptionChooser()));
+
+            if(!(model.plan().subscription().code() === 'free' ||
+                 (model.plan().subscription().pending() && 
+                  model.plan().subscription().pending().code() === 'free')))
+                changesub.append(view.cancelButton());
+
+            changesub
                 .append(button.input())
                 .append($('<div class="clearfix" />'));
 

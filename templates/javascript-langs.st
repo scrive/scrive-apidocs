@@ -456,7 +456,7 @@ javascriptLocalisation =
             , savingsubscription : "$_paymentPlanSavingSubscription()$"
             , loading : "$_paymentPlanLoading()$"
             , askviktor : "$_paymentPlanAskViktor()$"
-
+            , cancelsubscription: "$_paymentPlanCancelSubscription()$"
         }  
       , documents : "$_docListTabsDocs()$"
       , templates : "$_docListTabsTemplates()$"
