@@ -164,8 +164,12 @@
 }
 
 .payments-dashboard .payments.subscribing {
-    width:460px;
+    width:490px;
     margin: auto;
+}
+
+.payments-dashboard .payments.subscribing .col {
+    width:460px;
 }
 
 
@@ -313,7 +317,7 @@
 }
 
 .payments-dashboard .payments form.recurly.subscribe {
-    width: 348px;
+    width: 426px;
 }
 
 .payments-dashboard .askviktor {

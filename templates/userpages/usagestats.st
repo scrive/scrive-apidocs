@@ -11,7 +11,7 @@ showUsageStats =
       $if(iscompanyadmin)$<li class='float-left'><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>$endif$
       <li class='float-left'><a href="/account/mailapi">$_HeadMailApi()$</a></li>
       <li class="active float-left"><a href="/account/usagestats">$_HeadUsageStats()$</a></li>
-    <li class="float-left"><a href="/payments/dashboard">$_Subscription()$</a></li>
+       $if(seessubscriptiondashboard)$<li class="float-left"><a href="/payments/dashboard">$_Subscription()$</a></li>$endif$
        <!-- <li><a href="/oauth/dashboard">API</a></li> -->
       <li class='float-right'/>
     </ul>
