@@ -246,9 +246,9 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` foldDB decoder []
     decoder acc uid password salt is_company_admin account_suspended
      has_accepted_terms_of_service signup_method service_id company_id
      first_name last_name personal_number company_position phone mobile
-     email lang region customfooter company_name company_number cid eid sid
+     email lang region customfooter company_name company_number is_free cid eid sid
      name number address zip' city country bars_background bars_textcolour logo email_domain
-     inviter_id invite_time invite_type is_free
+     inviter_id invite_time invite_type
      = (
        User {
            userid = uid
