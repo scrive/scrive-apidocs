@@ -1,23 +1,3 @@
-####
-showFileImagesReady= $images:{image| 
-
-<div id="page$image.number$" class="pagediv">
-  <div class="pagejpg" style="background-image: url($pageurl$/$image.number$);">
-    <input type="hidden" name="width" value="$image.width$"/> 
-    <input type="hidden" name="height" value="$image.height$"/>
-  </div>
-</div> 
-}$
-####
-showFileImagesPending= 
-<div class="pagejpga4 pagejpg">
-  <img class="waiting" src="/img/wait30trans.gif"/>
-</div>
-####
-showFileImagesError=
-<div class="errormsg">
- $_showFileImagesError()$
-</div>
 ###
 customfield=
 <span class="customfield dragfield inputWrapper">

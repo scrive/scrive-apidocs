@@ -78,8 +78,6 @@ staticRoutes = choice
      , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK2 $ DocControl.handleSigAttach
      , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
 
-     , dir "sv" $ hGet $ toK3 $ DocControl.handleAttachmentViewForViewer
-
      --Q: This all needs to be done by author. Why we dont check it
      --here? MR
 
@@ -117,7 +115,6 @@ staticRoutes = choice
      , dir "mailpreview"           $ hGet  $ toK2 $ DocControl.prepareEmailPreview
 
      , dir "df"                    $ hGet  $ toK2 $ DocControl.handleFileGet
-     , dir "dv"                    $ hGet  $ toK1 $ DocControl.handleAttachmentViewForAuthor
 
      --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
      , dir "resend"  $ hPost $ toK2 $ DocControl.handleResend
@@ -134,8 +131,6 @@ staticRoutes = choice
      , dir "template"  $ hPost $ toK0 $ DocControl.handleCreateFromTemplate
 
      , dir "filepages" $ hGetAjax $  toK1 $ DocControl.handleFilePages
-     , dir "pagesofdoc" $ hGetAjax $ toK1 $ DocControl.handlePageOfDocument
-     , dir "pagesofdoc" $ hGetAjax $ toK3 $ DocControl.handlePageOfDocumentForSignatory
 
      , dir "csvlandpage" $ hGet $ toK1 $ DocControl.handleCSVLandpage
 

@@ -16,7 +16,6 @@ module Doc.DocControl(
     , handleAcceptAccountFromSign
     , handleSigAttach
     , handleDeleteSigAttach
-    , handleAttachmentViewForViewer
     , handleShowUploadPage
     , handleCreateNewTemplate
     , handleIssueShowGet
@@ -28,7 +27,6 @@ module Doc.DocControl(
     , handleParseCSV
     , prepareEmailPreview
     , handleFileGet
-    , handleAttachmentViewForAuthor
     , handleResend
     , handleChangeSignatoryEmail
     , handleRestart
@@ -38,8 +36,6 @@ module Doc.DocControl(
     , showPreviewForSignatory
     , handleCreateFromTemplate
     , handleFilePages
-    , handlePageOfDocument
-    , handlePageOfDocumentForSignatory
     , handleCSVLandpage
     , handleInvariantViolations
     , handleShowVerificationPage
@@ -538,42 +534,6 @@ handleFileGet fileid' _title = do
           let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
           return res2
 
-{- |
-   Save a document from data in the post params.
-
- -}
-
-handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
-handleAttachmentViewForViewer docid siglinkid mh = do
-  doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
-  let pending JpegPagesPending = True
-      pending _                = False
-      files                    = map authorattachmentfile (documentauthorattachments doc)
-  case files of
-    [] -> return $ toResponse ""
-    f  -> do
-      b <- mapM maybeScheduleRendering f
-      if any pending b
-        then notFound (toResponse "temporary unavailable (document has files pending for process)")
-        else do
-        pages <- Doc.DocView.showFilesImages2 (documentid doc) Nothing $ zip f b
-        simpleResponse pages
-
-handleAttachmentViewForAuthor :: Kontrakcja m => DocumentID -> m Response
-handleAttachmentViewForAuthor docid = do
-  doc <- guardRightM $ getDocByDocID docid
-  let pending JpegPagesPending = True
-      pending _                = False
-      files                    = map authorattachmentfile (documentauthorattachments doc)
-  case files of
-    [] -> return $ toResponse ""
-    f  -> do
-      b <- mapM maybeScheduleRendering f
-      if any pending b
-        then notFound (toResponse "temporary unavailable (document has files pending for process)")
-        else do
-        pages <- Doc.DocView.showFilesImages2 (documentid doc) Nothing $ zip f b
-        simpleResponse pages
 
 {- We return pending message if file is still pending, else we return JSON with number of pages-}
 handleFilePages :: Kontrakcja m => FileID -> m JSValue
@@ -608,43 +568,6 @@ handleFilePages fid = do
         J.value "width"  width
         J.value "height" height
 
-handlePageOfDocument :: Kontrakcja m => DocumentID -> m (Either KontraLink Response)
-handlePageOfDocument docid = checkUserTOSGet $ handlePageOfDocument' docid Nothing
-
-handlePageOfDocumentForSignatory :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
-handlePageOfDocumentForSignatory docid siglinkid sigmagichash = do
-    doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
-    checkLinkIDAndMagicHash doc siglinkid sigmagichash
-    handlePageOfDocument' docid $ Just (siglinkid, sigmagichash)
-
-handlePageOfDocument' :: Kontrakcja m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> m Response
-handlePageOfDocument' documentid mtokens = do
-  Log.debug $ "Request for doc " ++ show documentid
-  edoc <- case mtokens of
-    Nothing         -> getDocByDocID documentid
-    Just (slid, mh) -> getDocByDocIDSigLinkIDAndMagicHash documentid slid mh
-  case edoc of
-    Left l -> do
-      Log.debug ("Could not get Document " ++ show l)
-      internalError
-    Right Document { documentfiles
-                   , documentsealedfiles
-                   , documentstatus
-                   } -> do
-      let pending JpegPagesPending = True
-          pending _                = False
-          files                    = if documentstatus == Closed
-                                      then documentsealedfiles
-                                      else documentfiles
-      case files of
-         [] -> notFound $ toResponse "temporarily unavailable (document has no files)"
-         f  -> do
-             b <- mapM maybeScheduleRendering f
-             if any pending b
-                then notFound (toResponse "temporarily unavailable (document has files pending for process)")
-                else do
-                    pages <- Doc.DocView.showFilesImages2 documentid mtokens $ zip f b
-                    simpleResponse pages
 
 handleDocumentUpload :: Kontrakcja m => DocumentID -> BS.ByteString -> String -> m ()
 handleDocumentUpload docid content1 filename = do

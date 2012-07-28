@@ -24,7 +24,6 @@ module Doc.DocView (
   , pageDocumentDesign
   , pageDocumentView
   , pageDocumentSignView
-  , showFilesImages2
   , signatoryDetailsFromUser
   , documentsToFixView
   , uploadPage
@@ -44,7 +43,6 @@ import Doc.DocViewMail
 import FlashMessage
 import Kontra
 import KontraLink
-import MagicHash (MagicHash)
 import MinutesTime
 import Misc
 import Templates.Templates
@@ -351,34 +349,6 @@ authorJSON mauthor mcompany = runJSONGen $ do
     J.value "company" $ (\a -> getCompanyName (a,mcompany)) <$> mauthor
     J.value "phone" $ userphone <$> userinfo <$> mauthor
     J.value "position" $ usercompanyposition <$> userinfo <$>mauthor
-
-
-
-showFileImages :: TemplatesMonad m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> FileID -> JpegPages -> m String
-showFileImages _ _ _ JpegPagesPending = renderTemplate_ "showFileImagesPending"
-
-showFileImages _ _ _ (JpegPagesError normalizelog) =
-  renderTemplate "showFileImagesError" $ do
-    F.value "normalizelog" normalizelog
-
-showFileImages docid mtokens fileid (JpegPages jpgpages) =
-  renderTemplate "showFileImagesReady" $ do
-    F.value "pageurl" $ "/pages/" ++ pageurl mtokens
-    F.objects "images" . map page $ zip ([1..]::[Int]) jpgpages
-  where
-    pageurl Nothing =  show docid ++ "/" ++ show fileid
-    pageurl (Just (siglinkid, sigmagichash)) =
-           show docid ++ "/" ++ show siglinkid ++ "/"
-        ++ show sigmagichash ++ "/" ++ show fileid
-    page (x,(_,w,h)) = do
-      F.value "number" x
-      F.value "width" w
-      F.value "height" h
-
-showFilesImages2 :: TemplatesMonad m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> [(FileID, JpegPages)] -> m String
-showFilesImages2 docid mtokens files = do
-  filesPages <- sequence $ map (uncurry (showFileImages docid mtokens)) files
-  renderTemplate "spanNoEscape" $ F.value "it" (concat filesPages)
 
 
 
