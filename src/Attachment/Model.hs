@@ -116,15 +116,12 @@ data AttachmentFilter
   = AttachmentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
   | AttachmentFilterByID [AttachmentID]         -- ^ Attachments with IDs on the list
 
-instance IsSQL AttachmentFilter where
-  toSQLCommand (AttachmentFilterByString string) =
-    SQL "attachments.title ILIKE ?" [toSql ("%" ++ string ++ "%")]
-  toSQLCommand (AttachmentFilterByID []) =
-    SQL "FALSE" []
-  toSQLCommand (AttachmentFilterByID [attid]) =
-    SQL "attachments.id = ?" [toSql attid]
-  toSQLCommand (AttachmentFilterByID _) =
-    error "not implemented"
+sqlWhereAttachmentFilter :: (MonadState v m, SqlWhere v) =>
+                            AttachmentFilter -> m ()
+sqlWhereAttachmentFilter (AttachmentFilterByString string) =
+  sqlWhereILike "attachments.title" ("%" ++ string ++ "%")
+sqlWhereAttachmentFilter (AttachmentFilterByID ids) =
+  sqlWhereIn "attachments.id" ids
 
 data AttachmentDomain
   = AttachmentsOfAuthorDeleteValue UserID Bool   -- ^ Attachments of user, with deleted flag
@@ -167,7 +164,7 @@ instance MonadDB m => DBQuery m GetAttachments [Attachment] where
     kRun_ $ sqlSelect "attachments" $ do
       sqlAttachmentResults
       sqlWhereOr domains
-      mapM_ sqlWhere filters
+      mapM_ sqlWhereAttachmentFilter filters
       mapM_ sqlOrderBy orderbys
     fetchAttachments
 
