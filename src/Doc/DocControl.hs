@@ -59,6 +59,7 @@ import Doc.Rendering
 import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
+import Attachment.Model
 import qualified Doc.DocSeal as DocSeal
 import InputValidation
 import File.Model
@@ -708,23 +709,10 @@ makeDocumentFromFile _ _ _ = internalError -- to complete the patterns
    Method: GET
    FIXME: Should probably check for permissions to view
  -}
-showPage :: Kontrakcja m => FileID -> Int -> m (Either KontraLink Response)
+showPage :: Kontrakcja m => FileID -> Int -> m Response
 showPage fileid pageno = do
-  Right <$> showPage' fileid pageno
-  {-
-  msid <- readField "signatorylinkid"
-  mmh <- readField "magichash"
-  mdid <- readField "documentid"
-  mattid <- readField "attachmentid"
-  edoc <- case (msid, mmh) of
-           (Just sid, Just mh) -> Right <$> guardRightM (getDocByDocIDSigLinkIDAndMagicHash docid sid mh)
-           _ ->  checkUserTOSGet $ guardRightM (getDocByDocID docid)
-  case edoc of
-       Right doc -> do
-           unless (fileInDocument doc fileid) internalError
-           Right <$> showPage' fileid pageno
-       Left rdir -> return $ Left rdir
-  -}
+  checkFileAccess fileid
+  showPage' fileid pageno
 
 showPreview:: Kontrakcja m => DocumentID -> FileID -> m (Either KontraLink Response)
 showPreview docid fileid = withAuthorisedViewer docid $ do
@@ -887,29 +875,52 @@ handleCreateFromTemplate = withUserPost $ do
         Left _ -> internalError
     Nothing -> internalError
 
+checkFileAccess :: Kontrakcja m => FileID -> m ()
+checkFileAccess fid = do
+  msid <- readField "signatorylinkid"
+  mmh <- readField "magichash"
+  mdid <- readField "documentid"
+  mattid <- readField "attachmentid"
+  case (msid, mmh, mdid, mattid) of
+    (Just sid, Just mh, Just did,_) -> do
+       doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
+       let allfiles = documentfiles doc ++ documentsealedfiles doc  ++ 
+                      (authorattachmentfile <$> documentauthorattachments doc) ++
+                      (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
+       when (all (/= fid) allfiles) $ 
+            internalError
+    (_,_,Just did,_) -> do
+       doc <- guardRightM $ getDocByDocID did
+       let allfiles = documentfiles doc ++ documentsealedfiles doc  ++ 
+                      (authorattachmentfile <$> documentauthorattachments doc) ++
+                      (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
+       when (all (/= fid) allfiles) $ 
+            internalError
+    (_,_,_,Just attid) -> do
+       ctx <- getContext
+       case ctxmaybeuser ctx of
+         Nothing -> internalError
+         Just user -> do
+           atts <- dbQuery $ GetAttachments [ AttachmentsSharedInUsersCompany (userid user)
+                                            , AttachmentsOfAuthorDeleteValue (userid user) True
+                                            , AttachmentsOfAuthorDeleteValue (userid user) False
+                                            ]
+                                            [ AttachmentFilterByID [attid]
+                                            , AttachmentFilterByFileID [fid]
+                                            ]
+                                            []
+                                            (AttachmentPagination 0 1)
+           when (length atts /= 1) $ 
+                internalError
+    _ -> internalError
+
 -- | This handler downloads a file by file id. As specified in
 -- handlePageOfDocument rules of access need to be obeyd. This handler
 -- download file as is. If you need preprinted fields use
 -- 'handleDownloadMainFile'.
 handleDownloadFile :: Kontrakcja m => FileID -> String -> m Response
 handleDownloadFile fid _nameForBrowser = do
-{-
-  msid <- readField "signatorylinkid"
-  mmh <- readField "magichash"
-  mdid <- readField "documentid"
-  mattid <- readField "attachmentid"
-  doc <- case (msid, mmh, mdid, matt) of
-           (Just sid, Just mh, Just did,_) -> guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
-           (_,_,Just did,_)                -> guardRightM $ getDocByDocID did
-           (_,_,_,Just attid)              -> guardRightM $ getDocByDocID did
-           _                               -> internalError
-
-  let allfiles = documentfiles doc ++ documentsealedfiles doc  ++ 
-                 (authorattachmentfile <$> documentauthorattachments doc) ++
-                 (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
-  when (all (/= fid) allfiles) $ 
-       internalError
--}
+  checkFileAccess fid
   content <- getFileIDContents fid
   respondWithPDF content
   where

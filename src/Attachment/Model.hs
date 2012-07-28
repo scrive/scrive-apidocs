@@ -115,6 +115,7 @@ data AttachmentPagination =
 data AttachmentFilter
   = AttachmentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
   | AttachmentFilterByID [AttachmentID]         -- ^ Attachments with IDs on the list
+  | AttachmentFilterByFileID [FileID]           -- ^ Attachments with IDs on the list
 
 sqlWhereAttachmentFilter :: (MonadState v m, SqlWhere v) =>
                             AttachmentFilter -> m ()
@@ -122,6 +123,8 @@ sqlWhereAttachmentFilter (AttachmentFilterByString string) =
   sqlWhereILike "attachments.title" ("%" ++ string ++ "%")
 sqlWhereAttachmentFilter (AttachmentFilterByID ids) =
   sqlWhereIn "attachments.id" ids
+sqlWhereAttachmentFilter (AttachmentFilterByFileID fileids) =
+  sqlWhereIn "attachments.file_id" fileids
 
 data AttachmentDomain
   = AttachmentsOfAuthorDeleteValue UserID Bool   -- ^ Attachments of user, with deleted flag
