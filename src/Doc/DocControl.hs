@@ -557,7 +557,22 @@ handleFilePages fid = do
   -- hers account but we still refer using signatorylinkid.
   --
   -- Exactly same access rights should apply to file download and to individual pages.
-  jpages <- maybeScheduleRendering fid
+
+  -- we wait 10s before returning here, hopefully it does not kill too
+  -- many free ports we check every 0.1s to see if everything was
+  -- rendered, then we return promptly (before in js it checked every
+  -- 2s, so document was on average shown 1s later than it was
+  -- available, 2s later in worst case)
+  let wait10seconds 0 = maybeScheduleRendering fid
+      wait10seconds n = do
+        jpages <- maybeScheduleRendering fid
+        case jpages of
+          JpegPagesPending -> do
+            liftIO $ threadDelay 100000 -- wait 0.1s and retry
+            wait10seconds (n-1 :: Int)
+          _ -> return jpages
+  jpages <- wait10seconds 100
+
   runJSONGenT $ case jpages of
     JpegPagesPending -> do
       J.value "wait" "Rendering in progress"
