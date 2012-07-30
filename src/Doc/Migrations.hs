@@ -17,6 +17,16 @@ import qualified Data.ByteString.UTF8 as BS
 
 $(jsonableDeriveConvertible [t| [SignatoryField] |])
 
+addForeignKeyToDocumentTags :: MonadDB m => Migration m
+addForeignKeyToDocumentTags = Migration {
+    mgrTable = tableDocumentTags
+  , mgrFrom = 1
+  , mgrDo = kRunRaw $ "ALTER TABLE document_tags"
+      ++ " ADD CONSTRAINT fk_document_tags_document_id FOREIGN KEY(document_id)"
+      ++ " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+}
+
 deprecateDocFunctionalityCol :: MonadDB m => Migration m
 deprecateDocFunctionalityCol = Migration {
     mgrTable = tableDocuments

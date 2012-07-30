@@ -122,7 +122,6 @@ checkCancelDocument doc = catMaybes $
                     ("document should be pending but it is " ++ (show $ documentstatus doc))
   ]
 
-
 {- | Preconditions for moving a document from Preparation to Pending.
  -}
 checkPreparationToPending :: Document -> [String]

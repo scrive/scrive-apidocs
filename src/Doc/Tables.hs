@@ -251,7 +251,7 @@ tableSignatoryLinks = Table {
 tableDocumentTags :: Table
 tableDocumentTags = Table {
     tblName = "document_tags"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblCreateOrValidate = \desc -> case desc of
       [ ("document_id", SqlColDesc {colType = SqlBigIntT,  colNullable = Just False})
        , ("name",        SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
@@ -267,6 +267,10 @@ tableDocumentTags = Table {
       _ -> return TVRinvalid
   , tblPutProperties = do
     kRunRaw $ "CREATE INDEX idx_document_tags_document_id ON document_tags(document_id)"
+    kRunRaw $ "ALTER TABLE document_tags"
+      ++ " ADD CONSTRAINT fk_document_tags_document_id FOREIGN KEY(document_id)"
+      ++ " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 
 tableSignatoryLinkFields :: Table

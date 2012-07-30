@@ -77,6 +77,7 @@ kontraMigrations = [
   , removeUserRefuseSaveAfterSignEvent
   , removeDocEventsThatReferenceNotActivatedUsers
   , addCryptoColumnsToFilesTable
+  , addForeignKeyToDocumentTags
   , moveAttachmentsFromDocumentsToAttachments
   ] ++ mailerMigrations
 

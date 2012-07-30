@@ -39,15 +39,6 @@ mailsTests params env  = testGroup "Mails" [
   , testThat "User emails" env $ testUserMails $ toMailAddress params
   ]
 
-gRight :: (Show a, MonadIO m) => m (Either a b) -> m b
-gRight ac = do
-  r <- ac
-  case r of
-    Left m -> do
-      assertFailure (show m)
-      return undefined
-    Right d -> return d
-
 testBrandedDocumentMails :: Maybe String -> TestEnv ()
 testBrandedDocumentMails mailTo = do
   company' <- addNewCompany
@@ -75,25 +66,27 @@ sendDocumentMails mailTo author mcompany = do
         ctx <- mailingContext l
         _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
         let aa = authorActor (ctxtime ctx) noIP (userid author) (getEmail author)
-        d' <- gRight $ randomUpdate $ NewDocument author mcompany "Document title" (Signable doctype) 0 aa
-        d <- gRight . dbUpdate $ SetDocumentLocale (documentid d') l (systemActor $ ctxtime ctx)
+        Just d <- randomUpdate $ NewDocument author mcompany "Document title" (Signable doctype) 0 aa
+        True <- dbUpdate $ SetDocumentLocale (documentid d) l (systemActor $ ctxtime ctx)
 
         let docid = documentid d
         let asl = head $ documentsignatorylinks d
         let authordetails = signatorydetails asl
         file <- addNewRandomFile
-        _ <- gRight $ randomUpdate $ AttachFile docid (fileid file) (systemActor $ ctxtime ctx)
+        True <- randomUpdate $ AttachFile docid (fileid file) (systemActor $ ctxtime ctx)
 
         isl <- rand 10 arbitrary
         now <- getMinutesTime
         let authorrole = [SignatoryAuthor, SignatoryPartner]
             sigs = [(authordetails,authorrole), (isl,[SignatoryPartner])]
-        _ <- gRight $ randomUpdate $ ResetSignatoryDetails docid sigs (systemActor now)
-        d2 <- gRight $ randomUpdate $ PreparationToPending docid (systemActor now)
+        True <- randomUpdate $ ResetSignatoryDetails docid sigs (systemActor now)
+        True <- randomUpdate $ PreparationToPending docid (systemActor now)
+        Just d2 <- dbQuery $ GetDocumentByDocumentID docid
         let asl2 = head $ documentsignatorylinks d2
-        _ <- gRight $ randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2)
+        True <- randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2)
              (signatoryActor now noIP (maybesignatory asl2) (getEmail asl2) (signatorylinkid asl2))
-        doc <- gRight $ randomUpdate $ \si -> SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) si (systemActor now)
+        True <- randomUpdate $ \si -> SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) si (systemActor now)
+        Just doc <- dbQuery $ GetDocumentByDocumentID docid
         let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
         req <- mkRequest POST []
         --Invitation Mails

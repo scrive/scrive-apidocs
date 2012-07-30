@@ -1015,9 +1015,16 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachCSVUpload Bool where
             (Just did)
             actor
         return success
-      Just status -> do
-        Log.error $ "Document #" ++ show did ++ " is in " ++ show status ++ " state, must be Preparation"
+      -- standard conversion puts error in DocumentError argument, so we
+      -- can't try to evaluate it here.
+      Just DocumentError{} -> do
+        Log.error $ errmsg "DocumentError"
         return False
+      Just status -> do
+        Log.error $ errmsg $ show status
+        return False
+    where
+      errmsg status = "Document #" ++ show did ++ " is in " ++ status ++ " state, must be Preparation"
 
 data AttachFile = AttachFile DocumentID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachFile Bool where
@@ -1525,12 +1532,11 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkDocumentSeen Bool where
 
           -- FIXME: (max 1 r) should be there instead of r, but with (max 1 r)
           -- few tests fails. it should be done properly.
-        when_ success $
-          update $ InsertEvidenceEvent
-            MarkDocumentSeenEvidence
-            (value "actor" (actorWho actor) >> value "email"  (getEmail sig) >> value "ip" (isJust $ actorIP actor))
-            (Just did)
-            actor
+        _ <- update $ InsertEvidenceEvent
+          MarkDocumentSeenEvidence
+          (value "actor" (actorWho actor) >> value "email"  (getEmail sig) >> value "ip" (isJust $ actorIP actor))
+          (Just did)
+          actor
         return success
 
 data AddInvitationEvidence = AddInvitationEvidence DocumentID SignatoryLinkID Actor
@@ -1826,7 +1832,8 @@ data SetDocumentInviteTime = SetDocumentInviteTime DocumentID MinutesTime Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentInviteTime Bool where
   update (SetDocumentInviteTime did invitetime actor) = do
     let ipaddress  = fromMaybe noIP $ actorIP actor
-    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND (invite_time != ? OR invite_ip != ?)" [toSql did, toSql invitetime, toSql ipaddress]
+    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND (invite_time IS DISTINCT FROM ? OR invite_ip IS DISTINCT FROM ?)" [toSql did, toSql invitetime, toSql ipaddress]
+    Log.debug $ show changed
     success <- kRun01 $ mkSQL UPDATE tableDocuments [
         sql "invite_time" invitetime
       , sql "invite_ip" ipaddress
@@ -1842,7 +1849,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentInviteTime Bool 
 data SetDocumentTimeoutTime = SetDocumentTimeoutTime DocumentID MinutesTime Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTimeoutTime Bool where
   update (SetDocumentTimeoutTime did timeouttime actor) = do
-    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND timeout_time != ?" [toSql did, toSql timeouttime]
+    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND timeout_time IS DISTINCT FROM ?" [toSql did, toSql timeouttime]
     success <- kRun01 $ mkSQL UPDATE tableDocuments [sql "timeout_time" timeouttime]
       <++> SQL "WHERE id = ? AND deleted = FALSE AND type = ?" [
         toSql did
@@ -1859,7 +1866,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTimeoutTime Bool
 data SetInviteText = SetInviteText DocumentID String Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInviteText Bool where
   update (SetInviteText did text actor) = do
-    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND invite_text != ?" [toSql did, toSql text]
+    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND invite_text IS DISTINCT FROM ?" [toSql did, toSql text]
     let time = actorTime actor
     success <- kRun01 $ mkSQL UPDATE tableDocuments [
         sql "invite_text" text
@@ -1893,7 +1900,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDaysToSign Bool where
 data SetDocumentTitle = SetDocumentTitle DocumentID String Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTitle Bool where
   update (SetDocumentTitle did doctitle actor) = do
-    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND title != ?" [toSql did, toSql doctitle]
+    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND title IS DISTINCT FROM ?" [toSql did, toSql doctitle]
     let time = actorTime actor
     success <- kRun01 $ mkSQL UPDATE tableDocuments [
         sql "title" doctitle
@@ -1911,7 +1918,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTitle Bool where
 data SetDocumentLocale = SetDocumentLocale DocumentID Locale Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentLocale Bool where
   update (SetDocumentLocale did locale actor) = do
-    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND region != ?" [toSql did, toSql $ getRegion locale]
+    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND region IS DISTINCT FROM ?" [toSql did, toSql $ getRegion locale]
     let time = actorTime actor
     success <- kRun01 $ mkSQL UPDATE tableDocuments [
         sql "region" $ getRegion locale
@@ -2209,7 +2216,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m TimeoutDocument Bool where
 data SetDocumentIdentification = SetDocumentIdentification DocumentID [IdentificationType] Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentIdentification Bool where
   update (SetDocumentIdentification did identification actor) = do
-    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND allowed_id_types != ?" [toSql did, toSql identification]
+    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND allowed_id_types IS DISTINCT FROM ?" [toSql did, toSql identification]
     success <- kRun01 $ mkSQL UPDATE tableDocuments
          [ sql "allowed_id_types" $ identification
          ] <++> SQL "WHERE id = ?" [ toSql did ]
@@ -2309,7 +2316,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFieldsNoStatusCheck (
 data AddDocumentAttachment = AddDocumentAttachment DocumentID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddDocumentAttachment Bool where
   update (AddDocumentAttachment did fid actor) = do
-    f <- exactlyOneObjectReturnedGuard =<< query (GetFileByFileID fid)
+    mf <- query (GetFileByFileID fid)
     success <- kRun01 $ mkSQL INSERT tableAuthorAttachments [
         sql "document_id" did
       , sql "file_id" fid
@@ -2320,7 +2327,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddDocumentAttachment Bool 
     when_ success $
       update $ InsertEvidenceEvent
         AddDocumentAttachmentEvidence
-        (value "fid" (show fid) >> value "actor" (actorWho actor) >> value "name" (filename f))
+        (value "fid" (show fid) >> value "actor" (actorWho actor) >> value "name" (filename <$> mf))
         (Just did)
         actor
     return success
@@ -2328,7 +2335,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddDocumentAttachment Bool 
 data RemoveDocumentAttachment = RemoveDocumentAttachment DocumentID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m RemoveDocumentAttachment Bool where
   update (RemoveDocumentAttachment did fid actor) = do
-    f <- exactlyOneObjectReturnedGuard =<< query (GetFileByFileID fid)
+    mf <- query (GetFileByFileID fid)
     kPrepare "DELETE FROM author_attachments WHERE document_id = ? AND file_id = ? AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?)"
     success <- kExecute01 [
         toSql did
@@ -2339,7 +2346,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RemoveDocumentAttachment Bo
     when_ success $
       update $ InsertEvidenceEvent
         RemoveDocumentAttachmentEvidence
-        (value "fid" (show fid) >> value "actor" (actorWho actor) >> value "name" (filename f))
+        (value "fid" (show fid) >> value "actor" (actorWho actor) >> value "name" (filename <$> mf))
         (Just did)
         actor
     return success
