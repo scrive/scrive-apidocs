@@ -106,6 +106,7 @@ staticRoutes = choice
      , dir "d" $ dir "remind"       $ hPost $ toK0 $ ArchiveControl.handleSendReminders
      , dir "d" $ dir "restore"      $ hPost $ toK0 $ ArchiveControl.handleRestore
      , dir "d" $ dir "reallydelete" $ hPost $ toK0 $ ArchiveControl.handleReallyDelete
+     , dir "d" $ dir "share"        $ hPost $ toK0 $ ArchiveControl.handleShare
      , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
      , dir "docs"                  $ hGet  $ toK0 $ ArchiveControl.jsonDocumentsList
      , dir "doc"                   $ hGet  $ toK1 $ DocControl.jsonDocument
