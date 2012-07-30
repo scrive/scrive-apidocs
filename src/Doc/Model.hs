@@ -80,6 +80,7 @@ import Control.Monad.Trans
 import DB
 import MagicHash
 import Crypto.RNG
+import Doc.Checks
 import File.File
 import File.FileID
 import File.Model
@@ -957,6 +958,11 @@ newFromDocument f docid = do
         Log.error $ "Document " ++ show docid ++ " does not exist"
         return Nothing
 
+data CheckIfDocumentExists = CheckIfDocumentExists DocumentID
+instance MonadDB m => DBQuery m CheckIfDocumentExists Bool where
+  query (CheckIfDocumentExists did) =
+    checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ?" [toSql did]
+
 {- |
     The existance of this function is wrong.  What it means is that storing
     maybesignatory and maybecompany on the signatory links is the wrong way of doing it,
@@ -1065,13 +1071,14 @@ data CancelDocument = CancelDocument DocumentID CancelationReason Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
   update (CancelDocument did reason actor) = do
     let mtime = actorTime actor
-    mdocument <- query $ GetDocumentByDocumentID did
-    case mdocument of
-      Nothing -> do
+    doc_exists <- query $ CheckIfDocumentExists did
+    if not doc_exists
+      then do
         Log.error $ "Cannot CancelDocument document " ++ show did ++ " because it does not exist"
         return False
-      Just document -> do
-        case checkCancelDocument document of
+      else do
+        errmsgs <- checkCancelDocument did
+        case errmsgs of
           [] -> do
             let ipaddress = fromMaybe noIP $ actorIP actor
             success <- kRun01 $ mkSQL UPDATE tableDocuments [
@@ -1091,8 +1098,8 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
                   (Just did)
                   actor
                 ELegDataMismatch _ sid fn ln num -> do
-                  let Just sl = getSigLinkFor document sid
-                      trips = [("First name",      getFirstName      sl, fn)
+                  Just sl <- query $ GetSignatoryLinkByID did sid Nothing
+                  let trips = [("First name",      getFirstName      sl, fn)
                               ,("Last name",       getLastName       sl, ln)
                               ,("Personal number", getPersonalNumber sl, num)]
                       uneql = filter (\(_,a,b)->a/=b) trips
@@ -1172,20 +1179,22 @@ data PreparationToPending = PreparationToPending DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m PreparationToPending Bool where
   update (PreparationToPending docid actor) = do
     let time = actorTime actor
-    mdocument <- query $ GetDocumentByDocumentID docid
-    case mdocument of
-      Nothing -> do
+    doc_exists <- query $ CheckIfDocumentExists docid
+    if not doc_exists
+      then do
         Log.error $ "Cannot PreparationToPending document " ++ show docid ++ " because it does not exist"
         return False
-      Just document ->
-        case checkPreparationToPending document of
+      else do
+        errmsgs <- checkPreparationToPending docid
+        case errmsgs of
           [] -> do
-            let mtt = (\days -> (days * 24 *60) `minutesAfter` time) <$> documentdaystosign document
+            daystosign :: Maybe Int <- getOne (SQL "SELECT days_to_sign FROM documents WHERE id = ?" [toSql docid]) >>= exactlyOneObjectReturnedGuard
+            let mtt = (\days -> (days * 24 *60) `minutesAfter` time) <$> daystosign
             success <- kRun01 $ mkSQL UPDATE tableDocuments [
                 sql "status" Pending
               , sql "mtime" time
               , sql "timeout_time" $ (\days -> (days * 24 * 60) `minutesAfter` time)
-                  <$> documentdaystosign document
+                  <$> daystosign
               , sqlLog time "Document put into Pending state"
               ] <++> SQL "WHERE id = ? AND type = ?" [
                 toSql docid
@@ -1207,13 +1216,14 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CloseDocument Bool where
   update (CloseDocument docid actor) = do
     let time = actorTime actor
         ipaddress = fromMaybe noIP $ actorIP actor
-    mdocument <- query $ GetDocumentByDocumentID docid
-    case mdocument of
-      Nothing -> do
+    doc_exists <- query $ CheckIfDocumentExists docid
+    if not doc_exists
+      then do
         Log.error $ "Cannot Close document " ++ show docid ++ " because it does not exist"
         return False
-      Just document ->
-        case checkCloseDocument document of
+      else do
+        errmsgs <- checkCloseDocument docid
+        case errmsgs of
           [] -> do
             success <- kRun01 $ mkSQL UPDATE tableDocuments [
                 sql "status" Closed
@@ -1672,37 +1682,34 @@ data RejectDocument = RejectDocument DocumentID SignatoryLinkID (Maybe String) A
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m RejectDocument Bool where
   update (RejectDocument docid slid customtext actor) = do
     let time = actorTime actor
-    mdocument <- query $ GetDocumentByDocumentID docid
-    case mdocument of
+    msig <- query $ GetSignatoryLinkByID docid slid Nothing
+    case msig of
       Nothing -> do
-        Log.error $ "Cannot RejectDocument document " ++ show docid ++ " because it does not exist"
+        Log.error $ "Cannot RejectDocument document " ++ show docid ++ " because there is no docid/siglinkid = " ++ show docid ++ "/" ++ show slid
         return False
-      Just document -> case getSigLinkFor document slid of
-        Nothing -> do
-          Log.error $ "Cannot RejectDocument document " ++ show docid ++ " because signatory link id does not exist."
-          return False
-        Just sl ->
-          case checkRejectDocument document slid of
-            [] -> do
-              let ipnumber = fromMaybe noIP $ actorIP actor
-              success <- kRun01 $ mkSQL UPDATE tableDocuments [
-                  sql "status" Rejected
-                , sql "mtime" time
-                , sql "rejection_time" time
-                , sql "rejection_reason" customtext
-                , sql "rejection_signatory_link_id" slid
-                , sqlLog time $ "Document rejected from " ++ show ipnumber
-                ] <++> SQL "WHERE id = ?" [toSql docid]
-              when_ success $
-                  update $ InsertEvidenceEvent
-                    RejectDocumentEvidence
-                    (value "email" (getEmail sl) >> value "actor" (actorWho actor))
-                    (Just docid)
-                    actor
-              return success
-            s -> do
-              Log.error $ "Cannot RejectDocument document " ++ show docid ++ " because " ++ concat s
-              return False
+      Just sig -> do
+        errmsgs <- checkRejectDocument docid slid
+        case errmsgs of
+          [] -> do
+            let ipnumber = fromMaybe noIP $ actorIP actor
+            success <- kRun01 $ mkSQL UPDATE tableDocuments [
+                sql "status" Rejected
+              , sql "mtime" time
+              , sql "rejection_time" time
+              , sql "rejection_reason" customtext
+              , sql "rejection_signatory_link_id" slid
+              , sqlLog time $ "Document rejected from " ++ show ipnumber
+              ] <++> SQL "WHERE id = ?" [toSql docid]
+            when_ success $
+                update $ InsertEvidenceEvent
+                  RejectDocumentEvidence
+                  (value "email" (getEmail sig) >> value "actor" (actorWho actor))
+                  (Just docid)
+                  actor
+            return success
+          s -> do
+            Log.error $ "Cannot RejectDocument document " ++ show docid ++ " because " ++ concat s
+            return False
 
 data RestartDocument = RestartDocument Document Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocument (Maybe Document) where
@@ -1976,13 +1983,14 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentSharing Bool whe
 data SignDocument = SignDocument DocumentID SignatoryLinkID MagicHash (Maybe SignatureInfo) Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument Bool where
   update (SignDocument docid slid mh msiginfo actor) = do
-    mdocument <- query $ GetDocumentByDocumentID docid
-    case mdocument of
-      Nothing -> do
+    doc_exists <- query $ CheckIfDocumentExists docid
+    if not doc_exists
+      then do
         Log.error $ "Cannot SignDocument document " ++ show docid ++ " because it does not exist"
         return False
-      Just document ->
-        case checkSignDocument document slid mh of
+      else do
+        errmsgs <- checkSignDocument docid slid mh
+        case errmsgs of
           [] -> do
             let ipnumber = fromMaybe noIP $ actorIP actor
                 time     = actorTime actor

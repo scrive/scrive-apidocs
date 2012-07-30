@@ -1701,7 +1701,7 @@ testRejectDocumentSignablePendingRight :: TestEnv ()
 testRejectDocumentSignablePendingRight = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
-  slid <- rand 10 $ elements (map signatorylinkid (documentsignatorylinks doc))
+  slid <- rand 10 $ elements (map signatorylinkid . filter ((SignatoryPartner `elem`) . signatoryroles) $ documentsignatorylinks doc)
   let Just sl = getSigLinkFor doc slid
   time <- rand 10 arbitrary
   let sa = signatoryActor time noIP Nothing (getEmail sl) slid

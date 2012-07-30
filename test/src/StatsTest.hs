@@ -166,7 +166,7 @@ testRejectStat = do
   Just author' <- dbQuery $ GetUserByID (userid author)
   doc' <- addRandomDocumentWithAuthorAndCondition author' (isSignable &&^
                                                            isPreparation &&^
-                                                           (any isSignatory . documentsignatorylinks))
+                                                           (all (isAuthor =>>^ isSignatory) . documentsignatorylinks))
   time <- getMinutesTime
   _ <- dbUpdate $ PreparationToPending (documentid doc') (systemActor time)
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')

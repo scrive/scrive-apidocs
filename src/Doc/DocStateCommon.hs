@@ -1,12 +1,10 @@
 module Doc.DocStateCommon where
 
-import Control.Logic
 import Company.Model
 import Data.Maybe
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocUtils
-import InputValidation
 import MagicHash (MagicHash)
 import MinutesTime
 import Misc
@@ -99,67 +97,6 @@ blankDocument =
           , documentregion               = defaultValue
           , documentstatusclass          = SCDraft
           }
-
-{- |
-
--}
-checkCloseDocument :: Document -> [String]
-checkCloseDocument doc = catMaybes $
-  [ trueOrMessage (isSignable doc) ("document is not signable")
-  , trueOrMessage (isPending doc)
-                    ("document should be pending but it is " ++ (show $ documentstatus doc))
-  , trueOrMessage (all (isSignatory =>>^ hasSigned) (documentsignatorylinks doc))
-                    ("Not all signatories have signed")
-  ]
-
-{- |
-
--}
-checkCancelDocument :: Document -> [String]
-checkCancelDocument doc = catMaybes $
-  [ trueOrMessage (isSignable doc) ("document is not signable")
-  , trueOrMessage (isPending doc)
-                    ("document should be pending but it is " ++ (show $ documentstatus doc))
-  ]
-
-{- | Preconditions for moving a document from Preparation to Pending.
- -}
-checkPreparationToPending :: Document -> [String]
-checkPreparationToPending document = catMaybes $
-  [ trueOrMessage (isSignable document) ("document is not signable")
-  , trueOrMessage (isPreparation document)
-                    ("Document status is not pending (is " ++ (show . documentstatus) document ++ ")")
-  , trueOrMessage (length (filter isAuthor $ documentsignatorylinks document) == 1)
-                    ("Number of authors was not 1")
-  , trueOrMessage (length (filter isSignatory $ documentsignatorylinks document) >= 1)
-                    ("There are no signatories")
-  , trueOrMessage (all (isSignatory =>>^ (isGood . asValidEmail . getEmail)) (documentsignatorylinks document))
-                    ("Not all signatories have valid email")
-  , trueOrMessage (length (documentfiles document) == 1) "Did not have exactly one file"
-  ]
-  -- NOTE: Should add stuff about first/last name, though currently the author may have his full name
-  -- stored in the first name field. OOPS!
-
-
--- FIXME: check magic hash token
--- FIXME: check proper role
-checkRejectDocument :: Document -> SignatoryLinkID -> [String]
-checkRejectDocument doc slid = catMaybes $
-  [ trueOrMessage (isSignable doc) ("document is not signable")
-  , trueOrMessage (isPending doc)
-                    ("document should be pending but it is " ++ (show $ documentstatus doc))
-  , trueOrMessage (any ((== slid) . signatorylinkid) (documentsignatorylinks doc))
-                  ("signatory #" ++ show slid ++ " is not in the list of document signatories")
-  ]
-
-checkSignDocument :: Document -> SignatoryLinkID -> MagicHash -> [String]
-checkSignDocument doc slid mh = catMaybes $
-  [ trueOrMessage (isPending doc) "Document is not in pending"
-  , trueOrMessage (not $ hasSigned (doc, slid)) "Signatory has already signed"
-  , trueOrMessage (hasSeen (doc, slid)) "Signatory has not seen"
-  , trueOrMessage (isJust $ getSigLinkFor doc slid) "Signatory does not exist"
-  , trueOrMessage (validSigLink slid mh (Just doc)) "Magic Hash does not match"
-  ]
 
 checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload)] -> [String]
 checkResetSignatoryData doc sigs =

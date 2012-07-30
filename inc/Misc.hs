@@ -40,6 +40,14 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS (toString,fromString)
 import Network.HTTP (urlDecode)
 
+-- intercalate for monoids
+mintercalate :: Monoid s => (s -> s -> s) -> [s] -> s
+mintercalate f = go
+    where
+      go []     = mempty
+      go (s:[]) = s
+      go (s:ss) = s `f` go ss
+
 -- | Given an action f and a number of seconds t, cron will execute
 -- f every t seconds with the first execution t seconds after cron is called.
 -- cron does not spawn a new thread.
