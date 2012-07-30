@@ -441,18 +441,16 @@ window.Document = Backbone.Model.extend({
         return this.get("whitelabel");
     },
     parse: function(args) {
-     var document = this;
+     var self = this;
      setTimeout(function() {
-         if (document.needRecall())
-            document.recall();
+         if (self.needRecall())
+            self.recall();
      },1000);
-     var extendedWithDocument = function(hash) {
-         hash.documentid = document.documentid();
-         hash.signatoryid = document.viewer().signatoryid();
-         hash.magichash = document.viewer().magichash();
-         hash.document = document;
-         return hash; 
-     };
+      var dataForFile = 
+        { documentid: self.documentid(),
+          signatoryid: self.viewer().signatoryid(),
+          magichash: self.viewer().magichash() };
+
      /**this way of doing it is safe for IE7 which doesnt
       * naturally parse stuff like 2012-03-29 so new Date(datestr)
       * doesnt work*/
@@ -461,39 +459,39 @@ window.Document = Backbone.Model.extend({
         return new Date(dateValues[0], dateValues[1], dateValues[2]);
      };
      return {
-      title: args.title,
-      files: _.map(args.files, function(fileargs) {
-                return new File(extendedWithDocument(fileargs));
-              }),
-      sealedfiles: _.map(args.sealedfiles, function(fileargs) {
-                return new File(extendedWithDocument(fileargs));
-              }),
-      authorattachments: _.map(args.authorattachments, function(fileargs) {
-                return new File(extendedWithDocument(fileargs));
-              }),
-      signatories: _.map(args.signatories, function(signatoryargs) {
-                return new Signatory(extendedWithDocument(signatoryargs));
-      }),
-      authoruser: new DocumentAuthor(extendedWithDocument(args.author)),
-      process: new Process(args.process),
-      region: new Region(args.region),
-      infotext: args.infotext,
-      canberestarted: args.canberestarted,
-      canbecanceled: args.canbecanceled,
-      canseeallattachments: args.canseeallattachments,
-      status: args.status,
-      timeouttime: args.timeouttime == undefined ? undefined : parseDate(args.timeouttime),
-      signorder: args.signorder,
-      authorization: args.authorization,
-      template: args.template,
-      daystosign: args.daystosign,
-      invitationmessage: args.invitationmessage,
-      logo: args.logo,
-      barsbackgroundcolor: args.barsbackgroundcolor,
-      barsbackgroundtextcolor: args.barsbackgroundtextcolor,
-      whitelabel: args.whitelabel,
-      ready: true
-      };
+       title: args.title,
+       files: _.map(args.files, function(fileargs) {
+         return new File(_.defaults(fileargs, dataForFile));
+       }),
+       sealedfiles: _.map(args.sealedfiles, function(fileargs) {
+         return new File(_.defaults(fileargs, dataForFile));
+       }),
+       authorattachments: _.map(args.authorattachments, function(fileargs) {
+         return new File(_.defaults(fileargs, dataForFile));
+       }),
+       signatories: _.map(args.signatories, function(signatoryargs) {
+         return new Signatory(_.defaults(signatoryargs, { document: self }));
+       }),
+       authoruser: new DocumentAuthor(_.defaults(args.author, { document: self })),
+       process: new Process(args.process),
+       region: new Region(args.region),
+       infotext: args.infotext,
+       canberestarted: args.canberestarted,
+       canbecanceled: args.canbecanceled,
+       canseeallattachments: args.canseeallattachments,
+       status: args.status,
+       timeouttime: args.timeouttime == undefined ? undefined : parseDate(args.timeouttime),
+       signorder: args.signorder,
+       authorization: args.authorization,
+       template: args.template,
+       daystosign: args.daystosign,
+       invitationmessage: args.invitationmessage,
+       logo: args.logo,
+       barsbackgroundcolor: args.barsbackgroundcolor,
+       barsbackgroundtextcolor: args.barsbackgroundtextcolor,
+       whitelabel: args.whitelabel,
+       ready: true
+     };
     }
 
 });
