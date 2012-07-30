@@ -1,5 +1,13 @@
 
 module Attachment.Control
+  ( handleCreateNew
+  , handleShare
+  , handleRename
+  , handleShow
+  , handleDelete
+  , jsonAttachment
+  , jsonAttachmentsList
+  )
 where
 import Attachment.AttachmentID
 import InputValidation
