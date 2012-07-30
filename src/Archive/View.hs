@@ -32,6 +32,7 @@ import Data.List (intercalate)
 import Doc.DocUtils
 import PadQueue.Model
 import Text.JSON.Gen as J
+import qualified Templates.Fields as F
 
 
 flashMessageSignableArchiveDone :: TemplatesMonad m => m FlashMessage
@@ -46,9 +47,11 @@ flashMessageAttachmentArchiveDone :: TemplatesMonad m => m FlashMessage
 flashMessageAttachmentArchiveDone =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageAttachmentArchiveDone"
 
-pageArchive :: TemplatesMonad m => m String
-pageArchive = renderTemplate_ "pageDocumentsList" 
-
+pageArchive :: TemplatesMonad m => MinutesTime -> m String
+pageArchive mt = renderTemplate "pageDocumentsList" $ do
+                    F.value "month" $ mtMonth mt
+                    F.value "year" $ mtYear mt
+                    
 pagePadDeviceArchive :: TemplatesMonad m =>  m String
 pagePadDeviceArchive = renderTemplate_ "pagePadDeviceArchive"
     

@@ -154,7 +154,9 @@ handleShare =  do
    Constructs a list of documents (Arkiv) to show to the user.
  -}
 showArchive :: Kontrakcja m => m (Either KontraLink String)
-showArchive = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >> pageArchive
+showArchive = checkUserTOSGet $ do
+    tostime <- guardJustM $ join <$> fmap userhasacceptedtermsofservice <$> ctxmaybeuser <$> getContext
+    pageArchive tostime
 
 showPadDeviceArchive :: Kontrakcja m => m (Either KontraLink String)
 showPadDeviceArchive = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >> pagePadDeviceArchive
@@ -168,16 +170,10 @@ jsonDocumentsList = withUserGet $ do
   params <- getListParamsNew
 
   let (domain,filters1) = case doctype of
-                          "Document"          -> ([DocumentsForSignatory uid] ++ (maybeCompanyDomain False),[])
-                          "Contract"          -> ([DocumentsForSignatory uid] ++ (maybeCompanyDomain False),[DocumentFilterByProcess [Contract]])
-                          "Offer"             -> ([DocumentsForSignatory uid] ++ (maybeCompanyDomain False),[DocumentFilterByProcess [Offer]])
-                          "Order"             -> ([DocumentsForSignatory uid] ++ (maybeCompanyDomain False),[DocumentFilterByProcess [Order]])
-                          "Template"          -> ([TemplatesOfAuthor uid],[])
+                          "Document"          -> ([DocumentsForSignatoryDeleteValue uid False] ++ (maybeCompanyDomain False),[])
+                          "Template"          -> ([TemplatesOfAuthorDeleteValue uid False],[])
                           "Rubbish"           -> ([DocumentsForSignatoryDeleteValue uid True] ++ (maybeCompanyDomain True), [])
-                          "Template|Contract" -> ([TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid],[DocumentFilterByProcess [Contract]])
-                          "Template|Offer"    -> ([TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid],[DocumentFilterByProcess [Offer]])
-                          "Template|Order"    -> ([TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid],[DocumentFilterByProcess [Order]])
-                          "Pad"               -> ([DocumentsOfAuthor uid]  ++ (maybeCompanyDomain False) ,[DocumentFilterByIdentification PadIdentification, DocumentFilterStatuses [Pending,Closed]])
+                          "Pad"               -> ([DocumentsOfAuthorDeleteValue uid True]  ++ (maybeCompanyDomain False) ,[DocumentFilterByIdentification PadIdentification, DocumentFilterStatuses [Pending,Closed]])
                           _ -> ([],[])
                          where
                              maybeCompanyDomain d = if (useriscompanyadmin user && (isJust $ usercompany user))
@@ -187,14 +183,14 @@ jsonDocumentsList = withUserGet $ do
       fltSpec ("process", "contract") = [DocumentFilterByProcess [Contract]]
       fltSpec ("process", "order") = [DocumentFilterByProcess [Order]]
       fltSpec ("process", "offer") = [DocumentFilterByProcess [Offer]]
-      fltSpec ("year", yearstr) = case reads yearstr of
-                                    ((year,""):_) -> [DocumentFilterByYears [year]]
+      fltSpec ("from", fromstr) = case reads fromstr of  
+                                    ((from',""):_) -> [DocumentFilterByMonthYearFrom from']
                                     _ -> []
-      fltSpec ("month", monthstr) = case reads monthstr of
-                                    ((month,""):_) -> [DocumentFilterByMonths [month]]
+      fltSpec ("to", tostr) = case reads tostr of
+                                    ((to',""):_) -> [DocumentFilterByMonthYearTo to']
                                     _ -> []
-      fltSpec ("statusclass", scstr) = case reads scstr of
-                                    ((statusclass,""):_) -> [DocumentFilterByStatusClass [statusclass]]
+      fltSpec ("status", scstr) = case reads scstr of
+                                    ((statusclasss,""):_) -> [DocumentFilterByStatusClass statusclasss]
                                     _ -> []
       fltSpec _ = []
   let sorting    = docSortingFromParams params

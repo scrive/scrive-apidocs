@@ -3,11 +3,6 @@
 
 (function(window){
 
-function capitaliseFirstLetter(string)
-{
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
 window.DocumentsListDefinition = function(archive) { return {
     name : "Documents Table",
     schema: new Schema({
@@ -17,17 +12,14 @@ window.DocumentsListDefinition = function(archive) { return {
     paging: new Paging({}),
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.documents.search}),
     selectfiltering : [
-            new SelectFiltering({description: localization.filterByStatusClass.showAnyStatusClass,
-                             name: "statusclass",
-                             textWidth : "100px",
-                             options: [ {name: localization.filterByStatusClass.showDraft,     value: "draft"},
-                                        {name: localization.filterByStatusClass.showCancelled, value: "cancelled"},
-                                        {name: localization.filterByStatusClass.showSent,      value: "sent"},
-                                        {name: localization.filterByStatusClass.showDelivered, value: "delivered"},
-                                        {name: localization.filterByStatusClass.showRead,      value: "read"},
-                                        {name: localization.filterByStatusClass.showOpened,    value: "opened"},
-                                        {name: localization.filterByStatusClass.showSigned,    value: "signed"}
-                                      ]}),
+            new SelectFiltering({description: localization.filterByStatus.showAnyStatus,
+                             name: "status",
+                             textWidth : "90px",
+                             options: [ {name: localization.filterByStatus.showDraft,     value: "[draft]"},
+                                        {name: localization.filterByStatus.showCancelled, value: "[cancelled]"},
+                                        {name: localization.filterByStatus.showSent,      value: "[sent,delivered,read,opened]"},
+                                        {name: localization.filterByStatus.showSigned,    value: "[signed]"}
+                                      ]}), 
             new SelectFiltering({description: localization.filterByProcess.showAllProcesses,
                              name: "process",
                              textWidth : "100px",
@@ -36,31 +28,41 @@ window.DocumentsListDefinition = function(archive) { return {
                                         {name: localization.filterByProcess.showOrdersOnly,    value: "order"}
                                       ]}),
             new SelectFiltering({
-                             description: localization.filterByYear.showAnyYear,
-                             name: "year",
-                             textWidth : "100px",
-                             options: [ {name: "2010",    value: "2010"},
-                                        {name: "2011",    value: "2011"},
-                                        {name: "2012",    value: "2012"},
-                                        {name: "2013",    value: "2013"}
-                                      ]}),
+                             description: localization.filterByTime.filterForm,
+                             name: "from",
+                             prefix : localization.filterByTime.filterForm,
+                             textWidth : "144px",
+                             options: function() {
+                                        var year = archive.year();
+                                        var month = archive.month();
+                                        var options = [];
+                                        var time = new Date();
+                                        while (year < time.getFullYear() || (year == time.getFullYear() && month <= time.getMonth() + 1)) {
+                                            var name = capitaliseFirstLetter(localization.months[month] + " " + year);
+                                            options.push({name : name , value : "("+month + "," + year + ")" })
+                                            month++;
+                                            if (month == 13) {month = 1; year++;}
+                                        };
+                                        return options.reverse();} ()
+                             }),
             new SelectFiltering({
-                             description: localization.filterByMonth.showAnyMonth,
-                             name: "month",
-                             textWidth : "100px",
-                             options: [ {name: capitaliseFirstLetter(localization.months.january),   value: "1"},
-                                        {name: capitaliseFirstLetter(localization.months.february),  value: "2"},
-                                        {name: capitaliseFirstLetter(localization.months.march),     value: "3"},
-                                        {name: capitaliseFirstLetter(localization.months.april),     value: "4"},
-                                        {name: capitaliseFirstLetter(localization.months.may),       value: "5"},
-                                        {name: capitaliseFirstLetter(localization.months.june),      value: "6"},
-                                        {name: capitaliseFirstLetter(localization.months.july),      value: "7"},
-                                        {name: capitaliseFirstLetter(localization.months.august),    value: "8"},
-                                        {name: capitaliseFirstLetter(localization.months.september), value: "9"},
-                                        {name: capitaliseFirstLetter(localization.months.october),   value: "10"},
-                                        {name: capitaliseFirstLetter(localization.months.november),  value: "11"},
-                                        {name: capitaliseFirstLetter(localization.months.december),  value: "12"}
-                                      ]})
+                             description: localization.filterByTime.filterTo,
+                             name: "to",
+                             prefix : localization.filterByTime.filterTo,
+                             textWidth : "144px",
+                             options: function() {
+                                        var year = archive.year();
+                                        var month = archive.month();
+                                        var options = [];
+                                        var time = new Date();
+                                        while (year < time.getFullYear() || (year == time.getFullYear() && month <= time.getMonth() + 1)) {
+                                            var name = capitaliseFirstLetter(localization.months[month-1] + " " + year);
+                                            month++;
+                                            if (month == 13) {month = 1; year++;}
+                                            options.push({name : name , value : "("+month + "," + year + ")" })
+                                        };
+                                        return options.reverse();} ()
+                })
             ], 
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),

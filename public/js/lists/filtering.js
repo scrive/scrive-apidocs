@@ -77,6 +77,9 @@
         name: function() {
             return this.get("name");
         },
+        prefix: function() {
+            return this.get("prefix");
+        },
         textWidth: function() {
             return this.get("textWidth");
         }, 
@@ -126,6 +129,8 @@
             {
                 var selected = selectFiltering.selected()
                 name = selected.name;
+                if (this.model.prefix() != undefined)
+                    name = this.model.prefix() + name;
                 var options_ = [];
                 options_.push({name:  this.model.description(), value: "", onSelect: function(value) {selectFiltering.deselect();} });
                 for(var i=0;i< options.length;i++)

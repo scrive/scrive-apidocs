@@ -3,6 +3,12 @@
 (function(window){
  
 var ArchiveModel = Backbone.Model.extend({
+  month : function() {
+     return this.get("month");    
+  },
+  year : function() {
+     return this.get("year");
+  },
   documents : function() {
         if (this.get("documents") != undefined) return this.get("documents");
         this.set({ "documents" : KontraList().init(DocumentsListDefinition(this)) });
@@ -101,11 +107,12 @@ var ArchiveView = Backbone.View.extend({
 
 
 window.Archive = function(args) {
-          var model = new ArchiveModel();
+          var model = new ArchiveModel(args);
           var view =  new ArchiveView({model : model, el : $("<div/>")});
           return new Object({
               model : function() {return model;},
               view  : function() {return view;}
+              
             });
 };
 

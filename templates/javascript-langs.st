@@ -156,19 +156,19 @@ javascriptLocalisation =
             , saveTemplate : "$_signStepsBodyFunctionssaveTemplate()$"
             , skrivapa : "$_skrivapa()$"
 
-            , months : { january: "$_january()$",
-                         february: "$_february()$",
-                         march: "$_march()$",
-                         april: "$_april()$",
-                         may: "$_may()$",
-                         june: "$_june()$",
-                         july: "$_july()$",
-                         august: "$_august()$",
-                         september: "$_september()$",
-                         october: "$_october()$",
-                         november: "$_november()$",
-                         december: "$_december()$"
-                       }
+            , months : [ "$_january()$",
+                         "$_february()$",
+                         "$_march()$",
+                         "$_april()$",
+                         "$_may()$",
+                         "$_june()$",
+                         "$_july()$",
+                         "$_august()$",
+                         "$_september()$",
+                         "$_october()$",
+                         "$_november()$",
+                         "$_december()$"
+                       ]
 
             , tweetAccount : "$_tweetAccount()$"
             , selectFileToUpload : "$_selectFileToUpload()$"
@@ -201,20 +201,15 @@ javascriptLocalisation =
                 showOrdersOnly: "$_showOrdersOnly()$",
                 showOffersOnly: "$_showOffersOnly()$"
             }
-            , filterByYear: {
-                showAnyYear: "$_showAnyYear()$"
+            , filterByTime: {
+                filterForm: "From:",
+                filterTo: "To:"
             }
-            , filterByMonth: {
-                showAnyMonth: "$_showAnyMonth()$"
-            }
-            , filterByStatusClass: {
-                showAnyStatusClass: "$_showAnyStatusClass()$",
+            , filterByStatus: {
+                showAnyStatus: "$_showAnyStatusClass()$",
                 showDraft: "$_tablestatusesDraft()$",
                 showCancelled: "$_tablestatusesCancelled()$",
                 showSent: "$_tablestatusesSent()$",
-                showDelivered: "$_tablestatusesDelivered()$",
-                showRead: "$_tablestatusesViewedOnline()$",
-                showOpened: "$_tablestatusesEmailOpened()$",
                 showSigned: "$_tablestatusesSigned()$"
             }
            , searchTemplate : "$_SearchTemplate()$"

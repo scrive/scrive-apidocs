@@ -132,19 +132,13 @@ data DocumentFilter
   | DocumentFilterByProcess [DocumentProcess] -- ^ Any of listed processes
   | DocumentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
   | DocumentFilterByIdentification IdentificationType -- ^ Only documents that use selected identification type
-  | DocumentFilterByYears [Int]               -- ^ Document time fits in a year
-  | DocumentFilterByMonths [Int]              -- ^ Document time has any year but a single month
+  | DocumentFilterByMonthYearFrom (Int,Int)           -- ^ Document time after or in (month,year)
+  | DocumentFilterByMonthYearTo   (Int,Int)           -- ^  Document time before or in (month,year)
 
 data DocumentDomain
   = DocumentsOfWholeUniverse                     -- ^ All documents in the system. Only for admin view.
-  | DocumentsOfAuthor UserID                     -- ^ Documents by author, not deleted
-  | DocumentsOfAuthorDeleted UserID              -- ^ Documents by author, deleted
   | DocumentsOfAuthorDeleteValue UserID Bool     -- ^ Documents by author, with delete flag
-  | DocumentsForSignatory UserID                 -- ^ Documents by signatory, not deleted
-  | DocumentsForSignatoryDeleted UserID          -- ^ Documents by signatory, deleted
   | DocumentsForSignatoryDeleteValue UserID Bool -- ^ Documents by signatory, with delete flag
-  | TemplatesOfAuthor UserID                     -- ^ Templates by author, not deleted
-  | TemplatesOfAuthorDeleted UserID              -- ^ Templates by author, deleted
   | TemplatesOfAuthorDeleteValue UserID Bool     -- ^ Templates by author, with deleted flag
   | TemplatesSharedInUsersCompany UserID         -- ^ Templates shared in company
   | DocumentsOfService (Maybe ServiceID)         -- ^ All documents of service
@@ -233,14 +227,6 @@ documentDomainToSQL (DocumentsOfAuthorDeleteValue uid deleted) =
        ++ " AND signatory_links.really_deleted = FALSE"
        ++ " AND documents.type = 1")
         [toSql [SignatoryAuthor], toSql uid, toSql deleted]
-documentDomainToSQL (DocumentsOfAuthor uid) =
-  documentDomainToSQL (DocumentsOfAuthorDeleteValue uid False)
-documentDomainToSQL (DocumentsOfAuthorDeleted uid) =
-  documentDomainToSQL (DocumentsOfAuthorDeleteValue uid True)
-documentDomainToSQL (DocumentsForSignatory uid) =
-  documentDomainToSQL (DocumentsForSignatoryDeleteValue uid False)
-documentDomainToSQL (DocumentsForSignatoryDeleted uid) =
-  documentDomainToSQL (DocumentsForSignatoryDeleteValue uid True)
 documentDomainToSQL (DocumentsForSignatoryDeleteValue uid deleted) =
   SQL ("signatory_links.user_id = ?"
        ++ " AND signatory_links.deleted = ?"
@@ -260,10 +246,6 @@ documentDomainToSQL (TemplatesOfAuthorDeleteValue uid deleted) =
        ++ " AND signatory_links.really_deleted = FALSE"
        ++ " AND documents.type = 2")
         [toSql uid, toSql deleted]
-documentDomainToSQL (TemplatesOfAuthor uid) =
-  documentDomainToSQL (TemplatesOfAuthorDeleteValue uid False)
-documentDomainToSQL (TemplatesOfAuthorDeleted uid) =
-  documentDomainToSQL (TemplatesOfAuthorDeleteValue uid True)
 documentDomainToSQL (TemplatesSharedInUsersCompany uid) =
   SQL ("signatory_links.deleted = FALSE"
        ++ " AND documents.type = 2"
@@ -316,18 +298,10 @@ documentFilterToSQL (DocumentFilterByProcess processes) =
   sqlConcatOR $ map (\process -> SQL "documents.process = ?" [toSql process]) processes
 documentFilterToSQL (DocumentFilterByRole role) =
   SQL "(signatory_links.roles & ?) <> 0" [toSql [role]]
-documentFilterToSQL (DocumentFilterByMonths months) =
-  sqlConcatOR $ map (\month -> SQL "EXTRACT (MONTH FROM documents.mtime) = ?" [toSql month]) months
-documentFilterToSQL (DocumentFilterByYears years) =
-  -- Filtering by year is supposed to show all documents with time in
-  -- a year, for example for year 2011 it will show all documents from
-  -- 2011-01-01 00:00 to 2012-01-01 00:00 last date should be
-  -- excluded, but to use BETWEEN we skip this small issue
-  --
-  -- Note: using mtime isn't the smartest thing we could do here. We
-  -- have some times associated with document and we need to sort out
-  -- which of times should be used for filtering.
-  sqlConcatOR $ map (\year -> SQL ("documents.mtime BETWEEN '" ++ show year ++ "-01-01' AND '" ++ show (year+1) ++ "-01-01'") []) years
+documentFilterToSQL (DocumentFilterByMonthYearFrom (month,year)) =
+  SQL ("documents.mtime > '" ++ show year ++  "-" ++ show month ++ "-1'") []
+documentFilterToSQL (DocumentFilterByMonthYearTo (month,year)) =
+  SQL ("documents.mtime < '" ++ show year ++ "-" ++ show month ++ "-1'") []
 documentFilterToSQL (DocumentFilterByTags []) =
   SQL "TRUE" []
 documentFilterToSQL (DocumentFilterByTags tags) =
@@ -1461,17 +1435,17 @@ instance MonadDB m => DBQuery m GetDeletedDocumentsByUser [Document] where
 data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
 instance MonadDB m => DBQuery m GetDocumentsByAuthor [Document] where
   query (GetDocumentsByAuthor uid) =
-    query (GetDocuments [DocumentsOfAuthor uid, TemplatesOfAuthor uid] [] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
+    query (GetDocuments [DocumentsOfAuthorDeleteValue uid False, TemplatesOfAuthorDeleteValue uid False] [] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
 data GetTemplatesByAuthor = GetTemplatesByAuthor UserID
 instance MonadDB m => DBQuery m GetTemplatesByAuthor [Document] where
   query (GetTemplatesByAuthor uid) =
-    query (GetDocuments [TemplatesOfAuthor uid] [] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
+    query (GetDocuments [TemplatesOfAuthorDeleteValue uid False] [] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
 data GetAvailableTemplates = GetAvailableTemplates UserID [DocumentProcess]
 instance MonadDB m => DBQuery m GetAvailableTemplates [Document] where
   query (GetAvailableTemplates uid processes) =
-    query (GetDocuments [TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid]
+    query (GetDocuments [TemplatesOfAuthorDeleteValue uid False, TemplatesSharedInUsersCompany uid]
                             [DocumentFilterByProcess processes]
                             [Asc DocumentOrderByMTime]
                             (DocumentPagination 0 maxBound))
@@ -1485,7 +1459,7 @@ instance MonadDB m => DBQuery m GetAvailableTemplates [Document] where
 data GetDocumentsBySignatory = GetDocumentsBySignatory [DocumentProcess] UserID
 instance MonadDB m => DBQuery m GetDocumentsBySignatory [Document] where
   query (GetDocumentsBySignatory processes uid) =
-    query (GetDocuments [DocumentsForSignatory uid] [DocumentFilterByProcess processes] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
+    query (GetDocuments [DocumentsForSignatoryDeleteValue uid False] [DocumentFilterByProcess processes] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
 data GetTimeoutedButPendingDocuments = GetTimeoutedButPendingDocuments MinutesTime
 instance MonadDB m => DBQuery m GetTimeoutedButPendingDocuments [Document] where

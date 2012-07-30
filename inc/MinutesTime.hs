@@ -28,6 +28,8 @@ module MinutesTime
        , monthsBefore
        , daysBefore
        , daysAfter
+       , mtMonth
+       , mtYear
        ) where
 
 import Control.Monad.IO.Class
@@ -186,6 +188,11 @@ fromSeconds s = MinutesTime s
 toSeconds :: MinutesTime -> Int
 toSeconds (MinutesTime s) = s
 
+mtMonth :: MinutesTime -> String
+mtMonth = formatCalendarTime defaultTimeLocale "%m" . toCalendarTime
+
+mtYear :: MinutesTime -> String
+mtYear = formatCalendarTime defaultTimeLocale "%Y" . toCalendarTime
 
 -- | Format time according to Swedish rules of time formating.
 formatMinutesTime :: KontraTimeLocale -> String -> MinutesTime -> String
