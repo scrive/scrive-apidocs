@@ -538,25 +538,7 @@ handleFileGet fileid' _title = do
 {- We return pending message if file is still pending, else we return JSON with number of pages-}
 handleFilePages :: Kontrakcja m => FileID -> m JSValue
 handleFilePages fid = do
-  -- Here we need to implement access rights, this will go as follows:
-  --
-  -- If we have documentid then we look for logged in user and
-  -- signatorylinkid and magichash (in cookie). Then we check if file is
-  -- reachable as document file, document sealed file, document author
-  -- attachment or document signatory attachment.
-  --
-  -- If we have attachmentid then we look for logged in user and see
-  -- if user owns the file or file is shared in user's company.
-  --
-  -- URLs look like:
-  -- /filepages/#fileid/This%20is%file.pdf?documentid=34134124
-  -- /filepages/#fileid/This%20is%file.pdf?documentid=34134124&signatorylinkid=412413
-  -- /filepages/#fileid/This%20is%file.pdf?attachmentid=34134124
-  --
-  -- Warning take into account when somebody has saved document into
-  -- hers account but we still refer using signatorylinkid.
-  --
-  -- Exactly same access rights should apply to file download and to individual pages.
+  checkFileAccess fid
 
   -- we wait 10s before returning here, hopefully it does not kill too
   -- many free ports we check every 0.1s to see if everything was
@@ -815,6 +797,23 @@ handleCreateFromTemplate = withUserPost $ do
 
 checkFileAccess :: Kontrakcja m => FileID -> m ()
 checkFileAccess fid = do
+
+  -- If we have documentid then we look for logged in user and
+  -- signatorylinkid and magichash (in cookie). Then we check if file is
+  -- reachable as document file, document sealed file, document author
+  -- attachment or document signatory attachment.
+  --
+  -- If we have attachmentid then we look for logged in user and see
+  -- if user owns the file or file is shared in user's company.
+  --
+  -- URLs look like:
+  -- /filepages/#fileid/This%20is%file.pdf?documentid=34134124
+  -- /filepages/#fileid/This%20is%file.pdf?documentid=34134124&signatorylinkid=412413
+  -- /filepages/#fileid/This%20is%file.pdf?attachmentid=34134124
+  --
+  -- Warning take into account when somebody has saved document into
+  -- hers account but we still refer using signatorylinkid.
+
   msid <- readField "signatorylinkid"
   mmh <- readField "magichash"
   mdid <- readField "documentid"
