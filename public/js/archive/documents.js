@@ -3,53 +3,8 @@
 
 (function(window){
 
-window.DocumentsListDefinition = function(archive) { return {
-    name : "Documents Table",
-    schema: new Schema({
-    url: "/docs",
-    extraParams : { documentType : "Document" },
-    sorting: new Sorting({ fields: ["title", "status", "time", "party", "author"]}),
-    paging: new Paging({}),
-    textfiltering: new TextFiltering({text: "", infotext: localization.archive.documents.search}),
-    selectfiltering : [
-            new SelectFiltering({
-                             name: "status",
-                             textWidth : "100px",
-                             options: [ {name: localization.filterByStatus.showAnyStatus, value: ""},
-                                        {name: localization.filterByStatus.showDraft,     value: "[draft]"},
-                                        {name: localization.filterByStatus.showCancelled, value: "[cancelled]"},
-                                        {name: localization.filterByStatus.showSent,      value: "[sent,delivered,read,opened]"},
-                                        {name: localization.filterByStatus.showSigned,    value: "[signed]"}
-                                      ]}), 
-            new SelectFiltering({
-                             name: "process",
-                             textWidth : "100px",
-                             options: [ {name: localization.filterByProcess.showAllProcesses,  value: ""},
-                                        {name: localization.filterByProcess.showContractsOnly, value: "contract"},
-                                        {name: localization.filterByProcess.showOffersOnly,    value: "offer"},
-                                        {name: localization.filterByProcess.showOrdersOnly,    value: "order"}
-                                      ]}),
-            new IntervalDoubleSelectFiltering({
-                             name: "time",
-                             textWidth : "110px",
-                             selectedBottomPrefix : localization.filterByTime.filterForm,
-                             selectedTopPrefix :    localization.filterByTime.filterTo ,
-                             options: function() {
-                                        var year = archive.year();
-                                        var month = archive.month();
-                                        var options = [{name : localization.filterByTime.filterForm , value : "<" }];
-                                        var time = new Date();
-                                        while (year < time.getFullYear() || (year == time.getFullYear() && month <= time.getMonth() + 1)) {
-                                            var name = capitaliseFirstLetter(localization.months[month-1].slice(0,3) + " " + year);
-                                            options.push({name : name , value : "("+month + "," + year + ")" })
-                                            month++;
-                                            if (month == 13) {month = 1; year++;}
-                                        };
-                                        options.push({name : localization.filterByTime.filterTo , value : ">" });
-                                        return options} ()
-                             })
-            ], 
-    cells : [
+
+window.DocumentCellsDefinition = function(archive) { return  [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
         new Cell({name: localization.archive.documents.columns.status, width:"52px", field:"status",
                  rendering: function(status,idx,listobject) {
@@ -83,7 +38,60 @@ window.DocumentsListDefinition = function(archive) { return {
                       return jQuery("<span />").text(txt);
                     }
                  })
-        ],
+        ]
+};
+
+window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  [
+            new SelectFiltering({
+                             name: "status",
+                             textWidth : "100px",
+                             options: _.union(
+                                        [{name: localization.filterByStatus.showAnyStatus, value: ""} ],
+                                         (draftsAvaible ? [{name: localization.filterByStatus.showDraft,     value: "[draft]"}] : []),
+                                        [{name: localization.filterByStatus.showCancelled, value: "[cancelled]"},
+                                         {name: localization.filterByStatus.showSent,      value: "[sent,delivered,read,opened]"},
+                                         {name: localization.filterByStatus.showSigned,    value: "[signed]"}
+                                        ])}),
+            new SelectFiltering({
+                             name: "process",
+                             textWidth : "100px",
+                             options: [ {name: localization.filterByProcess.showAllProcesses,  value: ""},
+                                        {name: localization.filterByProcess.showContractsOnly, value: "contract"},
+                                        {name: localization.filterByProcess.showOffersOnly,    value: "offer"},
+                                        {name: localization.filterByProcess.showOrdersOnly,    value: "order"}
+                                      ]}),
+            new IntervalDoubleSelectFiltering({
+                             name: "time",
+                             textWidth : "110px",
+                             selectedBottomPrefix : localization.filterByTime.filterForm,
+                             selectedTopPrefix :    localization.filterByTime.filterTo ,
+                             options: function() {
+                                        var year = archive.year();
+                                        var month = archive.month();
+                                        var options = [{name : localization.filterByTime.filterForm , value : "<" }];
+                                        var time = new Date();
+                                        while (year < time.getFullYear() || (year == time.getFullYear() && month <= time.getMonth() + 1)) {
+                                            var name = capitaliseFirstLetter(localization.months[month-1].slice(0,3) + " " + year);
+                                            options.push({name : name , value : "("+month + "," + year + ")" })
+                                            month++;
+                                            if (month == 13) {month = 1; year++;}
+                                        };
+                                        options.push({name : localization.filterByTime.filterTo , value : ">" });
+                                        return options} ()
+                             })
+            ]
+};
+    
+window.DocumentsListDefinition = function(archive) { return {
+    name : "Documents Table",
+    schema: new Schema({
+    url: "/docs",
+    extraParams : { documentType : "Document" },
+    sorting: new Sorting({ fields: ["title", "status", "time", "party", "author"]}),
+    paging: new Paging({}),
+    textfiltering: new TextFiltering({text: "", infotext: localization.archive.documents.search}),
+    selectfiltering : DocumentSelectsDefinition(archive, true),
+    cells : DocumentCellsDefinition(archive),
     actions : [
            new ListAction({
                 name : localization.archive.documents.createnew,

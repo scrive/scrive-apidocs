@@ -24,16 +24,24 @@ window.TemplatesListDefinition = function(archive) { return {
             ], 
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
-        new Cell({name: localization.archive.templates.columns.time, width:"140px", field:"time"}),
-        new Cell({name: localization.archive.templates.columns.type, width:"120px", field:"process"}),
-        new Cell({name: localization.archive.templates.columns.template, width:"400px", field:"title",  special: "link"}),
-        new Cell({name: "", width:"100px", field:"shared", special: "rendered",
+        new Cell({name: localization.archive.templates.columns.shared, width:"52px", field:"shared", special: "rendered",
                   rendering: function(shared) {
-                         var res = jQuery("<p/>")
-                         if (shared == "True")
-                          return res.text(localization.archive.templates.shared);
+                         return $("<div/>").addClass((shared == "True") ? "sharedIcon" : "notSharedIcon");
+                  }}),
+        new Cell({name: localization.archive.templates.columns.time, width:"140px", field:"time"}),
+        new Cell({name: localization.archive.templates.columns.verificationMethod, width:"100px", field:"verification",  special: "rendered",
+                  rendering: function(verification) {
+                         var res= $("<div/>");
+                         if (verification == "eleg")
+                             res.text(localization.eleg)
+                         else if (verification == "pad")
+                             res.text(localization.pad.authorization)
+                         else
+                             res.text(localization.email)
                          return res;
-                  }})
+                  }}),
+        new Cell({name: localization.archive.templates.columns.template, width:"400px", field:"title",  special: "link"}),
+        new Cell({name: localization.archive.templates.columns.type, width:"120px", field:"process"})
         ],
     actions : [
        new ListAction({

@@ -12,15 +12,12 @@ window.AttachmentsListDefinition = function(archive) {
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.attachments.search}),
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
-        new Cell({name: localization.archive.attachments.columns.time, width:"140px", field:"time"}),
-        new Cell({name: localization.archive.attachments.columns.attachment, width:"400px", field:"title",  special: "link"}),
-        new Cell({name: "", width:"100px", field:"shared", special: "rendered",
+        new Cell({name: localization.archive.attachments.columns.shared, width:"52px", field:"shared", special: "rendered",
                   rendering: function(shared) {
-                         var res = jQuery("<p/>")
-                         if (shared == "True")
-                          return res.text(localization.archive.attachments.shared);
-                         return res;
-                  }})
+                         return $("<div/>").addClass((shared == "True") ? "sharedIcon" : "notSharedIcon");
+                  }}),
+        new Cell({name: localization.archive.attachments.columns.attachment, width:"600px", field:"title",  special: "link"}),
+        new Cell({name: localization.archive.attachments.columns.time, width:"140px", field:"time"})
         ],
     actions : [
         new ListAction({

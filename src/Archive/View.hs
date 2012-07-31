@@ -83,6 +83,10 @@ docFieldsListForJSON tl crtime padqueue doc = do
                           Contract -> "contract"
                           Offer    -> "offer"
                           Order    -> "order"
+    J.value "verification"  $ case (head $ (documentallowedidtypes doc) ++ [EmailIdentification]) of
+      EmailIdentification            -> "email"
+      ELegitimationIdentification    -> "eleg"
+      PadIdentification              -> "pad"
     J.value "anyinvitationundelivered" $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc
     J.value "shared" $ show $ documentsharing doc == Shared
     J.value "file" $ fromMaybe "" $ show <$> (listToMaybe $ (documentsealedfiles doc) ++ (documentfiles doc))

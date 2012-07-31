@@ -2,6 +2,7 @@
 
 (function(window){
 
+    
 window.BinListDefinition = function(archive) { return {
     name : "Trash table",
     schema: new Schema({
@@ -10,12 +11,8 @@ window.BinListDefinition = function(archive) { return {
     sorting: new Sorting({ fields: ["title", "time", "type"]}),
     paging: new Paging({}),
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.bin.search}),
-    cells : [
-        new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
-        new Cell({name: localization.archive.bin.columns.time, width:"140px", field:"time"}),
-        new Cell({name: localization.archive.bin.columns.type, width:"120px", field:"type"}),
-        new Cell({name: localization.archive.bin.columns.title, width:"400px", field:"title",  special: "link"})
-        ],
+    selectfiltering : new DocumentSelectsDefinition(archive),
+    cells : new DocumentCellsDefinition(archive,false),
     actions : [
       new ListAction({
                 name : localization.archive.bin.restore.action,

@@ -496,7 +496,8 @@ javascriptLocalisation =
                               time       : "$_SortTime()$"
                             , type       : "$_SortType()$"
                             , template   : "$_SortTemplate()$"
-
+                            , shared      : "$_share()$"
+                            , verificationMethod : "$_verificationMethod()$"
                        }
                 }
             ,  attachments : {
@@ -519,6 +520,7 @@ javascriptLocalisation =
                     ,  search : "$_pageAttachmentListSearchInfo()$"
                     ,  columns :{
                               time       : "$_SortTime()$"
+                            , shared      : "$_share()$"
                             , attachment   : "$_SortAttachment()$"
 
                        }

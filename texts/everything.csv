@@ -2438,3 +2438,4 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_uploadViewGoBack","Gå tillbaks ett steg",,"Go back one step"
 "_archiveCSV","Download CSV",,"Download CSV"
 "_archiveZIP","Download PDF",,"Download PDF"
+"_verificationMethod","Verifiering",,"Verification"
