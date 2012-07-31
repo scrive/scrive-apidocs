@@ -64,7 +64,7 @@ var AttachmentView = Backbone.View.extend({
     this.render();
   },
   downloadbox : function() {
-    var box = $("<span class='download'>")
+    var box = $("<span class='download'>");
     var link = $("<a  target='_blank'/>").attr("href",this.model.file().downloadLink()).text(localization.downloadPDF);
     return box.append(link);
   },
@@ -80,7 +80,7 @@ var AttachmentView = Backbone.View.extend({
     }
     else if (!this.editing)
     {
-      var editIcon = $("<a href='#' class='icon edit' style='margin-right: 2px'></a>")
+      var editIcon = $("<a href='#' class='icon edit' style='margin-right: 2px'></a>");
       editIcon.click(function() {view.editing = true; view.render(); return false;});
       titlebox.append(editIcon);
       titlebox.append($("<span class='visible-docname'></span>").text(attachment.title()));
@@ -123,7 +123,7 @@ var AttachmentView = Backbone.View.extend({
     });
 
 
-    $(this.el).append(this.file.view.el)
+    $(this.el).append(this.file.view.el);
   }
 });
 
@@ -139,7 +139,7 @@ window.KontraAttachment = function(args) {
   return {
     model : function() { return model;},
     view : function()  { return view; }
-  }
+  };
 };
 
 })(window);
