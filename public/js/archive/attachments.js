@@ -56,7 +56,6 @@ window.AttachmentsListDefinition = function(archive) {
                                                 ajaxsuccess : function() {
                                                     FlashMessages.add({color : "green", content : localization.archive.attachments.share.successMessage});
                                                     archive.attachments().recall();
-                                                    confirmationPopup.view.clear();
                                                 }
                                           }).sendAjax();
                                     return true;
@@ -90,7 +89,6 @@ window.AttachmentsListDefinition = function(archive) {
                                                 ajaxsuccess : function() {
                                                     FlashMessages.add({color : "green", content : localization.archive.attachments.remove.successMessage});
                                                     archive.attachments().recall();
-                                                    confirmationPopup.view.clear();
                                                 }
                                           }).sendAjax();
                                     return true;
