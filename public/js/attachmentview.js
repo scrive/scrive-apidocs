@@ -51,7 +51,7 @@ var Attachment = Backbone.Model.extend({
       processData: true,
       cache: false
     });
-  },
+  }
 });
 
 var AttachmentView = Backbone.View.extend({
