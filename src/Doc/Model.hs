@@ -299,9 +299,9 @@ documentFilterToSQL (DocumentFilterByProcess processes) =
 documentFilterToSQL (DocumentFilterByRole role) =
   SQL "(signatory_links.roles & ?) <> 0" [toSql [role]]
 documentFilterToSQL (DocumentFilterByMonthYearFrom (month,year)) =
-  SQL ("documents.mtime > '" ++ show year ++  "-" ++ show month ++ "-1'") []
+  SQL ("(documents.mtime > '" ++ show year ++  "-" ++ show month ++ "-1')") []
 documentFilterToSQL (DocumentFilterByMonthYearTo (month,year)) =
-  SQL ("documents.mtime < '" ++ show year ++ "-" ++ show month ++ "-1'") []
+  SQL ("(documents.mtime < '" ++ show (year + 1 <| month == 12 |> year)++ "-" ++ show ((month `mod` 12) + 1) ++ "-1')") []
 documentFilterToSQL (DocumentFilterByTags []) =
   SQL "TRUE" []
 documentFilterToSQL (DocumentFilterByTags tags) =

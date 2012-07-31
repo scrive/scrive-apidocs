@@ -183,11 +183,10 @@ jsonDocumentsList = withUserGet $ do
       fltSpec ("process", "contract") = [DocumentFilterByProcess [Contract]]
       fltSpec ("process", "order") = [DocumentFilterByProcess [Order]]
       fltSpec ("process", "offer") = [DocumentFilterByProcess [Offer]]
-      fltSpec ("from", fromstr) = case reads fromstr of  
-                                    ((from',""):_) -> [DocumentFilterByMonthYearFrom from']
-                                    _ -> []
-      fltSpec ("to", tostr) = case reads tostr of
-                                    ((to',""):_) -> [DocumentFilterByMonthYearTo to']
+      fltSpec ("time", tostr) = case reads tostr of
+                                    (((Just from',Just to'),""):_) -> [DocumentFilterByMonthYearFrom from',DocumentFilterByMonthYearTo to']
+                                    (((Nothing ,Just to'),""):_) -> [DocumentFilterByMonthYearTo to']
+                                    (((Just from',Nothing),""):_)   -> [DocumentFilterByMonthYearFrom from']
                                     _ -> []
       fltSpec ("status", scstr) = case reads scstr of
                                     ((statusclasss,""):_) -> [DocumentFilterByStatusClass statusclasss]
@@ -196,7 +195,7 @@ jsonDocumentsList = withUserGet $ do
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
       pagination = docPaginationFromParams params
-      filters = filters1 ++ filters2      
+      filters = filters1 ++ filters2
   cttime <- getMinutesTime
   padqueue <- dbQuery $ GetPadQueue $ userid user
   format <- getField "format"

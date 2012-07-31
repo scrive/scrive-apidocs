@@ -300,13 +300,13 @@
             }
             _.each(this.schema.allFiltering(),function(f) {
                 console.log("Generating new view for filtering");
-                var filter = new SelectFilteringView({model: f, el: $("<div class='float-left'/>")});
+                var filter = new FilteringView({model: f, el: $("<div class='float-left'/>")});
                 view.pretableboxleft.append(filter.el);
             })
             
             if (!this.schema.textfiltering().disabled()) {
                 console.log("Generating new view for text-filtering");
-                var filter = new TextFilteringView({model: this.schema.textfiltering(), el: $("<div style='searchBox height:30px'/>")});
+                var filter = new FilteringView({model: this.schema.textfiltering(), el: $("<div style='searchBox height:30px'/>")});
                 this.pretableboxright.append(filter.el);
             }
 

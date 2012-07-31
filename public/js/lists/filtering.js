@@ -6,6 +6,9 @@
 (function(window) {
 
     window.TextFiltering = Backbone.Model.extend({
+        type : function() {
+            return "text";
+        },
         disabled: function() {
             return this.get("disabled") != undefined && this.get("disabled") == true;
         },
@@ -27,8 +30,134 @@
         }
     });
 
+  window.SelectFiltering = Backbone.Model.extend({
+        defaults : {
+            options: [{name : "", value : ""}],
+            name: ""
+        },
+        type : function() {
+            return "select"
+        },
+        initialize: function(args) {
+        },
+        options: function() {
+            return this.get("options");
+        },
+        name: function() {
+            return this.get("name");
+        },
+        textWidth: function() {
+            return this.get("textWidth");
+        },
+        selected: function() {
+            return this.get("selected");
+        },
+        find : function(v){
+            return _.filter(this.options(), function(o) {return o.value == v})[0];
+        },
+        select: function(v) {
+            if (this.find(v) != undefined) {
+               SessionStorage.set(this.get("namespace"), "select-filtering" + this.name(), this.find(v).value );
+               this.set({"selected" : this.find(v)});
+            }   
+            else
+                this.select("");
+        },
+        selectedValue : function() {
+          if (this.selected() != undefined)
+              return this.selected().value;
+          else
+              return "";
+        },
+        setSessionStorageNamespace: function(namespace) {
+            this.set({ namespace: namespace });
+            var fss = SessionStorage.get(namespace, "select-filtering" + this.name());
+            if (fss == undefined) fss = "";
+                this.select(fss);
+        }
+    });
+  
+  window.IntervalDoubleSelectFiltering = Backbone.Model.extend({
+        defaults : {
+            options: [{name : "", value : "<"}, {name : "", value : ">"}],
+            name: "",
+            selectedBottomPrefix : "",
+            selectedTopPrefix : ""
+        },
+        type : function() {
+            return "interval-double-select";
+        },
+        options: function() {
+            return this.get("options");
+        },
+        name: function() {
+            return this.get("name");
+        },
+        textWidth: function() {
+            return this.get("textWidth");
+        },
+        selectedBottomPrefix : function() {
+            return this.get("selectedBottomPrefix");
+        },
+        selectedTopPrefix : function() {
+            return this.get("selectedTopPrefix");
+        },
+        selectedTop: function() {
+            return this.get("selectedTop");
+        },
+        selectedBottom: function() {
+            return this.get("selectedBottom");
+        },
+        find : function(v){
+            return _.filter(this.options(), function(o) {return o.value == v})[0];
+        },
+        selectTop: function(v) {
+            console.log("Selecting top");
+            if (this.find(v) != undefined) {
+               SessionStorage.set(this.get("namespace"), "interval-double-select-top" + this.name(), this.find(v).value );
+               this.set({"selectedTop" : this.find(v)});
+            }
+            else
+                this.selectTop(">");
+        },
+        selectBottom: function(v) {
+            console.log("Selecting top");
+            if (this.find(v) != undefined) {
+               SessionStorage.set(this.get("namespace"), "interval-double-select-bottom" + this.name(), this.find(v).value );
+               this.set({"selectedBottom" : this.find(v)});
+            }
+            else
+                this.selectBottom("<");
+        },
+        selectedValue : function() {
+              var valueBottom = this.selectedBottom().value != "<" ? "Just " + this.selectedBottom().value : "Nothing";
+              var valueTop = this.selectedTop().value != ">"       ? "Just " + this.selectedTop().value : "Nothing";
+              return "(" + valueBottom + "," + valueTop + ")";
+        },
+        setSessionStorageNamespace: function(namespace) {
+            this.set({ namespace: namespace });
+            var fss = SessionStorage.get(namespace, "interval-double-select-top" + this.name());
+            if (fss == undefined) fss = ">";
+                this.selectTop(fss);
+            fss = SessionStorage.get(namespace, "interval-double-select-bottom" + this.name());
+            if (fss == undefined) fss = "<";
+                this.selectBottom(fss);
+        }
+    });
 
-    window.TextFilteringView = Backbone.View.extend({
+
+    window.FilteringView = Backbone.View.extend({
+    initialize: function (args) {
+        if (args.model.type() == "text")
+            return new TextFilteringView(args);
+        else if (args.model.type() == "select")
+            return new SelectFilteringView(args);
+        else if (args.model.type() == "interval-double-select")
+            return new IntervalDoubleSelectFilteringView(args);
+    }
+    });
+
+    var TextFilteringView = Backbone.View.extend({
         model: TextFiltering,
         initialize: function(args) {
             _.bindAll(this, 'render');
@@ -58,60 +187,7 @@
     });
 
 
-
-  window.SelectFiltering = Backbone.Model.extend({
-        defaults : {
-            options: [],
-            selected: undefined,
-            description: "",
-            name: ""
-        },
-        initialize: function(args) {
-        },
-        options: function() {
-            return this.get("options");
-        },
-        description: function() {
-            return this.get("description");
-        },
-        name: function() {
-            return this.get("name");
-        },
-        prefix: function() {
-            return this.get("prefix");
-        },
-        textWidth: function() {
-            return this.get("textWidth");
-        }, 
-        selected: function() {
-            return this.find(this.get("selected"));
-        },
-        find : function(v){
-            return _.filter(this.options(), function(o) {return o.value == v})[0];
-        },
-        select: function(v) {
-            if (this.find(v) != undefined) {
-               SessionStorage.set(this.get("namespace"), "select-filtering" + this.name(), this.find(v).value );
-               this.set({"selected" : this.find(v).value});
-            }
-            else
-                this.deselect();
-                 
-        },
-        deselect: function() {
-            SessionStorage.set(this.get("namespace"), "select-filtering" + this.name(), "" );
-            this.set({"selected" : undefined});
-        },
-        setSessionStorageNamespace: function(namespace) {
-            this.set({ namespace: namespace });
-            var fss = SessionStorage.get(namespace, "select-filtering" + this.name());
-            if (fss!= undefined)
-                this.select(fss);
-        }
-    });
-
-
-    window.SelectFilteringView = Backbone.View.extend({
+    var SelectFilteringView = Backbone.View.extend({
         model: SelectFiltering,
         initialize: function(args) {
             _.bindAll(this, 'render');
@@ -122,29 +198,18 @@
         render: function() {
             $(this.el).empty();
             var selectFiltering = this.model;
-            var name = this.model.description();
             var options = this.model.options();
-
-            if (selectFiltering.selected() != undefined)
-            {
-                var selected = selectFiltering.selected()
-                name = selected.name;
-                if (this.model.prefix() != undefined)
-                    name = this.model.prefix() + name;
-                var options_ = [];
-                options_.push({name:  this.model.description(), value: "", onSelect: function(value) {selectFiltering.deselect();} });
-                for(var i=0;i< options.length;i++)
+            var selected = selectFiltering.selected()
+            var selectOptions = [];
+            for(var i=0;i< options.length;i++)
                     if (options[i] != selected)
-                         options_.push(options[i])
-                options = options_;         
-                
-            }
+                         selectOptions.push(options[i])
             if (this.select != undefined)
                 this.select.clear();
             this.select = new Select({
-                options : options,
-                name : name,
-                theme : selectFiltering.selected() != undefined ? "dark" : "warm",
+                options : selectOptions,
+                name : selected.name,
+                theme : selected.value != "" ? "dark" : "warm",
                 textWidth : selectFiltering.textWidth(),
                 onSelect : function(value) {
                     selectFiltering.select(value);
@@ -154,4 +219,66 @@
         }
     });
 
+
+    var IntervalDoubleSelectFilteringView = Backbone.View.extend({
+        model: SelectFiltering,
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            var view = this;
+            this.model.bind('change', function() {view.render();})
+            this.render();
+        },
+        render: function() {
+            $(this.el).empty();
+            var filtering = this.model;
+            var options = this.model.options();
+            var selectedBottom = filtering.selectedBottom()
+            var selectedTop = filtering.selectedTop()
+
+            var selectOptionsBottom = [];
+            for(var i=0;i< options.length;i++) {
+                    if (options[i] != selectedBottom && options[i].value != ">")
+                        selectOptionsBottom.push({name : options[i].name, value : options[i].value});
+                    if (options[i] == selectedTop) break;
+            }
+            if (selectOptionsBottom[0].value == "<")
+                selectOptionsBottom.push(selectOptionsBottom.shift());
+            selectOptionsBottom.reverse();
+            
+            if (this.selectBottom != undefined)
+                this.selectBottom.clear();
+            this.selectBottom = new Select({
+                options : selectOptionsBottom,
+                name :  selectedBottom.value != "<" ? filtering.selectedBottomPrefix() + " "  + selectedBottom.name : selectedBottom.name,
+                theme : selectedBottom.value != "<" ? "dark" : "warm",
+                textWidth : filtering.textWidth(),
+                onSelect : function(value) {
+                    filtering.selectBottom(value);
+                }
+            });
+            $(this.el).append($(this.selectBottom.view().el).addClass("float-left"));
+
+            var selectOptionsTop = [];
+            var addOption = false;
+            for(var i=0;i< options.length;i++) {
+                    if (options[i] == selectedBottom) addOption = true;
+                    if (options[i].value != "<" && addOption && options[i] != selectedTop)
+                         selectOptionsTop.push({name : options[i].name, value : options[i].value});
+            }
+            selectOptionsTop.reverse();
+            if (this.selectTop != undefined)
+                this.selectTop.clear();
+            this.selectTop = new Select({
+                options : selectOptionsTop,
+                name : selectedTop.value != ">" ? filtering.selectedTopPrefix() + " " + selectedTop.name : selectedTop.name,
+                theme : selectedTop.value != ">" ? "dark" : "warm",
+                textWidth : filtering.textWidth(),
+                onSelect : function(value) {
+                    filtering.selectTop(value);
+                }
+            });
+            $(this.el).append($(this.selectTop.view().el).addClass("float-left"));
+
+        }
+    });
 })(window);

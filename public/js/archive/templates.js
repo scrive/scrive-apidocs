@@ -12,10 +12,12 @@ window.TemplatesListDefinition = function(archive) { return {
     sorting: new Sorting({ fields: ["title", "time", "process"]}),
     paging: new Paging({}),
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.templates.search}),
-    selectfiltering : [ new SelectFiltering({description: localization.filterByProcess.showAllProcesses,
+    selectfiltering : [ new SelectFiltering({
                              name: "process",
                              textWidth : "100px",
-                             options: [ {name: localization.filterByProcess.showContractsOnly, value: "contract"},
+                             options: [
+                                        {name: localization.filterByProcess.showAllProcesses, value: ""},
+                                        {name: localization.filterByProcess.showContractsOnly, value: "contract"},
                                         {name: localization.filterByProcess.showOffersOnly,    value: "offer"},
                                         {name: localization.filterByProcess.showOrdersOnly,    value: "order"}
                                       ]})
