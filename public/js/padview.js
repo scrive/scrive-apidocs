@@ -80,7 +80,7 @@ window.PadQueueView = Backbone.View.extend({
     },
     documentView : function() {
         var padqueue = this.model;
-        var doc =  KontraSignDocument.init({
+        var doc =  new DocumentSignView({
                     id: padqueue.documentid(),
                     viewer : new DocumentViewer({
                         signatoryid : padqueue.signatorylinkid(),
@@ -178,18 +178,16 @@ window.PadQueueView = Backbone.View.extend({
     }
 });
 
-window.KontraPad = {
-    init : function(args){
-       this.model = new PadQueue({ });
-       this.view = new PadQueueView({
-                        model: this.model,
+window.KontraPad = function() {
+     var model = new PadQueue({ });
+     var view = new PadQueueView({
+                        model: model,
                         el : $("<div/>")
                     });
-       return this;
-   },
-   recall : function()
-   {
-       this.model.recall();
-   }
+     return {
+         model : function()  {return model;},
+         view :  function()  {return view;},
+         recall : function() {model.recall();}
+    }
 };
 })(window);
