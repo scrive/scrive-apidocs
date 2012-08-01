@@ -373,13 +373,6 @@ isStandardField _ = True
 findCustomField :: HasFields a => String -> a -> Maybe SignatoryField
 findCustomField name = find (matchingFieldType (CustomFT name False)) . getAllFields
 
-{- | Add a tag to tag list -}
-addTag:: [DocumentTag] -> (String, String) -> [DocumentTag]
-addTag ((DocumentTag n v):ts) (n',v') = if n == n'
-                           then (DocumentTag n v') : ts
-                           else (DocumentTag n v)  : (addTag ts (n',v'))
-addTag _ (n,v) = [DocumentTag n v]
-
 samenameanddescription :: String -> String -> (String, String, [(String, String)]) -> Bool
 samenameanddescription n d (nn, dd, _) = n == nn && d == dd
 

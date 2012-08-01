@@ -29,6 +29,7 @@ import Stats.Control
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
+import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import qualified Log (scrivebymail, scrivebymailfailure, mailAPI, jsonMailAPI)
 
@@ -37,7 +38,6 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
 import Data.Char
-import Data.Either
 import Data.Int
 import Data.List
 import Data.Maybe
@@ -258,56 +258,41 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   let userDetails = signatoryDetailsFromUser user mcompany
 
   let actor = mailAPIActor ctxtime (userid user) (getEmail user)
-  edoc <- dbUpdate $ NewDocument user mcompany title doctype 0 actor
+  mdoc <- dbUpdate $ NewDocument user mcompany title doctype 0 actor
 
-
-  when (isLeft edoc) $ do
-    let Left msg = edoc
-
-    Log.scrivebymail $ "Could not create document: " ++ msg
+  when (isNothing mdoc) $ do
 
     -- send email saying sorry, there was some weird error
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not create your document. I do not know what is wrong. You can try again or you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkUpload) ++ "\">click here</a> to use the web interface.</p>"
 
     internalError
 
-  let Right doc = edoc
-
+  let Just doc = mdoc
 
   content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) pdfBinary
   file <- dbUpdate $ NewFile title content14
-  _ <- guardRightM $ dbUpdate (AttachFile (documentid doc) (fileid file) actor)
+  _ <- guardTrueM $ dbUpdate (AttachFile (documentid doc) (fileid file) actor)
   _ <- dbUpdate $ SetDocumentIdentification (documentid doc) [EmailIdentification] actor
   res <- (sequence $ [dbUpdate $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) actor])
 
-  let errs = lefts res
-
-  when ([] /= errs) $ do
-    Log.scrivebymail $ "Could not set up document: " ++ (intercalate "; " errs)
-
+  when (not $ and res) $ do
     -- send sorry email
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what is wrong. I created it in Scrive, but I cannot get it ready to send. If you want to see your document, you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
 
     internalError
 
-  let Right resdoc = last res
-  _ <- addDocumentCreateStatEvents resdoc "mailapi+simple"
-
-  edoc2 <- dbUpdate $ PreparationToPending (documentid doc) actor
-
-  when (isLeft edoc2) $ do
-    Log.scrivebymail $ "Could not got to pending document: " ++ (intercalate "; " errs)
-
+  is_pending <- dbUpdate $ PreparationToPending (documentid doc) actor
+  when (not is_pending) $ do
     -- send sorry email
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what's wrong. Your document is created and ready to be sent. To see your document and send it yourself, <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
 
     internalError
 
-  let Right doc2 = edoc2
+  -- if previous step succeeded, document must be in the database
+  Just enddoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
-
-
-  markDocumentAuthorReadAndSeen doc2
+  _ <- addDocumentCreateStatEvents enddoc "mailapi+simple"
+  markDocumentAuthorReadAndSeen enddoc
   --_ <- DocControl.postDocumentChangeAction doc2 doc Nothing
 
   _ <- case (mailapi, usercompany user) of
@@ -317,9 +302,9 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
       Log.scrivebymail $ "Company API Key with user with no companyid?"
       return Nothing
 
-  sendMailAPIConfirmEmail ctx doc2
+  sendMailAPIConfirmEmail ctx enddoc
 
-  return doc2
+  return enddoc
 
 sendMailAPIConfirmEmail :: Kontrakcja m => Context -> Document -> m ()
 sendMailAPIConfirmEmail ctx document =
@@ -529,24 +514,18 @@ jsonMailAPI mailapi username user pdfs plains content = do
       title = maybe (basename $ getAttachmentFilename $ fst pdf) decodeWords $ dcrTitle dcr
       actor = mailAPIActor ctxtime (userid user) (getEmail user)
 
-  edoc <- dbUpdate $ NewDocument user mcompany title doctype 0 actor
+  mdoc <- dbUpdate $ NewDocument user mcompany title doctype 0 actor
 
-  when (isLeft edoc) $ do
-    let Left msg = edoc
-
-    Log.jsonMailAPI $ "Could not create document: " ++ msg
-
+  when (isNothing mdoc) $ do
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not create your document. I do not know what is wrong. You can try again or you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkUpload) ++ "\">click here</a> to use the web interface.</p>"
 
     internalError
 
-  let Right doc = edoc
-
-
+  let Just doc = mdoc
 
   content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) pdfBinary
   file <- dbUpdate $ NewFile title content14
-  _ <- guardRightM $ dbUpdate (AttachFile (documentid doc) (fileid file) actor)
+  _ <- guardTrueM $ dbUpdate (AttachFile (documentid doc) (fileid file) actor)
 
   _ <- dbUpdate $ SetDocumentIdentification (documentid doc) [EmailIdentification] actor
 
@@ -556,24 +535,19 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
   res <- (sequence $ [dbUpdate $ ResetSignatoryDetails (documentid doc) signatories actor])
 
-  let errs = lefts res
-
-  when ([] /= errs) $ do
-    Log.jsonMailAPI $ "Could not set up document: " ++ (intercalate "; " errs)
+  when (not $ and res) $ do
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what is wrong. I created it in Scrive, but I cannot get it ready to send. If you want to see your document, you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     internalError
 
-  let Right resdoc = last res
-  _ <- addDocumentCreateStatEvents resdoc "mailapi+json"
-
-  edoc2 <- dbUpdate $ PreparationToPending (documentid doc) actor
-  when (isLeft edoc2) $ do
-    Log.jsonMailAPI $ "Could not get to pending document: " ++ (intercalate "; " errs)
+  is_pending <- dbUpdate $ PreparationToPending (documentid doc) actor
+  when (not is_pending) $ do
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what's wrong. Your document is created and ready to be sent. To see your document and send it yourself, <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     internalError
 
-  let Right doc2 = edoc2
-  markDocumentAuthorReadAndSeen doc2
+  -- if previous step succeeded, document must be in the database
+  Just enddoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+  _ <- addDocumentCreateStatEvents enddoc "mailapi+json"
+  markDocumentAuthorReadAndSeen enddoc
   --_ <- DocControl.postDocumentChangeAction doc2 doc Nothing
 
   _ <- case (mailapi, usercompany user) of
@@ -583,9 +557,9 @@ jsonMailAPI mailapi username user pdfs plains content = do
       Log.jsonMailAPI $ "Company API Key with user with no companyid?"
       return Nothing
 
-  sendMailAPIConfirmEmail ctx doc2
+  sendMailAPIConfirmEmail ctx enddoc
 
-  return doc2
+  return enddoc
 
 getByAttachmentName :: String -> [(MIME.Type, BS.ByteString)] -> Maybe (MIME.Type, BS.ByteString)
 getByAttachmentName name ps =

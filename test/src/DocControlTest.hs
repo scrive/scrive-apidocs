@@ -146,19 +146,22 @@ testNonLastPersonSigningADocumentRemainsPending = do
                          _ -> False
                      && d `allowsIdentification` EmailIdentification)
 
-  Right _ <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
+  True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
                    (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])
                  , (mkSigDetails "Fred" "Frog" "fred@frog.com", [SignatoryPartner])
                  , (mkSigDetails "Gordon" "Gecko" "gord@geck.com", [SignatoryPartner])
                ]) (systemActor $ documentctime doc')
 
-  Right doc'' <- randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc'))
+  True <- randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc'))
+  Just doc'' <- dbQuery $ GetDocumentByDocumentID $ documentid doc'
 
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
       siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
 
-  Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink)
+  True <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink)
                (signatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (getEmail $ siglink) (signatorylinkid siglink))
+  Just doc <- dbQuery $ GetDocumentByDocumentID $ documentid doc''
+
 
   assertEqual "Two left to sign" 2 (length $ filter isUnsigned (documentsignatorylinks doc))
 
@@ -187,19 +190,21 @@ testLastPersonSigningADocumentClosesIt = do
                          _ -> False
                      && d `allowsIdentification` EmailIdentification)
 
-  Right _ <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
+  True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
                    (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])
                  , (mkSigDetails "Fred" "Frog" "fred@frog.com", [SignatoryPartner])
                ]) (systemActor $ documentctime doc')
 
 
-  Right doc'' <- randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc'))
+  True <- randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc'))
+  Just doc'' <- dbQuery $ GetDocumentByDocumentID $ documentid doc'
 
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
       siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
 
-  Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink)
+  True <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink)
                (signatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (getEmail siglink) (signatorylinkid siglink))
+  Just doc <- dbQuery $ GetDocumentByDocumentID $ documentid doc''
 
   assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks doc))
 

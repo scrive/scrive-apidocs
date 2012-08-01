@@ -69,6 +69,7 @@ import Text.JSON
 import Control.Applicative
 import Misc
 import Control.Monad
+import qualified Data.Set as S
 
 newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
   deriving (Eq, Ord)
@@ -287,7 +288,11 @@ data DocumentSharing = Private
 data DocumentTag = DocumentTag {
     tagname :: String
   , tagvalue :: String
-  } deriving (Eq, Ord, Show, Data, Typeable)
+  } deriving (Eq, Show, Data, Typeable)
+
+ -- for inserting into set
+instance Ord DocumentTag where
+  a `compare` b = tagname a `compare` tagname b
 
 data DocumentUI = DocumentUI {
     documentmailfooter :: Maybe String
@@ -421,7 +426,7 @@ data Document = Document {
   , documentcancelationreason      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
   , documentsharing                :: DocumentSharing
   , documentrejectioninfo          :: Maybe (MinutesTime, SignatoryLinkID, String)
-  , documenttags                   :: [DocumentTag]
+  , documenttags                   :: S.Set DocumentTag
   , documentservice                :: Maybe ServiceID
   , documentdeleted                :: Bool -- set to true when doc is deleted - the other fields will be cleared too, so it is really truely deleting, it's just we want to avoid re-using the docid.
   , documentauthorattachments      :: [AuthorAttachment]

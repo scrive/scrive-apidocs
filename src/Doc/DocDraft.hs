@@ -4,6 +4,7 @@ module Doc.DocDraft (
     applyDraftDataToDocument
   ) where
 
+import Control.Monad.Trans.Maybe
 import Doc.SignatoryTMP
 import Doc.DocStateData
 import Misc
@@ -75,7 +76,14 @@ applyDraftDataToDocument doc draft actor = do
          dbUpdate $ TemplateFromDocument (documentid doc) actor
     case (mergeSignatories (fromJust $ getAuthorSigLink doc) (signatories draft)) of
          Nothing   -> return $ Left "Problem with author details while sending draft"
-         Just sigs -> dbUpdate $ ResetSignatoryDetails2 (documentid doc) sigs actor
+         Just sigs -> do
+           mdoc <- runMaybeT $ do
+             True <- dbUpdate $ ResetSignatoryDetails2 (documentid doc) sigs actor
+             Just newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+             return newdoc
+           return $ case mdoc of
+             Nothing  -> Left "applyDraftDataToDocument failed"
+             Just newdoc -> Right newdoc
 
 mergeSignatories :: SignatoryLink -> [SignatoryTMP] -> Maybe [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload)]
 mergeSignatories docAuthor tmps =

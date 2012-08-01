@@ -89,16 +89,17 @@ testSeparateCompanies = do
   _dcs <- catMaybes <$> mapM (dbQuery . GetDocumentByDocumentID) dids
   let actor = systemActor $ fromMinutes 0
   _docs <- forM dids $ \did -> do
-    ed <- dbUpdate (PreparationToPending did  actor)
-    case ed of
-      Right d -> do
+    True <- dbUpdate (PreparationToPending did  actor)
+    mdoc <- dbQuery $ GetDocumentByDocumentID did
+    case mdoc of
+      Just d -> do
         let Just sl = getAuthorSigLink d
         _ <- dbUpdate $ SetDocumentInviteTime did (fromMinutes 0) actor
         _ <- dbUpdate $ MarkInvitationRead did (signatorylinkid sl)  actor
         _ <- dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) actor
         _ <- dbUpdate $ (SignDocument did (signatorylinkid sl) (signatorymagichash sl) Nothing actor)
         return $ Just d
-      Left _ -> return Nothing
+      Nothing -> return Nothing
 
   x1' <- createDocumentJSONFriend "test_company1" "eric@scrive.com" "erik@scrive.com"
   y1' <- createDocumentJSONFriend "test_company2" "erik@scrive.com" "eric@scrive.com"
@@ -109,16 +110,17 @@ testSeparateCompanies = do
   
   _dcs <- catMaybes <$> mapM (dbQuery . GetDocumentByDocumentID) dids'
   _docs <- forM dids' $ \did -> do
-    ed <- dbUpdate (PreparationToPending did  actor)
-    case ed of
-      Right d -> do
+    True <- dbUpdate (PreparationToPending did  actor)
+    mdoc <- dbQuery $ GetDocumentByDocumentID did
+    case mdoc of
+      Just d -> do
         let Just sl = getAuthorSigLink d
         _ <- dbUpdate $ SetDocumentInviteTime did (fromMinutes 0) actor
         _ <- dbUpdate $ MarkInvitationRead did (signatorylinkid sl)  actor
         _ <- dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) actor
         _ <- dbUpdate $ (SignDocument did (signatorylinkid sl) (signatorymagichash sl) Nothing actor)
         return $ Just d
-      Left _ -> return Nothing
+      Nothing -> return Nothing
 
   apiReqDocs1 <- getDocumentsJSONC "test_company1"
   apiRespDocs1 <- makeAPIRequest getDocuments $ apiReqDocs1

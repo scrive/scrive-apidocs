@@ -19,6 +19,7 @@ import User.Model
 import User.History.Model
 import KontraLink
 import FlashMessage
+import qualified Data.Set as S
 import qualified Data.ByteString.UTF8 as BS
 import File.FileID
 import IPAddress
@@ -63,6 +64,9 @@ instance InspectXML FileID where
 
 instance InspectXML DocumentLogEntry where
     inspectXML (DocumentLogEntry time text) = show time ++ ": " ++ inspectXML text
+
+instance InspectXML (S.Set DocumentTag) where
+  inspectXML = inspectXML . S.toList
 
 --Standard classes - we will just call show with some escaping
 instance InspectXML String where

@@ -1,5 +1,6 @@
 module Doc.API (documentAPI) where
 
+import Control.Monad.Trans.Maybe
 import Happstack.StaticRouting
 import Text.JSON
 import KontraMonad
@@ -97,26 +98,29 @@ documentNew = api $ do
 
   content <- apiGuardL (badInput "The PDF is invalid.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks pdfcontent)
 
-  file <- lift $ dbUpdate $ NewFile filename content
+  doc <- apiGuardL (serverError "documentNew failed") . runMaybeT $ do
+    file <- dbUpdate $ NewFile filename content
+    Just d1 <- dbUpdate $ NewDocument user mcompany filename doctype 1 actor
+    True <- dbUpdate $ AttachFile (documentid d1) (fileid file) actor
+    -- we really need to check SignatoryDetails before adding them
+    let sigs = map (\ir -> (SignatoryDetails {
+                              signatorysignorder = SignOrder (toInteger $ fromMaybe 1 $ irSignOrder ir),
+                              signatoryfields = irData ir
+                              },
+                            irRole ir,
+                            irAttachments ir,
+                            Nothing)) -- No CSV
+              (dcrInvolved dcr)
 
-  d1 <- apiGuardL' $ dbUpdate $ NewDocument user mcompany filename doctype 1 actor
-  d2 <- apiGuardL' $ dbUpdate $ AttachFile (documentid d1) (fileid file) actor
-  -- we really need to check SignatoryDetails before adding them
-  let sigs = map (\ir -> (SignatoryDetails {
-                             signatorysignorder = SignOrder (toInteger $ fromMaybe 1 $ irSignOrder ir),
-                             signatoryfields = irData ir
-                             },
-                          irRole ir,
-                          irAttachments ir,
-                          Nothing)) -- No CSV
-             (dcrInvolved dcr)
-  
-  d3 <- case sigs of
-    [] -> return d2
-    _ -> apiGuardL' $ dbUpdate $ ResetSignatoryDetails2 (documentid d2) sigs actor
+    when (not $ null sigs) $ do
+      True <- dbUpdate $ ResetSignatoryDetails2 (documentid d1) sigs actor
+      return ()
 
-  _ <- lift $ addDocumentCreateStatEvents d3 "web"
-  return $ Created $ jsonDocumentForAuthor d3 (ctxhostpart ctx)
+    Just d3 <- dbQuery $ GetDocumentByDocumentID $ documentid d1
+    _ <- addDocumentCreateStatEvents d3 "web"
+    return d3
+
+  return $ Created $ jsonDocumentForAuthor doc (ctxhostpart ctx)
 
 -- this one must be standard post with post params because it needs to
 -- be posted from a browser form
@@ -205,9 +209,12 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
 
   content <- apiGuardL (badInput "The PDF was invalid.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
 
-  file <- lift $ dbUpdate $ NewFile (basename filename) content
+  file <- dbUpdate $ NewFile (basename filename) content
   let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) email slid
-  d <- apiGuardL' $ dbUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor
+  d <- apiGuardL (serverError "documentUploadSignatoryAttachment: SaveSigAttachment failed") . runMaybeT $ do
+    True <- dbUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor
+    Just newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+    return newdoc
 
   -- let's dig the attachment out again
   sigattach' <- apiGuard' $ getSignatoryAttachment d sid aname
@@ -231,8 +238,10 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   -- attachment must have a file
   fileid <- apiGuard (actionNotAvailable "That signatory attachment request does not have a file uploaded for it, or it has been previously deleted.") $ signatoryattachmentfile sigattach
 
-  d <- apiGuardL' $ dbUpdate $ DeleteSigAttachment (documentid doc) sid fileid
-       (signatoryActor ctxtime ctxipnumber muid email sid)
+  d <- apiGuardL (serverError "documentUploadSignatoryAttachment: SaveSigAttachment failed") . runMaybeT $ do
+    True <- dbUpdate $ DeleteSigAttachment (documentid doc) sid fileid (signatoryActor ctxtime ctxipnumber muid email sid)
+    Just newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+    return newdoc
 
   -- let's dig the attachment out again
   sigattach' <- apiGuard' $ getSignatoryAttachment d sid aname

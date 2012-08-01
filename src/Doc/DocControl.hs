@@ -83,6 +83,7 @@ import Control.Applicative
 import Control.Concurrent
 import Control.Monad
 import Control.Monad.Reader
+import Control.Monad.Trans.Maybe
 import Data.Either
 import Data.List
 import Data.Maybe
@@ -188,12 +189,15 @@ handleMismatch doc sid msg sfn sln spn = do
         ctx <- getContext
         let Just sl = getSigLinkFor doc sid
         Log.eleg $ "Information from eleg did not match information stored for signatory in document." ++ show msg
-        Right newdoc <- dbUpdate $ CancelDocument (documentid doc) (ELegDataMismatch msg sid sfn sln spn)
-                        (signatoryActor (ctxtime ctx)
-                         (ctxipnumber ctx)
-                         (maybesignatory sl)
-                         (getEmail sl)
-                         sid)
+        Just newdoc <- runMaybeT $ do
+          True <- dbUpdate $ CancelDocument (documentid doc) (ELegDataMismatch msg sid sfn sln spn)
+           (signatoryActor (ctxtime ctx)
+           (ctxipnumber ctx)
+           (maybesignatory sl)
+           (getEmail sl)
+           sid)
+          Just newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+          return newdoc
         postDocumentCanceledChange newdoc "web+eleg"
 
 {- |
@@ -478,12 +482,12 @@ splitUpDocument doc = do
           return $ Left $ LinkDesignDoc $ (documentid doc)
         ([], CleanCSVData{csvbody}) -> do
           mdocs <- mapM (createDocFromRow doc) csvbody
-          if Data.List.null (lefts mdocs)
+          if all isJust mdocs
             then do
               Log.debug $ "splitUpDocument: finishing properly"
-              return $ Right (rights mdocs)
+              return $ Right (catMaybes mdocs)
             else do
-              Log.debug $ "splitUpDocument: createDocFromRow returned some Lefts: " ++ show (lefts mdocs)
+              Log.debug "splitUpDocument: createDocFromRow returned some Nothings"
               internalError
   where createDocFromRow udoc xs = do
           actor <- guardJustM $ mkAuthorActor <$> getContext
@@ -688,12 +692,15 @@ handleCancel docid = withUserPost $ do
   actor <- guardJustM $ mkAuthorActor <$> getContext
   if isPending doc
     then do
-    mdoc' <- dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
-    case mdoc' of
-      Right doc' ->  do
+    mdoc <- runMaybeT $ do
+      True <- dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
+      Just newdoc <- dbQuery $ GetDocumentByDocumentID docid
+      return newdoc
+    case mdoc of
+      Just doc' ->  do
           Log.debug $ "Canceling document #" ++ show docid
           addFlashM $ flashMessageCanceled doc'
-      Left errmsg -> addFlash (OperationFailed, errmsg)
+      Nothing -> addFlashM flashMessageCannotCancel
     else addFlashM flashMessageCannotCancel
   return (LinkIssueDoc $ documentid doc)
 
@@ -737,9 +744,12 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
         Right doc -> do
           muser <- dbQuery $ GetUserByEmail (documentservice doc) (Email email)
           actor <- guardJustM $ mkAuthorActor <$> getContext
-          mnewdoc <- dbUpdate $ ChangeSignatoryEmailWhenUndelivered docid slid muser email actor
+          mnewdoc <- runMaybeT $ do
+            True <- dbUpdate $ ChangeSignatoryEmailWhenUndelivered docid slid muser email actor
+            Just newdoc <- dbQuery $ GetDocumentByDocumentID docid
+            return newdoc
           case mnewdoc of
-            Right newdoc -> do
+            Just newdoc -> do
               -- get (updated) siglink from updated document
               sl <- guardJust (getSigLinkFor newdoc slid)
               ctx <- getContext
@@ -788,11 +798,11 @@ handleCreateFromTemplate = withUserPost $ do
                       dbUpdate $ SignableFromDocumentIDWithUpdatedAuthor user mcompany did actor
                     else internalError
       case enewdoc of
-        Right newdoc -> do
+        Just newdoc -> do
           _ <- addDocumentCreateStatEvents newdoc "web"
           Log.debug $ show "Document created from template"
           return $ LinkIssueDoc $ documentid newdoc
-        Left _ -> internalError
+        _ -> internalError
     Nothing -> internalError
 
 checkFileAccess :: Kontrakcja m => FileID -> m ()
@@ -930,7 +940,10 @@ handleSigAttach docid siglinkid = do
   content <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   file <- dbUpdate $ NewFile attachname content
   let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory siglink) email siglinkid
-  d <- guardRightM $ dbUpdate $ SaveSigAttachment docid siglinkid attachname (fileid file) actor
+  d <- guardJustM . runMaybeT $ do
+    True <- dbUpdate $ SaveSigAttachment docid siglinkid attachname (fileid file) actor
+    Just newdoc <- dbQuery $ GetDocumentByDocumentID docid
+    return newdoc
   return $ LinkSignDoc d siglink
 
 jsonDocument :: Kontrakcja m => DocumentID -> m JSValue

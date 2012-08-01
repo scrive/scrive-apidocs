@@ -40,6 +40,14 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS (toString,fromString)
 import Network.HTTP (urlDecode)
 
+-- intercalate for monoids
+mintercalate :: Monoid s => (s -> s -> s) -> [s] -> s
+mintercalate f = go
+    where
+      go []     = mempty
+      go (s:[]) = s
+      go (s:ss) = s `f` go ss
+
 -- | Given an action f and a number of seconds t, cron will execute
 -- f every t seconds with the first execution t seconds after cron is called.
 -- cron does not spawn a new thread.
@@ -519,12 +527,6 @@ urlDecodeVars s = makeKV (splitOver "&" s) []
           (k, '=':v) -> makeKV ks ((urlDecode k, urlDecode v):a)
           (k, "") -> makeKV ks ((urlDecode k, ""):a)
           _ -> Nothing
-
-containsAll :: Eq a => [a] -> [a] -> Bool
-containsAll elems inList = all (`elem` inList) elems
-
-listsEqualNoOrder :: Eq a => [a] -> [a] -> Bool
-listsEqualNoOrder a b = containsAll a b && containsAll b a
 
 listDiff :: Eq a => [a] -> [a] -> ([a], [a], [a])
 listDiff a b = ([x|x <- a, x `notElem` b],

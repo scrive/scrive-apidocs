@@ -128,8 +128,9 @@ createTestElegDoc :: User -> MinutesTime -> TestEnv Document
 createTestElegDoc user ctxtime = do
   doc <- addRandomDocumentWithAuthorAndCondition user
            (\d -> documentstatus d == Preparation)
-  (Right elegdoc) <- dbUpdate $ SetDocumentIdentification (documentid doc) [ELegitimationIdentification] (systemActor ctxtime)
-  return elegdoc
+  True <- dbUpdate $ SetDocumentIdentification (documentid doc) [ELegitimationIdentification] (systemActor ctxtime)
+  Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+  return ndoc
 
 createTestUser :: Region -> Lang -> TestEnv User
 createTestUser region lang = do

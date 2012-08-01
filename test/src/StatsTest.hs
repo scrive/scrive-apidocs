@@ -53,7 +53,8 @@ testInviteStat = do
                                                           (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
   _ <- dbUpdate $ PreparationToPending (documentid doc') (systemActor time)
-  Right doc <- dbUpdate $ SetDocumentInviteTime (documentid doc') time (systemActor time)
+  True <- dbUpdate $ SetDocumentInviteTime (documentid doc') time (systemActor time)
+  Just doc <- dbQuery $ GetDocumentByDocumentID $ documentid doc'
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatInviteEvent doc sl time)
   stats'' <- dbQuery $ GetSignStatEvents
   assertEqual "Should have saved stat." (length $ documentsignatorylinks doc) (length stats'')
@@ -165,7 +166,7 @@ testRejectStat = do
   Just author' <- dbQuery $ GetUserByID (userid author)
   doc' <- addRandomDocumentWithAuthorAndCondition author' (isSignable &&^
                                                            isPreparation &&^
-                                                           (any isSignatory . documentsignatorylinks))
+                                                           (all (isAuthor =>>^ isSignatory) . documentsignatorylinks))
   time <- getMinutesTime
   _ <- dbUpdate $ PreparationToPending (documentid doc') (systemActor time)
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')

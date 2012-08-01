@@ -49,6 +49,7 @@ import Control.Applicative
 import EvidenceLog.Model
 import Util.Actor
 import Control.Concurrent
+import Control.Monad.Trans.Maybe
 import Data.String.Utils
 import qualified Templates.Fields as F
 import Control.Logic
@@ -424,9 +425,12 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
         Log.debug $ "Adding new sealed file to DB"
         File{fileid = sealedfileid} <- dbUpdate $ NewFile filename newfilepdf
         Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
-        res <- dbUpdate $ AttachSealedFile documentid sealedfileid (systemActor ctxtime)
+        res <- runMaybeT $ do
+          True <- dbUpdate $ AttachSealedFile documentid sealedfileid $ systemActor ctxtime
+          Just doc <- dbQuery $ GetDocumentByDocumentID documentid
+          return doc
         Log.debug $ "Should be attached to document; is it? " ++ show ((elem sealedfileid . documentsealedfiles) <$> res)
-        return res
+        return $ maybe (Left "AttachSealedFile failed") Right res
       ExitFailure _ -> do
         -- error handling
         msg <- liftIO $ do

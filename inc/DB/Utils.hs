@@ -22,6 +22,22 @@ import DB.Fetcher
 import DB.Functions
 import DB.SQL (IsSQL)
 
+class OneObjectReturnedGuard f where
+  exactlyOneObjectReturnedGuard :: (MonadIO m, Typeable a) => f a -> m a
+
+instance OneObjectReturnedGuard Maybe where
+  exactlyOneObjectReturnedGuard = impl
+    where
+      impl :: forall a m. (MonadIO m, Typeable a) => Maybe a -> m a
+      impl = maybe
+        (liftIO . E.throwIO $ NoObject (show $ typeOf (undefined::a)))
+        return
+
+instance OneObjectReturnedGuard [] where
+  exactlyOneObjectReturnedGuard xs =
+    oneObjectReturnedGuard xs
+      >>= exactlyOneObjectReturnedGuard
+
 oneRowAffectedGuard :: MonadIO m => Integer -> m Bool
 oneRowAffectedGuard 0 = return False
 oneRowAffectedGuard 1 = return True
@@ -39,10 +55,6 @@ oneObjectReturnedGuard xs  = liftIO $ E.throwIO TooManyObjects {
   , tmoExpected = 1
   , tmoGiven = fromIntegral $ length xs
   }
-
-exactlyOneObjectReturnedGuard :: forall a m. (MonadIO m, Typeable a) => [a] -> m a
-exactlyOneObjectReturnedGuard xs = oneObjectReturnedGuard xs
-  >>= maybe (liftIO . E.throwIO $ NoObject (show $ typeOf (undefined::a))) return
 
 checkIfOneObjectReturned :: MonadIO m => [a] -> m Bool
 checkIfOneObjectReturned xs = oneObjectReturnedGuard xs
