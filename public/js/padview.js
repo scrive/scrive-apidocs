@@ -188,6 +188,6 @@ window.KontraPad = function() {
          model : function()  {return model;},
          view :  function()  {return view;},
          recall : function() {model.recall();}
-    }
+    };
 };
 })(window);

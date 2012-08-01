@@ -123,7 +123,7 @@ window.PadDesignViewUtilsView = Backbone.View.extend({
            var giveForSigningRadio = $("<input type='radio' name='padsend'/>");
            var giveForSigningSelector = this.sigSelector(function() {return model.giveForSigningSignatory()}, function(a) {model.setGiveForSigningSignatory(a)});
            var giveForSigningLabel =  $("<span class='label'/>").append($("<span class='float-left'/>").text(localization.pad.signingOnSameDeviceFor))
-                                                                .append(giveForSigningSelector)
+                                                                .append(giveForSigningSelector);
            var giveForSigning = $("<div class='padoption'/>").append(giveForSigningRadio)
                                                              .append(giveForSigningLabel);
                                                             
