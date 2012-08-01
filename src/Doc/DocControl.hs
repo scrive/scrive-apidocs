@@ -557,7 +557,7 @@ handleFilePages fid = do
             liftIO $ threadDelay 100000 -- wait 0.1s and retry
             wait10seconds (n-1 :: Int)
           _ -> return jpages
-  jpages <- wait10seconds 100
+  jpages <- wait10seconds 0 -- Waiting for selenium fix
 
   runJSONGenT $ case jpages of
     JpegPagesPending -> do
