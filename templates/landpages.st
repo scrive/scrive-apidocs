@@ -5,7 +5,7 @@
 ## I know it's ugly. Cut me a break. That's why we hired a designer.
 csvlandpage=
 <div class="tab-viewer">
-  <div id="signStepsContainer">
+  <div class="tab-viewer-header">
     <div id="signStepsTitleRow">
       <span id="signStepsTitleRowTextContainer">
       </span>

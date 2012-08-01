@@ -13,7 +13,7 @@ orderuploadprompttext=$_orderuploadprompttext()$
 ####
 uploadPage=
 <div class="tab-viewer">
-<div id="signStepsContainer" class="uploading">
+<div class="tab-viewer-header" class="uploading">
   <script type="text/javascript">
     jQuery(UploadProcessMain);
   </script>

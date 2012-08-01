@@ -693,10 +693,6 @@ img.waiting
     margin: 10px auto 10px;
 }
 
-#signStepsContainer .doctable {
-    width:898px;
-}
-
 .doctable td
 {
     border-style: none none solid none;
@@ -1003,14 +999,8 @@ input[type=submit].hidden
     background-color:transparent
 }
 
-#signStepsWrapper #signStepsContainer.fixed {
-    position: fixed;
-    top: -53px;
-    z-index: 5000;
-}
-
 /* 005 new code below */
-#signStepsContainer
+.tab-viewer-header
 {
     width: 960px;
 }

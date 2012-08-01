@@ -147,7 +147,7 @@ var TabsView = Backbone.View.extend({
     prerender: function(){
         var container = $(this.el);
         container.addClass("tab-viewer");
-        this.toprow = $("<div id='signStepsContainer'/>");
+        this.toprow = $("<div class='tab-viewer-header'/>");
         container.append(this.toprow);
     },
     render: function () {
