@@ -56,10 +56,10 @@ describe "sign up after signing a document" do
 
     puts "should be logged in"
     @h.wait.until { @h.driver.find_element :css => ".save.done" }
-
+    sleep 1
     puts "go to the server"
     (@h.wait.until { @h.driver.find_element :css => ".start.btn" }).click();
-
+    
     @h.loginhelper.logout
 
     puts "make sure we can login and out as our new user"
