@@ -561,16 +561,6 @@
     z-index: 1000;
 }
 
-#signStepsTitleRowTextContainer .title {
-     float: left;
-     margin-top: 4px;
-}
-
-#signStepsTitleRowTextContainer .docname-display , #signStepsTitleRowTextContainer .docname-edit{
-         float: left;
-
-}
-
 .countspan {
     margin-left: 0.5em;
 }

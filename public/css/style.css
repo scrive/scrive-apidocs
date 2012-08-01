@@ -1112,13 +1112,6 @@ input[type=submit].hidden
     position: relative;
 }
 
-#signStepsTitleRowTextContainer
-{
-    min-height: 19px;
-    max-height: 22px;
-    float: left;
-}
-
 .tab-viewer-header-title .title
 {
     font-size: 10px;

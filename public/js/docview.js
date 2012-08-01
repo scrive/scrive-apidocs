@@ -338,12 +338,6 @@ window.DocumentStandardView = Backbone.View.extend({
     return signatoriestabview;
 
   },
-  createMenuElems: function() {
-    return $(new DocumentActionMenuView({
-      model: this.model,
-      el: $("<div/>")
-    }).el);
-  },
   createRestartButtonElems: function() {
     var document = this.model;
     return Button.init({
@@ -481,9 +475,10 @@ window.DocumentStandardView = Backbone.View.extend({
 
     this.container.empty();
 
-    var titlepart = $("<span id='signStepsTitleRowTextContainer'/>");
-    titlepart.append($("<span class='title'/>").text(document.process().title() + " #" + document.documentid() + ": "));
-    titlepart.append($("<span class='name'/>").text(document.title()));
+    var titlepart = $("<span class='title'/>");
+    titlepart.text(document.process().title() + " #" + document.documentid() + ": ");
+    var namepart = $("<span class='name'/>");
+    namepart.text(document.title());
 
     var bottomparts = $("<div/>");
     // Author attachment box
@@ -509,12 +504,16 @@ window.DocumentStandardView = Backbone.View.extend({
       bottomparts.append(this.createSignBoxElems());
     }
 
+    // Download link
+    var downloadpart = $("<span class='download'/>");
+    downloadpart.append($("<a target='_blank'/>").attr("href",document.mainfile().downloadLink()).text(localization.downloadPDF));
+
     var file = KontraFile.init({
       file: document.mainfile()
     });
     var tabs = new KontraTabs({
     numbers : false,
-    title: jQuery.merge(titlepart, this.createMenuElems()),
+    title: titlepart.add(namepart).add(downloadpart),
     tabs: [
       new Tab({
         name: localization.document,

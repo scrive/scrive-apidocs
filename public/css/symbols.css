@@ -2,8 +2,7 @@
 
 .icon.status, .icon.small {
 	background: url(../img/spr-icons.png) 0 0 no-repeat;
-	display: block;
-	float: left;
+	display: inline-block;
 	height: 15px;
 	margin-right: 4px;
 }

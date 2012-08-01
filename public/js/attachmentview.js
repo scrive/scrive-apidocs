@@ -71,10 +71,9 @@ var AttachmentView = Backbone.View.extend({
   namebox : function() {
     var view = this;
     var attachment = this.model;
-    var box =  $("<div id='signStepsTitleRowTextContainer'/>");
-    box.append($("<span class='title'/>").text(localization.attachmentType));
+    var box = $("<span class='title'/>").text(localization.attachmentType);
     var titlebox = $("<span class='docname'>");
-    box.append(titlebox);
+
     if (!this.editable) {
       titlebox.append($("<span class='visible-docname'></span>").text(attachment.title()));
     }
@@ -87,7 +86,7 @@ var AttachmentView = Backbone.View.extend({
     }
     else
     {
-      var acceptIcon = $("<a href='#' class='icon small ok submitafterdone' style='margin: 2px;'></a>");
+      var acceptIcon = $("<a href='#' class='icon small ok submitafterdone' style='margin-right: 2px;'></a>");
       this.input = $("<input type='text' name='docname' class='docname-edit' />").val(attachment.title());
       var changeFunction = function() {
         attachment.rename(view.input.val(), function() {view.editing = false;view.render();}).send();
@@ -101,7 +100,7 @@ var AttachmentView = Backbone.View.extend({
       titlebox.append(acceptIcon);
       titlebox.append(this.input);
     }
-    return box;
+    return box.add(titlebox);
   },
   render: function() {
     var attachment = this.model;

@@ -44,13 +44,13 @@ var DocumentDesignView = Backbone.View.extend({
     },
     titlerow : function() {
         var document = this.model;
-        var titlepart = $("<span id='signStepsTitleRowTextContainer'/>");
+        var titlepart = $("<span class='title'/>");
 
         //First text
         if (document.isTemplate())
-            titlepart.append($("<span class='title'/>").text(localization.templateTitle));
+            titlepart.text(localization.templateTitle);
         else
-            titlepart.append($("<span class='title'/>").text(document.process().title() + " #" + document.documentid() + ": "));
+            titlepart.text(document.process().title() + " #" + document.documentid() + ": ");
 
         //Editable name
         var namepart = $("<span class='docname'/>");
@@ -86,12 +86,11 @@ var DocumentDesignView = Backbone.View.extend({
             titleedit.focus();
             return false;
         });
-        titlepart.append(namepart);
 
         // Download link
         var downloadpart = $("<span class='download'/>");
         downloadpart.append($("<a  target='_blank'/>").attr("href",document.mainfile().downloadLink()).text(localization.downloadPDF));
-        return jQuery.merge(titlepart,downloadpart);
+        return titlepart.add(namepart).add(downloadpart);
     },
     saveAsTemplateOption : function() {
         var document = this.model;
