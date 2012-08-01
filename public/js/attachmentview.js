@@ -110,7 +110,7 @@ var AttachmentView = Backbone.View.extend({
       return;
     }
 
-    var titlerow = $("<div id='signStepsTitleRow'/>");
+    var titlerow = $("<div class='tab-viewer-header-title'/>");
     titlerow.append(this.namebox());
     titlerow.append(this.downloadbox());
 

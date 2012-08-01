@@ -22,7 +22,7 @@ $endif$
 
 $if(barsbackground)$
 .modal-container .modal-header,
- #signStepsTitleRow,
+ .tab-viewer-header-title,
  #signStepsMenu div.current 
  {
    background: $barsbackground$;

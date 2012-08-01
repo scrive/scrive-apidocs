@@ -305,7 +305,7 @@ function generateTBS(doctitle, docid, signatories) {
 }
 
 function getTBS() {
-    return generateTBS($("#signStepsTitleRow .name").text(), $("#signStepsTitleRow .title").text().substring(10), getSignatoryData());
+    return generateTBS($(".tab-viewer-header-title .name").text(), $(".tab-viewer-header-title .title").text().substring(10), getSignatoryData());
 }
 
 function checkPlugin(iefn, otfn, msgfn) {

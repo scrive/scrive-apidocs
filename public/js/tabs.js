@@ -155,7 +155,7 @@ var TabsView = Backbone.View.extend({
         var tabsview = this;
         this.toprow.children().detach();
         // Top part , with title and the tabs
-        var titlepart = $("<div id='signStepsTitleRow'/>");
+        var titlepart = $("<div class='tab-viewer-header-title'/>");
         titlepart.append(this.model.title());
         var tabsrow = $("<ul class='tabs'/>");
         var model = this.model;

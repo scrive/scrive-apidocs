@@ -6,7 +6,7 @@
 csvlandpage=
 <div class="tab-viewer">
   <div class="tab-viewer-header">
-    <div id="signStepsTitleRow">
+    <div class="tab-viewer-header-title">
       <span id="signStepsTitleRowTextContainer">
       </span>
     </div>

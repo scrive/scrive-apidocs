@@ -17,7 +17,7 @@ uploadPage=
   <script type="text/javascript">
     jQuery(UploadProcessMain);
   </script>
-  <div id="signStepsTitleRow">
+  <div class="tab-viewer-header-title">
     <span id="signStepsTitleRowTextContainer">
     </span>
   </div>

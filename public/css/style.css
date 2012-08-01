@@ -1103,7 +1103,7 @@ input[type=submit].hidden
     top: 4px;
 }
 /**/
-#signStepsTitleRow
+.tab-viewer-header-title
 {
     color: #ffffff;
     min-height: 20px;
@@ -1119,13 +1119,13 @@ input[type=submit].hidden
     float: left;
 }
 
-#signStepsTitleRow .title
+.tab-viewer-header-title .title
 {
     font-size: 10px;
     margin-right: 2px;
 }
 
-#signStepsTitleRow .download
+.tab-viewer-header-title .download
 {
     font-size: 10px;
     font-weight: bold;
@@ -1137,43 +1137,43 @@ input[type=submit].hidden
 
 }
 
-#signStepsTitleRow .download a{
+.tab-viewer-header-title .download a{
     color: #999999;
     text-transform: uppercase;
 }
 
-#signStepsTitleRow .download .docname {
+.tab-viewer-header-title .download .docname {
   display: none;
 }
 
 
-#signStepsTitleRow .download a:hover{
+.tab-viewer-header-title .download a:hover{
   color: #FFFFFF;
 }
 
-#signStepsTitleRow .docname
+.tab-viewer-header-title .docname
 {
     font-weight: bold;
     font-size: 16px;
     margin-right: 2px;
 }
 
-#signStepsTitleRow .docname .icon {
+.tab-viewer-header-title .docname .icon {
     width: 14px;
     height: 14px;
     display: inline-block;
 }
 
-#signStepsTitleRow .docname .icon.edit {
+.tab-viewer-header-title .docname .icon.edit {
     background-image: url(/img/iconPen.png);
 }
 
-#signStepsTitleRow .docname .docname-display text {
+.tab-viewer-header-title .docname .docname-display text {
     display: inline-block;
 }
 
-#signStepsTitleRow .docname .docname-edit input,
-#signStepsTitleRow .docname input.docname-edit {
+.tab-viewer-header-title .docname .docname-edit input,
+.tab-viewer-header-title .docname input.docname-edit {
     -moz-border-radius:0px;
     background:transparent;
     border:0 none;
@@ -1187,14 +1187,14 @@ input[type=submit].hidden
     font-family:'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
 }
 
-#signStepsTitleRow .changeName a
+.tab-viewer-header-title .changeName a
 {
     font-size: 10px;
 }
 
 
-#signStepsTitleRow .saveButton,
-#signStepsTitleRow .downloadButton
+.tab-viewer-header-title .saveButton,
+.tab-viewer-header-title .downloadButton
 {
     float:right;
     margin-right: 10px;
