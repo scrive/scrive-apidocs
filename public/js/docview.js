@@ -31,25 +31,6 @@ window.DocumentDownloadView = Backbone.View.extend({
   }
 });
 
-window.DocumentActionMenuView = Backbone.View.extend({
-  initialize: function(args) {
-    _.bindAll(this, 'render');
-    this.render();
-  },
-  createDownloadElems: function() {
-    return $(new DocumentDownloadView({
-                  model: this.model,
-                  el: $("<div/>")
-    }).el);
-  },
-  render: function() {
-    $(this.el).empty();
-    $(this.el).append($("<div class='menu' />").append(this.createDownloadElems()));
-
-    return this;
-  }
-});
-
 window.DocumentAuthorAttachmentsView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
