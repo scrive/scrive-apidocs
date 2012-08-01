@@ -49,7 +49,8 @@ window.CreateAccountAfterSignView = Backbone.View.extend({
   render: function() {
     var view = this;
     var container = $("<div class='save'>")
-    $(this.el).empty().append(container);
+    $(this.el).children().detach();
+    $(this.el).append(container);
 
     if (this.model.document().currentSignatory().saved() || this.model.justSaved()) {
       container.append($("<div class='headline'/>").text(localization.docsignview.createdAccountTitle));
@@ -68,21 +69,22 @@ window.CreateAccountAfterSignView = Backbone.View.extend({
     emailrow.append($("<div />").append($("<div class='label' />").text(localization.docsignview.emailLabel)));
     emailrow.append($("<div />").append($("<input type='text' class='email' disabled='true'/>").val(this.model.document().currentSignatory().email())));
     form.append(emailrow);
-
-    this.passwordinput = $("<input type='password' name='password' autocomplete='off' />");
-    this.passwordinput.change(function() {view.clearPasswordValidationErrors();});
-    this.passwordinput.keypress(function() {view.clearPasswordValidationErrors();});
+    if (this.passwordinput == undefined) {
+        this.passwordinput = $("<input type='password' name='password' autocomplete='off' />");
+        this.passwordinput.change(function() {view.clearPasswordValidationErrors();});
+        this.passwordinput.keypress(function() {view.clearPasswordValidationErrors();});
+    };
     var password1row = $("<div class='item' />");
     password1row.append($("<div />").append($("<div class='label' />").text(localization.docsignview.passwordLabel)));
     this.password1box = $("<div / >");
     password1row.append(this.password1box.append(this.passwordinput));
     form.append(password1row);
                                                         
-
-    this.password2input = $("<input type='password' name='password2' autocomplete='off' />");
-    this.password2input.change(function() {view.clearPasswordValidationErrors();});
-    this.password2input.keypress(function() {view.clearPasswordValidationErrors();});
-
+    if (this.password2input == undefined) {
+        this.password2input = $("<input type='password' name='password2' autocomplete='off' />");
+        this.password2input.change(function() {view.clearPasswordValidationErrors();});
+        this.password2input.keypress(function() {view.clearPasswordValidationErrors();});
+    };
     var password2row = $("<div class='item' />");
     password2row.append($("<div />").append($("<div class='label' />").text(localization.docsignview.password2Label)));
     this.password2box = $("<div / >");
@@ -92,8 +94,10 @@ window.CreateAccountAfterSignView = Backbone.View.extend({
     form.append("<div class='clearfix' />");
 
     this.tos = $("<div class='tos'/>");
-    this.checkbox = $("<input type='checkbox'  id='tosCBox' autocomplete='off'/>");
-    this.checkbox.change(function() {view.clearTOSValidationErrors();});
+    if (this.checkbox == undefined) {
+        this.checkbox = $("<input type='checkbox'  id='tosCBox' autocomplete='off'/>");
+        this.checkbox.change(function() {view.clearTOSValidationErrors();});
+    };
     this.tos.append($("<div class='check'/>").append(this.checkbox));
 
     var toslabel = $("<label for='tosCBox'/>");
