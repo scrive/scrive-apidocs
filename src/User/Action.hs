@@ -95,16 +95,21 @@ handleActivate mfstname msndname actvuser signupmethod = do
               tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
               _ <- addUserSignTOSStatEvent tosuser
               _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
+              Log.debug $ "Attempting successfull. User " ++ (show $ getEmail actvuser) ++ "is logged in."
               logUserToContext $ Just tosuser
               when (callme) $ phoneMeRequest tosuser phone
               return $ Just (tosuser, newdocs)
             else do
+              Log.debug $ "No TOS accepted. We cant activate user."
               addFlashM flashMessageMustAcceptTOS
               return Nothing
         Left flash -> do
+          Log.debug $ "Create account attempt failed (params checkup)"
           addFlashM flash
           return Nothing
-    _ -> return Nothing
+    _ -> do
+        Log.debug $ "Create account attempt failed (params missing)"
+        return Nothing
 
 createUser :: Kontrakcja m => Email -> (String, String) -> Maybe CompanyID -> Locale -> m (Maybe User)
 createUser email names mcompanyid locale = do
