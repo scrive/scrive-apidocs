@@ -28,6 +28,7 @@ addBarackObamaField = do
          , page = 1
          , w = 770
          , h = 1085
+         , includeInSummary = True
          }
 
 sealspec :: String -> SealSpec
@@ -60,11 +61,11 @@ sealspec filename = SealSpec
           , companyverified = False
           , numberverified = True
           -- should be in 4 corners, aligned
-          , fields = [ Field {value = "Gracjan Polak", x = 7, y = 7, page = 1, w = 770, h = 1085}
-                     , Field {value = "Gracjan Polak", x = 681, y = 7, page = 1, w = 770, h = 1085}
-                     , Field {value = "Gracjan Polak", x = 7, y = 1058, page = 1, w = 770, h = 1085}
-                     , Field {value = "Gracjan Polak", x = 681, y = 1058, page = 1, w = 770, h = 1085}
-                     , Field {value = "gracjan@mail.com", x = 121, y = 347, page = 1,w = 770, h = 1085}
+          , fields = [ Field {value = "Gracjan Polak", x = 7, y = 7, page = 1, w = 770, h = 1085, includeInSummary = False}
+                     , Field {value = "Gracjan Polak", x = 681, y = 7, page = 1, w = 770, h = 1085, includeInSummary = False}
+                     , Field {value = "Gracjan Polak", x = 7, y = 1058, page = 1, w = 770, h = 1085, includeInSummary = False}
+                     , Field {value = "Gracjan Polak", x = 681, y = 1058, page = 1, w = 770, h = 1085, includeInSummary = False}
+                     , Field {value = "gracjan@mail.com", x = 121, y = 347, page = 1,w = 770, h = 1085, includeInSummary = False}
                      ]
           }) [1..30::Int]
     , initials = "LD, LD"
@@ -159,11 +160,11 @@ simple_upsales_confirmation = SealSpec
           , emailverified = True
           , companyverified = False
           , numberverified = True
-          , fields = [ Field {value = "Gracjan Polak", x = 7, y = 7, page = 1, w = 770, h = 1085}
-                     , Field {value = "Gracjan Polak", x = 681, y = 7, page = 1, w = 770, h = 1085}
-                     , Field {value = "Gracjan Polak", x = 7, y = 1058, page = 1, w = 770, h = 1085}
-                     , Field {value = "Gracjan Polak", x = 681, y = 1058, page = 1, w = 770, h = 1085}
-                     , Field {value = "gracjan@mail.com", x = 121, y = 347, page = 1,w = 770, h = 1085}
+          , fields = [ Field {value = "Gracjan Polak", x = 7, y = 7, page = 1, w = 770, h = 1085, includeInSummary = False}
+                     , Field {value = "Gracjan Polak", x = 681, y = 7, page = 1, w = 770, h = 1085, includeInSummary = False}
+                     , Field {value = "Gracjan Polak", x = 7, y = 1058, page = 1, w = 770, h = 1085, includeInSummary = False}
+                     , Field {value = "Gracjan Polak", x = 681, y = 1058, page = 1, w = 770, h = 1085, includeInSummary = False}
+                     , Field {value = "gracjan@mail.com", x = 121, y = 347, page = 1,w = 770, h = 1085, includeInSummary = False}
                      ]
           }) [1..30::Int]
     , initials = "LD, LD"
