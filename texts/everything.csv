@@ -2205,9 +2205,9 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_createCompanyFormPreamble","För att skapa ett företag vänligen fyll i följande information:",,"To create a company please complete the following information:"
 "_documentLanguageLabel","Mottagares språk",,"Recipient's language"
 "_signInEnglish","Signera på engelska",,"Sign in English"
-"_modalUserSignupDoneHeader","Konto skapat",,"Account saved"
-"_modalUserSignupDoneBody","Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter
- till $email$.",,"Your account has been created. An email containing your account details has been sent to $email$."
+"_modalUserSignupDoneHeader","Ditt konto har skapats!",,"Your account has been created!"
+"_modalUserSignupDoneBody","Vi har skickat dina användaruppgifter till $email$. Gå till din inkorg och följ instruktionerna i mailet för att
+ logga in första gången.",,"We have sent your account details to $email$. Go to your inbox and follow the instructions in the email to login for the first time."
 "_GoBack","Gå tillbaka",,"Go back"
 "_signInEnglishConfirmText","<p>Vill du att samtliga parter ska signera på engelska?</p><p>Det innebär att all text under signeringsprocessen kommer att vara på engelska.</p>",,"<p>Do you want all parties to sign in English?</p><p>This means that all texts during the sign process will be in English.</p>"
 "_signInSwedish","Signera på svenska",,"Sign in Swedish"

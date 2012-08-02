@@ -102,7 +102,7 @@
                       if(model.wizard())
                         model.wizard().previousStep();
                       return false;
-                    })).append($("<span class='upload-back-text float-left'/>").text(localization.uploadView.back)))
+                    })).append($("<span class='upload-back-text float-left'/>").text(localization.uploadView.back)));
                
 
         },
