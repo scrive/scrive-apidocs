@@ -724,7 +724,6 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
             tell "Q\n"
 
             tell "q\n"
-            tell "1 0 0 1 15 25 cm\n"
 
             let footerBox = boxEnlarge printableMargin 0 0 0 $
                                 (setLightTextColor . setFrameColor . boxDrawFrame . boxEnlarge 16 11 16 11) $
@@ -735,11 +734,11 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
                                           , makeLeftTextBox (PDFFont Helvetica 8) (boxWidth histExample - 90 - 32)
                                                               (show pageNumber ++ "/" ++ show (length groupedBoxesNumbered))
                                           ]
-            tell $ "1 0 0 1 0 " ++ show (boxHeight footerBox + (printableMargin `div` 2) ) ++ " cm\n"
+            tell $ "1 0 0 1 15 " ++ show (15 + boxHeight footerBox + printableMargin) ++ " cm\n"
             tell $ boxCommands footerBox
             tell "Q\n"
             tell (rightcornerseal (printableWidth - printableMargin - 66)
-                  ( ((boxHeight footerBox - 87) `div` 2) + printableMargin + (printableMargin `div` 2)))
+                  (15 + printableMargin + ((boxHeight footerBox - 90) `div` 2)))
 
 -- To emulate a near perfect circle of radius r with cubic Bézier
 -- curves, draw four curves such that one of the line segments

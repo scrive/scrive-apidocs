@@ -282,7 +282,8 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
       invitationSentEntry = case (documentinvitetime document,(sendMailsDurringSigning &&^ hasOtherSignatoriesThenAuthor) document ) of
                                 (Just (SignInfo time ipnumber),True) -> do
                                    desc <-  renderLocalTemplate document "_invitationSentEntry" $ do
-                                       partylist <- lift $ renderListTemplateNormal . map getSmartName $ partyList document
+                                       let partyListButAuthor' = partyListButAuthor document
+                                       partylist <- lift $ renderListTemplateNormal . map getSmartName $ partyListButAuthor'
                                        F.value "partyList" partylist
                                        documentInfoFields document
                                        documentAuthorInfo document
