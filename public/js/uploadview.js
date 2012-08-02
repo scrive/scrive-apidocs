@@ -53,7 +53,7 @@
                 wiz.previousStep();
                 return false;
             });
-            var p = $("<p style='padding-top:25px;'/>").text(localization.uploadView.back).append(a);
+            var p = $("<p style='padding-top:25px;'/>").append(a).append($("<span class='float-left upload-back-text'/>").text(localization.uploadView.back));
             var div = $("<div class='signStepsBodyUploadBox' style='border:0px;text-align:left;width: 250px;font-weight:bold'/>").append(prompt).append(p);
             return $("<td/>").append(div);
         },
@@ -194,10 +194,8 @@
                 }),
                 headerExtras : $("<div>").addClass("float-left basicinfo")
                     .append($("<p>").text(localization.infoSelectTemplate))
-                    .append($("<br>"))
-                    .append($("<p>").append($("<a href='#' />").addClass("jsback1 backicon float-left boo").html(" &nbsp;"))
-                            .append(" &nbsp;" + localization.goBack))
-
+                    .append($("<p style='padding-top: 20px;'>").append($("<a class='jsback1 backicon float-left boo' href='#'/>"))
+                            .append($("<span class='upload-back-text float-left'/>").text(localization.uploadView.back)))
             });
             documentsTable.view.render();
 

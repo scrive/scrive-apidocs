@@ -15,7 +15,9 @@
 
 .tab-content .basicinfo {
     color: #414241 !important;
-    font: 12px "Helvetica Neue";
+    font-family: 'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
+    font-size: small;
+    font-weight : bold;
     text-decoration: none;
     padding: 48px 0 36px 50px;
     width: 230px;

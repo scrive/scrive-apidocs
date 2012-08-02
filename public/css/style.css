@@ -1402,6 +1402,10 @@ input[type=submit].hidden
     width:140px;
 }
 
+.upload-back-text{
+    margin-left : 8px;
+}
+
 /* HOW TO MAKE FILE INPUT LOOKING LIKE A BUTTON !!!! */
 input.multiFileInput,
 .box input.multiFileInput {

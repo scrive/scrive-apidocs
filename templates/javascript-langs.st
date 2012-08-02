@@ -419,7 +419,7 @@ javascriptLocalisation =
           }
        , uploadView : {
                 signStepsBodyUpload : "$_signStepsBodyUploadBoxStep1Info()$"
-             ,  back : "$_GoBack()$"
+             ,  back : "$_uploadViewGoBack()$"
              ,  chooseFile : "$_signStepsBodyUploadBoxStep1UpLoadChooseFile()$"
              ,  chooseTemplate : "$_signStepsBodyUploadBoxStep1ChooseTemplate()$"
              ,  savedTemplate  : "$_signStepsBodyUploadBoxStep1TemplateSaved()$"
