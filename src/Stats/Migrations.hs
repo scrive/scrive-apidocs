@@ -4,6 +4,22 @@ import DB
 import Doc.DocStateData
 import Stats.Tables
 
+removeDocEventsThatReferenceNotActivatedUsers :: MonadDB m => Migration m
+removeDocEventsThatReferenceNotActivatedUsers = Migration {
+    mgrTable = tableDocStatEvents
+  , mgrFrom = 3
+  , mgrDo = kRunRaw "DELETE FROM doc_stat_events WHERE EXISTS (SELECT 1 FROM users WHERE deleted = FALSE AND user_id = id AND has_accepted_terms_of_service IS NULL)"
+  }
+
+removeUserRefuseSaveAfterSignEvent :: MonadDB m => Migration m
+removeUserRefuseSaveAfterSignEvent = Migration {
+    mgrTable = tableUserStatEvents
+  , mgrFrom = 2
+  , mgrDo = do
+    kRunRaw $ "DELETE FROM user_stat_events WHERE quantity = 3"
+    kRunRaw $ "UPDATE user_stat_events SET quantity = quantity - 1 WHERE quantity > 3"
+  }
+
 addServiceAndCompanyToStats :: MonadDB m => Migration m
 addServiceAndCompanyToStats =
   Migration {

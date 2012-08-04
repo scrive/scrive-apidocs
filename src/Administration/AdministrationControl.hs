@@ -80,6 +80,7 @@ import Util.Actor
 import InspectXMLInstances ()
 import InspectXML
 import File.Model
+import Util.CSVUtil
 import ListUtil
 import Text.JSON
 import Mails.Model
@@ -190,22 +191,16 @@ showAdminCompanyUsers cid = onlySalesOrAdmin $ adminCompanyUsersPage cid
 showAdminUsersForSales :: Kontrakcja m => m String
 showAdminUsersForSales = onlySalesOrAdmin $ adminUsersPageForSales
 
-handleUsersListCSV :: Kontrakcja m => m Response
+handleUsersListCSV :: Kontrakcja m => m CSV
 handleUsersListCSV = onlySalesOrAdmin $ do
   users <- getUsersAndStatsInv [] [] (UserPagination 0 maxBound)
-  ok $ setHeader "Content-Disposition" "attachment;filename=userslist.csv"
-     $ setHeader "Content-Type" "text/csv"
-     $ toResponse (usersListCSV users)
-
-usersListCSV :: [(User, Maybe Company, DocStats, InviteType)] -> String
-usersListCSV users = 
-  "\"" ++ intercalate "\";\""  
-  ["id", "fstname", "sndname", "email", "company", "position","tos"]
-  ++ "\"\n" ++
-  (concat $ map csvline $ filter active users)
-    where
+  return $ CSV { csvHeader = ["id", "fstname", "sndname", "email", "company", "position","tos"] 
+               , csvFilename = "userslist.csv"
+               , csvContent = map csvline $ filter active users
+               }
+  where
         active (u,_,_,_) =   (not (useraccountsuspended u)) && (isJust $ userhasacceptedtermsofservice u) && (isNothing $ userservice u)
-        csvline (u,mc,_,_) = "\"" ++ intercalate "\";\""
+        csvline (u,mc,_,_) =
                           [ show $ userid u
                           , getFirstName u
                           , getLastName u
@@ -214,7 +209,7 @@ usersListCSV users =
                           , usercompanyposition $ userinfo u
                           , show $ fromJust $ userhasacceptedtermsofservice u
                           ]
-                          ++ "\"\n"
+
 
 userSearchingFromParams :: ListParams -> [UserFilter]
 userSearchingFromParams params =
@@ -402,13 +397,12 @@ handleCompanyChange companyid = onlySalesOrAdmin $ do
 
 handleCreateUser :: Kontrakcja m => m KontraLink
 handleCreateUser = onlySalesOrAdmin $ do
-    ctx <- getContext
     email <- map toLower <$> getAsString "email"
     fstname <- getAsString "fstname"
     sndname <- getAsString "sndname"
     custommessage <- getField "custommessage"
     region <- guardJustM $ readField "region"
-    muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage (mkLocaleFromRegion region)
+    muser <- createNewUserByAdmin email (fstname, sndname) custommessage Nothing (mkLocaleFromRegion region)
     when (isNothing muser) $
       addFlashM flashMessageUserWithSameEmailExists
     -- FIXME: where to redirect?
@@ -439,7 +433,6 @@ handlePrivateUserCompanyInvite companyid = onlySalesOrAdmin $ do
 
 handleCreateCompanyUser :: Kontrakcja m => CompanyID -> m ()
 handleCreateCompanyUser companyid = onlySalesOrAdmin $ do
-  ctx <- getContext
   email <- getCriticalField asValidEmail "email"
   fstname <- getCriticalField asValidName "fstname"
   sndname <- getCriticalField asValidName "sndname"
@@ -447,12 +440,9 @@ handleCreateCompanyUser companyid = onlySalesOrAdmin $ do
   Log.debug $ "Custom message when creating an account " ++ show custommessage
   region <- guardJustM $ readField "region"
   admin <- isFieldSet "iscompanyadmin"
-  muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage (mkLocaleFromRegion region)
-  case muser of
-    Just (User{userid}) -> do
-      _ <- dbUpdate $ SetUserCompany userid (Just companyid)
-      when_ admin $ dbUpdate $ SetUserCompanyAdmin userid True
-    Nothing -> addFlashM flashMessageUserWithSameEmailExists
+  muser <- createNewUserByAdmin email (fstname, sndname) custommessage (Just (companyid, admin)) (mkLocaleFromRegion region)
+  when (isNothing muser) $
+      addFlashM flashMessageUserWithSameEmailExists
   return ()
 
 {- | Reads params and returns function for conversion of company info.  With no param leaves fields unchanged -}
@@ -701,7 +691,7 @@ jsonDocuments = onlySalesOrAdmin $ do
                         , ("ctime", jsFromString . showMinutesTimeForAPI $ documentctime doc) 
                         , ("mtime", jsFromString . showMinutesTimeForAPI $ documentmtime doc) 
                         , ("author", JSObject $ toJSObject [
-                              ("name", jsFromString $ maybe "" getSmartName $ getAuthorSigLink doc)
+                              ("name", jsFromString $ getAuthorName doc)
                             , ("email", jsFromString $ maybe "" getEmail $ getAuthorSigLink doc)
                             , ("company", jsFromString $ maybe "" getCompanyName $ getAuthorSigLink doc)
                             ])
@@ -776,7 +766,7 @@ resealFile docid = onlyAdmin $ do
 
 replaceMainFile :: Kontrakcja m => DocumentID -> m KontraLink
 replaceMainFile did = onlyAdmin $ do
-  Log.debug $ "Replaing main file | SUPER CRITICAL | If you see this check who did this ask who did this and why"
+  Log.debug $ "Replaing main file | SUPER CRITICAL | If you see this check who did this and ask why"
   doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID did
   input <- getDataFnM (lookInput "file")
   case (input, documentfiles doc) of
@@ -787,7 +777,7 @@ replaceMainFile did = onlyAdmin $ do
             fn <- fromMaybe "file" <$> fmap filename <$> (dbQuery $ GetFileByFileID cf)
             Context{ctxipnumber,ctxtime, ctxmaybeuser = Just user} <- getContext
             let actor = adminActor ctxtime ctxipnumber (userid user) (getEmail user)
-            file <- dbUpdate $ NewFile fn (concatChunks content)
+            file <- dbUpdate $ NewFile fn (Binary $ concatChunks content)
             _ <- dbUpdate $ ChangeMainfile did (fileid file) actor
             return LoopBack
        _ -> internalError

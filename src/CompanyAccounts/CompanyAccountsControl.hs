@@ -5,10 +5,6 @@ module CompanyAccounts.CompanyAccountsControl (
   , handleAddCompanyAccount
   , handleGetBecomeCompanyAccount
   , handlePostBecomeCompanyAccount
-  -- these should be deleted once we know people
-  -- aren't still using these old takeover links
-  , handleGetBecomeCompanyAccountOld
-  , handlePostBecomeCompanyAccountOld
   -- this shares some handy stuff with the adminonly section
   , handleCompanyAccountsForAdminOnly
   , sendTakeoverPrivateUserMail
@@ -23,6 +19,7 @@ import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Text.JSON (JSValue(..), toJSObject, toJSString)
 
+import ActionQueue.UserAccountRequest
 import AppView
 import DB
 import Company.CompanyControl (withCompanyAdmin)
@@ -42,6 +39,7 @@ import Util.FlashUtil
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.MonadUtils
+import User.Action
 import User.Utils
 import User.UserControl
 import User.UserView
@@ -221,7 +219,7 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
     case (memail, mexistinguser, mexistingcompany) of
       (Just email, Nothing, Nothing) -> do
         --create a new company user
-        newuser' <- guardJustM $ createUser (Email email) fstname sndname (Just company)
+        newuser' <- guardJustM $ createUser (Email email) (fstname, sndname) (Just $ companyid company) (ctxlocale ctx)
         _ <- dbUpdate $ SetUserInfo (userid newuser') (userinfo newuser') {
                             userfstname = fstname
                           , usersndname = sndname
@@ -294,7 +292,7 @@ handleResendToCompanyAccount = withCompanyAdmin $ \(user, company) -> do
 sendNewCompanyUserMail :: Kontrakcja m => User -> Company -> User -> m ()
 sendNewCompanyUserMail inviter company user = do
   ctx <- getContext
-  al <- newAccountCreatedLink user
+  al <- newUserAccountRequestLink $ userid user
   mail <- mailNewCompanyUserInvite (ctxhostpart ctx) user inviter company al
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getFullName user, email = getEmail user }]}
   return ()
@@ -361,33 +359,6 @@ handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
     _ -> do
       _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (Email removeemail)
       addFlashM flashMessageCompanyAccountDeleted
-
-{- |
-    This handles the company account takeover links that we've sent out.
-    You need a userid to use it, and it's only secure by obscurity:
-    if you were a hacker you could join a company by guessing user ids, bleurgh
-
-    Deprecated!!
- -}
-handleGetBecomeCompanyAccountOld :: Kontrakcja m => UserID -> m (Either KontraLink Response)
-handleGetBecomeCompanyAccountOld inviterid = withUserGet $ do
-  inviter <- guardJustM $ dbQuery $ GetUserByID inviterid
-  company <- guardJustM $ getCompanyForUser inviter
-  addFlashM $ modalDoYouWantToBeCompanyAccount company
-  Context{ctxmaybeuser = Just user} <- getContext
-  mcompany <- getCompanyForUser user
-  content <- showUser user mcompany False
-  renderFromBody kontrakcja content
-
-handlePostBecomeCompanyAccountOld :: Kontrakcja m => UserID -> m KontraLink
-handlePostBecomeCompanyAccountOld inviterid = withUserPost $ do
-  user <- guardJustM $ ctxmaybeuser <$> getContext
-  inviter <- guardJustM $ dbQuery $ GetUserByID inviterid
-  company <- guardJustM $ getCompanyForUser inviter
-  _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid company)
-  _ <- resaveDocsForUser (userid user)
-  addFlashM $ flashMessageUserHasBecomeCompanyAccount company
-  return $ LinkAccount
 
 {- |
     This handles the company account takeover links, and replaces

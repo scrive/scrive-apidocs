@@ -3,41 +3,23 @@ module Company.CompanyID (
   , unsafeCompanyID
   ) where
 
-import Control.Monad
-import Data.Data
 import Data.Int
-import Happstack.Data
+import Data.SafeCopy
+import Data.Typeable
 import Happstack.Server
-import Happstack.Util.Common
 
-import Crypto.RNG
 import DB.Derive
+import Misc
 
 newtype CompanyID = CompanyID Int64
-  deriving (Eq, Ord, Data, Typeable)
+  deriving (Eq, Ord, Typeable)
 $(newtypeDeriveConvertible ''CompanyID)
 $(newtypeDeriveUnderlyingReadShow ''CompanyID)
 
-instance FromReqURI CompanyID where
-  fromReqURI = readM
+$(deriveSafeCopy 0 'base ''CompanyID)
 
-instance Random CompanyID where
-  random = CompanyID `liftM` randomR (10000000, 10000000000)
+instance FromReqURI CompanyID where
+  fromReqURI = maybeRead
 
 unsafeCompanyID :: Int64 -> CompanyID
 unsafeCompanyID = CompanyID
-
--- blah, old migrations
-
-newtype CompanyID_0 = CompanyID_0 Int
-  deriving (Eq, Ord, Typeable)
-
-instance Version CompanyID where
-  mode = extension 2 (Proxy :: Proxy CompanyID_0)
-
-instance Version CompanyID_0
-
-instance Migrate CompanyID_0 CompanyID where
-  migrate (CompanyID_0 n) = CompanyID (fromIntegral n)
-
-$(deriveSerializeFor [''CompanyID, ''CompanyID_0])

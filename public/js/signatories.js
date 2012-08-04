@@ -35,7 +35,8 @@ window.SignatoryAttachment = Backbone.Model.extend({
         return this.get('reviewed');
     },
     review: function() {
-        this.set({'reviewed':true});
+        this.set({'reviewed':true}, {silent : true});
+        this.trigger('change');
         return this;
     },
     signatory: function() {

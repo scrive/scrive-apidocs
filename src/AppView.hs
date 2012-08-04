@@ -258,7 +258,7 @@ mainLinksFields :: Monad m => Locale -> Fields m ()
 mainLinksFields locale = do
   F.value "linkaccount"          $ show (LinkAccount)
   F.value "linkforgotenpassword" $ show LinkForgotPassword
-  F.value "linkissue"            $ show LinkContracts
+  F.value "linkissue"            $ show LinkArchive
   F.value "linklogin"            $ show (LinkLogin locale LoginTry)
   F.value "linklogout"           $ show LinkLogout
   F.value "linkupload"           $ show LinkUpload

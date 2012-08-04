@@ -142,7 +142,7 @@ $endif$
         <script>
             
             jQuery(function(){
-                var docview = KontraSignDocument.init({
+                var docview = new DocumentSignView({
                     id:"$documentid$"
                     $if(siglinkid)$
                     , viewer : new DocumentViewer({
@@ -151,8 +151,8 @@ $endif$
                        })
                     $endif$
                 });
-            jQuery('body').prepend(new DocumentSignViewHeader({model : docview.view.saveAfterSignModel, mainview : docview.view}).el)
-            jQuery('body').append(new DocumentSignViewFooter({model : docview.view.saveAfterSignModel,  mainview : docview.view}).el)
+            jQuery('body').prepend(new DocumentSignViewHeader({model : docview.model, mainview : docview.view}).el)
+            jQuery('body').append(new DocumentSignViewFooter({model : docview.model,  mainview : docview.view}).el)
             jQuery(".body-container").replaceWith(docview.view.el);
             })
        </script>

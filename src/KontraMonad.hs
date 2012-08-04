@@ -9,6 +9,8 @@ import Control.Monad.State
 import Control.Monad.Trans.Control
 import Happstack.Server
 
+import Acid.Monad
+import AppState
 import Context
 import Crypto.RNG
 import DB.Core
@@ -19,6 +21,7 @@ import Templates.Templates
 class ( Applicative m
       , CryptoRNG m
       , FilterMonad Response m
+      , AcidStore AppState m
       , HasRqData m
       , KontraMonad m
       , MonadDB m

@@ -25,8 +25,8 @@ padQueueCurrentPageContent=
 <div class="padview"></div>
 <script>
 jQuery(function(){
-    var padTable = KontraPad.init({ });
-    jQuery(".padview").append(padTable.view.el)
+    var pad = new KontraPad();
+    jQuery(".padview").append(pad.view().el)
 });
 
 </script>

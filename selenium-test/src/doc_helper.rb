@@ -60,6 +60,8 @@ class DocHelper
     (@wait.until { @driver.find_element :xpath => lastField + "//input[contains(@class,'fieldvalue')]" }).send_keys fieldvalue
     @driver.action.drag_and_drop((@driver.find_element :xpath => lastField + "//div[contains(@class,'ddIcon')]"),
                                  (@driver.find_element :css => "div.pagejpg")).perform
+    @driver.action.drag_and_drop((@driver.find_element :xpath => lastField + "//div[contains(@class,'ddIcon')]"),
+                                 (@driver.find_element :css => "div.pagejpg")).perform
 # this doesn't work, possibly due to a bug in the Firefox driver:
 # http://code.google.com/p/selenium/issues/detail?id=3729
 # Symptom: the release event moves the div to the top-left corner of the div.pagejpg.
@@ -83,7 +85,6 @@ class DocHelper
   end
 
   def loadAuthorAttachment(no, filepath)
-    gotToStep3
     (@wait.until { @driver.find_element :css => "div.authorattachmentssetup span.countspan" }).click
     (@wait.until { @driver.find_element :css => "div.selectAuthorAttachmentPopupContent input.multiFileInput" }).send_keys filepath
     (@wait.until { @driver.find_element :css => "a.float-right" }).click
@@ -91,7 +92,6 @@ class DocHelper
   end
 
   def requestSigAttachment(attname, attdesc, counterparts)
-    gotToStep3
     (@wait.until { @driver.find_element :css => "div.signatoryattachmentssetup span.countspan" }).click
     counterparts.each do |counterpart|
       (@wait.until { @driver.find_elements :css => "div.designSignatoryAttachmentsPopupContent div.label" }).last.click

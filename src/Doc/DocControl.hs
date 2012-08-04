@@ -17,16 +17,11 @@ module Doc.DocControl(
     , handleDeleteSigAttach
     , handleAttachmentViewForViewer
     , handleShowUploadPage
-    , handleAttachmentShare
     , handleAttachmentRename
     , handleCreateNewAttachment
-    , handleTemplateShare
     , handleCreateNewTemplate
-    , handleRubbishRestore
-    , handleRubbishReallyDelete
     , handleIssueShowGet
     , handleIssueNewDocument
-    , handleBulkDocumentRemind
     , handleIssueShowPost
     , jsonDocument
     , handleSaveDraft
@@ -48,7 +43,6 @@ module Doc.DocControl(
     , handlePageOfDocumentForSignatory
     , handleCSVLandpage
     , handleInvariantViolations
-    , handleUpsalesDeleted
     , handleShowVerificationPage
     , handleVerify
 ) where
@@ -87,7 +81,6 @@ import Util.MonadUtils
 import Doc.Invariants
 import Stats.Control
 import User.Utils
-import API.Service.Model
 import Company.Model
 import Control.Applicative
 import Control.Concurrent
@@ -357,7 +350,7 @@ handleIssueShowPost docid = do
     Preparation | sign              -> Right <$> (linkAsJSON $ handleIssueSign document)
     Preparation | send              -> Right <$> (linkAsJSON $ handleIssueSend document)
     _ | canAuthorSignLast document  -> Left  <$> handleIssueSignByAuthor document
-    _ -> return $ Left LinkContracts
+    _ -> return $ Left LinkArchive
  where
      linkAsJSON :: (Kontrakcja m) => m KontraLink -> m JSValue
      linkAsJSON lg = do
@@ -387,10 +380,8 @@ handleIssueSign document = do
               addFlashM $ flashMessageCSVSent $ length ds
               Log.debug (show $ map documenttype ds)
               case documenttype (head ds) of
-                Signable Contract -> return $ LinkContracts
-                Signable Offer    -> return $ LinkOffers
-                Signable Order    -> return $ LinkOrders
-                _                 -> return $ LinkUpload
+                Signable _ -> return $ LinkArchive
+                _          -> return $ LinkUpload
           (ls, _) -> do
             Log.debug $ "handleIssueSign had lefts: " ++ intercalate ";" ls
             addFlash (OperationFailed, intercalate ";" ls)
@@ -452,9 +443,7 @@ handleIssueSend document = do
               addFlashM $ flashMessageCSVSent $ length ds
               Log.debug (show $ map documenttype ds)
               case documenttype (head ds) of
-                Signable Contract -> return $ LinkContracts
-                Signable Offer    -> return $ LinkOffers
-                Signable Order    -> return $ LinkOrders
+                Signable _ -> return $ LinkArchive
                 _ -> return $ LinkUpload
           (ls, _) -> do
             Log.debug $ "handleIssueSend had lefts: " ++ intercalate ";" (map show ls)
@@ -678,19 +667,18 @@ handleCreateNewTemplate = withUserPost $ do
   docprocess <- fromMaybe Contract `fmap` getDocProcess
   mdoc <- makeDocumentFromFile (Template docprocess) input 1
   case mdoc of
-    Nothing -> return $ LinkTemplates
+    Nothing -> return $ LinkArchive
     Just doc -> do
       _ <- addDocumentCreateStatEvents doc "web"
       return $ LinkIssueDoc $ documentid doc
 
-handleCreateNewAttachment:: Kontrakcja m => m KontraLink
-handleCreateNewAttachment = withUserPost $ do
+handleCreateNewAttachment:: Kontrakcja m => m JSValue
+handleCreateNewAttachment = do
+  guardLoggedIn
   input <- getDataFnM (lookInput "doc")
   mdoc <- makeDocumentFromFile Attachment input 0
-  when (isJust mdoc) $ do
-    _<- addDocumentCreateStatEvents (fromJust mdoc) "web"
-    return ()
-  return LinkAttachments
+  when_ (isJust mdoc) $ addDocumentCreateStatEvents (fromJust mdoc) "web"
+  J.runJSONGenT $ return ()
 
 makeDocumentFromFile :: Kontrakcja m => DocumentType -> Input -> Int -> m (Maybe Document)
 makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) nrOfExtraSigs  = do
@@ -711,91 +699,12 @@ makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) nr
           return $ Just doc
 makeDocumentFromFile _ _ _ = internalError -- to complete the patterns
 
-
-handleRubbishRestore :: Kontrakcja m => m KontraLink
-handleRubbishRestore = do
-  user <- guardJustM $ ctxmaybeuser <$> getContext
-  actor <- guardJustM $ mkAuthorActor <$> getContext
-  docids <- getCriticalFieldList asValidDocID "doccheck"
-  mapM_ (\did -> guardRightM $ dbUpdate $ RestoreArchivedDocument user did actor) docids
-  addFlashM flashMessageRubbishRestoreDone
-  return $ LinkRubbishBin
-
-handleRubbishReallyDelete :: Kontrakcja m => m KontraLink
-handleRubbishReallyDelete = do
-  user <- guardJustM $ ctxmaybeuser <$> getContext
-  actor <- guardJustM $ mkAuthorActor <$> getContext
-  ctx <- getContext
-  docids <- getCriticalFieldList asValidDocID "doccheck"
-  mapM_ (\did -> do
-            doc <- guardRightM $ dbUpdate $ ReallyDeleteDocument user did actor
-            case getSigLinkFor doc user of
-              Just sl -> addSignStatPurgeEvent doc sl (ctxtime ctx)
-              _ -> return False)
-    docids
-  addFlashM flashMessageRubbishHardDeleteDone
-  return $ LinkRubbishBin
-
-handleTemplateShare :: Kontrakcja m => m KontraLink
-handleTemplateShare = withUserPost $ do
-    docs <- handleIssueShare
-    case docs of
-      (d:[]) -> addFlashM $ flashMessageSingleTemplateShareDone $ documenttitle d
-      _ -> addFlashM flashMessageMultipleTemplateShareDone
-    return $ LinkTemplates
-
-handleAttachmentShare :: Kontrakcja m => m KontraLink
-handleAttachmentShare = withUserPost $ do
-    docs <- handleIssueShare
-    case docs of
-      (d:[]) -> addFlashM $ flashMessageSingleAttachmentShareDone $ documenttitle d
-      _ -> addFlashM  flashMessageMultipleAttachmentShareDone
-    return $ LinkAttachments
-
-handleIssueShare :: Kontrakcja m => m [Document]
-handleIssueShare = do
-  ids <- getCriticalFieldList asValidDocID "doccheck"
-  _ <- dbUpdate $ SetDocumentSharing ids True
-  w <- flip mapM ids $ (dbQuery . GetDocumentByDocumentID)
-  return (catMaybes w)
-
 handleAttachmentRename :: Kontrakcja m => DocumentID -> m KontraLink
 handleAttachmentRename docid = withUserPost $ do
   newname <- getCriticalField return "docname"
   actor <- guardJustM $ mkAuthorActor <$> getContext
   doc <- guardRightM $ dbUpdate $ SetDocumentTitle docid newname actor
   return $ LinkIssueDoc $ documentid doc
-
-handleBulkDocumentRemind :: Kontrakcja m => m KontraLink
-handleBulkDocumentRemind = withUserPost $ do
-    _ <- handleIssueBulkRemind
-    return $ LinkContracts
-
-{- |
-    This sends out bulk reminders.  The functionality is offered in the document
-    and offers list page.  It will make sure the user is actually the author of everything,
-    and send out reminders only to signatories who haven't accepted or signed on those that are
-    pending.  This returns all the signatory links that were reminded.
--}
-handleIssueBulkRemind :: Kontrakcja m => m [SignatoryLink]
-handleIssueBulkRemind = do
-    ctx@Context{ctxmaybeuser = Just user } <- getContext
-    ids <- getCriticalFieldList asValidDocID "doccheck"
-    remindedsiglinks <- fmap concat . sequence . map (\docid -> docRemind ctx user docid) $ ids
-    case (length remindedsiglinks) of
-      0 -> addFlashM $ flashMessageNoBulkRemindsSent
-      _ -> addFlashM $ flashMessageBulkRemindsSent
-    return remindedsiglinks
-    where
-      docRemind :: Kontrakcja m => Context -> User -> DocumentID -> m [SignatoryLink]
-      docRemind ctx user docid = do
-        doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
-        case (documentstatus doc) of
-          Pending -> do
-            let isEligible = isEligibleForReminder user doc
-                unsignedsiglinks = filter isEligible $ documentsignatorylinks doc
-            sequence . map (sendReminderEmail Nothing ctx doc) $ unsignedsiglinks
-          _ -> return []
 
 {- |
    Get some html to display the images of the files
@@ -938,12 +847,7 @@ checkLinkIDAndMagicHash document linkid magichash1 = do
   return ()
 
 handleShowUploadPage :: Kontrakcja m => m (Either KontraLink String)
-handleShowUploadPage = checkUserTOSGet $ do
-    showTemplates <- isFieldSet "showTemplates"
-    tooLarge <- isFieldSet "tooLarge"
-    mdocprocess <- getDocProcess
-    when tooLarge $ addFlashM modalPdfTooLarge
-    uploadPage mdocprocess showTemplates
+handleShowUploadPage = checkUserTOSGet $ uploadPage
 
 getDocProcess :: Kontrakcja m => m (Maybe DocumentProcess)
 getDocProcess = getOptionalField asDocType "doctype"
@@ -1162,19 +1066,6 @@ handleSetAttachments did = do
                           Just fid -> (fmap fileid) <$> (dbQuery $ GetFileByFileID fid)
                           Nothing -> return $ Nothing
                  _ -> return Nothing
-
-handleUpsalesDeleted :: Kontrakcja m => m Response
-handleUpsalesDeleted = onlyAdmin $ do
-  docs <- dbQuery $ GetDocumentsByService $ Just $ ServiceID $ BS.fromString "upsales"
-  let deleteddocs = [[show $ documentid d, showDateYMD $ documentctime d, documenttitle d]
-                    | d <- docs
-                    , isDeletedFor $ getAuthorSigLink d
-                    , (isJust $ getSigLinkFor d SignatoryAuthor) && (isJust $ getSigLinkFor d $ unsafeCompanyID 1849610088)]
-  let header = ["document_id", "date created", "document_title"]
-  let csv = toCSV header deleteddocs
-  ok $ setHeader "Content-Disposition" "attachment;filename=upsalesdocsdeleted.csv"
-     $ setHeader "Content-Type" "text/csv"
-     $ toResponse csv
 
 handleParseCSV :: Kontrakcja m => m JSValue
 handleParseCSV = do

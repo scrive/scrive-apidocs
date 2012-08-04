@@ -19,8 +19,7 @@ import Data.Maybe
 import Control.Monad.Reader
 
 import AppConf
-import ActionScheduler
-import ActionSchedulerState
+import ActionQueue.Scheduler
 import Crypto.RNG
 import DB
 import Doc.Model
@@ -43,7 +42,7 @@ import Util.Actor
 import Stats.Control
 import qualified Templates.Fields as F
 
-processEvents :: ActionScheduler ()
+processEvents :: Scheduler ()
 processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
   where
     processEvent (eid, mid, XSMTPAttrs [("mailinfo", mi)], eventType) = do

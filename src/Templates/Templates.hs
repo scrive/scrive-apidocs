@@ -104,7 +104,6 @@ instance (Functor m, Monad m) => TemplatesMonad (ReaderT KontrakcjaGlobalTemplat
       globaltemplates <- ask
       return $ localizedVersion locale globaltemplates
 
-  
 renderTemplate :: TemplatesMonad m => String -> Fields m () -> m String
 renderTemplate name fields = do
   ts <- getTemplates
@@ -115,7 +114,6 @@ renderTemplateI name fields = do
   ts <- getTemplates
   return $ renderTemplateMain ts name ([]::[(String, String)]) (setManyAttrib $ runIdentity $ runFields fields)
 
-  
 renderTemplate_ :: TemplatesMonad m => String -> m String
 renderTemplate_ name = renderTemplate name $ return ()
 
@@ -131,82 +129,3 @@ renderHelper :: Monad m => KontrakcjaTemplates -> String -> Fields m () -> m Str
 renderHelper ts name fields = do
   attrs <- runFields fields
   return $ renderTemplateMain ts name ([]::[(String, String)]) (setManyAttrib attrs)
-
-{-
-  
--- | Filling template with a given name using given attributes.  It
--- never fail, just returns empty message and writes something in the
--- logs.  Params - Templates (loaded from local files), Name of
--- template, something that sets params value.
-class RenderTemplate a where
-  renderTemplate :: MonadIO m => KontrakcjaTemplates -> String -> a -> m String
-
-renderTemplateM :: (RenderTemplate a, TemplatesMonad m) => String -> a -> m String
-renderTemplateM name value = do
-  templates <- getTemplates
-  renderTemplate templates name value
-
-renderLocalTemplateM :: (HasLocale a, RenderTemplate a, TemplatesMonad m) => a -> String -> a -> m String
-renderLocalTemplateM haslocale name value = do
-  templates <- getLocalTemplates (getLocale haslocale)
-  renderTemplate templates name value
-
--- | Basic rendering interface It allows to pass some string
--- attributes to templates. Usefull when working with simple templates.
-instance RenderTemplate () where
-    renderTemplate ts name () =
-        return $ renderTemplateMain ts name ([] :: [(String,String)]) id
-
-instance RenderTemplate [(String, String)] where
-    renderTemplate ts name attrs = return $ renderTemplateMain ts name attrs id
-
--- Same here what below for Field typeclass - generalized Fields
--- won't work as instances of RenderTemplate, so I had to make
--- them distinct functions. Oh well, too bad.
-
-renderTemplateF :: MonadIO m => KontrakcjaTemplates -> String -> Fields m -> m String
-renderTemplateF ts name fields = do
-    attrs <- sequence $ map packIO $ execState fields []
-    return $ renderTemplateMain ts name ([] :: [(String, String)]) (setManyAttrib attrs)
-
-renderTemplateFM :: TemplatesMonad m => String -> Fields m -> m String
-renderTemplateFM name fields = do
-    ts <- getTemplates
-    renderTemplateF ts name fields
-
-renderLocalTemplateFM :: (HasLocale a, TemplatesMonad m) => a -> String -> Fields m -> m String
-renderLocalTemplateFM haslocale name fields = do
-    ts <- getLocalTemplates (getLocale haslocale)
-    renderTemplateF ts name fields
-
-type Fields m = State ([(String, m (SElem String))]) ()
-
--- Had to scrap Field typeclass, because more generalized design
--- wasn't working with it. I don't know if it's even possible to
--- achieve the same result using typeclass and various instances
--- instead of different functions (field, fieldM etc.) because
--- even when I got this module to compile, everything else was
--- complaining about missing instances :|
-
-field :: (MonadIO m, ToSElem a) => String -> a -> Fields m
-field n v = modify $ \s -> (n, return $ toSElem v) : s
-
-fieldM :: (Functor m, MonadIO m, ToSElem a) => String -> m a -> Fields m
-fieldM n v = modify $ \s -> (n, toSElem <$> v) : s
-
-fieldF :: (Functor m, MonadIO m) => String -> Fields m -> Fields m
-fieldF n v = modify $ \s -> (n, val) : s
-    where
-      val = toSElem . Map.fromList <$> (sequence $ map packIO $ execState v [])
-
-fieldFL :: (Functor m, MonadIO m) => String -> [Fields m] -> Fields m
-fieldFL n fs = modify $ \s -> (n, toSElem <$> mapM vals fs) : s
-      where
-        vals f = Map.fromList <$> (sequence $ map packIO $ execState f [])
-
-packIO :: MonadIO m => (a, m b) -> m (a, b)
-packIO (name, comp)= do
-    res <- comp
-    return (name,res)
-
--}

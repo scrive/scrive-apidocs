@@ -15,8 +15,9 @@ import Login
 import PublicPages (publicPages)
 import Redirect
 import Routing
-import Happstack.StaticRouting(Route, choice, dir, path, param, remainingPath)
+import Happstack.StaticRouting(Route, choice, dir, param, remainingPath)
 import qualified Stats.Control as Stats
+import qualified ActionQueue.UserAccountRequest as UAR
 import qualified Administration.AdministrationControl as Administration
 import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
@@ -63,7 +64,7 @@ staticRoutes = choice
      , dir "s" $ dir "eleg" $ hGet $ toK2 $ BankID.generateBankIDTransaction
      , dir "s" $ dir "eleg" $ dir "mbi" $ hPostNoXToken $ toK2 $ BankID.initiateMobileBankID
      , dir "s" $ dir "eleg" $ dir "mbi" $ hGet  $ toK2 $ BankID.collectMobileBankID
-     , dir "s" $ hGet $ toK0    $ sendRedirect $ LinkContracts
+     , dir "s" $ hGet $ toK0    $ sendRedirect $ LinkArchive
      , dir "s" $ hGet $ toK2    $ DocControl.handleSignShow
      , dir "s" $ hGet $ toK3    $ DocControl.handleSignShowOldRedirectToNew -- Redirect for old version to version above, remove not earlier then 31.12.2012.
 
@@ -84,31 +85,23 @@ staticRoutes = choice
      --what it does/access control is left to the handler. EN
      , dir "upload" $ hGet $ toK0 $ DocControl.handleShowUploadPage
      , dir "locale" $ hPost $ toK0 $ UserControl.handlePostUserLocale
-     , dir "a"                     $ hGet  $ toK0 $ ArchiveControl.showAttachmentList
-     , dir "a" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleAttachmentArchive
-     , dir "a" $ param "share"     $ hPost $ toK0 $ DocControl.handleAttachmentShare
      , dir "a" $ dir "rename"      $ hPost $ toK1 $ DocControl.handleAttachmentRename
      , dir "a"                     $ hPost $ toK0 $ DocControl.handleCreateNewAttachment
 
-     , dir "t" $ hGet  $ toK0 $ ArchiveControl.showTemplatesList
-     , dir "t" $ param "archive" $ hPost $ toK0 $ ArchiveControl.handleTemplateArchive
-     , dir "t" $ param "share" $ hPost $ toK0 $ DocControl.handleTemplateShare
      , dir "t" $ param "template" $ hPost $ toK0 $ DocControl.handleCreateFromTemplate
      , dir "t" $ hPost $ toK0 $ DocControl.handleCreateNewTemplate
 
-     , dir "r" $ hGet $ toK0 $ ArchiveControl.showRubbishBinList
-     , dir "r" $ param "restore" $ hPost $ toK0 $ DocControl.handleRubbishRestore
-     , dir "r" $ param "reallydelete" $ hPost $ toK0 $ DocControl.handleRubbishReallyDelete
-
-
-     , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showDocumentsList
+     , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showArchive
      , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
      , dir "d" $ dir "eleg"        $ hGet  $ toK1 $ BankID.generateBankIDTransactionForAuthor
      , dir "d" $ dir "eleg" $ dir "mbi" $ hPostNoXToken $ toK1 $ BankID.initiateMobileBankIDForAuthor
      , dir "d" $ dir "eleg" $ dir "mbi" $ hGet  $ toK1 $ BankID.collectMobileBankIDForAuthor
      , dir "d" $ {- param "doc" $ -} hPost $ toK0 $ DocControl.handleIssueNewDocument
-     , dir "d" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleDocumentArchive
-     , dir "d" $ param "remind"    $ hPost $ toK0 $ DocControl.handleBulkDocumentRemind
+     , dir "d" $ dir "delete"       $ hPost $ toK0 $ ArchiveControl.handleDelete
+     , dir "d" $ dir "remind"       $ hPost $ toK0 $ ArchiveControl.handleSendReminders
+     , dir "d" $ dir "restore"      $ hPost $ toK0 $ ArchiveControl.handleRestore
+     , dir "d" $ dir "reallydelete" $ hPost $ toK0 $ ArchiveControl.handleReallyDelete
+     , dir "d" $ dir "share"        $ hPost $ toK0 $ ArchiveControl.handleShare
      , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
      , dir "docs"                  $ hGet  $ toK0 $ ArchiveControl.jsonDocumentsList
      , dir "doc"                   $ hGet  $ toK1 $ DocControl.jsonDocument
@@ -175,10 +168,6 @@ staticRoutes = choice
      , dir "companyaccounts" $ hGet  $ toK0 $ CompanyAccounts.handleCompanyAccounts
      , dir "companyaccounts" $ dir "join" $ hGet $ toK1 $ CompanyAccounts.handleGetBecomeCompanyAccount
      , dir "companyaccounts" $ dir "join" $ hPost $ toK1 $ CompanyAccounts.handlePostBecomeCompanyAccount
-     -- these two are deprecated now, but we mailed out the links so we need to keep them hanging
-     -- around for a litte bit
-     , dir "account" $ dir "bsa" $ hGet $ toK1 $ CompanyAccounts.handleGetBecomeCompanyAccountOld
-     , dir "account" $ dir "bsa" $ hPost $ toK1 $ CompanyAccounts.handlePostBecomeCompanyAccountOld
 
      -- super user only
      , dir "createuser" $ hPost $ toK0 $ Administration.handleCreateUser
@@ -202,12 +191,12 @@ staticRoutes = choice
      , dir "adminonly" $ dir "documents" $ hGet $ toK0 $ Administration.showDocuments
      , dir "adminonly" $ dir "documentslist" $ hGet $ toK0 $ Administration.jsonDocuments
 
-     , dir "adminonly" $ dir "allstatscsv" $ path GET id $ Stats.handleDocStatsCSV
-     , dir "adminonly" $ dir "userstatscsv" $ path GET id $ Stats.handleUserStatsCSV
-     , dir "adminonly" $ dir "signstatscsv" $ path GET id $ Stats.handleSignStatsCSV
-     , dir "adminonly" $ dir "dochistorycsv" $ path GET id $ Stats.handleDocHistoryCSV
-     , dir "adminonly" $ dir "signhistorycsv" $ path GET id $ Stats.handleSignHistoryCSV
-     , dir "adminonly" $ dir "userslistcsv" $ path GET id $ Administration.handleUsersListCSV
+     , dir "adminonly" $ dir "allstatscsv" $ hGet $ toK0 $ Stats.handleDocStatsCSV
+     , dir "adminonly" $ dir "userstatscsv" $ hGet $ toK0 $ Stats.handleUserStatsCSV
+     , dir "adminonly" $ dir "signstatscsv" $ hGet $ toK0 $ Stats.handleSignStatsCSV
+     , dir "adminonly" $ dir "dochistorycsv" $ hGet $ toK0 $ Stats.handleDocHistoryCSV
+     , dir "adminonly" $ dir "signhistorycsv" $ hGet $ toK0 $ Stats.handleSignHistoryCSV
+     , dir "adminonly" $ dir "userslistcsv" $ hGet $ toK0 $ Administration.handleUsersListCSV
 
      , dir "adminonly" $ dir "statistics"        $ hGet  $ toK0 $ Stats.showAdminSystemUsageStats
 
@@ -222,8 +211,6 @@ staticRoutes = choice
      , dir "adminonly" $ dir "docproblems" $ hGet $ toK0 $ DocControl.handleInvariantViolations
 
      , dir "adminonly" $ dir "backdoor" $ hGet $ toK1 $ Administration.handleBackdoorQuery
-
-     , dir "adminonly" $ dir "upsalesdeleted" $ hGet $ toK0 $ DocControl.handleUpsalesDeleted
 
      , dir "services" $ hGet $ toK0 $ handleShowServiceList
      , dir "services" $ hGet $ toK1 $ handleShowService
@@ -266,4 +253,7 @@ staticRoutes = choice
      , documentAPI
      , oauthAPI
      , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "public"
+
+     -- to be removed after 15.07.2012 (see ActionQueue.UserAccountRequest)
+     , dir "populate_uar" $ hGet $ toK0 $ UAR.populateUARTable
    ]

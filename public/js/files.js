@@ -26,6 +26,9 @@ window.File = Backbone.Model.extend({
     pages : function(){
         return this.get("pages");
     },
+    placements : function() {
+       return _.flatten(_.map(this.pages(), function(p) {return p.placements();}));
+    },
     page : function(number){
         var pages = this.pages();
         for(var i=0;i<pages.length;i++)
@@ -77,12 +80,12 @@ window.File = Backbone.Model.extend({
 */
 
 var FilePage = Backbone.Model.extend({
-    defaults: {
+    defaults: function() { return {
         number : 0,
         placements : [],
         width: 943,
         height: 1335
-    },
+    }},
     initialize: function (args) {
     },
     file : function(){
@@ -113,8 +116,20 @@ var FilePage = Backbone.Model.extend({
              newplacements.push(this.placements()[i]);
        this.set({placements : newplacements}, {silent : true});
        this.trigger("change:dragables");
-
-
+    },
+    fixedX : function(x,y,field){
+     _.each(this.placements(), function(p) {
+             if (Math.abs(p.x()-x) < 8 && (Math.abs(p.x()-x) + Math.abs(p.y()-y) < 400))
+                  x =  p.x();
+     });
+     return x;
+    },
+    fixedY : function(x,y,field){
+          _.each(this.placements(), function(p) {
+             if (Math.abs(p.y()-y) < 8 && (Math.abs(p.x()-x) + Math.abs(p.y()-y) < 400))
+                  y =  p.y();
+     });
+     return y;
     }
 });
 
@@ -189,7 +204,7 @@ var FilePageView = Backbone.View.extend({
         var file = page.file();
         var document =file.document();
         this.renderedPlacements = [];
-        $(".placedfield",container).remove();
+        $(".placedfield",container).detach();
         _.each(page.placements(), function(placement) {
             var placement = placement;
             if (placement.page()==page.number()) {
@@ -203,6 +218,9 @@ var FilePageView = Backbone.View.extend({
                 }
             }
         });
+    },
+    ready : function() {
+        return this.pagejpg != undefined && this.pagejpg.width() > 100 && this.pagejpg.height() > 100;
     },
     render: function () {
         var page = this.model;
@@ -253,9 +271,25 @@ var FileView = Backbone.View.extend({
                  view.pageviews.push(pageview);
                  docbox.append($(pageview.el));
             });
+            view.startReadyChecker();
+
         }
         return this;
 
+    },
+    startReadyChecker : function() {
+        var view = this;
+        if (view.ready())
+         view.trigger('ready');
+        else
+         setTimeout(function() {view.startReadyChecker()},1000);
+    },
+    ready : function() {
+        //console.log("Document view checking ...")
+        //console.log("File is ready " + this.model.ready())
+        //console.log("Pages length "  +  (this.pageviews.length) + " " + (this.model.pages().length))
+        //console.log("All pages ready "  +  _.all(this.pageviews, function(pv) {return pv.ready();}))
+        return this.model.ready() && (this.model.pages().length > 0) && (this.pageviews.length == this.model.pages().length) && _.all(this.pageviews, function(pv) {return pv.ready();});
     },
     moveCoordinateAxes : function(helper) {
         var file = this.model;

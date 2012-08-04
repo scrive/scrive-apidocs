@@ -171,7 +171,7 @@ instance MonadDB m => DBUpdate m UpdateCompanyUI Bool where
     kRun01 $ sqlUpdate "companies" $ do
       sqlSet "bars_background" $ companybarsbackground cui
       sqlSet "bars_textcolour" $ companybarstextcolour cui
-      sqlSetCmd "logo" $ SQL "decode(?, 'base64')" [toSql $ companylogo cui]
+      sqlSet "logo" $ companylogo cui
       sqlWhereEq "id" cid
 
 data GetOrCreateCompanyWithExternalID = GetOrCreateCompanyWithExternalID (Maybe ServiceID) ExternalCompanyID
@@ -213,7 +213,7 @@ selectCompaniesSelectors = do
   sqlResult "country"
   sqlResult "bars_background"
   sqlResult "bars_textcolour"
-  sqlResult "encode(logo, 'base64') AS logo_base64"
+  sqlResult "logo"
   sqlResult "email_domain"
 
 

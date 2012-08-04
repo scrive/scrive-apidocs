@@ -9,11 +9,13 @@ module Stats.Model
          GetDocStatEvents(..),
          GetDocStatEventsByCompanyID(..),
          GetDocStatEventsByUserID(..),
+         GetDocStatCSV(..),
 
          UserStatEvent(..),
          AddUserStatEvent(..),
          GetUserStatEvents(..),
          UserStatQuantity(..),
+         RemoveInactiveUserLoginEvents(..),
 
          SignStatQuantity(..),
          SignStatEvent(..),
@@ -40,7 +42,10 @@ import Stats.Tables
 import Company.Model
 import API.Service.Model
 import OurPrelude
+import Data.Maybe (fromMaybe)
 import qualified Data.Map as M
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BS
 
 {------ Doc Stats ------}
 
@@ -166,12 +171,32 @@ instance MonadDB m => DBQuery m GetDocStatEventsByCompanyID [DocStatEvent] where
       <++> SQL "WHERE e.company_id = ?" [toSql companyid]
     fetchDocStats
 
+data GetDocStatCSV = GetDocStatCSV MinutesTime MinutesTime
+instance MonadDB m => DBQuery m GetDocStatCSV [[BS.ByteString]] where
+  query (GetDocStatCSV start end) = do
+    _ <- kRun $ SQL ("SELECT doc_stat_events.user_id, trim(trim(users.first_name) || ' ' || trim(users.last_name)), trim(users.email), " ++
+                    "       doc_stat_events.time, doc_stat_events.quantity, doc_stat_events.amount,  " ++
+                    "       doc_stat_events.document_id, doc_stat_events.service_id, trim(companies.name), " ++
+                    "       doc_stat_events.company_id, doc_stat_events.document_type, doc_stat_events.api_string " ++
+                    "FROM doc_stat_events " ++
+                    "LEFT JOIN users ON doc_stat_events.user_id = users.id " ++
+                    "LEFT JOIN companies ON doc_stat_events.company_id = companies.id " ++
+                    "WHERE doc_stat_events.time > ? AND doc_stat_events.time <= ?" ++
+                    "ORDER BY doc_stat_events.time DESC") [toSql start, toSql end]
+    foldDB f []
+      where f :: [[BS.ByteString]] -> UserID -> BS.ByteString -> BS.ByteString -> MinutesTime -> DocStatQuantity -> Int -> DocumentID -> Maybe BS.ByteString -> Maybe BS.ByteString -> Maybe CompanyID -> BS.ByteString -> BS.ByteString -> [[BS.ByteString]]
+            f acc uid n em t q a did sid cn cid tp api =
+              let smartname = if BS.null n then em else n
+              in [BS.fromString $ show uid, smartname, BS.fromString $ showDateYMD t, BS.fromString $ show q, 
+                  BS.fromString $ show a, BS.fromString $ show did, fromMaybe (BS.fromString "scrive") sid, fromMaybe (BS.fromString "none") cn, BS.fromString $ maybe "" show cid, tp, api] : acc
+                    
+
 selectUsersAndCompaniesAndInviteInfoSQL :: SQL
 selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   -- User:
   ++ "  users.id AS user_id"
-  ++ ", encode(users.password, 'base64') AS password_bas64"
-  ++ ", encode(users.salt, 'base64') AS salt_base64"
+  ++ ", users.password"
+  ++ ", users.salt"
   ++ ", users.is_company_admin"
   ++ ", users.account_suspended"
   ++ ", users.has_accepted_terms_of_service"
@@ -202,7 +227,7 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   ++ ", c.country"
   ++ ", c.bars_background"
   ++ ", c.bars_textcolour"
-  ++ ", encode(c.logo, 'base64') AS logo_base64"
+  ++ ", c.logo"
   ++ ", email_domain"
   -- InviteInfo:
   ++ ", user_invite_infos.inviter_id"
@@ -349,7 +374,6 @@ instance MonadDB m => DBUpdate m FlushDocStats () where
 
 data UserStatQuantity = UserSignTOS             -- When user signs TOS
                       | UserSaveAfterSign       -- when user accepts the save option after signing
-                      | UserRefuseSaveAfterSign -- deprecated: when user refuses the save option after signing
                       | UserPhoneAfterTOS       -- when a user requests a phone call after accepting the TOS
                       | UserCreateCompany       -- when a user creates a company
                       | UserLogin               -- when a user logs in
@@ -407,6 +431,12 @@ instance MonadDB m => DBUpdate m AddUserStatEvent Bool where
       , sql "service_id" usServiceID
       , sql "company_id" usCompanyID
       ]
+
+data RemoveInactiveUserLoginEvents = RemoveInactiveUserLoginEvents UserID
+instance MonadDB m => DBUpdate m RemoveInactiveUserLoginEvents Bool where
+  update (RemoveInactiveUserLoginEvents uid) = do
+    n <- kRun $ SQL "DELETE FROM user_stat_events WHERE quantity = ? AND EXISTS (SELECT 1 FROM users WHERE deleted = FALSE AND id = ? AND has_accepted_terms_of_service IS NULL)" [toSql UserLogin, toSql uid]
+    return $ n > 0
 
 {------ Signatory Stats ------}
 
@@ -479,3 +509,4 @@ instance MonadDB m => DBUpdate m AddSignStatEvent Bool where
       , toSql ssQuantity
       , toSql ssSignatoryLinkID
       ]
+

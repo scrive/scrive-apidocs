@@ -141,10 +141,8 @@ remindMailSignedStandardHeader :: TemplatesMonad m
                                -> m String
 remindMailSignedStandardHeader document signlink =
     renderLocalTemplateForProcess document processmailsignedstandardheader $ do
-        let mauthorsiglink = getAuthorSigLink document
-            creatorname = maybe "" getSmartName mauthorsiglink
         F.value "documenttitle" $ documenttitle document
-        F.value "author" creatorname
+        F.value "author" $ getAuthorName document
         F.value "personname" $ getSmartName signlink
         F.value "service" $ isJust $ documentservice document
 
@@ -154,10 +152,8 @@ remindMailNotSignedStandardHeader :: TemplatesMonad m
                                   -> m String
 remindMailNotSignedStandardHeader document signlink =
     renderLocalTemplateForProcess document processmailnotsignedstandardheader $ do
-        let mauthorsiglink = getAuthorSigLink document
-            creatorname = maybe "" getSmartName mauthorsiglink
         F.value "documenttitle" $ documenttitle document
-        F.value "author" $ creatorname
+        F.value "author" $ getAuthorName document
         F.value "personname" $ getSmartName signlink
         F.value "service" $ isJust $ documentservice document
 

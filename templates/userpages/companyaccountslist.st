@@ -3,13 +3,14 @@ viewCompanyAccounts =
 <div class="tab-viewer">
       <div class="tab-header"></div>
       <ul class="tabs">
-        <li><a href="/account">$_HeadUserInfo()$</a></li>
-        <li><a href="/account/security">$_HeadAccountSettings()$</a></li>
-        <li><a href="/account/company">$_CompanySettings()$</a></li>
-        <li class="active"><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>
-        <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
-        <li><a href="/account/usagestats">$_HeadUsageStats()$</a></li>
+        <li class='float-left'><a href="/account">$_HeadUserInfo()$</a></li>
+        <li class='float-left'><a href="/account/security">$_HeadAccountSettings()$</a></li>
+        <li class='float-left'><a href="/account/company">$_CompanySettings()$</a></li>
+        <li class="active float-left"><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>
+        <li class='float-left'><a href="/account/mailapi">$_HeadMailApi()$</a></li>
+        <li class='float-left'><a href="/account/usagestats">$_HeadUsageStats()$</a></li>
         <!--<li><a href="/oauth/dashboard">API</a></li>-->
+        <li class='float-right'/>
       </ul>
 </div>
 
@@ -79,7 +80,7 @@ viewCompanyAccounts =
                                       "activated",
                                       "deletable"] }),
       paging: new Paging({}),
-      filtering: new Filtering({ text: "", infotext: "$_SearchCompanyAccount()$" }),
+      textfiltering: new TextFiltering({ text: "", infotext: "$_SearchCompanyAccount()$" }),
       cells : [
         new Cell({name: "$_name()$", width: "100px", field:"fullname"}),
         new Cell({name: "$_email()$", width: "100px", field:"email" }),

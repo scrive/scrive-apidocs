@@ -2,52 +2,49 @@
 contractsealingtexts= 
 SealingTexts
     {   verificationTitle="$_contractsealingtexts()$"
-      , docPrefix="$_contractsealingtextsdocPrefix()$"
+      , docPrefix="$_sealingtextsdocPrefix()$"
       , signedText="$_contractsealingtextssignedText()$"
       , partnerText="$_contractsealingtextspartnerText()$"
       , secretaryText="$_contractsealingtextssecretaryText()$"
+      , documentText="$_documentText()$"
       , orgNumberText="$_contractsealingtextsorgNumberText()$"
+      , personalNumberText="$_personalNumberText()$"
       , eventsText="$_contractsealingtextseventsText()$"
       , dateText="$_contractsealingtextsdateText()$"
       , historyText="$_contractsealingtextshistoryText()$"
-      , verificationFooter=[
-          "$_contractsealingtextsverificationFooterRow1()$"
-        , "$_contractsealingtextsverificationFooterRow2()$"
-        , "$_contractsealingtextsverificationFooterRow3()$ $hostpart$/d/$documentid$."]
+      , verificationFooter="$_verificationFooter()$"
     }
 #####
 offersealingtexts=
 SealingTexts
     {   verificationTitle="$_offersealingtextsverificationTitle()$"
-      , docPrefix="$_offersealingtextsdocPrefix()$"
+      , docPrefix="$_sealingtextsdocPrefix()$"
       , signedText="$_offersealingtextssignedText()$"
       , partnerText="$_offersealingtextspartnerText()$"
       , secretaryText="$_offersealingtextssecretaryText()$"
+      , documentText="$_documentText()$"
       , orgNumberText="$_offersealingtextsorgNumberText()$"
+      , personalNumberText="$_personalNumberText()$"
       , eventsText="$_offersealingtextseventsText()$"
       , dateText="$_offersealingtextsdateText()$"
       , historyText="$_offersealingtextshistoryText()$"
-      , verificationFooter=[
-          "$_offersealingtextsverificationFooterRow1()$"
-        , "$_offersealingtextsverificationFooterRow2()$."
-        , "$_offersealingtextsverificationFooterRow3()$ $hostpart$/d/$documentid$."]
+      , verificationFooter="$_verificationFooter()$"
     }
 #####
 ordersealingtexts= 
 SealingTexts
     {   verificationTitle="$_ordersealingtextsverificationTitle()$"
-      , docPrefix="$_ordersealingtextsdocPrefix()$"
+      , docPrefix="$_sealingtextsdocPrefix()$"
       , signedText="$_ordersealingtextssignedText()$"
       , partnerText="$_ordersealingtextspartnerText()$"
       , secretaryText="$_ordersealingtextssecretaryText()$"
+      , documentText="$_documentText()$"
       , orgNumberText="$_ordersealingtextsorgNumberText()$"
+      , personalNumberText="$_personalNumberText()$"
       , eventsText="$_ordersealingtextseventsText()$"
       , dateText="$_ordersealingtextsdateText()$"
       , historyText="$_ordersealingtextshistoryText()$"
-      , verificationFooter=[
-          "$_ordersealingtextsverificationFooterRow1()$"
-        , "$_ordersealingtextsverificationFooterRow2()$"
-        , "$_ordersealingtextsverificationFooterRow3()$ $hostpart$/d/$documentid$."]
+      , verificationFooter="$_verificationFooter()$"
     }
 #####
 contractLastHistEntry=
@@ -66,8 +63,6 @@ contractInvitationSentEntry=
     $else$
         $_contractInvitationSentEntryIfElse()$
     $endif$ 
-    
-    $ip$
 ###
 offerInvitationSentEntry=
     $authorfstname$ $authorsndname$ $_offerInvitationSentEntry()$
@@ -76,8 +71,6 @@ offerInvitationSentEntry=
     $else$
         $_offerInvitationSentEntryIfElse()$
     $endif$ 
-    
-    $ip$
 ###
 orderInvitationSentEntry=
     $authorfstname$ $authorsndname$ $_orderInvitationSentEntry()$
@@ -86,26 +79,6 @@ orderInvitationSentEntry=
     $else$
         $_orderInvitationSentEntryIfElse()$
     $endif$ 
-    
-    $ip$
-###
-contractSeenHistEntry=
-    $personname$ $_contractSeenHistEntry()$ $seenip$
-###
-offerSeenHistEntry=
-    $personname$ $_offerSeenHistEntry()$ $seenip$
-####
-orderSeenHistEntry=
-    $personname$ $_orderSeenHistEntry()$ $seenip$
-####
-contractSignHistEntry=
-    $personname$ $_contractSignHistEntry()$ $signMethod()$ $signip$
-####
-offerSignHistEntry=
-    $personname$ $_offerSignHistEntry()$ $signMethod()$ $signip$
-###
-orderSignHistEntry=
-    $personname$ $_orderSignHistEntry()$ $signMethod()$ $signip$
 ###
 signMethod=
         $if(!provider)$

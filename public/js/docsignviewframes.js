@@ -8,8 +8,8 @@ window.DocumentSignViewHeader = Backbone.View.extend({
  initialize: function(args) {
      this.mainview = args.mainview;
      _.bindAll(this, 'render' ,'refresh');
-     this.model.document.bind('reset', this.render);
-     this.model.document.bind('change', this.render);
+     this.model.document().bind('reset', this.render);
+     this.model.document().bind('change', this.render);
      this.model.bind('change', this.render);
      this.mainview.bind('change:task', this.refresh);
      this.render();
@@ -43,7 +43,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
   render: function() {
     var view = this;
     var model = this.model;
-    var document = this.model.document;
+    var document = this.model.document();
     if (!document.ready()) return this;
     var maindiv = $(this.el);
     maindiv.empty();
@@ -64,7 +64,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
         if (document.barsbackgroundtextcolor() != undefined)
             maindiv.css("color", document.barsbackgroundtextcolor());
 
-    } else if(model.hasSigned() && model.saved()) {
+    } else if(document.currentSignatory() != undefined && (document.currentSignatory().saved() || model.justSaved())) {
         maindiv.addClass('withstandardlogo');
         var content = $("<div class='content' />");
         var logowrapper = $("<div class='logowrapper' />");
@@ -97,7 +97,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
     this.sender = $("<div class='sender' />");
     var inner = $('<div class="inner" />');
       this.sender.append(inner);
-    if(model.hasSigned() && model.saved()) {
+    if(document.currentSignatory() != undefined && (document.currentSignatory().saved() || model.justSaved())) {
       var name = $("<div class='name' />").text("Scrive help desk");
       var phone = $("<div class='phone' />").text("+46 8 519 779 00");
       inner.append(name).append(phone);
@@ -122,8 +122,8 @@ window.DocumentSignViewFooter = Backbone.View.extend({
   initialize: function(args) {
     this.mainview = args.mainview;
     _.bindAll(this, 'render' , 'refresh');
-    this.model.document.bind('reset', this.render);
-    this.model.document.bind('change', this.render);
+    this.model.document().bind('reset', this.render);
+    this.model.document().bind('change', this.render);
     this.mainview.bind('change:task', this.refresh);
     this.render();
   },
@@ -141,7 +141,7 @@ window.DocumentSignViewFooter = Backbone.View.extend({
   tagName: "div",
   render: function() {
     var model = this.model;
-    var document = this.model.document;
+    var document = this.model.document();
     if (!document.ready()) return this;
     var maindiv = $(this.el);
     maindiv.empty();
@@ -160,7 +160,7 @@ window.DocumentSignViewFooter = Backbone.View.extend({
     var powerdiv = $("<div class='poweredbyscrive'/>").append($("<a href='/'>").text(localization.poweredByScrive).css("color", document.barsbackgroundtextcolor()));
     var sender = $("<div class='sender' />");
 
-    if(model.hasSigned() && model.saved()) {
+    if(document.currentSignatory() != undefined && (document.currentSignatory().saved() || model.justSaved())) {
       var name = $("<div class='name' />").text("Scrive help desk");
       var phone = $("<div class='phone' />").text("+46 8 519 779 00");
       sender.append(name).append(phone);

@@ -9,7 +9,10 @@ module DB.Derive (
   , bitfieldDeriveConvertible
   , jsonableDeriveConvertible
   , jsonFromSqlValue
+  , jsonFromSqlValueCustom
+  , nothingToResult -- | Util for above since default parsers use Maybe
   , jsonToSqlValue
+  , jsonToSqlValueCustom
   ) where
 
 import Control.Arrow
@@ -235,10 +238,17 @@ bitfieldDeriveConvertible t = do
 -- be stored in DB as JSON (Data/Typeable instances are required)
 
 jsonToSqlValue :: Data a => a -> ConvertResult SqlValue
-jsonToSqlValue = Right . SqlString . encodeJSON
+jsonToSqlValue = jsonToSqlValueCustom toJSON
+
+jsonToSqlValueCustom :: (a -> JSValue ) -> a -> ConvertResult SqlValue
+jsonToSqlValueCustom f a = Right $ SqlString $ showJSValue (f a) ""
 
 jsonFromSqlValue :: forall a. (Data a, Typeable a) => SqlValue -> ConvertResult a
-jsonFromSqlValue v = safeDecodeJSON (show (typeOf (undefined :: a))) =<< safeConvert v
+jsonFromSqlValue = jsonFromSqlValueCustom fromJSON
+
+jsonFromSqlValueCustom :: forall a. (Data a, Typeable a) =>  (JSValue -> Result a) -> SqlValue -> ConvertResult a
+jsonFromSqlValueCustom f v = safeDecodeJSONCustom f (show (typeOf (undefined :: a))) =<< safeConvert v
+
 
 jsonableDeriveConvertible :: TypeQ -> Q [Dec]
 jsonableDeriveConvertible tq = do
@@ -246,9 +256,9 @@ jsonableDeriveConvertible tq = do
   [d|instance Convertible $(tq) SqlValue where safeConvert = jsonToSqlValue
      instance Convertible SqlValue $(tq) where safeConvert = jsonFromSqlValue|]
 
-safeDecodeJSON :: Data a => String -> String -> ConvertResult a
-safeDecodeJSON t s = case runGetJSON readJSValue s of
-  Right j -> case fromJSON j of
+safeDecodeJSONCustom :: Data a => (JSValue -> Result a)  -> String -> String -> ConvertResult a
+safeDecodeJSONCustom f t s = case runGetJSON readJSValue s of
+  Right j -> case f j of
     Error msg -> err msg
     Ok x -> Right x
   Left msg -> err msg
@@ -259,3 +269,8 @@ safeDecodeJSON t s = case runGetJSON readJSValue s of
       , convDestType = t
       , convErrorMessage = msg
     }
+    
+
+nothingToResult :: Maybe a -> Result a
+nothingToResult Nothing  = Error "Nothing found when Just expected"
+nothingToResult (Just a) = Ok a

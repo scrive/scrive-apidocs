@@ -8,19 +8,17 @@ module MagicHash
   ) where
 
 
-import Control.Applicative ((<$>))
-import Control.Arrow (first)
-import Data.Data (Data, Typeable)
-import Data.Int (Int64)
-import Data.Word (Word64)
-import Happstack.Data(Version, Serialize)
-import Happstack.Server (FromReqURI(..))
-import Happstack.Util.Common (readM)
-import Numeric (showHex, readHex)
+import Control.Applicative
+import Control.Arrow
+import Data.Int
+import Data.SafeCopy
+import Data.Word
+import Happstack.Server
+import Numeric
 
-import Crypto.RNG(Random)
-import DB.Derive(newtypeDeriveConvertible)
-import Misc (pad0)
+import Crypto.RNG
+import DB.Derive
+import Misc
 
 -- | Hash value that is produced by cryptographically secure random
 -- generators for authentication purposes.
@@ -32,21 +30,19 @@ import Misc (pad0)
 -- unsigned one in Show instance and readHex works fine with negative
 -- numbers.
 newtype MagicHash = MagicHash Int64
-  deriving (Data, Eq, Ord, Typeable, Random)
+  deriving (Eq, Ord, Random)
 $(newtypeDeriveConvertible ''MagicHash)
 
-deriving instance Serialize MagicHash
-instance Version MagicHash
+$(deriveSafeCopy 0 'base ''MagicHash)
 
 instance Show MagicHash where
-  showsPrec _prec (MagicHash x) =
-    (++) (pad0 16 $ showHex (fromIntegral x :: Word64) "")
+  show (MagicHash x) = pad0 16 $ showHex (fromIntegral x :: Word64) ""
 
 instance Read MagicHash where
   readsPrec _ s = first MagicHash <$> readHex s
 
 instance FromReqURI MagicHash where
-  fromReqURI = readM
+  fromReqURI = maybeRead
 
 -- | Construct a magic hash manually.  It is up to the caller to
 -- reason about the consequences if the argument is not generated from

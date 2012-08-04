@@ -17,8 +17,8 @@ import Misc
 import ScriveByMail.Action
 import ScriveByMail.Model
 import ScriveByMail.View
+import User.Action
 import User.Model
-import User.UserControl
 import Util.FlashUtil
 import Util.MonadUtils
 import Doc.Action
@@ -57,7 +57,7 @@ handleConfirmDelay adminemail delayid key = do
       adminuser <- guardJustM $ dbQuery $ GetUserByEmail Nothing (Email adminemail)
       unless (Just companyid == usercompany adminuser && useriscompanyadmin adminuser)
              internalError
-      newuser   <- guardJustM $ createUser (Email email) "" "" (Just company)
+      newuser <- guardJustM $ createUser (Email email) ("", "") (Just companyid) (ctxlocale ctx)
       _ <- dbUpdate $ ConfirmBossDelay delayid (ctxtime ctx)
       _ <- sendNewCompanyUserMail adminuser company newuser
       addFlashM $ modalConfirmDelay email

@@ -363,7 +363,8 @@ body.signview {
 
 .signview .share .panel {
     margin:auto;
-    width: 728px;
+    float: left;
+    width: 182px;
 }
 
 .signview .share .item {
@@ -422,7 +423,6 @@ body.signview {
 .signview .share .dropdown .content {
   background: white;
   width: 292px;
-  height: 65px;
   margin: 0px;
 }
 
@@ -434,13 +434,6 @@ body.signview {
   background-image: url(/img/phone-dropdown.png);
 }
 
-.signview .share .phone.dropdown .content {
-  background: transparent;
-  padding-top: 10px;
-  padding-left: 30px;
-  padding-right: 30px;
-  width: 280px;
-}
 
 .signview .share .phone.dropdown .loading {
   background-image: url(/img/wait30trans.gif);
@@ -566,6 +559,7 @@ body.signview {
 .signview .authorattachments .item .label {
   float: left;
   margin-left: 10px;
+  width : 290px;
 }
 
 .signview .authorattachments .item .name {
@@ -839,21 +833,38 @@ body.signview {
   position: absolute;
 }
 
-.signview .arrows .action.arrow .front {
-  background: url(../img/sign-arrow-action-front.png);
+.signview .arrows .action.arrow.right .front {
+  background: url(../img/sign-arrow-action-right-front.png);
   background-repeat: no-repeat;
   min-width: 84px;
   height: 28px;
   float: left;
 }
 
-.signview .arrows .action.arrow .back {
-  background: url(../img/sign-arrow-action-back.png);
+.signview .arrows .action.arrow.right .back {
+  background: url(../img/sign-arrow-action-right-back.png);
   background-repeat: no-repeat;
   width: 8px;
   height: 28px;
   float: left;
 }
+
+.signview .arrows .action.arrow.left .front {
+  background: url(../img/sign-arrow-action-left-front.png);
+  background-repeat: no-repeat;
+  min-width: 84px;
+  height: 28px;
+  float: left;
+}
+
+.signview .arrows .action.arrow.left .back {
+  background: url(../img/sign-arrow-action-left-back.png);
+  background-repeat: no-repeat;
+  width: 20px;
+  height: 28px;
+  float: left;
+}
+
 
 .signview .arrows .action.arrow .label {
   color: white;
@@ -1030,13 +1041,8 @@ div.spacing.butt {
 .signview .newaccount .inner {
     width: 590px;
     margin: auto;
-    padding 
 }
 
-.signview.just-signed .panel {
-    width: 182px;
-    float: left;
-}
 
 .signview .sbox {
     padding: 10px;

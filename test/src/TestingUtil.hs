@@ -41,7 +41,7 @@ import API.Service.Model
 import Data.Typeable
 import Doc.Invariants
 import Doc.DocProcess
-import ActionSchedulerState
+import System.Random.CryptoRNG ()
 import Text.JSON
 import TestKontra
 
@@ -135,9 +135,6 @@ instance Arbitrary MinutesTime where
 
 instance Arbitrary DocumentUI where
   arbitrary = DocumentUI <$> arbitrary
-
-instance Arbitrary ActionID where
-  arbitrary = ActionID <$> arbitrary
 
 {- | Sometimes we get and object that is not as random as we would expect (from some reason)
      Like author signatorylink that by default does not have any fields attached
@@ -343,6 +340,7 @@ instance Arbitrary FieldPlacement where
                             , placementpage = c
                             , placementpagewidth = d
                             , placementpageheight = e
+                            , placementtipside = Nothing
                             }
 
 instance Arbitrary FieldType where
@@ -468,7 +466,7 @@ addNewCompany = do
     dbUpdate $ CreateCompany Nothing eid
 
 addNewFile :: String -> BS.ByteString -> TestEnv File
-addNewFile filename content = dbUpdate $ NewFile filename content
+addNewFile filename content = dbUpdate $ NewFile filename $ Binary content
 
 addNewRandomFile :: TestEnv File
 addNewRandomFile = do
@@ -478,11 +476,11 @@ addNewRandomFile = do
 
 addNewUser :: String -> String -> String -> TestEnv (Maybe User)
 addNewUser firstname secondname email =
-  dbUpdate $ AddUser (firstname, secondname) email Nothing False Nothing Nothing (mkLocaleFromRegion defaultValue)
+  dbUpdate $ AddUser (firstname, secondname) email Nothing Nothing Nothing (mkLocaleFromRegion defaultValue)
 
 addNewCompanyUser :: String -> String -> String -> CompanyID -> TestEnv (Maybe User)
 addNewCompanyUser firstname secondname email cid =
-  dbUpdate $ AddUser (firstname, secondname) email Nothing False Nothing (Just cid) (mkLocaleFromRegion defaultValue)
+  dbUpdate $ AddUser (firstname, secondname) email Nothing Nothing (Just cid) (mkLocaleFromRegion defaultValue)
 
 addNewRandomUser :: TestEnv User
 addNewRandomUser = do
@@ -629,6 +627,9 @@ addRandomDocument rda = do
       let adoc = doc { documentsignatorylinks = alllinks
                      , documentregion = getRegion user
                      , documentfiles = [fileid file]
+                     , documentsealedfiles = if documentstatus doc == Closed
+                                               then [fileid file]
+                                               else []
                      }
       case (p adoc, invariantProblems now adoc) of
         (True, Nothing) -> return adoc
@@ -765,14 +766,6 @@ instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbit
 
 instance Arbitrary FileID where
   arbitrary = unsafeFileID . abs <$> arbitrary
-
-instance Arbitrary File where
-  arbitrary = do
-    (a, b, c) <- arbitrary
-    return $ File { fileid = a
-                  , filename = b
-                  , filestorage = FileStorageMemory c
-                  }
 
 instance Arbitrary IPAddress where
   arbitrary = unsafeIPAddress <$> arbitrary

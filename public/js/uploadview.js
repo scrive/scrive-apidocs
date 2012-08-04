@@ -7,26 +7,31 @@
         initialize: function() {
             this.model.view = this;
             _.bindAll(this, 'render');
-            this.model.bind('change', this.render);
-            this.text = $("#jschooseprocesstext").html();
-            this.choose = $("#jschooseprocess").html();
+            this.model.bind('change', this.render);   
+        },
+        text : function() {
+           var textp = $("<p class='text' style='padding-top:40px'/>").text(localization.uploadView.signStepsBodyUpload);
+           var textdiv = $("<div class='signStepsBodyUploadBox' style='border:0px;text-align:left;width: 250px;font-weight:bold'/>").append(textp);
+           return $("<td/>").append(textdiv);
+        },
+        choose : function(i, v) {
+           var wiz = this.model.wizard();
+           var a = $("<a class='documenticon' href='#'/>").append($("<span class='text'/>").text(v.localname));
+           a.click(function(){
+                    wiz.set({process: v});
+                    wiz.nextStep();
+                    return false;
+           });
+           return $("<td/>").append($("<div class='documentTypeBox'/>").append(a));
         },
         render: function() {
             var view = this;
             $(view.el).children().detach();
             var model = view.model;
             var wiz = model.wizard();
-            $(view.el).append(this.text);
+            $(view.el).append(this.text());
             $.each(model.get('processes'), function(i, v) {
-                var n = $(view.choose);
-                var a = n.find("a");
-                a.click(function(){
-                    wiz.set({process: v});
-                    wiz.nextStep();
-                    return false;
-                });
-                $(".text",a).text(v.localname);
-                $(view.el).append(n);
+                $(view.el).append(view.choose(i,v));
             });
         }
     });
@@ -37,26 +42,26 @@
             this.model.view = this;
             _.bindAll(this, 'render');
             this.model.bind('change', this.render);
-            this.text = $("#jsuploadtext").html();
             this.upload = $("#jsuploadbutton").html();
             this.template = $("#jschoosetemplate").html();
         },
-        render: function() {
-            var view = this;
-            $(view.el).children().detach();
-            var model = view.model;
-            var wiz = model.wizard();
-            var t = $(view.text);
-            if(t.find("a.jswizardback").length > 0)
-              t.find("a.jswizardback").click(function() {
+        text : function() {
+            var wiz = this.model.wizard();
+            var prompt = $("<p class='text jsprompt' style='padding-top:30px'></p>").text(wiz.get('process').prompt);
+            var a = $("<a class='backicon float-left jswizardback' href='#'></a>");
+            a.click(function() {
                 wiz.previousStep();
                 return false;
-              });
-            if(t.find(".jsprompt").length > 0)
-              t.find(".jsprompt").text(wiz.get('process').prompt);
-            $(view.el).append(t);
-            var url = "/api/document";
-            var upbutton = UploadButton.init({
+            });
+            var p = $("<p style='padding-top:25px;'/>").append(a).append($("<span class='float-left upload-back-text'/>").text(localization.uploadView.back));
+            var div = $("<div class='signStepsBodyUploadBox' style='border:0px;text-align:left;width: 250px;font-weight:bold'/>").append(prompt).append(p);
+            return $("<td/>").append(div);
+        },
+        uploadBox: function() {
+          var wiz = this.model.wizard();
+          var header = $("<span class='header'/>").text(localization.uploadView.chooseFile);
+          var subheader = $("<span class='text'/>").text(localization.onlyPDF);
+          var upbutton = UploadButton.init({
                 name: "file",
                 width: 125,
                 text: localization.uploadButton,
@@ -71,7 +76,7 @@
                 },
                 submit: new Submit({
                     method : "POST",
-                    url : url,
+                    url : "/api/document",
                     ajax: true,
                     json: JSON.stringify({"type" : (wiz.get('process') ? wiz.get('process').signable : 1)}),
                     expectedType: 'json',
@@ -99,20 +104,41 @@
                              FlashMessages.add({content: localization.couldNotUpload, color: "red"});
                              LoadingDialog.close();
                              wiz.trigger('change');
-                        }     
+                        }
                     }
                 })
             });
-            var up = $(view.upload);
-            up.find(".signStepsBodyUploadBox .signStepsButtonContainer").append(upbutton.input());
-            $(view.el).append(up);
-            var temps = $(view.template);
-            temps.find("a").click(function(event) {
-                event.preventDefault();
+          var uploadbuttoncontainer = $("<div class='signStepsButtonContainer'></div>").append(upbutton.input());
+          var div = $("<div class='signStepsBodyUploadBox'/>").append(header).append("<BR/>").append(subheader).append("<BR/>").append(uploadbuttoncontainer);    
+          return $("<td class='jsformbox'>").append(div); 
+        },
+        templateBox : function() {
+          var wiz = this.model.wizard();
+          var header = $("<span class='header'/>").text(localization.uploadView.chooseTemplate);
+          var subheader = $("<span class='text'/>").text(localization.uploadView.savedTemplate);
+          var button = Button.init({
+            color : 'green',
+            size : 'small' ,
+            width : 134,
+            text : localization.uploadView.chooseTemplate,
+            onClick : function() {
                 wiz.nextStep();
                 return false;
-            });
-            $(view.el).append(temps);
+            }
+          });
+          var buttonbox = $("<div class='signStepsButtonContainer' style='height:34px'/>");
+          buttonbox.append(button.input().addClass("selectTemplateButton"));
+          var div = $("<div class='signStepsBodyUploadBox'/>").append(header).append("<BR/>").append(subheader).append("<BR/>").append(buttonbox);
+          return $("<td/>").append(div);
+        },
+        render: function() {
+            var view = this;
+            $(view.el).children().detach();
+            var model = view.model;
+            var wiz = model.wizard();
+            $(view.el).append(this.text());
+            $(view.el).append(this.uploadBox());
+            $(view.el).append(this.templateBox());
         }
     });
 
@@ -146,12 +172,11 @@
                     extraParams : { documentType : "Template|" + wiz.get('process').name },
                     sorting: new Sorting({ fields: ["title"]}),
                     paging: new Paging({}),
-                    filtering: new Filtering({text: "", infotext: localization.searchTemplate}),
+                    filtering: new TextFiltering({text: "", infotext: localization.searchTemplate}),
                     cells : [
                         new Cell({name: localization.sortTemplate,
                                   width:"400px",
                                   field:"title",
-                                  special: "rendered",
                                   rendering : function(title, _mainrow, listobject) {
                                       var link = jQuery("<a/>").text(title);
                                       link.click(function(){
@@ -169,10 +194,8 @@
                 }),
                 headerExtras : $("<div>").addClass("float-left basicinfo")
                     .append($("<p>").text(localization.infoSelectTemplate))
-                    .append($("<br>"))
-                    .append($("<p>").append($("<a href='#' />").addClass("jsback1 backicon float-left boo").html(" &nbsp;"))
-                            .append(" &nbsp;" + localization.goBack))
-
+                    .append($("<p style='padding-top: 20px;'>").append($("<a class='jsback1 backicon float-left boo' href='#'/>"))
+                            .append($("<span class='upload-back-text float-left'/>").text(localization.uploadView.back)))
             });
             documentsTable.view.render();
 

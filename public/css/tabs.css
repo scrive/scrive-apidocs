@@ -15,7 +15,9 @@
 
 .tab-content .basicinfo {
     color: #414241 !important;
-    font: 12px "Helvetica Neue";
+    font-family: 'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
+    font-size: small;
+    font-weight : bold;
     text-decoration: none;
     padding: 48px 0 36px 50px;
     width: 230px;
@@ -59,28 +61,39 @@
 .tab-viewer .tabs {
 	background: #f4f4f4;
 	border: solid #808080;
-	border-width: 0 1px 1px 0px;
+	border-width: 0px 0px 1px 0px;
 	height: 24px;
 }
 
-.tab-viewer .tabs li:first-child {
+.tab-viewer .tabs li.float-left:first-child {
     border: solid #808080;
-    border-width: 0 0px 0px 1px;
+    border-width: 0px 0px 0px 1px;
 }
-.tab-viewer .tabs li.active:first-child {
+.tab-viewer .tabs li.float-right:last-child {
+    border: solid #808080;
+    border-width: 0px 1px 0px 0px;
+}
+
+.tab-viewer .tabs li.float-left.active:first-child {
+    border-width: 0;
+}
+.tab-viewer .tabs li.float-right.active:last-child {
     border-width: 0;
 }
 .tab-viewer .tabs li {
 	color: #4b4b4b;
-	float: left;
 	font: 11px "Lucida Grande";
 	height: 16px;
 	padding: 4px 30px;
 }
 
+.tab-viewer .tabs li.withIcon {
+        padding: 4px 10px;
+}
+
 .tab-viewer .tabs li a {
-	color: #000;
-	font: 11px "Helvetica Neue";
+    color: #000;
+    font: 11px "Helvetica Neue";
     display: inline-block;
     padding-top:2px;
 }

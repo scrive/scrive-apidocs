@@ -25,6 +25,7 @@ module Doc.DocStateData (
   , SignOrder(..)
   , SignatoryField(..)
   , FieldType(..)
+  , TipSide(..)
   , SignatoryDetails(..)
   , SignatoryLink(..)
   , SignatoryRole(..)
@@ -44,19 +45,16 @@ module Doc.DocStateData (
 
 import API.Service.Model
 import Company.Model
-import Data.Data (Data)
+import Data.Data
 import Data.Either
 import Data.Maybe
 import DB.Derive
-import Happstack.Data
 import IPAddress
-import MagicHash (MagicHash)
+import MagicHash
 import MinutesTime
 import User.UserID
 import User.Region
 import User.Locale
---import qualified Data.ByteString as BS
---import qualified Data.ByteString.UTF8 as BS
 import File.FileID
 import File.File
 import Doc.DocumentID
@@ -65,6 +63,12 @@ import Doc.SignatoryLinkID
 import Database.HDBC
 import Data.List
 import ELegitimation.SignatureProvider
+import Text.JSON.FromJSValue
+import Text.JSON.Gen
+import Text.JSON
+import Control.Applicative
+import Misc
+import Control.Monad
 
 newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
   deriving (Eq, Ord)
@@ -91,7 +95,7 @@ data StatusClass = SCDraft
                   | SCRead
                   | SCOpened
                   | SCSigned
-                  deriving (Eq, Ord, Enum)
+                  deriving (Eq, Ord, Enum, Bounded)
 
 instance Show StatusClass where
   show SCDraft = "draft"
@@ -101,6 +105,11 @@ instance Show StatusClass where
   show SCRead = "read"
   show SCOpened = "opened"
   show SCSigned = "signed"
+
+instance Read StatusClass where
+  readsPrec _ str =
+    [(v,drop (length (show v)) str) | v <- [minBound .. maxBound], show v `isPrefixOf` str]
+
 
 data IdentificationType = EmailIdentification
                         | ELegitimationIdentification
@@ -142,7 +151,11 @@ data FieldPlacement = FieldPlacement {
   , placementpage :: Int
   , placementpagewidth :: Int
   , placementpageheight :: Int
+  , placementtipside :: Maybe TipSide
   } deriving (Eq, Ord, Show, Data, Typeable)
+
+data TipSide = LeftTip | RightTip
+  deriving (Eq, Ord, Show, Read, Data, Typeable)
 
 data SignatoryDetails = SignatoryDetails {
     signatorysignorder :: SignOrder
@@ -461,4 +474,29 @@ $(enumDeriveConvertible ''DocumentSharing)
 $(jsonableDeriveConvertible [t| [DocumentTag] |])
 $(jsonableDeriveConvertible [t| CancelationReason |])
 $(jsonableDeriveConvertible [t| [[String]] |])
-$(jsonableDeriveConvertible [t| [FieldPlacement] |])
+
+
+instance Convertible  [FieldPlacement] SqlValue where
+    safeConvert = jsonToSqlValueCustom $ JSArray . (map placementJSON) 
+        where
+         placementJSON p = runJSONGen $ do 
+            value "placementx" $ placementx p
+            value "placementy" $ placementy p
+            value "placementpage" $ placementpage p
+            value "placementpagewidth" $ placementpagewidth p
+            value "placementpageheight" $ placementpageheight p
+            when (isJust $ placementtipside p) $ 
+                value "placementtipside" $ show <$> placementtipside p
+
+instance Convertible  SqlValue [FieldPlacement] where
+    safeConvert = jsonFromSqlValueCustom $ nothingToResult . (fromJSValueCustomMany placementFromJSON)
+        where
+         placementFromJSON :: JSValue -> Maybe FieldPlacement
+         placementFromJSON = do
+              x     <- fromJSValueField "placementx"
+              y     <- fromJSValueField "placementy"
+              page   <- fromJSValueField "placementpage"
+              pagewidth  <- fromJSValueField "placementpagewidth"
+              pageheight <- fromJSValueField  "placementpageheight"
+              tipside    <- fromJSValueField "placementtipside"
+              return (FieldPlacement <$> x <*> y <*> page <*> pagewidth <*> pageheight <*> (Just $ join $ maybeRead <$> tipside))

@@ -2,9 +2,10 @@ pagePadDeviceArchive=
 <div>
   <div class="tab-viewer paddevicearchive">
         <div class="tab-header">
-      $docListRubbishBinLink()$
         </div>
-        $docListTabs()$
+        <ul class="tabs">
+            <li class="active"><a href="$link$" class="listtype">$_PadDevice()$</a></li>
+        </ul>
   </div>
 </div>
 <script>
@@ -21,7 +22,7 @@ var padTable = KontraList().init({
     extraParams : { documentType : "Pad" },
     sorting: new Sorting({ fields: ["status", "time", "title","party"]}),
     paging: new Paging({}),
-    filtering: new Filtering({text: "", infotext: "$_SearchDoc()$"}),
+    textfiltering: new TextFiltering({text: "", infotext: "$_SearchDoc()$"}),
     expandedByDefault: true,
     cells : [
          new Cell({name: "$_SortStatus()$", width:"65px", field:"status", special: "rendered",

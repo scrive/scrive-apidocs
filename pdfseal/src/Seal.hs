@@ -1,17 +1,42 @@
 {-# LANGUAGE DoRec #-}
 
 module Seal where
-import PdfModel
+import PdfModel hiding(trace)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import Control.Monad.State.Strict
+import Control.Monad.Writer.Strict
 import qualified Data.Map as Map
 import Data.List
 import Data.Ord
 import Graphics.PDF.Text
-import Graphics.PDF hiding (Box)
+import Graphics.PDF (PDFFloat)
 import SealSpec
 import qualified Data.ByteString.Base64 as Base64
+
+buildList :: State [a] () -> [a]
+buildList actions = reverse (execState actions [])
+
+lm :: a -> State [a] ()
+lm e = modify (\x -> e : x)
+
+lms :: [a] -> State [a] ()
+lms es = mapM_ lm es
+
+printableWidth :: Int
+printableWidth = 567
+
+printableHeight :: Int
+printableHeight = 673
+
+printableMargin :: Int
+printableMargin = 23
+
+frameInnerPadding :: Int
+frameInnerPadding = 16
+
+cardWidth :: Int
+cardWidth = (printableWidth - 4*frameInnerPadding - 2*printableMargin) `div` 2
 
 winAnsiPostScriptEncode :: String -> String
 winAnsiPostScriptEncode text' = concatMap charEncode text'
@@ -258,7 +283,11 @@ placeFieldsOnPage (pagerefid,sealtext) document' =
         newpage = (Indir newpagedict pagestrem)
         newdocument = setIndirF pagerefid newpage docx
     in newdocument
-   
+
+tellMatrix :: (MonadWriter String m) => Double -> Double -> Double -> Double -> Double -> Double -> m ()
+tellMatrix a b c d e f =
+      tell $ (concat $ intersperse " " $ map show [a::Double,b,c,d,e,f]) ++ " cm\n"
+
 -- FIXME: here we still have font size problem. On the page it appears
 -- as some pt size font. We need to translate that size into PDF pt
 -- size. For now pretend we are using 10pt font.
@@ -281,9 +310,16 @@ fieldstext pagew pageh fields = concatMap fieldtext fields
                    , y
                    , w
                    , h
-                   } = "q 1 0 0 1 " ++ show (fromIntegral (x * pagew) / fromIntegral w :: Double) ++ " " ++
-                       show (fromIntegral ((h - y) * pageh) / fromIntegral h - fontBaseline :: Double) ++ " cm " ++
-                       "BT /SkrivaPaHelvetica 10 Tf (" ++ winAnsiPostScriptEncode val ++ ") Tj ET Q "
+                   } = execWriter $ do
+                         tell "q\n"
+                         tellMatrix 1 0 0 1
+                                      (fromIntegral (x * pagew) / fromIntegral w)
+                                      (fromIntegral ((h - y) * pageh) / fromIntegral h - fontBaseline)
+                         tell "BT\n"
+                         tell "/SkrivaPaHelvetica 10 Tf\n"
+                         tell $ "(" ++ winAnsiPostScriptEncode val ++ ") Tj\n"
+                         tell "ET\n"
+                         tell "Q\n"
     fieldtext FieldJPG{ SealSpec.valueBase64 = val
                    , x
                    , y
@@ -291,16 +327,23 @@ fieldstext pagew pageh fields = concatMap fieldtext fields
                    , h
                    , image_w, image_h
                    , internal_image_w, internal_image_h
-                   } = "q " ++ intercalate " " [  show (fromIntegral (image_w * pagew) / fromIntegral w :: Double)
-                                               , "0"
-                                               , "0"
-                                               , show (fromIntegral (image_h * pageh) / fromIntegral h :: Double)
-                                               , show (fromIntegral (x * pagew) / fromIntegral w :: Double)
-                                               , show (fromIntegral ((h - y - image_h) * pageh) / fromIntegral h :: Double)
-                                               ] ++ " cm\n" ++
-                       "BI\n/BPC 8\n/CS /RGB\n/F /DCT\n" ++
-                       "/H " ++ show internal_image_h ++ "\n/W " ++ show internal_image_w ++ "\nID " ++
-                       BS.unpack (Base64.decodeLenient (BS.pack val)) ++ "\nEI\nQ "
+                   } = execWriter $ do
+                         tell "q\n"
+                         tellMatrix (fromIntegral (image_w * pagew) / fromIntegral w)
+                                      0 0
+                                      (fromIntegral (image_h * pageh) / fromIntegral h)
+                                      (fromIntegral (x * pagew) / fromIntegral w)
+                                      (fromIntegral ((h - y - image_h) * pageh) / fromIntegral h)
+                         tell "BI\n"        -- begin image
+                         tell "/BPC 8\n"    -- 8 bits per pixel
+                         tell "/CS /RGB\n"  -- color space is RGB
+                         tell "/F /DCT\n"   -- filter is DCT, that means JPEG
+                         tell $ "/H " ++ show internal_image_h ++ "\n"  -- height is pixels
+                         tell $ "/W " ++ show internal_image_w ++ "\n"  -- width in pixels
+                         tell "ID "         -- image data follow
+                         tell $ BS.unpack (Base64.decodeLenient (BS.pack val)) ++ "\n"
+                         tell "EI\n"        -- end image
+                         tell "Q\n"
 
 placeSeals :: [Field] -> RefID -> [String] -> RefID -> String -> RefID -> State Document ()
 placeSeals fields sealrefid sealtexts paginrefid pagintext' sealmarkerformrefid = do
@@ -333,7 +376,7 @@ placeFields fields = do
                           [(page,pagintext1 pageno) | (page,pageno) <- zip pages [1..]]
 
 
-        
+
 contentsValueListFromPageID :: Document -> RefID -> [RefID]
 contentsValueListFromPageID document' pagerefid =
     let
@@ -348,17 +391,88 @@ contentsValueListFromPageID document' pagerefid =
         unRefID _ = error "unRefID not on ref"
     in contentlist
 
-data Box = Box Int String
 
-boxToString :: Box -> String
-boxToString (Box height content) = " q " ++ content ++ " Q " ++ "1 0 0 1 0 " ++ show (-height) ++ " cm "
+data Box = Box
+  { boxWidth    :: Int         -- ^ box width in pt
+  , boxHeight   :: Int         -- ^ box height in pt
+  , boxCommands :: String      -- ^ commands for the box, does not safe the state
+  }
 
-groupBoxesUpToHeight :: Int -> [Box] -> [[Box]]
+
+boxHCat :: Int -> [Box] -> Box
+boxHCat sep boxes = boxDrawDebugRectAround $
+  Box { boxHeight = maximum (map boxHeight boxes)
+      , boxWidth  = sum (map boxWidth boxes)
+      , boxCommands = concatMap boxF boxes
+      }
+  where boxF box = " q " ++ boxCommands box ++ " Q 1 0 0 1 " ++ show (boxWidth box + sep) ++ " 0 cm "
+
+boxVCat :: Int -> [Box] -> Box
+boxVCat sep boxes = boxDrawDebugRectAround $
+  Box { boxHeight = sum (map boxHeight boxes)
+      , boxWidth  = maximum (map boxWidth boxes)
+      , boxCommands = concatMap boxF boxes
+      }
+  where boxF box = " q " ++ boxCommands box ++ " Q 1 0 0 1 0 " ++ show (-boxHeight box - sep) ++ " cm "
+
+
+boxHCenter :: Int -> Box -> Box
+boxHCenter width box =
+  box { boxWidth = width
+      , boxCommands = " 1 0 0 1 " ++ show ((width - boxWidth box) `div` 2) ++ " 0 cm\n" ++ boxCommands box
+      }
+
+boxVCenter :: Int -> Box -> Box
+boxVCenter height box =
+  box { boxHeight = height
+      , boxCommands = " 1 0 0 1 0 " ++ show ((height - boxHeight box) `div` 2) ++ " cm\n" ++ boxCommands box
+      }
+
+
+boxEnlarge :: Int -> Int -> Int -> Int -> Box -> Box
+boxEnlarge left bottom right top  box =
+  Box { boxWidth = boxWidth box + left + right
+      , boxHeight = boxHeight box + bottom + top
+      , boxCommands = " 1 0 0 1 " ++ show left ++ " " ++ show (-top) ++ " cm " ++ boxCommands box
+      }
+
+boxStrokeColor :: Float -> Float -> Float -> Float -> Box -> Box
+boxStrokeColor c m y k box =
+  box { boxCommands = show c ++ " " ++ show m ++ " " ++ show y ++ " " ++ show k ++ " K " ++ boxCommands box }
+
+boxFillColor :: Float -> Float -> Float -> Float -> Box -> Box
+boxFillColor c m y k box =
+  box { boxCommands = show c ++ " " ++ show m ++ " " ++ show y ++ " " ++ show k ++ " k " ++ boxCommands box }
+
+boxDrawDebugRectAround :: Box -> Box
+boxDrawDebugRectAround box = box
+{-
+  box { boxCommands = " q [1 5] 0 d 0 g 0 G 0 0 " ++ show (boxWidth box) ++ " " ++ show (-boxHeight box) ++ " re S Q " ++ boxCommands box
+      }
+-}
+
+boxDrawFrame :: Box -> Box
+boxDrawFrame box =
+  box { boxCommands = " q 0 0 " ++ show (boxWidth box) ++ " " ++ show (-boxHeight box) ++ " re S Q " ++ boxCommands box
+      }
+
+
+setFrameColor :: Box -> Box
+setFrameColor = boxStrokeColor 0 0 0 0.333
+
+setDarkTextColor :: Box -> Box
+setDarkTextColor = boxFillColor 0.806 0.719 0.51 0.504
+
+setLightTextColor :: Box -> Box
+setLightTextColor = boxFillColor 0.597 0.512 0.508 0.201
+
+groupBoxesUpToHeight :: Int -> [(Bool,Bool,Box)] -> [[(Bool,Box)]]
 groupBoxesUpToHeight height boxes = helper boxes
     where
         worker _ currentBoxes [] = (currentBoxes,[])
-        worker currentHeight currentBoxes rest@((x@(Box h _)):xs)
-                                               | currentHeight + h < height = worker (currentHeight + h) (x:currentBoxes) xs
+        worker currentHeight currentBoxes rest@((goesWithNext, needsFrame, x@(Box _ h _)):xs)
+                                               | currentHeight + h < height || goesWithNext
+                                                 = worker (currentHeight + h) ((needsFrame,x):currentBoxes) xs
                                                | otherwise = (currentBoxes, rest)
         helper boxes' = case worker 0 [] boxes' of
                             (cb, []) -> [reverse cb]
@@ -392,8 +506,12 @@ pagintext (SealSpec{documentNumber,initials,staticTexts }) =
  show (sioffset+siwidth+10) ++ " 18 m " ++ show (595 - 60 :: Int) ++ " 18 l S " ++
  "Q "
 
-makeManyLines :: PDFFont -> PDFFloat -> String -> [String]
-makeManyLines font width text' = result
+
+-- | This function takes font and maximal width of lines. Then it
+-- splits text on space characters so that neither line crosses width
+-- limit unless there is a sole word that is too long to split.
+splitLinesOfLength :: PDFFont -> Int -> String -> [String]
+splitLinesOfLength font width text' = result
     where
     textSplit :: String -> [String]
     textSplit [] = []
@@ -407,197 +525,220 @@ makeManyLines font width text' = result
     takeWhileLength :: PDFFloat -> String -> [(PDFFloat,String)] -> [String]
     takeWhileLength _   text'' [] = [text'']
     takeWhileLength len text'' all'@((l,t):rest)
-                    | len + l < width = takeWhileLength (len + l) (text'' ++ t) rest
+                    | len + l < fromIntegral width = takeWhileLength (len + l) (text'' ++ t) rest
                     | otherwise = text'' : takeWhileLength 0 "" all'
-    textOutLine text'' = "[(" ++ winAnsiPostScriptEncode text'' ++ ")]TJ T* "
-    textLines = takeWhileLength 0 "" textSplitWithLength
-    result = map textOutLine textLines
+    result = takeWhileLength 0 "" textSplitWithLength
+
+makeManyLines :: PDFFont -> Int -> String -> [String]
+makeManyLines font width text' = result
+  where
+    textOutLine text'' = "[(" ++ winAnsiPostScriptEncode text'' ++ ")] TJ T* "
+    result = map textOutLine (splitLinesOfLength font width text')
 
 
-
+makeLeftTextBox :: PDFFont -> Int -> String -> Box
+makeLeftTextBox font@(PDFFont name' size) width text' = result
+  where
+    result = Box { boxWidth = width
+                 , boxHeight = 12 * size * length lines' `div` 10
+                 , boxCommands = commands
+                 }
+    lines' = splitLinesOfLength font width text'
+    textOutLine text'' = "[(" ++ winAnsiPostScriptEncode text'' ++ ")] TJ T*\n"
+    commands = " BT\n" ++
+               " " ++ show (1.2 * fromIntegral size :: Double) ++ " TL\n" ++
+               " /" ++ resourceFontName ++ " " ++ show size ++ " Tf\n" ++
+               " 1 0 0 1 0 " ++  show (-size) ++ " Tm\n" ++ -- FIXME: where to start this really?
+               concatMap textOutLine lines' ++
+               " ET\n"
+    resourceFontName =
+      case name' of
+        Helvetica -> "TT0"
+        Helvetica_Bold -> "TT1"
+        Helvetica_Oblique -> "TT2"
+        _ -> error $ "Font " ++ show name' ++ " not available, add to resources dictionary"
 
 verificationTextBox :: SealingTexts -> Box
-verificationTextBox staticTexts = Box 22 $
-    "BT " ++
-    "/TT0 1 Tf " ++
-    "0.806 0.719 0.51 0.504 k " ++
-    "21 0 0 21 39.8198 787.9463 Tm " ++
-    "(" ++ winAnsiPostScriptEncode (verificationTitle staticTexts) ++ ") Tj " ++
-    "ET "
+verificationTextBox staticTexts =
+  setDarkTextColor $
+  makeLeftTextBox (PDFFont Helvetica 21) 500
+                  (verificationTitle staticTexts)
 
 documentNumberTextBox :: SealingTexts -> String -> Box
-documentNumberTextBox staticTexts documentNumber = Box 30 $
-    "1 0 0 1 0 22 cm " ++
-    "BT " ++
-    "/TT0 1 Tf " ++
-    "0.546 0.469 0.454 0.113 k " ++
-    "12 0 0 12 39.8198 766.9555 Tm " ++
-    "[(" ++ docPrefix staticTexts ++ ") 55 ( " ++ winAnsiPostScriptEncode documentNumber ++ ")]TJ " ++
-    "ET "
+documentNumberTextBox staticTexts documentNumber =
+  setLightTextColor $
+  makeLeftTextBox (PDFFont Helvetica 12) 500
+                  (docPrefix staticTexts ++ " " ++ documentNumber)
+
 
 partnerTextBox :: SealingTexts -> Box
-partnerTextBox staticTexts = Box 30 $
-    "1 0 0 1 0 22 cm " ++
-    "1 0 0 1 0 30 cm " ++
-    "0.039 0.024 0.02 0 k " ++
-    "566.479 731.97 -537.601 20.16 re " ++
-    "S " ++
-    "BT " ++
-    "/TT0 1 Tf " ++
-    "0.806 0.719 0.51 0.504 k " ++
-    "12 0 0 12 39.8198 736.8555 Tm " ++
-    "("++ winAnsiPostScriptEncode (partnerText staticTexts) ++ ")Tj " ++
-    "ET "
+partnerTextBox staticTexts =
+  setDarkTextColor $
+  boxEnlarge 5 12 0 23 $
+  makeLeftTextBox (PDFFont Helvetica 12) 200
+                    (partnerText staticTexts)
 
 secretaryBox :: SealingTexts -> Box
-secretaryBox staticTexts = Box 27 $
-            "1 0 0 1 0 17 cm " ++
-            "1 0 0 1 0 30 cm " ++
-            "BT " ++
-            "/TT0 1 Tf " ++
-            "0.806 0.719 0.51 0.504 k " ++
-            "12 0 0 12 39.8198 736.8555 Tm " ++
-            "(" ++ secretaryText staticTexts ++ ")Tj " ++
-            "ET "
+secretaryBox staticTexts =
+  setDarkTextColor $
+  boxEnlarge 5 12 0 23 $
+  makeLeftTextBox (PDFFont Helvetica 12) 200
+                    (secretaryText staticTexts)
+
+documentTextBox :: SealingTexts -> Box
+documentTextBox staticTexts =
+  setDarkTextColor $
+  boxEnlarge 5 12 0 23 $
+  makeLeftTextBox (PDFFont Helvetica 12) 200
+                    (documentText staticTexts)
 
 signatoryBox :: SealingTexts -> Person -> Box
-signatoryBox sealingTexts (Person {fullname,company,companynumber,email}) =
- let
-    orgnrtext = if companynumber=="" then "" else (orgNumberText sealingTexts) ++ " " ++ companynumber
-    orgnroffset = textWidth (PDFFont Helvetica 10) (toPDFString orgnrtext)
-    emailoffset = textWidth (PDFFont Helvetica_Oblique 10) (toPDFString email)
-    rightmargin = 595 - 46.5522
- in Box 42 $
-    "1 0 0 1 0 22 cm " ++
-    "1 0 0 1 0 26 cm " ++
-    "1 0 0 1 0 30 cm " ++
-    "BT " ++
-    "0.806 0.719 0.51 0.504 k " ++
-    "/TT1 1 Tf " ++
-    "10 0 0 10 46.5522 707.3906 Tm " ++
-    "(" ++ winAnsiPostScriptEncode fullname ++ ")Tj " ++
-    "/TT0 1 Tf " ++
-    "10 0 0 10 46.5522 695.9906 Tm " ++
-    "(" ++ winAnsiPostScriptEncode company ++ ")Tj " ++
-    "10 0 0 10 " ++ show (rightmargin - orgnroffset) ++ " 707.3906 Tm " ++
-    "(" ++ winAnsiPostScriptEncode orgnrtext ++ ")Tj " ++
-    "/TT2 1 Tf " ++
-    "10 0 0 10 " ++ show (rightmargin - emailoffset) ++ " 695.9906 Tm " ++
-    "(" ++ winAnsiPostScriptEncode email ++ ")Tj " ++
-    "ET "
+signatoryBox sealingTexts (Person {fullname,personalnumber,company,companynumber,email,fields}) =
+  boxVCat 0 $ buildList $ do
+    lm (makeLeftTextBox (PDFFont Helvetica_Bold 10) width fullname)
+    lm (makeLeftTextBox (PDFFont Helvetica 10) width company)
+    lm (Box 0 10 "")
+    when (not (null personalnumber)) $
+         lm (makeLeftTextBox (PDFFont Helvetica 10) width $ personalNumberText sealingTexts ++ " " ++ personalnumber)
+    when (not (null companynumber)) $
+         lm (makeLeftTextBox (PDFFont Helvetica 10) width $ orgNumberText sealingTexts ++ " " ++ companynumber)
+    lm (makeLeftTextBox (PDFFont Helvetica_Oblique 10) width email)
+    forM_ fields $ \field ->
+      case field of
+        FieldJPG{ SealSpec.valueBase64 = val
+                , internal_image_w, internal_image_h
+                , includeInSummary = True
+                } -> let halfWidth, halfHeight :: Int
+                         halfWidth = cardWidth `div` 2
+                         halfHeight = (halfWidth * internal_image_h `div` internal_image_w)
+                    in lm $ boxEnlarge ((cardWidth-halfWidth) `div` 2) 6 0 6 $
+                        setFrameColor $
+                        boxDrawFrame $
+                        Box halfWidth halfHeight $ execWriter $ do
+                         tell "q\n"
+                         tellMatrix (fromIntegral halfWidth) 0 0 (fromIntegral halfHeight) 0 (-fromIntegral halfHeight)
+                         tell "BI\n"        -- begin image
+                         tell "/BPC 8\n"    -- 8 bits per pixel
+                         tell "/CS /RGB\n"  -- color space is RGB
+                         tell "/F /DCT\n"   -- filter is DCT, that means JPEG
+                         tell $ "/H " ++ show internal_image_h ++ "\n"  -- height is pixels
+                         tell $ "/W " ++ show internal_image_w ++ "\n"  -- width in pixels
+                         tell "ID "         -- image data follow
+                         tell $ BS.unpack (Base64.decodeLenient (BS.pack val)) ++ "\n"
+                         tell "EI\n"        -- end image
+                         tell "Q\n"
+        _ -> return ()
+  where
+    width = cardWidth
+
+
+fileBox :: SealingTexts -> FileDesc -> Box
+fileBox _sealingTexts (FileDesc {fileTitle,fileRole,filePagesText,fileAttachedBy}) =
+  boxVCat 0 $ buildList $ do
+    lm (makeLeftTextBox (PDFFont Helvetica_Bold 10) cardWidth fileTitle)
+    lm (makeLeftTextBox (PDFFont Helvetica 10) cardWidth fileRole)
+    lm (Box 0 10 "")
+    lm (makeLeftTextBox (PDFFont Helvetica 10) cardWidth filePagesText)
+    lm (makeLeftTextBox (PDFFont Helvetica_Oblique 10) cardWidth fileAttachedBy)
 
 
 handlingBox :: SealingTexts -> Box
-handlingBox staticTexts = Box 26 $
-    "1 0 0 1 0 22 cm " ++
-    "1 0 0 1 0 26 cm " ++
-    "1 0 0 1 0 100 cm " ++
-    "1 0 0 1 0 30 cm " ++
-    "1 0 0 1 0 30 cm " ++
-    "0.4 G " ++
-    "566.479 566.85 -537.601 20.16 re " ++
-    "S " ++
-    "BT " ++
-    "0.784 0.698 0.475 0.533 k " ++
-    "/TT0 1 Tf " ++
-    "0 Tc 0 Tw " ++
-    "12 0 0 12 40 571.9502 Tm " ++
-    "[("++ eventsText staticTexts ++")]TJ " ++
-    "ET "
+handlingBox staticTexts =
+  setDarkTextColor $
+  boxEnlarge 5 12 0 23 $
+  makeLeftTextBox (PDFFont Helvetica 12) 300
+                    (eventsText staticTexts)
 
-dateAndHistoryBox :: SealingTexts -> Box
-dateAndHistoryBox staticTexts = Box 26 $
-    "1 0 0 1 0 22 cm " ++
-    "1 0 0 1 0 26 cm " ++
-    "1 0 0 1 0 26 cm " ++
-    "1 0 0 1 0 100 cm " ++
-    "1 0 0 1 0 30 cm " ++
-    "1 0 0 1 0 30 cm " ++
-    "0.4 G " ++
-    "566.479 540.93 -537.601 20.16 re " ++
-    "S " ++
-    "BT " ++
-    "0.784 0.698 0.475 0.533 k " ++
-    "/TT0 1 Tf " ++
-    "11 0 0 11 40 546.3926 Tm " ++
-    "("++ dateText staticTexts ++")Tj " ++
-    "11 0 0 11 225 546.3926 Tm " ++
-    "("++ historyText staticTexts ++")Tj " ++
-    "ET "
 
-logEntryBox :: HistEntry -> Box
-logEntryBox (HistEntry {histdate,histcomment}) =
-    let outlines = (makeManyLines (PDFFont Helvetica_Oblique 10) 300 histcomment)
-    in
-        Box (8 + length outlines * 12) $
-                "1 0 0 1 0 30 cm " ++
-                "1 0 0 1 0 30 cm " ++
-                "1 0 0 1 0 22 cm " ++
-                "1 0 0 1 0 26 cm " ++
-                "1 0 0 1 0 26 cm " ++
-                "1 0 0 1 0 26 cm " ++
-                "1 0 0 1 0 100 cm " ++
-                "BT " ++
-                "/TT2 1 Tf " ++
-                "0.591 0.507 0.502 0.19 k " ++
-                "10 0 0 10 46 520.8887 Tm " ++
-                "(" ++ winAnsiPostScriptEncode histdate ++ ")Tj " ++
-                "10 0 0 10 231 520.8887 Tm " ++
-                "1.2 TL " ++
-                concat outlines ++
-                "ET "
+makeHistoryEntryBox :: HistEntry -> Box
+makeHistoryEntryBox (HistEntry {histdate,histcomment,histaddress}) =
+  setLightTextColor $
+  boxHCat 0 [ boxEnlarge frameInnerPadding 5 frameInnerPadding 5 $
+              boxVCat 0 $ buildList $ do
+                lm (makeLeftTextBox (PDFFont Helvetica_Oblique 10) (140) histdate)
+                when (not (null histaddress))$
+                     lm (makeLeftTextBox (PDFFont Helvetica_Oblique 8) (140) histaddress)
+            , boxEnlarge frameInnerPadding 5 frameInnerPadding 5 $
+              makeLeftTextBox (PDFFont Helvetica_Oblique 10) (cardWidth*2 - 140) histcomment
+            ]
+
+
+boxHCat2 :: [Box] -> [Box]
+boxHCat2 [] = []
+boxHCat2 [box] = [setLightTextColor . setFrameColor . boxDrawFrame . boxEnlarge 16 11 16 11 $ box]
+boxHCat2 (box1:box2:boxes) = (boxHCat 0 [ (setLightTextColor . setFrameColor . boxDrawFrame . boxEnlarge 16 11 16 11) $
+                                                            box1 { boxHeight = maximum [boxHeight box1, boxHeight box2] }
+                                        , (setLightTextColor . setFrameColor . boxDrawFrame . boxEnlarge 16 11 16 11) $
+                                                            box2 { boxHeight = maximum [boxHeight box1, boxHeight box2] }
+                                        ]) : boxHCat2 boxes
+
+boxP :: [Box] -> [Box]
+boxP = boxHCat2
 
 verificationPagesContents :: SealSpec -> [String]
-verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,staticTexts}) =
-    let boxes = [verificationTextBox staticTexts] ++
-                [documentNumberTextBox staticTexts documentNumber] ++
-                [partnerTextBox staticTexts] ++
+verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,staticTexts,filesList}) =
+  map pageContent groupedBoxesNumbered
+    where
+      histExample = makeHistoryEntryBox (HistEntry "" "" "")
 
-                -- every signatory on its own line, repeated every 64 pixels down
-                map (signatoryBox staticTexts) persons ++
+      boxes = buildList $ do
+                  lm (True,False,Box 0 30 "")
+                  lm (True,False,verificationTextBox staticTexts)
+                  lm (True,False,documentNumberTextBox staticTexts documentNumber)
+                  lm (True,False,Box 0 20 "")
 
-                (case secretaries of
-                     [] -> []
-                     _ -> [secretaryBox staticTexts] ++
-                          map (signatoryBox staticTexts) secretaries
-                ) ++
+                  lm (True,False,documentTextBox staticTexts)
+                  lms (map (\x -> (False,False,x)) $ boxP $ map (fileBox staticTexts) filesList)
 
-                -- Datum and Handelse
-                [handlingBox staticTexts] ++
-                [dateAndHistoryBox staticTexts] ++
+                  lm (True,False,partnerTextBox staticTexts)
+                  lms (map (\x -> (False,False,x)) $ boxP $ map (signatoryBox staticTexts) persons)
 
-                -- logentry
-                map (logEntryBox) history
-        groupedBoxes = groupBoxesUpToHeight 650 boxes
-        groupedBoxesNumbered = zip groupedBoxes [1::Int ..]
-    in flip map groupedBoxesNumbered $ \(thisPageBoxes, thisNumber) ->
+                  when (not (null secretaries)) $ do
+                     lm (True,False,secretaryBox staticTexts)
+                     lms (map (\x -> (False,False,x)) $ boxP $ map (signatoryBox staticTexts) secretaries)
 
-    "/GS0 gs " ++
-    "0.4 G " ++
+                  lm (True,False,handlingBox staticTexts)
+                  lms (map (\x -> (False, True, makeHistoryEntryBox x)) history)
 
-    -- Frame around whole page
-    "0.081 0.058 0.068 0 k " ++
-    "581.839 14.37 -567.36 813.12 re " ++
-    "S " ++
+      groupedBoxes = groupBoxesUpToHeight printableHeight boxes
+      groupedBoxesNumbered = zip groupedBoxes [1::Int ..]
+      boxize boxlist = if (fst (head boxlist))
+                       then (setLightTextColor . setFrameColor . boxDrawFrame) $ boxVCat 0 $ map snd boxlist
+                       else boxVCat 0 $ map snd boxlist
+      drawFramesAsNeeded pb =
+        map boxize $ groupBy (\x y -> fst x == fst y) pb
 
-    "q " ++
-    concatMap boxToString thisPageBoxes ++
-    "Q " ++
+      pageContent (pageBoxes,pageNumber) =
+          execWriter $ do
+            tell "/GS0 gs "
 
-    -- "0.039 0.024 0.02 0 k " ++
-    "571.856 24.7 -548.354 64.55 re " ++
-    "S " ++
+            -- Frame around whole page
+            tell "0 0 0 0.333 K "
+            tell "581.839 14.37 -567.36 813.12 re "
+            tell "S\n"
 
-    "BT " ++
-    "0.625 0.537 0.53 0.257 k " ++
-    "/TT0 1 Tf " ++
-    "8 0 0 8 39.8198 74.2334 Tm " ++
-    "1.2 TL " ++
-    intercalate "T* " (map (\t -> "[(" ++ t ++ ")]TJ ") (verificationFooter staticTexts)) ++
-    "0.546 0.469 0.454 0.113 k " ++
-    "10 0 0 10 46.5522 31.5469 Tm " ++
-    "(" ++ show thisNumber ++ "/" ++ show (length groupedBoxesNumbered) ++ ")Tj " ++
-    "ET " ++ rightcornerseal2
+            tell "q\n"
+            tell "1 0 0 1 15 808 cm\n"
+            tell "0 g 0 G\n"
+            tell $ boxCommands (boxEnlarge printableMargin 0 0 0 $ boxVCat 0 $ drawFramesAsNeeded pageBoxes)
+            tell "Q\n"
+
+            tell "q\n"
+
+            let footerBox = boxEnlarge printableMargin 0 0 0 $
+                                (setLightTextColor . setFrameColor . boxDrawFrame . boxEnlarge 16 11 16 11) $
+                                boxEnlarge 0 0 90 0 $
+                                boxVCat 5
+                                          [ makeLeftTextBox (PDFFont Helvetica 8) (boxWidth histExample - 90 - 32)
+                                                              (verificationFooter staticTexts)
+                                          , makeLeftTextBox (PDFFont Helvetica 8) (boxWidth histExample - 90 - 32)
+                                                              (show pageNumber ++ "/" ++ show (length groupedBoxesNumbered))
+                                          ]
+            tell $ "1 0 0 1 15 " ++ show (15 + boxHeight footerBox + printableMargin) ++ " cm\n"
+            tell $ boxCommands footerBox
+            tell "Q\n"
+            tell (rightcornerseal (printableWidth - printableMargin - 66)
+                  (15 + printableMargin + ((boxHeight footerBox - 90) `div` 2)))
 
 -- To emulate a near perfect circle of radius r with cubic Bézier
 -- curves, draw four curves such that one of the line segments
@@ -606,8 +747,8 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
 -- the other one is horizontal. The length l of each such segment
 -- equals r multiplied by kappa. kappa is 0.5522847498 in our case we
 -- need: 45 + 25 = 70, 45 - 25 = 20
-rightcornerseal2 :: String
-rightcornerseal2 = "q 1 0 0 1 491.839 14.37 cm " ++
+rightcornerseal :: Int -> Int -> String
+rightcornerseal x y = "q 1 0 0 1 " ++ show x ++ " " ++ show y ++ "  cm " ++
                    "1 g 1 G " ++
                    "0 45 m " ++
                    "0  20 20 0  45 0  c " ++
@@ -673,19 +814,19 @@ attachFiles sealAttachments = do
 
     embeddedFilesNamesTreeRoot <- addObject (Dict [ (BS.pack "Kids", Array [Ref embeddedFilesNamesTree])])
 
-    document <- get
+    document' <- get
     let
-        firstBody = head (documentBodies document)
+        firstBody = head (documentBodies document')
         trailer' = bodyTrailer firstBody
         root = case Prelude.lookup (BS.pack "Root") trailer' of
                  Just (Ref root') -> root'
                  x -> error ("/Root is wrong: " ++ show x)
-        catalog = case PdfModel.lookup root document of
+        catalog = case PdfModel.lookup root document' of
                     Just (Indir (Dict catalog') _) -> catalog'
                     x -> error ("lookup of " ++ show root ++ " returned " ++ show x)
         names = case Prelude.lookup (BS.pack "Names") catalog of
                     Just (Dict names') -> names'
-                    Just (Ref namesrefid) -> case PdfModel.lookup namesrefid document of
+                    Just (Ref namesrefid) -> case PdfModel.lookup namesrefid document' of
                                                Just (Indir (Dict names') _) -> names'
                                                x -> error ("lookup of " ++ show namesrefid ++ " returned " ++ show x)
                     Nothing -> []
@@ -704,9 +845,10 @@ process :: SealSpec -> IO ()
 process (sealSpec@SealSpec
     { input
     , output
-    , fields
+    , persons
     , attachments
     }) = do
+    let fields' = concatMap fields persons
     mdoc <- PdfModel.parseFile input
     doc <- maybe (error $ "Cannot parse input PDF " ++ input) return mdoc
     mseal <- PdfModel.parseFile sealFileName
@@ -726,7 +868,7 @@ process (sealSpec@SealSpec
               sealmarkerform <- pageToForm sealmarkerpage2
               let pagintext1 = pagintext sealSpec
               let sealtexts = verificationPagesContents sealSpec
-              placeSeals fields newsealcontents sealtexts newpagincontents pagintext1 sealmarkerform
+              placeSeals fields' newsealcontents sealtexts newpagincontents pagintext1 sealmarkerform
               when (not (null attachments)) $
                    attachFiles attachments
     putStrLn $ "Writing file " ++ output

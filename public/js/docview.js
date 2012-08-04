@@ -72,7 +72,7 @@ window.DocumentAuthorAttachmentsView = Backbone.View.extend({
   render: function() {
     $(this.el).empty();
 
-    if (!this.model.isAuthorAttachments()) {
+    if (!this.model.authorattachments().length > 0) {
       return this;
     }
 
@@ -111,7 +111,7 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     $(this.el).empty();
     var view = this;
 
-    if (!this.model.isSignatoryAttachments()) {
+    if (!this.model.currentSignatory().attachments().length > 0) {
       return this;
     }
 
@@ -149,7 +149,7 @@ window.DocumentUploadedSignatoryAttachmentsView = Backbone.View.extend({
   render: function() {
     $(this.el).empty();
 
-    if (!this.model.isUploadedAttachments()) {
+    if (!this.model.canseeallattachments() && this.model.signatoryattachments().length > 0) {
       return this;
     }
 
@@ -170,158 +170,10 @@ window.DocumentUploadedSignatoryAttachmentsView = Backbone.View.extend({
   }
 });
 
-// Remove sign guard (Lukas's choice) --Eric
-/* Remove after May 1, 2012
-window.GuardModel = Backbone.Model.extend({
-  defaults: {
-    ischecked: false,
-    ishighlighted: false,
-    isrequired: true
-  },
-  initialize: function(args) {
-    this.onAlert = args.onAlert;
-  },
-  isChecked: function() {
-    return this.get("ischecked");
-  },
-  setChecked: function(checked) {
-    if (checked) {
-      this.set({
-        ischecked: true,
-        ishighlighted: false
-      });
-    } else {
-      this.set({ ischecked: false });
-    }
-  },
-  isHighlighted: function() {
-    return this.get("ishighlighted");
-  },
-  isRequired: function() {
-    return this.get("isrequired");
-  },
-  ensureChecked: function() {
-    if (this.isRequired() && !this.isChecked()) {
-      this.set({ ishighlighted: true });
-      if (this.onAlert) {
-        this.onAlert();
-      }
-      return false;
-    } else {
-      return true;
-    }
-  }
-});
-*/
-
-// Remove sign guard (Lukas's choice) --Eric
-/* Remove after May 1, 2012
-window.DocumentSignGuardView = Backbone.View.extend({
-  initialize: function(args) {
-    _.bindAll(this, 'render');
-    this.model.bind('reset', this.render);
-    this.model.bind('change', this.render);
-    this.prerender();
-    this.render();
-  },
-  prerender: function() {
-    $(this.el).empty();
-
-    if (!this.model.isRequired()) {
-      return this;
-    }
-
-    var guard = this.model;
-
-    var checkbox = $("<input type='checkbox'  id='signGuardCBox' autocomplete='off'/>");
-    checkbox.click(function() {
-      guard.setChecked(checkbox.is(":checked"));
-    });
-    this.checkbox = checkbox;
-
-    this.container = $("<div class='signguard' />");
-    this.container.append($("<div class='check' />").append(this.checkbox));
-    this.container.append($("<div class='label' />").append($("<label for='signGuardCBox' />").append(localization.sign.guardCBox)));
-
-    $(this.el).append(this.container);
-
-    return this;
-  },
-  render: function() {
-    if (!this.model.isRequired()) {
-      return this;
-    }
-
-    if (this.model.isChecked() &&
-          !this.checkbox.is(":checked")) {
-      this.checkbox.attr("checked", "true");
-    } else if (!this.model.isChecked() &&
-                  this.checkbox.is(":checked")) {
-      this.checkbox.removeAttr("checked");
-    }
-
-    if (this.model.isHighlighted()) {
-      this.container.css("border", "solid red 1px");
-    } else {
-      this.container.css("border", "none");
-    }
-  }
-});
-*/
-
-window.DocumentSignButtonView = Backbone.View.extend({
-  initialize: function(args) {
-    _.bindAll(this, 'render');
-    this.validate = args.validate;
-    this.render();
-  },
-  confirm: function() {
-    return new DocumentSignConfirmation({
-      model: this.model
-    }).popup();
-  },
-  render: function() {
-    if (!this.model.currentSignatoryCanSign()) {
-      return this;
-    }
-    var model = this.model;
-    var sign = this;
-    $(this.el).append($("<div class='sign' />").append(Button.init({
-      size: "big",
-      color: "blue",
-      text: this.model.process().signbuttontext(),
-      icon: $("<span class='icon cross'></span>"),
-      onClick: function() {
-        if (sign.validate()) {
-          sign.confirm();
-        } else
-        {
-          model.trigger("tried-to-sign-and-failed");
-        }
-      }
-    }).input()));
-
-    return this;
-  }
-});
-
 window.DocumentSignConfirmation = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'popup');
     _.bindAll(this, 'createContentElems');
-    // Remove sign guard (Lukas's choice) --Eric
-    /* Remove after May 1, 2012
-    var guardWarnText = this.model.process().signguardwarntext();
-    this.guardModel = new GuardModel({
-      onAlert: function() {
-        FlashMessages.add({
-          content: guardWarnText,
-          color: "red"});
-        return this;
-      },
-      isrequired: this.model.process().requiressignguard()
-    });
-    */
   },
   createElegButtonElems: function() {
     var document = this.model;
@@ -358,9 +210,6 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       icon: $("<span class='btn-symbol cross' />"),
       text: document.process().signbuttontext(),
       onClick: function() {
-        // Remove sign guard (Lukas's choice) --Eric
-          // Remove after May 1, 2012
-        //if (guardModel.ensureChecked())
         document.sign().send();
       }
     }).input();
@@ -403,21 +252,9 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       return content;
     }
   },
-  // Remove sign guard (Lukas's choice) -- Eric
-  /* Remove after May 1, 2012
-  createSignGuardElems: function() {
-    return $(new DocumentSignGuardView({
-      model: this.guardModel,
-      el: $("<div />")
-    }).el);
-  },
-  */
   createContentElems: function() {
     var content = $("<div />");
     content.append(this.createPreambleElems());
-    // Remove sign guard (Lukas's choice) -- Eric
-      // Remove after May 1, 2012
-    //content.append(this.createSignGuardElems());
     return content;
   },
   popup: function() {
@@ -559,13 +396,20 @@ window.DocumentStandardView = Backbone.View.extend({
   },
   createAcceptButtonElems: function() {
     var validateSign = this.validateSign;
-    return $(new DocumentSignButtonView({
-      model: this.model,
-      validate: function() {
-        return validateSign();
-      },
-      el: $("<div />")
-    }).el);
+    var document = this.model;
+    return $( Button.init({
+                            size: "big",
+                            color: "blue",
+                            text: document.process().signbuttontext(),
+                            icon: $("<span class='icon cross'></span>"),
+                            onClick: function() {
+                                if (validateSign())
+                                    new DocumentSignConfirmation({
+                                        model: document
+                                        }).popup();
+                            }        
+                            }).input()
+            );
   },
   validateSign: function() {
     var document = this.model;
@@ -676,7 +520,8 @@ window.DocumentStandardView = Backbone.View.extend({
       file: document.mainfile(),
       document: document
     });
-    var tabs = KontraTabs.init({
+    var tabs = new KontraTabs({
+    numbers : false,
     title: jQuery.merge(titlepart, this.createMenuElems()),
     tabs: [
       new Tab({

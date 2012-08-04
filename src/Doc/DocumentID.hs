@@ -3,28 +3,21 @@ module Doc.DocumentID (
   , unsafeDocumentID
   ) where
 
-import Control.Monad
-import Data.Data
 import Data.Int
-
-import Crypto.RNG
-import DB.Derive
-import Happstack.Data
+import Data.SafeCopy
 import Happstack.Server
-import Happstack.Util.Common
+
+import DB.Derive
+import Misc
 
 newtype DocumentID = DocumentID Int64
-  deriving (Eq, Ord, Typeable)
+  deriving (Eq, Ord)
 $(newtypeDeriveUnderlyingReadShow ''DocumentID)
 
-instance Random DocumentID where
-  random = DocumentID `liftM` randomR (10000000, 10000000000)
+$(deriveSafeCopy 0 'base ''DocumentID)
 
 instance FromReqURI DocumentID where
-  fromReqURI = readM
-
-$(deriveSerialize ''DocumentID)
-instance Version DocumentID
+  fromReqURI = maybeRead
 
 unsafeDocumentID :: Int64 -> DocumentID
 unsafeDocumentID = DocumentID

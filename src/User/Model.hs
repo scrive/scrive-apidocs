@@ -19,6 +19,7 @@ module User.Model (
   , GetInviteInfo(..)
   , SetUserCompany(..)
   , DeleteUser(..)
+  , RemoveInactiveUser(..)
   , AddUser(..)
   , SetUserEmail(..)
   , SetUserPassword(..)
@@ -44,25 +45,25 @@ import Control.Applicative
 import Data.Monoid
 import Data.List
 import Data.Char
-import Data.Data
 import Database.HDBC
-import Happstack.State (Version, deriveSerialize)
 
 import API.Service.Model
 import Company.Model
 import DB
 import MinutesTime
+import Misc
 import User.Lang
 import User.Locale
 import User.Password
 import User.Region
+import User.Tables
 import User.UserID
 import DB.SQL2
 import Doc.DocStateData (DocumentStatus(..), SignatoryRole(..), DocumentID)
 
 -- newtypes
 newtype Email = Email { unEmail :: String }
-  deriving (Eq, Ord, Typeable)
+  deriving (Eq, Ord)
 $(newtypeDeriveConvertible ''Email)
 $(newtypeDeriveUnderlyingReadShow ''Email)
 
@@ -252,52 +253,40 @@ instance MonadDB m => DBUpdate m DeleteUser Bool where
     kPrepare $ "UPDATE users SET deleted = ? WHERE id = ? AND deleted = FALSE"
     kExecute01 [toSql True, toSql uid]
 
-data AddUser = AddUser (String, String) String (Maybe Password) Bool (Maybe ServiceID) (Maybe CompanyID) Locale
+-- | Removes user who didn't accept TOS from the database
+data RemoveInactiveUser = RemoveInactiveUser UserID
+instance MonadDB m => DBUpdate m RemoveInactiveUser Bool where
+  update (RemoveInactiveUser uid) = kRun01 $ SQL "DELETE FROM users WHERE deleted = FALSE AND id = ? AND has_accepted_terms_of_service IS NULL" [toSql uid]
+
+data AddUser = AddUser (String, String) String (Maybe Password) (Maybe ServiceID) (Maybe CompanyID) Locale
 instance MonadDB m => DBUpdate m AddUser (Maybe User) where
-  update (AddUser (fname, lname) email mpwd iscompadmin msid mcid l) = do
+  update (AddUser (fname, lname) email mpwd msid mcid l) = do
     mu <- query $ GetUserByEmail msid $ Email email
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
       Nothing -> do
-        kPrepare $ "INSERT INTO users"
-          ++ "( password"
-          ++ ", salt"
-          ++ ", is_company_admin"
-          ++ ", account_suspended"
-          ++ ", has_accepted_terms_of_service"
-          ++ ", signup_method"
-          ++ ", service_id"
-          ++ ", company_id"
-          ++ ", first_name"
-          ++ ", last_name"
-          ++ ", personal_number"
-          ++ ", company_position"
-          ++ ", company_name"
-          ++ ", company_number"
-          ++ ", phone"
-          ++ ", mobile"
-          ++ ", email"
-          ++ ", lang"
-          ++ ", region"
-          ++ ", deleted) VALUES (decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-          ++ " RETURNING " ++ selectUsersSelectors
-        _ <- kExecute $
-          [ toSql $ pwdHash <$> mpwd
-          , toSql $ pwdSalt <$> mpwd
-          , toSql iscompadmin
-          , toSql False
-          , SqlNull
-          , toSql AccountRequest
-          , toSql msid
-          , toSql mcid
-          , toSql fname
-          , toSql lname
-          ] ++ replicate 6 (toSql "")
-            ++ [toSql $ map toLower email] ++ [
-              toSql $ getLang l
-            , toSql $ getRegion l
-            , toSql False
-            ]
+        _ <- kRun $ mkSQL INSERT tableUsers [
+            sql "password" $ pwdHash <$> mpwd
+          , sql "salt" $ pwdSalt <$> mpwd
+          , sql "is_company_admin" False
+          , sql "account_suspended" False
+          , sql "has_accepted_terms_of_service" SqlNull
+          , sql "signup_method" AccountRequest
+          , sql "service_id" msid
+          , sql "company_id" mcid
+          , sql "first_name" fname
+          , sql "last_name" lname
+          , sql "personal_number" ""
+          , sql "company_position" ""
+          , sql "company_name" ""
+          , sql "company_number" ""
+          , sql "phone" ""
+          , sql "mobile" ""
+          , sql "email" $ map toLower email
+          , sql "lang" $ getLang l
+          , sql "region" $ getRegion l
+          , sql "deleted" False
+          ] <++> SQL ("RETURNING " ++ selectUsersSelectors) []
         fetchUsers >>= oneObjectReturnedGuard
 
 data SetUserEmail = SetUserEmail (Maybe ServiceID) UserID Email
@@ -311,8 +300,8 @@ data SetUserPassword = SetUserPassword UserID Password
 instance MonadDB m => DBUpdate m SetUserPassword Bool where
   update (SetUserPassword uid pwd) = do
     kPrepare $ "UPDATE users SET"
-      ++ "  password = decode(?, 'base64')"
-      ++ ", salt = decode(?, 'base64')"
+      ++ "  password = ?"
+      ++ ", salt = ?"
       ++ "  WHERE id = ? AND deleted = FALSE"
     kExecute01 [toSql $ pwdHash pwd, toSql $ pwdSalt pwd, toSql uid]
 
@@ -442,8 +431,8 @@ selectUsersSQL = "SELECT " ++ selectUsersSelectors ++ " FROM users"
 selectUsersSelectors :: String
 selectUsersSelectors =
  "  id"
- ++ ", encode(password, 'base64')"
- ++ ", encode(salt, 'base64')"
+ ++ ", password"
+ ++ ", salt"
  ++ ", is_company_admin"
  ++ ", account_suspended"
  ++ ", has_accepted_terms_of_service"
@@ -497,11 +486,3 @@ fetchUsers = foldDB decoder []
         , userservice = service_id
         , usercompany = company_id
         } : acc
-
--- this will not be needed when we move documents to pgsql. for now it's needed
--- for document handlers - it seems that types of arguments that handlers take
--- need to be serializable. I don't know wtf, but I'll gladly dispose of these
--- instances when we're done with the migration.
-
-instance Version Email
-$(deriveSerialize ''Email)

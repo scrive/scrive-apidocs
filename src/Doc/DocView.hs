@@ -5,22 +5,13 @@ module Doc.DocView (
   , flashDocumentDraftSaved
   , flashDocumentRestarted
   , flashDocumentTemplateSaved
-  , flashMessageRubbishRestoreDone
-  , flashMessageRubbishHardDeleteDone
-  , flashMessageBulkRemindsSent
   , flashMessageCSVSent
   , flashMessageCanceled
   , flashMessageCannotCancel
   , flashMessageInvalidCSV
-  , flashMessageMultipleAttachmentShareDone
-  , flashMessageMultipleTemplateShareDone
-  , flashMessageNoBulkRemindsSent
-  , flashMessageSingleAttachmentShareDone
-  , flashMessageSingleTemplateShareDone
   , flashRemindMailSent
   , getDataMismatchMessage
   , modalMismatch
-  , modalPdfTooLarge
   , mailDocumentAwaitingForAuthor
   , mailDocumentClosed
   , mailDocumentRejected
@@ -83,9 +74,6 @@ modalMismatch msg author = toModal <$>  do
                     F.value "authoremail" $ getEmail author
                     F.value "message"     $ concatMap para $ lines msg
 
-modalPdfTooLarge :: TemplatesMonad m => m FlashMessage
-modalPdfTooLarge = toModal <$> renderTemplate_ "pdfTooBigModal"
-
 modalSignAwaitingAuthorLast :: TemplatesMonad m => m FlashMessage
 modalSignAwaitingAuthorLast = toModal <$> renderTemplate_ "signAwaitingAuthorLast"
 
@@ -145,22 +133,6 @@ flashAuthorSigned :: TemplatesMonad m => m FlashMessage
 flashAuthorSigned =
   toFlashMsg OperationDone <$> renderTemplate_ "flashAuthorSigned"
 
-flashMessageBulkRemindsSent :: TemplatesMonad m => m FlashMessage
-flashMessageBulkRemindsSent = do
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageBulkDocumentRemindsSent"
-
-flashMessageNoBulkRemindsSent :: TemplatesMonad m => m FlashMessage
-flashMessageNoBulkRemindsSent = do
-  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageNoBulkDocumentRemindsSent"
-
-flashMessageRubbishRestoreDone :: TemplatesMonad m => m FlashMessage
-flashMessageRubbishRestoreDone =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageRubbishRestoreDone"
-
-flashMessageRubbishHardDeleteDone :: TemplatesMonad m => m FlashMessage
-flashMessageRubbishHardDeleteDone =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageRubbishHardDeleteDone"
-
 flashMessageInvalidCSV :: TemplatesMonad m => m FlashMessage
 flashMessageInvalidCSV =
   toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageInvalidCSV"
@@ -168,22 +140,6 @@ flashMessageInvalidCSV =
 flashMessageCSVSent :: TemplatesMonad m => Int -> m FlashMessage
 flashMessageCSVSent doccount =
   toFlashMsg OperationDone <$> (renderTemplate "flashMessageCSVSent" $ F.value "doccount" doccount)
-
-flashMessageSingleTemplateShareDone :: TemplatesMonad m => String -> m FlashMessage
-flashMessageSingleTemplateShareDone docname =
-  toFlashMsg OperationDone <$> (renderTemplate "flashMessageSingleTemplateShareDone" $ F.value "docname" docname)
-
-flashMessageMultipleTemplateShareDone :: TemplatesMonad m => m FlashMessage
-flashMessageMultipleTemplateShareDone =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageMultipleTemplateShareDone"
-
-flashMessageSingleAttachmentShareDone :: TemplatesMonad m => String -> m FlashMessage
-flashMessageSingleAttachmentShareDone docname =
-  toFlashMsg OperationDone <$> (renderTemplate "flashMessageSingleAttachmentShareDone" $ F.value "docname" docname)
-
-flashMessageMultipleAttachmentShareDone :: TemplatesMonad m => m FlashMessage
-flashMessageMultipleAttachmentShareDone =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageMultipleAttachmentShareDone"
 
 documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m) => PadQueue -> Maybe SignatoryLink -> MinutesTime -> Document -> m JSValue
 documentJSON pq msl _crttime doc = do
@@ -317,6 +273,10 @@ placementJSON doc placement = runJSONGen $ do
     J.value "y" $ placementy placement
     J.value "page" $ placementpage placement
     J.value "fileid" $ fromMaybe "" $ show <$> (listToMaybe $ documentfiles doc)
+    J.value "tip" $ case (placementtipside placement) of
+                         Just LeftTip -> Just "left"
+                         Just RightTip -> Just "right"
+                         _ -> Nothing
 
 jsonDate :: Maybe MinutesTime -> JSValue
 jsonDate mdate = toJSValue $ showDateYMD <$> mdate
@@ -551,24 +511,8 @@ documentStatusFields document = do
            Just (ELegDataMismatch _ _ _ _ _) -> True
            _ -> False)
 
-uploadPage :: TemplatesMonad m => (Maybe DocumentProcess) -> Bool -> m String
-uploadPage mdocprocess showTemplates = renderTemplate "uploadPage" $ do
-    F.value "isprocessselected" $ isJust mdocprocess
-    F.value "showTemplates" showTemplates
-    F.objects "processes" $ map processFields [Contract,Offer,Order]
-    F.value "processid" $ show <$> mdocprocess
-    F.value "linkupload" $ show LinkUpload
-    case mdocprocess of
-      Just selecteprocess -> do
-        F.object "selectedprocess" $ processFields selecteprocess
-      _ -> return ()
-    where
-      processFields process = do
-        F.value "id" $ show process
-        F.value "selected" $ (Just process == mdocprocess)
-        F.valueM "name" $ renderTextForProcess (Signable process) processuploadname
-        F.valueM "uploadprompttext" $ renderTextForProcess (Signable process) processuploadprompttext
-        F.value "apiid" $ fromSafeEnumInt (Signable process)
+uploadPage :: TemplatesMonad m => m String
+uploadPage = renderTemplate_ "uploadPage"
 
 
 getDataMismatchMessage :: Maybe CancelationReason -> Maybe String

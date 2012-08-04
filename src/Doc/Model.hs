@@ -123,6 +123,7 @@ data DocumentPagination =
 
 data DocumentFilter
   = DocumentFilterStatuses [DocumentStatus]   -- ^ Any of listed statuses
+  | DocumentFilterByStatusClass [StatusClass] -- ^ Any of listed status classes
   | DocumentFilterByTags [DocumentTag]        -- ^ All of listed tags
   | DocumentFilterMinChangeTime MinutesTime   -- ^ Minimal mtime
   | DocumentFilterMaxChangeTime MinutesTime   -- ^ Maximum mtime
@@ -131,6 +132,8 @@ data DocumentFilter
   | DocumentFilterByProcess [DocumentProcess] -- ^ Any of listed processes
   | DocumentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
   | DocumentFilterByIdentification IdentificationType -- ^ Only documents that use selected identification type
+  | DocumentFilterByYears [Int]               -- ^ Document time fits in a year
+  | DocumentFilterByMonths [Int]              -- ^ Document time has any year but a single month
 
 data DocumentDomain
   = DocumentsOfWholeUniverse                     -- ^ All documents in the system. Only for admin view.
@@ -316,6 +319,11 @@ documentFilterToSQL (DocumentFilterStatuses []) =
 documentFilterToSQL (DocumentFilterStatuses statuses) =
   SQL ("documents.status IN (" ++ intercalate "," (map (const "?") statuses) ++ ")")
                                (map toSql statuses)
+documentFilterToSQL (DocumentFilterByStatusClass []) =
+  SQL "FALSE" []
+documentFilterToSQL (DocumentFilterByStatusClass statuses) =
+  SQL (documentStatusClassExpression ++ " IN (" ++ intercalate "," (map (const "?") statuses) ++ ")")
+                               (map (toSql . fromEnum) statuses)
 documentFilterToSQL (DocumentFilterMinChangeTime ctime) =
   SQL (maxselect ++ " >= ?") [toSql ctime]
 documentFilterToSQL (DocumentFilterMaxChangeTime ctime) =
@@ -326,6 +334,18 @@ documentFilterToSQL (DocumentFilterByProcess processes) =
   sqlConcatOR $ map (\process -> SQL "documents.process = ?" [toSql process]) processes
 documentFilterToSQL (DocumentFilterByRole role) =
   SQL "(signatory_links.roles & ?) <> 0" [toSql [role]]
+documentFilterToSQL (DocumentFilterByMonths months) =
+  sqlConcatOR $ map (\month -> SQL "EXTRACT (MONTH FROM documents.mtime) = ?" [toSql month]) months
+documentFilterToSQL (DocumentFilterByYears years) =
+  -- Filtering by year is supposed to show all documents with time in
+  -- a year, for example for year 2011 it will show all documents from
+  -- 2011-01-01 00:00 to 2012-01-01 00:00 last date should be
+  -- excluded, but to use BETWEEN we skip this small issue
+  --
+  -- Note: using mtime isn't the smartest thing we could do here. We
+  -- have some times associated with document and we need to sort out
+  -- which of times should be used for filtering.
+  sqlConcatOR $ map (\year -> SQL ("documents.mtime BETWEEN '" ++ show year ++ "-01-01' AND '" ++ show (year+1) ++ "-01-01'") []) years
 documentFilterToSQL (DocumentFilterByTags []) =
   SQL "TRUE" []
 documentFilterToSQL (DocumentFilterByTags tags) =
@@ -2077,7 +2097,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                 update $ InsertEvidenceEvent
                   ResetSignatoryDetailsEvidence
                   (value "changed" True >> value "field" True >> value "email" eml >> (value "fieldtype" $ show (sfType changedfield)) >>
-                   value "value" (sfValue changedfield) >> value "placements" (show $ sfPlacements changedfield) >> value "actor"  (actorWho actor))
+                   value "value" (sfValue changedfield) >> value "hasplacements" (not $ null $ sfPlacements changedfield) >> value "placements" (show $ sfPlacements changedfield) >> value "actor"  (actorWho actor))
                   (Just documentid)
                   actor
 
@@ -2091,7 +2111,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                     update $ InsertEvidenceEvent
                         ResetSignatoryDetailsEvidence
                         (value "added" True >> value "field" True >> value "email" eml >> (value "fieldtype" $ show (sfType changedfield)) >>
-                         value "value" (sfValue changedfield) >> value "placements" (show $ sfPlacements changedfield) >> value "actor" (actorWho actor))
+                         value "value" (sfValue changedfield) >> value "hasplacements" (not $ null $ sfPlacements changedfield) >> value "placements" (show $ sfPlacements changedfield) >> value "actor" (actorWho actor))
                         (Just documentid)
                         actor
 
@@ -2107,7 +2127,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
           s -> return $ Left $ "cannot reset signatory details on document " ++ show documentid ++ " because " ++ intercalate ";" s
           where emailsOfRemoved old new = [getEmail x | x <- removedSigs old new, "" /= getEmail x]
                 changedStuff    old new = [(getEmail x, removedFields x y, changedFields x y) | (x, y) <- changedSigs old new, not $ null $ getEmail x]
-                fieldsOfNew     old new = [(getEmail x, signatoryfields x) | x <- newSigs old new, not $ null $ getEmail x]
+                fieldsOfNew     old new = [(getEmail x, [f| f <- signatoryfields x, not $ null $ sfValue f]) | x <- newSigs old new, not $ null $ getEmail x]
                 removedSigs     old new = [x      | x <- old, getEmail x `notElem` map getEmail new, not $ null $ getEmail x]
                 changedSigs     old new = [(x, y) | x <- new, y <- old, getEmail x == getEmail y,    not $ null $ getEmail x]
                 newSigs         old new = [x      | x <- new, getEmail x `notElem` map getEmail old, not $ null $ getEmail x]
@@ -2123,18 +2143,6 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m SignLinkFromDe
                         roles [] magichash
 
       return link
-
-data SignableFromDocument = SignableFromDocument Document Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignableFromDocument Document where  -- NOTE TO MERGER: I removed this in another branch. If there's a
-  -- conflict in a merge, get rid of this whole DBUpdate -- Eric
-  update (SignableFromDocument document actor ) = do
-    d <- insertNewDocument $ templateToDocument document
-    void $ update $ InsertEvidenceEvent
-      SignableFromDocumentEvidence
-      (value "actor" (actorWho actor) >> value "did" (show (documentid document)))
-      (Just (documentid d))
-      actor
-    return d
 
 data SignableFromDocumentIDWithUpdatedAuthor = SignableFromDocumentIDWithUpdatedAuthor User (Maybe Company) DocumentID Actor
 instance (MonadDB m, TemplatesMonad m)=> DBUpdate m SignableFromDocumentIDWithUpdatedAuthor (Either String Document) where

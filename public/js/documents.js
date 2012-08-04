@@ -398,14 +398,24 @@ window.Document = Backbone.Model.extend({
     allowsDD: function() {
         return this.preparation();
     },
-    isAuthorAttachments: function() {
-      return this.authorattachments().length > 0;
+    isSigning: function() {
+        var signatory = this.currentSignatory();
+        return this.signingInProcess() && signatory.signs() && !signatory.hasSigned();
     },
-    isSignatoryAttachments: function() {
-      return this.currentSignatory().attachments().length > 0;
+    isReviewing: function() {
+        var signatory = this.currentSignatory();
+        return (this.signingInProcess() || this.closed()) && !signatory.signs();
     },
-    isUploadedAttachments: function() {
-      return this.canseeallattachments() && this.signatoryattachments().length > 0;
+    isSignedNotClosed: function() {
+        var signatory = this.currentSignatory();
+        return this.signingInProcess() && signatory.hasSigned() && !this.closed();
+    },
+    isSignedAndClosed: function() {
+        var signatory = this.currentSignatory();
+        return signatory.hasSigned() && this.closed();
+    },
+    isUnavailableForSign: function() {
+        return !this.signingInProcess() && !this.closed();
     },
     currentSignatoryCanSign: function() {
       var canSignAsSig = !this.currentViewerIsAuthor() &&

@@ -35,6 +35,7 @@ import Control.Monad.Error
 import Control.Applicative
 import Network.HTTP (urlEncodeVars)
 
+import Crypto.RNG
 import DB
 import Util.JSON
 import Misc
@@ -121,7 +122,7 @@ instance ToAPIResponse FormEncoded where
     in setHeader "Content-Type" "application/x-www-form-urlencoded" r1
     
 newtype APIMonad m a = AM { runAPIMonad :: ErrorT APIError m a }
-  deriving (Applicative, Functor, Monad, MonadDB, MonadError APIError, MonadIO, MonadTrans)
+  deriving (Applicative, CryptoRNG, Functor, Monad, MonadDB, MonadError APIError, MonadIO, MonadTrans)
 
 instance KontraMonad m => KontraMonad (APIMonad m) where
   getContext = lift getContext

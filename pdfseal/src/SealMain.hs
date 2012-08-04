@@ -28,6 +28,7 @@ addBarackObamaField = do
          , page = 1
          , w = 770
          , h = 1085
+         , includeInSummary = True
          }
 
 sealspec :: String -> SealSpec
@@ -46,6 +47,7 @@ sealspec filename = SealSpec
           , emailverified = True
           , companyverified = False
           , numberverified = True
+          , fields = []
           }]
     , persons = map (\num ->
          Person
@@ -58,17 +60,19 @@ sealspec filename = SealSpec
           , emailverified = True
           , companyverified = False
           , numberverified = True
+          -- should be in 4 corners, aligned
+          , fields = [ Field {value = "Gracjan Polak", x = 7, y = 7, page = 1, w = 770, h = 1085, includeInSummary = False}
+                     , Field {value = "Gracjan Polak", x = 681, y = 7, page = 1, w = 770, h = 1085, includeInSummary = False}
+                     , Field {value = "Gracjan Polak", x = 7, y = 1058, page = 1, w = 770, h = 1085, includeInSummary = False}
+                     , Field {value = "Gracjan Polak", x = 681, y = 1058, page = 1, w = 770, h = 1085, includeInSummary = False}
+                     , Field {value = "gracjan@mail.com", x = 121, y = 347, page = 1,w = 770, h = 1085, includeInSummary = False}
+                     ]
           }) [1..30::Int]
     , initials = "LD, LD"
-      , history = map (\num -> HistEntry { histdate = "2010-09-" ++ show num ++ " 13:34"
+    , history = map (\num -> HistEntry { histdate = "2010-09-" ++ show num ++ " 13:34"
                                          , histcomment = "I was here and mucked around with PDFs. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good."
+                                         , histaddress = "IP: 123.34.1231.12"
                                          }) [10..99::Int]
-    -- should be in 4 corners, aligned
-    , fields = [ Field {value = "Gracjan Polak", x = 7, y = 7, page = 1, w = 770, h = 1085}
-               , Field {value = "Gracjan Polak", x = 681, y = 7, page = 1, w = 770, h = 1085}
-               , Field {value = "Gracjan Polak", x = 7, y = 1058, page = 1, w = 770, h = 1085}
-               , Field {value = "Gracjan Polak", x = 681, y = 1058, page = 1, w = 770, h = 1085}
-               , Field {value = "gracjan@mail.com", x = 121, y = 347, page = 1,w = 770, h = 1085}]
     , staticTexts = sampleSealingTexts
     , attachments = [ SealAttachment { fileName = "SkrivaPå attachment 1.txt"
                                      , fileBase64Content = "214124124123412341234"
@@ -80,6 +84,7 @@ sealspec filename = SealSpec
                                      , fileBase64Content = "2632345234534563454"
                                      }
                     ]
+    , filesList = []
     }
 
 
@@ -94,10 +99,10 @@ sampleSealingTexts = SealingTexts
       , eventsText="Registrerade händelser"
       , dateText="Datum"
       , historyText="Händelser"
-      , verificationFooter=[
-          "Detta verifikat är utfärdat av SkrivaPå CM AB och styrker att dokument nummer $documenttitle$ har undertecknats"
-        , "av parterna och är juridiskt bindande. Kursiverad information är säkert verifierad genom vår tjänst."
-        , "Kontrollera dokumentet mot vår databas genom följande länk: $hostpart$/d/$documentid$."]
+      , verificationFooter=
+           "Detta verifikat är utfärdat av Scrive. Kursiverad information är säkert verifierad. Tidsstämpeln säkerställer att dokumentets äkthet går att bevisa matematiskt och oberoende av Scrive. För mer information se den dolda juridiska bilagan. För er bekvämlighet tillhandahåller Scrive även en tjänst för att kontrollera dokumentets äkthet automatiskt på: https://scrive.com/verify/"
+      , documentText = "Dokument"
+      , personalNumberText = "ID-nr."
     }
 
 processFile :: String -> IO ()
@@ -107,7 +112,8 @@ processFile filename = do
 processWithObama :: SealSpec -> IO ()
 processWithObama sealspec = do
   obama <- addBarackObamaField
-  let sealspec2 = sealspec { fields = obama : fields sealspec }
+  let addObama person = person { fields = obama : fields person }
+  let sealspec2 = sealspec { persons = addObama (head (persons sealspec)) : tail (persons sealspec) }
   process sealspec2
 
 sealAllInTest :: IO ()
@@ -141,6 +147,7 @@ simple_upsales_confirmation = SealSpec
           , emailverified = True
           , companyverified = False
           , numberverified = True
+          , fields = []
           }]
     , persons = map (\num ->
          Person
@@ -153,17 +160,19 @@ simple_upsales_confirmation = SealSpec
           , emailverified = True
           , companyverified = False
           , numberverified = True
+          , fields = [ Field {value = "Gracjan Polak", x = 7, y = 7, page = 1, w = 770, h = 1085, includeInSummary = False}
+                     , Field {value = "Gracjan Polak", x = 681, y = 7, page = 1, w = 770, h = 1085, includeInSummary = False}
+                     , Field {value = "Gracjan Polak", x = 7, y = 1058, page = 1, w = 770, h = 1085, includeInSummary = False}
+                     , Field {value = "Gracjan Polak", x = 681, y = 1058, page = 1, w = 770, h = 1085, includeInSummary = False}
+                     , Field {value = "gracjan@mail.com", x = 121, y = 347, page = 1,w = 770, h = 1085, includeInSummary = False}
+                     ]
           }) [1..30::Int]
     , initials = "LD, LD"
-      , history = map (\num -> HistEntry { histdate = "2010-09-" ++ show num ++ " 13:34"
+    , history = map (\num -> HistEntry { histdate = "2010-09-" ++ show num ++ " 13:34"
                                          , histcomment = "I was here and mucked around with PDFs. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good."
+                                         , histaddress = "IP: 1123.11.131.1231"
                                          }) [10..99::Int]
     -- should be in 4 corners, aligned
-    , fields = [ Field {value = "Gracjan Polak", x = 7, y = 7, page = 1, w = 770, h = 1085}
-               , Field {value = "Gracjan Polak", x = 681, y = 7, page = 1, w = 770, h = 1085}
-               , Field {value = "Gracjan Polak", x = 7, y = 1058, page = 1, w = 770, h = 1085}
-               , Field {value = "Gracjan Polak", x = 681, y = 1058, page = 1, w = 770, h = 1085}
-               , Field {value = "gracjan@mail.com", x = 121, y = 347, page = 1,w = 770, h = 1085}]
     , staticTexts = sampleSealingTexts
     , attachments = [ SealAttachment { fileName = "SkrivaPa attachment 1.txt"
                                      , fileBase64Content = "214124124123412341234"
@@ -175,6 +184,7 @@ simple_upsales_confirmation = SealSpec
                                      , fileBase64Content = "2632345234534563454"
                                      }
                     ]
+    , filesList = []
     }
 
 main :: IO ()

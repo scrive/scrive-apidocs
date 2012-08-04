@@ -65,8 +65,8 @@ import Happstack.Server
 import Control.Monad
 import Control.Monad.Trans.Control
 import Control.Applicative
-import qualified Data.Map as Map
 import User.Utils
+import Util.CSVUtil
 
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
 showAdminUserUsageStats userid = onlySalesOrAdmin $ do
@@ -105,61 +105,16 @@ showAdminSystemUsageStats = onlySalesOrAdmin $ do
     F.objects "statisticsbymonth" $ statisticsFieldsByMonth statsByMonth
   renderFromBody kontrakcja content
 
-handleDocStatsCSV :: Kontrakcja m => m Response
+handleDocStatsCSV :: Kontrakcja m => m CSV
 handleDocStatsCSV = onlySalesOrAdmin $ do
-  stats <- dbQuery GetDocStatEvents
+  let start = fromSeconds 0
+  end <- ctxtime <$> getContext
+  stats <- dbQuery $ GetDocStatCSV start end
   let docstatsheader = ["userid", "user", "date", "event", "count", "docid", "serviceid", "company", "companyid", "doctype", "api"]
-  csvstrings <- docStatsToString stats [] []
-  let res = Response 200 Map.empty nullRsFlags (toCSV docstatsheader csvstrings) Nothing
-  Log.debug $ "All doc stats length with bytestring" ++ (show $ length stats) ++ " " ++ (show $ length $ show $ rsBody res)
-  ok $ setHeader "Content-Disposition" "attachment;filename=docstats.csv"
-     $ setHeader "Content-Type" "text/csv"
-     $ res
-
-docStatsToString :: Kontrakcja m => [DocStatEvent] -> [(UserID, String)] -> [(CompanyID, String)] -> m [[String]]
-docStatsToString [] _ _ = return []
-docStatsToString (e:es) usernames companynames = do
-  (username, usernames') <- dbUserIDLookup (seUserID e) usernames
-  (companyname, companynames') <- maybe (return ("none", companynames))
-                                  (\i -> dbCompanyIDLookup i companynames)
-                                  (seCompanyID e)
-  let servicename = maybe "scrive" (BS.toString . unServiceID) (seServiceID e)
-  rest <- docStatsToString es usernames' companynames'
-  return $ [ show $ seUserID e
-           , username
-           , showDateYMD $ seTime e
-           , show $ seQuantity e
-           , show $ seAmount e
-           , show $ seDocumentID e
-           , servicename
-           , companyname
-           , maybe "" show $ seCompanyID e
-           , show $ seDocumentType e
-           , seAPIString e
-           ] : rest
-
-dbUserIDLookup :: (Kontrakcja m) => UserID -> [(UserID, String)] -> m (String, [(UserID, String)])
-dbUserIDLookup uid tbl =
-  case lookup uid tbl of
-    Nothing -> do
-      name <- maybe "Unknown user" getSmartName <$> (dbQuery $ GetUserByID uid)
-      return (name, (uid, name):tbl)
-    Just name -> return (name, tbl)
-
-dbCompanyIDLookup :: (Kontrakcja m) => CompanyID -> [(CompanyID, String)] -> m (String, [(CompanyID, String)])
-dbCompanyIDLookup cid tbl =
-  case lookup cid tbl of
-    Nothing -> do
-      mcompany <- dbQuery $ GetCompany cid
-      let name = case mcompany of
-            Nothing -> "Unknown Company"
-            Just company -> case companyexternalid company of
-              Just eid -> unExternalCompanyID eid
-              Nothing -> case companyname $ companyinfo company of
-                "" -> "no company name"
-                a -> a
-      return (name, (cid, name):tbl)
-    Just name -> return (name, tbl)
+  return $ CSV { csvFilename = "docstats.csv"
+               , csvHeader = docstatsheader
+               , csvContent = map (map BS.toString) stats
+               }
 
 
 
@@ -587,13 +542,20 @@ addUserStatAPINewUser uid mt cid sid = do
                                                                   
 
 
-handleUserStatsCSV :: Kontrakcja m => m Response
+handleUserStatsCSV :: Kontrakcja m => m CSV
 handleUserStatsCSV = onlySalesOrAdmin $ do
   stats <- dbQuery GetUserStatEvents
-  Log.stats $ "All user stats length: " ++ (show $ length stats)
-  ok $ setHeader "Content-Disposition" "attachment;filename=userstats.csv"
-     $ setHeader "Content-Type" "text/csv"
-     $ toResponse (userStatisticsCSV stats)
+  return $ CSV { csvFilename = "userstats.csv"
+               , csvHeader = ["userid", "date", "event", "count", "serviceid", "companyid"]
+               , csvContent = map csvline stats
+               }
+  where csvline event = [ show                                 $ usUserID    event
+                        , showDateYMD                          $ usTime      event
+                        , show                                 $ usQuantity  event
+                        , show                                 $ usAmount    event
+                        , maybe "" (BS.toString . unServiceID) $ usServiceID event
+                        , maybe "" show                        $ usCompanyID event
+                        ]
 
 -- For User Admin tab in adminonly
 getUsersAndStatsInv :: Kontrakcja m => [UserFilter] -> [AscDesc UserOrderBy] -> UserPagination -> m [(User, Maybe Company, DocStats, InviteType)]
@@ -888,13 +850,22 @@ addSignStatPurgeEvent doc sl time =
 
 
 --CSV for sign stats
-handleSignStatsCSV :: Kontrakcja m => m Response
+handleSignStatsCSV :: Kontrakcja m => m CSV
 handleSignStatsCSV = do
   stats <- dbQuery GetSignStatEvents
-  Log.debug $ "All sign stats length: " ++ (show $ length stats)
-  ok $ setHeader "Content-Disposition" "attachment;filename=signstats.csv"
-     $ setHeader "Content-Type" "text/csv"
-     $ toResponse (signStatsCSV stats)
+  return $ CSV { csvFilename = "signstats.csv"
+               , csvHeader = ["documentid", "signatorylinkid", "date", "event", "doctype", "service (author)", "company (author)"]
+               , csvContent = map csvline stats
+               }
+  where csvline event = [ show        $ ssDocumentID      event
+                        , show        $ ssSignatoryLinkID event
+                        , showDateYMD $ ssTime            event
+                        , show        $ ssQuantity        event
+                        , show        $ ssDocumentProcess event
+                        , show        $ ssServiceID       event
+                        , show        $ ssCompanyID       event
+                        ]
+
 
 csvRowFromDocHist :: [DocStatEvent] -> [String] -> [String]
 csvRowFromDocHist [] csv = csv
@@ -916,14 +887,16 @@ csvRowFromDocHist (s:ss) csv' =
        ] ++ csv2
 
 -- CSV for document history
-handleDocHistoryCSV :: Kontrakcja m => m Response
+handleDocHistoryCSV :: Kontrakcja m => m CSV
 handleDocHistoryCSV = do
   stats <- dbQuery GetDocStatEvents
   let byDoc = groupWith seDocumentID $ reverse $ sortWith seDocumentID stats
       rows = map (\es -> csvRowFromDocHist es []) byDoc
-  ok $ setHeader "Content-Disposition" "attachment;filename=dochist.csv"
-     $ setHeader "Content-Type" "text/csv"
-     $ toResponse (docHistCSV rows)
+  return $ CSV { csvFilename = "dochist.csv"
+               , csvHeader = ["documentid", "serviceid", "companyid", "doctype", "create", "send", "close", "reject", "cancel", "timeout"]
+               , csvContent = rows
+               }
+
 
 -- CSV for sig history
 csvRowFromSignHist :: [SignStatEvent] -> [String] -> [String]
@@ -948,12 +921,12 @@ csvRowFromSignHist (s:ss) csv' =
      ] ++ csv2
 
 -- CSV for document history
-handleSignHistoryCSV :: Kontrakcja m => m Response
+handleSignHistoryCSV :: Kontrakcja m => m CSV
 handleSignHistoryCSV = do
   stats <- dbQuery GetSignStatEvents
   let bySig = groupWith (\s-> (ssDocumentID s, ssSignatoryLinkID s)) $ reverse $ sortWith (\s-> (ssDocumentID s, ssSignatoryLinkID s)) stats
       rows = map (\es -> csvRowFromSignHist es []) bySig
-  ok $ setHeader "Content-Disposition" "attachment;filename=signhist.csv"
-     $ setHeader "Content-Type" "text/csv"
-     $ toResponse (signHistCSV rows)
-
+  return $ CSV { csvFilename = "signhist.csv"
+               , csvHeader = ["documentid", "signatoryid", "serviceid", "companyid", "doctype", "invite", "receive", "open", "link", "sign", "reject", "delete", "purge"]
+               , csvContent = rows
+               }

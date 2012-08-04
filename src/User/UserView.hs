@@ -11,7 +11,7 @@ module User.UserView (
     newUserMail,
     mailNewAccountCreatedByAdmin,
     resetPasswordMail,
-    mailRequestChangeEmail,
+    mailEmailChangeRequest,
 
     -- modals
     modalAccountSetup,
@@ -60,7 +60,6 @@ module User.UserView (
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
 import Data.Maybe
-import ActionSchedulerState
 import Company.Model
 import Kontra
 import KontraLink
@@ -251,8 +250,8 @@ mailNewAccountCreatedByAdmin ctx locale personname email setpasslink custommessa
     F.value "ctxhostpart"   $ ctxhostpart ctx
     F.value "custommessage"   custommessage
 
-mailRequestChangeEmail :: (TemplatesMonad m, HasSomeUserInfo a) => String -> a -> Email -> KontraLink -> m Mail
-mailRequestChangeEmail hostpart user newemail link = do
+mailEmailChangeRequest :: (TemplatesMonad m, HasSomeUserInfo a) => String -> a -> Email -> KontraLink -> m Mail
+mailEmailChangeRequest hostpart user newemail link = do
   kontramail "mailRequestChangeEmail" $ do
     F.value "fullname" $ getFullName user
     F.value "newemail" $ unEmail newemail
@@ -365,7 +364,7 @@ flashMessageUserSignupDone :: TemplatesMonad m => m FlashMessage
 flashMessageUserSignupDone =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageUserSignupDone"
 
-modalNewPasswordView :: TemplatesMonad m => ActionID -> MagicHash -> m FlashMessage
+modalNewPasswordView :: TemplatesMonad m => UserID -> MagicHash -> m FlashMessage
 modalNewPasswordView aid hash = do
   toModal <$> (renderTemplate "modalNewPasswordView" $ do
             F.value "linkchangepassword" $ show $ LinkPasswordReminder aid hash)

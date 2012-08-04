@@ -2,10 +2,8 @@
    Initialises contexts and sessions, and farms requests out to the appropriate handlers.
  -}
 module AppControl
-    ( module AppConf
-    , appHandler
+    ( appHandler
     , AppGlobals(..)
-    , defaultAWSAction
 
     -- exported for the sake of unit tests
     , getStandardLocale
@@ -14,7 +12,10 @@ module AppControl
 import AppConf
 import API.Service.Model
 
+import Acid.Monad
+import Amazon
 import AppView as V
+import AppState
 import Crypto.RNG
 import DB
 import DB.PostgreSQL
@@ -49,13 +50,9 @@ import System.Time
 
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
-import qualified Network.AWS.AWSConnection as AWS
-import qualified Network.AWS.Authentication as AWS
-import qualified Network.HTTP as HTTP
 import qualified Static.Resources as SR
 
 {- |
@@ -89,25 +86,6 @@ getStandardLocale muser = do
       newlocalecookie = mkCookie "locale" (show newlocale)
   addCookie (MaxAge (60*60*24*366)) newlocalecookie
   return newlocale
-
-{- |
-   Creates a default amazon configuration based on the
-   given AppConf
--}
-defaultAWSAction :: AppConf -> AWS.S3Action
-defaultAWSAction appConf =
-    let (bucket,accessKey,secretKey) = maybe ("","","") id (amazonConfig appConf)
-    in
-    AWS.S3Action
-           { AWS.s3conn = AWS.amazonS3Connection accessKey secretKey
-           , AWS.s3bucket = bucket
-           , AWS.s3object = ""
-           , AWS.s3query = ""
-           , AWS.s3metadata = []
-           , AWS.s3body = BSL.empty
-           , AWS.s3operation = HTTP.GET
-           }
-
 
 maybeReadTemplates :: MVar (ClockTime, KontrakcjaGlobalTemplates)
                       -> IO KontrakcjaGlobalTemplates
@@ -147,9 +125,9 @@ showRequest rq maybeInputsBody =
 {- |
    Creates a context, routes the request, and handles the session.
 -}
-appHandler :: KontraPlus Response -> AppConf -> AppGlobals -> ServerPartT IO Response
-appHandler handleRoutes appConf appGlobals = measureResponseTime $
-  withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) $ do
+appHandler :: KontraPlus Response -> AppConf -> AppGlobals -> AppState -> ServerPartT IO Response
+appHandler handleRoutes appConf appGlobals appState = measureResponseTime $
+  withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) . runAcidT appState $ do
     let quota = 10000000
     temp <- liftIO getTemporaryDirectory
     decodeBody (defaultBodyPolicy temp quota quota quota)
@@ -272,7 +250,7 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
         , ctxnormalizeddocuments = docscache appGlobals
         , ctxipnumber = peerip
         , ctxdocstore = docstore appConf
-        , ctxs3action = defaultAWSAction appConf
+        , ctxs3action = mkAWSAction appConf
         , ctxgscmd = gsCmd appConf
         , ctxproduction = production appConf
         , ctxtemplates = localizedVersion userlocale templates2

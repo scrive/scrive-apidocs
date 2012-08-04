@@ -81,7 +81,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         this.uploadButton = UploadButton.init({
                 color : "green",
                 size: "small",
-                text: localization.attachments.selectFile,
+                text: localization.authorattachments.selectFile,
                 width: 200,
                 maxlength: 2,
                 onAppend : function(input,title,multifile) {
@@ -102,12 +102,12 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         var view = this;
         var attachmentsList = this.model;
         var box = $("<div class='option-box'>");
-        var header = $("<div class='header'/>").text(localization.attachments.selectAttachment);
-        var subheader = $("<div class='sheader'/>").text(localization.attachments.storedInScrive);
+        var header = $("<div class='header'/>").text(localization.authorattachments.selectAttachment);
+        var subheader = $("<div class='sheader'/>").text(localization.authorattachments.storedInScrive);
         var selectAttachmentButton = Button.init({
             color : "green",
             size: "small",
-            text: localization.attachments.selectAttachment,
+            text: localization.authorattachments.selectAttachment,
             width: 200,
             onClick : function() {
                 view.showAvaibleAttachmentsList = true;
@@ -138,10 +138,9 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
                     url: "/docs",
                     extraParams : { documentType : "Attachment" },
                     cells : [
-                        new Cell({name: localization.attachments.selectAttachment,
+                        new Cell({name: localization.authorattachments.selectAttachment,
                                   width:"400px",
                                   field:"title",
-                                  special: "rendered",
                                   rendering : function(title, _mainrow, listobject) {
                                       var link = jQuery("<a/>").text(title);
                                       var attachment_file = listobject.field("file");
@@ -168,7 +167,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         var attachmentsList = this.model;
         if (attachmentsList.isEmpty()) return box;
         box.addClass("attachmentsList");
-        box.append($("<div class='header'/>").text(localization.attachments.selectedAttachments));
+        box.append($("<div class='header'/>").text(localization.authorattachments.selectedAttachments));
         _.each(attachmentsList.attachments(),function(attachment){
             var attachmentBox = $("<div class='attachmentBox'>");
             attachmentBox.append($("<span/>").text(attachment.name()));
@@ -188,7 +187,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         this.container.addClass("selectAuthorAttachmentPopupContent");
         this.container.empty();
         if (!this.showAvaibleAttachmentsList) {
-            var header = $("<div class='description'/>").text(localization.attachments.selectAttachmentsDescription);
+            var header = $("<div class='description'/>").text(localization.authorattachments.selectAttachmentsDescription);
             this.container.append(header);
 
             var c1  = $("<td/>");
@@ -219,8 +218,8 @@ window.DesignAuthorAttachmentsPopup = {
          var view = new DesignAuthorAttachmentsView({model : model, el : $("<div/>")});
          Confirmation.popup({
               content  : $(view.el),
-              title  : localization.attachments.selectAttachments,
-              acceptText: localization.attachments.attach,
+              title  : localization.authorattachments.selectAttachments,
+              acceptText: localization.authorattachments.attach,
               width: "800px",
               onAccept : function() {
                   var submit = document.setAttachments();
@@ -370,7 +369,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
 
         _.each(attachments.document.signatories(), function(sig)  {
            if (sig.signs() && !sig.author()) {
-                var option = $("<option>").text(sig.nameOrEmail() != "" ? sig.nameOrEmail() :  sig.view.name());
+                var option = $("<option>").text(sig.nameOrEmail());
                 if (attachment.signatory() == sig)
                     option.attr("selected","yes");
                 option.data("signatory",sig);

@@ -17,6 +17,7 @@ module Doc.DocStorage
     , preCheckPDF
     ) where
 
+import Control.Applicative
 import Control.Exception (catch, SomeException)
 import Control.Monad
 import Control.Monad.Error
@@ -223,9 +224,9 @@ preCheckPDFHelper gscmd content tmppath =
                , Seal.history        = []
                , Seal.initials       = "An example text"
                , Seal.hostpart       = "An example text"
-               , Seal.fields         = []
                , Seal.staticTexts    = sealingTexts
                , Seal.attachments    = []
+               , Seal.filesList      = []
                }
 
     sealingTexts = Seal.SealingTexts
@@ -234,11 +235,13 @@ preCheckPDFHelper gscmd content tmppath =
                    , Seal.signedText         = "An example text"
                    , Seal.partnerText        = "An example text"
                    , Seal.secretaryText      = "An example text"
+                   , Seal.documentText       = "An example text"
                    , Seal.orgNumberText      = "An example text"
+                   , Seal.personalNumberText = "An example text"
                    , Seal.eventsText         = "An example text"
                    , Seal.dateText           = "An example text"
                    , Seal.historyText        = "An example text"
-                   , Seal.verificationFooter = ["An example text", "An example text", "An example text"]
+                   , Seal.verificationFooter = "An example text"
                    }
 
     checkSize = do
@@ -304,7 +307,7 @@ preCheckPDFHelper gscmd content tmppath =
 --
 preCheckPDF :: String
             -> BS.ByteString
-            -> IO (Either FileError BS.ByteString)
+            -> IO (Either FileError Binary)
 preCheckPDF gscmd content =
   withSystemTempDirectory "precheck" $ \tmppath -> do
     value <- preCheckPDFHelper gscmd content tmppath
@@ -312,4 +315,4 @@ preCheckPDF gscmd content =
     case value of
       Left x -> Log.error $ "preCheckPDF: " ++ show x
       Right _ -> return ()
-    return value
+    return $ Binary <$> value

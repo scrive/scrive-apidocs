@@ -7,31 +7,25 @@ module Doc.SignatoryLinkID (
   , unsafeSignatoryLinkID
   ) where
 
-import Control.Monad
 import Data.Data
 import Data.Int
-
-import Crypto.RNG
-import DB.Derive
-import Happstack.Data
+import Data.SafeCopy
 import Happstack.Server
-import Happstack.Util.Common
+
+import DB.Derive
+import Misc
 
 -- | 'SignatoryLinkID' is and integer that identifies
 -- a signatory inside a document scope.
 newtype SignatoryLinkID = SignatoryLinkID Int64
-  deriving (Eq, Ord, Typeable, Data)
+  deriving (Eq, Ord, Data, Typeable)
 $(newtypeDeriveUnderlyingReadShow ''SignatoryLinkID)
 $(newtypeDeriveConvertible ''SignatoryLinkID)
 
-instance Random SignatoryLinkID where
-  random = SignatoryLinkID `liftM` randomR (10000000, 10000000000)
+$(deriveSafeCopy 0 'base ''SignatoryLinkID)
 
 instance FromReqURI SignatoryLinkID where
-  fromReqURI = readM
-
-instance Version SignatoryLinkID
-$(deriveSerialize ''SignatoryLinkID)
+  fromReqURI = maybeRead
 
 unsafeSignatoryLinkID :: Int64 -> SignatoryLinkID
 unsafeSignatoryLinkID = SignatoryLinkID

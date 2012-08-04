@@ -362,7 +362,7 @@ var DocumentDesignView = Backbone.View.extend({
         var document = this.model;
         var box = $("<div class='authorattachmentssetup'/>");
         var icon = $("<span class='authorattachmentssetupicon'/>");
-        var text = $("<span class='authorattachmentssetuptext'/>").text(localization.attachments.changeAuthorAttachments);
+        var text = $("<span class='authorattachmentssetuptext'/>").text(localization.authorattachments.changeAuthorAttachments);
         var countspan = $("<span class='countspan' />").text("(" + document.authorattachments().length + ")").appendTo(text);
         box.append(icon).append(text);
 
@@ -572,19 +572,21 @@ var DocumentDesignView = Backbone.View.extend({
        var document = this.model;
        var signatory = document.currentSignatory();
        var box = $("<div>");
-       var confirmtext =  $("<span/>").append(document.process().confirmsendtext());
-       var content = $("<p/>").append(confirmtext);
-       if (!document.authorIsOnlySignatory())
-           content.append($("<span/>").text(localization.to)).append("<span class='unsignedpartynotcurrent'/>");
-       content.append($("<span>?</span>"));
-       box.append(DocumentDataFiller.fill(document,content));
        var padDesignViewUtil = undefined;
-       if (document.padAuthorization())
-       {   var padDesignViewUtil = new PadDesignViewUtilsModel({document : document});
+       if (!document.padAuthorization())
+       {
+           var content = $("<p/>").append($("<span/>").append(document.process().confirmsendtext()));
+           if (!document.authorIsOnlySignatory())
+                content.append($("<span/>").text(localization.to)).append("<span class='unsignedpartynotcurrent'/>");
+           content.append($("<span>?</span>"));
+           box.append(DocumentDataFiller.fill(document,content));
+       }
+       else {
+           var padDesignViewUtil = new PadDesignViewUtilsModel({document : document});
            box.append(new PadDesignViewUtilsView({model : padDesignViewUtil}).el);
        }
        Confirmation.popup({
-              title : document.process().confirmsendtitle(),
+              title : (!document.padAuthorization()) ? document.process().confirmsendtitle() : localization.pad.howDoYouWantToSign,
               acceptButton : Button.init({
                                 size: "small",
                                 color : "green",
@@ -667,7 +669,8 @@ var DocumentDesignView = Backbone.View.extend({
         var changemainfile = this.designChangeMainFile();
 
         var file = KontraFile.init({file: document.mainfile()});
-        this.tabs = KontraTabs.init({
+        this.tabs = new KontraTabs({
+            numbers : true,
             title : this.titlerow(),
             tabsTail : (!document.isTemplate()) ?  [this.saveAsTemplateOption()] : [] ,
             tabs: [

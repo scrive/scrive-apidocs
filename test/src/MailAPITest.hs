@@ -84,7 +84,7 @@ testSuccessfulDocCreation emlfile sigs = withSystemTempDirectory' "mailapi-test-
 
 createTestUser :: TestEnv UserID
 createTestUser = do
-    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" Nothing False Nothing Nothing (mkLocaleFromRegion defaultValue)
+    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" Nothing Nothing Nothing (mkLocaleFromRegion defaultValue)
     return userid
 
 test_getUserMailAPI :: TestEnv ()

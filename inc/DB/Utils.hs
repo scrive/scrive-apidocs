@@ -20,7 +20,7 @@ import DB.Env
 import DB.Exception
 import DB.Fetcher
 import DB.Functions
-import DB.SQL (SQL)
+import DB.SQL (IsSQL)
 
 oneRowAffectedGuard :: MonadIO m => Integer -> m Bool
 oneRowAffectedGuard 0 = return False
@@ -48,14 +48,13 @@ checkIfOneObjectReturned :: MonadIO m => [a] -> m Bool
 checkIfOneObjectReturned xs = oneObjectReturnedGuard xs
   >>= return . maybe False (const True)
 
-getOne :: MonadDB m => Convertible SqlValue a => SQL -> DBEnv m (Maybe a)
+getOne :: (IsSQL sql, MonadDB m) => Convertible SqlValue a => sql -> DBEnv m (Maybe a)
 getOne sql = do
   _ <- kRun sql
   foldDB (\acc v -> v : acc) []
     >>= oneObjectReturnedGuard
 
-checkIfAnyReturned :: forall m. MonadDB m => SQL -> DBEnv m Bool
+checkIfAnyReturned :: forall m sql. (IsSQL sql, MonadDB m) => sql -> DBEnv m Bool
 checkIfAnyReturned sql =
   (getOne sql :: DBEnv m (Maybe SqlValue))
     >>= checkIfOneObjectReturned . maybeToList
-

@@ -20,11 +20,6 @@ Flag mailing-server
   Manual: True
   Default: True
 
-Flag doc-converter
-  Description: Build document converter
-  Manual: True
-  Default: True
-
 Flag server
   Description: Build server
   Manual: True
@@ -164,6 +159,8 @@ Executable kontrakcja-server
   if impl(ghc >= 7)
     ghc-options: -rtsopts
 
+  Build-depends: AES == 0.2.8
+  Build-depends: cryptohash == 0.7.5
   Build-depends: Crypto == 4.2.*
   Build-depends: DRBG == 0.2.3
   Build-depends: HDBC == 2.3.1.1
@@ -177,6 +174,7 @@ Executable kontrakcja-server
   Build-depends: pretty-show == 1.2
   Build-depends: QuickCheck
   Build-depends: base >= 4 && < 5
+  Build-depends: base16-bytestring == 0.1.1.5
   Build-depends: base64-bytestring == 0.1.0.2
   Build-depends: binary == 0.5.0.2
   Build-depends: bytestring
@@ -190,13 +188,11 @@ Executable kontrakcja-server
   Build-depends: extensible-exceptions
   Build-depends: filepath
   Build-depends: hS3 == 0.5.6
-  Build-depends: happstack-data==6.0.1
-  Build-depends: happstack-ixset==6.0.1
+  Build-depends: ixset == 1.0.5
+  Build-depends: safecopy == 0.6.1
+  Build-depends: acid-state == 0.6.4
   Build-depends: happstack-server==6.6.4
-  Build-depends: happstack-state==6.1.4
   Build-depends: happstack-static-routing==0.3.1
-  Build-depends: happstack-util==6.0.3
-  Build-depends: happstack==6.1.8
   Build-depends: hslogger==1.1.4
   Build-depends: html == 1.0.1.2
   Build-depends: iconv == 0.4.1.0
@@ -323,41 +319,6 @@ Executable mailing-server
               TypeFamilies,
               TypeOperators,
               TypeSynonymInstances,
-              UndecidableInstances
-
-Library
-  if flag(doc-converter)
-    Buildable: True
-  else
-    Buildable: False
-
-  Hs-source-dirs: inc docconv/src
-
-  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
-  if !flag(allow-warnings)
-    GHC-Options: -Werror
-  if flag(server-coverage)
-    GHC-Options: -fhpc
-  if !os(windows)
-    -- don't do threaded on Windows because it uses blocking listen and accept
-    GHC-Options: -threaded
-  if os(windows)
-    cpp-options: -DWINDOWS
-  if impl(ghc >= 7)
-    ghc-options: -rtsopts
-
-  exposed-modules: LiveDocx
-
-  Build-depends: HaXml == 1.22.5
-
-  Extensions: FlexibleContexts,
-              FlexibleInstances,
-              GeneralizedNewtypeDeriving,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              RankNTypes,
-              ScopedTypeVariables,
-              TypeFamilies,
               UndecidableInstances
 
 Executable kontrakcja-test

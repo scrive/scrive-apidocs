@@ -44,6 +44,7 @@ window.Submit = Backbone.Model.extend({
     addInputs : function(v)
     {
         this.set({inputs : this.get("inputs").add(v)});
+        return this;
     },
     remove : function(k) {
         this.set({inputs : this.get("inputs").remove(k)});

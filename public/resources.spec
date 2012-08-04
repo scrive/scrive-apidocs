@@ -62,6 +62,7 @@ set systemPage
  js   js/browserinfo.js
  js   js/loading.js
  js   js/table.js
+ js   js/arrows.js
  js   js/flashmessages.js
  js   js/infotextinputs.js
  js   js/buttons.js
@@ -72,7 +73,11 @@ set systemPage
  js   js/ajaxqueue.js
  js   js/confirmations.js
  js   js/selects.js
- js   js/lists.js
+ js   js/lists/sorting.js
+ js   js/lists/filtering.js
+ js   js/lists/paging.js
+ js   js/lists/schema.js
+ js   js/lists/lists.js
  js   js/tabs.js
  js   js/files.js
  js   js/process.js
@@ -82,11 +87,17 @@ set systemPage
  js   js/documents.js
  js   js/confirmationsWithEmails.js
  js   js/docview.js
+ js   js/tasks.js
  js   js/docsignviewframes.js
- js   js/docsignview.js
+ js   js/signview/docsignviewinstructions.js
+ js   js/signview/docsignviewsignatories.js
+ js   js/signview/docsignviewcreateaccount.js
+ js   js/signview/docsignviewpromotescrive.js
+ js   js/signview/docsignviewsignsection.js
+ js   js/signview/docsignviewpad.js
+ js   js/signview/docsignview.js
  js   js/signatorydesignview.js
  js   js/docdesignviewpad.js
- js   js/docsignviewpad.js
  js   js/docdesignview.js
  js   js/mobilebankid.js
  js   js/bankid.js
@@ -101,3 +112,8 @@ set systemPage
  js   js/padview.js
  js   js/changemainfile.js
  js   js/fileverifier.js
+ js   js/archive/documents.js
+ js   js/archive/templates.js
+ js   js/archive/attachments.js
+ js   js/archive/bin.js
+ js   js/archive/archive.js

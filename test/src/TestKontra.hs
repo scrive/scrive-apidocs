@@ -24,10 +24,8 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans.Control
 import Data.Maybe
-import Happstack.Data (Proxy(..))
 import Happstack.Server hiding (mkHeaders, dir, getHeader, method, path)
 import Happstack.Server.Internal.Monads
-import Happstack.State (runTxSystem, TxControl, shutdownSystem, Saver(..))
 import System.FilePath
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BSU
@@ -38,12 +36,13 @@ import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 
-import GuardTime (GuardTimeConf(..))
+import Acid.Monad
 import AppState
 import Control.Monad.Trans.Control.Util
 import Configuration
 import Crypto.RNG
 import DB
+import GuardTime (GuardTimeConf(..))
 import Kontra
 import Mails.MailsConfig
 import MinutesTime
@@ -63,6 +62,7 @@ import qualified Doc.JpegPages as JpegPages
 data TestEnvSt = TestEnvSt {
     teNexus           :: Nexus
   , teRNGState        :: CryptoRNGState
+  , teAppState        :: AppState
   , teGlobalTemplates :: KontrakcjaGlobalTemplates
   }
 
@@ -72,10 +72,14 @@ newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
   deriving (Applicative, Functor, Monad, MonadBase IO, MonadIO, MonadReader TestEnvSt)
 
 runTestEnv :: TestEnvSt -> TestEnv () -> IO ()
-runTestEnv st = ununTestEnv st . withTestState . withTestDB
+runTestEnv st m = withTestState $ \appState ->
+  ununTestEnv (st { teAppState = appState }) $ withTestDB m
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> IO a
 ununTestEnv st m = runReaderT (unTestEnv m) st
+
+instance AcidStore AppState TestEnv where
+  getAcidStore = teAppState <$> ask
 
 instance CryptoRNG TestEnv where
   getCryptoRNGState = teRNGState <$> ask
@@ -84,14 +88,12 @@ instance MonadDB TestEnv where
   getNexus     = teNexus <$> ask
   localNexus f = local (\st -> st { teNexus = f (teNexus st) })
 
-
 instance TemplatesMonad TestEnv where
   getTemplates = getLocalTemplates defaultValue
   getLocalTemplates locale = do
     globaltemplates <- teGlobalTemplates <$> ask
     return $ localizedVersion locale globaltemplates
 
-  
 instance MonadBaseControl IO TestEnv where
   newtype StM TestEnv a = StTestEnv { unStTestEnv :: StM InnerTestEnv a }
   liftBaseWith = newtypeLiftBaseWith TestEnv unTestEnv StTestEnv
@@ -104,7 +106,8 @@ runTestKontraHelper rq ctx tk = do
   let noflashctx = ctx { ctxflashmessages = [] }
   nex <- getNexus
   rng <- getCryptoRNGState
-  mres <- liftIO $ ununWebT $ runServerPartT (runDBT nex $ runCryptoRNGT rng $
+  appState <- getAcidStore
+  mres <- liftIO $ ununWebT $ runServerPartT (runDBT nex $ runCryptoRNGT rng $ runAcidT appState $
     runStateT (unKontraPlus $ unKontra tk) noflashctx) rq
   case mres of
     Nothing -> fail "runTestKontraHelper mzero"
@@ -274,6 +277,10 @@ clearTables = runDBEnv $ do
   kRunRaw "DELETE FROM sign_stat_events"
   kRunRaw "DELETE FROM companyinvites"
 
+  kRunRaw "DELETE FROM email_change_requests"
+  kRunRaw "DELETE FROM password_reminders"
+  kRunRaw "DELETE FROM user_account_requests"
+
   kRunRaw "DELETE FROM author_attachments"
   kRunRaw "DELETE FROM signatory_attachments"
   kRunRaw "DELETE FROM signatory_links"
@@ -286,19 +293,14 @@ clearTables = runDBEnv $ do
 
   kRunRaw "DELETE FROM mails"
 
--- happstack-state --
+-- acid-state --
 
-startUp :: Saver -> TestEnv (MVar TxControl)
-startUp saver = liftIO $ runTxSystem saver (Proxy :: Proxy AppState)
-
-withSaver :: Saver -> TestEnv () -> TestEnv ()
-withSaver saver m = E.bracket (startUp saver) (liftIO . shutdownSystem) (const m)
-
-withFileSaver :: FilePath -> TestEnv () ->TestEnv ()
-withFileSaver dir m = withSaver (Queue (FileSaver dir)) m
-
-withTemporaryDirectory :: (FilePath -> TestEnv a) -> TestEnv a
-withTemporaryDirectory = withSystemTempDirectory' "kontrakcja-test-"
-
-withTestState :: TestEnv () -> TestEnv ()
-withTestState m = withTemporaryDirectory (\tmpDir -> withFileSaver tmpDir m)
+withTestState :: (AppState -> IO ()) -> IO ()
+withTestState m = withTemporaryDirectory (\tmpDir -> withAcid tmpDir m)
+  where
+    withTemporaryDirectory = withSystemTempDirectory' "kontrakcja-test-"
+    withAcid dir = E.bracket openAcid closeAcid
+      where
+        dummy_logger = const (return ())
+        openAcid = openAcidState dummy_logger dir
+        closeAcid = closeAcidState dummy_logger

@@ -10,12 +10,13 @@ window.FieldPlacement = Backbone.Model.extend({
     defaults: {
         x : 0,
         y : 0,
-        placed : false
+        placed : false,
+        tip: undefined
 
     },
     initialize : function(args){
         var placement = this;
-        setTimeout(function() {placement.addToPage();},100);
+        placement.addToPage();
         args.field.bind('removed', function() {
             placement.trigger("removed");
             placement.remove();
@@ -31,18 +32,16 @@ window.FieldPlacement = Backbone.Model.extend({
          var signatory = field.signatory();
          var document = signatory.document();
          var fileid = this.get("fileid");
-         if ( document.getFile(fileid) != undefined)
-         {
-             var page = document.getFile(fileid).page(this.get("page"));
-             if (page != undefined)
-             {
-                this.set({placed : true});
-                page.addPlacement(placement);
-             }
-
-          }
-         return setTimeout(function() {placement.addToPage();},100);
-
+         var pageno = this.get("page");
+         var tryToAddToPage = function() {
+                if (document.getFile(fileid) != undefined && document.getFile(fileid).page(pageno) != undefined) {
+                    placement.set({placed : true});
+                    document.getFile(fileid).page(pageno).addPlacement(placement);
+                    document.off('file:change',tryToAddToPage);
+                }
+         };
+         document.bind('file:change',tryToAddToPage);
+         tryToAddToPage();
     },
     x : function() {
         return this.get("x");
@@ -58,6 +57,9 @@ window.FieldPlacement = Backbone.Model.extend({
     },
     file : function(){
         return this.get("file");
+    },
+    tip : function(){
+        return this.get("tip");
     },
     remove : function() {
        var document = this.field().signatory().document();
@@ -76,7 +78,8 @@ window.FieldPlacement = Backbone.Model.extend({
             y : parseInt(this.y()),
             pagewidth : page != undefined ? page.width() : 943,
             pageheight : page != undefined ? page.height() : 1335,
-            page : page != undefined ? page.number() : this.get("page")
+            page : page != undefined ? page.number() : this.get("page"),
+            tip : this.get("tip")
         };
     }
 });
@@ -397,12 +400,15 @@ window.FieldDesignView = Backbone.View.extend({
                         fileview.moveCoordinateAxes(ui.helper);
                     },
                     onDrop: function(page, x,y ){
+                          x = page.fixedX(x,y);
+                          y = page.fixedY(x,y);
                           field.addPlacement(new FieldPlacement({
                               page: page.number(),
                               fileid: page.file().fileid(),
                               field: field,
                               x : x,
-                              y : y
+                              y : y,
+                              tip : "right"
                             }));
                     }
             });

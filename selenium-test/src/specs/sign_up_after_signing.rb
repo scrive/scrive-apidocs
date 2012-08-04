@@ -38,13 +38,13 @@ describe "sign up after signing a document" do
     @h.wait.until { @h.driver.find_element :css => ".tos input[type='checkbox']" }.click
     puts "make sure we get invalid elements if we try to activate without filling in the password details"
     (@h.wait.until { @h.driver.find_element :css => ".save .btn-small" }).click
-    @h.wait.until { @h.driver.find_element :css => ".invalid" }
+    @h.wait.until { @h.driver.find_element :css => ".errormsg" }
 
     puts "fill in the password details incorrectly and make sure we get invalid elements"
     (@h.wait.until { @h.driver.find_element :name => "password" }).send_keys "password-12"
     (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys "password-123"
     (@h.wait.until { @h.driver.find_element :css => ".save .btn-small" }).click
-    @h.wait.until { @h.driver.find_element :css => ".invalid" }
+    @h.wait.until { @h.driver.find_element :css => ".errormsg" }
 
     puts "clear password2 and really activate"
     (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
