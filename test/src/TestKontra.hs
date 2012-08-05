@@ -58,6 +58,7 @@ import qualified Data.Map as Map
 import qualified Control.Exception.Lifted as E
 import qualified Static.Resources as SR
 import qualified Doc.JpegPages as JpegPages
+import System.Time
 
 data TestEnvSt = TestEnvSt {
     teNexus           :: Nexus
@@ -255,7 +256,7 @@ mkContext locale = do
         , ctxsalesaccounts = []
         , ctxmagichashes = Map.empty
         , ctxmaybepaduser = Nothing
-        , ctxstaticresources = SR.ResourceSetsForImport []
+        , ctxstaticresources = SR.ResourceSetsForImport [] (TOD 0 0)
         , ctxusehttps = False
         , ctxgtconf = GuardTimeConf { guardTimeURL = "http://stamper.guardtime.net/gt-signingservice" }
     }

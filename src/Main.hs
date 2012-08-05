@@ -56,7 +56,7 @@ main = Log.withLogger $ do
   -- Generating static resources (JS and CSS). For development this does nothing. For production it generates joins.
   staticResources' <- SR.getResourceSetsForImport (SR.Production <| production appConf |> SR.Development) (srConfig appConf) ""
   staticResources <- case staticResources' of
-                          Right r -> return r
+                          Right r -> newMVar r
                           Left s -> error $ "Error while generating static resources: " ++ s
   appGlobals <- (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
     >>= \templates -> MemCache.new BS.length 50000000

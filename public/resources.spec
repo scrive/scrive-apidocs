@@ -19,8 +19,6 @@ set firstPage
  css css/symbols.css
  css css/newdesign.css
  css css/buttons.css
- less less/demo.less
- less less/anotherdemo.less
  js  libs/jquery.min.js
  js  libs/jquery-ui.min.js
  js  libs/jquery.tools.min.js

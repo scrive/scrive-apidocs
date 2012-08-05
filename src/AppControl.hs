@@ -38,7 +38,6 @@ import File.FileID
 
 import Control.Concurrent
 import Control.Concurrent.MVar.Util (tryReadMVar)
-import Control.Logic
 import Control.Monad.Error
 import Data.Functor
 import Data.List
@@ -65,7 +64,7 @@ data AppGlobals
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
                  , docscache       :: MemCache.MemCache FileID JpegPages
                  , cryptorng       :: CryptoRNGState
-                 , staticResources :: SR.ResourceSetsForImport
+                 , staticResources :: MVar SR.ResourceSetsForImport
                  }
 
 
@@ -89,17 +88,32 @@ getStandardLocale muser = do
   addCookie (MaxAge (60*60*24*366)) newlocalecookie
   return newlocale
 
-maybeReadTemplates :: MVar (ClockTime, KontrakcjaGlobalTemplates)
-                      -> IO KontrakcjaGlobalTemplates
-maybeReadTemplates mvar = modifyMVar mvar $ \(modtime, templates) -> do
-        modtime' <- getTemplatesModTime
-        if modtime /= modtime'
-            then do
-                Log.debug $ "Reloading templates"
-                templates' <- readGlobalTemplates
-                return ((modtime', templates'), templates')
-            else return ((modtime, templates), templates)
+maybeReadTemplates :: Bool -> MVar (ClockTime, KontrakcjaGlobalTemplates) -> IO KontrakcjaGlobalTemplates
+maybeReadTemplates production mvar = modifyMVar mvar $ \(modtime, templates) -> do
+        if (production)
+         then return ((modtime, templates), templates)
+         else do
+              modtime' <- getTemplatesModTime
+              if modtime /= modtime'
+               then do
+                   Log.debug $ "Reloading templates"
+                   templates' <- readGlobalTemplates
+                   return ((modtime', templates'), templates')
+               else return ((modtime, templates), templates)
 
+maybeReadStaticResources :: Bool -> MVar SR.ResourceSetsForImport -> String -> IO SR.ResourceSetsForImport
+maybeReadStaticResources production mvar srConfigForAppConf = modifyMVar mvar $ \sr ->
+        if (production)
+         then return $  (sr,sr)
+         else do
+              mtime <- SR.resourcesMTime srConfigForAppConf
+              if (SR.generationTime sr < mtime)
+               then do
+                   sr' <- fromRight <$> SR.getResourceSetsForImport SR.Development srConfigForAppConf ""
+                   return (sr',sr')
+               else return $  (sr,sr)
+
+            
 showNamedHeader :: forall t . (t, HeaderPair) -> [Char]
 showNamedHeader (_nm,hd) = BS.toString (hName hd) ++ ": [" ++
                       concat (intersperse ", " (map (show . BS.toString) (hValue hd))) ++ "]"
@@ -238,11 +252,10 @@ appHandler handleRoutes appConf appGlobals appState = measureResponseTime $
             return []
 
       -- do reload templates in non-production code
-      templates2 <- liftIO $ maybeReadTemplates (templates appGlobals)
+      templates2 <- liftIO $ maybeReadTemplates (production appConf) (templates appGlobals)
       
       -- regenerate static files that need to be regenerated in development mode
-      liftIO $ SR.regenerateChangedResources (SR.Production <| production appConf |> SR.Development)
-                                             (srConfig appConf)
+      staticRes <-  liftIO $ maybeReadStaticResources (production appConf) (staticResources appGlobals) (srConfig appConf)
 
       -- work out the region and language
       userlocale <- getStandardLocale muser
@@ -276,6 +289,6 @@ appHandler handleRoutes appConf appGlobals appState = measureResponseTime $
         , ctxsalesaccounts = sales appConf
         , ctxmagichashes = getMagicHashes session
         , ctxmaybepaduser = mpaduser
-        , ctxstaticresources = staticResources appGlobals
+        , ctxstaticresources = staticRes
         , ctxusehttps = useHttps appConf
         }
