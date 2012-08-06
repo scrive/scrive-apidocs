@@ -386,11 +386,6 @@ sqlConcatOR sqls =
 parenthesize :: SQL -> SQL
 parenthesize (SQL command values) = SQL ("(" ++ command ++ ")") values
 
-
-sqlLog :: MinutesTime -> String -> (String, String, SqlValue)
-sqlLog time text = sql' "log" "log || ?" logmsg
-  where logmsg = unlines [show $ DocumentLogEntry time text]
-
 checkEqualBy :: (Eq b, Show b) => String -> (a -> b) -> a -> a -> Maybe (String, String, String)
 checkEqualBy name func obj1 obj2
   | func obj1 /= func obj2 = Just (name, show (func obj1), show (func obj2))
@@ -439,7 +434,6 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentdaystosign" documentdaystosign
                    , checkEqualBy "documenttimeouttime" documenttimeouttime
                    , checkEqualBy "documentinvitetime" documentinvitetime
-                   , checkEqualBy "documentlog" documentlog
                    , checkEqualBy "documentinvitetext" documentinvitetext
                    , checkEqualBy "documentallowedidtypes" (nub . documentallowedidtypes)
                    , checkEqualBy "documentcancelationreason" documentcancelationreason
@@ -472,7 +466,6 @@ documentsSelectors = SQL (intercalate ", " [
   , "timeout_time"
   , "invite_time"
   , "invite_ip"
-  , "log"
   , "invite_text"
   , "allowed_id_types"
   , "cancelation_reason"
@@ -499,7 +492,7 @@ fetchDocuments = foldDB decoder []
     -- use reversed order too, so in the end everything is properly ordered.
     decoder acc did title file_id sealed_file_id status error_text simple_type
      process ctime mtime days_to_sign timeout_time invite_time
-     invite_ip dlog invite_text allowed_id_types cancelationreason rejection_time
+     invite_ip invite_text allowed_id_types cancelationreason rejection_time
      rejection_signatory_link_id rejection_reason service deleted mail_footer
      region sharing status_class
        = Document {
@@ -520,7 +513,6 @@ fetchDocuments = foldDB decoder []
        , documentinvitetime = case invite_time of
            Nothing -> Nothing
            Just t -> Just (SignInfo t $ fromMaybe noIP invite_ip)
-       , documentlog = dlog
        , documentinvitetext = invite_text
        , documentallowedidtypes = allowed_id_types
        , documentcancelationreason = cancelationreason
@@ -876,7 +868,6 @@ insertDocumentAsIs document = do
                  , documentdaystosign
                  , documenttimeouttime
                  , documentinvitetime
-                 , documentlog
                  , documentinvitetext
                  , documentallowedidtypes
                  , documentcancelationreason
@@ -908,7 +899,6 @@ insertDocumentAsIs document = do
       , sql "invite_time" $ signtime `fmap` documentinvitetime
       , sql "invite_ip" (fmap signipnumber documentinvitetime)
       , sql "invite_text" documentinvitetext
-      , sql "log" documentlog
       , sql "allowed_id_types" documentallowedidtypes
       , sql "cancelation_reason" documentcancelationreason
       , sql "rejection_time" $ fst3 `fmap` documentrejectioninfo
@@ -1039,7 +1029,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachFile Bool where
     success <- kRun01 $ mkSQL UPDATE tableDocuments [
         sql "mtime" time
       , sql "file_id" $ fid
-      , sqlLog time $ "Attached main file " ++ show fid
       ] <++> SQL "WHERE id = ? AND status = ?" [toSql did, toSql Preparation]
     when_ success $ do
       f <- exactlyOneObjectReturnedGuard =<< query (GetFileByFileID fid)
@@ -1057,7 +1046,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile Bool where
     success <- kRun01 $ mkSQL UPDATE tableDocuments [
         sql "mtime" time
       , sql "sealed_file_id" fid
-      , sqlLog time $ "Attached sealed file " ++ show fid
       ] <++> SQL "WHERE id = ? AND status = ?" [toSql did, toSql Closed]
     when_ success $
       update $ InsertEvidenceEvent
@@ -1080,12 +1068,10 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
         errmsgs <- checkCancelDocument did
         case errmsgs of
           [] -> do
-            let ipaddress = fromMaybe noIP $ actorIP actor
             success <- kRun01 $ mkSQL UPDATE tableDocuments [
                 sql "status" Canceled
               , sql "mtime" mtime
               , sql "cancelation_reason" $ reason
-              , sqlLog mtime $ "Document canceled from " ++ show ipaddress
               ] <++> SQL "WHERE id = ? AND type = ?" [
                 toSql did
               , toSql $ Signable undefined
@@ -1195,7 +1181,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m PreparationToPending Bool w
               , sql "mtime" time
               , sql "timeout_time" $ (\days -> (days * 24 * 60) `minutesAfter` time)
                   <$> daystosign
-              , sqlLog time "Document put into Pending state"
               ] <++> SQL "WHERE id = ? AND type = ?" [
                 toSql docid
               , toSql $ Signable undefined
@@ -1215,7 +1200,6 @@ data CloseDocument = CloseDocument DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m CloseDocument Bool where
   update (CloseDocument docid actor) = do
     let time = actorTime actor
-        ipaddress = fromMaybe noIP $ actorIP actor
     doc_exists <- query $ CheckIfDocumentExists docid
     if not doc_exists
       then do
@@ -1228,7 +1212,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CloseDocument Bool where
             success <- kRun01 $ mkSQL UPDATE tableDocuments [
                 sql "status" Closed
               , sql "mtime" time
-              , sqlLog time $ "Document closed from " ++ show ipaddress
               ] <++> SQL "WHERE id = ? AND type = ?" [
                 toSql docid
               , toSql $ Signable undefined
@@ -1552,12 +1535,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkDocumentSeen Bool where
 data AddInvitationEvidence = AddInvitationEvidence DocumentID SignatoryLinkID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddInvitationEvidence Bool where
   update (AddInvitationEvidence docid slid actor) = do
-  -- modifySignable docid $ \document ->
-  -- case checkAddEvidence document slid of
-  --  [] -> let Just sds = signatorydetails <$> getSigLinkFor document slid
-  --        in Right $ document { documentinvitetime = Just (SignInfo time ipnumber) }
-  --           `appendHistory` [DocumentHistoryInvitationSent time ipnumber [sds]]
-  --  s -> Left $ "Document " ++ show documentid ++ " cannot have evidence attached for signatory " ++ show slid ++ " because " ++ concat s
     msig <- query $ GetSignatoryLinkByID docid slid Nothing
     case msig of
       Nothing -> do
@@ -1640,7 +1617,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
                 , documentauthorattachments    = []
                 , documentallowedidtypes       = [EmailIdentification]
                 , documentui                   = (documentui blankDocument) { documentmailfooter = customfooter $ usersettings user }
-                } `appendHistory` [DocumentHistoryCreated ctime]
+                } 
 
       case invariantProblems ctime doc of
         Nothing -> do
@@ -1691,14 +1668,12 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RejectDocument Bool where
         errmsgs <- checkRejectDocument docid slid
         case errmsgs of
           [] -> do
-            let ipnumber = fromMaybe noIP $ actorIP actor
             success <- kRun01 $ mkSQL UPDATE tableDocuments [
                 sql "status" Rejected
               , sql "mtime" time
               , sql "rejection_time" time
               , sql "rejection_reason" customtext
               , sql "rejection_signatory_link_id" slid
-              , sqlLog time $ "Document rejected from " ++ show ipnumber
               ] <++> SQL "WHERE id = ?" [toSql docid]
             when_ success $
                 update $ InsertEvidenceEvent
@@ -1737,11 +1712,8 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocumen
       if (documentstatus doc `notElem` [Canceled, Timedout, Rejected])
       then return $ Left $ "Can't restart document with " ++ (show $ documentstatus doc) ++ " status"
       else do
-             let time = actorTime actor
-                 ipnumber = fromMaybe noIP $ actorIP actor
              doc' <- clearSignInfofromDoc
-             let doc'' = doc' `appendHistory` [DocumentHistoryRestarted time ipnumber]
-             return $ Right doc''
+             return $ Right doc'
 
     clearSignInfofromDoc = do
       let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x, signatorylinkid x, signatoryattachments x)) $ documentsignatorylinks doc
@@ -1878,7 +1850,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInviteText Bool where
     success <- kRun01 $ mkSQL UPDATE tableDocuments [
         sql "invite_text" text
       , sql "mtime" time
-      , sqlLog time "Invite text set"
       ] <++> SQL "WHERE id = ?" [toSql did]
     when_ (success && changed) $
       update $ InsertEvidenceEvent
@@ -1912,7 +1883,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTitle Bool where
     success <- kRun01 $ mkSQL UPDATE tableDocuments [
         sql "title" doctitle
       , sql "mtime" time
-      , sqlLog time "Document title changed"
       ] <++> SQL "WHERE id = ?" [toSql did]
     when_ (success && changed) $
       update $ InsertEvidenceEvent
@@ -1930,7 +1900,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentLocale Bool wher
     success <- kRun01 $ mkSQL UPDATE tableDocuments [
         sql "region" $ getRegion locale
       , sql "mtime" time
-      , sqlLog time "Document locale changed"
       ] <++> SQL "WHERE id = ?" [toSql did]
     when_ (success && changed) $
       update $ InsertEvidenceEvent
@@ -2207,7 +2176,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m TimeoutDocument Bool where
     success <- kRun01 $ mkSQL UPDATE tableDocuments [
         sql "status" Timedout
       , sql "mtime" time
-      , sqlLog time "Document timed out"
       ] <++> SQL "WHERE id = ? AND type = ? AND status = ?" [
         toSql did
       , toSql $ Signable undefined

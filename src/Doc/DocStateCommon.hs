@@ -79,7 +79,6 @@ blankDocument =
           , documentmtime                = fromSeconds 0
           , documentdaystosign           = Nothing
           , documenttimeouttime          = Nothing
-          , documentlog                  = []
           , documentinvitetext           = ""
           , documentsealedfiles          = []
           -- , documenttrustweaverreference = Nothing

@@ -239,12 +239,6 @@ signatoryDetailsFromUser user mcompany = SignatoryDetails {
       , sfPlacements = []
     }
 
-{- |
-   Add some history to a document.
- -}
-appendHistory :: Document -> [DocumentHistoryEntry] -> Document
-appendHistory document history =
-    document { documentlog = documentlog document ++ map documentHistoryToDocumentLog history }
 
 {- |
    Is a CancelationReason due to ELegDataMismatch?

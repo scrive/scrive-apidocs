@@ -6,7 +6,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = Table {
     tblName = "documents"
-  , tblVersion = 7
+  , tblVersion = 8
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -23,7 +23,6 @@ tableDocuments = Table {
        , ("timeout_time", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True})
        , ("invite_time", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True})
        , ("invite_ip", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
-       , ("log", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("invite_text", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("trust_weaver_reference", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("allowed_id_types", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -56,7 +55,6 @@ tableDocuments = Table {
           ++ ", timeout_time TIMESTAMPTZ NULL"
           ++ ", invite_time TIMESTAMPTZ NULL"
           ++ ", invite_ip INTEGER NULL"
-          ++ ", log TEXT NOT NULL"
           ++ ", invite_text TEXT NOT NULL"
           ++ ", trust_weaver_reference TEXT NULL"
           ++ ", allowed_id_types INTEGER NOT NULL"

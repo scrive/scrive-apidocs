@@ -420,7 +420,6 @@ data Document = Document {
   , documentdaystosign             :: Maybe Int
   , documenttimeouttime            :: Maybe TimeoutTime
   , documentinvitetime             :: Maybe SignInfo
-  , documentlog                    :: [DocumentLogEntry]      -- to be made into plain text
   , documentinvitetext             :: String
   , documentallowedidtypes         :: [IdentificationType]
   , documentcancelationreason      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.

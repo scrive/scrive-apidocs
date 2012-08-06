@@ -79,6 +79,7 @@ kontraMigrations = [
   , addCryptoColumnsToFilesTable
   , addForeignKeyToDocumentTags
   , moveAttachmentsFromDocumentsToAttachments
+  , removeOldDocumentLog
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

@@ -401,3 +401,11 @@ moveAttachmentsFromDocumentsToAttachments =
       when (deleted /= inserted) $
            error $ "migration from documents to attachments lost some files: " ++ show inserted ++ "/" ++ show deleted
   }
+
+removeOldDocumentLog :: MonadDB m => Migration m
+removeOldDocumentLog =
+  Migration
+  { mgrTable = tableDocuments
+  , mgrFrom = 7
+  , mgrDo = kRunRaw "ALTER TABLE documents DROP COLUMN log" 
+  }
