@@ -6,8 +6,6 @@ module Doc.DocStateData (
   , CancelationReason(..)
   , DocStats(..)
   , Document(..)
-  , DocumentHistoryEntry(..)
-  , DocumentLogEntry(..)
   , DocumentSharing(..)
   , DocumentStatus(..)
   , DocumentTag(..)
@@ -36,7 +34,6 @@ module Doc.DocStateData (
   , StatusClass(..)
   , getFieldOfType
   , getValueOfType
-  , documentHistoryToDocumentLog
   , emptyDocumentUI
   , documentType
   , toDocumentProcess
@@ -46,7 +43,6 @@ module Doc.DocStateData (
 import API.Service.Model
 import Company.Model
 import Data.Data
-import Data.Either
 import Data.Maybe
 import DB.Derive
 import IPAddress
@@ -301,75 +297,6 @@ data DocumentUI = DocumentUI {
 emptyDocumentUI :: DocumentUI
 emptyDocumentUI = DocumentUI { documentmailfooter = Nothing }
 
-data DocumentHistoryEntry =
-  DocumentHistoryCreated {
-    dochisttime :: MinutesTime
-  }
-  | DocumentHistoryInvitationSent {
-      dochisttime :: MinutesTime
-    , ipnumber :: IPAddress
-    , dochistsignatories :: [SignatoryDetails]
-  }    -- changed state from Preparatio to Pending
-  | DocumentHistoryTimedOut {
-    dochisttime :: MinutesTime
-  }
-  | DocumentHistorySigned {
-      dochisttime :: MinutesTime
-    , ipnumber :: IPAddress
-    , dochistsignatorydetails :: SignatoryDetails
-  }
-  | DocumentHistoryRejected {
-      dochisttime :: MinutesTime
-    , ipnumber :: IPAddress
-    , dochistsignatorydetails :: SignatoryDetails
-  }
-  | DocumentHistoryClosed {
-      dochisttime :: MinutesTime
-    , ipnumber :: IPAddress
-  }
-  | DocumentHistoryCanceled {
-      dochisttime :: MinutesTime
-    , ipnumber :: IPAddress
-  }
-  | DocumentHistoryRestarted {
-      dochisttime :: MinutesTime
-    , ipnumber :: IPAddress
-  } deriving (Eq, Ord, Show)
-
-data DocumentLogEntry = DocumentLogEntry MinutesTime String
-  deriving (Eq, Ord)
-
-instance Show DocumentLogEntry where
-  show (DocumentLogEntry time rest) =
-    formatMinutesTimeUTC time ++ " " ++ rest
-
-instance Read DocumentLogEntry where
-  readsPrec _ text =
-    -- 2011-01-02 13:45:22 = 19 chars
-    case parseMinutesTimeUTC timepart of
-      Just time -> [(DocumentLogEntry time $ drop 1 restpart, "")]
-      Nothing -> []
-    where
-     (timepart, restpart) = splitAt 19 text
-
-instance Convertible [DocumentLogEntry] SqlValue where
-  safeConvert = return . toSql . unlines . map show
-
-instance Convertible SqlValue [DocumentLogEntry] where
-  safeConvert = check . partitionEithers . map parse . lines . fromSql
-    where
-      check ((x:_), _) = Left x
-      check ([], x) = Right x
-      parse s = maybe (Left ConvertError {
-          convSourceValue = s
-        , convSourceType = "String"
-        , convDestType = "DocumentLogEntry"
-        , convErrorMessage = "Convertion error: reads returned " ++ show parsedS
-        }) Right $ do
-          [(v, "")] <- return parsedS
-          return v
-        where
-          parsedS = reads s
 
 getFieldOfType :: FieldType -> [SignatoryField] -> Maybe SignatoryField
 getFieldOfType _ [] = Nothing
@@ -379,23 +306,6 @@ getFieldOfType t (sf:rest) =
 getValueOfType :: FieldType -> SignatoryDetails -> String
 getValueOfType t = fromMaybe "" . fmap sfValue . getFieldOfType t . signatoryfields
 
-documentHistoryToDocumentLog :: DocumentHistoryEntry -> DocumentLogEntry
-documentHistoryToDocumentLog DocumentHistoryCreated{..} =
-  DocumentLogEntry dochisttime $ "Document created"
-documentHistoryToDocumentLog DocumentHistoryInvitationSent{..} =
-  DocumentLogEntry dochisttime $ "Invitations sent to signatories" ++ formatIP ipnumber
-documentHistoryToDocumentLog DocumentHistoryTimedOut{..} =
-  DocumentLogEntry dochisttime $ "Document timed out"
-documentHistoryToDocumentLog DocumentHistorySigned{..} =
-  DocumentLogEntry dochisttime $ "Document signed by a signatory" ++ formatIP ipnumber
-documentHistoryToDocumentLog DocumentHistoryRejected{..} =
-  DocumentLogEntry dochisttime $ "Document rejected by a signatory" ++ formatIP ipnumber
-documentHistoryToDocumentLog DocumentHistoryClosed{..} =
-  DocumentLogEntry dochisttime $ "Document closed" ++ formatIP ipnumber
-documentHistoryToDocumentLog DocumentHistoryCanceled{..} =
-  DocumentLogEntry dochisttime $ "Document canceled" ++ formatIP ipnumber
-documentHistoryToDocumentLog DocumentHistoryRestarted{..} =
-  DocumentLogEntry dochisttime $ "Document restarted" ++ formatIP ipnumber
 
 data DocStats = DocStats {
     doccount          :: !Int

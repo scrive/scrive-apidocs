@@ -61,10 +61,6 @@ instance InspectXML File where
     inspectXML file = "<a href='" ++ (inspectXML $ LinkFile (fileid file) (filename file)) ++"'>" ++ show (fileid file)++ "/" ++ inspectXML (filename file) ++"</a>"
 instance InspectXML FileID where
     inspectXML fileid = "<a href='" ++ (inspectXML $ LinkFile fileid (show fileid)) ++"'>" ++ show fileid ++ "</a>"
-
-instance InspectXML DocumentLogEntry where
-    inspectXML (DocumentLogEntry time text) = show time ++ ": " ++ inspectXML text
-
 instance InspectXML (S.Set DocumentTag) where
   inspectXML = inspectXML . S.toList
 
@@ -86,7 +82,6 @@ instance InspectXML DocumentTag where
 instance InspectXML DocumentUI where
 instance InspectXML TimeoutTime where
 instance InspectXML SignInfo where
-instance InspectXML DocumentHistoryEntry where
 instance InspectXML MagicHash where
 instance InspectXML MinutesTime where
 instance InspectXML Password where
