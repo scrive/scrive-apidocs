@@ -24,7 +24,7 @@ window.SelectModel = Backbone.Model.extend({
   defaults : {
       name  : "",
       options : [],
-      expanded : false,
+      expanded : false
   },
   initialize: function(args){
       var model = this;
