@@ -458,8 +458,6 @@
 
     window.KontraList = function() { return {
         init: function(args) {
-            $("body").append("KontraList init");
-
             _.bindAll(this, 'recall');
             this.schema = args.schema;
             this.schema.initSessionStorageNamespace(args.name);

@@ -78,7 +78,6 @@ import Util.Actor
 import InspectXMLInstances ()
 import InspectXML
 import File.Model
-import File.Storage
 import Util.CSVUtil
 import ListUtil
 import Text.JSON
@@ -89,8 +88,6 @@ import CompanyAccounts.Model
 import Util.SignatoryLinkUtils
 import Stats.Control (getUsersAndStatsInv)
 import User.History.Model
-import Codec.Archive.Zip
-import qualified Data.Map as Map
 import qualified Templates.Fields as F
 
 {- | Main page. Redirects users to other admin panels -}

@@ -48,7 +48,7 @@ import Util.ZipUtil
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString as BSS
 import Data.Char
-import Doc.DocStorage
+import File.Storage as F
 import qualified Log as Log
 import Data.List (find)
 import Control.Logic
@@ -67,13 +67,16 @@ handleDelete = do
               case (documentstatus doc) of
                   Pending -> if (isAuthor msl)
                                 then do 
-                                   doc' <- guardRightM' $ dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
+                                   guardTrueM $ dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
+                                   doc' <- guardRightM' $ getDocByDocID $ did
                                    postDocumentCanceledChange doc' "web+archive"
                                 else do
-                                   doc' <- guardRightM' $ dbUpdate $ RejectDocument did (signatorylinkid $ fromJust msl) Nothing actor
+                                   guardTrueM $ dbUpdate $ RejectDocument did (signatorylinkid $ fromJust msl) Nothing actor
+                                   doc' <- guardRightM' $ getDocByDocID $ did
                                    postDocumentRejectedChange doc' (signatorylinkid $ fromJust msl) "web+archive"
                   _ -> return ()
-              doc' <- guardRightM' $ dbUpdate $ ArchiveDocument user did actor
+              guardTrueM $ dbUpdate $ ArchiveDocument user did actor
+              doc' <- guardRightM' $ getDocByDocID $ did
               _ <- addSignStatDeleteEvent doc' (fromJust msl) ctxtime
               case (documentstatus doc) of
                    Preparation -> do
@@ -112,7 +115,8 @@ handleCancel = do
       actor <- guardJustM $ mkAuthorActor <$> getContext
       if (documentstatus doc == Pending)
         then do
-           doc' <- guardRightM' $ dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
+           guardTrueM $ dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
+           doc' <- guardRightM' $ getDocByDocID $ docid
            postDocumentCanceledChange doc' "web+archive"
         else internalError
   J.runJSONGenT $ return ()
@@ -172,9 +176,7 @@ jsonDocumentsList = withUserGet $ do
   Just user@User{userid = uid} <- ctxmaybeuser <$> getContext
   lang <- getLang . ctxlocale <$> getContext
   doctype <- getField' "documentType"
-
   params <- getListParamsNew
-
   let (domain,filters1) = case doctype of
                           "Document"          -> ([DocumentsForSignatoryDeleteValue uid False] ++ (maybeCompanyDomain False),[])
                           "Template"          -> ([TemplatesOfAuthorDeleteValue uid False],[])

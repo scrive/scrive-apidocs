@@ -87,10 +87,13 @@ var ArchiveView = Backbone.View.extend({
         $(window).scroll(function() {view.updateScroll();})
     },
     updateScroll : function() {
-        if ($(window).scrollTop() >= 174 && $("body").height() > 1200)
+        if ($(window).scrollTop() >= 174 && $("body").height() >= 1200)
+        {
             $(this.el).addClass("scrolled");
-        else
+        } else if ( $(this.el).hasClass("scrolled") && $(window).scrollTop() <= 174){
             $(this.el).removeClass("scrolled");
+        }
+            
     },
     render: function () {
        var container = $(this.el);
