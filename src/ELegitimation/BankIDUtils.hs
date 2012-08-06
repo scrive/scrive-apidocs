@@ -32,18 +32,18 @@ data MergeResult = MergeMatch
      E-Legitimation provider. Returns Either and error message or the
      correct value.
  -}
-mergeInfo :: (String, String, String)
-                -> (String, String, String)
-                -> Either (String, String, String, String) (Bool, Bool, Bool)
-mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, elegNumber) =
-    let results = [ compareFirstNames contractFirst  elegFirst
-                  , compareLastNames  contractLast   elegLast
-                  , compareNumbers    contractNumber elegNumber]
-        failmsgs = [msg | MergeFail msg <- results]
-        matches  = map (== MergeMatch) results
-    in if not $ null failmsgs
-        then Left  (intercalate "\n" failmsgs, elegFirst, elegLast, elegNumber)
-        else Right (matches !! 0, matches !! 1, matches !! 2)
+mergeInfo :: TemplatesMonad m => (String, String, String)
+                              -> (String, String, String)
+                              -> m (Either (String, String, String, String) (Bool, Bool, Bool))
+mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, elegNumber) = do
+  results <- sequence [ compareFirstNames contractFirst  elegFirst
+                      , compareLastNames  contractLast   elegLast
+                      , compareNumbers    contractNumber elegNumber]
+  let failmsgs = [msg | MergeFail msg <- results]
+      matches  = map (== MergeMatch) results
+  if not $ null failmsgs
+    then return $ Left  (intercalate "\n" failmsgs, elegFirst, elegLast, elegNumber)
+    else return $ Right (matches !! 0, matches !! 1, matches !! 2)
 
 findTransactionByID :: String -> [ELegTransaction] -> Maybe ELegTransaction
 findTransactionByID transactionsid = find ((==) transactionsid . transactiontransactionid)
@@ -73,46 +73,64 @@ fieldvaluebyid fid ((k, v):xs)
     | k == fid  = v
     | otherwise = fieldvaluebyid fid xs
 
-compareFirstNames :: String -> String -> MergeResult
+compareFirstNames :: TemplatesMonad m => String -> String -> m MergeResult
 compareFirstNames fnContract fnEleg
-    | null fnContract = MergeFail "Du har inte fyllt i förnamn, vänligen försök igen."
-    | null fnEleg = MergeKeep
+    | null fnContract = do
+      f <- renderTemplate "bankidNoFirstName" $ return ()
+      return $ MergeFail f
+    | null fnEleg = return MergeKeep
     | otherwise =
         let fnsc = words $ map toLower fnContract
             fnse = words $ map toLower fnEleg
             difs = [levenshtein a b | a <- fnsc, b <- fnse]
         in if any (<= 1) difs
-            then MergeMatch
-            else MergeFail $ "Förnamn matchar inte: '" ++ fnContract ++ "' och '" ++ fnEleg ++ "'."
+            then return MergeMatch
+            else do
+             f <- renderTemplate "bankidFirstNameMismatch" $ do
+               F.value "contract" fnContract
+               F.value "eleg" fnEleg
+             return $ MergeFail f
 
 normalizeNumber :: String -> String
 normalizeNumber = filter isDigit
 
-compareNumbers :: String -> String -> MergeResult
+compareNumbers :: TemplatesMonad m => String -> String -> m MergeResult
 compareNumbers nContract nEleg
-    | null nContract = MergeFail "Du har inte fyllt i personnnummer, vänligen försök igen."
-    | null nEleg     = MergeKeep
+    | null nContract = do
+      f <- renderTemplate "bankidNoNumber" $ return ()
+      return $ MergeFail f
+    | null nEleg     = return MergeKeep
     | otherwise =
         let nsc = normalizeNumber nContract
             nse = normalizeNumber nEleg
             dif = levenshtein nsc nse
         in if dif <= 3
-            then MergeMatch
-            else MergeFail $ "Personnnummer matchar inte: '" ++ nContract ++ "' och '" ++ nEleg ++ "'."
+            then return MergeMatch
+            else do
+             f <- renderTemplate "bankidNumberMismatch" $ do
+               F.value "contract" nContract
+               F.value "eleg" nEleg
+             return $ MergeFail f
 
-compareLastNames :: String -> String -> MergeResult
+compareLastNames :: TemplatesMonad m => String -> String -> m MergeResult
 compareLastNames lnContract lnEleg
-    | null lnContract = MergeFail "Du har inte fyllt i efternamn, vänligen försök igen."
-    | null lnEleg = MergeKeep
-    | levenshtein (map toLower lnContract) (map toLower lnEleg) <= 1 = MergeMatch
-    | otherwise = MergeFail $ "Efternamn matchar inte: '" ++ lnContract ++ "' och '" ++ lnEleg ++"'."
+    | null lnContract = do
+      f <- renderTemplate "bankidNoLastName" $ return ()
+      return $ MergeFail f
+    | null lnEleg = return MergeKeep
+    | levenshtein (map toLower lnContract) (map toLower lnEleg) <= 1 = return MergeMatch
+    | otherwise = do
+      f <- renderTemplate "bankidLastNameMismatch" $ do
+        F.value "contract" lnContract
+        F.value "eleg" lnEleg
+      return $ MergeFail f
 
 --GHC.Unicode.toLower
 -- import GHC.Unicode ( toLower )
 --import qualified Data.ByteString.Lazy.Char8 as B
 
 
-compareSigLinkToElegData :: SignatoryLink -> [(String, String)] -> Either (String, String, String, String) (Bool, Bool, Bool)
+compareSigLinkToElegData :: TemplatesMonad m => SignatoryLink -> [(String, String)] -> m (Either (String, String, String, String) (Bool, Bool, Bool))
 compareSigLinkToElegData sl attrs =
   -- compare information from document (and fields) to that obtained from BankID
   let contractFirst  = getFirstName sl
