@@ -1,6 +1,5 @@
 module ELegitimation.BankIDRequests (
           ImplStatus(..)
-        , LogicaConfig(..)
         , generateChallenge
         , encodeTBS
         , verifySignature
@@ -16,17 +15,10 @@ import SOAP.SOAP
 import Text.XML.HaXml.Posn (Posn)
 import Text.XML.HaXml.XmlContent.Parser
 import Text.XML.HaXml.Types (QName(N))
+import ELegitimation.Config
 import ELegitimation.SignatureProvider
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Base64 as Base64
-
-data LogicaConfig = LogicaConfig { logicaEndpoint  :: String,  -- ^ URL to Logica
-                                   logicaServiceID :: String,  -- ^ ServiceID from Logica
-                                   logicaCertFile  :: String,   -- ^ Path to certificate file
-                                   logicaMBIDisplayName:: String,  -- ^ Display Name for Mobile Bank ID (must match display name registered with Logica)
-                                   logicaMBIEndpoint :: String -- ^ URL for MobileBankID at Logica
-                                 }
-                  deriving (Show, Read, Ord, Eq)
 
 data ImplStatus = ImplStatus { errorGroup            :: Int, 
                                errorGroupDescription :: String, 
