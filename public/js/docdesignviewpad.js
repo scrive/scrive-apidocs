@@ -6,8 +6,6 @@
 
 window.PadDesignViewUtilsModel = Backbone.Model.extend({
  defaults: {
-        //giveForSigningSignatory: undefined, Set
-        //sendForPadSignatory
         giveForSigning : false,
         sendForSigning : false
     },
@@ -34,14 +32,20 @@ window.PadDesignViewUtilsModel = Backbone.Model.extend({
     giveForSigning : function(){
        return this.get("giveForSigning");
     },
-    toogleGiveForSigning : function(){
-       this.set({giveForSigning: !this.giveForSigning(), sendToPad: false });
+    setGiveForSigning : function(){
+       this.set({giveForSigning: true, sendToPad: false });
     },
     sendToPad: function(){
         return this.get("sendToPad");
     },
-    toogleSendToPad : function(){
-       this.set({sendToPad : !this.sendToPad(), giveForSigning : false});
+    setSendToPad : function(){
+       this.set({sendToPad : true, giveForSigning : false});
+    },
+    justSend : function() {
+        return ! this.giveForSigning() && ! this.sendToPad(); 
+    },
+    setJustSend : function() {
+       this.set({sendToPad : false, giveForSigning : false});
     },
     postSendAction : function(link) {
        var padDesignViewUtilsModel = this;
@@ -83,8 +87,6 @@ window.PadDesignViewUtilsView = Backbone.View.extend({
     sigSelector : function(source,callback) {
         var model = this.model;
         var sigs = model.document().signatoriesThatCanSignNow();
-        if (sigs.length <= 1)
-         return $("<strong/>").text(source().smartname());
         var select = $("<select/>");
         _.each(sigs,function(sig) {
             var option = $("<option>").text(sig.smartname()).val(sig.email());
@@ -107,36 +109,45 @@ window.PadDesignViewUtilsView = Backbone.View.extend({
            var model = this.model;
            box.empty();
            box.addClass('padoptions');
-           var giveForSigningRadio = $("<input type='checkbox' name='padsend'/>");
+           var justSendRadio = $("<input type='radio' name='padsend'/>");
+           var justSendRadioLabel =  $("<span class='label'/>").text(localization.pad.justSend);
+
+           var justSend = $("<div class='padoption'/>").append(justSendRadio).append(justSendRadioLabel);
+
+           if (model.justSend())
+               justSendRadio.attr("checked","checked");
+           justSendRadio.change(function() {
+               model.setJustSend();
+            });
+           
+           var giveForSigningRadio = $("<input type='radio' name='padsend'/>");
            var giveForSigningSelector = this.sigSelector(function() {return model.giveForSigningSignatory()}, function(a) {model.setGiveForSigningSignatory(a)});
-           var giveForSigningLabel =  $("<span class='label'/>").append($("<span class='float-left'/>").text(localization.pad.signingOnSameDeviceFor1))
-                                                                .append(giveForSigningSelector)
-                                                                .append($("<span class='float-right'/>").text(localization.pad.signingOnSameDeviceFor2));
+           var giveForSigningLabel =  $("<span class='label'/>").append($("<span class='float-left'/>").text(localization.pad.signingOnSameDeviceFor))
+                                                                .append(giveForSigningSelector);
            var giveForSigning = $("<div class='padoption'/>").append(giveForSigningRadio)
                                                              .append(giveForSigningLabel);
                                                             
            if (model.giveForSigning())
                giveForSigningRadio.attr("checked","checked");
            giveForSigningRadio.change(function() {
-               model.toogleGiveForSigning();
+               model.setGiveForSigning();
             });
 
            
-           var sendToPadRadio = $("<input type='checkbox' name='padsend'/>");
+           var sendToPadRadio = $("<input type='radio' name='padsend'/>");
            var sendToPadSelector = this.sigSelector(function() {return model.sendToPadSignatory()}, function(a) {model.setSendToPadSignatory(a)});
-           var sendToPadLabel =  $("<span class='label'/>").append($("<span class='float-left'/>").text(localization.pad.addToPadQueueFor)).append(sendToPadSelector);
+           var sendToPadLabel =  $("<span class='label'/>").append($("<span class='float-left'/>").text(localization.pad.sendToDifferentDeviceFor)).append(sendToPadSelector);
            var sendToPad = $("<div class='padoption'/>").append(sendToPadRadio)
                                                         .append(sendToPadLabel);
 
            if (model.sendToPad())
                sendToPadRadio.attr("checked","checked");
            sendToPadRadio.change(function() {
-               model.toogleSendToPad();
+               model.setSendToPad();
             });
 
-           if (BrowserInfo.isPadDevice())
+            box.append(justSend);
             box.append(giveForSigning);
-           else
             box.append(sendToPad);
            return this; 
     }

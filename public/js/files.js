@@ -236,7 +236,7 @@ var FilePageView = Backbone.View.extend({
         var file = page.file();
 
         this.renderedPlacements = [];
-        $(".placedfield",container).remove();
+        $(".placedfield",container).detach();
         _.each(page.placements(), function(placement) {
             var placement = placement;
             if (placement.page()==page.number()) {

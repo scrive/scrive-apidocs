@@ -371,13 +371,20 @@ window.DocumentStandardView = Backbone.View.extend({
   },
   createAcceptButtonElems: function() {
     var validateSign = this.validateSign;
-    return $(new DocumentSignButtonView({
-      model: this.model,
-      validate: function() {
-        return validateSign();
-      },
-      el: $("<div />")
-    }).el);
+    var document = this.model;
+    return $( Button.init({
+                            size: "big",
+                            color: "blue",
+                            text: document.process().signbuttontext(),
+                            icon: $("<span class='icon cross'></span>"),
+                            onClick: function() {
+                                if (validateSign())
+                                    new DocumentSignConfirmation({
+                                        model: document
+                                        }).popup();
+                            }        
+                            }).input()
+            );
   },
   validateSign: function() {
     var document = this.model;

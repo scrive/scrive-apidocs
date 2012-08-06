@@ -724,7 +724,6 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
             tell "Q\n"
 
             tell "q\n"
-            tell "1 0 0 1 15 25 cm\n"
 
             let footerBox = boxEnlarge printableMargin 0 0 0 $
                                 (setLightTextColor . setFrameColor . boxDrawFrame . boxEnlarge 16 11 16 11) $
@@ -735,10 +734,11 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
                                           , makeLeftTextBox (PDFFont Helvetica 8) (boxWidth histExample - 90 - 32)
                                                               (show pageNumber ++ "/" ++ show (length groupedBoxesNumbered))
                                           ]
-            tell $ "1 0 0 1 0 " ++ show (boxHeight footerBox + (printableMargin `div` 2)) ++ " cm\n"
+            tell $ "1 0 0 1 15 " ++ show (15 + boxHeight footerBox + printableMargin) ++ " cm\n"
             tell $ boxCommands footerBox
             tell "Q\n"
-            tell rightcornerseal2
+            tell (rightcornerseal (printableWidth - printableMargin - 66)
+                  (15 + printableMargin + ((boxHeight footerBox - 90) `div` 2)))
 
 -- To emulate a near perfect circle of radius r with cubic Bézier
 -- curves, draw four curves such that one of the line segments
@@ -747,8 +747,8 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
 -- the other one is horizontal. The length l of each such segment
 -- equals r multiplied by kappa. kappa is 0.5522847498 in our case we
 -- need: 45 + 25 = 70, 45 - 25 = 20
-rightcornerseal2 :: String
-rightcornerseal2 = "q 1 0 0 1 " ++ show (printableWidth - printableMargin - 66) ++ " 25 cm " ++
+rightcornerseal :: Int -> Int -> String
+rightcornerseal x y = "q 1 0 0 1 " ++ show x ++ " " ++ show y ++ "  cm " ++
                    "1 g 1 G " ++
                    "0 45 m " ++
                    "0  20 20 0  45 0  c " ++

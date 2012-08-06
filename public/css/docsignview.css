@@ -559,6 +559,7 @@ body.signview {
 .signview .authorattachments .item .label {
   float: left;
   margin-left: 10px;
+  width : 290px;
 }
 
 .signview .authorattachments .item .name {

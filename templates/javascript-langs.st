@@ -340,10 +340,12 @@ javascriptLocalisation =
              ,  addToPadQueueNotAdded : "$_padAddToPadQueueNotAdded()$"
              ,  removeFromPadQueue : "$_padRemoveFromPadQueue()$"
              ,  drawSignatureBoxHeader : "$_padDrawSignatureBoxHeader()$"
-             ,  signingOnSameDeviceFor1 :  "$_padSigningOnSameDeviceFor1()$"
-             ,  signingOnSameDeviceFor2 :  "$_padSigningOnSameDeviceFor2()$"
-             ,  addToPadQueueFor :  "$_padAddToPadQueueFor()$"
+             ,  signingOnSameDeviceFor :  "$_padSigningOnSameDeviceFor()$"
+             ,  sendToDifferentDeviceFor :  "$_sendToDifferentDeviceFor()$"
+             ,  justSend : "$_justSend()$"
+             ,  howDoYouWantToSign : "$_howDoYouWantToSign()$"
              ,  cleanImage : "$_padCleanImage()$"
+
         }
          , sampleEmailHeader: "$_SampleEmailHeader()$"
          , sampleEmailSubheader: "$_mailsubheader()$"
@@ -418,7 +420,7 @@ javascriptLocalisation =
           }
        , uploadView : {
                 signStepsBodyUpload : "$_signStepsBodyUploadBoxStep1Info()$"
-             ,  back : "$_GoBack()$"
+             ,  back : "$_uploadViewGoBack()$"
              ,  chooseFile : "$_signStepsBodyUploadBoxStep1UpLoadChooseFile()$"
              ,  chooseTemplate : "$_signStepsBodyUploadBoxStep1ChooseTemplate()$"
              ,  savedTemplate  : "$_signStepsBodyUploadBoxStep1TemplateSaved()$"

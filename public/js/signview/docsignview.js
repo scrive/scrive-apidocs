@@ -270,8 +270,11 @@ var DocumentSignViewView = Backbone.View.extend({
      var view = this;
      this.container.children().detach();
       
-     if (!this.model.isReady())  return this;
-
+     if (!this.model.isReady())
+     {
+         this.container.append("<div class='subcontainer'><BR/><div class='waiting4page'></div></div>");
+         return this;
+     }
      this.container.append(this.model.instructionssection().el)
       
      if (this.model.hasCreateAccountSection())

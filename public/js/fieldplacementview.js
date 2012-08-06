@@ -337,7 +337,7 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
     },
     addTypeSetter : function() {
          var placement = this.model;
-         if (!this.hasTypeSetter())
+         if (!this.hasTypeSetter() && $.contains(document.body, this.el))
                 {
                   placement.typeSetter = new CheckboxTypeSetterView({model : placement});
                   $('body').append(placement.typeSetter.el);

@@ -97,15 +97,14 @@
         extras: function() {
           var model = this.model;
           return $("<div>").addClass("float-left basicinfo")
-            .append($("<p>").text(localization.infoSelectTemplate))
-            .append($("<br>"))
-            .append($("<p>").append($("<a href='#' />").addClass("jsback1 backicon float-left boo").html(" &nbsp;"))
-                    .click(function() {
+                    .append($("<p>").text(localization.infoSelectTemplate))
+                    .append($("<p style='padding-top: 20px;'>").append($("<a class='jsback1 backicon float-left boo' href='#'/>").click(function() {
                       if(model.wizard())
                         model.wizard().previousStep();
                       return false;
-                    })
-                    .append(" &nbsp;" + localization.goBack));
+                    })).append($("<span class='upload-back-text float-left'/>").text(localization.uploadView.back)));
+               
+
         },
         render: function() {
             var view = this;
