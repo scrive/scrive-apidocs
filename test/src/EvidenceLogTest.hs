@@ -38,6 +38,6 @@ conversionEq = do
 evidenceLogEventsHaveTexts:: TestEnv ()
 evidenceLogEventsHaveTexts = forM_ (range (0, 100)) $ \a -> do
     let t = safeConvert (a :: Int) :: Either ConvertError EvidenceEventType
-    when (isRight t) $ do
+    when (isRight t && (not $ htmlSkipedEvidenceType $ fromRight t)) $ do
       text <- renderTemplate_ $ eventTextTemplateName (fromRight t)
       assertBool ("No text provided for event " ++ (show $ fromRight t)) (not $ "No template" `isInfixOf` text)

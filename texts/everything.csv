@@ -1556,7 +1556,7 @@ the document <strong>$documenttitle$</strong>. The signing
 "_offercancelflashmessage","Dokumentet återkallat.",,"Document withdrawn."
 "_listcanceledflashmessagesuccess","Valda dokument återkallat.",,"Selected documents withdrawn."
 "_listcancelbuttontext","Återkalla",,"Cancel"
-"_listcancelbody","Are you sure you want to cancel selected documents?",,"Are you sure you want to cancel selected documents?"
+"_listcancelbody","Är du säker på att du vill avbryta de valda dokumenten?",,"Are you sure you want to cancel selected documents?"
 "_offercancelmodaltext","Är du säker att du vill återkalla inbjudan att signera?
 <BR/><BR/>Om motparten klickar på signeringslänken efter att du återkallat kommer de att få information om att dokumentet inte längre går att signera. Inget meddelande kommer att skickas till din motpart.",,"Are you sure you want to withdraw the invitation to sign?
 <BR/><BR/>

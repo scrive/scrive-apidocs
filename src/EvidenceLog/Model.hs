@@ -7,6 +7,7 @@ module EvidenceLog.Model (
   , DocumentEvidenceEvent(..)
   , copyEvidenceLogToNewDocument
   , htmlDocFromEvidenceLog
+  , htmlSkipedEvidenceType
   ) where
 
 import DB
@@ -70,7 +71,7 @@ htmlDocFromEvidenceLog :: TemplatesMonad m => String -> [DocumentEvidenceEvent] 
 htmlDocFromEvidenceLog title elog = do
   renderTemplate "htmlevidencelog" $ do
     F.value "documenttitle" title
-    F.objects "entries" $ for elog $ \entry -> do
+    F.objects "entries" $ for (filter (not . htmlSkipedEvidenceType . evType) elog) $ \entry -> do
       F.value "time" $ formatMinutesTimeUTC (evTime entry) ++ " UTC"
       F.value "ip"   $ show <$> evIP4 entry
       F.value "text" $ evText entry
@@ -331,3 +332,8 @@ instance Convertible EvidenceEventType SqlValue where
 
 instance Convertible SqlValue EvidenceEventType where
   safeConvert s = safeConvert (fromSql s :: Int)
+
+
+htmlSkipedEvidenceType :: EvidenceEventType -> Bool
+htmlSkipedEvidenceType OldDocumentHistory = True
+htmlSkipedEvidenceType _ = False
