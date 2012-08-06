@@ -77,7 +77,7 @@ window.SelectOptionView = Backbone.View.extend({
         var model = this.model;
         var a = $("<span/>").text(this.model.name());
         $(this.el).append(a);
-        $(this.el).click(function() {model.selected(); return false;})
+        $(this.el).click(function() {model.selected(); return false;});
         return this;
     }
     
@@ -91,7 +91,7 @@ var SelectView = Backbone.View.extend({
         this.model.view = this;
         var view = this;
         $(this.el).mouseout(function() {
-                 setTimeout(function() {view.closeIfNeeded();}, 1000)
+                 setTimeout(function() {view.closeIfNeeded();}, 1000);
               });
         $(this.el).mouseenter(function() {view.enterdate = new Date().getTime();});
         this.render();
