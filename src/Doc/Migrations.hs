@@ -14,6 +14,9 @@ import Doc.DocStateData
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
+import EvidenceLog.Model
+import Version
+import MinutesTime
 
 $(jsonableDeriveConvertible [t| [SignatoryField] |])
 
@@ -407,5 +410,9 @@ removeOldDocumentLog =
   Migration
   { mgrTable = tableDocuments
   , mgrFrom = 7
-  , mgrDo = kRunRaw "ALTER TABLE documents DROP COLUMN log" 
+  , mgrDo = do
+      now <- getMinutesTime
+      _ <- kRun $ SQL ("INSERT INTO evidence_log(document_id,time,text,event_type,version_id)"
+                              ++ " SELECT id, ?, log, ? , ? FROM documents") [toSql now ,  toSql OldDocumentHistory, toSql versionID]
+      kRunRaw "ALTER TABLE documents DROP COLUMN log"
   }
