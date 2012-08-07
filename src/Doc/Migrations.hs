@@ -398,7 +398,7 @@ moveAttachmentsFromDocumentsToAttachments =
   , mgrDo = do
       inserted <- kRun $ SQL ("INSERT INTO attachments(title,file_id,deleted,shared,ctime,mtime, user_id)"
                               ++ " SELECT title, file_id, signatory_links.deleted, sharing=2, ctime, mtime, user_id"
-                              ++ " FROM documents JOIN signatory_links ON document_id = documents.id AND (roles&2)<>0"
+                              ++ " FROM documents JOIN signatory_links ON document_id = documents.id AND (roles&2)<>0 AND (documents.file_id IS NOT NULL)"
                               ++ " WHERE type = 3") []
       deleted <- kRun $ SQL ("DELETE FROM documents WHERE type = 3") []
       when (deleted /= inserted) $
