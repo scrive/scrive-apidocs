@@ -212,8 +212,8 @@ javascriptLocalisation =
                 showCancelled: "$_tablestatusesCancelled()$",
                 showSent: "$_tablestatusesSent()$",
                 showDelivered: "$_tablestatusesDelivered()$",
-                showRead: "$_tablestatusesViewedOnline()$",
-                showOpened: "$_tablestatusesEmailOpened()$",
+                showRead: "$_tablestatusesEmailOpened()$",
+                showOpened: "$_tablestatusesViewedOnline()$",
                 showSigned: "$_tablestatusesSigned()$"
             }
            , searchTemplate : "$_SearchTemplate()$"
