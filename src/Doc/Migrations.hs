@@ -402,7 +402,7 @@ moveAttachmentsFromDocumentsToAttachments =
                               ++ " WHERE type = 3") []
       deleted <- kRun $ SQL ("DELETE FROM documents WHERE type = 3") []
       when (deleted /= inserted) $
-           error $ "migration from documents to attachments lost some files: " ++ show inserted ++ "/" ++ show deleted
+         Log.debug  $ "Migration from documents to attachments done. Migrated: " ++ show inserted ++ ". Lost attachments due to missing files: " ++ show (deleted - inserted)
   }
 
 removeOldDocumentLog :: MonadDB m => Migration m
