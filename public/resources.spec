@@ -62,6 +62,7 @@ set systemPage
  css css/docsignview.css
  css css/main.css
  css css/createfromtemplate.css
+ css css/dochistory.css
  less less/selects.less
  less less/document-pages.less
  less less/payments.less
@@ -94,6 +95,7 @@ set systemPage
  js   js/infotextinputs.js
  js   js/buttons.js
  js   js/uploadbuttons.js
+ js   js/uploadview.js
  js   js/tooltips.js
  js   js/calendar.js
  js   js/submits.js
@@ -119,6 +121,7 @@ set systemPage
  js   js/attachmentview.js
  js   js/tasks.js
  js   js/docsignviewframes.js
+ js   js/doctools/dochistory.js
  js   js/signview/docsignviewinstructions.js
  js   js/signview/docsignviewsignatories.js
  js   js/signview/docsignviewcreateaccount.js

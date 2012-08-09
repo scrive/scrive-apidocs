@@ -50,6 +50,7 @@ import Crypto.RNG
 import DB
 import Control.Applicative
 import EvidenceLog.Model
+import EvidenceLog.View
 import Util.Actor
 import Control.Concurrent
 import Control.Monad.Trans.Maybe

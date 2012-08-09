@@ -12,6 +12,7 @@ import TestingUtil
 import TestKontra
 import Templates.Templates
 import Data.List
+import EvidenceLog.View
 
 evidenceLogTests :: TestEnvSt -> Test
 evidenceLogTests env = testGroup "Evidence Log" [

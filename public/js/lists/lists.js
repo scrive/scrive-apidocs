@@ -262,15 +262,22 @@
             $(this.el).css("opacity",1);
         },
         renderEmpty: function() {
-            this.main = $("<div class='tab-container'/>");
+            this.main = $("<div/>");
             this.pretableboxleft = $("<div class='col float-left'/>");
             this.pretableboxright = $("<div class='col float-right'/>");
-            this.pretablebox = $("<div class='tab-content'/>");
+            this.pretablebox = $("<div/>");
             this.pretableboxleft.append(this.emptyAlternative);
             this.main.append(this.pretablebox);
             this.pretablebox.append(this.pretableboxleft).append(this.pretableboxright);
             $(this.el).append(this.main);
         },
+        hasFirstTopBox : function() {
+            return this.headerExtras != undefined || this.schema.allFiltering().length > 0 || !this.schema.textfiltering().disabled();
+        },
+        hasSecoundTopBox : function() {
+            return this.schema.options().length > 0 || this.schema.actions().length > 0;
+        },
+        
         prerender: function() {
             var view = this;
             this.main = $("<div class='tab-container'/>");
@@ -280,37 +287,50 @@
             this.tableoptionbox = $("<div class='option-top-box' />");
             this.pretableboxsubbox = $("<div class='subbox empty'/>");
             this.tablebox = $("<div class='tab-table'/>");
+
             this.tableboxfooter = $("<div/>");
             this.tablebox.append(this.tableboxfooter);
-            this.pretablebox.append(this.pretableboxleft).append(this.pretableboxright).append("<div class='clearfix'/>");
-            this.main.append(this.tableoptionbox.append(this.pretablebox).append(this.pretableboxsubbox)).append(this.tablebox);
+            this.pretablebox = $("<div/>");
 
-            if (this.headerExtras != undefined) {
-                if (typeof(this.headerExtras) == "function") {
-                    this.pretableboxleft.append(this.headerExtras());
-                } else {
-                    this.pretableboxleft.append(this.headerExtras);
+            if (this.hasFirstTopBox() || this.hasSecoundTopBox()) {
+                this.tableoptionbox = $("<div class='option-top-box' />");
+                this.main.append(this.tableoptionbox);
+                // Top box - for filters
+                if (this.hasFirstTopBox()) {
+                    this.pretablebox = $("<div/>");
+                    this.pretableboxleft = $("<div class='col float-left'/>");
+                    this.pretableboxright = $("<div class='col float-right'/>");
+                    this.pretablebox.append(this.pretableboxleft).append(this.pretableboxright).append("<div class='clearfix'/>");
+                    this.tableoptionbox.append(this.pretablebox);
+                    if (this.headerExtras != undefined) {
+                        if (typeof(this.headerExtras) == "function") 
+                            this.pretableboxleft.append(this.headerExtras());
+                        else
+                            this.pretableboxleft.append(this.headerExtras);
+                    }
+                    _.each(this.schema.allFiltering(),function(f) {
+                        var filter = new FilteringView({model: f, el: $("<div class='float-left'/>")});
+                        view.pretableboxleft.append(filter.el);
+                    })
+                    if (!this.schema.textfiltering().disabled()) {
+                        var filter = new FilteringView({model: this.schema.textfiltering(), el: $("<div style='searchBox height:30px'/>")});
+                        this.pretableboxright.append(filter.el);
+                    }
+                }
+                // Secound top box - for actions
+                if (this.hasSecoundTopBox())
+                {
+                    this.pretableboxsubbox = $("<div class='subbox'/>");
+                    this.tableoptionbox.append(this.pretableboxsubbox)
+                    if (this.schema.actionsAvaible()) {
+                        this.prepareActions();
+                    }
+                    if (this.schema.optionsAvaible()) {
+                        this.prepareOptions();
+                    }
                 }
             }
-            _.each(this.schema.allFiltering(),function(f) {
-                console.log("Generating new view for filtering");
-                var filter = new FilteringView({model: f, el: $("<div class='float-left'/>")});
-                view.pretableboxleft.append(filter.el);
-            })
-            
-            if (!this.schema.textfiltering().disabled()) {
-                console.log("Generating new view for text-filtering");
-                var filter = new FilteringView({model: this.schema.textfiltering(), el: $("<div style='searchBox height:30px'/>")});
-                this.pretableboxright.append(filter.el);
-            }
-
-            if (this.schema.actionsAvaible()) {
-                this.prepareActions();
-            }
-            if (this.schema.optionsAvaible()) {
-                this.prepareOptions();
-            }
-            
+            this.main.append(this.tablebox);
             if (this.bottomExtras != undefined) {
                 this.tableboxfooter.append(this.bottomExtras);
             }
@@ -423,7 +443,7 @@
             var body = this.tbody;
             var odd = true;
             var schema = this.schema
-            _.each(this.model.first(this.schema.paging().pageSize()),function(e) {
+            _.each(this.model.first(this.schema.paging().showLimit()),function(e) {
                 if (e.view == undefined)
                   new ListObjectView({
                         model: e,
@@ -481,5 +501,4 @@
             schema.bind('change', function() {self.recall();});
             if (args.loadOnInit != false) self.recall();
         }
-        
 })(window);

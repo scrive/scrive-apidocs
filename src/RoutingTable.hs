@@ -22,6 +22,7 @@ import qualified User.UserControl as UserControl
 import qualified ScriveByMail.Control as MailAPI
 import qualified Payments.Control as Payments
 import qualified Attachment.Control as AttachmentControl
+import qualified EvidenceLog.Control as EvidenceLog
 import Doc.API
 import OAuth.Control
 
@@ -101,6 +102,7 @@ staticRoutes = choice
      , dir "d" $ dir "cancel"       $ hPost $ toK0 $ ArchiveControl.handleCancel
      , dir "d" $ dir "zip"      $ hGet  $ toK0 $ ArchiveControl.handleZip
      , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
+     , dir "d" $ dir "evidencelog" $ hGet  $ toK1 $ EvidenceLog.jsonDocumentEvidenceLog
      , dir "docs"                  $ hGet  $ toK0 $ ArchiveControl.jsonDocumentsList
      , dir "setattachments"        $ hPost $ toK1 $ DocControl.handleSetAttachments -- Since setting attachments can have file upload, we need extra handler for it.
      , dir "parsecsv"              $ hPost $ toK0 $ DocControl.handleParseCSV

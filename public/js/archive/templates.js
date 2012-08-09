@@ -82,9 +82,22 @@ window.TemplatesListDefinition = function(archive) { return {
                                     }
                                 }
                             }).send();
-                          }  
-                })
+
+                        var t = jQuery('<tr/>') ;
+                        t.append(doctypebutton(localization.process.contract.name, "Contract"));
+                        t.append(doctypebutton(localization.process.offer.name, "Offer"));
+                        t.append(doctypebutton(localization.process.order.name, "Order"));
+                        var table = jQuery('<table />').append(jQuery('<tbody/>').append(t));
+                        popup = Confirmation.popup({
+                            onAccept: function() { },
+                            title: localization.archive.templates.createnewtype,
+                            content: table
+                        });
+                        popup.hideAccept();
+                        return false;
+                    }
             }),
+        }),
         new ListAction({
                 name : localization.archive.templates.share.action,
                 emptyMessage :  localization.archive.templates.share.emptyMessage,
@@ -146,7 +159,7 @@ window.TemplatesListDefinition = function(archive) { return {
                             return true;
                           }
             })           
-        ]
+       ]
     })
 };};
 

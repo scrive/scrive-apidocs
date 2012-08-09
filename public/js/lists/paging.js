@@ -14,7 +14,8 @@
             pageCurrent: 0,
             pageSize: 0,
             // Maximal number of pages that are sown
-            maxNextPages : 5
+            maxNextPages : 5,
+            showLimit : undefined
         },
         disabled: function() {
             return this.get("disabled") != undefined && this.get("disabled") == true;
@@ -43,6 +44,17 @@
         },
         updateWithServerResponse: function(resp) {
             this.set(resp);
+        },
+        showLimit : function() {
+            if (this.get("showLimit") != undefined && this.get("pageSize") != undefined)
+                return Math.min(this.get("showLimit"),this.get("pageSize"))
+            else if (this.get("showLimit") != undefined)
+                return this.get("showLimit");
+            else
+                return this.get("pageSize")
+        },
+        setShowLimit : function(i) {
+            this.set({ "showLimit": i });
         }
     });
 

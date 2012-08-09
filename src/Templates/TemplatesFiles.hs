@@ -69,7 +69,9 @@ templateFiles = ["modals.st",
                  "javascript-langs.st",
                  "evidencelog/htmllog.st",
                  "evidencelog/texts.st",
-                 "payments.st"]
+                 "payments.st",
+                 "evidencelog/simplified.st"
+                ]
 
 
 getTemplates :: String -> IO [(String, String)]

@@ -530,6 +530,7 @@ window.DocumentStandardView = Backbone.View.extend({
       new Tab({
         name: localization.document,
         elems: [this.createSignatoriesTabElems(),
+                $(new DocumentHistory({document : document}).view().el),
                 $(fileview),
                 bottomparts
                ]
