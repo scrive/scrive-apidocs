@@ -97,6 +97,7 @@
             SessionStorage.set(namespace, "expanded" + id, "" + !val);
             this.set({ "expanded": !val }, {silent : true});
             this.trigger("change");
+            return false;
         }
     });
 
