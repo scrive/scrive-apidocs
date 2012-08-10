@@ -151,7 +151,6 @@
         model: ListObject,
         events: {
             'click .selectme': 'selectCheck',
-            'click .expand': 'toggleExpand',
             'click .row': 'selectRow'
         },
         initialize: function(args) {
@@ -179,6 +178,7 @@
                     elem = cell.rendering(value, undefined, this.model);
                 } else if (cell.isExpandable() && value != undefined) {
                     elem = $("<a href='#' class='expand' />").text(value);
+                    elem.click(function() { this.model.toggleExpand(); return false;});
                 } else if (cell.isBool()) {
                     if (value) {
                         elem = $("<center />").append( $("<a>&#10003;</a>").attr("href", this.model.link()));
@@ -251,10 +251,6 @@
                 this.model.collection.selectNone();
                 this.model.select();
             }
-        },
-        toggleExpand: function() {
-            this.model.toggleExpand();
-            return false;
         }
     });
 
