@@ -64,6 +64,7 @@ import System.Time
 data TestEnvSt = TestEnvSt {
     teNexus           :: Nexus
   , teRNGState        :: CryptoRNGState
+  , teActiveTests     :: MVar (Bool, Int)
   , teGlobalTemplates :: KontrakcjaGlobalTemplates
   }
 
@@ -73,7 +74,12 @@ newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
   deriving (Applicative, Functor, Monad, MonadBase IO, MonadIO, MonadReader TestEnvSt)
 
 runTestEnv :: TestEnvSt -> TestEnv () -> IO ()
-runTestEnv st = ununTestEnv st . withTestDB
+runTestEnv st m = do
+  can_be_run <- fst <$> readMVar (teActiveTests st)
+  when can_be_run $ do
+    modifyMVar_ (teActiveTests st) $ return . second succ
+    ununTestEnv st $ withTestDB m
+    modifyMVar_ (teActiveTests st) $ return . second pred
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> IO a
 ununTestEnv st m = runReaderT (unTestEnv m) st
