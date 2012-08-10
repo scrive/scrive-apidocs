@@ -109,7 +109,7 @@ window.TemplatesListDefinition = function(archive) { return {
                         method : "POST",
                         doctype: type,
                         url : "/t",
-                        onSend: function() {LoadingDialog.open();},
+                        onSend: function() {LoadingDialog.open();}
                     })
                 }).input()));
             }
