@@ -15,7 +15,15 @@ window.TemplatesListDefinition = function(archive) { return {
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
         new Cell({name: localization.archive.templates.columns.time, width:"140px", field:"time"}),
-        new Cell({name: localization.archive.templates.columns.type, width:"120px", field:"process"}),
+        new Cell({name: localization.archive.templates.columns.type, width:"120px", field:"process",
+              rendering: function(value, _idx, _model) {
+                      var txt = "";
+                      if( localization.process[value] !== undefined ) {
+                          txt = localization.process[value].shortName;
+                      }
+                      return jQuery("<span />").text(txt);
+                    }
+        }),
         new Cell({name: localization.archive.templates.columns.template, width:"400px", field:"title",  special: "link"}),
         new Cell({name: "", width:"100px", field:"shared", special: "rendered",
                   rendering: function(shared) {
