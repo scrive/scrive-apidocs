@@ -162,7 +162,8 @@
             this.render();
         },
         render: function() {
-            $(this.el).empty();
+            $(this.el).children().detach();
+            var model = this.model;
             var mainrow = $(this.el).first();
             for (var i = 0; i < this.schema.size(); i++) {
                 var td = $("<td class='row'></td>");
@@ -177,8 +178,8 @@
                 } else if (cell.isRendered() && value != undefined) {
                     elem = cell.rendering(value, undefined, this.model);
                 } else if (cell.isExpandable() && value != undefined) {
-                    elem = $("<a href='#' class='expand' />").text(value);
-                    elem.click(function() { this.model.toggleExpand(); return false;});
+                    elem = $("<a class='expand' />").text(value);
+                    elem.click(function() { model.toggleExpand(); return false;});
                 } else if (cell.isBool()) {
                     if (value) {
                         elem = $("<center />").append( $("<a>&#10003;</a>").attr("href", this.model.link()));
@@ -387,7 +388,7 @@
         },
         render: function() {           
             if (this.table != undefined)
-                this.table.remove();
+                this.table.detach();
 
             if (this.model.length > 0 || this.emptyAlternative == undefined) {
                 this.table = $("<table />");
