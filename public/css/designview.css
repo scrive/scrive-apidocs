@@ -568,7 +568,7 @@
 
 .padoptions .padoption{
     height: 30px;
-    width: 400px;
+    width: 500px;
 
 }
 .padoptions .label{
@@ -596,6 +596,7 @@
     margin-bottom: 0px;
     margin-left: 5px;
     padding: 0px;
+    max-width: 200px;
 }
 .ui-resizable {
     position: relative;

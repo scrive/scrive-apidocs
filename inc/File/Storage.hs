@@ -15,6 +15,7 @@ import qualified Data.ByteString as BS
 import qualified MemCache as MemCache
 import qualified Log
 
+
 {- Gets file content from somewere (Amazon for now), putting it to cache and returning as BS -}
 getFileContents :: (KontraMonad m, MonadIO m) => File -> m BS.ByteString
 getFileContents file = do
@@ -38,3 +39,4 @@ getFileIDContents fid = do
   case mfile of
     Just file -> getFileContents file
     Nothing -> return BS.empty
+
