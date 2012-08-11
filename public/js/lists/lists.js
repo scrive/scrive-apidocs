@@ -179,7 +179,7 @@
                 } else if (cell.isRendered() && value != undefined) {
                     elem = cell.rendering(value, undefined, this.model);
                 } else if (cell.isExpandable() && value != undefined) {
-                    elem = $("<a href='#'/>").text(value).click(function() {model.toggleExpand(); return false;});
+                    elem = $("<a class='expand' />").text(value);
                 } else if (cell.isBool()) {
                     if (value) {
                         elem = $("<center />").append( $("<a>&#10003;</a>").attr("href", this.model.link()));

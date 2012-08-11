@@ -52,7 +52,6 @@ instance GuardRight FileError where
                                      Log.error $ show fe
                                      internalError
 
-
 scaleForPreview :: BS.ByteString -> IO BS.ByteString
 scaleForPreview image = withSystemTempDirectory "preview" $ \tmppath -> do
     let fpath = tmppath ++ "/source.jpg"

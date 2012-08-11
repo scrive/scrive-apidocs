@@ -391,7 +391,7 @@
 "_close","Stäng",,"Close"
 "_company","Företag",,"Company"
 "_companyposition","Befattning",,"Position"
-"_invitationSentEntry","Scrive skickar en inbjudan att signera till $partyList$",,"Scrive sends an invitation to sign to $partyList$"
+"_invitationSentEntry","Scrive skickar en inbjudan att signera till $partyList$.",,"Scrive sends an invitation to sign to $partyList$."
 "_lastHistEntry","Dokumentet förseglas och signeras digitalt av Scrive.",,"The document is sealed and digitally signed by Scrive."
 "_seenHistEntry","$personname$ granskar dokumentet online.",,"$personname$ reviews the document online."
 "_signHistEntry","$personname$ signerar dokumentet online med $signMethod()$ som verifieringsmetod.",,"$personname$ signs the document online with $signMethod()$ as verification method."

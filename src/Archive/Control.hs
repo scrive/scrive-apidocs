@@ -179,7 +179,7 @@ jsonDocumentsList = withUserGet $ do
   params <- getListParamsNew
   let (domain,filters1) = case doctype of
                           "Document"          -> ([DocumentsForSignatoryDeleteValue uid False] ++ (maybeCompanyDomain False),[])
-                          "Template"          -> ([TemplatesOfAuthorDeleteValue uid False],[])
+                          "Template"          -> ([TemplatesOfAuthorDeleteValue uid False]++ (maybeCompanyDomain False),[])
                           "Rubbish"           -> ([DocumentsForSignatoryDeleteValue uid True] ++ (maybeCompanyDomain True), [])
                           "Pad"               -> ([DocumentsOfAuthorDeleteValue uid True]  ++ (maybeCompanyDomain False) ,[DocumentFilterByIdentification PadIdentification, DocumentFilterStatuses [Pending,Closed]])
                           _ -> ([],[])

@@ -51,13 +51,13 @@ mintercalate f = go
 -- | Given an action f and a number of seconds t, cron will execute
 -- f every t seconds with the first execution t seconds after cron is called.
 -- cron does not spawn a new thread.
-cron :: Int -> IO () -> IO a
-cron seconds action = forever $ do
-  let freq = seconds * 1000000
-  when (freq < 0) $
-    error $ "cron: seconds value (" ++ show seconds ++ ") is invalid"
-  threadDelay freq
-  action
+cron :: Integer -> IO () -> IO a
+cron seconds action = do
+  let (times::Int, rest::Int) = fromInteger *** fromInteger $ (seconds * 1000000) `divMod` (fromIntegral(maxBound::Int)::Integer)
+  forever $ do
+    replicateM_ times $ threadDelay maxBound
+    threadDelay rest
+    action
 
 -- | Wait for a signal (sigINT or sigTERM).
 waitForTermination :: IO ()

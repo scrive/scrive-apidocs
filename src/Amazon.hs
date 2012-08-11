@@ -78,18 +78,23 @@ calculateChecksumAndEncryptOldFiles = do
       let fid = fileid file
       Log.debug $ "Generating checksum, encrypting and saving in the database file with id = " ++ show fid ++ "..."
       conf <- sdAppConf <$> ask
-      content <- Binary <$> getFileContents (mkAWSAction conf) file
-      op1 <- dbUpdate $ SetChecksum fid $ SHA1.hash `binApp` content
-      op2 <- dbUpdate $ SetContentToMemoryAndEncryptIt fid content
-      case (unBinary content /= BS.empty, op1, op2) of
-        (True, True, True) -> do
-          Log.debug $ "Operation succeeded for file " ++ show fid ++ "."
-          dbCommit
-          liftIO $ threadDelay 500000 -- 0.5 sec
-          calculateChecksumAndEncryptOldFiles
-        res -> do
-          Log.debug $ "Operation failed for file " ++ show fid ++ " - (content not empty, op1, op2) = " ++ show res ++ ", aborting."
+      mcontent <- fmap Binary <$> getFileContents (mkAWSAction conf) file
+      case mcontent of
+        Nothing -> do
+          Log.debug $ "Couldn't get content for file " ++ show fid ++ ", aborting."
           dbRollback
+        Just content -> do
+          op1 <- dbUpdate $ SetChecksum fid $ SHA1.hash `binApp` content
+          op2 <- dbUpdate $ SetContentToMemoryAndEncryptIt fid content
+          case (op1, op2) of
+            (True, True) -> do
+              Log.debug $ "Operation succeeded for file " ++ show fid ++ "."
+              dbCommit
+              liftIO $ threadDelay 500000 -- 0.5 sec
+              calculateChecksumAndEncryptOldFiles
+            res -> do
+              Log.debug $ "Operation failed for file " ++ show fid ++ " - (op1, op2) = " ++ show res ++ ", aborting."
+              dbRollback
 
 -- | Convert a file to Amazon URL. We use the following format:
 --
@@ -130,27 +135,32 @@ exportFile _ _ = do
   Log.debug "No uploading to Amazon as bucket is ''"
   return False
 
-getFileContents :: MonadIO m => S3Action -> File -> m BS.ByteString
+getFileContents :: MonadIO m => S3Action -> File -> m (Maybe BS.ByteString)
 getFileContents s3action File{..} = do
-  content <- liftIO $ getContent filestorage
-  if isJust filechecksum && Just (SHA1.hash content) /= filechecksum
-     then do
-       Log.debug $ "CRITICAL: SHA1 checksum of file with id = " ++ show fileid ++ " doesn't match the one in the database"
-       return BS.empty
-     else return content
+  mcontent <- liftIO $ getContent filestorage
+  case mcontent of
+    Nothing -> do
+      Log.debug $ "No content for file " ++ show fileid
+      return Nothing
+    Just content -> do
+      if isJust filechecksum && Just (SHA1.hash content) /= filechecksum
+        then do
+          Log.debug $ "CRITICAL: SHA1 checksum of file with id = " ++ show fileid ++ " doesn't match the one in the database"
+          return Nothing
+        else return $ Just content
   where
     getContent (FileStorageDisk filepath) = do
-      BS.readFile filepath `catch` (\(e :: SomeException) -> do
+      (Just <$> BS.readFile filepath) `catch` (\(e :: SomeException) -> do
         Log.debug $ "Reading file " ++ filepath ++ " failed with: " ++ show e
-        return BS.empty)
-    getContent (FileStorageMemory content aes) = return $ aesDecrypt aes content
+        return Nothing)
+    getContent (FileStorageMemory content aes) = return . Just $ aesDecrypt aes content
     getContent (FileStorageAWS bucket url aes) = do
       result <- AWS.runAction $ s3action {
           AWS.s3object = url
         , AWS.s3bucket = bucket
       }
       case result of
-        Right rsp -> return . maybe id aesDecrypt aes . concatChunks $ HTTP.rspBody rsp
+        Right rsp -> return . Just . maybe id aesDecrypt aes . concatChunks $ HTTP.rspBody rsp
         Left err -> do
           Log.error $ "AWS.runAction failed with: " ++ show err
-          return BS.empty
+          return Nothing

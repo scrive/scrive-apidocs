@@ -28,6 +28,7 @@ window.TemplatesListDefinition = function(archive) { return {
                   rendering: function(shared) {
                          return $("<div/>").addClass((shared == "True") ? "sharedIcon" : "notSharedIcon");
                   }}),
+
         new Cell({name: localization.archive.templates.columns.time, width:"140px", field:"time"}),
         new Cell({name: localization.archive.templates.columns.verificationMethod, width:"100px", field:"verification",  special: "rendered",
                   rendering: function(verification) {
@@ -41,7 +42,15 @@ window.TemplatesListDefinition = function(archive) { return {
                          return res;
                   }}),
         new Cell({name: localization.archive.templates.columns.template, width:"400px", field:"title",  special: "link"}),
-        new Cell({name: localization.archive.templates.columns.type, width:"120px", field:"process"})
+        new Cell({name: localization.archive.templates.columns.type, width:"120px", field:"process",
+              rendering: function(value, _idx, _model) {
+                      var txt = "";
+                      if( localization.process[value] !== undefined ) {
+                          txt = localization.process[value].shortName;
+                      }
+                      return jQuery("<span />").text(txt);
+                    }
+        })
         ],
     actions : [
        new ListAction({
@@ -63,7 +72,7 @@ window.TemplatesListDefinition = function(archive) { return {
                                     method : "POST",
                                     doctype: type,
                                     url : "/t",
-                                    onSend: function() {LoadingDialog.open();},
+                                    onSend: function() {LoadingDialog.open();}
                                 })
                             }).input()));
                         }
@@ -141,7 +150,7 @@ window.TemplatesListDefinition = function(archive) { return {
                           }
             })           
         ]
-    }),    
+    })
 };};
 
 

@@ -9,27 +9,32 @@
 
 window.SessionStorage = {
     set : function(namespace, field, value ){
-        if (window.sessionStorage != undefined)
-            window.sessionStorage.setItem(namespace + " " + field, value);
+        try {
+            if (window.sessionStorage != undefined)
+                window.sessionStorage.setItem(namespace + " " + field, value);
+        } catch (e) {}    
         
     },
     get : function(namespace,field) {
-        if (window.sessionStorage != undefined)
+        try {
+            if (window.sessionStorage != undefined)
             return window.sessionStorage.getItem(namespace + " " + field);
-        
+        } catch (e) {}            
     }
 };
 
 window.LocalStorage = {
     set : function(namespace, field, value ){
-        if (window.localStorage != undefined)
-            window.localStorage.setItem(namespace + " " + field, value);
-
+        try {
+            if (window.localStorage != undefined)
+                window.localStorage.setItem(namespace + " " + field, value);
+        } catch (e) {}    
     },
     get : function(namespace,field) {
-        if (window.localStorage != undefined)
-            return window.localStorage.getItem(namespace + " " + field);
-
+        try {
+            if (window.localStorage != undefined)
+                return window.localStorage.getItem(namespace + " " + field);
+        } catch (e) {}
     }
 };
 
