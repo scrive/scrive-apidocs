@@ -48,7 +48,7 @@ checkSignDocument did slid mh = checkDocument did [
     isPending
   , hasSignatory slid
   , hasNotSigned slid
-  , hasSeenDoc slid
+  --, hasSeenDoc slid
   , hasMagicHash slid mh
   ]
 
@@ -99,8 +99,9 @@ hasSignatory slid = (SQL "(SELECT COUNT(*) FROM signatory_links sl WHERE sl.id =
 hasNotSigned :: SignatoryLinkID -> (SQL, String)
 hasNotSigned slid = (SQL "(SELECT COUNT(*) FROM signatory_links sl WHERE sl.id = ? AND document_id = d.id AND sign_time IS NULL) = 1" [toSql slid], "Signatory #" ++ show slid ++ " has already signed")
 
-hasSeenDoc :: SignatoryLinkID -> (SQL, String)
-hasSeenDoc slid = (SQL "(SELECT COUNT(*) FROM signatory_links sl WHERE sl.id = ? AND document_id = d.id AND seen_time IS NOT NULL) = 1" [toSql slid], "Signatory #" ++ show slid ++ " didn't see the document")
+-- delete Oct 1, 2012 -Eric
+--hasSeenDoc :: SignatoryLinkID -> (SQL, String)
+--hasSeenDoc slid = (SQL "(SELECT COUNT(*) FROM signatory_links sl WHERE sl.id = ? AND document_id = d.id AND seen_time IS NOT NULL) = 1" [toSql slid], "Signatory #" ++ show slid ++ " didn't see the document")
 
 hasMagicHash :: SignatoryLinkID -> MagicHash -> (SQL, String)
 hasMagicHash slid mh = (SQL "SELECT token = ? FROM signatory_links sl WHERE sl.id = ? AND document_id = d.id" [toSql mh, toSql slid], "Magic hash for signatory #" ++ show slid ++ " doesn't match")

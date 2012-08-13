@@ -139,9 +139,10 @@ authorSignDocument did msigninfo = onlyAuthor did $ do
       let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
       mdoc <- runMaybeT $ do
         True <- dbUpdate $ PreparationToPending did $ systemActor $ ctxtime ctx
-        True <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
-        True <- dbUpdate $ MarkInvitationRead did signatorylinkid $ systemActor $ ctxtime ctx
-        True <- dbUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
+        -- please delete after Oct 1, 2012 -Eric
+        -- True <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
+        -- True <- dbUpdate $ MarkInvitationRead did signatorylinkid $ systemActor $ ctxtime ctx
+        -- True <- dbUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
         True <- dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo actor
         Just doc <- dbQuery $ GetDocumentByDocumentID did
         let Just sl = getSigLinkFor doc signatorylinkid
@@ -157,17 +158,18 @@ authorSignDocument did msigninfo = onlyAuthor did $ do
 authorSendDocument :: (Kontrakcja m) => DocumentID -> m (Either DBError Document)
 authorSendDocument did = onlyAuthor did $ do
   ctx <- getContext
-  actor <- guardJustM $ mkAuthorActor <$> getContext
+  --actor <- guardJustM $ mkAuthorActor <$> getContext
   edoc <- getDocByDocID did
   case edoc of
     Left m -> return $ Left m
-    Right olddoc -> do
+    Right _olddoc -> do
       mdoc <- runMaybeT $ do
         True <- dbUpdate $ PreparationToPending did $ systemActor $ ctxtime ctx
-        let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
-        True <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
-        True <- dbUpdate $ MarkInvitationRead did signatorylinkid $ systemActor $ ctxtime ctx
-        True <- dbUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
+        -- please delete after Oct 1, 2012
+        -- let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
+        -- True <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
+        -- True <- dbUpdate $ MarkInvitationRead did signatorylinkid $ systemActor $ ctxtime ctx
+        -- True <- dbUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
         Just doc <- dbQuery $ GetDocumentByDocumentID did
         return doc
       return $ case mdoc of

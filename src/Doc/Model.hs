@@ -1539,12 +1539,11 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkInvitationRead Bool whe
             toSql slid
           , toSql did
           ]
-        when_ success $
-          update $ InsertEvidenceEvent
-            MarkInvitationReadEvidence
-            (value "email" eml >> value "actor" (actorWho actor))
-            (Just did)
-            actor
+        _ <- update $ InsertEvidenceEvent
+          MarkInvitationReadEvidence
+          (value "email" eml >> value "actor" (actorWho actor))
+          (Just did)
+          actor
         return success
 
 data NewDocument = NewDocument User (Maybe Company) String DocumentType Int Actor
