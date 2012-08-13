@@ -129,58 +129,50 @@ rejectDocumentWithChecks did slid mh customtext = do
   The Author signs a document with security checks.
  -}
 authorSignDocument :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> m (Either DBError Document)
-authorSignDocument did msigninfo = onlyAuthor did $ do
+authorSignDocument did msigninfo = onlyAuthor did $ \olddoc -> do
   ctx <- getContext
   actor <- guardJustM $ mkAuthorActor <$> getContext
-  edoc <- getDocByDocID did
-  case edoc of
-    Left m -> return $ Left m
-    Right olddoc -> do
-      let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
-      mdoc <- runMaybeT $ do
-        True <- dbUpdate $ PreparationToPending did $ systemActor $ ctxtime ctx
-        -- please delete after Oct 1, 2012 -Eric
-        -- True <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
-        -- True <- dbUpdate $ MarkInvitationRead did signatorylinkid $ systemActor $ ctxtime ctx
-        -- True <- dbUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
-        True <- dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo actor
-        Just doc <- dbQuery $ GetDocumentByDocumentID did
-        let Just sl = getSigLinkFor doc signatorylinkid
-        _ <- addSignStatSignEvent doc sl
-        return doc
-      return $ case mdoc of
-        Nothing  -> Left $ DBActionNotAvailable "authorSignDocument failed"
-        Just doc -> Right doc
+  let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
+  mdoc <- runMaybeT $ do
+    True <- dbUpdate $ PreparationToPending did $ systemActor $ ctxtime ctx
+    -- please delete after Oct 1, 2012 -Eric
+    -- True <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
+    -- True <- dbUpdate $ MarkInvitationRead did signatorylinkid $ systemActor $ ctxtime ctx
+    -- True <- dbUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
+    True <- dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo actor
+    Just doc <- dbQuery $ GetDocumentByDocumentID did
+    let Just sl = getSigLinkFor doc signatorylinkid
+    _ <- addSignStatSignEvent doc sl
+    return doc
+  return $ case mdoc of
+    Nothing  -> Left $ DBActionNotAvailable "authorSignDocument failed"
+    Just doc -> Right doc
 
 {- |
   The Author sends a document with security checks.
  -}
 authorSendDocument :: (Kontrakcja m) => DocumentID -> m (Either DBError Document)
-authorSendDocument did = onlyAuthor did $ do
+authorSendDocument did = onlyAuthor did $ \_ -> do
   ctx <- getContext
-  --actor <- guardJustM $ mkAuthorActor <$> getContext
-  edoc <- getDocByDocID did
-  case edoc of
-    Left m -> return $ Left m
-    Right _olddoc -> do
-      mdoc <- runMaybeT $ do
-        True <- dbUpdate $ PreparationToPending did $ systemActor $ ctxtime ctx
-        -- please delete after Oct 1, 2012
-        -- let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
-        -- True <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
-        -- True <- dbUpdate $ MarkInvitationRead did signatorylinkid $ systemActor $ ctxtime ctx
-        -- True <- dbUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
-        Just doc <- dbQuery $ GetDocumentByDocumentID did
-        return doc
-      return $ case mdoc of
-        Nothing  -> Left $ DBActionNotAvailable "authorSendDocument failed"
-        Just doc -> Right doc
+  --actor <- guardJustM $ mkAuthorActor <$> getContext      
+  mdoc <- runMaybeT $ do
+    True <- dbUpdate $ PreparationToPending did $ systemActor $ ctxtime ctx
+    -- please delete after Oct 1, 2012
+    -- let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
+    -- True <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
+    -- True <- dbUpdate $ MarkInvitationRead did signatorylinkid $ systemActor $ ctxtime ctx
+    -- True <- dbUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
+    Just doc <- dbQuery $ GetDocumentByDocumentID did
+    return doc
+  return $ case mdoc of
+    Nothing  -> Left $ DBActionNotAvailable "authorSendDocument failed"
+    Just doc -> Right doc
 
 {- |
   Reseting all signatory attachments when document is in preparation | State of document is not checked
  -}
 setSigAttachments :: (Kontrakcja m) => DocumentID -> SignatoryLinkID -> [SignatoryAttachment] -> m (Either DBError ())
-setSigAttachments did sid sigatts = onlyAuthor did $ do
+setSigAttachments did sid sigatts = onlyAuthor did $ \_ -> do
   actor <- guardJustM $ mkAuthorActor <$> getContext
   transActionNotAvailable <$> Right <$> dbUpdate (SetSigAttachments did sid sigatts actor)
 
@@ -188,27 +180,23 @@ setSigAttachments did sid sigatts = onlyAuthor did $ do
    Only the author can Close a document when its in AwaitingAuthor status.
  -}
 authorSignDocumentFinal :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> m (Either DBError Document)
-authorSignDocumentFinal did msigninfo = onlyAuthor did $ do
+authorSignDocumentFinal did msigninfo = onlyAuthor did $ \olddoc -> do
   ctx <- getContext
   actor <- guardJustM $ mkAuthorActor <$> getContext
-  edoc <- getDocByDocID did
-  case edoc of
-    Left m -> return $ Left m
-    Right olddoc -> do
-      let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
-      mdoc <- runMaybeT $ do
-        True <- dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo actor
-        True <- dbUpdate $ CloseDocument did $ systemActor $ ctxtime ctx
-        Just doc <- dbQuery $ GetDocumentByDocumentID did
-        let Just sl = getSigLinkFor doc signatorylinkid
-        _ <- addSignStatSignEvent doc sl
-        return doc
-      return $ case mdoc of
-        Nothing  -> Left $ DBActionNotAvailable "authorSignDocumentFinal failed"
-        Just doc -> Right doc
+  let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
+  mdoc <- runMaybeT $ do
+    True <- dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo actor
+    True <- dbUpdate $ CloseDocument did $ systemActor $ ctxtime ctx
+    Just doc <- dbQuery $ GetDocumentByDocumentID did
+    let Just sl = getSigLinkFor doc signatorylinkid
+    _ <- addSignStatSignEvent doc sl
+    return doc
+  return $ case mdoc of
+    Nothing  -> Left $ DBActionNotAvailable "authorSignDocumentFinal failed"
+    Just doc -> Right doc
 
 -- | Make sure we're logged in as the author before taking action.
-onlyAuthor :: (Kontrakcja m) => DocumentID -> m (Either DBError a) -> m (Either DBError a)
+onlyAuthor :: (Kontrakcja m) => DocumentID -> (Document -> m (Either DBError a)) -> m (Either DBError a)
 onlyAuthor did action = do
   edoc <- getDocByDocID did -- this makes sure we're the author or someone else with permissions in the company
   case edoc of
@@ -218,13 +206,13 @@ onlyAuthor did action = do
       let Just user = ctxmaybeuser ctx
       if not $ isAuthor (doc, user) -- only the author should be allowed in
         then return $ Left DBResourceNotAvailable
-        else action
+        else action doc
 
 {- |
  Create a signable from template with logged in user as the author.
  -}
 signableFromTemplateWithUpdatedAuthor :: (Kontrakcja m) => DocumentID -> m (Either DBError Document)
-signableFromTemplateWithUpdatedAuthor did = onlyAuthor did $ do
+signableFromTemplateWithUpdatedAuthor did = onlyAuthor did $ \_ -> do
   user <- guardJustM $ ctxmaybeuser <$> getContext
   mcompany <- getCompanyForUser user
   actor <- guardJustM $ mkAuthorActor <$> getContext
@@ -236,25 +224,21 @@ signableFromTemplateWithUpdatedAuthor did = onlyAuthor did $ do
     Just doc -> Right doc
 
 updateDocAuthorAttachments :: (Kontrakcja m) => DocumentID -> [FileID] -> [FileID] -> m (Either DBError Document)
-updateDocAuthorAttachments did adds removes = onlyAuthor did $ do
+updateDocAuthorAttachments did adds removes = onlyAuthor did $ \doc -> do
   case (adds ++ removes) of
-    [] -> getDocByDocID did
+    [] -> return $ Right doc
     _ -> do
       actor <- guardJustM $ mkAuthorActor <$> getContext
       res1 <- mapM (\a -> dbUpdate $ AddDocumentAttachment    did a actor) adds
       res2 <- mapM (\r -> dbUpdate $ RemoveDocumentAttachment did r actor) removes
       if and res1 && and res2
-        then do
-          mdoc <- dbQuery $ GetDocumentByDocumentID did
-          return $ case mdoc of
-            Nothing -> err
-            Just doc -> Right doc
+        then return $ Right doc
         else return err
   where
     err = Left $ DBActionNotAvailable "updateDocAuthorAttachments failed"
 
 attachFile :: (Kontrakcja m) => DocumentID -> String -> BS.ByteString -> m (Either DBError Document)
-attachFile docid filename content = onlyAuthor docid $ do
+attachFile docid filename content = onlyAuthor docid $ \_ -> do
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
   ctx <- getContext
