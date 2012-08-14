@@ -847,8 +847,9 @@ process (sealSpec@SealSpec
     , output
     , persons
     , attachments
+    , secretaries
     }) = do
-    let fields' = concatMap fields persons
+    let fields' = concatMap fields persons ++ concatMap fields secretaries
     mdoc <- PdfModel.parseFile input
     doc <- maybe (error $ "Cannot parse input PDF " ++ input) return mdoc
     mseal <- PdfModel.parseFile sealFileName
