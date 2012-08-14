@@ -40,7 +40,8 @@ documentInvariants = [ documentHasOneAuthor
                      , connectedSigLinkOnTemplateOrPreparation
                      , authorHasUser
                      , signatoryLimit
-                     , seenWhenSigned
+                     -- Removing requirement that it is seen before signed. --Eric
+                     -- , seenWhenSigned
                      , allSignedWhenClosed
                      , maxLengthOnFields
                      , maxNumberOfPlacements
@@ -158,11 +159,12 @@ hasSignedAttachments _ document =
        
 {- |
    Has signed implies has seen.
- -}
+
 seenWhenSigned :: MinutesTime -> Document -> Maybe String
 seenWhenSigned _ document =
   assertInvariant "some signatories have signed but not seen" $
     all (hasSigned =>>^ hasSeen) (documentsignatorylinks document)
+-}
     
 {- |
    max length of fields

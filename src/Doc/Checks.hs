@@ -46,6 +46,7 @@ checkRejectDocument did slid = checkDocument did [
 checkSignDocument :: MonadDB m => DocumentID -> SignatoryLinkID -> MagicHash -> DBEnv m [String]
 checkSignDocument did slid mh = checkDocument did [
     isPending
+  , isSignable
   , hasSignatory slid
   , hasNotSigned slid
   --, hasSeenDoc slid
