@@ -249,12 +249,14 @@ sealSpecFromDocument :: (KontraMonad m, MonadIO m, TemplatesMonad m, MonadDB m)
 sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog content inputpath outputpath =
   let docid = documentid document
       Just authorsiglink = getAuthorSigLink document
-      authorHasSigned = isSignatory authorsiglink && isJust (maybesigninfo authorsiglink)
+      --authorHasSigned = isSignatory authorsiglink && isJust (maybesigninfo authorsiglink)
       signatoriesdetails = [signatorydetails sl | sl <- documentsignatorylinks document
                                                 , SignatoryPartner `elem` signatoryroles sl]
       authordetails = signatorydetails authorsiglink
       signatories = personsFromDocument (checkedBoxImage,uncheckedBoxImage) document
-      secretaries = if authorHasSigned then [] else [personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) authordetails]
+      --secretaries = if authorHasSigned then [] else [personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) authordetails]
+      secretaries = [personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) $ signatorydetails s| s <- documentsignatorylinks document
+                                                                                                        , SignatoryPartner `notElem` signatoryroles s]
 
       persons = map (\(a,_,_,_,_,_) -> a) signatories
       initialsx = map (\(_,_,_,_,_,a) -> a) signatories
