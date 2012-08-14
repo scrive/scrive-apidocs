@@ -15,8 +15,11 @@ module API.Monad (
                  apiGuard',
                  apiGuardL,
                  apiGuardL',
+                 apiGuardJustM,
                  api,
+                 Ok(..),    
                  Created(..),
+                 Accepted(..),    
                  APIMonad(..),
                  getAPIUser,
                  FormEncoded(..)
@@ -29,7 +32,7 @@ module API.Monad (
 import Control.Monad.Trans
 import Happstack.Server (toResponse)
 import Happstack.Server.Types
-import Text.JSON
+import Text.JSON hiding (Ok)
 import qualified Happstack.Server.Response as Web
 import Control.Monad.Error
 import Control.Applicative
@@ -49,11 +52,17 @@ import OAuth.Util
 import OAuth.Model
 import Doc.Rendering
 import Util.Actor
-
+import Templates.Templates
 import qualified Log
+
+-- | Respond with a 200 Created status
+data Ok a = Ok a
 
 -- | Respond with a 201 Created status
 data Created a = Created a
+
+-- | Respond with a 202 Accepted status
+data Accepted a = Accepted a
 
 -- | Values to be form encoded
 data FormEncoded = FormEncoded [(String, String)]
@@ -110,8 +119,14 @@ instance ToAPIResponse JSValue where
   toAPIResponse jv = let r1 = Web.toResponse $ encode jv in
     setHeader "Content-Type" "text/plain" r1 -- must be text/plain because some browsers complain about JSON type
 
+instance ToAPIResponse a => ToAPIResponse (Ok a) where
+  toAPIResponse (Ok a) = (toAPIResponse a) { rsCode = 200 }
+    
 instance ToAPIResponse a => ToAPIResponse (Created a) where
   toAPIResponse (Created a) = (toAPIResponse a) { rsCode = 201 }
+
+instance ToAPIResponse a => ToAPIResponse (Accepted a) where
+  toAPIResponse (Accepted a) = (toAPIResponse a) { rsCode = 202 }
   
 instance ToAPIResponse () where
   toAPIResponse () = toResponse ""
@@ -122,7 +137,7 @@ instance ToAPIResponse FormEncoded where
     in setHeader "Content-Type" "application/x-www-form-urlencoded" r1
     
 newtype APIMonad m a = AM { runAPIMonad :: ErrorT APIError m a }
-  deriving (Applicative, CryptoRNG, Functor, Monad, MonadDB, MonadError APIError, MonadIO, MonadTrans)
+  deriving (Applicative, CryptoRNG, Functor, Monad, MonadDB, MonadError APIError, MonadIO, MonadTrans, TemplatesMonad)
 
 instance KontraMonad m => KontraMonad (APIMonad m) where
   getContext = lift getContext
@@ -172,6 +187,10 @@ apiGuard' a = guardEither a >>= either throwError return
     
 apiGuard :: (Monad m, APIGuard m a b) => APIError -> a -> APIMonad m b
 apiGuard e a = guardEither a >>= either (const $ throwError e) return
+
+apiGuardJustM :: (Monad m) => APIError -> APIMonad m (Maybe a) -> APIMonad m a
+apiGuardJustM e a = a >>= maybe (throwError e) return
+
 
 -- | Unify the different types of guards with this class
 class Monad m => APIGuard m a b | a -> b where
@@ -231,6 +250,7 @@ getOAuthUser = do
   Log.debug "getOAuthUser start"
   ctx <- getContext
   eauth <- lift $ getAuthorization
+  Log.debug $ show eauth
   case eauth of
     Left _ -> return Nothing
     Right auth -> do

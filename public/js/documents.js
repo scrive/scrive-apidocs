@@ -483,7 +483,7 @@ window.Document = Backbone.Model.extend({
        }),
        authoruser: new DocumentAuthor(_.defaults(args.author, { document: self })),
        process: new Process(args.process),
-       region: new Region(args.region),
+       region: new Region({region : args.region}),
        infotext: args.infotext,
        canberestarted: args.canberestarted,
        canbecanceled: args.canbecanceled,

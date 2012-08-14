@@ -957,7 +957,7 @@ jsonDocument did = do
          Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "No document avaible")]
          Just doc -> do
              switchLocaleWhenNeeded msiglink doc
-             documentJSON pg msiglink cttime doc
+             documentJSON False pg msiglink cttime doc
 
 jsonDocumentGetterWithPermissionCheck ::   Kontrakcja m => DocumentID -> m (Maybe Document, Maybe SignatoryLink)
 jsonDocumentGetterWithPermissionCheck did = do

@@ -10,6 +10,8 @@ ignore  libs/analytics.js
 ignore  libs/postmessage.js
 ignore  js/signup.js
 ignore  libs/recurly/recurly.css
+ignore  api-demo
+
 
 set firstPage
  css css/main.css
