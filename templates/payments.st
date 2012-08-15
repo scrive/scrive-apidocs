@@ -1,7 +1,7 @@
 ##
 subscriptionDashboard =
 <script>
-  bootPaymentsDashboard('.js-paymentsdashboard');
+  jQuery(function(){bootPaymentsDashboard('.js-paymentsdashboard')});
 </script>
 <div class="tab-viewer paymentsdashboard">
   <div class="tab-header">
