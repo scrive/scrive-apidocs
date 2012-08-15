@@ -64,7 +64,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
         if (document.barsbackgroundtextcolor() != undefined)
             maindiv.css("color", document.barsbackgroundtextcolor());
 
-    } else if(document.currentSignatory() != undefined && (document.currentSignatory().saved() || model.justSaved())) {
+    } else if(document.currentSignatory() != undefined && document.currentSignatory().hasSigned() && (document.currentSignatory().saved() || model.justSaved())) {
         maindiv.addClass('withstandardlogo');
         var content = $("<div class='content' />");
         var logowrapper = $("<div class='logowrapper' />");
