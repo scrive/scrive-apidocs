@@ -41,9 +41,10 @@
         }
     });
 
-    $.get("/blockinginfo", {dataType: 'json',
+    $.ajax("/blockinginfo", {dataType: 'json',
                             timeout: 3000,
                             success: function(data) {
+                                data.block = true;
                                 window.BlockingInfo = new window.BlockingInfoModel(data);
                             },
                             error: function() {
@@ -59,6 +60,6 @@
             acceptText: "Purchase"
         });
 
-    });
+    }};
 
 })(window);

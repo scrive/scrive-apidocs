@@ -2,6 +2,8 @@ module User.UserControl where
 
 import Control.Monad.State
 import Data.Functor
+import Data.Ix
+import System.Time hiding (toUTCTime)
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Text.JSON (JSValue(..), toJSObject, showJSON)
@@ -16,6 +18,7 @@ import AppView
 import Crypto.RNG
 import DB hiding (update, query)
 import Doc.Action
+import Doc.Model
 import Company.Model
 import Control.Logic
 import InputValidation
@@ -573,8 +576,10 @@ handlePasswordReminderPost uid token = do
 
 handleBlockingInfo :: Kontrakcja m => m JSValue
 handleBlockingInfo = do
-  user <- guardJust $ ctxmaybeuser <$> getContext
-  docsusedthismonth <- dbQuery $ GetDocsSentThisMonth (userid user)
+  user <- guardJustM $ ctxmaybeuser <$> getContext
+  time <- ctxtime <$> getContext
+  let month = 1 + (index (January, December) $ ctMonth $ toUTCTime time)
+  docsusedthismonth <- dbQuery $ GetDocsSentThisMonth (userid user) month
   
   runJSONGenT $ do
     J.value "docsused" docsusedthismonth

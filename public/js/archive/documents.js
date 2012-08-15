@@ -99,6 +99,12 @@ window.DocumentsListDefinition = function(archive) { return {
                 avaible : function() {return true;},
                 acceptEmpty : true,
                 onSelect: function() {
+
+                    if(BlockingInfo.blockCreate()) {
+                        blocking.show("Can't send more documents.");
+                        return false;
+                    }
+
                         var popup;
                         function doctypebutton(txt,type) {
                             return jQuery('<td/>').append(jQuery('<div class="documentTypeBox"/>').append(UploadButton.init({

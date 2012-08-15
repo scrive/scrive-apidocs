@@ -121,6 +121,8 @@ staticRoutes = choice
 
      , dir "df"                    $ hGet  $ toK2 $ DocControl.handleFileGet
 
+     , dir "blockinginfo"          $ hGet $ toK0 $ UserControl.handleBlockingInfo
+
      --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
      , dir "resend"  $ hPost $ toK2 $ DocControl.handleResend
      , dir "changeemail" $ hPost $ toK2 $ DocControl.handleChangeSignatoryEmail
