@@ -114,7 +114,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
     this.sender = $("<div class='sender' />");
     var inner = $('<div class="inner" />');
       this.sender.append(inner);
-    if(document.currentSignatory() != undefined && (document.currentSignatory().saved() || model.justSaved())) {
+    if(document.currentSignatory() != undefined && (document.currentSignatory().hasSigned() && model.justSaved())) {
       var name = $("<div class='name' />").text("Scrive help desk");
       var phone = $("<div class='phone' />").text("+46 8 519 779 00");
       inner.append(name).append(phone);
@@ -177,7 +177,7 @@ window.DocumentSignViewFooter = Backbone.View.extend({
     var powerdiv = $("<div class='poweredbyscrive'/>").append($("<a href='/'>").text(localization.poweredByScrive).css("color", document.barsbackgroundtextcolor()));
     var sender = $("<div class='sender' />");
 
-    if(document.currentSignatory() != undefined && (document.currentSignatory().saved() || model.justSaved())) {
+    if(document.currentSignatory() != undefined && (document.currentSignatory().hasSigned() && model.justSaved())) {
       var name = $("<div class='name' />").text("Scrive help desk");
       var phone = $("<div class='phone' />").text("+46 8 519 779 00");
       sender.append(name).append(phone);
