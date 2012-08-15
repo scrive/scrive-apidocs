@@ -81,6 +81,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
                       field.setValue(val);
                       SessionStorage.set(field.signatory().document().documentid(),field.name(),val);
                       field.trigger('change:inlineedited');
+                      field.signatory().trigger('change');
                       view.render();
         }
         acceptIcon.click(function() {
