@@ -463,8 +463,13 @@ var SignaturePlacementViewForDrawing = Backbone.View.extend({
                 box.css("border-width","0px");
                 var bwidth = 253;
                 var bheight = 48;
-                box.width(Math.max(this.signature.width(),bwidth));
-                box.height(Math.max(this.signature.height(),bheight));
+                // Lukas wanted the width and height to be set directly,
+                // without a minimum, to be able to fit into small form
+                // fields. -- Eric
+                //box.width(Math.max(this.signature.width(),bwidth));
+                //box.height(Math.max(this.signature.height(),bheight));
+                box.width(this.signature.width());
+                box.height(this.signature.height());
                 var button = $("<div/>");
                 if (!signatory.canPadSignQuickSign()){
                     button.addClass('placesignaturebutton');
