@@ -292,7 +292,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   Just enddoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
   _ <- addDocumentCreateStatEvents enddoc "mailapi+simple"
-  markDocumentAuthorReadAndSeen enddoc
+  --markDocumentAuthorReadAndSeen enddoc
   --_ <- DocControl.postDocumentChangeAction doc2 doc Nothing
 
   _ <- case (mailapi, usercompany user) of
@@ -331,6 +331,7 @@ sendMailAPIDelayUserEmail email = do
   mail <- mailMailApiDelayUser ctx email
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress email email] }
 
+{- Removed because we should not be marking invitation and seen for author.
 markDocumentAuthorReadAndSeen :: Kontrakcja m => Document -> m ()
 markDocumentAuthorReadAndSeen doc@Document{documentid} = do
   let Just sl@SignatoryLink{signatorylinkid, signatorymagichash, maybesignatory} =
@@ -341,6 +342,7 @@ markDocumentAuthorReadAndSeen doc@Document{documentid} = do
   _ <- dbUpdate $ MarkDocumentSeen documentid signatorylinkid signatorymagichash
        (mailAPIActor time (fromJust maybesignatory) (getEmail sl))
   return ()
+-}
 
 parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.Type, BS.ByteString)])
 parseEmailMessageToParts content = (mime, parts mime)
@@ -547,7 +549,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
   -- if previous step succeeded, document must be in the database
   Just enddoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   _ <- addDocumentCreateStatEvents enddoc "mailapi+json"
-  markDocumentAuthorReadAndSeen enddoc
+  --markDocumentAuthorReadAndSeen enddoc
   --_ <- DocControl.postDocumentChangeAction doc2 doc Nothing
 
   _ <- case (mailapi, usercompany user) of
