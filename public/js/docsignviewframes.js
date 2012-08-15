@@ -25,9 +25,10 @@ window.DocumentSignViewHeader = Backbone.View.extend({
         var width = Math.max($('body').width(),$(document).width());
         if (width > 1020)
           el.css("min-width",width + "px");
-        var pbs = $(".poweredbyscrive",this.el);
-        if (pbs.size() > 0)
-            pbs.css("left", width - pbs.width() - 1);
+        // remove poweredbyscrive triangle
+        //var pbs = $(".poweredbyscrive",this.el);
+        //if (pbs.size() > 0)
+        //    pbs.css("left", width - pbs.width() - 1);
         var pti = $(".padTopIcon");
         if (pti.size() > 0)
             pti.css("left", width - pti.width() - 2);
@@ -86,7 +87,8 @@ window.DocumentSignViewHeader = Backbone.View.extend({
         logowrapper.append("<a href='/'><div class='logo'></div></a>");
 
     } else {
-      maindiv.append($("<div class='poweredbyscrive'/>"));
+        // Remove powered by scrive triangle
+        //maindiv.append($("<div class='poweredbyscrive'/>"));
         maindiv.addClass(document.logo() == undefined ? 'withstandardlogo' : 'withcustomlogo');
         if (document.barsbackgroundcolor() != undefined)
         {
@@ -112,7 +114,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
     this.sender = $("<div class='sender' />");
     var inner = $('<div class="inner" />');
       this.sender.append(inner);
-    if(document.currentSignatory() != undefined && (document.currentSignatory().saved() || model.justSaved())) {
+    if(document.currentSignatory() != undefined && (document.currentSignatory().hasSigned() && model.justSaved())) {
       var name = $("<div class='name' />").text("Scrive help desk");
       var phone = $("<div class='phone' />").text("+46 8 519 779 00");
       inner.append(name).append(phone);
@@ -175,7 +177,7 @@ window.DocumentSignViewFooter = Backbone.View.extend({
     var powerdiv = $("<div class='poweredbyscrive'/>").append($("<a href='/'>").text(localization.poweredByScrive).css("color", document.barsbackgroundtextcolor()));
     var sender = $("<div class='sender' />");
 
-    if(document.currentSignatory() != undefined && (document.currentSignatory().saved() || model.justSaved())) {
+    if(document.currentSignatory() != undefined && (document.currentSignatory().hasSigned() && model.justSaved())) {
       var name = $("<div class='name' />").text("Scrive help desk");
       var phone = $("<div class='phone' />").text("+46 8 519 779 00");
       sender.append(name).append(phone);
