@@ -118,17 +118,23 @@ var FilePage = Backbone.Model.extend({
        this.trigger("change:dragables");
     },
     fixedX : function(x,y,field){
+     /* Turn off snap-to-grid for now. It is nice when it works, but
+        it does not always do what you want. -- Eric
      _.each(this.placements(), function(p) {
              if (Math.abs(p.x()-x) < 8 && (Math.abs(p.x()-x) + Math.abs(p.y()-y) < 400))
-                  x =  p.x();
+                  x = p.x();
      });
+     */
      return x;
     },
     fixedY : function(x,y,field){
+    /* Turn off snap-to-grid for now. It is nice when it works, but
+       it does not always do what you want. -- Eric
           _.each(this.placements(), function(p) {
              if (Math.abs(p.y()-y) < 8 && (Math.abs(p.x()-x) + Math.abs(p.y()-y) < 400))
                   y =  p.y();
      });
+     */
      return y;
     }
 });
