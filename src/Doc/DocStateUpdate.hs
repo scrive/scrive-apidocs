@@ -135,8 +135,8 @@ authorSignDocument did msigninfo = onlyAuthor did $ \olddoc -> do
   let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
   mdoc <- runMaybeT $ do
     True <- dbUpdate $ PreparationToPending did $ systemActor $ ctxtime ctx
+    True <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
     -- please delete after Oct 1, 2012 -Eric
-    -- True <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
     -- True <- dbUpdate $ MarkInvitationRead did signatorylinkid $ systemActor $ ctxtime ctx
     -- True <- dbUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
     True <- dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo actor
@@ -154,12 +154,12 @@ authorSignDocument did msigninfo = onlyAuthor did $ \olddoc -> do
 authorSendDocument :: (Kontrakcja m) => DocumentID -> m (Either DBError Document)
 authorSendDocument did = onlyAuthor did $ \_ -> do
   ctx <- getContext
-  --actor <- guardJustM $ mkAuthorActor <$> getContext      
+  actor <- guardJustM $ mkAuthorActor <$> getContext      
   mdoc <- runMaybeT $ do
     True <- dbUpdate $ PreparationToPending did $ systemActor $ ctxtime ctx
+    True <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
     -- please delete after Oct 1, 2012
     -- let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
-    -- True <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
     -- True <- dbUpdate $ MarkInvitationRead did signatorylinkid $ systemActor $ ctxtime ctx
     -- True <- dbUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
     Just doc <- dbQuery $ GetDocumentByDocumentID did
