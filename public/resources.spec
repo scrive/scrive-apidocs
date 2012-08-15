@@ -130,4 +130,5 @@ set systemPage
  js   js/archive/attachments.js
  js   js/archive/bin.js
  js   js/archive/archive.js
+ js   js/blocking.js
 

@@ -5,6 +5,8 @@ import Data.Functor
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Text.JSON (JSValue(..), toJSObject, showJSON)
+import Text.JSON.Gen
+import qualified Text.JSON.Gen as J
 
 import ActionQueue.Core
 import ActionQueue.EmailChangeRequest
@@ -568,6 +570,14 @@ handlePasswordReminderPost uid token = do
     Nothing   -> do
       addFlashM flashMessagePasswordChangeLinkNotValid
       getHomeOrUploadLink
+
+handleBlockingInfo :: Kontrakcja m => m JSValue
+handleBlockingInfo = do
+  user <- guardJust $ ctxmaybeuser <$> getContext
+  docsusedthismonth <- dbQuery $ GetDocsSentThisMonth (userid user)
+  
+  runJSONGenT $ do
+    J.value "docsused" docsusedthismonth
 
 {- |
    Fetch the xtoken param and double read it. Once as String and once as MagicHash.
