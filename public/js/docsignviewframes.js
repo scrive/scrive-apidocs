@@ -64,7 +64,22 @@ window.DocumentSignViewHeader = Backbone.View.extend({
         if (document.barsbackgroundtextcolor() != undefined)
             maindiv.css("color", document.barsbackgroundtextcolor());
 
-    } else if(document.currentSignatory() != undefined && document.currentSignatory().hasSigned() && (document.currentSignatory().saved() || model.justSaved())) {
+    } 
+      // alright, here's the deal: how do we determine if they should see our logo.
+      // lukas and I were getting this bug where documents on his computer were not showing branding
+      // and on mine, the same documents were. We spent a good half hour trying to figure out why. He
+      // rebooted, we sent each other documents, etc.
+      // It turns out that if you sent to an email address with a User, you didn't see branding on 
+      // sign view. We can't tell the difference between a user that just saved and one that had an
+      // account from long ago.
+      // I'm making a ruling here: if companies are going to pay for branding, they don't want to
+      // send out a contract with Scrive logo ever. Even if they have a Scrive account.
+      // So now, we only show the Scrive logo just once after they save. If they reload, we show
+      // the old logo. We should probably change that but it's late and Lukas will file another
+      // bug if I make that change.
+      // I will address this later when I fix up the post sign view.
+      // -- Eric, 4 Aug 2012
+      else if(document.currentSignatory() != undefined && document.currentSignatory().hasSigned() && model.justSaved()) {
         maindiv.addClass('withstandardlogo');
         var content = $("<div class='content' />");
         var logowrapper = $("<div class='logowrapper' />");
