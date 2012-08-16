@@ -113,7 +113,7 @@ import Util.MonadUtils
 import Templates.Templates
 import EvidenceLog.Model
 import Util.HasSomeUserInfo
-import Templates.Fields (value)
+import Templates.Fields (value, objects)
 
 data DocumentPagination =
   DocumentPagination
@@ -2048,6 +2048,15 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
   update (ResetSignatoryDetails documentid signatories actor) =
     update (ResetSignatoryDetails2 documentid (map (\(a,b) -> (a,b,[],Nothing)) signatories) actor)
 
+splitImage :: String -> Maybe (Int, Int, String)
+splitImage s = do
+  let ws = takeWhile (/= '|') s
+      hs = takeWhile (/= '|') s'
+      is = dropWhile (== '|') $ dropWhile (/= '|') s'
+      s' = dropWhile (== '|') $ dropWhile (/= '|') s
+  w <- maybeRead ws
+  h <- maybeRead hs
+  return (w, h, is)
 
 data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload)] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails2 (Either String Document) where
@@ -2081,39 +2090,75 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
 
             forM_ (emailsOfRemoved old new) $ \eml ->
               update $ InsertEvidenceEvent
-                ResetSignatoryDetailsEvidence
-                (value "removed" True >> value "signatory" True >> value "email" eml >> value "actor"  (actorWho actor))
+                RemoveSignatoryEvidence
+                (do value "email" eml
+                    value "actor" $ actorWho actor)
                 (Just documentid)
                 actor
 
             forM_ (changedStuff old new) $ \(eml, rs, cs) -> do
               forM_ rs $ \removedfield ->
                 update $ InsertEvidenceEvent
-                  ResetSignatoryDetailsEvidence
-                  (value "removed" True >> value "field" True >> value "email" eml >> value "fieldtype" (show $ sfType removedfield) >> value "actor"  (actorWho actor))
+                  RemoveFieldEvidence
+                  (do value "email" eml
+                      value "fieldtype" $ show $ sfType removedfield
+                      value "actor" $ actorWho actor)
                   (Just documentid)
                   actor
               forM_ cs $ \changedfield ->
                 update $ InsertEvidenceEvent
-                  ResetSignatoryDetailsEvidence
-                  (value "changed" True >> value "field" True >> value "email" eml >> (value "fieldtype" $ show (sfType changedfield)) >>
-                   value "value" (sfValue changedfield) >> value "hasplacements" (not $ null $ sfPlacements changedfield) >> value "placements" (show $ sfPlacements changedfield) >> value "actor"  (actorWho actor))
+                  ChangeFieldEvidence
+                  (do value "email" eml 
+                      value "fieldtype" $ show (sfType changedfield)
+                      case sfType changedfield of
+                        SignatureFT -> case splitImage $ sfValue changedfield of
+                          Just (_w,_h,"") -> return ()
+                          Just (_w,_h,i)  -> value "signature" i
+                          Nothing -> return ()
+                        CheckboxOptionalFT   _ | sfValue changedfield == "" -> value "unchecked" True
+                        CheckboxOptionalFT   _                              -> value "checked" True
+                        CheckboxObligatoryFT _ | sfValue changedfield == "" -> value "unchecked" True
+                        CheckboxObligatoryFT _                              -> value "checked" True 
+                        _                                                   -> value "value" $ sfValue changedfield
+                      value "hasplacements" (not $ null $ sfPlacements changedfield)
+                      objects "placements" $ for (sfPlacements changedfield) $ \p -> do
+                        value "x"    $ show $ placementx p
+                        value "y"    $ show $ placementy p
+                        value "page" $ show $ placementpage p
+                      value "actor"  (actorWho actor))
                   (Just documentid)
                   actor
 
             forM_ (fieldsOfNew old new) $ \(eml, fs) -> do
               _ <- update $ InsertEvidenceEvent
-                ResetSignatoryDetailsEvidence
-                (value "added" True >> value "signatory" True >> value "email" eml >> value "actor"  (actorWho actor))
+                AddSignatoryEvidence
+                (do value "email" eml
+                    value "actor"  (actorWho actor))
                 (Just documentid)
                 actor
               forM_ fs $ \changedfield ->
-                    update $ InsertEvidenceEvent
-                        ResetSignatoryDetailsEvidence
-                        (value "added" True >> value "field" True >> value "email" eml >> (value "fieldtype" $ show (sfType changedfield)) >>
-                         value "value" (sfValue changedfield) >> value "hasplacements" (not $ null $ sfPlacements changedfield) >> value "placements" (show $ sfPlacements changedfield) >> value "actor" (actorWho actor))
-                        (Just documentid)
-                        actor
+                update $ InsertEvidenceEvent
+                  AddFieldEvidence
+                  (do value "email" eml
+                      value "fieldtype" $ show (sfType changedfield)
+                      case sfType changedfield of
+                        SignatureFT -> case splitImage $ sfValue changedfield of
+                          Just (_,_,"") -> return ()
+                          Just (_,_,i)  -> value "signature" i
+                          Nothing -> return ()
+                        CheckboxOptionalFT   _ | sfValue changedfield == "" -> value "unchecked" True
+                        CheckboxOptionalFT   _                              -> value "checked" True
+                        CheckboxObligatoryFT _ | sfValue changedfield == "" -> value "unchecked" True
+                        CheckboxObligatoryFT _                              -> value "checked" True 
+                        _                                                   -> value "value" $ sfValue changedfield
+                      value "hasplacements" (not $ null $ sfPlacements changedfield)
+                      objects "placements" $ for (sfPlacements changedfield) $ \p -> do
+                        value "x"    $ show $ placementx p
+                        value "y"    $ show $ placementy p
+                        value "page" $ show $ placementpage p
+                      value "actor" (actorWho actor))
+                  (Just documentid)
+                  actor
 
             Just newdocument <- query $ GetDocumentByDocumentID documentid
             let moldcvsupload = msum (map (\(_,_,_,a) -> a) signatories)
@@ -2127,7 +2172,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
           s -> return $ Left $ "cannot reset signatory details on document " ++ show documentid ++ " because " ++ intercalate ";" s
           where emailsOfRemoved old new = [getEmail x | x <- removedSigs old new, "" /= getEmail x]
                 changedStuff    old new = [(getEmail x, removedFields x y, changedFields x y) | (x, y) <- changedSigs old new, not $ null $ getEmail x]
-                fieldsOfNew     old new = [(getEmail x, [f| f <- signatoryfields x, not $ null $ sfValue f]) | x <- newSigs old new, not $ null $ getEmail x]
+                fieldsOfNew     old new = [(getEmail x, [f| f <- signatoryfields x, (not $ null $ sfValue f) || (not $ null $ sfPlacements f)]) | x <- newSigs old new, not $ null $ getEmail x]
                 removedSigs     old new = [x      | x <- old, getEmail x `notElem` map getEmail new, not $ null $ getEmail x]
                 changedSigs     old new = [(x, y) | x <- new, y <- old, getEmail x == getEmail y,    not $ null $ getEmail x]
                 newSigs         old new = [x      | x <- new, getEmail x `notElem` map getEmail old, not $ null $ getEmail x]
@@ -2270,7 +2315,21 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields (Either String
           when_ (r>0) $ do
             update $ InsertEvidenceEvent
                UpdateFieldsEvidence
-               (value "email" eml >> value "fieldtype" (show fieldtype) >> value "value" fvalue >> value "actor" (actorWho actor))
+               (do value "email" eml 
+                   value "fieldtype" (show fieldtype)
+                   case fieldtype of
+                        SignatureFT -> case splitImage fvalue of
+                          Just (_,_,"") -> return ()
+                          Just (_,_,i)  -> do
+                            value "signature" i
+                          Nothing -> return ()
+                        CheckboxOptionalFT   _ | fvalue == "" -> value "unchecked" True
+                        CheckboxOptionalFT   _                -> value "checked" True
+                        CheckboxObligatoryFT _ | fvalue == "" -> value "unchecked" True
+                        CheckboxObligatoryFT _                -> value "checked" True 
+                        _                                     -> value "value" $ fvalue
+                   
+                   value "actor" (actorWho actor))
                (Just did)
                actor
           return (r :: Integer)
