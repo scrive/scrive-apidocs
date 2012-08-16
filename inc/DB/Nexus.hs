@@ -48,8 +48,8 @@ module DB.Nexus (
   , getNexusStats
   ) where
 
+import Control.Concurrent.MVar
 import Control.Monad.IO.Class
-import Data.IORef
 import Database.HDBC
 import Database.HDBC.Statement
 
@@ -86,20 +86,20 @@ emptyStats = NexusStats 0 0 0 0
 -- 'Nexus' is an instance of 'IConnection'.
 data Nexus = forall conn . IConnection conn => 
            Nexus { nexusConnection :: conn
-                 , nexusStats      :: IORef NexusStats
+                 , nexusStats      :: MVar NexusStats
                  }
 
 -- | Wrap an existing 'IConnection' object into a 'Nexus' statistics
 -- counting mechanism'
 mkNexus :: (MonadIO m, IConnection conn) => conn -> m Nexus
 mkNexus conn = do
-  stats <- liftIO $ newIORef emptyStats
+  stats <- liftIO $ newMVar emptyStats
   return (Nexus conn stats)
 
 -- | Retrieve current 'NexusStats' from a 'Nexus'. Does not clear
 -- stats, so you may use this many times a day.
 getNexusStats :: MonadIO m => Nexus -> m NexusStats
-getNexusStats = liftIO . readIORef . nexusStats
+getNexusStats = liftIO . readMVar . nexusStats
 
 instance IConnection Nexus where
     disconnect Nexus{nexusConnection=conn} = disconnect conn
@@ -108,28 +108,28 @@ instance IConnection Nexus where
     rollback Nexus{nexusConnection=conn} = rollback conn
 
     run nexus@Nexus{nexusConnection=conn} command values = do
-      modifyIORef (nexusStats nexus) $ \stats -> 
-        stats { nexusParams = nexusParams stats + length values }
+      modifyMVar_ (nexusStats nexus) $ \stats ->
+        return $! stats { nexusParams = nexusParams stats + length values }
       run conn command values
  
     prepare nexus@Nexus{nexusConnection=conn} command = do
       st <- prepare conn command
       return $ Statement 
              { execute = \values -> do
-                           modifyIORef (nexusStats nexus) $ \stats ->
-                             stats { nexusParams  = nexusParams stats + length values
+                           modifyMVar_ (nexusStats nexus) $ \stats ->
+                             return $! stats { nexusParams  = nexusParams stats + length values
                                    , nexusQueries = nexusQueries stats + 1
                                    }
                            execute st values
              , executeMany = \values -> do
-                           modifyIORef (nexusStats nexus) $ \stats ->
-                             stats { nexusParams  = nexusParams stats + sum (map length values)
+                           modifyMVar_ (nexusStats nexus) $ \stats ->
+                             return $! stats { nexusParams  = nexusParams stats + sum (map length values)
                                    , nexusQueries = nexusQueries stats + 1
                                    }
                            executeMany st values
              , executeRaw = do
-                           modifyIORef (nexusStats nexus) $ \stats ->
-                             stats { nexusQueries  = nexusQueries stats + 1
+                           modifyMVar_ (nexusStats nexus) $ \stats ->
+                             return $! stats { nexusQueries  = nexusQueries stats + 1
                                    }
                            executeRaw st
              , finish = finish st
@@ -137,8 +137,8 @@ instance IConnection Nexus where
                  mrow <- fetchRow st
                  case mrow of
                    Just row -> 
-                     modifyIORef (nexusStats nexus) $ \stats ->
-                       stats { nexusValues = nexusValues stats + length row
+                     modifyMVar_ (nexusStats nexus) $ \stats ->
+                       return $! stats { nexusValues = nexusValues stats + length row
                              , nexusRows   = nexusRows stats + 1
                              }
                    Nothing -> return ()
@@ -150,7 +150,7 @@ instance IConnection Nexus where
 
     clone Nexus{nexusConnection=conn} = do
       c2 <- clone conn
-      s2 <- newIORef emptyStats
+      s2 <- newMVar emptyStats
       return (Nexus c2 s2)
 
     hdbcDriverName Nexus{nexusConnection=conn} = hdbcDriverName conn
