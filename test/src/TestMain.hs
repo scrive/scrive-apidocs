@@ -3,7 +3,8 @@ module TestMain where
 
 import Control.Applicative
 import Control.Arrow
-import Control.Concurrent
+import Control.Concurrent.STM
+import Control.Monad
 import Control.Monad.IO.Class
 import Data.Char
 import Data.Either
@@ -20,7 +21,6 @@ import DB
 import DB.Checks
 import DB.SQLFunction
 import DB.PostgreSQL
-import Misc
 import Templates.TemplatesLoader
 import TestKontra
 
@@ -248,20 +248,20 @@ testMany (args, ts) = Log.withLogger $ do
     performDBChecks Log.debug kontraTables kontraMigrations
     runDBEnv $ defineMany kontraFunctions
     nex <- getNexus
-    active_tests <- liftIO $ newMVar (True, 0)
+    active_tests <- liftIO . atomically $ newTVar (True, 0)
     let env = TestEnvSt {
           teNexus = nex
         , teRNGState = rng
         , teGlobalTemplates = templates
         , teActiveTests = active_tests
         }
-    liftIO $ E.finally (defaultMainWithArgs (map ($ env) ts) args) $ do
+    liftIO . E.finally (defaultMainWithArgs (map ($ env) ts) args) $ do
       -- upon interruption (eg. Ctrl+C), prevent next tests in line
       -- from running and wait until all that are running are finished.
-      modifyMVar_ active_tests $ return . first (const False)
-      untilM (threadDelay 100000) $ do
-        n <- snd <$> readMVar active_tests
-        return $ n == 0
+      atomically . modifyTVar' active_tests $ first (const False)
+      atomically $ do
+        n <- snd <$> readTVar active_tests
+        when (n /= 0) retry
       stats <- getNexusStats nex
       putStrLn $ "SQL: " ++ show stats
 

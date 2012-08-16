@@ -40,13 +40,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS (toString,fromString)
 import Network.HTTP (urlDecode)
 
-untilM :: Monad m => m () -> m Bool -> m ()
-untilM wait m = do
-  exit <- m
-  case exit of
-    True  -> return ()
-    False -> wait >> untilM wait m
-
 -- intercalate for monoids
 mintercalate :: Monoid s => (s -> s -> s) -> [s] -> s
 mintercalate f = go

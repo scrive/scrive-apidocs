@@ -189,6 +189,7 @@ Executable kontrakcja-server
   Build-depends: happstack-server==7.0.7
   Build-depends: happstack-static-routing==0.3.1
   Build-depends: hslogger==1.1.4
+  Build-depends: stm == 2.3
   Build-depends: html == 1.0.1.2
   Build-depends: iconv == 0.4.1.0
   if impl(ghc >= 7.4.1)

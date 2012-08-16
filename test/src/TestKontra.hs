@@ -19,6 +19,7 @@ module TestKontra (
 import Control.Applicative
 import Control.Arrow
 import Control.Concurrent
+import Control.Concurrent.STM
 import Control.Monad.Base
 import Control.Monad.Error
 import Control.Monad.Reader
@@ -64,7 +65,7 @@ import System.Time
 data TestEnvSt = TestEnvSt {
     teNexus           :: Nexus
   , teRNGState        :: CryptoRNGState
-  , teActiveTests     :: MVar (Bool, Int)
+  , teActiveTests     :: TVar (Bool, Int)
   , teGlobalTemplates :: KontrakcjaGlobalTemplates
   }
 
@@ -75,11 +76,11 @@ newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
 
 runTestEnv :: TestEnvSt -> TestEnv () -> IO ()
 runTestEnv st m = do
-  can_be_run <- fst <$> readMVar (teActiveTests st)
+  can_be_run <- fst <$> atomically (readTVar $ teActiveTests st)
   when can_be_run $ do
-    modifyMVar_ (teActiveTests st) $ return . second succ
-    ununTestEnv st $ withTestDB m
-    modifyMVar_ (teActiveTests st) $ return . second pred
+    atomically . modifyTVar' (teActiveTests st) $ second (succ $!)
+    E.finally (ununTestEnv st $ withTestDB m) $ do
+      atomically . modifyTVar' (teActiveTests st) $ second (pred $!)
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> IO a
 ununTestEnv st m = runReaderT (unTestEnv m) st
