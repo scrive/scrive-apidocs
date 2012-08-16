@@ -4,10 +4,11 @@ import Control.Concurrent
 import Control.Monad
 import Data.List
 import Data.Version
-import Happstack.Server (simpleHTTPWithSocket, nullConf, port, timeout)
+import Happstack.Server (simpleHTTPWithSocket, nullConf, port, timeout, threadGroup)
 import Happstack.StaticRouting
 import System.Environment
 import System.IO
+import qualified Control.Concurrent.Thread.Group as TG
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 
@@ -68,19 +69,26 @@ main = Log.withLogger $ do
     performDBChecks Log.server kontraTables kontraMigrations
     runDBEnv $ defineMany kontraFunctions
 
-  startSystem appGlobals appConf
+  startSystem appGlobals appConf =<< TG.new
 
-startSystem :: AppGlobals -> AppConf -> IO ()
-startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
+startSystem :: AppGlobals -> AppConf -> TG.ThreadGroup -> IO ()
+startSystem appGlobals appConf tg = E.bracket startServer stopServer waitForTerm
   where
     startServer = do
       let (iface,port) = httpBindAddress appConf
       listensocket <- listenOn (htonl iface) (fromIntegral port)
       let (routes,overlaps) = compile staticRoutes
       maybe (return ()) Log.server overlaps
-      server <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port, timeout = 120}) (appHandler routes appConf appGlobals)
-      return server
-    stopServer = killThread
+      let conf = nullConf {
+            port = fromIntegral port
+          , timeout = 120
+          , threadGroup = Just tg
+          }
+      forkIO . simpleHTTPWithSocket listensocket conf $ appHandler routes appConf appGlobals
+    stopServer srvr = do
+      Log.server "Waiting for active request handlers to finish..."
+      killThread srvr
+      TG.wait tg
     waitForTerm _ = do
       withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) $
         initDatabaseEntries $ initialUsers appConf
