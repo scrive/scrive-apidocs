@@ -203,6 +203,11 @@ data EvidenceEventType =
   AttachCSVUploadEvidence                         |
   SendToPadDevice                                 |
   RemovedFromPadDevice                            |
+  AddSignatoryEvidence                            |
+  RemoveSignatoryEvidence                         |
+  AddFieldEvidence                                |
+  RemoveFieldEvidence                             |
+  ChangeFieldEvidence                             |
   OldDocumentHistory
   deriving (Eq, Show, Read, Ord)
 
@@ -262,7 +267,13 @@ instance Convertible EvidenceEventType Int where
   safeConvert AttachCSVUploadEvidence                         = return 53
   safeConvert SendToPadDevice                                 = return 54
   safeConvert RemovedFromPadDevice                            = return 55
-  safeConvert OldDocumentHistory                              = return 56
+  safeConvert AddSignatoryEvidence                            = return 56
+  safeConvert RemoveSignatoryEvidence                         = return 57
+  safeConvert AddFieldEvidence                                = return 58
+  safeConvert RemoveFieldEvidence                             = return 59
+  safeConvert ChangeFieldEvidence                             = return 60
+  safeConvert OldDocumentHistory                              = return 61
+
   
 instance Convertible Int EvidenceEventType where
     safeConvert 1  = return AddSigAttachmentEvidence
@@ -320,7 +331,12 @@ instance Convertible Int EvidenceEventType where
     safeConvert 53 = return AttachCSVUploadEvidence
     safeConvert 54 = return SendToPadDevice
     safeConvert 55 = return RemovedFromPadDevice
-    safeConvert 56 = return OldDocumentHistory
+    safeConvert 56 = return AddSignatoryEvidence
+    safeConvert 57 = return RemoveSignatoryEvidence
+    safeConvert 58 = return AddFieldEvidence
+    safeConvert 59 = return RemoveFieldEvidence
+    safeConvert 60 = return ChangeFieldEvidence
+    safeConvert 61 = return OldDocumentHistory
     safeConvert s  = Left ConvertError { convSourceValue = show s
                                        , convSourceType = "Int"
                                        , convDestType = "EvidenceEventType"
