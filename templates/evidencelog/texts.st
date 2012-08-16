@@ -9,7 +9,8 @@ AddDocumentAttachmentEvidenceText=Attachment “$name$” uploaded by $actor$.
 ###
 PendingToAwaitingAuthorEvidenceText=$actor$ emailed notification to author ($email$) that all other parties have signed and the author is next to sign.
 ###
-UpdateFieldsEvidenceText=Field $fieldtype$ for signatory ($email$) was filled with “$value$” by $actor$.
+UpdateFieldsEvidenceText=
+Field $fieldtype$ for signatory ($email$) was $if(checked)$checked$elseif(unchecked)$unchecked$elseif(value)$filled with "$value$"$elseif(signature)$signed <img alt="signature for $email$" src="$signature$" width="100" height="50"></img>$else$changed$endif$ by $actor$.
 ###
 SetElegitimationIdentificationEvidenceText=$actor$ required e-legitimation verification for all signatories.
 ###
@@ -109,24 +110,22 @@ SignableFromDocumentIDWithUpdatedAuthorEvidenceText=Transaction started from tem
 ###
 ArchiveDocumentEvidenceText= 
 ###
-ResetSignatoryDetailsEvidenceText=
-    $if(added)$
-        $if(signatory)$
-          Signatory ($email$) added to transaction by $actor$.
-        $elseif(field)$
-          Field $fieldtype$ for signatory ($email$) was filled with “$value$” by $actor$.$if(hasplacements)$ Field was placed onto the page to places with coordinates $placements$.$endif$
-        $endif$
-    $elseif(changed)$
-        $if(field)$
-          Field $fieldtype$ for signatory ($email$) was filled with “$value$” by $actor$.$if(hasplacements)$ Field was placed onto the page to places with coordinates $placements$.$endif$
-        $endif$
-    $elseif(removed)$
-        $if(signatory)$
-          Signatory ($email$) removed from transaction by $actor$.
-        $elseif(field)$
-          Field $fieldtype$ for signatory ($email$) removed by $actor$.
-        $endif$
-    $endif$
+RemoveSignatoryEvidenceText=
+Signatory ($email$) removed from transaction by $actor$.
+###
+AddSignatoryEvidenceText=
+Signatory ($email$) added to transaction by $actor$.
+###
+RemoveFieldEvidenceText=
+Field $fieldtype$ for signatory ($email$) removed by $actor$.
+###
+AddFieldEvidenceText=
+Field $fieldtype$ for signatory ($email$) was $if(checked)$added checked$elseif(unchecked)$added unchecked$elseif(value)$filled with "$value$"$else$added$endif$ by $actor$.$if(hasplacements)$ Field was placed onto the page at coordinates $placements:{p | (page=$p.page$, x=$p.x$, y=$p.y$) }; separator=","$.$endif$
+###
+ChangeFieldEvidenceText=
+Field $fieldtype$ for signatory ($email$) was $if(checked)$checked$elseif(unchecked)$unchecked$elseif(value)$filled with "$value$"$elseif(signature)$signed <img alt="signature for $email$" src="$signature$" width="100" height="50"></img>$else$changed$endif$ by $actor$.$if(hasplacements)$ Field was placed onto the page at coordinates $placements:{p | (page=$p.page$, x=$p.x$, y=$p.y$) }; separator=","$.$endif$
+###
+ResetSignatoryDetailsEvidenceText=DO NOT USE!
 ###
 AdminOnlySaveForUserEvidenceText=
 ###
