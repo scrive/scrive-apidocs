@@ -47,7 +47,7 @@ main = Log.withLogger $ do
     t1 <- forkCron_ tg "Dispatcher" 5 $ dispatcher rng sender msender dbconf
     t2 <- forkCron_ tg "Cleaner" (60*60*24) $ cleaner rng dbconf
     t3 <- case mscSlaveSender conf of
-      Just slave -> return <$> forkCron_ tg "ServiceAvailabilityChecker" 0
+      Just slave -> return <$> forkCron tg "ServiceAvailabilityChecker" 0
         (serviceAvailabilityChecker rng dbconf (sender, createSender slave) msender)
       Nothing -> return []
     return (tg, srvr, t1:t2:t3)

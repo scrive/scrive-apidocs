@@ -72,8 +72,7 @@ forkCron tg name seconds action = do
             (ws, cmd) <- readTVar ctrl
             -- if worker was ordered to finish, just wait until controller
             -- kills it, do not re-enter noninterruptible section again.
-            when (ws == Running && cmd == Finish)
-              retry
+            when (ws == Running && cmd == Finish) retry
             writeTVar int False
         worker = do
           st <- atomically $ do
