@@ -44,10 +44,10 @@ main = Log.withLogger $ do
     maybe (return ()) Log.mailingServer overlaps
     socket <- listenOn (htonl iface) $ fromIntegral port
     srvr <- forkIO $ simpleHTTPWithSocket socket handlerConf (router rng conf routes)
-    t1 <- forkCron tg "Dispatcher" 5 $ dispatcher rng sender msender dbconf
-    t2 <- forkCron tg "Cleaner" (60*60*24) $ cleaner rng dbconf
+    t1 <- forkCron_ tg "Dispatcher" 5 $ dispatcher rng sender msender dbconf
+    t2 <- forkCron_ tg "Cleaner" (60*60*24) $ cleaner rng dbconf
     t3 <- case mscSlaveSender conf of
-      Just slave -> return <$> forkCron tg "ServiceAvailabilityChecker" 0
+      Just slave -> return <$> forkCron_ tg "ServiceAvailabilityChecker" 0
         (serviceAvailabilityChecker rng dbconf (sender, createSender slave) msender)
       Nothing -> return []
     return (tg, srvr, t1:t2:t3)

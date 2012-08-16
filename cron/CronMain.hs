@@ -51,26 +51,26 @@ main = Log.withLogger $ do
 
   let runScheduler = runQueue rng (dbConfig appConf) (SchedulerData appConf templates)
       inDB = liftIO . withPostgreSQL (dbConfig appConf) . runCryptoRNGT rng
-  t1 <- forkCron tg "timeoutDocuments" (60 * 10) $ do
+  t1 <- forkCron_ tg "timeoutDocuments" (60 * 10) $ do
     Log.cron "Running timeoutDocuments..."
     runScheduler timeoutDocuments
-  t2 <- forkCron tg "EmailChangeRequests" (60 * 60) $ do
+  t2 <- forkCron_ tg "EmailChangeRequests" (60 * 60) $ do
     Log.cron "Evaluating EmailChangeRequest actions..."
     runScheduler $ actionQueue emailChangeRequest
-  t3 <- forkCron tg "PasswordReminders" (60 * 60) $ do
+  t3 <- forkCron_ tg "PasswordReminders" (60 * 60) $ do
     Log.cron "Evaluating PasswordReminder actions..."
     runScheduler $ actionQueue passwordReminder
-  t4 <- forkCron tg "UserAccountRequests" (60 * 60) $ do
+  t4 <- forkCron_ tg "UserAccountRequests" (60 * 60) $ do
     Log.cron "Evaluating UserAccountRequest actions..."
     runScheduler $ actionQueue userAccountRequest
-  t5 <-  forkCron tg "Sessions" (60 * 60) $ do
+  t5 <-  forkCron_ tg "Sessions" (60 * 60) $ do
     Log.cron "Evaluating sessions..."
     runScheduler $ actionQueue session
-  t6 <- forkCron tg "EventsProcessing" 5 $ do
+  t6 <- forkCron_ tg "EventsProcessing" 5 $ do
     runScheduler processEvents
-  t7 <- forkCron tg "DocumentAPICallback" 10 $ do
+  t7 <- forkCron_ tg "DocumentAPICallback" 10 $ do
     runScheduler $ actionQueue documentAPICallback
-  t8 <- forkCron tg "RecurlySync" (60 * 60) . inDB $ do
+  t8 <- forkCron_ tg "RecurlySync" (60 * 60) . inDB $ do
     mtime <- getMinutesTime
     ctime <- liftIO $ System.Time.toCalendarTime (toClockTime mtime)
     temps <- snd `liftM` liftIO (readMVar templates)
@@ -78,7 +78,7 @@ main = Log.withLogger $ do
       handleSyncWithRecurly (hostpart appConf) (mailsConfig appConf)
         temps (recurlyAPIKey $ recurlyConfig appConf) mtime
   t9 <- if AWS.isAWSConfigOk appConf
-          then return <$> (forkCron tg "AmazonUploading" 60 $ runScheduler AWS.uploadFilesToAmazon)
+          then return <$> (forkCron_ tg "AmazonUploading" 60 $ runScheduler AWS.uploadFilesToAmazon)
           else return []
 
   waitForTermination
