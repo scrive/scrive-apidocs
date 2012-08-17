@@ -84,7 +84,7 @@ window.PageTasks = Backbone.Model.extend({
   },
   initialize: function(args) {
     var model = this;  
-    var tasks = args.tasks.sort(function(t1,t2) {return t1.el().offset().top > t2.el().offset().top} );
+    var tasks = args.tasks.sort(function(t1,t2) {return t1.el().offset().top - t2.el().offset().top} );
    _.each(tasks, function(t) {t.bind('change', function() { model.activateTask();})});
    this.activateTask();
   },
