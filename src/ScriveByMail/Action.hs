@@ -58,6 +58,8 @@ checkThat s b = Nothing <| b |> Just s
 charset :: MIME.Type -> String
 charset mimetype = fromMaybe "us-ascii" $ lookup "charset" (MIME.mimeParams mimetype)
 
+-- Some mail clients apparently don't surround the email address with <>, so treat
+-- them separately
 parseEmail :: String -> String
 parseEmail from = if '<' `elem` from
                   then strip $ map toLower $ takeWhile (/= '>') $ dropWhile (== '<') $ dropWhile (/= '<') from
