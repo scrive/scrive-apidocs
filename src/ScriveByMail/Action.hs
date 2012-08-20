@@ -58,6 +58,12 @@ checkThat s b = Nothing <| b |> Just s
 charset :: MIME.Type -> String
 charset mimetype = fromMaybe "us-ascii" $ lookup "charset" (MIME.mimeParams mimetype)
 
+parseEmail :: String -> String
+parseEmail from = if '<' `elem` from
+                  then strip $ map toLower $ takeWhile (/= '>') $ dropWhile (== '<') $ dropWhile (/= '<') from
+                  else strip from
+
+
 doMailAPI :: Kontrakcja m => BS.ByteString -> m (Maybe Document)
 doMailAPI content = do
   let (mime, allParts) = parseEmailMessageToParts content
@@ -81,7 +87,7 @@ doMailAPI content = do
   -- access control
 
   ctx <- getContext
-  let username = strip $ map toLower $ takeWhile (/= '>') $ dropWhile (== '<') $ dropWhile (/= '<') from
+  let username = parseEmail from
     -- 'extension' is a piece of data that is after + sign in email
     -- addres. example: api+1234@api.skrivapa.se here '1234' is
     -- extension and can be used as for example password
