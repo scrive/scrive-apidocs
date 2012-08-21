@@ -60,7 +60,7 @@ instance MonadDB m => DBUpdate m DeleteMailsOlderThenDays Integer where
   update (DeleteMailsOlderThenDays days) = do
     kPrepare $ "DELETE FROM mails where (now() > to_be_sent + interval '"++show days++" days')" -- Sorry but it did not work as param.
     kExecute []
-    
+
 data GetUnreadEvents = GetUnreadEvents
 instance MonadDB m => DBQuery m GetUnreadEvents [(EventID, MailID, XSMTPAttrs, Event)] where
   query GetUnreadEvents = getUnreadEvents False
