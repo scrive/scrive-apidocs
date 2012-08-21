@@ -453,6 +453,8 @@ var DocumentDesignView = Backbone.View.extend({
                         cssClass: "finalbutton",
                         text: localization.saveTemplate,
                         onClick: function() {
+                                if (alreadyClicked(this))
+                                  return;
                                 document.save();
                                 document.afterSave( function() {new Submit().send();});
                         }
@@ -504,18 +506,26 @@ var DocumentDesignView = Backbone.View.extend({
                                                  });
                             }
             bankid.click(function() {
+                    if (alreadyClicked(acceptButton))
+                      return false;
                     Eleg.bankidSign(document,signatory, document.signByAuthor(),callback);
                     return false;
             });
             telia.click(function() {
+                    if (alreadyClicked(acceptButton))
+                      return false;
                     Eleg.teliaSign(document,signatory, document.signByAuthor(),callback);
                     return false;
             });
             nordea.click(function() {
+                    if (alreadyClicked(acceptButton))
+                      return false;
                     Eleg.nordeaSign(document,signatory, document.signByAuthor(),callback);
                     return false;
             });
             mbi.click(function() {
+                if (alreadyClicked(acceptButton))
+                  return false;
                 Eleg.mobileBankIDSign(document,signatory,document.signByAuthor(),callback);
                 return false;
             });
@@ -529,6 +539,8 @@ var DocumentDesignView = Backbone.View.extend({
                   icon : $("<span class='btn-symbol cross' />"),
                   text : document.process().signbuttontext(),
                   onClick : function() {
+                      if (alreadyClicked(this))
+                        return;
                       document.afterSave(function() {
                           document.signByAuthor().sendAjax(function(resp) {
                                         var link = JSON.parse(resp).link;
@@ -591,6 +603,8 @@ var DocumentDesignView = Backbone.View.extend({
                                 color : "green",
                                 text : document.process().sendbuttontext(),
                                 onClick : function() {
+                                    if (alreadyClicked(this))
+                                      return;
                                     LoadingDialog.open(localization.designview.messages.sendingDocument);
                                     document.afterSave(function() {
                                         document.sendByAuthor().sendAjax(function(resp) {
