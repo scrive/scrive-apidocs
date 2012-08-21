@@ -137,11 +137,18 @@
         },
         getSchemaUrlParams: function() {
             var params = this.extraParams();
-            params.page = this.paging().pageCurrent();
-            params.offset = params.page * this.paging().pageSize();
-            params.textfilter = this.textfiltering().text();
-            params.selectfilter = JSON.stringify(_.map(this.allFiltering(),function(f) {return {name: f.name(),value: f.selectedValue() }; }));
-            params.sort = this.sorting().current();
+            // do not overwrite already defined fields
+            if (!params.hasOwnProperty("page"))
+              params.page = this.paging().pageCurrent();
+            if (!params.hasOwnProperty("offset"))
+              params.offset = params.page * this.paging().pageSize();
+            if (!params.hasOwnProperty("textfilter"))
+              params.textfilter = this.textfiltering().text();
+            if (!params.hasOwnProperty("selectfilter"))
+              params.selectfilter = JSON.stringify(_.map(this.allFiltering(),function(f) {return {name: f.name(),value: f.selectedValue() }; }));
+            if (!params.hasOwnProperty("sort"))
+              params.sort = this.sorting().current();
+            if (!params.hasOwnProperty("sortReversed"))
             params.sortReversed = this.sorting().isAsc();
             return params;
         }

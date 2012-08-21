@@ -1383,10 +1383,14 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
   query (GetDocuments domains filters orderbys pagination) = do
     selectDocuments $ mconcat
       [ selectDocumentsSQL
-      , SQL "WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = signatory_links.document_id AND " []
-      , SQL "(" []
-      , sqlConcatOR (map documentDomainToSQL domains)
-      , SQL ")" []
+      , SQL "WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = signatory_links.document_id " []
+      , if null domains
+          then mempty
+          else mconcat [
+              SQL "AND (" []
+            , sqlConcatOR (map documentDomainToSQL domains)
+            , SQL ")" []
+            ]
       , if not (null filters)
         then SQL " AND " [] `mappend` sqlConcatAND (map documentFilterToSQL filters)
         else SQL "" []
