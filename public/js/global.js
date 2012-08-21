@@ -189,6 +189,15 @@ safeReady(function() {
   $(window).resize();
 });
 
+//used by buttons for signing/sending/saving/rejecting document
+function alreadyClicked(button) {
+  var result = false;
+  if (button.wasAlreadyClicked)
+    result = true;
+  button.wasAlreadyClicked = true;
+  return result;
+}
+
 //used by the administration pages
 function prepareForEdit(form, width) {
   var width = width == undefined ? 540 : width;

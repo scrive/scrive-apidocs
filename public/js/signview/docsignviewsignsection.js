@@ -29,8 +29,10 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                             rejectText: localization.cancel,
                                             acceptColor: "red",
                                             onAccept: function(customtext) {
+                                                if (alreadyClicked(this))
+                                                  return;
                                                 document.currentSignatory().reject(customtext).send();
-                                                }
+                                              }
                                             });
                                         }
                                 });
