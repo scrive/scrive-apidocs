@@ -117,6 +117,9 @@
         extraParams: function() {
             return this.get("extraParams");
         },
+        extraParamsOverwrite: function() {
+            return this.get("extraParamsOverwrite");
+        },
         expandedByDefault : function() {
             return this.get("expandedByDefault") == true;
         },
@@ -143,6 +146,11 @@
             params.selectfilter = JSON.stringify(_.map(this.allFiltering(),function(f) {return {name: f.name(),value: f.selectedValue() }; }));
             params.sort = this.sorting().current();
             params.sortReversed = this.sorting().isAsc();
+            var overwrite = this.extraParamsOverwrite();
+            for (var p in overwrite) {
+              if (overwrite.hasOwnProperty(p))
+                params[p] = overwrite[p];
+            }
             return params;
         }
     });

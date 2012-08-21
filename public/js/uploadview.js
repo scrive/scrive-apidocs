@@ -169,7 +169,8 @@
                 name : "Templates table",
                 schema: new Schema({
                     url: "/docs",
-                    extraParams : { documentType : "Template|" + wiz.get('process').name },
+                    extraParams : { documentType : "Template" },
+                    extraParamsOverwrite: { selectfilter: "[{\"name\":\"process\",\"value\":\"" + wiz.get('process').name.toLowerCase() + "\"}]" },
                     sorting: new Sorting({ fields: ["title"]}),
                     paging: new Paging({}),
                     filtering: new TextFiltering({text: "", infotext: localization.searchTemplate}),

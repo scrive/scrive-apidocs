@@ -232,19 +232,19 @@ sqlWhereOr sqls = sqlWhere $
 
 sqlWhereEq :: (MonadState v m, SqlWhere v, Convertible sql SqlValue) => String -> sql -> m ()
 sqlWhereEq name value =
-  sqlWhere (SQL (name ++ "=?") [toSql value])
+  sqlWhere (SQL (name ++ " = ?") [toSql value])
 
 sqlWhereNotEq :: (MonadState v m, SqlWhere v, Convertible sql SqlValue) => String -> sql -> m ()
 sqlWhereNotEq name value =
-  sqlWhere (SQL (name ++ "<>?") [toSql value])
+  sqlWhere (SQL (name ++ " <> ?") [toSql value])
 
 sqlWhereLike :: (MonadState v m, SqlWhere v, Convertible sql SqlValue) => String -> sql -> m ()
 sqlWhereLike name value =
-  sqlWhere (SQL (name ++ "LIKE ?") [toSql value])
+  sqlWhere (SQL (name ++ " LIKE ?") [toSql value])
 
 sqlWhereILike :: (MonadState v m, SqlWhere v, Convertible sql SqlValue) => String -> sql -> m ()
 sqlWhereILike name value =
-  sqlWhere (SQL (name ++ "ILIKE ?") [toSql value])
+  sqlWhere (SQL (name ++ " ILIKE ?") [toSql value])
 
 sqlWhereIn :: (MonadState v m, SqlWhere v, Convertible sql SqlValue) => String -> [sql] -> m ()
 sqlWhereIn _name [] = sqlWhere (SQL "FALSE" [])

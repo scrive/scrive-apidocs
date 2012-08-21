@@ -8,6 +8,7 @@ import Control.Arrow
 import Control.Monad
 import Data.Maybe
 import Happstack.Server
+import qualified Control.Exception.Lifted as E
 
 import DB
 import Mails.Model
@@ -38,7 +39,10 @@ handleSendGridEvents = do
                   email <- fromMaybe "" <$> getField "email"
                   category <- fromMaybe "" <$> getField "category"
                   let ev = SendGridEvent email event category
-                  res <- dbUpdate $ UpdateWithEvent mailID ev
+                  res <- dbUpdate (UpdateWithEvent mailID ev) `E.catch` \(e::SQLError) -> do
+                    logMsg $ "SQLError thrown while executing UpdateWithEvent: " ++ show e
+                    dbRollback
+                    return False
                   logMsg $ if not res
                     then "UpdateWithEvent didn't update anything"
                     else "Event '" ++ show event ++ "' for email #" ++ show mailID ++ " received."

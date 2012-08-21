@@ -26,6 +26,8 @@ simpleMailTests = testGroup "Simple Mail Tests" [
   ,doubleOptionalFieldsWeirdSignatory
   ,testMinimumDistance
   ,testWackySignature
+  ,testExtraSpaces
+  --,testExtraSpaces2
   ]
 
 blankEmailTest :: Test
@@ -47,7 +49,6 @@ singleMinimalSignatory = testCase "Single Minimal Signatory" $ do
                                                   , SignatoryField EmailFT     "mariusz@skrivapa.se" []]} 
       -> return ()
     _ -> error "Did not return correct details"
-    
 
 doubleMinimalSignatory :: Test
 doubleMinimalSignatory = testCase "Double Minimal Signatory" $ do
@@ -220,3 +221,60 @@ testWackySignature = testCase "Test wacky signature (rtf)" $
       Log.debug $ "JSON returned from parse: " ++ show a
       error ("Did not return correct json; got: " ++ show a) 
                   
+testExtraSpaces :: Test
+testExtraSpaces = testCase "Test that those stupid clients that think Return means start new paragraph are parsed in a way that stops generating bug reports." $
+  case parseSimpleEmail "Dude!"
+       ("First name: eric " ++
+        "\n" ++
+        "\n" ++
+        "Last name: normand " ++
+        "\n" ++
+        "\n" ++
+        "email:ericwnormand@gmail.com" ++
+        "\n" ++
+        "\n") of
+    Left msg -> error msg
+    Right (title, sigs) |
+      title == "Dude!" &&
+      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "eric" []
+                                              , SignatoryField LastNameFT "normand" []
+                                              , SignatoryField EmailFT "ericwnormand@gmail.com" []]]
+      -> return ()
+    a -> do
+      error ("Did not return correct json; got: " ++ show a)
+
+{- Doesn't work! No way to parse it.
+testExtraSpaces2 :: Test
+testExtraSpaces2 = testCase "Test that those stupid clients that think Return means start new paragraph are parsed in a way that stops generating bug reports." $
+  case parseSimpleEmail "Dude!"
+       ("First name: eric " ++
+        "\n" ++
+        "\n" ++
+        "Last name: normand " ++
+        "\n" ++
+        "\n" ++
+        "email:\nericwnormand@gmail.com " ++
+        "\n" ++
+        "\n" ++
+        "first name: eric " ++
+        "\n" ++
+        "\n" ++
+        "last name: normand " ++
+        "\n" ++
+        "\n" ++
+        "email:\n" ++
+        "eric@scrive.com ") of
+    Left msg -> error msg
+    Right (title, sigs) |
+      title == "Dude!" &&
+      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "eric" []
+                                              , SignatoryField LastNameFT "normand" []
+                                              , SignatoryField EmailFT "ericwnormand@gmail.com" []]
+              ,SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "eric" []
+                                              , SignatoryField LastNameFT "normand" []
+                                              , SignatoryField EmailFT "eric@scrive.com" []]]
+      -> return ()
+    a -> do
+      error ("Did not return correct json; got: " ++ show a)
+
+-}

@@ -183,9 +183,14 @@ handleShow :: Kontrakcja m => AttachmentID -> m (Either KontraLink (Either Respo
 handleShow attid = checkUserTOSGet $ do
   ctx <- getContext
   let Just user = ctxmaybeuser ctx
-  [attachment] <- dbQuery $ GetAttachments [AttachmentsSharedInUsersCompany (userid user)]
-                                         [AttachmentFilterByID [attid]] [] (AttachmentPagination 0 1)
-  Right <$> pageAttachment' attachment
+  mattachment <- oneObjectReturnedGuard =<< dbQuery (GetAttachments
+    [AttachmentsSharedInUsersCompany (userid user)]
+    [AttachmentFilterByID [attid]]
+    []
+    (AttachmentPagination 0 1))
+  case mattachment of
+    Nothing -> respond404
+    Just at -> Right <$> pageAttachment' at
 
 pageAttachment' :: TemplatesMonad m
                 => Attachment
