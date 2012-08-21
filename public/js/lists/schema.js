@@ -117,6 +117,9 @@
         extraParams: function() {
             return this.get("extraParams");
         },
+        extraParamsOverwrite: function() {
+            return this.get("extraParamsOverwrite");
+        },
         expandedByDefault : function() {
             return this.get("expandedByDefault") == true;
         },
@@ -137,19 +140,17 @@
         },
         getSchemaUrlParams: function() {
             var params = this.extraParams();
-            // do not overwrite already defined fields
-            if (!params.hasOwnProperty("page"))
-              params.page = this.paging().pageCurrent();
-            if (!params.hasOwnProperty("offset"))
-              params.offset = params.page * this.paging().pageSize();
-            if (!params.hasOwnProperty("textfilter"))
-              params.textfilter = this.textfiltering().text();
-            if (!params.hasOwnProperty("selectfilter"))
-              params.selectfilter = JSON.stringify(_.map(this.allFiltering(),function(f) {return {name: f.name(),value: f.selectedValue() }; }));
-            if (!params.hasOwnProperty("sort"))
-              params.sort = this.sorting().current();
-            if (!params.hasOwnProperty("sortReversed"))
+            params.page = this.paging().pageCurrent();
+            params.offset = params.page * this.paging().pageSize();
+            params.textfilter = this.textfiltering().text();
+            params.selectfilter = JSON.stringify(_.map(this.allFiltering(),function(f) {return {name: f.name(),value: f.selectedValue() }; }));
+            params.sort = this.sorting().current();
             params.sortReversed = this.sorting().isAsc();
+            var overwrite = this.extraParamsOverwrite();
+            for (var p in overwrite) {
+              if (overwrite.hasOwnProperty(p))
+                params[p] = overwrite[p];
+            }
             return params;
         }
     });
