@@ -218,7 +218,7 @@ window.DesignAuthorAttachmentsPopup = {
          Confirmation.popup({
               content  : $(view.el),
               title  : localization.authorattachments.selectAttachments,
-              acceptText: localization.authorattachments.attach,
+              acceptText: localization.save,
               width: "800px",
               onAccept : function() {
                   var submit = document.setAttachments();
