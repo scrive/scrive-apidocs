@@ -105,13 +105,21 @@ getParseErrorsSig ls = let unks = concatMap getParseErrorsLine ls
                        in case unks ++ missings of
                          [] -> Nothing
                          es -> Just $ CombinedError ls es
+                         
+joinColons :: [String] -> [String]
+joinColons []                        = []
+joinColons (s:t:ss) | endswith ":" s = joinColons $ (s ++ t) : ss
+joinColons (s:ss)                    = s : joinColons ss
 
 splitSignatories :: String -> [[String]]
 splitSignatories mailbody =
-  let sigstrings' = map strip $ lines $ strip mailbody
+  let sigstrings' = joinColons $ map strip $ lines $ strip mailbody
       sigstrings  = takeWhile ((== "") ||^ (elem ':')) sigstrings'           
-      lss = filter (/= []) $ split [""] sigstrings
-  in lss
+      lss  = filter (/= []) $ split [""] sigstrings
+      lss' = map (filter (/= "")) $ filter (/= []) $ split ["", ""] sigstrings
+  in if any (\s->1==length s) lss
+     then lss'
+     else lss
 
 getParseErrorsEmail :: String -> [SimpleMailError]
 getParseErrorsEmail mailbody = 
