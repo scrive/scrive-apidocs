@@ -24,6 +24,12 @@
         plan: function() {
             return this.get('plan');
         },
+        free: function() {
+            return this.plan() === 'free';
+        },
+        teamPlan: function() {
+            return teamplans[this.plan()];
+        },
         blockAny: function() {
             return this.get('block');
         },
@@ -34,10 +40,17 @@
             return this.blockAny() && this.docsLeft() < n;
         },
         blockBranding: function() {
-            return this.blockAny() && teamplans[this.plan()];
+            return this.blockAny() && !this.teamPlan();
         },
         blockUsers: function() {
-            return this.blockAny() && teamplans[this.plan()];
+            return this.blockAny() && (!this.teamPlan()
+                                       || this.usersUsed() >= this.usersPaid());
+        },
+        usersUsed: function() {
+            return this.get('usersused') || 0;
+        },
+        usersPaid: function() {
+            return this.get('userspaid') || 0;
         }
     });
 
@@ -57,7 +70,12 @@
             title: "Please purchase an account to continue",
             content: $("<p />").text(text),
             color: "Green",
-            acceptText: "Purchase"
+            acceptText: "Purchase",
+            onAccept: function() {
+                // just send them to the payments page!
+                window.location = "/payments/dashboard";
+                return false;
+            }
         });
 
     }};

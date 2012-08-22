@@ -44,6 +44,7 @@ import User.Utils
 import User.History.Model
 import ScriveByMail.Model
 import Payments.Control
+import Payments.Model
 
 handleUserGet :: Kontrakcja m => m (Either KontraLink Response)
 handleUserGet = checkUserTOSGet $ do
@@ -580,10 +581,21 @@ handleBlockingInfo = do
   time <- ctxtime <$> getContext
   let month = 1 + (index (January, December) $ ctMonth $ toUTCTime time)
   docsusedthismonth <- dbQuery $ GetDocsSentThisMonth (userid user) month
+  mpaymentplan <- dbQuery $ GetPaymentPlan $ maybe (Left $ userid user) Right (usercompany user)
+
+  let paymentplan = maybe "free" (show . ppPricePlan) mpaymentplan
+
+  let quantity = maybe 0 ppQuantity mpaymentplan
+  usedusers <- case usercompany user of
+    Nothing -> return 0
+    Just cid -> dbQuery $ GetCompanyQuantity cid
   
   runJSONGenT $ do
-    J.value "docsused" docsusedthismonth
-
+    J.value "docsused"  docsusedthismonth
+    J.value "plan"      paymentplan
+    J.value "userspaid" quantity
+    J.value "usersused" usedusers
+    
 {- |
    Fetch the xtoken param and double read it. Once as String and once as MagicHash.
  -}

@@ -100,7 +100,8 @@ window.DocumentsListDefinition = function(archive) { return {
                 acceptEmpty : true,
                 onSelect: function() {
 
-                    if(BlockingInfo.blockCreate()) {
+                    // blocking
+                    if(BlockingInfo && BlockingInfo.blockCreate()) {
                         blocking.show("Can't send more documents.");
                         return false;
                     }

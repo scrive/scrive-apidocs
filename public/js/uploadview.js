@@ -18,9 +18,14 @@
            var wiz = this.model.wizard();
            var a = $("<a class='documenticon' href='#'/>").append($("<span class='text'/>").text(v.localname));
            a.click(function(){
-                    wiz.set({process: v});
-                    wiz.nextStep();
-                    return false;
+               // blocking
+               if(BlockingInfo && BlockingInfo.blockCreate()) {
+                   blocking.show("Can't send more documents.");
+                   return false;
+               }
+               wiz.set({process: v});
+               wiz.nextStep();
+               return false;
            });
            return $("<td/>").append($("<div class='documentTypeBox'/>").append(a));
         },

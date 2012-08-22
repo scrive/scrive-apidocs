@@ -457,6 +457,11 @@ window.CompanyBrandingView = Backbone.View.extend({
       size: "small",
       text: localization.saveBranding,
       onClick: function() {
+          // blocking
+          if(BlockingInfo && BlockingInfo.blockBranding()) {
+              blocking.show("Please purchase a Team account to use branding.");
+              return false;
+          }
         new Submit({
           method: "POST",
           url: company.submitUrl,

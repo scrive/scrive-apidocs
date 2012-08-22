@@ -23,6 +23,22 @@ viewCompanyAccounts =
         size: "tiny",
         text: "$_newCompanyAccountButtonText()$",
         onClick: function() {
+
+            // blocking
+            if(BlockingInfo && BlockingInfo.blockUsers()) {
+              var msg;
+
+              if(BlockingInfo.teamPlan())
+                msg = "You have used all of the user accounts you pay for. Please add more users to your subscription.";
+              else if(BlockingInfo.free())
+                msg = "Please purchase a Team account to add new users.";
+              else
+                msg = "Please upgrade to a Team account to add enw users.";
+
+              blocking.show(msg);
+              return false;
+            }
+
             var body = jQuery("<div class='account-body'>");
             body.append("<p>$_modalAddCompanyAccountBody()$</p>");
             var table = jQuery("<table/>");

@@ -187,6 +187,14 @@ showUser =
     size: "small",
     text: "$_createCompany()$",
     onClick: function() {
+
+        // blocking
+        if(BlockingInfo && BlockingInfo.blockBranding()) {
+          blocking.show("Please purchase a Team account to convert to company.");
+          return false;
+        }
+        
+
         var body = jQuery("<div class='account-body'>");
         var firstp = jQuery("<p>").text("$_createCompanyExplanation()$");
         var secondp = jQuery("<p>").text("$_createCompanyFormPreamble()$");
@@ -194,15 +202,20 @@ showUser =
         body.append(secondp);
         var table = jQuery("<table/>");
 
+        var company = jQuery('input[name=companyname]').val();
+        var orgnum = jQuery('input[name=companynumber]').val();
+
         var tr1 = jQuery("<tr/>").append(jQuery("<td/>").text("$_company()$:"));
         var companyname = jQuery("<input type='text' name='companyname' autocomplete='off' />");
         tr1.append(jQuery("<td/>").append(companyname));
         table.append(tr1);
+        companyname.val(company);
 
         var tr2 = jQuery("<tr/>").append(jQuery("<td/>").text("$_orgnumber()$:"));
         var companynumber = jQuery("<input type='text' name='companynumber' autocomplete='off' />");
         tr2.append(jQuery("<td/>").append(companynumber));
         table.append(tr2);
+        companynumber.val(orgnum);
 
         var tr5 = jQuery("<tr/>").append(jQuery("<td/>").text("$_address()$"));
         var companyaddress = jQuery("<input type='text' name='companyaddress' autocomplete='off' />");
