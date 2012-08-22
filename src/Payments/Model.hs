@@ -18,24 +18,23 @@ import KontraError
 -- new data types
 
 data PricePlan = FreePricePlan
-               | BasicPricePlan    
-               | BrandingPricePlan
-               | AdvancedPricePlan
-               | EnterprisePricePlan  -- when they are invoiced
+               | ProfessionalPricePlan    
+               | TeamPricePlan
+               | EnterprisePricePlan  -- nothing gets blocked
                deriving (Eq, Ord)
                  
 newtype AccountCode = AccountCode Int64
                     deriving (Eq, Ord, Typeable)
 
 -- | Data structure for storing in DB
-data PaymentPlan = PaymentPlan    { ppAccountCode      :: AccountCode
-                                  , ppID               :: Either UserID CompanyID
-                                  , ppPricePlan        :: PricePlan 
-                                  , ppPendingPricePlan :: PricePlan    -- plan next month
-                                  , ppStatus           :: PaymentPlanStatus
-                                  , ppPendingStatus    :: PaymentPlanStatus -- status next month
-                                  , ppQuantity         :: Int
-                                  , ppPendingQuantity  :: Int
+data PaymentPlan = PaymentPlan    { ppAccountCode         :: AccountCode
+                                  , ppID                  :: Either UserID CompanyID
+                                  , ppPricePlan           :: PricePlan 
+                                  , ppPendingPricePlan    :: PricePlan    -- plan next month
+                                  , ppStatus              :: PaymentPlanStatus
+                                  , ppPendingStatus       :: PaymentPlanStatus -- status next month
+                                  , ppQuantity            :: Int
+                                  , ppPendingQuantity     :: Int
                                   , ppPaymentPlanProvider :: PaymentPlanProvider
                                   }
                    
@@ -208,19 +207,17 @@ instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
 -- how do things look as a string?
     
 instance Show PricePlan where
-  showsPrec _ FreePricePlan       = (++) "free"
-  showsPrec _ BasicPricePlan      = (++) "basic"
-  showsPrec _ BrandingPricePlan   = (++) "branding"
-  showsPrec _ AdvancedPricePlan   = (++) "advanced"
-  showsPrec _ EnterprisePricePlan = (++) "enterprise"
+  showsPrec _ FreePricePlan         = (++) "free"
+  showsPrec _ ProfessionalPricePlan = (++) "professional"
+  showsPrec _ TeamPricePlan         = (++) "team"
+  showsPrec _ EnterprisePricePlan   = (++) "enterprise"
 
 instance Read PricePlan where
-  readsPrec _ "free"       = [(FreePricePlan,     "")]
-  readsPrec _ "basic"      = [(BasicPricePlan,    "")]
-  readsPrec _ "branding"   = [(BrandingPricePlan, "")]
-  readsPrec _ "advanced"   = [(AdvancedPricePlan, "")]
-  readsPrec _ "enterprise" = [(EnterprisePricePlan,  "")]
-  readsPrec _ _            = []
+  readsPrec _ "free"         = [(FreePricePlan,         "")]
+  readsPrec _ "professional" = [(ProfessionalPricePlan, "")]
+  readsPrec _ "team"         = [(TeamPricePlan,         "")]
+  readsPrec _ "enterprise"   = [(EnterprisePricePlan,   "")]
+  readsPrec _ _              = []
 
 instance Show PaymentPlanStatus where
   showsPrec _ ActiveStatus      = (++) "active"
@@ -237,18 +234,16 @@ instance Read PaymentPlanStatus where
   
 -- conversions for cramming values into the database
 instance Convertible PricePlan Int where
-  safeConvert FreePricePlan     = return 0
-  safeConvert BasicPricePlan    = return 1
-  safeConvert BrandingPricePlan = return 2
-  safeConvert AdvancedPricePlan = return 3
-  safeConvert EnterprisePricePlan  = return 4
+  safeConvert FreePricePlan         = return 0
+  safeConvert ProfessionalPricePlan = return 1
+  safeConvert TeamPricePlan         = return 2
+  safeConvert EnterprisePricePlan   = return 3
 
 instance Convertible Int PricePlan where
   safeConvert 0  = return FreePricePlan
-  safeConvert 1  = return BasicPricePlan
-  safeConvert 2  = return BrandingPricePlan
-  safeConvert 3  = return AdvancedPricePlan
-  safeConvert 4  = return EnterprisePricePlan
+  safeConvert 1  = return ProfessionalPricePlan
+  safeConvert 2  = return TeamPricePlan
+  safeConvert 3  = return EnterprisePricePlan
   safeConvert s = Left ConvertError { convSourceValue  = show s
                                     , convSourceType   = "Int"
                                     , convDestType     = "PricePlan"

@@ -302,11 +302,10 @@ fromRecurlyStatus "future"   = (DeactivatedStatus, ActiveStatus)
 fromRecurlyStatus _          = (ActiveStatus, ActiveStatus)
 
 fromRecurlyPricePlan :: String -> PricePlan
-fromRecurlyPricePlan "free"     = FreePricePlan
-fromRecurlyPricePlan "basic"    = BasicPricePlan
-fromRecurlyPricePlan "branded"  = BrandingPricePlan
-fromRecurlyPricePlan "advanced" = AdvancedPricePlan
-fromRecurlyPricePlan _          = AdvancedPricePlan
+fromRecurlyPricePlan "free"         = FreePricePlan
+fromRecurlyPricePlan "professional" = ProfessionalPricePlan
+fromRecurlyPricePlan "team"         = TeamPricePlan
+fromRecurlyPricePlan _              = TeamPricePlan
   
 instance ToJSValue Subscription where
   toJSValue (Subscription{..}) = runJSONGen $ do
