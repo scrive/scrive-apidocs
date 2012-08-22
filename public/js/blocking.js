@@ -24,33 +24,93 @@
         plan: function() {
             return this.get('plan');
         },
+        status: function() {
+            return this.get('status');
+        },
         free: function() {
             return this.plan() === 'free';
+        },
+        enterprise: function() {
+            return this.plan() === 'enterprise';
         },
         teamPlan: function() {
             return teamplans[this.plan()];
         },
+        overdue: function() {
+            return this.status() === 'overdue';
+        },
         blockAny: function() {
-            return this.get('block');
+            return this.get('block') && !this.enterprise();
         },
         blockCreate: function() {
             return this.blockAny() && this.docsLeft() < 1;
         },
+        blockCreateMessage: function() {
+            if(this.free())
+                return localization.blocking.create.noneLeftFree;
+            else
+                return localization.blocking.create.noneLeftBlock;
+        },
         blockCSV: function(n) {
             return this.blockAny() && this.docsLeft() < n;
+        },
+        blockCSVMessage: function(n) {
+            if(this.free())
+                return localization.blocking.create.csvfree;
+            else
+                return localization.blocking.create.csvblock;
         },
         blockBranding: function() {
             return this.blockAny() && !this.teamPlan();
         },
+        blockBrandingMessage: function() {
+            if(!this.teamPlan())
+                return localization.blocking.branding.notTeam;
+            else
+                return localization.blocking
+        },
+        blockCompanyMessage: function() {
+            if(this.free())
+                return localization.blocking.branding.companyfree;
+            else if(this.overdue())
+                return localization.blocking.branding.companyoverdue;
+            else
+                return localization.blocking.branding.companyprof;
+        },
         blockUsers: function() {
-            return this.blockAny() && (!this.teamPlan()
-                                       || this.usersUsed() >= this.usersPaid());
+            return this.blockAny() 
+                && (!this.teamPlan()
+                    || this.usersUsed() >= this.usersPaid());
+        },
+        blockUsersMessage: function() {
+            if(!this.teamPlan())
+                return localization.blocking.users.notTeam;
+            else if(this.usersUsed() >= this.usersPaid())
+                return localization.blocking.users.noneLeft;
+            else 
+                return "This should not be displayed.";
         },
         usersUsed: function() {
             return this.get('usersused') || 0;
         },
         usersPaid: function() {
             return this.get('userspaid') || 0;
+        },
+        modalTitle: function() {
+            if(this.free())
+                return localization.blocking.title.free;
+            else if(this.overdue())
+                return localization.blocking.title.update;
+            else
+                return localization.blocking.title.upgrade;
+        },
+        buttonText: function() {
+            if(this.free())
+                return localization.blocking.button.purchase;
+            else if(this.overdue())
+                return localization.blocking.button.doublecheck;
+            else 
+                return localization.blocking.button.upgrade;
         }
     });
 
@@ -65,12 +125,12 @@
                             }});
 
     window.blocking = {show: function(text) {
-
+        
         Confirmation.popup({
-            title: "Please purchase an account to continue",
-            content: $("<p />").text(text),
+            title: BlockingInfo.modalTitle(),
+            content: $("<p />").html(text),
             color: "Green",
-            acceptText: "Purchase",
+            acceptText: BlockingInfo.buttonText(),
             onAccept: function() {
                 // just send them to the payments page!
                 window.location = "/payments/dashboard";

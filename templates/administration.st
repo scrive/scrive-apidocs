@@ -458,11 +458,10 @@ adminuserpayments=
                   <td>Price plan (selected by admin):</td>
 		  <td>
 		    <select name="priceplan">
-                      <option value="free"       $if(freeplan)$selected="selected"$endif$>Free (no plan)</option>
-                      <option value="basic"      $if(basicplan)$selected="selected"$endif$>Basic</option>
-                      <option value="branding"   $if(brandingplan)$selected="selected"$endif$>Branding</option>
-                      <option value="advanced"   $if(advancedplan)$selected="selected"$endif$>Advanced</option>
-                      <option value="enterprise" $if(enterpriseplan)$selected="selected"$endif$>Enterprise</option>
+                      <option value="free"         $if(freeplan)$selected="selected"$endif$>Free (no plan)</option>
+                      <option value="professional" $if(professionalplan)$selected="selected"$endif$>Professional</option>
+                      <option value="team"         $if(teamplan)$selected="selected"$endif$>Team</option>
+                      <option value="enterprise"   $if(enterpriseplan)$selected="selected"$endif$>Enterprise</option>
                     </select>
 		  </td>
 		</tr>
@@ -497,11 +496,10 @@ adminuserpayments=
                   <td>Price plan (selected by admin):</td>
 		  <td>
 		    <select name="priceplan">
-                      <option value="free"       $if(freeplan)$selected="selected"$endif$>Free (no plan)</option>
-                      <option value="basic"      $if(basicplan)$selected="selected"$endif$>Basic</option>
-                      <option value="branding"   $if(brandingplan)$selected="selected"$endif$>Branding</option>
-                      <option value="advanced"   $if(advancedplan)$selected="selected"$endif$>Advanced</option>
-                      <option value="enterprise" $if(enterpriseplan)$selected="selected"$endif$>Enterprise</option>
+                      <option value="free"         $if(freeplan)$selected="selected"$endif$>Free (no plan)</option>
+                      <option value="professional" $if(professionalplan)$selected="selected"$endif$>Professional</option>
+                      <option value="team"         $if(teamplan)$selected="selected"$endif$>Team</option>
+                      <option value="enterprise"   $if(enterpriseplan)$selected="selected"$endif$>Enterprise</option>
                     </select>
 		  </td>
 		</tr>
@@ -707,11 +705,10 @@ admincompanypayments=
                   <td>Price plan (selected by admin):</td>
 		  <td>
 		    <select name="priceplan">
-                      <option value="free"       $if(freeplan)$selected="selected"$endif$>Free (no plan)</option>
-                      <option value="basic"      $if(basicplan)$selected="selected"$endif$>Basic</option>
-                      <option value="branding"   $if(brandingplan)$selected="selected"$endif$>Branding</option>
-                      <option value="advanced"   $if(advancedplan)$selected="selected"$endif$>Advanced</option>
-                      <option value="enterprise" $if(enterpriseplan)$selected="selected"$endif$>Enterprise</option>
+                      <option value="free"         $if(freeplan)$selected="selected"$endif$>Free (no plan)</option>
+                      <option value="professional" $if(professionalplan)$selected="selected"$endif$>Professional</option>
+                      <option value="team"         $if(professionalplan)$selected="selected"$endif$>Team</option>
+                      <option value="enterprise"   $if(enterpriseplan)$selected="selected"$endif$>Enterprise</option>
                     </select>
 		  </td>
 		</tr>

@@ -584,6 +584,7 @@ handleBlockingInfo = do
   mpaymentplan <- dbQuery $ GetPaymentPlan $ maybe (Left $ userid user) Right (usercompany user)
 
   let paymentplan = maybe "free" (show . ppPricePlan) mpaymentplan
+      status      = maybe "" (show . ppStatus) mpaymentplan
 
   let quantity = maybe 0 ppQuantity mpaymentplan
   usedusers <- case usercompany user of
@@ -595,6 +596,7 @@ handleBlockingInfo = do
     J.value "plan"      paymentplan
     J.value "userspaid" quantity
     J.value "usersused" usedusers
+    J.value "status"    status
     
 {- |
    Fetch the xtoken param and double read it. Once as String and once as MagicHash.

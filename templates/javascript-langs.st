@@ -595,5 +595,38 @@ javascriptLocalisation =
            , passwordReminderSend : "$_flashMessageChangePasswordEmailSend()$"
 
       }
+        , blocking : {
+           users : {
+             free     : "$_blockingUsersFree()$",
+             notTeam  : "$_blockingUsersNotTeam()$",
+             noneLeft : "$_blockingUsersNoneLeft()$",
+             overdue  : "$_blockingUsersOverdue()$"
+           },
+           branding : {
+             free    : "$_blockingBrandingFree()$",
+             notTeam : "$_blockingBrandingNotTeam()$",
+             overdue : "$_blockingBrandingOverdue()$",
+             companyfree    : "$_blockingBrandingCompanyFree()$",
+             companyoverdue : "$_blockingBrandingCompanyOverdue()$",
+             companyNotTeam : "$_blockingBrandingCompanyProf()$"
+           },
+           create : {
+             noneLeftFree  : "$_blockingCreateNoneLeftFree()$",
+             noneLeftBlock : "$_blockingCreateNoneLeftBlock()$",
+             csvfree       : "$_blockingCreateCSVFree()$",
+             csvblock      : "$_blockingCreateCSVBlock()$",
+             overdue       : "$_blockingCreateOverdue()$"
+           },
+           title : {
+             free    : "$_blockingModalTitleFree()$",
+             upgrade : "$_blockingModalTitleUpgrade()$",
+             update  : "$_blockingModalTitleUpdate()$"
+           },
+           button : {
+             purchase    : "$_blockingButtonPurchase()$",
+             doublecheck : "$_blockingButtonDoubleCheck()$",
+             upgrade     : "$_blockingButtonUpgrade()$"
+           }
+        }
     }
 ####

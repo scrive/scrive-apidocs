@@ -190,7 +190,7 @@ showUser =
 
         // blocking
         if(BlockingInfo && BlockingInfo.blockBranding()) {
-          blocking.show("Please purchase a Team account to convert to company.");
+          blocking.show(BlockingInfo.blockCompanyMessage());
           return false;
         }
         
