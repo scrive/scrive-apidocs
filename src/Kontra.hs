@@ -42,20 +42,21 @@ import Happstack.Server
 import KontraError
 import KontraMonad
 import Mails.MailsConfig
+import OurServerPart
 import Templates.Templates
 import Templates.TemplatesLoader
 import User.Model
 import Util.MonadUtils
 import Misc
 
-type InnerKontraPlus = StateT Context (AcidT AppState (CryptoRNGT (DBT (ServerPartT IO))))
+type InnerKontraPlus = StateT Context (AcidT AppState (CryptoRNGT (DBT (OurServerPartT IO))))
 
 -- | KontraPlus is 'MonadPlus', but it should only be used on toplevel
 -- for interfacing with static routing.
 newtype KontraPlus a = KontraPlus { unKontraPlus :: InnerKontraPlus a }
   deriving (AcidStore AppState, MonadPlus, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, ServerMonad, WebMonad Response)
 
-runKontraPlus :: Context -> KontraPlus a -> AcidT AppState (CryptoRNGT (DBT (ServerPartT IO))) a
+runKontraPlus :: Context -> KontraPlus a -> AcidT AppState (CryptoRNGT (DBT (OurServerPartT IO))) a
 runKontraPlus ctx f = evalStateT (unKontraPlus f) ctx
 
 instance Kontrakcja KontraPlus

@@ -48,6 +48,7 @@ import Mails.MailsConfig
 import MinutesTime
 import Misc
 import IPAddress
+import OurServerPart
 import Templates.Templates
 import Templates.TemplatesLoader
 import qualified MemCache
@@ -108,8 +109,9 @@ runTestKontraHelper rq ctx tk = do
   nex <- getNexus
   rng <- getCryptoRNGState
   appState <- getAcidStore
-  mres <- liftIO $ ununWebT $ runServerPartT (runDBT nex $ runCryptoRNGT rng $ runAcidT appState $
-    runStateT (unKontraPlus $ unKontra tk) noflashctx) rq
+  mres <- liftIO . ununWebT $ runServerPartT
+    (runOurServerPartT . runDBT nex . runCryptoRNGT rng . runAcidT appState $
+      runStateT (unKontraPlus $ unKontra tk) noflashctx) rq
   case mres of
     Nothing -> fail "runTestKontraHelper mzero"
     Just (Left _, _) -> fail "This should never happen since we don't use Happstack's finishWith"

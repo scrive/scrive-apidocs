@@ -24,6 +24,7 @@ import IPAddress
 import Kontra
 import MinutesTime
 import Misc
+import OurServerPart
 import Redirect
 import Session
 import Templates.TemplatesLoader
@@ -142,7 +143,7 @@ showRequest rq maybeInputsBody =
    Creates a context, routes the request, and handles the session.
 -}
 appHandler :: KontraPlus Response -> AppConf -> AppGlobals -> AppState -> ServerPartT IO Response
-appHandler handleRoutes appConf appGlobals appState = measureResponseTime $
+appHandler handleRoutes appConf appGlobals appState = runOurServerPartT . measureResponseTime $
   withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) . runAcidT appState $ do
     let quota = 10000000
     temp <- liftIO getTemporaryDirectory
