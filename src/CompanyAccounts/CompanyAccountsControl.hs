@@ -385,6 +385,8 @@ handlePostBecomeCompanyAccount cid = withUserPost $ do
           ctxrecurlyconfig} <- getContext
   newcompany <- guardJustM $ dbQuery $ GetCompany cid
   _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid newcompany)
+  -- if we are inviting a user with a plan to join the company, we
+  -- should delete their personal plan
   mplan <- dbQuery $ GetPaymentPlan (Left $ userid user)
   case mplan of
     Just pp -> do

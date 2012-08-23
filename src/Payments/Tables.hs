@@ -17,32 +17,36 @@ tablePaymentPlans = Table {
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> do
     case desc of
-      [("account_code", SqlColDesc { colType     = SqlBigIntT
-                                   , colNullable = Just False}),
-       ("account_type", SqlColDesc { colType     = SqlSmallIntT
-                                   , colNullable = Just False}),
-       ("user_id",      SqlColDesc { colType     = SqlBigIntT
-                                   , colNullable = Just True}),
-       ("company_id",   SqlColDesc { colType     = SqlBigIntT
-                                   , colNullable = Just True}),
-       ("plan",         SqlColDesc { colType     = SqlSmallIntT
-                                   , colNullable = Just False}),
-       ("plan_pending", SqlColDesc { colType     = SqlSmallIntT
-                                   , colNullable = Just False}),
-       ("status",       SqlColDesc { colType     = SqlSmallIntT
-                                   , colNullable = Just False}),
-       ("status_pending", SqlColDesc { colType     = SqlSmallIntT
-                                     , colNullable = Just False}),
-       ("quantity",         SqlColDesc { colType = SqlBigIntT
-                                       , colSize = Just 4
-                                      , colNullable = Just False}),
-       ("quantity_pending", SqlColDesc { colType = SqlBigIntT
-                                       , colSize = Just 4
-                              , colNullable = Just False}),
-       ("sync_date", SqlColDesc { colType = SqlTimestampWithZoneT
-                               , colNullable = Just False}),
-       ("provider", SqlColDesc { colType = SqlSmallIntT
-                               , colNullable = Just False})
+      [("account_code",     SqlColDesc { colType     = SqlBigIntT
+                                       , colNullable = Just False}),
+       ("account_type",     SqlColDesc { colType     = SqlSmallIntT
+                                       , colNullable = Just False}),
+       ("user_id",          SqlColDesc { colType     = SqlBigIntT
+                                       , colNullable = Just True}),
+       ("company_id",       SqlColDesc { colType     = SqlBigIntT
+                                       , colNullable = Just True}),
+       ("plan",             SqlColDesc { colType     = SqlSmallIntT
+                                       , colNullable = Just False}),
+       ("plan_pending",     SqlColDesc { colType     = SqlSmallIntT
+                                       , colNullable = Just False}),
+       ("status",           SqlColDesc { colType     = SqlSmallIntT
+                                       , colNullable = Just False}),
+       ("status_pending",   SqlColDesc { colType     = SqlSmallIntT
+                                       , colNullable = Just False}),
+       ("quantity",         SqlColDesc { colType     = SqlBigIntT
+                                       , colSize     = Just 4
+                                       , colNullable = Just False}),
+       ("quantity_pending", SqlColDesc { colType     = SqlBigIntT
+                                       , colSize     = Just 4
+                                       , colNullable = Just False}),
+       ("sync_date",        SqlColDesc { colType     = SqlTimestampWithZoneT
+                                       , colNullable = Just False}),
+       ("provider",         SqlColDesc { colType     = SqlSmallIntT
+                                       , colNullable = Just False}),
+       ("dunning_step",     SqlColDesc { colType     = SqlSmallIntT
+                                       , colNullable = Just True}),
+       ("dunning_date",     SqlColDesc { colType     = SqlTimestampWithZoneT
+                                       , colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE payment_plans ("
@@ -58,9 +62,9 @@ tablePaymentPlans = Table {
           ++ ", quantity_pending INTEGER NOT NULL"
           ++ ", sync_date TIMESTAMPTZ NOT NULL"
           ++ ", provider SMALLINT NOT NULL"
+          ++ ", dunning_step SMALLINT NULL"
+          ++ ", dunning_date TIMESTAMPTZ NULL"
           ++ ", CONSTRAINT pk_payment_plans PRIMARY KEY (account_code)"
-          ++ ", CONSTRAINT un_payment_plans_user_id UNIQUE (user_id)"
-          ++ ", CONSTRAINT un_payment_plans_company_id UNIQUE (company_id)"
           --- the following constraint implements an Either UserID CompanyID
           ++ ", CONSTRAINT ch_payment_plans_type_id CHECK ((account_type = 1 AND user_id    IS NOT NULL AND company_id IS NULL) OR " -- 1 is UserID
           ++ "                                             (account_type = 2 AND company_id IS NOT NULL AND user_id    IS NULL))"    -- 2 is CompanyID
@@ -68,6 +72,8 @@ tablePaymentPlans = Table {
         return TVRcreated
       _ -> return TVRinvalid
   , tblPutProperties = do
+    kRunRaw $ "CREATE UNIQUE INDEX idx_payment_plans_user_id ON payment_plans(user_id) WHEN (user_id IS NOT NULL)"
+    kRunRaw $ "CREATE UNIQUE INDEX idx_payment_plans_company_id ON payment_plans(company_id) WHEN (company_id IS NOT NULL)"
     kRunRaw $ "ALTER TABLE payment_plans"
       ++ " ADD CONSTRAINT fk_payment_plans_users FOREIGN KEY(user_id)"
       ++ " REFERENCES users(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
