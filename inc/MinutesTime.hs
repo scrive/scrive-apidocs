@@ -10,6 +10,7 @@ module MinutesTime
        , parseMinutesTimeDMY
        , showDateAbbrev
        , showDateDMY
+       , showDateDMYYYY
        , showDateOnly
        , parseDateOnly
        , showDateYMD
@@ -25,6 +26,7 @@ module MinutesTime
        , formatMinutesTime
        , parseMinutesTimeUTC
        , parseMinutesTimeISO
+       , parseMinutesTime
        , monthsBefore
        , daysBefore
        , daysAfter
@@ -210,6 +212,9 @@ parseMinutesTimeDMY = parseMinutesTime "%d-%m-%Y"
 -- | Show date as %d-%m-%y.
 showDateDMY :: MinutesTime -> String
 showDateDMY = formatMinutesTime defaultKontraTimeLocale "%d-%m-%y"
+
+showDateDMYYYY :: MinutesTime -> String
+showDateDMYYYY = formatMinutesTime defaultKontraTimeLocale "%d-%m-%Y"
 
 
 -- | Show date as %Y-%m-%d.

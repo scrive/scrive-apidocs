@@ -707,7 +707,7 @@ admincompanypayments=
 		    <select name="priceplan">
                       <option value="free"         $if(freeplan)$selected="selected"$endif$>Free (no plan)</option>
                       <option value="professional" $if(professionalplan)$selected="selected"$endif$>Professional</option>
-                      <option value="team"         $if(professionalplan)$selected="selected"$endif$>Team</option>
+                      <option value="team"         $if(teamplan)$selected="selected"$endif$>Team</option>
                       <option value="enterprise"   $if(enterpriseplan)$selected="selected"$endif$>Enterprise</option>
                     </select>
 		  </td>

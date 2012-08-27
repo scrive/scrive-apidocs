@@ -447,6 +447,7 @@ handleCompanyChange companyid = onlySalesOrAdmin $ do
 handleCompanyPaymentsChange :: Kontrakcja m => CompanyID -> m KontraLink
 handleCompanyPaymentsChange companyid = onlySalesOrAdmin $ do
   mplan <- readField "priceplan"
+  Log.debug $ show mplan
   mstatus <- readField "status"
   let status = fromMaybe ActiveStatus mstatus
   case mplan of
@@ -475,6 +476,8 @@ handleCompanyPaymentsChange companyid = onlySalesOrAdmin $ do
                                         , ppQuantity            = quantity
                                         , ppPendingQuantity     = quantity
                                         , ppPaymentPlanProvider = NoProvider
+                                        , ppDunningStep         = Nothing
+                                        , ppDunningDate         = Nothing
                                         }
           _ <- dbUpdate $ SavePaymentPlan paymentplan time
           _ <- Payments.Stats.record time Payments.Stats.SignupAction NoProvider quantity plan (Right companyid) ac
@@ -524,6 +527,8 @@ handleUserPaymentsChange userid = onlySalesOrAdmin $ do
                                         , ppQuantity            = quantity
                                         , ppPendingQuantity     = quantity
                                         , ppPaymentPlanProvider = NoProvider
+                                        , ppDunningStep         = Nothing
+                                        , ppDunningDate         = Nothing
                                         }
           _ <- dbUpdate $ SavePaymentPlan paymentplan time
           _ <- Payments.Stats.record time Payments.Stats.SignupAction NoProvider quantity plan (Left userid) ac

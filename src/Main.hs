@@ -124,11 +124,14 @@ startSystem appGlobals appConf = E.bracket
           t8 <- forkIO $ cron (60 * 60) (System.Mem.performGC >> Log.debug "Performing GC...")
           -- transition function between non-encrypted and encrypted files.
           t9 <- forkIO $ runScheduler AWS.calculateChecksumAndEncryptOldFiles
-          t10 <- forkIO $ cron (60 * 60) $ withPostgreSQL (dbConfig appConf) $ do
-            mtime <- getMinutesTime
-            ctime <- liftIO $ System.Time.toCalendarTime (toClockTime mtime)
-            when (System.Time.ctHour ctime == 0) $ -- midnight
-              handleSyncWithRecurly (recurlyAPIKey $ recurlyConfig appConf) mtime
+          t10 <- forkIO $ cron (60 * 60) $ 
+              withPostgreSQL (dbConfig appConf) $ 
+              runCryptoRNGT (cryptorng appGlobals) $ do
+                mtime <- getMinutesTime
+                ctime <- liftIO $ System.Time.toCalendarTime (toClockTime mtime)
+                temps <- liftIO $ maybeReadTemplates (production appConf) (templates appGlobals)
+                when (System.Time.ctHour ctime == 0) $ -- midnight
+                  handleSyncWithRecurly (hostpart appConf) (mailsConfig appConf) temps (recurlyAPIKey $ recurlyConfig appConf) mtime
           return [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10]
         waitForTerm _ = E.bracket
           -- checkpoint the state once a day

@@ -4,7 +4,7 @@
 module AppControl
     ( appHandler
     , AppGlobals(..)
-
+    , maybeReadTemplates
     -- exported for the sake of unit tests
     , getStandardLocale
     ) where

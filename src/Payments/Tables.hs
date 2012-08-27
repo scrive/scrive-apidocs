@@ -72,8 +72,8 @@ tablePaymentPlans = Table {
         return TVRcreated
       _ -> return TVRinvalid
   , tblPutProperties = do
-    kRunRaw $ "CREATE UNIQUE INDEX idx_payment_plans_user_id ON payment_plans(user_id) WHEN (user_id IS NOT NULL)"
-    kRunRaw $ "CREATE UNIQUE INDEX idx_payment_plans_company_id ON payment_plans(company_id) WHEN (company_id IS NOT NULL)"
+    kRunRaw $ "CREATE UNIQUE INDEX idx_payment_plans_user_id ON payment_plans(user_id) WHERE (user_id IS NOT NULL)"
+    kRunRaw $ "CREATE UNIQUE INDEX idx_payment_plans_company_id ON payment_plans(company_id) WHERE (company_id IS NOT NULL)"
     kRunRaw $ "ALTER TABLE payment_plans"
       ++ " ADD CONSTRAINT fk_payment_plans_users FOREIGN KEY(user_id)"
       ++ " REFERENCES users(id) ON UPDATE RESTRICT ON DELETE NO ACTION"

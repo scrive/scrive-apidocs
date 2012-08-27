@@ -426,11 +426,10 @@ javascriptLocalisation =
         }
         , payments: {
              user: "$_CompanyAccounts()$"
-           , plans: { basic : "$_paymentPlanBasic()$"
-                    , branding : "$_paymentPlanBranding()$"
-                    , advanced : "$_paymentPlanAdvanced()$"
-                    , free     : "$_paymentPlanFree()$"
-                    , enterprise : "$_paymentPlanEnterprise()$"
+           , plans: { professional : "$_paymentPlanProfessional()$"
+                    , team         : "$_paymentPlanTeam()$"
+                    , free         : "$_paymentPlanFree()$"
+                    , enterprise   : "$_paymentPlanEnterprise()$"
                     }
            , table: { currentplan : "$_paymentPlanCurrentPlan()$"
                     , item        : "$_paymentPlanItem()$"

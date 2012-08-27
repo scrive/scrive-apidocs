@@ -36,6 +36,8 @@ data PaymentPlan = PaymentPlan    { ppAccountCode         :: AccountCode
                                   , ppQuantity            :: Int
                                   , ppPendingQuantity     :: Int
                                   , ppPaymentPlanProvider :: PaymentPlanProvider
+                                  , ppDunningStep         :: Maybe Int
+                                  , ppDunningDate         :: Maybe MinutesTime
                                   }
                    
 data PaymentPlanStatus = ActiveStatus      -- everything is great (unblocked)
@@ -98,6 +100,8 @@ instance (MonadDB m) => DBQuery m GetPaymentPlan (Maybe PaymentPlan) where
       sqlResult "status_pending"
       sqlResult "quantity_pending"
       sqlResult "provider"
+      sqlResult "dunning_step"
+      sqlResult "dunning_date"
       case eid of
         Left  uid -> sqlWhereEq "user_id"    uid
         Right cid -> sqlWhereEq "company_id" cid
@@ -118,26 +122,44 @@ instance (MonadDB m) => DBQuery m GetPaymentPlanByAccountCode (Maybe PaymentPlan
       sqlResult "status_pending"
       sqlResult "quantity_pending"
       sqlResult "provider"
+      sqlResult "dunning_step"
+      sqlResult "dunning_date"
       sqlWhereEq "account_code" ac
     listToMaybe <$> foldDB fetchPaymentPlans []
 
-fetchPaymentPlans :: [PaymentPlan] -> AccountCode -> Int -> Maybe UserID -> Maybe CompanyID -> PricePlan -> PaymentPlanStatus -> Int -> PricePlan -> PaymentPlanStatus -> Int -> PaymentPlanProvider -> [PaymentPlan]
-fetchPaymentPlans acc ac t muid mcid p s q pp sp qp pr = 
+fetchPaymentPlans :: [PaymentPlan]       -> 
+                     AccountCode         -> 
+                     Int                 -> 
+                     Maybe UserID        -> 
+                     Maybe CompanyID     -> 
+                     PricePlan           -> 
+                     PaymentPlanStatus   -> 
+                     Int                 -> 
+                     PricePlan           -> 
+                     PaymentPlanStatus   -> 
+                     Int                 -> 
+                     PaymentPlanProvider -> 
+                     Maybe Int           ->
+                     Maybe MinutesTime   ->
+                     [PaymentPlan]
+fetchPaymentPlans acc ac t muid mcid p s q pp sp qp pr mds mdd =
   let mid = case (t, muid, mcid) of
         (1, Just uid, _) -> Just $ Left  uid
         (2, _, Just cid) -> Just $ Right cid
         _                -> Nothing
   in case mid of
     Nothing -> acc
-    Just eid -> PaymentPlan { ppAccountCode      = ac
-                            , ppID               = eid
-                            , ppPricePlan        = p
-                            , ppPendingPricePlan = pp
-                            , ppStatus           = s
-                            , ppPendingStatus    = sp
-                            , ppQuantity         = q
-                            , ppPendingQuantity  = qp 
-                            , ppPaymentPlanProvider = pr} : acc
+    Just eid -> PaymentPlan { ppAccountCode         = ac
+                            , ppID                  = eid
+                            , ppPricePlan           = p
+                            , ppPendingPricePlan    = pp
+                            , ppStatus              = s
+                            , ppPendingStatus       = sp
+                            , ppQuantity            = q
+                            , ppPendingQuantity     = qp 
+                            , ppPaymentPlanProvider = pr
+                            , ppDunningStep         = mds
+                            , ppDunningDate         = mdd} : acc
 
 {- | How often, in days, do we sync with recurly? -}
 daysBeforeSync :: Int
@@ -147,15 +169,23 @@ data PaymentPlansRequiringSync = PaymentPlansRequiringSync MinutesTime
 instance MonadDB m => DBQuery m PaymentPlansRequiringSync [PaymentPlan] where
   query (PaymentPlansRequiringSync time) = do
     let past = daysBefore daysBeforeSync time 
-    kPrepare $ "SELECT account_code, account_type, user_id, company_id, plan, status, quantity, plan_pending, status_pending, quantity_pending, provider " ++
+    kPrepare $ "SELECT account_code, account_type, user_id, company_id, plan, status, quantity, " ++ 
+             "    plan_pending, status_pending, quantity_pending, provider, dunning_step, dunning_date " ++
              "  FROM payment_plans " ++ 
-             "  LEFT OUTER JOIN (SELECT company_id as cid, count(id) as q FROM users WHERE NOT deleted AND NOT is_free GROUP BY cid) as ccount ON cid = company_id " ++ 
-             "  WHERE ((account_type = 2 " ++ 
-             "    AND  (q > quantity " ++
-             "     OR   (q <= quantity AND NOT q = quantity_pending ))) " ++
-             "     OR sync_date < ? )" ++
-             "    AND provider = ?"
+             "  WHERE sync_date < ? " ++
+             "    AND provider = ? "
     _ <- kExecute [toSql past, toSql RecurlyProvider]
+    foldDB fetchPaymentPlans []
+
+data PaymentPlansExpiredDunning = PaymentPlansExpiredDunning MinutesTime
+instance MonadDB m => DBQuery m PaymentPlansExpiredDunning [PaymentPlan] where
+  query (PaymentPlansExpiredDunning time) = do
+    kPrepare $ "SELECT account_code, account_type, user_id, company_id, plan, status, quantity, " ++ 
+             "    plan_pending, status_pending, quantity_pending, provider, dunning_step, dunning_date " ++
+             "  FROM payment_plans " ++ 
+             "  WHERE dunning_date < ? " ++
+             "    AND provider = ? "
+    _ <- kExecute [toSql time, toSql RecurlyProvider]
     foldDB fetchPaymentPlans []
 
 -- update payment_plans set 
@@ -170,6 +200,8 @@ instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
                ",   quantity = ?, quantity_pending = ? " ++
                ",   provider = ? " ++
                ",   sync_date = ? " ++
+               ",   dunning_step = ? " ++
+               ",   dunning_date = ? " ++
                "WHERE account_code = ? "
     r <- kExecute [toSql $ either (const (1 :: Int)) (const 2)  $ ppID pp
                   ,toSql $ either Just (const Nothing) $ ppID pp
@@ -182,12 +214,15 @@ instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
                   ,toSql $ ppPendingQuantity pp
                   ,toSql $ ppPaymentPlanProvider pp
                   ,toSql $ tm
+                  ,toSql $ ppDunningStep pp
+                  ,toSql $ ppDunningDate pp
                   ,toSql $ ppAccountCode pp]
     case r of
       1 -> return True
       _ -> do
-        kPrepare $ "INSERT INTO payment_plans (account_code, plan, status, plan_pending, status_pending, quantity, quantity_pending, provider, sync_date, account_type, user_id, company_id) " ++
-          "SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? " ++
+        kPrepare $ "INSERT INTO payment_plans (account_code, plan, status, plan_pending, status_pending, quantity, " ++ 
+          "quantity_pending, provider, sync_date, dunning_step, dunning_date, account_type, user_id, company_id) " ++
+          "SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? " ++
           "WHERE ? NOT IN (SELECT account_code FROM payment_plans) "
         r' <- kExecute $ [toSql $ ppAccountCode pp
                          ,toSql $ ppPricePlan pp
@@ -198,6 +233,8 @@ instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
                          ,toSql $ ppPendingQuantity pp
                          ,toSql $ ppPaymentPlanProvider pp
                          ,toSql $ tm
+                         ,toSql $ ppDunningStep pp
+                         ,toSql $ ppDunningDate pp
                          ,toSql $ either (const (1 :: Int)) (const 2)  $ ppID pp
                          ,toSql $ either Just (const Nothing) $ ppID pp
                          ,toSql $ either (const Nothing) Just $ ppID pp 
@@ -244,11 +281,11 @@ instance Convertible Int PricePlan where
   safeConvert 1  = return ProfessionalPricePlan
   safeConvert 2  = return TeamPricePlan
   safeConvert 3  = return EnterprisePricePlan
-  safeConvert s = Left ConvertError { convSourceValue  = show s
-                                    , convSourceType   = "Int"
-                                    , convDestType     = "PricePlan"
-                                    , convErrorMessage = "Convertion error: value " ++ show s ++ " not mapped"
-                                    }
+  safeConvert s  = Left ConvertError { convSourceValue  = show s
+                                     , convSourceType   = "Int"
+                                     , convDestType     = "PricePlan"
+                                     , convErrorMessage = "Convertion error: value " ++ show s ++ " not mapped"
+                                     }
 
 instance Convertible PricePlan SqlValue where
   safeConvert e = fmap toSql (safeConvert e :: Either ConvertError Int)

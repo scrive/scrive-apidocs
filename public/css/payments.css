@@ -105,6 +105,15 @@
 .payments-dashboard .select-plan {
     font-weight: bold;
     font-size: 14px;
+    display: inline-block;
+    width: 90px;
+}
+
+.payments-dashboard .select-users {
+    font-weight: bold;
+    font-size: 14px;
+    display: inline-block;
+    width: 90px;
 }
 
 .payments-dashboard .recurly.update_billing_info .billing_info {
@@ -313,7 +322,7 @@
 }
 
 .payments-dashboard .subscription-payments .account-body {
-    min-height: 124px;
+    min-height: 474px;
     
 }
 
