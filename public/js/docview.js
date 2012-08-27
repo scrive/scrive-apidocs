@@ -191,6 +191,8 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       icon: $("<span class='btn-symbol cross' />"),
       text: document.process().signbuttontext(),
       onClick: function() {
+        if (alreadyClicked(this))
+          return false;
         document.sign().send();
       }
     }).input();
@@ -325,7 +327,11 @@ window.DocumentStandardView = Backbone.View.extend({
       color: "red",
       size: "small",
       text: document.process().restartbuttontext(),
-      onClick: function() { document.restart().send(); }
+      onClick: function() {
+        if (alreadyClicked(this))
+          return;
+        document.restart().send();
+      }
     }).input();
   },
   createCancelButtonElems: function() {
@@ -344,6 +350,8 @@ window.DocumentStandardView = Backbone.View.extend({
           acceptColor: "red",
           extraClass : "s-withdraw-confirmation",
           onAccept: function() {
+              if (alreadyClicked(this))
+                return;
               document.cancel().sendAjax(function() {window.location = window.location;});
               return true;
             }
@@ -433,6 +441,8 @@ window.DocumentStandardView = Backbone.View.extend({
           rejectText: localization.cancel,
           acceptColor: "red",
           onAccept: function(customtext) {
+            if (alreadyClicked(this))
+              return;
             signatory.reject(customtext).send();
           }
         });
