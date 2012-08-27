@@ -72,12 +72,18 @@ instance SafeEnum DocumentStatus where
     fromSafeEnum (DocumentError _) = 40
     toSafeEnum _                   = Nothing
 
-instance SafeEnum [IdentificationType] where
-    fromSafeEnum [EmailIdentification]            = 1
-    fromSafeEnum [ELegitimationIdentification]    = 10
-    fromSafeEnum _                                = 1
-    toSafeEnum 1  =  Just [EmailIdentification]
-    toSafeEnum 10 = Just [ELegitimationIdentification]
+instance SafeEnum AuthenticationMethod where
+    fromSafeEnum EmailAuthentication = 1
+    fromSafeEnum ELegAuthentication  = 2
+    toSafeEnum 1 = Just EmailAuthentication
+    toSafeEnum 2 = Just ELegAuthentication
+    toSafeEnum _  = Nothing
+
+instance SafeEnum DeliveryMethod where
+    fromSafeEnum EmailDelivery = 1
+    fromSafeEnum PadDelivery   = 2
+    toSafeEnum 1 = Just EmailDelivery
+    toSafeEnum 2 = Just PadDelivery
     toSafeEnum _  = Nothing
 
 jsonDocumentForAuthor :: Document -> String -> JSValue
@@ -91,7 +97,8 @@ jsonDocumentForAuthor doc hostpart =
   (jsset "status"        $ fromSafeEnumInt $ documentstatus doc) >>=                    
 
   (jsset "designurl"     $ show $ LinkIssueDoc (documentid doc)) >>= -- up for deletion 
-  (jsset "authorization" $ fromSafeEnumInt $ documentallowedidtypes doc)              
+  (jsset "authentication" $ fromSafeEnumInt $ documentauthenticationmethod doc) >>=
+  (jsset "delivery"      $ fromSafeEnumInt $ documentdeliverymethod doc)
 
 jsonDocumentForSignatory :: Document -> JSValue
 jsonDocumentForSignatory doc =
@@ -100,8 +107,8 @@ jsonDocumentForSignatory doc =
   (jsset "title"         $ documenttitle doc)                    >>=                        
   (jsset "type"          $ fromSafeEnumInt $ documenttype doc)   >>=       
   (jsset "status"        $ fromSafeEnumInt $ documentstatus doc) >>=
-  (jsset "authorization" $ fromSafeEnumInt $ documentallowedidtypes doc)
-
+  (jsset "authentication" $ fromSafeEnumInt $ documentauthenticationmethod doc) >>=
+  (jsset "delivery"      $ fromSafeEnumInt $ documentdeliverymethod doc)
 
 -- I really want to add a url to the file in the json, but the only
 -- url at the moment requires a sigid/mh pair

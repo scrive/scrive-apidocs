@@ -166,7 +166,8 @@ documentJSON pq msl _crttime doc = do
       J.value "status" $ show $ documentstatus doc
       J.objects "signatories" $ map (signatoryJSON pq doc msl) (documentsignatorylinks doc)
       J.value "signorder" $ unSignOrder $ documentcurrentsignorder doc
-      J.value "authorization" $ authorizationJSON $ head $ (documentallowedidtypes doc) ++ [EmailIdentification]
+      J.value "authentication" $ authenticationJSON $ documentauthenticationmethod doc
+      J.value "delivery" $ deliveryJSON $ documentdeliverymethod doc
       J.value "template" $ isTemplate doc
       J.value "daystosign" $ documentdaystosign doc
       J.value "invitationmessage" $ documentinvitetext doc
@@ -176,10 +177,13 @@ documentJSON pq msl _crttime doc = do
       J.value "author" $ authorJSON mauthor mcompany
       J.value "whitelabel" $ isJust mservice
 
-authorizationJSON :: IdentificationType -> JSValue
-authorizationJSON EmailIdentification = toJSValue "email"
-authorizationJSON ELegitimationIdentification = toJSValue "eleg"
-authorizationJSON PadIdentification = toJSValue "pad"
+authenticationJSON :: AuthenticationMethod -> JSValue
+authenticationJSON EmailAuthentication = toJSValue "email"
+authenticationJSON ELegAuthentication = toJSValue "eleg"
+
+deliveryJSON :: DeliveryMethod -> JSValue
+deliveryJSON EmailDelivery = toJSValue "email"
+deliveryJSON PadDelivery = toJSValue "pad"
 
 signatoryJSON :: (TemplatesMonad m, MonadDB m) => PadQueue -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
 signatoryJSON pq doc viewer siglink = do
@@ -418,8 +422,10 @@ documentInfoFields  document  = do
   F.value "documentid" $ show $ documentid document
   F.value "timetosignset" $  isJust $ documentdaystosign document
   F.value "template" $  isTemplate document
-  F.value "emailselected" $ document `allowsIdentification` EmailIdentification
-  F.value "elegselected" $ document `allowsIdentification` ELegitimationIdentification
+  F.value "emailauthenticationselected" $ document `allowsAuthMethod` EmailAuthentication
+  F.value "elegauthenticationselected" $ document `allowsAuthMethod` ELegAuthentication
+  F.value "emaildeliveryselected" $ document `allowsDeliveryMethod` EmailDelivery
+  F.value "paddeliveryselected" $ document `allowsDeliveryMethod` PadDelivery
   F.value "hasanyattachments" $ length (documentauthorattachments document) + length (concatMap signatoryattachments $ documentsignatorylinks document) > 0
   documentStatusFields document
 

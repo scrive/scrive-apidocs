@@ -123,7 +123,7 @@ handleAcceptAccountFromSign documentid
                             signatorylinkid
                             magichash = do
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
-  when (document `allowsIdentification` PadIdentification) internalError
+  when (document `allowsDeliveryMethod` PadDelivery) internalError
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
   _ <- guardJustM $ User.Action.handleAccountSetupFromSign document signatorylink
   return $ LinkSignDoc document signatorylink
@@ -474,7 +474,7 @@ splitUpDocument doc = do
       return $ Right [doc]
     (Just csvupload, Right csvcustomfields) -> do
       Log.debug $ "splitUpDocument called on document with csvupload and we managed to split fields properly"
-      case (cleanCSVContents (ELegitimationIdentification `elem` (documentallowedidtypes doc)) (length csvcustomfields) $ csvcontents csvupload) of
+      case (cleanCSVContents (doc `allowsAuthMethod` ELegAuthentication) (length csvcustomfields) $ csvcontents csvupload) of
         (_prob:_, _) -> do
           addFlashM flashMessageInvalidCSV
           Log.debug $ "splitUpDocument: back to document"

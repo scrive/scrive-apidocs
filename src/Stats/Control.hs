@@ -269,11 +269,10 @@ addDocumentCloseStatEvents doc apistring = falseOnError $ do
                                                         , seAPIString  = apistring
                                                         }
       unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatClose
-      let q = case documentallowedidtypes doc of
-            [EmailIdentification] -> DocStatEmailSignatures
-            [ELegitimationIdentification] -> DocStatElegSignatures
-            [PadIdentification] -> DocStatPadSignatures
-            _ -> DocStatEmailSignatures
+      let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
+            (EmailAuthentication, EmailDelivery) -> DocStatEmailSignatures
+            (EmailAuthentication, PadDelivery) -> DocStatPadSignatures
+            (ELegAuthentication, _) -> DocStatElegSignatures
       b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                      , seTime       = signtime
                                                      , seQuantity   = q
@@ -310,11 +309,10 @@ addDocumentSendStatEvents doc apistring = falseOnError $ do
                                                         , seAPIString  = apistring
                                                         }
       unless a $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatSend
-      let q = case documentallowedidtypes doc of
-            [EmailIdentification] -> DocStatEmailSignaturePending
-            [ELegitimationIdentification] -> DocStatElegSignaturePending
-            [PadIdentification] -> DocStatPadSignaturePending
-            _ -> DocStatEmailSignatures
+      let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
+            (EmailAuthentication, EmailDelivery) -> DocStatEmailSignatures
+            (EmailAuthentication, PadDelivery) -> DocStatPadSignatures
+            (ELegAuthentication, _) -> DocStatElegSignatures
       b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = sendtime
                                                         , seQuantity   = q
@@ -351,10 +349,10 @@ addDocumentCancelStatEvents doc apistring = falseOnError $ do
                                                         , seAPIString  = apistring
                                                         }
       unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCancel
-      let q = case documentallowedidtypes doc of
-            [ELegitimationIdentification] -> DocStatElegSignatureCancel
-            [PadIdentification] -> DocStatPadSignatureCancel
-            _ -> DocStatEmailSignatureCancel
+      let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
+            (EmailAuthentication, EmailDelivery) -> DocStatEmailSignatures
+            (EmailAuthentication, PadDelivery) -> DocStatPadSignatures
+            (ELegAuthentication, _) -> DocStatElegSignatures
       b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = canceltime
                                                         , seQuantity   = q
@@ -391,10 +389,10 @@ addDocumentRejectStatEvents doc apistring = falseOnError $ do
                                                         , seAPIString  = apistring
                                                         }
       unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatReject
-      let q = case documentallowedidtypes doc of
-            [ELegitimationIdentification] -> DocStatElegSignatureReject
-            [PadIdentification] -> DocStatPadSignatureReject
-            _ -> DocStatEmailSignatureReject
+      let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
+            (EmailAuthentication, EmailDelivery) -> DocStatEmailSignatures
+            (EmailAuthentication, PadDelivery) -> DocStatPadSignatures
+            (ELegAuthentication, _) -> DocStatElegSignatures
       b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = rejecttime
                                                         , seQuantity   = q
@@ -456,10 +454,10 @@ addDocumentTimeoutStatEvents doc apistring = do
                                                         , seAPIString  = apistring
                                                         }
       unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatTimeout
-      let q = case documentallowedidtypes doc of
-            [ELegitimationIdentification] -> DocStatElegSignatureTimeout
-            [PadIdentification] -> DocStatPadSignatureTimeout
-            _ -> DocStatEmailSignatureTimeout
+      let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
+            (EmailAuthentication, EmailDelivery) -> DocStatEmailSignatures
+            (EmailAuthentication, PadDelivery) -> DocStatPadSignatures
+            (ELegAuthentication, _) -> DocStatElegSignatures
       b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = ttime
                                                         , seQuantity   = q

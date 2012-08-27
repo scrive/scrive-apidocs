@@ -66,7 +66,8 @@ window.Document = Backbone.Model.extend({
         ready: false,
         viewer: new DocumentViewer(),
         infotext: "",
-        authorization: "email",
+        authentication: "email",
+        delivery: "email",
         template: false,
         saveQueue : new AjaxQueue()
     },
@@ -231,7 +232,8 @@ window.Document = Backbone.Model.extend({
           title: this.title(),
           invitationmessage: this.get("invitationmessage"),
           daystosign: this.get("daystosign"),
-          authorization: this.get("authorization"),
+          authentication: this.get("authentication"),
+          delivery: this.get("delivery"),
           signatories: _.map(this.signatories(), function(sig) {return sig.draftData()}),
           region: this.region().draftData(),
           template: this.isTemplate()
@@ -308,27 +310,34 @@ window.Document = Backbone.Model.extend({
     signorder: function() {
       return this.get("signorder");
     },
-    emailAuthorization: function() {
-          return this.get("authorization") == "email";
+    emailAuthentication: function() {
+          return this.get("authentication") == "email";
     },
-    elegAuthorization: function() {
-          return this.get("authorization") == "eleg";
+    elegAuthentication: function() {
+          return this.get("authentication") == "eleg";
     },
-    padAuthorization : function() {
-          return this.get("authorization") == "pad";
+    emailDelivery: function() {
+          return this.get("delivery") == "email";
     },
-    setElegVerification : function() {
-          this.set({"authorization":"eleg"}, {silent: true});
-          this.trigger("change:authorization");
+    padDelivery : function() {
+          return this.get("delivery") == "pad";
     },
-    setEmailVerification: function() {
-          this.set({"authorization": "email"}, {silent: true});
-          this.trigger("change:authorization");
+    setEmailAuthentication: function() {
+          this.set({"authentication": "email"}, {silent: true});
+          this.trigger("change:authenticationdelivery");
     },
-    setPadVerification : function() {
-          this.set({"authorization":"pad"}, {silent: true});
+    setElegAuthentication : function() {
+          this.set({"authentication":"eleg"}, {silent: true});
+          this.trigger("change:authenticationdelivery");
+    },
+    setEmailDelivery: function() {
+          this.set({"delivery": "email"}, {silent: true});
+          this.trigger("change:authenticationdelivery");
+    },
+    setPadDelivery : function() {
+          this.set({"delivery":"pad"}, {silent: true});
           _.each(this.signatories(), function(sig) {sig.clearAttachments();});
-          this.trigger("change:authorization");
+          this.trigger("change:authenticationdelivery");
     },
     elegTBS: function() {
         var text = this.title() + " " + this.documentid();
@@ -368,7 +377,7 @@ window.Document = Backbone.Model.extend({
               return this.signatories()[i];
     },
     authorCanSignFirst : function() {
-        if (!this.author().signs() || this.padAuthorization())
+        if (!this.author().signs() || this.padDelivery())
             return false;
         var aidx = this.author().signorder();
         return ! _.any(this.signatories(), function(sig) {
@@ -483,7 +492,8 @@ window.Document = Backbone.Model.extend({
        status: args.status,
        timeouttime: args.timeouttime == undefined ? undefined : parseDate(args.timeouttime),
        signorder: args.signorder,
-       authorization: args.authorization,
+       authentication: args.authentication,
+       delivery: args.delivery,
        template: args.template,
        daystosign: args.daystosign,
        invitationmessage: args.invitationmessage,

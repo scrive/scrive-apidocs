@@ -6,7 +6,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = Table {
     tblName = "documents"
-  , tblVersion = 8
+  , tblVersion = 9
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -25,7 +25,6 @@ tableDocuments = Table {
        , ("invite_ip", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("invite_text", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("trust_weaver_reference", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("allowed_id_types", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("csv_title", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("csv_contents", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("csv_signatory_index", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
@@ -37,6 +36,8 @@ tableDocuments = Table {
        , ("mail_footer", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("region", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
+       , ("authentication_method", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
+       , ("delivery_method", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE documents ("
@@ -57,7 +58,6 @@ tableDocuments = Table {
           ++ ", invite_ip INTEGER NULL"
           ++ ", invite_text TEXT NOT NULL"
           ++ ", trust_weaver_reference TEXT NULL"
-          ++ ", allowed_id_types INTEGER NOT NULL"
           ++ ", csv_title TEXT NULL"
           ++ ", csv_contents TEXT NULL"
           ++ ", csv_signatory_index INTEGER NULL"
@@ -69,6 +69,8 @@ tableDocuments = Table {
           ++ ", mail_footer TEXT NULL"
           ++ ", region SMALLINT NOT NULL"
           ++ ", deleted BOOL NOT NULL"
+          ++ ", authentication_method SMALLINT NOT NULL"
+          ++ ", delivery_method SMALLINT NOT NULL"
           ++ ", CONSTRAINT pk_documents PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated

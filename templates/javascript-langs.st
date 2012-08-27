@@ -287,9 +287,12 @@ javascriptLocalisation =
                     , notPlacedField : "$_placeAllFields()$"
                     , notPlacedSignature : "$_signatureMustBePlacedForPad()$"
                 }
-             , verification : {
-                      selectmethod: "$_signStepsBodyFunctionsBoxChooseVerification()$"
+             , authentication : {
+                      selectmethod: "$_signStepsBodyFunctionsBoxChooseAuthentication()$"
                 }
+             , delivery : {
+                      selectmethod: "$_signStepsBodyFunctionsBoxChooseDelivery()$"
+             }
              , messages : {
                       sendingDocument: "$_designViewMessageSending()$"
                     , reloadingDocument : "$_designViewMessageReloading()$"
@@ -324,7 +327,7 @@ javascriptLocalisation =
          , selectImageLabel: "$_SelectImageLabel()$"
          , saveBranding: "$_SaveSettings()$"
          , pad : {
-                authorization : "$_padAuthorization()$"
+                delivery : "$_padDelivery()$"
              ,  signingOnSameDevice : "$_padSigningOnSameDevice()$"
              ,  signingOnSameDeviceConfirmHeader : "$_padSigningOnSameDeviceConfirmHeader()$"
              ,  signingOnSameDeviceConfirmText : "$_padSigningOnSameDeviceConfirmText()$"

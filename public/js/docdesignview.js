@@ -12,7 +12,7 @@ var DocumentDesignView = Backbone.View.extend({
         this.model.bind('change:ready', this.render);
         this.model.bind('change:signatories', this.refreshFinalButton);
         this.model.bind('change:signatories', this.refreshSignatoryAttachmentsOption);
-        this.model.bind('change:authorization', this.refreshAuthorizationDependantOptions);
+        this.model.bind('change:authenticationdelivery', this.refreshAuthorizationDependantOptions);
         this.model.view = this;
         this.prerender();
         this.render();
@@ -166,49 +166,63 @@ var DocumentDesignView = Backbone.View.extend({
        box.append(box2).append($("<div class='border'/>"));
 
        var box3 = $("<div class='signStepsBodyPart last'/>");
-       box3.append(this.verifikationMethodSelection());
+       box3.append(this.authenticationMethodSelection());
+       box3.append(this.deliveryMethodSelection());
        box3.append(this.finalButton());
        box.append(box3);
        return box;
     },
-    verifikationMethodSelection : function() {
+    authenticationMethodSelection : function() {
         var document = this.model;
-        var elegAvaible = document.region().iselegavailable() || document.elegAuthorization();;
-        var box = $("<div class='verificationmethodselect'/>");
+        var elegAvailable = document.region().iselegavailable() || document.elegAuthentication();
+        var box = $("<div class='authenticationmethodselect'/>");
         var select= $("<select/>");
-        var eleg =  $("<option value='eleg'/>").text(localization.eleg);
         var email = $("<option value='email'/>").text(localization.email);
-        var pad = $("<option value='pad'/>").text(localization.pad.authorization);
+        var eleg =  $("<option value='eleg'/>").text(localization.eleg);
         select.append(email);
-        if (elegAvaible) select.append(eleg);
-        select.append(pad);
-        box.text(localization.designview.verification.selectmethod);
+        if (elegAvailable)
+          select.append(eleg);
+        box.text(localization.designview.authentication.selectmethod);
         box.append(select);
-        if (document.elegAuthorization()) {
+        if (document.emailAuthentication()) {
+          email.attr("selected","YES");
+          eleg.attr("selected","");
+        }
+        else if (document.elegAuthentication()) {
           email.attr("selected","");
-          pad.attr("selected","");
           eleg.attr("selected","YES");
         }
-        else if  (document.padAuthorization()) {
-          eleg.attr("selected","");
-          email.attr("selected","");
-          pad.attr("selected","YES");
-
-        }
-        else if  (document.emailAuthorization()) {
-          eleg.attr("selected","");
-          pad.attr("selected","");
-          email.attr("selected","YES");
-
-        }
-
         select.change(function(){
             if ($(this).val() == 'eleg')
-                document.setElegVerification();
-            else if ($(this).val() == 'pad')
-                document.setPadVerification();
+                document.setElegAuthentication();
             else
-                document.setEmailVerification();
+                document.setEmailAuthentication();
+        });
+        return box;
+    },
+    deliveryMethodSelection : function() {
+        var document = this.model;
+        var box = $("<div class='deliverymethodselect'/>");
+        var select= $("<select/>");
+        var email = $("<option value='email'/>").text(localization.email);
+        var pad = $("<option value='pad'/>").text(localization.pad.delivery);
+        select.append(email);
+        select.append(pad);
+        box.text(localization.designview.delivery.selectmethod);
+        box.append(select);
+        if (document.emailDelivery()) {
+          email.attr("selected","YES");
+          pad.attr("selected","");
+        }
+        else if (document.padDelivery()) {
+          email.attr("selected","");
+          pad.attr("selected","YES");
+        }
+        select.change(function() {
+            if ($(this).val() == 'pad')
+                document.setPadDelivery();
+            else
+                document.setEmailDelivery();
         });
         return box;
     },
@@ -266,7 +280,7 @@ var DocumentDesignView = Backbone.View.extend({
     },
     editInvitationOption: function() {
         var document = this.model;
-        if (document.padAuthorization()) return $("<div class='display:none'>");
+        if (document.padDelivery()) return $("<div class='display:none'>");
         var box  = $("<div class='editinvitemessage'/>");
         var icon = $("<span class='editinvitemessageicon'/>");
         var text = $("<span class='editinvitemessagetext'/>").text(localization.editInviteText);
@@ -375,7 +389,7 @@ var DocumentDesignView = Backbone.View.extend({
     },
     signatoryAttachmentSetup : function() {
         var document = this.model;
-        if (document.padAuthorization()) return $("<div style='display:none'/>");
+        if (document.padDelivery()) return $("<div style='display:none'/>");
 
         var box = $("<div class='signatoryattachmentssetup'/>");
         var icon = $("<span class='signatoryattachmentssetupicon'/>");
@@ -491,7 +505,7 @@ var DocumentDesignView = Backbone.View.extend({
         var document = this.model;
         var signatory = document.currentSignatory();
         var acceptButton;
-        if (document.elegAuthorization())
+        if (document.elegAuthentication())
         {
             acceptButton = $("<span/>");
             var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
@@ -553,7 +567,7 @@ var DocumentDesignView = Backbone.View.extend({
         var content = $("<span/>");
         if (document.authorIsOnlySignatory())
             content = $(document.process().authorIsOnlySignatory());
-        else if (document.elegAuthorization())
+        else if (document.elegAuthentication())
             content = $(document.process().signatorysignmodalcontentdesignvieweleg());
         else if (document.lastSignatoryLeft())
             content = $(document.process().signatorysignmodalcontentlast());
@@ -562,7 +576,7 @@ var DocumentDesignView = Backbone.View.extend({
 
 
         DocumentDataFiller.fill(document, content);
-        if (document.elegAuthorization())
+        if (document.elegAuthentication())
         {
 
             var subhead = $("<h3/>").text(localization.sign.eleg.subhead);
@@ -584,7 +598,7 @@ var DocumentDesignView = Backbone.View.extend({
        var signatory = document.currentSignatory();
        var box = $("<div>");
        var padDesignViewUtil = undefined;
-       if (!document.padAuthorization())
+       if (!document.padDelivery())
        {
            var content = $("<p/>").append($("<span/>").append(document.process().confirmsendtext()));
            if (!document.authorIsOnlySignatory())
@@ -597,7 +611,7 @@ var DocumentDesignView = Backbone.View.extend({
            box.append(new PadDesignViewUtilsView({model : padDesignViewUtil}).el);
        }
        Confirmation.popup({
-              title : (!document.padAuthorization()) ? document.process().confirmsendtitle() : localization.pad.howDoYouWantToSign,
+              title : (!document.padDelivery()) ? document.process().confirmsendtitle() : localization.pad.howDoYouWantToSign,
               acceptButton : Button.init({
                                 size: "small",
                                 color : "green",

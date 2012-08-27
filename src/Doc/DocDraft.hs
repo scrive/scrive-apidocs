@@ -25,17 +25,24 @@ data DraftData = DraftData {
       title :: String
     , invitationmessage :: Maybe String
     , daystosign :: Maybe Int
-    , authorization :: IdentificationType
+    , authentication :: AuthenticationMethod
+    , delivery :: DeliveryMethod
     , signatories :: [SignatoryTMP]
     , region :: Region
     , template :: Bool
     } deriving Show
 
-instance FromJSValue IdentificationType where
-    fromJSValue j = case fromJSValue j of
-             Just "eleg" -> Just ELegitimationIdentification
-             Just "pad" -> Just PadIdentification
-             _ -> Just EmailIdentification
+instance FromJSValue AuthenticationMethod where
+  fromJSValue j = case fromJSValue j of
+    Just "email" -> Just EmailAuthentication
+    Just "eleg"  -> Just ELegAuthentication
+    _            -> Nothing
+
+instance FromJSValue DeliveryMethod where
+  fromJSValue j = case fromJSValue j of
+    Just "email" -> Just EmailDelivery
+    Just "pad"   -> Just PadDelivery
+    _            -> Nothing
 
 instance FromJSValue Region where
     fromJSValue j = do
@@ -47,16 +54,18 @@ instance FromJSValue DraftData where
         title' <- fromJSValueField "title"
         invitationmessage <-  liftM join $ liftM (fmap nothingIfEmpty) $ fromJSValueField "invitationmessage"
         daystosign <- fromJSValueField "daystosign"
-        authorization' <-  fromJSValueField "authorization"
+        authentication' <-  fromJSValueField "authentication"
+        delivery' <-  fromJSValueField "delivery"
         signatories' <-  fromJSValueField "signatories"
         region' <- fromJSValueField "region"
         template' <- fromJSValueField "template"
-        case (title', authorization', region') of
-            (Just t, Just a, Just r) -> return $ Just DraftData {
+        case (title', authentication', delivery', region') of
+            (Just t, Just a, Just d, Just r) -> return $ Just DraftData {
                                       title =  t
                                     , invitationmessage = invitationmessage
                                     , daystosign = daystosign
-                                    , authorization = a
+                                    , authentication = a
+                                    , delivery = d
                                     , signatories = concat $ maybeToList $ signatories'
                                     , region = r
                                     , template = joinB template'
@@ -69,7 +78,8 @@ applyDraftDataToDocument doc draft actor = do
                                   documenttitle = title draft
                                 , documentinvitetext = fromMaybe "" $ invitationmessage draft
                                 , documentdaystosign = daystosign draft
-                                , documentallowedidtypes = [authorization draft]
+                                , documentauthenticationmethod = authentication draft
+                                , documentdeliverymethod = delivery draft
                                 , documentregion = region draft
                             }) actor
     when_ (template draft && (not $ isTemplate doc)) $ do

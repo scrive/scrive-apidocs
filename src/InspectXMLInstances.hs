@@ -92,7 +92,8 @@ instance InspectXML MailsDeliveryStatus where
 instance InspectXML UserInfo where
 instance InspectXML MailAPIInfo where
 instance InspectXML UserSettings where
-instance InspectXML IdentificationType where
+instance InspectXML AuthenticationMethod where
+instance InspectXML DeliveryMethod where
 instance InspectXML CancelationReason where
 instance InspectXML SignatureProvider where
 instance InspectXML SignatureInfo where

@@ -59,7 +59,8 @@ module Doc.Model
   , SetDocumentTimeoutTime(..)
   , SetDocumentTitle(..)
   , SetDocumentUI(..)
-  , SetDocumentIdentification(..)
+  , SetDocumentAuthenticationMethod(..)
+  , SetDocumentDeliveryMethod(..)
   , SetInvitationDeliveryStatus(..)
   , SetInviteText(..)
   , SignDocument(..)
@@ -131,7 +132,7 @@ data DocumentFilter
   | DocumentFilterByRole SignatoryRole        -- ^ Signatory must have role
   | DocumentFilterByProcess [DocumentProcess] -- ^ Any of listed processes
   | DocumentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
-  | DocumentFilterByIdentification IdentificationType -- ^ Only documents that use selected identification type
+  | DocumentFilterByDelivery DeliveryMethod -- ^ Only documents that use selected delivery method
   | DocumentFilterByMonthYearFrom (Int,Int)           -- ^ Document time after or in (month,year)
   | DocumentFilterByMonthYearTo   (Int,Int)           -- ^  Document time before or in (month,year)
 
@@ -326,8 +327,8 @@ documentFilterToSQL (DocumentFilterByString string) =
       escape '_' = "\\_"
       escape c = [c]
 
-documentFilterToSQL (DocumentFilterByIdentification identification) =
-  SQL ("(documents.allowed_id_types & ?) <> 0") [toSql [identification]]
+documentFilterToSQL (DocumentFilterByDelivery del) =
+  SQL ("documents.delivery_method = ?") [toSql del]
 
 sqlOR :: SQL -> SQL -> SQL
 sqlOR sql1 sql2 = mconcat [parenthesize sql1, SQL " OR " [], parenthesize sql2]
@@ -409,7 +410,8 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documenttimeouttime" documenttimeouttime
                    , checkEqualBy "documentinvitetime" documentinvitetime
                    , checkEqualBy "documentinvitetext" documentinvitetext
-                   , checkEqualBy "documentallowedidtypes" (nub . documentallowedidtypes)
+                   , checkEqualBy "documentauthenticationmethod" documentauthenticationmethod
+                   , checkEqualBy "documentdeliverymethod" documentdeliverymethod
                    , checkEqualBy "documentcancelationreason" documentcancelationreason
                    , checkEqualBy "documentsharing" documentsharing
                    , checkEqualBy "documentrejectioninfo" documentrejectioninfo
@@ -441,7 +443,6 @@ documentsSelectors = SQL (intercalate ", " [
   , "invite_time"
   , "invite_ip"
   , "invite_text"
-  , "allowed_id_types"
   , "cancelation_reason"
   , "rejection_time"
   , "rejection_signatory_link_id"
@@ -452,6 +453,8 @@ documentsSelectors = SQL (intercalate ", " [
   , "region"
   , "sharing"
   , documentStatusClassExpression
+  , "authentication_method"
+  , "delivery_method"
   ]) []
 
 selectDocumentsSQL :: SQL
@@ -466,9 +469,9 @@ fetchDocuments = foldDB decoder []
     -- use reversed order too, so in the end everything is properly ordered.
     decoder acc did title file_id sealed_file_id status error_text simple_type
      process ctime mtime days_to_sign timeout_time invite_time
-     invite_ip invite_text allowed_id_types cancelationreason rejection_time
+     invite_ip invite_text cancelationreason rejection_time
      rejection_signatory_link_id rejection_reason service deleted mail_footer
-     region sharing status_class
+     region sharing status_class authentication_method delivery_method
        = Document {
          documentid = did
        , documenttitle = title
@@ -488,7 +491,8 @@ fetchDocuments = foldDB decoder []
            Nothing -> Nothing
            Just t -> Just (SignInfo t $ fromMaybe noIP invite_ip)
        , documentinvitetext = invite_text
-       , documentallowedidtypes = allowed_id_types
+       , documentauthenticationmethod = authentication_method
+       , documentdeliverymethod = delivery_method
        , documentcancelationreason = cancelationreason
        , documentsharing = sharing
        , documentrejectioninfo = case (rejection_time, rejection_signatory_link_id, rejection_reason) of
@@ -843,7 +847,8 @@ insertDocumentAsIs document = do
                  , documenttimeouttime
                  , documentinvitetime
                  , documentinvitetext
-                 , documentallowedidtypes
+                 , documentauthenticationmethod
+                 , documentdeliverymethod
                  , documentcancelationreason
                  , documentsharing
                  , documentrejectioninfo
@@ -873,7 +878,8 @@ insertDocumentAsIs document = do
       , sql "invite_time" $ signtime `fmap` documentinvitetime
       , sql "invite_ip" (fmap signipnumber documentinvitetime)
       , sql "invite_text" documentinvitetext
-      , sql "allowed_id_types" documentallowedidtypes
+      , sql "authentication_method" documentauthenticationmethod
+      , sql "delivery_method" documentdeliverymethod
       , sql "cancelation_reason" documentcancelationreason
       , sql "rejection_time" $ fst3 `fmap` documentrejectioninfo
       , sql "rejection_signatory_link_id" $ snd3 `fmap` documentrejectioninfo
@@ -1592,7 +1598,8 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
                 , documentmtime                = ctime
                 , documentservice              = userservice user
                 , documentauthorattachments    = []
-                , documentallowedidtypes       = [EmailIdentification]
+                , documentauthenticationmethod = EmailAuthentication
+                , documentdeliverymethod       = EmailDelivery
                 , documentui                   = (documentui blankDocument) { documentmailfooter = customfooter $ usersettings user }
                 } 
 
@@ -2211,17 +2218,36 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m TimeoutDocument Bool where
         actor
     return success
 
-data SetDocumentIdentification = SetDocumentIdentification DocumentID [IdentificationType] Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentIdentification Bool where
-  update (SetDocumentIdentification did identification actor) = do
-    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND allowed_id_types IS DISTINCT FROM ?" [toSql did, toSql identification]
+data SetDocumentAuthenticationMethod = SetDocumentAuthenticationMethod DocumentID AuthenticationMethod Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAuthenticationMethod Bool where
+  update (SetDocumentAuthenticationMethod did auth actor) = do
+    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND authentication_method IS DISTINCT FROM ?" [toSql did, toSql auth]
     success <- kRun01 $ mkSQL UPDATE tableDocuments
-         [ sql "allowed_id_types" $ identification
+         [ sql "authentication_method" auth
          ] <++> SQL "WHERE id = ?" [ toSql did ]
-    when_ (success && changed) $
-      update $ InsertEvidenceEvent
-        (SetElegitimationIdentificationEvidence <| ELegitimationIdentification `elem` identification |> SetEmailIdentificationEvidence)
-        (value "identification" (show identification) >> value "actor" (actorWho actor))
+    when_ (success && changed) $ do
+      let evidence = case auth of
+            EmailAuthentication -> SetEmailAuthenticationMethodEvidence
+            ELegAuthentication  -> SetELegAuthenticationMethodEvidence
+      update $ InsertEvidenceEvent evidence
+        (value "authentication" (show auth) >> value "actor" (actorWho actor))
+        (Just did)
+        actor
+    return success
+
+data SetDocumentDeliveryMethod = SetDocumentDeliveryMethod DocumentID DeliveryMethod Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentDeliveryMethod Bool where
+  update (SetDocumentDeliveryMethod did del actor) = do
+    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND delivery_method IS DISTINCT FROM ?" [toSql did, toSql del]
+    success <- kRun01 $ mkSQL UPDATE tableDocuments
+         [ sql "delivery_method" del
+         ] <++> SQL "WHERE id = ?" [ toSql did ]
+    when_ (success && changed) $ do
+      let evidence = case del of
+            EmailDelivery -> SetEmailDeliveryMethodEvidence
+            PadDelivery   -> SetPadDeliveryMethodEvidence
+      update $ InsertEvidenceEvent evidence
+        (value "delivery" (show del) >> value "actor" (actorWho actor))
         (Just did)
         actor
     return success
@@ -2384,7 +2410,8 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateDraft Bool where
       update $ SetDocumentTitle did (documenttitle document) actor
     , update $ SetDaysToSign  did (documentdaystosign document) actor
     , update $ SetDocumentLocale did (getLocale document) actor
-    , update $ SetDocumentIdentification did (documentallowedidtypes document) actor
+    , update $ SetDocumentAuthenticationMethod did (documentauthenticationmethod document) actor
+    , update $ SetDocumentDeliveryMethod did (documentdeliverymethod document) actor
     , update $ SetInviteText did (documentinvitetext document) actor
     ]
 

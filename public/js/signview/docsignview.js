@@ -61,13 +61,13 @@ var DocumentSignViewModel = Backbone.Model.extend({
              && this.document().currentSignatory().hasSigned()
              && this.justSaved()
              && !this.document().isWhiteLabeled()
-             && !this.document().padAuthorization();
+             && !this.document().padDelivery();
   },
   hasCreateAccountSection : function() {
       return    this.document().currentSignatory() != undefined
              && this.document().currentSignatory().hasSigned()
              && !this.document().currentSignatory().saved()
-             && !this.document().padAuthorization()
+             && !this.document().padDelivery()
              && !this.document().isWhiteLabeled();
   },
   instructionssection : function() {

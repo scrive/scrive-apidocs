@@ -15,7 +15,8 @@ module Doc.DocStateData (
   , FieldPlacement(..)
   , File(..)
   , FileStorage(..)
-  , IdentificationType(..)
+  , AuthenticationMethod(..)
+  , DeliveryMethod(..)
   , JpegPages(..)
   , MailsDeliveryStatus(..)
   , SignatureProvider(..)
@@ -107,11 +108,13 @@ instance Read StatusClass where
   readsPrec _ str =
     [(v,drop (length (show v)) str) | v <- [minBound .. maxBound], show v `isPrefixOf` str]
 
+data AuthenticationMethod = EmailAuthentication
+                          | ELegAuthentication
+  deriving (Eq, Ord, Show)
 
-data IdentificationType = EmailIdentification
-                        | ELegitimationIdentification
-                        | PadIdentification
-  deriving (Eq, Ord, Bounded, Enum, Show)
+data DeliveryMethod = EmailDelivery
+                    | PadDelivery
+  deriving (Eq, Ord, Show)
 
 data SignatureInfo = SignatureInfo {
     signatureinfotext        :: String
@@ -331,7 +334,8 @@ data Document = Document {
   , documenttimeouttime            :: Maybe TimeoutTime
   , documentinvitetime             :: Maybe SignInfo
   , documentinvitetext             :: String
-  , documentallowedidtypes         :: [IdentificationType]
+  , documentauthenticationmethod   :: AuthenticationMethod
+  , documentdeliverymethod         :: DeliveryMethod
   , documentcancelationreason      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
   , documentsharing                :: DocumentSharing
   , documentrejectioninfo          :: Maybe (MinutesTime, SignatoryLinkID, String)
@@ -377,7 +381,8 @@ $(newtypeDeriveConvertible ''SignOrder)
 $(enumDeriveConvertible ''DocumentProcess)
 $(enumDeriveConvertibleIgnoreFields ''DocumentStatus)
 $(enumDeriveConvertibleIgnoreFields ''FieldType)
-$(bitfieldDeriveConvertible ''IdentificationType)
+$(enumDeriveConvertible ''AuthenticationMethod)
+$(enumDeriveConvertible ''DeliveryMethod)
 $(enumDeriveConvertible ''DocumentSharing)
 $(jsonableDeriveConvertible [t| [DocumentTag] |])
 $(jsonableDeriveConvertible [t| CancelationReason |])

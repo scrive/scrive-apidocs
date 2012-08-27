@@ -250,7 +250,11 @@
     padding: 5px 5px 5px 17px;
 }
 
-.verificationmethodselect select{
+.authenticationmethodselect select {
+    margin-left: 5px;
+}
+
+.deliverymethodselect select {
     margin-left: 5px;
 }
 

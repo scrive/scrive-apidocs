@@ -205,13 +205,13 @@ window.DocumentSignConfirmation = Backbone.View.extend({
      var content = $("<div />");
      if (document.authorIsOnlySignatory())
             content = $(document.process().authorIsOnlySignatory());
-     else if (document.elegAuthorization())
+     else if (document.elegAuthentication())
           content.append(document.process().signatorysignmodalcontentsignvieweleg());
      else if (document.lastSignatoryLeft())
           content.append(document.process().signatorysignmodalcontentauthorlast());
      else
           content.append(document.process().signatorysignmodalcontentnotlast());
-     if (document.elegAuthorization()) {
+     if (document.elegAuthentication()) {
         var subhead = $("<h3/>").text(localization.signByAuthor.eleg.subhead);
         var a = $("<a target='_new' />").text(localization.signByAuthor.eleg.clickHere).attr("href", "http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
         var p = $("<p/>").append(localization.signByAuthor.eleg.body1).append(a).append(localization.signByAuthor.eleg.body2);
@@ -220,13 +220,13 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       return content;
     } else {
       var content = $("<div />");
-      if (document.elegAuthorization())
+      if (document.elegAuthentication())
           content.append(document.process().signatorysignmodalcontentsignvieweleg());
       else if (document.lastSignatoryLeft())
           content.append(document.process().signatorysignmodalcontentlast());
       else
           content.append(document.process().signatorysignmodalcontentnotlast());
-      if (document.elegAuthorization()) {
+      if (document.elegAuthentication()) {
         var subhead = $("<h3/>").text(localization.sign.eleg.subhead);
         var a = $("<a target='_new' />").text(localization.sign.eleg.clickHere).attr("href", "http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
         var p = $("<p/>").append(localization.sign.eleg.body1).append(a).append(localization.sign.eleg.body2);
@@ -246,7 +246,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
 
     Confirmation.popup({
       title: signatory.author ? localization.signByAuthor.modalTitle : document.process().signatorysignmodaltitle(),
-      acceptButton: document.elegAuthorization() ? this.createElegButtonElems() : this.createSignButtonElems(),
+      acceptButton: document.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
       rejectText: localization.cancel,
       content: this.createContentElems
     });

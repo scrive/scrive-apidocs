@@ -3,6 +3,7 @@ module Doc.Migrations where
 
 import Control.Monad
 import Data.Int
+import Data.Monoid
 import Database.HDBC
 import Text.JSON
 
@@ -19,6 +20,33 @@ import Version
 import MinutesTime
 
 $(jsonableDeriveConvertible [t| [SignatoryField] |])
+
+splitIdentificationTypes :: MonadDB m => Migration m
+splitIdentificationTypes = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 8
+  , mgrDo = do
+    kRunRaw "ALTER TABLE documents ADD COLUMN authentication_method INTEGER NULL"
+    kRunRaw "ALTER TABLE documents ADD COLUMN delivery_method INTEGER NULL"
+    kRun_ $ mconcat [
+        SQL "UPDATE documents SET" []
+      , SQL "  authentication_method = (CASE WHEN allowed_id_types = 0 THEN ? WHEN allowed_id_types = 1 THEN ? WHEN allowed_id_types = 2 THEN ? WHEN allowed_id_types = 4 THEN ? END)::SMALLINT" [
+          toSql EmailAuthentication -- 0 (nothing, was defaulting to email)
+        , toSql EmailAuthentication -- 1 (email)
+        , toSql ELegAuthentication  -- 2 (eleg)
+        , toSql EmailAuthentication -- 4 (pad, it implied email)
+        ]
+      , SQL ", delivery_method = (CASE WHEN allowed_id_types = 0 THEN ? WHEN allowed_id_types = 1 THEN ? WHEN allowed_id_types = 2 THEN ? WHEN allowed_id_types = 4 THEN ? END)::SMALLINT" [
+          toSql EmailDelivery -- 0 (nothing, was defaulting to email)
+        , toSql EmailDelivery -- 1 (email)
+        , toSql EmailDelivery -- 2 (eleg, couldn't mix eleg with pad previously)
+        , toSql PadDelivery   -- 4 (pad)
+        ]
+      ]
+    kRunRaw "ALTER TABLE documents ALTER authentication_method SET NOT NULL"
+    kRunRaw "ALTER TABLE documents ALTER delivery_method SET NOT NULL"
+    kRunRaw "ALTER TABLE documents DROP COLUMN allowed_id_types"
+}
 
 addForeignKeyToDocumentTags :: MonadDB m => Migration m
 addForeignKeyToDocumentTags = Migration {

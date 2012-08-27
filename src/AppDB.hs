@@ -80,6 +80,7 @@ kontraMigrations = [
   , addForeignKeyToDocumentTags
   , moveAttachmentsFromDocumentsToAttachments
   , removeOldDocumentLog
+  , splitIdentificationTypes
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

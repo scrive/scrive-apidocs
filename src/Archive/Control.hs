@@ -181,7 +181,7 @@ jsonDocumentsList = withUserGet $ do
                           "Document"          -> ([DocumentsForSignatoryDeleteValue uid False] ++ (maybeCompanyDomain False),[])
                           "Template"          -> ([TemplatesOfAuthorDeleteValue uid False] ++ [TemplatesSharedInUsersCompany uid],[])
                           "Rubbish"           -> ([DocumentsForSignatoryDeleteValue uid True] ++ (maybeCompanyDomain True), [])
-                          "Pad"               -> ([DocumentsOfAuthorDeleteValue uid True]  ++ (maybeCompanyDomain False) ,[DocumentFilterByIdentification PadIdentification, DocumentFilterStatuses [Pending,Closed]])
+                          "Pad"               -> ([DocumentsOfAuthorDeleteValue uid True]  ++ (maybeCompanyDomain False) ,[DocumentFilterByDelivery PadDelivery, DocumentFilterStatuses [Pending,Closed]])
                           _ -> ([],[])
                          where
                              maybeCompanyDomain d = if (useriscompanyadmin user && (isJust $ usercompany user))

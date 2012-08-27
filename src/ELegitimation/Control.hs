@@ -66,7 +66,7 @@ generateBankIDTransaction docid signid = do
   -- sanity check
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
 
-  unless (document `allowsIdentification` ELegitimationIdentification) internalError
+  unless (document `allowsAuthMethod` ELegAuthentication) internalError
     -- request a nonce
 
   nonceresponse <- liftIO $ generateChallenge ctxlogicaconf provider
@@ -267,7 +267,7 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
     unless (transactiondocumentid == docid) internalError
     Log.eleg $ ("Document " ++ show docid ) ++ ": Transaction validated"
     Log.eleg $ ("Document " ++ show docid ) ++ ": Document matched"
-    unless (doc `allowsIdentification` ELegitimationIdentification) internalError
+    unless (doc `allowsAuthMethod` ELegAuthentication) internalError
     Log.eleg $ ("Document " ++ show docid ) ++ ": Document allows eleg"
     res <- liftIO $ verifySignature logicaconf provider 
                       etbs
@@ -312,7 +312,7 @@ initiateMobileBankID docid slid = do
 
     -- sanity check
     document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid slid magic
-    unless (document `allowsIdentification` ELegitimationIdentification) internalError
+    unless (document `allowsAuthMethod` ELegAuthentication) internalError
 
     sl <- guardJust $ getSigLinkFor document slid
     let pn = getPersonalNumber sl
@@ -341,7 +341,7 @@ initiateMobileBankIDForAuthor docid = do
 
     -- sanity check
     document <- guardRightM $ getDocByDocIDForAuthor docid
-    unless (document `allowsIdentification` ELegitimationIdentification) internalError
+    unless (document `allowsAuthMethod` ELegAuthentication) internalError
     
     tbs <-getTBS document
     
@@ -377,7 +377,7 @@ collectMobileBankID docid slid = do
   elegtransactions  <- ctxelegtransactions <$> getContext
   -- sanity check
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid slid magic
-  unless (document `allowsIdentification` ELegitimationIdentification) internalError
+  unless (document `allowsAuthMethod` ELegAuthentication) internalError
 
   trans@ELegTransaction {transactionsignatorylinkid
                         ,transactionmagichash
@@ -425,7 +425,7 @@ collectMobileBankIDForAuthor docid = do
   elegtransactions  <- ctxelegtransactions <$> getContext
   -- sanity check
   document <- guardRightM $ getDocByDocIDForAuthor docid
-  unless (document `allowsIdentification` ELegitimationIdentification) internalError
+  unless (document `allowsAuthMethod` ELegAuthentication) internalError
   trans@ELegTransaction {transactionoref
                         ,transactionstatus
                         ,transactiondocumentid} <- guardJust $ findTransactionByID tid elegtransactions

@@ -61,9 +61,9 @@ signDocumentWithEmailOrPad did slid mh fields = do
     Left err -> return $ Left err
     Right olddoc -> do
      switchLocale (getLocale olddoc)
-     case olddoc `allowsIdentification` EmailIdentification || olddoc `allowsIdentification` PadIdentification of
-      False -> return $ Left (DBActionNotAvailable "This document does not allow signing using email identification.")
-      True  -> do
+     case olddoc `allowsAuthMethod` ELegAuthentication of
+      True -> return $ Left (DBActionNotAvailable "This document does not allow signing using email authentication.")
+      False  -> do
         Context{ ctxtime, ctxipnumber } <- getContext
         let Just sl' = getSigLinkFor olddoc slid
         let actor = signatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
@@ -86,8 +86,8 @@ signDocumentWithEleg did slid mh fields sinfo = do
     Left err -> return $ Left err
     Right olddoc -> do
      switchLocale (getLocale olddoc)
-     case olddoc `allowsIdentification` ELegitimationIdentification of
-      False -> return $ Left (DBActionNotAvailable "This document does not allow signing using email identification.")
+     case olddoc `allowsAuthMethod` ELegAuthentication of
+      False -> return $ Left (DBActionNotAvailable "This document does not allow signing using eleg authentication.")
       True  -> do
         let Just sl' = getSigLinkFor olddoc slid
         let actor = signatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid

@@ -283,7 +283,8 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) pdfBinary
   file <- dbUpdate $ NewFile title content14
   _ <- guardTrueM $ dbUpdate (AttachFile (documentid doc) (fileid file) actor)
-  _ <- dbUpdate $ SetDocumentIdentification (documentid doc) [EmailIdentification] actor
+  _ <- dbUpdate $ SetDocumentAuthenticationMethod (documentid doc) EmailAuthentication actor
+  _ <- dbUpdate $ SetDocumentDeliveryMethod (documentid doc) EmailDelivery actor
   res <- (sequence $ [dbUpdate $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) actor])
 
   when (not $ and res) $ do
@@ -540,7 +541,8 @@ jsonMailAPI mailapi username user pdfs plains content = do
   file <- dbUpdate $ NewFile title content14
   _ <- guardTrueM $ dbUpdate (AttachFile (documentid doc) (fileid file) actor)
 
-  _ <- dbUpdate $ SetDocumentIdentification (documentid doc) [EmailIdentification] actor
+  _ <- dbUpdate $ SetDocumentAuthenticationMethod (documentid doc) EmailAuthentication actor
+  _ <- dbUpdate $ SetDocumentDeliveryMethod (documentid doc) EmailDelivery actor
 
   let signatories = for (dcrInvolved dcr) $ \InvolvedRequest{irRole,irData} ->
         (SignatoryDetails{signatorysignorder = SignOrder 0, signatoryfields = irData},

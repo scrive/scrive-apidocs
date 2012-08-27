@@ -91,7 +91,7 @@ var CsvProblem = Backbone.Model.extend({
        var sigdesign = this;
        var submit = new Submit({ url : "/parsecsv", method : "POST", expectedType:"json"});
        submit.add("customfieldscount",this.signatory().customFields().length);
-       if (this.signatory().document().elegAuthorization())
+       if (this.signatory().document().elegAuthentication())
         submit.add("eleg","YES");
        submit.addInputs(input);
        submit.sendAjax(function (resp) {

@@ -481,7 +481,7 @@ window.Signatory = Backbone.Model.extend({
                  this.signorder() == this.document().signorder();
     },
     canPadSignQuickSign : function() {
-       return this.document().padAuthorization() && this.canSign() && !this.document().hasAnyAttachments() && this.allFieldsButSignatureDontRequiredFilling();
+       return this.document().padDelivery() && this.canSign() && !this.document().hasAnyAttachments() && this.allFieldsButSignatureDontRequiredFilling();
     },
     allAttachemntHaveFile: function() {
         return _.all(this.attachments(), function(attachment) {
@@ -837,7 +837,7 @@ window.SignatoryStandardView = Backbone.View.extend({
        if ((signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin()) &&
                !signatory.author() &&
                ((signatory.document().signingInProcess() && signatory.canSign()) ||
-                   signatory.document().closed()) && !signatory.document().padAuthorization())
+                   signatory.document().closed()) && !signatory.document().padDelivery())
           container.append(this.remidenMailOption());
 
         if (signatory.undeliveredEmail() && signatory.document().currentViewerIsAuthor() && signatory.document().pending())
@@ -846,7 +846,7 @@ window.SignatoryStandardView = Backbone.View.extend({
         if ((signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
             && signatory.document().signingInProcess()
             && signatory.canSign()
-            && signatory.document().padAuthorization() && !signatory.author()) {
+            && signatory.document().padDelivery() && !signatory.author()) {
                   if (!signatory.author() && BrowserInfo.isPadDevice())
                       container.append(this.giveForSigningOnThisDeviceOption());
                   if (!BrowserInfo.isPadDevice()) {
