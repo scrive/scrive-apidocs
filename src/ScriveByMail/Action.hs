@@ -33,6 +33,7 @@ import Util.SignatoryLinkUtils
 import qualified Log (scrivebymail, scrivebymailfailure, mailAPI, jsonMailAPI)
 
 import Codec.MIME.Decode
+import qualified Codec.MIME.QuotedPrintable as PQ
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
@@ -51,6 +52,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString.Internal as BSI
 
 checkThat :: String -> Bool -> Maybe String
 checkThat s b = Nothing <| b |> Just s
@@ -82,7 +84,7 @@ doMailAPI content = do
       isOutlook = maybe False ("Outlook" `isInfixOf`) (lookup "x-mailer" (MIME.mime_val_headers mime)) ||
                   maybe False ("Exchange" `isInfixOf`) (lookup "x-mimeole" (MIME.mime_val_headers mime))
 
-      subject = decodeWords $ BS.toString $ maybe BS.empty BS.fromString $ lookup "subject" (MIME.mime_val_headers mime)
+      subject = decodeWordsMIME $ BS.toString $ maybe BS.empty BS.fromString $ lookup "subject" (MIME.mime_val_headers mime)
 
   -- access control
 
@@ -532,7 +534,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
     internalError
 
   let doctype = dcrType dcr
-      title = maybe (basename $ getAttachmentFilename $ fst pdf) decodeWords $ dcrTitle dcr
+      title = maybe (basename $ getAttachmentFilename $ fst pdf) decodeWordsMIME $ dcrTitle dcr
       actor = mailAPIActor ctxtime (userid user) (getEmail user)
 
   edoc <- dbUpdate $ NewDocument user mcompany title doctype 0 actor
@@ -597,12 +599,27 @@ getByAttachmentName :: String -> [(MIME.Type, BS.ByteString)] -> Maybe (MIME.Typ
 getByAttachmentName name ps =
   find byname ps
     where byname p = case lookup "name" (MIME.mimeParams $ fst p) of
-            Just n' -> name == decodeWords n'
+            Just n' -> name == decodeWordsMIME n'
             _       -> False
 
 getAttachmentFilename :: MIME.Type -> String
 getAttachmentFilename tp = case lookup "filename" (MIME.mimeParams tp) of
-                             Just s -> decodeWords s
+                             Just s -> decodeWordsMIME s
                              _ -> case lookup "name" (MIME.mimeParams tp) of
-                                    Just s -> decodeWords s
+                                    Just s -> decodeWordsMIME s
                                     _ -> "document.pdf"
+
+
+-- | This is a quickfix. MIME packege does not support UTF-8 encoding
+decodeWordsMIME :: String -> String
+decodeWordsMIME s =  if (utfString `isInfixOf` (toLower <$> s))
+                        then unwords $ map decodeWordsMIMEUTF $ words s
+                        else decodeWords s
+
+decodeWordsMIMEUTF :: String -> String                        
+decodeWordsMIMEUTF s = if (utfString `isPrefixOf` (toLower <$> s))
+                          then BS.toString  $ BS.pack $ map BSI.c2w $ PQ.decode $ takeWhile ((/=) '?') $ drop (length utfString) s
+                          else s
+
+utfString :: String
+utfString = "=?utf-8?q?"                          
