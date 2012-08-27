@@ -34,6 +34,7 @@ import qualified Log (scrivebymail, scrivebymailfailure, mailAPI, jsonMailAPI)
 
 import Codec.MIME.Decode
 import qualified Codec.MIME.QuotedPrintable as PQ
+import qualified Codec.MIME.Base64 as Base64
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
@@ -612,14 +613,19 @@ getAttachmentFilename tp = case lookup "filename" (MIME.mimeParams tp) of
 
 -- | This is a quickfix. MIME packege does not support UTF-8 encoding
 decodeWordsMIME :: String -> String
-decodeWordsMIME s =  if (utfString `isInfixOf` (toLower <$> s))
+decodeWordsMIME s =  if (utfString `isInfixOf` (toLower <$> s) || utfBString `isInfixOf` (toLower <$> s))
                         then unwords $ map decodeWordsMIMEUTF $ words s
                         else decodeWords s
 
 decodeWordsMIMEUTF :: String -> String                        
 decodeWordsMIMEUTF s = if (utfString `isPrefixOf` (toLower <$> s))
                           then BS.toString  $ BS.pack $ map BSI.c2w $ PQ.decode $ takeWhile ((/=) '?') $ drop (length utfString) s
-                          else s
+                          else if (utfBString `isPrefixOf` (toLower <$> s))
+                            then BS.toString  $ BS.pack $ map BSI.c2w $ Base64.decodeToString $ takeWhile ((/=) '?') $ drop (length utfString) s
+                            else s
 
 utfString :: String
-utfString = "=?utf-8?q?"                          
+utfString = "=?utf-8?q?"
+
+utfBString :: String
+utfBString = "=?utf-8?b?"
