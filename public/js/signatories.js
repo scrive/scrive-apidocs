@@ -481,7 +481,7 @@ window.Signatory = Backbone.Model.extend({
                  this.signorder() == this.document().signorder();
     },
     canPadSignQuickSign : function() {
-       return this.document().padDelivery() && this.canSign() && !this.document().hasAnyAttachments() && this.allFieldsButSignatureDontRequiredFilling();
+       return this.document().padDelivery() && this.document().emailAuthentication() && this.canSign() && !this.document().hasAnyAttachments() && this.allFieldsButSignatureDontRequiredFilling();
     },
     allAttachemntHaveFile: function() {
         return _.all(this.attachments(), function(attachment) {
