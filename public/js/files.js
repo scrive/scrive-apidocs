@@ -320,8 +320,9 @@ var FileView = Backbone.View.extend({
     },
     startReadyChecker : function() {
         var view = this;
+        console.log("File is ready ...")
         if (view.ready())
-         view.trigger('ready');
+         view.model.trigger('ready');
         else
          setTimeout(function() {view.startReadyChecker()},1000);
     },
