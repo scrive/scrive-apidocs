@@ -141,7 +141,9 @@ window.SignatoryAttachmentUploadView = Backbone.View.extend({
         },
         ajaxsuccess: function(d) {
           if (d) {
-            attachment.setFile(new File(_.extend(d.file, {document: attachment.signatory().document() })));
+            var doc =  attachment.signatory().document();
+            var file = new File(_.extend(d.file, {document: doc }));
+            attachment.setFile(file);
             attachment.notLoading();
           }
         }

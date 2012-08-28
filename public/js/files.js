@@ -59,17 +59,26 @@ window.File = Backbone.Model.extend({
     page : function(number){
         return this.pages()[number - 1];
     },
+    document : function() {
+        return this.get("document");
+    },
     documentid : function(){
-        return this.get("documentid");
+      if (this.document() != undefined)
+        return this.document().documentid();
+      return this.get("documentid");
     },
     attachmentid : function(){
         return this.get("attachmentid");
     },
     signatoryid : function(){
-        return this.get("signatoryid");
+      if (this.document() != undefined && this.document().viewer().signatoryid() != undefined)
+        return this.document().viewer().signatoryid();
+      return this.get("signatoryid");
     },
     magichash : function(){
-        return this.get("magichash");
+      if (this.document() != undefined && this.document().viewer().magichash() != undefined)
+        return this.document().viewer().magichash();
+      return this.get("magichash");
     },
     name : function(){
         return this.get("name");
@@ -320,7 +329,6 @@ var FileView = Backbone.View.extend({
     },
     startReadyChecker : function() {
         var view = this;
-        console.log("File is ready ...")
         if (view.ready())
          view.model.trigger('ready');
         else
