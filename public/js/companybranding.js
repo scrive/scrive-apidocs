@@ -459,7 +459,7 @@ window.CompanyBrandingView = Backbone.View.extend({
       onClick: function() {
           // blocking
           if(BlockingInfo && BlockingInfo.blockBranding()) {
-              blocking.show("Please purchase a Team account to use branding.");
+              blocking.show(BlockingInfo.blockBrandingMessage());
               return false;
           }
         new Submit({

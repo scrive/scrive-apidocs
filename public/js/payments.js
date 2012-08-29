@@ -124,7 +124,11 @@
             return this.get('currency');
         },
         // the number of users in the company
-        quantity: function() {
+        quantity: function(q) {
+            if(q) {
+                this.set({quantity:q});
+                return this;
+            }
             return this.get("quantity");
         }
     });
@@ -298,48 +302,188 @@
         dateString: function(d) {
             return moment(d).format("YYYY-MM-DD");
         },
+        professionalBox: function() {
+            var view = this;
+            var model = view.model;
+
+            var div = $('<div class="professional planbox" />');
+
+            var header = $('<div class="header" />');
+            var header1 = $('<div class="header1" />');
+            header1.text(localization.payments.plans.professional);
+            var header2 = $('<div class="header2" />');
+            header2.text(localization.payments.plans.professionaltag);
+            header.append(header1).append(header2);
+            div.append(header);
+
+            var features = $('<div class="features" />');
+            var users = $('<div class="feature" />');
+            users.text("1 " + localization.payments.user);
+            features.append(users);
+            div.append(features);
+
+            var price = $('<div class="price" />');
+            var price1 = $('<div class="price1" />');
+            price1.text(localization.payments.flatrate + ":");
+            var price2 = $('<div class="price2" />');
+            price2.text(localization.payments.plans.professionalprice);
+            var price3 = $('<div class="price3" />');
+            price3.text(localization.payments.permonth);
+            price.append(price1).append(price2).append(price3);
+            div.append(price);
+
+            var buttonbox = $('<div class="buttonbox" />');
+            var button = Button.init({color: 'black',
+                                      text: localization.payments.select,
+                                      size: 'small',
+                                      width: 150,
+                                      onClick: function() {
+                                          model.signup().code('professional');
+                                          view.showRecurlySubscriptionForm();
+                                          return false;
+                                      }});
+            
+            buttonbox.append(button.input());
+            div.append(buttonbox);
+
+            return div;
+        },
+        teamBox: function() {
+            var view = this;
+            var model = view.model;
+
+            var div = $('<div class="team planbox" />');
+
+            var header = $('<div class="header" />');
+            var header1 = $('<div class="header1" />');
+            header1.text(localization.payments.plans.team);
+            var header2 = $('<div class="header2" />');
+            header2.text(localization.payments.plans.teamtag);
+            header.append(header1).append(header2);
+            div.append(header);
+
+            var features = $('<div class="features" />');
+            var users = $('<div class="feature" />');
+            users.text("3+ " + localization.payments.users);
+            var logo = $('<div class="feature" />');
+            logo.text(localization.payments.plans.logo);
+            var dash = $('<div class="feature" />');
+            dash.text(localization.payments.plans.dash);
+            features.append(users).append(logo).append(dash);
+            div.append(features);
+
+            var price = $('<div class="price" />');
+            var price1 = $('<div class="price1" />');
+            price1.text(localization.payments.peruserrate + ":");
+            var price2 = $('<div class="price2" />');
+            price2.text(localization.payments.plans.teamprice);
+            var price3 = $('<div class="price3" />');
+            price3.text(localization.payments.peruserpermonth);
+            price.append(price1).append(price2).append(price3);
+            div.append(price);
+
+            var buttonbox = $('<div class="buttonbox" />');
+            var button = Button.init({color: 'green',
+                                      text: localization.payments.selected,
+                                     size: 'small',
+                                     width: 150,
+                                     onClick: function() {
+                                         model.signup().code('team');
+                                         view.showRecurlySubscriptionForm();
+                                         return false;
+                                     }});
+            
+            buttonbox.append(button.input());
+            div.append(buttonbox);
+
+            return div;
+        },
+        enterpriseBox: function() {
+            var view = this;
+            var model = view.model;
+
+            var div = $('<div class="enterprise planbox" />');
+            var header = $('<div class="header" />');
+            var header1 = $('<div class="header1" />');
+            header1.text(localization.payments.plans.enterprise);
+            var header2 = $('<div class="header2" />');
+            header2.text(localization.payments.plans.enterprisetag);
+            header.append(header1).append(header2);
+            div.append(header);
+
+            var features = $('<div class="features" />');
+            var integrations = $('<div class="feature" />');
+            integrations.text(localization.payments.integrations);
+            features.append(integrations);
+            div.append(features);
+
+            var price = $('<div class="price" />');
+            price.html(localization.payments.enterpriseprice);
+            div.append(price);
+
+            var empty = $('<div class="empty" />');
+            div.append(empty);
+
+            return div;
+        },
         showSubscribeForm: function() {
             var view = this;
             var model = view.model;
             var $el = $(view.el);
+            $el.empty();
             $el.removeClass("subscribed").addClass("subscribing");
             
-            var header = $('<div class="account-header" />')
-                .append($('<h2 />').text(localization.payments.subscribe));
+            var header = $('<div class="header" />')
+                .append($('<h2 />').text(localization.payments.subscribeheader));
+
+            $el.append(header);
+            $el.append($('<h3 />').text("1. " + localization.payments.chooseplan + ":"));
+
             var subs = $('<div class="subscription-chooser" />');
-            var select = $('<select name="plan" />');
-            subs.append(select);
-            _.each(['professional', 'team'], function(value) {
-                var name     = localization.payments.plans[value];
-                var price    = planPrice(value);
-                var pricef   = view.addMark(price);
-                var currency = model.signup().currency();
-                var txt = 
-                    name + " " + pricef + " " + currency;
-                select.append($("<option />").attr("value", value).text(txt));
-            });
 
-            subs.find('select').change(function() {
-                model.signup().code($(this).val());
-                view.showRecurlySubscriptionForm();
-            });
+            var prof = this.professionalBox();
+            var team = this.teamBox();
 
-            var form = $('<div id="js-recurly-form"></div>');
+            team.addClass('selected');
 
-            var col = $('<div class="col" />')
-                .append(header)
-                .append($('<div class="account-body" />')
-                        .append(subs)
-                        .append(form));
+            subs.append(prof);
+            subs.append(team);
+            subs.append(this.enterpriseBox());
 
-            $el.append(col);
+            $el.append(subs);
+            $el.append($('<div class="clearfix" />'));
+            $el.append($('<h3 />').text("2. " + localization.payments.paywithcard + ":"));
+
+            var recurlyform = $('<div id="js-recurly-form"></div>');
+
+            $el.append(recurlyform);
 
             view.showRecurlySubscriptionForm();
+
         },
         showRecurlySubscriptionForm: function() {
             var view = this;
             var model = view.model;
             var $el = $(view.el);
+
+            var prof = $('.planbox.professional');
+            var team = $('.planbox.team');
+
+            if(model.signup().code() === 'team') {
+                team.addClass('selected');
+                team.find('.btn-small').removeClass('black').addClass('green')
+                    .find('.label').text(localization.payments.selected);
+                prof.removeClass('selected');
+                prof.find('.btn-small').removeClass('green').addClass('black')
+                    .find('.label').text(localization.payments.select);
+            } else {
+                prof.addClass('selected');
+                prof.find('.btn-small').removeClass('black').addClass('green')
+                    .find('.label').text(localization.payments.selected);
+                team.removeClass('selected');
+                team.find('.btn-small').removeClass('green').addClass('black')
+                    .find('.label').text(localization.payments.select);
+            }
 
             Recurly.config({
                 subdomain: model.server().subdomain()
@@ -370,8 +514,63 @@
                 , signature: model.signup().signatures()[model.signup().code()]
                 , beforeInject: function(form) {
                     form = $(form);
+
+                    form.find('.field').prepend(function(){
+                        return $('<div class="label" />').text($(this).find('.placeholder').text().trim() + ": ");
+                    });
+
+                    var div = $('<div class="borderbox" />');
+                    div.append(form.contents());
+                    form.append(div);
+
+                    form.find('.server_errors').prependTo(form);
+
                     // set the quantity that we found from the db
-                    form.find('.quantity input').val(model.signup().quantity());
+                    var quantbox = form.find('.quantity input');
+                    quantbox.attr('min', 1);
+                     
+                    quantbox.val(model.signup().quantity());
+                    if(model.signup().code() === 'team') {
+                        quantbox.attr('min', 3);
+                        if(model.signup().quantity() < 3)
+                            quantbox.val(3);
+
+                    quantbox.change(function() { 
+                        var qty = parseInt(quantbox.val(), 10);
+                        var min = quantbox.attr('min');
+
+                        if(qty && min) {
+                            if(qty < min)
+                                qty = min;
+                        } else if(min) {
+                            qty = min
+                        } else {
+                            qty = 1;
+                        }
+
+                        quantbox.val(qty);
+                        model.signup().quantity(qty);
+                    });
+                        quantbox.change();
+                    }  else {
+                        quantbox.after($('<span class="quantity" />').text("1"));
+                        quantbox.hide();
+                    }
+
+
+
+                    form.find('.quantity .label').text(localization.payments.nousers + ": ");
+
+                    var guarantee = $('<div class="guarantee" />');
+                    guarantee.text(localization.payments.guarantee);
+                    var permonth = $('<span />').text(" " + localization.payments.permonth);
+                    form.find('.due_now').append(permonth).append(guarantee);
+                    form.find('.due_now .title').text(localization.payments.table.total + ": ");
+
+                    var expires = form.find('.expires');
+                    expires.find('.label').text(expires.find('.title').text().trim() + ": ");
+
+                    //quantbox.attr('type', 'number').attr('min', 3);
                     // replace button with our own
                     var work = true;
                     var button = Button.init({color:'green',
@@ -384,7 +583,12 @@
                                                       work = true;
                                                   }
                                               }});
-                    form.find('button').replaceWith(button.input());
+                    div.find('button').remove();
+                    form.append(button.input());
+
+                    form.find('.field.cvv').insertAfter(form.find('.field.expires'));
+                    form.find('.field .month').after($('<span />').text(" / "));
+
                     // we can store the field values so they won't have to type them again
                     var c = model.creditcard();
                     var cc = form.find('.card_number input');
@@ -411,6 +615,12 @@
                     ln.change(function(e) {
                         model.contact().lastName($(e.target).val());
                     });
+
+                    if(model.contact().firstName() === '' || model.contact().lastName() === '') {
+                        fn.show();
+                        ln.show();
+                    }
+
                     var en = form.find('.email input');
                     en.val(model.contact().email());
                     en.change();
@@ -472,7 +682,7 @@
             var currency = this.model.plan().subscription().currency();
             var quantity = pOrS.quantity();
             var txt = 
-                amountf + " " + currency + " x " + quantity + " " + localization.payments.user;
+                amountf + " " + currency + " x " + quantity + " " + localization.payments.users;
             return $('<div class="plan-price" />').text(txt);
         },
         planTotal: function() {
@@ -644,13 +854,13 @@
                     }
                     userchooser.empty();
                     userchooser.append($('<span class="select-users" />')
-                                       .text(localization.payments.user + ": "))
+                                       .text(localization.payments.users + ": "))
                         .append(num);
                     num.change(changefun).bind('input', changefun).blur(function() { if(num.val() < 3) num.val(3); changefun(); });
                 } else {
                     userchooser.empty();
                     userchooser.append($('<span class="select-users" />')
-                                       .text(localization.payments.user + ": 1"));
+                                       .text(localization.payments.users + ": 1"));
                 }
 
                 var quantity = plan === 'team' ? num.val() : 1;
@@ -862,7 +1072,7 @@
             var table = $('<div class="account-body" />')
                 .append(view.currentPlan())
                 .append($('<p />')
-                       .text(model.plan().quantity() + " " + localization.payments.user))
+                       .text(model.plan().quantity() + " " + localization.payments.users))
                 .append($('<p class="askviktor" />')
                         .html(localization.payments.askviktor));
 

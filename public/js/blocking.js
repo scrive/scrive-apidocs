@@ -64,10 +64,12 @@
             return this.blockAny() && !this.teamPlan();
         },
         blockBrandingMessage: function() {
-            if(!this.teamPlan())
-                return localization.blocking.branding.notTeam;
+            if(this.free()) 
+                return localization.blocking.branding.free;
+            else if(this.overdue()) 
+                return localization.blocking.branding.overdue;
             else
-                return localization.blocking
+                return localization.blocking.branding.notTeam;
         },
         blockCompanyMessage: function() {
             if(this.free())
@@ -75,7 +77,7 @@
             else if(this.overdue())
                 return localization.blocking.branding.companyoverdue;
             else
-                return localization.blocking.branding.companyprof;
+                return localization.blocking.branding.companyNotTeam;
         },
         blockUsers: function() {
             return this.blockAny() 
@@ -83,8 +85,12 @@
                     || this.usersUsed() >= this.usersPaid());
         },
         blockUsersMessage: function() {
+            if(this.free())
+                return localization.blocking.users.free;
             if(!this.teamPlan())
                 return localization.blocking.users.notTeam;
+            if(this.overdue())
+                return localization.blocking.users.overdue;
             else if(this.usersUsed() >= this.usersPaid())
                 return localization.blocking.users.noneLeft;
             else 

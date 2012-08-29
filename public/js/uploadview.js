@@ -20,7 +20,7 @@
            a.click(function(){
                // blocking
                if(BlockingInfo && BlockingInfo.blockCreate()) {
-                   blocking.show("Can't send more documents.");
+                   blocking.show(BlockingInfo.blockCreateMessage());
                    return false;
                }
                wiz.set({process: v});

@@ -102,7 +102,7 @@ window.DocumentsListDefinition = function(archive) { return {
 
                     // blocking
                     if(BlockingInfo && BlockingInfo.blockCreate()) {
-                        blocking.show("Can't send more documents.");
+                        blocking.show(BlockingInfo.blockCreateMessage);
                         return false;
                     }
 

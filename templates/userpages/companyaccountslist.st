@@ -26,16 +26,7 @@ viewCompanyAccounts =
 
             // blocking
             if(BlockingInfo && BlockingInfo.blockUsers()) {
-              var msg;
-
-              if(BlockingInfo.teamPlan())
-                msg = "You have used all of the user accounts you pay for. Please add more users to your subscription.";
-              else if(BlockingInfo.free())
-                msg = "Please purchase a Team account to add new users.";
-              else
-                msg = "Please upgrade to a Team account to add enw users.";
-
-              blocking.show(msg);
+              blocking.show(BlockingInfo.blockUsersMessage());
               return false;
             }
 
