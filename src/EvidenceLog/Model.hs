@@ -346,7 +346,7 @@ instance Convertible Int EvidenceEventType where
     safeConvert 60 = return ChangeFieldEvidence
     safeConvert 61 = return OldDocumentHistory
     safeConvert 62 = return SetEmailAuthenticationMethodEvidence
-    safeConvert 63 = return SetElegitimationIdentificationEvidence
+    safeConvert 63 = return SetELegAuthenticationMethodEvidence
     safeConvert 64 = return SetEmailDeliveryMethodEvidence
     safeConvert 65 = return SetPadDeliveryMethodEvidence
     safeConvert s  = Left ConvertError { convSourceValue = show s

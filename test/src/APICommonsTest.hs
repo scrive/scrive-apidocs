@@ -72,7 +72,7 @@ testFileJSON = do
 
 testDocumentJSON :: Assertion
 testDocumentJSON = do
-  let doc = blankDocument { documenttitle = "Cool Contract", documentallowedidtypes = [EmailIdentification] }
+  let doc = blankDocument { documenttitle = "Cool Contract" }
       jsv = api_document (Just []) doc
   testJSONStringLookup "title" jsv "Cool Contract"
   testJSONStringLookup "document_id" jsv "0"
@@ -83,10 +83,14 @@ testDocumentJSON = do
         Just (JSRational _ s) -> assertBool ("Document status was not between 0 and 10: " ++ show s ++ " in " ++ show js) $ 0 <= s && s < 10
         Just _ -> assertFailure ("Expected a number in state, got: " ++ show js)
         Nothing -> assertFailure $ "state not found in " ++ show js
-      case getJSONField "authorization" js of
-        Just (JSRational _ s) -> assertBool ("Document allowed id type was not 1: " ++ show s ++ " in " ++ show js) $ s == 1
+      case getJSONField "authentication" js of
+        Just (JSRational _ s) -> assertBool ("Document authentication method was not 1: " ++ show s ++ " in " ++ show js) $ s == 1
         Just _ -> assertFailure ("Expected a number in authorization, got: " ++ show js)
         Nothing -> assertFailure $ "authorization not found in " ++ show js
+      case getJSONField "delivery" js of
+        Just (JSRational _ s) -> assertBool ("Document delivery method was not 1: " ++ show s ++ " in " ++ show js) $ s == 1
+        Just _ -> assertFailure ("Expected a number in delivery, got: " ++ show js)
+        Nothing -> assertFailure $ "delivery not found in " ++ show js
       testFieldExists "files" js
       testFieldExists "involved" js
       testFieldExists "tags" js

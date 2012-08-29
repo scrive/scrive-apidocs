@@ -52,8 +52,10 @@ docStateTests env = testGroup "DocState" [
   testThat "SetDocumentTags adds to the log" env testSetDocumentTagsEvidenceLog,
   testThat "SetDocumentTimeoutTime adds to the log" env testSetDocumentTimeoutTimeEvidenceLog,
   testThat "SetDocumentTitle adds to the log" env testSetDocumentTitleEvidenceLog,
-  testThat "Set ElegitimationIdentification adds to the log" env testSetElegitimationIdentificationEvidenceLog,
-  testThat "Set EmailIdentification adds to the log" env testSetEmailIdentificationEvidenceLog,
+  testThat "Set ELegAuthentication adds to the log" env testSetElegitimationAuthenticationEvidenceLog,
+  testThat "Set EmailAuthentication adds to the log" env testSetEmailAuthenticationEvidenceLog,
+  testThat "Set PadDelivery adds to the log" env testSetPadDeliveryEvidenceLog,
+  testThat "Set EmailDelivery adds to the log" env testSetEmailDeliveryEvidenceLog,
   testThat "SetInvitationDeliveryStatus adds to the log" env testSetInvitationDeliveryStatusEvidenceLog,
   testThat "SetInviteText adds to the log" env testSetInviteTextEvidenceLog,
   testThat "SignDocument adds to the log" env testSignDocumentEvidenceLog,
@@ -422,28 +424,50 @@ testSetDocumentTitleEvidenceLog = do
                     then loop doc
                     else randomUpdate $ \t->SetDocumentTitle (documentid doc) title (systemActor t)
 
-testSetElegitimationIdentificationEvidenceLog :: TestEnv ()
-testSetElegitimationIdentificationEvidenceLog = do
+testSetElegitimationAuthenticationEvidenceLog :: TestEnv ()
+testSetElegitimationAuthenticationEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success1 <- randomUpdate $ \t->SetDocumentIdentification (documentid doc) [EmailIdentification] (systemActor t)
-  success2 <- randomUpdate $ \t->SetDocumentIdentification (documentid doc) [ELegitimationIdentification] (systemActor t)
+  success1 <- randomUpdate $ \t->SetDocumentAuthenticationMethod (documentid doc) EmailAuthentication (systemActor t)
+  success2 <- randomUpdate $ \t->SetDocumentAuthenticationMethod (documentid doc) ELegAuthentication (systemActor t)
   assert success1
   assert success2
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SetElegitimationIdentificationEvidence) lg
+  assertJust $ find (\e -> evType e == SetELegAuthenticationMethodEvidence) lg
 
-testSetEmailIdentificationEvidenceLog :: TestEnv ()
-testSetEmailIdentificationEvidenceLog = do
+testSetEmailAuthenticationEvidenceLog :: TestEnv ()
+testSetEmailAuthenticationEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success1 <- randomUpdate $ \t->SetDocumentIdentification (documentid doc) [ELegitimationIdentification] (systemActor t)
-  success2 <- randomUpdate $ \t->SetDocumentIdentification (documentid doc) [EmailIdentification] (systemActor t)
+  success1 <- randomUpdate $ \t->SetDocumentAuthenticationMethod (documentid doc) ELegAuthentication (systemActor t)
+  success2 <- randomUpdate $ \t->SetDocumentAuthenticationMethod (documentid doc) EmailAuthentication (systemActor t)
   assert success1
   assert success2
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SetEmailIdentificationEvidence) lg
+  assertJust $ find (\e -> evType e == SetEmailAuthenticationMethodEvidence) lg
 
+testSetPadDeliveryEvidenceLog :: TestEnv ()
+testSetPadDeliveryEvidenceLog = do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
+  success1 <- randomUpdate $ \t->SetDocumentDeliveryMethod (documentid doc) EmailDelivery (systemActor t)
+  success2 <- randomUpdate $ \t->SetDocumentDeliveryMethod (documentid doc) PadDelivery (systemActor t)
+  assert success1
+  assert success2
+  lg <- dbQuery $ GetEvidenceLog (documentid doc)
+  assertJust $ find (\e -> evType e == SetPadDeliveryMethodEvidence) lg
+
+testSetEmailDeliveryEvidenceLog :: TestEnv ()
+testSetEmailDeliveryEvidenceLog = do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
+  success1 <- randomUpdate $ \t->SetDocumentDeliveryMethod (documentid doc) PadDelivery (systemActor t)
+  success2 <- randomUpdate $ \t->SetDocumentDeliveryMethod (documentid doc) EmailDelivery (systemActor t)
+  assert success1
+  assert success2
+  lg <- dbQuery $ GetEvidenceLog (documentid doc)
+  assertJust $ find (\e -> evType e == SetEmailDeliveryMethodEvidence) lg
+  
 testSetInvitationDeliveryStatusEvidenceLog :: TestEnv ()
 testSetInvitationDeliveryStatusEvidenceLog = do
   author <- addNewRandomUser
@@ -758,7 +782,7 @@ assertGoodNewDocument mcompany doctype title authorsigns (user, time, edoc) = do
     assertEqual "Doc has user's service" (userservice user) (documentservice doc)
     assertEqual "No author attachments" [] (documentauthorattachments doc)
     assertEqual "No sig attachments" [] (concatMap signatoryattachments $ documentsignatorylinks doc)
-    assertEqual "Uses email identification only" [EmailIdentification] (documentallowedidtypes doc)
+    assertEqual "Uses email identification only" EmailAuthentication (documentauthenticationmethod doc)
     assertEqual "Doc has user's footer" (customfooter $ usersettings user) (documentmailfooter $ documentui doc)
     assertEqual "In preparation" Preparation (documentstatus doc)
     assertEqual "1 signatory" 1 (length $ documentsignatorylinks doc)
@@ -1878,7 +1902,7 @@ testCloseDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
   doc <- addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentAllowedTypes = documentSignableTypes
          , randomDocumentAllowedStatuses = [Pending]
-         , randomDocumentCondition = const True
+         , randomDocumentCondition = (\doc -> length (documentsignatorylinks doc) > 1)
          }
   sa <- unSystemActor <$> rand 10 arbitrary
   let Just sl = getAuthorSigLink doc

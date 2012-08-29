@@ -45,11 +45,17 @@ documentJSONTests env = testGroup "Document JSON tests" [
     ],
     testProperty "does not have files"
     (\doc -> True ==> (isLeft $ jsget "files" (jsonDocumentForSignatory doc))),
-    testProperty "authorization" $ \doc ->
-      let da = fromJSONRational $ docjson doc "authorization" in
+    testProperty "authentication" $ \doc ->
+      let da = fromJSONRational $ docjson doc "authentication" in
       disjoin
-      [ EmailIdentification `elem` documentallowedidtypes doc         ==> 1 == da
-      , ELegitimationIdentification `elem` documentallowedidtypes doc ==> 10 == da
+      [ EmailAuthentication == documentauthenticationmethod doc  ==> 1 == da
+      , ELegAuthentication == documentauthenticationmethod doc   ==> 2 == da
+      ],
+    testProperty "delivery" $ \doc ->
+      let da = fromJSONRational $ docjson doc "delivery" in
+      disjoin
+      [ EmailDelivery == documentdeliverymethod doc ==> 1 == da
+      , PadDelivery == documentdeliverymethod doc   ==> 2 == da
       ]
   ]
 

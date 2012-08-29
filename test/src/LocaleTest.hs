@@ -110,7 +110,7 @@ testDocumentLocaleSwitchToBritain = do
   assertEqual "Initial lang is Swedish" LANG_SE (getLang doc)
 
   -- check that eleg is used
-  assertEqual "Eleg is used" [ELegitimationIdentification] (documentallowedidtypes doc)
+  assertEqual "Eleg is used" ELegAuthentication (documentauthenticationmethod doc)
 
 testDocumentLocaleSwitchToSweden :: TestEnv ()
 testDocumentLocaleSwitchToSweden = do
@@ -128,7 +128,7 @@ createTestElegDoc :: User -> MinutesTime -> TestEnv Document
 createTestElegDoc user ctxtime = do
   doc <- addRandomDocumentWithAuthorAndCondition user
            (\d -> documentstatus d == Preparation)
-  True <- dbUpdate $ SetDocumentIdentification (documentid doc) [ELegitimationIdentification] (systemActor ctxtime)
+  True <- dbUpdate $ SetDocumentAuthenticationMethod (documentid doc) ELegAuthentication (systemActor ctxtime)
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   return ndoc
 

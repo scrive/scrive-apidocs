@@ -281,7 +281,8 @@ instance Arbitrary Document where
                then arbitrary
                else return Preparation
     sls <- arbitrary
-    ids <- arbitrary
+    auth <- arbitrary
+    delivery <- arbitrary
     -- we can have any days to sign. almost
     ddaystosign <- elements [Nothing, Just 1, Just 10, Just 99]
     -- document timeout time makes sense only when days to sign was set for this document
@@ -291,7 +292,8 @@ instance Arbitrary Document where
     return $ blankDocument { documentstatus = dstatus
                            , documenttype = dtype
                            , documentsignatorylinks = sls
-                           , documentallowedidtypes = [ids]
+                           , documentauthenticationmethod = auth
+                           , documentdeliverymethod = delivery
                            , documenttimeouttime = TimeoutTime <$> dtimeouttime
                            , documentdaystosign = ddaystosign
                            }
@@ -361,8 +363,11 @@ instance Arbitrary SignatoryField where
 instance Arbitrary SignatoryRole where
   arbitrary = return SignatoryPartner
 
-instance Arbitrary IdentificationType where
-  arbitrary = elements [EmailIdentification, ELegitimationIdentification, PadIdentification]
+instance Arbitrary AuthenticationMethod where
+  arbitrary = elements [EmailAuthentication, ELegAuthentication]
+
+instance Arbitrary DeliveryMethod where
+  arbitrary = elements [EmailDelivery, PadDelivery]
 
 instance Arbitrary UserInfo where
   arbitrary = do

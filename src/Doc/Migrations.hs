@@ -26,8 +26,8 @@ splitIdentificationTypes = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 8
   , mgrDo = do
-    kRunRaw "ALTER TABLE documents ADD COLUMN authentication_method INTEGER NULL"
-    kRunRaw "ALTER TABLE documents ADD COLUMN delivery_method INTEGER NULL"
+    kRunRaw "ALTER TABLE documents ADD COLUMN authentication_method SMALLINT NULL"
+    kRunRaw "ALTER TABLE documents ADD COLUMN delivery_method SMALLINT NULL"
     kRun_ $ mconcat [
         SQL "UPDATE documents SET" []
       , SQL "  authentication_method = (CASE WHEN allowed_id_types = 0 THEN ? WHEN allowed_id_types = 1 THEN ? WHEN allowed_id_types = 2 THEN ? WHEN allowed_id_types = 4 THEN ? END)::SMALLINT" [
