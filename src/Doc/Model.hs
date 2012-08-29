@@ -73,6 +73,7 @@ module Doc.Model
   , UpdateFieldsNoStatusCheck(..)
   , UpdateDraft(..)
   , SetDocumentModificationData(..)
+  , FixClosedErroredDocument(..)
   ) where
 
 import API.Service.Model
@@ -1029,6 +1030,13 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile Bool where
       actor
     return success
 
+data FixClosedErroredDocument = FixClosedErroredDocument DocumentID Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument Bool where
+  update (FixClosedErroredDocument did _actor) = do
+    kRun01 $ mkSQL UPDATE tableDocuments [
+        sql "status" Closed
+      ] <++> SQL "WHERE id = ? AND status = ?" [toSql did, toSql $ DocumentError undefined]
+    
 data CancelDocument = CancelDocument DocumentID CancelationReason Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
   update (CancelDocument did reason actor) = do
