@@ -1036,7 +1036,11 @@ $daveBody:noescape()$
 <BR/>
 <BR/>
 <BR/>
-$if(closed)$
+$if(couldBeclosed)$
+  <form method="post" action="/adminonly/reseal/$id$">
+    <input type="submit" value="Reseal"> </input>
+  </form>
+$elseif(closed)$
   <form method="post" action="/adminonly/reseal/$id$">
     <input type="submit" value="Reseal"> </input>
   </form>

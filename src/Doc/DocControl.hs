@@ -288,7 +288,7 @@ handleSignShow2 documentid
 
   ctx <- getContext
   content <- pageDocumentSignView ctx document invitedlink
-  simpleResponse content
+  simpleResonseClrFlash content
 
 {- |
    Handles the request to show a document to a logged in user.
@@ -324,7 +324,7 @@ handleIssueShowGet docid = checkUserTOSGet $ do
     (True,  _) | isattachment        -> Right <$> pageAttachmentDesign document
     (True,  _)                       -> Right <$> pageDocumentDesign document
     (False, _) | isauthororincompany || isadminofcompany -> Right <$> pageDocumentView document msiglink (isadminofcompany || isincompany)
-    (False, Just siglink)            -> Left  <$> (simpleResponse =<< pageDocumentSignView ctx document siglink)
+    (False, Just siglink)            -> Left  <$> (simpleResonseClrFlash =<< pageDocumentSignView ctx document siglink)
     _                                -> internalError
 
 {- |

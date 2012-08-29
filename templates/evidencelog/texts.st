@@ -139,3 +139,5 @@ SendToPadDeviceText=$actor$ sent transaction to pad device for signing by signat
 ####
 RemovedFromPadDeviceText=$actor$ removed transaction from pad device for signing by signatory ($email$).
 ###
+ResealedPDFText=$actor$ requested document to be resealed.
+###

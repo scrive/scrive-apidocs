@@ -9,6 +9,7 @@ module AppView( kontrakcja
               , signupVipPageView
               , pageLogin
               , simpleResponse
+              , simpleResonseClrFlash
               , ajaxError
               , firstPage
               , sitemapPage
@@ -236,6 +237,13 @@ simpleResponse = ok . toResponseBS (BS.fromString "text/html;charset=utf-8") . B
     -- change this to HtmlString from helpers package
     -- (didn't want to connect it one day before prelaunch)
 
+{- | Sames as simpleResponse, but clears also flash messages and modals -}
+simpleResonseClrFlash :: Kontrakcja m => String -> m Response
+simpleResonseClrFlash rsp = do
+  res <- simpleResponse rsp
+  clearFlashMsgs
+  return res
+    
 ajaxError :: Kontra Response
 ajaxError = simpleResponse "<script>window.location='/'</script>"
 {- |
