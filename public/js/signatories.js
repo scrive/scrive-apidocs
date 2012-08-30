@@ -98,14 +98,6 @@ window.SignatoryAttachmentUploadView = Backbone.View.extend({
       });
     return removelink;
   },
-    // Review attachment change
-    // please delete on or after May 1, 2012
-    // -- Eric
-    /*
-    fileLink: function() {
-        return $("<a target='_blank'/>").text(localization.reviewPDF).attr("href", this.model.file().downloadLink());
-    },
-    */
   uploadButton: function() {
     var attachment = this.model;
     var uploadurl = this.apiURL();
@@ -172,7 +164,7 @@ window.SignatoryAttachmentUploadView = Backbone.View.extend({
           //please delete this line after May 1, 2012
           // -- Eric
           //actions.append($("<div class='action' />").append(this.fileLink()));
-          if (!attachment.signatory().hasSigned()) {
+          if (!attachment.signatory().hasSigned() && attachment.signatory().document().pending()) {
               actions.append($("<div class='action' />").append(this.removeLink()));
           }
           actions.append($("<div class='clearfix' />"));
@@ -183,7 +175,7 @@ window.SignatoryAttachmentUploadView = Backbone.View.extend({
           buttonbox.append(this.reviewButton().input());
           container.append(buttonbox);
 
-      } else {
+      } else if (attachment.signatory().document().pending() || attachment.signatory().document().currentSignatoryCanSign()){
           container.append(this.uploadButton().input());
       }
       container.append($("<div class='clearfix' />"));
