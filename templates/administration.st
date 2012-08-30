@@ -949,6 +949,7 @@ admindocumentslist =
     <script>
     var docTable = KontraList().init({
         name : "Documents Table",
+        timeout : 20000,
         schema: new Schema({
             url: "/adminonly/documentslist",
             sorting: new Sorting({
