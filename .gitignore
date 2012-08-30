@@ -13,3 +13,4 @@ selenium-test/selenium-test.properties
 kontrakcja-test.tix
 jslint.txt
 .hpc/
+*.less.css

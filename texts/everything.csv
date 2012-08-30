@@ -2543,7 +2543,7 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_paymentsIntegrations","",,"We develop custom integrations for document signing processes."
 "_paymentsManyUsers","",,"Many Users"
 "_paymentsUser","",,"User"
-"_paymentsEnterprisePrice","",,"Enterprise integrations cost 500 € per workflow per month. Please contact us at <br /> +46 8 519 779 00  or <a href='mailto:info@scrive.com'>info@scrive.com</a> for more information."
+"_paymentsEnterprisePrice","",,"Enterprise integrations cost 500 € per workflow per month. Please contact us at +46 8 519 779 00  or <a href='mailto:info@scrive.com'>info@scrive.com</a> for more information."
 "_paymentsGuarantee","",,"with 14-day money back guarantee"
 "_paymentsNoUsers","",,"Number of users"
 "_paymentsErrorsEmptyField","",,"Required field"

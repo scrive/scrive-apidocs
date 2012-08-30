@@ -359,7 +359,8 @@
             header1.text(localization.payments.plans.team);
             var header2 = $('<div class="header2" />');
             header2.text(localization.payments.plans.teamtag);
-            header.append(header1).append(header2);
+            var img = $('<img src="/img/bestvalue.png" alt="Best Value" class="bestvalue" />');
+            header.append(header1).append(header2).append(img);
             div.append(header);
 
             var features = $('<div class="features" />');
