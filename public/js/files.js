@@ -309,7 +309,6 @@ var FileView = Backbone.View.extend({
         var view = this;
         var file = this.model;
         var docbox = $(this.el);
-        docbox.attr("id","documentBox");
         docbox.empty();
         if (!file.ready()) {
             var waitbox = $("<div class='waiting4page'/>");
@@ -381,7 +380,7 @@ window.KontraFile = {
         }
         this.view = new FileView({
             model: this.model,
-            el : $("<div/>")
+            el : $("<div id ='documentBox'/>")
         });
         return this;
     }

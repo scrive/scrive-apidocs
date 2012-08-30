@@ -504,11 +504,15 @@ window.DocumentStandardView = Backbone.View.extend({
 
     // Download link
     var downloadpart = $("<span class='download'/>");
-    downloadpart.append($("<a target='_blank'/>").attr("href",document.mainfile().downloadLink()).text(localization.downloadPDF));
-
-    var file = KontraFile.init({
-      file: document.mainfile()
-    });
+    if (document.mainfile() != undefined)
+      downloadpart.append($("<a target='_blank'/>").attr("href",document.mainfile().downloadLink()).text(localization.downloadPDF));
+    var fileview = $("<div id ='documentBox'><div class='waiting4page'/></div>");
+    if (document.mainfile() != undefined) {
+      var file = KontraFile.init({
+        file: document.mainfile()
+      });
+      fileview = $(file.view.el);
+    }
     var tabs = new KontraTabs({
     numbers : false,
     title: titlepart.add(namepart).add(downloadpart),
@@ -516,14 +520,14 @@ window.DocumentStandardView = Backbone.View.extend({
       new Tab({
         name: localization.document,
         elems: [this.createSignatoriesTabElems(),
-                $(file.view.el),
+                $(fileview),
                 bottomparts
                ]
         }),
       new Tab({
           name: localization.attachmentsWord,
           elems: [this.createAttachmentsTabElems(),
-                  $(file.view.el),
+                  $(fileview),
                   bottomparts
                  ],
           disabled: !this.model.hasAnyAttachments() ||
