@@ -31,7 +31,7 @@ import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
 import File.FileID
-import qualified Log as Log
+
 import qualified Data.Set as S
 
 import Util.Actor
@@ -2058,30 +2058,26 @@ testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
   (name1, value1) <- rand 10 arbitrary
   (name2, value2) <- rand 10 arbitrary
   (name3, value3) <- rand 10 arbitrary
-  company <- addNewCompany
-  author <- addNewRandomUser
-  time <- getMinutesTime
-  let actor = systemActor time
-  _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
-  Just author' <- dbQuery $ GetUserByID (userid author)
-  did <- addRandomDocumentWithAuthor author'
+  if (name1 /= name2 && name1 /= name2 && name2 /= name3) 
+   then do
+    company <- addNewCompany
+    author <- addNewRandomUser
+    time <- getMinutesTime
+    let actor = systemActor time
+    _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
+    Just author' <- dbQuery $ GetUserByID (userid author)
+    did <- addRandomDocumentWithAuthor author'
 
-  o <- dbUpdate $ SetDocumentTags did (S.fromList [DocumentTag name1 value1, DocumentTag name2 value2]) actor
-  Log.debug $ "Output " ++ show o
-  Log.debug $ "Tags " ++ show ([DocumentTag name1 value1, DocumentTag name2 value2])
-  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name1 value1]]
-  Log.debug $ "D1 " ++ show (length docs) 
-  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name2 value2]]
-  Log.debug $ "D2 " ++ show (length docs')
-  docs'' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name1 value1, DocumentTag name2 value2]]
-  Log.debug $ "D3 " ++ show (length docs'')
-  docs''' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
-  Log.debug $ "D4 " ++ show (length docs''')
-  docs'''' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name1 value1, DocumentTag name2 value2, DocumentTag name3 value3]]
-  Log.debug $ "D5 " ++ show (length docs'''')
-  validTest $ do
-    assertEqual "Should have one document returned" 1 (length docs)
-    assertEqual "Should have one document returned" 1 (length docs')
-    assertEqual "Should have one document returned" 1 (length docs'')
-    assertEqual "Should have one document returned" 1 (length docs''')
-    assertEqual "Should have zero documents returned" 0 (length docs'''')
+    _ <- dbUpdate $ SetDocumentTags did (S.fromList [DocumentTag name1 value1, DocumentTag name2 value2]) actor
+    docs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name1 value1]]
+    docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name2 value2]]
+    docs'' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name1 value1, DocumentTag name2 value2]]
+    docs''' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
+    docs'''' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name1 value1, DocumentTag name2 value2, DocumentTag name3 value3]]
+    validTest $ do
+      assertEqual "Should have one document returned" 1 (length docs)
+      assertEqual "Should have one document returned" 1 (length docs')
+      assertEqual "Should have one document returned" 1 (length docs'')
+      assertEqual "Should have one document returned" 1 (length docs''')
+      assertEqual "Should have zero documents returned" 0 (length docs'''')
+   else return Nothing
