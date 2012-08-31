@@ -208,6 +208,7 @@ data EvidenceEventType =
   AddFieldEvidence                                |
   RemoveFieldEvidence                             |
   ChangeFieldEvidence                             |
+  ResealedPDF                                     |
   OldDocumentHistory
   deriving (Eq, Show, Read, Ord)
 
@@ -272,8 +273,8 @@ instance Convertible EvidenceEventType Int where
   safeConvert AddFieldEvidence                                = return 58
   safeConvert RemoveFieldEvidence                             = return 59
   safeConvert ChangeFieldEvidence                             = return 60
-  safeConvert OldDocumentHistory                              = return 61
-
+  safeConvert ResealedPDF                                     = return 61
+  safeConvert OldDocumentHistory                              = return 62
   
 instance Convertible Int EvidenceEventType where
     safeConvert 1  = return AddSigAttachmentEvidence
@@ -336,7 +337,8 @@ instance Convertible Int EvidenceEventType where
     safeConvert 58 = return AddFieldEvidence
     safeConvert 59 = return RemoveFieldEvidence
     safeConvert 60 = return ChangeFieldEvidence
-    safeConvert 61 = return OldDocumentHistory
+    safeConvert 61 = return ResealedPDF
+    safeConvert 62 = return OldDocumentHistory
     safeConvert s  = Left ConvertError { convSourceValue = show s
                                        , convSourceType = "Int"
                                        , convDestType = "EvidenceEventType"

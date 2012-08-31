@@ -59,17 +59,26 @@ window.File = Backbone.Model.extend({
     page : function(number){
         return this.pages()[number - 1];
     },
+    document : function() {
+        return this.get("document");
+    },
     documentid : function(){
-        return this.get("documentid");
+      if (this.document() != undefined)
+        return this.document().documentid();
+      return this.get("documentid");
     },
     attachmentid : function(){
         return this.get("attachmentid");
     },
     signatoryid : function(){
-        return this.get("signatoryid");
+      if (this.document() != undefined && this.document().viewer().signatoryid() != undefined)
+        return this.document().viewer().signatoryid();
+      return this.get("signatoryid");
     },
     magichash : function(){
-        return this.get("magichash");
+      if (this.document() != undefined && this.document().viewer().magichash() != undefined)
+        return this.document().viewer().magichash();
+      return this.get("magichash");
     },
     name : function(){
         return this.get("name");
@@ -300,7 +309,6 @@ var FileView = Backbone.View.extend({
         var view = this;
         var file = this.model;
         var docbox = $(this.el);
-        docbox.attr("id","documentBox");
         docbox.empty();
         if (!file.ready()) {
             var waitbox = $("<div class='waiting4page'/>");
@@ -321,7 +329,7 @@ var FileView = Backbone.View.extend({
     startReadyChecker : function() {
         var view = this;
         if (view.ready())
-         view.trigger('ready');
+         view.model.trigger('ready');
         else
          setTimeout(function() {view.startReadyChecker()},1000);
     },
@@ -372,7 +380,7 @@ window.KontraFile = {
         }
         this.view = new FileView({
             model: this.model,
-            el : $("<div/>")
+            el : $("<div id ='documentBox'/>")
         });
         return this;
     }

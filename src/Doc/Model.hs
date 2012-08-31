@@ -73,6 +73,7 @@ module Doc.Model
   , UpdateFieldsNoStatusCheck(..)
   , UpdateDraft(..)
   , SetDocumentModificationData(..)
+  , FixClosedErroredDocument(..)
   ) where
 
 import API.Service.Model
@@ -947,10 +948,10 @@ data ArchiveDocument = ArchiveDocument User DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument Bool where
   update (ArchiveDocument user did _actor) = do
     case (usercompany user, useriscompanyadmin user) of
-      (Just cid, True) -> updateArchivableDoc $ SQL "WHERE (company_id = ? OR user_id = ?)" [toSql cid,toSql $ userid user]
-      _ -> updateArchivableDoc $ SQL "WHERE user_id = ?" [toSql $ userid user]
+      (Just cid, True) -> fmap (\x -> x > 0) $  kRun $ updateArchivableDoc $ SQL "WHERE (company_id = ? OR user_id = ?)" [toSql cid,toSql $ userid user]
+      _ -> kRun01 $ updateArchivableDoc $ SQL "WHERE user_id = ?" [toSql $ userid user]
     where
-      updateArchivableDoc whereClause = kRun01 $ mconcat [
+      updateArchivableDoc whereClause = mconcat [
           mkSQL UPDATE tableSignatoryLinks [sql "deleted" True]
         , whereClause
         , SQL " AND document_id = ? AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND status <> ?)" [
@@ -1029,6 +1030,13 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile Bool where
       actor
     return success
 
+data FixClosedErroredDocument = FixClosedErroredDocument DocumentID Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument Bool where
+  update (FixClosedErroredDocument did _actor) = do
+    kRun01 $ mkSQL UPDATE tableDocuments [
+        sql "status" Closed
+      ] <++> SQL "WHERE id = ? AND status = ?" [toSql did, toSql $ DocumentError undefined]
+    
 data CancelDocument = CancelDocument DocumentID CancelationReason Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
   update (CancelDocument did reason actor) = do
@@ -1622,10 +1630,10 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ReallyDeleteDocument Bool w
     -- in a User which could be old. It should be done within a
     -- transaction. -EN
     case (usercompany user, useriscompanyadmin user) of
-      (Just cid, True) -> deleteDoc $ SQL "WHERE (company_id = ? OR user_id = ?)" [toSql cid,toSql $ userid user]
-      _ -> deleteDoc $ SQL "WHERE user_id = ? AND (company_id IS NULL OR EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?))" [toSql $ userid user,toSql did, toSql Preparation]
+      (Just cid, True) -> fmap (\x -> x > 0) $ kRun $ deleteDoc $ SQL "WHERE (company_id = ? OR user_id = ?)" [toSql cid,toSql $ userid user] -- This can remove more then one link (subaccounts)
+      _ -> kRun01 $ deleteDoc $ SQL "WHERE user_id = ? AND (company_id IS NULL OR EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?))" [toSql $ userid user,toSql did, toSql Preparation]
     where
-      deleteDoc whereClause = kRun01 $ mconcat [
+      deleteDoc whereClause = mconcat [
           mkSQL UPDATE tableSignatoryLinks [sql "really_deleted" True]
         , whereClause
         , SQL " AND document_id = ? AND deleted = TRUE" [toSql did]
