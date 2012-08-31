@@ -2066,7 +2066,9 @@ testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
   Just author' <- dbQuery $ GetUserByID (userid author)
   did <- addRandomDocumentWithAuthor author'
 
-  _ <- dbUpdate $ SetDocumentTags did (S.fromList [DocumentTag name1 value1, DocumentTag name2 value2]) actor
+  o <- dbUpdate $ SetDocumentTags did (S.fromList [DocumentTag name1 value1, DocumentTag name2 value2]) actor
+  Log.debug $ "Output " ++ show o
+  Log.debug $ "Tags " ++ show ([DocumentTag name1 value1, DocumentTag name2 value2])
   docs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name1 value1]]
   Log.debug $ "D1 " ++ show (length docs) 
   docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name2 value2]]
