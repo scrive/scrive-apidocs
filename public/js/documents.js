@@ -471,7 +471,11 @@ window.Document = Backbone.Model.extend({
      return {
        title: args.title,
        files: _.map(args.files, function(fileargs) {
-         return new File(_.defaults(fileargs, dataForFile));
+         var file = new File(_.defaults(fileargs, dataForFile));
+         file.bind('ready', function() {
+           self.trigger('file:change');
+         });
+         return file;
        }),
        sealedfiles: _.map(args.sealedfiles, function(fileargs) {
          return new File(_.defaults(fileargs, dataForFile));

@@ -208,6 +208,7 @@ data EvidenceEventType =
   AddFieldEvidence                                |
   RemoveFieldEvidence                             |
   ChangeFieldEvidence                             |
+  ResealedPDF                                     |
   OldDocumentHistory                              |
   SetEmailAuthenticationMethodEvidence            |
   SetELegAuthenticationMethodEvidence             |
@@ -276,12 +277,12 @@ instance Convertible EvidenceEventType Int where
   safeConvert AddFieldEvidence                                = return 58
   safeConvert RemoveFieldEvidence                             = return 59
   safeConvert ChangeFieldEvidence                             = return 60
-  safeConvert OldDocumentHistory                              = return 61
-  safeConvert SetEmailAuthenticationMethodEvidence            = return 62
-  safeConvert SetELegAuthenticationMethodEvidence             = return 63
-  safeConvert SetEmailDeliveryMethodEvidence                  = return 64
-  safeConvert SetPadDeliveryMethodEvidence                    = return 65
-
+  safeConvert ResealedPDF                                     = return 61
+  safeConvert OldDocumentHistory                              = return 62
+  safeConvert SetEmailAuthenticationMethodEvidence            = return 63
+  safeConvert SetELegAuthenticationMethodEvidence             = return 64
+  safeConvert SetEmailDeliveryMethodEvidence                  = return 65
+  safeConvert SetPadDeliveryMethodEvidence                    = return 66
   
 instance Convertible Int EvidenceEventType where
     safeConvert 1  = return AddSigAttachmentEvidence
@@ -344,11 +345,12 @@ instance Convertible Int EvidenceEventType where
     safeConvert 58 = return AddFieldEvidence
     safeConvert 59 = return RemoveFieldEvidence
     safeConvert 60 = return ChangeFieldEvidence
-    safeConvert 61 = return OldDocumentHistory
-    safeConvert 62 = return SetEmailAuthenticationMethodEvidence
-    safeConvert 63 = return SetELegAuthenticationMethodEvidence
-    safeConvert 64 = return SetEmailDeliveryMethodEvidence
-    safeConvert 65 = return SetPadDeliveryMethodEvidence
+    safeConvert 61 = return ResealedPDF
+    safeConvert 62 = return OldDocumentHistory
+    safeConvert 63 = return SetEmailAuthenticationMethodEvidence
+    safeConvert 64 = return SetELegAuthenticationMethodEvidence
+    safeConvert 65 = return SetEmailDeliveryMethodEvidence
+    safeConvert 66 = return SetPadDeliveryMethodEvidence
     safeConvert s  = Left ConvertError { convSourceValue = show s
                                        , convSourceType = "Int"
                                        , convDestType = "EvidenceEventType"

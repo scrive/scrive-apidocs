@@ -513,12 +513,21 @@ pagintext (SealSpec{documentNumber,initials,staticTexts }) =
 splitLinesOfLength :: PDFFont -> Int -> String -> [String]
 splitLinesOfLength font width text' = result
     where
+    widthBreak :: String -> String -> (String,String)
+    widthBreak "" r = (r,"")
+    widthBreak (t:ts) r = if (textWidth font (toPDFString $ r ++ [t]) < fromIntegral width )
+                            then widthBreak ts (r ++ [t])
+                            else (r,t:ts)
     textSplit :: String -> [String]
     textSplit [] = []
-    -- textSplit [x] = [[x]]
     textSplit (text'') = let (b,a1) = break (==' ') text''
                              (s,a) = break (/=' ') a1
-                         in (b ++ s) : textSplit a
+                             h = b ++ s
+                         in if (textWidth font (toPDFString h) < fromIntegral width )
+                               then h : textSplit a
+                               else let
+                                      (t,r) =   widthBreak h ""
+                                    in t : (textSplit (r ++ a))
     textWithLength :: String -> (PDFFloat,String)
     textWithLength text'' = (textWidth font (toPDFString text''),text'')
     textSplitWithLength = map textWithLength (textSplit text')
@@ -528,7 +537,7 @@ splitLinesOfLength font width text' = result
                     | len + l < fromIntegral width = takeWhileLength (len + l) (text'' ++ t) rest
                     | otherwise = text'' : takeWhileLength 0 "" all'
     result = takeWhileLength 0 "" textSplitWithLength
-
+    
 makeManyLines :: PDFFont -> Int -> String -> [String]
 makeManyLines font width text' = result
   where

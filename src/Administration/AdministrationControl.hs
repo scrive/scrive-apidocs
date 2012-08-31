@@ -89,6 +89,9 @@ import Util.SignatoryLinkUtils
 import Stats.Control (getUsersAndStatsInv)
 import User.History.Model
 import qualified Templates.Fields as F
+import Control.Logic
+import Doc.DocInfo
+import EvidenceLog.Model
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m String
@@ -750,8 +753,18 @@ handleBackdoorQuery email = onlySalesOrAdmin $ onlyBackdoorOpen $ do
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink
 resealFile docid = onlyAdmin $ do
   Log.debug $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
-  doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
-  Log.debug "Document is valid for resealing sealing"
+  Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
+  let actor = userActor ctxtime ctxipnumber (userid user) (getEmail user)
+  _ <- dbUpdate $ InsertEvidenceEvent
+          ResealedPDF
+          (F.value "actor" (actorWho actor))
+          (Just docid)
+          actor
+  doc <- do
+    doc' <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
+    when_ (isDocumentError doc') $ do
+       guardTrueM $ dbUpdate $ FixClosedErroredDocument docid actor
+    guardJustM  $ dbQuery $ GetDocumentByDocumentID docid   
   res <- sealDocument doc
   case res of
       Left  _ -> Log.debug "We failed to reseal the document"
@@ -796,6 +809,7 @@ daveDocument documentid = onlyAdmin $ do
         F.value "daveBody" $  inspectXML document
         F.value "id" $ show documentid
         F.value "closed" $ documentstatus document == Closed
+        F.value "couldBeclosed" $ isDocumentError document && all (isSignatory =>>^ hasSigned) (documentsignatorylinks document)
       return $ Right r
      else return $ Left $ LinkDaveDocument documentid
 

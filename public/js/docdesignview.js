@@ -174,14 +174,12 @@ var DocumentDesignView = Backbone.View.extend({
     },
     authenticationMethodSelection : function() {
         var document = this.model;
-        var elegAvailable = document.region().iselegavailable() || document.elegAuthentication();
         var box = $("<div class='authenticationmethodselect'/>");
         var select= $("<select/>");
         var email = $("<option value='email'/>").text(localization.email);
         var eleg =  $("<option value='eleg'/>").text(localization.eleg);
         select.append(email);
-        if (elegAvailable)
-          select.append(eleg);
+        select.append(eleg);
         box.text(localization.designview.authentication.selectmethod);
         box.append(select);
         if (document.emailAuthentication()) {

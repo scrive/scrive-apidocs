@@ -949,6 +949,7 @@ admindocumentslist =
     <script>
     var docTable = KontraList().init({
         name : "Documents Table",
+        timeout : 20000,
         schema: new Schema({
             url: "/adminonly/documentslist",
             sorting: new Sorting({
@@ -1036,7 +1037,11 @@ $daveBody:noescape()$
 <BR/>
 <BR/>
 <BR/>
-$if(closed)$
+$if(couldBeclosed)$
+  <form method="post" action="/adminonly/reseal/$id$">
+    <input type="submit" value="Reseal"> </input>
+  </form>
+$elseif(closed)$
   <form method="post" action="/adminonly/reseal/$id$">
     <input type="submit" value="Reseal"> </input>
   </form>
