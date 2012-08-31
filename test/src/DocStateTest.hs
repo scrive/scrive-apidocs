@@ -31,7 +31,7 @@ import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
 import File.FileID
-
+import qualified Log as Log
 import qualified Data.Set as S
 
 import Util.Actor
@@ -2068,10 +2068,15 @@ testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
 
   _ <- dbUpdate $ SetDocumentTags did (S.fromList [DocumentTag name1 value1, DocumentTag name2 value2]) actor
   docs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name1 value1]]
+  Log.debug $ "D1 " ++ show (length docs) 
   docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name2 value2]]
+  Log.debug $ "D2 " ++ show (length docs')
   docs'' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name1 value1, DocumentTag name2 value2]]
+  Log.debug $ "D3 " ++ show (length docs'')
   docs''' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
+  Log.debug $ "D4 " ++ show (length docs''')
   docs'''' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name1 value1, DocumentTag name2 value2, DocumentTag name3 value3]]
+  Log.debug $ "D5 " ++ show (length docs'''')
   validTest $ do
     assertEqual "Should have one document returned" 1 (length docs)
     assertEqual "Should have one document returned" 1 (length docs')
