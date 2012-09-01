@@ -160,7 +160,7 @@ tableSignatoryAttachments = Table {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = Table {
     tblName = "signatory_links"
-  , tblVersion = 10
+  , tblVersion = 11
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -189,6 +189,7 @@ tableSignatoryLinks = Table {
        , ("csv_signatory_index", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("internal_insert_order", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("signinfo_ocsp_response", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("sign_redirect_url", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE SEQUENCE signatory_links_internal_insert_order_seq"

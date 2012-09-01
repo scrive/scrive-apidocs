@@ -253,16 +253,13 @@ isELegDataMismatch _                            = False
 allowsAuthMethod :: Document -> AuthenticationMethod -> Bool
 allowsAuthMethod doc auth = documentauthenticationmethod doc == auth
 
-allowsDeliveryMethod :: Document -> DeliveryMethod -> Bool
-allowsDeliveryMethod doc del = documentdeliverymethod doc == del
-
 {- | Determine is document is designed to be signed using pad - this determines if invitation emais are send and if author can get access to siglink -}
 sendMailsDurringSigning :: Document -> Bool
 sendMailsDurringSigning doc = not $ isPadDocument doc
 
 
 isPadDocument :: Document -> Bool
-isPadDocument doc = doc `allowsDeliveryMethod` PadDelivery
+isPadDocument doc = documentdeliverymethod doc == PadDelivery
 
 hasOtherSignatoriesThenAuthor :: Document -> Bool
 hasOtherSignatoriesThenAuthor doc = not . null $ filter (isSignatory &&^ not . isAuthor) $ documentsignatorylinks doc

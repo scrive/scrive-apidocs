@@ -131,7 +131,7 @@ handleAcceptAccountFromSign documentid
                             signatorylinkid = do
   magichash <- guardJustM $ getMagicHashFromContext signatorylinkid
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
-  when (document `allowsDeliveryMethod` PadDelivery) internalError
+  when (documentdeliverymethod document == PadDelivery) internalError
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
   _ <- guardJustM $ User.Action.handleAccountSetupFromSign document signatorylink
   return $ LinkSignDoc document signatorylink
@@ -179,7 +179,11 @@ signDocument documentid
       postDocumentPendingChange doc olddoc "web"
       udoc <- guardJustM $ dbQuery $ GetDocumentByDocumentID documentid
       handleAfterSigning udoc signatorylinkid
-      return LoopBack
+      siglink <- guardJust $ getSigLinkFor doc signatorylinkid
+      case (signatorylinksignredirecturl siglink) of
+           Nothing -> return LoopBack
+           Just "" -> return LoopBack
+           Just s  -> return $ LinkExternal s
     Right (Left (DBActionNotAvailable message)) -> do
       addFlash (OperationFailed, message)
       return LoopBack
@@ -952,12 +956,11 @@ jsonDocument did = do
          let sl = fromJust msiglink 
          dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
               (signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
-    cttime <- liftIO $ getMinutesTime
     case mdoc of
          Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "No document avaible")]
          Just doc -> do
              switchLocaleWhenNeeded msiglink doc
-             documentJSON False pg msiglink cttime doc
+             documentJSON False (isAuthor msiglink) pg msiglink doc
 
 jsonDocumentGetterWithPermissionCheck ::   Kontrakcja m => DocumentID -> m (Maybe Document, Maybe SignatoryLink)
 jsonDocumentGetterWithPermissionCheck did = do

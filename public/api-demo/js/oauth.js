@@ -11,6 +11,7 @@ var OAuthModel = Backbone.Model.extend({
             verifier : LocalStorage.get("oauth","verifier") != undefined ? LocalStorage.get("oauth","verifier") : "",
             final_token :   LocalStorage.get("oauth","final_token") != undefined ? LocalStorage.get("oauth","final_token") : "",
             final_token_secret :   LocalStorage.get("oauth","final_token_secret") != undefined ? LocalStorage.get("oauth","final_token_secret") : "",
+            priviliges :  LocalStorage.get("oauth","priviliges") != undefined ? LocalStorage.get("oauth","priviliges") : "DOC_CREATE",
         },
         save : function() {
             LocalStorage.set("oauth","consumer_key", this.consumer_key());
@@ -21,7 +22,7 @@ var OAuthModel = Backbone.Model.extend({
             LocalStorage.set("oauth","token_secret",this.token_secret());
             LocalStorage.set("oauth","final_token",this.final_token());
             LocalStorage.set("oauth","final_token_secret",this.final_token_secret());
-
+            LocalStorage.get("oauth","priviliges",this.priviliges());
             
         },
         clear : function() {
@@ -36,6 +37,7 @@ var OAuthModel = Backbone.Model.extend({
                 , "final_token" : ""
                 , "final_token_secret" : ""
                 , "verifier" : ""
+                , "priviliges" : "DOC_CREATE+DOC_CHECK+DOC_SEND"
             }, {silent: true});
             this.trigger("change");
             this.trigger("clear");
@@ -62,7 +64,13 @@ var OAuthModel = Backbone.Model.extend({
             this.set({"callback" : v}, {silent: true});
             this.save();
         },
-
+        priviliges : function() {
+            return this.get("priviliges");
+        },
+        set_priviliges : function(v) {
+            this.set({"priviliges" : v}, {silent: true});
+            this.save();
+        },
         /* ROA PARAMS*/
         token : function() {
             return this.get("token");
@@ -112,7 +120,8 @@ var OAuthModel = Backbone.Model.extend({
                 new OAuthTemporaryCredentialRequest({
                       oauth_consumer_key : this.consumer_key(),
                       oauth_callback:  this.callback(),
-                      oauth_client_shared_secret : this.client_shared_secret()
+                      oauth_client_shared_secret : this.client_shared_secret(),
+                      priviliges : this.priviliges()                              
                 }).send(function(res) {
                     model.set_token(res.oauth_token);
                     model.set_token_secret(res.oauth_token_secret);
@@ -182,6 +191,33 @@ var OAuthView = Backbone.View.extend({
             client_shared_secret_input.change(function() {model.set_client_shared_secret(client_shared_secret_input.val()); return false;})
             box.append($("<div><div class='label'>Shared secret: </div></div>").append(client_shared_secret_input))
             box.append($("<div><div class='label'>Callback: </div></div>").append($("<b>").text(model.callback())))
+
+            var priviliges = model.priviliges();
+            var priviliges_input = $("<select/>");
+
+            var o1 = $("<option value='DOC_CREATE'>DOC_CREATE</option>")
+            priviliges_input.append(o1);
+            if (priviliges == "DOC_CREATE") o1.attr("selected","TRUE");
+
+            var o2 = $("<option value='DOC_SEND'>DOC_SEND</option>")
+            priviliges_input.append(o2);
+            if (priviliges == "DOC_SEND") o1.attr("selected","TRUE");
+
+            var o3 = $("<option value='DOC_CHECK'>DOC_CHECK</option>")
+            priviliges_input.append(o3);
+            if (priviliges == "DOC_CHECK") o3.attr("selected","TRUE");
+
+            var o4 = $("<option value='DOC_CREATE+DOC_SEND'>DOC_CREATE+DOC_SEND</option>")
+            priviliges_input.append(o4);
+            if (priviliges == "DOC_CREATE+DOC_SEND") o4.attr("selected","TRUE");
+
+            var o5 = $("<option value='DOC_CREATE+DOC_SEND+DOC_CHECK'>DOC_CREATE+DOC_SEND+DOC_CHECK</option>")
+            priviliges_input.append(o5);
+            if (priviliges == "DOC_CREATE+DOC_SEND+DOC_CHECK") o5.attr("selected","TRUE");
+                                     
+            priviliges_input.change(function() {model.set_priviliges(priviliges_input.val()); return false;})
+                                     
+            box.append($("<div><div class='label'>Priviliges: </div></div>").append(priviliges_input));
             
             var sendeTCRButton = $("<input type='button' value='Send Temporary Credential Request'/ >");
             sendeTCRButton.click(function() {model.sendeTCR(); return false;});

@@ -5,7 +5,6 @@ import PadQueue.Model
 import DB
 import Doc.DocStateData
 import Doc.DocStateQuery
-import Doc.DocUtils
 import Kontra
 import Redirect
 import User.Model
@@ -56,7 +55,7 @@ addToQueue did slid = do
     uid   <- userid <$> (guardJustM $ liftM2 mplus (ctxmaybeuser <$> getContext) (ctxmaybepaduser <$> getContext))
     doc <- guardRightM $ getDocByDocIDForAuthorOrAuthorsCompanyAdmin did
     _ <- guardJust $ getSigLinkFor doc slid
-    if (doc `allowsDeliveryMethod` PadDelivery)
+    if (documentdeliverymethod doc == PadDelivery)
         then do
             Log.debug $ "Adding signatory #" ++ (show slid) ++ "to padqueue of user #" ++ (show uid)
             actor <- guardJustM $ mkAuthorActor <$> getContext

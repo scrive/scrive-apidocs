@@ -597,6 +597,9 @@ window.Signatory = Backbone.Model.extend({
          this.trigger("change:csv");
 
     },
+    signsuccessredirect : function() {
+        return this.get("signsuccessredirect");
+    },
     inpadqueue : function() {
        return this.get("inpadqueue");
     },
@@ -618,7 +621,8 @@ window.Signatory = Backbone.Model.extend({
               attachments: _.map(this.attachments(), function(att) {
                   return att.draftData();
               }),
-              csv: this.csv()
+              csv: this.csv(),
+              signsuccessredirect : this.signsuccessredirect()
 
         };
     }

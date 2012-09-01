@@ -83,6 +83,7 @@ kontraMigrations = [
   , moveAttachmentsFromDocumentsToAttachments
   , removeOldDocumentLog
   , splitIdentificationTypes
+  , addSignRedirectURL
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

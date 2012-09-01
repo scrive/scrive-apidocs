@@ -104,6 +104,8 @@ data KontraLink
     | LinkOAuthDashboard
     | LinkCompanyAdminPayments CompanyID
     | LinkUserAdminPayments UserID
+    | LinkExternal String
+
     deriving (Eq)
 
 localeFolder :: Locale -> String
@@ -231,6 +233,8 @@ instance Show KontraLink where
       (++) ("/adminonly/companyadmin/payments/" ++ show cid)
     showsPrec _ (LinkUserAdminPayments uid) = 
       (++) ("/adminonly/useradmin/payments/" ++ show uid)
+    showsPrec _ (LinkExternal s) = (++) s
+
 
 setParams :: URI -> [(String, String)] -> URI
 setParams uri params = uri { uriQuery = "?" ++ vars }

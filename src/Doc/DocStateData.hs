@@ -114,6 +114,7 @@ data AuthenticationMethod = EmailAuthentication
 
 data DeliveryMethod = EmailDelivery
                     | PadDelivery
+                    | APIDelivery
   deriving (Eq, Ord, Show)
 
 data SignatureInfo = SignatureInfo {
@@ -184,6 +185,7 @@ data SignatoryLink = SignatoryLink {
   , signatorylinkcsvupload     :: Maybe CSVUpload
   , signatoryattachments       :: [SignatoryAttachment]
   , signatorylinkstatusclass   :: StatusClass
+  , signatorylinksignredirecturl  :: Maybe String
   } deriving (Eq, Ord, Show)
 
 data SignatoryRole = SignatoryPartner | SignatoryAuthor

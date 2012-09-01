@@ -28,24 +28,35 @@ instance Read APIToken where
       _ -> []
 
 data APIPrivilege = APIDocCreate
+                  | APIDocCheck
+                  | APIDocSend
                   | APIPersonal  -- used only for personal access token
   deriving (Eq)
 
 instance Read APIPrivilege where
   readsPrec _ "DOC_CREATE" = [(APIDocCreate, "")]
+  readsPrec _ "DOC_CHECK"  = [(APIDocCheck, "")]
+  readsPrec _ "DOC_SEND"   = [(APIDocSend, "")] 
   readsPrec _ _ = [] -- we should never read APIPersonal
 
 instance Show APIPrivilege where
   showsPrec _ APIDocCreate = (++) "DOC_CREATE"
+  showsPrec _ APIDocCheck  = (++) "DOC_CHECK"
+  showsPrec _ APIDocSend   = (++) "DOC_SEND"
   showsPrec _ APIPersonal  = (++) "PERSONAL"
 
 instance Convertible APIPrivilege Int where
   safeConvert APIPersonal  = return 0
   safeConvert APIDocCreate = return 1
-
+  safeConvert APIDocCheck  = return 2
+  safeConvert APIDocSend   = return 3
+  
 instance Convertible Int APIPrivilege where
   safeConvert 0 = return APIPersonal
   safeConvert 1 = return APIDocCreate
+  safeConvert 2 = return APIDocCheck
+  safeConvert 3 = return APIDocSend
+
   safeConvert s = Left ConvertError { convSourceValue  = show s
                                     , convSourceType   = "Int"
                                     , convDestType     = "APIPrivilege"

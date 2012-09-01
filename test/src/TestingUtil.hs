@@ -201,6 +201,7 @@ instance Arbitrary SignatoryLink where
                            , signatorylinkcsvupload     = Nothing
                            , signatoryattachments       = []
                            , signatorylinkstatusclass   = SCDraft
+                           , signatorylinksignredirecturl = Nothing
                            }
 
 instance Arbitrary SignatureProvider where
@@ -435,6 +436,7 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 
                                       , signatorylinkcsvupload = Nothing
                                       , signatoryattachments   = []
                                       , signatorylinkstatusclass = SCDraft
+                                      , signatorylinksignredirecturl = Nothing
                                       }
 
 blankUser :: User

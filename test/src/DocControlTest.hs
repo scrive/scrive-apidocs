@@ -145,7 +145,7 @@ testNonLastPersonSigningADocumentRemainsPending = do
                          Signable _ -> True
                          _ -> False
                      && d `allowsAuthMethod` EmailAuthentication
-                     && d `allowsDeliveryMethod` EmailDelivery)
+                     && documentdeliverymethod d == EmailDelivery)
   True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
                    (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])
                  , (mkSigDetails "Fred" "Frog" "fred@frog.com", [SignatoryPartner])
@@ -187,7 +187,7 @@ testLastPersonSigningADocumentClosesIt = do
                          Signable _ -> True
                          _ -> False
                      && d `allowsAuthMethod` EmailAuthentication
-                     && d `allowsDeliveryMethod` EmailDelivery)
+                     && documentdeliverymethod d == EmailDelivery)
 
   True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
                    (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])

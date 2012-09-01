@@ -22,6 +22,8 @@ pagePrivilegesConfirm privileges email companyname token = do
      renderTemplate "pagePrivilegesConfirm" $ do
          F.value "email" email
          F.value "isDocumentCreate" $ APIDocCreate `elem` privileges
+         F.value "isDocumentSend" $ APIDocSend `elem` privileges
+         F.value "isDocumentCheck" $ APIDocCheck `elem` privileges
          F.value "companyname" companyname
          F.value "token" $ show token
 
@@ -33,6 +35,8 @@ pagePrivilegesConfirmNoUser :: TemplatesMonad m
 pagePrivilegesConfirmNoUser privileges companyname token = do
      renderTemplate "pagePrivilegesConfirmNoUser" $ do
          F.value "isDocumentCreate" $ APIDocCreate `elem` privileges
+         F.value "isDocumentSend" $ APIDocSend `elem` privileges
+         F.value "isDocumentCheck" $ APIDocCheck `elem` privileges
          F.value "companyname" companyname
          F.value "token" $ show token
 
@@ -43,6 +47,8 @@ showAPIDashboard user = do
           
 privilegeDescription :: TemplatesMonad m => APIPrivilege -> m String
 privilegeDescription APIDocCreate = return "Create a document on your behalf."
+privilegeDescription APIDocCheck  = return "Read your documents."
+privilegeDescription APIDocSend   = return "Send documents in your name."
 privilegeDescription APIPersonal  = return "This is a personal access token."
 
 jsonFromPersonalToken :: (APIToken, MagicHash, APIToken, MagicHash) -> JSValue

@@ -50,7 +50,8 @@ data SignatoryTMP = SignatoryTMP {
         details :: SignatoryDetails,
         roles   :: [SignatoryRole],
         attachments :: [SignatoryAttachment], -- Do not expose it as durring runtime this does not have email set
-        csvupload :: Maybe CSVUpload
+        csvupload :: Maybe CSVUpload,
+        signredirecturl :: Maybe String
     } deriving (Show)
 
 instance HasFields SignatoryTMP where
@@ -67,6 +68,7 @@ emptySignatoryTMP = SignatoryTMP
                 , roles  = []
                 , attachments = []
                 , csvupload = Nothing
+                , signredirecturl = Nothing
                 }
                 
 -- Basic operations
@@ -143,11 +145,13 @@ addAttachment a s = s {attachments = a : (attachments s)}
 getAttachments :: SignatoryTMP -> [SignatoryAttachment]
 getAttachments s = attachments s
 
+setSignredirecturl :: Maybe String -> SignatoryTMP -> SignatoryTMP
+setSignredirecturl rurl s = s {signredirecturl = rurl}
 
 toSignatoryDetails1 :: SignatoryTMP -> (SignatoryDetails,[SignatoryRole])
-toSignatoryDetails1 sTMP = (\(x,y,_,_) ->(x,y)) (toSignatoryDetails2 sTMP)
+toSignatoryDetails1 sTMP = (\(x,y,_,_,_) ->(x,y)) (toSignatoryDetails2 sTMP)
 -- To SignatoryLink or SignatoryDetails conversion
-toSignatoryDetails2 :: SignatoryTMP -> (SignatoryDetails,[SignatoryRole], [SignatoryAttachment], Maybe CSVUpload)
+toSignatoryDetails2 :: SignatoryTMP -> (SignatoryDetails,[SignatoryRole], [SignatoryAttachment], Maybe CSVUpload, Maybe String)
 toSignatoryDetails2 sTMP  = 
     let sig = makeSignatory [] [] ""
                  (fold $ fstname sTMP)
@@ -163,7 +167,7 @@ toSignatoryDetails2 sTMP  =
   where
    mergeFields [] l = l
    mergeFields (f:fs) l = mergeFields fs (replaceField f l)
-   withRolesAndAttsAndCSV x = (x,roles $ sTMP, attachments $ sTMP, csvupload $ sTMP)
+   withRolesAndAttsAndCSV x = (x,roles $ sTMP, attachments $ sTMP, csvupload $ sTMP, signredirecturl $ sTMP)
    
 
 instance FromJSValue SignatoryTMP where
@@ -174,12 +178,13 @@ instance FromJSValue SignatoryTMP where
         signorder <- fromJSValueField "signorder"
         attachments <- fromJSValueField "attachments"
         csv <- fromJSValueField "csv"
-
+        sredirecturl <- fromJSValueField "signsuccessredirect"
         return $ Just $
             (setSignOrder (SignOrder $ fromMaybe 1 signorder)) $
             (makeAuthor  <| joinB author |> id) $
             (makeSigns   <| joinB signs  |> id) $
-            (setCSV $ csv) $ 
+            (setCSV $ csv) $
+            (setSignredirecturl $ sredirecturl) $
             (map replaceField $ concat $ maybeToList fields) $^^
             (map addAttachment $ concat $ maybeToList attachments) $^^
             emptySignatoryTMP

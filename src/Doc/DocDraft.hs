@@ -44,6 +44,7 @@ instance FromJSValue DeliveryMethod where
   fromJSValue j = case fromJSValue j of
     Just "email" -> Just EmailDelivery
     Just "pad"   -> Just PadDelivery
+    Just "api"   -> Just APIDelivery
     _            -> Nothing
 
 instance FromJSValue Region where
@@ -97,7 +98,7 @@ applyDraftDataToDocument doc draft actor = do
              Nothing  -> Left "applyDraftDataToDocument failed"
              Just newdoc -> Right newdoc
 
-mergeSignatories :: SignatoryLink -> [SignatoryTMP] -> Maybe [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload)]
+mergeSignatories :: SignatoryLink -> [SignatoryTMP] -> Maybe [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload, Maybe String)]
 mergeSignatories docAuthor tmps =
         let (atmp, notatmps) = partition isAuthorTMP tmps
             setAuthorConstandDetails =  setFstname (getFirstName docAuthor) .

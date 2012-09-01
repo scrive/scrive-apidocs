@@ -29,7 +29,6 @@ window.OAuthTemporaryCredentialRequest = OAuthRequest.extend({
                oauth_consumer_key :"",
                oauth_callback: window.location.href,
                oauth_client_shared_secret:"",
-               privileges : ['DOC_CREATE']
             },
             requestUrl : function() {
                 return "/oauth/temporarycredentials"
@@ -44,7 +43,7 @@ window.OAuthTemporaryCredentialRequest = OAuthRequest.extend({
             },
             data : function() {
                   return {
-                      privileges : _.reduce(this.get('privileges'), function(a, b) { return (a != "" ? a + "+" + b : b); }, "")
+                      privileges : this.get('priviliges')
                   }
             }
 });

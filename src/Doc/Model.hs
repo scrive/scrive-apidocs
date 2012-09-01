@@ -560,6 +560,7 @@ signatoryLinksSelectors = intercalate ", "
   , "signatory_links.csv_signatory_index"
   , "signatory_links.deleted"
   , "signatory_links.really_deleted"
+  , "signatory_links.sign_redirect_url"
 
   , -- this is to fetch status class, so we can do sorting according to that class
     --  0 Draft - 1 Cancel - 2 Fall due - 3 Sent - 4 Opened - 5 Signed
@@ -592,7 +593,7 @@ fetchSignatoryLinks = do
      signinfo_provider signinfo_first_name_verified signinfo_last_name_verified
      signinfo_personal_number_verified signinfo_ocsp_response 
      roles csv_title csv_contents csv_signatory_index
-     deleted really_deleted status_class
+     deleted really_deleted signredirecturl status_class
      safileid saname sadesc
       | docid == nulldocid                      = (document_id, [link], linksmap)
       | docid /= document_id                    = (document_id, [link], M.insertWith' (++) docid links linksmap)
@@ -643,6 +644,7 @@ fetchSignatoryLinks = do
               CSVUpload <$> csv_title <*> csv_contents <*> csv_signatory_index
           , signatoryattachments = sigAtt
           , signatorylinkstatusclass = toEnum (status_class :: Int)
+          , signatorylinksignredirecturl = signredirecturl
           }
 
 insertSignatoryLinkAsIs :: MonadDB m => DocumentID -> SignatoryLink -> DBEnv m (Maybe SignatoryLink)
@@ -673,7 +675,9 @@ insertSignatoryLinkAsIs documentid link = do
            , sql "deleted" $ signatorylinkdeleted link
            , sql "really_deleted" $ signatorylinkreallydeleted link
            , sql "signinfo_ocsp_response" $ signatureinfoocspresponse `fmap` signatorysignatureinfo link
+           , sql "sign_redirect_url" $ signatorylinksignredirecturl link
            ] <> SQL " RETURNING id" []
+
 
   slids <- foldDB (\acc slid -> slid : acc) []
 
@@ -2007,7 +2011,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument Bool where
 data ResetSignatoryDetails = ResetSignatoryDetails DocumentID [(SignatoryDetails, [SignatoryRole])] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails Bool where
   update (ResetSignatoryDetails documentid signatories actor) =
-    update (ResetSignatoryDetails2 documentid (map (\(a,b) -> (a,b,[],Nothing)) signatories) actor)
+    update (ResetSignatoryDetails2 documentid (map (\(a,b) -> (a,b,[],Nothing, Nothing)) signatories) actor)
 
 splitImage :: String -> Maybe (Int, Int, String)
 splitImage s = do
@@ -2018,7 +2022,7 @@ splitImage s = do
   w <- maybeRead ws
   h <- maybeRead hs
   return (w, h, is)
-data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload)] Actor
+data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload, Maybe String)] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails2 Bool where
   update (ResetSignatoryDetails2 documentid signatories actor) = do
     Log.debug $ "reset: " ++ show signatories
@@ -2035,10 +2039,12 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
             _ <- kExecute [toSql documentid]
 
             let mauthorsiglink = getAuthorSigLink document
-            forM_ signatories $ \(details, roles, atts, mcsvupload) -> do
+            forM_ signatories $ \(details, roles, atts, mcsvupload, msignredirecturl) -> do
                      magichash <- lift random
                      let link' = (signLinkFromDetails' details roles atts magichash)
-                                 { signatorylinkcsvupload = mcsvupload }
+                                 {  signatorylinkcsvupload = mcsvupload
+                                  , signatorylinksignredirecturl= msignredirecturl
+                                 }
                          link = if isAuthor link'
                                 then link' { maybesignatory = maybe Nothing maybesignatory mauthorsiglink
                                            , maybecompany   = maybe Nothing maybecompany   mauthorsiglink
@@ -2048,7 +2054,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                      when (not (isJust r1)) $
                           error "ResetSignatoryDetails signatory_links did not manage to insert a row"
 
-            let (old, _, new) = listDiff (map signatorydetails $ documentsignatorylinks document) (map (\(sd, _, _, _)-> sd) signatories)
+            let (old, _, new) = listDiff (map signatorydetails $ documentsignatorylinks document) (map (\(sd, _, _, _, _)-> sd) signatories)
 
             forM_ (emailsOfRemoved old new) $ \eml ->
               update $ InsertEvidenceEvent
@@ -2123,7 +2129,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                   actor
 
             Just newdocument <- query $ GetDocumentByDocumentID documentid
-            let moldcvsupload = msum (map (\(_,_,_,a) -> a) signatories)
+            let moldcvsupload = msum (map (\(_,_,_,a,_) -> a) signatories)
             let mnewcsvupload = msum (map (signatorylinkcsvupload) (documentsignatorylinks newdocument))
 
             when (moldcvsupload /= mnewcsvupload) $ do
@@ -2260,6 +2266,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentDeliveryMethod B
       let evidence = case del of
             EmailDelivery -> SetEmailDeliveryMethodEvidence
             PadDelivery   -> SetPadDeliveryMethodEvidence
+            APIDelivery   -> SetAPIDeliveryMethodEvidence
       update $ InsertEvidenceEvent evidence
         (value "delivery" (show del) >> value "actor" (actorWho actor))
         (Just did)

@@ -4,7 +4,7 @@
 
 
 window.Scrive =  {
-                serverUrl : function() {return "http://signview-c.scrive.com";}
+                serverUrl : function() {return "http://localhost:8000";}
 };
 
 

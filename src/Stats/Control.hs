@@ -270,9 +270,9 @@ addDocumentCloseStatEvents doc apistring = falseOnError $ do
                                                         }
       unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatClose
       let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
-            (EmailAuthentication, EmailDelivery) -> DocStatEmailSignatures
             (EmailAuthentication, PadDelivery) -> DocStatPadSignatures
-            (ELegAuthentication, _) -> DocStatElegSignatures
+            (EmailAuthentication, _) -> DocStatPadSignatures
+            (ELegAuthentication,  _) -> DocStatElegSignatures
       b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                      , seTime       = signtime
                                                      , seQuantity   = q
@@ -310,9 +310,9 @@ addDocumentSendStatEvents doc apistring = falseOnError $ do
                                                         }
       unless a $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatSend
       let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
-            (EmailAuthentication, EmailDelivery) -> DocStatEmailSignatures
             (EmailAuthentication, PadDelivery) -> DocStatPadSignatures
-            (ELegAuthentication, _) -> DocStatElegSignatures
+            (EmailAuthentication, _) -> DocStatEmailSignatures
+            (ELegAuthentication,  _) -> DocStatElegSignatures
       b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = sendtime
                                                         , seQuantity   = q
@@ -350,8 +350,8 @@ addDocumentCancelStatEvents doc apistring = falseOnError $ do
                                                         }
       unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCancel
       let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
-            (EmailAuthentication, EmailDelivery) -> DocStatEmailSignatures
             (EmailAuthentication, PadDelivery) -> DocStatPadSignatures
+            (EmailAuthentication, _)           -> DocStatEmailSignatures
             (ELegAuthentication, _) -> DocStatElegSignatures
       b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = canceltime
@@ -390,8 +390,8 @@ addDocumentRejectStatEvents doc apistring = falseOnError $ do
                                                         }
       unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatReject
       let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
-            (EmailAuthentication, EmailDelivery) -> DocStatEmailSignatures
             (EmailAuthentication, PadDelivery) -> DocStatPadSignatures
+            (EmailAuthentication, _ )          -> DocStatEmailSignatures
             (ELegAuthentication, _) -> DocStatElegSignatures
       b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = rejecttime
@@ -455,8 +455,8 @@ addDocumentTimeoutStatEvents doc apistring = do
                                                         }
       unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatTimeout
       let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
-            (EmailAuthentication, EmailDelivery) -> DocStatEmailSignatures
             (EmailAuthentication, PadDelivery) -> DocStatPadSignatures
+            (EmailAuthentication, _) -> DocStatEmailSignatures
             (ELegAuthentication, _) -> DocStatElegSignatures
       b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = ttime

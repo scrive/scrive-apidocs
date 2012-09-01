@@ -213,7 +213,8 @@ data EvidenceEventType =
   SetEmailAuthenticationMethodEvidence            |
   SetELegAuthenticationMethodEvidence             |
   SetEmailDeliveryMethodEvidence                  |
-  SetPadDeliveryMethodEvidence
+  SetPadDeliveryMethodEvidence                    |
+  SetAPIDeliveryMethodEvidence
   deriving (Eq, Show, Read, Ord)
 
 instance Convertible EvidenceEventType Int where
@@ -283,6 +284,8 @@ instance Convertible EvidenceEventType Int where
   safeConvert SetELegAuthenticationMethodEvidence             = return 64
   safeConvert SetEmailDeliveryMethodEvidence                  = return 65
   safeConvert SetPadDeliveryMethodEvidence                    = return 66
+  safeConvert SetAPIDeliveryMethodEvidence                    = return 67
+  
   
 instance Convertible Int EvidenceEventType where
     safeConvert 1  = return AddSigAttachmentEvidence
@@ -351,6 +354,7 @@ instance Convertible Int EvidenceEventType where
     safeConvert 64 = return SetELegAuthenticationMethodEvidence
     safeConvert 65 = return SetEmailDeliveryMethodEvidence
     safeConvert 66 = return SetPadDeliveryMethodEvidence
+    safeConvert 67 = return SetAPIDeliveryMethodEvidence
     safeConvert s  = Left ConvertError { convSourceValue = show s
                                        , convSourceType = "Int"
                                        , convDestType = "EvidenceEventType"

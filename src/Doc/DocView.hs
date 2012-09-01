@@ -132,8 +132,8 @@ flashMessageCSVSent :: TemplatesMonad m => Int -> m FlashMessage
 flashMessageCSVSent doccount =
   toFlashMsg OperationDone <$> (renderTemplate "flashMessageCSVSent" $ F.value "doccount" doccount)
 
-documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m) => Bool -> PadQueue -> Maybe SignatoryLink -> MinutesTime -> Document -> m JSValue
-documentJSON forapi pq msl _crttime doc = do
+documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m) => Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
+documentJSON forapi forauthor pq msl doc = do
     ctx <- getContext
     files <- documentfilesM doc
     sealedfiles <- documentsealedfilesM doc
@@ -163,7 +163,7 @@ documentJSON forapi pq msl _crttime doc = do
       J.value "authorattachments" $ map fileJSON (catMaybes authorattachmentfiles)
       J.value "timeouttime" $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc
       J.value "status" $ show $ documentstatus doc
-      J.objects "signatories" $ map (signatoryJSON pq doc msl) (documentsignatorylinks doc)
+      J.objects "signatories" $ map (signatoryJSON forapi forauthor pq doc msl) (documentsignatorylinks doc)
       J.value "signorder" $ unSignOrder $ documentcurrentsignorder doc
       J.value "authentication" $ authenticationJSON $ documentauthenticationmethod doc
       J.value "delivery" $ deliveryJSON $ documentdeliverymethod doc
@@ -193,9 +193,10 @@ authenticationJSON ELegAuthentication = toJSValue "eleg"
 deliveryJSON :: DeliveryMethod -> JSValue
 deliveryJSON EmailDelivery = toJSValue "email"
 deliveryJSON PadDelivery = toJSValue "pad"
+deliveryJSON APIDelivery = toJSValue "api"
 
-signatoryJSON :: (TemplatesMonad m, MonadDB m) => PadQueue -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
-signatoryJSON pq doc viewer siglink = do
+signatoryJSON :: (TemplatesMonad m, MonadDB m) => Bool -> Bool -> PadQueue -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
+signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "id" $ show $ signatorylinkid siglink
     J.value "current" $ isCurrent
     J.value "signorder" $ unSignOrder $ signatorysignorder $ signatorydetails siglink
@@ -215,7 +216,8 @@ signatoryJSON pq doc viewer siglink = do
     J.value "csv" $ csvcontents <$> signatorylinkcsvupload siglink
     J.value "inpadqueue"  $ (fmap fst pq == Just (documentid doc)) && (fmap snd pq == Just (signatorylinkid siglink))
     J.value "hasUser" $ isJust (maybesignatory siglink) && isCurrent -- we only inform about current user
-    when (not (isPreparation doc)) $ do
+    J.value "signsuccessredirect" $ signatorylinksignredirecturl siglink
+    when (not (isPreparation doc) && forauthor && forapi && documentdeliverymethod doc == APIDelivery) $ do
         J.value "signlink" $ show $ LinkSignDoc doc siglink
     where
       datamismatch = case documentcancelationreason doc of
@@ -428,8 +430,8 @@ documentInfoFields  document  = do
   F.value "template" $  isTemplate document
   F.value "emailauthenticationselected" $ document `allowsAuthMethod` EmailAuthentication
   F.value "elegauthenticationselected" $ document `allowsAuthMethod` ELegAuthentication
-  F.value "emaildeliveryselected" $ document `allowsDeliveryMethod` EmailDelivery
-  F.value "paddeliveryselected" $ document `allowsDeliveryMethod` PadDelivery
+  F.value "emaildeliveryselected" $ documentdeliverymethod document == EmailDelivery
+  F.value "paddeliveryselected" $ documentdeliverymethod document == PadDelivery
   F.value "hasanyattachments" $ length (documentauthorattachments document) + length (concatMap signatoryattachments $ documentsignatorylinks document) > 0
   documentStatusFields document
 

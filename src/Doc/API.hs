@@ -84,12 +84,11 @@ apiCallCreateFromFile = api $ do
   file <- dbUpdate $ NewFile filename content
   Just doc <- dbUpdate $ NewDocument user mcompany filename (Signable Contract) 1 actor
   True <- dbUpdate $ AttachFile (documentid doc) (fileid file) actor
-  Created <$> documentJSON True  Nothing Nothing (ctxtime ctx) doc
+  Created <$> documentJSON True True Nothing Nothing doc
   
 
 apiCallCreateFromTemplate :: Kontrakcja m => DocumentID -> m Response
 apiCallCreateFromTemplate did =  api $ do
-  ctx <- getContext
   (user, actor) <- getAPIUser
   mcompany <- case usercompany user of
     Just companyid -> Just <$> (apiGuardL' $ dbQuery $ GetCompany companyid)
@@ -106,14 +105,13 @@ apiCallCreateFromTemplate did =  api $ do
       Just newdoc -> do
           _ <- lift $ addDocumentCreateStatEvents newdoc "web"
           Log.debug $ show "Document created from template"
-          Created <$> documentJSON True  Nothing Nothing (ctxtime ctx) newdoc
+          Created <$> documentJSON True  True Nothing Nothing newdoc
       Nothing -> throwError $ serverError "Create document from template failed"
 
     
 
 apiCallUpdate :: Kontrakcja m => DocumentID -> m Response
 apiCallUpdate did = api $ do
-  ctx <- getContext
   (user, actor) <- getAPIUser
   doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
@@ -125,11 +123,10 @@ apiCallUpdate did = api $ do
                                                                                _ -> Nothing
   draftData   <-apiGuardJustM (badInput "Given JSON does not represent valid draft data.") $ return $ fromJSValue json
   newdocument <-  apiGuardL (serverError "Could not apply draft data") $ applyDraftDataToDocument doc draftData actor
-  Ok <$> documentJSON True  Nothing Nothing (ctxtime ctx) newdocument
+  Ok <$> documentJSON True True Nothing Nothing newdocument
 
 apiCallReady :: Kontrakcja m => DocumentID -> m Response
 apiCallReady did =  api $ do
-  ctx <- getContext
   (user, _actor) <- getAPIUser
   doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
@@ -140,20 +137,19 @@ apiCallReady did =  api $ do
           Right newdocument -> do
               lift $ postDocumentPreparationChange newdocument "web"
               newdocument' <- apiGuardL (serverError "No document found") $ getDocByDocID $ did
-              Accepted <$> documentJSON True  Nothing Nothing (ctxtime ctx) newdocument'
+              Accepted <$> documentJSON True True Nothing Nothing newdocument'
           Left reason -> throwError $ serverError $ "Operation failed: " ++ show reason
 
   
 apiCallGet :: Kontrakcja m => DocumentID -> m Response
 apiCallGet did = api $ do
-  ctx <- getContext
   (user, _actor) <- getAPIUser
   doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
   auser <- apiGuardJustM (serverError "No user found") $ dbQuery $ GetUserByID auid
   let haspermission = (userid auser == userid user) || ((usercompany auser == usercompany user && (isJust $ usercompany user)) &&  isDocumentShared doc)
   if (haspermission)
-      then Ok <$> documentJSON True  Nothing Nothing (ctxtime ctx) doc
+      then Ok <$> documentJSON True True Nothing Nothing doc
       else throwError $ serverError "You do not have right to access document"
 
 
@@ -227,7 +223,8 @@ documentNew = api $ do
                               },
                             irRole ir,
                             irAttachments ir,
-                            Nothing)) -- No CSV
+                            Nothing,
+                            Nothing))
               (dcrInvolved dcr)
 
     when (not $ null sigs) $ do
