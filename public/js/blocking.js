@@ -13,7 +13,7 @@
             if(this.plan() === 'free')
                 return 3;
             else
-                return 40; // # of docs it says in the TOS
+                return 500; // # of docs it says in the TOS
         },
         docsUsed: function() {
             return this.get('docsused');
