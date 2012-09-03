@@ -61,6 +61,7 @@ import PadQueue.Model
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
 import qualified Templates.Fields as F
+import qualified Data.Set as Set
 
 -- FIXME: why do we even use that?
 para :: String -> String
@@ -173,6 +174,9 @@ documentJSON forapi forauthor pq msl doc = do
       J.value "region" $  case (getRegion doc) of
                              REGION_GB -> "gb" 
                              REGION_SE -> "se"
+      J.objects "tags" $ for (Set.toList $ documenttags doc) $ \(DocumentTag n v) -> do
+                                    J.value "name"  n
+                                    J.value "value" v
       when (not $ forapi) $ do
         J.value "logo" logo
         J.value "barsbackgroundcolor" bbc

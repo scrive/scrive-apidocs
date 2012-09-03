@@ -326,7 +326,7 @@ window.niceJSONText = function(obj,s) {
     if (s == undefined) s = ""
     var res = "";
     if (obj instanceof Array) {
-        if (obj.length == 0) return "{}";
+        if (obj.length == 0) return "[]";
         res += "[\n";
         for(var i=0;i<obj.length;i++) {
             res += (s + niceJSONText(obj[i], s + " ") + "\n")

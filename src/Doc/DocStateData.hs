@@ -251,11 +251,11 @@ data DocumentStatus = Preparation
   deriving (Eq, Ord, Show)
 
 data DocumentProcess = Contract | Offer | Order
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Read)
 
 data DocumentType = Signable DocumentProcess
                   | Template DocumentProcess
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Read)
 
 instance Convertible DocumentType SqlValue where
   safeConvert v = Right . SqlInteger $ case v of

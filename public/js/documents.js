@@ -68,7 +68,7 @@ window.Document = Backbone.Model.extend({
         saveQueue : new AjaxQueue()
     },
     initialize: function(args) {
-        this.url = "/doc/" + args.id;
+        this.url = "/api/get/" + args.id;
     },
     viewer: function() {
         if (this.get("viewer") != undefined)
@@ -207,9 +207,9 @@ window.Document = Backbone.Model.extend({
     },
     save: function() {
          this.get("saveQueue").add(new Submit({
-              url: "/save/" + this.documentid(),
+              url: "/api/update/" + this.documentid(),
               method: "POST",
-              draft: JSON.stringify(this.draftData())
+              json: JSON.stringify(this.draftData())
           }));
     },
     afterSave: function(f) {
@@ -317,6 +317,9 @@ window.Document = Backbone.Model.extend({
     padDelivery : function() {
           return this.get("delivery") == "pad";
     },
+    apiDelivery : function() {
+          return this.get("delivery") == "api";
+    },
     setEmailAuthentication: function() {
           this.set({"authentication": "email"}, {silent: true});
           this.trigger("change:authenticationdelivery");
@@ -332,6 +335,10 @@ window.Document = Backbone.Model.extend({
     setPadDelivery : function() {
           this.set({"delivery":"pad"}, {silent: true});
           _.each(this.signatories(), function(sig) {sig.clearAttachments();});
+          this.trigger("change:authenticationdelivery");
+    },
+    setAPIDelivery : function() {
+          this.set({"delivery":"api"}, {silent: true});
           this.trigger("change:authenticationdelivery");
     },
     elegTBS: function() {

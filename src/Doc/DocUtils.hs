@@ -255,11 +255,7 @@ allowsAuthMethod doc auth = documentauthenticationmethod doc == auth
 
 {- | Determine is document is designed to be signed using pad - this determines if invitation emais are send and if author can get access to siglink -}
 sendMailsDurringSigning :: Document -> Bool
-sendMailsDurringSigning doc = not $ isPadDocument doc
-
-
-isPadDocument :: Document -> Bool
-isPadDocument doc = documentdeliverymethod doc == PadDelivery
+sendMailsDurringSigning doc = (not $ documentdeliverymethod doc == PadDelivery) && (not $ documentdeliverymethod doc == APIDelivery)
 
 hasOtherSignatoriesThenAuthor :: Document -> Bool
 hasOtherSignatoriesThenAuthor doc = not . null $ filter (isSignatory &&^ not . isAuthor) $ documentsignatorylinks doc

@@ -22,7 +22,7 @@ var OAuthModel = Backbone.Model.extend({
             LocalStorage.set("oauth","token_secret",this.token_secret());
             LocalStorage.set("oauth","final_token",this.final_token());
             LocalStorage.set("oauth","final_token_secret",this.final_token_secret());
-            LocalStorage.get("oauth","priviliges",this.priviliges());
+            LocalStorage.set("oauth","priviliges",this.priviliges());
             
         },
         clear : function() {
@@ -37,7 +37,7 @@ var OAuthModel = Backbone.Model.extend({
                 , "final_token" : ""
                 , "final_token_secret" : ""
                 , "verifier" : ""
-                , "priviliges" : "DOC_CREATE+DOC_CHECK+DOC_SEND"
+                , "priviliges" : "DOC_CREATE"
             }, {silent: true});
             this.trigger("change");
             this.trigger("clear");

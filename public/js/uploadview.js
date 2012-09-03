@@ -83,15 +83,11 @@
                 },
                 submit: new Submit({
                     method : "POST",
-                    url : "/api/document",
+                    url : "/api/createfromfile",
                     ajax: true,
-                    json: JSON.stringify({"type" : (wiz.get('process') ? wiz.get('process').signable : 1)}),
+                    type: wiz.get('process') ? "Signable " + wiz.get('process').name : "",
                     expectedType: 'json',
-                    beforeSend: function() {
-                        console.log("first");
-                    },
                     onSend: function() {
-                        console.log("here");
                         LoadingDialog.open();
                     },
                     ajaxerror: function(d,a){
@@ -103,9 +99,8 @@
                         wiz.trigger('change');
                     },
                     ajaxsuccess: function(d) {
-                        console.log("there");
-                        if (d != undefined && d.designurl != undefined) {
-                            window.location.href = d.designurl;
+                        if (d != undefined && d.id != undefined) {
+                            window.location.href = "/d/"+d.id;
                         }
                         else {
                              FlashMessages.add({content: localization.couldNotUpload, color: "red"});
@@ -190,8 +185,25 @@
                                       link.click(function(){
                                           new Submit({
                                               method : "POST",
-                                              url: "/t",
-                                              template: listobject.field("id")
+                                              url: "/api/createfromtemplate/" +  listobject.field("id"),
+                                              ajax: true,
+                                              expectedType: 'json',
+                                              onSend: function() {
+                                                      LoadingDialog.open();
+                                              },
+                                              ajaxerror: function(d,a){
+                                                      LoadingDialog.close();
+                                                      wiz.trigger('change');
+                                              },
+                                              ajaxsuccess: function(d) {
+                                                      if (d != undefined && d.id != undefined) {
+                                                          window.location.href = "/d/"+d.id;
+                                                      }
+                                                      else {
+                                                          LoadingDialog.close();
+                                                          wiz.trigger('change');
+                                                      }
+                                              }
                                           }).send();
                                           return false;
                                       });

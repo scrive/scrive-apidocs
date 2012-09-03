@@ -147,5 +147,7 @@ SetEmailDeliveryMethodEvidenceText=$actor$ requested document to be available fo
 ###
 SetPadDeliveryMethodEvidenceText=$actor$ requested document to be available only for email signing.
 ###
+SetAPIDeliveryMethodEvidenceText=$actor$ requested document to be available only for api signing.
+###
 ResealedPDFText=$actor$ requested document to be resealed.
 ###

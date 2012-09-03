@@ -141,7 +141,7 @@ data DocumentFilter
   | DocumentFilterByDelivery DeliveryMethod -- ^ Only documents that use selected delivery method
   | DocumentFilterByMonthYearFrom (Int,Int)           -- ^ Document time after or in (month,year)
   | DocumentFilterByMonthYearTo   (Int,Int)           -- ^  Document time before or in (month,year)
-
+  deriving Show
 data DocumentDomain
   = DocumentsOfWholeUniverse                     -- ^ All documents in the system. Only for admin view.
   | DocumentsOfAuthorDeleteValue UserID Bool     -- ^ Documents by author, with delete flag
@@ -2434,6 +2434,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateDraft Bool where
     , update $ SetDocumentAuthenticationMethod did (documentauthenticationmethod document) actor
     , update $ SetDocumentDeliveryMethod did (documentdeliverymethod document) actor
     , update $ SetInviteText did (documentinvitetext document) actor
+    , update $ SetDocumentTags  did (documenttags document) actor
     ]
 
 data SetDocumentModificationData = SetDocumentModificationData DocumentID MinutesTime

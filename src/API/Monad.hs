@@ -54,6 +54,8 @@ import Doc.Rendering
 import Util.Actor
 import Templates.Templates
 import qualified Log
+import Util.CSVUtil
+import Util.ZipUtil
 
 -- | Respond with a 200 Created status
 data Ok a = Ok a
@@ -119,6 +121,17 @@ instance ToAPIResponse JSValue where
   toAPIResponse jv = let r1 = Web.toResponse $ encode jv in
     setHeader "Content-Type" "text/plain" r1 -- must be text/plain because some browsers complain about JSON type
 
+instance ToAPIResponse CSV where
+  toAPIResponse v = let r1 = Web.toResponse $ v in
+    setHeader "Content-Type" "text/zip" r1
+
+instance ToAPIResponse ZipArchive where
+  toAPIResponse v = let r1 = Web.toResponse $ v in
+    setHeader "Content-Type" "text/csv" r1 
+
+instance (ToAPIResponse a, ToAPIResponse b) => ToAPIResponse (Either a b) where
+  toAPIResponse = either toAPIResponse toAPIResponse
+    
 instance ToAPIResponse a => ToAPIResponse (Ok a) where
   toAPIResponse (Ok a) = (toAPIResponse a) { rsCode = 200 }
     
@@ -225,17 +238,17 @@ instance (Monad m, JSON b) => APIGuard m (Result b) b where
 -- get the user for the api; it can either be 
 --  1. OAuth using Authorization header
 --  2. Session for Ajax client
-getAPIUser :: Kontrakcja m => APIMonad m (User, Actor)
-getAPIUser = do
-  moauthuser <- getOAuthUser
+getAPIUser :: Kontrakcja m => APIPrivilege -> APIMonad m (User, Actor, Bool)
+getAPIUser priv = do
+  moauthuser <- getOAuthUser priv
   Log.debug $ "moauthuser: " ++ show moauthuser
   case moauthuser of
-    Just (user, actor) -> return (user, actor)
+    Just (user, actor) -> return (user, actor, True)
     Nothing -> do
       msessionuser <- getSessionUser
       Log.debug $ "msessionuser: " ++ show msessionuser
       case msessionuser of
-        Just (user, actor) -> return (user, actor)
+        Just (user, actor) -> return (user, actor, False)
         Nothing -> throwError notLoggedIn'
 
 getSessionUser :: Kontrakcja m => APIMonad m (Maybe (User, Actor))
@@ -245,8 +258,8 @@ getSessionUser = do
     Nothing -> return Nothing
     Just user -> return $ Just (user, authorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user))
 
-getOAuthUser :: Kontrakcja m => APIMonad m (Maybe (User, Actor))
-getOAuthUser = do
+getOAuthUser :: Kontrakcja m => APIPrivilege -> APIMonad m (Maybe (User, Actor))
+getOAuthUser priv = do
   Log.debug "getOAuthUser start"
   ctx <- getContext
   eauth <- lift $ getAuthorization
@@ -255,7 +268,7 @@ getOAuthUser = do
     Left _ -> return Nothing
     Right auth -> do
       (userid, apistring) <- apiGuardL (forbidden "OAuth credentials are invalid.") $ 
-                              dbQuery $ GetUserIDForAPIWithPrivilege (oaAPIToken auth) (oaAPISecret auth) (oaAccessToken auth) (oaAccessSecret auth) APIDocCreate
+                              dbQuery $ GetUserIDForAPIWithPrivilege (oaAPIToken auth) (oaAPISecret auth) (oaAccessToken auth) (oaAccessSecret auth) priv
   
       user <- apiGuardL (serverError "The User account for those credentials does not exist.") $ dbQuery $ GetUserByID userid
 

@@ -66,13 +66,36 @@ window.TemplatesListDefinition = function(archive) { return {
                                 width : "130",
                                 text: txt, //
                                 button: jQuery('<a href="#" class="documenticon withUpload"/>').append(jQuery('<div class="documenticonText"/>').append(jQuery("<span class='text'/>").text(txt))),
-                                name : "doc",
+                                name : "file",
                                 submitOnUpload : true,
                                 submit: new Submit({
                                     method : "POST",
-                                    doctype: type,
-                                    url : "/t",
-                                    onSend: function() {LoadingDialog.open();}
+                                    url : "/api/createfromfile",
+                                    ajax: true,
+                                    type: "Template " + type,
+                                    expectedType: 'json',
+                                    onSend: function() {
+                                        LoadingDialog.open();
+                                    },
+                                    ajaxerror: function(d,a){
+                                        if(a === 'parsererror') // file too large
+                                            FlashMessages.add({content: localization.fileTooLarge, color: "red"});
+                                        else
+                                            FlashMessages.add({content: localization.couldNotUpload, color: "red"});
+                                        LoadingDialog.close();
+                                        wiz.trigger('change');
+                                    },
+                                    ajaxsuccess: function(d) {
+                                        if (d != undefined && d.id != undefined) {
+                                            window.location.href = "/d/"+d.id;
+                                        }
+                                        else {
+                                            FlashMessages.add({content: localization.couldNotUpload, color: "red"});
+                                            LoadingDialog.close();
+                                            wiz.trigger('change');
+                                        }
+                                    }
+
                                 })
                             }).input()));
                         }
