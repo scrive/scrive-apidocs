@@ -2452,7 +2452,7 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_attachedDocument","Bilaga $number$",,"Attachment $number$"
 "_documentAttachedBy","Bifogat av $author$",,"Attached by $author$"
 "_customerCases","Kundcase",,"Customer cases"
-"_uploadViewGoBack","Gå tillbaks ett steg",,"Go back one step"
+"_uploadViewGoBack","Gå tillbaka ett steg",,"Go back one step"
 "_archiveCSV","Download CSV",,"Download CSV"
 "_archiveZIP","Download PDF",,"Download PDF"
 "_verificationMethod","Verifiering",,"Verification"
