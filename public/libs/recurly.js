@@ -1542,10 +1542,10 @@ function pullBillingInfoFields($form, billingInfo, options, pull) {
 
 
 function pullPlanQuantity($form, plan, options, pull) {
-  var qty = pull.field($form, '.plan .quantity', V(R.isValidQuantity));
+  var qty = parseInt(pull.field($form, '.plan .quantity', V(R.isValidQuantity)), 10);
   // An empty quantity field indicates 1
 
- var min = $('.plan .quantity').attr('min');
+ var min = parseInt($('.plan .quantity input').attr('min'), 10);
  if(qty && min) {
      if(qty < min)
          qty = min;
@@ -1872,11 +1872,12 @@ R.buildSubscriptionForm = function(options) {
 
     $form.find('.plan .quantity input').bind('change keyup', function() {
         var qty = parseInt($(this).val(), 10);
-        var min = $(this).attr('min');
+        var min = parseInt($(this).attr('min'), 10);
 
         if(qty && min) {
-            if(qty < min)
+            if(qty < min) {
                 qty = min;
+            }
         } else if(min) {
             qty = min
         } else {
@@ -1926,7 +1927,7 @@ R.buildSubscriptionForm = function(options) {
           var $addOn = $(this).closest('.add_on');
           var addOn = $addOn.data('add_on');
             var qty = parseInt($(this).val(), 10);
-            var min = $(this).attr('min');
+            var min = parseInt($(this).attr('min'), 10);
             
             if(qty && min) {
                 if(qty < min)
@@ -1961,7 +1962,7 @@ R.buildSubscriptionForm = function(options) {
             var sa = subscription.redeemAddOn(addOn);
             var $qty = $(this).find('.quantity input');
               var qty = parseInt($qty.val(), 10);
-              var min = $qty.attr('min');
+              var min = parseInt($qty.attr('min'), 10);
               
               if(qty && min) {
                   if(qty < min)

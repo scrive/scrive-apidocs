@@ -536,28 +536,27 @@
                         if(model.signup().quantity() < 3)
                             quantbox.val(3);
 
-                    quantbox.change(function() { 
-                        var qty = parseInt(quantbox.val(), 10);
-                        var min = quantbox.attr('min');
-
-                        if(qty && min) {
-                            if(qty < min)
-                                qty = min;
-                        } else if(min) {
-                            qty = min
-                        } else {
-                            qty = 1;
-                        }
-
-                        quantbox.val(qty);
-                        model.signup().quantity(qty);
-                    });
+                        quantbox.change(function() { 
+                            var qty = parseInt(quantbox.val(), 10);
+                            var min = quantbox.attr('min');
+                            
+                            if(qty && min) {
+                                if(qty < min)
+                                    qty = min;
+                            } else if(min) {
+                                qty = min
+                            } else {
+                                qty = 1;
+                            }
+                            
+                            quantbox.val(qty);
+                            model.signup().quantity(qty);
+                        });
                         quantbox.change();
                     }  else {
                         quantbox.after($('<span class="quantity" />').text("1"));
                         quantbox.hide();
                     }
-
 
 
                     form.find('.quantity .label').text(localization.payments.nousers + ": ");

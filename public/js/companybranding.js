@@ -462,12 +462,12 @@ window.CompanyBrandingView = Backbone.View.extend({
               blocking.show(BlockingInfo.blockBrandingMessage());
               return false;
           }
-        new Submit({
-          method: "POST",
-          url: company.submitUrl,
-          company: JSON.stringify(company),
-          islogo: company.logo().customised()
-        }).send();
+          new Submit({
+              method: "POST",
+              url: company.submitUrl,
+              company: JSON.stringify(company),
+              islogo: company.logo().customised()
+          }).send();
       }
     }).input();
   },
