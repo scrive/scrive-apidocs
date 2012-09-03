@@ -4,7 +4,7 @@
 
 
 window.Scrive =  {
-                serverUrl : function() {return "http://localhost:8000";}
+                serverUrl : function() {return "http://" + window.location.host;}
 };
 
 
