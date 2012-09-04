@@ -180,8 +180,10 @@ var OAuthView = Backbone.View.extend({
         TCRSection : function() {
             var model = this.model;
             var box = $("<div class='section'>");
-            box.append("<div class='header'>Step 1. Inform us that you want to gain some permissions (Temporary Credential Request)</div>");
-            
+            box.append("<div class='header'>Step 1. Inform us that you want to gain some permissions (Temporary Credential Request)"+
+                        "<BR/> <small><small> Token can be generated in <a href='http://"+window.location.host+"/oauth/dashboard'>http://"+window.location.host+
+                        "/oauth/dashboard</a> </small></small></div>");
+
             var consumer_key_input = $("<input type='text'>").val(model.consumer_key());
             box.append($("<div><div class='label'>Consumer key: </div></div>").append(consumer_key_input))
             consumer_key_input.change(function() {model.set_consumer_key(consumer_key_input.val()); return false;})

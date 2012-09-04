@@ -452,7 +452,7 @@ instance (MonadDB m, CryptoRNG m) => DBUpdate m CreatePersonalToken Bool where
         -- need to add all privileges here
         kPrepare (  "INSERT INTO oauth_privilege "
                  ++ "(access_token_id, privilege) "
-                 ++ "VALUES (?,?), (?,?) ")
+                 ++ "VALUES (?,?) ")
         r <- kExecute [toSql accessid, toSql APIPersonal]
         return $ r > 0
 

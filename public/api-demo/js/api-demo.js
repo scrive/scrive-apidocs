@@ -45,7 +45,8 @@ var ApiDemoView = Backbone.View.extend({
             var update = $("<option value='u'>Update</option>");
             var ready = $("<option value='g'>Ready</option>");
             var check = $("<option value='c'>Get</option>");
-            select.append(none).append(createFromFile).append(createFromTemplate).append(update).append(ready).append(check);
+            var list  = $("<option value='l'>List</option>");
+            select.append(none).append(createFromFile).append(createFromTemplate).append(update).append(ready).append(check).append(list);
             if (model.selectedApiCall() != undefined) {
                 if (model.selectedApiCall().isCreateFromFile())
                     createFromFile.attr("selected", "true");
@@ -57,6 +58,8 @@ var ApiDemoView = Backbone.View.extend({
                     ready.attr("selected", "true");
                 else if (model.selectedApiCall().isGet())
                     check.attr("selected", "true");
+                else if (model.selectedApiCall().isList())
+                    list.attr("selected", "true");
                 else
                     none.attr("selected", "true");
             }
@@ -72,6 +75,8 @@ var ApiDemoView = Backbone.View.extend({
                     model.setSelectedApiCall(new ReadyApiCall({oauth : oauth}));
                 else if (select.val() == "c")
                     model.setSelectedApiCall(new GetApiCall({oauth : oauth}));
+                else if (select.val() == "l")
+                    model.setSelectedApiCall(new ListApiCall({oauth : oauth}));
                 else
                     model.setSelectedApiCall(undefined);
                 return false;

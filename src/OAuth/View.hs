@@ -48,7 +48,7 @@ showAPIDashboard user = do
 privilegeDescription :: TemplatesMonad m => APIPrivilege -> m String
 privilegeDescription APIDocCreate = return "Create a document on your behalf."
 privilegeDescription APIDocCheck  = return "Read your documents."
-privilegeDescription APIDocSend   = return "Send documents in your name."
+privilegeDescription APIDocSend   = return "Send a document on your behalf."
 privilegeDescription APIPersonal  = return "This is a personal access token."
 
 jsonFromPersonalToken :: (APIToken, MagicHash, APIToken, MagicHash) -> JSValue

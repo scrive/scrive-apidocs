@@ -411,6 +411,7 @@
                 this.table.detach();
 
             if (this.model.length > 0 || this.emptyAlternative == undefined) {
+                if (this.emptyAlternative != undefined) this.emptyAlternative.detach();
                 this.table = $("<table />");
                 this.theader = this.renderheader();
                 this.tbody = $("<tbody />");

@@ -2400,7 +2400,16 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_importantSecurityInformation","Important Security Information",,"Important Security Information"
 "_isRequestingPermissions","<em>$companyname$</em> is requesting permission to perform the following operations on your behalf. Please review them carefully and either confirm or deny them.",,"<em>$companyname$</em> is requesting permission to perform the following operations on your behalf. Please review them carefully and either confirm or deny them."
 "_documentCreation","Document Creation",,"Document Creation"
-"_createDocumentsMessage","If confirmed, <em>$companyname$</em> will be able to create documents for you. These documents would not be sent to anyone. They will show up in your archive.",,"If confirmed, <em>$companyname$</em> will be able to create documents for you. These documents would not be sent to anyone. They will show up in your archive."
+"_createDocumentsMessage","If confirmed, <em>$companyname$</em> will be able to create documents for you.
+ Such documents will show up in your archive.",,"If confirmed, <em>$companyname$</em> will be able to create documents for you.
+ Such documents will show up in your archive."
+"_documentCheck","Document Access",,"Document Access"
+"_checkDocumentsMessage","If confirmed, <em>$companyname$</em> will be able to read your documents. This affects all documents that you can access throught Scrive.",,"
+If confirmed, <em>$companyname$</em> will be able to read your documents. This affects all documents that you can access throught Scrive."
+"_documentSend","Document Sending",,"Document Sending"
+"_sendDocumentsMessage","If confirmed, <em>$companyname$</em> will be able to send documents for you.
+ Such documents will show up in your archive.",,"If confirmed, <em>$companyname$</em> will be able to send documents for you.
+ Such documents will show up in your archive."
 "_logInAndConfirm","Log in and Confirm",,"Log in and Confirm"
 "_logInAndConfirmPrivileges","Log in and confirm privileges",,"Log in and confirm privileges"
 "_denyPrivileges","Deny the privileges",,"Deny the privileges"

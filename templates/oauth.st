@@ -12,6 +12,18 @@ pagePrivilegesConfirm=
     $_createDocumentsMessage()$
   </p>
   $endif$
+  $if(isDocumentSend)$
+  <h3>$_documentSend()$</h3>
+  <p>
+    $_sendDocumentsMessage()$
+  </p>
+  $endif$
+  $if(isDocumentCheck)$
+  <h3>$_documentCheck()$</h3>
+  <p>
+    $_checkDocumentsMessage()$
+  </p>
+  $endif$
   </div>
   <div class="buttons">
     <div class="floatright" style="margin-left: 34px">
@@ -120,9 +132,9 @@ var personalTokensTable = KontraList().init({
     name : "Personal Access Token",
     headerExtras: jQuery("<div class='middle'>").append(jQuery("<p>").append("$_userPersonalAccessToken()$")),
     emptyAlternative: 
-      jQuery("<div >").append(jQuery("<div class='middle'>").append(jQuery("<p>").append("$_userPersonalAccessToken()$")))
-                      .append(jQuery("<div class='middle'>").append(Button.init({
-                      size: "small",
+      jQuery("<div style='height:28px;padding:2px;'>").append(jQuery("<div class='float-left'>").append(jQuery("<p>").append("$_userPersonalAccessToken()$")))
+                      .append(jQuery("<div class='float-right'>").append(Button.init({
+                      size: "tiny",
                       color: "green",
                       text: "Create Personal Token",
                       onClick: function() {
@@ -144,7 +156,7 @@ var personalTokensTable = KontraList().init({
         new Cell({name: "",              width:"70px",  field:"accesssecret", special: "rendered",
                  rendering: function(status,idx,listobject) {
                     var button = Button.init({
-                      size: "small",
+                      size: "tiny",
                       color: "red",
                       text: "Delete",
                       onClick: function() {
@@ -177,7 +189,7 @@ var grantedPrivilegesTable = KontraList().init({
                  rendering: function(priv,idx,listobject) {
                     if(priv === "") {
                       return Button.init({
-                        size: "small",
+                        size: "tiny",
                         color: "red",
                         text: "Delete All",
                         onClick: function() {
@@ -192,7 +204,7 @@ var grantedPrivilegesTable = KontraList().init({
                       }).input();
                     } else {
                       return Button.init({
-                        size: "small",
+                        size: "tiny",
                         color: "red",
                         text: "Delete",
                         onClick: function() {
@@ -218,7 +230,7 @@ var apiTokensTable = KontraList().init({
     name : "Granted Privileges",
     headerExtras: jQuery("<div />").append(jQuery("<div class='middle'>").append(jQuery("<p>").append("$_apiTokensMessage()$")))
                                    .append(jQuery("<div class='middle'>").append(Button.init({
-                      size: "small",
+                      size: "tiny",
                       color: "green",
                       text: "Create API Token",
                       onClick: function() {
@@ -238,7 +250,7 @@ var apiTokensTable = KontraList().init({
         new Cell({name: "",           width:"70px",  field:"apitoken", special: "rendered",
                  rendering: function(apitoken,idx,listobject) {
                     return Button.init({
-                      size: "small",
+                      size: "tiny",
                       color: "red",
                       text: "Delete",
                       onClick: function() {
@@ -274,16 +286,18 @@ jQuery(function(){
   </ul>
   <div class="tab-container">
     <div class="tab-content account">
-
-      <h2 class="first">Granted Privileges</h2>
-      <div id="jsgrantedprivileges"> </div>
-
-      <h2>Personal Access Token</h2>
-      <div id="jspersonaltoken"> </div>
-
-      <h2>API Tokens</h2>
-      <div id="jsapitokens"> </div>
-
+      <div class='oauth-section'>
+        <h2 class="first">Granted Privileges</h2>
+        <div id="jsgrantedprivileges"> </div>
+      </div>
+      <div class='oauth-section'>
+        <h2>Personal Access Token</h2>
+        <div id="jspersonaltoken"> </div>
+      </div>
+      <div class='oauth-section'>
+        <h2>API Tokens</h2>
+        <div id="jsapitokens"> </div>
+      </div>
     </div>
   </div>
 </div>

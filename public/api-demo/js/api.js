@@ -15,6 +15,7 @@ var ApiCall = Backbone.Model.extend({
         isUpdate : function() {return false;},
         isReady : function() {return false;},
         isGet : function() {return false;},
+        isList : function() {return false;},                            
         name : function() {return this.get("name");},
         oauth : function() {return this.get("oauth");},
         authorization: function() { return this.oauth().authorizationForRequests();  },
@@ -192,6 +193,36 @@ window.GetApiCall = ApiCall.extend({
         }    
 });
 
+window.ListApiCall = ApiCall.extend({
+        defaults: {
+             name : "List API call",
+             tags : "[]"
+        },
+        tags : function() {return this.get("tags");},
+        setTags : function(tags) {
+            LocalStorage.set("api","tags",tags);
+            this.set({"tags" : tags});
+        },
+        initialize: function (args) {
+        },
+        isList : function() {return true;},
+        send : function() {
+            var model = this;
+            $.ajax(Scrive.serverUrl()+"/api/list", {
+                type: 'GET',
+                cache: false,
+                data : { tags : model.tags() },
+                headers : { authorization : model.authorization() },
+                success : function(res) {
+                    model.setResult(niceJSONText(JSON.parse(res),""));
+                },
+                error : function(res) {
+                    model.setResult(niceJSONText(res.responseText,""));
+                }
+            });
+        }
+});
+
 window.ApiCallView = function(args) {
         if (args.model.isCreateFromFile())
            return new CreateFromFileApiCallView(args);
@@ -203,6 +234,8 @@ window.ApiCallView = function(args) {
            return new ReadyApiCallView(args);
         else if (args.model.isGet())
            return new GetApiCallView(args);
+        else if (args.model.isList())
+           return new ListApiCallView(args);
 }
 
 
@@ -316,6 +349,29 @@ var GetApiCallView = Backbone.View.extend({
             var button = $("<input type='button' value='Send request'/>");
             button.click(function() {model.send(); return false;});
             boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput)).append($("<div/>").append(button));
+            if (model.result() != undefined)
+                boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+        }
+});
+
+var ListApiCallView = Backbone.View.extend({
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            this.model.bind('change', this.render);
+            this.render();
+        },
+        render : function() {
+            var model = this.model;
+            var box = $(this.el);
+            box.children().detach();
+            var boxLeft  = $("<div class='left-box'>");
+            var boxRight = $("<div class='right-box'>");
+            box.append(boxRight).append(boxLeft);
+            var tagsInput = $("<input type='text'/>").val(model.tags());
+            tagsInput.change(function() {model.setTags(tagsInput.val()); return false;})
+            var button = $("<input type='button' value='Send request'/>");
+            button.click(function() {model.send(); return false;});
+            boxLeft.append($("<div>Tags: <BR/></div>").append(tagsInput)).append($("<div/>").append(button));
             if (model.result() != undefined)
                 boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
         }
