@@ -43,6 +43,10 @@ padQueueState = do
          Just user -> do
              pq <- dbQuery $ GetPadQueue (userid user)
              msdata <- padQueueToSignatoryData pq
+             case msdata of
+               Just (_,siglink) -> do
+                 addMagicHashToContext (signatorylinkid siglink) (signatorymagichash siglink)
+               Nothing -> return ()
              padQueueStateJSON (isJust $ ctxmaybeuser ctx)  msdata
 
 -- PadQueue ACTIONS

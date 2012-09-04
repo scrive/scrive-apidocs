@@ -15,7 +15,6 @@ padQueueStateJSON :: Monad m => Bool -> Maybe (Document, SignatoryLink) -> m JSV
 padQueueStateJSON systemlogged mds = JSON.runJSONGenT $ do
   JSON.value "documentid" $ show <$> documentid <$> fst <$> mds
   JSON.value "signatorylinkid" $ show <$> signatorylinkid <$> snd <$> mds
-  JSON.value "magichash" $ show  <$> signatorymagichash <$> snd <$> mds
   JSON.value "logged" $ "system" <| systemlogged |> "pad"
 
 padQueueStateJSONNotLoggedIn :: Monad m => m JSValue
