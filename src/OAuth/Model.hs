@@ -320,14 +320,15 @@ instance MonadDB m => DBQuery m GetUserIDForAPIWithPrivilege (Maybe (UserID, Str
              ++ "JOIN oauth_api_token t      ON a.api_token_id    = t.id "
              ++ "JOIN users u                ON t.user_id         = u.id "
              ++ "LEFT OUTER JOIN companies c ON u.company_id      = c.id " -- 0..1 relationship
-             ++ "WHERE t.id = ? AND t.api_token = ? AND t.api_secret = ? AND a.id = ? AND a.access_token = ? AND a.access_secret = ? AND p.privilege = ? ")
+             ++ "WHERE t.id = ? AND t.api_token = ? AND t.api_secret = ? AND a.id = ? AND a.access_token = ? AND a.access_secret = ? AND (p.privilege = ? OR p.privilege = ?)")
     _ <- kExecute [ toSql $ atID token
                   , toSql $ atToken token
                   , toSql secret
                   , toSql $ atID atoken
                   , toSql $ atToken atoken
                   , toSql asecret
-                  , toSql priv ]
+                  , toSql priv
+                  , toSql APIPersonal]
     mr <- foldDB f []
     oneObjectReturnedGuard mr
       where f acc uid _ _ _ _ (Just s) = (uid, s):acc               -- company name from company table
@@ -452,8 +453,7 @@ instance (MonadDB m, CryptoRNG m) => DBUpdate m CreatePersonalToken Bool where
         kPrepare (  "INSERT INTO oauth_privilege "
                  ++ "(access_token_id, privilege) "
                  ++ "VALUES (?,?), (?,?) ")
-        r <- kExecute [toSql accessid, toSql APIPersonal,
-                       toSql accessid, toSql APIDocCreate]
+        r <- kExecute [toSql accessid, toSql APIPersonal]
         return $ r > 0
 
 {- |
