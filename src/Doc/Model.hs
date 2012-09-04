@@ -1394,6 +1394,7 @@ instance MonadDB m => DBQuery m GetDocumentsByService [Document] where
 --
 data GetDocuments = GetDocuments [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] DocumentPagination
 instance MonadDB m => DBQuery m GetDocuments [Document] where
+  query (GetDocuments [] _filters _orderbys _pagination)   = return []
   query (GetDocuments domains filters orderbys pagination) = do
     selectDocuments $ mconcat
       [ selectDocumentsSQL

@@ -281,7 +281,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
 
 window.SignatureDrawerPopup = {
     popup : function(args){
-        if ($.browser.msie && $.browser.version <= 9)
+        if ($.browser.msie && $.browser.version < 9)
         {
             alert('Drawing signature is not avaible for older versions of Internet Explorer. Please update your browser.');
             return;
