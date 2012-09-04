@@ -78,11 +78,11 @@ handleDelete = do
               guardTrueM $ dbUpdate $ ArchiveDocument user did actor
               doc' <- guardRightM' $ getDocByDocID $ did
               _ <- addSignStatDeleteEvent doc' (fromJust msl) ctxtime
-              case (documentstatus doc) of
+              case (documentstatus doc') of
                    Preparation -> do
                        _ <- dbUpdate $ ReallyDeleteDocument user did actor
-                       when_ (isJust $ getSigLinkFor doc user) $ 
-                            addSignStatPurgeEvent doc (fromJust $ getSigLinkFor doc user)  ctxtime
+                       when_ (isJust $ getSigLinkFor doc' user) $ 
+                            addSignStatPurgeEvent doc' (fromJust $ getSigLinkFor doc' user)  ctxtime
                    _ -> return ()         
     J.runJSONGenT $ return ()
             

@@ -299,7 +299,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what's wrong. Your document is created and ready to be sent. To see your document and send it yourself, <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
 
     internalError
-
+  _ <- dbUpdate $ SetDocumentInviteTime (documentid doc) ctxtime actor
   -- if previous step succeeded, document must be in the database
   Just enddoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
@@ -355,7 +355,6 @@ markDocumentAuthorReadAndSeen doc@Document{documentid} = do
        (mailAPIActor time (fromJust maybesignatory) (getEmail sl))
   return ()
 -}
-
 parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.Type, BS.ByteString)])
 parseEmailMessageToParts content = (mime, parts mime)
   where
@@ -558,7 +557,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
   when (not is_pending) $ do
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what's wrong. Your document is created and ready to be sent. To see your document and send it yourself, <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     internalError
-
+  _ <- dbUpdate $ SetDocumentInviteTime (documentid doc) ctxtime actor
   -- if previous step succeeded, document must be in the database
   Just enddoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   _ <- addDocumentCreateStatEvents enddoc "mailapi+json"
