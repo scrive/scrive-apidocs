@@ -7,15 +7,11 @@
         defaults: {
             status: "outstanding",
             message: localization.startingSaveSigning,
-            magichash: "",
             fetching: false,
             callback: function() {},
             remaining: [10, // wait 10s before first poll
                         3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3, // then we can poll 20 times with 3s intervals
                         10,10,10,10,10,10,10,10,10] // then we finish with 10s intervals; docs say we get Fault before the end
-        },
-        magichash: function() {
-            return this.get("magichash");
         },
         status: function(s) {
             if(s) {
@@ -65,8 +61,7 @@
                         $.ajax(polling.collectUrl(),
                                {
                                    "data" : {
-                                       "transactionid" : polling.trid(),
-                                       "magichash" : polling.magichash()
+                                       "transactionid" : polling.trid()
                                    },
                                    "dataType": "json",
                                    "success": function(d) {

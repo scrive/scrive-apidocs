@@ -16,8 +16,7 @@ window.File = Backbone.Model.extend({
     queryPart: function () {
       var params = { documentid: this.documentid(),
                      attachmentid: this.attachmentid(),
-                     signatorylinkid: this.signatoryid(),
-                     magichash: this.magichash()
+                     signatorylinkid: this.signatoryid()
                    };
       /* This construct removes undefined values from params */
       params = _.defaults({}, params);
@@ -75,11 +74,6 @@ window.File = Backbone.Model.extend({
         return this.document().viewer().signatoryid();
       return this.get("signatoryid");
     },
-    magichash : function(){
-      if (this.document() != undefined && this.document().viewer().magichash() != undefined)
-        return this.document().viewer().magichash();
-      return this.get("magichash");
-    },
     name : function(){
         return this.get("name");
     },
@@ -98,8 +92,7 @@ window.File = Backbone.Model.extend({
         else if (response.wait != undefined)
         {
           _.delay(_.bind(this.fetch, this), 2000,
-                  {data: { signatoryid: this.signatoryid(),
-                           magichash: this.magichash()},
+                  {data: { signatoryid: this.signatoryid()},
                    processData:  true,
                    cache : false});
         }
@@ -299,8 +292,7 @@ var FileView = Backbone.View.extend({
         this.model.bind('change', this.render);
         this.model.view = this;
         this.pageviews = [];
-        this.model.fetch({data: { signatoryid: this.model.signatoryid(),
-                                  magichash: this.model.magichash()},
+        this.model.fetch({data: { signatoryid: this.model.signatoryid()},
                           processData:  true,
                           cache : false});
         this.render();
@@ -374,8 +366,7 @@ window.KontraFile = {
                 name: args.name,
                 documentid: args.documentid,
                 attachmentid: args.attachmentid,
-                signatoryid: args.signatoryid,
-                magichash: args.magichash
+                signatoryid: args.signatoryid
             });
         }
         this.view = new FileView({

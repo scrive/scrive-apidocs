@@ -381,7 +381,6 @@ window.Eleg = {
             'url': url,
             'dataType': 'json',
             'data': { 'provider' : 'bankid', 
-                      'magichash' : document.viewer().magichash(),
                       'tbs' : tbs
                     }, 
             'scriptCharset': "utf-8",
@@ -449,7 +448,6 @@ window.Eleg = {
             'url': url,
             'dataType': 'json',
             'data': {  'provider' : 'nordea' ,
-                       'magichash' : document.viewer().magichash(),
                        'tbs' : tbs
                     }, 
       
@@ -521,7 +519,6 @@ window.Eleg = {
             'url': url,
             'dataType': 'json',
             'data': { 'provider' : 'telia', 
-                      'magichash' : document.viewer().magichash(),
                       'tbs' : tbs
                     }, 
             'scriptCharset': "utf-8",
@@ -591,7 +588,6 @@ window.Eleg = {
             'url': url,
             'dataType': 'json',
             'data': { 
-                'magichash' : document.viewer().magichash()
             }, 
             'type': 'POST',
             'scriptCharset': "utf-8",
@@ -606,7 +602,6 @@ window.Eleg = {
                 }
                 var m = new MobileBankIDPolling({docid: document.documentid()
                                                  , collecturl:url
-                                                 ,magichash: document.viewer().magichash()
                                                  ,trid: data.transactionid
                                                  ,slid: document.viewer().signatoryid()
                                                  ,callback: function() {

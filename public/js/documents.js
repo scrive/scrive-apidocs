@@ -1,5 +1,5 @@
 /* Document model
- * Also document viewer (person thet is looking at document so we can hold current signatory magic hash somewere)
+ * Also document viewer (person thet is looking at document so we can hold current signatory link id somewere)
  */
 
 
@@ -12,19 +12,15 @@ window.DocumentViewer = Backbone.Model.extend({
     signatoryid: function() {
       return this.get("signatoryid");
     },
-    magichash: function() {
-      return this.get("magichash");
-    },
     urlPart: function() {
-        if (this.signatoryid() != undefined && this.magichash() != undefined)
-            return "?signatorylinkid=" + this.signatoryid() + "&magichash=" + this.magichash();
+        if (this.signatoryid() != undefined)
+          return "?signatorylinkid=" + this.signatoryid();
         else return "";
     },
 
     forFetch: function() {
         return {
-            signatoryid: this.signatoryid(),
-            magichash: this.magichash()
+            signatoryid: this.signatoryid()
         };
     }
 });
@@ -194,7 +190,6 @@ window.Document = Backbone.Model.extend({
               sign : "YES",
               url : "/s/" + this.documentid() + "/" + this.viewer().signatoryid(),
               method: "POST",
-              magichash: this.viewer().magichash(),
               fields: JSON.stringify(fields)
           });
     },
@@ -458,8 +453,8 @@ window.Document = Backbone.Model.extend({
      },1000);
       var dataForFile = 
         { documentid: self.documentid(),
-          signatoryid: self.viewer().signatoryid(),
-          magichash: self.viewer().magichash() };
+          signatoryid: self.viewer().signatoryid()
+        };
 
      /**this way of doing it is safe for IE7 which doesnt
       * naturally parse stuff like 2012-03-29 so new Date(datestr)

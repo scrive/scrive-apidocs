@@ -35,11 +35,8 @@ window.PadQueue = Backbone.Model.extend({
     signatorylinkid : function() {
         return this.get("signatorylinkid");
     },
-    magichash : function() {
-        return this.get("magichash");
-    },
     hasDocument : function() {
-        return this.documentid() != undefined && this.signatorylinkid() != undefined && this.magichash() != undefined;
+        return this.documentid() != undefined && this.signatorylinkid() != undefined;
     },
     logged : function() {
         return this.loggedToSystem() || this.loggedToPad();
@@ -60,7 +57,6 @@ window.PadQueue = Backbone.Model.extend({
      return {
       documentid : args.documentid,
       signatorylinkid: args.signatorylinkid,
-      magichash : args.magichash,
       logged : args.logged,
       needFullRefresh : this.documentid() != undefined &&
                         ((this.signatorylinkid() != args.signatorylinkid) || (this.documentid() != args.documentid)),
@@ -83,8 +79,7 @@ window.PadQueueView = Backbone.View.extend({
         var doc =  new DocumentSignView({
                     id: padqueue.documentid(),
                     viewer : new DocumentViewer({
-                        signatoryid : padqueue.signatorylinkid(),
-                        magichash : padqueue.magichash()
+                        signatoryid : padqueue.signatorylinkid()
                       })
                    });
         $('body').prepend(new DocumentSignViewHeader({model : doc.model, mainview : doc.view}).el);
