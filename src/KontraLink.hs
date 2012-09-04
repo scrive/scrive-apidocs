@@ -60,11 +60,9 @@ data KontraLink
     | LinkUserMailAPI
     | LinkSignDoc Document SignatoryLink
     | LinkSignDocNoMagicHash DocumentID SignatoryLinkID
-    | LinkAccountFromSign Document SignatoryLink
     | LinkIssueDoc DocumentID
     | LinkDesignDoc DocumentID
     | LinkRenameAttachment AttachmentID
-    | LinkIssueDocPDF (Maybe SignatoryLink) Document {- Which file? -}
     | LinkCompanyAccounts ListParams
     | LinkCompanyTakeover CompanyID
     | LinkRemind Document SignatoryLink
@@ -89,8 +87,6 @@ data KontraLink
     | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
     | LinkConnectUserSession ServiceID UserID SessionID KontraLink
     | LinkConnectCompanySession ServiceID CompanyID SessionID KontraLink
-    | LinkAttachmentForAuthor DocumentID FileID
-    | LinkAttachmentForViewer DocumentID SignatoryLinkID MagicHash FileID
     | LinkAttachmentView AttachmentID
     | LinkServiceLogo ServiceID
     | LinkServiceButtonsBody ServiceID
@@ -171,10 +167,6 @@ instance Show KontraLink where
         (++) $ "/d/" ++ show documentid
     showsPrec _ (LinkDesignDoc did) =  (++) $ "/" ++ show did
     showsPrec _ (LinkRenameAttachment documentid) = (++) $ "/a/rename/" ++ show documentid
-    showsPrec _ (LinkIssueDocPDF Nothing document) =
-        (++) $ "/d/" ++ show (documentid document) ++ "/" ++ documenttitle document ++ ".pdf"
-    showsPrec _ (LinkIssueDocPDF (Just SignatoryLink{signatorylinkid, signatorymagichash}) document) =
-        (++) $ "/d/" ++ show (documentid document) ++ "/" ++ show signatorylinkid ++ "/" ++ show signatorymagichash ++ "/" ++ documenttitle document ++ ".pdf"
     showsPrec _ (LinkFile fileid filename) =
         (++) $ "/df/" ++ show fileid ++ "/" ++ filename
     showsPrec _ (LinkSignDoc document signatorylink) =
@@ -182,9 +174,6 @@ instance Show KontraLink where
                  "/"++ show (signatorymagichash signatorylink)
     showsPrec _ (LinkSignDocNoMagicHash documentid signatorylinkid) =
         (++) $ "/s/" ++ show documentid ++ "/" ++ show signatorylinkid
-    showsPrec _ (LinkAccountFromSign document signatorylink) =
-        (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
-                 "/" ++ show (signatorymagichash signatorylink)
     showsPrec _ (LinkRemind document signlink) = (++) $ "/resend/"++(show $ documentid document)++"/"++(show $ signatorylinkid signlink)
     showsPrec _ (LinkCancel document) = (++) $ "/cancel/"++(show $ documentid document)
     showsPrec _ (LinkRestart documentid) = (++) $ "/restart/"++(show  documentid)
@@ -209,8 +198,6 @@ instance Show KontraLink where
                                                                         ++ "?referer=" ++ (URL.encode $ UTF.encode  $ show referer)
     showsPrec _ (LinkConnectCompanySession sid cid ssid referer) = (++) $ "/integration/connectcompany/" ++ encodeForURL sid ++ "/" ++ show cid  ++ "/" ++ show ssid
                                                                         ++ "?referer=" ++ (URL.encode $ UTF.encode  $ show referer)
-    showsPrec _ (LinkAttachmentForAuthor did fid) = (++) $ "/download/" ++ show did ++ "/" ++ show fid ++ "/" ++ "file.pdf"
-    showsPrec _ (LinkAttachmentForViewer did sid mh fid) = (++) $ "/download/" ++ show did ++ "/" ++ show fid ++ "/file.pdf?signatorylinkid=" ++ show sid ++ "&magichash=" ++ show mh
     showsPrec _ (LinkServiceLogo sid) = (++) $ "/services/logo/" ++ encodeForURL sid
     showsPrec _ (LinkServiceButtonsBody sid) = (++) $ "/services/buttons_body/" ++ encodeForURL sid
     showsPrec _ (LinkServiceButtonsRest sid) = (++) $ "/services/buttons_rest/" ++ encodeForURL sid
