@@ -3184,7 +3184,20 @@ a#attachmentback {
 
 .usagestats #jsdaytable .tab-container, .usagestats #jsmonthtable .tab-container, .usagestats .tab-table {
     -moz-border-radius: 5px 5px 5px 5px;
-	-webkit-border-radius: 5px 5px 5px 5px;
+    -webkit-border-radius: 5px 5px 5px 5px;
+    border-radius: 5px 5px 5px 5px;
+}
+
+.usagestats div.tab-container {
+    border-top: 1px solid;
+}
+
+.usagestats .tab-table {
+    border-top: 0;
+}
+
+.usagestats .option-top-box {
+    display: none;
 }
 
 .usagestats #jsdaytable, .usagestats #jsmonthtable {
