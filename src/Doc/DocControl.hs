@@ -118,10 +118,10 @@ import System.Directory
 
     Handles an account setup from within the sign view.
 -}
-handleAcceptAccountFromSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
+handleAcceptAccountFromSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleAcceptAccountFromSign documentid
-                            signatorylinkid
-                            magichash = do
+                            signatorylinkid = do
+  magichash <- guardJustM $ getMagicHashFromContext signatorylinkid
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
   when (document `allowsDeliveryMethod` PadDelivery) internalError
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
@@ -142,7 +142,7 @@ signDocument :: Kontrakcja m
              -> m KontraLink
 signDocument documentid
              signatorylinkid = do
-  magichash <- guardJustM $ readField "magichash"
+  magichash <- guardJustM $ getMagicHashFromContext signatorylinkid
   fieldsJSON <- guardRightM $ liftM (runGetJSON readJSArray) $ getField' "fields"
   fields <- guardJustM $ withJSValue fieldsJSON $ fromJSValueCustomMany $ do
       ft <- fromJSValueM
@@ -221,11 +221,11 @@ rejectDocumentIphoneCase did sid _ = rejectDocument did sid
 
 {- |
    Control rejecting the document
-   URL: /s/{docid}/{signatorylinkid1}/{magichash1}
+   URL: /s/{docid}/{signatorylinkid1}
  -}
 rejectDocument :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 rejectDocument documentid siglinkid = do
-  magichash <- guardJustM $ readField "magichash"
+  magichash <- guardJustM $ getMagicHashFromContext siglinkid
   customtext <- getCustomTextField "customtext"
 
   edocs <- rejectDocumentWithChecks documentid siglinkid magichash customtext
@@ -243,10 +243,26 @@ rejectDocument documentid siglinkid = do
       addFlashM $ modalRejectedView document
       return $ LoopBack
 
-{- |
-   Show the document to be signed
- -}
-
+-- |
+-- Show the document to be signed.
+--
+-- We put links of the form:
+--
+--   /s/[documentid]/[signatorylinkid]/[magichash]
+--
+-- in emails. The magichash should be stored in session, redirect
+-- should happen immediatelly, every following action should use
+-- magichash stored.
+--
+-- Note: JavaScript should never be allowed to see magichash in any
+-- form. Therefore we do immediate redirect without any content.
+--
+-- Warning: iPhones have this problem: they randomly disable cookies
+-- in Safari so cookies cannot be stored. This breaks all session
+-- related machinery. Everybody is suffering from this. For now we
+-- handle this as special case, but this is not secure and should just
+-- be removed. To iPhone users with disabled cookies: tell them to
+-- call Apple service and enable cookies (again) on their phone.
 handleSignShowOldRedirectToNew :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m (Either KontraLink Response)
 handleSignShowOldRedirectToNew did sid mh = do
   addMagicHashToContext sid mh
@@ -270,13 +286,7 @@ handleSignShow2 documentid
                 signatorylinkid = do
   Context { ctxtime
           , ctxipnumber } <- getContext
-  mmagichash <- getMagicHashFromContext signatorylinkid
-
-  magichash <- case mmagichash of
-                 Just x -> return x
-                 Nothing -> do
-                   Log.debug $ "magichash for " ++ show documentid ++ "/" ++ show signatorylinkid ++ " not found"
-                   internalError
+  magichash <- guardJustM $ getMagicHashFromContext signatorylinkid
 
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
   invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
@@ -795,9 +805,13 @@ checkFileAccess fid = do
   -- hers account but we still refer using signatorylinkid.
 
   msid <- readField "signatorylinkid"
-  mmh <- readField "magichash"
   mdid <- readField "documentid"
   mattid <- readField "attachmentid"
+
+  -- If refering to something by SignatoryLinkID check out if in the
+  -- session we have a properly stored access magic hash.
+  mmh <- maybe (return Nothing) getMagicHashFromContext msid
+
   case (msid, mmh, mdid, mattid) of
     (Just sid, Just mh, Just did,_) -> do
        doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
@@ -856,7 +870,9 @@ handleDownloadFile fid _nameForBrowser = do
 handleDownloadMainFile :: Kontrakcja m => DocumentID -> String -> m Response
 handleDownloadMainFile did _nameForBrowser = do
   msid <- readField "signatorylinkid"
-  mmh <- readField "magichash"
+
+  mmh <- maybe (return Nothing) getMagicHashFromContext msid
+
   doc <- case (msid, mmh) of
            (Just sid, Just mh) -> guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
            _ ->                   guardRightM $ getDocByDocID did
@@ -881,7 +897,7 @@ handleDownloadMainFile did _nameForBrowser = do
 
 handleDeleteSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m KontraLink
 handleDeleteSigAttach docid siglinkid = do
-  mh <- guardJustM $ readField "magichash"
+  mh <- guardJustM $ getMagicHashFromContext siglinkid
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
   siglink <- guardJust $ getSigLinkFor doc siglinkid
   fid <- read <$> getCriticalField asValidID "deletesigattachment"
@@ -894,7 +910,7 @@ handleDeleteSigAttach docid siglinkid = do
 
 handleSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleSigAttach docid siglinkid = do
-  mh <- guardJustM $ readField "magichash"
+  mh <- guardJustM $ getMagicHashFromContext siglinkid
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
   siglink <- guardJust $ getSigLinkFor doc siglinkid
   attachname <- getCriticalField asValidFieldValue "attachname"
@@ -937,8 +953,8 @@ jsonDocument did = do
 jsonDocumentGetterWithPermissionCheck ::   Kontrakcja m => DocumentID -> m (Maybe Document, Maybe SignatoryLink)
 jsonDocumentGetterWithPermissionCheck did = do
     ctx <- getContext
-    mmagichashh <- readField "magichash"
     msignatorylink <- readField "signatoryid"
+    mmagichashh <- maybe (return Nothing) getMagicHashFromContext msignatorylink
     case (msignatorylink,mmagichashh) of
         (Just slid,Just mh) -> do
                    mdoc <- dbQuery $ GetDocumentByDocumentID did
