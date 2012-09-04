@@ -178,7 +178,7 @@ instance FromReqURI MetadataResource where
 getSigLinkID :: Kontrakcja m => APIMonad m (SignatoryLinkID, MagicHash)
 getSigLinkID = do
   msignatorylink <- lift $ readField "signatorylinkid"
-  mmagichash <- lift $ readField "magichash"
+  mmagichash <- lift $ maybe (return Nothing) getMagicHashFromContext msignatorylink
   case (msignatorylink, mmagichash) of
        (Just sl, Just mh) -> return (sl,mh)
        _ -> throwError $ badInput "The signatorylinkid or magichash were missing."
