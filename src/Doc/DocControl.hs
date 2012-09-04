@@ -284,10 +284,11 @@ handleSignShow2 documentid
   switchLocaleWhenNeeded  (Just invitedlink) document
   _ <- dbUpdate $ MarkDocumentSeen documentid signatorylinkid magichash
        (signatoryActor ctxtime ctxipnumber (maybesignatory invitedlink) (getEmail invitedlink) signatorylinkid)
-  _ <- addSignStatLinkEvent document invitedlink
+  document' <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
+  _ <- addSignStatLinkEvent document' invitedlink
 
   ctx <- getContext
-  content <- pageDocumentSignView ctx document invitedlink
+  content <- pageDocumentSignView ctx document' invitedlink
   simpleResonseClrFlash content
 
 {- |

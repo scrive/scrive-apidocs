@@ -296,12 +296,11 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what's wrong. Your document is created and ready to be sent. To see your document and send it yourself, <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
 
     internalError
-
+  _ <- dbUpdate $ SetDocumentInviteTime (documentid doc) ctxtime actor
   -- if previous step succeeded, document must be in the database
   Just enddoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
   _ <- addDocumentCreateStatEvents enddoc "mailapi+simple"
-  markDocumentAuthorReadAndSeen enddoc
   --_ <- DocControl.postDocumentChangeAction doc2 doc Nothing
 
   _ <- case (mailapi, usercompany user) of
@@ -339,17 +338,6 @@ sendMailAPIDelayUserEmail email = do
   ctx  <- getContext
   mail <- mailMailApiDelayUser ctx email
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress email email] }
-
-markDocumentAuthorReadAndSeen :: Kontrakcja m => Document -> m ()
-markDocumentAuthorReadAndSeen doc@Document{documentid} = do
-  let Just sl@SignatoryLink{signatorylinkid, signatorymagichash, maybesignatory} =
-        getAuthorSigLink doc
-  time <- ctxtime <$> getContext
-  _ <- dbUpdate $ MarkInvitationRead documentid signatorylinkid
-       (mailAPIActor time (fromJust maybesignatory) (getEmail sl))
-  _ <- dbUpdate $ MarkDocumentSeen documentid signatorylinkid signatorymagichash
-       (mailAPIActor time (fromJust maybesignatory) (getEmail sl))
-  return ()
 
 parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.Type, BS.ByteString)])
 parseEmailMessageToParts content = (mime, parts mime)
@@ -552,11 +540,10 @@ jsonMailAPI mailapi username user pdfs plains content = do
   when (not is_pending) $ do
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what's wrong. Your document is created and ready to be sent. To see your document and send it yourself, <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     internalError
-
+  _ <- dbUpdate $ SetDocumentInviteTime (documentid doc) ctxtime actor
   -- if previous step succeeded, document must be in the database
   Just enddoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   _ <- addDocumentCreateStatEvents enddoc "mailapi+json"
-  markDocumentAuthorReadAndSeen enddoc
   --_ <- DocControl.postDocumentChangeAction doc2 doc Nothing
 
   _ <- case (mailapi, usercompany user) of
