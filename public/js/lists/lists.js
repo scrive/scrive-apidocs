@@ -180,6 +180,7 @@
                     elem = cell.rendering(value, undefined, this.model);
                 } else if (cell.isExpandable() && value != undefined) {
                     elem = $("<a class='expand' />").text(value);
+                    elem.click(function() { model.toggleExpand(); return false;});
                 } else if (cell.isBool()) {
                     if (value) {
                         elem = $("<center />").append( $("<a>&#10003;</a>").attr("href", this.model.link()));
