@@ -257,6 +257,20 @@ preCheckPDFHelper gscmd content tmppath =
 
         throwError (FileNormalizeError stderr1)
 
+      -- GhostScript sometimes breaks files by normalization. Here we
+      -- detect what it calls warnings and what trully breaks a PDF.
+      --
+      -- Example:
+      --
+      -- GPL Ghostscript 9.02: Warning: 'loca' length 326 is greater than numGlyphs 162 in the font NGBUYI+Arial-BoldMT.
+      --
+      -- Warning about glyphs causes truncation of fonts and glyphs show empty on page.
+      --
+      -- If such thing happened just use source as normalized document.
+
+      when (any (BSL.pack "is greater than numGlyphs" `BSL.isPrefixOf`) (BSL.tails stderr1)) $ do
+         liftIO $ BS.writeFile normalizedpath content
+
     checkSealing = do
       (exitcode,_stdout,stderr1) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" 
                                    [] (BSL.pack (show sealSpec))
