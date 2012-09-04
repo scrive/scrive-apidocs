@@ -134,7 +134,7 @@ jsonDocumentsList = withUserGet $ do
                           "Template|Offer"    -> ([TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid],[DocumentFilterByProcess [Offer]])
                           "Template|Order"    -> ([TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid],[DocumentFilterByProcess [Order]])
                           "Pad"               -> ([DocumentsOfAuthor uid]  ++ (maybeCompanyDomain False) ,[DocumentFilterByIdentification PadIdentification, DocumentFilterStatuses [Pending,Closed]])
-                          _ -> ([],[])
+                          _ -> ([DocumentsForSignatory uid] ++ (maybeCompanyDomain False) ++ [TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid],[])
                          where
                              maybeCompanyDomain d = if (useriscompanyadmin user && (isJust $ usercompany user))
                                                    then [DocumentsOfCompany (fromJust $ usercompany user) False d]
