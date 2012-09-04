@@ -753,8 +753,8 @@ handleBackdoorQuery email = onlySalesOrAdmin $ onlyBackdoorOpen $ do
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink
 resealFile docid = onlyAdmin $ do
   Log.debug $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
-  Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
-  let actor = userActor ctxtime ctxipnumber (userid user) (getEmail user)
+  ctx <- getContext
+  actor <- guardJust $ mkAdminActor ctx
   _ <- dbUpdate $ InsertEvidenceEvent
           ResealedPDF
           (F.value "actor" (actorWho actor))
