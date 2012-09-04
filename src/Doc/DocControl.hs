@@ -8,7 +8,7 @@ module Doc.DocControl(
     , handleDownloadFile
     , handleDownloadMainFile
     , handleSignShow
-    , handleSignShowOldRedirectToNew
+    , handleSignShowSaveMagicHash
     , signDocument
     , signDocumentIphoneCase
     , rejectDocument
@@ -108,6 +108,7 @@ import qualified MemCache as MemCache
 import qualified GuardTime as GuardTime
 import System.IO.Temp
 import System.Directory
+
 {-
   Document state transitions are described in DocState.
 
@@ -263,42 +264,43 @@ rejectDocument documentid siglinkid = do
 -- handle this as special case, but this is not secure and should just
 -- be removed. To iPhone users with disabled cookies: tell them to
 -- call Apple service and enable cookies (again) on their phone.
-handleSignShowOldRedirectToNew :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m (Either KontraLink Response)
-handleSignShowOldRedirectToNew did sid mh = do
+handleSignShowSaveMagicHash :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
+handleSignShowSaveMagicHash did sid mh = do
   addMagicHashToContext sid mh
-  iphone <- isIphone
-  if iphone -- For iphones we are returning full page due to cookie bug in mobile safari
-    then Right <$> handleSignShow2 did sid
-    else return $ Left $ LinkSignDocNoMagicHash did sid
+  return $ LinkSignDocNoMagicHash did sid
 
-handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either KontraLink Response)
+handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 handleSignShow documentid
-               slid = do
-  mmh <- readField "magichash"
-  case mmh of
-    Just mh -> do -- IMPORTANT!!! Keep this just for historical reasons
-      addMagicHashToContext slid mh
-      return $ Left (LinkSignDocNoMagicHash documentid slid)
-    Nothing -> Right <$> handleSignShow2 documentid slid
-
-handleSignShow2 :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
-handleSignShow2 documentid
                 signatorylinkid = do
   Context { ctxtime
           , ctxipnumber } <- getContext
-  magichash <- guardJustM $ getMagicHashFromContext signatorylinkid
 
-  document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
-  invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
-  switchLocaleWhenNeeded  (Just invitedlink) document
-  _ <- dbUpdate $ MarkDocumentSeen documentid signatorylinkid magichash
-       (signatoryActor ctxtime ctxipnumber (maybesignatory invitedlink) (getEmail invitedlink) signatorylinkid)
-  document' <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
-  _ <- addSignStatLinkEvent document' invitedlink
+  mmagichash <- getMagicHashFromContext signatorylinkid
 
-  ctx <- getContext
-  content <- pageDocumentSignView ctx document' invitedlink
-  simpleResonseClrFlash content
+  case mmagichash of
+    Just magichash -> do
+      document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
+      invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
+      switchLocaleWhenNeeded  (Just invitedlink) document
+      _ <- dbUpdate $ MarkDocumentSeen documentid signatorylinkid magichash
+           (signatoryActor ctxtime ctxipnumber (maybesignatory invitedlink) (getEmail invitedlink) signatorylinkid)
+      document' <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
+      _ <- addSignStatLinkEvent document' invitedlink
+
+      ctx <- getContext
+      content <- pageDocumentSignView ctx document' invitedlink
+      simpleResonseClrFlash content
+    Nothing -> do
+      -- There is not magic hash in session. It may mean that the
+      -- session expired and we deleted the credentials already or it
+      -- may mean that cookies are disabled. Lets try to find out if
+      -- there are any cookies, if there are none we show a page how
+      -- to enable cookies on iPhone that seems to be the only
+      -- offender.
+      cookies <- rqCookies <$> askRq
+      if null cookies
+         then sendRedirect LinkEnableCookies
+         else internalError
 
 {- |
    Handles the request to show a document to a logged in user.

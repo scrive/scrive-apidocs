@@ -92,6 +92,7 @@ data KontraLink
     | LinkServiceButtonsBody ServiceID
     | LinkServiceButtonsRest ServiceID
     | LinkCSVLandPage Int
+    | LinkEnableCookies
     | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
     | LinkAPIDocumentSignatoryAttachment DocumentID SignatoryLinkID String
     | LinkPadDeviceArchive 
@@ -202,6 +203,7 @@ instance Show KontraLink where
     showsPrec _ (LinkServiceButtonsBody sid) = (++) $ "/services/buttons_body/" ++ encodeForURL sid
     showsPrec _ (LinkServiceButtonsRest sid) = (++) $ "/services/buttons_rest/" ++ encodeForURL sid
     showsPrec _ (LinkCSVLandPage c) = (++) ("/csvlandpage/" ++ show c)
+    showsPrec _ (LinkEnableCookies) = (++) ("/enable-cookies/enable-cookies.html")
     showsPrec _ (LinkDocumentPreview did (Just sl) fid) = (++) ("/preview/" ++ show did ++
                  "/" ++ show (signatorylinkid sl) ++
                  "/" ++ show (signatorymagichash sl) ++

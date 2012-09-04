@@ -68,7 +68,7 @@ staticRoutes = choice
      , dir "s" $ dir "eleg" $ dir "mbi" $ hGet  $ toK2 $ BankID.collectMobileBankID
      , dir "s" $ hGet $ toK0    $ sendRedirect $ LinkArchive
      , dir "s" $ hGet $ toK2    $ DocControl.handleSignShow
-     , dir "s" $ hGet $ toK3    $ DocControl.handleSignShowOldRedirectToNew -- Redirect for old version to version above, remove not earlier then 31.12.2012.
+     , dir "s" $ hGet $ toK3    $ DocControl.handleSignShowSaveMagicHash
 
      , dir "s" $ param "sign"           $ hPostNoXToken $ toK2 $ DocControl.signDocument
      , dir "s" $ param "sign"           $ hPostNoXToken $ toK3 $ DocControl.signDocumentIphoneCase
