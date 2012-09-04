@@ -243,20 +243,28 @@ var CreateFromFileApiCallView = Backbone.View.extend({
         initialize: function(args) {
             _.bindAll(this, 'render');
             this.model.bind('change', this.render);
-            this.render();
+            this.prerender();
         },
-        render : function() {
+        prerender : function() {
             var model = this.model;
             var box = $(this.el);
             box.children().detach();
             var boxLeft  = $("<div class='left-box'>");
-            var boxRight = $("<div class='right-box'>");
-            box.append(boxRight).append(boxLeft);
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
             var button = $("<input type='button' value='Send request'/>");
             button.click(function() {model.send(); return false;});
-            boxLeft.append($("<div> File: <BR/> </div>").append(model.file())).append($("<div/>").append(button));
+            this.filebox = $("<div>");
+            boxLeft.append($("<div> File: <BR/> </div>").append(this.filebox.append(model.file()))).append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
             if (model.result() != undefined)
-                boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+            this.filebox.append(model.file())
+                
         }
 });
 
@@ -264,22 +272,27 @@ var CreateFromTemplateApiCallView = Backbone.View.extend({
         initialize: function(args) {
             _.bindAll(this, 'render');
             this.model.bind('change', this.render);
-            this.render();
+            this.prerender();
         },
-        render : function() {
+        prerender : function() {
             var model = this.model;
             var box = $(this.el);
             box.children().detach();
             var boxLeft  = $("<div class='left-box'>");
-            var boxRight = $("<div class='right-box'>");
-            box.append(boxRight).append(boxLeft);
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
             var templateidInput = $("<input type='text'/>").val(model.templateid());
             templateidInput.change(function() {model.setTemplateid(templateidInput.val()); return false;})
             var button = $("<input type='button' value='Send request'/>");
             button.click(function() {model.send(); return false;});
             boxLeft.append($("<div>Template #: <BR/></div>").append(templateidInput)).append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
             if (model.result() != undefined)
-                boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
         }
 });
 
@@ -287,15 +300,15 @@ var UpdateApiCallView = Backbone.View.extend({
         initialize: function(args) {
             _.bindAll(this, 'render');
             this.model.bind('change', this.render);
-            this.render();
+            this.prerender();
         },
-        render : function() {
+        prerender : function() {
             var model = this.model;
             var box = $(this.el);
             box.children().detach();
             var boxLeft  = $("<div class='left-box'>");
-            var boxRight = $("<div class='right-box'>");
-            box.append(boxRight).append(boxLeft);
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
             var documentidInput = $("<input type='text'/>").val(model.documentid());
             documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
             var jsontextarea = $("<textarea class='json-text-area'>"+model.json()+"</textarea>");
@@ -303,8 +316,13 @@ var UpdateApiCallView = Backbone.View.extend({
             var button = $("<input type='button' value='Send request'/>");
             button.click(function() {model.send(); return false;});
             boxLeft.append($("<div>Document # : <BR/></div>").append(documentidInput)).append($("<div>JSON : <BR/></div>").append(jsontextarea)).append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
             if (model.result() != undefined)
-                boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
         }
 });
 
@@ -312,22 +330,27 @@ var ReadyApiCallView = Backbone.View.extend({
         initialize: function(args) {
             _.bindAll(this, 'render');
             this.model.bind('change', this.render);
-            this.render();
+            this.prerender();
         },
-        render : function() {
+        prerender : function() {
             var model = this.model;
             var box = $(this.el);
             box.children().detach();
             var boxLeft  = $("<div class='left-box'>");
-            var boxRight = $("<div class='right-box'>");
-            box.append(boxRight).append(boxLeft);
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
             var documentidInput = $("<input type='text'/>").val(model.documentid());
             documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
             var button = $("<input type='button' value='Send request'/>");
             button.click(function() {model.send(); return false;});
             boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput)).append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
             if (model.result() != undefined)
-                boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
         }
 });
 
@@ -335,22 +358,28 @@ var GetApiCallView = Backbone.View.extend({
         initialize: function(args) {
             _.bindAll(this, 'render');
             this.model.bind('change', this.render);
-            this.render();
+            this.prerender();
+          
         },
-        render : function() {
+        prerender : function() {
             var model = this.model;
             var box = $(this.el);
             box.children().detach();
             var boxLeft  = $("<div class='left-box'>");
-            var boxRight = $("<div class='right-box'>");
-            box.append(boxRight).append(boxLeft);
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
             var documentidInput = $("<input type='text'/>").val(model.documentid());
             documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
             var button = $("<input type='button' value='Send request'/>");
             button.click(function() {model.send(); return false;});
             boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput)).append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
             if (model.result() != undefined)
-                boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
         }
 });
 
@@ -358,22 +387,27 @@ var ListApiCallView = Backbone.View.extend({
         initialize: function(args) {
             _.bindAll(this, 'render');
             this.model.bind('change', this.render);
-            this.render();
+            this.prerender();
         },
-        render : function() {
+        prerender : function() {
             var model = this.model;
             var box = $(this.el);
             box.children().detach();
             var boxLeft  = $("<div class='left-box'>");
-            var boxRight = $("<div class='right-box'>");
-            box.append(boxRight).append(boxLeft);
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
             var tagsInput = $("<input type='text'/>").val(model.tags());
             tagsInput.change(function() {model.setTags(tagsInput.val()); return false;})
             var button = $("<input type='button' value='Send request'/>");
             button.click(function() {model.send(); return false;});
             boxLeft.append($("<div>Tags: <BR/></div>").append(tagsInput)).append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
             if (model.result() != undefined)
-                boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
         }
 });
 
