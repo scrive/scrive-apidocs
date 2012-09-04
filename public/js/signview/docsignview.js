@@ -18,7 +18,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
           model.trigger("change");
       });
       document.bind("file:change", function() {
+        setTimeout(function() {
             model.trigger("change");
+        },100);
       });
   },
   document : function(){
