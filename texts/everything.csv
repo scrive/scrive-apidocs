@@ -2336,7 +2336,7 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_followArrowToSign","Följ den gröna pilen för att e-signera",,"Follow the green arrow to e-sign"
 "_followArrowToReview","Följ den gröna pilen för att granska",,"Follow the green arrow to review"
 "_signedNotClosed","Du har signerat",,"You have signed"
-"_signedNotClosedSubText","När alla har signerat kommer dokumentet skickas till din angivna e-post adress.",,"When everyone has signed a copy will be sent to your email."
+"_signedNotClosedSubText","När alla har signerat kommer dokumentet skickas till din angivna e-post adress.",,"When every party has signed the finalized document will be sent to your email."
 "_signedAndClosed","Dokument signerat!",,"Document signed!"
 "_signedAndClosedSubText","Dokumentet med registrerad signeringshistorik har skickats till din inkorg.",,"The document with registered signing history has been sent to your inbox."
 "_unavailableForSign","Dokumentet går ej längre att signera",,"No longer available for signing"
