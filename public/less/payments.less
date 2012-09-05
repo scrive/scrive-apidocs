@@ -331,12 +331,44 @@
 
     .subscribing {
 
-    .planbox {
+        .includes {
+            margin-top: 18px;
+            .price {
+                font-family: 'Copse', serif;
+                text-align: center;
+                display: inline-block;
+                width: 50%;
+                .price1 {
+                    font-size: 64px;
+                    font-weight: bold;
+                    color: #000;
+                }
+                .price2 {
+                    font-size: 18px;
+                    color: #9a9a9a;
+                }
+            }
+            
+            .features {
+                display: inline-block;
+                .feature {
+                    background-image: url(/img/iconGreenCheck.png);
+                    background-repeat: no-repeat;
+                    background-position: 0 6px;
+                    font-size: 18px;
+                    line-height: 28px;
+                    padding-left: 22px;
+                }
+            }
+
+        }
+
+        .planbox {
         float: left;
         width: 230px;
         border: 1px solid #d3d3d3;
         margin-left: 18px;
-        maring-top: 19px;
+        margin-top: 19px;
         -moz-border-radius: 5px;
         -webkit-border-radius: 5px;
         border-radius: 5px 5px 5px 5px;
@@ -510,11 +542,14 @@
         width: 100%;
         text-align: center;
 
+        margin-top: 18px;
+
         .server_errors {
             text-align: left;
             width: 742px;
             margin: 0;
             margin-left: -1px;
+            height: 34px;
             .error {
                 margin-bottom: 18px;
             }
@@ -523,6 +558,7 @@
 
 
         .borderbox{
+            margin-top: 18px;
             border: 1px solid #9bd567;
             width: 100%;
             -moz-border-radius: 5px;

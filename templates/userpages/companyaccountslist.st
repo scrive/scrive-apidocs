@@ -24,12 +24,6 @@ viewCompanyAccounts =
         text: "$_newCompanyAccountButtonText()$",
         onClick: function() {
 
-            // blocking
-            if(BlockingInfo && BlockingInfo.blockUsers()) {
-              blocking.show(BlockingInfo.blockUsersMessage());
-              return false;
-            }
-
             var body = jQuery("<div class='account-body'>");
             body.append("<p>$_modalAddCompanyAccountBody()$</p>");
             var table = jQuery("<table/>");

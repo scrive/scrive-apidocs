@@ -168,7 +168,7 @@ data PaymentPlansRequiringSync = PaymentPlansRequiringSync MinutesTime
 instance MonadDB m => DBQuery m PaymentPlansRequiringSync [PaymentPlan] where
   query (PaymentPlansRequiringSync time) = do
     let past = daysBefore daysBeforeSync time 
-    kPrepare $ "SELECT account_code, account_type, user_id, company_id, plan, status, quantity, plan_pending, status_pending, quantity_pending, provider " ++
+    kPrepare $ "SELECT account_code, account_type, user_id, company_id, plan, status, quantity, plan_pending, status_pending, quantity_pending, provider, dunning_step, dunning_date " ++
              "  FROM payment_plans " ++ 
              "  LEFT OUTER JOIN (SELECT company_id as cid, count(id) as q FROM users WHERE NOT deleted AND NOT is_free GROUP BY cid) as ccount ON cid = company_id " ++ 
              "  WHERE ((account_type = 2 " ++ 

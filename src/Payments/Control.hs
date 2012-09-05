@@ -278,7 +278,7 @@ handleSyncWithRecurly hostpart mailsconfig templates recurlyapikey time = do
                   return ()
         _ -> Log.payments $ "Could not parse subscription from Recurly."
   dunnings <- dbQuery $ PaymentPlansExpiredDunning time
-  Log.payments $ "Found " ++ show (length plans) ++ " plans requiring dunning email."
+  Log.payments $ "Found " ++ show (length dunnings) ++ " plans requiring dunning email."
   forM_ dunnings $ \plan -> do
     case ppDunningStep plan of
       Just n -> do

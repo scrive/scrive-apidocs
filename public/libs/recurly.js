@@ -203,7 +203,7 @@ R.locale.currency = {
   format: "%n%u"
 , separator: ","
 , delimiter: "."
-, precision: 2
+, precision: 0
 };
 
 function C(key, def) {
@@ -1549,6 +1549,8 @@ function pullPlanQuantity($form, plan, options, pull) {
  if(qty && min) {
      if(qty < min)
          qty = min;
+ } else if(qty) {
+     // do nothing
  } else if(min) {
      qty = min
  } else {
@@ -1878,6 +1880,8 @@ R.buildSubscriptionForm = function(options) {
             if(qty < min) {
                 qty = min;
             }
+        } else if(qty) {
+            // do nothing
         } else if(min) {
             qty = min
         } else {
@@ -1932,6 +1936,8 @@ R.buildSubscriptionForm = function(options) {
             if(qty && min) {
                 if(qty < min)
                     qty = min;
+            } else if(qty) {
+                // do nothing
             } else if(min) {
                 qty = min
             } else {
@@ -1967,6 +1973,8 @@ R.buildSubscriptionForm = function(options) {
               if(qty && min) {
                   if(qty < min)
                       qty = min;
+              } else if(qty) {
+                  // do nothing
               } else if(min) {
                   qty = min
               } else {

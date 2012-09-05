@@ -428,6 +428,8 @@ javascriptLocalisation =
              users: "$_CompanyAccounts()$"
            , user: "$_paymentsUser()$"
            , manyusers: "$_paymentsManyUsers()$"
+           , price : "$_paymentsPrice()$"
+           , buysyou : "$_paymentsBuysYou()$"
            , plans: { professional : "$_paymentPlanProfessional()$"
                     , team         : "$_paymentPlanTeam()$"
                     , free         : "$_paymentPlanFree()$"
@@ -437,6 +439,7 @@ javascriptLocalisation =
                     , professionalprice : "$_paymentsProfessionalPrice()$"
                     , teamtag : "$_paymentPlanTeamTag()$"
                     , teamprice : "$_paymentsTeamPrice()$"
+
                     , enterprisetag : "$_paymentPlanEnterpriseTag()$"
                     , logo : "$_paymentPlanLogoAndBranding()$"
                     , dash : "$_paymentPlanDashboard()$"
@@ -454,6 +457,12 @@ javascriptLocalisation =
                     , changebilling: "$_paymentPlanChangeBilling()$"
                     , none: "$_paymentPlanNone()$"
                     }
+            , features: { send     : "$_paymentFeatureSend()$"
+                        , manage   : "$_paymentFeatureManage()$"
+                        , dash     : "$_paymentFeatureDash()$"
+                        , branding : "$_paymentFeatureBranding()$"
+                        , features : "$_paymentFeatureFeatures()$"
+                        }           
             , subscribe: "$_paymentPlanSubscribe()$"
             , subscribeheader : "$_paymentsSubscribeHeader()$"
             , chooseplan : "$_paymentsChoosePlan()$"
