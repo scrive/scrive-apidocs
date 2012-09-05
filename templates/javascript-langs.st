@@ -431,6 +431,7 @@ javascriptLocalisation =
            , plans: { professional : "$_paymentPlanProfessional()$"
                     , team         : "$_paymentPlanTeam()$"
                     , free         : "$_paymentPlanFree()$"
+                    , pay          : "$_paymentPlanPay()$"
                     , enterprise   : "$_paymentPlanEnterprise()$"
                     , professionaltag : "$_paymentPlanProfessionalTag()$"
                     , professionalprice : "$_paymentsProfessionalPrice()$"

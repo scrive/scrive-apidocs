@@ -10,8 +10,7 @@
 
     var planPrices = {
         free         :     0,
-        professional : 19900,
-        team         : 29900
+        pay          : 29900
     };
 
     var planPrice = function(p) {
@@ -104,7 +103,7 @@
 
     var PaymentsSignupModel = Backbone.Model.extend({
         defaults: {
-            plan_code: 'team'
+            plan_code: 'pay'
         },
         code: function(p) {
             if(p) {

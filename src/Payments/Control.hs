@@ -41,6 +41,7 @@ import qualified Log (payments)
 import qualified Text.JSON.Gen as J
 import MinutesTime
 import Mails.SendMail
+import Util.MonadUtils (when_)
 
 import Payments.Model
 import Payments.Rules
@@ -68,16 +69,14 @@ handleSubscriptionDashboardInfo = do
   --let currency = "SEK" -- we only support SEK for now
   plan <- case mplan of
     Nothing -> do
-          professionalsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "professional")]
-          teamsig         <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "team")]
+          paysig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "pay")]
           code <- dbUpdate GetAccountCode
           return $ J.object "signup" $ do
             J.value "code" $ show code
             J.value "currency" "SEK"
             J.value "quantity" quantity
             J.object "signatures" $ do
-              J.value "professional" professionalsig
-              J.value "team"         teamsig
+              J.value "pay" paysig
     Just plan | ppPaymentPlanProvider plan == RecurlyProvider -> do
           billingsig  <- liftIO $ genSignature recurlyPrivateKey [("account[account_code]", show $ ppAccountCode plan)]
           -- we should be syncing somewhere else
@@ -154,7 +153,6 @@ handleChangePlan = do
   time <- ctxtime <$> getContext
   newplan :: PricePlan <- pguardM' "handleChangePlan: field plan must exist and be a recurly plan code (String)" $ 
                           readField "plan"
-  quantity <- fromMaybe (if newplan == ProfessionalPricePlan then 1 else 3) <$> readField "quantity"  
   user <- pguardM' "handleChangePlan: No user logged in." $ 
           ctxmaybeuser <$> getContext
   plan <- pguardM' "handleChangePlan: No plan for logged in user." $ 
@@ -163,6 +161,7 @@ handleChangePlan = do
                    liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show $ ppAccountCode plan
   subscription <- pguard' "handleChangePlan: No subscriptions for Recurly account." $ 
                   listToMaybe subscriptions
+  quantity <- maybe (return 1) (dbQuery . GetCompanyQuantity) $ usercompany user
   let eid = maybe (Left $ userid user) Right $ usercompany user
       ac  = ppAccountCode plan
   subinfo <- pguard "handleChangePlan" $ subInfo subscription
@@ -252,17 +251,32 @@ handleSyncWithRecurly hostpart mailsconfig templates recurlyapikey time = do
         Log.payments $ "syncing: " ++ s
       Right [] ->
         Log.payments $ "syncing: no subscriptions for Recurly account; skipping."
-      Right (subscription:_) -> do
-        einvoices <- liftIO $ getInvoicesForAccount curl_exe recurlyapikey $ show $ ppAccountCode plan
-        case einvoices of
-          Left s -> do
-            Log.payments $ "syncing: " ++ s
-          Right invoices -> do
-            let is = maybe "collected" inState $ listToMaybe invoices
-                eid = ppID plan
-                ac = ppAccountCode plan
-            _ <- cachePlan time Stats.SyncAction ac subscription is eid (ppDunningStep plan) (ppDunningDate plan)
-            return ()
+      Right (subscription:_) -> case subInfo subscription of
+        Right subinfo@(_,_,_,newplan) -> do
+          einvoices <- liftIO $ getInvoicesForAccount curl_exe recurlyapikey $ show $ ppAccountCode plan
+          case einvoices of
+            Left s -> do
+              Log.payments $ "syncing: " ++ s
+            Right invoices -> do
+              let is = maybe "collected" inState $ listToMaybe invoices
+                  eid = ppID plan
+                  ac = ppAccountCode plan
+              _ <- cachePlan time Stats.SyncAction ac subscription is eid (ppDunningStep plan) (ppDunningDate plan)
+              quantity <- maybe (return 1) (dbQuery . GetCompanyQuantity) $ toMaybe $ ppID plan
+              Log.payments $ "Here is the db quantity: " ++ show quantity
+              case syncAction (quantity, newplan) subinfo of
+                RUpdateNow -> do
+                  ms <- liftIO $ changeAccount curl_exe recurlyapikey (subID subscription) (show newplan) quantity True
+                  when_ (isRight ms) $
+                    cachePlan time Stats.ChangeAction ac (fromRight ms) is eid (ppDunningStep plan) (ppDunningDate plan)
+                RUpdateRenewal -> do
+                  ms <- liftIO $ changeAccount curl_exe recurlyapikey (subID subscription) (show newplan) quantity False
+                  when_ (isRight ms) $
+                    cachePlan time Stats.ChangeAction ac (fromRight ms) is eid (ppDunningStep plan) (ppDunningDate plan)
+                _ -> do
+                  _ <- cachePlan time Stats.SyncAction ac subscription is eid (ppDunningStep plan) (ppDunningDate plan)
+                  return ()
+        _ -> Log.payments $ "Could not parse subscription from Recurly."
   dunnings <- dbQuery $ PaymentPlansExpiredDunning time
   Log.payments $ "Found " ++ show (length plans) ++ " plans requiring dunning email."
   forM_ dunnings $ \plan -> do
@@ -389,9 +403,8 @@ fromRecurlyStatus _          = (ActiveStatus, ActiveStatus)
 
 fromRecurlyPricePlan :: String -> PricePlan
 fromRecurlyPricePlan "free"         = FreePricePlan
-fromRecurlyPricePlan "professional" = ProfessionalPricePlan
-fromRecurlyPricePlan "team"         = TeamPricePlan
-fromRecurlyPricePlan _              = TeamPricePlan
+fromRecurlyPricePlan "pay"          = PayPricePlan
+fromRecurlyPricePlan _              = PayPricePlan
   
 instance ToJSValue Subscription where
   toJSValue (Subscription{..}) = runJSONGen $ do

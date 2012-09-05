@@ -18,8 +18,7 @@ import KontraError
 -- new data types
 
 data PricePlan = FreePricePlan
-               | ProfessionalPricePlan    
-               | TeamPricePlan
+               | PayPricePlan
                | EnterprisePricePlan  -- nothing gets blocked
                deriving (Eq, Ord)
                  
@@ -169,11 +168,14 @@ data PaymentPlansRequiringSync = PaymentPlansRequiringSync MinutesTime
 instance MonadDB m => DBQuery m PaymentPlansRequiringSync [PaymentPlan] where
   query (PaymentPlansRequiringSync time) = do
     let past = daysBefore daysBeforeSync time 
-    kPrepare $ "SELECT account_code, account_type, user_id, company_id, plan, status, quantity, " ++ 
-             "    plan_pending, status_pending, quantity_pending, provider, dunning_step, dunning_date " ++
+    kPrepare $ "SELECT account_code, account_type, user_id, company_id, plan, status, quantity, plan_pending, status_pending, quantity_pending, provider " ++
              "  FROM payment_plans " ++ 
-             "  WHERE sync_date < ? " ++
-             "    AND provider = ? "
+             "  LEFT OUTER JOIN (SELECT company_id as cid, count(id) as q FROM users WHERE NOT deleted AND NOT is_free GROUP BY cid) as ccount ON cid = company_id " ++ 
+             "  WHERE ((account_type = 2 " ++ 
+             "    AND   (q > quantity " ++
+             "     OR    (q <= quantity AND NOT q = quantity_pending ))) " ++
+             "     OR  sync_date < ? )" ++
+             "    AND provider = ?"
     _ <- kExecute [toSql past, toSql RecurlyProvider]
     foldDB fetchPaymentPlans []
 
@@ -245,14 +247,12 @@ instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
     
 instance Show PricePlan where
   showsPrec _ FreePricePlan         = (++) "free"
-  showsPrec _ ProfessionalPricePlan = (++) "professional"
-  showsPrec _ TeamPricePlan         = (++) "team"
+  showsPrec _ PayPricePlan          = (++) "pay"
   showsPrec _ EnterprisePricePlan   = (++) "enterprise"
 
 instance Read PricePlan where
   readsPrec _ "free"         = [(FreePricePlan,         "")]
-  readsPrec _ "professional" = [(ProfessionalPricePlan, "")]
-  readsPrec _ "team"         = [(TeamPricePlan,         "")]
+  readsPrec _ "pay"          = [(PayPricePlan,          "")]
   readsPrec _ "enterprise"   = [(EnterprisePricePlan,   "")]
   readsPrec _ _              = []
 
@@ -272,15 +272,13 @@ instance Read PaymentPlanStatus where
 -- conversions for cramming values into the database
 instance Convertible PricePlan Int where
   safeConvert FreePricePlan         = return 0
-  safeConvert ProfessionalPricePlan = return 1
-  safeConvert TeamPricePlan         = return 2
-  safeConvert EnterprisePricePlan   = return 3
+  safeConvert PayPricePlan          = return 1
+  safeConvert EnterprisePricePlan   = return 2
 
 instance Convertible Int PricePlan where
   safeConvert 0  = return FreePricePlan
-  safeConvert 1  = return ProfessionalPricePlan
-  safeConvert 2  = return TeamPricePlan
-  safeConvert 3  = return EnterprisePricePlan
+  safeConvert 1  = return PayPricePlan
+  safeConvert 2  = return EnterprisePricePlan
   safeConvert s  = Left ConvertError { convSourceValue  = show s
                                      , convSourceType   = "Int"
                                      , convDestType     = "PricePlan"
