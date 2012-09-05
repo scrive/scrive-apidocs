@@ -29,6 +29,7 @@ set firstPage
  js  libs/underscore.js
  js  libs/backbone.js
  js  libs/jquery.form.js
+ js  libs/json2.js
  js  js/global.js
  js  js/flashmessages.js
  js  js/validation.js

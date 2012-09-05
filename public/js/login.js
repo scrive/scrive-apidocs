@@ -8,7 +8,7 @@ var LoginModel = Backbone.Model.extend({
         email : "",
         password : "",
         referer : "",
-        visible : true,
+        visible : true
   },
   reminderView : function() {
      return this.get("reminderView") == true;
@@ -61,7 +61,7 @@ var LoginModel = Backbone.Model.extend({
             {
               FlashMessages.add({ content: localization.loginModal.loginFailed, color: "red"});
             }
-          },
+          }
         }).send();
   },
   sendPasswordReminder : function() {
@@ -81,9 +81,9 @@ var LoginModel = Backbone.Model.extend({
             {
               FlashMessages.add({ content: localization.loginModal.invalidEmail, color: "red"});
             }
-          },
+          }
         }).send();
-  },
+  }
 });
 
 var LoginView = Backbone.View.extend({
@@ -120,7 +120,7 @@ var LoginView = Backbone.View.extend({
 
       })
       passwordinput.input().attr("autocomplete","false");
-      wrapper.append($("<span class='txt'>").text(localization.loginModal.password)).append(passwordinput.input()).append("<BR/>");
+      wrapper.append($("<span class='txt'/>").text(localization.loginModal.password)).append(passwordinput.input()).append("<BR/>");
       wrapper.append("<BR/>")
       var toogleOption = $("<a href='#' class='txt-link message'/>").text(localization.loginModal.forgotpassword).click(function(){ model.toogleView();});
 
