@@ -2456,3 +2456,4 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_archiveCSV","Download CSV",,"Download CSV"
 "_archiveZIP","Download PDF",,"Download PDF"
 "_verificationMethod","Verifiering",,"Verification"
+"_flashEmailIncorectlyFormed","E-post är ej korrekt formaterad.",,"Email is incorrectly formated."

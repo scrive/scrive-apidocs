@@ -306,100 +306,14 @@ modalRejectedView=
 loginModal=
 $if(!logged)$
 $if(loginModal)$
-<div class="modalcontainer">
-  <div class="modalbox overlay login-container">
-    <div class="modal-container">
-      <form id="loginForm" method="post" action="$linklogin$">
-        <div class="modal-header">
-          <span class="modal-icon message"></span>
-          <span class="modal-title">
-            <h1>$_login()$</h1>
-          </span>
-          <a class="modal-close close"> </a>
-        </div>
-        <div class="modal-body">
-          <div class="modal-content">
-            <div class="body">
-              <div class="wrapper" style="text-align:right">
-                <input type="hidden" name="referer" value="$referer$" />
-                <span class="txt">$_email()$</span><input type="email" name="email" value="$email$" infotext="$_email()$" autocomplete="off"/><br />
-                <span class="txt">$_password()$</span><input type="password" name="password" infotext="password" autocomplete="off"/><br />
-                <input type="submit" class="hidden" />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <div class="float-left">
-            <a class="close cancel">$_cancel()$</a>
-            <a href="#" class="txt-link message s-forgot-password">$_forgotpassword()$</a>
-          </div>
-          <a href="#" class="btn-small blue float-right submit s-login-modal">
-            <div class="left"></div>
-            <div class="label">
-              <p>$_login()$</p>
-            </div>
-            <div class="right"></div>
-          </a>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div class="modalbox overlay recovery-container">
-    <div class="modal-container">
-      <form method="post" action="$linkforgotenpassword$">
-        <div class="modal-header">
-          <span class="modal-icon message"></span>
-          <span class="modal-title">
-            <h1>$_forgotpassword()$</h1>
-          </span>
-          <a class="modal-close close"> </a>
-        </div>
-        <div class="modal-body">
-          <div class="modal-content">
-            <div class="body">
-              <div class="wrapper">
-                <span class="txt">$_email()$</span><input class="s-forgot-password-email" type="email" name="email" infotext="$_email()$" autocomplete="off"/>
-                <input type="submit" class="hidden" />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <div class="float-left">
-            <a class="close cancel">$_cancel()$</a>
-            <a href="#" class="txt-link message">$_login()$</a>
-          </div>
-          <a href="#" class="btn-small green float-right submit s-forgot-password-submit">
-            <div class="left"></div>
-            <div class="label">
-              <p>$_loginModalForgotPasswordSendNewPassword()$</p>
-            </div>
-            <div class="right"></div>
-          </a>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
+  <script>
+    jQuery( function() {new Login({
+        referer: "$referer$",
+        email : "$email$"
+    });});
+  </script>
 $endif$
 $endif$
-####
-loginModalPart=
-<div class="user-container">
-  <div class="login-container">
-    <div class="body">
-      <div class="wrapper" style="text-align:right">
-        <input type="hidden" name="referer" value="$referer$" />
-        <span class="txt">$_email()$</span><input type="email" name="email" value="$email$" infotext="$_email()$" autocomplete="off"/><br />
-        <span class="txt">$_password()$</span><input type="password" name="password" infotext="password" autocomplete="off"/><br />
-        <input type="submit" class="hidden" />
-      </div>
-    </div>
-  </div>
-</div>
-######
 ####
 modalNewPasswordView=
 <form action="$linkchangepassword$" method="post">

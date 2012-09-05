@@ -50,6 +50,10 @@ var InfoTextInputModel = Backbone.Model.extend({
   },
   inputtype: function() {
       return this.get("inputtype");
+  },
+  enterPressed : function() {
+      if (this.get("onEnter") != undefined)
+          this.get("onEnter")();
   }
 });
 
@@ -62,6 +66,7 @@ var InfoTextInputView = Backbone.View.extend({
         "blur"   :  "looseFocus",
         "change" :  "updateValue",
         "keydown" : "addFocus",
+        "keydown" : "propagateEnter",
         "keyup" : "updateValue"
     },
     initialize: function (args) {
@@ -104,8 +109,11 @@ var InfoTextInputView = Backbone.View.extend({
     },
     updateValue: function(){
         this.model.setValue($(this.el).val());
+    },
+    propagateEnter : function(e) {
+        if (e.keyCode == 13)
+          this.model.enterPressed();
     }
-    
 });
 
 /*InfotextInput is a controler generator. Defines input method
@@ -116,7 +124,8 @@ window.InfoTextInput = {
                       infotext: args.infotext,
                       value: args.value,
                       onChange : args.onChange,
-                      inputtype : args.inputtype
+                      inputtype : args.inputtype,
+                      onEnter : args.onEnter
                     });
           var input = $("<input/>");
           input.attr("type",model.inputtype());

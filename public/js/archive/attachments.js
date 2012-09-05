@@ -99,7 +99,7 @@ window.AttachmentsListDefinition = function(archive) {
                 })
               ]
 
-    }),
+    })
  };
  
 };
