@@ -97,7 +97,7 @@ var LoginView = Backbone.View.extend({
       var model = this.model;
       //Content
       var content = $("<div class='body'/>");
-      var wrapper = $("<div class='wrapper' style='text-align:right'/>")
+      var wrapper = $("<div class='wrapper' style='text-align:right'/>");
       content.append(wrapper);
 
       var emailinput = InfoTextInput.init({
@@ -118,10 +118,10 @@ var LoginView = Backbone.View.extend({
               inputtype : "password",
               onEnter : function() {  model.login();}
 
-      })
+      });
       passwordinput.input().attr("autocomplete","false");
       wrapper.append($("<span class='txt'/>").text(localization.loginModal.password)).append(passwordinput.input()).append("<BR/>");
-      wrapper.append("<BR/>")
+      wrapper.append("<BR/>");
       var toogleOption = $("<a href='#' class='txt-link message'/>").text(localization.loginModal.forgotpassword).click(function(){ model.toogleView();});
 
       this.popupLoginModalConfirmation = Confirmation.popup({
@@ -154,7 +154,7 @@ var LoginView = Backbone.View.extend({
       var model = this.model;
       //Content
       var content = $("<div class='body'/>");
-      var wrapper = $("<div class='wrapper'/>")
+      var wrapper = $("<div class='wrapper'/>");
       content.append(wrapper);
 
       
@@ -165,10 +165,10 @@ var LoginView = Backbone.View.extend({
               inputtype : "text",
               onEnter : function() { model.sendPasswordReminder();}
                                           
-      })
+      });
       emailinput.input().attr("autocomplete","false");
       wrapper.append($("<span class='txt'/>").text(localization.loginModal.email)).append(emailinput.input()).append("<BR/>");
-      wrapper.append("<BR/>")
+      wrapper.append("<BR/>");
       //Popup
       var toogleOption = $("<a href='#' class='txt-link message'/>").text(localization.loginModal.login).click(function(){ model.toogleView();});
 
@@ -197,7 +197,7 @@ var LoginView = Backbone.View.extend({
 
     },
     render: function () {
-       var model = this.model
+       var model = this.model;
        $("#exposeMask").css("display", "none");
        if (this.popupLoginModalConfirmation != undefined) {
          this.popupLoginModalConfirmation.view.reject();
