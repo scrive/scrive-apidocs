@@ -109,7 +109,7 @@ var LoginView = Backbone.View.extend({
 
       });
       emailinput.input().attr("autocomplete","false");
-      wrapper.append($("<span class='txt'>").text(localization.loginModal.email)).append(emailinput.input()).append("<BR/>");
+      wrapper.append($("<span class='txt'/>").text(localization.loginModal.email)).append(emailinput.input()).append("<BR/>");
       emailinput.input().click();
       var passwordinput = InfoTextInput.init({
               infotext: localization.loginModal.password,
@@ -122,7 +122,7 @@ var LoginView = Backbone.View.extend({
       passwordinput.input().attr("autocomplete","false");
       wrapper.append($("<span class='txt'>").text(localization.loginModal.password)).append(passwordinput.input()).append("<BR/>");
       wrapper.append("<BR/>")
-      var toogleOption = $("<a href='#' class='txt-link message'>").text(localization.loginModal.forgotpassword).click(function(){ model.toogleView();});
+      var toogleOption = $("<a href='#' class='txt-link message'/>").text(localization.loginModal.forgotpassword).click(function(){ model.toogleView();});
 
       this.popupLoginModalConfirmation = Confirmation.popup({
         title: localization.loginModal.login,
@@ -167,10 +167,10 @@ var LoginView = Backbone.View.extend({
                                           
       })
       emailinput.input().attr("autocomplete","false");
-      wrapper.append($("<span class='txt'>").text(localization.loginModal.email)).append(emailinput.input()).append("<BR/>");
+      wrapper.append($("<span class='txt'/>").text(localization.loginModal.email)).append(emailinput.input()).append("<BR/>");
       wrapper.append("<BR/>")
       //Popup
-      var toogleOption = $("<a href='#' class='txt-link message'>").text(localization.loginModal.login).click(function(){ model.toogleView();});
+      var toogleOption = $("<a href='#' class='txt-link message'/>").text(localization.loginModal.login).click(function(){ model.toogleView();});
 
       this.popupReminderModalConfirmation = Confirmation.popup({
         title: localization.loginModal.forgotpassword,
