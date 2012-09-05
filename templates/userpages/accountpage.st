@@ -187,14 +187,6 @@ showUser =
     size: "small",
     text: "$_createCompany()$",
     onClick: function() {
-
-        // blocking
-        if(BlockingInfo && BlockingInfo.blockBranding()) {
-          blocking.show(BlockingInfo.blockCompanyMessage());
-          return false;
-        }
-        
-
         var body = jQuery("<div class='account-body'>");
         var firstp = jQuery("<p>").text("$_createCompanyExplanation()$");
         var secondp = jQuery("<p>").text("$_createCompanyFormPreamble()$");

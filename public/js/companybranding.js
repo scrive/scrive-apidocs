@@ -457,11 +457,6 @@ window.CompanyBrandingView = Backbone.View.extend({
       size: "small",
       text: localization.saveBranding,
       onClick: function() {
-          // blocking
-          if(BlockingInfo && BlockingInfo.blockBranding()) {
-              blocking.show(BlockingInfo.blockBrandingMessage());
-              return false;
-          }
           new Submit({
               method: "POST",
               url: company.submitUrl,
