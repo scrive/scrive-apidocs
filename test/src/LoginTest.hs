@@ -1,14 +1,12 @@
 module LoginTest (loginTests, assertLoginEventRecordedFor) where
 
 import Control.Applicative
-import Data.List
 import Happstack.Server
 import Test.Framework
 
 import ActionQueue.PasswordReminder
 import DB
 import Context
-import FlashMessage
 import Login
 import Redirect
 import Stats.Model
@@ -17,6 +15,8 @@ import TestKontra as T
 import User.Model
 import User.UserControl
 import Misc
+import Text.JSON.Gen as J
+import Text.JSON
 
 loginTests :: TestEnvSt -> Test
 loginTests env = testGroup "Login" [
@@ -33,9 +33,8 @@ testSuccessfulLogin = do
     uid <- createTestUser
     ctx <- mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
-    (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
-    assertBool "Response code is 303" $ rsCode res == 303
-    assertBool "Location is /upload" $ T.getHeader "location" (rsHeaders res) == Just "/upload"
+    (res, ctx') <- runTestKontra req ctx $ handleLoginPost
+    assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" True)
     assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx') == Just uid
     assertBool "No flash messages were added" $ null $ ctxflashmessages ctx'
 
@@ -44,7 +43,7 @@ testCantLoginWithInvalidUser = do
     _ <- createTestUser
     ctx <- mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [("email", inText "emily@skrivapa.se"), ("password", inText "admin")]
-    (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
+    (res, ctx') <- runTestKontra req ctx $ handleLoginPost 
     loginFailureChecks res ctx'
 
 testCantLoginWithInvalidPassword :: TestEnv ()
@@ -52,7 +51,7 @@ testCantLoginWithInvalidPassword = do
     _ <- createTestUser
     ctx <- mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "invalid")]
-    (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
+    (res, ctx') <- runTestKontra req ctx $ handleLoginPost
     loginFailureChecks res ctx'
 
 testSuccessfulLoginSavesAStatEvent :: TestEnv ()
@@ -60,7 +59,7 @@ testSuccessfulLoginSavesAStatEvent = do
   uid <- createTestUser
   ctx <- mkContext (mkLocaleFromRegion defaultValue)
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
-  (_res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
+  (_res, ctx') <- runTestKontra req ctx $ handleLoginPost
   assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx') == Just uid
   assertLoginEventRecordedFor uid
 
@@ -94,13 +93,11 @@ assertLoginEventRecordedFor uid = do
   assertEqual "Expected 1 login" 1 (length loginstats)
   assertEqual "Expected amount 1" 1 (usAmount $ head loginstats)
 
-loginFailureChecks :: Response -> Context -> TestEnv ()
+loginFailureChecks :: JSValue -> Context -> TestEnv ()
 loginFailureChecks res ctx = do
-    assertBool "Response code is 303" $ rsCode res == 303
-    assertBool "Location starts with /se/sv/?logging" $ (isPrefixOf "/se/sv/?logging" <$> T.getHeader "location" (rsHeaders res)) == Just True
+    assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" False)
     assertBool "User wasn't logged into context" $ ctxmaybeuser ctx == Nothing
-    assertBool "One flash message was added" $ length (ctxflashmessages ctx) == 1
-    assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx) `isFlashOfType` OperationFailed
+    assertBool "No flash messages were added" $ null $ ctxflashmessages ctx
 
 createTestUser :: TestEnv UserID
 createTestUser = do

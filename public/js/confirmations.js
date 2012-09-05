@@ -25,7 +25,8 @@ var ConfirmationModel = Backbone.Model.extend({
       content  : jQuery("<p/>"),
       cantCancel : false,
       width: "640px",
-      acceptVisible : true
+      acceptVisible : true,
+      extraOption : undefined
   },
   title : function(){
        return this.get("title");
@@ -80,7 +81,10 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   extraClass : function() {
             return this.get("extraClass");   
-  }
+  },
+  extraOption: function() {
+            return this.get("extraOption");
+  } 
 });
 
 /* Fixer for background overlay
@@ -150,6 +154,9 @@ var ConfirmationView = Backbone.View.extend({
         cancel.text(this.model.rejectText());
         footer.append(cancel);
        }
+       if (model.extraOption())
+        footer.append(model.extraOption());
+
        this.acceptButton = model.acceptButton() != undefined ?  model.acceptButton().addClass("float-right") :
             Button.init({color:model.acceptColor(),
                                  size: "small",
@@ -187,12 +194,14 @@ window.Confirmation = {
     popup: function (args) {
           var model = new ConfirmationModel(args);
           var overlay = $("<div/>");
+          if (args.cssClass != undefined)
+            overlay.addClass(args.cssClass);
           var view = new ConfirmationView({model : model, el : overlay});
           $("body").append(overlay);
           overlay.overlay({load: true,
                            target:overlay,
                            speed : 0,
-                           mask: standardDialogMask,
+                           mask: args.mask != undefined ? args.mask : standardDialogMask,
                            top: standardDialogTop,
                            fixed: false
                           });

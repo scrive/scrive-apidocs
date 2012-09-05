@@ -32,8 +32,6 @@ module User.UserView (
     flashMessageActivationLinkNotValid,
     flashMessageUserActivated,
     flashMessageUserAlreadyActivated,
-    flashMessageChangePasswordEmailSend,
-    flashMessageNoRemainedPasswordReminderEmails,
     flashMessageNewActivationLinkSend,
     flashMessageUserSignupDone,
     flashMessageThanksForTheQuestion,
@@ -346,14 +344,6 @@ flashMessageUserActivated =
 flashMessageUserAlreadyActivated :: TemplatesMonad m => m FlashMessage
 flashMessageUserAlreadyActivated =
   toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageUserAlreadyActivated"
-
-flashMessageChangePasswordEmailSend :: TemplatesMonad m => m FlashMessage
-flashMessageChangePasswordEmailSend =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageChangePasswordEmailSend"
-
-flashMessageNoRemainedPasswordReminderEmails :: TemplatesMonad m => m FlashMessage
-flashMessageNoRemainedPasswordReminderEmails =
-    toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageNoRemainedPasswordReminderEmails"
 
 flashMessageNewActivationLinkSend :: TemplatesMonad m => m FlashMessage
 flashMessageNewActivationLinkSend =

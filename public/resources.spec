@@ -28,9 +28,16 @@ set firstPage
  js  libs/analytics.js
  js  libs/underscore.js
  js  libs/backbone.js
+ js  libs/jquery.form.js
+ js  libs/json2.js
  js  js/global.js
  js  js/flashmessages.js
  js  js/validation.js
+ js  js/submits.js
+ js  js/infotextinputs.js
+ js  js/buttons.js
+ js  js/confirmations.js
+ js  js/login.js
 
 set systemPage
  css css/newdesign.css
@@ -74,6 +81,7 @@ set systemPage
  js   js/ajaxqueue.js
  js   js/confirmations.js
  js   js/selects.js
+ js   js/login.js
  js   js/lists/action.js
  js   js/lists/sorting.js
  js   js/lists/filtering.js
@@ -120,3 +128,4 @@ set systemPage
  js   js/archive/attachments.js
  js   js/archive/bin.js
  js   js/archive/archive.js
+

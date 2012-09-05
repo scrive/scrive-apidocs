@@ -61,8 +61,9 @@ testLoggedInLocaleSwitching = do
     ctx0 <- (\c -> c { ctxlocale = mkLocale REGION_GB LANG_EN })
       <$> mkContext (mkLocaleFromRegion defaultValue)
     req0 <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
-    (res1, ctx1) <- runTestKontra req0 ctx0 $ handleLoginPost >>= sendRedirect
-    assertLoggedInAndOnUploadPage (userid user) res1 ctx1
+    (_, ctx1) <- runTestKontra req0 ctx0 $ handleLoginPost
+
+    assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx1) == Just (userid user)
     assertUserLocale (userid user) REGION_GB LANG_EN
     assertContextLocale (userid user) ctx1 REGION_GB LANG_EN
 

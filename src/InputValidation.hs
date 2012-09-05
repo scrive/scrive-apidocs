@@ -7,6 +7,7 @@ module InputValidation
     , isGood
     , fromGood
     , checkIfEmpty
+    , getOptionalFieldNoFlash
     , getOptionalField
     , getOptionalFieldList
     , getDefaultedField
@@ -115,6 +116,20 @@ isGood _ = False
 fromGood:: Result a -> a
 fromGood (Good a) = a
 fromGood _ = error "Trying to get good from bad"
+
+
+
+{- |
+    Use this to get and validate most of the usual fields for all AJAX calls.
+-}
+getOptionalFieldNoFlash :: Kontrakcja m => (String -> Result a) -> String -> m (Maybe a)
+getOptionalFieldNoFlash validate =
+    getValidateAndHandle validate optionalFieldHandlerNoFlash
+
+optionalFieldHandlerNoFlash :: Kontrakcja m => (Input, Result a) -> m (Maybe a)
+optionalFieldHandlerNoFlash result =
+    logIfBad result
+    >>= asMaybe
 
 
 {- |

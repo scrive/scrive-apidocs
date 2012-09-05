@@ -239,7 +239,7 @@ staticRoutes = choice
      -- account stuff
      , dir "logout"      $ hGet  $ toK0 $ handleLogout
      , allLocaleDirs $ const $ dir "login" $ hGet  $ toK0 $ handleLoginGet
-     , allLocaleDirs $ const $ dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
+     , dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
      , dir "signup"      $ hPostAllowHttp $ toK0 $ signupPagePost
      , dir "amnesia"     $ hPostNoXToken $ toK0 $ forgotPasswordPagePost
      , dir "amnesia"     $ hGet $ toK2 $ UserControl.handlePasswordReminderGet

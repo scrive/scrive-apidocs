@@ -26,6 +26,8 @@ import Mails.SendMail(Mail)
 import Templates.Templates
 import Templates.TemplatesUtils
 import User.Model
+import Company.Model
+import Doc.DocViewMail
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import qualified Templates.Fields as F
@@ -37,20 +39,23 @@ viewCompanyAccounts =
 
 ----------------------------------------------------------------------------
 
-mailNewCompanyUserInvite :: (TemplatesMonad m, HasSomeUserInfo a, HasLocale a, HasSomeUserInfo b, HasSomeCompanyInfo c) =>
-                               String -> a -> b -> c -> KontraLink -> m Mail
+mailNewCompanyUserInvite :: (TemplatesMonad m, HasSomeUserInfo a, HasLocale a, HasSomeUserInfo b) =>
+                               String -> a -> b -> Company -> KontraLink -> m Mail
 mailNewCompanyUserInvite hostpart invited inviter company link =
   kontramail "mailNewCompanyUserInvite" $ do
     basicCompanyInviteFields invited inviter company
     basicLinkFields hostpart link
+    F.object "companybrand" $ companyBrandFields company
 
-mailTakeoverPrivateUserInvite :: (TemplatesMonad m,  HasSomeUserInfo a, HasLocale a, HasSomeUserInfo b, HasSomeCompanyInfo c) =>
-                               String -> a -> b -> c -> KontraLink -> m Mail
+
+mailTakeoverPrivateUserInvite :: (TemplatesMonad m,  HasSomeUserInfo a, HasLocale a, HasSomeUserInfo b) =>
+                               String -> a -> b -> Company -> KontraLink -> m Mail
 mailTakeoverPrivateUserInvite hostpart invited inviter company link =
   --invite in the language of the existing user rather than in the inviter's language
   kontramaillocal invited  "mailTakeoverPrivateUserInvite" $ do
     basicCompanyInviteFields invited inviter company
     basicLinkFields hostpart link
+    F.object "companybrand" $ companyBrandFields company
 
 basicCompanyInviteFields :: (TemplatesMonad m, HasSomeUserInfo a, HasSomeUserInfo b, HasSomeCompanyInfo c) => a -> b -> c -> Fields m ()
 basicCompanyInviteFields invited inviter company = do
@@ -63,6 +68,7 @@ basicLinkFields :: TemplatesMonad m => String -> KontraLink -> Fields m ()
 basicLinkFields hostpart link = do
   F.value "ctxhostpart" hostpart
   F.value "link" $ show link
+
 
 -------------------------------------------------------------------------------
 

@@ -112,7 +112,7 @@ window.DocumentsListDefinition = function(archive) { return {
                                     method : "POST",
                                     doctype: type,
                                     url : "/d",
-                                    onSend: function() {LoadingDialog.open();},
+                                    onSend: function() {LoadingDialog.open();}
                                 })
                             }).input()));
                         }

@@ -30,34 +30,36 @@ import User.History.Model
 import Control.Applicative
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
-
+import Text.JSON.Gen as J
+import Text.JSON
 {- |
    Handles submission of the password reset form
 -}
-forgotPasswordPagePost :: Kontrakcja m => m KontraLink
+forgotPasswordPagePost :: Kontrakcja m => m JSValue
 forgotPasswordPagePost = do
   ctx <- getContext
-  memail <- getOptionalField asValidEmail "email"
+  memail <- getOptionalFieldNoFlash asValidEmail "email"
   case memail of
-    Nothing -> return LoopBack
+    Nothing -> runJSONGenT $ value "send" False 
     Just email -> do
       muser <- dbQuery $ GetUserByEmail Nothing $ Email email
       case muser of
         Nothing -> do
           Log.security $ "ip " ++ (show $ ctxipnumber ctx) ++ " made a failed password reset request for non-existant account " ++ email
+          runJSONGenT $ value "send" True 
         Just user -> do
           minv <- dbQuery $ GetAction passwordReminder $ userid user
           case minv of
             Just pr@PasswordReminder{..} -> case prRemainedEmails of
-              0 -> addFlashM flashMessageNoRemainedPasswordReminderEmails
+              0 -> runJSONGenT $ value "send" True 
               n -> do
                 _ <- dbUpdate $ UpdateAction passwordReminder $ pr { prRemainedEmails = n - 1 }
                 sendResetPasswordMail ctx (LinkPasswordReminder prUserID prToken) user
+                runJSONGenT $ value "send" True 
             _ -> do
               link <- newPasswordReminderLink $ userid user
               sendResetPasswordMail ctx link user
-      addFlashM flashMessageChangePasswordEmailSend
-      return LinkUpload
+              runJSONGenT $ value "send" True 
 
 sendResetPasswordMail :: Kontrakcja m => Context -> KontraLink -> User -> m ()
 sendResetPasswordMail ctx link user = do
@@ -123,12 +125,11 @@ handleLoginGet = do
 {- |
    Handles submission of a login form.  On failure will redirect back to referer, if there is one.
 -}
-handleLoginPost :: Kontrakcja m => m KontraLink
+handleLoginPost :: Kontrakcja m => m JSValue
 handleLoginPost = do
     ctx <- getContext
-    memail  <- getOptionalField asDirtyEmail    "email"
-    mpasswd <- getOptionalField asDirtyPassword "password"
-    let linkemail = fromMaybe "" memail
+    memail  <- getOptionalFieldNoFlash asDirtyEmail    "email"
+    mpasswd <- getOptionalFieldNoFlash asDirtyPassword "password"
     case (memail, mpasswd) of
         (Just email, Just passwd) -> do
             -- check the user things here
@@ -144,15 +145,15 @@ handleLoginPost = do
                         _ <- addUserLoginStatEvent (ctxtime ctx) (fromJust muuser)
                         _ <- dbUpdate $ LogHistoryLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
                         logUserToContext muuser
-                        return BackToReferer
+                        runJSONGenT $ value "logged" True
                 Just u -> do
                         Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
                         _ <- dbUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
-                        return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
+                        runJSONGenT $ value "logged" False
                 Nothing -> do
                     Log.debug $ "User " ++ show email ++ " login failed (user not found)"
-                    return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
-        _ -> return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
+                    runJSONGenT $ value "logged" False
+        _ -> runJSONGenT $ value "logged" False
 
 {- |
    Handles the logout, and sends user back to main page.

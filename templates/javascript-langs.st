@@ -549,6 +549,17 @@ javascriptLocalisation =
 
                        }
                }
-        } 
+        }
+      , loginModal : {
+             login : "$_login()$"
+           , email : "$_email()$"
+           , password : "$_password()$"
+           , forgotpassword : "$_forgotpassword()$"
+           , sendNewPassword : "$_loginModalForgotPasswordSendNewPassword()$"
+           , loginFailed : "$_flashMessageLoginPageRedirectReasonWrongMailOrPassword()$"
+           , invalidEmail : "$_flashEmailIncorectlyFormed()$"
+           , passwordReminderSend : "$_flashMessageChangePasswordEmailSend()$"
+
+      }
     }
 ####
