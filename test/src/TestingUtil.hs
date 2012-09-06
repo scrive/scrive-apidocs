@@ -34,7 +34,7 @@ import KontraError (internalError)
 import KontraMonad
 import MinutesTime
 import User.Model
-import Misc
+import Utils.Default
 import IPAddress
 import File.Model
 import API.Service.Model
@@ -454,7 +454,7 @@ blankUser = User { userid                        = unsafeUserID 0
                                        , usercompanyname = []
                                        , usercompanynumber = []
                                        }
-                 , usersettings  = UserSettings { locale = mkLocaleFromRegion Misc.defaultValue
+                 , usersettings  = UserSettings { locale = mkLocaleFromRegion defaultValue
                                                 , customfooter = Nothing
                                                 }
                  , userservice = Nothing

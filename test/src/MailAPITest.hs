@@ -15,7 +15,9 @@ import DB
 import MagicHash
 import Context
 import Doc.Model
-import Misc
+import Utils.Default
+import Utils.Directory
+import Utils.Read
 import User.Model
 import TestingUtil
 import TestKontra as T

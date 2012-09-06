@@ -14,7 +14,7 @@ import TestingUtil
 import TestKontra as T
 import User.Model
 import User.UserControl
-import Misc
+import Utils.Default
 import Text.JSON.Gen as J
 import Text.JSON
 

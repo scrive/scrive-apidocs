@@ -20,7 +20,8 @@ import TestKontra as T
 import User.Locale
 import User.Model
 import User.UserControl
-import Misc
+import Utils.Default
+import Utils.Enum
 import Util.Actor
 
 localeTests :: TestEnvSt -> Test

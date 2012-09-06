@@ -12,7 +12,8 @@ import Company.Model
 import CompanyAccounts.Model
 import Context
 import DB
-import Misc
+import Utils.Default
+import Utils.Either
 import Redirect
 import TestingUtil
 import TestKontra as T
