@@ -129,7 +129,8 @@ window.InfoTextInput = {
                     });
           var input = $("<input/>");
           input.attr("type",model.inputtype());
-
+          if (args.name != undefined)
+              input.attr("name",args.name);
           if (args.cssClass != undefined)
               input.addClass(args.cssClass);
           if (args.inputname != undefined)

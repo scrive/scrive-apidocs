@@ -4,6 +4,7 @@ module FlashMessage (
     , unFlashMessage
     , toFlashMsg
     , toModal
+    , isModal
     , toFlashTemplate
     , instantiate
     , updateFlashCookie
@@ -68,6 +69,10 @@ toFlashMsg = FlashMessage
 
 toModal :: String -> FlashMessage
 toModal = FlashMessage Modal
+
+isModal :: FlashMessage -> Bool
+isModal (FlashMessage  ft _) = Modal == ft
+isModal (FlashTemplate ft _ _) = Modal == ft
 
 toFlashTemplate :: FlashType -> String -> [(String, String)] -> FlashMessage
 toFlashTemplate = FlashTemplate

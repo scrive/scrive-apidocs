@@ -18,13 +18,15 @@ describe "sign up on front page and modify account settings" do
     puts "reset password for "+email+" to "+password
     @h.driver.get(@h.ctx.createKontrakcjaURL "/")
     (@h.wait.until { @h.driver.find_element :css => "a.login-button" }).click
-    (@h.wait.until { @h.driver.find_element :css => "a.s-forgot-password" }).click
-    (@h.wait.until { @h.driver.find_element :css => "input.s-forgot-password-email" }).send_keys email
-    (@h.wait.until { @h.driver.find_element :css => "a.s-forgot-password-submit" }).click
+    (@h.wait.until { @h.driver.find_element :css => ".login-container a.s-forgot-password" }).click
+    (@h.wait.until { @h.driver.find_element :css => ".recovery-container input[name='email']" }).send_keys email
+    (@h.wait.until { @h.driver.find_element :css => ".recovery-container a.recovery-password-submit" }).click
     @h.emailhelper.follow_link_in_latest_mail_for email
+    puts "We have real change password form"
     (@h.wait.until { @h.driver.find_element :name => "password" }).send_keys password
     (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys password
     (@h.wait.until { @h.driver.find_element :css => "a.submit" }).click
+    puts "Change password request send"
     @h.loginhelper.logout
   end
 
@@ -116,10 +118,10 @@ describe "sign up on front page and modify account settings" do
 
     @h.emailhelper.follow_link_in_latest_mail_for new_email
 
-    (@h.wait.until { @h.driver.find_element :name => "email" }).send_keys random_email
-    (@h.wait.until { @h.driver.find_element :name => "password" }).send_keys new_password
+    (@h.wait.until { @h.driver.find_element :css => ".login-container input[name='email']" }).send_keys random_email
+    (@h.wait.until { @h.driver.find_element :css => ".login-container input[name='password']" }).send_keys new_password
+    (@h.wait.until { @h.driver.find_element :css => ".login-container a.login-button" }).click
 
-    (@h.wait.until { @h.driver.find_element :css => "a.s-login-modal" }).click
 
     @h.wait.until { @h.driver.find_element :css => "div.recovery-container" }
     (@h.wait.until { @h.driver.find_element :name => "password" }).send_keys new_password
