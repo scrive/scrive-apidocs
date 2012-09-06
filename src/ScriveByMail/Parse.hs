@@ -7,7 +7,7 @@ import Control.Monad
 import Control.Applicative
 import Utils.Prelude
 import Data.List
-import Util.StringUtil
+import Utils.String
 import Data.Char
 import Doc.DocStateData
 

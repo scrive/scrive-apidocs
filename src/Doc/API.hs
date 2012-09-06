@@ -141,7 +141,7 @@ documentChangeMainFile docid = api $ do
               -- we need to downgrade the PDF to 1.4 that has uncompressed structure
               -- we use gs to do that of course
               content <- apiGuardL (badInput "PDF precheck failed.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
-              let filename = basename filename'
+              let filename = takeBaseName filename'
 
               fileid <$> (dbUpdate $ NewFile filename content)
             (_, Just templateids) -> do
@@ -206,7 +206,7 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
 
   content <- apiGuardL (badInput "The PDF was invalid.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
 
-  file <- dbUpdate $ NewFile (basename filename) content
+  file <- dbUpdate $ NewFile (takeBaseName filename) content
   let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) email slid
   d <- apiGuardL (serverError "documentUploadSignatoryAttachment: SaveSigAttachment failed") . runMaybeT $ do
     True <- dbUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor

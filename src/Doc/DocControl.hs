@@ -1077,7 +1077,7 @@ handleParseCSV = do
           content <- case contentspec of
                        Left filepath -> liftIO $ BSL.readFile filepath
                        Right content -> return content
-          let _title = BS.fromString (basename filename)
+          let _title = BS.fromString (takeBaseName filename)
           case parseCSV content of
                  Left _ -> oneProblemJSON $ renderTemplate_ "flashMessageFailedToParseCSV"
                  Right contents
