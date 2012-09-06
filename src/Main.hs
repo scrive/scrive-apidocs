@@ -26,11 +26,11 @@ import Crypto.RNG
 import DB
 import DB.Checks
 import DB.PostgreSQL
-import Mails.Events
-import Utils.Default
-import Utils.IO
 import Utils.Cron
-import Network
+import Utils.Default
+import Mails.Events
+import Utils.IO
+import Utils.Network
 import RoutingTable
 import Templates.TemplatesLoader
 import User.Model

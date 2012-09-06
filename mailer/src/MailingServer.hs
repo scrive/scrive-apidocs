@@ -17,10 +17,10 @@ import Handlers
 import Mails.Migrations
 import Mails.Tables
 import MailingServerConf
-import Network
 import Sender
 import ServiceChecker
 import Utils.IO
+import Utils.Network
 import qualified Log (withLogger, mailingServer)
 
 main :: IO ()
