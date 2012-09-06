@@ -136,6 +136,7 @@ var PageTasksArrowView = Backbone.View.extend({
   },
   taskArrow : function(task) {
         var view = this;
+        this.task = task;
         var scrolltop = $(window).scrollTop();
         var scrollbottom = scrolltop + $(window).height();
         var eltop = task.el().offset().top;
@@ -158,17 +159,42 @@ var PageTasksArrowView = Backbone.View.extend({
         else
             return new Arrow.init({type: 'scroll-up',  point : $(task.el())});
   },
+  arrowShouldChange : function(newtask) {
+        var view = this;
+        var task = view.task;
+        var arrow = view.arrow;
+        var scrolltop = $(window).scrollTop();
+        var scrollbottom = scrolltop + $(window).height();
+        var eltop = task.el().offset().top;
+        var elbottom = eltop +task.el().height();
+        var bottommargin = 0;
+        var topmargin = 0;
+        if (task == undefined || arrow == undefined) return true;
+        if (task != newtask) return true;
+        if ((scrolltop >= 0) && (elbottom <= eltop)) return false;
+        
+        if (((elbottom + bottommargin) <= scrollbottom) && ((eltop - topmargin) >= scrolltop))
+           return true;
+        
+        if ((elbottom + bottommargin) > scrollbottom)
+           return (arrow.model().type() != 'scroll-down');
+
+        return (arrow.model().type() != 'scroll-up');
+  },      
   updateArrow : function() {
      var view = this;
-     if (view.arrow != undefined)
-        this.arrow.clear();
-     if (this.model.active() != undefined)
-        {
-            this.arrow = this.taskArrow(this.model.active());
-            if (this.arrow != undefined)
-                $(this.el).append(this.arrow.view().el);
-            this.trigger("change:arrow");
-        }
+     if (view.arrow == undefined || view.arrowShouldChange(this.model.active()))
+     {  
+      if (view.arrow != undefined)
+          this.arrow.clear();
+      if (this.model.active() != undefined)
+          {
+              this.arrow = this.taskArrow(this.model.active());
+              if (this.arrow != undefined)
+                  $(this.el).append(this.arrow.view().el);
+              this.trigger("change:arrow");
+          }
+     }
   },
   render: function() {
     var view = this;
