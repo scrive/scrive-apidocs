@@ -18,7 +18,7 @@ import Mails.MailsConfig
 import Mails.MailsData
 import Mails.Model hiding (Mail)
 import MinutesTime
-import Util.MonadUtils
+import Utils.Monad
 import qualified Log
 import qualified Mails.Model as M
 

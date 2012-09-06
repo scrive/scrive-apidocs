@@ -97,6 +97,7 @@ import Doc.DocStateData
 import Doc.Invariants
 import Data.Maybe hiding (fromJust)
 import Utils.List
+import Utils.Monad
 import Utils.Monoid
 import Utils.Prelude
 import Utils.Read
@@ -115,7 +116,6 @@ import Doc.DocStateCommon
 import qualified Log
 import Control.Monad
 import Util.Actor
-import Util.MonadUtils
 import Templates.Templates
 import EvidenceLog.Model
 import Util.HasSomeUserInfo

@@ -23,6 +23,7 @@ import MagicHash (MagicHash)
 import Mails.SendMail
 import MinutesTime
 import Happstack.Fields
+import Utils.Monad
 import Utils.Read
 import Redirect
 import Templates.Templates

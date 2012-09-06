@@ -29,13 +29,13 @@ import Kontra
 import KontraLink
 import Mails.SendMail
 import Utils.List
+import Utils.Monad
 import Utils.Monoid
 import Utils.Prelude
 import Templates.Templates
 import Templates.TemplatesUtils
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import Util.MonadUtils
 import DB
 import Control.Monad
 import Data.Functor

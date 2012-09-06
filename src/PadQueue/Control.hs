@@ -13,6 +13,7 @@ import qualified Log
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import PadQueue.View
+import Utils.Monad
 
 import Control.Applicative
 import Control.Monad

@@ -35,7 +35,7 @@ import Happstack.Server.SimpleHTTP
 import DB
 import User.Model
 import Util.FlashUtil
-import Util.MonadUtils
+import Utils.Monad
 import Utils.Monoid
 import Utils.Tuples
 

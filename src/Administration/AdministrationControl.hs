@@ -45,6 +45,7 @@ import Data.Functor
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.Fields
 import Utils.IO
+import Utils.Monad
 import Utils.Monoid
 import Utils.Prelude
 import Utils.String
