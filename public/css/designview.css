@@ -202,11 +202,6 @@
     margin-right: 5px;
 }
 
-.setRoleBox .option .radiolabel{
-    position: relative;
-    top: -2px;
-}
-
 .selectSignOrder{
     background: none repeat scroll 0 0 #FFFFFF;
     font-size: 11px;
