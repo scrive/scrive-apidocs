@@ -16,7 +16,8 @@ module SOAP.SOAP
   , makeSoapCallWithCA
   , makeSoapCallWithCookies ) where
 
-import Misc hiding(optional)
+import Utils.Either
+import Utils.IO
 import System.Exit
 import Text.XML.HaXml.XmlContent.Parser
 import Text.XML.HaXml.XmlContent

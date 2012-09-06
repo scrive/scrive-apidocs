@@ -88,11 +88,11 @@ module Templates.Templates (
 import Control.Monad.Trans.Maybe
 import Text.StringTemplate.Base hiding (ToSElem, toSElem, render)
 
+import Utils.Default
 import User.Locale
 import Templates.Fields
 import Templates.TemplatesLoader
 import Control.Monad.Reader
-import Misc (defaultValue)
 import Control.Monad.Identity
 
 class (Functor m, Monad m) => TemplatesMonad m where

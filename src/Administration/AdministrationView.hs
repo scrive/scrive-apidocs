@@ -31,7 +31,7 @@ import Templates.Templates
 import Control.Applicative
 import Data.Maybe
 import DB
-import Misc
+import Utils.Prelude
 import User.UserView
 import User.Model
 import Doc.DocStateData

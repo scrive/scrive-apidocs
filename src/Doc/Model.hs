@@ -96,7 +96,11 @@ import Control.Logic
 import Doc.DocStateData
 import Doc.Invariants
 import Data.Maybe hiding (fromJust)
-import Misc
+import Utils.List
+import Utils.Monoid
+import Utils.Prelude
+import Utils.Read
+import Utils.Tuples
 import IPAddress
 import Data.List hiding (tail, head)
 import Data.Monoid

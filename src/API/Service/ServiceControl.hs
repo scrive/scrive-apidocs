@@ -21,7 +21,7 @@ module  API.Service.ServiceControl(
           ) where
 import Control.Monad.State
 import Data.Functor
-import Misc
+import Happstack.Fields
 import Kontra
 import KontraLink
 import Data.Maybe
@@ -36,6 +36,8 @@ import DB
 import User.Model
 import Util.FlashUtil
 import Util.MonadUtils
+import Utils.Monoid
+import Utils.Tuples
 
 handleChangeServiceUI :: Kontrakcja m => ServiceID -> m KontraLink
 handleChangeServiceUI sid = do

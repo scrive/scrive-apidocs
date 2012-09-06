@@ -12,7 +12,7 @@ import Data.Monoid
 import DB
 import Doc.DocStateData
 import MagicHash
-import Misc
+import Utils.Monoid
 
 checkPreparationToPending :: MonadDB m => DocumentID -> DBEnv m [String]
 checkPreparationToPending did = checkDocument did [

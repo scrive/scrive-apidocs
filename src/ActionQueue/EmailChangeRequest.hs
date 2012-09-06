@@ -21,7 +21,7 @@ import KontraMonad
 import KontraLink
 import MagicHash
 import MinutesTime
-import Misc
+import Utils.Monoid
 import User.Model
 
 data EmailChangeRequest = EmailChangeRequest {

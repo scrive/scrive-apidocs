@@ -18,7 +18,7 @@ import Numeric
 
 import Crypto.RNG
 import DB.Derive
-import Misc
+import Utils.Read
 
 -- | Hash value that is produced by cryptographically secure random
 -- generators for authentication purposes.

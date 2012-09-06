@@ -4,7 +4,8 @@ import Data.Int
 
 import Doc.DocStateData
 import MagicHash
-import Misc
+import Utils.HTTP
+import Utils.List
 import User.Model
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
@@ -226,11 +227,20 @@ instance Show KontraLink where
     showsPrec _ (LinkAttachmentView attid) = (++) ("/a/" ++ show attid)
 
 setParams :: URI -> [(String, String)] -> URI
-setParams uri params = 
-  let mvars = urlDecodeVars $ uriQuery uri
-      vars = urlEncodeVars $ maybe params (++ params) mvars
-  in uri { uriQuery = "?" ++ vars}
-  
+setParams uri params = uri { uriQuery = "?" ++ vars }
+  where
+    mvars = urlDecodeVars $ uriQuery uri
+    vars = urlEncodeVars $ maybe params (++ params) mvars
+    urlDecodeVars :: String -> Maybe [(String, String)]
+    urlDecodeVars ('?':s) = urlDecodeVars s
+    urlDecodeVars s = makeKV (splitOver "&" s) []
+      where
+        makeKV [] a = Just a
+        makeKV (kv:ks) a = case break (== '=') kv of
+          (k, '=':v) -> makeKV ks ((urlDecode k, urlDecode v):a)
+          (k, "") -> makeKV ks ((urlDecode k, ""):a)
+          _ -> Nothing
+
 getHomeOrUploadLink :: KontraMonad m => m KontraLink
 getHomeOrUploadLink = do
   ctx <- getContext

@@ -21,7 +21,7 @@ import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Company.Model
 import DB
-import Misc
+import Utils.Prelude
 import qualified Templates.Fields as F
 
 import Control.Monad
@@ -464,9 +464,9 @@ recentDate doc =
   (maybeToList $ signtime <$> documentinvitetime doc) ++
   (maybeToList $ (\(a,_,_) -> a) <$> documentrejectioninfo doc) ++
   concat (for (documentsignatorylinks doc) (\sl ->
-                                             (maybeToList $ signtime <$> maybeseeninfo sl) ++
-                                             (maybeToList $ signtime <$> maybesigninfo sl) ++
-                                             (maybeToList $ id       <$> maybereadinvite sl)))
+       (maybeToList $ signtime <$> maybeseeninfo sl)
+    ++ (maybeToList $ signtime <$> maybesigninfo sl)
+    ++ (maybeToList $ id       <$> maybereadinvite sl)))
 
 
 getMagicHashFromContext :: (KontraMonad m) => SignatoryLinkID -> m (Maybe MagicHash)

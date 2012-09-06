@@ -19,8 +19,9 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import Kontra
 import KontraLink
 import qualified Log
-import Misc
+import Happstack.Fields
 import Util.FlashUtil
+import Utils.HTTP
 import DBError
 import User.UserView
 import Util.FinishWith
@@ -58,8 +59,10 @@ sendRedirect link = do
 
 sendSecureLoopBack :: Kontrakcja m => m Response
 sendSecureLoopBack = do
-    link <- getSecureLink
-    seeOther link =<< setRsCode 303 (seeOtherXML link)
+  link <- getSecureLink
+  seeOther link =<< setRsCode 303 (seeOtherXML link)
+  where
+    getSecureLink = (++) "https://" <$> currentLinkBody
 
 redirectKontraResponse :: KontraLink -> Kontra Response
 redirectKontraResponse link = do

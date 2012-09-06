@@ -34,7 +34,7 @@ import API.Service.Model
 import FlashMessage
 import Kontra
 import KontraLink
-import Misc
+import Happstack.Fields
 
 import Control.Applicative
 import Data.List
@@ -44,6 +44,7 @@ import Templates.Templates
 import User.Lang
 import User.Locale
 import User.Region
+import qualified Codec.Binary.Url as URL
 import qualified Templates.Fields as F
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified Data.ByteString.UTF8 as BS (fromString)
@@ -198,6 +199,17 @@ getLoginReferer = do
   qstr <- querystring
   let loginreferer = Just $ fromMaybe (curr ++ qstr) referer
   return loginreferer
+  where
+    querystring = qs <$> queryString lookPairs
+      where
+        qs qsPairs =
+          let encodeString  = URL.encode . map (toEnum . ord)
+              relevantPairs = [ (k, v) | (k, Right v) <- qsPairs ]
+              empties       = [ encodeString k | (k, "") <- relevantPairs ]
+              withValues    = [ encodeString k ++ "=" ++ encodeString v | (k, v) <- relevantPairs, length v > 0 ]
+          in if Data.List.null relevantPairs
+              then ""
+              else "?" ++ intercalate "&" (empties ++ withValues)
 
 standardPageFields :: TemplatesMonad m => Context -> String -> Maybe (Locale -> KontraLink) -> Bool -> Bool -> Maybe String -> Maybe String -> Fields m ()
 standardPageFields ctx title mpubliclink showCreateAccount loginOn referer email = do

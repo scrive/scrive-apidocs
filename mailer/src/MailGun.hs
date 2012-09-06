@@ -10,9 +10,9 @@ import Happstack.Server
 import qualified Control.Exception.Lifted as E
 
 import DB
+import Happstack.Fields
 import Mails.Model
 import Mailer
-import Misc
 import qualified Log (mailingServer)
 
 -- Note: This function is almost the same as the one used for handling sendgrid

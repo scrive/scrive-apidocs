@@ -20,7 +20,7 @@ import Kontra
 import KontraLink
 import MagicHash
 import MinutesTime
-import Misc
+import Utils.Monoid
 import Stats.Model
 import User.Model
 import qualified Log

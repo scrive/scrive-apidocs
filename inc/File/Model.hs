@@ -21,7 +21,7 @@ import DB
 import File.File
 import File.FileID
 import File.Tables
-import Misc
+import Utils.Monoid
 import qualified Data.ByteString as BS
 import qualified Crypto.Hash.SHA1 as SHA1
 

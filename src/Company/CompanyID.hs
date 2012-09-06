@@ -9,7 +9,7 @@ import Data.Typeable
 import Happstack.Server
 
 import DB.Derive
-import Misc
+import Utils.Read
 
 newtype CompanyID = CompanyID Int64
   deriving (Eq, Ord, Typeable)

@@ -19,7 +19,7 @@ import DB
 import KontraLink
 import MagicHash
 import MinutesTime
-import Misc
+import Utils.Monoid
 import User.Model
 
 data PasswordReminder = PasswordReminder {

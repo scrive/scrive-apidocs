@@ -8,6 +8,7 @@ import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Digest.SHA256 as D
 
 import DB.Binary
+import Crypto.RNG.Utils
 
 data Password = Password {
     pwdHash :: Binary
@@ -33,3 +34,6 @@ verifyPassword (Just Password{pwdHash, pwdSalt}) password =
 maybePassword :: (Maybe Binary, Maybe Binary) -> Maybe Password
 maybePassword (Just hash, Just salt) = Just Password { pwdHash = hash, pwdSalt = salt }
 maybePassword _ = Nothing
+
+randomPassword :: (MonadIO m, CryptoRNG m) => m String
+randomPassword = randomString 8 (['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'])

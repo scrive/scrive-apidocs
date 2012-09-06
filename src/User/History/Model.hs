@@ -24,7 +24,7 @@ import qualified Data.Version as Ver
 import DB
 import IPAddress
 import MinutesTime
-import Misc
+import Utils.Monoid
 
 import User.History.Tables
 import User.UserID

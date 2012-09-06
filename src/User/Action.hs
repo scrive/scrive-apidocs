@@ -18,7 +18,7 @@ import Doc.DocStateData
 import InputValidation
 import Kontra
 import Mails.SendMail
-import Misc
+import Happstack.Fields
 import Templates.Templates
 import User.Model
 import User.UserView

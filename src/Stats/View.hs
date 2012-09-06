@@ -6,9 +6,9 @@ module Stats.View
        )
        where
 
-import Misc
 import MinutesTime
 import Templates.Templates
+import Utils.Prelude
 import qualified Templates.Fields as F
 
 statisticsFieldsByDay :: Monad m => [(Int, [Int])] -> [Fields m ()]

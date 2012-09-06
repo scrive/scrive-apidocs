@@ -7,6 +7,7 @@ import Happstack.Server
 import qualified Happstack.StaticRouting as R
 import qualified Control.Exception as E
 
+import Cleaner
 import Crypto.RNG (newCryptoRNGState)
 import Configuration
 import Dispatcher
@@ -16,11 +17,10 @@ import Handlers
 import Mails.Migrations
 import Mails.Tables
 import MailingServerConf
-import Misc
 import Network
 import Sender
 import ServiceChecker
-import Cleaner
+import Utils.IO
 import qualified Log (withLogger, mailingServer)
 
 main :: IO ()

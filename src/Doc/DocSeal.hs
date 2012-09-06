@@ -25,7 +25,10 @@ import File.Storage
 import Doc.DocView
 import Doc.DocUtils
 import IPAddress
-import Misc
+import Utils.Directory
+import Utils.Read
+import Utils.String
+import Utils.IO
 import System.Directory
 import System.Exit
 import Kontra

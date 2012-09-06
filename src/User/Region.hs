@@ -10,7 +10,8 @@ import Data.Foldable hiding (find)
 import Data.List
 import Data.Maybe
 import DB.Derive
-import Misc
+import Utils.Enum
+import Utils.List
 import User.Lang
 import Data.Char
 
@@ -34,4 +35,3 @@ regionFromHTTPHeader :: String -> Region
 regionFromHTTPHeader s = fromMaybe REGION_GB $ msum $ map findRegion (splitOver "," s)
   where
     findRegion str = find ((`isInfixOf` str) . codeFromLang . defaultRegionLang) allValues
-

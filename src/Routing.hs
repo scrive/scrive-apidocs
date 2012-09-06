@@ -28,7 +28,8 @@ import Data.Maybe
 import Happstack.Server(Response, Method(GET, POST, DELETE, PUT), rsCode, ToMessage(..))
 import Happstack.StaticRouting
 import KontraLink
-import Misc
+import Happstack.Fields
+import Utils.HTTP
 import Kontra
 import qualified User.UserControl as UserControl
 import Redirect

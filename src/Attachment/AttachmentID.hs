@@ -8,7 +8,7 @@ import Data.SafeCopy
 import Happstack.Server
 
 import DB.Derive
-import Misc
+import Utils.Read
 
 newtype AttachmentID = AttachmentID Int64
   deriving (Eq, Ord)

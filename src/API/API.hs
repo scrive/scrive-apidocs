@@ -31,7 +31,7 @@ import AppState
 import AppView as V
 import Happstack.Server (Response, Method(POST)) -- GHC 6.12.3 workaround hack
 import Happstack.StaticRouting (Route, Path, dir, path, remainingPath)
-import Misc
+import Utils.Enum
 import KontraMonad
 import Text.JSON
 import Control.Monad.Base

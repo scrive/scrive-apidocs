@@ -27,7 +27,7 @@ import API.Service.Model
 import Company.CompanyID
 import Control.Monad.State
 import Data.Monoid
-import Misc
+import Utils.Monoid
 import Data.List
 
 newtype ExternalCompanyID = ExternalCompanyID { unExternalCompanyID :: String }

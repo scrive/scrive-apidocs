@@ -10,7 +10,7 @@ module ELegitimation.BankIDRequests (
 
 import Data.Maybe
 import Data.SafeCopy
-import Misc hiding (optional)
+import Utils.Enum
 import SOAP.SOAP
 import Text.XML.HaXml.Posn (Posn)
 import Text.XML.HaXml.XmlContent.Parser

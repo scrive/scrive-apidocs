@@ -25,10 +25,10 @@ import Util.HasSomeUserInfo
 import Text.JSON
 import ListUtil
 import MinutesTime
-import Misc
 import Data.Maybe
 import Text.JSON.Gen as J
 import Redirect
+import System.FilePath
 
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -167,7 +167,7 @@ makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do
         return Nothing
       else do
           Log.debug "Got the content, creating document"
-          let title = basename filename
+          let title = takeBaseName filename
           actor <- guardJustM $ mkAuthorActor <$> getContext
           ctx <- getContext
           att <- guardRightM $ dbUpdate $ NewAttachment (userid $ fromJust $ ctxmaybeuser ctx) title filename (Binary $ BS.concat $ BSL.toChunks content) actor

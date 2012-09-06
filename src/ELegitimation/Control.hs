@@ -25,7 +25,7 @@ import Happstack.Server
 import Kontra
 import MagicHash (MagicHash)
 import MinutesTime
-import Misc
+import Happstack.Fields
 import Text.XML.HaXml.XmlContent.Parser
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils

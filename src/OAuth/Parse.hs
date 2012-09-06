@@ -5,7 +5,8 @@ module OAuth.Parse (
                    ) where
 
 import OAuth.Model
-import Misc
+import Utils.List
+import Utils.Read
 import MagicHash
 
 import Data.String.Utils
@@ -44,4 +45,3 @@ readPrivileges s = privs (splitOver "+" s) []
         privs (p:pp) a = case maybeRead p of
           Just priv -> privs pp (priv:a)
           Nothing -> Nothing
-

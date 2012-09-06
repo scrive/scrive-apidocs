@@ -13,7 +13,7 @@ import qualified Data.ByteString.Lazy as BSL
 
 import KontraLink
 import MagicHash
-import Misc
+import Utils.String
 import ScriveByMail.Action
 import ScriveByMail.Model
 import ScriveByMail.View

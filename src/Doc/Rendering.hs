@@ -27,7 +27,8 @@ import Doc.DocStateData
 import File.Model
 import ForkAction
 import Kontra
-import Misc
+import Utils.IO
+import Utils.Read
 import Prelude hiding (catch)
 import System.Directory
 import System.Exit

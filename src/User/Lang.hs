@@ -8,7 +8,7 @@ module User.Lang (
 import Data.List
 import DB.Derive
 import MinutesTime
-import Misc
+import Utils.Enum
 
 data Lang = LANG_SE --according to IANA this really should be LANG_SV - em
           | LANG_EN
@@ -25,4 +25,3 @@ langFromCode s = find ((== s) . codeFromLang) allValues
 timeLocaleForLang :: Lang -> KontraTimeLocale
 timeLocaleForLang LANG_SE = SwedishTimeLocale
 timeLocaleForLang LANG_EN = BritishTimeLocale
-

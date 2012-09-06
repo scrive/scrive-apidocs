@@ -7,7 +7,7 @@ import Doc.DocStateData
 import Doc.DocUtils
 import MagicHash (MagicHash)
 import MinutesTime
-import Misc
+import Utils.Default
 import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo

@@ -25,7 +25,7 @@ import MagicHash
 import Mails.Data
 import Mails.Tables
 import MinutesTime
-import Misc
+import Utils.Monoid
 import OurPrelude
 
 data CreateEmail = CreateEmail MagicHash Address [Address] MinutesTime

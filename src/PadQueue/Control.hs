@@ -20,7 +20,7 @@ import Control.Monad
 import Text.JSON hiding (Result)
 import Text.JSON.Gen hiding (value)
 import KontraLink
-import Misc
+import Happstack.Fields
 import Util.FlashUtil
 import User.UserView
 import Doc.Model

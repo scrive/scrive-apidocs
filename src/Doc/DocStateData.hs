@@ -64,7 +64,7 @@ import Text.JSON.FromJSValue
 import Text.JSON.Gen
 import Text.JSON
 import Control.Applicative
-import Misc
+import Utils.Read
 import Control.Monad
 import qualified Data.Set as S
 

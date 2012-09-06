@@ -1,10 +1,12 @@
 module ELegitimation.SignatureProvider (
-    SignatureProvider(..)) 
-    where
+    SignatureProvider(..)
+  ) where
+
+import Happstack.Server.SimpleHTTP
 
 import DB.Derive
-import Misc
-import Happstack.Server.SimpleHTTP
+import Utils.Enum
+import Utils.Read
 
 {-# LANGUAGE CPP #-}
 instance FromReqURI SignatureProvider where

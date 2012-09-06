@@ -36,11 +36,12 @@ import Control.Logic
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 import Doc.DocStateData
-import Misc
 import Data.List
 import Doc.DocUtils
 import Data.Foldable hiding (concat, elem)
 import Data.Maybe
+import Utils.Monoid
+import Utils.Prelude
 import Text.JSON.FromJSValue
 import Control.Applicative
 

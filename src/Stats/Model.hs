@@ -34,7 +34,7 @@ import Data.List
 import Database.HDBC
 
 import DB
-import Misc
+import Utils.Monoid
 import MinutesTime
 import User.Model
 import Doc.DocStateData

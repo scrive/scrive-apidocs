@@ -12,10 +12,11 @@ import ActionQueue.PasswordReminder
 import AppView as V
 import DB
 import InputValidation
+import Happstack.Fields
 import Kontra
 import KontraLink
 import Mails.SendMail
-import Misc
+import Utils.Prelude
 import Redirect
 import User.Action
 import User.Model

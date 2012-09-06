@@ -21,7 +21,8 @@ import qualified Codec.Binary.Base16 as B16
 import qualified Data.ByteString as BS
 
 import DB
-import Misc
+import Utils.HTTP
+import Utils.Tuples
 import User.Password
 import User.UserID
 

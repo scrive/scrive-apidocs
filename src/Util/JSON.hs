@@ -28,7 +28,8 @@ module Util.JSON (
 import Text.JSON
 import Control.Monad
 import qualified Data.List.Utils as List
-import Misc
+import Utils.Enum
+import Utils.Tuples
 import Text.JSON.FromJSValue
 import qualified Data.Text as T
 import Control.Applicative

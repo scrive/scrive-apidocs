@@ -35,7 +35,7 @@ import Text.JSON
 import Util.CSVUtil
 import ListUtil
 import MinutesTime
-import Misc
+import Happstack.Fields
 import PadQueue.Model
 import Data.Maybe
 import Text.JSON.Gen as J

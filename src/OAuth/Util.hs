@@ -4,7 +4,8 @@ import Kontra
 import OAuth.Model
 import OAuth.Parse
 import Control.Logic
-import Misc
+import Happstack.Fields
+import Utils.Read
 
 import Control.Applicative
 import qualified Data.ByteString.UTF8 as BS hiding (length)

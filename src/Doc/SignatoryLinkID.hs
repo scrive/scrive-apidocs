@@ -13,7 +13,7 @@ import Data.SafeCopy
 import Happstack.Server
 
 import DB.Derive
-import Misc
+import Utils.Read
 
 -- | 'SignatoryLinkID' is and integer that identifies
 -- a signatory inside a document scope.

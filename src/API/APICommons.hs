@@ -42,7 +42,8 @@ import API.API
 import File.Storage
 import Doc.DocUtils
 import Kontra
-import Misc
+import Utils.Enum
+import Utils.Prelude
 import Data.Maybe
 import Data.Functor
 import Control.Monad
@@ -50,7 +51,7 @@ import DB
 import Util.JSON
 import User.Lang
 import User.Region
-import Doc.JSON()
+import Doc.JSON ()
 import User.Locale
 import Doc.SignatoryTMP
 

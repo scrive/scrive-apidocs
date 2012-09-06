@@ -20,7 +20,9 @@ import KontraLink
 import MagicHash
 import Mails.SendMail
 import MinutesTime
-import Misc
+import Utils.Either
+import Utils.Prelude
+import Utils.Read
 import Redirect
 import ScriveByMail.Model
 import ScriveByMail.Parse
@@ -44,6 +46,7 @@ import Data.Int
 import Data.List
 import Data.Maybe
 import Data.String.Utils
+import System.FilePath
 import Text.JSON
 import Text.JSON.String
 import qualified Codec.MIME.Parse as MIME
@@ -524,7 +527,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
     internalError
 
   let doctype = dcrType dcr
-      title = maybe (basename $ getAttachmentFilename $ fst pdf) decodeWordsMIME $ dcrTitle dcr
+      title = maybe (takeBaseName $ getAttachmentFilename $ fst pdf) decodeWordsMIME $ dcrTitle dcr
       actor = mailAPIActor ctxtime (userid user) (getEmail user)
 
   mdoc <- dbUpdate $ NewDocument user mcompany title doctype 0 actor

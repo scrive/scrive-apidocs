@@ -7,7 +7,9 @@ module Doc.DocDraft (
 import Control.Monad.Trans.Maybe
 import Doc.SignatoryTMP
 import Doc.DocStateData
-import Misc
+import Utils.Enum
+import Utils.Monoid
+import Utils.Prelude
 import Control.Monad
 import Data.Maybe
 import Kontra

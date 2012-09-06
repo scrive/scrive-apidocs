@@ -51,13 +51,13 @@ import API.Service.Model
 import Company.Model
 import DB
 import MinutesTime
-import Misc
 import User.Lang
 import User.Locale
 import User.Password
 import User.Region
 import User.Tables
 import User.UserID
+import Utils.Monoid
 import DB.SQL2
 import Doc.DocStateData (DocumentStatus(..), SignatoryRole(..), DocumentID)
 

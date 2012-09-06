@@ -19,7 +19,8 @@ import Text.JSON
 import Text.JSON.Types
 import Text.JSON.FromJSValue
 import Util.JSON
-import Misc
+import Utils.Either
+import Utils.Enum
 import KontraLink
 
 import Control.Applicative
