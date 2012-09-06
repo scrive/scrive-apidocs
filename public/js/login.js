@@ -105,6 +105,7 @@ var LoginView = Backbone.View.extend({
               value : model.email(),
               onChange : function(v) {model.setEmail(v);} ,
               inputtype : "text",
+              name : "email",
               onEnter : function() {  model.login();}
 
       });
@@ -116,13 +117,14 @@ var LoginView = Backbone.View.extend({
               value : model.password(),
               onChange : function(v) {model.setPassword(v);} ,
               inputtype : "password",
+              name : "password",
               onEnter : function() {  model.login();}
 
       });
       passwordinput.input().attr("autocomplete","false");
       wrapper.append($("<span class='txt'/>").text(localization.loginModal.password)).append(passwordinput.input()).append("<BR/>");
       wrapper.append("<BR/>");
-      var toogleOption = $("<a href='#' class='txt-link message'/>").text(localization.loginModal.forgotpassword).click(function(){ model.toogleView();});
+      var toogleOption = $("<a href='#' class='txt-link message s-forgot-password'/>").text(localization.loginModal.forgotpassword).click(function(){ model.toogleView();});
 
       this.popupLoginModalConfirmation = Confirmation.popup({
         title: localization.loginModal.login,
@@ -140,6 +142,7 @@ var LoginView = Backbone.View.extend({
                   size  : "small",
                   color : "blue",
                   text  : localization.loginModal.login,
+                  cssClass : "login-button",
                   onClick : function() {
                         model.login();
                     }
@@ -163,6 +166,7 @@ var LoginView = Backbone.View.extend({
               value : model.email(),
               onChange : function(v) {model.setEmail(v);} ,
               inputtype : "text",
+              name : "email",
               onEnter : function() { model.sendPasswordReminder();}
                                           
       });
@@ -170,7 +174,7 @@ var LoginView = Backbone.View.extend({
       wrapper.append($("<span class='txt'/>").text(localization.loginModal.email)).append(emailinput.input()).append("<BR/>");
       wrapper.append("<BR/>");
       //Popup
-      var toogleOption = $("<a href='#' class='txt-link message'/>").text(localization.loginModal.login).click(function(){ model.toogleView();});
+      var toogleOption = $("<a href='#' class='txt-link message s-log-in'/>").text(localization.loginModal.login).click(function(){ model.toogleView();});
 
       this.popupReminderModalConfirmation = Confirmation.popup({
         title: localization.loginModal.forgotpassword,
@@ -188,6 +192,7 @@ var LoginView = Backbone.View.extend({
                   size  : "small",
                   color : "green",
                   text  : localization.loginModal.sendNewPassword,
+                  cssClass : "recovery-password-submit",
                   onClick : function() {
                         model.sendPasswordReminder();
                     }

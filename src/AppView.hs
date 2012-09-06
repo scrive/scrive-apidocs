@@ -256,7 +256,7 @@ firstPage ctx loginOn referer email = renderTemplate "firstPage" $ do
   mainLinksFields $ ctxlocale ctx
   staticLinksFields $ ctxlocale ctx
   localeSwitcherFields ctx (Just LinkHome)
-  loginModal loginOn referer email
+  loginModal (loginOn && null (filter isModal $ ctxflashmessages ctx)) referer email
   F.value "staticResources" $ SR.htmlImportList "firstPage" (ctxstaticresources ctx)
 
 {- |
@@ -332,8 +332,8 @@ flashMessageFields flash = do
     OperationFailed -> "red"
     _               -> "") <$> ftype
   F.valueM "message" $ do
-      isModal <- (== Modal) <$> ftype
-      if (isModal )
+      isFModal <- (== Modal) <$> ftype
+      if (isFModal )
          then filter (not . isControl) <$> msg 
          else replace "\"" "'" <$> filter (not . isControl) <$> msg
   F.valueM "isModal" $ (== Modal) <$> ftype

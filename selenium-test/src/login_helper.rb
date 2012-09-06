@@ -14,13 +14,10 @@ class LoginHelper
     @driver.get(@ctx.createKontrakcjaURL "/")
 
     (@wait.until { @driver.find_element :css => "a.login-button" }).click
-
-    @wait.until { @driver.find_element :id => "loginForm" }
-
-    (@wait.until { @driver.find_element :name => "email" }).send_keys email
-    (@wait.until { @driver.find_element :name => "password" }).send_keys password
-
-    (@wait.until { @driver.find_element :css => "#loginForm a.submit" }).click
+    @wait.until { @driver.find_element :css => ".login-container" }
+    (@wait.until { @driver.find_element :css => ".login-container input[name='email']" }).send_keys email
+    (@wait.until { @driver.find_element :css => ".login-container input[name='password']" }).send_keys password
+    (@wait.until { @driver.find_element :css => ".login-container a.login-button" }).click
     (@wait.until { @driver.find_element :css => "a.logout" })
 
     if (@driver.find_elements :id => "toscontainer").length>0 then
