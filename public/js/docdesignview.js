@@ -421,19 +421,22 @@ var DocumentDesignView = Backbone.View.extend({
           return "true" == SessionStorage.get(this.model.documentid(), "signLastChecked");
     },
     signLastOption : function() {
-        var view = this;
-        var box = $("<div class='signLastOption'/>");
-        var checkbox = $("<input type='checkbox' cc='FALSE' class='signLastCheckbox'>");
-        if (this.signLast())
-        {
-            checkbox.attr("checked","YES");
-            checkbox.attr("cc","YES");
-        }
-        checkbox.change(function() {view.setSignLast( $(this).attr("cc") != "YES")});
+      var self = this;
+      var box = $("<div class='signLastOption'/>");
+      var checkbox = $("<input type='checkbox' class='signLastCheckbox'>");
+      var checkboxid = "fdd" + Math.random();
+      checkbox.attr("id",checkboxid);
 
-        var text = $("<span>").text(localization.signLast);
-        box.append(checkbox).append(text);
-        return box;
+      if (self.signLast()) {
+        checkbox.attr("checked", true);
+      }
+      checkbox.change(function() {
+        self.setSignLast( $(this).attr("checked"));
+      });
+
+      var label = $("<label>").text(localization.signLast).attr("for",checkboxid);
+      box.append(checkbox).append(label);
+      return box;
     },
     setSignLast : function(v) {
          SessionStorage.set(this.model.documentid(), "signLastChecked", "" + v);
