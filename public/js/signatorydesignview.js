@@ -115,7 +115,7 @@ window.SignatoryDesignView = Backbone.View.extend({
        var signatory = this.model;
        var setSignOrderIcon = $("<a class='setSignOrder' href='#'/>");
        setSignOrderIcon.click(function(){
-          signatory.document().view.toggleSignOrger();
+          signatory.document().view.toggleSignOrder();
             });
         return setSignOrderIcon;
    },

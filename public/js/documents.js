@@ -92,13 +92,48 @@ window.Document = Backbone.Model.extend({
         return sigs;
     },
     addSignatory: function() {
-        var document = this;
-        var signatories = this.signatories();
-        var nsig = new Signatory({"document": document, signs: true});
-        signatories[signatories.length] = nsig;
-        document.set({"signatories": signatories});
-        document.change();
-        return nsig;
+      var document = this;
+      var signatories = document.signatories();
+      var author = document.author();
+      var signorder = 1;
+      if( author.signs()) {
+        if( author.signorder()==1 ) {
+          // author signs first
+          signorder = 2;
+        }
+        else {
+          // author does not sign first
+          signorder = 1;
+        }
+      }
+      else {
+        // author does not sign at all
+        signorder = 1;
+      }
+      var nsig = new Signatory({"document": document, signs: true, signorder: signorder});
+      signatories[signatories.length] = nsig;
+      document.set({"signatories": signatories});
+      return nsig;
+    },
+    authorSignsFirstMode : function() {
+      return _.all(this.signatories(), function(sig) {
+        return (sig.signs() && sig.author() && sig.signorder() == 1) ||
+         (sig.signs() && !sig.author() && sig.signorder() == 2) ||
+         (!sig.signs() && !sig.author());
+     });
+    },
+    authorSignsLastMode : function() {
+      return _.all(this.signatories(), function(sig) {
+        return (sig.signs() && sig.author() && sig.signorder() == 2) ||
+          (sig.signs() && !sig.author() && sig.signorder() == 1) ||
+          (!sig.signs() && !sig.author());
+      });
+    },
+    authorNotSignsMode : function() {
+      return _.all(this.signatories(), function(sig) {
+        return (sig.signs() && !sig.author() && sig.signorder() == 1) ||
+          (!sig.signs());
+      });
     },
     mainfile: function() {
         var file;
