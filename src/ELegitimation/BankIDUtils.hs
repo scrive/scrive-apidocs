@@ -76,7 +76,7 @@ fieldvaluebyid fid ((k, v):xs)
 compareFirstNames :: TemplatesMonad m => String -> String -> m MergeResult
 compareFirstNames fnContract fnEleg
     | null fnContract = do
-      f <- renderTemplate "bankidNoFirstName" $ return ()
+      f <- renderTemplate "_bankidNoFirstName" $ return ()
       return $ MergeFail f
     | null fnEleg = return MergeKeep
     | otherwise =
@@ -86,7 +86,7 @@ compareFirstNames fnContract fnEleg
         in if any (<= 1) difs
             then return MergeMatch
             else do
-             f <- renderTemplate "bankidFirstNameMismatch" $ do
+             f <- renderTemplate "_bankidFirstNameMismatch" $ do
                F.value "contract" fnContract
                F.value "eleg" fnEleg
              return $ MergeFail f
@@ -97,7 +97,7 @@ normalizeNumber = filter isDigit
 compareNumbers :: TemplatesMonad m => String -> String -> m MergeResult
 compareNumbers nContract nEleg
     | null nContract = do
-      f <- renderTemplate "bankidNoNumber" $ return ()
+      f <- renderTemplate "_bankidNoNumber" $ return ()
       return $ MergeFail f
     | null nEleg     = return MergeKeep
     | otherwise =
@@ -107,7 +107,7 @@ compareNumbers nContract nEleg
         in if dif <= 3
             then return MergeMatch
             else do
-             f <- renderTemplate "bankidNumberMismatch" $ do
+             f <- renderTemplate "_bankidNumberMismatch" $ do
                F.value "contract" nContract
                F.value "eleg" nEleg
              return $ MergeFail f
@@ -115,12 +115,12 @@ compareNumbers nContract nEleg
 compareLastNames :: TemplatesMonad m => String -> String -> m MergeResult
 compareLastNames lnContract lnEleg
     | null lnContract = do
-      f <- renderTemplate "bankidNoLastName" $ return ()
+      f <- renderTemplate "_bankidNoLastName" $ return ()
       return $ MergeFail f
     | null lnEleg = return MergeKeep
     | levenshtein (map toLower lnContract) (map toLower lnEleg) <= 1 = return MergeMatch
     | otherwise = do
-      f <- renderTemplate "bankidLastNameMismatch" $ do
+      f <- renderTemplate "_bankidLastNameMismatch" $ do
         F.value "contract" lnContract
         F.value "eleg" lnEleg
       return $ MergeFail f
