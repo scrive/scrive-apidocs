@@ -47,12 +47,24 @@ window.SignatoryDesignView = Backbone.View.extend({
        self.setRoleBox = $("<div class='setRoleBox'/>");
        self.container.append(self.setRoleBox);
 
+       var niceClose = function(funcOnChange) {
+         self.setRoleIcon.removeClass("selected");
+         self.showRoleSelector = false;
+         if (self.setRoleBox!= undefined) {
+           self.setRoleBox.fadeOut('fast', function() {
+             if (self.setRoleBox!= undefined) {
+               self.setRoleBox.remove();
+             }
+             if( funcOnChange!=undefined ) {
+               funcOnChange();
+             }
+           });
+         }
+       }
+
        var closeButton = $("<a class='modal-close close' href='#'/>");
        closeButton.click(function() {
-         self.setRoleIcon.removeClass("selected");
-         if (self.setRoleBox!= undefined)
-           self.setRoleBox.remove();
-         self.showRoleSelector = false;
+         niceClose();
          return false;
        });
        self.setRoleBox.append(closeButton);
@@ -65,7 +77,9 @@ window.SignatoryDesignView = Backbone.View.extend({
          if (checked) {
            checkbox.attr("checked","yes");
          } else {
-           checkbox.change(funcOnChange);
+           checkbox.change(function() {
+             niceClose(funcOnChange);
+           });
          }
          var label = $("<label class='radiolabel'>").text(text).attr("for", checkboxID);
          wrapper.append(checkbox).append(label);
