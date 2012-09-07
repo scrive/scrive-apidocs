@@ -166,8 +166,8 @@ var DocumentDesignView = Backbone.View.extend({
        box.append(box2).append($("<div class='border'/>"));
 
        var box3 = $("<div class='signStepsBodyPart last'/>");
-       box3.append(this.authenticationMethodSelection());
        box3.append(this.deliveryMethodSelection());
+       box3.append(this.authenticationMethodSelection());
        box3.append(this.finalButton());
        box.append(box3);
        return box;
@@ -175,27 +175,28 @@ var DocumentDesignView = Backbone.View.extend({
     authenticationMethodSelection : function() {
         var document = this.model;
         var box = $("<div class='authenticationmethodselect'/>");
-        var select= $("<select/>");
-        var email = $("<option value='email'/>").text(localization.email);
-        var eleg =  $("<option value='eleg'/>").text(localization.eleg);
-        select.append(email);
-        select.append(eleg);
-        box.text(localization.designview.authentication.selectmethod);
-        box.append(select);
-        if (document.emailAuthentication()) {
-          email.attr("selected","YES");
-          eleg.attr("selected","");
+        var checkbox = $("<input type='checkbox' cc='FALSE' class='elegCheckbox'>");
+        if (document.elegAuthentication())
+        {
+            checkbox.attr("checked","YES");
+            checkbox.attr("cc","YES");
         }
-        else if (document.elegAuthentication()) {
-          email.attr("selected","");
-          eleg.attr("selected","YES");
-        }
-        select.change(function(){
-            if ($(this).val() == 'eleg')
-                document.setElegAuthentication();
-            else
-                document.setEmailAuthentication();
-        });
+        checkbox.change(function() {
+          if ($(this).attr("cc") != "YES")
+          {
+            checkbox.attr("checked","YES");
+            checkbox.attr("cc","YES");
+            document.setElegAuthentication();
+          }  
+          else {
+             checkbox.removeAttr("checked");
+             checkbox.attr("cc","NO");
+             document.setEmailAuthentication();
+          }   
+          return false;
+        });  
+        var text = $("<span>").text(localization.designview.authentication.selectmethod + " "+ localization.eleg);
+        box.append(checkbox).append(text);
         return box;
     },
     deliveryMethodSelection : function() {
