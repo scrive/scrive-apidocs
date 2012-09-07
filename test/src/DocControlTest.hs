@@ -146,7 +146,6 @@ testNonLastPersonSigningADocumentRemainsPending = do
                          _ -> False
                      && d `allowsAuthMethod` EmailAuthentication
                      && d `allowsDeliveryMethod` EmailDelivery)
-
   True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
                    (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])
                  , (mkSigDetails "Fred" "Frog" "fred@frog.com", [SignatoryPartner])
@@ -158,19 +157,17 @@ testNonLastPersonSigningADocumentRemainsPending = do
 
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
       siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
-
   True <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink)
                (signatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (getEmail $ siglink) (signatorylinkid siglink))
   Just doc <- dbQuery $ GetDocumentByDocumentID $ documentid doc''
 
-
   assertEqual "Two left to sign" 2 (length $ filter isUnsigned (documentsignatorylinks doc))
 
-  req <- mkRequest POST [  ("magichash", inText $ show $ signatorymagichash siglink)
-                         , ("fields", inText "[]")
-                        ]
-  (_link, _ctx') <- runTestKontra req ctx $ signDocument (documentid doc) (signatorylinkid siglink)
-
+  preq <- mkRequest GET [ ]
+  (_,ctx') <- runTestKontra preq ctx $ handleSignShowSaveMagicHash (documentid doc) (signatorylinkid siglink) (signatorymagichash siglink)
+  
+  req <- mkRequest POST [ ("fields", inText "[]")]
+  (_link, _ctx') <- runTestKontra req ctx' $ signDocument (documentid doc) (signatorylinkid siglink)
   Just signeddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "In pending state" Pending (documentstatus signeddoc)
   assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks signeddoc))
@@ -210,10 +207,11 @@ testLastPersonSigningADocumentClosesIt = do
 
   assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks doc))
 
-  req <- mkRequest POST [   ("magichash", inText $ show $ signatorymagichash siglink)
-                          , ("fields", inText "[]")
-                        ]
-  (_link, _ctx') <- runTestKontra req ctx $ signDocument (documentid doc) (signatorylinkid siglink)
+  preq <- mkRequest GET [ ]
+  (_,ctx') <- runTestKontra preq ctx $ handleSignShowSaveMagicHash (documentid doc) (signatorylinkid siglink) (signatorymagichash siglink)
+
+  req <- mkRequest POST [ ("fields", inText "[]")]
+  (_link, _ctx') <- runTestKontra req ctx' $ signDocument (documentid doc) (signatorylinkid siglink)
 
   Just signeddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "In closed state" Closed (documentstatus signeddoc)
