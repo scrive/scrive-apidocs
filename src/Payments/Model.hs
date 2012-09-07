@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -XStandaloneDeriving #-}
+   
 module Payments.Model where
 
 import Data.Int (Int64)
@@ -38,6 +40,7 @@ data PaymentPlan = PaymentPlan    { ppAccountCode         :: AccountCode
                                   , ppDunningStep         :: Maybe Int
                                   , ppDunningDate         :: Maybe MinutesTime
                                   }
+                 deriving (Eq)
                    
 data PaymentPlanStatus = ActiveStatus      -- everything is great (unblocked)
                        | OverdueStatus     -- didn't pay!
@@ -52,7 +55,7 @@ data PaymentPlanProvider = NoProvider
 -- db operations
 
 {- | Get a new, unique account code. -}
-data GetAccountCode = GetAccountCode
+data GetAccountCode = GetAccountCode -- tested
 instance (MonadBase IO m, MonadDB m) => DBUpdate m GetAccountCode AccountCode where
   update GetAccountCode = do
     kPrepare $ "SELECT nextval('payment_plans_account_code_seq')"
@@ -63,7 +66,7 @@ instance (MonadBase IO m, MonadDB m) => DBUpdate m GetAccountCode AccountCode wh
       _ -> internalError -- should never happen
       
 {- | Get the quantity of users that should be charged in a company. -}
-data GetCompanyQuantity = GetCompanyQuantity CompanyID
+data GetCompanyQuantity = GetCompanyQuantity CompanyID --tested
 instance MonadDB m => DBQuery m GetCompanyQuantity Int where
   query (GetCompanyQuantity cid) = do
     kRun_ $ sqlSelect "users" $ do
@@ -84,6 +87,7 @@ instance (MonadDB m) => DBUpdate m DeletePaymentPlan () where
         Left  uid -> sqlWhereEq "payment_plans.user_id" uid
         Right cid -> sqlWhereEq "payment_plans.company_id" cid
 
+-- tested
 data GetPaymentPlan = GetPaymentPlan (Either UserID CompanyID)
 instance (MonadDB m) => DBQuery m GetPaymentPlan (Maybe PaymentPlan) where
   query (GetPaymentPlan eid) = do
@@ -106,6 +110,7 @@ instance (MonadDB m) => DBQuery m GetPaymentPlan (Maybe PaymentPlan) where
         Right cid -> sqlWhereEq "company_id" cid
     listToMaybe <$> foldDB fetchPaymentPlans []
 
+-- tested
 data GetPaymentPlanByAccountCode = GetPaymentPlanByAccountCode AccountCode
 instance (MonadDB m) => DBQuery m GetPaymentPlanByAccountCode (Maybe PaymentPlan) where
   query (GetPaymentPlanByAccountCode ac) = do
@@ -164,6 +169,7 @@ fetchPaymentPlans acc ac t muid mcid p s q pp sp qp pr mds mdd =
 daysBeforeSync :: Int
 daysBeforeSync = 7
 
+--tested
 data PaymentPlansRequiringSync = PaymentPlansRequiringSync MinutesTime
 instance MonadDB m => DBQuery m PaymentPlansRequiringSync [PaymentPlan] where
   query (PaymentPlansRequiringSync time) = do
@@ -171,14 +177,14 @@ instance MonadDB m => DBQuery m PaymentPlansRequiringSync [PaymentPlan] where
     kPrepare $ "SELECT account_code, account_type, user_id, company_id, plan, status, quantity, plan_pending, status_pending, quantity_pending, provider, dunning_step, dunning_date " ++
              "  FROM payment_plans " ++ 
              "  LEFT OUTER JOIN (SELECT company_id as cid, count(id) as q FROM users WHERE NOT deleted AND NOT is_free GROUP BY cid) as ccount ON cid = company_id " ++ 
-             "  WHERE ((account_type = 2 " ++ 
-             "    AND   (q > quantity " ++
-             "     OR    (q <= quantity AND NOT q = quantity_pending ))) " ++
-             "     OR  sync_date < ? )" ++
-             "    AND provider = ?"
-    _ <- kExecute [toSql past, toSql RecurlyProvider]
+             "  WHERE provider = ? " ++ -- only sync recurly
+             "    AND (sync_date < ? " ++ -- stuff older than 7 days needs sync
+             "     OR  (q > quantity " ++ -- current # of users > cache
+             "     OR   q <> quantity_pending)) " -- current # of users <> pending cache
+    _ <- kExecute [toSql RecurlyProvider, toSql past]
     foldDB fetchPaymentPlans []
 
+--tested
 data PaymentPlansExpiredDunning = PaymentPlansExpiredDunning MinutesTime
 instance MonadDB m => DBQuery m PaymentPlansExpiredDunning [PaymentPlan] where
   query (PaymentPlansExpiredDunning time) = do
@@ -190,8 +196,7 @@ instance MonadDB m => DBQuery m PaymentPlansExpiredDunning [PaymentPlan] where
     _ <- kExecute [toSql time, toSql RecurlyProvider]
     foldDB fetchPaymentPlans []
 
--- update payment_plans set 
-
+-- tested
 data SavePaymentPlan = SavePaymentPlan PaymentPlan MinutesTime
 instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
   update (SavePaymentPlan pp tm) = do
@@ -336,3 +341,5 @@ instance Convertible PaymentPlanProvider SqlValue where
   
 instance Convertible SqlValue PaymentPlanProvider where
   safeConvert s = safeConvert (fromSql s :: Int)
+
+deriving instance Show PaymentPlan

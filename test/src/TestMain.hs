@@ -121,7 +121,7 @@ import PadTest
 #endif
 
 #ifndef NO_LIVEDOCX
-import LiveDocxTest
+--import LiveDocxTest
 #endif
 
 
@@ -131,6 +131,10 @@ import OAuth
 
 #ifndef NO_FLASHMSGS
 import FlashMessages
+#endif
+
+#ifndef NO_PAYMENTS
+import PaymentsTest
 #endif
 
 allTests :: [(String, [String] -> TestEnvSt -> Test)]
@@ -227,7 +231,7 @@ allTests = tail tests
 #endif
 
 #ifndef NO_LIVEDOCX
-      , ("livedocx", const $ const liveDocxTests)
+--      , ("livedocx", const $ const liveDocxTests)
 #endif
 
 #ifndef NO_OAUTH
@@ -236,6 +240,9 @@ allTests = tail tests
 
 #ifndef NO_FLASHMSGS
       , ("flashmessages", const $ const flashMessagesTests)
+#endif
+#ifndef NO_PAYMENTS
+      , ("payments", const paymentsTests)
 #endif
       ]
 
