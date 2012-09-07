@@ -7,6 +7,7 @@ module Archive.Control
        handleReallyDelete,
        handleShare,
        handleCancel,
+       handleZip,
        showArchive,
        showPadDeviceArchive,
        jsonDocumentsList
@@ -158,8 +159,14 @@ handleShare =  do
     when_ (null $ catMaybes w) internalError
     J.runJSONGenT $ return ()
 
-
-
+handleZip :: Kontrakcja m => m ZipArchive
+handleZip = do
+  Log.debug $ "Downloading zip list"
+  docids <- take 100 <$> getCriticalFieldList asValidDocID "doccheck"
+  mentries <- forM docids $ \did -> do
+                doc <- guardRightM' $ getDocByDocID did
+                docToEntry doc
+  return $ ZipArchive "selectedfiles.zip" $ foldr addEntryToArchive emptyArchive $ map fromJust $ filter isJust $ mentries
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
  -}
@@ -171,7 +178,7 @@ showArchive = checkUserTOSGet $ do
 showPadDeviceArchive :: Kontrakcja m => m (Either KontraLink String)
 showPadDeviceArchive = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >> pagePadDeviceArchive
 
-jsonDocumentsList ::  Kontrakcja m => m (Either KontraLink (Either CSV (Either ZipArchive JSValue)))
+jsonDocumentsList ::  Kontrakcja m => m (Either KontraLink (Either CSV JSValue))
 jsonDocumentsList = withUserGet $ do
   Just user@User{userid = uid} <- ctxmaybeuser <$> getContext
   lang <- getLang . ctxlocale <$> getContext
@@ -215,12 +222,6 @@ jsonDocumentsList = withUserGet $ do
                               , csvHeader = docForListCSVHeader
                               , csvContent = docsCSVs
                               }
-       Just "zip" -> do
-          Log.debug "Returning zip" 
-          allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting (DocumentPagination 0 maxBound)
-          mentries <- mapM docToEntry $  allDocs
-          Log.debug "We have all files"
-          return $ Right $ Left $ ZipArchive "allfiles.zip" $ foldr addEntryToArchive emptyArchive $ map fromJust $ filter isJust $ mentries
        _ -> do
           allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
           let docs = PagedList {  list       = allDocs
@@ -228,7 +229,7 @@ jsonDocumentsList = withUserGet $ do
                                 , pageSize   = docsPageSize
                                 }
           docsJSONs <- mapM (docForListJSON (timeLocaleForLang lang) cttime user padqueue) $ take docsPageSize $ list docs
-          return $ Right $ Right $ JSObject $ toJSObject [
+          return $ Right $ JSObject $ toJSObject [
               ("list", JSArray docsJSONs)
             , ("paging", pagingParamsJSON docs)
             ]
