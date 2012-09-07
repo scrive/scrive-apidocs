@@ -164,6 +164,7 @@ handleZip = do
   Log.debug $ "Downloading zip list"
   docids <- take 100 <$> getCriticalFieldList asValidDocID "doccheck"
   mentries <- forM docids $ \did -> do
+                Log.debug "Getting file for zip download"
                 doc <- guardRightM' $ getDocByDocID did
                 docToEntry doc
   return $ ZipArchive "selectedfiles.zip" $ foldr addEntryToArchive emptyArchive $ map fromJust $ filter isJust $ mentries
