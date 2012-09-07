@@ -44,7 +44,7 @@ window.DocumentCellsDefinition = function(archive) { return  [
 window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  [
             new SelectFiltering({
                              name: "status",
-                             textWidth : "100px",
+                             textWidth : "110px",
                              options: _.union(
                                         [{name: localization.filterByStatus.showAnyStatus, value: ""} ],
                                          (draftsAvaible ? [{name: localization.filterByStatus.showDraft,     value: "[draft]"}] : []),
