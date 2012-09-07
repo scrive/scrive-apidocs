@@ -368,7 +368,10 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
 
         _.each(attachments.document.signatories(), function(sig)  {
            if (sig.signs() && !sig.author()) {
-                var option = $("<option>").text(sig.nameOrEmail());
+                var text = sig.nameOrEmail();
+                if (sig.isCsv())
+                  text = localization.csv.title;
+                var option = $("<option>").text(text);
                 if (attachment.signatory() == sig)
                     option.attr("selected","yes");
                 option.data("signatory",sig);
