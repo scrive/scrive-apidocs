@@ -97,7 +97,7 @@ handlePadLogin = do
     case (memail, mpasswd) of
         (Just email, Just passwd) -> do
             -- check the user things here
-            maybeuser <- dbQuery $ GetUserByEmail Nothing (Email $ map toLower $ email)
+            maybeuser <- dbQuery $ GetUserByEmail (Email $ map toLower $ email)
             when_ (isJust maybeuser) $ do
                  ctx <- getContext
                  _ <- dbUpdate $ LogHistoryPadLoginAttempt (userid $ fromJust maybeuser) (ctxipnumber ctx) (ctxtime ctx)

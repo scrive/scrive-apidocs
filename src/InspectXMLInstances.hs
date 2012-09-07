@@ -9,7 +9,6 @@
 -----------------------------------------------------------------------------
 
 module InspectXMLInstances() where
-import API.Service.Model
 import Doc.DocStateData
 import Company.Model
 import MagicHash (MagicHash)
@@ -71,7 +70,6 @@ instance InspectXML BS.ByteString where
 instance InspectXML Bool where
 instance InspectXML Char where
 instance InspectXML Int where
-instance InspectXML ServiceID where
 instance InspectXML Integer where
 instance InspectXML SignOrder where
 instance InspectXML SignatoryRole where

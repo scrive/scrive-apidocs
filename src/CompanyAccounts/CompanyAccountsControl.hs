@@ -212,7 +212,7 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
   memail <- getOptionalField asValidEmail "email"
   fstname <- fromMaybe "" <$> getOptionalField asValidName "fstname"
   sndname <- fromMaybe "" <$> getOptionalField asValidName "sndname"
-  mexistinguser <- maybe (return Nothing) (dbQuery . GetUserByEmail Nothing . Email) memail
+  mexistinguser <- maybe (return Nothing) (dbQuery . GetUserByEmail . Email) memail
   mexistingcompany <- maybe (return Nothing) getCompanyForUser mexistinguser
 
   minvitee <-
@@ -265,7 +265,7 @@ handleResendToCompanyAccount = withCompanyAdmin $ \(user, company) -> do
   muserbyid <- dbQuery $ GetUserByID resendid
   mcompanybyid <- maybe (return Nothing) getCompanyForUser muserbyid
   minvite <- dbQuery $ GetCompanyInvite (companyid company) (Email resendemail)
-  muserbyemail <- dbQuery $ GetUserByEmail Nothing (Email resendemail)
+  muserbyemail <- dbQuery $ GetUserByEmail (Email resendemail)
 
   resent <-
     case (muserbyid, mcompanybyid, minvite, muserbyemail) of

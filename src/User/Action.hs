@@ -38,7 +38,7 @@ handleAccountSetupFromSign document signatorylink = do
   let firstname = getFirstName signatorylink
       lastname = getLastName signatorylink
       email = getEmail signatorylink
-  muser <- dbQuery $ GetUserByEmail (currentServiceID ctx) (Email email)
+  muser <- dbQuery $ GetUserByEmail (Email email)
   user <- maybe (guardJustM $ createUser (Email email) (firstname, lastname) Nothing (ctxlocale ctx))
                 return
                 muser
@@ -115,7 +115,7 @@ createUser :: Kontrakcja m => Email -> (String, String) -> Maybe CompanyID -> Lo
 createUser email names mcompanyid locale = do
   ctx <- getContext
   passwd <- createPassword =<< randomPassword
-  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) Nothing mcompanyid locale
+  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) mcompanyid locale
   case muser of
     Just user -> do
       _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) email (userid <$> ctxmaybeuser ctx)

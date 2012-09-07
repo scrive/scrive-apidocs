@@ -5,9 +5,6 @@ module RoutingTable (
     staticRoutes
   ) where
 
-import API.IntegrationAPI
-import API.Service.ServiceControl
-
 import Kontra
 import KontraLink
 import LocaleRouting (allLocaleDirs)
@@ -203,9 +200,6 @@ staticRoutes = choice
 
      , dir "adminonly" $ dir "statistics"        $ hGet  $ toK0 $ Stats.showAdminSystemUsageStats
 
-     , dir "adminonly" $ dir "services" $ hGet $ toK0 $ Administration.showServicesPage
-     , dir "adminonly" $ dir "services" $ param "create" $ hPost $ toK0 $ Administration.handleCreateService
-
      , dir "adminonly" $ dir "companies" $ hGet $ toK0 $ Administration.jsonCompanies
 
      , dir "adminonly" $ dir "reseal" $ hPost $ toK1 $ Administration.resealFile
@@ -214,18 +208,6 @@ staticRoutes = choice
      , dir "adminonly" $ dir "docproblems" $ hGet $ toK0 $ DocControl.handleInvariantViolations
 
      , dir "adminonly" $ dir "backdoor" $ hGet $ toK1 $ Administration.handleBackdoorQuery
-
-     , dir "services" $ hGet $ toK0 $ handleShowServiceList
-     , dir "services" $ hGet $ toK1 $ handleShowService
-     , dir "services" $ dir "ui" $ hPost $ toK1 $ handleChangeServiceUI
-     , dir "services" $ dir "password" $ hPost $ toK1 $ handleChangeServicePassword
-     , dir "services" $ dir "settings" $ hPost $ toK1 $ handleChangeServiceSettings
-     , dir "services" $ dir "logo" $ hGet $ toK1 $ handleServiceLogo
-     , dir "services" $ dir "buttons_body" $ hGet $ toK1 $ handleServiceButtonsBody
-     , dir "services" $ dir "buttons_rest" $ hGet $ toK1 $ handleServiceButtonsRest
-
-     -- never ever use this
-     , dir "adminonly" $ dir "neveruser" $ dir "resetservicepassword" $ hGetWrap (onlyAdmin . https) $ toK2 $ handleChangeServicePasswordAdminOnly
 
      , dir "adminonly" $ dir "log" $ hGetWrap (onlyAdmin . https) $ toK1 $ Administration.serveLogDirectory
 
@@ -251,7 +233,6 @@ staticRoutes = choice
      -- question form on static pages
      , dir "question"    $ hPostAllowHttp $ toK0 $ UserControl.handleQuestion
 
-     , integrationAPI
      , documentAPI
      , oauthAPI
      , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "public"

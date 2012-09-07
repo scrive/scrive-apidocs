@@ -18,7 +18,6 @@ module Administration.AdministrationView(
             , adminCompanyUsersPage
             , adminUsersPageForSales
             , allUsersTable
-            , servicesAdminPage
             , adminFunctionalityStatsPage
             , adminDocuments
             , adminUserUsageStatsPage
@@ -28,15 +27,11 @@ module Administration.AdministrationView(
 
 import KontraLink
 import Templates.Templates
-import Control.Applicative
 import Data.Maybe
-import DB
-import Utils.Prelude
 import User.UserView
 import User.Model
 import Doc.DocStateData
 import Company.Model
-import API.Service.Model
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 import Kontra
@@ -155,15 +150,6 @@ allUsersTable users =
     renderTemplate "allUsersTable" $ do
         F.objects "users" $ map mkUserInfoView $ users
         F.value "adminlink" $ show $ LinkAdminOnly
-
-servicesAdminPage :: (MonadDB m, TemplatesMonad m) => [Service] -> m String
-servicesAdminPage services = do
-    renderTemplate "servicesAdmin" $ do
-        F.value "adminlink" $ show $ LinkAdminOnly
-        F.objects "services" $ for services $ \ service -> do
-            F.value "name"  $ show $ serviceid service
-            F.valueM "admin" $ fmap getSmartName <$> (dbQuery $ GetUserByID $ serviceadmin $ servicesettings service)
-            F.value "location" $ show $ servicelocation $ servicesettings service
 
 mkUserInfoView :: Monad m => (User, Maybe Company, DocStats,InviteType) -> Fields m ()
 mkUserInfoView (user, mcompany, docstats, _) = do

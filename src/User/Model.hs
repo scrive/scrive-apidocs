@@ -47,7 +47,6 @@ import Data.List
 import Data.Char
 import Database.HDBC
 
-import API.Service.Model
 import Company.Model
 import DB
 import MinutesTime
@@ -90,7 +89,6 @@ data User = User {
   , usersignupmethod              :: SignupMethod
   , userinfo                      :: UserInfo
   , usersettings                  :: UserSettings
-  , userservice                   :: Maybe ServiceID
   , usercompany                   :: Maybe CompanyID
   } deriving (Eq, Ord, Show)
 
@@ -191,11 +189,11 @@ instance MonadDB m => DBQuery m GetUserByID (Maybe User) where
     _ <- kExecute [toSql uid]
     fetchUsers >>= oneObjectReturnedGuard
 
-data GetUserByEmail = GetUserByEmail (Maybe ServiceID) Email
+data GetUserByEmail = GetUserByEmail Email
 instance MonadDB m => DBQuery m GetUserByEmail (Maybe User) where
-  query (GetUserByEmail msid email) = do
-    kPrepare $ selectUsersSQL ++ " WHERE deleted = FALSE AND service_id IS NOT DISTINCT FROM ? AND email = ?"
-    _ <- kExecute [toSql msid, toSql $ map toLower $ unEmail email]
+  query (GetUserByEmail email) = do
+    kPrepare $ selectUsersSQL ++ " WHERE deleted = FALSE AND email = ?"
+    _ <- kExecute [toSql $ map toLower $ unEmail email]
     fetchUsers >>= oneObjectReturnedGuard
 
 data GetCompanyAccounts = GetCompanyAccounts CompanyID
@@ -257,10 +255,10 @@ data RemoveInactiveUser = RemoveInactiveUser UserID
 instance MonadDB m => DBUpdate m RemoveInactiveUser Bool where
   update (RemoveInactiveUser uid) = kRun01 $ SQL "DELETE FROM users WHERE deleted = FALSE AND id = ? AND has_accepted_terms_of_service IS NULL" [toSql uid]
 
-data AddUser = AddUser (String, String) String (Maybe Password) (Maybe ServiceID) (Maybe CompanyID) Locale
+data AddUser = AddUser (String, String) String (Maybe Password) (Maybe CompanyID) Locale
 instance MonadDB m => DBUpdate m AddUser (Maybe User) where
-  update (AddUser (fname, lname) email mpwd msid mcid l) = do
-    mu <- query $ GetUserByEmail msid $ Email email
+  update (AddUser (fname, lname) email mpwd mcid l) = do
+    mu <- query $ GetUserByEmail $ Email email
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
       Nothing -> do
@@ -271,7 +269,6 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
           , sql "account_suspended" False
           , sql "has_accepted_terms_of_service" SqlNull
           , sql "signup_method" AccountRequest
-          , sql "service_id" msid
           , sql "company_id" mcid
           , sql "first_name" fname
           , sql "last_name" lname
@@ -288,12 +285,12 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
           ] <> SQL ("RETURNING " ++ selectUsersSelectors) []
         fetchUsers >>= oneObjectReturnedGuard
 
-data SetUserEmail = SetUserEmail (Maybe ServiceID) UserID Email
+data SetUserEmail = SetUserEmail UserID Email
 instance MonadDB m => DBUpdate m SetUserEmail Bool where
-  update (SetUserEmail msid uid email) = do
+  update (SetUserEmail uid email) = do
     kPrepare $ "UPDATE users SET email = ?"
-      ++ " WHERE id = ? AND deleted = FALSE AND service_id IS NOT DISTINCT FROM ?"
-    kExecute01 [toSql $ map toLower $ unEmail email, toSql uid, toSql msid]
+      ++ " WHERE id = ? AND deleted = FALSE"
+    kExecute01 [toSql $ map toLower $ unEmail email, toSql uid]
 
 data SetUserPassword = SetUserPassword UserID Password
 instance MonadDB m => DBUpdate m SetUserPassword Bool where
@@ -436,7 +433,6 @@ selectUsersSelectors =
  ++ ", account_suspended"
  ++ ", has_accepted_terms_of_service"
  ++ ", signup_method"
- ++ ", service_id"
  ++ ", company_id"
  ++ ", first_name"
  ++ ", last_name"
@@ -457,7 +453,7 @@ fetchUsers = foldDB decoder []
     -- Note: this function gets users in reversed order, but all queries
     -- use ORDER BY DESC, so in the end everything is properly ordered.
     decoder acc uid password salt is_company_admin account_suspended
-      has_accepted_terms_of_service signup_method service_id company_id
+      has_accepted_terms_of_service signup_method company_id
       first_name last_name personal_number company_position phone mobile
       email lang region customfooter
       company_name company_number = User {
@@ -482,6 +478,5 @@ fetchUsers = foldDB decoder []
             locale = mkLocale region lang
           , customfooter = customfooter
           }
-        , userservice = service_id
         , usercompany = company_id
         } : acc

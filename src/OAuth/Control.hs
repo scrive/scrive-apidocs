@@ -116,7 +116,7 @@ authorizationGranted = do
       return $ LinkOAuthAuthorization token
     Just user -> do
       (url, verifier) <- guardJustM $ dbUpdate $ VerifyCredentials token (userid user) time
-      _ <- addUserStatAPIGrantAccess (userid user) time (usercompany user) Nothing 
+      _ <- addUserStatAPIGrantAccess (userid user) time (usercompany user) 
       return $ LinkOAuthCallback url token $ Just verifier
 
 authorizationGrantedLogin :: Kontrakcja m => m KontraLink
@@ -133,7 +133,7 @@ authorizationGrantedLogin = do
       return $ LinkOAuthAuthorization token
     Just user -> do
       (url, verifier) <- guardJustM $ dbUpdate $ VerifyCredentials token (userid user) time
-      _ <- addUserStatAPIGrantAccess (userid user) time (usercompany user) Nothing       
+      _ <- addUserStatAPIGrantAccess (userid user) time (usercompany user)
       return $ LinkOAuthCallback url token $ Just verifier
 
 authorizationGrantedNewUser :: Kontrakcja m => m KontraLink
@@ -144,7 +144,7 @@ authorizationGrantedNewUser = do
   meu <- handleSignup
   case meu of
     Just (email, Just uid) -> do
-      void $ addUserStatAPINewUser uid time Nothing Nothing 
+      void $ addUserStatAPINewUser uid time Nothing 
       addFlashM $ modalUserSignupDone $ email
     _ -> return ()
   return $ LinkOAuthAuthorization token

@@ -135,9 +135,9 @@ initDatabaseEntries :: (CryptoRNG m, MonadDB m) => [(Email, String)] -> m ()
 initDatabaseEntries = mapM_ $ \(email, passwordstring) -> do
   -- create initial database entries
   passwd <- createPassword passwordstring
-  maybeuser <- dbQuery $ GetUserByEmail Nothing email
+  maybeuser <- dbQuery $ GetUserByEmail email
   case maybeuser of
     Nothing -> do
-      _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) Nothing Nothing (mkLocaleFromRegion defaultValue)
+      _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) Nothing (mkLocaleFromRegion defaultValue)
       return ()
     Just _ -> return () -- user exist, do not add it

@@ -31,7 +31,6 @@ module Doc.DocView (
   ) where
 
 import AppView (kontrakcja, standardPageFields)
-import API.Service.Model
 import Company.Model
 import Doc.DocProcess
 import Doc.DocRegion
@@ -141,18 +140,13 @@ documentJSON pq msl _crttime doc = do
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
     let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
     mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) (getAuthorSigLink doc >>= maybesignatory)
-    mservice <- maybe (return Nothing) (dbQuery . GetService) (documentservice doc)
     mcompany <- maybe (return Nothing) (dbQuery . GetCompany) (getAuthorSigLink doc >>= maybecompany)
     let logo  = if (isJust mcompany && isJust (companylogo $ companyui (fromJust mcompany)))
                   then show <$> LinkCompanyLogo <$> companyid <$> mcompany
-                  else if ((isJust mservice) &&  (isJust $ servicelogo $ serviceui $ fromJust mservice))
-                        then show <$> LinkServiceLogo <$> serviceid <$> mservice
-                        else Nothing
+                  else Nothing
     let bbc  = if (isJust mcompany && isJust (companybarsbackground $ companyui (fromJust mcompany)))
                   then companybarsbackground $ companyui (fromJust mcompany)
-                  else if ((isJust mservice) &&  (isJust $ servicebarsbackground $ serviceui $ fromJust mservice))
-                        then servicebarsbackground $ serviceui $ fromJust mservice
-                        else Nothing
+                  else Nothing
     let bbtc  = if (isJust mcompany && isJust (companybarstextcolour $ companyui (fromJust mcompany)))
                   then companybarstextcolour $ companyui (fromJust mcompany)
                   else Nothing
@@ -180,7 +174,6 @@ documentJSON pq msl _crttime doc = do
       J.value "barsbackgroundcolor" bbc
       J.value "barsbackgroundtextcolor" bbtc
       J.value "author" $ authorJSON mauthor mcompany
-      J.value "whitelabel" $ isJust mservice
 
 authenticationJSON :: AuthenticationMethod -> JSValue
 authenticationJSON EmailAuthentication = toJSValue "email"

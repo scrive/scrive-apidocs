@@ -39,7 +39,6 @@ import User.Model
 import Doc.DocStateData
 import Stats.Tables
 import Company.Model
-import API.Service.Model
 import OurPrelude
 import Data.Maybe (fromMaybe)
 import qualified Data.Map as M
@@ -81,7 +80,6 @@ data DocStatEvent = DocStatEvent {
   , seQuantity   :: DocStatQuantity -- ^ The type of event
   , seAmount     :: Int             -- ^ The value of the event
   , seDocumentID :: DocumentID      -- ^ If the event is related to a document, it's this doc
-  , seServiceID :: Maybe ServiceID
   , seCompanyID :: Maybe CompanyID
   , seDocumentType :: DocumentType
   , seAPIString :: String
@@ -127,7 +125,6 @@ selectDocStatEventsSQL = SQL ("SELECT "
  ++ ", e.quantity"
  ++ ", e.amount"
  ++ ", e.document_id"
- ++ ", e.service_id"
  ++ ", e.company_id"
  ++ ", e.document_type"
  ++ ", e.api_string"
@@ -137,14 +134,13 @@ selectDocStatEventsSQL = SQL ("SELECT "
 fetchDocStats :: MonadDB m => DBEnv m [DocStatEvent]
 fetchDocStats = foldDB decoder []
   where
-    decoder acc uid time quantity amount documentid serviceid
+    decoder acc uid time quantity amount documentid
      companyid documenttype apistring = DocStatEvent {
          seUserID       = uid
        , seTime         = time
        , seQuantity     = quantity
        , seAmount       = amount
        , seDocumentID   = documentid
-       , seServiceID    = serviceid
        , seCompanyID    = companyid
        , seDocumentType = doctypeFromString documenttype
        , seAPIString    = apistring
@@ -175,7 +171,7 @@ instance MonadDB m => DBQuery m GetDocStatCSV [[BS.ByteString]] where
   query (GetDocStatCSV start end) = do
     _ <- kRun $ SQL ("SELECT doc_stat_events.user_id, trim(trim(users.first_name) || ' ' || trim(users.last_name)), trim(users.email), " ++
                     "       doc_stat_events.time, doc_stat_events.quantity, doc_stat_events.amount,  " ++
-                    "       doc_stat_events.document_id, doc_stat_events.service_id, trim(companies.name), " ++
+                    "       doc_stat_events.document_id, trim(companies.name), " ++
                     "       doc_stat_events.company_id, doc_stat_events.document_type, doc_stat_events.api_string " ++
                     "FROM doc_stat_events " ++
                     "LEFT JOIN users ON doc_stat_events.user_id = users.id " ++
@@ -183,11 +179,11 @@ instance MonadDB m => DBQuery m GetDocStatCSV [[BS.ByteString]] where
                     "WHERE doc_stat_events.time > ? AND doc_stat_events.time <= ?" ++
                     "ORDER BY doc_stat_events.time DESC") [toSql start, toSql end]
     foldDB f []
-      where f :: [[BS.ByteString]] -> UserID -> BS.ByteString -> BS.ByteString -> MinutesTime -> DocStatQuantity -> Int -> DocumentID -> Maybe BS.ByteString -> Maybe BS.ByteString -> Maybe CompanyID -> BS.ByteString -> BS.ByteString -> [[BS.ByteString]]
-            f acc uid n em t q a did sid cn cid tp api =
+      where f :: [[BS.ByteString]] -> UserID -> BS.ByteString -> BS.ByteString -> MinutesTime -> DocStatQuantity -> Int -> DocumentID -> Maybe BS.ByteString -> Maybe CompanyID -> BS.ByteString -> BS.ByteString -> [[BS.ByteString]]
+            f acc uid n em t q a did cn cid tp api =
               let smartname = if BS.null n then em else n
               in [BS.fromString $ show uid, smartname, BS.fromString $ showDateYMD t, BS.fromString $ show q, 
-                  BS.fromString $ show a, BS.fromString $ show did, fromMaybe (BS.fromString "scrive") sid, fromMaybe (BS.fromString "none") cn, BS.fromString $ maybe "" show cid, tp, api] : acc
+                  BS.fromString $ show a, BS.fromString $ show did, fromMaybe (BS.fromString "none") cn, BS.fromString $ maybe "" show cid, tp, api] : acc
                     
 
 selectUsersAndCompaniesAndInviteInfoSQL :: SQL
@@ -200,7 +196,6 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   ++ ", users.account_suspended"
   ++ ", users.has_accepted_terms_of_service"
   ++ ", users.signup_method"
-  ++ ", users.service_id AS user_service_id"
   ++ ", users.company_id AS user_company_id"
   ++ ", users.first_name"
   ++ ", users.last_name"
@@ -217,7 +212,6 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   -- Company:
   ++ ", c.id AS company_id"
   ++ ", c.external_id"
-  ++ ", c.service_id AS company_service_id"
   ++ ", c.name"
   ++ ", c.number"
   ++ ", c.address"
@@ -243,9 +237,9 @@ fetchUsersAndCompaniesAndInviteInfo :: MonadDB m => DBEnv m [(User, Maybe Compan
 fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` foldDB decoder []
   where
     decoder acc uid password salt is_company_admin account_suspended
-     has_accepted_terms_of_service signup_method service_id company_id
+     has_accepted_terms_of_service signup_method company_id
      first_name last_name personal_number company_position phone mobile
-     email lang region customfooter company_name company_number cid eid sid
+     email lang region customfooter company_name company_number cid eid
      name number address zip' city country bars_background bars_textcolour logo email_domain
      inviter_id invite_time invite_type
      = (
@@ -271,14 +265,12 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` foldDB decoder []
              locale = mkLocale region lang
            , customfooter = customfooter
            }
-         , userservice = service_id
          , usercompany = company_id
          }
         , case cid of
             (Just _) -> Just Company {
                 companyid = $(fromJust) cid
               , companyexternalid = eid
-              , companyservice = sid
               , companyinfo = CompanyInfo {
                   companyname = $(fromJust) name
                 , companynumber = $(fromJust) number
@@ -356,7 +348,6 @@ instance MonadDB m => DBUpdate m AddDocStatEvent Bool where
       , sql "quantity" seQuantity
       , sql "amount" seAmount
       , sql "document_id" seDocumentID
-      , sql "service_id" seServiceID
       , sql "company_id" seCompanyID
       , sql "document_type" $ show seDocumentType
       , sql "api_string" seAPIString
@@ -386,7 +377,6 @@ data UserStatEvent = UserStatEvent {
   , usTime      :: MinutesTime
   , usQuantity  :: UserStatQuantity
   , usAmount    :: Int
-  , usServiceID :: Maybe ServiceID
   , usCompanyID :: Maybe CompanyID
   }
 
@@ -396,7 +386,6 @@ selectUserStatEventsSQL = SQL ("SELECT"
  ++ ", e.time"
  ++ ", e.quantity"
  ++ ", e.amount"
- ++ ", e.service_id"
  ++ ", e.company_id"
  ++ "  FROM user_stat_events e"
  ++ " ") []
@@ -404,12 +393,11 @@ selectUserStatEventsSQL = SQL ("SELECT"
 fetchUserStats :: MonadDB m => DBEnv m [UserStatEvent]
 fetchUserStats = foldDB decoder []
   where
-    decoder acc uid time quantity amount serviceid companyid = UserStatEvent {
+    decoder acc uid time quantity amount companyid = UserStatEvent {
         usUserID       = uid
       , usTime         = time
       , usQuantity     = quantity
       , usAmount       = amount
-      , usServiceID    = serviceid
       , usCompanyID    = companyid
       } : acc
 
@@ -427,7 +415,6 @@ instance MonadDB m => DBUpdate m AddUserStatEvent Bool where
       , sql "time" usTime
       , sql "quantity" usQuantity
       , sql "amount" usAmount
-      , sql "service_id" usServiceID
       , sql "company_id" usCompanyID
       ]
 
@@ -455,7 +442,6 @@ data SignStatEvent = SignStatEvent {
   , ssSignatoryLinkID :: SignatoryLinkID
   , ssTime            :: MinutesTime
   , ssQuantity        :: SignStatQuantity
-  , ssServiceID       :: Maybe ServiceID
   , ssCompanyID       :: Maybe CompanyID
   , ssDocumentProcess :: DocumentProcess
   }
@@ -466,7 +452,6 @@ selectSignStatEventsSQL = SQL ("SELECT"
  ++ ", e.signatory_link_id"
  ++ ", e.time"
  ++ ", e.quantity"
- ++ ", e.service_id"
  ++ ", e.company_id"
  ++ ", e.document_process"
  ++ "  FROM sign_stat_events e"
@@ -475,13 +460,12 @@ selectSignStatEventsSQL = SQL ("SELECT"
 fetchSignStats :: MonadDB m => DBEnv m [SignStatEvent]
 fetchSignStats = foldDB decoder []
   where
-    decoder acc docid slid time quantity serviceid
+    decoder acc docid slid time quantity
      companyid documentprocess = SignStatEvent {
          ssDocumentID      = docid
        , ssSignatoryLinkID = slid
        , ssTime            = time
        , ssQuantity        = quantity
-       , ssServiceID       = serviceid
        , ssCompanyID       = companyid
        , ssDocumentProcess = documentprocess
        } : acc
@@ -500,7 +484,6 @@ instance MonadDB m => DBUpdate m AddSignStatEvent Bool where
       , sql "signatory_link_id" ssSignatoryLinkID
       , sql "time" ssTime
       , sql "quantity" ssQuantity
-      , sql "service_id" ssServiceID
       , sql "company_id" ssCompanyID
       , sql "document_process" ssDocumentProcess
       ] <> SQL "WHERE NOT EXISTS (SELECT 1 FROM sign_stat_events WHERE document_id = ? AND quantity = ? AND signatory_link_id = ?)" [

@@ -4,14 +4,11 @@ import Data.Int
 
 import Doc.DocStateData
 import MagicHash
-import Utils.HTTP
 import Utils.List
 import User.Model
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
 import ListUtil
-import Session
-import API.Service.Model
 import Company.Model
 import File.FileID
 import OAuth.Model
@@ -86,12 +83,7 @@ data KontraLink
     | LinkFile FileID String
     | LinkAskQuestion
     | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
-    | LinkConnectUserSession ServiceID UserID SessionID KontraLink
-    | LinkConnectCompanySession ServiceID CompanyID SessionID KontraLink
     | LinkAttachmentView AttachmentID
-    | LinkServiceLogo ServiceID
-    | LinkServiceButtonsBody ServiceID
-    | LinkServiceButtonsRest ServiceID
     | LinkCSVLandPage Int
     | LinkEnableCookies
     | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
@@ -196,13 +188,6 @@ instance Show KontraLink where
     showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid ++"/")
     showsPrec _ (LinkAskQuestion) = (++) ("/question")
     showsPrec _ (LinkSignCanceledDataMismatch docid sigid) = (++) $ "/landpage/signcanceleddatamismatch/" ++ show docid ++ "/" ++ show sigid
-    showsPrec _ (LinkConnectUserSession sid uid ssid referer) = (++) $ "/integration/connectuser/" ++ encodeForURL sid ++ "/" ++ show uid  ++ "/" ++ show ssid
-                                                                        ++ "?referer=" ++ (URL.encode $ UTF.encode  $ show referer)
-    showsPrec _ (LinkConnectCompanySession sid cid ssid referer) = (++) $ "/integration/connectcompany/" ++ encodeForURL sid ++ "/" ++ show cid  ++ "/" ++ show ssid
-                                                                        ++ "?referer=" ++ (URL.encode $ UTF.encode  $ show referer)
-    showsPrec _ (LinkServiceLogo sid) = (++) $ "/services/logo/" ++ encodeForURL sid
-    showsPrec _ (LinkServiceButtonsBody sid) = (++) $ "/services/buttons_body/" ++ encodeForURL sid
-    showsPrec _ (LinkServiceButtonsRest sid) = (++) $ "/services/buttons_rest/" ++ encodeForURL sid
     showsPrec _ (LinkCSVLandPage c) = (++) ("/csvlandpage/" ++ show c)
     showsPrec _ (LinkEnableCookies) = (++) ("/enable-cookies/enable-cookies.html")
     showsPrec _ (LinkDocumentPreview did (Just sl) fid) = (++) ("/preview/" ++ show did ++

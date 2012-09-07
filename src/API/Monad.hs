@@ -20,10 +20,7 @@ module API.Monad (
                  APIMonad(..),
                  getAPIUser,
                  FormEncoded(..)
-                 
                  )
-
-
   where
 
 import Control.Monad.Trans

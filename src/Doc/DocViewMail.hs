@@ -18,7 +18,6 @@ module Doc.DocViewMail (
     , companyBrandFields
     ) where
 
-import API.Service.Model
 import Company.Model
 import Control.Logic
 import Doc.DocProcess
@@ -41,7 +40,6 @@ import Control.Monad
 import Data.Functor
 import Data.Maybe
 import File.Model
-import AppView
 import User.Model
 import Util.HasSomeCompanyInfo
 import qualified Templates.Fields as F
@@ -91,10 +89,9 @@ remindMailNotSigned forMail customMessage ctx document signlink = do
         F.value "partnerswhosigned" $ map getSmartName $ partySignedList document
         F.value "someonesigned" $ not $ null $ partySignedList document
         F.value "timetosign" $ show <$> documenttimeouttime document
-        F.valueM "link" $ do
-            if forMail
-               then makeFullLink ctx document $ show $ LinkSignDoc document signlink
-               else makeFullLink ctx document $ "/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
+        F.value "link" $ if forMail
+          then makeFullLink ctx $ show $ LinkSignDoc document signlink
+          else makeFullLink ctx "/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
         F.value "isattachments" $ length (documentauthorattachments document) > 0
         F.value "attachments" $ map (filename) (catMaybes authorattachmentfiles)
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Just signlink <| forMail |> Nothing) (mainfile)
@@ -150,7 +147,6 @@ remindMailSignedStandardHeader document signlink =
         F.value "documenttitle" $ documenttitle document
         F.value "author" $ getAuthorName document
         F.value "personname" $ getSmartName signlink
-        F.value "service" $ isJust $ documentservice document
 
 remindMailNotSignedStandardHeader :: TemplatesMonad m
                                   => Document
@@ -161,7 +157,6 @@ remindMailNotSignedStandardHeader document signlink =
         F.value "documenttitle" $ documenttitle document
         F.value "author" $ getAuthorName document
         F.value "personname" $ getSmartName signlink
-        F.value "service" $ isJust $ documentservice document
 
 mailDocumentRejected :: (MonadDB m, TemplatesMonad m)
                      => Maybe String
@@ -172,7 +167,7 @@ mailDocumentRejected :: (MonadDB m, TemplatesMonad m)
 mailDocumentRejected customMessage ctx document rejector = do
    documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailreject) $ do
         F.value "rejectorName" $ getSmartName rejector
-        F.valueM "footer" $ mailFooterForUser ctx document
+        F.valueM "footer" $ mailFooterForUser ctx
         F.value "customMessage" $ customMessage
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
 
@@ -232,19 +227,16 @@ mailInvitation forMail
                                      F.value "creatorname" $ creatorname
                                      F.value "personname" $ personname
                                      F.value "documenttitle" $ documenttitle
-                                     F.value "service" $ isJust $ documentservice document
                                  else renderLocalTemplate document "mailInvitationToViewDefaultHeader" $ do
                                      F.value "creatorname" creatorname
                                      F.value "personname" personname
                                      F.value "documenttitle" $ documenttitle
-                                     F.value "service" $ isJust $ documentservice document
                          else return documentinvitetext
             makeEditable "customtext" header
         F.valueM "footer" $ mailFooterForDocument ctx document
-        F.valueM "link" $ do
-            case msiglink of
-                 Just siglink -> makeFullLink ctx document $ show (LinkSignDoc document siglink)
-                 Nothing -> makeFullLink ctx document "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
+        F.value "link" $ case msiglink of
+          Just siglink -> makeFullLink ctx $ show (LinkSignDoc document siglink)
+          Nothing -> makeFullLink ctx "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
         F.value "partners" $ map getSmartName $ partyList document
         F.value "partnerswhosigned" $ map getSmartName $ partySignedList document
         F.value "someonesigned" $ not $ null $ partySignedList document
@@ -339,7 +331,6 @@ mailFooterForDocument :: (MonadDB m, TemplatesMonad m) => Context -> Document ->
 mailFooterForDocument ctx doc = firstOrNothing  [
     getDocumentFooter doc
   , getUserFooter ctx
-  , getServiceFooter doc
   ]
 
 
@@ -350,10 +341,9 @@ mailFooterForDocument ctx doc = firstOrNothing  [
       1. a custom footer configured on the context user (if there is one)
       3. the default powered by scrive footer
 -}
-mailFooterForUser :: (MonadDB m, TemplatesMonad m) => Context -> Document -> m String
-mailFooterForUser ctx doc = firstWithDefault [
+mailFooterForUser :: (MonadDB m, TemplatesMonad m) => Context -> m String
+mailFooterForUser ctx = firstWithDefault [
     getUserFooter ctx
-  , getServiceFooter doc
   ] (defaultFooter ctx)
 
 getUserFooter :: Monad m => Context -> m (Maybe String)
@@ -362,29 +352,18 @@ getUserFooter ctx = return $ join $ customfooter <$> usersettings <$> ctxmaybeus
 getDocumentFooter :: Monad m => Document -> m (Maybe String)
 getDocumentFooter doc = return $ documentmailfooter $ documentui doc
 
-getServiceFooter :: MonadDB m => Document -> m (Maybe String)
-getServiceFooter doc = do
-  mservice <- liftMM (dbQuery . GetService) (return $ documentservice doc)
-  return $ mservice >>= servicemailfooter . serviceui
-
 defaultFooter :: TemplatesMonad m => Context -> m String
 defaultFooter ctx = renderTemplate "poweredByScrive" $ do
   F.value "ctxhostpart" $ ctxhostpart ctx
 
-makeFullLink :: (MonadDB m, TemplatesMonad m) => Context -> Document -> String -> m String
-makeFullLink ctx doc link = do
-    mservice <- liftMM (dbQuery . GetService) (return $ documentservice doc)
-    case join $ servicelocation <$> servicesettings <$> mservice of
-         Just (ServiceLocation location) -> return $ location ++ link
-         Nothing -> return $ ctxhostpart ctx ++ link
-
+makeFullLink :: Context -> String -> String
+makeFullLink ctx link = ctxhostpart ctx ++ link
 
 documentMailWithDocLocale :: (MonadDB m, TemplatesMonad m) => Context -> Document -> String -> Fields m () -> m Mail
 documentMailWithDocLocale ctx doc mailname otherfields = documentMail doc ctx doc mailname otherfields
 
 documentMail :: (HasLocale a, MonadDB m, TemplatesMonad m) =>  a -> Context -> Document -> String -> Fields m () -> m Mail
 documentMail haslocale ctx doc mailname otherfields = do
-    mservice <- liftMM (dbQuery . GetService) (return $ documentservice doc)
     mcompany <- liftMM (dbQuery . GetCompany) (return $ getAuthorSigLink doc >>= maybecompany)
     let allfields = do
         contextFields ctx
@@ -393,8 +372,6 @@ documentMail haslocale ctx doc mailname otherfields = do
         when (isJust mcompany) $ do
             let (Just company) = mcompany
             F.object "companybrand" $ companyBrandFields company
-        when (isJust mservice) $
-            F.object "service" $ serviceFields "" mservice
         otherfields
     kontramaillocal haslocale mailname allfields
 

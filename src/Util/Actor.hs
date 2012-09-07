@@ -5,7 +5,6 @@ module Util.Actor (
   , systemActor
   , mailAPIActor
   , mailSystemActor
-  , integrationAPIActor
   , userActor
   , adminActor
   , mkAuthorActor
@@ -18,10 +17,8 @@ import Context
 import IPAddress
 import MinutesTime
 import User.Model
-import API.Service.Model
 import Doc.DocStateData
 import Data.Typeable
-import qualified Data.ByteString.UTF8 as BS
 import Control.Monad
 
 mkAuthorActor :: Context -> Maybe Actor
@@ -110,20 +107,6 @@ mailSystemActor time muid email slid = Actor {
   , actorSigLinkID = Just slid
   , actorAPIString = Nothing
   , actorWho = "the email subsystem"
-}
-
--- | For actions originating from the integration api
-integrationAPIActor :: MinutesTime -> IPAddress -> ServiceID -> Maybe String -> Actor
-integrationAPIActor time ip sid mcompany = Actor {
-    actorTime = time
-  , actorIP = Just ip
-  , actorUserID = Nothing
-  , actorEmail = Nothing
-  , actorSigLinkID = Nothing
-  , actorAPIString = Just $ BS.toString $ unServiceID sid
-  , actorWho = case mcompany of
-      Just company -> "the company \"" ++ company ++ "\" (using the Integration API)"
-      Nothing -> "the Integration API"
 }
 
 -- | For actions performed by logged in user
