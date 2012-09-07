@@ -47,6 +47,16 @@ window.File = Backbone.Model.extend({
         }
         return link;
     },
+    downloadLinkForMainFile : function() {
+        var link = null;
+        if( this.documentid()!==undefined ) {
+            link = "/downloadmainfile/"+ this.documentid() + "/" + this.name() + ".pdf" + this.queryPart();
+        }
+        else {
+            console.log("File is not binded to document");
+        }
+        return link;
+    },
     fileid : function(){
         return this.get("id");
     },

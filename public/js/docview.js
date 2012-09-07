@@ -19,7 +19,7 @@ window.DocumentDownloadView = Backbone.View.extend({
     }
 
     var link = $("<a target='_blank' />");
-    link.attr("href", this.model.mainfile().downloadLink());
+    link.attr("href", this.model.mainfile().downloadLinkForMainFile());
     link.append($("<div class='float-left icon' />"));
     link.append($("<div class='float-left label' />").text(localization.downloadPDF));
     link.append($("<div class='float-left docname' />").text(this.model.mainfile().name() + ".pdf"));
@@ -505,7 +505,7 @@ window.DocumentStandardView = Backbone.View.extend({
     // Download link
     var downloadpart = $("<span class='download'/>");
     if (document.mainfile() != undefined)
-      downloadpart.append($("<a target='_blank'/>").attr("href",document.mainfile().downloadLink()).text(localization.downloadPDF));
+      downloadpart.append($("<a target='_blank'/>").attr("href",document.mainfile().downloadLinkForMainFile()).text(localization.downloadPDF));
     var fileview = $("<div id ='documentBox'><div class='waiting4page'/></div>");
     if (document.mainfile() != undefined) {
       var file = KontraFile.init({
