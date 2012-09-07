@@ -242,31 +242,6 @@ safeReady(function() {
   });
 });
 
-//when we moved to backbone we stopped using this function, is it still handy
-//tho?!
-/*
- * Function to deal with the situation when page is very big (more then 3000px)
- * So when basiclly all page, normally seen as 10 or more pages are interpreted
- * by the browser as one big page. This happends on iPod or in embedded frames,
- *
- * Then we want to put overlay near the button that activates it
- */
-function saveOverlay(d, o) {
-  $(d).click(function() {
-    if ($(this).data("overlay") == undefined) {
-      if ($(window).height() < 1650) {
-        o.top = standardDialogTop;
-      } else {
-        o.top = $(this).offset().top - $(document).scrollTop() - 400;
-      }
-      o.load = true;
-      o.fixed = false;
-      $(this).overlay(o);
-    }
-    return false;
-  });
-}
-
 //seems unecessary to clear the inputs, but i guess this is here because
 //it fixed a bug
 safeReady(function() {
@@ -280,30 +255,6 @@ safeReady(function() {
   });
 });
 
-//not sure what this does
-safeReady(function() {
-  var oldsignableform = $(".jsuploadform");
-  var signableform;
-  $(".jsuploadform").ajaxForm({
-    success: function(d) {
-      if (d)
-        window.location.href = d.designurl;
-    },
-    error: function(a, b) {
-      LoadingDialog.close();
-      if (b === 'parsererror')
-        FlashMessages.add({content: localization.fileTooLarge, color: "red"});
-      else
-        FlashMessages.add({content: localization.couldNotUpload, color: "red"});
-      oldsignableform.replaceWith(signableform);
-      oldsignableform = signableform;
-      signableform = signableform.clone(true);
-    },
-    dataType: 'json'
-  });
-  // this is kind of a hack. need more backbone!
-  signableform = oldsignableform.clone(true);
-});
 
 //Checking
 $(document).ready(function() {
@@ -324,14 +275,6 @@ $(document).ready(function() {
     });
   }
 
-  // needed for IE8 (awesomeness of this browser is unbelivable)
-  if ($.browser.msie) {
-    var loginForm = $("#loginForm");
-    loginForm.keypress(function(event) {
-      if (event.keyCode == 13)
-        loginForm.submit();
-    });
-  }
 });
 
 // Alternative submit button
@@ -371,13 +314,6 @@ $(document).ready(function() {
 
 //stuff for public pages
 $(document).ready(function() {
-  //this stuff is for the login/forgot password popup
-  var emailform = $(".login-container input[type=email]");
-  emailform.focus();
-  if (emailform.length > 0 && emailform.val().length > 0) {
-      $(".login-container[input[type=password]").focus();
-  }
-
   $('.tooltip').tooltip();
 
   $('.login-button').click(function(e) {
@@ -389,24 +325,6 @@ $(document).ready(function() {
             newlocation += "&logging";
     }
     window.location = newlocation;
-    return false;
-  });
-
-  $('.recovery-container .txt-link').click(function(e) {
-    e.preventDefault();
-
-    $("#exposeMask").css("display", "none");
-    $('.recovery-container').data("overlay").close();
-    $("#exposeMask").css("display", "block");
-    $('.login-container').data("overlay").load();
-    return false;
-  });
-  $('.login-container .txt-link').click(function(e) {
-    e.preventDefault();
-    $("#exposeMask").css("display", "none");
-    $('.login-container').data("overlay").close();
-    $("#exposeMask").css("display", "block");
-    $('.recovery-container').data("overlay").load();
     return false;
   });
 
