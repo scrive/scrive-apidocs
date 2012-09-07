@@ -159,8 +159,8 @@ apiCallReady did =  api $ do
 apiCallGet :: Kontrakcja m => DocumentID -> m Response
 apiCallGet did = api $ do
   ctx <- getContext
-  mmagichashh <- lift $ maybe (return Nothing) getMagicHashFromContext msignatorylink
   (msignatorylink :: Maybe SignatoryLinkID) <- lift $ readField "signatoryid"
+  mmagichashh <- maybe (return Nothing) getMagicHashFromContext msignatorylink
   case (msignatorylink,mmagichashh) of
       (Just slid,Just mh) -> do
          doc <- apiGuardL (serverError "No document found") $  dbQuery $ GetDocumentByDocumentID did

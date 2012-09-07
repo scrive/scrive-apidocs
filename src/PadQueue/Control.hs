@@ -30,7 +30,7 @@ import Data.Char (toLower)
 import Data.Maybe
 import Util.Actor
 import User.History.Model
-
+import Doc.DocUtils
 -- PadQueue STATE
 padQueueState :: Kontrakcja m => m JSValue
 padQueueState = do
