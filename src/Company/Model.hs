@@ -27,7 +27,6 @@ import API.Service.Model
 import Company.CompanyID
 import Control.Monad.State
 import Data.Monoid
-import Utils.Monoid
 import Data.List
 
 newtype ExternalCompanyID = ExternalCompanyID { unExternalCompanyID :: String }
@@ -119,7 +118,7 @@ instance MonadDB m => DBQuery m GetCompanies [Company] where
        sqlWhere (orx $ map companyDomainToSQL domains)
        mapM_ companyFilterToWhereClause filters
        let ascdesc (Asc x) = companyOrderByToOrderBySQL x
-           ascdesc (Desc x) = companyOrderByToOrderBySQL x <++> SQL " DESC" []
+           ascdesc (Desc x) = companyOrderByToOrderBySQL x <> SQL " DESC" []
        mapM_ (sqlOrderBy . ascdesc) sorting
        sqlOffset offset
        sqlLimit limit

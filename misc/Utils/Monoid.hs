@@ -3,11 +3,6 @@ module Utils.Monoid where
 import Control.Monad
 import Data.Monoid
 
--- | Infix version of mappend, provided for convenience.
-(<++>) :: Monoid m => m -> m -> m
-(<++>) = mappend
-infixr 6 <++>
-
 -- intercalate for monoids
 mintercalate :: Monoid s => (s -> s -> s) -> [s] -> s
 mintercalate f = go

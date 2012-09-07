@@ -64,7 +64,7 @@ checkDocument did conditions = do
     ]
   filter (not . null) <$> foldDB (flip (:)) []
   where
-    helper = mintercalate (\a b -> a <++> SQL " || '\n' || " [] <++> b)
+    helper = mintercalate (\a b -> a <> SQL " || '\n' || " [] <> b)
       . map (\(s, msg) -> mconcat [
         SQL "(CASE WHEN (" []
       , s

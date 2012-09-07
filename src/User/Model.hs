@@ -57,7 +57,6 @@ import User.Password
 import User.Region
 import User.Tables
 import User.UserID
-import Utils.Monoid
 import DB.SQL2
 import Doc.DocStateData (DocumentStatus(..), SignatoryRole(..), DocumentID)
 
@@ -286,7 +285,7 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
           , sql "lang" $ getLang l
           , sql "region" $ getRegion l
           , sql "deleted" False
-          ] <++> SQL ("RETURNING " ++ selectUsersSelectors) []
+          ] <> SQL ("RETURNING " ++ selectUsersSelectors) []
         fetchUsers >>= oneObjectReturnedGuard
 
 data SetUserEmail = SetUserEmail (Maybe ServiceID) UserID Email

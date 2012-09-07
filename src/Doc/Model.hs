@@ -181,9 +181,9 @@ documentOrderByToSQL DocumentOrderByService = SQL "documents.service_id" []
 
 selectSignatoryLinksSmartNames :: [SignatoryRole] -> SQL
 selectSignatoryLinksSmartNames roles =
-      SQL ("SELECT COALESCE(string_agg(x.value,' '),'no fields') FROM ") [] <++>
-      SQL ("(SELECT (") [] <++>
-      selectSmartName <++>
+      SQL ("SELECT COALESCE(string_agg(x.value,' '),'no fields') FROM ") [] <>
+      SQL ("(SELECT (") [] <>
+      selectSmartName <>
       SQL (") AS value FROM signatory_links" ++
            " WHERE signatory_links.document_id = documents.id" ++
            "   AND ((signatory_links.roles & ?) <>0)" ++
@@ -209,19 +209,19 @@ selectSignatoryLinksSmartNames roles =
                            "COALESCE(NULLIF(TRIM(BOTH FROM (COALESCE(first_name.value,'') " ++
                            "                                || ' ' || " ++
                            "                                COALESCE(last_name.value,''))), ''),email.value) " ++
-                           "FROM (") [] <++>
-                      selectFieldAs FirstNameFT "first_name" <++>
-                      SQL " FULL JOIN " [] <++>
-                      selectFieldAs LastNameFT "last_name" <++>
-                      SQL " ON TRUE " [] <++>
-                      SQL " FULL JOIN " [] <++>
-                      selectFieldAs EmailFT "email" <++>
-                      SQL " ON TRUE " [] <++>
+                           "FROM (") [] <>
+                      selectFieldAs FirstNameFT "first_name" <>
+                      SQL " FULL JOIN " [] <>
+                      selectFieldAs LastNameFT "last_name" <>
+                      SQL " ON TRUE " [] <>
+                      SQL " FULL JOIN " [] <>
+                      selectFieldAs EmailFT "email" <>
+                      SQL " ON TRUE " [] <>
                       SQL ") WHERE signatory_links.document_id = documents.id" []
 
 documentOrderByAscDescToSQL :: AscDesc DocumentOrderBy -> SQL
 documentOrderByAscDescToSQL (Asc x) = documentOrderByToSQL x
-documentOrderByAscDescToSQL (Desc x) = documentOrderByToSQL x <++> SQL " DESC" []
+documentOrderByAscDescToSQL (Desc x) = documentOrderByToSQL x <> SQL " DESC" []
 
 documentDomainToSQL :: DocumentDomain -> SQL
 documentDomainToSQL (DocumentsOfWholeUniverse) =
@@ -463,8 +463,8 @@ documentsSelectors = SQL (intercalate ", " [
   ]) []
 
 selectDocumentsSQL :: SQL
-selectDocumentsSQL = SQL "SELECT " [] <++>
-                     documentsSelectors <++>
+selectDocumentsSQL = SQL "SELECT " [] <>
+                     documentsSelectors <>
                      SQL " FROM documents " []
 
 fetchDocuments :: MonadDB m => DBEnv m [Document]
@@ -672,11 +672,11 @@ insertSignatoryLinkAsIs documentid link = do
            , sql "deleted" $ signatorylinkdeleted link
            , sql "really_deleted" $ signatorylinkreallydeleted link
            , sql "signinfo_ocsp_response" $ signatureinfoocspresponse `fmap` signatorysignatureinfo link
-           ] <++> SQL " RETURNING id" []
+           ] <> SQL " RETURNING id" []
 
   slids <- foldDB (\acc slid -> slid : acc) []
 
-  _ <- kRun $ selectSignatoryLinksSQL <++> SQL "WHERE signatory_links.id = ? AND signatory_links.document_id = ? ORDER BY internal_insert_order DESC"
+  _ <- kRun $ selectSignatoryLinksSQL <> SQL "WHERE signatory_links.id = ? AND signatory_links.document_id = ? ORDER BY internal_insert_order DESC"
        [$(head) slids, toSql documentid]
 
   msiglink <- fetchSignatoryLinks
@@ -739,7 +739,7 @@ insertDocumentTagAsIs documentid tag = do
        [ sql "name" $ tagname tag
        , sql "value" $ tagvalue tag
        , sql "document_id" documentid
-       ] <++> SQL ("RETURNING " ++ documentTagsSelectors) []
+       ] <> SQL ("RETURNING " ++ documentTagsSelectors) []
 
   fetchDocumentTags
     >>= oneObjectReturnedGuard . concatMap (S.toList . snd) . M.toList
@@ -769,7 +769,7 @@ insertAuthorAttachmentAsIs documentid attach = do
   _ <- kRun $ mkSQL INSERT tableAuthorAttachments [
       sql "file_id" $ authorattachmentfile attach
     , sql "document_id" documentid
-    ] <++> SQL ("RETURNING " ++ authorAttachmentsSelectors) []
+    ] <> SQL ("RETURNING " ++ authorAttachmentsSelectors) []
 
   fetchAuthorAttachments
     >>= oneObjectReturnedGuard . concatMap snd . M.toList
@@ -781,7 +781,7 @@ insertSignatoryAttachmentAsIs slid SignatoryAttachment {..} = do
        , sql "name" signatoryattachmentname
        , sql "description" signatoryattachmentdescription
        , sql "signatory_link_id" slid
-       ] <++> SQL ("RETURNING " ++ signatoryAttachmentsSelectors) []
+       ] <> SQL ("RETURNING " ++ signatoryAttachmentsSelectors) []
 
   fetchSignatoryAttachments
     >>= oneObjectReturnedGuard . concatMap snd . M.toList
@@ -833,7 +833,7 @@ insertSignatoryLinkFieldAsIs slid field = do
                                 _ -> False
        , sql "value" $ sfValue field
        , sql "placements" $ sfPlacements field
-       ] <++> SQL ("RETURNING " ++ signatoryLinkFieldsSelectors) []
+       ] <> SQL ("RETURNING " ++ signatoryLinkFieldsSelectors) []
 
   fetchSignatoryLinkFields
     >>= oneObjectReturnedGuard . concatMap snd . M.toList
@@ -894,7 +894,7 @@ insertDocumentAsIs document = do
       , sql "mail_footer" $ documentmailfooter $ documentui -- should go into separate table?
       , sql "region" documentregion
       , sql "sharing" documentsharing
-      ] <++> SQL "RETURNING " [] <++> documentsSelectors
+      ] <> SQL "RETURNING " [] <> documentsSelectors
 
     mdoc <- fetchDocuments >>= oneObjectReturnedGuard
     case mdoc of
@@ -949,7 +949,7 @@ data AdminOnlySaveForUser = AdminOnlySaveForUser DocumentID User Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AdminOnlySaveForUser Bool where
   update (AdminOnlySaveForUser did user _actor) = do
     kRun01 $ mkSQL UPDATE tableSignatoryLinks [sql "company_id" $ usercompany user]
-      <++> SQL "WHERE document_id = ? AND user_id = ? " [
+      <> SQL "WHERE document_id = ? AND user_id = ? " [
         toSql did
       , toSql $ userid user
       ]
@@ -984,7 +984,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachCSVUpload Bool where
             sql "csv_title" $ csvtitle csvupload
           , sql "csv_signatory_index" $ csvsignatoryindex csvupload
           , sql "csv_contents" $ csvcontents csvupload
-          ] <++> SQL "WHERE document_id = ? AND signatory_links.id = ? AND deleted = FALSE AND ((roles & ?) = 0)" [
+          ] <> SQL "WHERE document_id = ? AND signatory_links.id = ? AND deleted = FALSE AND ((roles & ?) = 0)" [
             toSql did
           , toSql slid
           , toSql [SignatoryAuthor]
@@ -1014,7 +1014,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachFile Bool where
     success <- kRun01 $ mkSQL UPDATE tableDocuments [
         sql "mtime" time
       , sql "file_id" $ fid
-      ] <++> SQL "WHERE id = ? AND status = ?" [toSql did, toSql Preparation]
+      ] <> SQL "WHERE id = ? AND status = ?" [toSql did, toSql Preparation]
     when_ success $ do
       f <- exactlyOneObjectReturnedGuard =<< query (GetFileByFileID fid)
       update $ InsertEvidenceEvent
@@ -1031,7 +1031,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile Bool where
     success <- kRun01 $ mkSQL UPDATE tableDocuments [
         sql "mtime" time
       , sql "sealed_file_id" fid
-      ] <++> SQL "WHERE id = ? AND status = ?" [toSql did, toSql Closed]
+      ] <> SQL "WHERE id = ? AND status = ?" [toSql did, toSql Closed]
     when_ success $
       update $ InsertEvidenceEvent
       AttachSealedFileEvidence
@@ -1045,7 +1045,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument Bo
   update (FixClosedErroredDocument did _actor) = do
     kRun01 $ mkSQL UPDATE tableDocuments [
         sql "status" Closed
-      ] <++> SQL "WHERE id = ? AND status = ?" [toSql did, toSql $ DocumentError undefined]
+      ] <> SQL "WHERE id = ? AND status = ?" [toSql did, toSql $ DocumentError undefined]
     
 data CancelDocument = CancelDocument DocumentID CancelationReason Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
@@ -1064,7 +1064,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
                 sql "status" Canceled
               , sql "mtime" mtime
               , sql "cancelation_reason" $ reason
-              ] <++> SQL "WHERE id = ? AND type = ?" [
+              ] <> SQL "WHERE id = ? AND type = ?" [
                 toSql did
               , toSql $ Signable undefined
               ]
@@ -1107,7 +1107,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeMainfile Bool where
                             then "sealed_file_id"
                             else "file_id"
             success <- kRun01 $ mkSQL UPDATE tableDocuments [sql fieldname $ fid]
-                 <++> SQL "WHERE id = ?" [toSql did]
+                 <> SQL "WHERE id = ?" [toSql did]
             oldf <- exactlyOneObjectReturnedGuard =<< query (GetFileByFileID ofid)
             newf <- exactlyOneObjectReturnedGuard =<< query (GetFileByFileID fid)
             when_ success $
@@ -1136,12 +1136,12 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeSignatoryEmailWhenUnd
           oldemail = getEmail sl
       success1 <- kRun01 $ mkSQL UPDATE tableSignatoryLinkFields [
              sql "value" email
-            ] <++> SQL (" WHERE signatory_link_id = ? AND type = ?") [toSql slid, toSql EmailFT]
+            ] <> SQL (" WHERE signatory_link_id = ? AND type = ?") [toSql slid, toSql EmailFT]
       success2 <- kRun01 $ mkSQL UPDATE tableSignatoryLinks [
           sql "invitation_delivery_status" Unknown
         , sql "user_id" $ fmap userid muser
         , sql "company_id" $ muser >>= usercompany
-        ] <++> SQL "WHERE EXISTS (SELECT 1 FROM documents WHERE documents.id = signatory_links.document_id AND documents.status = ?) AND id = ?" [
+        ] <> SQL "WHERE EXISTS (SELECT 1 FROM documents WHERE documents.id = signatory_links.document_id AND documents.status = ?) AND id = ?" [
           toSql Pending
         , toSql slid
         ]
@@ -1173,7 +1173,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m PreparationToPending Bool w
               , sql "mtime" time
               , sql "timeout_time" $ (\days -> (days * 24 * 60) `minutesAfter` time)
                   <$> daystosign
-              ] <++> SQL "WHERE id = ? AND type = ?" [
+              ] <> SQL "WHERE id = ? AND type = ?" [
                 toSql docid
               , toSql $ Signable undefined
               ]
@@ -1204,7 +1204,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CloseDocument Bool where
             success <- kRun01 $ mkSQL UPDATE tableDocuments [
                 sql "status" Closed
               , sql "mtime" time
-              ] <++> SQL "WHERE id = ? AND type = ?" [
+              ] <> SQL "WHERE id = ? AND type = ?" [
                 toSql docid
               , toSql $ Signable undefined
               ]
@@ -1233,7 +1233,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m DeleteSigAttachment Bool wh
           return False
         Just sa -> do
           success <- kRun01 $ mkSQL UPDATE tableSignatoryAttachments [sql "file_id" SqlNull]
-               <++> SQL "WHERE file_id = ? AND signatory_link_id = ?"
+               <> SQL "WHERE file_id = ? AND signatory_link_id = ?"
                [ toSql fid
                , toSql slid
                ]
@@ -1297,7 +1297,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument Bool where
             success <- kRun01 $ mkSQL UPDATE tableDocuments [
                 sql "status" $ DocumentError errmsg
               , sql "error_text" errmsg
-              ] <++> SQL "WHERE id = ?" [toSql docid]
+              ] <> SQL "WHERE id = ?" [toSql docid]
             when_ success $
               update $ InsertEvidenceEvent
                 ErrorDocumentEvidence
@@ -1311,24 +1311,24 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument Bool where
 
 selectDocuments :: MonadDB m => SQL -> DBEnv m [Document]
 selectDocuments sqlquery = do
-    _ <- kRun $ SQL "CREATE TEMP TABLE docs AS " [] <++> sqlquery
+    _ <- kRun $ SQL "CREATE TEMP TABLE docs AS " [] <> sqlquery
 
     _ <- kRun $ SQL "SELECT * FROM docs" []
     docs <- reverse `liftM` fetchDocuments
 
-    _ <- kRun $ SQL "CREATE TEMP TABLE links AS " [] <++>
-         selectSignatoryLinksSQL <++>
+    _ <- kRun $ SQL "CREATE TEMP TABLE links AS " [] <>
+         selectSignatoryLinksSQL <>
          SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE signatory_links.document_id = docs.id) ORDER BY document_id DESC, internal_insert_order DESC" []
     _ <- kRun $ SQL "SELECT * FROM links" []
     sls <- fetchSignatoryLinks
 
-    _ <- kRun $ selectSignatoryLinkFieldsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM links WHERE links.id = signatory_link_fields.signatory_link_id) ORDER BY signatory_link_fields.id" []
+    _ <- kRun $ selectSignatoryLinkFieldsSQL <> SQL "WHERE EXISTS (SELECT 1 FROM links WHERE links.id = signatory_link_fields.signatory_link_id) ORDER BY signatory_link_fields.id" []
     fields <- fetchSignatoryLinkFields
 
-    _ <- kRun $ selectAuthorAttachmentsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE author_attachments.document_id = docs.id) ORDER BY document_id DESC" []
+    _ <- kRun $ selectAuthorAttachmentsSQL <> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE author_attachments.document_id = docs.id) ORDER BY document_id DESC" []
     ats <- fetchAuthorAttachments
 
-    _ <- kRun $ selectDocumentTagsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE document_tags.document_id = docs.id)" []
+    _ <- kRun $ selectDocumentTagsSQL <> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE document_tags.document_id = docs.id)" []
     tags <- fetchDocumentTags
 
     kRunRaw "DROP TABLE docs"
@@ -1348,7 +1348,7 @@ selectDocuments sqlquery = do
 data GetDocumentTags = GetDocumentTags DocumentID
 instance MonadDB m => DBQuery m GetDocumentTags (S.Set DocumentTag) where
   query (GetDocumentTags did) = do
-    _ <- kRun $ selectDocumentTagsSQL <++> SQL "WHERE document_id = ?" [toSql did]
+    _ <- kRun $ selectDocumentTagsSQL <> SQL "WHERE document_id = ?" [toSql did]
     fetchDocumentTags
       >>= oneObjectReturnedGuard . map snd . M.toList
       >>= return . fromMaybe S.empty
@@ -1357,14 +1357,14 @@ data GetSignatoryLinkByID = GetSignatoryLinkByID DocumentID SignatoryLinkID (May
 instance MonadDB m => DBQuery m GetSignatoryLinkByID (Maybe SignatoryLink) where
   query (GetSignatoryLinkByID did sid mmh) = do
     _ <- kRun $ selectSignatoryLinksSQL
-      <++> SQL "WHERE documents.id = ? AND signatory_links.id = ?" [toSql did, toSql sid]
-      <++> case mmh of
+      <> SQL "WHERE documents.id = ? AND signatory_links.id = ?" [toSql did, toSql sid]
+      <> case mmh of
              Nothing -> mempty
              Just mh -> SQL " AND signatory_links.token = ?" [toSql mh]
     mlink <- fetchSignatoryLinks
       >>= oneObjectReturnedGuard . concatMap snd . M.toList
     _ <- kRun $ selectSignatoryLinkFieldsSQL
-      <++> SQL "WHERE signatory_link_id = ?" [toSql sid]
+      <> SQL "WHERE signatory_link_id = ?" [toSql sid]
     fields <- fetchSignatoryLinkFields
       >>= return . concatMap snd . M.toList
     return $ (\link -> link {
@@ -1377,7 +1377,7 @@ data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance MonadDB m => DBQuery m GetDocumentByDocumentID (Maybe Document) where
   query (GetDocumentByDocumentID did) = do
     selectDocuments (selectDocumentsSQL
-      <++> SQL "WHERE id = ? AND deleted = FALSE" [toSql did])
+      <> SQL "WHERE id = ? AND deleted = FALSE" [toSql did])
       >>= oneObjectReturnedGuard
 
 data GetDocumentsByService = GetDocumentsByService (Maybe ServiceID)
@@ -1488,7 +1488,7 @@ data GetTimeoutedButPendingDocuments = GetTimeoutedButPendingDocuments MinutesTi
 instance MonadDB m => DBQuery m GetTimeoutedButPendingDocuments [Document] where
   query (GetTimeoutedButPendingDocuments mtime) = do
     selectDocuments $ selectDocumentsSQL
-      <++> SQL "WHERE status = ? AND timeout_time IS NOT NULL AND timeout_time < ?" [
+      <> SQL "WHERE status = ? AND timeout_time IS NOT NULL AND timeout_time < ?" [
         toSql Pending
       , toSql mtime
       ]
@@ -1508,7 +1508,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkDocumentSeen Bool where
         success <- kRun01 $ mkSQL UPDATE tableSignatoryLinks [
             sql "seen_time" time
           , sql "seen_ip" ipnumber
-          ] <++> SQL "WHERE id = ? AND document_id = ? AND token = ? AND seen_time IS NULL AND sign_time IS NULL AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND type = ? AND status <> ? AND status <> ?)" [
+          ] <> SQL "WHERE id = ? AND document_id = ? AND token = ? AND seen_time IS NULL AND sign_time IS NULL AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND type = ? AND status <> ? AND status <> ?)" [
             toSql slid
           , toSql did
           , toSql mh
@@ -1558,7 +1558,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkInvitationRead Bool whe
         let time = actorTime actor
             eml  = getEmail sig
         success <- kRun01 $ mkSQL UPDATE tableSignatoryLinks [sql "read_invitation" time]
-          <++> SQL "WHERE id = ? AND document_id = ? AND read_invitation IS NULL" [
+          <> SQL "WHERE id = ? AND document_id = ? AND read_invitation IS NULL" [
             toSql slid
           , toSql did
           ]
@@ -1671,7 +1671,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RejectDocument Bool where
               , sql "rejection_time" time
               , sql "rejection_reason" customtext
               , sql "rejection_signatory_link_id" slid
-              ] <++> SQL "WHERE id = ?" [toSql docid]
+              ] <> SQL "WHERE id = ?" [toSql docid]
             when_ success $
                 update $ InsertEvidenceEvent
                   RejectDocumentEvidence
@@ -1762,7 +1762,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SaveDocumentForUser Bool wh
     kRun01 $ mkSQL UPDATE tableSignatoryLinks [
         sql "user_id" userid
       , sql "company_id" usercompany
-      ] <++> SQL "WHERE document_id = ? AND id = ?" [
+      ] <> SQL "WHERE document_id = ? AND id = ?" [
         toSql did
       , toSql slid
       ]
@@ -1776,7 +1776,7 @@ data SaveSigAttachment = SaveSigAttachment DocumentID SignatoryLinkID String Fil
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SaveSigAttachment Bool where
   update (SaveSigAttachment did slid name fid actor) = do
     success <- kRun01 $ mkSQL UPDATE tableSignatoryAttachments [sql "file_id" fid]
-      <++> SQL "WHERE file_id IS NULL AND name = ? AND signatory_link_id = ?"
+      <> SQL "WHERE file_id IS NULL AND name = ? AND signatory_link_id = ?"
       [ toSql name
       , toSql slid
       ]
@@ -1813,7 +1813,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentInviteTime Bool 
     success <- kRun01 $ mkSQL UPDATE tableDocuments [
         sql "invite_time" invitetime
       , sql "invite_ip" ipaddress
-      ] <++> SQL "WHERE id = ?" [toSql did]
+      ] <> SQL "WHERE id = ?" [toSql did]
     when_ (success && changed) $
       update $ InsertEvidenceEvent
         SetDocumentInviteTimeEvidence
@@ -1827,7 +1827,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTimeoutTime Bool
   update (SetDocumentTimeoutTime did timeouttime actor) = do
     changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND timeout_time IS DISTINCT FROM ?" [toSql did, toSql timeouttime]
     success <- kRun01 $ mkSQL UPDATE tableDocuments [sql "timeout_time" timeouttime]
-      <++> SQL "WHERE id = ? AND deleted = FALSE AND type = ?" [
+      <> SQL "WHERE id = ? AND deleted = FALSE AND type = ?" [
         toSql did
       , toSql $ Signable undefined
       ]
@@ -1847,7 +1847,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInviteText Bool where
     success <- kRun01 $ mkSQL UPDATE tableDocuments [
         sql "invite_text" text
       , sql "mtime" time
-      ] <++> SQL "WHERE id = ?" [toSql did]
+      ] <> SQL "WHERE id = ?" [toSql did]
     when_ (success && changed) $
       update $ InsertEvidenceEvent
         SetInvitationTextEvidence
@@ -1863,7 +1863,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDaysToSign Bool where
     success <- kRun01 $ mkSQL UPDATE tableDocuments
          [ sql "days_to_sign" $ mdays
          , sql "mtime" $ actorTime actor
-         ] <++> SQL "WHERE id = ?" [ toSql did ]
+         ] <> SQL "WHERE id = ?" [ toSql did ]
     when_ (success && changed) $
       update $ InsertEvidenceEvent
         (SetDaysToSignEvidence <| isJust mdays |> RemoveDaysToSignEvidence)
@@ -1880,7 +1880,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTitle Bool where
     success <- kRun01 $ mkSQL UPDATE tableDocuments [
         sql "title" doctitle
       , sql "mtime" time
-      ] <++> SQL "WHERE id = ?" [toSql did]
+      ] <> SQL "WHERE id = ?" [toSql did]
     when_ (success && changed) $
       update $ InsertEvidenceEvent
         SetDocumentTitleEvidence
@@ -1897,7 +1897,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentLocale Bool wher
     success <- kRun01 $ mkSQL UPDATE tableDocuments [
         sql "region" $ getRegion locale
       , sql "mtime" time
-      ] <++> SQL "WHERE id = ?" [toSql did]
+      ] <> SQL "WHERE id = ?" [toSql did]
     when_ (success && changed) $
       update $ InsertEvidenceEvent
         SetDocumentLocaleEvidence
@@ -1912,7 +1912,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentUI Bool where
     kRun01 $ mkSQL UPDATE tableDocuments [
         sql "mail_footer" $ documentmailfooter docui
       , sql "mtime" $ actorTime actor
-      ] <++> SQL "WHERE id = ?" [toSql did]
+      ] <> SQL "WHERE id = ?" [toSql did]
 
 data SetInvitationDeliveryStatus = SetInvitationDeliveryStatus DocumentID SignatoryLinkID MailsDeliveryStatus Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInvitationDeliveryStatus Bool where
@@ -1923,7 +1923,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInvitationDeliveryStatus
           Just sl -> (getEmail sl, invitationdeliverystatus sl /= status)
     success <- kRun01 $ mkSQL UPDATE tableSignatoryLinks [
         sql "invitation_delivery_status" status
-      ] <++> SQL "WHERE id = ? AND document_id = ? AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND type = ?)" [
+      ] <> SQL "WHERE id = ? AND document_id = ? AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND type = ?)" [
         toSql slid
       , toSql did
       , toSql did
@@ -1942,7 +1942,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentSharing Bool whe
   update (SetDocumentSharing dids flag) = do
     results <- forM dids $ \did -> kRun01 $ mkSQL UPDATE tableDocuments
          [ sql "sharing" $ (if flag then Shared else Private)
-         ] <++> SQL
+         ] <> SQL
          " WHERE id = ? AND deleted = FALSE " [ toSql did ]
     return $ and results
 
@@ -1971,7 +1971,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument Bool where
               , sql "signinfo_last_name_verified" $ signaturelstnameverified `fmap` msiginfo
               , sql "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` msiginfo
               , sql "signinfo_ocsp_response" $ signatureinfoocspresponse `fmap` msiginfo
-              ] <++> SQL "WHERE id = ? AND document_id = ?" [
+              ] <> SQL "WHERE id = ? AND document_id = ?" [
                 toSql slid
               , toSql docid
               ]
@@ -2202,7 +2202,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m TemplateFromDocument Bool w
     success <- kRun01 $ mkSQL UPDATE tableDocuments [
         sql "status" Preparation
       , sql "type" $ Template undefined
-      ] <++> SQL "WHERE id = ?" [toSql did]
+      ] <> SQL "WHERE id = ?" [toSql did]
     when_ success $
       update $ InsertEvidenceEvent
         TemplateFromDocumentEvidence
@@ -2218,7 +2218,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m TimeoutDocument Bool where
     success <- kRun01 $ mkSQL UPDATE tableDocuments [
         sql "status" Timedout
       , sql "mtime" time
-      ] <++> SQL "WHERE id = ? AND type = ? AND status = ?" [
+      ] <> SQL "WHERE id = ? AND type = ? AND status = ?" [
         toSql did
       , toSql $ Signable undefined
       , toSql Pending
@@ -2237,7 +2237,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAuthenticationMe
     changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND authentication_method IS DISTINCT FROM ?" [toSql did, toSql auth]
     success <- kRun01 $ mkSQL UPDATE tableDocuments
          [ sql "authentication_method" auth
-         ] <++> SQL "WHERE id = ?" [ toSql did ]
+         ] <> SQL "WHERE id = ?" [ toSql did ]
     when_ (success && changed) $ do
       let evidence = case auth of
             EmailAuthentication -> SetEmailAuthenticationMethodEvidence
@@ -2254,7 +2254,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentDeliveryMethod B
     changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND delivery_method IS DISTINCT FROM ?" [toSql did, toSql del]
     success <- kRun01 $ mkSQL UPDATE tableDocuments
          [ sql "delivery_method" del
-         ] <++> SQL "WHERE id = ?" [ toSql did ]
+         ] <> SQL "WHERE id = ?" [ toSql did ]
     when_ (success && changed) $ do
       let evidence = case del of
             EmailDelivery -> SetEmailDeliveryMethodEvidence
@@ -2284,7 +2284,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where
                               _ -> ""
           r <- kRun $ mkSQL UPDATE tableSignatoryLinkFields
                  [ sql "value" fvalue ]
-                 <++> SQL (" WHERE EXISTS (SELECT 1 FROM documents, signatory_links"
+                 <> SQL (" WHERE EXISTS (SELECT 1 FROM documents, signatory_links"
                            ++             " WHERE documents.id = signatory_links.document_id"
                            ++             "   AND documents.status = ?"
                            ++             "   AND signatory_links.sign_time IS NULL"
@@ -2330,7 +2330,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFieldsNoStatusCheck (
     let updateValue xtype fvalue = do
           _ <- kRun $ mkSQL UPDATE tableSignatoryLinkFields
                  [ sql "value" fvalue ]
-                 <++> SQL (" WHERE EXISTS (SELECT 1 FROM documents, signatory_links"
+                 <> SQL (" WHERE EXISTS (SELECT 1 FROM documents, signatory_links"
                            ++             " WHERE documents.id = signatory_links.document_id"
                            ++             "   AND documents.status = ?"
                            ++             "   AND signatory_links.sign_time IS NULL"
@@ -2371,7 +2371,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddDocumentAttachment Bool 
     success <- kRun01 $ mkSQL INSERT tableAuthorAttachments [
         sql "document_id" did
       , sql "file_id" fid
-      ] <++> SQL "WHERE EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?)" [
+      ] <> SQL "WHERE EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?)" [
         toSql did
       , toSql Preparation
       ]
@@ -2432,4 +2432,4 @@ data SetDocumentModificationData = SetDocumentModificationData DocumentID Minute
 instance MonadDB m => DBUpdate m SetDocumentModificationData Bool where
   update (SetDocumentModificationData did time) = do
     kRun01 $ mkSQL UPDATE tableDocuments [sql "mtime" time]
-      <++> SQL "WHERE id = ?" [toSql did]
+      <> SQL "WHERE id = ?" [toSql did]

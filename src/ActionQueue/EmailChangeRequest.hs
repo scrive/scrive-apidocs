@@ -9,6 +9,7 @@ module ActionQueue.EmailChangeRequest (
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
+import Data.Monoid
 import Data.Typeable
 
 import ActionQueue.Core
@@ -21,7 +22,6 @@ import KontraMonad
 import KontraLink
 import MagicHash
 import MinutesTime
-import Utils.Monoid
 import User.Model
 
 data EmailChangeRequest = EmailChangeRequest {
@@ -47,7 +47,7 @@ emailChangeRequest = Action {
       sql "expires" ecrExpires
     , sql "new_email" ecrNewEmail
     , sql "token" ecrToken
-    ] <++> SQL ("WHERE " ++ qaIndexField emailChangeRequest ++ " = ?") [toSql ecrUserID]
+    ] <> SQL ("WHERE " ++ qaIndexField emailChangeRequest ++ " = ?") [toSql ecrUserID]
   , qaEvaluateExpired = \EmailChangeRequest{ecrUserID} -> do
     _ <- dbUpdate $ DeleteAction emailChangeRequest ecrUserID
     return ()

@@ -9,6 +9,7 @@ module ActionQueue.PasswordReminder (
 import Control.Monad
 import Control.Monad.Trans.Maybe
 import Data.Int
+import Data.Monoid
 import Data.Typeable
 
 import ActionQueue.Core
@@ -19,7 +20,6 @@ import DB
 import KontraLink
 import MagicHash
 import MinutesTime
-import Utils.Monoid
 import User.Model
 
 data PasswordReminder = PasswordReminder {
@@ -45,7 +45,7 @@ passwordReminder = Action {
       sql "expires" prExpires
     , sql "remained_emails" prRemainedEmails
     , sql "token" prToken
-    ] <++> SQL ("WHERE " ++ qaIndexField passwordReminder ++ " = ?") [toSql prUserID]
+    ] <> SQL ("WHERE " ++ qaIndexField passwordReminder ++ " = ?") [toSql prUserID]
   , qaEvaluateExpired = \PasswordReminder{prUserID} -> do
     _ <- dbUpdate $ DeleteAction passwordReminder prUserID
     return ()

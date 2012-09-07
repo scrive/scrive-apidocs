@@ -34,7 +34,6 @@ import Data.List
 import Database.HDBC
 
 import DB
-import Utils.Monoid
 import MinutesTime
 import User.Model
 import Doc.DocStateData
@@ -161,14 +160,14 @@ data GetDocStatEventsByUserID = GetDocStatEventsByUserID UserID
 instance MonadDB m => DBQuery m GetDocStatEventsByUserID [DocStatEvent] where
   query (GetDocStatEventsByUserID userid) = do
     _ <- kRun $ selectDocStatEventsSQL
-      <++> SQL "WHERE e.user_id = ?" [toSql userid]
+      <> SQL "WHERE e.user_id = ?" [toSql userid]
     fetchDocStats
 
 data GetDocStatEventsByCompanyID = GetDocStatEventsByCompanyID CompanyID
 instance MonadDB m => DBQuery m GetDocStatEventsByCompanyID [DocStatEvent] where
   query (GetDocStatEventsByCompanyID companyid) = do
     _ <- kRun $ selectDocStatEventsSQL
-      <++> SQL "WHERE e.company_id = ?" [toSql companyid]
+      <> SQL "WHERE e.company_id = ?" [toSql companyid]
     fetchDocStats
 
 data GetDocStatCSV = GetDocStatCSV MinutesTime MinutesTime
@@ -328,14 +327,14 @@ instance MonadDB m => DBQuery m GetUsersAndStatsAndInviteInfo
              else SQL " AND " [] `mappend` sqlConcatAND (map userFilterToSQL filters)
          , if null sorting
            then mempty
-           else SQL " ORDER BY " [] <++> sqlConcatComma (map userOrderByAscDescToSQL sorting)
+           else SQL " ORDER BY " [] <> sqlConcatComma (map userOrderByAscDescToSQL sorting)
          , SQL (" OFFSET " ++ show (userOffset pagination) ++ " LIMIT " ++ show (userLimit pagination)) []
          ]
 
     _ <- kRun $ SQL "SELECT * FROM users_and_companies_temp" []
     usersWithCompaniesAndInviteInfo <- fetchUsersAndCompaniesAndInviteInfo
 
-    _ <- kRun $ selectUserIDAndStatsSQL (DocStatCreate, DocStatClose) <++>
+    _ <- kRun $ selectUserIDAndStatsSQL (DocStatCreate, DocStatClose) <>
          SQL " AND EXISTS (SELECT 1 FROM users_and_companies_temp WHERE users_and_companies_temp.user_id = e.user_id)" []
 
     stats <- fetchUserIDAndStats
@@ -361,7 +360,7 @@ instance MonadDB m => DBUpdate m AddDocStatEvent Bool where
       , sql "company_id" seCompanyID
       , sql "document_type" $ show seDocumentType
       , sql "api_string" seAPIString
-      ] <++> SQL "WHERE NOT EXISTS (SELECT 1 FROM doc_stat_events WHERE document_id = ? AND quantity = ?)" [
+      ] <> SQL "WHERE NOT EXISTS (SELECT 1 FROM doc_stat_events WHERE document_id = ? AND quantity = ?)" [
         toSql seDocumentID
       , toSql seQuantity
       ]
@@ -504,7 +503,7 @@ instance MonadDB m => DBUpdate m AddSignStatEvent Bool where
       , sql "service_id" ssServiceID
       , sql "company_id" ssCompanyID
       , sql "document_process" ssDocumentProcess
-      ] <++> SQL "WHERE NOT EXISTS (SELECT 1 FROM sign_stat_events WHERE document_id = ? AND quantity = ? AND signatory_link_id = ?)" [
+      ] <> SQL "WHERE NOT EXISTS (SELECT 1 FROM sign_stat_events WHERE document_id = ? AND quantity = ? AND signatory_link_id = ?)" [
         toSql ssDocumentID
       , toSql ssQuantity
       , toSql ssSignatoryLinkID
