@@ -473,7 +473,7 @@
 .editSignatoryAttachmentTDRemove{
     width: 30px;
 }
-.signLastCheckbox {
+.signLastCheckbox, .elegCheckbox {
     top: 2px;
     position: relative;
     margin-right: 5px;
