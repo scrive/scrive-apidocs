@@ -89,7 +89,7 @@ var DocumentDesignView = Backbone.View.extend({
 
         // Download link
         var downloadpart = $("<span class='download'/>");
-        downloadpart.append($("<a  target='_blank'/>").attr("href",document.mainfile().downloadLink()).text(localization.downloadPDF));
+        downloadpart.append($("<a  target='_blank'/>").attr("href",document.mainfile().downloadLinkForMainFile()).text(localization.downloadPDF));
         return titlepart.add(namepart).add(downloadpart);
     },
     saveAsTemplateOption : function() {

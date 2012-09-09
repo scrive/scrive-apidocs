@@ -457,7 +457,6 @@ window.Signatory = Backbone.Model.extend({
     },
     addAttachment: function(att) {
         this.get("attachments").push(att);
-        this.document().trigger("change:attachments");
     },
     clearAttachments: function() {
         this.set({attachments: []});

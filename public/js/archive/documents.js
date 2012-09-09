@@ -44,7 +44,7 @@ window.DocumentCellsDefinition = function(archive) { return  [
 window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  [
             new SelectFiltering({
                              name: "status",
-                             textWidth : "100px",
+                             textWidth : "110px",
                              options: _.union(
                                         [{name: localization.filterByStatus.showAnyStatus, value: ""} ],
                                          (draftsAvaible ? [{name: localization.filterByStatus.showDraft,     value: "[draft]"}] : []),
@@ -257,12 +257,19 @@ window.DocumentsListDefinition = function(archive) { return {
                 } ,
                {name : localization.archive.documents.zip.action,
                  acceptEmpty : true,
-                 onSelect: function(){
-                        var url =  archive.documents().model.schema.url() + "?"
-                        var params =  archive.documents().model.schema.getSchemaUrlParams();
-                        _.each(params,function(a,b){url+=(b+"="+a+"&")})
-                        window.open(url + "format=zip");
-                        return true;
+                 onSelect: function(docs){
+                        if (docs == undefined || docs.length == 0 )
+                         return true;
+                        if (docs.length == 1) {
+                          var url =  "/downloadmainfile/" + docs[0].field("id") + "/" + docs[0].field("title") + ".pdf";
+                          window.open(url);
+                          return true;
+                        } else {  
+                          var url =  "/d/zip?"
+                          _.each(docs,function(doc){url+=("doccheck="+doc.field("id")+"&")})
+                          window.open(url);
+                          return true;
+                        }
                  }
                 } 
               ]

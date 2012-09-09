@@ -209,7 +209,7 @@ javascriptLocalisation =
                 showAnyStatus: "$_showAnyStatusClass()$",
                 showDraft: "$_tablestatusesDraft()$",
                 showCancelled: "$_tablestatusesCancelled()$",
-                showSent: "$_tablestatusesSent()$",
+                showSent: "$_filterBySent()$",
                 showSigned: "$_tablestatusesSigned()$"
             }
            , searchTemplate : "$_SearchTemplate()$"
