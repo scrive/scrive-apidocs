@@ -65,7 +65,6 @@ import MagicHash
 import MinutesTime
 import Happstack.Fields
 import Utils.Either
-import Utils.HTTP
 import Utils.Monad
 import Utils.Prelude
 import Utils.Read
