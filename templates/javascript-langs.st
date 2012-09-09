@@ -434,6 +434,8 @@ javascriptLocalisation =
                     , team         : "$_paymentPlanTeam()$"
                     , free         : "$_paymentPlanFree()$"
                     , pay          : "$_paymentPlanPay()$"
+                    , form         : "$_paymentPlanForm()$"
+                    , formprice    : "$_paymentPlanFormPrice()$"
                     , enterprise   : "$_paymentPlanEnterprise()$"
                     , professionaltag : "$_paymentPlanProfessionalTag()$"
                     , professionalprice : "$_paymentsProfessionalPrice()$"
@@ -441,8 +443,11 @@ javascriptLocalisation =
                     , teamprice : "$_paymentsTeamPrice()$"
 
                     , enterprisetag : "$_paymentPlanEnterpriseTag()$"
+                    , enterpriseprice : "$_paymentPlanEnterprisePrice()$"
                     , logo : "$_paymentPlanLogoAndBranding()$"
                     , dash : "$_paymentPlanDashboard()$"
+                    , formtag : "$_paymentPlanFormTag()$"
+                    , docprice : "$_paymentPlanDocPrice()$"
                     }
            , table: { currentplan : "$_paymentPlanCurrentPlan()$"
                     , item        : "$_paymentPlanItem()$"
@@ -462,8 +467,29 @@ javascriptLocalisation =
                         , dash     : "$_paymentFeatureDash()$"
                         , branding : "$_paymentFeatureBranding()$"
                         , features : "$_paymentFeatureFeatures()$"
+                        , team : [ "$_paymentFeatureDistance()$"
+                                 , "$_paymentFeaturePad()$"
+                                 , "$_paymentFeatureBranding()$"
+                                 , "$_paymentFeatureTracking()$"
+                                 , "$_paymentFeatureAPI()$"
+                                 , "$_paymentFeatureFeatures()$"
+                                 ]
+                        , form : [ "$_paymentFeatureSupport()$"
+                                 , "$_paymentFeatureHTTPAPI()$"
+                                 , "$_paymentFeatureDocumentation()$"
+                                 , "$_paymentFeatureExampleCode()$"
+                                 ]
+                        , enterprise0 : [ "$_paymentFeatureAllTeamFeatures()$"
+                                        , "$_paymentFeatureAllOnlineFormFeatures()$"
+                                        ]
+                        , enterprise : [ "$_paymentFeatureOnPremise()$"
+                                       , "$_paymentFeatureFullCust()$"
+                                       , "$_paymentFeatureProjMan()$"
+                                       ]
                         }           
             , subscribe: "$_paymentPlanSubscribe()$"
+            , getintouch: "$_paymentsGetInTouch()$"
+            , signed: "$_paymentsSigned()$"
             , subscribeheader : "$_paymentsSubscribeHeader()$"
             , chooseplan : "$_paymentsChoosePlan()$"
             , paywithcard: "$_paymentsPayWithCard()$"
@@ -473,6 +499,8 @@ javascriptLocalisation =
             , changeaccount: "$_paymentPlanChangeAccount()$"
             , permonth: "$_paymentPlanPerMonth()$"
             , peruserpermonth: "$_paymentPlanPerUserPerMonth()$"
+            , perprocesspermonth: "$_paymentPlanPerProcessPerMonth()$"
+            , perdocument: "$_paymentPlanPerDocument()$"
             , pendingline : {part1: "$_paymentPlanPendingLinePart1()$",
                              part2: "$_paymentPlanPendingLinePart2()$"}
             , savingsubscription : "$_paymentPlanSavingSubscription()$"

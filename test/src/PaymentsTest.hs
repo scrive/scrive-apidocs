@@ -60,8 +60,8 @@ testSavePaymentPlan = do
   time <- getMinutesTime
   let pp = PaymentPlan { ppAccountCode = ac
                        , ppID = Left (userid user)
-                       , ppPricePlan = PayPricePlan
-                       , ppPendingPricePlan = PayPricePlan
+                       , ppPricePlan = TeamPricePlan
+                       , ppPendingPricePlan = TeamPricePlan
                        , ppStatus = ActiveStatus
                        , ppPendingStatus = ActiveStatus
                        , ppQuantity = 1
@@ -103,8 +103,8 @@ testPaymentPlansRequiringSync = do
         ac <- dbUpdate $ GetAccountCode
         let pp = PaymentPlan { ppAccountCode = ac
                              , ppID = Right (companyid company)
-                             , ppPricePlan = PayPricePlan
-                             , ppPendingPricePlan = PayPricePlan
+                             , ppPricePlan = TeamPricePlan
+                             , ppPendingPricePlan = TeamPricePlan
                              , ppStatus = ActiveStatus
                              , ppPendingStatus = ActiveStatus
                              , ppQuantity = 10
@@ -120,8 +120,8 @@ testPaymentPlansRequiringSync = do
         ac <- dbUpdate $ GetAccountCode
         let pp = PaymentPlan { ppAccountCode = ac
                              , ppID = Left (userid user)
-                             , ppPricePlan = PayPricePlan
-                             , ppPendingPricePlan = PayPricePlan
+                             , ppPricePlan = TeamPricePlan
+                             , ppPendingPricePlan = TeamPricePlan
                              , ppStatus = ActiveStatus
                              , ppPendingStatus = ActiveStatus
                              , ppQuantity = 1
@@ -145,8 +145,8 @@ testPaymentPlansExpiredDunning = do
       ac <- dbUpdate $ GetAccountCode
       let pp = PaymentPlan { ppAccountCode = ac
                            , ppID = Left (userid user)
-                           , ppPricePlan = PayPricePlan
-                           , ppPendingPricePlan = PayPricePlan
+                           , ppPricePlan = TeamPricePlan
+                           , ppPendingPricePlan = TeamPricePlan
                            , ppStatus = ActiveStatus
                            , ppPendingStatus = ActiveStatus
                            , ppQuantity = 1

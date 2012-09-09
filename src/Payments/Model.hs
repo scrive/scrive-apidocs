@@ -20,7 +20,8 @@ import KontraError
 -- new data types
 
 data PricePlan = FreePricePlan
-               | PayPricePlan
+               | TeamPricePlan
+               | FormPricePlan
                | EnterprisePricePlan  -- nothing gets blocked
                deriving (Eq, Ord)
                  
@@ -252,12 +253,14 @@ instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
     
 instance Show PricePlan where
   showsPrec _ FreePricePlan         = (++) "free"
-  showsPrec _ PayPricePlan          = (++) "pay"
+  showsPrec _ TeamPricePlan         = (++) "team"
+  showsPrec _ FormPricePlan         = (++) "form"
   showsPrec _ EnterprisePricePlan   = (++) "enterprise"
 
 instance Read PricePlan where
   readsPrec _ "free"         = [(FreePricePlan,         "")]
-  readsPrec _ "pay"          = [(PayPricePlan,          "")]
+  readsPrec _ "team"         = [(TeamPricePlan,         "")]
+  readsPrec _ "form"         = [(FormPricePlan,         "")]
   readsPrec _ "enterprise"   = [(EnterprisePricePlan,   "")]
   readsPrec _ _              = []
 
@@ -277,13 +280,15 @@ instance Read PaymentPlanStatus where
 -- conversions for cramming values into the database
 instance Convertible PricePlan Int where
   safeConvert FreePricePlan         = return 0
-  safeConvert PayPricePlan          = return 1
-  safeConvert EnterprisePricePlan   = return 2
+  safeConvert TeamPricePlan         = return 1
+  safeConvert FormPricePlan         = return 2
+  safeConvert EnterprisePricePlan   = return 3
 
 instance Convertible Int PricePlan where
   safeConvert 0  = return FreePricePlan
-  safeConvert 1  = return PayPricePlan
-  safeConvert 2  = return EnterprisePricePlan
+  safeConvert 1  = return TeamPricePlan
+  safeConvert 2  = return FormPricePlan
+  safeConvert 3  = return EnterprisePricePlan
   safeConvert s  = Left ConvertError { convSourceValue  = show s
                                      , convSourceType   = "Int"
                                      , convDestType     = "PricePlan"

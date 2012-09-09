@@ -10,7 +10,9 @@
 
     var planPrices = {
         free         :     0,
-        pay          : 29900
+        pay          : 29900,
+        team         : 29900,
+        form         :100000
     };
 
     var planPrice = function(p) {
@@ -301,6 +303,155 @@
         dateString: function(d) {
             return moment(d).format("YYYY-MM-DD");
         },
+        teamBox: function() {
+            var view = this;
+            var model = view.model;
+
+            var div = $('<div class="team planbox" />');
+
+            var header = $('<div class="header" />');
+            var header1 = $('<div class="header1" />');
+            header1.text(localization.payments.plans.team);
+            var header2 = $('<div class="header2" />');
+            header2.text(localization.payments.plans.teamtag);
+            header.append(header1).append(header2);
+            div.append(header);
+
+            var features = $('<div class="features" />');
+            _.each(localization.payments.features.team, function(t) {
+                features.append($('<div class="feature" />').text(t));
+            });
+
+            div.append(features);
+
+            var price = $('<div class="price" />');
+            var price1 = $('<div class="price1" />');
+            price1.text();
+            var price2 = $('<div class="price2" />');
+            price2.text(localization.payments.plans.teamprice);
+            var price3 = $('<div class="price3" />');
+            price3.text(localization.payments.peruserpermonth);
+            price.append(price1).append(price2).append(price3);
+            div.append(price);
+
+            var buttonbox = $('<div class="buttonbox" />');
+            var button = Button.init({color: 'green',
+                                      text: localization.payments.selected,
+                                      size: 'small',
+                                      width: 150,
+                                      onClick: function() {
+                                          model.signup().code('team');
+                                          view.showRecurlySubscriptionForm();
+                                          return false;
+                                      }});
+            
+            buttonbox.append(button.input());
+            div.append(buttonbox);
+
+            return div;
+        },
+        formBox: function() {
+            var view = this;
+            var model = view.model;
+
+            var div = $('<div class="form planbox" />');
+
+            var header = $('<div class="header" />');
+            var header1 = $('<div class="header1" />');
+            header1.text(localization.payments.plans.form);
+            var header2 = $('<div class="header2" />');
+            header2.text(localization.payments.plans.formtag);
+            //var img = $('<img src="/img/bestvalue.png" alt="Best Value" class="bestvalue" />');
+            header.append(header1).append(header2); //.append(img);
+            div.append(header);
+
+            var features = $('<div class="features" />');
+            _.each(localization.payments.features.form, function(t) {
+                features.append($('<div class="feature" />').text(t));
+            });
+
+            div.append(features);
+
+            var price = $('<div class="price" />');
+            var price1 = $('<div class="price1" />');
+            price1.text("");
+            var price2 = $('<div class="price2" />');
+            price2.text(localization.payments.plans.formprice);
+            var price3 = $('<div class="price3" />');
+            price3.text(localization.payments.permonth + " " + localization.and);
+            price.append(price1).append(price2).append(price3);
+
+            var price21 = $('<div class="price2 s" />');
+            price21.text(localization.payments.plans.docprice);
+            var price31 = $('<div class="price3" />');
+            price31.text(localization.payments.perdocument);
+            price.append(price21).append(price31);
+
+            div.append(price);
+
+            var buttonbox = $('<div class="buttonbox" />');
+            var button = Button.init({color: 'black',
+                                      text: localization.payments.select,
+                                     size: 'small',
+                                     width: 150,
+                                     onClick: function() {
+                                         model.signup().code('form');
+                                         view.showRecurlySubscriptionForm();
+                                         return false;
+                                     }});
+            
+            buttonbox.append(button.input());
+            div.append(buttonbox);
+
+            return div;
+        },
+        enterpriseBox: function() {
+            var view = this;
+            var model = view.model;
+
+            var div = $('<div class="enterprise planbox" />');
+            var header = $('<div class="header" />');
+            var header1 = $('<div class="header1" />');
+            header1.text(localization.payments.plans.enterprise);
+            var header2 = $('<div class="header2" />');
+            header2.text(localization.payments.plans.enterprisetag);
+            header.append(header1).append(header2);
+            div.append(header);
+
+            var features = $('<div class="features" />');
+            _.each(localization.payments.features.enterprise0, function(t) {
+                features.append($('<div class="feature" />').text(t));
+            });
+            features.append($('<div class="feature" />').html("&nbsp;"));
+            _.each(localization.payments.features.enterprise, function(t) {
+                features.append($('<div class="feature" />').text(t));
+            });
+            div.append(features);
+
+            var price = $('<div class="price" />');
+            var price1 = $('<div class="price1" />');
+            price1.text("ask for a");
+            var price2 = $('<div class="price2" />');
+            price2.text("Quote");
+            var price3 = $('<div class="price3" />');
+
+            price.append(price1).append(price2).append(price3);
+            div.append(price);
+
+            var buttonbox = $('<div class="buttonbox" />');
+            var button = Button.init({color: 'black',
+                                      text: localization.payments.getintouch,
+                                      size: 'small',
+                                      width: 150,
+                                      onClick: function() {
+                                          view.getInTouch();
+                                          return false;
+                                      }});
+            buttonbox.append(button.input());
+            div.append(buttonbox);
+ 
+            return div;
+        },
         showSubscribeForm: function() {
             var view = this;
             var model = view.model;
@@ -308,31 +459,30 @@
             $el.empty();
             $el.removeClass("subscribed").addClass("subscribing");
             
-            var header = $('<div class="header" />');
-            header.append($('<h2 />')
-                          .text(localization.payments.subscribeheader));
+            var header = $('<div class="header" />')
+                .append($('<h2 />').text(localization.payments.subscribeheader));
+
             $el.append(header);
+            $el.append($('<h3 />').text(localization.payments.chooseplan));
 
-            var includes = $('<div class="includes" />');
+            var subs = $('<div class="subscription-chooser" />');
 
-            var price = $('<div class="price" />');
-            price.append($('<div class="price1" />')
-                        .text(localization.payments.price));
-            price.append($('<div class="price2" />')
-                        .text(localization.payments.peruserpermonth));
-            includes.append(price);
-                         
-            var features = $('<ul class="features" />');
-            var feature_names = ['send', 'manage', 'dash', 'branding', 'features'];
-            _.each(feature_names, function(n) {
-                features.append($('<li class="feature" />')
-                                .text(localization.payments.features[n]));
-            });
-            includes.append(features);
+            var team = this.teamBox();
 
-            $el.append(includes);
+            team.addClass('selected');
+
+            subs.append(team);
+            subs.append(this.formBox());
+            subs.append(this.enterpriseBox());
+
+            model.signup().code('team');
+
+            $el.append(subs);
+            $el.append($('<div class="clearfix" />'));
+            $el.append($('<h3 />').text(localization.payments.paywithcard));
 
             var recurlyform = $('<div id="js-recurly-form"></div>');
+
             $el.append(recurlyform);
 
             view.showRecurlySubscriptionForm();
@@ -342,6 +492,25 @@
             var view = this;
             var model = view.model;
             var $el = $(view.el);
+
+            var form = $('.planbox.form');
+            var team = $('.planbox.team');
+
+            if(model.signup().code() === 'team') {
+                team.addClass('selected');
+                team.find('.btn-small').removeClass('black').addClass('green')
+                    .find('.label').text(localization.payments.selected);
+                form.removeClass('selected');
+                form.find('.btn-small').removeClass('green').addClass('black')
+                    .find('.label').text(localization.payments.select);
+            } else {
+                form.addClass('selected');
+                form.find('.btn-small').removeClass('black').addClass('green')
+                    .find('.label').text(localization.payments.selected);
+                team.removeClass('selected');
+                team.find('.btn-small').removeClass('green').addClass('black')
+                    .find('.label').text(localization.payments.select);
+            }
 
             Recurly.config({
                 subdomain: model.server().subdomain()
@@ -385,16 +554,27 @@
 
                     // set the quantity that we found from the db
                     var quantbox = form.find('.quantity input');
-                    quantbox.val(model.signup().quantity());
-                    quantbox.change();
-                    quantbox.after($('<span class="quantity" />').text(model.signup().quantity()));
-                    quantbox.hide();
 
-                    form.find('.quantity .label').text(localization.payments.nousers + ": ");
+
+                    if(model.signup().code() == 'team') {
+                        quantbox.val(model.signup().quantity());
+                        quantbox.after($('<span class="quantity" />').text(model.signup().quantity()));
+                        form.find('.quantity .label').text(localization.payments.nousers + ": ");
+                    } else {
+                        quantbox.val(1);
+                        form.find('.quantity .label').text("You next invoice will include: ");
+                        quantbox.after($('<span class="quantity" />').text(localization.payments.plans.docprice + " " + localization.payments.perdocument + " " + localization.payments.signed));
+                    }
+                    quantbox.change();                    
+                    quantbox.hide();
 
                     var guarantee = $('<div class="guarantee" />');
                     guarantee.text(localization.payments.guarantee);
-                    var permonth = $('<span />').text(" " + localization.payments.permonth);
+                    var permonth = $('<span />');
+                    permonth.text(" " + localization.payments.permonth);
+                    if(model.signup().code() == 'form') {
+                        //permonth.text(" " + localization.payments.permonth + " " + localization.and + " " + localization.payments.plans.docprice + " " + localization.payments.perdocument);
+                    }
                     form.find('.due_now').append(permonth).append(guarantee);
                     form.find('.due_now .title').text(localization.payments.table.total + ": ");
 
@@ -420,7 +600,6 @@
                     form.find('.field.cvv').insertAfter(form.find('.field.expires'));
                     form.find('.field .month').after($('<span />').text(" / "));
 
-                    /* Don't need this anymore; todo: remove
                     // we can store the field values so they won't have to type them again
                     var c = model.creditcard();
                     var cc = form.find('.card_number input');
@@ -471,7 +650,6 @@
                     y.change(function(e) {
                         model.year($(e.target).val());
                     });
-                    */
                 }
                 , successHandler: function(stuff) {
                     LoadingDialog.open(localization.payments.savingsubscription);
@@ -489,6 +667,12 @@
                              }
                            });
                 }
+            });
+        },
+        getInTouch: function() {
+            Confirmation.popup({
+                acceptText: localization.payments.getintouch,
+                title: localization.payments.getintouch
             });
         },
         getPlanName: function(p) {
@@ -518,7 +702,7 @@
                 amountf + " " + currency + " x " + quantity + " " + localization.payments.users;
             return $('<div class="plan-price" />').text(txt);
         },
-        planTotal: function() {
+        planTotal: function() { // not used?
             var view = this;
             var pOrS = this.model.plan().subscription().pending() || this.model.plan().subscription();
             var amount   = pOrS.unitAmountInCents();
@@ -866,7 +1050,6 @@
                  }
                 }
             );
-            billingform.append($('<div class="cancel" />').append(view.cancelButton()));
             return billing.append(billingheader).append(billingform);
         },
         showCurrentSubscription: function () {
@@ -880,6 +1063,7 @@
 
 
             var col2 = $('<div class="col2" />')
+                .append(view.changeSubscription())
                 .append(view.changeBillingForm());
             
             $el.append(col1).append(col2);

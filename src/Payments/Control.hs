@@ -69,14 +69,16 @@ handleSubscriptionDashboardInfo = do
   --let currency = "SEK" -- we only support SEK for now
   plan <- case mplan of
     Nothing -> do
-          paysig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "pay")]
+          teamsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "team")]
+          formsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "form")]
           code <- dbUpdate GetAccountCode
           return $ J.object "signup" $ do
             J.value "code" $ show code
             J.value "currency" "SEK"
             J.value "quantity" quantity
             J.object "signatures" $ do
-              J.value "pay" paysig
+              J.value "team" teamsig
+              J.value "form" formsig
     Just plan | ppPaymentPlanProvider plan == RecurlyProvider -> do
           billingsig  <- liftIO $ genSignature recurlyPrivateKey [("account[account_code]", show $ ppAccountCode plan)]
           -- we should be syncing somewhere else
@@ -403,8 +405,9 @@ fromRecurlyStatus _          = (ActiveStatus, ActiveStatus)
 
 fromRecurlyPricePlan :: String -> PricePlan
 fromRecurlyPricePlan "free"         = FreePricePlan
-fromRecurlyPricePlan "pay"          = PayPricePlan
-fromRecurlyPricePlan _              = PayPricePlan
+fromRecurlyPricePlan "team"         = TeamPricePlan
+fromRecurlyPricePlan "form"         = FormPricePlan
+fromRecurlyPricePlan _              = TeamPricePlan
   
 instance ToJSValue Subscription where
   toJSValue (Subscription{..}) = runJSONGen $ do
