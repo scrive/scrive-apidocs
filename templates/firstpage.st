@@ -164,7 +164,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 </div>
                                 <div class="spacer50"></div>
                                 <div class="clearfix"></div>
-
+<!--
                                 <div class="price-plan-container">
                                         <table class="price-plan">
                                                 <tr>$_PriceTableHead()$
@@ -210,6 +210,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 </div>
 
                                 <div class="spacer70"></div>
+-->
                                 <div class="try-skrivapa">
                                         <div class="left">
                                                 <h3>$_h3CreateAccount()$</h3>
