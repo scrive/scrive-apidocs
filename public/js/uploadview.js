@@ -18,11 +18,13 @@
            var wiz = this.model.wizard();
            var a = $("<a class='documenticon' href='#'/>").append($("<span class='text'/>").text(v.localname));
            a.click(function(){
+               /* Disable blocking for now
                // blocking
                if(BlockingInfo && BlockingInfo.blockCreate()) {
                    blocking.show(BlockingInfo.blockCreateMessage());
                    return false;
                }
+               */
                wiz.set({process: v});
                wiz.nextStep();
                return false;

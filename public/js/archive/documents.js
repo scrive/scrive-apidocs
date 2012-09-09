@@ -99,13 +99,13 @@ window.DocumentsListDefinition = function(archive) { return {
                 avaible : function() {return true;},
                 acceptEmpty : true,
                 onSelect: function() {
-
+                    /*  Disable blocking for now -- Eric
                     // blocking
                     if(BlockingInfo && BlockingInfo.blockCreate()) {
                         blocking.show(BlockingInfo.blockCreateMessage);
                         return false;
                     }
-
+                    */
                         var popup;
                         function doctypebutton(txt,type) {
                             return jQuery('<td/>').append(jQuery('<div class="documentTypeBox"/>').append(UploadButton.init({
