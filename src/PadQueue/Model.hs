@@ -10,6 +10,7 @@ import Control.Monad
 import Database.HDBC
 import DB
 import OurPrelude
+import Utils.Monad
 import User.Model
 import Doc.DocStateData
 import Doc.Model
@@ -17,7 +18,6 @@ import Data.Maybe (listToMaybe, isJust)
 import Data.Functor
 import Util.Actor
 import EvidenceLog.Model
-import Util.MonadUtils
 import Templates.Templates
 import Templates.Fields
 import Util.SignatoryLinkUtils

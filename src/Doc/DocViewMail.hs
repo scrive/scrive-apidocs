@@ -28,12 +28,14 @@ import File.FileID
 import Kontra
 import KontraLink
 import Mails.SendMail
-import Misc
+import Utils.List
+import Utils.Monad
+import Utils.Monoid
+import Utils.Prelude
 import Templates.Templates
 import Templates.TemplatesUtils
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import Util.MonadUtils
 import DB
 import Control.Monad
 import Data.Functor
@@ -43,6 +45,10 @@ import AppView
 import User.Model
 import Util.HasSomeCompanyInfo
 import qualified Templates.Fields as F
+
+-- FIXME: why do we even use that?
+para :: String -> String
+para s = "<p>" ++ s ++ "</p>"
 
 mailDocumentRemind :: (MonadDB m, TemplatesMonad m)
                    => Maybe String

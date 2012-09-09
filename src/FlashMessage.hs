@@ -24,7 +24,9 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Base64 as B64
 
 import Cookies
-import Misc
+import Utils.HTTP
+import Utils.Monoid
+import Utils.Read
 import Templates.Templates
 import Templates.TemplatesLoader
 

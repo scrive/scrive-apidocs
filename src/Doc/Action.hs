@@ -14,6 +14,7 @@ import Control.Logic
 import Crypto.RNG
 import Data.Char
 import DB
+import Utils.Monad
 import Doc.DocSeal
 import Doc.Model
 import Doc.DocInfo

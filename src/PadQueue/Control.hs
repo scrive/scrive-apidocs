@@ -13,6 +13,7 @@ import qualified Log
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import PadQueue.View
+import Utils.Monad
 
 import Control.Applicative
 import Control.Monad
@@ -20,7 +21,7 @@ import Control.Monad
 import Text.JSON hiding (Result)
 import Text.JSON.Gen hiding (value)
 import KontraLink
-import Misc
+import Happstack.Fields
 import Util.FlashUtil
 import User.UserView
 import Doc.Model

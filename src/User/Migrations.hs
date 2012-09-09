@@ -1,7 +1,7 @@
 module User.Migrations where
 
 import DB
-import Misc
+import Utils.Default
 import User.Region
 import User.Tables
 

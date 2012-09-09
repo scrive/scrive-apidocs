@@ -63,7 +63,14 @@ import Kontra
 import KontraLink
 import MagicHash
 import MinutesTime
-import Misc
+import Happstack.Fields
+import Utils.Either
+import Utils.HTTP
+import Utils.Monad
+import Utils.Prelude
+import Utils.Read
+import Utils.String
+import Utils.Tuples
 import Redirect
 import User.Model
 import Util.HasSomeUserInfo
@@ -93,6 +100,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
+import System.FilePath
 import Text.JSON hiding (Result)
 import Text.JSON.Gen hiding (value)
 import Text.JSON.String (runGetJSON)
@@ -632,7 +640,7 @@ makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) nr
         return Nothing
       else do
           Log.debug "Got the content, creating document"
-          let title = basename filename
+          let title = takeBaseName filename
           doc <- guardRightM $ newDocument title doctype nrOfExtraSigs
           handleDocumentUpload (documentid doc) (concatChunks content) title
           return $ Just doc
@@ -1069,7 +1077,7 @@ handleParseCSV = do
           content <- case contentspec of
                        Left filepath -> liftIO $ BSL.readFile filepath
                        Right content -> return content
-          let _title = BS.fromString (basename filename)
+          let _title = BS.fromString (takeBaseName filename)
           case parseCSV content of
                  Left _ -> oneProblemJSON $ renderTemplate_ "flashMessageFailedToParseCSV"
                  Right contents

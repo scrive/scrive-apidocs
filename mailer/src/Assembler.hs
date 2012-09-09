@@ -23,9 +23,9 @@ import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Data.ByteString.Base64 as Base64
 import qualified Text.JSON as J
 
-import Crypto.RNG (CryptoRNG)
+import Crypto.RNG
+import Crypto.RNG.Utils
 import Mails.Model
-import Misc (randomString)
 
 assembleContent :: (MonadIO m, CryptoRNG m) => Mail -> m BSL.ByteString
 assembleContent Mail{..} = do

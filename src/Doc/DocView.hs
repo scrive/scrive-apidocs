@@ -42,7 +42,8 @@ import FlashMessage
 import Kontra
 import KontraLink
 import MinutesTime
-import Misc
+import Utils.Prelude
+import Utils.Monoid
 import Templates.Templates
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
@@ -61,6 +62,10 @@ import PadQueue.Model
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
 import qualified Templates.Fields as F
+
+-- FIXME: why do we even use that?
+para :: String -> String
+para s = "<p>" ++ s ++ "</p>"
 
 modalMismatch :: TemplatesMonad m => String -> SignatoryLink -> m FlashMessage
 modalMismatch msg author = toModal <$>  do

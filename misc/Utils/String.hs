@@ -1,16 +1,14 @@
-module Util.StringUtil where
+module Utils.String where
 
 import Data.Char
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
 
-trim :: String -> String
-trim = f . f
-  where f = reverse . dropWhile isSpace
+concatChunks :: BSL.ByteString -> BS.ByteString
+concatChunks = BS.concat . BSL.toChunks
 
-splitOn :: Char -> String -> [String]
-splitOn c s = case dropWhile (== c) s of
-  "" -> []
-  s' -> w : splitOn c s''
-    where (w, s'') = break (== c) s'
+pureString :: String -> String
+pureString = unwords . words . filter (not . isControl)
 
 {- |
     Calculate the Levenshtein distance (edit distance) between two strings
@@ -40,5 +38,3 @@ maxLev' s1 s2 m i j
   | otherwise = any id [maxLev' s1 s2 (m - 1) (i - 1) j
                        ,maxLev' s1 s2 (m - 1) i (j - 1)
                        ,maxLev' s1 s2 (m - 1) (i - 1) (j - 1)]
-
-

@@ -4,7 +4,7 @@ import Control.Monad
 import Data.Convertible
 import Data.Ix
 import EvidenceLog.Model
-import Misc
+import Utils.Either
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit.Base (Assertion)

@@ -9,7 +9,7 @@ import Test.Framework
 import TestingUtil
 import TestKontra as T
 import Mails.Model
-import Misc
+import Utils.Default
 import Context
 import DB
 import Doc.Model

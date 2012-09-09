@@ -11,9 +11,9 @@ import Happstack.Server
 import qualified Control.Exception.Lifted as E
 
 import DB
+import Happstack.Fields
 import Mails.Model
 import Mailer
-import Misc
 import qualified Log (mailingServer)
 
 handleSendGridEvents :: Mailer Response

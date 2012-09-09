@@ -6,7 +6,7 @@ import Text.JSON
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 
 import Util.JSON
-import Misc
+import Utils.Either
 import Doc.JSON
 import Doc.DocStateData
 import Doc.DocInfo

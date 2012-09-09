@@ -6,7 +6,7 @@ import ScriveByMail.Parse
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import qualified Log
-import Util.StringUtil
+import Utils.String
 
 import Data.Maybe
 

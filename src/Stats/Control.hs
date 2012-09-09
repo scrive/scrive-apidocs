@@ -49,7 +49,7 @@ import Doc.DocInfo
 import Doc.DocStateData
 import Kontra
 import MinutesTime
-import Misc
+import Utils.List
 import Stats.Model
 import Stats.View
 import User.Model

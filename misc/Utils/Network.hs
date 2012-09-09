@@ -1,5 +1,5 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
-module Network where
+module Utils.Network where
 
 import Data.Word
 import Network.BSD

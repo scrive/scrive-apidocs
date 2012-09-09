@@ -5,7 +5,10 @@ import API.Monad
 import Routing
 import OAuth.Model
 import DB
-import Misc
+import Happstack.Fields
+import Utils.List
+import Utils.Monad
+import Utils.Read
 import KontraLink
 import Happstack.StaticRouting(Route, choice, dir)
 import User.Utils
@@ -33,8 +36,6 @@ import Happstack.Server.Types
 import Data.Maybe
 import Control.Monad.Error
 import Data.Map (singleton)
-
---import qualified Log
 
 oauthAPI :: Route (KontraPlus Response)
 oauthAPI = choice [

@@ -42,7 +42,7 @@ import Doc.DocStateData
 import MagicHash (MagicHash)
 import User.Model
 import Util.HasSomeUserInfo
-import Misc
+import Utils.Prelude
 
 import Data.List
 import Data.Maybe

@@ -4,7 +4,7 @@ import ActionQueue.UserAccountRequest
 import Test.Framework
 import TestingUtil
 import IPAddress
-import Misc
+import Utils.Default
 import DB
 import MinutesTime
 import User.Model

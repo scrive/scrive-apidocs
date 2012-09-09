@@ -46,7 +46,9 @@ import Doc.SignatoryLinkID
 import ELegitimation.ELegTransaction
 import MagicHash
 import MinutesTime
-import Misc
+import Utils.HTTP
+import Utils.Monoid
+import Utils.Read
 import User.Model
 
 newtype SessionID = SessionID Word64

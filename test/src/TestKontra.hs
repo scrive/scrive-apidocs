@@ -46,7 +46,8 @@ import GuardTime (GuardTimeConf(..))
 import Kontra
 import Mails.MailsConfig
 import MinutesTime
-import Misc
+import Utils.Default
+import Utils.Directory
 import IPAddress
 import OurServerPart
 import Templates.Templates

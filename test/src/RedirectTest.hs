@@ -6,7 +6,7 @@ import Redirect
 import Control.Applicative
 import Data.List
 import DBError
-import Misc
+import Utils.Default
 import Happstack.Server
 import Context
 import KontraError

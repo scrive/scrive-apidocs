@@ -51,7 +51,6 @@ import API.Service.Model
 import Company.Model
 import DB
 import MinutesTime
-import Misc
 import User.Lang
 import User.Locale
 import User.Password
@@ -286,7 +285,7 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
           , sql "lang" $ getLang l
           , sql "region" $ getRegion l
           , sql "deleted" False
-          ] <++> SQL ("RETURNING " ++ selectUsersSelectors) []
+          ] <> SQL ("RETURNING " ++ selectUsersSelectors) []
         fetchUsers >>= oneObjectReturnedGuard
 
 data SetUserEmail = SetUserEmail (Maybe ServiceID) UserID Email

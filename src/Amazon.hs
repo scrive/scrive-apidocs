@@ -30,7 +30,7 @@ import Crypto
 import DB
 import File.File
 import File.Model
-import Misc (concatChunks)
+import Utils.String
 import qualified Log
 
 isAWSConfigOk :: AppConf -> Bool

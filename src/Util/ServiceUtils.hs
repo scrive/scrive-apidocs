@@ -17,7 +17,7 @@ import User.Model
 import Doc.DocStateData
 import Company.Model
 import Control.Monad
-import Misc
+import Utils.Prelude
 
 class MayHaveService a where
   getServiceID :: a -> Maybe ServiceID
@@ -40,7 +40,5 @@ instance MayHaveService Service where
 instance (MayHaveService a) => MayHaveService (Maybe a) where
   getServiceID = join . fmap getServiceID
 
-
-sameService::(MayHaveService a ,MayHaveService b) => a -> b -> Bool
+sameService :: (MayHaveService a ,MayHaveService b) => a -> b -> Bool
 sameService a b = joinB $ liftM2 (==) (getServiceID a) (getServiceID b)
-

@@ -29,7 +29,7 @@ import Administration.AdministrationView (adminCompanyBrandingPage)
 import Company.Model
 import Kontra
 import KontraLink
-import Misc
+import Happstack.Fields
 import Redirect
 import Routing (hGet, hPost, toK0, toK1)
 import User.Model

@@ -9,6 +9,7 @@ module ActionQueue.UserAccountRequest (
 
 import Control.Monad
 import Control.Monad.Trans.Maybe
+import Data.Monoid
 import Data.Typeable
 
 import ActionQueue.Core
@@ -20,7 +21,6 @@ import Kontra
 import KontraLink
 import MagicHash
 import MinutesTime
-import Misc
 import Stats.Model
 import User.Model
 import qualified Log
@@ -45,7 +45,7 @@ userAccountRequest = Action {
   , qaUpdateSQL = \UserAccountRequest{..} -> mkSQL UPDATE tableUserAccountRequests [
       sql "expires" uarExpires
     , sql "token" uarToken
-    ] <++> SQL ("WHERE " ++ qaIndexField userAccountRequest ++ " = ?") [toSql uarUserID]
+    ] <> SQL ("WHERE " ++ qaIndexField userAccountRequest ++ " = ?") [toSql uarUserID]
   , qaEvaluateExpired = \UserAccountRequest{uarUserID} -> do
     _ <- dbUpdate $ DeleteAction userAccountRequest uarUserID
     _ <- dbUpdate $ RemoveInactiveUserLoginEvents uarUserID

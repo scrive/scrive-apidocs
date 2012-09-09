@@ -16,7 +16,7 @@ import Mails.Model
 import Login
 import LoginTest (assertLoginEventRecordedFor)
 import MinutesTime
-import Misc
+import Utils.Default
 import Redirect
 import TestingUtil
 import TestKontra as T

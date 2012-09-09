@@ -38,7 +38,7 @@ import Network.HTTP (urlEncodeVars)
 import Crypto.RNG
 import DB
 import Util.JSON
-import Misc
+import Utils.Either
 import Kontra
 import DBError
 import User.Model

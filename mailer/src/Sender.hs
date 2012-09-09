@@ -15,7 +15,7 @@ import Assembler
 import Crypto.RNG (CryptoRNG)
 import MailingServerConf
 import Mails.Model
-import Misc
+import Utils.IO
 import OurPrelude
 import qualified Log (mailingServer, mailContent)
 

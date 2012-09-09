@@ -13,6 +13,7 @@ module File.Model (
 import Control.Applicative
 import Control.Monad.Trans
 import Data.List
+import Data.Monoid
 import Database.HDBC
 
 import Crypto
@@ -21,14 +22,13 @@ import DB
 import File.File
 import File.FileID
 import File.Tables
-import Misc
 import qualified Data.ByteString as BS
 import qualified Crypto.Hash.SHA1 as SHA1
 
 data GetFileByFileID = GetFileByFileID FileID
 instance MonadDB m => DBQuery m GetFileByFileID (Maybe File) where
   query (GetFileByFileID fid) = do
-    kRun_ $ selectFilesSQL <++> SQL "WHERE id = ?" [toSql fid]
+    kRun_ $ selectFilesSQL <> SQL "WHERE id = ?" [toSql fid]
     fetchFiles >>= oneObjectReturnedGuard
 
 data NewFile = NewFile String Binary
@@ -42,7 +42,7 @@ instance (Applicative m, CryptoRNG m, MonadDB m) => DBUpdate m NewFile File wher
       , sql "size" $ BS.length $ unBinary content
       , sql "aes_key" $ aesKey aes
       , sql "aes_iv" $ aesIV aes
-      ] <++> SQL ("RETURNING " ++ filesSelectors) []
+      ] <> SQL ("RETURNING " ++ filesSelectors) []
     fetchFiles >>= exactlyOneObjectReturnedGuard
 
 data FileMovedToAWS = FileMovedToAWS FileID String String
@@ -52,7 +52,7 @@ instance MonadDB m => DBUpdate m FileMovedToAWS () where
         sql "content" SqlNull
       , sql "amazon_bucket" bucket
       , sql "amazon_url" url
-      ] <++> SQL "WHERE id = ?" [toSql fid]
+      ] <> SQL "WHERE id = ?" [toSql fid]
 
 data FileMovedToDisk = FileMovedToDisk FileID FilePath
 instance MonadDB m => DBUpdate m FileMovedToDisk () where
@@ -64,14 +64,14 @@ instance MonadDB m => DBUpdate m FileMovedToDisk () where
 data GetFileThatShouldBeMovedToAmazon = GetFileThatShouldBeMovedToAmazon
 instance MonadDB m => DBQuery m GetFileThatShouldBeMovedToAmazon (Maybe File) where
   query GetFileThatShouldBeMovedToAmazon = do
-    kRun_ $ selectFilesSQL <++> SQL "WHERE content IS NOT NULL LIMIT 1" []
+    kRun_ $ selectFilesSQL <> SQL "WHERE content IS NOT NULL LIMIT 1" []
     fetchFiles >>= oneObjectReturnedGuard
 
 -- | Needed for encrypting/calculating checksum for old files. To be removed after 15.08.2012.
 data GetFileWithNoChecksum = GetFileWithNoChecksum
 instance MonadDB m => DBQuery m GetFileWithNoChecksum (Maybe File) where
   query GetFileWithNoChecksum = do
-    kRun_ $ selectFilesSQL <++> SQL "WHERE checksum IS NULL LIMIT 1" []
+    kRun_ $ selectFilesSQL <> SQL "WHERE checksum IS NULL LIMIT 1" []
     fetchFiles >>= oneObjectReturnedGuard
 
 -- | Needed for encrypting/calculating checksum for old files. To be removed after 15.08.2012.
@@ -79,7 +79,7 @@ data SetChecksum = SetChecksum FileID Binary
 instance MonadDB m => DBUpdate m SetChecksum Bool where
   update (SetChecksum fid checksum) = do
     kRun01 $ mkSQL UPDATE tableFiles [sql "checksum" checksum]
-      <++> SQL "WHERE id = ?" [toSql fid]
+      <> SQL "WHERE id = ?" [toSql fid]
 
 -- | Needed for encrypting/calculating checksum for old files. To be removed after 15.08.2012.
 data SetContentToMemoryAndEncryptIt = SetContentToMemoryAndEncryptIt FileID Binary
@@ -91,7 +91,7 @@ instance (Applicative m, CryptoRNG m, MonadDB m) => DBUpdate m SetContentToMemor
       , sql "size" $ BS.length $ unBinary content
       , sql "aes_key" $ aesKey aes
       , sql "aes_iv" $ aesIV aes
-      ] <++> SQL "WHERE id = ?" [toSql fid]
+      ] <> SQL "WHERE id = ?" [toSql fid]
 
 selectFilesSQL :: SQL
 selectFilesSQL = SQL ("SELECT " ++ filesSelectors ++ " FROM files ") []

@@ -74,7 +74,7 @@ import MinutesTime
 import Util.JSON
 import Text.JSON
 import Data.Either
-import Misc
+import Utils.Either
 import ScriveByMail.Model
 import ScriveByMail.View
 import qualified Templates.Fields as F

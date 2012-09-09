@@ -51,7 +51,7 @@ import Data.List
 import Data.Maybe
 import Data.Foldable (foldMap)
 import Data.Ord
-import Misc
+import Happstack.Fields
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Char8 as BS8
 import Data.Char (toUpper)
@@ -62,7 +62,8 @@ import Text.JSON.String (runGetJSON)
 import Text.JSON.FromJSValue
 import Control.Monad
 import Control.Monad.Identity
-import qualified Log 
+import Utils.Prelude
+import qualified Log
  
 -- This part is responsible for sorting,searching and paging documents lists
 data PagedList a =

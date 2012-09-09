@@ -13,7 +13,7 @@ import FlashMessage
 import MagicHash (unsafeMagicHash)
 import Mails.Model
 import MinutesTime
-import Misc
+import Utils.Default
 import Redirect
 import TestingUtil
 import TestKontra as T

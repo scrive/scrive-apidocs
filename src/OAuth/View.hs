@@ -1,7 +1,7 @@
 module OAuth.View where
 
 import MagicHash
-import Misc
+import Utils.Prelude
 import Data.Int
 import Templates.Templates
 import OAuth.Model

@@ -11,15 +11,16 @@ module User.Locale (
 
 import Happstack.Server
 
-import Misc
 import User.Lang
 import User.Region
+import Utils.Enum
+import Utils.Read
 
 data Locale = Locale Region Lang
   deriving (Bounded, Show, Read, Ord, Eq)
 
 instance FromReqURI Locale where
-    fromReqURI = maybeRead
+  fromReqURI = maybeRead
 
 -- I suggest that this returns Maybe Locale, where Nothing 
 -- signals an invalid combo; or it could be an error - EN

@@ -16,6 +16,7 @@ module User.History.Model (
   ) where
 
 import Data.List (intersperse)
+import Data.Monoid
 import Text.JSON
 
 import qualified Paths_kontrakcja as Paths
@@ -24,7 +25,6 @@ import qualified Data.Version as Ver
 import DB
 import IPAddress
 import MinutesTime
-import Misc
 
 import User.History.Tables
 import User.UserID
@@ -93,7 +93,7 @@ data GetUserHistoryByUserID = GetUserHistoryByUserID UserID
 instance MonadDB m => DBQuery m GetUserHistoryByUserID [UserHistory] where
   query (GetUserHistoryByUserID uid) = do
     _ <- kRun $ selectUserHistorySQL
-      <++> SQL "WHERE user_id = ? ORDER BY time" [toSql uid]
+      <> SQL "WHERE user_id = ? ORDER BY time" [toSql uid]
     fetchUserHistory
 
 data LogHistoryLoginAttempt = LogHistoryLoginAttempt UserID IPAddress MinutesTime

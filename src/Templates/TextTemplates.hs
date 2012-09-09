@@ -18,7 +18,12 @@ module Templates.TextTemplates
     ) where
 
 import Control.Logic
-import Misc
+import Utils.Directory
+import Utils.Enum
+import Utils.List
+import Utils.Prelude
+import Utils.Read
+import Utils.Tuples
 import Templates.TemplatesFiles
 
 import Control.Monad
@@ -44,7 +49,6 @@ import Data.String.Utils (replace)
 -- different files.
 getTextTemplatesMTime :: IO ClockTime
 getTextTemplatesMTime = getRecursiveMTime textsDirectory
-
 
 -- | We recursively read all csv files from texts directory. This
 -- function will also merge by selecting the closest default text for those that are missing.

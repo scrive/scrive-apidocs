@@ -15,7 +15,7 @@ import Doc.DocStateData
 import EvidenceLog.Tables
 import IPAddress
 import MinutesTime
-import Misc
+import Utils.Prelude
 import Data.Typeable
 import User.Model
 import Util.Actor

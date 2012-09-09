@@ -33,7 +33,7 @@ import Kontra
 import KontraLink
 import ListUtil
 import Mails.SendMail
-import Misc
+import Happstack.Fields
 import Util.Actor
 import Util.FlashUtil
 import Util.HasSomeCompanyInfo

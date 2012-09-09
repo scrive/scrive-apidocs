@@ -7,7 +7,10 @@ module Doc.DocDraft (
 import Control.Monad.Trans.Maybe
 import Doc.SignatoryTMP
 import Doc.DocStateData
-import Misc
+import Utils.Enum
+import Utils.Monad
+import Utils.Monoid
+import Utils.Prelude
 import Control.Monad
 import Data.Maybe
 import Kontra
@@ -18,7 +21,6 @@ import User.Region
 import Doc.Model
 import DB
 import Util.Actor
-import Util.MonadUtils
 import Text.JSON.FromJSValue
 
 data DraftData = DraftData {

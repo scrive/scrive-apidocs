@@ -7,7 +7,7 @@ import Test.Framework
 import Company.Model
 import DB
 import MinutesTime
-import Misc
+import Utils.Default
 import User.Model
 import TestingUtil
 import TestKontra

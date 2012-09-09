@@ -10,7 +10,7 @@ import AppView as V
 import Kontra
 import KontraLink
 import LocaleRouting (allLocaleDirs, dirByLang)
-import Misc
+import Happstack.Fields
 import Redirect
 import Routing
 import Happstack.StaticRouting (Route, choice, dir)

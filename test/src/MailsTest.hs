@@ -11,7 +11,7 @@ import TestingUtil
 import TestKontra as T
 import User.Model
 import IPAddress
-import Misc
+import Utils.Default
 import Doc.Model
 import Doc.DocViewMail
 import Doc.DocStateData

@@ -9,7 +9,7 @@ module GuardTime
 
 import qualified Data.ByteString.Lazy as BSL hiding (length)
 import qualified Data.ByteString.Lazy.UTF8 as BSL 
-import Misc
+import Utils.IO
 import Data.List
 import Control.Monad.IO.Class
 import System.Exit

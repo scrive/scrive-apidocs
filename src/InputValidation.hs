@@ -68,7 +68,7 @@ import Doc.DocumentID
 import Attachment.AttachmentID
 import Numeric
 import qualified Log (security)
-import Misc hiding (getFields)
+import Happstack.Fields hiding (getFields)
 import Templates.Templates
 import qualified Templates.Fields as F
 import Util.FlashUtil

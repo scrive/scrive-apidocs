@@ -5,9 +5,9 @@ import Data.Maybe
 import Data.String.Utils
 import Control.Monad
 import Control.Applicative
-import Misc
+import Utils.Prelude
 import Data.List
-import Util.StringUtil
+import Utils.String
 import Data.Char
 import Doc.DocStateData
 

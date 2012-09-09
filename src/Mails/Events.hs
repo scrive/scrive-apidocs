@@ -30,7 +30,7 @@ import Mails.MailsData
 import Mails.Model hiding (Mail)
 import Mails.SendMail
 import MinutesTime
-import Misc
+import Utils.Read
 import Templates.Templates
 import Templates.TemplatesUtils
 import Templates.Trans

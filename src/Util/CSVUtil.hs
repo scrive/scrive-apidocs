@@ -13,7 +13,7 @@ import Data.Spreadsheet as SS
 import Control.Monad.Exception.Asynchronous (Exceptional(..))
 import Happstack.Server (ToMessage(..), setHeaderBS, setHeader)
 import Codec.Text.IConv
-import Misc
+import Utils.String
 
 {- |
     Parses a csv file's contents.  It tries to guess the char encoding and the delimiters.

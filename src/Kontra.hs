@@ -46,8 +46,8 @@ import OurServerPart
 import Templates.Templates
 import Templates.TemplatesLoader
 import User.Model
-import Util.MonadUtils
-import Misc
+import Utils.List
+import Utils.Monad
 
 type InnerKontraPlus = StateT Context (AcidT AppState (CryptoRNGT (DBT (OurServerPartT IO))))
 

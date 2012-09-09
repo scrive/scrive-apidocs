@@ -4,7 +4,6 @@ import Control.Monad.Trans.Maybe
 import Happstack.StaticRouting
 import Text.JSON
 import KontraMonad
---import Util.JSON
 import Happstack.Server.Types
 import Routing
 import Doc.DocStateQuery
@@ -14,10 +13,11 @@ import Doc.JSON
 import Control.Applicative
 import Control.Logic
 import Control.Monad.Trans
-import Misc
+import Happstack.Fields
+import Utils.String
+import Utils.Read
+import System.FilePath
 import Data.Maybe
-
---import Text.JSON.String
 
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -27,8 +27,6 @@ import Util.HasSomeUserInfo
 import Happstack.Server.RqData
 import Doc.Rendering
 import DB
---import Doc.DocControl
---import Control.Concurrent.MVar
 
 import File.Model
 import MagicHash (MagicHash)
@@ -41,8 +39,7 @@ import Control.Monad.Error
 import qualified Log
 import Stats.Control
 import LiveDocx
---import Data.String.Utils
---import MinutesTime
+
 documentAPI :: Route (KontraPlus Response)
 documentAPI = choice [
   dir "api" $ dir "document" $ hPostNoXToken $ toK0 $ documentNew,
@@ -74,7 +71,7 @@ documentNew = api $ do
   -- pdf exists
   Input contentspec (Just filename') _contentType <- apiGuardL (badInput "The main file of the document must be attached in the MIME part 'file'.") $ getDataFn' (lookInput "file")
 
-  let filename = basename filename'
+  let filename = takeBaseName filename'
 
   content1 <- case contentspec of
     Left filepath -> liftIO $ BSL.readFile filepath
@@ -144,7 +141,7 @@ documentChangeMainFile docid = api $ do
               -- we need to downgrade the PDF to 1.4 that has uncompressed structure
               -- we use gs to do that of course
               content <- apiGuardL (badInput "PDF precheck failed.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
-              let filename = basename filename'
+              let filename = takeBaseName filename'
 
               fileid <$> (dbUpdate $ NewFile filename content)
             (_, Just templateids) -> do
@@ -209,7 +206,7 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
 
   content <- apiGuardL (badInput "The PDF was invalid.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
 
-  file <- dbUpdate $ NewFile (basename filename) content
+  file <- dbUpdate $ NewFile (takeBaseName filename) content
   let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) email slid
   d <- apiGuardL (serverError "documentUploadSignatoryAttachment: SaveSigAttachment failed") . runMaybeT $ do
     True <- dbUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor

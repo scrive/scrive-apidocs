@@ -14,7 +14,8 @@ module API.Service.ServiceView(
 ) where
 
 import Templates.Templates
-import Misc
+import Utils.HTTP
+import Utils.Prelude
 import API.Service.Model
 import Util.HasSomeUserInfo
 import Data.Maybe

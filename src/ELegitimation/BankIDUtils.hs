@@ -18,7 +18,7 @@ import Doc.DocStateData as D
 import ELegitimation.ELegTransaction 
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import Util.StringUtil
+import Utils.String
 
 import Templates.Templates
 import qualified Templates.Fields as F
