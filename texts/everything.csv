@@ -75,134 +75,106 @@
 "_PresentPassword","Nuvarande lösenord",,"Present password"
 "_PriceTableHead","<th>
 
-    <h3>Basic</h3>
-                      <p>För distanssignering.</p>
+    <h3>Team</h3>
+                      <p>$_paymentPlanTeamTag()$</p>
                                                         </th>
                                                         <th>
 
-    <h3>Branded</h3>
-                     <p>Anpassa med egen logo och färger.</p>
-                                                        </th>
-                                                        <th>
-
-    <h3>Advanced</h3>
-                         <p>För många olika tillämpningar.</p>
+    <h3>Online Forms</h3>
+                     <p>$_paymentPlanFormTag()$</p>
                                                         </th>
                                                         <th>
 
     <h3>Enterprise</h3>
-                           <p> För större organisationer och speciella behov.</p>
+                           <p>$_paymentPlanEnterpriseTag()$</p>
            </th>",,"<th>
 
-    <h3>Basic</h3>
-                      <p>For distance signing.</p>
+    <h3>Team</h3>
+                      <p>$_paymentPlanTeamTag()$</p>
                                                     </th>
                                                      <th>
 
- <h3>Branded</h3>
-                  <p>Customise with your logo and colours.</p>
+ <h3>Online Forms</h3>
+                  <p>$_paymentPlanFormTag()$</p>
                                                  </th>
                                                   <th>
-                                                          <h3>Advanced</h3>
-
-    <p>For multiple applications.</p>
-                                   </th>
-                                    <th>
                                             <h3>Enterprise</h3>
 
-    <p> For larger organisations and
- special needs.
-</p>
+    <p>$_paymentPlanEnterpriseTag()$</p>
                                                     </th>"
 "_PriceTableHighlightedColumn","
     <ul class=""highlight-rows"">
         <li class=""top"">
-           <h3>Advanced</h3>
-           <p>För många olika tillämpningar.</p>
+           <h3>Team</h3>
+           <p>$_paymentPlanTeamTag()$</p>
         </li>
-        <li>Fria signaturer *</li>
-        <li> <p>Distanssignering</p> </li>
-        <li>Branding</li>
-        <li>Scrive by Mail</li>
-        <li>Pad-signering</li>
+        <li>$_paymentFeatureDistance()$</li>
+        <li>$_paymentFeaturePad()$</li>
+        <li>$_paymentFeatureBranding()$</li>
+        <li>$_paymentFeatureTracking()$</li>
+        <li>$_paymentFeatureAPI()$</li>
+        <li>$_paymentFeatureFeatures()$</li>
         <li> </li>
         <li> </li>
-        <li> </li>
-        <li class='last-child'> <span class='price'>299kr/månad</span><span class='price-comment'>Per användare.</span>
+        <li class='last-child'> <span class='price'>299kr/månad</span><span class='price-comment'>per användare</span>
         </li>
     </ul>","
     <ul class=""highlight-rows"">
         <li class=""top"">
-           <h3>Advanced</h3>
-           <p>  For multiple applications.</p>
+           <h3>Team</h3>
+           <p>$_paymentPlanTeamTag()$</p>
         </li>
-        <li>Free signatures *</li>
-        <li>Signing over distance</li>
-        <li>Branding</li>
-        <li>Scrive by Mail</li>
-        <li>Pad-signing</li>
-        <li> </li>
-        <li> </li>
-        <li> </li>
-        <li class='last-child'> <span class='price'>29.99 €/month</span><span class='price-comment'>Per user.</span>
+        <li>$_paymentFeatureDistance()$</li>
+        <li>$_paymentFeaturePad()$</li>
+        <li>$_paymentFeatureBranding()$</li>
+        <li>$_paymentFeatureTracking()$</li>
+        <li>$_paymentFeatureAPI()$</li>
+        <li>$_paymentFeatureFeatures()$</li>
+        <li class='last-child'> <span class='price'>299kr/month</span><span class='price-comment'>per user</span>
         </li>
     </ul>",
-"_PriceTablePriceRow","<td><span class='price'>199 kr/månad </span><span class='price-comment'>Per användare.</span></td>
-                       <td><span class='price'>279kr/månad </span><span class='price-comment'>Per användare.</span></td>
-                       <td><span class='price'>299kr/månad</span><span class='price-comment'>Per användare.</span></td>
-                       <td><span class='price'>Från 2999kr/månad</span><span class='price-comment'>Kontakta oss för offert!</span></td>",,"
-                       <td><span class='price'>19.99 €/month</span><span class='price-comment'>Per user.</span></td>
-                       <td><span class='price'>27.99 €/month </span><span class='price-comment'>Per user.</span></td>
-                       <td><span class='price'>29.99 €/month</span><span class='price-comment'>Per user.</span></td>
-                       <td><span class='price'>From 299 €/month</span><span class='price-comment'>Contact us for your offer!</span></td>"
-"_PriceTableRow1","<td>Fria signaturer *</td>
-                   <td>Fria signaturer *</td>
-                   <td>Fria signaturer *</td>
-                   <td>Signaturpris enligt offert</td>",,"
-                   <td>Free signatures *</td>
-                   <td>Free signatures *</td>
-                   <td>Free signatures *</td>
-                   <td>Signature price according to offer</td>"
-"_PriceTableRow2","<td>Distanssignering</td>
-                   <td>Distanssignering</td>
-                   <td>Distanssignering</td>
-                   <td>Distanssignering</td>",,"
-                   <td>Signing over distance</td>
-                   <td>Signing over distance</td>
-                   <td>Signing over distance</td>
-                   <td>Signing over distance</td>"
-"_PriceTableRow3","<td></td>
-                   <td>Branding</td>
-                   <td>Branding</td>
-                   <td>Branding</td>",,"
+"_PriceTablePriceRow","<td><span class='price'>299kr/månad</span><span class='price-comment'>per användare</span></td>
+                       <td><span class='price'>1.000kr/månad</span><span class='price-comment'>per användare</span></td>
+                       <td><span class='price-comment'>$_paymentsAskForA()$</span><span class='price'>$_paymentsQuote()$</span></td>",,"
+                       <td><span class='price'>299kr/month</span><span class='price-comment'>per user</span></td>
+                       <td><span class='price'>1.000kr/month </span><span class='price-comment'>per user</span></td>
+                       <td><span class='price-comment'>$_paymentsAskForA()$</span><span class='price'>$_paymentsQuote()$</span></td>"
+"_PriceTableRow1","<td>$_paymentFeatureDistance()$</td>
+                   <td>$_paymentFeatureSupport()$</td>
+                   <td>$_paymentFeatureAllTeamFeatures()$</td>",,"
+                   <td>$_paymentFeatureDistance()$</td>
+                   <td>$_paymentFeatureSupport()$</td>
+                   <td>$_paymentFeatureAllTeamFeatures()$</td>"
+"_PriceTableRow2","<td>$_paymentFeaturePad()$</td>
+                   <td>$_paymentFeatureHTTPAPI()$</td>
+                   <td>$_paymentFeatureAllOnlineFormFeatures()$</td>",,"
+                   <td>$_paymentFeaturePad()$</td>
+                   <td>$_paymentFeatureHTTPAPI()$</td>
+                   <td>$_paymentFeatureAllOnlineFormFeatures()$</td>"
+"_PriceTableRow3","<td>$_paymentFeatureBranding()$</td>
+                   <td>$_paymentFeatureDocumentation()$</td>
+                   <td>$_paymentFeatureFullCust()$</td>",,"
+                   <td>$_paymentFeatureBranding()$</td>
+                   <td>$_paymentFeatureDocumentation()$</td>
+                   <td>$_paymentFeatureFullCust()$</td>"
+"_PriceTableRow4","<td>$_paymentFeatureTracking()$</td>
+                   <td>$_paymentFeatureExampleCode()$</td>
+                   <td>$_paymentFeatureOnPremise()$</td>",,"
+                   <td>$_paymentFeatureTracking()$</td>
+                   <td>$_paymentFeatureExampleCode()$</td>
+                   <td>$_paymentFeatureOnPremise()$</td>"
+"_PriceTableRow5","<td>$_paymentFeatureAPI()$</td>
                    <td></td>
-                   <td>Branding</td>
-                   <td>Branding</td>
-                   <td>Branding</td>"
-"_PriceTableRow4","<td></td>
+                   <td>$_paymentFeatureProjMan()$</td>",,"
+                   <td>$_paymentFeatureAPI()$</td>
                    <td></td>
-                   <td>Scrive by Mail</td>
-                   <td>Scrive by Mail</td>",,"
+                   <td>$_paymentFeatureProjMan()$</td>"
+"_PriceTableRow6","<td>$_paymentFeatureFeatures()$</td>
                    <td></td>
+                   <td></td>",,"
+                   <td>$_paymentFeatureFeatures()$</td>
                    <td></td>
-                   <td>Scrive by Mail</td>
-                   <td>Scrive by Mail</td>"
-"_PriceTableRow5","<td></td>
-                   <td></td>
-                   <td>Pad-signering</td>
-                   <td>Pad-signering</td>",,"
-                   <td></td>
-                   <td></td>
-                   <td>Pad-signing</td>
-                   <td>Pad-signing</td>"
-"_PriceTableRow6","<td></td>
-                   <td></td>
-                   <td></td>
-                   <td>Integration via Scrive API</td>",,"
-                   <td></td>
-                   <td></td>
-                   <td></td>
-                   <td>Integration by Scrive API</td>"
+                   <td></td>"
 "_PriceTableRow7","<td></td>
                    <td></td>
                    <td></td>
@@ -2529,7 +2501,7 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_paymentsChoosePlan","",,"Choose a plan"
 "_paymentsPayWithCard","",,"Pay with credit card"
 "_paymentPlanProfessionalTag","",,"project your excellence"
-"_paymentPlanTeamTag","",,"synergize your group"
+"_paymentPlanTeamTag","",,"close your deals faster"
 "_paymentsSelect","",,"Select"
 "_paymentsFlatRate","",,"Simple flat rate"
 "_paymentsProfessionalPrice","199kr",,"1000kr"
@@ -2539,7 +2511,7 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_paymentPlanLogoAndBranding","",,"Logo and Branding"
 "_paymentPlanDashboard","",,"Manager Dashboard"
 "_paymentsSelected","",,"Selected"
-"_paymentPlanEnterpriseTag","",,"digitize your workflows"
+"_paymentPlanEnterpriseTag","",,"consultation and custom processes"
 "_paymentsIntegrations","",,"We develop custom integrations for document signing processes."
 "_paymentsManyUsers","",,"Many Users"
 "_paymentsUser","",,"User"
@@ -2581,3 +2553,5 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_paymentPlanDocPrice","25 kr",,"25kr"
 "_paymentsSigned",,,"signed"
 "_paymentsGetInTouch",,,"Get in touch"
+"_paymentsAskForA",,,"ask for a"
+"_paymentsQuote",,,"Quote"

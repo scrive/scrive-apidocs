@@ -39,15 +39,7 @@ priceplanPageContents=
                                                 <tr>
                                                         $_PriceTableRow5()$
                                                 </tr>
-                                                <tr>
-                                                        $_PriceTableRow6()$
-                                                </tr>
-                                                <tr>
-                                                        $_PriceTableRow7()$
-                                                </tr>
-                                                <tr>
-                                                        $_PriceTableRow8()$
-                                                </tr>
+                                                
                                                 <tr class="big-row last-child">
                                                         $_PriceTablePriceRow()$
                                                 </tr>
@@ -58,7 +50,9 @@ priceplanPageContents=
                                         </div>
                                 </div>
                 <br />
+<!--
                 <div>$_priceplanPageSignLimit()$</div>
+-->
                 <div class="big-price-plan">$_priceplanPageBelowTable1()$
                 </div>
 
