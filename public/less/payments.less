@@ -1,7 +1,15 @@
+.payments.loading {
+    background-image: url(/img/wait30trans.gif);
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 50px;
+    width: 240px;
+}
 
 
 .payments-dashboard {
     color: #666;
+
 
     .payments {
         margin: auto;
@@ -544,7 +552,7 @@
         .borderbox{
             margin-top: 18px;
             border: 1px solid #9bd567;
-            width: 100%;
+            width: 410px;
             -moz-border-radius: 5px;
             -webkit-border-radius: 5px;
             border-radius: 5px 5px 5px 5px;
@@ -574,28 +582,29 @@
                 padding-bottom: 6px;
             }
 
+
             .due_now {
                 width: 100%;
                 background: #f1f7ed; 
                 text-shadow: none;
 
                 color: #569e16;
-                padding:0px;
+                padding: 20px 0px;
                 margin: 0px;
                 position: static;
                 text-align: center;
                 height: auto;
                 font-size: 24px;
                 line-height: 1em;
-                padding-top: 14px;
                 font-weight: bold;
                 font-family: 'Copse', serif;
+                margin-bottom: 8px;
                 .title {
                     width: auto;
                     color: #569e16;
                     font-size: 24px;
 
-                    display: inline;
+                    display: none;
                     float: none;
                 }
                 .cost {
@@ -610,8 +619,7 @@
                 .guarantee {
                     color: #828483;
                     font-size: 14px;
-                    padding-top: 10px;
-                    padding-bottom: 10px;
+                    padding-top: 6px;
                     font-weight: normal;
                 }
             }
@@ -620,26 +628,54 @@
                 display: none;
             }
 
-            .label {
+            .billing_info {
+                text-align: center;
+                .credit_card {
+
+                    text-align: left;
+                }
+            }
+
+            .field.first_name, .field.last_name {
+                display: none;
+            }
+
+/*            .label {
                 display: inline-block;
                 float: none;
-                width: 50%;
                 text-align: right;
                 color: #414141;
                 font-size: 16px;
+            }
+*/
+
+            .field.expires {
+                text-align: center;
+                width: 202px;
+                .title {
+                    display: inline;
+                    display: inline-block;
+                    float: none;
+                    text-align: right;
+                    color: #414141;
+                    font-size: 16px;
+                }
+
             }
 
             .field {
                 float: none;
                 display: block;
-                width: 100%; 
+                width: auto; 
                 color: #414141;
                 font-size: 16px;
                 height: auto;
-                margin-top: 8px;
+                margin-top: 16px;
+                text-align: left;
+                margin-left: 102px;
                 input {
                     display: inline;
-                    margin-left: 10px;
+                    /*margin-left: 10px;*/
                     width: 200px;
                     font-family: "Lucida Grande", sans-serif;
                     padding: 1px;
@@ -666,12 +702,12 @@
 
                 }
 
-                
+               .placeholder {
+                   font-size: 16px;
+                   
+                   
+               }
 
-                .placeholder {
-                    display: none;
-                    font-size: 0px;
-                }
 
                 .error {
                     display: inline-block;
@@ -693,13 +729,15 @@
             }
 
             .field.quantity {
+                text-align: center;
+                margin-left:0px;
                 .quantity {
-                    margin-left: 10px;
+/*                    margin-left: 10px; */
                     font-weight: bold;
                     font-size: 20px;
                     height: 26px;
                     display: inline-block;
-                
+                    text-transform: lowercase;
                 }
             }
 
@@ -708,7 +746,11 @@
         
         .btn-big {
             display: inline-block;
-            margin-top: 26px;
+            padding-left: 3px;
+        }
+
+        .footer {
+            padding: 20px 0;
         }
         
     }

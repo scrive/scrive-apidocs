@@ -427,6 +427,8 @@ javascriptLocalisation =
         , payments: {
              users: "$_CompanyAccounts()$"
            , user: "$_paymentsUser()$"
+           , expires: "$_paymentsExpires()$"
+           , creditcardnumber: "$_paymentsCreditCardNumber()$"
            , manyusers: "$_paymentsManyUsers()$"
            , price : "$_paymentsPrice()$"
            , buysyou : "$_paymentsBuysYou()$"
@@ -488,6 +490,11 @@ javascriptLocalisation =
                                        ]
                         }           
             , subscribe: "$_paymentPlanSubscribe()$"
+            , pleaseleavenumbertitle: "$_paymentsPleaseLeaveNumberTitle()$"
+            , ok: "$_paymentsSubmitButtonLabel()$"
+            , pleaseleavenumber: "$_paymentsPleaseLeaveNumber()$"
+            , askfora: "$_paymentsAskForA()$"
+            , quote: "$_paymentsQuote()$"
             , getintouch: "$_paymentsGetInTouch()$"
             , signed: "$_paymentsSigned()$"
             , subscribeheader : "$_paymentsSubscribeHeader()$"

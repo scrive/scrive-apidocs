@@ -430,9 +430,9 @@
 
             var price = $('<div class="price" />');
             var price1 = $('<div class="price1" />');
-            price1.text("ask for a");
+            price1.text(localization.payments.askfora);
             var price2 = $('<div class="price2" />');
-            price2.text("Quote");
+            price2.text(localization.payments.quote);
             var price3 = $('<div class="price3" />');
 
             price.append(price1).append(price2).append(price3);
@@ -541,11 +541,11 @@
                 , signature: model.signup().signatures()[model.signup().code()]
                 , beforeInject: function(form) {
                     form = $(form);
-
+                    /*
                     form.find('.field').prepend(function(){
                         return $('<div class="label" />').text($(this).find('.placeholder').text().trim() + ": ");
                     });
-
+                    */
                     var div = $('<div class="borderbox" />');
                     div.append(form.contents());
                     form.append(div);
@@ -555,31 +555,31 @@
                     // set the quantity that we found from the db
                     var quantbox = form.find('.quantity input');
 
+                    var guarantee = $('<div class="guarantee" />');
+                    guarantee.text(localization.payments.guarantee);
 
                     if(model.signup().code() == 'team') {
                         quantbox.val(model.signup().quantity());
-                        quantbox.after($('<span class="quantity" />').text(model.signup().quantity()));
-                        form.find('.quantity .label').text(localization.payments.nousers + ": ");
+                        quantbox.after($('<span class="quantity" />').text(model.signup().quantity() + " " + localization.payments.users));
+                        form.find('.quantity .label').hide();
                     } else {
                         quantbox.val(1);
                         form.find('.quantity .label').text("You next invoice will include: ");
-                        quantbox.after($('<span class="quantity" />').text(localization.payments.plans.docprice + " " + localization.payments.perdocument + " " + localization.payments.signed));
+                        quantbox.after($('<span class="quantity" />').html("&nbsp;"));
+                        guarantee.text(localization.and + " " + localization.payments.plans.docprice + " " + localization.payments.perdocument + " " + localization.payments.signed);
+                                       
                     }
                     quantbox.change();                    
                     quantbox.hide();
 
-                    var guarantee = $('<div class="guarantee" />');
-                    guarantee.text(localization.payments.guarantee);
+
                     var permonth = $('<span />');
                     permonth.text(" " + localization.payments.permonth);
                     if(model.signup().code() == 'form') {
                         //permonth.text(" " + localization.payments.permonth + " " + localization.and + " " + localization.payments.plans.docprice + " " + localization.payments.perdocument);
                     }
                     form.find('.due_now').append(permonth).append(guarantee);
-                    form.find('.due_now .title').text(localization.payments.table.total + ": ");
-
-                    var expires = form.find('.expires');
-                    expires.find('.label').text(expires.find('.title').text().trim() + ": ");
+                    form.find('.due_now .title').hide();
 
                     //quantbox.attr('type', 'number').attr('min', 3);
                     // replace button with our own
@@ -594,10 +594,13 @@
                                                       work = true;
                                                   }
                                               }});
-                    div.find('button').remove();
-                    form.append(button.input());
-
-                    form.find('.field.cvv').insertAfter(form.find('.field.expires'));
+                    div.find('button').replaceWith(button.input());
+                    
+                    //form.append(button.input());
+                    var expires = form.find('.field.expires');
+                    form.find('.field.cvv').insertAfter(expires);
+                    expires.find('.title').text(localization.payments.expires);
+                    form.find('.card_number .placeholder').text(localization.payments.creditcardnumber);
                     form.find('.field .month').after($('<span />').text(" / "));
 
                     // we can store the field values so they won't have to type them again
@@ -628,8 +631,7 @@
                     });
 
                     if(model.contact().firstName() === '' || model.contact().lastName() === '') {
-                        fn.show();
-                        ln.show();
+                        form.find('.field.first_name, .field.last_name').show();
                     }
 
                     var en = form.find('.email input');
@@ -670,9 +672,48 @@
             });
         },
         getInTouch: function() {
-            Confirmation.popup({
-                acceptText: localization.payments.getintouch,
-                title: localization.payments.getintouch
+            var view = this;
+            var model = view.model;
+            var form = $("<div />");
+            form.append($("<span />").text(localization.docsignview.phoneFormDescription + " "));
+            var numberinput = $("<input type='text' />");
+            form.append(numberinput);
+
+            var content = $('<div />');
+            content.append($('<p />').text(localization.payments.pleaseleavenumber));
+            content.append(form);
+            var done = false;
+            var popup = Confirmation.popup({
+                //acceptText: localization.payments.ok,
+                title: localization.payments.pleaseleavenumbertitle,
+                content: content,
+                onAccept: function() {
+                    if(done)
+                        popup.view.clear();
+                    var phone = numberinput.val();
+                    if (phone.trim().length == 0) return;
+                    new Submit({
+                        url: "/account/phoneme",
+                        method: "POST",
+                        email: model.contact().email(),
+                        phone: phone,
+                        ajax: true,
+                        onSend: function() {
+                            content.empty();
+                            content.append("<div class='loading payments'/>");
+                        },
+                        ajaxerror: function(d, a) {
+                            content.empty();
+                            content.append($("<div>").text(localization.docsignview.phoneConfirmationText));
+                            done = true;
+                        },
+                        ajaxsuccess: function(d) {
+                            content.empty();
+                            content.append($("<div>").text(localization.docsignview.phoneConfirmationText));
+                            done = true;
+                        }
+                    }).send();
+                }
             });
         },
         getPlanName: function(p) {
