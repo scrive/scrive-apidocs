@@ -55,7 +55,7 @@ adminRoutes = choice
 
 
 handleGetCompany :: Kontrakcja m => m String
-handleGetCompany = withCompanyUser $ const viewCompanySettings
+handleGetCompany = withCompanyUser viewCompanySettings
 
 handleAdminGetCompany :: Kontrakcja m => CompanyID -> m String
 handleAdminGetCompany cid = withCompanyAdminOrAdminOnly (Just cid) $

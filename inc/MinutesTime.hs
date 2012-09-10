@@ -33,6 +33,7 @@ module MinutesTime
        , toClockTime
        , mtMonth
        , mtYear
+       , fromClockTime
        ) where
 
 import Control.Monad.IO.Class

@@ -1091,6 +1091,7 @@
                  }
                 }
             );
+            billingform.append($('<div class="cancel" />').append(view.cancelButton()));
             return billing.append(billingheader).append(billingform);
         },
         showCurrentSubscription: function () {
@@ -1104,7 +1105,6 @@
 
 
             var col2 = $('<div class="col2" />')
-                .append(view.changeSubscription())
                 .append(view.changeBillingForm());
             
             $el.append(col1).append(col2);

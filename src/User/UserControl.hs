@@ -2,7 +2,6 @@ module User.UserControl where
 
 import Control.Monad.State
 import Data.Functor
-import Data.Ix
 import System.Time hiding (toUTCTime)
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
@@ -26,7 +25,7 @@ import Kontra
 import KontraLink
 import MagicHash (MagicHash)
 import Mails.SendMail
-import MinutesTime
+import MinutesTime hiding (toClockTime)
 import Happstack.Fields
 import Utils.Monad
 import Utils.Read
@@ -579,8 +578,11 @@ handleBlockingInfo :: Kontrakcja m => m JSValue
 handleBlockingInfo = do
   user <- guardJustM $ ctxmaybeuser <$> getContext
   time <- ctxtime <$> getContext
-  let month = 1 + (index (January, December) $ ctMonth $ toUTCTime time)
-  docsusedthismonth <- dbQuery $ GetDocsSentThisMonth (userid user) month
+  let utctime = toUTCTime time
+      utcbeginningOfMonth = utctime { ctDay = 1, ctHour = 0, ctMin = 0, ctSec = 0 }
+      beginningOfMonth = fromClockTime $ toClockTime utcbeginningOfMonth
+
+  docsusedthismonth <- dbQuery $ GetDocsSentBetween (userid user) beginningOfMonth time
   mpaymentplan <- dbQuery $ GetPaymentPlan $ maybe (Left $ userid user) Right (usercompany user)
 
   let paymentplan = maybe "free" (show . ppPricePlan) mpaymentplan

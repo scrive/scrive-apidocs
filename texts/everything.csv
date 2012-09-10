@@ -5,7 +5,7 @@
 "_BelowPriceTable1","<h3>Gratis för privatpersoner och enmansföretagare</h3>
                              <p>Vi erbjuder
  ett supportfritt konto för alla mindre användare. 1 användare och
- 3 fria signaturer per månad.</p>",,"<h3>Free for personal use</h3>
+ 3 fria dokumenten per månad.</p>",,"<h3>Free for personal use</h3>
                     <p>We offer a support free account for small users. 1 user and 3 free  signatures per month.</p>"
 "_Bemefit1","Nöjdare kunder",,"More satisfied customers"
 "_Bemefit1Body","Den mest positiva feedbacken kommer inte sällan från våra kunders kunder. Scrive minskar den administrativa bördan för alla parter.","The most positive feedback often comes from our customers' customers. Scrive decrease the administrative burden of all parties.",
@@ -619,7 +619,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_forgotpassword","Glömt lösenord",,"Forgot password"
 "_h1","Signera offerter och avtal med Scrive",,"Sign tenders and contracts with Scrive"
 "_h1Body","Stäng affärer snabbare. Mindre administration. Nöjdare kunder.",,"Close deals faster. Less administration. More satisfied customers."
-"_h3CreateAccount","3 fria signaturer per månad!",,"3 free signatures per month!"
+"_h3CreateAccount","3 fria dokumenten per månad!",,"3 free documents per month!"
 "_h3CreateAccountBody","Kom igång omedelbart. Inga installationer. Inga dolda kostnader.",,"Get started instantly. No installation. No hidden costs."
 "_headerAccount","Konto",,"Account"
 "_headerArchive","Arkiv",,"Archive"
@@ -1731,12 +1731,12 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_poweredByScrive","Med vänliga hälsningar",,"Best regards"
 "_priceplanPageBelowTable1","
                      <h2>Vill du testa tjänsten först?</h2>
-                    <p>Vi bjuder på 3 fria signaturer i månaden.</p>",,"
+                    <p>Vi bjuder på 3 fria dokumenten i månaden.</p>",,"
                     <h2>Do you want to try the service first?</h2>
-                    <p>We offer you 3 free signatures per month.</p>"
+                    <p>We offer you 3 free documents per month.</p>"
 "_priceplanPageH1","Priser",,"Prices"
 "_priceplanPageH1Body1","E-signera dokument snabbt, smidigt och säkert.",,"E-sign documents quickly, simply and securely. "
-"_priceplanPageH1Body2","Registrera dig på under minuten och få 3 fria signaturer per månad redan idag!",,"Register in less than a minute and get 3 free signatures per month today!"
+"_priceplanPageH1Body2","Registrera dig på under minuten och få 3 fria dokumenten per månad redan idag!",,"Register in less than a minute and get 3 free documents per month today!"
 "_priceplanPageMetaDescription","Scrive har en enkel och rättfram prissättning. Inga dolda kostnader.",,"Scrive has a simple and straight forward pricing model. No hidden costs."
 "_contactUsPageMetaDescription","Kontakta Scrive",,"Contact Scrive"
 "_priceplanPagePriceplanTop","<th><h2>Features</h2></th><th></th>","<th><h2>Features</h2></th><th></th>","<th><h2>Features</h2></th><th></th>"
@@ -1789,7 +1789,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_backToArchive","Tillbaka till Arkiv",,"Back to Archive"
 "_queryColumnBody1","Stäng affärerna snabbare. Mindre administrativt krångel. Nöjdare kunder. Scrive gör ditt liv lite enklare och lite bättre.",,"Close deals faster. Less administration. More satisfied customers. Simpler and
 simply better."
-"_queryColumnBody2","3 fria signaturer per månad. Ingen inlåsning, inga konstigheter.",,"3 free signatures per month. No commitments. Cancel any time."
+"_queryColumnBody2","3 fria dokumenten per månad. Ingen inlåsning, inga konstigheter.",,"3 free documents per month. No commitments. Cancel any time."
 "_queryColumnEmail","E-post: info@scrive.com",,"Email: info@scrive.com"
 "_queryColumnHead","Varför vänta?",,"Why wait?"
 "_queryColumnPhone","Telefon: +46 8 519 779 00",,"Phone: +46 8 519 779 00"
@@ -2087,7 +2087,7 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_signupVipPageViewHead","Gratis Scrive till och med 31 december!",,"Free Scrive through December 31!"
 "_skrivapa","Scrive",,"Scrive"
 "_standardBodyWrapperBody","Ingen inlåsning, inga konstigheter.",,"No commitment. Cancel any time."
-"_standardBodyWrapperHead","3 fria signaturer per månad",,"3 free signatures per month!"
+"_standardBodyWrapperHead","3 fria dokumenten per månad",,"3 free documents per month!"
 "_startingSaveSigning","Inleder säker signering . . .",,"Initiates secure signing . . ."
 "_step1select","Välj dokument",,"Select document"
 "_step1selectIfTemplate","Välj mall",,"Select template"
@@ -2130,7 +2130,7 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_termsPage1b","<h4>b. Användarinnehåll:</h4> Ni accepterar att Ni inte kommer att använda Tjänsten i illegala syften, för att störa Tjänsten eller för att sprida innehåll som bryter mot integritet, upphovsrätt eller ägarrätt för någon tredje part, eller för syften som av Scrive kan uppfattas som olagliga, obscena, kränkande, förolämpande, hotfulla, vulgära eller på andra sätt klandervärda. Scrive är inte ansvarigt för misslyckanden eller förseningar orsakade av borttagning av sådant innehåll. Scrive har rätt att när som helst ta bort, blockera och processa mot Användare och Användarinnehåll som, enligt Scrive anses bryta mot Villkoren eller på annat sätt bryter mot gällande lagar och regler. Ni är själv fullt ansvarig för innehållet i Ert konto och de transaktioner som görs med Ert konto genom Tjänsten.
 ",,"<h4>b. User Content:</h4> You agree that You will not use the Service for illegal purposes. This includes disrupting the Service, disseminating content that violates privacy, copyright or proprietary right of any Third-party, or using Scrive for any purposes that are or may be perceived as illegal, obscene, abusive, libellous, threatening, vulgar or otherwise reprehensible. Scrive is not responsible for any failure or delay in removing such content. Scrive has the right to, at any time, delete, reject and litigate against User and User content if Scrive deems it to violate the Terms or otherwise violate any applicable laws and regulations. You are fully responsible for the contents of Your account and any transactions made with Your account through the Service.
 "
-"_termsPage1c","<h4>c. Kostnader och betalning:</h4> enskilda individer kan använda tjänsten utan kostnad med upp till 3 fria signaturer i månaden. Grupper och företag kan använda tjänsten enligt gällande prisplan på hemsidan eller enligt offererat pris från Scrive eller en auktoriserad återförsäljare. Scrive fakturerar med 30 dagar netto och tar ut en förseningsavgift på 150kr på förfallna fakturor. Räntan på försenade betalningar är 15% plus den aktuella statslåneräntan.
+"_termsPage1c","<h4>c. Kostnader och betalning:</h4> enskilda individer kan använda tjänsten utan kostnad med upp till 3 fria dokumenten i månaden. Grupper och företag kan använda tjänsten enligt gällande prisplan på hemsidan eller enligt offererat pris från Scrive eller en auktoriserad återförsäljare. Scrive fakturerar med 30 dagar netto och tar ut en förseningsavgift på 150kr på förfallna fakturor. Räntan på försenade betalningar är 15% plus den aktuella statslåneräntan.
 ",,"<h4>c. Costs and payment:</h4> Individuals can use the Services free of charge for up to 3 signatures a month. Groups and companies can use the Service according to existing price plan published on the website, or according to a customized offering from Scrive or an authorised reseller. Scrive invoices are due 30 days after invoice date. Reminders will be charged a late payment fee of 15 EUR. The interest rate on late payments is 15% plus the current government borrowing rate.
  "
 "_termsPage1d","<h4>d. Normal användning:</h4> Användare som använder tjänsten enligt gällande prisplan på hemsidan och utan särskilt offererat pris från Scrive eller en auktoriserad återförsäljare har rätt att använda Tjänsten för totalt 100 signaturer och 300 skickade dokument i månaden. En signatur definieras här som varje signatur som Parterna tillför dokument som skickats av Användaren.
@@ -2442,7 +2442,7 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_paymentPlanQuantity","Kvantitet",,"Quantity"
 "_paymentPlanSubtotal","Delsumma",,"Subtotal"
 "_paymentPlanTotal","Totalt",,"Total"
-"_Subscription","Prenumeration",,"Subscription"
+"_Subscription","Fakturering",,"Subscription"
 "_paymentPlanNone","Ingen",,"None"
 "_paymentPlanChangeSubscription","Byt prenumeration",,"Change Subscription"
 "_paymentPlanChangeBilling","Byt betalningsinfo",,"Change Billing Information"

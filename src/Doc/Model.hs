@@ -74,7 +74,7 @@ module Doc.Model
   , UpdateFieldsNoStatusCheck(..)
   , UpdateDraft(..)
   , SetDocumentModificationData(..)
-  , GetDocsSentThisMonth(..)
+  , GetDocsSentBetween(..)
   , FixClosedErroredDocument(..)
   ) where
 
@@ -2435,15 +2435,16 @@ instance MonadDB m => DBUpdate m SetDocumentModificationData Bool where
     kRun01 $ mkSQL UPDATE tableDocuments [sql "mtime" time]
       <> SQL "WHERE id = ?" [toSql did]
 
-data GetDocsSentThisMonth = GetDocsSentThisMonth UserID Int
-instance MonadDB m => DBQuery m GetDocsSentThisMonth Int where
-  query (GetDocsSentThisMonth uid month) = do
+data GetDocsSentBetween = GetDocsSentBetween UserID MinutesTime MinutesTime
+instance MonadDB m => DBQuery m GetDocsSentBetween Int where
+  query (GetDocsSentBetween uid start end) = do
     kPrepare $ "SELECT count(documents.id) " ++
                "FROM documents " ++
                "JOIN signatory_links ON documents.id = signatory_links.document_id " ++
                "WHERE signatory_links.user_id = ? " ++
                "AND ((roles & ?) <> 0) " ++ 
-               "AND EXTRACT(month FROM documents.ctime) = ? " ++
+               "AND documents.ctime >= ? " ++
+               "AND documents.ctime <  ? " ++
                "AND NOT documents.deleted" 
-    _ <- kExecute [toSql uid, toSql [SignatoryAuthor], toSql month]
+    _ <- kExecute [toSql uid, toSql [SignatoryAuthor], toSql start, toSql end]
     foldDB (+) 0
