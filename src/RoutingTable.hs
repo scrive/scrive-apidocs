@@ -260,7 +260,7 @@ staticRoutes = choice
 
      , integrationAPI
      , documentAPI
-     , oauthAPI
+     , oauth
      , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "public"
 
      -- to be removed after 15.07.2012 (see ActionQueue.UserAccountRequest)

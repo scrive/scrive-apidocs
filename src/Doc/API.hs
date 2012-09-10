@@ -21,6 +21,7 @@ import Control.Monad.Trans
 import Happstack.Fields
 import Utils.String
 import Utils.Read
+import Utils.Monad
 import System.FilePath
 import Data.Maybe
 
@@ -51,7 +52,6 @@ import Doc.Action
 import Text.JSON.FromJSValue
 import Doc.DocDraft
 import PadQueue.Model
-import Util.MonadUtils
 import Archive.Control
 import OAuth.Model
 
@@ -82,7 +82,7 @@ apiCallCreateFromFile = api $ do
     Nothing -> return Nothing
   Input contentspec (Just filename') _contentType <- apiGuardL (badInput "The main file of the document must be attached in the MIME part 'file'.") $ getDataFn' (lookInput "file")
   doctype <- lift $ fromMaybe (Signable Contract) <$> readField "type"
-  let filename = basename filename'
+  let filename = takeBaseName filename'
   let mformat = getFileFormatForConversion filename'
   content' <- case contentspec of
     Left filepath -> liftIO $ BSL.readFile filepath

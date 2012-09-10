@@ -184,7 +184,7 @@ showArchive = checkUserTOSGet $ do
 showPadDeviceArchive :: Kontrakcja m => m (Either KontraLink String)
 showPadDeviceArchive = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >> pagePadDeviceArchive
 
-jsonDocumentsList ::  Kontrakcja m => m (Either CSV JSValue))
+jsonDocumentsList ::  Kontrakcja m => m (Either CSV JSValue)
 jsonDocumentsList = do
   user@User{userid = uid} <- guardJustM $ ctxmaybeuser <$> getContext
   lang <- getLang . ctxlocale <$> getContext

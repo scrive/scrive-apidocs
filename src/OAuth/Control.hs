@@ -1,4 +1,4 @@
-module OAuth.Control where
+module OAuth.Control(oauth) where
 
 import Kontra
 import API.Monad
@@ -12,7 +12,6 @@ import Utils.Read
 import KontraLink
 import Happstack.StaticRouting(Route, choice, dir)
 import User.Utils
-import Util.HasSomeUserInfo
 import Util.MonadUtils
 import OAuth.View
 import OAuth.Util
@@ -37,8 +36,8 @@ import Data.Maybe
 import Control.Monad.Error
 import Data.Map (singleton)
 
-oauthAPI :: Route (KontraPlus Response)
-oauthAPI = choice [
+oauth :: Route (KontraPlus Response)
+oauth = choice [
   dir "oauth" $ dir "temporarycredentials" $ hGet  $ toK0 $ tempCredRequest,
   dir "oauth" $ dir "authorization"        $ hGet  $ toK0 $ authorization,
   dir "oauth" $ dir "authorizationconfirm" $ hPost $ toK0 $ authorizationGranted,
@@ -73,9 +72,9 @@ tempCredRequest = api $ do
                             ("oauth_token_secret", show tempsecret),
                             ("oauth_callback_confirmed", "true")]
 
-authorization :: Kontrakcja m => m (Either KontraLink String)
+authorization :: Kontrakcja m => m (Either KontraLink Response)
 authorization = do
-  muser  <- ctxmaybeuser <$> getContext
+  ctx <- getContext
   time   <- ctxtime      <$> getContext
   locale <- ctxlocale    <$> getContext
 
@@ -85,12 +84,9 @@ authorization = do
   mprivs <- dbQuery $ GetRequestedPrivileges token time
 
   case mprivs of
-    Just (companyname, p:ps) ->
-      case muser of
-        Just user -> Right <$> pagePrivilegesConfirm       (p:ps) (getEmail user) companyname token
-        _         -> Right <$> pagePrivilegesConfirmNoUser (p:ps) companyname token
-    _ -> -- no privileges recorded? we just take the traffic
-      return $ Left $ LinkHome locale
+    Just (companyname, p:ps) -> Right <$> pagePrivilegesConfirm ctx (p:ps) companyname token
+    _ -> return $ Left $ LinkHome locale -- no privileges recorded? we just take the traffic
+
 
 authorizationDenied :: Kontrakcja m => m KontraLink
 authorizationDenied = do

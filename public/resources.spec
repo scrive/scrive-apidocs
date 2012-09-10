@@ -56,6 +56,7 @@ set systemPage
  css css/main.css
  css css/selects.css
  less less/payments.less
+ less less/oauth.less
  js   libs/jquery.min.js
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js
@@ -133,4 +134,5 @@ set systemPage
  js   js/archive/bin.js
  js   js/archive/archive.js
  js   js/blocking.js
+ js   js/oauth.js
 
