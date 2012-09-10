@@ -362,7 +362,7 @@ handleIssueShowPost docid = do
   case documentstatus document of
     Preparation | sign              -> Right <$> (linkAsJSON $ handleIssueSign document)
     Preparation | send              -> Right <$> (linkAsJSON $ handleIssueSend document)
-    _ | canAuthorSignLast document  -> Left  <$> handleIssueSignByAuthor document
+    _ | canAuthorSignNow document   -> Left  <$> handleIssueSignByAuthor document
     _ -> return $ Left LinkArchive
  where
      linkAsJSON :: (Kontrakcja m) => m KontraLink -> m JSValue

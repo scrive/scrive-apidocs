@@ -9,7 +9,6 @@
 -----------------------------------------------------------------------------
 module Doc.DocInfo where
 
-import Control.Logic
 import Doc.DocStateData
 import MinutesTime
 import Data.Maybe
@@ -67,13 +66,6 @@ isDocumentError doc = case documentstatus doc of
 isDocumentShared :: Document -> Bool
 isDocumentShared doc = Shared == documentsharing doc
 
--- | Can author sign as the last person?
-canAuthorSignLast :: Document -> Bool
-canAuthorSignLast doc =
-     isPending doc
-  && all (not . isAuthor &&^ isSignatory =>>^ hasSigned) (documentsignatorylinks doc)
-  && (not . hasSigned $ getAuthorSigLink doc)
-  && isSignatory (getAuthorSigLink doc)
 
 {- |
    How many signatures does this document have?

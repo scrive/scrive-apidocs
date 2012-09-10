@@ -179,7 +179,7 @@ documentJSON forapi forauthor pq msl doc = do
         J.object "process" $ processJSON doc
         J.valueM "infotext" $ documentInfoText ctx doc msl
         J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
-        J.value "canbecanceled" $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && not (canAuthorSignLast doc)
+        J.value "canbecanceled" $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending
         J.value "canseeallattachments" $ isAuthor msl || isauthoradmin
 
 authenticationJSON :: AuthenticationMethod -> JSValue
@@ -449,7 +449,10 @@ documentStatusFields document = do
   F.value "timedout" $ documentstatus document == Timedout
   F.value "rejected" $ documentstatus document == Rejected
   F.value "signed" $ documentstatus document == Closed
-  F.value "awaitingauthor" $ canAuthorSignLast document
+  -- awaitingauthor is used in old view in old template
+  -- remove it when old view is removed
+  -- currently it means: is the next turn for author to sign?
+  F.value "awaitingauthor" $ canAuthorSignNow document
   F.value "datamismatch" $ (documentstatus document == Canceled
       && case documentcancelationreason document of
            Just (ELegDataMismatch _ _ _ _ _) -> True

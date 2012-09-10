@@ -1335,12 +1335,10 @@ profits and reduce frustration. The following mateials shall only
 "_mailContractClosedContentAttached","Det färdigställda dokumentet bifogas med detta mail.",,"The finalised document is attached."
 "_mailContractClosedContentSignedBy","Dokumentet <strong>$documenttitle$</strong> har signerats
          av $partylist:noescape()$. Avtalet är nu bindande.",,"The document <strong>$documenttitle$</strong> has been signed by $partylist:noescape()$. This agreement is now legally binding."
-"_mailDocumentAwaitingForAuthorContentInstruction","För att färdigställa dokumentet gör följande:<br/>      1. Klicka på länken<br/>      <a href=""$documentlink$"">$documenttitle$</a><br/>
-      <br/>      2. Granska uppgifterna<br/>      3. Signera",,"To finalise the document:<br/>      1. Click  the link<br/>      <a href=""$documentlink$"">$documenttitle$</a><br/>       <br/>2. Review<br/>3. Sign the  agreement"
-"_mailDocumentAwaitingForAuthorContentSignedBy","Dokumentet <strong>$documenttitle$</strong> har signerats
- av $partylist:noescape()$.      Därmed är det bara du kvar innan
- dokumentet är färdigställt.",,"The document <strong>$documenttitle$</strong> has been signed  by $partylist:noescape()$.  Therefore it only remains for you sign before the document is final."
-"_mailDocumentAwaitingForAuthorTitle","Din tur att e-signera $documenttitle$",,"Please sign $documenttitle$"
+"_mailDocumentAwaitingForAuthorContentInstruction","För att signera dokumentet gör följande:<br/>      1. Klicka på länken<br/>      <a href=""$documentlink$"">$documenttitle$</a><br/>
+      <br/>      2. Granska uppgifterna<br/>      3. Signera",,"To sign the document:<br/>      1. Click the link<br/>      <a href=""$documentlink$"">$documenttitle$</a><br/>       <br/>2. Review<br/>3. Sign the  agreement"
+"_mailDocumentAwaitingForAuthorContentSignedBy","Dokumentet <strong>$documenttitle$</strong> har signerats av $partylist:noescape()$. Det är din tur att e-signera.",,"The document <strong>$documenttitle$</strong> has been signed by $partylist:noescape()$.  It is your turn to sign."
+"_mailDocumentAwaitingForAuthorTitle","Din tur att e-signera $documenttitle$",,"It is your turn to sign $documenttitle$"
 "_mailDocumentClosedTitleContract","Bekräftelse: e-signerat avtal $documenttitle$",,"Confirmation: $documenttitle$"
 "_mailDocumentClosedTitleOffer","Bekräftelse: e-signerad offert $documenttitle$",,"Confirmation: $documenttitle$"
 "_mailDocumentClosedTitleOrder","Bekräftelse: e-signerad orderbekräftelse $documenttitle$",,"Confirmation: $documenttitle$"

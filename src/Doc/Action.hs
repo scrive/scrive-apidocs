@@ -75,13 +75,6 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistri
   unless (isPending doc) $
     stateMismatchError "postDocumentPendingChange" Pending doc
   case undefined of
-    _ | canAuthorSignLast doc -> do
-      Log.docevent $ "All have signed but author: " ++ show documentid
-      Log.docevent $ "Send email to author: " ++ show documentid
-      ctx <- getContext
-      author <- getDocAuthor doc
-      Log.server $ "Sending awaiting email for document #" ++ show documentid ++ ": " ++ documenttitle
-      when (sendMailsDurringSigning doc) $ sendAwaitingEmail ctx doc author
     _ | allSignatoriesSigned doc -> do
       Log.docevent $ "All have signed; " ++ show documentstatus ++ " -> Closed: " ++ show documentid
       time <- ctxtime `liftM` getContext
@@ -267,9 +260,9 @@ sendInvitationEmails :: Kontrakcja m => Context -> Document -> m (Either String 
 sendInvitationEmails ctx document = do
   let signlinks = [sl | sl <- documentsignatorylinks document
                       , isCurrentSignatory (documentcurrentsignorder document) sl
-                      , not $ isAuthor sl]
+                      , not $ hasSigned sl]
   case signlinks of
-    [] -> return $ Left "No signatories."
+    [] -> return $ Left $ "Document " ++ show (documentid document) ++ " has no signatories. Cannot send invitation emails."
     _ -> do
       edocs <- forM signlinks (sendInvitationEmail1 ctx document)
       return $ msum edocs
@@ -280,22 +273,32 @@ sendInvitationEmails ctx document = do
    ??: Should this be in DocControl or in an email-specific file?
  -}
 sendInvitationEmail1 :: Kontrakcja m => Context -> Document -> SignatoryLink -> m (Either String Document)
-sendInvitationEmail1 ctx document signatorylink = do
+sendInvitationEmail1 ctx document signatorylink | not (isAuthor signatorylink) = do
+  -- send invitation to sign to invited person
   let SignatoryLink { signatorylinkid
                     , signatorydetails } = signatorylink
       Document { documentid } = document
   mail <- mailInvitation True ctx (Sign <| isSignatory signatorylink |> View) document (Just signatorylink)
   -- ?? Do we need to read in the contents? -EN
   -- _attachmentcontent <- liftIO $ getFileContents ctx $ head $ documentfiles document
-  scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
-        to = [getMailAddress signatorydetails]
-      , mailInfo = Invitation documentid signatorylinkid
-  }
+  scheduleEmailSendout (ctxmailsconfig ctx) $
+    mail { to = [getMailAddress signatorydetails]
+         , mailInfo = Invitation documentid signatorylinkid
+         }
   mdoc <- runMaybeT $ do
     True <- dbUpdate $ AddInvitationEvidence documentid signatorylinkid $ systemActor $ ctxtime ctx
     Just doc <- dbQuery $ GetDocumentByDocumentID documentid
     return doc
   return $ maybe (Left "sendInvitationEmail1 failed") Right mdoc
+  
+sendInvitationEmail1 ctx document authorsiglink = do
+  -- send invitation to sign to author when it is his turn to sign
+  mail <- mailDocumentAwaitingForAuthor ctx document (getLocale document)
+  scheduleEmailSendout (ctxmailsconfig ctx) $
+    mail { to = [getMailAddress authorsiglink]
+         , from = documentservice document
+         }
+  return $ Right document
 
 {- |
     Send a reminder email (and update the modification time on the document)
@@ -328,17 +331,6 @@ sendClosedEmails document = do
       mail { to = map getMailAddress signatorylinks
            , attachments = mailattachments
            }
-
-{- |
-   Send an email to the author when the document is awaiting approval
- -}
-sendAwaitingEmail :: Kontrakcja m => Context -> Document -> User -> m ()
-sendAwaitingEmail ctx document author = do
-  let Just authorsiglink = getAuthorSigLink document
-  mail <- mailDocumentAwaitingForAuthor ctx document (getLocale author)
-  scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
-    to = [getMailAddress authorsiglink]
-  }
 
 makeMailAttachments :: (KontraMonad m, MonadDB m) => Document -> m [(String, BS.ByteString)]
 makeMailAttachments document = do
