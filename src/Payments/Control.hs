@@ -22,7 +22,6 @@ import Company.Model
 import DB hiding (update, query)
 import Kontra
 import KontraLink
-import Misc
 import Crypto.RNG
 import Recurly
 import Recurly.JS
@@ -37,11 +36,15 @@ import User.Model
 import User.Utils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
+import Happstack.Fields
+import Utils.Read
+import Utils.Either
+import Utils.IO
 import qualified Log (payments)
 import qualified Text.JSON.Gen as J
 import MinutesTime
 import Mails.SendMail
-import Util.MonadUtils (when_)
+import Utils.Monad
 
 import Payments.Model
 import Payments.Rules

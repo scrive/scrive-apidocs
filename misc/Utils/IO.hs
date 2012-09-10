@@ -78,8 +78,11 @@ readProcessWithExitCode' cmd args input =
 
     return (ex, out, err)
 
+curl_exe :: String
+curl_exe = "curl"
+
 -- | This function executes curl as external program. Args are args.
 readCurl :: [String]                 -- ^ any arguments
          -> BSL.ByteString           -- ^ standard input
          -> IO (ExitCode, BSL.ByteString, BSL.ByteString) -- ^ exitcode, stdout, stderr
-readCurl args input = readProcessWithExitCode' "curl" args input
+readCurl args input = readProcessWithExitCode' curl_exe args input

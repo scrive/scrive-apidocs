@@ -19,3 +19,6 @@ fromRight _ = error "Reading Right for Left"
 toMaybe :: Either a b -> Maybe b
 toMaybe (Right a) = Just a
 toMaybe _ = Nothing
+
+toEither :: a -> Maybe b -> Either a b
+toEither m = maybe (Left m) Right
