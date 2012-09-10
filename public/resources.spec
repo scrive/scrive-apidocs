@@ -7,7 +7,6 @@ ignore  tiny_mce/plugins
 ignore  tiny_mce/themes
 ignore  tiny_mce/utils
 ignore  libs/analytics.js
-ignore  libs/postmessage.js
 ignore  js/signup.js
 
 
