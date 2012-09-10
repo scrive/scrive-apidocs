@@ -68,7 +68,7 @@ $_paymentsEmailQuestion()$
 paymentsDeclinedEmail=
 $_paymentsDeclinedEmailSubject()$
 $nicemail(
-  mailheader=_paymentsDeclinedEmailHeader()$
+  mailheader=_paymentsDeclinedEmailHeader();
   mailp1=paymentsDeclinedEmail1();
   mailp2=paymentsDeclinedEmail2();
   mailp3=paymentsDeclinedEmail3()
@@ -86,11 +86,11 @@ $_paymentsEmailTotal()$: $total$ $currency$
 ###
 paymentsDeclinedEmail2=
 <p>
-$_paymentsEmailBilledTo:
+$_paymentsEmailBilledTo()$:
 </p>
 <p>
 $fullname$<br />
-$if(companyname$$companyname$<br />$endif$
+$if(companyname)$$companyname$<br />$endif$
 $email$
 </p>
 ###
