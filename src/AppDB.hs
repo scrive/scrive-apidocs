@@ -80,6 +80,12 @@ kontraMigrations = [
   , moveAttachmentsFromDocumentsToAttachments
   , removeOldDocumentLog
   , splitIdentificationTypes
+  , removeServiceIDFromCompanies
+  , removeServiceIDFromDocuments
+  , removeServiceIDFromUsers
+  , removeServiceIDFromDocStatEvents
+  , removeServiceIDFromUserStatEvents
+  , removeServiceIDFromSignStatEvents
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

@@ -5,6 +5,22 @@ import Utils.Default
 import User.Region
 import User.Tables
 
+removeServiceIDFromUsers :: MonadDB m => Migration m
+removeServiceIDFromUsers = Migration {
+    mgrTable = tableUsers
+  , mgrFrom = 8
+  , mgrDo = do
+    -- check if service_id field is empty for all users
+    check <- getMany "SELECT DISTINCT service_id IS NULL FROM users"
+    case check of
+      []     -> return () -- no records, ok
+      [True] -> return () -- only nulls, ok
+      _      -> error "Users have rows with non-null service_id"
+    kRunRaw "ALTER TABLE users DROP CONSTRAINT fk_users_services"
+    kRunRaw "DROP INDEX idx_users_service_id"
+    kRunRaw "ALTER TABLE users DROP COLUMN service_id"
+}
+
 addUserCustomFooter :: MonadDB m => Migration m
 addUserCustomFooter =
   Migration {

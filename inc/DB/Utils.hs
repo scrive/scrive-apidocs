@@ -1,5 +1,6 @@
 module DB.Utils (
-    getOne
+    getMany
+  , getOne
   , oneRowAffectedGuard
   , oneObjectReturnedGuard
   , exactlyOneObjectReturnedGuard
@@ -60,11 +61,13 @@ checkIfOneObjectReturned :: MonadIO m => [a] -> m Bool
 checkIfOneObjectReturned xs = oneObjectReturnedGuard xs
   >>= return . maybe False (const True)
 
-getOne :: (IsSQL sql, MonadDB m) => Convertible SqlValue a => sql -> DBEnv m (Maybe a)
-getOne sql = do
+getMany :: (IsSQL sql, MonadDB m) => Convertible SqlValue a => sql -> DBEnv m [a]
+getMany sql = do
   _ <- kRun sql
   foldDB (\acc v -> v : acc) []
-    >>= oneObjectReturnedGuard
+
+getOne :: (IsSQL sql, MonadDB m) => Convertible SqlValue a => sql -> DBEnv m (Maybe a)
+getOne sql = getMany sql >>= oneObjectReturnedGuard
 
 checkIfAnyReturned :: forall m sql. (IsSQL sql, MonadDB m) => sql -> DBEnv m Bool
 checkIfAnyReturned sql =
