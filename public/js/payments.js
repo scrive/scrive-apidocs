@@ -1011,7 +1011,7 @@
                                      });
 
             var accountbody = $('<div class="account-body" />')
-                        .append(view.subscriptionChooser())
+                        .append(view.subscriptionChooser());
             
             changesub
                 .append(changesubheader)
