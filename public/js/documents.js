@@ -465,12 +465,7 @@ window.Document = Backbone.Model.extend({
         return !this.signingInProcess() && !this.closed();
     },
     currentSignatoryCanSign: function() {
-      var canSignAsSig = !this.currentViewerIsAuthor() &&
-                              this.currentSignatory() != undefined &&
-                              this.currentSignatory().canSign();
-      var canSignAsAuthor = this.currentViewerIsAuthor() &&
-                                 this.authorCanSignLast();
-      return canSignAsSig || canSignAsAuthor;
+      return this.currentSignatory() && this.currentSignatory().canSign();
     },
     logo: function() {
         return this.get("logo");

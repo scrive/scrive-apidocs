@@ -218,7 +218,6 @@ documentcurrentsignorder doc =
         sigs = documentsignatorylinks doc
         notSigned siglnk = isNothing (maybesigninfo siglnk)
             && SignatoryPartner `elem` signatoryroles siglnk -- we exclude non-signatories
-            && not (isAuthor siglnk) -- we omit author
 
 {- |
    Build a SignatoryDetails from a User with no fields

@@ -307,18 +307,14 @@ processJSON doc = do
     J.valueM "signbuttontext" $ text processsignbuttontext
     J.valueM "signatorycancelmodaltitle" $ text processsignatorycancelmodaltitle
     J.valueM "signguardwarntext" $ text processsignguardwarntext
-    J.valueM "signatorysignmodalcontentlast" $ text processsignatorysignmodalcontentlast
-    J.valueM "signatorysignmodalcontentnotlast" $ text processsignatorysignmodalcontentnotlast
-    J.valueM "signatorysignmodalcontentauthorlast" $ text processsignatorysignmodalcontentauthorlast
+    J.valueM "signatorysignmodalcontent" $ text processsignatorysignmodalcontent
     J.valueM "signatorysignmodalcontentdesignvieweleg" $ text processsignatorysignmodalcontentdesignvieweleg
     J.valueM "signatorysignmodalcontentsignvieweleg" $ text processsignatorysignmodalcontentdesignvieweleg
     J.valueM "signatorysignmodalcontentauthoronly" $ text processsignatorysignmodalcontentauthoronly
 
-
     J.valueM "signbuttontext" $ text processsignbuttontext
     J.valueM "signbuttontextauthor" $ text processsignbuttontextauthor
     J.valueM "signatorysignmodaltitle" $ text processsignatorysignmodaltitle
-    J.valueM "authorsignlastbutton" $ text processauthorsignlastbuttontext
 
     J.valueM "authorname" $ text processauthorname
     J.valueM "authorsignatoryname" $ text processauthorsignatoryname

@@ -69,14 +69,8 @@ window.Process = Backbone.Model.extend({
     signguardwarntext :  function() {
         return this.get("signguardwarntext");
     },
-    signatorysignmodalcontentnotlast:  function() {
-        return this.get("signatorysignmodalcontentnotlast");
-    },
-    signatorysignmodalcontentauthorlast:  function() {
-        return this.get("signatorysignmodalcontentauthorlast");
-    },
-    signatorysignmodalcontentlast:  function() {
-        return this.get("signatorysignmodalcontentlast");
+    signatorysignmodalcontent:  function() {
+        return this.get("signatorysignmodalcontent");
     },
     signatorysignmodalcontentdesignvieweleg:  function() {
         return this.get("signatorysignmodalcontentdesignvieweleg");
@@ -92,9 +86,6 @@ window.Process = Backbone.Model.extend({
     },
     step1text : function() {
         return this.get("step1text");
-    },
-    authorsignlastbutton : function() {
-        return this.get("authorsignlastbutton");
     },
     authorname : function() {
         return this.get("authorname");

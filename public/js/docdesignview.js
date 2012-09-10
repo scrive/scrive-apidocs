@@ -623,11 +623,9 @@ var DocumentDesignView = Backbone.View.extend({
             content = $(document.process().authorIsOnlySignatory());
         else if (document.elegAuthentication())
             content = $(document.process().signatorysignmodalcontentdesignvieweleg());
-        else if (document.lastSignatoryLeft())
-            content = $(document.process().signatorysignmodalcontentlast());
-        else
-            content = $(document.process().signatorysignmodalcontentnotlast());
-
+        else {
+            content = $(document.process().signatorysignmodalcontent());
+        }
 
         DocumentDataFiller.fill(document, content);
         if (document.elegAuthentication())

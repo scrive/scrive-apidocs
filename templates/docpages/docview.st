@@ -36,23 +36,7 @@ offersignatorysignmodaltitle=$_offersignatorysignmodaltitle()$
 ####
 ordersignatorysignmodaltitle=$_ordersignatorysignmodaltitle()$
 ####
-contractsignatorysignmodalcontentlast= <p>$_contractsignatorysignmodalcontentlast()$ </p>
-####
-offersignatorysignmodalcontentlast=<p> $_offersignatorysignmodalcontentlast()$ </p>
-####
-ordersignatorysignmodalcontentlast=<p> $_ordersignatorysignmodalcontentlast()$ </p>
-####
-contractsignatorysignmodalcontentnotlast=<p> $_contractsignatorysignmodalcontentnotlast()$ </p>
-####
-offersignatorysignmodalcontentnotlast=<p> $_offersignatorysignmodalcontentnotlast()$ </p>
-####
-ordersignatorysignmodalcontentnotlast= <p> $_ordersignatorysignmodalcontentnotlast()$ </p>
-####
-contractsignatorysignmodalcontentauthorlast=<p> $_contractsignatorysignmodalcontentauthorlast()$ </p>
-####
-offersignatorysignmodalcontentauthorlast=<p> $_offersignatorysignmodalcontentauthorlast()$ </p>
-####
-ordersignatorysignmodalcontentauthorlast= <p> $_ordersignatorysignmodalcontentauthorlast()$ </p>
+contractsignatorysignmodalcontent= <p>$_contractsignatorysignmodalcontent()$ </p>
 ####
 contractsignatorysignmodalcontentdesignvieweleg=<p> $_contractsignatorysignmodalcontentdesignvieweleg()$ </p>
 ####
