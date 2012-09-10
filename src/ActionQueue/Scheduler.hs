@@ -67,7 +67,7 @@ runDocumentProblemsCheck :: Scheduler ()
 runDocumentProblemsCheck = do
   sd <- ask
   now <- getMinutesTime
-  docs <- dbQuery GetDocumentsForProblemsCheck
+  docs <- dbQuery GetAllDocuments
   let probs = listInvariantProblems now docs
   when (probs /= []) $ mailDocumentProblemsCheck $
     "<p>"  ++ (hostpart $ sdAppConf sd) ++ "/dave/document/" ++

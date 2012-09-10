@@ -592,7 +592,7 @@ showFunctionalityStats :: Kontrakcja m => m String
 showFunctionalityStats = onlySalesOrAdmin $ do
   Context{ctxtime} <- getContext
   users <- dbQuery GetUsers
-  documents <- dbQuery GetDocumentsForProblemsCheck
+  documents <- dbQuery GetAllDocuments
   adminFunctionalityStatsPage (mkStats ctxtime users)
                               (mkStats ctxtime documents)
   where

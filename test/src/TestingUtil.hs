@@ -20,7 +20,6 @@ import qualified Data.ByteString as BS
 import qualified Test.HUnit as T
 
 import File.FileID
-import API.API
 import Crypto.RNG
 import DB
 import MagicHash (MagicHash, unsafeMagicHash)
@@ -37,7 +36,6 @@ import User.Model
 import Utils.Default
 import IPAddress
 import File.Model
-import API.Service.Model
 import Data.Typeable
 import Doc.Invariants
 import Doc.DocProcess
@@ -76,11 +74,9 @@ instance Arbitrary Company where
   arbitrary = do
     a <- arbitrary
     b <- arbitrary
-    c <- arbitrary
     d <- arbitrary
     return $ Company { companyid  = a
                      , companyexternalid = b
-                     , companyservice = c
                      , companyinfo = d
                      , companyui = emptyCompanyUI
                      }
@@ -113,9 +109,6 @@ instance Arbitrary CompanyInfo where
                          , companycountry    = f
                          , companyemaildomain = Nothing
                          }
-
-instance Arbitrary ServiceID where
-  arbitrary = ServiceID <$> arbitrary
 
 instance Arbitrary MagicHash where
   arbitrary = unsafeMagicHash <$> arbitrary
@@ -457,7 +450,6 @@ blankUser = User { userid                        = unsafeUserID 0
                  , usersettings  = UserSettings { locale = mkLocaleFromRegion defaultValue
                                                 , customfooter = Nothing
                                                 }
-                 , userservice = Nothing
                  , usercompany = Nothing
                  }
 
@@ -467,7 +459,7 @@ testThat s env = testCase s . runTestEnv env
 addNewCompany :: TestEnv Company
 addNewCompany = do
     eid <- rand 10 arbitrary
-    dbUpdate $ CreateCompany Nothing eid
+    dbUpdate $ CreateCompany eid
 
 addNewFile :: String -> BS.ByteString -> TestEnv File
 addNewFile filename content = dbUpdate $ NewFile filename $ Binary content
@@ -480,11 +472,11 @@ addNewRandomFile = do
 
 addNewUser :: String -> String -> String -> TestEnv (Maybe User)
 addNewUser firstname secondname email =
-  dbUpdate $ AddUser (firstname, secondname) email Nothing Nothing Nothing (mkLocaleFromRegion defaultValue)
+  dbUpdate $ AddUser (firstname, secondname) email Nothing Nothing (mkLocaleFromRegion defaultValue)
 
 addNewCompanyUser :: String -> String -> String -> CompanyID -> TestEnv (Maybe User)
 addNewCompanyUser firstname secondname email cid =
-  dbUpdate $ AddUser (firstname, secondname) email Nothing Nothing (Just cid) (mkLocaleFromRegion defaultValue)
+  dbUpdate $ AddUser (firstname, secondname) email Nothing (Just cid) (mkLocaleFromRegion defaultValue)
 
 addNewRandomUser :: TestEnv User
 addNewRandomUser = do
@@ -505,10 +497,6 @@ addNewRandomCompanyUser cid isadmin = do
   _ <- dbUpdate $ SetUserCompanyAdmin userid isadmin
   Just user <- dbQuery $ GetUserByID userid
   return user
-
-addService :: String -> UserID -> TestEnv (Maybe Service)
-addService name uid =
-  dbUpdate $ CreateService (ServiceID $ BS.fromString name) Nothing uid
 
 emptySignatoryDetails :: SignatoryDetails
 emptySignatoryDetails = SignatoryDetails
@@ -834,15 +822,6 @@ guardMethodM :: Kontrakcja m => Method -> m ()
 guardMethodM m = do
   rq <- askRq
   unless (rqMethod rq == m) internalError
-
--- | Runs API function and returns its json response
-testAPI :: (APIContext c, Kontrakcja m) => APIFunction c m APIResponse -> m APIResponse
-testAPI f = do
-    guardMethodM POST
-    mcontext <- apiContext
-    case mcontext of
-         Right apictx -> either (uncurry apiError) id <$> runApiFunction f apictx
-         Left emsg -> return $ uncurry apiError emsg
 
 -- | Checks type of flash message
 isFlashOfType :: FlashMessage -> FlashType -> Bool

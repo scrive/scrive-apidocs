@@ -27,7 +27,7 @@ test_createCompany = do
 test_getCompanies :: TestEnv ()
 test_getCompanies = do
   companies <- forM ["", "external_id"] addTestCompany
-  result <- dbQuery $ GetCompanies [CompaniesOfService Nothing] [] [] 0 (-1)
+  result <- dbQuery $ GetCompanies [] [] 0 (-1)
   assertBool "GetCompanies returned correct result" $ and $ map (`elem` result) companies
 
 test_getCompany :: TestEnv ()
@@ -41,7 +41,7 @@ test_getCompanyByExternalID = do
   let seid = "external_id"
       eid = ExternalCompanyID seid
   Company{companyid = cid} <- addTestCompany seid
-  Just company <- dbQuery $ GetCompanyByExternalID Nothing eid
+  Just company <- dbQuery $ GetCompanyByExternalID eid
   assertBool "GetCompanyByExternalID returned correct result" $ companyid company == cid
 
 test_setCompanyInfo :: TestEnv ()
@@ -76,12 +76,12 @@ test_updateCompanyUI = do
 test_getOrCreateCompanyWithExternalID :: TestEnv ()
 test_getOrCreateCompanyWithExternalID = do
   let eid = ExternalCompanyID "external_id"
-  Company{companyid = cid} <- dbUpdate $ GetOrCreateCompanyWithExternalID Nothing eid
-  company <- dbUpdate $ GetOrCreateCompanyWithExternalID Nothing eid
+  Company{companyid = cid} <- dbUpdate $ GetOrCreateCompanyWithExternalID eid
+  company <- dbUpdate $ GetOrCreateCompanyWithExternalID eid
   assertBool "GetOrCreateCompanyWithExternalID returned the same company it created before" $ companyid company == cid
 
 addTestCompany :: String -> TestEnv Company
-addTestCompany seid = dbUpdate $ CreateCompany Nothing eid
+addTestCompany seid = dbUpdate $ CreateCompany eid
   where
     eid = case seid of
       "" -> Nothing

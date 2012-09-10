@@ -253,7 +253,6 @@ mkContext locale = do
         , ctxfilecache = memcache
         , ctxxtoken = error "xtoken is not defined"
         , ctxcompany = Nothing
-        , ctxservice = Nothing
         , ctxlocation = error "location is not defined"
         , ctxadminaccounts = []
         , ctxsalesaccounts = []
@@ -274,7 +273,7 @@ withTestDB m = E.finally m $ do
 
 clearTables :: TestEnv ()
 clearTables = runDBEnv $ do
-  kRunRaw "UPDATE users SET service_id = NULL, company_id = NULL"
+  kRunRaw "UPDATE users SET company_id = NULL"
   kRunRaw "DELETE FROM evidence_log"
   kRunRaw "DELETE FROM doc_stat_events"
   kRunRaw "DELETE FROM user_stat_events"

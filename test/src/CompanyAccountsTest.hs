@@ -100,7 +100,7 @@ test_addingANewCompanyAccount = do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
 
-  Just newuser <- dbQuery $ GetUserByEmail Nothing (Email "bob@blue.com")
+  Just newuser <- dbQuery $ GetUserByEmail (Email "bob@blue.com")
   assertEqual "New user is in company" (Just $ companyid company) (usercompany newuser)
   assertEqual "New user is standard user" False (useriscompanyadmin newuser)
   assertEqual "New user has the invited name" "Bob Blue" (getFullName newuser)

@@ -965,7 +965,7 @@ jsonDocumentGetterWithPermissionCheck did = do
 handleInvariantViolations :: Kontrakcja m => m Response
 handleInvariantViolations = onlyAdmin $ do
   Context{ ctxtime } <- getContext
-  docs <- dbQuery $ GetDocumentsForProblemsCheck
+  docs <- dbQuery GetAllDocuments
   let probs = listInvariantProblems ctxtime docs
       res = case probs of
         [] -> "No problems!"

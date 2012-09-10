@@ -47,9 +47,6 @@ import HtmlTest
 #ifndef NO_INPUTVALIDATION
 import InputValidationTest
 #endif
-#ifndef NO_INTEGRATIONAPI
-import IntegrationAPITest
-#endif
 #ifndef NO_LOGIN
 import LoginTest
 #endif
@@ -64,9 +61,6 @@ import MailAPITest
 #endif
 #ifndef NO_REDIRECT
 import RedirectTest
-#endif
-#ifndef NO_SERVICESTATE
-import ServiceStateTest
 #endif
 #ifndef NO_USERSTATE
 import UserStateTest
@@ -88,9 +82,6 @@ import CompanyAccountsTest
 #endif
 #ifndef NO_MAILS
 import MailsTest
-#endif
-#ifndef NO_MAILS
-import APICommonsTest
 #endif
 #ifndef NO_JSON
 import JSONUtilTest
@@ -159,9 +150,6 @@ allTests = tail tests
 #ifndef NO_INPUTVALIDATION
       , ("inputvalidation", const $ const inputValidationTests)
 #endif
-#ifndef NO_INTEGRATIONAPI
-      , ("integrationapi", const integrationAPITests)
-#endif
 #ifndef NO_LOGIN
       , ("login", const loginTests)
 #endif
@@ -176,9 +164,6 @@ allTests = tail tests
 #endif
 #ifndef NO_REDIRECT
       , ("redirect", const redirectTests)
-#endif
-#ifndef NO_SERVICESTATE
-      , ("servicestate", const serviceStateTests)
 #endif
 #ifndef NO_USERSTATE
       , ("userstate", const userStateTests)
@@ -200,9 +185,6 @@ allTests = tail tests
 #endif
 #ifndef NO_MAILS
       , ("mails", mailsTests )
-#endif
-#ifndef NO_MAILS
-      , ("apicommons", const apiCommonsTest )
 #endif
 #ifndef NO_JSON
       , ("jsonutil", const jsonUtilTests )

@@ -55,23 +55,23 @@ userStateTests env = testGroup "UserState" [
 
 test_getUserByEmail_returnsNothing :: TestEnv ()
 test_getUserByEmail_returnsNothing = do
-  queriedUser <- dbQuery $ GetUserByEmail Nothing (Email "emily@green.com")
+  queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
   assert (isNothing queriedUser)
 
 test_getUserByEmail_returnsTheRightUser :: TestEnv ()
 test_getUserByEmail_returnsTheRightUser = do
   Just user <- addNewUser "Emily" "Green" "emily@green.com"
-  queriedUser <- dbQuery $ GetUserByEmail Nothing (Email "emily@green.com")
+  queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
   assert (isJust queriedUser)
   assertEqual "For GetUserByEmail result" user (fromJust queriedUser)
-  queriedUser2 <- dbQuery $ GetUserByEmail Nothing (Email "EMILY@green.com")
+  queriedUser2 <- dbQuery $ GetUserByEmail (Email "EMILY@green.com")
   assert (isJust queriedUser2)
   assertEqual "For GetUserByEmail result" user (fromJust queriedUser2)
   Just user3 <- addNewUser "Eric" "Normand" "ERIc@Normand.Com"
-  queriedUser3 <- dbQuery $ GetUserByEmail Nothing (Email "eric@normand.com")
+  queriedUser3 <- dbQuery $ GetUserByEmail (Email "eric@normand.com")
   assert (isJust queriedUser3)
   assertEqual "For GetUserByEmail result" user3 (fromJust queriedUser3)
-  queriedUser4 <- dbQuery $ GetUserByEmail Nothing (Email "erIc@normand.com")
+  queriedUser4 <- dbQuery $ GetUserByEmail (Email "erIc@normand.com")
   assert (isJust queriedUser4)
   assertEqual "For GetUserByEmail result" user3 (fromJust queriedUser4)
 
@@ -99,23 +99,23 @@ test_getAllUsers_returnsAllUsers = do
 test_setUserEmail_GetByEmail :: TestEnv ()
 test_setUserEmail_GetByEmail = do
   Just user' <- addNewUser "Emily" "Green" "emily@green.com"
-  _ <- dbUpdate $ SetUserEmail Nothing (userid user') $ Email "Emily@green.coM"
+  _ <- dbUpdate $ SetUserEmail (userid user') $ Email "Emily@green.coM"
   Just user <- dbQuery $ GetUserByID $ userid user'
-  queriedUser <- dbQuery $ GetUserByEmail Nothing (Email "emily@green.com")
+  queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
   assert (isJust queriedUser)
   assertEqual "For GetUserByEmail result" user (fromJust queriedUser)
-  queriedUser2 <- dbQuery $ GetUserByEmail Nothing (Email "EMILY@green.com")
+  queriedUser2 <- dbQuery $ GetUserByEmail (Email "EMILY@green.com")
   assert (isJust queriedUser2)
   assertEqual "For GetUserByEmail result" user (fromJust queriedUser2)
 
 test_setUserEmail_works :: TestEnv ()
 test_setUserEmail_works = do
   Just user' <- addNewUser "Emily" "Green" "emily@green.com"
-  _ <- dbUpdate $ SetUserEmail Nothing (userid user') $ Email "other@email.com"
+  _ <- dbUpdate $ SetUserEmail (userid user') $ Email "other@email.com"
   Just user <- dbQuery $ GetUserByID $ userid user'
-  queriedUser <- dbQuery $ GetUserByEmail Nothing (Email "emily@green.com")
+  queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
   assert (isNothing queriedUser)
-  queriedUser2 <- dbQuery $ GetUserByEmail Nothing (Email "Other@EmAil.com")
+  queriedUser2 <- dbQuery $ GetUserByEmail (Email "Other@EmAil.com")
   assert (isJust queriedUser2)
   assertEqual "For GetUserByEmail result" user (fromJust queriedUser2)
 
@@ -124,7 +124,7 @@ test_setUserPassword_changesPassword = do
   Just user <- addNewUser "Emily" "Green" "emily@green.com"
   passwordhash <- createPassword "Secret Password!"
   _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
-  queriedUser <- dbQuery $ GetUserByEmail Nothing (Email "emily@green.com")
+  queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
   assert $ verifyPassword (userpassword (fromJust queriedUser)) "Secret Password!"
 
 test_addUser_repeatedEmailReturnsNothing :: TestEnv ()
@@ -135,7 +135,7 @@ test_addUser_repeatedEmailReturnsNothing = do
 
 test_getCompanyAccounts :: TestEnv ()
 test_getCompanyAccounts = do
-  Company{companyid = cid} <- dbUpdate $ CreateCompany Nothing Nothing
+  Company{companyid = cid} <- dbUpdate $ CreateCompany Nothing
   let emails = ["emily@green.com", "emily2@green.com", "andrzej@skrivapa.se"]
   users <- forM emails $ \email -> do
     Just user <- addNewCompanyUser "Emily" "Green" email cid
@@ -168,7 +168,7 @@ test_getInviteInfo = do
 test_setUserCompany :: TestEnv ()
 test_setUserCompany = do
   Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  Company{companyid} <- dbUpdate $ CreateCompany Nothing Nothing
+  Company{companyid} <- dbUpdate $ CreateCompany Nothing
   res <- dbUpdate $ SetUserCompany userid (Just $ companyid)
   assertBool "Company was correctly set" res
   Just user <- dbQuery $ GetUserByID userid

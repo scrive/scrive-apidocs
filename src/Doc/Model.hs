@@ -29,7 +29,7 @@ module Doc.Model
   , ErrorDocument(..)
   , GetDeletedDocumentsByUser(..)
   , GetDocuments(..)
-  , GetDocumentsForProblemsCheck(..)
+  , GetAllDocuments(..)
   , GetDocumentByDocumentID(..)
   , GetDocumentsByCompanyWithFiltering(..)
   , GetDocumentsByAuthorCompanyWithFiltering(..)
@@ -1378,7 +1378,6 @@ instance MonadDB m => DBQuery m GetDocumentByDocumentID (Maybe Document) where
 --
 data GetDocuments = GetDocuments [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] DocumentPagination
 instance MonadDB m => DBQuery m GetDocuments [Document] where
-  query (GetDocuments [] _filters _orderbys _pagination)   = return []
   query (GetDocuments domains filters orderbys pagination) = do
     selectDocuments $ mconcat
       [ selectDocumentsSQL
@@ -1400,12 +1399,11 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
       , SQL (" OFFSET " ++ show (documentOffset pagination) ++ " LIMIT " ++ show (documentLimit pagination)) []
       ]
 
--- | Gets all documents from database for invariants checking.
--- Do not use it anywhere else.
-data GetDocumentsForProblemsCheck = GetDocumentsForProblemsCheck
-instance MonadDB m => DBQuery m GetDocumentsForProblemsCheck [Document] where
-  query GetDocumentsForProblemsCheck =
-    query $ GetDocuments [] [] [] (DocumentPagination 0 maxBound)
+-- | Gets all documents from database.
+-- Used for problems checking/stats/tests only.
+data GetAllDocuments = GetAllDocuments
+instance MonadDB m => DBQuery m GetAllDocuments [Document] where
+  query GetAllDocuments = query $ GetDocuments [] [] [] (DocumentPagination 0 maxBound)
 
 {- |
     Fetches documents by company with filtering by tags, edate, and status.
