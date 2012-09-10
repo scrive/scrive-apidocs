@@ -49,17 +49,6 @@ adminsmain=
     </tbody></table>
     <br/>
 $if(admin)$
-    <strong> Admin Tools  </strong>
-    <table><tbody>
-        <tr>
-          <td style="height:50px;width:200px"><a href="/adminonly/services"><button style="width:150px"> Services </button> </a> </td>
-        </tr>
-        <tr>
-        </tr>
-    </tbody></table>
-
-    <br/>
-    <br/>
     <strong> Log Files </strong>
     <ul>
       <li><a href="/adminonly/log/debug.log">debug.log</a></li>
