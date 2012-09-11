@@ -18,8 +18,6 @@ module Session (
   , getSessionID
   , getSessionMagicHash
   , getSessionUserID
-  , createServiceSession
-  , loadServiceSession
   ) where
 
 import Control.Applicative hiding (optional)
@@ -73,7 +71,7 @@ data SessionData = SessionData {
                                           -- with. Also link to page
                                           -- that embeds it (hash
                                           -- location hack)
-  , company          :: Maybe CompanyID
+  , company          :: Maybe CompanyID   -- Drop this with load balancing task. We don't support loging as company anymore.
   , magichashes      :: M.Map SignatoryLinkID MagicHash
   , padUserID        :: Maybe UserID      -- Other version of login - for pad devices, when you don't want to give control over a device.
   } deriving (Ord, Eq, Show, Typeable)
@@ -338,41 +336,3 @@ getMagicHashes = magichashes . sessionData
 -- | Get the xtoken from the session data
 getSessionXToken :: Session -> MagicHash
 getSessionXToken = xtoken . sessionData
-
--- | Creates a session for user and service
-createServiceSession :: (MonadIO m, CryptoRNG m, HasAcidState Sessions m)
-                     => Either CompanyID UserID -> String -> m SessionID
-createServiceSession userorcompany loc = do
-  now <- getMinutesTime
-  moldsession <- case userorcompany of
-    Right uid -> query $ GetSessionsByUserID uid
-    Left  cid -> query $ GetSessionsByCompanyID cid
-  case find (\s -> now < expires (sessionData s)) moldsession of
-    Just s  -> return $ sessionID s
-    Nothing -> do
-      sd <- emptySessionData
-      session <-  update $ NewSession sd {
-          userID = either (const Nothing) Just userorcompany
-        , company = either Just (const Nothing) userorcompany
-        , location = loc
-        }
-      return $ sessionID session
-
--- This is used to connect user or company to session when it was created by same service
-loadServiceSession :: (MonadIO m, ServerMonad m, HasAcidState Sessions m, FilterMonad Response m) => Either CompanyID UserID -> SessionID -> m Bool
-loadServiceSession userorcompany ssid  = do
-  msession <- query $ GetSession ssid
-  case msession of
-    Nothing -> return False
-    Just session@Session{sessionData} ->
-      case (userorcompany) of
-        Left cid -> if company sessionData == Just cid
-                      then do
-                        startSessionCookie session
-                        return True
-                      else return False
-        Right uid -> if userID sessionData == Just uid
-                       then do
-                         startSessionCookie session
-                         return True
-                       else return False
