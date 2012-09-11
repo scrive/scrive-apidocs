@@ -91,7 +91,7 @@ var OAuthConfirationView = Backbone.View.extend({
       var box = $("<div id='top-slim-container'>");
       var content = $("<div class='content'>");
       var deny = $("<a class='toplink deny' href='#'></a>").text(localization.apiConfiration.deny);
-      deny.click(function() {model.deny();})
+      deny.click(function() {model.deny();});
       var logo = $("<a class='scrive-logo'  href='#'></a>");
       return box.append(content.append(deny).append(logo)).append("<div class='clearboth'></div>");
     },
@@ -100,7 +100,7 @@ var OAuthConfirationView = Backbone.View.extend({
     },    
     textBox : function() {
       var model = this.model;
-      var box = $("<div class='box white oauth-confiration-box'/>")
+      var box = $("<div class='box white oauth-confiration-box'/>");
       var hwho = $("<span/>").text(model.who());
       var hrest = $("<span/>").text(" "+ localization.apiConfiration.header);
       box.append($("<p class=''/>").append(hwho).append(hrest));
@@ -120,7 +120,7 @@ var OAuthConfirationView = Backbone.View.extend({
       return box;
     },
     acceptButton : function() {
-        var box = $("<div class='button-box'>")
+        var box = $("<div class='button-box'>");
         var model = this.model;
         var button = Button.init({
           color: "green",
@@ -165,8 +165,8 @@ var OAuthConfirationView = Backbone.View.extend({
                   onClick : function() {
                         model.login(emailinput.value(),passwordinput.value());
                     }
-                }).input()
-      box.append(button)          
+                }).input();
+      box.append(button);          
       return box;
     },
     createAccountBox : function() {
@@ -189,8 +189,8 @@ var OAuthConfirationView = Backbone.View.extend({
                   onClick : function() {
                         model.createAccount(emailinput.value());
                     }
-                }).input()
-      box.append(button)
+                }).input();
+      box.append(button);
       return box;
     },
     body : function() {
