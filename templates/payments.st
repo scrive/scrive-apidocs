@@ -100,12 +100,12 @@ $_paymentsDeclinedEmailCheck()$
 </p>
 ##
 paymentsExpiredEmail=
-$_paymentsEmailThanksForChoosingScrive()$
+$_paymentsEmailExpiredSubject()$
 $nicemail(
-  mailheader=_paymentsEmailThanksForChoosingScrive();
-  mailp1=paymentsSignupEmail1();
-  mailp2=paymentsSignupEmail2();
-  mailp3=paymentsSignupEmail3();
-  mailp4=paymentsSignupEmail4()
+  mailheader=_paymentsEmailEmailHeader();
+  mailp1=paymentsExpiredEmail1()
 )$
+###
+paymentsExpiredEmail1=
+$_paymentsEmailExpiredQuestions()$
 ###
