@@ -171,7 +171,7 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m RequestTempCredentials (Maybe (A
                            , toSql tempsecret
                            , toSql $ atID tcAPIToken
                            , toSql verifier
-                           , toSql $ 10 `minutesAfter` time
+                           , toSql $ 60 `minutesAfter` time
                            , toSql $ show tcCallback
                            , toSql $ atID tcAPIToken
                            , toSql $ atToken tcAPIToken

@@ -31,8 +31,8 @@ pagePrivilegesConfirm ctx privileges companyname token = do
          F.value "companyname" companyname
          F.value "token" $ show token
          F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
-
-     simpleResponse rsp    
+         contextInfoFields ctx
+     simpleResonseClrFlash rsp    
 
 showAPIDashboard :: TemplatesMonad m => User -> m String
 showAPIDashboard user = do

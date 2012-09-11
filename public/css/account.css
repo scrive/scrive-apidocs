@@ -95,3 +95,57 @@
   margin-right: 40px;
 }
 
+.apidashboard p {
+    font-size: 14px;
+}
+
+.apidashboard .subbox {
+  display : none;
+}
+
+.apidashboard .account .col {
+    width: 100%;
+}
+.apidashboard .oauth-section {
+  margin-bottom: 10px;
+  border : 1px dashed #CCCCCC;
+  padding: 20px;
+}
+.apidashboard #jsapitokens .tab-container,
+.apidashboard #jspersonaltoken .tab-container,
+.apidashboard #jsgrantedprivileges .tab-container
+{
+    border-width: 0px;
+}
+
+.apidashboard .account .col p {
+    margin-right: 30px;
+    display: inline-block;
+
+}
+.apidashboard .account .col .btn-small {
+    display: inline-block;
+}
+
+.apidashboard .tab-table {
+    border: 1px solid gray;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius:5px;
+}
+
+.apidashboard .col.float-right {
+    display: none;
+}
+
+
+.apidashboard .col {
+    display: table;
+    overflow: hidden;
+    height: 33px;
+}
+
+.apidashboard .middle {
+    display: table-cell;
+    vertical-align: middle;
+}

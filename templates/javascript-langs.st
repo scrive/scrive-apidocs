@@ -703,5 +703,20 @@ javascriptLocalisation =
              upgrade     : "$_blockingButtonUpgrade()$"
            }
         }
+      , apiConfiration : {
+             title : "$_apiConfiramtionTitle()$"
+           , header : "$_apiConfiramtionHeader()$"
+           , footerNotLogged : "$_apiConfiramtionFooterNotLogged()$"
+           , footerLogged : "$_apiConfiramtionFooterLogged()$"
+           , readPermission : "$_apiConfiramtionReadPermission()$"
+           , createPermission : "$_apiConfiramtionCreatePersmission()$"
+           , sendPermission : "$_apiConfiramtionSendPermission()$"
+           , accept : "$_apiConfiramtionAccept()$"
+           , loginAndAcceptTitle : "$_apiConfiramtionLoginAndAcceptTitle()$"
+           , loginAndAccept : "$_apiConfiramtionLoginAndAccept()$"
+           , createAccount : "$_apiConfiramtionCreateAccount()$"
+           , enterEmailAdress : "$_apiConfiramtionEnterEmailAdress()$"
+           , deny : "$_apiConfiramtionDeny()$"
+      }
+
     }
-####
