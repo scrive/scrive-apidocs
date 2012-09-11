@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cross-domain-policy>
+</cross-domain-policy>
+<!--
+
+Format of crossdomain.xml file is described at:
+
+http://www.adobe.com/devnet/articles/crossdomain_policy_file_spec.html
+
+-->
