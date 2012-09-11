@@ -119,7 +119,7 @@ window.DocumentsListDefinition = function(archive) { return {
                                     method : "POST",
                                     url : "/api/createfromfile",
                                     ajax: true,
-                                    type: "Signable " + type,
+                                    type: type,
                                     expectedType: 'json',
                                     onSend: function() {
                                         LoadingDialog.open();

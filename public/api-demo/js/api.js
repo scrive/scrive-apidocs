@@ -46,12 +46,12 @@ window.CreateFromFileApiCall = ApiCall.extend({
                 headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.file().detach();
-                    model.setResult(niceJSONText(JSON.parse(res),""));
+                    model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                     form.remove();
                 },
                 error : function(res) {
                     model.file().detach();
-                    model.setResult(niceJSONText(JSON.parse(res.responseText),""));form.remove();
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
                     form.remove();
                 }
             });
@@ -79,10 +79,10 @@ window.CreateFromTemplateApiCall = ApiCall.extend({
                 processData: false,
                 headers : { authorization : model.authorization() },
                 success : function(res) {
-                    model.setResult(niceJSONText(JSON.parse(res),""));
+                    model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },
                 error : function(res) {
-                    model.setResult(niceJSONText(res.responseText,""));
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
                 }
             });
 
@@ -119,11 +119,11 @@ window.UpdateApiCall = ApiCall.extend({
                 contentType: false,
                 headers : { authorization : model.authorization() },
                 success : function(res) {
-                    model.setResult(niceJSONText(JSON.parse(res),""));
+                    model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                     form.remove();
                 },
                 error : function(res) {
-                    model.setResult(niceJSONText(res.responseText,""));
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
                     form.remove();
                 }
             });
@@ -154,10 +154,10 @@ window.ReadyApiCall = ApiCall.extend({
                 processData: false,
                 headers : { authorization : model.authorization() },
                 success : function(res) {
-                    model.setResult(niceJSONText(JSON.parse(res),""));
+                    model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },
                 error : function(res) {
-                    model.setResult(niceJSONText(res.responseText,""));
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
                 }
             });
         }    
@@ -184,10 +184,10 @@ window.GetApiCall = ApiCall.extend({
                 cache: false,
                 headers : { authorization : model.authorization() },
                 success : function(res) {
-                    model.setResult(niceJSONText(JSON.parse(res),""));
+                    model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },
                 error : function(res) {
-                    model.setResult(niceJSONText(res.responseText,""));
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
                 }
             });
         }    
@@ -214,10 +214,10 @@ window.ListApiCall = ApiCall.extend({
                 data : { tags : model.tags() },
                 headers : { authorization : model.authorization() },
                 success : function(res) {
-                    model.setResult(niceJSONText(JSON.parse(res),""));
+                    model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
                 },
                 error : function(res) {
-                    model.setResult(niceJSONText(res.responseText,""));
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
                 }
             });
         }
@@ -409,48 +409,6 @@ var ListApiCallView = Backbone.View.extend({
             if (model.result() != undefined)
                 this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
         }
-});
+});    
 
-
-window.niceJSONText = function(obj,s) {
-    if (s == undefined) s = ""
-    var res = "";
-    if (obj instanceof Array) {
-        if (obj.length == 0) return "[]";
-        res += "[\n";
-        for(var i=0;i<obj.length;i++) {
-            res += (s + niceJSONText(obj[i], s + " ") + "\n")
-            if (i<obj.length - 1)
-                res += ",\n"
-            else
-                res += "\n"
-        }    
-        res += s + "]";
-        
-    } else if(typeof obj =='object' && obj != undefined) {
-        var ks = _.keys(obj)
-        if (ks.length == 0) return "{}";
-        res += "{\n";
-        for(var i=0;i<ks.length;i++) {
-            res += (s + '"' + ks[i] + '"' + ":" + niceJSONText(obj[ks[i]], s + " "));
-            if (i<ks.length - 1)
-                res += ",\n"
-            else
-                res += "\n"
-        }
-        res += s + "}";
-
-    } else if (typeof obj =='string') {
-       res += '"' + obj + '"';
-    } else {
-        res += obj;
-    }    
-    return res
-        
-    
-        
-    
-
-    
-}
 })(window);

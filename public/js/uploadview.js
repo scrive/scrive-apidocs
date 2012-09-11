@@ -85,7 +85,7 @@
                     method : "POST",
                     url : "/api/createfromfile",
                     ajax: true,
-                    type: wiz.get('process') ? "Signable " + wiz.get('process').name : "",
+                    type: wiz.get('process') ? wiz.get('process').name : "",
                     expectedType: 'json',
                     onSend: function() {
                         LoadingDialog.open();

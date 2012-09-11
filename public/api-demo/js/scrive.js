@@ -4,7 +4,7 @@
 
 
 window.Scrive =  {
-                serverUrl : function() {return "http://" + window.location.host;}
+                serverUrl : function() {return window.location.protocol + "//" + window.location.host;}
 };
 
 

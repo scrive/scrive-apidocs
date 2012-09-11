@@ -81,7 +81,9 @@ apiCallCreateFromFile = api $ do
     Just companyid -> Just <$> (apiGuardL' $ dbQuery $ GetCompany companyid)
     Nothing -> return Nothing
   Input contentspec (Just filename') _contentType <- apiGuardL (badInput "The main file of the document must be attached in the MIME part 'file'.") $ getDataFn' (lookInput "file")
-  doctype <- lift $ fromMaybe (Signable Contract) <$> readField "type"
+  dtype <- lift $ fromMaybe (Contract) <$> readField "type"
+  isTpl<- lift $ isFieldSet "template"
+  let doctype = (Template <| isTpl |> Signable) dtype
   let filename = takeBaseName filename'
   let mformat = getFileFormatForConversion filename'
   content' <- case contentspec of

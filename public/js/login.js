@@ -203,7 +203,7 @@ var LoginView = Backbone.View.extend({
     },
     render: function () {
        var model = this.model;
-       $("#exposeMask").css("display", "none");
+       $("#exposeMask").css("display", "none"); // Hack to expose mask. It works wrong.
        if (this.popupLoginModalConfirmation != undefined) {
          this.popupLoginModalConfirmation.view.reject();
          this.popupLoginModalConfirmation = undefined;

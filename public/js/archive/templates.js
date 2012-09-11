@@ -72,7 +72,8 @@ window.TemplatesListDefinition = function(archive) { return {
                                     method : "POST",
                                     url : "/api/createfromfile",
                                     ajax: true,
-                                    type: "Template " + type,
+                                    type: type,
+                                    template : "YES",
                                     expectedType: 'json',
                                     onSend: function() {
                                         LoadingDialog.open();
