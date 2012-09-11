@@ -232,7 +232,7 @@ Executable kontrakcja-server
   Build-depends: blaze-html == 0.4.3.3
   Build-depends: tagged == 0.4.1
   Build-depends: fields-json == 0.2
-  Build-depends: static-resources == 0.1.5.1
+  Build-depends: static-resources == 0.1.5.2
   Build-depends: recurly == 0.0.33
   Main-Is: Main.hs
 
