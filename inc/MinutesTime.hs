@@ -22,6 +22,7 @@ module MinutesTime
        , showAsMonth
        , showAsDate
        , formatMinutesTimeUTC
+       , formatMinutesTimeRealISO
        , formatMinutesTimeISO
        , formatMinutesTime
        , parseMinutesTimeUTC
@@ -205,6 +206,9 @@ formatMinutesTime ktl fmt mt = formatCalendarTime (getTimeLocale ktl) fmt (toCal
 formatMinutesTimeUTC :: MinutesTime -> String
 formatMinutesTimeUTC mt = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" (toUTCTime mt)
 
+
+formatMinutesTimeRealISO :: MinutesTime -> String
+formatMinutesTimeRealISO mt = formatCalendarTime defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ" (toUTCTime mt)
 
 -- | Parse format %d-%m-%Y.
 parseMinutesTimeDMY :: String -> Maybe MinutesTime

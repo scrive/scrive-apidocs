@@ -287,7 +287,7 @@ placementJSON doc placement = runJSONGen $ do
                          _ -> Nothing
 
 jsonDate :: Maybe MinutesTime -> JSValue
-jsonDate mdate = toJSValue $ showDateYMD <$> mdate
+jsonDate mdate = toJSValue $ formatMinutesTimeRealISO <$> mdate
 
 processJSON :: TemplatesMonad m => Document -> JSONGenT m ()
 processJSON doc = do
