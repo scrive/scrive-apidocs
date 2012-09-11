@@ -114,8 +114,6 @@
         <li>$_paymentFeatureTracking()$</li>
         <li>$_paymentFeatureAPI()$</li>
         <li>$_paymentFeatureFeatures()$</li>
-        <li> </li>
-        <li> </li>
         <li class='last-child'> <span class='price'>299kr/månad</span><span class='price-comment'>per användare</span>
         </li>
     </ul>","
@@ -2503,7 +2501,7 @@ vill skicka fler dokument per månad, kontakta vår <a href = 'mailto: viktor@sc
 "_paymentsChoosePlan","Välj en plan",,"Choose a plan"
 "_paymentsPayWithCard","Betala med kreditkort",,"Pay with credit card"
 "_paymentPlanProfessionalTag","Projicera excellens",,"project your excellence"
-"_paymentPlanTeamTag","close your deals faster",,"close your deals faster"
+"_paymentPlanTeamTag","stäng dina affärer fortare",,"close your deals faster"
 "_paymentsSelect","Valda",,"Select"
 "_paymentsFlatRate","Simple flat rate",,"Simple flat rate"
 "_paymentsProfessionalPrice","199kr",,"1000kr"
