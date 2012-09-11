@@ -207,7 +207,7 @@ var OAuthConfirationView = Backbone.View.extend({
         var container = $(this.el);
         container.append(this.top()).append(this.body());
         return this;
-    },
+    }
 });
 
 
