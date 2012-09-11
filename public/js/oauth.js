@@ -34,7 +34,7 @@ window.OAuthConfirationModel = Backbone.Model.extend({
       new Submit({
           method: "POST",
           url: "/oauth/authorizationdeny",
-          oauth_token : this.token(),
+          oauth_token : this.token()
         }).send();
 
   },
@@ -42,7 +42,7 @@ window.OAuthConfirationModel = Backbone.Model.extend({
       new Submit({
           method: "POST",
           url: "/oauth/authorizationconfirm",
-          oauth_token : this.token(),
+          oauth_token : this.token()
         }).send();
   },
   login : function(email,password) {
@@ -74,7 +74,7 @@ window.OAuthConfirationModel = Backbone.Model.extend({
               window.location = window.location;
           }
         }).send();
-  },
+  }
 });
 
 var OAuthConfirationView = Backbone.View.extend({

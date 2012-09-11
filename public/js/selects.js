@@ -119,7 +119,6 @@ var SelectView = Backbone.View.extend({
         return button;
     },
     clear : function() {
-        this.dead;
         _.each(this.model.options(),function(o) {
             if (o.view != undefined)
                 o.view.clear();
