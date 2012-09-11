@@ -718,9 +718,6 @@ javascriptLocalisation =
            , enterEmailAdress : "$_apiConfiramtionEnterEmailAdress()$"
            , deny : "$_apiConfiramtionDeny()$"
       }
-<<<<<<< HEAD
-
-=======
       , apiDashboard : {
             delete :  "$_apiDashboardDelete()$"
           , deleteAll : "$_apiDashboardDeleteAll()$"
@@ -735,5 +732,4 @@ javascriptLocalisation =
           , personOrCompany : "$_apiDashboardPersonOrCompany()$"
           , privilige       :  "$_apiDashboardPrivilige()$"
       }
->>>>>>> Changes to translations (API dashboard)
     }

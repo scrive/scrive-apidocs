@@ -2420,7 +2420,6 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_verificationMethod","Verifiering",,"Verification"
 "_flashEmailIncorectlyFormed","E-post är ej korrekt formaterad.",,"Email is incorrectly formated."
 "_filterBySent","Inväntar signatur",,"Pending"
-<<<<<<< HEAD
 "_paymentPlanProfessional","Professional",,"Professional"
 "_paymentPlanTeam","Team",,"Team"
 "_paymentPlanCurrentPlan","Nuvarande prisplan",,"Current Plan"
@@ -2553,15 +2552,9 @@ vill skicka fler dokument per månad, kontakta vår <a href = 'mailto: viktor@sc
 "_paymentsPleaseLeaveNumber","Please leave your telephone number and we will contact you shortly.",,"Please leave your telephone number and we will contact you shortly."
 "_paymentsThankYouInterest","Thank you for you interest in Scrive. We will get back to you shortly.",,"Thank you for you interest in Scrive. We will get back to you shortly."
 "_paymentsSubmitButtonLabel","OK",,"OK"
-"_apiConfiramtionTitle","Approve to proceed",,"Godkänn för att fortsätta"
-"_apiConfiramtionHeader"," is requestion permission to perform the following actions in Scrive on your behalf:",,"begär ett godkännande för att genomföra följande åtgärder i Scrive för din räkning:"
-"_apiConfiramtionFooterNotLogged","To accept please log into your Scrive account and confirm. If you don't
-have an account please follow the account creation process. Free use up to 5 sent documents per month.",,"För att acceptera, logga in på ditt Scrive-konto och godkänn.
-=======
 "_apiConfiramtionTitle","Godkänn för att fortsätta",,"Approve to proceed"
 "_apiConfiramtionHeader","begär ett godkännande för att genomföra följande åtgärder i Scrive för din räkning:",," is requestion permission to perform the following actions in Scrive on your behalf:"
 "_apiConfiramtionFooterNotLogged","För att acceptera, logga in på ditt Scrive-konto och godkänn.
->>>>>>> Changes to translations (API dashboard)
 Om du inte har ett konto på Scrive, klicka på skapa nytt konto för att registrera ny användare. Skicka upp till 5 dokument/mån utan kostnad.
 ",,"To accept please log into your Scrive account and confirm. If you don't
 have an account please follow the account creation process. Free use up to 5 sent documents per month."
