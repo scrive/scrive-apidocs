@@ -410,19 +410,28 @@ window.Signatory = Backbone.Model.extend({
       return this.get("saved");
     },
     signdate: function() {
-        return this.get("signdate");
+        if (this.get("signdate") != undefined)
+          return new Date(Date.parse(this.get("signdate")));
+        return undefined;
     },
     datamismatch: function() {
         return this.get("datamismatch");
     },
     rejecteddate: function() {
-        return this.get("rejecteddate");
+        if (this.get("rejecteddate") != undefined)
+          return new Date(Date.parse(this.get("rejecteddate")));
+        return undefined;
     },
     seendate: function() {
-        return this.get("seendate");
+        if (this.get("seendate") != undefined)
+          return new Date(Date.parse(this.get("seendate")));
+        return undefined;
+        
     },
     readdate: function() {
-        return this.get("readdate");
+        if (this.get("readdate") != undefined)
+          return new Date(Date.parse(this.get("readdate")));
+        return undefined;
     },
     deliveredEmail: function() {
         return this.get("deliveredEmail");
@@ -597,6 +606,9 @@ window.Signatory = Backbone.Model.extend({
          this.trigger("change:csv");
 
     },
+    signsuccessredirect : function() {
+        return this.get("signsuccessredirect");
+    },
     inpadqueue : function() {
        return this.get("inpadqueue");
     },
@@ -618,7 +630,8 @@ window.Signatory = Backbone.Model.extend({
               attachments: _.map(this.attachments(), function(att) {
                   return att.draftData();
               }),
-              csv: this.csv()
+              csv: this.csv(),
+              signsuccessredirect : this.signsuccessredirect()
 
         };
     }
@@ -634,9 +647,10 @@ window.SignatoryStandardView = Backbone.View.extend({
     },
     signatorySummary: function() {
           var signatory = this.model;
+          var timePP = function(t) {return t.getFullYear() + "-" + (t.getMonth() < 9 ? "0" + (t.getMonth() + 1) : (t.getMonth()+1)) + "-" + t.getDate();}
           var document = signatory.document();
           if (signatory.signdate() != undefined)
-               return localization.signatoryMessage.signed + " " + this.model.signdate();
+               return localization.signatoryMessage.signed + " " + timePP(signatory.signdate());
           else if (signatory.datamismatch() == true)
                return localization.signatoryMessage.datamismatch;
           else if (document.timedout())
@@ -646,16 +660,19 @@ window.SignatoryStandardView = Backbone.View.extend({
           else if (document.datamismatch())
                return " ";
           else if (signatory.rejecteddate() != undefined)
-               return localization.signatoryMessage.rejected + " " + this.model.rejecteddate();
+               return localization.signatoryMessage.rejected + " " + timePP(signatory.rejecteddate()); 
           else if (signatory.seendate() != undefined)
-               return localization.signatoryMessage.seen + " " + this.model.seendate();
+               return localization.signatoryMessage.seen + " " + timePP(signatory.seendate()); 
           else if (signatory.readdate() != undefined)
-               return localization.signatoryMessage.read + " " + this.model.readdate();
+               return localization.signatoryMessage.read + " " + timePP(signatory.readdate());  
           else if (signatory.deliveredEmail())
                return localization.signatoryMessage.delivered;
           else
               return localization.signatoryMessage.other;
     },
+
+
+    
     changeEmailOption: function() {
         var signatory = this.model;
         var container = $("<div style='margin-top: 10px'/>");

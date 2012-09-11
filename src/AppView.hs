@@ -28,6 +28,7 @@ module AppView( kontrakcja
               , embeddedErrorPage
               , serviceFields
               , standardPageFields
+              , contextInfoFields
               ) where
 
 import API.Service.Model

@@ -205,6 +205,7 @@ var DocumentDesignView = Backbone.View.extend({
         var select= $("<select/>");
         var email = $("<option value='email'/>").text(localization.email);
         var pad = $("<option value='pad'/>").text(localization.pad.delivery);
+        var api = $("<option value='api'/>").text("API");
         select.append(email);
         select.append(pad);
         box.text(localization.designview.delivery.selectmethod);
@@ -217,9 +218,18 @@ var DocumentDesignView = Backbone.View.extend({
           email.attr("selected","");
           pad.attr("selected","YES");
         }
+        else if (document.apiDelivery()) {
+          email.attr("selected","");
+          pad.attr("selected","");
+          api.attr("selected","YES");
+          select.append(api);
+        }
+       
         select.change(function() {
             if ($(this).val() == 'pad')
                 document.setPadDelivery();
+            else if ($(this).val() == 'api')
+                document.setAPIDelivery();
             else
                 document.setEmailDelivery();
         });
@@ -279,7 +289,7 @@ var DocumentDesignView = Backbone.View.extend({
     },
     editInvitationOption: function() {
         var document = this.model;
-        if (document.padDelivery()) return $("<div class='display:none'>");
+        if (document.padDelivery() || document.apiDelivery()) return $("<div class='display:none'>");
         var box  = $("<div class='editinvitemessage'/>");
         var icon = $("<span class='editinvitemessageicon'/>");
         var text = $("<span class='editinvitemessagetext'/>").text(localization.editInviteText);

@@ -95,15 +95,11 @@ staticRoutes = choice
      , dir "a"                     $ hGet  $ toK1 $ AttachmentControl.handleShow
      , dir "att"                   $ hGet  $ toK1 $ AttachmentControl.jsonAttachment
 
-     , dir "t" $ param "template" $ hPost $ toK0 $ DocControl.handleCreateFromTemplate
-     , dir "t" $ hPost $ toK0 $ DocControl.handleCreateNewTemplate
-
      , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showArchive
      , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
      , dir "d" $ dir "eleg"        $ hGet  $ toK1 $ BankID.generateBankIDTransactionForAuthor
      , dir "d" $ dir "eleg" $ dir "mbi" $ hPostNoXToken $ toK1 $ BankID.initiateMobileBankIDForAuthor
      , dir "d" $ dir "eleg" $ dir "mbi" $ hGet  $ toK1 $ BankID.collectMobileBankIDForAuthor
-     , dir "d" $ {- param "doc" $ -} hPost $ toK0 $ DocControl.handleIssueNewDocument
      , dir "d" $ dir "delete"       $ hPost $ toK0 $ ArchiveControl.handleDelete
      , dir "d" $ dir "remind"       $ hPost $ toK0 $ ArchiveControl.handleSendReminders
      , dir "d" $ dir "restore"      $ hPost $ toK0 $ ArchiveControl.handleRestore
@@ -113,8 +109,6 @@ staticRoutes = choice
      , dir "d" $ dir "zip"      $ hGet  $ toK0 $ ArchiveControl.handleZip
      , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
      , dir "docs"                  $ hGet  $ toK0 $ ArchiveControl.jsonDocumentsList
-     , dir "doc"                   $ hGet  $ toK1 $ DocControl.jsonDocument
-     , dir "save"                  $ hPost $ toK1 $ DocControl.handleSaveDraft
      , dir "setattachments"        $ hPost $ toK1 $ DocControl.handleSetAttachments -- Since setting attachments can have file upload, we need extra handler for it.
      , dir "parsecsv"              $ hPost $ toK0 $ DocControl.handleParseCSV
      , dir "mailpreview"           $ hGet  $ toK2 $ DocControl.prepareEmailPreview
@@ -133,8 +127,6 @@ staticRoutes = choice
      -- HTMP emails can have embedded preview image
      , dir "preview" $ hGet $ toK2 $ DocControl.showPreview
      , dir "preview" $ hGet $ toK4 $ DocControl.showPreviewForSignatory
-
-     , dir "template"  $ hPost $ toK0 $ DocControl.handleCreateFromTemplate
 
      , dir "filepages" $ hGetAjax $  toK1 $ DocControl.handleFilePages
 
@@ -268,7 +260,7 @@ staticRoutes = choice
 
      , integrationAPI
      , documentAPI
-     , oauthAPI
+     , oauth
      , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "public"
 
      -- to be removed after 15.07.2012 (see ActionQueue.UserAccountRequest)

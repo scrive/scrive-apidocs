@@ -1,4 +1,4 @@
-module OAuth.Control where
+module OAuth.Control(oauth) where
 
 import Kontra
 import API.Monad
@@ -7,22 +7,17 @@ import OAuth.Model
 import DB
 import Happstack.Fields
 import Utils.List
-import Utils.Monad
 import Utils.Read
 import KontraLink
 import Happstack.StaticRouting(Route, choice, dir)
 import User.Utils
-import Util.HasSomeUserInfo
 import Util.MonadUtils
 import OAuth.View
 import OAuth.Util
-import Login
 import User.Model
 import AppView
 import qualified Log
 import Stats.Control
-import Util.FlashUtil
-import User.UserView
 import ListUtil
 
 import Text.JSON.Gen hiding (value)
@@ -37,13 +32,11 @@ import Data.Maybe
 import Control.Monad.Error
 import Data.Map (singleton)
 
-oauthAPI :: Route (KontraPlus Response)
-oauthAPI = choice [
+oauth :: Route (KontraPlus Response)
+oauth = choice [
   dir "oauth" $ dir "temporarycredentials" $ hGet  $ toK0 $ tempCredRequest,
   dir "oauth" $ dir "authorization"        $ hGet  $ toK0 $ authorization,
   dir "oauth" $ dir "authorizationconfirm" $ hPost $ toK0 $ authorizationGranted,
-  dir "oauth" $ dir "authorizationconfirmlogin"   $ hPostNoXToken $ toK0 $ authorizationGrantedLogin,
-  dir "oauth" $ dir "authorizationconfirmnewuser" $ hPostNoXToken $ toK0 $ authorizationGrantedNewUser,  
   dir "oauth" $ dir "authorizationdeny"    $ hPost $ toK0 $ authorizationDenied,
   dir "oauth" $ dir "tokencredentials"     $ hGet  $ toK0 $ tokenCredRequest,
   dir "oauth" $ dir "createapitoken"       $ hPost $ toK0 $ createAPIToken,
@@ -73,9 +66,9 @@ tempCredRequest = api $ do
                             ("oauth_token_secret", show tempsecret),
                             ("oauth_callback_confirmed", "true")]
 
-authorization :: Kontrakcja m => m (Either KontraLink String)
+authorization :: Kontrakcja m => m (Either KontraLink Response)
 authorization = do
-  muser  <- ctxmaybeuser <$> getContext
+  ctx <- getContext
   time   <- ctxtime      <$> getContext
   locale <- ctxlocale    <$> getContext
 
@@ -85,12 +78,9 @@ authorization = do
   mprivs <- dbQuery $ GetRequestedPrivileges token time
 
   case mprivs of
-    Just (companyname, p:ps) ->
-      case muser of
-        Just user -> Right <$> pagePrivilegesConfirm       (p:ps) (getEmail user) companyname token
-        _         -> Right <$> pagePrivilegesConfirmNoUser (p:ps) companyname token
-    _ -> -- no privileges recorded? we just take the traffic
-      return $ Left $ LinkHome locale
+    Just (companyname, p:ps) -> Right <$> pagePrivilegesConfirm ctx (p:ps) companyname token
+    _ -> return $ Left $ LinkHome locale -- no privileges recorded? we just take the traffic
+
 
 authorizationDenied :: Kontrakcja m => m KontraLink
 authorizationDenied = do
@@ -118,36 +108,6 @@ authorizationGranted = do
       (url, verifier) <- guardJustM $ dbUpdate $ VerifyCredentials token (userid user) time
       _ <- addUserStatAPIGrantAccess (userid user) time (usercompany user) Nothing 
       return $ LinkOAuthCallback url token $ Just verifier
-
-authorizationGrantedLogin :: Kontrakcja m => m KontraLink
-authorizationGrantedLogin = do
-  mtk <- getDataFn' (look "oauth_token")
-  token <- guardJust $ maybeRead =<< mtk
-  muser' <- ctxmaybeuser <$> getContext
-  when_ (isNothing muser') handleLoginPost
-  muser <- ctxmaybeuser <$> getContext  
-  time <- ctxtime <$> getContext
-  case muser of
-    Nothing -> do
-      addFlashM $ flashMessageLoginRedirectReason $ InvalidLoginInfo undefined
-      return $ LinkOAuthAuthorization token
-    Just user -> do
-      (url, verifier) <- guardJustM $ dbUpdate $ VerifyCredentials token (userid user) time
-      _ <- addUserStatAPIGrantAccess (userid user) time (usercompany user) Nothing       
-      return $ LinkOAuthCallback url token $ Just verifier
-
-authorizationGrantedNewUser :: Kontrakcja m => m KontraLink
-authorizationGrantedNewUser = do
-  time <- ctxtime <$> getContext
-  mtk <- getDataFn' (look "oauth_token")
-  token <- guardJust $ maybeRead =<< mtk
-  meu <- handleSignup
-  case meu of
-    Just (email, Just uid) -> do
-      void $ addUserStatAPINewUser uid time Nothing Nothing 
-      addFlashM $ modalUserSignupDone $ email
-    _ -> return ()
-  return $ LinkOAuthAuthorization token
 
 tokenCredRequest :: Kontrakcja m => m Response
 tokenCredRequest = api $ do
@@ -190,7 +150,7 @@ apiDashboardGrantedPrivileges :: Kontrakcja m => m JSValue
 apiDashboardGrantedPrivileges = do
   Context{..} <- getContext
   user <- guardJust ctxmaybeuser
-  ds <- mapassocM privilegeDescription [APIDocCreate]
+  ds <- mapassocM privilegeDescription [APIDocCreate,APIDocSend, APIDocCheck]
   ls <- concatMap (\p->jsonFromGrantedPrivilege p ds) <$> (dbQuery $ GetGrantedPrivileges (userid user))
   return $ runJSONGen $ do
     J.objects "list" $ map (J.value "fields") ls

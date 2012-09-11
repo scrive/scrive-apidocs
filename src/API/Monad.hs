@@ -15,8 +15,11 @@ module API.Monad (
                  apiGuard',
                  apiGuardL,
                  apiGuardL',
+                 apiGuardJustM,
                  api,
+                 Ok(..),    
                  Created(..),
+                 Accepted(..),    
                  APIMonad(..),
                  getAPIUser,
                  FormEncoded(..)
@@ -29,7 +32,7 @@ module API.Monad (
 import Control.Monad.Trans
 import Happstack.Server (toResponse)
 import Happstack.Server.Types
-import Text.JSON
+import Text.JSON hiding (Ok)
 import qualified Happstack.Server.Response as Web
 import Control.Monad.Error
 import Control.Applicative
@@ -49,11 +52,19 @@ import OAuth.Util
 import OAuth.Model
 import Doc.Rendering
 import Util.Actor
-
+import Templates.Templates
 import qualified Log
+import Util.CSVUtil
+import Util.ZipUtil
+
+-- | Respond with a 200 Created status
+data Ok a = Ok a
 
 -- | Respond with a 201 Created status
 data Created a = Created a
+
+-- | Respond with a 202 Accepted status
+data Accepted a = Accepted a
 
 -- | Values to be form encoded
 data FormEncoded = FormEncoded [(String, String)]
@@ -110,8 +121,25 @@ instance ToAPIResponse JSValue where
   toAPIResponse jv = let r1 = Web.toResponse $ encode jv in
     setHeader "Content-Type" "text/plain" r1 -- must be text/plain because some browsers complain about JSON type
 
+instance ToAPIResponse CSV where
+  toAPIResponse v = let r1 = Web.toResponse $ v in
+    setHeader "Content-Type" "text/zip" r1
+
+instance ToAPIResponse ZipArchive where
+  toAPIResponse v = let r1 = Web.toResponse $ v in
+    setHeader "Content-Type" "text/csv" r1 
+
+instance (ToAPIResponse a, ToAPIResponse b) => ToAPIResponse (Either a b) where
+  toAPIResponse = either toAPIResponse toAPIResponse
+    
+instance ToAPIResponse a => ToAPIResponse (Ok a) where
+  toAPIResponse (Ok a) = (toAPIResponse a) { rsCode = 200 }
+    
 instance ToAPIResponse a => ToAPIResponse (Created a) where
   toAPIResponse (Created a) = (toAPIResponse a) { rsCode = 201 }
+
+instance ToAPIResponse a => ToAPIResponse (Accepted a) where
+  toAPIResponse (Accepted a) = (toAPIResponse a) { rsCode = 202 }
   
 instance ToAPIResponse () where
   toAPIResponse () = toResponse ""
@@ -122,7 +150,7 @@ instance ToAPIResponse FormEncoded where
     in setHeader "Content-Type" "application/x-www-form-urlencoded" r1
     
 newtype APIMonad m a = AM { runAPIMonad :: ErrorT APIError m a }
-  deriving (Applicative, CryptoRNG, Functor, Monad, MonadDB, MonadError APIError, MonadIO, MonadTrans)
+  deriving (Applicative, CryptoRNG, Functor, Monad, MonadDB, MonadError APIError, MonadIO, MonadTrans, TemplatesMonad)
 
 instance KontraMonad m => KontraMonad (APIMonad m) where
   getContext = lift getContext
@@ -173,6 +201,10 @@ apiGuard' a = guardEither a >>= either throwError return
 apiGuard :: (Monad m, APIGuard m a b) => APIError -> a -> APIMonad m b
 apiGuard e a = guardEither a >>= either (const $ throwError e) return
 
+apiGuardJustM :: (Monad m) => APIError -> APIMonad m (Maybe a) -> APIMonad m a
+apiGuardJustM e a = a >>= maybe (throwError e) return
+
+
 -- | Unify the different types of guards with this class
 class Monad m => APIGuard m a b | a -> b where
   guardEither :: a -> APIMonad m (Either APIError b)
@@ -206,17 +238,17 @@ instance (Monad m, JSON b) => APIGuard m (Result b) b where
 -- get the user for the api; it can either be 
 --  1. OAuth using Authorization header
 --  2. Session for Ajax client
-getAPIUser :: Kontrakcja m => APIMonad m (User, Actor)
-getAPIUser = do
-  moauthuser <- getOAuthUser
+getAPIUser :: Kontrakcja m => APIPrivilege -> APIMonad m (User, Actor, Bool)
+getAPIUser priv = do
+  moauthuser <- getOAuthUser priv
   Log.debug $ "moauthuser: " ++ show moauthuser
   case moauthuser of
-    Just (user, actor) -> return (user, actor)
+    Just (user, actor) -> return (user, actor, True)
     Nothing -> do
       msessionuser <- getSessionUser
       Log.debug $ "msessionuser: " ++ show msessionuser
       case msessionuser of
-        Just (user, actor) -> return (user, actor)
+        Just (user, actor) -> return (user, actor, False)
         Nothing -> throwError notLoggedIn'
 
 getSessionUser :: Kontrakcja m => APIMonad m (Maybe (User, Actor))
@@ -226,16 +258,17 @@ getSessionUser = do
     Nothing -> return Nothing
     Just user -> return $ Just (user, authorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user))
 
-getOAuthUser :: Kontrakcja m => APIMonad m (Maybe (User, Actor))
-getOAuthUser = do
+getOAuthUser :: Kontrakcja m => APIPrivilege -> APIMonad m (Maybe (User, Actor))
+getOAuthUser priv = do
   Log.debug "getOAuthUser start"
   ctx <- getContext
   eauth <- lift $ getAuthorization
+  Log.debug $ show eauth
   case eauth of
     Left _ -> return Nothing
     Right auth -> do
       (userid, apistring) <- apiGuardL (forbidden "OAuth credentials are invalid.") $ 
-                              dbQuery $ GetUserIDForAPIWithPrivilege (oaAPIToken auth) (oaAPISecret auth) (oaAccessToken auth) (oaAccessSecret auth) APIDocCreate
+                              dbQuery $ GetUserIDForAPIWithPrivilege (oaAPIToken auth) (oaAPISecret auth) (oaAccessToken auth) (oaAccessSecret auth) priv
   
       user <- apiGuardL (serverError "The User account for those credentials does not exist.") $ dbQuery $ GetUserByID userid
 

@@ -83,8 +83,10 @@ instance SafeEnum AuthenticationMethod where
 instance SafeEnum DeliveryMethod where
     fromSafeEnum EmailDelivery = 1
     fromSafeEnum PadDelivery   = 2
+    fromSafeEnum APIDelivery   = 3
     toSafeEnum 1 = Just EmailDelivery
     toSafeEnum 2 = Just PadDelivery
+    toSafeEnum 3 = Just APIDelivery
     toSafeEnum _  = Nothing
 
 jsonDocumentForAuthor :: Document -> String -> JSValue

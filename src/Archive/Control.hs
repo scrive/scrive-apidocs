@@ -41,6 +41,7 @@ import Happstack.Fields
 import PadQueue.Model
 import Data.Maybe
 import Text.JSON.Gen as J
+import Text.JSON.FromJSValue
 import Doc.DocUtils
 import Doc.Action
 import Doc.DocStateQuery
@@ -54,6 +55,9 @@ import File.Storage as F
 import qualified Log as Log
 import Data.List (find)
 import Control.Logic
+import Control.Monad.Identity
+import Text.JSON.String (runGetJSON)
+import Doc.DocDraft()
 
 handleDelete :: Kontrakcja m => m JSValue
 handleDelete = do
@@ -180,9 +184,9 @@ showArchive = checkUserTOSGet $ do
 showPadDeviceArchive :: Kontrakcja m => m (Either KontraLink String)
 showPadDeviceArchive = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >> pagePadDeviceArchive
 
-jsonDocumentsList ::  Kontrakcja m => m (Either KontraLink (Either CSV JSValue))
-jsonDocumentsList = withUserGet $ do
-  Just user@User{userid = uid} <- ctxmaybeuser <$> getContext
+jsonDocumentsList ::  Kontrakcja m => m (Either CSV JSValue)
+jsonDocumentsList = do
+  user@User{userid = uid} <- guardJustM $ ctxmaybeuser <$> getContext
   lang <- getLang . ctxlocale <$> getContext
   doctype <- getField' "documentType"
   params <- getListParamsNew
@@ -208,10 +212,14 @@ jsonDocumentsList = withUserGet $ do
                                     ((statusclasss,""):_) -> [DocumentFilterByStatusClass statusclasss]
                                     _ -> []
       fltSpec _ = []
+  tagsstr <- getField' "tags"
+  let tagsFilters = case runGetJSON readJSArray tagsstr of
+                      Right js ->[DocumentFilterByTags $ join $ maybeToList $ runIdentity $ withJSValue js $ fromJSValueCustomMany $ fromJSValueM]
+                      _ -> []
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
       pagination = docPaginationFromParams params
-      filters = filters1 ++ filters2
+      filters = filters1 ++ filters2 ++ tagsFilters
   cttime <- getMinutesTime
   padqueue <- dbQuery $ GetPadQueue $ userid user
   format <- getField "format"

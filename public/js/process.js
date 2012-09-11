@@ -114,28 +114,23 @@ window.Process = Backbone.Model.extend({
 });
 
 window.Region = Backbone.Model.extend({
-    haspeopleids : function(){
-        return this.get("haspeopleids");
-    },
-    iselegavailable : function(){
-        return this.get("iselegavailable");
+    region : function() {
+        return this.get("region");
     },
     gb : function(){
-        return this.get("gb");
+        return this.region() == "gb";
     },
     se : function(){
-        return this.get("se");
+        return this.region() == "se";
     },
     setGB : function() {
-        this.set({gb: true, se: false});
+        this.set({region : "gb"});
     },
     setSE : function() {
-        this.set({gb: false, se: true});
+        this.set({region : "se"});
     },
     draftData : function() {
-        if (this.gb())
-            return "gb";
-        return "se";
+        return this.region();
     }
 });
 

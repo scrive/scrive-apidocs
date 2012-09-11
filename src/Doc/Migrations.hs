@@ -417,6 +417,14 @@ addOCSPResponse =
   , mgrDo = kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN signinfo_ocsp_response VARCHAR NULL DEFAULT NULL"
   } 
 
+addSignRedirectURL :: MonadDB m => Migration m
+addSignRedirectURL =
+  Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 10
+  , mgrDo = do
+      kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN sign_redirect_url VARCHAR NULL DEFAULT NULL"
+  }  
 
 moveAttachmentsFromDocumentsToAttachments :: MonadDB m => Migration m
 moveAttachmentsFromDocumentsToAttachments =

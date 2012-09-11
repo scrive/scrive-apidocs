@@ -1,0 +1,56 @@
+.main {
+    width: 900px;
+    margin: auto;
+}
+.oauth, .api {
+    margin  : 10px;
+    padding : 15px;
+    border: 1px solid #cccccc;
+    width: 840px
+}
+.section {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding : 10px;
+    border: 1px solid #cccccc;
+    width: 800px
+}
+.section .header{
+    font-size : large;
+    font-weight : bold;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.section .label{
+    width: 200px;
+    display: inline-block;
+}
+
+.mainheader{
+    font-size : x-large;
+    font-weight : bold;
+}
+
+.json-text-area {
+    width: 320px;
+    height: 300px;
+}
+.file-input {
+    widht: 200px;
+}
+input[type='button']{
+    margin-top: 5px;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #000000;
+}
+
+.left-box {
+    width: 380px;
+    min-height : 400px;
+}
+.right-box {
+    float: right;
+    width: 330px;
+}

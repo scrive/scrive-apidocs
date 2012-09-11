@@ -22,6 +22,7 @@ import Doc.Model
 import DB
 import Util.Actor
 import Text.JSON.FromJSValue
+import qualified Data.Set as Set
 
 data DraftData = DraftData {
       title :: String
@@ -32,6 +33,7 @@ data DraftData = DraftData {
     , signatories :: [SignatoryTMP]
     , region :: Region
     , template :: Bool
+    , tags :: Maybe [DocumentTag]
     } deriving Show
 
 instance FromJSValue AuthenticationMethod where
@@ -44,8 +46,17 @@ instance FromJSValue DeliveryMethod where
   fromJSValue j = case fromJSValue j of
     Just "email" -> Just EmailDelivery
     Just "pad"   -> Just PadDelivery
+    Just "api"   -> Just APIDelivery
     _            -> Nothing
 
+instance FromJSValue DocumentTag where
+    fromJSValue = do
+        name   <- fromJSValueField "name"
+        value  <- fromJSValueField "value"
+        case (name, value) of
+             (Just n, Just v) -> return $ Just $ DocumentTag n v
+             _ -> return Nothing  
+    
 instance FromJSValue Region where
     fromJSValue j = do
          s <-fromJSValue j
@@ -61,6 +72,7 @@ instance FromJSValue DraftData where
         signatories' <-  fromJSValueField "signatories"
         region' <- fromJSValueField "region"
         template' <- fromJSValueField "template"
+        tags' <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany  fromJSValueM
         case (title', authentication', delivery', region') of
             (Just t, Just a, Just d, Just r) -> return $ Just DraftData {
                                       title =  t
@@ -71,6 +83,7 @@ instance FromJSValue DraftData where
                                     , signatories = concat $ maybeToList $ signatories'
                                     , region = r
                                     , template = joinB template'
+                                    , tags = tags'
                                  }
             _ -> return Nothing
 
@@ -83,6 +96,7 @@ applyDraftDataToDocument doc draft actor = do
                                 , documentauthenticationmethod = authentication draft
                                 , documentdeliverymethod = delivery draft
                                 , documentregion = region draft
+                                , documenttags = fromMaybe (documenttags doc) (fmap Set.fromList $ tags draft)
                             }) actor
     when_ (template draft && (not $ isTemplate doc)) $ do
          dbUpdate $ TemplateFromDocument (documentid doc) actor
@@ -97,7 +111,7 @@ applyDraftDataToDocument doc draft actor = do
              Nothing  -> Left "applyDraftDataToDocument failed"
              Just newdoc -> Right newdoc
 
-mergeSignatories :: SignatoryLink -> [SignatoryTMP] -> Maybe [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload)]
+mergeSignatories :: SignatoryLink -> [SignatoryTMP] -> Maybe [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload, Maybe String)]
 mergeSignatories docAuthor tmps =
         let (atmp, notatmps) = partition isAuthorTMP tmps
             setAuthorConstandDetails =  setFstname (getFirstName docAuthor) .

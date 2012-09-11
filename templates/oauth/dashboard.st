@@ -1,130 +1,15 @@
 ####
-pagePrivilegesConfirm=
-<div class="oauth-confirm">
-     <div class="maintext">
-  <h2>$_importantSecurityInformation()$</h2>
-  <p>
-    $_isRequestingPermissions()$
-  </p>
-  $if(isDocumentCreate)$
-  <h3>$_documentCreation()$</h3>
-  <p>
-    $_createDocumentsMessage()$
-  </p>
-  $endif$
-  </div>
-  <div class="buttons">
-    <div class="floatright" style="margin-left: 34px">
-    <form method="POST" action="/oauth/authorizationconfirm">
-      <div class="finalbuttonbox">
-        <a class="submit green btn-big">
-          <div class="left"></div>
-          <div class="label">$_confirm()$</div>
-          <div class="right"></div>
-        </a>
-      </div>
-      <input type="hidden" name="oauth_token" value="$token$" />
-      <input type="submit" class="hidden" />
-    </form>
-    </div>
-    <div class="floatright">
-    <form method="POST" action="/oauth/authorizationdeny">
-      <div class="finalbuttonbox">
-        <a class="submit red btn-big">
-          <div class="left"></div>
-          <div class="label">$_deny()$</div>
-          <div class="right"></div>
-        </a>
-      </div>
-      <input type="hidden" name="oauth_token" value="$token$" />
-      <input type="submit" class="hidden" />
-    </form>
-    </div>
-  </div>
-</div>
-###
-pagePrivilegesConfirmNoUser=
-<div class="oauth-confirm">
-     <div class="maintext">
-  <h2>$_importantSecurityInformation()$</h2>
-  <p>
-    $_isRequestingPermissions()$
-  </p>
-  $if(isDocumentCreate)$
-  <h3>$_documentCreation()$</h3>
-  <p>
-    $_createDocumentsMessage()$
-  </p>
-  $endif$
-  </div>
-  <div class="login option">
-    <form id="loginForm" method="post" action="/oauth/authorizationconfirmlogin">
-      <h2>$_logInAndConfirmPrivileges()$</h2>
-      <span class="txt">$_email()$</span><input type="email"
-                                                name="email" value=""
-                                                infotext="$_email()$"
-                                                autocomplete="off" />
-      <br />
-      <span class="txt">$_password()$</span><input type="password"
-                                                   name="password"
-                                                   infotext="password"
-                                                   autocomplete="off" />
-      <br />
-      <input type="hidden" value="$token$" name="oauth_token" />
-      <input type="submit" class="hidden" />
-      <div class="finalbuttonbox">
-        <a class="submit green btn-small">
-          <div class="left"></div>
-          <div class="label">$_logInAndConfirm()$</div>
-          <div class="right"></div>
-        </a>
-      </div>
-    </form>
-  </div>
-  
-  <div class="newuser option">
-    <h2>$_createaccount()$</h2>
-    <form method="post" action="/oauth/authorizationconfirmnewuser" class="requestAccount">
-      <input class="shiny"
-             name="email" type="email"
-             infotext="$_FillInEmail()$"
-             autocomplete="off" />
-      <input type="hidden" value="$token$" name="oauth_token" />
-      <a href="#" class="submit new-btn-small green2 center">
-        <p>$_createaccount()$</p>
-      </a>
-      <input type="submit" class="hidden" />
-      <div class="clearfix" > </div>
-    </form>
-  </div>
-  <div class="deny option right">
-    <h2>$_denyPrivileges()$</h2>
-    <form method="POST" action="/oauth/authorizationdeny">
-      <div class="finalbuttonbox">
-        <a class="submit red btn-small">
-          <div class="left"></div>
-          <div class="label">$_deny()$</div>
-          <div class="right"></div>
-        </a>
-      </div>
-      <input type="hidden" name="oauth_token" value="$token$" />
-      <input type="submit" class="hidden" />
-    </form>
-  </div>
-</div>
-###
-####
 apiDashboard =
 <script>
 var personalTokensTable = KontraList().init({
     name : "Personal Access Token",
-    headerExtras: jQuery("<div class='middle'>").append(jQuery("<p>").append("$_userPersonalAccessToken()$")),
+    headerExtras: jQuery("<div class='middle'>").append(jQuery("<p>").append(localization.apiDashboard.personalTokenDescription)),
     emptyAlternative: 
-      jQuery("<div >").append(jQuery("<div class='middle'>").append(jQuery("<p>").append("$_userPersonalAccessToken()$")))
-                      .append(jQuery("<div class='middle'>").append(Button.init({
-                      size: "small",
+      jQuery("<div style='height:28px;padding:2px;'>")
+                      .append(jQuery("<div class='float-right'>").append(Button.init({
+                      size: "tiny",
                       color: "green",
-                      text: "Create Personal Token",
+                      text: localization.apiDashboard.personalTokenCreate,
                       onClick: function() {
                         new Submit({
                           url: "/oauth/createpersonaltoken",
@@ -144,9 +29,9 @@ var personalTokensTable = KontraList().init({
         new Cell({name: "",              width:"70px",  field:"accesssecret", special: "rendered",
                  rendering: function(status,idx,listobject) {
                     var button = Button.init({
-                      size: "small",
+                      size: "tiny",
                       color: "red",
-                      text: "Delete",
+                      text: localization.apiDashboard.delete,
                       onClick: function() {
                         new Submit({
                           url: "/oauth/deletepersonaltoken",
@@ -166,20 +51,19 @@ jQuery(function(){
 
 var grantedPrivilegesTable = KontraList().init({
     name : "Granted Privileges",
-    emptyAlternative: jQuery("<div class='middle'>").append(jQuery("<p>").append("$_haveNoGrantedPrivileges()$")),
-    headerExtras: jQuery("<div class='middle'>").append(jQuery("<p>").append("$_haveGrantedPrivileges()$")),
+    headerExtras: jQuery("<div class='middle'>").append(jQuery("<p>").append(localization.apiDashboard.grantedPriviligesDescription)),
     schema: new Schema({
     url: "/oauth/dashboard/grantedprivileges",
     cells : [
-        new Cell({name: "Company/Individual", width:"240px",  field:"name"}),
-        new Cell({name: "Privilege",          width:"240px", field:"privilegedescription"}),
+        new Cell({name: localization.apiDashboard.personOrCompany, width:"240px",  field:"name"}),
+        new Cell({name: localization.apiDashboard.privilige,          width:"240px", field:"privilegedescription"}),
         new Cell({name: "",                   width:"70px",  field:"privilege", special: "rendered",
                  rendering: function(priv,idx,listobject) {
                     if(priv === "") {
                       return Button.init({
-                        size: "small",
+                        size: "tiny",
                         color: "red",
-                        text: "Delete All",
+                        text: localization.apiDashboard.deleteAll,
                         onClick: function() {
                           new Submit({
                             tokenid: listobject.get("fields").tokenid,
@@ -192,9 +76,9 @@ var grantedPrivilegesTable = KontraList().init({
                       }).input();
                     } else {
                       return Button.init({
-                        size: "small",
+                        size: "tiny",
                         color: "red",
-                        text: "Delete",
+                        text: localization.apiDashboard.delete,
                         onClick: function() {
                           new Submit({
                             tokenid: listobject.get("fields").tokenid,
@@ -216,11 +100,11 @@ jQuery(function(){
 
 var apiTokensTable = KontraList().init({
     name : "Granted Privileges",
-    headerExtras: jQuery("<div />").append(jQuery("<div class='middle'>").append(jQuery("<p>").append("$_apiTokensMessage()$")))
+    headerExtras: jQuery("<div />").append(jQuery("<div class='middle'>").append(jQuery("<p>").append(localization.apiDashboard.apiTokenDescription)))
                                    .append(jQuery("<div class='middle'>").append(Button.init({
-                      size: "small",
+                      size: "tiny",
                       color: "green",
-                      text: "Create API Token",
+                      text: localization.apiDashboard.apiTokenCreate,
                       onClick: function() {
                         new Submit({
                           url: "/oauth/createapitoken",
@@ -238,9 +122,9 @@ var apiTokensTable = KontraList().init({
         new Cell({name: "",           width:"70px",  field:"apitoken", special: "rendered",
                  rendering: function(apitoken,idx,listobject) {
                     return Button.init({
-                      size: "small",
+                      size: "tiny",
                       color: "red",
-                      text: "Delete",
+                      text: localization.apiDashboard.delete,
                       onClick: function() {
                         new Submit({
                           apitoken: apitoken,
@@ -274,16 +158,18 @@ jQuery(function(){
   </ul>
   <div class="tab-container">
     <div class="tab-content account">
-
-      <h2 class="first">Granted Privileges</h2>
-      <div id="jsgrantedprivileges"> </div>
-
-      <h2>Personal Access Token</h2>
-      <div id="jspersonaltoken"> </div>
-
-      <h2>API Tokens</h2>
-      <div id="jsapitokens"> </div>
-
+      <div class='oauth-section'>
+        <h2 class="first">$_apiDashboardGrantedPriviliges()$</h2>
+        <div id="jsgrantedprivileges"> </div>
+      </div>
+      <div class='oauth-section'>
+        <h2>$_apiDashboardPersonalToken()$</h2>
+        <div id="jspersonaltoken"> </div>
+      </div>
+      <div class='oauth-section'>
+        <h2>$_apiDashboardApiToken()$</h2>
+        <div id="jsapitokens"> </div>
+      </div>
     </div>
   </div>
 </div>

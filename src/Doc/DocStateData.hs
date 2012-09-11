@@ -114,6 +114,7 @@ data AuthenticationMethod = EmailAuthentication
 
 data DeliveryMethod = EmailDelivery
                     | PadDelivery
+                    | APIDelivery
   deriving (Eq, Ord, Show)
 
 data SignatureInfo = SignatureInfo {
@@ -184,6 +185,7 @@ data SignatoryLink = SignatoryLink {
   , signatorylinkcsvupload     :: Maybe CSVUpload
   , signatoryattachments       :: [SignatoryAttachment]
   , signatorylinkstatusclass   :: StatusClass
+  , signatorylinksignredirecturl  :: Maybe String
   } deriving (Eq, Ord, Show)
 
 data SignatoryRole = SignatoryPartner | SignatoryAuthor
@@ -249,11 +251,11 @@ data DocumentStatus = Preparation
   deriving (Eq, Ord, Show)
 
 data DocumentProcess = Contract | Offer | Order
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Read)
 
 data DocumentType = Signable DocumentProcess
                   | Template DocumentProcess
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Read)
 
 instance Convertible DocumentType SqlValue where
   safeConvert v = Right . SqlInteger $ case v of

@@ -4,6 +4,7 @@ module DocControlTest(
 
 import Control.Applicative
 import Data.Maybe
+import Data.List
 import Happstack.Server
 import Test.Framework
 import TestingUtil
@@ -17,11 +18,12 @@ import Doc.DocStateData
 import Doc.DocControl
 import Doc.DocUtils
 import Company.Model
-import KontraLink
 import User.Model
 import Util.SignatoryLinkUtils
 import Util.Actor
 import Util.HasSomeUserInfo
+import Doc.API
+
 
 docControlTests :: TestEnvSt -> Test
 docControlTests env = testGroup "Templates" [
@@ -39,38 +41,38 @@ docControlTests env = testGroup "Templates" [
 
 testUploadingFileAsContract :: TestEnv ()
 testUploadingFileAsContract = do
-  (user, link) <- uploadDocAsNewUser Contract
+  (user, rsp) <- uploadDocAsNewUser Contract
   docs <- randomQuery $ GetDocumentsByAuthor (userid user)
   assertEqual "New doc" 1 (length docs)
   let newdoc = head docs
-  assertEqual "Links to /d/docid" ("/d/" ++ (show $ documentid newdoc)) (show link)
-
+  assertBool "Document id in result json" ((show $ documentid newdoc) `isInfixOf` (show rsp))
+  
 testUploadingFileAsOffer :: TestEnv ()
 testUploadingFileAsOffer = do
-  (user, link) <- uploadDocAsNewUser Offer
+  (user, rsp) <- uploadDocAsNewUser Offer
   docs <- randomQuery $ GetDocumentsByAuthor (userid user)
   assertEqual "New doc" 1 (length docs)
   let newdoc = head docs
-  assertEqual "Links to /d/docid" ("/d/" ++ (show $ documentid newdoc)) (show link)
-
+  assertBool "Document id in result json" ((show $ documentid newdoc) `isInfixOf` (show rsp))
+  
 testUploadingFileAsOrder :: TestEnv ()
 testUploadingFileAsOrder = do
-  (user, link) <- uploadDocAsNewUser Order
+  (user, rsp) <- uploadDocAsNewUser Order
   docs <- randomQuery $ GetDocumentsByAuthor (userid user)
   assertEqual "New doc" 1 (length docs)
   let newdoc = head docs
-  assertEqual "Links to /d/docid" ("/d/" ++ (show $ documentid newdoc)) (show link)
+  assertBool "Document id in result json" ((show $ documentid newdoc) `isInfixOf` (show rsp))
 
-uploadDocAsNewUser :: DocumentProcess -> TestEnv (User, KontraLink)
+uploadDocAsNewUser :: DocumentProcess -> TestEnv (User, Response)
 uploadDocAsNewUser doctype = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue)
 
-  req <- mkRequest POST [ ("doctype", inText (show doctype))
-                        , ("doc", inFile "test/pdfs/simple.pdf") ]
-  (link, _ctx') <- runTestKontra req ctx $ handleIssueNewDocument
-  return (user, link)
+  req <- mkRequest POST [ ("type", inText (show $ Signable doctype))
+                        , ("file", inFile "test/pdfs/simple.pdf") ]
+  (rsp, _ctx') <- runTestKontra req ctx $ apiCallCreateFromFile
+  return (user, rsp)
 
 testSendingDocumentSendsInvites :: TestEnv ()
 testSendingDocumentSendsInvites = do
@@ -145,7 +147,7 @@ testNonLastPersonSigningADocumentRemainsPending = do
                          Signable _ -> True
                          _ -> False
                      && d `allowsAuthMethod` EmailAuthentication
-                     && d `allowsDeliveryMethod` EmailDelivery)
+                     && documentdeliverymethod d == EmailDelivery)
   True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
                    (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])
                  , (mkSigDetails "Fred" "Frog" "fred@frog.com", [SignatoryPartner])
@@ -187,7 +189,7 @@ testLastPersonSigningADocumentClosesIt = do
                          Signable _ -> True
                          _ -> False
                      && d `allowsAuthMethod` EmailAuthentication
-                     && d `allowsDeliveryMethod` EmailDelivery)
+                     && documentdeliverymethod d == EmailDelivery)
 
   True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
                    (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])
@@ -252,8 +254,8 @@ testDocumentFromTemplate = do
     docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
     ctx <- (\c -> c { ctxmaybeuser = Just user })
       <$> mkContext (mkLocaleFromRegion defaultValue)
-    req <- mkRequest POST [("template", inText (show $ documentid doc))]
-    _ <- runTestKontra req ctx $ handleCreateFromTemplate
+    req <- mkRequest POST []
+    _ <- runTestKontra req ctx $ apiCallCreateFromTemplate (documentid doc)
     docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
     assertBool "No new document" (length docs2 == 1+ length docs1)
 
@@ -269,8 +271,8 @@ testDocumentFromTemplateShared = do
     docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
     ctx <- (\c -> c { ctxmaybeuser = Just user })
       <$> mkContext (mkLocaleFromRegion defaultValue)
-    req <- mkRequest POST [("template", inText (show $ documentid doc))]
-    _ <- runTestKontra req ctx $ handleCreateFromTemplate
+    req <- mkRequest POST []
+    _ <- runTestKontra req ctx $ apiCallCreateFromTemplate (documentid doc)
     docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
     assertBool "New document should have been created" (length docs2 == 1+ length docs1)
 

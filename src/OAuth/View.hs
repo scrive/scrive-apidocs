@@ -11,30 +11,28 @@ import User.UserView
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
 import Text.JSON
+import AppView
+import Happstack.Server.SimpleHTTP
+import Kontra
+import qualified Static.Resources as SR
 
-pagePrivilegesConfirm :: TemplatesMonad m
-                      => [APIPrivilege]
-                      -> String -- email
+
+pagePrivilegesConfirm :: Kontrakcja m
+                      => Context
+                      -> [APIPrivilege]
                       -> String -- company name
                       -> APIToken
-                      -> m String  
-pagePrivilegesConfirm privileges email companyname token = do
-     renderTemplate "pagePrivilegesConfirm" $ do
-         F.value "email" email
+                      -> m Response  
+pagePrivilegesConfirm ctx privileges companyname token = do
+     rsp <- renderTemplate "pagePrivilegesConfirm" $ do
          F.value "isDocumentCreate" $ APIDocCreate `elem` privileges
+         F.value "isDocumentSend" $ APIDocSend `elem` privileges
+         F.value "isDocumentCheck" $ APIDocCheck `elem` privileges
          F.value "companyname" companyname
          F.value "token" $ show token
-
-pagePrivilegesConfirmNoUser :: TemplatesMonad m
-                            => [APIPrivilege]
-                            -> String -- company name
-                            -> APIToken
-                            -> m String  
-pagePrivilegesConfirmNoUser privileges companyname token = do
-     renderTemplate "pagePrivilegesConfirmNoUser" $ do
-         F.value "isDocumentCreate" $ APIDocCreate `elem` privileges
-         F.value "companyname" companyname
-         F.value "token" $ show token
+         F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
+         contextInfoFields ctx
+     simpleResonseClrFlash rsp    
 
 showAPIDashboard :: TemplatesMonad m => User -> m String
 showAPIDashboard user = do
@@ -42,8 +40,11 @@ showAPIDashboard user = do
     menuFields user
           
 privilegeDescription :: TemplatesMonad m => APIPrivilege -> m String
-privilegeDescription APIDocCreate = return "Create a document on your behalf."
-privilegeDescription APIPersonal  = return "This is a personal access token."
+privilegeDescription APIDocCreate = renderTemplate_ "_apiConfiramtionCreatePersmission"
+privilegeDescription APIDocCheck  = renderTemplate_ "_apiConfiramtionReadPermission"
+privilegeDescription APIDocSend   = renderTemplate_ "_apiConfiramtionSendPermission"
+privilegeDescription APIPersonal  = return "Personal access token."
+
 
 jsonFromPersonalToken :: (APIToken, MagicHash, APIToken, MagicHash) -> JSValue
 jsonFromPersonalToken (apitoken, apisecret, tok, mh) = 

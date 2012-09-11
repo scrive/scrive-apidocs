@@ -703,5 +703,33 @@ javascriptLocalisation =
              upgrade     : "$_blockingButtonUpgrade()$"
            }
         }
+      , apiConfiration : {
+             title : "$_apiConfiramtionTitle()$"
+           , header : "$_apiConfiramtionHeader()$"
+           , footerNotLogged : "$_apiConfiramtionFooterNotLogged()$"
+           , footerLogged : "$_apiConfiramtionFooterLogged()$"
+           , readPermission : "$_apiConfiramtionReadPermission()$"
+           , createPermission : "$_apiConfiramtionCreatePersmission()$"
+           , sendPermission : "$_apiConfiramtionSendPermission()$"
+           , accept : "$_apiConfiramtionAccept()$"
+           , loginAndAcceptTitle : "$_apiConfiramtionLoginAndAcceptTitle()$"
+           , loginAndAccept : "$_apiConfiramtionLoginAndAccept()$"
+           , createAccount : "$_apiConfiramtionCreateAccount()$"
+           , enterEmailAdress : "$_apiConfiramtionEnterEmailAdress()$"
+           , deny : "$_apiConfiramtionDeny()$"
+      }
+      , apiDashboard : {
+            delete :  "$_apiDashboardDelete()$"
+          , deleteAll : "$_apiDashboardDeleteAll()$"
+          , grantedPriviliges: "$_apiDashboardGrantedPriviliges()$"
+          , grantedPriviligesDescription: "$_apiDashboardGrantedPriviligesDescription()$"
+          , personalToken: "$_apiDashboardPersonalToken()$"
+          , personalTokenDescription: "$_apiDashboardpersonalTokenDescription()$"
+          , personalTokenCreate: "$_apiDashboardPersonalTokenCreate()$"
+          , apiToken: "$_apiDashboardApiToken()$"
+          , apiTokenDescription : "$_apiDashboardApiTokenDescription()$"
+          , apiTokenCreate : "$_apiDashboardApiTokenCreate()$"
+          , personOrCompany : "$_apiDashboardPersonOrCompany()$"
+          , privilige       :  "$_apiDashboardPrivilige()$"
+      }
     }
-####

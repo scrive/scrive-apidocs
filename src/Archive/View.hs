@@ -89,6 +89,7 @@ docFieldsListForJSON tl crtime padqueue doc = do
     J.value "delivery" $ case documentdeliverymethod doc of
       EmailDelivery -> "email"
       PadDelivery   -> "pad"
+      APIDelivery   -> "api"
     J.value "anyinvitationundelivered" $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc
     J.value "shared" $ show $ documentsharing doc == Shared
     J.value "file" $ fromMaybe "" $ show <$> (listToMaybe $ (documentsealedfiles doc) ++ (documentfiles doc))

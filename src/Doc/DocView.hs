@@ -34,7 +34,6 @@ import AppView (kontrakcja, standardPageFields)
 import API.Service.Model
 import Company.Model
 import Doc.DocProcess
-import Doc.DocRegion
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocViewMail
@@ -62,6 +61,7 @@ import PadQueue.Model
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
 import qualified Templates.Fields as F
+import qualified Data.Set as Set
 
 -- FIXME: why do we even use that?
 para :: String -> String
@@ -133,8 +133,8 @@ flashMessageCSVSent :: TemplatesMonad m => Int -> m FlashMessage
 flashMessageCSVSent doccount =
   toFlashMsg OperationDone <$> (renderTemplate "flashMessageCSVSent" $ F.value "doccount" doccount)
 
-documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m) => PadQueue -> Maybe SignatoryLink -> MinutesTime -> Document -> m JSValue
-documentJSON pq msl _crttime doc = do
+documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m) => Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
+documentJSON forapi forauthor pq msl doc = do
     ctx <- getContext
     files <- documentfilesM doc
     sealedfiles <- documentsealedfilesM doc
@@ -157,30 +157,38 @@ documentJSON pq msl _crttime doc = do
                   then companybarstextcolour $ companyui (fromJust mcompany)
                   else Nothing
     runJSONGenT $ do
+      J.value "id" $ show $ documentid doc
       J.value "title" $ documenttitle doc
       J.value "files" $ map fileJSON files
       J.value "sealedfiles" $ map fileJSON sealedfiles
       J.value "authorattachments" $ map fileJSON (catMaybes authorattachmentfiles)
-      J.object "process" $ processJSON doc
-      J.value "region" $ regionJSON doc
-      J.valueM "infotext" $ documentInfoText ctx doc msl
-      J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
-      J.value "canbecanceled" $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && not (canAuthorSignLast doc)
-      J.value "canseeallattachments" $ isAuthor msl || isauthoradmin
       J.value "timeouttime" $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc
       J.value "status" $ show $ documentstatus doc
-      J.objects "signatories" $ map (signatoryJSON pq doc msl) (documentsignatorylinks doc)
+      J.objects "signatories" $ map (signatoryJSON forapi forauthor pq doc msl) (documentsignatorylinks doc)
       J.value "signorder" $ unSignOrder $ documentcurrentsignorder doc
       J.value "authentication" $ authenticationJSON $ documentauthenticationmethod doc
       J.value "delivery" $ deliveryJSON $ documentdeliverymethod doc
       J.value "template" $ isTemplate doc
       J.value "daystosign" $ documentdaystosign doc
       J.value "invitationmessage" $ documentinvitetext doc
-      J.value "logo" logo
-      J.value "barsbackgroundcolor" bbc
-      J.value "barsbackgroundtextcolor" bbtc
-      J.value "author" $ authorJSON mauthor mcompany
-      J.value "whitelabel" $ isJust mservice
+      J.value "region" $  case (getRegion doc) of
+                             REGION_GB -> "gb" 
+                             REGION_SE -> "se"
+      J.objects "tags" $ for (Set.toList $ documenttags doc) $ \(DocumentTag n v) -> do
+                                    J.value "name"  n
+                                    J.value "value" v
+      when (not $ forapi) $ do
+        J.value "logo" logo
+        J.value "barsbackgroundcolor" bbc
+        J.value "barsbackgroundtextcolor" bbtc
+        J.value "author" $ authorJSON mauthor mcompany
+        J.value "whitelabel" $ isJust mservice
+        J.object "process" $ processJSON doc
+        J.valueM "infotext" $ documentInfoText ctx doc msl
+        J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
+        J.value "canbecanceled" $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && not (canAuthorSignLast doc)
+        J.value "canseeallattachments" $ isAuthor msl || isauthoradmin
+
 
 authenticationJSON :: AuthenticationMethod -> JSValue
 authenticationJSON EmailAuthentication = toJSValue "email"
@@ -189,9 +197,10 @@ authenticationJSON ELegAuthentication = toJSValue "eleg"
 deliveryJSON :: DeliveryMethod -> JSValue
 deliveryJSON EmailDelivery = toJSValue "email"
 deliveryJSON PadDelivery = toJSValue "pad"
+deliveryJSON APIDelivery = toJSValue "api"
 
-signatoryJSON :: (TemplatesMonad m, MonadDB m) => PadQueue -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
-signatoryJSON pq doc viewer siglink = do
+signatoryJSON :: (TemplatesMonad m, MonadDB m) => Bool -> Bool -> PadQueue -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
+signatoryJSON forapi forauthor pq doc viewer siglink = do
     J.value "id" $ show $ signatorylinkid siglink
     J.value "current" $ isCurrent
     J.value "signorder" $ unSignOrder $ signatorysignorder $ signatorydetails siglink
@@ -211,6 +220,9 @@ signatoryJSON pq doc viewer siglink = do
     J.value "csv" $ csvcontents <$> signatorylinkcsvupload siglink
     J.value "inpadqueue"  $ (fmap fst pq == Just (documentid doc)) && (fmap snd pq == Just (signatorylinkid siglink))
     J.value "hasUser" $ isJust (maybesignatory siglink) && isCurrent -- we only inform about current user
+    J.value "signsuccessredirect" $ signatorylinksignredirecturl siglink
+    when (not (isPreparation doc) && forauthor && forapi && documentdeliverymethod doc == APIDelivery) $ do
+        J.value "signlink" $ show $ LinkSignDoc doc siglink
     where
       datamismatch = case documentcancelationreason doc of
         Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid siglink
@@ -275,7 +287,7 @@ placementJSON doc placement = runJSONGen $ do
                          _ -> Nothing
 
 jsonDate :: Maybe MinutesTime -> JSValue
-jsonDate mdate = toJSValue $ showDateYMD <$> mdate
+jsonDate mdate = toJSValue $ formatMinutesTimeRealISO <$> mdate
 
 processJSON :: TemplatesMonad m => Document -> JSONGenT m ()
 processJSON doc = do
@@ -328,13 +340,6 @@ processJSON doc = do
           F.value "partylist" partylist
           documentInfoFields doc
       bool = fromMaybe False . getValueForProcess doc
-
-regionJSON :: Document -> JSValue
-regionJSON doc = runJSONGen $ do
-    J.value "haspeopleids" $ regionhaspeopleids $ getRegionInfo doc
-    J.value "iselegavailable" $ regionelegavailable $ getRegionInfo doc
-    J.value "gb" $ REGION_GB == getRegion doc
-    J.value "se" $ REGION_SE == getRegion doc
 
 fileJSON :: File -> JSValue
 fileJSON file = runJSONGen $ do
@@ -429,8 +434,8 @@ documentInfoFields  document  = do
   F.value "template" $  isTemplate document
   F.value "emailauthenticationselected" $ document `allowsAuthMethod` EmailAuthentication
   F.value "elegauthenticationselected" $ document `allowsAuthMethod` ELegAuthentication
-  F.value "emaildeliveryselected" $ document `allowsDeliveryMethod` EmailDelivery
-  F.value "paddeliveryselected" $ document `allowsDeliveryMethod` PadDelivery
+  F.value "emaildeliveryselected" $ documentdeliverymethod document == EmailDelivery
+  F.value "paddeliveryselected" $ documentdeliverymethod document == PadDelivery
   F.value "hasanyattachments" $ length (documentauthorattachments document) + length (concatMap signatoryattachments $ documentsignatorylinks document) > 0
   documentStatusFields document
 

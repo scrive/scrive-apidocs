@@ -94,6 +94,8 @@ import Templates.Fields
 import Templates.TemplatesLoader
 import Control.Monad.Reader
 import Control.Monad.Identity
+import Control.Monad.Error
+
 
 class (Functor m, Monad m) => TemplatesMonad m where
   getTemplates      :: m KontrakcjaTemplates
@@ -103,6 +105,10 @@ instance TemplatesMonad m => TemplatesMonad (MaybeT m) where
   getTemplates = lift getTemplates
   getLocalTemplates = lift . getLocalTemplates
 
+instance (TemplatesMonad m , Error e) => TemplatesMonad (ErrorT e m) where
+  getTemplates = lift getTemplates
+  getLocalTemplates = lift . getLocalTemplates
+  
 instance (Functor m, Monad m) => TemplatesMonad (ReaderT KontrakcjaGlobalTemplates m) where
   getTemplates      = getLocalTemplates defaultValue 
   getLocalTemplates locale = do

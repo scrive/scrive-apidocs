@@ -68,7 +68,7 @@ window.Document = Backbone.Model.extend({
         saveQueue : new AjaxQueue()
     },
     initialize: function(args) {
-        this.url = "/doc/" + args.id;
+        this.url = "/api/get/" + args.id;
     },
     viewer: function() {
         if (this.get("viewer") != undefined)
@@ -207,9 +207,9 @@ window.Document = Backbone.Model.extend({
     },
     save: function() {
          this.get("saveQueue").add(new Submit({
-              url: "/save/" + this.documentid(),
+              url: "/api/update/" + this.documentid(),
               method: "POST",
-              draft: JSON.stringify(this.draftData())
+              json: JSON.stringify(this.draftData())
           }));
     },
     afterSave: function(f) {
@@ -317,6 +317,9 @@ window.Document = Backbone.Model.extend({
     padDelivery : function() {
           return this.get("delivery") == "pad";
     },
+    apiDelivery : function() {
+          return this.get("delivery") == "api";
+    },
     setEmailAuthentication: function() {
           this.set({"authentication": "email"}, {silent: true});
           this.trigger("change:authenticationdelivery");
@@ -332,6 +335,10 @@ window.Document = Backbone.Model.extend({
     setPadDelivery : function() {
           this.set({"delivery":"pad"}, {silent: true});
           _.each(this.signatories(), function(sig) {sig.clearAttachments();});
+          this.trigger("change:authenticationdelivery");
+    },
+    setAPIDelivery : function() {
+          this.set({"delivery":"api"}, {silent: true});
           this.trigger("change:authenticationdelivery");
     },
     elegTBS: function() {
@@ -455,14 +462,6 @@ window.Document = Backbone.Model.extend({
         { documentid: self.documentid(),
           signatoryid: self.viewer().signatoryid()
         };
-
-     /**this way of doing it is safe for IE7 which doesnt
-      * naturally parse stuff like 2012-03-29 so new Date(datestr)
-      * doesnt work*/
-     var parseDate = function(datestr) {
-        var dateValues = datestr.split('-');
-        return new Date(dateValues[0], dateValues[1], dateValues[2]);
-     };
      return {
        title: args.title,
        files: _.map(args.files, function(fileargs) {
@@ -483,13 +482,13 @@ window.Document = Backbone.Model.extend({
        }),
        authoruser: new DocumentAuthor(_.defaults(args.author, { document: self })),
        process: new Process(args.process),
-       region: new Region(args.region),
+       region: new Region({region : args.region}),
        infotext: args.infotext,
        canberestarted: args.canberestarted,
        canbecanceled: args.canbecanceled,
        canseeallattachments: args.canseeallattachments,
        status: args.status,
-       timeouttime: args.timeouttime == undefined ? undefined : parseDate(args.timeouttime),
+       timeouttime: args.timeouttime == undefined ? undefined : new Date(Date.parse(args.timeouttime)),
        signorder: args.signorder,
        authentication: args.authentication,
        delivery: args.delivery,

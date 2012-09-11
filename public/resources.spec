@@ -10,6 +10,8 @@ ignore  libs/analytics.js
 ignore  libs/postmessage.js
 ignore  js/signup.js
 ignore  libs/recurly/recurly.css
+ignore  api-demo
+
 
 set firstPage
  css css/main.css
@@ -54,6 +56,7 @@ set systemPage
  css css/main.css
  css css/selects.css
  less less/payments.less
+ less less/oauth.less
  js   libs/jquery.min.js
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js
@@ -66,6 +69,7 @@ set systemPage
  js   libs/livequery.js
  js   libs/recurly.js
  js   libs/moment.min.js
+ js   libs/iso8601.min.js
  js   js/global.js
  js   js/storage.js
  js   js/browserinfo.js
@@ -131,4 +135,5 @@ set systemPage
  js   js/archive/bin.js
  js   js/archive/archive.js
  js   js/blocking.js
+ js   js/oauth.js
 

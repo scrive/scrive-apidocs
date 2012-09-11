@@ -41,7 +41,7 @@ padSigningTests env = testGroup "Pad" [
 testSendDocumentsDurringSigningReturnsFalseForPad :: TestEnv ()
 testSendDocumentsDurringSigningReturnsFalseForPad = do
   author <- addNewRandomUser
-  doc <-  addRandomDocumentWithAuthorAndCondition author isPadDocument
+  doc <-  addRandomDocumentWithAuthorAndCondition author (((==) PadDelivery) . documentdeliverymethod)
   assertBool "sendMailsDurringSigning returns false for padsigning documents" (not $ sendMailsDurringSigning doc)
 
 
@@ -53,7 +53,7 @@ testAddToPadQueue = do
   doc <- addRandomDocumentWithAuthorAndCondition user (isSignable &&^
                                                            isPending &&^
                                                            (any isSignatory . documentsignatorylinks) &&^
-                                                           isPadDocument)
+                                                           ((==) PadDelivery) . documentdeliverymethod )
   _ <- dbUpdate $ AddToPadQueue (userid user) (documentid doc) (signatorylinkid $ head $ documentsignatorylinks doc) aa
   Just (did,slid) <- dbQuery $ GetPadQueue (userid user)
   assertBool "We get from pad queue same we put in"  (did == documentid doc && slid == (signatorylinkid $ head $ documentsignatorylinks doc))
@@ -66,7 +66,7 @@ testRemoveFromPadQueue = do
   doc <- addRandomDocumentWithAuthorAndCondition user (isSignable &&^
                                                            isPending &&^
                                                            (any isSignatory . documentsignatorylinks) &&^
-                                                           isPadDocument)
+                                                           ((==) PadDelivery) . documentdeliverymethod)
   _ <- dbUpdate $ AddToPadQueue (userid user) (documentid doc) (signatorylinkid $ head $ documentsignatorylinks doc) aa
   _ <- dbQuery $ GetPadQueue (userid user)
   _ <- dbUpdate $ ClearPadQueue (userid user) aa
@@ -82,12 +82,12 @@ testLastDocumentInPadqueue = do
   doc1 <- addRandomDocumentWithAuthorAndCondition user (isSignable &&^
                                                            isPending &&^
                                                            (any isSignatory . documentsignatorylinks) &&^
-                                                           isPadDocument)
+                                                           ((==) PadDelivery) . documentdeliverymethod)
   _ <- dbUpdate $ AddToPadQueue (userid user) (documentid doc1) (signatorylinkid $ head $ documentsignatorylinks doc1) aa
   doc2 <- addRandomDocumentWithAuthorAndCondition user (isSignable &&^
                                                            isPending &&^
                                                            (any isSignatory . documentsignatorylinks) &&^
-                                                           isPadDocument)
+                                                           ((==) PadDelivery) . documentdeliverymethod)
   _ <- dbUpdate $ AddToPadQueue (userid user) (documentid doc2) (signatorylinkid $ head $ documentsignatorylinks doc2) aa
   Just (did,slid) <- dbQuery $ GetPadQueue (userid user)
   assertBool "We get last document from padqueue"  (did == documentid doc2 && slid == (signatorylinkid $ head $ documentsignatorylinks doc2))

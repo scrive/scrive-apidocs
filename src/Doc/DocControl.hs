@@ -17,12 +17,8 @@ module Doc.DocControl(
     , handleSigAttach
     , handleDeleteSigAttach
     , handleShowUploadPage
-    , handleCreateNewTemplate
     , handleIssueShowGet
-    , handleIssueNewDocument
     , handleIssueShowPost
-    , jsonDocument
-    , handleSaveDraft
     , handleSetAttachments
     , handleParseCSV
     , prepareEmailPreview
@@ -33,7 +29,6 @@ module Doc.DocControl(
     , showPage
     , showPreview
     , showPreviewForSignatory
-    , handleCreateFromTemplate
     , handleFilePages
     , handleCSVLandpage
     , handleInvariantViolations
@@ -62,9 +57,7 @@ import File.Storage
 import Kontra
 import KontraLink
 import MagicHash
-import MinutesTime
 import Happstack.Fields
-import Utils.Either
 import Utils.Monad
 import Utils.Prelude
 import Utils.Read
@@ -105,11 +98,10 @@ import Text.JSON.Gen hiding (value)
 import Text.JSON.String (runGetJSON)
 import qualified Text.JSON.Gen as J
 import Text.JSON.FromJSValue
-import Doc.DocDraft as Draft
+import Doc.DocDraft() -- | Some instance is imported
 import qualified User.Action
 import qualified ELegitimation.Control as BankID
 import Util.Actor
-import PadQueue.Model
 import qualified Templates.Fields as F
 import qualified MemCache as MemCache
 import qualified GuardTime as GuardTime
@@ -131,7 +123,7 @@ handleAcceptAccountFromSign documentid
                             signatorylinkid = do
   magichash <- guardJustM $ getMagicHashFromContext signatorylinkid
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
-  when (document `allowsDeliveryMethod` PadDelivery) internalError
+  when (documentdeliverymethod document == PadDelivery) internalError
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
   _ <- guardJustM $ User.Action.handleAccountSetupFromSign document signatorylink
   return $ LinkSignDoc document signatorylink
@@ -179,7 +171,11 @@ signDocument documentid
       postDocumentPendingChange doc olddoc "web"
       udoc <- guardJustM $ dbQuery $ GetDocumentByDocumentID documentid
       handleAfterSigning udoc signatorylinkid
-      return LoopBack
+      siglink <- guardJust $ getSigLinkFor doc signatorylinkid
+      case (signatorylinksignredirecturl siglink) of
+           Nothing -> return LoopBack
+           Just "" -> return LoopBack
+           Just s  -> return $ LinkExternal s
     Right (Left (DBActionNotAvailable message)) -> do
       addFlash (OperationFailed, message)
       return LoopBack
@@ -587,64 +583,6 @@ handleFilePages fid = do
         J.value "width"  width
         J.value "height" height
 
-
-handleDocumentUpload :: Kontrakcja m => DocumentID -> BS.ByteString -> String -> m ()
-handleDocumentUpload docid content1 filename = do
-  Log.debug $ "Uploading file for doc #" ++ show docid
-  fileresult <- attachFile docid filename content1
-  case fileresult of
-    Left err -> do
-      Log.debug $ "Got an error in handleDocumentUpload: " ++ show err
-      return ()
-    Right _document ->
-        return ()
-  return ()
-
-handleIssueNewDocument :: Kontrakcja m => m KontraLink
-handleIssueNewDocument = withUserPost $ do
-    Log.debug $ "Creating a new document"
-    input <- getDataFnM (lookInput "doc")
-    mdocprocess <- getDocProcess
-    let docprocess = fromMaybe (Contract) mdocprocess
-    Log.debug $ "Creating new document of process : " ++ show docprocess
-    mdoc <- makeDocumentFromFile (Signable docprocess) input 1
-    case mdoc of
-      Nothing -> return LinkUpload
-      Just doc -> do
-        Log.debug $ "Document #" ++ show (documentid doc) ++ " created"
-        _ <- addDocumentCreateStatEvents doc "web"
-        return $ LinkIssueDoc $ documentid doc
-
-handleCreateNewTemplate:: Kontrakcja m => m KontraLink
-handleCreateNewTemplate = withUserPost $ do
-  input <- getDataFnM (lookInput "doc")
-  docprocess <- fromMaybe Contract `fmap` getDocProcess
-  mdoc <- makeDocumentFromFile (Template docprocess) input 1
-  case mdoc of
-    Nothing -> return $ LinkArchive
-    Just doc -> do
-      _ <- addDocumentCreateStatEvents doc "web"
-      return $ LinkIssueDoc $ documentid doc
-
-makeDocumentFromFile :: Kontrakcja m => DocumentType -> Input -> Int -> m (Maybe Document)
-makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) nrOfExtraSigs  = do
-    Log.debug $ "makeDocumentFromFile: beggining"
-    guardLoggedIn
-    content <- case contentspec of
-        Left filepath -> liftIO $ BSL.readFile filepath
-        Right content -> return content
-    if BSL.null content
-      then do
-        Log.debug "makeDocumentFromFile: no content"
-        return Nothing
-      else do
-          Log.debug "Got the content, creating document"
-          let title = takeBaseName filename
-          doc <- guardRightM $ newDocument title doctype nrOfExtraSigs
-          handleDocumentUpload (documentid doc) (concatChunks content) title
-          return $ Just doc
-makeDocumentFromFile _ _ _ = internalError -- to complete the patterns
-
 {- |
    Get some html to display the images of the files
    URL: /pages/{fileid}
@@ -756,43 +694,6 @@ checkLinkIDAndMagicHash document linkid magichash1 = do
 handleShowUploadPage :: Kontrakcja m => m (Either KontraLink String)
 handleShowUploadPage = checkUserTOSGet $ uploadPage
 
-getDocProcess :: Kontrakcja m => m (Maybe DocumentProcess)
-getDocProcess = getOptionalField asDocType "doctype"
-  where
-    asDocType :: String -> Result DocumentProcess
-    asDocType val
-      | val == show Offer = Good $ Offer
-      | val == show Contract = Good $ Contract
-      | val == show Order = Good $ Order
-      | otherwise = Empty
-
-handleCreateFromTemplate :: Kontrakcja m => m KontraLink
-handleCreateFromTemplate = withUserPost $ do
-  docid <- readField "template"
-  Log.debug $ show "Creating document from template : " ++ show docid
-  case docid of
-    Just did -> do
-      user <- guardJustM $ ctxmaybeuser <$> getContext
-      document <- guardJustM $ dbQuery $ GetDocumentByDocumentID $ did
-      Log.debug $ show "Matching document found"
-      auid <- guardJust $ join $ maybesignatory <$> getAuthorSigLink document
-      auser <- guardJustM $ dbQuery $ GetUserByID auid
-      let haspermission = (userid auser == userid user) ||
-                          ((usercompany auser == usercompany user && (isJust $ usercompany user)) &&  isDocumentShared document)
-      enewdoc <- if (isTemplate document && haspermission)
-                    then do
-                      Log.debug $ show "Valid persmision to create from template"
-                      mcompany <- getCompanyForUser user
-                      actor <- guardJustM $ mkAuthorActor <$> getContext
-                      dbUpdate $ SignableFromDocumentIDWithUpdatedAuthor user mcompany did actor
-                    else internalError
-      case enewdoc of
-        Just newdoc -> do
-          _ <- addDocumentCreateStatEvents newdoc "web"
-          Log.debug $ show "Document created from template"
-          return $ LinkIssueDoc $ documentid newdoc
-        _ -> internalError
-    Nothing -> internalError
 
 checkFileAccess :: Kontrakcja m => FileID -> m ()
 checkFileAccess fid = do
@@ -941,43 +842,6 @@ handleSigAttach docid siglinkid = do
     return newdoc
   return $ LinkSignDoc d siglink
 
-jsonDocument :: Kontrakcja m => DocumentID -> m JSValue
-jsonDocument did = do
-    ctx <- getContext
-    (mdoc,msiglink) <- jsonDocumentGetterWithPermissionCheck did
-    pg <- case (userid <$> ctxmaybeuser ctx) of 
-               Just uid ->  dbQuery $ GetPadQueue uid
-               Nothing -> return Nothing
-    when_ (isJust mdoc && isJust msiglink) $ do 
-         let sl = fromJust msiglink 
-         dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
-              (signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
-    cttime <- liftIO $ getMinutesTime
-    case mdoc of
-         Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "No document avaible")]
-         Just doc -> do
-             switchLocaleWhenNeeded msiglink doc
-             documentJSON pg msiglink cttime doc
-
-jsonDocumentGetterWithPermissionCheck ::   Kontrakcja m => DocumentID -> m (Maybe Document, Maybe SignatoryLink)
-jsonDocumentGetterWithPermissionCheck did = do
-    ctx <- getContext
-    msignatorylink <- readField "signatoryid"
-    mmagichashh <- maybe (return Nothing) getMagicHashFromContext msignatorylink
-    case (msignatorylink,mmagichashh) of
-        (Just slid,Just mh) -> do
-                   mdoc <- dbQuery $ GetDocumentByDocumentID did
-                   let msiglink = join $ find ((== slid) . signatorylinkid) <$> (documentsignatorylinks <$> mdoc)
-                   if (validSigLink slid mh mdoc)
-                     then return (mdoc,msiglink)
-                     else return (Nothing,Nothing)
-        _ -> do
-                    mdoc <- toMaybe <$> getDocByDocID did
-                    let msiglink = join $ getMaybeSignatoryLink <$> pairMaybe mdoc (ctxmaybeuser ctx)
-                    return $ (mdoc, msiglink)
-
-
-
 handleInvariantViolations :: Kontrakcja m => m Response
 handleInvariantViolations = onlyAdmin $ do
   Context{ ctxtime } <- getContext
@@ -1015,23 +879,6 @@ handleCSVLandpage :: Kontrakcja m => Int -> m String
 handleCSVLandpage c = do
   text <- csvLandPage c
   return text
-
--- Function for saving document while still working in design view
-handleSaveDraft:: Kontrakcja m => DocumentID -> m JSValue
-handleSaveDraft did = do
-    doc <- guardRightM $ getDocByDocIDForAuthor did
-    draftData <- guardJustM $ do
-        v <- liftM (runGetJSON readJSObject) $ getField' "draft"
-        case v of
-         Right j -> return $ fromJSValue j
-         _ -> return Nothing
-    actor     <- guardJustM $ mkAuthorActor <$> getContext
-    res       <- applyDraftDataToDocument doc draftData actor
-    case res of
-         Right _ -> return $ JSObject $ toJSObject []
-         Left s -> do
-             return $ JSObject $ toJSObject [("error",JSString $ toJSString $ "Document saving failed with ("++s++") - unless someone is experimenting this should never happend")]
-
 
 handleSetAttachments :: Kontrakcja m => DocumentID -> m KontraLink
 handleSetAttachments did = do
@@ -1107,15 +954,10 @@ switchLocaleWhenNeeded :: (Kontrakcja m) => Maybe SignatoryLink -> Document -> m
 switchLocaleWhenNeeded mslid doc = do
   cu <- ctxmaybeuser <$> getContext
   when (isNothing cu || ((isJust mslid) && not (isSigLinkFor cu mslid))) $ switchLocale (getLocale doc)
-
-
-
 -- GuardTime verification page. This can't be external since its a page in our system.
-
 
 handleShowVerificationPage :: Kontrakcja m =>  m String
 handleShowVerificationPage = gtVerificationPage
-
 
 handleVerify :: Kontrakcja m => m JSValue
 handleVerify = do
