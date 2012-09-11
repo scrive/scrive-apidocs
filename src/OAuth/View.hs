@@ -40,10 +40,11 @@ showAPIDashboard user = do
     menuFields user
           
 privilegeDescription :: TemplatesMonad m => APIPrivilege -> m String
-privilegeDescription APIDocCreate = return "Create a document on your behalf."
-privilegeDescription APIDocCheck  = return "Read your documents."
-privilegeDescription APIDocSend   = return "Send a document on your behalf."
-privilegeDescription APIPersonal  = return "This is a personal access token."
+privilegeDescription APIDocCreate = renderTemplate_ "_apiConfiramtionCreatePersmission"
+privilegeDescription APIDocCheck  = renderTemplate_ "_apiConfiramtionReadPermission"
+privilegeDescription APIDocSend   = renderTemplate_ "_apiConfiramtionSendPermission"
+privilegeDescription APIPersonal  = return "Personal access token."
+
 
 jsonFromPersonalToken :: (APIToken, MagicHash, APIToken, MagicHash) -> JSValue
 jsonFromPersonalToken (apitoken, apisecret, tok, mh) = 

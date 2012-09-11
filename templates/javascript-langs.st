@@ -718,5 +718,22 @@ javascriptLocalisation =
            , enterEmailAdress : "$_apiConfiramtionEnterEmailAdress()$"
            , deny : "$_apiConfiramtionDeny()$"
       }
+<<<<<<< HEAD
 
+=======
+      , apiDashboard : {
+            delete :  "$_apiDashboardDelete()$"
+          , deleteAll : "$_apiDashboardDeleteAll()$"
+          , grantedPriviliges: "$_apiDashboardGrantedPriviliges()$"
+          , grantedPriviligesDescription: "$_apiDashboardGrantedPriviligesDescription()$"
+          , personalToken: "$_apiDashboardPersonalToken()$"
+          , personalTokenDescription: "$_apiDashboardpersonalTokenDescription()$"
+          , personalTokenCreate: "$_apiDashboardPersonalTokenCreate()$"
+          , apiToken: "$_apiDashboardApiToken()$"
+          , apiTokenDescription : "$_apiDashboardApiTokenDescription()$"
+          , apiTokenCreate : "$_apiDashboardApiTokenCreate()$"
+          , personOrCompany : "$_apiDashboardPersonOrCompany()$"
+          , privilige       :  "$_apiDashboardPrivilige()$"
+      }
+>>>>>>> Changes to translations (API dashboard)
     }
