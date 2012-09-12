@@ -138,9 +138,9 @@ handleSyncNewSubscriptionWithRecurly = do
         readField "account_code"
   user <- pguardM' "handleSyncNewSubscriptionWithRecurly: No user logged in." $ 
           ctxmaybeuser <$> getContext
-  mcompany <- case usercompany user of
-    Nothing -> return Nothing
-    Just cid -> dbQuery $ GetCompany cid
+  --mcompany <- case usercompany user of
+  --  Nothing -> return Nothing
+  --  Just cid -> dbQuery $ GetCompany cid
   subscriptions <- pguardM "handleSyncNewSubscriptionWithRecurly" $ 
                    liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show ac
   subscription <- pguard' "handleSyncNewSubscriptionWithRecurly: No subscription." $ 
