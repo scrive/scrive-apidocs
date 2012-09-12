@@ -87,9 +87,10 @@ var ConfirmationModel = Backbone.Model.extend({
   } 
 });
 
-/* Fixer for background overlay
-   We need to extend it if the page is changing dinamicly in backgroud, else it may only match half screen.
-   It gets initialized by confirmation view on confirmation object, and will self-destroy when confirmation will loose connection to view
+/* Fixer for background overlay.  We need to extend it if the page is
+ * changing dynamicaly in the backgroud or else it may only match half
+ * screen.  It gets initialized by confirmation view on confirmation
+ * view and will self-destroy when confirmation view is closed.
  */
 
 window.ExposeMaskFixer =  Backbone.Model.extend({
