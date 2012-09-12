@@ -51,7 +51,7 @@ window.SignatoryDesignView = Backbone.View.extend({
          self.setRoleIcon.removeClass("selected");
          self.showRoleSelector = false;
          if (self.setRoleBox!= undefined) {
-           self.setRoleBox.fadeOut('fast', function() {
+           self.setRoleBox.hide(0, function() {
              if (self.setRoleBox!= undefined) {
                self.setRoleBox.remove();
              }
