@@ -89,7 +89,6 @@ signMethod=
           $elseif(api)$
             $_signMethodAPI()$
           $endif$
-          $endif$
         $elseif(bankid)$
             $_signMethodElegBankID()$
         $elseif(norder)$
