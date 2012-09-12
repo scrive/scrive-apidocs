@@ -150,7 +150,8 @@ handleSyncNewSubscriptionWithRecurly = do
   let is = maybe "collected" inState $ listToMaybe invoices
   let eid = maybe (Left $ userid user) Right $ usercompany user
   _ <- cachePlan time Stats.SignupAction ac subscription is eid Nothing Nothing
-  sendInvoiceEmail user mcompany subscription
+  -- now we send email with push notification
+  -- sendInvoiceEmail user mcompany subscription
 
 handleChangePlan :: Kontrakcja m => m ()
 handleChangePlan = do
