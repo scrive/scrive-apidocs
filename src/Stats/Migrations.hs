@@ -30,7 +30,7 @@ removeServiceIDFromUserStatEvents = Migration {
       []     -> return () -- no records, ok
       [True] -> return () -- only nulls, ok
       _      -> error "User stat events have rows with non-null service_id"
-    kRunRaw "ALTER TABLE user_stat_events DROP CONSTRAINT fk_user_stat_events_service"
+    kRunRaw "ALTER TABLE user_stat_events DROP CONSTRAINT IF EXISTS fk_user_stat_events_service"
     kRunRaw "ALTER TABLE user_stat_events DROP COLUMN service_id"
 }
 
