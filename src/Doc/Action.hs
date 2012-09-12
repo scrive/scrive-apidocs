@@ -295,9 +295,7 @@ sendInvitationEmail1 ctx document authorsiglink = do
   -- send invitation to sign to author when it is his turn to sign
   mail <- mailDocumentAwaitingForAuthor ctx document (getLocale document)
   scheduleEmailSendout (ctxmailsconfig ctx) $
-    mail { to = [getMailAddress authorsiglink]
-         , from = documentservice document
-         }
+    mail { to = [getMailAddress authorsiglink] }
   return $ Right document
 
 {- |
