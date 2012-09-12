@@ -3,7 +3,6 @@ module Mails.MailsData where
 import qualified Data.ByteString as BS
 
 import Doc.DocStateData
-import API.Service.Model
 
 data MailAddress = MailAddress {
     fullname    :: String
@@ -17,7 +16,6 @@ data Mail = Mail {
   , title       :: String
   , content     :: String
   , attachments :: [(String, BS.ByteString)] -- list of attachments (name,content)
-  , from        :: Maybe ServiceID
   , mailInfo    :: MailInfo
   } deriving (Eq, Ord, Show)
 
@@ -32,6 +30,5 @@ emptyMail = Mail {
   , title          = []
   , content        = []
   , attachments    = []
-  , from           = Nothing
   , mailInfo       = None
 }

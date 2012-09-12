@@ -5,11 +5,10 @@ import DB
 tableCompanies :: Table
 tableCompanies = Table {
     tblName = "companies"
-  , tblVersion = 6
+  , tblVersion = 7
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("external_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("number", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("address", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
@@ -25,7 +24,6 @@ tableCompanies = Table {
         kRunRaw $ "CREATE TABLE companies ("
           ++ "  id              BIGINT NOT NULL"
           ++ ", external_id     TEXT       NULL"
-          ++ ", service_id      TEXT       NULL"
           ++ ", name            TEXT   NOT NULL DEFAULT ''"
           ++ ", number          TEXT   NOT NULL DEFAULT ''"
           ++ ", address         TEXT   NOT NULL DEFAULT ''"
@@ -41,12 +39,7 @@ tableCompanies = Table {
         return TVRcreated
       _ -> return TVRinvalid
   , tblPutProperties = do
-    kRunRaw "CREATE INDEX idx_companies_service_id ON companies(service_id)"
     kRunRaw "CREATE INDEX idx_companies_external_id ON companies(external_id)"
-    kRunRaw $ "ALTER TABLE companies"
-      ++ " ADD CONSTRAINT fk_companies_services FOREIGN KEY(service_id)"
-      ++ " REFERENCES services(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
     kRunRaw $ "CREATE SEQUENCE companies_id_seq"
     kRunRaw $ "SELECT setval('companies_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM companies))"
     kRunRaw $ "ALTER TABLE companies ALTER id SET DEFAULT nextval('companies_id_seq')"

@@ -14,7 +14,6 @@ module Company.Model (
   , GetCompanyByEmailDomain(..)
   , SetCompanyEmailDomain(..)
 
-  , CompanyDomain(..)
   , CompanyFilter(..)
   , CompanyOrderBy(..)
   ) where
@@ -23,12 +22,12 @@ import Data.Typeable
 
 import DB
 import DB.SQL2
-import API.Service.Model
 import Company.CompanyID
 import Control.Monad.State
 import Data.Monoid
 import Data.List
 
+-- to be removed, only upsales used that
 newtype ExternalCompanyID = ExternalCompanyID { unExternalCompanyID :: String }
   deriving (Eq, Ord, Show)
 $(newtypeDeriveConvertible ''ExternalCompanyID)
@@ -36,7 +35,6 @@ $(newtypeDeriveConvertible ''ExternalCompanyID)
 data Company = Company {
     companyid         :: CompanyID
   , companyexternalid :: Maybe ExternalCompanyID
-  , companyservice    :: Maybe ServiceID
   , companyinfo       :: CompanyInfo
   , companyui         :: CompanyUI
   } deriving (Eq, Ord, Show, Typeable)
@@ -56,18 +54,6 @@ data CompanyUI = CompanyUI {
   , companybarstextcolour    :: Maybe String
   , companylogo              :: Maybe Binary -- File with the logo
 } deriving (Eq, Ord, Show)
-
-data CompanyDomain
-  = CompaniesOfWholeUniverse                     -- ^ All companies in the system. Only for admin view.
-  | CompaniesOfService (Maybe ServiceID)
-
-companyDomainToSQL :: CompanyDomain -> SQL
-companyDomainToSQL CompaniesOfWholeUniverse =
-  SQL"TRUE" []
-companyDomainToSQL (CompaniesOfService Nothing) =
-  SQL "companies.service_id IS NULL" []
-companyDomainToSQL (CompaniesOfService mservice) =
-  SQL "companies.service_id = ?" [toSql mservice]
 
 data CompanyFilter
   = CompanyFilterByString String             -- ^ Contains the string anywhere
@@ -107,15 +93,11 @@ companyOrderByToOrderBySQL order =
     CompanyOrderByCountry -> SQL "companies.country" []
     CompanyOrderByID      -> SQL "companies.id" []
 
-data GetCompanies = GetCompanies [CompanyDomain] [CompanyFilter] [AscDesc CompanyOrderBy] Integer Integer
+data GetCompanies = GetCompanies [CompanyFilter] [AscDesc CompanyOrderBy] Integer Integer
 instance MonadDB m => DBQuery m GetCompanies [Company] where
-  query (GetCompanies domains filters sorting offset limit) = do
+  query (GetCompanies filters sorting offset limit) = do
     kRun_ $ sqlSelect "companies" $ do
        selectCompaniesSelectors
-       let orx [] = SQL "FALSE" []
-           orx [thing] = thing
-           orx xs = mconcat $ [SQL "(" []] ++ intersperse (SQL " OR " []) xs ++ [SQL ")" []]
-       sqlWhere (orx $ map companyDomainToSQL domains)
        mapM_ companyFilterToWhereClause filters
        let ascdesc (Asc x) = companyOrderByToOrderBySQL x
            ascdesc (Desc x) = companyOrderByToOrderBySQL x <> SQL " DESC" []
@@ -133,21 +115,19 @@ instance MonadDB m => DBQuery m GetCompany (Maybe Company) where
       sqlWhereEq "id" cid
     fetchCompanies >>= oneObjectReturnedGuard
 
-data GetCompanyByExternalID = GetCompanyByExternalID (Maybe ServiceID) ExternalCompanyID
+data GetCompanyByExternalID = GetCompanyByExternalID ExternalCompanyID
 instance MonadDB m => DBQuery m GetCompanyByExternalID (Maybe Company) where
-  query (GetCompanyByExternalID msid ecid) = do
+  query (GetCompanyByExternalID ecid) = do
     kRun_ $ sqlSelect "companies" $ do
       selectCompaniesSelectors
-      sqlWhere $ SQL "service_id IS NOT DISTINCT FROM ?" [toSql msid]
       sqlWhereEq "external_id" ecid
     fetchCompanies >>= oneObjectReturnedGuard
 
-data CreateCompany = CreateCompany (Maybe ServiceID) (Maybe ExternalCompanyID)
+data CreateCompany = CreateCompany (Maybe ExternalCompanyID)
 instance MonadDB m => DBUpdate m CreateCompany Company where
-  update (CreateCompany msid mecid) = do
+  update (CreateCompany mecid) = do
     kRun_ $ sqlInsert "companies" $ do
       sqlSet "external_id" mecid
-      sqlSet "service_id" msid
       selectCompaniesSelectors
     fetchCompanies >>= exactlyOneObjectReturnedGuard
 
@@ -173,13 +153,13 @@ instance MonadDB m => DBUpdate m UpdateCompanyUI Bool where
       sqlSet "logo" $ companylogo cui
       sqlWhereEq "id" cid
 
-data GetOrCreateCompanyWithExternalID = GetOrCreateCompanyWithExternalID (Maybe ServiceID) ExternalCompanyID
+data GetOrCreateCompanyWithExternalID = GetOrCreateCompanyWithExternalID ExternalCompanyID
 instance MonadDB m => DBUpdate m GetOrCreateCompanyWithExternalID Company where
-  update (GetOrCreateCompanyWithExternalID msid ecid) = do
-    mc <- query $ GetCompanyByExternalID msid ecid
+  update (GetOrCreateCompanyWithExternalID ecid) = do
+    mc <- query $ GetCompanyByExternalID ecid
     case mc of
       Just c  -> return c
-      Nothing -> update $ CreateCompany msid $ Just ecid
+      Nothing -> update $ CreateCompany $ Just ecid
 
 data SetCompanyEmailDomain = SetCompanyEmailDomain CompanyID (Maybe String)
 instance MonadDB m => DBUpdate m SetCompanyEmailDomain Bool where
@@ -203,7 +183,6 @@ selectCompaniesSelectors :: (SqlResult command) => State command ()
 selectCompaniesSelectors = do
   sqlResult "id"
   sqlResult "external_id"
-  sqlResult "service_id"
   sqlResult "name"
   sqlResult "number"
   sqlResult "address"
@@ -219,11 +198,10 @@ selectCompaniesSelectors = do
 fetchCompanies :: MonadDB m => DBEnv m [Company]
 fetchCompanies = foldDB decoder []
   where
-    decoder acc cid eid sid name number address zip' city country
+    decoder acc cid eid name number address zip' city country
       bars_background bars_textcolour logo email_domain = Company {
         companyid = cid
       , companyexternalid = eid
-      , companyservice = sid
       , companyinfo = CompanyInfo {
           companyname = name
         , companynumber = number

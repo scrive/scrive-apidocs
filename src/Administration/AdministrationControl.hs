@@ -19,7 +19,6 @@ module Administration.AdministrationControl(
           , showAdminUserPayments
           , showAdminCompanyPayments
           , showAllUsersTable
-          , showServicesPage
           , showDocuments
           , handleUserChange
           , handleCompanyChange
@@ -27,7 +26,6 @@ module Administration.AdministrationControl(
           , handleUserPaymentsChange
           , handleCreateUser
           , handlePostAdminCompanyUsers
-          , handleCreateService
           , handleUsersListCSV
           , showFunctionalityStats
           , handleBackdoorQuery
@@ -55,7 +53,6 @@ import Utils.Prelude
 import Utils.String
 import Kontra
 import Administration.AdministrationView
-import Crypto.RNG (CryptoRNG)
 import Doc.Model
 import Doc.DocStateData
 import Company.Model
@@ -68,7 +65,6 @@ import User.UserView
 import User.Model
 import Data.Maybe
 import Data.Char
-import API.Service.Model
 import Templates.Templates
 import Util.FlashUtil
 import Data.List
@@ -152,13 +148,12 @@ jsonCompanies :: Kontrakcja m => m JSValue
 jsonCompanies = onlySalesOrAdmin $ do
     params <- getListParamsNew
     let
-      domains = [CompaniesOfService Nothing]
       filters = companySearchingFromParams params
       sorting = companySortingFromParams params
       (offset, limit) = companyPaginationFromParams companiesPageSize params
       companiesPageSize = 100
 
-    allCompanies <- dbQuery $ GetCompanies domains filters sorting offset limit
+    allCompanies <- dbQuery $ GetCompanies filters sorting offset limit
     let companies = PagedList { list       = allCompanies
                               , params     = params
                               , pageSize   = companiesPageSize
@@ -225,7 +220,7 @@ handleUsersListCSV = onlySalesOrAdmin $ do
                , csvContent = map csvline $ filter active users
                }
   where
-        active (u,_,_,_) =   (not (useraccountsuspended u)) && (isJust $ userhasacceptedtermsofservice u) && (isNothing $ userservice u)
+        active (u,_,_,_) =   (not (useraccountsuspended u)) && (isJust $ userhasacceptedtermsofservice u)
         csvline (u,mc,_,_) =
                           [ show $ userid u
                           , getFirstName u
@@ -338,7 +333,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
       --then we need to create a company and make this account an admin
       --we also need to tie all the existing docs to the company
       newuser <- guardJustM $ do
-        company <- dbUpdate $ CreateCompany Nothing Nothing
+        company <- dbUpdate $ CreateCompany Nothing
         _ <- dbUpdate $ SetUserCompany uid (Just $ companyid company)
         _ <- dbUpdate 
                   $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
@@ -367,7 +362,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
       --then we need to create a company and make this account a standard user
       --we also need to tie all the existing docs to the company
       newuser <- guardJustM $ do
-        company <- dbUpdate $ CreateCompany Nothing Nothing
+        company <- dbUpdate $ CreateCompany Nothing
         _ <- dbUpdate $ SetUserCompany uid (Just $ companyid company)
         -- cancel payment plan since they are now not admin
         mplan <- dbQuery $ GetPaymentPlan (Left uid)
@@ -574,7 +569,7 @@ handlePrivateUserCompanyInvite companyid = onlySalesOrAdmin $ do
   ctx <- getContext
   user <- guardJust $ ctxmaybeuser ctx
   email <- Email <$> getCriticalField asValidEmail "email"
-  existinguser <- guardJustM $ dbQuery $ GetUserByEmail Nothing email
+  existinguser <- guardJustM $ dbQuery $ GetUserByEmail email
   _ <- dbUpdate $ AddCompanyInvite CompanyInvite{
           invitedemail = email
         , invitedfstname = getFirstName existinguser
@@ -651,34 +646,6 @@ getUserInfoChange = do
       , usercompanyname     = fromMaybe usercompanyname musercompanyname
       , usercompanynumber   = fromMaybe usercompanynumber musercompanynumber
     }
-
-
-
-{- Create service-}
-handleCreateService :: (CryptoRNG m, Kontrakcja m) => m KontraLink
-handleCreateService = onlySalesOrAdmin $ do
-    name <- guardJustM $ getField "name"
-    Log.debug $ "name: " ++ name
-    admin <- guardJustM $ liftMM  (dbQuery . GetUserByEmail Nothing . Email) (getField "admin")
-    Log.debug $ "admin: " ++ show admin
-    pwdBS <- getField' "password"
-    Log.debug $ "password: " ++ show pwdBS
-    pwd <- createPassword pwdBS
-    service <- guardJustM $ dbUpdate $ CreateService (ServiceID $ BS.fromString name) (Just pwd) (userid admin)
-    Log.debug $ "service: " ++ show service
-    location <- getField "location"
-    Log.debug $ "location: " ++ show location
-    _ <- dbUpdate $ UpdateServiceSettings (serviceid service) (servicesettings service)
-                                               {servicelocation = ServiceLocation <$> location}
-    Log.debug $ "LoopBack"
-    return LoopBack
-
-{- Services page-}
-showServicesPage :: Kontrakcja m => m String
-showServicesPage = onlySalesOrAdmin $ do
-  services <- dbQuery GetServices
-  servicesAdminPage services
-
 
 {-
 Sales leads stats:
@@ -773,9 +740,9 @@ Used signatures last 12 months
 -}
 showFunctionalityStats :: Kontrakcja m => m String
 showFunctionalityStats = onlySalesOrAdmin $ do
-  ctx@Context{ ctxtime } <- getContext
+  Context{ctxtime} <- getContext
   users <- dbQuery GetUsers
-  documents <- dbQuery $ GetDocumentsByService $ currentServiceID ctx
+  documents <- dbQuery GetAllDocuments
   adminFunctionalityStatsPage (mkStats ctxtime users)
                               (mkStats ctxtime documents)
   where
@@ -850,7 +817,6 @@ jsonDocuments = onlySalesOrAdmin $ do
                             , ("company", jsFromString $ maybe "" getCompanyName $ getAuthorSigLink doc)
                             ])
                         , ("title", jsFromString $ documenttitle doc)
-                        , ("service", jsFromString $ maybe "" show $ documentservice doc)
                         , ("status", jsFromString $ take 20 $ show $ documentstatus doc)
                         , ("type", jsFromString . show $ documenttype doc)
                         , ("signs", JSArray $ map (jsFromString . getSmartName) $ documentsignatorylinks doc)
@@ -879,8 +845,6 @@ docSortingFromParams params =
     -- x "partnercompREV" = viewComparingRev partnerComps
     x "process"           = [Asc DocumentOrderByProcess]
     x "processREV"        = [Desc DocumentOrderByProcess]
-    x "service"           = [Asc DocumentOrderByService]
-    x "serviceREV"        = [Desc DocumentOrderByService]
     x "type"              = [Asc DocumentOrderByType]
     x "typeREV"           = [Desc DocumentOrderByType]
     x "author"            = [Asc DocumentOrderByAuthor]

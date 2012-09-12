@@ -2,14 +2,12 @@ module Doc.Tables where
 
 import DB
 
-{-# NOINLINE tableDocuments #-}
 tableDocuments :: Table
 tableDocuments = Table {
     tblName = "documents"
-  , tblVersion = 9
+  , tblVersion = 10
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("sealed_file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("title", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
@@ -42,7 +40,6 @@ tableDocuments = Table {
       [] -> do
         kRunRaw $ "CREATE TABLE documents ("
           ++ "  id BIGINT NOT NULL"
-          ++ ", service_id TEXT NULL"
           ++ ", file_id BIGINT NULL"
           ++ ", sealed_file_id BIGINT NULL"
           ++ ", title TEXT NOT NULL"
@@ -76,11 +73,6 @@ tableDocuments = Table {
         return TVRcreated
       _ -> return TVRinvalid
   , tblPutProperties = do
-    kRunRaw $ "CREATE INDEX idx_documents_service_id ON documents(service_id)"
-    kRunRaw $ "ALTER TABLE documents"
-      ++ " ADD CONSTRAINT fk_documents_services FOREIGN KEY(service_id)"
-      ++ " REFERENCES services(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
     kRunRaw $ "ALTER TABLE documents"
       ++ " ADD CONSTRAINT fk_documents_file_id FOREIGN KEY(file_id)"
       ++ " REFERENCES files(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
@@ -95,7 +87,6 @@ tableDocuments = Table {
     kRunRaw $ "ALTER TABLE documents ALTER id SET DEFAULT nextval('documents_id_seq')"
     return ()
   }
-
 
 tableAuthorAttachments :: Table
 tableAuthorAttachments = Table {

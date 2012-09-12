@@ -779,7 +779,6 @@ assertGoodNewDocument mcompany doctype title authorsigns (user, time, edoc) = do
     assertEqual "Doc has user's region" (getRegion user) (getRegion doc)
     assertEqual "Doc creation time" time (documentctime doc)
     assertEqual "Doc modification time" time (documentmtime doc)
-    assertEqual "Doc has user's service" (userservice user) (documentservice doc)
     assertEqual "No author attachments" [] (documentauthorattachments doc)
     assertEqual "No sig attachments" [] (concatMap signatoryattachments $ documentsignatorylinks doc)
     assertEqual "Uses email identification only" EmailAuthentication (documentauthenticationmethod doc)
@@ -1104,7 +1103,7 @@ testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
   let doc = case mdoc of
           Nothing -> error "No document"
           Just d  -> d
-  docs <- dbQuery $ GetDocumentsByService Nothing
+  docs <- dbQuery GetAllDocuments
   -- assert
   validTest $ do
     assertJust $ find (sameDocID doc) docs

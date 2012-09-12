@@ -38,7 +38,6 @@ module Stats.Control
 
        where
 
-import API.Service.Model
 import Administration.AdministrationView
 import AppView
 import Company.Model
@@ -264,7 +263,6 @@ addDocumentCloseStatEvents doc apistring = falseOnError $ do
                                                         , seAmount     = 1
                                                         , seDocumentID = did
                                                         , seCompanyID  = maybecompany sl
-                                                        , seServiceID  = documentservice doc
                                                         , seDocumentType = documenttype doc
                                                         , seAPIString  = apistring
                                                         }
@@ -278,7 +276,6 @@ addDocumentCloseStatEvents doc apistring = falseOnError $ do
                                                      , seQuantity   = q
                                                      , seAmount     = sigs
                                                      , seCompanyID  = maybecompany sl
-                                                     , seServiceID  = documentservice doc
                                                      , seDocumentType = documenttype doc
                                                      , seDocumentID = did
                                                      , seAPIString  = apistring
@@ -304,7 +301,6 @@ addDocumentSendStatEvents doc apistring = falseOnError $ do
                                                         , seAmount     = 1
                                                         , seDocumentID = did
                                                         , seCompanyID  = maybecompany sl
-                                                        , seServiceID  = documentservice doc
                                                         , seDocumentType = documenttype doc
                                                         , seAPIString  = apistring
                                                         }
@@ -318,7 +314,6 @@ addDocumentSendStatEvents doc apistring = falseOnError $ do
                                                         , seQuantity   = q
                                                         , seAmount     = sigs
                                                         , seCompanyID  = maybecompany sl
-                                                        , seServiceID  = documentservice doc
                                                         , seDocumentType = documenttype doc
                                                         , seDocumentID = did
                                                         , seAPIString  = apistring
@@ -344,7 +339,6 @@ addDocumentCancelStatEvents doc apistring = falseOnError $ do
                                                         , seAmount     = 1
                                                         , seDocumentID = did
                                                         , seCompanyID  = maybecompany sl
-                                                        , seServiceID  = documentservice doc
                                                         , seDocumentType = documenttype doc
                                                         , seAPIString  = apistring
                                                         }
@@ -358,7 +352,6 @@ addDocumentCancelStatEvents doc apistring = falseOnError $ do
                                                         , seQuantity   = q
                                                         , seAmount     = sigs
                                                         , seCompanyID  = maybecompany sl
-                                                        , seServiceID  = documentservice doc
                                                         , seDocumentType = documenttype doc
                                                         , seDocumentID = did
                                                         , seAPIString  = apistring
@@ -384,7 +377,6 @@ addDocumentRejectStatEvents doc apistring = falseOnError $ do
                                                         , seAmount     = 1
                                                         , seDocumentID = did
                                                         , seCompanyID  = maybecompany sl
-                                                        , seServiceID  = documentservice doc
                                                         , seDocumentType = documenttype doc
                                                         , seAPIString  = apistring
                                                         }
@@ -398,7 +390,6 @@ addDocumentRejectStatEvents doc apistring = falseOnError $ do
                                                         , seQuantity   = q
                                                         , seAmount     = sigs
                                                         , seCompanyID  = maybecompany sl
-                                                        , seServiceID  = documentservice doc
                                                         , seDocumentType = documenttype doc
                                                         , seDocumentID = did
                                                         , seAPIString  = apistring
@@ -418,7 +409,6 @@ addDocumentCreateStatEvents doc apistring = falseOnError $ do
                                                         , seAmount     = 1
                                                         , seDocumentID = did
                                                         , seCompanyID  = maybecompany sl
-                                                        , seServiceID  = documentservice doc
                                                         , seDocumentType = documenttype doc
                                                         , seAPIString  = apistring
                                                         }
@@ -449,7 +439,6 @@ addDocumentTimeoutStatEvents doc apistring = do
                                                         , seAmount     = 1
                                                         , seDocumentID = did
                                                         , seCompanyID  = maybecompany sl
-                                                        , seServiceID  = documentservice doc
                                                         , seDocumentType = documenttype doc
                                                         , seAPIString  = apistring
                                                         }
@@ -463,7 +452,6 @@ addDocumentTimeoutStatEvents doc apistring = do
                                                         , seQuantity   = q
                                                         , seAmount     = sigs
                                                         , seCompanyID  = maybecompany sl
-                                                        , seServiceID  = documentservice doc
                                                         , seDocumentType = documenttype doc
                                                         , seDocumentID = did
                                                         , seAPIString  = apistring
@@ -474,19 +462,18 @@ addDocumentTimeoutStatEvents doc apistring = do
 
 addUserLoginStatEvent :: Kontrakcja m => MinutesTime -> User -> m Bool
 addUserLoginStatEvent time user = falseOnError $ do
-    addUserIDStatEvent UserLogin (userid user) time (usercompany user) (userservice user)
+    addUserIDStatEvent UserLogin (userid user) time (usercompany user)
 
 addUserCreateCompanyStatEvent :: Kontrakcja m => MinutesTime -> User -> m Bool
 addUserCreateCompanyStatEvent time user = falseOnError $ do
-      case usercompany user of
-        Nothing -> return False
-        Just cid ->
-          addUserIDStatEvent UserCreateCompany (userid user) time (Just cid) (userservice user)
+  case usercompany user of
+    Nothing  -> return False
+    Just cid -> addUserIDStatEvent UserCreateCompany (userid user) time (Just cid)
 
 addUserSignTOSStatEvent :: Kontrakcja m => User -> m Bool
 addUserSignTOSStatEvent = addUserStatEventWithTOSTime UserSignTOS
 
-addUserIDSignTOSStatEvent :: (MonadDB m) => UserID -> MinutesTime -> Maybe CompanyID -> Maybe ServiceID -> m Bool
+addUserIDSignTOSStatEvent :: (MonadDB m) => UserID -> MinutesTime -> Maybe CompanyID -> m Bool
 addUserIDSignTOSStatEvent = addUserIDStatEvent UserSignTOS
 
 addUserSaveAfterSignStatEvent :: Kontrakcja m => User -> m Bool
@@ -504,41 +491,36 @@ addUserStatEventWithTOSTime qty user = falseOnError $ do
       let mt' = if mt == fromSeconds 0
                 then (60 * 24) `minutesBefore` ctxtime -- one day before running stats
                 else mt
-      addUserIDStatEvent qty (userid user) mt' (usercompany user) (userservice user)
+      addUserIDStatEvent qty (userid user) mt' (usercompany user)
 
-addUserIDStatEvent :: (MonadDB m) => UserStatQuantity -> UserID -> MinutesTime -> Maybe CompanyID -> Maybe ServiceID -> m Bool
-addUserIDStatEvent qty uid mt mcid msid =  do
+addUserIDStatEvent :: (MonadDB m) => UserStatQuantity -> UserID -> MinutesTime -> Maybe CompanyID -> m Bool
+addUserIDStatEvent qty uid mt mcid =  do
     a <- dbUpdate $ AddUserStatEvent $ UserStatEvent { usUserID     = uid
                                                         , usTime       = mt
                                                         , usQuantity   = qty
                                                         , usAmount     = 1
                                                         , usCompanyID  = mcid
-                                                        , usServiceID  = msid
                                                         }
     unless a $ Log.stats $ "Skipping existing user stat for userid: " ++ show uid ++ " and quantity: " ++ show qty
     return a
 
-addUserStatAPIGrantAccess :: (MonadDB m) => UserID -> MinutesTime -> Maybe CompanyID -> Maybe ServiceID -> m Bool
-addUserStatAPIGrantAccess uid mt cid sid = do
+addUserStatAPIGrantAccess :: (MonadDB m) => UserID -> MinutesTime -> Maybe CompanyID -> m Bool
+addUserStatAPIGrantAccess uid mt cid = do
   dbUpdate $ AddUserStatEvent $ UserStatEvent { usUserID = uid
                                               , usTime = mt
                                               , usQuantity = UserAPIGrantAccess
                                               , usAmount = 1
                                               , usCompanyID = cid
-                                              , usServiceID = sid
                                               }
   
-addUserStatAPINewUser :: (MonadDB m) => UserID -> MinutesTime -> Maybe CompanyID -> Maybe ServiceID -> m Bool
-addUserStatAPINewUser uid mt cid sid = do
+addUserStatAPINewUser :: (MonadDB m) => UserID -> MinutesTime -> Maybe CompanyID -> m Bool
+addUserStatAPINewUser uid mt cid = do
   dbUpdate $ AddUserStatEvent $ UserStatEvent { usUserID = uid
                                               , usTime = mt
                                               , usQuantity = UserAPINewUser
                                               , usAmount = 1
                                               , usCompanyID = cid
-                                              , usServiceID = sid
                                               }
-                                                                  
-
 
 handleUserStatsCSV :: Kontrakcja m => m CSV
 handleUserStatsCSV = onlySalesOrAdmin $ do
@@ -551,7 +533,6 @@ handleUserStatsCSV = onlySalesOrAdmin $ do
                         , showDateYMD                          $ usTime      event
                         , show                                 $ usQuantity  event
                         , show                                 $ usAmount    event
-                        , maybe "" (BS.toString . unServiceID) $ usServiceID event
                         , maybe "" show                        $ usCompanyID event
                         ]
 
@@ -640,7 +621,6 @@ addSignStatInviteEvent :: MonadDB m => Document -> SignatoryLink -> MinutesTime 
 addSignStatInviteEvent doc sl time =
   let dp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
-      sid = documentservice doc
       cid = maybe Nothing maybecompany mal
   in  do
       a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
@@ -648,7 +628,6 @@ addSignStatInviteEvent doc sl time =
                                                           , ssTime            = time
                                                           , ssQuantity        = SignStatInvite
                                                           , ssDocumentProcess = dp
-                                                          , ssServiceID       = sid
                                                           , ssCompanyID       = cid
                                                           }
       unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
@@ -659,7 +638,6 @@ addSignStatReceiveEvent :: MonadDB m => Document -> SignatoryLink -> MinutesTime
 addSignStatReceiveEvent doc sl time =
   let dp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
-      sid = documentservice doc
       cid = maybe Nothing maybecompany mal
   in case invitationdeliverystatus sl of
     Delivered -> do
@@ -668,7 +646,6 @@ addSignStatReceiveEvent doc sl time =
                                                           , ssTime            = time
                                                           , ssQuantity        = SignStatReceive
                                                           , ssDocumentProcess = dp
-                                                          , ssServiceID       = sid
                                                           , ssCompanyID       = cid
                                                           }
       unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
@@ -683,7 +660,6 @@ addSignStatOpenEvent :: MonadDB m => Document -> SignatoryLink -> m Bool
 addSignStatOpenEvent doc sl =
   let dp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
-      sid = documentservice doc
       cid = maybe Nothing maybecompany mal
   in case maybereadinvite sl of
     Just time -> do
@@ -692,7 +668,6 @@ addSignStatOpenEvent doc sl =
                                                             , ssTime            = time
                                                             , ssQuantity        = SignStatOpen
                                                             , ssDocumentProcess = dp
-                                                            , ssServiceID       = sid
                                                             , ssCompanyID       = cid
                                                             }
         unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
@@ -706,7 +681,6 @@ addSignStatLinkEvent :: MonadDB m => Document -> SignatoryLink -> m Bool
 addSignStatLinkEvent doc sl =
   let dp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
-      sid = documentservice doc
       cid = maybe Nothing maybecompany mal
   in case maybeseeninfo sl of
     Just (SignInfo {signtime}) -> do
@@ -715,7 +689,6 @@ addSignStatLinkEvent doc sl =
                                                             , ssTime            = signtime
                                                             , ssQuantity        = SignStatLink
                                                             , ssDocumentProcess = dp
-                                                            , ssServiceID       = sid
                                                             , ssCompanyID       = cid
                                                             }
         unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
@@ -729,7 +702,6 @@ addSignStatSignEvent :: MonadDB m => Document -> SignatoryLink -> m Bool
 addSignStatSignEvent doc sl =
   let dp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
-      sid = documentservice doc
       cid = maybe Nothing maybecompany mal
   in case maybesigninfo sl of
     Just (SignInfo {signtime}) -> do
@@ -738,7 +710,6 @@ addSignStatSignEvent doc sl =
                                                             , ssTime            = signtime
                                                             , ssQuantity        = SignStatSign
                                                             , ssDocumentProcess = dp
-                                                            , ssServiceID       = sid
                                                             , ssCompanyID       = cid
                                                             }
         unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
@@ -752,7 +723,6 @@ addSignStatRejectEvent :: MonadDB m => Document -> SignatoryLink -> m Bool
 addSignStatRejectEvent doc sl =
   let dp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
-      sid = documentservice doc
       cid = maybe Nothing maybecompany mal
   in case documentrejectioninfo doc of
     Just (signtime, slid, _) | slid == signatorylinkid sl -> do
@@ -761,7 +731,6 @@ addSignStatRejectEvent doc sl =
                                                           , ssTime            = signtime
                                                           , ssQuantity        = SignStatReject
                                                           , ssDocumentProcess = dp
-                                                          , ssServiceID       = sid
                                                           , ssCompanyID       = cid
                                                           }
       unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
@@ -778,7 +747,6 @@ addSignStatDeleteEvent :: MonadDB m => Document -> SignatoryLink -> MinutesTime 
 addSignStatDeleteEvent doc sl time =
   let dp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
-      sid = documentservice doc
       cid = maybe Nothing maybecompany mal
   in case signatorylinkdeleted sl of
     True -> do
@@ -787,7 +755,6 @@ addSignStatDeleteEvent doc sl time =
                                                           , ssTime            = time
                                                           , ssQuantity        = SignStatDelete
                                                           , ssDocumentProcess = dp
-                                                          , ssServiceID       = sid
                                                           , ssCompanyID       = cid
                                                           }
       unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
@@ -801,7 +768,6 @@ addSignStatPurgeEvent :: MonadDB m => Document -> SignatoryLink -> MinutesTime -
 addSignStatPurgeEvent doc sl time =
   let dp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
-      sid = documentservice doc
       cid = maybe Nothing maybecompany mal
   in case signatorylinkreallydeleted sl of
     True -> do
@@ -810,7 +776,6 @@ addSignStatPurgeEvent doc sl time =
                                                           , ssTime            = time
                                                           , ssQuantity        = SignStatPurge
                                                           , ssDocumentProcess = dp
-                                                          , ssServiceID       = sid
                                                           , ssCompanyID       = cid
                                                           }
       unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
@@ -834,7 +799,6 @@ handleSignStatsCSV = do
                         , showDateYMD $ ssTime            event
                         , show        $ ssQuantity        event
                         , show        $ ssDocumentProcess event
-                        , show        $ ssServiceID       event
                         , show        $ ssCompanyID       event
                         ]
 
@@ -853,7 +817,6 @@ csvRowFromDocHist (s:ss) csv' =
         _ -> csvtail
   in csvRowFromDocHist ss
      $ [show $ seDocumentID s,
-        maybe "scrive" show $ seServiceID s,
         maybe "" show $ seCompanyID s,
         show $ seDocumentType s
        ] ++ csv2
@@ -887,7 +850,6 @@ csvRowFromSignHist (s:ss) csv' =
   in csvRowFromSignHist ss $
      [show                $ ssDocumentID s,
       show                $ ssSignatoryLinkID s,
-      maybe "scrive" show $ ssServiceID s,
       maybe ""       show $ ssCompanyID s,
       show                $ ssDocumentProcess s
      ] ++ csv2

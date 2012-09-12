@@ -186,7 +186,6 @@ sendoutForManualChecking _ req ctx (Just email) m = do
            _ <- scheduleEmailSendout (ctxmailsconfig ctx) $ m {
                   to = [MailAddress { fullname = "Tester",
                                       email = email}]
-                , from = Nothing
            }
            assertSuccess
     assertSuccess

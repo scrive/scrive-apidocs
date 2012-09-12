@@ -7,10 +7,6 @@ module Mails.SendMail
     , scheduleEmailSendout
     ) where
 
-import Control.Applicative
-import Control.Monad
-
-import API.Service.Model
 import DB
 import Crypto.RNG
 import InputValidation
@@ -18,7 +14,6 @@ import Mails.MailsConfig
 import Mails.MailsData
 import Mails.Model hiding (Mail)
 import MinutesTime
-import Utils.Monad
 import qualified Log
 import qualified Mails.Model as M
 
@@ -28,19 +23,14 @@ import Util.SignatoryLinkUtils
 import Doc.Model
 import Doc.DocStateData
 
-scheduleEmailSendout :: (CryptoRNG m, Functor m, MonadDB m) => MailsConfig -> Mail -> m ()
+scheduleEmailSendout :: (CryptoRNG m, MonadDB m) => MailsConfig -> Mail -> m ()
 scheduleEmailSendout MailsConfig{..} mail@Mail{..} = do
   if unsendable to
     then Log.error $ "Email " ++ show mail ++ " is unsendable, discarding."
     else do
       fromAddr <- do
-        addr <- join . fmap (servicemailfromaddress . servicesettings)
-          <$> liftMM (dbQuery . GetService) (return from)
-        case addr of
-          Nothing -> do
-            niceAddress <- fromNiceAddress mailInfo ourInfoEmailNiceName
-            return Address {addrName = niceAddress, addrEmail = ourInfoEmail }
-          Just address -> return Address { addrName = "", addrEmail = address }
+        niceAddress <- fromNiceAddress mailInfo ourInfoEmailNiceName
+        return Address {addrName = niceAddress, addrEmail = ourInfoEmail }
       token <- random
       now <- getMinutesTime
       mid <- dbUpdate $ CreateEmail token fromAddr (map toAddress to) now
@@ -76,9 +66,9 @@ wrapHTML body = concat [
   , "</html>"
   ]
 
--- Prototyped. This is why texts are here. But the propper way to do
+-- Prototyped. This is why texts are here. But the proper way to do
 -- that is not to add some extra info in Mail data structure
--- Propper way is to hold as abstract data there.
+-- Proper way is to hold as abstract data there.
 fromNiceAddress :: MonadDB m => MailInfo -> String -> m String
 fromNiceAddress (None) servicename = return servicename
 fromNiceAddress (Invitation did _) servicename = do

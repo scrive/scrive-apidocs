@@ -97,7 +97,7 @@ handleRequestPhoneCall = do
   mphone <-  getOptionalField asValidPhone "phone"
   case (memail, mphone) of
     (Just email, Just phone) -> do
-      user <- guardJustM $ dbQuery $ GetUserByEmail (ctxmaybeuser >>= userservice) (Email email)
+      user <- guardJustM $ dbQuery $ GetUserByEmail (Email email)
       --only set the phone number if they're actually logged in
       -- it is possible to request a phone call from the sign view without being logged in!
       -- this function could be called by anyone!
@@ -116,7 +116,7 @@ handleRequestChangeEmail = do
   mnewemailagain <- getRequiredField asValidEmail "newemailagain"
   case (Email <$> mnewemail, Email <$> mnewemailagain) of
     (Just newemail, Just newemailagain) | newemail == newemailagain -> do
-       mexistinguser <- dbQuery $ GetUserByEmail (userservice user) newemail
+       mexistinguser <- dbQuery $ GetUserByEmail newemail
        case mexistinguser of
          Just _existinguser ->
            sendChangeToExistingEmailInternalWarningMail user newemail
@@ -161,7 +161,7 @@ handleCreateCompany :: Kontrakcja m => m KontraLink
 handleCreateCompany = do
   ctx <- getContext
   user <- guardJust $ ctxmaybeuser ctx
-  company <- dbUpdate $ CreateCompany Nothing Nothing
+  company <- dbUpdate $ CreateCompany Nothing
   mailapikey <- random
   _ <- dbUpdate $ SetCompanyMailAPIKey (companyid company) mailapikey 1000
   _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid company)
@@ -198,7 +198,7 @@ handlePostChangeEmail uid hash = withUserPost $ do
     Nothing -> return ()
     Just password | verifyPassword (userpassword user) password -> do
       changed <- maybe (return False)
-                      (dbUpdate . SetUserEmail (userservice user) (userid user))
+                      (dbUpdate . SetUserEmail (userid user))
                       mnewemail
       if changed
         then do

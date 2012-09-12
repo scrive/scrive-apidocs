@@ -170,10 +170,10 @@ saveDocumentForSignatories doc@Document{documentsignatorylinks} =
         link to that user.
     -}
     saveDocumentForSignatory :: Kontrakcja m => Document -> SignatoryLink -> m (Either String Document)
-    saveDocumentForSignatory doc'@Document{documentid,documentservice}
+    saveDocumentForSignatory doc'@Document{documentid}
                              SignatoryLink{signatorylinkid,signatorydetails} = do
       let sigemail = getValueOfType EmailFT signatorydetails
-      muser <- dbQuery $ GetUserByEmail documentservice (Email sigemail)
+      muser <- dbQuery $ GetUserByEmail (Email sigemail)
       case muser of
         Nothing -> return $ Right doc'
         Just user -> do
@@ -245,7 +245,6 @@ sendDocumentErrorEmail document author = do
       mail <- mailDocumentErrorForAuthor ctx document (getLocale author)
       scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
           to = [getMailAddress authorlink]
-        , from = documentservice document
       }
     -- | Helper function to send emails to invited parties
     -- ??: Should this be in DocControl or in an email-specific file?
@@ -258,7 +257,6 @@ sendDocumentErrorEmail document author = do
       scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
             to = [getMailAddress signatorydetails]
           , mailInfo = Invitation documentid  signatorylinkid
-          , from = documentservice document
       }
 
 {- |
@@ -292,7 +290,6 @@ sendInvitationEmail1 ctx document signatorylink = do
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
         to = [getMailAddress signatorydetails]
       , mailInfo = Invitation documentid signatorylinkid
-      , from = documentservice document
   }
   mdoc <- runMaybeT $ do
     True <- dbUpdate $ AddInvitationEvidence documentid signatorylinkid $ systemActor $ ctxtime ctx
@@ -313,7 +310,6 @@ sendReminderEmail custommessage ctx doc siglink = do
     , attachments = if isJust $ maybesigninfo siglink
                       then mailattachments
                       else []
-    , from = documentservice doc
     }
   --this is needed so the last event time in archive looks good
   _ <- dbUpdate $ SetDocumentModificationData (documentid doc) (ctxtime ctx)
@@ -331,7 +327,6 @@ sendClosedEmails document = do
     scheduleEmailSendout (ctxmailsconfig ctx) $
       mail { to = map getMailAddress signatorylinks
            , attachments = mailattachments
-           , from = documentservice document
            }
 
 {- |
@@ -341,8 +336,9 @@ sendAwaitingEmail :: Kontrakcja m => Context -> Document -> User -> m ()
 sendAwaitingEmail ctx document author = do
   let Just authorsiglink = getAuthorSigLink document
   mail <- mailDocumentAwaitingForAuthor ctx document (getLocale author)
-  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress authorsiglink]
-                                                  , from = documentservice document  }
+  scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
+    to = [getMailAddress authorsiglink]
+  }
 
 makeMailAttachments :: (KontraMonad m, MonadDB m) => Document -> m [(String, BS.ByteString)]
 makeMailAttachments document = do
@@ -371,10 +367,9 @@ sendRejectEmails customMessage ctx document signalink = do
                                  , isActivatedSignatory (documentcurrentsignorder document) sl || isAuthor sl]
   forM_ activatedSignatories $ \sl -> do
     mail <- mailDocumentRejected customMessage ctx document signalink
-    scheduleEmailSendout (ctxmailsconfig ctx) $ mail {   to = [getMailAddress sl]
-                                                      , from = documentservice document }
-
-
+    scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
+      to = [getMailAddress sl]
+    }
 
 {- |
     If the custom text field is empty then that's okay, but if it's invalid

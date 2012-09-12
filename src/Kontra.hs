@@ -16,16 +16,12 @@ module Kontra
     , onlyBackdoorOpen
     , getAsString
     , getDataFnM
-    , currentService
-    , currentServiceID
-    , HasService(..)
     , switchLocale       -- set language
     )
     where
 
 import Acid.Monad
 import AppState
-import API.Service.Model
 import Context
 import Control.Applicative
 import Control.Logic
@@ -37,7 +33,6 @@ import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB
 import ELegitimation.ELegTransaction
-import Doc.DocStateData
 import Happstack.Server
 import KontraError
 import KontraMonad
@@ -97,11 +92,11 @@ instance MonadBaseControl IO Kontra where
 
 {- Logged in user is admin-}
 isAdmin :: Context -> Bool
-isAdmin ctx = (useremail <$> userinfo <$> ctxmaybeuser ctx) `melem` (ctxadminaccounts ctx) && scriveService ctx
+isAdmin ctx = (useremail <$> userinfo <$> ctxmaybeuser ctx) `melem` (ctxadminaccounts ctx)
 
 {- Logged in user is sales -}
 isSales :: Context -> Bool
-isSales ctx = (useremail <$> userinfo <$> ctxmaybeuser ctx) `melem` (ctxsalesaccounts ctx) && scriveService ctx
+isSales ctx = (useremail <$> userinfo <$> ctxmaybeuser ctx) `melem` (ctxsalesaccounts ctx)
 
 {- |
    Will 404 if not logged in as an admin.
@@ -165,23 +160,3 @@ getAsString = getDataFnM . look
 -- variable not present or when it cannot be read.
 getDataFnM :: (HasRqData m, MonadBase IO m, MonadIO m, ServerMonad m) => RqData a -> m a
 getDataFnM fun = either (const internalError) return =<< getDataFn fun
-
--- | Current service id
-
-currentService :: Context -> (Maybe Service)
-currentService  ctx = ctxservice ctx
-
-currentServiceID :: Context -> Maybe ServiceID
-currentServiceID  ctx = serviceid <$> currentService ctx
-
-scriveService :: (HasService a) => a -> Bool
-scriveService a = Nothing ==  getService a
-
-class HasService a where
-    getService:: a -> Maybe ServiceID
-
-instance HasService Document where
-    getService = documentservice
-
-instance HasService Context where
-    getService ctx = serviceid <$> ctxservice ctx

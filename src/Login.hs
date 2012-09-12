@@ -43,7 +43,7 @@ forgotPasswordPagePost = do
   case memail of
     Nothing -> runJSONGenT $ value "send" False 
     Just email -> do
-      muser <- dbQuery $ GetUserByEmail Nothing $ Email email
+      muser <- dbQuery $ GetUserByEmail $ Email email
       case muser of
         Nothing -> do
           Log.security $ "ip " ++ (show $ ctxipnumber ctx) ++ " made a failed password reset request for non-existant account " ++ email
@@ -90,7 +90,7 @@ handleSignup = do
   case memail of
     Nothing -> return Nothing
     Just email -> do
-      muser <- dbQuery $ GetUserByEmail Nothing $ Email $ email
+      muser <- dbQuery $ GetUserByEmail $ Email email
       case (muser, muser >>= userhasacceptedtermsofservice) of
         (Just user, Nothing) -> do
           -- there is an existing user that hasn't been activated
@@ -134,7 +134,7 @@ handleLoginPost = do
     case (memail, mpasswd) of
         (Just email, Just passwd) -> do
             -- check the user things here
-            maybeuser <- dbQuery $ GetUserByEmail Nothing (Email email)
+            maybeuser <- dbQuery $ GetUserByEmail (Email email)
             case maybeuser of
                 Just user@User{userpassword}
                     | verifyPassword userpassword passwd -> do

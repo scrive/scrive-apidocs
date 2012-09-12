@@ -4,6 +4,51 @@ import DB
 import Doc.DocStateData
 import Stats.Tables
 
+removeServiceIDFromDocStatEvents :: MonadDB m => Migration m
+removeServiceIDFromDocStatEvents = Migration {
+    mgrTable = tableDocStatEvents
+  , mgrFrom = 4
+  , mgrDo = do
+    -- check if service_id field is empty for all doc stat events
+    check <- getMany "SELECT DISTINCT service_id IS NULL FROM doc_stat_events"
+    case check of
+      []     -> return () -- no records, ok
+      [True] -> return () -- only nulls, ok
+      _      -> error "Doc stat events have rows with non-null service_id"
+    kRunRaw "ALTER TABLE doc_stat_events DROP CONSTRAINT fk_doc_stat_events_service"
+    kRunRaw "ALTER TABLE doc_stat_events DROP COLUMN service_id"
+}
+
+removeServiceIDFromUserStatEvents :: MonadDB m => Migration m
+removeServiceIDFromUserStatEvents = Migration {
+    mgrTable = tableUserStatEvents
+  , mgrFrom = 3
+  , mgrDo = do
+    -- check if service_id field is empty for all user stat events
+    check <- getMany "SELECT DISTINCT service_id IS NULL FROM user_stat_events"
+    case check of
+      []     -> return () -- no records, ok
+      [True] -> return () -- only nulls, ok
+      _      -> error "User stat events have rows with non-null service_id"
+    kRunRaw "ALTER TABLE user_stat_events DROP CONSTRAINT fk_user_stat_events_service"
+    kRunRaw "ALTER TABLE user_stat_events DROP COLUMN service_id"
+}
+
+removeServiceIDFromSignStatEvents :: MonadDB m => Migration m
+removeServiceIDFromSignStatEvents = Migration {
+    mgrTable = tableSignStatEvents
+  , mgrFrom = 2
+  , mgrDo = do
+    -- check if service_id field is empty for all sign stat events
+    check <- getMany "SELECT DISTINCT service_id IS NULL FROM sign_stat_events"
+    case check of
+      []     -> return () -- no records, ok
+      [True] -> return () -- only nulls, ok
+      _      -> error "Sign stat events have rows with non-null service_id"
+    kRunRaw "ALTER TABLE sign_stat_events DROP CONSTRAINT fk_sign_stat_events_service"
+    kRunRaw "ALTER TABLE sign_stat_events DROP COLUMN service_id"
+}
+
 removeDocEventsThatReferenceNotActivatedUsers :: MonadDB m => Migration m
 removeDocEventsThatReferenceNotActivatedUsers = Migration {
     mgrTable = tableDocStatEvents

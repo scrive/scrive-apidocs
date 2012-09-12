@@ -170,7 +170,7 @@ testHandlerForAccountCreated = do
     ctx <- mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [ ("email", inText "test@test.com")]
     _ <- runTestKontra req ctx $ signupPagePost
-    Just user <- dbQuery $ GetUserByEmail Nothing $ Email "test@test.com"
+    Just user <- dbQuery $ GetUserByEmail $ Email "test@test.com"
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
     assertBool "History log exists" (not . null $ history)
     assertBool "History log contains account created event" 
@@ -240,7 +240,6 @@ createTestUser = do
     muser <- dbUpdate $ AddUser ("", "")
                                 "karol@skrivapa.se"
                                 (Just pwd) 
-                                Nothing 
                                 Nothing 
                                 (mkLocaleFromRegion defaultValue)
     case muser of

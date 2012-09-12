@@ -16,7 +16,6 @@ import qualified MemCache
 import FlashMessage
 import Mails.MailsConfig
 import LiveDocx (LiveDocxConf(..))
-import API.Service.Model
 import Company.Model
 import MagicHash (MagicHash)
 import IPAddress
@@ -48,7 +47,6 @@ data Context = Context
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString -- ^
     , ctxxtoken              :: MagicHash -- ^ The XToken for combatting CSRF
     , ctxcompany             :: Maybe Company -- ^
-    , ctxservice             :: Maybe Service -- ^
     , ctxlocation            :: String -- ^
     , ctxadminaccounts       :: [Email] -- ^
     , ctxsalesaccounts       :: [Email] -- ^

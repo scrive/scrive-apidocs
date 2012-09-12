@@ -54,7 +54,7 @@ handleConfirmDelay adminemail delayid key = do
     Nothing -> addFlashM $ modalDenyDelay
     Just (email, companyid) -> do
       company   <- guardJustM $ dbQuery $ GetCompany companyid
-      adminuser <- guardJustM $ dbQuery $ GetUserByEmail Nothing (Email adminemail)
+      adminuser <- guardJustM $ dbQuery $ GetUserByEmail (Email adminemail)
       unless (Just companyid == usercompany adminuser && useriscompanyadmin adminuser)
              internalError
       newuser <- guardJustM $ createUser (Email email) ("", "") (Just companyid) (ctxlocale ctx)

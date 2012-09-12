@@ -211,7 +211,7 @@ handleAfterSigning :: Kontrakcja m => Document -> SignatoryLinkID -> m ()
 handleAfterSigning document@Document{documentid} signatorylinkid = do
   ctx <- getContext
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
-  maybeuser <- dbQuery $ GetUserByEmail (currentServiceID ctx) (Email $ getEmail signatorylink)
+  maybeuser <- dbQuery $ GetUserByEmail (Email $ getEmail signatorylink)
   case maybeuser of
     Just user | isJust $ userhasacceptedtermsofservice user-> do
       let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink) (getEmail signatorylink) (signatorylinkid)
@@ -373,7 +373,6 @@ handleIssueShowPost docid = do
 handleIssueSign :: Kontrakcja m => Document -> m KontraLink
 handleIssueSign document = do
     Log.debug "handleIssueSign"
-    ctx <- getContext
     mdocs <- splitUpDocument document
     case mdocs of
       Right docs -> do
@@ -384,12 +383,6 @@ handleIssueSign document = do
                 addFlashM $ modalSendConfirmationView d True
             return $ LinkIssueDoc (documentid d)
           ([], ds) -> do
-            if isJust $ ctxservice ctx
-              then do
-              --sessionid <- readCookieValue "sessionId"
-              --return $ LinkConnectUserToSession (ctxservice ctx) (fromJust $ ctxmaybeuser ctx) sessionid LinkCSVLandPage
-              return $ LinkCSVLandPage (length ds)
-              else do
               addFlashM $ flashMessageCSVSent $ length ds
               Log.debug (show $ map documenttype ds)
               case documenttype (head ds) of
@@ -436,7 +429,6 @@ handleIssueSign document = do
 handleIssueSend :: Kontrakcja m => Document -> m KontraLink
 handleIssueSend document = do
     Log.debug "handleIssueSend"
-    ctx <- getContext
     mdocs <- splitUpDocument document
     case mdocs of
       Right docs -> do
@@ -447,12 +439,6 @@ handleIssueSend document = do
                 addFlashM $ modalSendConfirmationView d False
             return $ LinkIssueDoc (documentid d)
           ([], ds) -> do
-            if isJust $ ctxservice ctx
-              then do
-              --sessionid <- readCookieValue "sessionId"
-              --return $ LinkConnectUserToSession (ctxservice ctx) (fromJust $ ctxmaybeuser ctx) sessionid LinkCSVLandPage
-              return $ LinkCSVLandPage (length ds)
-              else do
               addFlashM $ flashMessageCSVSent $ length ds
               Log.debug (show $ map documenttype ds)
               case documenttype (head ds) of
@@ -668,8 +654,8 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
       edoc <- getDocByDocIDForAuthor docid
       case edoc of
         Left _ -> return LoopBack
-        Right doc -> do
-          muser <- dbQuery $ GetUserByEmail (documentservice doc) (Email email)
+        Right _ -> do
+          muser <- dbQuery $ GetUserByEmail (Email email)
           actor <- guardJustM $ mkAuthorActor <$> getContext
           mnewdoc <- runMaybeT $ do
             True <- dbUpdate $ ChangeSignatoryEmailWhenUndelivered docid slid muser email actor
@@ -845,14 +831,12 @@ handleSigAttach docid siglinkid = do
 handleInvariantViolations :: Kontrakcja m => m Response
 handleInvariantViolations = onlyAdmin $ do
   Context{ ctxtime } <- getContext
-  docs <- dbQuery $ GetDocumentsByService Nothing
+  docs <- dbQuery GetAllDocuments
   let probs = listInvariantProblems ctxtime docs
       res = case probs of
         [] -> "No problems!"
         _  -> intercalate "\n" probs
   return $ Response 200 Map.empty nullRsFlags (BSL.fromString res) Nothing
-
-
 
 prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 prepareEmailPreview docid slid = do

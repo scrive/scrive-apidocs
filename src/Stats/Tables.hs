@@ -5,7 +5,7 @@ import DB
 tableDocStatEvents :: Table
 tableDocStatEvents = Table {
   tblName = "doc_stat_events"
-  , tblVersion = 4
+  , tblVersion = 5
   , tblCreateOrValidate = \desc -> case desc of
       [("user_id",     SqlColDesc { colType       = SqlBigIntT
                                   , colNullable   = Just False}),
@@ -17,8 +17,6 @@ tableDocStatEvents = Table {
                                   , colNullable   = Just False}),
        ("document_id", SqlColDesc { colType       = SqlBigIntT
                                   , colNullable   = Just False}),
-       ("service_id",  SqlColDesc { colType       = SqlVarCharT
-                                  , colNullable   = Just True}),
        ("company_id",  SqlColDesc { colType       = SqlBigIntT
                                   , colNullable   = Just True}),
        ("document_type", SqlColDesc { colType     = SqlVarCharT
@@ -33,7 +31,6 @@ tableDocStatEvents = Table {
           ++ ", quantity      SMALLINT    NOT NULL"
           ++ ", amount        INTEGER     NOT NULL"
           ++ ", document_id   BIGINT      NOT NULL"
-          ++ ", service_id    TEXT            NULL"
           ++ ", company_id    BIGINT          NULL"
           ++ ", document_type TEXT        NOT NULL"
           ++ ", api_string    TEXT        NOT NULL"
@@ -52,16 +49,12 @@ tableDocStatEvents = Table {
       ++ " ADD CONSTRAINT fk_doc_stat_events_company FOREIGN KEY(company_id)"
       ++ " REFERENCES companies(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE doc_stat_events"
-      ++ " ADD CONSTRAINT fk_doc_stat_events_service FOREIGN KEY(service_id)"
-      ++ " REFERENCES services(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 
 tableUserStatEvents :: Table
 tableUserStatEvents = Table {
   tblName = "user_stat_events"
-  , tblVersion = 3
+  , tblVersion = 4
   , tblCreateOrValidate = \desc -> case desc of
       [("user_id",     SqlColDesc { colType        = SqlBigIntT
                                   , colNullable    = Just False}),
@@ -71,8 +64,6 @@ tableUserStatEvents = Table {
                                   , colNullable    = Just False}),
        ("amount",      SqlColDesc { colType        = SqlBigIntT
                                   , colNullable    = Just False}),
-       ("service_id",  SqlColDesc { colType = SqlVarCharT
-                                  , colNullable = Just True}),
        ("company_id",  SqlColDesc { colType = SqlBigIntT
                                  , colNullable = Just True}),
        ("id",          SqlColDesc { colType        = SqlBigIntT
@@ -84,7 +75,6 @@ tableUserStatEvents = Table {
           ++ ", time          TIMESTAMPTZ NOT NULL"
           ++ ", quantity      SMALLINT    NOT NULL"
           ++ ", amount        INTEGER     NOT NULL"
-          ++ ", service_id    TEXT            NULL"
           ++ ", company_id    BIGINT          NULL"
           ++ ", id            BIGINT      NOT NULL      DEFAULT nextval('user_stat_events_id_seq')"
           ++ ", CONSTRAINT pk_user_stat_events PRIMARY KEY (id)"
@@ -102,16 +92,12 @@ tableUserStatEvents = Table {
       ++ " ADD CONSTRAINT fk_user_stat_events_company FOREIGN KEY(company_id)"
       ++ " REFERENCES companies(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE user_stat_events"
-      ++ " ADD CONSTRAINT fk_user_stat_events_service FOREIGN KEY(service_id)"
-      ++ " REFERENCES services(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 
 tableSignStatEvents :: Table
 tableSignStatEvents = Table {
   tblName = "sign_stat_events"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblCreateOrValidate = \desc -> case desc of
       [("document_id",       SqlColDesc { colType     = SqlBigIntT
                                         , colNullable = Just False}),
@@ -121,8 +107,6 @@ tableSignStatEvents = Table {
                                         , colNullable = Just False}),
        ("quantity",          SqlColDesc { colType     = SqlSmallIntT
                                         , colNullable = Just False}),
-       ("service_id",        SqlColDesc { colType     = SqlVarCharT
-                                        , colNullable = Just True}),
        ("company_id",        SqlColDesc { colType     = SqlBigIntT
                                         , colNullable = Just True}),
        ("document_process",  SqlColDesc { colType     = SqlSmallIntT
@@ -133,7 +117,6 @@ tableSignStatEvents = Table {
           ++ ", signatory_link_id  BIGINT      NOT NULL"
           ++ ", time               TIMESTAMPTZ NOT NULL"
           ++ ", quantity           SMALLINT    NOT NULL"
-          ++ ", service_id         TEXT            NULL"
           ++ ", company_id         BIGINT          NULL"
           ++ ", document_process   SMALLINT    NOT NULL"
           ++ ", CONSTRAINT pk_sign_stat_events PRIMARY KEY (quantity, document_id, signatory_link_id)"
@@ -155,9 +138,5 @@ tableSignStatEvents = Table {
     kRunRaw $ "ALTER TABLE sign_stat_events"
       ++ " ADD CONSTRAINT fk_sign_stat_events_company FOREIGN KEY(company_id)"
       ++ " REFERENCES companies(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE sign_stat_events"
-      ++ " ADD CONSTRAINT fk_sign_stat_events_service FOREIGN KEY(service_id)"
-      ++ " REFERENCES services(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }

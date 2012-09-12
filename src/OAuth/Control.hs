@@ -106,7 +106,7 @@ authorizationGranted = do
       return $ LinkOAuthAuthorization token
     Just user -> do
       (url, verifier) <- guardJustM $ dbUpdate $ VerifyCredentials token (userid user) time
-      _ <- addUserStatAPIGrantAccess (userid user) time (usercompany user) Nothing 
+      _ <- addUserStatAPIGrantAccess (userid user) time (usercompany user) 
       return $ LinkOAuthCallback url token $ Just verifier
 
 tokenCredRequest :: Kontrakcja m => m Response

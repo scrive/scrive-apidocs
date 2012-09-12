@@ -29,8 +29,8 @@ module Doc.Model
   , ErrorDocument(..)
   , GetDeletedDocumentsByUser(..)
   , GetDocuments(..)
+  , GetAllDocuments(..)
   , GetDocumentByDocumentID(..)
-  , GetDocumentsByService(..)
   , GetDocumentsByCompanyWithFiltering(..)
   , GetDocumentsByAuthorCompanyWithFiltering(..)
   , GetDocumentsByAuthor(..)
@@ -78,7 +78,6 @@ module Doc.Model
   , FixClosedErroredDocument(..)
   ) where
 
-import API.Service.Model
 import Control.Monad.Trans
 import DB
 import MagicHash
@@ -134,7 +133,6 @@ data DocumentFilter
   | DocumentFilterByTags [DocumentTag]        -- ^ All of listed tags
   | DocumentFilterMinChangeTime MinutesTime   -- ^ Minimal mtime
   | DocumentFilterMaxChangeTime MinutesTime   -- ^ Maximum mtime
-  | DocumentFilterByService (Maybe ServiceID) -- ^ Only documents belonging to a service
   | DocumentFilterByRole SignatoryRole        -- ^ Signatory must have role
   | DocumentFilterByProcess [DocumentProcess] -- ^ Any of listed processes
   | DocumentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
@@ -148,7 +146,6 @@ data DocumentDomain
   | DocumentsForSignatoryDeleteValue UserID Bool -- ^ Documents by signatory, with delete flag
   | TemplatesOfAuthorDeleteValue UserID Bool     -- ^ Templates by author, with deleted flag
   | TemplatesSharedInUsersCompany UserID         -- ^ Templates shared in company
-  | DocumentsOfService (Maybe ServiceID)         -- ^ All documents of service
   | DocumentsOfCompany CompanyID Bool Bool       -- ^ All documents of a company, with flag for selecting also drafts and deleted
   | DocumentsOfAuthorCompany CompanyID Bool Bool -- ^ All documents of a company by author, with flag for selecting also drafts and deleted
 
@@ -162,7 +159,6 @@ data DocumentOrderBy
   | DocumentOrderByProcess     -- ^ Order by process
   | DocumentOrderByPartners    -- ^ Order by partner names or emails
   | DocumentOrderByAuthor      -- ^ Order by author name or email
-  | DocumentOrderByService     -- ^ Order by service
 
 
 -- | Convert DocumentOrderBy enumeration into proper SQL order by statement
@@ -178,7 +174,6 @@ documentOrderByToSQL DocumentOrderByPartners =
   parenthesize (selectSignatoryLinksSmartNames [SignatoryPartner])
 documentOrderByToSQL DocumentOrderByAuthor =
   parenthesize (selectSignatoryLinksSmartNames [SignatoryAuthor])
-documentOrderByToSQL DocumentOrderByService = SQL "documents.service_id" []
 
 selectSignatoryLinksSmartNames :: [SignatoryRole] -> SQL
 selectSignatoryLinksSmartNames roles =
@@ -263,9 +258,6 @@ documentDomainToSQL (TemplatesSharedInUsersCompany uid) =
        ++ "                  AND usr2.company_id = usr1.company_id "
        ++ "                  AND usr1.id = ?)")
         [toSql Shared, toSql uid]
-documentDomainToSQL (DocumentsOfService sid) =
-  SQL "documents.service_id IS NOT DISTINCT FROM ? AND documents.type = 1"
-        [toSql sid]
 documentDomainToSQL (DocumentsOfCompany cid preparation deleted) =
   SQL "signatory_links.company_id = ? AND (? OR documents.status <> ?) AND signatory_links.deleted = ? AND signatory_links.really_deleted = FALSE"
         [toSql cid,toSql preparation, toSql Preparation, toSql deleted]
@@ -299,8 +291,6 @@ documentFilterToSQL (DocumentFilterMinChangeTime ctime) =
   SQL (maxselect ++ " >= ?") [toSql ctime]
 documentFilterToSQL (DocumentFilterMaxChangeTime ctime) =
   SQL (maxselect ++ " <= ?") [toSql ctime]
-documentFilterToSQL (DocumentFilterByService mservice) =
-  SQL "documents.service_id IS NOT DISTINCT FROM ?" [toSql mservice]
 documentFilterToSQL (DocumentFilterByProcess processes) =
   sqlConcatOR $ map (\process -> SQL "documents.process = ?" [toSql process]) processes
 documentFilterToSQL (DocumentFilterByRole role) =
@@ -422,7 +412,6 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentsharing" documentsharing
                    , checkEqualBy "documentrejectioninfo" documentrejectioninfo
                    , checkEqualBy "documenttags" documenttags
-                   , checkEqualBy "documentservice" documentservice
                    , checkEqualBy "documentdeleted" documentdeleted
                    , checkEqualBy "documentauthorattachments" documentauthorattachments
                    , checkEqualBy "documentui" documentui
@@ -453,7 +442,6 @@ documentsSelectors = SQL (intercalate ", " [
   , "rejection_time"
   , "rejection_signatory_link_id"
   , "rejection_reason"
-  , "service_id"
   , "deleted"
   , "mail_footer"
   , "region"
@@ -476,7 +464,7 @@ fetchDocuments = foldDB decoder []
     decoder acc did title file_id sealed_file_id status error_text simple_type
      process ctime mtime days_to_sign timeout_time invite_time
      invite_ip invite_text cancelationreason rejection_time
-     rejection_signatory_link_id rejection_reason service deleted mail_footer
+     rejection_signatory_link_id rejection_reason deleted mail_footer
      region sharing status_class authentication_method delivery_method
        = Document {
          documentid = did
@@ -505,7 +493,6 @@ fetchDocuments = foldDB decoder []
            (Just t, Just sl, mr) -> Just (t, sl, fromMaybe "" mr)
            _ -> Nothing
        , documenttags = S.empty
-       , documentservice = service
        , documentdeleted = deleted
        , documentauthorattachments = []
        , documentui = DocumentUI mail_footer
@@ -863,7 +850,6 @@ insertDocumentAsIs document = do
                  , documentsharing
                  , documentrejectioninfo
                  , documenttags
-                 , documentservice
                  , documentdeleted
                  , documentauthorattachments
                  , documentui
@@ -894,7 +880,6 @@ insertDocumentAsIs document = do
       , sql "rejection_time" $ fst3 `fmap` documentrejectioninfo
       , sql "rejection_signatory_link_id" $ snd3 `fmap` documentrejectioninfo
       , sql "rejection_reason" $ thd3 `fmap` documentrejectioninfo
-      , sql "service_id" documentservice
       , sql "deleted" documentdeleted
       , sql "mail_footer" $ documentmailfooter $ documentui -- should go into separate table?
       , sql "region" documentregion
@@ -1385,11 +1370,6 @@ instance MonadDB m => DBQuery m GetDocumentByDocumentID (Maybe Document) where
       <> SQL "WHERE id = ? AND deleted = FALSE" [toSql did])
       >>= oneObjectReturnedGuard
 
-data GetDocumentsByService = GetDocumentsByService (Maybe ServiceID)
-instance MonadDB m => DBQuery m GetDocumentsByService [Document] where
-  query (GetDocumentsByService msid) =
-    query (GetDocuments [DocumentsOfService msid] [] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
-
 -- | GetDocuments is central switch for documents list queries.
 --
 -- GetDocuments domains filters sorting pagination
@@ -1403,7 +1383,6 @@ instance MonadDB m => DBQuery m GetDocumentsByService [Document] where
 --
 data GetDocuments = GetDocuments [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] DocumentPagination
 instance MonadDB m => DBQuery m GetDocuments [Document] where
-  query (GetDocuments [] _filters _orderbys _pagination)   = return []
   query (GetDocuments domains filters orderbys pagination) = do
     selectDocuments $ mconcat
       [ selectDocumentsSQL
@@ -1424,6 +1403,12 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
         else SQL "" []
       , SQL (" OFFSET " ++ show (documentOffset pagination) ++ " LIMIT " ++ show (documentLimit pagination)) []
       ]
+
+-- | Gets all documents from database.
+-- Used for problems checking/stats/tests only.
+data GetAllDocuments = GetAllDocuments
+instance MonadDB m => DBQuery m GetAllDocuments [Document] where
+  query GetAllDocuments = query $ GetDocuments [] [] [] (DocumentPagination 0 maxBound)
 
 {- |
     Fetches documents by company with filtering by tags, edate, and status.
@@ -1614,7 +1599,6 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
                 , documentregion               = getRegion user
                 , documentctime                = ctime
                 , documentmtime                = ctime
-                , documentservice              = userservice user
                 , documentauthorattachments    = []
                 , documentauthenticationmethod = EmailAuthentication
                 , documentdeliverymethod       = EmailDelivery

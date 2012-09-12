@@ -16,7 +16,6 @@ import Routing
 import Happstack.StaticRouting (Route, choice, dir)
 import User.Model
 
-import Data.Functor
 import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 
 publicPages :: Route (KontraPlus Response)
@@ -61,20 +60,19 @@ publicDir swedish english link handler = choice $
 
 handleHomepage :: Kontra (Either Response (Either KontraLink String))
 handleHomepage = do
-  ctx@Context{ ctxmaybeuser,ctxservice } <- getContext
+  ctx@Context{ctxmaybeuser} <- getContext
   loginOn <- isFieldSet "logging"
   referer <- getField "referer"
   email   <- getField "email"
-  case (ctxmaybeuser, ctxservice) of
-    (Just _user, _) -> do
+  case ctxmaybeuser of
+    Just _user -> do
       response <- V.simpleResponse =<< firstPage ctx loginOn referer email
       clearFlashMsgs
       return $ Left response
-    (Nothing, Nothing) -> do
+    Nothing -> do
       response <- V.simpleResponse =<< firstPage ctx loginOn referer email
       clearFlashMsgs
       return $ Left response
-    _ -> Left <$> embeddedErrorPage
 
 handleSitemapPage :: Kontra Response
 handleSitemapPage = handleWholePage sitemapPage

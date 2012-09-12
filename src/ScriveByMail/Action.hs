@@ -101,7 +101,7 @@ doMailAPI content = do
     -- extension and can be used as for example password
   let extension = takeWhile (/= '@') $ dropWhile (== '+') $ dropWhile (/= '+') to
 
-  muser <- dbQuery (GetUserByEmail Nothing (Email username))
+  muser <- dbQuery $ GetUserByEmail $ Email username
 
   minfo <- case muser of
     Just user -> do

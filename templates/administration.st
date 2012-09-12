@@ -50,17 +50,6 @@ adminsmain=
     </tbody></table>
     <br/>
 $if(admin)$
-    <strong> Admin Tools  </strong>
-    <table><tbody>
-        <tr>
-          <td style="height:50px;width:200px"><a href="/adminonly/services"><button style="width:150px"> Services </button> </a> </td>
-        </tr>
-        <tr>
-        </tr>
-    </tbody></table>
-
-    <br/>
-    <br/>
     <strong> Log Files </strong>
     <ul>
       <li><a href="/adminonly/log/debug.log">debug.log</a></li>
@@ -1107,45 +1096,6 @@ backtoadminmainlink=
    <a href="$adminlink$">Go back to main admin page</a>
     <br/><br/>
 ####
-servicesAdmin=
-$backtoadminmainlink()$
-<div>
-<h4 style="margin-left:200px">All services </h4>
-<BR/>
-<table style="text-align:left">
-<thead>
-  <tr>
-      <th style="width: 200px;"> Name</th>
-      <th style="width: 300px;"> Users </th>
-      <th style="width: 300px;"> Location </th>
-  </tr>
-</thead>
-<tbody>
-$services:{service |<tr>
-    <td>$service.name$ </td>
-    <td>$service.admin$ </td>
-    <td>$service.location$ </td>
-</tr>}$
-</tbody>
-</table>
-</div>
-<BR/>
-<BR/>
-<BR/>
-<form method="POST">
-<h4 style="margin-left:200px">Create service </h4>
-<BR/>
-<table><tbody>
-<tr> <td style="width:200px;">Name: </td><td><input type="text" name="name"/> </td></tr>
-<tr> <td>Admin: </td><td><input type="text" name="admin"/></td></tr>
-<tr> <td>Password: </td><td><input type="password" name="password"/> </td></tr>
-<tr> <td>Location: </td><td><input type="text" name="location"/> </td></tr>
-</tbody></table>
-<input type="submit" name="create" value="Create"/>
-</form>
-<BR/>
-<BR/>
-###
 admindocumentslist =
 
    <div class="tab-viewer">

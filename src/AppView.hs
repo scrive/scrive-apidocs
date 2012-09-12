@@ -3,7 +3,6 @@
 -}
 module AppView( kontrakcja
               , renderFromBody
-              , embeddedPage
               , notFoundPage
               , signupPageView
               , signupVipPageView
@@ -25,13 +24,10 @@ module AppView( kontrakcja
               , apiPage
               , scriveByMailPage
               , modalError
-              , embeddedErrorPage
-              , serviceFields
               , standardPageFields
               , contextInfoFields
               ) where
 
-import API.Service.Model
 import FlashMessage
 import Kontra
 import KontraLink
@@ -97,42 +93,8 @@ pageFromBody ctx loginOn referer email showCreateAccount title bodytext =
     F.value "content" bodytext
     standardPageFields ctx title Nothing showCreateAccount loginOn referer email
 
-embeddedPage :: String -> Kontra Response
-embeddedPage pb = do
-  ctx <- getContext
-  bdy <- renderTemplate "embeddedPage" $ do
-    F.value "content" pb
-    standardPageFields ctx "" Nothing False False Nothing Nothing
-  res <- simpleResponse bdy
-  clearFlashMsgs
-  return res
-
-embeddedErrorPage :: Kontrakcja m => m Response
-embeddedErrorPage = do
-  ctx <- getContext
-  content <- renderTemplate "embeddedErrorPage" $ do
-    serviceFields (ctxlocation ctx) (ctxservice ctx)
-    standardPageFields ctx kontrakcja Nothing False False Nothing Nothing
-  simpleResponse content
-
 notFoundPage :: Kontrakcja m => m Response
 notFoundPage = renderTemplate_ "notFound" >>= renderFromBody kontrakcja
-
-serviceFields :: Monad m => String -> Maybe Service -> Fields m ()
-serviceFields location (Just service)  = do
-  F.value "location" location
-  F.value "isservice" True
-  F.value "buttons" $ isJust $ servicebuttons $ serviceui service
-  F.value "buttonBodyLink"  $ show $ LinkServiceButtonsBody $ serviceid service
-  F.value "buttonRestLink"  $ show $ LinkServiceButtonsRest $  serviceid service
-  F.value "buttonstextcolor"  $ servicebuttonstextcolor $ serviceui service
-  F.value "background"  $ servicebackground $ serviceui service
-  F.value "overlaybackground"  $ serviceoverlaybackground $ serviceui service
-  F.value "barsbackground"  $ servicebarsbackground $ serviceui service
-  F.value "logo" $ isJust $ servicelogo $ serviceui service
-  F.value "logoLink"  $ show $ LinkServiceLogo $ serviceid service
-serviceFields location Nothing =
-  F.value "location" location
 
 sitemapPage :: Kontrakcja m => m String
 sitemapPage = do
@@ -222,7 +184,6 @@ standardPageFields ctx title mpubliclink showCreateAccount loginOn referer email
   contextInfoFields ctx
   publicSafeFlagField ctx loginOn (isJust mpubliclink)
   loginModal loginOn referer email
-  serviceFields (ctxlocation ctx) (ctxservice ctx)
   F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
 
 {- |

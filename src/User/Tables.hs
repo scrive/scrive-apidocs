@@ -5,7 +5,7 @@ import DB
 tableUsers :: Table
 tableUsers = Table {
     tblName = "users"
-  , tblVersion = 9
+  , tblVersion = 10
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
@@ -14,7 +14,6 @@ tableUsers = Table {
        , ("account_suspended", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        , ("has_accepted_terms_of_service", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True})
        , ("signup_method", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
-       , ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("company_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("first_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("last_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
@@ -39,7 +38,6 @@ tableUsers = Table {
           ++ ", account_suspended BOOL NOT NULL"
           ++ ", has_accepted_terms_of_service TIMESTAMPTZ NULL"
           ++ ", signup_method SMALLINT NOT NULL"
-          ++ ", service_id TEXT NULL"
           ++ ", company_id BIGINT NULL"
           ++ ", first_name TEXT NOT NULL"
           ++ ", last_name TEXT NOT NULL"
@@ -60,13 +58,8 @@ tableUsers = Table {
         return TVRcreated
       _ -> return TVRinvalid
   , tblPutProperties = do
-    kRunRaw "CREATE INDEX idx_users_service_id ON users(service_id)"
     kRunRaw "CREATE INDEX idx_users_company_id ON users(company_id)"
     kRunRaw "CREATE INDEX idx_users_email ON users(email)"
-    kRunRaw $ "ALTER TABLE users"
-      ++ " ADD CONSTRAINT fk_users_services FOREIGN KEY(service_id)"
-      ++ " REFERENCES services(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
     kRunRaw $ "ALTER TABLE users"
       ++ " ADD CONSTRAINT fk_users_companies FOREIGN KEY(company_id)"
       ++ " REFERENCES companies(id) ON DELETE RESTRICT ON UPDATE RESTRICT"

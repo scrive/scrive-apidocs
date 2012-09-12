@@ -91,7 +91,6 @@ blankDocument =
           , documentrejectioninfo        = Nothing
           , documenttags                 = S.empty
           , documentui                   = emptyDocumentUI
-          , documentservice              = Nothing
           , documentauthorattachments    = []
           , documentdeleted              = False
           -- , documentattachments          = []

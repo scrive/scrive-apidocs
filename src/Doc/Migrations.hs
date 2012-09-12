@@ -21,6 +21,22 @@ import MinutesTime
 
 $(jsonableDeriveConvertible [t| [SignatoryField] |])
 
+removeServiceIDFromDocuments :: MonadDB m => Migration m
+removeServiceIDFromDocuments = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 9
+  , mgrDo = do
+    -- check if service_id field is empty for all documents
+    check <- getMany "SELECT DISTINCT service_id IS NULL FROM documents"
+    case check of
+      []     -> return () -- no records, ok
+      [True] -> return () -- only nulls, ok
+      _      -> error "Documents have rows with non-null service_id"
+    kRunRaw "ALTER TABLE documents DROP CONSTRAINT fk_documents_services"
+    kRunRaw "DROP INDEX idx_documents_service_id"
+    kRunRaw "ALTER TABLE documents DROP COLUMN service_id"
+}
+
 splitIdentificationTypes :: MonadDB m => Migration m
 splitIdentificationTypes = Migration {
     mgrTable = tableDocuments

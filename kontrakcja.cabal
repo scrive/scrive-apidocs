@@ -65,11 +65,6 @@ Flag test-input-validation
   Manual: True
   Default: True
 
-Flag test-integrationapi
-  Description: Build integrationapi testsuite
-  Manual: True
-  Default: True
-
 Flag test-login
   Description: Build login testsuite
   Manual: True
@@ -88,11 +83,6 @@ Flag test-mailapi
 
 Flag test-redirect
   Description: Build redirect testsuite
-  Manual: True
-  Default: True
-
-Flag test-servicestate
-  Description: Build servicestate testsuite
   Manual: True
   Default: True
 
@@ -353,8 +343,6 @@ Executable kontrakcja-test
     cpp-options: -DNO_HTML
   if !flag(test-input-validation)
     cpp-options: -DNO_INPUTVALIDATION
-  if !flag(test-integrationapi)
-    cpp-options: -DNO_INTEGRATIONAPI
   if !flag(test-login)
     cpp-options: -DNO_LOGIN
   if !flag(test-signup)
@@ -363,8 +351,6 @@ Executable kontrakcja-test
     cpp-options: -DNO_ACCOUNTINFO
   if !flag(test-mailapi)
     cpp-options: -DNO_MAILAPI
-  if !flag(test-servicestate)
-    cpp-options: -DNO_SERVICESTATE
   if !flag(test-userstate)
     cpp-options: -DNO_USERSTATE
   if !flag(test-csvutil)

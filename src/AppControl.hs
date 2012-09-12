@@ -10,7 +10,6 @@ module AppControl
     ) where
 
 import AppConf
-import API.Service.Model
 
 import Acid.Monad
 import Amazon
@@ -204,17 +203,12 @@ appHandler handleRoutes appConf appGlobals appState = runOurServerPartT . measur
       Log.error $ show e
       liftIO (tryReadMVar $ rqInputsBody rq)
         >>= Log.error . showRequest rq
-      service <- ctxservice <$> getContext
       case e of
-        InternalError -> case service of
-          Nothing -> do
-            addFlashM V.modalError
-            linkmain <- getHomeOrUploadLink
-            sendRedirect linkmain
-          _ -> embeddedErrorPage
-        Respond404 -> case service of
-          Nothing -> notFoundPage >>= notFound
-          _ -> embeddedErrorPage
+        InternalError -> do
+          addFlashM V.modalError
+          linkmain <- getHomeOrUploadLink
+          sendRedirect linkmain
+        Respond404 -> notFoundPage >>= notFound
 
     createContext session = do
       -- rqPeer hostname comes always from showHostAddress
@@ -240,11 +234,6 @@ appHandler handleRoutes appConf appGlobals appState = runOurServerPartT . measur
       muser <- getUserFromSession session
       mcompany <- getCompanyFromSession session
       mpaduser <- getPadUserFromSession session
-      mservice <- do
-        clink <- currentLink
-        if hostpart appConf `isPrefixOf` clink
-          then return Nothing
-          else dbQuery $ GetServiceByLocation $ toServiceLocation clink
 
       flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval ->
         case F.fromCookieValue fval of
@@ -286,7 +275,6 @@ appHandler handleRoutes appConf appGlobals appState = runOurServerPartT . measur
         , ctxfilecache = filecache appGlobals
         , ctxxtoken = getSessionXToken session
         , ctxcompany = mcompany
-        , ctxservice = mservice
         , ctxlocation = getLocationFromSession session
         , ctxadminaccounts = admins appConf
         , ctxsalesaccounts = sales appConf

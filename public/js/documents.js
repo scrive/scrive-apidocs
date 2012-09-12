@@ -449,9 +449,6 @@ window.Document = Backbone.Model.extend({
     authoruser: function() {
         return this.get("authoruser");
     },
-    isWhiteLabeled: function() {
-        return this.get("whitelabel");
-    },
     parse: function(args) {
      var self = this;
      setTimeout(function() {
@@ -498,7 +495,6 @@ window.Document = Backbone.Model.extend({
        logo: args.logo,
        barsbackgroundcolor: args.barsbackgroundcolor,
        barsbackgroundtextcolor: args.barsbackgroundtextcolor,
-       whitelabel: args.whitelabel,
        ready: true
      };
     }

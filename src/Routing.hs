@@ -88,13 +88,10 @@ hPutWrap :: Path Kontra KontraPlus a Response => (Kontra Response -> Kontra Resp
 hPutWrap = kpath PUT
 
 {- To change standard string to page -}
-page:: Kontra String -> Kontra Response
+page :: Kontra String -> Kontra Response
 page pageBody = do
     pb <- pageBody
-    ctx <- getContext
-    if (isNothing $ ctxservice ctx)
-     then renderFromBody kontrakcja pb
-     else embeddedPage pb
+    renderFromBody kontrakcja pb
 
 {- Use this to mark that request will try to get data from our service and embed it on our website
    It returns a script that if embeded on site will force redirect to main page
