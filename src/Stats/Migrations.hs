@@ -45,7 +45,7 @@ removeServiceIDFromSignStatEvents = Migration {
       []     -> return () -- no records, ok
       [True] -> return () -- only nulls, ok
       _      -> error "Sign stat events have rows with non-null service_id"
-    kRunRaw "ALTER TABLE sign_stat_events DROP CONSTRAINT fk_sign_stat_events_service"
+    kRunRaw "ALTER TABLE sign_stat_events DROP CONSTRAINT IF EXISTS fk_sign_stat_events_service"
     kRunRaw "ALTER TABLE sign_stat_events DROP COLUMN service_id"
 }
 
