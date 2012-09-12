@@ -449,14 +449,31 @@ window.Signatory = Backbone.Model.extend({
          return this.get("signs");
     },
     makeSignatory: function() {
-        this.set({ signs: true });
-        this.trigger("change:role");
+      var authorNotSignsMode = this.document().authorNotSignsMode();
+      this.set({ signs: true });
+      if( this.author() && authorNotSignsMode) {
+        /* We need to renumber all other signatories from group 1 to group 2 */
+        _.each(this.document().signatories(),function(sig) {
+          if( !sig.author()) {
+            sig.setSignOrder(2);
+          }
+        });
+      }
+      this.trigger("change:role");
     },
     makeViewer: function() {
-        this.set({signs: false});
-        if (this.signature() != undefined)
-           this.signature().removeAllPlacements();
-        this.trigger("change:role");
+      var authorSignsFirstMode = this.document().authorSignsFirstMode();
+      this.set({signs: false});
+      if (this.signature() != undefined) {
+        this.signature().removeAllPlacements();
+      }
+      if( this.author() && authorSignsFirstMode) {
+        /* We need to renumber all other signatories from group 2 to group 1 */
+        _.each(this.document().signatories(),function(sig) {
+          sig.setSignOrder(1);
+        });
+      }
+      this.trigger("change:role");
     },
     hasSigned: function() {
         return this.signdate() != undefined;

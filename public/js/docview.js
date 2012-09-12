@@ -207,10 +207,9 @@ window.DocumentSignConfirmation = Backbone.View.extend({
             content = $(document.process().authorIsOnlySignatory());
      else if (document.elegAuthentication())
           content.append(document.process().signatorysignmodalcontentsignvieweleg());
-     else if (document.lastSignatoryLeft())
-          content.append(document.process().signatorysignmodalcontentauthorlast());
-     else
-          content.append(document.process().signatorysignmodalcontentnotlast());
+     else 
+          content.append(document.process().signatorysignmodalcontent());
+
      if (document.elegAuthentication()) {
         var subhead = $("<h3/>").text(localization.signByAuthor.eleg.subhead);
         var a = $("<a target='_new' />").text(localization.signByAuthor.eleg.clickHere).attr("href", "http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
@@ -222,10 +221,9 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       var content = $("<div />");
       if (document.elegAuthentication())
           content.append(document.process().signatorysignmodalcontentsignvieweleg());
-      else if (document.lastSignatoryLeft())
-          content.append(document.process().signatorysignmodalcontentlast());
       else
-          content.append(document.process().signatorysignmodalcontentnotlast());
+          content.append(document.process().signatorysignmodalcontent());
+
       if (document.elegAuthentication()) {
         var subhead = $("<h3/>").text(localization.sign.eleg.subhead);
         var a = $("<a target='_new' />").text(localization.sign.eleg.clickHere).attr("href", "http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");

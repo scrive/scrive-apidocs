@@ -39,51 +39,62 @@ window.SignatoryDesignView = Backbone.View.extend({
         return addFieldButton;
    } ,
    refreshRoleSelector: function() {
-       var view = this;
-       var signatory = this.model;
+     var self = this;
+     var signatory = self.model;
 
-       if (view.showRoleSelector) {
-           this.setRoleIcon.addClass("selected");
-           this.setRoleBox = $("<div class='setRoleBox'/>");
-           this.container.append(this.setRoleBox);
+     if (self.showRoleSelector) {
+       self.setRoleIcon.addClass("selected");
+       self.setRoleBox = $("<div class='setRoleBox'/>");
+       self.container.append(self.setRoleBox);
 
-           var closeButton = $("<a class='modal-close close' href='#'/>");
-           closeButton.click(function() {
-               view.setRoleIcon.removeClass("selected");
-               if (view.setRoleBox!= undefined)  view.setRoleBox.remove();
-               view.showRoleSelector = false;
-               return false;
+       var niceClose = function(funcOnChange) {
+         self.setRoleIcon.removeClass("selected");
+         self.showRoleSelector = false;
+         if (self.setRoleBox!= undefined) {
+           self.setRoleBox.hide(0, function() {
+             if (self.setRoleBox!= undefined) {
+               self.setRoleBox.remove();
+             }
+             if( funcOnChange!=undefined ) {
+               funcOnChange();
+             }
            });
-           this.setRoleBox.append(closeButton);
-
-
-           var makeSignatoryWrapper = $("<div class='option'/>");
-           var makeSignatoryCheckbox =  $("<input class='radio' type='radio'/>");
-           if (signatory.signs())
-               makeSignatoryCheckbox.attr("checked","yes");
-           else
-               makeSignatoryCheckbox.click(function() {
-                   signatory.makeSignatory();
-            });
-           makeSignatoryWrapper.append(makeSignatoryCheckbox).append("<span class='radiolabel'>"+localization.isSigningParty+"</span>");
-           this.setRoleBox.append(makeSignatoryWrapper);
-
-
-           var makeNotSignatoryWrapper = $("<div class='option'>");
-           var makeNotSignatoryCheckbox =  $("<input class='radio' type='radio'>");
-           makeNotSignatoryWrapper.append(makeNotSignatoryCheckbox).append("<span class='radiolabel'>"+localization.isNotSigningParty+"</span>");
-           this.setRoleBox.append(makeNotSignatoryWrapper);
-           if (!signatory.signs())
-               makeNotSignatoryCheckbox.attr("checked","yes");
-           else
-               makeNotSignatoryCheckbox.click(function() {
-                   signatory.makeViewer();
-            });
+         }
        }
-       else {
-           this.setRoleIcon.removeClass("selected");
-           if (this.setRoleBox!= undefined)  this.setRoleBox.remove();
-       }
+
+       var closeButton = $("<a class='modal-close close' href='#'/>");
+       closeButton.click(function() {
+         niceClose();
+         return false;
+       });
+       self.setRoleBox.append(closeButton);
+
+       var addOption = function(text,checked,funcOnChange) {
+         var wrapper = $("<div class='option'/>");
+         var checkbox = $("<input class='radio' type='radio'/>");
+         var checkboxID = "idf" + Math.random();
+         checkbox.attr("id",checkboxID);
+         if (checked) {
+           checkbox.attr("checked","yes");
+         } else {
+           checkbox.change(function() {
+             niceClose(funcOnChange);
+           });
+         }
+         var label = $("<label class='radiolabel'>").text(text).attr("for", checkboxID);
+         wrapper.append(checkbox).append(label);
+         self.setRoleBox.append(wrapper);
+       };
+       addOption(localization.isSigningParty, signatory.signs(),
+                 function() { signatory.makeSignatory(); });
+       addOption(localization.isNotSigningParty, !signatory.signs(),
+                 function() { signatory.makeViewer(); });
+     }
+     else {
+       self.setRoleIcon.removeClass("selected");
+       if (self.setRoleBox!= undefined)
+         self.setRoleBox.remove();
+     }
    },
    setRoleFieldIcon : function() {
        var view = this;
@@ -104,26 +115,24 @@ window.SignatoryDesignView = Backbone.View.extend({
        var signatory = this.model;
        var setSignOrderIcon = $("<a class='setSignOrder' href='#'/>");
        setSignOrderIcon.click(function(){
-          signatory.document().view.toggleSignOrger();
+          signatory.document().view.toggleSignOrder();
             });
         return setSignOrderIcon;
    },
    signOrderSelector : function() {
-      var select = $("<select class='selectSignOrder'/>");
-      var signatory = this.model;
-      var signatoriesCount = signatory.document().signatories().length;
-      for(var i=1;i<=signatoriesCount;i++)
-      {
-        if (signatory.author() && (i != 1 && i != signatoriesCount ))  continue; // Author can only select first or last.
-        var option = $("<option value='"+i+"'>"+i+"</option>");
-        if (i == signatory.signorder())
-            option.attr("selected","Yes");
-        select.append(option);
-      }
-      select.change(function(){
-            signatory.setSignOrder($(this).val());
-      });
-      return select;
+     var select = $("<select class='selectSignOrder'/>");
+     var signatory = this.model;
+     var signatoriesCount = signatory.document().signatories().length;
+     for(var i=1; i<=signatoriesCount; i++){
+       var option = $("<option>").attr("value",i).text(i);
+       select.append(option);
+     }
+     select.val(signatory.signorder());
+
+     select.change(function(){
+       signatory.setSignOrder($(this).val());
+     });
+     return select;
    },
    setCsvSignatoryIcon : function() {
        var view = this;

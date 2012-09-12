@@ -18,21 +18,41 @@ var DocumentDesignView = Backbone.View.extend({
         this.render();
     },
     signOrderVisible : function() {
-        return this.showSignOrder == true || _.any(this.model.signatories(), function(sig) {
-            return sig.signorder() != 1;
-        });
+      if( this.showSignOrder == true ) {
+        return true;
+      }
+      return !this.model.authorSignsFirstMode() && !this.model.authorSignsLastMode() && !this.model.authorNotSignsMode();
     },
-    toggleSignOrger : function() {
-        if (this.signOrderVisible())
-        {   _.each(this.model.signatories(),function(sig) {
-                sig.setSignOrder(1);
+    toggleSignOrder : function() {
+      if (this.signOrderVisible()) {
+        this.showSignOrder = false;
+        var document = this.model;
+        var author = this.model.author();
+        if( author.signs()) {
+          if( author.signorder()==1 ) {
+            /* Make everybody else sign as second group */
+            _.each(document.signatories(),function(sig) {
+              sig.setSignOrder(sig.author()?1:2);
             });
-            this.showSignOrder = false;
+          }
+          else {
+            /* Make author sign last in his own group */
+            _.each(document.signatories(),function(sig) {
+              sig.setSignOrder(sig.author()?2:1);
+            });
+          }
         }
-        else
-            this.showSignOrder = true;
+        else {
+          /* Author does not sign so everybody signs in first group */
+          _.each(document.signatories(),function(sig) {
+            sig.setSignOrder(1);
+          });
+        }
+      } else {
+        this.showSignOrder = true;
+      }
 
-        this.model.trigger("change");
+      this.model.trigger("change");
     },
     prerender: function(){
         this.contrainer = $("<div class='mainContainer' />");
@@ -416,28 +436,37 @@ var DocumentDesignView = Backbone.View.extend({
         });
         return box;
     },
-    signLast : function() {
+    signLastOption : function(signLast) {
+      var self = this;
+      var box = $("<div class='signLastOption'/>");
+      var checkbox = $("<input type='checkbox' class='signLastCheckbox'>");
+      var checkboxid = "fdd" + Math.random();
+      checkbox.attr("id",checkboxid);
+      checkbox.attr("checked", signLast);
 
-          return "true" == SessionStorage.get(this.model.documentid(), "signLastChecked");
-    },
-    signLastOption : function() {
-        var view = this;
-        var box = $("<div class='signLastOption'/>");
-        var checkbox = $("<input type='checkbox' cc='FALSE' class='signLastCheckbox'>");
-        if (this.signLast())
-        {
-            checkbox.attr("checked","YES");
-            checkbox.attr("cc","YES");
-        }
-        checkbox.change(function() {view.setSignLast( $(this).attr("cc") != "YES")});
+      checkbox.change(function() {
+        self.setSignLast( $(this).attr("checked"));
+      });
 
-        var text = $("<span>").text(localization.signLast);
-        box.append(checkbox).append(text);
-        return box;
+      var label = $("<label>").text(localization.signLast).attr("for",checkboxid);
+      box.append(checkbox).append(label);
+      return box;
     },
     setSignLast : function(v) {
-         SessionStorage.set(this.model.documentid(), "signLastChecked", "" + v);
-         this.refreshFinalButton();
+      var document = this.model;
+      if( !v ) {
+        /* Make everybody else sign as second group */
+        _.each(document.signatories(),function(sig) {
+          sig.setSignOrder(sig.author()?1:2);
+        });
+      }
+      else {
+        /* Make author sign last in his own group */
+        _.each(document.signatories(),function(sig) {
+          sig.setSignOrder(sig.author()?2:1);
+        });
+      }
+      this.refreshFinalButton();
     },
     refreshInvitationMessageOption : function() {
         if (this.editInvitationOptionBox != undefined)
@@ -463,52 +492,68 @@ var DocumentDesignView = Backbone.View.extend({
             this.finalButtonBox.replaceWith(this.finalButton());
     },
     finalButton: function() {
-        var document = this.model;
-        var view = this;
-        this.finalButtonBox = $("<div class='finalbuttonbox'/>");
-        if (!document.isTemplate()  && document.authorCanSignFirst())
-            this.finalButtonBox.append(this.signLastOption());
-        var button;
-        if (document.isTemplate())
-            button = Button.init({
-                        color: "green",
-                        size: "big" ,
-                        cssClass: "finalbutton",
-                        text: localization.saveTemplate,
-                        onClick: function() {
-                                if (alreadyClicked(this))
-                                  return;
-                                document.save();
-                                document.afterSave( function() {new Submit().send();});
-                        }
-                      });
-        else if (!this.signLast() && document.authorCanSignFirst())
-            button = Button.init({
-                        color: "blue",
-                        size: "big" ,
-                        cssClass: "finalbutton",
-                        text: localization.designview.sign,
-                        onClick: function() {
-                            if (!view.verificationBeforeSendingOrSigning(true)) return;
-                               document.save();
-                               view.signConfirmation();
-                        }
-                      });
-       else
+      var document = this.model;
+      var view = this;
+      this.finalButtonBox = $("<div class='finalbuttonbox'/>");
+      if (!document.isTemplate()) {
+        if( document.authorSignsLastMode()) {
+          this.finalButtonBox.append(this.signLastOption(true));
+        }
+        else if( document.authorSignsFirstMode()) {
+          this.finalButtonBox.append(this.signLastOption(false));
+        }
+      }
+      var button;
+      if (document.isTemplate()) {
+        button = Button.init({
+          color: "green",
+          size: "big" ,
+          cssClass: "finalbutton",
+          text: localization.saveTemplate,
+          onClick: function() {
+            if (alreadyClicked(this))
+              return;
+            document.save();
+            document.afterSave( function() { 
+              new Submit().send();
+            });
+          }
+        });
+      } 
+      else {
+        if (document.authorCanSignFirst()) {
+          button = Button.init({
+            color: "blue",
+            size: "big" ,
+            cssClass: "finalbutton",
+            text: localization.designview.sign,
+            onClick: function() {
+              if (!view.verificationBeforeSendingOrSigning(true)) {
+                return;
+              }
+              document.save();
+              view.signConfirmation();
+            }
+          });
+        } 
+        else {
            button = Button.init({
-                        color: "green",
-                        size: "big" ,
-                        cssClass: "finalbutton",
-                        text: document.process().sendbuttontext(),
-                        onClick: function() {
-                            if (!view.verificationBeforeSendingOrSigning(false)) return;
-                                document.save();
-                                view.sendConfirmation();
-                        }
-                      });
-        this.finalButtonBox.append(button.input());
-        return this.finalButtonBox;
-
+             color: "green",
+             size: "big" ,
+             cssClass: "finalbutton",
+             text: document.process().sendbuttontext(),
+             onClick: function() {
+               if (!view.verificationBeforeSendingOrSigning(false)) {
+                 return;
+               }
+               document.save();
+               view.sendConfirmation();
+             }
+           });
+        }
+      }
+      this.finalButtonBox.append(button.input());
+      return this.finalButtonBox;
     },
     signConfirmation : function() {
         var document = this.model;
@@ -578,11 +623,9 @@ var DocumentDesignView = Backbone.View.extend({
             content = $(document.process().authorIsOnlySignatory());
         else if (document.elegAuthentication())
             content = $(document.process().signatorysignmodalcontentdesignvieweleg());
-        else if (document.lastSignatoryLeft())
-            content = $(document.process().signatorysignmodalcontentlast());
-        else
-            content = $(document.process().signatorysignmodalcontentnotlast());
-
+        else {
+            content = $(document.process().signatorysignmodalcontent());
+        }
 
         DocumentDataFiller.fill(document, content);
         if (document.elegAuthentication())

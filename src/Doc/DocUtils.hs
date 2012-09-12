@@ -218,7 +218,6 @@ documentcurrentsignorder doc =
         sigs = documentsignatorylinks doc
         notSigned siglnk = isNothing (maybesigninfo siglnk)
             && SignatoryPartner `elem` signatoryroles siglnk -- we exclude non-signatories
-            && not (isAuthor siglnk) -- we omit author
 
 {- |
    Build a SignatoryDetails from a User with no fields
@@ -284,6 +283,17 @@ isEligibleForReminder user document@Document{documentstatus} siglink =
     dontShowAnyReminder = documentstatus `elem` [Timedout, Canceled, Rejected]
     isSignatoryPartner = SignatoryPartner `elem` signatoryroles siglink
 
+-- | Can author sign now according to sign order?
+canAuthorSignNow :: Document -> Bool
+canAuthorSignNow doc =
+     isPending doc
+  && documentcurrentsignorder doc >= signatorysignorder (signatorydetails author)
+  && (not . hasSigned $ author)
+  && isSignatory author
+  where author = case getAuthorSigLink doc of
+                   Just a -> a
+                   _ -> error $ "Document " ++ show (documentid doc) ++ " does not have author"
+
 -- Please define this better. Maybe in the positive?
 {- |
    Is this document eligible for a reminder (depends on documentstatus)?
@@ -333,7 +343,6 @@ canUserViewDirectly user = canUserInfoViewDirectly (userid user) (getEmail user)
  -}
 isActivatedSignatory :: SignOrder -> SignatoryLink -> Bool
 isActivatedSignatory signorder siglink =
-  (not $ isAuthor siglink) &&
   signorder >= signatorysignorder (signatorydetails siglink)
 
 {- |
@@ -342,7 +351,6 @@ isActivatedSignatory signorder siglink =
  -}
 isCurrentSignatory :: SignOrder -> SignatoryLink -> Bool
 isCurrentSignatory signorder siglink =
-  (not $ isAuthor siglink) &&
   signorder == signatorysignorder (signatorydetails siglink)
 
 type CustomSignatoryField = (SignatoryField, String, Bool)

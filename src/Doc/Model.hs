@@ -1587,8 +1587,10 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
                         mh <- lift random
                         return $ signLinkFromDetails'
                                 SignatoryDetails
-                                                {  signatorysignorder = SignOrder 1
-                                                 , signatoryfields   = emptySignatoryFields
+                                                { signatorysignorder = if SignatoryPartner `elem` authorRoles
+                                                                       then SignOrder 2
+                                                                       else SignOrder 1
+                                                , signatoryfields    = emptySignatoryFields
                                                 }
                                 [SignatoryPartner] [] mh
 

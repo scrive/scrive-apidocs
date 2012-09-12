@@ -164,19 +164,19 @@
 }
 .setRole{
     background-image: url("/img/iconMan.png");
+    background-repeat: no-repeat;
     margin-top: -1px;
     height: 16px;
     width: 16px;
     display: block;
     float: left;
-}
-.setRole.selected{
-    border-color: #BDBDBD #BDBDBD white;
-    border-left: 1px solid #BDBDBD;
-    border-radius: 1px 1px 0 0;
-    border-right: 1px solid #BDBDBD;
     border-style: solid;
     border-width: 1px;
+    border-color: transparent;
+    border-radius: 1px 1px 0 0;
+}
+.setRole.selected{
+    border-color: #BDBDBD #BDBDBD transparent #BDBDBD;
     position: relative;
     z-index: 10;
 }
@@ -200,11 +200,6 @@
 .setRoleBox .option .radio{
     margin-top:2px;
     margin-right: 5px;
-}
-
-.setRoleBox .option .radiolabel{
-    position: relative;
-    top: -2px;
 }
 
 .selectSignOrder{

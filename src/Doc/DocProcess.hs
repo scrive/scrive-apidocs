@@ -88,9 +88,7 @@ data DocProcessInfo =
 
   -- Texts for modal that is shown when someone is about to sign (clicked the blue sign button).
   , processsignatorysignmodaltitle :: String
-  , processsignatorysignmodalcontentlast :: String           -- Sign & design view. When person is last to sign
-  , processsignatorysignmodalcontentnotlast :: String        -- Sign & design view. When person is not last to sign
-  , processsignatorysignmodalcontentauthorlast :: String     -- Sign view. When person is author and is last to sign
+  , processsignatorysignmodalcontent :: String           -- Sign & design view. When person is last to sign
   , processsignatorysignmodalcontentdesignvieweleg :: String -- Design view, eleg authorization
   , processsignatorysignmodalcontentsignvieweleg   :: String   -- Sign view, eleg authorization
   , processsignatorysignmodalcontentauthoronly     :: String   -- Sign & design view. Only author is signatory.
@@ -135,7 +133,6 @@ data DocProcessInfo =
   , processsignedinfoheader :: String
   , processsignedinfotext :: String
   , processstatusinfotext :: String
-  , processauthorsignlastbuttontext :: String
 
   -- process specific design view titles of parties
   , processauthorname :: String
@@ -174,9 +171,7 @@ contractProcess =
   , processcancelmodaltext = "contractcancelmodaltext"
   , processrejectbuttontext = "contractrejectbuttontext"
   , processsignatorysignmodaltitle = "contractsignatorysignmodaltitle"
-  , processsignatorysignmodalcontentlast = "contractsignatorysignmodalcontentlast"
-  , processsignatorysignmodalcontentnotlast = "contractsignatorysignmodalcontentnotlast"
-  , processsignatorysignmodalcontentauthorlast = "contractsignatorysignmodalcontentauthorlast"
+  , processsignatorysignmodalcontent = "contractsignatorysignmodalcontent"
   , processsignatorysignmodalcontentdesignvieweleg = "contractsignatorysignmodalcontentdesignvieweleg"
   , processsignatorysignmodalcontentsignvieweleg = "contractsignatorysignmodalcontentsignvieweleg"
   , processsignatorysignmodalcontentauthoronly = "contractsignatorysignmodalcontentauthoronly"
@@ -221,7 +216,6 @@ contractProcess =
   , processsignedinfoheader = "contractsignedinfoheader"
   , processsignedinfotext = "contractsignedinfotext"
   , processstatusinfotext = "contractstatusinfotext"
-  , processauthorsignlastbuttontext = "contractauthorsignlastbuttontext"
 
   , processauthorname = "contractauthorname"
   , processauthorsignatoryname = "contractauthorsignatoryname"
@@ -261,9 +255,7 @@ offerProcess =
 
   , processrejectbuttontext = "offerrejectbuttontext"
   , processsignatorysignmodaltitle = "offersignatorysignmodaltitle"
-  , processsignatorysignmodalcontentlast = "offersignatorysignmodalcontentlast"
-  , processsignatorysignmodalcontentnotlast = "offersignatorysignmodalcontentnotlast"
-  , processsignatorysignmodalcontentauthorlast = "offersignatorysignmodalcontentauthorlast"
+  , processsignatorysignmodalcontent = "offersignatorysignmodalcontent"
   , processsignatorysignmodalcontentdesignvieweleg = "offersignatorysignmodalcontentdesignvieweleg"
   , processsignatorysignmodalcontentsignvieweleg = "offersignatorysignmodalcontentsignvieweleg"
   , processsignatorysignmodalcontentauthoronly = "offersignatorysignmodalcontentauthoronly"
@@ -308,7 +300,6 @@ offerProcess =
   , processsignedinfoheader = "offersignedinfoheader"
   , processsignedinfotext = "offersignedinfotext"
   , processstatusinfotext = "offerstatusinfotext"
-  , processauthorsignlastbuttontext = "offerauthorsignlastbuttontext"
 
   , processauthorname = "offerauthorname"
   , processauthorsignatoryname = "offerauthorsignatoryname"
@@ -349,9 +340,7 @@ orderProcess =
 
   , processrejectbuttontext = "orderrejectbuttontext"
   , processsignatorysignmodaltitle = "ordersignatorysignmodaltitle"
-  , processsignatorysignmodalcontentlast = "ordersignatorysignmodalcontentlast"
-  , processsignatorysignmodalcontentnotlast = "ordersignatorysignmodalcontentnotlast"
-  , processsignatorysignmodalcontentauthorlast = "ordersignatorysignmodalcontentauthorlast"
+  , processsignatorysignmodalcontent = "ordersignatorysignmodalcontent"
   , processsignatorysignmodalcontentdesignvieweleg = "ordersignatorysignmodalcontentdesignvieweleg"
   , processsignatorysignmodalcontentsignvieweleg = "ordersignatorysignmodalcontentsignvieweleg"
   , processsignatorysignmodalcontentauthoronly = "ordersignatorysignmodalcontentauthoronly"
@@ -396,7 +385,6 @@ orderProcess =
   , processsignedinfoheader = "ordersignedinfoheader"
   , processsignedinfotext = "ordersignedinfotext"
   , processstatusinfotext = "orderstatusinfotext"
-  , processauthorsignlastbuttontext = "orderauthorsignlastbuttontext"
 
   , processauthorname = "orderauthorname"
   , processauthorsignatoryname = "orderauthorsignatoryname"
