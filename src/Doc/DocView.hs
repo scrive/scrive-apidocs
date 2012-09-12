@@ -17,7 +17,6 @@ module Doc.DocView (
   , mailInvitation
   , modalLoginForSaveView
   , modalRejectedView
-  , modalSignAwaitingAuthorLast
   , modalSendConfirmationView
   , pageDocumentDesign
   , pageDocumentView
@@ -72,9 +71,6 @@ modalMismatch msg author = toModal <$>  do
                     F.value "authorname"  $ getSmartName author
                     F.value "authoremail" $ getEmail author
                     F.value "message"     $ concatMap para $ lines msg
-
-modalSignAwaitingAuthorLast :: TemplatesMonad m => m FlashMessage
-modalSignAwaitingAuthorLast = toModal <$> renderTemplate_ "signAwaitingAuthorLast"
 
 modalSendConfirmationView :: TemplatesMonad m => Document -> Bool -> m FlashMessage
 modalSendConfirmationView document authorWillSign = do

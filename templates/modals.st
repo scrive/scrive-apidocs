@@ -101,33 +101,6 @@ modalOrderCreated=
   </div>
 </div>
 ####
-modalOfferSignedHasAccount=
-<div class="modal-container">
-  <div class="modal-header">
-    <span class="modal-icon message"></span>
-    <span class="modal-title">
-      <h3>$_modalOfferSignedHasAccountHeader()$</h3>
-    </span>
-    <a class="modal-close close"> </a>
-  </div>
-  <div class="modal-body">
-    <div class="modal-content">
-      <p>$_modalOfferSignedHasAccountBody()$
-      </p>
-    </div>
-  </div>
-  <div class="modal-footer">
-    <a class="btn-small green float-right close">
-      <div class="left"></div>
-      <div class="label">
-        <p>$_close()$</p>
-        <div class="btn-symbol green arrow-left"></div>
-      </div>
-      <div class="right"></div>
-    </a>
-  </div>
-</div>
-######
 modalAccountSetup=
 <div class="modal-container">
   <script src="/js/signup.js" type="text/javascript"></script>
@@ -472,32 +445,6 @@ signCanceledDataMismatchModal=
       <p>$_signCanceledDataMismatchModalBodyAborted()$</p>
       <p><strong>$_signCanceledDataMismatchModalErrorReport()$</strong></p>
       $message:noescape()$
-    </div>
-  </div>
-  <div class="modal-footer">
-    <a class="btn-small green float-right close">
-      <div class="left"></div>
-      <div class="label">
-        <p>$_ok()$</p>
-        <div class="btn-symbol green arrow-left"></div>
-      </div>
-      <div class="right"></div>
-    </a>
-  </div>
-</div>
-###
-signAwaitingAuthorLast=
-<div class="modal-container">
-  <div class="modal-header">
-    <span class="modal-icon message"></span>
-    <span class="modal-title">
-      <h3>$_signAwaitingAuthorLastHeader()$</h3>
-    </span>
-    <a class="modal-close close"> </a>
-  </div>
-  <div class="modal-body">
-    <div class="modal-content">
-      <p>$_signAwaitingAuthorLastBody()$</p>
     </div>
   </div>
   <div class="modal-footer">
