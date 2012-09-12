@@ -82,6 +82,7 @@ personFields doc (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
    F.value "telia"  $ mprovider == Just TeliaProvider
    F.value "email"  $ documentdeliverymethod doc == EmailDelivery
    F.value "pad"    $ documentdeliverymethod doc == PadDelivery
+   F.value "api"    $ documentdeliverymethod doc == APIDelivery
 
 personsFromDocument :: (BS.ByteString,BS.ByteString) -> Document -> [(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String)]
 personsFromDocument (checkedBoxImage,uncheckedBoxImage) document =
