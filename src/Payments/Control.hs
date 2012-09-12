@@ -152,6 +152,7 @@ handleSyncNewSubscriptionWithRecurly = do
   _ <- cachePlan time Stats.SignupAction ac subscription is eid Nothing Nothing
   -- now we send email with push notification
   -- sendInvoiceEmail user mcompany subscription
+  return ()
 
 handleChangePlan :: Kontrakcja m => m ()
 handleChangePlan = do
