@@ -212,6 +212,7 @@ tableSignatoryLinks = Table {
           ++ ", csv_signatory_index INTEGER NULL"
           ++ ", internal_insert_order BIGINT NOT NULL DEFAULT nextval('signatory_links_internal_insert_order_seq')"
           ++ ", signinfo_ocsp_response VARCHAR NULL DEFAULT NULL"
+          ++ ", sign_redirect_url VARCHAR NULL DEFAULT NULL"
           ++ ", CONSTRAINT pk_signatory_links PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated
