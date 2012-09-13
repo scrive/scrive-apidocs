@@ -2373,11 +2373,6 @@ form {
     width: 24px;
 }
 
-#signStepsBody.ericfix {
-    padding: 8px 39px;
-    width: 880px;
-}
-
 #signStepsBody.personPaneLargeNumberMode span.persondetails
 {
     display: none;

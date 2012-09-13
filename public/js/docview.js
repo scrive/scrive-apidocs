@@ -270,7 +270,7 @@ window.DocumentStandardView = Backbone.View.extend({
   },
   createAttachmentsTabElems: function() {
     var attachmenttab = $("<span id='attachmenttabview' class='attachmentstab' />");
-    var body = $("<div class='signStepsBody ericfix forauthor'/>");
+    var body = $("<div class='signStepsBody forauthor'/>");
     body.append($("<div class='section'/>").append(this.createAuthorAttachmentsElems()));
     body.append($("<div class='section' />").append(this.createUploadedAttachmentsElems()));
     attachmenttab.append(body);
@@ -279,7 +279,7 @@ window.DocumentStandardView = Backbone.View.extend({
   createSignatoriesTabElems: function() {
     var document = this.model;
     var signatoriestabview = $("<span id='documenttabview' />");
-    var body = $("<div class='signStepsBody ericfix forauthor'/>");
+    var body = $("<div class='signStepsBody forauthor'/>");
     var firstbox = $("<div id='signViewBodyLeft' />");
     firstbox.append(document.infotext());
     firstbox.append("<BR/>");
