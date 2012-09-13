@@ -6,13 +6,14 @@
 javascriptLocalisation =
     var localization =
         {
-       loadingFile : "$_loadingFile()$"
+               loadingFile : "$_loadingFile()$"
              , problemWithPDF : "$_problemWithPDF()$"
              , backToArchive : "$_backToArchive()$"
              , repetedEmailAddress : "$_repetedEmailAddress()$"
              , offerSignatory : "$_offerSignatory()$"
              , sigattachmessage : "$_pageDocumentForAuthorHelpersLocalDialogsRecipient()$"
              , secretaryCantSign : "$_secretaryCantSign()$"
+             , more : "$_more()$"
              , cantSendReminder: function(listtype){
                     return "$_cantSendReminder1()$" + listtype + "$_cantSendReminder2()$"
                     }
