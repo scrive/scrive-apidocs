@@ -81,11 +81,11 @@ var LoginModel = Backbone.Model.extend({
             {
               var text = "";
               if (resp.badformat)
-                text = localization.loginModal.invalidEmail
+                text = localization.loginModal.invalidEmail;
               else if (resp.nouser)
-                text = localization.loginModal.noUser
+                text = localization.loginModal.noUser;
               else if (resp.toomuch)
-                text = localization.loginModal.tooMuch  
+                text = localization.loginModal.tooMuch;
               FlashMessages.add({ content: text, color: "red"});
             }
           }
