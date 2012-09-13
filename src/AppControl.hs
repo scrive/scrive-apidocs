@@ -235,10 +235,11 @@ appHandler handleRoutes appConf appGlobals appState = runOurServerPartT . measur
       mcompany <- getCompanyFromSession session
       mpaduser <- getPadUserFromSession session
 
-      flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval ->
-        case F.fromCookieValue fval of
-          Just flashes -> return flashes
-          Nothing -> do
+      flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval -> do
+        flashes <- liftIO $ (E.try (E.evaluate $ F.fromCookieValue fval) :: IO (Either  E.SomeException (Maybe [FlashMessage])))
+        case flashes of
+          Right (Just fs) -> return fs
+          _ -> do
             Log.error $ "Couldn't read flash messages from value: " ++ fval
             F.removeFlashCookie
             return []
