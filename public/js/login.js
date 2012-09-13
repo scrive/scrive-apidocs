@@ -77,9 +77,16 @@ var LoginModel = Backbone.Model.extend({
             {
               FlashMessages.add({ content: localization.loginModal.passwordReminderSend, color: "green"});
             }
-            else
+            else 
             {
-              FlashMessages.add({ content: localization.loginModal.invalidEmail, color: "red"});
+              var text = "";
+              if (resp.badformat)
+                text = localization.loginModal.invalidEmail
+              else if (resp.nouser)
+                text = localization.loginModal.noUser
+              else if (resp.toomuch)
+                text = localization.loginModal.tooMuch  
+              FlashMessages.add({ content: text, color: "red"});
             }
           }
         }).send();

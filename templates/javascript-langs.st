@@ -203,8 +203,8 @@ javascriptLocalisation =
                 showOffersOnly: "$_showOffersOnly()$"
             }
             , filterByTime: {
-                filterForm: "From:",
-                filterTo: "To:"
+                filterForm: "$_fromFilter()$",
+                filterTo: "$_toFilter()$"
             }
             , filterByStatus: {
                 showAnyStatus: "$_showAnyStatusClass()$",
@@ -668,6 +668,8 @@ javascriptLocalisation =
            , sendNewPassword : "$_loginModalForgotPasswordSendNewPassword()$"
            , loginFailed : "$_flashMessageLoginPageRedirectReasonWrongMailOrPassword()$"
            , invalidEmail : "$_flashEmailIncorectlyFormed()$"
+           , noUser : "$_cantSendReminderNoUser()$"
+           , tooMuch : "$_cantSendReminderTooMuch()$"
            , passwordReminderSend : "$_flashMessageChangePasswordEmailSend()$"
 
       }
