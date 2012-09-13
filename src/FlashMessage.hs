@@ -103,6 +103,7 @@ toCookieValue flashes =
     BS.unpack . B64.encode . BS.concat
     . BSL.toChunks . GZip.compress . BSLU.fromString $ show flashes
 
+-- Warning! This may throw exception id decoding is wrong!
 fromCookieValue :: String -> Maybe [FlashMessage]
 fromCookieValue flashesdata = do
     case B64.decode $ BS.pack flashesdata of
