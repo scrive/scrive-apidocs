@@ -347,7 +347,7 @@
             var select = new Select({  name: "",
                                        options: options,
                                        cssClass: "float-left",
-                                       name : "More",
+                                       name : localization.more,
                                        theme : "standard"
             });
             console.log("Generating selects for options");

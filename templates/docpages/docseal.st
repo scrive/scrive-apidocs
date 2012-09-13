@@ -86,6 +86,8 @@ signMethod=
             $_signMethodEmail()$
           $elseif(pad)$
             $_signMethodPad()$
+          $elseif(api)$
+            $_signMethodAPI()$
           $endif$
         $elseif(bankid)$
             $_signMethodElegBankID()$

@@ -41,18 +41,18 @@ forgotPasswordPagePost = do
   ctx <- getContext
   memail <- getOptionalFieldNoFlash asValidEmail "email"
   case memail of
-    Nothing -> runJSONGenT $ value "send" False 
+    Nothing -> runJSONGenT $ value "send" False >> value "badformat" True
     Just email -> do
       muser <- dbQuery $ GetUserByEmail $ Email email
       case muser of
         Nothing -> do
           Log.security $ "ip " ++ (show $ ctxipnumber ctx) ++ " made a failed password reset request for non-existant account " ++ email
-          runJSONGenT $ value "send" True 
+          runJSONGenT $ value "send" False >> value "nouser" True
         Just user -> do
           minv <- dbQuery $ GetAction passwordReminder $ userid user
           case minv of
             Just pr@PasswordReminder{..} -> case prRemainedEmails of
-              0 -> runJSONGenT $ value "send" True 
+              0 -> runJSONGenT $ value "send" False >> value "toomuch" True
               n -> do
                 _ <- dbUpdate $ UpdateAction passwordReminder $ pr { prRemainedEmails = n - 1 }
                 sendResetPasswordMail ctx (LinkPasswordReminder prUserID prToken) user

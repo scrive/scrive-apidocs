@@ -6,13 +6,14 @@
 javascriptLocalisation =
     var localization =
         {
-       loadingFile : "$_loadingFile()$"
+               loadingFile : "$_loadingFile()$"
              , problemWithPDF : "$_problemWithPDF()$"
              , backToArchive : "$_backToArchive()$"
              , repetedEmailAddress : "$_repetedEmailAddress()$"
              , offerSignatory : "$_offerSignatory()$"
              , sigattachmessage : "$_pageDocumentForAuthorHelpersLocalDialogsRecipient()$"
              , secretaryCantSign : "$_secretaryCantSign()$"
+             , more : "$_more()$"
              , cantSendReminder: function(listtype){
                     return "$_cantSendReminder1()$" + listtype + "$_cantSendReminder2()$"
                     }
@@ -202,8 +203,8 @@ javascriptLocalisation =
                 showOffersOnly: "$_showOffersOnly()$"
             }
             , filterByTime: {
-                filterForm: "From:",
-                filterTo: "To:"
+                filterForm: "$_fromFilter()$",
+                filterTo: "$_toFilter()$"
             }
             , filterByStatus: {
                 showAnyStatus: "$_showAnyStatusClass()$",
@@ -667,6 +668,8 @@ javascriptLocalisation =
            , sendNewPassword : "$_loginModalForgotPasswordSendNewPassword()$"
            , loginFailed : "$_flashMessageLoginPageRedirectReasonWrongMailOrPassword()$"
            , invalidEmail : "$_flashEmailIncorectlyFormed()$"
+           , noUser : "$_cantSendReminderNoUser()$"
+           , tooMuch : "$_cantSendReminderTooMuch()$"
            , passwordReminderSend : "$_flashMessageChangePasswordEmailSend()$"
 
       }
