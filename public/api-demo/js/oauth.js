@@ -180,18 +180,16 @@ var OAuthView = Backbone.View.extend({
         TCRSection : function() {
             var model = this.model;
             var box = $("<div class='section'>");
-            box.append("<div class='header'>Step 1. Inform us that you want to gain some permissions (Temporary Credential Request)"+
-                        "<BR/> <small><small> Token can be generated in <a href='http://"+window.location.host+"/oauth/dashboard'>http://"+window.location.host+
-                        "/oauth/dashboard</a> </small></small></div>");
+            box.append("<div class='header'>Step 1. Inform Scrive that you want to gain some permissions (Temporary Credential Request)"+
+                        "<BR/> <small><small> Generate API Token at <a href='"+Scrive.serverUrl()+"/oauth/dashboard'>"+Scrive.serverUrl()+"/oauth/dashboard</a> </small></small></div>");
 
             var consumer_key_input = $("<input type='text'>").val(model.consumer_key());
-            box.append($("<div><div class='label'>Consumer key: </div></div>").append(consumer_key_input))
+            box.append($("<div><div class='label'>API key (<span class='code'>oauth_consumer_key</span>): </div></div>").append(consumer_key_input))
             consumer_key_input.change(function() {model.set_consumer_key(consumer_key_input.val()); return false;})
-
             
             var client_shared_secret_input = $("<input type='text'>").val(model.client_shared_secret());
             client_shared_secret_input.change(function() {model.set_client_shared_secret(client_shared_secret_input.val()); return false;})
-            box.append($("<div><div class='label'>Shared secret: </div></div>").append(client_shared_secret_input))
+            box.append($("<div><div class='label'>API secret (<span class='code'>oauth_signature</span>): </div></div>").append(client_shared_secret_input))
             box.append($("<div><div class='label'>Callback: </div></div>").append($("<b>").text(model.callback())))
 
             var priviliges = model.priviliges();
@@ -230,10 +228,10 @@ var OAuthView = Backbone.View.extend({
         ROASection : function() {
             var model = this.model;
             var box = $("<div class='section'>");
-            box.append("<div class='header'>Step 2. Now your user have to click link and confirm access to his Scrive account (Resource Owner Authorization)</div>");
+            box.append("<div class='header'>Step 2. Your user have to click link and confirm access to his Scrive account (Resource Owner Authorization)</div>");
             
-            box.append($("<div><div class='label'>Token: </div></div>").append($("<b>").text(model.token())))
-            box.append($("<div><div class='label'>Token secret: </div></div>").append($("<b>").text(model.token_secret())))
+            box.append($("<div><div class='label'>Access Token (<span class='code'>oauth_token</span>): </div></div>").append($("<b>").text(model.token())))
+            box.append($("<div><div class='label'>Access Secret (<span class='code'>oauth_token_secret</span>): </div></div>").append($("<b>").text(model.token_secret())))
 
             var rao = new OAuthResourceOwnerAuthorization({oauth_token : model.token()});
             var confirm_link = $("<a href='"+rao.requestUrl()+"' >"+rao.requestUrl()+"</a>");
@@ -244,9 +242,9 @@ var OAuthView = Backbone.View.extend({
         TRSection : function() {
             var model = this.model;
             var box = $("<div class='section'>");
-            box.append("<div class='header'>Step 3. Now can get final token to act on behalf of Scrive user (Token Request)</div>");
+            box.append("<div class='header'>Step 3. Get final token to act on behalf of Scrive user (Token Request)</div>");
 
-            box.append($("<div><div class='label'>Verifier: </div></div>").append($("<b>").text(model.verifier())))
+            box.append($("<div><div class='label'>Verifier (<span class='code'>oauth_verifier</span>): </div></div>").append($("<b>").text(model.verifier())))
 
             var sendeTRButton = $("<input type='button' value='Send Token Request'/ >");
             sendeTRButton.click(function() {model.sendeTR(); return false;});
@@ -256,10 +254,11 @@ var OAuthView = Backbone.View.extend({
         FinalTokenSection : function() {
             var model = this.model;
             var box = $("<div class='section'>");
-            box.append("<div class='header'>Done. We have final token and API calls are avaible </div>");
-
-            box.append($("<div><div class='label'>Token: </div></div>").append($("<b>").text(model.final_token())));
-            box.append($("<div><div class='label'>Token secret: </div></div>").append($("<b>").text(model.final_token_secret())));
+            box.append("<div class='header'>Done. We have everything need to make API calls are avaible </div>");
+            box.append($("<div><div class='label'>API key (<span class='code'>oauth_consumer_key</span>): </div></div>").append($("<b>").text(model.consumer_key())));
+            box.append($("<div><div class='label'>API secret (<span class='code'>oauth_signature</span>): </div></div>").append($("<b>").text(model.client_shared_secret())));
+            box.append($("<div><div class='label'>Access Token (<span class='code'>oauth_token</span>): </div></div>").append($("<b>").text(model.final_token())))
+            box.append($("<div><div class='label'>Access Secret (<span class='code'>oauth_token_secret</span>): </div></div>").append($("<b>").text(model.final_token_secret())))
             return box;
         },
         render: function() {
