@@ -122,14 +122,20 @@ var SignatureDrawer = Backbone.View.extend({
       this.stopDrawing();
       this.uped = true;
     },
+    xPos : function(e) {
+      return e.pageX - this.canvas.offset().left;
+    },
+    yPos : function(e) {
+      return e.pageY - this.canvas.offset().top;
+    },
     initDrawing : function() {
            var view = this;
-           this.canvas[0].addEventListener('touchstart',function(e) {e.preventDefault(); e.stopPropagation(); view.drawingtoolDown(e.layerX, e.layerY);});
-           this.canvas[0].addEventListener('touchmove',function(e) {view.drawingtoolMove(e.layerX, e.layerY);});
-           this.canvas[0].addEventListener('touchend',function(e) {view.drawingtoolUp(e.layerX, e.layerY);});
-           this.canvas.mousedown(function(e) {e.preventDefault(); e.stopPropagation();e.target.style.cursor = 'default';view.drawingtoolDown(e.layerX, e.layerY);});
-           this.canvas.mousemove(function(e) {view.drawingtoolMove(e.layerX, e.layerY);});
-           this.canvas.mouseup(function(e){view.drawingtoolUp(e.layerX, e.layerY);} );
+           this.canvas[0].addEventListener('touchstart',function(e) {e.preventDefault(); e.stopPropagation(); view.drawingtoolDown(view.xPos(e), view.yPos(e));});
+           this.canvas[0].addEventListener('touchmove',function(e) {view.drawingtoolMove(view.xPos(e), view.yPos(e));});
+           this.canvas[0].addEventListener('touchend',function(e) {view.drawingtoolUp(view.xPos(e), view.yPos(e));});
+           this.canvas.mousedown(function(e) {e.preventDefault(); e.stopPropagation();e.target.style.cursor = 'default';view.drawingtoolDown(view.xPos(e), view.yPos(e),e);});
+           this.canvas.mousemove(function(e) {view.drawingtoolMove(view.xPos(e), view.yPos(e));});
+           this.canvas.mouseup(function(e){view.drawingtoolUp(view.xPos(e), view.yPos(e));} );
            //this.canvas.mouseout(function(e){settimeout(function() {view.drawingtoolUp(e.layerX, e.layerY);})}, 100 );
 
     },

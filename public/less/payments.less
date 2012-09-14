@@ -8,6 +8,11 @@
 
 
 .payments-dashboard {
+
+    @blue: #35a4d6;
+    @darkblue: #137DAD;
+    @green: #9bd567;
+
     color: #666;
 
 
@@ -373,8 +378,8 @@
         .planbox {
         float: left;
         width: 230px;
-        border: 1px solid #d3d3d3;
-        margin-left: 18px;
+        border: 2px solid #d3d3d3;
+        margin-left: 16px;
         margin-top: 19px;
         -moz-border-radius: 5px;
         -webkit-border-radius: 5px;
@@ -405,7 +410,7 @@
 
         .features {
             //height: 32px;
-            color: #72c104;
+            color: @green;
             padding-top: 20px;
             font-size: 16px;
             padding-bottom: 20px;
@@ -421,7 +426,7 @@
             color: #737373;
             font-family: 'Copse', serif;
             .price1 {
-                font-size: 12px;
+                font-size: 14px;
                 color: #9a9a9a;
                 font-weight: bold;
             }
@@ -437,7 +442,7 @@
             }
 
             .price3 {
-                font-size: 12px;
+                font-size: 14px;
                 color: #9a9a9a;
                 font-weight: bold;
             }
@@ -468,7 +473,7 @@
     }
 
     .planbox.selected {
-        border-color: #9bd567;
+        border-color: @green;
 
         a.btn-small.green {
             .left {
@@ -481,6 +486,10 @@
             .right {
 	        background-position: -223px -68px;
             }
+        }
+
+        .header1 {
+            color: @green;
         }
     }
 
@@ -550,7 +559,7 @@
 
         .borderbox{
             margin-top: 18px;
-            border: 1px solid #9bd567;
+            border: 2px solid @green;
             width: 410px;
             -moz-border-radius: 5px;
             -webkit-border-radius: 5px;
@@ -575,7 +584,7 @@
             }
 
             .totalbox {
-                background-color: #f1f7ed;
+                background-color: #edf1f7;
 
                 padding-top:6px;
                 padding-bottom: 6px;
@@ -584,10 +593,10 @@
 
             .due_now {
                 width: 100%;
-                background: #f1f7ed; 
+                background: #edf1f7; 
                 text-shadow: none;
 
-                color: #569e16;
+                color: @green;
                 padding: 20px 0px;
                 margin: 0px;
                 position: static;
@@ -600,9 +609,8 @@
                 margin-bottom: 8px;
                 .title {
                     width: auto;
-                    color: #569e16;
                     font-size: 24px;
-
+                    color: @green;
                     display: none;
                     float: none;
                 }
@@ -611,7 +619,7 @@
                     display: inline;
                     text-shadow: none;
                     position: static;
-                    color: #569e16;
+                    color: @green;
                     font-size: 24px;
                     font-weight: bold;
                 }

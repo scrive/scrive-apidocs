@@ -335,8 +335,8 @@
             div.append(price);
 
             var buttonbox = $('<div class="buttonbox" />');
-            var button = Button.init({color: 'green',
-                                      text: localization.payments.selected,
+            var button = Button.init({color: 'black',
+                                      text: localization.payments.select,
                                       size: 'small',
                                       width: 150,
                                       onClick: function() {
@@ -347,7 +347,11 @@
             
             buttonbox.append(button.input());
             div.append(buttonbox);
-
+            div.click(function() {
+                model.signup().code('team');
+                view.showRecurlySubscriptionForm();
+                return false;
+            });
             return div;
         },
         formBox: function() {
@@ -402,7 +406,11 @@
             
             buttonbox.append(button.input());
             div.append(buttonbox);
-
+            div.click(function() {
+                model.signup().code('form');
+                view.showRecurlySubscriptionForm();
+                return false;
+            });
             return div;
         },
         enterpriseBox: function() {
@@ -414,13 +422,13 @@
             var header1 = $('<div class="header1" />');
             header1.text(localization.payments.plans.enterprise);
             var header2 = $('<div class="header2" />');
-            header2.text(localization.payments.plans.enterprisetag);
+            header2.html(localization.payments.plans.enterprisetag);
             header.append(header1).append(header2);
             div.append(header);
 
             var features = $('<div class="features" />');
             _.each(localization.payments.features.enterprise0, function(t) {
-                features.append($('<div class="feature" />').text(t));
+                features.append($('<div class="feature" />').html(t));
             });
             features.append($('<div class="feature" />').html("&nbsp;"));
             _.each(localization.payments.features.enterprise, function(t) {
@@ -449,7 +457,10 @@
                                       }});
             buttonbox.append(button.input());
             div.append(buttonbox);
- 
+            div.click(function() {
+                view.getInTouch();
+                return false;
+            });
             return div;
         },
         showSubscribeForm: function() {
@@ -469,7 +480,7 @@
 
             var team = this.teamBox();
 
-            team.addClass('selected');
+            //team.addClass('selected');
 
             subs.append(team);
             subs.append(this.formBox());
@@ -503,10 +514,17 @@
                 form.removeClass('selected');
                 form.find('.btn-small').removeClass('green').addClass('black')
                     .find('.label').text(localization.payments.select);
-            } else {
+            } else if(model.signup().code() === 'form') {
                 form.addClass('selected');
                 form.find('.btn-small').removeClass('black').addClass('green')
                     .find('.label').text(localization.payments.selected);
+                team.removeClass('selected');
+                team.find('.btn-small').removeClass('green').addClass('black')
+                    .find('.label').text(localization.payments.select);
+            } else {
+                form.removeClass('selected');
+                form.find('.btn-small').addClass('black').removeClass('green')
+                    .find('.label').text(localization.payments.select);
                 team.removeClass('selected');
                 team.find('.btn-small').removeClass('green').addClass('black')
                     .find('.label').text(localization.payments.select);
