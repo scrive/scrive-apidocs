@@ -37,9 +37,9 @@ window.Mail = Backbone.Model.extend({
 	ready : function() {
 		return this.get("ready");
 	},
-        editWidth: function() {
+    editWidth: function() {
                 return this.get("editWidth");
-        }
+    }
 });
 
 window.MailView = Backbone.View.extend({
@@ -52,27 +52,35 @@ window.MailView = Backbone.View.extend({
     },
     editableMailContent : function() {
         var view = this;
-	var content = this.model.content().clone();
-	var editablePart = $(".editable", content);
+        var content = this.model.content().clone();
+        var editablePart = $(".editable", content);
         var textarea = $("<textarea style='height:0px;border:0px;padding:0px;margin:0px'/>").html(editablePart.html());
         textarea.css("width", this.model.editWidth() + "px");
         var wrapper = $("<div/>").append(textarea);
         editablePart.replaceWith(wrapper);
-	$('textarea').livequery(function() {
-                        if (wrapper.has($(this)).length > 0)
-                            view.editor = $(this).tinymce({
-				script_url: '/tiny_mce/tiny_mce.js',
-				theme: "advanced",
-				theme_advanced_toolbar_location: "top",
-				theme_advanced_buttons1: "bold,italic,underline,separator,strikethrough,bullist,numlist,separator,undo,redo,separator,cut,copy,paste",
-				theme_advanced_buttons2: "",
-				convert_urls: false,
-				theme_advanced_toolbar_align: "left",
-				plugins: "noneditable,paste",
-				valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul"
-                            });
-	});
-            return content;
+        setTimeout( function() {
+           view.editor = textarea.tinymce({
+                      script_url: '/tiny_mce/tiny_mce.js',
+                      theme: "advanced",
+                      theme_advanced_toolbar_location: "top",
+                      theme_advanced_buttons1: "bold,italic,underline,separator,strikethrough,bullist,numlist,separator,undo,redo,separator,cut,copy,paste",
+                      theme_advanced_buttons2: "",
+                      convert_urls: false,
+                      theme_advanced_toolbar_align: "middle",
+                      plugins: "noneditable,paste",
+                      valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul",
+                      oninit : function(ed) {
+                          var body = $('body',$('iframe',content).contentDocument);
+                           $(ed.getWin()).scroll(
+                              function() {
+                                body.css('background', '#fffffe');
+                                setTimeout(function() {body.css('background', '#ffffff');},1);
+                                return true;
+                              });
+                      }
+          });
+        },100);
+        return content;
 	},
     render : function() {
 	var mail = this.model;
