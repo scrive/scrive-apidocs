@@ -2552,7 +2552,7 @@ vill skicka fler dokument per månad, kontakta vår <a href = 'mailto: viktor@sc
 "_paymentsThankYouInterest","Tack för visat intresse. Vi återkommer till dig inom kort.",,"Thank you for you interest in Scrive. We will get back to you shortly."
 "_paymentsSubmitButtonLabel","OK",,"OK"
 "_apiConfiramtionTitle","Godkänn för att fortsätta",,"Approve to proceed"
-"_apiConfiramtionHeader","begär ett godkännande för att genomföra följande åtgärder i Scrive för din räkning:",," is requestion permission to perform the following actions in Scrive on your behalf:"
+"_apiConfiramtionHeader","begär ett godkännande för att genomföra följande åtgärder i Scrive för din räkning:",," is requesting permission to perform the following actions in Scrive on your behalf:"
 "_apiConfiramtionFooterNotLogged","För att acceptera, logga in på ditt Scrive-konto och godkänn.
 Om du inte har ett konto på Scrive, klicka på skapa nytt konto för att registrera ny användare. Skicka upp till 5 dokument/mån utan kostnad.
 ",,"To accept please log into your Scrive account and confirm. If you don't
@@ -2575,7 +2575,7 @@ have an account please follow the account creation process. Free use up to 5 sen
 "_apiDashboardpersonalTokenDescription","Använd den här åtkomstbevisningen för att få tillgång till ditt eget Scrive konto genom API:et.",,"Use this access token to access your own Scrive account through the API."
 "_apiDashboardPersonalTokenCreate","Skapa personligt  åtkomstbevis",,"Create Personal Token"
 "_apiDashboardApiToken","API-bevis",,"API Tokens"
-"_apiDashboardApiTokenDescription","API-bevis tillåter dig att begära tillgång till andra Scrive-konton genom nyttjande av OAuth",,"API Tokens allow you to request access to other Scrive accounts using OAuth."
+"_apiDashboardApiTokenDescription","API-bevis tillåter dig att begära tillgång till andra Scrive-konton genom nyttjande av OAuth",,"API Tokens allow you to request access to Scrive accounts using OAuth."
 "_apiDashboardApiTokenCreate","Skapa API-bevis",,"Create API Token"
 "_apiDashboardPersonOrCompany","Företag/Person",,"Company/Individual"
 "_apiDashboardPrivilige","Rättigheter",,"Privilege"

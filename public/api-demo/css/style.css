@@ -1,19 +1,22 @@
 .main {
-    width: 900px;
+    width: 940px;
     margin: auto;
 }
 .oauth, .api {
     margin  : 10px;
     padding : 15px;
     border: 1px solid #cccccc;
-    width: 840px
+    width: 940px
 }
 .section {
     margin-top: 10px;
     margin-bottom: 10px;
     padding : 10px;
     border: 1px solid #cccccc;
-    width: 800px
+    width: 900px
+}
+.section > div {
+  margin: 5px 0px;
 }
 .section .header{
     font-size : large;
@@ -23,8 +26,9 @@
 }
 
 .section .label{
-    width: 200px;
+    width: 280px;
     display: inline-block;
+    font-size : normal;
 }
 
 .mainheader{
@@ -53,4 +57,9 @@ input[type='button']{
 .right-box {
     float: right;
     width: 330px;
+}
+
+.code {
+   font-family: Consolas,Menlo,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New,monospace,serif;
+   font-size: small;
 }
