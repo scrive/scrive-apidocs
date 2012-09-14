@@ -37,6 +37,7 @@ data KontraLink
     | LinkLegal Locale
     | LinkPrivacyPolicy Locale
     | LinkTerms Locale
+    | LinkJobs Locale
     | LinkAbout Locale
     | LinkPartners Locale
     | LinkClients Locale
@@ -123,6 +124,9 @@ instance Show KontraLink where
     showsPrec _ (LinkTerms locale)
       | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/allmana-villkor"
       | otherwise = (++) $ localeFolder locale ++ "/terms"
+    showsPrec _ (LinkJobs locale)
+      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/jobb"
+      | otherwise = (++) $ localeFolder locale ++ "/jobs"
     showsPrec _ (LinkAbout locale)
       | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/om-scrive"
       | otherwise = (++) $ localeFolder locale ++ "/about"
