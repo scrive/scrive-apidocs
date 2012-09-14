@@ -27,7 +27,7 @@ jobsPageContents=
 <p style="margin-top: 11px; margin-bottom: 11px;">Technologies you should be comfortable with:
 <ul style="padding-left: 2em; list-style: disc;">
 <li>Haskell (of course!)</li>
-<li>Postresql, SQL</li>
+<li>PostgreSQL, SQL</li>
 <li>HTML, JavaScript, jQuery, backbone.js</li>
 <li>Linux, git</li>
 </ul>
