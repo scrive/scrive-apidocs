@@ -179,9 +179,8 @@ var OAuthConfirationView = Backbone.View.extend({
               inputtype : "text",
               name : "email"
       });
-
-      emailinput.input().attr("autocomplete","false");
-      box.append(emailinput.input()).append("<BR/>").append("<BR/>");
+      box.append($("<span class='txt'/>").text(localization.loginModal.email)).append(emailinput.input()).append("<BR/>");
+      box.append("<BR/>").append("<BR/>");
       var button = Button.init({
                   size  : "small",
                   color : "green",

@@ -2556,14 +2556,14 @@ vill skicka fler dokument per månad, kontakta vår <a href = 'mailto: viktor@sc
 "_apiConfiramtionFooterNotLogged","För att acceptera, logga in på ditt Scrive-konto och godkänn.
 Om du inte har ett konto på Scrive, klicka på skapa nytt konto för att registrera ny användare. Skicka upp till 5 dokument/mån utan kostnad.
 ",,"To accept please log into your Scrive account and confirm. If you don't
-have an account please follow the account creation process. Free use up to 5 sent documents per month."
+have an account please follow the account creation process. Free use of up to 5 sent documents per month."
 "_apiConfiramtionFooterLogged","För att acceptera klicka på godkänn. ",,"To accept please click confirm."
 "_apiConfiramtionReadPermission","Tillgång till sparade dokument",,"Access document"
 "_apiConfiramtionCreatePersmission","Ladda upp dokument",,"Upload document"
 "_apiConfiramtionSendPermission","Skicka dokument",,"Send document"
 "_apiConfiramtionAccept","Godkänn",,"Confirm"
 "_apiConfiramtionLoginAndAcceptTitle","Logga in och godkänn",,"Log in and confirm privileges"
-"_apiConfiramtionLoginAndAccept","Logga in och godkänn",,"Log in and Confirm"
+"_apiConfiramtionLoginAndAccept","Logga in och godkänn",,"Log in and confirm"
 "_apiConfiramtionCreateAccount","Skapa konto",,"Create account"
 "_apiConfiramtionEnterEmailAdress","Fyll i din e-postadress",,"Enter your email address"
 "_apiConfiramtionDeny","Föregående sida",,"Return to previous page"
