@@ -5,24 +5,23 @@ import DB.SQLFunction
 
 insertDocumentTicket :: SQLFunction
 insertDocumentTicket = SQLFunction {
-    sqlFunHeader = "insert_document_ticket(BIGINT, BIGINT, BIGINT)"
-  , sqlFunDef  = SQL ("CREATE FUNCTION"
-    ++ " insert_document_ticket(session_id_ BIGINT, signatory_link_id_ BIGINT,"
-    ++ "                        token_ BIGINT) RETURNS BOOLEAN AS $$"
-    ++ " BEGIN"
-    ++ "   INSERT INTO document_tickets(session_id, signatory_link_id, token)"
-    ++ "     VALUES (session_id_, signatory_link_id_, token_);"
-    ++ "   RETURN TRUE;"
-    ++ " EXCEPTION"
-    ++ "   WHEN unique_violation THEN" -- ticket is already there, update token
-    ++ "     UPDATE document_tickets SET token = token_"
-    ++ "       WHERE session_id = session_id_"
-    ++ "         AND signatory_link_id = signatory_link_id_;"
-    ++ "     RETURN found;"
-    ++ "   WHEN foreign_key_violation THEN" -- invalid values
-    ++ "     RETURN FALSE;"
-    ++ " END;"
-    ++ " $$ LANGUAGE plpgsql") []
+  sqlFunDef = SQL ("CREATE OR REPLACE FUNCTION"
+  ++ " insert_document_ticket(session_id_ BIGINT, signatory_link_id_ BIGINT,"
+  ++ "                        token_ BIGINT) RETURNS BOOLEAN AS $$"
+  ++ " BEGIN"
+  ++ "   INSERT INTO document_tickets(session_id, signatory_link_id, token)"
+  ++ "     VALUES (session_id_, signatory_link_id_, token_);"
+  ++ "   RETURN TRUE;"
+  ++ " EXCEPTION"
+  ++ "   WHEN unique_violation THEN" -- ticket is already there, update token
+  ++ "     UPDATE document_tickets SET token = token_"
+  ++ "       WHERE session_id = session_id_"
+  ++ "         AND signatory_link_id = signatory_link_id_;"
+  ++ "     RETURN found;"
+  ++ "   WHEN foreign_key_violation THEN" -- invalid values
+  ++ "     RETURN FALSE;"
+  ++ " END;"
+  ++ " $$ LANGUAGE plpgsql") []
 }
 
 tableDocumentTickets :: Table

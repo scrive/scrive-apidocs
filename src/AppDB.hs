@@ -23,6 +23,7 @@ import Stats.Tables
 import Stats.Migrations
 import File.Tables
 import File.Migrations
+import Functions.AbstractSet
 import Mails.Tables
 import PadQueue.Tables
 import PadQueue.Migrations
@@ -108,7 +109,8 @@ kontraMigrations = [
 
 kontraTables :: [Table]
 kontraTables = [
-    tableUsers
+    abstractFunctionsSet
+  , tableUsers
   , tableUserMailAPIs
   , tableUserInviteInfos
   , tableUsersHistory
