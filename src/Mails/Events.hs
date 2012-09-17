@@ -49,6 +49,7 @@ processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
       markEventAsRead eid
       case maybeRead mi of
         Just (Invitation docid signlinkid) -> do
+          Log.debug $ "Processiong invitation event: " ++ show (Invitation docid signlinkid)
           mdoc <- dbQuery $ GetDocumentByDocumentID docid
           case mdoc of
             Nothing -> do
