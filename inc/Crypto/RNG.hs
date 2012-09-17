@@ -55,7 +55,6 @@ import qualified Control.Monad.State.Strict as SS
 import qualified Control.Monad.Writer.Lazy as LW
 import qualified Control.Monad.Writer.Strict as SW
 
-import Acid.Monad
 import Control.Monad.Trans.Control.Util
 
 -- | The random number generator state.  It sits inside an MVar to
@@ -183,9 +182,6 @@ class MonadIO m => CryptoRNG m where
 
 instance MonadIO m => CryptoRNG (CryptoRNGT m) where
   getCryptoRNGState = CryptoRNGT ask
-
-instance CryptoRNG m => CryptoRNG (AcidT st m) where
-  getCryptoRNGState = lift getCryptoRNGState
 
 instance CryptoRNG m => CryptoRNG (ReaderT r m) where
   getCryptoRNGState = lift getCryptoRNGState
