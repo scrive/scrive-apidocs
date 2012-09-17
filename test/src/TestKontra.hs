@@ -37,8 +37,6 @@ import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 
-import Acid.Monad
-import AppState
 import Control.Monad.Trans.Control.Util
 import Configuration
 import Crypto.RNG
@@ -48,17 +46,16 @@ import Kontra
 import Mails.MailsConfig
 import MinutesTime
 import Utils.Default
-import Utils.Directory
 import Payments.Config (RecurlyConfig(..))
 import IPAddress
 import OurServerPart
+import Session.SessionID
 import Templates.Templates
 import Templates.TemplatesLoader
 import qualified MemCache
 import User.Locale
 import Util.FinishWith
 import ELegitimation.Config (LogicaConfig(..))
-import qualified Data.Map as Map
 import qualified Control.Exception.Lifted as E
 import qualified Static.Resources as SR
 import qualified Doc.JpegPages as JpegPages
@@ -67,7 +64,6 @@ import System.Time
 data TestEnvSt = TestEnvSt {
     teNexus           :: Nexus
   , teRNGState        :: CryptoRNGState
-  , teAppState        :: AppState
   , teGlobalTemplates :: KontrakcjaGlobalTemplates
   }
 
@@ -77,14 +73,10 @@ newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
   deriving (Applicative, Functor, Monad, MonadBase IO, MonadIO, MonadReader TestEnvSt)
 
 runTestEnv :: TestEnvSt -> TestEnv () -> IO ()
-runTestEnv st m = withTestState $ \appState ->
-  ununTestEnv (st { teAppState = appState }) $ withTestDB m
+runTestEnv st = ununTestEnv st . withTestDB
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> IO a
 ununTestEnv st m = runReaderT (unTestEnv m) st
-
-instance AcidStore AppState TestEnv where
-  getAcidStore = teAppState <$> ask
 
 instance CryptoRNG TestEnv where
   getCryptoRNGState = teRNGState <$> ask
@@ -111,9 +103,8 @@ runTestKontraHelper rq ctx tk = do
   let noflashctx = ctx { ctxflashmessages = [] }
   nex <- getNexus
   rng <- getCryptoRNGState
-  appState <- getAcidStore
   mres <- liftIO . ununWebT $ runServerPartT
-    (runOurServerPartT . runDBT nex . runCryptoRNGT rng . runAcidT appState $
+    (runOurServerPartT . runDBT nex . runCryptoRNGT rng $
       runStateT (unKontraPlus $ unKontra tk) noflashctx) rq
   case mres of
     Nothing -> fail "runTestKontraHelper mzero"
@@ -251,14 +242,10 @@ mkContext locale = do
                                        , logicaMBIEndpoint = "https://eidt.funktionstjanster.se:18898/mbi/service"
                                        , logicaMBIDisplayName = "Test av Mobilt BankID"
                                        }
-        , ctxelegtransactions = []
         , ctxfilecache = memcache
         , ctxxtoken = error "xtoken is not defined"
-        , ctxcompany = Nothing
-        , ctxlocation = error "location is not defined"
         , ctxadminaccounts = []
         , ctxsalesaccounts = []
-        , ctxmagichashes = Map.empty
         , ctxmaybepaduser = Nothing
         , ctxstaticresources = SR.ResourceSetsForImport [] (TOD 0 0)
         , ctxusehttps = False
@@ -267,6 +254,7 @@ mkContext locale = do
                                            , recurlyAPIKey     = "c31afaf14af3457895ee93e7e08e4451"
                                            , recurlyPrivateKey = "49c1b30592fa475b8535a0ca04f88e65"
                                            }
+        , ctxsessionid = tempSessionID
     }
 
 -- pgsql database --
@@ -301,16 +289,6 @@ clearTables = runDBEnv $ do
   kRunRaw "DELETE FROM users"
   kRunRaw "DELETE FROM files"
 
+  kRunRaw "DELETE FROM sessions"
+
   kRunRaw "DELETE FROM mails"
-
--- acid-state --
-
-withTestState :: (AppState -> IO ()) -> IO ()
-withTestState m = withTemporaryDirectory (\tmpDir -> withAcid tmpDir m)
-  where
-    withTemporaryDirectory = withSystemTempDirectory' "kontrakcja-test-"
-    withAcid dir = E.bracket openAcid closeAcid
-      where
-        dummy_logger = const (return ())
-        openAcid = openAcidState dummy_logger dir
-        closeAcid = closeAcidState dummy_logger

@@ -16,6 +16,7 @@ import AppDB
 import Crypto.RNG
 import DB
 import DB.Checks
+import DB.SQLFunction
 import DB.PostgreSQL
 import Templates.TemplatesLoader
 import TestKontra
@@ -250,12 +251,12 @@ testMany (args, ts) = Log.withLogger $ do
   templates <- readGlobalTemplates
   withPostgreSQL pgconf $ do
     performDBChecks Log.debug kontraTables kontraMigrations
+    runDBEnv $ defineMany kontraFunctions
     nex <- getNexus
     let env = TestEnvSt {
           teNexus = nex
         , teRNGState = rng
         , teGlobalTemplates = templates
-        , teAppState = error "teAppState is not defined"
         }
     liftIO $ E.finally (defaultMainWithArgs (map ($ env) ts) args) $ do
       stats <- getNexusStats nex
