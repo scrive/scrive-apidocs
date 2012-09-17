@@ -1,10 +1,12 @@
 module AppDB (
-    kontraMigrations
+    kontraFunctions
+  , kontraMigrations
   , kontraTables
   ) where
 
 import DB.Core
 import DB.Model
+import DB.SQLFunction
 
 import ActionQueue.Tables
 import Company.Tables
@@ -13,6 +15,7 @@ import CompanyAccounts.Tables
 import Doc.Tables
 import Doc.Migrations
 import Doc.API.Callback.Tables
+import Doc.Tickets.Tables
 import User.Migrations
 import User.Tables
 import User.History.Tables
@@ -30,6 +33,9 @@ import ScriveByMail.Tables
 import EvidenceLog.Tables
 import Payments.Tables
 import Attachment.Tables
+
+kontraFunctions :: [SQLFunction]
+kontraFunctions = [insertDocumentTicket]
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
 -- (mailerMigrations always stay at the end though. They are
@@ -132,4 +138,5 @@ kontraTables = [
   , tablePaymentStats
   , tableDocumentApiCallbacks
   , tableSessions
+  , tableDocumentTickets
   ] ++ mailerTables

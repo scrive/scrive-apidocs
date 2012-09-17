@@ -30,8 +30,6 @@ import Data.Maybe
 import File.Model
 import Control.Applicative
 import MinutesTime
-import Kontra
-import MagicHash
 
 {- |
    Given a Document, return all of the signatory details for all signatories (exclude viewers but include author if he must sign).
@@ -472,14 +470,3 @@ recentDate doc =
        (maybeToList $ signtime <$> maybeseeninfo sl)
     ++ (maybeToList $ signtime <$> maybesigninfo sl)
     ++ (maybeToList $ id       <$> maybereadinvite sl)))
-
-
-getMagicHashFromContext :: (KontraMonad m) => SignatoryLinkID -> m (Maybe MagicHash)
-getMagicHashFromContext _slid = do
-  return Nothing -- FIXME
-  --Context{ctxmagichashes} <- getContext
-  --return $! Map.lookup slid ctxmagichashes
-
-addMagicHashToContext :: (KontraMonad m) => SignatoryLinkID -> MagicHash -> m ()
-addMagicHashToContext _slid _mh = do return () -- FIXME
-  --modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert slid mh (ctxmagichashes ctx) })

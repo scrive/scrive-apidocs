@@ -25,6 +25,7 @@ import Configuration
 import Crypto.RNG
 import DB
 import DB.Checks
+import DB.SQLFunction
 import DB.PostgreSQL
 import Doc.API.Callback.Model
 import Utils.Cron
@@ -76,8 +77,9 @@ main = Log.withLogger $ do
       , staticResources = staticResources
       }
 
-  withPostgreSQL (dbConfig appConf) $
+  withPostgreSQL (dbConfig appConf) $ do
     performDBChecks Log.server kontraTables kontraMigrations
+    runDBEnv $ defineMany kontraFunctions
 
   startSystem appGlobals appConf
 

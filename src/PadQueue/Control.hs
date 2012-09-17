@@ -5,6 +5,7 @@ import PadQueue.Model
 import DB
 import Doc.DocStateData
 import Doc.DocStateQuery
+import Doc.Tickets.Model
 import Kontra
 import Redirect
 import User.Model
@@ -24,7 +25,7 @@ import AppView
 import Happstack.Server.Types
 import Data.Maybe
 import Util.Actor
-import Doc.DocUtils
+
 -- PadQueue STATE
 padQueueState :: Kontrakcja m => m JSValue
 padQueueState = do
@@ -39,7 +40,7 @@ padQueueState = do
              msdata <- padQueueToSignatoryData pq
              case msdata of
                Just (_,siglink) -> do
-                 addMagicHashToContext (signatorylinkid siglink) (signatorymagichash siglink)
+                 addDocumentTicket (signatorylinkid siglink) (signatorymagichash siglink)
                Nothing -> return ()
              padQueueStateJSON (isJust $ ctxmaybeuser ctx)  msdata
 

@@ -1,5 +1,6 @@
 module Session.Model (
-    getCurrentSession
+    insertEmptySession
+  , getCurrentSession
   , updateSession
   , getUserFromSession
   , getPadUserFromSession
@@ -19,6 +20,17 @@ import Session.Cookies
 import Session.Data
 import User.Model
 import qualified Log
+
+-- | Insert empty session into database and return its id. Needed
+-- when document ticket/eleg transaction needs to be inserted into
+-- the database, but current session is temporary.
+insertEmptySession :: (CryptoRNG m, MonadDB m) => m SessionID
+insertEmptySession = do
+  token <- random
+  csrf_token <- random
+  expires <- sessionNowModifier `liftM` getMinutesTime
+  dbUpdate (NewAction session expires (Nothing, Nothing, token, csrf_token))
+    >>= return . sesID
 
 -- | Get current session based on cookies set.
 -- If no session is available, return new, empty session.
@@ -41,12 +53,17 @@ updateSession old_ses ses = do
         let uid = fromJust $ sesUserID ses
         n <- deleteSuperfluousUserSessions uid
         Log.debug $ show n ++ " superfluous sessions of user with id = " ++ show uid ++ " removed from the database"
-      expires <- (120 `minutesAfter`) `liftM` getMinutesTime
+      expires <- sessionNowModifier `liftM` getMinutesTime
       let Session{..} = ses
       dbUpdate (NewAction session expires (sesUserID, sesPadUserID, sesToken, sesCSRFToken))
         >>= startSessionCookie
     _ | old_ses /= ses -> do
       success <- dbUpdate $ UpdateAction session ses
+      -- if below condition is met, that means empty session was inserted
+      -- into the database (to allow inserting document tickets/eleg
+      -- transaction) but cookie wasn't created, so we need to create it here.
+      when (sesID old_ses == tempSessionID && sesID ses /= tempSessionID) $
+        startSessionCookie ses
       when (not success) $
         Log.debug "UpdateAction didn't update session where it should have to"
     _ -> return ()
@@ -60,6 +77,9 @@ getPadUserFromSession :: MonadDB m => Session -> m (Maybe User)
 getPadUserFromSession Session{sesPadUserID} = case sesPadUserID of
   Just uid -> dbQuery $ GetUserByID uid
   Nothing  -> return Nothing
+
+sessionNowModifier :: MinutesTime -> MinutesTime
+sessionNowModifier = (120 `minutesAfter`)
 
 isSessionEmpty :: Session -> Bool
 isSessionEmpty Session{..} = isNothing sesUserID && isNothing sesPadUserID

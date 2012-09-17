@@ -19,6 +19,7 @@ import Control.Logic
 import Control.Monad.State
 import Doc.DocStateData as D
 import Doc.DocUtils
+import Doc.Tickets.Model
 import ELegitimation.ELegTransaction
 import Happstack.Server
 import Kontra
@@ -58,7 +59,7 @@ generateBankIDTransaction :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m 
 generateBankIDTransaction docid signid = do
   Context{ctxtime,ctxlogicaconf} <- getContext
   
-  magic    <- guardJustM $ getMagicHashFromContext signid
+  magic    <- guardJustM $ getDocumentTicket signid
   provider <- guardJustM $ readField "provider"
   let seconds = toSeconds ctxtime
       
@@ -305,7 +306,7 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
 
 initiateMobileBankID :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 initiateMobileBankID docid slid = do
-    magic <- guardJustM $ getMagicHashFromContext slid
+    magic <- guardJustM $ getDocumentTicket slid
     logicaconf <- ctxlogicaconf <$> getContext
 
     -- sanity check
@@ -364,7 +365,7 @@ initiateMobileBankIDForAuthor docid = do
 
 collectMobileBankID :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 collectMobileBankID docid slid = do
-  magic <- guardJustM $ getMagicHashFromContext slid
+  magic <- guardJustM $ getDocumentTicket slid
   tid <- guardJustM $ getField "transactionid"
   logicaconf <- ctxlogicaconf <$> getContext
   elegtransactions  <- undefined <$> getContext -- FIXME

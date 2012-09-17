@@ -47,6 +47,7 @@ import Doc.Rendering
 import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
+import Doc.Tickets.Model
 import Attachment.Model
 import qualified Doc.DocSeal as DocSeal
 import InputValidation
@@ -116,7 +117,7 @@ import System.Directory
 handleAcceptAccountFromSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleAcceptAccountFromSign documentid
                             signatorylinkid = do
-  magichash <- guardJustM $ getMagicHashFromContext signatorylinkid
+  magichash <- guardJustM $ getDocumentTicket signatorylinkid
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
   when (documentdeliverymethod document == PadDelivery) internalError
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
@@ -152,7 +153,7 @@ signDocument documentid
   --
   -- The above requires changes to logic in all invoked procedures.
 
-  mmagichash <- getMagicHashFromContext signatorylinkid
+  mmagichash <- getDocumentTicket signatorylinkid
   magichash <- case mmagichash of
     Just m -> return m
     Nothing -> do
@@ -259,7 +260,7 @@ rejectDocumentIphoneCase did sid _ = rejectDocument did sid
  -}
 rejectDocument :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 rejectDocument documentid siglinkid = do
-  magichash <- guardJustM $ getMagicHashFromContext siglinkid
+  magichash <- guardJustM $ getDocumentTicket siglinkid
   customtext <- getCustomTextField "customtext"
 
   edocs <- rejectDocumentWithChecks documentid siglinkid magichash customtext
@@ -299,7 +300,7 @@ rejectDocument documentid siglinkid = do
 -- call Apple service and enable cookies (again) on their phone.
 handleSignShowSaveMagicHash :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
 handleSignShowSaveMagicHash did sid mh = do
-  addMagicHashToContext sid mh
+  addDocumentTicket sid mh
   return $ LinkSignDocNoMagicHash did sid
 
 handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
@@ -308,7 +309,7 @@ handleSignShow documentid
   Context { ctxtime
           , ctxipnumber } <- getContext
 
-  mmagichash <- getMagicHashFromContext signatorylinkid
+  mmagichash <- getDocumentTicket signatorylinkid
 
   case mmagichash of
     Just magichash -> do
@@ -737,7 +738,7 @@ checkFileAccess fid = do
 
   -- If refering to something by SignatoryLinkID check out if in the
   -- session we have a properly stored access magic hash.
-  mmh <- maybe (return Nothing) getMagicHashFromContext msid
+  mmh <- maybe (return Nothing) getDocumentTicket msid
 
   case (msid, mmh, mdid, mattid) of
     (Just sid, Just mh, Just did,_) -> do
@@ -798,7 +799,7 @@ handleDownloadMainFile :: Kontrakcja m => DocumentID -> String -> m Response
 handleDownloadMainFile did _nameForBrowser = do
   msid <- readField "signatorylinkid"
 
-  mmh <- maybe (return Nothing) getMagicHashFromContext msid
+  mmh <- maybe (return Nothing) getDocumentTicket msid
 
   doc <- case (msid, mmh) of
            (Just sid, Just mh) -> guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
@@ -824,7 +825,7 @@ handleDownloadMainFile did _nameForBrowser = do
 
 handleDeleteSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m KontraLink
 handleDeleteSigAttach docid siglinkid = do
-  mh <- guardJustM $ getMagicHashFromContext siglinkid
+  mh <- guardJustM $ getDocumentTicket siglinkid
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
   siglink <- guardJust $ getSigLinkFor doc siglinkid
   fid <- read <$> getCriticalField asValidID "deletesigattachment"
@@ -837,7 +838,7 @@ handleDeleteSigAttach docid siglinkid = do
 
 handleSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleSigAttach docid siglinkid = do
-  mh <- guardJustM $ getMagicHashFromContext siglinkid
+  mh <- guardJustM $ getDocumentTicket siglinkid
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
   siglink <- guardJust $ getSigLinkFor doc siglinkid
   attachname <- getCriticalField asValidFieldValue "attachname"
