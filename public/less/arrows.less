@@ -1,0 +1,88 @@
+.signview .arrows {
+   @scroll-arrow-size: 112px;
+   @scroll-arrow-margin: 50px;
+   @action-arrow-front-width:18px;
+   @action-arrow-back-width:7px;
+   @action-arrow-height: 28px;
+
+  .scroll-arrow {
+    height:    @scroll-arrow-size;
+    min-width: @scroll-arrow-size;
+    background-repeat: no-repeat;
+    position: fixed;
+    display: block;
+    z-index: 5000;
+  }
+
+  .down.arrow {
+    .scroll-arrow; 
+    bottom: @scroll-arrow-margin;
+    background: url(../img/sign-arrow-down.png);
+    position: fixed;
+
+  }
+
+  .up.arrow {
+    .scroll-arrow; 
+    up: @scroll-arrow-margin;
+    background: url(../img/sign-arrow-up.png);
+    background-repeat: no-repeat;
+  }
+
+
+  .action-arrow {
+    position: absolute;
+    display: block;
+    z-index: 5000;
+  }
+
+  .front {
+    height:    @action-arrow-height;
+    width: @action-arrow-front-width;
+    background-repeat: no-repeat;
+
+  }
+  .back {
+    height:    @action-arrow-height;
+    width: @action-arrow-back-width;
+    background-repeat: no-repeat;
+  }
+
+  .label {
+    background-repeat: repeat-x;
+    color: white;
+    padding-top: 4px;
+    height : @action-arrow-height;
+    white-space:nowrap;
+    min-width : 70px;
+
+  }
+
+  .action-arrow.right .front {
+    float : left;
+    background-image: url(../img/sign-arrow-action-right-front.png);
+  }
+  .action-arrow.right .back {
+    float : left;
+    background-image: url(../img/sign-arrow-action-right-back.png);
+  }
+  .action-arrow.right .label {
+    float : left;
+    background-image: url(../img/sign-arrow-action-label.png);
+  }
+
+  .action-arrow.left .front {
+    float : right;
+    background-image: url(../img/sign-arrow-action-left-front.png);
+  }
+  .action-arrow.left .back {
+    float : right;
+    background-image: url(../img/sign-arrow-action-left-back.png);
+  }
+  .action-arrow.left .label {
+    float : right;
+    background-image: url(../img/sign-arrow-action-label.png);
+  }
+
+ 
+}
