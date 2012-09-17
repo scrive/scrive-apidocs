@@ -63,6 +63,4 @@ checkUserTOSGet action = do
     case ctxmaybeuser ctx of
         Just (User{userhasacceptedtermsofservice = Just _}) -> Right <$> action
         Just _ -> return $ Left $ LinkAcceptTOS
-        Nothing -> case (ctxcompany ctx) of
-             Just _company -> Right <$> action
-             Nothing -> return $ Left $ LinkLogin (ctxlocale ctx) NotLogged
+        Nothing -> return $ Left $ LinkLogin (ctxlocale ctx) NotLogged

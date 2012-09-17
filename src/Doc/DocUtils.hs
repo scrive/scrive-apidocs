@@ -31,7 +31,6 @@ import File.Model
 import Control.Applicative
 import MinutesTime
 import Kontra
-import qualified Data.Map as Map
 import MagicHash
 
 {- |
@@ -476,11 +475,11 @@ recentDate doc =
 
 
 getMagicHashFromContext :: (KontraMonad m) => SignatoryLinkID -> m (Maybe MagicHash)
-getMagicHashFromContext slid = do
-  Context{ctxmagichashes} <- getContext
-  return $! Map.lookup slid ctxmagichashes
-
+getMagicHashFromContext _slid = do
+  return Nothing -- FIXME
+  --Context{ctxmagichashes} <- getContext
+  --return $! Map.lookup slid ctxmagichashes
 
 addMagicHashToContext :: (KontraMonad m) => SignatoryLinkID -> MagicHash -> m ()
-addMagicHashToContext slid mh = do
-  modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert slid mh (ctxmagichashes ctx) })
+addMagicHashToContext _slid _mh = do return () -- FIXME
+  --modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert slid mh (ctxmagichashes ctx) })

@@ -73,7 +73,6 @@ import Doc.DocInfo
 import Util.MonadUtils
 import Stats.Control
 import User.Utils
-import Company.Model
 import Control.Applicative
 import Control.Concurrent
 import Control.Monad
@@ -345,7 +344,6 @@ handleIssueShowGet :: Kontrakcja m => DocumentID -> m (Either KontraLink (Either
 handleIssueShowGet docid = checkUserTOSGet $ do
   document <- guardRightM $ getDocByDocID docid
   muser <- ctxmaybeuser <$> getContext
-  mcompany <- ctxcompany <$> getContext
 
   let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
   when (isAuthor (document, muser) && isCanceled document && isJust mMismatchMessage) $
@@ -355,8 +353,7 @@ handleIssueShowGet docid = checkUserTOSGet $ do
   let ispreparation = documentstatus document == Preparation
       isauthor = (userid <$> muser) == maybesignatory authorsiglink
       isincompany = isJust (maybecompany authorsiglink) &&
-                      ((usercompany =<< muser) == maybecompany authorsiglink || 
-                       (companyid <$> mcompany) == maybecompany authorsiglink)
+                      ((usercompany =<< muser) == maybecompany authorsiglink)
       isauthororincompany = isauthor || isincompany
       msiglink = find (isSigLinkFor muser) $ documentsignatorylinks document
       

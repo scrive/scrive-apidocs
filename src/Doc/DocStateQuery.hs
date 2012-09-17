@@ -37,7 +37,6 @@ import DB
 import DBError
 import Doc.Model
 import Doc.DocStateData
-import Company.Model
 import Kontra
 import MagicHash
 import Util.SignatoryLinkUtils
@@ -71,10 +70,10 @@ canUserViewDoc user doc =
  -}
 getDocByDocID :: Kontrakcja m => DocumentID -> m (Either DBError Document)
 getDocByDocID docid = do
-  Context { ctxmaybeuser, ctxmaybepaduser , ctxcompany } <- getContext
-  case (ctxmaybeuser `mplus` ctxmaybepaduser, ctxcompany) of
-    (Nothing, Nothing) -> return $ Left DBNotLoggedIn
-    (Just user, _) -> do
+  Context { ctxmaybeuser, ctxmaybepaduser} <- getContext
+  case (ctxmaybeuser `mplus` ctxmaybepaduser) of
+    Nothing -> return $ Left DBNotLoggedIn
+    Just user -> do
       mdoc <- dbQuery $ GetDocumentByDocumentID docid
       case mdoc of
         Nothing  -> do
@@ -84,14 +83,6 @@ getDocByDocID docid = do
           case canUserViewDoc user doc of
             False -> return $ Left DBResourceNotAvailable
             True  -> return $ Right doc
-    (_, Just company) -> do
-      Log.debug "Logged in as company"
-      mdoc <- dbQuery $ GetDocumentByDocumentID docid
-      case mdoc of
-        Nothing  -> return $ Left DBResourceNotAvailable
-        Just doc -> if isJust $ getSigLinkFor doc (companyid company)
-                    then return $ Right doc
-                    else return $ Left DBResourceNotAvailable
 
 {- | Same as getDocByDocID, but works only for author -}
 getDocByDocIDForAuthor :: Kontrakcja m => DocumentID -> m (Either DBError Document)

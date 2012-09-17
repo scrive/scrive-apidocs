@@ -21,7 +21,6 @@ import ActionQueue.UserAccountRequest
 import AppConf
 import AppControl
 import AppDB
-import AppState
 import Configuration
 import Crypto.RNG
 import DB
@@ -37,6 +36,7 @@ import Utils.Network
 import Payments.Config
 import Payments.Control
 import RoutingTable
+import Session.Data
 import Templates.TemplatesLoader
 import User.Model
 import Control.Logic
@@ -44,7 +44,6 @@ import qualified Amazon as AWS
 import qualified Log
 import qualified MemCache
 import qualified Paths_kontrakcja as Paths
-import qualified System.Mem
 import qualified Static.Resources as SR
 import qualified Doc.JpegPages as JpegPages
 
@@ -83,15 +82,9 @@ main = Log.withLogger $ do
   startSystem appGlobals appConf
 
 startSystem :: AppGlobals -> AppConf -> IO ()
-startSystem appGlobals appConf = E.bracket
-  (openAcidState Log.server $ store appConf)
-  (\st -> do
-    createCheckpoint Log.server st
-    closeAcidState Log.server st
-  )
-  startHttpServer
+startSystem appGlobals appConf = startHttpServer
   where
-    startHttpServer appState =
+    startHttpServer =
       E.bracket createThreads (mapM_ killThread) waitForTerm
       where
         createThreads = do
@@ -99,8 +92,8 @@ startSystem appGlobals appConf = E.bracket
           listensocket <- listenOn (htonl iface) (fromIntegral port)
           let (routes,overlaps) = compile staticRoutes
           maybe (return ()) Log.server overlaps
-          t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port, timeout = 120}) (appHandler routes appConf appGlobals appState)
-          let runScheduler = runQueue (cryptorng appGlobals) (dbConfig appConf) (SchedulerData appConf (templates appGlobals) appState)
+          t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port, timeout = 120}) (appHandler routes appConf appGlobals)
+          let runScheduler = runQueue (cryptorng appGlobals) (dbConfig appConf) (SchedulerData appConf (templates appGlobals))
           t2 <- forkIO $ cron 60 $ do
             Log.debug "Running oldScheduler..."
             runScheduler oldScheduler
@@ -113,14 +106,16 @@ startSystem appGlobals appConf = E.bracket
           t5 <- forkIO $ cron (60 * 60) $ do
             Log.debug "Evaluating UserAccountRequest actions..."
             runScheduler $ actionQueue userAccountRequest
-          t6 <- forkIO $ cron 5 $ runScheduler processEvents
-          t7 <- forkIO $ cron 10 $ runScheduler $ actionQueue documentAPICallback
-          t8 <- forkIO $ if AWS.isAWSConfigOk appConf
+          t6 <- forkIO $ cron (60 * 60) $ do
+            Log.debug "Evaluating sessions..."
+            runScheduler $ actionQueue session
+          t7 <- forkIO $ cron 5 $ runScheduler processEvents
+          t8 <- forkIO $ cron 10 $ runScheduler $ actionQueue documentAPICallback
+          t9 <- forkIO $ if AWS.isAWSConfigOk appConf
                            then cron 60 $ runScheduler AWS.uploadFilesToAmazon
                            else return ()
-          t9 <- forkIO $ cron (60 * 60) (System.Mem.performGC >> Log.debug "Performing GC...")
           t10 <- forkIO $ cron (60 * 60) $
-              withPostgreSQL (dbConfig appConf) $ 
+            withPostgreSQL (dbConfig appConf) $
               runCryptoRNGT (cryptorng appGlobals) $ do
                 mtime <- getMinutesTime
                 ctime <- liftIO $ System.Time.toCalendarTime (toClockTime mtime)
@@ -128,16 +123,12 @@ startSystem appGlobals appConf = E.bracket
                 when (System.Time.ctHour ctime == 0) $ -- midnight
                   handleSyncWithRecurly (hostpart appConf) (mailsConfig appConf) temps (recurlyAPIKey $ recurlyConfig appConf) mtime
           return [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10]
-        waitForTerm _ = E.bracket
-          -- checkpoint the state once a day
-          -- FIXME: make it checkpoint always at the same time
-          (forkIO $ cron (60*60*24) (createCheckpoint Log.server appState))
-          killThread $ \_ -> do
-            withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) $
-              initDatabaseEntries $ initialUsers appConf
-            -- wait for termination signal
-            waitForTermination
-            Log.server $ "Termination request received"
+        waitForTerm _ = do
+          withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) $
+            initDatabaseEntries $ initialUsers appConf
+          -- wait for termination signal
+          waitForTermination
+          Log.server $ "Termination request received"
 
 initDatabaseEntries :: (CryptoRNG m, MonadDB m) => [(Email, String)] -> m ()
 initDatabaseEntries = mapM_ $ \(email, passwordstring) -> do

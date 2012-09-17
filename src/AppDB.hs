@@ -23,6 +23,7 @@ import File.Migrations
 import Mails.Tables
 import PadQueue.Tables
 import PadQueue.Migrations
+import Session.Tables
 import Mails.Migrations
 import OAuth.Tables
 import ScriveByMail.Tables
@@ -130,4 +131,5 @@ kontraTables = [
   , tableAttachments
   , tablePaymentStats
   , tableDocumentApiCallbacks
+  , tableSessions
   ] ++ mailerTables

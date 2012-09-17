@@ -4,21 +4,18 @@ module Context (
 
 import File.FileID
 import Doc.JpegPages
-import Doc.SignatoryLinkID
 import MinutesTime
 import User.Model
 import qualified Data.ByteString as BS
-import qualified Data.Map as Map
 import qualified Network.AWS.Authentication as AWS
 import Templates.TemplatesLoader
-import ELegitimation.ELegTransaction
 import qualified MemCache
 import FlashMessage
 import Mails.MailsConfig
 import LiveDocx (LiveDocxConf(..))
-import Company.Model
 import MagicHash (MagicHash)
 import IPAddress
+import Session.SessionID
 import qualified Static.Resources as SR
 import ELegitimation.Config (LogicaConfig(..))
 import GuardTime (GuardTimeConf(..))
@@ -42,16 +39,13 @@ data Context = Context
     , ctxlivedocxconf        :: LiveDocxConf -- ^ LiveDocx configuration (does doc conversion)
     , ctxlogicaconf          :: LogicaConfig -- ^ Logica configuration (eleg)
     , ctxgtconf              :: GuardTimeConf -- ^ GuardTime configuration
-    , ctxelegtransactions    :: [ELegTransaction] -- ^ Transactions for connections to the Logica server
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString -- ^
     , ctxxtoken              :: MagicHash -- ^ The XToken for combatting CSRF
-    , ctxcompany             :: Maybe Company -- ^
-    , ctxlocation            :: String -- ^
     , ctxadminaccounts       :: [Email] -- ^
     , ctxsalesaccounts       :: [Email] -- ^
-    , ctxmagichashes         :: Map.Map SignatoryLinkID MagicHash
     , ctxmaybepaduser        :: Maybe User -- ^ If we are loged in to the pad view
     , ctxstaticresources     :: SR.ResourceSetsForImport
     , ctxusehttps            :: Bool
     , ctxrecurlyconfig       :: RecurlyConfig
+    , ctxsessionid           :: SessionID
     }

@@ -20,8 +20,6 @@ module Kontra
     )
     where
 
-import Acid.Monad
-import AppState
 import Context
 import Control.Applicative
 import Control.Logic
@@ -44,14 +42,14 @@ import User.Model
 import Utils.List
 import Utils.Monad
 
-type InnerKontraPlus = StateT Context (AcidT AppState (CryptoRNGT (DBT (OurServerPartT IO))))
+type InnerKontraPlus = StateT Context (CryptoRNGT (DBT (OurServerPartT IO)))
 
 -- | KontraPlus is 'MonadPlus', but it should only be used on toplevel
 -- for interfacing with static routing.
 newtype KontraPlus a = KontraPlus { unKontraPlus :: InnerKontraPlus a }
-  deriving (AcidStore AppState, MonadPlus, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, ServerMonad, WebMonad Response)
+  deriving (MonadPlus, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, ServerMonad, WebMonad Response)
 
-runKontraPlus :: Context -> KontraPlus a -> AcidT AppState (CryptoRNGT (DBT (OurServerPartT IO))) a
+runKontraPlus :: Context -> KontraPlus a -> CryptoRNGT (DBT (OurServerPartT IO)) a
 runKontraPlus ctx f = evalStateT (unKontraPlus f) ctx
 
 instance Kontrakcja KontraPlus
@@ -79,7 +77,7 @@ instance TemplatesMonad KontraPlus where
 -- Since we use static routing, there is no need for mzero inside a
 -- handler. Instead we signal errors explicitly through 'KontraError'.
 newtype Kontra a = Kontra { unKontra :: KontraPlus a }
-  deriving (AcidStore AppState, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadIO, MonadDB, ServerMonad, KontraMonad, TemplatesMonad)
+  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadIO, MonadDB, ServerMonad, KontraMonad, TemplatesMonad)
 
 instance Kontrakcja Kontra
 
@@ -124,8 +122,8 @@ onlyBackdoorOpen a = do
    Adds an Eleg Transaction to the context.
 -}
 addELegTransaction :: Kontrakcja m => ELegTransaction -> m ()
-addELegTransaction tr = do
-    modifyContext $ \ctx -> ctx {ctxelegtransactions = tr : ctxelegtransactions ctx }
+addELegTransaction _tr = return () -- FIXME
+    --modifyContext $ \ctx -> ctx {ctxelegtransactions = tr : ctxelegtransactions ctx }
 
 {- |
    Clears all the flash messages from the context.

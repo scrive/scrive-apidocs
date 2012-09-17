@@ -169,7 +169,7 @@ verifySignatureAndGetSignInfo ::  Kontrakcja m =>
                                    -> String
                                    -> m VerifySignatureResult
 verifySignatureAndGetSignInfo docid signid magic provider signature transactionid = do
-    ELegTransaction{..} <- guardJustM404  $ findTransactionByID transactionid <$> ctxelegtransactions <$> getContext
+    ELegTransaction{..} <- guardJustM404  $ findTransactionByID transactionid <$> undefined <$> getContext -- FIXME
     document            <- guardRightM    $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
     siglink             <- guardJust404   $ getSigLinkFor document signid
     logicaconf          <-               ctxlogicaconf <$> getContext
@@ -249,7 +249,7 @@ verifySignatureAndGetSignInfo docid signid magic provider signature transactioni
 verifySignatureAndGetSignInfoForAuthor :: Kontrakcja m => DocumentID -> SignatureProvider -> String -> String -> m VerifySignatureResult
 verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = do
     Log.eleg $ ("Document " ++ show docid ) ++ ": Author is signing with eleg for document "
-    elegtransactions  <- ctxelegtransactions <$> getContext
+    elegtransactions  <- undefined <$> getContext -- FIXME
     author   <- guardJustM  $ ctxmaybeuser <$> getContext
     doc <- guardRightM $ getDocByDocID docid
     logicaconf <- ctxlogicaconf <$> getContext
@@ -367,7 +367,7 @@ collectMobileBankID docid slid = do
   magic <- guardJustM $ getMagicHashFromContext slid
   tid <- guardJustM $ getField "transactionid"
   logicaconf <- ctxlogicaconf <$> getContext
-  elegtransactions  <- ctxelegtransactions <$> getContext
+  elegtransactions  <- undefined <$> getContext -- FIXME
   -- sanity check
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid slid magic
   unless (document `allowsAuthMethod` ELegAuthentication) internalError
@@ -414,7 +414,7 @@ collectMobileBankIDForAuthor :: Kontrakcja m => DocumentID -> m JSValue
 collectMobileBankIDForAuthor docid = do
   tid <- guardJustM $ getField "transactionid"
   logicaconf <- ctxlogicaconf <$> getContext
-  elegtransactions  <- ctxelegtransactions <$> getContext
+  elegtransactions  <- undefined <$> getContext -- FIXME
   -- sanity check
   document <- guardRightM $ getDocByDocIDForAuthor docid
   unless (document `allowsAuthMethod` ELegAuthentication) internalError
@@ -458,7 +458,7 @@ verifySignatureAndGetSignInfoMobile :: Kontrakcja m
                                        -> String
                                        -> m VerifySignatureResult
 verifySignatureAndGetSignInfoMobile docid signid magic transactionid = do
-    elegtransactions  <- ctxelegtransactions <$> getContext
+    elegtransactions  <- undefined <$> getContext --FIXME
     document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
     siglink <- guardJust $ getSigLinkFor document signid
     -- valid transaction?
@@ -501,7 +501,7 @@ verifySignatureAndGetSignInfoMobileForAuthor :: Kontrakcja m
                                              -> String
                                              -> m VerifySignatureResult
 verifySignatureAndGetSignInfoMobileForAuthor docid transactionid = do
-    elegtransactions  <- ctxelegtransactions <$> getContext
+    elegtransactions  <- undefined <$> getContext -- FIXME
     document <- guardRightM $ getDocByDocIDForAuthor docid
     siglink <- guardJust $ getAuthorSigLink document
     -- valid transaction?

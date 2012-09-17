@@ -11,10 +11,8 @@ module AppControl
 
 import AppConf
 
-import Acid.Monad
 import Amazon
 import AppView as V
-import AppState
 import Crypto.RNG
 import DB
 import DB.PostgreSQL
@@ -27,7 +25,8 @@ import Utils.HTTP
 import Utils.Monoid
 import OurServerPart
 import Redirect
-import Session
+import Session.Data hiding (session)
+import Session.Model
 import Templates.TemplatesLoader
 import User.Model
 import qualified Log (error, debug)
@@ -149,30 +148,29 @@ showRequest rq maybeInputsBody =
 {- |
    Creates a context, routes the request, and handles the session.
 -}
-appHandler :: KontraPlus Response -> AppConf -> AppGlobals -> AppState -> ServerPartT IO Response
-appHandler handleRoutes appConf appGlobals appState = catchEverything . runOurServerPartT $
-  withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) . runAcidT appState $ do
-
+appHandler :: KontraPlus Response -> AppConf -> AppGlobals -> ServerPartT IO Response
+appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT $
+  withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) $ do
     startTime <- liftIO getClockTime
-
     let quota = 10000000
     temp <- liftIO getTemporaryDirectory
     decodeBody (defaultBodyPolicy temp quota quota quota)
-    session <- handleSession
+    session <- getCurrentSession
     ctx <- createContext session
 
     (res, ctx') <- routeHandlers ctx
 
-    let newsessionuser = userid <$> ctxmaybeuser ctx'
-        newsessionpaduser = userid <$> ctxmaybepaduser ctx'
+    let newsession = session {
+          sesID        = ctxsessionid ctx'
+        , sesUserID    = userid <$> ctxmaybeuser ctx'
+        , sesPadUserID = userid <$> ctxmaybepaduser ctx'
+        }
         newflashmessages = ctxflashmessages ctx'
-        newelegtrans = ctxelegtransactions ctx'
-        newmagichashes = ctxmagichashes ctx'
     F.updateFlashCookie (ctxflashmessages ctx) newflashmessages
     issecure <- isSecure
     let usehttps = useHttps appConf
     when (issecure || not usehttps) $
-      updateSessionWithContextData session newsessionuser newelegtrans newmagichashes newsessionpaduser
+      updateSession session newsession
 
     -- Here we show in debug log some statistics that should help
     -- optimize code and instantly see if there is something
@@ -247,7 +245,6 @@ appHandler handleRoutes appConf appGlobals appState = catchEverything . runOurSe
       reshostpart <- getResourceHostpart
       minutestime <- getMinutesTime
       muser <- getUserFromSession session
-      mcompany <- getCompanyFromSession session
       mpaduser <- getPadUserFromSession session
 
       flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval -> do
@@ -286,16 +283,13 @@ appHandler handleRoutes appConf appGlobals appState = catchEverything . runOurSe
         , ctxgtconf = guardTimeConf appConf
         , ctxlivedocxconf = liveDocxConfig appConf
         , ctxlogicaconf   = logicaConfig appConf
-        , ctxelegtransactions = getELegTransactions session
         , ctxfilecache = filecache appGlobals
-        , ctxxtoken = getSessionXToken session
-        , ctxcompany = mcompany
-        , ctxlocation = getLocationFromSession session
+        , ctxxtoken = sesCSRFToken session
         , ctxadminaccounts = admins appConf
         , ctxsalesaccounts = sales appConf
-        , ctxmagichashes = getMagicHashes session
         , ctxmaybepaduser = mpaduser
         , ctxstaticresources = staticRes
         , ctxusehttps = useHttps appConf
         , ctxrecurlyconfig = recurlyConfig appConf
+        , ctxsessionid = sesID session
         }
