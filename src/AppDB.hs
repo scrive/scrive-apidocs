@@ -30,12 +30,16 @@ import Session.Tables
 import Mails.Migrations
 import OAuth.Tables
 import ScriveByMail.Tables
+import ELegitimation.ELegTransaction.Tables
 import EvidenceLog.Tables
 import Payments.Tables
 import Attachment.Tables
 
 kontraFunctions :: [SQLFunction]
-kontraFunctions = [insertDocumentTicket]
+kontraFunctions = [
+    insertDocumentTicket
+  , mergeELegTransaction
+  ]
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
 -- (mailerMigrations always stay at the end though. They are
@@ -139,4 +143,5 @@ kontraTables = [
   , tableDocumentApiCallbacks
   , tableSessions
   , tableDocumentTickets
+  , tableELegTransactions
   ] ++ mailerTables

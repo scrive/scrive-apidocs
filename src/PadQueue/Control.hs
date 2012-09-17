@@ -40,7 +40,7 @@ padQueueState = do
              msdata <- padQueueToSignatoryData pq
              case msdata of
                Just (_,siglink) -> do
-                 addDocumentTicket (signatorylinkid siglink) (signatorymagichash siglink)
+                 dbUpdate $ AddDocumentTicket (signatorylinkid siglink) (signatorymagichash siglink)
                Nothing -> return ()
              padQueueStateJSON (isJust $ ctxmaybeuser ctx)  msdata
 

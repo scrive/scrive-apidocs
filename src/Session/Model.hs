@@ -1,5 +1,5 @@
 module Session.Model (
-    insertEmptySession
+    getNonTempSessionID
   , getCurrentSession
   , updateSession
   , getUserFromSession
@@ -7,13 +7,16 @@ module Session.Model (
   ) where
 
 import Control.Monad
+import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
 import Data.Maybe
 import Happstack.Server hiding (Session)
 
 import ActionQueue.Core
+import Context
 import Crypto.RNG
 import DB
+import KontraMonad
 import MagicHash
 import MinutesTime
 import Session.Cookies
@@ -21,16 +24,27 @@ import Session.Data
 import User.Model
 import qualified Log
 
--- | Insert empty session into database and return its id. Needed
--- when document ticket/eleg transaction needs to be inserted into
--- the database, but current session is temporary.
-insertEmptySession :: (CryptoRNG m, MonadDB m) => m SessionID
-insertEmptySession = do
-  token <- random
-  csrf_token <- random
-  expires <- sessionNowModifier `liftM` getMinutesTime
-  dbUpdate (NewAction session expires (Nothing, Nothing, token, csrf_token))
-    >>= return . sesID
+-- | Gets non temporary session id from Context. If current session id
+-- is temporary, it inserts new, empty session into database and returns
+-- its id (needed when document ticket/eleg transaction needs to be
+-- inserted into the database, but current session is temporary), also
+-- modifying Context to carry modified id.
+getNonTempSessionID :: (CryptoRNG m, KontraMonad m, MonadDB m) => DBEnv m SessionID
+getNonTempSessionID = do
+  sid <- ctxsessionid `liftM` lift getContext
+  if sid == tempSessionID
+    then do
+      new_sid <- insertEmptySession
+      lift . modifyContext $ \ctx -> ctx { ctxsessionid = new_sid }
+      return new_sid
+    else return sid
+  where
+    insertEmptySession = do
+      token <- lift random
+      csrf_token <- lift random
+      expires <- sessionNowModifier `liftM` getMinutesTime
+      update (NewAction session expires (Nothing, Nothing, token, csrf_token))
+        >>= return . sesID
 
 -- | Get current session based on cookies set.
 -- If no session is available, return new, empty session.

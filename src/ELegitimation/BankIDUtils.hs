@@ -1,6 +1,5 @@
 module ELegitimation.BankIDUtils (
              mergeInfo
-           , findTransactionByID
            , getTBS
            , getSigEntries
            , getSigEntry
@@ -15,7 +14,6 @@ module ELegitimation.BankIDUtils (
 import Data.Char
 import Data.List
 import Doc.DocStateData as D
-import ELegitimation.ELegTransaction 
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Utils.String
@@ -44,9 +42,6 @@ mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, el
   if not $ null failmsgs
     then return $ Left  (intercalate "\n" failmsgs, elegFirst, elegLast, elegNumber)
     else return $ Right (matches !! 0, matches !! 1, matches !! 2)
-
-findTransactionByID :: String -> [ELegTransaction] -> Maybe ELegTransaction
-findTransactionByID transactionsid = find ((==) transactionsid . transactiontransactionid)
 
 getTBS :: TemplatesMonad m => D.Document -> m String
 getTBS doc = renderTemplate "tbs" $ do

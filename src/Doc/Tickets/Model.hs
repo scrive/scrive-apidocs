@@ -1,9 +1,10 @@
 module Doc.Tickets.Model (
-    getDocumentTicket
-  , addDocumentTicket
+    GetDocumentTicket(..)
+  , AddDocumentTicket(..)
   ) where
 
 import Control.Monad
+import Control.Monad.Trans
 
 import Context
 import Crypto.RNG
@@ -11,32 +12,24 @@ import DB
 import Doc.SignatoryLinkID
 import KontraMonad
 import MagicHash
-import Session.Data
 import Session.Model
 
-getDocumentTicket :: (KontraMonad m, MonadDB m)
-                  => SignatoryLinkID -> m (Maybe MagicHash)
-getDocumentTicket slid = do
-  sid <- ctxsessionid `liftM` getContext
-  runDBEnv . getOne $ SQL ("SELECT token FROM document_tickets"
-    ++ " WHERE session_id = ? AND signatory_link_id = ?") [
-      toSql sid
-    , toSql slid
-    ]
+data GetDocumentTicket = GetDocumentTicket SignatoryLinkID
+instance (KontraMonad m, MonadDB m) => DBQuery m GetDocumentTicket (Maybe MagicHash) where
+  query (GetDocumentTicket slid) = do
+    sid <- ctxsessionid `liftM` lift getContext
+    getOne $ SQL ("SELECT token FROM document_tickets"
+      ++ " WHERE session_id = ? AND signatory_link_id = ?") [
+        toSql sid
+      , toSql slid
+      ]
 
-addDocumentTicket :: (CryptoRNG m, KontraMonad m, MonadDB m)
-                  => SignatoryLinkID -> MagicHash -> m ()
-addDocumentTicket slid token = do
-  sid <- do
-    sid <- ctxsessionid `liftM` getContext
-    if sid == tempSessionID
-      then do
-        new_sid <- insertEmptySession
-        modifyContext $ \ctx -> ctx { ctxsessionid = new_sid }
-        return new_sid
-      else return sid
-  runDBEnv . kRun_ $ SQL "SELECT insert_document_ticket(?, ?, ?)" [
-      toSql sid
-    , toSql slid
-    , toSql token
-    ]
+data AddDocumentTicket = AddDocumentTicket SignatoryLinkID MagicHash
+instance (CryptoRNG m, KontraMonad m, MonadDB m) => DBUpdate m AddDocumentTicket () where
+  update (AddDocumentTicket slid token) = do
+    sid <- getNonTempSessionID
+    kRun_ $ SQL "SELECT insert_document_ticket(?, ?, ?)" [
+        toSql sid
+      , toSql slid
+      , toSql token
+      ]

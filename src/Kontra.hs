@@ -6,7 +6,6 @@ module Kontra
     , KontraPlus(..)
     , runKontraPlus
     , clearFlashMsgs
-    , addELegTransaction
     , logUserToContext
     , logPadUserToContext
     , isAdmin
@@ -30,7 +29,6 @@ import Control.Monad.Trans.Control
 import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB
-import ELegitimation.ELegTransaction
 import Happstack.Server
 import KontraError
 import KontraMonad
@@ -117,13 +115,6 @@ onlyBackdoorOpen a = do
   if backdoorOpen
     then a
     else respond404
-
-{- |
-   Adds an Eleg Transaction to the context.
--}
-addELegTransaction :: Kontrakcja m => ELegTransaction -> m ()
-addELegTransaction _tr = return () -- FIXME
-    --modifyContext $ \ctx -> ctx {ctxelegtransactions = tr : ctxelegtransactions ctx }
 
 {- |
    Clears all the flash messages from the context.

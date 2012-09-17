@@ -13,6 +13,7 @@ module ELegitimation.Control
     )
     where
 
+import DB
 import Redirect
 import qualified Log
 import Control.Logic
@@ -20,7 +21,7 @@ import Control.Monad.State
 import Doc.DocStateData as D
 import Doc.DocUtils
 import Doc.Tickets.Model
-import ELegitimation.ELegTransaction
+import ELegitimation.ELegTransaction.Model
 import Happstack.Server
 import Kontra
 import MagicHash (MagicHash)
@@ -59,7 +60,7 @@ generateBankIDTransaction :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m 
 generateBankIDTransaction docid signid = do
   Context{ctxtime,ctxlogicaconf} <- getContext
   
-  magic    <- guardJustM $ getDocumentTicket signid
+  magic    <- guardJustM $ dbQuery $ GetDocumentTicket signid
   provider <- guardJustM $ readField "provider"
   let seconds = toSeconds ctxtime
       
@@ -80,7 +81,7 @@ generateBankIDTransaction docid signid = do
                 Left (ImplStatus _a _b code msg) -> generationFailed "EncodeTBS failed" code msg
                 Right txt -> do
                     -- store in session
-                    addELegTransaction ELegTransaction
+                    dbUpdate . MergeELegTransaction $ ELegTransaction
                                             { transactiontransactionid   = transactionid
                                             , transactiontbs             = tbs
                                             , transactionencodedtbs      = Just txt
@@ -126,7 +127,7 @@ generateBankIDTransactionForAuthor  docid = do
                 Left (ImplStatus _a _b code msg) -> generationFailed "EncodeTBS failed" code msg
                 Right txt -> do
                     -- store in session
-                    addELegTransaction ELegTransaction
+                    dbUpdate . MergeELegTransaction $ ELegTransaction
                                         { transactiontransactionid   = transactionid
                                         , transactiontbs             = tbs
                                         , transactionencodedtbs      = Just txt
@@ -170,7 +171,7 @@ verifySignatureAndGetSignInfo ::  Kontrakcja m =>
                                    -> String
                                    -> m VerifySignatureResult
 verifySignatureAndGetSignInfo docid signid magic provider signature transactionid = do
-    ELegTransaction{..} <- guardJustM404  $ findTransactionByID transactionid <$> undefined <$> getContext -- FIXME
+    ELegTransaction{..} <- guardJustM404  $ dbQuery $ GetELegTransaction transactionid
     document            <- guardRightM    $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
     siglink             <- guardJust404   $ getSigLinkFor document signid
     logicaconf          <-               ctxlogicaconf <$> getContext
@@ -250,7 +251,6 @@ verifySignatureAndGetSignInfo docid signid magic provider signature transactioni
 verifySignatureAndGetSignInfoForAuthor :: Kontrakcja m => DocumentID -> SignatureProvider -> String -> String -> m VerifySignatureResult
 verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = do
     Log.eleg $ ("Document " ++ show docid ) ++ ": Author is signing with eleg for document "
-    elegtransactions  <- undefined <$> getContext -- FIXME
     author   <- guardJustM  $ ctxmaybeuser <$> getContext
     doc <- guardRightM $ getDocByDocID docid
     logicaconf <- ctxlogicaconf <$> getContext
@@ -261,7 +261,7 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
                     , transactiontbs
                     , transactionencodedtbs = Just etbs
                     , transactionnonce
-                    } <- guardJust $ findTransactionByID transactionid elegtransactions
+                    } <- guardJustM $ dbQuery $ GetELegTransaction transactionid
 
     unless (transactiondocumentid == docid) internalError
     Log.eleg $ ("Document " ++ show docid ) ++ ": Transaction validated"
@@ -306,7 +306,7 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
 
 initiateMobileBankID :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 initiateMobileBankID docid slid = do
-    magic <- guardJustM $ getDocumentTicket slid
+    magic <- guardJustM $ dbQuery $ GetDocumentTicket slid
     logicaconf <- ctxlogicaconf <$> getContext
 
     -- sanity check
@@ -322,18 +322,19 @@ initiateMobileBankID docid slid = do
     case eresponse of
       Left e -> mobileBankIDErrorJSON e
       Right (tid, oref) -> do
-        addELegTransaction ELegTransaction { transactiontransactionid   = tid
-                                           , transactiondocumentid      = docid
-                                           , transactionsignatorylinkid = Just slid
-                                           , transactionmagichash       = Just magic
-                                           , transactionoref            = Just oref
-                                           , transactionstatus          = Right $ CROutstanding tid
-                                           , transactiontbs             = tbs
-                                           , transactionencodedtbs      = Nothing
-                                           , transactionnonce           = Nothing
-                                          }
+        dbUpdate . MergeELegTransaction $ ELegTransaction {
+            transactiontransactionid   = tid
+          , transactiondocumentid      = docid
+          , transactionsignatorylinkid = Just slid
+          , transactionmagichash       = Just magic
+          , transactionoref            = Just oref
+          , transactionstatus          = Right $ CROutstanding tid
+          , transactiontbs             = tbs
+          , transactionencodedtbs      = Nothing
+          , transactionnonce           = Nothing
+        }
         return $ runJSONGen $ J.value "transactionid" tid
-        
+
 initiateMobileBankIDForAuthor :: Kontrakcja m => DocumentID -> m JSValue
 initiateMobileBankIDForAuthor docid = do
     logicaconf <- ctxlogicaconf <$> getContext
@@ -347,16 +348,17 @@ initiateMobileBankIDForAuthor docid = do
     case eresponse of
       Left e -> mobileBankIDErrorJSON e
       Right (tid, oref) -> do
-        addELegTransaction ELegTransaction { transactiontransactionid   = tid
-                                           , transactiondocumentid      = docid
-                                           , transactionsignatorylinkid = Just $ signatorylinkid sl
-                                           , transactionmagichash       = Just $ signatorymagichash sl
-                                           , transactionoref            = Just oref
-                                           , transactionstatus          = Right $ CROutstanding tid
-                                           , transactiontbs             = tbs
-                                           , transactionencodedtbs      = Nothing
-                                           , transactionnonce           = Nothing
-                                           }
+        dbUpdate . MergeELegTransaction $ ELegTransaction {
+            transactiontransactionid   = tid
+          , transactiondocumentid      = docid
+          , transactionsignatorylinkid = Just $ signatorylinkid sl
+          , transactionmagichash       = Just $ signatorymagichash sl
+          , transactionoref            = Just oref
+          , transactionstatus          = Right $ CROutstanding tid
+          , transactiontbs             = tbs
+          , transactionencodedtbs      = Nothing
+          , transactionnonce           = Nothing
+        }
         msg <- renderTemplate "bankidStartApp" $ return ()
         return $ runJSONGen $ do
           J.value "transactionid" tid
@@ -365,10 +367,9 @@ initiateMobileBankIDForAuthor docid = do
 
 collectMobileBankID :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 collectMobileBankID docid slid = do
-  magic <- guardJustM $ getDocumentTicket slid
+  magic <- guardJustM $ dbQuery $ GetDocumentTicket slid
   tid <- guardJustM $ getField "transactionid"
   logicaconf <- ctxlogicaconf <$> getContext
-  elegtransactions  <- undefined <$> getContext -- FIXME
   -- sanity check
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid slid magic
   unless (document `allowsAuthMethod` ELegAuthentication) internalError
@@ -377,7 +378,7 @@ collectMobileBankID docid slid = do
                         ,transactionmagichash
                         ,transactionoref
                         ,transactionstatus
-                        ,transactiondocumentid} <- guardJust $ findTransactionByID tid elegtransactions
+                        ,transactiondocumentid} <- guardJustM $ dbQuery $ GetELegTransaction tid
   unless (transactionsignatorylinkid == Just slid &&
           transactionmagichash       == Just magic &&
           transactiondocumentid      == docid) internalError
@@ -391,22 +392,22 @@ collectMobileBankID docid slid = do
       eresponse <- liftIO $ mbiRequestCollect logicaconf tid oref
       case eresponse of
         Left e -> do
-          addELegTransaction $ trans { transactionstatus = Left e }
+          dbUpdate . MergeELegTransaction $ trans { transactionstatus = Left e }
           return $ runJSONGen $ J.value "error" e
         Right s@(CROutstanding _) -> do
-          addELegTransaction $ trans { transactionstatus = Right s}
+          dbUpdate . MergeELegTransaction $ trans { transactionstatus = Right s}
           msg <- renderTemplate "bankidStartApp" $ return ()
           return $ runJSONGen $ do
             J.value "status" "outstanding"
             J.value "message" msg
         Right s@(CRUserSign _) -> do
-          addELegTransaction $ trans { transactionstatus = Right s}
+          dbUpdate . MergeELegTransaction $ trans { transactionstatus = Right s}
           msg <- renderTemplate "bankidEnterCode" $ return ()
           return $ runJSONGen $ do
             J.value "status" "usersign"
             J.value "message" msg
         Right s@(CRComplete _ _signature _attrs) -> do
-          addELegTransaction $ trans { transactionstatus = Right s}
+          dbUpdate . MergeELegTransaction $ trans { transactionstatus = Right s}
           -- save signature and attrs somewhere; 
           return $ runJSONGen $ do
             J.value "status" "complete"
@@ -415,13 +416,12 @@ collectMobileBankIDForAuthor :: Kontrakcja m => DocumentID -> m JSValue
 collectMobileBankIDForAuthor docid = do
   tid <- guardJustM $ getField "transactionid"
   logicaconf <- ctxlogicaconf <$> getContext
-  elegtransactions  <- undefined <$> getContext -- FIXME
   -- sanity check
   document <- guardRightM $ getDocByDocIDForAuthor docid
   unless (document `allowsAuthMethod` ELegAuthentication) internalError
   trans@ELegTransaction {transactionoref
                         ,transactionstatus
-                        ,transactiondocumentid} <- guardJust $ findTransactionByID tid elegtransactions
+                        ,transactiondocumentid} <- guardJustM $ dbQuery $ GetELegTransaction tid
   oref <- guardJust transactionoref
   unless (transactiondocumentid == docid) internalError
   case transactionstatus of
@@ -432,22 +432,22 @@ collectMobileBankIDForAuthor docid = do
       eresponse <- liftIO $ mbiRequestCollect logicaconf tid oref
       case eresponse of
         Left e -> do
-          addELegTransaction $ trans { transactionstatus = Left e }
+          dbUpdate . MergeELegTransaction $ trans { transactionstatus = Left e }
           return $ runJSONGen $ J.value "error" e
         Right s@(CROutstanding _) -> do
-          addELegTransaction $ trans { transactionstatus = Right s}
+          dbUpdate . MergeELegTransaction $ trans { transactionstatus = Right s}
           msg <- renderTemplate "bankidStartApp" $ return ()
           return $ runJSONGen $ do
             J.value "status" "outstanding"
             J.value "message" msg
         Right s@(CRUserSign _) -> do
-          addELegTransaction $ trans { transactionstatus = Right s}      
+          dbUpdate . MergeELegTransaction $ trans { transactionstatus = Right s}      
           msg <- renderTemplate "bankidEnterCode" $ return ()
           return $ runJSONGen $ do
             J.value "status" "usersign"
             J.value "message" msg
         Right s@(CRComplete _ _signature _attrs) -> do
-          addELegTransaction $ trans { transactionstatus = Right s}
+          dbUpdate . MergeELegTransaction $ trans { transactionstatus = Right s}
           -- save signature and attrs somewhere; 
           return $ runJSONGen $ do
             J.value "status" "complete"
@@ -459,7 +459,6 @@ verifySignatureAndGetSignInfoMobile :: Kontrakcja m
                                        -> String
                                        -> m VerifySignatureResult
 verifySignatureAndGetSignInfoMobile docid signid magic transactionid = do
-    elegtransactions  <- undefined <$> getContext --FIXME
     document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
     siglink <- guardJust $ getSigLinkFor document signid
     -- valid transaction?
@@ -468,8 +467,7 @@ verifySignatureAndGetSignInfoMobile docid signid magic transactionid = do
                     , transactiondocumentid      = tdocid
                     , transactionstatus          = status
                     , transactiontbs
-                    } <- guardJust $ findTransactionByID transactionid elegtransactions
-
+                    } <- guardJustM $ dbQuery $ GetELegTransaction transactionid
     unless (tdocid == docid && mtsignid == Just signid && mtmagic == Just magic )
            internalError
 
@@ -502,14 +500,13 @@ verifySignatureAndGetSignInfoMobileForAuthor :: Kontrakcja m
                                              -> String
                                              -> m VerifySignatureResult
 verifySignatureAndGetSignInfoMobileForAuthor docid transactionid = do
-    elegtransactions  <- undefined <$> getContext -- FIXME
     document <- guardRightM $ getDocByDocIDForAuthor docid
     siglink <- guardJust $ getAuthorSigLink document
     -- valid transaction?
     ELegTransaction { transactiondocumentid      = tdocid
                     , transactionstatus          = status
                     , transactiontbs
-                    } <- guardJust $ findTransactionByID transactionid elegtransactions
+                    } <- guardJustM $ dbQuery $ GetELegTransaction transactionid
     unless (tdocid == docid) internalError
     case status of
       Right (CRComplete _ signature attrs) -> do

@@ -198,7 +198,7 @@ apiCallGet :: Kontrakcja m => DocumentID -> m Response
 apiCallGet did = api $ do
   ctx <- getContext
   (msignatorylink :: Maybe SignatoryLinkID) <- lift $ readField "signatoryid"
-  mmagichashh <- maybe (return Nothing) getDocumentTicket msignatorylink
+  mmagichashh <- maybe (return Nothing) (dbQuery . GetDocumentTicket) msignatorylink
   case (msignatorylink,mmagichashh) of
       (Just slid,Just mh) -> do
          doc <- apiGuardL (serverError "No document found") $  dbQuery $ GetDocumentByDocumentID did
@@ -299,7 +299,7 @@ instance FromReqURI MetadataResource where
 getSigLinkID :: Kontrakcja m => APIMonad m (SignatoryLinkID, MagicHash)
 getSigLinkID = do
   msignatorylink <- lift $ readField "signatorylinkid"
-  mmagichash <- lift $ maybe (return Nothing) getDocumentTicket msignatorylink
+  mmagichash <- lift $ maybe (return Nothing) (dbQuery . GetDocumentTicket) msignatorylink
   case (msignatorylink, mmagichash) of
        (Just sl, Just mh) -> return (sl,mh)
        _ -> throwError $ badInput "The signatorylinkid or magichash were missing."
