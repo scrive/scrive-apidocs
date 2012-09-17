@@ -40,7 +40,6 @@ module MinutesTime
 import Control.Monad.IO.Class
 import Data.Char
 import Data.Convertible
-import Data.SafeCopy
 import Data.Time
 import Data.Time.Clock.POSIX
 import Data.Typeable
@@ -55,8 +54,6 @@ import System.IO.Unsafe
 -- Same as POSIX seconds and what every other database uses as TIMESTAMP time type.
 newtype MinutesTime = MinutesTime Int
     deriving (Eq, Ord, Typeable)
-
-$(deriveSafeCopy 0 'base ''MinutesTime)
 
 instance Show MinutesTime where
     show = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d, %H:%M:%S %Z"

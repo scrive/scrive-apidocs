@@ -9,7 +9,6 @@ module ELegitimation.BankIDRequests (
         ) where
 
 import Data.Maybe
-import Data.SafeCopy
 import Utils.Enum
 import SOAP.SOAP
 import Text.XML.HaXml.Posn (Posn)
@@ -294,8 +293,6 @@ data CollectResponse = CROutstanding { cresTransactionID :: String }
                                   , cresAttributes :: [(String, String)]
                                   }
                      deriving (Show, Eq, Read, Ord)
-
-$(deriveSafeCopy 0 'base ''CollectResponse)
 
 instance HTypeable (CollectResponse) where
     toHType _x = Defined "CollectResponse" [] []

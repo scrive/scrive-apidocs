@@ -9,7 +9,6 @@ module Doc.SignatoryLinkID (
 
 import Data.Data
 import Data.Int
-import Data.SafeCopy
 import Happstack.Server
 
 import DB.Derive
@@ -21,8 +20,6 @@ newtype SignatoryLinkID = SignatoryLinkID Int64
   deriving (Eq, Ord, Data, Typeable)
 $(newtypeDeriveUnderlyingReadShow ''SignatoryLinkID)
 $(newtypeDeriveConvertible ''SignatoryLinkID)
-
-$(deriveSafeCopy 0 'base ''SignatoryLinkID)
 
 instance FromReqURI SignatoryLinkID where
   fromReqURI = maybeRead

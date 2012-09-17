@@ -11,7 +11,6 @@ module MagicHash
 import Control.Applicative
 import Control.Arrow
 import Data.Int
-import Data.SafeCopy
 import Data.Word
 import Happstack.Server
 import Numeric
@@ -32,8 +31,6 @@ import Utils.Read
 newtype MagicHash = MagicHash Int64
   deriving (Eq, Ord, Random)
 $(newtypeDeriveConvertible ''MagicHash)
-
-$(deriveSafeCopy 0 'base ''MagicHash)
 
 instance Show MagicHash where
   show (MagicHash x) = pad0 16 $ showHex (fromIntegral x :: Word64) ""
