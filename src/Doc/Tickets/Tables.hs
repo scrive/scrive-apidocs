@@ -14,8 +14,11 @@ insertDocumentTicket = SQLFunction {
     ++ "     VALUES (session_id_, signatory_link_id_, token_);"
     ++ "   RETURN TRUE;"
     ++ " EXCEPTION"
-    ++ "   WHEN unique_violation THEN" -- ticket is already there
-    ++ "     RETURN TRUE;"
+    ++ "   WHEN unique_violation THEN" -- ticket is already there, update token
+    ++ "     UPDATE document_tickets SET token = token_"
+    ++ "       WHERE session_id = session_id_"
+    ++ "         AND signatory_link_id = signatory_link_id_;"
+    ++ "     RETURN found;"
     ++ "   WHEN foreign_key_violation THEN" -- invalid values
     ++ "     RETURN FALSE;"
     ++ " END;"

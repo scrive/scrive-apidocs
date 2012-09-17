@@ -1,4 +1,8 @@
-module ELegitimation.ELegTransaction.Model where
+module ELegitimation.ELegTransaction.Model (
+    ELegTransaction(..)
+  , MergeELegTransaction(..)
+  , GetELegTransaction(..)
+  ) where
 
 import Control.Monad
 import Control.Monad.Trans
@@ -76,24 +80,23 @@ instance (KontraMonad m, MonadDB m) => DBQuery m GetELegTransaction (Maybe ELegT
       ]
     fetchTransactions >>= oneObjectReturnedGuard
 
-selectTransactionsSelectors :: String
-selectTransactionsSelectors = intercalate ", " [
-    "id"
-  , "nonce"
-  , "tbs"
-  , "encoded_tbs"
-  , "signatory_link_id"
-  , "document_id"
-  , "token"
-  , "status"
-  , "cr_transaction_id"
-  , "cr_signature"
-  , "cr_attributes"
-  , "oref"
-  ]
-
 selectTransactionsSQL :: SQL
-selectTransactionsSQL = SQL ("SELECT " ++ selectTransactionsSelectors ++ " FROM eleg_transactions ") []
+selectTransactionsSQL = SQL ("SELECT " ++ selectors ++ " FROM eleg_transactions ") []
+  where
+    selectors = intercalate ", " [
+        "id"
+      , "nonce"
+      , "tbs"
+      , "encoded_tbs"
+      , "signatory_link_id"
+      , "document_id"
+      , "token"
+      , "status"
+      , "cr_transaction_id"
+      , "cr_signature"
+      , "cr_attributes"
+      , "oref"
+      ]
 
 fetchTransactions :: MonadDB m => DBEnv m [ELegTransaction]
 fetchTransactions = foldDB decoder []
