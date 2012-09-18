@@ -103,7 +103,7 @@ var ApiDemoView = Backbone.View.extend({
             if (model.oauth().ready())   {
               apiSection.append(this.apisection());
             } else {
-              apiSection.append("<div>Please provide oauth authorization in box above. When done, API calls selecction will be avaible here</div>");
+                apiSection.append("<div>Please follow the steps in the box above in order to perform API calls.</div>");
             }
             container.append(apiSection);
             return this;
