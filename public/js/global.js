@@ -226,6 +226,24 @@ safeReady(function() {
   });
 });
 
+//does some google analytics stuff, not sure if this is working or not
+safeReady(function() {
+  $("form.askQuestion").submit(function() {
+      var einput = $("input[name='email']",this);
+      return einput.validate(new EmailValidation({
+          callback : function(){
+            einput.addClass('redborder');
+            einput.focus(function() {einput.removeClass('redborder');});
+          }
+        
+      }));
+
+  });
+});
+
+
+
+
 // shows avanza demo video
 safeReady(function() {
   $(".avanza-play-video").click(function() {
