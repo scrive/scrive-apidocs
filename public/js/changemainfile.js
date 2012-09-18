@@ -118,7 +118,8 @@
                 name : "Templates table",
                 schema: new Schema({
                     url: "/docs",
-                    extraParams : { documentType : "Template|" + KontraDesignDocument.model.process().corename() },
+                    extraParams : { documentType : "Template" },
+                    extraParamsOverwrite: { selectfilter: "[{\"name\":\"process\",\"value\":\"" + KontraDesignDocument.model.process().corename().toLowerCase() + "\"}]" },
                     sorting: new Sorting({ fields: ["title"]}),
                     paging: new Paging({}),
                     filtering: new TextFiltering({text: "", infotext: localization.searchTemplate}),
