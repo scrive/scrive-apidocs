@@ -278,7 +278,8 @@ javascriptLocalisation =
          , designview : {
               validation : {
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
-                    , missingOrWrongNames:  "$_missingSignatoryNames()$"
+                    , missingNames:  "$_missingSignatoryNames()$"
+                    , wrongNames :   "$_wrongSignatoryNames()$"
                     , missingOrWrongPersonalNumber : "$_backToStepTwoAndFillPersonNumber()$"
                     , missingOrWrongPlacedAuthorField : "$_missingPlacedAuthorFieldValue()$"
                     , missingOrWrongCustomFieldValue: "$_missingCustomFieldValue()$"
