@@ -186,8 +186,8 @@ window.Field = Backbone.Model.extend({
         var name  = this.name();
 
         if (!this.signatory().author() && this.isStandard() && (name == "fstname" ||name == "sndname") && !this.signatory().isCsv()) {
-            var msg = localization.designview.validation.missingOrWrongNames;
-            return new NameValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
+            return new NotEmptyValidation({message: localization.designview.validation.missingNames})
+                   .concat(new NameValidation({message: localization.designview.validation.wrongNames}));
         }
 
         if (!this.signatory().author() && this.isStandard() && name == "email" && !this.signatory().isCsv() ){

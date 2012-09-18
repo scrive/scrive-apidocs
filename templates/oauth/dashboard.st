@@ -22,16 +22,16 @@ var personalTokensTable = KontraList().init({
     schema: new Schema({
     url: "/oauth/dashboard/personaltoken",
     cells : [
-        new Cell({name: "API Token",     width:"120px", field:"apitoken"}),
-        new Cell({name: "API Secret",    width:"120px",  field:"apisecret"}),
-        new Cell({name: "Access Token",  width:"120px",  field:"accesstoken"}),
-        new Cell({name: "Access Secret", width:"120px",  field:"accesssecret"}),
+        new Cell({name: "Client credentials identifier",     width:"120px", field:"apitoken"}),
+        new Cell({name: "Client credentials secret",    width:"120px",  field:"apisecret"}),
+        new Cell({name: "Token credentials identifier",  width:"120px",  field:"accesstoken"}),
+        new Cell({name: "Token credentials secret", width:"120px",  field:"accesssecret"}),
         new Cell({name: "",              width:"70px",  field:"accesssecret", special: "rendered",
                  rendering: function(status,idx,listobject) {
                     var button = Button.init({
                       size: "tiny",
                       color: "red",
-                      text: localization.apiDashboard.delete,
+                      text: localization.apiDashboard.deleteToken,
                       onClick: function() {
                         new Submit({
                           url: "/oauth/deletepersonaltoken",
@@ -78,7 +78,7 @@ var grantedPrivilegesTable = KontraList().init({
                       return Button.init({
                         size: "tiny",
                         color: "red",
-                        text: localization.apiDashboard.delete,
+                        text: localization.apiDashboard.deleteToken,
                         onClick: function() {
                           new Submit({
                             tokenid: listobject.get("fields").tokenid,
@@ -117,14 +117,14 @@ var apiTokensTable = KontraList().init({
     schema: new Schema({
     url: "/oauth/dashboard/apitokens",
     cells : [
-        new Cell({name: "API Token",  width:"240px",  field:"apitoken"}),
-        new Cell({name: "API Secret", width:"240px", field:"apisecret"}),
+        new Cell({name: "Client credentials identifier",  width:"240px",  field:"apitoken"}),
+        new Cell({name: "Client credentials secret", width:"240px", field:"apisecret"}),
         new Cell({name: "",           width:"70px",  field:"apitoken", special: "rendered",
                  rendering: function(apitoken,idx,listobject) {
                     return Button.init({
                       size: "tiny",
                       color: "red",
-                      text: localization.apiDashboard.delete,
+                      text: localization.apiDashboard.deleteToken,
                       onClick: function() {
                         new Submit({
                           apitoken: apitoken,

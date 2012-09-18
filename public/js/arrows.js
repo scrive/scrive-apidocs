@@ -58,16 +58,16 @@ var PointLeftArrowView = Backbone.View.extend({
     clear : function() {
         $(this.el).remove();
     },
+    fixWidth : function() {
+       var container = $(this.el);
+       container.width($('.front',container).width() + $('.label',container).width() + $('.back',container).width()+10);
+    },
     render: function () {
        var container = $(this.el);
-       container.addClass('action').addClass('arrow').addClass('left');
-       var front = $("<div class='front' />");
-       container.append(front);
-       if (this.model.text()!=undefined)
-              front.append($("<div class='label' />").text(this.model.text()));
-
+       container.addClass('action-arrow').addClass('left');
+       container.append($("<div class='front' />"));
+       container.append($("<div class='label' />").text(this.model.text() || "" ));
        container.append($("<div class='back' />"));
-       container.append($("<div class='clearfix' />"));
 
        if (this.model.point() != undefined) {
           container.css("top", (this.model.point().offset().top + (this.model.point().height() / 2) - 14) + "px");
@@ -87,16 +87,16 @@ var PointRightArrowView = Backbone.View.extend({
     clear : function() {
         $(this.el).remove();
     },
+    fixWidth : function() {
+       var container = $(this.el);
+       container.width($('.front',container).width() + $('.label',container).width() + $('.back',container).width()+10);
+    },
     render: function () {
        var container = $(this.el);
-       container.addClass('action').addClass('arrow').addClass('right');
-       var front = $("<div class='front' />");
-       container.append(front);
-       if (this.model.text()!=undefined)
-              front.append($("<div class='label' />").text(this.model.text()));
- 
+       container.addClass('action-arrow').addClass('right');
+       container.append($("<div class='front' />"));
+       container.append($("<div class='label' />").text(this.model.text() || "" ));
        container.append($("<div class='back' />"));
-       container.append($("<div class='clearfix' />"));
 
        if (this.model.point() != undefined) {
           container.css("top", (this.model.point().offset().top + (this.model.point().height() / 2) - 14) + "px");
@@ -196,9 +196,9 @@ var ScrollDownArrowView = Backbone.View.extend({
       var footertop = $(".pagefooter").offset().top;
       var downarrowbottom = $(this.el).offset().top + $(this.el).height();
       if (downarrowbottom + 100 > footertop) {
-        $(this.el).addClass("infooter");
+        $(this.el).css("display","none");
       } else {
-        $(this.el).removeClass("infooter");
+        $(this.el).css("display","block");
       }
     },
     scroll: function(){
@@ -240,6 +240,10 @@ window.Arrow = {
                     else
                          el.show();
                     setTimeout(function() {arrow.blink(i - 1)},200);              
+              },
+              /* We need to recalculate width after appending arrow to page */ 
+              fixWidth: function() {
+                   if (view.fixWidth != undefined) view.fixWidth();
               }
             });
         }

@@ -1184,6 +1184,9 @@ div.price-plan-details {
 	padding: 4px;
 	width: 172px;
 }
+.box input.redborder {
+    border: 1px solid red;
+}
 
 .box textarea {
 	border: 1px solid #999;
