@@ -109,7 +109,7 @@ var UploadButtonView = Backbone.View.extend({
         fileinput.css("width",model.width()  + "px");
         var list = model.list();
         if (list == undefined) {
-            list = $("<div style='display:none'>");
+            list = $("<div style='display:none'/>");
             button.append(list);
         }
         fileinput.MultiFile({
@@ -146,7 +146,7 @@ var UploadButtonView = Backbone.View.extend({
                 }
             }
         });
-        button.append($("<span>").append(fileinput)); // This span is bugfix for error cases
+        button.append($("<span/>").append(fileinput)); // This span is bugfix for error cases
         $(this.el).append(button);
         return this;
     }
@@ -192,11 +192,11 @@ window.UploadBoxView = Backbone.View.extend({
   render: function () {
     var td = $(this.el);
     td.empty();
-    var div = $('<div class="signStepsBodyUploadBox">').appendTo($(td));
+    var div = $('<div class="signStepsBodyUploadBox"/>').appendTo($(td));
 
-    var header = $('<span class="header">').text(this.model.getHeaderText()).appendTo(div);
+    var header = $('<span class="header"/>').text(this.model.getHeaderText()).appendTo(div);
     $('<br />').appendTo(div);
-    var text = $('<span class="text">').text(this.model.getSubText()).appendTo(div);
+    var text = $('<span class="text"/>').text(this.model.getSubText()).appendTo(div);
     $('<br />').appendTo(div);
     var b = this.model.getButton().input();
     $('<div>').addClass('signStepsButtonContainer').append(b).appendTo(div);
@@ -215,10 +215,10 @@ window.UploadTextView = Backbone.View.extend({
   render: function () {
     var td = $(this.el);
     td.empty();
-    var div = $('<div class="signStepsBodyUploadBox">')
+    var div = $('<div class="signStepsBodyUploadBox"/>')
       .attr("style", "border:0px;text-align:left;width: 250px;font-weight:bold")
       .appendTo($(td));
-    $('<p class="text">')
+    $('<p class="text"/>')
       .attr("style", "padding-top:25px;")
       .text(this.text).appendTo(div);
     return this;

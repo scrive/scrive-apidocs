@@ -31,7 +31,7 @@ var personalTokensTable = KontraList().init({
                     var button = Button.init({
                       size: "tiny",
                       color: "red",
-                      text: localization.apiDashboard.delete,
+                      text: localization.apiDashboard.deleteToken,
                       onClick: function() {
                         new Submit({
                           url: "/oauth/deletepersonaltoken",
@@ -78,7 +78,7 @@ var grantedPrivilegesTable = KontraList().init({
                       return Button.init({
                         size: "tiny",
                         color: "red",
-                        text: localization.apiDashboard.delete,
+                        text: localization.apiDashboard.deleteToken,
                         onClick: function() {
                           new Submit({
                             tokenid: listobject.get("fields").tokenid,
@@ -124,7 +124,7 @@ var apiTokensTable = KontraList().init({
                     return Button.init({
                       size: "tiny",
                       color: "red",
-                      text: localization.apiDashboard.delete,
+                      text: localization.apiDashboard.deleteToken,
                       onClick: function() {
                         new Submit({
                           apitoken: apitoken,
