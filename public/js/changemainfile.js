@@ -96,9 +96,9 @@
         },
         extras: function() {
           var model = this.model;
-          return $("<div>").addClass("float-left basicinfo")
-                    .append($("<p>").text(localization.infoSelectTemplate))
-                    .append($("<p style='padding-top: 20px;'>").append($("<a class='jsback1 backicon float-left boo' href='#'/>").click(function() {
+          return $("<div/>").addClass("float-left basicinfo")
+                    .append($("<p/>").text(localization.infoSelectTemplate))
+                    .append($("<p style='padding-top: 20px;'/>").append($("<a class='jsback1 backicon float-left boo' href='#'/>").click(function() {
                       if(model.wizard())
                         model.wizard().previousStep();
                       return false;
@@ -152,7 +152,7 @@
             documentsTable.view.render();
 
 
-            el.append($("<td>").addClass("templateslist").append(documentsTable.view.el));
+            el.append($("<td/>").addClass("templateslist").append(documentsTable.view.el));
 
 
         }

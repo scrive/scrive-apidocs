@@ -723,7 +723,7 @@ javascriptLocalisation =
            , deny : "$_apiConfiramtionDeny()$"
       }
       , apiDashboard : {
-            delete :  "$_apiDashboardDelete()$"
+            deleteToken :  "$_apiDashboardDelete()$"
           , deleteAll : "$_apiDashboardDeleteAll()$"
           , grantedPriviliges: "$_apiDashboardGrantedPriviliges()$"
           , grantedPriviligesDescription: "$_apiDashboardGrantedPriviligesDescription()$"
