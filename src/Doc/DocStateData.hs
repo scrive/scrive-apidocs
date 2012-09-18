@@ -273,14 +273,16 @@ toDocumentProcess (Template p) = p
 
 -- | Terrible, I know. Better idea?
 -- | TODO: to be KILLED.
-doctypeFromString :: String -> DocumentType
-doctypeFromString "Signable Contract"  = Signable Contract
-doctypeFromString "Signable Offer"     = Signable Offer
-doctypeFromString "Signable Order"     = Signable Order
-doctypeFromString "Template Contract"  = Template Contract
-doctypeFromString "Template Offer"     = Template Offer
-doctypeFromString "Template Order"     = Template Order
-doctypeFromString x                    = error $ "Bad document type " ++ x
+-- | 
+-- | Changed to return Maybe
+doctypeFromString :: String -> Maybe DocumentType
+doctypeFromString "Signable Contract"  = Just $ Signable Contract
+doctypeFromString "Signable Offer"     = Just $ Signable Offer
+doctypeFromString "Signable Order"     = Just $ Signable Order
+doctypeFromString "Template Contract"  = Just $ Template Contract
+doctypeFromString "Template Offer"     = Just $ Template Offer
+doctypeFromString "Template Order"     = Just $ Template Order
+doctypeFromString _                    = Nothing
 
 data DocumentSharing = Private
                      | Shared -- means that the document is shared with subaccounts, and those with same parent accounts
