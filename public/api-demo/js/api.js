@@ -73,7 +73,6 @@ window.CreateFromTemplateApiCall = ApiCall.extend({
             var model = this;
             $.ajax(Scrive.serverUrl()+"/api/createfromtemplate/" + model.templateid(), {
                 type: 'POST',
-                data: {},
                 cache: false,
                 contentType: false,
                 processData: false,
@@ -148,7 +147,6 @@ window.ReadyApiCall = ApiCall.extend({
             var model = this;
             $.ajax(Scrive.serverUrl()+"/api/ready/" + model.documentid(), {
                 type: 'POST',
-                data: {},
                 cache: false,
                 contentType: false,
                 processData: false,
