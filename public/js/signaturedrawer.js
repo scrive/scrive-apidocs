@@ -296,6 +296,12 @@ window.SignatureDrawerPopup = {
         popup.overlay = $("<div style='width:900px;' class='overlay drawing-modal'><div class='close modal-close float-right' style='margin:5px;'/></div>");
         popup.overlay.append(new SignatureDrawerWrapper({model : args.signature, overlay : popup.overlay}).el);
         $('body').append( popup.overlay );
+        window.onorientationchange = function() {
+          var wheight = window.innerHeight ? window.innerHeight : $(window).height();
+          var mheight = popup.overlay.height();
+          window.scrollTo(0,popup.overlay.offset().top - ((wheight - mheight) / 2));
+          
+        };    
         popup.overlay.overlay({
             mask:  {
                 color: '#ffffff',
