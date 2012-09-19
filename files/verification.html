@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
  <head>
-  <title>How to Verify This Document?</title>
+   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+   <title>How to Verify This Document?</title>
  </head>
  <body>
 
@@ -115,7 +116,7 @@
   <p>The aggregate hash values are connected into binary trees by hashing them together in pairs in left to right order, then hashing the first level pairs together again, and so on until a set of complete binary trees is obtained (blue arrows and nodes on the figure). For generating the control publication, the roots of the binary trees are hashed into a chain in right to left order (purple arrows and nodes), and the value from the last node of the chain is extracted for generating the control publication (golden arrow).</p>
   <p>More precisely, each node on the figure is a <code>DataImprint</code> structure (section <a href="#parse">Parsing the Signature</a>). On each step, the <code>DataImprint</code> from the left child node, the <code>DataImprint</code> from the right child node, and a single byte with the value of 255 are concatenated together, hashed, and the result is obtained as a <code>DataImprint</code> consisting of the concatenation of the 1-byte hash algorithm code (appendix <a href="#hash">Hash Functions</a>) and the hash value.</p>
   <div style="height: 275px; width: 600px">
-   <svg version="1.1" xmlns="http://www.w3.org/2000/svg">
+   <svg version="1.1" xmlns="http://www.w3.org/2000/svg" height="275" width="600">
     <defs>
      <marker id="blueArrow" markerWidth="12" markerHeight="4" refX="12" refY="2" orient="auto">
       <path d="M 0 0 l 8 2 l -8 2 z" fill="blue" stroke="none" />
