@@ -242,35 +242,35 @@ dataStructureProperties = testGroup "data structure properties" [
 testNewDocumentForNonCompanyUserInsertsANewContract :: TestEnv ()
 testNewDocumentForNonCompanyUserInsertsANewContract = doTimes 10 $ do
   result <- performNewDocumentWithRandomUser Nothing (Signable Contract) "doc title"
-  assertGoodNewDocument Nothing (Signable Contract) "doc title" True result
+  assertGoodNewDocument Nothing (Signable Contract) "doc title" result
 
 testNewDocumentForACompanyUserInsertsANewContract :: TestEnv ()
 testNewDocumentForACompanyUserInsertsANewContract = doTimes 10 $ do
   company <- addNewCompany
   result <- performNewDocumentWithRandomUser (Just company) (Signable Contract) "doc title"
-  assertGoodNewDocument (Just company) (Signable Contract) "doc title" True result
+  assertGoodNewDocument (Just company) (Signable Contract) "doc title" result
 
 testNewDocumentForNonCompanyUserInsertsANewOffer :: TestEnv ()
 testNewDocumentForNonCompanyUserInsertsANewOffer = doTimes 10 $ do
   result <- performNewDocumentWithRandomUser Nothing (Signable Offer) "doc title"
-  assertGoodNewDocument Nothing (Signable Offer) "doc title" False result
+  assertGoodNewDocument Nothing (Signable Offer) "doc title" result
 
 testNewDocumentForACompanyUserInsertsANewOffer :: TestEnv ()
 testNewDocumentForACompanyUserInsertsANewOffer = doTimes 10 $ do
   company <- addNewCompany
   result <- performNewDocumentWithRandomUser (Just company) (Signable Offer) "doc title"
-  assertGoodNewDocument (Just company) (Signable Offer) "doc title" False result
+  assertGoodNewDocument (Just company) (Signable Offer) "doc title" result
 
 testNewDocumentForNonCompanyUserInsertsANewOrder :: TestEnv ()
 testNewDocumentForNonCompanyUserInsertsANewOrder = doTimes 10 $ do
   result <- performNewDocumentWithRandomUser Nothing (Signable Order) "doc title"
-  assertGoodNewDocument Nothing (Signable Order) "doc title" False result
+  assertGoodNewDocument Nothing (Signable Order) "doc title" result
 
 testNewDocumentForACompanyUserInsertsANewOrder :: TestEnv ()
 testNewDocumentForACompanyUserInsertsANewOrder = doTimes 10 $ do
   company <- addNewCompany
   result <- performNewDocumentWithRandomUser (Just company) (Signable Offer) "doc title"
-  assertGoodNewDocument (Just company) (Signable Offer) "doc title" False result
+  assertGoodNewDocument (Just company) (Signable Offer) "doc title" result
 
 testNewDocumentForMismatchingUserAndCompanyFails :: TestEnv ()
 testNewDocumentForMismatchingUserAndCompanyFails = doTimes 10 $ do
@@ -769,8 +769,8 @@ performNewDocumentWithRandomUser (Just company) doctype title = do
   mdoc <- randomUpdate $ NewDocument user (Just company) title doctype 0 aa
   return (user, time, maybe (Left "no document") Right mdoc)
 
-assertGoodNewDocument :: Maybe Company -> DocumentType -> String -> Bool -> (User, MinutesTime, Either String Document) -> TestEnv (Maybe (TestEnv ()))
-assertGoodNewDocument mcompany doctype title authorsigns (user, time, edoc) = do
+assertGoodNewDocument :: Maybe Company -> DocumentType -> String -> (User, MinutesTime, Either String Document) -> TestEnv (Maybe (TestEnv ()))
+assertGoodNewDocument mcompany doctype title (user, time, edoc) = do
   let (Right doc) = edoc
   validTest $ do
     assertRight edoc
@@ -786,9 +786,8 @@ assertGoodNewDocument mcompany doctype title authorsigns (user, time, edoc) = do
     assertEqual "In preparation" Preparation (documentstatus doc)
     assertEqual "1 signatory" 1 (length $ documentsignatorylinks doc)
     let siglink = head $ documentsignatorylinks doc
-    if authorsigns
-      then assertEqual "link is author and signer" [SignatoryPartner,SignatoryAuthor] (signatoryroles siglink)
-      else assertEqual "link is just author" [SignatoryAuthor] (signatoryroles siglink)
+    assertBool "link is author and possibly signer" $
+      (signatoryroles siglink) `elem` [[SignatoryAuthor], [SignatoryPartner,SignatoryAuthor]]
     assertEqual "link first name matches author's" (getFirstName user) (getFirstName siglink)
     assertEqual "link last name matches author's" (getLastName user) (getLastName siglink)
     assertEqual "link email matches author's" (getEmail user) (getEmail siglink)

@@ -38,7 +38,6 @@ import IPAddress
 import File.Model
 import Data.Typeable
 import Doc.Invariants
-import Doc.DocProcess
 import System.Random.CryptoRNG ()
 import Text.JSON
 import TestKontra
@@ -566,7 +565,8 @@ randomAuthorLinkByStatus _ = arbitrary
 
 getRandomAuthorRoles :: TestEnv [SignatoryRole]
 getRandomAuthorRoles =
-  rand 10000 (elements [[SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
+  rand 10000 (elements [[SignatoryAuthor],
+                        [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
 
 addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> TestEnv Document
 addRandomDocumentWithAuthorAndCondition user p =
