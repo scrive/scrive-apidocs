@@ -91,6 +91,7 @@ javascriptLocalisation =
              , attachmentsWord : "$_Attachments()$"
              , requestedAttachments : "$_RequestedAttachments()$"
              , send : "$_send()$"
+             , csvFilePersons : "$_csvFilePersons()$"
 			 , reminder : {
 					     send : "$_sendReminder()$"
 					   , formHead : "$_reminderFormHead()$"

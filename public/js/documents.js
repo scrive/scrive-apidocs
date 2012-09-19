@@ -526,6 +526,10 @@ window.DocumentDataFiller = {
             {
                 unsignedparty.push(localization.you);
             }
+            else if (signatories[i].isCsv()) {
+                unsignedparty.push(localization.csvFilePersons);
+                unsignedpartynotcurrent.push(localization.csvFilePersons);
+            }
             else
             {
                 unsignedparty.push(signatories[i].smartname());
