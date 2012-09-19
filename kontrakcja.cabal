@@ -223,7 +223,7 @@ Executable kontrakcja-server
   Build-depends: tagged == 0.4.1
   Build-depends: fields-json == 0.2
   Build-depends: static-resources == 0.1.5.3
-  Build-depends: recurly == 0.0.33
+  Build-depends: recurly == 0.0.34
   Main-Is: Main.hs
 
   Extensions: BangPatterns,
