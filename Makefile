@@ -6,7 +6,7 @@ TESTS=all --plain
 
 .PHONY : all
 all:
-	cabal install -f-test
+	cabal-dev install -f-test
 
 # Make "pretty" diagram of database model (requires postgresql-autodoc and graphwiz)
 dist/dbmodel/$(DBNAME).png:
@@ -17,7 +17,7 @@ dist/dbmodel/$(DBNAME).png:
 # Build and run all tests
 .PHONY : test
 test:
-	cabal install -f-server -ftest-coverage
+	cabal-dev install -f-server -ftest-coverage
 	rm -f kontrakcja-test.tix
 	time dist/build/kontrakcja-test/kontrakcja-test $(TESTS)
 
@@ -42,6 +42,6 @@ reset-test-db:
 
 .PHONY : profiling
 profiling:
-	cabal install --only-dependencies --enable-library-profiling --ghc-options="-auto-all -caf-all"
-	cabal configure --enable-executable-profiling --ghc-options="-auto-all -caf-all"
-	cabal build
+	cabal-dev install --only-dependencies --enable-library-profiling --ghc-options="-auto-all -caf-all"
+	cabal-dev configure --enable-executable-profiling --ghc-options="-auto-all -caf-all"
+	cabal-dev build
