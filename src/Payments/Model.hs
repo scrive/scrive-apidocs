@@ -120,6 +120,29 @@ instance (MonadDB m) => DBQuery m GetPaymentPlan (Maybe PaymentPlan) where
     listToMaybe <$> foldDB fetchPaymentPlans []
 
 -- tested
+data GetPaymentPlanInactiveUser = GetPaymentPlanInactiveUser UserID
+instance MonadDB m => DBQuery m GetPaymentPlanInactiveUser (Maybe PaymentPlan) where
+  query (GetPaymentPlanInactiveUser uid) = do
+    kRun_ $ sqlSelect "payment_plans" $ do
+      sqlResult "account_code"
+      sqlResult "account_type"
+      sqlResult "user_id"
+      sqlResult "payment_plans.company_id"
+      sqlResult "plan"
+      sqlResult "status"
+      sqlResult "quantity"
+      sqlResult "plan_pending"
+      sqlResult "status_pending"
+      sqlResult "quantity_pending"
+      sqlResult "provider"
+      sqlResult "dunning_step"
+      sqlResult "dunning_date"
+      sqlJoinOn "users" "payment_plans.user_id = users.id"
+      sqlWhereEq "user_id" uid
+      sqlWhereIsNULL "users.has_accepted_terms_of_service"
+    listToMaybe <$> foldDB fetchPaymentPlans []
+
+-- tested
 data GetPaymentPlanByAccountCode = GetPaymentPlanByAccountCode AccountCode
 instance (MonadDB m) => DBQuery m GetPaymentPlanByAccountCode (Maybe PaymentPlan) where
   query (GetPaymentPlanByAccountCode ac) = do
