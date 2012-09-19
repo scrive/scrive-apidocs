@@ -25,7 +25,7 @@ tblTable = Table
   }
 
 data TableIndex = TableIndex
-  { tblIndexColumns     :: [String]
+  { tblIndexColumns     :: [RawSQL]
   }
 
 tblTableIndex :: TableIndex
@@ -33,7 +33,7 @@ tblTableIndex = TableIndex
   { tblIndexColumns = []
   }
 
-tblIndexOnColumn :: String -> TableIndex
+tblIndexOnColumn :: RawSQL -> TableIndex
 tblIndexOnColumn column = TableIndex { tblIndexColumns = [column] }
 
 -- | Migration object. Fields description:
