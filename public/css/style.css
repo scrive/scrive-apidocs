@@ -1291,6 +1291,7 @@ input[type=submit].hidden
     border-left: 1px solid #BDBDBD;
     border-right: 1px solid #BDBDBD;
     border-bottom: 1px solid #C0C0C0;
+    min-width: 920px;
 }
 
 .postSignStepBody {
