@@ -91,6 +91,7 @@ javascriptLocalisation =
              , attachmentsWord : "$_Attachments()$"
              , requestedAttachments : "$_RequestedAttachments()$"
              , send : "$_send()$"
+             , csvFilePersons : "$_csvFilePersons()$"
 			 , reminder : {
 					     send : "$_sendReminder()$"
 					   , formHead : "$_reminderFormHead()$"
@@ -278,7 +279,8 @@ javascriptLocalisation =
          , designview : {
               validation : {
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
-                    , missingOrWrongNames:  "$_missingSignatoryNames()$"
+                    , missingNames:  "$_missingSignatoryNames()$"
+                    , wrongNames :   "$_wrongSignatoryNames()$"
                     , missingOrWrongPersonalNumber : "$_backToStepTwoAndFillPersonNumber()$"
                     , missingOrWrongPlacedAuthorField : "$_missingPlacedAuthorFieldValue()$"
                     , missingOrWrongCustomFieldValue: "$_missingCustomFieldValue()$"
@@ -722,7 +724,7 @@ javascriptLocalisation =
            , deny : "$_apiConfiramtionDeny()$"
       }
       , apiDashboard : {
-            delete :  "$_apiDashboardDelete()$"
+            deleteToken :  "$_apiDashboardDelete()$"
           , deleteAll : "$_apiDashboardDeleteAll()$"
           , grantedPriviliges: "$_apiDashboardGrantedPriviliges()$"
           , grantedPriviligesDescription: "$_apiDashboardGrantedPriviligesDescription()$"

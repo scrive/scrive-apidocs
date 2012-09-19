@@ -174,7 +174,7 @@ var PageTasksArrowView = Backbone.View.extend({
         if ((scrolltop >= 0) && (elbottom <= eltop)) return false;
         
         if (((elbottom + bottommargin) <= scrollbottom) && ((eltop - topmargin) >= scrolltop))
-           return true;
+           return (arrow.model().type() != 'point-left' && arrow.model().type() != 'point-right');
         
         if ((elbottom + bottommargin) > scrollbottom)
            return (arrow.model().type() != 'scroll-down');
@@ -193,6 +193,10 @@ var PageTasksArrowView = Backbone.View.extend({
               if (this.arrow != undefined)
                   $(this.el).append(this.arrow.view().el);
               this.trigger("change:arrow");
+              if (this.arrow != undefined) {
+                  view.arrow.fixWidth();
+                  setTimeout(function() {view.arrow.fixWidth();},100);
+              }
           }
      }
   },

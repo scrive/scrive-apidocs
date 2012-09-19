@@ -130,7 +130,7 @@ queryColumn=
 
                                                 <br />
                                                 <form method="post"
-                                                      action="$linkquestion$">
+                                                      action="$linkquestion$"  class='askQuestion'>
                                                         <input type="text" name="name" infotext="$_name()$" autocomplete="off" /><br />
                                                         <input type="email" name="email" infotext="$_email()$" autocomplete="off"/><br />
                                                         <input type="tel" name="phone" infotext="$_phone()$" autocomplete="off"/><br />

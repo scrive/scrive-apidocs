@@ -135,16 +135,20 @@ fetchDocStats :: MonadDB m => DBEnv m [DocStatEvent]
 fetchDocStats = foldDB decoder []
   where
     decoder acc uid time quantity amount documentid
-     companyid documenttype apistring = DocStatEvent {
+     companyid documenttype apistring =
+       case doctypeFromString documenttype of
+         Nothing -> acc -- Skip Attachment doctypes
+         Just doctype -> DocStatEvent {
          seUserID       = uid
        , seTime         = time
        , seQuantity     = quantity
        , seAmount       = amount
        , seDocumentID   = documentid
        , seCompanyID    = companyid
-       , seDocumentType = doctypeFromString documenttype
+       , seDocumentType = doctype
        , seAPIString    = apistring
        } : acc
+
 
 data GetDocStatEvents = GetDocStatEvents
 instance MonadDB m => DBQuery m GetDocStatEvents [DocStatEvent] where

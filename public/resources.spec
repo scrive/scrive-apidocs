@@ -56,6 +56,7 @@ set systemPage
  css css/selects.css
  less less/payments.less
  less less/oauth.less
+ less less/arrows.less
  js   libs/jquery.min.js
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js
