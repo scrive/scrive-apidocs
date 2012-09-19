@@ -38,6 +38,10 @@ ordersignatorysignmodaltitle=$_ordersignatorysignmodaltitle()$
 ####
 contractsignatorysignmodalcontent= <p>$_contractsignatorysignmodalcontent()$ </p>
 ####
+offersignatorysignmodalcontent= <p>$_offersignatorysignmodalcontent()$ </p>
+####
+ordersignatorysignmodalcontent= <p>$_ordersignatorysignmodalcontent()$ </p>
+####
 contractsignatorysignmodalcontentdesignvieweleg=<p> $_contractsignatorysignmodalcontentdesignvieweleg()$ </p>
 ####
 offersignatorysignmodalcontentdesignvieweleg=<p> $_offersignatorysignmodalcontentdesignvieweleg()$ </p>
@@ -86,12 +90,6 @@ ordersignatorycancelmodaltitle=
           <h2>$_ordersignatorycancelmodaltitleHead()$</h2>
           <p>$_ordersignatorycancelmodaltitleBody()$<strong>$authorfstname$ $authorsndname$</strong>$_ordersignatorycancelmodaltitleBody2()$</p>
 ####
-contractsignguardwarntext=$_contractsignguardwarntext()$
-####
-offersignguardwarntext=$_offersignguardwarntext()$
-######
-ordersignguardwarntext=$_ordersignguardwarntext()$
-######
 ###### PART INFO IN DESIGN VIEW
 ######
 contractauthorname=$_contractauthorname()$

@@ -564,15 +564,9 @@ randomAuthorLinkByStatus Pending = do
 randomAuthorLinkByStatus _ = arbitrary
 
 
-getRandomAuthorRoles :: Document -> TestEnv [SignatoryRole]
-getRandomAuthorRoles doc =
-  rand 10000 (elements $ getPossibleAuthorRoles doc)
-
-getPossibleAuthorRoles :: Document -> [[SignatoryRole]]
-getPossibleAuthorRoles doc = [SignatoryAuthor] :
-  case getValueForProcess doc processauthorsend of
-    Just True -> [[SignatoryAuthor]]
-    _ ->  [[SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]]
+getRandomAuthorRoles :: TestEnv [SignatoryRole]
+getRandomAuthorRoles =
+  rand 10000 (elements [[SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
 
 addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> TestEnv Document
 addRandomDocumentWithAuthorAndCondition user p =
@@ -607,7 +601,7 @@ addRandomDocument rda = do
 
       let doc = doc' { documenttype = xtype, documentstatus = status }
 
-      roles <- getRandomAuthorRoles doc
+      roles <- getRandomAuthorRoles
       asl' <- rand 10 $ randomAuthorLinkByStatus status
       let asl = asl' { maybesignatory = Just (userid user)
                      , maybecompany = usercompany user

@@ -18,9 +18,6 @@ window.Process = Backbone.Model.extend({
     title : function(){
         return this.get("title");
     },
-    authorsend : function(){
-        return this.get("authorsend");
-    },
     step1text : function(){
         return this.get("step1text");
     },
@@ -57,17 +54,11 @@ window.Process = Backbone.Model.extend({
     remindagainbuttontext : function(){
         return this.get("remindagainbuttontext");
     },
-    requiressignguard : function(){
-        return this.get("requiressignguard");
-    },
     signbuttontext :  function(){
         return this.get("signbuttontext");
     },
     signatorycancelmodaltitle : function() {
         return this.get("signatorycancelmodaltitle");
-    },
-    signguardwarntext :  function() {
-        return this.get("signguardwarntext");
     },
     signatorysignmodalcontent:  function() {
         return this.get("signatorysignmodalcontent");

@@ -111,7 +111,6 @@ import qualified Data.Set as S
 import Doc.Tables
 import Control.Applicative
 import Util.SignatoryLinkUtils
-import Doc.DocProcess
 import Doc.DocStateCommon
 import qualified Log
 import Control.Monad
@@ -1569,9 +1568,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
       return Nothing
     else do
 
-      let authorRoles = if ((Just True) == getValueForProcess documenttype processauthorsend)
-                        then [SignatoryAuthor]
-                        else [SignatoryPartner, SignatoryAuthor]
+      let authorRoles = [SignatoryPartner, SignatoryAuthor]
 
       magichash <- lift random
 

@@ -69,7 +69,6 @@ data DocProcessInfo =
   , processuploadname :: String
 
   -- used in the design view
-  , processauthorsend :: Bool
   , processstep1text :: String
   , processsendbuttontext :: String
   , processconfirmsendtitle :: String
@@ -77,8 +76,6 @@ data DocProcessInfo =
   , processexpirytext :: String
 
   -- process specific templates used in doc views
-  , processrequiressignguard :: Bool
-  , processsignguardwarntext :: String
   , processrestartbuttontext :: String
   , processcancelbuttontext :: String
   , processcancelmodaltitle :: String
@@ -117,7 +114,6 @@ data DocProcessInfo =
   , processmodalsendconfirmation :: String
 
   -- process specific seal information
-  , processsealincludesmaxtime :: Bool
   , processsealingtext :: String
   , processlasthisentry :: String
   , processinvitationsententry :: String
@@ -155,7 +151,6 @@ contractProcess =
   , processuploadname = "contractuploadname"
 
   -- used in the design view
-  , processauthorsend = False
   , processstep1text = "contractstep1text"
   , processsendbuttontext = "contractsendtext"
   , processconfirmsendtitle = "contractconfirmsendtitle"
@@ -163,8 +158,6 @@ contractProcess =
   , processexpirytext = "contractexpirytext"
 
   -- process specific templates used in doc views
-  , processrequiressignguard = True
-  , processsignguardwarntext = "contractsignguardwarntext"
   , processrestartbuttontext = "contractrestartbuttontext"
   , processcancelbuttontext = "contractcancelbuttontext"
   , processcancelmodaltitle = "contractcancelmodaltitle"
@@ -200,7 +193,6 @@ contractProcess =
   , processmodalsendconfirmation = "modalContractCreated"
 
   -- process specific seal information
-  , processsealincludesmaxtime = True
   , processsealingtext = "contractsealingtexts"
   , processlasthisentry = "contractLastHistEntry"
   , processinvitationsententry = "contractInvitationSentEntry"
@@ -238,7 +230,6 @@ offerProcess =
   , processuploadprompttext = "offeruploadprompttext"
 
   -- used in the design view
-  , processauthorsend = True
   , processstep1text = "offerstep1text"
   , processsendbuttontext = "offersendtext"
   , processconfirmsendtitle = "offerconfirmsendtitle"
@@ -246,8 +237,6 @@ offerProcess =
   , processexpirytext = "offerexpirytext"
 
   -- process specific templates used in doc views
-  , processrequiressignguard = False
-  , processsignguardwarntext = "offersignguardwarntext"
   , processrestartbuttontext = "offerrestartbuttontext"
   , processcancelbuttontext = "offercancelbuttontext"
   , processcancelmodaltitle = "offercancelmodaltitle"
@@ -284,7 +273,6 @@ offerProcess =
   , processmodalsendconfirmation = "modalOfferCreated"
 
   -- process specific seal information
-  , processsealincludesmaxtime = False
   , processsealingtext = "offersealingtexts"
   , processlasthisentry = "offerLastHistEntry"
   , processinvitationsententry = "offerInvitationSentEntry"
@@ -323,7 +311,6 @@ orderProcess =
   , processuploadname = "orderuploadname"
 
   -- used in the design view
-  , processauthorsend = True
   , processstep1text = "orderstep1text"
   , processsendbuttontext = "ordersendtext"
   , processconfirmsendtitle = "orderconfirmsendtitle"
@@ -331,8 +318,6 @@ orderProcess =
   , processexpirytext = "orderexpirytext"
 
   -- process specific templates used in doc views
-  , processrequiressignguard = False
-  , processsignguardwarntext = "ordersignguardwarntext"
   , processrestartbuttontext = "orderrestartbuttontext"
   , processcancelbuttontext = "ordercancelbuttontext"
   , processcancelmodaltitle = "ordercancelmodaltitle"
@@ -369,7 +354,6 @@ orderProcess =
   , processmodalsendconfirmation = "modalOrderCreated"
 
   -- process specific seal information
-  , processsealincludesmaxtime = True
   , processsealingtext = "ordersealingtexts"
   , processlasthisentry = "orderLastHistEntry"
   , processinvitationsententry = "orderInvitationSentEntry"

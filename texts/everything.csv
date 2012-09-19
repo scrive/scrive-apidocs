@@ -412,7 +412,6 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_contractsignbuttontextauthor","Signera",,"Sign"
 "_contractsignedinfoheader","Färdigställt",,"Finished"
 "_contractsignedinfotext","Samtliga parter har signerat dokumentet.",,"All parties have signed the document."
-"_contractsignguardwarntext","För att signera måste du först klicka i kryssrutan",,"You must fill in the check box to be able to sign."
 "_contractstatusinfotext","Du har skickat en inbjudan att signera avtalet. Vänligen invänta övriga parters signatur.",,"You have sent an invitation to sign the document. Please wait for the other signatories to sign."
 "_contractstep1text","Välj dokument",,"Select document"
 "_contracttitle","DOKUMENT",,"DOCUMENT"
@@ -1562,7 +1561,6 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_offersignedinfoheader","Offert accepterad",,"Offer accepted"
 "_offersignedinfotextFrom","från",,"from"
 "_offersignedinfotextHasAccepted","har accepterat offerten",,"has accepted the offer"
-"_offersignguardwarntext","För att acceptera måste du först klicka i kryssrutan",,"You must fill in the check box to be able to accept."
 "_offerstatusinfotext","Du har skickat en inbjudan att acceptera offerten. Vänligen invänta accept.",,"You have sent an invitation to accept the offer. Please wait
  for the acceptance."
 "_offerstep1text","Välj offert",,"Select offer"
@@ -1619,7 +1617,6 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_ordersignedinfoheader","Ordern bekräftad",,"Order confirmed"
 "_ordersignedinfotextFrom","från",,"from"
 "_ordersignedinfotextHasConfirmed","har bekräftat ordern",,"has confirmed the order"
-"_ordersignguardwarntext","För att bekräfta måste du först klicka i kryssrutan",,"You must fill in the check box to be able to confirm."
 "_orderstatusinfotext","Du har skickat en inbjudan att bekräfta ordern. Vänligen invänta
  bekräftelsen.",,"You have sent an invitation to confirm the order. Please wait
  for the confirmation."

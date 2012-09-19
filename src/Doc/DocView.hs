@@ -287,7 +287,6 @@ processJSON doc = do
     J.valueM "name" $ text processname
     J.valueM "corename" $ text processcorename
     -- used in the design view
-    J.value "authorsend" $ bool processauthorsend
     J.valueM "step1text" $ text processstep1text
     J.valueM "sendbuttontext" $ text processsendbuttontext
     J.valueM "confirmsendtitle" $ text processconfirmsendtitle
@@ -303,10 +302,8 @@ processJSON doc = do
     J.valueM "authorissecretarytext" $ text processauthorissecretarytext
     J.valueM "remindagainbuttontext" $ text processremindagainbuttontext
     -- And more
-    J.value "requiressignguard" $ bool processrequiressignguard
     J.valueM "signbuttontext" $ text processsignbuttontext
     J.valueM "signatorycancelmodaltitle" $ text processsignatorycancelmodaltitle
-    J.valueM "signguardwarntext" $ text processsignguardwarntext
     J.valueM "signatorysignmodalcontent" $ text processsignatorysignmodalcontent
     J.valueM "signatorysignmodalcontentdesignvieweleg" $ text processsignatorysignmodalcontentdesignvieweleg
     J.valueM "signatorysignmodalcontentsignvieweleg" $ text processsignatorysignmodalcontentdesignvieweleg
