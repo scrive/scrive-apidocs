@@ -54,6 +54,7 @@ module DB.SQL2
   , sqlWhereExists
   , sqlWhereLike
   , sqlWhereILike
+  , sqlWhereIsNULL
   , sqlFrom
   , sqlJoin
   , sqlJoinOn
@@ -261,6 +262,9 @@ sqlWhereNotIn name values =
 sqlWhereExists :: (MonadState v m, SqlWhere v) => SqlSelect -> m ()
 sqlWhereExists sqlSelectD = do
   sqlWhere (SQL "EXISTS (" [] `mappend` toSQLCommand (sqlSelectD { sqlSelectResult = [SQL "TRUE" []] }) `mappend` SQL ")" [])
+  
+sqlWhereIsNULL :: (MonadState v m, SqlWhere v) => String -> m ()
+sqlWhereIsNULL col = sqlWhere (SQL (col ++ " IS NULL") [])
 
 class SqlFrom a where
   sqlFrom1 :: a -> SQL -> a
