@@ -14,7 +14,6 @@ module Doc.DocViewMail (
     , mailMismatchSignatory
     , documentMailWithDocLocale
     , mailFooterForDocument
-    , mailFooterForUser
     , companyBrandFields
     ) where
 
@@ -172,7 +171,7 @@ mailDocumentRejected :: (MonadDB m, TemplatesMonad m)
 mailDocumentRejected customMessage ctx document rejector = do
    documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailreject) $ do
         F.value "rejectorName" $ getSmartName rejector
-        F.valueM "footer" $ mailFooterForUser ctx document
+        F.valueM "footer" $ mailFooterForService ctx document
         F.value "customMessage" $ customMessage
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
 
@@ -350,10 +349,9 @@ mailFooterForDocument ctx doc = firstOrNothing  [
       1. a custom footer configured on the context user (if there is one)
       3. the default powered by scrive footer
 -}
-mailFooterForUser :: (MonadDB m, TemplatesMonad m) => Context -> Document -> m String
-mailFooterForUser ctx doc = firstWithDefault [
-    getUserFooter ctx
-  , getServiceFooter doc
+mailFooterForService :: (MonadDB m, TemplatesMonad m) => Context -> Document -> m String
+mailFooterForService ctx doc = firstWithDefault [
+    getServiceFooter doc
   ] (defaultFooter ctx)
 
 getUserFooter :: Monad m => Context -> m (Maybe String)
