@@ -437,10 +437,12 @@ handleIssueSend :: Kontrakcja m => Document -> m KontraLink
 handleIssueSend document = do
     Log.debug "handleIssueSend"
     ctx <- getContext
+    user  <- guardJust $ ctxmaybeuser ctx
+    actor <- guardJustM $ mkAuthorActor <$> getContext
     mdocs <- splitUpDocument document
     case mdocs of
       Right docs -> do
-        mndocs <- mapM forIndividual docs
+        mndocs <- mapM (forIndividual user actor) docs
         case partitionEithers mndocs of
           ([], [d]) -> do
             when_ (sendMailsDurringSigning d) $ do
@@ -463,9 +465,9 @@ handleIssueSend document = do
             internalError
       Left link -> return link
     where
-      forIndividual doc = do
+      forIndividual user actor doc = do
         Log.debug $ "handleIssueSign for forIndividual " ++ show (documentid doc)
-        mndoc <- authorSendDocument (documentid doc)
+        mndoc <- authorSendDocument user actor (documentid doc)
         case mndoc of
           Right newdocument -> postDocumentPreparationChange newdocument "web"
           Left _ -> return ()

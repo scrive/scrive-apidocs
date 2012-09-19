@@ -54,6 +54,7 @@ import Doc.DocDraft
 import PadQueue.Model
 import Archive.Control
 import OAuth.Model
+import InputValidation
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = choice [
@@ -144,16 +145,18 @@ apiCallUpdate did = api $ do
 
 apiCallReady :: Kontrakcja m => DocumentID -> m Response
 apiCallReady did =  api $ do
-  (user, _actor, _) <- getAPIUser APIDocCreate
+  (user, actor, _) <- getAPIUser APIDocCreate
   doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
   when (not $ (auid == userid user)) $ do
         throwError $ serverError "Permission problem. Not an author."
-  mndoc <- lift $ authorSendDocument (documentid doc)
+  when (not $ all (isGood . asValidEmail . getEmail) (documentsignatorylinks doc)) $ do
+        throwError $ serverError "Some signatories don't have a valid email adress set."
+  mndoc <- lift $ authorSendDocument user actor (documentid doc)
   case mndoc of
           Right newdocument -> do
               lift $ postDocumentPreparationChange newdocument "web"
-              newdocument' <- apiGuardL (serverError "No document found") $ getDocByDocID $ did
+              newdocument' <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
               Accepted <$> documentJSON True True Nothing Nothing newdocument'
           Left reason -> throwError $ serverError $ "Operation failed: " ++ show reason
 

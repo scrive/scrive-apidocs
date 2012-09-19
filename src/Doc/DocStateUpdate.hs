@@ -151,22 +151,25 @@ authorSignDocument did msigninfo = onlyAuthor did $ \olddoc -> do
 {- |
   The Author sends a document with security checks.
  -}
-authorSendDocument :: (Kontrakcja m) => DocumentID -> m (Either DBError Document)
-authorSendDocument did = onlyAuthor did $ \_ -> do
+authorSendDocument :: (Kontrakcja m) => User -> Actor -> DocumentID -> m (Either DBError Document)
+authorSendDocument user actor did = do
   ctx <- getContext
-  actor <- guardJustM $ mkAuthorActor <$> getContext      
-  mdoc <- runMaybeT $ do
-    True <- dbUpdate $ PreparationToPending did $ systemActor $ ctxtime ctx
-    True <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
-    -- please delete after Oct 1, 2012
-    -- let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
-    -- True <- dbUpdate $ MarkInvitationRead did signatorylinkid $ systemActor $ ctxtime ctx
-    -- True <- dbUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
-    Just doc <- dbQuery $ GetDocumentByDocumentID did
-    return doc
-  return $ case mdoc of
-    Nothing  -> Left $ DBActionNotAvailable "authorSendDocument failed"
-    Just doc -> Right doc
+  Just doc <- dbQuery $ GetDocumentByDocumentID did
+  if not $ isAuthor (doc, user) 
+    then return $ Left DBResourceNotAvailable
+    else do
+        r1 <-  dbUpdate $ PreparationToPending did $ actor
+        if (not r1)
+           then return $ Left $ DBActionNotAvailable $ "Can't change from draft to pending"
+           else do
+             r2 <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
+             if (not r2)
+               then return $ Left $ DBActionNotAvailable $ "Can't send proper invitation time on document"
+               else do
+                 mdoc <- dbQuery $ GetDocumentByDocumentID did
+                 return $ case mdoc of
+                    Nothing  -> Left $ DBActionNotAvailable "authorSendDocument failed"
+                    Just d -> Right d
 
 {- |
   Reseting all signatory attachments when document is in preparation | State of document is not checked
