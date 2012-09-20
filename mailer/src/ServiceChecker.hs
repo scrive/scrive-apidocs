@@ -71,7 +71,8 @@ serviceAvailabilityChecker rng dbconf (master, slave) msender = do
 
     testSender = Address { addrName = "Scrive mailer", addrEmail = "noreply@scrive.com" }
     testReceivers = [
-        Address { addrName = "o2 test",    addrEmail = "mailer_000@o2.pl"     }
+        Address { addrName = "aol test",   addrEmail = "jdoe278@aol.com"      }
       , Address { addrName = "yahoo test", addrEmail = "mailer_000@yahoo.com" }
       , Address { addrName = "gmail test", addrEmail = "mailer0088@gmail.com" }
+      , Address { addrName = "zoho test",  addrEmail = "mailer_000@zoho.com"  }
       ]
