@@ -5,7 +5,8 @@ module Payments.Control (handleSubscriptionDashboard
                         ,handleChangePlan
                         ,switchPlanToCompany
                         ,handleSyncWithRecurly
-                        ,handleRecurlyPostBack)
+                        ,handleRecurlyPostBack
+                        ,handlePricePageJSON)
        where
 
 import Control.Monad.State
@@ -374,6 +375,10 @@ handleRecurlyPostBack = do
   case parsePush bdy of
     Just ps -> postBackCache ps
     _       -> return ()
+    
+handlePricePageJSON :: Kontrakcja m => m JSValue
+handlePricePageJSON = do
+  undefined
     
 -- mails    
 

@@ -170,7 +170,9 @@ staticRoutes = choice
      , dir "payments" $ dir "newsubscription" $ hPost $ toK0 $ Payments.handleSyncNewSubscriptionWithRecurly
      , dir "payments" $ dir "changeplan" $ hPost $ toK0 $ Payments.handleChangePlan
      , dir "payments" $ dir "postback" $ hPostNoXToken $ toK0 $ Payments.handleRecurlyPostBack
-
+     -- price plan page information
+     , dir "payments" $ dir "pricepage.json" $ hGet $ toK0 $ Payments.handlePricePageJSON
+       
      -- super user only
      , dir "createuser" $ hPost $ toK0 $ Administration.handleCreateUser
      , dir "adminonly" $ hGet $ toK0 $ Administration.showAdminMainPage
