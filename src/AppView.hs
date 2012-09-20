@@ -9,7 +9,6 @@ module AppView( kontrakcja
               , pageLogin
               , simpleResponse
               , simpleResonseClrFlash
-              , ajaxError
               , firstPage
               , sitemapPage
               , priceplanPage
@@ -218,8 +217,6 @@ simpleResonseClrFlash rsp = do
   clearFlashMsgs
   return res
     
-ajaxError :: Kontra Response
-ajaxError = simpleResponse "<script>window.location='/'</script>"
 {- |
    The landing page contents.  Read from template.
 -}

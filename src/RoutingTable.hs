@@ -120,12 +120,12 @@ staticRoutes = choice
      -- , dir "withdrawn" $ hPost $ DocControl.handleWithdrawn
      , dir "restart" $ hPost $ toK1 $ DocControl.handleRestart
 
-     , dir "pages"  $ hGetAjax $ toK2 $ DocControl.showPage
+     , dir "pages"  $ hGet $ toK2 $ DocControl.showPage
      -- HTMP emails can have embedded preview image
      , dir "preview" $ hGet $ toK2 $ DocControl.showPreview
      , dir "preview" $ hGet $ toK4 $ DocControl.showPreviewForSignatory
 
-     , dir "filepages" $ hGetAjax $  toK1 $ DocControl.handleFilePages
+     , dir "filepages" $ hGet $  toK1 $ DocControl.handleFilePages
 
      , dir "csvlandpage" $ hGet $ toK1 $ DocControl.handleCSVLandpage
 

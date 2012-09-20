@@ -15,7 +15,6 @@ module Routing ( hGet
                , hPostNoXToken
                , hPostAllowHttp
                , hGetAllowHttp
-               , hGetAjax
                , https
                , RedirectOrContent, allowHttp
                , toK0, toK1, toK2, toK3, toK4, toK5, toK6
@@ -25,7 +24,7 @@ module Routing ( hGet
 import Data.Functor
 import AppView as V
 import Data.Maybe
-import Happstack.Server(Response, Method(GET, POST, DELETE, PUT), rsCode, ToMessage(..))
+import Happstack.Server(Response, Method(GET, POST, DELETE, PUT), ToMessage(..))
 import Happstack.StaticRouting
 import KontraLink
 import Happstack.Fields
@@ -34,7 +33,6 @@ import Kontra
 import qualified User.UserControl as UserControl
 import Redirect
 import Text.JSON
-import qualified Control.Exception.Lifted as E
 import Util.CSVUtil
 import Util.ZipUtil
 
@@ -92,24 +90,6 @@ page :: Kontra String -> Kontra Response
 page pageBody = do
     pb <- pageBody
     renderFromBody kontrakcja pb
-
-{- Use this to mark that request will try to get data from our service and embed it on our website
-   It returns a script that if embeded on site will force redirect to main page
-   Ajax request should not contain redirect
--}
-
-hGetAjax :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
-hGetAjax = hGetWrap wrapAjax
-
-wrapAjax :: Kontra Response -> Kontra Response
-wrapAjax action = noRedirect action `E.catch` (\(_::KontraError) -> ajaxError)
-  -- Soft redirects should be supported here, ask MR
-
-noRedirect::Kontra Response -> Kontra Response
-noRedirect action = do
-    response <- action
-    if (rsCode response == 303) then internalError
-                                else return response
 
 hPost :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hPost = hPostWrap (https . guardXToken)
