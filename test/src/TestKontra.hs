@@ -297,7 +297,6 @@ clearTables = runDBEnv $ do
   kRunRaw "DELETE FROM documents"
 
   kRunRaw "DELETE FROM companies"
-  kRunRaw "DELETE FROM services"
   kRunRaw "DELETE FROM users"
   kRunRaw "DELETE FROM files"
 

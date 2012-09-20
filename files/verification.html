@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+ <head>
+   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+   <title>How to Verify This Document?</title>
+ </head>
+ <body>
+
+  <h1>How to Verify This Document?</h1>
+  <p>The PDF document into which this file is embedded has been signed by Scrive using the GuardTime Keyless Signature technology. This enables independent verification of the time when the document was signed and checking that it has not been modified since. The process consists of several steps outlined below.</p>
+
+  <h2>1. Extracting the Signature</h2>
+  <p>The signature is embedded into the document following the standard PDF digital signature framework [<a href="#pdf">PDF</a>, section 12.8]. A GuardTime signature has the value <code>GTTS.TimeStamp</code> in its <code>Filter</code> field.</p>
+  <p>A single PDF file can contain several revisions of a document [<a href="#pdf">PDF</a>, section 7.5.6]. A GuardTime signature normally signs all revisions up to and including the one that contains it. In order to verify the document as it was signed, all subsequent updates have to be removed from the file.</p>
+  <p>More precisely, the signature protects the parts of the document specified by the <code>ByteRange</code> field of the signature. The two ranges must cover everything left after the previous step, except the <code>Contents</code> field of the signature.</p>
+  <p>The signature value is embedded in the <code>Contents</code> field in base 16 encoding. The value has to be stripped of trailing spaces and decoded [<a href="#base">BASE</a>, section 8] for further processing.<p>
+
+  <h2><a name="parse">2. Parsing the Signature</a></h2>
+  <p>The result of the previous step has to be parsed as an ASN.1 data structure in BER encoding [<a href="#asn">ASN</a>, <a href="#der">DER</a>]. This must yield a <code>ContentInfo</code> structure [<a href="#cms">CMS</a>, section 3] that embeds a <code>SignedData</code> structure [<a href="#cms">CMS</a>, section 5] in the <code>content</code> field.</p>
+  <p>The contents of the <code>encapContentInfo.eContent</code> field of the <code>SignedData</code> structure have to be parsed as an ASN.1 data structure in DER encoding. This must yield a <code>TSTInfo</code> structure [<a href="#tsp">TSP</a>, section 2.4.2].</p>
+  <p>A GuardTime signature must have a single <code>SignerInfo</code> element in the <code>signerInfos</code> field of the <code>SignedData</code> structure and the object identifier <code>1.3.6.1.4.1.27868.4.1</code> in the <code>signatureAlgorithm</code> field of the <code>SignerInfo</code> structure.</p>
+  <p>The contents of the <code>signature</code> field of the <code>SignerInfo</code> structure have to be parsed as an ASN.1 data structure in DER encoding. This must yield a GuardTime-defined <code>TimeSignature</code> structure:</p>
+  <pre>
+    TimeSignature ::= SEQUENCE {
+      location HashChain,
+      history HashChain,
+      publishedData PublishedData,
+      pkSignature [0] SignatureInfo OPTIONAL,
+      pubReference [1] SET OF OCTET STRING OPTIONAL
+    }
+
+    PublishedData ::= SEQUENCE {
+      publicationIdentifier INTEGER,
+      publicationImprint DataImprint
+    }
+  </pre>
+  <p>Each of the <code>HashChain</code> fields is an ASN.1 <code>OCTET STRING</code> that contains a concatenation of a number of <code>HashStep</code> records. Each <code>HashStep</code> record in turn is a concatenation of a 1-byte hash algorithm code (appendix <a href="#hash">Hash Functions</a>), a 1-byte direction indicator, a variable-length <code>DataImprint</code> field, and a 1-byte level number. The <code>DataImprint</code> field consists of a 1-byte hash algorithm code followed by the hash value (the number of bytes determined by the hash function). Note that all these are just concatenated together, not encoded as separate ASN.1 fields.</p>
+  <p>The <code>DataImprint</code> field in the <code>PublishedData</code> structure is an ASN.1 <code>OCTET STRING</code> that consists of a 1-byte hash algorithm code followed by the corresponding number of bytes of hash value (again, just concatenated).</p>
+  <p>The contents of the <code>pkSignature</code> and <code>pubReference</code> fields will not be used in the following and thus need not be parsed. However, presence of the <code>pkSignature</code> field indicates the hash chain contained in the <code>history</code> field is a temporary one not connected to a printed control publication. In such a case, the <code>history</code> and <code>publishedData</code> fields should be updated before proceeding (appendix <a href="#ext">Extending the TimeSignature</a>).</p>
+
+  <h2>3. Checking the Document</h2>
+  <p>To check that the document matches the signature, it must be verified that the hash value of the signed document corresponds to the one embedded in the signature.</p>
+  <p>The concatenation of the sections of the original PDF file specified by the <code>ByteRange</code> field has to be hashed using the algorithm specified by the <code>messageImprint.hashAlgorithm</code> field of the <code>TSTInfo</code> structure. The result must be equal to the value of the <code>messageImprint.hashedMessage</code> field of the <code>TSTInfo</code> structure.</p>
+
+  <h2>4. Checking the Signature</h2>
+  <p>To check that the signature is internally consistent, it must be verified in several places that the hash value computed from one part of the signature corresponds to the one embedded in another part.</p>
+  <p>The DER-encoded representation of the <code>TSTInfo</code> structure (that is, the value of the <code>encapContentInfo.eContent</code> field of the <code>SignedData</code> structure) has to be hashed using the algorithm specified by the <code>digestAlgorithm</code> field of the <code>SignerInfo</code> structure. The result must be equal to the value of the <code>message-digest</code> attribute in the <code>signedAttrs</code> field of the <code>SignerInfo</code> structure.</p>
+  <p>The DER-encoded representation of the <code>SignedAttributes</code> structure has to be hashed using the algorithm specified by the <code>digestAlgorithm</code> field of the <code>SignerInfo</code> structure. The result will be the input data to the hash chain computation process described next. Note that the data to be hashed in this step is different from the representation of the <code>signedAttrs</code> field in the <code>SignerInfo</code> structure, as the latter is a tagged implicit set while the former is an explicit set [<a href="#cms">CMS</a>, section 5.4].</p>
+  <p>For each <code>HashStep</code> record in the <code>location</code> hash chain and then for each <code>HashStep</code> record in the <code>history</code> hash chain in the <code>TimeSignature</code> structure, in the order in which the records appear in the chains:</p>
+  <ol>
+   <li>compute <var>x</var> as the result of hashing the input data with the algorithm specified by the hash algorithm code (the first byte) in the record;</li>
+   <li>if the direction indicator (the second byte) in the record is 0:<br>
+    compute <var>y</var> as the concatenation of the <code>DataImprint</code> field (bytes from the third up to but excluding the last), the hash algorithm code (the first byte), the value of <var>x</var>, and the level byte (the last byte);</li>
+   <li>if the direction indicator (the second byte) in the record is 1:<br>
+    compute <var>y</var> as the concatenation of the hash algorithm code (the first byte), the value of <var>x</var>, the <code>DataImprint</code> field (bytes from the third up to but excluding the last), and the level byte (the last byte);</li>
+   <li>if the direction indicator (the second byte) is something else:<br>
+    abort with an error "invalid signature";</li>
+   <li>the value of <var>y</var> is the input for the next step.</li>
+  </ol>
+  <p>Finally, the value of <var>y</var> from the last step of the hash chain computation has to be hashed using the hash algorithm specified by the first byte of the <code>publicationImprint</code> field of the <code>PublishedData</code> structure. The result must be equal to the remaining bytes of the <code>publicationImprint</code> field.
+
+  <h2>5. Checking the Publication</h2>
+  <p>To check that the signature matches the widely witnessed control publication, it must be verified that the contents of the <code>PublishedData</code> structure correspond to a printed publication acquired from a trusted source.</p>
+  <p>The <code>publicationIdentifier</code> field in the <code>PublishedData</code> structure contains the POSIX time [<a href="#posix">POSIX</a>, section 4.15] value for the moment when the control publication was generated. A GuardTime control publication appears in the World Edition of the Financial Times 2&ndash;6 days after it is generated (depending on the publisher's schedules).</p>
+  <p>The <code>PublishedData</code> structure is formatted into human-comparable form as follows:</p>
+  <ol>
+   <li>the value of the <code>publicationIdentifier</code> field as a 64-bit integer (8 bytes in big-endian order) and the contents of the <code>publicationImprint</code> field are concatenated;</li>
+   <li>a CRC-32 checksum [<a href="#crc">CRC</a>, section 8.1.1.6.2] is computed on the result of the previous step and appended to it;</li>
+   <li>the result of the previous step is encoded in base 32 [<a href="#base">BASE</a>, section 6];</li>
+   <li>the result of the previous step may be broken into groups of 6 or 8 characters by dashes.</li>
+  </ol>
+  <p>The result must be equal to the control publication that appears in the newspaper (ignoring possible differences in the optional character grouping).</p>
+
+  <h2>6. Conclusion</h2>
+  <p>Since in the whole computation starts from the contents of the PDF file and through a series applications of one-way functions ends up at a value that was known to exist at some well-established time in the past (the time when the newspaper was printed), this proves that the file in question existed before that time in the same form as it is currently.</p>
+  <p>The preceding statement relies only on the hash functions being one-way and assumes absolutely nothing about the GuardTime technology. Adding information about how the hash chains are constructed (which is seen by all GuardTime clients while it happens and can thus also be considered quite widely witnessed) makes it possible to extract the signing time with much better precision (appendix <a href="#time">Extracting the Signing Time</a>).
+
+  <h2><a name="hash">A. Hash Functions</a></h2>
+  <p>The following table lists the hash functions that may be used in hash chains in GuardTime keyless signatures, along with their identifiers and hash value sizes.</p>
+  <table border="1">
+   <tr><th>Algorithm Name</th><th>GuardTime ID</th><th>Hash Value Size</th><th>Algorithm Specification</th></tr>
+   <tr><td>SHA-1</td><td>0</td><td>20</td><td><a href="#sha">SHA</a>, section 6.1</td></tr>
+   <tr><td>SHA-224</td><td>3</td><td>28</td><td><a href="#sha">SHA</a>, section 6.3</td></tr>
+   <tr><td>SHA-256</td><td>1</td><td>32</td><td><a href="#sha">SHA</a>, section 6.2</td></tr>
+   <tr><td>SHA-384</td><td>4</td><td>48</td><td><a href="#sha">SHA</a>, section 6.5</td></tr>
+   <tr><td>SHA-512</td><td>5</td><td>64</td><td><a href="#sha">SHA</a>, section 6.4</td></tr>
+   <tr><td>RIPEMD-160</td><td>2</td><td>20</td><td><a href="#ripe">RIPE</a>, section 7</td></tr>
+  </table>
+
+  <h2><a name="time">B. Extracting the Signing Time</a></h2>
+  <p>The time when a datum was signed with a GuardTime keyless signature can be extacted from the <code>history</code> and the <code>publicationIdentifier</code> fields of the <code>TimeSignature</code> structure (section <a href="#parse">Parsing the Signature</a>). The process is as follows:</p>
+  <ol>
+   <li>set <var>h</var> to 0 and <var>p</var> to the value of the <code>publicationIdentifier</code> field;
+   <li>for each <code>HashStep</code> record in the <code>history</code> hash chain, in the reverse of the order in which the records appear in the chain:
+    <ol>
+     <li>if <var>p</var> is 0:<br>
+      abort with an error "invalid signature";</li>
+     <li>set <var>x</var> to the highest power of 2 that does not exceed <var>p</var>;
+     <li>if the direction indicator (the second byte) in the record is 0:<br>
+      set <var>h</var> to <var>h</var>+<var>x</var> and <var>p</var> to <var>p</var>-<var>x</var>;</li>
+     <li>if the direction indicator (the second byte) in the record is 1:<br>
+      set <var>p</var> to <var>x</var>-1;</li>
+     <li>if the direction indicator (the second byte) is something else:<br>
+      abort with an error "invalid signature";</li>
+    </ol>
+   </li>
+   <li>if <var>p</var> is not 0:<br>
+    abort with an error "invalid signature";</li>
+  </ol>
+  <p>The final value of <var>h</var> is the POSIX time [<a href="#posix">POSIX</a>, section 4.15] value for the moment when the datum was signed.</p>
+
+  <h2><a name="ext">C. Extending the TimeSignature</a></h2>
+  <p>For each GuardTime signature and any control publication generated after the signature was issued, a hash chain can be created that connects the signature to the control publication and thus also to the printed medium in which the publication appeared. This process is called extending the signature.</p>
+  <p>The preferred way to do this is to access an online verification service using a tool obtained from either Scrive or GuardTime. This can also be done independently using the calendar database acquired either from GuardTime or, in case GuardTime has ceased the service, from the Estonian Technical Surveillance Authority, to which GuardTime is obligated to deposit the database before exiting the business.</p>
+  <p>The GuardTime calendar database consists of one hash value per second, indexed by integral POSIX time [<a href="#posix">POSIX</a>, section 4.15] values (red nodes and black numbers on the figure below). Each of these hash values aggregates all signing requests that the GuardTime service processed during the corresponding 1-second time interval.</p>
+  <p>The aggregate hash values are connected into binary trees by hashing them together in pairs in left to right order, then hashing the first level pairs together again, and so on until a set of complete binary trees is obtained (blue arrows and nodes on the figure). For generating the control publication, the roots of the binary trees are hashed into a chain in right to left order (purple arrows and nodes), and the value from the last node of the chain is extracted for generating the control publication (golden arrow).</p>
+  <p>More precisely, each node on the figure is a <code>DataImprint</code> structure (section <a href="#parse">Parsing the Signature</a>). On each step, the <code>DataImprint</code> from the left child node, the <code>DataImprint</code> from the right child node, and a single byte with the value of 255 are concatenated together, hashed, and the result is obtained as a <code>DataImprint</code> consisting of the concatenation of the 1-byte hash algorithm code (appendix <a href="#hash">Hash Functions</a>) and the hash value.</p>
+  <div style="height: 275px; width: 600px">
+   <svg version="1.1" xmlns="http://www.w3.org/2000/svg" height="275" width="600">
+    <defs>
+     <marker id="blueArrow" markerWidth="12" markerHeight="4" refX="12" refY="2" orient="auto">
+      <path d="M 0 0 l 8 2 l -8 2 z" fill="blue" stroke="none" />
+     </marker>
+     <marker id="purpleArrow" markerWidth="12" markerHeight="4" refX="12" refY="2" orient="auto">
+      <path d="M 0 0 l 8 2 l -8 2 z" fill="purple" stroke="none" />
+     </marker>
+     <marker id="goldArrow" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto">
+      <path d="M 0 0 l 6 2 l -6 2 z" fill="gold" stroke="none" />
+     </marker>
+    </defs>
+    <line x1="175" y1="25" x2="175" y2="255" stroke="black" stroke-width="1" stroke-dasharray="6 2" />
+    <line x1="325" y1="25" x2="325" y2="255" stroke="black" stroke-width="1" stroke-dasharray="6 2" />
+    <line x1="475" y1="25" x2="475" y2="255" stroke="black" stroke-width="1" stroke-dasharray="6 2" />
+    <line x1="050" y1="200" x2="100" y2="150" stroke="blue" stroke-width="2" marker-end="url(#blueArrow)" />
+    <line x1="100" y1="200" x2="100" y2="150" stroke="blue" stroke-width="2" marker-end="url(#blueArrow)" />
+    <line x1="150" y1="200" x2="200" y2="150" stroke="blue" stroke-width="2" stroke-dasharray="6 2" marker-end="url(#blueArrow)" />
+    <line x1="200" y1="200" x2="200" y2="150" stroke="blue" stroke-width="2" marker-end="url(#blueArrow)" />
+    <line x1="250" y1="200" x2="300" y2="150" stroke="blue" stroke-width="2" stroke-dasharray="2 2" marker-end="url(#blueArrow)" />
+    <line x1="300" y1="200" x2="300" y2="150" stroke="blue" stroke-width="2" marker-end="url(#blueArrow)" />
+    <line x1="350" y1="200" x2="400" y2="150" stroke="blue" stroke-width="2" marker-end="url(#blueArrow)" />
+    <line x1="400" y1="200" x2="400" y2="150" stroke="blue" stroke-width="2" marker-end="url(#blueArrow)" />
+    <line x1="450" y1="200" x2="500" y2="150" stroke="blue" stroke-width="2" marker-end="url(#blueArrow)" />
+    <line x1="500" y1="200" x2="500" y2="150" stroke="blue" stroke-width="2" marker-end="url(#blueArrow)" />
+    <line x1="100" y1="150" x2="200" y2="100" stroke="blue" stroke-width="2" stroke-dasharray="6 2" marker-end="url(#blueArrow)" />
+    <line x1="200" y1="150" x2="200" y2="100" stroke="blue" stroke-width="2" marker-end="url(#blueArrow)" />
+    <line x1="300" y1="150" x2="400" y2="100" stroke="blue" stroke-width="2" stroke-dasharray="2 2" marker-end="url(#blueArrow)" />
+    <line x1="400" y1="150" x2="400" y2="100" stroke="blue" stroke-width="2" marker-end="url(#blueArrow)" />
+    <line x1="200" y1="100" x2="400" y2="050" stroke="blue" stroke-width="2" marker-end="url(#blueArrow)" />
+    <line x1="400" y1="100" x2="400" y2="050" stroke="blue" stroke-width="2" stroke-dasharray="2 2" marker-end="url(#blueArrow)" />
+    <line x1="500" y1="150" x2="550" y2="150" stroke="purple" stroke-width="2" marker-end="url(#purpleArrow)" />
+    <line x1="550" y1="200" x2="550" y2="150" stroke="purple" stroke-width="2" marker-end="url(#purpleArrow)" />
+    <line x1="400" y1="050" x2="550" y2="050" stroke="purple" stroke-width="2" stroke-dasharray="2 2" marker-end="url(#purpleArrow)" />
+    <line x1="550" y1="150" x2="550" y2="050" stroke="purple" stroke-width="2" marker-end="url(#purpleArrow)" />
+    <circle cx="050" cy="200" r="10" fill="red" />
+    <circle cx="100" cy="200" r="10" fill="red" />
+    <circle cx="150" cy="200" r="10" fill="red" />
+    <circle cx="200" cy="200" r="10" fill="red" />
+    <circle cx="250" cy="200" r="10" fill="red" />
+    <circle cx="300" cy="200" r="10" fill="red" />
+    <circle cx="350" cy="200" r="10" fill="red" />
+    <circle cx="400" cy="200" r="10" fill="red" />
+    <circle cx="450" cy="200" r="10" fill="red" />
+    <circle cx="500" cy="200" r="10" fill="red" />
+    <circle cx="550" cy="200" r="10" fill="red" />
+    <circle cx="100" cy="150" r="10" fill="blue" />
+    <circle cx="200" cy="150" r="10" fill="blue" />
+    <circle cx="300" cy="150" r="10" fill="blue" />
+    <circle cx="400" cy="150" r="10" fill="blue" />
+    <circle cx="500" cy="150" r="10" fill="blue" />
+    <circle cx="200" cy="100" r="10" fill="blue" />
+    <circle cx="400" cy="100" r="10" fill="blue" />
+    <circle cx="400" cy="050" r="10" fill="blue" />
+    <circle cx="550" cy="150" r="10" fill="purple" />
+    <circle cx="550" cy="050" r="10" fill="purple" />
+    <line x1="550" y1="050" x2="575" y2="025" stroke="gold" stroke-width="3" marker-end="url(#goldArrow)" />
+    <text>
+     <tspan x="45 95 145 195 245 295 345 395 445 495 540 550" y="230">012345678910</tspan>
+    </text>
+   </svg>
+  </div>
+  <p>For manageability, the database is split into several files (separated by dashed black lines on the figure). For the files to be usable without access to preceding ones, each file starting from some time value <var>t</var> also contains the root values from the binary trees corresponding to the state of the database on time <var>t</var>-1 (dashed blue arrows between the first and second file on the figure).</p>
+  <p>To construct the hash chain linking a given signature to a given publication, the following steps have to be performed:</p>
+  <ol>
+   <li>the signing time has to be extracted from the <code>history</code> and <code>publishedData</code> fields currently in the signature (appendix <a href="#time">Extracting the Signing Time</a>);</li>
+   <li>the calendar database files covering the full interval from the signing time to the time when the publication was generated have to be obtained (format and naming of the files described later in this section);</li>
+   <li>the hash-linked structure corresponding to the time when the publication was generated has to be reconstructed (as described earlier in this section);</li>
+   <li>the unique hash chain connecting the leaf entry corresponding to the signing time to the root entry corresponding to the control publication (dotted arrows on the figure above) has to be extracted;</li>
+   <li>the <code>TimeSignature</code> structure (section <a href="#parse">Parsing the Signature</a>) has to be updated with new values:
+    <ul>
+     <li>the <code>history</code> field is set to the concatenation of <code>HashStep</code> records describing the steps in the hash chain; each <code>HashStep</code> record is constructed as the concatenation of the 1-byte hash algorithm code from the <code>DataImprint</code> in the current node, the 1-byte direction indicator (0 if the sibling node is to the right in the tree, 1 if the sibling is to the left), the <code>DataImprint</code> from the sibling node, and a single byte with the value of 255;</li>
+     <li>the <code>publicationIdentifier</code> field is set to the POSIX time value for the moment when the control publication was generated;</li>
+     <li>the <code>publicationImprint</code> field is set to the <code>DataImprint</code> value in the root entry corresponding to the control publication.</li>
+   </ul>
+  </ol>
+  <p>Each calendar database file consists of a fixed header, a set of root node records, a sequence of calendar node records, and a checksum record. In the following, many values are given in hexadecimal, with the <code>0x</code> prefix prepended.</p>
+  <p>The header consists of 12 fields totaling 65 bytes:</p>
+  <ol>
+   <li>8-byte sequence: file format identifier; must be <code>0x47</code>, <code>0x54</code>, <code>0x49</code>, <code>0x4d</code>, <code>0x45</code>, <code>0x48</code>, <code>0x44</code>, and <code>0x42</code> (ASCII representation of 'GTIMEHDB');</li>
+   <li>4-byte integer: endian-ness indicator; fixed value <code>0x01020304</code>; all other 32-bit integers in the file will be in the same byte order;</li>
+   <li>4-byte integer: version number; must be <code>0x00000001</code> (in file byte order);</li>
+   <li>8-byte integer: endian-ness indicator; fixed value <code>0x0102030405060708</code>; all other 64-bit integers in the file will be in the same byte order;</li>
+   <li>8-byte integer: file creation time as POSIX time;</li>
+   <li>8-byte integer: first calendar record index; the POSIX time value for the first node in the calendar node section of the file;</li>
+   <li>4-byte integer: first calendar record offset; the offset of the start of the calendar node section within the file;</li>
+   <li>4-byte integer: calendar record length; the length of each record in the calendar node section of the file;</li>
+   <li>1 byte: calendar hash algorithm; the 1-byte hash algorithm code (appendix <a href="#hash">Hash Functions</a>) for the hash function used by all calendar nodes in this file (they all must use the same algorithm);</li>
+   <li>1 byte: flags; must be <code>0x01</code>;</li>
+   <li>14 bytes: reserved for future; all bytes must be <code>0x00</code>;</li>
+   <li>1 byte: CRC8 checksum of all preceding bytes in the header record; this is intended as a short-term protection against accidental errors while the file is being created; checking this may be omitted as the checksum record at the end of the file gives much stronger protection.</li>
+  </ol>
+  <p>The root node section spans the space from the end of the header to the beginning of the calendar node section. It consists of a sequence of root node records followed by a 1-byte CRC8 checksum of all preceding bytes in the section. Each root node record consists of 4 fields:</p>
+  <ol>
+   <li>4-byte integer: record length; the number of bytes to follow in this record (excluding the length field itself);</li>
+   <li>8-byte integer: record index; the POSIX time value for the last calendar node in the complete binary tree whose root this node is;</li>
+   <li>1 byte: the 1-byte hash algorithm code for the hash function used in this node;</li>
+   <li>variable-length sequence: the hash value in this node (the length is determined by the hash function used; it may also be computed by subtracting 9 from the value of the record length field).</li>
+  </ol>
+  <p>Note that the concatenation of the two last fields in each record yields the <code>DataImprint</code> value for the corresponding node.</p>
+  <p>The calendar node section spans the space from the end of the root node section to almost the end of the file; it is followed only by a checksum record that has the same size and format as a calendar node record. It consists of a sequence of calendar node records (and no section checksum). Each calendar node record consists of 3 fields:</p>
+  <ol>
+   <li>4-byte integer: record index offset; this value is to be added to the first calendar record index field from the file header to obtain the POSIX time value for this node;</li>
+   <li>variable-length sequence: the hash value in this node (the length is determined by the hash function used which is specified by the calendar hash algorithm field in the file header; it may also be obtained by subtracting 5 from the calendar record length field in the file header);</li>
+   <li>1 byte: CRC8 checksum of all preceding bytes in the record.</li>
+  </ol>
+  <p>Again, note that the concatenation of the calendar hash algorithm field from the file header and the hash value field from the record yields the <code>DataImprint</code> value for the corresponding node.</p>
+  <p>The last record in the file is the cryptographic checksum of the whole file:</p>
+  <ol>
+   <li>4-byte integer: fixed value <code>0xffffffff</code>;</li>
+   <li>variable-length sequence: the hash value computed by hashing all data preceding the checksum record in the file using the hash function specified in the calendar hash algorithm field in the file header (the length is the same as for the calendar node records);</li>
+   <li>1 byte: CRC8 checksum of all preceding bytes in the record.</li>
+  </ol>
+  <p>The calendar database files are named following the pattern<br>
+   &nbsp;&nbsp;&nbsp;&nbsp;<code>hashdb-<i>tttttttttttttttt</i>-<i>yyyy</i>-<i>mm</i>-<i>dd</i>-<i>hhmmss</i>.bin</code><br>
+   where the fields have the following meaning:</p>
+  <ul>
+   <li>filename prefix, always <code>hashdb</code>;</li>
+   <li>POSIX time value for the first calendar node in the file; 16-digit lower-case hexadecimal number with leading zeroes preserved (but no <code>0x</code> prefix);</li>
+   <li>year, month, and day of the file creation time; month and day are 2-digit decimal numbers with the leading zeroes preserved;</li>
+   <li>hour, minute, and second of the file creation time (in UTC); each is 2-digit decimal number with the leading zero preserved;</li>
+   <li>filename suffix, always <code>bin</code>.</li>
+  </ul>
+
+  <h2>References</h2>
+  <dl>
+   <dt><a name="pdf">[PDF]</a></dt>
+    <dd><em>Document management &mdash; Portable document format &mdash; Part 1: PDF 1.7</em><br>ISO 32000-1:2008, International Organization for Standardization, 2008</dd>
+   <dt><a name="tsp">[TSP]</a></dt>
+    <dd><em>Internet X.509 Public Key Infrastructure: Time-Stamp Protocol (TSP)</em><br>RFC 3161, Internet Engineering Task Force, 2001</dd>
+   <dt><a name="cms">[CMS]</a></dt>
+    <dd><em>Cryptographic Message Syntax</em><br>RFC 2630, Internet Engineering Task Force, 1999</li>
+   <dt><a name="asn">[ASN]</a></dt>
+    <dd><em>Information technology &mdash; Abstract Syntax Notation One (ASN.1): Specification of basic notation</em><br>ITU-T X.680, International Telecommunication Union, 2002</li>
+   <dt><a name="der">[DER]</a></dt>
+    <dd><em>Information technology &mdash; ASN.1 encoding rules: Specification of Basic Encoding Rules (BER), Canonical Encoding Rules (CER) and Distinguished Encoding Rules (DER)</em><br>ITU-T X.690, International Telecommunication Union, 2002</li>
+   <dt><a name="base">[BASE]</a></dt>
+    <dd><em>The Base16, Base32, and Base64 Data Encodings</em><br>RFC 4648, Internet Engineering Task Force, 2006</li>
+   <dt><a name="sha">[SHA]</a></dt>
+    <dd><em>Secure Hash Standard (SHS)</em><br>FIPS 180-4, National Institute of Standards and Technology, 2012</li>
+   <dt><a name="ripe">[RIPE]</a></dt>
+    <dd><em>Information technology &mdash; Security techniques &mdash; Hash-functions &mdash; Part 3: Dedicated hash-functions</em><br>ISO/IEC 10118-3:2004, International Organization for Standardization, 2004</li>
+   <dt><a name="posix">[POSIX]</a></dt>
+    <dd><em>Standard for Information Technology &mdash; Portable Operating System Interface (POSIX)</em><br>IEEE 1003.1-2008, The Institute of Electrical & Electronics Engineers, 2008</li>
+   <dt><a name="crc">[CRC]</a></dt>
+    <dd><em>Error-correcting procedures for DCEs using asynchronous-to-synchronous conversion</em><br>ITU-T V.42, International Telecommunication Union, 2002</li>
+  </ol>
+ </body>
+</html>

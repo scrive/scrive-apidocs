@@ -340,6 +340,14 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
       htmllogs <- htmlDocFromEvidenceLog (documenttitle document) elog
       let evidenceattachment = Seal.SealAttachment { Seal.fileName = "evidencelog.html"
                                                    , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString htmllogs }
+      
+      -- add signature verification documentation
+      sigVerFile <- liftIO $ BS.toString <$> B64.encode <$> BS.readFile "files/verification.html"
+      let signatureVerificationAttachment = 
+            Seal.SealAttachment { Seal.fileName = "signatureverification.html"
+                                , Seal.fileBase64Content = sigVerFile
+                                }
+                               
 
       let numberOfPages = getNumberOfPDFPages content
       numberOfPagesText <- 
@@ -365,7 +373,8 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
             , Seal.initials       = initials
             , Seal.hostpart       = hostpart
             , Seal.staticTexts    = readtexts
-            , Seal.attachments    = [evidenceattachment]
+            , Seal.attachments    = [evidenceattachment
+                                    ,signatureVerificationAttachment]
             , Seal.filesList      =
               [ Seal.FileDesc { fileTitle = documenttitle document
                               , fileRole = mainDocumentText
