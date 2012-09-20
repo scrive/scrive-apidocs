@@ -5,18 +5,17 @@ import DB
 tableFiles :: Table
 tableFiles = Table {
     tblName = "files"
-  , tblVersion = 3
+  , tblVersion = 4
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("content", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
        , ("amazon_bucket", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("amazon_url", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("disk_path", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("size", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
-       , ("checksum", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
-       , ("aes_key", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
-       , ("aes_iv", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
+       , ("size", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("checksum", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just False})
+       , ("aes_key", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just False})
+       , ("aes_iv", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE files ("
@@ -25,11 +24,10 @@ tableFiles = Table {
           ++ ", content BYTEA NULL"
           ++ ", amazon_bucket TEXT NULL"
           ++ ", amazon_url TEXT NULL"
-          ++ ", disk_path TEXT NULL"
-          ++ ", size INTEGER NULL"
-          ++ ", checksum BYTEA NULL"
-          ++ ", aes_key BYTEA NULL"
-          ++ ", aes_iv BYTEA NULL"
+          ++ ", size INTEGER NOT NULL"
+          ++ ", checksum BYTEA NOT NULL"
+          ++ ", aes_key BYTEA NOT NULL"
+          ++ ", aes_iv BYTEA NOT NULL"
           ++ ", CONSTRAINT pk_files PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated

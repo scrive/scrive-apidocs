@@ -261,7 +261,6 @@ appHandler handleRoutes appConf appGlobals appState = runOurServerPartT . measur
         , ctxtime = minutestime
         , ctxnormalizeddocuments = docscache appGlobals
         , ctxipnumber = peerip
-        , ctxdocstore = docstore appConf
         , ctxs3action = mkAWSAction appConf
         , ctxgscmd = gsCmd appConf
         , ctxproduction = production appConf

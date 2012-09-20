@@ -1,7 +1,6 @@
 module File.Model (
       module File.FileID
     , FileMovedToAWS(..)
-    , FileMovedToDisk(..)
     , GetFileByFileID(..)
     , GetFileThatShouldBeMovedToAmazon(..)
     , NewFile(..)
@@ -54,13 +53,6 @@ instance MonadDB m => DBUpdate m FileMovedToAWS () where
       , sql "amazon_url" url
       ] <> SQL "WHERE id = ?" [toSql fid]
 
-data FileMovedToDisk = FileMovedToDisk FileID FilePath
-instance MonadDB m => DBUpdate m FileMovedToDisk () where
-  update (FileMovedToDisk fid path) = do
-    kPrepare "UPDATE files SET content = NULL, disk_path = ? WHERE id = ?"
-    _ <- kExecute1 [toSql path, toSql fid]
-    return ()
-
 data GetFileThatShouldBeMovedToAmazon = GetFileThatShouldBeMovedToAmazon
 instance MonadDB m => DBQuery m GetFileThatShouldBeMovedToAmazon (Maybe File) where
   query GetFileThatShouldBeMovedToAmazon = do
@@ -103,7 +95,6 @@ filesSelectors = intercalate ", " [
   , "content"
   , "amazon_bucket"
   , "amazon_url"
-  , "disk_path"
   , "checksum"
   , "aes_key"
   , "aes_iv"
@@ -112,22 +103,22 @@ filesSelectors = intercalate ", " [
 fetchFiles :: MonadDB m => DBEnv m [File]
 fetchFiles = foldDB decoder []
   where
-    decoder acc fid fname content amazon_bucket amazon_url disk_path checksum aes_key aes_iv = File {
+    decoder acc fid fname content amazon_bucket
+      amazon_url checksum aes_key aes_iv = File {
         fileid = fid
       , filename = fname
       , filestorage =
         case content of
-          Just (Binary mem) -> case meaes of
-            Just (Right aes) -> FileStorageMemory mem aes
-            _ -> let err :: forall a. a = error $ "File with id = " ++ show fid ++ " is of type FileStorageMemory, but aes/iv pair is invalid" in FileStorageMemory err err
-          Nothing -> case disk_path of
-            Just path -> FileStorageDisk path
-            Nothing -> case (amazon_bucket, amazon_url, meaes) of
-              (Just bucket, Just url, Just (Right aes)) -> FileStorageAWS bucket url (Just aes)
-              -- To be removed after we encrypt old files
-              (Just bucket, Just url, Nothing) -> FileStorageAWS bucket url Nothing
-              _ -> let err :: forall a. a = error $ "File with id = " ++ show fid ++ " is invalid" in FileStorageMemory err err
+          Just (Binary mem) -> case eaes of
+            Right aes -> FileStorageMemory mem aes
+            Left msg  -> err msg
+          Nothing -> case (amazon_bucket, amazon_url, eaes) of
+            (Just bucket, Just url, Right aes) -> FileStorageAWS bucket url aes
+            (Just _,      Just _,   Left msg)  -> err msg
+            d                                  -> error $ "Invalid AWS data for file with id = " ++ show fid ++ ": " ++ show d
       , filechecksum = unBinary `fmap` checksum
     } : acc
       where
-        meaes = mkAESConf <$> unBinary `fmap` aes_key <*> unBinary `fmap` aes_iv
+        err :: String -> FileStorage
+        err msg = error $ "File with id = " ++ show fid ++ " has invalid aes/iv pair: " ++ msg
+        eaes = mkAESConf (unBinary aes_key) (unBinary aes_iv)

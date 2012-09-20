@@ -11,14 +11,14 @@ import File.FileID
 
 data FileStorage =
     FileStorageMemory BS.ByteString AESConf
-  | FileStorageAWS String String (Maybe AESConf) -- ^ bucket, url inside bucket, aes key/iv
-  | FileStorageDisk FilePath -- ^ filepath
+  | FileStorageAWS String String AESConf -- ^ bucket, url inside bucket, aes key/iv
     deriving (Eq, Ord, Show, Typeable)
 
 data File = File {
     fileid       :: FileID
   , filename     :: String
-  , filestorage  :: FileStorage
+  -- if there is conversion error from sql, detect it immediately
+  , filestorage  :: !FileStorage
   , filechecksum :: Maybe BS.ByteString
   } deriving (Typeable)
 

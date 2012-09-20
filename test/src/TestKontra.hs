@@ -227,7 +227,6 @@ mkContext locale = do
         , ctxtime = time
         , ctxnormalizeddocuments = docs
         , ctxipnumber = noIP
-        , ctxdocstore = error "docstore is not defined"
         , ctxs3action = AWS.S3Action {
               AWS.s3conn = AWS.amazonS3Connection "" ""
             , AWS.s3bucket = ""

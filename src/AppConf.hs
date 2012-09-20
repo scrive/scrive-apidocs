@@ -23,7 +23,6 @@ data AppConf = AppConf {
   , hostpart           :: String                       -- ^ hostname as it should looklike in emails for example
   , useHttps           :: Bool                         -- ^ should we redirect to https?
   , store              :: FilePath                     -- ^ where to put database files
-  , docstore           :: FilePath                     -- ^ where to put files (active if amazonConfig is Nothing)
   , static             :: FilePath                     -- ^ static files directory
   , amazonConfig       :: Maybe (String,String,String) -- ^ bucket, access key, secret key
   , dbConfig           :: String                       -- ^ postgresql configuration
@@ -48,7 +47,6 @@ instance Configuration AppConf where
     , hostpart           = "http://localhost:8000"
     , useHttps           = True
     , store              = "_local/kontrakcja/_state"
-    , docstore           = "_local/documents"
     , static             = "public"
     , amazonConfig       = Nothing
     , dbConfig           = "user='kontra' password='kontra' dbname='kontrakcja'"

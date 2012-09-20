@@ -21,7 +21,6 @@ fileTests env = testGroup "Files" [
 
   --Basic DB operations
   testThat "File insert persists content"  env testFileNewFile,
-  testThat "File move to disk works"  env testFileMovedToDisc,
   testThat "File move to AWS works"  env testFileMovedToAWS,
 
   -- Advanced tests
@@ -46,16 +45,6 @@ testFileNewFile  = doNTimes 100 $ do
   assertBool ("File name doesn't change " ++ show name ++ " vs "++ show fname1) (name == fname1)
   Just (File { filename = fname2 , filestorage = FileStorageMemory fcontent2 aes2}) <- dbQuery $ GetFileByFileID fileid
   assertBool "File data doesn't change after storing" ( name == fname2 && content == aesDecrypt aes2 fcontent2)
-
-testFileMovedToDisc :: TestEnv ()
-testFileMovedToDisc  = doNTimes 100 $ do
-  (name,content) <- fileData
-  (pth) <- rand 10 $ arbString 10 100
-  file <- dbUpdate $ NewFile name $ Binary content
-  dbUpdate $ FileMovedToDisk (fileid file) pth
-  Just (File { filename = fname , filestorage = FileStorageDisk fpath }) <- dbQuery $ GetFileByFileID (fileid file)
-  assertBool "File data name does not change" ( name == fname ) 
-  assertBool "Path is persistent" ( pth ==  fpath ) 
 
 testFileMovedToAWS :: TestEnv ()
 testFileMovedToAWS  = doNTimes 100 $ do

@@ -6,6 +6,18 @@ import DB
 import File.Tables
 import qualified Log
 
+removeDiskPathAndMakeNewColumnsNotNull :: MonadDB m => Migration m
+removeDiskPathAndMakeNewColumnsNotNull = Migration {
+    mgrTable = tableFiles
+  , mgrFrom = 3
+  , mgrDo = do
+    kRunRaw "ALTER TABLE files DROP column disk_path"
+    kRunRaw "ALTER TABLE files ALTER size SET NOT NULL"
+    kRunRaw "ALTER TABLE files ALTER checksum SET NOT NULL"
+    kRunRaw "ALTER TABLE files ALTER aes_key SET NOT NULL"
+    kRunRaw "ALTER TABLE files ALTER aes_iv SET NOT NULL"
+}
+
 addCryptoColumnsToFilesTable :: MonadDB m => Migration m
 addCryptoColumnsToFilesTable = Migration {
     mgrTable = tableFiles

@@ -16,7 +16,6 @@ import MagicHash
 import Context
 import Doc.Model
 import Utils.Default
-import Utils.Directory
 import Utils.Read
 import User.Model
 import TestingUtil
@@ -63,28 +62,28 @@ testParseMimes mimepath = do
   assertBool ("Should be exactly one plaintext, found " ++ show plains) (length plains == 1)
 
 testSuccessfulDocCreation :: String -> Int -> TestEnv ()
-testSuccessfulDocCreation emlfile sigs = withSystemTempDirectory' "mailapi-test-" $ \tmpdir -> do
-    req <- mkRequest POST [("mail", inFile emlfile)]
-    uid <- createTestUser
-    muser <- dbQuery $ GetUserByID uid
-    ctx <- (\c -> c { ctxdocstore = tmpdir, ctxmaybeuser = muser })
-      <$> mkContext (mkLocaleFromRegion defaultValue)
-    _ <- dbUpdate $ SetUserMailAPIKey uid (read "ef545848bcd3f7d8") 1
-    (res, _) <- runTestKontra req ctx handleMailAPI
+testSuccessfulDocCreation emlfile sigs = do
+  req <- mkRequest POST [("mail", inFile emlfile)]
+  uid <- createTestUser
+  muser <- dbQuery $ GetUserByID uid
+  ctx <- (\c -> c { ctxmaybeuser = muser })
+    <$> mkContext (mkLocaleFromRegion defaultValue)
+  _ <- dbUpdate $ SetUserMailAPIKey uid (read "ef545848bcd3f7d8") 1
+  (res, _) <- runTestKontra req ctx handleMailAPI
 
-    Log.debug $ "Here's what I got back from handleMailCommand: " ++ show res
-    let mdocid = maybeRead res
-    assertBool ("documentid is not given: " ++ show mdocid) $ isJust mdocid
-    mdoc <- dbQuery $ GetDocumentByDocumentID $ fromJust mdocid
-    assertBool "document was really created" $ isJust mdoc
-    let doc = fromJust mdoc
-    assertBool ("document should have " ++ show sigs ++ " signatories has " ++ show (length (documentsignatorylinks doc)) ++": " ++ show (documentsignatorylinks doc)) $ length (documentsignatorylinks doc) == sigs
+  Log.debug $ "Here's what I got back from handleMailCommand: " ++ show res
+  let mdocid = maybeRead res
+  assertBool ("documentid is not given: " ++ show mdocid) $ isJust mdocid
+  mdoc <- dbQuery $ GetDocumentByDocumentID $ fromJust mdocid
+  assertBool "document was really created" $ isJust mdoc
+  let doc = fromJust mdoc
+  assertBool ("document should have " ++ show sigs ++ " signatories has " ++ show (length (documentsignatorylinks doc)) ++": " ++ show (documentsignatorylinks doc)) $ length (documentsignatorylinks doc) == sigs
 
-    assertBool ("document status should be pending, is " ++ show (documentstatus doc)) $ documentstatus doc == Pending
-    assertBool "document has file no attached" $ (length $ documentfiles doc) == 1
-    assertBool ("doc has iso encoded title " ++ show (documenttitle doc)) $ not $ "=?iso" `isInfixOf` (documenttitle doc)
-    Just doc' <- dbQuery $ GetDocumentByDocumentID $ fromJust mdocid
-    assertBool "document is in error!" $ not $ isDocumentError doc'
+  assertBool ("document status should be pending, is " ++ show (documentstatus doc)) $ documentstatus doc == Pending
+  assertBool "document has file no attached" $ (length $ documentfiles doc) == 1
+  assertBool ("doc has iso encoded title " ++ show (documenttitle doc)) $ not $ "=?iso" `isInfixOf` (documenttitle doc)
+  Just doc' <- dbQuery $ GetDocumentByDocumentID $ fromJust mdocid
+  assertBool "document is in error!" $ not $ isDocumentError doc'
 
 createTestUser :: TestEnv UserID
 createTestUser = do

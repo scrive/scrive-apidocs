@@ -89,6 +89,7 @@ kontraMigrations = [
   , removeServiceIDFromDocStatEvents
   , removeServiceIDFromUserStatEvents
   , removeServiceIDFromSignStatEvents
+  , removeDiskPathAndMakeNewColumnsNotNull
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

@@ -4,13 +4,11 @@ module Amazon (
   , mkAWSAction
   , uploadFilesToAmazon
   , getFileContents
-  , calculateChecksumAndEncryptOldFiles
   ) where
 
 import Control.Applicative
 import Control.Concurrent
 import Control.Monad.Reader
-import Control.Exception (catch, SomeException)
 import Data.Maybe
 import Network.AWS.Authentication
 import Prelude hiding (catch)
@@ -19,7 +17,6 @@ import qualified Network.AWS.AWSConnection as AWS
 import qualified Crypto.Hash.SHA1 as SHA1
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
@@ -66,35 +63,6 @@ uploadFilesToAmazon = do
           Log.debug "Uploading to Amazon failed, sleeping for 5 minutes."
           liftIO $ threadDelay $ 5 * 60 * 1000000
       uploadFilesToAmazon
-
--- | Transition function between non-encrypted and encrypted files.
--- To be removed after 15.08.2012.
-calculateChecksumAndEncryptOldFiles :: Scheduler ()
-calculateChecksumAndEncryptOldFiles = do
-  mfile <- dbQuery GetFileWithNoChecksum
-  case mfile of
-    Nothing -> Log.debug "Encrypting old files done."
-    Just file -> do
-      let fid = fileid file
-      Log.debug $ "Generating checksum, encrypting and saving in the database file with id = " ++ show fid ++ "..."
-      conf <- sdAppConf <$> ask
-      mcontent <- fmap Binary <$> getFileContents (mkAWSAction conf) file
-      case mcontent of
-        Nothing -> do
-          Log.debug $ "Couldn't get content for file " ++ show fid ++ ", aborting."
-          dbRollback
-        Just content -> do
-          op1 <- dbUpdate $ SetChecksum fid $ SHA1.hash `binApp` content
-          op2 <- dbUpdate $ SetContentToMemoryAndEncryptIt fid content
-          case (op1, op2) of
-            (True, True) -> do
-              Log.debug $ "Operation succeeded for file " ++ show fid ++ "."
-              dbCommit
-              liftIO $ threadDelay 500000 -- 0.5 sec
-              calculateChecksumAndEncryptOldFiles
-            res -> do
-              Log.debug $ "Operation failed for file " ++ show fid ++ " - (op1, op2) = " ++ show res ++ ", aborting."
-              dbRollback
 
 -- | Convert a file to Amazon URL. We use the following format:
 --
@@ -149,10 +117,6 @@ getFileContents s3action File{..} = do
           return Nothing
         else return $ Just content
   where
-    getContent (FileStorageDisk filepath) = do
-      (Just <$> BS.readFile filepath) `catch` (\(e :: SomeException) -> do
-        Log.debug $ "Reading file " ++ filepath ++ " failed with: " ++ show e
-        return Nothing)
     getContent (FileStorageMemory content aes) = return . Just $ aesDecrypt aes content
     getContent (FileStorageAWS bucket url aes) = do
       result <- AWS.runAction $ s3action {
@@ -160,7 +124,7 @@ getFileContents s3action File{..} = do
         , AWS.s3bucket = bucket
       }
       case result of
-        Right rsp -> return . Just . maybe id aesDecrypt aes . concatChunks $ HTTP.rspBody rsp
+        Right rsp -> return . Just . aesDecrypt aes . concatChunks $ HTTP.rspBody rsp
         Left err -> do
           Log.error $ "AWS.runAction failed with: " ++ show err
           return Nothing
