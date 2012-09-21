@@ -184,6 +184,7 @@ staticRoutes = choice
      , dir "adminonly" $ dir "useradmin" $ hGet $ toK0 $ Administration.showAdminUsers Nothing
      , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminUserUsageStats
      , dir "adminonly" $ dir "useradmin" $ hPost $ toK1 $ Administration.handleUserChange
+     , dir "adminonly" $ dir "useradmin" $ dir "sendinviteagain" $ hPost $ toK0 $ Administration.sendInviteAgain
      , dir "adminonly" $ dir "useradmin" $ dir "payments" $ hGet $ toK1 $ Administration.showAdminUserPayments
      , dir "adminonly" $ dir "useradmin" $ dir "payments" $ hPost $ toK1 $ Administration.handleUserPaymentsChange
      , dir "adminonly" $ dir "companyadmin" $ hGet $ toK0 $ Administration.showAdminCompanies

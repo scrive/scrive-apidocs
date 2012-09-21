@@ -41,6 +41,7 @@ module Administration.AdministrationControl(
           , jsonUsersList
           , jsonCompanies
           , jsonDocuments
+          , sendInviteAgain
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -868,6 +869,14 @@ handleBackdoorQuery email = onlySalesOrAdmin $ onlyBackdoorOpen $ do
   minfo <- listToMaybe . filter ((email `elem`) . map addrEmail . mailTo)
     <$> dbQuery GetEmails
   return $ maybe "No email found" mailContent minfo
+
+sendInviteAgain :: Kontrakcja m => m KontraLink
+sendInviteAgain = onlyAdmin $ do
+  uid <- guardJustM $ readField "userid"
+  user <- guardJustM $ dbQuery $ GetUserByID uid
+  sendNewUserMail user
+  addFlashM flashMessageNewActivationLinkSend
+  return LoopBack
 
 -- This method can be used do reseal a document
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink
