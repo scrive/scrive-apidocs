@@ -674,7 +674,8 @@ javascriptLocalisation =
                        }
                 }
             ,  bin: {
-                       remove : {
+                       name :  "$_docListTabsBin()$"
+                    ,  remove : {
                               action: "$_delete()$"
                             , head : "$_listReallyDeleteDialogHead()$"
                             , body : "$_listReallyDeleteDialogBody()$"

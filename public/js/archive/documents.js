@@ -95,7 +95,6 @@ window.DocumentsListDefinition = function(archive) { return {
     actions : [
            new ListAction({
                 name : localization.archive.documents.createnew,
-                color : "green",
                 avaible : function() {return true;},
                 acceptEmpty : true,
                 onSelect: function() {
@@ -161,7 +160,6 @@ window.DocumentsListDefinition = function(archive) { return {
             }),
         new ListAction({
             name :  localization.archive.documents.sendreminder.action,
-            color : "green",
             avaible : function(doc){
               return doc.field("status") == "sent"      ||
                      doc.field("status") == "delivered" ||
@@ -205,7 +203,6 @@ window.DocumentsListDefinition = function(archive) { return {
         }),
         new ListAction({
             name :  localization.archive.documents.cancel.action,
-            color : "red",
             avaible : function(doc){
               return doc.field("status") == "sent"      ||
                      doc.field("status") == "delivered" ||
@@ -240,7 +237,6 @@ window.DocumentsListDefinition = function(archive) { return {
         }),
         new ListAction({
             name : localization.archive.documents.remove.action,
-            color : "black",
             avaible : function(doc){ return true;},
             onSelect : function(docs) {
                          var confirmtext = jQuery("<p/>").append(localization.archive.documents.remove.body + " ");

@@ -24,6 +24,7 @@ window.SelectModel = Backbone.Model.extend({
   defaults : {
       name  : "",
       options : [],
+      expandSide : "left",
       expanded : false
   },
   initialize: function(args){
@@ -51,6 +52,9 @@ window.SelectModel = Backbone.Model.extend({
   },
   theme : function(){
        return this.get("theme");
+  },
+  expandSide : function() {
+       return this.get("expandSide");
   },
   textWidth : function(){
        return this.get("textWidth");
@@ -131,7 +135,7 @@ var SelectView = Backbone.View.extend({
         $(this.el).empty();
         $(this.el).addClass(this.model.theme() + "-theme");
         var view = this;
-        var options = $("<ul class='select-opts'/>");
+        var options = $("<ul class='select-opts'/>").addClass(this.model.expandSide());
         var model = this.model;
         var button = this.button();
         _.each(model.options(),function(e){
@@ -168,7 +172,8 @@ window.Select = function(args) {
                                         iconClass : args.iconClass,
                                         onSelect : args.onSelect,
                                         theme : args.theme != undefined ? args.theme : "standard",
-                                        textWidth : args.textWidth
+                                        textWidth : args.textWidth,
+                                        expandSide : args.expandSide
                                        });
           var input = $("<div class='select'/>");
           if (args.cssClass!= undefined)

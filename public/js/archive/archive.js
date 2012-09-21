@@ -66,9 +66,7 @@ var ArchiveModel = Backbone.Model.extend({
   binTab : function() {
                     var archive = this;
                     return  new Tab({
-                        name: "",
-                        iconClass : "rubbishbin",
-                        right: true,
+                        name: localization.archive.bin.name,
                         elems: [function() {return $(archive.bin().view.el);}],
                         active : window.location.hash == "#bin",
                         onActivate : function() {

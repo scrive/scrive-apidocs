@@ -6,32 +6,38 @@
 (function(window) {
     window.ListAction= Backbone.Model.extend({
         defaults: {
-            avaible: function() {return false;},
             onSelect : function() {return false;},
             name : "",
-            visible : false,
             acceptEmpty : false,
             color : "black",
-            button : undefined //Custom button, jQuery object. We don't control it's visability.
+            width : 130, // Default button width
+            button : undefined, //Custom button, jQuery object. We don't control it's visability.
+            emptyMessage : "", // Message to show when nothing is selected and we dont accept empty
+            notAvaibleMessage : "", 
         },
         initialize: function (args) {
-            this.update();
         },
         name: function(name) {
             return this.get("name");
         },
-        avaible: function(objs)  {
+        allAvaible: function()  {
             var af = this.get("avaible");
-            return (objs.length > 0 || this.acceptEmpty()) && _.all(objs, function(o) {return af(o);});
+            return _.all(this.selected(), function(o) {return af(o);});
+        },
+        selected : function() {
+          return this.get("list").getSelected();
         },
         onSelect: function() {
-            return this.get("onSelect")(this.get("list").getSelected());
-        },
-        visible : function() {
-          return this.get("visible");
+          return this.get("onSelect")(this.selected());
         },
         acceptEmpty : function() {
           return this.get("acceptEmpty");
+        },
+        emptyMessage : function() {
+          return this.get("emptyMessage");
+        },
+        notAvaibleMessage : function() {
+          return this.get("notAvaibleMessage");
         },
         button : function() {
           return this.get("button");
@@ -39,9 +45,8 @@
         color : function() {
           return this.get("color");
         },
-        update : function() {
-            if (this.get('list') == undefined) return;
-            this.set({"visible" : this.avaible(this.get("list").getSelected()) }) ;
+        width : function() {
+          return this.get("width");
         }
     });
 
@@ -49,28 +54,32 @@
         model: ListAction,
         tagname : 'div',
         initialize: function(args) {
-            _.bindAll(this, 'render', 'updateVisability');
-            this.model.bind('change', this.updateVisability);
-            this.model.update();
+            _.bindAll(this, 'render');
             this.render();
         },
-        updateVisability : function() {
-            if (this.model.visible())
-                $(this.el).css("opacity", "1");
+        onSelect : function() {
+            var self = this;
+            var model = self.model;
+            if (model.selected().length == 0 && !model.acceptEmpty())
+              FlashMessages.add({color: "red", text : model.emptyMessage});
+            else if (!model.allAvaible())
+              FlashMessages.add({color: "red", text : model.notAvaibleMessage});
             else
-                $(this.el).css("opacity", "0.5");
+              model.onSelect();
+            return false;
+              
         },
         render: function() {
-            var view = this;
-            var model = this.model
-            this.updateVisability();
+            var self = this;
+            var model = self.model
             var button = model.button();
             if (button == undefined)
                 button = Button.init({
                                       color : model.color(),
                                       size : "tiny",
                                       text  : model.name(),
-                                      onClick : function() {if (model.visible()) model.onSelect(); return false;}
+                                      width : model.width(),
+                                      onClick : function() { return self.onSelect();}
                 });
             $(this.el).append(button.input());
         }

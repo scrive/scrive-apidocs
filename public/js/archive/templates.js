@@ -55,8 +55,7 @@ window.TemplatesListDefinition = function(archive) { return {
     actions : [
        new ListAction({
                 name : localization.archive.templates.createnew,
-                avaible : function() {return true;},
-                color : "green",      
+                avaible : function() {return true;}, 
                 acceptEmpty : true,
                 onSelect: function() {
                         var popup;

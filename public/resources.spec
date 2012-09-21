@@ -53,7 +53,7 @@ set systemPage
  css css/flash.css
  css css/docsignview.css
  css css/main.css
- css css/selects.css
+ less less/selects.less
  less less/payments.less
  less less/paymentsoutside.less
  less less/oauth.less

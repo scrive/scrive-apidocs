@@ -149,10 +149,9 @@
     var ListObjectView = Backbone.View.extend({
         model: ListObject,
         initialize: function(args) {
-            _.bindAll(this, 'render', 'renderSelection', 'updateActions');
+            _.bindAll(this, 'render', 'renderSelection');
             this.model.bind('change', this.render);
             this.model.bind('selected:change', this.renderSelection);
-            this.model.bind('selected:change', this.updateActions);
             this.schema = args.schema;
             this.model.view = this;
             this.render();
@@ -173,7 +172,6 @@
                     td.click(function(){view.selectCheck(); return false;});
                     this.checkbox = $("<div class='listcheckbox'/>");
                     this.renderSelection();
-                    this.updateActions();
                     this.checkbox.click(function(){view.selectCheck();return false;})
                     elem = this.checkbox;
                 } else if (cell.isRendered() && value != undefined) {
@@ -225,7 +223,6 @@
              }
             }
             this.renderSelection();
-            this.updateActions();
             return this;
         },
         renderSelection: function() {
@@ -236,10 +233,6 @@
                 $(this.el).removeClass("ui-selected");
                 if (this.checkbox != undefined) this.checkbox.removeClass("checked");
             }
-        },
-        updateActions : function() {
-            if (this.schema.actionsAvaible())
-                _.each(this.schema.actions(), function(a) {a.update(); return false;});
         },
         selectCheck: function() {
           if(!this.model.isSelected())
@@ -348,7 +341,8 @@
                                        options: options,
                                        cssClass: "float-left",
                                        name : localization.more,
-                                       theme : "standard"
+                                       theme : "black",
+                                       expandSide : "right"
             });
             console.log("Generating selects for options");
 
