@@ -16,7 +16,8 @@
             credit_card: '',
             ccv: '',
             year: '',
-            month: ''
+            month: '',
+            created_user: false
         },
         firstName: function(n) {
             if(n || n === '') {
@@ -87,6 +88,13 @@
             }
             return this.get('year');
         },
+        createdUser: function(b) {
+            if(arguments.length > 0) {
+                this.set({created_user:b});
+                return this;
+            }
+            return this.get('created_user');            
+        }
 
     });
 
@@ -285,15 +293,14 @@
                     .find('.label').text(localization.payments.select);
             }
 
-
             Recurly.config({
                 subdomain: model.subdomain()
                 , currency: 'SEK'
                 , country: 'SE'
             });
             var recurlyForm = $(el).find('.js-recurly-form');
-            
-            Recurly.buildSubscriptionForm({
+
+            var validator = Recurly.buildSubscriptionForm({
                 target: recurlyForm
                 , enableAddons: false
                 , enableCoupons: false
@@ -313,7 +320,7 @@
                     , lastName: model.lastName()
                     , country: 'SE'
                 }
-                , signature: model.plans()[model.currentPlan() || 'team']
+                , signature: model.plans()[model.currentPlan() || 'team'].signature
                 , beforeInject: function(form) {
                     form = $(form);
                     var div = $('<div class="borderbox" />');
@@ -347,18 +354,87 @@
                     form.find('.due_now').append(permonth).append(guarantee);
                     form.find('.due_now .title').hide();
 
+                    var checkuserexists = function(email, callback) {
+                        $.ajax('/payments/userexists',
+                               {data: {email:email},
+                                timeout: 500,
+                                dataType: 'json',
+                                success: callback,
+                                error: function() {
+                                    //checkuserexists(email, callback);
+                                }});
+                    };
+                    var work = true;
+                    var createaccount = function(email, firstname, lastname, callback) {
+                        $.ajax('/payments/createuser',
+                               {type: 'POST',
+                                data: {email: email,
+                                       first_name: firstname,
+                                       last_name: lastname,
+                                       xtoken: readCookie("xtoken")},
+                                timeout: 1000,
+                                dataType: 'json',
+                                error: function() {
+                                    //createaccount(email,firstname,lastname,callback);
+                                },
+                                success: function(data) {
+                                    model.createdUser(true);
+                                    callback(data);
+                                }
+                               });
+                    };
+                    var handlechargeaccount = function(data) {
+                        // three cases
+                        if(!data.user_exists) {
+                            // create the user and charge the account
+                            if(work) {
+                                work = false;
+                                createaccount(model.email(),
+                                              model.firstName(), 
+                                              model.lastName(), 
+                                              function(data) {
+                                                  LoadingDialog.close();
+                                                  if(data.success)
+                                                      form.submit();
+                                                  // what else?
+                                              });
+                                work = true;
+                            }
+                        } else if(data.user_exists && !data.has_plan) {
+                            // charge the existing account
+                            LoadingDialog.close();
+                            if(work) {
+                                work = false;
+                                form.submit();
+                                work = true;
+                            }
+                        } else {
+                            // show message (they should log in)
+                            LoadingDialog.close();
+                            var text = localization.payments.outside.sorryExistingUser;
+                            var header = localization.payments.outside.sorryExistingUserHeader;
+                            var popup = Confirmation.popup({
+                                title: header,
+                                content: $('<p />').text(text),
+                                onAccept: function(){
+                                    popup.view.clear();
+                                }
+                            });
+                        }
+                    };
+                    
                     //quantbox.attr('type', 'number').attr('min', 3);
                     // replace button with our own
-                    var work = true;
                     var button = Button.init({color:'green',
                                               size:'big',
                                               text:localization.payments.subscribe,
                                               onClick: function() {
-                                                  if(work) {
-                                                      work = false;
-                                                      form.submit();
-                                                      work = true;
-                                                  }
+                                                  console.log(validator);
+                                                  validator.validate(function() {
+                                                      LoadingDialog.open(localization.payments.loading);
+                                                      checkuserexists(model.email(),
+                                                                      handlechargeaccount);
+                                                  });
                                               }});
                     div.find('button').replaceWith(button.input());
                     
@@ -374,7 +450,7 @@
                     cc.val(model.creditCard());
                     cc.change();
                     cc.change(function(e) { 
-                        model.creditcard($(e.target).val()); 
+                        model.creditCard($(e.target).val()); 
                     });
                     var cvv = form.find('.cvv input');
                     cvv.val(model.cvv());
@@ -413,6 +489,38 @@
                     y.change(function(e) {
                         model.year($(e.target).val());
                     });
+                }
+                , successHandler: function(stuff) {
+                    LoadingDialog.open(localization.payments.savingsubscription);
+                    $.ajax("/payments/newsubscriptionoutside",
+                           { type: "POST"
+                             ,data: {account_code : model.accountCode(), 
+                                     email        : model.email()}
+                             ,success: function() {
+                                 LoadingDialog.close();
+                                 
+                                 var text;
+                                 var header;
+                                 if(model.createdUser()) {
+                                     text = localization.payments.outside.confirmAccountCreatedUser;
+                                     header = localization.payments.outside.confirmAccountCreatedUserHeader;
+                                 } else {
+                                     text = localization.payments.outside.confirmAccountExistingUser;
+                                     header = localization.payments.outside.confirmAccountExistingUserHeader;
+                                 }
+                                 var popup = Confirmation.popup({
+                                     title: header,
+                                     content: $('<p />').text(text),
+                                     onAccept: function() {
+                                         if(model.createdUser()) {
+                                             popup.clear();
+                                         } else {
+                                             window.location = '/?logging';
+                                         }
+                                     }
+                                 });
+                             }
+                           });
                 }
 
             });
