@@ -535,6 +535,14 @@ javascriptLocalisation =
                       , acceptTOS: "$_paymentsErrorsAcceptTOS()$"
                       , invalidQuantity: "$_paymentsErrorsInvalidQuantity()$"
                       }
+              , outside: {
+                  confirmAccountCreatedUser       : "$_confirmAccountCreatedUser()$",
+                  confirmAccountCreatedUserHeader : "$_modalUserSignupDoneHeader()$",
+                  confirmAccountExistingUser      : "$_confirmAccountExistingUser()$",
+                  confirmAccountExistingUserHeader: "$_confirmAccountExistingUserHeader()$",
+                  sorryExistingUser               : "$_flashMessageUserWithSameEmailExists()$",
+                  sorryExistingUserHeader         : "$_mailDocumentErrorContentBodyFourth()$"
+              }
         }  
       , documents : "$_docListTabsDocs()$"
       , templates : "$_docListTabsTemplates()$"
