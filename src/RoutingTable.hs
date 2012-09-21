@@ -173,6 +173,7 @@ staticRoutes = choice
      -- price plan page information
      , dir "payments" $ dir "pricepage.json" $ hGet $ toK0 $ Payments.handlePricePageJSON
      , dir "payments" $ dir "userexists" $ hGet $ toK0 $ Payments.handleUserExists
+     , dir "payments" $ dir "createuser" $ hPost $ toK0 $ Payments.handleCreateUser
      -- super user only
      , dir "createuser" $ hPost $ toK0 $ Administration.handleCreateUser
      , dir "adminonly" $ hGet $ toK0 $ Administration.showAdminMainPage

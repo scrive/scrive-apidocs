@@ -3,11 +3,11 @@ module Payments.Control (handleSubscriptionDashboard
                         ,handleSubscriptionDashboardInfo
                         ,handleSyncNewSubscriptionWithRecurly
                         ,handleChangePlan
-                        ,switchPlanToCompany
                         ,handleSyncWithRecurly
                         ,handleRecurlyPostBack
                         ,handlePricePageJSON
-                        ,handleUserExists)
+                        ,handleUserExists
+                        ,handleCreateUser)
        where
 
 import Control.Monad.State
@@ -48,6 +48,7 @@ import qualified Text.JSON.Gen as J
 import MinutesTime
 import Mails.SendMail
 import Utils.Monad
+import qualified Login
 
 import Payments.Model
 import Payments.Rules
@@ -236,17 +237,6 @@ cachePlan time pa ac subscription invoicestatus eid mds mdd = do
     Log.payments "cachePlan: Could not save payment plan."
     return False
   
-switchPlanToCompany :: Kontrakcja m => UserID -> CompanyID -> m Bool
-switchPlanToCompany uid cid = do
-  time <- ctxtime <$> getContext
-  mplan <- dbQuery $ GetPaymentPlan (Left uid)
-  case mplan of
-    Just pp | isLeft $ ppID pp -> do
-      let pp' = pp { ppID = Right cid }
-      b <- dbUpdate $ SavePaymentPlan pp' time
-      _ <- Stats.record time Stats.CompanySwitchAction RecurlyProvider (ppQuantity pp') (ppPricePlan pp') (Right cid) (ppAccountCode pp)
-      return b
-    _ -> return False
 
 {- Should be run once per day, preferably at night -}
 handleSyncWithRecurly :: (MonadIO m, MonadDB m, CryptoRNG m) => String -> MailsConfig -> KontrakcjaGlobalTemplates -> String -> MinutesTime -> m ()
@@ -403,6 +393,12 @@ handleUserExists = do
   runJSONGenT $ do
     J.value "user_exists" $ isJust muser
     J.value "has_plan"    $ isJust mplan
+    
+handleCreateUser :: Kontrakcja m => m JSValue
+handleCreateUser = do
+  mres <- Login.handleSignup
+  runJSONGenT $ do
+    J.value "success" $ isJust mres
 
 -- mails    
 

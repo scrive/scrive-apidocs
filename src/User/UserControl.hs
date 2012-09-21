@@ -42,7 +42,7 @@ import User.Action
 import User.Utils
 import User.History.Model
 import ScriveByMail.Model
-import Payments.Control
+import Payments.Action
 import Payments.Model
 
 handleUserGet :: Kontrakcja m => m (Either KontraLink Response)
