@@ -15,6 +15,11 @@ Flag pdfseal
   Manual: True
   Default: True
 
+Flag cron
+  Description: Build executable that run various jobs periodically
+  Manual: True
+  Default: True
+
 Flag mailing-server
   Description: Build mailing server
   Manual: True
@@ -266,6 +271,48 @@ Executable pdfseal
               TypeFamilies,
               TypeOperators,
               TypeSynonymInstances
+
+Executable cron
+  if flag(cron)
+    Buildable: True
+  else
+    Buildable: False
+
+  Hs-source-dirs: inc misc src cron mailer/inc docconv/src pdfseal/inc
+
+  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
+  if !flag(allow-warnings)
+    GHC-Options: -Werror
+  if flag(server-coverage)
+    GHC-Options: -fhpc
+  if !os(windows)
+    -- don't do threaded on Windows because it uses blocking listen and accept
+    GHC-Options: -threaded
+  if os(windows)
+    cpp-options: -DWINDOWS
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
+  cpp-options: -DCronMain=Main
+  Main-is: CronMain.hs
+
+  Extensions: BangPatterns,
+              DeriveDataTypeable,
+              FlexibleContexts,
+              FlexibleInstances,
+              GeneralizedNewtypeDeriving,
+              MultiParamTypeClasses,
+              NamedFieldPuns,
+              PatternGuards,
+              RankNTypes,
+              RecordWildCards,
+              ScopedTypeVariables,
+              TemplateHaskell,
+              TupleSections,
+              TypeFamilies,
+              TypeOperators,
+              TypeSynonymInstances,
+              UndecidableInstances
 
 Executable mailing-server
   if flag(mailing-server)

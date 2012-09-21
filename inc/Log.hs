@@ -4,6 +4,7 @@ module Log (
   , eleg
   , debug
   , error
+  , cron
   , forkIOLogWhenError
   , mail
   , mailContent
@@ -57,6 +58,7 @@ setupLogger = do
 
     appLog         <- fileHandler' "log/app.log"         INFO >>= \lh -> return $ setFormatter lh fmt
     accessLog      <- fileHandler' "log/access.log"      INFO
+    cronLog        <- fileHandler' "log/cron.log"        INFO >>= \lh -> return $ setFormatter lh fmt
     mailLog        <- fileHandler' "log/mail.log"        INFO >>= \lh -> return $ setFormatter lh fmt
     debugLog       <- fileHandler' "log/debug.log"       INFO >>= \lh -> return $ setFormatter lh fmt
     errorLog       <- fileHandler' "log/error.log"       INFO >>= \lh -> return $ setFormatter lh fmt
@@ -79,6 +81,7 @@ setupLogger = do
 
     let allLoggers = [ appLog
                      , accessLog
+                     , cronLog
                      , stdoutLog
                      , mailLog
                      , debugLog
@@ -109,6 +112,10 @@ setupLogger = do
     updateGlobalLogger
         "Happstack.Server.AccessLog.Combined"
         (setLevel INFO . setHandlers [accessLog])
+
+    updateGlobalLogger
+        "Kontrakcja.Cron"
+        (setLevel NOTICE . setHandlers [cronLog, stdoutLog])
 
     -- Mail Log
     updateGlobalLogger
@@ -222,6 +229,9 @@ debug msg = liftIO $ noticeM "Kontrakcja.Debug" msg
 
 error :: (MonadIO m) => String -> m ()
 error msg = liftIO $ noticeM "Kontrakcja.Error" msg
+
+cron :: (MonadIO m) => String -> m ()
+cron msg = liftIO $ noticeM "Kontrakcja.Cron" msg
 
 mail :: (MonadIO m) => String -> m ()
 mail msg = liftIO $ noticeM "Kontrakcja.Mail" msg
