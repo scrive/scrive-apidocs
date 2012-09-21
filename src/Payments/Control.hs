@@ -6,7 +6,8 @@ module Payments.Control (handleSubscriptionDashboard
                         ,switchPlanToCompany
                         ,handleSyncWithRecurly
                         ,handleRecurlyPostBack
-                        ,handlePricePageJSON)
+                        ,handlePricePageJSON
+                        ,handleUserExists)
        where
 
 import Control.Monad.State
@@ -392,6 +393,10 @@ handlePricePageJSON = do
       J.object "form" $ do
         J.value "signature" formsig
     
+handleUserExists :: Kontrakcja m => m JSValue
+handleUserExists = do
+  undefined
+
 -- mails    
 
 sendInvoiceEmail :: Kontrakcja m => User -> Maybe Company -> Subscription -> m ()
