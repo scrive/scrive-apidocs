@@ -38,6 +38,7 @@ import User.Model
 import User.Utils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
+import Util.MonadUtils
 import Happstack.Fields
 import Utils.Read
 import Utils.Either
@@ -395,7 +396,13 @@ handlePricePageJSON = do
     
 handleUserExists :: Kontrakcja m => m JSValue
 handleUserExists = do
-  undefined
+  email <- guardJustM $ getField "email"
+  muser <- dbQuery $ GetUserByEmail $ Email email
+  let meid = maybe (Left $ userid $ fromJust muser) Right . usercompany <$> muser
+  mplan <- maybe (return Nothing) (dbQuery . GetPaymentPlan) meid
+  runJSONGenT $ do
+    J.value "user_exists" $ isJust muser
+    J.value "has_plan"    $ isJust mplan
 
 -- mails    
 
