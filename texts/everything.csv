@@ -2564,3 +2564,6 @@ have an account please follow the account creation process. Free use of up to 5 
 "_cantSendReminderNoUser","Ingen användare matchar e-postadressen, därför kan inte lösenordspåminnelse skickas ut.",,"We could not send password reminder, because we don't have user with such email."
 "_cantSendReminderTooMuch","På grund av för många lösenordsförfrågningar dröjer det 24 timmar innan nästa påminnsele kan skickas ut.",,"We send too much passwords reminders to that email, and next one is avaible in 24h."
 "_csvFilePersons"," en person för varje rad i .csv filen definierad ",," one person for each row defined in the .csv file "
+"_confirmAccountExistingUser",,,"Your subscription is now active. Please log in to begin using it."
+"_confirmAccountExistingUserHeader",,,"Subscription successful"
+"_confirmAccountCreatedUser","Vi har skickat dina användaruppgifter till din e-postadress. Gå till din inkorg och följ instruktionerna i mailet för att logga in första gången.",,"We have sent your account details to your email. Go to your inbox and follow the instructions in the email to login for the first time."
