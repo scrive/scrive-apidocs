@@ -36,6 +36,8 @@ import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 
+import qualified Log
+
 {- |
    Securely
  -}
@@ -92,11 +94,17 @@ signDocumentWithEleg did slid mh fields sinfo = do
         let Just sl' = getSigLinkFor olddoc slid
         let actor = signatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
         mdoc <- runMaybeT $ do
+          Log.debug "a"
           True <- dbUpdate $ UpdateFields did slid fields actor
+          Log.debug "b"
           True <- dbUpdate $ SignDocument did slid mh (Just sinfo) actor
+          Log.debug "c"
           Just doc <- dbQuery $ GetDocumentByDocumentID did
+          Log.debug "d"
           let Just sl = getSigLinkFor doc slid
+          Log.debug "e"
           _ <- addSignStatSignEvent doc sl
+          Log.debug "f"
           return doc
         return $ case mdoc of
           Nothing -> Left $ DBActionNotAvailable "Signing with Eleg failed"

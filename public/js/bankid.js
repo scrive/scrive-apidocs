@@ -577,7 +577,7 @@ window.Eleg = {
     mobileBankIDSign: function(document, signatory, submit, callback) {
         var eleg = this;
         var url;
-        if(document.preparation() || (document.viewer() && document.viewer().signatoryid() === document.author().signatoryid())) // author
+        if(document.preparation())// || (document.viewer() && document.viewer().signatoryid() === document.author().signatoryid())) // author
             url = "/d/eleg/mbi/" + document.documentid();
         else 
             url = "/s/eleg/mbi/" + document.documentid() +  "/" + document.viewer().signatoryid();

@@ -181,17 +181,23 @@ window.Document = Backbone.Model.extend({
                         });
     },
     sign: function() {
+        var document = this;
         var fields = [];
         _.each(this.currentSignatory().fields(), function(field) {
             if (field.isClosed()) return;
             fields.push({name: field.name(), value: field.value(), type: field.type()});
         });
-          return new Submit({
-              sign : "YES",
-              url : "/s/" + this.documentid() + "/" + this.viewer().signatoryid(),
-              method: "POST",
-              fields: JSON.stringify(fields)
-          });
+        var url;
+        //        if(document.preparation() || (document.viewer() && document.viewer().signatoryid() === document.author().signatoryid())) // author
+        //url = "/d/" + document.documentid();
+        //else 
+        url = "/s/" + document.documentid() +  "/" + document.viewer().signatoryid();
+        return new Submit({
+            sign : "YES",
+            url : url,
+            method: "POST",
+            fields: JSON.stringify(fields)
+        });
     },
     sendByAuthor: function() {
         return new Submit({
