@@ -397,6 +397,7 @@ handleUserExists = do
     
 handleCreateUser :: Kontrakcja m => m JSValue
 handleCreateUser = do
+  Log.payments $ "handleCreateUser"
   mres <- Login.handleSignup
   runJSONGenT $ do
     J.value "success" $ isJust mres
@@ -408,7 +409,7 @@ handleSyncNewSubscriptionWithRecurlyOutside = do
   ac <- pguardM' "handleSyncNewSubscriptionWithRecurlyOutside: account_code must exist and be an integer." $ 
         readField "account_code"
   email <- pguardM' "handleSyncNewSubscriptionWithRecurlyOutside: email must exist." $ 
-        readField "email"
+        getField "email"
   user <- pguardM' "handleSyncNewSubscriptionWithRecurlyOutside: user does not exist." $
           dbQuery $ GetUserByEmail $ Email email
   subscriptions <- pguardM "handleSyncNewSubscriptionWithRecurly" $ 

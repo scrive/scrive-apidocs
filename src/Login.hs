@@ -86,9 +86,9 @@ signupPagePost = do
  -}
 handleSignup :: Kontrakcja m => m (Maybe (Email, Maybe UserID))
 handleSignup = do
-  memail <- getOptionalField asValidEmail "email"
-  mfirstname <- getOptionalField asValidName "first_name"
-  mlastname <- getOptionalField asValidName "last_name"
+  memail <- getOptionalFieldNoFlash asValidEmail "email"
+  mfirstname <- getOptionalFieldNoFlash asValidName "first_name"
+  mlastname <- getOptionalFieldNoFlash asValidName "last_name"
   case memail of
     Nothing -> return Nothing
     Just email -> do
