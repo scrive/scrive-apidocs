@@ -87,6 +87,8 @@ signupPagePost = do
 handleSignup :: Kontrakcja m => m (Maybe (Email, Maybe UserID))
 handleSignup = do
   memail <- getOptionalField asValidEmail "email"
+  mfirstname <- getOptionalField asValidName "first_name"
+  mlastname <- getOptionalField asValidName "last_name"
   case memail of
     Nothing -> return Nothing
     Just email -> do
@@ -101,7 +103,7 @@ handleSignup = do
           -- this email address is new to the system, so create the user
           -- and send an invite
           locale <- ctxlocale <$> getContext
-          mnewuser <- createUser (Email email) ("", "") Nothing locale
+          mnewuser <- createUser (Email email) (fromMaybe "" mfirstname, fromMaybe "" mlastname) Nothing locale
           maybe (return ()) UserControl.sendNewUserMail mnewuser
           return $ Just (Email email, userid <$> mnewuser)
         (_, _) -> return $ Just (Email email, Nothing)
