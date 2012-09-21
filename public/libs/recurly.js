@@ -1810,6 +1810,8 @@ R.buildSubscriptionForm = function(options) {
   initBillingInfoForm($form, options);
   initTOSCheck($form, options);
 
+    var validate;
+
   function gotPlan(plan) {
 
     if(options.filterPlan)
@@ -2095,6 +2097,15 @@ R.buildSubscriptionForm = function(options) {
       updateTotals();
       showHideVAT();
     });
+
+      validate = function(callback) {
+          validationGroup(function(puller) {
+              pullPlanQuantity($form, subscription.plan, options, puller);
+              pullAccountFields($form, account, options, puller);
+              pullBillingInfoFields($form, billingInfo, options, puller);
+              verifyTOSChecked($form, puller);
+          }, callback);
+      };
  
     // SUBMIT HANDLER
     $form.submit(function(e) {
@@ -2106,12 +2117,8 @@ R.buildSubscriptionForm = function(options) {
       $form.find('.error').remove();
       $form.find('.invalid').removeClass('invalid');
 
-      validationGroup(function(puller) {
-        pullPlanQuantity($form, subscription.plan, options, puller);
-        pullAccountFields($form, account, options, puller);
-        pullBillingInfoFields($form, billingInfo, options, puller);
-        verifyTOSChecked($form, puller);
-      }, function() {
+        validate(
+            function() {
 
         $form.addClass('submitting');
         $form.find('button.submit').attr('disabled', true).text('Please Wait');
@@ -2159,7 +2166,9 @@ R.buildSubscriptionForm = function(options) {
     });
 
   }
-
+    return {validate : function(callback) {
+        validate(callback);
+    }};
 };
 
 
