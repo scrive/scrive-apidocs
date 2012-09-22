@@ -177,7 +177,9 @@ signDocument documentid
            Just "" -> return LoopBack
            Just s  -> return $ LinkExternal s
     Right (Left (DBActionNotAvailable message)) -> do
-      addFlash (OperationFailed, message)
+      -- The DBActionNotAvailable messages are not intended for end users
+      --addFlash (OperationFailed, message)
+      Log.debug $ "When signing document: " ++ message
       return LoopBack
     Right (Left (DBDatabaseNotAvailable message)) -> do
       addFlash (OperationFailed, message)

@@ -125,7 +125,6 @@ generateBankIDTransactionForAuthor  docid = do
                 Left (ImplStatus _a _b code msg) -> generationFailed "EncodeTBS failed" code msg
                 Right txt -> do
                     -- store in session
-                    Log.debug txt
                     addELegTransaction ELegTransaction
                                         { transactiontransactionid   = transactionid
                                         , transactiontbs             = tbs
@@ -337,25 +336,20 @@ initiateMobileBankID docid slid = do
 initiateMobileBankIDForAuthor :: Kontrakcja m => DocumentID -> m JSValue
 initiateMobileBankIDForAuthor docid = do
     logicaconf <- ctxlogicaconf <$> getContext
-
     -- sanity check
     document <- guardRightM $ getDocByDocIDForAuthor docid
     unless (document `allowsAuthMethod` ELegAuthentication) internalError
-    
     tbs <-getTBS document
-    
     sl <- guardJust $ getAuthorSigLink document
     let pn = getPersonalNumber sl
-    Log.debug $ pn
-    Log.debug $ tbs
     eresponse <- liftIO $ mbiRequestSignature logicaconf pn tbs
     case eresponse of
       Left e -> mobileBankIDErrorJSON e
       Right (tid, oref) -> do
         addELegTransaction ELegTransaction { transactiontransactionid   = tid
                                            , transactiondocumentid      = docid
-                                           , transactionsignatorylinkid = Nothing
-                                           , transactionmagichash       = Nothing
+                                           , transactionsignatorylinkid = Just $ signatorylinkid sl
+                                           , transactionmagichash       = Just $ signatorymagichash sl
                                            , transactionoref            = Just oref
                                            , transactionstatus          = Right $ CROutstanding tid
                                            , transactiontbs             = tbs
@@ -419,7 +413,6 @@ collectMobileBankID docid slid = do
 collectMobileBankIDForAuthor :: Kontrakcja m => DocumentID -> m JSValue
 collectMobileBankIDForAuthor docid = do
   tid <- guardJustM $ getField "transactionid"
-  Log.debug $ "transactionid: " ++ tid
   logicaconf <- ctxlogicaconf <$> getContext
   elegtransactions  <- ctxelegtransactions <$> getContext
   -- sanity check
@@ -475,8 +468,10 @@ verifySignatureAndGetSignInfoMobile docid signid magic transactionid = do
                     , transactionstatus          = status
                     , transactiontbs
                     } <- guardJust $ findTransactionByID transactionid elegtransactions
+
     unless (tdocid == docid && mtsignid == Just signid && mtmagic == Just magic )
            internalError
+
     case status of
       Right (CRComplete _ signature attrs) -> do
             Log.eleg "Successfully identified using eleg. (Omitting private information)."
