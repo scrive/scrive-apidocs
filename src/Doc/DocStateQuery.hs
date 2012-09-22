@@ -78,7 +78,7 @@ getDocByDocID docid = do
       mdoc <- dbQuery $ GetDocumentByDocumentID docid
       case mdoc of
         Nothing  -> do
-          Log.debug "Does not exist"
+          Log.debug $ "Document " ++ show docid ++ " does not exist (in getDocByDocID)"
           return $ Left DBResourceNotAvailable
         Just doc -> do
           case canUserViewDoc user doc of
