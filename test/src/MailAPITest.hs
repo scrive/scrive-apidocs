@@ -1,6 +1,7 @@
 module MailAPITest (mailApiTests) where
 
 import Control.Applicative
+import qualified Control.Exception.Lifted as E
 import Data.Maybe
 import Happstack.Server
 import Test.Framework
@@ -13,8 +14,11 @@ import Data.List
 
 import DB
 import MagicHash
+import Mails.Data (mailTitle)
+import Mails.Model (GetEmails(..))
 import Context
 import Doc.Model
+import KontraError (KontraError(..), internalError)
 import Utils.Default
 import Utils.Read
 import User.Model
@@ -37,6 +41,7 @@ mailApiTests env = testGroup "MailAPI" [
     , testCase "Parse mime document email_outlook_viktor.eml"         $ testParseMimes "test/mailapi/email_outlook_viktor.eml"
     , testCase "Parse mime document email_gmail_eric.eml"             $ testParseMimes "test/mailapi/email_gmail_eric.eml"
     , testThat "Create outlook email document with three signatories" env $ testSuccessfulDocCreation "test/mailapi/email_outlook_three.eml" 4
+    , testThat "Check that missing key generates error mail"          env $ testError "test/mailapi/missing_key.eml"
     , testThat "test lukas's error email"                             env $ testSuccessfulDocCreation "test/mailapi/lukas_mail_error.eml" 2
     , testThat "test eric's error email"                              env $ testSuccessfulDocCreation "test/mailapi/eric_email_error.eml" 2
     , testThat "test lukas's funny title"                             env $ testSuccessfulDocCreation "test/mailapi/email_weird_subject.eml" 2
@@ -61,16 +66,20 @@ testParseMimes mimepath = do
   assertBool ("Should be exactly one pdf, found " ++ show pdfs) (length pdfs == 1)
   assertBool ("Should be exactly one plaintext, found " ++ show plains) (length plains == 1)
 
+initializeMailTest :: String -> TestEnv (Request, Context)
+initializeMailTest emlfile = do
+    req <- mkRequest POST [("mail", inFile emlfile)]
+    uid <- createTestUser
+    muser <- dbQuery $ GetUserByID uid
+    ctx <- (\c -> c { ctxmaybeuser = muser })
+      <$> mkContext (mkLocaleFromRegion defaultValue)
+    _ <- dbUpdate $ SetUserMailAPIKey uid (read "ef545848bcd3f7d8") 1
+    return (req, ctx)
+
 testSuccessfulDocCreation :: String -> Int -> TestEnv ()
 testSuccessfulDocCreation emlfile sigs = do
-  req <- mkRequest POST [("mail", inFile emlfile)]
-  uid <- createTestUser
-  muser <- dbQuery $ GetUserByID uid
-  ctx <- (\c -> c { ctxmaybeuser = muser })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
-  _ <- dbUpdate $ SetUserMailAPIKey uid (read "ef545848bcd3f7d8") 1
+  (req, ctx) <- initializeMailTest emlfile
   (res, _) <- runTestKontra req ctx handleMailAPI
-
   Log.debug $ "Here's what I got back from handleMailCommand: " ++ show res
   let mdocid = maybeRead res
   assertBool ("documentid is not given: " ++ show mdocid) $ isJust mdocid
@@ -84,6 +93,21 @@ testSuccessfulDocCreation emlfile sigs = do
   assertBool ("doc has iso encoded title " ++ show (documenttitle doc)) $ not $ "=?iso" `isInfixOf` (documenttitle doc)
   Just doc' <- dbQuery $ GetDocumentByDocumentID $ fromJust mdocid
   assertBool "document is in error!" $ not $ isDocumentError doc'
+
+-- | Mail processing should have committed error email and throw exception
+testError :: String -> TestEnv ()
+testError emlfile = do
+    (req, ctx) <- initializeMailTest emlfile
+    mails <- dbQuery $ GetEmails
+    (runTestKontra req ctx handleMailAPI >> internalError) `E.catch`
+         \InternalError -> do
+         dbRollback -- simulate AppControl's behavior
+         -- Now, check that we got an error email
+         mails' <- dbQuery $ GetEmails
+         let errorMailsLen ms =
+               length [ m | m <- ms, mailTitle m == "Scrive by Mail Error\r" ]
+         assertBool "One error email should have been generated" $
+           errorMailsLen mails' == errorMailsLen mails + 1
 
 createTestUser :: TestEnv UserID
 createTestUser = do
