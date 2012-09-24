@@ -605,7 +605,7 @@ var DocumentDesignView = Backbone.View.extend({
                   size: "small",
                   color : "blue",
                   icon : $("<span class='btn-symbol cross' />"),
-                  text : document.process().signbuttontext(),
+                  text : localization.designview.sign,
                   onClick : function() {
                       if (alreadyClicked(this))
                         return;
