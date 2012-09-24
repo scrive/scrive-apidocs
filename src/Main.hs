@@ -27,6 +27,7 @@ import Crypto.RNG
 import DB
 import DB.Checks
 import DB.PostgreSQL
+import Doc.API.Callback.Model
 import Utils.Cron
 import Utils.Default
 import Mails.Events
@@ -113,11 +114,12 @@ startSystem appGlobals appConf = E.bracket
             Log.debug "Evaluating UserAccountRequest actions..."
             runScheduler $ actionQueue userAccountRequest
           t6 <- forkIO $ cron 5 $ runScheduler processEvents
-          t7 <- forkIO $ if AWS.isAWSConfigOk appConf
+          t7 <- forkIO $ cron 10 $ runScheduler $ actionQueue documentAPICallback
+          t8 <- forkIO $ if AWS.isAWSConfigOk appConf
                            then cron 60 $ runScheduler AWS.uploadFilesToAmazon
                            else return ()
-          t8 <- forkIO $ cron (60 * 60) (System.Mem.performGC >> Log.debug "Performing GC...")
-          t9 <- forkIO $ cron (60 * 60) $
+          t9 <- forkIO $ cron (60 * 60) (System.Mem.performGC >> Log.debug "Performing GC...")
+          t10 <- forkIO $ cron (60 * 60) $
               withPostgreSQL (dbConfig appConf) $ 
               runCryptoRNGT (cryptorng appGlobals) $ do
                 mtime <- getMinutesTime
@@ -125,7 +127,7 @@ startSystem appGlobals appConf = E.bracket
                 temps <- liftIO $ maybeReadTemplates (production appConf) (templates appGlobals)
                 when (System.Time.ctHour ctime == 0) $ -- midnight
                   handleSyncWithRecurly (hostpart appConf) (mailsConfig appConf) temps (recurlyAPIKey $ recurlyConfig appConf) mtime
-          return [t1, t2, t3, t4, t5, t6, t7, t8, t9, t9]
+          return [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10]
         waitForTerm _ = E.bracket
           -- checkpoint the state once a day
           -- FIXME: make it checkpoint always at the same time

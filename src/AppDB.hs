@@ -12,6 +12,7 @@ import Company.Migrations
 import CompanyAccounts.Tables
 import Doc.Tables
 import Doc.Migrations
+import Doc.API.Callback.Tables
 import User.Migrations
 import User.Tables
 import User.History.Tables
@@ -90,6 +91,7 @@ kontraMigrations = [
   , removeServiceIDFromUserStatEvents
   , removeServiceIDFromSignStatEvents
   , removeDiskPathAndMakeNewColumnsNotNull
+  , addApiCallbackUrlToDocument
   ] ++ mailerMigrations
 
 kontraTables :: [Table]
@@ -126,4 +128,5 @@ kontraTables = [
   , tablePaymentPlans
   , tableAttachments
   , tablePaymentStats
+  , tableDocumentApiCallbacks
   ] ++ mailerTables

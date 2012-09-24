@@ -21,6 +21,13 @@ import MinutesTime
 
 $(jsonableDeriveConvertible [t| [SignatoryField] |])
 
+addApiCallbackUrlToDocument :: MonadDB m => Migration m
+addApiCallbackUrlToDocument = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 10
+  , mgrDo = kRunRaw "ALTER TABLE documents ADD COLUMN api_callback_url TEXT NULL"
+}
+
 removeServiceIDFromDocuments :: MonadDB m => Migration m
 removeServiceIDFromDocuments = Migration {
     mgrTable = tableDocuments

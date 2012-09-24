@@ -2,6 +2,7 @@ module Utils.IO where
 
 import Control.Concurrent
 import Control.Monad
+import Control.Monad.IO.Class
 import System.Exit
 import System.IO
 import System.IO.Temp
@@ -30,11 +31,12 @@ waitForTermination = do
 -- seemed to have trouble doing multitasking when writing to a slow
 -- process like curl upload.
 readProcessWithExitCode'
-    :: FilePath                                      -- ^ command to run
+    :: MonadIO m
+    => FilePath                                      -- ^ command to run
     -> [String]                                      -- ^ any arguments
     -> BSL.ByteString                                -- ^ standard input
-    -> IO (ExitCode, BSL.ByteString, BSL.ByteString) -- ^ exitcode, stdout, stderr
-readProcessWithExitCode' cmd args input =
+    -> m (ExitCode, BSL.ByteString, BSL.ByteString) -- ^ exitcode, stdout, stderr
+readProcessWithExitCode' cmd args input = liftIO $
   withSystemTempFile "process" $ \_inputname inputhandle -> do
     BSL.hPutStr inputhandle input
     hFlush inputhandle
