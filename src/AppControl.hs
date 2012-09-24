@@ -144,7 +144,7 @@ showRequest rq maybeInputsBody =
    Creates a context, routes the request, and handles the session.
 -}
 appHandler :: KontraPlus Response -> AppConf -> AppGlobals -> AppState -> ServerPartT IO Response
-appHandler handleRoutes appConf appGlobals appState = runOurServerPartT . measureResponseTime $
+appHandler handleRoutes appConf appGlobals appState = catchEverything . runOurServerPartT . measureResponseTime $
   withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) . runAcidT appState $ do
     let quota = 10000000
     temp <- liftIO getTemporaryDirectory
@@ -175,6 +175,10 @@ appHandler handleRoutes appConf appGlobals appState = runOurServerPartT . measur
         dbRollback -- if exception was thrown, rollback everything
         return response
   where
+    catchEverything m = m `E.catch` \(e::E.SomeException) -> do
+      Log.error $ "appHandler: exception caught at top level: " ++ show e ++ " (this shouldn't happen)"
+      internalServerError $ toResponse ""
+
     measureResponseTime action = do
       startTime <- liftIO getClockTime
       res <- action
