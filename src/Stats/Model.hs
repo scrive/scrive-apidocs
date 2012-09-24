@@ -139,16 +139,15 @@ fetchDocStats = foldDB decoder []
        case doctypeFromString documenttype of
          Nothing -> acc -- Skip Attachment doctypes
          Just doctype -> DocStatEvent {
-         seUserID       = uid
-       , seTime         = time
-       , seQuantity     = quantity
-       , seAmount       = amount
-       , seDocumentID   = documentid
-       , seCompanyID    = companyid
-       , seDocumentType = doctype
-       , seAPIString    = apistring
-       } : acc
-
+            seUserID       = uid
+          , seTime         = time
+          , seQuantity     = quantity
+          , seAmount       = amount
+          , seDocumentID   = documentid
+          , seCompanyID    = companyid
+          , seDocumentType = doctype
+          , seAPIString    = apistring
+          } : acc
 
 data GetDocStatEvents = GetDocStatEvents MinutesTime
 instance MonadDB m => DBQuery m GetDocStatEvents [DocStatEvent] where
