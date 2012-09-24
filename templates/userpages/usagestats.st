@@ -19,6 +19,7 @@ showUsageStats =
 <script>
 var dayTable = KontraList().init({
     name : "Past Month Table",
+    timeout : 20000,
     schema: new Schema({
     url: "/account/usagestats/days/json",
     cells : [
@@ -35,6 +36,7 @@ jQuery(function(){
 
 var monthTable = KontraList().init({
     name : "Past 6 Month Table",
+    timeout : 20000,
     schema: new Schema({
     url: "/account/usagestats/months/json",
     cells : [
