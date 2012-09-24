@@ -448,6 +448,7 @@ documentsSelectors = SQL (intercalate ", " [
   , documentStatusClassExpression
   , "authentication_method"
   , "delivery_method"
+  , "api_callback_url"
   ]) []
 
 selectDocumentsSQL :: SQL
@@ -464,7 +465,7 @@ fetchDocuments = foldDB decoder []
      process ctime mtime days_to_sign timeout_time invite_time
      invite_ip invite_text cancelationreason rejection_time
      rejection_signatory_link_id rejection_reason deleted mail_footer
-     region sharing status_class authentication_method delivery_method
+     region sharing status_class authentication_method delivery_method apicallback
        = Document {
          documentid = did
        , documenttitle = title
@@ -497,6 +498,7 @@ fetchDocuments = foldDB decoder []
        , documentui = DocumentUI mail_footer
        , documentregion = region
        , documentstatusclass = toEnum (status_class :: Int)
+       , documentapicallbackurl = apicallback
        } : acc
 
 documentStatusClassExpression :: String
@@ -2256,6 +2258,15 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentDeliveryMethod B
         actor
     return success
 
+data SetDocumentAPICallbackURL = SetDocumentAPICallbackURL DocumentID (Maybe String)
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAPICallbackURL Bool where
+  update (SetDocumentAPICallbackURL did mac) = do
+    success <- kRun01 $ mkSQL UPDATE tableDocuments
+         [ sql "api_callback_url" mac
+         ] <> SQL "WHERE id = ?" [ toSql did ]
+    return success
+
+    
 data UpdateFields = UpdateFields DocumentID SignatoryLinkID [(FieldType, String)] Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where
   update (UpdateFields did slid fields actor) = do
@@ -2418,6 +2429,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateDraft Bool where
     , update $ SetDocumentDeliveryMethod did (documentdeliverymethod document) actor
     , update $ SetInviteText did (documentinvitetext document) actor
     , update $ SetDocumentTags  did (documenttags document) actor
+    , update $ SetDocumentAPICallbackURL did (documentapicallbackurl document) 
     ]
 
 data SetDocumentModificationData = SetDocumentModificationData DocumentID MinutesTime

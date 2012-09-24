@@ -55,6 +55,7 @@ import PadQueue.Model
 import Archive.Control
 import OAuth.Model
 import InputValidation
+import Doc.API.Callback.Model
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = choice [
@@ -141,6 +142,7 @@ apiCallUpdate did = api $ do
                                                                                _ -> Nothing
   draftData   <-apiGuardJustM (badInput "Given JSON does not represent valid draft data.") $ return $ fromJSValue json
   newdocument <-  apiGuardL (serverError "Could not apply draft data") $ applyDraftDataToDocument doc draftData actor
+  triggerAPICallbackIfThereIsOne newdocument
   Ok <$> documentJSON True True Nothing Nothing newdocument
 
 apiCallReady :: Kontrakcja m => DocumentID -> m Response
@@ -235,6 +237,7 @@ documentChangeMainFile docid = api $ do
             _ -> throwError $ badInput "This API call requires one of 'file' or 'template' POST parameters."
 
   _ <- apiGuardL' $ dbUpdate $ AttachFile docid fileid aa
+  
   return ()
 
 

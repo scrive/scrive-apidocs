@@ -348,6 +348,7 @@ data Document = Document {
   , documentui                     :: DocumentUI
   , documentregion                 :: Region
   , documentstatusclass            :: StatusClass
+  , documentapicallbackurl         :: Maybe String
   } deriving (Eq, Ord, Show)
 
 instance HasLocale Document where

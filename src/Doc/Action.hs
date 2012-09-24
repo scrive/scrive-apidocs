@@ -43,9 +43,11 @@ import Data.List hiding (head, tail)
 import Data.Maybe hiding (fromJust)
 import qualified Data.ByteString as BS
 import ForkAction
+import Doc.API.Callback.Model
 
 postDocumentPreparationChange :: Kontrakcja m => Document -> String -> m ()
 postDocumentPreparationChange doc@Document{documentid, documenttitle} apistring = do
+  triggerAPICallbackIfThereIsOne doc
   unless (isPending doc) $
     stateMismatchError "postDocumentPreparationChange" Pending doc
   Log.docevent $ "Preparation -> Pending; Sending invitation emails: " ++ show documentid
@@ -72,6 +74,7 @@ postDocumentPreparationChange doc@Document{documentid, documenttitle} apistring 
 
 postDocumentPendingChange :: Kontrakcja m => Document -> Document -> String -> m ()
 postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistring = do
+  triggerAPICallbackIfThereIsOne doc
   unless (isPending doc) $
     stateMismatchError "postDocumentPendingChange" Pending doc
   case undefined of
@@ -106,6 +109,7 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistri
 
 postDocumentRejectedChange :: Kontrakcja m => Document -> SignatoryLinkID -> String -> m ()
 postDocumentRejectedChange doc@Document{..} siglinkid apistring = do
+  triggerAPICallbackIfThereIsOne doc
   unless (isRejected doc) $
     stateMismatchError "postDocumentRejectedChange" Rejected doc
   Log.docevent $ "Pending -> Rejected; send reject emails: " ++ show documentid
@@ -119,6 +123,7 @@ postDocumentRejectedChange doc@Document{..} siglinkid apistring = do
 
 postDocumentCanceledChange :: Kontrakcja m => Document -> String -> m ()
 postDocumentCanceledChange doc@Document{..} apistring = do
+  triggerAPICallbackIfThereIsOne doc
   unless (isCanceled doc) $
     stateMismatchError "postDocumentCanceledChange" Canceled doc
   Log.docevent $ "Pending -> Canceled (ElegDataMismatch); Sending cancelation emails: " ++ show documentid

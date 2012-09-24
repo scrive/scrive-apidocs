@@ -107,7 +107,6 @@ import qualified MemCache as MemCache
 import qualified GuardTime as GuardTime
 import System.IO.Temp
 import System.Directory
-
 {-
   Document state transitions are described in DocState.
 

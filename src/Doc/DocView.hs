@@ -167,6 +167,7 @@ documentJSON forapi forauthor pq msl doc = do
       J.objects "tags" $ for (Set.toList $ documenttags doc) $ \(DocumentTag n v) -> do
                                     J.value "name"  n
                                     J.value "value" v
+      J.value "apicallbackurl" $ documentapicallbackurl doc                              
       when (not $ forapi) $ do
         J.value "logo" logo
         J.value "barsbackgroundcolor" bbc

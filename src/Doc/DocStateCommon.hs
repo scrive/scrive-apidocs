@@ -96,6 +96,7 @@ blankDocument =
           -- , documentattachments          = []
           , documentregion               = defaultValue
           , documentstatusclass          = SCDraft
+          , documentapicallbackurl       = Nothing
           }
 
 checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload, Maybe String)] -> [String]

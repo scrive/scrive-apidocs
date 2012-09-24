@@ -1,7 +1,7 @@
 module Doc.API.Callback.Model (
     DocumentAPICallback(..)
   , documentAPICallback
-  , requestCallback
+  , triggerAPICallbackIfThereIsOne 
   ) where
 
 import Control.Applicative
@@ -17,6 +17,8 @@ import ActionQueue.Scheduler
 import DB
 import Doc.API.Callback.Tables
 import Doc.DocumentID
+import Doc.DocStateData
+
 import Utils.IO
 import MinutesTime
 import qualified Log
@@ -58,10 +60,10 @@ documentAPICallback = Action {
       } : acc
 
     evaluateDocumentCallback dac@DocumentAPICallback{..} = do
-      Log.debug $ "Calling " ++ show dacURL ++ " (document_id = " ++ show dacDocumentID ++ ")..."
+      Log.debug $ "Calling " ++ show dacURL ++ " (documentid = " ++ show dacDocumentID ++ ")..."
       (exitcode, stdout, stderr) <- readProcessWithExitCode' "curl" [
           "-X", "POST"
-        , "-d", "document_id=" ++ show dacDocumentID
+        , "-d", "documentid=" ++ show dacDocumentID
         , dacURL
         ] BSL.empty
       Log.debug $ "Call result: " ++ BSL.toString stdout
@@ -90,19 +92,13 @@ documentAPICallback = Action {
           }
           return ()
 
-requestCallback :: MonadDB m => DocumentID -> m Bool
-requestCallback did = do
-  mcallback <- dbQuery $ GetAction documentAPICallback did
-  case mcallback of
-    Just _ -> return True -- if request's already in there, do nothing
-    Nothing -> do
-      murl <- runDBEnv . getOne $ SQL "SELECT api_callback_url FROM documents WHERE id = ?" [toSql did]
-      case murl of
-        Nothing -> return False -- no url, no callback
+
+triggerAPICallbackIfThereIsOne :: MonadDB m => Document -> m ()
+triggerAPICallbackIfThereIsOne doc = do
+      case (documentapicallbackurl doc) of
+        Nothing -> return () 
         Just url -> do
-          -- FIXME: obvious race condition here. to be fixed after
-          -- dev-andrzej-noacid is merged as it contains appropriate
-          -- tools for resolving it.
           now <- getMinutesTime
-          _ <- dbUpdate $ NewAction documentAPICallback now (did, url)
-          return True
+          _ <- dbUpdate $ NewAction documentAPICallback now (documentid doc, url)
+          return ()
+          

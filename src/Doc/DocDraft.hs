@@ -34,6 +34,7 @@ data DraftData = DraftData {
     , region :: Region
     , template :: Bool
     , tags :: Maybe [DocumentTag]
+    , apicallbackurl :: Maybe String
     } deriving Show
 
 instance FromJSValue AuthenticationMethod where
@@ -73,6 +74,7 @@ instance FromJSValue DraftData where
         region' <- fromJSValueField "region"
         template' <- fromJSValueField "template"
         tags' <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany  fromJSValueM
+        apicallbackurl' <- fromJSValueField "apicallbackurl"
         case (title', authentication', delivery', region') of
             (Just t, Just a, Just d, Just r) -> return $ Just DraftData {
                                       title =  t
@@ -84,6 +86,7 @@ instance FromJSValue DraftData where
                                     , region = r
                                     , template = joinB template'
                                     , tags = tags'
+                                    , apicallbackurl = apicallbackurl'
                                  }
             _ -> return Nothing
 
@@ -97,6 +100,7 @@ applyDraftDataToDocument doc draft actor = do
                                 , documentdeliverymethod = delivery draft
                                 , documentregion = region draft
                                 , documenttags = fromMaybe (documenttags doc) (fmap Set.fromList $ tags draft)
+                                , documentapicallbackurl = (apicallbackurl draft)
                             }) actor
     when_ (template draft && (not $ isTemplate doc)) $ do
          dbUpdate $ TemplateFromDocument (documentid doc) actor
