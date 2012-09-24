@@ -150,24 +150,27 @@ fetchDocStats = foldDB decoder []
        } : acc
 
 
-data GetDocStatEvents = GetDocStatEvents
+data GetDocStatEvents = GetDocStatEvents MinutesTime
 instance MonadDB m => DBQuery m GetDocStatEvents [DocStatEvent] where
-  query GetDocStatEvents = do
-    _ <- kRun selectDocStatEventsSQL
+  query (GetDocStatEvents since) = do
+    _ <- kRun $ selectDocStatEventsSQL
+      <> SQL "WHERE e.time >= ?" [toSql since]
     fetchDocStats
 
-data GetDocStatEventsByUserID = GetDocStatEventsByUserID UserID
+data GetDocStatEventsByUserID = GetDocStatEventsByUserID UserID MinutesTime
 instance MonadDB m => DBQuery m GetDocStatEventsByUserID [DocStatEvent] where
-  query (GetDocStatEventsByUserID userid) = do
+  query (GetDocStatEventsByUserID userid since) = do
     _ <- kRun $ selectDocStatEventsSQL
       <> SQL "WHERE e.user_id = ?" [toSql userid]
+      <> SQL "AND e.time >= ?" [toSql since]
     fetchDocStats
 
-data GetDocStatEventsByCompanyID = GetDocStatEventsByCompanyID CompanyID
+data GetDocStatEventsByCompanyID = GetDocStatEventsByCompanyID CompanyID MinutesTime
 instance MonadDB m => DBQuery m GetDocStatEventsByCompanyID [DocStatEvent] where
-  query (GetDocStatEventsByCompanyID companyid) = do
+  query (GetDocStatEventsByCompanyID companyid since) = do
     _ <- kRun $ selectDocStatEventsSQL
       <> SQL "WHERE e.company_id = ?" [toSql companyid]
+      <> SQL "AND e.time >= ?" [toSql since]
     fetchDocStats
 
 data GetDocStatCSV = GetDocStatCSV MinutesTime MinutesTime

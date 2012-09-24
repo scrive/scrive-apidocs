@@ -69,7 +69,9 @@ import Util.CSVUtil
 
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
 showAdminUserUsageStats userid = onlySalesOrAdmin $ do
-  statEvents <- dbQuery $ GetDocStatEventsByUserID userid
+  now <- ctxtime <$> getContext
+  let sixmonthsago = 6 `monthsBefore` now
+  statEvents <- dbQuery $ GetDocStatEventsByUserID userid sixmonthsago
   Just user <- dbQuery $ GetUserByID userid
   mcompany <- getCompanyForUser user
   let rawevents = catMaybes $ map statEventToDocStatTuple statEvents
@@ -80,7 +82,9 @@ showAdminUserUsageStats userid = onlySalesOrAdmin $ do
 
 showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m Response
 showAdminCompanyUsageStats companyid = onlySalesOrAdmin $ do
-  statCompanyEvents <- dbQuery $ GetDocStatEventsByCompanyID companyid
+  now <- ctxtime <$> getContext
+  let sixmonthsago = 6 `monthsBefore` now
+  statCompanyEvents <- dbQuery $ GetDocStatEventsByCompanyID companyid sixmonthsago
   let rawevents = catMaybes $ map statCompanyEventToDocStatTuple statCompanyEvents
   let stats = calculateCompanyDocStats rawevents
   fullnames <- convertUserIDToFullName [] stats
@@ -91,9 +95,10 @@ showAdminCompanyUsageStats companyid = onlySalesOrAdmin $ do
 showAdminSystemUsageStats :: Kontrakcja m => m Response
 showAdminSystemUsageStats = onlySalesOrAdmin $ do
   Context{ctxtime} <- getContext
+  let sixmonthsago = 6 `monthsBefore` ctxtime
   let today = asInt ctxtime
       som   = 100 * (today `div` 100) -- start of month
-  statEvents <- dbQuery $ GetDocStatEvents
+  statEvents <- dbQuery $ GetDocStatEvents sixmonthsago
   userEvents <- dbQuery $ GetUserStatEvents
   let rawstats = (catMaybes $ map statEventToDocStatTuple statEvents)
                  ++ (catMaybes $ map userEventToDocStatTuple userEvents)
@@ -269,7 +274,7 @@ addDocumentCloseStatEvents doc apistring = falseOnError $ do
       unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatClose
       let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
             (EmailAuthentication, PadDelivery) -> DocStatPadSignatures
-            (EmailAuthentication, _) -> DocStatEmailSignatures
+            (EmailAuthentication, _) -> DocStatPadSignatures
             (ELegAuthentication,  _) -> DocStatElegSignatures
       b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                      , seTime       = signtime
@@ -564,7 +569,8 @@ getUsersAndStatsInv filters sorting pagination = do
 getDocStatsForUser :: Kontrakcja m => UserID -> m DocStats
 getDocStatsForUser uid = do
   Context{ctxtime} <- getContext
-  statEvents <- tuplesFromDocStatsForUser <$> dbQuery (GetDocStatEventsByUserID uid)
+  let sixmonthsago = 6 `monthsBefore` ctxtime
+  statEvents <- tuplesFromDocStatsForUser <$> dbQuery (GetDocStatEventsByUserID uid sixmonthsago)
   return $ calculateDocStats ctxtime statEvents
 
 tuplesFromDocStatsForUser :: [DocStatEvent] -> [(Int, [Int])]
@@ -577,7 +583,9 @@ tuplesFromDocStatsForUser = catMaybes . map toTuple
 -- For Usage Stats tab in Account
 getUsageStatsForUser :: Kontrakcja m => UserID -> Int -> Int -> m ([(Int, [Int])], [(Int, [Int])])
 getUsageStatsForUser uid som sixm = do
-  statEvents <- tuplesFromUsageStatsForUser <$> dbQuery (GetDocStatEventsByUserID uid)
+  now <- ctxtime <$> getContext
+  let sixmonthsago = 6 `monthsBefore` now
+  statEvents <- tuplesFromUsageStatsForUser <$> dbQuery (GetDocStatEventsByUserID uid sixmonthsago)
   Log.stats $ "sixm: " ++ show sixm
   Log.stats $ "stat events: " ++ show (length statEvents)
   let statsByDay = calculateStatsByDay $ filter (\s -> (fst s) >= som) statEvents
@@ -587,7 +595,9 @@ getUsageStatsForUser uid som sixm = do
 
 getUsageStatsForCompany :: Kontrakcja m => CompanyID -> Int -> Int -> m ([(Int, String, [Int])], [(Int, String, [Int])])
 getUsageStatsForCompany cid som sixm = do
-  statEvents <- tuplesFromUsageStatsForCompany <$> dbQuery (GetDocStatEventsByCompanyID cid)
+  now <- ctxtime <$> getContext
+  let sixmonthsago = 6 `monthsBefore` now
+  statEvents <- tuplesFromUsageStatsForCompany <$> dbQuery (GetDocStatEventsByCompanyID cid sixmonthsago)
   let statsByDay = calculateCompanyDocStats $ filter (\(t,_,_)-> t >= som) statEvents
       statsByMonth = calculateCompanyDocStatsByMonth $ filter (\(t,_,_) -> t >= sixm) statEvents
   fullnamesDay <- convertUserIDToFullName [] statsByDay
@@ -824,7 +834,9 @@ csvRowFromDocHist (s:ss) csv' =
 -- CSV for document history
 handleDocHistoryCSV :: Kontrakcja m => m CSV
 handleDocHistoryCSV = do
-  stats <- dbQuery GetDocStatEvents
+  now <- ctxtime <$> getContext
+  let sixmonthsago = 6 `monthsBefore` now
+  stats <- dbQuery $ GetDocStatEvents sixmonthsago
   let byDoc = groupWith seDocumentID $ reverse $ sortWith seDocumentID stats
       rows = map (\es -> csvRowFromDocHist es []) byDoc
   return $ CSV { csvFilename = "dochist.csv"
