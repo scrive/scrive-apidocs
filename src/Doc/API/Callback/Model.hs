@@ -100,16 +100,7 @@ triggerAPICallbackIfThereIsOne doc = do
         Just url -> do
           -- Race condition. Andrzej said that he can fix it later.
           now <- getMinutesTime   
-          mdac <- dbQuery $  GetAction documentAPICallback (documentid doc)
-          case (mdac) of
-             Just dac -> do
-              _ <- dbUpdate $  UpdateAction documentAPICallback $ dac {
-                    dacExpires = now
-                  , dacAttempt = 0
-                  , dacURL = url
-                }
-              return ()  
-             Nothing -> do
-              _ <- dbUpdate $ NewAction documentAPICallback now (documentid doc, url)
-              return ()
+          _ <- dbUpdate $ DeleteAction documentAPICallback (documentid doc)
+          _ <- dbUpdate $ NewAction documentAPICallback now (documentid doc, url)
+          return ()
           
