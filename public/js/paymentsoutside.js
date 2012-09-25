@@ -103,6 +103,9 @@
             this.set({accountCreated:b});
             return this;
         },
+        url: function() {
+            return "/payments/pricepage.json";
+        },
         createaccount: function(email, firstname, lastname, callback) {
             var model = this;
             $.ajax('/payments/createuser',
@@ -150,6 +153,7 @@
         initialize: function(args) {
             _.bindAll(this);
             args.model.bind('change:currentPlan', this.render);
+            args.model.bind('fetch', this.render);
             this.plan = args.plan;
             this.onClick = args.onClick;
             var view = this;
@@ -158,8 +162,6 @@
                 return false;
             });
             this.$el.addClass(this.plan);
-
-            this.render();
         },
         render: function() {
             var view = this;
@@ -232,7 +234,7 @@
             this.$el.append(this.element);
             args.model.bind('change:currentPlan', this.render);
             args.model.bind('change:accountCreated', this.render);
-            this.render();
+            args.model.bind('fetch', this.render);
         },
         scrambleForm: function(form) {
             var view = this;
@@ -456,14 +458,14 @@
             this.teamBox = new PlanBoxView({model: args.model,
                                             plan:'team',
                                             onClick: function() { 
-                                                if(this.model.currentPlan() !== 'team')
-                                                    this.model.setCurrentPlan('team');
+                                                if(view.model.currentPlan() !== 'team')
+                                                    view.model.setCurrentPlan('team');
                                             }});
             this.formBox = new PlanBoxView({model: args.model,
                                             plan:'form', 
                                             onClick: function() { 
-                                                if(this.model.currentPlan() !== 'form')
-                                                    this.model.setCurrentPlan('form');
+                                                if(view.model.currentPlan() !== 'form')
+                                                    view.model.setCurrentPlan('form');
                                             }});
             this.enterpriseBox = new PlanBoxView({model: args.model,
                                                   plan:'enterprise', 
@@ -471,6 +473,7 @@
                                                       view.getInTouch();
                                                   }});
             this.recurlyForm = new RecurlyView({model: args.model});
+            view.model.bind('fetch', this.render);
         },
         render: function() {
             var view = this;
@@ -493,7 +496,6 @@
             div.append(view.recurlyForm.el);
             
             view.$el.html(div.contents());
-            LoadingDialog.close();
         },
         getInTouch: function() {
             var view = this;
@@ -542,31 +544,20 @@
         }
     });
 
-    window.pricePageModel = null;
-    window.pricePageView  = null;
+    window.PricePage = function(opts) { 
+        var model = new PricePageModel(opts);
+        var view  = new PricePageView({model:model});
+        //model.fetch();
+        model.fetch({success: function() {
+            model.trigger('fetch');
+            LoadingDialog.close();
+        }});
 
-    var fetchAndShow = function(selector) {
-        $.ajax("/payments/pricepage.json", 
-               {
-                   dataType: "json",
-                   timeout: 1000,
-                   success: function(data) {
-                       window.pricePageModel = new PricePageModel(data);
-                       window.pricePageView  = new PricePageView({model:window.pricePageModel});
-                       window.pricePageView.render();
-                       $(selector).append(window.pricePageView.el);
-                   },
-                   error: function() {
-                       fetchAndShow(selector);
-                   }
-               });
-        
-    };
-
-    window.bootPricePage = function(selector) {
-        LoadingDialog.open(localization.payments.loading);
-        $("head").append('<link rel="stylesheet" href="/libs/recurly/recurly.css"></link>');
-        fetchAndShow(selector);
+        return { show : function(selector) {
+            LoadingDialog.open(localization.payments.loading);
+            $("head").append('<link rel="stylesheet" href="/libs/recurly/recurly.css"></link>');
+            $(selector).append(view.el);
+        }};
     };
 
 })(window);

@@ -16,7 +16,7 @@ priceplanPage=
 priceplanPageContents=
 <div class="js-price-plan price-plan-outside"></div>
 
-<script type="text/javascript">
-  bootPricePage('.js-price-plan');
+<script>
+  PricePage().show('.js-price-plan');
 </script>
 ###

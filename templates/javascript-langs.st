@@ -767,4 +767,4 @@ javascriptLocalisation =
           , personOrCompany : "$_apiDashboardPersonOrCompany()$"
           , privilige       :  "$_apiDashboardPrivilige()$"
       }
-    }
+    };
