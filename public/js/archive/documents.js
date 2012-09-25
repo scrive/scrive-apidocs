@@ -60,6 +60,26 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  [
                                         {name: localization.filterByProcess.showOffersOnly,    value: "offer"},
                                         {name: localization.filterByProcess.showOrdersOnly,    value: "order"}
                                       ]}),
+ 
+            new SelectAjaxFiltering({
+                             name: "sender",
+                             textWidth : "110px",
+                             text : "sender",
+                             optionsURL : "/companyaccounts",
+                             options: [{name : "Sender", value : ""}],
+                             optionsParse: function(resp) {
+                                        var options = []
+                                        _.each(res.list, function(l) {
+                                          var fields = l.fields;
+                                          var id = fields["id"];
+                                          var name = fields["fullname"];
+                                          if (name == undefined || name == "")
+                                            name = field["email"];
+                                          options.push({name : name , value : id });
+                                        });
+                                        return options;
+                                   }
+                               }),
             new IntervalDoubleSelectFiltering({
                              name: "time",
                              textWidth : "110px",
