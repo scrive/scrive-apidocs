@@ -141,7 +141,40 @@ signDocument :: Kontrakcja m
              -> m KontraLink
 signDocument documentid
              signatorylinkid = do
-  magichash <- guardJustM $ getMagicHashFromContext signatorylinkid
+  -- This method requires fixes. Right now we emulate author signing
+  -- by digging out his magichash and using that in the same form as
+  -- signatory signing. This is wrong.
+  --
+  -- Instead we want to change it to the following schema:
+  --
+  -- Any operation done on SignatoryLink can be done under one of circumstances:
+  --
+  -- * signatorylinkid is same as requested and magic hash matches the
+  --   one stored in session 
+  -- * signatorylinkid is same as requested and maybesignatory is same
+  --   as logged in user
+  --
+  -- The above requires changes to logic in all invoked procedures.
+
+  mmagichash <- getMagicHashFromContext signatorylinkid
+  magichash <- case mmagichash of
+    Just m -> return m
+    Nothing -> do
+      -- we are author of this document probably
+      doc <- guardRightM $ getDocByDocID documentid
+      (authorlink :: SignatoryLink) <- guardJust $ getSigLinkFor doc signatorylinkid
+      ctx <- getContext
+      when (not (isAuthor authorlink)) $ do
+        Log.debug $ "Signatory id " ++ show signatorylinkid ++ " is not author of document " ++ show documentid ++ " and cannot sign because there is no magichash in session"
+        internalError
+
+      when (fmap userid (ctxmaybeuser ctx) /= maybesignatory authorlink) $ do
+        Log.debug $ "Signatory user id " ++ show (maybesignatory authorlink)
+                 ++ " is not same as logged in user id " ++ show (fmap userid (ctxmaybeuser ctx))
+        internalError
+
+      return (signatorymagichash authorlink)
+
   fieldsJSON <- guardRightM $ liftM (runGetJSON readJSArray) $ getField' "fields"
   fields <- guardJustM $ withJSValue fieldsJSON $ fromJSValueCustomMany $ do
       ft <- fromJSValueM
