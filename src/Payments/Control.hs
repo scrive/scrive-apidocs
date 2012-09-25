@@ -377,7 +377,7 @@ handlePricePageJSON = do
   formsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "form")]
   runJSONGenT $ do
     J.value "subdomain" recurlySubdomain
-    J.value "account_code" $ show code
+    J.value "accountCode" $ show code
     J.object "plans" $ do
       J.object "team" $ do
         J.value "signature" teamsig

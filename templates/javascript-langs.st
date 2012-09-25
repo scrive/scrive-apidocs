@@ -436,22 +436,63 @@ javascriptLocalisation =
            , price : "$_paymentsPrice()$"
            , buysyou : "$_paymentsBuysYou()$"
            , plans: { professional : "$_paymentPlanProfessional()$"
-                    , team         : "$_paymentPlanTeam()$"
+                    , team         : {
+                      name : "$_paymentPlanTeam()$",
+                      tag :"$_paymentPlanTeamTag()$",
+                      price : "$_paymentsTeamPrice()$",
+                      features: [ "$_paymentFeatureDistance()$"
+                                 , "$_paymentFeaturePad()$"
+                                 , "$_paymentFeatureBranding()$"
+                                 , "$_paymentFeatureTracking()$"
+                                 , "$_paymentFeatureAPI()$"
+                                 , "$_paymentFeatureFeatures()$"
+                                 ],
+                      price1 : "",
+                      price3 : "$_paymentPlanPerUserPerMonth()$",
+                      price21 : "",
+                      price31 : "",
+                      select : "$_paymentsSelect()$",
+                      selected : "$_paymentsSelected()$"
+                    }
+                    , form : {
+                      name : "$_paymentPlanForm()$",
+                      tag : "$_paymentPlanFormTag()$",
+                      price : "$_paymentPlanFormPrice()$",
+                      features : [ "$_paymentFeatureSupport()$"
+                                 , "$_paymentFeatureHTTPAPI()$"
+                                 , "$_paymentFeatureDocumentation()$"
+                                 , "$_paymentFeatureExampleCode()$"
+                                 ],
+                      price1 : "",
+                      price3 : "$_paymentPlanPerMonth()$ $_and()$",
+                      price21 : "$_paymentPlanDocPrice()$",
+                      price31 : "$_paymentPlanPerDocument()$",
+                      select : "$_paymentsSelect()$",
+                      selected : "$_paymentsSelected()$"
+                    }
+                    , enterprise : {
+                      name : "$_paymentPlanEnterprise()$",
+                      tag : "$_paymentPlanProfessionalTag()$",
+                      price : "$_paymentsQuote()$",
+                      features : [ "$_paymentFeatureAllTeamFeatures()$"
+                                 , "$_paymentFeatureAllOnlineFormFeatures()$"
+                                 , "&nbsp;"
+                                 , "$_paymentFeatureOnPremise()$"
+                                 , "$_paymentFeatureFullCust()$"
+                                 , "$_paymentFeatureProjMan()$"
+                                 ],
+                      price1 : "$_paymentsAskForA()$",
+                      price3 : "",
+                      price21 : "",
+                      price31 : "",
+                      select : "$_paymentsGetInTouch()$",
+                      selected : "$_paymentsSelect()$"
+
+                    }
                     , free         : "$_paymentPlanFree()$"
                     , pay          : "$_paymentPlanPay()$"
-                    , form         : "$_paymentPlanForm()$"
-                    , formprice    : "$_paymentPlanFormPrice()$"
-                    , enterprise   : "$_paymentPlanEnterprise()$"
-                    , professionaltag : "$_paymentPlanProfessionalTag()$"
-                    , professionalprice : "$_paymentsProfessionalPrice()$"
-                    , teamtag : "$_paymentPlanTeamTag()$"
-                    , teamprice : "$_paymentsTeamPrice()$"
-
-                    , enterprisetag : "$_paymentPlanEnterpriseTag()$"
-                    , enterpriseprice : "$_paymentPlanEnterprisePrice()$"
                     , logo : "$_paymentPlanLogoAndBranding()$"
                     , dash : "$_paymentPlanDashboard()$"
-                    , formtag : "$_paymentPlanFormTag()$"
                     , docprice : "$_paymentPlanDocPrice()$"
                     }
            , table: { currentplan : "$_paymentPlanCurrentPlan()$"
@@ -472,25 +513,6 @@ javascriptLocalisation =
                         , dash     : "$_paymentFeatureDash()$"
                         , branding : "$_paymentFeatureBranding()$"
                         , features : "$_paymentFeatureFeatures()$"
-                        , team : [ "$_paymentFeatureDistance()$"
-                                 , "$_paymentFeaturePad()$"
-                                 , "$_paymentFeatureBranding()$"
-                                 , "$_paymentFeatureTracking()$"
-                                 , "$_paymentFeatureAPI()$"
-                                 , "$_paymentFeatureFeatures()$"
-                                 ]
-                        , form : [ "$_paymentFeatureSupport()$"
-                                 , "$_paymentFeatureHTTPAPI()$"
-                                 , "$_paymentFeatureDocumentation()$"
-                                 , "$_paymentFeatureExampleCode()$"
-                                 ]
-                        , enterprise0 : [ "$_paymentFeatureAllTeamFeatures()$"
-                                        , "$_paymentFeatureAllOnlineFormFeatures()$"
-                                        ]
-                        , enterprise : [ "$_paymentFeatureOnPremise()$"
-                                       , "$_paymentFeatureFullCust()$"
-                                       , "$_paymentFeatureProjMan()$"
-                                       ]
                         }           
             , subscribe: "$_paymentPlanSubscribe()$"
             , pleaseleavenumbertitle: "$_paymentsPleaseLeaveNumberTitle()$"

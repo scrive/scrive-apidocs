@@ -10,7 +10,7 @@ priceplanPage=
         <script src="/libs/analytics.js" type="text/javascript"></script>
         $endif$
       </head>
-      $standardBody(unwrappedbody=priceplanPageContents())$
+      $standardBody(unwrappedbody=priceplanPageContents();showCreateAccount=False)$
     </html>
 ###
 priceplanPageContents=
