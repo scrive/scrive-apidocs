@@ -278,9 +278,11 @@ window.DocumentStandardView = Backbone.View.extend({
   },
   createSignatoriesTabElems: function() {
     var document = this.model;
-    var signatoriestabview = $("<span id='documenttabview' />");
+
+    var signatoriestabview = $("<div id='documenttabview' />");
     var body = $("<div class='signStepsBody forauthor'/>");
     var firstbox = $("<div id='signViewBodyLeft' />");
+
     firstbox.append(document.infotext());
     firstbox.append("<BR/>");
     // Making restart button
@@ -294,27 +296,23 @@ window.DocumentStandardView = Backbone.View.extend({
       firstbox.append(this.createCancelButtonElems());
     }
 
-    var middlebox = $("<div class='float-left signViewBodyBox'/>");
+    body.append(firstbox);
+
     if (document.currentSignatory() != undefined) {
         if (document.currentSignatory().author() || document.currentSignatory().signs()) {
           var currentsignatoryview = new SignatoryStandardView({model: document.currentSignatory(), el: $("<div/>")});
-          middlebox.append($(currentsignatoryview.el));
+          body.append($(currentsignatoryview.el));
         }
     }
 
-    var lastbox = $("<div class='float-right signViewBodyBox'/>");
     var othersignatories = document.otherSignatories();
     _.each(document.otherSignatories(), function(signatory) {
         if (signatory.author() || signatory.signs()) {
           var signatoryview = new SignatoryStandardView({model: signatory, el: $("<div/>")});
-          lastbox.append($(signatoryview.el));
+          body.append($(signatoryview.el));
         }
     });
 
-
-    body.append(firstbox);
-    body.append(middlebox);
-    body.append(lastbox);
     signatoriestabview.append(body);
     return signatoriestabview;
 

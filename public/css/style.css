@@ -1218,11 +1218,11 @@ input[type=submit].hidden
     background-repeat: repeat-y;
     overflow: hidden;
     min-height: 100px;
-    padding: 8px 19px;
+    padding: 8px 9px;
     border-left: 1px solid #BDBDBD;
     border-right: 1px solid #BDBDBD;
     border-bottom: 1px solid #C0C0C0;
-    min-width: 920px;
+    width: 940px;
 }
 
 .designview .signStepsBody
@@ -1370,28 +1370,22 @@ input.multiFileInput,
    padding-top: 5px;
 }
 
-/* 013 changed */
-/* FIXME?
-#signStepsBodyRight
-{
-    width: 326px;
-    position: relative;
-    padding: 7px 6px 0 0px;
-}
-*/
 .signViewBodyRight
 {
-    float: right;
+    float: left;
     border-top: 1px solid #E0E0E0;
     border-right: 1px solid #E0E0E0;
     border-bottom: 1px solid #E8E5E5;
     border-left: 1px solid #E8E5E5;
     margin-top: 15px;
-    margin-left: 35px;
-    min-height: 140px;
     margin-bottom: 10px;
-    margin-right: 0px;
-    width: 268px;
+    /* 940/3 = total width 313 - 2*1px border + 16*2 margin + 279 width */
+    margin-left: 16px;
+    margin-right: 16px;
+    min-height: 140px;
+    width: 279px;
+    overflow: hidden;
+    position: relative;
 }
 
 .signViewBodyBox {
@@ -1402,13 +1396,25 @@ input.multiFileInput,
     min-height: 170px;
 }
 
-#signViewBodyLeft
+.signViewBodyLeft
 {
-    width: 270px;
     float: left;
     position: relative;
+
     padding: 14px 0px 5px 0px;
-    margin-top: 20px;
+
+    margin-top: 15px;
+    margin-bottom: 10px;
+    /* total width 313 = 0*1px border + 16*2 margin + 281 width */
+    margin-left: 16px;
+    margin-right: 16px;
+    min-height: 140px;
+    width: 281px;
+    overflow: hidden;
+}
+
+.forauthor .signViewBodyLeft {
+    min-height: 170px;
 }
 
 .signViewBodyRightTextContainer
@@ -1443,14 +1449,14 @@ input.multiFileInput,
     margin-left: 0px;
 }
 
-#signViewBodyLeft .header
+.signViewBodyLeft .header
 {
     font-weight: bold;
     font-size: 16px;
     color: black; /* 008 new */
 }
 
-#signViewBodyLeft .subheader, .subheader
+.signViewBodyLeft .subheader, .subheader
 {
     font-weight: bold;
     color: black; /* 008 new */
