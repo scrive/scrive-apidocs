@@ -104,7 +104,7 @@
             return this;
         },
         url: function() {
-            return "/payments/pricepage.json";
+            return "/payments/pricepageinfo";
         },
         createaccount: function(email, firstname, lastname, callback) {
             var model = this;
