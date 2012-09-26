@@ -572,7 +572,7 @@ var SignaturePlacementViewForDrawing = Backbone.View.extend({
                 }
                 else {
                     button.addClass('placesignatureandsignbutton');
-                    button.append($("<span class='text'/>").text(signatory.document().process().signbuttontext()));
+                    button.append($("<span class='text'/>").text(signatory.document().process().localization().signbuttontext));
                 }
                 if (this.signature.width() > bwidth) {
                     button.css("margin-left", Math.floor((this.signature.width() - bwidth) / 2) + "px");

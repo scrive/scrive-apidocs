@@ -18,10 +18,10 @@ window.DocumentSignSignSection = Backbone.View.extend({
        this.rejectButton = Button.init({
                                         size: "big",
                                         color: "red",
-                                        text: document.process().rejectbuttontext(),
+                                        text: document.process().localization().rejectbuttontext,
                                         onClick: function() {
                                             ConfirmationWithEmail.popup({
-                                            title: document.process().signatorycancelmodaltitle(),
+                                            title: document.process().localization().signatorycancelmodaltitle,
                                             mail: document.currentSignatory().rejectMail(),
                                             acceptText: localization.reject.send,
                                             editText: localization.reject.editMessage,
@@ -38,7 +38,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
        this.signButton = Button.init({
                             size: "big",
                             color: "blue",
-                            text: document.process().signbuttontext(),
+                            text: document.process().localization().signbuttontext,
                             icon: $("<span class='icon cross'></span>"),
                             onClick: function() {
                                 var valid =  model.tasks().notCompleatedTasks().length == 1 && model.tasks().notCompleatedTasks()[0] == model.signtask();

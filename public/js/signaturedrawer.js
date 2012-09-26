@@ -222,7 +222,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
             return Button.init({
                     color : 'blue',
                     size: 'tiny',
-                    text: document.process().signbuttontext(),
+                    text: document.process().localization().signbuttontext,
                     onClick : function(){
                         view.drawer.saveImage(function(){
                             if (field.signature().hasImage()) {

@@ -189,7 +189,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       size: "small",
       color: "blue",
       icon: $("<span class='btn-symbol cross' />"),
-      text: document.process().signbuttontext(),
+      text: document.process().localization().signbuttontext,
       onClick: function() {
         if (alreadyClicked(this))
           return false;
@@ -204,11 +204,11 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     if (signatory.author) {
      var content = $("<div />");
      if (document.authorIsOnlySignatory())
-            content = $(document.process().authorIsOnlySignatory());
+            content = $(document.process().localization().signatorysignmodalcontentauthoronly);
      else if (document.elegAuthentication())
-          content.append(document.process().signatorysignmodalcontentsignvieweleg());
+          content.append(document.process().localization().signatorysignmodalcontentsignvieweleg);
      else 
-          content.append(document.process().signatorysignmodalcontent());
+          content.append(document.process().localization().signatorysignmodalcontent);
 
      if (document.elegAuthentication()) {
         var subhead = $("<h3/>").text(localization.signByAuthor.eleg.subhead);
@@ -220,9 +220,9 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     } else {
       var content = $("<div />");
       if (document.elegAuthentication())
-          content.append(document.process().signatorysignmodalcontentsignvieweleg());
+          content.append(document.process().localization().signatorysignmodalcontentsignvieweleg);
       else
-          content.append(document.process().signatorysignmodalcontent());
+          content.append(document.process().localization().signatorysignmodalcontent);
 
       if (document.elegAuthentication()) {
         var subhead = $("<h3/>").text(localization.sign.eleg.subhead);
@@ -243,7 +243,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var signatory = document.currentSignatory();
 
     Confirmation.popup({
-      title: signatory.author ? localization.signByAuthor.modalTitle : document.process().signatorysignmodaltitle(),
+      title: signatory.author ? localization.signByAuthor.modalTitle : document.process().localization().signatorysignmodaltitle,
       acceptButton: document.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
       rejectText: localization.cancel,
       content: this.createContentElems
@@ -324,7 +324,7 @@ window.DocumentStandardView = Backbone.View.extend({
     return Button.init({
       color: "red",
       size: "small",
-      text: document.process().restartbuttontext(),
+      text: document.process().localization().restartbuttontext,
       onClick: function() {
         if (alreadyClicked(this))
           return;
@@ -337,13 +337,13 @@ window.DocumentStandardView = Backbone.View.extend({
     return Button.init({
       color: "red",
       size: "small",
-      text: document.process().cancelbuttontext(),
+      text: document.process().localization().cancelbuttontext,
       cssClass: "s-withdraw-button",
       onClick: function() {
         Confirmation.popup({
-          title: document.process().cancelmodaltitle(),
-          content: document.process().cancelmodaltext(),
-          acceptText: document.process().cancelbuttontext(),
+          title: document.process().localization().cancelmodaltitle,
+          content: document.process().localization().cancelmodaltext,
+          acceptText: document.process().localization().cancelbuttontext,
           rejectText: localization.cancel,
           acceptColor: "red",
           extraClass : "s-withdraw-confirmation",
@@ -381,7 +381,7 @@ window.DocumentStandardView = Backbone.View.extend({
     return $( Button.init({
                             size: "big",
                             color: "blue",
-                            text: document.process().signbuttontext(),
+                            text: document.process().localization().signbuttontext,
                             icon: $("<span class='icon cross'></span>"),
                             onClick: function() {
                                 if (validateSign())
@@ -428,11 +428,11 @@ window.DocumentStandardView = Backbone.View.extend({
     return Button.init({
       size: "small",
       color: "red",
-      text: document.process().rejectbuttontext(),
+      text: document.process().localization().rejectbuttontext,
       style: "width: 150px;margin-right: 12px;",
       onClick: function() {
         ConfirmationWithEmail.popup({
-          title: document.process().signatorycancelmodaltitle(),
+          title: document.process().localization().signatorycancelmodaltitle,
           mail: signatory.rejectMail(),
           acceptText: localization.reject.send,
           editText: localization.reject.editMessage,
@@ -472,7 +472,7 @@ window.DocumentStandardView = Backbone.View.extend({
     this.container.empty();
 
     var titlepart = $("<span class='title'/>");
-    titlepart.text(document.process().title() + " #" + document.documentid() + ": ");
+    titlepart.text(document.process().localization().title + " #" + document.documentid() + ": ");
     var namepart = $("<span class='name'/>");
     namepart.text(document.title());
 

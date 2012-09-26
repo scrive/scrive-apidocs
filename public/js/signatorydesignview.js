@@ -21,13 +21,13 @@ window.SignatoryDesignView = Backbone.View.extend({
        if (signatory.isCsv())
         return localization.csv.title;
        if (signatory.signs() &&  signatory.author())
-        return process.authorsignatoryname() + (process.numberedsignatories() ? " " + signatory.signIndex() : "");
+        return process.localization().authorsignatoryname + (process.numberedsignatories() ? " " + signatory.signIndex() : "");
        else if(signatory.author())
-        return process.authorname();
+        return process.localization().authorname;
        else if (signatory.signs())
-        return process.signatoryname() + (process.numberedsignatories() ? " " + signatory.signIndex() : "");
+        return process.localization().signatoryname + (process.numberedsignatories() ? " " + signatory.signIndex() : "");
        else
-        return process.nonsignatoryname();
+        return process.localization().nonsignatoryname;
     },
    addCustomFieldButton : function() {
         var signatory = this.model;

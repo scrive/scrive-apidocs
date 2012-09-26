@@ -812,12 +812,12 @@ window.SignatoryStandardView = Backbone.View.extend({
          var signatory = this.model;
          var button = $("<a  class='btn-tiny green prepareToSendReminderMail'/>");
          var icon = $("<div/>").addClass(signatory.hasSigned() ? "reminderForSignedIcon" : "reminderForSendIcon");
-         var text = signatory.hasSigned() ? signatory.document().process().remindagainbuttontext() : localization.reminder.send;
+         var text = signatory.hasSigned() ? signatory.document().process().localization().remindagainbuttontext : localization.reminder.send;
          var textbox = $("<div class='sendLinkText'/>").text(text);
          button.append(icon).append(textbox);
          button.click(function() {
              ConfirmationWithEmail.popup({
-                title: signatory.hasSigned() ? signatory.document().process().remindagainbuttontext() : localization.reminder.formHead,
+                title: signatory.hasSigned() ? signatory.document().process().localization().remindagainbuttontext : localization.reminder.formHead,
                 mail: signatory.remindMail(),
                 acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
                 editText: localization.reminder.formOwnMessage,
@@ -865,7 +865,7 @@ window.SignatoryStandardView = Backbone.View.extend({
             textsummary.append($("<span class='textstatus'/>").text(this.signatorySummary()));
         }
         else {
-            textsummary.text(signatory.document().process().authorissecretarytext());
+            textsummary.text(signatory.document().process().localization().authorissecretarytext);
         }
         container.append(textsummary);
 

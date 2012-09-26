@@ -282,47 +282,9 @@ jsonDate mdate = toJSValue $ formatMinutesTimeRealISO <$> mdate
 
 processJSON :: TemplatesMonad m => Document -> JSONGenT m ()
 processJSON doc = do
-    J.valueM "title" $ text processtitle
-    J.valueM "name" $ text processname
-    J.valueM "corename" $ text processcorename
-    -- used in the design view
-    J.valueM "step1text" $ text processstep1text
-    J.valueM "sendbuttontext" $ text processsendbuttontext
-    J.valueM "confirmsendtitle" $ text processconfirmsendtitle
-    J.valueM "confirmsendtext" $ text processconfirmsendtext
-    J.valueM "expirytext" $ text processexpirytext
-    -- some buttons texts
-    J.valueM "restartbuttontext" $ text processrestartbuttontext
-    J.valueM "cancelbuttontext" $ text processcancelbuttontext
-    J.valueM "rejectbuttontext" $ text processrejectbuttontext
-    J.valueM "cancelmodaltitle" $ text processcancelmodaltitle
-    J.valueM "cancelmodaltext" $ text processcancelmodaltext
-
-    J.valueM "authorissecretarytext" $ text processauthorissecretarytext
-    J.valueM "remindagainbuttontext" $ text processremindagainbuttontext
-    -- And more
-    J.valueM "signbuttontext" $ text processsignbuttontext
-    J.valueM "signatorycancelmodaltitle" $ text processsignatorycancelmodaltitle
-    J.valueM "signatorysignmodalcontent" $ text processsignatorysignmodalcontent
-    J.valueM "signatorysignmodalcontentdesignvieweleg" $ text processsignatorysignmodalcontentdesignvieweleg
-    J.valueM "signatorysignmodalcontentsignvieweleg" $ text processsignatorysignmodalcontentdesignvieweleg
-    J.valueM "signatorysignmodalcontentauthoronly" $ text processsignatorysignmodalcontentauthoronly
-
-    J.valueM "signbuttontext" $ text processsignbuttontext
-    J.valueM "signbuttontextauthor" $ text processsignbuttontextauthor
-    J.valueM "signatorysignmodaltitle" $ text processsignatorysignmodaltitle
-
-    J.valueM "authorname" $ text processauthorname
-    J.valueM "authorsignatoryname" $ text processauthorsignatoryname
-    J.valueM "signatoryname" $ text processsignatoryname
-    J.valueM "nonsignatoryname" $ text processnonsignatoryname
+    J.value "corename" $ show $ toDocumentProcess (documenttype doc)
     J.value "numberedsignatories" $ bool processnumberedsignatories
     where
-      text k = do
-        partylist <- renderListTemplate . map getSmartName $ partyList doc
-        renderTemplateForProcess doc k $ do
-          F.value "partylist" partylist
-          documentInfoFields doc
       bool = fromMaybe False . getValueForProcess doc
 
 fileJSON :: File -> JSValue

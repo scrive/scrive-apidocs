@@ -1,16 +1,4 @@
 ####    Pages for documents - main part of system
-contractuploadname=$_contractuploadname()$
-####
-offeruploadname=$_offeruploadname()$
-####
-orderuploadname=$_orderuploadname()$
-####
-contractuploadprompttext=$_contractuploadprompttext()$
-####
-offeruploadprompttext=$_offeruploadprompttext()$
-####
-orderuploadprompttext=$_orderuploadprompttext()$
-####
 uploadPage=
 <div class="tab-viewer">
 <div class="tab-viewer-header" class="uploading">

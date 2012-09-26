@@ -63,7 +63,7 @@ window.PadGiveToNextSignatoryView = Backbone.View.extend({
            var giveForSigningButton = Button.init({
                                 size: "tiny",
                                 color : "green",
-                                text : model.document().process().sendbuttontext(),
+                                text : model.document().process().localization().sendbuttontext,
                                 //cssClass: "float-right" ,                 
                                 onClick : function() {
                                     model.giveForSigning();

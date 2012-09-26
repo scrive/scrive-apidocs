@@ -60,43 +60,8 @@ instance HasProcess Document where
 data DocProcessInfo =
   DocProcessInfo {
 
-  -- templates used in lots of different places
-    processtitle :: String
-  , processname :: String
-  , processcorename :: String
-  -- used when uploading
-  , processuploadprompttext :: String
-  , processuploadname :: String
-
-  -- used in the design view
-  , processstep1text :: String
-  , processsendbuttontext :: String
-  , processconfirmsendtitle :: String
-  , processconfirmsendtext :: String
-  , processexpirytext :: String
-
-  -- process specific templates used in doc views
-  , processrestartbuttontext :: String
-  , processcancelbuttontext :: String
-  , processcancelmodaltitle :: String
-  , processcancelmodaltext :: String
-
-  , processrejectbuttontext :: String
-
-  -- Texts for modal that is shown when someone is about to sign (clicked the blue sign button).
-  , processsignatorysignmodaltitle :: String
-  , processsignatorysignmodalcontent :: String           -- Sign & design view. When person is last to sign
-  , processsignatorysignmodalcontentdesignvieweleg :: String -- Design view, eleg authorization
-  , processsignatorysignmodalcontentsignvieweleg   :: String   -- Sign view, eleg authorization
-  , processsignatorysignmodalcontentauthoronly     :: String   -- Sign & design view. Only author is signatory.
-  , processsignbuttontext :: String
-  , processsignbuttontextauthor :: String
-  , processsignatorycancelmodaltitle :: String
-  , processauthorissecretarytext :: String
-  , processremindagainbuttontext :: String
-
   -- process specific doc mail template names
-  , processmailcancelstandardheader :: String
+    processmailcancelstandardheader :: String
   , processmailclosed :: String
   , processmailreject :: String
   , processmailinvitationtosign :: String
@@ -131,51 +96,14 @@ data DocProcessInfo =
   , processstatusinfotext :: String
 
   -- process specific design view titles of parties
-  , processauthorname :: String
-  , processauthorsignatoryname :: String
-  , processsignatoryname :: String
-  , processnonsignatoryname :: String
   , processnumberedsignatories :: Bool
   }
 
 contractProcess :: DocProcessInfo
 contractProcess =
   DocProcessInfo {
-
-  -- templates used in lots of different places
-    processtitle = "contracttitle"
-  , processname = "contractname"
-  , processcorename = "contractcorename"
-  -- used when uploading
-  , processuploadprompttext = "contractuploadprompttext"
-  , processuploadname = "contractuploadname"
-
-  -- used in the design view
-  , processstep1text = "contractstep1text"
-  , processsendbuttontext = "contractsendtext"
-  , processconfirmsendtitle = "contractconfirmsendtitle"
-  , processconfirmsendtext = "contractconfirmsendtext"
-  , processexpirytext = "contractexpirytext"
-
-  -- process specific templates used in doc views
-  , processrestartbuttontext = "contractrestartbuttontext"
-  , processcancelbuttontext = "contractcancelbuttontext"
-  , processcancelmodaltitle = "contractcancelmodaltitle"
-  , processcancelmodaltext = "contractcancelmodaltext"
-  , processrejectbuttontext = "contractrejectbuttontext"
-  , processsignatorysignmodaltitle = "contractsignatorysignmodaltitle"
-  , processsignatorysignmodalcontent = "contractsignatorysignmodalcontent"
-  , processsignatorysignmodalcontentdesignvieweleg = "contractsignatorysignmodalcontentdesignvieweleg"
-  , processsignatorysignmodalcontentsignvieweleg = "contractsignatorysignmodalcontentsignvieweleg"
-  , processsignatorysignmodalcontentauthoronly = "contractsignatorysignmodalcontentauthoronly"
-  , processsignbuttontext = "contractsignbuttontext"
-  , processsignbuttontextauthor = "contractsignbuttontextauthor"
-  , processsignatorycancelmodaltitle = "contractsignatorycancelmodaltitle"
-  , processauthorissecretarytext = "contractauthorissecretarytext"
-  , processremindagainbuttontext = "contractremindagainbuttontext"
-
   -- process specific doc mail template names
-  , processmailcancelstandardheader = "mailCancelContractStandardHeader"
+    processmailcancelstandardheader = "mailCancelContractStandardHeader"
   , processmailclosed= "mailContractClosed"
   , processmailreject = "mailRejectContractMail"
   , processmailinvitationtosign = "mailInvitationToSignContract"
@@ -209,53 +137,14 @@ contractProcess =
   , processsignedinfotext = "contractsignedinfotext"
   , processstatusinfotext = "contractstatusinfotext"
 
-  , processauthorname = "contractauthorname"
-  , processauthorsignatoryname = "contractauthorsignatoryname"
-  , processsignatoryname = "contractsignatoryname"
-  , processnonsignatoryname = "contractnonsignatoryname"
   , processnumberedsignatories = True
   }
 
 offerProcess :: DocProcessInfo
 offerProcess =
   DocProcessInfo {
-
-  -- templates used in lots of different places
-    processtitle = "offertitle"
-  , processname = "offername"
-  , processcorename = "offercorename"
-
-  -- used when uploading
-  , processuploadname = "offeruploadname"
-  , processuploadprompttext = "offeruploadprompttext"
-
-  -- used in the design view
-  , processstep1text = "offerstep1text"
-  , processsendbuttontext = "offersendtext"
-  , processconfirmsendtitle = "offerconfirmsendtitle"
-  , processconfirmsendtext = "offerconfirmsendtext"
-  , processexpirytext = "offerexpirytext"
-
-  -- process specific templates used in doc views
-  , processrestartbuttontext = "offerrestartbuttontext"
-  , processcancelbuttontext = "offercancelbuttontext"
-  , processcancelmodaltitle = "offercancelmodaltitle"
-  , processcancelmodaltext = "offercancelmodaltext"
-
-  , processrejectbuttontext = "offerrejectbuttontext"
-  , processsignatorysignmodaltitle = "offersignatorysignmodaltitle"
-  , processsignatorysignmodalcontent = "offersignatorysignmodalcontent"
-  , processsignatorysignmodalcontentdesignvieweleg = "offersignatorysignmodalcontentdesignvieweleg"
-  , processsignatorysignmodalcontentsignvieweleg = "offersignatorysignmodalcontentsignvieweleg"
-  , processsignatorysignmodalcontentauthoronly = "offersignatorysignmodalcontentauthoronly"
-  , processsignbuttontext = "offersignbuttontext"
-  , processsignbuttontextauthor = "offersignbuttontextauthor"
-  , processsignatorycancelmodaltitle = "offersignatorycancelmodaltitle"
-  , processauthorissecretarytext = "offerauthorissecretarytext"
-  , processremindagainbuttontext = "offerremindagainbuttontext"
-
   -- process specific doc mail template names
-  , processmailcancelstandardheader = "mailCancelOfferStandardHeader"
+    processmailcancelstandardheader = "mailCancelOfferStandardHeader"
   , processmailclosed = "mailOfferClosed"
   , processmailreject = "mailRejectOfferMail"
   , processmailinvitationtosign = "mailInvitationToSignOffer"
@@ -289,10 +178,6 @@ offerProcess =
   , processsignedinfotext = "offersignedinfotext"
   , processstatusinfotext = "offerstatusinfotext"
 
-  , processauthorname = "offerauthorname"
-  , processauthorsignatoryname = "offerauthorsignatoryname"
-  , processsignatoryname = "offersignatoryname"
-  , processnonsignatoryname = "offernonsignatoryname"
   , processnumberedsignatories = True
 
   }
@@ -300,43 +185,8 @@ offerProcess =
 orderProcess :: DocProcessInfo
 orderProcess =
   DocProcessInfo {
-
-  -- templates used in lots of different places
-    processtitle = "ordertitle"
-  , processname = "ordername"
-  , processcorename = "ordercorename"
-
-  -- used when uploading
-  , processuploadprompttext = "orderuploadprompttext"
-  , processuploadname = "orderuploadname"
-
-  -- used in the design view
-  , processstep1text = "orderstep1text"
-  , processsendbuttontext = "ordersendtext"
-  , processconfirmsendtitle = "orderconfirmsendtitle"
-  , processconfirmsendtext = "orderconfirmsendtext"
-  , processexpirytext = "orderexpirytext"
-
-  -- process specific templates used in doc views
-  , processrestartbuttontext = "orderrestartbuttontext"
-  , processcancelbuttontext = "ordercancelbuttontext"
-  , processcancelmodaltitle = "ordercancelmodaltitle"
-  , processcancelmodaltext = "ordercancelmodaltext"
-
-  , processrejectbuttontext = "orderrejectbuttontext"
-  , processsignatorysignmodaltitle = "ordersignatorysignmodaltitle"
-  , processsignatorysignmodalcontent = "ordersignatorysignmodalcontent"
-  , processsignatorysignmodalcontentdesignvieweleg = "ordersignatorysignmodalcontentdesignvieweleg"
-  , processsignatorysignmodalcontentsignvieweleg = "ordersignatorysignmodalcontentsignvieweleg"
-  , processsignatorysignmodalcontentauthoronly = "ordersignatorysignmodalcontentauthoronly"
-  , processsignbuttontext = "ordersignbuttontext"
-  , processsignbuttontextauthor = "ordersignbuttontextauthor"
-  , processsignatorycancelmodaltitle = "ordersignatorycancelmodaltitle"
-  , processauthorissecretarytext = "orderauthorissecretarytext"
-  , processremindagainbuttontext = "orderremindagainbuttontext"
-
   -- process specific doc mail template names
-  , processmailcancelstandardheader = "mailCancelOrderStandardHeader"
+    processmailcancelstandardheader = "mailCancelOrderStandardHeader"
   , processmailclosed = "mailOrderClosed"
   , processmailreject = "mailRejectOrderMail"
   , processmailinvitationtosign = "mailInvitationToSignOrder"
@@ -370,10 +220,6 @@ orderProcess =
   , processsignedinfotext = "ordersignedinfotext"
   , processstatusinfotext = "orderstatusinfotext"
 
-  , processauthorname = "orderauthorname"
-  , processauthorsignatoryname = "orderauthorsignatoryname"
-  , processsignatoryname = "ordersignatoryname"
-  , processnonsignatoryname = "ordernonsignatoryname"
   , processnumberedsignatories = True
 
   }

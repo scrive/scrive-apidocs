@@ -70,7 +70,7 @@ var DocumentDesignView = Backbone.View.extend({
         if (document.isTemplate())
             titlepart.text(localization.templateTitle);
         else
-            titlepart.text(document.process().title() + " #" + document.documentid() + ": ");
+            titlepart.text(document.process().localization().title + " #" + document.documentid() + ": ");
 
         //Editable name
         var namepart = $("<span class='docname'/>");
@@ -279,7 +279,7 @@ var DocumentDesignView = Backbone.View.extend({
                   document.setDaystosign(7);
               }
               box.append(selectdaysbox);
-              selectdaysbox.append($("<span/>").text(document.process().expirytext()));
+              selectdaysbox.append($("<span/>").text(document.process().localization().expirytext));
               var daysinput = $("<input class='daystosign' maxlength='2' size='2' autocomplete='off'>");
               daysinput.val(document.daystosign());
               selectdaysbox.append(daysinput);
@@ -541,7 +541,7 @@ var DocumentDesignView = Backbone.View.extend({
              color: "green",
              size: "big" ,
              cssClass: "finalbutton",
-             text: document.process().sendbuttontext(),
+             text: document.process().localization().sendbuttontext,
              onClick: function() {
                if (!view.verificationBeforeSendingOrSigning(false)) {
                  return;
@@ -620,11 +620,11 @@ var DocumentDesignView = Backbone.View.extend({
         }
         var content = $("<span/>");
         if (document.authorIsOnlySignatory())
-            content = $(document.process().authorIsOnlySignatory());
+            content = $(document.process().localization().signatorysignmodalcontentauthoronly);
         else if (document.elegAuthentication())
-            content = $(document.process().signatorysignmodalcontentdesignvieweleg());
+            content = $(document.process().localization().signatorysignmodalcontentdesignvieweleg);
         else {
-            content = $(document.process().signatorysignmodalcontent());
+            content = $(document.process().localization().signatorysignmodalcontent);
         }
 
         DocumentDataFiller.fill(document, content);
@@ -652,7 +652,7 @@ var DocumentDesignView = Backbone.View.extend({
        var padDesignViewUtil = undefined;
        if (!document.padDelivery())
        {
-           var content = $("<p/>").append($("<span/>").append(document.process().confirmsendtext()));
+           var content = $("<p/>").append($("<span/>").append(document.process().localization().confirmsendtext));
            if (!document.authorIsOnlySignatory())
                 content.append($("<span/>").text(localization.to)).append("<span class='unsignedpartynotcurrent'/>");
            content.append($("<span>?</span>"));
@@ -663,11 +663,11 @@ var DocumentDesignView = Backbone.View.extend({
            box.append(new PadDesignViewUtilsView({model : padDesignViewUtil}).el);
        }
        Confirmation.popup({
-              title : (!document.padDelivery()) ? document.process().confirmsendtitle() : localization.pad.howDoYouWantToSign,
+              title : (!document.padDelivery()) ? document.process().localization().confirmsendtitle : localization.pad.howDoYouWantToSign,
               acceptButton : Button.init({
                                 size: "small",
                                 color : "green",
-                                text : document.process().sendbuttontext(),
+                                text : document.process().localization().sendbuttontext,
                                 onClick : function() {
                                     if (alreadyClicked(this))
                                       return;
@@ -754,7 +754,7 @@ var DocumentDesignView = Backbone.View.extend({
             tabsTail : (!document.isTemplate()) ?  [this.saveAsTemplateOption()] : undefined ,
             tabs: [
                 this.tab1 = new Tab({
-                    name : document.isTemplate() ? localization.step1template : document.process().step1text(),
+                    name : document.isTemplate() ? localization.step1template : document.process().localization().step1text,
                     active :  SessionStorage.get(document.documentid(), "step") == "1",
                     onActivate : function() {
                       KontraDesignDocument.model.save();
