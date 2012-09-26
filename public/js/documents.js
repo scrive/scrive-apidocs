@@ -162,6 +162,13 @@ window.Document = Backbone.Model.extend({
     region: function() {
         return this.get("region");
     },
+    setDocumentType: function(t) {
+        this.get("process").setCorename(t);
+        this.trigger("change:documenttype");
+    },
+    getDocumentType: function() {
+        return this.get("process").corename();
+    },
     title: function() {
         return this.get("title");
     },

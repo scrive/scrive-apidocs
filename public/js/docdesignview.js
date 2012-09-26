@@ -13,6 +13,8 @@ var DocumentDesignView = Backbone.View.extend({
         this.model.bind('change:signatories', this.refreshFinalButton);
         this.model.bind('change:signatories', this.refreshSignatoryAttachmentsOption);
         this.model.bind('change:authenticationdelivery', this.refreshAuthorizationDependantOptions);
+//        this.model.bind('change:documenttype', this.render);
+// TODO: Refresh all text that depends on document type.
         this.model.view = this;
         this.prerender();
         this.render();
@@ -172,6 +174,7 @@ var DocumentDesignView = Backbone.View.extend({
        var box = $("<div class='signStepsBody advancedMode'/>");
 
        var box1 = $("<div class='signStepsBodyPart first'/>");
+       box1.append(this.documentTypeSelection());
        box1.append(this.finalDateSelection());
        box1.append(this.selectLanguageOption());
        this.editInvitationOptionBox = this.editInvitationOption();
@@ -217,6 +220,35 @@ var DocumentDesignView = Backbone.View.extend({
         });  
         var text = $("<span>").text(localization.designview.authentication.selectmethod + " "+ localization.eleg);
         box.append(checkbox).append(text);
+        return box;
+    },
+    documentTypeSelection : function() {
+        var document = this.model;
+        var box = $("<div class='documenttypeselect'/>");
+        var select= $("<select/>");
+        var contract = $("<option value='Contract'/>").text(localization.process.contract.name);
+        var offer = $("<option value='Offer'/>").text(localization.process.offer.name);
+        var order = $("<option value='Order'/>").text(localization.process.order.name);
+        select.append(contract);
+        select.append(offer);
+        select.append(order);
+        box.text(localization.designview.selectprocess);
+        box.append(select);
+        switch(document.getDocumentType()) {
+        case "Contract":
+            contract.attr("selected","yes");
+            break;
+        case "Offer":
+            offer.attr("selected","yes");
+            break;
+        case "Order":
+            order.attr("selected","yes");
+            break;
+        }
+
+        select.change(function() {
+            document.setDocumentType($(this).val());
+        });
         return box;
     },
     deliveryMethodSelection : function() {

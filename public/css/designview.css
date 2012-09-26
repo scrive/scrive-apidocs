@@ -253,6 +253,10 @@
     margin-left: 5px;
 }
 
+.documenttypeselect select {
+    margin-left: 5px;
+}
+
 .finaldatecheckbox{
     position:relative;
     top:2px;

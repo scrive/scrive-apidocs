@@ -362,6 +362,7 @@ javascriptLocalisation =
              , confirmSignature : "$_signatureConfirm()$"
            }
          , designview : {
+              selectprocess : "$_selectDocumentType()$",
               validation : {
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
                     , missingNames:  "$_missingSignatoryNames()$"

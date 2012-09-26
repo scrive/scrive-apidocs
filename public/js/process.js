@@ -12,6 +12,9 @@ window.Process = Backbone.Model.extend({
     corename : function() { // The name of process used in comunication with server
         return this.get("corename");
     },
+    setCorename : function(t) {
+        this.set({"corename": t}, {silent: true});
+    },
     localization: function() {
         var l = localization.process;
         switch (this.corename()) {

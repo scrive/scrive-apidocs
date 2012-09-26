@@ -409,6 +409,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_createNewTemplateType","Välj dokumenttyp för den nya mallen",,"Pick a document type for the new template"
 "_createNewDocument","Skapa nytt",,"Create new"
 "_createNewDocumentType","Välj dokumenttyp",,"Pick a document type"
+"_selectDocumentType","Dokumenttyp",,"Document type"
 "_createaccount","Skapa konto",,"Create account"
 "_daysToSignFieldName","dagar kvar att signera",,"days to sign"
 "_daystosigncheckboxActivateExpDate","Aktivera förfallodatum",,"Activate expiration date"
