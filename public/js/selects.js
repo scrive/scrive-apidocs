@@ -61,7 +61,14 @@ window.SelectModel = Backbone.Model.extend({
        return this.get("textWidth");
   },
   toggleExpand: function() {
-       this.set({"expanded" : !this.expanded()});    
+     if (this.expanded())
+       this.set({"expanded" : false});
+     else
+       this.expand();
+  },
+  expand : function() {
+     if (!this.expanded() && this.onOpen())
+       this.set({"expanded" : true});
   },
   onOpen : function(){
        if (this.get("onOpen") != undefined)
@@ -151,8 +158,8 @@ var SelectView = Backbone.View.extend({
         });
 
         button.click(function(){
-            if (model.onOpen())
               model.toggleExpand();
+              return false;
         });
         if (model.expanded())
             {
@@ -190,7 +197,8 @@ window.Select = function(args) {
           return new Object({
               model : function() {return model;},
               view : function()  {return view;},
-              clear : function() {view.clear(); model.destroy();}
+              clear : function() {view.clear(); model.destroy();},
+              open : function()  {model.expand();}
             });    
 };
 

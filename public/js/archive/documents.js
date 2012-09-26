@@ -41,10 +41,10 @@ window.DocumentCellsDefinition = function(archive) { return  [
         ]
 };
 
-window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  [
+window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.flatten([
             new SelectFiltering({
                              name: "status",
-                             textWidth : "110px",
+                             textWidth : "90px",
                              options: _.union(
                                         [{name: localization.filterByStatus.showAnyStatus, value: ""} ],
                                          (draftsAvaible ? [{name: localization.filterByStatus.showDraft,     value: "[draft]"}] : []),
@@ -54,35 +54,36 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  [
                                         ])}),
             new SelectFiltering({
                              name: "process",
-                             textWidth : "100px",
+                             textWidth : "90px",
                              options: [ {name: localization.filterByProcess.showAllProcesses,  value: ""},
                                         {name: localization.filterByProcess.showContractsOnly, value: "contract"},
                                         {name: localization.filterByProcess.showOffersOnly,    value: "offer"},
                                         {name: localization.filterByProcess.showOrdersOnly,    value: "order"}
                                       ]}),
- 
-            new SelectAjaxFiltering({
+            archive.forCompanyAdmin() ?
+              [new SelectAjaxFiltering({
                              name: "sender",
-                             textWidth : "110px",
+                             textWidth : "90px",
                              text : "sender",
                              optionsURL : "/companyaccounts",
-                             options: [{name : "Sender", value : ""}],
+                             defaultName : "Any sender",
                              optionsParse: function(resp) {
                                         var options = []
-                                        _.each(res.list, function(l) {
+                                        _.each(resp.list, function(l) {
                                           var fields = l.fields;
                                           var id = fields["id"];
                                           var name = fields["fullname"];
-                                          if (name == undefined || name == "")
-                                            name = field["email"];
-                                          options.push({name : name , value : id });
+                                          if (name == undefined || name == "" || name == " ")
+                                            name = fields["email"];
+                                          if (fields["activated"])
+                                            options.push({name : name , value : id });
                                         });
                                         return options;
                                    }
-                               }),
+                 })] : [],
             new IntervalDoubleSelectFiltering({
                              name: "time",
-                             textWidth : "110px",
+                             textWidth : "90px",
                              selectedBottomPrefix : localization.filterByTime.filterForm,
                              selectedTopPrefix :    localization.filterByTime.filterTo ,
                              options: function() {
@@ -99,7 +100,7 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  [
                                         options.push({name : localization.filterByTime.filterTo , value : ">" });
                                         return options} ()
                              })
-            ]
+            ]);
 };
     
 window.DocumentsListDefinition = function(archive) { return {

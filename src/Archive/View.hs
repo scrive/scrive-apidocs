@@ -34,7 +34,6 @@ import PadQueue.Model
 import Text.JSON.Gen as J
 import qualified Templates.Fields as F
 
-
 flashMessageSignableArchiveDone :: TemplatesMonad m => m FlashMessage
 flashMessageSignableArchiveDone = do
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageDocumentArchiveDone"
@@ -47,8 +46,9 @@ flashMessageAttachmentArchiveDone :: TemplatesMonad m => m FlashMessage
 flashMessageAttachmentArchiveDone =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageAttachmentArchiveDone"
 
-pageArchive :: TemplatesMonad m => MinutesTime -> m String
-pageArchive mt = renderTemplate "pageDocumentsList" $ do
+pageArchive :: TemplatesMonad m => User -> MinutesTime -> m String
+pageArchive user mt = renderTemplate "pageDocumentsList" $ do
+                    F.value "isadmin" $ useriscompanyadmin user && isJust (usercompany user)
                     F.value "month" $ mtMonth mt
                     F.value "year" $ mtYear mt
                     

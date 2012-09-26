@@ -138,6 +138,7 @@ data DocumentFilter
   | DocumentFilterByDelivery DeliveryMethod -- ^ Only documents that use selected delivery method
   | DocumentFilterByMonthYearFrom (Int,Int)           -- ^ Document time after or in (month,year)
   | DocumentFilterByMonthYearTo   (Int,Int)           -- ^  Document time before or in (month,year)
+  | DocumentFilterByAuthor UserID             -- ^ Only documents created by this user
   deriving Show
 data DocumentDomain
   = DocumentsOfWholeUniverse                     -- ^ All documents in the system. Only for admin view.
@@ -324,7 +325,10 @@ documentFilterToSQL (DocumentFilterByString string) =
 
 documentFilterToSQL (DocumentFilterByDelivery del) =
   SQL ("documents.delivery_method = ?") [toSql del]
-
+  
+documentFilterToSQL (DocumentFilterByAuthor userid) =
+  SQL ("(signatory_links.roles & ?) <> 0 AND signatory_links.user_id = ?") [toSql [SignatoryAuthor], toSql userid]
+  
 sqlOR :: SQL -> SQL -> SQL
 sqlOR sql1 sql2 = mconcat [parenthesize sql1, SQL " OR " [], parenthesize sql2]
 

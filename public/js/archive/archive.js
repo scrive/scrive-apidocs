@@ -9,6 +9,9 @@ var ArchiveModel = Backbone.Model.extend({
   year : function() {
      return this.get("year");
   },
+  forCompanyAdmin : function() {
+     return this.get("forCompanyAdmin");
+  },
   documents : function() {
         if (this.get("documents") != undefined) return this.get("documents");
         this.set({ "documents" : KontraList().init(DocumentsListDefinition(this)) });

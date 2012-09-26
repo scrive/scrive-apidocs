@@ -161,7 +161,13 @@
        padding-bottom: 6px;
        max-width: 800px;
 }
+.list-container .col.float-right {
+       margin: 0 20px 0 0;
+}
 
+.list-container .col.float-left {
+       margin: 0 0 0 20px;
+}
 /* Select boxes and search boxes for lists */
 
 .list-search {

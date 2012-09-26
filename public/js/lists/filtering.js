@@ -79,10 +79,17 @@
 
    window.SelectAjaxFiltering = Backbone.Model.extend({
         defaults : {
-            name: ""
+            name: "",
+            defaultName : ""
         },
         type : function() {
             return "ajax-select";
+        },
+        initialize: function(args) {
+            this.set({"options" : [{name : this.defaultName(), value : ""}]});
+        },
+        defaultName : function() {
+            return this.get("defaultName");
         },
         options: function() {
             return this.get("options");
@@ -108,16 +115,23 @@
         needMoreOptions: function() {
             return this.options().length < 2;
         },
-        getMoreOptions: function() {
-            $.get(this.optionsURL(), function(res) {
-              var newOptions = optionsParse(res);
-              alert(newOptions);
+        getMoreOptions: function(callback) {
+            var self = this;
+            $.get(self.optionsURL(), function(res) {
+              var currentValue = self.selectedValue();
+              var newOptions = self.optionsParse()(JSON.parse(res));
+              newOptions.unshift({name : self.defaultName(), value : ""})
+              self.set({options : newOptions}, {silent : true});
+              self.select(currentValue);
+              self.trigger("more-options-available"); // We might not rendered with select, since probably we just changed options, but not selected one.
+              callback();
             })
         },
         select: function(v) {
             if (this.find(v) != undefined) {
-               SessionStorage.set(this.get("namespace"), "ajax-select-filtering" + this.name(), this.find(v).value );
-               this.set({"selected" : this.find(v)});
+               SessionStorage.set(this.get("namespace"), "ajax-select-filtering-name" + this.name(), this.find(v).name );
+               SessionStorage.set(this.get("namespace"), "ajax-select-filtering-value" + this.name(), this.find(v).value );
+               this.set({"selected" : this.find(v)}, {silent : this.selectedValue() == v});
             }
             else
                 this.select("");
@@ -130,9 +144,12 @@
         },
         setSessionStorageNamespace: function(namespace) {
             this.set({ namespace: namespace });
-            var fss = SessionStorage.get(namespace, "ajax-select-filtering" + this.name());
-            if (fss == undefined) fss = "";
-                this.select(fss);
+            var fssn = SessionStorage.get(namespace, "ajax-select-filtering-name" + this.name());
+            var fssv = SessionStorage.get(namespace, "ajax-select-filtering-value" + this.name());
+            if (fssn == undefined) fssn = this.defaultName();  
+            if (fssv == undefined) fssv = "";
+            this.set({"options" : [{name : fssn, value : fssv}]});
+            this.select(fssv);
         }
     });
 
@@ -249,39 +266,6 @@
         }
     });
 
-
-    var SelectAjaxFilteringView = Backbone.View.extend({
-        model: SelectAjaxFiltering,
-        initialize: function(args) {
-            _.bindAll(this, 'render');
-            var view = this;
-            this.model.bind('change', function() {view.render();})
-            this.render();
-        },
-        render: function() {
-            $(this.el).empty();
-            var selectFiltering = this.model;
-            var options = this.model.options();
-            var selected = selectFiltering.selected()
-            var selectOptions = [];
-            for(var i=0;i< options.length;i++)
-                    if (options[i] != selected)
-                         selectOptions.push(options[i])
-            if (this.select != undefined)
-                this.select.clear();
-            this.select = new Select({
-                options : selectOptions,
-                name : selected.name,
-                theme : selected.value != "" ? "dark" : "warm",
-                textWidth : selectFiltering.textWidth(),
-                onSelect : function(value) {
-                    selectFiltering.select(value);
-                }
-            });
-            $(this.el).append(this.select.view().el);
-        }
-    });
-
     var SelectFilteringView = Backbone.View.extend({
         initialize: function(args) {
             _.bindAll(this, 'render');
@@ -314,6 +298,44 @@
     });
 
 
+    var SelectAjaxFilteringView = Backbone.View.extend({
+        model: SelectAjaxFiltering,
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            var view = this;
+            this.model.bind('change', function() {view.render();})
+            this.model.bind('more-options-available', function() {view.render();})
+            this.render();
+        },
+        render: function() {
+            var self = this;
+            $(this.el).empty();
+            var selectFiltering = this.model;
+            var options = this.model.options();
+            var selected = selectFiltering.selected()
+            var selectOptions = [];
+            for(var i=0;i< options.length;i++)
+                    if (options[i] != selected)
+                         selectOptions.push(options[i])
+            if (this.select != undefined)
+                this.select.clear();
+            this.select = new Select({
+                options : selectOptions,
+                name : selected.name,
+                theme : selected.value != "" ? "dark" : "warm",
+                textWidth : selectFiltering.textWidth(),
+                onOpen : function() {
+                    if (!selectFiltering.needMoreOptions())  return true;
+                    selectFiltering.getMoreOptions(function() {self.select.open();})
+                    return false;
+                },
+                onSelect : function(value) {
+                    selectFiltering.select(value);
+                }
+            });
+            $(this.el).append(this.select.view().el);
+        }
+    });
     
 
     var IntervalDoubleSelectFilteringView = Backbone.View.extend({
