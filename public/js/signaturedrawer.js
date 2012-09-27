@@ -21,7 +21,7 @@ var SignatureDrawer = Backbone.View.extend({
         this.drawing = false;
 
         document.ontouchstart = function(e){
-            return state;
+            return true;
         }
     },
     lineWith : function() {
@@ -315,7 +315,7 @@ window.SignatureDrawerPopup = {
             },
             onClose : function() {
               document.ontouchmove = function(e){
-                 return state;
+                 return true;
               }
             },
             top: standardDialogTop,
