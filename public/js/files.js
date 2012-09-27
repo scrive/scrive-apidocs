@@ -289,10 +289,10 @@ var FilePageView = Backbone.View.extend({
         container.addClass("pagediv");
 
         // Page part with image
-        this.pagejpg = $("<div class='pagejpg'/>");
-        var pagelink = location.protocol + "//" + location.host + "/pages/" + fileid  + "/" + page.number() + file.queryPart();
+        this.pagejpg = $("<img class='pagejpg'/>");
+        var pagelink = "/pages/" + fileid  + "/" + page.number() + file.queryPart();
 
-        this.pagejpg.css("background-image", "url(" +pagelink +")");
+        this.pagejpg.attr("src", pagelink);
         container.append(this.pagejpg);
         this.makeDropable();
         // Fields for the page

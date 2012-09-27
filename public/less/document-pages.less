@@ -14,9 +14,13 @@
 
 .pagediv {
     width: @page-div-width;
+
+    border: 1px solid #777;
+
     box-shadow: 1px 1px 5px #505050;
     -moz-box-shadow: 1px 1px 5px #505050;
     -webkit-box-shadow: 1px 1px 5px #505050;
+
     overflow: hidden;
 
     position: relative;
@@ -25,8 +29,8 @@
 }
 
 .pagejpg {
-    height: @a4-height-in-pt * @page-div-width / @a4-width-in-pt;
-    border: 1px solid #777;
+    /* Show page image in full width and height comes from aspect ratio of bitmap */
+    width: 100%;
     background-color: #fafafa;
 }
 
