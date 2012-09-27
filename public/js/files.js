@@ -233,19 +233,20 @@ var FilePageView = Backbone.View.extend({
         $("body").unbind("mousemove");
     },
     makeDropable : function() {
-      var page = this.model;
-      var pagejpg = this.pagejpg;
-      pagejpg.droppable({
+      var self = this;
+      var page = self.model;
+      var pagejpg = self.pagejpg;
+      $(self.el).droppable({
         drop: function(event, ui) {
-            var helper = $(ui.helper);
-            var top = helper.offset().top -  pagejpg.offset().top;
-            var left = helper.offset().left -  pagejpg.offset().left;
-            var options = $(ui.draggable).data("draggable").options;
-            var onDrop = options.onDrop;
-            onDrop(page,left,top);
-            return false;
-          }
-       });
+          var helper = $(ui.helper);
+          var top = helper.offset().top - $(self.el).offset().top;
+          var left = helper.offset().left - $(self.el).offset().left;
+          var options = $(ui.draggable).data("draggable").options;
+          var onDrop = options.onDrop;
+          onDrop(page,left,top);
+          return false;
+        }
+      });
     },
     renderDragables : function() {
         var view = this;
@@ -381,7 +382,7 @@ window.KontraFile = {
         }
         this.view = new FileView({
             model: this.model,
-            el : $("<div id ='documentBox'/>")
+            el : $("<div class='document-pages'/>")
         });
         return this;
     }

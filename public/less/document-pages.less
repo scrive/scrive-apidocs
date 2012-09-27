@@ -1,0 +1,99 @@
+
+@page-div-width: 954px;
+
+@a4-width-in-pt: 595px;
+@a4-height-in-pt: 842px;
+
+.document-pages {
+
+    overflow: auto;
+    text-align: center;
+
+    margin: 0px;
+    margin-top:10px;
+
+.pagediv {
+    width: @page-div-width;
+    box-shadow: 1px 1px 5px #505050;
+    -moz-box-shadow: 1px 1px 5px #505050;
+    -webkit-box-shadow: 1px 1px 5px #505050;
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    position: relative;
+
+    margin: 0 auto;
+}
+
+.pagejpg {
+    height: @a4-height-in-pt * @page-div-width / @a4-width-in-pt;
+    border: 1px solid #777;
+    background-color: #fafafa;
+}
+
+.pagediv .hline {
+    width: 100%;
+    height: 1px;
+    background: #dedede;
+    position: relative;
+}
+
+.pagediv .vline {
+    width: 1px;
+    height: 100%;
+    background: #dedede;
+    position: relative;
+}
+
+.placedfield, .placedfieldhelper {
+    position: absolute;
+    cursor: pointer;
+}
+
+}
+
+/* This .placedfieldvalue and .placedcheckbox have to be outside of
+ * everything as this is used for draggables which are direct children
+ * of BODY.
+ */
+.placedfieldvalue {
+    font-family: Helvetica;
+    font-size: 10px * @page-div-width / @a4-width-in-pt;
+}
+
+.placedcheckbox {
+    background: url("../img/checkbox_unchecked.jpg") no-repeat scroll 0 0 transparent;
+    height: 16px;
+    width: 16px;
+    cursor: pointer;
+}
+
+.placedcheckbox.checked {
+    background: url("../img/checkbox_checked.jpg") no-repeat scroll 0 0 transparent;
+}
+
+.signatureBox {
+    min-width: 10px;
+    text-align: center;
+    border: 1px solid #999999;
+    filter: alpha(opacity=95);
+    -moz-opacity: 0.95;
+    opacity: 0.95;
+    background-color: white;
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+}
+
+.signatureBox .signatureHeader {
+    background-image: url("/img/drag.png");
+    background-position: 2px 2px;
+    background-repeat: no-repeat;
+    width: 100%;
+    font-size: 12px;
+    font-style: italic;
+    color: #666666;
+    padding-top:2px;
+    padding-bottom:2px;
+    position: absolute;
+    min-height: 10px;
+}

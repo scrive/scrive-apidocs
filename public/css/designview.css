@@ -525,35 +525,6 @@
 
 }
 
-.signatureBox{
-    display: block;
-    min-width: 10px;
-    text-align: center;
-    border: 1px solid #999999;
-    filter: alpha(opacity=95);
-    -moz-opacity: 0.95;
-    opacity: 0.95;
-    background-color: white;
-    -moz-border-radius: 2px;
-    -webkit-border-radius: 2px;
-}
-
-.signatureBox .signatureHeader{
-    background-image: url("/img/drag.png");
-    background-position: 2px 2px;
-    background-repeat: no-repeat;
-    display: block;
-    width: 100%;
-    font-size: 12px;
-    font-style: italic;
-    color: #666666;
-    padding-top:2px;
-    padding-bottom:2px;
-    position: absolute;
-    min-height: 10px;
-
-}
-
 .signStepsBody.fixed{
     position:fixed;
     top:0px;

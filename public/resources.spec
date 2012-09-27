@@ -54,6 +54,7 @@ set systemPage
  css css/docsignview.css
  css css/main.css
  less less/selects.less
+ less less/document-pages.less
  less less/payments.less
  less less/paymentsoutside.less
  less less/oauth.less
