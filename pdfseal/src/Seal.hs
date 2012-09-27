@@ -300,11 +300,11 @@ tellMatrix a b c d e f =
 -- upper left corner.  The internal_image_w and internal_image_h are
 -- in image pixels. Usually these are equal to image_w and image_h,
 -- but we have the machinery to scale should it be needed.
-fieldstext :: Int -> Int -> [Field] -> String
-fieldstext pagew pageh fields = concatMap fieldtext fields
+commandsFromFields :: Int -> Int -> [Field] -> String
+commandsFromFields pagew pageh fields = concatMap commandsFromField fields
   where
     fontBaseline = 8
-    fieldtext Field{ SealSpec.value = val
+    commandsFromField Field{ SealSpec.value = val
                    , x
                    , y
                    , w
@@ -319,8 +319,9 @@ fieldstext pagew pageh fields = concatMap fieldtext fields
                          tell $ "(" ++ winAnsiPostScriptEncode val ++ ") Tj\n"
                          tell "ET\n"
                          tell "Q\n"
-    fieldtext FieldJPG{ SealSpec.valueBase64 = val } | null val = ""
-    fieldtext FieldJPG{ SealSpec.valueBase64 = val
+
+    commandsFromField FieldJPG{ SealSpec.valueBase64 = val } | null val = ""
+    commandsFromField FieldJPG{ SealSpec.valueBase64 = val
                    , x
                    , y
                    , w
@@ -345,15 +346,17 @@ fieldstext pagew pageh fields = concatMap fieldtext fields
                          tell "EI\n"        -- end image
                          tell "Q\n"
 
-placeSeals :: [Field] -> RefID -> [String] -> RefID -> String -> RefID -> State Document ()
-placeSeals fields sealrefid sealtexts paginrefid pagintext' sealmarkerformrefid = do
+placeSeals :: SealSpec -> [Field] -> RefID -> [String] -> RefID -> RefID -> State Document ()
+placeSeals sealSpec fields sealrefid sealtexts paginrefid sealmarkerformrefid = do
     pages <- gets listPageRefIDs
     let pagew = 595
         pageh = 842
+    let pagintext' = paginCommands pagew sealSpec
+
     let pagevalue = page_dict (Array []) (Array []) `ext` [entryna "MediaBox" [0,0,pagew,pageh]]
     -- should optimize pagintext' into one stream
     let findFields pageno = filter (\x -> page x == pageno) fields
-    let pagintext1 pageno = fieldstext pagew pageh (findFields pageno)++
+    let pagintext1 pageno = commandsFromFields pagew pageh (findFields pageno)++
                      pagintext' ++
                      " q 0.2 0 0 0.2 " ++ show (fromIntegral (pagew - 18) / 2 :: Double) ++ " 14 cm /SealMarkerForm Do Q "
 
@@ -361,7 +364,7 @@ placeSeals fields sealrefid sealtexts paginrefid pagintext' sealmarkerformrefid 
                           [(page,pagintext1 pageno) | (page,pageno) <- zip pages [1..]]
     flip mapM_ sealtexts $ \sealtext -> do
         lastpage' <- addPageToDocument pagevalue
-        mapM_ (placeSealOnPageRefID sealrefid sealmarkerformrefid) [(lastpage',sealtext)]
+        placeSealOnPageRefID sealrefid sealmarkerformrefid (lastpage',sealtext)
 
 placeFields :: [Field] -> State Document ()
 placeFields fields = do
@@ -370,7 +373,7 @@ placeFields fields = do
         pageh = 842
     -- should optimize pagintext' into one stream
     let findFields pageno = filter (\x -> page x == pageno) fields
-    let pagintext1 pageno = fieldstext pagew pageh (findFields pageno)
+    let pagintext1 pageno = commandsFromFields pagew pageh (findFields pageno)
 
     modify $ \document' -> foldr (placeFieldsOnPage) document'
                           [(page,pagintext1 pageno) | (page,pageno) <- zip pages [1..]]
@@ -477,33 +480,33 @@ groupBoxesUpToHeight height boxes = helper boxes
                             (cb, []) -> [reverse cb]
                             (cb, rest) -> reverse cb : helper rest
 
-pagintext :: SealSpec -> String
-pagintext (SealSpec{documentNumber,initials,staticTexts }) =
+paginCommands :: Int -> SealSpec -> String
+paginCommands pageWidth (SealSpec{documentNumber,initials,staticTexts }) =
  let
     font = PDFFont Helvetica 8
     docnrwidth = textWidth font (toPDFString docnrtext)
     docnroffset = center - 20 - docnrwidth
-    center = 595/2
-    signedinitials = (signedText staticTexts) ++": " ++ winAnsiPostScriptEncode initials
+    center = fromIntegral pageWidth/2
+    signedinitials = signedText staticTexts ++ ": " ++ winAnsiPostScriptEncode initials
     siwidth = textWidth font (toPDFString signedinitials)
     sioffset = center + 20
-    docnrtext = (docPrefix staticTexts) ++ " "++ documentNumber
+    docnrtext = docPrefix staticTexts ++ " " ++ documentNumber
 
- in
- "q 1 0 0 1 0 5 cm " ++
- "BT " ++
- "0.546 0.469 0.454 0.113 k " ++
- "/SkrivaPaHelvetica 1 Tf " ++
- "8 0 0 8 " ++ show sioffset ++ " 15 Tm " ++
- "[(" ++ signedinitials ++ ")]TJ " ++
- "8 0 0 8 " ++ show docnroffset ++ " 15 Tm " ++
- "(" ++ docnrtext ++ ")Tj " ++
- "ET " ++
- "0.863 0.43 0.152 0.004 K " ++
- "0.4 w " ++
- "60 18 m " ++ show (docnroffset-10) ++ " 18 l S " ++
- show (sioffset+siwidth+10) ++ " 18 m " ++ show (595 - 60 :: Int) ++ " 18 l S " ++
- "Q "
+ in unlines [ "q"                                              -- safe state
+            , "0.546 0.469 0.454 0.113 k"                      -- set graish color
+            , "BT"                                             -- begin text
+            ,   "/SkrivaPaHelvetica 8 Tf"                        -- choose 8pt font
+            ,   "1 0 0 1 " ++ show docnroffset ++ " 20 Tm"       -- move to beginning of document number text
+            ,   "(" ++ docnrtext ++ ")Tj"                        -- write document number
+            ,   "1 0 0 1 " ++ show sioffset ++ " 20 Tm"          -- move to the beginning of initials text
+            , "[(" ++ signedinitials ++ ")] TJ"                -- write initials
+            , "ET"                                             -- end of text
+            , "0.863 0.43 0.152 0.004 K"                       -- choose blueish color
+            , "0.4 w"                                          -- line is 0.4pt wide
+            , "60 23 m " ++ show (docnroffset-10) ++ " 23 l S" -- draw left line
+            , show (sioffset+siwidth+10) ++ " 23 m " ++ show (pageWidth - 60) ++ " 23 l S" -- draw right line
+            , "Q"                                              -- restore state
+            ]
 
 
 -- | This function takes font and maximal width of lines. Then it
@@ -875,9 +878,8 @@ process (sealSpec@SealSpec
               [newpagincontents,newsealcontents] <- importObjects seal [paginpage1,sealpage1]
               [sealmarkerpage2] <- importObjects sealmarker [sealmarkerpage]
               sealmarkerform <- pageToForm sealmarkerpage2
-              let pagintext1 = pagintext sealSpec
               let sealtexts = verificationPagesContents sealSpec
-              placeSeals fields' newsealcontents sealtexts newpagincontents pagintext1 sealmarkerform
+              placeSeals sealSpec fields' newsealcontents sealtexts newpagincontents sealmarkerform
               when (not (null attachments)) $
                    attachFiles attachments
     putStrLn $ "Writing file " ++ output
