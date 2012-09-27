@@ -115,37 +115,38 @@ listPageRefIDs document' =
 
 getResDict :: RefID -> State Document DictData
 getResDict pageid = do
+  value' <- getInheritedPageKey "Resources" pageid
+  case value' of
+    Just (Dict dt) -> return dt
+    _ -> do
+      -- /Resources key is not dict, should not happen in normal PDFs
+      return []
+
+
+getInheritedPageKey :: String -> RefID -> State Document (Maybe Value)
+getInheritedPageKey key pageid = do
   Just (Indir (Dict pagedict) _) <- gets $ PdfModel.lookup pageid
-  case Prelude.lookup (BS.pack "Resources") pagedict of
+  case Prelude.lookup (BS.pack key) pagedict of
     Nothing -> do
       case Prelude.lookup (BS.pack "Parent") pagedict of
-        Nothing -> return []
-        Just (Ref parentrefid') -> getResDict parentrefid'
-        _ -> return []
-    Just (Dict value') -> do
-      return value'
+        Nothing -> do
+          return Nothing
+        Just (Ref parentrefid') -> do
+          getInheritedPageKey key parentrefid'
+        _ -> do
+          -- /Parent key is bogus, but we ignore it
+          return Nothing
     Just (Ref refid') -> do
       m <- gets $ PdfModel.lookup refid'
       case m of
-        Just (Indir (Dict value') _) -> return value'
-        _ -> error "2"
-    x -> error $ "/Resources key is totally bogus: " ++ show x
-
-mergeResourceBranch :: Document -> DictData -> DictData -> DictData
-mergeResourceBranch _document source1 source2 = source1 ++ source2
-{-
-    map merge source1
-    where
-      merge (key,Dict value) =
-          let
-              Dict value2 = maybe (Dict []) id $ Prelude.lookup key source2
-          in (key,Dict (value ++ value2))
-      merge (key,Ref refid) =
-          case PdfModel.lookup refid document of
-            Just (Indir value _) -> merge (key,value)
-            _ -> merge (key,Dict [])
-      merge (key,x) = (key,x)
--}
+        Just (Indir value' _) -> do
+          return (Just value')
+        _ -> do
+          -- refered object does not exist in PDF, should not happen,
+          -- but according to spec this is same as null
+          return Nothing
+    Just value' -> do
+      return (Just value')
 
 mergeResources :: Document -> DictData -> DictData -> DictData
 mergeResources document' source1 source2 =
@@ -163,7 +164,11 @@ mergeResources document' source1 source2 =
             Just (Indir value' _) -> unite x value'
             _ -> x
       unite (Dict d1) (Dict d2) =
-          Dict (mergeResourceBranch document' d1 d2)
+          -- at this point we merge resources from two PDF pages d1
+          -- and d2 are maps so simple concat will produce duplicates
+          -- luckyly we control names in d2 and have chosen them to
+          -- not conflict with anything in this world
+          Dict (d1 ++ d2)
       unite x _ = x
 
 placeSealOnPageRefID :: RefID -> RefID -> (RefID,String) -> State Document ()
