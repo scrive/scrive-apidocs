@@ -97,7 +97,7 @@ data HistEntry = HistEntry
     deriving (Eq,Ord,Show,Read)
 
 
-{- |  Static (almoust) text for sealing document.
+{- |  Static (almost) text for sealing document.
       !!!! IMPORTANT Templates for sealing depends on read instance of this class
       If You change this structure sealing WILL fail, unless changes are made to docseal.st
 -}

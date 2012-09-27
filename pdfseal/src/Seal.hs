@@ -901,8 +901,7 @@ process (sealSpec@SealSpec
     let [paginpage1, sealpage1] = listPageRefIDs seal
         [sealmarkerpage] = listPageRefIDs sealmarker
 
-    let ((),outputdoc) =
-            flip runState doc $ do
+    let outputdoc = flip execState doc $ do
               [newpagincontents,newsealcontents] <- importObjects seal [paginpage1,sealpage1]
               [sealmarkerpage2] <- importObjects sealmarker [sealmarkerpage]
               sealmarkerform <- pageToForm sealmarkerpage2
