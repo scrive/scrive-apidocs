@@ -92,6 +92,7 @@ kontraMigrations = [
   , removeServiceIDFromSignStatEvents
   , removeDiskPathAndMakeNewColumnsNotNull
   , addApiCallbackUrlToDocument
+  , removeSignatoryRoles
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

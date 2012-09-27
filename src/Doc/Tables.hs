@@ -153,7 +153,7 @@ tableSignatoryAttachments = Table {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = Table {
     tblName = "signatory_links"
-  , tblVersion = 11
+  , tblVersion = 12
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -174,7 +174,6 @@ tableSignatoryLinks = Table {
        , ("signinfo_first_name_verified", SqlColDesc {colType = SqlBitT, colNullable = Just True})
        , ("signinfo_last_name_verified", SqlColDesc {colType = SqlBitT, colNullable = Just True})
        , ("signinfo_personal_number_verified", SqlColDesc {colType = SqlBitT, colNullable = Just True})
-       , ("roles", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        , ("really_deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        , ("csv_title", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -183,6 +182,8 @@ tableSignatoryLinks = Table {
        , ("internal_insert_order", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("signinfo_ocsp_response", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("sign_redirect_url", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("is_author", SqlColDesc {colType = SqlBitT, colNullable = Just False})
+       , ("is_partner", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE SEQUENCE signatory_links_internal_insert_order_seq"
@@ -206,7 +207,6 @@ tableSignatoryLinks = Table {
           ++ ", signinfo_first_name_verified BOOL NULL DEFAULT NULL"
           ++ ", signinfo_last_name_verified BOOL NULL DEFAULT NULL"
           ++ ", signinfo_personal_number_verified BOOL NULL DEFAULT NULL"
-          ++ ", roles INTEGER NOT NULL"
           ++ ", deleted BOOL NOT NULL DEFAULT false"
           ++ ", really_deleted BOOL NOT NULL DEFAULT false"
           ++ ", csv_title TEXT NULL"
@@ -215,6 +215,8 @@ tableSignatoryLinks = Table {
           ++ ", internal_insert_order BIGINT NOT NULL DEFAULT nextval('signatory_links_internal_insert_order_seq')"
           ++ ", signinfo_ocsp_response VARCHAR NULL DEFAULT NULL"
           ++ ", sign_redirect_url VARCHAR NULL DEFAULT NULL"
+          ++ ", is_author BOOL NOT NULL"
+          ++ ", is_partner BOOL NOT NULL"
           ++ ", CONSTRAINT pk_signatory_links PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated

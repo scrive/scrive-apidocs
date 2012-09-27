@@ -21,6 +21,21 @@ import MinutesTime
 
 $(jsonableDeriveConvertible [t| [SignatoryField] |])
 
+removeSignatoryRoles :: MonadDB m => Migration m
+removeSignatoryRoles = Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 11
+  , mgrDo = do
+    kRunRaw "ALTER TABLE signatory_links ADD COLUMN is_author BOOL NULL"
+    kRunRaw "ALTER TABLE signatory_links ADD COLUMN is_partner BOOL NULL"
+    kRunRaw $ "UPDATE signatory_links SET"
+      ++ "  is_author  = (roles & 2)::BOOL"
+      ++ ", is_partner = (roles & 1)::BOOL"
+    kRunRaw "ALTER TABLE signatory_links DROP COLUMN roles"
+    kRunRaw "ALTER TABLE signatory_links ALTER is_author SET NOT NULL"
+    kRunRaw "ALTER TABLE signatory_links ALTER is_partner SET NOT NULL"
+}
+
 addApiCallbackUrlToDocument :: MonadDB m => Migration m
 addApiCallbackUrlToDocument = Migration {
     mgrTable = tableDocuments
