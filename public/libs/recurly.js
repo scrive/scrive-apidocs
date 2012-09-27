@@ -2099,6 +2099,9 @@ R.buildSubscriptionForm = function(options) {
     });
 
       validate = function(callback) {
+          $form.find('.error').remove();
+          $form.find('.invalid').removeClass('invalid');
+
           validationGroup(function(puller) {
               pullPlanQuantity($form, subscription.plan, options, puller);
               pullAccountFields($form, account, options, puller);
@@ -2114,8 +2117,6 @@ R.buildSubscriptionForm = function(options) {
       clearServerErrors($form);
 
       
-      $form.find('.error').remove();
-      $form.find('.invalid').removeClass('invalid');
 
         validate(
             function() {
