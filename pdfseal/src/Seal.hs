@@ -113,22 +113,23 @@ listPageRefIDs document' =
 
     in listPageRefIDSFromPages document' pagesrefid
 
-getResDict :: Document -> RefID -> DictData
-getResDict doc pageid =
-    let
-        -- FIXME: refs or something
-        Just (Indir (Dict pagedict) _) = PdfModel.lookup pageid doc
-        resource = case Prelude.lookup (BS.pack "Resources") pagedict of
-          Nothing -> case Prelude.lookup (BS.pack "Parent") pagedict of
-                         Nothing -> []
-                         Just (Ref parentrefid') -> getResDict doc parentrefid'
-                         _ -> []
-          Just (Dict value') -> value'
-          Just (Ref refid') -> case PdfModel.lookup refid' doc of
-                                Just (Indir (Dict value') _) -> value'
-                                _ -> error "2"
-          _ -> error "/Resources key is totally bogus"
-    in resource
+getResDict :: RefID -> State Document DictData
+getResDict pageid = do
+  Just (Indir (Dict pagedict) _) <- gets $ PdfModel.lookup pageid
+  case Prelude.lookup (BS.pack "Resources") pagedict of
+    Nothing -> do
+      case Prelude.lookup (BS.pack "Parent") pagedict of
+        Nothing -> return []
+        Just (Ref parentrefid') -> getResDict parentrefid'
+        _ -> return []
+    Just (Dict value') -> do
+      return value'
+    Just (Ref refid') -> do
+      m <- gets $ PdfModel.lookup refid'
+      case m of
+        Just (Indir (Dict value') _) -> return value'
+        _ -> error "2"
+    x -> error $ "/Resources key is totally bogus: " ++ show x
 
 mergeResourceBranch :: Document -> DictData -> DictData -> DictData
 mergeResourceBranch _document source1 source2 = source1 ++ source2
@@ -165,52 +166,51 @@ mergeResources document' source1 source2 =
           Dict (mergeResourceBranch document' d1 d2)
       unite x _ = x
 
-placeSealOnPageRefID :: RefID -> RefID -> (RefID,String) -> Document -> Document
-placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document' =
-    let
-        Just (Indir (Dict pagedict) pagestrem) =
-            PdfModel.lookup pagerefid document'
-        Just contentvalue = {- trace (show pagedict) $ -} Prelude.lookup (BS.pack "Contents") pagedict
-        contentlist = case contentvalue of
-                        Ref{} -> [contentvalue]
-                        Array arr -> arr
-                        _ -> error "/Contents must be either ref or array of refs"
+placeSealOnPageRefID :: RefID -> RefID -> (RefID,String) -> State Document ()
+placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) = do
+  Just (Indir (Dict pagedict) pagestrem) <- gets $
+            PdfModel.lookup pagerefid
+  let mcontentvalue = Prelude.lookup (BS.pack "Contents") pagedict
+  let contentlist = case mcontentvalue of
+                        Just (contentvalue@Ref{}) -> [contentvalue]
+                        Just (Array arr) -> arr
+                        x -> error $ "/Contents must be either ref or array of refs but found " ++ show x
 
-        ([q,qQ,rr], docx) = flip runState document' $ do
-            q' <- addStream (Dict []) $ BSL.pack "q "
-            qQ' <- addStream (Dict []) $ BSL.pack (" Q " ++ normalizeToA4 ++ " " ++ rotationtext ++ " % here\n")
-            rr' <- addStream (Dict []) $ BSL.pack (sealtext)
-            return [q',qQ',rr']
-
-        sealpagecontents = contentsValueListFromPageID document' sealrefid
-
-        rotatekey = Prelude.lookup (BS.pack "Rotate") pagedict
-        ([cropbox_l, cropbox_b, cropbox_r, cropbox_t] {- :: Double -})
+  let ([cropbox_l, cropbox_b, cropbox_r, cropbox_t] {- :: Double -})
             = case (Prelude.lookup (BS.pack "CropBox") pagedict `mplus` Prelude.lookup (BS.pack "MediaBox") pagedict) of
                   Just (PdfModel.Array [PdfModel.Number l, PdfModel.Number b, PdfModel.Number r, PdfModel.Number t]) ->
                        [l :: Double, b, r, t]
                   _ -> [0, 0, 595, 842]
 
-        cropbox_w = cropbox_r - cropbox_l
-        cropbox_h = cropbox_t - cropbox_b
+      cropbox_w = cropbox_r - cropbox_l
+      cropbox_h = cropbox_t - cropbox_b
 
-        normalizeToA4 = show (Number (cropbox_w/595)) ++ " " ++
+      normalizeToA4 = show (Number (cropbox_w/595)) ++ " " ++
                         show (Number (0)) ++ " " ++
                         show (Number (0)) ++ " " ++
                         show (Number (cropbox_h/842)) ++ " " ++
                         show (Number (-cropbox_l)) ++ " " ++
                         show (Number (-cropbox_b)) ++ " cm"
 
-        rotationtext = case rotatekey of -- 595 842
+  let rotatekey = Prelude.lookup (BS.pack "Rotate") pagedict
+
+  let rotationtext = case rotatekey of -- 595 842
                          Just (Number 90) -> "0 1 -1 0 " ++ show (Number cropbox_w) ++ " 0 cm"
                          Just (Number 180) -> "-1 0 0 -1 " ++ show (Number cropbox_w) ++ " " ++ show (Number cropbox_h) ++ " cm"
                          Just (Number 270) -> "0 -1 1 0 0 " ++ show (Number cropbox_h) ++ " cm"
                          _ -> ""
 
-        sealresdict = getResDict document' sealrefid
-        pageresdict = getResDict document' pagerefid
-        newresdictcont1 = mergeResources document' sealresdict pageresdict
-        newxobjectdict = case Prelude.lookup (BS.pack "XObject") newresdictcont1 of
+  q <- addStream (Dict []) $ BSL.pack "q "
+  qQ <- addStream (Dict []) $ BSL.pack (" Q " ++ normalizeToA4 ++ " " ++ rotationtext ++ " % here\n")
+  rr <- addStream (Dict []) $ BSL.pack (sealtext)
+
+  sealpagecontents <- contentsValueListFromPageID sealrefid
+
+  sealresdict <- getResDict sealrefid
+  pageresdict <- getResDict pagerefid
+  document' <- get
+  let newresdictcont1 = mergeResources document' sealresdict pageresdict
+      newxobjectdict = case Prelude.lookup (BS.pack "XObject") newresdictcont1 of
                            Just (Dict w) -> Dict (w ++ [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)])
                            Just (Ref r) -> case PdfModel.lookup r document' of
                                              Just (Indir (Dict w) _) ->
@@ -219,18 +219,17 @@ placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document
 
                            Nothing -> Dict [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)]
                            x -> error (show x)
-        newresdict = Dict ((BS.pack "XObject",newxobjectdict) : skipXObject newresdictcont1)
-        skipXObject = filter (not . (== BS.pack "XObject") . fst)
+      newresdict = Dict ((BS.pack "XObject",newxobjectdict) : skipXObject newresdictcont1)
+      skipXObject = filter (not . (== BS.pack "XObject") . fst)
 
 
-        newcontentarray = Array ([Ref q] ++ contentlist ++ [Ref qQ] ++ map Ref sealpagecontents ++ [Ref rr])
-        skipkey x = BS.pack "Contents" == x || BS.pack "Resources" == x
-        pagedict2 = filter (not . skipkey . fst) pagedict
-        newpagedict = Dict pagedict2 `ext` [(BS.pack "Contents", newcontentarray)
+      newcontentarray = Array ([Ref q] ++ contentlist ++ [Ref qQ] ++ map Ref sealpagecontents ++ [Ref rr])
+      skipkey x = BS.pack "Contents" == x || BS.pack "Resources" == x
+      pagedict2 = filter (not . skipkey . fst) pagedict
+      newpagedict = Dict pagedict2 `ext` [(BS.pack "Contents", newcontentarray)
                                            ,(BS.pack "Resources", newresdict)]
-        newpage = (Indir newpagedict pagestrem)
-        newdocument = setIndirF pagerefid newpage docx
-    in newdocument
+      newpage = (Indir newpagedict pagestrem)
+  modify (setIndirF pagerefid newpage)
 
 placeFieldsOnPage :: (RefID,String) -> Document -> Document
 placeFieldsOnPage (pagerefid,sealtext) document' =
@@ -272,7 +271,7 @@ placeFieldsOnPage (pagerefid,sealtext) document' =
                          Just (Number 270) -> "0 -1 1 0 0 " ++ show (Number cropbox_h) ++ " cm"
                          _ -> ""
 
-        pageresdict = getResDict document' pagerefid
+        pageresdict = evalState (getResDict pagerefid) document'
 
 
         newcontentarray = Array ([Ref q] ++ contentlist ++ [Ref qQ] ++ [Ref rr])
@@ -358,11 +357,11 @@ placeSeals fields sealrefid sealtexts paginrefid pagintext' sealmarkerformrefid 
                      pagintext' ++
                      " q 0.2 0 0 0.2 " ++ show (fromIntegral (pagew - 18) / 2 :: Double) ++ " 14 cm /SealMarkerForm Do Q "
 
-    modify $ \document' -> foldr (placeSealOnPageRefID paginrefid sealmarkerformrefid) document'
+    mapM_ (placeSealOnPageRefID paginrefid sealmarkerformrefid)
                           [(page,pagintext1 pageno) | (page,pageno) <- zip pages [1..]]
     flip mapM_ sealtexts $ \sealtext -> do
         lastpage' <- addPageToDocument pagevalue
-        modify $ \document' -> foldr (placeSealOnPageRefID sealrefid sealmarkerformrefid) document' [(lastpage',sealtext)]
+        mapM_ (placeSealOnPageRefID sealrefid sealmarkerformrefid) [(lastpage',sealtext)]
 
 placeFields :: [Field] -> State Document ()
 placeFields fields = do
@@ -378,19 +377,18 @@ placeFields fields = do
 
 
 
-contentsValueListFromPageID :: Document -> RefID -> [RefID]
-contentsValueListFromPageID document' pagerefid =
-    let
-        Just (Indir (Dict pagedict) _) =
-            PdfModel.lookup pagerefid document'
-        Just contentvalue = Prelude.lookup (BS.pack "Contents") pagedict
-        contentlist = case contentvalue of
-                        Ref r -> [r]
-                        Array arr -> map unRefID arr
-                        _ -> error "/Contents must be ref or an array of refs"
-        unRefID (Ref r) = r
-        unRefID _ = error "unRefID not on ref"
-    in contentlist
+contentsValueListFromPageID :: RefID -> State Document [RefID]
+contentsValueListFromPageID pagerefid = do
+  Just (Indir (Dict pagedict) _) <- gets $
+            PdfModel.lookup pagerefid
+  let mcontentvalue = Prelude.lookup (BS.pack "Contents") pagedict
+  let contentlist = case mcontentvalue of
+                        Just (Ref r) -> [r]
+                        Just (Array arr) -> map unRefID arr
+                        x -> error $ "/Contents must be ref or an array of refs, found " ++ show x
+      unRefID (Ref r) = r
+      unRefID _ = error "unRefID not on ref"
+  return contentlist
 
 
 data Box = Box
