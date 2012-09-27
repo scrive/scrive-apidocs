@@ -120,6 +120,7 @@
         }
     });
 
+/*
     $.ajax("/blockinginfo", {dataType: 'json',
                             timeout: 3000,
                             success: function(data) {
@@ -129,7 +130,7 @@
                             error: function() {
                                 window.BlockingInfo = new window.BlockingInfoModel({});
                             }});
-
+*/
     window.blocking = {show: function(text) {
         
         Confirmation.popup({
