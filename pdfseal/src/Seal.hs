@@ -122,7 +122,11 @@ getResDict pageid = do
       -- /Resources key is not dict, should not happen in normal PDFs
       return []
 
-
+-- Keys 'Resources', 'MediaBox' and 'CropBox' in PDF are inherited
+-- from /Page and /Pages via /Parent key. Use this method to fins
+-- proper key. This inheritance is old concept and abandoned, other
+-- similar keys like ArtBox, BleedBox and TrimBox are not inherited in
+-- PDF.
 getInheritedPageKey :: String -> RefID -> State Document (Maybe Value)
 getInheritedPageKey key pageid = do
   Just (Indir (Dict pagedict) _) <- gets $ PdfModel.lookup pageid
@@ -181,16 +185,22 @@ placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) = do
                         Just (Array arr) -> arr
                         x -> error $ "/Contents must be either ref or array of refs but found " ++ show x
 
-  let ([cropbox_l, cropbox_b, cropbox_r, cropbox_t] {- :: Double -})
-            = case (Prelude.lookup (BS.pack "CropBox") pagedict `mplus` Prelude.lookup (BS.pack "MediaBox") pagedict) of
-                  Just (PdfModel.Array [PdfModel.Number l, PdfModel.Number b, PdfModel.Number r, PdfModel.Number t]) ->
-                       [l :: Double, b, r, t]
-                  _ -> [0, 0, 595, 842]
+  [cropbox_l, cropbox_b, cropbox_r, cropbox_t] <- do
+     mcropBox <- getInheritedPageKey "CropBox" pagerefid
+     case mcropBox of
+       Just (PdfModel.Array [PdfModel.Number l, PdfModel.Number b, PdfModel.Number r, PdfModel.Number t]) ->
+         return [l :: Double, b, r, t]
+       _ -> do
+         mmediaBox <- getInheritedPageKey "MediaBox" pagerefid
+         case mmediaBox of
+           Just (PdfModel.Array [PdfModel.Number l, PdfModel.Number b, PdfModel.Number r, PdfModel.Number t]) ->
+             return [l :: Double, b, r, t]
+           _ -> return [0, 0, 595, 842]
 
-      cropbox_w = cropbox_r - cropbox_l
+  let cropbox_w = cropbox_r - cropbox_l
       cropbox_h = cropbox_t - cropbox_b
 
-      normalizeToA4 = show (Number (cropbox_w/595)) ++ " " ++
+  let normalizeToA4 = show (Number (cropbox_w/595)) ++ " " ++
                         show (Number (0)) ++ " " ++
                         show (Number (0)) ++ " " ++
                         show (Number (cropbox_h/842)) ++ " " ++
