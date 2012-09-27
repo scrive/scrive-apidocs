@@ -175,8 +175,8 @@ mergeResources document' source1 source2 =
           Dict (d1 ++ d2)
       unite x _ = x
 
-placeSealOnPageRefID :: RefID -> RefID -> (RefID,String) -> State Document ()
-placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) = do
+placeContentOnPage :: DictData -> RefID -> (Int -> Int -> String) -> State Document ()
+placeContentOnPage newres pagerefid sealtext = do
   Just (Indir (Dict pagedict) pagestrem) <- gets $
             PdfModel.lookup pagerefid
   let mcontentvalue = Prelude.lookup (BS.pack "Contents") pagedict
@@ -188,62 +188,56 @@ placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) = do
   [cropbox_l, cropbox_b, cropbox_r, cropbox_t] <- do
      mcropBox <- getInheritedPageKey "CropBox" pagerefid
      case mcropBox of
-       Just (PdfModel.Array [PdfModel.Number l, PdfModel.Number b, PdfModel.Number r, PdfModel.Number t]) ->
+       Just (Array [Number l, Number b, Number r, Number t]) ->
          return [l :: Double, b, r, t]
        _ -> do
          mmediaBox <- getInheritedPageKey "MediaBox" pagerefid
          case mmediaBox of
-           Just (PdfModel.Array [PdfModel.Number l, PdfModel.Number b, PdfModel.Number r, PdfModel.Number t]) ->
+           Just (Array [Number l, Number b, Number r, Number t]) ->
              return [l :: Double, b, r, t]
            _ -> return [0, 0, 595, 842]
 
   let cropbox_w = cropbox_r - cropbox_l
       cropbox_h = cropbox_t - cropbox_b
 
-  let normalizeToA4 = show (Number (cropbox_w/595)) ++ " " ++
-                        show (Number (0)) ++ " " ++
-                        show (Number (0)) ++ " " ++
-                        show (Number (cropbox_h/842)) ++ " " ++
-                        show (Number (-cropbox_l)) ++ " " ++
-                        show (Number (-cropbox_b)) ++ " cm"
-
-  let rotatekey = Prelude.lookup (BS.pack "Rotate") pagedict
-
-  let rotationtext = case rotatekey of -- 595 842
-                         Just (Number 90) -> "0 1 -1 0 " ++ show (Number cropbox_w) ++ " 0 cm"
-                         Just (Number 180) -> "-1 0 0 -1 " ++ show (Number cropbox_w) ++ " " ++ show (Number cropbox_h) ++ " cm"
-                         Just (Number 270) -> "0 -1 1 0 0 " ++ show (Number cropbox_h) ++ " cm"
-                         _ -> ""
+  let offsetToZero = [1,0,0,1,-cropbox_l,-cropbox_b]
+  let rotateKey = Prelude.lookup (BS.pack "Rotate") pagedict
+  let rotateToZero = case rotateKey of
+                       Just (Number 90)  -> [ 0,  1, -1,  0, cropbox_w,         0]
+                       Just (Number 180) -> [-1,  0,  0, -1, cropbox_w, cropbox_h]
+                       Just (Number 270) -> [ 0, -1,  1,  0,         0, cropbox_h]
+                       _                 -> [ 1,  0,  0,  1,         0,         0]
 
   q <- addStream (Dict []) $ BSL.pack "q "
-  qQ <- addStream (Dict []) $ BSL.pack (" Q " ++ normalizeToA4 ++ " " ++ rotationtext ++ " % here\n")
-  rr <- addStream (Dict []) $ BSL.pack (sealtext)
+  qQ <- addStream (Dict []) $ BSL.pack $ unlines [ " Q "
+                                                 , unwords (map show offsetToZero) ++ " cm"
+                                                 , unwords (map show rotateToZero) ++ " cm "
+                                                 ]
 
-  sealpagecontents <- contentsValueListFromPageID sealrefid
+  rr <- addStream (Dict []) $ BSL.pack (sealtext (floor cropbox_w) (floor cropbox_h))
 
-  sealresdict <- getResDict sealrefid
   pageresdict <- getResDict pagerefid
   document' <- get
-  let newresdictcont1 = mergeResources document' sealresdict pageresdict
-      newxobjectdict = case Prelude.lookup (BS.pack "XObject") newresdictcont1 of
-                           Just (Dict w) -> Dict (w ++ [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)])
-                           Just (Ref r) -> case PdfModel.lookup r document' of
-                                             Just (Indir (Dict w) _) ->
-                                                   Dict (w ++ [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)])
-                                             x -> error (show x)
 
-                           Nothing -> Dict [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)]
-                           x -> error (show x)
-      newresdict = Dict ((BS.pack "XObject",newxobjectdict) : skipXObject newresdictcont1)
-      skipXObject = filter (not . (== BS.pack "XObject") . fst)
+  -- create new /Resources dictionary that has all resources from page
+  -- merged with all resources from our seal template files and merged
+  -- with seal marker resource on top of that
+  let newresdict = Dict $ mergeResources document' pageresdict newres
 
-
-      newcontentarray = Array ([Ref q] ++ contentlist ++ [Ref qQ] ++ map Ref sealpagecontents ++ [Ref rr])
+  -- new content array should have following structure:
+  -- - save state
+  -- - render old contents as it were
+  -- - restore state
+  -- - compensate for possible cropbox offset from (0,0)
+  -- - compensate for /Rotation attribute
+  -- - render whatever was specified to render
+  let newcontentarray = Array ([Ref q] ++ contentlist ++ [Ref qQ] ++ [Ref rr])
       skipkey x = BS.pack "Contents" == x || BS.pack "Resources" == x
       pagedict2 = filter (not . skipkey . fst) pagedict
       newpagedict = Dict pagedict2 `ext` [(BS.pack "Contents", newcontentarray)
                                            ,(BS.pack "Resources", newresdict)]
       newpage = (Indir newpagedict pagestrem)
+  -- finally set new page in place of the old one
   modify (setIndirF pagerefid newpage)
 
 placeFieldsOnPage :: (RefID,String) -> Document -> Document
@@ -361,37 +355,52 @@ commandsFromFields pagew pageh fields = concatMap commandsFromField fields
                          tell "EI\n"        -- end image
                          tell "Q\n"
 
-placeSeals :: SealSpec -> [Field] -> RefID -> [String] -> RefID -> RefID -> State Document ()
-placeSeals sealSpec fields sealrefid sealtexts paginrefid sealmarkerformrefid = do
+placeFieldsAndPagina :: SealSpec -> [Field] -> RefID -> RefID -> State Document ()
+placeFieldsAndPagina sealSpec fields paginrefid sealmarkerformrefid = do
     pages <- gets listPageRefIDs
-    let pagew = 595
-        pageh = 842
-    let pagintext' = paginCommands pagew sealSpec
 
-    let pagevalue = page_dict (Array []) (Array []) `ext` [entryna "MediaBox" [0,0,pagew,pageh]]
-    -- should optimize pagintext' into one stream
     let findFields pageno = filter (\x -> page x == pageno) fields
-    let pagintext1 pageno = commandsFromFields pagew pageh (findFields pageno)++
-                     pagintext' ++
-                     " q 0.2 0 0 0.2 " ++ show (fromIntegral (pagew - 18) / 2 :: Double) ++ " 14 cm /SealMarkerForm Do Q "
+    let contentCommands pageno = \pagew pageh ->
+           commandsFromFields pagew pageh (findFields pageno) ++
+           paginCommands pagew sealSpec
 
-    mapM_ (placeSealOnPageRefID paginrefid sealmarkerformrefid)
-                          [(page,pagintext1 pageno) | (page,pageno) <- zip pages [1..]]
+    paginresdict <- getResDict paginrefid
+
+    document' <- get
+
+    let newres = mergeResources document' paginresdict
+                        ([(BS.pack "XObject", Dict [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)])])
+    mapM_ (uncurry $ placeContentOnPage newres)
+            [(page,contentCommands pageno) | (page,pageno) <- zip pages [1..]]
+
+appendVerificationPages :: RefID -> [String] -> RefID -> State Document ()
+appendVerificationPages sealrefid sealtexts sealmarkerformrefid = do
+
+    sealresdict <- getResDict sealrefid
+
+    document' <- get
+
+    let newres = mergeResources document' sealresdict
+                        ([(BS.pack "XObject", Dict [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)])])
+
     flip mapM_ sealtexts $ \sealtext -> do
-        lastpage' <- addPageToDocument pagevalue
-        placeSealOnPageRefID sealrefid sealmarkerformrefid (lastpage',sealtext)
+      let pagew = 595
+          pageh = 842
+      lastpage' <- addPageToDocument (page_dict (Array []) (Array []) `ext` [entryna "MediaBox" [0::Int,0,pagew,pageh]])
+      placeContentOnPage newres lastpage' (\_ _ -> sealtext)
 
-placeFields :: [Field] -> State Document ()
-placeFields fields = do
+placeFields :: [Field] -> RefID -> State Document ()
+placeFields fields paginrefid = do
     pages <- gets listPageRefIDs
-    let pagew = 595
-        pageh = 842
-    -- should optimize pagintext' into one stream
-    let findFields pageno = filter (\x -> page x == pageno) fields
-    let pagintext1 pageno = commandsFromFields pagew pageh (findFields pageno)
 
-    modify $ \document' -> foldr (placeFieldsOnPage) document'
-                          [(page,pagintext1 pageno) | (page,pageno) <- zip pages [1..]]
+    let findFields pageno = filter (\x -> page x == pageno) fields
+    let contentCommands pageno = \pagew pageh ->
+           commandsFromFields pagew pageh (findFields pageno)
+
+    paginresdict <- getResDict paginrefid
+
+    mapM_ (uncurry $ placeContentOnPage paginresdict)
+            [(page,contentCommands pageno) | (page,pageno) <- zip pages [1..]]
 
 
 
@@ -520,6 +529,10 @@ paginCommands pageWidth (SealSpec{documentNumber,initials,staticTexts }) =
             , "0.4 w"                                          -- line is 0.4pt wide
             , "60 23 m " ++ show (docnroffset-10) ++ " 23 l S" -- draw left line
             , show (sioffset+siwidth+10) ++ " 23 m " ++ show (pageWidth - 60) ++ " 23 l S" -- draw right line
+                   -- seal form is 90pt x 90 pt, so 0.2*90 is 18
+                   -- line at 23 minus half of 18 is 14
+            , "0.2 0 0 0.2 " ++ show (((fromIntegral pageWidth - 18) / 2) :: Double) ++ " 14 cm" -- position for drawing seal
+            , "/SealMarkerForm Do"                             -- draw the seal in the middle between lines
             , "Q"                                              -- restore state
             ]
 
@@ -894,7 +907,8 @@ process (sealSpec@SealSpec
               [sealmarkerpage2] <- importObjects sealmarker [sealmarkerpage]
               sealmarkerform <- pageToForm sealmarkerpage2
               let sealtexts = verificationPagesContents sealSpec
-              placeSeals sealSpec fields' newsealcontents sealtexts newpagincontents sealmarkerform
+              placeFieldsAndPagina sealSpec fields' newpagincontents sealmarkerform
+              appendVerificationPages newsealcontents sealtexts sealmarkerform
               when (not (null attachments)) $
                    attachFiles attachments
     putStrLn $ "Writing file " ++ output
@@ -906,9 +920,15 @@ preprocess (PreSealSpec{ pssInput, pssOutput, pssFields }) = do
     mdoc <- PdfModel.parseFile pssInput
     doc <- maybe (error $ "Cannot parse input PDF " ++ pssInput) return mdoc
 
-    let ((),outputdoc) =
-            flip runState doc $ do
-              placeFields pssFields
+    mseal <- PdfModel.parseFile sealFileName
+    seal <- maybe (error $ "Cannot parse seal PDF " ++ sealFileName)
+            return mseal
+
+    let outputdoc = flip execState doc $ do
+              let [paginpage1, _sealpage1] = listPageRefIDs seal
+              [newpagincontents] <- importObjects seal [paginpage1]
+              placeFields pssFields newpagincontents
+
     putStrLn $ "Writing file " ++ pssOutput
     writeFileX pssOutput outputdoc
     return ()
