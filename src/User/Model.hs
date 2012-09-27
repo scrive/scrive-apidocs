@@ -58,7 +58,7 @@ import User.Region
 import User.Tables
 import User.UserID
 import DB.SQL2
-import Doc.DocStateData (DocumentStatus(..), SignatoryRole(..), DocumentID)
+import Doc.DocStateData (DocumentStatus(..), DocumentID)
 
 -- newtypes
 newtype Email = Email { unEmail :: String }
@@ -236,7 +236,7 @@ instance MonadDB m => DBQuery m IsUserDeletable Bool where
       sqlWhereEq "users.id" uid
       sqlJoinOn "signatory_links" "users.id = signatory_links.user_id"
       sqlWhereEq "signatory_links.deleted" False
-      sqlWhere $ SQL "(signatory_links.roles & ?) <> 0" [toSql [SignatoryAuthor]]
+      sqlWhere "signatory_links.is_author"
       sqlJoinOn "documents" "documents.id = signatory_links.document_id"
       sqlWhereEq "documents.status" Pending
       sqlResult "documents.id"

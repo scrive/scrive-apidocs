@@ -11,6 +11,7 @@ import Mails.MailsData
 import Doc.DocViewMail
 import Data.Maybe
 import Doc.DocProcess
+import Util.SignatoryLinkUtils
 import KontraLink
 import MagicHash
 import MinutesTime
@@ -27,7 +28,6 @@ mailMailAPIConfirm :: (MonadDB m, TemplatesMonad m)
                    -> SignatoryLink
                    -> m Mail
 mailMailAPIConfirm ctx document siglink = do
-  let issignatory = (elem SignatoryPartner . signatoryroles) siglink
   documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailconfirmbymailapi)  $ do
         F.valueM "footer" $ mailFooterForDocument ctx document
         F.valueM "timetosigninfo" $ do
@@ -44,7 +44,7 @@ mailMailAPIConfirm ctx document siglink = do
                                     else return Nothing
                    renderLocalTemplateForProcess document processwhohadsignedinfoformail $ do
                        F.value "signedlist" signedlist
-        F.value "issignatory" $ issignatory
+        F.value "issignatory" $ isSignatory siglink
         F.value "isattachments" $ False
         F.value "hassigattachments" $ False
         F.value "link" $ ctxhostpart ctx ++ (show $  LinkIssueDoc (documentid document))

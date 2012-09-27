@@ -217,7 +217,7 @@ documentcurrentsignorder doc =
         signorder = signatorysignorder . signatorydetails
         sigs = documentsignatorylinks doc
         notSigned siglnk = isNothing (maybesigninfo siglnk)
-            && SignatoryPartner `elem` signatoryroles siglnk -- we exclude non-signatories
+          && srPartner (signatoryroles siglnk) -- we exclude non-signatories
 
 {- |
    Build a SignatoryDetails from a User with no fields
@@ -274,14 +274,13 @@ isEligibleForReminder user document@Document{documentstatus} siglink =
     && invitationdeliverystatus siglink /= Undelivered
     && invitationdeliverystatus siglink /= Deferred
     && wasNotSigned
-    && isSignatoryPartner
+    && srPartner (signatoryroles siglink)
   where
     userIsAuthor = isAuthor (document, user)
     isUserSignator = isSigLinkFor user siglink
     wasNotSigned = isNothing (maybesigninfo siglink)
     signatoryActivated = documentcurrentsignorder document >= signatorysignorder (signatorydetails siglink)
     dontShowAnyReminder = documentstatus `elem` [Timedout, Canceled, Rejected]
-    isSignatoryPartner = SignatoryPartner `elem` signatoryroles siglink
 
 -- | Can author sign now according to sign order?
 canAuthorSignNow :: Document -> Bool

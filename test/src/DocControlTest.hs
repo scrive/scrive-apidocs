@@ -84,12 +84,13 @@ testSendingDocumentSendsInvites = do
   ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue)
 
-  doc <- addRandomDocumentWithAuthorAndCondition user (\d -> documentstatus d == Preparation
-                                                             && 2 <= length (filterSigLinksFor SignatoryPartner d)
-                                                             && case documenttype d of
-                                                                    Signable _ -> True
-                                                                    _ -> False
-                                                             && sendMailsDurringSigning d)
+  doc <- addRandomDocumentWithAuthorAndCondition user (\d ->
+       documentstatus d == Preparation
+    && 2 <= length (filterSigLinksFor (srPartner . signatoryroles) d)
+    && case documenttype d of
+          Signable _ -> True
+          _ -> False
+    && sendMailsDurringSigning d)
 
   req <- mkRequest POST [ ("send", inText "True")
                         -- this stuff is for updateDocument function, which I believe
@@ -121,13 +122,14 @@ testSigningDocumentFromDesignViewSendsInvites = do
   ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue)
 
-  doc <- addRandomDocumentWithAuthorAndCondition user (\d -> documentstatus d == Preparation
-                                                               && case documenttype d of
-                                                                    Signable Contract -> True
-                                                                    _ -> False
-                                                               && isSignatory (getAuthorSigLink d)
-                                                               && 2 <= length (filterSigLinksFor SignatoryPartner d)
-                                                               && sendMailsDurringSigning d)
+  doc <- addRandomDocumentWithAuthorAndCondition user (\d ->
+       documentstatus d == Preparation
+    && case documenttype d of
+        Signable Contract -> True
+        _ -> False
+    && isSignatory (getAuthorSigLink d)
+    && 2 <= length (filterSigLinksFor (srPartner . signatoryroles) d)
+    && sendMailsDurringSigning d)
 
   req <- mkRequest POST [ ("sign", inText "True")
                         ]
@@ -153,9 +155,9 @@ testNonLastPersonSigningADocumentRemainsPending = do
                      && d `allowsAuthMethod` StandardAuthentication
                      && documentdeliverymethod d == EmailDelivery)
   True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
-                   (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])
-                 , (mkSigDetails "Fred" "Frog" "fred@frog.com", [SignatoryPartner])
-                 , (mkSigDetails "Gordon" "Gecko" "gord@geck.com", [SignatoryPartner])
+                   (signatorydetails . fromJust $ getAuthorSigLink doc', authorRole)
+                 , (mkSigDetails "Fred" "Frog" "fred@frog.com", partnerRole)
+                 , (mkSigDetails "Gordon" "Gecko" "gord@geck.com", partnerRole)
                ]) (systemActor $ documentctime doc')
 
   True <- randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc'))
@@ -196,8 +198,8 @@ testLastPersonSigningADocumentClosesIt = do
                      && documentdeliverymethod d == EmailDelivery)
 
   True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
-                   (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])
-                 , (mkSigDetails "Fred" "Frog" "fred@frog.com", [SignatoryPartner])
+                   (signatorydetails . fromJust $ getAuthorSigLink doc', authorRole)
+                 , (mkSigDetails "Fred" "Frog" "fred@frog.com", partnerRole)
                ]) (systemActor $ documentctime doc')
 
 

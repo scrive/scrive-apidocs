@@ -212,7 +212,6 @@ mailInvitation forMail
                msiglink = do
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
     let creatorname = getSmartName $ fromJust $ getAuthorSigLink document
-    let issignatory = maybe False (elem SignatoryPartner . signatoryroles) msiglink
     let personname = maybe "" getSmartName msiglink
     let mainfile =  head $ (documentfiles document) ++ [unsafeFileID 0] -- There always should be main file but tests fail without it
     documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailinvitationtosign) $ do
@@ -221,7 +220,7 @@ mailInvitation forMail
         F.value "javascriptmagic" $ not forMail
         F.valueM "header" $ do
             header <- if null documentinvitetext
-                         then if issignatory || not forMail
+                         then if isSignatory msiglink || not forMail
                                  then renderLocalTemplateForProcess document processmailinvitationtosigndefaultheader $ do
                                      F.value "creatorname" $ creatorname
                                      F.value "personname" $ personname

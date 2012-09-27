@@ -83,19 +83,19 @@ isPreparation :: (SQL, String)
 isPreparation = (SQL "status = ?" [toSql Preparation], "Document is not Preparation")
 
 allHaveSigned :: (SQL, String)
-allHaveSigned = (SQL "(SELECT COUNT(*) FROM signatory_links WHERE document_id = d.id AND (roles & ?) <> 0 AND sign_time IS NULL) = 0" [toSql [SignatoryPartner]], "Not all signatories have signed")
+allHaveSigned = (SQL "(SELECT COUNT(*) FROM signatory_links WHERE document_id = d.id AND is_partner AND sign_time IS NULL) = 0" [], "Not all signatories have signed")
 
 hasOneAuthor :: (SQL, String)
-hasOneAuthor = (SQL "(SELECT COUNT(*) FROM signatory_links WHERE document_id = d.id AND (roles & ?) <> 0) = 1" [toSql [SignatoryAuthor]], "Number of authors was not 1")
+hasOneAuthor = (SQL "(SELECT COUNT(*) FROM signatory_links WHERE document_id = d.id AND is_author) = 1" [], "Number of authors was not 1")
 
 hasSignatories :: (SQL, String)
-hasSignatories = (SQL "(SELECT COUNT(*) FROM signatory_links WHERE document_id = d.id AND (roles & ?) <> 0) > 0" [toSql [SignatoryPartner]], "Document has no signatories")
+hasSignatories = (SQL "(SELECT COUNT(*) FROM signatory_links WHERE document_id = d.id AND is_partner) > 0" [], "Document has no signatories")
 
 hasOneFile :: (SQL, String)
 hasOneFile = (SQL "file_id IS NOT NULL AND sealed_file_id IS NULL" [], "Document doesn't have exactly one file")
 
 hasSignatory :: SignatoryLinkID -> (SQL, String)
-hasSignatory slid = (SQL "(SELECT COUNT(*) FROM signatory_links sl WHERE sl.id = ? AND document_id = d.id AND (roles & ?) <> 0) = 1" [toSql slid, toSql [SignatoryPartner]], "Signatory #" ++ show slid ++ " either doesn't belong to this document or is not signatory partner")
+hasSignatory slid = (SQL "(SELECT COUNT(*) FROM signatory_links sl WHERE sl.id = ? AND document_id = d.id AND sl.is_partner) = 1" [toSql slid], "Signatory #" ++ show slid ++ " either doesn't belong to this document or is not signatory partner")
 
 hasNotSigned :: SignatoryLinkID -> (SQL, String)
 hasNotSigned slid = (SQL "(SELECT COUNT(*) FROM signatory_links sl WHERE sl.id = ? AND document_id = d.id AND sign_time IS NULL) = 1" [toSql slid], "Signatory #" ++ show slid ++ " has already signed")

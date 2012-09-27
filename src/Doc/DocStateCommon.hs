@@ -20,7 +20,7 @@ trueOrMessage True  _ = Nothing
 
 
 signLinkFromDetails' :: SignatoryDetails
-                     -> [SignatoryRole]
+                     -> SignatoryRoles
                      -> [SignatoryAttachment]
                      -> MagicHash
                      -> SignatoryLink
@@ -99,12 +99,12 @@ blankDocument =
           , documentapicallbackurl       = Nothing
           }
 
-checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload, Maybe String)] -> [String]
+checkResetSignatoryData :: Document -> [(SignatoryDetails, SignatoryRoles, [SignatoryAttachment], Maybe CSVUpload, Maybe String)] -> [String]
 checkResetSignatoryData doc sigs =
-  let authors    = [ r | (_, r, _, _, _) <- sigs, SignatoryAuthor `elem` r]
+  let authors = length $ filter (\(_, r, _, _, _) -> srAuthor r) sigs
   in catMaybes $
       [ trueOrMessage (documentstatus doc == Preparation) $ "Document is not in preparation, is in " ++ show (documentstatus doc)
-      , trueOrMessage (length authors == 1) $ "Should have exactly one author, had " ++ show (length authors)
+      , trueOrMessage (authors == 1) $ "Should have exactly one author, had " ++ show authors
       ]
 
 {- |

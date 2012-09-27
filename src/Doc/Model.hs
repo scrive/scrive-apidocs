@@ -132,7 +132,6 @@ data DocumentFilter
   | DocumentFilterByTags [DocumentTag]        -- ^ All of listed tags
   | DocumentFilterMinChangeTime MinutesTime   -- ^ Minimal mtime
   | DocumentFilterMaxChangeTime MinutesTime   -- ^ Maximum mtime
-  | DocumentFilterByRole SignatoryRole        -- ^ Signatory must have role
   | DocumentFilterByProcess [DocumentProcess] -- ^ Any of listed processes
   | DocumentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
   | DocumentFilterByDelivery DeliveryMethod -- ^ Only documents that use selected delivery method
@@ -170,19 +169,19 @@ documentOrderByToSQL DocumentOrderByStatusClass = documentStatusClassExpression
 documentOrderByToSQL DocumentOrderByType = SQL "documents.type" []
 documentOrderByToSQL DocumentOrderByProcess = SQL "documents.process" []
 documentOrderByToSQL DocumentOrderByPartners =
-  parenthesize (selectSignatoryLinksSmartNames [SignatoryPartner])
+  parenthesize (selectSignatoryLinksSmartNames partnerRole)
 documentOrderByToSQL DocumentOrderByAuthor =
-  parenthesize (selectSignatoryLinksSmartNames [SignatoryAuthor])
+  parenthesize (selectSignatoryLinksSmartNames authorRole)
 
-selectSignatoryLinksSmartNames :: [SignatoryRole] -> SQL
-selectSignatoryLinksSmartNames roles =
+selectSignatoryLinksSmartNames :: SignatoryRoles -> SQL
+selectSignatoryLinksSmartNames SignatoryRoles{..} =
       SQL ("SELECT COALESCE(string_agg(x.value,' '),'no fields') FROM ") [] <>
       SQL ("(SELECT (") [] <>
       selectSmartName <>
       SQL (") AS value FROM signatory_links" ++
            " WHERE signatory_links.document_id = documents.id" ++
-           "   AND ((signatory_links.roles & ?) <>0)" ++
-           " ORDER BY signatory_links.internal_insert_order) AS x") [toSql roles]
+           "   AND signatory_links.is_author = ? AND signatory_links.is_partner = ?" ++
+           " ORDER BY signatory_links.internal_insert_order) AS x") [toSql srAuthor, toSql srPartner]
   where
     selectFieldAs xtype name = SQL ("(SELECT signatory_link_fields.value AS value " ++
                                     "FROM signatory_link_fields " ++
@@ -222,25 +221,24 @@ documentDomainToSQL :: DocumentDomain -> SQL
 documentDomainToSQL (DocumentsOfWholeUniverse) =
   SQL "TRUE" []
 documentDomainToSQL (DocumentsOfAuthorDeleteValue uid deleted) =
-  SQL ("(signatory_links.roles & ?) <> 0"
+  SQL ("signatory_links.is_author"
        ++ " AND signatory_links.user_id = ?"
        ++ " AND signatory_links.deleted = ?"
        ++ " AND signatory_links.really_deleted = FALSE"
        ++ " AND documents.type = 1")
-        [toSql [SignatoryAuthor], toSql uid, toSql deleted]
+        [toSql uid, toSql deleted]
 documentDomainToSQL (DocumentsForSignatoryDeleteValue uid deleted) =
   SQL ("signatory_links.user_id = ?"
        ++ " AND signatory_links.deleted = ?"
        ++ " AND signatory_links.really_deleted = FALSE"
        ++ " AND documents.type = 1"
-       ++ " AND ((signatory_links.roles & ?) <> 0"
-       ++ "      OR ((signatory_links.roles & ?) <> 0"
+       ++ " AND (signatory_links.is_author OR (signatory_links.is_partner"
        ++ "          AND NOT EXISTS (SELECT 1 FROM signatory_links AS sl2"
        ++ "                           WHERE signatory_links.document_id = sl2.document_id"
-       ++ "                             AND ((sl2.roles & ?) <> 0)"
+       ++ "                             AND sl2.is_partner"
        ++ "                             AND sl2.sign_time IS NULL"
        ++ "                             AND sl2.sign_order < signatory_links.sign_order)))")
-        [toSql uid, toSql deleted, toSql [SignatoryAuthor], toSql [SignatoryPartner], toSql [SignatoryPartner]]
+        [toSql uid, toSql deleted]
 documentDomainToSQL (TemplatesOfAuthorDeleteValue uid deleted) =
   SQL ("signatory_links.user_id = ?"
        ++ " AND signatory_links.deleted = ?"
@@ -261,8 +259,8 @@ documentDomainToSQL (DocumentsOfCompany cid preparation deleted) =
   SQL "signatory_links.company_id = ? AND (? OR documents.status <> ?) AND signatory_links.deleted = ? AND signatory_links.really_deleted = FALSE"
         [toSql cid,toSql preparation, toSql Preparation, toSql deleted]
 documentDomainToSQL (DocumentsOfAuthorCompany cid preparation deleted) =
-  SQL "(signatory_links.roles & ?) <> 0 AND signatory_links.company_id = ? AND (? OR documents.status <> ?) AND signatory_links.deleted = ? AND signatory_links.really_deleted = FALSE"
-        [toSql [SignatoryAuthor], toSql cid, toSql preparation, toSql Preparation, toSql deleted]
+  SQL "signatory_links.is_author AND signatory_links.company_id = ? AND (? OR documents.status <> ?) AND signatory_links.deleted = ? AND signatory_links.really_deleted = FALSE"
+        [toSql cid, toSql preparation, toSql Preparation, toSql deleted]
 
 
 maxselect :: String
@@ -291,8 +289,6 @@ documentFilterToSQL (DocumentFilterMaxChangeTime ctime) =
   SQL (maxselect ++ " <= ?") [toSql ctime]
 documentFilterToSQL (DocumentFilterByProcess processes) =
   sqlConcatOR $ map (\process -> SQL "documents.process = ?" [toSql process]) processes
-documentFilterToSQL (DocumentFilterByRole role) =
-  SQL "(signatory_links.roles & ?) <> 0" [toSql [role]]
 documentFilterToSQL (DocumentFilterByMonthYearFrom (month,year)) =
   SQL ("(documents.mtime > '" ++ show year ++  "-" ++ show month ++ "-1')") []
 documentFilterToSQL (DocumentFilterByMonthYearTo (month,year)) =
@@ -325,7 +321,7 @@ documentFilterToSQL (DocumentFilterByDelivery del) =
   SQL ("documents.delivery_method = ?") [toSql del]
 
 documentFilterToSQL (DocumentFilterByAuthor userid) =
-  SQL ("(signatory_links.roles & ?) <> 0 AND signatory_links.user_id = ?") [toSql [SignatoryAuthor], toSql userid]  
+  SQL ("signatory_links.is_author AND signatory_links.user_id = ?") [toSql userid]
 
 sqlOR :: SQL -> SQL -> SQL
 sqlOR sql1 sql2 = mconcat [parenthesize sql1, SQL " OR " [], parenthesize sql2]
@@ -388,7 +384,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          , checkEqualBy "maybereadinvite" maybereadinvite
                          , checkEqualBy "invitationdeliverystatus" invitationdeliverystatus
                          , checkEqualBy "signatorysignatureinfo" signatorysignatureinfo
-                         , checkEqualBy "signatoryroles" (sort . signatoryroles)
+                         , checkEqualBy "signatoryroles" signatoryroles
                          , checkEqualBy "signatorylinkdeleted" signatorylinkdeleted
                          , checkEqualBy "signatorylinkreallydeleted" signatorylinkreallydeleted
                          , checkEqualBy "signatorylinkcsvupload" signatorylinkcsvupload
@@ -509,7 +505,7 @@ documentStatusClassExpression :: SQL
 documentStatusClassExpression =
        SQL ("(    COALESCE((SELECT min(") []
     <> statusClassCaseExpression 
-    <> SQL ") FROM signatory_links WHERE signatory_links.document_id = documents.id AND (signatory_links.roles&?)<>0), ?)    )" [toSql [SignatoryPartner], toSql SCDraft]
+    <> SQL ") FROM signatory_links WHERE signatory_links.document_id = documents.id AND signatory_links.is_partner), ?))" [toSql SCDraft]
 
 statusClassCaseExpression :: SQL
 statusClassCaseExpression =
@@ -549,7 +545,8 @@ signatoryLinksSelectors = SQL (intercalate ", "
   , "signatory_links.signinfo_last_name_verified"
   , "signatory_links.signinfo_personal_number_verified"
   , "signatory_links.signinfo_ocsp_response"
-  , "signatory_links.roles"
+  , "signatory_links.is_author"
+  , "signatory_links.is_partner"
   , "signatory_links.csv_title"
   , "signatory_links.csv_contents"
   , "signatory_links.csv_signatory_index"
@@ -583,7 +580,7 @@ fetchSignatoryLinks = do
      invitation_delivery_status signinfo_text signinfo_signature signinfo_certificate
      signinfo_provider signinfo_first_name_verified signinfo_last_name_verified
      signinfo_personal_number_verified signinfo_ocsp_response 
-     roles csv_title csv_contents csv_signatory_index
+     is_author is_partner csv_title csv_contents csv_signatory_index
      deleted really_deleted signredirecturl status_class
      safileid saname sadesc
       | docid == nulldocid                      = (document_id, [link], linksmap)
@@ -628,7 +625,10 @@ fetchSignatoryLinks = do
                 , signaturepersnumverified = signinfo_personal_number_verified'
                 , signatureinfoocspresponse = signinfo_ocsp_response
                 }
-          , signatoryroles = roles
+          , signatoryroles = SignatoryRoles {
+              srAuthor  = is_author
+            , srPartner = is_partner
+            }
           , signatorylinkdeleted = deleted
           , signatorylinkreallydeleted = really_deleted
           , signatorylinkcsvupload =
@@ -643,7 +643,8 @@ insertSignatoryLinkAsIs documentid link = do
   _ <- kRun $ mkSQL INSERT tableSignatoryLinks
            [ sql "document_id" documentid
            , sql "user_id" $ maybesignatory link
-           , sql "roles" $ signatoryroles link
+           , sql "is_author" $ srAuthor $ signatoryroles link
+           , sql "is_partner" $ srPartner $ signatoryroles link
            , sql "company_id" $ maybecompany link
            , sql "token" $ signatorymagichash link
            , sql "sign_order"$ signatorysignorder $ signatorydetails link
@@ -978,10 +979,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachCSVUpload Bool where
             sql "csv_title" $ csvtitle csvupload
           , sql "csv_signatory_index" $ csvsignatoryindex csvupload
           , sql "csv_contents" $ csvcontents csvupload
-          ] <> SQL "WHERE document_id = ? AND signatory_links.id = ? AND deleted = FALSE AND ((roles & ?) = 0)" [
+          ] <> SQL "WHERE document_id = ? AND signatory_links.id = ? AND deleted = FALSE AND NOT is_author" [
             toSql did
           , toSql slid
-          , toSql [SignatoryAuthor]
           ]
         when_ success $
           update $ InsertEvidenceEvent
@@ -1573,13 +1573,11 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
       return Nothing
     else do
 
-      let authorRoles = [SignatoryPartner, SignatoryAuthor]
-
       magichash <- lift random
 
       let authorlink0 = signLinkFromDetails'
                         (signatoryDetailsFromUser user mcompany)
-                        authorRoles [] magichash
+                        (authorRole <> partnerRole) [] magichash
 
       let authorlink = authorlink0 {
                          maybesignatory = Just $ userid user,
@@ -1589,12 +1587,10 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
                         mh <- lift random
                         return $ signLinkFromDetails'
                                 SignatoryDetails
-                                                { signatorysignorder = if SignatoryPartner `elem` authorRoles
-                                                                       then SignOrder 2
-                                                                       else SignOrder 1
+                                                { signatorysignorder = SignOrder 2
                                                 , signatoryfields    = emptySignatoryFields
                                                 }
-                                [SignatoryPartner] [] mh
+                                partnerRole [] mh
 
       let doc = blankDocument
                 { documenttitle                = title
@@ -1996,7 +1992,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument Bool where
             Log.error $ "Cannot SignDocument document " ++ show docid ++ " because " ++ concat s
             return False
 
-data ResetSignatoryDetails = ResetSignatoryDetails DocumentID [(SignatoryDetails, [SignatoryRole])] Actor
+data ResetSignatoryDetails = ResetSignatoryDetails DocumentID [(SignatoryDetails, SignatoryRoles)] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails Bool where
   update (ResetSignatoryDetails documentid signatories actor) =
     update (ResetSignatoryDetails2 documentid (map (\(a,b) -> (a,b,[],Nothing, Nothing)) signatories) actor)
@@ -2010,7 +2006,7 @@ splitImage s = do
   w <- maybeRead ws
   h <- maybeRead hs
   return (w, h, is)
-data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload, Maybe String)] Actor
+data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, SignatoryRoles, [SignatoryAttachment], Maybe CSVUpload, Maybe String)] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails2 Bool where
   update (ResetSignatoryDetails2 documentid signatories actor) = do
     Log.debug $ "reset: " ++ show signatories
@@ -2144,7 +2140,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                 removedFields x y = let (r, _, _) = listDiff (signatoryfields x) (signatoryfields y) in r
                 changedFields x y = let (_, _, c) = listDiff (signatoryfields x) (signatoryfields y) in c
 
-data SignLinkFromDetailsForTest = SignLinkFromDetailsForTest SignatoryDetails [SignatoryRole]
+data SignLinkFromDetailsForTest = SignLinkFromDetailsForTest SignatoryDetails SignatoryRoles
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m SignLinkFromDetailsForTest SignatoryLink where
   update (SignLinkFromDetailsForTest details roles) = do
       magichash <- lift random
@@ -2429,9 +2425,9 @@ instance MonadDB m => DBQuery m GetDocsSentBetween Int where
                "FROM documents " ++
                "JOIN signatory_links ON documents.id = signatory_links.document_id " ++
                "WHERE signatory_links.user_id = ? " ++
-               "AND ((roles & ?) <> 0) " ++ 
+               "AND is_author " ++
                "AND documents.ctime >= ? " ++
                "AND documents.ctime <  ? " ++
                "AND NOT documents.deleted" 
-    _ <- kExecute [toSql uid, toSql [SignatoryAuthor], toSql start, toSql end]
+    _ <- kExecute [toSql uid, toSql start, toSql end]
     foldDB (+) 0

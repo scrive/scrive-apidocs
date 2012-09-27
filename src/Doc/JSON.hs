@@ -13,6 +13,7 @@ module Doc.JSON
        )
 where
 
+import Data.Monoid
 import Doc.DocStateData
 import Text.JSON
 import Text.JSON.FromJSValue
@@ -26,20 +27,16 @@ import Control.Monad.Reader
 import Doc.DocDraft()
 
 
-instance SafeEnum [SignatoryRole] where
-  fromSafeEnum srs =
-    case srs of
-      [SignatoryAuthor]                   -> 1
-      [SignatoryPartner, SignatoryAuthor] -> 2
-      [SignatoryAuthor, SignatoryPartner] -> 2
-      [SignatoryPartner]                  -> 5
-      []                                  -> 10
-      _                                   -> 20
-  toSafeEnum 1  = Just [SignatoryAuthor]
-  toSafeEnum 2  = Just [SignatoryPartner, SignatoryAuthor]
-  toSafeEnum 5  = Just [SignatoryPartner]
-  toSafeEnum 10 = Just []
-  toSafeEnum 20 = Just []
+instance SafeEnum SignatoryRoles where
+  fromSafeEnum srs = case srs of
+    SignatoryRoles { srAuthor = True,  srPartner = False } -> 1
+    SignatoryRoles { srAuthor = True,  srPartner = True  } -> 2
+    SignatoryRoles { srAuthor = False, srPartner = True  } -> 5
+    SignatoryRoles { srAuthor = False, srPartner = False } -> 10
+  toSafeEnum 1  = Just authorRole
+  toSafeEnum 2  = Just $ authorRole <> partnerRole
+  toSafeEnum 5  = Just partnerRole
+  toSafeEnum 10 = Just mempty
   toSafeEnum _  = Nothing
 
 instance SafeEnum DocumentType where
@@ -136,7 +133,7 @@ data DocumentCreationRequest = DocumentCreationRequest {
                              deriving (Show, Eq)
 
 data InvolvedRequest = InvolvedRequest {
-  irRole        :: [SignatoryRole],
+  irRole        :: SignatoryRoles,
   irData        :: [SignatoryField],
   irAttachments :: [SignatoryAttachment],
   irSignOrder   :: Maybe Int
@@ -186,7 +183,7 @@ irFromJSON = do
               _ -> return $ Nothing
   return $ case mData of
     (Just hisData) -> return $ InvolvedRequest {
-          irRole = fromMaybe [SignatoryPartner] $ join $ (toSafeEnum :: Int -> Maybe [SignatoryRole]) <$> role,
+          irRole = fromMaybe partnerRole $ join $ (toSafeEnum :: Int -> Maybe SignatoryRoles) <$> role,
           irData = hisData,
           irAttachments = fromMaybe [] mattachments,
           irSignOrder = mso

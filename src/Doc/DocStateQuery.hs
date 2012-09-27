@@ -61,7 +61,7 @@ canUserViewDoc user doc =
     docIsSavedForUser =
       any (isSigLinkSavedFor user) $ documentsignatorylinks doc
     isSharedWithinCompany = isDocumentShared doc && isAuthoredWithinCompany
-    isAuthoredWithinCompany = isJust $ getSigLinkFor doc (SignatoryAuthor, usercompany user)
+    isAuthoredWithinCompany = isJust $ getSigLinkFor doc (srAuthor . signatoryroles, usercompany user)
 
 {- |
    Securely find a document by documentid for the author or within their company.
@@ -110,7 +110,7 @@ getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid = do
       user <- guardJustM $ liftM2 mplus (ctxmaybeuser <$> getContext) (ctxmaybepaduser <$> getContext)
       edoc <- getDocByDocID docid
       case edoc of
-           Right doc -> if (isAuthor (doc, user) || (useriscompanyadmin user  && (isJust $ getSigLinkFor doc (SignatoryAuthor, usercompany user))))
+           Right doc -> if (isAuthor (doc, user) || (useriscompanyadmin user  && (isJust $ getSigLinkFor doc (srAuthor . signatoryroles, usercompany user))))
                            then return $ Right doc
                            else return $ Left DBResourceNotAvailable
            e -> return e

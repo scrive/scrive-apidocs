@@ -45,6 +45,7 @@ import Data.Char
 import Data.Int
 import Data.List
 import Data.Maybe
+import Data.Monoid
 import Data.String.Utils
 import System.FilePath
 import Text.JSON
@@ -196,10 +197,11 @@ scriveByMail :: (Kontrakcja m) =>
 scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   ctx@Context{ctxtime} <- getContext
 
-  let (doctype, arole) = caseOf [ ("contract" `isInfixOf` to, (Signable Contract, [SignatoryAuthor, SignatoryPartner]))
-                                , ("offer"    `isInfixOf` to, (Signable Offer,    [SignatoryAuthor]))
-                                , ("order"    `isInfixOf` to, (Signable Order,    [SignatoryAuthor]))
-                                ]                             (Signable Contract, [SignatoryAuthor, SignatoryPartner])
+  let fullRole = authorRole <> partnerRole
+      (doctype, arole) = caseOf [ ("contract" `isInfixOf` to, (Signable Contract, fullRole))
+                                , ("offer"    `isInfixOf` to, (Signable Offer,    authorRole))
+                                , ("order"    `isInfixOf` to, (Signable Order,    authorRole))
+                                ]                             (Signable Contract, fullRole)
 
   when (umapiDailyLimit (unTagMailAPIInfo mailapi) <= umapiSentToday (unTagMailAPIInfo mailapi)) $ do
     Log.scrivebymail $ "Daily limit of documents for user '" ++ username ++ "' has been reached"
@@ -256,7 +258,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   -- add signatories
   -- send document
 
-  let signatories = map (\p -> (p, [SignatoryPartner])) sigdets
+  let signatories = map (\p -> (p, partnerRole)) sigdets
 
   mcompany <- case usercompany user of
     Just companyid -> dbQuery $ GetCompany companyid
@@ -431,7 +433,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
   -- we should check that the request makes sense
 
   -- exactly one author
-  let aus = [a | a <- dcrInvolved dcr, elem SignatoryAuthor $ irRole a]
+  let aus = [a | a <- dcrInvolved dcr, srAuthor $ irRole a]
 
   when (length aus /= 1) $ do
     Log.jsonMailAPI $ (show $ toSeconds ctxtime) ++ " Should have exactly one author; instead, has " ++ show aus
@@ -441,7 +443,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
   let [authorIR] = aus
 
   -- at least one signatory
-  let sigs = length $ [p | p <- dcrInvolved dcr, elem SignatoryPartner $ irRole p]
+  let sigs = length $ [p | p <- dcrInvolved dcr, srPartner $ irRole p]
   when (1 > sigs) $ do
     Log.jsonMailAPI $ (show $ toSeconds ctxtime) ++ " Should have at least one signatory; instead, has " ++ show sigs
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content

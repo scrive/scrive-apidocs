@@ -116,7 +116,7 @@ applyDraftDataToDocument doc draft actor = do
              Nothing  -> Left "applyDraftDataToDocument failed"
              Just newdoc -> Right newdoc
 
-mergeSignatories :: SignatoryLink -> [SignatoryTMP] -> Maybe [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload, Maybe String)]
+mergeSignatories :: SignatoryLink -> [SignatoryTMP] -> Maybe [(SignatoryDetails, SignatoryRoles, [SignatoryAttachment], Maybe CSVUpload, Maybe String)]
 mergeSignatories docAuthor tmps =
         let (atmp, notatmps) = partition isAuthorTMP tmps
             setAuthorConstandDetails =  setFstname (getFirstName docAuthor) .

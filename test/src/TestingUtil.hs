@@ -7,6 +7,7 @@ import Test.Framework.Providers.HUnit (testCase)
 
 import Control.Applicative
 import Data.Char
+import Data.Monoid
 import Data.Word
 import Test.QuickCheck
 import Happstack.Server
@@ -187,7 +188,7 @@ instance Arbitrary SignatoryLink where
                            , maybereadinvite            = Nothing
                            , invitationdeliverystatus   = Unknown
                            , signatorysignatureinfo     = Nothing
-                           , signatoryroles             = []
+                           , signatoryroles             = mempty
                            , signatorylinkdeleted       = False
                            , signatorylinkreallydeleted = False
                            , signatorylinkcsvupload     = Nothing
@@ -360,8 +361,9 @@ instance Arbitrary SignatoryField where
                             , sfPlacements = p
                             }
 
-instance Arbitrary SignatoryRole where
-  arbitrary = return SignatoryPartner
+-- this is arbitrary indeed.
+instance Arbitrary SignatoryRoles where
+  arbitrary = return partnerRole
 
 instance Arbitrary AuthenticationMethod where
   arbitrary = elements [StandardAuthentication, ELegAuthentication]
@@ -417,7 +419,7 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 
                                       , maybereadinvite = Nothing
                                       , invitationdeliverystatus = Delivered
                                       , signatorysignatureinfo = Nothing
-                                      , signatoryroles = [SignatoryPartner]
+                                      , signatoryroles = partnerRole
                                       , signatorylinkdeleted = False
                                       , signatorylinkreallydeleted = False
                                       , signatorydetails = SignatoryDetails { signatorysignorder = SignOrder 1,
@@ -548,32 +550,30 @@ addRandomDocumentWithAuthor user = documentid <$> addRandomDocument (randomDocum
 randomSigLinkByStatus :: DocumentStatus -> Gen SignatoryLink
 randomSigLinkByStatus Closed = do
   (sl, sign, seen) <- arbitrary
-  return $ sl{maybesigninfo = Just sign, maybeseeninfo = Just seen, signatoryroles=[SignatoryPartner]}
+  return $ sl{maybesigninfo = Just sign, maybeseeninfo = Just seen, signatoryroles=partnerRole}
 randomSigLinkByStatus Preparation = do
   (sl) <- arbitrary
-  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=[SignatoryPartner]}
+  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=partnerRole}
 randomSigLinkByStatus Pending = do
   (sl) <- arbitrary
-  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=[SignatoryPartner]}
+  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=partnerRole}
 randomSigLinkByStatus _ = arbitrary
 
 randomAuthorLinkByStatus :: DocumentStatus -> Gen SignatoryLink
 randomAuthorLinkByStatus Closed = do
   (sl, sign, seen) <- arbitrary
-  return $ sl{maybesigninfo = Just sign, maybeseeninfo = Just seen, signatoryroles=[SignatoryAuthor]}
+  return $ sl{maybesigninfo = Just sign, maybeseeninfo = Just seen, signatoryroles=authorRole}
 randomAuthorLinkByStatus Preparation = do
   (sl) <- arbitrary
-  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=[SignatoryAuthor]}
+  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=authorRole}
 randomAuthorLinkByStatus Pending = do
   (sl) <- arbitrary
-  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=[SignatoryAuthor]}
+  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=authorRole}
 randomAuthorLinkByStatus _ = arbitrary
 
 
-getRandomAuthorRoles :: TestEnv [SignatoryRole]
-getRandomAuthorRoles =
-  rand 10000 (elements [[SignatoryAuthor],
-                        [SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]])
+getRandomAuthorRoles :: TestEnv SignatoryRoles
+getRandomAuthorRoles = rand 10000 (elements [authorRole, authorRole <> partnerRole])
 
 addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> TestEnv Document
 addRandomDocumentWithAuthorAndCondition user p =

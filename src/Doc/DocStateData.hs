@@ -27,12 +27,14 @@ module Doc.DocStateData (
   , TipSide(..)
   , SignatoryDetails(..)
   , SignatoryLink(..)
-  , SignatoryRole(..)
+  , SignatoryRoles(..)
   , SignatureInfo(..)
   , TimeoutTime(..)
   , AuthorAttachment(..)
   , SignatoryAttachment(..)
   , StatusClass(..)
+  , authorRole
+  , partnerRole
   , getFieldOfType
   , getValueOfType
   , emptyDocumentUI
@@ -44,6 +46,7 @@ module Doc.DocStateData (
 import Company.Model
 import Data.Data
 import Data.Maybe
+import Data.Monoid
 import DB.Derive
 import IPAddress
 import MagicHash
@@ -198,7 +201,7 @@ data SignatoryLink = SignatoryLink {
   , maybereadinvite            :: Maybe MinutesTime   -- ^ when we receive confirmation that a user has read
   , invitationdeliverystatus   :: MailsDeliveryStatus -- ^ status of email delivery
   , signatorysignatureinfo     :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
-  , signatoryroles             :: [SignatoryRole]
+  , signatoryroles             :: SignatoryRoles
   , signatorylinkdeleted       :: Bool -- ^ when true sends the doc to the recycle bin for that sig
   , signatorylinkreallydeleted :: Bool -- ^ when true it means that the doc has been removed from the recycle bin
   , signatorylinkcsvupload     :: Maybe CSVUpload
@@ -207,8 +210,23 @@ data SignatoryLink = SignatoryLink {
   , signatorylinksignredirecturl  :: Maybe String
   } deriving (Eq, Ord, Show)
 
-data SignatoryRole = SignatoryPartner | SignatoryAuthor
-    deriving (Eq, Ord, Bounded, Enum, Show)
+data SignatoryRoles = SignatoryRoles {
+    srAuthor :: Bool
+  , srPartner :: Bool
+  } deriving (Eq, Ord, Show)
+
+instance Monoid SignatoryRoles where
+  mempty = SignatoryRoles { srAuthor = False, srPartner = False }
+  mappend a b = SignatoryRoles {
+      srAuthor = srAuthor a || srAuthor b
+    , srPartner = srPartner a || srPartner b
+  }
+
+authorRole :: SignatoryRoles
+authorRole = mempty { srAuthor = True }
+
+partnerRole :: SignatoryRoles
+partnerRole = mempty { srPartner = True }
 
 data CSVUpload = CSVUpload {
     csvtitle :: String
@@ -398,7 +416,6 @@ data MailsDeliveryStatus = Delivered
 
 -- stuff for converting to pgsql
 
-$(bitfieldDeriveConvertible ''SignatoryRole)
 $(enumDeriveConvertible ''MailsDeliveryStatus)
 $(newtypeDeriveConvertible ''SignOrder)
 $(enumDeriveConvertible ''DocumentProcess)

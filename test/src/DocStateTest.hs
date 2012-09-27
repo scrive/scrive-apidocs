@@ -22,7 +22,7 @@ import Util.HasSomeCompanyInfo
 
 import Data.Functor
 import Data.Maybe
-import Data.Convertible (convert)
+import Data.Monoid
 import Control.Monad
 import Control.Monad.Trans
 import Data.List
@@ -206,7 +206,6 @@ docStateTests env = testGroup "DocState" [
   testThat "documentFromSignatoryData fails when document doesn't exist" env testDocumentFromSignatoryDataFailsDoesntExist,
   testThat "documentFromSignatoryData succeeds when document exists" env testDocumentFromSignatoryDataSucceedsExists,
   testThat "TimeoutDocument fails when document is not signable" env testTimeoutDocumentNonSignableLeft,
-  testProperty "bitfieldDeriveConvertibleId" propbitfieldDeriveConvertibleId,
 
   -- archive & doc deletion tests
   testThat "ArchiveDocument fails if the document is pending or awaiting author" env testArchiveDocumentPendingLeft,
@@ -324,7 +323,7 @@ testResetSignatoryDetailsEvidenceLog :: TestEnv ()
 testResetSignatoryDetailsEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success <- randomUpdate $ \sd t->ResetSignatoryDetails (documentid doc) [(sd, [SignatoryAuthor])] (systemActor t)
+  success <- randomUpdate $ \sd t->ResetSignatoryDetails (documentid doc) [(sd, authorRole)] (systemActor t)
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   let pos = [AddSignatoryEvidence, RemoveSignatoryEvidence, AddFieldEvidence, RemoveFieldEvidence, ChangeFieldEvidence]
@@ -789,7 +788,7 @@ assertGoodNewDocument mcompany doctype title (user, time, edoc) = do
     assertEqual "1 signatory" 1 (length $ documentsignatorylinks doc)
     let siglink = head $ documentsignatorylinks doc
     assertBool "link is author and possibly signer" $
-      (signatoryroles siglink) `elem` [[SignatoryAuthor], [SignatoryPartner,SignatoryAuthor]]
+      (signatoryroles siglink) `elem` [authorRole, authorRole <> partnerRole]
     assertEqual "link first name matches author's" (getFirstName user) (getFirstName siglink)
     assertEqual "link last name matches author's" (getLastName user) (getLastName siglink)
     assertEqual "link email matches author's" (getEmail user) (getEmail siglink)
@@ -1244,7 +1243,7 @@ testNotPreparationResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
   mt <- rand 10 arbitrary
   let sd = signatoryDetailsFromUser author Nothing
   --execute
-  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [(sd, [SignatoryAuthor])] (systemActor mt)
+  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [(sd, authorRole)] (systemActor mt)
   --assert
   validTest $ assert $ not success
 
@@ -1255,7 +1254,7 @@ testPreparationResetSignatoryDetailsAlwaysRight = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   mt <- rand 10 arbitrary
   --execute
-  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [(emptySignatoryDetails, [SignatoryAuthor])] (systemActor mt)
+  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [(emptySignatoryDetails, authorRole)] (systemActor mt)
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   --assert
   validTest $ do
@@ -1270,7 +1269,7 @@ testNoDocumentResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
   mt <- rand 10 arbitrary
   --execute
   -- non-existent docid
-  success <- dbUpdate $ ResetSignatoryDetails a [(emptySignatoryDetails, [SignatoryAuthor])] (systemActor mt)
+  success <- dbUpdate $ ResetSignatoryDetails a [(emptySignatoryDetails, authorRole)] (systemActor mt)
   --assert
   validTest $ assert $ not success
 
@@ -1723,7 +1722,7 @@ testRejectDocumentSignablePendingRight :: TestEnv ()
 testRejectDocumentSignablePendingRight = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
-  slid <- rand 10 $ elements (map signatorylinkid . filter ((SignatoryPartner `elem`) . signatoryroles) $ documentsignatorylinks doc)
+  slid <- rand 10 $ elements (map signatorylinkid . filter (srPartner . signatoryroles) $ documentsignatorylinks doc)
   let Just sl = getSigLinkFor doc slid
   time <- rand 10 arbitrary
   let sa = signatoryActor time noIP Nothing (getEmail sl) slid
@@ -1995,12 +1994,6 @@ assertInvariants document = do
   case invariantProblems now document of
     Nothing -> assertSuccess
     Just a  -> assertFailure a
-
-propbitfieldDeriveConvertibleId :: [SignatoryRole] -> Bool
-propbitfieldDeriveConvertibleId ss =
-  let ss' = nub (sort ss)
-  in ss' == convert (convert ss' :: SqlValue)
-
 
 testGetDocumentsByCompanyWithFilteringCompany :: TestEnv ()
 testGetDocumentsByCompanyWithFilteringCompany = doTimes 10 $ do

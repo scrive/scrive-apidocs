@@ -14,7 +14,6 @@ module Util.SignatoryLinkUtils (
 
   isSigLinkFor,
   isSigLinkSavedFor,
-  isAuthorSignatory,
   getAuthorSigLink,
   getAuthorName,
   isUndelivered,
@@ -75,9 +74,6 @@ instance SignatoryLinkIdentity (SignatoryLink -> Bool) where
 
 instance SignatoryLinkIdentity SignatoryLinkID where
   isJustSigLinkFor slid sl = slid == signatorylinkid sl
-  
-instance SignatoryLinkIdentity SignatoryRole where
-  isJustSigLinkFor role sl = role `elem` signatoryroles sl
 
 {- |
    Identify a User based on UserID or Email (if UserID fails).
@@ -125,33 +121,27 @@ instance (SignatoryLinkIdentity a, HasSignatoryLinks b) => MaybeSignatoryLink (b
  -}
 class HasSignatoryLinks a where
   getSignatoryLinks :: a -> [SignatoryLink]
-  
+
 instance HasSignatoryLinks Document where
   getSignatoryLinks = documentsignatorylinks
-  
+
 instance HasSignatoryLinks [SignatoryLink] where
   getSignatoryLinks = id
-  
+
 instance HasSignatoryLinks SignatoryLink where
   getSignatoryLinks sl = [sl]
-  
+
 instance (HasSignatoryLinks a) => HasSignatoryLinks (Maybe a) where
   getSignatoryLinks = maybe [] getSignatoryLinks
-  
+
 instance (HasSignatoryLinks a, SignatoryLinkIdentity b) => HasSignatoryLinks (a, b) where
   getSignatoryLinks (sls, i) = filter (isSigLinkFor i) (getSignatoryLinks sls)
-
-{- |
-   Is the Author of this Document a signatory (not a Secretary)?
- -}
-isAuthorSignatory :: HasSignatoryLinks a => a -> Bool
-isAuthorSignatory hsl = hasSigLinkFor (SignatoryAuthor, SignatoryPartner) hsl
 
 {- |
    Get the author's signatory link.
  -}
 getAuthorSigLink :: HasSignatoryLinks a => a -> Maybe SignatoryLink
-getAuthorSigLink doc = getSigLinkFor doc SignatoryAuthor
+getAuthorSigLink doc = getSigLinkFor doc (srAuthor . signatoryroles)
 
 {- |
    Given a Document, return the best guess at the author's name:
@@ -160,7 +150,6 @@ getAuthorSigLink doc = getSigLinkFor doc SignatoryAuthor
 -}
 getAuthorName :: Document -> String
 getAuthorName doc = maybe "" getSmartName $ getAuthorSigLink doc
-
 
 {- |
    Is this SignatoryLink undelivered?
@@ -190,13 +179,13 @@ hasSeen msl = maybe False (isJust . maybeseeninfo) (getMaybeSignatoryLink msl)
    Is this SignatoryLink an author?
  -}
 isAuthor :: (MaybeSignatoryLink msl) => msl -> Bool
-isAuthor = isSigLinkFor SignatoryAuthor
+isAuthor = isSigLinkFor (srAuthor . signatoryroles)
 
 {- |
    Is the given SignatoryLink marked as a signatory (someone who can must sign)?
  -}
 isSignatory :: (MaybeSignatoryLink msl) => msl -> Bool
-isSignatory = isSigLinkFor SignatoryPartner
+isSignatory = isSigLinkFor (srPartner . signatoryroles)
 
 {- |
    Is the user able to view the doc?
@@ -224,7 +213,7 @@ validSigLink _ _ _ = False
    signing the document, rather than just viewing.
 -}
 getSignatoryPartnerLinks :: HasSignatoryLinks hsl => hsl -> [SignatoryLink] 
-getSignatoryPartnerLinks doc = filterSigLinksFor SignatoryPartner doc
+getSignatoryPartnerLinks = filterSigLinksFor (srPartner . signatoryroles)
 
 {- |
   Does this siglink have a user (maybesignatory)?

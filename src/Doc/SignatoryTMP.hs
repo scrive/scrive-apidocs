@@ -36,10 +36,10 @@ import Control.Logic
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 import Doc.DocStateData
-import Data.List
 import Doc.DocUtils
 import Data.Foldable hiding (concat, elem)
 import Data.Maybe
+import Data.Monoid
 import Utils.Monoid
 import Utils.Prelude
 import Text.JSON.FromJSValue
@@ -48,7 +48,7 @@ import Control.Applicative
 -- Structure definition + pointed
 data SignatoryTMP = SignatoryTMP {
         details :: SignatoryDetails,
-        roles   :: [SignatoryRole],
+        roles   :: SignatoryRoles,
         attachments :: [SignatoryAttachment], -- Do not expose it as durring runtime this does not have email set
         csvupload :: Maybe CSVUpload,
         signredirecturl :: Maybe String
@@ -59,18 +59,17 @@ instance HasFields SignatoryTMP where
     getAllFields = getAllFields . details
     
 emptySignatoryTMP :: SignatoryTMP 
-emptySignatoryTMP = SignatoryTMP 
-                { 
-                  details         = SignatoryDetails
-                                                { signatorysignorder = SignOrder 1
-                                                 , signatoryfields   = []
-                                                }
-                , roles  = []
-                , attachments = []
-                , csvupload = Nothing
-                , signredirecturl = Nothing
-                }
-                
+emptySignatoryTMP = SignatoryTMP {
+    details = SignatoryDetails {
+      signatorysignorder = SignOrder 1
+    , signatoryfields   = []
+    }
+  , roles = mempty
+  , attachments = []
+  , csvupload = Nothing
+  , signredirecturl = Nothing
+  }
+
 -- Basic operations
 
 liftTMP ::  (SignatoryDetails -> SignatoryDetails) -> SignatoryTMP -> SignatoryTMP
@@ -122,16 +121,16 @@ setCSV :: (Maybe CSVUpload) -> SignatoryTMP -> SignatoryTMP
 setCSV mcsv s = s {csvupload = mcsv}
 
 makeAuthor :: SignatoryTMP -> SignatoryTMP 
-makeAuthor s =  s {roles = roles s `union` [SignatoryAuthor]}
-    
+makeAuthor s =  s {roles = authorRole <> roles s}
+
 makeSigns :: SignatoryTMP -> SignatoryTMP
-makeSigns s =  s {roles = roles s `union` [SignatoryPartner]}
+makeSigns s = s {roles = partnerRole <> roles s}
 
 isAuthorTMP :: SignatoryTMP -> Bool
-isAuthorTMP s = SignatoryAuthor `elem` (roles s)
+isAuthorTMP = srAuthor . roles
 
 isSignatoryTMP :: SignatoryTMP -> Bool
-isSignatoryTMP s = SignatoryPartner `elem` (roles s)
+isSignatoryTMP = srPartner . roles
 
 setSignOrder :: SignOrder -> SignatoryTMP -> SignatoryTMP
 setSignOrder i =  liftTMP $  \s -> s {signatorysignorder = i}
@@ -148,10 +147,10 @@ getAttachments s = attachments s
 setSignredirecturl :: Maybe String -> SignatoryTMP -> SignatoryTMP
 setSignredirecturl rurl s = s {signredirecturl = rurl}
 
-toSignatoryDetails1 :: SignatoryTMP -> (SignatoryDetails,[SignatoryRole])
+toSignatoryDetails1 :: SignatoryTMP -> (SignatoryDetails,SignatoryRoles)
 toSignatoryDetails1 sTMP = (\(x,y,_,_,_) ->(x,y)) (toSignatoryDetails2 sTMP)
 -- To SignatoryLink or SignatoryDetails conversion
-toSignatoryDetails2 :: SignatoryTMP -> (SignatoryDetails,[SignatoryRole], [SignatoryAttachment], Maybe CSVUpload, Maybe String)
+toSignatoryDetails2 :: SignatoryTMP -> (SignatoryDetails,SignatoryRoles, [SignatoryAttachment], Maybe CSVUpload, Maybe String)
 toSignatoryDetails2 sTMP  = 
     let sig = makeSignatory [] [] ""
                  (fold $ fstname sTMP)

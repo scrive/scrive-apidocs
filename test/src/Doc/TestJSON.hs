@@ -74,7 +74,7 @@ dcrTest = doNTimes 100 $ do
         dcrTitle = Just title,
         dcrType  = Signable Contract,
         dcrTags  = [],
-        dcrInvolved = [InvolvedRequest { irRole = [SignatoryPartner],
+        dcrInvolved = [InvolvedRequest { irRole = partnerRole,
                                          irData = [SignatoryField FirstNameFT fn [],
                                                    SignatoryField LastNameFT  sn [],
                                                    SignatoryField EmailFT     em []],
