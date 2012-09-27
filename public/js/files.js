@@ -193,28 +193,33 @@ var FilePageView = Backbone.View.extend({
         this.render();
     },
     vline: function() {
-        if (this.vlinediv != undefined)
-            return this.vlinediv;
-        this.vlinediv = $("<div class='vline'>");
-        this.pagejpg.append(this.vlinediv);
+      if (this.vlinediv != undefined)
         return this.vlinediv;
+      this.vlinediv = $("<div class='vline'>");
+      $(this.el).append(this.vlinediv);
+      return this.vlinediv;
     },
     hline: function() {
-        if (this.hlinediv != undefined)
-            return this.hlinediv;
-        this.hlinediv = $("<div class='hline'>");;
-        this.pagejpg.append(this.hlinediv);
+      if (this.hlinediv != undefined)
         return this.hlinediv;
+      this.hlinediv = $("<div class='hline'>");;
+      $(this.el).append(this.hlinediv);
+      return this.hlinediv;
     },
     moveCoordinateAxes : function(helper) {
-       this.hline().css({
-                top: Math.min(this.pagejpg.height() - 1, Math.max(0, helper.offset().top - this.pagejpg.offset().top + helper.height() - 4)) + "px"
-            });
-
-
-       this.vline().css({
-                left: Math.min(this.pagejpg.width() - 1, Math.max(0, helper.offset().left - this.pagejpg.offset().left)) + "px"
-            });
+      var top = helper.offset().top - $(this.el).offset().top + helper.height() - 4;
+      var left = helper.offset().left - $(this.el).offset().left;
+      var height = $(this.el).height();
+      var width = $(this.el).width();
+      /*
+       * Here we need to also set width/height of lines. With width we
+       * could go away with 100%, but height needs to be dynamically
+       * adjusted to have same height as rendered image.
+       */
+      this.hline().css({ top: top + "px",
+                         width: width + "px"});
+      this.vline().css({ left: left + "px",
+                         height: height + "px"});
     },
     showCoordinateAxes : function(helper) {
         var view = this;
@@ -235,7 +240,7 @@ var FilePageView = Backbone.View.extend({
     makeDropable : function() {
       var self = this;
       var page = self.model;
-      var pagejpg = self.pagejpg;
+
       $(self.el).droppable({
         drop: function(event, ui) {
           var helper = $(ui.helper);
