@@ -78,7 +78,7 @@ doMailAPI content = do
 
       isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf" ||
                      (MIME.mimeType tp == MIME.Application "octet-stream" &&
-                      maybe False (isSuffixOf ".pdf" . map toLower) (lookup "name" (MIME.mimeParams tp)))
+                      maybe False (isSuffixOf ".pdf" . map toLower . decodeWordsMIME) (lookup "name" (MIME.mimeParams tp)))
       isPlain (tp,_) = MIME.mimeType tp == MIME.Text "plain"
 
       pdfs = filter isPDF allParts
