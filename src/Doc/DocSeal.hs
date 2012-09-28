@@ -151,6 +151,7 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signato
                  }    
     fieldJPEGFromPlacement v placement =
       case split "|" v of
+        [_,_,""] -> Nothing
         [w,h,c] -> do
           wi <- maybeRead w -- NOTE: Maybe monad usage
           hi <- maybeRead h
