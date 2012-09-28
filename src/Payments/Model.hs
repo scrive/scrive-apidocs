@@ -76,9 +76,17 @@ instance MonadDB m => DBQuery m GetCompanyQuantity Int where
       sqlWhereEq "deleted"    False
       sqlResult "count(id)"
     res <- foldDB (flip (:)) []
-    case res of
+    au <- case res of
       [x] -> return x
       _   -> return 0
+    kRun_ $ sqlSelect "companyinvites" $ do  
+      sqlWhereEq "company_id" cid
+      sqlResult "count(email)"
+    res2 <- foldDB (flip (:)) []
+    ci <- case res2 of
+      [x] -> return x
+      _   -> return 0
+    return $ au + ci
 
 data DeletePaymentPlan = DeletePaymentPlan (Either UserID CompanyID)
 instance (MonadDB m) => DBUpdate m DeletePaymentPlan () where
