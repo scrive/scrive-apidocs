@@ -185,14 +185,20 @@ apiCallGet did = api $ do
             let sl = fromJust msiglink
             dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
                  (signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
-        auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
-        auser <- apiGuardJustM (serverError "No user found") $ dbQuery $ GetUserByID auid
-        pq <- if (userid auser == userid user) 
-                then dbQuery $ GetPadQueue auid
+                 
+        let macmp = join $ maybecompany <$> getAuthorSigLink doc
+        mauser <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
+                       Just auid -> dbQuery $ GetUserByID auid
+                       _ -> return Nothing
+                       
+        pq <- if ((userid <$> mauser) == Just (userid user)) 
+                then dbQuery $ GetPadQueue $ userid user
                 else return Nothing
-        let haspermission = (isJust msiglink) || (usercompany auser == usercompany user && (useriscompanyadmin user || isDocumentShared doc))
+        let haspermission = (isJust msiglink)
+                         || (isJust macmp && macmp == usercompany user && (useriscompanyadmin user || isDocumentShared doc))
+                         || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared doc))
         if (haspermission)
-          then Ok <$> documentJSON external (userid auser == userid user) pq msiglink doc
+          then Ok <$> documentJSON external ((userid <$> mauser) == (Just $ userid user)) pq msiglink doc
           else throwError $ serverError "You do not have right to access document"
 
 apiCallList :: Kontrakcja m => m Response

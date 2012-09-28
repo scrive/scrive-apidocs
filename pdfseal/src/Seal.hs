@@ -320,6 +320,7 @@ fieldstext pagew pageh fields = concatMap fieldtext fields
                          tell $ "(" ++ winAnsiPostScriptEncode val ++ ") Tj\n"
                          tell "ET\n"
                          tell "Q\n"
+    fieldtext FieldJPG{ SealSpec.valueBase64 = val } | null val = ""
     fieldtext FieldJPG{ SealSpec.valueBase64 = val
                    , x
                    , y

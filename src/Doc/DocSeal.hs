@@ -117,9 +117,11 @@ fieldsFromSignatory :: (BS.ByteString,BS.ByteString) -> SignatoryDetails -> [Sea
 fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signatoryfields} =
   concatMap makeSealField  signatoryfields
   where
+    onlyFirstInSummary (a:rest) = (a {Seal.includeInSummary = True}) : (map (\r -> r {Seal.includeInSummary = False}) rest)
+    onlyFirstInSummary [] = []
     makeSealField :: SignatoryField -> [Seal.Field]
     makeSealField sf = case  sfType sf of
-                         SignatureFT -> concatMap (maybeToList . (fieldJPEGFromPlacement (sfValue sf))) (sfPlacements sf)
+                         SignatureFT -> onlyFirstInSummary $ concatMap (maybeToList . (fieldJPEGFromPlacement (sfValue sf))) (sfPlacements sf)
                          CheckboxOptionalFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf)
                          CheckboxObligatoryFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf) 
                          _ -> map (fieldFromPlacement (sfValue sf)) (sfPlacements sf)
@@ -149,6 +151,7 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signato
                  }    
     fieldJPEGFromPlacement v placement =
       case split "|" v of
+        [_,_,""] -> Nothing
         [w,h,c] -> do
           wi <- maybeRead w -- NOTE: Maybe monad usage
           hi <- maybeRead h
@@ -167,6 +170,8 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signato
                  }
         _ -> Nothing
 
+
+    
 listAttachmentsFromDocument :: Document -> [(SignatoryAttachment,SignatoryLink)]
 listAttachmentsFromDocument document = 
   concatMap extract (documentsignatorylinks document)
