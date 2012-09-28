@@ -18,8 +18,14 @@ window.File = Backbone.Model.extend({
                      attachmentid: this.attachmentid(),
                      signatorylinkid: this.signatoryid()
                    };
-      /* This construct removes undefined values from params */
-      params = _.defaults({}, params);
+      /*
+       * Remove undefined values that may happen in the object.
+       */
+      _.each(_.keys(params), function (k) {
+        if( params[k]===undefined ) {
+          delete params[k];
+        }
+      });
 
       var query = $.param(params, true);
       if( query!="" ) {
