@@ -14,6 +14,7 @@ var ApiCall = Backbone.Model.extend({
         isCreateFromTemplate : function() {return false;},
         isUpdate : function() {return false;},
         isReady : function() {return false;},
+        isCancel : function() {return false;},
         isGet : function() {return false;},
         isList : function() {return false;},                            
         name : function() {return this.get("name");},
@@ -161,6 +162,39 @@ window.ReadyApiCall = ApiCall.extend({
         }    
 });
 
+window.CancelApiCall = ApiCall.extend({
+        defaults: {
+            name : "Cancel API call",
+            documentid : LocalStorage.get("api","documentid")
+        },
+        documentid : function() {return this.get("documentid");},
+        setDocumentid : function(documentid) {
+            LocalStorage.set("api","documentid",documentid);
+            return this.set({"documentid" : documentid});
+        },
+
+        initialize: function (args) {
+        },
+        isCancel : function() {return true;},
+        send : function() {
+            var model = this;
+            $.ajax(Scrive.serverUrl()+"/api/cancel/" + model.documentid(), {
+                type: 'POST',
+                cache: false,
+                contentType: false,
+                processData: false,
+                headers : { authorization : model.authorization() },
+                success : function(res) {
+                    model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
+                },
+                error : function(res) {
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
+                }
+            });
+        }
+});
+
+
 window.GetApiCall = ApiCall.extend({
         defaults: {
              name : "Get API call",
@@ -230,6 +264,8 @@ window.ApiCallView = function(args) {
            return new UpdateApiCallView(args);
         else if (args.model.isReady())
            return new ReadyApiCallView(args);
+        else if (args.model.isCancel())
+           return new CancelApiCallView(args);
         else if (args.model.isGet())
            return new GetApiCallView(args);
         else if (args.model.isList())
@@ -325,6 +361,34 @@ var UpdateApiCallView = Backbone.View.extend({
 });
 
 var ReadyApiCallView = Backbone.View.extend({
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            this.model.bind('change', this.render);
+            this.prerender();
+        },
+        prerender : function() {
+            var model = this.model;
+            var box = $(this.el);
+            box.children().detach();
+            var boxLeft  = $("<div class='left-box'>");
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
+            var documentidInput = $("<input type='text'/>").val(model.documentid());
+            documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
+            var button = $("<input type='button' value='Send request'/>");
+            button.click(function() {model.send(); return false;});
+            boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput)).append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
+            if (model.result() != undefined)
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+        }
+});
+
+var CancelApiCallView = Backbone.View.extend({
         initialize: function(args) {
             _.bindAll(this, 'render');
             this.model.bind('change', this.render);
