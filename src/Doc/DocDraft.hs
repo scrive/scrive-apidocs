@@ -7,7 +7,6 @@ module Doc.DocDraft (
 import Control.Monad.Trans.Maybe
 import Doc.SignatoryTMP
 import Doc.DocStateData
-import Utils.Enum
 import Utils.Monad
 import Utils.Monoid
 import Utils.Prelude
@@ -31,7 +30,7 @@ data DraftData = DraftData {
     , authentication :: AuthenticationMethod
     , delivery :: DeliveryMethod
     , signatories :: [SignatoryTMP]
-    , region :: Region
+    , region :: Maybe Region
     , template :: Bool
     , tags :: Maybe [DocumentTag]
     , apicallbackurl :: Maybe String
@@ -59,9 +58,11 @@ instance FromJSValue DocumentTag where
              _ -> return Nothing  
     
 instance FromJSValue Region where
-    fromJSValue j = do
-         s <-fromJSValue j
-         find (\r -> codeFromRegion r  == s) allValues
+    fromJSValue j =case fromJSValue j of -- Due to documentation inconsistency we need to support gb and en for a while.
+      Just "se"    -> Just REGION_SE
+      Just "en"    -> Just REGION_GB
+      Just "gb"    -> Just REGION_GB
+      _            -> Nothing
 
 instance FromJSValue DraftData where
    fromJSValue = do
@@ -75,15 +76,15 @@ instance FromJSValue DraftData where
         template' <- fromJSValueField "template"
         tags' <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany  fromJSValueM
         apicallbackurl' <- fromJSValueField "apicallbackurl"
-        case (title', authentication', delivery', region') of
-            (Just t, Just a, Just d, Just r) -> return $ Just DraftData {
+        case (title', authentication', delivery') of
+            (Just t, Just a, Just d) -> return $ Just DraftData {
                                       title =  t
                                     , invitationmessage = invitationmessage
                                     , daystosign = daystosign
                                     , authentication = a
                                     , delivery = d
                                     , signatories = concat $ maybeToList $ signatories'
-                                    , region = r
+                                    , region = region'
                                     , template = joinB template'
                                     , tags = tags'
                                     , apicallbackurl = apicallbackurl'
@@ -98,7 +99,7 @@ applyDraftDataToDocument doc draft actor = do
                                 , documentdaystosign = daystosign draft
                                 , documentauthenticationmethod = authentication draft
                                 , documentdeliverymethod = delivery draft
-                                , documentregion = region draft
+                                , documentregion = fromMaybe (documentregion doc) (region draft)
                                 , documenttags = fromMaybe (documenttags doc) (fmap Set.fromList $ tags draft)
                                 , documentapicallbackurl = (apicallbackurl draft)
                             }) actor
