@@ -249,7 +249,7 @@ var DocumentDesignView = Backbone.View.extend({
             else if ($(this).val() == "order")
               document.process().changeToOrder();
             document.save();
-            document.afterSave(function() { window.location = window.location; });
+            document.afterSave(function() { LoadingDialog.open(); window.location = window.location; });
         });
         return box;
     },
@@ -788,7 +788,7 @@ var DocumentDesignView = Backbone.View.extend({
             tabsTail : (!document.isTemplate()) ?  [this.saveAsTemplateOption()] : undefined ,
             tabs: [
                 this.tab1 = new Tab({
-                    name : document.isTemplate() ? localization.step1template : document.process().localization().step1text,
+                    name : localization.step1select,
                     active :  SessionStorage.get(document.documentid(), "step") == "1",
                     onActivate : function() {
                       KontraDesignDocument.model.save();

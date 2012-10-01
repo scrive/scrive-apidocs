@@ -14,7 +14,7 @@
           var model = view.model;
           var wiz = model.wizard();
 
-          var textview = new UploadTextView({text:localization.docupload.uploadinfo});
+          var textview = new UploadTextView({text:localization.changemainfile.uploadinfo});
           $(view.el).append(textview.el);
 
           var url = "/api/mainfile/" + KontraDesignDocument.model.id;
@@ -55,7 +55,7 @@
           });
 
           var upbox = new UploadBoxModel({
-            headertext: localization.docupload.choosefile,
+            headertext: localization.changemainfile.choosefile,
             subtext: localization.onlyPDF,
             button: upbutton
           });
@@ -66,7 +66,7 @@
           var tempbutton = Button.init({
             color: "green",
             size: "small",
-            text: localization.docupload.choosetemplate,
+            text: localization.changemainfile.choosetemplatebutton,
             width: "130",
             onClick: function () {
               wiz.nextStep();
@@ -75,8 +75,8 @@
           });
 
           var tempbox = new UploadBoxModel({
-            headertext: localization.docupload.choosetemplate,
-            subtext: localization.docupload.templatesaved,
+            headertext: localization.changemainfile.choosetemplate,
+            subtext: localization.changemainfile.templatesaved,
             button: tempbutton
           });
 

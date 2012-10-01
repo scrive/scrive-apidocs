@@ -153,7 +153,7 @@ javascriptLocalisation =
             , uploadedAttachments: "$_uploadedAttachments()$"
             , waitingForAttachment: "$_waitingForAttachment()$"
             , templateTitle : "$_signStepsTitleRowTextContainerIfTemplate()$"
-            , step1template : "$_step1selectIfTemplate()$"
+            , step1select : "$_step1select()$"
             , step2template : "$_step2selectIfTemplate()$"
             , step2normal   : "$_step2selectIfElse()$"
             , step3template : "$_step3selectIfTemplate()$"
@@ -185,11 +185,9 @@ javascriptLocalisation =
             , couldNotUpload: "$_couldNotUpload()$"
             , process : {
                 contract: {
-                   uploadprompt: "$_contractuploadprompttext()$",
                    name: "$_contractname()$",
                    shortName: "$_contractshortname()$",
                    title: "$_contracttitle()$",
-                   step1text: "$_contractstep1text()$",
                    sendbuttontext: "$_contractsendbuttontext()$",
                    confirmsendtext: "$_contractconfirmsendtext()$",
                    confirmsendtitle: "$_contractconfirmsendtitle()$",
@@ -216,11 +214,9 @@ javascriptLocalisation =
                    nonsignatoryname: "$_contractnonsignatoryname()$"
                 },
                 offer: {
-                   uploadprompt: "$_offeruploadprompttext()$",
                    name: "$_offername()$",
                    shortName: "$_offershortname()$",
                    title: "$_offertitle()$",
-                   step1text: "$_offerstep1text()$",
                    sendbuttontext: "$_offersendbuttontext()$",
                    confirmsendtext: "$_offerconfirmsendtext()$",
                    confirmsendtitle: "$_offerconfirmsendtitle()$",
@@ -247,11 +243,9 @@ javascriptLocalisation =
                    nonsignatoryname: "$_offernonsignatoryname()$"
                 },
                 order: {
-                   uploadprompt: "$_orderuploadprompttext()$",
                    name: "$_ordername()$",
                    shortName: "$_ordershortname()$",
                    title: "$_ordertitle()$",
-                   step1text: "$_orderstep1text()$",
                    sendbuttontext: "$_ordersendbuttontext()$",
                    confirmsendtext: "$_orderconfirmsendtext()$",
                    confirmsendtitle: "$_orderconfirmsendtitle()$",
@@ -443,11 +437,12 @@ javascriptLocalisation =
               logMeIn : "$_login()$"
          }
          , cancel : "$_cancel()$"
-         , docupload : {
-             choosefile: "$_signStepsBodyUploadBoxStep1UpLoadChooseFile()$"
-            ,choosetemplate: "$_signStepsBodyUploadBoxStep1ChooseTemplate()$"
+         , changemainfile : {
+             choosefile: "$_ChangeMainFileUpload()$"
+            ,choosetemplate: "$_ChangeMainFileTemplate()$"
+            ,choosetemplatebutton: "$_ChangeMainFileTemplateButton()$"
             ,templatesaved: "$_signStepsBodyUploadBoxStep1TemplateSaved()$"
-            ,uploadinfo: "$_contractuploadprompttext()$"
+            ,uploadinfo: "$_uploadprompttext()$"
          }
          , docsignview : {
                followArrowToSign: "$_followArrowToSign()$"
@@ -506,12 +501,12 @@ javascriptLocalisation =
 
           }
        , uploadView : {
-                signStepsBodyUpload : "$_signStepsBodyUploadBoxStep1Info()$"
-             ,  back : "$_uploadViewGoBack()$"
+                back : "$_uploadViewGoBack()$"
              ,  chooseFile : "$_signStepsBodyUploadBoxStep1UpLoadChooseFile()$"
              ,  chooseTemplate : "$_signStepsBodyUploadBoxStep1ChooseTemplate()$"
              ,  savedTemplate  : "$_signStepsBodyUploadBoxStep1TemplateSaved()$"
              ,  chooseTemplateButton : "$_signStepsBodyUploadBoxStep1ButtonChooseTemplate()$"
+             ,  createNewTemplate : "$_createNewTemplate()$"
         }
         , payments: {
              users: "$_CompanyAccounts()$"
