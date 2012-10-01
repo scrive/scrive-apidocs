@@ -153,3 +153,5 @@ ResealedPDFText=$actor$ requested document to be resealed.
 ###
 DeliveryInformationClearedForReminderText= $name$ mail delivery details cleared, since reminder was send.
 ###
+SetDocumentProcessEvidenceText= Document process set to $process$
+### 

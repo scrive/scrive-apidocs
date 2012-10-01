@@ -13,8 +13,7 @@ var DocumentDesignView = Backbone.View.extend({
         this.model.bind('change:signatories', this.refreshFinalButton);
         this.model.bind('change:signatories', this.refreshSignatoryAttachmentsOption);
         this.model.bind('change:authenticationdelivery', this.refreshAuthorizationDependantOptions);
-//        this.model.bind('change:documenttype', this.render);
-// TODO: Refresh all text that depends on document type.
+
         this.model.view = this;
         this.prerender();
         this.render();
@@ -223,31 +222,34 @@ var DocumentDesignView = Backbone.View.extend({
         return box;
     },
     documentTypeSelection : function() {
+        // TODO: Change this HTML select to proper JavaScript-based Select one day
         var document = this.model;
         var box = $("<div class='documenttypeselect'/>");
         var select= $("<select/>");
-        var contract = $("<option value='Contract'/>").text(localization.process.contract.name);
-        var offer = $("<option value='Offer'/>").text(localization.process.offer.name);
-        var order = $("<option value='Order'/>").text(localization.process.order.name);
+        var contract = $("<option value='contract'/>").text(localization.process.contract.name);
+        var offer = $("<option value='offer'/>").text(localization.process.offer.name);
+        var order = $("<option value='order'/>").text(localization.process.order.name);
         select.append(contract);
         select.append(offer);
         select.append(order);
         box.text(localization.designview.selectprocess);
         box.append(select);
-        switch(document.getDocumentType()) {
-        case "Contract":
+        if (document.process().isContract())
             contract.attr("selected","yes");
-            break;
-        case "Offer":
+        else if (document.process().isOffer())
             offer.attr("selected","yes");
-            break;
-        case "Order":
+        else if (document.process().isOrder())
             order.attr("selected","yes");
-            break;
-        }
 
         select.change(function() {
-            document.setDocumentType($(this).val());
+            if ($(this).val() == "contract")
+              document.process().changeToContract();
+            else if ($(this).val() == "offer")
+              document.process().changeToOffer();
+            else if ($(this).val() == "order")
+              document.process().changeToOrder();
+            document.save();
+            document.afterSave(function() { window.location = window.location; });
         });
         return box;
     },

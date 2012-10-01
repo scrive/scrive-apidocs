@@ -162,13 +162,6 @@ window.Document = Backbone.Model.extend({
     region: function() {
         return this.get("region");
     },
-    setDocumentType: function(t) {
-        this.get("process").setCorename(t);
-        this.trigger("change:documenttype");
-    },
-    getDocumentType: function() {
-        return this.get("process").corename();
-    },
     title: function() {
         return this.get("title");
     },
@@ -283,6 +276,7 @@ window.Document = Backbone.Model.extend({
           apicallbackurl : this.get("apicallbackurl"),                              
           signatories: _.map(this.signatories(), function(sig) {return sig.draftData()}),
           region: this.region().draftData(),
+          process : this.process().process(),
           template: this.isTemplate()
       };
     },
@@ -542,7 +536,12 @@ window.Document = Backbone.Model.extend({
          return new Signatory(_.defaults(signatoryargs, { document: self }));
        }),
        authoruser: new DocumentAuthor(_.defaults(args.author, { document: self })),
-       process: new Process(args.process),
+       process: function() {
+                        var process= new Process({process : args.process});
+                        process.bind("change", function() { self.trigger("change:process")});
+                        // This is not used but nice to have. Please leave it.
+                        return process;
+                }(),
        region: new Region({region : args.region}),
        infotext: args.infotext,
        canberestarted: args.canberestarted,

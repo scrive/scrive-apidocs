@@ -252,7 +252,7 @@ javascriptLocalisation =
                    shortName: "$_ordershortname()$",
                    title: "$_ordertitle()$",
                    step1text: "$_orderstep1text()$",
-                   sendbuttontext: "$_orderendbuttontext()$",
+                   sendbuttontext: "$_ordersendbuttontext()$",
                    confirmsendtext: "$_orderconfirmsendtext()$",
                    confirmsendtitle: "$_orderconfirmsendtitle()$",
                    expirytext: "$_orderexpirytext()$",

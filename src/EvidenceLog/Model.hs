@@ -215,7 +215,11 @@ data EvidenceEventType =
   SetEmailDeliveryMethodEvidence                  |
   SetPadDeliveryMethodEvidence                    |
   SetAPIDeliveryMethodEvidence                    |
+<<<<<<< HEAD
   DeliveryInformationClearedForReminder
+=======
+  SetDocumentProcessEvidence
+>>>>>>> Mariusz: Document process selection working + small fixes
   deriving (Eq, Show, Read, Ord)
 
 instance Convertible EvidenceEventType Int where
@@ -286,7 +290,12 @@ instance Convertible EvidenceEventType Int where
   safeConvert SetEmailDeliveryMethodEvidence                  = return 65
   safeConvert SetPadDeliveryMethodEvidence                    = return 66
   safeConvert SetAPIDeliveryMethodEvidence                    = return 67
+<<<<<<< HEAD
   safeConvert DeliveryInformationClearedForReminder           = return 68
+=======
+  safeConvert SetDocumentProcessEvidence                      = return 68
+  
+>>>>>>> Mariusz: Document process selection working + small fixes
   
 instance Convertible Int EvidenceEventType where
     safeConvert 1  = return AddSigAttachmentEvidence
@@ -356,7 +365,11 @@ instance Convertible Int EvidenceEventType where
     safeConvert 65 = return SetEmailDeliveryMethodEvidence
     safeConvert 66 = return SetPadDeliveryMethodEvidence
     safeConvert 67 = return SetAPIDeliveryMethodEvidence
+<<<<<<< HEAD
     safeConvert 68 = return DeliveryInformationClearedForReminder
+=======
+    safeConvert 68 = return SetDocumentProcessEvidence
+>>>>>>> Mariusz: Document process selection working + small fixes
     safeConvert s  = Left ConvertError { convSourceValue = show s
                                        , convSourceType = "Int"
                                        , convDestType = "EvidenceEventType"

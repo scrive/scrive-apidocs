@@ -61,6 +61,7 @@ module Doc.Model
   , SetDocumentUI(..)
   , SetDocumentAuthenticationMethod(..)
   , SetDocumentDeliveryMethod(..)
+  , SetDocumentProcess(..)
   , SetInvitationDeliveryStatus(..)
   , SetInviteText(..)
   , SignDocument(..)
@@ -2262,6 +2263,21 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentDeliveryMethod B
         actor
     return success
 
+data SetDocumentProcess = SetDocumentProcess DocumentID DocumentProcess Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentProcess Bool where
+  update (SetDocumentProcess did process actor) = do
+    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND process IS DISTINCT FROM ?" [toSql did, toSql process]
+    success <- kRun01 $ mkSQL UPDATE tableDocuments
+         [ sql "process" process
+         ] <> SQL "WHERE id = ?" [ toSql did ]
+    when_ (success && changed) $ do
+      update $ InsertEvidenceEvent SetDocumentProcessEvidence
+        (value "process" (show process) >> value "actor" (actorWho actor))
+        (Just did)
+        actor
+    return success
+
+    
 data SetDocumentAPICallbackURL = SetDocumentAPICallbackURL DocumentID (Maybe String)
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAPICallbackURL Bool where
   update (SetDocumentAPICallbackURL did mac) = do

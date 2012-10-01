@@ -172,7 +172,7 @@ documentJSON forapi forauthor pq msl doc = do
         J.value "barsbackgroundcolor" bbc
         J.value "barsbackgroundtextcolor" bbtc
         J.value "author" $ authorJSON mauthor mcompany
-        J.object "process" $ processJSON doc
+        J.value "process" $ show $ toDocumentProcess (documenttype doc)
         J.valueM "infotext" $ documentInfoText ctx doc msl
         J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
         J.value "canbecanceled" $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending
@@ -279,13 +279,6 @@ placementJSON doc placement = runJSONGen $ do
 
 jsonDate :: Maybe MinutesTime -> JSValue
 jsonDate mdate = toJSValue $ formatMinutesTimeRealISO <$> mdate
-
-processJSON :: TemplatesMonad m => Document -> JSONGenT m ()
-processJSON doc = do
-    J.value "corename" $ show $ toDocumentProcess (documenttype doc)
-    J.value "numberedsignatories" $ bool processnumberedsignatories
-    where
-      bool = fromMaybe False . getValueForProcess doc
 
 fileJSON :: File -> JSValue
 fileJSON file = runJSONGen $ do

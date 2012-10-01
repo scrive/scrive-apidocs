@@ -119,7 +119,7 @@
                 schema: new Schema({
                     url: "/docs",
                     extraParams : { documentType : "Template" },
-                    extraParamsOverwrite: { selectfilter: "[{\"name\":\"process\",\"value\":\"" + KontraDesignDocument.model.process().corename().toLowerCase() + "\"}]" },
+                    extraParamsOverwrite: { selectfilter: "[{\"name\":\"process\",\"value\":\"" + KontraDesignDocument.model.process().name().toLowerCase() + "\"}]" },
                     sorting: new Sorting({ fields: ["title"]}),
                     paging: new Paging({}),
                     filtering: new TextFiltering({text: "", infotext: localization.searchTemplate}),

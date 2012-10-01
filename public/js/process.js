@@ -9,25 +9,44 @@
 
 
 window.Process = Backbone.Model.extend({
-    corename : function() { // The name of process used in comunication with server
-        return this.get("corename");
+    defaults : {
+      process : "Contract"
     },
-    setCorename : function(t) {
-        this.set({"corename": t}, {silent: true});
+    name : function() {
+        return this.get("process");
+    },
+    process : function() { 
+        return this.get("process");
+    },
+    isContract : function() {
+      return this.process() == "Contract";
+    },
+    isOffer : function() {
+      return this.process() == "Offer";
+    },
+    isOrder : function() {
+      return this.process() == "Order";
+    },
+    changeToContract : function() {
+      this.set({"process": "Contract"});
+    },
+    changeToOffer : function() {
+       this.set({"process": "Offer"});
+    },
+    changeToOrder : function() {
+       this.set({"process": "Order"});
     },
     localization: function() {
         var l = localization.process;
-        switch (this.corename()) {
-        case "Offer":
+        if (this.isOffer())
             return l.offer;
-        case "Order":
+        else if (this.isOrder())
             return l.order;
-        default:
+        else
             return l.contract;
-        }
     },
     numberedsignatories : function() {
-        return this.get("numberedsignatories");
+       return true;
     }
 });
 

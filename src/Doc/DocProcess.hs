@@ -94,9 +94,6 @@ data DocProcessInfo =
   , processsignedinfoheader :: String
   , processsignedinfotext :: String
   , processstatusinfotext :: String
-
-  -- process specific design view titles of parties
-  , processnumberedsignatories :: Bool
   }
 
 contractProcess :: DocProcessInfo
@@ -136,8 +133,6 @@ contractProcess =
   , processsignedinfoheader = "contractsignedinfoheader"
   , processsignedinfotext = "contractsignedinfotext"
   , processstatusinfotext = "contractstatusinfotext"
-
-  , processnumberedsignatories = True
   }
 
 offerProcess :: DocProcessInfo
@@ -178,8 +173,6 @@ offerProcess =
   , processsignedinfotext = "offersignedinfotext"
   , processstatusinfotext = "offerstatusinfotext"
 
-  , processnumberedsignatories = True
-
   }
 
 orderProcess :: DocProcessInfo
@@ -219,8 +212,6 @@ orderProcess =
   , processsignedinfoheader = "ordersignedinfoheader"
   , processsignedinfotext = "ordersignedinfotext"
   , processstatusinfotext = "orderstatusinfotext"
-
-  , processnumberedsignatories = True
 
   }
 
