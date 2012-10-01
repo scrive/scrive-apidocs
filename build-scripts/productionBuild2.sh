@@ -46,6 +46,7 @@ gtime -s -f "$TMP/$ZIP" -o "$signaturefile"
 
 echo "Creating final enhanced deployment file"
 tar zcf "$finalfile" "$signaturefile" "$opensslfile" "$ZIP"
+
 cd -
 ls -lh "$TMP/$finalfile"
 
