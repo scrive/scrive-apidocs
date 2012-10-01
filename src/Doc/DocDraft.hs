@@ -101,8 +101,10 @@ instance FromJSValue DraftData where
 
 applyDraftDataToDocument :: Kontrakcja m =>  Document -> DraftData -> Actor -> m (Either String Document)
 applyDraftDataToDocument doc draft actor = do
-    if (documentstatus doc == Preparation)
-     then return $ Left $ "Document is not in preparation, is in " ++ show (documentstatus doc)
+    if (documentstatus doc /= Preparation)
+     then do
+       Log.error $ "Document is not in preparation, is in " ++ show (documentstatus doc)
+       return $ Left $ "applyDraftDataToDocument failed"
      else do
       _ <- dbUpdate $ UpdateDraft (documentid doc) ( doc {
                                     documenttitle = title draft
