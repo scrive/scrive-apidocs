@@ -194,54 +194,8 @@ var FilePageView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'renderDragables');
         this.model.bind('change:dragables', this.renderDragables);
-        this.model.view = this;
         this.renderedPlacements = [];
         this.render();
-    },
-    vline: function() {
-      if (this.vlinediv != undefined)
-        return this.vlinediv;
-      this.vlinediv = $("<div class='vline'>");
-      $(this.el).append(this.vlinediv);
-      return this.vlinediv;
-    },
-    hline: function() {
-      if (this.hlinediv != undefined)
-        return this.hlinediv;
-      this.hlinediv = $("<div class='hline'>");;
-      $(this.el).append(this.hlinediv);
-      return this.hlinediv;
-    },
-    moveCoordinateAxes : function(helper) {
-      var top = helper.offset().top - $(this.el).offset().top + helper.height() - 4;
-      var left = helper.offset().left - $(this.el).offset().left;
-      var height = $(this.el).height();
-      var width = $(this.el).width();
-      /*
-       * Here we need to also set width/height of lines. With width we
-       * could go away with 100%, but height needs to be dynamically
-       * adjusted to have same height as rendered image.
-       */
-      this.hline().css({ top: top + "px",
-                         width: width + "px"});
-      this.vline().css({ left: left + "px",
-                         height: height + "px"});
-    },
-    showCoordinateAxes : function(helper) {
-        var view = this;
-        this.hline().show();
-        this.vline().show();
-        $("body").mousemove(function() {
-            setTimeout(function() {
-                view.moveCoordinateAxes(helper);
-            }, 100);
-        });
-    },
-
-    hideCoordinateAxes : function() {
-        this.vline().hide();
-        this.hline().hide();
-        $("body").unbind("mousemove");
     },
     makeDropable : function() {
       var self = this;
@@ -250,8 +204,14 @@ var FilePageView = Backbone.View.extend({
       $(self.el).droppable({
         drop: function(event, ui) {
           var helper = $(ui.helper);
-          var top = helper.offset().top - $(self.el).offset().top;
-          var left = helper.offset().left - $(self.el).offset().left;
+          /*
+           * Here we need to account for border property. There is an
+           * unsupported bug/feature in jquery:
+           *
+           * http://bugs.jquery.com/ticket/7948
+           */
+          var top = helper.offset().top - $(self.el).offset().top - 1;
+          var left = helper.offset().left - $(self.el).offset().left - 1;
           var options = $(ui.draggable).data("draggable").options;
           var onDrop = options.onDrop;
           onDrop(page,left,top);
@@ -319,6 +279,20 @@ var FileView = Backbone.View.extend({
                           cache : false});
         this.render();
     },
+    vline: function() {
+      if (this.vlinediv != undefined)
+        return this.vlinediv;
+      this.vlinediv = $("<div class='vline'>");
+      $(this.el).append(this.vlinediv);
+      return this.vlinediv;
+    },
+    hline: function() {
+      if (this.hlinediv != undefined)
+        return this.hlinediv;
+      this.hlinediv = $("<div class='hline'>");;
+      $(this.el).append(this.hlinediv);
+      return this.hlinediv;
+    },
     render: function () {
         var view = this;
         var file = this.model;
@@ -354,25 +328,42 @@ var FileView = Backbone.View.extend({
         //console.log("All pages ready "  +  _.all(this.pageviews, function(pv) {return pv.ready();}))
         return this.model.ready() && (this.model.pages().length > 0) && (this.pageviews.length == this.model.pages().length) && _.all(this.pageviews, function(pv) {return pv.ready();});
     },
-    moveCoordinateAxes : function(helper) {
-        var file = this.model;
-        _.each(file.pages(),function(page){
-                 page.view.moveCoordinateAxes(helper);
-            });
-    },
 
+    moveCoordinateAxes : function(helper) {
+      var self = this;
+      _.defer(function() {
+        /*
+         * The 'helper' contains *old* coordinates when called, so we
+         * need to give it a chance to update and then use them for
+         * positioning of guidelines.
+         */
+
+        var top = helper.offset().top - $(self.el).offset().top + helper.height() - 4;
+        var left = helper.offset().left - $(self.el).offset().left;
+        var height = $(self.el).height();
+        var width = $(self.el).width();
+
+        /*
+         * Here we need to also set width/height of lines. With width we
+         * could go away with 100%, but height needs to be dynamically
+         * adjusted to have same height as rendered image.
+         */
+        self.hline().css({ top: top + "px",
+                           width: width + "px"});
+        self.vline().css({ left: left + "px",
+                           height: height + "px"});
+      });
+    },
     showCoordinateAxes : function(helper) {
-        var file = this.model;
-        _.each(file.pages(),function(page){
-                 page.view.showCoordinateAxes(helper);
-            });
+        var view = this;
+        this.hline().show();
+        this.vline().show();
+        this.moveCoordinateAxes(helper);
     },
 
     hideCoordinateAxes : function() {
-        var file = this.model;
-        _.each(file.pages(),function(page){
-                 page.view.hideCoordinateAxes();
-            });
+        this.vline().hide();
+        this.hline().hide();
     }
 });
 
