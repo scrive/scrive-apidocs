@@ -69,6 +69,7 @@ module Doc.Model
   , StoreDocumentForTesting(..)
   , TemplateFromDocument(..)
   , TimeoutDocument(..)
+  , ResetSignatoryMailDeliveryInformationForReminder(..)
   , UpdateFields(..)
   , SetSigAttachments(..)
   , UpdateFieldsNoStatusCheck(..)
@@ -325,10 +326,10 @@ documentFilterToSQL (DocumentFilterByString string) =
 
 documentFilterToSQL (DocumentFilterByDelivery del) =
   SQL ("documents.delivery_method = ?") [toSql del]
-  
+
 documentFilterToSQL (DocumentFilterByAuthor userid) =
-  SQL ("(signatory_links.roles & ?) <> 0 AND signatory_links.user_id = ?") [toSql [SignatoryAuthor], toSql userid]
-  
+  SQL ("(signatory_links.roles & ?) <> 0 AND signatory_links.user_id = ?") [toSql [SignatoryAuthor], toSql userid]  
+
 sqlOR :: SQL -> SQL -> SQL
 sqlOR sql1 sql2 = mconcat [parenthesize sql1, SQL " OR " [], parenthesize sql2]
 
@@ -2269,6 +2270,26 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAPICallbackURL B
          [ sql "api_callback_url" mac
          ] <> SQL "WHERE id = ?" [ toSql did ]
     return success
+
+
+data ResetSignatoryMailDeliveryInformationForReminder = ResetSignatoryMailDeliveryInformationForReminder Document SignatoryLink Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryMailDeliveryInformationForReminder () where
+   update (ResetSignatoryMailDeliveryInformationForReminder doc sl actor) = do
+      success <- kRun01 $ mkSQL UPDATE tableSignatoryLinks
+        [  sql "read_invitation" $ (Nothing :: Maybe MinutesTime)
+         , sql "invitation_delivery_status" $ Unknown]
+        <> SQL ("WHERE document_id = ? AND id = ? AND sign_time IS NULL AND " ++
+               "EXISTS (SELECT 1 FROM documents WHERE id = document_id AND documents.status = ?)") [
+          toSql $ documentid doc
+        , toSql $ signatorylinkid sl
+        , toSql Pending
+        ]
+      when_ success $
+        update $ InsertEvidenceEvent
+          DeliveryInformationClearedForReminder
+          (value "name" (getSmartName sl))
+          (Just $ documentid doc)
+          actor     
 
     
 data UpdateFields = UpdateFields DocumentID SignatoryLinkID [(FieldType, String)] Actor
