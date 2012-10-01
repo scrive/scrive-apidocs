@@ -266,8 +266,11 @@ fieldJSON  doc tp name value closed placements = runJSONGen $ do
 
 placementJSON :: Document -> FieldPlacement -> JSValue
 placementJSON doc placement = runJSONGen $ do
-    J.value "x" $ placementx placement
-    J.value "y" $ placementy placement
+    J.value "xrel" $ placementxrel placement
+    J.value "yrel" $ placementyrel placement
+    J.value "wrel" $ placementwrel placement
+    J.value "hrel" $ placementhrel placement
+    J.value "fsrel" $ placementfsrel placement
     J.value "page" $ placementpage placement
     J.value "fileid" $ fromMaybe "" $ show <$> (listToMaybe $ documentfiles doc)
     J.value "tip" $ case (placementtipside placement) of

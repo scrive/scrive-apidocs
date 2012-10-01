@@ -4,27 +4,137 @@
 
 
 // !!! Not placed views model field, not placement
-window.FieldPlacementView = Backbone.View.extend({
-    initialize: function (args) {
-        if (args.model.isSignature())
-            return new SignaturePlacementView(args);
-        else if (args.model.isCheckbox())
-            return new CheckboxPlacementView(args);
-        else return new TextPlacementView(args);
+window.createFieldPlacementView = function (args) {
+    if (args.model.isSignature())
+        return new SignaturePlacementView(args);
+    else if (args.model.isCheckbox())
+        return new CheckboxPlacementView(args);
+    else return new TextPlacementView(args);
+};
+
+window.createFieldPlacementPlacedView = function (args) {
+    if (args.model.field().isSignature())
+        return new SignaturePlacementPlacedView(args);
+    else if (args.model.field().isCheckbox())
+        return new CheckboxPlacementPlacedView(args);
+    else return new TextPlacementPlacedView(args);
+};
+
+window.draggebleField = function(dragHandler, fieldOrPlacement)
+{
+    var droppedInside = false;
+    var helper;
+    var field;
+    var placement;
+
+    if( fieldOrPlacement.field !=undefined ) {
+        placement = fieldOrPlacement;
+        field = placement.field();
     }
-});
-
-window.FieldPlacementPlacedView = Backbone.View.extend({
-    initialize: function (args) {
-        if (args.model.field().isSignature())
-            return new SignaturePlacementPlacedView(args);
-        else if (args.model.field().isCheckbox())
-            return new CheckboxPlacementPlacedView(args);
-        else return new TextPlacementPlacedView(args);
+    else {
+        placement = undefined;
+        field = fieldOrPlacement;
     }
-});
+    var fileview = field.signatory().document().mainfile().view;
 
+    dragHandler.draggable({
+        appendTo: "body",
+        helper: function(event) {
+            if( helper==undefined ) {
+                helper = createFieldPlacementView({model: field}).el;
+            }
+            return helper;
+        },
+        start: function(event, ui) {
+            if( placement!=undefined ) {
+                if (placement.typeSetter != undefined) {
+                    placement.typeSetter.clear();
+                    placement.typeSetter = undefined;
+                }
+            }
 
+            if( dragHandler.hasClass("placedfield")) {
+                /*
+                 * We are draggin an existing placed field. We need to
+                 * copy all important attributes, so it looks exactly
+                 * the same.
+                 */
+                $(helper).css({fontSize: dragHandler.css("fontSize")});
+                dragHandler.hide();
+            }
+            fileview.showCoordinateAxes(ui.helper);
+        },
+        stop: function() {
+            if( placement!=undefined && !droppedInside ) {
+                placement.remove();
+            }
+            else if( dragHandler.hasClass("placedfield")) {
+                dragHandler.show();
+            }
+            fileview.hideCoordinateAxes();
+            droppedInside = false;
+        },
+        drag: function(event, ui) {
+            fileview.moveCoordinateAxes(ui.helper);
+        },
+        onDrop: function(page, x, y, w, h) {
+            droppedInside = true;
+            var signatory = field.signatory();
+            if( !_.find(signatory.fields(), function(f) { return f==field; })) {
+                signatory.addField(field);
+            }
+            var fontSizeText = $(helper).css("font-size");
+            var fontSize = parseFloat(fontSizeText);
+
+            if( placement!=undefined ) {
+                if( placement.page()==page.number() ) {
+                    placement.set({ page: page.number(),
+                                    xrel: x/w,
+                                    yrel: y/h,
+                                    wrel: $(helper).width()/w,
+                                    hrel: $(helper).height()/h,
+                                    fsrel: fontSize/w
+                                  });
+                }
+                else {
+                    /*
+                     * Placement has been moved from page to another
+                     * page. For now we just remove and re-add
+                     * placement. Refactor this later to in place
+                     * update.
+                     */
+                    placement.remove();
+                    var newPlacement = new FieldPlacement({
+                        page: page.number(),
+                        fileid: page.file().fileid(),
+                        field: field,
+                        xrel : x/w,
+                        yrel : y/h,
+                        wrel: $(helper).width() / w,
+                        hrel: $(helper).height() / h,
+                        fsrel: fontSize/w,
+                        tip: placement.tip()
+                    });
+                    field.addPlacement(newPlacement);
+                }
+            }
+            else {
+                var newPlacement = new FieldPlacement({
+                    page: page.number(),
+                    fileid: page.file().fileid(),
+                    field: field,
+                    xrel : x/w,
+                    yrel : y/h,
+                    wrel: $(helper).width() / w,
+                    hrel: $(helper).height() / h,
+                    fsrel: fontSize/w,
+                    tip: "left"
+                });
+                field.addPlacement(newPlacement);
+            }
+        }
+    });
+}
 
 var TextPlacementView = Backbone.View.extend({
     initialize: function (args) {
@@ -52,9 +162,38 @@ var TextPlacementView = Backbone.View.extend({
 var TextPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render' , 'clear');
-        this.model.bind('removed', this.clear);
+        this.model.bind('removed', this.clear, this);
+        this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.view = this;
         this.render();
+    },
+    updatePosition: function() {
+        /*
+         * There is a series of these updatePosition functions, all
+         * the same.  We need to round position down to nearest
+         * integer. We need to ceil size because if we do not then we
+         * end up with place not big enough to fit text and it will
+         * wrap or be cropped.
+         */
+        var placement = this.model;
+        var place = $(this.el);
+        var parent = place.parent();
+        if( parent.length>0 ) {
+            /*
+             * We set size only when we have parent. If drag was just
+             * started then drag helper does not have parent and will
+             * use default size for itself.
+             */
+            var parentWidth = parent.width();
+            var parentHeight = parent.height();
+            place.css({
+                left: Math.floor(placement.xrel() * parentWidth + 0.5),
+                top: Math.floor(placement.yrel() * parentHeight + 0.5),
+                width: Math.ceil(placement.wrel() * parentWidth),
+                height: Math.ceil(placement.hrel() * parentHeight),
+                fontSize: placement.fsrel() * parentWidth
+            });
+        }
     },
     clear: function() {
         this.off();
@@ -97,58 +236,28 @@ var TextPlacementPlacedView = Backbone.View.extend({
         return false;
     },
     render: function() {
-            var view = this;
-            var placement = this.model;
-            var field =  placement.field();
-            var document = field.signatory().document();
-            var place = $(this.el);
-            if (this.placed != true)
-            {   this.placed = true;
-                place.addClass('placedfield').css('position','absolute');
-                place.offset({
-                    left: placement.x(),
-                    top: placement.y()
-                });
-            }
-            place.empty();
-            var fileview = field.signatory().document().mainfile().view;
-            place.append(new TextPlacementView({model: placement.field(), el: $("<div/>")}).el);
+        var view = this;
+        var placement = this.model;
+        var field =  placement.field();
+        var document = field.signatory().document();
+        var place = $(this.el);
 
-            if (document.allowsDD())
-              place.draggable({
-                    appendTo: "body",
-                    helper: function(event) {
-                        return new TextPlacementView({model: placement.field(), el: $("<div/>")}).el;
-                    },
-                    start: function(event, ui) {
-                        place.hide();
-                        fileview.showCoordinateAxes(ui.helper);
-                    },
-                    stop: function() {
-                        placement.remove();
-                        fileview.hideCoordinateAxes();
-                    },
-                    drag: function(event, ui) {
-                        fileview.moveCoordinateAxes(ui.helper);
-                    },
-                    onDrop: function(page, x,y ){
-                          x = page.fixedX(x,y);
-                          y = page.fixedY(x,y);
-                          field.addPlacement(new FieldPlacement({
-                              page: page.number(),
-                              fileid: page.file().fileid(),
-                              field: field,
-                              x : x,
-                              y : y,
-                              tip : placement.tip()
-                            }));
-                    }
-            });
-            if (field.signatory().canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true)
+        place.addClass('placedfield');
+
+        this.updatePosition();
+
+        place.empty();
+        place.append(new TextPlacementView({model: placement.field()}).el);
+
+        if (document.allowsDD()) {
+            draggebleField(place, placement);
+        }
+        if (field.signatory().canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true) {
             place.click(function() {
                 return view.startinlineediting();
             });
-            return this;
+        }
+        return this;
     }
 });
 
@@ -175,7 +284,7 @@ var CheckboxPlacementView = Backbone.View.extend({
                 box.addClass("checked");
             else
                 box.removeClass("checked");
-           
+
             field.bind('change', function() {
                 if (field.value() != undefined && field.value()  != "")
                     box.addClass("checked");
@@ -219,7 +328,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
                                      field.setName(value);
                                  }
                             }).input();
-     return this.nameinput;                      
+     return this.nameinput;
     },
     obligatoryOption : function() {
         var option = $("<div class='checkboxTypeSetter-option'/>");
@@ -251,7 +360,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
                     field.setValue("");
                 else
                     field.setValue("checked");
-            field.trigger("change");     
+            field.trigger("change");
         });
         return option;
     },
@@ -269,7 +378,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
 
                                 var done = field.name() != undefined && field.name() != "";
                                 done = done && _.all(field.signatory().fields(), function(f) {
-                                    return f.name() != field.name() || f.type() != field.type() || f == field; 
+                                    return f.name() != field.name() || f.type() != field.type() || f == field;
                                 });
                                 if (done){
                                      field.makeReady();
@@ -326,8 +435,25 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render' , 'clear', 'addTypeSetter');
         this.model.bind('removed', this.clear);
+        this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.view = this;
         this.render();
+    },
+    updatePosition: function() {
+        var placement = this.model;
+        var place = $(this.el);
+        var parent = place.parent();
+        if( parent.length>0 ) {
+            var parentWidth = parent.width();
+            var parentHeight = parent.height();
+            place.css({
+                left: Math.floor(placement.xrel() * parentWidth + 0.5),
+                top: Math.floor(placement.yrel() * parentHeight + 0.5),
+                width: Math.ceil(placement.wrel() * parentWidth),
+                height: Math.ceil(placement.hrel() * parentHeight),
+                fontSize: placement.fsrel() * parentWidth
+            });
+        }
     },
     clear: function() {
         this.off();
@@ -338,92 +464,61 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
     },
     addTypeSetter : function() {
          var placement = this.model;
-         if (!this.hasTypeSetter() && $.contains(document.body, this.el))
-                {
-                  placement.typeSetter = new CheckboxTypeSetterView({model : placement});
-                  $('body').append(placement.typeSetter.el);
-                }
+         if (!this.hasTypeSetter() && $.contains(document.body, this.el)) {
+             placement.typeSetter = new CheckboxTypeSetterView({model : placement});
+             $('body').append(placement.typeSetter.el);
+         }
     },
     closeTypeSetter : function() {
          var placement = this.model;
-         if (this.hasTypeSetter())
-                placement.typeSetter.clear();
+         if (this.hasTypeSetter()) {
+             placement.typeSetter.clear();
+         }
     },
     render: function() {
-            var view = this;
-            var placement = this.model;
-            var field =  placement.field();
-            var document = field.signatory().document();
-            var place = $(this.el);
-            if (this.placed != true)
-            {   this.placed = true;
-                place.addClass('placedfield').css('position','absolute');
-                place.offset({
-                    left: placement.x(),
-                    top: placement.y()
-                });
-            }
-            place.empty();
-            var fileview = field.signatory().document().mainfile().view;
-            var innerPlace = $(new CheckboxPlacementView({model: placement.field(), el: $("<div/>")}).el);
-            place.append(innerPlace);
+        var view = this;
+        var placement = this.model;
+        var field =  placement.field();
+        var document = field.signatory().document();
+        var place = $(this.el);
 
-            if (document.allowsDD()) {
-              innerPlace.draggable({
-                    appendTo: "body",
-                    helper: function(event) {
-                        return new CheckboxPlacementView({model: placement.field(), el: $("<div/>")}).el;
-                    },
-                    start: function(event, ui) {
-                        if (placement.typeSetter != undefined)
-                        {   placement.typeSetter.clear();
-                            placement.typeSetter = undefined;
-                        };
-                        place.hide();
-                        fileview.showCoordinateAxes(ui.helper);
-                    },
-                    stop: function() {
-                        placement.remove();
-                        fileview.hideCoordinateAxes();
-                    },
-                    drag: function(event, ui) {
-                        fileview.moveCoordinateAxes(ui.helper);
-                    },
-                    onDrop: function(page, x,y ){
-                          field.addPlacement(new FieldPlacement({
-                              page: page.number(),
-                              fileid: page.file().fileid(),
-                              field: field,
-                              x : x,
-                              y : y,
-                              tip : placement.tip()
-                            }));
-                    }
-               });
+        place.addClass('placedfield');
+        this.updatePosition();
+
+        place.empty();
+        var innerPlace = $(new CheckboxPlacementView({model: placement.field(), el: $("<div/>")}).el);
+        place.append(innerPlace);
+
+        if (document.allowsDD()) {
+
+            draggebleField(place, placement);
+
+
             if (!field.isReady())
             {
                 setTimeout(function(){
                     view.addTypeSetter();
-                    } ,50);
-            }    
+                } ,50);
+            }
             innerPlace.dblclick(function(){
                 if (!view.hasTypeSetter())
                     view.addTypeSetter();
                 else
                     view.closeTypeSetter();
                 return false;
-            });  
-            }    
-            if (field.signatory().canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true)
-            {  innerPlace.click(function() {
-                    if (field.value() == "")
-                        field.setValue("CHECKED");
-                    else
-                        field.setValue("");
-                    return false;
-                });
-            } 
-       return this;
+            });
+        }
+        if (field.signatory().canSign() && !field.isClosed() &&
+            field.signatory().current() && view.inlineediting != true ) {
+            innerPlace.click(function() {
+                if (field.value() == "")
+                    field.setValue("CHECKED");
+                else
+                    field.setValue("");
+                return false;
+            });
+        }
+        return this;
     }
 
 });
@@ -447,7 +542,6 @@ var SignaturePlacementViewForDrawing = Backbone.View.extend({
         this.signature = this.model.signature();
         this.render();
     },
-    tagname: 'div',
     clear: function() {
         this.off();
         $(this.el).remove();
@@ -484,7 +578,7 @@ var SignaturePlacementViewForDrawing = Backbone.View.extend({
                     button.css("margin-left", Math.floor((this.signature.width() - bwidth) / 2) + "px");
                 };
                 if (this.signature.height() >bheight) {
-                
+
                     button.css("margin-top", Math.floor((this.signature.height() - bheight) / 2) + "px");
                 };
                 box.append(button);
@@ -516,7 +610,6 @@ var SignaturePlacementView = Backbone.View.extend({
         this.resizable = args.resizable;
         this.render();
     },
-    tagname: 'div',
     clear: function() {
         this.off();
         $(this.el).remove();
@@ -577,66 +670,61 @@ var SignaturePlacementView = Backbone.View.extend({
     }
 });
 
+
 var SignaturePlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'clear');
         this.model.bind('removed', this.clear);
+        this.model.bind('change:xrel change:yrel change:wrel change:hrel change:fsrel', this.updatePosition, this);
         this.model.view = this;
         this.signature = this.model.field().signature();
         this.render();
+    },
+    updatePosition: function() {
+        var placement = this.model;
+        var place = $(this.el);
+        var parent = place.parent();
+        if( parent.length>0 ) {
+            var parentWidth = parent.width();
+            var parentHeight = parent.height();
+            place.css({
+                left: Math.floor(placement.xrel() * parentWidth + 0.5),
+                top: Math.floor(placement.yrel() * parentHeight + 0.5),
+                width: Math.ceil(placement.wrel() * parentWidth),
+                height: Math.ceil(placement.hrel() * parentHeight),
+                fontSize: placement.fsrel() * parentWidth
+            });
+        }
     },
     clear: function() {
         this.off();
         $(this.el).remove();
     },
     render: function() {
-            var signature = this.signature;
-            var placement = this.model;
-            var field =  placement.field();
-            var signatory =  field.signatory();
-            var document = signatory.document();
-            var place = $(this.el);
-            var fileview = field.signatory().document().mainfile().view;
-            place.addClass('placedfield').css('position','absolute');
-            place.offset({
-                left: placement.x(),
-                top: placement.y()
-            });
-            if (document.signingInProcess() && signatory.document().currentSignatoryCanSign() && signatory.current())
-                place.append(new SignaturePlacementViewForDrawing({model: placement.field()}).el);
-            else  if (document.preparation()) {
-                    var placementView = $(new SignaturePlacementView({model: placement.field(), resizable : true}).el);
-                    place.append(placementView);
-                }    
-            else {
-                place.append(new SignaturePlacementView({model: placement.field()}).el);
-            }
-            if (document.allowsDD())
-              place.draggable({
-                    appendTo: "body",
-                    helper: function(event) {
-                        return new SignaturePlacementView({model: placement.field()}).el;
-                    },
-                    start: function(event, ui) {
-                        place.hide();
-                    },
-                    stop: function() {
-                        placement.remove();
-                    },
-                    drag: function(event, ui) {
-                    },
-                    onDrop: function(page, x,y ){
-                          field.addPlacement(new FieldPlacement({
-                              page: page.number(),
-                              fileid: page.file().fileid(),
-                              field: field,
-                              x : x,
-                              y : y,
-                              tip : placement.tip()
-                            }));
-                    }
-            });
-            return this;
+        var signature = this.signature;
+        var placement = this.model;
+        var field = placement.field();
+        var signatory = field.signatory();
+        var document = signatory.document();
+        var place = $(this.el);
+        var fileview = field.signatory().document().mainfile().view;
+        place.addClass('placedfield');
+        this.updatePosition();
+
+        if (document.signingInProcess() && signatory.document().currentSignatoryCanSign() && signatory.current()) {
+            place.append(new SignaturePlacementViewForDrawing({model: placement.field()}).el);
+        }
+        else if (document.preparation()) {
+            var placementView = $(new SignaturePlacementView({model: placement.field(), resizable : true}).el);
+            place.append(placementView);
+        }
+        else {
+            place.append(new SignaturePlacementView({model: placement.field()}).el);
+        }
+        if (document.allowsDD()) {
+            draggebleField(place, placement);
+        }
+        return this;
     }
 });
 

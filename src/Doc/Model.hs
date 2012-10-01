@@ -2079,9 +2079,12 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                         _                                                   -> value "value" $ sfValue changedfield
                       value "hasplacements" (not $ null $ sfPlacements changedfield)
                       objects "placements" $ for (sfPlacements changedfield) $ \p -> do
-                        value "x"    $ show $ placementx p
-                        value "y"    $ show $ placementy p
-                        value "page" $ show $ placementpage p
+                        value "xrel"    $ show $ placementxrel p
+                        value "yrel"    $ show $ placementyrel p
+                        value "wrel"    $ show $ placementwrel p
+                        value "hrel"    $ show $ placementhrel p
+                        value "fsrel"   $ show $ placementfsrel p
+                        value "page"    $ show $ placementpage p
                       value "actor"  (actorWho actor))
                   (Just documentid)
                   actor
@@ -2110,9 +2113,12 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                         _                                                   -> value "value" $ sfValue changedfield
                       value "hasplacements" (not $ null $ sfPlacements changedfield)
                       objects "placements" $ for (sfPlacements changedfield) $ \p -> do
-                        value "x"    $ show $ placementx p
-                        value "y"    $ show $ placementy p
-                        value "page" $ show $ placementpage p
+                        value "xrel"    $ show $ placementxrel p
+                        value "yrel"    $ show $ placementyrel p
+                        value "wrel"    $ show $ placementwrel p
+                        value "hrel"    $ show $ placementhrel p
+                        value "fsrel"   $ show $ placementfsrel p
+                        value "page"    $ show $ placementpage p
                       value "actor" (actorWho actor))
                   (Just documentid)
                   actor

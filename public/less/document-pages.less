@@ -51,7 +51,7 @@
     position: absolute;
 }
 
-.placedfield, .placedfieldhelper {
+.placedfield {
     position: absolute;
     cursor: pointer;
 }
@@ -62,8 +62,10 @@
  * everything as this is used for draggables which are direct children
  * of BODY.
  */
+
 .placedfieldvalue {
     font-family: Helvetica;
+    white-space: nowrap;
     font-size: 10px * @page-div-width / @a4-width-in-pt;
 }
 

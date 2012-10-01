@@ -120,31 +120,33 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signato
     onlyFirstInSummary (a:rest) = (a {Seal.includeInSummary = True}) : (map (\r -> r {Seal.includeInSummary = False}) rest)
     onlyFirstInSummary [] = []
     makeSealField :: SignatoryField -> [Seal.Field]
-    makeSealField sf = case  sfType sf of
-                         SignatureFT -> onlyFirstInSummary $ concatMap (maybeToList . (fieldJPEGFromPlacement (sfValue sf))) (sfPlacements sf)
-                         CheckboxOptionalFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf)
-                         CheckboxObligatoryFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf) 
-                         _ -> map (fieldFromPlacement (sfValue sf)) (sfPlacements sf)
+    makeSealField sf = case sfType sf of
+       SignatureFT -> onlyFirstInSummary $
+          concatMap (maybeToList . (fieldJPEGFromPlacement (sfValue sf))) (sfPlacements sf)
+       CheckboxOptionalFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf)
+       CheckboxObligatoryFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf) 
+       _ -> map (fieldFromPlacement (sfValue sf)) (sfPlacements sf)
     fieldFromPlacement sf placement = 
       Seal.Field { Seal.value            = sf
-                 , Seal.x                = placementx placement
-                 , Seal.y                = placementy placement
+                 , Seal.x                = placementxrel placement
+                 , Seal.y                = placementyrel placement
                  , Seal.page             = placementpage placement
-                 , Seal.w                = placementpagewidth placement
-                 , Seal.h                = placementpageheight placement
                  , Seal.includeInSummary = True
                  }
+    
     checkedImageFromPlacement = iconWithPlacement checkedBoxImage
     uncheckedImageFromPlacement = iconWithPlacement uncheckedBoxImage
     iconWithPlacement image placement = Seal.FieldJPG
                  { valueBase64           = BS.toString $ B64.encode image
-                 , Seal.x                = placementx placement
-                 , Seal.y                = placementy placement
+                 , Seal.x                = placementxrel placement
+                 , Seal.y                = placementyrel placement
                  , Seal.page             = placementpage placement
-                 , Seal.w                = placementpagewidth placement
-                 , Seal.h                = placementpageheight placement
-                 , Seal.image_w          = 16
-                 , Seal.image_h          = 16
+                 , Seal.image_w          = if placementwrel placement /= 0
+                                           then placementwrel placement
+                                           else 16 / 943
+                 , Seal.image_h          = if placementhrel placement /= 0
+                                           then placementhrel placement
+                                           else 16 / 1335
                  , Seal.internal_image_w = 16
                  , Seal.internal_image_h = 16
                  , Seal.includeInSummary = False
@@ -157,13 +159,15 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signato
           hi <- maybeRead h
           Just $ Seal.FieldJPG
                  { valueBase64           = drop 1 $ dropWhile (\e -> e /= ',') c
-                 , Seal.x                = placementx placement
-                 , Seal.y                = placementy placement
+                 , Seal.x                = placementxrel placement
+                 , Seal.y                = placementyrel placement
                  , Seal.page             = placementpage placement
-                 , Seal.w                = placementpagewidth placement
-                 , Seal.h                = placementpageheight placement
-                 , Seal.image_w          = wi
-                 , Seal.image_h          = hi
+                 , Seal.image_w          = if placementwrel placement /= 0
+                                           then placementwrel placement
+                                           else fromIntegral wi / 943
+                 , Seal.image_h          = if placementhrel placement /= 0
+                                           then placementhrel placement
+                                           else fromIntegral hi / 1335
                  , Seal.internal_image_w = 4 * wi
                  , Seal.internal_image_h = 4 * hi
                  , Seal.includeInSummary = True

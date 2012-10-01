@@ -156,33 +156,8 @@ window.SignatoryDesignView = Backbone.View.extend({
        var signatory = this.model;
        var field = signatory.newCheckbox();
        var placeCheckboxIcon = $("<a class='placeCheckboxIcon' href='#'/>");
-       var fileview = signatory.document().mainfile().view;
-       placeCheckboxIcon.draggable({
-                    handle: ".ddIcon",
-                    appendTo: "body",
-                    helper: function(event) {
-                        return new FieldPlacementView({model: field, el : $("<div style='margin-left:12px;margin-top:1px;'/>")}).el;
-                    },
-                    start: function(event, ui) {
-                          fileview.showCoordinateAxes(ui.helper);
-                    },
-                    stop: function() {
-                          fileview.hideCoordinateAxes();
-                    },
-                    drag: function(event, ui) {
-                    },
-                    onDrop: function(page, x,y ){
-                          signatory.addField(field);
-                          field.addPlacement(new FieldPlacement({
-                              page: page.number(),
-                              fileid: page.file().fileid(),
-                              field: field,
-                              x : x,
-                              y : y,
-                              tip : "left"
-                            }));
-                    }
-            });
+
+       draggebleField(placeCheckboxIcon, field);
 
        return placeCheckboxIcon;
    },
@@ -194,29 +169,8 @@ window.SignatoryDesignView = Backbone.View.extend({
        field.view = placeSignatureIcon;
        field.view.redborder = function() {placeSignatureIcon.addClass('redborder')};
        field.view.mousedown(function() {placeSignatureIcon.removeClass('redborder')});
-       var fileview = signatory.document().mainfile().view;
-       placeSignatureIcon.draggable({
-                    handle: ".ddIcon",
-                    appendTo: "body",
-                    helper: function(event) {
-                        return new FieldPlacementView({model: field, el : $("<div/>")}).el;
-                    },
-                    start: function(event, ui) {
-                    },
-                    stop: function() {
-                    },
-                    drag: function(event, ui) {
-                    },
-                    onDrop: function(page, x,y ){
-                          field.addPlacement(new FieldPlacement({
-                              page: page.number(),
-                              fileid: page.file().fileid(),
-                              field: field,
-                              x : x,
-                              y : y
-                            }));
-                    }
-            });
+
+       draggebleField(placeSignatureIcon, field);
 
        return placeSignatureIcon;
    },

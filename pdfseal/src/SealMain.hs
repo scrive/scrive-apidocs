@@ -21,13 +21,11 @@ addBarackObamaField = do
          { valueBase64 = BS.toString base64
          , internal_image_w = w1
          , internal_image_h = h1
-         , image_w = w1
-         , image_h = h1
-         , x = 7
-         , y = 7
+         , image_w = fromIntegral w1 / 770
+         , image_h = fromIntegral h1 / 1085
+         , x = 7 / 770
+         , y = 7 / 1085
          , page = 1
-         , w = 770
-         , h = 1085
          , includeInSummary = True
          }
 
@@ -61,13 +59,13 @@ sealspec filename = SealSpec
           , companyverified = False
           , numberverified = True
           -- should be in 4 corners, aligned
-          , fields = [ Field {value = "Gracjan Polak", x = 7, y = 7, page = 1, w = 770, h = 1085, includeInSummary = False}
-                     , Field {value = "Gracjan Polak", x = 681, y = 7, page = 1, w = 770, h = 1085, includeInSummary = False}
-                     , Field {value = "Gracjan Polak", x = 7, y = 1058, page = 1, w = 770, h = 1085, includeInSummary = False}
-                     , Field {value = "Gracjan Polak", x = 681, y = 1058, page = 1, w = 770, h = 1085, includeInSummary = False}
-                     , Field {value = "gracjan@mail.com", x = 121, y = 347, page = 1,w = 770, h = 1085, includeInSummary = False}
+          , fields = [ Field {value = "Gracjan Polak",    x = 7/770,   y = 7/1085,    page = 1, includeInSummary = False}
+                     , Field {value = "Gracjan Polak",    x = 681/770, y = 7/1085,    page = 1, includeInSummary = False}
+                     , Field {value = "Gracjan Polak",    x = 7/770,   y = 1058/1085, page = 1, includeInSummary = False}
+                     , Field {value = "Gracjan Polak",    x = 681/770, y = 1058/1085, page = 1, includeInSummary = False}
+                     , Field {value = "gracjan@mail.com", x = 121/770, y = 347/1085,  page = 1, includeInSummary = False}
                      ]
-          }) [1..30::Int]
+          }) [1..10::Int]
     , initials = "LD, LD"
     , history = map (\num -> HistEntry { histdate = "2010-09-" ++ show num ++ " 13:34"
                                          , histcomment = "I was here and mucked around with PDFs. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good."

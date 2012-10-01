@@ -328,13 +328,15 @@ instance Arbitrary SignatoryDetails where
 
 instance Arbitrary FieldPlacement where
   arbitrary = do
-    (a,b,c,d,e) <- arbitrary
-    return $ FieldPlacement { placementx = a
-                            , placementy = b
-                            , placementpage = c
-                            , placementpagewidth = d
-                            , placementpageheight = e
-                            , placementtipside = Nothing
+    (a,b,c) <- arbitrary
+    (d,e,f) <- arbitrary
+    return $ FieldPlacement { placementxrel       = a
+                            , placementyrel       = b
+                            , placementwrel       = c
+                            , placementhrel       = d
+                            , placementfsrel      = e
+                            , placementpage       = f
+                            , placementtipside    = Nothing
                             }
 
 instance Arbitrary FieldType where

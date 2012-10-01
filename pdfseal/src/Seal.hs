@@ -316,13 +316,11 @@ commandsFromFields pagew pageh fields = concatMap commandsFromField fields
     commandsFromField Field{ SealSpec.value = val
                    , x
                    , y
-                   , w
-                   , h
                    } = execWriter $ do
                          tell "q\n"
                          tellMatrix 1 0 0 1
-                                      (fromIntegral (x * pagew) / fromIntegral w)
-                                      (fromIntegral ((h - y) * pageh) / fromIntegral h - fontBaseline)
+                                      (x * fromIntegral pagew)
+                                      (((1 - y) * fromIntegral pageh) - fontBaseline)
                          tell "BT\n"
                          tell "/SkrivaPaHelvetica 10 Tf\n"
                          tell $ "(" ++ winAnsiPostScriptEncode val ++ ") Tj\n"
@@ -333,17 +331,15 @@ commandsFromFields pagew pageh fields = concatMap commandsFromField fields
     commandsFromField FieldJPG{ SealSpec.valueBase64 = val
                    , x
                    , y
-                   , w
-                   , h
                    , image_w, image_h
                    , internal_image_w, internal_image_h
                    } = execWriter $ do
                          tell "q\n"
-                         tellMatrix (fromIntegral (image_w * pagew) / fromIntegral w)
-                                      0 0
-                                      (fromIntegral (image_h * pageh) / fromIntegral h)
-                                      (fromIntegral (x * pagew) / fromIntegral w)
-                                      (fromIntegral ((h - y - image_h) * pageh) / fromIntegral h)
+                         tellMatrix (image_w * fromIntegral pagew)
+                                    0 0
+                                    (image_h * fromIntegral pageh)
+                                    (x * fromIntegral pagew)
+                                    ((1 - y - image_h) * fromIntegral pageh)
                          tell "BI\n"        -- begin image
                          tell "/BPC 8\n"    -- 8 bits per pixel
                          tell "/CS /RGB\n"  -- color space is RGB

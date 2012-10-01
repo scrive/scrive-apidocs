@@ -166,26 +166,6 @@ var FilePage = Backbone.Model.extend({
              newplacements.push(this.placements()[i]);
        this.set({placements : newplacements}, {silent : true});
        this.trigger("change:dragables");
-    },
-    fixedX : function(x,y,field){
-     /* Turn off snap-to-grid for now. It is nice when it works, but
-        it does not always do what you want. -- Eric
-     _.each(this.placements(), function(p) {
-             if (Math.abs(p.x()-x) < 8 && (Math.abs(p.x()-x) + Math.abs(p.y()-y) < 400))
-                  x = p.x();
-     });
-     */
-     return x;
-    },
-    fixedY : function(x,y,field){
-    /* Turn off snap-to-grid for now. It is nice when it works, but
-       it does not always do what you want. -- Eric
-          _.each(this.placements(), function(p) {
-             if (Math.abs(p.y()-y) < 8 && (Math.abs(p.x()-x) + Math.abs(p.y()-y) < 400))
-                  y =  p.y();
-     });
-     */
-     return y;
     }
 });
 
@@ -202,21 +182,23 @@ var FilePageView = Backbone.View.extend({
       var page = self.model;
 
       $(self.el).droppable({
-        drop: function(event, ui) {
-          var helper = $(ui.helper);
-          /*
-           * Here we need to account for border property. There is an
-           * unsupported bug/feature in jquery:
-           *
-           * http://bugs.jquery.com/ticket/7948
-           */
-          var top = helper.offset().top - $(self.el).offset().top - 1;
-          var left = helper.offset().left - $(self.el).offset().left - 1;
-          var options = $(ui.draggable).data("draggable").options;
-          var onDrop = options.onDrop;
-          onDrop(page,left,top);
-          return false;
-        }
+          drop: function(event, ui) {
+              var helper = $(ui.helper);
+              /*
+               * Here we need to account for border property. There is an
+               * unsupported bug/feature in jquery:
+               *
+               * http://bugs.jquery.com/ticket/7948
+               */
+              var top = helper.offset().top - $(self.el).offset().top - 1;
+              var left = helper.offset().left - $(self.el).offset().left - 1;
+              var height = $(self.el).height();
+              var width = $(self.el).width();
+              var options = $(ui.draggable).data("draggable").options;
+              var onDrop = options.onDrop;
+              onDrop(page,left,top,width,height);
+              return false;
+          }
       });
     },
     renderDragables : function() {
@@ -230,13 +212,13 @@ var FilePageView = Backbone.View.extend({
         _.each(page.placements(), function(placement) {
             var placement = placement;
             if (placement.page()==page.number()) {
-                var elem = new FieldPlacementPlacedView({model: placement, el : $("<div>")}).el;
-                container.append(elem);
+                var elem = $("<div>").appendTo(container);
+                createFieldPlacementPlacedView({model: placement, el: elem});
                 if (!placement.field().isClosed()) {
-                  view.renderedPlacements.push({
-                    placement: placement,
-                    elem: $(elem)
-                  });
+                    view.renderedPlacements.push({
+                        placement: placement,
+                        elem: elem
+                    });
                 }
             }
         });
