@@ -2,7 +2,6 @@ module Doc.DocStateCommon where
 
 import Company.Model
 import Data.Maybe
-import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocUtils
 import MagicHash (MagicHash)
@@ -11,7 +10,6 @@ import Utils.Default
 import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import Util.SignatoryLinkUtils
 import qualified Data.Set as S
 
 trueOrMessage :: Bool -> String -> Maybe String
@@ -175,16 +173,3 @@ replaceSignatoryUser siglink user mcompany =
                        (map sfValue $ filter isFieldCustom $ signatoryfields $ signatorydetails siglink) in
   newsl { maybesignatory = Just $ userid user,
           maybecompany = usercompany user }
-
-checkUpdateFields :: Document -> SignatoryLinkID -> [String]
-checkUpdateFields doc slid = catMaybes $
-  [ trueOrMessage (isPending doc) $ "Document is not in Pending (is " ++ (show $ documentstatus doc) ++ ")"
-  , trueOrMessage (isJust $ getSigLinkFor doc slid) $ "Signatory does not exist"
-  , trueOrMessage (not $ hasSigned (doc, slid)) "Signatory has already signed."
-  ]
-
-checkAddEvidence :: Document -> SignatoryLinkID -> [String]
-checkAddEvidence doc slid = catMaybes $
-  [ trueOrMessage (isPending doc) "Document is not in pending"
-  , trueOrMessage (isSignatory (doc, slid)) "Given signatorylinkid is not a signatory"
-  ]
