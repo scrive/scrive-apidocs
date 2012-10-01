@@ -14,7 +14,7 @@ echo "BUILD ID: "$BUILD_ID
 echo "TMP: "$TMP
 
 echo "Building Clean"
-sh build-scripts/runCleanCompile.sh
+sh build-scripts/runCleanCompile.sh > build-report.txt
 
 echo "Running unit tests"
 sh build-scripts/runAllUnitTests.sh > test-report.txt
@@ -75,7 +75,7 @@ scp "$TMP/$finalfile" builds@prod.scrive.lan:/tmp/deployment/.
 scp "/home/builds/key/builds.scrive.com.pubkey.pem" builds@prod.scrive.lan:/tmp/deployment/.
 
 echo "Verifying and unzipping deployment file"
-ssh builds@prod.scrive.lan 'cd /tmp/deployment && tar -zxf $finalfile && gtime -v -f $ZIP -i $signaturefile && openssl dgst -sha256 -verify builds.scrive.com.pubkey.pem -signature $opensslfile $ZIP && mkdir kontrakcja && tar -C kontrakcja -zxf $ZIP ; exit $?'
+ssh builds@prod.scrive.lan "cd /tmp/deployment && tar -zxf $finalfile && gtime -v -f $ZIP -i $signaturefile && openssl dgst -sha256 -verify builds.scrive.com.pubkey.pem -signature $opensslfile $ZIP && mkdir kontrakcja && tar -C kontrakcja -zxf $ZIP ; exit \$?"
 
 echo "Deployed to /tmp/deployment on Production server. Deployment file has been verified."
 
