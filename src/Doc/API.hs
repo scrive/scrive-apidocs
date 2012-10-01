@@ -56,6 +56,7 @@ import Archive.Control
 import OAuth.Model
 import InputValidation
 import Doc.API.Callback.Model
+import qualified Data.ByteString.Base64 as B64
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = choice [
@@ -64,6 +65,7 @@ documentAPI = choice [
   dir "api" $ dir "createfromtemplate" $ hPostNoXToken $ toK1 $ apiCallCreateFromTemplate,
   dir "api" $ dir "update"             $ hPostNoXToken $ toK1 $ apiCallUpdate,
   dir "api" $ dir "ready"              $ hPostNoXToken $ toK1 $ apiCallReady,
+  dir "api" $ dir "cancel"             $ hPostNoXToken $ toK1 $ apiCallCancel,
   dir "api" $ dir "get"                $ hGet $ toK1 $ apiCallGet,
   dir "api" $ dir "list"               $ hGet $ apiCallList,
     
@@ -98,8 +100,14 @@ apiCallCreateFromFile = api $ do
       case eres of
         Left (LiveDocxIOError e) -> throwError $ serverError $ show e
         Left (LiveDocxSoapError s)-> throwError $ serverError s
-        Right res -> return $ BSL.fromChunks [res]
-  pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content'')
+        Right res -> return $ BSL.fromChunks [res]       
+  pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ liftIO $ do
+                 cres <- preCheckPDF (ctxgscmd ctx) (concatChunks content'')
+                 case cres of
+                    Right c -> return (Right c)
+                    Left m -> case (B64.decode $ (concatChunks content'')) of -- Salesforce hack. Drop this decoding when happstack-7.0.4 is included.
+                                  Right dcontent -> preCheckPDF (ctxgscmd ctx) dcontent
+                                  Left _ -> return (Left m)
   file <- dbUpdate $ NewFile filename pdfcontent
   Just doc <- dbUpdate $ NewDocument user mcompany filename doctype 1 actor
   True <- dbUpdate $ AttachFile (documentid doc) (fileid file) actor
@@ -162,6 +170,22 @@ apiCallReady did =  api $ do
               Accepted <$> documentJSON True True Nothing Nothing newdocument'
           Left reason -> throwError $ serverError $ "Operation failed: " ++ show reason
 
+
+apiCallCancel :: Kontrakcja m => DocumentID -> m Response
+apiCallCancel did =  api $ do
+  (user, actor, _) <- getAPIUser APIDocSend
+  doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
+  auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
+  when (not $ (auid == userid user)) $ do
+        throwError $ serverError "Permission problem. Not an author."
+  cancelled <- dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
+  if cancelled 
+    then do
+      newdocument <- apiGuardL (serverError "No document found after cancel") $ dbQuery $ GetDocumentByDocumentID $ did
+      lift $ postDocumentCanceledChange newdocument "api"
+      newdocument' <- apiGuardL (serverError "No document found after cancell and post actions") $ dbQuery $ GetDocumentByDocumentID $ did
+      Accepted <$> documentJSON True True Nothing Nothing newdocument'
+    else throwError $ serverError $ "Operation failed"
   
 apiCallGet :: Kontrakcja m => DocumentID -> m Response
 apiCallGet did = api $ do
