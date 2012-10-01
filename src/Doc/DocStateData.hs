@@ -400,6 +400,27 @@ $(jsonableDeriveConvertible [t| [DocumentTag] |])
 $(jsonableDeriveConvertible [t| CancelationReason |])
 $(jsonableDeriveConvertible [t| [[String]] |])
 
+-- this should go to fields-json
+instance FromJSValue Double where
+    fromJSValue (JSRational _ r) = Just $ fromRational r
+    fromJSValue _ = Nothing
+
+instance FromJSValue FieldPlacement where
+    fromJSValue = do
+         x          <- fromJSValueField "x"
+         y          <- fromJSValueField "y"
+         page       <- fromJSValueField "page"
+         pagewidth  <- fromJSValueField "pagewidth"
+         pageheight <- fromJSValueField "pageheight"
+         side       <- fromJSValueField "tip"
+         return $ (FieldPlacement <$> x <*> y <*> page <*> pagewidth <*> pageheight <*> Just side)
+
+instance FromJSValue TipSide where
+    fromJSValue js = case fromJSValue js of
+          Just "left"  -> Just LeftTip
+          Just "right" -> Just RightTip
+          _ ->            Nothing
+
 
 instance Convertible  [FieldPlacement] SqlValue where
     safeConvert = jsonToSqlValueCustom $ JSArray . (map placementJSON) 
