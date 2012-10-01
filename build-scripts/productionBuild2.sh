@@ -37,7 +37,7 @@ signaturefile="$BUILD_ID.signature.gtts"
 finalfile="$BUILD_ID.production.enhanced.tar.gz"
 
 echo "Signing with private key"
-openssl dgst -sha256 -sign "~/key/builds.scrive.com.key" -out "$opensslfile" "$TMP/$ZIP"
+openssl dgst -sha256 -sign "/home/builds/key/builds.scrive.com.key" -out "$opensslfile" "$TMP/$ZIP"
 
 echo "Signing with GuardTime"
 gtime -s -f "$TMP/$ZIP" -o "$signaturefile"
@@ -72,10 +72,10 @@ echo ""
 echo "Copying deployment file to /tmp on production server"
 ssh builds@prod.scrive.lan 'rm -rf /tmp/deployment && mkdir /tmp/deployment'
 scp "$TMP/$finalfile" builds@prod.scrive.lan:/tmp/deployment/.
-scp "~/key/builds.scrive.com.pubkey.pem" builds@prod.scrive.lan:/tmp/deployment/.
+scp "/home/builds/key/builds.scrive.com.pubkey.pem" builds@prod.scrive.lan:/tmp/deployment/.
 
 echo "Verifying and unzipping deployment file"
-ssh builds@prod.scrive.lan 'cd /tmp/deployment && tar -zxf $finalfile && gtime -v -f $ZIP -i $signaturefile && openssl dgst -sha256 -verify builds.scrive.com.pubkey.pem -signature $opensslfile $ZIP  && mkdir kontrakcja && tar -zxf $ZIP -C kontrakcja'
+ssh builds@prod.scrive.lan 'cd /tmp/deployment && tar -zxf $finalfile && gtime -v -f $ZIP -i $signaturefile && openssl dgst -sha256 -verify builds.scrive.com.pubkey.pem -signature $opensslfile $ZIP && mkdir kontrakcja && tar -C kontrakcja -zxf $ZIP ; exit $?'
 
 echo "Deployed to /tmp/deployment on Production server. Deployment file has been verified."
 
