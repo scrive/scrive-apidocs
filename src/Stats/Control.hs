@@ -274,7 +274,7 @@ addDocumentCloseStatEvents doc apistring = falseOnError $ do
       unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatClose
       let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
             (EmailAuthentication, PadDelivery) -> DocStatPadSignatures
-            (EmailAuthentication, _) -> DocStatPadSignatures
+            (EmailAuthentication, _) -> DocStatEmailSignatures
             (ELegAuthentication,  _) -> DocStatElegSignatures
       b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                      , seTime       = signtime
