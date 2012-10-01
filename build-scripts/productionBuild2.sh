@@ -5,20 +5,21 @@
 # example:
 #DIR=/home/eric/haskell/kontrakcja
 
-echo "BUILD_NUMBER: "$BUILD_NUMBER
-echo "TMP: "$TMP
-
 BUILD_DATE=`date "+%Y-%m-%d-%H-%M-%S"`
 #BUILD_VCS_NUMBER=`git log -1 --pretty=oneline|awk '{print $1;}'`
 
+BUILD_ID=$BUILD_DATE"."$BUILD_NUMBER"."$BUILD_VCS_NUMBER
+
+echo "BUILD ID: "$BUILD_ID
+echo "TMP: "$TMP
+
+echo "Building Clean"
 sh build-scripts/runCleanCompile.sh
 
 echo "Running unit tests"
 sh build-scripts/runAllUnitTests.sh > test-report.txt
 
-BUILD_ID=$BUILD_DATE"."$BUILD_NUMBER"."$BUILD_VCS_NUMBER
-
-ZIP="$BUILD_ID".".production.tar.gz"
+ZIP="$BUILD_ID"".production.tar.gz"
 
 echo "Creating zip file"
 
@@ -38,7 +39,7 @@ echo "Signing with GuardTime"
 gtime -s -f "$TMP/$ZIP" -o "$signaturefile"
 
 echo "Creating final enhanced deployment file"
-tar zcf "$finalfile" "$signaturefile" "$TMP/$ZIP"
+tar zcf "$finalfile" "$signaturefile" "$ZIP"
 cd -
 ls -lh "$TMP/$finalfile"
 
@@ -58,6 +59,19 @@ else
     exit 1
 fi
 
+echo ""
+echo "Backed-up file on Amazon:"
 echo "s3://production-builds/$finalfile"
+
+echo ""
+
+echo "Copying deployment file to /tmp on production server"
+ssh builds@prod.scrive.lan 'rm -rf /tmp/deployment && mkdir /tmp/deployment'
+scp "$TMP/$finalfile" builds@prod.scrive.lan:/tmp/deployment/.
+
+echo "Verifying and unzipping deployment file"
+ssh builds@prod.scrive.lan 'cd /tmp/deployment && tar zxf $finalfile && gtime -v -f $ZIP -i $signaturefile && mkdir kontrakcja && tar zxf $ZIP -C kontrakcja'
+
+echo "Deployed to /tmp/deployment on Production server. Deployment file has been verified."
 
 exit 0
