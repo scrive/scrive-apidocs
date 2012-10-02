@@ -18,7 +18,8 @@
             year: '',
             month: '',
             createdUser: false,
-            accountCreated: false
+            accountCreated: false,
+            currentPlan: 'team'
         },
         firstName: function() {
             return this.get("firstName");
@@ -58,7 +59,8 @@
             return this.get('currentPlan');
         },
         setCurrentPlan: function(plan) {
-            this.set({currentPlan:plan});
+            if(plan !== this.get('currentPlan'))
+                this.set({currentPlan:plan});
             return this;
         },
         creditCard: function() {
@@ -217,7 +219,6 @@
                                       size: 'small',
                                       width: 150,
                                       onClick: function() {
-                                          view.onClick();
                                           return false;
                                       }});
             
