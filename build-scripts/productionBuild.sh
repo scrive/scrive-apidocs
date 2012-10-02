@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+# This script was used before October 1, 2012
+
 # This script assumes the existence of BUILD_NUMBER from TeamCity
 # This script assumes the existence of TWPASSWORD as the password for trustweaver certificates
 # This script assumes the existence of PRIVATEKEY as the location of private key file
