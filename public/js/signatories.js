@@ -460,6 +460,7 @@ window.Signatory = Backbone.Model.extend({
         });
       }
       this.trigger("change:role");
+      this.document().fixSignorder();
     },
     makeViewer: function() {
       var authorSignsFirstMode = this.document().authorSignsFirstMode();
@@ -474,6 +475,7 @@ window.Signatory = Backbone.Model.extend({
         });
       }
       this.trigger("change:role");
+      this.document().fixSignorder();
     },
     hasSigned: function() {
         return this.signdate() != undefined;

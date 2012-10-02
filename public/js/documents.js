@@ -113,6 +113,7 @@ window.Document = Backbone.Model.extend({
       var nsig = new Signatory({"document": document, signs: true, signorder: signorder});
       signatories[signatories.length] = nsig;
       document.set({"signatories": signatories});
+      this.fixSignorder();
       return nsig;
     },
     authorSignsFirstMode : function() {
@@ -305,6 +306,7 @@ window.Document = Backbone.Model.extend({
               removed = true;
           }
        this.set({signatories : newsigs});
+       this.fixSignorder();
     },
     currentViewerIsAuthor: function() {
         var csig = this.currentSignatory();
@@ -487,6 +489,17 @@ window.Document = Backbone.Model.extend({
     },
     authoruser: function() {
         return this.get("authoruser");
+    },
+    maxPossibleSignOrder : function() {
+      var mpso = 0;
+      _.each(this.signatories(), function(sig) {if (sig.signs()) mpso++;})
+      return mpso == 0 ? 1 : mpso;
+    }, 
+    fixSignorder : function() {
+        var mpso = this.maxPossibleSignOrder();
+        _.each(this.signatories(), function(sig) {
+          if (sig.signorder() > mpso) sig.setSignOrder(mpso);
+        })
     },
     parse: function(args) {
      var self = this;
