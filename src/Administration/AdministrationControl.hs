@@ -258,7 +258,7 @@ userPaginationFromParams pageSize params = UserPagination (listParamsOffset para
 
 
 jsonUsersList ::Kontrakcja m => m JSValue
-jsonUsersList = do
+jsonUsersList = jsonUsersList $ do
     params <- getListParamsNew
     let filters = userSearchingFromParams params
         sorting = userSortingFromParams params
