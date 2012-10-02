@@ -238,13 +238,15 @@ window.Document = Backbone.Model.extend({
     sendByAuthor: function() {
         return new Submit({
               send: "YES",
-              method: "POST"
+              method: "POST",
+              ajaxtimeout : 120000
           });
     },
     signByAuthor: function() {
         return new Submit({
               sign: "YES",
-              method: "POST"
+              method: "POST",
+              ajaxtimeout : 120000
           });
     },
     save: function() {
@@ -492,14 +494,14 @@ window.Document = Backbone.Model.extend({
     },
     maxPossibleSignOrder : function() {
       var mpso = 0;
-      _.each(this.signatories(), function(sig) {if (sig.signs()) mpso++;})
+      _.each(this.signatories(), function(sig) {if (sig.signs()) mpso++;});
       return mpso == 0 ? 1 : mpso;
     }, 
     fixSignorder : function() {
         var mpso = this.maxPossibleSignOrder();
         _.each(this.signatories(), function(sig) {
           if (sig.signorder() > mpso) sig.setSignOrder(mpso);
-        })
+        });
     },
     parse: function(args) {
      var self = this;
