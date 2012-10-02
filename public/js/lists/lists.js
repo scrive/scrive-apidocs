@@ -461,7 +461,6 @@
     window.KontraList = function() { return {
         init: function(args) {
             _.bindAll(this, 'recall');
-            this.timeout = args.timeout != undefined ? this.timeout  : 6000
             this.schema = args.schema;
             this.schema.initSessionStorageNamespace(args.name);
             this.model = new List({
@@ -486,7 +485,7 @@
                                processData: true,
                                cache: false,
                                success: function() {list.view.stopLoading(); },
-                               error : function() {list.recall();},
+                               error : function() {},
                                timeout: this.timeout
             });
         }
