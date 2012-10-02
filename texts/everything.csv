@@ -2428,6 +2428,8 @@ vill skicka fler dokument per månad, kontakta vår <a href = 'mailto: viktor@sc
 "_blockingButtonDoubleCheck","Kontrollera faktureringsinformation",,"Check Billing Info"
 "_blockingButtonUpgrade","Uppgrader",,"Upgrade"
 "_blockingBrandingCompanyProf","<p>Om du vill konvertera ditt konto till ett företagskonto kan du uppgradera till Team plan. Med Team plan, får du:</p><ul><li><p><img src='/img/iconGreenCheck.png' /> Brandade epost och signerings sidor</p></li><li><p><img src='/img/iconGreenCheck.png' /> Fler användare till ert företag. </p></li><li><p><img src='/img/iconGreenCheck.png' /> Fösäljningschefsdashboard</p></li></ul>",,"<p>If you would like to convert your account to a company account, please upgrade to a <em>Team</em> monthly plan.</p> With a <em>Team</em> plan, you get: <ul><li><p><img src='/img/iconGreenCheck.png' /> Branded emails and contract pages</p></li><li><p><img src='/img/iconGreenCheck.png' /> Many user accounts under one plan</p></li><li><p><img src='/img/iconGreenCheck.png' /> Sales Manager Dashboard</p></li></ul>"
+"_buyAvtal24Template","Köp mall från Avtal24",,"Buy template from Avtal24"
+"_buyTemplateButton","Köp mall",,"Buy template"
 "_paymentsEmailThanksForChoosingScrive","Tack för att du valt Scrive",,"Thank you for subscribing to Scrive"
 "_paymentsEmailSeeDetailsBelow","Se detaljer nedan",,"Your order details are"
 "_paymentsEmailDescription","Planen",,"Plan"

@@ -507,6 +507,8 @@ javascriptLocalisation =
              ,  savedTemplate  : "$_signStepsBodyUploadBoxStep1TemplateSaved()$"
              ,  chooseTemplateButton : "$_signStepsBodyUploadBoxStep1ButtonChooseTemplate()$"
              ,  createNewTemplate : "$_createNewTemplate()$"
+             ,  buyAvtal24Template : "$_buyAvtal24Template()$"
+             ,  buyTemplateButton : "$_buyTemplateButton()$"
         }
         , payments: {
              users: "$_CompanyAccounts()$"

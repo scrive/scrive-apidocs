@@ -129,14 +129,35 @@
           var div = $("<div class='signStepsBodyUploadBox'/>").append(header).append("<BR/>").append(subheader).append("<BR/>").append(uploadbuttoncontainer);
           return $("<td class='jsformbox'>").append(div);
         },
+        avtal24Box: function() {
+            var wiz = this.model.wizard();
+            var header = $("<span class='header'/>").text(localization.uploadView.buyAvtal24Template);
+            var label = $("<div class='label' style='text-align: center; width: 102px'/>").text(localization.uploadView.buyTemplateButton);
+            var link = $("<a href='https://avtal24.se' class='green btn-small'/>").append("<div class='left'/>").append(label).append("<div class='right'/>");
+            var container = $("<div class='signStepsButtonContainer'></div>").append(link);
+            var div = $("<div class='signStepsBodyUploadBox'/>").append(header).append("<BR/>").append("<BR/>").append(container);
+            return $("<td class='jsformbox'>").append(div);
+        },
         render: function() {
             var view = this;
             $(view.el).children().detach();
             var model = view.model;
             var wiz = model.wizard();
-            $(view.el).append(this.uploadBox());
-            $(view.el).append(this.templateBox());
-            $(view.el).append(this.newTemplateBox());
+            var useAvtal24 = true;
+            if (useAvtal24) {
+                var d = $("<div/>");
+                d.append(this.uploadBox());
+                d.append(this.templateBox());
+                $(view.el).append(d);
+                d = $("<div/>");
+                d.append(this.newTemplateBox());
+                d.append(this.avtal24Box());
+                $(view.el).append(d);
+            } else {
+                $(view.el).append(this.uploadBox());
+                $(view.el).append(this.templateBox());
+                $(view.el).append(this.newTemplateBox());
+            }
         }
     });
 
