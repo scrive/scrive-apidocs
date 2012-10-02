@@ -451,6 +451,7 @@ documentsSelectors = SQL (intercalate ", " [
   , "authentication_method"
   , "delivery_method"
   , "api_callback_url"
+  , " "
   ]) [] <>
   documentStatusClassExpression
 
@@ -501,7 +502,7 @@ fetchDocuments = foldDB decoder []
        , documentauthorattachments = []
        , documentui = DocumentUI mail_footer
        , documentregion = region
-       , documentstatusclass = toEnum (status_class :: Int)
+       , documentstatusclass = status_class
        , documentapicallbackurl = apicallback
        } : acc
 
@@ -510,11 +511,11 @@ documentStatusClassExpression =
        SQL ("(COALESCE((SELECT min(") []
     <> statusClassCaseExpression 
     <> SQL ") FROM signatory_links"[]
-    <> SQL " WHERE signatory_links.document_id = documents.id AND ((signatory_links.roles&1)<>0)), 0))" []
+    <> SQL " WHERE signatory_links.document_id = documents.id AND ((signatory_links.roles&1)<>0)), ?))" [ toSql SCDraft]
 
 statusClassCaseExpression :: SQL
 statusClassCaseExpression =
-  SQL "CASE " []
+  SQL " CASE " []
    <> SQL " WHEN documents.status IN (?) THEN ?"     [toSql Preparation,                                        toSql SCDraft]                        
    <> SQL " WHEN documents.status IN (?,?,?) THEN ?" [toSql Canceled, toSql Timedout, toSql (DocumentError ""), toSql SCCancelled]
    <> SQL " WHEN documents.status IN (?) THEN ?"     [toSql Rejected,                                           toSql SCRejected]
@@ -524,7 +525,7 @@ statusClassCaseExpression =
    <> SQL " WHEN signatory_links.invitation_delivery_status = ? THEN ?" [toSql Undelivered,                     toSql SCCancelled]
    <> SQL " WHEN signatory_links.invitation_delivery_status = ? THEN ?" [toSql Delivered,                       toSql SCDelivered]
    <> SQL " ELSE ?"                                                                                            [toSql SCSent]    
-  <> SQL " END" []
+  <> SQL " END " []
 
 signatoryLinksSelectors :: SQL
 signatoryLinksSelectors = SQL (intercalate ", "
@@ -554,7 +555,8 @@ signatoryLinksSelectors = SQL (intercalate ", "
   , "signatory_links.csv_signatory_index"
   , "signatory_links.deleted"
   , "signatory_links.really_deleted"
-  , "signatory_links.sign_redirect_url"]) []
+  , "signatory_links.sign_redirect_url"
+  , " "]) []
   <> statusClassCaseExpression
   <> SQL " AS status_class" []
 
@@ -632,7 +634,7 @@ fetchSignatoryLinks = do
           , signatorylinkcsvupload =
               CSVUpload <$> csv_title <*> csv_contents <*> csv_signatory_index
           , signatoryattachments = sigAtt
-          , signatorylinkstatusclass = toEnum (status_class :: Int)
+          , signatorylinkstatusclass = status_class 
           , signatorylinksignredirecturl = signredirecturl
           }
 
