@@ -205,7 +205,7 @@
             
             if(model.currentPlan() == view.plan) {
                 color = 'green';
-                localization.payments.plans[view.plan].selected;
+                text = localization.payments.plans[view.plan].selected;
                 view.$el.addClass('selected');
             } else {
                 view.$el.removeClass('selected');
@@ -434,9 +434,9 @@
                             onAccept: function() {
                                 if(model.createdUser()) {
                                     popup.view.clear();
-                                    window.location = '.?logging';
+                                    Login({referer:'/upload'});
                                 } else {
-                                    window.location = '.?logging';
+                                    Login({referer:'/d'});
                                 }
                             }
                         });
@@ -554,7 +554,6 @@
         }});
 
         return { show : function(selector) {
-            LoadingDialog.open(localization.payments.loading);
             $("head").append('<link rel="stylesheet" href="/libs/recurly/recurly.css"></link>');
             $(selector).append(view.el);
         }};
