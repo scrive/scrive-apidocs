@@ -56,7 +56,7 @@
                     }
                 })
             });
-          var uploadbuttoncontainer = $("<div class='signStepsButtonContainer'></div>").append(upbutton.input());
+          var uploadbuttoncontainer = $("<div class='signStepsButtonContainer s-upload-document'></div>").append(upbutton.input());
           var div = $("<div class='signStepsBodyUploadBox'/>").append(header).append("<BR/>").append(subheader).append("<BR/>").append(uploadbuttoncontainer);    
           return $("<td class='jsformbox'>").append(div); 
         },

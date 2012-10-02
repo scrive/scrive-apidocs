@@ -31,9 +31,7 @@ class DocHelper
 
   def uploadContract
     (@wait.until { @driver.find_element :xpath => "//a[@href='/upload']" }).click
-    @wait.until { (@driver.find_elements :css => "a.documenticon").length>0 }
-    (@wait.until { (@driver.find_elements :css => "a.documenticon").first }).click
-    (@wait.until { @driver.find_element :css => "input.multiFileInput" }).send_keys @ctx.props.contract_pdf_path
+    (@wait.until { @driver.find_element :css => ".s-upload-document input.multiFileInput" }).send_keys @ctx.props.contract_pdf_path
     puts "waiting for pages"
     @wait.until { @driver.find_element :css => "#page1" }
   end
