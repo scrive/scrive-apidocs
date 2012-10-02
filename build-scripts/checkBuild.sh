@@ -1,5 +1,7 @@
 #!/bin/sh -e
 
+# This script can check builds with TrustWeaver created before Oct 1, 2012
+
 # This script assumes a command-line arg which is the enhanced deployment zip
 # This script assumes DIR which is the directory where scripts can be found
 # This script assumes TMP which is the directory as a temporary workspace
