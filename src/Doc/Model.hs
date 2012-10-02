@@ -167,8 +167,7 @@ documentOrderByToSQL :: DocumentOrderBy -> SQL
 documentOrderByToSQL DocumentOrderByTitle = SQL "documents.title" []
 documentOrderByToSQL DocumentOrderByMTime = SQL "documents.mtime" []
 documentOrderByToSQL DocumentOrderByCTime = SQL "documents.ctime" []
-documentOrderByToSQL DocumentOrderByStatusClass =
-  SQL (documentStatusClassExpression) []
+documentOrderByToSQL DocumentOrderByStatusClass = documentStatusClassExpression
 documentOrderByToSQL DocumentOrderByType = SQL "documents.type" []
 documentOrderByToSQL DocumentOrderByProcess = SQL "documents.process" []
 documentOrderByToSQL DocumentOrderByPartners =
@@ -286,8 +285,7 @@ documentFilterToSQL (DocumentFilterStatuses statuses) =
 documentFilterToSQL (DocumentFilterByStatusClass []) =
   SQL "FALSE" []
 documentFilterToSQL (DocumentFilterByStatusClass statuses) =
-  SQL (documentStatusClassExpression ++ " IN (" ++ intercalate "," (map (const "?") statuses) ++ ")")
-                               (map (toSql . fromEnum) statuses)
+  documentStatusClassExpression <> SQL (" IN (" ++ intercalate "," (map (const "?") statuses) ++ ")")  (map (toSql . fromEnum) statuses)
 documentFilterToSQL (DocumentFilterMinChangeTime ctime) =
   SQL (maxselect ++ " >= ?") [toSql ctime]
 documentFilterToSQL (DocumentFilterMaxChangeTime ctime) =
@@ -450,12 +448,13 @@ documentsSelectors = SQL (intercalate ", " [
   , "mail_footer"
   , "region"
   , "sharing"
-  , documentStatusClassExpression
   , "authentication_method"
   , "delivery_method"
   , "api_callback_url"
-  ]) []
+  ]) [] <>
+  documentStatusClassExpression
 
+  
 selectDocumentsSQL :: SQL
 selectDocumentsSQL = SQL "SELECT " [] <>
                      documentsSelectors <>
@@ -470,7 +469,7 @@ fetchDocuments = foldDB decoder []
      process ctime mtime days_to_sign timeout_time invite_time
      invite_ip invite_text cancelationreason rejection_time
      rejection_signatory_link_id rejection_reason deleted mail_footer
-     region sharing status_class authentication_method delivery_method apicallback
+     region sharing authentication_method delivery_method apicallback status_class 
        = Document {
          documentid = did
        , documenttitle = title
@@ -506,27 +505,29 @@ fetchDocuments = foldDB decoder []
        , documentapicallbackurl = apicallback
        } : acc
 
-documentStatusClassExpression :: String
+documentStatusClassExpression :: SQL
 documentStatusClassExpression =
-  "(COALESCE((SELECT min(" ++ statusClassCaseExpression ++ ")"
-  ++         "  FROM signatory_links"
-  ++         " WHERE signatory_links.document_id = documents.id AND ((signatory_links.roles&1)<>0)), 0))"
+       SQL ("(COALESCE((SELECT min(") []
+    <> statusClassCaseExpression 
+    <> SQL ") FROM signatory_links"[]
+    <> SQL " WHERE signatory_links.document_id = documents.id AND ((signatory_links.roles&1)<>0)), 0))" []
 
-statusClassCaseExpression :: String
+statusClassCaseExpression :: SQL
 statusClassCaseExpression =
-  "CASE "
-  ++ " WHEN documents.status IN (1) THEN 0"                        -- (documentstatus==Preparation, SCDraft)
-  ++ " WHEN documents.status IN (4,5,6,7,8) THEN 1"                -- (documentstatus==Canceled, SCCancelled)
-  ++ " WHEN signatory_links.sign_time IS NOT NULL THEN 6"          -- (isJust maybesigninfo, SCSigned)
-  ++ " WHEN signatory_links.seen_time IS NOT NULL THEN 5"          -- (isJust maybeseeninfo, SCOpened)
-  ++ " WHEN signatory_links.read_invitation IS NOT NULL THEN 4"    -- (isJust maybereadinvite, SCRead)
-  ++ " WHEN signatory_links.invitation_delivery_status = 2 THEN 1" -- (invitationdeliverystatus==Undelivered, SCCancelled)
-  ++ " WHEN signatory_links.invitation_delivery_status = 1 THEN 3" -- (invitationdeliverystatus==Delivered, SCDelivered)
-  ++ " ELSE 2"                                                     -- SCSent
-  ++ " END"
+  SQL "CASE " []
+   <> SQL " WHEN documents.status IN (?) THEN ?"     [toSql Preparation,                                        toSql SCDraft]                        
+   <> SQL " WHEN documents.status IN (?,?,?) THEN ?" [toSql Canceled, toSql Timedout, toSql (DocumentError ""), toSql SCCancelled]
+   <> SQL " WHEN documents.status IN (?) THEN ?"     [toSql Rejected,                                           toSql SCRejected]
+   <> SQL " WHEN signatory_links.sign_time IS NOT NULL THEN ?"                                                 [toSql SCSigned]
+   <> SQL " WHEN signatory_links.seen_time IS NOT NULL THEN ?"                                                 [toSql SCOpened]  
+   <> SQL " WHEN signatory_links.read_invitation IS NOT NULL THEN ?"                                           [toSql SCRead]  
+   <> SQL " WHEN signatory_links.invitation_delivery_status = ? THEN ?" [toSql Undelivered,                     toSql SCCancelled]
+   <> SQL " WHEN signatory_links.invitation_delivery_status = ? THEN ?" [toSql Delivered,                       toSql SCDelivered]
+   <> SQL " ELSE ?"                                                                                            [toSql SCSent]    
+  <> SQL " END" []
 
-signatoryLinksSelectors :: String
-signatoryLinksSelectors = intercalate ", "
+signatoryLinksSelectors :: SQL
+signatoryLinksSelectors = SQL (intercalate ", "
   [ "signatory_links.id"
   , "signatory_links.document_id"
   , "signatory_links.user_id"
@@ -553,26 +554,21 @@ signatoryLinksSelectors = intercalate ", "
   , "signatory_links.csv_signatory_index"
   , "signatory_links.deleted"
   , "signatory_links.really_deleted"
-  , "signatory_links.sign_redirect_url"
-
-  , -- this is to fetch status class, so we can do sorting according to that class
-    --  0 Draft - 1 Cancel - 2 Fall due - 3 Sent - 4 Opened - 5 Signed
-    -- FIXME: we should really be using constants from Haskell, but this after some refactoring
-    -- this has to stay a single string for now
-    statusClassCaseExpression ++ " AS status_class"
-  ]
+  , "signatory_links.sign_redirect_url"]) []
+  <> statusClassCaseExpression
+  <> SQL " AS status_class" []
 
 selectSignatoryLinksSQL :: SQL
-selectSignatoryLinksSQL = SQL ("SELECT "
-  ++ signatoryLinksSelectors
-  ++ ", signatory_attachments.file_id as sigfileid "
-  ++ ", signatory_attachments.name as signame "
-  ++ ", signatory_attachments.description as sigdesc "
-  ++ " FROM (signatory_links "
-  ++ " LEFT JOIN signatory_attachments "
-  ++ " ON signatory_attachments.signatory_link_id = signatory_links.id) "
-  ++ " JOIN documents "
-  ++ " ON signatory_links.document_id = documents.id ") []
+selectSignatoryLinksSQL = SQL ("SELECT ") []
+  <> signatoryLinksSelectors
+  <> SQL ( ", signatory_attachments.file_id as sigfileid "
+        ++ ", signatory_attachments.name as signame "
+        ++ ", signatory_attachments.description as sigdesc "
+        ++ " FROM (signatory_links "
+        ++ " LEFT JOIN signatory_attachments "
+        ++ " ON signatory_attachments.signatory_link_id = signatory_links.id) "
+        ++ " JOIN documents "
+        ++ " ON signatory_links.document_id = documents.id ") []
 
 fetchSignatoryLinks :: MonadDB m => DBEnv m (M.Map DocumentID [SignatoryLink])
 fetchSignatoryLinks = do

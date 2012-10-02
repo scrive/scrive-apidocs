@@ -87,6 +87,7 @@ $(newtypeDeriveUnderlyingReadShow ''SignOrder)
 
 data StatusClass = SCDraft
                   | SCCancelled
+                  | SCRejected
                   | SCSent
                   | SCDelivered
                   | SCRead
@@ -97,6 +98,7 @@ data StatusClass = SCDraft
 instance Show StatusClass where
   show SCDraft = "draft"
   show SCCancelled = "cancelled"
+  show SCRejected  = "rejected"
   show SCSent = "sent"
   show SCDelivered = "delivered"
   show SCRead = "read"
@@ -382,6 +384,7 @@ $(bitfieldDeriveConvertible ''SignatoryRole)
 $(enumDeriveConvertible ''MailsDeliveryStatus)
 $(newtypeDeriveConvertible ''SignOrder)
 $(enumDeriveConvertible ''DocumentProcess)
+$(enumDeriveConvertibleIgnoreFields ''StatusClass)
 $(enumDeriveConvertibleIgnoreFields ''DocumentStatus)
 $(enumDeriveConvertibleIgnoreFields ''FieldType)
 $(enumDeriveConvertible ''AuthenticationMethod)

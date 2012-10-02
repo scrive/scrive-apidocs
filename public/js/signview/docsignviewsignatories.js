@@ -45,6 +45,7 @@ var DocumentSignSignatoriesListView = Backbone.View.extend({
       else if (signatory.datamismatch() == true ||
                document.timedout() ||
                document.canceled() ||
+               document.rejected() ||
                document.datamismatch())
           return localization.docsignview.unavailableForSign;
       else if (signatory.rejecteddate() != undefined)
@@ -105,6 +106,7 @@ var DocumentSignSignatoryView = Backbone.View.extend({
       else if (signatory.datamismatch() == true ||
                document.timedout() ||
                document.canceled() ||
+               document.rejected() ||
                document.datamismatch())
           return localization.docsignview.unavailableForSign;
       else if (signatory.rejecteddate() != undefined)

@@ -683,7 +683,7 @@ window.SignatoryStandardView = Backbone.View.extend({
                return localization.signatoryMessage.datamismatch;
           else if (document.timedout())
                return localization.signatoryMessage.timedout;
-          else if (document.canceled())
+          else if (document.canceled() || document.rejected())
                return localization.signatoryMessage.cancelled;
           else if (document.datamismatch())
                return " ";
