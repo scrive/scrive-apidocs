@@ -38,9 +38,9 @@ data DraftData = DraftData {
 
 instance FromJSValue AuthenticationMethod where
   fromJSValue j = case fromJSValue j of
-    Just "email" -> Just EmailAuthentication
-    Just "eleg"  -> Just ELegAuthentication
-    _            -> Nothing
+    Just "standard" -> Just StandardAuthentication
+    Just "eleg"     -> Just ELegAuthentication
+    _               -> Nothing
 
 instance FromJSValue DeliveryMethod where
   fromJSValue j = case fromJSValue j of

@@ -210,7 +210,7 @@ data EvidenceEventType =
   ChangeFieldEvidence                             |
   ResealedPDF                                     |
   OldDocumentHistory                              |
-  SetEmailAuthenticationMethodEvidence            |
+  SetStandardAuthenticationMethodEvidence         |
   SetELegAuthenticationMethodEvidence             |
   SetEmailDeliveryMethodEvidence                  |
   SetPadDeliveryMethodEvidence                    |
@@ -280,7 +280,7 @@ instance Convertible EvidenceEventType Int where
   safeConvert ChangeFieldEvidence                             = return 60
   safeConvert ResealedPDF                                     = return 61
   safeConvert OldDocumentHistory                              = return 62
-  safeConvert SetEmailAuthenticationMethodEvidence            = return 63
+  safeConvert SetStandardAuthenticationMethodEvidence         = return 63
   safeConvert SetELegAuthenticationMethodEvidence             = return 64
   safeConvert SetEmailDeliveryMethodEvidence                  = return 65
   safeConvert SetPadDeliveryMethodEvidence                    = return 66
@@ -350,7 +350,7 @@ instance Convertible Int EvidenceEventType where
     safeConvert 60 = return ChangeFieldEvidence
     safeConvert 61 = return ResealedPDF
     safeConvert 62 = return OldDocumentHistory
-    safeConvert 63 = return SetEmailAuthenticationMethodEvidence
+    safeConvert 63 = return SetStandardAuthenticationMethodEvidence
     safeConvert 64 = return SetELegAuthenticationMethodEvidence
     safeConvert 65 = return SetEmailDeliveryMethodEvidence
     safeConvert 66 = return SetPadDeliveryMethodEvidence

@@ -146,7 +146,7 @@ testNonLastPersonSigningADocumentRemainsPending = do
                      && case documenttype d of
                          Signable _ -> True
                          _ -> False
-                     && d `allowsAuthMethod` EmailAuthentication
+                     && d `allowsAuthMethod` StandardAuthentication
                      && documentdeliverymethod d == EmailDelivery)
   True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
                    (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])
@@ -188,7 +188,7 @@ testLastPersonSigningADocumentClosesIt = do
                      && case documenttype d of
                          Signable _ -> True
                          _ -> False
-                     && d `allowsAuthMethod` EmailAuthentication
+                     && d `allowsAuthMethod` StandardAuthentication
                      && documentdeliverymethod d == EmailDelivery)
 
   True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([

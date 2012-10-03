@@ -74,9 +74,9 @@ instance SafeEnum DocumentStatus where
     toSafeEnum _                   = Nothing
 
 instance SafeEnum AuthenticationMethod where
-    fromSafeEnum EmailAuthentication = 1
+    fromSafeEnum StandardAuthentication = 1
     fromSafeEnum ELegAuthentication  = 2
-    toSafeEnum 1 = Just EmailAuthentication
+    toSafeEnum 1 = Just StandardAuthentication
     toSafeEnum 2 = Just ELegAuthentication
     toSafeEnum _  = Nothing
 

@@ -273,8 +273,8 @@ addDocumentCloseStatEvents doc apistring = falseOnError $ do
                                                         }
       unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatClose
       let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
-            (EmailAuthentication, PadDelivery) -> DocStatPadSignatures
-            (EmailAuthentication, _) -> DocStatEmailSignatures
+            (StandardAuthentication, PadDelivery) -> DocStatPadSignatures
+            (StandardAuthentication, _) -> DocStatEmailSignatures
             (ELegAuthentication,  _) -> DocStatElegSignatures
       b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                      , seTime       = signtime
@@ -311,8 +311,8 @@ addDocumentSendStatEvents doc apistring = falseOnError $ do
                                                         }
       unless a $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatSend
       let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
-            (EmailAuthentication, PadDelivery) -> DocStatPadSignaturePending
-            (EmailAuthentication, _) -> DocStatEmailSignaturePending
+            (StandardAuthentication, PadDelivery) -> DocStatPadSignaturePending
+            (StandardAuthentication, _) -> DocStatEmailSignaturePending
             (ELegAuthentication,  _) -> DocStatElegSignaturePending
       b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = sendtime
@@ -349,8 +349,8 @@ addDocumentCancelStatEvents doc apistring = falseOnError $ do
                                                         }
       unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCancel
       let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
-            (EmailAuthentication, PadDelivery) -> DocStatPadSignatureCancel
-            (EmailAuthentication, _)           -> DocStatEmailSignatureCancel
+            (StandardAuthentication, PadDelivery) -> DocStatPadSignatureCancel
+            (StandardAuthentication, _)           -> DocStatEmailSignatureCancel
             (ELegAuthentication, _) -> DocStatElegSignatureCancel
       b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = canceltime
@@ -387,8 +387,8 @@ addDocumentRejectStatEvents doc apistring = falseOnError $ do
                                                         }
       unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatReject
       let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
-            (EmailAuthentication, PadDelivery) -> DocStatPadSignatureReject
-            (EmailAuthentication, _ )          -> DocStatEmailSignatureReject
+            (StandardAuthentication, PadDelivery) -> DocStatPadSignatureReject
+            (StandardAuthentication, _ )          -> DocStatEmailSignatureReject
             (ELegAuthentication, _) -> DocStatElegSignatureReject
       b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = rejecttime
@@ -449,8 +449,8 @@ addDocumentTimeoutStatEvents doc apistring = do
                                                         }
       unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatTimeout
       let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
-            (EmailAuthentication, PadDelivery) -> DocStatPadSignatureTimeout
-            (EmailAuthentication, _) -> DocStatEmailSignatureTimeout
+            (StandardAuthentication, PadDelivery) -> DocStatPadSignatureTimeout
+            (StandardAuthentication, _) -> DocStatEmailSignatureTimeout
             (ELegAuthentication, _) -> DocStatElegSignatureTimeout
       b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = ttime

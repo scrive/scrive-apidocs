@@ -1601,7 +1601,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
                 , documentctime                = ctime
                 , documentmtime                = ctime
                 , documentauthorattachments    = []
-                , documentauthenticationmethod = EmailAuthentication
+                , documentauthenticationmethod = StandardAuthentication
                 , documentdeliverymethod       = EmailDelivery
                 , documentui                   = (documentui blankDocument) { documentmailfooter = customfooter $ usersettings user }
                 } 
@@ -2232,7 +2232,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAuthenticationMe
          ] <> SQL "WHERE id = ?" [ toSql did ]
     when_ (success && changed) $ do
       let evidence = case auth of
-            EmailAuthentication -> SetEmailAuthenticationMethodEvidence
+            StandardAuthentication -> SetStandardAuthenticationMethodEvidence
             ELegAuthentication  -> SetELegAuthenticationMethodEvidence
       update $ InsertEvidenceEvent evidence
         (value "authentication" (show auth) >> value "actor" (actorWho actor))
