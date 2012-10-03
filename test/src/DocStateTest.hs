@@ -53,7 +53,7 @@ docStateTests env = testGroup "DocState" [
   testThat "SetDocumentTimeoutTime adds to the log" env testSetDocumentTimeoutTimeEvidenceLog,
   testThat "SetDocumentTitle adds to the log" env testSetDocumentTitleEvidenceLog,
   testThat "Set ELegAuthentication adds to the log" env testSetElegitimationAuthenticationEvidenceLog,
-  testThat "Set EmailAuthentication adds to the log" env testSetEmailAuthenticationEvidenceLog,
+  testThat "Set StandardAuthentication adds to the log" env testSetStandardAuthenticationEvidenceLog,
   testThat "Set PadDelivery adds to the log" env testSetPadDeliveryEvidenceLog,
   testThat "Set EmailDelivery adds to the log" env testSetEmailDeliveryEvidenceLog,
   testThat "SetInvitationDeliveryStatus adds to the log" env testSetInvitationDeliveryStatusEvidenceLog,
@@ -428,23 +428,23 @@ testSetElegitimationAuthenticationEvidenceLog :: TestEnv ()
 testSetElegitimationAuthenticationEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success1 <- randomUpdate $ \t->SetDocumentAuthenticationMethod (documentid doc) EmailAuthentication (systemActor t)
+  success1 <- randomUpdate $ \t->SetDocumentAuthenticationMethod (documentid doc) StandardAuthentication (systemActor t)
   success2 <- randomUpdate $ \t->SetDocumentAuthenticationMethod (documentid doc) ELegAuthentication (systemActor t)
   assert success1
   assert success2
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SetELegAuthenticationMethodEvidence) lg
 
-testSetEmailAuthenticationEvidenceLog :: TestEnv ()
-testSetEmailAuthenticationEvidenceLog = do
+testSetStandardAuthenticationEvidenceLog :: TestEnv ()
+testSetStandardAuthenticationEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   success1 <- randomUpdate $ \t->SetDocumentAuthenticationMethod (documentid doc) ELegAuthentication (systemActor t)
-  success2 <- randomUpdate $ \t->SetDocumentAuthenticationMethod (documentid doc) EmailAuthentication (systemActor t)
+  success2 <- randomUpdate $ \t->SetDocumentAuthenticationMethod (documentid doc) StandardAuthentication (systemActor t)
   assert success1
   assert success2
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SetEmailAuthenticationMethodEvidence) lg
+  assertJust $ find (\e -> evType e == SetStandardAuthenticationMethodEvidence) lg
 
 testSetPadDeliveryEvidenceLog :: TestEnv ()
 testSetPadDeliveryEvidenceLog = do
@@ -781,7 +781,7 @@ assertGoodNewDocument mcompany doctype title (user, time, edoc) = do
     assertEqual "Doc modification time" time (documentmtime doc)
     assertEqual "No author attachments" [] (documentauthorattachments doc)
     assertEqual "No sig attachments" [] (concatMap signatoryattachments $ documentsignatorylinks doc)
-    assertEqual "Uses email identification only" EmailAuthentication (documentauthenticationmethod doc)
+    assertEqual "Uses email identification only" StandardAuthentication (documentauthenticationmethod doc)
     assertEqual "Doc has user's footer" (customfooter $ usersettings user) (documentmailfooter $ documentui doc)
     assertEqual "In preparation" Preparation (documentstatus doc)
     assertEqual "1 signatory" 1 (length $ documentsignatorylinks doc)

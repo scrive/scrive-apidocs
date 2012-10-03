@@ -139,7 +139,7 @@ SendToPadDeviceText=$actor$ sent transaction to pad device for signing by signat
 ####
 RemovedFromPadDeviceText=$actor$ removed transaction from pad device for signing by signatory ($email$).
 ###
-SetEmailAuthenticationMethodEvidenceText=$actor$ required only email authentication method for all signatories.
+SetStandardAuthenticationMethodEvidenceText=$actor$ required only standard authentication method for all signatories.
 ###
 SetELegAuthenticationMethodEvidenceText=$actor$ required e-legitimation authentication method for all signatories.
 ###

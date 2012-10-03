@@ -48,7 +48,7 @@ documentJSONTests env = testGroup "Document JSON tests" [
     testProperty "authentication" $ \doc ->
       let da = fromJSONRational $ docjson doc "authentication" in
       disjoin
-      [ EmailAuthentication == documentauthenticationmethod doc  ==> 1 == da
+      [ StandardAuthentication == documentauthenticationmethod doc  ==> 1 == da
       , ELegAuthentication == documentauthenticationmethod doc   ==> 2 == da
       ],
     testProperty "delivery" $ \doc ->

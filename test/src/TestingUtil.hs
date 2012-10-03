@@ -357,7 +357,7 @@ instance Arbitrary SignatoryRole where
   arbitrary = return SignatoryPartner
 
 instance Arbitrary AuthenticationMethod where
-  arbitrary = elements [EmailAuthentication, ELegAuthentication]
+  arbitrary = elements [StandardAuthentication, ELegAuthentication]
 
 instance Arbitrary DeliveryMethod where
   arbitrary = elements [EmailDelivery, PadDelivery]

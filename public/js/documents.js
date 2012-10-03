@@ -62,7 +62,7 @@ window.Document = Backbone.Model.extend({
         ready: false,
         viewer: new DocumentViewer(),
         infotext: "",
-        authentication: "email",
+        authentication: "standard",
         delivery: "email",
         template: false,
         saveQueue : new AjaxQueue()
@@ -351,8 +351,8 @@ window.Document = Backbone.Model.extend({
     signorder: function() {
       return this.get("signorder");
     },
-    emailAuthentication: function() {
-          return this.get("authentication") == "email";
+    standardAuthentication: function() {
+          return this.get("authentication") == "standard";
     },
     elegAuthentication: function() {
           return this.get("authentication") == "eleg";
@@ -366,8 +366,8 @@ window.Document = Backbone.Model.extend({
     apiDelivery : function() {
           return this.get("delivery") == "api";
     },
-    setEmailAuthentication: function() {
-          this.set({"authentication": "email"}, {silent: true});
+    setStandardAuthentication: function() {
+          this.set({"authentication": "standard"}, {silent: true});
           this.trigger("change:authenticationdelivery");
     },
     setElegAuthentication : function() {

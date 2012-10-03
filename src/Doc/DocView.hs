@@ -180,8 +180,8 @@ documentJSON forapi forauthor pq msl doc = do
         J.value "canseeallattachments" $ isAuthor msl || isauthoradmin
 
 authenticationJSON :: AuthenticationMethod -> JSValue
-authenticationJSON EmailAuthentication = toJSValue "email"
-authenticationJSON ELegAuthentication = toJSValue "eleg"
+authenticationJSON StandardAuthentication = toJSValue "standard"
+authenticationJSON ELegAuthentication     = toJSValue "eleg"
 
 deliveryJSON :: DeliveryMethod -> JSValue
 deliveryJSON EmailDelivery = toJSValue "email"
@@ -414,7 +414,7 @@ documentInfoFields  document  = do
   F.value "documentid" $ show $ documentid document
   F.value "timetosignset" $  isJust $ documentdaystosign document
   F.value "template" $  isTemplate document
-  F.value "emailauthenticationselected" $ document `allowsAuthMethod` EmailAuthentication
+  F.value "emailauthenticationselected" $ document `allowsAuthMethod` StandardAuthentication
   F.value "elegauthenticationselected" $ document `allowsAuthMethod` ELegAuthentication
   F.value "emaildeliveryselected" $ documentdeliverymethod document == EmailDelivery
   F.value "paddeliveryselected" $ documentdeliverymethod document == PadDelivery

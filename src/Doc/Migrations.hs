@@ -54,10 +54,10 @@ splitIdentificationTypes = Migration {
     kRun_ $ mconcat [
         SQL "UPDATE documents SET" []
       , SQL "  authentication_method = (CASE WHEN allowed_id_types = 0 THEN ? WHEN allowed_id_types = 1 THEN ? WHEN allowed_id_types = 2 THEN ? WHEN allowed_id_types = 4 THEN ? END)::SMALLINT" [
-          toSql EmailAuthentication -- 0 (nothing, was defaulting to email)
-        , toSql EmailAuthentication -- 1 (email)
-        , toSql ELegAuthentication  -- 2 (eleg)
-        , toSql EmailAuthentication -- 4 (pad, it implied email)
+          toSql StandardAuthentication -- 0 (nothing, was defaulting to email)
+        , toSql StandardAuthentication -- 1 (email)
+        , toSql ELegAuthentication     -- 2 (eleg)
+        , toSql StandardAuthentication -- 4 (pad, it implied email)
         ]
       , SQL ", delivery_method = (CASE WHEN allowed_id_types = 0 THEN ? WHEN allowed_id_types = 1 THEN ? WHEN allowed_id_types = 2 THEN ? WHEN allowed_id_types = 4 THEN ? END)::SMALLINT" [
           toSql EmailDelivery -- 0 (nothing, was defaulting to email)

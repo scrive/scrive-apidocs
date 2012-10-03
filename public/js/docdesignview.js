@@ -211,7 +211,7 @@ var DocumentDesignView = Backbone.View.extend({
           else {
              checkbox.removeAttr("checked");
              checkbox.attr("cc","NO");
-             document.setEmailAuthentication();
+             document.setStandardAuthentication();
           }   
           return false;
         });  

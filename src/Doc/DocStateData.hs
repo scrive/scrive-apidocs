@@ -107,7 +107,7 @@ instance Read StatusClass where
   readsPrec _ str =
     [(v,drop (length (show v)) str) | v <- [minBound .. maxBound], show v `isPrefixOf` str]
 
-data AuthenticationMethod = EmailAuthentication
+data AuthenticationMethod = StandardAuthentication
                           | ELegAuthentication
   deriving (Eq, Ord, Show)
 

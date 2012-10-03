@@ -84,7 +84,7 @@ docFieldsListForJSON tl crtime padqueue doc = do
                           Offer    -> "offer"
                           Order    -> "order"
     J.value "authentication" $ case documentauthenticationmethod doc of
-      EmailAuthentication -> "email"
+      StandardAuthentication -> "standard"
       ELegAuthentication  -> "eleg"
     J.value "delivery" $ case documentdeliverymethod doc of
       EmailDelivery -> "email"
