@@ -174,7 +174,7 @@ window.DocumentSignViewFooter = Backbone.View.extend({
         maindiv.addClass("pagefooter");
         this.content = $("<div class='content' />");
         this.dogtooth = $("<div class='dogtooth' />");
-        this.powerdiv = $("<div class='poweredbyscrive'/>")
+        this.powerdiv = $("<div class='poweredbyscrive'/>");
         this.sender = $("<div class='sender' />");
         this.content.append(this.sender).append(this.powerdiv).append("<div class='clearboth'/>");
         maindiv.append(this.dogtooth.append(this.content));
