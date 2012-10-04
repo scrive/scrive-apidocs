@@ -460,7 +460,7 @@ window.Signatory = Backbone.Model.extend({
           }
         });
       }
-      if(!isAuthor && this.document().author().signorder() == 1 )
+      if(!isAuthor && this.document().author().signs() && this.document().author().signorder() == 1 )
          this.setSignOrder(2);
       else
          this.setSignOrder(1);
