@@ -46,10 +46,10 @@ window.File = Backbone.Model.extend({
         }
         return link;
     },
-    downloadLinkForMainFile : function() {
+    downloadLinkForMainFile : function(name) {
         var link = null;
         if( this.documentid()!==undefined ) {
-            link = "/downloadmainfile/"+ this.documentid() + "/" + this.name() + ".pdf" + this.queryPart();
+            link = "/downloadmainfile/"+ this.documentid() + "/" + (name == undefined ? this.name() : name) + ".pdf" + this.queryPart();
         }
         else {
             console.log("File is not binded to document");
