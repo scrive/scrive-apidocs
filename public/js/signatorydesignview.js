@@ -120,19 +120,23 @@ window.SignatoryDesignView = Backbone.View.extend({
         return setSignOrderIcon;
    },
    signOrderSelector : function() {
-     var select = $("<select class='selectSignOrder'/>");
+     var self = this;
+     this.signOrderSelectorSelect = $("<select class='selectSignOrder'/>");
      var signatory = this.model;
      var signatoriesCount = signatory.document().signatories().length;
      for(var i=1; i<=signatoriesCount; i++){
        var option = $("<option>").attr("value",i).text(i);
-       select.append(option);
+       this.signOrderSelectorSelect.append(option);
      }
-     select.val(signatory.signorder());
+     this.signOrderSelectorSelect.val(signatory.signorder());
 
-     select.change(function(){
+     this.signOrderSelectorSelect.change(function(){
        signatory.setSignOrder($(this).val());
      });
-     return select;
+     signatory.bind("change:signorder", function() {
+        $("option[value='"+signatory.signorder()+"']", self.signOrderSelectorSelect ).attr("selected", "true");
+     })
+     return this.signOrderSelectorSelect;
    },
    setCsvSignatoryIcon : function() {
        var view = this;

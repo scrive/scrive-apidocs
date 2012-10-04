@@ -449,9 +449,10 @@ window.Signatory = Backbone.Model.extend({
          return this.get("signs");
     },
     makeSignatory: function() {
+      var isAuthor = this.author();
       var authorNotSignsMode = this.document().authorNotSignsMode();
       this.set({ signs: true });
-      if( this.author() && authorNotSignsMode) {
+      if( isAuthor && authorNotSignsMode) {
         /* We need to renumber all other signatories from group 1 to group 2 */
         _.each(this.document().signatories(),function(sig) {
           if( !sig.author()) {
@@ -459,6 +460,10 @@ window.Signatory = Backbone.Model.extend({
           }
         });
       }
+      if(!isAuthor && this.document().author().signorder() == 1 )
+         this.setSignOrder(2);
+      else
+         this.setSignOrder(1);
       this.trigger("change:role");
       this.document().fixSignorder();
     },
