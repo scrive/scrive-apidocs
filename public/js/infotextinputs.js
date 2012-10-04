@@ -30,7 +30,7 @@ var InfoTextInputModel = Backbone.Model.extend({
        return this.get("value");
   },
   isValueSet : function() {
-      return this.value() != "";
+      return this.value() !== "";
   },
   setValue: function(value) {
       if (value == this.value()) return;

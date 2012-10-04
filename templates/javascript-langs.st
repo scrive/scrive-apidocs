@@ -435,6 +435,7 @@ javascriptLocalisation =
            , manyusers: "$_paymentsManyUsers()$"
            , price : "$_paymentsPrice()$"
            , buysyou : "$_paymentsBuysYou()$"
+           , phonenumber : "$_paymentsPhonenumber()$"
            , plans: { professional : "$_paymentPlanProfessional()$"
                     , team         : {
                       name : "$_paymentPlanTeam()$",
@@ -467,7 +468,7 @@ javascriptLocalisation =
                       price3 : "$_paymentPlanPerMonth()$ $_and()$",
                       price21 : "$_paymentPlanDocPrice()$",
                       price31 : "$_paymentPlanPerDocument()$",
-                      select : "$_paymentsSelect()$",
+                      select : "$_paymentsGetInTouch()$",
                       selected : "$_paymentsSelected()$"
                     }
                     , enterprise : {

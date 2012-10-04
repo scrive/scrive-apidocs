@@ -465,8 +465,7 @@
             this.formBox = new PlanBoxView({model: args.model,
                                             plan:'form', 
                                             onClick: function() { 
-                                                if(view.model.currentPlan() !== 'form')
-                                                    view.model.setCurrentPlan('form');
+                                                view.getInTouch();
                                             }});
             this.enterpriseBox = new PlanBoxView({model: args.model,
                                                   plan:'enterprise', 
@@ -502,15 +501,20 @@
             var view = this;
             var model = view.model;
             var form = $("<div />");
-            form.append($("<span />").text(localization.docsignview.phoneFormDescription + " "));
-            var numberinput = $("<input type='text' />");
+            var popup;
+            var numberinput = InfoTextInput.init({infotext: localization.payments.phonenumber, 
+                                                  onEnter: function() {
+                                                      popup.model.accept();
+                                                      return false;
+                                                  }
+                                                 }).input().blur().change();
             form.append(numberinput);
 
             var content = $('<div />');
             content.append($('<p />').text(localization.payments.pleaseleavenumber));
             content.append(form);
             var done = false;
-            var popup = Confirmation.popup({
+            popup = Confirmation.popup({
                 //acceptText: localization.payments.ok,
                 title: localization.payments.pleaseleavenumbertitle,
                 content: content,
@@ -522,7 +526,7 @@
                     new Submit({
                         url: "/account/phoneme",
                         method: "POST",
-                        email: model.contact().email(),
+                        email: model.email(),
                         phone: phone,
                         ajax: true,
                         onSend: function() {
