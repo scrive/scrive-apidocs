@@ -3241,16 +3241,14 @@ a#attachmentback {
 .inlineEditing input:focus{
     outline:0px;
 }
-.verificationBox{
+
+.box.verificationBox{
     text-align : center;
+    padding: 120px 0px;
 }
 .verificationContainer{
     margin: 0 auto;
-    border-color:  #E0E0E0 #E0E0E0 #E8E5E5 #E8E5E5;
-    border-width : 1px;
-    border-style: solid;
     padding: 20px 50px;
-    width: 200px;
     display: inline-block;
 }
 

@@ -103,14 +103,24 @@ window.Button = {
               input : function() {return input;}
             });
         },
-   borderWidth : function(size){
-    if (size == "small")
-        return 16;
-    else if (size == "tiny")
-        return 6;
-    else if (size == "big")
-        return 22;
-  }
+    borderWidth : function(size){
+        if (size == "small")
+            return 16;
+        else if (size == "tiny")
+            return 6;
+        else if (size == "big")
+            return 22;
+        return 0;
+    },
+    labelPadding: function(size) {
+        if (size == "small")
+            return 0;
+        else if (size == "tiny")
+            return 0;
+        else if (size == "big")
+            return 40;
+        return 0;
+    }
 };
 
 })(window);
