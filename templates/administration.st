@@ -398,8 +398,8 @@ adminuser=
 	    value="Change" name="change" />
     </form>
     <form action="/adminonly/useradmin/sendinviteagain" method="POST">
-      <input type="hidden" name="userid" value="$user.id$">
-      <input type="submit" value="Resend Invitation" style="width:200px;font-weight:bold">
+      <input type="hidden" name="userid" value="$user.id$" />
+      <input type="submit" value="Resend Invitation" style="width:200px;font-weight:bold" />
     </form>
 	  </div>
 	</div>
