@@ -473,6 +473,10 @@ window.Signatory = Backbone.Model.extend({
       if (this.signature() != undefined) {
         this.signature().removeAllPlacements();
       }
+      _.each(this.fields(), function(field) {
+          if (field.isCheckbox()) field.remove();    
+      });
+      
       if( this.author() && authorSignsFirstMode) {
         /* We need to renumber all other signatories from group 2 to group 1 */
         _.each(this.document().signatories(),function(sig) {
