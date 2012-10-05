@@ -76,6 +76,9 @@ documentAPI = choice [
   dir "api" $ dir "document" $ hDelete       $ toK6 $ documentDeleteSignatoryAttachment
   ]
 
+-- | Clean a filename from a path (could be windows \) to a base name
+cleanFileName :: FilePath -> String
+cleanFileName = takeBaseName . String.replace "\\" "/"
 
 {- New API calls-}
 apiCallCreateFromFile :: Kontrakcja m => m Response
@@ -89,7 +92,7 @@ apiCallCreateFromFile = api $ do
   dtype <- lift $ fromMaybe (Contract) <$> readField "type"
   isTpl<- lift $ isFieldSet "template"
   let doctype = (Template <| isTpl |> Signable) dtype
-  let filename = takeBaseName filename'
+  let filename = cleanFileName filename'
   let mformat = getFileFormatForConversion filename'
   content' <- case contentspec of
     Left filepath -> liftIO $ BSL.readFile filepath
@@ -258,7 +261,7 @@ documentChangeMainFile docid = api $ do
               -- we need to downgrade the PDF to 1.4 that has uncompressed structure
               -- we use gs to do that of course
               content <- apiGuardL (badInput "PDF precheck failed.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
-              let filename = takeBaseName filename'
+              let filename = cleanFileName filename'
 
               fileid <$> (dbUpdate $ NewFile filename content)
             (_, Just templateids) -> do
@@ -323,8 +326,8 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   ctx <- getContext
 
   content <- apiGuardL (badInput "The PDF was invalid.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
-  let cleanFileName = takeBaseName $ String.replace "\\" "/" filename
-  file <- dbUpdate $ NewFile cleanFileName content
+
+  file <- dbUpdate $ NewFile (cleanFileName filename) content
   let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) email slid
   d <- apiGuardL (serverError "documentUploadSignatoryAttachment: SaveSigAttachment failed") . runMaybeT $ do
     True <- dbUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor
