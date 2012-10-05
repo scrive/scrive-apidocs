@@ -131,6 +131,7 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signato
                  , Seal.x                = placementxrel placement
                  , Seal.y                = placementyrel placement
                  , Seal.page             = placementpage placement
+                 , Seal.fontSize         = placementfsrel placement
                  , Seal.includeInSummary = True
                  }
     

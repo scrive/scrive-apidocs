@@ -294,7 +294,7 @@ placeFieldsOnPage (pagerefid,sealtext) document' =
 
 tellMatrix :: (MonadWriter String m) => Double -> Double -> Double -> Double -> Double -> Double -> m ()
 tellMatrix a b c d e f =
-      tell $ (concat $ intersperse " " $ map show [a::Double,b,c,d,e,f]) ++ " cm\n"
+      tell $ (concat $ intersperse " " $ map (show . Number) [a::Double,b,c,d,e,f]) ++ " cm\n"
 
 -- FIXME: here we still have font size problem. On the page it appears
 -- as some pt size font. We need to translate that size into PDF pt
@@ -312,17 +312,18 @@ tellMatrix a b c d e f =
 commandsFromFields :: Int -> Int -> [Field] -> String
 commandsFromFields pagew pageh fields = concatMap commandsFromField fields
   where
-    fontBaseline = 8
+    fontBaseline = 0.8
     commandsFromField Field{ SealSpec.value = val
                    , x
                    , y
+                   , fontSize
                    } = execWriter $ do
                          tell "q\n"
                          tellMatrix 1 0 0 1
                                       (x * fromIntegral pagew)
-                                      (((1 - y) * fromIntegral pageh) - fontBaseline)
+                                      (((1 - y) * fromIntegral pageh) - fontBaseline * fontSize * fromIntegral pagew)
                          tell "BT\n"
-                         tell "/SkrivaPaHelvetica 10 Tf\n"
+                         tell $ "/SkrivaPaHelvetica " ++ show (Number (fontSize * fromIntegral pagew)) ++ " Tf\n"
                          tell $ "(" ++ winAnsiPostScriptEncode val ++ ") Tj\n"
                          tell "ET\n"
                          tell "Q\n"
@@ -533,7 +534,7 @@ paginCommands pageWidth (SealSpec{documentNumber,initials,staticTexts }) =
             , show (sioffset+siwidth+10) ++ " 23 m " ++ show (pageWidth - 60) ++ " 23 l S" -- draw right line
                    -- seal form is 90pt x 90 pt, so 0.2*90 is 18
                    -- line at 23 minus half of 18 is 14
-            , "0.2 0 0 0.2 " ++ show (((fromIntegral pageWidth - 18) / 2) :: Double) ++ " 14 cm" -- position for drawing seal
+            , "0.2 0 0 0.2 " ++ show (Number ((fromIntegral pageWidth - 18) / 2)) ++ " 14 cm" -- position for drawing seal
             , "/SealMarkerForm Do"                             -- draw the seal in the middle between lines
             , "Q"                                              -- restore state
             ]
@@ -587,7 +588,7 @@ makeLeftTextBox font@(PDFFont name' size) width text' = result
     lines' = splitLinesOfLength font width text'
     textOutLine text'' = "[(" ++ winAnsiPostScriptEncode text'' ++ ")] TJ T*\n"
     commands = " BT\n" ++
-               " " ++ show (1.2 * fromIntegral size :: Double) ++ " TL\n" ++
+               " " ++ show (Number $ 1.2 * fromIntegral size) ++ " TL\n" ++
                " /" ++ resourceFontName ++ " " ++ show size ++ " Tf\n" ++
                " 1 0 0 1 0 " ++  show (-size) ++ " Tm\n" ++ -- FIXME: where to start this really?
                concatMap textOutLine lines' ++

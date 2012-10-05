@@ -31,6 +31,7 @@ data Field
     , x                :: Double -- ^ left coordinate of field in (0,0)-(1,1)
     , y                :: Double -- ^ upper coordinate of field in (0,0)-(1,1)
     , page             :: Int    -- ^ on which page should the field be placed
+    , fontSize         :: Double -- ^ font size divided by width
     , includeInSummary :: Bool   -- ^ add this field to report at the very end of document
     }
   | FieldJPG

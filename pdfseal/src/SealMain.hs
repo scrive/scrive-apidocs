@@ -59,11 +59,36 @@ sealspec filename = SealSpec
           , companyverified = False
           , numberverified = True
           -- should be in 4 corners, aligned
-          , fields = [ Field {value = "Gracjan Polak",    x = 7/770,   y = 7/1085,    page = 1, includeInSummary = False}
-                     , Field {value = "Gracjan Polak",    x = 681/770, y = 7/1085,    page = 1, includeInSummary = False}
-                     , Field {value = "Gracjan Polak",    x = 7/770,   y = 1058/1085, page = 1, includeInSummary = False}
-                     , Field {value = "Gracjan Polak",    x = 681/770, y = 1058/1085, page = 1, includeInSummary = False}
-                     , Field {value = "gracjan@mail.com", x = 121/770, y = 347/1085,  page = 1, includeInSummary = False}
+          , fields = [ Field { value = "Gracjan Polak"
+                             , x = 7/770,   y = 7/1085
+                             , page = 1
+                             , includeInSummary = False
+                             , fontSize = 20/770
+                             }
+                     , Field { value = "Gracjan Polak"
+                             , x = 681/770, y = 7/1085
+                             , page = 1
+                             , includeInSummary = False
+                             , fontSize = 10/770
+                             }
+                     , Field { value = "Gracjan Polak"
+                             , x = 7/770,   y = 1058/1085
+                             , page = 1
+                             , includeInSummary = False
+                             , fontSize = 10/770
+                             }
+                     , Field { value = "Gracjan Polak"
+                             , x = 681/770, y = 1058/1085
+                             , page = 1
+                             , includeInSummary = False
+                             , fontSize = 10/770
+                             }
+                     , Field { value = "gracjan@mail.com"
+                             , x = 121/770, y = 347/1085
+                             , page = 1
+                             , includeInSummary = False
+                             , fontSize = 10/770
+                             }
                      ]
           }) [1..10::Int]
     , initials = "LD, LD"
