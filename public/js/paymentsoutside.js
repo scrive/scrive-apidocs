@@ -184,6 +184,13 @@
                 features.append($('<div class="feature" />').html(t));
             });
 
+            features.append($('<a />').attr('href', localization.payments.featuresurl)
+                            .addClass('readmorelink')
+                            .text(localization.payments.readmore)
+                            .click(function(e) { 
+                                e.stopPropagation();
+                            }));
+
             div.append(features);
 
             var price = $('<div class="price" />');

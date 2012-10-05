@@ -436,6 +436,8 @@ javascriptLocalisation =
            , price : "$_paymentsPrice()$"
            , buysyou : "$_paymentsBuysYou()$"
            , phonenumber : "$_paymentsPhonenumber()$"
+           , readmore : "$_paymentsReadMore()$"
+           , featuresurl : "$_paymentsFeaturesURL()$"
            , plans: { professional : "$_paymentPlanProfessional()$"
                     , team         : {
                       name : "$_paymentPlanTeam()$",

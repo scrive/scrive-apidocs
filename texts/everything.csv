@@ -2562,3 +2562,5 @@ have an account please follow the account creation process. Free use of up to 5 
 "_confirmAccountExistingUserHeader","Subscription successful",,"Subscription successful"
 "_confirmAccountCreatedUser","Vi har skickat dina användaruppgifter till din e-postadress. Gå till din inkorg och följ instruktionerna i mailet för att logga in första gången.",,"We have sent your account details to your email. Go to your inbox and follow the instructions in the email to login for the first time."
 "_paymentsPhonenumber","Telefonnummer",,"Phone number"
+"_paymentsReadMore","läs mer",,"read more"
+"_paymentsFeaturesURL","/se/sv/funktioner",,"/gb/en/features"
