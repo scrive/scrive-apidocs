@@ -24,6 +24,7 @@ import Utils.Read
 import Utils.Monad
 import System.FilePath
 import Data.Maybe
+import qualified Data.String.Utils as String
 
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -322,8 +323,8 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   ctx <- getContext
 
   content <- apiGuardL (badInput "The PDF was invalid.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
-
-  file <- dbUpdate $ NewFile (takeBaseName filename) content
+  let cleanFileName = takeBaseName $ String.replace "\\" "/" filename
+  file <- dbUpdate $ NewFile cleanFileName content
   let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) email slid
   d <- apiGuardL (serverError "documentUploadSignatoryAttachment: SaveSigAttachment failed") . runMaybeT $ do
     True <- dbUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor
