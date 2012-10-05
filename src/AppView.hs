@@ -23,6 +23,7 @@ module AppView( kontrakcja
               , contactUsPage
               , apiPage
               , scriveByMailPage
+              , featuresPage
               , modalError
               , standardPageFields
               , contextInfoFields
@@ -140,6 +141,9 @@ apiPage = getContext >>= \ctx -> renderTemplateAsPage ctx "apiPage" (Just LinkAP
 
 scriveByMailPage :: Kontra String
 scriveByMailPage = getContext >>= \ctx -> renderTemplateAsPage ctx "scrivebymailPage" (Just LinkScriveByMailPage) True
+
+featuresPage :: Kontra String
+featuresPage = getContext >>= \ctx -> renderTemplateAsPage ctx "featuresPage" (Just LinkFeaturesPage) True
 
 {- |
     Render a template as an entire page.
