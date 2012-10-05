@@ -49,6 +49,7 @@ mailApiTests env = testGroup "MailAPI" [
     , testThat "test exchange email with swedish chars"               env $ testSuccessfulDocCreation "test/mailapi/email_exchange_swedish.eml" 2      
     , testThat "test 2 sig model from outlook mac"                    env $ testSuccessfulDocCreation "test/mailapi/email_outlook_viktor.eml" 3
     , testThat "test json with 2 sigs"                                env $ testSuccessfulDocCreation "test/mailapi/email_onesig_json.eml" 2
+    , testThat "test json with 2 sigs and newlines"                   env $ testSuccessfulDocCreation "test/mailapi/email_onesig_newlines_json.eml" 2      
     , testThat "test json with 2 sigs (from Roger)"                   env $ testSuccessfulDocCreation "test/mailapi/roger_json.eml" 2
     , testThat "test json with 2 sigs (from Roger) with decoding"     env $ testSuccessfulDocCreation "test/mailapi/roger_decode_json.eml" 2
     , testThat "test email from per"                                  env $ testSuccessfulDocCreation "test/mailapi/per_one.eml" 2
