@@ -44,7 +44,7 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.
                              options: _.union(
                                         [{name: localization.filterByStatus.showAnyStatus, value: ""} ],
                                          (draftsAvaible ? [{name: localization.filterByStatus.showDraft,     value: "[draft]"}] : []),
-                                        [{name: localization.filterByStatus.showCancelled, value: "[cancelled]"},
+                                        [{name: localization.filterByStatus.showCancelled, value: "[cancelled,rejected,timeouted,deliveryproblem,problem]"},
                                          {name: localization.filterByStatus.showSent,      value: "[sent,delivered,read,opened]"},
                                          {name: localization.filterByStatus.showSigned,    value: "[signed]"}
                                         ])}),

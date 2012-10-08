@@ -96,16 +96,7 @@ data StatusClass = SCDraft
                   | SCRead
                   | SCOpened
                   | SCSigned
-                  deriving (Eq, Ord, Enum, Bounded)
-
-instance Convertible StatusClass SqlValue where
-  safeConvert a = safeConvert (fromEnum a)
-
-instance Convertible SqlValue StatusClass where
-  safeConvert a = case (safeConvert a) of
-                       Right r -> Right (toEnum r)
-                       Left l -> Left l
-  
+                  deriving (Eq, Ord, Enum, Bounded) 
                   
 instance Show StatusClass where
   show SCDraft = "draft"
@@ -399,6 +390,7 @@ $(bitfieldDeriveConvertible ''SignatoryRole)
 $(enumDeriveConvertible ''MailsDeliveryStatus)
 $(newtypeDeriveConvertible ''SignOrder)
 $(enumDeriveConvertible ''DocumentProcess)
+$(enumDeriveConvertible ''StatusClass)
 $(enumDeriveConvertibleIgnoreFields ''DocumentStatus)
 $(enumDeriveConvertibleIgnoreFields ''FieldType)
 $(enumDeriveConvertible ''AuthenticationMethod)

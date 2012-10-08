@@ -2082,6 +2082,21 @@ testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
       assertEqual "Should have zero documents returned" 0 (length docs'''')
    else return Nothing
 
+testGetDocumentsByAuthorFiltering :: TestEnv ()
+testGetDocumentsByAuthorFiltering = doTimes 10 $ do
+    company <- addNewCompany
+    u1 <- addNewRandomUser -- author
+    u2 <- addNewRandomUser -- some other user
+    _ <- dbUpdate $ SetUserCompany (userid u1) (Just (companyid company))
+    Just u1' <- dbQuery $ GetUserByID (userid u1)
+    _ <- addRandomDocumentWithAuthor u1'
+
+    docs   <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByAuthor (userid u1)]
+    nodocs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByAuthor (userid u2)]
+    validTest $ do
+      assertEqual "Should have one document returned" 1 (length docs)
+      assertEqual "Should have no documents" 0 (length nodocs)
+   
 testStatusClassSignedWhenAllSigned :: TestEnv ()
 testStatusClassSignedWhenAllSigned = doTimes 10 $ do
   author <- addNewRandomUser
