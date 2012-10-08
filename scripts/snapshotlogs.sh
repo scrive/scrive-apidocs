@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# usage: snapshotlogs.sh {repodir} {prefix} {wherethescriptslive}
-# example: snapshotlogs.sh /home/prod/kontrakcja kontrakcja-logs /home/prod/kontrackja
+# usage: snapshotlogs.sh {repodir} {prefix} {wherethescriptslive} {s3bucketname}
+# example: snapshotlogs.sh /home/prod/kontrakcja kontrakcja-logs /home/prod/kontrackja skrivapa-snapshots
 
-repo=$3
 tocopy=$1
 prefix=$2
+repo=$3
+bucket=$4
 
 # this has to match what logrotate uses
 dateext=`date "+%Y%m%d"`
@@ -15,7 +16,7 @@ cd /tmp
 
 echo "Zipping logs"
 tar zcf "$zipfile"                    \
-    $tocopy/log/*.log-$dateext
+    $tocopy/log/*.log-$dateext.gz
 ls -lh "$zipfile"
 
 echo "Generating signature hash"
@@ -25,50 +26,18 @@ echo "SkrivaPa Log Snapshot"  >  "$hashdoc"
 echo "Date: $date"            >> "$hashdoc"
 echo "Filename: $zipfile"     >> "$hashdoc"
 echo "MD5SUM: $m"             >> "$hashdoc"
-exit 
-#sign with trustweaver
-echo "Building soap message"
-echo "Multipart MIME"
-mimefile=hash-$date.mime
-python $repo/scripts/genmime.py "$hashdoc" "$mimefile"
-echo "Constructing SOAP Message"
-soaprequest=request-$date.xml
-base64 "$hashdoc" | cat $repo/scripts/top - $repo/scripts/bottom > "$soaprequest"
-twcert=$repo/certs/credentials.pem
-twcertpwd=jhdaEo5LLejh
-twurl=https://tseiod.trustweaver.com/ts/svs.asmx
-echo "Signing with trustweaver"
-soapresponse=response-$date.xml
-curl -X POST --verbose --show-error                           \
-    --cert $twcert:$twcertpwd --cacert $twcert                \
-    --data-binary "@$soaprequest"                             \
-    -H "Content-Type: text/xml; charset=UTF-8"                \
-    -H "Expect: 100-continue"                                 \
-    -H "SOAPAction: http://www.trustweaver.com/tsswitch#Sign" \
-    -o "$soapresponse"                                        \
-    $twurl
-echo "Parsing XML"
-signed64=signed-$date.b64
-python $repo/scripts/parsesignresponse.py "$soapresponse" "$signed64"
-echo "Decoding base64 and rezipping"
+
+echo "Signing files with GuardTime"
+gtime-sign $zipfile $hashdoc
+
+echo "Building archive for upload"
 finalfile=kontrakcja-signed-$date.tar.gz
-signedmime=signed-$date.mime
-base64 -d "$signed64" > "$signedmime"
-tar zcf "$finalfile" "$signedmime" "$zipfile"
-#push to amazon
+tar zcf "$finalfile" "$hashdoc" "$zipfile" "$hashdoc.gtts" "$zipfile.gtts"
+
+# push to amazon
 echo "Pushing to amazon"
-s3cmd --acl-private put "$finalfile" s3://skrivapa-snapshots
-#check hash from amazon
-echo "Not checking amazon sum"
-#echo "Checking amazon md5 sum"
-#md5amazon=`s3cmd -c "$repo/scripts/s3cfg" info "s3://skrivapa-snapshots/$finalfile" |grep MD5|awk "{print $3}"`
-#echo $md5amazon
-#md5local=`md5sum "$finalfile" | awk 'BEGIN { FS = " +" } ; { print $1 }'`
-#if [ "$md5amazon" = "$md5local" ]
-#then
-#    echo "MD5 sum matches!"
-    #clean up
-#    rm "$zipfile" "$finalfile" "$hashdoc" "$mimefile" "$soaprequest" "$soapresponse" "$signed64" "$signedmime"
-    exit 0
-#fi
-echo "Something went wrong. Try again."
+s3cmd --acl-private put "$finalfile" s3://$bucket
+
+# clean up
+rm "$zipfile" "$finalfile" "$hashdoc" "$hashdoc.gtts" "$zipfile.gtts"
+exit 0
