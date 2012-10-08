@@ -218,6 +218,9 @@ javascriptLocalisation =
                 showSent: "$_filterBySent()$",
                 showSigned: "$_tablestatusesSigned()$"
             }
+           , filterByAuthor : {
+                showAnyAuthor : "$_anyAuthor()$"
+            }
            , searchTemplate : "$_SearchTemplate()$"
            , sortTemplate : "$_SortTemplate()$"
            , infoSelectTemplate : "$_InfoSelectTemplate()$"
@@ -599,14 +602,14 @@ javascriptLocalisation =
                             , bodysingle : "$_ContractReminderBodySingel()$"
                             , successMessage : "$_flashMessageBulkDocumentRemindsSent()$"
                             , errorMessage   : "$_flashMessageNoBulkDocumentRemindsSent()$"
-                            , emptyMessage : "$_noDocumentChosen$"
+                            , emptyMessage : "$_noDocumentChosen()$"
                             , notAvailableMessage : "$_youCantSendRemindersToThisDocuments()$"
                         }
                     , cancel : {
                               action: "$_listcancelbuttontext()$"
                             , body : "$_listcancelbody()$"
                             , successMessage : "$_listcanceledflashmessagesuccess()$"
-                            , emptyMessage : "$_noDocumentChosen$"
+                            , emptyMessage : "$_noDocumentChosen()$"
                             , notAvailableMessage : "$_youCantCancelThisDocuments()$"
                         }
                     ,  remove : {
@@ -614,13 +617,14 @@ javascriptLocalisation =
                             , body : "$_listLocalDialogsBody()$"
                             , cantremoveactive : "$_CantRemoveActiveDocuments()$"
                             , successMessage : "$_flashMessageDocumentArchiveDone()$"
-                            , emptyMessage : "$_noDocumentChosen$"
+                            , emptyMessage : "$_noDocumentChosen()$"
                         }
                     , csv : {
                               action : "$_archiveCSV()$"
                         }
                     , zip : {
                               action : "$_archiveZIP()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
                         } 
                     , columns :{
                               status : "$_SortStatus()$"
@@ -638,12 +642,14 @@ javascriptLocalisation =
                               action: "$_delete()$"
                             , body : "$_listLocalDialogsBody()$"
                             , successMessage : "$_flashMessageTemplateArchiveDone()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
                         }
                     ,  share : {
                               action: "$_share()$"
                             , head : "$_listShareDialogHead()$"
                             , body : "$_listShareDialogBody()$"
                             , successMessage : "$_flashMessageTemplateShareDone()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
                         }
                     ,  createnew : "$_createNewTemplate()$"
                     ,  createnewtype : "$_createNewTemplateType()$"
@@ -663,12 +669,14 @@ javascriptLocalisation =
                               action: "$_delete()$"
                             , body : "$_listLocalDialogsBody()$"
                             , successMessage : "$_flashMessageAttachmentArchiveDone()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
                         }
                     ,  share : {
                               action: "$_pageAttachmentListShare()$"
                             , head : "$_listShareDialogHead()$"
                             , body : "$_listShareDialogBody()$"
                             , successMessage : "$_flashMessageAttachmentShareDone()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
                         }
                     ,  createnew : {
                               action: "$_pageAttachmentListNewAttachment()$"
@@ -689,12 +697,14 @@ javascriptLocalisation =
                             , head : "$_listReallyDeleteDialogHead()$"
                             , body : "$_listReallyDeleteDialogBody()$"
                             , successMessage : "$_flashMessageRubbishHardDeleteDone()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
                         }
                     ,  restore : {
                               action: "$_restore()$"
                             , head : "$_listRestoreDialogHead()$"
                             , body : "$_listRestoreDialogBody()$"
                             , successMessage : "$_flashMessageRubbishRestoreDone()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
                         } 
                     ,  search : "$_SearchDoc()$"                     
                     ,  columns :{

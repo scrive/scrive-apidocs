@@ -13,7 +13,7 @@
             width : 130, // Default button width
             button : undefined, //Custom button, jQuery object. We don't control it's visability.
             emptyMessage : "", // Message to show when nothing is selected and we dont accept empty
-            notAvaibleMessage : "", 
+            notAvailableMessage : "", 
         },
         initialize: function (args) {
         },
@@ -36,8 +36,8 @@
         emptyMessage : function() {
           return this.get("emptyMessage");
         },
-        notAvaibleMessage : function() {
-          return this.get("notAvaibleMessage");
+        notAvailableMessage : function() {
+          return this.get("notAvailableMessage");
         },
         button : function() {
           return this.get("button");
@@ -61,9 +61,9 @@
             var self = this;
             var model = self.model;
             if (model.selected().length == 0 && !model.acceptEmpty())
-              FlashMessages.add({color: "red", text : model.emptyMessage()});
+              FlashMessages.add({color: "red", content : model.emptyMessage()});
             else if (!model.allAvaible())
-              FlashMessages.add({color: "red", text : model.notAvaibleMessage()});
+              FlashMessages.add({color: "red", content : model.notAvailableMessage()});
             else
               model.onSelect();
             return false;

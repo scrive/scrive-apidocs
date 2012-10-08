@@ -62,7 +62,7 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.
                              textWidth : "90px",
                              text : "sender",
                              optionsURL : "/companyaccounts",
-                             defaultName : "Any sender",
+                             defaultName : localization.filterByAuthor.showAnyAuthor,
                              optionsParse: function(resp) {
                                         var options = []
                                         _.each(resp.list, function(l) {
@@ -222,6 +222,8 @@ window.DocumentsListDefinition = function(archive) { return {
         }),
         new ListAction({
             name :  localization.archive.documents.cancel.action,
+            emptyMessage :  localization.archive.documents.cancel.emptyMessage,
+            notAvailableMessage :  localization.archive.documents.cancel.notAvailableMessage,
             avaible : function(doc){
               return doc.field("status") == "sent"      ||
                      doc.field("status") == "delivered" ||
@@ -256,6 +258,7 @@ window.DocumentsListDefinition = function(archive) { return {
         }),
         new ListAction({
             name : localization.archive.documents.remove.action,
+            emptyMessage :  localization.archive.documents.cancel.emptyMessage,
             avaible : function(doc){ return true;},
             onSelect : function(docs) {
                          var confirmtext = jQuery("<p/>").append(localization.archive.documents.remove.body + " ");
@@ -300,10 +303,12 @@ window.DocumentsListDefinition = function(archive) { return {
                  }
                 } ,
                {name : localization.archive.documents.zip.action,
-                 acceptEmpty : true,
+                 acceptEmpty : true, // We handle in manually
                  onSelect: function(docs){
-                        if (docs == undefined || docs.length == 0 )
+                        if (docs == undefined || docs.length == 0 ) {
+                         FlashMessages.add({color : "red", content : localization.archive.documents.zip.emptyMessage}); 
                          return true;
+                        } 
                         if (docs.length == 1) {
                           var url =  "/downloadmainfile/" + docs[0].field("id") + "/" + docs[0].field("title") + ".pdf";
                           window.open(url);

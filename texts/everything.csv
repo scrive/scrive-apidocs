@@ -466,7 +466,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_docListTemplateLabel","Mall",,"Template"
 "_docListTabsAttachemtns","Bilagor",,"Attachments"
 "_docListTabsDocs","Dokument",,"Documents"
-"_docListTabsBin","Papperskorgen",,"Rubbish bin"
+"_docListTabsBin","Raderade dokument",,"Deleted documents"
 "_docListTabsTemplates","Mallar",,"Templates"
 "_document","dokument",,"document"
 "_documentInfoTextDatamismatchElseImauthorBody","Signeringsprocessen är avbruten på grund av felaktig matchning mellan en signerande part och dennes e-legitimation.",,"The signing process was canceled because the personal data of a signatory did not match the data in his or her e-ID."
@@ -2571,3 +2571,4 @@ have an account please follow the account creation process. Free use of up to 5 
 "_noDocumentChosen","Inga dokument valda.",,"No documents chosen."
 "_youCantSendRemindersToThisDocuments","Det går inte att skicka påminnelse till några av de valda dokumentet.",,"You can't send reminder for selected documents."
 "_youCantCancelThisDocuments","Du kan inte avbryta valda dokument.",,"You can't cancel selected documents."
+"_anyAuthor","Alla avsändare",,"Any sender"

@@ -42,6 +42,7 @@ window.AttachmentsListDefinition = function(archive) {
                }),
         new ListAction({
                 name :  localization.archive.attachments.share.action,
+                emptyMessage :  localization.archive.attachments.share.emptyMessage,
                 avaible : function(){return true;},
                 onSelect: function(docs){
                             var confirmationPopup = Confirmation.popup({
@@ -67,6 +68,7 @@ window.AttachmentsListDefinition = function(archive) {
                }),
         new ListAction({
                 name :  localization.archive.attachments.remove.action,
+                emptyMessage :  localization.archive.attachments.remove.emptyMessage,
                 avaible : function(){return true;},
                 onSelect: function(docs){
                              var confirmtext = jQuery("<p/>").append(localization.archive.attachments.remove.body + " ");

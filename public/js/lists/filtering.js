@@ -146,7 +146,7 @@
             this.set({ namespace: namespace });
             var fssn = SessionStorage.get(namespace, "ajax-select-filtering-name" + this.name());
             var fssv = SessionStorage.get(namespace, "ajax-select-filtering-value" + this.name());
-            if (fssn == undefined) fssn = this.defaultName();  
+            if (fssn == undefined || fssv == "") fssn = this.defaultName();  
             if (fssv == undefined) fssv = "";
             this.set({"options" : [{name : fssn, value : fssv}]});
             this.select(fssv);
