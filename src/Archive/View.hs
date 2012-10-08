@@ -33,6 +33,7 @@ import Doc.DocUtils
 import PadQueue.Model
 import Text.JSON.Gen as J
 import qualified Templates.Fields as F
+import Data.String.Utils (strip)
 
 flashMessageSignableArchiveDone :: TemplatesMonad m => m FlashMessage
 flashMessageSignableArchiveDone = do
@@ -99,7 +100,9 @@ signatoryFieldsListForJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTim
 signatoryFieldsListForJSON tl crtime padqueue doc sl = do
     J.value "id" $ show $ signatorylinkid sl 
     J.value "status" $ show $ signatorylinkstatusclass sl
-    J.value "name" $ getSmartName sl
+    J.value "name" $ case strip (getCompanyName sl) of
+                       "" -> getSmartName sl
+                       _  -> getSmartName sl ++ " (" ++ getCompanyName sl ++ ")"
     J.value "time" $ fromMaybe "" $ (showDateAbbrev tl crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open)
     J.value "invitationundelivered" $ show $ isUndelivered sl && Pending == documentstatus doc
     J.value "inpadqueue" $ "true" <| (fmap fst padqueue == Just (documentid doc)) && (fmap snd padqueue == Just (signatorylinkid sl)) |> "false"

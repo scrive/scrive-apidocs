@@ -285,7 +285,7 @@ documentFilterToSQL (DocumentFilterStatuses statuses) =
 documentFilterToSQL (DocumentFilterByStatusClass []) =
   SQL "FALSE" []
 documentFilterToSQL (DocumentFilterByStatusClass statuses) =
-  documentStatusClassExpression <> SQL (" IN (" ++ intercalate "," (map (const "?") statuses) ++ ")")  (map (toSql . fromEnum) statuses)
+  documentStatusClassExpression <> SQL (" IN (" ++ intercalate "," (map (const "?") statuses) ++ ")")  (map toSql statuses)
 documentFilterToSQL (DocumentFilterMinChangeTime ctime) =
   SQL (maxselect ++ " >= ?") [toSql ctime]
 documentFilterToSQL (DocumentFilterMaxChangeTime ctime) =
@@ -508,23 +508,24 @@ fetchDocuments = foldDB decoder []
 
 documentStatusClassExpression :: SQL
 documentStatusClassExpression =
-       SQL ("(COALESCE((SELECT min(") []
+       SQL ("(    COALESCE((SELECT min(") []
     <> statusClassCaseExpression 
-    <> SQL ") FROM signatory_links"[]
-    <> SQL " WHERE signatory_links.document_id = documents.id AND ((signatory_links.roles&1)<>0)), ?))" [ toSql SCDraft]
+    <> SQL ") FROM signatory_links WHERE signatory_links.document_id = documents.id AND (signatory_links.roles&?)<>0), ?)    )" [toSql [SignatoryPartner], toSql SCDraft]
 
 statusClassCaseExpression :: SQL
 statusClassCaseExpression =
   SQL " CASE " []
-   <> SQL " WHEN documents.status IN (?) THEN ?"     [toSql Preparation,                                        toSql SCDraft]                        
-   <> SQL " WHEN documents.status IN (?,?,?) THEN ?" [toSql Canceled, toSql Timedout, toSql (DocumentError ""), toSql SCCancelled]
-   <> SQL " WHEN documents.status IN (?) THEN ?"     [toSql Rejected,                                           toSql SCRejected]
-   <> SQL " WHEN signatory_links.sign_time IS NOT NULL THEN ?"                                                 [toSql SCSigned]
-   <> SQL " WHEN signatory_links.seen_time IS NOT NULL THEN ?"                                                 [toSql SCOpened]  
-   <> SQL " WHEN signatory_links.read_invitation IS NOT NULL THEN ?"                                           [toSql SCRead]  
-   <> SQL " WHEN signatory_links.invitation_delivery_status = ? THEN ?" [toSql Undelivered,                     toSql SCCancelled]
-   <> SQL " WHEN signatory_links.invitation_delivery_status = ? THEN ?" [toSql Delivered,                       toSql SCDelivered]
-   <> SQL " ELSE ?"                                                                                            [toSql SCSent]    
+   <> SQL " WHEN documents.status = ? THEN (? :: INTEGER)" [toSql (DocumentError ""),                           toSql SCError]
+   <> SQL " WHEN documents.status = ? THEN (? :: INTEGER)" [toSql Preparation,                                  toSql SCDraft]
+   <> SQL " WHEN documents.status = ? THEN (? :: INTEGER)" [toSql Canceled,                                     toSql SCCancelled]
+   <> SQL " WHEN documents.status = ? THEN (? :: INTEGER)" [toSql Timedout,                                     toSql SCTimedout]
+   <> SQL " WHEN documents.status = ? THEN (? :: INTEGER)" [toSql Rejected,                                     toSql SCRejected]
+   <> SQL " WHEN signatory_links.sign_time IS NOT NULL THEN (? :: INTEGER)"                                       [toSql SCSigned]
+   <> SQL " WHEN signatory_links.seen_time IS NOT NULL THEN (? :: INTEGER)"                                       [toSql SCOpened]
+   <> SQL " WHEN signatory_links.read_invitation IS NOT NULL THEN (? :: INTEGER)"                                 [toSql SCRead]
+   <> SQL " WHEN signatory_links.invitation_delivery_status = ? THEN (? :: INTEGER)" [toSql Undelivered,           toSql SCDeliveryProblem]
+   <> SQL " WHEN signatory_links.invitation_delivery_status = ? THEN (? :: INTEGER)" [toSql Delivered,             toSql SCDelivered]
+   <> SQL " ELSE (? :: INTEGER)"                                                                                  [toSql SCSent]
   <> SQL " END " []
 
 signatoryLinksSelectors :: SQL

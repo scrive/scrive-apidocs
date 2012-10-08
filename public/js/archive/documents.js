@@ -15,10 +15,6 @@ window.DocumentCellsDefinition = function(archive) { return  [
                         on: icon,
                         tip: tip
                     })
-                    if ((listobject.field("anyinvitationundelivered") == "True" &&  idx == undefined)
-                       || (idx != undefined && listobject.subfield(idx,"invitationundelivered") == "True"))
-                       icon = jQuery.merge( icon, jQuery("<span style='color:#000000;position:relative;top:-2px'>!</span>"));
-
                     return icon;
                  }
         }),
@@ -181,6 +177,8 @@ window.DocumentsListDefinition = function(archive) { return {
             }),
         new ListAction({
             name :  localization.archive.documents.sendreminder.action,
+            emptyMessage :  localization.archive.documents.sendreminder.emptyMessage,
+            notAvailableMessage :  localization.archive.documents.sendreminder.notAvailableMessage,
             avaible : function(doc){
               return doc.field("status") == "sent"      ||
                      doc.field("status") == "delivered" ||

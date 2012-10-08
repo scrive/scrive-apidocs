@@ -74,6 +74,10 @@ javascriptLocalisation =
                  , read : "$_tooltipread()$"
                  , opened : "$_tooltipopened()$"
                  , signed : "$_tooltipsigned()$"
+                 , rejected :  "$_tooltiprejected()$"
+                 , deliveryproblem : "$_tooltipdeliveryproblem()$"
+                 , timeouted       : "$_tooltiptimedout()$"
+                 , problem           : "$_tooltiperror()$"
              }
              , select : "$_options()$"
              , of : "$_of()$"
@@ -595,17 +599,22 @@ javascriptLocalisation =
                             , bodysingle : "$_ContractReminderBodySingel()$"
                             , successMessage : "$_flashMessageBulkDocumentRemindsSent()$"
                             , errorMessage   : "$_flashMessageNoBulkDocumentRemindsSent()$"
+                            , emptyMessage : "$_noDocumentChosen$"
+                            , notAvailableMessage : "$_youCantSendRemindersToThisDocuments()$"
                         }
                     , cancel : {
                               action: "$_listcancelbuttontext()$"
                             , body : "$_listcancelbody()$"
                             , successMessage : "$_listcanceledflashmessagesuccess()$"
+                            , emptyMessage : "$_noDocumentChosen$"
+                            , notAvailableMessage : "$_youCantCancelThisDocuments()$"
                         }
                     ,  remove : {
                               action: "$_delete()$"
                             , body : "$_listLocalDialogsBody()$"
                             , cantremoveactive : "$_CantRemoveActiveDocuments()$"
                             , successMessage : "$_flashMessageDocumentArchiveDone()$"
+                            , emptyMessage : "$_noDocumentChosen$"
                         }
                     , csv : {
                               action : "$_archiveCSV()$"

@@ -88,6 +88,9 @@ $(newtypeDeriveUnderlyingReadShow ''SignOrder)
 data StatusClass = SCDraft
                   | SCCancelled
                   | SCRejected
+                  | SCTimedout
+                  | SCError
+                  | SCDeliveryProblem -- Order is important for SQL's
                   | SCSent
                   | SCDelivered
                   | SCRead
@@ -95,10 +98,22 @@ data StatusClass = SCDraft
                   | SCSigned
                   deriving (Eq, Ord, Enum, Bounded)
 
+instance Convertible StatusClass SqlValue where
+  safeConvert a = safeConvert (fromEnum a)
+
+instance Convertible SqlValue StatusClass where
+  safeConvert a = case (safeConvert a) of
+                       Right r -> Right (toEnum r)
+                       Left l -> Left l
+  
+                  
 instance Show StatusClass where
   show SCDraft = "draft"
   show SCCancelled = "cancelled"
   show SCRejected  = "rejected"
+  show SCTimedout  = "timeouted"
+  show SCError = "problem"
+  show SCDeliveryProblem = "deliveryproblem"
   show SCSent = "sent"
   show SCDelivered = "delivered"
   show SCRead = "read"
@@ -384,7 +399,6 @@ $(bitfieldDeriveConvertible ''SignatoryRole)
 $(enumDeriveConvertible ''MailsDeliveryStatus)
 $(newtypeDeriveConvertible ''SignOrder)
 $(enumDeriveConvertible ''DocumentProcess)
-$(enumDeriveConvertibleIgnoreFields ''StatusClass)
 $(enumDeriveConvertibleIgnoreFields ''DocumentStatus)
 $(enumDeriveConvertibleIgnoreFields ''FieldType)
 $(enumDeriveConvertible ''AuthenticationMethod)

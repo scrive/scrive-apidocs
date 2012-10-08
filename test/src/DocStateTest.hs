@@ -229,7 +229,9 @@ docStateTests env = testGroup "DocState" [
   testThat "GetDocumentsByAuthor doesn't return archived docs" env testGetDocumentsByAuthorNoArchivedDocs,
   testThat "GetDocumentsByCompanyWithFiltering doesn't return archived docs" env testGetDocumentsByCompanyWithFilteringNoArchivedDocs,
   testThat "GetDocumentsBySignatory doesn't return archived docs" env testGetDocumentsBySignatoryNoArchivedDocs,
-  testThat "GetDeletedDocumentsByUser returns archived docs" env testGetDeletedDocumentsByUserArchivedDocs
+  testThat "GetDeletedDocumentsByUser returns archived docs" env testGetDeletedDocumentsByUserArchivedDocs,
+  testThat "When document is signed it's status class is signed" env testStatusClassSignedWhenAllSigned,
+  testThat "When document is pending and some invitation is undelivered it's status is undelivered" env testStatusClassSignedWhenAllSigned
   ]
 
 dataStructureProperties :: Test
@@ -2079,3 +2081,26 @@ testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
       assertEqual "Should have one document returned" 1 (length docs''')
       assertEqual "Should have zero documents returned" 0 (length docs'''')
    else return Nothing
+
+testStatusClassSignedWhenAllSigned :: TestEnv ()
+testStatusClassSignedWhenAllSigned = doTimes 10 $ do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isClosed &&^ ((<=) 2 . length . (filter isSignatory) . documentsignatorylinks))
+  Just doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
+  validTest $ do
+      assertEqual "Statusclass for signed documents is signed" SCSigned (documentstatusclass doc')
+
+
+testStatusClassDeliveryProblemWhenUndelivered :: TestEnv ()
+testStatusClassDeliveryProblemWhenUndelivered = doTimes 10 $ do
+  author <- addNewRandomUser
+  time <- getMinutesTime
+  doc <- addRandomDocumentWithAuthorAndCondition author
+            (    isSignable
+             &&^ isPending
+             &&^ ((all isSignatory) . documentsignatorylinks)
+             &&^ ((<=) 2 . length . documentsignatorylinks))
+  _ <- dbUpdate $ SetInvitationDeliveryStatus (documentid doc) (signatorylinkid $ last $ documentsignatorylinks doc) Undelivered (systemActor time)
+  Just doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
+  validTest $ do
+      assertEqual "Statusclass for signed documents is signed" SCDeliveryProblem (documentstatusclass doc')
