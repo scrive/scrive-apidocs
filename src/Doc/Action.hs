@@ -296,13 +296,15 @@ sendInvitationEmail1 ctx document signatorylink | not (isAuthor signatorylink) =
     return doc
   return $ maybe (Left "sendInvitationEmail1 failed") Right mdoc
   
-sendInvitationEmail1 ctx document authorsiglink = do
-  -- send invitation to sign to author when it is his turn to sign
-  mail <- mailDocumentAwaitingForAuthor ctx document (getLocale document)
-  scheduleEmailSendout (ctxmailsconfig ctx) $
-    mail { to = [getMailAddress authorsiglink] }
-  return $ Right document
-
+sendInvitationEmail1 ctx document authorsiglink =
+  if (isSignatory authorsiglink)
+     then do
+        -- send invitation to sign to author when it is his turn to sign
+        mail <- mailDocumentAwaitingForAuthor ctx document (getLocale document)
+        scheduleEmailSendout (ctxmailsconfig ctx) $
+          mail { to = [getMailAddress authorsiglink] }
+        return $ Right document
+     else return $ Right document 
 {- |
     Send a reminder email (and update the modification time on the document)
 -}
