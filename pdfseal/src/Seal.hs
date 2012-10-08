@@ -393,15 +393,7 @@ placeFields fields paginrefid = do
     let findFields pageno = filter (\x -> page x == pageno) fields
     let contentCommands pageno = \pagew pageh ->
            commandsFromFields pagew pageh (findFields pageno)
-<<<<<<< HEAD
-
     paginresdict <- getResDict paginrefid
-
-=======
-
-    paginresdict <- getResDict paginrefid
-
->>>>>>> Lots of refactoring to make sealing and presealing unified
     mapM_ (uncurry $ placeContentOnPage paginresdict)
             [(page,contentCommands pageno) | (page,pageno) <- zip pages [1..]]
 
