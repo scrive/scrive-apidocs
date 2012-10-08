@@ -671,7 +671,6 @@ javascriptLocalisation =
                             , signed :    "$_tablestatusesSigned()$"
                        }
                     ,  createnew : "$_createNewDocument()$"
-                    ,  createnewtype : "$_createNewDocumentType()$"
                     ,  sendreminder : {
                               action: "$_SendReminder()$"
                             , bodymulti : "$_ContractReminderBodyMulti()$"
@@ -728,7 +727,6 @@ javascriptLocalisation =
                             , emptyMessage : "$_noDocumentChosen()$"
                         }
                     ,  createnew : "$_createNewTemplate()$"
-                    ,  createnewtype : "$_createNewTemplateType()$"
                     ,  shared : "$_shared()$"
                     ,  search : "$_SearchDoc()$"
                     ,  columns :{

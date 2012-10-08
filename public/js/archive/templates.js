@@ -58,61 +58,43 @@ window.TemplatesListDefinition = function(archive) { return {
                 name : localization.archive.templates.createnew,
                 avaible : function() {return true;}, 
                 acceptEmpty : true,
-                onSelect: function() {
-                        var popup;
-                        function doctypebutton(txt,type) {
-                            return jQuery('<td/>').append(jQuery('<div class="documentTypeBox"/>').append(UploadButton.init({
-                                size: "tiny",
-                                width : "130",
-                                text: txt, //
-                                button: jQuery('<a href="#" class="documenticon withUpload"/>').append(jQuery('<div class="documenticonText"/>').append(jQuery("<span class='text'/>").text(txt))),
-                                name : "file",
-                                submitOnUpload : true,
-                                submit: new Submit({
-                                    method : "POST",
-                                    url : "/api/createfromfile",
-                                    ajax: true,
-                                    type: type,
-                                    template : "YES",
-                                    expectedType: 'json',
-                                    onSend: function() {
-                                        LoadingDialog.open();
-                                    },
-                                    ajaxerror: function(d,a){
-                                        if(a === 'parsererror') // file too large
-                                            FlashMessages.add({content: localization.fileTooLarge, color: "red"});
-                                        else
-                                            FlashMessages.add({content: localization.couldNotUpload, color: "red"});
+                button: UploadButton.init({
+                            name : "file",
+                            size: "tiny",
+                            width : "140",
+                            text: localization.archive.templates.createnew,
+                            submitOnUpload: true,
+                            onClick : function(input) {
+                                LoadingDialog.open();
+                                /*  Disable blocking for now -- Eric
+                                // blocking
+                                if(BlockingInfo && BlockingInfo.blockCreate()) {
+                                blocking.show(BlockingInfo.blockCreateMessage);
+                                return false;
+                                }
+                                */
+                            },
+                            submit: new Submit({
+                                method : "POST",
+                                url : "/api/createfromfile",
+                                ajax: true,
+                                template: "YES",
+                                expectedType: 'json',
+                                onSend: function() {
+                                            LoadingDialog.open();
+                                        },
+                                ajaxsuccess: function(d) {
+                                    if (d != undefined && d.id != undefined) {
+                                        window.location.href = "/d/"+d.id;
+                                    }
+                                    else {
+                                        FlashMessages.add({content: localization.couldNotUpload+" "+d, color: "red"});
                                         LoadingDialog.close();
                                         wiz.trigger('change');
-                                    },
-                                    ajaxsuccess: function(d) {
-                                        if (d != undefined && d.id != undefined) {
-                                            window.location.href = "/d/"+d.id;
-                                        }
-                                        else {
-                                            FlashMessages.add({content: localization.couldNotUpload, color: "red"});
-                                            LoadingDialog.close();
-                                            wiz.trigger('change');
-                                        }
                                     }
-
-                                })
-                            }).input()));
-                        }
-                        var t = jQuery('<tr/>') ;
-                        t.append(doctypebutton(localization.process.contract.name, "Contract"));
-                        t.append(doctypebutton(localization.process.offer.name, "Offer"));
-                        t.append(doctypebutton(localization.process.order.name, "Order"));
-                        var table = jQuery('<table style="width: 100%"/>').append(jQuery('<tbody/>').append(t));
-                        popup = Confirmation.popup({
-                            onAccept: function() { },
-                            title: localization.archive.templates.createnewtype,
-                            content: table
-                        });
-                        popup.hideAccept();
-                        return false;
-                    }
+                                }
+                            })
+                })
             }),
         new ListAction({
                 name : localization.archive.templates.share.action,
