@@ -84,7 +84,7 @@ window.draggebleField = function(dragHandler, fieldOrPlacement)
                 signatory.addField(field);
             }
             var fontSizeText = $(helper).css("font-size");
-            var fontSize = parseFloat(fontSizeText);
+            var fontSize = parseFloat(fontSizeText) || 16;
 
             if( placement!=undefined ) {
                 if( placement.page()==page.number() ) {
