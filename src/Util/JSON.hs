@@ -23,6 +23,7 @@ module Util.JSON (
     , pathList
     , jsonType
     , jsonPack
+    , singlePageListToJSON
     )where
 
 import Text.JSON
@@ -31,6 +32,8 @@ import qualified Data.List.Utils as List
 import Utils.Enum
 import Utils.Tuples
 import Text.JSON.FromJSValue
+import Text.JSON.Gen
+import qualified Text.JSON.Gen as J
 import qualified Data.Text as T
 import Control.Applicative
 
@@ -155,3 +158,14 @@ jsonType (JSArray _) = "array"
 
 jsonPack :: [(String,String)] -> JSValue
 jsonPack = JSObject . toJSObject . (mapSnd (JSString . toJSString))
+
+singlePageListToJSON :: ToJSValue a => [a] -> JSValue
+singlePageListToJSON items =
+    runJSONGen $ do
+      let itemCount = length items
+      J.value "list" items
+      J.object "paging" $ do
+        J.value "pageSize"    itemCount
+        J.value "pageCurrent" (0 :: Int)
+        J.value "itemMin"     (0 :: Int)
+        J.value "itemMax"     (itemCount - 1)

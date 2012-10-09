@@ -2,7 +2,9 @@ module Stats.Control
        (
          showAdminCompanyUsageStats,
          showAdminUserUsageStats,
-         showAdminSystemUsageStats,
+         handleAdminSystemUsageStats,
+         handleAdminSystemUsageStatsByDayJSON,
+         handleAdminSystemUsageStatsByMonthJSON,
          addDocumentCloseStatEvents,
          addDocumentCreateStatEvents,
          addDocumentSendStatEvents,
@@ -51,8 +53,10 @@ import MinutesTime
 import Utils.List
 import Stats.Model
 import Stats.View
+import Text.JSON
 import User.Model
 import Util.HasSomeUserInfo
+import Util.JSON
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import qualified Log
@@ -92,22 +96,28 @@ showAdminCompanyUsageStats companyid = onlySalesOrAdmin $ do
     F.objects "statistics" $ statisticsCompanyFieldsByDay fullnames
   renderFromBody kontrakcja content
 
-showAdminSystemUsageStats :: Kontrakcja m => m Response
-showAdminSystemUsageStats = onlySalesOrAdmin $ do
-  Context{ctxtime} <- getContext
-  let sixmonthsago = 6 `monthsBefore` ctxtime
-  let today = asInt ctxtime
-      som   = 100 * (today `div` 100) -- start of month
-  statEvents <- dbQuery $ GetDocStatEvents sixmonthsago
-  userEvents <- dbQuery $ GetUserStatEvents
-  let rawstats = (catMaybes $ map statEventToDocStatTuple statEvents)
-                 ++ (catMaybes $ map userEventToDocStatTuple userEvents)
-  let statsByDay = calculateStatsByDay $ filter (\s -> (fst s) >= som) rawstats
-      statsByMonth = calculateStatsByMonth rawstats
-  content <- adminUserStatisticsPage $ do
-    F.objects "statisticsbyday" $ statisticsFieldsByDay statsByDay
-    F.objects "statisticsbymonth" $ statisticsFieldsByMonth statsByMonth
-  renderFromBody kontrakcja content
+handleAdminSystemUsageStats :: Kontrakcja m => m String
+handleAdminSystemUsageStats = onlySalesOrAdmin $ adminSystemUsageStatsPage
+
+handleAdminSystemUsageStatsByDayJSON :: Kontrakcja m => m JSValue
+handleAdminSystemUsageStatsByDayJSON =
+    onlySalesOrAdmin $ do
+      stats <- calculateStatsByDay <$> getAdminSystemUsageStats (30 `daysBefore`)
+      return $ singlePageListToJSON $ map (statToJSON showAsDate) stats
+
+handleAdminSystemUsageStatsByMonthJSON :: Kontrakcja m => m JSValue
+handleAdminSystemUsageStatsByMonthJSON =
+    onlySalesOrAdmin $ do
+      stats <- calculateStatsByMonth <$> getAdminSystemUsageStats (6 `monthsBefore`)
+      return $ singlePageListToJSON $ map (statToJSON showAsMonth) stats
+
+getAdminSystemUsageStats :: Kontrakcja m => (MinutesTime -> MinutesTime) -> m [(Int, [Int])]
+getAdminSystemUsageStats timeDiff = do
+    time <- timeDiff <$> ctxtime <$> getContext
+    statEvents <- dbQuery $ GetDocStatEvents time
+    userEvents <- dbQuery $ GetUserStatEvents
+    return $ (catMaybes $ map statEventToDocStatTuple statEvents)
+          ++ (catMaybes $ map userEventToDocStatTuple userEvents)
 
 handleDocStatsCSV :: Kontrakcja m => m CSV
 handleDocStatsCSV = onlySalesOrAdmin $ do

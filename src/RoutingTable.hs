@@ -210,7 +210,9 @@ staticRoutes = choice
      , dir "adminonly" $ dir "userslistcsv" $ hGet $ toK0 $ Administration.handleUsersListCSV
      , dir "adminonly" $ dir "paymentsstats.csv" $ hGet $ toK0 $ Payments.Stats.handlePaymentsStatsCSV
 
-     , dir "adminonly" $ dir "statistics"        $ hGet  $ toK0 $ Stats.showAdminSystemUsageStats
+     , dir "adminonly" $ dir "statistics"   $ hGet $ toK0 $ Stats.handleAdminSystemUsageStats
+     , dir "adminonly" $ dir "statsbyday"   $ hGet $ toK0 $ Stats.handleAdminSystemUsageStatsByDayJSON
+     , dir "adminonly" $ dir "statsbymonth" $ hGet $ toK0 $ Stats.handleAdminSystemUsageStatsByMonthJSON
 
      , dir "adminonly" $ dir "companies" $ hGet $ toK0 $ Administration.jsonCompanies
 

@@ -23,7 +23,7 @@ module Administration.AdministrationView(
             , adminDocuments
             , adminUserUsageStatsPage
             , adminCompanyUsageStatsPage
-            , adminUserStatisticsPage
+            , adminSystemUsageStatsPage
             , adminUserPaymentPage
           ) where
 
@@ -162,11 +162,13 @@ adminCompanyPaymentPage mpaymentplan quantity companyid recurlysubdomain =
           CanceledStatus    -> F.value "canceledstatus"    True
           DeactivatedStatus -> F.value "deactivatedstatus" True
 
-adminUserStatisticsPage :: TemplatesMonad m => Fields m () -> m String
-adminUserStatisticsPage morefields =
-  renderTemplate "statisticsPage" $ do
-    morefields
-    F.value "adminlink" $ show $ LinkAdminOnly
+adminSystemUsageStatsPage :: TemplatesMonad m => m String
+adminSystemUsageStatsPage =
+    renderTemplate "statisticsPage" $ do
+      F.value "adminlink"             $ show $ LinkAdminOnly
+      F.value "adminstatisticslink"   $ show $ LinkAdminStatistics
+      F.value "adminstatsbydaylink"   $ show $ LinkAdminStatsByDay
+      F.value "adminstatsbymonthlink" $ show $ LinkAdminStatsByMonth
 
 adminFunctionalityStatsPage :: TemplatesMonad m => [(String, Int)]
                                               -> [(String, Int)]

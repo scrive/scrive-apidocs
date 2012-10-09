@@ -1021,47 +1021,55 @@ companyusagestats=
     </div>
 ###
 statisticsPage=
-    $backtoadminmainlink()$
-    <div>
-      <h1>Stats this month by date</h1>
-	  <table>
-            <thead>
-              <td style="width:200px">Date</td>
-              <td style="width:200px">Documents Closed</td>
-              <td style="width:200px">Total Closed Signatures</td>
-              <td style="width:200px">Average Signatures / Doc</td>
-              <td style="width:200px">Documents Sent</td>
-              <td style="width:200px">New Users (TOS)</td>
-	    </thead>
-            $statisticsbyday:{stat|<tr>
-              <td>$stat.date$</td>
-              <td>$stat.closed$ </td>
-              <td>$stat.signatures$ </td>
-              <td>$stat.avg$ </td>
-              <td>$stat.sent$ </td>
-              <td>$stat.users$ </td>
-	    </tr>}$
-	  </table>
-      <h1>Stats by month</h1>
-	  <table>
-            <thead>
-              <td style="width:200px">Month</td>
-              <td style="width:200px">Documents Closed</td>
-              <td style="width:200px">Total Closed Signatures</td>
-              <td style="width:200px">Average Signatures / Doc</td>
-              <td style="width:200px">Documents Sent</td>
-              <td style="width:200px">New Users (TOS)</td>
-	    </thead>
-            $statisticsbymonth:{stat|<tr>
-              <td>$stat.date$</td>
-              <td>$stat.closed$ </td>
-              <td>$stat.signatures$ </td>
-              <td>$stat.avg$ </td>
-              <td>$stat.sent$ </td>
-              <td>$stat.users$ </td>
-	    </tr>}$
-	  </table>
+    <div class="tab-viewer">
+      <div class="tab-header"></div>
+      <ul class="tabs">
+        <li class="float-left"><a href="$adminlink$">$_admin()$</a></li>
+        <li class="active float-left"><a href="$adminstatisticslink$">$_HeadUsageStats()$</a></li>
+        <li class="float-right"></li>
+      </ul>
+      <div class="tab-container">
+        <div class="tab-content account usagestats">
+          <h2>$_last30Days()$</h2>
+          <div id="jsdaytable"></div>
+          <h2>$_last6Months()$</h2>
+          <div id="jsmonthtable"></div>
+          <div class="clearfix"></div>
+        </div>
+      </div>
     </div>
+    <script>
+      var dayTable = KontraList().init({
+        name: "Past Month Table",
+        timeout: 20000,
+        schema: new Schema({
+          url: "$adminstatsbydaylink$",
+          cells: [
+            new Cell({name: "$_usageStatsDate()$",   width: "100px", field: "date"}),
+            new Cell({name: "$_closedDocuments()$",  width: "70px",  field: "closed",     tdclass: "num"}),
+            new Cell({name: "$_sentDocuments()$",    width: "70px",  field: "sent",       tdclass: "num"}),
+            new Cell({name: "$_closedSignatures()$", width: "70px",  field: "signatures", tdclass: "num"}),
+            new Cell({name: "$_avgSigsPerDoc()$",    width: "70px",  field: "avg",        tdclass: "num"}),
+            new Cell({name: "$_newUsers()$",         width: "70px",  field: "users",      tdclass: "num"})
+          ]})});
+      var monthTable = KontraList().init({
+        name: "Pash 6 Month Table",
+        timeout: 20000,
+        schema: new Schema({
+          url: "$adminstatsbymonthlink$",
+          cells: [
+            new Cell({name: "$_usageStatsMonth()$",  width: "100px", field: "date"}),
+            new Cell({name: "$_closedDocuments()$",  width: "70px",  field: "closed",     tdclass: "num"}),
+            new Cell({name: "$_sentDocuments()$",    width: "70px",  field: "sent",       tdclass: "num"}),
+            new Cell({name: "$_closedSignatures()$", width: "70px",  field: "signatures", tdclass: "num"}),
+            new Cell({name: "$_avgSigsPerDoc()$",    width: "70px",  field: "avg",        tdclass: "num"}),
+            new Cell({name: "$_newUsers()$",         width: "70px",  field: "users",      tdclass: "num"})
+          ]})});
+      jQuery(function(){
+        jQuery("#jsdaytable").append(dayTable.view.el);
+        jQuery("#jsmonthtable").append(monthTable.view.el);
+      });
+    </script>
 ###
 ###
 adminFunctionalityStatsPage=

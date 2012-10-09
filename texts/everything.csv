@@ -2572,3 +2572,5 @@ have an account please follow the account creation process. Free use of up to 5 
 "_youCantSendRemindersToThisDocuments","Det går inte att skicka påminnelse till några av de valda dokumentet.",,"You can't send reminder for selected documents."
 "_youCantCancelThisDocuments","Du kan inte avbryta valda dokument.",,"You can't cancel selected documents."
 "_anyAuthor","Alla avsändare",,"Any sender"
+"_avgSigsPerDoc","Genomsnittlig Signaturer per Dokument",,"Average Signatures per Document"
+"_newUsers","Nya Användare (AV)",,"New Users (TOS)"

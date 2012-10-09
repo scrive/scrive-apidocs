@@ -75,6 +75,9 @@ data KontraLink
     | LinkCompanyUserAdmin CompanyID
     | LinkAdminServices
     | LinkAdminQuarantine
+    | LinkAdminStatistics
+    | LinkAdminStatsByDay
+    | LinkAdminStatsByMonth
     | LinkPasswordReminder UserID MagicHash
     | LinkAccountCreated UserID MagicHash -- email
     | LinkChangeSignatoryEmail DocumentID SignatoryLinkID
@@ -191,6 +194,9 @@ instance Show KontraLink where
     showsPrec _ (LinkCompanyUserAdmin companyid) = (++) $ "/adminonly/companyadmin/users/" ++ show companyid
     showsPrec _ (LinkAdminServices) = (++) $ "/adminonly/services"
     showsPrec _ (LinkAdminQuarantine) = (++) $ "/adminonly/quarantine"
+    showsPrec _ (LinkAdminStatistics) = (++) $ "/adminonly/statistics"
+    showsPrec _ (LinkAdminStatsByDay) = (++) $ "/adminonly/statsbyday"
+    showsPrec _ (LinkAdminStatsByMonth) = (++) $ "/adminonly/statsbymonth"
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
     showsPrec _ (LinkAccountCreated uid hash) = (++) $ "/accountsetup/" ++ show uid ++ "/" ++ show hash
     showsPrec _ (LinkChangeSignatoryEmail did slid ) = (++) $ "/changeemail/"++show did++"/"++show slid
