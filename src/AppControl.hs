@@ -150,8 +150,11 @@ showRequest rq maybeInputsBody =
    Creates a context, routes the request, and handles the session.
 -}
 appHandler :: KontraPlus Response -> AppConf -> AppGlobals -> AppState -> ServerPartT IO Response
-appHandler handleRoutes appConf appGlobals appState = catchEverything . runOurServerPartT . measureResponseTime $
+appHandler handleRoutes appConf appGlobals appState = catchEverything . runOurServerPartT $
   withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) . runAcidT appState $ do
+
+    startTime <- liftIO getClockTime
+
     let quota = 10000000
     temp <- liftIO getTemporaryDirectory
     decodeBody (defaultBodyPolicy temp quota quota quota)
@@ -171,9 +174,22 @@ appHandler handleRoutes appConf appGlobals appState = catchEverything . runOurSe
     when (issecure || not usehttps) $
       updateSessionWithContextData session newsessionuser newelegtrans newmagichashes newsessionpaduser
 
+    -- Here we show in debug log some statistics that should help
+    -- optimize code and instantly see if there is something
+    -- wrong. Measurements are not perfect, for example time is not
+    -- full response time, it is just the part that is under
+    -- application control. That is good because we want to stress
+    -- places that can be fixed.
+
     rq <- askRq
     stats <- getNexusStats =<< getNexus
-    Log.debug $ "SQL for " ++ rqUri rq ++ ": " ++ show stats
+    finishTime <- liftIO getClockTime
+    let TOD ss sp = startTime
+        TOD fs fp = finishTime
+        diff = (fs - ss) * 1000000000000 + fp - sp
+
+    Log.debug $ "SQL stats: " ++ rqUri rq ++ rqQuery rq ++
+                "\n    " ++ show stats ++ ", time: " ++ show (diff `div` 1000000000) ++ "ms"
 
     case res of
       Right response -> return response
@@ -184,16 +200,6 @@ appHandler handleRoutes appConf appGlobals appState = catchEverything . runOurSe
     catchEverything m = m `E.catch` \(e::E.SomeException) -> do
       Log.error $ "appHandler: exception caught at top level: " ++ show e ++ " (this shouldn't happen)"
       internalServerError $ toResponse ""
-
-    measureResponseTime action = do
-      startTime <- liftIO getClockTime
-      res <- action
-      finishTime <- liftIO getClockTime
-      let TOD ss sp = startTime
-          TOD fs fp = finishTime
-          diff = (fs - ss) * 1000000000000 + fp - sp
-      Log.debug $ "Response time " ++ show (diff `div` 1000000000) ++ "ms"
-      return res
 
     routeHandlers ctx = runKontraPlus ctx $ do
       res <- (Right <$> handleRoutes `mplus` E.throwIO Respond404) `E.catches` [
