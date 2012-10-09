@@ -55,8 +55,7 @@ window.TemplatesListDefinition = function(archive) { return {
     actions : [
        new ListAction({
                 name : localization.archive.templates.createnew,
-                avaible : function() {return true;},
-                color : "green",      
+                avaible : function() {return true;}, 
                 acceptEmpty : true,
                 onSelect: function() {
                         var popup;
@@ -116,6 +115,7 @@ window.TemplatesListDefinition = function(archive) { return {
             }),
         new ListAction({
                 name : localization.archive.templates.share.action,
+                emptyMessage :  localization.archive.templates.share.emptyMessage,
                 avaible : function() {return true;},
                 onSelect: function(docs){
                             var confirmationPopup = Confirmation.popup({
@@ -142,6 +142,7 @@ window.TemplatesListDefinition = function(archive) { return {
             }),
         new ListAction({
                 name : localization.archive.templates.remove.action,
+                emptyMessage :  localization.archive.templates.remove.emptyMessage,
                 avaible : function() {return true;},
                 onSelect: function(docs){
                              var confirmtext = jQuery("<p/>").append(localization.archive.templates.remove.body + " ");

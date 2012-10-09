@@ -59,9 +59,9 @@ class DocHelper
     (@wait.until { @driver.find_element :xpath => lastField + "//a[contains(@class,'setNameIcon')]" }).click
     (@wait.until { @driver.find_element :xpath => lastField + "//input[contains(@class,'fieldvalue')]" }).send_keys fieldvalue
     @driver.action.drag_and_drop((@driver.find_element :xpath => lastField + "//div[contains(@class,'ddIcon')]"),
-                                 (@driver.find_element :css => "div.pagejpg")).perform
+                                 (@driver.find_element :css => "img.pagejpg")).perform
     @driver.action.drag_and_drop((@driver.find_element :xpath => lastField + "//div[contains(@class,'ddIcon')]"),
-                                 (@driver.find_element :css => "div.pagejpg")).perform
+                                 (@driver.find_element :css => "img.pagejpg")).perform
 # this doesn't work, possibly due to a bug in the Firefox driver:
 # http://code.google.com/p/selenium/issues/detail?id=3729
 # Symptom: the release event moves the div to the top-left corner of the div.pagejpg.

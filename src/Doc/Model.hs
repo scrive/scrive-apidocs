@@ -69,6 +69,7 @@ module Doc.Model
   , StoreDocumentForTesting(..)
   , TemplateFromDocument(..)
   , TimeoutDocument(..)
+  , ResetSignatoryMailDeliveryInformationForReminder(..)
   , UpdateFields(..)
   , SetSigAttachments(..)
   , UpdateFieldsNoStatusCheck(..)
@@ -138,6 +139,7 @@ data DocumentFilter
   | DocumentFilterByDelivery DeliveryMethod -- ^ Only documents that use selected delivery method
   | DocumentFilterByMonthYearFrom (Int,Int)           -- ^ Document time after or in (month,year)
   | DocumentFilterByMonthYearTo   (Int,Int)           -- ^  Document time before or in (month,year)
+  | DocumentFilterByAuthor UserID             -- ^ Only documents created by this user
   deriving Show
 data DocumentDomain
   = DocumentsOfWholeUniverse                     -- ^ All documents in the system. Only for admin view.
@@ -165,8 +167,7 @@ documentOrderByToSQL :: DocumentOrderBy -> SQL
 documentOrderByToSQL DocumentOrderByTitle = SQL "documents.title" []
 documentOrderByToSQL DocumentOrderByMTime = SQL "documents.mtime" []
 documentOrderByToSQL DocumentOrderByCTime = SQL "documents.ctime" []
-documentOrderByToSQL DocumentOrderByStatusClass =
-  SQL (documentStatusClassExpression) []
+documentOrderByToSQL DocumentOrderByStatusClass = documentStatusClassExpression
 documentOrderByToSQL DocumentOrderByType = SQL "documents.type" []
 documentOrderByToSQL DocumentOrderByProcess = SQL "documents.process" []
 documentOrderByToSQL DocumentOrderByPartners =
@@ -284,8 +285,7 @@ documentFilterToSQL (DocumentFilterStatuses statuses) =
 documentFilterToSQL (DocumentFilterByStatusClass []) =
   SQL "FALSE" []
 documentFilterToSQL (DocumentFilterByStatusClass statuses) =
-  SQL (documentStatusClassExpression ++ " IN (" ++ intercalate "," (map (const "?") statuses) ++ ")")
-                               (map (toSql . fromEnum) statuses)
+  documentStatusClassExpression <> SQL (" IN (" ++ intercalate "," (map (const "?") statuses) ++ ")")  (map toSql statuses)
 documentFilterToSQL (DocumentFilterMinChangeTime ctime) =
   SQL (maxselect ++ " >= ?") [toSql ctime]
 documentFilterToSQL (DocumentFilterMaxChangeTime ctime) =
@@ -324,6 +324,9 @@ documentFilterToSQL (DocumentFilterByString string) =
 
 documentFilterToSQL (DocumentFilterByDelivery del) =
   SQL ("documents.delivery_method = ?") [toSql del]
+
+documentFilterToSQL (DocumentFilterByAuthor userid) =
+  SQL ("(signatory_links.roles & ?) <> 0 AND signatory_links.user_id = ?") [toSql [SignatoryAuthor], toSql userid]  
 
 sqlOR :: SQL -> SQL -> SQL
 sqlOR sql1 sql2 = mconcat [parenthesize sql1, SQL " OR " [], parenthesize sql2]
@@ -445,12 +448,14 @@ documentsSelectors = SQL (intercalate ", " [
   , "mail_footer"
   , "region"
   , "sharing"
-  , documentStatusClassExpression
   , "authentication_method"
   , "delivery_method"
   , "api_callback_url"
-  ]) []
+  , " "
+  ]) [] <>
+  documentStatusClassExpression
 
+  
 selectDocumentsSQL :: SQL
 selectDocumentsSQL = SQL "SELECT " [] <>
                      documentsSelectors <>
@@ -465,7 +470,7 @@ fetchDocuments = foldDB decoder []
      process ctime mtime days_to_sign timeout_time invite_time
      invite_ip invite_text cancelationreason rejection_time
      rejection_signatory_link_id rejection_reason deleted mail_footer
-     region sharing status_class authentication_method delivery_method apicallback
+     region sharing authentication_method delivery_method apicallback status_class 
        = Document {
          documentid = did
        , documenttitle = title
@@ -497,31 +502,34 @@ fetchDocuments = foldDB decoder []
        , documentauthorattachments = []
        , documentui = DocumentUI mail_footer
        , documentregion = region
-       , documentstatusclass = toEnum (status_class :: Int)
+       , documentstatusclass = status_class
        , documentapicallbackurl = apicallback
        } : acc
 
-documentStatusClassExpression :: String
+documentStatusClassExpression :: SQL
 documentStatusClassExpression =
-  "(COALESCE((SELECT min(" ++ statusClassCaseExpression ++ ")"
-  ++         "  FROM signatory_links"
-  ++         " WHERE signatory_links.document_id = documents.id AND ((signatory_links.roles&1)<>0)), 0))"
+       SQL ("(    COALESCE((SELECT min(") []
+    <> statusClassCaseExpression 
+    <> SQL ") FROM signatory_links WHERE signatory_links.document_id = documents.id AND (signatory_links.roles&?)<>0), ?)    )" [toSql [SignatoryPartner], toSql SCDraft]
 
-statusClassCaseExpression :: String
+statusClassCaseExpression :: SQL
 statusClassCaseExpression =
-  "CASE "
-  ++ " WHEN documents.status IN (1) THEN 0"                        -- (documentstatus==Preparation, SCDraft)
-  ++ " WHEN documents.status IN (4,5,6,7,8) THEN 1"                -- (documentstatus==Canceled, SCCancelled)
-  ++ " WHEN signatory_links.sign_time IS NOT NULL THEN 6"          -- (isJust maybesigninfo, SCSigned)
-  ++ " WHEN signatory_links.seen_time IS NOT NULL THEN 5"          -- (isJust maybeseeninfo, SCOpened)
-  ++ " WHEN signatory_links.read_invitation IS NOT NULL THEN 4"    -- (isJust maybereadinvite, SCRead)
-  ++ " WHEN signatory_links.invitation_delivery_status = 2 THEN 1" -- (invitationdeliverystatus==Undelivered, SCCancelled)
-  ++ " WHEN signatory_links.invitation_delivery_status = 1 THEN 3" -- (invitationdeliverystatus==Delivered, SCDelivered)
-  ++ " ELSE 2"                                                     -- SCSent
-  ++ " END"
+  SQL " CASE " []
+   <> SQL " WHEN documents.status = ? THEN (? :: INTEGER)" [toSql (DocumentError ""),                           toSql SCError]
+   <> SQL " WHEN documents.status = ? THEN (? :: INTEGER)" [toSql Preparation,                                  toSql SCDraft]
+   <> SQL " WHEN documents.status = ? THEN (? :: INTEGER)" [toSql Canceled,                                     toSql SCCancelled]
+   <> SQL " WHEN documents.status = ? THEN (? :: INTEGER)" [toSql Timedout,                                     toSql SCTimedout]
+   <> SQL " WHEN documents.status = ? THEN (? :: INTEGER)" [toSql Rejected,                                     toSql SCRejected]
+   <> SQL " WHEN signatory_links.sign_time IS NOT NULL THEN (? :: INTEGER)"                                       [toSql SCSigned]
+   <> SQL " WHEN signatory_links.seen_time IS NOT NULL THEN (? :: INTEGER)"                                       [toSql SCOpened]
+   <> SQL " WHEN signatory_links.read_invitation IS NOT NULL THEN (? :: INTEGER)"                                 [toSql SCRead]
+   <> SQL " WHEN signatory_links.invitation_delivery_status = ? THEN (? :: INTEGER)" [toSql Undelivered,           toSql SCDeliveryProblem]
+   <> SQL " WHEN signatory_links.invitation_delivery_status = ? THEN (? :: INTEGER)" [toSql Delivered,             toSql SCDelivered]
+   <> SQL " ELSE (? :: INTEGER)"                                                                                  [toSql SCSent]
+  <> SQL " END " []
 
-signatoryLinksSelectors :: String
-signatoryLinksSelectors = intercalate ", "
+signatoryLinksSelectors :: SQL
+signatoryLinksSelectors = SQL (intercalate ", "
   [ "signatory_links.id"
   , "signatory_links.document_id"
   , "signatory_links.user_id"
@@ -549,25 +557,21 @@ signatoryLinksSelectors = intercalate ", "
   , "signatory_links.deleted"
   , "signatory_links.really_deleted"
   , "signatory_links.sign_redirect_url"
-
-  , -- this is to fetch status class, so we can do sorting according to that class
-    --  0 Draft - 1 Cancel - 2 Fall due - 3 Sent - 4 Opened - 5 Signed
-    -- FIXME: we should really be using constants from Haskell, but this after some refactoring
-    -- this has to stay a single string for now
-    statusClassCaseExpression ++ " AS status_class"
-  ]
+  , " "]) []
+  <> statusClassCaseExpression
+  <> SQL " AS status_class" []
 
 selectSignatoryLinksSQL :: SQL
-selectSignatoryLinksSQL = SQL ("SELECT "
-  ++ signatoryLinksSelectors
-  ++ ", signatory_attachments.file_id as sigfileid "
-  ++ ", signatory_attachments.name as signame "
-  ++ ", signatory_attachments.description as sigdesc "
-  ++ " FROM (signatory_links "
-  ++ " LEFT JOIN signatory_attachments "
-  ++ " ON signatory_attachments.signatory_link_id = signatory_links.id) "
-  ++ " JOIN documents "
-  ++ " ON signatory_links.document_id = documents.id ") []
+selectSignatoryLinksSQL = SQL ("SELECT ") []
+  <> signatoryLinksSelectors
+  <> SQL ( ", signatory_attachments.file_id as sigfileid "
+        ++ ", signatory_attachments.name as signame "
+        ++ ", signatory_attachments.description as sigdesc "
+        ++ " FROM (signatory_links "
+        ++ " LEFT JOIN signatory_attachments "
+        ++ " ON signatory_attachments.signatory_link_id = signatory_links.id) "
+        ++ " JOIN documents "
+        ++ " ON signatory_links.document_id = documents.id ") []
 
 fetchSignatoryLinks :: MonadDB m => DBEnv m (M.Map DocumentID [SignatoryLink])
 fetchSignatoryLinks = do
@@ -631,7 +635,7 @@ fetchSignatoryLinks = do
           , signatorylinkcsvupload =
               CSVUpload <$> csv_title <*> csv_contents <*> csv_signatory_index
           , signatoryattachments = sigAtt
-          , signatorylinkstatusclass = toEnum (status_class :: Int)
+          , signatorylinkstatusclass = status_class 
           , signatorylinksignredirecturl = signredirecturl
           }
 
@@ -2075,9 +2079,12 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                         _                                                   -> value "value" $ sfValue changedfield
                       value "hasplacements" (not $ null $ sfPlacements changedfield)
                       objects "placements" $ for (sfPlacements changedfield) $ \p -> do
-                        value "x"    $ show $ placementx p
-                        value "y"    $ show $ placementy p
-                        value "page" $ show $ placementpage p
+                        value "xrel"    $ show $ placementxrel p
+                        value "yrel"    $ show $ placementyrel p
+                        value "wrel"    $ show $ placementwrel p
+                        value "hrel"    $ show $ placementhrel p
+                        value "fsrel"   $ show $ placementfsrel p
+                        value "page"    $ show $ placementpage p
                       value "actor"  (actorWho actor))
                   (Just documentid)
                   actor
@@ -2106,9 +2113,12 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                         _                                                   -> value "value" $ sfValue changedfield
                       value "hasplacements" (not $ null $ sfPlacements changedfield)
                       objects "placements" $ for (sfPlacements changedfield) $ \p -> do
-                        value "x"    $ show $ placementx p
-                        value "y"    $ show $ placementy p
-                        value "page" $ show $ placementpage p
+                        value "xrel"    $ show $ placementxrel p
+                        value "yrel"    $ show $ placementyrel p
+                        value "wrel"    $ show $ placementwrel p
+                        value "hrel"    $ show $ placementhrel p
+                        value "fsrel"   $ show $ placementfsrel p
+                        value "page"    $ show $ placementpage p
                       value "actor" (actorWho actor))
                   (Just documentid)
                   actor
@@ -2265,6 +2275,26 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAPICallbackURL B
          [ sql "api_callback_url" mac
          ] <> SQL "WHERE id = ?" [ toSql did ]
     return success
+
+
+data ResetSignatoryMailDeliveryInformationForReminder = ResetSignatoryMailDeliveryInformationForReminder Document SignatoryLink Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryMailDeliveryInformationForReminder () where
+   update (ResetSignatoryMailDeliveryInformationForReminder doc sl actor) = do
+      success <- kRun01 $ mkSQL UPDATE tableSignatoryLinks
+        [  sql "read_invitation" $ (Nothing :: Maybe MinutesTime)
+         , sql "invitation_delivery_status" $ Unknown]
+        <> SQL ("WHERE document_id = ? AND id = ? AND sign_time IS NULL AND " ++
+               "EXISTS (SELECT 1 FROM documents WHERE id = document_id AND documents.status = ?)") [
+          toSql $ documentid doc
+        , toSql $ signatorylinkid sl
+        , toSql Pending
+        ]
+      when_ success $
+        update $ InsertEvidenceEvent
+          DeliveryInformationClearedForReminder
+          (value "name" (getSmartName sl))
+          (Just $ documentid doc)
+          actor     
 
     
 data UpdateFields = UpdateFields DocumentID SignatoryLinkID [(FieldType, String)] Actor

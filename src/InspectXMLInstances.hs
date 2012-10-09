@@ -71,6 +71,9 @@ instance InspectXML Bool where
 instance InspectXML Char where
 instance InspectXML Int where
 instance InspectXML Integer where
+instance InspectXML Float where
+instance InspectXML Double where
+instance InspectXML Rational where
 instance InspectXML SignOrder where
 instance InspectXML SignatoryRole where
 instance InspectXML DocumentStatus where

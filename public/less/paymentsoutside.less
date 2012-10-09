@@ -1,0 +1,429 @@
+/**
+   Styles for Payments form outside.
+   Author: Eric Normand
+
+**/
+
+.payments.loading {
+    background-image: url(/img/wait30trans.gif);
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 50px;
+    width: 240px;
+}
+
+.price-plan-outside {
+    /* Define some colors */
+    @blue            : #35a4d6;
+    @darkblue        : #137DAD;
+    @gray            : #666;
+    @green           : #9bd567;
+    @lightgrayborder : #d3d3d3;
+    @lightgrayshadow : #d2d2d2;
+    @lightgraybg     : #fafafa;
+    @charcoal        : #676767;
+    @steel           : #a5a5a5;
+    @pricedescr      : #9a9a9a;
+    @pricecolor      : black;
+    @fieldcolor      : #fff;
+
+    /* Our two fonts */
+    @serif : 'Copse', serif;
+    @sans  : 'Lucida Grande', sans-serif;
+
+    /* @amount is between 0.0 and 1.0 */
+    .opacity(@amount) {
+        /* BEGIN .opacity */
+        /* Defined in paymentesoutside.less */
+        /* IE 8 */
+        @forie: @amount * 100;
+        -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=@{forie})";
+                    
+        /* Netscape */
+        -moz-opacity: @amount;
+        
+        /* Safari 1.x */
+        -khtml-opacity: @amount;
+        
+        /* Good browsers */
+        opacity: @amount;
+        /* END .opacity */
+    }
+
+    .drop-shadow(@xoffset, @yoffset, @blur, @color) {
+        /* BEGIN .drop-shadow */
+        /* Defined in paymentsoutside.less */
+        -moz-box-shadow: @xoffset @yoffset @blur @color;
+        -webkit-box-shadow: @xoffset @yoffset @blur @color;
+        box-shadow: @xoffset @yoffset @blur @color;
+        /* END .drop-shadow */
+    }
+
+    .rounded-corners(@radius) {
+        /* BEGIN .rounded-corners */
+        /* defined in paymentsoutsdie.less */
+        -moz-border-radius: @radius;
+        -webkit-border-radius: @radius;
+        border-radius: @radius @radius @radius @radius;
+        /* END .rounded-corners */
+    }
+
+    width: 740px;
+    margin: auto;
+
+    color: @gray;
+    font-family: @serif;
+
+    .payments {
+        min-height: 1309px;
+
+        .planbox {
+            .rounded-corners(5px);
+
+            background-color: @lightgraybg;
+            border: 2px solid @lightgrayborder;
+            float: left;
+            margin-left: 16px;
+            margin-top: 19px;
+            text-align: center;
+            width: 230px;
+
+            .readmorelink {
+                text-decoration: underline;
+                color: #55c4D6;
+                margin-top: 4px;
+                display: inline-block;
+            }
+
+            .header {
+                border-bottom: 1px solid @lightgrayborder;
+                height: 54px;
+                margin-bottom: 0px;
+                padding-bottom: 16px;
+                padding-top: 32px;
+                position: relative;
+                .header1 {
+                    font-size: 20px;
+                    color: @charcoal;
+                    font-weight: bold;
+                }
+                .header2 {
+                    color: @steel;
+                    font-size: 12px;
+                    font-style: italic;
+                }
+            }
+
+            .features {
+                color: @green;
+                font-size: 16px;
+                font-family: @sans;
+                padding-bottom: 20px;
+                padding-top: 20px;
+            }
+
+            .price {
+                background-color: #f1f1f1;
+                padding-top: 20px;
+                padding-bottom: 20px;
+                padding-left: 20px;
+                padding-right: 20px;
+                font-size: 16px;
+                color: #737373;
+                .price1 {
+                    font-size: 14px;
+                    color: @pricedescr;
+                    font-weight: bold;
+                }
+
+                .price2 {
+                    font-size: 32px;
+                    color: @pricecolor;
+                    font-weight: bold;
+                }
+
+                .price2.s {
+                    margin-top:12px;
+                }
+
+                .price3 {
+                    font-size: 14px;
+                    color: @pricedescr;
+                    font-weight: bold;
+                }
+
+            }
+
+            .buttonbox {
+                padding-top: 20px;
+                padding-bottom: 20px;
+                .btn-small {
+                    float: none;
+                    display: inline-block;
+                }
+                .btn-small.black {
+                    .opacity(0.5);
+                }
+            }
+        }
+
+        .planbox.selected {
+            border: 3px solid @green;
+
+            a.btn-small.green {
+                .left {
+	            background-position: -209px -68px;
+                }
+                .label {
+	            background-position: 0 -591px;
+	            text-shadow: #41770b 0 1px 3px;
+                }
+                .right {
+	            background-position: -223px -68px;
+                }
+            }
+
+            .header1 {
+                color: @green;
+            }
+        }
+
+        .planbox.form, .planbox.enterprise {
+            .drop-shadow(2px, 2px, 2px, @lightgrayshadow);
+        }
+
+        .planbox.team {
+            margin-left: 0px;
+            .drop-shadow(4px, 4px, 4px, @lightgrayshadow);
+        }
+
+        h2 {
+            font-size: 28px;
+            margin-bottom: 26px;
+            margin-top: 15px;
+            text-align: center;
+            color: black;
+            letter-spacing: 0px;
+            font-weight: normal;
+            width: 110%;
+            margin-left: -5%;
+        }
+        
+        h3 {
+            font-size: 24px;
+            margin-bottom: 6px;
+            color: #898989;
+            font-weight: bold;
+            margin-top:28px;
+        }
+
+        form.recurly.subscribe {
+            width: 100%;
+            text-align: center;
+
+            margin-top: 18px;
+
+            .server_errors {
+                text-align: left;
+                width: 742px;
+                margin: 0;
+                margin-left: -1px;
+                .error {
+                    margin-bottom: 18px;
+                }
+            }
+
+            .borderbox{
+                .rounded-corners(5px);
+                .drop-shadow(4px, 4px, 4px, @lightgrayshadow);
+
+                margin-top: 22px;
+                border: 2px solid @green;
+                width: 410px;
+                background-color: @lightgraybg;
+                text-align: left;
+
+                .subscription {
+                    padding-top: 8px;
+                    padding-bottom: 8px;
+                }
+
+                .plan .name {
+                    display: none;
+                }
+
+                .recurring_cost {
+                    display: none;
+                }
+
+                .totalbox {
+                    background-color: #edf1f7;
+                    padding-top:6px;
+                    padding-bottom: 6px;
+                }
+
+                .due_now {
+                    width: 100%;
+                    height: auto;
+                    background: #f1f7ed; 
+                    text-shadow: none;
+                    color: @pricecolor;
+                    padding: 20px 0px;
+                    margin: 0 0 8px 0;
+                    position: static;
+                    text-align: center;
+                    font-size: 32px;
+                    line-height: 1em;
+                    font-weight: bold;
+                    .title {
+                        width: auto;
+                        font-size: 32px;
+                        color: @pricecolor;
+                        display: none;
+                        float: none;
+                    }
+                    .cost {
+                        float: none;
+                        display: inline;
+                        text-shadow: none;
+                        position: static;
+                        color: @pricecolor;
+                        font-size: 32px;
+                        font-weight: bold;
+                    }
+                    .guarantee {
+                        color: #828483;
+                        font-size: 14px;
+                        padding-top: 6px;
+                        font-weight: normal;
+                    }
+                }
+
+                .title {
+                    display: none;
+                }
+
+                .billing_info {
+                    text-align: center;
+                    .credit_card {
+                        text-align: left;
+                    }
+                }
+
+                .field {
+                    color         : #414141;
+                    display       : block;
+                    float         : none;
+                    font-size     : 16px;
+                    margin        : 16px 0 0 102px;
+                    text-align    : left;
+                    width         : auto; 
+                    height        : auto;
+                    font-family   : @sans;
+                    input {
+                        display: inline;
+                        width: 200px;
+                        font-family: sans;
+                        padding: 1px;
+                        border: 1px solid #A0A0A5;
+                        box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1) inset;
+                        font-size: 16px;
+                        height: 22px;
+                    }
+                    .placeholder {
+                        font-size: 16px;
+                        font-family: @sans;
+                    }
+
+                    div.month, div.year {
+                        float: none;
+                        display: inline-block;
+                        width: auto;
+
+                        select {
+                            font-size: 16px;
+                        }
+                    }
+
+                    .month {
+                        margin-left: 10px;
+                    }
+
+                    .error {
+                        display: inline-block;
+                        min-width: 0px;
+                        width: auto;
+                        margin-left: 12px;
+                        position: static;
+                        font-size: 10px;
+                    }
+                }
+
+                .field.vat_number, .field.company_name {
+                    display: none;
+                }
+
+                .field.expires {
+                    text-align: center;
+                    width: 202px;
+                    padding-bottom: 0px;
+                    width: 100%;
+                    margin-left: 0;
+
+                    .title {
+                        font: 16px @sans;
+                        line-height: 25px;
+                        display: inline-block;
+                        float: none;
+                        text-align: right;
+                        color: #414141;
+                        vertical-align: middle;
+                        padding-bottom: 0;
+                        width: auto;
+                    }
+                }
+
+                .field.quantity {
+                    text-align: center;
+                    margin-left:0px;
+                    .quantity {
+                        font-weight: bold;
+                        font-size: 20px;
+                        height: 26px;
+                        display: inline-block;
+                        text-transform: lowercase;
+                    }
+                }
+
+                /* Do some resetting */
+
+                .contact_info {
+                    background: transparent;
+                }
+
+                .accepted_cards {
+                    display: none;
+                }
+
+                .footer {
+                    padding: 12px 0px;
+                    text-align: center;
+                }
+
+                .contact_info, .billing_info, .accept_tos {
+                    padding: 0;
+                    margin-top: 0;
+                }
+            }
+            
+            .btn-big {
+                display: inline-block;
+                padding-left: 3px;
+            }
+
+            .footer {
+                padding: 20px 0;
+            }
+        }
+    }
+}

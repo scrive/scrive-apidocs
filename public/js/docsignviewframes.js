@@ -12,6 +12,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
      this.model.document().bind('change', this.render);
      this.model.bind('change', this.render);
      this.mainview.bind('change:task', this.refresh);
+     this.prerender();
      this.render();
 
   },
@@ -25,10 +26,6 @@ window.DocumentSignViewHeader = Backbone.View.extend({
         var width = Math.max($('body').width(),$(document).width());
         if (width > 1020)
           el.css("min-width",width + "px");
-        // remove poweredbyscrive triangle
-        //var pbs = $(".poweredbyscrive",this.el);
-        //if (pbs.size() > 0)
-        //    pbs.css("left", width - pbs.width() - 1);
         var pti = $(".padTopIcon");
         if (pti.size() > 0)
             pti.css("left", width - pti.width() - 2);
@@ -41,99 +38,111 @@ window.DocumentSignViewHeader = Backbone.View.extend({
         this.sender.removeClass("shoved");
     }
   },
+  useStandardBranding : function() {
+    return this.model.document().currentSignatory() != undefined && this.model.document().currentSignatory().hasSigned() &&  this.model.justSaved();
+  },
+  prerender : function() {
+        var maindiv = $(this.el);
+        maindiv.addClass("pageheader");
+        this.content = $("<div class='content' />");
+        this.logowrapper = $("<div class='logowrapper' />");
+        this.sender = $("<div class='sender' />");
+        this.inner = $('<div class="inner" />');
+        this.content.append(this.logowrapper).append(this.sender.append(this.inner)).append("<div class='clearboth'/>");
+        maindiv.append(this.content);
+        this.usedStandardLogo = undefined;
+        this.usedStandardColorsBars = undefined;
+        this.usedStandardColorsTexts = undefined;
+        this.usedStandardDescription = undefined;
+  },
   render: function() {
     var view = this;
     var model = this.model;
     var document = this.model.document();
-    if (!document.ready()) return this;
     var maindiv = $(this.el);
-    maindiv.empty();
-      maindiv.removeClass();
-      maindiv.attr("style","");
-    maindiv.addClass("pageheader");
+    if (!document.ready()) {
+      maindiv.css("display", "none");
+      return this;
+    }
+    maindiv.css("display","block");
 
-    if(inService) {
-        maindiv.addClass('withstandardlogo');
-        var content = $("<div class='content' />");
-        var logowrapper = $("<div class='logowrapper' />");
-        logowrapper.append("<a href='/'><div class='logo'></div></a>");
-        if (document.barsbackgroundcolor() != undefined)
-        {
-            maindiv.css('background-image', 'none');
-            maindiv.css('background-color', document.barsbackgroundcolor());
-        }
-        if (document.barsbackgroundtextcolor() != undefined)
-            maindiv.css("color", document.barsbackgroundtextcolor());
+    // Setting logo
 
-    } 
-      // alright, here's the deal: how do we determine if they should see our logo.
-      // lukas and I were getting this bug where documents on his computer were not showing branding
-      // and on mine, the same documents were. We spent a good half hour trying to figure out why. He
-      // rebooted, we sent each other documents, etc.
-      // It turns out that if you sent to an email address with a User, you didn't see branding on 
-      // sign view. We can't tell the difference between a user that just saved and one that had an
-      // account from long ago.
-      // I'm making a ruling here: if companies are going to pay for branding, they don't want to
-      // send out a contract with Scrive logo ever. Even if they have a Scrive account.
-      // So now, we only show the Scrive logo just once after they save. If they reload, we show
-      // the old logo. We should probably change that but it's late and Lukas will file another
-      // bug if I make that change.
-      // I will address this later when I fix up the post sign view.
-      // -- Eric, 4 Aug 2012
-      else if(document.currentSignatory() != undefined && document.currentSignatory().hasSigned() && model.justSaved()) {
-        maindiv.addClass('withstandardlogo');
-        var content = $("<div class='content' />");
-        var logowrapper = $("<div class='logowrapper' />");
-        logowrapper.append("<a href='/'><div class='logo'></div></a>");
-
-    } else {
-        // Remove powered by scrive triangle
-        //maindiv.append($("<div class='poweredbyscrive'/>"));
-        maindiv.addClass(document.logo() == undefined ? 'withstandardlogo' : 'withcustomlogo');
-        if (document.barsbackgroundcolor() != undefined)
-        {
-            maindiv.css('background-image', 'none');
-            maindiv.css('background-color', document.barsbackgroundcolor());
-        }
-        if (document.barsbackgroundtextcolor() != undefined)
-            maindiv.css("color", document.barsbackgroundtextcolor());
-
-        var content = $("<div class='content' />");
-        var logowrapper = $("<div class='logowrapper' />");
-        if (document.logo() == undefined)
-            logowrapper.append("<a href='/'><div class='logo'></div></a>");
-        else
-            {
-                var img = $("<img class='logo'></img>");
-                img.load(function(){  view.refresh();  });
-                img.attr('src',document.logo());
-                logowrapper.append(img);
-            }
+    
+    if((this.useStandardBranding() || document.logo() == undefined)) {
+       if (this.usedStandardLogo != true) {
+         maindiv.removeClass('withcustomlogo').addClass('withstandardlogo');
+         this.logowrapper.empty().append("<a href='/'><div class='logo'></div></a>");
+         this.usedStandardLogo = true;
+       }  
+    }
+    else {
+      if (this.usedStandardLogo != false) {
+        maindiv.removeClass('withstandardlogo').addClass('withcustomlogo');
+        var img = $("<img class='logo'></img>");
+        img.load(function(){  view.refresh();  });
+        img.attr('src',document.logo());
+        this.logowrapper.empty().append(img);
+        this.usedStandardLogo = false;
+      }  
     }
     
-    this.sender = $("<div class='sender' />");
-    var inner = $('<div class="inner" />');
-      this.sender.append(inner);
-    if(document.currentSignatory() != undefined && (document.currentSignatory().hasSigned() && model.justSaved())) {
-      var name = $("<div class='name' />").text("Scrive help desk");
-      var phone = $("<div class='phone' />").text("+46 8 519 779 00");
-      inner.append(name).append(phone);
-    } else {
-      var author = $("<div class='author' />").text((document.authoruser().fullname().trim()||document.authoruser().phone().trim())?localization.docsignview.contact:"");
-      var name = $("<div class='name' />").text(document.authoruser().fullname());
-      var phone = $("<div class='phone' />").text(document.authoruser().phone());
-      inner.append(author).append(name).append(phone);
+    // Background color of top bar
+    if((this.useStandardBranding() || document.barsbackgroundcolor() == undefined)) {
+      if (this.usedStandardColorsBars != true) {
+        maindiv.css('background-image', '');
+        maindiv.css('background-color', '');
+        this.usedStandardColorsBars = true;
+      }
     }
-    
+    else {
+      if (this.usedStandardColorsBars != false) {
+        maindiv.css('background-image', 'none');
+        maindiv.css('background-color', document.barsbackgroundcolor());
+        this.usedStandardColorsBars = false;
+      }
+    }
+
+    // Text color in header
+    if((this.useStandardBranding() || document.barsbackgroundtextcolor() == undefined)) {
+      if (this.usedStandardColorsTexts != true) {
+        maindiv.css("color", '');
+        this.usedStandardColorsTexts = true;
+      }
+    }
+    else {
+      if (this.usedStandardColorsTexts != false) {
+        maindiv.css("color", document.barsbackgroundtextcolor());
+        this.usedStandardColorsTexts = false;
+      }
+    }
+
+    // Text in header | Scrive or Author details
+    if(this.useStandardBranding()) {
+      if (this.usedStandardDescription != true) {
+        var name = $("<div class='name' />").text("Scrive help desk");
+        var phone = $("<div class='phone' />").text("+46 8 519 779 00");
+        this.inner.empty().append(name).append(phone);
+        this.usedStandardDescription = true;
+      }
+    }
+    else {
+      if (this.usedStandardDescription != false) {
+        var author = $("<div class='author' />").text((document.authoruser().fullname().trim()||document.authoruser().phone().trim())?localization.docsignview.contact:"");
+        var name = $("<div class='name' />").text(document.authoruser().fullname());
+        var phone = $("<div class='phone' />").text(document.authoruser().phone());
+        this.inner.empty().append(author).append(name).append(phone);
+        this.usedStandardDescription = false;
+      } 
+    }
 
     this.updateHeaderSenderPosition();
     $(window).resize(function() { view.updateHeaderSenderPosition();});
-
-    content.append(logowrapper).append(this.sender).append("<div class='clearboth'/>");
-    maindiv.append(content);
     return this;
   }
 });
+
+
 
 window.DocumentSignViewFooter = Backbone.View.extend({
   initialize: function(args) {
@@ -142,6 +151,7 @@ window.DocumentSignViewFooter = Backbone.View.extend({
     this.model.document().bind('reset', this.render);
     this.model.document().bind('change', this.render);
     this.mainview.bind('change:task', this.refresh);
+    this.prerender();
     this.render();
   },
   refresh : function() {
@@ -156,46 +166,84 @@ window.DocumentSignViewFooter = Backbone.View.extend({
       }   
   },
   tagName: "div",
+  useStandardBranding : function() {
+    return this.model.document().currentSignatory() != undefined && this.model.document().currentSignatory().hasSigned() &&  this.model.justSaved();
+  },
+  prerender : function() {
+        var maindiv = $(this.el);
+        maindiv.addClass("pagefooter");
+        this.content = $("<div class='content' />");
+        this.dogtooth = $("<div class='dogtooth' />");
+        this.powerdiv = $("<div class='poweredbyscrive'/>");
+        this.sender = $("<div class='sender' />");
+        this.content.append(this.sender).append(this.powerdiv).append("<div class='clearboth'/>");
+        maindiv.append(this.dogtooth.append(this.content));
+        this.usedStandardColorsBars = undefined;
+        this.usedStandardColorsTexts = undefined;
+        this.usedStandardDescription = undefined;
+  },
   render: function() {
+    var view = this;
     var model = this.model;
     var document = this.model.document();
-    if (!document.ready()) return this;
     var maindiv = $(this.el);
-    maindiv.empty();
-    maindiv.addClass("pagefooter");
-    if (document.barsbackgroundcolor() != undefined)
-    {
+    if (!document.ready()) {
+      maindiv.css("display", "none");
+      return this;
+    }
+    maindiv.css("display","block");
+
+   // Background color of top bar
+    if((this.useStandardBranding() || document.barsbackgroundcolor() == undefined)) {
+      if (this.useStandardBranding != true) {
+        maindiv.css('background-image', '');
+        maindiv.css('background-color', '');
+        this.usedStandardColorsBars = true;
+      }
+    }
+    else {
+      if (this.useStandardBranding != false) {
         maindiv.css('background-image', 'none');
         maindiv.css('background-color', document.barsbackgroundcolor());
+        this.usedStandardColorsBars = false;
+      }
     }
 
-    if (document.barsbackgroundtextcolor() != undefined)
+    // Text color in header
+    if((this.useStandardBranding() || document.barsbackgroundtextcolor() == undefined)) {
+      if (this.usedStandardColorsTexts != true) {
+        maindiv.css("color", '');
+        this.usedStandardColorsTexts = true;
+      }
+    }
+    else  {
+      if (this.usedStandardColorsTexts != false) {
         maindiv.css("color", document.barsbackgroundtextcolor());
-
-    var content = $("<div class='content' />");
-    var dogtooth = $("<div class='dogtooth' />");
-    var powerdiv = $("<div class='poweredbyscrive'/>").append($("<a href='/'>").text(localization.poweredByScrive).css("color", document.barsbackgroundtextcolor()));
-    var sender = $("<div class='sender' />");
-
-    if(document.currentSignatory() != undefined && (document.currentSignatory().hasSigned() && model.justSaved())) {
-      var name = $("<div class='name' />").text("Scrive help desk");
-      var phone = $("<div class='phone' />").text("+46 8 519 779 00");
-      sender.append(name).append(phone);
-    } else {
-
-      var name = $("<div class='name' />").text(document.authoruser().fullname());
-      var position = $("<div class='position' />").text(document.authoruser().position());
-      var company = $("<div class='company' />").text(document.authoruser().company());
-      var phone = $("<div class='phone' />").text(document.authoruser().phone());
-      var email = $("<div class='email' />").text(document.authoruser().email());
-      sender.append(name).append(position).append(company).append(phone).append(email);
+        this.usedStandardColorsTexts = false;
+      }  
     }
 
-    content.append(sender);
-      if(!inService)
-          content.append(powerdiv);
-      content.append("<div class='clearboth'/>");
-    maindiv.append(dogtooth.append(content));
+    // Text in header | Scrive or Author details
+    if(this.useStandardBranding()) {
+      if (this.usedStandardDescription != true ) {
+        var name = $("<div class='name' />").text("Scrive help desk");
+        var phone = $("<div class='phone' />").text("+46 8 519 779 00");
+        this.sender.empty().append(name).append(phone);
+        this.usedStandardDescription = true;
+      }
+    }
+    else {
+      if (this.usedStandardDescription != false ) {
+        var name = $("<div class='name' />").text(document.authoruser().fullname());
+        var position = $("<div class='position' />").text(document.authoruser().position());
+        var company = $("<div class='company' />").text(document.authoruser().company());
+        var phone = $("<div class='phone' />").text(document.authoruser().phone());
+        var email = $("<div class='email' />").text(document.authoruser().email());
+        this.sender.empty().append(name).append(position).append(company).append(phone).append(email);
+        this.usedStandardDescription = false;
+      }
+    }
+
     return this;
   }
 });

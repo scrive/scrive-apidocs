@@ -289,7 +289,7 @@ adminuser=
     <a style="padding-left:100px" href="$adminuserslink$">Go back to user admin page</a>
     <br/>
     <br/>
-    <form action="" method="POST">
+    
       <div class="tab-viewer">
 	<div class="tab-header">
 	</div>
@@ -301,6 +301,7 @@ adminuser=
 	</ul>
 	<div class="tab-container">
 	  <div class="tab-content account">
+           <form action="" method="POST">
 	    <table><tbody>
 		<tr> <th style="width:200px"></th> <th> </th></tr>
 		<tr> <td style="padding-top:10px"><strong>User data</strong></td> <td> </td></tr>
@@ -395,10 +396,15 @@ adminuser=
 	    <br/>
 	    <input type="submit" style="width:200px;font-weight:bold"
 	    value="Change" name="change" />
+    </form>
+    <form action="/adminonly/useradmin/sendinviteagain" method="POST">
+      <input type="hidden" name="userid" value="$user.id$" />
+      <input type="submit" value="Resend Invitation" style="width:200px;font-weight:bold" />
+    </form>
 	  </div>
 	</div>
       </div>
-    </form>
+
 ####
 adminuserpayments=
     <a href="$adminlink$">Go back to main admin page</a>

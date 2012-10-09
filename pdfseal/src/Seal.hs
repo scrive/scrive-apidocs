@@ -294,7 +294,7 @@ placeFieldsOnPage (pagerefid,sealtext) document' =
 
 tellMatrix :: (MonadWriter String m) => Double -> Double -> Double -> Double -> Double -> Double -> m ()
 tellMatrix a b c d e f =
-      tell $ (concat $ intersperse " " $ map show [a::Double,b,c,d,e,f]) ++ " cm\n"
+      tell $ (concat $ intersperse " " $ map (show . Number) [a::Double,b,c,d,e,f]) ++ " cm\n"
 
 -- FIXME: here we still have font size problem. On the page it appears
 -- as some pt size font. We need to translate that size into PDF pt
@@ -312,19 +312,18 @@ tellMatrix a b c d e f =
 commandsFromFields :: Int -> Int -> [Field] -> String
 commandsFromFields pagew pageh fields = concatMap commandsFromField fields
   where
-    fontBaseline = 8
+    fontBaseline = 0.8
     commandsFromField Field{ SealSpec.value = val
                    , x
                    , y
-                   , w
-                   , h
+                   , fontSize
                    } = execWriter $ do
                          tell "q\n"
                          tellMatrix 1 0 0 1
-                                      (fromIntegral (x * pagew) / fromIntegral w)
-                                      (fromIntegral ((h - y) * pageh) / fromIntegral h - fontBaseline)
+                                      (x * fromIntegral pagew)
+                                      (((1 - y) * fromIntegral pageh) - fontBaseline * fontSize * fromIntegral pagew)
                          tell "BT\n"
-                         tell "/SkrivaPaHelvetica 10 Tf\n"
+                         tell $ "/SkrivaPaHelvetica " ++ show (Number (fontSize * fromIntegral pagew)) ++ " Tf\n"
                          tell $ "(" ++ winAnsiPostScriptEncode val ++ ") Tj\n"
                          tell "ET\n"
                          tell "Q\n"
@@ -333,17 +332,15 @@ commandsFromFields pagew pageh fields = concatMap commandsFromField fields
     commandsFromField FieldJPG{ SealSpec.valueBase64 = val
                    , x
                    , y
-                   , w
-                   , h
                    , image_w, image_h
                    , internal_image_w, internal_image_h
                    } = execWriter $ do
                          tell "q\n"
-                         tellMatrix (fromIntegral (image_w * pagew) / fromIntegral w)
-                                      0 0
-                                      (fromIntegral (image_h * pageh) / fromIntegral h)
-                                      (fromIntegral (x * pagew) / fromIntegral w)
-                                      (fromIntegral ((h - y - image_h) * pageh) / fromIntegral h)
+                         tellMatrix (image_w * fromIntegral pagew)
+                                    0 0
+                                    (image_h * fromIntegral pageh)
+                                    (x * fromIntegral pagew)
+                                    ((1 - y - image_h) * fromIntegral pageh)
                          tell "BI\n"        -- begin image
                          tell "/BPC 8\n"    -- 8 bits per pixel
                          tell "/CS /RGB\n"  -- color space is RGB
@@ -392,17 +389,13 @@ appendVerificationPages sealrefid sealtexts sealmarkerformrefid = do
 placeFields :: [Field] -> RefID -> State Document ()
 placeFields fields paginrefid = do
     pages <- gets listPageRefIDs
-
     let findFields pageno = filter (\x -> page x == pageno) fields
     let contentCommands pageno = \pagew pageh ->
            commandsFromFields pagew pageh (findFields pageno)
 
     paginresdict <- getResDict paginrefid
-
     mapM_ (uncurry $ placeContentOnPage paginresdict)
             [(page,contentCommands pageno) | (page,pageno) <- zip pages [1..]]
-
-
 
 contentsValueListFromPageID :: RefID -> State Document [RefID]
 contentsValueListFromPageID pagerefid = do
@@ -531,7 +524,7 @@ paginCommands pageWidth (SealSpec{documentNumber,initials,staticTexts }) =
             , show (sioffset+siwidth+10) ++ " 23 m " ++ show (pageWidth - 60) ++ " 23 l S" -- draw right line
                    -- seal form is 90pt x 90 pt, so 0.2*90 is 18
                    -- line at 23 minus half of 18 is 14
-            , "0.2 0 0 0.2 " ++ show (((fromIntegral pageWidth - 18) / 2) :: Double) ++ " 14 cm" -- position for drawing seal
+            , "0.2 0 0 0.2 " ++ show (Number ((fromIntegral pageWidth - 18) / 2)) ++ " 14 cm" -- position for drawing seal
             , "/SealMarkerForm Do"                             -- draw the seal in the middle between lines
             , "Q"                                              -- restore state
             ]
@@ -585,7 +578,7 @@ makeLeftTextBox font@(PDFFont name' size) width text' = result
     lines' = splitLinesOfLength font width text'
     textOutLine text'' = "[(" ++ winAnsiPostScriptEncode text'' ++ ")] TJ T*\n"
     commands = " BT\n" ++
-               " " ++ show (1.2 * fromIntegral size :: Double) ++ " TL\n" ++
+               " " ++ show (Number $ 1.2 * fromIntegral size) ++ " TL\n" ++
                " /" ++ resourceFontName ++ " " ++ show size ++ " Tf\n" ++
                " 1 0 0 1 0 " ++  show (-size) ++ " Tm\n" ++ -- FIXME: where to start this really?
                concatMap textOutLine lines' ++
@@ -901,8 +894,7 @@ process (sealSpec@SealSpec
     let [paginpage1, sealpage1] = listPageRefIDs seal
         [sealmarkerpage] = listPageRefIDs sealmarker
 
-    let ((),outputdoc) =
-            flip runState doc $ do
+    let outputdoc = flip execState doc $ do
               [newpagincontents,newsealcontents] <- importObjects seal [paginpage1,sealpage1]
               [sealmarkerpage2] <- importObjects sealmarker [sealmarkerpage]
               sealmarkerform <- pageToForm sealmarkerpage2

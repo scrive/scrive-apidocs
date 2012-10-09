@@ -151,3 +151,5 @@ SetAPIDeliveryMethodEvidenceText=$actor$ requested document to be available only
 ###
 ResealedPDFText=$actor$ requested document to be resealed.
 ###
+DeliveryInformationClearedForReminderText= $name$ mail delivery details cleared, since reminder was send.
+###

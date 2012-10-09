@@ -15,10 +15,6 @@ window.DocumentCellsDefinition = function(archive) { return  [
                         on: icon,
                         tip: tip
                     })
-                    if ((listobject.field("anyinvitationundelivered") == "True" &&  idx == undefined)
-                       || (idx != undefined && listobject.subfield(idx,"invitationundelivered") == "True"))
-                       icon = jQuery.merge( icon, jQuery("<span style='color:#000000;position:relative;top:-2px'>!</span>"));
-
                     return icon;
                  }
         }),
@@ -41,28 +37,49 @@ window.DocumentCellsDefinition = function(archive) { return  [
         ]
 };
 
-window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  [
+window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.flatten([
             new SelectFiltering({
                              name: "status",
-                             textWidth : "110px",
+                             textWidth : "90px",
                              options: _.union(
                                         [{name: localization.filterByStatus.showAnyStatus, value: ""} ],
                                          (draftsAvaible ? [{name: localization.filterByStatus.showDraft,     value: "[draft]"}] : []),
-                                        [{name: localization.filterByStatus.showCancelled, value: "[cancelled]"},
+                                        [{name: localization.filterByStatus.showCancelled, value: "[cancelled,rejected,timeouted,deliveryproblem,problem]"},
                                          {name: localization.filterByStatus.showSent,      value: "[sent,delivered,read,opened]"},
                                          {name: localization.filterByStatus.showSigned,    value: "[signed]"}
                                         ])}),
             new SelectFiltering({
                              name: "process",
-                             textWidth : "100px",
+                             textWidth : "90px",
                              options: [ {name: localization.filterByProcess.showAllProcesses,  value: ""},
                                         {name: localization.filterByProcess.showContractsOnly, value: "contract"},
                                         {name: localization.filterByProcess.showOffersOnly,    value: "offer"},
                                         {name: localization.filterByProcess.showOrdersOnly,    value: "order"}
                                       ]}),
+            archive.forCompanyAdmin() ?
+              [new SelectAjaxFiltering({
+                             name: "sender",
+                             textWidth : "90px",
+                             text : "sender",
+                             optionsURL : "/companyaccounts",
+                             defaultName : localization.filterByAuthor.showAnyAuthor,
+                             optionsParse: function(resp) {
+                                        var options = []
+                                        _.each(resp.list, function(l) {
+                                          var fields = l.fields;
+                                          var id = fields["id"];
+                                          var name = fields["fullname"];
+                                          if (name == undefined || name == "" || name == " ")
+                                            name = fields["email"];
+                                          if (fields["activated"])
+                                            options.push({name : name , value : id });
+                                        });
+                                        return options;
+                                   }
+                 })] : [],
             new IntervalDoubleSelectFiltering({
                              name: "time",
-                             textWidth : "110px",
+                             textWidth : "90px",
                              selectedBottomPrefix : localization.filterByTime.filterForm,
                              selectedTopPrefix :    localization.filterByTime.filterTo ,
                              options: function() {
@@ -79,7 +96,7 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  [
                                         options.push({name : localization.filterByTime.filterTo , value : ">" });
                                         return options} ()
                              })
-            ]
+            ]);
 };
     
 window.DocumentsListDefinition = function(archive) { return {
@@ -95,7 +112,6 @@ window.DocumentsListDefinition = function(archive) { return {
     actions : [
            new ListAction({
                 name : localization.archive.documents.createnew,
-                color : "green",
                 avaible : function() {return true;},
                 acceptEmpty : true,
                 onSelect: function() {
@@ -161,7 +177,8 @@ window.DocumentsListDefinition = function(archive) { return {
             }),
         new ListAction({
             name :  localization.archive.documents.sendreminder.action,
-            color : "green",
+            emptyMessage :  localization.archive.documents.sendreminder.emptyMessage,
+            notAvailableMessage :  localization.archive.documents.sendreminder.notAvailableMessage,
             avaible : function(doc){
               return doc.field("status") == "sent"      ||
                      doc.field("status") == "delivered" ||
@@ -205,7 +222,8 @@ window.DocumentsListDefinition = function(archive) { return {
         }),
         new ListAction({
             name :  localization.archive.documents.cancel.action,
-            color : "red",
+            emptyMessage :  localization.archive.documents.cancel.emptyMessage,
+            notAvailableMessage :  localization.archive.documents.cancel.notAvailableMessage,
             avaible : function(doc){
               return doc.field("status") == "sent"      ||
                      doc.field("status") == "delivered" ||
@@ -240,7 +258,7 @@ window.DocumentsListDefinition = function(archive) { return {
         }),
         new ListAction({
             name : localization.archive.documents.remove.action,
-            color : "black",
+            emptyMessage :  localization.archive.documents.cancel.emptyMessage,
             avaible : function(doc){ return true;},
             onSelect : function(docs) {
                          var confirmtext = jQuery("<p/>").append(localization.archive.documents.remove.body + " ");
@@ -285,10 +303,12 @@ window.DocumentsListDefinition = function(archive) { return {
                  }
                 } ,
                {name : localization.archive.documents.zip.action,
-                 acceptEmpty : true,
+                 acceptEmpty : true, // We handle in manually
                  onSelect: function(docs){
-                        if (docs == undefined || docs.length == 0 )
+                        if (docs == undefined || docs.length == 0 ) {
+                         FlashMessages.add({color : "red", content : localization.archive.documents.zip.emptyMessage}); 
                          return true;
+                        } 
                         if (docs.length == 1) {
                           var url =  "/downloadmainfile/" + docs[0].field("id") + "/" + docs[0].field("title") + ".pdf";
                           window.open(url);
@@ -311,7 +331,7 @@ window.DocumentsListDefinition = function(archive) { return {
                             return $.merge(icon,text);
                         };
                         box.append(description("draft",localization.archive.documents.statusDescription.draft));
-                        box.append(description("cancelled",localization.archive.documents.statusDescription.cancelled));
+                        box.append(description("problem",localization.archive.documents.statusDescription.cancelled));
                         box.append(description("sent",localization.archive.documents.statusDescription.sent));
                         box.append(description("delivered",localization.archive.documents.statusDescription.delivered));
                         box.append(description("read",localization.archive.documents.statusDescription.read));

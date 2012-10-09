@@ -526,7 +526,7 @@
 	color: #666;
 	font: 14px "Helvetica Neue";
 	position: absolute;
-	width: 225px;
+	width: 250px;
 	z-index: 101;
 }
 
@@ -534,7 +534,7 @@
 	background: #fff;
 	margin: 5px;
 	padding: 15px 20px 14px;
-	width: 175px;
+	width: 200px;
 }
 
 .tooltip-container .tooltip-body p {

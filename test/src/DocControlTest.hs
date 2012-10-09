@@ -37,6 +37,7 @@ docControlTests env = testGroup "Templates" [
   , testThat "Signing document from design view sends invites" env testSigningDocumentFromDesignViewSendsInvites
   , testThat "Person who isn't last signing a doc leaves it pending" env testNonLastPersonSigningADocumentRemainsPending
   , testThat "Last person signing a doc closes it" env testLastPersonSigningADocumentClosesIt
+  , testThat "Sending an reminder clears delivery information" env testSendingReminderClearsDeliveryInformation
   ]
 
 testUploadingFileAsContract :: TestEnv ()
@@ -245,6 +246,29 @@ testSendReminderEmailUpdatesLastModifiedDate = do
   Just updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "Modified date is updated" (ctxtime ctx) (documentmtime updateddoc)
 
+
+testSendingReminderClearsDeliveryInformation :: TestEnv ()
+testSendingReminderClearsDeliveryInformation = do
+  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue)
+
+  doc <- addRandomDocumentWithAuthorAndCondition
+            user
+            (\d -> documentstatus d == Pending
+                     && case documenttype d of
+                         Signable _ -> True
+                         _ -> False)
+  let sl = head . reverse $ documentsignatorylinks doc
+  _ <- dbUpdate $ MarkInvitationRead (documentid doc) (signatorylinkid sl) (systemActor $ ctxtime ctx)
+  -- who cares which one, just pick the last one
+  req <- mkRequest POST []
+  (_link, _ctx') <- runTestKontra req ctx $ sendReminderEmail Nothing ctx doc sl
+  Just updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
+  let (Just sl') = find (\t -> signatorylinkid t == signatorylinkid sl) (documentsignatorylinks updateddoc)
+  assertEqual "Invitation is not delivered" (Unknown) (invitationdeliverystatus sl')
+
+  
 testDocumentFromTemplate :: TestEnv ()
 testDocumentFromTemplate = do
     (Just user) <- addNewUser "aaa" "bbb" "xxx@xxx.pl"

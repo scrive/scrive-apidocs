@@ -228,21 +228,6 @@ instance FromJSValue FieldType where
          ("checkbox-obligatory", Just name       )  -> Just $ CheckboxObligatoryFT  name 
          _ -> Nothing
 
-instance FromJSValue FieldPlacement where
-    fromJSValue = do
-         x          <- fromJSValueField "x"
-         y          <- fromJSValueField "y"
-         page       <- fromJSValueField "page"
-         pagewidth  <- fromJSValueField "pagewidth"
-         pageheight <- fromJSValueField "pageheight"
-         side       <- fromJSValueField "tip"
-         return $ (FieldPlacement <$> x <*> y <*> page <*> pagewidth <*> pageheight <*> Just side)
-
-instance FromJSValue TipSide where
-    fromJSValue js = case fromJSValue js of
-          Just "left"  -> Just LeftTip
-          Just "right" -> Just RightTip
-          _ ->            Nothing
          
 instance FromJSValue CSVUpload  where
     fromJSValue = do

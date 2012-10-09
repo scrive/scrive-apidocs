@@ -597,16 +597,6 @@ color: white;
     white-space:nowrap;
 }
 
-#documentBox
-{
-    overflow: auto;
-    text-align: center;
-    /* background-color: #999; */
-    margin: 0 auto;
-    width: 960px;
-    margin-top:10px;
-}
-
 .waiting4page
 {
     margin: auto;
@@ -635,13 +625,6 @@ color: white;
     background-image: url(/img/wait30trans.gif);
     background-repeat: no-repeat;
     background-position: center center;
-}
-.pagejpg
-{
-    width: 943px;
-    height: 1335px;
-    border: 1px solid #777;
-    background-color: #fafafa;
 }
 
 img.waiting
@@ -913,54 +896,6 @@ a.button {
     width:140px;
 }
 
-.pagediv
-{
-    position: relative;
-    font-size: 15.93px; /* A4 is 595x842pt, for us it is 948x1337px. So 10pt font in PDF is 948px*10pt/595pt = 15.93px */
-    margin: 6px;
-}
-
-.pagediv .hline {
-    width: 100%;
-    height: 1px;
-    background: #dedede;
-    position: relative;
-}
-
-.pagediv .vline {
-    width: 1px;
-    height: 100%;
-    background: #dedede;
-    position: relative;
-}
-
-.placedfield, .placedfieldhelper {
-    position: absolute;
-    cursor: pointer;
-    font-family: Helvetica;
-    font-size: 15.93px;
-}
-
-.placedfieldvalue{
-    font-family: Helvetica;
-    font-size: 15.93px;
-}
-
-.placedfieldhelper {
-    cursor: pointer;
-}
-
-.placedcheckbox{
-    background: url("../img/checkbox_unchecked.jpg") no-repeat scroll 0 0 transparent;
-    display: block;
-    height: 16px;
-    width: 16px;
-    cursor: pointer;
-}
-
-.placedcheckbox.checked{
-    background: url("../img/checkbox_checked.jpg") no-repeat scroll 0 0 transparent;
-}
 /* Localized */
 
 
@@ -3241,16 +3176,14 @@ a#attachmentback {
 .inlineEditing input:focus{
     outline:0px;
 }
-.verificationBox{
+
+.box.verificationBox{
     text-align : center;
+    padding: 120px 0px;
 }
 .verificationContainer{
     margin: 0 auto;
-    border-color:  #E0E0E0 #E0E0E0 #E8E5E5 #E8E5E5;
-    border-width : 1px;
-    border-style: solid;
     padding: 20px 50px;
-    width: 200px;
     display: inline-block;
 }
 

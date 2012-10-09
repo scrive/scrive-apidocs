@@ -329,6 +329,9 @@ window.Document = Backbone.Model.extend({
     canceled: function() {
         return this.status() == "Canceled";
     },
+    rejected: function() {
+        return this.status() == "Rejected";
+    },
     closed: function() {
         return this.status() == "Closed";
     },

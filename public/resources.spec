@@ -53,8 +53,10 @@ set systemPage
  css css/flash.css
  css css/docsignview.css
  css css/main.css
- css css/selects.css
+ less less/selects.less
+ less less/document-pages.less
  less less/payments.less
+ less less/paymentsoutside.less
  less less/oauth.less
  less less/arrows.less
  js   libs/jquery.min.js
@@ -136,4 +138,5 @@ set systemPage
  js   js/archive/archive.js
  js   js/blocking.js
  js   js/oauth.js
+ js   js/paymentsoutside.js
 

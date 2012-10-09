@@ -24,7 +24,9 @@ window.SelectModel = Backbone.Model.extend({
   defaults : {
       name  : "",
       options : [],
-      expanded : false
+      expandSide : "left",
+      expanded : false,
+      onOpen : function() {return true;}
   },
   initialize: function(args){
       var model = this;
@@ -52,11 +54,26 @@ window.SelectModel = Backbone.Model.extend({
   theme : function(){
        return this.get("theme");
   },
+  expandSide : function() {
+       return this.get("expandSide");
+  },
   textWidth : function(){
        return this.get("textWidth");
   },
   toggleExpand: function() {
-       this.set({"expanded" : !this.expanded()});    
+     if (this.expanded())
+       this.set({"expanded" : false});
+     else
+       this.expand();
+  },
+  expand : function() {
+     if (!this.expanded() && this.onOpen())
+       this.set({"expanded" : true});
+  },
+  onOpen : function(){
+       if (this.get("onOpen") != undefined)
+        return this.get("onOpen")();
+       return true;
   }
 });
 
@@ -131,7 +148,7 @@ var SelectView = Backbone.View.extend({
         $(this.el).empty();
         $(this.el).addClass(this.model.theme() + "-theme");
         var view = this;
-        var options = $("<ul class='select-opts'/>");
+        var options = $("<ul class='select-opts'/>").addClass(this.model.expandSide());
         var model = this.model;
         var button = this.button();
         _.each(model.options(),function(e){
@@ -141,7 +158,8 @@ var SelectView = Backbone.View.extend({
         });
 
         button.click(function(){
-            model.toggleExpand();
+              model.toggleExpand();
+              return false;
         });
         if (model.expanded())
             {
@@ -168,7 +186,9 @@ window.Select = function(args) {
                                         iconClass : args.iconClass,
                                         onSelect : args.onSelect,
                                         theme : args.theme != undefined ? args.theme : "standard",
-                                        textWidth : args.textWidth
+                                        textWidth : args.textWidth,
+                                        expandSide : args.expandSide,
+                                        onOpen : args.onOpen
                                        });
           var input = $("<div class='select'/>");
           if (args.cssClass!= undefined)
@@ -177,7 +197,8 @@ window.Select = function(args) {
           return new Object({
               model : function() {return model;},
               view : function()  {return view;},
-              clear : function() {view.clear(); model.destroy();}
+              clear : function() {view.clear(); model.destroy();},
+              open : function()  {model.expand();}
             });    
 };
 

@@ -8,15 +8,17 @@
 
 window.FieldPlacement = Backbone.Model.extend({
     defaults: {
-        x : 0,
-        y : 0,
-        placed : false,
-        tip: undefined
-
+      placed : false,
+      tip: undefined,
+      wrel: 0,
+      hrel: 0,
+      fsrel: 0
     },
     initialize : function(args){
         var placement = this;
         placement.addToPage();
+        if (this.tip() == undefined)
+          this.set({"tip" : args.field.defaultTip()});
         args.field.bind('removed', function() {
             placement.trigger("removed");
             placement.remove();
@@ -43,11 +45,20 @@ window.FieldPlacement = Backbone.Model.extend({
          document.bind('file:change',tryToAddToPage);
          tryToAddToPage();
     },
-    x : function() {
-        return this.get("x");
+    xrel : function() {
+        return this.get("xrel");
     },
-    y : function() {
-        return this.get("y");
+    yrel : function() {
+        return this.get("yrel");
+    },
+    wrel : function() {
+        return this.get("wrel");
+    },
+    hrel : function() {
+        return this.get("hrel");
+    },
+    fsrel : function() {
+        return this.get("fsrel");
     },
     page : function() {
         return this.get("page");
@@ -70,17 +81,19 @@ window.FieldPlacement = Backbone.Model.extend({
        this.off();
     },
     draftData : function() {
-        var document = this.field().signatory().document();
-        var fileid = this.get("fileid");
-        var page = document.getFile(fileid).page(this.get("page"));
-        return {
-            x : parseInt(this.x()),
-            y : parseInt(this.y()),
-            pagewidth : page != undefined ? page.width() : 943,
-            pageheight : page != undefined ? page.height() : 1335,
-            page : page != undefined ? page.number() : this.get("page"),
-            tip : this.get("tip")
-        };
+      var document = this.field().signatory().document();
+      var fileid = this.get("fileid");
+      var page = document.getFile(fileid).page(this.get("page"));
+      var draft = {
+        xrel : this.xrel(),
+        yrel : this.yrel(),
+        wrel : this.wrel(),
+        hrel : this.hrel(),
+        fsrel : this.fsrel(),
+        page : page != undefined ? page.number() : this.get("page"),
+        tip : this.get("tip")
+      };
+      return draft;
     }
 });
 
@@ -253,6 +266,11 @@ window.Field = Backbone.Model.extend({
     isObligatoryCheckbox : function() {
         return this.type() == "checkbox-obligatory";
     },
+    defaultTip : function() {
+      if (this.isCheckbox())
+        return "left";
+      return "right";
+    },
     makeCheckboxOptional : function() {
         this.set({"type":"checkbox-optional"}, {silent: true});
     },
@@ -382,36 +400,9 @@ window.FieldDesignView = Backbone.View.extend({
         var icon =  $("<div class='ddIcon' />");
         var field = this.model;
         var document = field.signatory().document();
-        if (document.mainfile() != undefined && document.mainfile().view != undefined)
-        {   var fileview = field.signatory().document().mainfile().view;
-            icon.draggable({
-                    handle: ".ddIcon",
-                    appendTo: "body",
-                    helper: function(event) {
-                        return new FieldPlacementView({model: field, el : $("<div/>")}).el;
-                    },
-                    start: function(event, ui) {
-                        fileview.showCoordinateAxes(ui.helper);
-                    },
-                    stop: function() {
-                        fileview.hideCoordinateAxes();
-                    },
-                    drag: function(event, ui) {
-                        fileview.moveCoordinateAxes(ui.helper);
-                    },
-                    onDrop: function(page, x,y ){
-                          x = page.fixedX(x,y);
-                          y = page.fixedY(x,y);
-                          field.addPlacement(new FieldPlacement({
-                              page: page.number(),
-                              fileid: page.file().fileid(),
-                              field: field,
-                              x : x,
-                              y : y,
-                              tip : "right"
-                            }));
-                    }
-            });
+        if (document.mainfile() != undefined && document.mainfile().view != undefined) {
+
+            draggebleField(icon, field);
         }
         return icon;
     },

@@ -183,10 +183,6 @@ body.signview {
   color: grey;
 }
 
-.signview .pagejpg {
-    width: 953px;
-}
-
 .signview .save {
   background-color: white;
   border: solid #bababc 1px;
@@ -488,18 +484,6 @@ body.signview {
   /*background-image: url(../img/horizontal-shading-bar.png); */
   background-repeat: no-repeat;
   height: 2px;
-}
-
-.signview .pagediv {
-  margin-top: 10px;
-  margin-bottom: 5px;
-  margin-left: auto;
-  margin-right: auto;
-  width: 955px;
-  box-shadow: 1px 1px 5px #505050;
-  -moz-box-shadow: 1px 1px 5px #505050;
-  -webkit-box-shadow: 1px 1px 5px #505050;
-  overflow-x: hidden;
 }
 
 .signview .section {

@@ -41,7 +41,7 @@ digitallySign conf inputFileName = do
              , intercalate ":" (map ("GuardTime/" ++) guardTimeJars)
              , "com.guardtime.pdftools.PdfStamper"
              , "-i"
-             , "-n", " Scrive "
+             , "-n", "Scrive"
              , "-s", guardTimeURL conf
              , "-f"
              , inputFileName

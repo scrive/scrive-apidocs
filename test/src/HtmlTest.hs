@@ -29,7 +29,7 @@ htmlTests = testGroup "HTML"
     ]
 
 excludedTemplates :: [String]
-excludedTemplates = ["paymentsadminpagesuperuser"]
+excludedTemplates = ["paymentsadminpagesuperuser", "javascriptLocalisation"]
 
 isIncluded :: (String, String) -> Bool
 isIncluded (name, _) = not $ name `elem` excludedTemplates

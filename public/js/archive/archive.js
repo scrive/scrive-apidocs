@@ -9,6 +9,9 @@ var ArchiveModel = Backbone.Model.extend({
   year : function() {
      return this.get("year");
   },
+  forCompanyAdmin : function() {
+     return this.get("forCompanyAdmin");
+  },
   documents : function() {
         if (this.get("documents") != undefined) return this.get("documents");
         this.set({ "documents" : KontraList().init(DocumentsListDefinition(this)) });
@@ -66,9 +69,7 @@ var ArchiveModel = Backbone.Model.extend({
   binTab : function() {
                     var archive = this;
                     return  new Tab({
-                        name: "",
-                        iconClass : "rubbishbin",
-                        right: true,
+                        name: localization.archive.bin.name,
                         elems: [function() {return $(archive.bin().view.el);}],
                         active : window.location.hash == "#bin",
                         onActivate : function() {

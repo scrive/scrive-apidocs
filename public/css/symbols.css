@@ -53,6 +53,11 @@
 	width: 11px;
 }
 
+.icon.signed {
+    background-position: -199px 0;
+    width: 15px;
+}
+
 .icon.draft {
 	background-position: -214px 0;
 }
@@ -61,40 +66,51 @@
 	background-position: -225px 0;
 }
 
+.icon.problem {
+    background-position: -236px 0;
+    margin-right: 7px;
+}
+  
+.icon.rejected {
+	background-position: -247px 0;
+    margin-right: 7px;
+}
+
+.icon.deliveryproblem {
+	background-position: -258px 0;
+    margin-right: 7px;
+}
+
+.icon.timeouted {
+    background-position: -269px 0;
+    margin-right: 7px;
+}
+
 .icon.cancelled {
-	background-position: -236px 0;
-        margin-right: 7px;
+	background-position: -280px 0;
+    margin-right: 7px;
 }
 
 .icon.sent {
-	background-position: -247px 0;
-        margin-right: 7px;
+    background-position: -291px 0;
+    margin-right: 7px;
 }
 
 .icon.delivered {
-	background-position: -258px 0;
-        margin-right: 7px;
+    background-position: -302px 0;
+    margin-right: 7px;
 }
 
 .icon.read {
-       background-position: -269px 0;
-       margin-right: 7px;
+    background-position: -313px 0;
+    margin-right: 7px;
 }
 
 .icon.opened {
-	background-position: -280px 0;
-        margin-right: 7px;
+    background-position: -324px 0;
+    margin-right: 7px;
 }
 
-.icon.reviewed {
-	background-position: -280px 0;
-        margin-right: 7px;
-}
-
-.icon.signed {
-	background-position: -199px 0;
-	width: 15px;
-}
 
 /* Drag Icons */
 

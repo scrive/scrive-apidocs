@@ -16,6 +16,7 @@ window.BinListDefinition = function(archive) { return {
     actions : [
       new ListAction({
                 name : localization.archive.bin.restore.action,
+                emptyMessage :  localization.archive.bin.restore.emptyMessage,
                 avaible : function() {return true;},
                 onSelect: function(docs){
                             var confirmationPopup = Confirmation.popup({
@@ -41,6 +42,7 @@ window.BinListDefinition = function(archive) { return {
                }),
      new ListAction({ 
                 name : localization.archive.bin.remove.action,
+                emptyMessage :  localization.archive.bin.remove.emptyMessage,
                 avaible : function() {return true;},
                 onSelect: function(docs){
                               var confirmationPopup = Confirmation.popup({

@@ -137,7 +137,7 @@ postDocumentCanceledChange doc@Document{..} apistring = do
       sendElegDataMismatchEmails ctx doc author
     -- should we send cancelation emails?
     _ -> return ()
-
+    
 stateMismatchError :: Kontrakcja m => String -> DocumentStatus -> Document -> m a
 stateMismatchError funame expected Document{documentstatus, documentid} = do
   Log.debug $ funame ++ ": document #" ++ show documentid ++ " in " ++ show documentstatus ++ " state, expected " ++ show expected
@@ -319,8 +319,12 @@ sendReminderEmail custommessage ctx doc siglink = do
                       then mailattachments
                       else []
     }
-  --this is needed so the last event time in archive looks good
+  when (isPending doc &&  not (hasSigned siglink)) $ do
+    Log.debug $ "Reminder mail send for signatory that has not signed " ++ show (signatorylinkid siglink)
+    actor <- guardJustM $ fmap mkAuthorActor getContext
+    dbUpdate $ ResetSignatoryMailDeliveryInformationForReminder doc siglink actor
   _ <- dbUpdate $ SetDocumentModificationData (documentid doc) (ctxtime ctx)
+  triggerAPICallbackIfThereIsOne doc
   return siglink
 
 {- |

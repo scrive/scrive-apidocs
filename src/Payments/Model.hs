@@ -76,9 +76,17 @@ instance MonadDB m => DBQuery m GetCompanyQuantity Int where
       sqlWhereEq "deleted"    False
       sqlResult "count(id)"
     res <- foldDB (flip (:)) []
-    case res of
+    au <- case res of
       [x] -> return x
       _   -> return 0
+    kRun_ $ sqlSelect "companyinvites" $ do  
+      sqlWhereEq "company_id" cid
+      sqlResult "count(email)"
+    res2 <- foldDB (flip (:)) []
+    ci <- case res2 of
+      [x] -> return x
+      _   -> return 0
+    return $ au + ci
 
 data DeletePaymentPlan = DeletePaymentPlan (Either UserID CompanyID)
 instance (MonadDB m) => DBUpdate m DeletePaymentPlan () where
@@ -109,6 +117,29 @@ instance (MonadDB m) => DBQuery m GetPaymentPlan (Maybe PaymentPlan) where
       case eid of
         Left  uid -> sqlWhereEq "user_id"    uid
         Right cid -> sqlWhereEq "company_id" cid
+    listToMaybe <$> foldDB fetchPaymentPlans []
+
+-- tested
+data GetPaymentPlanInactiveUser = GetPaymentPlanInactiveUser UserID
+instance MonadDB m => DBQuery m GetPaymentPlanInactiveUser (Maybe PaymentPlan) where
+  query (GetPaymentPlanInactiveUser uid) = do
+    kRun_ $ sqlSelect "payment_plans" $ do
+      sqlResult "account_code"
+      sqlResult "account_type"
+      sqlResult "user_id"
+      sqlResult "payment_plans.company_id"
+      sqlResult "plan"
+      sqlResult "status"
+      sqlResult "quantity"
+      sqlResult "plan_pending"
+      sqlResult "status_pending"
+      sqlResult "quantity_pending"
+      sqlResult "provider"
+      sqlResult "dunning_step"
+      sqlResult "dunning_date"
+      sqlJoinOn "users" "payment_plans.user_id = users.id"
+      sqlWhereEq "user_id" uid
+      sqlWhereIsNULL "users.has_accepted_terms_of_service"
     listToMaybe <$> foldDB fetchPaymentPlans []
 
 -- tested

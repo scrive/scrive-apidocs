@@ -3,9 +3,12 @@ module Payments.Control (handleSubscriptionDashboard
                         ,handleSubscriptionDashboardInfo
                         ,handleSyncNewSubscriptionWithRecurly
                         ,handleChangePlan
-                        ,switchPlanToCompany
                         ,handleSyncWithRecurly
-                        ,handleRecurlyPostBack)
+                        ,handleRecurlyPostBack
+                        ,handlePricePageJSON
+                        ,handleUserExists
+                        ,handleCreateUser
+                        ,handleSyncNewSubscriptionWithRecurlyOutside)
        where
 
 import Control.Monad.State
@@ -45,6 +48,7 @@ import qualified Text.JSON.Gen as J
 import MinutesTime
 import Mails.SendMail
 import Utils.Monad
+import qualified Login
 
 import Payments.Model
 import Payments.Rules
@@ -233,17 +237,6 @@ cachePlan time pa ac subscription invoicestatus eid mds mdd = do
     Log.payments "cachePlan: Could not save payment plan."
     return False
   
-switchPlanToCompany :: Kontrakcja m => UserID -> CompanyID -> m Bool
-switchPlanToCompany uid cid = do
-  time <- ctxtime <$> getContext
-  mplan <- dbQuery $ GetPaymentPlan (Left uid)
-  case mplan of
-    Just pp | isLeft $ ppID pp -> do
-      let pp' = pp { ppID = Right cid }
-      b <- dbUpdate $ SavePaymentPlan pp' time
-      _ <- Stats.record time Stats.CompanySwitchAction RecurlyProvider (ppQuantity pp') (ppPricePlan pp') (Right cid) (ppAccountCode pp)
-      return b
-    _ -> return False
 
 {- Should be run once per day, preferably at night -}
 handleSyncWithRecurly :: (MonadIO m, MonadDB m, CryptoRNG m) => String -> MailsConfig -> KontrakcjaGlobalTemplates -> String -> MinutesTime -> m ()
@@ -375,6 +368,61 @@ handleRecurlyPostBack = do
     Just ps -> postBackCache ps
     _       -> return ()
     
+handlePricePageJSON :: Kontrakcja m => m JSValue
+handlePricePageJSON = do
+  Log.payments $ "Handling Price Page JSON"
+  RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
+  code <- dbUpdate GetAccountCode
+  teamsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "team")]
+  formsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "form")]
+  runJSONGenT $ do
+    J.value "subdomain" recurlySubdomain
+    J.value "accountCode" $ show code
+    J.object "plans" $ do
+      J.object "team" $ do
+        J.value "signature" teamsig
+      J.object "form" $ do
+        J.value "signature" formsig
+    
+handleUserExists :: Kontrakcja m => m JSValue
+handleUserExists = do
+  email <- pguardM' "handleUserExists: email must exist." $ 
+           getField "email"
+  muser <- dbQuery $ GetUserByEmail $ Email email
+  let meid = maybe (Left $ userid $ fromJust muser) Right . usercompany <$> muser
+  mplan <- maybe (return Nothing) (dbQuery . GetPaymentPlan) meid
+  runJSONGenT $ do
+    J.value "user_exists" $ isJust muser
+    J.value "has_plan"    $ isJust mplan
+    
+handleCreateUser :: Kontrakcja m => m JSValue
+handleCreateUser = do
+  Log.payments $ "handleCreateUser"
+  mres <- Login.handleSignup
+  runJSONGenT $ do
+    J.value "success" $ isJust mres
+
+handleSyncNewSubscriptionWithRecurlyOutside :: Kontrakcja m => m ()
+handleSyncNewSubscriptionWithRecurlyOutside = do
+  RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
+  time <- ctxtime <$> getContext
+  ac <- pguardM' "handleSyncNewSubscriptionWithRecurlyOutside: account_code must exist and be an integer." $ 
+        readField "account_code"
+  email <- pguardM' "handleSyncNewSubscriptionWithRecurlyOutside: email must exist." $ 
+        getField "email"
+  user <- pguardM' "handleSyncNewSubscriptionWithRecurlyOutside: user does not exist." $
+          dbQuery $ GetUserByEmail $ Email email
+  subscriptions <- pguardM "handleSyncNewSubscriptionWithRecurly" $ 
+                   liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show ac
+  subscription <- pguard' "handleSyncNewSubscriptionWithRecurly: No subscription." $ 
+                  listToMaybe subscriptions
+  invoices <- pguardM "handleChangePlan" $ 
+              liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey $ show ac
+  let is = maybe "collected" inState $ listToMaybe invoices
+  let eid = maybe (Left $ userid user) Right $ usercompany user
+  _ <- cachePlan time Stats.SignupAction ac subscription is eid Nothing Nothing
+  return ()
+
 -- mails    
 
 sendInvoiceEmail :: Kontrakcja m => User -> Maybe Company -> Subscription -> m ()

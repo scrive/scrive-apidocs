@@ -187,7 +187,7 @@ apiCallCancel did =  api $ do
     then do
       newdocument <- apiGuardL (serverError "No document found after cancel") $ dbQuery $ GetDocumentByDocumentID $ did
       lift $ postDocumentCanceledChange newdocument "api"
-      newdocument' <- apiGuardL (serverError "No document found after cancell and post actions") $ dbQuery $ GetDocumentByDocumentID $ did
+      newdocument' <- apiGuardL (serverError "No document found after cancel and post actions") $ dbQuery $ GetDocumentByDocumentID $ did
       Accepted <$> documentJSON True True Nothing Nothing newdocument'
     else throwError $ serverError $ "Operation failed"
   

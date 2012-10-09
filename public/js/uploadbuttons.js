@@ -95,7 +95,8 @@ var UploadButtonView = Backbone.View.extend({
             button = $("<a/>");
             button.addClass(model.color()).addClass("btn-" + model.size()).css("overflow", "hidden").css("width",model.width() + "px");
             var left  = $("<div class='left'/>");
-            var label = $("<div class='label' style='text-align: center;'/>").text(model.text()).css("width",(model.width() - 2 * Button.borderWidth(model.size())) + "px");
+            var labelwidth = model.width() - 2 * Button.borderWidth(model.size()) - 2 * Button.labelPadding(model.size());
+            var label = $("<div class='label' style='text-align: center;'/>").text(model.text()).css("width", labelwidth + "px");
             var right = $("<div class='right'/>");
             button.append(left);
             button.append(label);

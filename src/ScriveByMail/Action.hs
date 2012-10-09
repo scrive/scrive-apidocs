@@ -385,8 +385,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
   ctx@Context{ctxtime} <- getContext
   when (umapiDailyLimit (unTagMailAPIInfo mailapi) <= umapiSentToday (unTagMailAPIInfo mailapi)) $ do
     Log.jsonMailAPI $ "Daily limit of documents for user '" ++ username ++ "' has been reached"
-    sendMailAPIErrorEmail ctx username $ "<p>For your own protection, Scrive Mail API sets a daily limit on how many emails you can send out. Your daily Scrive Mail API limit has been reached. To reset your daily limit, please visit " ++ ctxhostpart ctx ++ show LinkUserMailAPI ++ " .<p>"
-
+    sendMailAPIErrorEmail ctx username $ "<p>For your own protection, Scrive Mail API sets a daily limit on how many emails you can send out. Your daily Scrive Mail API limit has been reached. To reset your daily limit, please visit " ++ ctxhostpart ctx ++ show LinkUserMailAPI ++ " .</p>"
   when (length plains /= 1) $ do
     Log.jsonMailAPI $ "Wrong number of plain text attachments."
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
@@ -403,8 +402,11 @@ jsonMailAPI mailapi username user pdfs plains content = do
       Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
 
       sendMailAPIErrorEmail ctx username $ "<p>I do not know what the problem is. Perhaps try again with a different email program or contact <a href='mailto:eric@scrive.com'>Mail API Support</a> for help.</p>"
-
-  let ejson = runGetJSON readJSValue $ BS.toString recodedPlain'
+  let jsonString = BS.toString recodedPlain'
+      
+  -- some mail clients insert carriage returns + newlines wherever they want, even 
+  -- in the middle of JSON strings! -- Eric
+  let ejson = runGetJSON readJSValue $ replace "\n" "" $ replace "\r" "" jsonString
 
   when (isLeft ejson) $ do
     let Left msg = ejson

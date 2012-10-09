@@ -26,6 +26,8 @@ paymentsTests env = testGroup "Payments" [
   , testThat "SavePaymentPlan can be read in" env testSavePaymentPlan
   , testThat "PaymentPlansRequiringSync conditions are correct" env testPaymentPlansRequiringSync
   , testThat "PaymentPlansExpiredDunning conditions are correct" env testPaymentPlansExpiredDunning
+  , testThat "GetPaymentPlanInactiveUser works for inactive users" env testPaymentPlanInactiveUser
+  , testThat "GetPaymentPlanInactiveUser does not work for active users" env testPaymentPlanInactiveUserActive
   , testGroup "Recurly" [
       testThat "Recurly saves account properly" env testRecurlySavesAccount
      ,testThat "Recurly changes account properly" env testRecurlyChangeAccount     
@@ -160,6 +162,53 @@ testPaymentPlansExpiredDunning = do
   rs <- dbQuery $ PaymentPlansExpiredDunning now
   assert $ length rs == 1
   
+testPaymentPlanInactiveUser :: TestEnv ()
+testPaymentPlanInactiveUser = do
+  user <- addNewRandomUser
+  assertBool "User should not have accepted terms of service." (isNothing $ userhasacceptedtermsofservice user)
+  ac <- dbUpdate $ GetAccountCode
+  time <- getMinutesTime
+  let pp = PaymentPlan { ppAccountCode = ac
+                       , ppID = Left (userid user)
+                       , ppPricePlan = TeamPricePlan
+                       , ppPendingPricePlan = TeamPricePlan
+                       , ppStatus = ActiveStatus
+                       , ppPendingStatus = ActiveStatus
+                       , ppQuantity = 1
+                       , ppPendingQuantity = 1
+                       , ppPaymentPlanProvider = NoProvider
+                       , ppDunningStep = Nothing
+                       , ppDunningDate = Nothing
+                       }
+  b <- dbUpdate $ SavePaymentPlan pp time
+  assert b
+  mpp <- dbQuery $ GetPaymentPlanInactiveUser (userid user)
+  assert $ Just pp == mpp
+  
+testPaymentPlanInactiveUserActive :: TestEnv ()
+testPaymentPlanInactiveUserActive = do
+  user <- addNewRandomUser
+  time <- getMinutesTime
+  _ <- dbUpdate $ AcceptTermsOfService (userid user) time
+  ac <- dbUpdate $ GetAccountCode
+
+  let pp = PaymentPlan { ppAccountCode = ac
+                       , ppID = Left (userid user)
+                       , ppPricePlan = TeamPricePlan
+                       , ppPendingPricePlan = TeamPricePlan
+                       , ppStatus = ActiveStatus
+                       , ppPendingStatus = ActiveStatus
+                       , ppQuantity = 1
+                       , ppPendingQuantity = 1
+                       , ppPaymentPlanProvider = NoProvider
+                       , ppDunningStep = Nothing
+                       , ppDunningDate = Nothing
+                       }
+  b <- dbUpdate $ SavePaymentPlan pp time
+  assert b
+  mpp <- dbQuery $ GetPaymentPlanInactiveUser (userid user)
+  assert $ mpp == Nothing
+
 testRecurlySavesAccount :: TestEnv ()
 testRecurlySavesAccount = do
   mh :: MagicHash <- rand 1000 arbitrary

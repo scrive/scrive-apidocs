@@ -21,33 +21,6 @@
         return -1;
     };
 
-    var maketable = function(header, rows, footer) {
-        var table = $('<table />');
-        var thead = $('<thead />');
-        table.append(thead);
-        var tfoot = $('<tfoot />');
-        table.append(tfoot);
-        var tbody = $('<tbody />');
-        table.append(tbody);
-
-        if(header) {
-            var hrow = $('<tr />');
-            thead.append(hrow);
-            _.each(header, function(s) { hrow.append($('<th />').append(s)) });
-        }
-        if(footer) {
-            var frow = $('<tr />');
-            tfoot.append(frow);
-            _.each(footer, function(s) { frow.append($('<td />').append(s)) });
-        }
-        _.each(rows, function(row) {
-            var brow = $('<tr />');
-            _.each(row, function(s) { brow.append($('<td />').append(s)) });
-            tbody.append(brow);
-        });
-        return table;
-    };
-
     var PaymentsInvoiceModel = Backbone.Model.extend({
         number: function() {
             return this.get('invoice_number');
@@ -105,7 +78,7 @@
 
     var PaymentsSignupModel = Backbone.Model.extend({
         defaults: {
-            plan_code: 'pay'
+            plan_code: 'team'
         },
         code: function(p) {
             if(p) {
@@ -307,20 +280,27 @@
             var view = this;
             var model = view.model;
 
-            var div = $('<div class="team planbox" />');
+            var div = $('<div class="team planbox selected" />');
 
             var header = $('<div class="header" />');
             var header1 = $('<div class="header1" />');
-            header1.text(localization.payments.plans.team);
+            header1.text(localization.payments.plans.team.name);
             var header2 = $('<div class="header2" />');
-            header2.text(localization.payments.plans.teamtag);
+            header2.text(localization.payments.plans.team.tag);
             header.append(header1).append(header2);
             div.append(header);
 
             var features = $('<div class="features" />');
-            _.each(localization.payments.features.team, function(t) {
+            _.each(localization.payments.plans.team.features, function(t) {
                 features.append($('<div class="feature" />').text(t));
             });
+
+            features.append($('<a />').attr('href', localization.payments.featuresurl)
+                            .addClass('readmorelink')
+                            .text(localization.payments.readmore)
+                            .click(function(e) { 
+                                e.stopPropagation();
+                            }));
 
             div.append(features);
 
@@ -328,20 +308,18 @@
             var price1 = $('<div class="price1" />');
             price1.text();
             var price2 = $('<div class="price2" />');
-            price2.text(localization.payments.plans.teamprice);
+            price2.text(localization.payments.plans.team.price);
             var price3 = $('<div class="price3" />');
-            price3.text(localization.payments.peruserpermonth);
+            price3.text(localization.payments.plans.team.price3);
             price.append(price1).append(price2).append(price3);
             div.append(price);
 
             var buttonbox = $('<div class="buttonbox" />');
-            var button = Button.init({color: 'black',
-                                      text: localization.payments.select,
+            var button = Button.init({color: 'green',
+                                      text: localization.payments.selected,
                                       size: 'small',
                                       width: 150,
                                       onClick: function() {
-                                          model.signup().code('team');
-                                          view.showRecurlySubscriptionForm();
                                           return false;
                                       }});
             
@@ -362,17 +340,24 @@
 
             var header = $('<div class="header" />');
             var header1 = $('<div class="header1" />');
-            header1.text(localization.payments.plans.form);
+            header1.text(localization.payments.plans.form.name);
             var header2 = $('<div class="header2" />');
-            header2.text(localization.payments.plans.formtag);
+            header2.text(localization.payments.plans.form.tag);
             //var img = $('<img src="/img/bestvalue.png" alt="Best Value" class="bestvalue" />');
             header.append(header1).append(header2); //.append(img);
             div.append(header);
 
             var features = $('<div class="features" />');
-            _.each(localization.payments.features.form, function(t) {
+            _.each(localization.payments.plans.form.features, function(t) {
                 features.append($('<div class="feature" />').text(t));
             });
+
+            features.append($('<a />').attr('href', localization.payments.featuresurl)
+                            .addClass('readmorelink')
+                            .text(localization.payments.readmore)
+                            .click(function(e) { 
+                                e.stopPropagation();
+                            }));
 
             div.append(features);
 
@@ -380,35 +365,32 @@
             var price1 = $('<div class="price1" />');
             price1.text("");
             var price2 = $('<div class="price2" />');
-            price2.text(localization.payments.plans.formprice);
+            price2.text(localization.payments.plans.form.price);
             var price3 = $('<div class="price3" />');
-            price3.text(localization.payments.permonth + " " + localization.and);
+            price3.text(localization.payments.plans.form.price3);
             price.append(price1).append(price2).append(price3);
 
             var price21 = $('<div class="price2 s" />');
-            price21.text(localization.payments.plans.docprice);
-            var price31 = $('<div class="price3" />');
-            price31.text(localization.payments.perdocument);
+            price21.text(localization.payments.plans.form.price21);
+            var price31 = $('<div class="price3 s" />');
+            price31.text(localization.payments.plans.form.price31);
             price.append(price21).append(price31);
 
             div.append(price);
 
             var buttonbox = $('<div class="buttonbox" />');
             var button = Button.init({color: 'black',
-                                      text: localization.payments.select,
+                                      text: localization.payments.getintouch,
                                      size: 'small',
                                      width: 150,
                                      onClick: function() {
-                                         model.signup().code('form');
-                                         view.showRecurlySubscriptionForm();
                                          return false;
                                      }});
             
             buttonbox.append(button.input());
             div.append(buttonbox);
             div.click(function() {
-                model.signup().code('form');
-                view.showRecurlySubscriptionForm();
+                view.getInTouch();
                 return false;
             });
             return div;
@@ -420,27 +402,31 @@
             var div = $('<div class="enterprise planbox" />');
             var header = $('<div class="header" />');
             var header1 = $('<div class="header1" />');
-            header1.text(localization.payments.plans.enterprise);
+            header1.text(localization.payments.plans.enterprise.name);
             var header2 = $('<div class="header2" />');
-            header2.html(localization.payments.plans.enterprisetag);
+            header2.html(localization.payments.plans.enterprise.tag);
             header.append(header1).append(header2);
             div.append(header);
 
             var features = $('<div class="features" />');
-            _.each(localization.payments.features.enterprise0, function(t) {
+            _.each(localization.payments.plans.enterprise.features, function(t) {
                 features.append($('<div class="feature" />').html(t));
             });
-            features.append($('<div class="feature" />').html("&nbsp;"));
-            _.each(localization.payments.features.enterprise, function(t) {
-                features.append($('<div class="feature" />').text(t));
-            });
+
+            features.append($('<a />').attr('href', localization.payments.featuresurl)
+                            .addClass('readmorelink')
+                            .text(localization.payments.readmore)
+                            .click(function(e) { 
+                                e.stopPropagation();
+                            }));
+
             div.append(features);
 
             var price = $('<div class="price" />');
             var price1 = $('<div class="price1" />');
-            price1.text(localization.payments.askfora);
+            price1.text(localization.payments.plans.enterprise.price1);
             var price2 = $('<div class="price2" />');
-            price2.text(localization.payments.quote);
+            price2.text(localization.payments.plans.enterprise.price);
             var price3 = $('<div class="price3" />');
 
             price.append(price1).append(price2).append(price3);
@@ -452,7 +438,6 @@
                                       size: 'small',
                                       width: 150,
                                       onClick: function() {
-                                          view.getInTouch();
                                           return false;
                                       }});
             buttonbox.append(button.input());
@@ -507,27 +492,12 @@
             var form = $('.planbox.form');
             var team = $('.planbox.team');
 
+            console.log(model.signup().code());
+
             if(model.signup().code() === 'team') {
                 team.addClass('selected');
                 team.find('.btn-small').removeClass('black').addClass('green')
                     .find('.label').text(localization.payments.selected);
-                form.removeClass('selected');
-                form.find('.btn-small').removeClass('green').addClass('black')
-                    .find('.label').text(localization.payments.select);
-            } else if(model.signup().code() === 'form') {
-                form.addClass('selected');
-                form.find('.btn-small').removeClass('black').addClass('green')
-                    .find('.label').text(localization.payments.selected);
-                team.removeClass('selected');
-                team.find('.btn-small').removeClass('green').addClass('black')
-                    .find('.label').text(localization.payments.select);
-            } else {
-                form.removeClass('selected');
-                form.find('.btn-small').addClass('black').removeClass('green')
-                    .find('.label').text(localization.payments.select);
-                team.removeClass('selected');
-                team.find('.btn-small').removeClass('green').addClass('black')
-                    .find('.label').text(localization.payments.select);
             }
 
             Recurly.config({
@@ -693,15 +663,20 @@
             var view = this;
             var model = view.model;
             var form = $("<div />");
-            form.append($("<span />").text(localization.docsignview.phoneFormDescription + " "));
-            var numberinput = $("<input type='text' />");
+            var popup;
+            var numberinput = InfoTextInput.init({infotext: localization.payments.phonenumber, 
+                                                  onEnter: function() {
+                                                      popup.model.accept();
+                                                      return false;
+                                                  }
+                                                 }).input().blur().change();
             form.append(numberinput);
 
             var content = $('<div />');
             content.append($('<p />').text(localization.payments.pleaseleavenumber));
             content.append(form);
             var done = false;
-            var popup = Confirmation.popup({
+            popup = Confirmation.popup({
                 //acceptText: localization.payments.ok,
                 title: localization.payments.pleaseleavenumbertitle,
                 content: content,
@@ -713,7 +688,7 @@
                     new Submit({
                         url: "/account/phoneme",
                         method: "POST",
-                        email: model.contact().email(),
+                        email: model.email(),
                         phone: phone,
                         ajax: true,
                         onSend: function() {
@@ -1175,7 +1150,6 @@
     window.paymentsDashboardView  = null;
 
     window.bootPaymentsDashboard = function(selector) {
-        LoadingDialog.open(localization.payments.loading);
         $("head").append('<link rel="stylesheet" href="/libs/recurly/recurly.css"></link>');
 
         $.ajax("/payments/info.json", 

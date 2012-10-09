@@ -61,7 +61,8 @@ var FileVerifierView = Backbone.View.extend({
         var view = this;
         return  UploadButton.init({
             name: "file",
-            width: 200,
+            width: 380,
+            size: "big",
             text: localization.uploadButton,
             submitOnUpload: true,
             onClick : function () {
@@ -91,8 +92,7 @@ var FileVerifierView = Backbone.View.extend({
     },
     render: function () {
         var box = $(this.el);
-        box.empty();
-        box.append(this.uploadButton().input());
+        box.html(this.uploadButton().input());
         return box;
     }
 });

@@ -179,13 +179,15 @@ handleZip = do
 showArchive :: Kontrakcja m => m (Either KontraLink String)
 showArchive = checkUserTOSGet $ do
     tostime <- guardJustM $ join <$> fmap userhasacceptedtermsofservice <$> ctxmaybeuser <$> getContext
-    pageArchive tostime
+    user    <- guardJustM $ ctxmaybeuser <$> getContext
+    pageArchive user tostime
 
 showPadDeviceArchive :: Kontrakcja m => m (Either KontraLink String)
 showPadDeviceArchive = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >> pagePadDeviceArchive
 
 jsonDocumentsList ::  Kontrakcja m => m (Either CSV JSValue)
 jsonDocumentsList = do
+  Log.debug $ "Long list " ++ (show $ map fromEnum [SCDraft,SCCancelled,SCRejected,SCTimedout,SCError,SCDeliveryProblem,SCSent,SCDelivered,SCRead,SCOpened,SCSigned])
   user@User{userid = uid} <- guardJustM $ ctxmaybeuser <$> getContext
   lang <- getLang . ctxlocale <$> getContext
   doctype <- getField' "documentType"
@@ -208,6 +210,11 @@ jsonDocumentsList = do
                                     (((Nothing ,Just to'),""):_) -> [DocumentFilterByMonthYearTo to']
                                     (((Just from',Nothing),""):_)   -> [DocumentFilterByMonthYearFrom from']
                                     _ -> []
+
+      fltSpec ("sender", tostr) = case reads tostr of
+                                    ((suid,""):_) -> [DocumentFilterByAuthor suid]
+                                    _ -> []
+
       fltSpec ("status", scstr) = case reads scstr of
                                     ((statusclasss,""):_) -> [DocumentFilterByStatusClass statusclasss]
                                     _ -> []

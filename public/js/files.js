@@ -18,8 +18,14 @@ window.File = Backbone.Model.extend({
                      attachmentid: this.attachmentid(),
                      signatorylinkid: this.signatoryid()
                    };
-      /* This construct removes undefined values from params */
-      params = _.defaults({}, params);
+      /*
+       * Remove undefined values that may happen in the object.
+       */
+      _.each(_.keys(params), function (k) {
+        if( params[k]===undefined ) {
+          delete params[k];
+        }
+      });
 
       var query = $.param(params, true);
       if( query!="" ) {
@@ -160,26 +166,6 @@ var FilePage = Backbone.Model.extend({
              newplacements.push(this.placements()[i]);
        this.set({placements : newplacements}, {silent : true});
        this.trigger("change:dragables");
-    },
-    fixedX : function(x,y,field){
-     /* Turn off snap-to-grid for now. It is nice when it works, but
-        it does not always do what you want. -- Eric
-     _.each(this.placements(), function(p) {
-             if (Math.abs(p.x()-x) < 8 && (Math.abs(p.x()-x) + Math.abs(p.y()-y) < 400))
-                  x = p.x();
-     });
-     */
-     return x;
-    },
-    fixedY : function(x,y,field){
-    /* Turn off snap-to-grid for now. It is nice when it works, but
-       it does not always do what you want. -- Eric
-          _.each(this.placements(), function(p) {
-             if (Math.abs(p.y()-y) < 8 && (Math.abs(p.x()-x) + Math.abs(p.y()-y) < 400))
-                  y =  p.y();
-     });
-     */
-     return y;
     }
 });
 
@@ -188,64 +174,32 @@ var FilePageView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'renderDragables');
         this.model.bind('change:dragables', this.renderDragables);
-        this.model.view = this;
         this.renderedPlacements = [];
         this.render();
     },
-    vline: function() {
-        if (this.vlinediv != undefined)
-            return this.vlinediv;
-        this.vlinediv = $("<div class='vline'>");
-        this.pagejpg.append(this.vlinediv);
-        return this.vlinediv;
-    },
-    hline: function() {
-        if (this.hlinediv != undefined)
-            return this.hlinediv;
-        this.hlinediv = $("<div class='hline'>");;
-        this.pagejpg.append(this.hlinediv);
-        return this.hlinediv;
-    },
-    moveCoordinateAxes : function(helper) {
-       this.hline().css({
-                top: Math.min(this.pagejpg.height() - 1, Math.max(0, helper.offset().top - this.pagejpg.offset().top + helper.height() - 4)) + "px"
-            });
-
-
-       this.vline().css({
-                left: Math.min(this.pagejpg.width() - 1, Math.max(0, helper.offset().left - this.pagejpg.offset().left)) + "px"
-            });
-    },
-    showCoordinateAxes : function(helper) {
-        var view = this;
-        this.hline().show();
-        this.vline().show();
-        $("body").mousemove(function() {
-            setTimeout(function() {
-                view.moveCoordinateAxes(helper);
-            }, 100);
-        });
-    },
-
-    hideCoordinateAxes : function() {
-        this.vline().hide();
-        this.hline().hide();
-        $("body").unbind("mousemove");
-    },
     makeDropable : function() {
-      var page = this.model;
-      var pagejpg = this.pagejpg;
-      pagejpg.droppable({
-        drop: function(event, ui) {
-            var helper = $(ui.helper);
-            var top = helper.offset().top -  pagejpg.offset().top;
-            var left = helper.offset().left -  pagejpg.offset().left;
-            var options = $(ui.draggable).data("draggable").options;
-            var onDrop = options.onDrop;
-            onDrop(page,left,top);
-            return false;
+      var self = this;
+      var page = self.model;
+
+      $(self.el).droppable({
+          drop: function(event, ui) {
+              var helper = $(ui.helper);
+              /*
+               * Here we need to account for border property. There is an
+               * unsupported bug/feature in jquery:
+               *
+               * http://bugs.jquery.com/ticket/7948
+               */
+              var top = helper.offset().top - $(self.el).offset().top - 1;
+              var left = helper.offset().left - $(self.el).offset().left - 1;
+              var height = $(self.el).height();
+              var width = $(self.el).width();
+              var options = $(ui.draggable).data("draggable").options;
+              var onDrop = options.onDrop;
+              onDrop(page,left,top,width,height);
+              return false;
           }
-       });
+      });
     },
     renderDragables : function() {
         var view = this;
@@ -258,13 +212,13 @@ var FilePageView = Backbone.View.extend({
         _.each(page.placements(), function(placement) {
             var placement = placement;
             if (placement.page()==page.number()) {
-                var elem = new FieldPlacementPlacedView({model: placement, el : $("<div>")}).el;
-                container.append(elem);
+                var elem = $("<div>").appendTo(container);
+                createFieldPlacementPlacedView({model: placement, el: elem});
                 if (!placement.field().isClosed()) {
-                  view.renderedPlacements.push({
-                    placement: placement,
-                    elem: $(elem)
-                  });
+                    view.renderedPlacements.push({
+                        placement: placement,
+                        elem: elem
+                    });
                 }
             }
         });
@@ -283,10 +237,10 @@ var FilePageView = Backbone.View.extend({
         container.addClass("pagediv");
 
         // Page part with image
-        this.pagejpg = $("<div class='pagejpg'/>");
-        var pagelink = location.protocol + "//" + location.host + "/pages/" + fileid  + "/" + page.number() + file.queryPart();
+        this.pagejpg = $("<img class='pagejpg'/>");
+        var pagelink = "/pages/" + fileid  + "/" + page.number() + file.queryPart();
 
-        this.pagejpg.css("background-image", "url(" +pagelink +")");
+        this.pagejpg.attr("src", pagelink);
         container.append(this.pagejpg);
         this.makeDropable();
         // Fields for the page
@@ -306,6 +260,20 @@ var FileView = Backbone.View.extend({
                           processData:  true,
                           cache : false});
         this.render();
+    },
+    vline: function() {
+      if (this.vlinediv != undefined)
+        return this.vlinediv;
+      this.vlinediv = $("<div class='vline'>");
+      $(this.el).append(this.vlinediv);
+      return this.vlinediv;
+    },
+    hline: function() {
+      if (this.hlinediv != undefined)
+        return this.hlinediv;
+      this.hlinediv = $("<div class='hline'>");;
+      $(this.el).append(this.hlinediv);
+      return this.hlinediv;
     },
     render: function () {
         var view = this;
@@ -342,25 +310,42 @@ var FileView = Backbone.View.extend({
         //console.log("All pages ready "  +  _.all(this.pageviews, function(pv) {return pv.ready();}))
         return this.model.ready() && (this.model.pages().length > 0) && (this.pageviews.length == this.model.pages().length) && _.all(this.pageviews, function(pv) {return pv.ready();});
     },
-    moveCoordinateAxes : function(helper) {
-        var file = this.model;
-        _.each(file.pages(),function(page){
-                 page.view.moveCoordinateAxes(helper);
-            });
-    },
 
+    moveCoordinateAxes : function(helper) {
+      var self = this;
+      _.defer(function() {
+        /*
+         * The 'helper' contains *old* coordinates when called, so we
+         * need to give it a chance to update and then use them for
+         * positioning of guidelines.
+         */
+
+        var top = helper.offset().top - $(self.el).offset().top + helper.height() - 4;
+        var left = helper.offset().left - $(self.el).offset().left;
+        var height = $(self.el).height();
+        var width = $(self.el).width();
+
+        /*
+         * Here we need to also set width/height of lines. With width we
+         * could go away with 100%, but height needs to be dynamically
+         * adjusted to have same height as rendered image.
+         */
+        self.hline().css({ top: top + "px",
+                           width: width + "px"});
+        self.vline().css({ left: left + "px",
+                           height: height + "px"});
+      });
+    },
     showCoordinateAxes : function(helper) {
-        var file = this.model;
-        _.each(file.pages(),function(page){
-                 page.view.showCoordinateAxes(helper);
-            });
+        var view = this;
+        this.hline().show();
+        this.vline().show();
+        this.moveCoordinateAxes(helper);
     },
 
     hideCoordinateAxes : function() {
-        var file = this.model;
-        _.each(file.pages(),function(page){
-                 page.view.hideCoordinateAxes();
-            });
+        this.vline().hide();
+        this.hline().hide();
     }
 });
 
@@ -381,7 +366,7 @@ window.KontraFile = {
         }
         this.view = new FileView({
             model: this.model,
-            el : $("<div id ='documentBox'/>")
+            el : $("<div class='document-pages'/>")
         });
         return this;
     }

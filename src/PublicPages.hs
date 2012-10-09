@@ -33,6 +33,7 @@ publicPages = choice
      , publicDir "kontakta" "contact" LinkContactUs handleContactUsPage
      , publicDir "scriveapi" "scriveapi" LinkAPIPage handleApiPage
      , publicDir "scrivebymail" "scrivebymail" LinkScriveByMailPage handleScriveByMailPage
+     , publicDir "funktioner" "features" LinkFeaturesPage handleFeaturesPage
 
      -- sitemap
      , dir "webbkarta"       $ hGetAllowHttp $ handleSitemapPage
@@ -113,6 +114,9 @@ handleApiPage = handleWholePage apiPage
 
 handleScriveByMailPage :: Kontra Response
 handleScriveByMailPage = handleWholePage scriveByMailPage
+
+handleFeaturesPage :: Kontra Response
+handleFeaturesPage = handleWholePage featuresPage
 
 handleWholePage :: Kontra String -> Kontra Response
 handleWholePage f = do

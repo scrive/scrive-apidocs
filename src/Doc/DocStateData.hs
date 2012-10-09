@@ -87,16 +87,24 @@ $(newtypeDeriveUnderlyingReadShow ''SignOrder)
 
 data StatusClass = SCDraft
                   | SCCancelled
+                  | SCRejected
+                  | SCTimedout
+                  | SCError
+                  | SCDeliveryProblem -- Order is important for SQL's
                   | SCSent
                   | SCDelivered
                   | SCRead
                   | SCOpened
                   | SCSigned
-                  deriving (Eq, Ord, Enum, Bounded)
-
+                  deriving (Eq, Ord, Enum, Bounded) 
+                  
 instance Show StatusClass where
   show SCDraft = "draft"
   show SCCancelled = "cancelled"
+  show SCRejected  = "rejected"
+  show SCTimedout  = "timeouted"
+  show SCError = "problem"
+  show SCDeliveryProblem = "deliveryproblem"
   show SCSent = "sent"
   show SCDelivered = "delivered"
   show SCRead = "read"
@@ -145,13 +153,14 @@ data SignatoryField = SignatoryField {
   , sfPlacements :: [FieldPlacement]
   } deriving (Eq, Ord, Show, Data, Typeable)
 
-data FieldPlacement = FieldPlacement {
-    placementx :: Int
-  , placementy :: Int
-  , placementpage :: Int
-  , placementpagewidth :: Int
-  , placementpageheight :: Int
-  , placementtipside :: Maybe TipSide
+data FieldPlacement = FieldPlacement
+  { placementxrel       :: Double
+  , placementyrel       :: Double
+  , placementwrel       :: Double
+  , placementhrel       :: Double
+  , placementfsrel      :: Double
+  , placementpage       :: Int
+  , placementtipside    :: Maybe TipSide
   } deriving (Eq, Ord, Show, Data, Typeable)
 
 data TipSide = LeftTip | RightTip
@@ -382,6 +391,7 @@ $(bitfieldDeriveConvertible ''SignatoryRole)
 $(enumDeriveConvertible ''MailsDeliveryStatus)
 $(newtypeDeriveConvertible ''SignOrder)
 $(enumDeriveConvertible ''DocumentProcess)
+$(enumDeriveConvertible ''StatusClass)
 $(enumDeriveConvertibleIgnoreFields ''DocumentStatus)
 $(enumDeriveConvertibleIgnoreFields ''FieldType)
 $(enumDeriveConvertible ''AuthenticationMethod)
@@ -391,28 +401,79 @@ $(jsonableDeriveConvertible [t| [DocumentTag] |])
 $(jsonableDeriveConvertible [t| CancelationReason |])
 $(jsonableDeriveConvertible [t| [[String]] |])
 
+-- this should go to fields-json
+instance FromJSValue Double where
+    fromJSValue (JSRational _ r) = Just $ fromRational r
+    fromJSValue _ = Nothing
+
+instance FromJSValue FieldPlacement where
+  -- Here we do three cases of json representation of FieldPlacement.
+  -- First one is new relative representation, second is old json
+  -- representation for javascript and ajax, third is database
+  -- representation. After ajax is changed and database is migrated
+  -- only first on representation should be left in place.
+  fromJSValue js = msum $ fmap ($ js) 
+                     [ do xrel       <- fromJSValueField "xrel"
+                          yrel       <- fromJSValueField "yrel"
+                          wrel       <- fromJSValueField "wrel"
+                          hrel       <- fromJSValueField "hrel"
+                          fsrel      <- fromJSValueField "fsrel"
+                          page       <- fromJSValueField "page"
+                          side       <- fromJSValueField "tip"
+                          return (FieldPlacement <$> xrel <*> yrel
+                                                 <*> wrel <*> hrel <*> fsrel
+                                                 <*> page <*> Just side)
+                     , do x          <- fromJSValueField "x"
+                          y          <- fromJSValueField "y"
+                          page       <- fromJSValueField "page"
+                          pagewidth  <- fromJSValueField "pagewidth"
+                          pageheight <- fromJSValueField "pageheight"
+                          side       <- fromJSValueField "tip"
+                          let xrel  = (/) <$> x <*> pagewidth
+                          let yrel  = (/) <$> y <*> pageheight
+                          let wrel  = Just 0
+                          let hrel  = Just 0
+                          let fsrel = Just 0
+                          return (FieldPlacement <$> xrel <*> yrel
+                                                 <*> wrel <*> hrel <*> fsrel
+                                                 <*> page <*> Just side)
+                     , do x          <- fromJSValueField "placementx"
+                          y          <- fromJSValueField "placementy"
+                          page       <- fromJSValueField "placementpage"
+                          pagewidth  <- fromJSValueField "placementpagewidth"
+                          pageheight <- fromJSValueField "placementpageheight"
+                          tipside    <- fromJSValueField "placementtipside"
+                          let xrel  = (/) <$> x <*> pagewidth
+                          let yrel  = (/) <$> y <*> pageheight
+                          let wrel  = Just 0
+                          let hrel  = Just 0
+                          let fsrel = Just 0
+                          return (FieldPlacement <$> xrel <*> yrel
+                                                 <*> wrel <*> hrel <*> fsrel
+                                                 <*> page <*> (Just $ join $ maybeRead <$> tipside))
+                     ]
+
+instance FromJSValue TipSide where
+    fromJSValue js = case fromJSValue js of
+          Just "left"  -> Just LeftTip
+          Just "right" -> Just RightTip
+          _ ->            Nothing
+
 
 instance Convertible  [FieldPlacement] SqlValue where
     safeConvert = jsonToSqlValueCustom $ JSArray . (map placementJSON) 
         where
-         placementJSON p = runJSONGen $ do 
-            value "placementx" $ placementx p
-            value "placementy" $ placementy p
-            value "placementpage" $ placementpage p
-            value "placementpagewidth" $ placementpagewidth p
-            value "placementpageheight" $ placementpageheight p
-            when (isJust $ placementtipside p) $ 
-                value "placementtipside" $ show <$> placementtipside p
+         placementJSON placement = runJSONGen $ do 
+                             value "xrel" $ placementxrel placement
+                             value "yrel" $ placementyrel placement
+                             value "wrel" $ placementwrel placement
+                             value "hrel" $ placementhrel placement
+                             value "fsrel" $ placementfsrel placement
+                             value "page" $ placementpage placement
+                             value "tip" $ case (placementtipside placement) of
+                                             Just LeftTip -> Just "left"
+                                             Just RightTip -> Just "right"
+                                             _ -> Nothing
 
 instance Convertible  SqlValue [FieldPlacement] where
-    safeConvert = jsonFromSqlValueCustom $ nothingToResult . (fromJSValueCustomMany placementFromJSON)
-        where
-         placementFromJSON :: JSValue -> Maybe FieldPlacement
-         placementFromJSON = do
-              x     <- fromJSValueField "placementx"
-              y     <- fromJSValueField "placementy"
-              page   <- fromJSValueField "placementpage"
-              pagewidth  <- fromJSValueField "placementpagewidth"
-              pageheight <- fromJSValueField  "placementpageheight"
-              tipside    <- fromJSValueField "placementtipside"
-              return (FieldPlacement <$> x <*> y <*> page <*> pagewidth <*> pageheight <*> (Just $ join $ maybeRead <$> tipside))
+    safeConvert = jsonFromSqlValueCustom $ nothingToResult . (fromJSValueCustomMany fromJSValue)

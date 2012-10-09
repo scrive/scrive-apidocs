@@ -170,7 +170,11 @@ staticRoutes = choice
      , dir "payments" $ dir "newsubscription" $ hPost $ toK0 $ Payments.handleSyncNewSubscriptionWithRecurly
      , dir "payments" $ dir "changeplan" $ hPost $ toK0 $ Payments.handleChangePlan
      , dir "payments" $ dir "postback" $ hPostNoXToken $ toK0 $ Payments.handleRecurlyPostBack
-
+     -- price plan page information
+     , dir "payments" $ dir "pricepageinfo" $ hGet $ toK0 $ Payments.handlePricePageJSON
+     , dir "payments" $ dir "userexists" $ hGet $ toK0 $ Payments.handleUserExists
+     , dir "payments" $ dir "createuser" $ hPostNoXToken $ toK0 $ Payments.handleCreateUser
+     , dir "payments" $ dir "newsubscriptionoutside" $ hPostNoXToken $ toK0 $ Payments.handleSyncNewSubscriptionWithRecurlyOutside
      -- super user only
      , dir "createuser" $ hPost $ toK0 $ Administration.handleCreateUser
      , dir "adminonly" $ hGet $ toK0 $ Administration.showAdminMainPage
@@ -180,6 +184,7 @@ staticRoutes = choice
      , dir "adminonly" $ dir "useradmin" $ hGet $ toK0 $ Administration.showAdminUsers Nothing
      , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminUserUsageStats
      , dir "adminonly" $ dir "useradmin" $ hPost $ toK1 $ Administration.handleUserChange
+     , dir "adminonly" $ dir "useradmin" $ dir "sendinviteagain" $ hPost $ toK0 $ Administration.sendInviteAgain
      , dir "adminonly" $ dir "useradmin" $ dir "payments" $ hGet $ toK1 $ Administration.showAdminUserPayments
      , dir "adminonly" $ dir "useradmin" $ dir "payments" $ hPost $ toK1 $ Administration.handleUserPaymentsChange
      , dir "adminonly" $ dir "companyadmin" $ hGet $ toK0 $ Administration.showAdminCompanies

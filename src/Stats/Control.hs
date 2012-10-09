@@ -114,7 +114,7 @@ handleDocStatsCSV = onlySalesOrAdmin $ do
   let start = fromSeconds 0
   end <- ctxtime <$> getContext
   stats <- dbQuery $ GetDocStatCSV start end
-  let docstatsheader = ["userid", "user", "date", "event", "count", "docid", "serviceid", "company", "companyid", "doctype", "api"]
+  let docstatsheader = ["userid", "user", "date", "event", "count", "docid", "company", "companyid", "doctype", "api"]
   return $ CSV { csvFilename = "docstats.csv"
                , csvHeader = docstatsheader
                , csvContent = map (map BS.toString) stats
@@ -531,7 +531,7 @@ handleUserStatsCSV :: Kontrakcja m => m CSV
 handleUserStatsCSV = onlySalesOrAdmin $ do
   stats <- dbQuery GetUserStatEvents
   return $ CSV { csvFilename = "userstats.csv"
-               , csvHeader = ["userid", "date", "event", "count", "serviceid", "companyid"]
+               , csvHeader = ["userid", "date", "event", "count", "companyid"]
                , csvContent = map csvline stats
                }
   where csvline event = [ show                                 $ usUserID    event
@@ -801,7 +801,7 @@ handleSignStatsCSV :: Kontrakcja m => m CSV
 handleSignStatsCSV = do
   stats <- dbQuery GetSignStatEvents
   return $ CSV { csvFilename = "signstats.csv"
-               , csvHeader = ["documentid", "signatorylinkid", "date", "event", "doctype", "service (author)", "company (author)"]
+               , csvHeader = ["documentid", "signatorylinkid", "date", "event", "doctype", "company (author)"]
                , csvContent = map csvline stats
                }
   where csvline event = [ show        $ ssDocumentID      event
@@ -840,7 +840,7 @@ handleDocHistoryCSV = do
   let byDoc = groupWith seDocumentID $ reverse $ sortWith seDocumentID stats
       rows = map (\es -> csvRowFromDocHist es []) byDoc
   return $ CSV { csvFilename = "dochist.csv"
-               , csvHeader = ["documentid", "serviceid", "companyid", "doctype", "create", "send", "close", "reject", "cancel", "timeout"]
+               , csvHeader = ["documentid", "companyid", "doctype", "create", "send", "close", "reject", "cancel", "timeout"]
                , csvContent = rows
                }
 
@@ -873,6 +873,6 @@ handleSignHistoryCSV = do
   let bySig = groupWith (\s-> (ssDocumentID s, ssSignatoryLinkID s)) $ reverse $ sortWith (\s-> (ssDocumentID s, ssSignatoryLinkID s)) stats
       rows = map (\es -> csvRowFromSignHist es []) bySig
   return $ CSV { csvFilename = "signhist.csv"
-               , csvHeader = ["documentid", "signatoryid", "serviceid", "companyid", "doctype", "invite", "receive", "open", "link", "sign", "reject", "delete", "purge"]
+               , csvHeader = ["documentid", "signatoryid", "companyid", "doctype", "invite", "receive", "open", "link", "sign", "reject", "delete", "purge"]
                , csvContent = rows
                }

@@ -74,6 +74,10 @@ javascriptLocalisation =
                  , read : "$_tooltipread()$"
                  , opened : "$_tooltipopened()$"
                  , signed : "$_tooltipsigned()$"
+                 , rejected :  "$_tooltiprejected()$"
+                 , deliveryproblem : "$_tooltipdeliveryproblem()$"
+                 , timeouted       : "$_tooltiptimedout()$"
+                 , problem           : "$_tooltiperror()$"
              }
              , select : "$_options()$"
              , of : "$_of()$"
@@ -213,6 +217,9 @@ javascriptLocalisation =
                 showCancelled: "$_tablestatusesCancelled()$",
                 showSent: "$_filterBySent()$",
                 showSigned: "$_tablestatusesSigned()$"
+            }
+           , filterByAuthor : {
+                showAnyAuthor : "$_anyAuthor()$"
             }
            , searchTemplate : "$_SearchTemplate()$"
            , sortTemplate : "$_SortTemplate()$"
@@ -435,23 +442,67 @@ javascriptLocalisation =
            , manyusers: "$_paymentsManyUsers()$"
            , price : "$_paymentsPrice()$"
            , buysyou : "$_paymentsBuysYou()$"
+           , phonenumber : "$_paymentsPhonenumber()$"
+           , readmore : "$_paymentsReadMore()$"
+           , featuresurl : "$_paymentsFeaturesURL()$"
            , plans: { professional : "$_paymentPlanProfessional()$"
-                    , team         : "$_paymentPlanTeam()$"
+                    , team         : {
+                      name : "$_paymentPlanTeam()$",
+                      tag :"$_paymentPlanTeamTag()$",
+                      price : "$_paymentsTeamPrice()$",
+                      features: [ "$_paymentFeatureDistance()$"
+                                 , "$_paymentFeaturePad()$"
+                                 , "$_paymentFeatureBranding()$"
+                                 , "$_paymentFeatureTracking()$"
+                                 , "$_paymentFeatureAPI()$"
+                                 , "$_paymentFeatureFeatures()$"
+                                 ],
+                      price1 : "",
+                      price3 : "$_paymentPlanPerUserPerMonth()$",
+                      price21 : "",
+                      price31 : "",
+                      select : "$_paymentsSelect()$",
+                      selected : "$_paymentsSelected()$"
+                    }
+                    , form : {
+                      name : "$_paymentPlanForm()$",
+                      tag : "$_paymentPlanFormTag()$",
+                      price : "$_paymentPlanFormPrice()$",
+                      features : [ "$_paymentFeatureSupport()$"
+                                 , "$_paymentFeatureHTTPAPI()$"
+                                 , "$_paymentFeatureDocumentation()$"
+                                 , "$_paymentFeatureExampleCode()$"
+                                 ],
+                      price1 : "",
+                      price3 : "$_paymentPlanPerMonth()$ $_and()$",
+                      price21 : "$_paymentPlanDocPrice()$",
+                      price31 : "$_paymentPlanPerDocument()$",
+                      select : "$_paymentsGetInTouch()$",
+                      selected : "$_paymentsSelected()$"
+                    }
+                    , enterprise : {
+                      name : "$_paymentPlanEnterprise()$",
+                      tag : "$_paymentPlanProfessionalTag()$",
+                      price : "$_paymentsQuote()$",
+                      features : [ "$_paymentFeatureAllTeamFeatures()$"
+                                 , "$_paymentFeatureAllOnlineFormFeatures()$"
+                                 , "&nbsp;"
+                                 , "$_paymentFeatureOnPremise()$"
+                                 , "$_paymentFeatureFullCust()$"
+                                 , "$_paymentFeatureProjMan()$"
+                                 ],
+                      price1 : "$_paymentsAskForA()$",
+                      price3 : "",
+                      price21 : "",
+                      price31 : "",
+                      select : "$_paymentsGetInTouch()$",
+                      selected : "$_paymentsSelect()$"
+
+                    }
                     , free         : "$_paymentPlanFree()$"
                     , pay          : "$_paymentPlanPay()$"
-                    , form         : "$_paymentPlanForm()$"
-                    , formprice    : "$_paymentPlanFormPrice()$"
-                    , enterprise   : "$_paymentPlanEnterprise()$"
-                    , professionaltag : "$_paymentPlanProfessionalTag()$"
-                    , professionalprice : "$_paymentsProfessionalPrice()$"
-                    , teamtag : "$_paymentPlanTeamTag()$"
-                    , teamprice : "$_paymentsTeamPrice()$"
-
-                    , enterprisetag : "$_paymentPlanEnterpriseTag()$"
-                    , enterpriseprice : "$_paymentPlanEnterprisePrice()$"
                     , logo : "$_paymentPlanLogoAndBranding()$"
                     , dash : "$_paymentPlanDashboard()$"
-                    , formtag : "$_paymentPlanFormTag()$"
                     , docprice : "$_paymentPlanDocPrice()$"
                     }
            , table: { currentplan : "$_paymentPlanCurrentPlan()$"
@@ -472,25 +523,6 @@ javascriptLocalisation =
                         , dash     : "$_paymentFeatureDash()$"
                         , branding : "$_paymentFeatureBranding()$"
                         , features : "$_paymentFeatureFeatures()$"
-                        , team : [ "$_paymentFeatureDistance()$"
-                                 , "$_paymentFeaturePad()$"
-                                 , "$_paymentFeatureBranding()$"
-                                 , "$_paymentFeatureTracking()$"
-                                 , "$_paymentFeatureAPI()$"
-                                 , "$_paymentFeatureFeatures()$"
-                                 ]
-                        , form : [ "$_paymentFeatureSupport()$"
-                                 , "$_paymentFeatureHTTPAPI()$"
-                                 , "$_paymentFeatureDocumentation()$"
-                                 , "$_paymentFeatureExampleCode()$"
-                                 ]
-                        , enterprise0 : [ "$_paymentFeatureAllTeamFeatures()$"
-                                        , "$_paymentFeatureAllOnlineFormFeatures()$"
-                                        ]
-                        , enterprise : [ "$_paymentFeatureOnPremise()$"
-                                       , "$_paymentFeatureFullCust()$"
-                                       , "$_paymentFeatureProjMan()$"
-                                       ]
                         }           
             , subscribe: "$_paymentPlanSubscribe()$"
             , pleaseleavenumbertitle: "$_paymentsPleaseLeaveNumberTitle()$"
@@ -535,6 +567,14 @@ javascriptLocalisation =
                       , acceptTOS: "$_paymentsErrorsAcceptTOS()$"
                       , invalidQuantity: "$_paymentsErrorsInvalidQuantity()$"
                       }
+              , outside: {
+                  confirmAccountCreatedUser       : "$_confirmAccountCreatedUser()$",
+                  confirmAccountCreatedUserHeader : "$_modalUserSignupDoneHeader()$",
+                  confirmAccountExistingUser      : "$_confirmAccountExistingUser()$",
+                  confirmAccountExistingUserHeader: "$_confirmAccountExistingUserHeader()$",
+                  sorryExistingUser               : "$_flashMessageUserWithSameEmailExists()$",
+                  sorryExistingUserHeader         : "$_mailDocumentErrorContentBodyFourth()$"
+              }
         }  
       , documents : "$_docListTabsDocs()$"
       , templates : "$_docListTabsTemplates()$"
@@ -562,23 +602,29 @@ javascriptLocalisation =
                             , bodysingle : "$_ContractReminderBodySingel()$"
                             , successMessage : "$_flashMessageBulkDocumentRemindsSent()$"
                             , errorMessage   : "$_flashMessageNoBulkDocumentRemindsSent()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
+                            , notAvailableMessage : "$_youCantSendRemindersToThisDocuments()$"
                         }
                     , cancel : {
                               action: "$_listcancelbuttontext()$"
                             , body : "$_listcancelbody()$"
                             , successMessage : "$_listcanceledflashmessagesuccess()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
+                            , notAvailableMessage : "$_youCantCancelThisDocuments()$"
                         }
                     ,  remove : {
                               action: "$_delete()$"
                             , body : "$_listLocalDialogsBody()$"
                             , cantremoveactive : "$_CantRemoveActiveDocuments()$"
                             , successMessage : "$_flashMessageDocumentArchiveDone()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
                         }
                     , csv : {
                               action : "$_archiveCSV()$"
                         }
                     , zip : {
                               action : "$_archiveZIP()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
                         } 
                     , columns :{
                               status : "$_SortStatus()$"
@@ -596,12 +642,14 @@ javascriptLocalisation =
                               action: "$_delete()$"
                             , body : "$_listLocalDialogsBody()$"
                             , successMessage : "$_flashMessageTemplateArchiveDone()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
                         }
                     ,  share : {
                               action: "$_share()$"
                             , head : "$_listShareDialogHead()$"
                             , body : "$_listShareDialogBody()$"
                             , successMessage : "$_flashMessageTemplateShareDone()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
                         }
                     ,  createnew : "$_createNewTemplate()$"
                     ,  createnewtype : "$_createNewTemplateType()$"
@@ -621,12 +669,14 @@ javascriptLocalisation =
                               action: "$_delete()$"
                             , body : "$_listLocalDialogsBody()$"
                             , successMessage : "$_flashMessageAttachmentArchiveDone()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
                         }
                     ,  share : {
                               action: "$_pageAttachmentListShare()$"
                             , head : "$_listShareDialogHead()$"
                             , body : "$_listShareDialogBody()$"
                             , successMessage : "$_flashMessageAttachmentShareDone()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
                         }
                     ,  createnew : {
                               action: "$_pageAttachmentListNewAttachment()$"
@@ -641,17 +691,20 @@ javascriptLocalisation =
                        }
                 }
             ,  bin: {
-                       remove : {
+                       name :  "$_docListTabsBin()$"
+                    ,  remove : {
                               action: "$_delete()$"
                             , head : "$_listReallyDeleteDialogHead()$"
                             , body : "$_listReallyDeleteDialogBody()$"
                             , successMessage : "$_flashMessageRubbishHardDeleteDone()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
                         }
                     ,  restore : {
                               action: "$_restore()$"
                             , head : "$_listRestoreDialogHead()$"
                             , body : "$_listRestoreDialogBody()$"
                             , successMessage : "$_flashMessageRubbishRestoreDone()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
                         } 
                     ,  search : "$_SearchDoc()$"                     
                     ,  columns :{
@@ -737,4 +790,5 @@ javascriptLocalisation =
           , personOrCompany : "$_apiDashboardPersonOrCompany()$"
           , privilige       :  "$_apiDashboardPrivilige()$"
       }
-    }
+    };
+###
