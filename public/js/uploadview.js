@@ -13,12 +13,10 @@
         },
         uploadBox: function() {
           var wiz = this.model.wizard();
-          var header = $("<span class='header'/>").text(localization.uploadView.chooseFile);
-          var subheader = $("<span class='text'/>").text(localization.onlyPDF);
           var upbutton = UploadButton.init({
                 name: "file",
                 width: 125,
-                text: localization.uploadButton,
+                text: localization.uploadView.newProcessFromFile,
                 submitOnUpload: true,
                 type: "",
                 onClick : function () {
@@ -57,18 +55,15 @@
                 })
             });
           var uploadbuttoncontainer = $("<div class='signStepsButtonContainer s-upload-document'></div>").append(upbutton.input());
-          var div = $("<div class='signStepsBodyUploadBox'/>").append(header).append("<BR/>").append(subheader).append("<BR/>").append(uploadbuttoncontainer);    
-          return $("<td class='jsformbox'>").append(div); 
+          return $("<div/>").append(uploadbuttoncontainer);
         },
         templateBox : function() {
           var wiz = this.model.wizard();
-          var header = $("<span class='header'/>").text(localization.uploadView.chooseTemplate);
-          var subheader = $("<span class='text'/>").text(localization.uploadView.savedTemplate);
           var button = Button.init({
             color : 'green',
             size : 'small' ,
-            width : 134,
-            text : localization.uploadView.chooseTemplateButton,
+            width : 125,
+            text : localization.uploadView.chooseTemplate,
             onClick : function() {
                 wiz.nextStep();
                 return false;
@@ -76,17 +71,14 @@
           });
           var buttonbox = $("<div class='signStepsButtonContainer' style='height:34px'/>");
           buttonbox.append(button.input().addClass("selectTemplateButton"));
-          var div = $("<div class='signStepsBodyUploadBox'/>").append(header).append("<BR/>").append(subheader).append("<BR/>").append(buttonbox);
-          return $("<td/>").append(div);
+          return $("<div/>").append(buttonbox);
         },
         newTemplateBox: function() {
           var wiz = this.model.wizard();
-          var header = $("<span class='header'/>").text(localization.uploadView.createNewTemplate);
-          var subheader = $("<span class='text'/>").text(localization.onlyPDF);
           var upbutton = UploadButton.init({
                 name: "file",
-                width: 125,
-                text: localization.uploadButton,
+                width: 145,
+                text: localization.uploadView.uploadNewTemplate,
                 submitOnUpload: true,
                 type: "",
                 onClick : function () {
@@ -125,39 +117,34 @@
                     }
                 })
             });
-          var uploadbuttoncontainer = $("<div class='signStepsButtonContainer'></div>").append(upbutton.input());
-          var div = $("<div class='signStepsBodyUploadBox'/>").append(header).append("<BR/>").append(subheader).append("<BR/>").append(uploadbuttoncontainer);
-          return $("<td class='jsformbox'>").append(div);
+          var uploadbuttoncontainer = $("<div class='signStepsButtonContainer' style='width: 145px;'></div>").append(upbutton.input());
+          return $("<div/>").append(uploadbuttoncontainer);
         },
         avtal24Box: function() {
             var wiz = this.model.wizard();
-            var header = $("<span class='header'/>").text(localization.uploadView.buyAvtal24Template);
-            var label = $("<div class='label' style='text-align: center; width: 102px'/>").text(localization.uploadView.buyTemplateButton);
+            var label = $("<div class='label' style='text-align: center; width: 113px;'/>").text(localization.uploadView.buyAvtal24Template);
             var link = $("<a href='https://avtal24.se' class='green btn-small'/>").append("<div class='left'/>").append(label).append("<div class='right'/>");
-            var container = $("<div class='signStepsButtonContainer'></div>").append(link);
-            var div = $("<div class='signStepsBodyUploadBox'/>").append(header).append("<BR/>").append("<BR/>").append(container);
-            return $("<td class='jsformbox'>").append(div);
+            var container = $("<div class='signStepsButtonContainer' style='width: 145px;'></div>").append(link);
+            return $("<div/>").append(container);
         },
         render: function() {
             var view = this;
             $(view.el).children().detach();
             var model = view.model;
             var wiz = model.wizard();
-            var useAvtal24 = true;
-            if (useAvtal24) {
-                var d = $("<div/>");
-                d.append(this.uploadBox());
-                d.append(this.templateBox());
-                $(view.el).append(d);
-                d = $("<div/>");
-                d.append(this.newTemplateBox());
-                d.append(this.avtal24Box());
-                $(view.el).append(d);
-            } else {
-                $(view.el).append(this.uploadBox());
-                $(view.el).append(this.templateBox());
-                $(view.el).append(this.newTemplateBox());
-            }
+            var div = "<div class='signStepsBodyUploadBox' style='height: 120px; width: 280px;'/>";
+            var header = "<span class='header' style='font-variant: small-caps;'/>";
+            var d = $(div);
+            $(view.el).append($("<div style='float: left; height: 1px; width: 135px;'/>"));
+            d.append($(header).text(localization.uploadView.startNewProcess));
+            d.append(this.uploadBox());
+            d.append(this.templateBox());
+            $(view.el).append(d);
+            d = $(div);
+            d.append($(header).text(localization.uploadView.createNewTemplate));
+            d.append(this.newTemplateBox());
+            d.append(this.avtal24Box());
+            $(view.el).append(d);
         }
     });
 

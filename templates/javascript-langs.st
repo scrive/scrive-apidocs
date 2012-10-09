@@ -502,13 +502,12 @@ javascriptLocalisation =
           }
        , uploadView : {
                 back : "$_uploadViewGoBack()$"
-             ,  chooseFile : "$_signStepsBodyUploadBoxStep1UpLoadChooseFile()$"
+             ,  startNewProcess : "$_signStepsBodyUploadBoxStep1StartNewProcess()$"
              ,  chooseTemplate : "$_signStepsBodyUploadBoxStep1ChooseTemplate()$"
-             ,  savedTemplate  : "$_signStepsBodyUploadBoxStep1TemplateSaved()$"
-             ,  chooseTemplateButton : "$_signStepsBodyUploadBoxStep1ButtonChooseTemplate()$"
+             ,  newProcessFromFile: "$_signStepsBodyUploadBoxStep1NewProcessFromFile()$"
+             ,  uploadNewTemplate : "$_signStepsBodyUploadBoxStep1UploadNewTemplate()$"
              ,  createNewTemplate : "$_createNewTemplate()$"
              ,  buyAvtal24Template : "$_buyAvtal24Template()$"
-             ,  buyTemplateButton : "$_buyTemplateButton()$"
         }
         , payments: {
              users: "$_CompanyAccounts()$"
