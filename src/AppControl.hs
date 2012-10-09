@@ -42,7 +42,6 @@ import Control.Concurrent
 import Control.Concurrent.MVar.Util (tryReadMVar)
 import Control.Monad.Error
 import Data.Functor
-import Data.List
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.Server.Internal.Cookie
@@ -115,30 +114,37 @@ maybeReadStaticResources production mvar srConfigForAppConf = modifyMVar mvar $ 
                    return (sr',sr')
                else return $  (sr,sr)
 
-            
-showNamedHeader :: forall t . (t, HeaderPair) -> [Char]
-showNamedHeader (_nm,hd) = BS.toString (hName hd) ++ ": [" ++
-                      concat (intersperse ", " (map (show . BS.toString) (hValue hd))) ++ "]"
 
-showNamedCookie :: ([Char], Cookie) -> [Char]
+-- | Show nicely formated headers. Same header lines can appear
+-- multiple times in HTTP so we need to beautifully show them.  We
+-- also skip 'cookies' header as we show it later in a nicer form.
+showNamedHeader :: (a, HeaderPair) -> [String]
+showNamedHeader (_nm,hd) | hName hd == BS.fromString "cookie" = []
+showNamedHeader (_nm,hd) = map showHeaderLine (hValue hd)
+  where
+    showHeaderLine value = BS.toString (hName hd) ++ ": " ++ BS.toString value
+
+showNamedCookie :: (String, Cookie) -> String
 showNamedCookie (name,cookie) = name ++ ": " ++ mkCookieHeader Nothing cookie
 
-showNamedInput :: ([Char], Input) -> [Char]
-showNamedInput (name,input) = name ++ ": " ++ case inputFilename input of
-                                                  Just filename -> filename
-                                                  _ -> case inputValue input of
-                                                           Left _tmpfilename -> "<<content in /tmp>>"
-                                                           Right value -> show (BSL.toString value)
+showNamedInput :: (String, Input) -> String
+showNamedInput (name,input) = name ++ ": " ++
+    case inputFilename input of
+      Just filename -> filename
+      _ -> case inputValue input of
+             Left _tmpfilename -> "<<content in /tmp>>"
+             Right value -> show (BSL.toString value)
 
-showRequest :: Request -> Maybe [([Char], Input)] -> [Char]
+showRequest :: Request -> Maybe [(String, Input)] -> String
 showRequest rq maybeInputsBody =
     show (rqMethod rq) ++ " " ++ rqUri rq ++ rqQuery rq ++ "\n" ++
-    "post variables:\n" ++
-    maybe "" (unlines . map showNamedInput) maybeInputsBody ++
-    "http headers:\n" ++
-    (unlines $ map showNamedHeader (Map.toList $ rqHeaders rq)) ++
-    "http cookies:\n" ++
-    (unlines $ map showNamedCookie (rqCookies rq))
+    (unlinesIndented "post variables" . map showNamedInput) (fromMaybe [] maybeInputsBody) ++
+    (unlinesIndented "http headers" . concatMap showNamedHeader) (Map.toList $ rqHeaders rq) ++
+    (unlinesIndented "http cookies" . map showNamedCookie) (rqCookies rq)
+  where
+    unlinesIndented _title [] = ""
+    unlinesIndented title list = "  " ++ title ++ ":\n" ++
+        concatMap (\line -> "    " ++ line ++ "\n") list
 
 {- |
    Creates a context, routes the request, and handles the session.
@@ -204,9 +210,8 @@ appHandler handleRoutes appConf appGlobals appState = catchEverything . runOurSe
 
     handleKontraError e = Left <$> do
       rq <- askRq
-      Log.error $ show e
       liftIO (tryReadMVar $ rqInputsBody rq)
-        >>= Log.error . showRequest rq
+        >>= Log.error . shows e . (++) ": " . showRequest rq
       case e of
         InternalError -> do
           addFlashM V.modalError
@@ -250,7 +255,7 @@ appHandler handleRoutes appConf appGlobals appState = catchEverything . runOurSe
 
       -- do reload templates in non-production code
       templates2 <- liftIO $ maybeReadTemplates (production appConf) (templates appGlobals)
-      
+
       -- regenerate static files that need to be regenerated in development mode
       staticRes <-  liftIO $ maybeReadStaticResources (production appConf) (staticResources appGlobals) (srConfig appConf)
 
