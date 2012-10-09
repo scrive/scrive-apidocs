@@ -344,7 +344,7 @@ postBackCache pr = do
       -- next email 7 days later
       _ <- cachePlan time Stats.PushAction ac s is (ppID plan) (Just 1) (Just $ daysAfter 7 time) 
       ctx <- getContext
-      sendInvoiceFailedEmail (ctxhostpart ctx) (ctxmailsconfig ctx) (ctxlocale ctx) (ctxglobaltemplates ctx) user mcompany invoice
+      sendInvoiceFailedEmail (ctxhostpart ctx) (ctxmailsconfig ctx) (locale $ usersettings user) (ctxglobaltemplates ctx) user mcompany invoice
     (SuccessfulPayment _, _, _) -> do
       -- need to remove dunning step
       _ <- cachePlan time Stats.PushAction ac s is (ppID plan) Nothing Nothing
@@ -428,7 +428,7 @@ handleSyncNewSubscriptionWithRecurlyOutside = do
 sendInvoiceEmail :: Kontrakcja m => User -> Maybe Company -> Subscription -> m ()
 sendInvoiceEmail user mcompany subscription = do
   ctx <- getContext
-  mail <- mailSignup (ctxhostpart ctx) user mcompany subscription
+  mail <- runTemplatesT (locale $ usersettings user, ctxglobaltemplates ctx) $ mailSignup (ctxhostpart ctx) user mcompany subscription
   scheduleEmailSendout (ctxmailsconfig ctx)
                         (mail{to = [MailAddress{
                                      fullname = getFullName user
@@ -444,7 +444,7 @@ sendInvoiceFailedEmail hostpart mailsconfig locale templates user mcompany invoi
 sendExpiredEmail :: Kontrakcja m => User -> m ()
 sendExpiredEmail user = do
   ctx <- getContext
-  mail <- mailExpired (ctxhostpart ctx)
+  mail <- runTemplatesT (locale $ usersettings user, ctxglobaltemplates ctx) $ mailExpired (ctxhostpart ctx)
   scheduleEmailSendout (ctxmailsconfig ctx)
     (mail{to = [MailAddress { fullname = getFullName user
                             , email = getEmail user }]})
