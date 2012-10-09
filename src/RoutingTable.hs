@@ -171,10 +171,10 @@ staticRoutes = choice
      , dir "payments" $ dir "changeplan" $ hPost $ toK0 $ Payments.handleChangePlan
      , dir "payments" $ dir "postback" $ hPostNoXToken $ toK0 $ Payments.handleRecurlyPostBack
      -- price plan page information
-     , dir "payments" $ dir "pricepageinfo" $ hGet $ toK0 $ Payments.handlePricePageJSON
-     , dir "payments" $ dir "userexists" $ hGet $ toK0 $ Payments.handleUserExists
-     , dir "payments" $ dir "createuser" $ hPostNoXToken $ toK0 $ Payments.handleCreateUser
-     , dir "payments" $ dir "newsubscriptionoutside" $ hPostNoXToken $ toK0 $ Payments.handleSyncNewSubscriptionWithRecurlyOutside
+     , dir "payments" $ dir "pricepageinfo" $ hGetAllowHttp $ toK0 $ Payments.handlePricePageJSON
+     , dir "payments" $ dir "userexists" $ hGetAllowHttp $ toK0 $ Payments.handleUserExists
+     , dir "payments" $ dir "createuser" $ hPostAllowHttp $ toK0 $ Payments.handleCreateUser
+     , dir "payments" $ dir "newsubscriptionoutside" $ hPostAllowHttp $ toK0 $ Payments.handleSyncNewSubscriptionWithRecurlyOutside
      -- super user only
      , dir "createuser" $ hPost $ toK0 $ Administration.handleCreateUser
      , dir "adminonly" $ hGet $ toK0 $ Administration.showAdminMainPage
