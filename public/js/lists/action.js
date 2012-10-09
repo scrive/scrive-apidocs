@@ -52,7 +52,6 @@
 
     window.ListActionView = Backbone.View.extend({
         model: ListAction,
-        tagname : 'div',
         initialize: function(args) {
             _.bindAll(this, 'render');
             this.render();

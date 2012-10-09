@@ -150,7 +150,6 @@
     });
 
     var PlanBoxView = Backbone.View.extend({
-        tagName: "div",
         className: "planbox",
         initialize: function(args) {
             _.bindAll(this);
@@ -458,7 +457,6 @@
     });
 
     var PricePageView = Backbone.View.extend({
-        tagName: "div",
         className: "payments",
         initialize: function(args){
             var view = this;

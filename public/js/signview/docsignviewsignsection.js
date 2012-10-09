@@ -11,7 +11,6 @@ window.DocumentSignSignSection = Backbone.View.extend({
    initialize : function(args){
       this.render();
    },
-   tagname : 'div',
    render: function() {
        var model = this.model;
        var document = this.model.document();
