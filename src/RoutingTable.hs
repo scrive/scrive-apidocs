@@ -138,7 +138,6 @@ staticRoutes = choice
      , dir "padqueue" $ dir "state" $ hGet $ toK0 $ PadQueue.padQueueState
      , dir "padqueue" $ hGet $ toK0 $ PadQueue.showPadQueuePage
      , dir "padqueue" $ dir "archive" $ hGet $ toK0 $ ArchiveControl.showPadDeviceArchive
-     , dir "padqueue" $ dir "login"  $ hPostNoXToken $ toK0 $ PadQueue.handlePadLogin
      , dir "padqueue" $ dir "logout" $ hPostNoXToken $ toK0 $ PadQueue.handlePadLogout
 
      -- UserControl
@@ -235,7 +234,6 @@ staticRoutes = choice
 
      -- account stuff
      , dir "logout"      $ hGet  $ toK0 $ handleLogout
-     , allLocaleDirs $ const $ dir "login" $ hGet  $ toK0 $ handleLoginGet
      , dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
      , dir "signup"      $ hPostAllowHttp $ toK0 $ signupPagePost
      , dir "amnesia"     $ hPostNoXToken $ toK0 $ forgotPasswordPagePost

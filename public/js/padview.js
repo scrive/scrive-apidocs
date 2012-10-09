@@ -95,41 +95,9 @@ window.PadQueueView = Backbone.View.extend({
         
     },
     logToPadDevicePopup : function() {
-        var wrapper = $("<div class='body'>");
-        var loginForm= $("<form class='wrapper'/>");
-        var emailValue = LocalStorage.get("Pad", "email");
-        console.log("Email " + emailValue);
-        var email = InfoTextInput.init({infotext:localization.email,  inputtype : 'email', value : emailValue});
-        var password = InfoTextInput.init({infotext:localization.password, inputtype : 'password'});
-        var sendLogin = function() {
-                LocalStorage.set("Pad", "email", email.value())
-                new Submit({
-                    url : "/padqueue/login",
-                    method : "POST",
-                    email: email.value(),
-                    password : password.value()       
-                }).send();
-                return false;
-            };
-            
-        var table = Table.init({
-                        fields: 
-                        [
-                            [$("<span class='txt'>").text(localization.email), email.input()],
-                            [$("<span class='txt'>").text(localization.password), password.input()]
-                            
-                        ]
-                    });
-        loginForm.append(table.view.el);
-        loginForm.append("<input class='hidden' type='submit'>");    
-        loginForm.submit(sendLogin);     
-        Confirmation.popup({
-            title : localization.login.logMeIn,
-            content : wrapper.append(loginForm),
-            acceptText : localization.login.logMeIn,
-            cantCancel : true,
-            extraClass : "login-container",
-            onAccept : sendLogin
+        Login({
+            pad : true,
+            referer : "/padqueue"
             });
     },
     padLogoutIcon : function() {

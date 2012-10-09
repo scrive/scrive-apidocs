@@ -5,14 +5,6 @@ notFound=
 
             $_notFoundGoHome()$
         </div>
-
-###
-pageLogin=
-    <div class="centerdivnarrow">
-      <p class="headline">$_login()$</p>
-      $loginBox()$
-    </div>
-
 ###
 wholePage=
     $doctype()$
@@ -228,28 +220,6 @@ safeReady(function() {
   <img src="/theme/../img/spr-flash-bg.png" />
   <img src="/img/spr-flash-bg.png" />
 </div>
-####
-loginBox=
-    <div id="login">
-      <form action="/login" method="post">
-        <input type="hidden" name="referer" value="$referer$" />
-        <table>
-	  <tr>
-            <td>$_email()$:</td>
-            <td><input type="email" name="email" autocomplete="off" class="noflash" value="$if(email)$$email$$endif$" /></td>
-          </tr>
-	  <tr>
-            <td>$_password()$:</td>
-            <td><input type="password" name="password" autocomplete="off" /></td>
-          </tr>
-	  <tr>
-            <td><input class="button" id="loginbtn" type="submit" name="login" value="Logga in" /></td>
-            <td><a href="/amnesia"> $_forgotpassword()$</a></td>
-	  </tr>
-        </table>
-      </form>
-    </div>
-
 ####
 header=
  <div id="top-slim-container" class="newdesign">

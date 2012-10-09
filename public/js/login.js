@@ -22,6 +22,9 @@ var LoginModel = Backbone.Model.extend({
   visible : function() {
     return this.get("visible");
   },
+  pad : function() {
+    return this.get("pad");
+  },
   show: function() {
     this.set({visible : true});
   },
@@ -45,7 +48,7 @@ var LoginModel = Backbone.Model.extend({
   },
   login : function() {
     var model = this;
-    new Submit({
+    var submit = new Submit({
           method: "POST",
           url: "/login",
           ajax: true,
@@ -62,7 +65,10 @@ var LoginModel = Backbone.Model.extend({
               FlashMessages.add({ content: localization.loginModal.loginFailed, color: "red"});
             }
           }
-        }).send();
+        })
+    if (model.pad() == true)
+      submit.add("pad","true");
+    submit.send();
   },
   sendPasswordReminder : function() {
     var model = this;

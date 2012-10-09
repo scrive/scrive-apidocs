@@ -1,7 +1,6 @@
 module Login (
     forgotPasswordPagePost
   , signupPagePost
-  , handleLoginGet
   , handleLoginPost
   , handleLogout
   , handleSignup
@@ -11,7 +10,7 @@ import ActionQueue.Core
 import ActionQueue.PasswordReminder
 import AppView as V
 import DB
-import InputValidation
+import InputValidation hiding (Result)
 import Happstack.Fields
 import Kontra
 import KontraLink
@@ -110,26 +109,12 @@ handleSignup = do
         -- whatever happens we want the same outcome, we just claim we sent the activation link,
         -- because we don't want any security problems with user information leaks
         
-
-{- |
-   Handles viewing of the login page
--}
-handleLoginGet :: Kontrakcja m => m Response
-handleLoginGet = do
-  ctx <- getContext
-  case ctxmaybeuser ctx of
-       Just _  -> sendRedirect LinkUpload
-       Nothing -> do
-         referer <- getField "referer"
-         email   <- getField "email"
-         content <- V.pageLogin referer email
-         V.renderFromBody V.kontrakcja content
-
 {- |
    Handles submission of a login form.  On failure will redirect back to referer, if there is one.
 -}
 handleLoginPost :: Kontrakcja m => m JSValue
 handleLoginPost = do
+    padlogin <- isFieldSet "pad"
     ctx <- getContext
     memail  <- getOptionalFieldNoFlash asDirtyEmail    "email"
     mpasswd <- getOptionalFieldNoFlash asDirtyPassword "password"
@@ -146,12 +131,19 @@ handleLoginPost = do
                         }
                         muuser <- dbQuery $ GetUserByID (userid user)
                         _ <- addUserLoginStatEvent (ctxtime ctx) (fromJust muuser)
-                        _ <- dbUpdate $ LogHistoryLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
-                        logUserToContext muuser
+                        if padlogin
+                          then do
+                            _ <- dbUpdate $ LogHistoryPadLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
+                            logPadUserToContext muuser
+                          else do
+                            _ <- dbUpdate $ LogHistoryLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
+                            logUserToContext muuser
                         runJSONGenT $ value "logged" True
                 Just u -> do
                         Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
-                        _ <- dbUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
+                        _ <- if padlogin
+                          then dbUpdate $ LogHistoryPadLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
+                          else dbUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
                         runJSONGenT $ value "logged" False
                 Nothing -> do
                     Log.debug $ "User " ++ show email ++ " login failed (user not found)"
