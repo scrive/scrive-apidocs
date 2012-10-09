@@ -128,7 +128,6 @@ window.draggebleField = function(dragHandler, fieldOrPlacement)
                     wrel: $(helper).width() / w,
                     hrel: $(helper).height() / h,
                     fsrel: fontSize/w,
-                    tip: "left"
                 });
                 field.addPlacement(newPlacement);
             }

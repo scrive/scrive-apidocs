@@ -17,6 +17,8 @@ window.FieldPlacement = Backbone.Model.extend({
     initialize : function(args){
         var placement = this;
         placement.addToPage();
+        if (this.tip() == undefined)
+          this.set({"tip" : args.field.defaultTip()});
         args.field.bind('removed', function() {
             placement.trigger("removed");
             placement.remove();
@@ -263,6 +265,11 @@ window.Field = Backbone.Model.extend({
     },
     isObligatoryCheckbox : function() {
         return this.type() == "checkbox-obligatory";
+    },
+    defaultTip : function() {
+      if (this.isCheckbox())
+        return "left";
+      return "right";
     },
     makeCheckboxOptional : function() {
         this.set({"type":"checkbox-optional"}, {silent: true});
