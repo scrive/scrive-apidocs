@@ -7,7 +7,6 @@ module RoutingTable (
 
 import Kontra
 import KontraLink
-import LocaleRouting (allLocaleDirs)
 import Login
 import PublicPages (publicPages)
 import Redirect

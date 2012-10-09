@@ -8,7 +8,6 @@ module Login (
 
 import ActionQueue.Core
 import ActionQueue.PasswordReminder
-import AppView as V
 import DB
 import InputValidation hiding (Result)
 import Happstack.Fields

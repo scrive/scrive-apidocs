@@ -4,9 +4,6 @@
 module AppView( kontrakcja
               , renderFromBody
               , notFoundPage
-              , signupPageView
-              , signupVipPageView
-              , pageLogin
               , simpleResponse
               , simpleResonseClrFlash
               , firstPage
@@ -192,23 +189,6 @@ standardPageFields ctx title mpubliclink showCreateAccount loginOn referer email
   publicSafeFlagField ctx loginOn (isJust mpubliclink)
   loginModal loginOn referer email
   F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
-
-{- |
-   The contents of the signup page.  This is read from a template.
--}
-signupPageView :: TemplatesMonad m => m String
-signupPageView = renderTemplate_ "signupPageView"
-
-signupVipPageView :: TemplatesMonad m => m String
-signupVipPageView = renderTemplate_ "signupVipPageView"
-
-{- |
-   The contents of the login page.  This is read from a template.
--}
-pageLogin :: TemplatesMonad m => Maybe String -> Maybe String -> m String
-pageLogin referer email = renderTemplate "pageLogin" $ do
-  F.value "referer" referer
-  F.value "email" email
 
 {- |
    Changing our pages into reponses, and clearing flash messages.
