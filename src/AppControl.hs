@@ -125,7 +125,7 @@ showNamedHeader (_nm,hd) = map showHeaderLine (hValue hd)
     showHeaderLine value = BS.toString (hName hd) ++ ": " ++ BS.toString value
 
 showNamedCookie :: (String, Cookie) -> String
-showNamedCookie (name,cookie) = name ++ ": " ++ mkCookieHeader Nothing cookie
+showNamedCookie (_name,cookie) = mkCookieHeader Nothing cookie
 
 showNamedInput :: (String, Input) -> String
 showNamedInput (name,input) = name ++ ": " ++
