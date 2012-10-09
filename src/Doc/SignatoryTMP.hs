@@ -169,34 +169,36 @@ toSignatoryDetails2 sTMP  =
    mergeFields (f:fs) l = mergeFields fs (replaceField f l)
    withRolesAndAttsAndCSV x = (x,roles $ sTMP, attachments $ sTMP, csvupload $ sTMP, signredirecturl $ sTMP)
    
-
 instance FromJSValue SignatoryTMP where
     fromJSValue = do
         author <- fromJSValueField "author"
         signs  <- fromJSValueField "signs"
-        fields <- fromJSValueField "fields"
+        mfields <- fromJSValueField "fields"
         signorder <- fromJSValueField "signorder"
-        attachments <- fromJSValueField "attachments"
+        mattachments <- fromJSValueField "attachments"
         csv <- fromJSValueField "csv"
         sredirecturl <- fromJSValueField "signsuccessredirect"
-        return $ Just $
-            (setSignOrder (SignOrder $ fromMaybe 1 signorder)) $
-            (makeAuthor  <| joinB author |> id) $
-            (makeSigns   <| joinB signs  |> id) $
-            (setCSV $ csv) $
-            (setSignredirecturl $ sredirecturl) $
-            (map replaceField $ concat $ maybeToList fields) $^^
-            (map addAttachment $ concat $ maybeToList attachments) $^^
-            emptySignatoryTMP
+        case (mfields, mattachments) of
+          (Just fields, Just attachments) -> 
+            return $ Just $
+                (setSignOrder (SignOrder $ fromMaybe 1 signorder)) $
+                (makeAuthor  <| joinB author |> id) $
+                (makeSigns   <| joinB signs  |> id) $
+                (setCSV $ csv) $
+                (setSignredirecturl $ sredirecturl) $
+                (map replaceField fields) $^^
+                (map addAttachment attachments) $^^
+                emptySignatoryTMP
+          _ -> return Nothing
             
 instance FromJSValue SignatoryField where
     fromJSValue = do
         ftype <- fromJSValue -- We read field type at this from two different fields, so we can't use fromJSValueField
         value  <- fromJSValueField "value"
-        placements <- fromJSValueField "placements"
-        case (ftype,value) of 
-          (Just ft, Just v) -> do
-              return $ Just $ SignatoryField ft v (concat $ maybeToList placements)
+        mplacements <- fromJSValueField "placements"
+        case (ftype,value,mplacements) of 
+          (Just ft, Just v, Just placements) -> do
+              return $ Just $ SignatoryField ft v placements
           _ -> return Nothing
         
 
