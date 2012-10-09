@@ -327,14 +327,18 @@ instance Arbitrary SignatoryDetails where
                                                      , SignatoryField EmailFT     em []]}
 
 instance Arbitrary FieldPlacement where
-  arbitrary = do
-    (a,b,c) <- arbitrary
-    (d,e,f) <- arbitrary
-    return $ FieldPlacement { placementxrel       = a
-                            , placementyrel       = b
-                            , placementwrel       = c
-                            , placementhrel       = d
-                            , placementfsrel      = e
+  arbitrary = do  -- We loose precision with conversion, so please watch out for this
+    (a :: Int) <- choose (1,1000)
+    (b :: Int) <- choose (1,1000)
+    (c :: Int) <- choose (1,1000)
+    (d :: Int) <- choose (1,1000)
+    (e :: Int) <- choose (1,1000)
+    f <- arbitrary
+    return $ FieldPlacement { placementxrel       = fromIntegral a / 100
+                            , placementyrel       = fromIntegral b / 100
+                            , placementwrel       = fromIntegral c / 100
+                            , placementhrel       = fromIntegral d / 100
+                            , placementfsrel      = fromIntegral e / 100
                             , placementpage       = f
                             , placementtipside    = Nothing
                             }
