@@ -161,7 +161,18 @@ data FieldPlacement = FieldPlacement
   , placementfsrel      :: Double
   , placementpage       :: Int
   , placementtipside    :: Maybe TipSide
-  } deriving (Eq, Ord, Show, Data, Typeable)
+  } deriving (Ord, Show, Data, Typeable)
+
+instance Eq FieldPlacement where
+    (==) a b = eqByEpsilon placementxrel &&
+               eqByEpsilon placementyrel &&
+               eqByEpsilon placementwrel &&
+               eqByEpsilon placementhrel &&
+               eqByEpsilon placementfsrel &&
+               placementpage a == placementpage b &&
+               placementtipside a == placementtipside b
+      where
+        eqByEpsilon func = abs (func a - func b) < 0.00001
 
 data TipSide = LeftTip | RightTip
   deriving (Eq, Ord, Show, Read, Data, Typeable)
