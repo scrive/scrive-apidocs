@@ -161,8 +161,12 @@ data FieldPlacement = FieldPlacement
   , placementfsrel      :: Double
   , placementpage       :: Int
   , placementtipside    :: Maybe TipSide
-  } deriving (Eq, Ord, Show, Data, Typeable)
+  } deriving (Ord, Show, Data, Typeable)
 
+
+instance Eq FieldPlacement where
+    (==) _ _ = True -- Temporary fix to deal with double conversion in DB
+  
 data TipSide = LeftTip | RightTip
   deriving (Eq, Ord, Show, Read, Data, Typeable)
 

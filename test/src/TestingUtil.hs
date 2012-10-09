@@ -333,12 +333,13 @@ instance Arbitrary FieldPlacement where
     (c :: Int) <- choose (1,1000)
     (d :: Int) <- choose (1,1000)
     (e :: Int) <- choose (1,1000)
+    (x :: Int) <- choose (1, 10)
     f <- arbitrary
-    return $ FieldPlacement { placementxrel       = fromIntegral a / 100
-                            , placementyrel       = fromIntegral b / 100
-                            , placementwrel       = fromIntegral c / 100
-                            , placementhrel       = fromIntegral d / 100
-                            , placementfsrel      = fromIntegral e / 100
+    return $ FieldPlacement { placementxrel       = fromIntegral a / fromIntegral x
+                            , placementyrel       = fromIntegral b / fromIntegral x
+                            , placementwrel       = fromIntegral c / fromIntegral x
+                            , placementhrel       = fromIntegral d / fromIntegral x
+                            , placementfsrel      = fromIntegral e / fromIntegral x
                             , placementpage       = f
                             , placementtipside    = Nothing
                             }
