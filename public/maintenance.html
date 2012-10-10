@@ -3,16 +3,52 @@
   <head>
     <title>Scrive - maintenance mode</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <link href='http://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css">
-    <link href="/css/main.css" rel="stylesheet" type="text/css" />
+    <script>
+function doCountdown() {
+  var elem = document.getElementById("countdown");
+  var txt = elem.innerHTML;
+  if( txt == "0" ) {
+    window.location.reload();
+  }
+  else {
+    txt = "" + (txt - 1);
+    elem.innerHTML = txt;
+    setTimeout(doCountdown,1000);
+  }
+}
+
+setTimeout(doCountdown,1000);
+    </script>
+    <style>
+body {
+    background-image: url(img/cross.png);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
+    background-size: 120%;
+    overflow: hidden;
+}
+.coverup {
+    background-color: #ffffff;
+    background-color: rgba(255,255,255,0.9);
+    text-align: right;
+    position: absolute;
+    left: 50px;
+    right: 50px;
+    top: 50px;
+    bottom: 50px;
+}
+.vspacer {
+    height: 45%;
+}
+    </style>
   </head>
-  <body style="text-align: center; padding: 50px;">
-
-    <img src="img/logo-scrive.png" /><br />
-    <br />
-    <br />
-    Scrive server is undergoing maintenance. We will be back shortly.<br />
-    For more info see our <a href="http://twitter.com/scrive">twitter updates</a>.
-
+  <body>
+   <div class="coverup">
+    <div class="vspacer"></div>
+    Scrive server is undergoing maintenance. <br />
+    Service will be back shortly.<br />
+    Automatic page reload in <span id="countdown">20</span>s.
+   </div>
   </body>
 </html>
