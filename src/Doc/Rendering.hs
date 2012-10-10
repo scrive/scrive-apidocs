@@ -108,6 +108,7 @@ convertPdfToJpgPages gs fid widthInPixels = do
                           , "-dSAFER"
                           , "-dBATCH"
                           , "-dNOPAUSE"
+                          , "-sFONTPATH=/opt/fonts"
                           , "-dTextAlphaBits=4"
                           , "-dGraphicsAlphaBits=4"
                           , "-r" ++ show resolution
@@ -244,6 +245,7 @@ preCheckPDFHelper gscmd content tmppath =
       (exitcode,_stdout,stderr1) <- liftIO $ readProcessWithExitCode' gscmd 
                                    [ "-sDEVICE=pdfwrite"
                                    , "-sOutputFile=" ++ normalizedpath
+                                   , "-sFONTPATH=/opt/fonts"
                                    , "-dSAFER"
                                    , "-dBATCH"
                                    , "-dNOPAUSE"
