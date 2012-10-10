@@ -153,7 +153,7 @@ data EvidenceEventType =
   RemoveDocumentAttachmentEvidence                |
   AddDocumentAttachmentEvidence                   |
   PendingToAwaitingAuthorEvidence                 |
-  UpdateFieldsEvidence                            |
+  UpdateFieldsEvidence                            | -- not used anymore
   SetElegitimationIdentificationEvidence          | -- not used anymore
   SetEmailIdentificationEvidence                  | -- not used anymore
   TimeoutDocumentEvidence                         |
@@ -224,7 +224,7 @@ instance Convertible EvidenceEventType Int where
   safeConvert RemoveDocumentAttachmentEvidence                = return 3
   safeConvert AddDocumentAttachmentEvidence                   = return 4
   safeConvert PendingToAwaitingAuthorEvidence                 = return 5
-  safeConvert UpdateFieldsEvidence                            = return 6
+  safeConvert UpdateFieldsEvidence                            = return 6 -- Depreciated
   safeConvert SetElegitimationIdentificationEvidence          = return 7
   safeConvert SetEmailIdentificationEvidence                  = return 8
   safeConvert TimeoutDocumentEvidence                         = return 9

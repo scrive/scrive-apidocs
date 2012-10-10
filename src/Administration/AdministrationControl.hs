@@ -10,48 +10,17 @@
 --
 -----------------------------------------------------------------------------
 module Administration.AdministrationControl(
-            showAdminMainPage
-          , showAdminUsers
-          , showAdminCompanies
-          , showAdminCompany
-          , showAdminCompanyUsers
-          , showAdminUsersForSales
-          , showAdminUserPayments
-          , showAdminCompanyPayments
-          , showAllUsersTable
-          , showDocuments
-          , handleUserChange
-          , handleCompanyChange
-          , handleCompanyPaymentsChange
-          , handleUserPaymentsChange
-          , handleCreateUser
-          , handlePostAdminCompanyUsers
-          , handleUsersListCSV
-          , showFunctionalityStats
-          , handleBackdoorQuery
-          , resealFile
-          , replaceMainFile
-          , daveDocument
-          , daveUser
-          , daveCompany
-          , daveUserHistory
-          , daveSignatoryLink
-          , updateFields
-          , serveLogDirectory
-          , jsonUsersList
-          , jsonCompanies
-          , jsonDocuments
-          , sendInviteAgain
+            adminonlyRoutes
+          , daveRoutes
           ) where
 import Control.Monad.State
 import Data.Functor
-import Happstack.Server hiding (simpleHTTP)
+import Happstack.Server hiding (simpleHTTP,dir,path,https)
 import Happstack.Fields
 import Utils.IO
 import Utils.Monad
 import Utils.Monoid
 import Utils.Prelude
-import Utils.String
 import Kontra
 import Administration.AdministrationView
 import Doc.Model
@@ -59,7 +28,6 @@ import Doc.DocStateData
 import Company.Model
 import KontraLink
 import MinutesTime
-import System.Directory
 import DB
 import User.UserControl
 import User.UserView
@@ -76,8 +44,7 @@ import Util.HasSomeUserInfo
 import InputValidation
 import User.Utils
 import ScriveByMail.Model
-import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString.Lazy.UTF8 as BSL
 import Crypto.RNG(random)
 import Util.Actor
 import Payments.Action
@@ -88,7 +55,6 @@ import Recurly
 
 import InspectXMLInstances ()
 import InspectXML
-import File.Model
 import Util.CSVUtil
 import ListUtil
 import Text.JSON
@@ -103,13 +69,76 @@ import qualified Templates.Fields as F
 import Control.Logic
 import Doc.DocInfo
 import EvidenceLog.Model
+import Routing
+import qualified Stats.Control as Stats
+import qualified Company.CompanyControl as Company
+import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
+import Happstack.StaticRouting(Route, choice, dir)
+import Text.JSON.Gen
+import Doc.Invariants
+import qualified Data.Map as Map
 
+adminonlyRoutes :: Route (KontraPlus Response)
+adminonlyRoutes =
+  fmap onlySalesOrAdmin $ choice $ [
+          hGet $ toK0 $ showAdminMainPage
+        , dir "createuser" $ hPost $ toK0 $ handleCreateUser
+        , dir "useradminforsales" $ hGet $ toK0 $ showAdminUsersForSales
+        , dir "userslist" $ hGet $ toK0 $ jsonUsersList
+        , dir "useradmin" $ hGet $ toK1 $ showAdminUsers . Just
+        , dir "useradmin" $ hGet $ toK0 $ showAdminUsers Nothing
+        , dir "useradmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminUserUsageStats
+        , dir "useradmin" $ hPost $ toK1 $ handleUserChange
+        , dir "useradmin" $ dir "sendinviteagain" $ hPost $ toK0 $ sendInviteAgain
+        , dir "useradmin" $ dir "payments" $ hGet $ toK1 $ showAdminUserPayments
+        , dir "useradmin" $ dir "payments" $ hPost $ toK1 $ handleUserPaymentsChange
+        , dir "companyadmin" $ hGet $ toK0 $ showAdminCompanies
+        , dir "companyadmin" $ hGet $ toK1 $ showAdminCompany
+        , dir "companyadmin" $ dir "branding" $ Company.adminRoutes
+        , dir "companyadmin" $ dir "users" $ hGet $ toK1 $ showAdminCompanyUsers
+        , dir "companyadmin" $ dir "users" $ hPost $ toK1 $ handlePostAdminCompanyUsers
+        , dir "companyadmin" $ dir "payments" $ hGet $ toK1 $ showAdminCompanyPayments
+        , dir "companyadmin" $ dir "payments" $ hPost $ toK1 $ handleCompanyPaymentsChange
+        , dir "companyaccounts" $ hGet  $ toK1 $ CompanyAccounts.handleCompanyAccountsForAdminOnly
+        , dir "companyadmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminCompanyUsageStats
+        , dir "companyadmin" $ hPost $ toK1 $ handleCompanyChange
+        , dir "functionalitystats" $ hGet $ toK0 $ showFunctionalityStats
+
+        , dir "documents" $ hGet $ toK0 $ showDocuments
+        , dir "documentslist" $ hGet $ toK0 $ jsonDocuments
+
+        , dir "allstatscsv" $ hGet $ toK0 $ Stats.handleDocStatsCSV
+        , dir "userstatscsv" $ hGet $ toK0 $ Stats.handleUserStatsCSV
+        , dir "signstatscsv" $ hGet $ toK0 $ Stats.handleSignStatsCSV
+        , dir "dochistorycsv" $ hGet $ toK0 $ Stats.handleDocHistoryCSV
+        , dir "signhistorycsv" $ hGet $ toK0 $ Stats.handleSignHistoryCSV
+        , dir "userslistcsv" $ hGet $ toK0 $ handleUsersListCSV
+        , dir "paymentsstats.csv" $ hGet $ toK0 $ Payments.Stats.handlePaymentsStatsCSV
+
+        , dir "statistics"   $ hGet $ toK0 $ Stats.handleAdminSystemUsageStats
+        , dir "statsbyday"   $ hGet $ toK0 $ Stats.handleAdminSystemUsageStatsByDayJSON
+        , dir "statsbymonth" $ hGet $ toK0 $ Stats.handleAdminSystemUsageStatsByMonthJSON
+
+        , dir "companies" $ hGet $ toK0 $ jsonCompanies
+        , dir "backdoor" $ hGet $ toK1 $ handleBackdoorQuery
+  ]
+
+daveRoutes :: Route (KontraPlus Response)
+daveRoutes =  
+  fmap onlyAdmin $ choice $ [
+       dir "document"      $ hGet $ toK1 $ daveDocument
+     , dir "document"      $ hGet $ toK2 $ daveSignatoryLink
+     , dir "user"          $ hGet $ toK1 $ daveUser
+     , dir "userhistory"   $ hGet $ toK1 $ daveUserHistory
+     , dir "company"       $ hGet $ toK1 $ daveCompany
+     , dir "reseal" $ hPost $ toK1 $ resealFile
+     , dir "docproblems" $ hGet $ toK0 $ handleInvariantViolations
+    ]
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m String
 showAdminMainPage = onlySalesOrAdmin $ do
     ctx <- getContext
     adminMainPage ctx
-
 
 {- | Process view for finding a user in basic administration. If provided with userId string as param
 it allows to edit user details -}
@@ -159,24 +188,18 @@ jsonCompanies = onlySalesOrAdmin $ do
                               , params     = params
                               , pageSize   = companiesPageSize
                               }
-
-    return . JSObject . toJSObject $
-        [("list", JSArray $ map (\company ->
-            JSObject . toJSObject $
-                [("fields", JSObject . toJSObject $
-                    [("id",             jsFromString . show . companyid $ company)
-                    ,("companyname",    jsFromString . getCompanyName $ company)
-                    ,("companynumber",  jsFromString . getCompanyNumber $ company)
-                    ,("companyaddress", jsFromString . companyaddress . companyinfo $ company)
-                    ,("companyzip",     jsFromString . companyzip . companyinfo $ company)
-                    ,("companycity",    jsFromString . companycity . companyinfo $ company)
-                    ,("companycountry", jsFromString . companycountry . companyinfo $ company)
-                    ]
-                 )
-                ,("link", jsFromString . show . LinkCompanyAdmin . Just . companyid $ company)
-                ]) (take companiesPageSize $ allCompanies) )
-        ,("paging", pagingParamsJSON companies)
-        ]
+    runJSONGenT $ do
+            valueM "list" $ forM (take companiesPageSize $ allCompanies) $ \company -> runJSONGenT $ do
+                object "fields" $ do
+                    value "id"            $ show . companyid $ company
+                    value "companyname"   $ getCompanyName $ company
+                    value "companynumber" $ getCompanyNumber $ company
+                    value "companyaddress" $ companyaddress . companyinfo $ company
+                    value "companyzip"     $ companyzip . companyinfo $ company
+                    value "companycity"    $ companycity . companyinfo $ company
+                    value "companycountry" $ companycountry . companyinfo $ company
+                value "link" $ show $ LinkCompanyAdmin $ Just $ companyid $ company
+            value "paging" $ pagingParamsJSON companies
 
 companySearchingFromParams :: ListParams -> [CompanyFilter]
 companySearchingFromParams params =
@@ -271,47 +294,26 @@ jsonUsersList = onlySalesOrAdmin $ do
                           , pageSize   = usersPageSize
                           }
 
-    return $ JSObject
-           $ toJSObject
-            [("list", JSArray $ map (\(user,mcompany,docstats,itype) ->
-                JSObject $ toJSObject
-                    [("fields", JSObject $ toJSObject
-                        [("id",       jsFromString . show $ userid user)
-                        ,("username", jsFromString $ getFullName user)
-                        ,("email",    jsFromString $ getEmail user)
-                        ,("company",  jsFromString $ getCompanyName mcompany)
-                        ,("phone",    jsFromString $ userphone $ userinfo user)
-                        ,("tos",      jsFromString $ maybe "-" show (userhasacceptedtermsofservice user))
-                        ,("signed_1m",     jsFromString . show $ signaturecount1m docstats)
-                        ,("signed_2m",     jsFromString . show $ signaturecount2m docstats)
-                        ,("signed_3m",     jsFromString . show $ signaturecount3m docstats)
-                        ,("signed_6m",     jsFromString . show $ signaturecount6m docstats)
-                        ,("signed_12m",    jsFromString . show $ signaturecount12m docstats)
-                        ,("signed_docs",   jsFromString . show $ signaturecount docstats)
-                        ,("uploaded_docs", jsFromString . show $ doccount docstats)
-                        ,("viral_invites", JSBool $ not $ isAdminInvite itype)
-                        ,("admin_invites", JSBool $ isAdminInvite itype)
-                        ])
-                    ,("link", jsFromString . show $ LinkUserAdmin $ Just $ userid user)
-                    ]) (take usersPageSize $ list users)),
-             ("paging", pagingParamsJSON users)]
-
-jsFromString :: String -> JSValue
-jsFromString = JSString . toJSString
-
-isAdminInvite :: InviteType -> Bool
-isAdminInvite Viral = False
-isAdminInvite Admin = True
-
-
-
-
-{- Shows table of all users-}
-showAllUsersTable :: Kontrakcja m => m String
-showAllUsersTable = onlySalesOrAdmin $ do
-    users <- getUsersAndStatsInv [] [] (UserPagination 0 maxBound)
-    allUsersTable users
-
+    runJSONGenT $ do
+            valueM "list" $ forM (take usersPageSize $ list users) $ \(user,mcompany,docstats,itype) -> runJSONGenT $ do
+                object "fields" $ do
+                    value "id" $ show $ userid user
+                    value "username" $ getFullName user
+                    value "email"    $ getEmail user
+                    value "company"  $ getCompanyName mcompany
+                    value "phone"    $ userphone $ userinfo user
+                    value "tos"      $ maybe "-" show (userhasacceptedtermsofservice user)
+                    value "signed_1m" $ show $ signaturecount1m docstats
+                    value "signed_2m" $ show $ signaturecount2m docstats
+                    value "signed_3m" $ show $ signaturecount3m docstats
+                    value "signed_6m" $ show $ signaturecount6m docstats
+                    value "signed_12m" $ show $ signaturecount12m docstats
+                    value "signed_docs" $ show $ signaturecount docstats
+                    value "uploaded_docs" $ show $ doccount docstats
+                    value "viral_invites" $ itype == Viral
+                    value "admin_invites" $ itype == Admin
+                value "link" $ show $ LinkUserAdmin $ Just $ userid user
+            value "paging" $ pagingParamsJSON users
 
 {- | Handling user details change. It reads user info change -}
 handleUserChange :: Kontrakcja m => UserID -> m KontraLink
@@ -803,28 +805,21 @@ jsonDocuments = onlySalesOrAdmin $ do
                             , params     = params
                             , pageSize   = docsPageSize
                             }
-
-  return $ JSObject
-           $ toJSObject
-            [("list", JSArray $ map (\doc -> 
-                JSObject $ toJSObject
-                    [("fields", JSObject $ toJSObject
-                        [ ("id", jsFromString $ show $ documentid doc)
-                        , ("ctime", jsFromString . showMinutesTimeForAPI $ documentctime doc) 
-                        , ("mtime", jsFromString . showMinutesTimeForAPI $ documentmtime doc) 
-                        , ("author", JSObject $ toJSObject [
-                              ("name", jsFromString $ getAuthorName doc)
-                            , ("email", jsFromString $ maybe "" getEmail $ getAuthorSigLink doc)
-                            , ("company", jsFromString $ maybe "" getCompanyName $ getAuthorSigLink doc)
-                            ])
-                        , ("title", jsFromString $ documenttitle doc)
-                        , ("status", jsFromString $ take 20 $ show $ documentstatus doc)
-                        , ("type", jsFromString . show $ documenttype doc)
-                        , ("signs", JSArray $ map (jsFromString . getSmartName) $ documentsignatorylinks doc)
-                        ])
-                    ]) (take docsPageSize $ list documents))
-            , ("paging", pagingParamsJSON documents)
-            ]
+  runJSONGenT $ do
+            valueM "list" $ forM (take docsPageSize $ list documents) $ \doc-> runJSONGenT $ do
+                 object "fields" $ do
+                   value "id" $ show $ documentid doc
+                   value "ctime" $ showMinutesTimeForAPI $ documentctime doc
+                   value "mtime" $ showMinutesTimeForAPI $ documentmtime doc
+                   object "author" $ do
+                          value "name" $ getAuthorName doc
+                          value "email" $ maybe "" getEmail $ getAuthorSigLink doc
+                          value "company" $ maybe "" getCompanyName $ getAuthorSigLink doc
+                   value "title"  $ documenttitle doc
+                   value "status" $ take 20 $ show $ documentstatus doc
+                   value "type"   $ show $ documenttype doc
+                   value "signs"  $ map (getSmartName) $ documentsignatorylinks doc
+            value "paging" $  pagingParamsJSON documents
 
 docSortingFromParams :: ListParams -> [AscDesc DocumentOrderBy]
 docSortingFromParams params =
@@ -840,10 +835,6 @@ docSortingFromParams params =
     x "ctimeREV"          = [Desc DocumentOrderByCTime]
     x "signs"             = [Asc DocumentOrderByPartners]
     x "signsREV"          = [Desc DocumentOrderByPartners]
-    -- x "partner"        = comparePartners
-    -- x "partnerREV"     = revComparePartners
-    -- x "partnercomp"    = viewComparing partnerComps
-    -- x "partnercompREV" = viewComparingRev partnerComps
     x "process"           = [Asc DocumentOrderByProcess]
     x "processREV"        = [Desc DocumentOrderByProcess]
     x "type"              = [Asc DocumentOrderByType]
@@ -871,7 +862,7 @@ handleBackdoorQuery email = onlySalesOrAdmin $ onlyBackdoorOpen $ do
   return $ maybe "No email found" mailContent minfo
 
 sendInviteAgain :: Kontrakcja m => m KontraLink
-sendInviteAgain = onlyAdmin $ do
+sendInviteAgain = onlySalesOrAdmin $ do
   uid <- guardJustM $ readField "userid"
   user <- guardJustM $ dbQuery $ GetUserByID uid
   sendNewUserMail user
@@ -900,24 +891,6 @@ resealFile docid = onlyAdmin $ do
       Right _ -> Log.debug "Ok, so the document has been resealed"
   return LoopBack
 
-
-replaceMainFile :: Kontrakcja m => DocumentID -> m KontraLink
-replaceMainFile did = onlyAdmin $ do
-  Log.debug $ "Replaing main file | SUPER CRITICAL | If you see this check who did this and ask why"
-  doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID did
-  input <- getDataFnM (lookInput "file")
-  case (input, documentfiles doc) of
-       (Input contentspec _ _contentType, cf:_)  -> do
-            content <- case contentspec of
-                Left filepath -> liftIO $ BSL.readFile filepath
-                Right c -> return c
-            fn <- fromMaybe "file" <$> fmap filename <$> (dbQuery $ GetFileByFileID cf)
-            Context{ctxipnumber,ctxtime, ctxmaybeuser = Just user} <- getContext
-            let actor = adminActor ctxtime ctxipnumber (userid user) (getEmail user)
-            file <- dbUpdate $ NewFile fn (Binary $ concatChunks content)
-            _ <- dbUpdate $ ChangeMainfile did (fileid file) actor
-            return LoopBack
-       _ -> internalError
 
 {- |
    Used by super users to inspect a particular document.
@@ -969,17 +942,6 @@ daveSignatoryLink documentid siglinkid = onlyAdmin $ do
               CheckboxOptionalFT label -> "Checkbox*: " ++ label
               CheckboxObligatoryFT label -> "Checkbox: " ++ label
 
-
-updateFields :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
-updateFields did slid = onlyAdmin $ do
-  Log.debug $ "Changing signatory fields | SUPER CRITICAL | If you see this check who did this ask who did this and why"
-  fieldname <- getDataFnM (look "fieldname")
-  fieldvalue <- getDataFnM (look "fieldvalue")
-  ctx <- getContext
-  actor <- guardJust $ mkAdminActor ctx
-  _ <- dbUpdate $ UpdateFieldsNoStatusCheck did slid (fieldname, fieldvalue) actor
-  return LoopBack
-
 {- |
    Used by super users to inspect a particular user.
 -}
@@ -1004,12 +966,12 @@ daveCompany companyid = onlyAdmin $ do
   company <- guardJustM $ dbQuery $ GetCompany companyid
   return $ inspectXML company
 
-
-serveLogDirectory ::  Kontrakcja m => String -> m Response
-serveLogDirectory filename = onlyAdmin $ do
-    contents <- liftIO $ getDirectoryContents "log"
-    when (filename `notElem` contents) $ do
-        Log.debug $ "Log '" ++ filename ++ "' not found"
-        respond404
-    (_,bsstdout,_) <- liftIO $ readProcessWithExitCode' "tail" ["log/" ++ filename, "-n", "40"] BSL.empty
-    ok $ addHeader "Refresh" "5" $ toResponseBS (BS.fromString "text/plain; charset=utf-8") $ bsstdout
+handleInvariantViolations :: Kontrakcja m => m Response
+handleInvariantViolations = onlyAdmin $ do
+  Context{ ctxtime } <- getContext
+  docs <- dbQuery GetAllDocuments
+  let probs = listInvariantProblems ctxtime docs
+      res = case probs of
+        [] -> "No problems!"
+        _  -> intercalate "\n" probs
+  return $ Response 200 Map.empty nullRsFlags (BSL.fromString res) Nothing
