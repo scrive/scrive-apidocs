@@ -389,15 +389,13 @@ appendVerificationPages sealrefid sealtexts sealmarkerformrefid = do
 placeFields :: [Field] -> RefID -> State Document ()
 placeFields fields paginrefid = do
     pages <- gets listPageRefIDs
-
     let findFields pageno = filter (\x -> page x == pageno) fields
     let contentCommands pageno = \pagew pageh ->
            commandsFromFields pagew pageh (findFields pageno)
+
     paginresdict <- getResDict paginrefid
     mapM_ (uncurry $ placeContentOnPage paginresdict)
             [(page,contentCommands pageno) | (page,pageno) <- zip pages [1..]]
-
-
 
 contentsValueListFromPageID :: RefID -> State Document [RefID]
 contentsValueListFromPageID pagerefid = do

@@ -201,11 +201,13 @@ dcrFromJSON jsv = runIdentity $ withJSValue jsv $ do
   mmainfile <- fromJSValueFieldCustom "mainfile" $ fromJSValueField "name"
   tags <- fromJSValueField "tags"
   inv <-  fromJSValueFieldCustom "involved" $ fromJSValueCustomMany irFromJSON
-  return $ Right $ DocumentCreationRequest { dcrTitle    = mtitle
+  case inv of
+       Nothing -> return (Left $ "Parsing error (no parse)" ++ encode jsv)
+       Just [] -> return (Left $ "Parsing error (empty)" ++ encode jsv)
+       Just inv'-> return $ Right $ DocumentCreationRequest { dcrTitle    = mtitle
                                    , dcrType     = fromMaybe (Signable Contract) $ join $ (toSafeEnum :: Int -> Maybe DocumentType) <$> tp
                                    , dcrTags     = fromMaybe [] tags
-                                   , dcrInvolved = fromMaybe [] inv
+                                   , dcrInvolved = inv'
                                    , dcrMainFile = mmainfile
                                    , dcrAttachments = []
-                                   }
-  -- return (Left $ "Parsing error" ++ encode jsv)                                  
+                                   }                          

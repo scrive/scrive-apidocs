@@ -120,17 +120,6 @@
         }
     });
 
-/*
-    $.ajax("/blockinginfo", {dataType: 'json',
-                             timeout: 3000,
-                             success: function(data) {
-                                 data.block = true;
-                                 window.BlockingInfo = new window.BlockingInfoModel(data);
-                             },
-                             error: function() {
-                                 window.BlockingInfo = new window.BlockingInfoModel({});
-                             }});
-*/
     window.blocking = {show: function(text) {
         
         Confirmation.popup({

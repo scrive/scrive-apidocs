@@ -328,17 +328,18 @@ instance Arbitrary SignatoryDetails where
 
 instance Arbitrary FieldPlacement where
   arbitrary = do  -- We loose precision with conversion, so please watch out for this
-    a <- arbitrary
-    b <- arbitrary
-    c <- arbitrary
-    d <- arbitrary
-    e <- arbitrary
+    (a :: Int) <- choose (1,1000)
+    (b :: Int) <- choose (1,1000)
+    (c :: Int) <- choose (1,1000)
+    (d :: Int) <- choose (1,1000)
+    (e :: Int) <- choose (1,1000)
+    (x :: Int) <- choose (1, 10)
     f <- arbitrary
-    return $ FieldPlacement { placementxrel       = a
-                            , placementyrel       = b
-                            , placementwrel       = c
-                            , placementhrel       = d
-                            , placementfsrel      = e
+    return $ FieldPlacement { placementxrel       = fromIntegral a / fromIntegral x
+                            , placementyrel       = fromIntegral b / fromIntegral x
+                            , placementwrel       = fromIntegral c / fromIntegral x
+                            , placementhrel       = fromIntegral d / fromIntegral x
+                            , placementfsrel      = fromIntegral e / fromIntegral x
                             , placementpage       = f
                             , placementtipside    = Nothing
                             }

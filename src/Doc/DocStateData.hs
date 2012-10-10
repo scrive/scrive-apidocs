@@ -174,7 +174,6 @@ instance Eq FieldPlacement where
       where
         eqByEpsilon func = abs (func a - func b) < 0.00001
 
-
 data TipSide = LeftTip | RightTip
   deriving (Eq, Ord, Show, Read, Data, Typeable)
 
