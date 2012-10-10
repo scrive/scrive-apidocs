@@ -163,6 +163,7 @@ data FieldPlacement = FieldPlacement
   , placementtipside    :: Maybe TipSide
   } deriving (Eq, Ord, Show, Data, Typeable)
 
+
 data TipSide = LeftTip | RightTip
   deriving (Eq, Ord, Show, Read, Data, Typeable)
 

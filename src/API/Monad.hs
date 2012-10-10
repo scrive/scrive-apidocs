@@ -30,6 +30,7 @@ import Control.Monad.Trans
 import Happstack.Server (toResponse)
 import Happstack.Server.Types
 import Text.JSON hiding (Ok)
+import Text.JSON.Gen
 import qualified Happstack.Server.Response as Web
 import Control.Monad.Error
 import Control.Applicative
@@ -37,8 +38,6 @@ import Network.HTTP (urlEncodeVars)
 
 import Crypto.RNG
 import DB
-import Util.JSON
-import Utils.Either
 import Kontra
 import DBError
 import User.Model
@@ -153,9 +152,10 @@ instance KontraMonad m => KontraMonad (APIMonad m) where
   getContext = lift getContext
   modifyContext = lift . modifyContext
 
-jsonError :: JSValue
-jsonError = fromRight $ jsset ("status" :: String) ("error" :: String) jsempty
-
+jsonError :: JSONGen () -> JSValue
+jsonError msg = runJSONGen $ do 
+  value "status" "error"
+  msg
 
 
 -- | convert the return type to the appropriate response
@@ -167,17 +167,17 @@ apiToResponse :: (ToAPIResponse a, Kontrakcja m) => Either APIError a -> m Respo
 apiToResponse r =
   case r of 
     Left (BadInput msg) ->
-      Web.badRequest (toAPIResponse $ fromRight $ jsset "message" msg jsonError)
+      Web.badRequest (toAPIResponse $ jsonError $ value "message" msg)
     Left (Forbidden msg) ->
-      Web.forbidden (toAPIResponse $ fromRight $ jsset "message" msg jsonError)
+      Web.forbidden (toAPIResponse $ jsonError $ value "message" msg)
     Left (NotLoggedIn msg) -> 
-      Web.unauthorized (toAPIResponse $ fromRight $ 
-                    jsset "message" msg jsonError >>=
-                    jsset "url" "https://scrive.com/gb/en?logging")
+      Web.unauthorized (toAPIResponse $ jsonError $ do
+                           value "message" msg
+                           value "url" "https://scrive.com/gb/en?logging")
     Left (ServerError msg) ->
-      Web.internalServerError (toAPIResponse $ fromRight $ jsset "message" msg jsonError)
+      Web.internalServerError (toAPIResponse $ jsonError $ value "message" msg)
     Left (ActionNotAvailable msg) ->
-      Web.resp 405 (toAPIResponse $ fromRight $ jsset "message" msg jsonError)
+      Web.resp 405 (toAPIResponse $ jsonError $ value "message" msg)
     Right v -> return $ toAPIResponse v
 
 apiErrorFromDBError :: DBError -> APIError

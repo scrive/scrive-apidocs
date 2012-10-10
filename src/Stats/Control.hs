@@ -56,7 +56,6 @@ import Stats.View
 import Text.JSON
 import User.Model
 import Util.HasSomeUserInfo
-import Util.JSON
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import qualified Log
@@ -70,6 +69,7 @@ import Control.Monad.Trans.Control
 import Control.Applicative
 import User.Utils
 import Util.CSVUtil
+import ListUtil
 
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
 showAdminUserUsageStats userid = onlySalesOrAdmin $ do

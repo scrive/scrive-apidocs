@@ -38,7 +38,7 @@ module ListUtil(
             , viewComparing
             , viewComparingRev
             , pagingParamsJSON
-
+            , singlePageListToJSON
             , listParamsSearching
             , listParamsSorting
             , listParamsOffset
@@ -59,6 +59,7 @@ import Happstack.Server hiding (simpleHTTP)
 import Network.HTTP.Base (urlEncode)
 import Text.JSON
 import Text.JSON.String (runGetJSON)
+import Text.JSON.Gen
 import Text.JSON.FromJSValue
 import Control.Monad
 import Control.Monad.Identity
@@ -145,14 +146,25 @@ getListParamsNew = do
              }
 
 pagingParamsJSON :: PagedList a -> JSValue
-pagingParamsJSON (PagedList{list,pageSize,params}) = JSObject $ toJSObject [
-    ("pageCurrent", showJSON $ (offset params `div` pageSize)),
-    ("itemMin", showJSON $ offset params),
-    ("itemMax", showJSON $ offset params + length list - 1),
-    ("maxNextPages", showJSON $ (limit params) `div` pageSize),
-    ("pageSize", showJSON $ pageSize)
-    ]
-
+pagingParamsJSON (PagedList{list,pageSize,params}) = runJSONGen $ do
+    value "pageCurrent" $ offset params `div` pageSize
+    value "itemMin" $ offset params
+    value "itemMax" $ offset params + length list - 1
+    value "maxNextPages" $ (limit params) `div` pageSize
+    value "pageSize" $ pageSize
+    
+singlePageListToJSON :: ToJSValue a => [a] -> JSValue
+singlePageListToJSON items =
+    runJSONGen $ do
+      let itemCount = length items
+      value "list" items
+      object "paging" $ do
+        value "pageSize"    itemCount
+        value "pageCurrent" (0 :: Int)
+        value "itemMin"     (0 :: Int)
+        value "itemMax"     (itemCount - 1)
+    
+    
 getListParamsForSearch :: (ServerMonad m, Functor m, HasRqData m, MonadIO m) => m ListParams
 getListParamsForSearch = do
     search <- getField "search"

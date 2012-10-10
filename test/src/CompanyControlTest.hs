@@ -4,7 +4,7 @@ import Control.Applicative
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Text.JSON
-import Text.JSON.Types
+import Text.JSON.FromJSValue
 import Test.Framework
 
 import Company.CompanyControl
@@ -17,7 +17,6 @@ import Utils.Either
 import Redirect
 import TestingUtil
 import TestKontra as T
-import Util.JSON
 
 companyControlTests :: TestEnvSt -> Test
 companyControlTests env = testGroup "CompanyControl" [
@@ -56,9 +55,9 @@ test_handleGetCompanyJSON = do
   assertEqual "JSON id matches company id" (show $ companyid company) jsonid
   where
     getIDFromJSON :: JSValue -> Either String String
-    getIDFromJSON jsv = do
-      companyjsv <- jsget "company" jsv
-      JSString (JSONString jsonid) <- jsget "id" companyjsv
+    getIDFromJSON jsv = maybe (Left "Unable to parse JSON!") Right $ do
+      (companyjsv :: JSValue) <- fromJSValueField "company" jsv
+      jsonid <- fromJSValueField "id" companyjsv
       return jsonid
 
 test_settingUIWithHandlePostCompany :: TestEnv ()

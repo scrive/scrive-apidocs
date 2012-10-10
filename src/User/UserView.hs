@@ -71,10 +71,9 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import User.Model
 import MinutesTime
-import Util.JSON
 import Text.JSON
+import Text.JSON.Gen
 import Data.Either
-import Utils.Either
 import ScriveByMail.Model
 import ScriveByMail.View
 import qualified Templates.Fields as F
@@ -150,63 +149,65 @@ showUserMailAPI user mapi mcapi =
 
 userStatsDayToJSON :: [(Int, [Int])] -> JSValue
 userStatsDayToJSON = JSArray . rights . map f
-  where f (d, s:c:i:_) = Right jsempty >>=
-                         jsset ["fields", "date"] (showAsDate d) >>=
-                         jsset ["fields", "closed"] c >>=
-                         jsset ["fields", "sent"] i >>=
-                         jsset ["fields", "signatures"] s
-        f _ = Left "Bad stat"
+  where
+    f (d, s:c:i:_) = Right . runJSONGen . object "fields" $ do
+      value "date" (showAsDate d)
+      value "closed" c
+      value "sent" i
+      value "signatures" s
+    f _ = Left "Bad stat"
 
 userStatsMonthToJSON :: [(Int, [Int])] -> JSValue
 userStatsMonthToJSON = JSArray . rights . map f
-  where f (d, s:c:i:_) = Right jsempty >>=
-                         jsset ["fields", "date"] (showAsMonth d) >>=
-                         jsset ["fields", "closed"] c >>=
-                         jsset ["fields", "sent"] i >>=
-                         jsset ["fields", "signatures"] s
-        f _ = Left "Bad stat"
+  where
+    f (d, s:c:i:_) = Right . runJSONGen . object "fields" $ do
+      value "date" (showAsMonth d)
+      value "closed" c
+      value "sent" i
+      value "signatures" s
+    f _ = Left "Bad stat"
 
 companyStatsDayToJSON :: String -> [(Int, String, [Int])] -> JSValue
-companyStatsDayToJSON ts ls = JSArray $ rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
-  where f (d, _, s:c:i:_) = Right jsempty >>=
-                            jsset ["fields", "date"] (showAsDate d) >>=
-                            jsset ["fields", "closed"] c >>=
-                            jsset ["fields", "sent"] i >>=
-                            jsset ["fields", "name"] ts >>=
-                            jsset ["fields", "signatures"] s >>=
-                            jsset "subfields" [fromRight $
-                                               Right jsempty >>=
-                                               jsset "date" (showAsDate d') >>=
-                                               jsset "closed" c' >>=
-                                               jsset "sent"   i' >>=
-                                               jsset "name"   n' >>=
-                                               jsset "signatures" s' |
-                                               (d',n',s':c':i':_) <- ls,
-                                               d' == d,
-                                               n' /= "Total"]
-
-
-        f _ = Left "Bad stat"
+companyStatsDayToJSON ts ls =
+  JSArray $ rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
+  where
+    f (d, _, s:c:i:_) = Right . runJSONGen . object "fields" $ do
+      value "date" (showAsDate d)
+      value "closed" c
+      value "sent" i
+      value "name" ts
+      value "signatures" s
+      objects "subfields" $ do
+         [do value "date" (showAsDate d') 
+             value "closed" c'
+             value "sent" i' 
+             value "name" n' 
+             value "signatures" s'
+           | (d',n',s':c':i':_) <- ls,
+             d' == d,
+             n' /= "Total"]
+    f _ = Left "Bad stat"
 
 companyStatsMonthToJSON :: String -> [(Int, String, [Int])] -> JSValue
-companyStatsMonthToJSON ts ls = JSArray $ rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
-  where f (d, _, s:c:i:_) = Right jsempty >>=
-                            jsset ["fields", "date"] (showAsMonth d) >>=
-                            jsset ["fields", "closed"] c >>=
-                            jsset ["fields", "sent"] i >>=
-                            jsset ["fields", "name"] ts >>=
-                            jsset ["fields", "signatures"] s >>=
-                            jsset "subfields" [fromRight $
-                                               Right jsempty >>=
-                                               jsset "date" (showAsMonth d') >>=
-                                               jsset "closed" c' >>=
-                                               jsset "sent"   i' >>=
-                                               jsset "name"   n' >>=
-                                               jsset "signatures" s' |
-                                               (d',n',s':c':i':_) <- ls,
-                                               d' == d,
-                                               n' /= "Total"]
-        f _ = Left "Bad stat"
+companyStatsMonthToJSON ts ls =
+  JSArray $ rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
+  where
+    f (d, _, s:c:i:_) = Right $ runJSONGen $ object "fields" $ do
+      value "date" (showAsMonth d)
+      value "closed" c
+      value "sent" i
+      value "name" ts
+      value "signatures" s
+      objects "subfields" $ do
+        [do value "date" (showAsMonth d')
+            value "closed" c' 
+            value "sent" i' 
+            value "name" n' 
+            value "signatures" s'
+          | (d',n',s':c':i':_) <- ls,
+            d' == d,
+            n' /= "Total"]
+    f _ = Left "Bad stat"
 
 showUsageStats :: TemplatesMonad m => User -> m String
 showUsageStats user =

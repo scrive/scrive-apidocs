@@ -7,7 +7,6 @@ module Doc.JSON
        , jsonDocumentType
        , jsonSigAttachmentWithFile
        , jsonDocumentForAuthor
-       , fileNameFromJSON
        , dcrFromJSON
        , DocumentCreationRequest(..)
        , InvolvedRequest(..)
@@ -16,14 +15,16 @@ where
 
 import Doc.DocStateData
 import Text.JSON
-import Text.JSON.Types
 import Text.JSON.FromJSValue
-import Util.JSON
-import Utils.Either
+import Text.JSON.Gen
 import Utils.Enum
 import KontraLink
+import Control.Monad.Identity
+import Data.Maybe
+import Data.Functor
+import Control.Monad.Reader
+import Doc.DocDraft()
 
-import Control.Applicative
 
 instance SafeEnum [SignatoryRole] where
   fromSafeEnum srs =
@@ -90,41 +91,39 @@ instance SafeEnum DeliveryMethod where
     toSafeEnum _  = Nothing
 
 jsonDocumentForAuthor :: Document -> String -> JSValue
-jsonDocumentForAuthor doc hostpart = 
-  fromRight              $ (Right jsempty)                       >>=                    
-
-  (jsset "url"           $ hostpart ++ show (LinkIssueDoc (documentid doc))) >>=
-  (jsset "document_id"   $ jsonDocumentID $ documentid doc)      >>=                    
-  (jsset "title"         $ documenttitle doc)                    >>=                    
-  (jsset "type"          $ fromSafeEnumInt $ documenttype doc)   >>=                    
-  (jsset "status"        $ fromSafeEnumInt $ documentstatus doc) >>=                    
-
-  (jsset "designurl"     $ show $ LinkIssueDoc (documentid doc)) >>= -- up for deletion 
-  (jsset "authentication" $ fromSafeEnumInt $ documentauthenticationmethod doc) >>=
-  (jsset "delivery"      $ fromSafeEnumInt $ documentdeliverymethod doc)
+jsonDocumentForAuthor doc hostpart =
+  runJSONGen $ do
+    value "url"            $ hostpart ++ show (LinkIssueDoc (documentid doc))
+    value "document_id"    $ jsonDocumentID $ documentid doc
+    value "title"          $ documenttitle doc
+    value "type"           $ fromSafeEnumInt $ documenttype doc
+    value "status"         $ fromSafeEnumInt $ documentstatus doc
+    value "designurl"      $ show $ LinkIssueDoc (documentid doc)
+    value "authentication" $ fromSafeEnumInt $ documentauthenticationmethod doc
+    value "delivery"       $ fromSafeEnumInt $ documentdeliverymethod doc
 
 jsonDocumentForSignatory :: Document -> JSValue
 jsonDocumentForSignatory doc =
-  fromRight              $ (Right jsempty)                       >>=                                
-  (jsset "document_id"   $ jsonDocumentID $ documentid doc)      >>=    
-  (jsset "title"         $ documenttitle doc)                    >>=                        
-  (jsset "type"          $ fromSafeEnumInt $ documenttype doc)   >>=       
-  (jsset "status"        $ fromSafeEnumInt $ documentstatus doc) >>=
-  (jsset "authentication" $ fromSafeEnumInt $ documentauthenticationmethod doc) >>=
-  (jsset "delivery"      $ fromSafeEnumInt $ documentdeliverymethod doc)
+  runJSONGen $ do
+    value "document_id"    $ jsonDocumentID $ documentid doc
+    value "title"          $ documenttitle doc
+    value "type"           $ fromSafeEnumInt $ documenttype doc
+    value "status"         $ fromSafeEnumInt $ documentstatus doc
+    value "authentication" $ fromSafeEnumInt $ documentauthenticationmethod doc
+    value "delivery"       $ fromSafeEnumInt $ documentdeliverymethod doc
 
 -- I really want to add a url to the file in the json, but the only
 -- url at the moment requires a sigid/mh pair
 jsonSigAttachmentWithFile :: SignatoryAttachment -> Maybe File -> JSValue
 jsonSigAttachmentWithFile sa mfile =
-  fromRight $ (Right jsempty) >>=
-  (jsset "name" $ signatoryattachmentname sa) >>=
-  (jsset "description" $ signatoryattachmentdescription sa) >>=
-  (case mfile of
-      Nothing   -> jsset "requested" True
-      Just file -> jsset "file" $ fromRight ((Right jsempty) >>=
-                                             (jsset "id" $ show (fileid file)) >>=
-                                             (jsset "name" $ filename file)))
+  runJSONGen $ do
+    value "name"        $ signatoryattachmentname sa
+    value "description" $ signatoryattachmentdescription sa
+    case mfile of
+      Nothing   -> value "requested" True
+      Just file -> object "file" $ do
+        value "id"   $ show (fileid file)
+        value "name" $ filename file
 
 data DocumentCreationRequest = DocumentCreationRequest {
   dcrTitle       :: Maybe String,
@@ -144,76 +143,69 @@ data InvolvedRequest = InvolvedRequest {
   }
                      deriving (Show, Eq)
 
-arFromJSON :: JSValue -> Either String SignatoryAttachment
-arFromJSON jsv = do
-  JSString (JSONString name) <- jsget "name" jsv
-  JSString (JSONString description) <- jsgetdef "description" (showJSON "") jsv
-  return $ SignatoryAttachment {
-                                signatoryattachmentfile        = Nothing
-                               ,signatoryattachmentname        = name
-                               ,signatoryattachmentdescription = description
-                               }
+arFromJSON :: (MonadReader JSValue m, Functor m) => m (Maybe SignatoryAttachment)
+arFromJSON = do
+      mname <- fromJSValueField "name"
+      desc <- fromMaybe "" <$> (fromJSValueField "description")
+      case mname of
+           Just name -> return $ Just SignatoryAttachment {
+                signatoryattachmentfile        = Nothing,
+                signatoryattachmentname        = name,
+                signatoryattachmentdescription = desc
+              }
+           Nothing -> return Nothing   
 
-sfFromJSON :: (String, JSValue) -> Either String SignatoryField
-sfFromJSON (name, jsv) = do
-  JSString (JSONString value) <- jsgetdef "value" (showJSON "") jsv
-  JSBool req <- jsgetdef "requested" (showJSON False) jsv
-  tp <- case name of
-    "email"      -> Right EmailFT
-    "fstname"    -> Right FirstNameFT
-    "sndname"    -> Right LastNameFT
-    "company"    -> Right CompanyFT
-    "companynr"  -> Right CompanyNumberFT
-    "personalnr" -> Right PersonalNumberFT
-    s            -> Right $ CustomFT s req
-  -- do placements later /Eric
-  return $ SignatoryField { sfType = tp, sfValue = value, sfPlacements = [] }
+sfFromJSON :: (String, JSValue) -> Maybe SignatoryField
+sfFromJSON (name, jsv) =
+  Just $ SignatoryField {
+      sfType = tp,
+      sfValue = val,
+      sfPlacements = [] -- do placements later /Eric
+    }
+  where
+    val = maybe "" id (fromJSValueField "value" jsv)
+    req = maybe False id (fromJSValueField "requested" jsv)
+    tp  = case name of
+            "email"      -> EmailFT
+            "fstname"    -> FirstNameFT
+            "sndname"    -> LastNameFT
+            "company"    -> CompanyFT
+            "companynr"  -> CompanyNumberFT
+            "personalnr" -> PersonalNumberFT
+            s            -> CustomFT s req
 
-irFromJSON :: JSValue -> Either String InvolvedRequest
-irFromJSON jsv = do
-  i'@(JSRational _ _) <- jsgetdef "role" (showJSON (5::Int)) jsv
-  let Just (i::Int) = fromJSValue i'
-  JSObject dat' <- jsget "data" jsv
-  let dat = fromJSObject dat'
-  JSArray attachmentjs <- jsgetdef "attachments" (showJSON ([]::[JSValue])) jsv
-  attachments <- mapM arFromJSON attachmentjs
-  role <- maybe (Left $ "Not a valid role: " ++ show i)
-          Right $ toSafeEnum i
-  hisData <- mapM sfFromJSON dat
-  let mso = either (const Nothing) fromJSValue $ jsget "signorder" jsv
-  return $ InvolvedRequest { irRole = role, irData = hisData, irAttachments = attachments, irSignOrder = mso }
-
-fileNameFromJSON :: JSValue -> Either String String
-fileNameFromJSON jsv = do
-  JSString (JSONString name) <- jsget "name" jsv
-  return name
-
-tagFromJSON :: JSValue -> Either String DocumentTag
-tagFromJSON jsv = do
-  JSString (JSONString name)  <- jsget "name"  jsv
-  JSString (JSONString value) <- jsget "value" jsv
-  return $ DocumentTag { tagname = name, tagvalue = value }
+irFromJSON :: (MonadReader JSValue m, Functor m) => m (Maybe InvolvedRequest)
+irFromJSON = do
+  mso <- fromJSValueField "signorder"
+  mattachments <- fromJSValueFieldCustom "attachments" $ fromJSValueCustomMany arFromJSON
+  role <- fromJSValueField "role"
+  mData <- fromJSValueFieldCustom "data" $ do
+            dat <- fmap readJSON <$> fromJSValueM
+            case dat of
+              Just (Ok d) -> return $ sequence $ map sfFromJSON (fromJSObject d)
+              _ -> return $ Nothing
+  return $ case mData of
+    (Just hisData) -> return $ InvolvedRequest {
+          irRole = fromMaybe [SignatoryPartner] $ join $ (toSafeEnum :: Int -> Maybe [SignatoryRole]) <$> role,
+          irData = hisData,
+          irAttachments = fromMaybe [] mattachments,
+          irSignOrder = mso
+        }
+    _ -> Nothing
 
 -- make this only require type; everything else is implied
 dcrFromJSON :: JSValue -> Either String DocumentCreationRequest
-dcrFromJSON jsv = do
-  tp''@(JSRational _ _) <- jsgetdef "type" (showJSON (1::Int)) jsv
-  let Just (tp'::Int) = fromJSValue tp''
-  tp <- maybe (Left $ "Unrecognized document type: " ++ show tp') Right $ toSafeEnum tp'
-  JSArray tags' <- jsgetdef "tags" (showJSON ([]::[JSValue])) jsv
-  tags <- mapM tagFromJSON tags'
-  JSArray inv' <- jsgetdef "involved" (showJSON ([]::[JSValue])) jsv
-  inv <- mapM irFromJSON inv'
-  let mtitle = case jsget "title" jsv of
-                 Right (JSString s) -> Just $ fromJSString s
-                 _ -> Nothing
-  mmainfile <- case jsget "mainfile" jsv of
-                 Left _ -> return Nothing
-                 Right o -> Just <$> fileNameFromJSON o
-  return $ DocumentCreationRequest { dcrTitle    = mtitle
-                                   , dcrType     = tp
-                                   , dcrTags     = tags
-                                   , dcrInvolved = inv
+dcrFromJSON jsv = runIdentity $ withJSValue jsv $ do
+  tp <- (fromJSValueField "type")
+  mtitle <- fromJSValueField "title"
+  mmainfile <- fromJSValueFieldCustom "mainfile" $ fromJSValueField "name"
+  tags <- fromJSValueField "tags"
+  inv <-  fromJSValueFieldCustom "involved" $ fromJSValueCustomMany irFromJSON
+  return $ Right $ DocumentCreationRequest { dcrTitle    = mtitle
+                                   , dcrType     = fromMaybe (Signable Contract) $ join $ (toSafeEnum :: Int -> Maybe DocumentType) <$> tp
+                                   , dcrTags     = fromMaybe [] tags
+                                   , dcrInvolved = fromMaybe [] inv
                                    , dcrMainFile = mmainfile
                                    , dcrAttachments = []
                                    }
+  -- return (Left $ "Parsing error" ++ encode jsv)                                  

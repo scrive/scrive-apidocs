@@ -17,8 +17,7 @@ import Happstack.Server hiding (dir, simpleHTTP)
 import Happstack.StaticRouting (Route, dir, choice)
 import Text.JSON
 import Text.JSON.String
-import Text.JSON.Types
-import Util.JSON
+import Text.JSON.FromJSValue
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Map as Map
@@ -95,17 +94,17 @@ setCompanyLogoFromRequest cui = do
       return cui
 
 companyUiFromJSON :: JSValue -> Either String CompanyUI
-companyUiFromJSON jsv = do
-  jsonbb <- jsget "barsbackground" jsv
-  jsonbtc <- jsget "barstextcolour" jsv
+companyUiFromJSON jsv = maybe (Left "Unable to parse JSON!") Right $ do
+  jsonbb <- fromJSValueField "barsbackground" jsv
+  jsonbtc <- fromJSValueField "barstextcolour" jsv
   return CompanyUI {
     companybarsbackground = maybeS jsonbb
   , companybarstextcolour = maybeS jsonbtc
   , companylogo = Nothing
   }
   where
-    maybeS (JSString (JSONString val)) | not (null val) = Just val
-    maybeS _ = Nothing
+    maybeS ""  = Nothing
+    maybeS str = Just str
 
 handleCompanyLogo :: Kontrakcja m => CompanyID -> m Response
 handleCompanyLogo cid = do
