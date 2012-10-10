@@ -5,7 +5,7 @@ import Control.Monad
 import Control.Monad.Trans
 import Data.List
 import Data.Version
-import Happstack.Server
+import Happstack.Server (simpleHTTPWithSocket, nullConf, port, timeout)
 import Happstack.StaticRouting
 import System.Environment
 import System.IO

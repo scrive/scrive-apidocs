@@ -3,7 +3,7 @@ module MailingServer where
 
 import Control.Concurrent
 import System.Environment
-import Happstack.Server
+import Happstack.Server (simpleHTTPWithSocket, nullConf, port)
 import qualified Happstack.StaticRouting as R
 import qualified Control.Exception as E
 

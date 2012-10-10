@@ -83,7 +83,6 @@ window.PadDesignViewUtilsView = Backbone.View.extend({
         this.model.bind('change', this.render);
         this.render();
     },
-    tagname : "div",
     sigSelector : function(source,callback) {
         var model = this.model;
         var sigs = model.document().signatoriesThatCanSignNow();

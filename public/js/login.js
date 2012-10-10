@@ -65,7 +65,7 @@ var LoginModel = Backbone.Model.extend({
               FlashMessages.add({ content: localization.loginModal.loginFailed, color: "red"});
             }
           }
-        })
+        });
     if (model.pad() == true)
       submit.add("pad","true");
     submit.send();

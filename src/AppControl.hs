@@ -42,7 +42,6 @@ import Control.Concurrent
 import Control.Concurrent.MVar.Util (tryReadMVar)
 import Control.Monad.Error
 import Data.Functor
-import Data.List
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.Server.Internal.Cookie
@@ -115,37 +114,47 @@ maybeReadStaticResources production mvar srConfigForAppConf = modifyMVar mvar $ 
                    return (sr',sr')
                else return $  (sr,sr)
 
-            
-showNamedHeader :: forall t . (t, HeaderPair) -> [Char]
-showNamedHeader (_nm,hd) = BS.toString (hName hd) ++ ": [" ++
-                      concat (intersperse ", " (map (show . BS.toString) (hValue hd))) ++ "]"
 
-showNamedCookie :: ([Char], Cookie) -> [Char]
-showNamedCookie (name,cookie) = name ++ ": " ++ mkCookieHeader Nothing cookie
+-- | Show nicely formated headers. Same header lines can appear
+-- multiple times in HTTP so we need to beautifully show them.  We
+-- also skip 'cookies' header as we show it later in a nicer form.
+showNamedHeader :: (a, HeaderPair) -> [String]
+showNamedHeader (_nm,hd) | hName hd == BS.fromString "cookie" = []
+showNamedHeader (_nm,hd) = map showHeaderLine (hValue hd)
+  where
+    showHeaderLine value = BS.toString (hName hd) ++ ": " ++ BS.toString value
 
-showNamedInput :: ([Char], Input) -> [Char]
-showNamedInput (name,input) = name ++ ": " ++ case inputFilename input of
-                                                  Just filename -> filename
-                                                  _ -> case inputValue input of
-                                                           Left _tmpfilename -> "<<content in /tmp>>"
-                                                           Right value -> show (BSL.toString value)
+showNamedCookie :: (String, Cookie) -> String
+showNamedCookie (_name,cookie) = mkCookieHeader Nothing cookie
 
-showRequest :: Request -> Maybe [([Char], Input)] -> [Char]
+showNamedInput :: (String, Input) -> String
+showNamedInput (name,input) = name ++ ": " ++
+    case inputFilename input of
+      Just filename -> filename
+      _ -> case inputValue input of
+             Left _tmpfilename -> "<<content in /tmp>>"
+             Right value -> show (BSL.toString value)
+
+showRequest :: Request -> Maybe [(String, Input)] -> String
 showRequest rq maybeInputsBody =
     show (rqMethod rq) ++ " " ++ rqUri rq ++ rqQuery rq ++ "\n" ++
-    "post variables:\n" ++
-    maybe "" (unlines . map showNamedInput) maybeInputsBody ++
-    "http headers:\n" ++
-    (unlines $ map showNamedHeader (Map.toList $ rqHeaders rq)) ++
-    "http cookies:\n" ++
-    (unlines $ map showNamedCookie (rqCookies rq))
+    (unlinesIndented "post variables" . map showNamedInput) (fromMaybe [] maybeInputsBody) ++
+    (unlinesIndented "http headers" . concatMap showNamedHeader) (Map.toList $ rqHeaders rq) ++
+    (unlinesIndented "http cookies" . map showNamedCookie) (rqCookies rq)
+  where
+    unlinesIndented _title [] = ""
+    unlinesIndented title list = "  " ++ title ++ ":\n" ++
+        concatMap (\line -> "    " ++ line ++ "\n") list
 
 {- |
    Creates a context, routes the request, and handles the session.
 -}
 appHandler :: KontraPlus Response -> AppConf -> AppGlobals -> AppState -> ServerPartT IO Response
-appHandler handleRoutes appConf appGlobals appState = catchEverything . runOurServerPartT . measureResponseTime $
+appHandler handleRoutes appConf appGlobals appState = catchEverything . runOurServerPartT $
   withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) . runAcidT appState $ do
+
+    startTime <- liftIO getClockTime
+
     let quota = 10000000
     temp <- liftIO getTemporaryDirectory
     decodeBody (defaultBodyPolicy temp quota quota quota)
@@ -165,9 +174,22 @@ appHandler handleRoutes appConf appGlobals appState = catchEverything . runOurSe
     when (issecure || not usehttps) $
       updateSessionWithContextData session newsessionuser newelegtrans newmagichashes newsessionpaduser
 
+    -- Here we show in debug log some statistics that should help
+    -- optimize code and instantly see if there is something
+    -- wrong. Measurements are not perfect, for example time is not
+    -- full response time, it is just the part that is under
+    -- application control. That is good because we want to stress
+    -- places that can be fixed.
+
     rq <- askRq
     stats <- getNexusStats =<< getNexus
-    Log.debug $ "SQL for " ++ rqUri rq ++ ": " ++ show stats
+    finishTime <- liftIO getClockTime
+    let TOD ss sp = startTime
+        TOD fs fp = finishTime
+        diff = (fs - ss) * 1000000000000 + fp - sp
+
+    Log.debug $ "SQL stats: " ++ rqUri rq ++ rqQuery rq ++
+                "\n    " ++ show stats ++ ", time: " ++ show (diff `div` 1000000000) ++ "ms"
 
     case res of
       Right response -> return response
@@ -178,16 +200,6 @@ appHandler handleRoutes appConf appGlobals appState = catchEverything . runOurSe
     catchEverything m = m `E.catch` \(e::E.SomeException) -> do
       Log.error $ "appHandler: exception caught at top level: " ++ show e ++ " (this shouldn't happen)"
       internalServerError $ toResponse ""
-
-    measureResponseTime action = do
-      startTime <- liftIO getClockTime
-      res <- action
-      finishTime <- liftIO getClockTime
-      let TOD ss sp = startTime
-          TOD fs fp = finishTime
-          diff = (fs - ss) * 1000000000000 + fp - sp
-      Log.debug $ "Response time " ++ show (diff `div` 1000000000) ++ "ms"
-      return res
 
     routeHandlers ctx = runKontraPlus ctx $ do
       res <- (Right <$> handleRoutes `mplus` E.throwIO Respond404) `E.catches` [
@@ -204,9 +216,8 @@ appHandler handleRoutes appConf appGlobals appState = catchEverything . runOurSe
 
     handleKontraError e = Left <$> do
       rq <- askRq
-      Log.error $ show e
       liftIO (tryReadMVar $ rqInputsBody rq)
-        >>= Log.error . showRequest rq
+        >>= Log.error . shows e . (++) ": " . showRequest rq
       case e of
         InternalError -> do
           addFlashM V.modalError
@@ -250,7 +261,7 @@ appHandler handleRoutes appConf appGlobals appState = catchEverything . runOurSe
 
       -- do reload templates in non-production code
       templates2 <- liftIO $ maybeReadTemplates (production appConf) (templates appGlobals)
-      
+
       -- regenerate static files that need to be regenerated in development mode
       staticRes <-  liftIO $ maybeReadStaticResources (production appConf) (staticResources appGlobals) (srConfig appConf)
 

@@ -128,7 +128,6 @@ var DocumentSignSignatoryView = Backbone.View.extend({
       statusbox.append(space);
       return statusbox;
   },
-  tagname : 'div',
   render: function() {
       var box = $(this.el);
       box.empty();
@@ -176,7 +175,6 @@ var DocumentSignSignatoriesView = Backbone.View.extend({
     this.model.bind('change', this.render);
     this.render();
   },
-  tagname : 'div',
   render: function() {
       var view = this;
       var box = $(this.el);

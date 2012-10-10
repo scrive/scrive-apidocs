@@ -268,7 +268,6 @@
     });
 
     var PaymentsView = Backbone.View.extend({
-        tagName: "div",
         className: "payments",
         initialize: function(args){
             _.bindAll(this);

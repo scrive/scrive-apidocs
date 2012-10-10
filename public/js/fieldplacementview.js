@@ -306,7 +306,6 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         $(window).resize(view.fixPlaceFunction);
         this.render();
     },
-    tagname : "div",
     clear: function() {
         this.off();
         $(this.el).remove();

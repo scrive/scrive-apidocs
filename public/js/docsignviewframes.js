@@ -16,7 +16,6 @@ window.DocumentSignViewHeader = Backbone.View.extend({
      this.render();
 
   },
-  tagName: "div",
   refresh : function() {
       var el = $(this.el);
       var tbd = $("<span/>");
@@ -165,7 +164,6 @@ window.DocumentSignViewFooter = Backbone.View.extend({
           el.css("min-width",width + "px");
       }   
   },
-  tagName: "div",
   useStandardBranding : function() {
     return this.model.document().currentSignatory() != undefined && this.model.document().currentSignatory().hasSigned() &&  this.model.justSaved();
   },

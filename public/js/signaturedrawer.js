@@ -198,7 +198,6 @@ var SignatureDrawerWrapper = Backbone.View.extend({
         this.overlay = args.overlay;
         this.render();
     },
-    tagname : "div",
     header: function() {
         var h = $("<h1>").text(localization.pad.drawSignatureBoxHeader);
         return $("<div class='header'/>").append(h);
