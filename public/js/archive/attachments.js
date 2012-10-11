@@ -5,6 +5,7 @@
 window.AttachmentsListDefinition = function(archive) {
  return {
     name : "Attachments Table",
+    loadOnInit : false,
     schema: new Schema({
     url: "/a",
     sorting: new Sorting({ fields: ["title", "time", "type"]}),

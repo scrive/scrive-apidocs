@@ -6,6 +6,7 @@
 
 window.TemplatesListDefinition = function(archive) { return {
     name : "Templatesarchive table",
+    loadOnInit : false,
     schema: new Schema({
     url: "/docs",
     extraParams : { documentType : "Template" },
