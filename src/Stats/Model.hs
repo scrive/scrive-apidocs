@@ -10,6 +10,7 @@ module Stats.Model
          GetDocStatEventsByCompanyID(..),
          GetDocStatEventsByUserID(..),
          GetDocStatCSV(..),
+         GetDocHistCSV(..),
 
          UserStatEvent(..),
          AddUserStatEvent(..),
@@ -191,6 +192,35 @@ instance MonadDB m => DBQuery m GetDocStatCSV [[BS.ByteString]] where
               in [BS.fromString $ show uid, smartname, BS.fromString $ showDateYMD t, BS.fromString $ show q, 
                   BS.fromString $ show a, BS.fromString $ show did, fromMaybe (BS.fromString "none") cn, BS.fromString $ maybe "" show cid, tp, api] : acc
                     
+data GetDocHistCSV = GetDocHistCSV MinutesTime MinutesTime
+instance MonadDB m => DBQuery m GetDocHistCSV [[String]] where
+  query (GetDocHistCSV start end) = do
+    _ <- kRun $ SQL ("SELECT ds.document_id, ds.company_id, ds.document_type, " ++
+                     "       creat.time, " ++
+                     "       send.time, " ++
+                     "       close.time, " ++
+                     "       reject.time, " ++
+                     "       cancel.time, " ++
+                     "       timeout.time " ++
+                     "FROM (SELECT DISTINCT document_id, company_id, document_type FROM doc_stat_events WHERE doc_stat_events.time > ? AND doc_stat_events.time <= ?) AS ds " ++
+                     "LEFT JOIN doc_stat_events AS creat   ON (ds.document_id = creat.document_id   AND creat.quantity = ?)" ++                     
+                     "LEFT JOIN doc_stat_events AS send    ON (ds.document_id = send.document_id    AND send.quantity = ?)" ++
+                     "LEFT JOIN doc_stat_events AS close   ON (ds.document_id = close.document_id   AND close.quantity = ?)" ++
+                     "LEFT JOIN doc_stat_events AS reject  ON (ds.document_id = reject.document_id  AND reject.quantity = ?)" ++
+                     "LEFT JOIN doc_stat_events AS cancel  ON (ds.document_id = cancel.document_id  AND cancel.quantity = ?)" ++
+                     "LEFT JOIN doc_stat_events AS timeout ON (ds.document_id = timeout.document_id AND timeout.quantity = ?)" ++
+                     "ORDER BY ds.document_id DESC") [toSql start, 
+                                                      toSql end,
+                                                      toSql DocStatCreate,
+                                                      toSql DocStatSend, 
+                                                      toSql DocStatClose, 
+                                                      toSql DocStatReject, 
+                                                      toSql DocStatCancel, 
+                                                      toSql DocStatTimeout]
+    foldDB f []
+      where f :: [[String]] -> DocumentID -> Maybe CompanyID -> String -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> [[String]]
+            f acc did co t cr se cl re ca ti =
+              [show did, maybe "" show co, t, maybe "" formatMinutesTimeISO cr, maybe "" formatMinutesTimeISO se, maybe "" formatMinutesTimeISO cl, maybe "" formatMinutesTimeISO re, maybe "" formatMinutesTimeISO ca, maybe "" formatMinutesTimeISO ti] : acc
 
 selectUsersAndCompaniesAndInviteInfoSQL :: SQL
 selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "

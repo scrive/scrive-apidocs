@@ -115,6 +115,7 @@ apiCallCreateFromFile = api $ do
   file <- dbUpdate $ NewFile filename pdfcontent
   Just doc <- dbUpdate $ NewDocument user mcompany filename doctype 1 actor
   True <- dbUpdate $ AttachFile (documentid doc) (fileid file) actor
+  _ <- lift $ addDocumentCreateStatEvents doc "web"
   Created <$> documentJSON True True Nothing Nothing doc
   
 
