@@ -127,7 +127,7 @@ var DocumentDesignView = Backbone.View.extend({
     },
     designChangeMainFile: function() {
       var document = this.model;
-      var box = $("<div class='signStepsBody table tbody' />");
+      var box = $("<div class='signStepsBody' />");
 
       var wizard = new Wizard;
       var wizardview = new WizardView({model: wizard});
