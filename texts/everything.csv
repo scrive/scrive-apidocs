@@ -2315,7 +2315,7 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_padAddToPadQueueAdded","Dokumentet skickat till pad",,"Document send to pad device"
 "_padAddToPadQueueNotAdded","Misslyckades med att skicka till pad.",,"Document could not be send to pad device"
 "_padRemoveFromPadQueue","Avlägsna från pad",,"Remove from pad device"
-"_padDrawSignatureBoxHeader","Signera dokument",,"Sign document"
+"_padDrawSignatureBoxHeader","Signera inom rutan",,"Sign within the box"
 "_justSend","Spara och signera senare.", "","Save and sign later."
 "_padSigningOnSameDeviceFor","Signera på denna enhet nu. Börja med: ",,"Sign on this device now. Start with: "
 "_sendToDifferentDeviceFor","Signera på en annan enhet nu. Börja med: ",,"Sign on another device now. Start with: "

@@ -184,10 +184,6 @@ var SignatureDrawer = Backbone.View.extend({
         //view.drawImage(this.model.image());
         this.initDrawing();
         this.container.append(this.canvas);
-        this.container.append("<div class='canvasSeparator' style='margin: 3px;top:"+1+"px'>");
-        this.container.append("<div class='canvasSeparator' style='margin: 3px;top:"+Math.floor(signature.sheight()/3)+"px'>");
-        this.container.append("<div class='canvasSeparator' style='margin: 3px;top:"+Math.floor(2*signature.sheight()/3)+"px'>");
-        this.container.append("<div class='canvasSeparator' style='margin: 3px;top:"+(signature.sheight() -1)+"px'>");
         return this;
     }
 });
