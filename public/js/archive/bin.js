@@ -5,6 +5,7 @@
     
 window.BinListDefinition = function(archive) { return {
     name : "Trash table",
+    loadOnInit : false,
     schema: new Schema({
     url: "/docs",
     extraParams : { documentType : "Rubbish" },

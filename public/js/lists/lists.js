@@ -469,7 +469,7 @@
                 emptyAlternative: args.emptyAlternative
             });
             this.schema.bind('change', this.recall);
-            this.recall();
+            if (args.loadOnInit != false) this.recall();
             return this;
         },
         recall: function() {

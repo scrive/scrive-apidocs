@@ -101,6 +101,7 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.
     
 window.DocumentsListDefinition = function(archive) { return {
     name : "Documents Table",
+    loadOnInit : false,
     schema: new Schema({
     url: "/docs",
     extraParams : { documentType : "Document" },
