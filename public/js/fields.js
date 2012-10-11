@@ -198,20 +198,12 @@ window.Field = Backbone.Model.extend({
         var field = this;
         var name  = this.name();
 
-        if (   !this.signatory().author()
-            && this.isStandard()
-            && (name == "fstname" ||name == "sndname")
-            && !this.signatory().isCsv()
-            && !this.hasPlacements()) {
+        if (!this.signatory().author() && this.isStandard() && (name == "fstname" ||name == "sndname") && !this.signatory().isCsv()) {
             return new NotEmptyValidation({message: localization.designview.validation.missingNames})
                    .concat(new NameValidation({message: localization.designview.validation.wrongNames}));
         }
 
-        if (   !this.signatory().author()
-            && this.isStandard()
-            && name == "email"
-            && !this.signatory().isCsv()
-            && !(this.signatory().document().padDelivery() && this.hasPlacements())){
+        if (!this.signatory().author() && this.isStandard() && name == "email" && !this.signatory().isCsv() ){
             var msg = localization.designview.validation.missingOrWrongEmail;
             this.setValue(this.value().trim());
             return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
