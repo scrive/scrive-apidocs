@@ -554,7 +554,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_flashMessageTemplateShareDone","Valda mallar har blivit delade inom din organisation.",,"The selected templates have been shared with your organisation."
 "_flashMessageMustAcceptTOS","Vänligen acceptera Scrive Allmänna Villkor för att komma igång.",,"Please accept the Scrive Terms of Service to get started."
 "_flashMessageNeedsLetterAndDigit","$fieldnametitlecase$ måste innehålla åtminstone två bokstäver
- och två nummer.",,"$fieldnametitlecase$ must contain at least two letters and two
+ och två siffror.",,"$fieldnametitlecase$ must contain at least two letters and two
  digits."
 "_flashMessageNewActivationLinkSend","Vi har skickat din kontoinbjudan igen. Vänligen gå tillbaka till
  din inkorg och följ instruktionerna i mailet för att aktivera ditt
@@ -2269,7 +2269,7 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_PasswordValidationMessageInputExceedsMaxLength","Lösenord får max innehålla 250 tecken.",,"Password must contain max 250 characters."
 "_PasswordValidationMessageInputLessThanMinLength","Lösenord måste innehålla minst 8 tecken.",,"Password must contain at least 8 characters."
 "_PasswordValidationMessageNeedsLetterAndDigit","Lösenord måste innehålla åtminstone två bokstäver
- och två nummer.",,"Password must contain at least two letters and two
+ och två siffror.",,"Password must contain at least two letters and two
  digits."
 "_PasswordValidationMessagePasswordsDontMatch","Nytt lösenord matchar inte med Upprepa lösenord",,"The two passwords do not match."
 "_modalAccountSetupCallMe","Jag vill veta mer, ring mig!",,"I want to know more, call me!"
