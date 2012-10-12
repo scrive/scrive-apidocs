@@ -55,7 +55,7 @@ describe "sign up after signing a document" do
     (@h.wait.until { @h.driver.find_element :css => ".save .btn-small" }).click
 
     puts "should be logged in"
-    @h.wait.until { @h.driver.find_element :css => ".save.done" }
+    (@h.wait.until { @h.driver.find_element :css => ".save.done" })
 
     puts "go to the server"
     (@h.wait.until { @h.driver.find_element :css => ".start.btn" }).click();
