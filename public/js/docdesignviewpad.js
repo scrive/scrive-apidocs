@@ -88,10 +88,15 @@ window.PadDesignViewUtilsView = Backbone.View.extend({
         var sigs = model.document().signatoriesThatCanSignNow();
         var options = [];
         _.each(sigs,function(sig) {
-          if (sig != source())
-            options.push({name : sig.smartname(), onSelect : function() { callback(sig); } });
+          if (sig != source()) {
+            var name = sig.smartname();
+            if (name == undefined || name == "") name = "(" + localization.pad.notNamedParty + ")";
+            options.push({name : name, onSelect : function() { callback(sig); } });
+          }
         });
-        var select = new Select({options : options, name : source().smartname(), cssClass : "float-left" });
+        var name = source().smartname();
+        if (name == undefined || name == "") name = "(" + localization.pad.notNamedParty + ")";
+        var select = new Select({options : options, name : name, cssClass : "float-left" });
         return select.view().el;    
         
     },

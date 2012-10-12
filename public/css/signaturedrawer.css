@@ -66,27 +66,6 @@
      text-align: center;
 }
 
-.placesignatureandsignbutton {
-        background-image: url(/img/pad-btns.png);
-        float: left;
-        height: 48px;
-        width: 253px;
-        margin:0px;
-}
-
-.placesignatureandsignbutton .text {
-        font-size: 14px;
-        margin-top:13px;
-        margin-left: auto;
-        margin-right: auto;
-        color: #fff;
-        white-space: nowrap;
-        font-weight: bold;
-        background: url(/img/x.png) 0 0 no-repeat;
-        display: inline-block;
-        padding-left: 40px;
-}
-
 .placesignaturebutton {
         background-image: url(/img/pad-btns.png);
         float: left;

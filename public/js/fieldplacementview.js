@@ -565,15 +565,10 @@ var SignaturePlacementViewForDrawing = Backbone.View.extend({
                 //box.height(Math.max(this.signature.height(),bheight));
                 box.width(this.signature.width());
                 box.height(this.signature.height());
-                var button = $("<div/>");
-                if (!signatory.canPadSignQuickSign()){
-                    button.addClass('placesignaturebutton');
-                    button.append($("<span class='text'/>").text(localization.signature.placeYour));
-                }
-                else {
-                    button.addClass('placesignatureandsignbutton');
-                    button.append($("<span class='text'/>").text(signatory.document().process().localization().signbuttontext));
-                }
+
+                var button = $("<div class='placesignaturebutton'/>");
+                button.append($("<span class='text'/>").text(localization.signature.placeYour));
+
                 if (this.signature.width() > bwidth) {
                     button.css("margin-left", Math.floor((this.signature.width() - bwidth) / 2) + "px");
                 };

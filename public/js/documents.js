@@ -87,9 +87,7 @@ window.Document = Backbone.Model.extend({
     },
     signatoriesThatCanSignNow: function() {
         var sigs = _.filter(this.signatories(),function(sig) {return sig.ableToSign()});
-        if (sigs.length > 1) //We try not to show author on this list unless he is only one left due to sign-last functionality misdesign. |
-            return _.filter(sigs,function(sig) {return !sig.author()});
-        return sigs;
+        return _.sortBy(sigs,function(sig) {return sig.author()? 2 : 1});
     },
     addSignatory: function() {
       var document = this;

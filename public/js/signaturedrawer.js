@@ -214,24 +214,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
         var field = this.model.field();
         var signatory = this.model.field().signatory();
         var document = signatory.document();
-        if (signatory.canPadSignQuickSign())
-            return Button.init({
-                    color : 'blue',
-                    size: 'tiny',
-                    text: document.process().localization().signbuttontext,
-                    onClick : function(){
-                        view.drawer.saveImage(function(){
-                            if (field.signature().hasImage()) {
-                                document.sign().send();
-                                view.overlay.data('overlay').close();
-                                view.overlay.detach();
-                            }    
-                        });
-                        return false;
-                    }
-            }).input();
-        else
-           return Button.init({
+        return Button.init({
                     color : 'green',
                     size: 'tiny',
                     text: localization.signature.confirmSignature,

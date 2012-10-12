@@ -510,9 +510,6 @@ window.Signatory = Backbone.Model.extend({
                 !this.hasSigned() &&
                  this.signorder() == this.document().signorder();
     },
-    canPadSignQuickSign : function() {
-       return this.document().padDelivery() && this.document().standardAuthentication() && this.canSign() && !this.document().hasAnyAttachments() && this.allFieldsButSignatureDontRequiredFilling();
-    },
     allAttachemntHaveFile: function() {
         return _.all(this.attachments(), function(attachment) {
             return attachment.hasFile();
@@ -521,11 +518,6 @@ window.Signatory = Backbone.Model.extend({
     allFieldsReadyForSign: function() {
         return _.all(this.fields(), function(field) {
             return field.readyForSign();
-        });
-    },
-    allFieldsButSignatureDontRequiredFilling: function() {
-        return _.all(this.fields(), function(field) {
-            return (field.isClosed() || field.placements().length == 0) || field.isSignature();
         });
     },
     signatureReadyForSign: function() {

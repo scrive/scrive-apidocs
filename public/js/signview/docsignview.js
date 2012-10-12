@@ -41,7 +41,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
             && this.document().ready() && this.document().mainfile() != undefined;
   },
   hasSignSection : function() {
-      return this.document().currentSignatoryCanSign() && (!this.document().currentSignatory().canPadSignQuickSign()) && this.hasArrows();
+      return this.document().currentSignatoryCanSign() && this.hasArrows();
   },
   hasSignatoriesSection : function() {
       return    !this.justSaved()

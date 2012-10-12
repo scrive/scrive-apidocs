@@ -426,6 +426,7 @@ javascriptLocalisation =
              ,  justSend : "$_justSend()$"
              ,  howDoYouWantToSign : "$_howDoYouWantToSign()$"
              ,  cleanImage : "$_padCleanImage()$"
+             ,  notNamedParty : "$_notNamedPartyPad()$"
 
         }
          , sampleEmailHeader: "$_SampleEmailHeader()$"

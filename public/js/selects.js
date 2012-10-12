@@ -67,7 +67,7 @@ window.SelectModel = Backbone.Model.extend({
        this.expand();
   },
   expand : function() {
-     if (!this.expanded() && this.onOpen())
+     if (!this.expanded() && this.onOpen() && this.options().length > 0)
        this.set({"expanded" : true});
   },
   onOpen : function(){
