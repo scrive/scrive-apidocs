@@ -31,7 +31,6 @@ module Doc.DocControl(
     , showPreviewForSignatory
     , handleFilePages
     , handleCSVLandpage
-    , handleInvariantViolations
     , handleShowVerificationPage
     , handleVerify
 ) where
@@ -73,7 +72,6 @@ import Util.FlashUtil
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Util.MonadUtils
-import Doc.Invariants
 import Stats.Control
 import User.Utils
 import Company.Model
@@ -864,16 +862,6 @@ handleSigAttach docid siglinkid = do
     Just newdoc <- dbQuery $ GetDocumentByDocumentID docid
     return newdoc
   return $ LinkSignDoc d siglink
-
-handleInvariantViolations :: Kontrakcja m => m Response
-handleInvariantViolations = onlyAdmin $ do
-  Context{ ctxtime } <- getContext
-  docs <- dbQuery GetAllDocuments
-  let probs = listInvariantProblems ctxtime docs
-      res = case probs of
-        [] -> "No problems!"
-        _  -> intercalate "\n" probs
-  return $ Response 200 Map.empty nullRsFlags (BSL.fromString res) Nothing
 
 prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 prepareEmailPreview docid slid = do

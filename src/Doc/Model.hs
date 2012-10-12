@@ -72,7 +72,6 @@ module Doc.Model
   , ResetSignatoryMailDeliveryInformationForReminder(..)
   , UpdateFields(..)
   , SetSigAttachments(..)
-  , UpdateFieldsNoStatusCheck(..)
   , UpdateDraft(..)
   , SetDocumentModificationData(..)
   , GetDocsSentBetween(..)
@@ -2350,51 +2349,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where
     updatedRows <- forM fields $ \(ft, v) -> updateValue ft v
     -- We don't want to affect too many rows
     return $ sum updatedRows <= fromIntegral (length fields)
-
-data UpdateFieldsNoStatusCheck = UpdateFieldsNoStatusCheck DocumentID SignatoryLinkID (String, String) Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFieldsNoStatusCheck () where
-  update (UpdateFieldsNoStatusCheck did slid (fieldname, fieldvalue) actor) = do
-    (eml :: String) <- $(fromJust) `liftM` getOne
-           (SQL ("SELECT value FROM signatory_link_fields"
-                ++ " WHERE signatory_link_fields.signatory_link_id = ?"
-                ++ "   AND signatory_link_fields.type = ?")
-                 [toSql slid, toSql EmailFT])
-    let updateValue xtype fvalue = do
-          _ <- kRun $ mkSQL UPDATE tableSignatoryLinkFields
-                 [ sql "value" fvalue ]
-                 <> SQL (" WHERE EXISTS (SELECT 1 FROM documents, signatory_links"
-                           ++             " WHERE documents.id = signatory_links.document_id"
-                           ++             "   AND documents.status = ?"
-                           ++             "   AND signatory_links.sign_time IS NULL"
-                           ++             "   AND signatory_links.id = signatory_link_id)"
-                           ++      "  AND signatory_link_id = ?"
-                           ++      "  AND custom_name = ?"
-                           ++      "  AND type = ?")
-                        [ toSql Pending
-                        , toSql slid
-                        , toSql (case xtype of
-                                   CustomFT custom_name _ -> custom_name
-                                   _ -> "")
-                        , toSql xtype
-                        ]
-          return ()
-
-    case fieldname of
-      "sigfstname" -> updateValue FirstNameFT fieldvalue
-      "sigsndname" -> updateValue LastNameFT fieldvalue
-      "sigco"      -> updateValue CompanyFT fieldvalue
-      "sigpersnr"  -> updateValue PersonalNumberFT fieldvalue
-      "sigcompnr"  -> updateValue CompanyNumberFT fieldvalue
-      "sigemail"   -> updateValue EmailFT fieldvalue
-      "signature"  -> updateValue SignatureFT fieldvalue
-      label        -> updateValue (CustomFT label False) fieldvalue
-
-    _ <- update $ InsertEvidenceEvent
-               UpdateFieldsEvidence
-               (value "email" eml >> value "fieldtype" fieldname >> value "value" fieldvalue >> value "actor" (actorWho actor))
-               (Just did)
-               actor
-    return ()
 
 data AddDocumentAttachment = AddDocumentAttachment DocumentID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddDocumentAttachment Bool where

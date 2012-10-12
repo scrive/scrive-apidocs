@@ -153,7 +153,7 @@ data EvidenceEventType =
   RemoveDocumentAttachmentEvidence                |
   AddDocumentAttachmentEvidence                   |
   PendingToAwaitingAuthorEvidence                 |
-  UpdateFieldsEvidence                            |
+  UpdateFieldsEvidence                            | -- not used anymore
   SetElegitimationIdentificationEvidence          | -- not used anymore
   SetEmailIdentificationEvidence                  | -- not used anymore
   TimeoutDocumentEvidence                         |

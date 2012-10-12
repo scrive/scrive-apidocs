@@ -4,7 +4,6 @@ module ActionQueue.UserAccountRequest (
   , getUserAccountRequestUser
   , newUserAccountRequest
   , newUserAccountRequestLink
-  , populateUARTable
   ) where
 
 import Control.Monad
@@ -20,7 +19,6 @@ import ActionQueue.Tables
 import AppConf
 import Crypto.RNG
 import DB
-import Kontra
 import KontraLink
 import MagicHash
 import MinutesTime
@@ -118,14 +116,3 @@ newUserAccountRequestLink :: (MonadDB m, CryptoRNG m) => UserID -> m KontraLink
 newUserAccountRequestLink uid = do
   uar <- newUserAccountRequest uid
   return $ LinkAccountCreated (uarUserID uar) (uarToken uar)
-
--- | Populates user_account_requests table with references to all
--- inactive users so they will gradually be deleted if owners won't
--- have any interest in them. To be removed after 15.07.2012.
-populateUARTable :: Kontrakcja m => m String
-populateUARTable = onlyAdmin $ do
-  ids <- runDBEnv $ do
-    _ <- kRun "SELECT id FROM users WHERE deleted = FALSE AND has_accepted_terms_of_service IS NULL"
-    foldDB (\acc uid -> uid : acc) []
-  forM_ ids newUserAccountRequest
-  return $ "user_account_requests table populated with " ++ show (length ids) ++ " records."

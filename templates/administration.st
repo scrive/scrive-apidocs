@@ -49,15 +49,6 @@ adminsmain=
         </tr>
     </tbody></table>
     <br/>
-$if(admin)$
-    <strong> Log Files </strong>
-    <ul>
-      <li><a href="/adminonly/log/debug.log">debug.log</a></li>
-      <li><a href="/adminonly/log/mail.log">mail.log</a></li>
-      <li><a href="/adminonly/log/error.log">error.log</a></li>
-    </ul>
-$endif$
-
 #####
 adminusers=
    <div class="tab-viewer">
@@ -243,7 +234,7 @@ adminUsersForSales=
                                 new Submit({
                                     method: "POST",
                                     add : "true",
-                                    url: "/createuser",
+                                    url: "/adminonly/createuser",
                                     fstname : fstname.val(),
                                     sndname : sndname.val(),
                                     email : email.val(),
@@ -1211,19 +1202,12 @@ $daveBody:noescape()$
 <BR/>
 <BR/>
 $if(couldBeclosed)$
-  <form method="post" action="/adminonly/reseal/$id$">
+  <form method="post" action="/dave/reseal/$id$">
     <input type="submit" value="Reseal"> </input>
   </form>
 $elseif(closed)$
-  <form method="post" action="/adminonly/reseal/$id$">
+  <form method="post" action="/dave/reseal/$id$">
     <input type="submit" value="Reseal"> </input>
-  </form>
-  <form method="post" action="/adminonly/replacemainfile/$id$" enctype="multipart/form-data">
-    <input type="file" name="file"> </input> <input type="submit" value="Reupload sealed file"></input>
-  </form>
-$else$
-  <form method="post" action="/adminonly/replacemainfile/$id$" enctype="multipart/form-data">
-    <input type="file" name="file"> </input> <input type="submit" value="Reupload main file"/>
   </form>
 $endif$
 <BR/>
@@ -1237,8 +1221,5 @@ $daveBody:noescape()$
 This will record the change in the evidence log.
 <BR/>
 <BR/>
-<BR/>
-<BR/>
-$fields:{field | <form action="/adminonly/updatefields/$docid$/$slid$" method="post">$field.label$: <input type="hidden" name="fieldname" value="$field.fieldname$" /><input type="text" name="fieldvalue" value="$field.fieldvalue$" /><input type="submit" /></form> }$
 </div>
 ####
