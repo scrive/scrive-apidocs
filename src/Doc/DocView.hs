@@ -233,9 +233,9 @@ signatoryFieldsJSON :: Document -> SignatoryLink -> JSValue
 signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = JSArray $
   for orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements} ->
     case sfType of
-      FirstNameFT             -> fieldJSON "standard" "fstname"   sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      LastNameFT              -> fieldJSON "standard" "sndname"   sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      EmailFT                 -> fieldJSON "standard" "email"     sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      FirstNameFT             -> fieldJSON "standard" "fstname"   sfValue (closedF sf  && (not $ isPreparation doc) || isAuthor sl) sfPlacements
+      LastNameFT              -> fieldJSON "standard" "sndname"   sfValue (closedF sf  && (not $ isPreparation doc) || isAuthor sl) sfPlacements
+      EmailFT                 -> fieldJSON "standard" "email"     sfValue (closedF sf  && (not $ isPreparation doc) || isAuthor sl) sfPlacements
       PersonalNumberFT        -> fieldJSON "standard" "sigpersnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
       CompanyFT               -> fieldJSON "standard" "sigco"     sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
       CompanyNumberFT         -> fieldJSON "standard" "sigcompnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements

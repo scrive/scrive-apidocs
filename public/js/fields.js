@@ -153,7 +153,9 @@ window.Field = Backbone.Model.extend({
         return this.value() == "" && this.placements().length == 0 && (this.isStandard() || this.isSignature());
     },
     readyForSign : function(){
-        if (this.isText() && (this.value() != ""))
+        if (this.isEmail())
+            return new EmailValidation().validateData(this.value());
+        else if (this.isText() && (this.value() != ""))
             return true;
         else if (this.canBeIgnored())
             return true;
@@ -199,7 +201,8 @@ window.Field = Backbone.Model.extend({
             && this.isStandard()
             && (name == "fstname" ||name == "sndname")
             && !this.signatory().isCsv()
-            && !this.hasPlacements()) {
+            && (!this.hasPlacements() || this.signatory().document().elegAuthentication()))
+        {
             return new NotEmptyValidation({message: localization.designview.validation.missingNames})
                    .concat(new NameValidation({message: localization.designview.validation.wrongNames}));
         }
@@ -249,6 +252,9 @@ window.Field = Backbone.Model.extend({
             return new Validation({validates : function() {return field.hasPlacements()}, message : msg});
         }
         return new Validation();
+    },
+    isEmail: function() {
+        return  this.isStandard() && this.name() == "email";
     },
     isStandard: function() {
         return  this.type() == "standard";
