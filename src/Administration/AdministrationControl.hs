@@ -120,7 +120,6 @@ adminonlyRoutes =
         , dir "statsbymonth" $ hGet $ toK0 $ Stats.handleAdminSystemUsageStatsByMonthJSON
 
         , dir "companies" $ hGet $ toK0 $ jsonCompanies
-        , dir "backdoor" $ hGet $ toK1 $ handleBackdoorQuery
   ]
 
 daveRoutes :: Route (KontraPlus Response)
@@ -133,6 +132,7 @@ daveRoutes =
      , dir "company"       $ hGet $ toK1 $ daveCompany
      , dir "reseal" $ hPost $ toK1 $ resealFile
      , dir "docproblems" $ hGet $ toK0 $ handleInvariantViolations
+     , dir "backdoor" $ hGet $ toK1 $ handleBackdoorQuery
     ]
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m String
