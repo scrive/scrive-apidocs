@@ -215,6 +215,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                         if (placement.view != undefined && placement.view.startinlineediting != undefined && !placement.field().readyForSign())
                         {
                           placement.view.startinlineediting();
+                          task.trigger("change");
                         }
                     },
                     tipSide : placement.tip(),
