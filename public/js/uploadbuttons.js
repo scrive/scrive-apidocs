@@ -188,7 +188,7 @@ window.UploadBoxView = Backbone.View.extend({
     this.model.view = this;
     this.render();
   },
-  tagName: 'td',
+  tagName: 'div',
 
   render: function () {
     var td = $(this.el);
@@ -211,7 +211,7 @@ window.UploadTextView = Backbone.View.extend({
     this.text = args.text;
     this.render();
   },
-  tagName: 'td',
+  tagName: 'div',
 
   render: function () {
     var td = $(this.el);

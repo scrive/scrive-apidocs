@@ -1,7 +1,7 @@
 (function(window){
 
     window.ChangeFileUploadView = Backbone.View.extend({
-        tagName: "tr",
+        tagName: "div",
         initialize: function() {
             this.model.view = this;
             _.bindAll(this, 'render');
@@ -87,7 +87,7 @@
     });
 
     window.ChangeFileTemplateView = Backbone.View.extend({
-        tagName: "tr",
+        tagName: "div",
         initialize: function() {
             this.model.view = this;
             _.bindAll(this, 'render');
@@ -153,7 +153,7 @@
             documentsTable.view.render();
 
 
-            el.append($("<td/>").addClass("templateslist").append(documentsTable.view.el));
+            el.append($("<div/>").addClass("templateslist").append(documentsTable.view.el));
 
 
         }
