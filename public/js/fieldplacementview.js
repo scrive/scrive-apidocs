@@ -188,8 +188,6 @@ var TextPlacementPlacedView = Backbone.View.extend({
             place.css({
                 left: Math.floor(placement.xrel() * parentWidth + 0.5),
                 top: Math.floor(placement.yrel() * parentHeight + 0.5),
-                width: Math.ceil(placement.wrel() * parentWidth),
-                height: Math.ceil(placement.hrel() * parentHeight),
                 fontSize: placement.fsrel() * parentWidth
             });
         }
@@ -204,18 +202,21 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var document = field.signatory().document();
         var place = $(this.el);
         var view = this;
-        if (view.inlineediting == true) return false;
+        if (view.inlineediting == true) {
+          if (this.input != undefined) this.input.focus();
+          return false;
+        }
         view.inlineediting = true;
         var width = place.width() > 80 ? place.width() : 80;
         place.empty();
         var box = $("<div class='inlineEditing'/>").width(width+24);
-        var iti = $("<input type='text' autofocus='autofocus'/>").val(field.value()).width(width+5);
+        this.input = $("<input type='text' autofocus='autofocus'/>").val(field.value()).width(width+5);
         var acceptIcon = $("<span class='acceptIcon'/>");
-        place.append(box.append(iti).append(acceptIcon));
+        place.append(box.append(this.input).append(acceptIcon));
         field.bind('change',function() { view.inlineediting  = false; view.render();});
         var accept =  function() {
                       view.inlineediting = false;
-                      var val = iti.val();
+                      var val = view.input.val();
                       field.setValue(val);
                       SessionStorage.set(field.signatory().document().documentid(),field.name(),val);
                       field.trigger('change:inlineedited');
@@ -226,12 +227,13 @@ var TextPlacementPlacedView = Backbone.View.extend({
                       accept();
                       return false;
         });
-        iti.keydown(function(event) {
+        this.input.keydown(function(event) {
                     if(event.which === 13 || event.which === 9)
                     {   accept();
                         return false;
                     }
         });
+        this.input.focus();
         return false;
     },
     render: function() {

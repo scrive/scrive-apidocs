@@ -166,6 +166,8 @@ var PageTasksArrowView = Backbone.View.extend({
         var scrolltop = $(window).scrollTop();
         var scrollbottom = scrolltop + $(window).height();
         var eltop = task.el().offset().top;
+        var elleft = task.el().offset().left;
+        var elwidth = task.el().width();
         var elbottom = eltop +task.el().height();
         var bottommargin = 0;
         var topmargin = 0;
@@ -173,9 +175,11 @@ var PageTasksArrowView = Backbone.View.extend({
         if (task != newtask) return true;
         if ((scrolltop >= 0) && (elbottom <= eltop)) return false;
         
-        if (((elbottom + bottommargin) <= scrollbottom) && ((eltop - topmargin) >= scrolltop))
+        if (((elbottom + bottommargin) <= scrollbottom) && ((eltop - topmargin) >= scrolltop)) {
+           if (arrow.model().type() == 'point-left')  return false;
+           if (arrow.model().type() == 'point-right') return (elleft + elwidth > $(arrow.view().el).offset().left);
            return (arrow.model().type() != 'point-left' && arrow.model().type() != 'point-right');
-        
+        }
         if ((elbottom + bottommargin) > scrollbottom)
            return (arrow.model().type() != 'scroll-down');
 
