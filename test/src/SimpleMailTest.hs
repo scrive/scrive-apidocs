@@ -46,7 +46,10 @@ singleMinimalSignatory = testCase "Single Minimal Signatory" $ do
       sig == SignatoryDetails { signatorysignorder = SignOrder 0,
                                 signatoryfields = [ SignatoryField FirstNameFT "Mariusz" []
                                                   , SignatoryField LastNameFT  "Rak" []
-                                                  , SignatoryField EmailFT     "mariusz@skrivapa.se" []]} 
+                                                  , SignatoryField EmailFT     "mariusz@skrivapa.se" []],
+                                signatoryisauthor = False,
+                                signatoryispartner = False
+                              }
       -> return ()
     _ -> error "Did not return correct details"
 
@@ -60,10 +63,10 @@ doubleMinimalSignatory = testCase "Double Minimal Signatory" $ do
       title == "Contract Title" &&
       sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" []
                                               , SignatoryField LastNameFT  "Rak" []
-                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" []],
+                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" []] False False,
                SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" []
                                               , SignatoryField LastNameFT  "Normand" []
-                                              , SignatoryField EmailFT     "eric@skrivapa.se" []]]
+                                              , SignatoryField EmailFT     "eric@skrivapa.se" []] False False]
       -> return ()
     _ -> error "Did not return correct json"
 
@@ -78,12 +81,12 @@ doubleOptionalFieldsSignatory = testCase "Double Optional Fields Signatory" $ do
       sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" []
                                               , SignatoryField LastNameFT  "Rak" []
                                               , SignatoryField EmailFT     "mariusz@skrivapa.se" []
-                                              , SignatoryField CompanyNumberFT "78765554" []],
+                                              , SignatoryField CompanyNumberFT "78765554" []] False False,
                SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" []
                                               , SignatoryField LastNameFT  "Normand" []
                                               , SignatoryField EmailFT     "eric@skrivapa.se" []
                                               , SignatoryField CompanyFT   "Hello" []
-                                              , SignatoryField PersonalNumberFT "78676545464" []]]
+                                              , SignatoryField PersonalNumberFT "78676545464" []] False False]
       -> return ()
     a -> do
       Log.debug $ "JSON returned from parse: " ++ show a
@@ -126,10 +129,10 @@ stupidEmailSignature = testCase "Stupid email signature" $ do
       title == "Contract Title" &&
       sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" []
                                               , SignatoryField LastNameFT  "Rak" []
-                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" []],
+                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" []] False False,
                SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" []
                                               , SignatoryField LastNameFT  "Normand" []
-                                              , SignatoryField EmailFT     "eric@skrivapa.se" []]]
+                                              , SignatoryField EmailFT     "eric@skrivapa.se" []] False False]
       -> return ()
     _ -> error "Did not return correct json"
 
@@ -148,10 +151,10 @@ looksLikeSignature = testCase "Stupid email looks like signatory signature" $ do
       title == "Contract Title" &&
       sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" []
                                               , SignatoryField LastNameFT  "Rak" []
-                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" []],
+                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" []] False False,
                SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" []
                                               , SignatoryField LastNameFT  "Normand" []
-                                              , SignatoryField EmailFT     "eric@skrivapa.se" []]]
+                                              , SignatoryField EmailFT     "eric@skrivapa.se" []] False False]
       -> return ()
     _ -> error "Did not return correct values"
 
@@ -166,12 +169,12 @@ doubleOptionalFieldsWeirdSignatory = testCase "Double Optional Fields Weird Sign
       sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" []
                                               , SignatoryField LastNameFT  "Rak" []
                                               , SignatoryField EmailFT     "mariusz@skrivapa.se" []
-                                              , SignatoryField CompanyNumberFT "78765554" []],
+                                              , SignatoryField CompanyNumberFT "78765554" []] False False,
                SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" []
                                               , SignatoryField LastNameFT  "Normand" []
                                               , SignatoryField EmailFT     "eric@skrivapa.se" []
                                               , SignatoryField CompanyFT   "Hello" []
-                                              , SignatoryField PersonalNumberFT "78676545464" []]]
+                                              , SignatoryField PersonalNumberFT "78676545464" []] False False]
       -> return ()
     a -> error $ "Did not return correct value: " ++ show a
 
@@ -215,7 +218,7 @@ testWackySignature = testCase "Test wacky signature (rtf)" $
       sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" []
                                               , SignatoryField LastNameFT  "Rak" []
                                               , SignatoryField EmailFT     "mariusz@skrivapa.se" []
-                                              , SignatoryField CompanyNumberFT "78765554" []]]
+                                              , SignatoryField CompanyNumberFT "78765554" []] False False]
       -> return ()
     a ->  do
       Log.debug $ "JSON returned from parse: " ++ show a
@@ -238,7 +241,7 @@ testExtraSpaces = testCase "Test that those stupid clients that think Return mea
       title == "Dude!" &&
       sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "eric" []
                                               , SignatoryField LastNameFT "normand" []
-                                              , SignatoryField EmailFT "ericwnormand@gmail.com" []]]
+                                              , SignatoryField EmailFT "ericwnormand@gmail.com" []] False False]
       -> return ()
     a -> do
       error ("Did not return correct json; got: " ++ show a)

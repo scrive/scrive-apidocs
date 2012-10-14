@@ -1,7 +1,6 @@
 module MailsTest (mailsTests) where
 
 import Control.Applicative
-import Data.Monoid
 import Happstack.Server
 import Test.Framework
 
@@ -78,7 +77,7 @@ sendDocumentMails mailTo author mcompany = do
 
         isl <- rand 10 arbitrary
         now <- getMinutesTime
-        let sigs = [(authordetails, authorRole <> partnerRole), (isl, partnerRole)]
+        let sigs = [authordetails, isl]
         True <- randomUpdate $ ResetSignatoryDetails docid sigs (systemActor now)
         True <- randomUpdate $ PreparationToPending docid (systemActor now)
         Just d2 <- dbQuery $ GetDocumentByDocumentID docid

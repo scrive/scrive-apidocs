@@ -75,7 +75,6 @@ instance InspectXML Float where
 instance InspectXML Double where
 instance InspectXML Rational where
 instance InspectXML SignOrder where
-instance InspectXML SignatoryRoles where
 instance InspectXML DocumentStatus where
 instance InspectXML CSVUpload where
 instance InspectXML DocumentType where

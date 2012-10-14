@@ -141,7 +141,7 @@ instance (HasSignatoryLinks a, SignatoryLinkIdentity b) => HasSignatoryLinks (a,
    Get the author's signatory link.
  -}
 getAuthorSigLink :: HasSignatoryLinks a => a -> Maybe SignatoryLink
-getAuthorSigLink doc = getSigLinkFor doc (srAuthor . signatoryroles)
+getAuthorSigLink doc = getSigLinkFor doc (signatoryisauthor . signatorydetails)
 
 {- |
    Given a Document, return the best guess at the author's name:
@@ -179,13 +179,13 @@ hasSeen msl = maybe False (isJust . maybeseeninfo) (getMaybeSignatoryLink msl)
    Is this SignatoryLink an author?
  -}
 isAuthor :: (MaybeSignatoryLink msl) => msl -> Bool
-isAuthor = isSigLinkFor (srAuthor . signatoryroles)
+isAuthor = isSigLinkFor (signatoryisauthor . signatorydetails)
 
 {- |
    Is the given SignatoryLink marked as a signatory (someone who can must sign)?
  -}
 isSignatory :: (MaybeSignatoryLink msl) => msl -> Bool
-isSignatory = isSigLinkFor (srPartner . signatoryroles)
+isSignatory = isSigLinkFor (signatoryispartner . signatorydetails)
 
 {- |
    Is the user able to view the doc?
@@ -213,7 +213,7 @@ validSigLink _ _ _ = False
    signing the document, rather than just viewing.
 -}
 getSignatoryPartnerLinks :: HasSignatoryLinks hsl => hsl -> [SignatoryLink] 
-getSignatoryPartnerLinks = filterSigLinksFor (srPartner . signatoryroles)
+getSignatoryPartnerLinks = filterSigLinksFor (signatoryispartner . signatorydetails)
 
 {- |
   Does this siglink have a user (maybesignatory)?

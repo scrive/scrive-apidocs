@@ -265,12 +265,12 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
       Just authorsiglink = getAuthorSigLink document
       --authorHasSigned = isSignatory authorsiglink && isJust (maybesigninfo authorsiglink)
       signatoriesdetails = [signatorydetails sl | sl <- documentsignatorylinks document
-                                                , srPartner $ signatoryroles sl]
+                                                , signatoryispartner $ signatorydetails sl]
       authordetails = signatorydetails authorsiglink
       signatories = personsFromDocument (checkedBoxImage,uncheckedBoxImage) document
       --secretaries = if authorHasSigned then [] else [personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) authordetails]
       secretaries = [personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) $ signatorydetails s| s <- documentsignatorylinks document
-                                                                                                        , not . srPartner $ signatoryroles s]
+                                                                                                        , not . signatoryispartner $ signatorydetails s]
 
       persons = map (\(a,_,_,_,_,_) -> a) signatories
       initialsx = map (\(_,_,_,_,_,a) -> a) signatories

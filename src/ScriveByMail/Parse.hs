@@ -146,7 +146,7 @@ parseSignatory sig =
                  [SignatoryField CompanyNumberFT   (a               ) [] | Just a <- [cmpnr], not $ null a] ++
                  [SignatoryField PersonalNumberFT   (a               ) [] | Just a <- [prsnr], not $ null a]
         in if length ss == length pairs 
-           then Just $ SignatoryDetails (SignOrder 0) ss
+           then Just $ SignatoryDetails (SignOrder 0) ss False False
            else Nothing
    else Nothing
 

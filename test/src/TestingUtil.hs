@@ -7,7 +7,6 @@ import Test.Framework.Providers.HUnit (testCase)
 
 import Control.Applicative
 import Data.Char
-import Data.Monoid
 import Data.Word
 import Test.QuickCheck
 import Happstack.Server
@@ -188,7 +187,6 @@ instance Arbitrary SignatoryLink where
                            , maybereadinvite            = Nothing
                            , invitationdeliverystatus   = Unknown
                            , signatorysignatureinfo     = Nothing
-                           , signatoryroles             = mempty
                            , signatorylinkdeleted       = False
                            , signatorylinkreallydeleted = False
                            , signatorylinkcsvupload     = Nothing
@@ -322,6 +320,8 @@ instance Arbitrary SignatoryDetails where
     em <- arbEmail
     fields <- filterSingleFieldType <$> arbitrary
     return $ SignatoryDetails { signatorysignorder = SignOrder 1
+                              , signatoryisauthor = False
+                              , signatoryispartner = True
                               , signatoryfields = filter (\f->notElem (sfType f) [FirstNameFT, LastNameFT, EmailFT]) fields
                                                   ++ [ SignatoryField FirstNameFT fn []
                                                      , SignatoryField LastNameFT  ln []
@@ -360,10 +360,6 @@ instance Arbitrary SignatoryField where
                             , sfValue = v
                             , sfPlacements = p
                             }
-
--- this is arbitrary indeed.
-instance Arbitrary SignatoryRoles where
-  arbitrary = return partnerRole
 
 instance Arbitrary AuthenticationMethod where
   arbitrary = elements [StandardAuthentication, ELegAuthentication]
@@ -419,10 +415,12 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 
                                       , maybereadinvite = Nothing
                                       , invitationdeliverystatus = Delivered
                                       , signatorysignatureinfo = Nothing
-                                      , signatoryroles = partnerRole
                                       , signatorylinkdeleted = False
                                       , signatorylinkreallydeleted = False
-                                      , signatorydetails = SignatoryDetails { signatorysignorder = SignOrder 1,
+                                      , signatorydetails = SignatoryDetails {
+                                      signatoryisauthor = False,
+                                      signatoryispartner = True,
+                                      signatorysignorder = SignOrder 1,
                                                                               signatoryfields = [SignatoryField FirstNameFT "Eric" [],
                                                                                                  SignatoryField LastNameFT "Normand" [],
                                                                                                  SignatoryField EmailFT "eric@scrive.com" [],
@@ -513,6 +511,8 @@ emptySignatoryDetails :: SignatoryDetails
 emptySignatoryDetails = SignatoryDetails
     { signatoryfields = []
     , signatorysignorder = SignOrder 1
+    , signatoryisauthor = False
+    , signatoryispartner = False
     }
 
 data RandomDocumentAllows = RandomDocumentAllows
@@ -550,30 +550,26 @@ addRandomDocumentWithAuthor user = documentid <$> addRandomDocument (randomDocum
 randomSigLinkByStatus :: DocumentStatus -> Gen SignatoryLink
 randomSigLinkByStatus Closed = do
   (sl, sign, seen) <- arbitrary
-  return $ sl{maybesigninfo = Just sign, maybeseeninfo = Just seen, signatoryroles=partnerRole}
+  return $ sl{maybesigninfo = Just sign, maybeseeninfo = Just seen}
 randomSigLinkByStatus Preparation = do
   (sl) <- arbitrary
-  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=partnerRole}
+  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing}
 randomSigLinkByStatus Pending = do
   (sl) <- arbitrary
-  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=partnerRole}
+  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing}
 randomSigLinkByStatus _ = arbitrary
 
 randomAuthorLinkByStatus :: DocumentStatus -> Gen SignatoryLink
 randomAuthorLinkByStatus Closed = do
   (sl, sign, seen) <- arbitrary
-  return $ sl{maybesigninfo = Just sign, maybeseeninfo = Just seen, signatoryroles=authorRole}
+  return $ sl{maybesigninfo = Just sign, maybeseeninfo = Just seen, signatorydetails = (signatorydetails sl) { signatoryisauthor = True } }
 randomAuthorLinkByStatus Preparation = do
   (sl) <- arbitrary
-  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=authorRole}
+  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatorydetails = (signatorydetails sl) { signatoryisauthor = True } }
 randomAuthorLinkByStatus Pending = do
   (sl) <- arbitrary
-  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=authorRole}
+  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatorydetails = (signatorydetails sl) { signatoryisauthor = True } }
 randomAuthorLinkByStatus _ = arbitrary
-
-
-getRandomAuthorRoles :: TestEnv SignatoryRoles
-getRandomAuthorRoles = rand 10000 (elements [authorRole, authorRole <> partnerRole])
 
 addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> TestEnv Document
 addRandomDocumentWithAuthorAndCondition user p =
@@ -608,12 +604,11 @@ addRandomDocument rda = do
 
       let doc = doc' { documenttype = xtype, documentstatus = status }
 
-      roles <- getRandomAuthorRoles
+      roles <- rand 10 arbitrary
       asl' <- rand 10 $ randomAuthorLinkByStatus status
       let asl = asl' { maybesignatory = Just (userid user)
                      , maybecompany = usercompany user
-                     , signatoryroles = roles
-                     , signatorydetails = signatoryDetailsFromUser user mcompany
+                     , signatorydetails = signatoryDetailsFromUser user mcompany roles
                      }
 
       let alllinks = asl : siglinks

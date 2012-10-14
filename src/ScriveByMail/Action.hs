@@ -45,7 +45,6 @@ import Data.Char
 import Data.Int
 import Data.List
 import Data.Maybe
-import Data.Monoid
 import Data.String.Utils
 import System.FilePath
 import Text.JSON
@@ -197,7 +196,8 @@ scriveByMail :: (Kontrakcja m) =>
 scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   ctx@Context{ctxtime} <- getContext
 
-  let fullRole = authorRole <> partnerRole
+  let authorRole = (True, False)
+      fullRole = (True, True)
       (doctype, arole) = caseOf [ ("contract" `isInfixOf` to, (Signable Contract, fullRole))
                                 , ("offer"    `isInfixOf` to, (Signable Offer,    authorRole))
                                 , ("order"    `isInfixOf` to, (Signable Order,    authorRole))
@@ -258,13 +258,13 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   -- add signatories
   -- send document
 
-  let signatories = map (\p -> (p, partnerRole)) sigdets
+  let signatories = map (\p -> p { signatoryispartner = True }) sigdets
 
   mcompany <- case usercompany user of
     Just companyid -> dbQuery $ GetCompany companyid
     Nothing -> return Nothing
 
-  let userDetails = signatoryDetailsFromUser user mcompany
+  let userDetails = signatoryDetailsFromUser user mcompany arole
 
   let actor = mailAPIActor ctxtime (userid user) (getEmail user)
   mdoc <- dbUpdate $ NewDocument user mcompany title doctype 0 actor
@@ -281,7 +281,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   _ <- guardTrueM $ dbUpdate (AttachFile (documentid doc) (fileid file) actor)
   _ <- dbUpdate $ SetDocumentAuthenticationMethod (documentid doc) StandardAuthentication actor
   _ <- dbUpdate $ SetDocumentDeliveryMethod (documentid doc) EmailDelivery actor
-  res <- (sequence $ [dbUpdate $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) actor])
+  res <- (sequence $ [dbUpdate $ ResetSignatoryDetails (documentid doc) (userDetails:signatories) actor])
 
   when (not $ and res) $ do
     -- send sorry email
@@ -433,7 +433,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
   -- we should check that the request makes sense
 
   -- exactly one author
-  let aus = [a | a <- dcrInvolved dcr, srAuthor $ irRole a]
+  let aus = [a | a <- dcrInvolved dcr, irIsAuthor a]
 
   when (length aus /= 1) $ do
     Log.jsonMailAPI $ (show $ toSeconds ctxtime) ++ " Should have exactly one author; instead, has " ++ show aus
@@ -443,7 +443,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
   let [authorIR] = aus
 
   -- at least one signatory
-  let sigs = length $ [p | p <- dcrInvolved dcr, srPartner $ irRole p]
+  let sigs = length $ [p | p <- dcrInvolved dcr, irIsPartner p]
   when (1 > sigs) $ do
     Log.jsonMailAPI $ (show $ toSeconds ctxtime) ++ " Should have at least one signatory; instead, has " ++ show sigs
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
@@ -481,7 +481,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
     Just companyid -> dbQuery $ GetCompany companyid
     Nothing -> return Nothing
 
-  let userDetails = signatoryDetailsFromUser user mcompany
+  let userDetails = signatoryDetailsFromUser user mcompany (False, False)
 
   let fieldstring FirstNameFT = "fstname"
       fieldstring LastNameFT  = "sndname"
@@ -529,9 +529,13 @@ jsonMailAPI mailapi username user pdfs plains content = do
   _ <- dbUpdate $ SetDocumentAuthenticationMethod (documentid doc) StandardAuthentication actor
   _ <- dbUpdate $ SetDocumentDeliveryMethod (documentid doc) EmailDelivery actor
 
-  let signatories = for (dcrInvolved dcr) $ \InvolvedRequest{irRole,irData} ->
-        (SignatoryDetails{signatorysignorder = SignOrder 0, signatoryfields = irData},
-         irRole)
+  let signatories = for (dcrInvolved dcr) $ \InvolvedRequest{..} ->
+        (SignatoryDetails {
+            signatorysignorder = SignOrder 0
+          , signatoryfields = irData
+          , signatoryisauthor = irIsAuthor
+          , signatoryispartner = irIsPartner
+        })
 
   res <- (sequence $ [dbUpdate $ ResetSignatoryDetails (documentid doc) signatories actor])
 

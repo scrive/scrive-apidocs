@@ -27,14 +27,11 @@ module Doc.DocStateData (
   , TipSide(..)
   , SignatoryDetails(..)
   , SignatoryLink(..)
-  , SignatoryRoles(..)
   , SignatureInfo(..)
   , TimeoutTime(..)
   , AuthorAttachment(..)
   , SignatoryAttachment(..)
   , StatusClass(..)
-  , authorRole
-  , partnerRole
   , getFieldOfType
   , getValueOfType
   , emptyDocumentUI
@@ -46,7 +43,6 @@ module Doc.DocStateData (
 import Company.Model
 import Data.Data
 import Data.Maybe
-import Data.Monoid
 import DB.Derive
 import IPAddress
 import MagicHash
@@ -183,12 +179,14 @@ data TipSide = LeftTip | RightTip
 data SignatoryDetails = SignatoryDetails {
     signatorysignorder :: SignOrder
   , signatoryfields    :: [SignatoryField]
+  , signatoryisauthor  :: Bool -- ^ True if signatory is an author of the document
+  , signatoryispartner :: Bool -- ^ True if signatory participates in signing process
   } deriving (Ord, Show)
 
 instance Eq SignatoryDetails where
-  SignatoryDetails {signatorysignorder=so1, signatoryfields=sf1} ==
-    SignatoryDetails {signatorysignorder=so2, signatoryfields=sf2} =
-      so1 == so2 && (sort sf2) == (sort sf1)
+  SignatoryDetails {signatorysignorder=so1, signatoryfields=sf1, signatoryisauthor = isauthor1, signatoryispartner = ispartner1} ==
+    SignatoryDetails {signatorysignorder=so2, signatoryfields=sf2, signatoryisauthor = isauthor2, signatoryispartner = ispartner2} =
+      so1 == so2 && (sort sf2) == (sort sf1) && isauthor1 == isauthor2 && ispartner1 == ispartner2
 
 data SignatoryLink = SignatoryLink {
     signatorylinkid            :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
@@ -201,7 +199,6 @@ data SignatoryLink = SignatoryLink {
   , maybereadinvite            :: Maybe MinutesTime   -- ^ when we receive confirmation that a user has read
   , invitationdeliverystatus   :: MailsDeliveryStatus -- ^ status of email delivery
   , signatorysignatureinfo     :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
-  , signatoryroles             :: SignatoryRoles
   , signatorylinkdeleted       :: Bool -- ^ when true sends the doc to the recycle bin for that sig
   , signatorylinkreallydeleted :: Bool -- ^ when true it means that the doc has been removed from the recycle bin
   , signatorylinkcsvupload     :: Maybe CSVUpload
@@ -209,24 +206,6 @@ data SignatoryLink = SignatoryLink {
   , signatorylinkstatusclass   :: StatusClass
   , signatorylinksignredirecturl  :: Maybe String
   } deriving (Eq, Ord, Show)
-
-data SignatoryRoles = SignatoryRoles {
-    srAuthor :: Bool
-  , srPartner :: Bool
-  } deriving (Eq, Ord, Show)
-
-instance Monoid SignatoryRoles where
-  mempty = SignatoryRoles { srAuthor = False, srPartner = False }
-  mappend a b = SignatoryRoles {
-      srAuthor = srAuthor a || srAuthor b
-    , srPartner = srPartner a || srPartner b
-  }
-
-authorRole :: SignatoryRoles
-authorRole = mempty { srAuthor = True }
-
-partnerRole :: SignatoryRoles
-partnerRole = mempty { srPartner = True }
 
 data CSVUpload = CSVUpload {
     csvtitle :: String

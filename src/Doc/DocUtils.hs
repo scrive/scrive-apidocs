@@ -217,13 +217,13 @@ documentcurrentsignorder doc =
         signorder = signatorysignorder . signatorydetails
         sigs = documentsignatorylinks doc
         notSigned siglnk = isNothing (maybesigninfo siglnk)
-          && srPartner (signatoryroles siglnk) -- we exclude non-signatories
+          && signatoryispartner (signatorydetails siglnk) -- we exclude non-signatories
 
 {- |
    Build a SignatoryDetails from a User with no fields
  -}
-signatoryDetailsFromUser :: User -> Maybe Company -> SignatoryDetails
-signatoryDetailsFromUser user mcompany = SignatoryDetails {
+signatoryDetailsFromUser :: User -> Maybe Company -> (Bool, Bool) -> SignatoryDetails
+signatoryDetailsFromUser user mcompany (is_author, is_partner) = SignatoryDetails {
     signatorysignorder = SignOrder 1
   , signatoryfields = [
       toSF FirstNameFT $ getFirstName user
@@ -233,6 +233,8 @@ signatoryDetailsFromUser user mcompany = SignatoryDetails {
     , toSF PersonalNumberFT $ getPersonalNumber user
     , toSF CompanyNumberFT $ getCompanyNumber (user, mcompany)
     ]
+  , signatoryispartner = is_partner
+  , signatoryisauthor = is_author
   }
   where
     toSF t v = SignatoryField {
@@ -274,7 +276,7 @@ isEligibleForReminder user document@Document{documentstatus} siglink =
     && invitationdeliverystatus siglink /= Undelivered
     && invitationdeliverystatus siglink /= Deferred
     && wasNotSigned
-    && srPartner (signatoryroles siglink)
+    && signatoryispartner (signatorydetails siglink)
   where
     userIsAuthor = isAuthor (document, user)
     isUserSignator = isSigLinkFor user siglink
@@ -436,11 +438,13 @@ makeSignatory ::[(String, String, FieldPlacement)]
                 -> String
                 -> String
                 -> SignOrder
+                -> Bool
+                -> Bool
                 -> String
                 -> String
                 -> String
                 -> SignatoryDetails
-makeSignatory pls fds sid sfn  ssn  se  sso  sc  spn  scn = SignatoryDetails {
+makeSignatory pls fds sid sfn  ssn  se  sso sauthor spartner sc  spn  scn = SignatoryDetails {
     signatorysignorder = sso
   , signatoryfields = [
       sf FirstNameFT sfn "fstname"
@@ -450,6 +454,8 @@ makeSignatory pls fds sid sfn  ssn  se  sso  sc  spn  scn = SignatoryDetails {
     , sf PersonalNumberFT spn "personalnumber"
     , sf CompanyNumberFT scn "companynumber"
     ] ++ filterFieldDefsByID fds sid
+  , signatoryisauthor = sauthor
+  , signatoryispartner = spartner
   }
   where
     sf ftype value texttype = SignatoryField {

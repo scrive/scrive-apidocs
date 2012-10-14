@@ -20,11 +20,10 @@ trueOrMessage True  _ = Nothing
 
 
 signLinkFromDetails' :: SignatoryDetails
-                     -> SignatoryRoles
                      -> [SignatoryAttachment]
                      -> MagicHash
                      -> SignatoryLink
-signLinkFromDetails' details roles attachments magichash =
+signLinkFromDetails' details attachments magichash =
   SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 0
                 , signatorydetails = signatoryLinkClearDetails details
                 , signatorymagichash = magichash
@@ -35,7 +34,6 @@ signLinkFromDetails' details roles attachments magichash =
                 , maybereadinvite = Nothing
                 , invitationdeliverystatus = Unknown
                 , signatorysignatureinfo = Nothing
-                , signatoryroles = roles
                 , signatorylinkdeleted = False
                 , signatorylinkreallydeleted = False
                 , signatorylinkcsvupload = Nothing
@@ -99,9 +97,9 @@ blankDocument =
           , documentapicallbackurl       = Nothing
           }
 
-checkResetSignatoryData :: Document -> [(SignatoryDetails, SignatoryRoles, [SignatoryAttachment], Maybe CSVUpload, Maybe String)] -> [String]
+checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String)] -> [String]
 checkResetSignatoryData doc sigs =
-  let authors = length $ filter (\(_, r, _, _, _) -> srAuthor r) sigs
+  let authors = length $ filter (\(d, _, _, _) -> signatoryisauthor d) sigs
   in catMaybes $
       [ trueOrMessage (documentstatus doc == Preparation) $ "Document is not in preparation, is in " ++ show (documentstatus doc)
       , trueOrMessage (authors == 1) $ "Should have exactly one author, had " ++ show authors

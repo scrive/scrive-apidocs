@@ -86,7 +86,7 @@ testSendingDocumentSendsInvites = do
 
   doc <- addRandomDocumentWithAuthorAndCondition user (\d ->
        documentstatus d == Preparation
-    && 2 <= length (filterSigLinksFor (srPartner . signatoryroles) d)
+    && 2 <= length (filterSigLinksFor (signatoryispartner . signatorydetails) d)
     && case documenttype d of
           Signable _ -> True
           _ -> False
@@ -128,7 +128,7 @@ testSigningDocumentFromDesignViewSendsInvites = do
         Signable Contract -> True
         _ -> False
     && isSignatory (getAuthorSigLink d)
-    && 2 <= length (filterSigLinksFor (srPartner . signatoryroles) d)
+    && 2 <= length (filterSigLinksFor (signatoryispartner . signatorydetails) d)
     && sendMailsDurringSigning d)
 
   req <- mkRequest POST [ ("sign", inText "True")
@@ -154,10 +154,12 @@ testNonLastPersonSigningADocumentRemainsPending = do
                          _ -> False
                      && d `allowsAuthMethod` StandardAuthentication
                      && documentdeliverymethod d == EmailDelivery)
+
+  let authorOnly sd = sd { signatoryisauthor = True, signatoryispartner = False }
   True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
-                   (signatorydetails . fromJust $ getAuthorSigLink doc', authorRole)
-                 , (mkSigDetails "Fred" "Frog" "fred@frog.com", partnerRole)
-                 , (mkSigDetails "Gordon" "Gecko" "gord@geck.com", partnerRole)
+                   (authorOnly $ signatorydetails . fromJust $ getAuthorSigLink doc')
+                 , (mkSigDetails "Fred" "Frog" "fred@frog.com" False True)
+                 , (mkSigDetails "Gordon" "Gecko" "gord@geck.com" False True)
                ]) (systemActor $ documentctime doc')
 
   True <- randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc'))
@@ -197,9 +199,10 @@ testLastPersonSigningADocumentClosesIt = do
                      && d `allowsAuthMethod` StandardAuthentication
                      && documentdeliverymethod d == EmailDelivery)
 
+  let authorOnly sd = sd { signatoryisauthor = True, signatoryispartner = False }
   True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
-                   (signatorydetails . fromJust $ getAuthorSigLink doc', authorRole)
-                 , (mkSigDetails "Fred" "Frog" "fred@frog.com", partnerRole)
+                   (authorOnly $ signatorydetails . fromJust $ getAuthorSigLink doc')
+                 , (mkSigDetails "Fred" "Frog" "fred@frog.com" False True)
                ]) (systemActor $ documentctime doc')
 
 
@@ -337,14 +340,16 @@ testGetBadHeader = do
   
 
     
-mkSigDetails :: String -> String -> String -> SignatoryDetails
-mkSigDetails fstname sndname email = SignatoryDetails {
+mkSigDetails :: String -> String -> String -> Bool -> Bool -> SignatoryDetails
+mkSigDetails fstname sndname email isauthor ispartner = SignatoryDetails {
     signatorysignorder = SignOrder 1
   , signatoryfields = [
       toSF FirstNameFT fstname
     , toSF LastNameFT sndname
     , toSF EmailFT email
     ]
+  , signatoryisauthor = isauthor
+  , signatoryispartner = ispartner
   }
   where
     toSF t v = SignatoryField {

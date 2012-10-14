@@ -169,19 +169,19 @@ documentOrderByToSQL DocumentOrderByStatusClass = documentStatusClassExpression
 documentOrderByToSQL DocumentOrderByType = SQL "documents.type" []
 documentOrderByToSQL DocumentOrderByProcess = SQL "documents.process" []
 documentOrderByToSQL DocumentOrderByPartners =
-  parenthesize (selectSignatoryLinksSmartNames partnerRole)
+  parenthesize (selectSignatoryLinksSmartNames False True)
 documentOrderByToSQL DocumentOrderByAuthor =
-  parenthesize (selectSignatoryLinksSmartNames authorRole)
+  parenthesize (selectSignatoryLinksSmartNames True False)
 
-selectSignatoryLinksSmartNames :: SignatoryRoles -> SQL
-selectSignatoryLinksSmartNames SignatoryRoles{..} =
+selectSignatoryLinksSmartNames :: Bool -> Bool -> SQL
+selectSignatoryLinksSmartNames is_author is_partner =
       SQL ("SELECT COALESCE(string_agg(x.value,' '),'no fields') FROM ") [] <>
       SQL ("(SELECT (") [] <>
       selectSmartName <>
       SQL (") AS value FROM signatory_links" ++
            " WHERE signatory_links.document_id = documents.id" ++
            "   AND signatory_links.is_author = ? AND signatory_links.is_partner = ?" ++
-           " ORDER BY signatory_links.internal_insert_order) AS x") [toSql srAuthor, toSql srPartner]
+           " ORDER BY signatory_links.internal_insert_order) AS x") [toSql is_author, toSql is_partner]
   where
     selectFieldAs xtype name = SQL ("(SELECT signatory_link_fields.value AS value " ++
                                     "FROM signatory_link_fields " ++
@@ -384,7 +384,6 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          , checkEqualBy "maybereadinvite" maybereadinvite
                          , checkEqualBy "invitationdeliverystatus" invitationdeliverystatus
                          , checkEqualBy "signatorysignatureinfo" signatorysignatureinfo
-                         , checkEqualBy "signatoryroles" signatoryroles
                          , checkEqualBy "signatorylinkdeleted" signatorylinkdeleted
                          , checkEqualBy "signatorylinkreallydeleted" signatorylinkreallydeleted
                          , checkEqualBy "signatorylinkcsvupload" signatorylinkcsvupload
@@ -599,6 +598,8 @@ fetchSignatoryLinks = do
           , signatorydetails = SignatoryDetails {
               signatorysignorder = sign_order
             , signatoryfields = []
+            , signatoryisauthor = is_author
+            , signatoryispartner = is_partner
           }
           , signatorymagichash = token
           , maybesignatory = user_id
@@ -625,10 +626,6 @@ fetchSignatoryLinks = do
                 , signaturepersnumverified = signinfo_personal_number_verified'
                 , signatureinfoocspresponse = signinfo_ocsp_response
                 }
-          , signatoryroles = SignatoryRoles {
-              srAuthor  = is_author
-            , srPartner = is_partner
-            }
           , signatorylinkdeleted = deleted
           , signatorylinkreallydeleted = really_deleted
           , signatorylinkcsvupload =
@@ -643,8 +640,8 @@ insertSignatoryLinkAsIs documentid link = do
   _ <- kRun $ mkSQL INSERT tableSignatoryLinks
            [ sql "document_id" documentid
            , sql "user_id" $ maybesignatory link
-           , sql "is_author" $ srAuthor $ signatoryroles link
-           , sql "is_partner" $ srPartner $ signatoryroles link
+           , sql "is_author" $ signatoryisauthor $ signatorydetails link
+           , sql "is_partner" $ signatoryispartner $ signatorydetails link
            , sql "company_id" $ maybecompany link
            , sql "token" $ signatorymagichash link
            , sql "sign_order"$ signatorysignorder $ signatorydetails link
@@ -1576,8 +1573,8 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
       magichash <- lift random
 
       let authorlink0 = signLinkFromDetails'
-                        (signatoryDetailsFromUser user mcompany)
-                        (authorRole <> partnerRole) [] magichash
+                        (signatoryDetailsFromUser user mcompany (True, True))
+                        [] magichash
 
       let authorlink = authorlink0 {
                          maybesignatory = Just $ userid user,
@@ -1589,8 +1586,10 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
                                 SignatoryDetails
                                                 { signatorysignorder = SignOrder 2
                                                 , signatoryfields    = emptySignatoryFields
+                                                , signatoryisauthor  = False
+                                                , signatoryispartner = True
                                                 }
-                                partnerRole [] mh
+                                [] mh
 
       let doc = blankDocument
                 { documenttitle                = title
@@ -1702,11 +1701,11 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocumen
              return $ Right doc'
 
     clearSignInfofromDoc = do
-      let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x, signatorylinkid x, signatoryattachments x)) $ documentsignatorylinks doc
+      let signatoriesDetails = map (\x -> (signatorydetails x, signatorylinkid x, signatoryattachments x)) $ documentsignatorylinks doc
           Just asl = getAuthorSigLink doc
-      newSignLinks <- forM signatoriesDetails $ \(details,roles,linkid, atts) -> do
+      newSignLinks <- forM signatoriesDetails $ \(details, linkid, atts) -> do
                            magichash <- lift random
-                           return $ (signLinkFromDetails' details roles atts magichash) { signatorylinkid = linkid }
+                           return $ (signLinkFromDetails' details atts magichash) { signatorylinkid = linkid }
       let Just authorsiglink0 = find isAuthor newSignLinks
           authorsiglink = authorsiglink0 {
                             maybesignatory = maybesignatory asl,
@@ -1992,10 +1991,10 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument Bool where
             Log.error $ "Cannot SignDocument document " ++ show docid ++ " because " ++ concat s
             return False
 
-data ResetSignatoryDetails = ResetSignatoryDetails DocumentID [(SignatoryDetails, SignatoryRoles)] Actor
+data ResetSignatoryDetails = ResetSignatoryDetails DocumentID [SignatoryDetails] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails Bool where
   update (ResetSignatoryDetails documentid signatories actor) =
-    update (ResetSignatoryDetails2 documentid (map (\(a,b) -> (a,b,[],Nothing, Nothing)) signatories) actor)
+    update (ResetSignatoryDetails2 documentid (map (\a -> (a,[],Nothing, Nothing)) signatories) actor)
 
 splitImage :: String -> Maybe (Int, Int, String)
 splitImage s = do
@@ -2006,7 +2005,7 @@ splitImage s = do
   w <- maybeRead ws
   h <- maybeRead hs
   return (w, h, is)
-data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, SignatoryRoles, [SignatoryAttachment], Maybe CSVUpload, Maybe String)] Actor
+data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String)] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails2 Bool where
   update (ResetSignatoryDetails2 documentid signatories actor) = do
     Log.debug $ "reset: " ++ show signatories
@@ -2023,9 +2022,9 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
             _ <- kExecute [toSql documentid]
 
             let mauthorsiglink = getAuthorSigLink document
-            forM_ signatories $ \(details, roles, atts, mcsvupload, msignredirecturl) -> do
+            forM_ signatories $ \(details, atts, mcsvupload, msignredirecturl) -> do
                      magichash <- lift random
-                     let link' = (signLinkFromDetails' details roles atts magichash)
+                     let link' = (signLinkFromDetails' details atts magichash)
                                  {  signatorylinkcsvupload = mcsvupload
                                   , signatorylinksignredirecturl= msignredirecturl
                                  }
@@ -2038,7 +2037,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                      when (not (isJust r1)) $
                           error "ResetSignatoryDetails signatory_links did not manage to insert a row"
 
-            let (old, _, new) = listDiff (map signatorydetails $ documentsignatorylinks document) (map (\(sd, _, _, _, _)-> sd) signatories)
+            let (old, _, new) = listDiff (map signatorydetails $ documentsignatorylinks document) (map (\(sd, _, _, _)-> sd) signatories)
 
             forM_ (emailsOfRemoved old new) $ \eml ->
               update $ InsertEvidenceEvent
@@ -2119,7 +2118,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                   actor
 
             Just newdocument <- query $ GetDocumentByDocumentID documentid
-            let moldcvsupload = msum (map (\(_,_,_,a,_) -> a) signatories)
+            let moldcvsupload = msum (map (\(_,_,a,_) -> a) signatories)
             let mnewcsvupload = msum (map (signatorylinkcsvupload) (documentsignatorylinks newdocument))
 
             when (moldcvsupload /= mnewcsvupload) $ do
@@ -2140,13 +2139,13 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                 removedFields x y = let (r, _, _) = listDiff (signatoryfields x) (signatoryfields y) in r
                 changedFields x y = let (_, _, c) = listDiff (signatoryfields x) (signatoryfields y) in c
 
-data SignLinkFromDetailsForTest = SignLinkFromDetailsForTest SignatoryDetails SignatoryRoles
+data SignLinkFromDetailsForTest = SignLinkFromDetailsForTest SignatoryDetails
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m SignLinkFromDetailsForTest SignatoryLink where
-  update (SignLinkFromDetailsForTest details roles) = do
+  update (SignLinkFromDetailsForTest details) = do
       magichash <- lift random
 
       let link = signLinkFromDetails' details
-                        roles [] magichash
+                        [] magichash
 
       return link
 

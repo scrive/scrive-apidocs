@@ -21,7 +21,7 @@ module Doc.SignatoryTMP (
     , email
     , setEmail
     , makeAuthor
-    , makeSigns
+    , makePartner
     , customField
     , setCustomField
     , toSignatoryDetails1
@@ -39,7 +39,6 @@ import Doc.DocStateData
 import Doc.DocUtils
 import Data.Foldable hiding (concat, elem)
 import Data.Maybe
-import Data.Monoid
 import Utils.Monoid
 import Utils.Prelude
 import Text.JSON.FromJSValue
@@ -48,7 +47,6 @@ import Control.Applicative
 -- Structure definition + pointed
 data SignatoryTMP = SignatoryTMP {
         details :: SignatoryDetails,
-        roles   :: SignatoryRoles,
         attachments :: [SignatoryAttachment], -- Do not expose it as durring runtime this does not have email set
         csvupload :: Maybe CSVUpload,
         signredirecturl :: Maybe String
@@ -63,8 +61,9 @@ emptySignatoryTMP = SignatoryTMP {
     details = SignatoryDetails {
       signatorysignorder = SignOrder 1
     , signatoryfields   = []
+    , signatoryispartner = False
+    , signatoryisauthor = False
     }
-  , roles = mempty
   , attachments = []
   , csvupload = Nothing
   , signredirecturl = Nothing
@@ -121,16 +120,16 @@ setCSV :: (Maybe CSVUpload) -> SignatoryTMP -> SignatoryTMP
 setCSV mcsv s = s {csvupload = mcsv}
 
 makeAuthor :: SignatoryTMP -> SignatoryTMP 
-makeAuthor s =  s {roles = authorRole <> roles s}
+makeAuthor s =  s {details = (details s) { signatoryisauthor = True }}
 
-makeSigns :: SignatoryTMP -> SignatoryTMP
-makeSigns s = s {roles = partnerRole <> roles s}
+makePartner :: SignatoryTMP -> SignatoryTMP
+makePartner s = s {details = (details s) { signatoryispartner = True }}
 
 isAuthorTMP :: SignatoryTMP -> Bool
-isAuthorTMP = srAuthor . roles
+isAuthorTMP = signatoryisauthor . details
 
 isSignatoryTMP :: SignatoryTMP -> Bool
-isSignatoryTMP = srPartner . roles
+isSignatoryTMP = signatoryispartner . details
 
 setSignOrder :: SignOrder -> SignatoryTMP -> SignatoryTMP
 setSignOrder i =  liftTMP $  \s -> s {signatorysignorder = i}
@@ -147,16 +146,18 @@ getAttachments s = attachments s
 setSignredirecturl :: Maybe String -> SignatoryTMP -> SignatoryTMP
 setSignredirecturl rurl s = s {signredirecturl = rurl}
 
-toSignatoryDetails1 :: SignatoryTMP -> (SignatoryDetails,SignatoryRoles)
-toSignatoryDetails1 sTMP = (\(x,y,_,_,_) ->(x,y)) (toSignatoryDetails2 sTMP)
+toSignatoryDetails1 :: SignatoryTMP -> SignatoryDetails
+toSignatoryDetails1 sTMP = (\(x,_,_,_) -> x) (toSignatoryDetails2 sTMP)
 -- To SignatoryLink or SignatoryDetails conversion
-toSignatoryDetails2 :: SignatoryTMP -> (SignatoryDetails,SignatoryRoles, [SignatoryAttachment], Maybe CSVUpload, Maybe String)
+toSignatoryDetails2 :: SignatoryTMP -> (SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String)
 toSignatoryDetails2 sTMP  = 
     let sig = makeSignatory [] [] ""
                  (fold $ fstname sTMP)
                  (fold $ sndname sTMP)
                  (fold $ email sTMP)
                  (signOrder sTMP)
+                 (signatoryisauthor $ details sTMP)
+                 (signatoryispartner $ details sTMP)
                  (fold $ company sTMP)
                  (fold $ personalnumber sTMP)
                  (fold $ companynumber sTMP)
@@ -166,7 +167,7 @@ toSignatoryDetails2 sTMP  =
   where
    mergeFields [] l = l
    mergeFields (f:fs) l = mergeFields fs (replaceField f l)
-   withRolesAndAttsAndCSV x = (x,roles $ sTMP, attachments $ sTMP, csvupload $ sTMP, signredirecturl $ sTMP)
+   withRolesAndAttsAndCSV x = (x, attachments $ sTMP, csvupload $ sTMP, signredirecturl $ sTMP)
    
 instance FromJSValue SignatoryTMP where
     fromJSValue = do
@@ -182,7 +183,7 @@ instance FromJSValue SignatoryTMP where
             return $ Just $
                 (setSignOrder (SignOrder $ fromMaybe 1 signorder)) $
                 (makeAuthor  <| joinB author |> id) $
-                (makeSigns   <| joinB signs  |> id) $
+                (makePartner <| joinB signs  |> id) $
                 (setCSV $ csv) $
                 (setSignredirecturl $ sredirecturl) $
                 (map replaceField fields) $^^

@@ -22,7 +22,6 @@ import Util.HasSomeCompanyInfo
 
 import Data.Functor
 import Data.Maybe
-import Data.Monoid
 import Control.Monad
 import Control.Monad.Trans
 import Data.List
@@ -323,7 +322,7 @@ testResetSignatoryDetailsEvidenceLog :: TestEnv ()
 testResetSignatoryDetailsEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success <- randomUpdate $ \sd t->ResetSignatoryDetails (documentid doc) [(sd, authorRole)] (systemActor t)
+  success <- randomUpdate $ \sd t->ResetSignatoryDetails (documentid doc) [sd { signatoryisauthor = True }] (systemActor t)
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   let pos = [AddSignatoryEvidence, RemoveSignatoryEvidence, AddFieldEvidence, RemoveFieldEvidence, ChangeFieldEvidence]
@@ -788,7 +787,7 @@ assertGoodNewDocument mcompany doctype title (user, time, edoc) = do
     assertEqual "1 signatory" 1 (length $ documentsignatorylinks doc)
     let siglink = head $ documentsignatorylinks doc
     assertBool "link is author and possibly signer" $
-      (signatoryroles siglink) `elem` [authorRole, authorRole <> partnerRole]
+      (signatoryisauthor $ signatorydetails siglink)
     assertEqual "link first name matches author's" (getFirstName user) (getFirstName siglink)
     assertEqual "link last name matches author's" (getLastName user) (getLastName siglink)
     assertEqual "link email matches author's" (getEmail user) (getEmail siglink)
@@ -829,12 +828,16 @@ testSignatories1 =
   let s1 = SignatoryDetails {signatorysignorder = SignOrder 0,
                              signatoryfields = [SignatoryField FirstNameFT "Eric" []
                                                ,SignatoryField LastNameFT "Normand" []
-                                                ]
+                                                ],
+                             signatoryisauthor = True,
+                             signatoryispartner = True
                             }
       s2 = SignatoryDetails {signatorysignorder = SignOrder 0,
                              signatoryfields = [SignatoryField LastNameFT "Normand" []
                                                ,SignatoryField FirstNameFT "Eric" []
-                                                ]
+                                                ],
+                             signatoryisauthor = True,
+                             signatoryispartner = True
                             }
   in assertBool "Signatories should be equal" (s1 == s2)
 
@@ -1241,9 +1244,9 @@ testNotPreparationResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
   mt <- rand 10 arbitrary
-  let sd = signatoryDetailsFromUser author Nothing
+  let sd = signatoryDetailsFromUser author Nothing (False, False)
   --execute
-  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [(sd, authorRole)] (systemActor mt)
+  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [sd] (systemActor mt)
   --assert
   validTest $ assert $ not success
 
@@ -1254,7 +1257,7 @@ testPreparationResetSignatoryDetailsAlwaysRight = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   mt <- rand 10 arbitrary
   --execute
-  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [(emptySignatoryDetails, authorRole)] (systemActor mt)
+  success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [emptySignatoryDetails { signatoryisauthor = True }] (systemActor mt)
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   --assert
   validTest $ do
@@ -1269,7 +1272,7 @@ testNoDocumentResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
   mt <- rand 10 arbitrary
   --execute
   -- non-existent docid
-  success <- dbUpdate $ ResetSignatoryDetails a [(emptySignatoryDetails, authorRole)] (systemActor mt)
+  success <- dbUpdate $ ResetSignatoryDetails a [emptySignatoryDetails { signatoryisauthor = True }] (systemActor mt)
   --assert
   validTest $ assert $ not success
 
@@ -1722,7 +1725,7 @@ testRejectDocumentSignablePendingRight :: TestEnv ()
 testRejectDocumentSignablePendingRight = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
-  slid <- rand 10 $ elements (map signatorylinkid . filter (srPartner . signatoryroles) $ documentsignatorylinks doc)
+  slid <- rand 10 $ elements (map signatorylinkid . filter (signatoryispartner . signatorydetails) $ documentsignatorylinks doc)
   let Just sl = getSigLinkFor doc slid
   time <- rand 10 arbitrary
   let sa = signatoryActor time noIP Nothing (getEmail sl) slid

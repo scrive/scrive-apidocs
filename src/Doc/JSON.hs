@@ -13,7 +13,6 @@ module Doc.JSON
        )
 where
 
-import Data.Monoid
 import Doc.DocStateData
 import Text.JSON
 import Text.JSON.FromJSValue
@@ -26,18 +25,21 @@ import Data.Functor
 import Control.Monad.Reader
 import Doc.DocDraft()
 
+parseIsAuthor :: Int -> Maybe Bool
+parseIsAuthor n
+  | n == 1    = Just True
+  | n == 2    = Just True
+  | n == 5    = Just False
+  | n == 10   = Just False
+  | otherwise = Nothing
 
-instance SafeEnum SignatoryRoles where
-  fromSafeEnum srs = case srs of
-    SignatoryRoles { srAuthor = True,  srPartner = False } -> 1
-    SignatoryRoles { srAuthor = True,  srPartner = True  } -> 2
-    SignatoryRoles { srAuthor = False, srPartner = True  } -> 5
-    SignatoryRoles { srAuthor = False, srPartner = False } -> 10
-  toSafeEnum 1  = Just authorRole
-  toSafeEnum 2  = Just $ authorRole <> partnerRole
-  toSafeEnum 5  = Just partnerRole
-  toSafeEnum 10 = Just mempty
-  toSafeEnum _  = Nothing
+parseIsPartner :: Int -> Maybe Bool
+parseIsPartner n
+  | n == 1    = Just False
+  | n == 2    = Just True
+  | n == 5    = Just True
+  | n == 10   = Just False
+  | otherwise = Nothing
 
 instance SafeEnum DocumentType where
   fromSafeEnum (Signable Contract) = 1
@@ -133,7 +135,8 @@ data DocumentCreationRequest = DocumentCreationRequest {
                              deriving (Show, Eq)
 
 data InvolvedRequest = InvolvedRequest {
-  irRole        :: SignatoryRoles,
+  irIsAuthor    :: Bool,
+  irIsPartner   :: Bool,
   irData        :: [SignatoryField],
   irAttachments :: [SignatoryAttachment],
   irSignOrder   :: Maybe Int
@@ -183,7 +186,8 @@ irFromJSON = do
               _ -> return $ Nothing
   return $ case mData of
     (Just hisData) -> return $ InvolvedRequest {
-          irRole = fromMaybe partnerRole $ join $ (toSafeEnum :: Int -> Maybe SignatoryRoles) <$> role,
+          irIsAuthor = fromMaybe False $ join $ parseIsAuthor <$> role,
+          irIsPartner = fromMaybe True $ join $ parseIsPartner <$> role,
           irData = hisData,
           irAttachments = fromMaybe [] mattachments,
           irSignOrder = mso
