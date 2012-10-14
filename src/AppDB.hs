@@ -15,7 +15,7 @@ import CompanyAccounts.Tables
 import Doc.Tables
 import Doc.Migrations
 import Doc.API.Callback.Tables
-import Doc.Tickets.Tables
+import Doc.Tokens.Tables
 import User.Migrations
 import User.Tables
 import User.History.Tables
@@ -38,7 +38,7 @@ import Attachment.Tables
 
 kontraFunctions :: [SQLFunction]
 kontraFunctions = [
-    insertDocumentTicket
+    insertDocumentSessionToken
   , mergeELegTransaction
   ]
 
@@ -144,6 +144,6 @@ kontraTables = [
   , tablePaymentStats
   , tableDocumentApiCallbacks
   , tableSessions
-  , tableDocumentTickets
+  , tableDocumentSessionTokens
   , tableELegTransactions
   ] ++ mailerTables

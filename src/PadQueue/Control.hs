@@ -5,7 +5,7 @@ import PadQueue.Model
 import DB
 import Doc.DocStateData
 import Doc.DocStateQuery
-import Doc.Tickets.Model
+import Doc.Tokens.Model
 import Kontra
 import Redirect
 import User.Model
@@ -40,7 +40,7 @@ padQueueState = do
              msdata <- padQueueToSignatoryData pq
              case msdata of
                Just (_,siglink) -> do
-                 dbUpdate $ AddDocumentTicket (signatorylinkid siglink) (signatorymagichash siglink)
+                 dbUpdate $ AddDocumentSessionToken (signatorylinkid siglink) (signatorymagichash siglink)
                Nothing -> return ()
              padQueueStateJSON (isJust $ ctxmaybeuser ctx)  msdata
 
