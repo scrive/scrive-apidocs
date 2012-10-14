@@ -62,6 +62,7 @@ updateSession :: (FilterMonad Response m, MonadDB m, ServerMonad m)
               => Session -> Session -> m ()
 updateSession old_ses ses = do
   case sesID ses == tempSessionID of
+    -- if session id is temporary, but its data is not empty, insert it into db
     True | not (isSessionEmpty ses) -> do
       when (isNothing (sesUserID old_ses) && isJust (sesUserID ses)) $ do
         let uid = fromJust $ sesUserID ses
@@ -74,8 +75,9 @@ updateSession old_ses ses = do
     _ | old_ses /= ses -> do
       success <- dbUpdate $ UpdateAction session ses
       -- if below condition is met, that means empty session was inserted
-      -- into the database (to allow inserting document tickets/eleg
-      -- transaction) but cookie wasn't created, so we need to create it here.
+      -- into the database (with getNonTempSessionID) to allow inserting
+      -- document tickets/eleg transaction, but cookie wasn't created, so
+      -- we need to create it here.
       when (sesID old_ses == tempSessionID && sesID ses /= tempSessionID) $
         startSessionCookie ses
       when (not success) $
@@ -104,6 +106,8 @@ getSession sid token = runMaybeT $ do
   guard $ sesToken == token
   return ses
 
+-- | We allow for at most 5 sessions with the same user_id, so if there
+-- are more, just delete the oldest ones.
 deleteSuperfluousUserSessions :: MonadDB m => UserID -> m Integer
 deleteSuperfluousUserSessions uid = runDBEnv $ do
   kRun $ SQL "DELETE FROM sessions WHERE id IN (SELECT id FROM sessions WHERE user_id = ? ORDER BY expires DESC OFFSET 5)" [toSql uid]
