@@ -4,6 +4,7 @@ module Session.Model (
   , updateSession
   , getUserFromSession
   , getPadUserFromSession
+  , getSession
   ) where
 
 import Control.Monad
@@ -107,7 +108,10 @@ getSession sid token = runMaybeT $ do
   return ses
 
 -- | We allow for at most 5 sessions with the same user_id, so if there
--- are more, just delete the oldest ones.
+-- are more, just delete the oldest ones. Note: only 4 sessions are left
+-- because we do deletion BEFORE inserting new session. This is better
+-- because this way we can be sure that newest session will always end
+-- up in the database.
 deleteSuperfluousUserSessions :: MonadDB m => UserID -> m Integer
 deleteSuperfluousUserSessions uid = runDBEnv $ do
-  kRun $ SQL "DELETE FROM sessions WHERE id IN (SELECT id FROM sessions WHERE user_id = ? ORDER BY expires DESC OFFSET 5)" [toSql uid]
+  kRun $ SQL "DELETE FROM sessions WHERE id IN (SELECT id FROM sessions WHERE user_id = ? ORDER BY expires DESC OFFSET 4)" [toSql uid]

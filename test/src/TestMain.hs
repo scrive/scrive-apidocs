@@ -90,41 +90,33 @@ import JSONUtilTest
 #ifndef NO_SQLUTILS
 import SQLUtilsTest
 #endif
-
+#ifndef NO_SESSIONS
+import SessionsTest
+#endif
 #ifndef NO_FILE
 import FileTest
 #endif
-
 #ifndef NO_DOCJSON
 import Doc.TestJSON
 #endif
-
 #ifndef NO_STATS
 import StatsTest
 #endif
-
 #ifndef NO_EVIDENCELOG
 import EvidenceLogTest
 #endif
-
-
 #ifndef NO_PAD
 import PadTest
 #endif
-
 #ifndef NO_LIVEDOCX
 --import LiveDocxTest
 #endif
-
-
 #ifndef NO_OAUTH
 import OAuth
 #endif
-
 #ifndef NO_FLASHMSGS
 import FlashMessages
 #endif
-
 #ifndef NO_PAYMENTS
 import PaymentsTest
 #endif
@@ -212,20 +204,20 @@ allTests = tail tests
 #ifndef NO_PAD
       , ("pad", const padTests)
 #endif
-
 #ifndef NO_LIVEDOCX
 --      , ("livedocx", const $ const liveDocxTests)
 #endif
-
 #ifndef NO_OAUTH
       , ("oauth", const oauthTest)
 #endif
-
 #ifndef NO_FLASHMSGS
       , ("flashmessages", const $ const flashMessagesTests)
 #endif
 #ifndef NO_PAYMENTS
       , ("payments", const paymentsTests)
+#endif
+#ifndef NO_SESSIONS
+      , ("sessions", const sessionsTests)
 #endif
       ]
 

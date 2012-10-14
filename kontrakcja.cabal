@@ -121,6 +121,11 @@ Flag test-companyaccounts
   Manual: True
   Default: True
 
+Flag test-sessions
+  Description: Collects tests coverage status
+  Manual: True
+  Default: True
+
 Flag allow-warnings
   Description: Disable -Werror flag
   Manual: True
@@ -130,8 +135,6 @@ Flag test-coverage
   Description: Collects tests coverage status
   Manual: True
   Default: False
-
-
 
 Executable kontrakcja-server
   if flag(server)
@@ -411,6 +414,8 @@ Executable kontrakcja-test
     cpp-options: -DNO_USERHISTORY
   if !flag(test-livedocx)
     cpp-options: -DNO_LIVEDOCX
+  if !flag(test-sessions)
+    cpp-options: -DNO_SESSIONS
 
   cpp-options: -DTestMain=Main
   Main-is: TestMain.hs

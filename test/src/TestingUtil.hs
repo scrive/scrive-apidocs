@@ -29,6 +29,8 @@ import qualified Log
 import Doc.Model
 import Doc.DocStateData
 import Doc.DocStateCommon
+import ELegitimation.BankIDRequests
+import ELegitimation.ELegTransaction.Model
 import KontraError (internalError)
 import KontraMonad
 import MinutesTime
@@ -384,6 +386,42 @@ instance Arbitrary UserInfo where
                       , usercompanyname = []
                       , usercompanynumber = []
                       }
+
+instance Arbitrary CollectResponse where
+  arbitrary = oneof [outstanding, usersign, complete]
+    where
+      outstanding = do
+        tid <- arbitrary
+        return $ CROutstanding tid
+      usersign = do
+        tid <- arbitrary
+        return $ CRUserSign tid
+      complete = do
+        tid <- arbitrary
+        sig <- arbitrary
+        attrs <- arbitrary
+        return $ CRComplete tid sig attrs
+
+instance Arbitrary ELegTransaction where
+  arbitrary = do
+    tid <- arbitrary
+    nonce <- arbitrary
+    tbs <- arbitrary
+    encodedtbs <- arbitrary
+    token <- arbitrary
+    status <- arbitrary
+    ref <- arbitrary
+    return ELegTransaction {
+        transactiontransactionid = tid
+      , transactionnonce = nonce
+      , transactiontbs = tbs
+      , transactionencodedtbs = encodedtbs
+      , transactionsignatorylinkid = Nothing
+      , transactiondocumentid = unsafeDocumentID 0
+      , transactionmagichash = token
+      , transactionstatus = status
+      , transactionoref = ref
+    }
 
 -- generate (byte)strings without \NUL in them since
 -- hdbc-postgresql plays around with these chars and
