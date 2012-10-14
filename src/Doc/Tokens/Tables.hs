@@ -9,17 +9,23 @@ insertDocumentSessionToken = SQLFunction {
   ++ " insert_document_session_token(session_id_ BIGINT, signatory_link_id_ BIGINT,"
   ++ "                               token_ BIGINT) RETURNS BOOLEAN AS $$"
   ++ " BEGIN"
-  ++ "   INSERT INTO document_session_tokens(session_id, signatory_link_id, token)"
-  ++ "     VALUES (session_id_, signatory_link_id_, token_);"
-  ++ "   RETURN TRUE;"
-  ++ " EXCEPTION"
-  ++ "   WHEN unique_violation THEN" -- ticket is already there, update token
+  ++ "   LOOP"
   ++ "     UPDATE document_session_tokens SET token = token_"
   ++ "       WHERE session_id = session_id_"
   ++ "         AND signatory_link_id = signatory_link_id_;"
-  ++ "     RETURN found;"
-  ++ "   WHEN foreign_key_violation THEN" -- invalid values
-  ++ "     RETURN FALSE;"
+  ++ "     IF found THEN"
+  ++ "       RETURN TRUE;"
+  ++ "     END IF;"
+  ++ "     BEGIN"
+  ++ "       INSERT INTO document_session_tokens(session_id, signatory_link_id, token)"
+  ++ "         VALUES (session_id_, signatory_link_id_, token_);"
+  ++ "       RETURN TRUE;"
+  ++ "     EXCEPTION"
+  ++ "       WHEN unique_violation THEN" -- do nothing, let update be run again
+  ++ "       WHEN foreign_key_violation THEN" -- invalid values, return false
+  ++ "         RETURN FALSE;"
+  ++ "     END;"
+  ++ "   END LOOP;"
   ++ " END;"
   ++ " $$ LANGUAGE plpgsql") []
 }
