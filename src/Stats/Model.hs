@@ -22,6 +22,7 @@ module Stats.Model
          SignStatEvent(..),
          AddSignStatEvent(..),
          GetSignStatEvents(..),
+         GetSignHistCSV(..),
 
          GetUsersAndStatsAndInviteInfo(..)
        )
@@ -530,3 +531,38 @@ instance MonadDB m => DBUpdate m AddSignStatEvent Bool where
       , toSql ssSignatoryLinkID
       ]
 
+data GetSignHistCSV = GetSignHistCSV MinutesTime MinutesTime
+instance MonadDB m => DBQuery m GetSignHistCSV [[String]] where
+  query (GetSignHistCSV start end) = do
+    _ <- kRun $ SQL ("SELECT ss.document_id, ss.signatory_link_id, ss.company_id, ss.document_process, " ++
+                     "       invite.time, " ++
+                     "       receive.time, " ++
+                     "       open.time, " ++
+                     "       link.time, " ++
+                     "       sign.time, " ++
+                     "       reject.time " ++
+                     "       delete.time " ++                     
+                     "       purge.time " ++                                          
+                     "FROM (SELECT DISTINCT document_id, signatory_link_id, company_id, document_process FROM sign_stat_events WHERE sign_stat_events.time > ? AND sign_stat_events.time <= ?) AS ss " ++
+                     "LEFT JOIN doc_stat_events AS invite   ON (ds.document_id = invite.document_id   AND invite.quantity = ?)" ++                     
+                     "LEFT JOIN doc_stat_events AS receive  ON (ds.document_id = receive.document_id  AND receive.quantity = ?)" ++                                          
+                     "LEFT JOIN doc_stat_events AS open     ON (ds.document_id = open.document_id     AND open.quantity = ?)" ++
+                     "LEFT JOIN doc_stat_events AS link     ON (ds.document_id = link.document_id     AND link.quantity = ?)" ++
+                     "LEFT JOIN doc_stat_events AS sign     ON (ds.document_id = sign.document_id     AND sign.quantity = ?)" ++
+                     "LEFT JOIN doc_stat_events AS reject   ON (ds.document_id = reject.document_id   AND reject.quantity = ?)" ++
+                     "LEFT JOIN doc_stat_events AS delete   ON (ds.document_id = delete.document_id   AND delete.quantity = ?)" ++
+                     "LEFT JOIN doc_stat_events AS purge    ON (ds.document_id = purge.document_id    AND purge.quantity = ?)" ++                     
+                     "ORDER BY ss.document_id DESC") [toSql start, 
+                                                      toSql end,
+                                                      toSql SignStatInvite,
+                                                      toSql SignStatReceive, 
+                                                      toSql SignStatOpen, 
+                                                      toSql SignStatLink, 
+                                                      toSql SignStatSign, 
+                                                      toSql SignStatReject,
+                                                      toSql SignStatDelete,
+                                                      toSql SignStatPurge]
+    foldDB f []
+      where f :: [[String]] -> DocumentID -> SignatoryLinkID -> Maybe CompanyID -> String -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> [[String]]
+            f acc did sid co t inv rec op li si rej del pur =
+              [show did, show sid, maybe "" show co, t, maybe "" formatMinutesTimeISO inv, maybe "" formatMinutesTimeISO rec, maybe "" formatMinutesTimeISO op, maybe "" formatMinutesTimeISO li, maybe "" formatMinutesTimeISO si, maybe "" formatMinutesTimeISO rej, maybe "" formatMinutesTimeISO del, maybe "" formatMinutesTimeISO pur] : acc

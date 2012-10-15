@@ -833,34 +833,12 @@ handleDocHistoryCSV = onlySalesOrAdmin $ do
                , csvContent = stats
                }
 
-
--- CSV for sig history
-csvRowFromSignHist :: [SignStatEvent] -> [String] -> [String]
-csvRowFromSignHist [] csv = csv
-csvRowFromSignHist (s:ss) csv' =
-  let csvtail = take 8 $ drop 5 $ csv' ++ repeat ""
-      csv2 = case ssQuantity s of
-        SignStatInvite  -> chng csvtail 0 $ formatMinutesTimeISO (ssTime s)
-        SignStatReceive -> chng csvtail 1 $ formatMinutesTimeISO (ssTime s)
-        SignStatOpen    -> chng csvtail 2 $ formatMinutesTimeISO (ssTime s)
-        SignStatLink    -> chng csvtail 3 $ formatMinutesTimeISO (ssTime s)
-        SignStatSign    -> chng csvtail 4 $ formatMinutesTimeISO (ssTime s)
-        SignStatReject  -> chng csvtail 5 $ formatMinutesTimeISO (ssTime s)
-        SignStatDelete  -> chng csvtail 6 $ formatMinutesTimeISO (ssTime s)
-        SignStatPurge   -> chng csvtail 7 $ formatMinutesTimeISO (ssTime s)
-  in csvRowFromSignHist ss $
-     [show                $ ssDocumentID s,
-      show                $ ssSignatoryLinkID s,
-      maybe ""       show $ ssCompanyID s,
-      show                $ ssDocumentProcess s
-     ] ++ csv2
-
 -- CSV for document history
 handleSignHistoryCSV :: Kontrakcja m => m CSV
 handleSignHistoryCSV = onlySalesOrAdmin $ do
-  stats <- dbQuery GetSignStatEvents
-  let bySig = groupWith (\s-> (ssDocumentID s, ssSignatoryLinkID s)) $ reverse $ sortWith (\s-> (ssDocumentID s, ssSignatoryLinkID s)) stats
-      rows = map (\es -> csvRowFromSignHist es []) bySig
+  let start = fromSeconds 0
+  end <- ctxtime <$> getContext
+  rows <- dbQuery $ GetSignHistCSV start end
   return $ CSV { csvFilename = "signhist.csv"
                , csvHeader = ["documentid", "signatoryid", "companyid", "doctype", "invite", "receive", "open", "link", "sign", "reject", "delete", "purge"]
                , csvContent = rows
