@@ -30,7 +30,6 @@ module Doc.DocControl(
     , showPreview
     , showPreviewForSignatory
     , handleFilePages
-    , handleCSVLandpage
     , handleShowVerificationPage
     , handleVerify
 ) where
@@ -882,12 +881,6 @@ prepareEmailPreview docid slid = do
          "invite" -> mailInvitationContent False ctx Sign doc Nothing
          _ -> return ""
     runJSONGenT $ J.value "content" content
-
-
-handleCSVLandpage :: Kontrakcja m => Int -> m String
-handleCSVLandpage c = do
-  text <- csvLandPage c
-  return text
 
 handleSetAttachments :: Kontrakcja m => DocumentID -> m KontraLink
 handleSetAttachments did = do

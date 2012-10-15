@@ -27,8 +27,7 @@ templateFilePath :: String -> String
 templateFilePath fn =  "templates/" ++ fn
 
 templateFiles :: [String]
-templateFiles = ["landpages.st",
-                 "modals.st",
+templateFiles = ["modals.st",
                  "flash.st",
                  "mails.st",
                  "nicemail.st",

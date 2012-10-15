@@ -123,8 +123,6 @@ staticRoutes = choice
 
      , dir "filepages" $ hGet $  toK1 $ DocControl.handleFilePages
 
-     , dir "csvlandpage" $ hGet $ toK1 $ DocControl.handleCSVLandpage
-
      , dir "verify" $ hGet  $ toK0 $ DocControl.handleShowVerificationPage
      , dir "verify" $ hPostNoXToken $ toK0 $ DocControl.handleVerify
      

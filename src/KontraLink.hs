@@ -89,7 +89,6 @@ data KontraLink
     | LinkAskQuestion
     | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
     | LinkAttachmentView AttachmentID
-    | LinkCSVLandPage Int
     | LinkEnableCookies
     | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
     | LinkAPIDocumentSignatoryAttachment DocumentID SignatoryLinkID String
@@ -206,7 +205,6 @@ instance Show KontraLink where
     showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid ++"/")
     showsPrec _ (LinkAskQuestion) = (++) ("/question")
     showsPrec _ (LinkSignCanceledDataMismatch docid sigid) = (++) $ "/landpage/signcanceleddatamismatch/" ++ show docid ++ "/" ++ show sigid
-    showsPrec _ (LinkCSVLandPage c) = (++) ("/csvlandpage/" ++ show c)
     showsPrec _ (LinkEnableCookies) = (++) ("/enable-cookies/enable-cookies.html")
     showsPrec _ (LinkDocumentPreview did (Just sl) fid) = (++) ("/preview/" ++ show did ++
                  "/" ++ show (signatorylinkid sl) ++

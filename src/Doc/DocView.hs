@@ -25,7 +25,6 @@ module Doc.DocView (
   , documentsToFixView
   , uploadPage
   , documentJSON
-  , csvLandPage
   , gtVerificationPage
   ) where
 
@@ -373,10 +372,6 @@ pageDocumentSignView ctx document siglink =
       F.value "sigmagichash" $ show $  signatorymagichash siglink
       F.value "documenttitle" $ documenttitle document
       standardPageFields ctx kontrakcja Nothing False False Nothing Nothing
-
-csvLandPage :: TemplatesMonad m => Int -> m String
-csvLandPage count = renderTemplate "csvlandpage" $ do
-  F.value "doccount" (show count)
 
 -- Helper to get document after signing info text
 documentInfoText :: TemplatesMonad m => Context -> Document -> Maybe SignatoryLink -> m String
