@@ -5,7 +5,7 @@ import Data.Functor
 import System.Time hiding (toUTCTime)
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
-import Text.JSON (JSValue(..), toJSObject, showJSON)
+import Text.JSON (JSValue(..))
 import Text.JSON.Gen
 import qualified Text.JSON.Gen as J
 
@@ -44,6 +44,7 @@ import User.History.Model
 import ScriveByMail.Model
 import Payments.Action
 import Payments.Model
+import ListUtil
 
 handleUserGet :: Kontrakcja m => m (Either KontraLink Response)
 handleUserGet = checkUserTOSGet $ do
@@ -272,20 +273,10 @@ handleUsageStatsJSONForUserDays = do
   if useriscompanyadmin user && isJust (usercompany user)
     then do
       (statsByDay, _) <- getUsageStatsForCompany (fromJust $ usercompany user) som sixm
-      return $ JSObject $ toJSObject [("list", companyStatsDayToJSON totalS statsByDay),
-                                      ("paging", JSObject $ toJSObject [
-                                        ("pageSize",showJSON (1000::Int)),
-                                        ("pageCurrent", showJSON (0::Int)),
-                                        ("itemMin",showJSON $ (0::Int)),
-                                        ("itemMax",showJSON $ (length statsByDay) - 1)])]
+      return $ singlePageListToJSON $ companyStatsDayToJSON totalS statsByDay
     else do
       (statsByDay, _) <- getUsageStatsForUser (userid user) som sixm
-      return $ JSObject $ toJSObject [("list", userStatsDayToJSON statsByDay),
-                                      ("paging", JSObject $ toJSObject [
-                                        ("pageSize",showJSON (1000::Int)),
-                                        ("pageCurrent", showJSON (0::Int)),
-                                        ("itemMin",showJSON $ (0::Int)),
-                                        ("itemMax",showJSON $ (length statsByDay) - 1)])]
+      return $ singlePageListToJSON $ userStatsDayToJSON statsByDay
 
 handleUsageStatsJSONForUserMonths :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserMonths = do
@@ -297,20 +288,10 @@ handleUsageStatsJSONForUserMonths = do
   if useriscompanyadmin user && isJust (usercompany user)
     then do
     (_, statsByMonth) <- getUsageStatsForCompany (fromJust $ usercompany user) som sixm
-    return $ JSObject $ toJSObject [("list", companyStatsMonthToJSON totalS statsByMonth),
-                                    ("paging", JSObject $ toJSObject [
-                                        ("pageSize",showJSON (1000::Int)),
-                                        ("pageCurrent", showJSON (0::Int)),
-                                        ("itemMin",showJSON $ (0::Int)),
-                                        ("itemMax",showJSON $ (length statsByMonth) - 1)])]
+    return $ singlePageListToJSON $ companyStatsMonthToJSON totalS statsByMonth
     else do
     (_, statsByMonth) <- getUsageStatsForUser (userid user) som sixm
-    return $ JSObject $ toJSObject [("list", userStatsMonthToJSON statsByMonth),
-                                    ("paging", JSObject $ toJSObject [
-                                        ("pageSize",showJSON (1000::Int)),
-                                        ("pageCurrent", showJSON (0::Int)),
-                                        ("itemMin",showJSON $ (0::Int)),
-                                        ("itemMax",showJSON $ (length statsByMonth) - 1)])]
+    return $ singlePageListToJSON $ userStatsMonthToJSON statsByMonth
 
 
 handleGetUserMailAPI :: Kontrakcja m => m (Either KontraLink Response)

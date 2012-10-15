@@ -245,10 +245,9 @@ jsonDocumentsList = do
                                 , pageSize   = docsPageSize
                                 }
           docsJSONs <- mapM (docForListJSON (timeLocaleForLang lang) cttime user padqueue) $ take docsPageSize $ list docs
-          return $ Right $ JSObject $ toJSObject [
-              ("list", JSArray docsJSONs)
-            , ("paging", pagingParamsJSON docs)
-            ]
+          return $ Right $ runJSONGen $ do
+              value "list" docsJSONs
+              value "paging" $ pagingParamsJSON docs
 
 docSortingFromParams :: ListParams -> [AscDesc DocumentOrderBy]
 docSortingFromParams params =

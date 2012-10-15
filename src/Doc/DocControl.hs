@@ -881,7 +881,7 @@ prepareEmailPreview docid slid = do
                Nothing -> return ""
          "invite" -> mailInvitationContent False ctx Sign doc Nothing
          _ -> return ""
-    return $ JSObject $ toJSObject [("content",JSString $ toJSString $ content)]
+    runJSONGenT $ J.value "content" content
 
 
 handleCSVLandpage :: Kontrakcja m => Int -> m String

@@ -2,7 +2,7 @@ module Doc.TestJSON where
 
 import Test.Framework
 import Test.QuickCheck
-import Text.JSON
+import Text.JSON.Gen
 import Text.JSON.FromJSValue
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Data.Maybe (isNothing, fromJust)
@@ -62,18 +62,14 @@ documentJSONTests env = testGroup "Document JSON tests" [
 dcrTest :: TestEnv ()
 dcrTest = doNTimes 100 $ do
   (mainfile, title, fn, sn, em) <- rand 10 arbitrary
-  let o = dcrFromJSON $ JSObject $ toJSObject $
-          [("mainfile", JSObject $ toJSObject $ 
-                        [("name", JSString $ toJSString mainfile)])
-          ,("title"   , JSString $ toJSString title)
-          ,("involved", JSArray [JSObject $ toJSObject $
-                                 [("data", JSObject $ toJSObject $
-                                           [("fstname", JSObject $ toJSObject $
-                                                        [("value", JSString $ toJSString fn)]),
-                                            ("sndname", JSObject $ toJSObject $
-                                                        [("value", JSString $ toJSString sn)]),
-                                            ("email",   JSObject $ toJSObject $
-                                                        [("value", JSString $ toJSString em)])])]])]
+  let o = dcrFromJSON $ runJSONGen $ do
+            object "mainfile" $ do value "name" mainfile
+            value "title"     $ title
+            objects "involved" $ [ object "data" $ do
+                                     object "fstname" $ do value "value" fn
+                                     object "sndname" $ do value "value" sn
+                                     object "email" $ do value "value" em
+                                 ]
       dcr :: Either String DocumentCreationRequest = Right $ DocumentCreationRequest {
         dcrTitle = Just title,
         dcrType  = Signable Contract,

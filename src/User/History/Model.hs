@@ -18,7 +18,7 @@ module User.History.Model (
 import Data.List (intersperse)
 import Data.Monoid
 import Text.JSON
-
+import Text.JSON.Gen
 import qualified Paths_kontrakcja as Paths
 import qualified Data.Version as Ver
 
@@ -29,6 +29,7 @@ import MinutesTime
 import User.History.Tables
 import User.UserID
 import User.Model
+import Utils.Prelude
 
 data UserHistory = UserHistory {
     uhuserid           :: UserID
@@ -157,11 +158,11 @@ instance MonadDB m => DBUpdate m LogHistoryAccountCreated Bool where
     userid
     UserHistoryEvent {
         uheventtype = UserAccountCreated
-      , uheventdata = Just $ JSArray $ [JSObject . toJSObject $ [
-          ("field", JSString $ toJSString "email")
-        , ("oldval", JSString $ toJSString "")
-        , ("newval", JSString $ toJSString $ unEmail email)
-        ]]
+      , uheventdata = Just $ JSArray $ [runJSONGen $ do 
+          value "field" "email"
+          value "oldval" ""
+          value "newval" $ unEmail email
+        ]
       }
     ip
     time
@@ -182,12 +183,10 @@ instance MonadDB m => DBUpdate m LogHistoryDetailsChanged Bool where
     userid
     UserHistoryEvent {
         uheventtype = UserDetailsChange
-      , uheventdata = Just $ JSArray $ map (\(field, oldv, newv) ->
-        JSObject . toJSObject $ [
-            ("field", JSString $ toJSString field)
-          , ("oldval", JSString $ toJSString oldv)
-          , ("newval", JSString $ toJSString newv)
-          ]) details
+      , uheventdata = Just $ JSArray $ for details $ \(field, oldv, newv) -> runJSONGen $ do
+          value "field" field
+          value "oldval" oldv
+          value "newval" newv
       }
     ip
     time

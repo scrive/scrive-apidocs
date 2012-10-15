@@ -111,10 +111,9 @@ jsonAttachmentsList = withUserGet $ do
                        , pageSize   = attachmentsPageSize
                        }
   attsJSONs <- mapM (attForListJSON (timeLocaleForLang lang) cttime user) $ take attachmentsPageSize $ list atts
-  return $ JSObject $ toJSObject
-           [ ("list", JSArray attsJSONs)
-           , ("paging", pagingParamsJSON atts)
-           ]
+  runJSONGenT $ do
+    J.value "list" attsJSONs
+    J.value "paging" $ pagingParamsJSON atts
 
 attForListJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> User -> Attachment -> m JSValue
 attForListJSON tl crtime _user att = do

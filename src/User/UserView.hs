@@ -147,8 +147,8 @@ showUserMailAPI user mapi mcapi =
         when (isJust mcapi) $ F.object "company" $ mailAPIInfoFields (fromJust mcapi)
         menuFields user
 
-userStatsDayToJSON :: [(Int, [Int])] -> JSValue
-userStatsDayToJSON = JSArray . rights . map f
+userStatsDayToJSON :: [(Int, [Int])] -> [JSValue]
+userStatsDayToJSON = rights . map f
   where
     f (d, s:c:i:_) = Right . runJSONGen . object "fields" $ do
       value "date" (showAsDate d)
@@ -157,8 +157,8 @@ userStatsDayToJSON = JSArray . rights . map f
       value "signatures" s
     f _ = Left "Bad stat"
 
-userStatsMonthToJSON :: [(Int, [Int])] -> JSValue
-userStatsMonthToJSON = JSArray . rights . map f
+userStatsMonthToJSON :: [(Int, [Int])] -> [JSValue]
+userStatsMonthToJSON = rights . map f
   where
     f (d, s:c:i:_) = Right . runJSONGen . object "fields" $ do
       value "date" (showAsMonth d)
@@ -167,9 +167,8 @@ userStatsMonthToJSON = JSArray . rights . map f
       value "signatures" s
     f _ = Left "Bad stat"
 
-companyStatsDayToJSON :: String -> [(Int, String, [Int])] -> JSValue
-companyStatsDayToJSON ts ls =
-  JSArray $ rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
+companyStatsDayToJSON :: String -> [(Int, String, [Int])] -> [JSValue]
+companyStatsDayToJSON ts ls = rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
   where
     f (d, _, s:c:i:_) = Right . runJSONGen . object "fields" $ do
       value "date" (showAsDate d)
@@ -188,9 +187,8 @@ companyStatsDayToJSON ts ls =
              n' /= "Total"]
     f _ = Left "Bad stat"
 
-companyStatsMonthToJSON :: String -> [(Int, String, [Int])] -> JSValue
-companyStatsMonthToJSON ts ls =
-  JSArray $ rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
+companyStatsMonthToJSON :: String -> [(Int, String, [Int])] -> [JSValue]
+companyStatsMonthToJSON ts ls = rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
   where
     f (d, _, s:c:i:_) = Right $ runJSONGen $ object "fields" $ do
       value "date" (showAsMonth d)

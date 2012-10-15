@@ -5,7 +5,6 @@ module Company.CompanyControl (
   , handleCompanyLogo
   , routes
   , adminRoutes
-
   , withCompanyAdmin
   ) where
 
@@ -36,6 +35,7 @@ import User.Utils
 import Util.HasSomeCompanyInfo
 import Util.MonadUtils
 import qualified Log
+import Text.JSON.Gen 
 
 routes :: Route (KontraPlus Response)
 routes = choice
@@ -113,26 +113,20 @@ handleCompanyLogo cid = do
     Response 200 Map.empty nullRsFlags (BSL.fromChunks $ map unBinary $ maybeToList mimg) Nothing
 
 handleGetCompanyJSON :: Kontrakcja m => Maybe CompanyID -> m JSValue
-handleGetCompanyJSON mcid = withCompanyUserOrAdminOnly mcid $ return . companyJSON
+handleGetCompanyJSON mcid = withCompanyUserOrAdminOnly mcid $ \(editable, company) -> runJSONGenT $ do
+  object "company" $ do
+    value "id" $ show $ companyid company
+    value "name" $ getCompanyName company
+    value "number" $ getCompanyNumber company
+    value "address" $ companyaddress $ companyinfo $ company
+    value "zip" $ companyzip $ companyinfo $ company
+    value "city" $ companycity $ companyinfo $ company
+    value "country" $ companycountry $ companyinfo $ company
+    value "barsbackground" $ fromMaybe "" $ companybarsbackground $ companyui $ company
+    value "barstextcolour" $ fromMaybe "" $ companybarstextcolour $ companyui $ company
+    value "logo" $ maybe "" (const $ show $ LinkCompanyLogo $ companyid company) $ companylogo $ companyui $ company
+    value "editable" editable
 
-companyJSON :: (Bool, Company) -> JSValue
-companyJSON (editable, company) =
-  JSObject $ toJSObject
-               [ ("company",
-                   JSObject $ toJSObject [
-                     ("id", JSString $ toJSString $ show $ companyid company)
-                   , ("name", JSString $ toJSString $ getCompanyName company)
-                   , ("number", JSString $ toJSString $ getCompanyNumber company)
-                   , ("address", JSString $ toJSString $ companyaddress $ companyinfo $ company)
-                   , ("zip", JSString $ toJSString $ companyzip $ companyinfo $ company)
-                   , ("city", JSString $ toJSString $ companycity $ companyinfo $ company)
-                   , ("country", JSString $ toJSString $ companycountry $ companyinfo $ company)
-                   , ("barsbackground", JSString $ toJSString $ fromMaybe "" $ companybarsbackground $ companyui $ company)
-                   , ("barstextcolour", JSString $ toJSString $ fromMaybe "" $ companybarstextcolour $ companyui $ company)
-                   , ("logo", JSString $ toJSString $ maybe "" (const $ show $ LinkCompanyLogo $ companyid company) $ companylogo $ companyui $ company)
-                   , ("editable", JSBool $ editable)
-                 ])
-               ]
 {- |
     Guards that there is a user that is logged in and they
     are in a company.  The user and company are passed as params

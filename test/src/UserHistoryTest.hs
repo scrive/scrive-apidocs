@@ -17,6 +17,9 @@ import Happstack.Server
 import Text.JSON
 import Login
 import SignupTest (getAccountCreatedActions)
+import Utils.Prelude
+import Text.JSON.Gen
+
 
 userHistoryTests :: TestEnvSt -> Test
 userHistoryTests env = testGroup "User's history" [
@@ -228,11 +231,11 @@ compareEventTypeFromList t l = not . null . filter (\h -> (uheventtype . uhevent
 
 compareEventDataFromList :: [(String, String, String)] -> [UserHistory] -> Bool
 compareEventDataFromList d l = (uheventdata . uhevent . head $ l) == (Just $ JSArray $ 
-    map (\(field, oldv, newv) -> JSObject . toJSObject $ [
-          ("field", JSString $ toJSString field)
-        , ("oldval", JSString $ toJSString oldv)
-        , ("newval", JSString $ toJSString newv)
-        ]) d)
+       for d $ \(field, oldv, newv) -> runJSONGen $ do
+          value "field" field
+          value "oldval" oldv
+          value "newval" newv
+    )
 
 createTestUser :: TestEnv User
 createTestUser = do

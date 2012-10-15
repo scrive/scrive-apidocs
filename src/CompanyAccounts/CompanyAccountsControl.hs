@@ -17,7 +17,9 @@ import Data.Functor
 import Data.List
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
-import Text.JSON (JSValue(..), toJSObject, toJSString)
+import Text.JSON (JSValue(..))
+import Text.JSON.Gen
+import Utils.Prelude
 
 import ActionQueue.UserAccountRequest
 import AppView
@@ -113,21 +115,18 @@ handleCompanyAccountsInternal cid = do
       }
   params <- getListParamsNew
   let companypage = companyAccountsSortSearchPage params companyaccounts
-  return $ JSObject $ toJSObject [("list",
-                                   JSArray $
-                                   map (\f -> JSObject $
-                                              toJSObject [ ("link", JSString $ toJSString $ show $ LinkUserAdmin $ camaybeuserid f), -- | Used in admins only
-                                                           ("fields",
-                                                           JSObject $ toJSObject [
-                                                              ("id", JSString $ toJSString $ maybe "0" show $ camaybeuserid f)
-                                                            , ("fullname", JSString $ toJSString $ cafullname f)
-                                                            , ("email", JSString $ toJSString $ caemail f)
-                                                            , ("role", JSString $ toJSString $ show $ carole f)
-                                                            , ("deletable", JSBool $ cadeletable f)
-                                                            , ("activated", JSBool $ caactivated f)
-                                                            , ("isctxuser", JSBool $ Just (userid user) == camaybeuserid f)])])
-                                   (take companyAccountsPageSize $ list companypage))
-                                 ,("paging", pagingParamsJSON companypage)]
+  runJSONGenT $ do
+    objects "list" $ for (take companyAccountsPageSize $ list companypage) $ \f -> do
+           value "link" $ show $ LinkUserAdmin $ camaybeuserid f -- | Used in admins only
+           object "fields" $ do
+                value "id" $ maybe "0" show $ camaybeuserid f
+                value "fullname" $ cafullname f
+                value "email" $ caemail f
+                value "role" $ show $ carole f
+                value "deletable" $ cadeletable f
+                value "activated" $ caactivated f
+                value "isctxuser" $ Just (userid user) == camaybeuserid f
+    value "paging" $ pagingParamsJSON companypage
 
 {- |
     A special data type used for just displaying stuff in the list
