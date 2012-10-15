@@ -33,6 +33,9 @@ var ButtonModel = Backbone.Model.extend({
   text: function() {
        return this.get("text");
   },
+  setText : function(text) {
+       this.set({text : text});
+  },
   clicked : function(){
        this.get("onClick")();
   },
@@ -55,9 +58,12 @@ var ButtonView = Backbone.View.extend({
         "click"  :  "clicked"
     },
     initialize: function (args) {
-        _.bindAll(this, 'render', 'clicked');
-        this.model.view = this;
+        _.bindAll(this, 'render', 'clicked', 'updateText');
+        this.model.bind("change:text",this.updateText);
         this.render();
+    },
+    updateText : function() {
+      $(".label", $(this.el)).text(this.model.text());
     },
     render: function () {
         $(this.el).addClass(this.model.color());
@@ -100,7 +106,8 @@ window.Button = {
               input.attr("style",args.style);
           var view = new ButtonView({model : model, el : input});
           return new Object({
-              input : function() {return input;}
+              input : function() {return input;},
+              setText : function(text) { model.setText(text);}
             });
         },
     borderWidth : function(size){

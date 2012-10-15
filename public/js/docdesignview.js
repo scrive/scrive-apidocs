@@ -672,8 +672,8 @@ var DocumentDesignView = Backbone.View.extend({
            box.append(DocumentDataFiller.fill(document,content));
        }
        else {
-           var padDesignViewUtil = new PadDesignViewUtilsModel({document : document});
-           box.append(new PadDesignViewUtilsView({model : padDesignViewUtil}).el);
+           var padDesignViewUtil = new PadDesignViewUtils({document : document});
+           box.append(padDesignViewUtil.el());
        }
        Confirmation.popup({
               title : (!document.padDelivery()) ? document.process().localization().confirmsendtitle : localization.pad.howDoYouWantToSign,

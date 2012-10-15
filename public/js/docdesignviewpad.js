@@ -4,7 +4,7 @@
 
 (function(window){
 
-window.PadDesignViewUtilsModel = Backbone.Model.extend({
+var PadDesignViewUtilsModel = Backbone.Model.extend({
  defaults: {
         giveForSigning : false,
         sendForSigning : false
@@ -77,7 +77,7 @@ window.PadDesignViewUtilsModel = Backbone.Model.extend({
    }           
 });
 
-window.PadDesignViewUtilsView = Backbone.View.extend({
+var PadDesignViewUtilsView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
         this.model.bind('change', this.render);
@@ -149,5 +149,14 @@ window.PadDesignViewUtilsView = Backbone.View.extend({
            return this; 
     }
 });
+
+window.PadDesignViewUtils = function(args) {
+          var model = new PadDesignViewUtilsModel({document : args.document});
+          var view = new PadDesignViewUtilsView({model : model});
+          return new Object({
+              el : function()  {return $(view.el);},
+              postSendAction : function(args) {model.postSendAction(args);}
+            });
+};
 
 })(window);

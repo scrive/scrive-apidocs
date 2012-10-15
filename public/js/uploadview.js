@@ -194,6 +194,54 @@
                 return false;
             });
         },
+        sendConfirmationForPadDelivery : function(document) {
+          var view = this;
+          var box = $("<div>");
+          var padDesignViewUtil = new PadDesignViewUtils({document : document});
+          box.append($("<div/>").text(localization.pad.maybeYouWantToSendDirectly));
+          var checkbox = $("<input type='checkbox' autocomplete='false'/>");
+          var updatepadDesignViewUtil = function() {
+              if (checkbox.is(":checked"))
+                padDesignViewUtil.el().show();
+              else
+                padDesignViewUtil.el().hide();
+            };
+          checkbox.change(updatepadDesignViewUtil);
+          updatepadDesignViewUtil();
+          var label = $("<span class='label'/>").text(localization.pad.sendDirectly);
+          box.append($("<div class='padoptions'/>").append($("<div class='padoption'/>").append(checkbox).append(label)));
+          box.append(padDesignViewUtil.el());
+          var acceptButton = Button.init({
+                                    size: "small",
+                                    color : "green",
+                                    text : localization.pad.goToDesignView,
+                                    onClick : function() {
+                                        if (alreadyClicked(this))
+                                          return;
+                                        LoadingDialog.open(localization.designview.messages.sendingDocument);
+                                        var link = "/d/" + document.documentid();
+                                        if (!checkbox.is(":checked"))
+                                          window.location = link;
+                                        else
+                                          document.sendByAuthor().sendAjax(function(resp) {
+                                                      padDesignViewUtil.postSendAction(link);
+                                          });
+                                    }
+                                  });
+          var updatepadAcceptButtonText = function() {
+              if (checkbox.is(":checked"))
+                acceptButton.setText(document.process().sendbuttontext());
+              else
+                acceptButton.setText(localization.pad.goToDesignView);
+            };
+          checkbox.change(updatepadAcceptButtonText);
+          Confirmation.popup({
+                  title : localization.pad.documentCreatedFromTemplate,
+                  acceptButton : acceptButton.input(),
+                  rejectText: localization.cancel,
+                  content  : box
+            });
+        },
         render: function() {
             var view = this;
             var el = $(view.el);
@@ -229,7 +277,18 @@
                                               },
                                               ajaxsuccess: function(d) {
                                                       if (d != undefined && d.id != undefined) {
-                                                          window.location.href = "/d/"+d.id;
+                                                          var doc = new Document({id : d.id});
+                                                          doc.bind('change:ready',function() {
+                                                            if (!doc.ready()) return;
+                                                            if (doc.padDelivery() && doc.readyToBeSend())
+                                                              {
+                                                                view.sendConfirmationForPadDelivery(doc);
+                                                              }
+                                                            else
+                                                              window.location.href = "/d/"+d.id;
+                                                              
+                                                          });
+                                                          doc.recall();
                                                       }
                                                       else {
                                                           LoadingDialog.close();

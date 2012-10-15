@@ -427,7 +427,10 @@ javascriptLocalisation =
              ,  howDoYouWantToSign : "$_howDoYouWantToSign()$"
              ,  cleanImage : "$_padCleanImage()$"
              ,  notNamedParty : "$_notNamedPartyPad()$"
-
+             ,  documentCreatedFromTemplate : "$_documentCreatedFromTemplate()$"
+             ,  maybeYouWantToSendDirectly : "$_maybeYouWantToSendDirectly()$"
+             ,  sendDirectly : "$_sendDirectly()$"
+             ,  goToDesignView : "$_goToDesignView()$"
         }
          , sampleEmailHeader: "$_SampleEmailHeader()$"
          , sampleEmailSubheader: "$_mailsubheader()$"
