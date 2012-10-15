@@ -174,7 +174,7 @@
             var header1 = $('<div class="header1" />');
             header1.text(localization.payments.plans[view.plan].name);
             var header2 = $('<div class="header2" />');
-            header2.text(localization.payments.plans[view.plan].tag);
+            header2.html(localization.payments.plans[view.plan].tag);
             header.append(header1).append(header2);
             div.append(header);
 
