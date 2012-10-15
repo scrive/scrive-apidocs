@@ -482,7 +482,7 @@ javascriptLocalisation =
                     }
                     , enterprise : {
                       name : "$_paymentPlanEnterprise()$",
-                      tag : "$_paymentPlanProfessionalTag()$",
+                      tag : "$_paymentPlanEnterpriseTag()$",
                       price : "$_paymentsQuote()$",
                       features : [ "$_paymentFeatureAllTeamFeatures()$"
                                  , "$_paymentFeatureAllOnlineFormFeatures()$"
