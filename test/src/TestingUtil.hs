@@ -654,10 +654,10 @@ addRandomDocument rda = do
 
       let adoc = doc { documentsignatorylinks = alllinks
                      , documentregion = getRegion user
-                     , documentfiles = [fileid file]
-                     , documentsealedfiles = if documentstatus doc == Closed
-                                               then [fileid file]
-                                               else []
+                     , documentfile = Just (fileid file)
+                     , documentsealedfile = if documentstatus doc == Closed
+                                               then Just (fileid file)
+                                               else Nothing
                      }
       case (p adoc, invariantProblems now adoc) of
         (True, Nothing) -> return adoc

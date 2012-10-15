@@ -55,8 +55,8 @@ window.Document = Backbone.Model.extend({
         id: 0,
         title: "",
         signatories: [],
-        files: [],
-        sealedfiles: [],
+        file: null,
+        sealedfile: null,
         authorattachments: [],
         signatoryattachments: [],
         ready: false,
@@ -139,9 +139,9 @@ window.Document = Backbone.Model.extend({
     mainfile: function() {
         var file;
         if (this.closed())
-            file = this.get("sealedfiles")[0];
+            file = this.get("sealedfile");
         else
-            file = this.get("files")[0];
+            file = this.get("file");
         return file;
     },
     authorattachments: function() {
@@ -346,11 +346,9 @@ window.Document = Backbone.Model.extend({
     timeouttime: function() {
         return this.get("timeouttime");
     },
-    getFile: function(fileid)
+    file: function()
     {
-        return _.detect(this.get("files"), function(file) {
-           return file.fileid() == fileid;
-        });
+        return this.get("file");
     },
     signorder: function() {
       return this.get("signorder");
@@ -419,9 +417,6 @@ window.Document = Backbone.Model.extend({
                     window.setTimeout(doc.recall, 1000);
                   }
       });
-    },
-    needRecall: function() {
-        return this.mainfile() == undefined;
     },
     author: function() {
       for (var i = 0; i < this.signatories().length; i++)
@@ -509,26 +504,26 @@ window.Document = Backbone.Model.extend({
     },
     parse: function(args) {
      var self = this;
-     setTimeout(function() {
-         if (self.needRecall())
-            self.recall();
-     },1000);
-      var dataForFile = 
+      var dataForFile =
         { documentid: self.documentid(),
           signatoryid: self.viewer().signatoryid()
         };
      return {
        title: args.title,
-       files: _.map(args.files, function(fileargs) {
-         var file = new File(_.defaults(fileargs, dataForFile));
-         file.bind('ready', function() {
-           self.trigger('file:change');
-         });
-         return file;
-       }),
-       sealedfiles: _.map(args.sealedfiles, function(fileargs) {
-         return new File(_.defaults(fileargs, dataForFile));
-       }),
+       file: function() {
+           if (args.file) {
+               var file = new File(_.defaults(args.file, dataForFile));
+               file.bind('ready', function() {
+                   self.trigger('file:change');
+               });
+               return file;
+           } else {
+               return null;
+           }
+       }(),
+       sealedfile: args.sealedfile
+                      ? new File(_.defaults(args.sealedfile, dataForFile))
+                      : null,
        authorattachments: _.map(args.authorattachments, function(fileargs) {
          return new File(_.defaults(fileargs, dataForFile));
        }),

@@ -388,33 +388,19 @@ isAuthorAdmin user doc =
   useriscompanyadmin user
   && maybe False (flip isAuthoredByCompany doc) (usercompany user)
 
-getFileIDsByStatus :: Document -> [FileID]
-getFileIDsByStatus doc
-  | isClosed doc =  documentsealedfiles doc
-  | otherwise    =  documentfiles doc
+documentfileM :: MonadDB m => Document -> m (Maybe File)
+documentfileM = maybe (return Nothing) (dbQuery . GetFileByFileID) . documentfile
 
-getFilesByStatus :: MonadDB m => Document -> m [File]
-getFilesByStatus doc = liftM catMaybes $ mapM dbQuery (GetFileByFileID <$> (getFileIDsByStatus doc))
-
-
-documentfilesM :: MonadDB m => Document -> m [File]
-documentfilesM Document{documentfiles} = do
-  catMaybes `liftM` mapM (dbQuery . GetFileByFileID) documentfiles
-
-documentsealedfilesM :: MonadDB m => Document -> m [File]
-documentsealedfilesM Document{documentsealedfiles} = do
-  catMaybes `liftM` mapM (dbQuery . GetFileByFileID) documentsealedfiles
+documentsealedfileM :: MonadDB m => Document -> m (Maybe File)
+documentsealedfileM = maybe (return Nothing) (dbQuery . GetFileByFileID) . documentsealedfile
 
 fileInDocument :: Document -> FileID -> Bool
 fileInDocument doc fid =
-    elem fid $      (documentfiles doc)
-                 ++ (documentsealedfiles doc)
+    elem fid $      maybeToList (documentfile doc)
+                 ++ maybeToList (documentsealedfile doc)
                  ++ (fmap authorattachmentfile $ documentauthorattachments doc)
                  ++ (catMaybes $ fmap signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
-                 
-mainFileOfDocument :: Document -> FileID -> Bool
-mainFileOfDocument doc fid = fid `elem` (documentfiles doc)
-                 
+
 filterPlacementsByID :: [(String, String, FieldPlacement)]
                         -> String
                         -> String

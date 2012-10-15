@@ -21,7 +21,6 @@ module Doc.Model
   , AttachFile(..)
   , AttachSealedFile(..)
   , CancelDocument(..)
-  , ChangeMainfile(..)
   , ChangeSignatoryEmailWhenUndelivered(..)
   , CloseDocument(..)
   , DeleteSigAttachment(..)
@@ -393,8 +392,8 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
 
     inequalities = catMaybes $ map (\f -> f d1 d2)
                    [ checkEqualBy "documenttitle" documenttitle
-                   , checkEqualBy "documentfiles" documentfiles
-                   , checkEqualBy "documentsealedfiles" documentsealedfiles
+                   , checkEqualBy "documentfiles" documentfile
+                   , checkEqualBy "documentsealedfiles" documentsealedfile
                    , checkEqualBy "documentstatus" documentstatus
                    , checkEqualBy "documenttype" documenttype
                    , checkEqualBy "documentctime" documentctime
@@ -470,8 +469,8 @@ fetchDocuments = foldDB decoder []
          documentid = did
        , documenttitle = title
        , documentsignatorylinks = []
-       , documentfiles = maybeToList file_id
-       , documentsealedfiles = maybeToList sealed_file_id
+       , documentfile = file_id
+       , documentsealedfile = sealed_file_id
        , documentstatus = case (status, error_text) of
            (DocumentError{}, Just text) -> DocumentError text
            (DocumentError{}, Nothing) -> DocumentError "document error"
@@ -837,8 +836,8 @@ insertDocumentAsIs :: MonadDB m => Document -> DBEnv m (Maybe Document)
 insertDocumentAsIs document = do
     let Document { documenttitle
                  , documentsignatorylinks
-                 , documentfiles
-                 , documentsealedfiles
+                 , documentfile
+                 , documentsealedfile
                  , documentstatus
                  , documenttype
                  , documentctime
@@ -862,8 +861,8 @@ insertDocumentAsIs document = do
 
     _ <- kRun $ mkSQL INSERT tableDocuments [
         sql "title" documenttitle
-      , sql "file_id" $ listToMaybe documentfiles
-      , sql "sealed_file_id" $ listToMaybe documentsealedfiles
+      , sql "file_id" $ documentfile
+      , sql "sealed_file_id" $ documentsealedfile
       , sql "status" documentstatus
       , sql "error_text" $ case documentstatus of
           DocumentError msg -> toSql msg
@@ -1083,37 +1082,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
           s -> do
             Log.error $ "Cannot CancelDocument document " ++ show did ++ " because " ++ concat s
             return False
-
-data ChangeMainfile = ChangeMainfile DocumentID FileID Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeMainfile Bool where
-  update (ChangeMainfile did fid actor) = do
-    mdocument <- query $ GetDocumentByDocumentID did
-    case mdocument of
-      Nothing -> do
-        Log.error $ "Cannot ChangeMainfile document " ++ show did ++ " because it does not exist"
-        return False
-      Just document -> do
-        case getFileIDsByStatus document of
-          [ofid] -> do
-            let fieldname = if (documentstatus document == Closed || allHadSigned document)
-                            then "sealed_file_id"
-                            else "file_id"
-            success <- kRun01 $ mkSQL UPDATE tableDocuments [sql fieldname $ fid]
-                 <> SQL "WHERE id = ?" [toSql did]
-            oldf <- exactlyOneObjectReturnedGuard =<< query (GetFileByFileID ofid)
-            newf <- exactlyOneObjectReturnedGuard =<< query (GetFileByFileID fid)
-            when_ success $
-              update $ InsertEvidenceEvent
-                ChangeMainfileEvidence
-                (value "actor" (actorWho actor) >> value "oldfilename" (filename oldf) >> value "newfilename" (filename newf))
-                (Just did)
-                actor
-            return success
-          fs -> do
-            Log.error $ "Cannot ChangeMainfile document " ++ show did ++ ": non-one number of main files: " ++ show (length fs)
-            return False
-    where
-        allHadSigned doc = all (hasSigned ||^ (not . isSignatory)) $ documentsignatorylinks doc
 
 data ChangeSignatoryEmailWhenUndelivered = ChangeSignatoryEmailWhenUndelivered DocumentID SignatoryLinkID (Maybe User) String Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeSignatoryEmailWhenUndelivered Bool where

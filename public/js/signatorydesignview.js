@@ -156,9 +156,7 @@ window.SignatoryDesignView = Backbone.View.extend({
        var signatory = this.model;
        var field = signatory.newCheckbox();
        var placeCheckboxIcon = $("<a class='placeCheckboxIcon' href='#'/>");
-
        draggebleField(placeCheckboxIcon, field);
-
        return placeCheckboxIcon;
    },
    placeSignatureIcon : function() {
@@ -169,9 +167,7 @@ window.SignatoryDesignView = Backbone.View.extend({
        field.view = placeSignatureIcon;
        field.view.redborder = function() {placeSignatureIcon.addClass('redborder')};
        field.view.mousedown(function() {placeSignatureIcon.removeClass('redborder')});
-
        draggebleField(placeSignatureIcon, field);
-
        return placeSignatureIcon;
    },
    top : function() {

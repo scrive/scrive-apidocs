@@ -306,8 +306,8 @@ docsPageSize = 100
 docToEntry ::  Kontrakcja m => Document -> m (Maybe Entry)
 docToEntry doc = do
       let name = filter ((/= ' ')) $ filter (isAscii) $ (documenttitle doc) ++ "_" ++ (show $ documentid doc) ++".pdf"
-      case (documentsealedfiles doc ++ documentfiles doc) of
-        (fid:_) -> do
+      case documentsealedfile doc `mplus` documentfile doc of
+        Just fid -> do
             content <- getFileIDContents fid
             return $ Just $ toEntry name 0 $ BSL.pack $ BSS.unpack content
-        [] -> return Nothing
+        Nothing -> return Nothing

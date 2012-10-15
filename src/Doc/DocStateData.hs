@@ -344,8 +344,8 @@ data Document = Document {
     documentid                     :: DocumentID
   , documenttitle                  :: String
   , documentsignatorylinks         :: [SignatoryLink]
-  , documentfiles                  :: [FileID]
-  , documentsealedfiles            :: [FileID]
+  , documentfile                   :: Maybe FileID
+  , documentsealedfile             :: Maybe FileID
   , documentstatus                 :: DocumentStatus
   , documenttype                   :: DocumentType
   , documentctime                  :: MinutesTime

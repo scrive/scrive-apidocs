@@ -76,7 +76,6 @@ docStateTests env = testGroup "DocState" [
   testThat "DeleteSigAttachment adds to the log" env testDeleteSigAttachmentEvidenceLog,
   testThat "CloseDocument adds to the log" env testCloseDocumentEvidenceLog,
   testThat "ChangeSignatoryEmailWhenUndelivered adds to the log" env testChangeSignatoryEmailWhenUndeliveredEvidenceLog,
-  testThat "ChangeMailfile adds to the log" env testChangeMainfileEvidenceLog,
   testThat "CancelDocument adds to the log" env testCancelDocumentEvidenceLog,
   testThat "AttachSealedFile adds to the log" env testAttachSealedFileEvidenceLog,
   testThat "AttachFile adds to the log" env testAttachFileEvidenceLog,
@@ -175,9 +174,6 @@ docStateTests env = testGroup "DocState" [
 
   testThat "when I attach a sealed file to a bad docid, it always returns left" env testNoDocumentAttachSealedAlwaysLeft,
   testThat "when I attach a sealed file to a real doc, it always returns Right" env testDocumentAttachSealedPendingRight,
-
-  testThat "when I ChangeMainFile of a real document returns Right" env testDocumentChangeMainFileRight,
-  testThat "when I ChangeMainFile of a bad docid, it ALWAYS returns Left" env testNoDocumentChangeMainFileAlwaysLeft,
 
   --testThat "when I call updateDocument, it fails when the doc doesn't exist" env testNoDocumentUpdateDocumentAlwaysLeft,
   --testThat "When I call updateDocument with a doc that is not in Preparation, always returns left" env testNotPreparationUpdateDocumentAlwaysLeft,
@@ -722,16 +718,6 @@ testCancelDocumentEvidenceLog = do
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == CancelDocumentEvidence) lg
 
-testChangeMainfileEvidenceLog :: TestEnv ()
-testChangeMainfileEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (const True)
-  file <- addNewRandomFile
-  success <- randomUpdate $ \t-> ChangeMainfile (documentid doc) (fileid file) (systemActor t)
-  assert success
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == ChangeMainfileEvidence) lg
-
 testChangeSignatoryEmailWhenUndeliveredEvidenceLog :: TestEnv ()
 testChangeSignatoryEmailWhenUndeliveredEvidenceLog = do
   author <- addNewRandomUser
@@ -1192,34 +1178,8 @@ testDocumentAttachSealedPendingRight = doTimes 10 $ do
   --assert
   validTest $ do
     assert success
-    assertBool "Should have new file attached, but it's not" $ (fileid file) `elem` documentsealedfiles ndoc
+    assertBool "Should have new file attached, but it's not" $ Just (fileid file) == documentsealedfile ndoc
 
-
-testDocumentChangeMainFileRight :: TestEnv ()
-testDocumentChangeMainFileRight = doTimes 10 $ do
-  -- setup
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (isPending ||^ isClosed))
-  file <- addNewRandomFile
-  --execute
-  success <- randomUpdate $ \t->ChangeMainfile (documentid doc) (fileid file) (systemActor t)
-  Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-  --assert
-  validTest $ do
-    assert success
-    assertBool "New file is attached" (fileid file `elem` (documentfiles ndoc ++ documentsealedfiles ndoc))
-    assertInvariants ndoc
-
-
-testNoDocumentChangeMainFileAlwaysLeft :: TestEnv ()
-testNoDocumentChangeMainFileAlwaysLeft = doTimes 10 $ do
-  -- setup
-  file <- addNewRandomFile
-  --execute
-  -- non-existent docid
-  success <- randomUpdate $ (\docid t -> ChangeMainfile docid (fileid file) (systemActor t))
-  --assert
-  validTest $ assert $ not success
 
 testGetTimedOutButPendingDocuments :: TestEnv ()
 testGetTimedOutButPendingDocuments = doTimes 1 $ do
@@ -1684,7 +1644,7 @@ testPreparationToPendingSignablePreparationRight = doTimes 10 $ do
          { randomDocumentAllowedTypes = documentSignableTypes
          , randomDocumentAllowedStatuses = [Preparation]
          , randomDocumentCondition = (any isSignatory . documentsignatorylinks) &&^
-          ((==) 1 . length . documentfiles) &&^
+          (isJust . documentfile) &&^
           ((==) 1 . length . filter isAuthor . documentsignatorylinks)
          }
   time <- rand 10 arbitrary

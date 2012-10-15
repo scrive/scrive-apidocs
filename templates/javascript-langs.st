@@ -357,6 +357,7 @@ javascriptLocalisation =
            }
          , designview : {
               selectprocess : "$_selectDocumentType()$",
+              orSelectFromTemplate : "$_orSelectFromTemplate()$",
               validation : {
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
                     , missingNames:  "$_missingSignatoryNames()$"

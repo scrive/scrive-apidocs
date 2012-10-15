@@ -1604,6 +1604,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
  for the confirmation."
 "_ordertitle","ORDERBEKRÄFTELSE",,"ORDER CONFIRMATION"
 "_orgnumber","Org. nr",,"Company Reg No"
+"_orSelectFromTemplate","eller välj från en mall:",,"or select from a template:"
 "_pageAttachmentAttachments","BILAGOR:",,"ATTACHMENTS:"
 "_pageAttachmentDownloadPDF","Ladda ned PDF",,"Download PDF"
 "_pageAttachmentListIfShared","Delad",,"Shared"

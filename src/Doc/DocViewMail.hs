@@ -75,7 +75,7 @@ remindMailNotSigned :: (MonadDB m, TemplatesMonad m)
                     -> SignatoryLink
                     -> m Mail
 remindMailNotSigned forMail customMessage ctx document signlink = do
-    let mainfile =  head $ (documentfiles document) ++ [unsafeFileID 0]
+    let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document)
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
     documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailremindnotsigned) $ do
         F.valueM "header" $ do
@@ -213,7 +213,7 @@ mailInvitation forMail
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
     let creatorname = getSmartName $ fromJust $ getAuthorSigLink document
     let personname = maybe "" getSmartName msiglink
-    let mainfile =  head $ (documentfiles document) ++ [unsafeFileID 0] -- There always should be main file but tests fail without it
+    let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document) -- There always should be main file but tests fail without it
     documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailinvitationtosign) $ do
         fieldsInvitationTo invitationto
         F.value "nojavascriptmagic" $ forMail

@@ -110,7 +110,8 @@ var DocumentDesignView = Backbone.View.extend({
 
         // Download link
         var downloadpart = $("<span class='download'/>");
-        downloadpart.append($("<a  target='_blank'/>").attr("href",document.mainfile().downloadLinkForMainFile()).text(localization.downloadPDF));
+        if (document.mainfile())
+            downloadpart.append($("<a  target='_blank'/>").attr("href",document.mainfile().downloadLinkForMainFile()).text(localization.downloadPDF));
         return titlepart.add(namepart).add(downloadpart);
     },
     saveAsTemplateOption : function() {
@@ -765,6 +766,93 @@ var DocumentDesignView = Backbone.View.extend({
         this.tabs.activate(this.tab2);
         this.signatoriesView.showSignatory(sig);
     },
+    uploadFile : function() {
+        var url = "/api/mainfile/" + KontraDesignDocument.model.id;
+        var upbutton = UploadButton.init({
+            name: "file",
+            width: 130,
+            text: localization.uploadButton,
+            submitOnUpload: true,
+            onClick : function () {
+                LoadingDialog.open();
+            },
+            onError: function() {
+                this.model.trigger('change');
+                LoadingDialog.close();
+            },
+            submit: new Submit({
+                method : "POST",
+                url : url,
+                ajax: true,
+                beforeSend: function() {
+                },
+                onSend: function() {
+                    LoadingDialog.open();
+                },
+                ajaxerror: function(d,a){
+                    if(a === 'parsererror') // file too large
+                        FlashMessages.add({content: localization.fileTooLarge, color: "red"});
+                    else
+                        FlashMessages.add({content: localization.couldNotUpload, color: "red"});
+                    LoadingDialog.close();
+                    this.model.trigger('change');
+                },
+                ajaxsuccess: function() {
+                    SessionStorage.set(KontraDesignDocument.model.documentid(), "step", "2");
+                    window.location.reload();
+                }
+            })
+        });
+        return upbutton.input();
+    },
+
+    selectTemplate: function () {
+            var documentsTable = KontraList().init({
+                name : "Templates table",
+                schema: new Schema({
+                    url: "/docs",
+                    extraParams : { documentType : "Template" },
+                    extraParamsOverwrite: { selectfilter: "[{\"name\":\"process\",\"value\":\"" + KontraDesignDocument.model.process().name().toLowerCase() + "\"}]" },
+                    sorting: new Sorting({ fields: ["title"]}),
+                    paging: new Paging({}),
+                    filtering: new TextFiltering({text: "", infotext: localization.searchTemplate}),
+                    cells : [
+                        new Cell({name: localization.sortTemplate,
+                                  width:"400px",
+                                  field:"title",
+                                  rendering : function(title, _mainrow, listobject) {
+                                      var link = jQuery("<a />").text(title);
+                                      link.click(function(){
+                                          new Submit({
+                                            method : "POST",
+                                            ajax: true,
+                                            url: "/api/mainfile/" + KontraDesignDocument.model.id,
+                                            template: listobject.field("id"),
+                                            ajaxsuccess: function() {
+                                              SessionStorage.set(KontraDesignDocument.model.documentid(), "step", "2");
+                                              window.location.reload();
+                                            }
+                                          }).send();
+                                          return false;
+                                      });
+                                      return link;
+                                  }
+                                 })
+                    ]
+                })
+            });
+            documentsTable.view.render();
+            return $("<td/>").addClass("templateslist").append(documentsTable.view.el);
+    },
+
+    emptyFile : function () {
+        var el = $("<div/>");
+        el.append($(this.uploadFile()));
+        el.append($("<span/>").text(localization.designview.orSelectFromTemplate));
+        el.append(this.selectTemplate());
+        return el;
+    },
+
     render: function () {
         var document = this.model;
         var view = this;
@@ -781,7 +869,9 @@ var DocumentDesignView = Backbone.View.extend({
 
         var changemainfile = this.designChangeMainFile();
 
-        var file = KontraFile.init({file: document.mainfile()});
+        var fileel = document.mainfile()
+                 ? KontraFile.init({file: document.mainfile()}).view.el
+                 : this.emptyFile();
         this.tabs = new KontraTabs({
             numbers : true,
             title : this.titlerow(),
@@ -807,7 +897,7 @@ var DocumentDesignView = Backbone.View.extend({
                     },
                     elems : [
                               designbody1,
-                              $(file.view.el)
+                              $(fileel)
                             ]
                   }),
                 this.tab3 = new Tab({
@@ -818,7 +908,7 @@ var DocumentDesignView = Backbone.View.extend({
                     },
                     elems : [
                             designbody2,
-                            $(file.view.el)
+                            $(fileel)
                             ]
                   })
                 ]

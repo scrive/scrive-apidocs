@@ -93,7 +93,7 @@ docFieldsListForJSON tl crtime padqueue doc = do
       APIDelivery   -> "api"
     J.value "anyinvitationundelivered" $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc
     J.value "shared" $ show $ documentsharing doc == Shared
-    J.value "file" $ fromMaybe "" $ show <$> (listToMaybe $ (documentsealedfiles doc) ++ (documentfiles doc))
+    J.value "file" $ show <$> (documentsealedfile doc `mplus` documentfile doc)
     J.value "inpadqueue" $ "true" <| (fmap fst padqueue == Just (documentid doc)) |> "false"
 
 signatoryFieldsListForJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> PadQueue -> Document -> SignatoryLink -> JSONGenT m ()

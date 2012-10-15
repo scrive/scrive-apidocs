@@ -35,7 +35,6 @@ invariantProblems now document =
  -} 
 documentInvariants :: [MinutesTime -> Document -> Maybe String]
 documentInvariants = [ documentHasOneAuthor
-                     , oldishDocumentHasFiles
                      , noDeletedSigLinksForSigning
                      , noSigningOrSeeingInPrep
                      , connectedSigLinkOnTemplateOrPreparation
@@ -66,16 +65,6 @@ documentHasOneAuthor _ document =
   let authors = (filter isAuthor $ documentsignatorylinks document) in
   assertInvariant ("document must have one author (has " ++ show (length authors) ++ ")") $
     length authors == 1
-
-{- |
-   A document older than one hour implies it has at least one file.
-   We must wait some time because we don't do NewDocument and AttachFile atomically. There could be some
-   in between.
- -}
-oldishDocumentHasFiles :: MinutesTime -> Document -> Maybe String
-oldishDocumentHasFiles now document =
-  assertInvariant ("document must have files if older than one hour (is " ++ show (toMinutes now - toMinutes (documentctime document)) ++ " minutes old)") $
-    olderThan now document 60 =>> (length (documentfiles document ++ documentsealedfiles document) > 0)
 
 {- |
    We don't expect to find any deleted documents in Pending or AwaitingAuthor
@@ -263,7 +252,3 @@ assertInvariant s False  = Just s
 
 fieldIsOfType :: FieldType -> SignatoryField -> Bool
 fieldIsOfType t f = t == sfType f
-
--- | Given the time now, is doc older than minutes.
-olderThan :: MinutesTime -> Document -> Int -> Bool
-olderThan now doc minutes = toMinutes now - toMinutes (documentctime doc) >= minutes

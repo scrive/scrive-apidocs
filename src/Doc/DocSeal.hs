@@ -408,9 +408,9 @@ sealDocument :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, T
              => Document
              -> m (Either String Document)
 sealDocument document = do
-  files <- documentfilesM document
+  file <- documentfileM document
   Log.debug $ "Sealing document"
-  mapM_ (sealDocumentFile document) files
+  _ <- maybe (return undefined) (sealDocumentFile document) file
   Log.debug $ "Sealing should be done now"
   Just newdocument <- dbQuery $ GetDocumentByDocumentID (documentid document)
   return $ Right newdocument
@@ -457,7 +457,7 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
           True <- dbUpdate $ AttachSealedFile documentid sealedfileid $ systemActor ctxtime
           Just doc <- dbQuery $ GetDocumentByDocumentID documentid
           return doc
-        Log.debug $ "Should be attached to document; is it? " ++ show ((elem sealedfileid . documentsealedfiles) <$> res)
+        Log.debug $ "Should be attached to document; is it? " ++ show (((Just sealedfileid==) . documentsealedfile) <$> res)
         return $ maybe (Left "AttachSealedFile failed") Right res
       ExitFailure _ -> do
         -- error handling

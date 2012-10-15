@@ -286,7 +286,7 @@ sendInvitationEmail1 ctx document signatorylink | not (isAuthor signatorylink) =
       Document { documentid } = document
   mail <- mailInvitation True ctx (Sign <| isSignatory signatorylink |> View) document (Just signatorylink)
   -- ?? Do we need to read in the contents? -EN
-  -- _attachmentcontent <- liftIO $ getFileContents ctx $ head $ documentfiles document
+  -- _attachmentcontent <- liftIO $ documentFileID document >>= getFileContents ctx
   scheduleEmailSendout (ctxmailsconfig ctx) $
     mail { to = [getMailAddress signatorydetails]
          , mailInfo = Invitation documentid signatorylinkid
@@ -343,13 +343,11 @@ sendClosedEmails document = do
 
 makeMailAttachments :: (KontraMonad m, MonadDB m) => Document -> m [(String, BS.ByteString)]
 makeMailAttachments document = do
-  let mainfile = $(head) $ case documentsealedfiles document of
-        [] -> documentfiles document
-        _ -> documentsealedfiles document
+  let mainfile = documentsealedfile document `mplus` documentfile document
   let
       aattachments = map authorattachmentfile $ documentauthorattachments document
       sattachments = concatMap (maybeToList . signatoryattachmentfile) $ concatMap signatoryattachments $ documentsignatorylinks document
-      allfiles' = [mainfile] ++ aattachments ++ sattachments
+      allfiles' = maybeToList mainfile ++ aattachments ++ sattachments
   allfiles <- catMaybes `liftM` mapM (dbQuery . GetFileByFileID) allfiles'
   let dropPDFSuffix name | ".pdf" `isSuffixOf` (map toLower name) = reverse . drop 4 $ reverse name
                          | otherwise = name

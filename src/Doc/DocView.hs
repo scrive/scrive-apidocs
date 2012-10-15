@@ -130,8 +130,8 @@ flashMessageCSVSent doccount =
 documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m) => Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
 documentJSON forapi forauthor pq msl doc = do
     ctx <- getContext
-    files <- documentfilesM doc
-    sealedfiles <- documentsealedfilesM doc
+    file <- documentfileM doc
+    sealedfile <- documentsealedfileM doc
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
     let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
     mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) (getAuthorSigLink doc >>= maybesignatory)
@@ -148,8 +148,8 @@ documentJSON forapi forauthor pq msl doc = do
     runJSONGenT $ do
       J.value "id" $ show $ documentid doc
       J.value "title" $ documenttitle doc
-      J.value "files" $ map fileJSON files
-      J.value "sealedfiles" $ map fileJSON sealedfiles
+      J.value "file" $ fmap fileJSON file
+      J.value "sealedfile" $ fmap fileJSON sealedfile
       J.value "authorattachments" $ map fileJSON (catMaybes authorattachmentfiles)
       J.value "timeouttime" $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc
       J.value "status" $ show $ documentstatus doc
@@ -233,16 +233,16 @@ signatoryFieldsJSON :: Document -> SignatoryLink -> JSValue
 signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = JSArray $
   for orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements} ->
     case sfType of
-      FirstNameFT             -> fieldJSON doc "standard" "fstname"   sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      LastNameFT              -> fieldJSON doc "standard" "sndname"   sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      EmailFT                 -> fieldJSON doc "standard" "email"     sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      PersonalNumberFT        -> fieldJSON doc "standard" "sigpersnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      CompanyFT               -> fieldJSON doc "standard" "sigco"     sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      CompanyNumberFT         -> fieldJSON doc "standard" "sigcompnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      SignatureFT             -> fieldJSON doc "signature" "signature" sfValue (closedSignatureF sf  && (not $ isPreparation doc)) sfPlacements
-      CustomFT label closed   -> fieldJSON doc "custom" label       sfValue (closed  && (not $ isPreparation doc))  sfPlacements
-      CheckboxOptionalFT label -> fieldJSON doc "checkbox-optional" label sfValue False  sfPlacements
-      CheckboxObligatoryFT label -> fieldJSON doc "checkbox-obligatory" label sfValue  False  sfPlacements
+      FirstNameFT             -> fieldJSON "standard" "fstname"   sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      LastNameFT              -> fieldJSON "standard" "sndname"   sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      EmailFT                 -> fieldJSON "standard" "email"     sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      PersonalNumberFT        -> fieldJSON "standard" "sigpersnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      CompanyFT               -> fieldJSON "standard" "sigco"     sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      CompanyNumberFT         -> fieldJSON "standard" "sigcompnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      SignatureFT             -> fieldJSON "signature" "signature" sfValue (closedSignatureF sf  && (not $ isPreparation doc)) sfPlacements
+      CustomFT label closed   -> fieldJSON "custom" label       sfValue (closed  && (not $ isPreparation doc))  sfPlacements
+      CheckboxOptionalFT label -> fieldJSON "checkbox-optional" label sfValue False  sfPlacements
+      CheckboxObligatoryFT label -> fieldJSON "checkbox-obligatory" label sfValue  False  sfPlacements
   where
     closedF sf = ((not $ null $ sfValue sf) || (null $ sfPlacements sf))
     closedSignatureF sf = ((not $ null $ dropWhile (/= ',') $ sfValue sf) || (null $ sfPlacements sf))
@@ -255,23 +255,23 @@ signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{si
     ftOrder CompanyNumberFT _ = LT
     ftOrder _ _ = EQ
 
-fieldJSON :: Document -> String -> String -> String -> Bool -> [FieldPlacement] -> JSValue
-fieldJSON  doc tp name value closed placements = runJSONGen $ do
+fieldJSON :: String -> String -> String -> Bool -> [FieldPlacement] -> JSValue
+fieldJSON  tp name value closed placements = runJSONGen $ do
     J.value "type" tp
     J.value "name" name
     J.value "value" value
     J.value "closed" closed
-    J.value "placements" $ map (placementJSON doc) placements
+    J.value "placements" $ map placementJSON placements
 
-placementJSON :: Document -> FieldPlacement -> JSValue
-placementJSON doc placement = runJSONGen $ do
+
+placementJSON :: FieldPlacement -> JSValue
+placementJSON placement = runJSONGen $ do
     J.value "xrel" $ placementxrel placement
     J.value "yrel" $ placementyrel placement
     J.value "wrel" $ placementwrel placement
     J.value "hrel" $ placementhrel placement
     J.value "fsrel" $ placementfsrel placement
     J.value "page" $ placementpage placement
-    J.value "fileid" $ fromMaybe "" $ show <$> (listToMaybe $ documentfiles doc)
     J.value "tip" $ case (placementtipside placement) of
                          Just LeftTip -> Just "left"
                          Just RightTip -> Just "right"

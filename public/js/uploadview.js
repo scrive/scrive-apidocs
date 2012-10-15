@@ -120,6 +120,35 @@
           var uploadbuttoncontainer = $("<div class='signStepsButtonContainer' style='width: 145px;'></div>").append(upbutton.input());
           return $("<div/>").append(uploadbuttoncontainer);
         },
+        newEmptyTemplateBox: function() {
+          var wiz = this.model.wizard();
+          var button = Button.init({
+                width: 145,
+                size : "small",
+                text: "New Template",
+                color: "green",
+                onClick: function() {
+                    new Submit({
+                        method : "POST",
+                        url : "/api/createfromfile",
+                        template : "YES",
+                        ajax: true,
+                        expectedType: 'json',
+                        ajaxsuccess: function(d) {
+                            if (d != undefined && d.id != undefined) {
+                                window.location.href = "/d/"+d.id;
+                            }
+                            else {
+                                LoadingDialog.close();
+                                wiz.trigger('change');
+                            }
+                        }
+                    }).send();
+                }
+          });
+          var container = $("<div class='signStepsButtonContainer' style='width: 145px;'></div>").append(button.input());
+          return $("<div/>").append(container);
+        },
         avtal24Box: function() {
             var wiz = this.model.wizard();
             var label = $("<div class='label' style='text-align: center; width: 113px;'/>").text(localization.uploadView.buyAvtal24Template);
@@ -142,7 +171,7 @@
             $(view.el).append(d);
             d = $(div);
             d.append($(header).text(localization.uploadView.createNewTemplate));
-            d.append(this.newTemplateBox());
+            d.append(this.newEmptyTemplateBox());
             d.append(this.avtal24Box());
             $(view.el).append(d);
         }

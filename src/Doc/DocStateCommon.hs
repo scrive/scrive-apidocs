@@ -1,9 +1,14 @@
 module Doc.DocStateCommon where
 
 import Company.Model
+import Control.Monad.Base (MonadBase)
+import Control.Monad.Trans (MonadIO)
 import Data.Maybe
 import Doc.DocStateData
 import Doc.DocUtils
+import File.FileID (FileID)
+import qualified Log
+import KontraError (internalError)
 import MagicHash (MagicHash)
 import MinutesTime
 import Utils.Default
@@ -69,7 +74,7 @@ blankDocument =
           { documentid                   = unsafeDocumentID 0
           , documenttitle                = ""
           , documentsignatorylinks       = []
-          , documentfiles                = []
+          , documentfile                 = Nothing
           , documentstatus               = Preparation
           , documenttype                 = Signable Contract
           , documentctime                = fromSeconds 0
@@ -77,7 +82,7 @@ blankDocument =
           , documentdaystosign           = Nothing
           , documenttimeouttime          = Nothing
           , documentinvitetext           = ""
-          , documentsealedfiles          = []
+          , documentsealedfile           = Nothing
           -- , documenttrustweaverreference = Nothing
           , documentauthenticationmethod = StandardAuthentication
           , documentdeliverymethod       = EmailDelivery
@@ -173,3 +178,12 @@ replaceSignatoryUser siglink user mcompany =
                        (map sfValue $ filter isFieldCustom $ signatoryfields $ signatorydetails siglink) in
   newsl { maybesignatory = Just $ userid user,
           maybecompany = usercompany user }
+
+-- | Extract main file ID from document, assuming it has been set
+documentFileID :: (MonadIO m, MonadBase IO m) => Document -> m FileID
+documentFileID doc =
+    case documentfile doc of
+      Nothing -> do
+        Log.error $ "Missing document file in " ++ show (documentid doc)
+        internalError
+      Just di -> return di

@@ -93,36 +93,46 @@ apiCallCreateFromFile = api $ do
   mcompany <- case usercompany user of
     Just companyid -> Just <$> (apiGuardL' $ dbQuery $ GetCompany companyid)
     Nothing -> return Nothing
-  Input contentspec (Just filename') _contentType <- apiGuardL (badInput "The main file of the document must be attached in the MIME part 'file'.") $ getDataFn' (lookInput "file")
   dtype <- lift $ fromMaybe (Contract) <$> readField "type"
-  isTpl<- lift $ isFieldSet "template"
+  isTpl <- lift $ isFieldSet "template"
   let doctype = (Template <| isTpl |> Signable) dtype
-  let filename = cleanFileName filename'
-  let mformat = getFileFormatForConversion filename'
-  content' <- case contentspec of
-    Left filepath -> liftIO $ BSL.readFile filepath
-    Right content -> return content
-  content'' <- case mformat of
-    Nothing -> return content'
-    Just format -> do
-      eres <- liftIO $ convertToPDF (ctxlivedocxconf ctx) (BS.concat $ BSL.toChunks content') format
-      case eres of
-        Left (LiveDocxIOError e) -> throwError $ serverError $ show e
-        Left (LiveDocxSoapError s)-> throwError $ serverError s
-        Right res -> return $ BSL.fromChunks [res]       
-  pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ liftIO $ do
-                 cres <- preCheckPDF (concatChunks content'')
-                 case cres of
-                    Right c -> return (Right c)
-                    Left m -> case (B64.decode $ (concatChunks content'')) of -- Salesforce hack. Drop this decoding when happstack-7.0.4 is included.
-                                  Right dcontent -> preCheckPDF dcontent
-                                  Left _ -> return (Left m)
-  file <- dbUpdate $ NewFile filename pdfcontent
-  Just doc <- dbUpdate $ NewDocument user mcompany filename doctype 1 actor
-  True <- dbUpdate $ AttachFile (documentid doc) (fileid file) actor
+  minput <- lift $ getDataFn' (lookInput "file")
+  (mfile, title) <- case minput of
+    Nothing -> return (Nothing, "")
+    Just (Input _ Nothing _) -> throwError $ badInput "Missing file"
+    Just (Input contentspec (Just filename') _contentType) -> do
+      let filename = takeBaseName filename'
+      let mformat = getFileFormatForConversion filename'
+      content' <- case contentspec of
+        Left filepath -> liftIO $ BSL.readFile filepath
+        Right content -> return content
+      content'' <- case mformat of
+        Nothing -> return content'
+        Just format -> do
+          eres <- liftIO $ convertToPDF (ctxlivedocxconf ctx) (BS.concat $ BSL.toChunks content') format
+          case eres of
+            Left (LiveDocxIOError e) -> throwError $ serverError $ show e
+            Left (LiveDocxSoapError s)-> throwError $ serverError s
+            Right res -> return $ BSL.fromChunks [res]
+      pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ liftIO $ do
+                     cres <- preCheckPDF (ctxgscmd ctx) (concatChunks content'')
+                     case cres of
+                        Right c -> return (Right c)
+                        Left m -> case (B64.decode $ (concatChunks content'')) of -- Salesforce hack. Drop this decoding when happstack-7.0.4 is included.
+                                      Right dcontent -> preCheckPDF (ctxgscmd ctx) dcontent
+                                      Left _ -> return (Left m)
+      file <- dbUpdate $ NewFile filename pdfcontent
+      return (Just file, filename)
+  Just doc <- dbUpdate $ NewDocument user mcompany title doctype 1 actor
+  case mfile of
+    Nothing -> return ()
+    Just file -> do
+      True <- dbUpdate $ AttachFile (documentid doc) (fileid file) actor
+      return ()
+  let doc' = doc{ documentfile = fileid `fmap` mfile }
   _ <- lift $ addDocumentCreateStatEvents doc "web"
-  Created <$> documentJSON True True Nothing Nothing doc
-  
+  Created <$> documentJSON True True Nothing Nothing doc'
+
 
 apiCallCreateFromTemplate :: Kontrakcja m => DocumentID -> m Response
 apiCallCreateFromTemplate did =  api $ do
@@ -309,7 +319,7 @@ documentChangeMainFile docid = api $ do
             (_, Just templateids) -> do
               templateid <- apiGuard (badInput $ "Template id in bad format: " ++ templateids) $ maybeRead templateids
               temp <- apiGuardL' $ getDocByDocID templateid
-              apiGuard (badInput "No template found for that id (or you don't have permissions).") $ listToMaybe $ documentfiles temp
+              apiGuard (badInput "No template found for that id (or you don't have permissions).") $ documentfile temp
             _ -> throwError $ badInput "This API call requires one of 'file' or 'template' POST parameters."
 
   _ <- apiGuardL' $ dbUpdate $ AttachFile docid fileid aa

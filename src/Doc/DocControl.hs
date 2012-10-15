@@ -40,6 +40,7 @@ import DBError
 import Doc.Action
 import Doc.CSVUtils
 import Doc.Model
+import Doc.DocStateCommon (documentFileID)
 import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocStateUpdate
@@ -744,14 +745,14 @@ checkFileAccess fid = do
   case (msid, mmh, mdid, mattid) of
     (Just sid, Just mh, Just did,_) -> do
        doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
-       let allfiles = documentfiles doc ++ documentsealedfiles doc  ++ 
+       let allfiles = maybeToList (documentfile doc) ++ maybeToList (documentsealedfile doc) ++
                       (authorattachmentfile <$> documentauthorattachments doc) ++
                       (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
        when (all (/= fid) allfiles) $ 
             internalError
     (_,_,Just did,_) -> do
        doc <- guardRightM $ getDocByDocID did
-       let allfiles = documentfiles doc ++ documentsealedfiles doc  ++ 
+       let allfiles = maybeToList (documentfile doc) ++ maybeToList (documentsealedfile doc)  ++
                       (authorattachmentfile <$> documentauthorattachments doc) ++
                       (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
        when (all (/= fid) allfiles) $ 
@@ -808,15 +809,15 @@ handleDownloadMainFile did _nameForBrowser = do
 
   content <- case documentstatus doc of
                Pending -> do
-                 sourceFile <- guardJustM $ dbQuery $ GetFileByFileID (head $ documentfiles doc)
+                 sourceFile <- documentFileID doc >>= guardJustM . dbQuery . GetFileByFileID
                  guardRightM $ DocSeal.presealDocumentFile doc sourceFile
                Closed -> do
                  -- Here we should actually respond with a redirect
                  -- that waits for file to appear. Hopefully nobody
                  -- clicks download that fast.
-                 getFileIDContents (head $ documentsealedfiles doc)
+                 documentFileID doc >>= getFileIDContents
                _ -> do
-                 getFileIDContents (head $ documentfiles doc)
+                 documentFileID doc >>= getFileIDContents
   respondWithPDF content
   where
     respondWithPDF contents = do
