@@ -278,7 +278,7 @@
             this.pretableboxright = $("<div class='col float-right'/>");
               this.pretablebox = $("<div class='tab-content'/>");
             this.tableoptionbox = $("<div class='option-top-box' />");
-            this.pretableboxsubbox = $("<div class='subbox'/>");
+            this.pretableboxsubbox = $("<div class='subbox empty'/>");
             this.tablebox = $("<div class='tab-table'/>");
             this.tableboxfooter = $("<div/>");
             this.tablebox.append(this.tableboxfooter);
@@ -345,7 +345,7 @@
                                        expandSide : "right"
             });
             console.log("Generating selects for options");
-
+            this.pretableboxsubbox.removeClass('empty');
             this.pretableboxsubbox.append($("<div class='options-box'/>").append(select.view().el));
         },
         prepareActions : function() {
@@ -358,6 +358,7 @@
                 div.append(new ListActionView({model : a, el : $("<div class='float-left actionButton'>")}).el);
             })
            console.log("Generating buttons for actions");
+           view.pretableboxsubbox.removeClass('empty');
            view.pretableboxsubbox.append(div);
         },
         renderheader: function() {

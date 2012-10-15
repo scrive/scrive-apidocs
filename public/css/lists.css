@@ -192,7 +192,9 @@
    padding-left: 20px;
    display : block;
 }
-
+.subbox.empty {
+   height : 0px;
+}
 .subbox .actions-box  {
     float: left;
 
