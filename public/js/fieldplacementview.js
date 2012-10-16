@@ -35,7 +35,6 @@ window.draggebleField = function(dragHandler, fieldOrPlacement)
         placement = undefined;
         field = fieldOrPlacement;
     }
-    var fileview = field.signatory().document().mainfile().view;
 
     dragHandler.draggable({
         appendTo: "body",
@@ -62,7 +61,8 @@ window.draggebleField = function(dragHandler, fieldOrPlacement)
                 $(helper).css({fontSize: dragHandler.css("fontSize")});
                 dragHandler.hide();
             }
-            fileview.showCoordinateAxes(ui.helper);
+            if (field.signatory().document().mainfile() != undefined)
+                field.signatory().document().mainfile().view.showCoordinateAxes(ui.helper);
         },
         stop: function() {
             if( placement!=undefined && !droppedInside ) {
@@ -71,11 +71,13 @@ window.draggebleField = function(dragHandler, fieldOrPlacement)
             else if( dragHandler.hasClass("placedfield")) {
                 dragHandler.show();
             }
-            fileview.hideCoordinateAxes();
+            if (field.signatory().document().mainfile() != undefined)
+                field.signatory().document().mainfile().view.hideCoordinateAxes();
             droppedInside = false;
         },
         drag: function(event, ui) {
-            fileview.moveCoordinateAxes(ui.helper);
+            if (field.signatory().document().mainfile() != undefined)
+                field.signatory().document().mainfile().view.moveCoordinateAxes(ui.helper);
         },
         onDrop: function(page, x, y, w, h) {
             droppedInside = true;
@@ -705,7 +707,6 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
         var signatory = field.signatory();
         var document = signatory.document();
         var place = $(this.el);
-        var fileview = field.signatory().document().mainfile().view;
         place.addClass('placedfield');
         this.updatePosition();
 

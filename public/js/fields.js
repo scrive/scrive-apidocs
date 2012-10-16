@@ -79,7 +79,6 @@ window.FieldPlacement = Backbone.Model.extend({
        this.off();
     },
     draftData : function() {
-<<<<<<< HEAD
       var document = this.field().signatory().document();
       var fileid = this.get("fileid");
       var page = document.getFile(fileid).page(this.get("page"));
@@ -93,18 +92,6 @@ window.FieldPlacement = Backbone.Model.extend({
         tip : this.get("tip")
       };
       return draft;
-=======
-        var document = this.field().signatory().document();
-        var page = document.file().page(this.get("page"));
-        return {
-            x : parseInt(this.x()),
-            y : parseInt(this.y()),
-            pagewidth : page != undefined ? page.width() : 943,
-            pageheight : page != undefined ? page.height() : 1335,
-            page : page != undefined ? page.number() : this.get("page"),
-            tip : this.get("tip")
-        };
->>>>>>> Rough design view with support for documentless templates
     }
 });
 
@@ -411,41 +398,8 @@ window.FieldDesignView = Backbone.View.extend({
         var icon =  $("<div class='ddIcon' />");
         var field = this.model;
         var document = field.signatory().document();
-<<<<<<< HEAD
         if (document.mainfile() != undefined && document.mainfile().view != undefined) {
-
             draggebleField(icon, field);
-=======
-        if (document.mainfile() != undefined && document.mainfile().view != undefined)
-        {   var fileview = field.signatory().document().mainfile().view;
-            icon.draggable({
-                    handle: ".ddIcon",
-                    appendTo: "body",
-                    helper: function(event) {
-                        return new FieldPlacementView({model: field, el : $("<div/>")}).el;
-                    },
-                    start: function(event, ui) {
-                        fileview.showCoordinateAxes(ui.helper);
-                    },
-                    stop: function() {
-                        fileview.hideCoordinateAxes();
-                    },
-                    drag: function(event, ui) {
-                        fileview.moveCoordinateAxes(ui.helper);
-                    },
-                    onDrop: function(page, x,y ){
-                          x = page.fixedX(x,y);
-                          y = page.fixedY(x,y);
-                          field.addPlacement(new FieldPlacement({
-                              page: page.number(),
-                              field: field,
-                              x : x,
-                              y : y,
-                              tip : "right"
-                            }));
-                    }
-            });
->>>>>>> Rough design view with support for documentless templates
         }
         return icon;
     },

@@ -163,68 +163,12 @@ staticRoutes = choice
      , dir "payments" $ dir "newsubscription" $ hPost $ toK0 $ Payments.handleSyncNewSubscriptionWithRecurly
      , dir "payments" $ dir "changeplan" $ hPost $ toK0 $ Payments.handleChangePlan
      , dir "payments" $ dir "postback" $ hPostNoXToken $ toK0 $ Payments.handleRecurlyPostBack
-<<<<<<< HEAD
+
      -- price plan page information
      , dir "payments" $ dir "pricepageinfo" $ hGetAllowHttp $ toK0 $ Payments.handlePricePageJSON
      , dir "payments" $ dir "userexists" $ hGetAllowHttp $ toK0 $ Payments.handleUserExists
      , dir "payments" $ dir "createuser" $ hPostAllowHttp $ toK0 $ Payments.handleCreateUser
      , dir "payments" $ dir "newsubscriptionoutside" $ hPostAllowHttp $ toK0 $ Payments.handleSyncNewSubscriptionWithRecurlyOutside
-=======
-
-     -- super user only
-     , dir "createuser" $ hPost $ toK0 $ Administration.handleCreateUser
-     , dir "adminonly" $ hGet $ toK0 $ Administration.showAdminMainPage
-     , dir "adminonly" $ dir "useradminforsales" $ hGet $ toK0 $ Administration.showAdminUsersForSales
-     , dir "adminonly" $ dir "userslist" $ hGet $ toK0 $ Administration.jsonUsersList
-     , dir "adminonly" $ dir "useradmin" $ hGet $ toK1 $ Administration.showAdminUsers . Just
-     , dir "adminonly" $ dir "useradmin" $ hGet $ toK0 $ Administration.showAdminUsers Nothing
-     , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminUserUsageStats
-     , dir "adminonly" $ dir "useradmin" $ hPost $ toK1 $ Administration.handleUserChange
-     , dir "adminonly" $ dir "useradmin" $ dir "payments" $ hGet $ toK1 $ Administration.showAdminUserPayments
-     , dir "adminonly" $ dir "useradmin" $ dir "payments" $ hPost $ toK1 $ Administration.handleUserPaymentsChange
-     , dir "adminonly" $ dir "companyadmin" $ hGet $ toK0 $ Administration.showAdminCompanies
-     , dir "adminonly" $ dir "companyadmin" $ hGet $ toK1 $ Administration.showAdminCompany
-     , dir "adminonly" $ dir "companyadmin" $ dir "branding" $ Company.adminRoutes
-     , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hGet $ toK1 $ Administration.showAdminCompanyUsers
-     , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hPost $ toK1 $ Administration.handlePostAdminCompanyUsers
-     , dir "adminonly" $ dir "companyadmin" $ dir "payments" $ hGet $ toK1 $ Administration.showAdminCompanyPayments
-     , dir "adminonly" $ dir "companyadmin" $ dir "payments" $ hPost $ toK1 $ Administration.handleCompanyPaymentsChange
-     , dir "adminonly" $ dir "companyaccounts" $ hGet  $ toK1 $ CompanyAccounts.handleCompanyAccountsForAdminOnly
-     , dir "adminonly" $ dir "companyadmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminCompanyUsageStats
-     , dir "adminonly" $ dir "companyadmin" $ hPost $ toK1 $ Administration.handleCompanyChange
-     , dir "adminonly" $ dir "functionalitystats" $ hGet $ toK0 $ Administration.showFunctionalityStats
-
-     , dir "adminonly" $ dir "documents" $ hGet $ toK0 $ Administration.showDocuments
-     , dir "adminonly" $ dir "documentslist" $ hGet $ toK0 $ Administration.jsonDocuments
-
-     , dir "adminonly" $ dir "allstatscsv" $ hGet $ toK0 $ Stats.handleDocStatsCSV
-     , dir "adminonly" $ dir "userstatscsv" $ hGet $ toK0 $ Stats.handleUserStatsCSV
-     , dir "adminonly" $ dir "signstatscsv" $ hGet $ toK0 $ Stats.handleSignStatsCSV
-     , dir "adminonly" $ dir "dochistorycsv" $ hGet $ toK0 $ Stats.handleDocHistoryCSV
-     , dir "adminonly" $ dir "signhistorycsv" $ hGet $ toK0 $ Stats.handleSignHistoryCSV
-     , dir "adminonly" $ dir "userslistcsv" $ hGet $ toK0 $ Administration.handleUsersListCSV
-     , dir "adminonly" $ dir "paymentsstats.csv" $ hGet $ toK0 $ Payments.Stats.handlePaymentsStatsCSV
-
-     , dir "adminonly" $ dir "statistics"        $ hGet  $ toK0 $ Stats.showAdminSystemUsageStats
-
-     , dir "adminonly" $ dir "companies" $ hGet $ toK0 $ Administration.jsonCompanies
-
-     , dir "adminonly" $ dir "reseal" $ hPost $ toK1 $ Administration.resealFile
-
-     , dir "adminonly" $ dir "docproblems" $ hGet $ toK0 $ DocControl.handleInvariantViolations
-
-     , dir "adminonly" $ dir "backdoor" $ hGet $ toK1 $ Administration.handleBackdoorQuery
-
-     , dir "adminonly" $ dir "log" $ hGetWrap (onlyAdmin . https) $ toK1 $ Administration.serveLogDirectory
-
-     , dir "adminonly" $ dir "updatefields" $ hPost $ toK2 $ Administration.updateFields
-
-     , dir "dave" $ dir "document"      $ hGet $ toK1 $ Administration.daveDocument
-     , dir "dave" $ dir "document"      $ hGet $ toK2 $ Administration.daveSignatoryLink
-     , dir "dave" $ dir "user"          $ hGet $ toK1 $ Administration.daveUser
-     , dir "dave" $ dir "userhistory"   $ hGet $ toK1 $ Administration.daveUserHistory
-     , dir "dave" $ dir "company"       $ hGet $ toK1 $ Administration.daveCompany
->>>>>>> Eliminate admin function for replacing main file of a document
 
      -- account stuff
      , dir "logout"      $ hGet  $ toK0 $ handleLogout
