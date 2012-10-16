@@ -42,7 +42,6 @@ import PadQueue.Model
 import Data.Maybe
 import Text.JSON.Gen as J
 import Text.JSON.FromJSValue
-import Doc.DocUtils
 import Doc.Action
 import Doc.DocStateQuery
 import Control.Monad
@@ -98,20 +97,11 @@ handleSendReminders :: Kontrakcja m => m JSValue
 handleSendReminders = do
     ctx@Context{ctxmaybeuser = Just user } <- getContext
     ids <- getCriticalFieldList asValidDocID "doccheck"
-    remindedsiglinks <- fmap concat . sequence . map (\docid -> docRemind ctx user docid) $ ids
+    actor <- guardJustM $ fmap mkAuthorActor getContext
+    remindedsiglinks <- fmap concat . sequence . map (\docid -> sendAllReminderEmails ctx actor user docid) $ ids
     case (length remindedsiglinks) of
       0 -> internalError
       _ -> J.runJSONGenT $ return ()
-    where
-      docRemind :: Kontrakcja m => Context -> User -> DocumentID -> m [SignatoryLink]
-      docRemind ctx user docid = do
-        doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
-        case (documentstatus doc) of
-          Pending -> do
-            let isEligible = isEligibleForReminder user doc
-                unsignedsiglinks = filter isEligible $ documentsignatorylinks doc
-            sequence . map (sendReminderEmail Nothing ctx doc) $ unsignedsiglinks
-          _ -> return []
     
 handleCancel :: Kontrakcja m =>  m JSValue
 handleCancel = do
@@ -126,8 +116,6 @@ handleCancel = do
            postDocumentCanceledChange doc' "web+archive"
         else internalError
   J.runJSONGenT $ return ()
-
-
   
 handleRestore :: Kontrakcja m => m JSValue
 handleRestore = do

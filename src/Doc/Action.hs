@@ -7,6 +7,7 @@ module Doc.Action (
   , getCustomTextField
   , sendReminderEmail
   , sendInvitationEmail1
+  , sendAllReminderEmails
   ) where
 
 import Control.Monad.Trans.Maybe
@@ -308,8 +309,8 @@ sendInvitationEmail1 ctx document authorsiglink =
 {- |
     Send a reminder email (and update the modification time on the document)
 -}
-sendReminderEmail :: Kontrakcja m => Maybe String -> Context -> Document -> SignatoryLink -> m SignatoryLink
-sendReminderEmail custommessage ctx doc siglink = do
+sendReminderEmail :: Kontrakcja m => Maybe String -> Context -> Actor -> Document -> SignatoryLink -> m SignatoryLink
+sendReminderEmail custommessage ctx actor doc siglink = do
   mail <- mailDocumentRemind custommessage ctx doc siglink
   mailattachments <- makeMailAttachments doc
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
@@ -321,7 +322,6 @@ sendReminderEmail custommessage ctx doc siglink = do
     }
   when (isPending doc &&  not (hasSigned siglink)) $ do
     Log.debug $ "Reminder mail send for signatory that has not signed " ++ show (signatorylinkid siglink)
-    actor <- guardJustM $ fmap mkAuthorActor getContext
     dbUpdate $ ResetSignatoryMailDeliveryInformationForReminder doc siglink actor
   _ <- dbUpdate $ SetDocumentModificationData (documentid doc) (ctxtime ctx)
   triggerAPICallbackIfThereIsOne doc
@@ -372,6 +372,19 @@ sendRejectEmails customMessage ctx document signalink = do
       to = [getMailAddress sl]
     }
 
+{- |
+   Send reminder to all parties in document. No custome text
+ -}    
+sendAllReminderEmails :: Kontrakcja m => Context -> Actor -> User -> DocumentID -> m [SignatoryLink]
+sendAllReminderEmails ctx actor user docid = do
+    doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
+    case (documentstatus doc) of
+          Pending -> do
+            let isEligible = isEligibleForReminder user doc
+                unsignedsiglinks = filter isEligible $ documentsignatorylinks doc
+            sequence . map (sendReminderEmail Nothing ctx actor doc) $ unsignedsiglinks
+          _ -> return []
+          
 {- |
     If the custom text field is empty then that's okay, but if it's invalid
     then we want to fail.

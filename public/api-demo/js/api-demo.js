@@ -44,10 +44,12 @@ var ApiDemoView = Backbone.View.extend({
             var createFromTemplate = $("<option value='cft'>Create from template</option>");
             var update = $("<option value='u'>Update</option>");
             var ready = $("<option value='g'>Ready</option>");
+            var sendReminder = $("<option value='s'>Send reminder</option>");
             var cancel = $("<option value='cc'>Cancel</option>");
+            var del = $("<option value='d'>Delete</option>");
             var check = $("<option value='c'>Get</option>");
             var list  = $("<option value='l'>List</option>");
-            select.append(none).append(createFromFile).append(createFromTemplate).append(update).append(ready).append(cancel).append(check).append(list);
+            select.append(none).append(createFromFile).append(createFromTemplate).append(update).append(ready).append(sendReminder).append(cancel).append(del).append(check).append(list);
             if (model.selectedApiCall() != undefined) {
                 if (model.selectedApiCall().isCreateFromFile())
                     createFromFile.attr("selected", "true");
@@ -57,8 +59,12 @@ var ApiDemoView = Backbone.View.extend({
                     update.attr("selected", "true");
                 else if (model.selectedApiCall().isReady())
                     ready.attr("selected", "true");
+                else if (model.selectedApiCall().isSendReminder())
+                    sendReminder.attr("selected", "true");
                 else if (model.selectedApiCall().isCancel())
                     cancel.attr("selected", "true");
+                else if (model.selectedApiCall().isDelete())
+                    del.attr("selected", "true");
                 else if (model.selectedApiCall().isGet())
                     check.attr("selected", "true");
                 else if (model.selectedApiCall().isList())
@@ -76,8 +82,12 @@ var ApiDemoView = Backbone.View.extend({
                     model.setSelectedApiCall(new UpdateApiCall({oauth : oauth}));
                 else if (select.val() == "g")
                     model.setSelectedApiCall(new ReadyApiCall({oauth : oauth}));
+                else if (select.val() == "s")
+                    model.setSelectedApiCall(new SendReminderApiCall({oauth : oauth}));
                 else if (select.val() == "cc")
                     model.setSelectedApiCall(new CancelApiCall({oauth : oauth}));
+                else if (select.val() == "d")
+                    model.setSelectedApiCall(new DeleteApiCall({oauth : oauth}));
                 else if (select.val() == "c")
                     model.setSelectedApiCall(new GetApiCall({oauth : oauth}));
                 else if (select.val() == "l")

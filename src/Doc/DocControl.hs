@@ -673,7 +673,8 @@ handleResend docid signlinkid  = withUserPost $ do
   doc <- guardRightM $ getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid
   signlink <- guardJust $ getSigLinkFor doc signlinkid
   customMessage <- getCustomTextField "customtext"
-  _ <- sendReminderEmail customMessage ctx doc signlink
+  actor <- guardJustM $ fmap mkAuthorActor getContext
+  _ <- sendReminderEmail customMessage ctx actor doc signlink
   addFlashM $ flashRemindMailSent signlink
   return (LinkIssueDoc docid)
 

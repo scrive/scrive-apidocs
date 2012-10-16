@@ -249,7 +249,7 @@ testSendReminderEmailUpdatesLastModifiedDate = do
   -- who cares which one, just pick the last one
   let sl = head . reverse $ documentsignatorylinks doc
   req <- mkRequest POST []
-  (_link, _ctx') <- runTestKontra req ctx $ sendReminderEmail Nothing ctx doc sl
+  (_link, _ctx') <- runTestKontra req ctx $ sendReminderEmail Nothing ctx (systemActor $ ctxtime ctx) doc sl
 
   Just updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "Modified date is updated" (ctxtime ctx) (documentmtime updateddoc)
@@ -268,10 +268,11 @@ testSendingReminderClearsDeliveryInformation = do
                          Signable _ -> True
                          _ -> False)
   let sl = head . reverse $ documentsignatorylinks doc
-  _ <- dbUpdate $ MarkInvitationRead (documentid doc) (signatorylinkid sl) (systemActor $ ctxtime ctx)
+      actor  =  systemActor $ ctxtime ctx
+  _ <- dbUpdate $ MarkInvitationRead (documentid doc) (signatorylinkid sl) actor
   -- who cares which one, just pick the last one
   req <- mkRequest POST []
-  (_link, _ctx') <- runTestKontra req ctx $ sendReminderEmail Nothing ctx doc sl
+  (_link, _ctx') <- runTestKontra req ctx $ sendReminderEmail Nothing ctx actor doc sl
   Just updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   let (Just sl') = find (\t -> signatorylinkid t == signatorylinkid sl) (documentsignatorylinks updateddoc)
   assertEqual "Invitation is not delivered" (Unknown) (invitationdeliverystatus sl')

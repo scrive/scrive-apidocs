@@ -60,6 +60,7 @@ import OAuth.Model
 import InputValidation
 import Doc.API.Callback.Model
 import qualified Data.ByteString.Base64 as B64
+import Text.JSON.Gen
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = choice [
@@ -69,6 +70,8 @@ documentAPI = choice [
   dir "api" $ dir "update"             $ hPostNoXToken $ toK1 $ apiCallUpdate,
   dir "api" $ dir "ready"              $ hPostNoXToken $ toK1 $ apiCallReady,
   dir "api" $ dir "cancel"             $ hPostNoXToken $ toK1 $ apiCallCancel,
+  dir "api" $ dir "remind"             $ hPostNoXToken $ toK1 $ apiCallRemind,
+  dir "api" $ dir "delete"             $ hDelete   $ toK1 $ apiCallDelete,
   dir "api" $ dir "get"                $ hGet $ toK1 $ apiCallGet,
   dir "api" $ dir "list"               $ hGet $ apiCallList,
     
@@ -193,6 +196,42 @@ apiCallCancel did =  api $ do
       newdocument' <- apiGuardL (serverError "No document found after cancel and post actions") $ dbQuery $ GetDocumentByDocumentID $ did
       Accepted <$> documentJSON True True Nothing Nothing newdocument'
     else throwError $ serverError $ "Operation failed"
+
+apiCallRemind :: Kontrakcja m => DocumentID -> m Response
+apiCallRemind did =  api $ do
+  ctx <- getContext
+  (user, actor , _) <- getAPIUser APIDocSend
+  doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
+  when (documentstatus doc /= Pending || documentdeliverymethod doc /= EmailDelivery) $ do
+        throwError $ serverError "Can't send reminder for documents that are not pending or that don't have email delivery type"
+  auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
+  when (not $ (auid == userid user)) $ do
+        throwError $ serverError "Permission problem. Not an author."
+  _ <- lift $ sendAllReminderEmails ctx actor user did
+  newdocument <- apiGuardL (serverError "No document found after sending reminder") $ dbQuery $ GetDocumentByDocumentID $ did
+  Accepted <$> documentJSON True True Nothing Nothing newdocument
+
+apiCallDelete :: Kontrakcja m => DocumentID -> m Response
+apiCallDelete did =  api $ do
+  ctx <- getContext
+  (user, actor, _) <- getAPIUser APIDocSend
+  doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
+  auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
+  when (not $ (auid == userid user)) $ do
+        throwError $ serverError "Permission problem. Not an author."
+  _ <-apiGuardL (serverError "This document cant be deleted. Maybe it's pending?") $ dbUpdate $ ArchiveDocument user did actor
+  doc' <- apiGuardL (serverError "No document found after operation") $ dbQuery $ GetDocumentByDocumentID $ did
+  _ <- addSignStatDeleteEvent doc' (fromJust $ getSigLinkFor doc' user) (ctxtime ctx)
+  case (documentstatus doc') of
+       Preparation -> do
+         _ <- dbUpdate $ ReallyDeleteDocument user did actor
+         when_ (isJust $ getSigLinkFor doc' user) $
+             addSignStatPurgeEvent doc' (fromJust $ getSigLinkFor doc' user)  (ctxtime ctx)
+       _ -> return ()
+  Accepted <$> (runJSONGenT $ return ())
+
+
+
   
 apiCallGet :: Kontrakcja m => DocumentID -> m Response
 apiCallGet did = api $ do
