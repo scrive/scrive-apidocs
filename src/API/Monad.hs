@@ -234,13 +234,13 @@ instance (Monad m, JSON b) => APIGuard m (Result b) b where
   
 -- get the user for the api; it can either be 
 --  1. OAuth using Authorization header
---  2. Session for Ajax client
+--  2. Session for Ajax client. ! Only if authorization header is empty !
 getAPIUser :: Kontrakcja m => APIPrivilege -> APIMonad m (User, Actor, Bool)
 getAPIUser priv = do
   moauthuser <- getOAuthUser priv
-  Log.debug $ "moauthuser: " ++ show moauthuser
   case moauthuser of
-    Just (user, actor) -> return (user, actor, True)
+    Just (Left err) -> throwError $ notLoggedIn err
+    Just (Right (user, actor)) -> return (user, actor, True)
     Nothing -> do
       msessionuser <- getSessionUser
       Log.debug $ "msessionuser: " ++ show msessionuser
@@ -255,19 +255,20 @@ getSessionUser = do
     Nothing -> return Nothing
     Just user -> return $ Just (user, authorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user))
 
-getOAuthUser :: Kontrakcja m => APIPrivilege -> APIMonad m (Maybe (User, Actor))
+getOAuthUser :: Kontrakcja m => APIPrivilege -> APIMonad m (Maybe (Either String (User, Actor)))
 getOAuthUser priv = do
   Log.debug "getOAuthUser start"
   ctx <- getContext
   eauth <- lift $ getAuthorization
   Log.debug $ show eauth
   case eauth of
-    Left _ -> return Nothing
-    Right auth -> do
-      (userid, apistring) <- apiGuardL (forbidden "OAuth credentials are invalid.") $ 
-                              dbQuery $ GetUserIDForAPIWithPrivilege (oaAPIToken auth) (oaAPISecret auth) (oaAccessToken auth) (oaAccessSecret auth) priv
-  
-      user <- apiGuardL (serverError "The User account for those credentials does not exist.") $ dbQuery $ GetUserByID userid
-
-      let actor = apiActor (ctxtime ctx) (ctxipnumber ctx) userid (getEmail user) apistring
-      return $ Just (user, actor)
+    Nothing       -> return Nothing
+    Just (Left l) -> return $ Just $ Left l
+    Just (Right auth) -> do
+      uap <- dbQuery $ GetUserIDForAPIWithPrivilege (oaAPIToken auth) (oaAPISecret auth) (oaAccessToken auth) (oaAccessSecret auth) priv
+      case uap of
+        Nothing -> return $ Just $ Left "OAuth credentials are invalid."
+        Just (userid, apistring) -> do
+          user <- apiGuardL (serverError "The User account for those credentials does not exist.") $ dbQuery $ GetUserByID userid
+          let actor = apiActor (ctxtime ctx) (ctxipnumber ctx) userid (getEmail user) apistring
+          return $ Just $ Right (user, actor)

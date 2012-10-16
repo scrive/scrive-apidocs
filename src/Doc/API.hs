@@ -2,6 +2,7 @@ module Doc.API (
     documentAPI
   , apiCallCreateFromFile      -- Exported for tests
   , apiCallCreateFromTemplate  -- Exported for tests
+  , apiCallGet                -- Exported for tests
   ) where
 
 import Control.Monad.Trans.Maybe

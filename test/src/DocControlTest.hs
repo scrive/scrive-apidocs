@@ -24,7 +24,6 @@ import Util.Actor
 import Util.HasSomeUserInfo
 import Doc.API
 
-
 docControlTests :: TestEnvSt -> Test
 docControlTests env = testGroup "Templates" [
     testThat "Sending a reminder updates last modified date on doc" env testSendReminderEmailUpdatesLastModifiedDate
@@ -38,8 +37,12 @@ docControlTests env = testGroup "Templates" [
   , testThat "Person who isn't last signing a doc leaves it pending" env testNonLastPersonSigningADocumentRemainsPending
   , testThat "Last person signing a doc closes it" env testLastPersonSigningADocumentClosesIt
   , testThat "Sending an reminder clears delivery information" env testSendingReminderClearsDeliveryInformation
+  , testThat "We can get json for document" env testGetLoggedIn
+  , testThat "We can't get json for document if we are not logged in" env testGetNotLoggedIn
+  , testThat "We can't get json for document is we are logged in but we provided authorization header" env testGetBadHeader
+  
   ]
-
+  
 testUploadingFileAsContract :: TestEnv ()
 testUploadingFileAsContract = do
   (user, rsp) <- uploadDocAsNewUser Contract
@@ -301,6 +304,37 @@ testDocumentFromTemplateShared = do
     assertBool "New document should have been created" (length docs2 == 1+ length docs1)
 
 
+testGetLoggedIn :: TestEnv ()
+testGetLoggedIn = do
+  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  doc <- addRandomDocumentWithAuthor user
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext (mkLocaleFromRegion defaultValue)
+  req <- mkRequest GET []
+  (res,_) <- runTestKontra req ctx $ apiCallGet doc
+  assertEqual "Response code is 200" 200 (rsCode res)
+
+   
+testGetNotLoggedIn :: TestEnv ()
+testGetNotLoggedIn = do
+  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  doc <- addRandomDocumentWithAuthor user
+  ctx <- mkContext (mkLocaleFromRegion defaultValue)
+  req <- mkRequest GET []
+  (res,_) <- runTestKontra req ctx $ apiCallGet doc
+  assertEqual "Response code is 401" 401 (rsCode res)
+
+
+testGetBadHeader :: TestEnv ()
+testGetBadHeader = do
+  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  doc <- addRandomDocumentWithAuthor user
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext (mkLocaleFromRegion defaultValue)
+  req <- mkRequestWithHeaders GET [] [("authorization", ["ABC"])]
+  (res,_) <- runTestKontra req ctx $ apiCallGet doc
+  assertEqual "Response code is 401" 401 (rsCode res)
+  
+
+    
 mkSigDetails :: String -> String -> String -> SignatoryDetails
 mkSigDetails fstname sndname email = SignatoryDetails {
     signatorysignorder = SignOrder 1

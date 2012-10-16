@@ -12,6 +12,7 @@ module TestKontra (
     , getHeader
     , getCookie
     , mkRequest
+    , mkRequestWithHeaders
     , mkContext
     ) where
 
@@ -186,11 +187,12 @@ getCookie name cookies = cookieValue <$> lookup name cookies
 
 -- | Constructs initial request with given data (POST or GET)
 mkRequest :: Method -> [(String, Input)] -> TestEnv Request
-mkRequest method vars = liftIO $ do
+mkRequest method vars = mkRequestWithHeaders method vars []
+
+mkRequestWithHeaders :: Method -> [(String, Input)] -> [(String, [String])]-> TestEnv Request
+mkRequestWithHeaders method vars headers = liftIO $ do
     rqbody <- newEmptyMVar
-    ib <- if isReqPost
-             then newMVar vars
-             else newEmptyMVar
+    ib <- newMVar vars
     let iq = if isReqPost
                 then []
                 else vars
@@ -204,7 +206,7 @@ mkRequest method vars = liftIO $ do
         , rqInputsBody = ib
         , rqCookies = []
         , rqVersion = HttpVersion 1 1
-        , rqHeaders = M.empty
+        , rqHeaders = mkHeaders $ headers
         , rqBody = rqbody
         , rqPeer = ("", 0)
     }

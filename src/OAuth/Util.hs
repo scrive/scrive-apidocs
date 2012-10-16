@@ -26,7 +26,7 @@ getAuthorizationHeader = do
     Nothing -> return Nothing
     Just (HeaderPair _ auths) -> do
       case BS.toString <$> listToMaybe auths of
-        Nothing -> return Nothing
+        Nothing -> return $ Just []
         Just auth -> return $ Just $ splitAuthorization auth
 
 getTempCredRequest :: Kontrakcja m => m (Either String OAuthTempCredRequest)
@@ -85,11 +85,12 @@ getTokenRequest = do
                                                 , trVerifier   = fromJust mverifier
                                                 }
 
-getAuthorization :: Kontrakcja m => m (Either String OAuthAuthorization)
+-- Read authorization header for oauth. Returns Nothing if 'authorization' header is missing.
+getAuthorization :: Kontrakcja m => m (Maybe (Either String OAuthAuthorization))
 getAuthorization = do
   eparams <- getAuthorizationHeader
   case eparams of
-    Nothing -> return $ Left "Authorization header is required."
+    Nothing -> return $ Nothing
     Just params -> do
       let msigtype          = lookupAndRead "oauth_signature_method" params
           mapisecret        = splitSignature =<< lookupAndRead "oauth_signature" params
@@ -103,8 +104,8 @@ getAuthorization = do
                     ["oauth_consumer_key is missing or is invalid"]            <| isNothing mapitoken            |> [] ++
                     ["oauth_token is required"]                                <| isNothing macctoken            |> [])
       if not $ null errors
-        then return $ Left errors
-        else return $ Right $ OAuthAuthorization { oaAPIToken     = fromJust mapitoken
+        then return $ Just $ Left errors
+        else return $ Just $ Right $ OAuthAuthorization { oaAPIToken     = fromJust mapitoken
                                                  , oaAPISecret    = fromJust $ fst $ fromJust mapisecret
                                                  , oaAccessToken  = fromJust macctoken
                                                  , oaAccessSecret = fromJust $ snd $ fromJust mapisecret
