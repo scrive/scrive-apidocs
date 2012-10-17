@@ -561,19 +561,14 @@ handleBlockingInfo = do
   mpaymentplan <- dbQuery $ GetPaymentPlan $ maybe (Left $ userid user) Right (usercompany user)
 
   let paymentplan = maybe "free" (show . ppPricePlan) mpaymentplan
-      status      = maybe "" (show . ppStatus) mpaymentplan
+      status      = maybe "active" (show . ppStatus) mpaymentplan
+      dunning     = maybe False (isJust . ppDunningStep) mpaymentplan
 
-  let quantity = maybe 0 ppQuantity mpaymentplan
-  usedusers <- case usercompany user of
-    Nothing -> return 0
-    Just cid -> dbQuery $ GetCompanyQuantity cid
-  
   runJSONGenT $ do
     J.value "docsused"  docsusedthismonth
     J.value "plan"      paymentplan
-    J.value "userspaid" quantity
-    J.value "usersused" usedusers
     J.value "status"    status
+    J.value "dunning"   dunning
     
 {- |
    Fetch the xtoken param and double read it. Once as String and once as MagicHash.

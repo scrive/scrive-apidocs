@@ -47,6 +47,7 @@ import Mails.SendMail
 import Utils.Monad
 import qualified Login
 
+import Payments.JSON ()
 import Payments.Model
 import Payments.Rules
 import Payments.View
@@ -63,7 +64,7 @@ handleSubscriptionDashboardInfo = do
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany user
   quantity <- (maybe (return 1) (dbQuery . GetCompanyQuantity) $ usercompany user)
   mplan <- dbQuery $ GetPaymentPlan (maybe (Left (userid user)) Right (usercompany user))
-  --let currency = "SEK" -- we only support SEK for now
+
   plan <- case mplan of
     Nothing -> do
           teamsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "team")]
@@ -78,7 +79,6 @@ handleSubscriptionDashboardInfo = do
               J.value "form" formsig
     Just plan | ppPaymentPlanProvider plan == RecurlyProvider -> do
           billingsig  <- liftIO $ genSignature recurlyPrivateKey [("account[account_code]", show $ ppAccountCode plan)]
-          -- we should be syncing somewhere else
           esub <- liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show $ ppAccountCode plan
           einvoices <- liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey (show $ ppAccountCode plan)
           msub <- case esub of
@@ -132,9 +132,6 @@ handleSyncNewSubscriptionWithRecurly = do
         readField "account_code"
   user <- pguardM' "handleSyncNewSubscriptionWithRecurly: No user logged in." $ 
           ctxmaybeuser <$> getContext
-  --mcompany <- case usercompany user of
-  --  Nothing -> return Nothing
-  --  Just cid -> dbQuery $ GetCompany cid
   subscriptions <- pguardM "handleSyncNewSubscriptionWithRecurly" $ 
                    liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show ac
   subscription <- pguard' "handleSyncNewSubscriptionWithRecurly: No subscription." $ 
@@ -144,8 +141,6 @@ handleSyncNewSubscriptionWithRecurly = do
   let is = maybe "collected" inState $ listToMaybe invoices
   let eid = maybe (Left $ userid user) Right $ usercompany user
   _ <- cachePlan time Stats.SignupAction ac subscription is eid Nothing Nothing
-  -- now we send email with push notification
-  -- sendInvoiceEmail user mcompany subscription
   return ()
 
 handleChangePlan :: Kontrakcja m => m ()
@@ -358,14 +353,89 @@ handleRecurlyPostBack = do
     Just ps -> postBackCache ps
     _       -> return ()
     
-handlePricePageJSON :: Kontrakcja m => m JSValue
-handlePricePageJSON = do
-  Log.payments $ "Handling Price Page JSON"
+-- do I need this?
+handlePricePageUserPlanRecurlyJSON :: Kontrakcja m => User -> PaymentPlan -> m JSValue
+handlePricePageUserPlanRecurlyJSON user plan = do
+  Log.payments $ "Handling Price Page JSON for existing user with payment plan on recurly"
+  RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
+  billingsig  <- liftIO $ genSignature recurlyPrivateKey [("account[account_code]", show $ ppAccountCode plan)]
+  esub <- liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show $ ppAccountCode plan
+  einvoices <- liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey (show $ ppAccountCode plan)
+  msub <- case esub of
+    Left e -> do
+      Log.payments $ "handleSubscriptionDashboardInfo: When fetching subscriptions for payment plan: " ++ e
+      return Nothing
+    Right (sub:_) -> return $ Just sub
+    Right _ -> do
+      Log.payments $ "handleSubscriptionDashboardInfo: No subscriptions returned."
+      return Nothing
+  minvoices <- case einvoices of
+    Left e -> do
+      Log.payments $ "handleSubscriptionDashboardInfo: When fetching invoices for payment plan: " ++ e
+      return Nothing
+    Right i -> return $ Just i
+  runJSONGenT $ do
+    J.value "type"         $ "planrecurly"
+    J.value "subscription" $ msub
+    J.value "invoices"     $ minvoices
+    J.value "subdomain" recurlySubdomain
+    J.value "accountCode"  $ show $ ppAccountCode plan
+    J.value "paidPlan"     $ show $ ppPricePlan plan    
+    J.value "status"       $ show $ ppStatus plan
+    J.value "firstName"    $ getFirstName user
+    J.value "lastName"     $ getLastName user
+    J.value "email"        $ getEmail user
+    J.value "billingSig" billingsig
+    J.value "provider" "recurly"
+
+handlePricePageUserPlanNoneJSON :: Kontrakcja m => User -> PaymentPlan -> m JSValue
+handlePricePageUserPlanNoneJSON user plan = do
+  Log.payments $ "Handling Price Page JSON for existing user with payment plan no provider"
+  mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany user
+  quantity <- (maybe (return 1) (dbQuery . GetCompanyQuantity) $ usercompany user)
+  runJSONGenT $ do
+    J.value "type"        $ "plannone"
+    J.value "accountCode" $ show $ ppAccountCode plan
+    J.value "firstName"   $ getFirstName user
+    J.value "lastName"    $ getLastName user
+    J.value "email"       $ getEmail user
+    J.value "companyName" $ getCompanyName (user, mcompany)        
+    J.value "paidPlan"    $ show $ ppPricePlan plan
+    J.value "status"      $ show $ ppStatus plan
+    J.value "provider"    $ "none"
+    J.value "quantity"    $ quantity
+
+handlePricePageUserJSON :: Kontrakcja m => User -> m JSValue
+handlePricePageUserJSON user = do
+  Log.payments $ "Handling Price Page JSON for existing user"
+  RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
+  code <- dbUpdate GetAccountCode
+  teamsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "team")]
+  formsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "form")]
+  mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany user
+  runJSONGenT $ do
+    J.value "type"      "user"
+    J.value "subdomain" recurlySubdomain
+    J.value "accountCode" $ show code
+    J.value "firstName" $ getFirstName user
+    J.value "lastName" $ getLastName user
+    J.value "email" $ getEmail user
+    J.value "companyName" $ getCompanyName (user, mcompany)    
+    J.object "plans" $ do
+      J.object "team" $ do
+        J.value "signature" teamsig
+      J.object "form" $ do
+        J.value "signature" formsig
+    
+handlePricePageNoUserJSON :: Kontrakcja m => m JSValue
+handlePricePageNoUserJSON = do
+  Log.payments $ "Handling Price Page JSON for non-existing user"
   RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
   code <- dbUpdate GetAccountCode
   teamsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "team")]
   formsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "form")]
   runJSONGenT $ do
+    J.value "type"      "nouser"
     J.value "subdomain" recurlySubdomain
     J.value "accountCode" $ show code
     J.object "plans" $ do
@@ -374,6 +444,19 @@ handlePricePageJSON = do
       J.object "form" $ do
         J.value "signature" formsig
     
+handlePricePageJSON :: Kontrakcja m => m JSValue
+handlePricePageJSON = do
+  muser <- ctxmaybeuser <$> getContext
+  mplan <- maybe (return Nothing) (dbQuery . GetPaymentPlan . toEID) muser
+  case (muser, mplan, ppPaymentPlanProvider $ fromJust mplan) of
+    (Nothing  , _        , _)               -> handlePricePageNoUserJSON
+    (Just user, Nothing  , _)               -> handlePricePageUserJSON user
+    (Just user, Just plan, NoProvider)      -> handlePricePageUserPlanNoneJSON user plan
+    (Just user, Just plan, RecurlyProvider) -> handlePricePageUserPlanRecurlyJSON user plan
+        
+toEID :: User -> Either UserID CompanyID
+toEID user = maybe (Left (userid user)) Right (usercompany user)
+
 handleUserExists :: Kontrakcja m => m JSValue
 handleUserExists = do
   email <- pguardM' "handleUserExists: email must exist." $ 
@@ -397,7 +480,7 @@ handleSyncNewSubscriptionWithRecurlyOutside = do
   RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
   time <- ctxtime <$> getContext
   ac <- pguardM' "handleSyncNewSubscriptionWithRecurlyOutside: account_code must exist and be an integer." $ 
-        readField "account_code"
+        readField "accountCode"
   email <- pguardM' "handleSyncNewSubscriptionWithRecurlyOutside: email must exist." $ 
         getField "email"
   user <- pguardM' "handleSyncNewSubscriptionWithRecurlyOutside: user does not exist." $
@@ -452,46 +535,6 @@ fromRecurlyPricePlan "team"         = TeamPricePlan
 fromRecurlyPricePlan "form"         = FormPricePlan
 fromRecurlyPricePlan _              = TeamPricePlan
   
-instance ToJSValue Subscription where
-  toJSValue (Subscription{..}) = runJSONGen $ do
-    case subState of
-      "expired" -> do
-        J.value "plan_name" "Free"
-        J.value "plan_code" "free"
-        J.value "unit_amount_in_cents" (0 :: Int)
-      _ -> do
-        J.value "plan_name" subName
-        J.value "plan_code" subPricePlan
-        J.value "unit_amount_in_cents" subUnitAmountInCents
-    J.value "quantity"  subQuantity
-    J.value "currency"  subCurrency
-    J.value "activated" subActivateDate
-    J.value "cancelled" subCancelledDate
-    J.value "billing_started" subCurrentBillingStarted
-    J.value "billing_ends" subCurrentBillingEnds
-    case subState of
-      "canceled" -> J.value "pending" $ PendingSubscription { penName = "Free"
-                                                            , penPricePlan = "free"
-                                                            , penUnitAmountInCents = 0
-                                                            , penQuantity = subQuantity }
-      _ -> J.value "pending" $ subPending
-    
-instance ToJSValue PendingSubscription where
-  toJSValue (PendingSubscription{..}) = runJSONGen $ do
-    J.value "plan_name" penName
-    J.value "plan_code" penPricePlan
-    J.value "unit_amount_in_cents" penUnitAmountInCents
-    J.value "quantity" penQuantity
-
-instance ToJSValue Invoice where
-  toJSValue (Invoice{..}) = runJSONGen $ do
-    J.value "invoice_number" inNumber
-    J.value "total_in_cents" inTotalInCents
-    J.value "currency"       inCurrency
-    J.value "state"          inState
-    J.value "account_code"   inAccount
-    J.value "date"           inDate
-    
 -- factor out error logging
 pguard :: (MonadBase IO m, MonadIO m) => String -> Either String a -> m a
 pguard _   (Right v) = return v

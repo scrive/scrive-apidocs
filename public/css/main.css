@@ -762,13 +762,6 @@ a.new-btn-small.black p {
     border-radius: 5px 5px 5px 5px;
 }
 
-.body-container .price-plan {
-	height: 404px;
-	position: absolute;
-	width: 938px;
-	z-index: 1;
-}
-
 .body-container .price-plan th {
 	height: 67px;
 	padding: 10px 0;

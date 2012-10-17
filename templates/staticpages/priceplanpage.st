@@ -14,7 +14,7 @@ priceplanPage=
     </html>
 ###
 priceplanPageContents=
-<div class="js-price-plan price-plan-outside"></div>
+<div class="js-price-plan price-plan"></div>
 
 <script>
   PricePage({}).show('.js-price-plan');

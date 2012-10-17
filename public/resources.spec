@@ -147,5 +147,4 @@ set systemPage
  js   js/account/account.js
  js   js/blocking.js
  js   js/oauth.js
- js   js/paymentsoutside.js
 

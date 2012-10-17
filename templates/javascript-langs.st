@@ -801,21 +801,27 @@ javascriptLocalisation =
            , passwordReminderSend : "$_flashMessageChangePasswordEmailSend()$"
 
       }
-        , blocking : {
-           users : {
-             free     : "$_blockingUsersFree()$",
-             notTeam  : "$_blockingUsersNotTeam()$",
-             noneLeft : "$_blockingUsersNoneLeft()$",
-             overdue  : "$_blockingUsersOverdue()$"
-           },
-           branding : {
-             free    : "$_blockingBrandingFree()$",
-             notTeam : "$_blockingBrandingNotTeam()$",
-             overdue : "$_blockingBrandingOverdue()$",
-             companyfree    : "$_blockingBrandingCompanyFree()$",
-             companyoverdue : "$_blockingBrandingCompanyOverdue()$",
-             companyNotTeam : "$_blockingBrandingCompanyProf()$"
-           },
+      , blocking : {
+          free: {
+            create : {
+              title  : "$_blockingFreeCreateTitle()$",
+              header : "$_blockingFreeCreateHeader()$"
+            },
+            csv : {
+              title  : "$_blockingFreeCSVTitle()$",
+              header : "$_blockingFreeCSVHeader()$"
+            }
+          },
+          overdue : {
+            create : {
+              title : "$_blockingOverdueCreateTitle()$",
+              body  : "$_blockingOverdueCreateBody()$"
+            },
+            csv : {
+              title : "$_blockingOverdueCSVTitle()$",
+              body  : "$_blockingOverdueCSVBody()$"
+            }
+          },
            create : {
              noneLeftFree  : "$_blockingCreateNoneLeftFree()$",
              noneLeftBlock : "$_blockingCreateNoneLeftBlock()$",
