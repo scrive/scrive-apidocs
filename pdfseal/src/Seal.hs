@@ -359,9 +359,9 @@ makeXObjectImageIfNeeded field@(FieldJPG{ SealSpec.valueBase64 = val
                     , entryn "Height" internal_image_h
                     ] ++ (case keyColor of
                            Nothing -> []
-                           Just (r,g,b) -> [ entryna "Mask" [ max (r-50) 0, min (r+50) 255
-                                                            , max (g-50) 0, min (g+50) 255
-                                                            , max (b-50) 0, min (b+50) 255
+                           Just (r,g,b) -> [ entryna "Mask" [ max (r-10) 0, min (r+10) 255
+                                                            , max (g-10) 0, min (g+10) 255
+                                                            , max (b-10) 0, min (b+10) 255
                                                             ]]))
   let streamData = BSL.fromChunks [Base64.decodeLenient (BS.pack val)]
   refid' <- addStream dict' streamData
