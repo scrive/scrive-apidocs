@@ -29,6 +29,7 @@ import ForkAction
 import Kontra
 import Utils.IO
 import Utils.Read
+import Utils.String
 import Prelude hiding (catch)
 import System.Directory
 import System.Exit
@@ -55,7 +56,7 @@ instance GuardRight FileError where
 
 scaleForPreview :: BS.ByteString -> IO BS.ByteString
 scaleForPreview image = withSystemTempDirectory "preview" $ \tmppath -> do
-    let fpath = tmppath ++ "/source.jpg"
+    let fpath = tmppath ++ "/source.png"
     BS.writeFile fpath image
     (_,_,_, resizer) <- createProcess $  proc "convert" ["-scale","190x270!", fpath, fpath]
     resizerexitcode <- waitForProcess resizer
@@ -69,77 +70,40 @@ scaleForPreview image = withSystemTempDirectory "preview" $ \tmppath -> do
    Convert PDF to jpeg images of pages
  -}
 convertPdfToJpgPages :: (KontraMonad m, MonadDB m)
-                     => String
-                     -> FileID
+                     => FileID
                      -> Int
                      -> m JpegPages
-convertPdfToJpgPages gs fid widthInPixels = do
+convertPdfToJpgPages fid widthInPixels = do
   content <- getFileIDContents fid
-  liftIO $ withSystemTempDirectory "pdf2jpeg" $ \tmppath -> do
+  liftIO $ withSystemTempDirectory "pdf2png" $ \tmppath -> do
     let sourcepath = tmppath ++ "/source.pdf"
 
     BS.writeFile sourcepath content
 
-    let (pageWidth,pageHeight) = getPageSizeOfPDFInPoints content
+    (exitcode,outcontent,errcontent) <-
+      liftIO $ readProcessWithExitCode' "mudraw"
+               [ "-o", tmppath ++ "/output-%d.png"
+               , "-w", show widthInPixels
+               , "-b", "8"
+               , sourcepath
+               ] BSL.empty
 
-    -- Resultion in PDF should be interpreted as follows:
-    --
-    -- Dimensions in PDF are in printers points, where 1pt is 1/72 of
-    -- 1 inch.  This is real world size. Wise men established that
-    -- screen is considered to have 72dpi, that is 72 dots (pixels)
-    -- per inch. Therefore rendering at resolution 72 maps 1pt to
-    -- 1pixel.
-    --
-    -- To get an image that has width BITMAP_W (in pixels) we need to
-    -- know PAGE_W (in points) and do the resolution calculation:
-    --
-    -- RESOLUTON = BITMAP_W/PAGE_W*72
-    --
-    -- See that if BITMAP_W and PAGE_W are equal then RESOLUTON is the
-    -- default 72. See also that if BITMAP_W grows then RESOLUTON
-    -- grows too.
-    --
-    -- Bitmap height accommodates to preserve aspect ratio.
-
-    let resolution = fromIntegral widthInPixels / pageWidth * 72
-
-    let gsproc = (proc gs [ "-sDEVICE=jpeg"
-                          , "-sOutputFile=" ++ tmppath ++ "/output-%d.jpg"
-                          , "-dSAFER"
-                          , "-dBATCH"
-                          , "-dNOPAUSE"
-                          , "-sFONTPATH=/opt/fonts"
-                          , "-dTextAlphaBits=4"
-                          , "-dGraphicsAlphaBits=4"
-                          , "-r" ++ show resolution
-                          , sourcepath
-                          ]) { std_out = CreatePipe
-                             , std_err = CreatePipe
-                             }
-    (_, Just outhandle, Just errhandle, gsProcHandle) <- createProcess gsproc
-    errcontent <- BS.hGetContents errhandle
-    outcontent <- BS.hGetContents outhandle
-
-    exitcode <- waitForProcess gsProcHandle
- 
-    let pathOfPage n = tmppath ++ "/output-" ++ show n ++ ".jpg"
+    let pathOfPage n = tmppath ++ "/output-" ++ show n ++ ".png"
     let readPagesFrom n = (do
                        contentx <- BS.readFile (pathOfPage n)
                        followingPages <- readPagesFrom (n+1 :: Int)
-                       let w = widthInPixels
-                           h = round $ pageHeight * fromIntegral w / pageWidth
-                       return $ (contentx, w, h) : followingPages)
+                       return $ (contentx, widthInPixels, widthInPixels * 842 `div` 595) : followingPages)
              `catch` \(_ :: SomeException) -> return []
 
     result <- case exitcode of
       ExitFailure _ -> do
         systmp <- getTemporaryDirectory
-        (path,handle) <- openTempFile systmp ("pdf2jpg-failed-" ++ show fid ++ "-.pdf")
-        Log.error $ "Cannot pdf2jpg of file #" ++ show fid ++ ": " ++ path
+        (path,handle) <- openTempFile systmp ("pdf2png-failed-" ++ show fid ++ "-.pdf")
+        Log.error $ "Cannot pdf2png of file #" ++ show fid ++ ": " ++ path
         BS.hPutStr handle content
         hClose handle
 
-        return $ JpegPagesError (errcontent `BS.append` outcontent)
+        return $ JpegPagesError (concatChunks errcontent `BS.append` concatChunks outcontent)
       ExitSuccess -> do
         pages <- readPagesFrom 1
         return (JpegPages pages)
@@ -152,7 +116,7 @@ maybeScheduleRendering :: Kontrakcja m
                        => FileID
                        -> m JpegPages
 maybeScheduleRendering fileid = do
-  Context{ctxgscmd,ctxnormalizeddocuments} <- getContext
+  Context{ctxnormalizeddocuments} <- getContext
 
   -- Some debugs
   Log.debug $ "Rendering is being scheduled for file #" ++ show fileid
@@ -166,11 +130,11 @@ maybeScheduleRendering fileid = do
       Nothing -> do
           MemCache.put fileid JpegPagesPending ctxnormalizeddocuments
           forkAction ("Rendering file #" ++ show fileid) $ do
-                   jpegpages <- convertPdfToJpgPages ctxgscmd fileid 943            -- FIXME: We should report error somewere
+                   jpegpages <- convertPdfToJpgPages fileid 943            -- FIXME: We should report error somewere
                    MemCache.put fileid jpegpages ctxnormalizeddocuments
           return JpegPagesPending
 
-  
+
 data FileError = FileSizeError Int Int
                | FileFormatError
                | FileNormalizeError BSL.ByteString
@@ -181,11 +145,10 @@ data FileError = FileSizeError Int Int
 instance Error FileError where
     strMsg = FileOtherError
 
-preCheckPDFHelper :: String
-                  -> BS.ByteString
+preCheckPDFHelper :: BS.ByteString
                   -> String
                   -> IO (Either FileError BS.ByteString)
-preCheckPDFHelper gscmd content tmppath =
+preCheckPDFHelper content tmppath =
     runErrorT $ do
       checkSize
       checkHeader
@@ -242,14 +205,11 @@ preCheckPDFHelper gscmd content tmppath =
     checkNormalize = do
       liftIO $ BS.writeFile sourcepath content
 
-      (exitcode,_stdout,stderr1) <- liftIO $ readProcessWithExitCode' gscmd 
-                                   [ "-sDEVICE=pdfwrite"
-                                   , "-sOutputFile=" ++ normalizedpath
-                                   , "-sFONTPATH=/opt/fonts"
-                                   , "-dSAFER"
-                                   , "-dBATCH"
-                                   , "-dNOPAUSE"
+      (exitcode,_stdout,stderr1) <- liftIO $ readProcessWithExitCode' "mubusy"
+                                   [ "clean"
+                                   , "-ggg"
                                    , sourcepath
+                                   , normalizedpath
                                    ] BSL.empty
       when (exitcode /= ExitSuccess ) $ do
         liftIO $ do
@@ -275,7 +235,7 @@ preCheckPDFHelper gscmd content tmppath =
          liftIO $ BS.writeFile normalizedpath content
 
     checkSealing = do
-      (exitcode,_stdout,stderr1) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" 
+      (exitcode,_stdout,stderr1) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal"
                                    [] (BSL.pack (show sealSpec))
       when (exitcode /= ExitSuccess ) $ do
         liftIO $ do
@@ -310,9 +270,9 @@ preCheckPDFHelper gscmd content tmppath =
 preCheckPDF :: String
             -> BS.ByteString
             -> IO (Either FileError Binary)
-preCheckPDF gscmd content =
+preCheckPDF _gscmd content =
   withSystemTempDirectory "precheck" $ \tmppath -> do
-    value <- preCheckPDFHelper gscmd content tmppath
+    value <- preCheckPDFHelper content tmppath
       `E.catch` \(e::IOError) -> return (Left (FileOtherError (show e)))
     case value of
       Left x -> Log.error $ "preCheckPDF: " ++ show x
