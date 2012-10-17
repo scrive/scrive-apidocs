@@ -27,6 +27,7 @@ addBarackObamaField = do
          , y = 7 / 1085
          , page = 1
          , includeInSummary = True
+         , keyColor = Just (255,255,255)
          }
 
 sealspec :: String -> SealSpec

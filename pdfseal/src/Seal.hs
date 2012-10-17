@@ -309,54 +309,73 @@ tellMatrix a b c d e f =
 -- upper left corner.  The internal_image_w and internal_image_h are
 -- in image pixels. Usually these are equal to image_w and image_h,
 -- but we have the machinery to scale should it be needed.
-commandsFromFields :: Int -> Int -> [Field] -> String
+commandsFromFields :: Int -> Int -> [(Field,[RefID])] -> String
 commandsFromFields pagew pageh fields = concatMap commandsFromField fields
   where
     fontBaseline = 0.8
-    commandsFromField Field{ SealSpec.value = val
-                   , x
-                   , y
-                   , fontSize
-                   } = execWriter $ do
-                         tell "q\n"
-                         tellMatrix 1 0 0 1
+    commandsFromField ( Field{ SealSpec.value = val
+                             , x
+                             , y
+                             , fontSize
+                             }
+                      , _) = execWriter $ do
+                               tell "q\n"
+                               tellMatrix 1 0 0 1
                                       (x * fromIntegral pagew)
                                       (((1 - y) * fromIntegral pageh) - fontBaseline * fontSize * fromIntegral pagew)
-                         tell "BT\n"
-                         tell $ "/SkrivaPaHelvetica " ++ show (Number (fontSize * fromIntegral pagew)) ++ " Tf\n"
-                         tell $ "(" ++ winAnsiPostScriptEncode val ++ ") Tj\n"
-                         tell "ET\n"
-                         tell "Q\n"
+                               tell "BT\n"
+                               tell $ "/SkrivaPaHelvetica " ++ show (Number (fontSize * fromIntegral pagew)) ++ " Tf\n"
+                               tell $ "(" ++ winAnsiPostScriptEncode val ++ ") Tj\n"
+                               tell "ET\n"
+                               tell "Q\n"
 
-    commandsFromField FieldJPG{ SealSpec.valueBase64 = val } | null val = ""
-    commandsFromField FieldJPG{ SealSpec.valueBase64 = val
-                   , x
-                   , y
-                   , image_w, image_h
-                   , internal_image_w, internal_image_h
-                   } = execWriter $ do
+    commandsFromField (FieldJPG{ SealSpec.valueBase64 = val },_) | null val = ""
+    commandsFromField (FieldJPG{ x
+                               , y
+                               , image_w, image_h
+                               }
+                      ,[imgid]) = execWriter $ do
                          tell "q\n"
                          tellMatrix (image_w * fromIntegral pagew)
                                     0 0
                                     (image_h * fromIntegral pageh)
                                     (x * fromIntegral pagew)
                                     ((1 - y - image_h) * fromIntegral pageh)
-                         tell "BI\n"        -- begin image
-                         tell "/BPC 8\n"    -- 8 bits per pixel
-                         tell "/CS /RGB\n"  -- color space is RGB
-                         tell "/F /DCT\n"   -- filter is DCT, that means JPEG
-                         tell $ "/H " ++ show internal_image_h ++ "\n"  -- height is pixels
-                         tell $ "/W " ++ show internal_image_w ++ "\n"  -- width in pixels
-                         tell "ID "         -- image data follow
-                         tell $ BS.unpack (Base64.decodeLenient (BS.pack val)) ++ "\n"
-                         tell "EI\n"        -- end image
+                         tell $ "/SkrivaPa_" ++ show (objno imgid) ++ "_" ++ show (gener imgid) ++ " Do\n"
                          tell "Q\n"
+    commandsFromField _ = "" -- ignoring broken field specification
+
+makeXObjectImageIfNeeded :: Field -> State Document (Field,[RefID])
+makeXObjectImageIfNeeded field@(FieldJPG{ SealSpec.valueBase64 = val
+                                       , internal_image_w
+                                       , internal_image_h
+                                       , keyColor
+                                       }) = do
+  let dict' = dict ([ entry "Subtype" "Image"
+                    , entry "ColorSpace" "DeviceRGB"
+                    , entry "Filter" "DCTDecode"
+                    , entryn "BitsPerComponent" (8::Int)
+                    , entryn "Width" internal_image_w
+                    , entryn "Height" internal_image_h
+                    ] ++ (case keyColor of
+                           Nothing -> []
+                           Just (r,g,b) -> [ entryna "Mask" [ max (r-50) 0, min (r+50) 255
+                                                            , max (g-50) 0, min (g+50) 255
+                                                            , max (b-50) 0, min (b+50) 255
+                                                            ]]))
+  let streamData = BSL.fromChunks [Base64.decodeLenient (BS.pack val)]
+  refid' <- addStream dict' streamData
+  return (field,[refid'])
+makeXObjectImageIfNeeded field = do
+  return (field,[])
 
 placeFieldsAndPagina :: SealSpec -> [Field] -> RefID -> RefID -> State Document ()
 placeFieldsAndPagina sealSpec fields paginrefid sealmarkerformrefid = do
     pages <- gets listPageRefIDs
 
-    let findFields pageno = filter (\x -> page x == pageno) fields
+    fieldsWithIndirectObjs <- mapM makeXObjectImageIfNeeded fields
+
+    let findFields pageno = filter (\(field,_) -> page field == pageno) fieldsWithIndirectObjs
     let contentCommands pageno = \pagew pageh ->
            commandsFromFields pagew pageh (findFields pageno) ++
            paginCommands pagew sealSpec
@@ -365,8 +384,11 @@ placeFieldsAndPagina sealSpec fields paginrefid sealmarkerformrefid = do
 
     document' <- get
 
+    let makeEntry rd = entry ("SkrivaPa_" ++ show (objno rd) ++ "_" ++ show (gener rd)) rd
     let newres = mergeResources document' paginresdict
-                        ([(BS.pack "XObject", Dict [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)])])
+                        [ entry "XObject" $ dict (entry "SealMarkerForm" sealmarkerformrefid
+                                                  : (map makeEntry . concatMap snd) fieldsWithIndirectObjs)
+                        ]
     mapM_ (uncurry $ placeContentOnPage newres)
             [(page,contentCommands pageno) | (page,pageno) <- zip pages [1..]]
 
@@ -389,12 +411,22 @@ appendVerificationPages sealrefid sealtexts sealmarkerformrefid = do
 placeFields :: [Field] -> RefID -> State Document ()
 placeFields fields paginrefid = do
     pages <- gets listPageRefIDs
-    let findFields pageno = filter (\x -> page x == pageno) fields
+
+    fieldsWithIndirectObjs <- mapM makeXObjectImageIfNeeded fields
+
+    let findFields pageno = filter (\(field,_) -> page field == pageno) fieldsWithIndirectObjs
+
     let contentCommands pageno = \pagew pageh ->
            commandsFromFields pagew pageh (findFields pageno)
 
     paginresdict <- getResDict paginrefid
-    mapM_ (uncurry $ placeContentOnPage paginresdict)
+    document' <- get
+
+    let makeEntry rd = entry ("SkrivaPa_" ++ show (objno rd) ++ "_" ++ show (gener rd)) rd
+    let newres = mergeResources document' paginresdict
+                        [ entry "XObject" $ dict $ (map makeEntry . concatMap snd) fieldsWithIndirectObjs
+                        ]
+    mapM_ (uncurry $ placeContentOnPage newres)
             [(page,contentCommands pageno) | (page,pageno) <- zip pages [1..]]
 
 contentsValueListFromPageID :: RefID -> State Document [RefID]

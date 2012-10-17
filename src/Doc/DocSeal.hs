@@ -151,6 +151,7 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signato
                  , Seal.internal_image_w = 16
                  , Seal.internal_image_h = 16
                  , Seal.includeInSummary = False
+                 , Seal.keyColor         = Nothing
                  }    
     fieldJPEGFromPlacement v placement =
       case split "|" v of
@@ -172,6 +173,7 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signato
                  , Seal.internal_image_w = 4 * wi
                  , Seal.internal_image_h = 4 * hi
                  , Seal.includeInSummary = True
+                 , Seal.keyColor         = Just (255,255,255) -- white is transparent
                  }
         _ -> Nothing
 
