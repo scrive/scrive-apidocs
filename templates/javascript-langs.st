@@ -153,11 +153,10 @@ javascriptLocalisation =
             , uploadedAttachments: "$_uploadedAttachments()$"
             , waitingForAttachment: "$_waitingForAttachment()$"
             , templateTitle : "$_signStepsTitleRowTextContainerIfTemplate()$"
-            , step1select : "$_step1select()$"
+            , step1template : "$_step1selectIfTemplate()$"
+            , step1normal   : "$_step1selectIfElse()$"
             , step2template : "$_step2selectIfTemplate()$"
-            , step2normal   : "$_step2selectIfElse()$"
-            , step3template : "$_step3selectIfTemplate()$"
-            , step3normal   : "$_step3selectIfNotTemplate()$"
+            , step2normal   : "$_step2selectIfNotTemplate()$"
             , saveAsTemplate : "$_signStepsMenuEmptyStepSaveAsTemplate()$"
             , saveTemplate : "$_signStepsBodyFunctionssaveTemplate()$"
             , skrivapa : "$_skrivapa()$"
@@ -357,7 +356,6 @@ javascriptLocalisation =
            }
          , designview : {
               selectprocess : "$_selectDocumentType()$",
-              orSelectFromTemplate : "$_orSelectFromTemplate()$",
               validation : {
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
                     , missingNames:  "$_missingSignatoryNames()$"
@@ -370,6 +368,7 @@ javascriptLocalisation =
                     , notReadyField : "$_setAllFields()$"
                     , notPlacedField : "$_placeAllFields()$"
                     , notPlacedSignature : "$_signatureMustBePlacedForPad()$"
+                    , fileMustBeAdded : "$_fileMustBeAdded()$"
                 }
              , authentication : {
                       selectmethod: "$_signStepsBodyFunctionsBoxChooseAuthentication()$"
@@ -438,13 +437,6 @@ javascriptLocalisation =
               logMeIn : "$_login()$"
          }
          , cancel : "$_cancel()$"
-         , changemainfile : {
-             choosefile: "$_ChangeMainFileUpload()$"
-            ,choosetemplate: "$_ChangeMainFileTemplate()$"
-            ,choosetemplatebutton: "$_ChangeMainFileTemplateButton()$"
-            ,templatesaved: "$_signStepsBodyUploadBoxStep1TemplateSaved()$"
-            ,uploadinfo: "$_uploadprompttext()$"
-         }
          , docsignview : {
                followArrowToSign: "$_followArrowToSign()$"
              , followArrowToReview: "$_followArrowToReview()$"

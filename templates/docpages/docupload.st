@@ -1,20 +1,8 @@
 ####    Pages for documents - main part of system
 uploadPage=
-<div class="tab-viewer">
-<div class="tab-viewer-header" class="uploading">
-  <script type="text/javascript">
-    jQuery(UploadProcessMain);
-  </script>
-  <div class="tab-viewer-header-title">
-  </div>
-  <div class="signStepsBody">
-
-<table style="width:100%" >
-  <tbody>
-  </tbody>
-</table>
-<!-- MAIN FROM END HERE -->
-</div>
-</div>
-</div>
+<div class="upload-view"></div>
+<script type="text/javascript">
+    var upm = new UploadProcessMain();
+    jQuery('.upload-view').append(jQuery(upm.el()).addClass('signStepsBody'));
+</script>
 ####

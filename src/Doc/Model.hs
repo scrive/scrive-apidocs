@@ -19,6 +19,7 @@ module Doc.Model
   , ArchiveDocument(..)
   , AttachCSVUpload(..)
   , AttachFile(..)
+  , DetachFile(..)
   , AttachSealedFile(..)
   , CancelDocument(..)
   , ChangeSignatoryEmailWhenUndelivered(..)
@@ -1015,6 +1016,23 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachFile Bool where
         a
     return success
 
+
+data DetachFile = DetachFile DocumentID Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m DetachFile Bool where
+  update (DetachFile did a) = do
+    let time = actorTime a
+    success <- kRun01 $ mkSQL UPDATE tableDocuments [
+        sql "mtime" time
+      , sql "file_id" $ (Nothing :: Maybe FileID)
+      ] <> SQL "WHERE id = ? AND status = ?" [toSql did, toSql Preparation]
+    when_ success $ do
+      update $ InsertEvidenceEvent
+        DetachFileEvidence
+        (value "actor" (actorWho a))
+        (Just did)
+        a
+    return success
+    
 data AttachSealedFile = AttachSealedFile DocumentID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile Bool where
   update (AttachSealedFile did fid actor) = do

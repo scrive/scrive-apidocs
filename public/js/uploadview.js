@@ -261,7 +261,6 @@
     window.UploadProcessMain = function(){
         var wizard = new Wizard;
         var wizardview = new WizardView({model: wizard});
-        wizardview.el = $(".signStepsBody table tbody");
         window.UploadWizardView = wizardview;
 
         var up = new WizardStep;
@@ -274,6 +273,9 @@
         wizard.addStep(tmp);
 
         wizardview.render();
+        return {
+          el : function() {return wizardview.el;}
+        }
 
     };
 })(window);

@@ -61,6 +61,7 @@ import InputValidation
 import Doc.API.Callback.Model
 import qualified Data.ByteString.Base64 as B64
 import Text.JSON.Gen
+import MinutesTime
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = choice [
@@ -98,7 +99,7 @@ apiCallCreateFromFile = api $ do
   let doctype = (Template <| isTpl |> Signable) dtype
   minput <- lift $ getDataFn' (lookInput "file")
   (mfile, title) <- case minput of
-    Nothing -> return (Nothing, "")
+    Nothing -> return (Nothing, ("New document " <| isTpl |> "New template ") ++ formatMinutesTimeUTC (ctxtime ctx))
     Just (Input _ Nothing _) -> throwError $ badInput "Missing file"
     Just (Input contentspec (Just filename') _contentType) -> do
       let filename = takeBaseName filename'
@@ -304,7 +305,7 @@ documentChangeMainFile docid = api $ do
   fileinput <- lift $ getDataFn' (lookInput "file")
   templateinput <- lift $ getDataFn' (look "template")
 
-  fileid <- case (fileinput, templateinput) of
+  mfileid <- case (fileinput, templateinput) of
             (Just (Input contentspec (Just filename') _contentType), _) -> do
               content1 <- case contentspec of
                 Left filepath -> liftIO $ BSL.readFile filepath
@@ -315,14 +316,16 @@ documentChangeMainFile docid = api $ do
               content <- apiGuardL (badInput "PDF precheck failed.") $ liftIO $ preCheckPDF (concatChunks content1)
               let filename = cleanFileName filename'
 
-              fileid <$> (dbUpdate $ NewFile filename content)
+              Just . fileid <$> (dbUpdate $ NewFile filename content)
             (_, Just templateids) -> do
               templateid <- apiGuard (badInput $ "Template id in bad format: " ++ templateids) $ maybeRead templateids
               temp <- apiGuardL' $ getDocByDocID templateid
-              apiGuard (badInput "No template found for that id (or you don't have permissions).") $ documentfile temp
-            _ -> throwError $ badInput "This API call requires one of 'file' or 'template' POST parameters."
+              Just <$> (apiGuard (badInput "No template found for that id (or you don't have permissions).") $ documentfile temp)
+            _ -> return Nothing
+  case mfileid of
+    Just  fileid -> apiGuardL' $ dbUpdate $ AttachFile docid fileid aa
+    Nothing -> apiGuardL' $ dbUpdate $ DetachFile docid aa
 
-  _ <- apiGuardL' $ dbUpdate $ AttachFile docid fileid aa
   
   return ()
 

@@ -128,7 +128,6 @@ set systemPage
  js   js/fieldplacementview.js
  js   js/companybranding.js
  js   js/padview.js
- js   js/changemainfile.js
  js   js/fileverifier.js
  js   js/payments.js
  js   js/archive/documents.js

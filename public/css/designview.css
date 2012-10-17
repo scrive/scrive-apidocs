@@ -245,17 +245,25 @@
     padding: 5px 5px 5px 17px;
 }
 
-.authenticationmethodselect select {
+
+.authenticationmethodselect,
+.deliverymethodselect,
+.languageselect,
+.documenttypeselect,
+.finaldateselection,
+.editinvitemessage{
+    height: 25px;
+}
+
+
+.authenticationmethodselect select,
+.deliverymethodselect select,
+.languageselect select,
+.documenttypeselect select{
     margin-left: 5px;
 }
 
-.deliverymethodselect select {
-    margin-left: 5px;
-}
 
-.documenttypeselect select {
-    margin-left: 5px;
-}
 
 .finaldatecheckbox{
     position:relative;

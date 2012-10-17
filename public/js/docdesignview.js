@@ -127,29 +127,7 @@ var DocumentDesignView = Backbone.View.extend({
                      });
         return a;
     },
-    designChangeMainFile: function() {
-      var document = this.model;
-      var box = $("<div class='signStepsBody' />");
 
-      var wizard = new Wizard;
-      var wizardview = new WizardView({model: wizard});
-
-
-      window.UploadWizardView = wizardview;
-
-      var up = new WizardStep;
-      var upview = new ChangeFileUploadView({model: up});
-
-      var tmp = new WizardStep;
-      var tmpview = new ChangeFileTemplateView({model: tmp});
-
-      wizard.addStep(up);
-      wizard.addStep(tmp);
-
-      wizardview.render();
-      box.append(wizardview.el);
-      return box;
-    },
     designStep1: function() {
         var document = this.model;
         var box = $("<div class='signStepsBody'/>");
@@ -175,8 +153,8 @@ var DocumentDesignView = Backbone.View.extend({
 
        var box1 = $("<div class='signStepsBodyPart first'/>");
        box1.append(this.documentTypeSelection());
-       box1.append(this.finalDateSelection());
        box1.append(this.selectLanguageOption());
+       box1.append(this.finalDateSelection());
        this.editInvitationOptionBox = this.editInvitationOption();
        box1.append(this.editInvitationOptionBox);
        box.append(box1).append($("<div class='border'/>"));
@@ -747,27 +725,56 @@ var DocumentDesignView = Backbone.View.extend({
         if (!atLeastOneSignatory)
         {
               FlashMessages.add({color: 'red', content : localization.designview.validation.atLeastOnePersonMustSigns});
-              this.tabs.activate(this.tab2);
+              this.tabs.activate(this.tab1);
               return false;
         }
-
+        if (this.model.mainfile() == undefined)
+        {
+             FlashMessages.add({color: 'red', content : localization.designview.validation.fileMustBeAdded});
+             return false;
+        }
         var mails = _.map(sigs, function(sig) {return sig.email();}).sort();;
         for (var i =0;i< mails.length -1;i++)
                 if (mails[i] == mails[i+1])
                 {
                     FlashMessages.add({color: 'red', content : localization.designview.validation.sameMails});
-                    this.tabs.activate(this.tab2);
+                    this.tabs.activate(this.tab1);
                     return false;
                 }
 
         return true;
     },
     showSignatory : function(sig) {
-        this.tabs.activate(this.tab2);
+        this.tabs.activate(this.tab1);
         this.signatoriesView.showSignatory(sig);
     },
+    removeFileOption : function() {
+      var document = this.model;
+      var icon = $("<span class='float-right' style='margin-right:20px;'><div class='icon delete' style='margin-top:2px;position: absolute;z-index:1 ;cursor:pointer;'/></span>");
+      icon.click(function() {
+        document.save();
+        document.afterSave( function() {
+          new Submit({
+                  method : "POST",
+                  url :  "/api/mainfile/" + document.documentid(),
+                  ajax: true,
+                  onSend: function() {
+                      LoadingDialog.open();
+                  },
+                  ajaxerror: function(d,a){
+                      window.location.reload();
+                  },
+                  ajaxsuccess: function() {
+                      window.location.reload();
+                  }}).send();
+        });          
+        return false;
+      });   
+      return icon;
+    },
     uploadFile : function() {
-        var url = "/api/mainfile/" + KontraDesignDocument.model.id;
+        var document = this.model;
+        var url = "/api/mainfile/" + document.documentid();
         var upbutton = UploadButton.init({
             name: "file",
             width: 130,
@@ -780,77 +787,41 @@ var DocumentDesignView = Backbone.View.extend({
                 this.model.trigger('change');
                 LoadingDialog.close();
             },
-            submit: new Submit({
-                method : "POST",
-                url : url,
-                ajax: true,
-                beforeSend: function() {
-                },
-                onSend: function() {
-                    LoadingDialog.open();
-                },
-                ajaxerror: function(d,a){
-                    if(a === 'parsererror') // file too large
-                        FlashMessages.add({content: localization.fileTooLarge, color: "red"});
-                    else
-                        FlashMessages.add({content: localization.couldNotUpload, color: "red"});
-                    LoadingDialog.close();
-                    this.model.trigger('change');
-                },
-                ajaxsuccess: function() {
-                    SessionStorage.set(KontraDesignDocument.model.documentid(), "step", "2");
-                    window.location.reload();
-                }
-            })
+            onAppend: function(input) {
+              document.save();
+              document.afterSave( function() {
+                  new Submit({
+                    method : "POST",
+                    url : url,
+                    ajax: true,
+                    beforeSend: function() {
+                    },
+                    onSend: function() {
+                        LoadingDialog.open();
+                    },
+                    ajaxerror: function(d,a){
+                        if(a === 'parsererror') // file too large
+                            FlashMessages.add({content: localization.fileTooLarge, color: "red"});
+                        else
+                            FlashMessages.add({content: localization.couldNotUpload, color: "red"});
+                        LoadingDialog.close();
+                        this.model.trigger('change');
+                    },
+                    ajaxsuccess: function() {
+                        window.location.reload();
+                    }
+                  }).addInputs(input).send();
+              });
+            }  
         });
         return upbutton.input();
     },
-
-    selectTemplate: function () {
-            var documentsTable = KontraList().init({
-                name : "Templates table",
-                schema: new Schema({
-                    url: "/docs",
-                    extraParams : { documentType : "Template" },
-                    extraParamsOverwrite: { selectfilter: "[{\"name\":\"process\",\"value\":\"" + KontraDesignDocument.model.process().name().toLowerCase() + "\"}]" },
-                    sorting: new Sorting({ fields: ["title"]}),
-                    paging: new Paging({}),
-                    filtering: new TextFiltering({text: "", infotext: localization.searchTemplate}),
-                    cells : [
-                        new Cell({name: localization.sortTemplate,
-                                  width:"400px",
-                                  field:"title",
-                                  rendering : function(title, _mainrow, listobject) {
-                                      var link = jQuery("<a />").text(title);
-                                      link.click(function(){
-                                          new Submit({
-                                            method : "POST",
-                                            ajax: true,
-                                            url: "/api/mainfile/" + KontraDesignDocument.model.id,
-                                            template: listobject.field("id"),
-                                            ajaxsuccess: function() {
-                                              SessionStorage.set(KontraDesignDocument.model.documentid(), "step", "2");
-                                              window.location.reload();
-                                            }
-                                          }).send();
-                                          return false;
-                                      });
-                                      return link;
-                                  }
-                                 })
-                    ]
-                })
-            });
-            documentsTable.view.render();
-            return $("<td/>").addClass("templateslist").append(documentsTable.view.el);
-    },
-
-    emptyFile : function () {
-        var el = $("<div/>");
-        el.append($(this.uploadFile()));
-        el.append($("<span/>").text(localization.designview.orSelectFromTemplate));
-        el.append(this.selectTemplate());
-        return el;
+    uploadFileOption : function () {
+        var box = $("<div class='document-pages '/>");
+        var subbox = $("<div class='nofilediv'/>");
+        var subsubbox = $("<div class='innerbox'/>");
+        box.append(subbox.append(subsubbox.append($(this.uploadFile()))));
+        return box;
     },
 
     render: function () {
@@ -860,51 +831,40 @@ var DocumentDesignView = Backbone.View.extend({
             return this;
         /* Make title row */
 
-
-
-
         // Sign boxes
         var designbody1 = this.designStep1();
         var designbody2 = this.designStep2();
 
-        var changemainfile = this.designChangeMainFile();
-
-        var fileel = document.mainfile()
-                 ? KontraFile.init({file: document.mainfile()}).view.el
-                 : this.emptyFile();
+        var fileel;
+        if (document.mainfile()) {
+          fileel = $("<div/>");
+          fileel.append(this.removeFileOption()).append(KontraFile.init({file: document.mainfile()}).view.el);
+        }
+        else {
+         fileel = $("<div/>");
+         fileel.append(this.uploadFileOption());
+        }
         this.tabs = new KontraTabs({
             numbers : true,
             title : this.titlerow(),
             tabsTail : (!document.isTemplate()) ?  [this.saveAsTemplateOption()] : undefined ,
             tabs: [
                 this.tab1 = new Tab({
-                    name : localization.step1select,
-                    active :  SessionStorage.get(document.documentid(), "step") == "1",
+                    name  : document.isTemplate() ? localization.step1template : localization.step1normal,
+                    active :  SessionStorage.get(document.documentid(), "step") != "2",
                     onActivate : function() {
-                      KontraDesignDocument.model.save();
-                      SessionStorage.set(document.documentid(), "step", "1");
-                      window.UploadWizardView.model.setStepIndex(0);
-                    },
-                    elems : [
-                      changemainfile
-                            ]
-                  }),
-                this.tab2 = new Tab({
-                    name  : document.isTemplate() ? localization.step2template : localization.step2normal,
-                    active :  SessionStorage.get(document.documentid(), "step") != "1" && SessionStorage.get(document.documentid(), "step") != "3",
-                    onActivate : function() {
-                         SessionStorage.set(document.documentid(), "step", "2");
+                         SessionStorage.set(document.documentid(), "step", "1");
                     },
                     elems : [
                               designbody1,
                               $(fileel)
                             ]
                   }),
-                this.tab3 = new Tab({
-                    name  : document.isTemplate() ? localization.step3template : localization.step3normal,
-                    active :  SessionStorage.get(document.documentid(), "step") == "3",
+                this.tab2 = new Tab({
+                    name  : document.isTemplate() ? localization.step2template : localization.step2normal,
+                    active :  SessionStorage.get(document.documentid(), "step") == "2",
                     onActivate : function() {
-                         SessionStorage.set(document.documentid(), "step", "3");
+                         SessionStorage.set(document.documentid(), "step", "2");
                     },
                     elems : [
                             designbody2,

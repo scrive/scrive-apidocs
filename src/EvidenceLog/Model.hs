@@ -216,7 +216,8 @@ data EvidenceEventType =
   SetPadDeliveryMethodEvidence                    |
   SetAPIDeliveryMethodEvidence                    |
   DeliveryInformationClearedForReminder           |
-  SetDocumentProcessEvidence
+  SetDocumentProcessEvidence                      |
+  DetachFileEvidence
   deriving (Eq, Show, Read, Ord)
 
 instance Convertible EvidenceEventType Int where
@@ -289,6 +290,8 @@ instance Convertible EvidenceEventType Int where
   safeConvert SetAPIDeliveryMethodEvidence                    = return 67
   safeConvert DeliveryInformationClearedForReminder           = return 68
   safeConvert SetDocumentProcessEvidence                      = return 69
+  safeConvert DetachFileEvidence                              = return 70
+
    
 instance Convertible Int EvidenceEventType where
     safeConvert 1  = return AddSigAttachmentEvidence
@@ -360,6 +363,7 @@ instance Convertible Int EvidenceEventType where
     safeConvert 67 = return SetAPIDeliveryMethodEvidence
     safeConvert 68 = return DeliveryInformationClearedForReminder
     safeConvert 69 = return SetDocumentProcessEvidence
+    safeConvert 70 = return DetachFileEvidence
     safeConvert s  = Left ConvertError { convSourceValue = show s
                                        , convSourceType = "Int"
                                        , convDestType = "EvidenceEventType"

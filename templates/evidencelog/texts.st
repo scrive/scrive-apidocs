@@ -155,3 +155,5 @@ DeliveryInformationClearedForReminderText= $name$ mail delivery details cleared,
 ###
 SetDocumentProcessEvidenceText= Document process set to $process$
 ### 
+DetachFileEvidenceText=Main file detatched by $actor$.
+###
