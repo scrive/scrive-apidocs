@@ -111,11 +111,11 @@ apiCallCreateFromFile = api $ do
         Left (LiveDocxSoapError s)-> throwError $ serverError s
         Right res -> return $ BSL.fromChunks [res]       
   pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ liftIO $ do
-                 cres <- preCheckPDF (ctxgscmd ctx) (concatChunks content'')
+                 cres <- preCheckPDF (concatChunks content'')
                  case cres of
                     Right c -> return (Right c)
                     Left m -> case (B64.decode $ (concatChunks content'')) of -- Salesforce hack. Drop this decoding when happstack-7.0.4 is included.
-                                  Right dcontent -> preCheckPDF (ctxgscmd ctx) dcontent
+                                  Right dcontent -> preCheckPDF dcontent
                                   Left _ -> return (Left m)
   file <- dbUpdate $ NewFile filename pdfcontent
   Just doc <- dbUpdate $ NewDocument user mcompany filename doctype 1 actor
@@ -302,7 +302,7 @@ documentChangeMainFile docid = api $ do
 
               -- we need to downgrade the PDF to 1.4 that has uncompressed structure
               -- we use gs to do that of course
-              content <- apiGuardL (badInput "PDF precheck failed.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
+              content <- apiGuardL (badInput "PDF precheck failed.") $ liftIO $ preCheckPDF (concatChunks content1)
               let filename = cleanFileName filename'
 
               fileid <$> (dbUpdate $ NewFile filename content)
@@ -367,7 +367,7 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   -- we use gs to do that of course
   ctx <- getContext
 
-  content <- apiGuardL (badInput "The PDF was invalid.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
+  content <- apiGuardL (badInput "The PDF was invalid.") $ liftIO $ preCheckPDF (concatChunks content1)
 
   file <- dbUpdate $ NewFile (cleanFileName filename) content
   let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) email slid

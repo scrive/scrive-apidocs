@@ -252,25 +252,23 @@ preCheckPDFHelper content tmppath =
 -- uploaded document from user and before it gets into the
 -- database. It does the following:
 --
--- - Checks if the file is not too large
+-- - Checks if the file is not too large.
 --
--- - Checks if beggining bytes
--- are '%PDF-1.' designating a PDF format
+-- - Checks if beggining bytes are '%PDF-1.' designating a PDF format.
 --
--- - Normalizes using GhostScript pdfwrite command. This is required
--- as we need to process 1.4 version documents maksimum and pdfwrite
--- ensures PDF files are in 1.4 (uncompressed structure) form.
+-- - Normalizes using mubusy clean command. This is required as we
+-- need to process 1.4 version documents maximum that have
+-- uncompressed structure.
 --
 -- - Tries to do pdfseal process with empty data, so we know in
--- advance if it did work or not
+-- advance if it did work or not.
 --
 -- Return value is either a 'BS.ByteString' with normalized document
 -- content or 'FileError' enumeration stating what is going on.
 --
-preCheckPDF :: String
-            -> BS.ByteString
+preCheckPDF :: BS.ByteString
             -> IO (Either FileError Binary)
-preCheckPDF _gscmd content =
+preCheckPDF content =
   withSystemTempDirectory "precheck" $ \tmppath -> do
     value <- preCheckPDFHelper content tmppath
       `E.catch` \(e::IOError) -> return (Left (FileOtherError (show e)))

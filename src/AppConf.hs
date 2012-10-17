@@ -26,7 +26,6 @@ data AppConf = AppConf {
   , static             :: FilePath                     -- ^ static files directory
   , amazonConfig       :: Maybe (String,String,String) -- ^ bucket, access key, secret key
   , dbConfig           :: String                       -- ^ postgresql configuration
-  , gsCmd              :: String
   , srConfig           :: String                       -- ^ static resource spec file
   , production         :: Bool                         -- ^ production flag, enables some production stuff, disables some development
   , guardTimeConf      :: GuardTimeConf
@@ -50,7 +49,6 @@ instance Configuration AppConf where
     , static             = "public"
     , amazonConfig       = Nothing
     , dbConfig           = "user='kontra' password='kontra' dbname='kontrakcja'"
-    , gsCmd              = "gs"
     , srConfig           = "public/resources.spec"
     , production         = True
     , guardTimeConf      = GuardTimeConf { guardTimeURL = "http://stamper.guardtime.net/gt-signingservice" }

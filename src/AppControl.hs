@@ -274,7 +274,6 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
         , ctxnormalizeddocuments = docscache appGlobals
         , ctxipnumber = peerip
         , ctxs3action = mkAWSAction appConf
-        , ctxgscmd = gsCmd appConf
         , ctxproduction = production appConf
         , ctxtemplates = localizedVersion userlocale templates2
         , ctxglobaltemplates = templates2

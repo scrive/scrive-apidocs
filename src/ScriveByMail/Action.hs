@@ -276,7 +276,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
 
   let Just doc = mdoc
 
-  content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) pdfBinary
+  content14 <- guardRightM $ liftIO $ preCheckPDF pdfBinary
   file <- dbUpdate $ NewFile title content14
   _ <- guardTrueM $ dbUpdate (AttachFile (documentid doc) (fileid file) actor)
   _ <- dbUpdate $ SetDocumentAuthenticationMethod (documentid doc) StandardAuthentication actor
@@ -522,7 +522,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
   let Just doc = mdoc
 
-  content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) pdfBinary
+  content14 <- guardRightM $ liftIO $ preCheckPDF pdfBinary
   file <- dbUpdate $ NewFile title content14
   _ <- guardTrueM $ dbUpdate (AttachFile (documentid doc) (fileid file) actor)
 

@@ -30,7 +30,6 @@ data Context = Context
     , ctxnormalizeddocuments :: MemCache.MemCache FileID JpegPages -- ^ Rendered jpeg pages
     , ctxipnumber            :: IPAddress -- ^ The ip number of the client.
     , ctxs3action            :: AWS.S3Action -- ^
-    , ctxgscmd               :: String -- ^
     , ctxproduction          :: Bool -- ^ Is this server the production server?
     , ctxtemplates           :: KontrakcjaTemplates -- ^ The set of templates to render text for the ctxlocale
     , ctxglobaltemplates     :: KontrakcjaGlobalTemplates -- ^ All of the templates for all valid locales

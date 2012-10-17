@@ -229,7 +229,6 @@ mkContext locale = do
             , AWS.s3body = BSL.empty
             , AWS.s3operation = HTTP.GET
         }
-        , ctxgscmd = "gs"
         , ctxproduction = False
         , ctxtemplates = localizedVersion locale globaltemplates
         , ctxglobaltemplates = globaltemplates

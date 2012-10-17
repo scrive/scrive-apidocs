@@ -252,8 +252,7 @@ attachFile :: (Kontrakcja m) => DocumentID -> String -> BS.ByteString -> m (Eith
 attachFile docid filename content = onlyAuthor docid $ \_ -> do
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
-  ctx <- getContext
-  content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) content
+  content14 <- guardRightM $ liftIO $ preCheckPDF content
   file <- dbUpdate $ NewFile filename content14
   actor <- guardJustM $ mkAuthorActor <$> getContext
   mdoc <- runMaybeT $ do

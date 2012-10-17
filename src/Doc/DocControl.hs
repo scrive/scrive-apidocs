@@ -852,7 +852,7 @@ handleSigAttach docid siglinkid = do
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
   ctx <- getContext
-  content <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
+  content <- guardRightM $ liftIO $ preCheckPDF (concatChunks content1)
   file <- dbUpdate $ NewFile attachname content
   let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory siglink) email siglinkid
   d <- guardJustM . runMaybeT $ do
