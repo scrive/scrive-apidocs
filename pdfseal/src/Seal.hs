@@ -507,6 +507,12 @@ boxDrawFrame box =
   box { boxCommands = " q 0 0 " ++ show (boxWidth box) ++ " " ++ show (-boxHeight box) ++ " re S Q " ++ boxCommands box
       }
 
+boxDrawBottomLine :: Box -> Box
+boxDrawBottomLine box =
+  box { boxCommands = boxCommands box ++ 
+                      " q 0 " ++ show (-boxHeight box) ++ " m " ++ 
+                      show (boxWidth box) ++ " " ++ show (-boxHeight box) ++ " l S Q "
+      }
 
 setFrameColor :: Box -> Box
 setFrameColor = boxStrokeColor 0 0 0 0.333
@@ -675,9 +681,9 @@ signatoryBox sealingTexts (Person {fullname,personalnumber,company,companynumber
                 } -> let halfWidth, halfHeight :: Int
                          halfWidth = cardWidth `div` 2
                          halfHeight = (halfWidth * internal_image_h `div` internal_image_w)
-                    in lm $ boxEnlarge ((cardWidth-halfWidth) `div` 2) 6 0 6 $
+                    in lm $ boxEnlarge 0 6 0 6 $
                         setFrameColor $
-                        boxDrawFrame $
+                        boxDrawBottomLine $
                         Box halfWidth halfHeight $ execWriter $ do
                          tell "q\n"
                          tellMatrix (fromIntegral halfWidth) 0 0 (fromIntegral halfHeight) 0 (-fromIntegral halfHeight)
