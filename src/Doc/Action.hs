@@ -373,7 +373,7 @@ sendRejectEmails customMessage ctx document signalink = do
     }
 
 {- |
-   Send reminder to all parties in document. No custome text
+   Send reminder to all parties in document. No custom text
  -}    
 sendAllReminderEmails :: Kontrakcja m => Context -> Actor -> User -> DocumentID -> m [SignatoryLink]
 sendAllReminderEmails ctx actor user docid = do
