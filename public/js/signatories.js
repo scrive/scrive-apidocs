@@ -75,7 +75,7 @@ window.SignatoryAttachmentUploadView = Backbone.View.extend({
   },
   apiURL: function() {
     var path = document.location.pathname.split("/");
-    return "/api/document/" + path[2] + "/signatory/" + path[3] + "/attachment/" + this.model.name() + "/file" + this.model.document().viewer().urlPart();
+    return "/api/frontend/document/" + path[2] + "/signatory/" + path[3] + "/attachment/" + this.model.name() + "/file" + this.model.document().viewer().urlPart();
   },
   removeLink: function() {
     var attachment = this.model;

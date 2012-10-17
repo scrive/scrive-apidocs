@@ -133,7 +133,7 @@ window.DocumentsListDefinition = function(archive) { return {
                             },
                             submit: new Submit({
                                 method : "POST",
-                                url : "/api/createfromfile",
+                                url : "/api/frontend/createfromfile",
                                 ajax: true,
                                 expectedType: 'json',
                                 onSend: function() {

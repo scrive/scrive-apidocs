@@ -28,7 +28,7 @@
                 },
                 submit: new Submit({
                     method : "POST",
-                    url : "/api/createfromfile",
+                    url : "/api/frontend/createfromfile",
                     ajax: true,
                     expectedType: 'json',
                     onSend: function() {
@@ -217,7 +217,7 @@
                                       link.click(function(){
                                           new Submit({
                                               method : "POST",
-                                              url: "/api/createfromtemplate/" +  listobject.field("id"),
+                                              url: "/api/frontend/createfromtemplate/" +  listobject.field("id"),
                                               ajax: true,
                                               expectedType: 'json',
                                               onSend: function() {

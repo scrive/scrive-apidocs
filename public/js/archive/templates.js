@@ -76,7 +76,7 @@ window.TemplatesListDefinition = function(archive) { return {
                             },
                             submit: new Submit({
                                 method : "POST",
-                                url : "/api/createfromfile",
+                                url : "/api/frontend/createfromfile",
                                 ajax: true,
                                 template: "YES",
                                 expectedType: 'json',

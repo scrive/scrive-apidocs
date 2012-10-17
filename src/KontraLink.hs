@@ -65,39 +65,27 @@ data KontraLink
     | LinkRenameAttachment AttachmentID
     | LinkCompanyAccounts ListParams
     | LinkCompanyTakeover CompanyID
-    | LinkRemind Document SignatoryLink
-    | LinkCancel Document
-    | LinkRestart DocumentID
     | LinkAcceptTOS
     | LinkAdminOnly
     | LinkUserAdmin (Maybe UserID)
     | LinkCompanyAdmin (Maybe CompanyID)
     | LinkCompanyUserAdmin CompanyID
-    | LinkAdminServices
-    | LinkAdminQuarantine
     | LinkAdminStatistics
     | LinkAdminStatsByDay
     | LinkAdminStatsByMonth
     | LinkPasswordReminder UserID MagicHash
     | LinkAccountCreated UserID MagicHash -- email
-    | LinkChangeSignatoryEmail DocumentID SignatoryLinkID
-    | LinkWithdrawn DocumentID
     | LoopBack
     | BackToReferer
     | LinkDaveDocument DocumentID
     | LinkFile FileID String
     | LinkAskQuestion
-    | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
     | LinkAttachmentView AttachmentID
     | LinkEnableCookies
     | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
-    | LinkAPIDocumentSignatoryAttachment DocumentID SignatoryLinkID String
-    | LinkPadDeviceArchive 
-    | LinkPadDeviceView
     | LinkMailAPIDelayConfirmation String Int64 MagicHash
     | LinkOAuthAuthorization APIToken
     | LinkOAuthCallback URI APIToken (Maybe MagicHash)
-    | LinkOAuthDashboard
     | LinkCompanyAdminPayments CompanyID
     | LinkUserAdminPayments UserID
     | LinkExternal String
@@ -182,29 +170,21 @@ instance Show KontraLink where
                  "/"++ show (signatorymagichash signatorylink)
     showsPrec _ (LinkSignDocNoMagicHash documentid signatorylinkid) =
         (++) $ "/s/" ++ show documentid ++ "/" ++ show signatorylinkid
-    showsPrec _ (LinkRemind document signlink) = (++) $ "/resend/"++(show $ documentid document)++"/"++(show $ signatorylinkid signlink)
-    showsPrec _ (LinkCancel document) = (++) $ "/cancel/"++(show $ documentid document)
-    showsPrec _ (LinkRestart documentid) = (++) $ "/restart/"++(show  documentid)
     showsPrec _ LinkAdminOnly = (++) $ "/adminonly/"
     showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/useradmin"
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
     showsPrec _ (LinkCompanyAdmin Nothing) = (++) $ "/adminonly/companyadmin"
     showsPrec _ (LinkCompanyAdmin (Just companyid)) = (++) $ "/adminonly/companyadmin/" ++ show companyid
     showsPrec _ (LinkCompanyUserAdmin companyid) = (++) $ "/adminonly/companyadmin/users/" ++ show companyid
-    showsPrec _ (LinkAdminServices) = (++) $ "/adminonly/services"
-    showsPrec _ (LinkAdminQuarantine) = (++) $ "/adminonly/quarantine"
     showsPrec _ (LinkAdminStatistics) = (++) $ "/adminonly/statistics"
     showsPrec _ (LinkAdminStatsByDay) = (++) $ "/adminonly/statsbyday"
     showsPrec _ (LinkAdminStatsByMonth) = (++) $ "/adminonly/statsbymonth"
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
     showsPrec _ (LinkAccountCreated uid hash) = (++) $ "/accountsetup/" ++ show uid ++ "/" ++ show hash
-    showsPrec _ (LinkChangeSignatoryEmail did slid ) = (++) $ "/changeemail/"++show did++"/"++show slid
-    showsPrec _ (LinkWithdrawn did ) = (++) $ "/withdrawn/"++show did
     showsPrec _ LoopBack = (++) $ "/" -- this should never be used
     showsPrec _ BackToReferer = (++) $ "/" -- this should never be used
     showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid ++"/")
     showsPrec _ (LinkAskQuestion) = (++) ("/question")
-    showsPrec _ (LinkSignCanceledDataMismatch docid sigid) = (++) $ "/landpage/signcanceleddatamismatch/" ++ show docid ++ "/" ++ show sigid
     showsPrec _ (LinkEnableCookies) = (++) ("/enable-cookies/enable-cookies.html")
     showsPrec _ (LinkDocumentPreview did (Just sl) fid) = (++) ("/preview/" ++ show did ++
                  "/" ++ show (signatorylinkid sl) ++
@@ -212,19 +192,12 @@ instance Show KontraLink where
                  "/" ++ show fid)
     showsPrec _ (LinkDocumentPreview did Nothing fid) = (++) ("/preview/" ++ show did ++
                  "/" ++ show fid)
-    showsPrec _ (LinkAPIDocumentSignatoryAttachment did sid name) =
-      (++) ("/api/document/" ++ show did ++ "/signatory/" ++ show sid ++ "/attachment/" ++ name)
-    showsPrec _ (LinkPadDeviceArchive) =
-      (++) ("/padqueue/archive")
-    showsPrec _ (LinkPadDeviceView) =
-      (++) ("/padqueue")
     showsPrec _ (LinkMailAPIDelayConfirmation email delayid key) = (++) ("/mailapi/confirmdelay/" ++ (URL.encode $ UTF.encode email) ++ "/" ++ show delayid ++ "/" ++ show key)
     showsPrec _ (LinkOAuthAuthorization token) = (++) ("/oauth/authorization?oauth_token=" ++ show token)
     showsPrec _ (LinkOAuthCallback url token (Just verifier)) = 
       (++) (show $ setParams url [("oauth_token", show token), ("oauth_verifier", show verifier)])
     showsPrec _ (LinkOAuthCallback url token Nothing) = 
       (++) (show $ setParams url [("oauth_token", show token), ("denied", "true")])
-    showsPrec _ LinkOAuthDashboard = (++) ("/oauth/dashboard")
     showsPrec _ (LinkAttachmentView attid) = (++) ("/a/" ++ show attid)
     showsPrec _ (LinkCompanyAdminPayments cid) = 
       (++) ("/adminonly/companyadmin/payments/" ++ show cid)

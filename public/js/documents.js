@@ -68,7 +68,7 @@ window.Document = Backbone.Model.extend({
         saveQueue : new AjaxQueue()
     },
     initialize: function(args) {
-        this.url = "/api/get/" + args.id;
+        this.url = "/api/frontend/get/" + args.id;
     },
     viewer: function() {
         if (this.get("viewer") != undefined)
@@ -251,7 +251,7 @@ window.Document = Backbone.Model.extend({
     },
     save: function() {
          this.get("saveQueue").add(new Submit({
-              url: "/api/update/" + this.documentid(),
+              url: "/api/frontend/update/" + this.documentid(),
               method: "POST",
               json: JSON.stringify(this.draftData())
           }));

@@ -40,7 +40,7 @@ window.CreateFromFileApiCall = ApiCall.extend({
             $("body").append(form);
             form.append(this.file());
             var formData = new FormData(form[0]);
-            $.ajax(Scrive.serverUrl()+"/api/createfromfile", {
+            $.ajax(Scrive.apiUrl()+"createfromfile", {
                 type: 'POST',
                 data: formData,
                 cache: false,
@@ -74,7 +74,7 @@ window.CreateFromTemplateApiCall = ApiCall.extend({
         setTemplateid : function(templateid) {return this.set({"templateid" : templateid});},
         send : function() {
             var model = this;
-            $.ajax(Scrive.serverUrl()+"/api/createfromtemplate/" + model.templateid(), {
+            $.ajax(Scrive.apiUrl()+"createfromtemplate/" + model.templateid(), {
                 type: 'POST',
                 cache: false,
                 contentType: false,
@@ -113,7 +113,7 @@ window.UpdateApiCall = ApiCall.extend({
             $("body").append(form);
             form.append($("<input type='hidden' name='json'/>").val(model.json()));
             var formData = new FormData(form[0]);
-            $.ajax(Scrive.serverUrl()+"/api/update/" + model.documentid(), {
+            $.ajax(Scrive.apiUrl()+"update/" + model.documentid(), {
                 type: 'POST',
                 data: formData,
                 cache: false,
@@ -148,7 +148,7 @@ window.ReadyApiCall = ApiCall.extend({
         isReady : function() {return true;},
         send : function() {
             var model = this;
-            $.ajax(Scrive.serverUrl()+"/api/ready/" + model.documentid(), {
+            $.ajax(Scrive.apiUrl()+"ready/" + model.documentid(), {
                 type: 'POST',
                 cache: false,
                 contentType: false,
@@ -180,7 +180,7 @@ window.SendReminderApiCall = ApiCall.extend({
         isSendReminder : function() {return true;},
         send : function() {
             var model = this;
-            $.ajax(Scrive.serverUrl()+"/api/remind/" + model.documentid(), {
+            $.ajax(Scrive.apiUrl()+"remind/" + model.documentid(), {
                 type: 'POST',
                 cache: false,
                 contentType: false,
@@ -212,7 +212,7 @@ window.CancelApiCall = ApiCall.extend({
         isCancel : function() {return true;},
         send : function() {
             var model = this;
-            $.ajax(Scrive.serverUrl()+"/api/cancel/" + model.documentid(), {
+            $.ajax(Scrive.apiUrl()+"cancel/" + model.documentid(), {
                 type: 'POST',
                 cache: false,
                 contentType: false,
@@ -244,7 +244,7 @@ window.DeleteApiCall = ApiCall.extend({
         isDelete : function() {return true;},
         send : function() {
             var model = this;
-            $.ajax(Scrive.serverUrl()+"/api/delete/" + model.documentid(), {
+            $.ajax(Scrive.apiUrl()+"delete/" + model.documentid(), {
                 type: 'DELETE',
                 cache: false,
                 contentType: false,
@@ -277,7 +277,7 @@ window.GetApiCall = ApiCall.extend({
         },
         send : function() {
             var model = this;
-            $.ajax(Scrive.serverUrl()+"/api/get/" + model.documentid(), {
+            $.ajax(Scrive.apiUrl()+"get/" + model.documentid(), {
                 type: 'GET',
                 cache: false,
                 headers : { authorization : model.authorization() },
@@ -306,7 +306,7 @@ window.ListApiCall = ApiCall.extend({
         isList : function() {return true;},
         send : function() {
             var model = this;
-            $.ajax(Scrive.serverUrl()+"/api/list", {
+            $.ajax(Scrive.apiUrl()+"list", {
                 type: 'GET',
                 cache: false,
                 data : { tags : model.tags() },

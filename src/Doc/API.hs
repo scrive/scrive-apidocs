@@ -12,6 +12,7 @@ import qualified Text.JSON as J
 import KontraMonad
 import Happstack.Server.Types
 import Routing
+import Doc.APIVersion (APIVersion(..))
 import Doc.DocStateQuery
 import Doc.DocStateData
 import Doc.Model
@@ -64,22 +65,29 @@ import Text.JSON.Gen
 import MinutesTime
 
 documentAPI :: Route (KontraPlus Response)
-documentAPI = choice [
+documentAPI = dir "api" $ choice 
+  [ dir "frontend" $ versionedAPI Frontend
+  , versionedAPI V1 -- Temporary backwards compatibility for clients accessing version-less API
+  , dir "v1" $ versionedAPI V1
+  ]
+ 
+versionedAPI :: APIVersion -> Route (KontraPlus Response)
+versionedAPI _version = choice [
 
-  dir "api" $ dir "createfromfile"     $ hPostNoXToken $ toK0 $ apiCallCreateFromFile,
-  dir "api" $ dir "createfromtemplate" $ hPostNoXToken $ toK1 $ apiCallCreateFromTemplate,
-  dir "api" $ dir "update"             $ hPostNoXToken $ toK1 $ apiCallUpdate,
-  dir "api" $ dir "ready"              $ hPostNoXToken $ toK1 $ apiCallReady,
-  dir "api" $ dir "cancel"             $ hPostNoXToken $ toK1 $ apiCallCancel,
-  dir "api" $ dir "remind"             $ hPostNoXToken $ toK1 $ apiCallRemind,
-  dir "api" $ dir "delete"             $ hDelete   $ toK1 $ apiCallDelete,
-  dir "api" $ dir "get"                $ hGet $ toK1 $ apiCallGet,
-  dir "api" $ dir "list"               $ hGet $ apiCallList,
-    
-  dir "api" $ dir "mainfile" $ hPostNoXToken $ toK1 $ documentChangeMainFile,
+  dir "createfromfile"     $ hPostNoXToken $ toK0 $ apiCallCreateFromFile,
+  dir "createfromtemplate" $ hPostNoXToken $ toK1 $ apiCallCreateFromTemplate,
+  dir "update"             $ hPostNoXToken $ toK1 $ apiCallUpdate,
+  dir "ready"              $ hPostNoXToken $ toK1 $ apiCallReady,
+  dir "cancel"             $ hPostNoXToken $ toK1 $ apiCallCancel,
+  dir "remind"             $ hPostNoXToken $ toK1 $ apiCallRemind,
+  dir "delete"             $ hDelete   $ toK1 $ apiCallDelete,
+  dir "get"                $ hGet $ toK1 $ apiCallGet,
+  dir "list"               $ hGet $ apiCallList,
 
-  dir "api" $ dir "document" $ hPostNoXToken $ toK6 $ documentUploadSignatoryAttachment,
-  dir "api" $ dir "document" $ hDelete       $ toK6 $ documentDeleteSignatoryAttachment
+  dir "mainfile" $ hPostNoXToken $ toK1 $ documentChangeMainFile,
+
+  dir "document" $ hPostNoXToken $ toK6 $ documentUploadSignatoryAttachment,
+  dir "document" $ hDelete       $ toK6 $ documentDeleteSignatoryAttachment
   ]
 
 -- | Clean a filename from a path (could be windows \) to a base name
