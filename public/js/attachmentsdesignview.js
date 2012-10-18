@@ -221,27 +221,22 @@ window.DesignAuthorAttachmentsPopup = {
               acceptText: localization.save,
               width: "800px",
               onAccept : function() {
-                  var submit = document.setAttachments();
-                  var counter = 0;
-                  _.each(model.attachments(), function(att){
-                      var name = "attachment_" + counter;
-                      if (att.isServerFile())
-                        submit.add(name, att.serverFileId());
-                      else
-                        submit.addInputs(att.fileUpload().attr("name", name));
-                      counter++;
-                   });
-
-                submit.success(function(){
-                  SessionStorage.set(document.documentid(), "step", "3");
-                  window.location = window.location;
-                });
-                LoadingDialog.open();
-                submit.send();
-                return false;
+                  document.afterSave( function() {
+                      var submit = document.setAttachments();
+                      var counter = 0;
+                      _.each(model.attachments(), function(att){
+                          var name = "attachment_" + counter;
+                          if (att.isServerFile())
+                            submit.add(name, att.serverFileId());
+                          else
+                            submit.addInputs(att.fileUpload().attr("name", name));
+                          counter++;
+                      });
+                      submit.sendAjax(function() {window.location = window.location;},function() {window.location = window.location;});
+                  });
+                  LoadingDialog.open();
+                  return false;
             }
-
-
          });
     }
 };

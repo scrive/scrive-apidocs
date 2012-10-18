@@ -18,6 +18,10 @@ window.Tab = Backbone.Model.extend({
     onActivate : function() {}
     }
   ,
+  initialize : function(args){
+       if (this.active())
+          this.get("onActivate")();
+  },
   name : function() {
       return this.get("name");
   },

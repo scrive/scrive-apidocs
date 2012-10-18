@@ -901,7 +901,7 @@ handleCSVLandpage c = do
   text <- csvLandPage c
   return text
 
-handleSetAttachments :: Kontrakcja m => DocumentID -> m KontraLink
+handleSetAttachments :: Kontrakcja m => DocumentID -> m JSValue
 handleSetAttachments did = do
     doc <- guardRightM $ getDocByDocIDForAuthor did
     attachments <- getAttachments 0
@@ -909,7 +909,7 @@ handleSetAttachments did = do
     actor <- guardJustM $ mkAuthorActor <$> getContext
     forM_ (documentauthorattachments doc) $ \att -> dbUpdate $ RemoveDocumentAttachment did (authorattachmentfile att) actor
     forM_ (nub attachments) $ \att -> dbUpdate $ AddDocumentAttachment did att actor -- usage of nub is ok, as we never expect this list to be big
-    return LoopBack
+    runJSONGenT $ return ()
    where
         getAttachments :: Kontrakcja m => Int -> m [FileID]
         getAttachments i = do

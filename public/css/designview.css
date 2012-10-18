@@ -351,6 +351,9 @@
     margin: 15px;
 }
 
+.selectAuthorAttachmentPopupContent  .option-top-box {
+    display: none;
+}
 
 .designCSVSignatoryPopupContent .option-box
 {
