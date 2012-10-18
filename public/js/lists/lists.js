@@ -339,7 +339,7 @@
             });
             var select = new Select({  name: "",
                                        options: options,
-                                       cssClass: "float-left",
+                                       cssClass: "float-left extra-width",
                                        name : localization.more,
                                        theme : "black",
                                        expandSide : "right"

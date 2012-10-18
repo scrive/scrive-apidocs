@@ -751,7 +751,7 @@ var DocumentDesignView = Backbone.View.extend({
         this.tabs = new KontraTabs({
             numbers : true,
             title : this.titlerow(),
-            tabsTail : (!document.isTemplate()) ?  [this.saveAsTemplateOption()] : [] ,
+            tabsTail : (!document.isTemplate()) ?  [this.saveAsTemplateOption()] : undefined ,
             tabs: [
                 this.tab1 = new Tab({
                     name : document.isTemplate() ? localization.step1template : document.process().step1text(),

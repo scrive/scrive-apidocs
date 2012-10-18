@@ -41,9 +41,10 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     }
   },
   // Description of due date
-  dueDateDescription : function(timeout) {
+  dueDateDescription : function() {
       var timeout = this.model.document().timeouttime();
-      return localization.docsignview.dueDate + " " + timeout.getFullYear() + "-" + timeout.getMonth() + "-" + timeout.getDate();;
+      var timeoutText = timeout.getFullYear() + "-" + (timeout.getMonth() < 9 ? "0" + (timeout.getMonth() + 1) : (timeout.getMonth()+1)) + "-" + timeout.getDate();
+      return localization.docsignview.dueDate + " " + timeoutText;
   },
   // Option do download document (link)
   downloadOption : function() {

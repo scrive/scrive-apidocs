@@ -50,10 +50,12 @@ window.Submit = Backbone.Model.extend({
         this.set({inputs : this.get("inputs").remove(k)});
         return this;
     },
-    sendAjax : function(callback) {
+    sendAjax : function(callback,errorcallback) {
         this.set({ajax : true});
         if (callback != undefined)
             this.set({ajaxsuccess : callback});
+        if (errorcallback != undefined)
+            this.set({ajaxerror : errorcallback});        
         return this.send();
     },
     send: function() {
