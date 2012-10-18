@@ -826,9 +826,9 @@ handleDocHistoryCSV = onlySalesOrAdmin $ do
 -- CSV for document history
 handleSignHistoryCSV :: Kontrakcja m => m CSV
 handleSignHistoryCSV = onlySalesOrAdmin $ do
-  stats <- dbQuery GetSignStatEvents
-  let bySig = groupWith (\s-> (ssDocumentID s, ssSignatoryLinkID s)) $ reverse $ sortWith (\s-> (ssDocumentID s, ssSignatoryLinkID s)) stats
-      rows = map (\es -> csvRowFromSignHist es []) bySig
+  let start = fromSeconds 0
+  end <- ctxtime <$> getContext
+  rows <- dbQuery $ GetSignHistCSV start end
   return $ CSV { csvFilename = "signhist.csv"
                , csvHeader = ["documentid", "signatoryid", "companyid", "doctype", "invite", "receive", "open", "link", "sign", "reject", "delete", "purge"]
                , csvContent = rows
