@@ -205,7 +205,7 @@ preCheckPDFHelper content tmppath =
     checkNormalize = do
       liftIO $ BS.writeFile sourcepath content
 
-      (exitcode,_stdout,stderr1) <- liftIO $ readProcessWithExitCode' "mubusy"
+      (exitcode,stdout1,stderr1) <- liftIO $ readProcessWithExitCode' "mubusy"
                                    [ "clean"
                                    , "-ggg"
                                    , sourcepath
@@ -218,7 +218,7 @@ preCheckPDFHelper content tmppath =
           BS.hPutStr handle content
           hClose handle
 
-        throwError (FileNormalizeError stderr1)
+        throwError (FileNormalizeError (BSL.pack $ BSL.unpack stdout1 ++ " "++ BSL.unpack stderr1))
 
       -- GhostScript sometimes breaks files by normalization. Here we
       -- detect what it calls warnings and what trully breaks a PDF.
