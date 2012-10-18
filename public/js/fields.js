@@ -80,8 +80,7 @@ window.FieldPlacement = Backbone.Model.extend({
     },
     draftData : function() {
       var document = this.field().signatory().document();
-      var fileid = this.get("fileid");
-      var page = document.getFile(fileid).page(this.get("page"));
+      var page = document.mainfile() != undefined ? document.mainfile().page(this.get("page")) : undefined;
       var draft = {
         xrel : this.xrel(),
         yrel : this.yrel(),
