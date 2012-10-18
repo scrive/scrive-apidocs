@@ -1211,7 +1211,7 @@ input[type=submit].hidden
     background-repeat: repeat-y;
     overflow: hidden;
     min-height: 100px;
-    padding:30px 19px;
+    padding: 8px 19px;
     border-left: 1px solid #BDBDBD;
     border-right: 1px solid #BDBDBD;
     border-bottom: 1px solid #C0C0C0;
@@ -1220,6 +1220,8 @@ input[type=submit].hidden
 
 .upload-view .signStepsBody{
    border-top: 1px solid #CCCCCC;
+   padding:30px 19px;
+
 }
 
 .postSignStepBody {
@@ -1460,7 +1462,7 @@ input.multiFileInput,
 .border {
    background-color: #ecedf3;
    width: 1px;
-   height: 130px;
+   height: 157px;
    display:inline-block;
    float:left;
    margin-top:-8px;

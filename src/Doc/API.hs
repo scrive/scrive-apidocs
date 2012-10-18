@@ -116,11 +116,11 @@ apiCallCreateFromFile = api $ do
             Left (LiveDocxSoapError s)-> throwError $ serverError s
             Right res -> return $ BSL.fromChunks [res]
       pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ liftIO $ do
-                     cres <- preCheckPDF (ctxgscmd ctx) (concatChunks content'')
+                     cres <- preCheckPDF (concatChunks content'')
                      case cres of
                         Right c -> return (Right c)
                         Left m -> case (B64.decode $ (concatChunks content'')) of -- Salesforce hack. Drop this decoding when happstack-7.0.4 is included.
-                                      Right dcontent -> preCheckPDF (ctxgscmd ctx) dcontent
+                                      Right dcontent -> preCheckPDF dcontent
                                       Left _ -> return (Left m)
       file <- dbUpdate $ NewFile filename pdfcontent
       return (Just file, filename)
