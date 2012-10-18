@@ -211,14 +211,19 @@ preCheckPDFHelper content tmppath =
                                    , sourcepath
                                    , normalizedpath
                                    ] BSL.empty
-      when (exitcode /= ExitSuccess ) $ do
-        liftIO $ do
-          systmp <- getTemporaryDirectory
-          (_path,handle) <- openTempFile systmp ("pre-normalize-failed-.pdf")
-          BS.hPutStr handle content
-          hClose handle
+      case exitcode of
+        ExitSuccess -> return ()
+        ExitFailure code -> do
+          liftIO $ do
+            systmp <- getTemporaryDirectory
+            (_path,handle) <- openTempFile systmp ("pre-normalize-failed-.pdf")
+            BS.hPutStr handle content
+            hClose handle
 
-        throwError (FileNormalizeError (BSL.pack $ BSL.unpack stdout1 ++ " "++ BSL.unpack stderr1))
+          throwError (FileNormalizeError (BSL.pack ("Exit code " ++ show code ++ "\n") `BSL.append`
+                                          stdout1 `BSL.append`
+                                          BSL.pack "\n" `BSL.append`
+                                          stderr1))
 
       -- GhostScript sometimes breaks files by normalization. Here we
       -- detect what it calls warnings and what trully breaks a PDF.
