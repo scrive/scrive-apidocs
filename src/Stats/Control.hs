@@ -823,7 +823,7 @@ handleDocHistoryCSV = onlySalesOrAdmin $ do
                , csvContent = stats
                }
 
--- CSV for document history
+-- CSV for sign history
 handleSignHistoryCSV :: Kontrakcja m => m CSV
 handleSignHistoryCSV = onlySalesOrAdmin $ do
   let start = fromSeconds 0
