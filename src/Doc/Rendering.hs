@@ -57,7 +57,7 @@ scaleForPreview :: BS.ByteString -> IO BS.ByteString
 scaleForPreview image = withSystemTempDirectory "preview" $ \tmppath -> do
     let fpath = tmppath ++ "/source.jpg"
     BS.writeFile fpath image
-    (_,_,_, resizer) <- createProcess $  proc "convert" ["-scale","190x270!", fpath, fpath]
+    (_,_,_, resizer) <- createProcess $  proc "convert" ["-scale","190x270", fpath, fpath]
     resizerexitcode <- waitForProcess resizer
     case resizerexitcode of
         ExitFailure _ -> return ()

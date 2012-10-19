@@ -726,11 +726,11 @@ nicemailbodywithpreview=
 <table style="margin: auto; width:540px;">
     <tr>
        <td>
-         <table cellspacing="0" cellpadding="0" style="margin: auto;">
-           <tr>
-               <td> <div style="width:190px;height:270px;border:1px solid #CCCCCC"><img src="$ctxhostpart$$previewLink$" height="270" width="190" alt=""/></div></td>
-           </tr>
-         </table>
+          <div style='text-align:center;min-width:190px'>
+            <div style="display:inline-block;margin:auto;max-width:190px;max-height:270px;min-width:95px;min-height:135px;border:1px solid #CCCCCC">
+               <img src="$ctxhostpart$$previewLink$" alt='' style='margin:0px;padding:0px;border:0px;'/>
+             </div>
+          </div>
        </td>
        <td>
 
