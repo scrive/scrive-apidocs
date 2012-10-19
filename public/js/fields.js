@@ -197,27 +197,21 @@ window.Field = Backbone.Model.extend({
         var field = this;
         var name  = this.name();
 
-        if (   !this.signatory().author()
-            && this.isStandard()
-            && (name == "fstname" ||name == "sndname")
+        if (   this.isEmail()
             && !this.signatory().isCsv()
-            && (!this.hasPlacements() || this.signatory().document().elegAuthentication()))
-        {
-            return new NotEmptyValidation({message: localization.designview.validation.missingNames})
-                   .concat(new NameValidation({message: localization.designview.validation.wrongNames}));
-        }
-
-        if (   !this.signatory().author()
-            && this.isStandard()
-            && name == "email"
-            && !this.signatory().isCsv()
-            && !(this.signatory().document().padDelivery() && this.hasPlacements())){
+            && (this.signatory().document().emailDelivery())){
             var msg = localization.designview.validation.missingOrWrongEmail;
             this.setValue(this.value().trim());
             return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
+        
+        if ( this.isEmail() && this.value() != undefined && this.value() != "") {
+            var msg = localization.designview.validation.missingOrWrongEmail;
+            this.setValue(this.value().trim());
+            return new EmailValidation({message: msg})
+        }
 
-        if (this.signatory().document().elegAuthentication() && this.isStandard() && name == "sigpersnr" && this.signatory().signs()  && !this.signatory().isCsv() ) {
+        if (forSigning && this.signatory().author() && this.signatory().document().elegAuthentication() && this.isSSN()) {
             var msg = localization.designview.validation.missingOrWrongPersonalNumber;
             return new NotEmptyValidation({message: msg});
         }
@@ -255,6 +249,15 @@ window.Field = Backbone.Model.extend({
     },
     isEmail: function() {
         return  this.isStandard() && this.name() == "email";
+    },
+    isFstName: function() {
+        return  this.isStandard() && this.name() == "fstname";
+    },
+    isSndName: function() {
+        return  this.isStandard() && this.name() == "sndname";
+    },
+    isSSN : function() {
+        return  this.isStandard() && this.name() == "sigpersnr";
     },
     isStandard: function() {
         return  this.type() == "standard";

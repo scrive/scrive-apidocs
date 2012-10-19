@@ -685,8 +685,6 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
             place.css({
                 left: Math.floor(placement.xrel() * parentWidth + 0.5),
                 top: Math.floor(placement.yrel() * parentHeight + 0.5),
-                width: Math.ceil(placement.wrel() * parentWidth),
-                height: Math.ceil(placement.hrel() * parentHeight),
                 fontSize: placement.fsrel() * parentWidth
             });
         }

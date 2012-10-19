@@ -51,6 +51,21 @@ var DocumentSignViewModel = Backbone.Model.extend({
       return    !this.justSaved()
              && this.document().authorattachments().length > 0;
   },
+  hasExtraDetailsSection : function() {
+    if (!this.document().currentSignatoryCanSign()) return false;
+    var res = false;
+    _.each(this.document().currentSignatory().fields(), function(field) {
+      if (field.isEmail() && field.value() == "" && !field.hasPlacements())
+        res = true;
+      if (field.isFstName() && field.value() == "" && !field.hasPlacements())
+        res = true;
+      if (field.isSndName() && field.value() == "" && !field.hasPlacements())
+        res = true;
+      if (field.isSSN() && field.value() == "" && !field.hasPlacements() && field.signatory().document().elegAuthentication())
+        res = true;
+    });
+    return res;
+  },
   hasSignatoriesAttachmentsSection : function() {
       return    !this.justSaved()
              && this.document().currentSignatory().attachments().length > 0;
@@ -138,6 +153,16 @@ var DocumentSignViewModel = Backbone.Model.extend({
                         })
         }, {silent : true});
       return this.get('authorattachmentssection');
+  },
+  extradetailssection : function() {
+      if (this.get("extradetailssection") == undefined)
+        this.set({'extradetailssection' :
+                        new DocumentSignExtraDetailsSection({
+                            model: this.document().currentSignatory(),
+                            el: $("<div class='section spacing'/>"),
+                        })
+        }, {silent : true});
+      return this.get('extradetailssection');
   },
   mainfile : function() {
       var model = this;
@@ -229,11 +254,41 @@ var DocumentSignViewModel = Backbone.Model.extend({
        }
        return this.get('filltasks');
   },
+  fillExtraDetailsTask : function() {
+        var document = this.document();
+        if (this.get("fillExtraDetailsTask") == undefined) {
+         var task = new PageTask({
+                    isComplete: function() {
+                        var res = true;
+                        _.each(document.currentSignatory().fields(), function(field) {
+                            if (field.isEmail() && (!new EmailValidation().validateData(field.value())))
+                                res = false;
+                            if (field.isFstName() && field.value() == "")
+                                res = false;
+                            if (field.isSndName() && field.value() == "")
+                                res = false;
+                            if (field.isSSN()    && (field.value() == "") && field.signatory().document().elegAuthentication())
+                                res = false;
+                        });
+                        return res;
+                    },
+                    el: $(this.extradetailssection().el),
+                    onActivate: function() {
+                      return false;
+                    }
+                });
+         document.currentSignatory().bind("change", function() { task.update()});
+         this.set({'fillExtraDetailsTask' : task }, {silent : true});
+       }
+       return this.get('fillExtraDetailsTask');  
+  },
   tasks : function() {
       if (this.get("tasks") == undefined) {
         var tasks = [];
         if (this.hasMainFileSection())
             tasks = _.union(tasks,this.filltasks());
+        if (this.hasExtraDetailsSection())
+            tasks.push(this.fillExtraDetailsTask());
         if (this.hasSignatoriesAttachmentsSection())
             tasks = _.union(tasks,this.signatoryattachmentasks());
         if (this.hasSignSection())
@@ -288,6 +343,7 @@ var DocumentSignViewView = Backbone.View.extend({
      
      if (   this.model.hasMainFileSection()
          || this.model.hasAuthorAttachmentsSection()
+         || this.model.hasExtraDetailsSection()
          || this.model.hasSignatoriesAttachmentsSection()
          || this.model.hasSignSection())
      {
@@ -296,9 +352,12 @@ var DocumentSignViewView = Backbone.View.extend({
 
         if (this.model.hasMainFileSection())
             this.subcontainer.append(this.model.mainfile().view.el);
-
+        
         if (this.model.hasAuthorAttachmentsSection())
             this.subcontainer.append(this.model.authorattachmentssection().el);
+
+        if (this.model.hasExtraDetailsSection())
+            this.subcontainer.append(this.model.extradetailssection().el);
 
         if (this.model.hasSignatoriesAttachmentsSection())
             this.subcontainer.append(this.model.signatoryattachmentsection().el);
