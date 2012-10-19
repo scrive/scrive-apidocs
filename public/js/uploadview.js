@@ -275,7 +275,7 @@
         wizardview.render();
         return {
           el : function() {return wizardview.el;}
-        }
+        };
 
     };
 })(window);
