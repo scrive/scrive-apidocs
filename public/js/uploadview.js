@@ -23,6 +23,12 @@
                     url : "/api/frontend/createfromfile",
                     ajax: true,
                     expectedType: 'json',
+                      // blocking
+                     if(uploadBlocking && uploadBlocking.shouldBlockDocs(1)) {
+                       uploadBlocking.createPopup();
+                       return false;
+                     }
+
                     ajaxsuccess: function(d) {
                             if (d != undefined && d.id != undefined) {
                                 window.location.href = "/d/"+d.id;

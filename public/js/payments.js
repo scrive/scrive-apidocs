@@ -91,7 +91,8 @@
             month: '',
             createdUser: false,
             accountCreated: false,
-            currentPlan: 'team'
+            currentPlan: 'team',
+            header: localization.payments.subscribeheader
         },
         reset: function() {
             if(this.get('firstName'))
@@ -221,6 +222,9 @@
         billingSig: function() {
             return this.get('billingSig');
         },
+        header: function() {
+            return this.get('header');
+        },
         type: function() {
             return this.get('type');
         },
@@ -293,7 +297,7 @@
             var header1 = $('<div class="header1" />');
             header1.text(localization.payments.plans[view.plan].name);
             var header2 = $('<div class="header2" />');
-            header2.text(localization.payments.plans[view.plan].tag);
+            header2.html(localization.payments.plans[view.plan].tag);
             header.append(header1).append(header2);
             div.append(header);
 
@@ -608,11 +612,11 @@
         },
         render: function() {
             var view = this;
-            
+            var model = view.model;
             var div = $('<div />');
 
             var header = $('<div class="header" />')
-                .append($('<h2 />').text(localization.payments.subscribeheader));
+                .append($('<h2 />').text(model.header()));
 
             div.append(header);
             div.append($('<h3 />').text(localization.payments.chooseplan));
@@ -710,7 +714,6 @@
     });
 
     var InvoicePaymentsView = Backbone.View.extend({
-        tagName: 'div',
         className: 'subscription-payments',
         initialize: function(args) {
             var view = this;
@@ -952,6 +955,8 @@
         model.fetch({success: function() {
             view = chooseView(model);
             subel.append(view.el);
+            if(model.type() == 'planrecurly')
+                    subel.removeClass('price-plan');
             model.reset();
             model.trigger('fetch');
         }});
@@ -962,6 +967,9 @@
           el : function() {return el;}
           
         };
+                if(model.type() == 'planrecurly')
+                    sel.removeClass('price-plan');
+
     };
 
     window.PricePage = function(opts) { 

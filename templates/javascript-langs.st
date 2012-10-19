@@ -810,6 +810,20 @@ javascriptLocalisation =
             csv : {
               title  : "$_blockingFreeCSVTitle()$",
               header : "$_blockingFreeCSVHeader()$"
+            },
+            click: {
+              title : "$_blockingFreeClickTitle()$",
+              header : "$_blockingFreeClickHeader()$"
+            },
+            has : {
+              headline : "$_blockingFreeHasHeadline()$",
+              subtext1 : "$_blockingFreeHasSubtext1()$",
+              subtext2 : "$_blockingFreeHasSubtext2()$"
+            },
+            hasNot : {
+              headline : "$_blockingFreeHasNotHeadline()$",
+              subtext1 : "$_blockingFreeHasNotSubtext1()$",
+              subtext2 : "$_blockingFreeHasNotSubtext2()$"
             }
           },
           overdue : {
@@ -820,6 +834,60 @@ javascriptLocalisation =
             csv : {
               title : "$_blockingOverdueCSVTitle()$",
               body  : "$_blockingOverdueCSVBody()$"
+            },
+            headline : "$_blockingOverdueHeadline()$",
+            subtext1 : "$_blockingOverdueSubtext1()$",
+            subtext2 : "$_blockingOverdueSubtext2()$"
+          },
+          dunning : {
+            headline : "$_blockingDunningHeadline()$",
+            subtext1 : "$_blockingDunningSubtext1()$",
+            subtext2 : "$_blockingDunningSubtext2()$"
+          },
+          canceled : {
+            create : {
+              title : "$_blockingCanceledCreateTitle()$",
+              body  : "$_blockingCanceledCreateBody()$"
+            },
+            csv : {
+              title : "$_blockingCanceledCSVTitle()$",
+              body  : "$_blockingCanceledCSVBody()$"
+            },
+            headline : "$_blockingCanceledHeadline()$",
+            subtext1 : "$_blockingCanceledSubtext1()$",
+            subtext2 : "$_blockingCanceledSubtext2()$"
+          },
+          deactivated : {
+            create : {
+              title : "$_blockingDeactivatedCreateTitle()$",
+              body  : "$_blockingDeactivatedCreateBody()$"
+            },
+            csv : {
+              title : "$_blockingDeactivatedCSVTitle()$",
+              body  : "$_blockingDeactivatedCSVBody()$"
+            },
+            headline : "$_blockingDeactivatedHeadline()$",
+            subtext1 : "$_blockingDeactivatedSubtext1()$",
+            subtext2 : "$_blockingDeactivatedSubtext2()$"
+          },
+          willcancel : {
+            headline : "$_blockingWillCancelHeadline()$",
+            subtext1 : "$_blockingWillCancelSubtext1()$",
+            subtext2 : "$_blockingWillCancelSubtext2()$"
+          },
+          usedall : {
+            headline : "$_blockingUsedAllHeadline()$",
+            subtext1 : "$_blockingUsedAllSubtext1()$",
+            subtext2 : "$_blockingUsedAllSubtext2()$"
+          },
+          paying : {
+            create : {
+              title : "$_blockingPayingCreateTitle()$",
+              body  : "$_blockingPayingCreateBody()$"
+            },
+            csv : {
+              title : "$_blockingPayingCSVTitle()$",
+              body  : "$_blockingPayingCSVBody()$"
             }
           },
            create : {
@@ -827,7 +895,7 @@ javascriptLocalisation =
              noneLeftBlock : "$_blockingCreateNoneLeftBlock()$",
              csvfree       : "$_blockingCreateCSVFree()$",
              csvblock      : "$_blockingCreateCSVBlock()$",
-             overdue       : "$_blockingCreateOverdue()$"
+             overdue       : "$_blockingCreateDeactivated()$"
            },
            title : {
              free    : "$_blockingModalTitleFree()$",
@@ -837,7 +905,9 @@ javascriptLocalisation =
            button : {
              purchase    : "$_blockingButtonPurchase()$",
              doublecheck : "$_blockingButtonDoubleCheck()$",
-             upgrade     : "$_blockingButtonUpgrade()$"
+             upgrade     : "$_blockingButtonUpgrade()$",
+             reinstate   : "$_blockingButtonReinstate()$",
+             contact     : "$_blockingButtonContact()$"
            }
         }
       , apiConfiration : {

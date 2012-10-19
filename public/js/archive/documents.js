@@ -121,7 +121,17 @@ window.DocumentsListDefinition = function(archive) { return {
                             width : "110",
                             text: localization.archive.documents.createnew,
                             onClick : function() {
+                               // blocking
+                               if(archiveBlocking && archiveBlocking.shouldBlockDocs(1)) {
+                                 archiveBlocking.createPopup();
+                                 return false;
+                               }
+
+
                               new Submit({
+                                
+                                
+
                                 method : "POST",
                                 url : "/api/frontend/createfromfile",
                                 ajax: true,

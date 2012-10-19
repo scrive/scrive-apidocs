@@ -96,7 +96,14 @@ var CsvProblem = Backbone.Model.extend({
        submit.addInputs(input);
        submit.sendAjax(function (resp) {
            var jresp = resp;
-           sigdesign.set({'rows': jresp.rows, 'problems': _.map(jresp.problems, function(pdata) {return new CsvProblem(pdata);}) });
+           var extraproblems = [];
+           if(designViewBlocking && designViewBlocking.shouldBlockDocs(jresp.rows.length)) {
+               extraproblems.push(new CsvProblem({description:designViewBlocking.csvMessage()}));
+           }
+
+           var problems = _.map(jresp.problems, function(pdata) {return new CsvProblem(pdata);});
+           problems = problems.concat(extraproblems);
+           sigdesign.set({'rows': jresp.rows, 'problems': problems });
            sigdesign.trigger("change");
           });
   }
@@ -115,7 +122,7 @@ var CsvSignatoryDesignView = Backbone.View.extend({
        var model = this.model;
        var box = $("<div class='generalProblems'>");
        _.each(model.generalProblems(), function(p) {
-          box.append($("<div class='problem'>").text(p.description()));
+          box.append($("<div class='problem'>").html(p.description()));
         });
        return box;
     },

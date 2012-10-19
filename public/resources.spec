@@ -59,6 +59,7 @@ set systemPage
  less less/paymentsoutside.less
  less less/oauth.less
  less less/arrows.less
+ less less/blocking.less
  js   libs/jquery.min.js
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js

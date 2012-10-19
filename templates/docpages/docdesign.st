@@ -8,5 +8,9 @@ jQuery(function(){
   });
   jQuery(".body-container").replaceWith(docview.view.el);
 });
+var designViewBlocking = null;
+jQuery(function() {
+  designViewBlocking = Blocking();
+});
 </script>
 ###

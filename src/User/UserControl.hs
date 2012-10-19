@@ -563,12 +563,14 @@ handleBlockingInfo = do
   let paymentplan = maybe "free" (show . ppPricePlan) mpaymentplan
       status      = maybe "active" (show . ppStatus) mpaymentplan
       dunning     = maybe False (isJust . ppDunningStep) mpaymentplan
+      canceled    = Just CanceledStatus == (ppPendingStatus <$> mpaymentplan)
 
   runJSONGenT $ do
     J.value "docsused"  docsusedthismonth
     J.value "plan"      paymentplan
     J.value "status"    status
     J.value "dunning"   dunning
+    J.value "canceled"  canceled
     
 {- |
    Fetch the xtoken param and double read it. Once as String and once as MagicHash.

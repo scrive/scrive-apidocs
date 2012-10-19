@@ -16,12 +16,12 @@
             if(this.isEnterprise())
                 return 500000; 
             if(!this.isFree() && this.isActive())
-                return 500; // # of docs it says in the TOS
+                return 100; // # of docs it says in the TOS
             else 
                 return 3;
         },
         docsUsed: function() {
-            return this.get('docsused');
+            return Math.min(this.get('docsused'), this.docsTotal());
         },
         docsLeft: function() {
             return this.docsTotal() - this.docsUsed();
@@ -31,6 +31,9 @@
         },
         status: function() {
             return this.get('status');
+        },
+        willCancel: function() {
+            return this.get('canceled');
         },
         isEnterprise: function() {
             return this.plan() === 'enterprise';
@@ -52,6 +55,12 @@
         },
         isDunning: function() {
             return this.get('dunning');
+        },
+        hasUsedAll: function() {
+            return !this.isEnterprise()  && 
+                   !this.isFree()        && 
+                    this.isActive()      &&
+                    this.docsLeft() <= 0;
         }
     });
 
@@ -61,25 +70,57 @@
             _.bindAll(this);
             this.model.bind('change reset fetch', this.render);
         },
+        setStyle: function() {
+            var view = this;
+            var model = view.model;
+            var $el = $(view.el);
+            $el.removeClass('warn').removeClass('good');
+            if(model.isFree() && model.docsLeft() > 0)
+                $el.addClass('good');
+            else if(model.isFree())
+                $el.addClass('warn');
+            else if(model.hasUsedAll())
+                $el.addClass('warn');
+            else if(model.isOverdue())
+                $el.addClass('warn');
+            else if(model.isDunning())
+                $el.addClass('good');
+            else if(model.isCanceled())
+                $el.addClass('warn');
+            else if(model.isDeactivated())
+                $el.addClass('warn');
+            else if(model.willCancel())
+                $el.addClass('good');
+        },
         headline: function() {
             var view = this;
             var model = view.model;
-            if(model.isFree())
-                return localization.blocking.free.headline;
+            if(model.isFree() && model.docsLeft() > 0)
+                return localization.blocking.free.has.headline + model.docsUsed() + " / " + model.docsTotal();
+            else if(model.isFree())
+                return localization.blocking.free.hasNot.headline + model.docsUsed() + " / " + model.docsTotal();
+            else if(model.hasUsedAll())
+                return localization.blocking.usedall.headline;
             else if(model.isOverdue())
                 return localization.blocking.overdue.headline;
             else if(model.isDunning())
                 return localization.blocking.dunning.headline;
             else if(model.isCanceled())
-                return localization.blocking.canceled.headline;
+                return localization.blocking.canceled.headline + model.docsUsed() + " / " + model.docsTotal();
             else if(model.isDeactivated())
-                return localization.blocking.deactivated.headline;
+                return localization.blocking.deactivated.headline + model.docsUsed() + " / " + model.docsTotal();
+            else if(model.willCancel())
+                return localization.blocking.willcancel.headline;
         },
         subtext1: function() {
             var view = this;
             var model = view.model;
-            if(model.isFree())
-                return localization.blocking.free.subtext1;
+            if(model.isFree() && model.docsLeft() > 0)
+                return localization.blocking.free.has.subtext1;
+            else if(model.isFree())
+                return localization.blocking.free.hasNot.subtext1;
+            else if(model.hasUsedAll())
+                return localization.blocking.usedall.subtext1;
             else if(model.isOverdue())
                 return localization.blocking.overdue.subtext1;
             else if(model.isDunning())
@@ -88,12 +129,18 @@
                 return localization.blocking.canceled.subtext1;
             else if(model.isDeactivated())
                 return localization.blocking.deactivated.subtext1;
+            else if(model.willCancel())
+                return localization.blocking.willcancel.subtext1;
         },
         subtext2: function() {
             var view = this;
             var model = view.model;
-            if(model.isFree())
-                return localization.blocking.free.subtext2;
+            if(model.isFree() && model.docsLeft() > 0)
+                return ""; //localization.blocking.free.has.subtext2;
+            else if(model.isFree())
+                return ""; //localization.blocking.free.hasNot.subtext2;
+            else if(model.hasUsedAll())
+                return ""; //localization.blocking.usedall.subtext2;
             else if(model.isOverdue())
                 return localization.blocking.overdue.subtext2;
             else if(model.isDunning())
@@ -102,27 +149,70 @@
                 return localization.blocking.canceled.subtext2;
             else if(model.isDeactivated())
                 return localization.blocking.deactivated.subtext2;
+            else if(model.willCancel())
+                return localization.blocking.willcancel.subtext2;
         },
         makeBox: function() {
             var view = this;
             var model = view.model;
             
-            var container = $("<div class='instructions' />");
+            var container = $("<div />");
             container.append($("<div class='headline' />").html(this.headline()));
             container.append($("<div class='subheadline' />").html(this.subtext1()));
             container.append($("<div class='subheadline' />").html(this.subtext2()));
+
+            view.setStyle();
 
             return container;
         },
         render: function() {
             var view = this;
             var model = view.model;
+            var $el = $(view.el);
+            $el.unbind('click');
             if(model.isFree() || 
                model.isOverdue() ||
                model.isDunning() || 
                model.isCanceled() || 
-               model.isDeactivated())
-                $(view.el).html(view.makeBox());
+               model.isDeactivated() ||
+               model.willCancel() ||
+               model.hasUsedAll()) {
+                $el.html(view.makeBox());
+                $el.bind('click', function() {
+                    view.clickAction();
+                });
+            }
+        },
+        clickAction: function() {
+            var view = this;
+            var model = view.model;
+            if(model.isFree())
+                view.paymentsPopup({
+                    title: model.docsUsed() + " " + localization.blocking.free.click.title,
+                    header: localization.blocking.free.click.header
+                });
+            else if(model.hasUsedAll())
+                window.location = 'mailto:support@scrive.com';
+            else if(model.isOverdue())
+                window.location = '/payments/dashboard';
+            else if(model.isDunning())
+                window.location = '/payments/dashboard';
+            else if(model.isCanceled())
+                window.location = '/payments/dashboard';
+            else if(model.isDeactivated())
+                window.location = 'mailto:support@scrive.com';
+            else if(model.willCancel())
+                window.location = '/payments/dashboard';
+        },
+        paymentsPopup: function(opts) {
+            var div = $('<div />').addClass('price-plan');
+            Confirmation.popup({
+                title: opts.title,
+                content: div,
+                acceptVisible: false,
+                width: "906px"
+            });
+            PricePage({header : opts.header, showContact: false}).show(div);
         },
         createPopup: function() {
             var view = this;
@@ -139,43 +229,33 @@
             else
                 view.payingCreatePopup();
         },
-        csvPopup: function(n) {
+        csvMessage: function() {
             var view = this;
             var model = view.model;
            
             if(model.isFree())
-                view.freeCSVPopup();
+                return view.freeCSVMessage();
             else if(model.isOverdue())
-                view.overdueCSVPopup();
+                return view.overdueCSVMessage();
             else if(model.isCanceled())
-                view.canceledCSVPopup();
+                return view.canceledCSVMessage();
             else if(model.isDeactivated())
-                view.deactivatedCSVPopup();
+                return view.deactivatedCSVMessage();
             else
-                view.payingCSVPopup();
+                return view.payingCSVMessage();
         },
         freeCreatePopup: function() {
-            var div = $('<div />');
-            Confirmation.popup({
-                title: localization.blocking.free.create.title,
-                content: div,
-                acceptVisible: false
+            this.paymentsPopup({
+                title: this.model.docsUsed() + " " + localization.blocking.free.create.title,
+                header: localization.blocking.free.create.header
             });
-            PricePage({header : localization.blocking.free.create.header}).show(div);
         },
-        freeCSVPopup: function() {
-            var div = $('<div />');
-            Confirmation.popup({
-                title: localization.blocking.free.csv.title,
-                content: div,
-                acceptVisible: false
-            });
-            PricePage({header : localization.blocking.free.csv.header,
-                       showContact : false}).show(div);
+        freeCSVMessage: function() {
+            return localization.blocking.free.csv.header;
         },
         overdueCreatePopup: function() {
             var p = $('<p />');
-            p.text(localization.blocking.overdue.create.body);
+            p.html(localization.blocking.overdue.create.body);
             Confirmation.popup({
                 title: localization.blocking.overdue.create.title,
                 content: p,
@@ -186,36 +266,56 @@
                 }
             });
         },
-        overdueCSVPopup: function() {
+        overdueCSVMessage: function() {
+            return localization.blocking.overdue.csv.body;
+        },
+        canceledCreatePopup: function() {
             var p = $('<p />');
-            p.text(localization.blocking.overdue.csv.body);
+            p.html(localization.blocking.canceled.create.body);
             Confirmation.popup({
-                title: localization.blocking.overdue.csv.title,
+                title: localization.blocking.canceled.create.title,
                 content: p,
-                acceptText: localization.blocking.button.doublecheck,
+                acceptText: localization.blocking.button.reinstate,
                 acceptColor: "green",
                 onAccept: function() {
                     window.location = "/payments/dashboard";
                 }
             });
         },
-        canceledCreatePopup: function() {
-            
-        },
-        canceledCSVPopup: function() {
-
+        canceledCSVMessage: function() {
+            return localization.blocking.canceled.csv.body;
         },
         deactivatedCreatePopup: function() {
-
+            var p = $('<p />');
+            p.html(localization.blocking.deactivated.create.body);
+            Confirmation.popup({
+                title: localization.blocking.deactivated.create.title,
+                content: p,
+                acceptText: localization.blocking.button.contact,
+                acceptColor: "green",
+                onAccept: function() {
+                    window.location = "mailto:support@scrive.com";
+                }
+            });
         },
-        deactivatedCSVPopup: function() {
-
+        deactivatedCSVMessage: function() {
+            return localization.blocking.deactivated.csv.body;
         },
         payingCreatePopup: function() {
-
+            var p = $('<p />');
+            p.html(localization.blocking.paying.create.body);
+            Confirmation.popup({
+                title: localization.blocking.paying.create.title,
+                content: p,
+                acceptText: localization.blocking.button.contact,
+                acceptColor: "green",
+                onAccept: function() {
+                    window.location = "mailto:support@scrive.com";
+                }
+            });
         },
-        payingCSVPopup: function() {
-
+        payingCSVMessage: function() {
+            return localization.blocking.paying.csv.body;
         }
     });
 
@@ -233,9 +333,11 @@
             shouldBlockDocs: function(n) {
                 return n > model.docsLeft();
             },
-            maybePopup: function(n) {
-                if(this.shouldBlockDocs(n))
-                    view.popup();
+            createPopup: function() {
+                view.createPopup();
+            },
+            csvMessage: function() {
+                return view.csvMessage();
             }
         }
     };
