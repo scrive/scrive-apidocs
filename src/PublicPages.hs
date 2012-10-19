@@ -15,7 +15,10 @@ import Redirect
 import Routing
 import Happstack.StaticRouting (Route, choice, dir)
 import User.Model
+import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
+import qualified Data.ByteString.UTF8 as BS (fromString)
 
+import Templates.Templates
 import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 
 publicPages :: Route (KontraPlus Response)
@@ -38,6 +41,8 @@ publicPages = choice
      -- sitemap
      , dir "webbkarta"       $ hGetAllowHttp $ handleSitemapPage
      , dir "sitemap"         $ hGetAllowHttp $ handleSitemapPage
+     -- localization javascript
+     , dir "localization"    $ allLocaleDirs $ \l -> hGetAllowHttp $ toK1 $ \(_::String) ->  generateLocalizationScript l
      ]
 
 {- |
@@ -124,3 +129,10 @@ handleWholePage f = do
   response <- V.simpleResponse content
   clearFlashMsgs
   return response
+
+generateLocalizationScript :: Kontrakcja m => Locale -> m Response
+generateLocalizationScript locale = do
+   switchLocale $ locale
+   script <- renderTemplate_ "javascriptLocalisation"
+   ok $ toResponseBS (BS.fromString "text/javascript;charset=utf-8") $ BSL.fromString script
+  

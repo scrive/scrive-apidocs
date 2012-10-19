@@ -42,10 +42,13 @@ import User.Region
 import qualified Codec.Binary.Url as URL
 import qualified Templates.Fields as F
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
-import qualified Data.ByteString.UTF8 as BS (fromString)
+import qualified Data.ByteString.UTF8 as BS (fromString,toString)
 import qualified Static.Resources as SR
+import qualified Data.ByteString.Base16 as B16
 import Data.Char
 import Data.String.Utils
+import Version
+
 
 {- |
    The name of our application (the codebase is known as kontrakcja,
@@ -188,6 +191,7 @@ standardPageFields ctx title mpubliclink showCreateAccount loginOn referer email
   contextInfoFields ctx
   publicSafeFlagField ctx loginOn (isJust mpubliclink)
   loginModal loginOn referer email
+  F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
   F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
 
 {- |

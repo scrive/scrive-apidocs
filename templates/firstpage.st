@@ -8,7 +8,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 <meta name="description" content="$_firstPageMetaDescription()$" />
                 <link href='https://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
                 $staticResources:noescape()$
-                <script type="text/javascript"> $javascriptLocalisation()$ </script>
+                <script src="/localization/$ctxregion$/$ctxlang$/$versioncode$.js"  type="text/javascript"></script>
                 $if(production)$
                     <script src="$resourcehostpart$/libs/analytics.js" type="text/javascript"></script>
                 $endif$

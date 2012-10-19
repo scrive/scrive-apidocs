@@ -25,7 +25,7 @@ standardHeaderContents=
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta http-equiv="content-language" content="$ctxlang$" />
         <link href='https://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
-        <script type="text/javascript">  $javascriptLocalisation()$</script>
+        <script src="/localization/$ctxregion$/$ctxlang$/$versioncode$.js"  type="text/javascript"></script>
         $staticResources:noescape()$
         $if(publicsafe)$
             <script src="/libs/jquery.tweet.js"  type="text/javascript"></script>
