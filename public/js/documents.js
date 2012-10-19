@@ -502,8 +502,15 @@ window.Document = Backbone.Model.extend({
           if (sig.signorder() > mpso) sig.setSignOrder(mpso);
         });
     },
+    needRecall : function() {
+      return this.closed() && this.mainfile() == undefined;
+    },
     parse: function(args) {
      var self = this;
+     setTimeout(function() {
+         if (self.needRecall())
+            self.recall();
+     },500);
       var dataForFile =
         { documentid: self.documentid(),
           signatoryid: self.viewer().signatoryid()
