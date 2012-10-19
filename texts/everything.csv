@@ -2410,7 +2410,7 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_blockingFreeHasNotSubtext1",,,"Purchase a subscription"
 "_blockingFreeHasNotSubtext2",,,
 "_blockingOverdueCreateTitle",,,"Payment failure"
-"_blockingOverdueCreateBody","Det uppstod ett problem med din senaste betalning och ditt konto har därför frysts. Var vänlig och besök betalsidorna och kontrollera din betalningsinformation.",,"There was something wrong with your last payment and your account has been put on hold. Please visit the payments page and double-check your billing information."
+"_blockingOverdueCreateBody","Det uppstod ett problem med din senaste betalning och ditt konto har därför frysts. Var vänlig och besök betalsidorna och kontrollera din betalningsinformation.",,"There was something wrong with your last payment and your account has been put on hold. Please visit the <a href='/payments/dashboard'>payments page</a> and double-check your billing information."
 "_blockingOverdueCSVTitle",,,"Payment failure"
 "_blockingOverdueCSVBody","Det var något fel med din senaste betalning, ditt konto har därför frysts. Besök betalningssidan och kontrollera dina faktureringsuppgifter.",,"There was something wrong with your last payment and your account has been put on hold. Please visit the <a href='/payments/dashboard'>payments page</a> and double-check your billing information."
 "_blockingOverdueHeadline",,,"Payment failure"

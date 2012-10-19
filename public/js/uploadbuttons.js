@@ -74,6 +74,11 @@ var UploadButtonModel = Backbone.Model.extend({
   },
   color : function() {
         return this.get("color");
+  },
+  click: function() {
+      if(this.get('onClick')) {
+          return this.get('onClick')();
+      }
   }
 });
 
@@ -148,6 +153,7 @@ var UploadButtonView = Backbone.View.extend({
             }
         });
         button.append($("<span/>").append(fileinput)); // This span is bugfix for error cases
+        button.click(function() {return model.click()} );
         $(this.el).append(button);
         return this;
     }

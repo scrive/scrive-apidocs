@@ -127,11 +127,8 @@ window.DocumentsListDefinition = function(archive) { return {
                                  return false;
                                }
 
-
                               new Submit({
                                 
-                                
-
                                 method : "POST",
                                 url : "/api/frontend/createfromfile",
                                 ajax: true,

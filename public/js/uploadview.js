@@ -18,17 +18,18 @@
                 text: localization.uploadView.newProcessFromFile,
                 color: "green",
                 onClick: function() {
-                 new Submit({
-                    method : "POST",
-                    url : "/api/frontend/createfromfile",
-                    ajax: true,
-                    expectedType: 'json',
-                      // blocking
-                     if(uploadBlocking && uploadBlocking.shouldBlockDocs(1)) {
+                    // blocking
+                    if(uploadBlocking && uploadBlocking.shouldBlockDocs(1)) {
                        uploadBlocking.createPopup();
                        return false;
                      }
 
+                 new Submit({
+                     
+                    method : "POST",
+                    url : "/api/frontend/createfromfile",
+                    ajax: true,
+                    expectedType: 'json',
                     ajaxsuccess: function(d) {
                             if (d != undefined && d.id != undefined) {
                                 window.location.href = "/d/"+d.id;
@@ -52,6 +53,12 @@
             width : 145,
             text : localization.uploadView.chooseTemplate,
             onClick : function() {
+                // blocking
+                if(uploadBlocking && uploadBlocking.shouldBlockDocs(1)) {
+                    uploadBlocking.createPopup();
+                    return false;
+                }
+
                 wiz.nextStep();
                 return false;
             }
