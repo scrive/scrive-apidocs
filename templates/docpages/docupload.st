@@ -27,7 +27,7 @@ uploadPage=
             <span class="numbericon2"></span><a href="#">$_step2selectIfElse()$</a>
       </li>
       <li class="float-left">
-            <span class="numbericon2"></span><a href="#">$_step3selectIfNotTemplate()$</a>
+            <span class="numbericon3"></span><a href="#">$_step3selectIfNotTemplate()$</a>
       </li>
       <li class="float-right"></li>
   </ul>
