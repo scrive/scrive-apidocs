@@ -507,6 +507,10 @@
 
 }
 
+.designCSVSignatoryPopupContent .generalProblems{
+    margin-bottom: 8px;
+}
+
 .designCSVSignatoryPopupContent .problem{
   color: red;
   font-size: 10px;
