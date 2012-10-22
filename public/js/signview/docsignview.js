@@ -156,12 +156,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
   },
   extradetailssection : function() {
       if (this.get("extradetailssection") == undefined)
-        this.set({'extradetailssection' :
-                        new DocumentSignExtraDetailsSection({
-                            model: this.document().currentSignatory(),
-                            el: $("<div class='section spacing'/>"),
-                        })
-        }, {silent : true});
+        this.set({'extradetailssection' :  new DocumentSignExtraDetailsSection({model: this.document().currentSignatory()}) }, {silent : true});
       return this.get('extradetailssection');
   },
   mainfile : function() {

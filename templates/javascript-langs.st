@@ -483,6 +483,9 @@ javascriptLocalisation =
              , checkboxes : {
                     pleaseCheck : "$_checkboxPleaseCheck()$" 
                }
+             , filladitionfields : "Please fill aditional fields"
+             , filladitionfieldsdescription : "Loren ipsum somer sonum"
+
         }
         , poweredByScrive : "$_poweredByScrive()$"
         , verification : {
