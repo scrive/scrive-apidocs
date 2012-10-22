@@ -208,7 +208,7 @@ window.Field = Backbone.Model.extend({
         if ( this.isEmail() && this.value() != undefined && this.value() != "") {
             var msg = localization.designview.validation.missingOrWrongEmail;
             this.setValue(this.value().trim());
-            return new EmailValidation({message: msg})
+            return new EmailValidation({message: msg});
         }
 
         if (forSigning && this.signatory().author() && this.signatory().document().elegAuthentication() && this.isSSN()) {
