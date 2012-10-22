@@ -61,6 +61,7 @@ window.TemplatesListDefinition = function(archive) { return {
                 button: UploadButton.init({
                             name : "file",
                             size: "tiny",
+                            color : "black",
                             width : "140",
                             text: localization.archive.templates.createnew,
                             submitOnUpload: true,

@@ -118,6 +118,7 @@ window.DocumentsListDefinition = function(archive) { return {
                 button: UploadButton.init({
                             name : "file",
                             size: "tiny",
+                            color : "black",
                             width : "110",
                             text: localization.archive.documents.createnew,
                             submitOnUpload: true,
