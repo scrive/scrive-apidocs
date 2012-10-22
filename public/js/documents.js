@@ -266,29 +266,6 @@ window.Document = Backbone.Model.extend({
               ajax: true
           });
     },
-    readyToBeSend : function() {
-        var view = this;
-        var failed = false;
-        var sigs = this.signatories();
-        var vres = true;
-        var atLeastOneSignatory = false;
-        for(var i =0; i< sigs.length; i++)
-        {   if (sigs[i].signs()) atLeastOneSignatory = true;
-            var fields = sigs[i].fields();
-            for(var j = 0; j< fields.length; j++) {
-                if (!fields[j].validation(false).validateData(fields[j].value()))
-                  return false;
-            }
-        }
-
-        if (!atLeastOneSignatory)
-          return false;
-        var mails = _.map(sigs, function(sig) {return sig.email();}).sort();;
-        for (var i =0;i< mails.length -1;i++)
-                if (mails[i] == mails[i+1])
-                  return false;
-        return true;
-    },
     draftData: function() {
       return {
           title: this.title(),
