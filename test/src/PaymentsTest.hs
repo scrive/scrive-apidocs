@@ -6,14 +6,14 @@ import User.Model
 import TestingUtil
 import TestKontra
 import Company.Model
-import MagicHash
 import MinutesTime
 
 import Data.Maybe
 import Control.Monad
 import Test.Framework
-import Test.QuickCheck
 import Control.Monad.Trans
+
+--import Utils.Either
 
 import Payments.Model
 
@@ -211,10 +211,11 @@ testPaymentPlanInactiveUserActive = do
 
 testRecurlySavesAccount :: TestEnv ()
 testRecurlySavesAccount = do
-  mh :: MagicHash <- rand 1000 arbitrary
-  let ac = show mh -- generate a random account code to avoid collisions
-  
-  cs <- liftIO $ createSubscription "curl" "c31afaf14af3457895ee93e7e08e4451" "pay" "SEK" ac "eric@scrive.com" "Eric" "Normand" "4111111111111111" "09" "2020" 5
+  t <- getMinutesTime
+  let ac = show $ toSeconds t -- generate a random account code to avoid collisions
+      email = "eric+" ++ ac ++ "@scrive.com"
+
+  cs <- liftIO $ createSubscription "curl" "c31afaf14af3457895ee93e7e08e4451" "pay" "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
 
   assertRight cs
 
@@ -238,10 +239,11 @@ testRecurlySavesAccount = do
 
 testRecurlyChangeAccount :: TestEnv ()
 testRecurlyChangeAccount = do
-  mh :: MagicHash <- rand 1000 arbitrary
-  let ac = show mh -- generate a random account code to avoid collisions
-  
-  cs <- liftIO $ createSubscription "curl" "c31afaf14af3457895ee93e7e08e4451" "pay" "SEK" ac "eric@scrive.com" "Eric" "Normand" "4111111111111111" "09" "2020" 5
+  t <- getMinutesTime
+  let ac = show $ toSeconds t -- generate a random account code to avoid collisions
+      email = "eric+" ++ ac ++ "@scrive.com"
+
+  cs <- liftIO $ createSubscription "curl" "c31afaf14af3457895ee93e7e08e4451" "pay" "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
   assertRight cs
 
   gs <- liftIO $ getSubscriptionsForAccount "curl" "c31afaf14af3457895ee93e7e08e4451" ac
@@ -272,10 +274,11 @@ testRecurlyChangeAccount = do
   
 testRecurlyChangeAccountDefer :: TestEnv ()
 testRecurlyChangeAccountDefer = do
-  mh :: MagicHash <- rand 1000 arbitrary
-  let ac = show mh -- generate a random account code to avoid collisions
-  
-  cs <- liftIO $ createSubscription "curl" "c31afaf14af3457895ee93e7e08e4451" "pay" "SEK" ac "eric@scrive.com" "Eric" "Normand" "4111111111111111" "09" "2020" 5
+  t <- getMinutesTime
+  let ac = show $ toSeconds t -- generate a random account code to avoid collisions
+      email = "eric+" ++ ac ++ "@scrive.com"
+
+  cs <- liftIO $ createSubscription "curl" "c31afaf14af3457895ee93e7e08e4451" "pay" "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
 
   assertRight cs
 
@@ -314,10 +317,11 @@ testRecurlyChangeAccountDefer = do
   
 testRecurlyCancelReactivate :: TestEnv ()
 testRecurlyCancelReactivate = do
-  mh :: MagicHash <- rand 1000 arbitrary
-  let ac = show mh -- generate a random account code to avoid collisions
+  t <- getMinutesTime
+  let ac = show $ toSeconds t -- generate a random account code to avoid collisions
+      email = "eric+" ++ ac ++ "@scrive.com"
   
-  cs <- liftIO $ createSubscription "curl" "c31afaf14af3457895ee93e7e08e4451" "pay" "SEK" ac "eric@scrive.com" "Eric" "Normand" "4111111111111111" "09" "2020" 5
+  cs <- liftIO $ createSubscription "curl" "c31afaf14af3457895ee93e7e08e4451" "pay" "SEK" ac email "Eric" "Normand" "4111111111111111" "09" "2020" 5
   assertRight cs
 
   gs <- liftIO $ getSubscriptionsForAccount "curl" "c31afaf14af3457895ee93e7e08e4451" ac
@@ -344,3 +348,5 @@ testRecurlyCancelReactivate = do
   let Right [sub3] = gs3
 
   assertBool ("Should be 'active', was '" ++ subState sub3 ++ "'") $ subState sub3 == "active"
+
+  
