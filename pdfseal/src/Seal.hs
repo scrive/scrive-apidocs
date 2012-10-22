@@ -321,12 +321,16 @@ commandsFromFields pagew pageh fields = concatMap commandsFromField fields
                          tell "q\n"
                          tellMatrix 1 0 0 1
                                       (x * fromIntegral pagew)
-                                      (((1 - y) * fromIntegral pageh) - fontBaseline * fontSize * fromIntegral pagew)
+                                      (((1 - y) * fromIntegral pageh) - fontBaseline * fs)
                          tell "BT\n"
-                         tell $ "/SkrivaPaHelvetica " ++ show (Number (fontSize * fromIntegral pagew)) ++ " Tf\n"
+                         tell $ "/SkrivaPaHelvetica " ++ show (Number fs) ++ " Tf\n"
                          tell $ "(" ++ winAnsiPostScriptEncode val ++ ") Tj\n"
                          tell "ET\n"
                          tell "Q\n"
+       where
+          fs = if fontSize>0
+               then fontSize * fromIntegral pagew
+               else 10
 
     commandsFromField FieldJPG{ SealSpec.valueBase64 = val } | null val = ""
     commandsFromField FieldJPG{ SealSpec.valueBase64 = val
