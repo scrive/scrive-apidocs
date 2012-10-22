@@ -750,7 +750,7 @@ var DocumentDesignView = Backbone.View.extend({
     },
     removeFileOption : function() {
       var document = this.model;
-      var icon = $("<span class='float-right' style='margin-right:20px;'><div class='icon delete' style='margin-top:2px;position: absolute;z-index:1 ;cursor:pointer;'/></span>");
+      var icon = $("<span class='float-right' style='margin-right:20px;'><div class='icon delete' style='margin-top:12px;position: absolute;z-index:1 ;cursor:pointer;'/></span>");
       icon.click(function() {
         document.save();
         document.afterSave( function() {
