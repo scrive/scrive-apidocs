@@ -166,11 +166,12 @@ verifySignatureAndGetSignInfo ::  Kontrakcja m =>
                                    DocumentID
                                    -> SignatoryLinkID
                                    -> MagicHash
+                                   -> [(FieldType, String)]
                                    -> SignatureProvider
                                    -> String
                                    -> String
                                    -> m VerifySignatureResult
-verifySignatureAndGetSignInfo docid signid magic provider signature transactionid = do
+verifySignatureAndGetSignInfo docid signid magic fields provider signature transactionid = do
     ELegTransaction{..} <- guardJustM404  $ dbQuery $ GetELegTransaction transactionid
     document            <- guardRightM    $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
     siglink             <- guardJust404   $ getSigLinkFor document signid
@@ -200,7 +201,7 @@ verifySignatureAndGetSignInfo docid signid magic provider signature transactioni
         Right (cert, attrs) -> do
             Log.eleg "Successfully identified using eleg. (Omitting private information)."
             -- compare information from document (and fields) to that obtained from BankID
-            info <- compareSigLinkToElegData siglink attrs
+            info <- compareSigLinkToElegData siglink fields attrs
             case info of
                 -- either number or name do not match
                 Left (msg, sfn, sln, spn) -> do
@@ -282,7 +283,7 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
       Right (cert, attrs) -> do
         authorsl <- guardJust $ getAuthorSigLink doc
         -- compare information from document (and fields) to that obtained from BankID
-        info <- compareSigLinkToElegData authorsl attrs
+        info <- compareSigLinkToElegData authorsl [] attrs
         case info of
           Left (msg, _, _, _) -> do
             Log.eleg $ "merge failed: " ++ msg
@@ -456,9 +457,10 @@ verifySignatureAndGetSignInfoMobile :: Kontrakcja m
                                        => DocumentID
                                        -> SignatoryLinkID
                                        -> MagicHash
+                                       -> [(FieldType, String)]
                                        -> String
                                        -> m VerifySignatureResult
-verifySignatureAndGetSignInfoMobile docid signid magic transactionid = do
+verifySignatureAndGetSignInfoMobile docid signid magic fields transactionid = do
     document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
     siglink <- guardJust $ getSigLinkFor document signid
     -- valid transaction?
@@ -475,7 +477,7 @@ verifySignatureAndGetSignInfoMobile docid signid magic transactionid = do
       Right (CRComplete _ signature attrs) -> do
             Log.eleg "Successfully identified using eleg. (Omitting private information)."
             -- compare information from document (and fields) to that obtained from BankID
-            info <- compareSigLinkToElegData siglink attrs
+            info <- compareSigLinkToElegData siglink fields attrs 
             case info of
                 -- either number or name do not match
                 Left (msg, sfn, sln, spn) -> do
@@ -512,7 +514,7 @@ verifySignatureAndGetSignInfoMobileForAuthor docid transactionid = do
       Right (CRComplete _ signature attrs) -> do
             Log.eleg "Successfully identified using eleg. (Omitting private information)."
             -- compare information from document (and fields) to that obtained from BankID
-            info <- compareSigLinkToElegData siglink attrs
+            info <- compareSigLinkToElegData siglink [] attrs
             case info of
                 -- either number or name do not match
                 Left (msg, sfn, sln, spn) -> do

@@ -185,10 +185,10 @@ signDocument documentid
              transactionid <- getDataFnM $ look "transactionid"
              esigninfo <- case provider of
                MobileBankIDProvider -> do
-                 BankID.verifySignatureAndGetSignInfoMobile documentid signatorylinkid magichash transactionid
+                 BankID.verifySignatureAndGetSignInfoMobile documentid signatorylinkid magichash fields transactionid
                _ -> do
                  signature <- getDataFnM $ look "signature"
-                 BankID.verifySignatureAndGetSignInfo documentid signatorylinkid magichash provider signature transactionid
+                 BankID.verifySignatureAndGetSignInfo documentid signatorylinkid magichash fields provider signature transactionid
              case esigninfo of
                BankID.Problem msg -> return $ Left msg
                BankID.Mismatch msg sfn sln spn -> do

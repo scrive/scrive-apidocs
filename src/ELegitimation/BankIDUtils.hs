@@ -13,6 +13,9 @@ module ELegitimation.BankIDUtils (
 
 import Data.Char
 import Data.List
+import Data.Maybe
+import Data.Functor
+
 import Doc.DocStateData as D
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
@@ -125,12 +128,12 @@ compareLastNames lnContract lnEleg
 --import qualified Data.ByteString.Lazy.Char8 as B
 
 
-compareSigLinkToElegData :: TemplatesMonad m => SignatoryLink -> [(String, String)] -> m (Either (String, String, String, String) (Bool, Bool, Bool))
-compareSigLinkToElegData sl attrs =
+compareSigLinkToElegData :: TemplatesMonad m => SignatoryLink ->  [(FieldType, String)] -> [(String, String)] -> m (Either (String, String, String, String) (Bool, Bool, Bool))
+compareSigLinkToElegData sl fields attrs =
   -- compare information from document (and fields) to that obtained from BankID
-  let contractFirst  = getFirstName sl
-      contractLast   = getLastName sl
-      contractNumber = getPersonalNumber sl
+  let contractFirst  = fromMaybe (getFirstName sl)      (snd <$> (find (\(ft,_) -> ft == FirstNameFT) fields))
+      contractLast   = fromMaybe (getLastName sl)       (snd <$> (find (\(ft,_) -> ft == LastNameFT) fields))
+      contractNumber = fromMaybe (getPersonalNumber sl) (snd <$> (find (\(ft,_) -> ft == PersonalNumberFT) fields))
                 
       elegFirst  = fieldvaluebyid "Subject.GivenName"    attrs
       elegLast   = fieldvaluebyid "Subject.Surname"      attrs

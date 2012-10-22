@@ -250,8 +250,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
        return this.get('filltasks');
   },
   fillExtraDetailsTask : function() {
-        var document = this.document();
-        if (this.get("fillExtraDetailsTask") == undefined) {
+        var self = this;
+        var document = self.document();
+        if (self.get("fillExtraDetailsTask") == undefined) {
          var task = new PageTask({
                     isComplete: function() {
                         var res = true;
@@ -267,15 +268,14 @@ var DocumentSignViewModel = Backbone.Model.extend({
                         });
                         return res;
                     },
-                    el: $(this.extradetailssection().el),
-                    onActivate: function() {
-                      return false;
-                    }
+                    el: $(self.extradetailssection().el),
+                    onActivate   : function() {$(self.extradetailssection().el).addClass("highlight");},
+                    onDeactivate : function() {$(self.extradetailssection().el).removeClass("highlight");}
                 });
          document.currentSignatory().bind("change", function() { task.update()});
-         this.set({'fillExtraDetailsTask' : task }, {silent : true});
+         self.set({'fillExtraDetailsTask' : task }, {silent : true});
        }
-       return this.get('fillExtraDetailsTask');  
+       return self.get('fillExtraDetailsTask');  
   },
   tasks : function() {
       if (this.get("tasks") == undefined) {

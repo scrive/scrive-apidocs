@@ -230,14 +230,14 @@ signatoryAttachmentJSON sa = do
   J.value "file" $ fileJSON <$> mfile
 
 signatoryFieldsJSON :: Document -> SignatoryLink -> JSValue
-signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = JSArray $
+signatoryFieldsJSON doc (SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = JSArray $
   for orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements} ->
     case sfType of
-      FirstNameFT             -> fieldJSON "standard" "fstname"   sfValue (closedF sf  && (not $ isPreparation doc) || isAuthor sl) sfPlacements
-      LastNameFT              -> fieldJSON "standard" "sndname"   sfValue (closedF sf  && (not $ isPreparation doc) || isAuthor sl) sfPlacements
-      EmailFT                 -> fieldJSON "standard" "email"     sfValue (closedF sf  && (not $ isPreparation doc) || isAuthor sl) sfPlacements
-      PersonalNumberFT        -> fieldJSON "standard" "sigpersnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      CompanyFT               -> fieldJSON "standard" "sigco"     sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      FirstNameFT             -> fieldJSON "standard" "fstname"   sfValue ((not $ null $ sfValue)  && (not $ isPreparation doc)) sfPlacements
+      LastNameFT              -> fieldJSON "standard" "sndname"   sfValue ((not $ null $ sfValue)  && (not $ isPreparation doc)) sfPlacements
+      EmailFT                 -> fieldJSON "standard" "email"     sfValue ((not $ null $ sfValue)  && (not $ isPreparation doc)) sfPlacements
+      PersonalNumberFT        -> fieldJSON "standard" "sigpersnr" sfValue ((not $ null $ sfValue)  && (not $ isPreparation doc)) sfPlacements
+      CompanyFT               -> fieldJSON "standard" "sigco"     sfValue ((not $ null $ sfValue)  && (ELegAuthentication == documentauthenticationmethod doc) && (not $ isPreparation doc)) sfPlacements
       CompanyNumberFT         -> fieldJSON "standard" "sigcompnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
       SignatureFT             -> fieldJSON "signature" "signature" sfValue (closedSignatureF sf  && (not $ isPreparation doc)) sfPlacements
       CustomFT label closed   -> fieldJSON "custom" label       sfValue (closed  && (not $ isPreparation doc))  sfPlacements
