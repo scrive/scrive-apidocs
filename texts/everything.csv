@@ -2555,3 +2555,5 @@ have an account please follow the account creation process. Free use of up to 5 
 "_maybeYouWantToSendDirectly","New document was created from template. Since delivery method for this document is pad and all required fields are set for it, maybe you want to send it directly from this view?",,"New document was created from template. Since delivery method for this document is pad and all required fields are set for it, maybe you want to send it directly from this view?"
 "_sendDirectly","Send directly from this view",,"Send directly from this view"
 "_goToDesignView","Go to design view",,"Go to design view"
+"_filladitionfields","Extra uppgifter",,"Additional details"
+"_filladitionfieldsdescription","Vänligen uppge denna extra information om dig själv innan du signerar.",,"Please submit additional information about yourself before you sign."

@@ -988,3 +988,30 @@ div.spacing.butt {
     #position: relative; 
     #top: -50%
 }
+
+.extradetails .title {
+  float: left;
+  width: 260px;
+}
+
+.extradetails .descriptionbox {
+  float: left;
+  width: 260px;
+}
+
+.extradetails .fillbox {
+  float: left;
+  width: 260px;
+}
+
+
+.extradetails .fillbox input{
+    background: none repeat scroll 0 0 #FFFFFF;
+    border: 1px solid #C6DADE;
+    border-radius: 4px 4px 4px 4px;
+    height: 17px;
+    margin: 5px auto;
+    padding: 8px;
+    width: 240px;
+  
+}
