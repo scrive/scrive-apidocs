@@ -557,6 +557,10 @@
                     model.submitSubscription(function() {
                         var text;
                         var header;
+                        if(model.type() === 'user') {
+                            window.location = '/payments/dashboard';
+                            return true;
+                        }
 
                         LoadingDialog.close();
                         if(model.createdUser()) {
@@ -945,7 +949,7 @@
     };
     window.PaymentsDashboard = function(opts) {
         $("head").append('<link rel="stylesheet" href="/libs/recurly/recurly.css"></link>');
-        var model = new PricePageModel();
+        var model = new PricePageModel(opts);
         var el = $("<div class='tab-container'/>");
         var view = null;
         var subel = $("<div class='tab-content account js-paymentsdashboard payments-dashboard'/>");
@@ -974,7 +978,7 @@
 
     window.PricePage = function(opts) { 
         var model = new PricePageModel(opts);
-        var view  = new PricePageView({model:model});
+        var view  = new PricePageView($.extend({model:model}, opts));
 
         model.fetch({success: function() {
             model.trigger('fetch');

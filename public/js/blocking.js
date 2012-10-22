@@ -212,7 +212,7 @@
                 acceptVisible: false,
                 width: "906px"
             });
-            PricePage({header : opts.header, showContact: false}).show(div);
+            PricePage({header : opts.header, hideContacts: true}).show(div);
         },
         createPopup: function() {
             var view = this;
