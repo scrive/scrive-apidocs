@@ -22,6 +22,7 @@ module MinutesTime
        , showAsMonth
        , showAsDate
        , formatMinutesTimeUTC
+       , formatMinutesTimeSimple
        , formatMinutesTimeRealISO
        , formatMinutesTimeISO
        , formatMinutesTime
@@ -203,6 +204,8 @@ formatMinutesTime ktl fmt mt = formatCalendarTime (getTimeLocale ktl) fmt (toCal
 formatMinutesTimeUTC :: MinutesTime -> String
 formatMinutesTimeUTC mt = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" (toUTCTime mt)
 
+formatMinutesTimeSimple :: MinutesTime -> String
+formatMinutesTimeSimple mt = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H:%M" (toUTCTime mt)
 
 formatMinutesTimeRealISO :: MinutesTime -> String
 formatMinutesTimeRealISO mt = formatCalendarTime defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ" (toUTCTime mt)

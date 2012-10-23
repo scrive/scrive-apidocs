@@ -58,24 +58,13 @@ window.TemplatesListDefinition = function(archive) { return {
                 name : localization.archive.templates.createnew,
                 avaible : function() {return true;}, 
                 acceptEmpty : true,
-                button: UploadButton.init({
-                            name : "file",
+                button: Button.init({
                             size: "tiny",
                             color : "black",
                             width : "140",
                             text: localization.archive.templates.createnew,
-                            submitOnUpload: true,
-                            onClick : function(input) {
-                                LoadingDialog.open();
-                                /*  Disable blocking for now -- Eric
-                                // blocking
-                                if(BlockingInfo && BlockingInfo.blockCreate()) {
-                                blocking.show(BlockingInfo.blockCreateMessage);
-                                return false;
-                                }
-                                */
-                            },
-                            submit: new Submit({
+                            onClick : function() {
+                              new Submit({
                                 method : "POST",
                                 url : "/api/frontend/createfromfile",
                                 ajax: true,
@@ -94,7 +83,8 @@ window.TemplatesListDefinition = function(archive) { return {
                                         wiz.trigger('change');
                                     }
                                 }
-                            })
+                            }).send();
+                          }  
                 })
             }),
         new ListAction({

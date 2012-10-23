@@ -351,7 +351,7 @@ javascriptLocalisation =
                placeFor : function(s) { return s + " $_signaturePlaceFor()$"; }
              , missing : "$_signatureMissing()$"
              , placeYour : "$_signaturePlaceYour()$"
-             , placeAndSign : "$_signatureSign()$"
+             , placeYourTip : "$_signaturePlaceYourTip()$"
              , confirmSignature : "$_signatureConfirm()$"
            }
          , designview : {

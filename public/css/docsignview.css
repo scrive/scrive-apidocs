@@ -86,9 +86,9 @@ body.signview {
 
 .signview .instructions {
   background-color: white;
-  padding-top: 31px;
-  padding-bottom: 15px;
-  margin-bottom: 7px;
+  padding-top: 40px;
+  padding-bottom: 25px;
+  margin-top: 20px;
   border: solid #bababc 1px;
   text-align: center;
   font-weight: bold;
@@ -189,6 +189,8 @@ body.signview {
   text-align: center;
   padding: 40px;
   overflow: none;
+  margin-top: 30px;
+  margin-bottom : 30px;
 }
 
 .signview .save .title {
@@ -343,7 +345,7 @@ body.signview {
   padding-top: 45px;
   padding-bottom: 45px;
   margin-bottom: 7px;
-  margin-top: 7px;
+  margin-top: 30px;
   border: solid #bababc 1px;
   text-align: center;
   font-weight: bold;
@@ -477,7 +479,6 @@ body.signview {
   background-repeat: no-repeat;
   padding-bottom:23px;
   padding-top:10px;
-  margin-top: 20px;
 }
 
 .signview .subcontainer .end {
@@ -1015,8 +1016,15 @@ div.spacing.butt {
     height: 17px;
     margin: 5px auto;
     padding: 8px;
-    width: 240px;
+    width: 248px;
   
+}
+
+.extradetails .fillbox .signatureBox.withImage {
+    border: 1px solid #C6DADE;
+    border-radius: 4px 4px 4px 4px;
+    padding: 2px;
+    margin-top: 5px;
 }
 
 .signview .section.highlight.extradetails {

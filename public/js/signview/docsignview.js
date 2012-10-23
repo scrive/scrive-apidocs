@@ -229,6 +229,8 @@ var DocumentSignViewModel = Backbone.Model.extend({
                     label = placement.field().nicename();
                 else if (placement.field().isObligatoryCheckbox())
                     label = localization.docsignview.checkboxes.pleaseCheck;
+                else if (placement.field().isSignature())
+                    label = localization.signature.placeYourTip;
                 var task = new PageTask({
                     isComplete: function() {
                     return placement.field().readyForSign();

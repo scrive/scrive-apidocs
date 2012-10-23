@@ -11,50 +11,31 @@
             this.upload = $("#jsuploadbutton").html();
             this.template = $("#jschoosetemplate").html();
         },
-        uploadBox: function() {
-          var wiz = this.model.wizard();
-          var upbutton = UploadButton.init({
-                name: "file",
-                width: 125,
+        newDocumentBox: function() {
+          var button = Button.init({
+                width: 145,
+                size : "small",
                 text: localization.uploadView.newProcessFromFile,
-                submitOnUpload: true,
-                type: "",
-                onClick : function () {
-                    LoadingDialog.open();
-                },
-                onError: function() {
-                    wiz.trigger('change');
-                    LoadingDialog.close();
-                },
-                submit: new Submit({
+                color: "green",
+                onClick: function() {
+                 new Submit({
                     method : "POST",
                     url : "/api/frontend/createfromfile",
                     ajax: true,
                     expectedType: 'json',
-                    onSend: function() {
-                        LoadingDialog.open();
-                    },
-                    ajaxerror: function(d,a){
-                        if(a === 'parsererror') // file too large
-                            FlashMessages.add({content: localization.fileTooLarge, color: "red"});
-                        else
-                            FlashMessages.add({content: localization.couldNotUpload, color: "red"});
-                        LoadingDialog.close();
-                        wiz.trigger('change');
-                    },
                     ajaxsuccess: function(d) {
-                        if (d != undefined && d.id != undefined) {
-                            window.location.href = "/d/"+d.id;
-                        }
-                        else {
-                             FlashMessages.add({content: localization.couldNotUpload, color: "red"});
-                             LoadingDialog.close();
-                             wiz.trigger('change');
-                        }
-                    }
-                })
-            });
-          var uploadbuttoncontainer = $("<div class='signStepsButtonContainer s-upload-document'></div>").append(upbutton.input());
+                            if (d != undefined && d.id != undefined) {
+                                window.location.href = "/d/"+d.id;
+                            }
+                            else {
+                                LoadingDialog.close();
+                                wiz.trigger('change');
+                            }
+                   }
+                }).send();
+             }
+          });
+          var uploadbuttoncontainer = $("<div class='signStepsButtonContainer s-upload-document'></div>").append(button.input());
           return $("<div/>").append(uploadbuttoncontainer);
         },
         templateBox : function() {
@@ -62,7 +43,7 @@
           var button = Button.init({
             color : 'green',
             size : 'small' ,
-            width : 125,
+            width : 145,
             text : localization.uploadView.chooseTemplate,
             onClick : function() {
                 wiz.nextStep();
@@ -74,53 +55,6 @@
           return $("<div/>").append(buttonbox);
         },
         newTemplateBox: function() {
-          var wiz = this.model.wizard();
-          var upbutton = UploadButton.init({
-                name: "file",
-                width: 145,
-                text: localization.uploadView.uploadNewTemplate,
-                submitOnUpload: true,
-                type: "",
-                onClick : function () {
-                    LoadingDialog.open();
-                },
-                onError: function() {
-                    wiz.trigger('change');
-                    LoadingDialog.close();
-                },
-                submit: new Submit({
-                    method : "POST",
-                    url : "/api/createfromfile",
-                    ajax: true,
-                    template : "YES",
-                    expectedType: 'json',
-                    onSend: function() {
-                        LoadingDialog.open();
-                    },
-                    ajaxerror: function(d,a){
-                        if(a === 'parsererror') // file too large
-                            FlashMessages.add({content: localization.fileTooLarge, color: "red"});
-                        else
-                            FlashMessages.add({content: localization.couldNotUpload, color: "red"});
-                        LoadingDialog.close();
-                        wiz.trigger('change');
-                    },
-                    ajaxsuccess: function(d) {
-                        if (d != undefined && d.id != undefined) {
-                            window.location.href = "/d/"+d.id;
-                        }
-                        else {
-                             FlashMessages.add({content: localization.couldNotUpload, color: "red"});
-                             LoadingDialog.close();
-                             wiz.trigger('change');
-                        }
-                    }
-                })
-            });
-          var uploadbuttoncontainer = $("<div class='signStepsButtonContainer' style='width: 145px;'></div>").append(upbutton.input());
-          return $("<div/>").append(uploadbuttoncontainer);
-        },
-        newEmptyTemplateBox: function() {
           var wiz = this.model.wizard();
           var button = Button.init({
                 width: 145,
@@ -166,12 +100,12 @@
             var d = $(div);
             $(view.el).append($("<div style='float: left; height: 1px; width: 135px;'/>"));
             d.append($(header).text(localization.uploadView.startNewProcess));
-            d.append(this.uploadBox());
+            d.append(this.newDocumentBox());
             d.append(this.templateBox());
             $(view.el).append(d);
             d = $(div);
             d.append($(header).text(localization.uploadView.createNewTemplate));
-            d.append(this.newEmptyTemplateBox());
+            d.append(this.newTemplateBox());
             d.append(this.avtal24Box());
             $(view.el).append(d);
         }

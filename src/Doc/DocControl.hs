@@ -40,7 +40,7 @@ import DBError
 import Doc.Action
 import Doc.CSVUtils
 import Doc.Model
-import Doc.DocStateCommon (documentFileID)
+import Doc.DocStateCommon (documentFileID,documentSealedFileID)
 import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocStateUpdate
@@ -815,7 +815,7 @@ handleDownloadMainFile did _nameForBrowser = do
                  -- Here we should actually respond with a redirect
                  -- that waits for file to appear. Hopefully nobody
                  -- clicks download that fast.
-                 documentFileID doc >>= getFileIDContents
+                 documentSealedFileID doc >>= getFileIDContents
                _ -> do
                  documentFileID doc >>= getFileIDContents
   respondWithPDF content

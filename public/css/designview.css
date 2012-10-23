@@ -540,6 +540,11 @@
 
 }
 
+.signview .signatureBox.forDrawing {
+    border-width: 0px;
+}
+
+
 .signStepsBody.fixed{
     position:fixed;
     top:0px;

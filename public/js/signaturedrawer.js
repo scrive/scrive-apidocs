@@ -271,7 +271,7 @@ window.SignatureDrawerPopup = {
             return;
         }
         var popup = this;
-        popup.overlay = $("<div style='width:900px;' class='overlay drawing-modal'><div class='close modal-close float-right' style='margin:5px;'/></div>");
+        popup.overlay = $("<div style='width:900px;' class='overlay drawing-modal'><div class='close modal-close float-right' style='margin-right:40px;margin-top:30px'/></div>");
         popup.overlay.append(new SignatureDrawerWrapper({model : args.signature, overlay : popup.overlay}).el);
         $('body').append( popup.overlay );
         window.onorientationchange = function() {

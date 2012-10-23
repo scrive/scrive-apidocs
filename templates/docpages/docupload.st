@@ -6,3 +6,7 @@ uploadPage=
     jQuery('.upload-view').append(jQuery(upm.el()).addClass('signStepsBody'));
 </script>
 ####
+newDocumentTitle=$_newDocumentTitle()$
+####
+newTemplateTitle=$_newTemplateTitle()$
+####

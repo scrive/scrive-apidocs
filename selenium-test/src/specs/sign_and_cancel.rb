@@ -19,8 +19,6 @@ describe "Sign a document and then cancel it" do
     @h.loginhelper.login_as(@h.ctx.props.tester_email, @h.ctx.props.tester_password)
     puts "Logged in"
     @h.dochelper.uploadContract
-    puts "Use basic mode"
-    @h.dochelper.useBasicMode
     puts "Fill in counterpart"
     @h.dochelper.enterCounterpart(@h.ctx.props.first_counterpart_fstname, @h.ctx.props.first_counterpart_sndname, @h.ctx.props.first_counterpart_email)
     (@h.wait.until { @h.driver.find_element :css => ".nextstepbutton" }).click

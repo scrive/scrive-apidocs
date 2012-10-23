@@ -115,24 +115,13 @@ window.DocumentsListDefinition = function(archive) { return {
                 name : localization.archive.documents.createnew,
                 avaible : function() {return true;},
                 acceptEmpty : true,
-                button: UploadButton.init({
-                            name : "file",
+                button: Button.init({
                             size: "tiny",
                             color : "black",
                             width : "110",
                             text: localization.archive.documents.createnew,
-                            submitOnUpload: true,
-                            onClick : function(input) {
-                                LoadingDialog.open();
-                                /*  Disable blocking for now -- Eric
-                                // blocking
-                                if(BlockingInfo && BlockingInfo.blockCreate()) {
-                                blocking.show(BlockingInfo.blockCreateMessage);
-                                return false;
-                                }
-                                */
-                            },
-                            submit: new Submit({
+                            onClick : function() {
+                              new Submit({
                                 method : "POST",
                                 url : "/api/frontend/createfromfile",
                                 ajax: true,
@@ -149,10 +138,11 @@ window.DocumentsListDefinition = function(archive) { return {
                                         LoadingDialog.close();
                                         wiz.trigger('change');
                                     }
-                                }
-                            })
-                })
-            }),
+                                }   
+                            }).send();
+                          }
+                        })
+        }),
         new ListAction({
             name :  localization.archive.documents.sendreminder.action,
             emptyMessage :  localization.archive.documents.sendreminder.emptyMessage,

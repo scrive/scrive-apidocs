@@ -10,28 +10,10 @@ class DocHelper
     @wait = wait
   end
 
-  def useBasicMode
-    if ((@driver.find_elements :id => "tobasic").length>0) then
-      (@wait.until { @driver.find_element :id => "tobasic" }).click
-      @wait.until { @driver.find_element :css => "form#dialog-confirm-basic" }
-      (@wait.until { @driver.find_element :css => "a.tobasic" }).click
-      @wait.until { @driver.find_element :id => "toadvanced" }
-    end
-  end
-
-  def useAdvancedMode
-    (@wait.until { @driver.find_element :css => "a.switchIcon" })
-    if ((@driver.find_elements :css => "a.switchIcon").length>0) then
-      (@wait.until { @driver.find_element :css => "a.switchIcon" }).click
-      @wait.until { @driver.find_element :css => "div.modal-container" }
-      (@wait.until { @driver.find_element :css => "div.modal-footer a.green" }).click
-      @wait.until { @driver.find_element :css => "a.nextstepbutton" }
-    end
-  end
 
   def uploadContract
-    (@wait.until { @driver.find_element :xpath => "//a[@href='/upload']" }).click
-    (@wait.until { @driver.find_element :css => ".s-upload-document input.multiFileInput" }).send_keys @ctx.props.contract_pdf_path
+    (@wait.until { @driver.find_element :css => ".s-upload-document .btn-small" }).click
+    (@wait.until { @driver.find_element :css => ".document-pages input.multiFileInput" }).send_keys @ctx.props.contract_pdf_path
     puts "waiting for pages"
     @wait.until { @driver.find_element :css => "#page1" }
   end

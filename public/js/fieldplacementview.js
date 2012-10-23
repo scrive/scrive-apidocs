@@ -552,10 +552,10 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
             var box = $(this.el);
             box.empty();
             box.attr("style","");
-            box.addClass('signatureBox');
+            box.addClass('signatureBox').addClass('forDrawing');
             if (!this.signature.hasImage())
             {
-                box.css("border-width","0px");
+                box.removeClass('withImage');
                 var bwidth = 253;
                 var bheight = 48;
                 // Lukas wanted the width and height to be set directly,
@@ -579,7 +579,7 @@ window.SignaturePlacementViewForDrawing = Backbone.View.extend({
                 box.append(button);
             }
             else {
-                box.css("border-width","0px");
+                box.addClass('withImage');
                 var img = $("<img alt=''/>");
                 img.css("width",view.signature.width());
                 img.attr("width",view.signature.width());

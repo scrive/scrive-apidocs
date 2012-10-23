@@ -187,3 +187,12 @@ documentFileID doc =
         Log.error $ "Missing document file in " ++ show (documentid doc)
         internalError
       Just di -> return di
+
+-- | Extract main sealed file ID from document, assuming it has been set
+documentSealedFileID :: (MonadIO m, MonadBase IO m) => Document -> m FileID
+documentSealedFileID doc =
+    case documentsealedfile doc of
+      Nothing -> do
+        Log.error $ "Missing document file in " ++ show (documentid doc)
+        internalError
+      Just di -> return di

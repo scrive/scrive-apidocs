@@ -23,7 +23,6 @@ import Control.Logic
 import Control.Monad.Trans
 import Happstack.Fields
 import Utils.String
-import Utils.Read
 import Utils.Monad
 import System.FilePath
 import Data.Maybe
@@ -63,6 +62,7 @@ import Doc.API.Callback.Model
 import qualified Data.ByteString.Base64 as B64
 import Text.JSON.Gen
 import MinutesTime
+import Templates.Templates
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice 
@@ -107,7 +107,9 @@ apiCallCreateFromFile = api $ do
   let doctype = (Template <| isTpl |> Signable) dtype
   minput <- lift $ getDataFn' (lookInput "file")
   (mfile, title) <- case minput of
-    Nothing -> return (Nothing, ("New document " <| isTpl |> "New template ") ++ formatMinutesTimeUTC (ctxtime ctx))
+    Nothing -> do
+      title <- renderTemplate_ ("newDocumentTitle" <| not isTpl |> "newTemplateTitle")
+      return (Nothing,  title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx))
     Just (Input _ Nothing _) -> throwError $ badInput "Missing file"
     Just (Input contentspec (Just filename') _contentType) -> do
       let filename = takeBaseName filename'
@@ -311,27 +313,38 @@ documentChangeMainFile docid = api $ do
   apiGuard (forbidden "Logged in user is not author of document.") (isAuthor $ getSigLinkFor doc (ctxmaybeuser ctx))
 
   fileinput <- lift $ getDataFn' (lookInput "file")
-  templateinput <- lift $ getDataFn' (look "template")
 
-  mfileid <- case (fileinput, templateinput) of
-            (Just (Input contentspec (Just filename') _contentType), _) -> do
-              content1 <- case contentspec of
-                Left filepath -> liftIO $ BSL.readFile filepath
-                Right content -> return content
-
-              -- we need to downgrade the PDF to 1.4 that has uncompressed structure
-              -- we use gs to do that of course
-              content <- apiGuardL (badInput "PDF precheck failed.") $ liftIO $ preCheckPDF (concatChunks content1)
-              let filename = cleanFileName filename'
-
-              Just . fileid <$> (dbUpdate $ NewFile filename content)
-            (_, Just templateids) -> do
-              templateid <- apiGuard (badInput $ "Template id in bad format: " ++ templateids) $ maybeRead templateids
-              temp <- apiGuardL' $ getDocByDocID templateid
-              Just <$> (apiGuard (badInput "No template found for that id (or you don't have permissions).") $ documentfile temp)
-            _ -> return Nothing
-  case mfileid of
-    Just  fileid -> apiGuardL' $ dbUpdate $ AttachFile docid fileid aa
+  mft <- case fileinput of
+    Nothing -> return Nothing
+    Just (Input _ Nothing _) -> throwError $ badInput "Missing file"
+    Just (Input contentspec (Just filename') _contentType) -> do
+      let filename = takeBaseName filename'
+      let mformat = getFileFormatForConversion filename'
+      content' <- case contentspec of
+        Left filepath -> liftIO $ BSL.readFile filepath
+        Right content -> return content
+      content'' <- case mformat of
+        Nothing -> return content'
+        Just format -> do
+          eres <- liftIO $ convertToPDF (ctxlivedocxconf ctx) (BS.concat $ BSL.toChunks content') format
+          case eres of
+            Left (LiveDocxIOError e) -> throwError $ serverError $ show e
+            Left (LiveDocxSoapError s)-> throwError $ serverError s
+            Right res -> return $ BSL.fromChunks [res]
+      pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ liftIO $ do
+                     cres <- preCheckPDF (concatChunks content'')
+                     case cres of
+                        Right c -> return (Right c)
+                        Left m -> case (B64.decode $ (concatChunks content'')) of -- Salesforce hack. Drop this decoding when happstack-7.0.4 is included.
+                                      Right dcontent -> preCheckPDF dcontent
+                                      Left _ -> return (Left m)
+      file <- dbUpdate $ NewFile filename pdfcontent
+      return $ Just (fileid file, filename)
+      
+  case mft of
+    Just  (fileid,filename) -> do
+      apiGuardL' $ dbUpdate $ AttachFile docid fileid aa
+      apiGuardL' $ dbUpdate $ SetDocumentTitle docid filename aa  
     Nothing -> apiGuardL' $ dbUpdate $ DetachFile docid aa
 
   
