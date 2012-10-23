@@ -44,6 +44,7 @@ data Field
     , internal_image_w :: Int    -- ^ pixels horizontal of image in pixels
     , internal_image_h :: Int    -- ^ pixels vertical of image in pixels
     , includeInSummary :: Bool   -- ^ add this field to report at the very end of document
+    , onlyForSummary   :: Bool   -- ^ if image is supposed to be included only in summary x,y, page will be inored
     , keyColor         :: Maybe (Int,Int,Int) -- ^ transparent color in the form of RGB tripple (0-255)
     }
     deriving (Eq, Ord, Show, Read)

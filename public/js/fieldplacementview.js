@@ -534,7 +534,7 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
 
 
 
-var SignaturePlacementViewForDrawing = Backbone.View.extend({
+window.SignaturePlacementViewForDrawing = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'clear');
         this.model.bind('removed', this.clear);

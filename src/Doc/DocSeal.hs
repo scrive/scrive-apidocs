@@ -121,8 +121,9 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signato
     onlyFirstInSummary [] = []
     makeSealField :: SignatoryField -> [Seal.Field]
     makeSealField sf = case sfType sf of
-       SignatureFT -> onlyFirstInSummary $
-          concatMap (maybeToList . (fieldJPEGFromPlacement (sfValue sf))) (sfPlacements sf)
+       SignatureFT -> case (sfPlacements sf) of
+                           [] -> maybeToList $ fieldJPEGFromSignatureField (sfValue sf)
+                           plsms -> onlyFirstInSummary $ concatMap (maybeToList . (fieldJPEGFromPlacement (sfValue sf))) plsms
        CheckboxOptionalFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf)
        CheckboxObligatoryFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf) 
        _ -> map (fieldFromPlacement (sfValue sf)) (sfPlacements sf)
@@ -151,6 +152,7 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signato
                  , Seal.internal_image_w = 16
                  , Seal.internal_image_h = 16
                  , Seal.includeInSummary = False
+                 , Seal.onlyForSummary   = False
                  , Seal.keyColor         = Nothing
                  }    
     fieldJPEGFromPlacement v placement =
@@ -173,10 +175,30 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signato
                  , Seal.internal_image_w = 4 * wi
                  , Seal.internal_image_h = 4 * hi
                  , Seal.includeInSummary = True
+                 , Seal.onlyForSummary   = False
                  , Seal.keyColor         = Just (255,255,255) -- white is transparent
                  }
         _ -> Nothing
-
+    fieldJPEGFromSignatureField v =
+      case split "|" v of
+        [_,_,""] -> Nothing
+        [w,h,c] -> do
+          wi <- maybeRead w -- NOTE: Maybe monad usage
+          hi <- maybeRead h
+          Just $ Seal.FieldJPG
+                 { valueBase64           = drop 1 $ dropWhile (\e -> e /= ',') c
+                 , Seal.x                = 0
+                 , Seal.y                = 0
+                 , Seal.page             = 0
+                 , Seal.image_w          = fromIntegral wi / 943
+                 , Seal.image_h          = fromIntegral hi / 1335
+                 , Seal.internal_image_w = 4 * wi
+                 , Seal.internal_image_h = 4 * hi
+                 , Seal.includeInSummary = True
+                 , Seal.onlyForSummary   = True
+                 , Seal.keyColor         = Just (255,255,255) -- white is transparent
+                 }
+        _ -> Nothing
 
     
 listAttachmentsFromDocument :: Document -> [(SignatoryAttachment,SignatoryLink)]

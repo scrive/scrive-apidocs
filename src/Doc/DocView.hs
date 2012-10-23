@@ -237,7 +237,7 @@ signatoryFieldsJSON doc (SignatoryLink{signatorydetails = SignatoryDetails{signa
       LastNameFT              -> fieldJSON "standard" "sndname"   sfValue ((not $ null $ sfValue)  && (not $ isPreparation doc)) sfPlacements
       EmailFT                 -> fieldJSON "standard" "email"     sfValue ((not $ null $ sfValue)  && (not $ isPreparation doc)) sfPlacements
       PersonalNumberFT        -> fieldJSON "standard" "sigpersnr" sfValue ((not $ null $ sfValue)  && (not $ isPreparation doc)) sfPlacements
-      CompanyFT               -> fieldJSON "standard" "sigco"     sfValue ((not $ null $ sfValue)  && (ELegAuthentication == documentauthenticationmethod doc) && (not $ isPreparation doc)) sfPlacements
+      CompanyFT               -> fieldJSON "standard" "sigco"     sfValue ((not $ null $ sfValue)  && (null sfPlacements) && (ELegAuthentication /= documentauthenticationmethod doc) && (not $ isPreparation doc)) sfPlacements
       CompanyNumberFT         -> fieldJSON "standard" "sigcompnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
       SignatureFT             -> fieldJSON "signature" "signature" sfValue (closedSignatureF sf  && (not $ isPreparation doc)) sfPlacements
       CustomFT label closed   -> fieldJSON "custom" label       sfValue (closed  && (not $ isPreparation doc))  sfPlacements
@@ -245,7 +245,7 @@ signatoryFieldsJSON doc (SignatoryLink{signatorydetails = SignatoryDetails{signa
       CheckboxObligatoryFT label -> fieldJSON "checkbox-obligatory" label sfValue  False  sfPlacements
   where
     closedF sf = ((not $ null $ sfValue sf) || (null $ sfPlacements sf))
-    closedSignatureF sf = ((not $ null $ dropWhile (/= ',') $ sfValue sf) || (null $ sfPlacements sf))
+    closedSignatureF sf = ((not $ null $ dropWhile (/= ',') $ sfValue sf) && (null $ sfPlacements sf) && ((PadDelivery /= documentdeliverymethod doc)))
     orderedFields = sortBy (\f1 f2 -> ftOrder (sfType f1) (sfType f2)) signatoryfields
     ftOrder FirstNameFT _ = LT
     ftOrder LastNameFT _ = LT

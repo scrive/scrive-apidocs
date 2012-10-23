@@ -334,7 +334,8 @@ commandsFromFields pagew pageh fields = concatMap commandsFromField fields
                then fontSize * fromIntegral pagew
                else 10
 
-    commandsFromField (FieldJPG{ SealSpec.valueBase64 = val },_) | null val = ""
+    commandsFromField (FieldJPG{ SealSpec.valueBase64 = val },_)    | null val      = ""
+    commandsFromField (FieldJPG{ SealSpec.onlyForSummary = val },_) | val == True   = ""
     commandsFromField (FieldJPG{ x
                                , y
                                , image_w, image_h

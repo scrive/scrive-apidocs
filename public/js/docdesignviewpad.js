@@ -153,10 +153,10 @@ var PadDesignViewUtilsView = Backbone.View.extend({
 window.PadDesignViewUtils = function(args) {
           var model = new PadDesignViewUtilsModel({document : args.document});
           var view = new PadDesignViewUtilsView({model : model});
-          return new Object({
+          return {
               el : function()  {return $(view.el);},
               postSendAction : function(args) {model.postSendAction(args);}
-            });
+            };
 };
 
 })(window);

@@ -108,11 +108,42 @@ var DocumentDesignView = Backbone.View.extend({
             return false;
         });
 
-        // Download link
-        var downloadpart = $("<span class='download'/>");
+        titlepart.append(namepart);
+        
+        // Options to download and remove main file
         if (document.mainfile())
-            downloadpart.append($("<a  target='_blank'/>").attr("href",document.mainfile().downloadLinkForMainFile()).text(localization.downloadPDF));
-        return titlepart.add(namepart).add(downloadpart);
+        {
+          // Download link
+          var downloadpart = $("<span class='download'/>");
+          downloadpart.append($("<a  target='_blank'/>").attr("href",document.mainfile().downloadLinkForMainFile()).text(localization.downloadPDF));
+          titlepart.append(downloadpart);
+
+          //Remove file
+          var removefilepart = $("<span class='remove'/>");
+          var link = $("<a href='#'/>").text(localization.designview.removeFile);
+          link.click(function() {
+            document.save();
+            document.afterSave( function() {
+              new Submit({
+                      method : "POST",
+                      url :  "/api/frontend/mainfile/" + document.documentid(),
+                      ajax: true,
+                      onSend: function() {
+                          LoadingDialog.open();
+                      },
+                      ajaxerror: function(d,a){
+                          window.location.reload();
+                      },
+                      ajaxsuccess: function() {
+                          window.location.reload();
+                      }}).send();
+            });
+            return false;
+          });
+          titlepart.append(removefilepart.append(link));
+
+        }
+        return titlepart;
     },
     saveAsTemplateOption : function() {
         var document = this.model;
@@ -748,30 +779,6 @@ var DocumentDesignView = Backbone.View.extend({
         this.tabs.activate(this.tab1);
         this.signatoriesView.showSignatory(sig);
     },
-    removeFileOption : function() {
-      var document = this.model;
-      var icon = $("<span class='float-right' style='margin-right:20px;'><div class='icon delete' style='margin-top:12px;position: absolute;z-index:1 ;cursor:pointer;'/></span>");
-      icon.click(function() {
-        document.save();
-        document.afterSave( function() {
-          new Submit({
-                  method : "POST",
-                  url :  "/api/frontend/mainfile/" + document.documentid(),
-                  ajax: true,
-                  onSend: function() {
-                      LoadingDialog.open();
-                  },
-                  ajaxerror: function(d,a){
-                      window.location.reload();
-                  },
-                  ajaxsuccess: function() {
-                      window.location.reload();
-                  }}).send();
-        });          
-        return false;
-      });   
-      return icon;
-    },
     uploadFile : function() {
         var document = this.model;
         var url = "/api/frontend/mainfile/" + document.documentid();
@@ -838,7 +845,7 @@ var DocumentDesignView = Backbone.View.extend({
         var fileel;
         if (document.mainfile()) {
           fileel = $("<div/>");
-          fileel.append(this.removeFileOption()).append(KontraFile.init({file: document.mainfile()}).view.el);
+          fileel.append(KontraFile.init({file: document.mainfile()}).view.el);
         }
         else {
          fileel = $("<div/>");

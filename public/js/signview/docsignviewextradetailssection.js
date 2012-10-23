@@ -80,8 +80,16 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
                                  }
                             }).input();
    },
-   fillBoxEl : function() {
-      return $(this.fillBox);
+   signatureInputAvaible : function() {
+     var signatory = this.model;
+     var field = signatory.signature();
+     return ((!field.signature().hasImage())) && !field.hasPlacements() && this.model.document().padDelivery();
+   },
+   signatureInput : function() {
+     var signatory = this.model;
+     var field = this.model.signature();
+     field.bind("change", function() {signatory.trigger("change");});
+     return new SignaturePlacementViewForDrawing({model: field}).el;
    },
    render: function() {
        var document = this.model;
@@ -97,6 +105,8 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
         this.fillBox.append(this.emailInput());
        if (this.ssnInputAvaible())
         this.fillBox.append(this.ssnInput());
+       if (this.signatureInputAvaible())
+        this.fillBox.append(this.signatureInput());
        box.append(header).append(description).append(this.fillBox).append("<div class='clearfix' />");
    } 
 });

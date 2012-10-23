@@ -241,10 +241,6 @@ window.Field = Backbone.Model.extend({
             return validation;  
         }
         
-        if (this.signatory().signs() && this.signatory().document().padDelivery() && this.isSignature()) {
-            var msg = localization.designview.validation.notPlacedSignature;
-            return new Validation({validates : function() {return field.hasPlacements()}, message : msg});
-        }
         return new Validation();
     },
     isEmail: function() {

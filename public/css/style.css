@@ -1041,7 +1041,8 @@ input[type=submit].hidden
     margin-right: 2px;
 }
 
-.tab-viewer-header-title .download
+.tab-viewer-header-title .download,
+.tab-viewer-header-title .remove
 {
     font-size: 10px;
     font-weight: bold;
@@ -1053,6 +1054,7 @@ input[type=submit].hidden
 
 }
 
+.tab-viewer-header-title .remove a,
 .tab-viewer-header-title .download a{
     color: #999999;
     text-transform: uppercase;
@@ -1062,7 +1064,7 @@ input[type=submit].hidden
   display: none;
 }
 
-
+.tab-viewer-header-title .remove a:hover,
 .tab-viewer-header-title .download a:hover{
   color: #FFFFFF;
 }

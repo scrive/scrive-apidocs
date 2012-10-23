@@ -367,7 +367,6 @@ javascriptLocalisation =
                     , atLeastOnePersonMustSigns : "$_atLeastOnePersonMustSigns()$"
                     , notReadyField : "$_setAllFields()$"
                     , notPlacedField : "$_placeAllFields()$"
-                    , notPlacedSignature : "$_signatureMustBePlacedForPad()$"
                     , fileMustBeAdded : "$_fileMustBeAdded()$"
                 }
              , authentication : {
@@ -382,6 +381,7 @@ javascriptLocalisation =
                     , extraActions : "$_designViewMessageExtraActions()$"
                 }
              , sign : "$_sign()$"
+             , removeFile : "Remove file"
              , checkboxes : {
                       checkbox : "$_checkboxCheckbox()$"
                     , prechecked : "$_checkboxPrechecked()$"

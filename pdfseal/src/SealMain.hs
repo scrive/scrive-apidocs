@@ -27,6 +27,7 @@ addBarackObamaField = do
          , y = 7 / 1085
          , page = 1
          , includeInSummary = True
+         , onlyForSummary   = False
          , keyColor = Just (255,255,255)
          }
 
