@@ -224,7 +224,7 @@ var FilePageView = Backbone.View.extend({
         });
     },
     ready : function() {
-        return this.pagejpg != undefined && this.pagejpg.width() > 100 && this.pagejpg.height() > 100;
+        return this.pagejpg != undefined && this.pagejpg[0].complete;
     },
     render: function () {
         var page = this.model;

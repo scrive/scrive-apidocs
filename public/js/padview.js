@@ -99,7 +99,7 @@ window.PadQueueView = Backbone.View.extend({
         var loginForm= $("<form class='wrapper'/>");
         var emailValue = LocalStorage.get("Pad", "email");
         console.log("Email " + emailValue);
-        var email = InfoTextInput.init({infotext:localization.email,  inputtype : 'email', value : emailValue});
+        var email = InfoTextInput.init({infotext:localization.email,  inputtype : 'text', value : emailValue});
         var password = InfoTextInput.init({infotext:localization.password, inputtype : 'password'});
         var sendLogin = function() {
                 LocalStorage.set("Pad", "email", email.value())
