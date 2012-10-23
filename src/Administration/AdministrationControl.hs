@@ -760,7 +760,7 @@ class HasFunctionalityStats a where
   getStatDefinitions :: [(String, a -> Bool)]
 
 aRecentDate :: MinutesTime -> MinutesTime
-aRecentDate = minutesBefore (60 * 24 * 30 * 3)
+aRecentDate = ((30 * 3) `daysBefore`)
 
 instance HasFunctionalityStats Document where
   isRecent time doc = aRecentDate time < documentctime doc

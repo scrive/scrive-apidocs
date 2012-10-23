@@ -28,7 +28,7 @@ import qualified Log
 data DraftData = DraftData {
       title :: String
     , invitationmessage :: Maybe String
-    , daystosign :: Maybe Int
+    , daystosign :: Int
     , authentication :: AuthenticationMethod
     , delivery :: DeliveryMethod
     , signatories :: [SignatoryTMP]
@@ -74,7 +74,7 @@ instance FromJSValue DraftData where
    fromJSValue = do
         title' <- fromJSValueField "title"
         invitationmessage <-  liftM join $ liftM (fmap nothingIfEmpty) $ fromJSValueField "invitationmessage"
-        daystosign <- fromJSValueField "daystosign"
+        daystosign' <- fromJSValueField "daystosign"
         authentication' <-  fromJSValueField "authentication"
         delivery' <-  fromJSValueField "delivery"
         signatories' <-  fromJSValueField "signatories"
@@ -83,8 +83,8 @@ instance FromJSValue DraftData where
         tags' <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany  fromJSValueM
         apicallbackurl' <- fromJSValueField "apicallbackurl"
         process' <- fromJSValueField "process"
-        case (title', authentication', delivery') of
-            (Just t, Just a, Just d) -> return $ Just DraftData {
+        case (title', daystosign', authentication', delivery') of
+            (Just t, Just daystosign, Just a, Just d) -> return $ Just DraftData {
                                       title =  t
                                     , invitationmessage = invitationmessage
                                     , daystosign = daystosign

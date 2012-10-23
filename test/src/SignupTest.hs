@@ -199,5 +199,5 @@ assertAccountActivationFailed (res, ctx) = do
 
 getAccountCreatedActions :: TestEnv [UserAccountRequest]
 getAccountCreatedActions = do
-  expirytime <- minutesAfter (30*24*60) <$> getMinutesTime
+  expirytime <- (30 `daysAfter`) <$> getMinutesTime
   dbQuery $ GetExpiredActions userAccountRequest expirytime

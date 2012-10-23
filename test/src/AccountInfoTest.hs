@@ -282,5 +282,5 @@ testEmailChangeFailsIfNoPassword = do
 
 getRequestChangeEmailActions :: TestEnv [EmailChangeRequest]
 getRequestChangeEmailActions = do
-  expirytime <- minutesAfter (30*24*60) <$> getMinutesTime
+  expirytime <- (30 `daysAfter`) <$> getMinutesTime
   dbQuery $ GetExpiredActions emailChangeRequest expirytime

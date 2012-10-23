@@ -107,7 +107,7 @@ getUserAccountRequestUser uid token = runMaybeT $ do
 newUserAccountRequest :: (MonadDB m, CryptoRNG m) => UserID -> m UserAccountRequest
 newUserAccountRequest uid = do
   token <- random
-  expires <- minutesAfter (14*24*60) `liftM` getMinutesTime
+  expires <- (14 `daysAfter`) `liftM` getMinutesTime
   -- FIXME: highly unlikely, but possible race condition
   _ <- dbUpdate $ DeleteAction userAccountRequest uid
   dbUpdate $ NewAction userAccountRequest expires (uid, token)

@@ -40,7 +40,6 @@ docStateTests :: TestEnvSt -> Test
 docStateTests env = testGroup "DocState" [
   dataStructureProperties,
   testThat "RejectDocument adds to the log" env testRejectDocumentEvidenceLog,
-  testThat "RemoveDaysToSign adds to the log" env testRemoveDaysToSignEvidenceLog,
   testThat "RemoveDocumentAttachment adds to the log" env testRemoveDocumentAttachmentEvidenceLog,
   testThat "ResetSignatoryDetails adds to the log" env testResetSignatoryDetailsEvidenceLog,
   testThat "RestartDocument adds to the log" env testRestartDocumentEvidenceLog,
@@ -292,17 +291,6 @@ testRejectDocumentEvidenceLog = do
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == RejectDocumentEvidence) lg
 
-testRemoveDaysToSignEvidenceLog :: TestEnv ()
-testRemoveDaysToSignEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success1 <- randomUpdate $ \t->SetDaysToSign (documentid doc) (Just 3) (systemActor t)
-  success2 <- randomUpdate $ \t->SetDaysToSign (documentid doc) Nothing (systemActor t)
-  assert success1
-  assert success2
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == RemoveDaysToSignEvidence) lg
-
 testRemoveDocumentAttachmentEvidenceLog :: TestEnv ()
 testRemoveDocumentAttachmentEvidenceLog = do
   author <- addNewRandomUser
@@ -353,7 +341,7 @@ testSetDaysToSignEvidenceLog :: TestEnv ()
 testSetDaysToSignEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success <- randomUpdate $ \t->SetDaysToSign (documentid doc) (Just 30) (systemActor t)
+  success <- randomUpdate $ \t->SetDaysToSign (documentid doc) 30 (systemActor t)
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SetDaysToSignEvidence) lg
@@ -1937,19 +1925,16 @@ testSetDocumentDaysToSignRight :: TestEnv ()
 testSetDocumentDaysToSignRight = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentCondition = (not . isClosed) &&^ (isNothing . documentdaystosign)
+         { randomDocumentCondition = not . isClosed
          }
   actor <- unAuthorActor <$> rand 10 arbitrary
   let daystosign = 15
-  success1 <- randomUpdate $ SetDaysToSign (documentid doc) (Just daystosign) actor
+  success1 <- randomUpdate $ SetDaysToSign (documentid doc) daystosign actor
   Just ndoc1 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-  success2 <- randomUpdate $ SetDaysToSign (documentid doc) Nothing actor
-  Just ndoc2 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   validTest $ do
     assert success1
-    assert success2
-    assertEqual "Days to sign is set properly" (Just daystosign) (documentdaystosign ndoc1)
-    assertEqual "Days to sign removed properly" (Nothing) (documentdaystosign ndoc2)
+    assertEqual "Days to sign is set properly" daystosign (documentdaystosign ndoc1)
+
 
 assertInvariants :: Document -> TestEnv ()
 assertInvariants document = do

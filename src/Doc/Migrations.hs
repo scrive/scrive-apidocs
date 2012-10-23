@@ -11,6 +11,7 @@ import DB
 import Doc.Tables
 import qualified Log
 import Doc.DocumentID
+import Doc.DocStateCommon (blankDocument)
 import Doc.DocStateData
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
@@ -20,6 +21,26 @@ import Version
 import MinutesTime
 
 $(jsonableDeriveConvertible [t| [SignatoryField] |])
+
+setMandatoryExpirationTimeInDocument :: MonadDB m => Migration m
+setMandatoryExpirationTimeInDocument = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 11
+  , mgrDo = do
+    let pendingDaysToSign = 7
+    timeout <- (pendingDaysToSign `daysAfter`) `liftM` getMinutesTime
+    kRun_ $ SQL "UPDATE documents SET days_to_sign = ? WHERE status = ? AND days_to_sign IS NULL"
+                [ toSql (documentdaystosign blankDocument)
+                , toSql Preparation
+                ]
+    kRun_ $ SQL "UPDATE documents SET days_to_sign = ?, timeout_time = ? WHERE status = ? AND timeout_time IS NULL"
+                [ toSql pendingDaysToSign
+                , toSql timeout
+                , toSql Pending
+                ]
+    kRun_ $ SQL "UPDATE documents SET days_to_sign = ? WHERE days_to_sign IS NULL" [ toSql (0::Int) ]
+    kRunRaw "ALTER TABLE documents ALTER days_to_sign SET NOT NULL"
+}
 
 removeSignatoryRoles :: MonadDB m => Migration m
 removeSignatoryRoles = Migration {

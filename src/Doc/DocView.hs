@@ -365,7 +365,6 @@ documentInfoFields  document  = do
   F.value "name" $ documenttitle document
   F.value "id" $ show $ documentid document
   F.value "documentid" $ show $ documentid document
-  F.value "timetosignset" $  isJust $ documentdaystosign document
   F.value "template" $  isTemplate document
   F.value "emailauthenticationselected" $ document `allowsAuthMethod` StandardAuthentication
   F.value "elegauthenticationselected" $ document `allowsAuthMethod` ELegAuthentication

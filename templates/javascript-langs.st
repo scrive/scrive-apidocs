@@ -297,7 +297,6 @@ javascriptLocalisation =
            , infoSelectTemplate : "$_InfoSelectTemplate()$"
            , goBack : "$_GoBack()$"
            , eleg : "$_eleg()$"
-           , finalDateCheckboxLabel : "$_daystosigncheckboxExpDate()$"
            , editInviteText :"$_editinvitetextlinkInviteText()$"
            , editInviteDialogHead : "$_editInviteTextDialogHead()$"
            , days : "$_days()$"

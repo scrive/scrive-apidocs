@@ -108,6 +108,7 @@ kontraMigrations = [
   , addSequenceOwnerToDocumentsId
   , addSequenceOwnerToSignatoryLinks
   , addBillingEndDateCache
+  , setMandatoryExpirationTimeInDocument
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

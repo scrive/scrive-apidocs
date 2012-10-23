@@ -163,10 +163,10 @@ data EvidenceEventType =
   SetDocumentLocaleEvidence                       |
   SetDocumentTitleEvidence                        |
   SetDocumentAdvancedFunctionalityEvidence        |
-  RemoveDaysToSignEvidence                        |
+  RemoveDaysToSignEvidence                        | -- not used anymore
   SetDaysToSignEvidence                           |
   SetInvitationTextEvidence                       |
-  RemoveSignatoryUserEvidence                     |
+  RemoveSignatoryUserEvidence                     | -- not used anymore
   SetSignatoryUserEvidence                        |
   RemoveSignatoryCompanyEvidence                  |
   SetSignatoryCompanyEvidence                     |

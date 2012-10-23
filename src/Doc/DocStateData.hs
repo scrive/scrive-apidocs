@@ -350,7 +350,7 @@ data Document = Document {
   , documenttype                   :: DocumentType
   , documentctime                  :: MinutesTime
   , documentmtime                  :: MinutesTime
-  , documentdaystosign             :: Maybe Int
+  , documentdaystosign             :: Int
   , documenttimeouttime            :: Maybe TimeoutTime
   , documentinvitetime             :: Maybe SignInfo
   , documentinvitetext             :: String

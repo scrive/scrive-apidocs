@@ -302,53 +302,29 @@ var DocumentDesignView = Backbone.View.extend({
     finalDateSelection: function() {
         var document = this.model;
         var box = $("<div class='finaldateselection'/>");
-        var checkbox = $("<input type='checkbox' name='finaldatecheckbox' class='finaldatecheckbox'/>");
-        var label = $("<label for='finaldatecheckbox'/>").text(localization.finalDateCheckboxLabel);
-        box.append($("<div/>").append(checkbox).append(label));
-        if (document.daystosign() != undefined)
-            checkbox.attr('checked', true);
         var selectdaysbox  = $("<div/>");
-        var refreshFunction = function() {
-            if (checkbox.attr('checked') != true)
+        box.append(selectdaysbox);
+        selectdaysbox.append($("<span/>").text(document.process().localization().expirytext));
+        var daysinput = $("<input class='daystosign' maxlength='2' size='2' autocomplete='off'>");
+        daysinput.val(document.daystosign());
+        selectdaysbox.append(daysinput);
+        selectdaysbox.append($("<span/>").text(localization.days));
+        var calendarbutton = $("<div class='calendarbutton'/>");
+        var calendar = new Calendar({on : calendarbutton,
+                                    change: function(days) {
+                                       document.setDaystosign(days);
+                                       daysinput.val(days);
+                                      }
+                        });
+        daysinput.change(function() {
+            var days = parseInt(daysinput.val());
+            if (days != undefined && !isNaN(days) && days != document.daystosign())
             {
-              selectdaysbox.empty();
-              selectdaysbox.detach();
-              document.setDaystosign(undefined);
-              return;
+                document.setDaystosign(days);
+                calendar.setDays(days);
             }
-            else
-            {
-              if (document.daystosign() == undefined)
-              {
-                  document.setDaystosign(7);
-              }
-              box.append(selectdaysbox);
-              selectdaysbox.append($("<span/>").text(document.process().localization().expirytext));
-              var daysinput = $("<input class='daystosign' maxlength='2' size='2' autocomplete='off'>");
-              daysinput.val(document.daystosign());
-              selectdaysbox.append(daysinput);
-              selectdaysbox.append($("<span/>").text(localization.days));
-              var calendarbutton = $("<div class='calendarbutton'/>");
-              var calendar = new Calendar({on : calendarbutton,
-                                          change: function(days) {
-                                             document.setDaystosign(days);
-                                             daysinput.val(days);
-                                            }
-                              });
-              daysinput.change(function() {
-                  var days = parseInt(daysinput.val());
-                  if (days != undefined && !isNaN(days) && days != document.daystosign())
-                  {
-                      document.setDaystosign(days);
-                      calendar.setDays(days);
-                  }
-              });
-              selectdaysbox.append(calendarbutton);
-
-            }
-        }
-        refreshFunction();
-        checkbox.change(function() {refreshFunction()});
+        });
+        selectdaysbox.append(calendarbutton);
         return box;
     },
     editInvitationOption: function() {

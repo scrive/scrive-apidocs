@@ -504,7 +504,7 @@ addUserStatEventWithTOSTime qty user = falseOnError $ do
       Context{ctxtime} <- getContext
       mt  <- guardJust $ userhasacceptedtermsofservice user
       let mt' = if mt == fromSeconds 0
-                then (60 * 24) `minutesBefore` ctxtime -- one day before running stats
+                then 1 `daysBefore` ctxtime -- before running stats
                 else mt
       addUserIDStatEvent qty (userid user) mt' (usercompany user)
 

@@ -278,17 +278,14 @@ instance Arbitrary Document where
     auth <- arbitrary
     delivery <- arbitrary
     -- we can have any days to sign. almost
-    ddaystosign <- elements [Nothing, Just 1, Just 10, Just 99]
-    -- document timeout time makes sense only when days to sign was set for this document
-    dtimeouttime <- if isJust ddaystosign
-                    then arbitrary
-                    else return Nothing
+    ddaystosign <- elements [1, 10, 99]
+    dtimeouttime <- arbitrary
     return $ blankDocument { documentstatus = dstatus
                            , documenttype = dtype
                            , documentsignatorylinks = sls
                            , documentauthenticationmethod = auth
                            , documentdeliverymethod = delivery
-                           , documenttimeouttime = TimeoutTime <$> dtimeouttime
+                           , documenttimeouttime = Just (TimeoutTime dtimeouttime)
                            , documentdaystosign = ddaystosign
                            }
 

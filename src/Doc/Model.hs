@@ -1144,13 +1144,12 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m PreparationToPending Bool w
         errmsgs <- checkPreparationToPending docid
         case errmsgs of
           [] -> do
-            daystosign :: Maybe Int <- getOne (SQL "SELECT days_to_sign FROM documents WHERE id = ?" [toSql docid]) >>= exactlyOneObjectReturnedGuard
-            let mtt = (\days -> (days * 24 *60) `minutesAfter` time) <$> daystosign
+            daystosign :: Int <- getOne (SQL "SELECT days_to_sign FROM documents WHERE id = ?" [toSql docid]) >>= exactlyOneObjectReturnedGuard
+            let mtt = daystosign `daysAfter` time
             success <- kRun01 $ mkSQL UPDATE tableDocuments [
                 sql "status" Pending
               , sql "mtime" time
-              , sql "timeout_time" $ (\days -> (days * 24 * 60) `minutesAfter` time)
-                  <$> daystosign
+              , sql "timeout_time" $ Just mtt
               ] <> SQL "WHERE id = ? AND type = ?" [
                 toSql docid
               , toSql $ Signable undefined
@@ -1158,7 +1157,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m PreparationToPending Bool w
             when_ success $
               update $ InsertEvidenceEvent
                 PreparationToPendingEvidence
-                (value "actor" (actorWho actor) >> value "timeouttime" (formatMinutesTimeUTC <$> mtt))
+                (value "actor" (actorWho actor) >> value "timeouttime" (formatMinutesTimeUTC mtt))
                 (Just docid)
                 actor
             return success
@@ -1831,18 +1830,18 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInviteText Bool where
         actor
     return success
 
-data SetDaysToSign = SetDaysToSign DocumentID (Maybe Int) Actor
+data SetDaysToSign = SetDaysToSign DocumentID Int Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDaysToSign Bool where
-  update (SetDaysToSign did mdays actor) = do
-    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND days_to_sign IS DISTINCT FROM ?" [toSql did, toSql mdays]
+  update (SetDaysToSign did days actor) = do
+    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND days_to_sign IS DISTINCT FROM ?" [toSql did, toSql days]
     success <- kRun01 $ mkSQL UPDATE tableDocuments
-         [ sql "days_to_sign" $ mdays
+         [ sql "days_to_sign" $ days
          , sql "mtime" $ actorTime actor
          ] <> SQL "WHERE id = ?" [ toSql did ]
     when_ (success && changed) $
       update $ InsertEvidenceEvent
-        (SetDaysToSignEvidence <| isJust mdays |> RemoveDaysToSignEvidence)
-        (value "mdays" (show <$> mdays) >> value "actor" (actorWho actor))
+        SetDaysToSignEvidence
+        (value "mdays" (show  days) >> value "actor" (actorWho actor))
         (Just did)
         actor
     return success

@@ -74,7 +74,7 @@ getEmailChangeRequestNewEmail uid token = runMaybeT $ do
 newEmailChangeRequest :: (MonadDB m, CryptoRNG m) => UserID -> Email -> m EmailChangeRequest
 newEmailChangeRequest uid new_email = do
   token <- random
-  expires <- minutesAfter (24*60) `liftM` getMinutesTime
+  expires <- (1 `daysAfter`) `liftM` getMinutesTime
   -- only one email change request can be active at a time, so we want
   -- to remove old one before we insert new one. this could potentially
   -- lead to race condition (when we introduce possibility of one user

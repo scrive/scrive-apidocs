@@ -17,7 +17,7 @@ tableDocuments = Table {
        , ("process", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True})
        , ("ctime", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just False})
        , ("mtime", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just False})
-       , ("days_to_sign", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
+       , ("days_to_sign", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("timeout_time", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True})
        , ("invite_time", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True})
        , ("invite_ip", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
@@ -50,7 +50,7 @@ tableDocuments = Table {
           ++ ", process SMALLINT NULL"
           ++ ", ctime TIMESTAMPTZ NOT NULL"
           ++ ", mtime TIMESTAMPTZ NOT NULL"
-          ++ ", days_to_sign INTEGER NULL"
+          ++ ", days_to_sign INTEGER NOT NULL"
           ++ ", timeout_time TIMESTAMPTZ NULL"
           ++ ", invite_time TIMESTAMPTZ NULL"
           ++ ", invite_ip INTEGER NULL"
