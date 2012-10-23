@@ -296,10 +296,34 @@ tellMatrix :: (MonadWriter String m) => Double -> Double -> Double -> Double -> 
 tellMatrix a b c d e f =
       tell $ (concat $ intersperse " " $ map (show . Number) [a::Double,b,c,d,e,f]) ++ " cm\n"
 
--- FIXME: here we still have font size problem. On the page it appears
--- as some pt size font. We need to translate that size into PDF pt
--- size. For now pretend we are using 10pt font.
+
+-- Font size story:
 --
+-- Fonts in PDF are rendered with respect to baseline, that is (0,0)
+-- of their bounding box. Fonts in HTML are rendered with respect to
+-- upper left corner of bounding box. Therefore we need to adjust what
+-- we render in PDF to the coordinates respected by HTML.
+--
+-- Base fonts have following metrics:
+--
+-- cour.t1    /FontBBox {-28 -250 628 805} readonly def
+-- courb.t1   /FontBBox {-113 -250 749 801} readonly def
+-- courbi.t1  /FontBBox {-56 -250 868 801} readonly def
+-- couri.t1   /FontBBox {-28 -250 742 805} readonly def
+-- helv.t1    /FontBBox {-166 -225 1000 931} readonly def
+-- helvb.t1   /FontBBox {-170 -228 1003 962} readonly def
+-- helvbi.t1  /FontBBox {-174 -228 1114 962} readonly def
+-- helvi.t1   /FontBBox {-170 -225 1116 931} readonly def
+-- symb.t1    /FontBBox {-180 -293 1090 1010} readonly def
+-- time.t1    /FontBBox {-168 -218 1000 898} readonly def
+-- timeb.t1   /FontBBox {-168 -218 1000 935} readonly def
+-- timebi.t1  /FontBBox {-200 -218 996 921} readonly def
+-- timei.t1   /FontBBox {-169 -217 1010 883} readonly def
+--
+-- /FontBBox is {left, bottom, top, right}, scale is 0.001 by default.
+--
+-- We use Helvetica for our purposes.
+
 -- For next generations: the coordinate space in PDF is in printer's
 -- points and bottom left corner is (0,0). Grows right and
 -- upwards. Fonts are also strange: the y=0 is on font baseline. Read
@@ -312,7 +336,8 @@ tellMatrix a b c d e f =
 commandsFromFields :: Int -> Int -> [(Field,[RefID])] -> String
 commandsFromFields pagew pageh fields = concatMap commandsFromField fields
   where
-    fontBaseline = 0.8
+    fontBaseline = 931/(931+225)
+    fontOffset   = 166/(931+225)
     commandsFromField ( Field{ SealSpec.value = val
                              , x
                              , y
@@ -321,7 +346,7 @@ commandsFromFields pagew pageh fields = concatMap commandsFromField fields
                       , _) = execWriter $ do
                                tell "q\n"
                                tellMatrix 1 0 0 1
-                                      (x * fromIntegral pagew)
+                                      (x * fromIntegral pagew - fontOffset * fs)
 
                                       (((1 - y) * fromIntegral pageh) - fontBaseline * fs)
                                tell "BT\n"
