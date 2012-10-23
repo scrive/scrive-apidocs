@@ -12,6 +12,7 @@ BUILD_ID=$BUILD_DATE"."$BUILD_NUMBER"."$BUILD_VCS_NUMBER
 
 echo "BUILD ID: "$BUILD_ID
 echo "TMP: "$TMP
+echo "Server: "$SRV
 
 echo "Building Clean"
 sh build-scripts/runCleanCompile.sh > build-report.txt
@@ -50,7 +51,7 @@ tar zcf "$finalfile" "$signaturefile" "$opensslfile" "$ZIP"
 cd -
 ls -lh "$TMP/$finalfile"
 
-if [$AMZN]
+if [ $AMZN -ne 0 ]
 then
   echo "Pushing to amazon"
   s3cmd --config=/home/builds/.s3cfg --acl-private put "$TMP/$finalfile" s3://production-builds
