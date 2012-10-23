@@ -104,6 +104,8 @@ kontraMigrations = [
   , removeDiskPathAndMakeNewColumnsNotNull
   , addApiCallbackUrlToDocument
   , removeSignatoryRoles
+  , addSequenceOwnerToDocumentsId
+  , addSequenceOwnerToSignatoryLinks
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

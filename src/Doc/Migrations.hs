@@ -43,6 +43,22 @@ addApiCallbackUrlToDocument = Migration {
   , mgrDo = kRunRaw "ALTER TABLE documents ADD COLUMN api_callback_url TEXT NULL"
 }
 
+addSequenceOwnerToDocumentsId :: MonadDB m => Migration m
+addSequenceOwnerToDocumentsId = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 11
+  , mgrDo = kRunRaw "ALTER SEQUENCE documents_id_seq OWNED BY documents.id"
+}
+
+addSequenceOwnerToSignatoryLinks :: MonadDB m => Migration m
+addSequenceOwnerToSignatoryLinks = Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 12
+  , mgrDo = do
+      kRunRaw "ALTER SEQUENCE signatory_links_internal_insert_order_seq OWNED BY signatory_links.internal_insert_order"
+      kRunRaw "ALTER SEQUENCE signatory_links_id_seq OWNED BY signatory_links.id"
+}
+
 removeServiceIDFromDocuments :: MonadDB m => Migration m
 removeServiceIDFromDocuments = Migration {
     mgrTable = tableDocuments

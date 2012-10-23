@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = Table {
     tblName = "documents"
-  , tblVersion = 11
+  , tblVersion = 12
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
@@ -40,7 +40,7 @@ tableDocuments = Table {
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE documents ("
-          ++ "  id BIGINT NOT NULL"
+          ++ "  id BIGSERIAL"
           ++ ", file_id BIGINT NULL"
           ++ ", sealed_file_id BIGINT NULL"
           ++ ", title TEXT NOT NULL"
@@ -83,10 +83,6 @@ tableDocuments = Table {
       ++ " ADD CONSTRAINT fk_documents_sealed_file_id FOREIGN KEY(sealed_file_id)"
       ++ " REFERENCES files(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-      -- create the sequence
-    kRunRaw $ "CREATE SEQUENCE documents_id_seq"
-    kRunRaw $ "SELECT setval('documents_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM documents))"
-    kRunRaw $ "ALTER TABLE documents ALTER id SET DEFAULT nextval('documents_id_seq')"
     return ()
   }
 
@@ -153,7 +149,7 @@ tableSignatoryAttachments = Table {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = Table {
     tblName = "signatory_links"
-  , tblVersion = 12
+  , tblVersion = 13
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -186,9 +182,8 @@ tableSignatoryLinks = Table {
        , ("is_partner", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
-        kRunRaw $ "CREATE SEQUENCE signatory_links_internal_insert_order_seq"
         kRunRaw $ "CREATE TABLE signatory_links"
-          ++ "( id BIGINT NOT NULL"
+          ++ "( id BIGSERIAL"
           ++ ", document_id BIGINT NOT NULL"
           ++ ", user_id BIGINT NULL DEFAULT NULL"
           ++ ", company_id BIGINT NULL DEFAULT NULL"
@@ -212,7 +207,7 @@ tableSignatoryLinks = Table {
           ++ ", csv_title TEXT NULL"
           ++ ", csv_contents TEXT NULL"
           ++ ", csv_signatory_index INTEGER NULL"
-          ++ ", internal_insert_order BIGINT NOT NULL DEFAULT nextval('signatory_links_internal_insert_order_seq')"
+          ++ ", internal_insert_order BIGSERIAL"
           ++ ", signinfo_ocsp_response VARCHAR NULL DEFAULT NULL"
           ++ ", sign_redirect_url VARCHAR NULL DEFAULT NULL"
           ++ ", is_author BOOL NOT NULL"
@@ -237,11 +232,6 @@ tableSignatoryLinks = Table {
       ++ " ADD CONSTRAINT fk_signatory_links_company_id FOREIGN KEY(company_id)"
       ++ " REFERENCES companies(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "CREATE SEQUENCE signatory_links_id_seq"
-      -- set start value to be one more than maximum already in the table or 1000 if table is empty
-    kRunRaw $ "SELECT setval('signatory_links_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM signatory_links))"
-      -- and finally attach serial default value to files.id
-    kRunRaw $ "ALTER TABLE signatory_links ALTER id SET DEFAULT nextval('signatory_links_id_seq')"
   }
 
 
