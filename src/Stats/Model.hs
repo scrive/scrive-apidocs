@@ -540,19 +540,19 @@ instance MonadDB m => DBQuery m GetSignHistCSV [[String]] where
                      "       open.time, " ++
                      "       link.time, " ++
                      "       sign.time, " ++
-                     "       reject.time " ++
-                     "       delete.time " ++                     
+                     "       reject.time, " ++
+                     "       del.time, " ++                     
                      "       purge.time " ++                                          
                      "FROM (SELECT DISTINCT document_id, signatory_link_id, company_id, document_process FROM sign_stat_events WHERE sign_stat_events.time > ? AND sign_stat_events.time <= ?) AS ss " ++
-                     "LEFT JOIN doc_stat_events AS invite   ON (ds.document_id = invite.document_id   AND invite.quantity = ?)" ++                     
-                     "LEFT JOIN doc_stat_events AS receive  ON (ds.document_id = receive.document_id  AND receive.quantity = ?)" ++                                          
-                     "LEFT JOIN doc_stat_events AS open     ON (ds.document_id = open.document_id     AND open.quantity = ?)" ++
-                     "LEFT JOIN doc_stat_events AS link     ON (ds.document_id = link.document_id     AND link.quantity = ?)" ++
-                     "LEFT JOIN doc_stat_events AS sign     ON (ds.document_id = sign.document_id     AND sign.quantity = ?)" ++
-                     "LEFT JOIN doc_stat_events AS reject   ON (ds.document_id = reject.document_id   AND reject.quantity = ?)" ++
-                     "LEFT JOIN doc_stat_events AS delete   ON (ds.document_id = delete.document_id   AND delete.quantity = ?)" ++
-                     "LEFT JOIN doc_stat_events AS purge    ON (ds.document_id = purge.document_id    AND purge.quantity = ?)" ++                     
-                     "ORDER BY ss.document_id DESC") [toSql start, 
+                     "LEFT JOIN sign_stat_events AS invite   ON (ss.document_id = invite.document_id   AND invite.quantity  = ? AND ss.signatory_link_id = invite.signatory_link_id )" ++                     
+                     "LEFT JOIN sign_stat_events AS receive  ON (ss.document_id = receive.document_id  AND receive.quantity = ? AND ss.signatory_link_id = receive.signatory_link_id )" ++                                          
+                     "LEFT JOIN sign_stat_events AS open     ON (ss.document_id = open.document_id     AND open.quantity    = ? AND ss.signatory_link_id = open.signatory_link_id )" ++
+                     "LEFT JOIN sign_stat_events AS link     ON (ss.document_id = link.document_id     AND link.quantity    = ? AND ss.signatory_link_id = link.signatory_link_id )" ++
+                     "LEFT JOIN sign_stat_events AS sign     ON (ss.document_id = sign.document_id     AND sign.quantity    = ? AND ss.signatory_link_id = sign.signatory_link_id )" ++
+                     "LEFT JOIN sign_stat_events AS reject   ON (ss.document_id = reject.document_id   AND reject.quantity  = ? AND ss.signatory_link_id = reject.signatory_link_id )" ++
+                     "LEFT JOIN sign_stat_events AS del      ON (ss.document_id = del.document_id      AND del.quantity     = ? AND ss.signatory_link_id = del.signatory_link_id )" ++
+                     "LEFT JOIN sign_stat_events AS purge    ON (ss.document_id = purge.document_id    AND purge.quantity   = ? AND ss.signatory_link_id = purge.signatory_link_id )" ++                     
+                     "ORDER BY ss.document_id DESC, ss.signatory_link_id DESC") [toSql start, 
                                                       toSql end,
                                                       toSql SignStatInvite,
                                                       toSql SignStatReceive, 

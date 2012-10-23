@@ -13,7 +13,7 @@
             width : 130, // Default button width
             button : undefined, //Custom button, jQuery object. We don't control it's visability.
             emptyMessage : "", // Message to show when nothing is selected and we dont accept empty
-            notAvailableMessage : "", 
+            notAvailableMessage : ""
         },
         initialize: function (args) {
         },
