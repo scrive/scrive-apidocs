@@ -27,7 +27,7 @@ setMandatoryExpirationTimeInDocument = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 11
   , mgrDo = do
-    let pendingDaysToSign = 7
+    let pendingDaysToSign = 90
     timeout <- (pendingDaysToSign `daysAfter`) `liftM` getMinutesTime
     kRun_ $ SQL "UPDATE documents SET days_to_sign = ? WHERE status = ? AND days_to_sign IS NULL"
                 [ toSql (documentdaystosign blankDocument)
