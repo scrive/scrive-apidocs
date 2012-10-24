@@ -62,7 +62,9 @@ module DB.SQL2
   , sqlRightJoinOn
   , sqlFullJoinOn
   , sqlSet
+  , sqlSetList
   , sqlSetCmd
+  , sqlSetCmdList
   , sqlResult
   , sqlOrderBy
   , sqlGroupBy
@@ -117,7 +119,7 @@ data SqlUpdate = SqlUpdate
 
 data SqlInsert = SqlInsert
   { sqlInsertWhat    :: String
-  , sqlInsertSet     :: [(String,SQL)]
+  , sqlInsertSet     :: [(String,Either SQL [SQL])]
   , sqlInsertResult  :: [SQL]
   } deriving (Eq, Typeable)
 
@@ -172,10 +174,16 @@ instance IsSQL SqlInsert where
   toSQLCommand cmd =
     SQL ("INSERT INTO " ++ sqlInsertWhat cmd) [] `mappend`
     SQL (" (" ++ (intercalate ", " (map fst (sqlInsertSet cmd)) ++ ")")) [] `mappend`
-    SQL (" VALUES (") [] `mappend`
-    mconcat (intersperse (SQL "," []) (map snd (sqlInsertSet cmd))) `mappend`
-    SQL (")") [] `mappend`
+    emitClausesSep "VALUES" "," (map makeClause (transpose (map (makeLongEnough . snd) (sqlInsertSet cmd)))) `mappend`
     emitClausesSep "RETURNING" ", " (sqlInsertResult cmd)
+   where
+      -- this is the longest list of values
+      longest = maximum (1 : (map (lengthOfEither . snd) (sqlInsertSet cmd)))
+      lengthOfEither (Left _) = 1
+      lengthOfEither (Right x) = length x
+      makeLongEnough (Left x) = take longest (repeat x)
+      makeLongEnough (Right x) = take longest (x ++ repeat (SQL "DEFAULT" []))
+      makeClause list = SQL "(" [] `mappend` mconcat (intersperse (SQL "," []) list) `mappend` SQL ")" []
 
 instance IsSQL SqlUpdate where
   toSQLCommand cmd =
@@ -312,14 +320,20 @@ instance SqlSet SqlUpdate where
   sqlSet1 cmd name sql = cmd { sqlUpdateSet = sqlUpdateSet cmd ++ [(name, sql)] }
 
 instance SqlSet SqlInsert where
-  sqlSet1 cmd name sql = cmd { sqlInsertSet = sqlInsertSet cmd ++ [(name, sql)] }
+  sqlSet1 cmd name sql = cmd { sqlInsertSet = sqlInsertSet cmd ++ [(name, Left sql)] }
 
 
 sqlSetCmd :: (MonadState v m, SqlSet v, IsSQL sql) => String -> sql -> m ()
 sqlSetCmd name sql = modify (\cmd -> sqlSet1 cmd name (toSQLCommand sql))
 
+sqlSetCmdList :: (MonadState SqlInsert m, IsSQL sql) => String -> [sql] -> m ()
+sqlSetCmdList name sql = modify (\cmd -> cmd { sqlInsertSet = sqlInsertSet cmd ++ [(name, Right (map toSQLCommand sql))] })
+
 sqlSet :: (MonadState v m, SqlSet v, Convertible sql SqlValue) => String -> sql -> m ()
 sqlSet name sql = modify (\cmd -> sqlSet1 cmd name (SQL "?" [convert sql]))
+
+sqlSetList :: (MonadState SqlInsert m, Convertible sql SqlValue) => String -> [sql] -> m ()
+sqlSetList name sql = modify (\cmd -> cmd { sqlInsertSet = sqlInsertSet cmd ++ [(name, Right (map (\v -> SQL "?" [convert v]) sql))] })
 
 class SqlResult a where
   sqlResult1 :: a -> SQL -> a
