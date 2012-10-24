@@ -136,6 +136,8 @@ set systemPage
  js   js/archive/attachments.js
  js   js/archive/bin.js
  js   js/archive/archive.js
+ js   js/account/stats.js
+ js   js/account/account.js
  js   js/blocking.js
  js   js/oauth.js
  js   js/paymentsoutside.js

@@ -863,5 +863,14 @@ javascriptLocalisation =
           , personOrCompany : "$_apiDashboardPersonOrCompany()$"
           , privilige       :  "$_apiDashboardPrivilige()$"
       }
+      , account :{
+            accountDetails :  "$_HeadUserInfo()$"
+          , accountSecurity : "$_HeadAccountSettings()$"
+          , companySettings : "$_CompanySettings()$"
+          , companyAccounts : "$_CompanyAccounts()$"
+          , mailAPI : "$_HeadMailApi()$"
+          , stats : "$_HeadUsageStats()$"
+          , subscription : "$_Subscription()$"
+      }
     };
 ###

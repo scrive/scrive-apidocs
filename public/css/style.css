@@ -3115,7 +3115,7 @@ a#attachmentback {
     display: none;
 }
 
-.usagestats #jsdaytable .tab-container, .usagestats #jsmonthtable .tab-container, .usagestats .tab-table {
+.usagestats .jsdaytable .tab-container, .usagestats .jsmonthtable .tab-container, .usagestats .tab-table {
     -moz-border-radius: 5px 5px 5px 5px;
     -webkit-border-radius: 5px 5px 5px 5px;
     border-radius: 5px 5px 5px 5px;
@@ -3133,7 +3133,7 @@ a#attachmentback {
     display: none;
 }
 
-.usagestats #jsdaytable, .usagestats #jsmonthtable {
+.usagestats .jsdaytable, .usagestats .jsmonthtable {
     margin-top: 20px;
     margin-bottom: 40px;
 }
