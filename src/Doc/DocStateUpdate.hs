@@ -166,10 +166,12 @@ authorSendDocument user actor did = do
   if not $ isAuthor (doc, user) 
     then return $ Left DBResourceNotAvailable
     else do
+        Log.debug $ "Preparation to pending for document " ++ show did
         r1 <-  dbUpdate $ PreparationToPending did $ actor
         if (not r1)
            then return $ Left $ DBActionNotAvailable $ "Can't change from draft to pending"
            else do
+             Log.debug $ "Setting invite time for  " ++ show did
              r2 <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
              if (not r2)
                then return $ Left $ DBActionNotAvailable $ "Can't send proper invitation time on document"

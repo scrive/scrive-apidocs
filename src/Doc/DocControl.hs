@@ -483,8 +483,9 @@ handleIssueSend document = do
       Left link -> return link
     where
       forIndividual user actor doc = do
-        Log.debug $ "handleIssueSign for forIndividual " ++ show (documentid doc)
+        Log.debug $ "handleIssueSend for forIndividual " ++ show (documentid doc)
         mndoc <- authorSendDocument user actor (documentid doc)
+        Log.debug $ "Document send by author " ++ show (documentid doc)
         case mndoc of
           Right newdocument -> postDocumentPreparationChange newdocument "web"
           Left _ -> return ()

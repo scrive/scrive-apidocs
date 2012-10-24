@@ -99,6 +99,7 @@ triggerAPICallbackIfThereIsOne doc = do
         Nothing -> return () 
         Just url -> do
           -- Race condition. Andrzej said that he can fix it later.
+          Log.debug $ "Triggering API callback for document " ++ show (documentid doc)
           now <- getMinutesTime   
           _ <- dbUpdate $ DeleteAction documentAPICallback (documentid doc)
           _ <- dbUpdate $ NewAction documentAPICallback now (documentid doc, url)
