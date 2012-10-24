@@ -698,16 +698,19 @@ fetchDocumentTags = foldDB decoder M.empty
       M.insertWith' S.union document_id
          (S.singleton $ DocumentTag name v) acc
 
-insertDocumentTagAsIs :: MonadDB m => DocumentID -> DocumentTag -> DBEnv m (Maybe DocumentTag)
-insertDocumentTagAsIs documentid tag = do
-  _ <- kRun $ mkSQL INSERT tableDocumentTags
-       [ sql "name" $ tagname tag
-       , sql "value" $ tagvalue tag
-       , sql "document_id" documentid
-       ] <> SQL ("RETURNING " ++ documentTagsSelectors) []
+insertDocumentTagsAsAre :: MonadDB m => DocumentID -> [DocumentTag] -> DBEnv m [DocumentTag]
+insertDocumentTagsAsAre _documentid [] = return []
+insertDocumentTagsAsAre documentid tags = do
+  _ <- kRun $ sqlInsert "document_tags" $ do
+         sqlSet "document_id" documentid
+         sqlSetList "name" $ tagname <$> tags
+         sqlSetList "value" $ tagvalue <$> tags
+         sqlResult "document_tags.document_id"
+         sqlResult "document_tags.name"
+         sqlResult "document_tags.value"
 
   fetchDocumentTags
-    >>= oneObjectReturnedGuard . concatMap (S.toList . snd) . M.toList
+    >>= return . concatMap (S.toList . snd) . M.toList
 
 
 authorAttachmentsSelectors :: String
@@ -865,8 +868,7 @@ insertDocumentAsIs document = do
       Just doc -> do
         mlinks <- insertSignatoryLinksAsAre (documentid doc) documentsignatorylinks
         mauthorattachments <- mapM (insertAuthorAttachmentAsIs (documentid doc)) documentauthorattachments
-        newtags <- F.foldlM (\acc tag -> insertDocumentTagAsIs (documentid doc) tag
-          >>= return . maybe acc (flip S.insert acc)) S.empty documenttags
+        newtags <- S.fromList <$> insertDocumentTagsAsAre (documentid doc) (S.toList documenttags)
         if any isNothing mauthorattachments || S.size documenttags /= S.size newtags
          then return Nothing
          else do
@@ -1721,16 +1723,22 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTags Bool where
   update (SetDocumentTags did doctags actor) = do
     oldtags <- query $ GetDocumentTags did
     let changed = doctags /= oldtags
-    _ <- kRun $ SQL "DELETE FROM document_tags WHERE document_id = ?" [toSql did]
-    success <- F.foldlM (\acc tag -> insertDocumentTagAsIs did tag >>= return . maybe False (const acc)) True doctags
-    when_ (success && changed) $ do
-      tagstr <- intercalate "; " <$> F.foldrM (\(DocumentTag k v) acc -> return $ (k ++ "=" ++ v) : acc) [] doctags
-      update $ InsertEvidenceEvent
-        SetDocumentTagsEvidence
-        (value "tags" tagstr >> value "actor" (actorWho actor))
-        (Just did)
-        actor
-    return success
+    if changed 
+      then do
+        _ <- kRun $ SQL "DELETE FROM document_tags WHERE document_id = ?" [toSql did]
+        newtags <- insertDocumentTagsAsAre did (S.toList doctags)
+        let success = length newtags == (S.size doctags)
+        when_ success $ do
+          tagstr <- intercalate "; " <$> F.foldrM (\(DocumentTag k v) acc -> return $ (k ++ "=" ++ v) : acc) [] doctags
+          update $ InsertEvidenceEvent
+            SetDocumentTagsEvidence
+            (value "tags" tagstr >> value "actor" (actorWho actor))
+            (Just did)
+            actor
+        return success
+      else
+        return True
+
 
 data SetDocumentInviteTime = SetDocumentInviteTime DocumentID MinutesTime Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentInviteTime Bool where
