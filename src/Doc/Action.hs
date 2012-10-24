@@ -45,6 +45,7 @@ import Data.Maybe hiding (fromJust)
 import qualified Data.ByteString as BS
 import ForkAction
 import Doc.API.Callback.Model
+import Data.String.Utils (strip)
 
 postDocumentPreparationChange :: Kontrakcja m => Document -> String -> m ()
 postDocumentPreparationChange doc@Document{documentid, documenttitle} apistring = do
@@ -172,7 +173,9 @@ saveDocumentForSignatories doc@Document{documentsignatorylinks} =
     saveDocumentForSignatory doc'@Document{documentid}
                              SignatoryLink{signatorylinkid,signatorydetails} = do
       let sigemail = getValueOfType EmailFT signatorydetails
-      muser <- dbQuery $ GetUserByEmail (Email sigemail)
+      muser <- case (strip sigemail) of
+                "" -> return Nothing    
+                _  -> dbQuery $ GetUserByEmail (Email sigemail)
       case muser of
         Nothing -> return $ Right doc'
         Just user -> do
