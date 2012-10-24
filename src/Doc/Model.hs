@@ -125,6 +125,7 @@ import Util.HasSomeUserInfo
 import Templates.Fields (value, objects)
 import DB.TimeZoneName (TimeZoneName, mkTimeZoneName, withTimeZone)
 import qualified DB.TimeZoneName as TimeZoneName
+import DB.SQL2
 
 data DocumentPagination =
   DocumentPagination
@@ -612,35 +613,35 @@ fetchSignatoryLinks = do
 
 insertSignatoryLinkAsIs :: MonadDB m => DocumentID -> SignatoryLink -> DBEnv m (Maybe SignatoryLink)
 insertSignatoryLinkAsIs documentid link = do
-  _ <- kRun $ mkSQL INSERT tableSignatoryLinks
-           [ sql "document_id" documentid
-           , sql "user_id" $ maybesignatory link
-           , sql "is_author" $ signatoryisauthor $ signatorydetails link
-           , sql "is_partner" $ signatoryispartner $ signatorydetails link
-           , sql "company_id" $ maybecompany link
-           , sql "token" $ signatorymagichash link
-           , sql "sign_order"$ signatorysignorder $ signatorydetails link
-           , sql "sign_time" $ signtime `fmap` maybesigninfo link
-           , sql "sign_ip" $ signipnumber `fmap` maybesigninfo link
-           , sql "seen_time" $ signtime `fmap` maybeseeninfo link
-           , sql "seen_ip" $ signipnumber `fmap` maybeseeninfo link
-           , sql "read_invitation" $ maybereadinvite link
-           , sql "invitation_delivery_status" $ invitationdeliverystatus link
-           , sql "signinfo_text" $ signatureinfotext `fmap` signatorysignatureinfo link
-           , sql "signinfo_signature" $ signatureinfosignature `fmap` signatorysignatureinfo link
-           , sql "signinfo_certificate" $ signatureinfocertificate `fmap` signatorysignatureinfo link
-           , sql "signinfo_provider" $ signatureinfoprovider `fmap` signatorysignatureinfo link
-           , sql "signinfo_first_name_verified" $ signaturefstnameverified `fmap` signatorysignatureinfo link
-           , sql "signinfo_last_name_verified" $ signaturelstnameverified `fmap` signatorysignatureinfo link
-           , sql "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` signatorysignatureinfo link
-           , sql "csv_title" $ csvtitle `fmap` signatorylinkcsvupload link
-           , sql "csv_contents" $ csvcontents `fmap` signatorylinkcsvupload link
-           , sql "csv_signatory_index" $ csvsignatoryindex `fmap` signatorylinkcsvupload link
-           , sql "deleted" $ signatorylinkdeleted link
-           , sql "really_deleted" $ signatorylinkreallydeleted link
-           , sql "signinfo_ocsp_response" $ signatureinfoocspresponse `fmap` signatorysignatureinfo link
-           , sql "sign_redirect_url" $ signatorylinksignredirecturl link
-           ] <> SQL " RETURNING id" []
+  _ <- kRun $ sqlInsert "signatory_links" $ do
+           sqlSet "document_id" documentid
+           sqlSet "user_id" $ maybesignatory link
+           sqlSet "is_author" $ signatoryisauthor $ signatorydetails link
+           sqlSet "is_partner" $ signatoryispartner $ signatorydetails link
+           sqlSet "company_id" $ maybecompany link
+           sqlSet "token" $ signatorymagichash link
+           sqlSet "sign_order"$ signatorysignorder $ signatorydetails link
+           sqlSet "sign_time" $ signtime `fmap` maybesigninfo link
+           sqlSet "sign_ip" $ signipnumber `fmap` maybesigninfo link
+           sqlSet "seen_time" $ signtime `fmap` maybeseeninfo link
+           sqlSet "seen_ip" $ signipnumber `fmap` maybeseeninfo link
+           sqlSet "read_invitation" $ maybereadinvite link
+           sqlSet "invitation_delivery_status" $ invitationdeliverystatus link
+           sqlSet "signinfo_text" $ signatureinfotext `fmap` signatorysignatureinfo link
+           sqlSet "signinfo_signature" $ signatureinfosignature `fmap` signatorysignatureinfo link
+           sqlSet "signinfo_certificate" $ signatureinfocertificate `fmap` signatorysignatureinfo link
+           sqlSet "signinfo_provider" $ signatureinfoprovider `fmap` signatorysignatureinfo link
+           sqlSet "signinfo_first_name_verified" $ signaturefstnameverified `fmap` signatorysignatureinfo link
+           sqlSet "signinfo_last_name_verified" $ signaturelstnameverified `fmap` signatorysignatureinfo link
+           sqlSet "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` signatorysignatureinfo link
+           sqlSet "csv_title" $ csvtitle `fmap` signatorylinkcsvupload link
+           sqlSet "csv_contents" $ csvcontents `fmap` signatorylinkcsvupload link
+           sqlSet "csv_signatory_index" $ csvsignatoryindex `fmap` signatorylinkcsvupload link
+           sqlSet "deleted" $ signatorylinkdeleted link
+           sqlSet "really_deleted" $ signatorylinkreallydeleted link
+           sqlSet "signinfo_ocsp_response" $ signatureinfoocspresponse `fmap` signatorysignatureinfo link
+           sqlSet "sign_redirect_url" $ signatorylinksignredirecturl link
+           sqlResult "id"
 
 
   slids <- foldDB (\acc slid -> slid : acc) []
