@@ -1515,27 +1515,21 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkInvitationRead Bool whe
           actor
         return success
 
-data NewDocument = NewDocument User (Maybe Company) String DocumentType Int Actor
+data NewDocument = NewDocument User String DocumentType Int Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (Maybe Document) where
-  update (NewDocument user mcompany title documenttype nrOfOtherSignatories actor) = do
+  update (NewDocument user title documenttype nrOfOtherSignatories actor) = do
   let ctime = actorTime actor
-  if fmap companyid mcompany /= usercompany user
-    then do
-      Log.error $ "NewDocument: company and user don't match"
-      return Nothing
-    else do
+  magichash <- lift random
 
-      magichash <- lift random
-
-      let authorlink0 = signLinkFromDetails'
-                        (signatoryDetailsFromUser user mcompany (True, True))
+  let authorlink0 = signLinkFromDetails'
+                        (signatoryDetailsFromUser user (True, True))
                         [] magichash
 
-      let authorlink = authorlink0 {
+  let authorlink = authorlink0 {
                          maybesignatory = Just $ userid user,
                          maybecompany = usercompany user }
 
-      othersignatories <- sequence $ replicate nrOfOtherSignatories $ do
+  othersignatories <- sequence $ replicate nrOfOtherSignatories $ do
                         mh <- lift random
                         return $ signLinkFromDetails'
                                 SignatoryDetails
@@ -1546,7 +1540,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
                                                 }
                                 [] mh
 
-      let doc = blankDocument
+  let doc = blankDocument
                 { documenttitle                = title
                 , documentsignatorylinks       = authorlink : othersignatories
                 , documenttype                 = documenttype
@@ -1559,7 +1553,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
                 , documentui                   = (documentui blankDocument) { documentmailfooter = customfooter $ usersettings user }
                 } 
 
-      case invariantProblems ctime doc of
+  case invariantProblems ctime doc of
         Nothing -> do
 
            midoc <- insertDocumentAsIs doc
@@ -2048,14 +2042,9 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m SignLinkFromDe
 
       return link
 
-data SignableFromDocumentIDWithUpdatedAuthor = SignableFromDocumentIDWithUpdatedAuthor User (Maybe Company) DocumentID Actor
+data SignableFromDocumentIDWithUpdatedAuthor = SignableFromDocumentIDWithUpdatedAuthor User DocumentID Actor
 instance (MonadDB m, TemplatesMonad m)=> DBUpdate m SignableFromDocumentIDWithUpdatedAuthor (Maybe Document) where
-  update (SignableFromDocumentIDWithUpdatedAuthor user mcompany docid actor) =
-      if fmap companyid mcompany /= usercompany user
-        then do
-          Log.error $ "company and user don't match"
-          return Nothing
-        else do
+  update (SignableFromDocumentIDWithUpdatedAuthor user docid actor) = do
           let time = actorTime actor
           res <- (flip newFromDocument) docid $ \doc ->
             (templateToDocument doc) {
@@ -2077,7 +2066,7 @@ instance (MonadDB m, TemplatesMonad m)=> DBUpdate m SignableFromDocumentIDWithUp
               return $ Just d
     where replaceAuthorSigLink :: SignatoryLink -> SignatoryLink
           replaceAuthorSigLink sl
-            | isAuthor sl = replaceSignatoryUser sl user mcompany
+            | isAuthor sl = replaceSignatoryUser sl user
             | otherwise = sl
 
 data StoreDocumentForTesting = StoreDocumentForTesting Document

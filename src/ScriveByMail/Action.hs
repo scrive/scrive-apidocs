@@ -260,14 +260,10 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
 
   let signatories = map (\p -> p { signatoryispartner = True }) sigdets
 
-  mcompany <- case usercompany user of
-    Just companyid -> dbQuery $ GetCompany companyid
-    Nothing -> return Nothing
-
-  let userDetails = signatoryDetailsFromUser user mcompany arole
+  let userDetails = signatoryDetailsFromUser user arole
 
   let actor = mailAPIActor ctxtime (userid user) (getEmail user)
-  mdoc <- dbUpdate $ NewDocument user mcompany title doctype 0 actor
+  mdoc <- dbUpdate $ NewDocument user title doctype 0 actor
 
   when (isNothing mdoc) $ do
 
@@ -477,11 +473,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
   -- add signatories
   -- send document
 
-  mcompany <- case usercompany user of
-    Just companyid -> dbQuery $ GetCompany companyid
-    Nothing -> return Nothing
-
-  let userDetails = signatoryDetailsFromUser user mcompany (False, False)
+  let userDetails = signatoryDetailsFromUser user (False, False)
 
   let fieldstring FirstNameFT = "fstname"
       fieldstring LastNameFT  = "sndname"
@@ -515,7 +507,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
       title = maybe (takeBaseName $ getAttachmentFilename $ fst pdf) decodeWordsMIME $ dcrTitle dcr
       actor = mailAPIActor ctxtime (userid user) (getEmail user)
 
-  mdoc <- dbUpdate $ NewDocument user mcompany title doctype 0 actor
+  mdoc <- dbUpdate $ NewDocument user title doctype 0 actor
 
   when (isNothing mdoc) $ do
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not create your document. I do not know what is wrong. You can try again or you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkUpload) ++ "\">click here</a> to use the web interface.</p>"
