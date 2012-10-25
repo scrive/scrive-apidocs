@@ -651,12 +651,12 @@ insertSignatoryLinksAsAre documentid links = do
 
   forM (zip (concatMap snd $ M.toList siglinks) links) $ \(newlink,oldlink) -> do
       msigattaches <- mapM (insertSignatoryAttachmentAsIs (signatorylinkid newlink)) (signatoryattachments oldlink)
-      mfields <- mapM (insertSignatoryLinkFieldAsIs (signatorylinkid newlink)) ((signatoryfields . signatorydetails) oldlink)
-      if any isNothing msigattaches || any isNothing mfields
-        then error $ "Could not insertSignatoryAttachmentAsIs or insertSignatoryLinkFieldAsIs for inserted signatory link #" ++ show (signatorylinkid oldlink)
+      fields <- insertSignatoryLinkFieldsAsAre (signatorylinkid newlink) ((signatoryfields . signatorydetails) oldlink)
+      if any isNothing msigattaches
+        then error $ "Could not insertSignatoryAttachmentAsIs for inserted signatory link #" ++ show (signatorylinkid oldlink)
         else do
           let newlinkfull = newlink { signatoryattachments = catMaybes msigattaches
-                                    , signatorydetails = (signatorydetails newlink) { signatoryfields = catMaybes mfields }
+                                    , signatorydetails = (signatorydetails newlink) { signatoryfields = fields }
                                     }
           return newlinkfull
 
@@ -754,8 +754,8 @@ insertSignatoryAttachmentAsIs slid SignatoryAttachment {..} = do
   fetchSignatoryAttachments
     >>= oneObjectReturnedGuard . concatMap snd . M.toList
 
-signatoryLinkFieldsSelectors :: String
-signatoryLinkFieldsSelectors = intercalate ", "
+signatoryLinkFieldsSelectors :: [String]
+signatoryLinkFieldsSelectors =
   [ "signatory_link_id"
   , "type"
   , "custom_name"
@@ -766,7 +766,7 @@ signatoryLinkFieldsSelectors = intercalate ", "
 
 selectSignatoryLinkFieldsSQL :: SQL
 selectSignatoryLinkFieldsSQL = SQL ("SELECT "
-  ++ signatoryLinkFieldsSelectors
+  ++ intercalate ", "signatoryLinkFieldsSelectors
   ++ " FROM signatory_link_fields ") []
 
 fetchSignatoryLinkFields :: MonadDB m => DBEnv m (M.Map SignatoryLinkID [SignatoryField])
@@ -784,27 +784,28 @@ fetchSignatoryLinkFields = foldDB decoder M.empty
                         _   -> xtype
           }] acc
 
-insertSignatoryLinkFieldAsIs :: MonadDB m => SignatoryLinkID -> SignatoryField -> DBEnv m (Maybe SignatoryField)
-insertSignatoryLinkFieldAsIs slid field = do
-  _ <- kRun $ mkSQL INSERT tableSignatoryLinkFields
-       [ sql "signatory_link_id" $ slid
-       , sql "type" $ sfType field
-       , sql "custom_name" $ case sfType field of
+insertSignatoryLinkFieldsAsAre :: MonadDB m => SignatoryLinkID -> [SignatoryField] -> DBEnv m [SignatoryField]
+insertSignatoryLinkFieldsAsAre _slid [] = return []
+insertSignatoryLinkFieldsAsAre slid fields = do
+  _ <- kRun $ sqlInsert "signatory_link_fields" $ do
+         sqlSet "signatory_link_id" $ slid
+         sqlSetList "type" $ sfType <$> fields
+         sqlSetList "custom_name" $ for fields $ \field -> case sfType field of
                                 CustomFT name _ -> name
                                 CheckboxOptionalFT name -> name
                                 CheckboxObligatoryFT name -> name
                                 _ -> ""
-       , sql "is_author_filled"  $ case sfType field of
+         sqlSetList "is_author_filled" $ for fields $ \field -> case sfType field of
                                 CustomFT _ authorfilled -> authorfilled
                                 CheckboxOptionalFT _  -> False
                                 CheckboxObligatoryFT _  -> False
                                 _ -> False
-       , sql "value" $ sfValue field
-       , sql "placements" $ sfPlacements field
-       ] <> SQL ("RETURNING " ++ signatoryLinkFieldsSelectors) []
+         sqlSetList "value" $ sfValue <$> fields
+         sqlSetList "placements" $ sfPlacements <$> fields
+         mapM_ sqlResult signatoryLinkFieldsSelectors
 
   fetchSignatoryLinkFields
-    >>= oneObjectReturnedGuard . concatMap snd . M.toList
+    >>= return . concatMap snd . M.toList
 
 insertDocumentAsIs :: MonadDB m => Document -> DBEnv m (Maybe Document)
 insertDocumentAsIs document = do
