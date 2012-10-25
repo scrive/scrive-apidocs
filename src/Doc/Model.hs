@@ -732,15 +732,17 @@ fetchAuthorAttachments = foldDB decoder M.empty
         authorattachmentfile = file_id
       }] acc
 
-insertAuthorAttachmentAsIs :: MonadDB m => DocumentID -> AuthorAttachment -> DBEnv m (Maybe AuthorAttachment)
-insertAuthorAttachmentAsIs documentid attach = do
-  _ <- kRun $ mkSQL INSERT tableAuthorAttachments [
-      sql "file_id" $ authorattachmentfile attach
-    , sql "document_id" documentid
-    ] <> SQL ("RETURNING " ++ authorAttachmentsSelectors) []
+insertAuthorAttachmentsAsAre :: MonadDB m => DocumentID -> [AuthorAttachment] -> DBEnv m [AuthorAttachment]
+insertAuthorAttachmentsAsAre _documentid [] = return []
+insertAuthorAttachmentsAsAre documentid attachments = do
+  _ <- kRun $ sqlInsert "author_attachments" $ do
+        sqlSet "document_id" documentid
+        sqlSetList "file_id" $ authorattachmentfile <$> attachments
+        sqlResult "document_id"
+        sqlResult "file_id"
 
   fetchAuthorAttachments
-    >>= oneObjectReturnedGuard . concatMap snd . M.toList
+    >>= return . concatMap snd . M.toList
 
 insertSignatoryAttachmentAsIs :: MonadDB m => SignatoryLinkID -> SignatoryAttachment -> DBEnv m (Maybe SignatoryAttachment)
 insertSignatoryAttachmentAsIs slid SignatoryAttachment {..} = do
@@ -867,18 +869,15 @@ insertDocumentAsIs document = do
     case mdoc of
       Nothing -> return Nothing
       Just doc -> do
-        mlinks <- insertSignatoryLinksAsAre (documentid doc) documentsignatorylinks
-        mauthorattachments <- mapM (insertAuthorAttachmentAsIs (documentid doc)) documentauthorattachments
+        links <- insertSignatoryLinksAsAre (documentid doc) documentsignatorylinks
+        authorattachments <- insertAuthorAttachmentsAsAre (documentid doc) documentauthorattachments
         newtags <- S.fromList <$> insertDocumentTagsAsAre (documentid doc) (S.toList documenttags)
-        if any isNothing mauthorattachments || S.size documenttags /= S.size newtags
-         then return Nothing
-         else do
-          let newdocument = doc { documentsignatorylinks    = mlinks
-                                , documentauthorattachments = catMaybes mauthorattachments
-                                , documenttags              = newtags
-                                }
-          assertEqualDocuments document newdocument
-          return (Just newdocument)
+        let newdocument = doc { documentsignatorylinks    = links
+                              , documentauthorattachments = authorattachments
+                              , documenttags              = newtags
+                              }
+        assertEqualDocuments document newdocument
+        return (Just newdocument)
 
 insertNewDocument :: MonadDB m => Document -> DBEnv m Document
 insertNewDocument doc = do
