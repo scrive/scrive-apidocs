@@ -609,6 +609,7 @@ fetchSignatoryLinks = do
           }
 
 insertSignatoryLinksAsAre :: MonadDB m => DocumentID -> [SignatoryLink] -> DBEnv m [SignatoryLink]
+insertSignatoryLinksAsAre documentid [] = return []
 insertSignatoryLinksAsAre documentid links = do
   _ <- kRun $ sqlInsert "signatory_links" $ do
            sqlSet "document_id" documentid
@@ -650,15 +651,12 @@ insertSignatoryLinksAsAre documentid links = do
   siglinks <- fetchSignatoryLinks
 
   forM (zip (concatMap snd $ M.toList siglinks) links) $ \(newlink,oldlink) -> do
-      msigattaches <- mapM (insertSignatoryAttachmentAsIs (signatorylinkid newlink)) (signatoryattachments oldlink)
+      sigattaches <- insertSignatoryAttachmentsAsAre (signatorylinkid newlink) (signatoryattachments oldlink)
       fields <- insertSignatoryLinkFieldsAsAre (signatorylinkid newlink) ((signatoryfields . signatorydetails) oldlink)
-      if any isNothing msigattaches
-        then error $ "Could not insertSignatoryAttachmentAsIs for inserted signatory link #" ++ show (signatorylinkid oldlink)
-        else do
-          let newlinkfull = newlink { signatoryattachments = catMaybes msigattaches
-                                    , signatorydetails = (signatorydetails newlink) { signatoryfields = fields }
-                                    }
-          return newlinkfull
+      let newlinkfull = newlink { signatoryattachments = sigattaches
+                                , signatorydetails = (signatorydetails newlink) { signatoryfields = fields }
+                                }
+      return newlinkfull
 
 signatoryAttachmentsSelectors :: String
 signatoryAttachmentsSelectors = intercalate ", "
@@ -744,17 +742,21 @@ insertAuthorAttachmentsAsAre documentid attachments = do
   fetchAuthorAttachments
     >>= return . concatMap snd . M.toList
 
-insertSignatoryAttachmentAsIs :: MonadDB m => SignatoryLinkID -> SignatoryAttachment -> DBEnv m (Maybe SignatoryAttachment)
-insertSignatoryAttachmentAsIs slid SignatoryAttachment {..} = do
-  _ <- kRun $ mkSQL INSERT tableSignatoryAttachments [
-        sql "file_id" signatoryattachmentfile
-       , sql "name" signatoryattachmentname
-       , sql "description" signatoryattachmentdescription
-       , sql "signatory_link_id" slid
-       ] <> SQL ("RETURNING " ++ signatoryAttachmentsSelectors) []
+insertSignatoryAttachmentsAsAre :: MonadDB m => SignatoryLinkID -> [SignatoryAttachment] -> DBEnv m [SignatoryAttachment]
+insertSignatoryAttachmentsAsAre _slid [] = return []
+insertSignatoryAttachmentsAsAre slid attachments = do
+  _ <- kRun $ sqlInsert "signatory_attachments" $ do
+          sqlSet "signatory_link_id" slid
+          sqlSetList "file_id" $ signatoryattachmentfile <$> attachments
+          sqlSetList "name" $ signatoryattachmentname <$> attachments
+          sqlSetList "description" $ signatoryattachmentdescription <$> attachments
+          sqlResult "signatory_link_id"
+          sqlResult "file_id"
+          sqlResult "name"
+          sqlResult "description"
 
   fetchSignatoryAttachments
-    >>= oneObjectReturnedGuard . concatMap snd . M.toList
+    >>= return . concatMap snd . M.toList
 
 signatoryLinkFieldsSelectors :: [String]
 signatoryLinkFieldsSelectors =
