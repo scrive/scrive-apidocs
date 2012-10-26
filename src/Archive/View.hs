@@ -19,7 +19,7 @@ import User.Model
 
 import Control.Applicative
 import Data.Maybe
-
+import Data.List
 import MinutesTime
 import Control.Logic
 import Util.HasSomeCompanyInfo
@@ -27,7 +27,7 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Control.Monad.Reader
 import Text.JSON
-import Data.List (intercalate)
+
 
 import Doc.DocUtils
 import PadQueue.Model
@@ -135,10 +135,16 @@ signatoryForListCSV ktl _agr doc msl = [
             , fromMaybe  "" $ getPersonalNumber <$> msl
             , fromMaybe  "" $ getCompanyName <$> msl
             , fromMaybe  "" $ getCompanyNumber <$> msl
-            ]
+            ] ++ (map sfValue $ sortBy fieldNameSort customFields)
     where
         csvTime = formatMinutesTime ktl "%Y-%m-%d %H:%M"
-
+        customFields = filter isCustom  $ concat $ maybeToList $ signatoryfields <$> signatorydetails <$> msl
+        fieldNameSort sf1 sf2 = case (sfType sf1, sfType sf2) of
+                                  (CustomFT n1 _, CustomFT n2 _) -> compare n1 n2
+                                  _ -> EQ
+        isCustom SignatoryField{sfType} = case sfType of
+                                            (CustomFT _ _) -> True
+                                            _ -> False
 docForListCSVHeader :: [String]
 docForListCSVHeader = [
                           "Id"

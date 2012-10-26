@@ -276,7 +276,7 @@ safeReady(function() {
 
 //Checking
 $(document).ready(function() {
-  if ($.browser.msie && $.browser.version < "7.0") {
+  if ($.browser.msie && ($.browser.version < "7.0" && $.browser.version > "3.0")) {
     var alertModal = $("<div class='modal-container' style='height:80px'>" + "<div class='modal-body' style='padding:20px;font-size:13pt'>" + "<div class='modal-icon decline' style='margin-top:0px'></div>" + "<div>" + localization.ie6NotSupported + "</div>" + "" + "</div>");
     $("body").html("");
     $("body").append(alertModal);
