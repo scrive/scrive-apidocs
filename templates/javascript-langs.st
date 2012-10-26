@@ -865,7 +865,20 @@ javascriptLocalisation =
       }
       , account :{
             accountDetails :  "$_HeadUserInfo()$"
-          , accountSecurity : "$_HeadAccountSettings()$"
+          , accountSecurity : {
+                name            : "$_HeadAccountSettings()$"
+              , passwordSection : "$_password()$"
+              , oldpassword     : "$_PresentPassword()$"
+              , newpassword1    : "$_NewPassword()$"
+              , newpassword2    : "$_RepeatNewPassword()$"
+              , regionSection   : "$_LanguageSettings()$"
+              , region          : "$_UserRegion()$"
+              , regionSE        : "$_Sweden()$"
+              , regionGB        : "$_Britain()$"
+              , footerSection   : "$_userDocumentsSettings()$"
+              , useFooter       : "$_userDocumentSettingsMailFooter()$"
+              , save : "$_SaveChanges()$"
+            }
           , companySettings : "$_CompanySettings()$"
           , companyAccounts : {
                 name : "$_CompanyAccounts()$"

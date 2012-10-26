@@ -139,6 +139,7 @@ set systemPage
  js   js/account/company.js
  js   js/account/user.js
  js   js/account/stats.js
+ js   js/account/securitysettings.js
  js   js/account/mailapisettings.js
  js   js/account/companyaccounts.js
  js   js/account/companybranding.js
