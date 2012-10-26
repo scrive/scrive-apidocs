@@ -8,7 +8,7 @@ var AccountModel = Backbone.Model.extend({
   },
   accountDetails : function() {
         if (this.get("accountDetails") != undefined) return this.get("accountDetails");
-        this.set({ "accountDetails" : new Stats({forCompanyAdmin : this.forCompanyAdmin() }) });
+        this.set({ "accountDetails" : new AccountSettings({forCompanyAdmin : this.forCompanyAdmin() }) });
         return this.accountDetails();
   },
   accountSecurity : function() {
@@ -49,7 +49,7 @@ var AccountModel = Backbone.Model.extend({
   accountDetailsTab : function() {
                     var account = this;  
                     return new Tab({
-                        name: localization.account.accountDetails,
+                        name: localization.account.accountDetails.name,
                         elems: [function() {return $(account.accountDetails().el());}],
                         active : window.location.hash == "#details",
                         onActivate : function() {
