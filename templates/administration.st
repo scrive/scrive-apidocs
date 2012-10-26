@@ -633,16 +633,12 @@ admincompanybranding=
           <li class="float-left"><a href="$admincompanieslink$/payments/$companyid$">Payments</a></li>
           <li class="float-right"/>
 	</ul>
-      <div class="tab-container">
-	<div class="tab-content account">
-	</div>
+      <div class="place-for-branding">
       </div>
     </div>
 <script>
-var company = CompanyBranding.init({ companyid: "$companyid$" });
-var tabcontent = jQuery(".tab-content");
-tabcontent.append(company.input());
-tabcontent.append(jQuery("<div class='clearfix' />"));
+var company = new CompanyBranding({ companyid: "$companyid$" });
+jQuery('.place-for-branding').append(company.el());
 </script>
 ####
 admincompanypayments=

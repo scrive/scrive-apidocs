@@ -14,15 +14,11 @@ viewCompany =
       <!--<li><a href="/oauth/dashboard">API</a></li>-->
       <li class='float-right'/>
   </ul>
-  <div class="tab-container">
-      <div class="tab-content account">
-      </div>
+  <div class="place-for-branding">
   </div>
 </div>
 <script>
-var company = CompanyBranding.init({ companyid: null });
-var tabcontent = jQuery(".tab-content");
-tabcontent.append(company.input());
-tabcontent.append(jQuery("<div class='clearfix' />"));
+var company = new CompanyBranding({ companyid: null });
+jQuery('.place-for-branding').append(company.el());
 </script>
 #####

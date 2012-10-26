@@ -127,7 +127,6 @@ set systemPage
  js   js/validation.js
  js   js/signaturedrawer.js
  js   js/fieldplacementview.js
- js   js/companybranding.js
  js   js/padview.js
  js   js/fileverifier.js
  js   js/payments.js
@@ -136,7 +135,13 @@ set systemPage
  js   js/archive/attachments.js
  js   js/archive/bin.js
  js   js/archive/archive.js
+ js   js/account/mailapi.js
+ js   js/account/company.js
+ js   js/account/user.js
  js   js/account/stats.js
+ js   js/account/mailapisettings.js
+ js   js/account/companyaccounts.js
+ js   js/account/companybranding.js
  js   js/account/account.js
  js   js/blocking.js
  js   js/oauth.js

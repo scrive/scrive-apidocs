@@ -1145,22 +1145,27 @@
         }
     });
 
-    window.paymentsDashboardModel = null;
-    window.paymentsDashboardView  = null;
-
-    window.bootPaymentsDashboard = function(selector) {
+    window.PaymentsDashboard = function() {
         $("head").append('<link rel="stylesheet" href="/libs/recurly/recurly.css"></link>');
-
+        var el = $("<div class='tab-container'/>");
+        var subel = $("<div class='tab-content account js-paymentsdashboard payments-dashboard'/>");
+        el.append(subel);
         $.ajax("/payments/info.json", 
                {
                    dataType: "json",
                    success: function(data) {
                        window.paymentsDashboardModel = new PaymentsModel(data);
-                       window.paymentsDashboardView  = new PaymentsView({model:window.paymentsDashboardModel});
+                       window.paymentsDashboardView  = new PaymentsView({
+                                                         model:window.paymentsDashboardModel});
                        window.paymentsDashboardView.render();
-                       $(selector).append(window.paymentsDashboardView.el);
+                       subel.append(window.paymentsDashboardView.el);
                    }
                });
+        return {
+          refresh : function() { },
+          el : function() {return el;}
+          
+        }
     };
 
 })(window);

@@ -502,7 +502,7 @@ window.CompanyBrandingView = Backbone.View.extend({
     col.append(header);
     col.append(body);
 
-    var container = $("<div class='companybranding' />");
+    var container = $("<div class='tab-content companybranding' />");
     container.append(col);
 
     if (company.editable()) {
@@ -517,15 +517,13 @@ window.CompanyBrandingView = Backbone.View.extend({
   }
 });
 
-window.CompanyBranding = {
-  init: function(args) {
+window.CompanyBranding = function(args) {
     var model = new CompanyModel(args);
-    var div = $("<div />");
-    var view = new CompanyBrandingView({ model: model, el: div});
-    return new Object({
-      input: function() { return div; }
-    });
-  }
+    var view = new CompanyBrandingView({ model: model, el:$("<div class='tab-container account'/>") });
+    return {
+      refresh: function() {},
+      el : function() { return $(view.el); }
+    };
 };
 
 })(window);

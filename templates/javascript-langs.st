@@ -867,9 +867,52 @@ javascriptLocalisation =
             accountDetails :  "$_HeadUserInfo()$"
           , accountSecurity : "$_HeadAccountSettings()$"
           , companySettings : "$_CompanySettings()$"
-          , companyAccounts : "$_CompanyAccounts()$"
-          , mailAPI : "$_HeadMailApi()$"
-          , stats : "$_HeadUsageStats()$"
+          , companyAccounts : {
+                name : "$_CompanyAccounts()$"
+              , createNewButtonText : "$_newCompanyAccountButtonText()$"
+              , createNewModalBody : "$_modalAddCompanyAccountBody()$"
+              , createNewModalTitle:"$_modalAddCompanyAccountTitle()$"
+              , createNewModalAcceptButton: "$_modalAddCompanyAccountInviteButtonText()$"
+              , search : "$_SearchCompanyAccount()$"
+              , roleAdmin : "$_admin()$"
+              , roleStandard : "$_standard()$"
+              , rolePending : "$_pendingcompanyaccount()$"
+              , resendModalBody : "$_modalResendCompanyAccountInviteBody()$ "
+              , resendModalTitle : "$_modalResendCompanyAccountInviteHeader()$"
+              , resendModalAccept : "$_modalResendCompanyAccountInviteConfirm()$"
+              , deleteModalBody : "$_listLocalDialogsBody()$ "
+              , deleteModalTitle : "$_delete()$"
+              , deleteFailedHasDocuments : "$_flashMessageUserHasLiveDocs()$"
+              , columnName :  "$_name()$"
+              , columnEmail : "$_email()$"
+              , columnRole :  "$_role()$"
+ 
+            }
+          , mailAPI : {
+                name : "$_HeadMailApi()$"
+              , save : "$_SaveChanges()$"
+              , activeMails : "$_MailAPIActiveEmail()$"
+              , dailyLimit : "$_MailAPILimitsDaily()$"
+              , processedToday : "$_MailAPILimitsProcessedToday()$"
+              , personalMailAPIHeader : "$_MailAPISettings()$"
+              , enablePersonal : "$_MailAPIEnable()$"
+              , resetKeys : "$_MailAPIResetKey()$"
+              , limitMailAPIHeader : "$_MailAPILimitHead()$"
+              , resetLimit : "$_MailAPILimitsResetToday()$"
+              , companyMailAPIHeader : "$_CompanyMailAPI()$"
+ 
+          }
+          , stats : {
+                name : "$_HeadUsageStats()$"
+              , last30days : "$_last30Days()$"
+              , last6months : "$_last6Months()$"
+              , columnDate: "$_usageStatsDate()$"
+              , columnMonth : "$_usageStatsMonth()$"
+              , columnSender : "$_statsSender()$"
+              , columnClosedDocuments : "$_closedDocuments()$"
+              , columnSendDocuments :"$_sentDocuments()$"
+              , columnClosedSignatures : "$_closedSignatures()$"     
+            }
           , subscription : "$_Subscription()$"
       }
     };

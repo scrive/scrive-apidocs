@@ -18,7 +18,8 @@ import MinutesTime
 import ScriveByMail.Model
 import FlashMessage
 import qualified Templates.Fields as F
-
+import qualified Text.JSON.Gen as J
+import Text.JSON
 import Control.Applicative
 import Data.Int
 
@@ -72,6 +73,13 @@ mailAPIInfoFields info = do
   F.value "mailapikey"   $ show $ umapiKey        info
   F.value "mailapilimit" $ show $ umapiDailyLimit info
   F.value "mailapisent"  $ show $ umapiSentToday  info
+
+mailAPIInfoJSON :: Monad m => MailAPIInfo -> m JSValue
+mailAPIInfoJSON info = J.runJSONGenT $ do
+  J.value "key"   $ show $ umapiKey        info
+  J.value "limit" $ show $ umapiDailyLimit info
+  J.value "sent"  $ show $ umapiSentToday  info
+  
 
 modalDenyDelay :: TemplatesMonad m => m FlashMessage
 modalDenyDelay = toModal <$> renderTemplate_ "modalDenyDelay"

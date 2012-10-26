@@ -18,28 +18,28 @@ var AccountModel = Backbone.Model.extend({
   },
   companySettings : function() {
         if (this.get("companySettings") != undefined) return this.get("companySettings");
-        this.set({ "companySettings" : new Stats({forCompanyAdmin : this.forCompanyAdmin() }) });
+        this.set({ "companySettings" : new CompanyBranding({forCompanyAdmin : this.forCompanyAdmin() }) });
         return this.companySettings();
   },
   companyAccounts : function() {
         if (this.get("companyAccounts") != undefined) return this.get("companyAccounts");
-        this.set({ "companyAccounts" :new Stats({forCompanyAdmin : this.forCompanyAdmin() }) });
+        this.set({ "companyAccounts" :new CompanyAccounts({forCompanyAdmin : this.forCompanyAdmin() }) });
         return this.companyAccounts();
   },
   mailAPI : function() {
         if (this.get("mailAPI") != undefined) return this.get("mailAPI");
-        this.set({ "mailAPI" : new Stats({forCompanyAdmin : this.forCompanyAdmin() }) });
+        this.set({ "mailAPI" : new MailAPISettings() });
         return this.mailAPI();
   },
   stats : function() {
         if (this.get("stats") != undefined) return this.get("stats");
         this.set({ "stats" : new Stats({forCompanyAdmin : this.forCompanyAdmin() }) });
-        return this.bin();
+        return this.stats();
 
   },
   subscription : function() {
         if (this.get("subscription") != undefined) return this.get("subscription");
-        this.set({ "subscription" : new Stats({forCompanyAdmin : this.forCompanyAdmin() }) });
+        this.set({ "subscription" : new PaymentsDashboard() });
         return this.subscription();
 
   },
@@ -62,7 +62,7 @@ var AccountModel = Backbone.Model.extend({
                     var account = this; 
                     return new Tab({
                         name: localization.account.accountSecurity,
-                        elems: [function() {return $(account.accountSecurity().el);}],
+                        elems: [function() {return $(account.accountSecurity().el());}],
                         active : window.location.hash == "#security",
                         onActivate : function() {
                             window.location.hash = "security";
@@ -85,7 +85,7 @@ var AccountModel = Backbone.Model.extend({
   companyAccountsTab : function() {
                     var account = this;
                     return new Tab({
-                        name: localization.account.companyAccounts,
+                        name: localization.account.companyAccounts.name,
                         elems: [function() {return $(account.companyAccounts().el());}],
                         active : window.location.hash == "#users",
                         onActivate : function() {
@@ -98,7 +98,7 @@ var AccountModel = Backbone.Model.extend({
   mailAPITab : function() {
                     var account = this;
                     return new Tab({
-                        name: localization.account.mailAPI,
+                        name: localization.account.mailAPI.name,
                         elems: [function() {return $(account.mailAPI().el());}],
                         active : window.location.hash == "#mailapi",
                         onActivate : function() {
@@ -109,7 +109,7 @@ var AccountModel = Backbone.Model.extend({
   statsTab : function() {
                     var account = this;
                     return new Tab({
-                        name: localization.account.stats,
+                        name: localization.account.stats.name,
                         elems: [function() {return $(account.stats().el());}],
                         active : window.location.hash == "#stats",
                         onActivate : function() {
@@ -136,8 +136,6 @@ var AccountModel = Backbone.Model.extend({
 var AccountView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
-        this.model.view = this;
-        var view = this;
         this.render();
     },
     render: function () {
@@ -166,9 +164,9 @@ var AccountView = Backbone.View.extend({
 window.Account = function(args) {
           var model = new AccountModel(args);
           var view =  new AccountView({model : model, el : $("<div/>")});
-          return new Object({
+          return {
               el  : function() {return view.el;}
-            });
+            };
 };
 
 })(window);

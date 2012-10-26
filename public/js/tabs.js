@@ -103,7 +103,10 @@ var Tabs = Backbone.Model.extend({
    {    var tabs = this.tabs();
         for(var i=0;i<tabs.length;i++)
         {
-            _.each(tabs[i].elems(), function(e) {if (e instanceof jQuery) e.hide();});
+            _.each(tabs[i].elems(), function(e) {
+              if (e instanceof jQuery)
+                e.hide();
+            });
         }
    },
    activeTab : function()

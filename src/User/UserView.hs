@@ -1,5 +1,6 @@
 module User.UserView (
     -- pages
+    userJSON,
     showUser,
     showUserSecurity,
     showUserMailAPI,
@@ -77,6 +78,7 @@ import Data.Either
 import ScriveByMail.Model
 import ScriveByMail.View
 import qualified Templates.Fields as F
+import Control.Logic
 
 showUser :: TemplatesMonad m => User -> Maybe Company -> Bool -> m String
 showUser user mcompany createcompany = renderTemplate "showUser" $ do
@@ -85,6 +87,41 @@ showUser user mcompany createcompany = renderTemplate "showUser" $ do
     F.value "createcompany" $ createcompany
     F.value "linkaccount" $ show LinkAccount
 
+userJSON :: Monad m => User -> Maybe MailAPIInfo -> Maybe Company -> Maybe MailAPIInfo -> m JSValue
+userJSON user mumailapi mcompany mcmailapi = runJSONGenT $ do
+    value "id" $ show $ userid user
+    value "fstname" $ getFirstName user
+    value "sndname" $ getLastName user
+    value "email" $ getEmail user
+    value "personalnumber" $ getPersonalNumber user
+    value "phone" $ userphone $ userinfo user
+    value "mobile" $ usermobile $ userinfo user
+    value "companyposition" $ usercompanyposition $ userinfo user
+    value "usercompanyname" $ getCompanyName user
+    value "usercompanynumber" $ getCompanyNumber user
+    value "region" $ "gb" <| LANG_EN == (getLang user) |> "se"
+    value "lang"   $ "en" <| LANG_EN == (getLang user) |> "se"
+    value "footer" $ customfooter $ usersettings user
+    valueM "mailapi" $ case (mumailapi) of
+                            Nothing -> return JSNull
+                            Just umailapi -> mailAPIInfoJSON umailapi
+    valueM "company" $ case (mcompany) of
+                            Nothing -> return JSNull
+                            Just company -> companyJSON company mcmailapi
+
+companyJSON :: Monad m => Company -> Maybe MailAPIInfo -> m JSValue
+companyJSON company mcmailapi = runJSONGenT $ do
+    value "companyid" $ show $ companyid company
+    value "address" $ companyaddress $ companyinfo company
+    value "city" $ companycity $ companyinfo company
+    value "country" $ companycountry $ companyinfo company
+    value "zip" $ companyzip $ companyinfo company
+    value "companyname" $ getCompanyName company
+    value "companynumber" $ getCompanyNumber company
+    valueM "mailapi" $ case (mcmailapi) of
+                            Nothing -> return JSNull
+                            Just cmailapi -> mailAPIInfoJSON cmailapi
+    
 companyFields :: Monad m => Maybe Company -> Fields m ()
 companyFields mcompany = do
     F.value "companyid" $ show $ fmap companyid mcompany

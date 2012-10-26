@@ -46,6 +46,19 @@ import Payments.Action
 import Payments.Model
 import ListUtil
 
+
+getUserJSON :: Kontrakcja m => m JSValue
+getUserJSON = do
+    ctx <- getContext
+    case (ctxmaybeuser ctx) of
+         Just user -> do
+           mumailapi <- dbQuery $ GetUserMailAPI $ userid user
+           mcompany <- getCompanyForUser user
+           mcmailapi <- maybe (return Nothing) (dbQuery . GetCompanyMailAPI) $ usercompany user
+           userJSON user mumailapi mcompany mcmailapi
+         Nothing -> internalError
+
+
 handleUserGet :: Kontrakcja m => m (Either KontraLink Response)
 handleUserGet = checkUserTOSGet $ do
     ctx <- getContext
