@@ -609,7 +609,7 @@ fetchSignatoryLinks = do
           }
 
 insertSignatoryLinksAsAre :: MonadDB m => DocumentID -> [SignatoryLink] -> DBEnv m [SignatoryLink]
-insertSignatoryLinksAsAre documentid [] = return []
+insertSignatoryLinksAsAre _documentid [] = return []
 insertSignatoryLinksAsAre documentid links = do
   _ <- kRun $ sqlInsert "signatory_links" $ do
            sqlSet "document_id" documentid
@@ -650,11 +650,20 @@ insertSignatoryLinksAsAre documentid links = do
 
   siglinks <- fetchSignatoryLinks
 
-  forM (zip (concatMap snd $ M.toList siglinks) links) $ \(newlink,oldlink) -> do
-      sigattaches <- insertSignatoryAttachmentsAsAre (signatorylinkid newlink) (signatoryattachments oldlink)
-      fields <- insertSignatoryLinkFieldsAsAre (signatorylinkid newlink) ((signatoryfields . signatorydetails) oldlink)
-      let newlinkfull = newlink { signatoryattachments = sigattaches
-                                , signatorydetails = (signatorydetails newlink) { signatoryfields = fields }
+  let newLinksAsList = concatMap snd $ M.toList siglinks
+
+  let replaceAttachments newlink oldlink = (signatorylinkid newlink, signatoryattachments oldlink)
+  sigattaches <- insertSignatoryAttachmentsAsAre $ zipWith replaceAttachments newLinksAsList links
+
+  let replaceFields newlink oldlink = (signatorylinkid newlink, (signatoryfields . signatorydetails) oldlink)
+
+  fields <- insertSignatoryLinkFieldsAsAre $ zipWith replaceFields newLinksAsList links
+
+  forM newLinksAsList $ \newlink -> do
+      let newlinkid = signatorylinkid newlink
+      let newlinkfull = newlink { signatoryattachments = M.findWithDefault [] newlinkid sigattaches
+                                , signatorydetails = (signatorydetails newlink)
+                                                     { signatoryfields = M.findWithDefault [] newlinkid fields }
                                 }
       return newlinkfull
 
@@ -742,21 +751,22 @@ insertAuthorAttachmentsAsAre documentid attachments = do
   fetchAuthorAttachments
     >>= return . concatMap snd . M.toList
 
-insertSignatoryAttachmentsAsAre :: MonadDB m => SignatoryLinkID -> [SignatoryAttachment] -> DBEnv m [SignatoryAttachment]
-insertSignatoryAttachmentsAsAre _slid [] = return []
-insertSignatoryAttachmentsAsAre slid attachments = do
+insertSignatoryAttachmentsAsAre :: MonadDB m
+                                => [(SignatoryLinkID,[SignatoryAttachment])]
+                                -> DBEnv m (M.Map SignatoryLinkID [SignatoryAttachment])
+insertSignatoryAttachmentsAsAre attachments | all (null . snd) attachments = return M.empty
+insertSignatoryAttachmentsAsAre attachments = do
   _ <- kRun $ sqlInsert "signatory_attachments" $ do
-          sqlSet "signatory_link_id" slid
-          sqlSetList "file_id" $ signatoryattachmentfile <$> attachments
-          sqlSetList "name" $ signatoryattachmentname <$> attachments
-          sqlSetList "description" $ signatoryattachmentdescription <$> attachments
+          sqlSetList "signatory_link_id" $ concatMap (\(d,l) -> map (const d) l) attachments
+          sqlSetList "file_id" $ signatoryattachmentfile <$> concatMap snd attachments
+          sqlSetList "name" $ signatoryattachmentname <$> concatMap snd attachments
+          sqlSetList "description" $ signatoryattachmentdescription <$> concatMap snd attachments
           sqlResult "signatory_link_id"
           sqlResult "file_id"
           sqlResult "name"
           sqlResult "description"
 
   fetchSignatoryAttachments
-    >>= return . concatMap snd . M.toList
 
 signatoryLinkFieldsSelectors :: [String]
 signatoryLinkFieldsSelectors =
@@ -788,28 +798,31 @@ fetchSignatoryLinkFields = foldDB decoder M.empty
                         _   -> xtype
           }] acc
 
-insertSignatoryLinkFieldsAsAre :: MonadDB m => SignatoryLinkID -> [SignatoryField] -> DBEnv m [SignatoryField]
-insertSignatoryLinkFieldsAsAre _slid [] = return []
-insertSignatoryLinkFieldsAsAre slid fields = do
+insertSignatoryLinkFieldsAsAre :: MonadDB m
+                               => [(SignatoryLinkID,[SignatoryField])]
+                               -> DBEnv m (M.Map SignatoryLinkID [SignatoryField])
+insertSignatoryLinkFieldsAsAre fields | all (null . snd) fields = return M.empty
+insertSignatoryLinkFieldsAsAre fields = do
+  let getCustomName field = case sfType field of
+                              CustomFT name _ -> name
+                              CheckboxOptionalFT name -> name
+                              CheckboxObligatoryFT name -> name
+                              _ -> ""
+      isAuthorFilled field = case sfType field of
+                               CustomFT _ authorfilled -> authorfilled
+                               CheckboxOptionalFT _  -> False
+                               CheckboxObligatoryFT _  -> False
+                               _ -> False
   _ <- kRun $ sqlInsert "signatory_link_fields" $ do
-         sqlSet "signatory_link_id" $ slid
-         sqlSetList "type" $ sfType <$> fields
-         sqlSetList "custom_name" $ for fields $ \field -> case sfType field of
-                                CustomFT name _ -> name
-                                CheckboxOptionalFT name -> name
-                                CheckboxObligatoryFT name -> name
-                                _ -> ""
-         sqlSetList "is_author_filled" $ for fields $ \field -> case sfType field of
-                                CustomFT _ authorfilled -> authorfilled
-                                CheckboxOptionalFT _  -> False
-                                CheckboxObligatoryFT _  -> False
-                                _ -> False
-         sqlSetList "value" $ sfValue <$> fields
-         sqlSetList "placements" $ sfPlacements <$> fields
+         sqlSetList "signatory_link_id" $ concatMap (\(d,l) -> map (const d) l) fields
+         sqlSetList "type" $ sfType <$> concatMap snd fields
+         sqlSetList "custom_name" $ getCustomName <$> concatMap snd fields
+         sqlSetList "is_author_filled" $ isAuthorFilled <$> concatMap snd fields
+         sqlSetList "value" $ sfValue <$> concatMap snd fields
+         sqlSetList "placements" $ sfPlacements <$> concatMap snd fields
          mapM_ sqlResult signatoryLinkFieldsSelectors
 
   fetchSignatoryLinkFields
-    >>= return . concatMap snd . M.toList
 
 insertDocumentAsIs :: MonadDB m => Document -> DBEnv m (Maybe Document)
 insertDocumentAsIs document = do
