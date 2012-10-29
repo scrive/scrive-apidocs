@@ -6,10 +6,10 @@ window.Company = Backbone.Model.extend({
       companyid        : "",
       companyname      : "",
       companynumber    : "",
-      adress    : "",
+      address    : "",
       zip       : "",
       city      : "",
-      county    : "",
+      country    : "",
       mailapi   : undefined
   },
   initialize : function(args) {
@@ -24,8 +24,8 @@ window.Company = Backbone.Model.extend({
   companynumber : function() {
      return this.get("companynumber");
   },
-  adress : function() {
-     return this.get("adress");
+  address : function() {
+     return this.get("address");
   },
   zip : function() {
      return this.get("zip");
@@ -33,8 +33,8 @@ window.Company = Backbone.Model.extend({
   city : function() {
      return this.get("city");
   },
-  county : function() {
-     return this.get("county");
+  country : function() {
+     return this.get("country");
   },
   mailapi : function() {
      return this.get("mailapi");

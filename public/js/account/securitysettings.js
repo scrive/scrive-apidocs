@@ -120,7 +120,7 @@ var SecuritySettingsView = Backbone.View.extend({
 
       var password2input = $("<input type='password' autocomplete='off'/>");
       password2input.change(function() {
-          model.setPassword1(password2input.val());
+          model.setPassword2(password2input.val());
         })
       table.append($("<tr/>").append($("<td/>").text(localization.account.accountSecurity.newpassword2)).append($("<td/>").append(password2input)));
         

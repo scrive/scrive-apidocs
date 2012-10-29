@@ -878,6 +878,15 @@ javascriptLocalisation =
               , companyzip :     "$_zip()$"
               , companycity :    "$_city()$"
               , companycountry : "$_country()$"
+              , newEmail       : "$_newemail()$"
+              , newEmailAgain  : "$_newemailagain()$"
+              , changeEmailButton : "$_changeEmailRequestButtonText()$"
+              , changeEmailExplaination : "$_changeEmailRequestExplanation()$"
+              , changeEmailTitle : "$_changeEmailRequestTitle()$"
+              , changeEmailAccept : "$_changeEmailRequestAcceptText()$"
+              , createCompany : "$_createCompany()$"
+              , createCompanyExplanation : "$_createCompanyExplanation()$"
+              , createCompanyPreambule :   "$_createCompanyFormPreamble()$"
               , save : "$_SaveChanges()$"
             }
           , accountSecurity : {

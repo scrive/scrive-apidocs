@@ -3,8 +3,8 @@
 (function(window){
  
 var StatsModel = Backbone.Model.extend({
-  forCompanyAdmin : function() {
-     return this.get("forCompanyAdmin");
+  companyAdmin : function() {
+     return this.get("companyAdmin");
   },
   dayTable : function() {
         if (this.get("dayTable") != undefined) return this.get("dayTable");
@@ -14,7 +14,7 @@ var StatsModel = Backbone.Model.extend({
                 url: "/account/usagestats/days/json",
                 cells : _.flatten([
                     [new Cell({name: localization.account.stats.columnDate,   width:"100px", field:"date"})],
-                    (this.forCompanyAdmin() ? [new Cell({name:  localization.account.stats.columnSender, width:"100px", field:"name", special:"expandable"})] : []),
+                    (this.companyAdmin() ? [new Cell({name:  localization.account.stats.columnSender, width:"100px", field:"name", special:"expandable"})] : []),
                     [new Cell({name:  localization.account.stats.columnClosedDocuments,  width:"70px",  field:"closed", tdclass: 'num'})],
                     [new Cell({name:  localization.account.stats.columnSendDocuments,    width:"70px",  field:"sent", tdclass: 'num'})],
                     [new Cell({name:  localization.account.stats.columnClosedSignatures, width:"70px",  field:"signatures", tdclass: 'num'})]
@@ -31,7 +31,7 @@ var StatsModel = Backbone.Model.extend({
               url: "/account/usagestats/months/json",
               cells : _.flatten([
                   [new Cell({name: localization.account.stats.columnMonth,   width:"100px", field:"date"})],
-                  (this.forCompanyAdmin() ? [new Cell({name: localization.account.stats.columnSender, width:"100px", field:"name", special:"expandable"})] : []),
+                  (this.companyAdmin() ? [new Cell({name: localization.account.stats.columnSender, width:"100px", field:"name", special:"expandable"})] : []),
                   [new Cell({name: localization.account.stats.columnClosedDocuments,  width:"70px",  field:"closed", tdclass: 'num'})],
                   [new Cell({name: localization.account.stats.columnSendDocuments,    width:"70px",  field:"sent", tdclass: 'num'})],
                   [new Cell({name: localization.account.stats.columnClosedSignatures, width:"70px",  field:"signatures", tdclass: 'num'})]

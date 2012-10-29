@@ -1,6 +1,5 @@
 module CompanyAccounts.CompanyAccountsControl (
-    handleGetCompanyAccounts
-  , handleCompanyAccounts
+    handleCompanyAccounts
   , handlePostCompanyAccounts
   , handleAddCompanyAccount
   , handleGetBecomeCompanyAccount
@@ -50,16 +49,6 @@ import User.History.Model
 import Payments.Model
 import Recurly
 import Payments.Config
-
-{- |
-    Handles the showing of the company accounts page.
-    This page shows the list of users that are members of a company
-    and a list of the pending takeover invites.
--}
-handleGetCompanyAccounts :: Kontrakcja m => m (Either KontraLink Response)
-handleGetCompanyAccounts = withUserGet $ withCompanyAdmin $ \_ -> do
-  content <- viewCompanyAccounts
-  renderFromBody kontrakcja content
 
 {- |
     Gets the ajax data for the company accounts list.
@@ -203,7 +192,7 @@ handlePostCompanyAccounts = withCompanyAdmin $ \_ -> do
     _ | changerole -> handleChangeRoleOfCompanyAccount
     _ | remove -> handleRemoveCompanyAccount
     _ -> return ()
-  LinkCompanyAccounts <$> getListParamsForSearch
+  return LinkCompanyAccounts
 
 {- |
     Handles adding a company user either by creating them or
@@ -375,7 +364,7 @@ handleGetBecomeCompanyAccount companyid = withUserGet $ do
   mcompany <- getCompanyForUser user
   newcompany <- guardJustM $ dbQuery $ GetCompany companyid
   addFlashM $ modalDoYouWantToBeCompanyAccount newcompany
-  content <- showUser user mcompany False
+  content <- showAccount user mcompany
   renderFromBody kontrakcja content
 
 handlePostBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m KontraLink

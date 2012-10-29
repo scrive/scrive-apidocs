@@ -1,7 +1,4 @@
 module CompanyAccounts.CompanyAccountsView (
-    -- pages
-    viewCompanyAccounts,
-
     -- mails
     mailNewCompanyUserInvite,
     mailTakeoverPrivateUserInvite,
@@ -21,7 +18,6 @@ import Control.Applicative ((<$>))
 
 import FlashMessage
 import KontraLink
-import ListUtil
 import Mails.SendMail(Mail)
 import Templates.Templates
 import Templates.TemplatesUtils
@@ -31,11 +27,6 @@ import Doc.DocViewMail
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import qualified Templates.Fields as F
-
-viewCompanyAccounts :: TemplatesMonad m => m String
-viewCompanyAccounts =
-  renderTemplate "viewCompanyAccounts" $
-    F.value "currentlink" $ show $ LinkCompanyAccounts emptyListParams
 
 ----------------------------------------------------------------------------
 

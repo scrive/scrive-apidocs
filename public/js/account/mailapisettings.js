@@ -78,8 +78,7 @@ var MailAPISettingsModel = Backbone.Model.extend({
       reset_senttoday : this.resetLimit() == true ? "on" : undefined,
       daily_limit : this.dailyLimitChange()
     }).sendAjax(function() {
-        self.user().fetch();
-        self.trigger("reset");
+        window.location.reload();
     });
   },
   refresh : function() {    this.user().fetch(); }

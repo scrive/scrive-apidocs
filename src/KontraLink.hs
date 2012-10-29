@@ -8,7 +8,6 @@ import Utils.List
 import User.Model
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
-import ListUtil
 import Company.Model
 import File.FileID
 import OAuth.Model
@@ -63,7 +62,7 @@ data KontraLink
     | LinkIssueDoc DocumentID
     | LinkDesignDoc DocumentID
     | LinkRenameAttachment AttachmentID
-    | LinkCompanyAccounts ListParams
+    | LinkCompanyAccounts
     | LinkCompanyTakeover CompanyID
     | LinkAcceptTOS
     | LinkAdminOnly
@@ -150,15 +149,15 @@ instance Show KontraLink where
     showsPrec _ (LinkArchive) = (++) $ "/d"
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ (LinkAccount) = (++) "/account"
-    showsPrec _ (LinkAccountCompany Nothing) = (++) "/account/company"
+    showsPrec _ (LinkAccountCompany Nothing) = (++) "/account#company"
     showsPrec _ (LinkAccountCompany (Just cid)) = (++) $ "/adminonly/companyadmin/branding/" ++ show cid
     showsPrec _ (LinkCompanyLogo cid) = (++) $ "/account/company/" ++ show cid
     showsPrec _ (LinkChangeUserEmail actionid magichash) =
         (++) $ "/account/" ++ show actionid ++  "/" ++ show magichash
-    showsPrec _ (LinkCompanyAccounts params) = (++) $ "/account/companyaccounts" ++ "?" ++ show params
+    showsPrec _ (LinkCompanyAccounts) = (++) $ "/account#users"
     showsPrec _ (LinkCompanyTakeover companyid) = (++) $ "/companyaccounts/join/" ++ show companyid
-    showsPrec _ LinkAccountSecurity = (++) "/account/security"
-    showsPrec _ LinkUserMailAPI = (++) "/account/mailapi"
+    showsPrec _ LinkAccountSecurity = (++) "/account#security"
+    showsPrec _ LinkUserMailAPI = (++) "/account#mailapi"
     showsPrec _ (LinkIssueDoc documentid) =
         (++) $ "/d/" ++ show documentid
     showsPrec _ (LinkDesignDoc did) =  (++) $ "/" ++ show did

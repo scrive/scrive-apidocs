@@ -1,10 +1,7 @@
 module User.UserView (
     -- pages
     userJSON,
-    showUser,
-    showUserSecurity,
-    showUserMailAPI,
-    showUsageStats,
+    showAccount,
     pageAcceptTOS,
     activatePageViewNotValidLink,
 
@@ -57,7 +54,6 @@ module User.UserView (
     ) where
 
 import Control.Applicative ((<$>))
-import Control.Monad.Reader
 import Data.Maybe
 import Company.Model
 import Kontra
@@ -80,13 +76,11 @@ import ScriveByMail.View
 import qualified Templates.Fields as F
 import Control.Logic
 
-showUser :: TemplatesMonad m => User -> Maybe Company -> Bool -> m String
-showUser user mcompany createcompany = renderTemplate "showUser" $ do
-    userFields user
-    companyFields mcompany
-    F.value "createcompany" $ createcompany
-    F.value "linkaccount" $ show LinkAccount
-
+showAccount :: TemplatesMonad m => User -> Maybe Company -> m String
+showAccount user mcompany = renderTemplate "showAccount" $ do
+    F.value "companyAdmin" $ useriscompanyadmin user
+    F.value "noCompany" $ isNothing mcompany
+    
 userJSON :: Monad m => User -> Maybe MailAPIInfo -> Maybe Company -> Maybe MailAPIInfo -> m JSValue
 userJSON user mumailapi mcompany mcmailapi = runJSONGenT $ do
     value "id" $ show $ userid user
@@ -121,69 +115,7 @@ companyJSON company mcmailapi = runJSONGenT $ do
     valueM "mailapi" $ case (mcmailapi) of
                             Nothing -> return JSNull
                             Just cmailapi -> mailAPIInfoJSON cmailapi
-    
-companyFields :: Monad m => Maybe Company -> Fields m ()
-companyFields mcompany = do
-    F.value "companyid" $ show $ fmap companyid mcompany
-    F.value "address" $ fmap (companyaddress . companyinfo) mcompany
-    F.value "city" $ fmap (companycity . companyinfo) mcompany
-    F.value "country" $ fmap (companycountry . companyinfo) mcompany
-    F.value "zip" $ fmap (companyzip . companyinfo) mcompany
-    F.value "companyname" $ getCompanyName mcompany
-    F.value "companynumber" $ getCompanyNumber mcompany
-    F.value "companyimagelink" False
-
-userFields :: Monad m => User -> Fields m ()
-userFields user = do
-    let fullname          = getFullName user
-        fullnameOrEmail   = getSmartName user
-        fullnamePlusEmail = if null fullname
-                            then              "<" ++ (getEmail user) ++ ">"
-                            else fullname ++ " <" ++ (getEmail user) ++ ">"
-    F.value "id" $ show $ userid user
-    F.value "fstname" $ getFirstName user
-    F.value "sndname" $ getLastName user
-    F.value "email" $ getEmail user
-    F.value "personalnumber" $ getPersonalNumber user
-    F.value "phone" $ userphone $ userinfo user
-    F.value "mobile" $ usermobile $ userinfo user
-    F.value "companyposition" $ usercompanyposition $ userinfo user
-    F.value "userimagelink" False
-    F.value "fullname" $ fullname
-    F.value "fullnameOrEmail" $ fullnameOrEmail
-    F.value "fullnamePlusEmail" $ fullnamePlusEmail
-    F.value "iscompanyaccount" $ isJust $ usercompany user
-    F.value "usercompanyname" $ getCompanyName user
-    F.value "usercompanynumber" $ getCompanyNumber user
-
-    --field "invoiceaddress" $ BS.toString $ useraddress $ userinfo user
-    menuFields user
-
-showUserSecurity :: TemplatesMonad m => User -> m String
-showUserSecurity user = renderTemplate "showUserSecurity" $ do
-    F.value "linksecurity" $ show LinkAccountSecurity
-    F.value "fstname" $ getFirstName user
-    F.value "sndname" $ getLastName user
-    F.value "userimagelink" False
-    F.object "region" $ do
-        F.value "se" $ REGION_SE == (getRegion user)
-        F.value "gb" $ REGION_GB == (getRegion user)
-    F.object "lang" $ do
-        F.value "en" $ LANG_EN == (getLang user)
-        F.value "se" $ LANG_SE == (getLang user)
-    F.value "footer" $ customfooter $ usersettings user
-    menuFields user
-
-showUserMailAPI :: TemplatesMonad m => User -> Maybe MailAPIInfo -> Maybe MailAPIInfo -> m String
-showUserMailAPI user mapi mcapi =
-    renderTemplate "showUserMailAPI" $ do
-        F.value "linkmailapi" $ show LinkUserMailAPI
-        F.value "mailapienabled" $ isJust mapi
-        when (isJust mapi) $ mailAPIInfoFields (fromJust mapi)
-        F.value "hascompanymailapi" $ isJust mcapi
-        when (isJust mcapi) $ F.object "company" $ mailAPIInfoFields (fromJust mcapi)
-        menuFields user
-
+                            
 userStatsDayToJSON :: [(Int, [Int])] -> [JSValue]
 userStatsDayToJSON = rights . map f
   where
@@ -243,11 +175,6 @@ companyStatsMonthToJSON ts ls = rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
             d' == d,
             n' /= "Total"]
     f _ = Left "Bad stat"
-
-showUsageStats :: TemplatesMonad m => User -> m String
-showUsageStats user =
-    renderTemplate "showUsageStats" $ do
-      menuFields user
 
 pageAcceptTOS :: TemplatesMonad m => m String
 pageAcceptTOS = renderTemplate_ "pageAcceptTOS"

@@ -20,23 +20,10 @@ import TestKontra as T
 
 companyControlTests :: TestEnvSt -> Test
 companyControlTests env = testGroup "CompanyControl" [
-    testThat "handleGetCompany works" env test_handleGetCompany
-  , testThat "handleGetCompanyJSON works" env test_handleGetCompanyJSON
+    testThat "handleGetCompanyJSON works" env test_handleGetCompanyJSON
   , testThat "handlePostCompany can be used to set the company ui" env test_settingUIWithHandlePostCompany
   , testThat "handleCompanyLogo responds when noone is logged in" env test_handleCompanyLogo
   ]
-
-test_handleGetCompany :: TestEnv ()
-test_handleGetCompany = do
-  (user, _company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
-
-  req <- mkRequest GET []
-  (res, _ctx') <- runTestKontra req ctx $ handleGetCompany
-
-  assertBool "Something is returned" (length res > 0)
 
 test_handleGetCompanyJSON :: TestEnv ()
 test_handleGetCompanyJSON = do

@@ -9,9 +9,6 @@
 
   
 var CompanyAccountsModel = Backbone.Model.extend({
-  forCompanyAdmin : function() {
-     return this.get("forCompanyAdmin");
-  },
   userFullName : function(user) {
     var fullname = user.field("fullname");
     if (user.field("fullname") == undefined || user.field("fullname").length < 2) {

@@ -1,6 +1,5 @@
 module Company.CompanyControl (
-    handleGetCompany
-  , handlePostCompany
+    handlePostCompany
   , handleGetCompanyJSON
   , handleCompanyLogo
   , routes
@@ -22,7 +21,6 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Map as Map
 
 import DB
-import Company.CompanyView
 import Administration.AdministrationView (adminCompanyBrandingPage)
 import Company.Model
 import Kontra
@@ -39,8 +37,7 @@ import Text.JSON.Gen
 
 routes :: Route (KontraPlus Response)
 routes = choice
-  [ hGet $ toK0 $ handleGetCompany
-  , hPost $ toK0 $ handlePostCompany Nothing
+  [ hPost $ toK0 $ handlePostCompany Nothing
   , dir "json" $ hGet $ toK0 $ handleGetCompanyJSON Nothing
   , hGet $ toK1 $ handleCompanyLogo
   ]
@@ -51,10 +48,6 @@ adminRoutes = choice
   , hPost $ toK1 $ handlePostCompany . Just
   , dir "json" $ hGet $ toK1 $ handleGetCompanyJSON . Just
   ]
-
-
-handleGetCompany :: Kontrakcja m => m String
-handleGetCompany = withCompanyUser viewCompanySettings
 
 handleAdminGetCompany :: Kontrakcja m => CompanyID -> m String
 handleAdminGetCompany cid = withCompanyAdminOrAdminOnly (Just cid) $

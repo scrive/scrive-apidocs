@@ -3,27 +3,30 @@
 (function(window){
  
 var AccountModel = Backbone.Model.extend({
-  forCompanyAdmin : function() {
-     return this.get("forCompanyAdmin");
+  companyAdmin : function() {
+     return this.get("companyAdmin");
+  },
+  noCompany : function() {
+     return this.get("noCompany");
   },
   accountDetails : function() {
         if (this.get("accountDetails") != undefined) return this.get("accountDetails");
-        this.set({ "accountDetails" : new AccountSettings({forCompanyAdmin : this.forCompanyAdmin() }) });
+        this.set({ "accountDetails" : new AccountSettings({ companyAdmin : this.companyAdmin() }) });
         return this.accountDetails();
   },
   accountSecurity : function() {
         if (this.get("accountSecurity") != undefined) return this.get("accountSecurity");
-        this.set({ "accountSecurity" : new SecuritySettings({forCompanyAdmin : this.forCompanyAdmin() }) });
+        this.set({ "accountSecurity" : new SecuritySettings() });
         return this.accountSecurity();
   },
   companySettings : function() {
         if (this.get("companySettings") != undefined) return this.get("companySettings");
-        this.set({ "companySettings" : new CompanyBranding({forCompanyAdmin : this.forCompanyAdmin() }) });
+        this.set({ "companySettings" : new CompanyBranding() });
         return this.companySettings();
   },
   companyAccounts : function() {
         if (this.get("companyAccounts") != undefined) return this.get("companyAccounts");
-        this.set({ "companyAccounts" :new CompanyAccounts({forCompanyAdmin : this.forCompanyAdmin() }) });
+        this.set({ "companyAccounts" :new CompanyAccounts() });
         return this.companyAccounts();
   },
   mailAPI : function() {
@@ -33,7 +36,7 @@ var AccountModel = Backbone.Model.extend({
   },
   stats : function() {
         if (this.get("stats") != undefined) return this.get("stats");
-        this.set({ "stats" : new Stats({forCompanyAdmin : this.forCompanyAdmin() }) });
+        this.set({ "stats" : new Stats({companyAdmin : this.companyAdmin() }) });
         return this.stats();
 
   },
@@ -141,17 +144,16 @@ var AccountView = Backbone.View.extend({
     render: function () {
        var container = $(this.el);
        var account = this.model;
-       var view = this;
        var tabs = new KontraTabs({
         title: "",
         tabs: _.flatten([
                     [account.accountDetailsTab()]
                   , [account.accountSecurityTab()]
-                  , [account.companySettingsTab()]
-                  , [account.companyAccountsTab()]
+                  , account.companyAdmin() ? [account.companySettingsTab()] : []
+                  , account.companyAdmin() ? [account.companyAccountsTab()] : []
                   , [account.mailAPITab()] 
                   , [account.statsTab()]
-                  , [account.subscriptionTab()]
+                  , account.noCompany() || account.companyAdmin() ? [account.subscriptionTab()] : []
                   
                 ])
        });

@@ -112,7 +112,7 @@ window.CompanyBrandingLogo = Backbone.Model.extend({
     label: "",
     editable: false,
     loading: false,
-    submitUrl: ""
+    submiturl: ""
   },
   initialize: function(args) {
     _.bindAll(this, "onSend");
@@ -175,14 +175,14 @@ window.CompanyBrandingLogo = Backbone.Model.extend({
     this.reload();
     console.log("error");
   },
-  submitUrl: function() {
+  submiturl: function() {
     return this.get("submiturl");
   },
   submit: function() {
     var logo = this;
     return new Submit({
       method: "POST",
-      url: logo.submitUrl(),
+      url: logo.submiturl(),
       islogo: true,
       ajax: true,
       onSend: logo.onSend,
@@ -331,7 +331,7 @@ window.CompanyModel = Backbone.Model.extend({
           label: localization.customiseLogo,
           editable: args.company.editable,
           url: this.url,
-          submiturl: this.submitUrl
+          submiturl: this.submiturl
         }),
         editable: args.company.editable,
         ready: true
@@ -459,7 +459,7 @@ window.CompanyBrandingView = Backbone.View.extend({
       onClick: function() {
           new Submit({
               method: "POST",
-              url: company.submitUrl,
+              url: company.submiturl,
               company: JSON.stringify(company),
               islogo: company.logo().customised()
           }).send();
@@ -512,7 +512,7 @@ window.CompanyBrandingView = Backbone.View.extend({
 
     $(this.el).empty();
     $(this.el).append(container);
-
+    $(this.el).append("<div class='clearfix'></div>");
     return this;
   }
 });

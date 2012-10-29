@@ -135,17 +135,14 @@ staticRoutes = choice
      , dir "padqueue" $ dir "logout" $ hPostNoXToken $ toK0 $ PadQueue.handlePadLogout
 
      -- UserControl
-     , dir "account"                    $ hGet  $ toK0 $ UserControl.handleUserGet
+     , dir "account"                    $ hGet  $ toK0 $ UserControl.handleAccountGet
      , dir "account" $ dir "json"       $ hGet  $ toK0 $ UserControl.getUserJSON                   
      , dir "account"                    $ hPost $ toK0 $ UserControl.handleUserPost
      , dir "account" $ hGet $ toK2 $ UserControl.handleGetChangeEmail
      , dir "account" $ hPost $ toK2 $ UserControl.handlePostChangeEmail
-     , dir "account" $ dir "security" $ hGet $ toK0 $ UserControl.handleGetUserSecurity
      , dir "account" $ dir "security" $ hPost $ toK0 $ UserControl.handlePostUserSecurity
      , dir "account" $ dir "company" $ Company.routes
-     , dir "account" $ dir "mailapi" $ hGet $ toK0 $ UserControl.handleGetUserMailAPI
      , dir "account" $ dir "mailapi" $ hPost $ toK0 $ UserControl.handlePostUserMailAPI
-     , dir "account" $ dir "usagestats" $ hGet $ toK0 $ UserControl.handleUsageStatsForUser
      , dir "account" $ dir "usagestats" $ dir "days"   $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserDays
      , dir "account" $ dir "usagestats" $ dir "months" $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserMonths
      , dir "accepttos" $ hGet  $ toK0 $ UserControl.handleAcceptTOSGet
@@ -153,7 +150,6 @@ staticRoutes = choice
      , dir "account" $ dir "phoneme" $ hPostNoXToken $ toK0 $ UserControl.handleRequestPhoneCall
 
      --CompanyAccountsControl
-     , dir "account" $ dir "companyaccounts" $ hGet  $ toK0 $ CompanyAccounts.handleGetCompanyAccounts
      , dir "account" $ dir "companyaccounts" $ hPost $ toK0 $ CompanyAccounts.handlePostCompanyAccounts
      , dir "companyaccounts" $ hGet  $ toK0 $ CompanyAccounts.handleCompanyAccounts
      , dir "companyaccounts" $ dir "join" $ hGet $ toK1 $ CompanyAccounts.handleGetBecomeCompanyAccount

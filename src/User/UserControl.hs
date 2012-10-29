@@ -59,14 +59,14 @@ getUserJSON = do
          Nothing -> internalError
 
 
-handleUserGet :: Kontrakcja m => m (Either KontraLink Response)
-handleUserGet = checkUserTOSGet $ do
+handleAccountGet :: Kontrakcja m => m (Either KontraLink Response)
+handleAccountGet = checkUserTOSGet $ do
     ctx <- getContext
-    createcompany <- isFieldSet "createcompany"  --we could dump this stupid flag if we improved javascript validation
     case (ctxmaybeuser ctx) of
          Just user -> do
            mcompany <- getCompanyForUser user
-           showUser user mcompany createcompany >>= renderFromBody kontrakcja
+           content <- showAccount user mcompany
+           renderFromBody kontrakcja content
          Nothing -> sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
 
 handleUserPost :: Kontrakcja m => m KontraLink
@@ -200,7 +200,7 @@ handleGetChangeEmail uid hash = withUserGet $ do
     Just newemail -> addFlashM $ modalDoYouWantToChangeEmail newemail
   Context{ctxmaybeuser = Just user} <- getContext
   mcompany <- getCompanyForUser user
-  content <- showUser user mcompany False
+  content <- showAccount user mcompany
   renderFromBody kontrakcja content
 
 handlePostChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m KontraLink
@@ -271,10 +271,6 @@ getCompanyInfoUpdate = do
   where
     getValidField = getDefaultedField ""
 
-handleUsageStatsForUser :: Kontrakcja m => m (Either KontraLink Response)
-handleUsageStatsForUser = withUserGet $ do
-  Context{ctxmaybeuser = Just user} <- getContext
-  showUsageStats user >>= renderFromBody kontrakcja
 
 handleUsageStatsJSONForUserDays :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserDays = do
@@ -305,14 +301,6 @@ handleUsageStatsJSONForUserMonths = do
     else do
     (_, statsByMonth) <- getUsageStatsForUser (userid user) som sixm
     return $ singlePageListToJSON $ userStatsMonthToJSON statsByMonth
-
-
-handleGetUserMailAPI :: Kontrakcja m => m (Either KontraLink Response)
-handleGetUserMailAPI = withUserGet $ do
-    Context{ctxmaybeuser = Just user@User{userid}} <- getContext
-    mapi <- dbQuery $ GetUserMailAPI userid
-    mcapi <- maybe (return Nothing) (dbQuery . GetCompanyMailAPI) $ usercompany user
-    showUserMailAPI user mapi mcapi >>= renderFromBody kontrakcja
 
 handlePostUserMailAPI :: Kontrakcja m => m KontraLink
 handlePostUserMailAPI = withUserPost $ do
@@ -345,13 +333,6 @@ handlePostUserMailAPI = withUserPost $ do
                                  return ()
                              _ -> return ()
         return LinkUserMailAPI)
-
-handleGetUserSecurity :: Kontrakcja m => m Response
-handleGetUserSecurity = do
-    ctx <- getContext
-    case (ctxmaybeuser ctx) of
-         Just user -> showUserSecurity user >>= renderFromBody kontrakcja
-         Nothing -> sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
 
 handlePostUserLocale :: Kontrakcja m => m KontraLink
 handlePostUserLocale = do

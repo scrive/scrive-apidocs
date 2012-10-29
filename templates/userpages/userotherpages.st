@@ -28,3 +28,6 @@ pageAcceptTOS =
     </div>
     </form>
 ####
+####
+statsOrgTotal=$_statsOrgTotal()$
+###
