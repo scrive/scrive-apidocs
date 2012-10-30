@@ -101,7 +101,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
 
                               var submitRoleChange = function() {
                                 (new Submit({
-                                  url: "$currentlink$",
+                                  url: "/account/companyaccounts",
                                   method: "POST",
                                   changerole: true,
                                   makeadmin: user.field("role")=="RoleStandard",
@@ -120,7 +120,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
 
                               var popupResendConfirmation = function() {
                                 var submit = new Submit({
-                                  url: "$currentlink$",
+                                  url: "/account/companyaccounts",
                                   method: "POST",
                                   resend: "true",
                                   resendid: user.field("id"),
@@ -153,7 +153,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
 
                                 var popupDeleteConfirmation = function() {
                                   var submit = new Submit({
-                                    url: "$currentlink$",
+                                    url: "/account/companyaccounts",
                                     method: "POST",
                                     remove: "true",
                                     removeid: user.field("id"),

@@ -139,7 +139,7 @@ var AccountSettingsModel = Backbone.Model.extend({
       url : "/account",
       fstname : this.fstname(),
       sndname : this.sndname(),
-      personnumber : this.personnumber(),
+      personalnumber : this.personnumber(),
       email : this.email(),
       phone : this.phone(),
       companyname :  this.companyname(),
