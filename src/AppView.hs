@@ -232,7 +232,6 @@ mainLinksFields locale = do
   F.value "linkissue"            $ show LinkArchive
   F.value "linklogin"            $ show (LinkLogin locale LoginTry)
   F.value "linklogout"           $ show LinkLogout
-  F.value "linkupload"           $ show LinkUpload
   F.value "linkquestion"         $ show LinkAskQuestion
   F.value "linksignup"           $ show LinkSignup
 

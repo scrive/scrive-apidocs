@@ -120,7 +120,7 @@ handleRequestPhoneCall = do
         return ()
       phoneMeRequest user phone
     _ -> return ()
-  return $ LinkUpload
+  return $ LinkArchive
 
 handleRequestChangeEmail :: Kontrakcja m => m KontraLink
 handleRequestChangeEmail = do
@@ -437,7 +437,7 @@ handleAcceptTOSPost = withUserPost $ do
       _ <- addUserSignTOSStatEvent user
       _ <- dbUpdate $ LogHistoryTOSAccept userid ctxipnumber ctxtime (Just userid)
       addFlashM flashMessageUserDetailsSaved
-      return LinkUpload
+      return LinkArchive
     Just False -> do
       addFlashM flashMessageMustAcceptTOS
       return LinkAcceptTOS
@@ -496,7 +496,7 @@ handleAccountSetupPost uid token = do
           _ <- dbUpdate $ DeleteAction userAccountRequest uid
           forM_ docs (\d -> postDocumentPreparationChange d "mailapi")
           addFlashM flashMessageUserActivated
-  getHomeOrUploadLink
+  getHomeOrArchiveLink
 
 {- |
     This is where we get to when the user clicks the link in their password reminder
@@ -510,10 +510,10 @@ handlePasswordReminderGet uid token = do
     Just user -> do
       switchLocale (getLocale user)
       addFlashM $ modalNewPasswordView uid token
-      sendRedirect LinkUpload
+      sendRedirect LinkArchive
     Nothing -> do
       addFlashM flashMessagePasswordChangeLinkNotValid
-      sendRedirect =<< getHomeOrUploadLink
+      sendRedirect =<< getHomeOrArchiveLink
 
 handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m KontraLink
 handlePasswordReminderPost uid token = do
@@ -535,19 +535,19 @@ handlePasswordReminderPost uid token = do
               addFlashM flashMessageUserPasswordChanged
               _ <- addUserLoginStatEvent ctxtime user
               logUserToContext $ Just user
-              return LinkUpload
+              return LinkArchive
             Left flash -> do
               _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) ctxipnumber (ctxtime) (userid <$> ctxmaybeuser)
               addFlashM flash
               addFlashM $ modalNewPasswordView uid token
-              getHomeOrUploadLink
+              getHomeOrArchiveLink
         _ -> do
           _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
           addFlashM $ modalNewPasswordView uid token
-          getHomeOrUploadLink
+          getHomeOrArchiveLink
     Nothing   -> do
       addFlashM flashMessagePasswordChangeLinkNotValid
-      getHomeOrUploadLink
+      getHomeOrArchiveLink
 
 handleBlockingInfo :: Kontrakcja m => m JSValue
 handleBlockingInfo = do

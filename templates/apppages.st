@@ -233,7 +233,10 @@ header=
                                <a href="$linklogout$" class="toplink logout">$_headerLogOut()$</a>
                                <a href="$linkaccount$" class="toplink s-account">$_headerAccount()$</a>
                                <a href="$linkissue$" class="toplink">$_headerArchive()$</a>
-                               <a href="$linkupload$" class="toplink">$_headerSend()$</a>
+                               <span class='toplink btn'><a class="green btn-tiny"  href='/fromtemplate' ><div class="left"></div><div class="label">$_headerTemplate()$</div><div class="right"></div></a></span>
+                               <span class='toplink btn'><a class="green btn-tiny"  onclick='createnewdocument()'><div class="left"></div><div class="label">$_headerSend()$</div><div class="right"></div></a></span>
+                               <!-- <a href="$linkupload$" class="toplink">$_headerSend()$</a> -->
+                               <!-- <a href="$linkupload$" class="toplink">$_headerSend()$</a> -->
                                 $localeSwitcher()$
                                 $else$
                                 <span id="moveleft2">

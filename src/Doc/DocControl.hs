@@ -5,6 +5,7 @@ module Doc.DocControl(
     -- Exported utils or test functions
       sendReminderEmail
     -- Top level handlers
+    , showCreateFromTemplate 
     , handleDownloadFile
     , handleDownloadMainFile
     , handleSignShow
@@ -16,7 +17,6 @@ module Doc.DocControl(
     , handleAcceptAccountFromSign
     , handleSigAttach
     , handleDeleteSigAttach
-    , handleShowUploadPage
     , handleIssueShowGet
     , handleIssueShowPost
     , handleSetAttachments
@@ -111,6 +111,10 @@ import System.Directory
 
   Here are all actions associated with transitions.
 -}
+
+
+showCreateFromTemplate :: Kontrakcja m => m (Either KontraLink String)
+showCreateFromTemplate = withUserGet $ pageCreateFromTemplate
 
 {- |
 
@@ -270,10 +274,10 @@ rejectDocument documentid siglinkid = do
   case edocs of
     Left (DBActionNotAvailable message) -> do
       addFlash (OperationFailed, message)
-      getHomeOrUploadLink
+      getHomeOrArchiveLink
     Left (DBDatabaseNotAvailable message) -> do
       addFlash (OperationFailed, message)
-      getHomeOrUploadLink
+      getHomeOrArchiveLink
     Left _ -> internalError
     Right document -> do
       postDocumentRejectedChange document siglinkid "web"
@@ -417,9 +421,7 @@ handleIssueSign document timezone = do
           ([], ds) -> do
               addFlashM $ flashMessageCSVSent $ length ds
               Log.debug (show $ map documenttype ds)
-              case documenttype (head ds) of
-                Signable _ -> return $ LinkArchive
-                _          -> return $ LinkUpload
+              return $ LinkArchive
           (ls, _) -> do
             Log.debug $ "handleIssueSign had lefts: " ++ intercalate ";" ls
             addFlash (OperationFailed, intercalate ";" ls)
@@ -476,9 +478,7 @@ handleIssueSend document timezone = do
           ([], ds) -> do
               addFlashM $ flashMessageCSVSent $ length ds
               Log.debug (show $ map documenttype ds)
-              case documenttype (head ds) of
-                Signable _ -> return $ LinkArchive
-                _ -> return $ LinkUpload
+              return $ LinkArchive
           (ls, _) -> do
             Log.debug $ "handleIssueSend had lefts: " ++ intercalate ";" (map show ls)
             internalError
@@ -713,10 +713,6 @@ checkLinkIDAndMagicHash document linkid magichash1 = do
   siglink <- guardJust $ getSigLinkFor document linkid
   unless (signatorymagichash siglink == magichash1) internalError
   return ()
-
-handleShowUploadPage :: Kontrakcja m => m (Either KontraLink String)
-handleShowUploadPage = checkUserTOSGet $ uploadPage
-
 
 checkFileAccess :: Kontrakcja m => FileID -> m ()
 checkFileAccess fid = do
