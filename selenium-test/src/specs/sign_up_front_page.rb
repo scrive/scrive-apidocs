@@ -106,8 +106,10 @@ describe "sign up on front page and modify account settings" do
 
     puts "change account settings"
     @h.loginhelper.login_as(random_email, new_password)
+    puts "Setting names"
     @h.loginhelper.set_name("Random", "User")
-    (@h.wait.until { @h.driver.find_element :css => "a.btn-tiny" }).click
+    puts "Looking for change mail button"
+    (@h.wait.until { @h.driver.find_element :css => "a.new-mail-button" }).click
 
     puts "change email address"
     new_email = "new-"+random_email
@@ -139,11 +141,11 @@ describe "sign up on front page and modify account settings" do
     (@h.wait.until { @h.driver.find_element :name => "companyname" }).send_keys "Scrive AB"
     (@h.wait.until { @h.driver.find_element :name => "companynumber" }).send_keys "556816-6804"
     (@h.wait.until { @h.driver.find_element :name => "companyposition" }).send_keys companyposition
-    (@h.wait.until { @h.driver.find_element :css => "a.s-submit-user-settings" }).click
+    (@h.wait.until { @h.driver.find_element :css => "a.save" }).click
 
     puts "make sure we get a confirmation"
     @h.wait.until { @h.driver.find_element :css => "div.flash-container.green" }
-    @h.wait.until { @h.driver.find_element :xpath => "//input[@name='companyposition' and @value='"+companyposition+"']" }
+    assert(((@h.wait.until { @h.driver.find_element :xpath => "//input[@name='companyposition']" }).attribute("value") == companyposition), "Values not equal in detail")
     @h.loginhelper.logout
   end
 

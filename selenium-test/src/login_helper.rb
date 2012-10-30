@@ -34,7 +34,7 @@ class LoginHelper
     (@wait.until { @driver.find_element :name => "fstname" }).send_keys fstname
     (@wait.until { @driver.find_element :name => "sndname" }).clear
     (@wait.until { @driver.find_element :name => "sndname" }).send_keys sndname
-    (@wait.until { @driver.find_element :css => "a.submit" }).click
+    (@wait.until { @driver.find_element :css => "a.save" }).click
   end
 
   def logout
