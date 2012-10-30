@@ -1,5 +1,6 @@
 module Doc.DocView (
-    documentAuthorInfo
+    pageCreateFromTemplate 
+  , documentAuthorInfo
   , documentInfoFields
   , flashAuthorSigned
   , flashDocumentDraftSaved
@@ -23,7 +24,6 @@ module Doc.DocView (
   , pageDocumentSignView
   , signatoryDetailsFromUser
   , documentsToFixView
-  , uploadPage
   , documentJSON
   , gtVerificationPage
   ) where
@@ -60,16 +60,15 @@ import qualified Text.JSON.Gen as J
 import qualified Templates.Fields as F
 import qualified Data.Set as Set
 
--- FIXME: why do we even use that?
-para :: String -> String
-para s = "<p>" ++ s ++ "</p>"
+pageCreateFromTemplate :: TemplatesMonad m => m String
+pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
 
 modalMismatch :: TemplatesMonad m => String -> SignatoryLink -> m FlashMessage
 modalMismatch msg author = toModal <$>  do
     renderTemplate "signCanceledDataMismatchModal" $ do
                     F.value "authorname"  $ getSmartName author
                     F.value "authoremail" $ getEmail author
-                    F.value "message"     $ concatMap para $ lines msg
+                    F.value "message"     $ concatMap (\s -> "<p>" ++ s ++ "</p>") $ lines msg
 
 modalSendConfirmationView :: TemplatesMonad m => Document -> Bool -> m FlashMessage
 modalSendConfirmationView document authorWillSign = do
@@ -403,10 +402,6 @@ documentStatusFields document = do
       && case documentcancelationreason document of
            Just (ELegDataMismatch _ _ _ _ _) -> True
            _ -> False)
-
-uploadPage :: TemplatesMonad m => m String
-uploadPage = renderTemplate_ "uploadPage"
-
 
 getDataMismatchMessage :: Maybe CancelationReason -> Maybe String
 getDataMismatchMessage (Just (ELegDataMismatch msg _ _ _ _)) = Just msg

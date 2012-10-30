@@ -122,8 +122,7 @@ set systemPage
  js   js/docdesignview.js
  js   js/mobilebankid.js
  js   js/bankid.js
- js   js/wizard.js
- js   js/uploadview.js
+ js   js/createfromtemplate/createfromtemplate.js
  js   js/attachmentsdesignview.js
  js   js/csvsignatorydesign.js
  js   js/validation.js

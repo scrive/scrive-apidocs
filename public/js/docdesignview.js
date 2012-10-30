@@ -117,48 +117,9 @@ var DocumentDesignView = Backbone.View.extend({
           var downloadpart = $("<span class='download'/>");
           downloadpart.append($("<a  target='_blank'/>").attr("href",document.mainfile().downloadLinkForMainFile()).text(localization.downloadPDF));
           titlepart.append(downloadpart);
-
-          //Remove file
-          var removefilepart = $("<span class='remove'/>");
-          var link = $("<a href='#'/>").text(localization.designview.removeFile);
-          link.click(function() {
-            document.save();
-            document.afterSave( function() {
-              new Submit({
-                      method : "POST",
-                      url :  "/api/frontend/mainfile/" + document.documentid(),
-                      ajax: true,
-                      onSend: function() {
-                          LoadingDialog.open();
-                      },
-                      ajaxerror: function(d,a){
-                          window.location.reload();
-                      },
-                      ajaxsuccess: function() {
-                          window.location.reload();
-                      }}).send();
-            });
-            return false;
-          });
-          titlepart.append(removefilepart.append(link));
-
         }
         return titlepart;
     },
-    saveAsTemplateOption : function() {
-        var document = this.model;
-        var a = $("<a href='#' class='extraLink saveIcon'/>").html(localization.saveAsTemplate);
-        a.click(function() {
-              document.makeTemplate();
-              document.save();
-              document.afterSave(function() {
-                               new Submit().send();
-                            });
-              return false;
-                     });
-        return a;
-    },
-
     designStep1: function() {
         var document = this.model;
         var box = $("<div class='signStepsBody'/>");
@@ -515,13 +476,11 @@ var DocumentDesignView = Backbone.View.extend({
       var document = this.model;
       var view = this;
       this.finalButtonBox = $("<div class='finalbuttonbox'/>");
-      if (!document.isTemplate()) {
-        if( document.authorSignsLastMode()) {
+      if( document.authorSignsLastMode()) {
           this.finalButtonBox.append(this.signLastOption(true));
         }
         else if( document.authorSignsFirstMode()) {
           this.finalButtonBox.append(this.signLastOption(false));
-        }
       }
       var button;
       if (document.isTemplate()) {
@@ -799,6 +758,53 @@ var DocumentDesignView = Backbone.View.extend({
         });
         return upbutton.input();
     },
+    extraFileOptions : function() {
+      var box =$("<div class='extra-file-options'/>");
+      var document = this.model;
+      var removeFileButton = Button.init({
+                                 color : "black",
+                                 size :  "tiny",
+                                 width : 120,
+                                 text :  localization.designview.removeFile,
+                                 onClick : function() {
+                                    document.save();
+                                    document.afterSave( function() {
+                                      new Submit({
+                                              method : "POST",
+                                              url :  "/api/frontend/mainfile/" + document.documentid(),
+                                              ajax: true,
+                                              onSend: function() {
+                                                  LoadingDialog.open();
+                                              },
+                                              ajaxerror: function(d,a){
+                                                  window.location.reload();
+                                              },
+                                              ajaxsuccess: function() {
+                                                  window.location.reload();
+                                              }}).send();
+                                    });
+                                }});
+
+      var saveAsTemplateButton = Button.init({
+                                 color : "black",
+                                 size :  "tiny",
+                                 width : 120,
+                                 text :  localization.saveAsTemplate,
+                                 onClick : function() {
+                                    document.makeTemplate();
+                                    document.save();
+                                    document.afterSave(function() {
+                                        new Submit().send();
+                                    });
+                                }});
+
+      
+      box.append(removeFileButton.input().addClass("float-left"));
+      if ((!document.isTemplate()))
+        box.append(saveAsTemplateButton.input().addClass("float-right"));
+      
+      return box;
+    },
     uploadFileOption : function () {
         var box = $("<div class='document-pages '/>");
         var subbox = $("<div class='nofilediv'/>");
@@ -820,17 +826,17 @@ var DocumentDesignView = Backbone.View.extend({
 
         var fileel;
         if (document.mainfile()) {
-          fileel = $("<div/>");
+          fileel = $("<div class='subcontainer'/>");
+          fileel.append(this.extraFileOptions());
           fileel.append(KontraFile.init({file: document.mainfile()}).view.el);
         }
         else {
-         fileel = $("<div/>");
+         fileel = $("<div class='subcontainer'/>");
          fileel.append(this.uploadFileOption());
         }
         this.tabs = new KontraTabs({
             numbers : true,
             title : this.titlerow(),
-            tabsTail : (!document.isTemplate()) ?  [this.saveAsTemplateOption()] : undefined ,
             tabs: [
                 this.tab1 = new Tab({
                     name  : document.isTemplate() ? localization.step1template : localization.step1normal,
@@ -838,10 +844,10 @@ var DocumentDesignView = Backbone.View.extend({
                     onActivate : function() {
                          SessionStorage.set(document.documentid(), "step", "1");
                     },
-                    elems : [
-                              designbody1,
-                              $(fileel)
-                            ]
+                    elems : _.flatten([
+                              [designbody1],
+                              [$(fileel)]
+                            ])
                   }),
                 this.tab2 = new Tab({
                     name  : document.isTemplate() ? localization.step2template : localization.step2normal,
@@ -849,10 +855,10 @@ var DocumentDesignView = Backbone.View.extend({
                     onActivate : function() {
                          SessionStorage.set(document.documentid(), "step", "2");
                     },
-                    elems : [
-                            designbody2,
-                            $(fileel)
-                            ]
+                    elems :  _.flatten([
+                              [designbody2],
+                              [$(fileel)]
+                            ])
                   })
                 ]
         });

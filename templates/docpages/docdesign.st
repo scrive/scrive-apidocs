@@ -1,6 +1,7 @@
 #####
-pageDocumentDesign=
+pageDocumentDesign=<html></html>
 <script>
+jQuery("body").addClass("designview");
 jQuery(function(){
   var docview = KontraDesignDocument.init({
     id:"$documentid$",
