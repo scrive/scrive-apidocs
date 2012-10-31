@@ -71,6 +71,7 @@ testSavePaymentPlan = do
                        , ppPaymentPlanProvider = NoProvider
                        , ppDunningStep = Nothing
                        , ppDunningDate = Nothing
+                       , ppBillingEndDate = time
                        }
   b <- dbUpdate $ SavePaymentPlan pp time
   assert b
@@ -114,6 +115,7 @@ testPaymentPlansRequiringSync = do
                              , ppPaymentPlanProvider = prov
                              , ppDunningStep = Nothing
                              , ppDunningDate = Nothing
+                             , ppBillingEndDate = now
                              }
         _ <- dbUpdate $ SavePaymentPlan pp sync
         return ()
@@ -131,6 +133,7 @@ testPaymentPlansRequiringSync = do
                              , ppPaymentPlanProvider = prov
                              , ppDunningStep = Nothing
                              , ppDunningDate = Nothing
+                             , ppBillingEndDate = now
                              }
         _ <- dbUpdate $ SavePaymentPlan pp sync
         return ()
@@ -156,6 +159,7 @@ testPaymentPlansExpiredDunning = do
                            , ppPaymentPlanProvider = prov
                            , ppDunningStep = if isJust dun then Just 1 else Nothing
                            , ppDunningDate = dun
+                           , ppBillingEndDate = now
                            }
       _ <- dbUpdate $ SavePaymentPlan pp now
       return ()
@@ -179,6 +183,7 @@ testPaymentPlanInactiveUser = do
                        , ppPaymentPlanProvider = NoProvider
                        , ppDunningStep = Nothing
                        , ppDunningDate = Nothing
+                       , ppBillingEndDate = time
                        }
   b <- dbUpdate $ SavePaymentPlan pp time
   assert b
@@ -203,6 +208,7 @@ testPaymentPlanInactiveUserActive = do
                        , ppPaymentPlanProvider = NoProvider
                        , ppDunningStep = Nothing
                        , ppDunningDate = Nothing
+                       , ppBillingEndDate = time
                        }
   b <- dbUpdate $ SavePaymentPlan pp time
   assert b

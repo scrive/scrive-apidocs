@@ -33,6 +33,7 @@ import ScriveByMail.Tables
 import ELegitimation.ELegTransaction.Tables
 import EvidenceLog.Tables
 import Payments.Tables
+import Payments.Migrations
 import Attachment.Tables
 
 kontraFunctions :: [SQLFunction]
@@ -106,6 +107,7 @@ kontraMigrations = [
   , removeSignatoryRoles
   , addSequenceOwnerToDocumentsId
   , addSequenceOwnerToSignatoryLinks
+  , addBillingEndDateCache
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

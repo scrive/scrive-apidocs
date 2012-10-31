@@ -204,6 +204,7 @@ cachePlan time pa ac subscription invoicestatus eid mds mdd = do
       q       = subQuantity subscription
       pp      = maybe p (fromRecurlyPricePlan . penPricePlan) $ subPending subscription
       qp      = maybe q penQuantity                           $ subPending subscription
+      be      = fromMaybe (daysAfter 30 time) $ parseMinutesTime "%Y-%m-%dT%H:%M:%S%Z" $ subCurrentBillingEnds subscription
   let paymentplan = PaymentPlan { ppAccountCode         = ac
                                 , ppID                  = eid
                                 , ppPricePlan           = p
@@ -214,7 +215,8 @@ cachePlan time pa ac subscription invoicestatus eid mds mdd = do
                                 , ppPendingQuantity     = qp 
                                 , ppPaymentPlanProvider = RecurlyProvider 
                                 , ppDunningStep         = mds
-                                , ppDunningDate         = mdd}
+                                , ppDunningDate         = mdd
+                                , ppBillingEndDate      = be}
   r <- dbUpdate $ SavePaymentPlan paymentplan time
   if r 
     then Stats.record time pa RecurlyProvider (subQuantity subscription) (fromRecurlyPricePlan $ subPricePlan subscription) eid ac

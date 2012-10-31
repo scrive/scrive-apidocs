@@ -14,7 +14,7 @@ import DB
 tablePaymentPlans :: Table
 tablePaymentPlans = Table {
   tblName = "payment_plans"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblCreateOrValidate = \desc -> do
     case desc of
       [("account_code",     SqlColDesc { colType     = SqlBigIntT
@@ -46,7 +46,9 @@ tablePaymentPlans = Table {
        ("dunning_step",     SqlColDesc { colType     = SqlSmallIntT
                                        , colNullable = Just True}),
        ("dunning_date",     SqlColDesc { colType     = SqlTimestampWithZoneT
-                                       , colNullable = Just True})
+                                       , colNullable = Just True}),
+       ("billing_ends",     SqlColDesc { colType     = SqlTimestampWithZoneT
+                                       , colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE payment_plans ("
@@ -64,6 +66,7 @@ tablePaymentPlans = Table {
           ++ ", provider SMALLINT NOT NULL"
           ++ ", dunning_step SMALLINT NULL"
           ++ ", dunning_date TIMESTAMPTZ NULL"
+          ++ ", billing_ends TIMESTAMPTZ NOT NULL"
           ++ ", CONSTRAINT pk_payment_plans PRIMARY KEY (account_code)"
           --- the following constraint implements an Either UserID CompanyID
           ++ ", CONSTRAINT ch_payment_plans_type_id CHECK ((account_type = 1 AND user_id    IS NOT NULL AND company_id IS NULL) OR " -- 1 is UserID

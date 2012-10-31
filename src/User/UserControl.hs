@@ -559,11 +559,15 @@ handleBlockingInfo = do
 
   docsusedthismonth <- dbQuery $ GetDocsSentBetween (userid user) beginningOfMonth time
   mpaymentplan <- dbQuery $ GetPaymentPlan $ maybe (Left $ userid user) Right (usercompany user)
+  quantity <- case usercompany user of
+    Nothing -> return 1
+    Just cid -> dbQuery $ GetCompanyQuantity cid
 
   let paymentplan = maybe "free" (show . ppPricePlan) mpaymentplan
       status      = maybe "active" (show . ppStatus) mpaymentplan
       dunning     = maybe False (isJust . ppDunningStep) mpaymentplan
       canceled    = Just CanceledStatus == (ppPendingStatus <$> mpaymentplan)
+      billingEnds = maybe "" (formatMinutesTimeUTC . ppBillingEndDate) mpaymentplan
 
   runJSONGenT $ do
     J.value "docsused"  docsusedthismonth
@@ -571,6 +575,8 @@ handleBlockingInfo = do
     J.value "status"    status
     J.value "dunning"   dunning
     J.value "canceled"  canceled
+    J.value "quantity"  quantity
+    J.value "billingEnds" billingEnds
     
 {- |
    Fetch the xtoken param and double read it. Once as String and once as MagicHash.

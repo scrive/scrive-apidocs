@@ -40,6 +40,7 @@ data PaymentPlan = PaymentPlan    { ppAccountCode         :: AccountCode
                                   , ppPaymentPlanProvider :: PaymentPlanProvider
                                   , ppDunningStep         :: Maybe Int
                                   , ppDunningDate         :: Maybe MinutesTime
+                                  , ppBillingEndDate      :: MinutesTime
                                   }
                  deriving (Eq)
                    
@@ -114,6 +115,7 @@ instance (MonadDB m) => DBQuery m GetPaymentPlan (Maybe PaymentPlan) where
       sqlResult "provider"
       sqlResult "dunning_step"
       sqlResult "dunning_date"
+      sqlResult "billing_ends"              
       case eid of
         Left  uid -> sqlWhereEq "user_id"    uid
         Right cid -> sqlWhereEq "company_id" cid
@@ -137,6 +139,7 @@ instance MonadDB m => DBQuery m GetPaymentPlanInactiveUser (Maybe PaymentPlan) w
       sqlResult "provider"
       sqlResult "dunning_step"
       sqlResult "dunning_date"
+      sqlResult "billing_ends"
       sqlJoinOn "users" "payment_plans.user_id = users.id"
       sqlWhereEq "user_id" uid
       sqlWhereIsNULL "users.has_accepted_terms_of_service"
@@ -160,6 +163,7 @@ instance (MonadDB m) => DBQuery m GetPaymentPlanByAccountCode (Maybe PaymentPlan
       sqlResult "provider"
       sqlResult "dunning_step"
       sqlResult "dunning_date"
+      sqlResult "billing_ends"
       sqlWhereEq "account_code" ac
     listToMaybe <$> foldDB fetchPaymentPlans []
 
@@ -177,8 +181,9 @@ fetchPaymentPlans :: [PaymentPlan]       ->
                      PaymentPlanProvider -> 
                      Maybe Int           ->
                      Maybe MinutesTime   ->
+                     MinutesTime         ->
                      [PaymentPlan]
-fetchPaymentPlans acc ac t muid mcid p s q pp sp qp pr mds mdd =
+fetchPaymentPlans acc ac t muid mcid p s q pp sp qp pr mds mdd be =
   let mid = case (t, muid, mcid) of
         (1, Just uid, _) -> Just $ Left  uid
         (2, _, Just cid) -> Just $ Right cid
@@ -195,7 +200,8 @@ fetchPaymentPlans acc ac t muid mcid p s q pp sp qp pr mds mdd =
                             , ppPendingQuantity     = qp 
                             , ppPaymentPlanProvider = pr
                             , ppDunningStep         = mds
-                            , ppDunningDate         = mdd} : acc
+                            , ppDunningDate         = mdd
+                            , ppBillingEndDate     = be} : acc
 
 {- | How often, in days, do we sync with recurly? -}
 daysBeforeSync :: Int
@@ -206,7 +212,7 @@ data PaymentPlansRequiringSync = PaymentPlansRequiringSync MinutesTime
 instance MonadDB m => DBQuery m PaymentPlansRequiringSync [PaymentPlan] where
   query (PaymentPlansRequiringSync time) = do
     let past = daysBefore daysBeforeSync time 
-    kPrepare $ "SELECT account_code, account_type, user_id, company_id, plan, status, quantity, plan_pending, status_pending, quantity_pending, provider, dunning_step, dunning_date " ++
+    kPrepare $ "SELECT account_code, account_type, user_id, company_id, plan, status, quantity, plan_pending, status_pending, quantity_pending, provider, dunning_step, dunning_date, billing_ends " ++
              "  FROM payment_plans " ++ 
              "  LEFT OUTER JOIN (SELECT company_id as cid, count(id) as q FROM users WHERE NOT deleted AND NOT is_free GROUP BY cid) as ccount ON cid = company_id " ++ 
              "  WHERE provider = ? " ++ -- only sync recurly
@@ -221,7 +227,7 @@ data PaymentPlansExpiredDunning = PaymentPlansExpiredDunning MinutesTime
 instance MonadDB m => DBQuery m PaymentPlansExpiredDunning [PaymentPlan] where
   query (PaymentPlansExpiredDunning time) = do
     kPrepare $ "SELECT account_code, account_type, user_id, company_id, plan, status, quantity, " ++ 
-             "    plan_pending, status_pending, quantity_pending, provider, dunning_step, dunning_date " ++
+             "    plan_pending, status_pending, quantity_pending, provider, dunning_step, dunning_date, billing_ends " ++
              "  FROM payment_plans " ++ 
              "  WHERE dunning_date < ? " ++
              "    AND provider = ? "
@@ -241,6 +247,7 @@ instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
                ",   sync_date = ? " ++
                ",   dunning_step = ? " ++
                ",   dunning_date = ? " ++
+               ",   billing_ends = ? " ++
                "WHERE account_code = ? "
     r <- kExecute [toSql $ either (const (1 :: Int)) (const 2)  $ ppID pp
                   ,toSql $ either Just (const Nothing) $ ppID pp
@@ -255,13 +262,14 @@ instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
                   ,toSql $ tm
                   ,toSql $ ppDunningStep pp
                   ,toSql $ ppDunningDate pp
+                  ,toSql $ ppBillingEndDate pp
                   ,toSql $ ppAccountCode pp]
     case r of
       1 -> return True
       _ -> do
         kPrepare $ "INSERT INTO payment_plans (account_code, plan, status, plan_pending, status_pending, quantity, " ++ 
-          "quantity_pending, provider, sync_date, dunning_step, dunning_date, account_type, user_id, company_id) " ++
-          "SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? " ++
+          "quantity_pending, provider, sync_date, dunning_step, dunning_date, billing_ends, account_type, user_id, company_id) " ++
+          "SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? " ++
           "WHERE ? NOT IN (SELECT account_code FROM payment_plans) "
         r' <- kExecute $ [toSql $ ppAccountCode pp
                          ,toSql $ ppPricePlan pp
@@ -274,6 +282,7 @@ instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
                          ,toSql $ tm
                          ,toSql $ ppDunningStep pp
                          ,toSql $ ppDunningDate pp
+                         ,toSql $ ppBillingEndDate pp
                          ,toSql $ either (const (1 :: Int)) (const 2)  $ ppID pp
                          ,toSql $ either Just (const Nothing) $ ppID pp
                          ,toSql $ either (const Nothing) Just $ ppID pp 

@@ -476,6 +476,7 @@ handleCompanyPaymentsChange companyid = onlySalesOrAdmin $ do
                                         , ppPaymentPlanProvider = NoProvider
                                         , ppDunningStep         = Nothing
                                         , ppDunningDate         = Nothing
+                                        , ppBillingEndDate      = time
                                         }
           _ <- dbUpdate $ SavePaymentPlan paymentplan time
           _ <- Payments.Stats.record time Payments.Stats.SignupAction NoProvider quantity plan (Right companyid) ac
@@ -527,6 +528,7 @@ handleUserPaymentsChange userid = onlySalesOrAdmin $ do
                                         , ppPaymentPlanProvider = NoProvider
                                         , ppDunningStep         = Nothing
                                         , ppDunningDate         = Nothing
+                                        , ppBillingEndDate      = time
                                         }
           _ <- dbUpdate $ SavePaymentPlan paymentplan time
           _ <- Payments.Stats.record time Payments.Stats.SignupAction NoProvider quantity plan (Left userid) ac
