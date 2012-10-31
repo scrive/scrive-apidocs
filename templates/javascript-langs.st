@@ -499,15 +499,7 @@ javascriptLocalisation =
              ,  reason: "Reason"
 
           }
-       , uploadView : {
-                back : "$_uploadViewGoBack()$"
-             ,  startNewProcess : "$_signStepsBodyUploadBoxStep1StartNewProcess()$"
-             ,  chooseTemplate : "$_signStepsBodyUploadBoxStep1ChooseTemplate()$"
-             ,  newProcessFromFile: "$_signStepsBodyUploadBoxStep1NewProcessFromFile()$"
-             ,  uploadNewTemplate : "$_signStepsBodyUploadBoxStep1UploadNewTemplate()$"
-             ,  createNewTemplate : "$_createNewTemplate()$"
-             ,  buyAvtal24Template : "$_buyAvtal24Template()$"
-        }
+        , buyAvtal24Template : "$_buyAvtal24Template()$"
         , payments: {
              users: "$_CompanyAccounts()$"
            , user: "$_paymentsUser()$"
