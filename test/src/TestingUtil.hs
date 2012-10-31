@@ -503,7 +503,25 @@ testThat s env = testCase s . runTestEnv env
 addNewCompany :: TestEnv Company
 addNewCompany = do
     eid <- rand 10 arbitrary
-    dbUpdate $ CreateCompany eid
+    Company{companyid = cid} <- dbUpdate $ CreateCompany eid
+    companyname <- rand 10 $ arbString 3 30
+    companynumber <- rand 10 $ arbString 3 30
+    companyaddress <- rand 10 $ arbString 3 30
+    companyzip <- rand 10 $ arbString 3 30
+    companycity <- rand 10 $ arbString 3 30
+    companycountry <- rand 10 $ arbString 3 30
+    companyemaildomain <- rand 10 $ arbString 3 30
+    _ <- dbUpdate $ SetCompanyInfo cid $ CompanyInfo
+         { companyname = companyname
+         , companynumber = companynumber
+         , companyaddress = companyaddress
+         , companyzip = companyzip
+         , companycity = companycity
+         , companycountry = companycountry
+         , companyemaildomain = Just companyemaildomain
+         }
+    Just company <- dbQuery $ GetCompany cid
+    return company
 
 addNewFile :: String -> BS.ByteString -> TestEnv File
 addNewFile filename content = dbUpdate $ NewFile filename $ Binary content
@@ -529,7 +547,27 @@ addNewRandomUser = do
   em <- rand 10 arbEmail
   muser <- addNewUser fn ln em
   case muser of
-    Just user -> return user
+    Just user -> do
+      -- change the user to have some distinct personal information
+      personal_number <- rand 10 $ arbString 3 30
+      company_position <- rand 10 $ arbString 3 30
+      phone <- rand 10 $ arbString 3 30
+      mobile <- rand 10 $ arbString 3 30
+      company_name <- rand 10 $ arbString 3 30
+      company_number <- rand 10 $ arbString 3 30
+      let userinfo = UserInfo
+                     { userfstname = fn
+                     , usersndname = ln
+                     , userpersonalnumber = personal_number
+                     , usercompanyposition = company_position
+                     , userphone = phone
+                     , usermobile = mobile
+                     , useremail = Email em
+                     , usercompanyname  = company_name
+                     , usercompanynumber = company_number
+                     }
+      _ <- dbUpdate $ SetUserInfo (userid user) userinfo
+      return user
     Nothing -> do
       Log.debug "Could not create user, trying again."
       addNewRandomUser
