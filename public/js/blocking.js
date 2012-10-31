@@ -13,6 +13,8 @@
             return "/blockinginfo";
         },
         docsTotal: function() {
+            if(this.isDeactivated())
+                return 0;
             if(this.isEnterprise())
                 return 500000; 
             if(!this.isFree() && this.isActive())
@@ -21,10 +23,13 @@
                 return 3;
         },
         docsUsed: function() {
-            return Math.min(this.get('docsused'), this.docsTotal());
+            return this.get('docsused');
         },
         docsLeft: function() {
-            return this.docsTotal() - this.docsUsed();
+            var ret = this.docsTotal() - this.docsUsed();
+            if(ret < 0)
+                return 0;
+            return ret;
         },
         plan: function() {
             return this.get('plan');
@@ -61,6 +66,12 @@
                    !this.isFree()        && 
                     this.isActive()      &&
                     this.docsLeft() <= 0;
+        },
+        billingEnds: function() {
+            return moment.utc(this.get('billingEnds'));
+        },
+        daysLeft: function() {
+            return Math.ceil(moment.duration(this.billingEnds() - moment()).asDays());
         }
     });
 
@@ -96,9 +107,9 @@
             var view = this;
             var model = view.model;
             if(model.isFree() && model.docsLeft() > 0)
-                return localization.blocking.free.has.headline + model.docsUsed() + " / " + model.docsTotal();
+                return localization.blocking.free.has.headline + " " + model.docsUsed();
             else if(model.isFree())
-                return localization.blocking.free.hasNot.headline + model.docsUsed() + " / " + model.docsTotal();
+                return localization.blocking.free.hasNot.headline + " " + model.docsUsed();
             else if(model.hasUsedAll())
                 return localization.blocking.usedall.headline;
             else if(model.isOverdue())
@@ -106,11 +117,11 @@
             else if(model.isDunning())
                 return localization.blocking.dunning.headline;
             else if(model.isCanceled())
-                return localization.blocking.canceled.headline + model.docsUsed() + " / " + model.docsTotal();
+                return localization.blocking.canceled.headline + " " + model.docsUsed();
             else if(model.isDeactivated())
-                return localization.blocking.deactivated.headline + model.docsUsed() + " / " + model.docsTotal();
+                return localization.blocking.deactivated.headline;
             else if(model.willCancel())
-                return localization.blocking.willcancel.headline;
+                return localization.blocking.willcancel.headline.replace('XX', model.daysLeft());
         },
         subtext1: function() {
             var view = this;
@@ -136,11 +147,11 @@
             var view = this;
             var model = view.model;
             if(model.isFree() && model.docsLeft() > 0)
-                return ""; //localization.blocking.free.has.subtext2;
+                return "";
             else if(model.isFree())
-                return ""; //localization.blocking.free.hasNot.subtext2;
+                return "";
             else if(model.hasUsedAll())
-                return ""; //localization.blocking.usedall.subtext2;
+                return "";
             else if(model.isOverdue())
                 return localization.blocking.overdue.subtext2;
             else if(model.isDunning())
@@ -148,9 +159,10 @@
             else if(model.isCanceled())
                 return localization.blocking.canceled.subtext2;
             else if(model.isDeactivated())
-                return localization.blocking.deactivated.subtext2;
+                return "";
             else if(model.willCancel())
-                return localization.blocking.willcancel.subtext2;
+                return "";
+            return "";
         },
         makeBox: function() {
             var view = this;
@@ -188,8 +200,7 @@
             var model = view.model;
             if(model.isFree())
                 view.paymentsPopup({
-                    title: model.docsUsed() + " " + localization.blocking.free.click.title,
-                    header: localization.blocking.free.click.header
+                    title: localization.blocking.free.click.title
                 });
             else if(model.hasUsedAll())
                 window.location = 'mailto:support@scrive.com';
@@ -212,7 +223,10 @@
                 acceptVisible: false,
                 width: "906px"
             });
-            PricePage({header : opts.header, hideContacts: true}).show(div);
+            var o = {hideContacts:true};
+            if(opts.header)
+                o.header = opts.header;
+            PricePage(o).show(div);
         },
         createPopup: function() {
             var view = this;
@@ -246,8 +260,7 @@
         },
         freeCreatePopup: function() {
             this.paymentsPopup({
-                title: this.model.docsUsed() + " " + localization.blocking.free.create.title,
-                header: localization.blocking.free.create.header
+                title: localization.blocking.free.create.title
             });
         },
         freeCSVMessage: function() {
@@ -336,8 +349,8 @@
             createPopup: function() {
                 view.createPopup();
             },
-            csvMessage: function() {
-                return view.csvMessage();
+            csvMessage: function(n) {
+                return view.csvMessage().replace('X1', n).replace('X2', model.docsLeft());
             }
         }
     };

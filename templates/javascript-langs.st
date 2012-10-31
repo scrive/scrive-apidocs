@@ -804,26 +804,21 @@ javascriptLocalisation =
       , blocking : {
           free: {
             create : {
-              title  : "$_blockingFreeCreateTitle()$",
-              header : "$_blockingFreeCreateHeader()$"
+              title  : "$_blockingFreeCreateTitle()$"
             },
             csv : {
-              title  : "$_blockingFreeCSVTitle()$",
               header : "$_blockingFreeCSVHeader()$"
             },
             click: {
-              title : "$_blockingFreeClickTitle()$",
-              header : "$_blockingFreeClickHeader()$"
+              title : "$_blockingFreeClickTitle()$"
             },
             has : {
               headline : "$_blockingFreeHasHeadline()$",
-              subtext1 : "$_blockingFreeHasSubtext1()$",
-              subtext2 : "$_blockingFreeHasSubtext2()$"
+              subtext1 : "$_blockingFreeHasSubtext1()$"
             },
             hasNot : {
               headline : "$_blockingFreeHasNotHeadline()$",
-              subtext1 : "$_blockingFreeHasNotSubtext1()$",
-              subtext2 : "$_blockingFreeHasNotSubtext2()$"
+              subtext1 : "$_blockingFreeHasNotSubtext1()$"
             }
           },
           overdue : {
@@ -832,7 +827,6 @@ javascriptLocalisation =
               body  : "$_blockingOverdueCreateBody()$"
             },
             csv : {
-              title : "$_blockingOverdueCSVTitle()$",
               body  : "$_blockingOverdueCSVBody()$"
             },
             headline : "$_blockingOverdueHeadline()$",
@@ -850,7 +844,6 @@ javascriptLocalisation =
               body  : "$_blockingCanceledCreateBody()$"
             },
             csv : {
-              title : "$_blockingCanceledCSVTitle()$",
               body  : "$_blockingCanceledCSVBody()$"
             },
             headline : "$_blockingCanceledHeadline()$",
@@ -863,22 +856,18 @@ javascriptLocalisation =
               body  : "$_blockingDeactivatedCreateBody()$"
             },
             csv : {
-              title : "$_blockingDeactivatedCSVTitle()$",
               body  : "$_blockingDeactivatedCSVBody()$"
             },
             headline : "$_blockingDeactivatedHeadline()$",
-            subtext1 : "$_blockingDeactivatedSubtext1()$",
-            subtext2 : "$_blockingDeactivatedSubtext2()$"
+            subtext1 : "$_blockingDeactivatedSubtext1()$"
           },
           willcancel : {
             headline : "$_blockingWillCancelHeadline()$",
-            subtext1 : "$_blockingWillCancelSubtext1()$",
-            subtext2 : "$_blockingWillCancelSubtext2()$"
+            subtext1 : "$_blockingWillCancelSubtext1()$"
           },
           usedall : {
             headline : "$_blockingUsedAllHeadline()$",
-            subtext1 : "$_blockingUsedAllSubtext1()$",
-            subtext2 : "$_blockingUsedAllSubtext2()$"
+            subtext1 : "$_blockingUsedAllSubtext1()$"
           },
           paying : {
             create : {
@@ -886,22 +875,9 @@ javascriptLocalisation =
               body  : "$_blockingPayingCreateBody()$"
             },
             csv : {
-              title : "$_blockingPayingCSVTitle()$",
               body  : "$_blockingPayingCSVBody()$"
             }
           },
-           create : {
-             noneLeftFree  : "$_blockingCreateNoneLeftFree()$",
-             noneLeftBlock : "$_blockingCreateNoneLeftBlock()$",
-             csvfree       : "$_blockingCreateCSVFree()$",
-             csvblock      : "$_blockingCreateCSVBlock()$",
-             overdue       : "$_blockingCreateDeactivated()$"
-           },
-           title : {
-             free    : "$_blockingModalTitleFree()$",
-             upgrade : "$_blockingModalTitleUpgrade()$",
-             update  : "$_blockingModalTitleUpdate()$"
-           },
            button : {
              purchase    : "$_blockingButtonPurchase()$",
              doublecheck : "$_blockingButtonDoubleCheck()$",
