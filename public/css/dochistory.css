@@ -1,18 +1,23 @@
 .document-history-container {
     margin-top: 10px;
     background-color : #ffffff;
-    float : right;
-    width: 600px;
+    float : left;
+    width: 579px;
     border : 1px solid #CCCCCC;
+    padding: 5px;
+    min-height: 180px;
 }
-.document-history-container .tab-viewer .tab-container {
-    border-color: white;
+
+.document-history-container .tab-container {
+    border-color: transparent;
 }
+
 .document-history-container .list-container .table {
-    border-color: white;
-}    
+    border-color: transparent;
+}
+
 .document-history-container .list-container{
-    border-color: white;
+    border-color: transparent;
 }
 
 .document-history-container .document-history-header{
@@ -45,6 +50,7 @@
     margin-left : 2px;
     float : left;
 }
+
 .document-history-container .document-history-header .option .checkbox {
     background: url("../img/checkbox_unchecked.png") no-repeat scroll 0 0 transparent;
     height: 16px;
@@ -52,8 +58,6 @@
     cursor: pointer;
     display: inline-block;
     float: left;
-
-
 }
 
 .document-history-container .document-history-header .option .checkbox.checked{

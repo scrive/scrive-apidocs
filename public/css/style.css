@@ -1377,11 +1377,8 @@ input.multiFileInput,
     border-right: 1px solid #E0E0E0;
     border-bottom: 1px solid #E8E5E5;
     border-left: 1px solid #E8E5E5;
-    margin-top: 15px;
-    margin-bottom: 10px;
+    margin: 15px 26px 10px 1px;
     /* 940/3 = total width 313 - 2*1px border + 16*2 margin + 279 width */
-    margin-left: 16px;
-    margin-right: 16px;
     min-height: 140px;
     width: 279px;
     overflow: hidden;
@@ -1399,22 +1396,24 @@ input.multiFileInput,
 .signViewBodyLeft
 {
     float: left;
-    position: relative;
-
-    padding: 14px 0px 5px 0px;
-
-    margin-top: 15px;
+    border-top: 1px solid #E0E0E0;
+    border-right: 1px solid #E0E0E0;
+    border-bottom: 1px solid #E8E5E5;
+    border-left: 1px solid #E8E5E5;
+    margin-top: 10px;
     margin-bottom: 10px;
-    /* total width 313 = 0*1px border + 16*2 margin + 281 width */
+    /* 940/3 = total width 313 - 2*1px border + 16*2 margin + 279 width */
     margin-left: 16px;
     margin-right: 16px;
     min-height: 140px;
-    width: 281px;
+    width: 279px;
     overflow: hidden;
+    position: relative;
+    padding: 15px 5px;
 }
 
 .forauthor .signViewBodyLeft {
-    min-height: 170px;
+    min-height: 160px;
 }
 
 .signViewBodyRightTextContainer
@@ -1452,8 +1451,9 @@ input.multiFileInput,
 .signViewBodyLeft .header
 {
     font-weight: bold;
-    font-size: 16px;
+    font-size: 20px;
     color: black; /* 008 new */
+    margin: 5px 0px;
 }
 
 .signViewBodyLeft .subheader, .subheader
@@ -1472,7 +1472,10 @@ input.multiFileInput,
     font-weight: bold;
     font-size: 13px;
     color: black; /* 008 new */
+    margin-bottom: 10px;
 }
+
+
 /* 015 new */
 .border {
    background-color: #ecedf3;
@@ -2836,11 +2839,6 @@ width: 340px;
     padding:0px;
     color:#414241;
     width:200px
-}
-
-
-.signViewBodyRight .header {
-    margin-bottom: 10px;
 }
 
 .signViewBodyForms input

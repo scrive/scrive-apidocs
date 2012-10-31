@@ -276,14 +276,18 @@ window.DocumentStandardView = Backbone.View.extend({
     attachmenttab.append(body);
     return attachmenttab;
   },
+  createInfoBoxElem: function() {
+  },
   createSignatoriesTabElems: function() {
     var document = this.model;
 
     var signatoriestabview = $("<div id='documenttabview' />");
     var body = $("<div class='signStepsBody forauthor'/>");
-    var firstbox = $("<div id='signViewBodyLeft' />");
 
-    firstbox.append(document.infotext());
+    var firstbox = $("<div class='signViewBodyLeft' />");
+
+    var infotext = document.infotext();
+    firstbox.append(infotext);
     firstbox.append("<BR/>");
     // Making restart button
     if (document.canberestarted()) {
@@ -297,6 +301,8 @@ window.DocumentStandardView = Backbone.View.extend({
     }
 
     body.append(firstbox);
+
+    body.append($(new DocumentHistory({document : document}).view().el));
 
     if (document.currentSignatory() != undefined) {
         if (document.currentSignatory().author() || document.currentSignatory().signs()) {
@@ -528,7 +534,6 @@ window.DocumentStandardView = Backbone.View.extend({
       new Tab({
         name: localization.document,
         elems: [this.createSignatoriesTabElems(),
-                $(new DocumentHistory({document : document}).view().el),
                 $(fileview),
                 bottomparts
                ]
