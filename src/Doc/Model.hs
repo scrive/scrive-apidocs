@@ -2430,6 +2430,7 @@ instance MonadDB m => DBQuery m GetDocsSentBetween Int where
                "AND documents.ctime >= ? " ++
                "AND documents.ctime <  ? " ++
                "AND documents.type = ? "   ++
+               "AND documents.status <> ? " ++
                "AND NOT documents.deleted" 
-    _ <- kExecute [toSql uid, toSql start, toSql end, toSql $ Signable undefined]
+    _ <- kExecute [toSql uid, toSql start, toSql end, toSql Preparation, toSql $ Signable undefined]
     foldDB (+) 0
