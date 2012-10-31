@@ -719,7 +719,7 @@ var DocumentDesignView = Backbone.View.extend({
         var url = "/api/frontend/mainfile/" + document.documentid();
         var upbutton = UploadButton.init({
             name: "file",
-            width: 130,
+            width: 150,
             text: localization.uploadButton,
             submitOnUpload: true,
             onClick : function () {
@@ -757,6 +757,50 @@ var DocumentDesignView = Backbone.View.extend({
             }  
         });
         return upbutton.input();
+    },
+    fromAvtal : function() {
+        var document = this.model;
+        var button = Button.init({
+            size : "small",
+            color : "green",
+            width: 150,
+            text: localization.buyAvtal24Template,
+            onClick : function () {
+                window.location = "https://avtal24.se/scrive";
+            }
+        });
+        return button.input();
+    },
+    uploadFileOption : function () {
+        var document = this.model;
+        var box = $("<div class='document-pages '/>");
+        var subbox = $("<div class='nofilediv'/>");
+        var subsubbox = $("<div class='innerbox'/>");
+        var buttonbox = $("<div class='button-box'/>");
+        
+        buttonbox.append($(this.uploadFile()).css("float","left")).append($(this.fromAvtal()).css("float","right"))
+        subsubbox.append(buttonbox);
+        
+        if (! this.model.isTemplate()) {
+          var text = "You can save your settings to reuse as a process template later.<BR/>";
+          text += "We save your settings from all three steps when you press the button below.";  
+          subsubbox.append($("<div class='inner-description'/>").html(text));
+          var saveAsTemplateButton = Button.init({
+                                 color : "green",
+                                 size :  "small",
+                                 width : 150,
+                                 text :  localization.saveAsTemplate,
+                                 onClick : function() {
+                                    document.makeTemplate();
+                                    document.save();
+                                    document.afterSave(function() {
+                                        new Submit().send();
+                                    });
+                                }});
+          subsubbox.append($("<div class='single-button-box'/>").append(saveAsTemplateButton.input()));
+        };
+        box.append(subbox.append(subsubbox));
+        return box;
     },
     extraFileOptions : function() {
       var box =$("<div class='extra-file-options'/>");
@@ -805,15 +849,7 @@ var DocumentDesignView = Backbone.View.extend({
       
       return box;
     },
-    uploadFileOption : function () {
-        var box = $("<div class='document-pages '/>");
-        var subbox = $("<div class='nofilediv'/>");
-        var subsubbox = $("<div class='innerbox'/>");
-        box.append(subbox.append(subsubbox.append($(this.uploadFile()))));
-        return box;
-    },
-
-    render: function () {
+   render: function () {
         var document = this.model;
         var view = this;
         if (!document.ready())

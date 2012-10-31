@@ -53,6 +53,7 @@ set systemPage
  css css/flash.css
  css css/docsignview.css
  css css/main.css
+ css css/createfromtemplate.css
  less less/selects.less
  less less/document-pages.less
  less less/payments.less
