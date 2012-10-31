@@ -511,9 +511,21 @@
     margin-bottom: 8px;
 }
 
-.designCSVSignatoryPopupContent .problem{
+.designCSVSignatoryPopupContent .problem {
   color: red;
   font-size: 10px;
+}
+
+.designCSVSignatoryPopupContent .generalProblems .problem {
+    color:black;
+    padding: 31px 15px 15px 15px;
+    text-align: center;
+    margin: 0 0 25px 0;
+    
+    background-color: #F6D5E7;
+    border: 1px solid #C04189;
+
+    width: 657px;
 }
 .placeCheckboxIcon {
     background: url("../img/checkbox_checked.jpg") no-repeat scroll 0 0 transparent;
