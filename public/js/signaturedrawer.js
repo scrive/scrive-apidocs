@@ -182,6 +182,12 @@ var SignatureDrawer = Backbone.View.extend({
         this.canvas.height(signature.sheight());
         this.picture =  this.canvas[0].getContext('2d');
         //view.drawImage(this.model.image());
+        if (this.model.image() != undefined && this.model.image() != "") {
+          var img = new Image();
+          img.src = this.model.image() ;
+          this.canvas[0].getContext('2d').drawImage(img,0,0,signature.drawScaling()*signature.width(),signature.drawScaling()*signature.height())
+          this.empty = false;
+        };  
         this.initDrawing();
         this.container.append(this.canvas);
         return this;
