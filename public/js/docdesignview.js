@@ -719,6 +719,7 @@ var DocumentDesignView = Backbone.View.extend({
         var url = "/api/frontend/mainfile/" + document.documentid();
         var upbutton = UploadButton.init({
             name: "file",
+            color : "black",
             width: 150,
             text: localization.uploadButton,
             submitOnUpload: true,
@@ -762,7 +763,7 @@ var DocumentDesignView = Backbone.View.extend({
         var document = this.model;
         var button = Button.init({
             size : "small",
-            color : "green",
+            color : "black",
             width: 150,
             text: localization.buyAvtal24Template,
             onClick : function () {
@@ -777,16 +778,19 @@ var DocumentDesignView = Backbone.View.extend({
         var subbox = $("<div class='nofilediv'/>");
         var subsubbox = $("<div class='innerbox'/>");
         var buttonbox = $("<div class='button-box'/>");
-        
+        {
+          var text = "No file is attached to this document.";
+          subsubbox.append($("<div class='inner-description-main'/>").html(text));
+        }
         buttonbox.append($(this.uploadFile()).css("float","left")).append($(this.fromAvtal()).css("float","right"))
         subsubbox.append(buttonbox);
         
         if (! this.model.isTemplate()) {
           var text = "You can save your settings to reuse as a process template later.<BR/>";
           text += "We save your settings from all three steps when you press the button below.";  
-          subsubbox.append($("<div class='inner-description'/>").html(text));
+          subsubbox.append($("<div class='inner-description-extra'/>").html(text));
           var saveAsTemplateButton = Button.init({
-                                 color : "green",
+                                 color : "black",
                                  size :  "small",
                                  width : 150,
                                  text :  localization.saveAsTemplate,
