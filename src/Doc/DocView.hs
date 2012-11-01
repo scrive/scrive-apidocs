@@ -21,7 +21,6 @@ module Doc.DocView (
   , pageDocumentDesign
   , pageDocumentView
   , pageDocumentSignView
-  , signatoryDetailsFromUser
   , documentsToFixView
   , uploadPage
   , documentJSON

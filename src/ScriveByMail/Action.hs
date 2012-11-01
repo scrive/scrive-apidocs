@@ -260,7 +260,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
 
   let signatories = map (\p -> p { signatoryispartner = True }) sigdets
 
-  let userDetails = signatoryDetailsFromUser user arole
+  userDetails <- signatoryDetailsFromUser user arole
 
   let actor = mailAPIActor ctxtime (userid user) (getEmail user)
   mdoc <- dbUpdate $ NewDocument user title doctype 0 actor
@@ -473,7 +473,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
   -- add signatories
   -- send document
 
-  let userDetails = signatoryDetailsFromUser user (False, False)
+  userDetails <- signatoryDetailsFromUser user (False, False)
 
   let fieldstring FirstNameFT = "fstname"
       fieldstring LastNameFT  = "sndname"

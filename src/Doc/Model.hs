@@ -1534,9 +1534,8 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
   let ctime = actorTime actor
   magichash <- lift random
 
-  let authorlink0 = signLinkFromDetails'
-                        (signatoryDetailsFromUser user (True, True))
-                        [] magichash
+  authorDetails <- lift $ signatoryDetailsFromUser user (True, True)
+  let authorlink0 = signLinkFromDetails' authorDetails [] magichash
 
   let authorlink = authorlink0 {
                          maybesignatory = Just $ userid user,

@@ -1158,7 +1158,7 @@ testNotPreparationResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
   mt <- rand 10 arbitrary
-  let sd = signatoryDetailsFromUser author (False, False)
+  sd <- signatoryDetailsFromUser author (False, False)
   --execute
   success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [sd] (systemActor mt)
   --assert

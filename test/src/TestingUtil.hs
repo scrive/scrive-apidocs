@@ -679,9 +679,10 @@ addRandomDocument rda = do
 
       roles <- rand 10 arbitrary
       asl' <- rand 10 $ randomAuthorLinkByStatus status
+      userDetails <- signatoryDetailsFromUser user roles
       let asl = asl' { maybesignatory = Just (userid user)
                      , maybecompany = usercompany user
-                     , signatorydetails = signatoryDetailsFromUser user roles
+                     , signatorydetails = userDetails
                      }
 
       let alllinks = asl : siglinks
