@@ -145,7 +145,6 @@ var AccountView = Backbone.View.extend({
        var container = $(this.el);
        var account = this.model;
        var tabs = new KontraTabs({
-        title: "",
         tabs: _.flatten([
                     [account.accountDetailsTab()]
                   , [account.accountSecurityTab()]

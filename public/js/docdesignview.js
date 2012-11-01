@@ -67,12 +67,6 @@ var DocumentDesignView = Backbone.View.extend({
         var document = this.model;
         var titlepart = $("<span class='title'/>");
 
-        //First text
-        if (document.isTemplate())
-            titlepart.text(localization.templateTitle);
-        else
-            titlepart.text(document.process().localization().title + " #" + document.documentid() + ": ");
-
         //Editable name
         var namepart = $("<span class='docname'/>");
 
@@ -83,8 +77,8 @@ var DocumentDesignView = Backbone.View.extend({
         var iconedit = $("<a href='#' class='icon edit' style='margin-right: 2px'></a>");
         var titleshow = $("<span class='visible-docname'/>").text(document.title());
         var titleedit = $("<input type='text' name='docname-edit'/>").val(document.title());
-        display.append(iconedit).append(titleshow);
-        edit.append(iconok).append(titleedit);
+        display.append(titleshow).append(iconedit);
+        edit.append(titleedit).append(iconok);
         namepart.append(display).append(edit);
         var fn = function() {
           document.setTitle(titleedit.val());
@@ -109,15 +103,6 @@ var DocumentDesignView = Backbone.View.extend({
         });
 
         titlepart.append(namepart);
-        
-        // Options to download and remove main file
-        if (document.mainfile())
-        {
-          // Download link
-          var downloadpart = $("<span class='download'/>");
-          downloadpart.append($("<a  target='_blank'/>").attr("href",document.mainfile().downloadLinkForMainFile()).text(localization.downloadPDF));
-          titlepart.append(downloadpart);
-        }
         return titlepart;
     },
     designStep1: function() {
@@ -876,7 +861,7 @@ var DocumentDesignView = Backbone.View.extend({
         }
         this.tabs = new KontraTabs({
             numbers : true,
-            title : this.titlerow(),
+            tabsTail : this.titlerow(),                       
             tabs: [
                 this.tab1 = new Tab({
                     name  : document.isTemplate() ? localization.step1template : localization.step1normal,
