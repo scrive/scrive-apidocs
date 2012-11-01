@@ -1165,7 +1165,7 @@
           refresh : function() { },
           el : function() {return el;}
           
-        }
+        };
     };
 
 })(window);
