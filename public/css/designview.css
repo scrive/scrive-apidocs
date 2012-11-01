@@ -46,13 +46,13 @@
 }
 
 .sigview .field{
+    padding: 2px;
     border: 1px solid #6782A5;
     border-radius: 2px 2px 2px 2px;
     display: block;
     float: left;
-    margin: 3px 5px 0 0;
+    margin: 4px 5px 2px 0px;
     overflow: hidden;
-    padding: 0;
     width: 161px;
     position: relative;
 }

@@ -62,7 +62,10 @@
 	background: #f4f4f4;
 	border: solid #808080;
 	border-width: 0px 0px 1px 0px;
-	height: 24px;
+	height: 44px;
+}
+.tab-viewer .no-title .tabs {
+    border-top: solid #808080 1px;
 }
 
 .tab-viewer .tabs li.float-left:first-child {
@@ -84,11 +87,11 @@
 	color: #4b4b4b;
 	font: 11px "Lucida Grande";
 	height: 16px;
-	padding: 4px 30px;
+	padding: 14px 30px;
 }
 
 .tab-viewer .tabs li.withIcon {
-        padding: 4px 10px;
+        padding: 14px 10px;
 }
 
 .tab-viewer .tabs li a {
