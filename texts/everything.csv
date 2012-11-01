@@ -2548,7 +2548,7 @@ have an account please follow the account creation process. Free use of up to 5 
 "_anyAuthor","Alla avsändare",,"Any sender"
 "_avgSigsPerDoc","Genomsnittlig Signaturer per Dokument",,"Average Signatures per Document"
 "_newUsers","Nya Användare (AV)",,"New Users (TOS)"
-"_fileMustBeAdded","File must be added to document",,"File must be added to document"
+"_fileMustBeAdded","Du måste lägga till en fil först",,"File must be added to document"
 "_notNamedPartyPad","Inte namnet part",,"Not named party"
 "_documentCreatedFromTemplate","Document created from template",,"Document created from template"
 "_maybeYouWantToSendDirectly","New document was created from template. Since delivery method for this document is pad and all required fields are set for it, maybe you want to send it directly from this view?",,"New document was created from template. Since delivery method for this document is pad and all required fields are set for it, maybe you want to send it directly from this view?"
