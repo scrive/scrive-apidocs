@@ -952,7 +952,7 @@
         var model = new PricePageModel(opts);
         var el = $("<div class='tab-container'/>");
         var view = null;
-        var subel = $("<div class='tab-content account js-paymentsdashboard payments-dashboard'/>");
+        var subel = $("<div class='tab-content account js-paymentsdashboard payments-dashboard price-plan'/>");
         el.append(subel);
         var sel = null;
 
