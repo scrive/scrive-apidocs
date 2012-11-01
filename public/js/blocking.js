@@ -205,15 +205,15 @@
             else if(model.hasUsedAll())
                 window.location = 'mailto:support@scrive.com';
             else if(model.isOverdue())
-                window.location = '/payments/dashboard';
+                window.location = '/account#subscription';
             else if(model.isDunning())
-                window.location = '/payments/dashboard';
+                window.location = '/account#subscription';
             else if(model.isCanceled())
-                window.location = '/payments/dashboard';
+                window.location = '/account#subscription';
             else if(model.isDeactivated())
                 window.location = 'mailto:support@scrive.com';
             else if(model.willCancel())
-                window.location = '/payments/dashboard';
+                window.location = '/account#subscription';
         },
         paymentsPopup: function(opts) {
             var div = $('<div />').addClass('price-plan');
@@ -275,7 +275,7 @@
                 acceptText: localization.blocking.button.doublecheck,
                 acceptColor: "green",
                 onAccept: function() {
-                    window.location = "/payments/dashboard";
+                    window.location = "/account#subscription";
                 }
             });
         },
@@ -291,7 +291,7 @@
                 acceptText: localization.blocking.button.reinstate,
                 acceptColor: "green",
                 onAccept: function() {
-                    window.location = "/payments/dashboard";
+                    window.location = "/account#subscription";
                 }
             });
         },
