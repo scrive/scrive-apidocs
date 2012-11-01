@@ -13,6 +13,21 @@ Module SQL2 offers some nice monadic function that build SQL commands on the fly
 
 @
 
+There is a possibility to do multiple inserts at once. Data given by
+sqlSetList will be inserted multiple times, data given by sqlSet will
+be multiplied as many times as needed to cover all inserted rows (it
+is common to all rows). If you use multiple sqlSetList then lists will
+be made equal in length by appending DEFAULT as fill element.
+
+@
+
+    kRun_ $ sqlInsert "documents" $ do
+      sqlSet "ctime" now
+      sqlSetList "title" [title1, title2, title3]
+      sqlResult "id"
+
+@
+
 @
 
     kRun_ $ sqlSelect "documents" $ do
@@ -98,6 +113,9 @@ import Database.HDBC
 import Data.Convertible
 import Data.Typeable
 
+data Multiplicity a = Single a | Many [a]
+  deriving (Eq, Ord, Show, Typeable)
+
 data SqlSelect = SqlSelect
   { sqlSelectFrom    :: SQL
   , sqlSelectResult  :: [SQL]
@@ -119,7 +137,7 @@ data SqlUpdate = SqlUpdate
 
 data SqlInsert = SqlInsert
   { sqlInsertWhat    :: String
-  , sqlInsertSet     :: [(String,Either SQL [SQL])]
+  , sqlInsertSet     :: [(String,Multiplicity SQL)]
   , sqlInsertResult  :: [SQL]
   } deriving (Eq, Typeable)
 
@@ -179,10 +197,10 @@ instance IsSQL SqlInsert where
    where
       -- this is the longest list of values
       longest = maximum (1 : (map (lengthOfEither . snd) (sqlInsertSet cmd)))
-      lengthOfEither (Left _) = 1
-      lengthOfEither (Right x) = length x
-      makeLongEnough (Left x) = take longest (repeat x)
-      makeLongEnough (Right x) = take longest (x ++ repeat (SQL "DEFAULT" []))
+      lengthOfEither (Single _) = 1
+      lengthOfEither (Many x) = length x
+      makeLongEnough (Single x) = take longest (repeat x)
+      makeLongEnough (Many x) = take longest (x ++ repeat (SQL "DEFAULT" []))
       makeClause list = SQL "(" [] `mappend` mconcat (intersperse (SQL "," []) list) `mappend` SQL ")" []
 
 instance IsSQL SqlUpdate where
@@ -320,20 +338,20 @@ instance SqlSet SqlUpdate where
   sqlSet1 cmd name sql = cmd { sqlUpdateSet = sqlUpdateSet cmd ++ [(name, sql)] }
 
 instance SqlSet SqlInsert where
-  sqlSet1 cmd name sql = cmd { sqlInsertSet = sqlInsertSet cmd ++ [(name, Left sql)] }
+  sqlSet1 cmd name sql = cmd { sqlInsertSet = sqlInsertSet cmd ++ [(name, Single sql)] }
 
 
 sqlSetCmd :: (MonadState v m, SqlSet v, IsSQL sql) => String -> sql -> m ()
 sqlSetCmd name sql = modify (\cmd -> sqlSet1 cmd name (toSQLCommand sql))
 
 sqlSetCmdList :: (MonadState SqlInsert m, IsSQL sql) => String -> [sql] -> m ()
-sqlSetCmdList name sql = modify (\cmd -> cmd { sqlInsertSet = sqlInsertSet cmd ++ [(name, Right (map toSQLCommand sql))] })
+sqlSetCmdList name sql = modify (\cmd -> cmd { sqlInsertSet = sqlInsertSet cmd ++ [(name, Many (map toSQLCommand sql))] })
 
 sqlSet :: (MonadState v m, SqlSet v, Convertible sql SqlValue) => String -> sql -> m ()
 sqlSet name sql = modify (\cmd -> sqlSet1 cmd name (SQL "?" [convert sql]))
 
 sqlSetList :: (MonadState SqlInsert m, Convertible sql SqlValue) => String -> [sql] -> m ()
-sqlSetList name sql = modify (\cmd -> cmd { sqlInsertSet = sqlInsertSet cmd ++ [(name, Right (map (\v -> SQL "?" [convert v]) sql))] })
+sqlSetList name sql = modify (\cmd -> cmd { sqlInsertSet = sqlInsertSet cmd ++ [(name, Many (map (\v -> SQL "?" [convert v]) sql))] })
 
 class SqlResult a where
   sqlResult1 :: a -> SQL -> a
