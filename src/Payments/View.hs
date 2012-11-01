@@ -14,18 +14,12 @@ import Company.Model
 import Templates.Templates
 import Templates.TemplatesUtils
 import User.Model
-import User.UserView
 import qualified Recurly as Recurly
 import qualified Templates.Fields as F
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 
 import Control.Applicative
-
-showSubscriptionDashboard :: TemplatesMonad m => User -> m String
-showSubscriptionDashboard user = do
-  renderTemplate "subscriptionDashboard" $ do
-    menuFields user
 
 mailSignup :: (TemplatesMonad m) => String -> User -> Maybe Company -> Recurly.Subscription -> m Mail
 mailSignup hp user mcompany subscription = do

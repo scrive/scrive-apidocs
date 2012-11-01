@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module Payments.Control (handleSubscriptionDashboard
-                        ,handleSubscriptionDashboardInfo
+module Payments.Control (
+                         handleSubscriptionDashboardInfo
                         ,handleSyncNewSubscriptionWithRecurly
                         ,handleChangePlan
                         ,handleSyncWithRecurly
@@ -20,11 +20,9 @@ import Control.Concurrent.MVar
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import Mails.MailsConfig
 
-import AppView
 import Company.Model
 import DB hiding (update, query)
 import Kontra
-import KontraLink
 import Crypto.RNG
 import Recurly
 import Recurly.JS
@@ -36,7 +34,6 @@ import Templates.Trans
 import Text.JSON
 import Text.JSON.Gen hiding (value)
 import User.Model
-import User.Utils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Happstack.Fields
@@ -55,13 +52,6 @@ import Payments.Rules
 import Payments.View
 import Payments.Config (RecurlyConfig(..))
 import qualified Payments.Stats as Stats
-
--- bootstrap the payments dashboard
-handleSubscriptionDashboard :: Kontrakcja m => m (Either KontraLink Response)
-handleSubscriptionDashboard = checkUserTOSGet $ do
-  user <- pguardM' "handleSubscriptionDashboardInfo: No user logged in." $ 
-          ctxmaybeuser <$> getContext
-  showSubscriptionDashboard user >>= renderFromBody kontrakcja
   
 -- information JSON for dashboard
 handleSubscriptionDashboardInfo :: Kontrakcja m => m JSValue
