@@ -2132,6 +2132,7 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_ordersignatorysignmodalcontentdesignvieweleg","När <b class='unsignedpartynotcurrent'/> undertecknat blir dokumentet juridiskt bindande och det färdigställda dokumentet skickas till din e-post",,"When <b class='unsignedpartynotcurrent'/> had signed the document becomes legally binding and the document will be sent to your email."
 "_contact","Kontakt",,"Contact"
 "_showAllProcesses","Alla dokument",,"All documents"
+"_showAllProcessesTemplates","Alla mallar",,"All templates"
 "_showContractsOnly","Avtal",,"Contracts"
 "_showOrdersOnly","Orderbekr.",,"Orders"
 "_showOffersOnly","Offerter",,"Offers"

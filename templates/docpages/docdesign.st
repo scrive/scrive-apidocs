@@ -3,11 +3,9 @@ pageDocumentDesign=<html></html>
 <script>
 jQuery("body").addClass("designview");
 jQuery(function(){
-  var docview = KontraDesignDocument.init({
-    id:"$documentid$",
-    basic : $if(isbasic)$ true $else$ false $endif$
-  });
-  jQuery(".body-container").replaceWith(docview.view.el);
+  jQuery(".body-container").replaceWith(new KontraDesignDocument({
+                        id:"$documentid$"
+                  }).el());
 });
 var designViewBlocking = null;
 jQuery(function() {

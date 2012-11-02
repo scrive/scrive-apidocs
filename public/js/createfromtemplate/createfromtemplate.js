@@ -32,16 +32,16 @@ var  CreateFromTemplateModel = Backbone.Model.extend({
                             }}),
 
                   new Cell({name: localization.archive.templates.columns.time, width:"140px", field:"time"}),
-                  new Cell({name: localization.archive.templates.columns.verificationMethod, width:"100px", field:"verification",  special: "rendered",
-                            rendering: function(verification) {
-                                  var res= $("<div/>");
-                                  if (verification == "eleg")
-                                      res.text(localization.eleg)
-                                  else if (verification == "pad")
-                                      res.text(localization.pad.authorization)
-                                  else
-                                      res.text(localization.email)
-                                  return res;
+                  new Cell({name: localization.archive.templates.columns.verificationMethod, width:"100px", field:"id",  special: "rendered",
+                            rendering: function(value,_idx,model) {
+                                   var res= $("<div/>");
+                                    if (model.field("authentication") == "eleg")
+                                        res.text(localization.eleg)
+                                    else if (model.field("delivery") == "pad")
+                                        res.text(localization.pad.delivery)
+                                    else
+                                        res.text(localization.email)
+                                    return res;
                             }}),
                   new Cell({name: localization.archive.templates.columns.template, width:"450px", field:"title",
                             rendering : function(title, _mainrow, listobject) {

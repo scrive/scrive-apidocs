@@ -911,21 +911,16 @@ var ScrollFixer =  Backbone.Model.extend({
     }
 });
 
-window.KontraDesignDocument = {
-    init : function(args){
-       this.model = new Document({
+window.KontraDesignDocument = function(args) {
+       var model = new Document({
                         id : args.id
                     });
-       this.view = new DocumentDesignView({
-                        model: this.model,
+       view = new DocumentDesignView({
+                        model: model,
                         el : $("<div/>")
                     });
-       this.recall();
-       return this;
-   },
-   recall : function()
-   {
-       this.model.fetch({ processData:  true, cache : false});
-   }
-};
+       model.fetch({ processData:  true, cache : false});
+       this.el = function() {return $(view.el);}
+}
+
 })(window);
