@@ -257,7 +257,7 @@ legalModal=
     <div class="modal-content">
 
       <div>
-        <img src="/img/Lawyer picture.jpg" class="float-left" />
+        <img src="/img/Jon Kihlman.jpg" class="float-left" />
 
         <p class="introtext">
           <b>Advokat, jur. dr Jon Kihlmans</b> krönika <i>Supply Chain Effect
