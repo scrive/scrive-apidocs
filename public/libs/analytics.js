@@ -26,22 +26,6 @@ document.onclick = function(event) {
            urlHost = document.domain.replace(/^www\./i,"");
        var urlPattern = "^(?:https?:)?\/\/(?:(?:www)\.)?" + urlHost + "\/?";
    }
-
-   function eventCheck(href,urlPattern){
-       if (href == undefined) return;
-       if ((href.match(/^https?\:/i)) && (!href.match(urlPattern))){
-           if (href.match(/^.*\.(pdf|jpg|png|gif|zip|mp3|txt|doc|rar|js|py)$/i))
-           {
-               _gaq.push(["_trackPageview","/mal/nedladdning/" + href]);
-           } else {
-               _gaq.push(["_trackPageview","/mal/utlank/" + href]);
-           }
-       } else if (href.match(/^mailto\:/i)) {
-           _gaq.push(["_trackPageview","/mal/epost/" + href.substr(7)]);
-       } else if(href.match(/^.*\.(pdf|jpg|png|gif|zip|mp3|txt|doc|rar|js|py)$/i)) {
-           _gaq.push(["_trackPageview","/mal/nedladdning/" + href]);
-       }
-   }
 };
 
 (function() {
