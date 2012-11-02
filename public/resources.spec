@@ -7,6 +7,7 @@ ignore  tiny_mce/plugins
 ignore  tiny_mce/themes
 ignore  tiny_mce/utils
 ignore  libs/analytics.js
+ignore  libs/zenbox.js
 ignore  js/signup.js
 ignore  libs/recurly/recurly.css
 ignore  api-demo
@@ -25,6 +26,7 @@ set firstPage
  jsx tiny_mce/jquery.tinymce.js
  js  libs/jquery.tweet.js
  js  libs/analytics.js
+ js  libs/zenbox.js
  js  libs/underscore.js
  js  libs/backbone.js
  js  libs/jquery.form.js

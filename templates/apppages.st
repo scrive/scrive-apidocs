@@ -198,23 +198,6 @@ pageFooter=
     </div>
   </div>
 </div>
-<script type="text/javascript" src="//asset0.zendesk.com/external/zenbox/v2.1/zenbox.js"></script>
-<style type="text/css" media="screen, projection">
-  @import url(//asset0.zendesk.com/external/zenbox/v2.1/zenbox.css);
-</style>
-<script type="text/javascript">
-safeReady(function() {
-  if (typeof(Zenbox) !== "undefined") {
-    Zenbox.init({
-      dropboxID:   "20010532",
-      url:         "https://scrive.zendesk.com",
-      tabID:       "support",
-      tabColor:    "black",
-      tabPosition: "Right"
-    });
-  }
-})
-</script>
 
 <div class="imgCache">
   <img src="/theme/../img/spr-flash-bg.png" />
