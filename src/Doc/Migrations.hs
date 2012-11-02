@@ -26,7 +26,7 @@ $(jsonableDeriveConvertible [t| [SignatoryField] |])
 setMandatoryExpirationTimeInDocument :: MonadDB m => Migration m
 setMandatoryExpirationTimeInDocument = Migration {
     mgrTable = tableDocuments
-  , mgrFrom = 11
+  , mgrFrom = 12
   , mgrDo = do
     -- Fix documents that don't have days to sign or timeout set:
     --   Pending  => 90 days to sign, timeout_time to 90 days from time of migration
