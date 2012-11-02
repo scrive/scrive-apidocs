@@ -48,7 +48,6 @@ docStateTests env = testGroup "DocState" [
   testThat "SetDocumentInviteTime adds to the log" env testSetDocumentInviteTimeEvidenceLog,
   testThat "SetDocumentLocale adds to the log" env testSetDocumentLocaleEvidenceLog,
   testThat "SetDocumentTags adds to the log" env testSetDocumentTagsEvidenceLog,
-  testThat "SetDocumentTimeoutTime adds to the log" env testSetDocumentTimeoutTimeEvidenceLog,
   testThat "SetDocumentTitle adds to the log" env testSetDocumentTitleEvidenceLog,
   testThat "Set ELegAuthentication adds to the log" env testSetElegitimationAuthenticationEvidenceLog,
   testThat "Set StandardAuthentication adds to the log" env testSetStandardAuthenticationEvidenceLog,
@@ -116,10 +115,6 @@ docStateTests env = testGroup "DocState" [
 
   testThat "SetDocumentUI fails when does not exist" env testSetDocumentUINotLeft,
   testThat "SetDocumentUI succeeds" env testSetDocumentUIRight,
-
-  testThat "SetDocumentTimeoutTime fails when does not exist" env testSetDocumentTimeoutTimeNotLeft,
-  testThat "SetDocumentTimeoutTime fails when not signable" env testSetDocumentTimeoutTimeNotSignableLeft,
-  testThat "SetDocumentTimeoutTime succeeds when signable" env testSetDocumentTimeoutTimeSignableRight,
 
   testThat "GetTimeoutedButPendingDocuments works as expected" env testGetTimedOutButPendingDocuments,
 
@@ -383,17 +378,6 @@ testSetDocumentTagsEvidenceLog = do
                     else randomUpdate $ \t->SetDocumentTags (documentid doc) ts (systemActor t)
 
 
-testSetDocumentTimeoutTimeEvidenceLog :: TestEnv ()
-testSetDocumentTimeoutTimeEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
-  success1 <- randomUpdate $ \t->SetDocumentTimeoutTime (documentid doc) (fromMinutes 0) (systemActor t)
-  success2 <- randomUpdate $ \t->SetDocumentTimeoutTime (documentid doc) (fromMinutes 10000) (systemActor t)
-  assert success1
-  assert success2
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SetDocumentTimeoutTimeEvidence) lg
-
 testSetDocumentTitleEvidenceLog :: TestEnv ()
 testSetDocumentTitleEvidenceLog = do
   author <- addNewRandomUser
@@ -548,7 +532,7 @@ testPreparationToPendingEvidenceLog :: TestEnv ()
 testPreparationToPendingEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation &&^ ((<=) 2 . length . documentsignatorylinks))
-  success <- randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t)
+  success <- randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t) Nothing
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == PreparationToPendingEvidence) lg
@@ -614,7 +598,7 @@ testSaveSigAttachmentEvidenceLog = do
                                              , signatoryattachmentname        = "attachment"
                                              , signatoryattachmentdescription = "gimme!"
                                              }] (systemActor t)
-  _ <- randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t)
+  _ <- randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t) Nothing
   success <- randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) "attachment" (fileid file) (systemActor t)
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
@@ -1178,8 +1162,8 @@ testGetTimedOutButPendingDocuments = doTimes 1 $ do
 
   let t = unTimeoutTime $ fromJust $ documenttimeouttime doc
   --execute
-  docsA <- dbQuery $ GetTimeoutedButPendingDocuments ((-10) `minutesAfter` t)
-  docsB <- dbQuery $ GetTimeoutedButPendingDocuments (10 `minutesAfter` t)
+  docsA <- dbQuery $ GetTimeoutedButPendingDocumentsChunk ((-10) `minutesAfter` t) 100
+  docsB <- dbQuery $ GetTimeoutedButPendingDocumentsChunk (10 `minutesAfter` t) 100
 
   --assert
   validTest $ do
@@ -1605,7 +1589,7 @@ testPreparationToPendingNotSignableLeft = doTimes 10 $ do
          { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
          }
   time <- rand 10 arbitrary
-  success <- randomUpdate $ PreparationToPending (documentid doc) (systemActor time)
+  success <- randomUpdate $ PreparationToPending (documentid doc) (systemActor time) Nothing
   validTest $ assert $ not success
 
 testPreparationToPendingSignableNotPreparationLeft :: TestEnv ()
@@ -1616,13 +1600,13 @@ testPreparationToPendingSignableNotPreparationLeft = doTimes 10 $ do
          , randomDocumentAllowedStatuses = documentAllStatuses \\ [Preparation]
          }
   time <- rand 10 arbitrary
-  success <- randomUpdate $ PreparationToPending (documentid doc) (systemActor time)
+  success <- randomUpdate $ PreparationToPending (documentid doc) (systemActor time) Nothing
   validTest $ assert $ not success
 
 testPreparationToPendingNotLeft :: TestEnv ()
 testPreparationToPendingNotLeft = doTimes 100 $ do
   (time, did) <- rand 10 arbitrary
-  success <- randomUpdate $ PreparationToPending did (systemActor time)
+  success <- randomUpdate $ PreparationToPending did (systemActor time) Nothing
   validTest $ assert $ not success
 
 testPreparationToPendingSignablePreparationRight :: TestEnv ()
@@ -1636,7 +1620,7 @@ testPreparationToPendingSignablePreparationRight = doTimes 10 $ do
           ((==) 1 . length . filter isAuthor . documentsignatorylinks)
          }
   time <- rand 10 arbitrary
-  success <- randomUpdate $ PreparationToPending (documentid doc) (systemActor time)
+  success <- randomUpdate $ PreparationToPending (documentid doc) (systemActor time) Nothing
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   validTest $ do
     assert success
@@ -1798,28 +1782,6 @@ testSetInvitationDeliveryStatusSignableRight = doTimes 10 $ do
   (st, actor) <- rand 10 arbitrary
   success <- randomUpdate $ SetInvitationDeliveryStatus (documentid doc) slid st (unSystemActor actor)
   validTest $ assert success
-
-testSetDocumentTimeoutTimeNotSignableLeft :: TestEnv ()
-testSetDocumentTimeoutTimeNotSignableLeft = doTimes 10 $ do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
-  (time, actor) <- rand 10 arbitrary
-  success <- randomUpdate $ SetDocumentTimeoutTime (documentid doc) time (unSystemActor actor)
-  validTest $ assert $ not success
-
-testSetDocumentTimeoutTimeSignableRight :: TestEnv ()
-testSetDocumentTimeoutTimeSignableRight = doTimes 10 $ do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isSignable
-  (time, actor) <- rand 10 arbitrary
-  success <- randomUpdate $ SetDocumentTimeoutTime (documentid doc) time (unSystemActor actor)
-  validTest $ assert success
-
-testSetDocumentTimeoutTimeNotLeft :: TestEnv ()
-testSetDocumentTimeoutTimeNotLeft = doTimes 10 $ do
-  (time, actor) <- rand 10 arbitrary
-  success <- randomUpdate $ \did -> SetDocumentTimeoutTime did time (unAuthorActor actor)
-  validTest $ assert $ not success
 
 testSetDocumentTagsRight :: TestEnv ()
 testSetDocumentTagsRight = doTimes 10 $ do

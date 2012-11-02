@@ -93,6 +93,7 @@ testSendingDocumentSendsInvites = do
     && sendMailsDurringSigning d)
 
   req <- mkRequest POST [ ("send", inText "True")
+                        , ("timezone", inText "Europe/Stockholm")
                         -- this stuff is for updateDocument function, which I believe
                         -- is being deleted.
                         , ("docname", inText "Test Doc")
@@ -132,6 +133,7 @@ testSigningDocumentFromDesignViewSendsInvites = do
     && sendMailsDurringSigning d)
 
   req <- mkRequest POST [ ("sign", inText "True")
+                        , ("timezone", inText "Europe/Stockholm")
                         ]
   (_link, _ctx') <- runTestKontra req ctx $ handleIssueShowPost (documentid doc)
 
@@ -162,7 +164,7 @@ testNonLastPersonSigningADocumentRemainsPending = do
                  , (mkSigDetails "Gordon" "Gecko" "gord@geck.com" False True)
                ]) (systemActor $ documentctime doc')
 
-  True <- randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc'))
+  True <- randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc')) Nothing
   Just doc'' <- dbQuery $ GetDocumentByDocumentID $ documentid doc'
 
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
@@ -206,7 +208,7 @@ testLastPersonSigningADocumentClosesIt = do
                ]) (systemActor $ documentctime doc')
 
 
-  True <- randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc'))
+  True <- randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc')) Nothing
   Just doc'' <- dbQuery $ GetDocumentByDocumentID $ documentid doc'
 
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)

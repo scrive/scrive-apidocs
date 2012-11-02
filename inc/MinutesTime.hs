@@ -18,7 +18,7 @@ module MinutesTime
        , showMinutesTimeForFileName
        , toMinutes
        , toSeconds
-       , toUTCTime
+       , toCalendarTimeInUTC
        , showAsMonth
        , showAsDate
        , formatMinutesTimeUTC
@@ -33,6 +33,7 @@ module MinutesTime
        , daysBefore
        , daysAfter
        , toClockTime
+       , toUTCTime
        , mtMonth
        , mtYear
        , fromClockTime
@@ -168,8 +169,12 @@ toClockTime :: MinutesTime -> ClockTime
 toClockTime mt = (TOD (fromIntegral $ toSeconds mt) 0)
 
 -- | Convert 'MinutesTime' to 'CalendarTime' through 'System.Time.toUTCTime'.
-toUTCTime :: MinutesTime -> CalendarTime
-toUTCTime = System.Time.toUTCTime . toClockTime
+toCalendarTimeInUTC :: MinutesTime -> CalendarTime
+toCalendarTimeInUTC = System.Time.toUTCTime . toClockTime
+
+-- | Convert 'MinutesTime' to 'UTCTime'.
+toUTCTime :: MinutesTime -> UTCTime
+toUTCTime (MinutesTime t) = posixSecondsToUTCTime (fromIntegral t)
 
 -- | This is wrong on so many different levels, kill this function, use something sensible.
 toCalendarTime :: MinutesTime -> CalendarTime
@@ -202,13 +207,13 @@ formatMinutesTime :: KontraTimeLocale -> String -> MinutesTime -> String
 formatMinutesTime ktl fmt mt = formatCalendarTime (getTimeLocale ktl) fmt (toCalendarTime mt)
 
 formatMinutesTimeUTC :: MinutesTime -> String
-formatMinutesTimeUTC mt = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" (toUTCTime mt)
+formatMinutesTimeUTC mt = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" (toCalendarTimeInUTC mt)
 
 formatMinutesTimeSimple :: MinutesTime -> String
-formatMinutesTimeSimple mt = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H:%M" (toUTCTime mt)
+formatMinutesTimeSimple mt = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H:%M" (toCalendarTimeInUTC mt)
 
 formatMinutesTimeRealISO :: MinutesTime -> String
-formatMinutesTimeRealISO mt = formatCalendarTime defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ" (toUTCTime mt)
+formatMinutesTimeRealISO mt = formatCalendarTime defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ" (toCalendarTimeInUTC mt)
 
 -- | Parse format %d-%m-%Y.
 parseMinutesTimeDMY :: String -> Maybe MinutesTime
@@ -251,7 +256,7 @@ asInt :: MinutesTime -> Int
 asInt m = ctYear*10000 + (fromEnum ctMonth+1)*100 + ctDay
   where
     -- January counts as 0, so we need to add 1
-    CalendarTime {ctYear,ctMonth,ctDay} = toUTCTime m
+    CalendarTime {ctYear,ctMonth,ctDay} = toCalendarTimeInUTC m
 
 showAsDate :: Int -> String
 showAsDate int = printf "%04d-%02d-%02d" (int `div` 10000) (int `div` 100 `mod` 100) (int `mod` 100)
@@ -263,4 +268,4 @@ instance Convertible SqlValue MinutesTime where
   safeConvert = either Left (Right . fromClockTime) . safeConvert
 
 instance Convertible MinutesTime SqlValue where
-  safeConvert = safeConvert . toUTCTime
+  safeConvert = safeConvert . toCalendarTimeInUTC

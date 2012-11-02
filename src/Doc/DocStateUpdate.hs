@@ -31,6 +31,7 @@ import User.Utils
 import File.Model
 import Redirect
 import DB
+import DB.TimeZoneName (TimeZoneName)
 import Stats.Control
 import Util.Actor
 import Util.HasSomeUserInfo
@@ -136,13 +137,13 @@ rejectDocumentWithChecks did slid mh customtext = do
 {- |
   The Author signs a document with security checks.
  -}
-authorSignDocument :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> m (Either DBError Document)
-authorSignDocument did msigninfo = onlyAuthor did $ \olddoc -> do
+authorSignDocument :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> TimeZoneName -> m (Either DBError Document)
+authorSignDocument did msigninfo timezone = onlyAuthor did $ \olddoc -> do
   ctx <- getContext
   actor <- guardJustM $ mkAuthorActor <$> getContext
   let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
   mdoc <- runMaybeT $ do
-    True <- dbUpdate $ PreparationToPending did $ systemActor $ ctxtime ctx
+    True <- dbUpdate $ PreparationToPending did (systemActor $ ctxtime ctx) (Just timezone)
     True <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
     -- please delete after Oct 1, 2012 -Eric
     -- True <- dbUpdate $ MarkInvitationRead did signatorylinkid $ systemActor $ ctxtime ctx
@@ -159,15 +160,15 @@ authorSignDocument did msigninfo = onlyAuthor did $ \olddoc -> do
 {- |
   The Author sends a document with security checks.
  -}
-authorSendDocument :: (Kontrakcja m) => User -> Actor -> DocumentID -> m (Either DBError Document)
-authorSendDocument user actor did = do
+authorSendDocument :: (Kontrakcja m) => User -> Actor -> DocumentID -> TimeZoneName -> m (Either DBError Document)
+authorSendDocument user actor did timezone = do
   ctx <- getContext
   Just doc <- dbQuery $ GetDocumentByDocumentID did
   if not $ isAuthor (doc, user) 
     then return $ Left DBResourceNotAvailable
     else do
         Log.debug $ "Preparation to pending for document " ++ show did
-        r1 <-  dbUpdate $ PreparationToPending did $ actor
+        r1 <-  dbUpdate $ PreparationToPending did actor (Just timezone)
         if (not r1)
            then return $ Left $ DBActionNotAvailable $ "Can't change from draft to pending"
            else do

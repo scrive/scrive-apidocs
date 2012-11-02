@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude, OverloadedStrings #-}
 {-# OPTIONS_GHC -fcontext-stack=50  #-}
 module Doc.Model
   ( module File.File
@@ -37,7 +37,7 @@ module Doc.Model
   , GetTemplatesByAuthor(..)
   , GetAvailableTemplates(..)
   , GetDocumentsBySignatory(..)
-  , GetTimeoutedButPendingDocuments(..)
+  , GetTimeoutedButPendingDocumentsChunk(..)
   , MarkDocumentSeen(..)
   , MarkInvitationRead(..)
   , NewDocument(..)
@@ -56,7 +56,6 @@ module Doc.Model
   , SetDocumentLocale(..)
   , SetDocumentSharing(..)
   , SetDocumentTags(..)
-  , SetDocumentTimeoutTime(..)
   , SetDocumentTitle(..)
   , SetDocumentUI(..)
   , SetDocumentAuthenticationMethod(..)
@@ -80,6 +79,7 @@ module Doc.Model
   ) where
 
 import Control.Monad.Trans
+import Control.Monad.Trans.Control (MonadBaseControl)
 import DB
 import MagicHash
 import Crypto.RNG
@@ -97,6 +97,9 @@ import Control.Logic
 import Doc.DocStateData
 import Doc.Invariants
 import Data.Maybe hiding (fromJust)
+import Data.String(fromString)
+import Data.Time.Format (formatTime)
+import System.Locale (defaultTimeLocale)
 import Utils.List
 import Utils.Monad
 import Utils.Monoid
@@ -120,6 +123,8 @@ import Templates.Templates
 import EvidenceLog.Model
 import Util.HasSomeUserInfo
 import Templates.Fields (value, objects)
+import DB.TimeZoneName (TimeZoneName, mkTimeZoneName, withTimeZone)
+import qualified DB.TimeZoneName as TimeZoneName
 
 data DocumentPagination =
   DocumentPagination
@@ -323,37 +328,6 @@ documentFilterToSQL (DocumentFilterByDelivery del) =
 
 documentFilterToSQL (DocumentFilterByAuthor userid) =
   SQL ("signatory_links.is_author AND signatory_links.user_id = ?") [toSql userid]
-
-sqlOR :: SQL -> SQL -> SQL
-sqlOR sql1 sql2 = mconcat [parenthesize sql1, SQL " OR " [], parenthesize sql2]
-
-sqlAND :: SQL -> SQL -> SQL
-sqlAND sql1 sql2 = mconcat [parenthesize sql1, SQL " AND " [], parenthesize sql2]
-
-sqlJoinWith :: SQL -> [SQL] -> SQL
-sqlJoinWith comm list = mconcat $ intersperse comm $ map parenthesize list
-
-
-sqlJoinWithOR :: [SQL] -> SQL
-sqlJoinWithOR = sqlJoinWith (SQL " OR " [])
-
-sqlJoinWithAND :: [SQL] -> SQL
-sqlJoinWithAND = sqlJoinWith (SQL " AND " [])
-
-sqlConcatComma :: [SQL] -> SQL
-sqlConcatComma sqls =
-  mconcat $ intersperse (SQL ", " []) sqls
-
-sqlConcatAND :: [SQL] -> SQL
-sqlConcatAND sqls =
-  mconcat $ intercalate [SQL " AND " []] (map (\s -> [SQL "(" [], s, SQL ")" [] ]) sqls)
-
-sqlConcatOR :: [SQL] -> SQL
-sqlConcatOR sqls =
-  mconcat $ intercalate [SQL " OR " []] (map (\s -> [SQL "(" [], s, SQL ")" [] ]) sqls)
-
-parenthesize :: SQL -> SQL
-parenthesize (SQL command values) = SQL ("(" ++ command ++ ")") values
 
 checkEqualBy :: (Eq b, Show b) => String -> (a -> b) -> a -> a -> Maybe (String, String, String)
 checkEqualBy name func obj1 obj2
@@ -973,21 +947,19 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachCSVUpload Bool where
         Log.error $ "Cannot AttachCSVUpload document " ++ show did ++ " because it does not exist"
         return False
       Just Preparation -> do
-        success <- kRun01 $ mkSQL UPDATE tableSignatoryLinks [
-            sql "csv_title" $ csvtitle csvupload
-          , sql "csv_signatory_index" $ csvsignatoryindex csvupload
-          , sql "csv_contents" $ csvcontents csvupload
-          ] <> SQL "WHERE document_id = ? AND signatory_links.id = ? AND deleted = FALSE AND NOT is_author" [
-            toSql did
-          , toSql slid
-          ]
-        when_ success $
-          update $ InsertEvidenceEvent
+        updateWithEvidence tableSignatoryLinks
+          (    "csv_title =" <?> csvtitle csvupload
+         <+> ", csv_signatory_index =" <?> csvsignatoryindex csvupload
+         <+> ", csv_contents =" <?> csvcontents csvupload
+         <+> "WHERE document_id =" <?> did
+         <+> "AND signatory_links.id =" <?> slid
+         <+> "AND deleted = FALSE AND NOT is_author"
+          ) $ do
+          return $ InsertEvidenceEvent
             AttachCSVUploadEvidence
             (value "csvtitle" (csvtitle csvupload) >> value "actor" (actorWho actor))
             (Just did)
             actor
-        return success
       -- standard conversion puts error in DocumentError argument, so we
       -- can't try to evaluate it here.
       Just DocumentError{} -> do
@@ -1003,51 +975,47 @@ data AttachFile = AttachFile DocumentID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachFile Bool where
   update (AttachFile did fid a) = do
     let time = actorTime a
-    success <- kRun01 $ mkSQL UPDATE tableDocuments [
-        sql "mtime" time
-      , sql "file_id" $ fid
-      ] <> SQL "WHERE id = ? AND status = ?" [toSql did, toSql Preparation]
-    when_ success $ do
+    updateWithEvidence tableDocuments
+      (    "mtime =" <?> time
+     <+> ", file_id =" <?> fid
+     <+> "WHERE id =" <?> did <+> "AND status =" <?> Preparation
+      ) $ do
       f <- exactlyOneObjectReturnedGuard =<< query (GetFileByFileID fid)
-      update $ InsertEvidenceEvent
+      return $ InsertEvidenceEvent
         AttachFileEvidence
         (value "actor" (actorWho a) >> value "filename" (filename f))
         (Just did)
         a
-    return success
-
 
 data DetachFile = DetachFile DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m DetachFile Bool where
   update (DetachFile did a) = do
     let time = actorTime a
-    success <- kRun01 $ mkSQL UPDATE tableDocuments [
-        sql "mtime" time
-      , sql "file_id" $ (Nothing :: Maybe FileID)
-      ] <> SQL "WHERE id = ? AND status = ?" [toSql did, toSql Preparation]
-    when_ success $ do
-      update $ InsertEvidenceEvent
+    updateWithEvidence tableDocuments
+      (    "mtime =" <?> time
+     <+> ", file_id =" <?> (Nothing :: Maybe FileID)
+     <+> "WHERE id =" <?> did <+> "AND status =" <?> Preparation
+      ) $ do
+      return $ InsertEvidenceEvent
         DetachFileEvidence
         (value "actor" (actorWho a))
         (Just did)
         a
-    return success
-    
+
 data AttachSealedFile = AttachSealedFile DocumentID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile Bool where
   update (AttachSealedFile did fid actor) = do
     let time = actorTime actor
-    success <- kRun01 $ mkSQL UPDATE tableDocuments [
-        sql "mtime" time
-      , sql "sealed_file_id" fid
-      ] <> SQL "WHERE id = ? AND status = ?" [toSql did, toSql Closed]
-    when_ success $
-      update $ InsertEvidenceEvent
-      AttachSealedFileEvidence
-      (value "actor"(actorWho actor))
-      (Just did)
-      actor
-    return success
+    updateWithEvidence tableDocuments
+      (    "mtime =" <?> time
+     <+> ", sealed_file_id =" <?> fid
+     <+> "WHERE id =" <?> did <+> "AND status =" <?> Closed
+      ) $ do
+      return $ InsertEvidenceEvent
+        AttachSealedFileEvidence
+        (value "actor"(actorWho actor))
+        (Just did)
+        actor
 
 data FixClosedErroredDocument = FixClosedErroredDocument DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument Bool where
@@ -1069,17 +1037,14 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
         errmsgs <- checkCancelDocument did
         case errmsgs of
           [] -> do
-            success <- kRun01 $ mkSQL UPDATE tableDocuments [
-                sql "status" Canceled
-              , sql "mtime" mtime
-              , sql "cancelation_reason" $ reason
-              ] <> SQL "WHERE id = ? AND type = ?" [
-                toSql did
-              , toSql $ Signable undefined
-              ]
-            when_ success $
+            updateWithEvidence tableDocuments
+              (    "status =" <?> Canceled
+             <+> ", mtime =" <?> mtime
+             <+> ", cancelation_reason =" <?> reason
+             <+> "WHERE id =" <?> did <+> "AND type =" <?> Signable undefined
+              ) $ do
               case reason of
-                ManualCancel -> update $ InsertEvidenceEvent
+                ManualCancel -> return $ InsertEvidenceEvent
                   CancelDocumentEvidence
                   (value "actor" (actorWho actor))
                   (Just did)
@@ -1091,12 +1056,11 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
                               ,("Personal number", getPersonalNumber sl, num)]
                       uneql = filter (\(_,a,b)->a/=b) trips
                       msg = intercalate "; " $ map (\(f,s,e)->f ++ " from transaction was \"" ++ s ++ "\" but from e-legitimation was \"" ++ e ++ "\"") uneql
-                  update $ InsertEvidenceEvent
+                  return $ InsertEvidenceEvent
                     CancelDocumenElegEvidence
                     (value "actor" (actorWho actor) >> value "msg" msg )
                     (Just did)
                     actor
-            return success
           s -> do
             Log.error $ "Cannot CancelDocument document " ++ show did ++ " because " ++ concat s
             return False
@@ -1131,9 +1095,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeSignatoryEmailWhenUnd
           actor
       return $ success1 && success2
 
-data PreparationToPending = PreparationToPending DocumentID Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m PreparationToPending Bool where
-  update (PreparationToPending docid actor) = do
+data PreparationToPending = PreparationToPending DocumentID Actor (Maybe TimeZoneName)
+instance (MonadBaseControl IO m, MonadDB m, TemplatesMonad m) => DBUpdate m PreparationToPending Bool where
+  update (PreparationToPending docid actor mtzn) = do
     let time = actorTime actor
     doc_exists <- query $ CheckIfDocumentExists docid
     if not doc_exists
@@ -1145,22 +1109,39 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m PreparationToPending Bool w
         case errmsgs of
           [] -> do
             daystosign :: Int <- getOne (SQL "SELECT days_to_sign FROM documents WHERE id = ?" [toSql docid]) >>= exactlyOneObjectReturnedGuard
-            let mtt = daystosign `daysAfter` time
-            success <- kRun01 $ mkSQL UPDATE tableDocuments [
-                sql "status" Pending
-              , sql "mtime" time
-              , sql "timeout_time" $ Just mtt
-              ] <> SQL "WHERE id = ? AND type = ?" [
-                toSql docid
-              , toSql $ Signable undefined
-              ]
-            when_ success $
-              update $ InsertEvidenceEvent
+            -- If we know actor's time zone:
+            --   Set timeout to the beginning of the day: start of actorTime day + days to sign + 1
+            --   Example: if actor time is 13:00 October 24, and days to sign is 1, then timeout is October 26 00:00
+            --   Rationale: actor may have picked October 25 from calendar as last day to sign, which gave days to sign = 1, and so
+            --   we should time out when October 25 has passed in actor's time zone.
+            -- If we don't know actor's time zone:
+            --   Set timeout to actorTime + days to sign + 1
+            --   Example: if actor time is 13:00 October 24, and days to sign is 1, then timeout is October 26 13:00
+            --   Rationale: Signatories will have at least until the end of the intended last day to sign.
+            let timestamp = case mtzn of
+                  Just tzn -> formatTime defaultTimeLocale "%F" (toUTCTime time) ++ " " ++ TimeZoneName.toString tzn
+                  Nothing  -> formatTime defaultTimeLocale "%F %T %Z" (toUTCTime time)
+            -- Need to temporarily set session timezone to any one
+            -- that recognizes daylight savings so that the day
+            -- interval addition advances the time properly across DST changes
+            -- (i.e., so that we stay on midnight)
+            -- http://www.postgresql.org/docs/9.2/static/functions-datetime.html
+            dstTz <- mkTimeZoneName "Europe/Stockholm"
+            withTimeZone dstTz $ updateWithEvidence tableDocuments
+              (    "status = " <?> Pending
+             <+> ", mtime =" <?> time
+             <+> ", timeout_time = cast (" <?> timestamp <+> "as timestamp with time zone)"
+                            <+> "+" <?> (show (daystosign + 1) ++ " days")
+             <+> "WHERE id =" <?> docid <+> "AND type =" <?> Signable undefined
+              ) $ do
+              Just (TimeoutTime tot) <- getOne ("SELECT timeout_time FROM documents WHERE id =" <?> docid) >>= exactlyOneObjectReturnedGuard
+              return $ InsertEvidenceEvent
                 PreparationToPendingEvidence
-                (value "actor" (actorWho actor) >> value "timeouttime" (formatMinutesTimeUTC mtt))
+                (  value "actor" (actorWho actor)
+                >> value "timezone" (maybe "" TimeZoneName.toString mtzn)
+                >> value "timeouttime" (formatMinutesTimeUTC tot))
                 (Just docid)
                 actor
-            return success
           s -> do
             Log.error $ "Cannot PreparationToPending document " ++ show docid ++ " because " ++ concat s
             return False
@@ -1178,20 +1159,16 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CloseDocument Bool where
         errmsgs <- checkCloseDocument docid
         case errmsgs of
           [] -> do
-            success <- kRun01 $ mkSQL UPDATE tableDocuments [
-                sql "status" Closed
-              , sql "mtime" time
-              ] <> SQL "WHERE id = ? AND type = ?" [
-                toSql docid
-              , toSql $ Signable undefined
-              ]
-            when_ success $
-              update $ InsertEvidenceEvent
+            updateWithEvidence tableDocuments
+              (    "status =" <?> Closed
+             <+> ", mtime =" <?> time
+             <+> "WHERE id =" <?> docid <+> "AND type =" <?> Signable undefined
+              ) $ do
+              return $ InsertEvidenceEvent
                 CloseDocumentEvidence
                 (value "actor" (actorWho actor))
                 (Just docid)
                 actor
-            return success
           s -> do
             Log.error $ "Cannot CloseDocument " ++ show docid ++ " because " ++ concat s
             return False
@@ -1209,18 +1186,15 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m DeleteSigAttachment Bool wh
           Log.error $ "No signatory attachment for that file id: " ++ show fid
           return False
         Just sa -> do
-          success <- kRun01 $ mkSQL UPDATE tableSignatoryAttachments [sql "file_id" SqlNull]
-               <> SQL "WHERE file_id = ? AND signatory_link_id = ?"
-               [ toSql fid
-               , toSql slid
-               ]
-          when_ success $
-            update $ InsertEvidenceEvent
+          updateWithEvidence tableSignatoryAttachments
+            (  "file_id =" <?> SqlNull
+           <+> "WHERE file_id =" <?> fid <+> "AND signatory_link_id =" <?> slid
+            ) $ do
+            return $ InsertEvidenceEvent
               DeleteSigAttachmentEvidence
               (value "actor" (actorWho actor) >> value "name" (signatoryattachmentname sa) >> value "email" (getEmail sig))
               (Just did)
               actor
-          return success
 
 data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID String String String String String String [String] Actor
 instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSignatoryData (Maybe Document) where
@@ -1269,22 +1243,16 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument Bool where
         Log.error $ "Cannot ErrorDocument document " ++ show docid ++ " because it does not exist"
         return False
       Just (_::Bool) -> do
-        case [] of -- WTF ?
-          [] -> do
-            success <- kRun01 $ mkSQL UPDATE tableDocuments [
-                sql "status" $ DocumentError errmsg
-              , sql "error_text" errmsg
-              ] <> SQL "WHERE id = ?" [toSql docid]
-            when_ success $
-              update $ InsertEvidenceEvent
+            updateWithEvidence tableDocuments
+              (    "status =" <?> DocumentError errmsg
+             <+> ", error_text =" <?> errmsg
+             <+> "WHERE id =" <?> docid
+              ) $ do
+              return $ InsertEvidenceEvent
                 ErrorDocumentEvidence
                 (value "errmsg" errmsg >> value "actor" (actorWho actor))
                 (Just docid)
                 actor
-            return success
-          s -> do
-            Log.error $ "Cannot ErrorDocument document " ++ show docid ++ " because " ++ concat s
-            return False
 
 selectDocuments :: MonadDB m => SQL -> DBEnv m [Document]
 selectDocuments sqlquery = do
@@ -1461,13 +1429,14 @@ instance MonadDB m => DBQuery m GetDocumentsBySignatory [Document] where
   query (GetDocumentsBySignatory processes uid) =
     query (GetDocuments [DocumentsForSignatoryDeleteValue uid False] [DocumentFilterByProcess processes] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
-data GetTimeoutedButPendingDocuments = GetTimeoutedButPendingDocuments MinutesTime
-instance MonadDB m => DBQuery m GetTimeoutedButPendingDocuments [Document] where
-  query (GetTimeoutedButPendingDocuments mtime) = do
+data GetTimeoutedButPendingDocumentsChunk = GetTimeoutedButPendingDocumentsChunk MinutesTime Int
+instance MonadDB m => DBQuery m GetTimeoutedButPendingDocumentsChunk [Document] where
+  query (GetTimeoutedButPendingDocumentsChunk mtime size) = do
     selectDocuments $ selectDocumentsSQL
-      <> SQL "WHERE status = ? AND timeout_time IS NOT NULL AND timeout_time < ?" [
+      <> SQL "WHERE status = ? AND timeout_time IS NOT NULL AND timeout_time < ? LIMIT ?" [
         toSql Pending
       , toSql mtime
+      , toSql size
       ]
 
 data MarkDocumentSeen = MarkDocumentSeen DocumentID SignatoryLinkID MagicHash Actor
@@ -1639,20 +1608,19 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RejectDocument Bool where
         errmsgs <- checkRejectDocument docid slid
         case errmsgs of
           [] -> do
-            success <- kRun01 $ mkSQL UPDATE tableDocuments [
-                sql "status" Rejected
-              , sql "mtime" time
-              , sql "rejection_time" time
-              , sql "rejection_reason" customtext
-              , sql "rejection_signatory_link_id" slid
-              ] <> SQL "WHERE id = ?" [toSql docid]
-            when_ success $
-                update $ InsertEvidenceEvent
+            updateWithEvidence tableDocuments
+              (    "status =" <?> Rejected
+             <+> ", mtime =" <?> time
+             <+> ", rejection_time =" <?> time
+             <+> ", rejection_reason =" <?> customtext
+             <+> ", rejection_signatory_link_id =" <?> slid
+             <+> "WHERE id =" <?> docid
+              ) $ do
+                return $ InsertEvidenceEvent
                   RejectDocumentEvidence
                   (value "email" (getEmail sig) >> value "actor" (actorWho actor))
                   (Just docid)
                   actor
-            return success
           s -> do
             Log.error $ "Cannot RejectDocument document " ++ show docid ++ " because " ++ concat s
             return False
@@ -1707,22 +1675,21 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocumen
 data RestoreArchivedDocument = RestoreArchivedDocument User DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m RestoreArchivedDocument Bool where
   update (RestoreArchivedDocument user did actor) = do
-    success <- case (usercompany user, useriscompanyadmin user) of
+    (case (usercompany user, useriscompanyadmin user) of
       (Just cid, True) -> updateRestorableDoc $ SQL "WHERE company_id = ?" [toSql cid]
-      _ -> updateRestorableDoc $ SQL "WHERE user_id = ?" [toSql $ userid user]
-    when_ success $
-      update $ InsertEvidenceEvent
+      _ -> updateRestorableDoc $ SQL "WHERE user_id = ?" [toSql $ userid user]) $ do
+      return $ InsertEvidenceEvent
         RestoreArchivedDocumentEvidence
         (value "email" (getEmail user) >> value "actor" (actorWho actor) >> value "company" (isJust (usercompany user) && useriscompanyadmin user))
         (Just did)
         actor
-    return success
     where
-      updateRestorableDoc whereClause = kRun01 $ mconcat [
-          mkSQL UPDATE tableSignatoryLinks [sql "deleted" False]
-        , whereClause
-        , SQL " AND document_id = ? AND really_deleted = FALSE" [toSql did]
-        ]
+      updateRestorableDoc whereClause = updateWithEvidence tableSignatoryLinks
+          (  "deleted =" <?> False
+         <+> whereClause
+         <+> "AND document_id =" <?> did
+         <+> "AND really_deleted = FALSE"
+          )
 
 {- |
     Links up a signatory link to a user account.  This should happen when
@@ -1749,18 +1716,15 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SaveDocumentForUser Bool wh
 data SaveSigAttachment = SaveSigAttachment DocumentID SignatoryLinkID String FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SaveSigAttachment Bool where
   update (SaveSigAttachment did slid name fid actor) = do
-    success <- kRun01 $ mkSQL UPDATE tableSignatoryAttachments [sql "file_id" fid]
-      <> SQL "WHERE file_id IS NULL AND name = ? AND signatory_link_id = ?"
-      [ toSql name
-      , toSql slid
-      ]
-    when_ success $
-      update $ InsertEvidenceEvent
+    updateWithEvidence tableSignatoryAttachments
+      (  "file_id =" <?> fid
+     <+> "WHERE file_id IS NULL AND name =" <?> name <+> "AND signatory_link_id =" <?> slid
+      ) $ do
+      return $ InsertEvidenceEvent
         SaveSigAttachmentEvidence
         (value "name" name  >> value "actor" (actorWho actor))
         (Just did)
         actor
-    return success
 
 data SetDocumentTags = SetDocumentTags DocumentID (S.Set DocumentTag) Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTags Bool where
@@ -1782,103 +1746,56 @@ data SetDocumentInviteTime = SetDocumentInviteTime DocumentID MinutesTime Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentInviteTime Bool where
   update (SetDocumentInviteTime did invitetime actor) = do
     let ipaddress  = fromMaybe noIP $ actorIP actor
-    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND (invite_time IS DISTINCT FROM ? OR invite_ip IS DISTINCT FROM ?)" [toSql did, toSql invitetime, toSql ipaddress]
-    Log.debug $ show changed
-    success <- kRun01 $ mkSQL UPDATE tableDocuments [
-        sql "invite_time" invitetime
-      , sql "invite_ip" ipaddress
-      ] <> SQL "WHERE id = ?" [toSql did]
-    when_ (success && changed) $
-      update $ InsertEvidenceEvent
+    updateWithEvidence' (checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND (invite_time IS DISTINCT FROM ? OR invite_ip IS DISTINCT FROM ?)" [toSql did, toSql invitetime, toSql ipaddress]) tableDocuments
+      (    "invite_time =" <?> invitetime
+     <+> ", invite_ip =" <?> ipaddress
+     <+> "WHERE id =" <?> did
+      ) $ do
+      return $ InsertEvidenceEvent
         SetDocumentInviteTimeEvidence
         (value "time" (formatMinutesTimeUTC invitetime) >> value "actor" (actorWho actor))
         (Just did)
         actor
-    return success
-
-data SetDocumentTimeoutTime = SetDocumentTimeoutTime DocumentID MinutesTime Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTimeoutTime Bool where
-  update (SetDocumentTimeoutTime did timeouttime actor) = do
-    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND timeout_time IS DISTINCT FROM ?" [toSql did, toSql timeouttime]
-    success <- kRun01 $ mkSQL UPDATE tableDocuments [sql "timeout_time" timeouttime]
-      <> SQL "WHERE id = ? AND deleted = FALSE AND type = ?" [
-        toSql did
-      , toSql $ Signable undefined
-      ]
-    when_ (success && changed) $
-      update $ InsertEvidenceEvent
-        SetDocumentTimeoutTimeEvidence
-        (value "time" (formatMinutesTimeUTC timeouttime) >> value "actor" (actorWho actor))
-        (Just did)
-        actor
-    return success
 
 data SetInviteText = SetInviteText DocumentID String Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInviteText Bool where
   update (SetInviteText did text actor) = do
-    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND invite_text IS DISTINCT FROM ?" [toSql did, toSql text]
-    let time = actorTime actor
-    success <- kRun01 $ mkSQL UPDATE tableDocuments [
-        sql "invite_text" text
-      , sql "mtime" time
-      ] <> SQL "WHERE id = ?" [toSql did]
-    when_ (success && changed) $
-      update $ InsertEvidenceEvent
+    updateOneAndMtimeWithEvidenceIfChanged did "invite_text" text (actorTime actor) $ do
+      return $ InsertEvidenceEvent
         SetInvitationTextEvidence
         (value "text" text >> value "actor" (actorWho actor))
         (Just did)
         actor
-    return success
 
 data SetDaysToSign = SetDaysToSign DocumentID Int Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDaysToSign Bool where
   update (SetDaysToSign did days actor) = do
-    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND days_to_sign IS DISTINCT FROM ?" [toSql did, toSql days]
-    success <- kRun01 $ mkSQL UPDATE tableDocuments
-         [ sql "days_to_sign" $ days
-         , sql "mtime" $ actorTime actor
-         ] <> SQL "WHERE id = ?" [ toSql did ]
-    when_ (success && changed) $
-      update $ InsertEvidenceEvent
+    updateOneAndMtimeWithEvidenceIfChanged did "days_to_sign" days (actorTime actor) $ do
+      return $ InsertEvidenceEvent
         SetDaysToSignEvidence
-        (value "mdays" (show  days) >> value "actor" (actorWho actor))
+        (value "days" (show  days) >> value "actor" (actorWho actor))
         (Just did)
         actor
-    return success
 
 data SetDocumentTitle = SetDocumentTitle DocumentID String Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTitle Bool where
   update (SetDocumentTitle did doctitle actor) = do
-    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND title IS DISTINCT FROM ?" [toSql did, toSql doctitle]
-    let time = actorTime actor
-    success <- kRun01 $ mkSQL UPDATE tableDocuments [
-        sql "title" doctitle
-      , sql "mtime" time
-      ] <> SQL "WHERE id = ?" [toSql did]
-    when_ (success && changed) $
-      update $ InsertEvidenceEvent
+    updateOneAndMtimeWithEvidenceIfChanged did "title" doctitle (actorTime actor) $ do
+      return $ InsertEvidenceEvent
         SetDocumentTitleEvidence
         (value "title" doctitle >> value "actor" (actorWho actor))
         (Just did)
         actor
-    return success
 
 data SetDocumentLocale = SetDocumentLocale DocumentID Locale Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentLocale Bool where
   update (SetDocumentLocale did locale actor) = do
-    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND region IS DISTINCT FROM ?" [toSql did, toSql $ getRegion locale]
-    let time = actorTime actor
-    success <- kRun01 $ mkSQL UPDATE tableDocuments [
-        sql "region" $ getRegion locale
-      , sql "mtime" time
-      ] <> SQL "WHERE id = ?" [toSql did]
-    when_ (success && changed) $
-      update $ InsertEvidenceEvent
+    updateOneAndMtimeWithEvidenceIfChanged did "region" (getRegion locale) (actorTime actor) $ do
+      return $ InsertEvidenceEvent
         SetDocumentLocaleEvidence
         (value "local" (show locale) >> value "actor" (actorWho actor))
         (Just did)
         actor
-    return success
 
 data SetDocumentUI = SetDocumentUI DocumentID DocumentUI Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentUI Bool where
@@ -1934,45 +1851,41 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument Bool where
           [] -> do
             let ipnumber = fromMaybe noIP $ actorIP actor
                 time     = actorTime actor
-            success <- kRun01 $ mkSQL UPDATE tableSignatoryLinks [
-                sql "sign_ip" ipnumber
-              , sql "sign_time" time
-              , sql "signinfo_text" $ signatureinfotext `fmap` msiginfo
-              , sql "signinfo_signature" $ signatureinfosignature `fmap` msiginfo
-              , sql "signinfo_certificate" $ signatureinfocertificate `fmap` msiginfo
-              , sql "signinfo_provider" $ signatureinfoprovider `fmap` msiginfo
-              , sql "signinfo_first_name_verified" $ signaturefstnameverified `fmap` msiginfo
-              , sql "signinfo_last_name_verified" $ signaturelstnameverified `fmap` msiginfo
-              , sql "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` msiginfo
-              , sql "signinfo_ocsp_response" $ signatureinfoocspresponse `fmap` msiginfo
-              ] <> SQL "WHERE id = ? AND document_id = ?" [
-                toSql slid
-              , toSql docid
-              ]
-            let signatureFields = case msiginfo of
-                  Nothing -> return ()
-                  Just si -> do
-                            value "eleg" True
-                            value "provider" $ case signatureinfoprovider si of
-                                                  BankIDProvider -> "BankID"
-                                                  TeliaProvider  -> "Telia"
-                                                  NordeaProvider -> "Nordea"
-                                                  MobileBankIDProvider -> "Mobile BankID"
-                            value "fstnameverified" $ signaturefstnameverified si
-                            value "lstnameverified" $ signaturelstnameverified si
-                            value "persnumverified" $ signaturepersnumverified si
-                            value "fieldsverified" $  signaturefstnameverified si || signaturelstnameverified si || signaturepersnumverified si
-                            value "signature" $ signatureinfosignature si
-                            value "certificate" $ nothingIfEmpty $ signatureinfocertificate si
-                            value "ocsp" $ signatureinfoocspresponse si
-                            value "infotext" $ signatureinfotext si
-            when_ success $
-              update $ InsertEvidenceEvent
+            updateWithEvidence tableSignatoryLinks
+              (    "sign_ip ="                           <?> ipnumber
+             <+> ", sign_time ="                         <?> time
+             <+> ", signinfo_text ="                     <?> signatureinfotext `fmap` msiginfo
+             <+> ", signinfo_signature ="                <?> signatureinfosignature `fmap` msiginfo
+             <+> ", signinfo_certificate ="              <?> signatureinfocertificate `fmap` msiginfo
+             <+> ", signinfo_provider ="                 <?> signatureinfoprovider `fmap` msiginfo
+             <+> ", signinfo_first_name_verified ="      <?> signaturefstnameverified `fmap` msiginfo
+             <+> ", signinfo_last_name_verified ="       <?> signaturelstnameverified `fmap` msiginfo
+             <+> ", signinfo_personal_number_verified =" <?> signaturepersnumverified `fmap` msiginfo
+             <+> ", signinfo_ocsp_response ="            <?> signatureinfoocspresponse `fmap` msiginfo
+             <+> "WHERE id =" <?> slid <+> "AND document_id =" <?> docid
+              ) $ do
+              let signatureFields = case msiginfo of
+                    Nothing -> return ()
+                    Just si -> do
+                              value "eleg" True
+                              value "provider" $ case signatureinfoprovider si of
+                                                    BankIDProvider -> "BankID" :: String
+                                                    TeliaProvider  -> "Telia"
+                                                    NordeaProvider -> "Nordea"
+                                                    MobileBankIDProvider -> "Mobile BankID"
+                              value "fstnameverified" $ signaturefstnameverified si
+                              value "lstnameverified" $ signaturelstnameverified si
+                              value "persnumverified" $ signaturepersnumverified si
+                              value "fieldsverified" $  signaturefstnameverified si || signaturelstnameverified si || signaturepersnumverified si
+                              value "signature" $ signatureinfosignature si
+                              value "certificate" $ nothingIfEmpty $ signatureinfocertificate si
+                              value "ocsp" $ signatureinfoocspresponse si
+                              value "infotext" $ signatureinfotext si
+              return $ InsertEvidenceEvent
                 SignDocumentEvidence
                 (signatureFields >> value "actor" (actorWho actor))
                 (Just docid)
                 actor
-            return success
           s -> do
             Log.error $ "Cannot SignDocument document " ++ show docid ++ " because " ++ concat s
             return False
@@ -2181,117 +2094,93 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m StoreDocumentForTesting Doc
 data TemplateFromDocument = TemplateFromDocument DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m TemplateFromDocument Bool where
   update (TemplateFromDocument did actor) = do
-    success <- kRun01 $ mkSQL UPDATE tableDocuments [
-        sql "status" Preparation
-      , sql "type" $ Template undefined
-      ] <> SQL "WHERE id = ?" [toSql did]
-    when_ success $
-      update $ InsertEvidenceEvent
+    updateWithEvidence tableDocuments
+      (    "status =" <?> Preparation
+     <+> ", type =" <?> Template undefined
+     <+> "WHERE id =" <?> did
+      ) $ do
+      return $ InsertEvidenceEvent
         TemplateFromDocumentEvidence
         (value "actor" $ actorWho actor)
         (Just did)
         actor
-    return success
+
 
 data TimeoutDocument = TimeoutDocument DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m TimeoutDocument Bool where
   update (TimeoutDocument did actor) = do
     let time = actorTime actor
-    success <- kRun01 $ mkSQL UPDATE tableDocuments [
-        sql "status" Timedout
-      , sql "mtime" time
-      ] <> SQL "WHERE id = ? AND type = ? AND status = ?" [
-        toSql did
-      , toSql $ Signable undefined
-      , toSql Pending
-      ]
-    when_ success $
-      update $ InsertEvidenceEvent
+    updateWithEvidence tableDocuments
+      (    "status =" <?> Timedout
+     <+> ", mtime =" <?> time
+     <+> "WHERE id =" <?> did <+> "AND type =" <?> Signable undefined <+> "AND status =" <?> Pending
+      ) $ do
+      return $ InsertEvidenceEvent
         TimeoutDocumentEvidence
         (value "actor" (actorWho actor))
         (Just did)
         actor
-    return success
 
 data SetDocumentAuthenticationMethod = SetDocumentAuthenticationMethod DocumentID AuthenticationMethod Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAuthenticationMethod Bool where
-  update (SetDocumentAuthenticationMethod did auth actor) = do
-    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND authentication_method IS DISTINCT FROM ?" [toSql did, toSql auth]
-    success <- kRun01 $ mkSQL UPDATE tableDocuments
-         [ sql "authentication_method" auth
-         ] <> SQL "WHERE id = ?" [ toSql did ]
-    when_ (success && changed) $ do
+  update (SetDocumentAuthenticationMethod did auth actor) =
+    updateOneWithEvidenceIfChanged did "authentication_method" auth $ do
       let evidence = case auth of
             StandardAuthentication -> SetStandardAuthenticationMethodEvidence
             ELegAuthentication  -> SetELegAuthenticationMethodEvidence
-      update $ InsertEvidenceEvent evidence
+      return $ InsertEvidenceEvent evidence
         (value "authentication" (show auth) >> value "actor" (actorWho actor))
         (Just did)
         actor
-    return success
 
 data SetDocumentDeliveryMethod = SetDocumentDeliveryMethod DocumentID DeliveryMethod Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentDeliveryMethod Bool where
-  update (SetDocumentDeliveryMethod did del actor) = do
-    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND delivery_method IS DISTINCT FROM ?" [toSql did, toSql del]
-    success <- kRun01 $ mkSQL UPDATE tableDocuments
-         [ sql "delivery_method" del
-         ] <> SQL "WHERE id = ?" [ toSql did ]
-    when_ (success && changed) $ do
+  update (SetDocumentDeliveryMethod did del actor) =
+    updateOneWithEvidenceIfChanged did "delivery_method" del $ do
       let evidence = case del of
             EmailDelivery -> SetEmailDeliveryMethodEvidence
             PadDelivery   -> SetPadDeliveryMethodEvidence
             APIDelivery   -> SetAPIDeliveryMethodEvidence
-      update $ InsertEvidenceEvent evidence
+      return $ InsertEvidenceEvent evidence
         (value "delivery" (show del) >> value "actor" (actorWho actor))
         (Just did)
         actor
-    return success
 
 data SetDocumentProcess = SetDocumentProcess DocumentID DocumentProcess Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentProcess Bool where
-  update (SetDocumentProcess did process actor) = do
-    changed <- checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ? AND process IS DISTINCT FROM ?" [toSql did, toSql process]
-    success <- kRun01 $ mkSQL UPDATE tableDocuments
-         [ sql "process" process
-         ] <> SQL "WHERE id = ?" [ toSql did ]
-    when_ (success && changed) $ do
-      update $ InsertEvidenceEvent SetDocumentProcessEvidence
+  update (SetDocumentProcess did process actor) =
+    updateOneWithEvidenceIfChanged did "process" process $ do
+      return $ InsertEvidenceEvent SetDocumentProcessEvidence
         (value "process" (show process) >> value "actor" (actorWho actor))
         (Just did)
         actor
-    return success
 
-    
 data SetDocumentAPICallbackURL = SetDocumentAPICallbackURL DocumentID (Maybe String)
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAPICallbackURL Bool where
   update (SetDocumentAPICallbackURL did mac) = do
-    success <- kRun01 $ mkSQL UPDATE tableDocuments
+    kRun01 $ mkSQL UPDATE tableDocuments
          [ sql "api_callback_url" mac
          ] <> SQL "WHERE id = ?" [ toSql did ]
-    return success
 
 
 data ResetSignatoryMailDeliveryInformationForReminder = ResetSignatoryMailDeliveryInformationForReminder Document SignatoryLink Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryMailDeliveryInformationForReminder () where
    update (ResetSignatoryMailDeliveryInformationForReminder doc sl actor) = do
-      success <- kRun01 $ mkSQL UPDATE tableSignatoryLinks
-        [  sql "read_invitation" $ (Nothing :: Maybe MinutesTime)
-         , sql "invitation_delivery_status" $ Unknown]
-        <> SQL ("WHERE document_id = ? AND id = ? AND sign_time IS NULL AND " ++
-               "EXISTS (SELECT 1 FROM documents WHERE id = document_id AND documents.status = ?)") [
-          toSql $ documentid doc
-        , toSql $ signatorylinkid sl
-        , toSql Pending
-        ]
-      when_ success $
-        update $ InsertEvidenceEvent
+     _ <- updateWithEvidence tableSignatoryLinks
+          (    "read_invitation =" <?> (Nothing :: Maybe MinutesTime)
+         <+> ", invitation_delivery_status =" <?> Unknown
+         <+> "WHERE document_id =" <?> documentid doc
+         <+> "AND id =" <?> signatorylinkid sl
+         <+> "AND sign_time IS NULL"
+         <+> "AND EXISTS (SELECT 1 FROM documents WHERE id = document_id AND documents.status =" <?> Pending <+> ")"
+          ) $ do
+        return $ InsertEvidenceEvent
           DeliveryInformationClearedForReminder
           (value "name" (getSmartName sl))
           (Just $ documentid doc)
-          actor     
+          actor
+     return ()
 
-    
 data UpdateFields = UpdateFields DocumentID SignatoryLinkID [(FieldType, String)] Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where
   update (UpdateFields did slid fields actor) = do
@@ -2433,3 +2322,33 @@ instance MonadDB m => DBQuery m GetDocsSentBetween Int where
                "AND NOT documents.deleted" 
     _ <- kExecute [toSql uid, toSql start, toSql end, toSql Preparation, toSql $ Signable undefined]
     foldDB (+) 0
+
+-- Update utilities
+
+updateWithEvidence' :: (MonadDB m, TemplatesMonad m) => DBEnv m Bool -> Table -> SQL -> DBEnv m InsertEvidenceEvent -> DBEnv m Bool
+updateWithEvidence' testChanged t u mkEvidence = do
+  changed <- testChanged
+  success <- kRun01 $ "UPDATE" <+> fromString (tblName t) <+> "SET" <+> u
+  when_ (success && changed) $ do
+    e <- mkEvidence
+    update $ e
+  return success
+
+updateWithEvidence ::  (MonadDB m, TemplatesMonad m) => Table -> SQL -> DBEnv m InsertEvidenceEvent -> DBEnv m Bool
+updateWithEvidence = updateWithEvidence' (return True)
+
+updateOneWithEvidenceIfChanged :: (MonadDB m, TemplatesMonad m, Convertible a SqlValue)
+                               => DocumentID -> SQL -> a -> DBEnv m InsertEvidenceEvent -> DBEnv m Bool
+updateOneWithEvidenceIfChanged did col new =
+  updateWithEvidence'
+    (checkIfAnyReturned $ "SELECT 1 FROM" <+> fromString (tblName tableDocuments)
+                      <+> "WHERE id = " <?> did <+> "AND" <+> col <+> "IS DISTINCT FROM" <?> new)
+    tableDocuments (col <+> "=" <?> new <+> "WHERE id =" <?> did)
+
+updateOneAndMtimeWithEvidenceIfChanged :: (MonadDB m, TemplatesMonad m, Convertible a SqlValue)
+                                       => DocumentID -> SQL -> a -> MinutesTime -> DBEnv m InsertEvidenceEvent -> DBEnv m Bool
+updateOneAndMtimeWithEvidenceIfChanged did col new mtime =
+  updateWithEvidence'
+    (checkIfAnyReturned $ "SELECT 1 FROM" <+> fromString (tblName tableDocuments)
+                      <+> "WHERE id = " <?> did <+> "AND" <+> col <+> "IS DISTINCT FROM" <?> new)
+    tableDocuments ("mtime =" <?> mtime <+> "," <+> col <+> "=" <?> new <+> "WHERE id =" <?> did)

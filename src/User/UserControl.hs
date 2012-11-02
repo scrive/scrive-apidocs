@@ -2,7 +2,7 @@ module User.UserControl where
 
 import Control.Monad.State
 import Data.Functor
-import System.Time hiding (toUTCTime)
+import System.Time
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Text.JSON (JSValue(..))
@@ -553,7 +553,7 @@ handleBlockingInfo :: Kontrakcja m => m JSValue
 handleBlockingInfo = do
   user <- guardJustM $ ctxmaybeuser <$> getContext
   time <- ctxtime <$> getContext
-  let utctime = toUTCTime time
+  let utctime = toCalendarTimeInUTC time
       utcbeginningOfMonth = utctime { ctDay = 1, ctHour = 0, ctMin = 0, ctSec = 0 }
       beginningOfMonth = fromClockTime $ toClockTime utcbeginningOfMonth
 

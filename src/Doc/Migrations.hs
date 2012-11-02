@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.Migrations where
 
@@ -27,18 +28,18 @@ setMandatoryExpirationTimeInDocument = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 11
   , mgrDo = do
+    -- Fix documents that don't have days to sign or timeout set:
+    --   Pending  => 90 days to sign, timeout_time to 90 days from time of migration
+    --   Draft => default days to sign
+    --   All other documents => set days to sign to 0
     let pendingDaysToSign = 90
     timeout <- (pendingDaysToSign `daysAfter`) `liftM` getMinutesTime
-    kRun_ $ SQL "UPDATE documents SET days_to_sign = ? WHERE status = ? AND days_to_sign IS NULL"
-                [ toSql (documentdaystosign blankDocument)
-                , toSql Preparation
-                ]
-    kRun_ $ SQL "UPDATE documents SET days_to_sign = ?, timeout_time = ? WHERE status = ? AND timeout_time IS NULL"
-                [ toSql pendingDaysToSign
-                , toSql timeout
-                , toSql Pending
-                ]
-    kRun_ $ SQL "UPDATE documents SET days_to_sign = ? WHERE days_to_sign IS NULL" [ toSql (0::Int) ]
+    kRun_ $ "UPDATE documents SET days_to_sign =" <?> documentdaystosign blankDocument
+        <+> "WHERE status =" <?> Preparation <+> "AND days_to_sign IS NULL"
+    kRun_ $ "UPDATE documents SET days_to_sign =" <?> pendingDaysToSign
+                           <+> ", timeout_time =" <?> timeout
+        <+> "WHERE status =" <?> Pending <+> "AND timeout_time IS NULL"
+    kRun_ $ ("UPDATE documents SET days_to_sign = 0 WHERE days_to_sign IS NULL" :: String)
     kRunRaw "ALTER TABLE documents ALTER days_to_sign SET NOT NULL"
 }
 
@@ -86,7 +87,7 @@ removeServiceIDFromDocuments = Migration {
   , mgrFrom = 9
   , mgrDo = do
     -- check if service_id field is empty for all documents
-    check <- getMany "SELECT DISTINCT service_id IS NULL FROM documents"
+    check <- getMany ("SELECT DISTINCT service_id IS NULL FROM documents" :: String)
     case check of
       []     -> return () -- no records, ok
       [True] -> return () -- only nulls, ok
@@ -316,7 +317,7 @@ removeOldSignatoryLinkIDFromCancelationReason = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 1
   , mgrDo = do
-    _ <- kRun $ SQL "SELECT id, cancelation_reason FROM documents WHERE cancelation_reason LIKE ?" [toSql "{\"ELegDataMismatch%"]
+    _ <- kRun $ SQL "SELECT id, cancelation_reason FROM documents WHERE cancelation_reason LIKE ?" [toSql ("{\"ELegDataMismatch%"::String)]
     values <- foldDB fetch []
     forM_ values $ \(slid, params) -> do
       let (x : JSObject link : xs) = params

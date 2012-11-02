@@ -48,9 +48,9 @@ main = Log.withLogger $ do
 
   let runScheduler = runQueue rng (dbConfig appConf) (SchedulerData appConf templates)
       inDB = withPostgreSQL (dbConfig appConf) . runCryptoRNGT rng
-  t1 <- forkIO . cron 60 $ do
-    Log.cron "Running oldScheduler..."
-    runScheduler oldScheduler
+  t1 <- forkIO . cron (60 * 10) $ do
+    Log.cron "Running timeoutDocuments..."
+    runScheduler timeoutDocuments
   t2 <- forkIO . cron (60 * 60) $ do
     Log.cron "Evaluating EmailChangeRequest actions..."
     runScheduler $ actionQueue emailChangeRequest

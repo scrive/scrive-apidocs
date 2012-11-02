@@ -85,8 +85,8 @@ AttachFileEvidenceText=$filename$ uploaded by $actor$.
 ###
 AttachSealedFileEvidenceText=Transaction verification page, evidence log, and evidence documentation appended by $actor$. Document digitally signed and stored in database by $actor$.
 ###
-PreparationToPendingEvidenceText=$actor$ locked document from author editing.
-$if(timeouttime)$ Due date set to $timeouttime$ UTC by $actor$.$endif$
+PreparationToPendingEvidenceText=$actor$ locked document from author editing, due date set to $timeouttime$ UTC.
+$if(timezone)$ $actor$ provided time zone $timezone$.$endif$
 ###
 DeleteSigAttachmentEvidenceText=Attachment for signatory ($email$) called “$name$” deleted by $actor$ .
 ###

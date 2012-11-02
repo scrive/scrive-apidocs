@@ -44,7 +44,6 @@ module User.Model (
 
 import Control.Applicative
 import Data.Monoid
-import Data.List
 import Data.Char
 import Database.HDBC
 
@@ -117,20 +116,6 @@ instance HasLocale User where
 instance HasLocale UserSettings where
   getLocale = locale
 
-
-sqlOR :: SQL -> SQL -> SQL
-sqlOR sql1 sql2 = mconcat [parenthesize sql1, SQL " OR " [], parenthesize sql2]
-
-
-sqlJoinWith :: SQL -> [SQL] -> SQL
-sqlJoinWith comm list = mconcat $ intersperse comm $ map parenthesize list
-
-
-sqlJoinWithAND :: [SQL] -> SQL
-sqlJoinWithAND = sqlJoinWith (SQL " AND " [])
-
-parenthesize :: SQL -> SQL
-parenthesize (SQL command values) = SQL ("(" ++ command ++ ")") values
 
 data UserFilter
   = UserFilterByString String             -- ^ Contains the string in name, email or anywhere

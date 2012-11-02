@@ -148,8 +148,13 @@ window.ReadyApiCall = ApiCall.extend({
         isReady : function() {return true;},
         send : function() {
             var model = this;
+            var form = $("<form method='post' style='display:none;' enctype='multipart/form-data'/>");
+            $("body").append(form);
+            form.append($("<input type='hidden' name='json'/>").val('{ "timezone": "Europe/Stockholm" }'));
+            var formData = new FormData(form[0]);
             $.ajax(Scrive.apiUrl()+"ready/" + model.documentid(), {
                 type: 'POST',
+                data: formData,
                 cache: false,
                 contentType: false,
                 processData: false,

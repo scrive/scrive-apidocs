@@ -1,7 +1,7 @@
 module ActionQueue.Scheduler (
     Scheduler
   , SchedulerData(..)
-  , oldScheduler
+  , timeoutDocuments
   , runDocumentProblemsCheck
   , getGlobalTemplates
   ) where
@@ -38,22 +38,23 @@ type Scheduler = ActionQueue SchedulerData
 -- assigned to and since TemplatesMonad doesn't give us the way to get
 -- appropriate language version of templates, we need to do that manually.
 
--- | Old scheduler (used as main one before action scheduler was implemented)
-oldScheduler :: Scheduler ()
-oldScheduler = do
+-- | Time out documents once per day after midnight.  Do it in chunks
+-- so that we don't choke the server in case there are many documents to time out
+timeoutDocuments :: Scheduler ()
+timeoutDocuments = do
   now <- getMinutesTime
-  timeoutDocuments now
-  where
-    timeoutDocuments now = do
-      docs <- dbQuery $ GetTimeoutedButPendingDocuments now
-      forM_ docs $ \doc -> do
-        gt <- getGlobalTemplates
-        success <- runReaderT (dbUpdate $ TimeoutDocument (documentid doc) (systemActor now)) gt
-        when success $ do
-          Just d <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-          _ <- addDocumentTimeoutStatEvents d "scheduler"
-          return ()
-        Log.debug $ "Document timedout " ++ (show $ documenttitle doc)
+  docs <- dbQuery $ GetTimeoutedButPendingDocumentsChunk now 100
+  forM_ docs $ \doc -> do
+    gt <- getGlobalTemplates
+    success <- runReaderT (dbUpdate $ TimeoutDocument (documentid doc) (systemActor now)) gt
+    when success $ do
+      Just d <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+      _ <- addDocumentTimeoutStatEvents d "scheduler"
+      return ()
+    Log.debug $ "Document timedout " ++ (show $ documenttitle doc)
+  when (not (null docs)) $ do
+    dbCommit
+    timeoutDocuments
 
 runDocumentProblemsCheck :: Scheduler ()
 runDocumentProblemsCheck = do

@@ -36,6 +36,7 @@ module Doc.DocControl(
 
 import AppView
 import DB
+import DB.TimeZoneName (TimeZoneName, mkTimeZoneName)
 import DBError
 import Doc.Action
 import Doc.CSVUtils
@@ -385,13 +386,14 @@ handleIssueShowPost :: Kontrakcja m => DocumentID -> m (Either KontraLink JSValu
 handleIssueShowPost docid = do
   document <- guardRightM $ getDocByDocID docid
   Context { ctxmaybeuser = muser } <- getContext
+  timezone <- getDataFnM (look "timezone") >>= (runDBEnv . mkTimeZoneName)
   unless (isAuthor (document, muser)) internalError -- still need this because others can read document
   sign              <- isFieldSet "sign"
   send              <- isFieldSet "send"
   -- Behold!
   case documentstatus document of
-    Preparation | sign              -> Right <$> (linkAsJSON $ handleIssueSign document)
-    Preparation | send              -> Right <$> (linkAsJSON $ handleIssueSend document)
+    Preparation | sign              -> Right <$> (linkAsJSON $ handleIssueSign document timezone)
+    Preparation | send              -> Right <$> (linkAsJSON $ handleIssueSend document timezone)
     _ | canAuthorSignNow document   -> Left  <$> handleIssueSignByAuthor document
     _ -> return $ Left LinkArchive
  where
@@ -400,8 +402,8 @@ handleIssueShowPost docid = do
          l <- lg
          runJSONGenT $ J.value "link" (show l)
 
-handleIssueSign :: Kontrakcja m => Document -> m KontraLink
-handleIssueSign document = do
+handleIssueSign :: Kontrakcja m => Document -> TimeZoneName -> m KontraLink
+handleIssueSign document timezone = do
     Log.debug "handleIssueSign"
     mdocs <- splitUpDocument document
     case mdocs of
@@ -429,7 +431,7 @@ handleIssueSign document = do
         Log.debug $ "handleIssueSign for forIndividual " ++ show (documentid doc)  
         mprovider <- readField "eleg"
         mndoc <- case mprovider of
-                   Nothing ->  Right <$> authorSignDocument (documentid doc) Nothing
+                   Nothing ->  Right <$> authorSignDocument (documentid doc) Nothing timezone
                    Just provider -> do
                      transactionid <- getDataFnM $ look "transactionid"
                      esigninfo <- case provider of
@@ -443,7 +445,7 @@ handleIssueSign document = do
                        BankID.Mismatch msg _ _ _ -> do
                          Log.debug $ "got this message: " ++ msg
                          return $ Left msg
-                       BankID.Sign sinfo -> Right <$>  authorSignDocument (documentid doc) (Just sinfo)
+                       BankID.Sign sinfo -> Right <$>  authorSignDocument (documentid doc) (Just sinfo) timezone
         case mndoc of
           Right (Right newdocument) -> do
             postDocumentPreparationChange newdocument "web"
@@ -456,8 +458,8 @@ handleIssueSign document = do
           Left s -> return $ Left s
 
 
-handleIssueSend :: Kontrakcja m => Document -> m KontraLink
-handleIssueSend document = do
+handleIssueSend :: Kontrakcja m => Document -> TimeZoneName -> m KontraLink
+handleIssueSend document timezone = do
     Log.debug "handleIssueSend"
     ctx <- getContext
     user  <- guardJust $ ctxmaybeuser ctx
@@ -484,7 +486,7 @@ handleIssueSend document = do
     where
       forIndividual user actor doc = do
         Log.debug $ "handleIssueSend for forIndividual " ++ show (documentid doc)
-        mndoc <- authorSendDocument user actor (documentid doc)
+        mndoc <- authorSendDocument user actor (documentid doc) timezone
         Log.debug $ "Document send by author " ++ show (documentid doc)
         case mndoc of
           Right newdocument -> postDocumentPreparationChange newdocument "web"

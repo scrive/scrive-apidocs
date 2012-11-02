@@ -6,6 +6,7 @@ module Doc.API (
   ) where
 
 import Control.Monad.Trans.Maybe
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Happstack.StaticRouting
 import Text.JSON hiding (Ok)
 import qualified Text.JSON as J
@@ -36,6 +37,7 @@ import Util.HasSomeUserInfo
 import Happstack.Server.RqData
 import Doc.Rendering
 import DB
+import DB.TimeZoneName (mkTimeZoneName)
 
 import File.Model
 import MagicHash (MagicHash)
@@ -184,16 +186,38 @@ apiCallUpdate did = api $ do
   triggerAPICallbackIfThereIsOne newdocument
   Ok <$> documentJSON True True Nothing Nothing newdocument
 
-apiCallReady :: Kontrakcja m => DocumentID -> m Response
+data ReadyParams = ReadyParams
+  { timezonestring :: String
+  }
+  deriving Show
+
+instance FromJSValue ReadyParams where
+  fromJSValue = do
+    Just s <- fromJSValueField "timezone"
+    return $ Just ReadyParams { timezonestring = s }
+
+apiCallReady :: (MonadBaseControl IO m, Kontrakcja m) => DocumentID -> m Response
 apiCallReady did =  api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
   doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
   when (not $ (auid == userid user)) $ do
         throwError $ serverError "Permission problem. Not an author."
+  let defaultParams = ReadyParams { timezonestring = "Europe/Stockholm" }
+  mjsons <- lift $ getDataFn' (look "json")
+  params <- case mjsons of
+            Nothing -> return defaultParams
+            Just jsons -> do
+              json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $
+                       case decode jsons of
+                         J.Ok js -> Just js
+                         _ -> Nothing
+              apiGuardJustM (badInput "Given JSON does not represent valid READY parameters.") $
+                return $ fromJSValue json
   when (not $ all (isGood . asValidEmail . getEmail) (documentsignatorylinks doc)) $ do
         throwError $ serverError "Some signatories don't have a valid email adress set."
-  mndoc <- lift $ authorSendDocument user actor (documentid doc)
+  timezone <- lift $ runDBEnv $ mkTimeZoneName (timezonestring params)
+  mndoc <- lift $ authorSendDocument user actor (documentid doc) timezone
   case mndoc of
           Right newdocument -> do
               lift $ postDocumentPreparationChange newdocument "web"

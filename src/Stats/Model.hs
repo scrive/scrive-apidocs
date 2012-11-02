@@ -87,37 +87,6 @@ data DocStatEvent = DocStatEvent {
   , seAPIString :: String
   }
 
-sqlOR :: SQL -> SQL -> SQL
-sqlOR sql1 sql2 = mconcat [parenthesize sql1, SQL " OR " [], parenthesize sql2]
-
-sqlAND :: SQL -> SQL -> SQL
-sqlAND sql1 sql2 = mconcat [parenthesize sql1, SQL " AND " [], parenthesize sql2]
-
-sqlJoinWith :: SQL -> [SQL] -> SQL
-sqlJoinWith comm list = mconcat $ intersperse comm $ map parenthesize list
-
-
-sqlJoinWithOR :: [SQL] -> SQL
-sqlJoinWithOR = sqlJoinWith (SQL " OR " [])
-
-sqlJoinWithAND :: [SQL] -> SQL
-sqlJoinWithAND = sqlJoinWith (SQL " AND " [])
-
-sqlConcatComma :: [SQL] -> SQL
-sqlConcatComma sqls =
-  mconcat $ intersperse (SQL ", " []) sqls
-
-sqlConcatAND :: [SQL] -> SQL
-sqlConcatAND sqls =
-  mconcat $ intercalate [SQL " AND " []] (map (\s -> [SQL "(" [], s, SQL ")" [] ]) sqls)
-
-sqlConcatOR :: [SQL] -> SQL
-sqlConcatOR sqls =
-  mconcat $ intercalate [SQL " OR " []] (map (\s -> [SQL "(" [], s, SQL ")" [] ]) sqls)
-
-parenthesize :: SQL -> SQL
-parenthesize (SQL command values) = SQL ("(" ++ command ++ ")") values
-
 {-------- Doc Stat Queries ---}
 
 selectDocStatEventsSQL :: SQL

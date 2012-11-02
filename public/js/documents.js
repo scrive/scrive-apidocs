@@ -236,6 +236,7 @@ window.Document = Backbone.Model.extend({
     sendByAuthor: function() {
         return new Submit({
               url : "/d/" + this.documentid(),
+              timezone: jstz.determine().name(),
               send: "YES",
               method: "POST",
               ajaxtimeout : 120000
@@ -244,6 +245,7 @@ window.Document = Backbone.Model.extend({
     signByAuthor: function() {
         return new Submit({
               url : "/d/" + this.documentid(),
+              timezone: jstz.determine().name(),
               sign: "YES",
               method: "POST",
               ajaxtimeout : 120000

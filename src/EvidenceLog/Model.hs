@@ -191,7 +191,7 @@ data EvidenceEventType =
   MarkDocumentSeenEvidence                        |
   RejectDocumentEvidence                          |
   SetDocumentInviteTimeEvidence                   |
-  SetDocumentTimeoutTimeEvidence                  |
+  SetDocumentTimeoutTimeEvidence                  | -- not used anymore
   RestoreArchivedDocumentEvidence                 |
   InvitationEvidence                              |
   SignableFromDocumentIDWithUpdatedAuthorEvidence |

@@ -1,20 +1,34 @@
+{-# LANGUAGE OverloadedStrings #-}
 module DB.SQL (
     SQL(..)
   , ColumnValue
   , sql'
   , sql
+  , sqlParam
+  , (<+>)
+  , (<?>)
   , SQLType(..)
   , mkSQL
   , AscDesc(..)
   , IsSQL(..)
+  , sqlOR
+  , sqlJoinWith
+  , sqlJoinWithAND
+  , sqlConcatComma
+  , sqlConcatAND
+  , sqlConcatOR
+  , parenthesize
   ) where
 
 import Data.Convertible
 import Data.List
 import Data.Monoid
+import Data.String (IsString, fromString)
 import Database.HDBC
 
 import DB.Model
+
+infixl 6 <?>, <+>
 
 data SQL = SQL String [SqlValue]
   deriving (Eq, Show)
@@ -33,6 +47,18 @@ instance IsSQL SQL where
 
 instance IsSQL String where
   toSQLCommand cmd = SQL cmd []
+
+instance IsString SQL where
+  fromString s = SQL s []
+
+sqlParam :: Convertible a SqlValue => a -> SQL
+sqlParam p = SQL "?" [toSql p]
+
+(<+>) :: SQL -> SQL -> SQL
+s1 <+> s2 = s1 <> " " <> s2
+
+(<?>) :: Convertible a SqlValue => SQL -> a -> SQL
+s <?> p = s <+> sqlParam p
 
 sql' :: Convertible a SqlValue => String -> String -> a -> ColumnValue
 sql' column placeholder value = (column, placeholder, toSql value)
@@ -60,3 +86,27 @@ mkSQL qtype Table{tblName} values = case qtype of
 -- Conversion to SQL adds DESC marker to descending and no marker
 -- to ascending order.
 data AscDesc a = Asc a | Desc a
+
+sqlOR :: SQL -> SQL -> SQL
+sqlOR s1 s2 = mconcat [parenthesize s1, SQL " OR " [], parenthesize s2]
+
+sqlJoinWith :: SQL -> [SQL] -> SQL
+sqlJoinWith comm list = mconcat $ intersperse comm $ map parenthesize list
+
+sqlJoinWithAND :: [SQL] -> SQL
+sqlJoinWithAND = sqlJoinWith (SQL " AND " [])
+
+sqlConcatComma :: [SQL] -> SQL
+sqlConcatComma sqls =
+  mconcat $ intersperse (SQL ", " []) sqls
+
+sqlConcatAND :: [SQL] -> SQL
+sqlConcatAND sqls =
+  mconcat $ intercalate [SQL " AND " []] (map (\s -> [SQL "(" [], s, SQL ")" [] ]) sqls)
+
+sqlConcatOR :: [SQL] -> SQL
+sqlConcatOR sqls =
+  mconcat $ intercalate [SQL " OR " []] (map (\s -> [SQL "(" [], s, SQL ")" [] ]) sqls)
+
+parenthesize :: SQL -> SQL
+parenthesize (SQL command values) = SQL ("(" ++ command ++ ")") values

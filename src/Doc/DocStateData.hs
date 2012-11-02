@@ -67,7 +67,7 @@ import Control.Monad
 import qualified Data.Set as S
 
 newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Typeable)
 $(newtypeDeriveConvertible ''TimeoutTime)
 
 instance Show TimeoutTime where

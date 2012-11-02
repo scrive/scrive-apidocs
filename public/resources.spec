@@ -66,6 +66,7 @@ set systemPage
  js   libs/jquery.MultiFile.js
  jsx  tiny_mce/jquery.tinymce.js
  js   libs/json2.js
+ js   libs/jstz.min.js
  js   libs/underscore.js
  js   libs/backbone.js
  js   libs/jquery.form.js

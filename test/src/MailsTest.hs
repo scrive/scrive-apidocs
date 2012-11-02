@@ -79,7 +79,7 @@ sendDocumentMails mailTo author mcompany = do
         now <- getMinutesTime
         let sigs = [authordetails, isl]
         True <- randomUpdate $ ResetSignatoryDetails docid sigs (systemActor now)
-        True <- randomUpdate $ PreparationToPending docid (systemActor now)
+        True <- randomUpdate $ PreparationToPending docid (systemActor now) Nothing
         Just d2 <- dbQuery $ GetDocumentByDocumentID docid
         let asl2 = head $ documentsignatorylinks d2
         True <- randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2)
