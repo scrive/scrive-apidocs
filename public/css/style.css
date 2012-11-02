@@ -1074,6 +1074,8 @@ input[type=submit].hidden
     font-weight: bold;
     font-size: 16px;
     margin-right: 2px;
+    width: 450px;
+    font-family:'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
 }
 
 .docname .icon {
@@ -1100,9 +1102,12 @@ input[type=submit].hidden
     padding:0;
     font-size:16px;
     font-weight:bold;
-    color:#FFFFFF;
     width: 450px;
     font-family:'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
+}
+
+.tab-viewer-header-title .docname input.docname-edit {
+  color : #FFFFFF;
 }
 
 .tab-viewer-header-title .changeName a
@@ -1224,7 +1229,7 @@ input[type=submit].hidden
 {
     background-image: url(/img/signStepsBodyBorderLong.png);
     min-width: 980px;
-    padding: 20px 19px;
+    padding: 0px 19px;
 }
 
 
@@ -1469,8 +1474,6 @@ input.multiFileInput,
    height: 157px;
    display:inline-block;
    float:left;
-   margin-top:-8px;
-   margin-bottom:-8px;
 }
 
 /* 015 new */
