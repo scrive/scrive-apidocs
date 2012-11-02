@@ -264,7 +264,7 @@ legalModal=
           nr 1/2011</i> behandlar den övertro på olika varianter av
           skriftlig form som finns i näringslivet och bland många
           jurister. Artikeln kan även läsas
-          som <a href="/pdf/supplychaineffectarticle.pdf">pdf</a>.
+          som <a href="/pdf/Supply Chain Effect - Jon Kihlman - Finns det papper och penna i molnet.pdf">Supply Chain Effect - Jon Kihlman - Finns det papper och penna i molnet.pdf</a>.
         </p>
       </div>
 
