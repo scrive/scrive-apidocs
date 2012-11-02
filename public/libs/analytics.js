@@ -29,11 +29,26 @@ document.onclick = function(event) {
 };
 
 (function() {
-var ga = document.createElement('script'); ga.type =
-'text/javascript'; ga.async = true;
-ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
-'http://www') + '.google-analytics.com/ga.js';
-(document.getElementsByTagName('head')[0] ||
-document.getElementsByTagName('body')[0]).appendChild(ga);
+    // Google Analytics part
+    var ga = document.createElement('script');
+    ga.type = 'text/javascript'; 
+    ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+              'http://www') + '.google-analytics.com/ga.js';
+    (document.getElementsByTagName('head')[0] ||
+    document.getElementsByTagName('body')[0]).appendChild(ga);
+
+    // ProspectEye part
+    var pe = document.createElement('script');
+    pe.type = 'text/javascript'; 
+    pe.async = true;
+    pe.src = "https://tr.prospecteye.com/track.js";
+
+    // these have to be global for ProspectEye to see
+    window.psSite = "8d72086524";
+    window.peJsHost = "https://";
+
+    (document.getElementsByTagName('head')[0] ||
+    document.getElementsByTagName('body')[0]).appendChild(pe);
 })();
 
