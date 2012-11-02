@@ -72,7 +72,7 @@ var ButtonView = Backbone.View.extend({
 
         var label = $("<div class='label'/>").text(this.model.text());
         if (this.model.width() != undefined)
-            label.css("width",(this.model.width() - 2 * Button.borderWidth(this.model.size())) + "px");
+            label.css("width",(this.model.width() - 2 * Button.borderWidth(this.model.size()) - 2 * Button.labelPadding(this.model.size())) + "px");
         label.append(this.model.icon());
         if (this.model.labelstyle() != undefined)
             label.attr("style",this.model.labelstyle());

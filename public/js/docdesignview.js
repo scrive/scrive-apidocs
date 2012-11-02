@@ -73,10 +73,10 @@ var DocumentDesignView = Backbone.View.extend({
         var display = $("<span class='docname-display'/>");
         var edit = $("<span class='docname-edit' style='display:none'/>");
 
-        var iconok = $("<a href='#' class='icon small ok' style='margin-right: 2px; float:none'></a>");
-        var iconedit = $("<a href='#' class='icon edit' style='margin-right: 2px'></a>");
+        var iconok = $("<a href='#' class='icon small ok' style='margin-left: 2px;float:right'></a>");
+        var iconedit = $("<a href='#' class='icon edit' style='margin-left: 2px;margin-top: 2px;float:right'></a>");
         var titleshow = $("<span class='visible-docname'/>").text(document.title());
-        var titleedit = $("<input type='text' name='docname-edit'/>").val(document.title());
+        var titleedit = $("<input type='text' name='docname-edit' style='text-align:right'/>").val(document.title());
         display.append(titleshow).append(iconedit);
         edit.append(titleedit).append(iconok);
         namepart.append(display).append(edit);
@@ -137,15 +137,14 @@ var DocumentDesignView = Backbone.View.extend({
        box.append(box1).append($("<div class='border'/>"));
 
        var box2 = $("<div class='signStepsBodyPart middle'/>");
+       box2.append(this.deliveryMethodSelection());
+       box2.append(this.authenticationMethodSelection());
        box2.append(this.authorAttachmentsSetup());
        this.signatoryAttachmentSetupBox = this.signatoryAttachmentSetup();
        box2.append(this.signatoryAttachmentSetupBox);
-
        box.append(box2).append($("<div class='border'/>"));
 
        var box3 = $("<div class='signStepsBodyPart last'/>");
-       box3.append(this.deliveryMethodSelection());
-       box3.append(this.authenticationMethodSelection());
        box3.append(this.finalButton());
        box.append(box3);
        return box;
@@ -705,7 +704,8 @@ var DocumentDesignView = Backbone.View.extend({
         var upbutton = UploadButton.init({
             name: "file",
             color : "black",
-            width: 150,
+            size : "big",
+            width: 300,
             text: localization.uploadButton,
             submitOnUpload: true,
             onClick : function () {
@@ -747,9 +747,9 @@ var DocumentDesignView = Backbone.View.extend({
     fromAvtal : function() {
         var document = this.model;
         var button = Button.init({
-            size : "small",
+            size : "big",
             color : "black",
-            width: 150,
+            width: 300,
             text: localization.buyAvtal24Template,
             onClick : function () {
                 window.location = "https://avtal24.se/scrive";
