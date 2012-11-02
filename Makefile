@@ -17,7 +17,7 @@ dist/dbmodel/$(DBNAME).png:
 # Build and run all tests
 .PHONY : test
 test:
-	cabal-dev install -f-server -ftest-coverage
+	cabal-dev install -f-server -f-cron -f-mailing-server -ftest-coverage
 	rm -f kontrakcja-test.tix
 	time dist/build/kontrakcja-test/kontrakcja-test $(TESTS)
 
