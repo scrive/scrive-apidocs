@@ -17,7 +17,7 @@ window.TemplatesListDefinition = function(archive) { return {
                              name: "process",
                              textWidth : "100px",
                              options: [
-                                        {name: localization.filterByProcess.showAllProcesses, value: ""},
+                                        {name: localization.filterByProcess.showAllProcessesTemplates, value: ""},
                                         {name: localization.filterByProcess.showContractsOnly, value: "contract"},
                                         {name: localization.filterByProcess.showOffersOnly,    value: "offer"},
                                         {name: localization.filterByProcess.showOrdersOnly,    value: "order"}
@@ -31,13 +31,13 @@ window.TemplatesListDefinition = function(archive) { return {
                   }}),
 
         new Cell({name: localization.archive.templates.columns.time, width:"140px", field:"time"}),
-        new Cell({name: localization.archive.templates.columns.verificationMethod, width:"100px", field:"verification",  special: "rendered",
-                  rendering: function(verification) {
+        new Cell({name: localization.archive.templates.columns.verificationMethod, width:"100px", field:"id",  special: "rendered",
+                  rendering: function(value, idx, model) {
                          var res= $("<div/>");
-                         if (verification == "eleg")
+                         if (model.field("authentication") == "eleg")
                              res.text(localization.eleg)
-                         else if (verification == "pad")
-                             res.text(localization.pad.authorization)
+                         else if (model.field("delivery") == "pad")
+                             res.text(localization.pad.delivery)
                          else
                              res.text(localization.email)
                          return res;

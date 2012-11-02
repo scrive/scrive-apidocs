@@ -274,6 +274,7 @@ javascriptLocalisation =
               }
             , filterByProcess: {
                 showAllProcesses: "$_showAllProcesses()$",
+                showAllProcessesTemplates: "$_showAllProcessesTemplates()$",
                 showContractsOnly: "$_showContractsOnly()$",
                 showOrdersOnly: "$_showOrdersOnly()$",
                 showOffersOnly: "$_showOffersOnly()$"
