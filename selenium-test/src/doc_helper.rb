@@ -12,8 +12,8 @@ class DocHelper
 
 
   def uploadContract
-    (@wait.until { @driver.find_element :xpath => "//a[@href='/upload']" }).click
-    (@wait.until { @driver.find_element :css => ".s-upload-document .btn-small" }).click
+    puts "Creating document"
+    (@wait.until { @driver.find_element :css => ".s-create-document" }).click
     (@wait.until { @driver.find_element :css => ".document-pages input.multiFileInput" }).send_keys @ctx.props.contract_pdf_path
     puts "waiting for pages"
     @wait.until { @driver.find_element :css => "#page1" }
@@ -68,7 +68,7 @@ class DocHelper
   def loadAuthorAttachment(no, filepath)
     (@wait.until { @driver.find_element :css => "div.authorattachmentssetup span.countspan" }).click
     (@wait.until { @driver.find_element :css => "div.selectAuthorAttachmentPopupContent input.multiFileInput" }).send_keys filepath
-    (@wait.until { @driver.find_element :css => "a.float-right" }).click
+    (@wait.until { @driver.find_element :css => "div.modal-footer a.float-right" }).click
     @wait.until { @driver.find_element :xpath => "//div[contains(@class,'authorattachmentssetup')]//span[text()='("+no.to_s()+")']" }
   end
 

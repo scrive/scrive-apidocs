@@ -88,7 +88,7 @@ describe "sign up on front page and modify account settings" do
 
     puts "should be logged in and able to upload a document"
     @h.wait.until { @h.driver.find_element :css => "a.logout" }
-    @h.wait.until { @h.driver.find_element :css => ".signStepsBodyUploadBox" }
+    @h.wait.until { @h.driver.find_element :css => ".archive" }
 
     @h.loginhelper.logout
 

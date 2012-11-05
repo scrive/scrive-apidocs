@@ -25,7 +25,7 @@ class LoginHelper
       (@wait.until { @driver.find_element :css => "#toscontainer a.submit" }).click
     end
 
-    @wait.until { @driver.find_element :css => ".signStepsBodyUploadBox" }
+    @wait.until { @driver.find_element :css => ".archive" }
   end
 
   def set_name(fstname, sndname)
