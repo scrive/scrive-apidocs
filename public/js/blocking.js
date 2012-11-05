@@ -352,7 +352,7 @@
             csvMessage: function(n) {
                 return view.csvMessage().replace('X1', n).replace('X2', model.docsLeft());
             }
-        }
+        };
     };
 
 }(window));
