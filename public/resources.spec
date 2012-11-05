@@ -53,6 +53,7 @@ set systemPage
  css css/flash.css
  css css/docsignview.css
  css css/main.css
+ css css/createfromtemplate.css
  less less/selects.less
  less less/document-pages.less
  less less/payments.less
@@ -122,8 +123,7 @@ set systemPage
  js   js/docdesignview.js
  js   js/mobilebankid.js
  js   js/bankid.js
- js   js/wizard.js
- js   js/uploadview.js
+ js   js/createfromtemplate/createfromtemplate.js
  js   js/attachmentsdesignview.js
  js   js/csvsignatorydesign.js
  js   js/validation.js

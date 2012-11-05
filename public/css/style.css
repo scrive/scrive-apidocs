@@ -1069,29 +1069,31 @@ input[type=submit].hidden
   color: #FFFFFF;
 }
 
-.tab-viewer-header-title .docname
+.docname
 {
     font-weight: bold;
     font-size: 16px;
     margin-right: 2px;
+    width: 450px;
+    font-family:'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
 }
 
-.tab-viewer-header-title .docname .icon {
+.docname .icon {
     width: 14px;
     height: 14px;
     display: inline-block;
 }
 
-.tab-viewer-header-title .docname .icon.edit {
+.docname .icon.edit {
     background-image: url(/img/iconPen.png);
 }
 
-.tab-viewer-header-title .docname .docname-display text {
+.docname .docname-display text {
     display: inline-block;
 }
 
-.tab-viewer-header-title .docname .docname-edit input,
-.tab-viewer-header-title .docname input.docname-edit {
+.docname .docname-edit input,
+.docname input.docname-edit {
     -moz-border-radius:0px;
     background:transparent;
     border:0 none;
@@ -1100,9 +1102,12 @@ input[type=submit].hidden
     padding:0;
     font-size:16px;
     font-weight:bold;
-    color:#FFFFFF;
     width: 450px;
     font-family:'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
+}
+
+.tab-viewer-header-title .docname input.docname-edit {
+  color : #FFFFFF;
 }
 
 .tab-viewer-header-title .changeName a
@@ -1220,11 +1225,13 @@ input[type=submit].hidden
     min-width: 920px;
 }
 
-.upload-view .signStepsBody{
-   border-top: 1px solid #CCCCCC;
-   padding:30px 19px;
-
+.designview .signStepsBody
+{
+    background-image: url(/img/signStepsBodyBorderLong.png);
+    min-width: 980px;
+    padding: 0px 19px;
 }
+
 
 .postSignStepBody {
 }
@@ -1467,8 +1474,6 @@ input.multiFileInput,
    height: 157px;
    display:inline-block;
    float:left;
-   margin-top:-8px;
-   margin-bottom:-8px;
 }
 
 /* 015 new */

@@ -1,4 +1,4 @@
-module KontraLink(KontraLink(..), LoginRedirectReason(..), getHomeOrUploadLink) where
+module KontraLink(KontraLink(..), LoginRedirectReason(..), getHomeOrArchiveLink) where
 
 import Data.Int
 
@@ -48,7 +48,6 @@ data KontraLink
     | LinkLogout
     | LinkSignup
     | LinkForgotPassword
-    | LinkUpload
     | LinkLocaleSwitch
     | LinkArchive
     | LinkAccount
@@ -144,7 +143,6 @@ instance Show KontraLink where
     showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ LinkSignup = (++) "/signup"
     showsPrec _ LinkForgotPassword = (++) "/amnesia"
-    showsPrec _ LinkUpload = (++) "/upload"
     showsPrec _ LinkLocaleSwitch = (++) "/locale"
     showsPrec _ (LinkArchive) = (++) $ "/d"
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
@@ -220,9 +218,9 @@ setParams uri params = uri { uriQuery = "?" ++ vars }
           (k, "") -> makeKV ks ((urlDecode k, ""):a)
           _ -> Nothing
 
-getHomeOrUploadLink :: KontraMonad m => m KontraLink
-getHomeOrUploadLink = do
+getHomeOrArchiveLink :: KontraMonad m => m KontraLink
+getHomeOrArchiveLink = do
   ctx <- getContext
   case ctxmaybeuser ctx of
-    Just _ -> return LinkUpload
+    Just _ -> return LinkArchive
     Nothing -> return $ LinkHome (ctxlocale ctx)

@@ -33,7 +33,7 @@
 
 .waiting4page
 {
-    margin: auto;
+    margin: 10px auto;
     width: @page-div-width;
     height: 100px;
 
@@ -49,17 +49,45 @@
 
 .nofilediv {
     width: @page-div-width;
-    height : 300px;
+    min-height : 600px;
+    /*
     border: 1px solid #777;
     background-color: #FFFFFF;
     box-shadow: 1px 1px 5px #505050;
     -moz-box-shadow: 1px 1px 5px #505050;
     -webkit-box-shadow: 1px 1px 5px #505050;
+    */
     text-align: center;
+    margin: 10px auto;
 }
 .nofilediv .innerbox {
-    width: 160px;
-    margin:120px auto;
+    width: 800px;
+    margin:60px auto;
+}
+.nofilediv .innerbox .button-box {
+  width : 800px;
+  margin : 0px auto;
+  height : 30px;
+  
+}
+
+.nofilediv .innerbox .single-button-box {
+  width : 150px;
+  height : 30px;
+  margin : 20px auto;
+}
+
+.nofilediv .innerbox .inner-description-main {
+  width : 100%;
+  color: black;
+  font-size: 36px;
+  margin : 30px auto 40px auto;
+}
+.nofilediv .innerbox .inner-description-extra {
+  width : 100%;
+  color: black;
+  font-size: large;
+  margin : 60px auto 20px auto;
 }
 .pagejpg {
     /* Show page image in full width and height comes from aspect ratio of bitmap */

@@ -116,7 +116,7 @@ window.PromoteScriveView = Backbone.View.extend({
     return container;
   },
   toServiceButton: function() {
-    var container = $("<a href='/upload'/>")
+    var container = $("<a href='/d'/>")
     var button = $("<div class='start btn' />");
     button.append($("<div class='label' />").text(localization.docsignview.startButtonLabel));
     container.append(button);

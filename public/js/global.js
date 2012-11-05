@@ -1,3 +1,22 @@
+window.createnewdocument = function() {
+  new Submit({
+                    method : "POST",
+                    url : "/api/frontend/createfromfile",
+                    ajax: true,
+                    expectedType: 'json',
+                    ajaxsuccess: function(d) {
+                            if (d != undefined && d.id != undefined) {
+                                window.location.href = "/d/"+d.id;
+                            }
+                            else {
+                                LoadingDialog.close();
+                                wiz.trigger('change');
+                            }
+                   }
+                }).send();  
+}
+
+
 //make sure we've got console logging
 if (!window.console) {
   window.console = {

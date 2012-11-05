@@ -1,10 +1,7 @@
-####    Pages for documents - main part of system
-uploadPage=
-<div class='blocking-box'></div>
-<div class="upload-view"></div>
-<script type="text/javascript">
-    var upm = new UploadProcessMain();
-    jQuery('.upload-view').append(jQuery(upm.el()).addClass('signStepsBody'));
+###
+createFromTemplatePage=
+<script>
+jQuery(".mainContainer").append(new CreateFromTemplate().el());
 </script>
 <script>
 var uploadBlocking;

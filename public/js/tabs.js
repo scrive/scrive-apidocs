@@ -75,6 +75,9 @@ var Tabs = Backbone.Model.extend({
    title: function(){
      return this.get("title") != undefined ? this.get("title") : "";
     },
+   hasTitle : function() {
+     return this.get("title") != undefined;
+   }, 
    numbers : function() {
      return   this.get("numbers") == true;
    },
@@ -198,7 +201,10 @@ var TabsView = Backbone.View.extend({
         });
         if (!hasRight && model.tabsTail() == undefined)
             tabsrow.append("<li class='float-right'/>");
-        this.toprow.append(titlepart);
+        if (model.hasTitle())
+          this.toprow.append(titlepart);
+        else
+          this.toprow.addClass("no-title");
         if (model.hasManyTabs())
             this.toprow.append(tabsrow);
         if (model.tabsTail() != undefined)

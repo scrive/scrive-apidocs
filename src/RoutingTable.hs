@@ -58,6 +58,9 @@ staticRoutes = choice
      , dir "download"                     $ hGet  $ toK2 $ DocControl.handleDownloadFile
      , dir "downloadmainfile"             $ hGet  $ toK2 $ DocControl.handleDownloadMainFile
 
+
+     , dir "fromtemplate"                 $ hGet  $ toK0 $ DocControl.showCreateFromTemplate
+     
      , dir "s" $ dir "eleg" $ hGet $ toK2 $ BankID.generateBankIDTransaction
      , dir "s" $ dir "eleg" $ dir "mbi" $ hPostNoXToken $ toK2 $ BankID.initiateMobileBankID
      , dir "s" $ dir "eleg" $ dir "mbi" $ hGet  $ toK2 $ BankID.collectMobileBankID
@@ -73,12 +76,7 @@ staticRoutes = choice
      , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK2 $ DocControl.handleSigAttach
      , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
 
-     --Q: This all needs to be done by author. Why we dont check it
-     --here? MR
-
-     --A: Because this table only contains routing logic. The logic of
-     --what it does/access control is left to the handler. EN
-     , dir "upload" $ hGet $ toK0 $ DocControl.handleShowUploadPage
+     
      , dir "locale" $ hPost $ toK0 $ UserControl.handlePostUserLocale
      , dir "a" $ dir "rename"      $ hPost $ toK1 $ AttachmentControl.handleRename
      , dir "a" $ dir "share"       $ hPost $ toK0 $ AttachmentControl.handleShare

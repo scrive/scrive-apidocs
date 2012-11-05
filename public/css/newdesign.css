@@ -36,16 +36,29 @@
 }
 
 
-
 /* Head Container */
 #top-slim-container {
-        background: url(../img/bg-header.jpg);
-        border-bottom: 1px solid #737373;
-        height: 50px;
-        min-width: 940px;
+    background: url(../img/bg-header.jpg);
+    border-bottom: 1px solid #737373;
+    height: 100px;
+    min-width: 940px;
 }
 
-/* Second Login Container */
+#top-slim-container .scrive-logo {
+    background: url(../img/logo-scrive-small.png);
+    display: block;
+    float: left;
+    height: 35px;
+    margin-top: 34px;
+    width: 137px;
+    margin-left: -8px;
+}
+
+
+#top-slim-container .localeSwitcher {
+    float: right;
+    top: 43px;
+}
 
 #top-slim-container .content
 {
@@ -59,7 +72,7 @@
         font: 14px/18px "Helvetica Neue";
         margin-right: 38px;
         margin-left: 30px;
-        margin-top: 17px;
+        margin-top: 42px;
         padding-bottom: 5px;
         padding-left: 28px;
         text-shadow: #000 0 1px 3px;
@@ -70,12 +83,16 @@
         color: #999;
         float: right;
         font: 14px/18px "Helvetica Neue";
-        margin-top: 17px;
+        margin-top: 42px;
         padding-bottom: 5px;
         padding-left: 30px;
         text-shadow: #000 0 1px 3px;
         text-decoration: none;
         font-weight: bold;
+}
+
+#top-slim-container .toplink.btn {
+        margin-top: 37px;
 }
 
 #top-slim-container .toplink:hover,
@@ -84,17 +101,12 @@
   color: #FFFFFF;
 }
 
+
 .content , .newdesign .content{
     margin:0 auto;
     width:960px;
     position: relative;
 }
-
-
-#top-slim-container .user-container {
-        top: 2px;
-}
-
 
 
 .float-left {
@@ -567,4 +579,22 @@
 
 a.submit{
     cursor:pointer
+}
+
+
+.designview .mainContainer960,
+.designview .tab-viewer,
+.designview .tab-viewer .tab-viewer-header {
+    width: 1020px;
+}
+
+.designview .subcontainer {
+  background-color: #e1e1e1;
+  box-shadow: inset 1px 1px 5px #505050;
+  -moz-box-shadow: inset 1px 1px 5px #505050;
+  -webkit-box-shadow: inset 1px 1px 5px #505050;
+  background-image: url(../img/horizontal-shading-bar.png);
+  background-repeat: no-repeat;
+  padding-bottom:23px;
+  padding-top:10px;
 }

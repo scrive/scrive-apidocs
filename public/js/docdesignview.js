@@ -67,24 +67,18 @@ var DocumentDesignView = Backbone.View.extend({
         var document = this.model;
         var titlepart = $("<span class='title'/>");
 
-        //First text
-        if (document.isTemplate())
-            titlepart.text(localization.templateTitle);
-        else
-            titlepart.text(document.process().localization().title + " #" + document.documentid() + ": ");
-
         //Editable name
         var namepart = $("<span class='docname'/>");
 
         var display = $("<span class='docname-display'/>");
         var edit = $("<span class='docname-edit' style='display:none'/>");
 
-        var iconok = $("<a href='#' class='icon small ok' style='margin-right: 2px; float:none'></a>");
-        var iconedit = $("<a href='#' class='icon edit' style='margin-right: 2px'></a>");
+        var iconok = $("<a href='#' class='icon small ok' style='margin-left: 2px;float:right'></a>");
+        var iconedit = $("<a href='#' class='icon edit' style='margin-left: 2px;margin-top: 2px;float:right'></a>");
         var titleshow = $("<span class='visible-docname'/>").text(document.title());
-        var titleedit = $("<input type='text' name='docname-edit'/>").val(document.title());
-        display.append(iconedit).append(titleshow);
-        edit.append(iconok).append(titleedit);
+        var titleedit = $("<input type='text' name='docname-edit' style='text-align:right'/>").val(document.title());
+        display.append(titleshow).append(iconedit);
+        edit.append(titleedit).append(iconok);
         namepart.append(display).append(edit);
         var fn = function() {
           document.setTitle(titleedit.val());
@@ -109,56 +103,8 @@ var DocumentDesignView = Backbone.View.extend({
         });
 
         titlepart.append(namepart);
-        
-        // Options to download and remove main file
-        if (document.mainfile())
-        {
-          // Download link
-          var downloadpart = $("<span class='download'/>");
-          downloadpart.append($("<a  target='_blank'/>").attr("href",document.mainfile().downloadLinkForMainFile()).text(localization.downloadPDF));
-          titlepart.append(downloadpart);
-
-          //Remove file
-          var removefilepart = $("<span class='remove'/>");
-          var link = $("<a href='#'/>").text(localization.designview.removeFile);
-          link.click(function() {
-            document.save();
-            document.afterSave( function() {
-              new Submit({
-                      method : "POST",
-                      url :  "/api/frontend/mainfile/" + document.documentid(),
-                      ajax: true,
-                      onSend: function() {
-                          LoadingDialog.open();
-                      },
-                      ajaxerror: function(d,a){
-                          window.location.reload();
-                      },
-                      ajaxsuccess: function() {
-                          window.location.reload();
-                      }}).send();
-            });
-            return false;
-          });
-          titlepart.append(removefilepart.append(link));
-
-        }
         return titlepart;
     },
-    saveAsTemplateOption : function() {
-        var document = this.model;
-        var a = $("<a href='#' class='extraLink saveIcon'/>").html(localization.saveAsTemplate);
-        a.click(function() {
-              document.makeTemplate();
-              document.save();
-              document.afterSave(function() {
-                               new Submit().send();
-                            });
-              return false;
-                     });
-        return a;
-    },
-
     designStep1: function() {
         var document = this.model;
         var box = $("<div class='signStepsBody'/>");
@@ -191,15 +137,14 @@ var DocumentDesignView = Backbone.View.extend({
        box.append(box1).append($("<div class='border'/>"));
 
        var box2 = $("<div class='signStepsBodyPart middle'/>");
+       box2.append(this.deliveryMethodSelection());
+       box2.append(this.authenticationMethodSelection());
        box2.append(this.authorAttachmentsSetup());
        this.signatoryAttachmentSetupBox = this.signatoryAttachmentSetup();
        box2.append(this.signatoryAttachmentSetupBox);
-
        box.append(box2).append($("<div class='border'/>"));
 
        var box3 = $("<div class='signStepsBodyPart last'/>");
-       box3.append(this.deliveryMethodSelection());
-       box3.append(this.authenticationMethodSelection());
        box3.append(this.finalButton());
        box.append(box3);
        return box;
@@ -515,13 +460,11 @@ var DocumentDesignView = Backbone.View.extend({
       var document = this.model;
       var view = this;
       this.finalButtonBox = $("<div class='finalbuttonbox'/>");
-      if (!document.isTemplate()) {
-        if( document.authorSignsLastMode()) {
+      if( document.authorSignsLastMode()) {
           this.finalButtonBox.append(this.signLastOption(true));
         }
         else if( document.authorSignsFirstMode()) {
           this.finalButtonBox.append(this.signLastOption(false));
-        }
       }
       var button;
       if (document.isTemplate()) {
@@ -760,7 +703,9 @@ var DocumentDesignView = Backbone.View.extend({
         var url = "/api/frontend/mainfile/" + document.documentid();
         var upbutton = UploadButton.init({
             name: "file",
-            width: 130,
+            color : "black",
+            size : "big",
+            width: 300,
             text: localization.uploadButton,
             submitOnUpload: true,
             onClick : function () {
@@ -799,15 +744,101 @@ var DocumentDesignView = Backbone.View.extend({
         });
         return upbutton.input();
     },
+    fromAvtal : function() {
+        var document = this.model;
+        var button = Button.init({
+            size : "big",
+            color : "black",
+            width: 300,
+            text: localization.buyAvtal24Template,
+            onClick : function () {
+                window.location = "https://avtal24.se/scrive";
+            }
+        });
+        return button.input();
+    },
     uploadFileOption : function () {
+        var document = this.model;
         var box = $("<div class='document-pages '/>");
         var subbox = $("<div class='nofilediv'/>");
         var subsubbox = $("<div class='innerbox'/>");
-        box.append(subbox.append(subsubbox.append($(this.uploadFile()))));
+        var buttonbox = $("<div class='button-box'/>");
+        {
+          var text = "No file is attached to this document.";
+          subsubbox.append($("<div class='inner-description-main'/>").html(text));
+        }
+        buttonbox.append($(this.uploadFile()).css("float","left")).append($(this.fromAvtal()).css("float","right"))
+        subsubbox.append(buttonbox);
+        
+        if (! this.model.isTemplate()) {
+          var text = "You can save your settings to reuse as a process template later.<BR/>";
+          text += "We save your settings from all three steps when you press the button below.";  
+          subsubbox.append($("<div class='inner-description-extra'/>").html(text));
+          var saveAsTemplateButton = Button.init({
+                                 color : "black",
+                                 size :  "small",
+                                 width : 150,
+                                 text :  localization.saveAsTemplate,
+                                 onClick : function() {
+                                    document.makeTemplate();
+                                    document.save();
+                                    document.afterSave(function() {
+                                        new Submit().send();
+                                    });
+                                }});
+          subsubbox.append($("<div class='single-button-box'/>").append(saveAsTemplateButton.input()));
+        };
+        box.append(subbox.append(subsubbox));
         return box;
     },
+    extraFileOptions : function() {
+      var box =$("<div class='extra-file-options'/>");
+      var document = this.model;
+      var removeFileButton = Button.init({
+                                 color : "black",
+                                 size :  "tiny",
+                                 width : 120,
+                                 text :  localization.designview.removeFile,
+                                 onClick : function() {
+                                    document.save();
+                                    document.afterSave( function() {
+                                      new Submit({
+                                              method : "POST",
+                                              url :  "/api/frontend/mainfile/" + document.documentid(),
+                                              ajax: true,
+                                              onSend: function() {
+                                                  LoadingDialog.open();
+                                              },
+                                              ajaxerror: function(d,a){
+                                                  window.location.reload();
+                                              },
+                                              ajaxsuccess: function() {
+                                                  window.location.reload();
+                                              }}).send();
+                                    });
+                                }});
 
-    render: function () {
+      var saveAsTemplateButton = Button.init({
+                                 color : "black",
+                                 size :  "tiny",
+                                 width : 120,
+                                 text :  localization.saveAsTemplate,
+                                 onClick : function() {
+                                    document.makeTemplate();
+                                    document.save();
+                                    document.afterSave(function() {
+                                        new Submit().send();
+                                    });
+                                }});
+
+      
+      box.append(removeFileButton.input().addClass("float-left"));
+      if ((!document.isTemplate()))
+        box.append(saveAsTemplateButton.input().addClass("float-right"));
+      
+      return box;
+    },
+   render: function () {
         var document = this.model;
         var view = this;
         if (!document.ready())
@@ -820,17 +851,17 @@ var DocumentDesignView = Backbone.View.extend({
 
         var fileel;
         if (document.mainfile()) {
-          fileel = $("<div/>");
+          fileel = $("<div class='subcontainer'/>");
+          fileel.append(this.extraFileOptions());
           fileel.append(KontraFile.init({file: document.mainfile()}).view.el);
         }
         else {
-         fileel = $("<div/>");
+         fileel = $("<div class='subcontainer'/>");
          fileel.append(this.uploadFileOption());
         }
         this.tabs = new KontraTabs({
             numbers : true,
-            title : this.titlerow(),
-            tabsTail : (!document.isTemplate()) ?  [this.saveAsTemplateOption()] : undefined ,
+            tabsTail : this.titlerow(),                       
             tabs: [
                 this.tab1 = new Tab({
                     name  : document.isTemplate() ? localization.step1template : localization.step1normal,
@@ -838,10 +869,10 @@ var DocumentDesignView = Backbone.View.extend({
                     onActivate : function() {
                          SessionStorage.set(document.documentid(), "step", "1");
                     },
-                    elems : [
-                              designbody1,
-                              $(fileel)
-                            ]
+                    elems : _.flatten([
+                              [designbody1],
+                              [$(fileel)]
+                            ])
                   }),
                 this.tab2 = new Tab({
                     name  : document.isTemplate() ? localization.step2template : localization.step2normal,
@@ -849,10 +880,10 @@ var DocumentDesignView = Backbone.View.extend({
                     onActivate : function() {
                          SessionStorage.set(document.documentid(), "step", "2");
                     },
-                    elems : [
-                            designbody2,
-                            $(fileel)
-                            ]
+                    elems :  _.flatten([
+                              [designbody2],
+                              [$(fileel)]
+                            ])
                   })
                 ]
         });
@@ -880,21 +911,16 @@ var ScrollFixer =  Backbone.Model.extend({
     }
 });
 
-window.KontraDesignDocument = {
-    init : function(args){
-       this.model = new Document({
+window.KontraDesignDocument = function(args) {
+       var model = new Document({
                         id : args.id
                     });
-       this.view = new DocumentDesignView({
-                        model: this.model,
+       view = new DocumentDesignView({
+                        model: model,
                         el : $("<div/>")
                     });
-       this.recall();
-       return this;
-   },
-   recall : function()
-   {
-       this.model.fetch({ processData:  true, cache : false});
-   }
-};
+       model.fetch({ processData:  true, cache : false});
+       this.el = function() {return $(view.el);}
+}
+
 })(window);

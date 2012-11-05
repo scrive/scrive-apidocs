@@ -35,13 +35,13 @@ seeOtherXML url = toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.f
 sendRedirect :: Kontrakcja m => KontraLink -> m Response
 sendRedirect LoopBack = do
   referer <- fmap BS.toString <$> getHeaderM "referer"
-  mainlink <- getHomeOrUploadLink
+  mainlink <- getHomeOrArchiveLink
   let link = fromMaybe (show mainlink) referer
   seeOther link =<< setRsCode 303 (seeOtherXML link)
 
 sendRedirect BackToReferer = do
   referer <- getField "referer"
-  mainlink <- getHomeOrUploadLink
+  mainlink <- getHomeOrArchiveLink
   let link' = fromMaybe (show mainlink) referer
   let link  = if (null link') then (show mainlink) else link'
   seeOther link =<< setRsCode 303 (seeOtherXML link)

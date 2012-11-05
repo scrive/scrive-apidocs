@@ -3,7 +3,7 @@
     cursor: pointer;
     -display: none;
     left: 0px;
-    height: 50px;
+    height: 100px;
     position: absolute;
     right: 0;
     top: 0;
@@ -27,7 +27,7 @@
 }
 
 .flash-container.green {
-    background-position: 0 -50px;
+    background-position: 0 -100px;
 }
 
 .flash-container.red {
@@ -35,14 +35,14 @@
 }
 
 .flash-container.blue {
-    background-position: 0 -100px;
+    background-position: 0 -200px;
 }
 
 .flash-content {
 	height: 40px;
-	margin: 9px  auto 0;
+	margin: 34px  auto 0;
 	position: relative;
-        left: -8px;
+    left: -8px;
 	width: 960px;
 	z-index: 101;
 }
@@ -51,7 +51,7 @@
 	background: url(../img/spr-flash-icons.png);
 	float: left;
 	height: 30px;
-	margin: 1px 15px 0 30px;
+	margin: 1px 40px 0 30px;
 	width: 30px;
 }
 
@@ -88,7 +88,7 @@
     top: 0;
     width: 100%;
     z-index: 10000;
-    height: 50px;
+    height: 100px;
 }
 
 .flash_signingrelated {
@@ -108,13 +108,13 @@
     font-size: 13px;
     font-weight: bold;
     width: 940px;
-    height: 50px;
+    height: 100px;
     margin: auto;
     display: block;
 }
 
 .flashmsgbox .flashcenter {
-  height: 50px;
+  height: 100px;
 }
 
 .flashmessageclose{
@@ -132,7 +132,7 @@
         display: block;
         float: left;
         height: 35px;
-        margin-top: 9px;
+        margin-top: 34px;
         width: 137px;
         margin-left: -8px;
 }

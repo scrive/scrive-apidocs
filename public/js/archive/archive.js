@@ -101,7 +101,6 @@ var ArchiveView = Backbone.View.extend({
        var archive = this.model;
        var view = this;
        var tabs = new KontraTabs({
-        title: "",
         tabs: [ archive.documentsTab(), archive.templatesTab(), archive.attachmentsTab(), archive.binTab() ]
        });
        container.append(tabs.view.el);

@@ -126,7 +126,12 @@ var SignatureDrawer = Backbone.View.extend({
       return e.pageX - this.canvas.offset().left;
     },
     yPos : function(e) {
-      return e.pageY - this.canvas.offset().top;
+      var extra = 0;
+      if ($.browser.msie)
+      {
+        extra = $(window).scrollTop();
+      }
+      return e.pageY + extra - this.canvas.offset().top;
     },
     initDrawing : function() {
            var view = this;
@@ -158,9 +163,9 @@ var SignatureDrawer = Backbone.View.extend({
                canvas[0].getContext('2d').drawImage(img,0,0,4*signature.width(),4*signature.height());
 
 
-               var image = canvas[0].toDataURL("image/jpeg",1.0);
-               console.log(image.length);
-               signature.setImage(image);
+               signature.setImage(canvas[0].toDataURL("image/jpeg",1.0));
+               signature.setImagePNG(image);
+               
                if (callback != undefined) callback();
          };
        }   
@@ -182,10 +187,10 @@ var SignatureDrawer = Backbone.View.extend({
         this.canvas.height(signature.sheight());
         this.picture =  this.canvas[0].getContext('2d');
         //view.drawImage(this.model.image());
-        if (this.model.image() != undefined && this.model.image() != "") {
+        if (this.model.image() != undefined && this.model.image() != "" && this.model.imagePNG() != undefined && this.model.imagePNG() != "") {
           var img = new Image();
-          img.src = this.model.image() ;
-          this.canvas[0].getContext('2d').drawImage(img,0,0,signature.drawScaling()*signature.width(),signature.drawScaling()*signature.height());
+          img.src = this.model.imagePNG() ;
+          this.canvas[0].getContext('2d').drawImage(img,0,0,img.width,img.height);
           this.empty = false;
         };  
         this.initDrawing();

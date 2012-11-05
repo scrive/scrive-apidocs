@@ -268,7 +268,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   when (isNothing mdoc) $ do
 
     -- send email saying sorry, there was some weird error
-    sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not create your document. I do not know what is wrong. You can try again or you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkUpload) ++ "\">click here</a> to use the web interface.</p>"
+    sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not create your document. I do not know what is wrong. You can try again or you can <a href=\"" ++ "\">click here</a> to use the web interface.</p>"
 
   let Just doc = mdoc
 
@@ -510,7 +510,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
   mdoc <- dbUpdate $ NewDocument user title doctype 0 actor
 
   when (isNothing mdoc) $ do
-    sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not create your document. I do not know what is wrong. You can try again or you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkUpload) ++ "\">click here</a> to use the web interface.</p>"
+    sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not create your document. I do not know what is wrong. You can try again or you can <a href=\"" ++ ctxhostpart ctx ++ "\">click here</a> to use the web interface.</p>"
 
   let Just doc = mdoc
 
