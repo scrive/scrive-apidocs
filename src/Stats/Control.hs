@@ -70,6 +70,7 @@ import Control.Applicative
 import User.Utils
 import Util.CSVUtil
 import ListUtil
+import Stats.DBUpdate
 
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
 showAdminUserUsageStats userid = onlySalesOrAdmin $ do
@@ -259,176 +260,32 @@ falseOnError m = m `E.catch` (\(_::KontraError) -> return False)
 -- Note that this will roll over (using mplus) in case there is
 -- an error.
 addDocumentCloseStatEvents :: (MonadDB m, MonadBaseControl IO m) => Document -> String -> m Bool
-addDocumentCloseStatEvents doc apistring = falseOnError $ do
-    if not (isClosed doc)
-      then do
-      Log.stats $ "Cannot log CloseStat because document is not closed: " ++ show (documentid doc)
-      return False
-      else do
-      sl  <- guardJust $ getAuthorSigLink doc
-      uid <- guardJust $ maybesignatory sl
-      let did = documentid doc
-          sigs = countSignatures doc
-          signtime = getLastSignedTime doc
-
-      when (signtime == fromSeconds 0) $ Log.stats ("weird document: "++show (documentid doc))
-      a <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
-                                                        , seTime       = signtime
-                                                        , seQuantity   = DocStatClose
-                                                        , seAmount     = 1
-                                                        , seDocumentID = did
-                                                        , seCompanyID  = maybecompany sl
-                                                        , seDocumentType = documenttype doc
-                                                        , seAPIString  = apistring
-                                                        }
-      unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatClose
-      let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
-            (StandardAuthentication, PadDelivery) -> DocStatPadSignatures
-            (StandardAuthentication, _) -> DocStatEmailSignatures
-            (ELegAuthentication,  _) -> DocStatElegSignatures
-      b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
-                                                     , seTime       = signtime
-                                                     , seQuantity   = q
-                                                     , seAmount     = sigs
-                                                     , seCompanyID  = maybecompany sl
-                                                     , seDocumentType = documenttype doc
-                                                     , seDocumentID = did
-                                                     , seAPIString  = apistring
-                                                     }
-      unless b $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show q
-      return (a && b)
+addDocumentCloseStatEvents did apistring = falseOnError $ do
+    aOK <- dbUpdate (statUpdate docStatClose (documentid did) apistring)
+    bOK <- dbUpdate (statUpdate (docStatSignMethod DocClosed) (documentid did) apistring)
+    return (aOK && bOK)
 
 addDocumentSendStatEvents :: (MonadDB m, MonadBaseControl IO m) => Document -> String -> m Bool
-addDocumentSendStatEvents doc apistring = falseOnError $ do
-    if isNothing $ documentinvitetime doc
-      then do
-      Log.stats $ "Cannot add send stat because there is not invite time: " ++ show (documentid doc)
-      return False
-      else do
-      sl  <- guardJust $ getAuthorSigLink doc
-      uid <- guardJust $ maybesignatory sl
-      sendtime <- guardJust $ getInviteTime doc
-      let did = documentid doc
-          sigs = countSignatories doc
-      a <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
-                                                        , seTime       = sendtime
-                                                        , seQuantity   = DocStatSend
-                                                        , seAmount     = 1
-                                                        , seDocumentID = did
-                                                        , seCompanyID  = maybecompany sl
-                                                        , seDocumentType = documenttype doc
-                                                        , seAPIString  = apistring
-                                                        }
-      unless a $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatSend
-      let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
-            (StandardAuthentication, PadDelivery) -> DocStatPadSignaturePending
-            (StandardAuthentication, _) -> DocStatEmailSignaturePending
-            (ELegAuthentication,  _) -> DocStatElegSignaturePending
-      b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
-                                                        , seTime       = sendtime
-                                                        , seQuantity   = q
-                                                        , seAmount     = sigs
-                                                        , seCompanyID  = maybecompany sl
-                                                        , seDocumentType = documenttype doc
-                                                        , seDocumentID = did
-                                                        , seAPIString  = apistring
-                                                        }
-      unless b $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show q
-      return (a && b)
+addDocumentSendStatEvents did apistring = falseOnError $ do
+    aOK <- dbUpdate (statUpdate docStatSend (documentid did) apistring)
+    bOK <- dbUpdate (statUpdate (docStatSignMethod DocPending) (documentid did) apistring)
+    return (aOK && bOK)
 
 addDocumentCancelStatEvents :: (MonadDB m, MonadBaseControl IO m) => Document -> String -> m Bool
-addDocumentCancelStatEvents doc apistring = falseOnError $ do
-    if not $ isCanceled doc
-      then do
-      Log.stats $ "Cannot add Cancel event because doc is not canceled: " ++ show (documentid doc)
-      return False
-      else do
-      sl  <- guardJust $ getAuthorSigLink doc
-      uid <- guardJust $ maybesignatory sl
-      let canceltime = documentmtime doc
-      let did = documentid doc
-          sigs = countSignatories doc
-      a <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
-                                                        , seTime       = canceltime
-                                                        , seQuantity   = DocStatCancel
-                                                        , seAmount     = 1
-                                                        , seDocumentID = did
-                                                        , seCompanyID  = maybecompany sl
-                                                        , seDocumentType = documenttype doc
-                                                        , seAPIString  = apistring
-                                                        }
-      unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCancel
-      let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
-            (StandardAuthentication, PadDelivery) -> DocStatPadSignatureCancel
-            (StandardAuthentication, _)           -> DocStatEmailSignatureCancel
-            (ELegAuthentication, _) -> DocStatElegSignatureCancel
-      b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
-                                                        , seTime       = canceltime
-                                                        , seQuantity   = q
-                                                        , seAmount     = sigs
-                                                        , seCompanyID  = maybecompany sl
-                                                        , seDocumentType = documenttype doc
-                                                        , seDocumentID = did
-                                                        , seAPIString  = apistring
-                                                        }
-      unless b $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show q
-      return (a && b)
+addDocumentCancelStatEvents did apistring = falseOnError $ do
+    aOK <- dbUpdate (statUpdate docStatCancel (documentid did) apistring)
+    bOK <- dbUpdate (statUpdate (docStatSignMethod DocCancel) (documentid did) apistring)
+    return (aOK && bOK)
 
 addDocumentRejectStatEvents :: (MonadDB m, MonadBaseControl IO m) => Document -> String -> m Bool
-addDocumentRejectStatEvents doc apistring = falseOnError $ do
-    if not $ isRejected doc
-      then do
-      Log.stats $ "Cannot add Reject stat because document is not rejected: " ++ show (documentid doc)
-      return False
-      else do
-      sl  <- guardJust $ getAuthorSigLink doc
-      uid <- guardJust $ maybesignatory sl
-      (rejecttime,_,_) <- guardJust $ documentrejectioninfo doc
-      let did = documentid doc
-          sigs = countSignatories doc
-      a <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
-                                                        , seTime       = rejecttime
-                                                        , seQuantity   = DocStatReject
-                                                        , seAmount     = 1
-                                                        , seDocumentID = did
-                                                        , seCompanyID  = maybecompany sl
-                                                        , seDocumentType = documenttype doc
-                                                        , seAPIString  = apistring
-                                                        }
-      unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatReject
-      let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
-            (StandardAuthentication, PadDelivery) -> DocStatPadSignatureReject
-            (StandardAuthentication, _ )          -> DocStatEmailSignatureReject
-            (ELegAuthentication, _) -> DocStatElegSignatureReject
-      b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
-                                                        , seTime       = rejecttime
-                                                        , seQuantity   = q
-                                                        , seAmount     = sigs
-                                                        , seCompanyID  = maybecompany sl
-                                                        , seDocumentType = documenttype doc
-                                                        , seDocumentID = did
-                                                        , seAPIString  = apistring
-                                                        }
-      unless b $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show q
-      return (a && b)
+addDocumentRejectStatEvents did apistring = falseOnError $ do
+    aOK <- dbUpdate (statUpdate docStatReject (documentid did) apistring)
+    bOK <- dbUpdate (statUpdate (docStatSignMethod DocReject) (documentid did) apistring)
+    return (aOK && bOK)
 
 addDocumentCreateStatEvents :: (MonadDB m, MonadBaseControl IO m) => Document -> String -> m Bool
-addDocumentCreateStatEvents doc apistring = falseOnError $ do
-      sl  <- guardJust $ getAuthorSigLink doc
-      uid <- guardJust $ maybesignatory sl
-      let createtime = documentctime doc
-      let did = documentid doc
-      a <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
-                                                        , seTime       = createtime
-                                                        , seQuantity   = DocStatCreate
-                                                        , seAmount     = 1
-                                                        , seDocumentID = did
-                                                        , seCompanyID  = maybecompany sl
-                                                        , seDocumentType = documenttype doc
-                                                        , seAPIString  = apistring
-                                                        }
-      unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCreate
-      return a
+addDocumentCreateStatEvents did apistring = falseOnError $ do
+      dbUpdate (statUpdate docStatCreate (documentid did) apistring)
 
 addDocumentTimeoutStatEvents :: (MonadDB m) => Document -> String -> m Bool
 addDocumentTimeoutStatEvents doc apistring = do
