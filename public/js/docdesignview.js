@@ -770,7 +770,7 @@ var DocumentDesignView = Backbone.View.extend({
         subsubbox.append(buttonbox);
         
         if (! this.model.isTemplate()) {
-          var text = localization.designview.saveAsTemplateLongDescription
+          var text = localization.designview.saveAsTemplateLongDescription;
           subsubbox.append($("<div class='inner-description-extra'/>").html(text));
           var saveAsTemplateButton = Button.init({
                                  color : "black",
