@@ -75,6 +75,8 @@ instance FromJSValue DraftData where
         title' <- fromJSValueField "title"
         invitationmessage <-  liftM join $ liftM (fmap nothingIfEmpty) $ fromJSValueField "invitationmessage"
         daystosign' <- fromJSValueField "daystosign"
+        let minDaysToSign = 1
+            maxDaysToSign = 90
         authentication' <-  fromJSValueField "authentication"
         delivery' <-  fromJSValueField "delivery"
         signatories' <-  fromJSValueField "signatories"
@@ -84,7 +86,9 @@ instance FromJSValue DraftData where
         apicallbackurl' <- fromJSValueField "apicallbackurl"
         process' <- fromJSValueField "process"
         case (title', daystosign', authentication', delivery') of
-            (Just t, Just daystosign, Just a, Just d) -> return $ Just DraftData {
+            (Just t, Just daystosign, Just a, Just d)
+             | daystosign >= minDaysToSign && daystosign <= maxDaysToSign ->
+                return $ Just DraftData {
                                       title =  t
                                     , invitationmessage = invitationmessage
                                     , daystosign = daystosign

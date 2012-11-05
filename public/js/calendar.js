@@ -4,7 +4,8 @@ window.Calendar = Backbone.Model.extend({
     defaults: {
         on : $('<div/>'),
         change : function() {return false},
-        value : 0
+        value : 0,
+        maxValue : 90
     },
     initialize : function(args){
         var activator  = this.get("on");
@@ -18,7 +19,8 @@ window.Calendar = Backbone.Model.extend({
                 var dist = Math.floor(difference_ms / ONE_DAY) + 1;
                 onchange(dist);
             },
-            min: new Date()
+            min: 0,
+            max: this.get("maxValue")
         });
     },
     setDays : function(days) {
