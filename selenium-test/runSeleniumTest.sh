@@ -9,6 +9,8 @@ function run {
     env  # debug this thing
     spec --colour --format specdoc "$t" || errors=1
     kill -s SIGINT $FLVREC_PID
+    sleep 2
+    kill -9 $FLVREC_PID
   done
 }
 
