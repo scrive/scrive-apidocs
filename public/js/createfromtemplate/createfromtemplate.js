@@ -92,7 +92,7 @@ var CreateFromTemplateView = Backbone.View.extend({
   },
   header : function() {
     var box = $("<div class='header'/>");
-    box.append($("<div class='headline'>").text("Click a template to create new document from it"));
+    box.append($("<div class='headline'>").text(localization.createFromTemplateDescription));
     return box;
   },
   render: function() {

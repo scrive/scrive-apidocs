@@ -343,6 +343,9 @@
             show: function(selector) {
                 $(selector).html(view.el);
             },
+            el : function() {
+               return $(view.el);
+            } ,
             shouldBlockDocs: function(n) {
                 return n > model.docsLeft();
             },

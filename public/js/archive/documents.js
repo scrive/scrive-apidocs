@@ -111,45 +111,6 @@ window.DocumentsListDefinition = function(archive) { return {
     selectfiltering : DocumentSelectsDefinition(archive, true),
     cells : DocumentCellsDefinition(archive),
     actions : [
-           new ListAction({
-                name : localization.archive.documents.createnew,
-                avaible : function() {return true;},
-                acceptEmpty : true,
-                button: Button.init({
-                            size: "tiny",
-                            color : "black",
-                            width : "110",
-                            text: localization.archive.documents.createnew,
-                            onClick : function() {
-                               // blocking
-                               if(archiveBlocking && archiveBlocking.shouldBlockDocs(1)) {
-                                 archiveBlocking.createPopup();
-                                 return false;
-                               }
-
-                              new Submit({
-                                
-                                method : "POST",
-                                url : "/api/frontend/createfromfile",
-                                ajax: true,
-                                expectedType: 'json',
-                                onSend: function() {
-                                            LoadingDialog.open();
-                                        },
-                                ajaxsuccess: function(d) {
-                                    if (d != undefined && d.id != undefined) {
-                                        window.location.href = "/d/"+d.id;
-                                    }
-                                    else {
-                                        FlashMessages.add({content: localization.couldNotUpload+" "+d, color: "red"});
-                                        LoadingDialog.close();
-                                        wiz.trigger('change');
-                                    }
-                                }   
-                            }).send();
-                          }
-                        })
-        }),
         new ListAction({
             name :  localization.archive.documents.sendreminder.action,
             emptyMessage :  localization.archive.documents.sendreminder.emptyMessage,

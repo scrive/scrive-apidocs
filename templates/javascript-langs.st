@@ -390,7 +390,8 @@ javascriptLocalisation =
                     , forThis : "$_checkboxFor()$"
                     , done : "$_checkboxDone()$"
                     , help : "$_checkboxHelp()$"
-             } 
+             }
+             , saveAsTemplateLongDescription : "$_saveAsTemplateLongDescription()$"
            }
 
          , validation : {
@@ -995,6 +996,7 @@ javascriptLocalisation =
               , columnClosedSignatures : "$_closedSignatures()$"     
             }
           , subscription : "$_Subscription()$"
-      }
+      },
+      createFromTemplateDescription : "$_createFromTemplateDescription()$"
     };
 ###

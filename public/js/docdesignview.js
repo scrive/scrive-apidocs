@@ -764,15 +764,13 @@ var DocumentDesignView = Backbone.View.extend({
         var subsubbox = $("<div class='innerbox'/>");
         var buttonbox = $("<div class='button-box'/>");
         {
-          var text = "No file is attached to this document.";
-          subsubbox.append($("<div class='inner-description-main'/>").html(text));
+          subsubbox.append($("<div class='inner-description-main'/>").html(new Blocking().el()));
         }
         buttonbox.append($(this.uploadFile()).css("float","left")).append($(this.fromAvtal()).css("float","right"))
         subsubbox.append(buttonbox);
         
         if (! this.model.isTemplate()) {
-          var text = "You can save your settings to reuse as a process template later.<BR/>";
-          text += "We save your settings from all three steps when you press the button below.";  
+          var text = localization.designview.saveAsTemplateLongDescription
           subsubbox.append($("<div class='inner-description-extra'/>").html(text));
           var saveAsTemplateButton = Button.init({
                                  color : "black",

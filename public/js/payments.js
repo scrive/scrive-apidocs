@@ -707,7 +707,7 @@
                         .text(localization.payments.table.currentplan));
             var table = $('<div class="account-body" />')
                 .append($('<div class="plan-name" />')
-                        .text(view.getPlanName(model.paidPlan())))
+                        .text(localization.payments.plans[model.paidPlan()].name))
                 .append($('<p />')
                        .text(model.quantity() + " " + localization.payments.users))
                 .append($('<p class="askviktor" />')
