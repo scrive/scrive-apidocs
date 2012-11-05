@@ -6,6 +6,7 @@ function run {
   for t in "$@"; do
     flvrec.py -o $(basename "$t").flv localhost:0 &
     FLVREC_PID=$!
+    env  # debug this thing
     spec --colour --format specdoc "$t" || errors=1
     kill -s SIGINT $FLVREC_PID
   done
