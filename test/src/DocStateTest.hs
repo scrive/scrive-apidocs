@@ -91,7 +91,6 @@ docStateTests env = testGroup "DocState" [
   testThat "NewDocument inserts a new offer for a company user successfully" env testNewDocumentForACompanyUserInsertsANewOffer,
   testThat "NewDocument inserts a new order for a single user successfully" env testNewDocumentForNonCompanyUserInsertsANewOrder,
   testThat "NewDocument inserts a new order for a company user successfully" env testNewDocumentForACompanyUserInsertsANewOrder,
-  testThat "NewDocument with mismatching user & company results in left" env testNewDocumentForMismatchingUserAndCompanyFails,
 
   testThat "CancelDocument cancels a document" env testCancelDocumentCancelsDocument,
   testThat "CancelDocument fails if doc not pending or awaiting author" env testCancelDocumentReturnsLeftIfDocInWrongState,
@@ -261,20 +260,6 @@ testNewDocumentForACompanyUserInsertsANewOrder = doTimes 10 $ do
   company <- addNewCompany
   result <- performNewDocumentWithRandomUser (Just company) (Signable Offer) "doc title"
   assertGoodNewDocument (Just company) (Signable Offer) "doc title" result
-
-testNewDocumentForMismatchingUserAndCompanyFails :: TestEnv ()
-testNewDocumentForMismatchingUserAndCompanyFails = doTimes 10 $ do
-  company <- addNewCompany
-  singleuser <- addNewRandomUser
-  companyuser <- addNewRandomCompanyUser (companyid company) False
-  time <- getMinutesTime
-  let aa = authorActor time noIP (userid singleuser) (getEmail singleuser)
-  mdoc1 <- randomUpdate $ NewDocument singleuser (Just company) "doc title" (Signable Contract) 0 aa
-  let ca = authorActor time noIP (userid companyuser) (getEmail companyuser)
-  mdoc2 <- randomUpdate $ NewDocument companyuser Nothing "doc title" (Signable Contract) 0 ca
-  validTest $ do
-    assertNothing mdoc1
-    assertNothing mdoc2
 
 testRejectDocumentEvidenceLog :: TestEnv ()
 testRejectDocumentEvidenceLog = do
@@ -482,7 +467,7 @@ testSignableFromDocumentIDWithUpdatedAuthorEvidenceLog = do
   doc <- addRandomDocumentWithAuthorAndCondition author (isTemplate &&^ isPreparation)
   _<- randomUpdate $ \t->SetInviteText (documentid doc) "" (systemActor t)
   _<- randomUpdate $ \t->SetInviteText (documentid doc) "new invite text" (systemActor t)
-  mdoc <- randomUpdate $ \t->SignableFromDocumentIDWithUpdatedAuthor author Nothing (documentid doc) (systemActor t)
+  mdoc <- randomUpdate $ \t->SignableFromDocumentIDWithUpdatedAuthor author (documentid doc) (systemActor t)
   assertJust mdoc
   let ndoc = fromJust mdoc
   lg <- dbQuery $ GetEvidenceLog (documentid ndoc)
@@ -718,13 +703,13 @@ performNewDocumentWithRandomUser Nothing doctype title = do
   user <- addNewRandomUser
   time <- getMinutesTime
   let aa = authorActor time noIP (userid user) (getEmail user)
-  mdoc <- randomUpdate $ NewDocument user Nothing title doctype 0 aa
+  mdoc <- randomUpdate $ NewDocument user title doctype 0 aa
   return (user, time, maybe (Left "no document") Right mdoc)
 performNewDocumentWithRandomUser (Just company) doctype title = do
   user <- addNewRandomCompanyUser (companyid company) False
   time <- getMinutesTime
   let aa = authorActor time noIP (userid user) (getEmail user)
-  mdoc <- randomUpdate $ NewDocument user (Just company) title doctype 0 aa
+  mdoc <- randomUpdate $ NewDocument user title doctype 0 aa
   return (user, time, maybe (Left "no document") Right mdoc)
 
 assertGoodNewDocument :: Maybe Company -> DocumentType -> String -> (User, MinutesTime, Either String Document) -> TestEnv (Maybe (TestEnv ()))
@@ -1022,11 +1007,10 @@ testNewDocumentDependencies :: TestEnv ()
 testNewDocumentDependencies = doTimes 10 $ do
   -- setup
   author <- addNewRandomUser
-  mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   -- execute
   now <- liftIO $ getMinutesTime
   let aa = authorActor now noIP (userid author) (getEmail author)
-  mdoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany (fromSNN title) doctype 0 aa)
+  mdoc <- randomUpdate $ (\title doctype -> NewDocument author (fromSNN title) doctype 0 aa)
   -- assert
   validTest $ do
     assertJust mdoc
@@ -1036,10 +1020,9 @@ testDocumentCanBeCreatedAndFetchedByID :: TestEnv ()
 testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
   -- setup
   author <- addNewRandomUser
-  mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   now <- liftIO $ getMinutesTime
   let aa = authorActor now noIP (userid author) (getEmail author)
-  mdoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany (fromSNN title) doctype 0 aa)
+  mdoc <- randomUpdate $ (\title doctype -> NewDocument author (fromSNN title) doctype 0 aa)
   let doc = case mdoc of
           Nothing -> error "No document"
           Just d  -> d
@@ -1055,11 +1038,10 @@ testDocumentCanBeCreatedAndFetchedByAllDocs :: TestEnv ()
 testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
   -- setup
   author <- addNewRandomUser
-  mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   -- execute
   now <- liftIO $ getMinutesTime
   let aa = authorActor now noIP (userid author) (getEmail author)
-  mdoc <- randomUpdate $ (\title processtype -> NewDocument author mcompany (fromSNN title) (Signable processtype) 0 aa)
+  mdoc <- randomUpdate $ (\title processtype -> NewDocument author (fromSNN title) (Signable processtype) 0 aa)
 
   let doc = case mdoc of
           Nothing -> error "No document"
@@ -1176,7 +1158,7 @@ testNotPreparationResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
   mt <- rand 10 arbitrary
-  let sd = signatoryDetailsFromUser author Nothing (False, False)
+  sd <- signatoryDetailsFromUser author (False, False)
   --execute
   success <- dbUpdate $ ResetSignatoryDetails (documentid doc) [sd] (systemActor mt)
   --assert
@@ -1405,7 +1387,7 @@ testCreateFromSharedTemplate = do
            fromJust <$> (dbQuery $ GetDocumentByDocumentID docid)
   newuser <- addNewRandomUser
 
-  _ <- dbUpdate $ SignableFromDocumentIDWithUpdatedAuthor newuser Nothing (documentid doc) (systemActor mt)
+  _ <- dbUpdate $ SignableFromDocumentIDWithUpdatedAuthor newuser (documentid doc) (systemActor mt)
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   let [author1] = filter isAuthor $ documentsignatorylinks doc
   let [author2] = filter isAuthor $ documentsignatorylinks ndoc

@@ -96,7 +96,7 @@ testLoggedInLocaleSwitching = do
       assertEqual "Lang" lang (getLang locale)
     assertLoggedInAndOnUploadPage uid res ctx = do
       assertBool "Response code is 303" $ rsCode res == 303
-      assertBool "Location is /upload" $ T.getHeader "location" (rsHeaders res) == Just "/upload"
+      assertBool "Location is /d" $ T.getHeader "location" (rsHeaders res) == Just "/d"
       assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx) == Just uid
       assertBool "No flash messages were added" $ null $ ctxflashmessages ctx
 

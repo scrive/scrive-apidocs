@@ -49,24 +49,22 @@ testBrandedDocumentMails mailTo = do
       , companylogo = Nothing
       }
   _ <- dbUpdate $ UpdateCompanyUI (companyid company') cui
-  mcompany <- dbQuery $ GetCompany (companyid company')
-  sendDocumentMails mailTo author mcompany
+  sendDocumentMails mailTo author
 
 testDocumentMails :: Maybe String -> TestEnv ()
 testDocumentMails mailTo = do
   author <- addNewRandomUser
-  mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
-  sendDocumentMails mailTo author mcompany
+  sendDocumentMails mailTo author
 
-sendDocumentMails :: Maybe String -> User -> Maybe Company -> TestEnv ()
-sendDocumentMails mailTo author mcompany = do
+sendDocumentMails :: Maybe String -> User -> TestEnv ()
+sendDocumentMails mailTo author = do
   forM_ allLocales $ \l ->
     forM_ [Contract,Offer,Order] $ \doctype -> do
         -- make  the context, user and document all use the same locale
         ctx <- mailingContext l
         _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
         let aa = authorActor (ctxtime ctx) noIP (userid author) (getEmail author)
-        Just d <- randomUpdate $ NewDocument author mcompany "Document title" (Signable doctype) 0 aa
+        Just d <- randomUpdate $ NewDocument author "Document title" (Signable doctype) 0 aa
         True <- dbUpdate $ SetDocumentLocale (documentid d) l (systemActor $ ctxtime ctx)
 
         let docid = documentid d

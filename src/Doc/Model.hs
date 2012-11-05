@@ -87,6 +87,7 @@ import Doc.Checks
 import File.File
 import File.FileID
 import File.Model
+import qualified Control.Monad.State.Lazy as State
 import Doc.DocUtils
 import User.UserID
 import User.Model
@@ -125,6 +126,9 @@ import Util.HasSomeUserInfo
 import Templates.Fields (value, objects)
 import DB.TimeZoneName (TimeZoneName, mkTimeZoneName, withTimeZone)
 import qualified DB.TimeZoneName as TimeZoneName
+import DB.SQL2 hiding (sqlResult,sqlOrderBy)
+import qualified DB.SQL2 as SQL2 (sqlResult,sqlOrderBy)
+import Control.Monad.State
 
 data DocumentPagination =
   DocumentPagination
@@ -497,51 +501,47 @@ statusClassCaseExpression =
    <> SQL " ELSE (? :: INTEGER)"                                                                                  [toSql SCSent]
   <> SQL " END " []
 
-signatoryLinksSelectors :: SQL
-signatoryLinksSelectors = SQL (intercalate ", "
-  [ "signatory_links.id"
-  , "signatory_links.document_id"
-  , "signatory_links.user_id"
-  , "signatory_links.company_id"
-  , "signatory_links.sign_order"
-  , "signatory_links.token"
-  , "signatory_links.sign_time"
-  , "signatory_links.sign_ip"
-  , "signatory_links.seen_time"
-  , "signatory_links.seen_ip"
-  , "signatory_links.read_invitation"
-  , "signatory_links.invitation_delivery_status"
-  , "signatory_links.signinfo_text"
-  , "signatory_links.signinfo_signature"
-  , "signatory_links.signinfo_certificate"
-  , "signatory_links.signinfo_provider"
-  , "signatory_links.signinfo_first_name_verified"
-  , "signatory_links.signinfo_last_name_verified"
-  , "signatory_links.signinfo_personal_number_verified"
-  , "signatory_links.signinfo_ocsp_response"
-  , "signatory_links.is_author"
-  , "signatory_links.is_partner"
-  , "signatory_links.csv_title"
-  , "signatory_links.csv_contents"
-  , "signatory_links.csv_signatory_index"
-  , "signatory_links.deleted"
-  , "signatory_links.really_deleted"
-  , "signatory_links.sign_redirect_url"
-  , " "]) []
-  <> statusClassCaseExpression
-  <> SQL " AS status_class" []
+
+selectSignatoryLinksX :: State.State SqlSelect () -> SqlSelect
+selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
+  sqlResult "signatory_links.id"
+  sqlResult "signatory_links.document_id"
+  sqlResult "signatory_links.user_id"
+  sqlResult "signatory_links.company_id"
+  sqlResult "signatory_links.sign_order"
+  sqlResult "signatory_links.token"
+  sqlResult "signatory_links.sign_time"
+  sqlResult "signatory_links.sign_ip"
+  sqlResult "signatory_links.seen_time"
+  sqlResult "signatory_links.seen_ip"
+  sqlResult "signatory_links.read_invitation"
+  sqlResult "signatory_links.invitation_delivery_status"
+  sqlResult "signatory_links.signinfo_text"
+  sqlResult "signatory_links.signinfo_signature"
+  sqlResult "signatory_links.signinfo_certificate"
+  sqlResult "signatory_links.signinfo_provider"
+  sqlResult "signatory_links.signinfo_first_name_verified"
+  sqlResult "signatory_links.signinfo_last_name_verified"
+  sqlResult "signatory_links.signinfo_personal_number_verified"
+  sqlResult "signatory_links.signinfo_ocsp_response"
+  sqlResult "signatory_links.is_author"
+  sqlResult "signatory_links.is_partner"
+  sqlResult "signatory_links.csv_title"
+  sqlResult "signatory_links.csv_contents"
+  sqlResult "signatory_links.csv_signatory_index"
+  sqlResult "signatory_links.deleted"
+  sqlResult "signatory_links.really_deleted"
+  sqlResult "signatory_links.sign_redirect_url"
+  sqlResult (statusClassCaseExpression <> SQL " AS status_class" [])
+  sqlResult "signatory_attachments.file_id AS sigfileid"
+  sqlResult "signatory_attachments.name AS signame"
+  sqlResult "signatory_attachments.description AS sigdesc"
+  sqlLeftJoinOn ("signatory_attachments" :: SQL) ("signatory_attachments.signatory_link_id = signatory_links.id" :: SQL)
+  sqlJoinOn ("documents" :: SQL) ("signatory_links.document_id = documents.id" :: SQL)
+  extension
 
 selectSignatoryLinksSQL :: SQL
-selectSignatoryLinksSQL = SQL ("SELECT ") []
-  <> signatoryLinksSelectors
-  <> SQL ( ", signatory_attachments.file_id as sigfileid "
-        ++ ", signatory_attachments.name as signame "
-        ++ ", signatory_attachments.description as sigdesc "
-        ++ " FROM (signatory_links "
-        ++ " LEFT JOIN signatory_attachments "
-        ++ " ON signatory_attachments.signatory_link_id = signatory_links.id) "
-        ++ " JOIN documents "
-        ++ " ON signatory_links.document_id = documents.id ") []
+selectSignatoryLinksSQL = toSQLCommand (selectSignatoryLinksX (return ())) <> SQL " " []
 
 fetchSignatoryLinks :: MonadDB m => DBEnv m (M.Map DocumentID [SignatoryLink])
 fetchSignatoryLinks = do
@@ -610,59 +610,64 @@ fetchSignatoryLinks = do
           , signatorylinksignredirecturl = signredirecturl
           }
 
-insertSignatoryLinkAsIs :: MonadDB m => DocumentID -> SignatoryLink -> DBEnv m (Maybe SignatoryLink)
-insertSignatoryLinkAsIs documentid link = do
-  _ <- kRun $ mkSQL INSERT tableSignatoryLinks
-           [ sql "document_id" documentid
-           , sql "user_id" $ maybesignatory link
-           , sql "is_author" $ signatoryisauthor $ signatorydetails link
-           , sql "is_partner" $ signatoryispartner $ signatorydetails link
-           , sql "company_id" $ maybecompany link
-           , sql "token" $ signatorymagichash link
-           , sql "sign_order"$ signatorysignorder $ signatorydetails link
-           , sql "sign_time" $ signtime `fmap` maybesigninfo link
-           , sql "sign_ip" $ signipnumber `fmap` maybesigninfo link
-           , sql "seen_time" $ signtime `fmap` maybeseeninfo link
-           , sql "seen_ip" $ signipnumber `fmap` maybeseeninfo link
-           , sql "read_invitation" $ maybereadinvite link
-           , sql "invitation_delivery_status" $ invitationdeliverystatus link
-           , sql "signinfo_text" $ signatureinfotext `fmap` signatorysignatureinfo link
-           , sql "signinfo_signature" $ signatureinfosignature `fmap` signatorysignatureinfo link
-           , sql "signinfo_certificate" $ signatureinfocertificate `fmap` signatorysignatureinfo link
-           , sql "signinfo_provider" $ signatureinfoprovider `fmap` signatorysignatureinfo link
-           , sql "signinfo_first_name_verified" $ signaturefstnameverified `fmap` signatorysignatureinfo link
-           , sql "signinfo_last_name_verified" $ signaturelstnameverified `fmap` signatorysignatureinfo link
-           , sql "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` signatorysignatureinfo link
-           , sql "csv_title" $ csvtitle `fmap` signatorylinkcsvupload link
-           , sql "csv_contents" $ csvcontents `fmap` signatorylinkcsvupload link
-           , sql "csv_signatory_index" $ csvsignatoryindex `fmap` signatorylinkcsvupload link
-           , sql "deleted" $ signatorylinkdeleted link
-           , sql "really_deleted" $ signatorylinkreallydeleted link
-           , sql "signinfo_ocsp_response" $ signatureinfoocspresponse `fmap` signatorysignatureinfo link
-           , sql "sign_redirect_url" $ signatorylinksignredirecturl link
-           ] <> SQL " RETURNING id" []
+insertSignatoryLinksAsAre :: MonadDB m => DocumentID -> [SignatoryLink] -> DBEnv m [SignatoryLink]
+insertSignatoryLinksAsAre _documentid [] = return []
+insertSignatoryLinksAsAre documentid links = do
+  _ <- kRun $ sqlInsert "signatory_links" $ do
+           sqlSet "document_id" documentid
+           sqlSetList "user_id" $ maybesignatory <$> links
+           sqlSetList "is_author" $ signatoryisauthor <$> signatorydetails <$> links
+           sqlSetList "is_partner" $ signatoryispartner <$> signatorydetails <$> links
+           sqlSetList "company_id" $ maybecompany <$> links
+           sqlSetList "token" $ signatorymagichash <$> links
+           sqlSetList "sign_order"$ signatorysignorder <$> signatorydetails <$> links
+           sqlSetList "sign_time" $ fmap signtime <$> maybesigninfo <$> links
+           sqlSetList "sign_ip" $ fmap signipnumber <$> maybesigninfo <$> links
+           sqlSetList "seen_time" $ fmap signtime <$> maybeseeninfo <$> links
+           sqlSetList "seen_ip" $ fmap signipnumber <$> maybeseeninfo <$> links
+           sqlSetList "read_invitation" $ maybereadinvite <$> links
+           sqlSetList "invitation_delivery_status" $ invitationdeliverystatus <$> links
+           sqlSetList "signinfo_text" $ fmap signatureinfotext <$> signatorysignatureinfo <$> links
+           sqlSetList "signinfo_signature" $ fmap signatureinfosignature <$> signatorysignatureinfo <$> links
+           sqlSetList "signinfo_certificate" $ fmap signatureinfocertificate <$> signatorysignatureinfo <$> links
+           sqlSetList "signinfo_provider" $ fmap signatureinfoprovider <$> signatorysignatureinfo <$> links
+           sqlSetList "signinfo_first_name_verified" $ fmap signaturefstnameverified <$> signatorysignatureinfo <$> links
+           sqlSetList "signinfo_last_name_verified" $ fmap signaturelstnameverified <$> signatorysignatureinfo <$> links
+           sqlSetList "signinfo_personal_number_verified" $ fmap signaturepersnumverified <$> signatorysignatureinfo <$> links
+           sqlSetList "csv_title" $ fmap csvtitle <$> signatorylinkcsvupload <$> links
+           sqlSetList "csv_contents" $ fmap csvcontents <$> signatorylinkcsvupload <$> links
+           sqlSetList "csv_signatory_index" $ fmap csvsignatoryindex <$> signatorylinkcsvupload <$> links
+           sqlSetList "deleted" $ signatorylinkdeleted <$> links
+           sqlSetList "really_deleted" $ signatorylinkreallydeleted <$> links
+           sqlSetList "signinfo_ocsp_response" $ fmap signatureinfoocspresponse <$> signatorysignatureinfo <$> links
+           sqlSetList "sign_redirect_url" $ signatorylinksignredirecturl <$> links
+           sqlResult "id"
 
+  (slids :: [SignatoryLinkID]) <- foldDB (\acc slid -> slid : acc) []
 
-  slids <- foldDB (\acc slid -> slid : acc) []
+  _ <- kRun $ selectSignatoryLinksX $ do
+         sqlWhereIn "signatory_links.id" slids
+         sqlWhereEq "signatory_links.document_id" documentid
+         sqlOrderBy "internal_insert_order DESC"
 
-  _ <- kRun $ selectSignatoryLinksSQL <> SQL "WHERE signatory_links.id = ? AND signatory_links.document_id = ? ORDER BY internal_insert_order DESC"
-       [$(head) slids, toSql documentid]
+  siglinks <- fetchSignatoryLinks
 
-  msiglink <- fetchSignatoryLinks
-              >>= oneObjectReturnedGuard . concatMap snd . M.toList
+  let newLinksAsList = concatMap snd $ M.toList siglinks
 
-  case msiglink of
-    Nothing -> return Nothing
-    Just siglink -> do
-      msigattaches <- mapM (insertSignatoryAttachmentAsIs (signatorylinkid siglink)) (signatoryattachments link)
-      mfields <- mapM (insertSignatoryLinkFieldAsIs (signatorylinkid siglink)) ((signatoryfields . signatorydetails) link)
-      if any isNothing msigattaches || any isNothing mfields
-        then return Nothing
-        else do
-          let newsiglink = siglink { signatoryattachments = catMaybes msigattaches
-                                , signatorydetails = (signatorydetails siglink) { signatoryfields = catMaybes mfields }
+  let replaceAttachments newlink oldlink = (signatorylinkid newlink, signatoryattachments oldlink)
+  sigattaches <- insertSignatoryAttachmentsAsAre $ zipWith replaceAttachments newLinksAsList links
+
+  let replaceFields newlink oldlink = (signatorylinkid newlink, (signatoryfields . signatorydetails) oldlink)
+
+  fields <- insertSignatoryLinkFieldsAsAre $ zipWith replaceFields newLinksAsList links
+
+  forM newLinksAsList $ \newlink -> do
+      let newlinkid = signatorylinkid newlink
+      let newlinkfull = newlink { signatoryattachments = M.findWithDefault [] newlinkid sigattaches
+                                , signatorydetails = (signatorydetails newlink)
+                                                     { signatoryfields = M.findWithDefault [] newlinkid fields }
                                 }
-          return (Just newsiglink)
+      return newlinkfull
 
 signatoryAttachmentsSelectors :: String
 signatoryAttachmentsSelectors = intercalate ", "
@@ -702,16 +707,19 @@ fetchDocumentTags = foldDB decoder M.empty
       M.insertWith' S.union document_id
          (S.singleton $ DocumentTag name v) acc
 
-insertDocumentTagAsIs :: MonadDB m => DocumentID -> DocumentTag -> DBEnv m (Maybe DocumentTag)
-insertDocumentTagAsIs documentid tag = do
-  _ <- kRun $ mkSQL INSERT tableDocumentTags
-       [ sql "name" $ tagname tag
-       , sql "value" $ tagvalue tag
-       , sql "document_id" documentid
-       ] <> SQL ("RETURNING " ++ documentTagsSelectors) []
+insertDocumentTagsAsAre :: MonadDB m => DocumentID -> [DocumentTag] -> DBEnv m [DocumentTag]
+insertDocumentTagsAsAre _documentid [] = return []
+insertDocumentTagsAsAre documentid tags = do
+  _ <- kRun $ sqlInsert "document_tags" $ do
+         sqlSet "document_id" documentid
+         sqlSetList "name" $ tagname <$> tags
+         sqlSetList "value" $ tagvalue <$> tags
+         sqlResult "document_tags.document_id"
+         sqlResult "document_tags.name"
+         sqlResult "document_tags.value"
 
   fetchDocumentTags
-    >>= oneObjectReturnedGuard . concatMap (S.toList . snd) . M.toList
+    >>= return . concatMap (S.toList . snd) . M.toList
 
 
 authorAttachmentsSelectors :: String
@@ -733,30 +741,37 @@ fetchAuthorAttachments = foldDB decoder M.empty
         authorattachmentfile = file_id
       }] acc
 
-insertAuthorAttachmentAsIs :: MonadDB m => DocumentID -> AuthorAttachment -> DBEnv m (Maybe AuthorAttachment)
-insertAuthorAttachmentAsIs documentid attach = do
-  _ <- kRun $ mkSQL INSERT tableAuthorAttachments [
-      sql "file_id" $ authorattachmentfile attach
-    , sql "document_id" documentid
-    ] <> SQL ("RETURNING " ++ authorAttachmentsSelectors) []
+insertAuthorAttachmentsAsAre :: MonadDB m => DocumentID -> [AuthorAttachment] -> DBEnv m [AuthorAttachment]
+insertAuthorAttachmentsAsAre _documentid [] = return []
+insertAuthorAttachmentsAsAre documentid attachments = do
+  _ <- kRun $ sqlInsert "author_attachments" $ do
+        sqlSet "document_id" documentid
+        sqlSetList "file_id" $ authorattachmentfile <$> attachments
+        sqlResult "document_id"
+        sqlResult "file_id"
 
   fetchAuthorAttachments
-    >>= oneObjectReturnedGuard . concatMap snd . M.toList
+    >>= return . concatMap snd . M.toList
 
-insertSignatoryAttachmentAsIs :: MonadDB m => SignatoryLinkID -> SignatoryAttachment -> DBEnv m (Maybe SignatoryAttachment)
-insertSignatoryAttachmentAsIs slid SignatoryAttachment {..} = do
-  _ <- kRun $ mkSQL INSERT tableSignatoryAttachments [
-        sql "file_id" signatoryattachmentfile
-       , sql "name" signatoryattachmentname
-       , sql "description" signatoryattachmentdescription
-       , sql "signatory_link_id" slid
-       ] <> SQL ("RETURNING " ++ signatoryAttachmentsSelectors) []
+insertSignatoryAttachmentsAsAre :: MonadDB m
+                                => [(SignatoryLinkID,[SignatoryAttachment])]
+                                -> DBEnv m (M.Map SignatoryLinkID [SignatoryAttachment])
+insertSignatoryAttachmentsAsAre attachments | all (null . snd) attachments = return M.empty
+insertSignatoryAttachmentsAsAre attachments = do
+  _ <- kRun $ sqlInsert "signatory_attachments" $ do
+          sqlSetList "signatory_link_id" $ concatMap (\(d,l) -> map (const d) l) attachments
+          sqlSetList "file_id" $ signatoryattachmentfile <$> concatMap snd attachments
+          sqlSetList "name" $ signatoryattachmentname <$> concatMap snd attachments
+          sqlSetList "description" $ signatoryattachmentdescription <$> concatMap snd attachments
+          sqlResult "signatory_link_id"
+          sqlResult "file_id"
+          sqlResult "name"
+          sqlResult "description"
 
   fetchSignatoryAttachments
-    >>= oneObjectReturnedGuard . concatMap snd . M.toList
 
-signatoryLinkFieldsSelectors :: String
-signatoryLinkFieldsSelectors = intercalate ", "
+signatoryLinkFieldsSelectors :: [SQL]
+signatoryLinkFieldsSelectors =
   [ "signatory_link_id"
   , "type"
   , "custom_name"
@@ -766,9 +781,9 @@ signatoryLinkFieldsSelectors = intercalate ", "
   ]
 
 selectSignatoryLinkFieldsSQL :: SQL
-selectSignatoryLinkFieldsSQL = SQL ("SELECT "
-  ++ signatoryLinkFieldsSelectors
-  ++ " FROM signatory_link_fields ") []
+selectSignatoryLinkFieldsSQL = "SELECT"
+  <+> foldr1 (<+>) (intersperse "," signatoryLinkFieldsSelectors)
+  <+> "FROM signatory_link_fields "
 
 fetchSignatoryLinkFields :: MonadDB m => DBEnv m (M.Map SignatoryLinkID [SignatoryField])
 fetchSignatoryLinkFields = foldDB decoder M.empty
@@ -785,27 +800,31 @@ fetchSignatoryLinkFields = foldDB decoder M.empty
                         _   -> xtype
           }] acc
 
-insertSignatoryLinkFieldAsIs :: MonadDB m => SignatoryLinkID -> SignatoryField -> DBEnv m (Maybe SignatoryField)
-insertSignatoryLinkFieldAsIs slid field = do
-  _ <- kRun $ mkSQL INSERT tableSignatoryLinkFields
-       [ sql "signatory_link_id" $ slid
-       , sql "type" $ sfType field
-       , sql "custom_name" $ case sfType field of
-                                CustomFT name _ -> name
-                                CheckboxOptionalFT name -> name
-                                CheckboxObligatoryFT name -> name
-                                _ -> ""
-       , sql "is_author_filled"  $ case sfType field of
-                                CustomFT _ authorfilled -> authorfilled
-                                CheckboxOptionalFT _  -> False
-                                CheckboxObligatoryFT _  -> False
-                                _ -> False
-       , sql "value" $ sfValue field
-       , sql "placements" $ sfPlacements field
-       ] <> SQL ("RETURNING " ++ signatoryLinkFieldsSelectors) []
+insertSignatoryLinkFieldsAsAre :: MonadDB m
+                               => [(SignatoryLinkID,[SignatoryField])]
+                               -> DBEnv m (M.Map SignatoryLinkID [SignatoryField])
+insertSignatoryLinkFieldsAsAre fields | all (null . snd) fields = return M.empty
+insertSignatoryLinkFieldsAsAre fields = do
+  let getCustomName field = case sfType field of
+                              CustomFT name _ -> name
+                              CheckboxOptionalFT name -> name
+                              CheckboxObligatoryFT name -> name
+                              _ -> ""
+      isAuthorFilled field = case sfType field of
+                               CustomFT _ authorfilled -> authorfilled
+                               CheckboxOptionalFT _  -> False
+                               CheckboxObligatoryFT _  -> False
+                               _ -> False
+  _ <- kRun $ sqlInsert "signatory_link_fields" $ do
+         sqlSetList "signatory_link_id" $ concatMap (\(d,l) -> map (const d) l) fields
+         sqlSetList "type" $ sfType <$> concatMap snd fields
+         sqlSetList "custom_name" $ getCustomName <$> concatMap snd fields
+         sqlSetList "is_author_filled" $ isAuthorFilled <$> concatMap snd fields
+         sqlSetList "value" $ sfValue <$> concatMap snd fields
+         sqlSetList "placements" $ sfPlacements <$> concatMap snd fields
+         mapM_ sqlResult signatoryLinkFieldsSelectors
 
   fetchSignatoryLinkFields
-    >>= oneObjectReturnedGuard . concatMap snd . M.toList
 
 insertDocumentAsIs :: MonadDB m => Document -> DBEnv m (Maybe Document)
 insertDocumentAsIs document = do
@@ -867,19 +886,15 @@ insertDocumentAsIs document = do
     case mdoc of
       Nothing -> return Nothing
       Just doc -> do
-        mlinks <- mapM (insertSignatoryLinkAsIs (documentid doc)) documentsignatorylinks
-        mauthorattachments <- mapM (insertAuthorAttachmentAsIs (documentid doc)) documentauthorattachments
-        newtags <- F.foldlM (\acc tag -> insertDocumentTagAsIs (documentid doc) tag
-          >>= return . maybe acc (flip S.insert acc)) S.empty documenttags
-        if any isNothing mlinks || any isNothing mauthorattachments || S.size documenttags /= S.size newtags
-         then return Nothing
-         else do
-          let newdocument = doc { documentsignatorylinks    = catMaybes mlinks
-                                , documentauthorattachments = catMaybes mauthorattachments
-                                , documenttags              = newtags
-                                }
-          assertEqualDocuments document newdocument
-          return (Just newdocument)
+        links <- insertSignatoryLinksAsAre (documentid doc) documentsignatorylinks
+        authorattachments <- insertAuthorAttachmentsAsAre (documentid doc) documentauthorattachments
+        newtags <- S.fromList <$> insertDocumentTagsAsAre (documentid doc) (S.toList documenttags)
+        let newdocument = doc { documentsignatorylinks    = links
+                              , documentauthorattachments = authorattachments
+                              , documenttags              = newtags
+                              }
+        assertEqualDocuments document newdocument
+        return (Just newdocument)
 
 insertNewDocument :: MonadDB m => Document -> DBEnv m Document
 insertNewDocument doc = do
@@ -1515,27 +1530,20 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkInvitationRead Bool whe
           actor
         return success
 
-data NewDocument = NewDocument User (Maybe Company) String DocumentType Int Actor
+data NewDocument = NewDocument User String DocumentType Int Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (Maybe Document) where
-  update (NewDocument user mcompany title documenttype nrOfOtherSignatories actor) = do
+  update (NewDocument user title documenttype nrOfOtherSignatories actor) = do
   let ctime = actorTime actor
-  if fmap companyid mcompany /= usercompany user
-    then do
-      Log.error $ "NewDocument: company and user don't match"
-      return Nothing
-    else do
+  magichash <- lift random
 
-      magichash <- lift random
+  authorDetails <- lift $ signatoryDetailsFromUser user (True, True)
+  let authorlink0 = signLinkFromDetails' authorDetails [] magichash
 
-      let authorlink0 = signLinkFromDetails'
-                        (signatoryDetailsFromUser user mcompany (True, True))
-                        [] magichash
-
-      let authorlink = authorlink0 {
+  let authorlink = authorlink0 {
                          maybesignatory = Just $ userid user,
                          maybecompany = usercompany user }
 
-      othersignatories <- sequence $ replicate nrOfOtherSignatories $ do
+  othersignatories <- sequence $ replicate nrOfOtherSignatories $ do
                         mh <- lift random
                         return $ signLinkFromDetails'
                                 SignatoryDetails
@@ -1546,7 +1554,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
                                                 }
                                 [] mh
 
-      let doc = blankDocument
+  let doc = blankDocument
                 { documenttitle                = title
                 , documentsignatorylinks       = authorlink : othersignatories
                 , documenttype                 = documenttype
@@ -1559,7 +1567,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
                 , documentui                   = (documentui blankDocument) { documentmailfooter = customfooter $ usersettings user }
                 } 
 
-      case invariantProblems ctime doc of
+  case invariantProblems ctime doc of
         Nothing -> do
 
            midoc <- insertDocumentAsIs doc
@@ -1731,16 +1739,22 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTags Bool where
   update (SetDocumentTags did doctags actor) = do
     oldtags <- query $ GetDocumentTags did
     let changed = doctags /= oldtags
-    _ <- kRun $ SQL "DELETE FROM document_tags WHERE document_id = ?" [toSql did]
-    success <- F.foldlM (\acc tag -> insertDocumentTagAsIs did tag >>= return . maybe False (const acc)) True doctags
-    when_ (success && changed) $ do
-      tagstr <- intercalate "; " <$> F.foldrM (\(DocumentTag k v) acc -> return $ (k ++ "=" ++ v) : acc) [] doctags
-      update $ InsertEvidenceEvent
-        SetDocumentTagsEvidence
-        (value "tags" tagstr >> value "actor" (actorWho actor))
-        (Just did)
-        actor
-    return success
+    if changed 
+      then do
+        _ <- kRun $ SQL "DELETE FROM document_tags WHERE document_id = ?" [toSql did]
+        newtags <- insertDocumentTagsAsAre did (S.toList doctags)
+        let success = length newtags == (S.size doctags)
+        when_ success $ do
+          tagstr <- intercalate "; " <$> F.foldrM (\(DocumentTag k v) acc -> return $ (k ++ "=" ++ v) : acc) [] doctags
+          update $ InsertEvidenceEvent
+            SetDocumentTagsEvidence
+            (value "tags" tagstr >> value "actor" (actorWho actor))
+            (Just did)
+            actor
+        return success
+      else
+        return True
+
 
 data SetDocumentInviteTime = SetDocumentInviteTime DocumentID MinutesTime Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentInviteTime Bool where
@@ -1921,7 +1935,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
             _ <- kExecute [toSql documentid]
 
             let mauthorsiglink = getAuthorSigLink document
-            forM_ signatories $ \(details, atts, mcsvupload, msignredirecturl) -> do
+            siglinks <- forM signatories $ \(details, atts, mcsvupload, msignredirecturl) -> do
                      magichash <- lift random
                      let link' = (signLinkFromDetails' details atts magichash)
                                  {  signatorylinkcsvupload = mcsvupload
@@ -1932,9 +1946,8 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                                            , maybecompany   = maybe Nothing maybecompany   mauthorsiglink
                                            }
                                 else link'
-                     r1 <- insertSignatoryLinkAsIs documentid link
-                     when (not (isJust r1)) $
-                          error "ResetSignatoryDetails signatory_links did not manage to insert a row"
+                     return link
+            _r1 <- insertSignatoryLinksAsAre documentid siglinks
 
             let (old, _, new) = listDiff (map signatorydetails $ documentsignatorylinks document) (map (\(sd, _, _, _)-> sd) signatories)
 
@@ -2048,14 +2061,9 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m SignLinkFromDe
 
       return link
 
-data SignableFromDocumentIDWithUpdatedAuthor = SignableFromDocumentIDWithUpdatedAuthor User (Maybe Company) DocumentID Actor
+data SignableFromDocumentIDWithUpdatedAuthor = SignableFromDocumentIDWithUpdatedAuthor User DocumentID Actor
 instance (MonadDB m, TemplatesMonad m)=> DBUpdate m SignableFromDocumentIDWithUpdatedAuthor (Maybe Document) where
-  update (SignableFromDocumentIDWithUpdatedAuthor user mcompany docid actor) =
-      if fmap companyid mcompany /= usercompany user
-        then do
-          Log.error $ "company and user don't match"
-          return Nothing
-        else do
+  update (SignableFromDocumentIDWithUpdatedAuthor user docid actor) = do
           let time = actorTime actor
           res <- (flip newFromDocument) docid $ \doc ->
             (templateToDocument doc) {
@@ -2077,7 +2085,7 @@ instance (MonadDB m, TemplatesMonad m)=> DBUpdate m SignableFromDocumentIDWithUp
               return $ Just d
     where replaceAuthorSigLink :: SignatoryLink -> SignatoryLink
           replaceAuthorSigLink sl
-            | isAuthor sl = replaceSignatoryUser sl user mcompany
+            | isAuthor sl = replaceSignatoryUser sl user
             | otherwise = sl
 
 data StoreDocumentForTesting = StoreDocumentForTesting Document
@@ -2352,3 +2360,14 @@ updateOneAndMtimeWithEvidenceIfChanged did col new mtime =
     (checkIfAnyReturned $ "SELECT 1 FROM" <+> fromString (tblName tableDocuments)
                       <+> "WHERE id = " <?> did <+> "AND" <+> col <+> "IS DISTINCT FROM" <?> new)
     tableDocuments ("mtime =" <?> mtime <+> "," <+> col <+> "=" <?> new <+> "WHERE id =" <?> did)
+
+
+-- UTILS, temporary
+
+sqlOrderBy :: (MonadState v m, SqlOrderBy v) => SQL -> m ()
+sqlOrderBy = SQL2.sqlOrderBy
+
+sqlResult :: (MonadState v m, SqlResult v) => SQL -> m ()
+sqlResult = SQL2.sqlResult
+
+    

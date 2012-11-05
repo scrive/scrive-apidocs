@@ -22,7 +22,6 @@ module Doc.DocView (
   , pageDocumentDesign
   , pageDocumentView
   , pageDocumentSignView
-  , signatoryDetailsFromUser
   , documentsToFixView
   , documentJSON
   , gtVerificationPage

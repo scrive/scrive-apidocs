@@ -44,7 +44,6 @@ import MagicHash (MagicHash)
 import Kontra
 import Doc.DocUtils
 import User.Model
-import Company.Model
 import API.Monad
 import Control.Monad.Error
 import qualified Log
@@ -101,9 +100,6 @@ apiCallCreateFromFile :: Kontrakcja m => m Response
 apiCallCreateFromFile = api $ do
   ctx <- getContext
   (user, actor, _) <- getAPIUser APIDocCreate
-  mcompany <- case usercompany user of
-    Just companyid -> Just <$> (apiGuardL' $ dbQuery $ GetCompany companyid)
-    Nothing -> return Nothing
   dtype <- lift $ fromMaybe (Contract) <$> readField "type"
   isTpl <- lift $ isFieldSet "template"
   let doctype = (Template <| isTpl |> Signable) dtype
@@ -136,7 +132,7 @@ apiCallCreateFromFile = api $ do
                                       Left _ -> return (Left m)
       file <- dbUpdate $ NewFile filename pdfcontent
       return (Just file, filename)
-  Just doc <- dbUpdate $ NewDocument user mcompany title doctype 1 actor
+  Just doc <- dbUpdate $ NewDocument user title doctype 1 actor
   case mfile of
     Nothing -> return ()
     Just file -> do
@@ -150,16 +146,13 @@ apiCallCreateFromFile = api $ do
 apiCallCreateFromTemplate :: Kontrakcja m => DocumentID -> m Response
 apiCallCreateFromTemplate did =  api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
-  mcompany <- case usercompany user of
-    Just companyid -> Just <$> (apiGuardL' $ dbQuery $ GetCompany companyid)
-    Nothing -> return Nothing
   template <- apiGuardJustM (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink template
   auser <- apiGuardJustM (serverError "No user found") $ dbQuery $ GetUserByID auid
   let haspermission = (userid auser == userid user) ||
                           ((usercompany auser == usercompany user && (isJust $ usercompany user)) &&  isDocumentShared template)
   enewdoc <- if (isTemplate template && haspermission)
-                    then dbUpdate $ SignableFromDocumentIDWithUpdatedAuthor user mcompany did actor
+                    then dbUpdate $ SignableFromDocumentIDWithUpdatedAuthor user did actor
                     else throwError $ serverError "Id did not matched template or you do not have right to access document"
   case enewdoc of
       Just newdoc -> do

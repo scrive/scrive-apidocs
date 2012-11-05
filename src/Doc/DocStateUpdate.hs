@@ -27,7 +27,6 @@ import Control.Applicative
 import User.Model
 import Control.Monad.Trans
 import Doc.Rendering
-import User.Utils
 import File.Model
 import Redirect
 import DB
@@ -228,10 +227,9 @@ onlyAuthor did action = do
 signableFromTemplateWithUpdatedAuthor :: (Kontrakcja m) => DocumentID -> m (Either DBError Document)
 signableFromTemplateWithUpdatedAuthor did = onlyAuthor did $ \_ -> do
   user <- guardJustM $ ctxmaybeuser <$> getContext
-  mcompany <- getCompanyForUser user
   actor <- guardJustM $ mkAuthorActor <$> getContext
   mdoc <- runMaybeT $ do
-    Just doc <- dbUpdate $ SignableFromDocumentIDWithUpdatedAuthor user mcompany did actor
+    Just doc <- dbUpdate $ SignableFromDocumentIDWithUpdatedAuthor user did actor
     return doc
   return $ case mdoc of
     Nothing  -> Left $ DBActionNotAvailable "signableFromTemplateWithUpdatedAuthor failed"
@@ -268,9 +266,8 @@ attachFile docid filename content = onlyAuthor docid $ \_ -> do
 
 newDocument :: (Kontrakcja m) => String -> DocumentType -> Int -> m (Either DBError Document)
 newDocument title doctype nrOrOtherSignatories = withUser $ \user -> do
-  mcompany <- getCompanyForUser user
   actor <- guardJustM $ mkAuthorActor <$> getContext
-  mdoc <- dbUpdate $ NewDocument user mcompany title doctype nrOrOtherSignatories actor
+  mdoc <- dbUpdate $ NewDocument user title doctype nrOrOtherSignatories actor
   return $ case mdoc of
     Nothing  -> Left $ DBActionNotAvailable "newDocument failed"
     Just doc -> Right doc

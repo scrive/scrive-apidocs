@@ -219,26 +219,28 @@ documentcurrentsignorder doc =
 {- |
    Build a SignatoryDetails from a User with no fields
  -}
-signatoryDetailsFromUser :: User -> Maybe Company -> (Bool, Bool) -> SignatoryDetails
-signatoryDetailsFromUser user mcompany (is_author, is_partner) = SignatoryDetails {
-    signatorysignorder = SignOrder 1
-  , signatoryfields = [
-      toSF FirstNameFT $ getFirstName user
-    , toSF LastNameFT $ getLastName user
-    , toSF EmailFT $ getEmail user
-    , toSF CompanyFT $ getCompanyName (user, mcompany)
-    , toSF PersonalNumberFT $ getPersonalNumber user
-    , toSF CompanyNumberFT $ getCompanyNumber (user, mcompany)
-    ]
-  , signatoryispartner = is_partner
-  , signatoryisauthor = is_author
-  }
-  where
-    toSF t v = SignatoryField {
-        sfType = t
-      , sfValue = v
-      , sfPlacements = []
+signatoryDetailsFromUser :: (MonadDB m) => User -> (Bool, Bool) -> m SignatoryDetails
+signatoryDetailsFromUser user (is_author, is_partner) = do
+  mcompany <- maybe (return Nothing) (dbQuery . GetCompany) (usercompany user)
+  return $ SignatoryDetails 
+    { signatorysignorder = SignOrder 1
+    , signatoryfields = 
+        [ toSF FirstNameFT $ getFirstName user
+        , toSF LastNameFT $ getLastName user
+        , toSF EmailFT $ getEmail user
+        , toSF CompanyFT $ getCompanyName (user, mcompany)
+        , toSF PersonalNumberFT $ getPersonalNumber user
+        , toSF CompanyNumberFT $ getCompanyNumber (user, mcompany)
+        ]
+    , signatoryispartner = is_partner
+    , signatoryisauthor = is_author
     }
+    where
+      toSF t v = SignatoryField
+                 { sfType = t
+                 , sfValue = v
+                 , sfPlacements = []
+                 }
 
 
 {- |

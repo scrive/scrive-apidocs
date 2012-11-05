@@ -1,6 +1,5 @@
 module Doc.DocStateCommon where
 
-import Company.Model
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Trans (MonadIO)
 import Data.Maybe
@@ -163,18 +162,17 @@ templateToDocument doc =
     Replaces signatory data with given user's data.
 -}
 replaceSignatoryUser :: SignatoryLink
-                        -> User
-                        -> Maybe Company
-                        -> SignatoryLink
-replaceSignatoryUser siglink user mcompany =
+                     -> User
+                     -> SignatoryLink
+replaceSignatoryUser siglink user =
   let newsl = replaceSignatoryData
                        siglink
                        (getFirstName      user)
                        (getLastName       user)
                        (getEmail          user)
-                       (getCompanyName    mcompany)
+                       (getCompanyName    user)
                        (getPersonalNumber user)
-                       (getCompanyNumber  mcompany)
+                       (getCompanyNumber  user)
                        (map sfValue $ filter isFieldCustom $ signatoryfields $ signatorydetails siglink) in
   newsl { maybesignatory = Just $ userid user,
           maybecompany = usercompany user }
