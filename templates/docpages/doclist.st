@@ -4,10 +4,9 @@ pageDocumentsList=
 <div class='archive'></div>
 <script>
 jQuery(".archive").append(new Archive({month : $month$, year : $year$, forCompanyAdmin : $if(isadmin)$true$else$false$endif$ }).view().el);
-var archiveBlocking;
+var BlockingInfo = Blocking();
 jQuery(function() {
-  archiveBlocking = Blocking();
-  archiveBlocking.show('.blocking-box');
+  BlockingInfo.show('.blocking-box');
 });
 </script>
 ####

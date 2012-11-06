@@ -3,8 +3,9 @@
 pageDocumentView=
 <script>
 var docview;
+var BlockingInfo = Blocking();
 jQuery(function(){
-docview = KontraStandardDocument.init({
+  docview = KontraStandardDocument.init({
     id:"$documentid$"
      $if(siglinkid)$
     , viewer : new DocumentViewer({
@@ -15,8 +16,11 @@ docview = KontraStandardDocument.init({
         authorcompanyadmin : true
         })
     $endif$
+  });
+  jQuery(".body-container").replaceWith(docview.view.el);
+  jQuery('.body-container').prepend('<div class="blocking-box" />');
+
+  BlockingInfo.show('.blocking-box');
 });
-jQuery(".body-container").replaceWith(docview.view.el)
-})
 </script>
 ####
