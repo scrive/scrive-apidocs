@@ -46,7 +46,6 @@ import Company.Model
 import DB
 import Data.List
 import Data.Maybe
-import Doc.DocInfo
 import Doc.DocStateData
 import Kontra
 import MinutesTime
@@ -288,48 +287,10 @@ addDocumentCreateStatEvents did apistring = falseOnError $ do
       dbUpdate (statUpdate docStatCreate (documentid did) apistring)
 
 addDocumentTimeoutStatEvents :: (MonadDB m) => Document -> String -> m Bool
-addDocumentTimeoutStatEvents doc apistring = do
-  case (isTimedout doc, getAuthorSigLink doc, maybesignatory =<< getAuthorSigLink doc, documenttimeouttime doc) of
-    (False,_,_,_) -> do
-      Log.stats $ "Cannot add Timeout stat because document is not timed out: " ++ show (documentid doc)
-      return False
-    (_,Nothing,_,_) -> do
-      Log.stats $ "Cannot add Timeout stat because document has no author: " ++ show (documentid doc)
-      return False
-    (_,_,Nothing,_) -> do
-      Log.stats $ "Cannot add Timeout stat because document author has no user: " ++ show (documentid doc)
-      return False
-    (_,_,_,Nothing) -> do
-      Log.stats $ "Cannot add Timeout stat because document has no timeout time: " ++ show (documentid doc)
-      return False
-    (True, Just sl, Just uid, Just (TimeoutTime ttime)) -> do
-      let did = documentid doc
-          sigs = countSignatories doc
-      a <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
-                                                        , seTime       = ttime
-                                                        , seQuantity   = DocStatTimeout
-                                                        , seAmount     = 1
-                                                        , seDocumentID = did
-                                                        , seCompanyID  = maybecompany sl
-                                                        , seDocumentType = documenttype doc
-                                                        , seAPIString  = apistring
-                                                        }
-      unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatTimeout
-      let q = case (documentauthenticationmethod doc, documentdeliverymethod doc) of
-            (StandardAuthentication, PadDelivery) -> DocStatPadSignatureTimeout
-            (StandardAuthentication, _) -> DocStatEmailSignatureTimeout
-            (ELegAuthentication, _) -> DocStatElegSignatureTimeout
-      b <- dbUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
-                                                        , seTime       = ttime
-                                                        , seQuantity   = q
-                                                        , seAmount     = sigs
-                                                        , seCompanyID  = maybecompany sl
-                                                        , seDocumentType = documenttype doc
-                                                        , seDocumentID = did
-                                                        , seAPIString  = apistring
-                                                        }
-      unless b $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show q
-      return (a && b)
+addDocumentTimeoutStatEvents did apistring = do
+    aOK <- dbUpdate (statUpdate docStatTimeout (documentid did) apistring)
+    bOK <- dbUpdate (statUpdate (docStatSignMethod DocTimeout) (documentid did) apistring)
+    return (aOK && bOK)
 
 
 addUserLoginStatEvent :: Kontrakcja m => MinutesTime -> User -> m Bool

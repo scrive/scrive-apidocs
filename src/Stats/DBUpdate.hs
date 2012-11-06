@@ -10,7 +10,8 @@ module Stats.DBUpdate (
     docStatSend,
     docStatCancel,
     docStatReject,
-    docStatCreate
+    docStatCreate,
+    docStatTimeout
   ) where
 import Database.HDBC
 import DB.Env
@@ -30,7 +31,13 @@ data StatUpdate = StatUpdate StatQuery DocumentID APIString
 --   a document status type, but that type has alternatives that aren't
 --   involved in the stat logging and thus creates the possibility of trying
 --   to log a "bad" stat. Better to use this type instead.
-data StatEvt = DocClosed | DocPending | DocCancel | DocReject deriving Eq
+data StatEvt
+  = DocClosed
+  | DocPending
+  | DocCancel
+  | DocReject 
+  | DocTimeout
+    deriving Eq
 
 instance MonadDB m => DBUpdate m StatUpdate Bool where
   update (StatUpdate doIt did apistring) =
@@ -48,11 +55,11 @@ docType doc = unlines [
     "      WHEN " ++ doc ++ ".type = 1 THEN 'Signable'",
     "      ELSE 'Template'",
     "    END, ' ',",
-    "  CASE",
-    "    WHEN " ++ doc ++ ".process = 1 THEN 'Contract'",
-    "    WHEN " ++ doc ++ ".process = 2 THEN 'Offer'",
-    "    ELSE 'Order'",
-    "  END)"]
+    "    CASE",
+    "      WHEN " ++ doc ++ ".process = 1 THEN 'Contract'",
+    "      WHEN " ++ doc ++ ".process = 2 THEN 'Offer'",
+    "      ELSE 'Order'",
+    "    END)"]
 
 
 -- | Create a stat database update using the given event, ID and API string.
@@ -62,65 +69,77 @@ statUpdate = StatUpdate
 -- | Register a stat event for whatever signing method was used.
 docStatSignMethod :: StatEvt -> StatQuery
 docStatSignMethod status did apistring =
-    SQL queryStr [toSql apistring,
-                  toSql StandardAuthentication, toSql PadDelivery, toSql padQty,
-                  toSql StandardAuthentication, toSql emailQty,
-                  toSql elegQty,
-                  did', did', toSql Closed]
+    SQL queryStr [toSql apistring, did', did']
   where
     queryStr = unlines [
       "INSERT INTO doc_stat_events",
-      " (user_id, time, amount, document_id, company_id,",
-      "  api_string, quantity, document_type)",
-      "SELECT sl.user_id, " ++ time ++ ", sls.sigs, doc.id, sl.company_id, ?,",
-      "  CASE",
-      "    WHEN doc.authentication_method=? AND delivery_method=? THEN ?",
-      "    WHEN doc.authentication_method=? THEN ?",
-      "    ELSE ?",
-      "  END,",
-      docType "doc",
+      " (user_id, time, amount, api_string, document_type, document_id,",
+      "  company_id, quantity)",
+      "SELECT sl.user_id, " ++ time ++ ", sigs, ?,",
+      docType "doc" ++ ",",
+      "  doc.id, sl.company_id,",
+      "  (CASE",
+      "    WHEN doc.authentication_method=1 AND delivery_method=2 THEN",
+      "      " ++ fromSql (toSql padQty),
+      "    WHEN doc.authentication_method=1 THEN",
+      "      " ++ fromSql (toSql emailQty),
+      "    ELSE " ++ fromSql (toSql elegQty),
+      "  END)",
       "FROM documents AS doc",
       "JOIN",
       "  signatory_links",
-      "  AS sl ON sl.document_id = doc.id",
+      "  AS sl ON sl.document_id = doc.id AND sl.is_author",
       "JOIN",
       "  (SELECT MAX(sign_time) AS last_sign, " ++ countSigs ++ " AS sigs",
       "   FROM signatory_links WHERE document_id = ?)",
       "  AS sls ON TRUE",
-      "WHERE doc.id = ? AND sl.is_author AND " ++ docStatusCondition]
+      "WHERE doc.id = ? AND " ++ docStatusCondition]
     did' = toSql did
     -- If status == Closed, then we want to count signatures and only update
     -- if the document is closed. If the document is instead pending or
     -- cancelled, we want to count _signatories_ and _always_ insert.
     -- Also, the event IDs differ, as does the timestamp to use.
     (padQty, emailQty, elegQty, countSigs, docStatusCondition, time)
-      | status == DocClosed  = (DocStatPadSignatures,
-                                DocStatEmailSignatures,
-                                DocStatElegSignatures,
-                                "COUNT (sign_time)",
-                                "doc.status = ?",
-                                "sls.last_sign")
-      | status == DocPending = (DocStatPadSignaturePending,
-                                DocStatEmailSignaturePending,
-                                DocStatElegSignaturePending,
-                                signatoryCount,
-                                "doc.invite_time IS NOT NULL",
-                                "doc.invite_time")
-      | status == DocCancel  = (DocStatPadSignatureCancel,
-                                DocStatEmailSignatureCancel,
-                                DocStatElegSignatureCancel,
-                                signatoryCount,
-                                "TRUE",
-                                "doc.mtime")
-      | status == DocReject  = (DocStatPadSignatureReject,
-                                DocStatEmailSignatureReject,
-                                DocStatElegSignatureReject,
-                                signatoryCount,
-                                "doc.rejection_time IS NOT NULL",
-                                "doc.rejection_time")
-      | otherwise            = error $  "docStatSignMethod called with "
-                                     ++ "nonsensical DocumentStatus!"
+      | status == DocClosed   = (DocStatPadSignatures,
+                                 DocStatEmailSignatures,
+                                 DocStatElegSignatures,
+                                 "COUNT (sign_time)",
+                                 "doc.status = " ++ fromSql (toSql Closed),
+                                 "sls.last_sign")
+      | status == DocPending  = (DocStatPadSignaturePending,
+                                 DocStatEmailSignaturePending,
+                                 DocStatElegSignaturePending,
+                                 signatoryCount,
+                                 "doc.invite_time IS NOT NULL",
+                                 "doc.invite_time")
+      | status == DocCancel   = (DocStatPadSignatureCancel,
+                                 DocStatEmailSignatureCancel,
+                                 DocStatElegSignatureCancel,
+                                 signatoryCount,
+                                 "TRUE",
+                                 "doc.mtime")
+      | status == DocReject   = (DocStatPadSignatureReject,
+                                 DocStatEmailSignatureReject,
+                                 DocStatElegSignatureReject,
+                                 signatoryCount,
+                                 "doc.rejection_time IS NOT NULL",
+                                 "doc.rejection_time")
+      | status == DocTimeout  = (DocStatPadSignatureTimeout,
+                                 DocStatEmailSignatureTimeout,
+                                 DocStatElegSignatureTimeout,
+                                 signatoryCount,
+                                 timeoutCondition,
+                                 "doc.timeout_time")
+      | otherwise             = error $  "docStatSignMethod called with "
+                                      ++ "nonsensical DocumentStatus!"
     signatoryCount = "COUNT (CASE WHEN is_partner THEN TRUE ELSE NULL END)"
+    timeoutCondition =
+        concat [
+            "doc.status = " ++ fromSql (toSql Timedout),
+            " AND sl.user_id IS NOT NULL",
+            " AND doc.timeout_time IS NOT NULL"
+          ]
+
 
 -- | Register an event for "another document closed".
 --   This is a bit hacky; in particular, concatenating the DocumentID is really
@@ -158,6 +177,16 @@ docStatCreate =
     genericStatEvent DocStatCreate
                      "doc.ctime"
                      "TRUE"
+
+-- | Record a "doc timed out" event.
+docStatTimeout :: StatQuery
+docStatTimeout =
+    genericStatEvent DocStatTimeout
+                     "doc.timeout_time"
+                     (concat [
+                         "doc.status = " ++ fromSql (toSql Timedout),
+                         " AND sl.user_id IS NOT NULL",
+                         " AND doc.timeout_time IS NOT NULL"])
 
 -- | Generic document stat event. An "event" is a log item which:
 --   * always has amount = 1;
