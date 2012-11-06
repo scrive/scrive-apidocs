@@ -1,4 +1,10 @@
 window.createnewdocument = function() {
+
+    if(BlockingInfo && BlockingInfo.shouldBlockDocs(1)) {
+        BlockingInfo.createPopup();
+        return false;
+    }
+
   new Submit({
                     method : "POST",
                     url : "/api/frontend/createfromfile",

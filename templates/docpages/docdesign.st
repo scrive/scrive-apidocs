@@ -7,9 +7,6 @@ jQuery(function(){
                         id:"$documentid$"
                   }).el());
 });
-var designViewBlocking = null;
-jQuery(function() {
-  designViewBlocking = Blocking();
-});
+var BlockingInfo = Blocking();
 </script>
 ###

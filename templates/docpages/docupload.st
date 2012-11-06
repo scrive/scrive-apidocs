@@ -1,13 +1,13 @@
 ###
 createFromTemplatePage=
+<div class="blocking-box"></div>
 <script>
 jQuery(".mainContainer").append(new CreateFromTemplate().el());
 </script>
 <script>
-var uploadBlocking;
+var BlockingInfo = Blocking();
 jQuery(function() {
-  uploadBlocking = Blocking();
-  uploadBlocking.show('.blocking-box');
+  BlockingInfo.show('.blocking-box');
 });
 </script>
 ####
