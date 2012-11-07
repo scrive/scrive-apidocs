@@ -139,7 +139,7 @@ apiCallCreateFromFile = api $ do
       True <- dbUpdate $ AttachFile (documentid doc) (fileid file) actor
       return ()
   let doc' = doc{ documentfile = fileid `fmap` mfile }
-  _ <- lift $ addDocumentCreateStatEvents doc "web"
+  _ <- lift $ addDocumentCreateStatEvents (documentid doc) "web"
   Created <$> documentJSON True True Nothing Nothing doc'
 
 
@@ -156,7 +156,7 @@ apiCallCreateFromTemplate did =  api $ do
                     else throwError $ serverError "Id did not matched template or you do not have right to access document"
   case enewdoc of
       Just newdoc -> do
-          _ <- lift $ addDocumentCreateStatEvents newdoc "web"
+          _ <- lift $ addDocumentCreateStatEvents (documentid newdoc) "web"
           Log.debug $ show "Document created from template"
           Created <$> documentJSON True  True Nothing Nothing newdoc
       Nothing -> throwError $ serverError "Create document from template failed"
