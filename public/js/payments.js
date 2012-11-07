@@ -558,7 +558,7 @@
                         var text;
                         var header;
                         if(model.type() === 'user') {
-                            window.location = '/payments/dashboard';
+                            window.location = '/account#subscription';
                             return true;
                         }
 
@@ -575,7 +575,7 @@
                             content: $('<p />').text(text),
                             onAccept: function() {
                                 if(model.type() === 'user') {
-                                    window.location = '/payments/dashboard';
+                                    window.location = '/account#subscription';
                                 } else if(model.createdUser()) {
                                     popup.view.clear();
                                     Login({referer:'/upload'});
