@@ -21,7 +21,6 @@ module DB.SQL (
   , parenthesize
   ) where
 
-import Data.Maybe (catMaybes)
 import Data.Convertible
 import Data.List
 import Data.Monoid
@@ -39,7 +38,9 @@ instance Monoid SQL where
   mempty = SQL [] []
   (SQL q v) `mappend` (SQL q' v') = SQL (q ++ q') (v ++ v')
 
-type ColumnValue = (String, String, Maybe SqlValue)
+-- | Represents the binding of an SQL expression to a column in an INSERT or
+--   UPDATE statement.
+data ColumnValue = ColumnValue String SQL
 
 class IsSQL a where
   toSQLCommand :: a -> SQL
@@ -63,7 +64,8 @@ s1 <+> s2 = s1 <> " " <> s2
 s <?> p = s <+> sqlParam p
 
 sql' :: Convertible a SqlValue => String -> String -> a -> ColumnValue
-sql' column placeholder value = (column, placeholder, Just $ toSql value)
+sql' column placeholder value =
+    ColumnValue column (SQL placeholder [toSql value])
 
 sql :: Convertible a SqlValue => String -> a -> ColumnValue
 sql column value = sql' column "?" value
@@ -72,23 +74,28 @@ sql column value = sql' column "?" value
 --   It's useful when inserting data straight from another table and thus don't
 --   have an extra parameter to pass in.
 sqlNoBind :: String -> String -> ColumnValue
-sqlNoBind column expr = (column, expr, Nothing)
+sqlNoBind column expr = ColumnValue column (SQL expr [])
 
 -- for INSERT/UPDATE statements generation
 
 data SQLType = INSERT | UPDATE
 
 mkSQL :: SQLType -> Table -> [ColumnValue] -> SQL
-mkSQL qtype Table{tblName} values = case qtype of
-  INSERT -> SQL ("INSERT INTO " ++ tblName
-    ++ " (" ++ (intercalate ", " columns) ++ ")"
-    ++ " SELECT " ++ (intercalate ", " placeholders)
-    ++ " ") (catMaybes vals)
-  UPDATE -> SQL ("UPDATE " ++ tblName ++ " SET "
-    ++ (intercalate ", " $ zipWith (\c p -> c ++ " = " ++ p) columns placeholders)
-    ++ " ") (catMaybes vals)
+mkSQL qtype Table{tblName} columnvalues = case qtype of
+  INSERT ->
+    SQL ("INSERT INTO " ++ tblName ++
+         " (" ++ (intercalate ", " columns) ++ ")")
+        [] <+>
+    SQL "SELECT" [] <+> mconcat (intersperse ", " values)
+  UPDATE ->
+    SQL ("UPDATE " ++ tblName ++ " SET")
+        [] <+>
+    mconcat (intersperse "," $ zipWith (\c p -> SQL (c ++ " = ") [] <+> p)
+                                       columns
+                                       values)
   where
-    (columns, placeholders, vals) = unzip3 values
+    (columns, values) =
+      unzip [(col, val) | ColumnValue col val <- columnvalues]
 
 -- | 'AscDesc' marks ORDER BY order as ascending or descending.
 -- Conversion to SQL adds DESC marker to descending and no marker
