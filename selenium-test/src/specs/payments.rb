@@ -20,15 +20,15 @@ describe "subscribe with a credit card" do
     begin
       @h.loginhelper.set_name(@h.ctx.props.tester_fstname, @h.ctx.props.tester_sndname)
 
-      (@wait.until { @driver.find_element :css => ".s-account" }).click
-      (@wait.until { @driver.find_element :css => ".s-subscription" }).click
+      (@h.wait.until { @driver.find_element :css => ".s-account" }).click
+      (@h.wait.until { @driver.find_element :css => ".s-subscription" }).click
 
-      (@wait.until { @driver.find_element :css => ".field.card_number input" }).send_keys "4111111111111111"
-      (@wait.until { @driver.find_element :css => ".field.expires .year select" }).select 20
+      (@h.wait.until { @driver.find_element :css => ".field.card_number input" }).send_keys "4111111111111111"
+      (@h.wait.until { @driver.find_element :css => ".field.expires .year select" }).select 20
       
-      (@wait.until { @driver.find_element :css => ".field.cvv input" }).send_keys "111"
+      (@h.wait.until { @driver.find_element :css => ".field.cvv input" }).send_keys "111"
 
-      (@wait.until { @driver.find_element :css => ".s-subscribe" }).click
+      (@h.wait.until { @driver.find_element :css => ".s-subscribe" }).click
 
       @h.wait.until { @h.driver.find_element :css => ".subscription-payments" }
     end
