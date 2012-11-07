@@ -31,6 +31,6 @@ describe "subscribe with a credit card" do
       (@wait.until { @driver.find_element :css => ".s-subscribe" }).click
 
       @h.wait.until { @h.driver.find_element :css => ".subscription-payments" }
-
+    end
   end
 end
