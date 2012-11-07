@@ -349,7 +349,6 @@ handleUserChange uid = onlySalesOrAdmin $ do
                                              [("is_company_admin", "false", "true")]
                                              (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
-      _ <- resaveDocsForUser uid
       return newuser
     (Just "companystandardaccount", Just _companyid, True) -> do
       --then we just want to downgrade this account to a standard
@@ -380,7 +379,6 @@ handleUserChange uid = onlySalesOrAdmin $ do
                                             [("company_id", "null", show $ companyid company)]
                                             (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
-      _ <- resaveDocsForUser uid
       return newuser
     (Just "privateaccount", Just companyid, _) -> do
       --then we need to downgrade this user and possibly delete their company
@@ -405,7 +403,6 @@ handleUserChange uid = onlySalesOrAdmin $ do
                                             [("company_id", show companyid, "null")]
                                             (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
-      _ <-resaveDocsForUser uid
       return newuser
     _ -> return olduser
   infoChange <- getUserInfoChange
@@ -419,15 +416,6 @@ handleUserChange uid = onlySalesOrAdmin $ do
   isfree <- isFieldSet "freeuser"
   _ <- dbUpdate $ SetUserIsFree uid isfree
   return $ LinkUserAdmin $ Just uid
-
-resaveDocsForUser :: Kontrakcja m => UserID -> m ()
-resaveDocsForUser uid = onlySalesOrAdmin $ do
-  Context{ctxmaybeuser = Just admin, ctxtime, ctxipnumber} <- getContext
-  let actor = adminActor ctxtime ctxipnumber (userid admin) (getEmail admin)
-  user <- guardJustM $ dbQuery $ GetUserByID uid
-  userdocs <- dbQuery $ GetDocumentsByAuthor uid
-  mapM_ (\doc -> dbUpdate $ AdminOnlySaveForUser (documentid doc) user actor) userdocs
-  return ()
 
 {- | Handling company details change. It reads user info change -}
 handleCompanyChange :: Kontrakcja m => CompanyID -> m KontraLink
