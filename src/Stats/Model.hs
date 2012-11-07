@@ -2,7 +2,6 @@
 {-# OPTIONS_GHC -fcontext-stack=50 #-}
 module Stats.Model
        (
-         AddDocStatEvent(..),
          DocStatEvent(..),
          DocStatQuantity(..),
          FlushDocStats(..),
@@ -356,23 +355,6 @@ instance MonadDB m => DBQuery m GetUsersAndStatsAndInviteInfo
     return $ map findStats usersWithCompaniesAndInviteInfo
 
 {-------- Doc Stat Updates --}
-
-data AddDocStatEvent = AddDocStatEvent DocStatEvent
-instance MonadDB m => DBUpdate m AddDocStatEvent Bool where
-  update (AddDocStatEvent DocStatEvent{..}) =
-    kRun01 $ mkSQL INSERT tableDocStatEvents [
-        sql "user_id" seUserID
-      , sql "time" seTime
-      , sql "quantity" seQuantity
-      , sql "amount" seAmount
-      , sql "document_id" seDocumentID
-      , sql "company_id" seCompanyID
-      , sql "document_type" $ show seDocumentType
-      , sql "api_string" seAPIString
-      ] <> SQL "WHERE NOT EXISTS (SELECT 1 FROM doc_stat_events WHERE document_id = ? AND quantity = ?)" [
-        toSql seDocumentID
-      , toSql seQuantity
-      ]
 
 data FlushDocStats = FlushDocStats
 instance MonadDB m => DBUpdate m FlushDocStats () where
