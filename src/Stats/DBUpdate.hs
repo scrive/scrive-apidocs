@@ -149,7 +149,7 @@ docStatSignMethod status did apistring =
 --   of genericStatEvent here or not is an open question.
 docStatClose :: StatQuery
 docStatClose did =
-    genericStatEvent DocStatSend
+    genericStatEvent DocStatClose
                      ("(SELECT MAX(sign_time) FROM signatory_links WHERE document_id = " ++ show did ++ ")")
                      ("doc.status = " ++ fromSql (toSql Closed))
                      did
