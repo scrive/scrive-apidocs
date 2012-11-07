@@ -285,7 +285,7 @@ addDocumentCreateStatEvents :: (MonadDB m, MonadBaseControl IO m) => Document ->
 addDocumentCreateStatEvents did apistring = falseOnError $ do
       dbUpdate (statUpdate docStatCreate (documentid did) apistring)
 
-addDocumentTimeoutStatEvents :: (MonadDB m) => Document -> String -> m Bool
+addDocumentTimeoutStatEvents :: (MonadDB m, MonadBaseControl IO m) => Document -> String -> m Bool
 addDocumentTimeoutStatEvents did apistring = falseOnError $ do
     aOK <- dbUpdate (statUpdate docStatTimeout (documentid did) apistring)
     bOK <- dbUpdate (statUpdate (docStatSignMethod DocTimeout) (documentid did) apistring)
