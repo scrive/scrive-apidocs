@@ -31,7 +31,6 @@ module Doc.DocStateQuery
     , getDocByDocIDSigLinkIDAndMagicHash
     ) where
 
-import Control.Applicative
 import Control.Monad
 import DB
 import DBError
@@ -43,7 +42,6 @@ import Util.SignatoryLinkUtils
 import qualified Log
 import User.Model
 import Data.Maybe
-import Util.MonadUtils
 
 {- |
    Securely find a document by documentid for the author or within their company.
