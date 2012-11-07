@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude, OverloadedStrings #-}
 {-# OPTIONS_GHC -fcontext-stack=50 #-}
 module Stats.Model
        (
@@ -648,16 +648,13 @@ docStatSignMethod status did apistring =
             " AND doc.timeout_time IS NOT NULL"
           ]
 
-
 -- | Register an event for "another document closed".
---   This is a bit hacky; in particular, concatenating the DocumentID is really
---   bad practice. Whether this is preferrable to having a near identical copy
---   of genericStatEvent here or not is an open question.
 docStatClose :: StatQuery
 docStatClose did =
     genericStatEvent DocStatClose
-                     ("(SELECT MAX(sign_time) FROM signatory_links WHERE document_id = " ++ show did ++ ")")
-                     ("doc.status = " ++ fromSql (toSql Closed))
+                     (SQL ("(SELECT MAX(sign_time) FROM signatory_links" 
+                           ++ " WHERE document_id = ?)") [toSql did])
+                     (SQL "doc.status = ?" [toSql Closed])
                      did
 
 -- | Record a "doc sent" stat.
@@ -691,10 +688,11 @@ docStatTimeout :: StatQuery
 docStatTimeout =
     genericStatEvent DocStatTimeout
                      "doc.timeout_time"
-                     (concat [
-                         "doc.status = " ++ fromSql (toSql Timedout),
-                         " AND sl.user_id IS NOT NULL",
-                         " AND doc.timeout_time IS NOT NULL"])
+                     (SQL (unwords [
+                             "doc.status = ?",
+                             "AND sl.user_id IS NOT NULL",
+                             "AND doc.timeout_time IS NOT NULL"])
+                          [toSql Timedout])
 
 -- | Generic document stat event. An "event" is a log item which:
 --   * always has amount = 1;
@@ -707,21 +705,35 @@ docStatTimeout =
 --   This is a convenience function, and it should absolutely NOT be exported
 --   sicne the interface is horribly unsafe for non-internal use.
 genericStatEvent :: DocStatQuantity -- ^ Event to log.
-                 -> String          -- ^ SQL expression for the event timestamp.
-                 -> String          -- ^ SQL expression that determines whether
+                 -> SQL             -- ^ SQL expression for the event timestamp.
+                                    --   This expression may bind AT MOST
+                                    --   one variable; preferrably none!
+                 -> SQL             -- ^ SQL expression that determines whether
                                     --   to log the stat or not.
                  -> StatQuery
-genericStatEvent qty time condition did apistring =
-    SQL queryStr [toSql apistring, toSql qty, toSql did]
+genericStatEvent qty (SQL time timeArgs) condition did apistring =
+    mkSQL INSERT tableDocStatEvents [
+        sqlNoBind "user_id"       "sl.user_id",
+        bindTime,
+        sql       "amount"        (1 :: Int),
+        sqlNoBind "document_id"   "doc.id",
+        sqlNoBind "company_id"    "sl.company_id",
+        sql       "api_string"    apistring,
+        sql       "quantity"      qty,
+        sqlNoBind "document_type" (docType "doc")
+      ] <+> fromPart
   where
-    queryStr = unlines [
-      "INSERT INTO doc_stat_events",
-      " (user_id, time, amount, document_id, company_id,",
-      "  api_string, quantity, document_type)",
-      "SELECT sl.user_id, " ++ time ++ ", 1, doc.id, sl.company_id, ?, ?,",
-      docType "doc",
-      "FROM documents AS doc",
-      "JOIN",
-      "  signatory_links",
-      "  AS sl ON sl.document_id = doc.id",
-      "WHERE doc.id = ? AND sl.is_author AND " ++ condition]
+    bindTime =
+        case timeArgs of
+          []    -> sqlNoBind "time" time
+          [arg] -> sql' "time" time arg
+          _     -> error $ "time expression in genericStatEvent may NOT bind"
+                         ++" more than one argument!"
+    fromPart =
+      SQL (unlines [
+           "FROM documents AS doc",
+           "JOIN signatory_links",
+           "AS sl ON sl.document_id = doc.id",
+           "WHERE doc.id = ? AND sl.is_author"])
+          [toSql did] <+>
+      SQL "AND" [] <+> condition
