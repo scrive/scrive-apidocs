@@ -292,7 +292,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   -- if previous step succeeded, document must be in the database
   Just enddoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
-  _ <- addDocumentCreateStatEvents enddoc "mailapi+simple"
+  _ <- addDocumentCreateStatEvents (documentid enddoc) "mailapi+simple"
   --markDocumentAuthorReadAndSeen enddoc
   --_ <- DocControl.postDocumentChangeAction doc2 doc Nothing
 
@@ -541,7 +541,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
   _ <- dbUpdate $ SetDocumentInviteTime (documentid doc) ctxtime actor
   -- if previous step succeeded, document must be in the database
   Just enddoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-  _ <- addDocumentCreateStatEvents enddoc "mailapi+json"
+  _ <- addDocumentCreateStatEvents (documentid doc) "mailapi+json"
   --markDocumentAuthorReadAndSeen enddoc
   --_ <- DocControl.postDocumentChangeAction doc2 doc Nothing
 

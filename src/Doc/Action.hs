@@ -48,29 +48,30 @@ import Doc.API.Callback.Model
 import Data.String.Utils (strip)
 
 postDocumentPreparationChange :: Kontrakcja m => Document -> String -> m ()
-postDocumentPreparationChange doc@Document{documentid, documenttitle} apistring = do
+postDocumentPreparationChange doc@Document{documenttitle} apistring = do
+  let docid = documentid doc
   triggerAPICallbackIfThereIsOne doc
   unless (isPending doc) $
     stateMismatchError "postDocumentPreparationChange" Pending doc
-  Log.docevent $ "Preparation -> Pending; Sending invitation emails: " ++ show documentid
+  Log.docevent $ "Preparation -> Pending; Sending invitation emails: " ++ show docid
   ctx <- getContext
   msaveddoc <- saveDocumentForSignatories doc
   document' <- case msaveddoc of
     Left msg -> do
-      Log.error $ "Failed to save document #" ++ (show documentid) ++ " for signatories " ++ msg
+      Log.error $ "Failed to save document #" ++ (show docid) ++ " for signatories " ++ msg
       return doc
     Right saveddoc -> return saveddoc
-  Log.server $ "Sending invitation emails for document #" ++ show documentid ++ ": " ++ documenttitle
+  Log.server $ "Sending invitation emails for document #" ++ show docid ++ ": " ++ documenttitle
   edoc <- if (sendMailsDurringSigning document')
              then sendInvitationEmails ctx document'
              else return $ Right $ document'
   case edoc of
     Left _ -> do
-      _ <- addDocumentSendStatEvents document' apistring
+      _ <- addDocumentSendStatEvents (documentid document') apistring
       forM_ (documentsignatorylinks document') $ \sl ->
         addSignStatInviteEvent document' sl (ctxtime ctx)
     Right doc2 -> do
-      _ <- addDocumentSendStatEvents doc2 apistring
+      _ <- addDocumentSendStatEvents (documentid doc2) apistring
       forM_ (documentsignatorylinks doc2) $ \sl ->
         addSignStatInviteEvent doc2 sl (ctxtime ctx)
 
@@ -88,7 +89,7 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistri
         Just newdoc <- dbQuery $ GetDocumentByDocumentID documentid
         return newdoc
       Log.docevent $ "Pending -> Closed; Sending emails: " ++ show documentid
-      _ <- addDocumentCloseStatEvents closeddoc apistring
+      _ <- addDocumentCloseStatEvents documentid apistring
       author <- getDocAuthor closeddoc
       dbCommit
       forkAction ("Sealing document #" ++ show documentid ++ ": " ++ documenttitle) $ do
@@ -115,7 +116,7 @@ postDocumentRejectedChange doc@Document{..} siglinkid apistring = do
   unless (isRejected doc) $
     stateMismatchError "postDocumentRejectedChange" Rejected doc
   Log.docevent $ "Pending -> Rejected; send reject emails: " ++ show documentid
-  _ <- addDocumentRejectStatEvents doc apistring
+  _ <- addDocumentRejectStatEvents documentid apistring
   Log.server $ "Sending rejection emails for document #" ++ show documentid ++ ": " ++ documenttitle
   ctx <- getContext
   customMessage <- getCustomTextField "customtext"
@@ -129,7 +130,7 @@ postDocumentCanceledChange doc@Document{..} apistring = do
   unless (isCanceled doc) $
     stateMismatchError "postDocumentCanceledChange" Canceled doc
   Log.docevent $ "Pending -> Canceled (ElegDataMismatch); Sending cancelation emails: " ++ show documentid
-  _ <- addDocumentCancelStatEvents doc apistring
+  _ <- addDocumentCancelStatEvents documentid apistring
   -- if canceled because of ElegDataMismatch, send out emails
   case documentcancelationreason of
     Just reason | isELegDataMismatch reason -> do

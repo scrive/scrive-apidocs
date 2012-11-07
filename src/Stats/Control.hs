@@ -257,38 +257,38 @@ falseOnError m = m `E.catch` (\(_::KontraError) -> return False)
 --   2. Count the number of signatures in StatDocumentSignatures
 -- Note that this will roll over (using mplus) in case there is
 -- an error.
-addDocumentCloseStatEvents :: (MonadDB m, MonadBaseControl IO m) => Document -> String -> m Bool
+addDocumentCloseStatEvents :: (MonadDB m, MonadBaseControl IO m) => DocumentID -> String -> m Bool
 addDocumentCloseStatEvents did apistring = falseOnError $ do
-    aOK <- dbUpdate (statUpdate docStatClose (documentid did) apistring)
-    bOK <- dbUpdate (statUpdate (docStatSignMethod DocClosed) (documentid did) apistring)
+    aOK <- dbUpdate (statUpdate docStatClose did apistring)
+    bOK <- dbUpdate (statUpdate (docStatSignMethod DocClosed) did apistring)
     return (aOK && bOK)
 
-addDocumentSendStatEvents :: (MonadDB m, MonadBaseControl IO m) => Document -> String -> m Bool
+addDocumentSendStatEvents :: (MonadDB m, MonadBaseControl IO m) => DocumentID -> String -> m Bool
 addDocumentSendStatEvents did apistring = falseOnError $ do
-    aOK <- dbUpdate (statUpdate docStatSend (documentid did) apistring)
-    bOK <- dbUpdate (statUpdate (docStatSignMethod DocPending) (documentid did) apistring)
+    aOK <- dbUpdate (statUpdate docStatSend did apistring)
+    bOK <- dbUpdate (statUpdate (docStatSignMethod DocPending) did apistring)
     return (aOK && bOK)
 
-addDocumentCancelStatEvents :: (MonadDB m, MonadBaseControl IO m) => Document -> String -> m Bool
+addDocumentCancelStatEvents :: (MonadDB m, MonadBaseControl IO m) => DocumentID -> String -> m Bool
 addDocumentCancelStatEvents did apistring = falseOnError $ do
-    aOK <- dbUpdate (statUpdate docStatCancel (documentid did) apistring)
-    bOK <- dbUpdate (statUpdate (docStatSignMethod DocCancel) (documentid did) apistring)
+    aOK <- dbUpdate (statUpdate docStatCancel did apistring)
+    bOK <- dbUpdate (statUpdate (docStatSignMethod DocCancel) did apistring)
     return (aOK && bOK)
 
-addDocumentRejectStatEvents :: (MonadDB m, MonadBaseControl IO m) => Document -> String -> m Bool
+addDocumentRejectStatEvents :: (MonadDB m, MonadBaseControl IO m) => DocumentID -> String -> m Bool
 addDocumentRejectStatEvents did apistring = falseOnError $ do
-    aOK <- dbUpdate (statUpdate docStatReject (documentid did) apistring)
-    bOK <- dbUpdate (statUpdate (docStatSignMethod DocReject) (documentid did) apistring)
+    aOK <- dbUpdate (statUpdate docStatReject did apistring)
+    bOK <- dbUpdate (statUpdate (docStatSignMethod DocReject) did apistring)
     return (aOK && bOK)
 
-addDocumentCreateStatEvents :: (MonadDB m, MonadBaseControl IO m) => Document -> String -> m Bool
+addDocumentCreateStatEvents :: (MonadDB m, MonadBaseControl IO m) => DocumentID -> String -> m Bool
 addDocumentCreateStatEvents did apistring = falseOnError $ do
-      dbUpdate (statUpdate docStatCreate (documentid did) apistring)
+      dbUpdate (statUpdate docStatCreate did apistring)
 
-addDocumentTimeoutStatEvents :: (MonadDB m, MonadBaseControl IO m) => Document -> String -> m Bool
+addDocumentTimeoutStatEvents :: (MonadDB m, MonadBaseControl IO m) => DocumentID -> String -> m Bool
 addDocumentTimeoutStatEvents did apistring = falseOnError $ do
-    aOK <- dbUpdate (statUpdate docStatTimeout (documentid did) apistring)
-    bOK <- dbUpdate (statUpdate (docStatSignMethod DocTimeout) (documentid did) apistring)
+    aOK <- dbUpdate (statUpdate docStatTimeout did apistring)
+    bOK <- dbUpdate (statUpdate (docStatSignMethod DocTimeout) did apistring)
     return (aOK && bOK)
 
 

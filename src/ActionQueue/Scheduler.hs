@@ -48,8 +48,7 @@ timeoutDocuments = do
     gt <- getGlobalTemplates
     success <- runReaderT (dbUpdate $ TimeoutDocument (documentid doc) (systemActor now)) gt
     when success $ do
-      Just d <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-      _ <- addDocumentTimeoutStatEvents d "scheduler"
+      _ <- addDocumentTimeoutStatEvents (documentid doc) "scheduler"
       return ()
     Log.debug $ "Document timedout " ++ (show $ documenttitle doc)
   when (not (null docs)) $ do
