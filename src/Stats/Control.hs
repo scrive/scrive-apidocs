@@ -69,7 +69,6 @@ import Control.Applicative
 import User.Utils
 import Util.CSVUtil
 import ListUtil
-import Stats.DBUpdate
 
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
 showAdminUserUsageStats userid = onlySalesOrAdmin $ do
