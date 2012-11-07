@@ -41,28 +41,9 @@ import Kontra
 import MagicHash
 import Util.SignatoryLinkUtils
 import qualified Log
-import Doc.DocInfo
 import User.Model
 import Data.Maybe
 import Util.MonadUtils
-{- |
-   Assuming user is the logged in user, can he view the Document?
-
-   They can if:
-     the document is saved for them or their company if they are a company admin
-     the document is authored within the user's company and shared
-
-  FIXME: this logic has to be moved to database layer
- -}
-canUserViewDoc :: User -> Document -> Bool
-canUserViewDoc user doc =
-  docIsSavedForUser --the doc is saved for the user (or the user's company if they are an admin)
-  || isSharedWithinCompany --the doc is shared within the user's company
-  where
-    docIsSavedForUser =
-      any (isSigLinkSavedFor user) $ documentsignatorylinks doc
-    isSharedWithinCompany = isDocumentShared doc && isAuthoredWithinCompany
-    isAuthoredWithinCompany = False -- isJust $ getSigLinkFor doc (signatoryisauthor . signatorydetails, usercompany user)
 
 {- |
    Securely find a document by documentid for the author or within their company.
@@ -76,38 +57,55 @@ getDocByDocID docid = do
   case (ctxmaybeuser `mplus` ctxmaybepaduser) of
     Nothing -> return $ Left DBNotLoggedIn
     Just user -> do
-      mdoc <- dbQuery $ GetDocumentByDocumentID docid
+      mdoc <- dbQuery (GetDocuments [ DocumentsForSignatoryDeleteValue (userid user) False
+                                    , DocumentsOfAuthorDeleteValue (userid user) False
+                                    , TemplatesOfAuthorDeleteValue (userid user) False
+                                    ] [ DocumentFilterByDocumentID docid ]
+                                    [] (DocumentPagination 0 1))
       case mdoc of
-        Nothing  -> do
+        [doc] -> do
+          return $ Right doc
+        _ -> do
           Log.debug $ "Document " ++ show docid ++ " does not exist (in getDocByDocID)"
           return $ Left DBResourceNotAvailable
-        Just doc -> do
-          case canUserViewDoc user doc of
-            False -> return $ Left DBResourceNotAvailable
-            True  -> return $ Right doc
 
 {- | Same as getDocByDocID, but works only for author -}
 getDocByDocIDForAuthor :: Kontrakcja m => DocumentID -> m (Either DBError Document)
 getDocByDocIDForAuthor docid = do
-      user <- guardJustM $ liftM2 mplus (ctxmaybeuser <$> getContext) (ctxmaybepaduser <$> getContext)
-      edoc <- getDocByDocID docid
-      case edoc of
-           Right doc -> if isAuthor (doc, user)
-                           then return $ Right doc
-                           else return $ Left DBResourceNotAvailable
-           e -> return e
-           
+  Context { ctxmaybeuser, ctxmaybepaduser} <- getContext
+  case (ctxmaybeuser `mplus` ctxmaybepaduser) of
+    Nothing -> return $ Left DBNotLoggedIn
+    Just user -> do
+      mdoc <- dbQuery (GetDocuments [ DocumentsOfAuthorDeleteValue (userid user) False
+                                    , TemplatesOfAuthorDeleteValue (userid user) False
+                                    ] [ DocumentFilterByDocumentID docid ]
+                                    [] (DocumentPagination 0 1))
+      case mdoc of
+        [doc] -> do
+          return $ Right doc
+        _ -> do
+          Log.debug $ "Document " ++ show docid ++ " does not exist (in getDocByDocIDForAuthor)"
+          return $ Left DBResourceNotAvailable
+
 {- | Same as getDocByDocID, but works only for author or authors company admin-}
 getDocByDocIDForAuthorOrAuthorsCompanyAdmin :: Kontrakcja m => DocumentID -> m (Either DBError Document)
 getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid = do
-      _user <- guardJustM $ liftM2 mplus (ctxmaybeuser <$> getContext) (ctxmaybepaduser <$> getContext)
-      edoc <- getDocByDocID docid
-      case edoc of
-           Right doc -> if True -- (isAuthor (doc, user) || (useriscompanyadmin user  && (isJust $ getSigLinkFor doc (signatoryisauthor . signatorydetails, usercompany user))))
-                           then return $ Right doc
-                           else return $ Left DBResourceNotAvailable
-           e -> return e
-           
+  Context { ctxmaybeuser, ctxmaybepaduser} <- getContext
+  case (ctxmaybeuser `mplus` ctxmaybepaduser) of
+    Nothing -> return $ Left DBNotLoggedIn
+    Just user -> do
+      mdoc <- dbQuery (GetDocuments [ DocumentsOfAuthorDeleteValue (userid user) False
+                                    , TemplatesOfAuthorDeleteValue (userid user) False
+                                    , TemplatesSharedInUsersCompany (userid user)
+                                    ] [ DocumentFilterByDocumentID docid ]
+                                    [] (DocumentPagination 0 1))
+      case mdoc of
+        [doc] -> do
+          return $ Right doc
+        _ -> do
+          Log.debug $ "Document " ++ show docid ++ " does not exist (in getDocByDocIDForAuthorOrAuthorsCompanyAdmin)"
+          return $ Left DBResourceNotAvailable
+
 {- |
    Get a document using docid, siglink, and magichash.
    ALWAYS FAILS THE SAME WAY FOR SECURITY PURPOSES (Left DBResourceNotAvailable).
@@ -125,4 +123,3 @@ getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
   case mdoc of
     Just doc | isJust $ getSigLinkFor doc (sigid, mh) -> return $ Right doc
     _                                                 -> return $ Left DBResourceNotAvailable
-

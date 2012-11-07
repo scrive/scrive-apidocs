@@ -141,10 +141,11 @@ data DocumentFilter
   | DocumentFilterMaxChangeTime MinutesTime   -- ^ Maximum mtime
   | DocumentFilterByProcess [DocumentProcess] -- ^ Any of listed processes
   | DocumentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
-  | DocumentFilterByDelivery DeliveryMethod -- ^ Only documents that use selected delivery method
-  | DocumentFilterByMonthYearFrom (Int,Int)           -- ^ Document time after or in (month,year)
-  | DocumentFilterByMonthYearTo   (Int,Int)           -- ^  Document time before or in (month,year)
+  | DocumentFilterByDelivery DeliveryMethod   -- ^ Only documents that use selected delivery method
+  | DocumentFilterByMonthYearFrom (Int,Int)   -- ^ Document time after or in (month,year)
+  | DocumentFilterByMonthYearTo   (Int,Int)   -- ^  Document time before or in (month,year)
   | DocumentFilterByAuthor UserID             -- ^ Only documents created by this user
+  | DocumentFilterByDocumentID DocumentID     -- ^ Only documents created by this user
   deriving Show
 data DocumentDomain
   = DocumentsOfWholeUniverse                     -- ^ All documents in the system. Only for admin view.
@@ -328,6 +329,9 @@ documentFilterToSQL (DocumentFilterByDelivery del) =
 
 documentFilterToSQL (DocumentFilterByAuthor userid) =
   SQL ("signatory_links.is_author AND signatory_links.user_id = ?") [toSql userid]
+
+documentFilterToSQL (DocumentFilterByDocumentID did) =
+  SQL ("documents.id = ?") [toSql did]
 
 checkEqualBy :: (Eq b, Show b) => String -> (a -> b) -> a -> a -> Maybe (String, String, String)
 checkEqualBy name func obj1 obj2
