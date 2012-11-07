@@ -56,7 +56,6 @@ import Text.JSON
 import User.Model
 import Util.HasSomeUserInfo
 import Util.MonadUtils
-import Util.SignatoryLinkUtils
 import qualified Log
 import qualified Templates.Fields as F
 
@@ -291,7 +290,6 @@ addDocumentTimeoutStatEvents did apistring = falseOnError $ do
     bOK <- dbUpdate (statUpdate (docStatSignMethod DocTimeout) did apistring)
     return (aOK && bOK)
 
-
 addUserLoginStatEvent :: Kontrakcja m => MinutesTime -> User -> m Bool
 addUserLoginStatEvent time user = falseOnError $ do
     addUserIDStatEvent UserLogin (userid user) time (usercompany user)
@@ -457,15 +455,13 @@ tuplesFromUsageStatsForCompany = catMaybes . map toTuple
 addSignStatInviteEvent :: MonadDB m => Document -> SignatoryLink -> MinutesTime -> m Bool
 addSignStatInviteEvent doc sl time =
   let dp = toDocumentProcess $ documenttype doc
-      mal = getAuthorSigLink doc
-      cid = maybe Nothing maybecompany mal
   in  do
       a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
                                                           , ssSignatoryLinkID = signatorylinkid sl
                                                           , ssTime            = time
                                                           , ssQuantity        = SignStatInvite
                                                           , ssDocumentProcess = dp
-                                                          , ssCompanyID       = cid
+                                                          , ssCompanyID       = Nothing
                                                           }
       unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
         show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatInvite
@@ -474,8 +470,6 @@ addSignStatInviteEvent doc sl time =
 addSignStatReceiveEvent :: MonadDB m => Document -> SignatoryLink -> MinutesTime -> m Bool
 addSignStatReceiveEvent doc sl time =
   let dp = toDocumentProcess $ documenttype doc
-      mal = getAuthorSigLink doc
-      cid = maybe Nothing maybecompany mal
   in case invitationdeliverystatus sl of
     Delivered -> do
       a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
@@ -483,7 +477,7 @@ addSignStatReceiveEvent doc sl time =
                                                           , ssTime            = time
                                                           , ssQuantity        = SignStatReceive
                                                           , ssDocumentProcess = dp
-                                                          , ssCompanyID       = cid
+                                                          , ssCompanyID       = Nothing
                                                           }
       unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
         show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatReceive
@@ -496,8 +490,6 @@ addSignStatReceiveEvent doc sl time =
 addSignStatOpenEvent :: MonadDB m => Document -> SignatoryLink -> m Bool
 addSignStatOpenEvent doc sl =
   let dp = toDocumentProcess $ documenttype doc
-      mal = getAuthorSigLink doc
-      cid = maybe Nothing maybecompany mal
   in case maybereadinvite sl of
     Just time -> do
         a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
@@ -505,7 +497,7 @@ addSignStatOpenEvent doc sl =
                                                             , ssTime            = time
                                                             , ssQuantity        = SignStatOpen
                                                             , ssDocumentProcess = dp
-                                                            , ssCompanyID       = cid
+                                                            , ssCompanyID       = Nothing
                                                             }
         unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
           show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatOpen
@@ -517,8 +509,6 @@ addSignStatOpenEvent doc sl =
 addSignStatLinkEvent :: MonadDB m => Document -> SignatoryLink -> m Bool
 addSignStatLinkEvent doc sl =
   let dp = toDocumentProcess $ documenttype doc
-      mal = getAuthorSigLink doc
-      cid = maybe Nothing maybecompany mal
   in case maybeseeninfo sl of
     Just (SignInfo {signtime}) -> do
         a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
@@ -526,7 +516,7 @@ addSignStatLinkEvent doc sl =
                                                             , ssTime            = signtime
                                                             , ssQuantity        = SignStatLink
                                                             , ssDocumentProcess = dp
-                                                            , ssCompanyID       = cid
+                                                            , ssCompanyID       = Nothing
                                                             }
         unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
           show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatLink
@@ -538,8 +528,6 @@ addSignStatLinkEvent doc sl =
 addSignStatSignEvent :: MonadDB m => Document -> SignatoryLink -> m Bool
 addSignStatSignEvent doc sl =
   let dp = toDocumentProcess $ documenttype doc
-      mal = getAuthorSigLink doc
-      cid = maybe Nothing maybecompany mal
   in case maybesigninfo sl of
     Just (SignInfo {signtime}) -> do
         a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
@@ -547,7 +535,7 @@ addSignStatSignEvent doc sl =
                                                             , ssTime            = signtime
                                                             , ssQuantity        = SignStatSign
                                                             , ssDocumentProcess = dp
-                                                            , ssCompanyID       = cid
+                                                            , ssCompanyID       = Nothing
                                                             }
         unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
           show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatSign
@@ -559,8 +547,6 @@ addSignStatSignEvent doc sl =
 addSignStatRejectEvent :: MonadDB m => Document -> SignatoryLink -> m Bool
 addSignStatRejectEvent doc sl =
   let dp = toDocumentProcess $ documenttype doc
-      mal = getAuthorSigLink doc
-      cid = maybe Nothing maybecompany mal
   in case documentrejectioninfo doc of
     Just (signtime, slid, _) | slid == signatorylinkid sl -> do
       a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
@@ -568,7 +554,7 @@ addSignStatRejectEvent doc sl =
                                                           , ssTime            = signtime
                                                           , ssQuantity        = SignStatReject
                                                           , ssDocumentProcess = dp
-                                                          , ssCompanyID       = cid
+                                                          , ssCompanyID       = Nothing
                                                           }
       unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
         show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatReject
@@ -583,8 +569,6 @@ addSignStatRejectEvent doc sl =
 addSignStatDeleteEvent :: MonadDB m => Document -> SignatoryLink -> MinutesTime -> m Bool
 addSignStatDeleteEvent doc sl time =
   let dp = toDocumentProcess $ documenttype doc
-      mal = getAuthorSigLink doc
-      cid = maybe Nothing maybecompany mal
   in case signatorylinkdeleted sl of
     True -> do
       a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
@@ -592,7 +576,7 @@ addSignStatDeleteEvent doc sl time =
                                                           , ssTime            = time
                                                           , ssQuantity        = SignStatDelete
                                                           , ssDocumentProcess = dp
-                                                          , ssCompanyID       = cid
+                                                          , ssCompanyID       = Nothing
                                                           }
       unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
         show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatDelete
@@ -604,8 +588,6 @@ addSignStatDeleteEvent doc sl time =
 addSignStatPurgeEvent :: MonadDB m => Document -> SignatoryLink -> MinutesTime -> m Bool
 addSignStatPurgeEvent doc sl time =
   let dp = toDocumentProcess $ documenttype doc
-      mal = getAuthorSigLink doc
-      cid = maybe Nothing maybecompany mal
   in case signatorylinkreallydeleted sl of
     True -> do
       a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
@@ -613,7 +595,7 @@ addSignStatPurgeEvent doc sl time =
                                                           , ssTime            = time
                                                           , ssQuantity        = SignStatPurge
                                                           , ssDocumentProcess = dp
-                                                          , ssCompanyID       = cid
+                                                          , ssCompanyID       = Nothing
                                                           }
       unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
         show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatPurge
