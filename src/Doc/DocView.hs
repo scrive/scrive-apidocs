@@ -134,7 +134,7 @@ documentJSON forapi forauthor pq msl doc = do
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
     let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
     mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) (getAuthorSigLink doc >>= maybesignatory)
-    mcompany <- maybe (return Nothing) (dbQuery . GetCompany) (getAuthorSigLink doc >>= maybecompany)
+    mcompany <- maybe (return Nothing) (dbQuery . GetCompanyByUserID) (getAuthorSigLink doc >>= maybesignatory)
     let logo  = if (isJust mcompany && isJust (companylogo $ companyui (fromJust mcompany)))
                   then show <$> LinkCompanyLogo <$> companyid <$> mcompany
                   else Nothing

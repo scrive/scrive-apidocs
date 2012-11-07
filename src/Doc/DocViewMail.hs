@@ -358,7 +358,7 @@ documentMailWithDocLang ctx doc mailname otherfields = documentMail doc ctx doc 
 
 documentMail :: (HasLang a, MonadDB m, TemplatesMonad m) =>  a -> Context -> Document -> String -> Fields m () -> m Mail
 documentMail haslang ctx doc mailname otherfields = do
-    mcompany <- liftMM (dbQuery . GetCompany) (return $ getAuthorSigLink doc >>= maybecompany)
+    mcompany <- liftMM (dbQuery . GetCompanyByUserID) (return $ getAuthorSigLink doc >>= maybesignatory)
     let allfields = do
         contextFields ctx
         F.value "documenttitle" $ documenttitle doc
