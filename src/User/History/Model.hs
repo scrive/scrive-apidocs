@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module User.History.Model (
     UserHistory(..)
   , UserHistoryEvent(..)

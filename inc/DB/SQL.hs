@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module DB.SQL (
     RawSQL
   , unRawSQL
@@ -8,6 +7,7 @@ module DB.SQL (
   , (<+>)
   , (<?>)
   , AscDesc(..)
+  , IsSQL(..)
   , sqlOR
   , sqlConcatComma
   , sqlConcatAND
@@ -42,6 +42,15 @@ instance Convertible RawSQL SqlValue where
 -- | Parameterized SQL fragments and statements
 data SQL = SQL RawSQL [SqlValue]
   deriving (Eq, Show)
+
+-- | Convenience class for things that can be turned into 'SQL'.
+-- There is intentionally no instance for String, use 'SQL' in a
+-- default declaration instead.
+class IsSQL a where
+  toSQLCommand :: a -> SQL
+
+instance IsSQL SQL where
+  toSQLCommand = id
 
 raw :: RawSQL -> SQL
 raw r = SQL r []

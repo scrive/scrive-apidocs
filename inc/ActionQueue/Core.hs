@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module ActionQueue.Core (
     Action(..)
   , GetAction(..)

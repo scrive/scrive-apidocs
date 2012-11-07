@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 {- |
 
 Module SQL2 offers some nice monadic function that build SQL commands on the fly. Some examples:
@@ -60,8 +60,7 @@ be made equal in length by appending DEFAULT as fill element.
 -}
 
 module DB.SQL2
-  ( IsSQL(..)
-  , sqlWhere
+  ( sqlWhere
   , sqlWhereEq
   , sqlWhereNotEq
   , sqlWhereIn
@@ -115,9 +114,6 @@ import Database.HDBC
 import Data.Convertible
 import Data.Typeable
 
-class IsSQL a where
-  toSQLCommand :: a -> SQL
-
 data Multiplicity a = Single a | Many [a]
   deriving (Eq, Ord, Show, Typeable)
 
@@ -163,9 +159,10 @@ instance Show SqlUpdate where
 instance Show SqlDelete where
   show = show . toSQLCommand
 
-emitClause :: RawSQL -> SQL -> SQL
-emitClause _ "" = ""
-emitClause name x = "" <+> raw name <+> x
+emitClause :: IsSQL sql => RawSQL -> sql -> SQL
+emitClause name s = case toSQLCommand s of
+  "" -> ""
+  x -> "" <+> raw name <+> x
 
 emitClausesSep :: RawSQL -> RawSQL -> [SQL] -> SQL
 emitClausesSep _name _sep [] = SQL "" []
@@ -216,21 +213,21 @@ instance IsSQL SqlDelete where
         emitClausesSep "WHERE" "AND" (sqlDeleteWhere cmd)
 
 
-sqlSelect :: RawSQL -> State SqlSelect () -> SQL
+sqlSelect :: RawSQL -> State SqlSelect () -> SqlSelect
 sqlSelect table refine =
-  toSQLCommand $ execState refine (SqlSelect (SQL table []) [] [] [] [] [] 0 (-1))
+  execState refine (SqlSelect (SQL table []) [] [] [] [] [] 0 (-1))
 
-sqlInsert :: RawSQL -> State SqlInsert () -> SQL
+sqlInsert :: RawSQL -> State SqlInsert () -> SqlInsert
 sqlInsert table refine =
-  toSQLCommand $ execState refine (SqlInsert table mempty [])
+  execState refine (SqlInsert table mempty [])
 
-sqlUpdate :: RawSQL -> State SqlUpdate () -> SQL
+sqlUpdate :: RawSQL -> State SqlUpdate () -> SqlUpdate
 sqlUpdate table refine =
-  toSQLCommand $ execState refine (SqlUpdate table mempty [] [] [])
+  execState refine (SqlUpdate table mempty [] [] [])
 
-sqlDelete :: RawSQL -> State SqlDelete () -> SQL
+sqlDelete :: RawSQL -> State SqlDelete () -> SqlDelete
 sqlDelete table refine =
-  toSQLCommand $ execState refine (SqlDelete table [])
+  execState refine (SqlDelete table [])
 
 class SqlWhere a where
   sqlWhere1 :: a -> SQL -> a

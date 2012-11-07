@@ -1,3 +1,4 @@
+{-# LANGUAGE ExtendedDefaultRules #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.DocStateData (
     module Doc.DocumentID
@@ -478,7 +479,7 @@ instance Convertible  [FieldPlacement] SqlValue where
                              value "fsrel" $ placementfsrel placement
                              value "page" $ placementpage placement
                              value "tip" $ case (placementtipside placement) of
-                                             Just LeftTip -> Just "left"
+                                             Just LeftTip -> Just ("left" :: String)
                                              Just RightTip -> Just "right"
                                              _ -> Nothing
 

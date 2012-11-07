@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Company.Model (
     module Company.CompanyID
   , ExternalCompanyID(..)

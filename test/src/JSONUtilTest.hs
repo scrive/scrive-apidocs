@@ -38,7 +38,7 @@ testBasicDiggers= do
     let Right json = runGetJSON readJSObject "{\"a\":\"1\" , \"b\" : 1 , \"c\": [], \"d\": {} }"
     withJSValue json $ do
         a <- fromJSValueField "a"
-        assertBool "Test fromJSValueField String" (a == Just "1")
+        assertBool "Test fromJSValueField String" (a == Just ("1"::String))
         a' <- fromJSValueField "a"
         assertBool "Test fromJSValueField BS" (a' == Just (BS.fromString "1"))
         b <-  fromJSValueField "b"

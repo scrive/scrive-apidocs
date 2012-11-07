@@ -1,3 +1,4 @@
+{-# LANGUAGE ExtendedDefaultRules #-}
 module OAuth.Control(oauth) where
 
 import Kontra
@@ -158,12 +159,15 @@ apiDashboardGrantedPrivileges = do
 
 -- Manipulate dashboard stuff
 
+success :: JSValue
+success = toJSValue $ singleton ("status" :: String) ("success" :: String)
+
 createAPIToken :: Kontrakcja m => m JSValue
 createAPIToken = do
   muser <- ctxmaybeuser <$> getContext
   user <- guardJust muser
   _success <- dbUpdate $ CreateAPIToken (userid user)
-  return $ toJSValue $ singleton "status" "success"
+  return success
   
 deleteAPIToken :: Kontrakcja m => m JSValue
 deleteAPIToken = do
@@ -173,21 +177,21 @@ deleteAPIToken = do
   case maybeRead =<< mtk of
     Nothing -> return ()
     Just token -> void $ dbUpdate $ DeleteAPIToken (userid user) token
-  return $ toJSValue $ singleton "status" "success"
+  return success
       
 createPersonalToken :: Kontrakcja m => m JSValue
 createPersonalToken = do
   muser <- ctxmaybeuser <$> getContext
   user <- guardJust muser
   _success <- dbUpdate $ CreatePersonalToken (userid user)
-  return $ toJSValue $ singleton "status" "success"
+  return success
   
 deletePersonalToken :: Kontrakcja m => m JSValue
 deletePersonalToken = do
   muser <- ctxmaybeuser <$> getContext
   user <- guardJust muser
   _success <- dbUpdate $ DeletePersonalToken (userid user)
-  return $ toJSValue $ singleton "status" "success"
+  return success
 
 deletePrivilege :: Kontrakcja m => m JSValue
 deletePrivilege = do
@@ -201,4 +205,4 @@ deletePrivilege = do
       case maybeRead =<< mpr of
         Nothing -> void $ dbUpdate $ DeletePrivileges (userid user) tokenid
         Just pr -> void $ dbUpdate $ DeletePrivilege  (userid user) tokenid pr
-  return $ toJSValue $ singleton "status" "success"
+  return success

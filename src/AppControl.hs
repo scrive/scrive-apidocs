@@ -1,3 +1,4 @@
+{-# LANGUAGE ExtendedDefaultRules #-}
 {- |
    Initialises contexts and sessions, and farms requests out to the appropriate handlers.
  -}

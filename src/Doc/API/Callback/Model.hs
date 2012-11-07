@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Doc.API.Callback.Model (
     DocumentAPICallback(..)
   , documentAPICallback

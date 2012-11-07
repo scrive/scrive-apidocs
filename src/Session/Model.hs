@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Session.Model (
     getNonTempSessionID
   , getCurrentSession

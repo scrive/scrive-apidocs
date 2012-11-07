@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module File.Model (
       module File.FileID
     , FileMovedToAWS(..)

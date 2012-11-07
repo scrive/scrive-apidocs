@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, OverloadedStrings #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
 module Mails.Model (
     module Mails.Data
   , CreateEmail(..)

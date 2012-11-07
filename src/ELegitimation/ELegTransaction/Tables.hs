@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module ELegitimation.ELegTransaction.Tables where
 
 import Data.Monoid ((<>))

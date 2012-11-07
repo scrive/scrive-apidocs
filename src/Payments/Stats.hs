@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Payments.Stats (record 
                       ,PaymentsAction(..)
                       ,handlePaymentsStatsCSV)

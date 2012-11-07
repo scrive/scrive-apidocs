@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 module DB.TimeZoneName
   ( TimeZoneName
   , mkTimeZoneName
@@ -17,9 +17,10 @@ import Database.HDBC (SqlValue)
 import DB.Core (MonadDB)
 import DB.Env (DBEnv)
 import DB.Functions (kRun)
-import DB.SQL ((<?>), (<+>))
+import DB.SQL (SQL, (<?>), (<+>))
 import DB.Utils (getOne, exactlyOneObjectReturnedGuard)
 
+default (SQL)
 
 -- | Time zone names that the database backend accepts.  See also
 -- http://en.wikipedia.org/wiki/List_of_tz_database_time_zones

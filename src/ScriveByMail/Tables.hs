@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module ScriveByMail.Tables (
     tableMailAPIDelay
   , tableUserMailAPIs

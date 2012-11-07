@@ -1,5 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -XStandaloneDeriving #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
 module Payments.Model where
 

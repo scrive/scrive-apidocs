@@ -1,8 +1,10 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 module Company.Migrations where
 
 import DB
 import Company.Tables
+
+default (SQL)
 
 removeServiceIDFromCompanies :: MonadDB m => Migration m
 removeServiceIDFromCompanies = Migration {

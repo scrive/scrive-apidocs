@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 module DB.Checks (
     performDBChecks
   ) where
@@ -17,6 +17,8 @@ import DB.Model
 import DB.SQL
 import DB.Utils
 import DB.Versions
+
+default (SQL)
 
 -- | Runs all checks on a database
 performDBChecks :: MonadDB m => (String -> m ()) -> [Table] -> [Migration m] -> m ()

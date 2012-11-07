@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module CompanyAccounts.Tables (
     tableCompanyInvites
   ) where

@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fcontext-stack=50 #-}
 module User.Model (
     module User.Lang

@@ -1,3 +1,4 @@
+{-# LANGUAGE ExtendedDefaultRules #-}
 module MailGun (
     handleMailGunEvents
   ) where

@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Mails.Migrations (
     mailerMigrations
   ) where

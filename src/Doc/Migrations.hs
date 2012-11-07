@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.Migrations where
 
@@ -20,6 +20,8 @@ import qualified Data.ByteString.UTF8 as BS
 import EvidenceLog.Model
 import Version
 import MinutesTime
+
+default (SQL)
 
 $(jsonableDeriveConvertible [t| [SignatoryField] |])
 

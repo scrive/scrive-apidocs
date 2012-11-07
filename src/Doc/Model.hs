@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, OverloadedStrings #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -fcontext-stack=50  #-}
 module Doc.Model
   ( module File.File
@@ -499,7 +499,7 @@ statusClassCaseExpression =
   <> SQL " END " []
 
 
-selectSignatoryLinksX :: State.State SqlSelect () -> SQL
+selectSignatoryLinksX :: State.State SqlSelect () -> SqlSelect
 selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
   sqlResult "signatory_links.id"
   sqlResult "signatory_links.document_id"
@@ -538,7 +538,7 @@ selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
   extension
 
 selectSignatoryLinksSQL :: SQL
-selectSignatoryLinksSQL = selectSignatoryLinksX (return ()) <+> ""
+selectSignatoryLinksSQL = toSQLCommand (selectSignatoryLinksX (return ())) <+> ""
 
 fetchSignatoryLinks :: MonadDB m => DBEnv m (M.Map DocumentID [SignatoryLink])
 fetchSignatoryLinks = do

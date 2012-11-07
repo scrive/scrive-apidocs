@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module DB.Functions (
     dbCommit
   , dbRollback
@@ -35,7 +34,7 @@ import DB.Core
 import DB.Env
 import DB.Exception
 import DB.Nexus
-import DB.SQL (RawSQL, SQL(..), raw, unRawSQL, (<+>), (<?>), sqlConcatComma, parenthesize, sqlParam)
+import DB.SQL (RawSQL, SQL(..), raw, unRawSQL, (<+>), (<?>), sqlConcatComma, parenthesize, sqlParam, IsSQL, toSQLCommand)
 import DB.Model (Table(..))
 
 infix 7 .=
@@ -126,14 +125,18 @@ kFinish = withDBEnvSt $ \s@DBEnvSt{..} -> do
 kRunRaw :: MonadDB m => String -> DBEnv m ()
 kRunRaw s = withDBEnv $ \_ -> getNexus >>= \c -> liftIO (runRaw c s)
 
-kRun_ :: MonadDB m => SQL -> DBEnv m ()
-kRun_ s = kRun s >> return ()
+kRun_ :: (MonadDB m, IsSQL sql) => sql -> DBEnv m ()
+kRun_ presql = kRun presql >> return ()
 
-kRun :: MonadDB m => SQL -> DBEnv m Integer
-kRun (SQL s values) = kPrepare s >> kExecute values
+kRun :: (MonadDB m, IsSQL sql) => sql -> DBEnv m Integer
+kRun presql = kPrepare s >> kExecute values
+  where
+    (SQL s values) = toSQLCommand presql
 
-kRun01 :: MonadDB m => SQL -> DBEnv m Bool
-kRun01 (SQL s values) = kPrepare s >> kExecute01 values
+kRun01 :: (MonadDB m, IsSQL sql) => sql -> DBEnv m Bool
+kRun01 presql = kPrepare s >> kExecute01 values
+  where
+    (SQL s values) = toSQLCommand presql
 
 kGetTables :: MonadDB m => DBEnv m [String]
 kGetTables = withDBEnv $ \_ -> getNexus >>= liftIO . getTables

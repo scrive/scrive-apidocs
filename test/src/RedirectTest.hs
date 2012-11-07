@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module RedirectTest where
 
 import Test.Framework

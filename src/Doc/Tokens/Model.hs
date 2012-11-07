@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Doc.Tokens.Model (
     GetDocumentSessionToken(..)
   , AddDocumentSessionToken(..)

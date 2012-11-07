@@ -352,7 +352,7 @@ asValidEmail input =
           checkFormat email | isValidFormat email = return email
                             | otherwise = Bad $ flashMessageInvalidFormat fieldtemplate
           isValidFormat :: String -> Bool
-          isValidFormat = (=~ "^[[:alnum:]._%+-]+@[[:alnum:].-]+[.][[:alpha:]]{2,4}$")
+          isValidFormat = (=~ ("^[[:alnum:]._%+-]+@[[:alnum:].-]+[.][[:alpha:]]{2,4}$":: String))
 
 {- |
     Creates an email that hasn't been completely validated.  It still does handy things

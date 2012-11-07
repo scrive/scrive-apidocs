@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module OAuth.Model where
 
 import DB.Derive

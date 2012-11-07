@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module SessionsTest (sessionsTests) where
 
 import Control.Applicative

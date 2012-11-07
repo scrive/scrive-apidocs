@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module EvidenceLog.Tables (tableEvidenceLog) where
 
 import DB

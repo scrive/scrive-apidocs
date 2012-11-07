@@ -1,3 +1,4 @@
+{-# LANGUAGE ExtendedDefaultRules #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {- 
     Signatory TMP is an data structure used to represend signatory data
@@ -216,7 +217,7 @@ instance FromJSValue FieldType where
    fromJSValue = do
     s <- fromJSValueField "name"
     t <- fromJSValueField "type"
-    filled <- (not . null) <$> fromMaybe "" <$> fromJSValueField "value"
+    filled <- (not . null) <$> fromMaybe ("" :: String) <$> fromJSValueField "value"
     return $ case (fromMaybe "standard" t,s) of
          ("standard",            Just "fstname")    -> Just $ FirstNameFT
          ("standard",            Just "sndname")    -> Just $ LastNameFT

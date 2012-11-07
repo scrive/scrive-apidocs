@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
 module SendGrid (
     handleSendGridEvents
   ) where
@@ -47,7 +46,7 @@ handleSendGridEvents = do
                     then "UpdateWithEvent didn't update anything"
                     else "Event '" ++ show event ++ "' for email #" ++ show mailID ++ " received."
     (mid, token) -> logMsg $ "Invalid id (" ++ show mid ++ ") or token (" ++ show token ++ ") received."
-  ok $ toResponse "Thanks"
+  ok $ toResponse ("Thanks" :: String)
 
 logMsg :: String -> Mailer ()
 logMsg msg = Log.mailingServer $ "handleSendgridEvents: " ++ msg

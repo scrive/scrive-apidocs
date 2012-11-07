@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module EvidenceLog.Model (
     EvidenceEventType(..)
   , eventTextTemplateName  
