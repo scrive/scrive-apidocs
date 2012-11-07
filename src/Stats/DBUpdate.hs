@@ -99,39 +99,38 @@ docStatSignMethod status did apistring =
     -- if the document is closed. If the document is instead pending or
     -- cancelled, we want to count _signatories_ and _always_ insert.
     -- Also, the event IDs differ, as does the timestamp to use.
-    (padQty, emailQty, elegQty, countSigs, docStatusCondition, time)
-      | status == DocClosed   = (DocStatPadSignatures,
-                                 DocStatEmailSignatures,
-                                 DocStatElegSignatures,
-                                 "COUNT (sign_time)",
-                                 "doc.status = " ++ fromSql (toSql Closed),
-                                 "sls.last_sign")
-      | status == DocPending  = (DocStatPadSignaturePending,
-                                 DocStatEmailSignaturePending,
-                                 DocStatElegSignaturePending,
-                                 signatoryCount,
-                                 "doc.invite_time IS NOT NULL",
-                                 "doc.invite_time")
-      | status == DocCancel   = (DocStatPadSignatureCancel,
-                                 DocStatEmailSignatureCancel,
-                                 DocStatElegSignatureCancel,
-                                 signatoryCount,
-                                 cancelCondition,
-                                 "doc.mtime")
-      | status == DocReject   = (DocStatPadSignatureReject,
-                                 DocStatEmailSignatureReject,
-                                 DocStatElegSignatureReject,
-                                 signatoryCount,
-                                 "doc.rejection_time IS NOT NULL",
-                                 "doc.rejection_time")
-      | status == DocTimeout  = (DocStatPadSignatureTimeout,
-                                 DocStatEmailSignatureTimeout,
-                                 DocStatElegSignatureTimeout,
-                                 signatoryCount,
-                                 timeoutCondition,
-                                 "doc.timeout_time")
-      | otherwise             = error $  "docStatSignMethod called with "
-                                      ++ "nonsensical DocumentStatus!"
+    (padQty, emailQty, elegQty, countSigs, docStatusCondition, time) =
+      case status of
+        DocClosed ->  (DocStatPadSignatures,
+                       DocStatEmailSignatures,
+                       DocStatElegSignatures,
+                       "COUNT (sign_time)",
+                       "doc.status = " ++ fromSql (toSql Closed),
+                       "sls.last_sign")
+        DocPending -> (DocStatPadSignaturePending,
+                       DocStatEmailSignaturePending,
+                       DocStatElegSignaturePending,
+                       signatoryCount,
+                       "doc.invite_time IS NOT NULL",
+                       "doc.invite_time")
+        DocCancel ->  (DocStatPadSignatureCancel,
+                       DocStatEmailSignatureCancel,
+                       DocStatElegSignatureCancel,
+                       signatoryCount,
+                       cancelCondition,
+                       "doc.mtime")
+        DocReject ->  (DocStatPadSignatureReject,
+                       DocStatEmailSignatureReject,
+                       DocStatElegSignatureReject,
+                       signatoryCount,
+                       "doc.rejection_time IS NOT NULL",
+                       "doc.rejection_time")
+        DocTimeout -> (DocStatPadSignatureTimeout,
+                       DocStatEmailSignatureTimeout,
+                       DocStatElegSignatureTimeout,
+                       signatoryCount,
+                       timeoutCondition,
+                       "doc.timeout_time")
     signatoryCount = "COUNT (CASE WHEN is_partner THEN TRUE ELSE NULL END)"
     cancelCondition =
         "doc.status = " ++ fromSql (toSql Canceled)
