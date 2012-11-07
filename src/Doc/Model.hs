@@ -126,9 +126,7 @@ import Util.HasSomeUserInfo
 import Templates.Fields (value, objects)
 import DB.TimeZoneName (TimeZoneName, mkTimeZoneName, withTimeZone)
 import qualified DB.TimeZoneName as TimeZoneName
-import DB.SQL2 hiding (sqlResult,sqlOrderBy)
-import qualified DB.SQL2 as SQL2 (sqlResult,sqlOrderBy)
-import Control.Monad.State
+import DB.SQL2
 
 data DocumentPagination =
   DocumentPagination
@@ -502,7 +500,7 @@ statusClassCaseExpression =
   <> SQL " END " []
 
 
-selectSignatoryLinksX :: State.State SqlSelect () -> SqlSelect
+selectSignatoryLinksX :: State.State SqlSelect () -> SQL
 selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
   sqlResult "signatory_links.id"
   sqlResult "signatory_links.document_id"
@@ -536,12 +534,12 @@ selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
   sqlResult "signatory_attachments.file_id AS sigfileid"
   sqlResult "signatory_attachments.name AS signame"
   sqlResult "signatory_attachments.description AS sigdesc"
-  sqlLeftJoinOn ("signatory_attachments" :: SQL) ("signatory_attachments.signatory_link_id = signatory_links.id" :: SQL)
-  sqlJoinOn ("documents" :: SQL) ("signatory_links.document_id = documents.id" :: SQL)
+  sqlLeftJoinOn "signatory_attachments" "signatory_attachments.signatory_link_id = signatory_links.id"
+  sqlJoinOn "documents" "signatory_links.document_id = documents.id"
   extension
 
 selectSignatoryLinksSQL :: SQL
-selectSignatoryLinksSQL = toSQLCommand (selectSignatoryLinksX (return ())) <> SQL " " []
+selectSignatoryLinksSQL = selectSignatoryLinksX (return ()) <+> ""
 
 fetchSignatoryLinks :: MonadDB m => DBEnv m (M.Map DocumentID [SignatoryLink])
 fetchSignatoryLinks = do
@@ -2360,14 +2358,3 @@ updateOneAndMtimeWithEvidenceIfChanged did col new mtime =
     (checkIfAnyReturned $ "SELECT 1 FROM" <+> fromString (tblName tableDocuments)
                       <+> "WHERE id = " <?> did <+> "AND" <+> col <+> "IS DISTINCT FROM" <?> new)
     tableDocuments ("mtime =" <?> mtime <+> "," <+> col <+> "=" <?> new <+> "WHERE id =" <?> did)
-
-
--- UTILS, temporary
-
-sqlOrderBy :: (MonadState v m, SqlOrderBy v) => SQL -> m ()
-sqlOrderBy = SQL2.sqlOrderBy
-
-sqlResult :: (MonadState v m, SqlResult v) => SQL -> m ()
-sqlResult = SQL2.sqlResult
-
-    

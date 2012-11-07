@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Stats.Migrations where
 
 import DB

@@ -21,7 +21,7 @@ import DB.Env
 import DB.Exception
 import DB.Fetcher
 import DB.Functions
-import DB.SQL (IsSQL)
+import DB.SQL (SQL (..))
 
 class OneObjectReturnedGuard f where
   exactlyOneObjectReturnedGuard :: (MonadIO m, Typeable a) => f a -> m a
@@ -61,15 +61,15 @@ checkIfOneObjectReturned :: MonadIO m => [a] -> m Bool
 checkIfOneObjectReturned xs = oneObjectReturnedGuard xs
   >>= return . maybe False (const True)
 
-getMany :: (IsSQL sql, MonadDB m) => Convertible SqlValue a => sql -> DBEnv m [a]
+getMany :: MonadDB m => Convertible SqlValue a => SQL -> DBEnv m [a]
 getMany sql = do
   _ <- kRun sql
   foldDB (\acc v -> v : acc) []
 
-getOne :: (IsSQL sql, MonadDB m) => Convertible SqlValue a => sql -> DBEnv m (Maybe a)
+getOne :: MonadDB m => Convertible SqlValue a => SQL -> DBEnv m (Maybe a)
 getOne sql = getMany sql >>= oneObjectReturnedGuard
 
-checkIfAnyReturned :: forall m sql. (IsSQL sql, MonadDB m) => sql -> DBEnv m Bool
+checkIfAnyReturned :: forall m. MonadDB m => SQL -> DBEnv m Bool
 checkIfAnyReturned sql =
   (getOne sql :: DBEnv m (Maybe SqlValue))
     >>= checkIfOneObjectReturned . maybeToList

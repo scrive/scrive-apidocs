@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module DB.Checks (
     performDBChecks
   ) where
@@ -42,7 +43,7 @@ setByteaOutput :: MonadDB m => (String -> DBEnv m ()) -> DBEnv m Bool
 setByteaOutput logger = do
   Just dbname <- getOne "SELECT current_catalog"
   Just bytea_output <- getOne "SHOW bytea_output"
-  if bytea_output /= "hex"
+  if bytea_output /= ("hex" :: String)
     then do
       logger $ "Setting bytea_output to 'hex'..."
       kRunRaw $ "ALTER DATABASE \"" ++ dbname ++ "\" SET bytea_output = 'hex'"

@@ -10,7 +10,6 @@ module DB.SQL (
   , SQLType(..)
   , mkSQL
   , AscDesc(..)
-  , IsSQL(..)
   , sqlOR
   , sqlJoinWith
   , sqlJoinWithAND
@@ -38,15 +37,6 @@ instance Monoid SQL where
   (SQL q v) `mappend` (SQL q' v') = SQL (q ++ q') (v ++ v')
 
 type ColumnValue = (String, String, SqlValue)
-
-class IsSQL a where
-  toSQLCommand :: a -> SQL
-
-instance IsSQL SQL where
-  toSQLCommand = id
-
-instance IsSQL String where
-  toSQLCommand cmd = SQL cmd []
 
 instance IsString SQL where
   fromString s = SQL s []

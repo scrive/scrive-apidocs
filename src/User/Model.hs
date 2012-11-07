@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fcontext-stack=50 #-}
 module User.Model (
     module User.Lang
@@ -259,12 +260,12 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
           , sql "company_id" mcid
           , sql "first_name" fname
           , sql "last_name" lname
-          , sql "personal_number" ""
-          , sql "company_position" ""
-          , sql "company_name" ""
-          , sql "company_number" ""
-          , sql "phone" ""
-          , sql "mobile" ""
+          , sql "personal_number" ("" :: String)
+          , sql "company_position" ("" :: String)
+          , sql "company_name" ("" :: String)
+          , sql "company_number" ("" :: String)
+          , sql "phone" ("" :: String)
+          , sql "mobile" ("" :: String)
           , sql "email" $ map toLower email
           , sql "lang" $ getLang l
           , sql "region" $ getRegion l

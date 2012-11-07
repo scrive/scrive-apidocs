@@ -39,7 +39,7 @@ setMandatoryExpirationTimeInDocument = Migration {
     kRun_ $ "UPDATE documents SET days_to_sign =" <?> pendingDaysToSign
                            <+> ", timeout_time =" <?> timeout
         <+> "WHERE status =" <?> Pending <+> "AND timeout_time IS NULL"
-    kRun_ $ ("UPDATE documents SET days_to_sign = 0 WHERE days_to_sign IS NULL" :: String)
+    kRun_ "UPDATE documents SET days_to_sign = 0 WHERE days_to_sign IS NULL"
     kRunRaw "ALTER TABLE documents ALTER days_to_sign SET NOT NULL"
 }
 
@@ -87,7 +87,7 @@ removeServiceIDFromDocuments = Migration {
   , mgrFrom = 9
   , mgrDo = do
     -- check if service_id field is empty for all documents
-    check <- getMany ("SELECT DISTINCT service_id IS NULL FROM documents" :: String)
+    check <- getMany "SELECT DISTINCT service_id IS NULL FROM documents"
     case check of
       []     -> return () -- no records, ok
       [True] -> return () -- only nulls, ok

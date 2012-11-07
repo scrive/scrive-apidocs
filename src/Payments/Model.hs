@@ -1,5 +1,6 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -XStandaloneDeriving #-}
-   
+
 module Payments.Model where
 
 import Data.Int (Int64)

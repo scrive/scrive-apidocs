@@ -27,7 +27,7 @@ import DB.Core
 import DB.Env
 import DB.Exception
 import DB.Nexus
-import DB.SQL (SQL(..), IsSQL(..))
+import DB.SQL (SQL(..))
 
 dbCommit :: MonadDB m => m ()
 dbCommit = getNexus >>= liftIO . commit
@@ -115,18 +115,14 @@ kFinish = withDBEnvSt $ \s@DBEnvSt{..} -> do
 kRunRaw :: MonadDB m => String -> DBEnv m ()
 kRunRaw sql = withDBEnv $ \_ -> getNexus >>= \c -> liftIO (runRaw c sql)
 
-kRun_ :: (MonadDB m, IsSQL sql) => sql -> DBEnv m ()
-kRun_ presql = kRun presql >> return ()
+kRun_ :: MonadDB m => SQL -> DBEnv m ()
+kRun_ sql = kRun sql >> return ()
 
-kRun :: (MonadDB m, IsSQL sql) => sql -> DBEnv m Integer
-kRun presql = kPrepare sql >> kExecute values
-  where
-    (SQL sql values) = toSQLCommand presql
+kRun :: MonadDB m => SQL -> DBEnv m Integer
+kRun (SQL sql values) = kPrepare sql >> kExecute values
 
-kRun01 :: (MonadDB m, IsSQL sql) => sql -> DBEnv m Bool
-kRun01 presql = kPrepare sql >> kExecute01 values
-  where
-    (SQL sql values) = toSQLCommand presql
+kRun01 :: MonadDB m => SQL -> DBEnv m Bool
+kRun01 (SQL sql values) = kPrepare sql >> kExecute01 values
 
 kGetTables :: MonadDB m => DBEnv m [String]
 kGetTables = withDBEnv $ \_ -> getNexus >>= liftIO . getTables

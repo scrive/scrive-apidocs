@@ -1,4 +1,4 @@
-
+{-# LANGUAGE OverloadedStrings #-}
 {- |
 
 Module SQL2 offers some nice monadic function that build SQL commands on the fly. Some examples:
@@ -60,7 +60,8 @@ be made equal in length by appending DEFAULT as fill element.
 -}
 
 module DB.SQL2
-  ( sqlWhere
+  ( IsSQL(..)
+  , sqlWhere
   , sqlWhereEq
   , sqlWhereNotEq
   , sqlWhereIn
@@ -113,6 +114,9 @@ import Database.HDBC
 import Data.Convertible
 import Data.Typeable
 
+class IsSQL a where
+  toSQLCommand :: a -> SQL
+
 data Multiplicity a = Single a | Many [a]
   deriving (Eq, Ord, Show, Typeable)
 
@@ -158,11 +162,9 @@ instance Show SqlUpdate where
 instance Show SqlDelete where
   show = show . toSQLCommand
 
-emitClause :: (IsSQL sql) => String -> sql -> SQL
-emitClause name sql =
-  case toSQLCommand sql of
-    SQL "" [] -> SQL "" []
-    x -> SQL (" " ++ name ++ " ") [] `mappend` x
+emitClause :: SQL -> SQL -> SQL
+emitClause _ (SQL "" []) = SQL "" []
+emitClause name x = "" <+> name <+> x
 
 emitClausesSep :: String -> String -> [SQL] -> SQL
 emitClausesSep _name _sep [] = SQL "" []
@@ -218,21 +220,21 @@ instance IsSQL SqlDelete where
         emitClausesSep "WHERE" " AND " (sqlDeleteWhere cmd)
 
 
-sqlSelect :: String -> State SqlSelect () -> SqlSelect
+sqlSelect :: String -> State SqlSelect () -> SQL
 sqlSelect table refine =
-  execState refine (SqlSelect (SQL table []) [] [] [] [] [] 0 (-1))
+  toSQLCommand $ execState refine (SqlSelect (SQL table []) [] [] [] [] [] 0 (-1))
 
-sqlInsert :: String -> State SqlInsert () -> SqlInsert
+sqlInsert :: String -> State SqlInsert () -> SQL
 sqlInsert table refine =
-  execState refine (SqlInsert table mempty [])
+  toSQLCommand $ execState refine (SqlInsert table mempty [])
 
-sqlUpdate :: String -> State SqlUpdate () -> SqlUpdate
+sqlUpdate :: String -> State SqlUpdate () -> SQL
 sqlUpdate table refine =
-  execState refine (SqlUpdate table mempty [] [] [])
+  toSQLCommand $ execState refine (SqlUpdate table mempty [] [] [])
 
-sqlDelete :: String -> State SqlDelete () -> SqlDelete
+sqlDelete :: String -> State SqlDelete () -> SQL
 sqlDelete table refine =
-  execState refine (SqlDelete table [])
+  toSQLCommand $ execState refine (SqlDelete table [])
 
 class SqlWhere a where
   sqlWhere1 :: a -> SQL -> a
@@ -246,15 +248,15 @@ instance SqlWhere SqlUpdate where
 instance SqlWhere SqlDelete where
   sqlWhere1 cmd sql = cmd { sqlDeleteWhere = sqlDeleteWhere cmd ++ [sql] }
 
-sqlWhere :: (MonadState v m, SqlWhere v, IsSQL sql) => sql -> m ()
-sqlWhere sql = modify (\cmd -> sqlWhere1 cmd (toSQLCommand sql))
+sqlWhere :: (MonadState v m, SqlWhere v) => SQL -> m ()
+sqlWhere sql = modify (\cmd -> sqlWhere1 cmd sql)
 
-sqlWhereOr :: (MonadState v m, SqlWhere v, IsSQL sql) => [sql] -> m ()
+sqlWhereOr :: (MonadState v m, SqlWhere v) => [SQL] -> m ()
 sqlWhereOr [] = sqlWhere "FALSE"
 sqlWhereOr [sql] = sqlWhere sql
 sqlWhereOr sqls = sqlWhere $
                   SQL "(" [] `mappend`
-                  mconcat (intersperse (SQL " OR " []) (map toSQLCommand sqls)) `mappend`
+                  mconcat (intersperse (SQL " OR " []) sqls) `mappend`
                   SQL ")" []
 
 sqlWhereEq :: (MonadState v m, SqlWhere v, Convertible sql SqlValue) => String -> sql -> m ()
@@ -301,35 +303,35 @@ instance SqlFrom SqlSelect where
 instance SqlFrom SqlUpdate where
   sqlFrom1 cmd sql = cmd { sqlUpdateFrom = sqlUpdateFrom cmd `mappend` sql }
 
-sqlFrom :: (MonadState v m, SqlFrom v, IsSQL sql) => sql -> m ()
-sqlFrom sql = modify (\cmd -> sqlFrom1 cmd (toSQLCommand sql))
+sqlFrom :: (MonadState v m, SqlFrom v) => SQL -> m ()
+sqlFrom sql = modify (\cmd -> sqlFrom1 cmd sql)
 
-sqlJoin :: (MonadState v m, SqlFrom v, IsSQL sql) => sql -> m ()
-sqlJoin table = sqlFrom (SQL ", " [] `mappend` toSQLCommand table)
+sqlJoin :: (MonadState v m, SqlFrom v) => SQL -> m ()
+sqlJoin table = sqlFrom (SQL ", " [] `mappend` table)
 
-sqlJoinOn :: (MonadState v m, SqlFrom v, IsSQL sql) => sql -> sql -> m ()
+sqlJoinOn :: (MonadState v m, SqlFrom v) => SQL -> SQL -> m ()
 sqlJoinOn table condition = sqlFrom (SQL " JOIN " [] `mappend`
-                                     toSQLCommand table `mappend`
+                                     table `mappend`
                                      SQL " ON " [] `mappend`
-                                     toSQLCommand condition)
+                                     condition)
 
-sqlLeftJoinOn :: (MonadState v m, SqlFrom v, IsSQL sql) => sql -> sql -> m ()
+sqlLeftJoinOn :: (MonadState v m, SqlFrom v) => SQL -> SQL -> m ()
 sqlLeftJoinOn table condition = sqlFrom (SQL " LEFT JOIN " [] `mappend`
-                                         toSQLCommand table `mappend`
+                                         table `mappend`
                                          SQL " ON " [] `mappend`
-                                         toSQLCommand condition)
+                                         condition)
 
-sqlRightJoinOn :: (MonadState v m, SqlFrom v, IsSQL sql) => sql -> sql -> m ()
+sqlRightJoinOn :: (MonadState v m, SqlFrom v) => SQL -> SQL -> m ()
 sqlRightJoinOn table condition = sqlFrom (SQL " RIGHT JOIN " [] `mappend`
-                                          toSQLCommand table `mappend`
+                                          table `mappend`
                                           SQL " ON " [] `mappend`
-                                          toSQLCommand condition)
+                                          condition)
 
-sqlFullJoinOn :: (MonadState v m, SqlFrom v, IsSQL sql) => sql -> sql -> m ()
+sqlFullJoinOn :: (MonadState v m, SqlFrom v) => SQL -> SQL -> m ()
 sqlFullJoinOn table condition = sqlFrom (SQL " FULL JOIN " [] `mappend`
-                                         toSQLCommand table `mappend`
+                                         table `mappend`
                                          SQL " ON " [] `mappend`
-                                         toSQLCommand condition)
+                                         condition)
 
 class SqlSet a where
   sqlSet1 :: a -> String -> SQL -> a
@@ -341,11 +343,11 @@ instance SqlSet SqlInsert where
   sqlSet1 cmd name sql = cmd { sqlInsertSet = sqlInsertSet cmd ++ [(name, Single sql)] }
 
 
-sqlSetCmd :: (MonadState v m, SqlSet v, IsSQL sql) => String -> sql -> m ()
-sqlSetCmd name sql = modify (\cmd -> sqlSet1 cmd name (toSQLCommand sql))
+sqlSetCmd :: (MonadState v m, SqlSet v) => String -> SQL -> m ()
+sqlSetCmd name sql = modify (\cmd -> sqlSet1 cmd name sql)
 
-sqlSetCmdList :: (MonadState SqlInsert m, IsSQL sql) => String -> [sql] -> m ()
-sqlSetCmdList name sql = modify (\cmd -> cmd { sqlInsertSet = sqlInsertSet cmd ++ [(name, Many (map toSQLCommand sql))] })
+sqlSetCmdList :: (MonadState SqlInsert m) => String -> [SQL] -> m ()
+sqlSetCmdList name sql = modify (\cmd -> cmd { sqlInsertSet = sqlInsertSet cmd ++ [(name, Many sql)] })
 
 sqlSet :: (MonadState v m, SqlSet v, Convertible sql SqlValue) => String -> sql -> m ()
 sqlSet name sql = modify (\cmd -> sqlSet1 cmd name (SQL "?" [convert sql]))
@@ -367,8 +369,8 @@ instance SqlResult SqlUpdate where
 
 
 
-sqlResult :: (MonadState v m, SqlResult v, IsSQL sql) => sql -> m ()
-sqlResult sql = modify (\cmd -> sqlResult1 cmd (toSQLCommand sql))
+sqlResult :: (MonadState v m, SqlResult v) => SQL -> m ()
+sqlResult sql = modify (\cmd -> sqlResult1 cmd sql)
 
 class SqlOrderBy a where
   sqlOrderBy1 :: a -> SQL -> a
@@ -378,8 +380,8 @@ instance SqlOrderBy SqlSelect where
 
 
 
-sqlOrderBy :: (MonadState v m, SqlOrderBy v, IsSQL sql) => sql -> m ()
-sqlOrderBy sql = modify (\cmd -> sqlOrderBy1 cmd (toSQLCommand sql))
+sqlOrderBy :: (MonadState v m, SqlOrderBy v) => SQL -> m ()
+sqlOrderBy sql = modify (\cmd -> sqlOrderBy1 cmd sql)
 
 class SqlGroupByHaving a where
   sqlGroupBy1 :: a -> SQL -> a
@@ -390,11 +392,11 @@ instance SqlGroupByHaving SqlSelect where
   sqlHaving1 cmd sql = cmd { sqlSelectHaving = sqlSelectHaving cmd ++ [sql] }
 
 
-sqlGroupBy :: (MonadState v m, SqlGroupByHaving v, IsSQL sql) => sql -> m ()
-sqlGroupBy sql = modify (\cmd -> sqlGroupBy1 cmd (toSQLCommand sql))
+sqlGroupBy :: (MonadState v m, SqlGroupByHaving v) => SQL -> m ()
+sqlGroupBy sql = modify (\cmd -> sqlGroupBy1 cmd sql)
 
-sqlHaving :: (MonadState v m, SqlGroupByHaving v, IsSQL sql) => sql -> m ()
-sqlHaving sql = modify (\cmd -> sqlHaving1 cmd (toSQLCommand sql))
+sqlHaving :: (MonadState v m, SqlGroupByHaving v) => SQL -> m ()
+sqlHaving sql = modify (\cmd -> sqlHaving1 cmd sql)
 
 
 class SqlOffsetLimit a where
