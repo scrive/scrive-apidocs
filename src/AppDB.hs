@@ -111,6 +111,7 @@ kontraMigrations = [
   , setMandatoryExpirationTimeInDocument
   , removeRegionFromUsers
   , changeRegionToLang
+  , removeCompanyIdFromSignatoryLinks
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

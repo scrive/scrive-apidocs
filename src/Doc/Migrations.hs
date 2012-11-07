@@ -83,6 +83,14 @@ addSequenceOwnerToSignatoryLinks = Migration {
       kRunRaw "ALTER SEQUENCE signatory_links_id_seq OWNED BY signatory_links.id"
 }
 
+removeCompanyIdFromSignatoryLinks :: MonadDB m => Migration m
+removeCompanyIdFromSignatoryLinks = Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 13
+  , mgrDo = do
+      kRunRaw "ALTER TABLE signatory_links DROP COLUMN company_id"
+}
+
 removeServiceIDFromDocuments :: MonadDB m => Migration m
 removeServiceIDFromDocuments = Migration {
     mgrTable = tableDocuments

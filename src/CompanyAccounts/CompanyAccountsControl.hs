@@ -27,15 +27,12 @@ import Company.CompanyControl (withCompanyAdmin)
 import Company.Model
 import CompanyAccounts.Model
 import CompanyAccounts.CompanyAccountsView
-import Doc.Model
-import Doc.DocStateData
 import InputValidation
 import Kontra
 import KontraLink
 import ListUtil
 import Mails.SendMail
 import Happstack.Fields
-import Util.Actor
 import Util.FlashUtil
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
@@ -383,23 +380,8 @@ handlePostBecomeCompanyAccount cid = withUserPost $ do
       _ <- dbUpdate $ DeletePaymentPlan (Left $ userid user)
       return ()
     Nothing -> return ()
-  _ <- resaveDocsForUser (userid user)
   addFlashM $ flashMessageUserHasBecomeCompanyAccount newcompany
   return $ LinkAccount
-
-{- |
-    Resaving the user's documents means that their new company
-    will take them over.
-    This is pretty icky - it'd be way nicer if it wasn't like this.
--}
-resaveDocsForUser :: Kontrakcja m => UserID -> m ()
-resaveDocsForUser uid = do
-  user <- guardJustM $ dbQuery $ GetUserByID uid
-  userdocs <- dbQuery $ GetDocumentsByAuthor uid
-  time <- ctxtime <$> getContext
-  let actor = systemActor time
-  mapM_ (\doc -> dbUpdate $ AdminOnlySaveForUser (documentid doc) user actor) userdocs
-  return ()
 
 {- |
     This checks that the logged in user is suitable for being

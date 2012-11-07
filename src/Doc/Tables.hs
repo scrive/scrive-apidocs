@@ -149,12 +149,11 @@ tableSignatoryAttachments = Table {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = Table {
     tblName = "signatory_links"
-  , tblVersion = 13
+  , tblVersion = 14
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
-       , ("company_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("sign_order", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("token", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("sign_time", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True})
@@ -186,7 +185,6 @@ tableSignatoryLinks = Table {
           ++ "( id BIGSERIAL"
           ++ ", document_id BIGINT NOT NULL"
           ++ ", user_id BIGINT NULL DEFAULT NULL"
-          ++ ", company_id BIGINT NULL DEFAULT NULL"
           ++ ", sign_order INTEGER NOT NULL DEFAULT 1"
           ++ ", token BIGINT NOT NULL"
           ++ ", sign_time TIMESTAMPTZ NULL DEFAULT NULL"
@@ -218,7 +216,6 @@ tableSignatoryLinks = Table {
       _ -> return TVRinvalid
   , tblPutProperties = do
     kRunRaw $ "CREATE INDEX idx_signatory_links_user_id ON signatory_links(user_id)"
-    kRunRaw $ "CREATE INDEX idx_signatory_links_company_id ON signatory_links(company_id)"
     kRunRaw $ "CREATE INDEX idx_signatory_links_document_id ON signatory_links(document_id)"
     kRunRaw $ "ALTER TABLE signatory_links"
       ++ " ADD CONSTRAINT fk_signatory_links_document_id FOREIGN KEY(document_id)"
@@ -227,10 +224,6 @@ tableSignatoryLinks = Table {
     kRunRaw $ "ALTER TABLE signatory_links"
       ++ " ADD CONSTRAINT fk_signatory_links_user_id FOREIGN KEY(user_id)"
       ++ " REFERENCES users(id) ON DELETE SET NULL ON UPDATE RESTRICT"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE signatory_links"
-      ++ " ADD CONSTRAINT fk_signatory_links_company_id FOREIGN KEY(company_id)"
-      ++ " REFERENCES companies(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 

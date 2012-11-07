@@ -15,7 +15,6 @@ module Doc.Model
 
   , AddDocumentAttachment(..)
   , AddInvitationEvidence(..)
-  , AdminOnlySaveForUser(..)
   , ArchiveDocument(..)
   , AttachCSVUpload(..)
   , AttachFile(..)
@@ -264,10 +263,10 @@ documentDomainToSQL (TemplatesSharedInUsersCompany uid) =
        <> "                  AND usr1.id = ?)")
         [toSql Shared, toSql uid]
 documentDomainToSQL (DocumentsOfCompany cid preparation deleted) =
-  SQL "signatory_links.company_id = ? AND (? OR documents.status <> ?) AND signatory_links.deleted = ? AND signatory_links.really_deleted = FALSE"
+  SQL "EXISTS (SELECT 1 FROM users WHERE users.company_id = ? AND signatory_links.user_id = users.id) AND (? OR documents.status <> ?) AND signatory_links.deleted = ? AND signatory_links.really_deleted = FALSE"
         [toSql cid,toSql preparation, toSql Preparation, toSql deleted]
 documentDomainToSQL (DocumentsOfAuthorCompany cid preparation deleted) =
-  SQL "signatory_links.is_author AND signatory_links.company_id = ? AND (? OR documents.status <> ?) AND signatory_links.deleted = ? AND signatory_links.really_deleted = FALSE"
+  SQL "signatory_links.is_author AND EXISTS (SELECT 1 FROM users WHERE users.company_id = ? AND signatory_links.user_id = users.id) AND (? OR documents.status <> ?) AND signatory_links.deleted = ? AND signatory_links.really_deleted = FALSE"
         [toSql cid, toSql preparation, toSql Preparation, toSql deleted]
 
 
@@ -354,7 +353,6 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          [ checkEqualBy "signatorydetails" signatorydetails
                          , checkEqualBy "signatorymagichash" signatorymagichash
                          , checkEqualByAllowSecondNothing "maybesignatory" maybesignatory
-                         , checkEqualBy "maybecompany" maybecompany
                          , checkEqualBy "maybesigninfo" maybesigninfo
                          , checkEqualBy "maybeseeninfo" maybeseeninfo
                          , checkEqualBy "maybereadinvite" maybereadinvite
@@ -504,7 +502,6 @@ selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
   sqlResult "signatory_links.id"
   sqlResult "signatory_links.document_id"
   sqlResult "signatory_links.user_id"
-  sqlResult "signatory_links.company_id"
   sqlResult "signatory_links.sign_order"
   sqlResult "signatory_links.token"
   sqlResult "signatory_links.sign_time"
@@ -546,7 +543,7 @@ fetchSignatoryLinks = do
   return $ (\(d, l, m) -> M.insertWith' (++) d l m) sigs
   where
     nulldocid = unsafeDocumentID $ -1
-    decoder (docid, links, linksmap) slid document_id user_id company_id
+    decoder (docid, links, linksmap) slid document_id user_id
      sign_order token sign_time sign_ip seen_time seen_ip read_invitation
      invitation_delivery_status signinfo_text signinfo_signature signinfo_certificate
      signinfo_provider signinfo_first_name_verified signinfo_last_name_verified
@@ -575,7 +572,7 @@ fetchSignatoryLinks = do
           }
           , signatorymagichash = token
           , maybesignatory = user_id
-          , maybecompany = company_id
+          , maybecompany = Nothing
           , maybesigninfo = SignInfo <$> sign_time <*> sign_ip
           , maybeseeninfo = SignInfo <$> seen_time <*> seen_ip
           , maybereadinvite = read_invitation
@@ -615,7 +612,6 @@ insertSignatoryLinksAsAre documentid links = do
            sqlSetList "user_id" $ maybesignatory <$> links
            sqlSetList "is_author" $ signatoryisauthor <$> signatorydetails <$> links
            sqlSetList "is_partner" $ signatoryispartner <$> signatorydetails <$> links
-           sqlSetList "company_id" $ maybecompany <$> links
            sqlSetList "token" $ signatorymagichash <$> links
            sqlSetList "sign_order"$ signatorysignorder <$> signatorydetails <$> links
            sqlSetList "sign_time" $ fmap signtime <$> maybesigninfo <$> links
@@ -913,25 +909,24 @@ instance MonadDB m => DBQuery m CheckIfDocumentExists Bool where
   query (CheckIfDocumentExists did) =
     checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ?" [toSql did]
 
-{- |
-    The existance of this function is wrong.  What it means is that storing
-    maybesignatory and maybecompany on the signatory links is the wrong way of doing it,
-    and there should be something else for hooking accounts to sig links that doesn't
-    involve editing all the docs as a user moves between private and company accounts.
--}
-data AdminOnlySaveForUser = AdminOnlySaveForUser DocumentID User Actor
-
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m AdminOnlySaveForUser Bool where
-  update (AdminOnlySaveForUser did user _actor) = do
-    kRun01 $ mkSQL UPDATE tableSignatoryLinks [sql "company_id" $ usercompany user]
-      <> SQL "WHERE document_id = ? AND user_id = ? " [
-        toSql did
-      , toSql $ userid user
-      ]
-
 data ArchiveDocument = ArchiveDocument User DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument Bool where
   update (ArchiveDocument user did _actor) = do
+    result <- kRun $ sqlUpdate "signatory_links" $ do
+        sqlFrom "documents"
+        sqlWhereEq "signatory_links.document_id" did
+        sqlWhere "documents.id = signatory_links.document_id"
+        sqlSet "deleted" True
+        sqlWhereNotEq "documents.status" Pending
+        sqlWhere $ "(signatory_links.user_id = " <?> userid user <+>  "OR"
+                        <+> "EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 "
+                        <+>   "WHERE signatory_links.user_id = usr2.id "
+                        <+>     "AND usr2.company_id = usr1.company_id "
+                        <+>     "AND usr1.is_company_admin "
+                        <+>     "AND usr1.id = " <?> userid user <+> "))"
+    return (result>0)
+
+{-
     case (usercompany user, useriscompanyadmin user) of
       (Just cid, True) -> fmap (\x -> x > 0) $  kRun $ updateArchivableDoc $ SQL "WHERE (company_id = ? OR user_id = ?)" [toSql cid,toSql $ userid user]
       _ -> fmap (\x -> x > 0) $ kRun $ updateArchivableDoc $ SQL "WHERE user_id = ?" [toSql $ userid user]
@@ -945,6 +940,8 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument Bool where
           , toSql Pending
           ]
         ]
+-}
+
 
 data AttachCSVUpload = AttachCSVUpload DocumentID SignatoryLinkID CSVUpload Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachCSVUpload Bool where
@@ -1090,7 +1087,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeSignatoryEmailWhenUnd
       success2 <- kRun01 $ mkSQL UPDATE tableSignatoryLinks [
           sql "invitation_delivery_status" Unknown
         , sql "user_id" $ fmap userid muser
-        , sql "company_id" $ muser >>= usercompany
         ] <> SQL "WHERE EXISTS (SELECT 1 FROM documents WHERE documents.id = signatory_links.document_id AND documents.status = ?) AND id = ?" [
           toSql Pending
         , toSql slid
@@ -1585,19 +1581,22 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
 data ReallyDeleteDocument = ReallyDeleteDocument User DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ReallyDeleteDocument Bool where
   update (ReallyDeleteDocument user did _actor) = do
-    -- I don't like this: we should do this on the DB side, not pass
-    -- in a User which could be old. It should be done within a
-    -- transaction. -EN
-    case (usercompany user, useriscompanyadmin user) of
-      (Just cid, True) -> fmap (\x -> x > 0) $ kRun $ deleteDoc $ SQL "WHERE (company_id = ? OR user_id = ?)" [toSql cid,toSql $ userid user] -- This can remove more then one link (subaccounts)
-      _ -> fmap (\x -> x > 0) $ kRun $ deleteDoc $ SQL "WHERE user_id = ? AND (company_id IS NULL OR EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?))" [toSql $ userid user,toSql did, toSql Preparation]
-    where
-      deleteDoc whereClause = mconcat [
-          mkSQL UPDATE tableSignatoryLinks [sql "really_deleted" True]
-        , whereClause
-        , SQL " AND document_id = ? AND deleted = TRUE" [toSql did]
-
-        ]
+    result <- kRun $ mkSQL UPDATE tableSignatoryLinks
+                                      [sql "really_deleted" True]
+                  <+> "FROM documents, users "
+                  <+> "WHERE (user_id = " <?> (userid user)
+                  <+> "          AND documents.status = " <?> Pending
+                  <+> "       OR EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 "
+                  <+>                  "  WHERE signatory_links.user_id = usr2.id "
+                  <+>                  "    AND usr2.company_id = usr1.company_id "
+                  <+>                  "    AND usr1.is_company_admin "
+                  <+>                  "    AND usr1.id = " <?> (userid user)
+                  <+> "       OR users.company_id IS NULL ))"
+                  <+> "  AND users.id = signatory_links.user_id "
+                  <+> "  AND documents.id = signatory_links.document_id "
+                  <+> "  AND signatory_links.document_id = " <?> did
+                  <+> "  AND signatory_links.deleted = TRUE"
+    return (result>0)
 
 data RejectDocument = RejectDocument DocumentID SignatoryLinkID (Maybe String) Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m RejectDocument Bool where
@@ -1679,21 +1678,26 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocumen
 data RestoreArchivedDocument = RestoreArchivedDocument User DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m RestoreArchivedDocument Bool where
   update (RestoreArchivedDocument user did actor) = do
-    (case (usercompany user, useriscompanyadmin user) of
-      (Just cid, True) -> updateRestorableDoc $ SQL "WHERE company_id = ?" [toSql cid]
-      _ -> updateRestorableDoc $ SQL "WHERE user_id = ?" [toSql $ userid user]) $ do
+      updateRestorableDoc $ do
       return $ InsertEvidenceEvent
         RestoreArchivedDocumentEvidence
-        (value "email" (getEmail user) >> value "actor" (actorWho actor) >> value "company" (isJust (usercompany user) && useriscompanyadmin user))
+        (value "email" (getEmail user) >> value "actor" (actorWho actor) >>
+               value "company" (isJust (usercompany user) && useriscompanyadmin user))
         (Just did)
         actor
     where
-      updateRestorableDoc whereClause = updateWithEvidence tableSignatoryLinks
+      updateRestorableDoc = updateWithEvidence tableSignatoryLinks
           (  "deleted =" <?> False
-         <+> whereClause
+         <+> "WHERE (user_id = " <?> (userid user)
+         <+> "       OR EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 "
+         <+>                  "  WHERE signatory_links.user_id = usr2.id "
+         <+>                  "    AND usr2.company_id = usr1.company_id "
+         <+>                  "    AND usr1.is_company_admin "
+         <+>                  "    AND usr1.id = " <?> (userid user) <+> "))"
          <+> "AND document_id =" <?> did
          <+> "AND really_deleted = FALSE"
           )
+
 
 {- |
     Links up a signatory link to a user account.  This should happen when
@@ -1703,10 +1707,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RestoreArchivedDocument Boo
 -}
 data SaveDocumentForUser = SaveDocumentForUser DocumentID User SignatoryLinkID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SaveDocumentForUser Bool where
-  update (SaveDocumentForUser did User{userid, usercompany} slid _actor) = do
+  update (SaveDocumentForUser did User{userid} slid _actor) = do
     kRun01 $ mkSQL UPDATE tableSignatoryLinks [
         sql "user_id" userid
-      , sql "company_id" usercompany
       ] <> SQL "WHERE document_id = ? AND id = ?" [
         toSql did
       , toSql slid
