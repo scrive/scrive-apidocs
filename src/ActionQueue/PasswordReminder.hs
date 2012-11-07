@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module ActionQueue.PasswordReminder (
     PasswordReminder(..)
   , passwordReminder
@@ -9,7 +10,6 @@ module ActionQueue.PasswordReminder (
 import Control.Monad
 import Control.Monad.Trans.Maybe
 import Data.Int
-import Data.Monoid
 import Data.Typeable
 
 import ActionQueue.Core
@@ -45,7 +45,7 @@ passwordReminder = Action {
       sql "expires" prExpires
     , sql "remained_emails" prRemainedEmails
     , sql "token" prToken
-    ] <> SQL ("WHERE " ++ qaIndexField passwordReminder ++ " = ?") [toSql prUserID]
+    ] <+> "WHERE" <+> qaIndexField passwordReminder <+> "=" <?> prUserID
   , qaEvaluateExpired = \PasswordReminder{prUserID} -> do
     _ <- dbUpdate $ DeleteAction passwordReminder prUserID
     return ()

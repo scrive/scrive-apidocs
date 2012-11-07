@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module ActionQueue.UserAccountRequest (
     UserAccountRequest(..)
   , userAccountRequest
@@ -8,7 +9,6 @@ module ActionQueue.UserAccountRequest (
 
 import Control.Monad
 import Control.Monad.Trans.Maybe
-import Data.Monoid
 import Data.Typeable
 import Control.Applicative
 import Control.Monad.Reader
@@ -51,7 +51,7 @@ userAccountRequest = Action {
   , qaUpdateSQL = \UserAccountRequest{..} -> mkSQL UPDATE tableUserAccountRequests [
       sql "expires" uarExpires
     , sql "token" uarToken
-    ] <> SQL ("WHERE " ++ qaIndexField userAccountRequest ++ " = ?") [toSql uarUserID]
+    ] <+> "WHERE" <+> qaIndexField userAccountRequest <+> "=" <?> uarUserID
   , qaEvaluateExpired = \UserAccountRequest{uarUserID} -> do
     mplan <- dbQuery $ GetPaymentPlanInactiveUser uarUserID
     case mplan of

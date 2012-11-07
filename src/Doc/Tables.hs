@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Doc.Tables where
 
 import DB

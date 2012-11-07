@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Doc.API.Callback.Model (
     DocumentAPICallback(..)
   , documentAPICallback
@@ -6,7 +7,6 @@ module Doc.API.Callback.Model (
 
 import Control.Applicative
 import Data.Int
-import Data.Monoid
 import Data.Typeable
 import System.Exit
 import qualified Data.ByteString.Lazy.Char8 as BSL
@@ -46,9 +46,7 @@ documentAPICallback = Action {
       sql "expires" dacExpires
     , sql "url" dacURL
     , sql "attempt" dacAttempt
-    ] <> SQL ("WHERE " ++ qaIndexField documentAPICallback ++ " = ?") [
-      toSql dacDocumentID
-    ]
+    ] <+> "WHERE" <+> qaIndexField documentAPICallback <+> "=" <?> dacDocumentID
   , qaEvaluateExpired = evaluateDocumentCallback
   }
   where

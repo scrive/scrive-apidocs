@@ -106,10 +106,11 @@ module DB.SQL2
   )
   where
 
-import DB.SQL hiding(sql, sql')
+import DB.SQL
+import DB.Functions ((.=))
 import Control.Monad.State
+import Data.List (transpose)
 import Data.Monoid
-import Data.List
 import Database.HDBC
 import Data.Convertible
 import Data.Typeable
@@ -132,21 +133,21 @@ data SqlSelect = SqlSelect
   } deriving (Eq, Typeable)
 
 data SqlUpdate = SqlUpdate
-  { sqlUpdateWhat    :: String
+  { sqlUpdateWhat    :: RawSQL
   , sqlUpdateFrom    :: SQL
   , sqlUpdateWhere   :: [SQL]
-  , sqlUpdateSet     :: [(String,SQL)]
+  , sqlUpdateSet     :: [(RawSQL,SqlValue)]
   , sqlUpdateResult  :: [SQL]
   } deriving (Eq, Typeable)
 
 data SqlInsert = SqlInsert
-  { sqlInsertWhat    :: String
-  , sqlInsertSet     :: [(String,Multiplicity SQL)]
+  { sqlInsertWhat    :: RawSQL
+  , sqlInsertSet     :: [(RawSQL,Multiplicity SqlValue)]
   , sqlInsertResult  :: [SQL]
   } deriving (Eq, Typeable)
 
 data SqlDelete = SqlDelete
-  { sqlDeleteFrom    :: String
+  { sqlDeleteFrom    :: RawSQL
   , sqlDeleteWhere   :: [SQL]
   } deriving (Eq, Typeable)
 
@@ -162,77 +163,72 @@ instance Show SqlUpdate where
 instance Show SqlDelete where
   show = show . toSQLCommand
 
-emitClause :: SQL -> SQL -> SQL
-emitClause _ (SQL "" []) = SQL "" []
-emitClause name x = "" <+> name <+> x
+emitClause :: RawSQL -> SQL -> SQL
+emitClause _ "" = ""
+emitClause name x = "" <+> raw name <+> x
 
-emitClausesSep :: String -> String -> [SQL] -> SQL
+emitClausesSep :: RawSQL -> RawSQL -> [SQL] -> SQL
 emitClausesSep _name _sep [] = SQL "" []
-emitClausesSep name sep sqls =
-  SQL (" " ++ name ++ " ") [] `mappend` mconcat (intersperse (SQL sep []) (filter outnull sqls))
-  where
-    outnull (SQL "" []) = False
-    outnull _ = True
+emitClausesSep name sep sqls = "" <+> raw name <+> intersperse sep (filter (/="") sqls)
 
 instance IsSQL SqlSelect where
   toSQLCommand cmd =
     SQL "SELECT " [] `mappend`
         emitClausesSep "" ", " (sqlSelectResult cmd) `mappend`
         emitClause "FROM" (sqlSelectFrom cmd) `mappend`
-        emitClausesSep "WHERE" " AND " (sqlSelectWhere cmd) `mappend`
+        emitClausesSep "WHERE" "AND" (sqlSelectWhere cmd) `mappend`
         emitClausesSep "GROUP BY" ", " (sqlSelectGroupBy cmd) `mappend`
-        emitClausesSep "HAVING" " AND " (sqlSelectHaving cmd) `mappend`
+        emitClausesSep "HAVING" "AND" (sqlSelectHaving cmd) `mappend`
         emitClausesSep "ORDER BY" ", " (sqlSelectOrderBy cmd) `mappend`
         (if sqlSelectOffset cmd > 0
-           then SQL (" OFFSET " ++ show (sqlSelectOffset cmd)) []
-           else SQL "" []) `mappend`
+           then " OFFSET" <?> sqlSelectOffset cmd
+           else "") `mappend`
         (if sqlSelectLimit cmd >= 0
-           then SQL (" LIMIT " ++ show (sqlSelectLimit cmd)) []
-           else SQL "" [])
+           then " LIMIT" <?> sqlSelectLimit cmd
+           else "")
 
 instance IsSQL SqlInsert where
   toSQLCommand cmd =
-    SQL ("INSERT INTO " ++ sqlInsertWhat cmd) [] `mappend`
-    SQL (" (" ++ (intercalate ", " (map fst (sqlInsertSet cmd)) ++ ")")) [] `mappend`
+    "INSERT INTO" <+> raw (sqlInsertWhat cmd) <+>
+    parenthesize (sqlConcatComma (map (raw . fst) (sqlInsertSet cmd))) <+>
     emitClausesSep "VALUES" "," (map makeClause (transpose (map (makeLongEnough . snd) (sqlInsertSet cmd)))) `mappend`
-    emitClausesSep "RETURNING" ", " (sqlInsertResult cmd)
+    emitClausesSep "RETURNING" "," (sqlInsertResult cmd)
    where
       -- this is the longest list of values
       longest = maximum (1 : (map (lengthOfEither . snd) (sqlInsertSet cmd)))
       lengthOfEither (Single _) = 1
       lengthOfEither (Many x) = length x
-      makeLongEnough (Single x) = take longest (repeat x)
-      makeLongEnough (Many x) = take longest (x ++ repeat (SQL "DEFAULT" []))
-      makeClause list = SQL "(" [] `mappend` mconcat (intersperse (SQL "," []) list) `mappend` SQL ")" []
+      makeLongEnough (Single x) = take longest (repeat (sqlParam x))
+      makeLongEnough (Many x) = take longest (map sqlParam x ++ repeat "DEFAULT")
+      makeClause = parenthesize . sqlConcatComma
 
 instance IsSQL SqlUpdate where
   toSQLCommand cmd =
-    SQL ("UPDATE " ++ sqlUpdateWhat cmd) [] `mappend`
-    SQL " SET " [] `mappend`
-    mconcat (intersperse (SQL ", " []) (map (\(name,value) -> (SQL (name ++ " = ") [] `mappend` value)) (sqlUpdateSet cmd))) `mappend`
+    "UPDATE" <+> raw (sqlUpdateWhat cmd) <+> "SET" <+>
+    sqlConcatComma (map (uncurry (.=)) (sqlUpdateSet cmd)) `mappend`
     emitClause "FROM" (sqlUpdateFrom cmd) `mappend`
-    emitClausesSep "WHERE" " AND " (sqlUpdateWhere cmd) `mappend`
-    emitClausesSep "RETURNING" ", " (sqlUpdateResult cmd)
+    emitClausesSep "WHERE" "AND" (sqlUpdateWhere cmd) `mappend`
+    emitClausesSep "RETURNING" "," (sqlUpdateResult cmd)
 
 instance IsSQL SqlDelete where
   toSQLCommand cmd =
-    SQL ("DELETE FROM " ++ (sqlDeleteFrom cmd)) [] `mappend`
-        emitClausesSep "WHERE" " AND " (sqlDeleteWhere cmd)
+    "DELETE FROM" <+> raw (sqlDeleteFrom cmd) `mappend`
+        emitClausesSep "WHERE" "AND" (sqlDeleteWhere cmd)
 
 
-sqlSelect :: String -> State SqlSelect () -> SQL
+sqlSelect :: RawSQL -> State SqlSelect () -> SQL
 sqlSelect table refine =
   toSQLCommand $ execState refine (SqlSelect (SQL table []) [] [] [] [] [] 0 (-1))
 
-sqlInsert :: String -> State SqlInsert () -> SQL
+sqlInsert :: RawSQL -> State SqlInsert () -> SQL
 sqlInsert table refine =
   toSQLCommand $ execState refine (SqlInsert table mempty [])
 
-sqlUpdate :: String -> State SqlUpdate () -> SQL
+sqlUpdate :: RawSQL -> State SqlUpdate () -> SQL
 sqlUpdate table refine =
   toSQLCommand $ execState refine (SqlUpdate table mempty [] [] [])
 
-sqlDelete :: String -> State SqlDelete () -> SQL
+sqlDelete :: RawSQL -> State SqlDelete () -> SQL
 sqlDelete table refine =
   toSQLCommand $ execState refine (SqlDelete table [])
 
@@ -254,45 +250,37 @@ sqlWhere sql = modify (\cmd -> sqlWhere1 cmd sql)
 sqlWhereOr :: (MonadState v m, SqlWhere v) => [SQL] -> m ()
 sqlWhereOr [] = sqlWhere "FALSE"
 sqlWhereOr [sql] = sqlWhere sql
-sqlWhereOr sqls = sqlWhere $
-                  SQL "(" [] `mappend`
-                  mconcat (intersperse (SQL " OR " []) sqls) `mappend`
-                  SQL ")" []
+sqlWhereOr sqls = sqlWhere $ parenthesize $ sqlConcatOR sqls
 
-sqlWhereEq :: (MonadState v m, SqlWhere v, Convertible sql SqlValue) => String -> sql -> m ()
-sqlWhereEq name value =
-  sqlWhere (SQL (name ++ " = ?") [toSql value])
+sqlWhereEq :: (MonadState v m, SqlWhere v, Convertible a SqlValue) => SQL -> a -> m ()
+sqlWhereEq name value = sqlWhere $ name <+> "=" <?> value
 
-sqlWhereNotEq :: (MonadState v m, SqlWhere v, Convertible sql SqlValue) => String -> sql -> m ()
-sqlWhereNotEq name value =
-  sqlWhere (SQL (name ++ " <> ?") [toSql value])
+sqlWhereNotEq :: (MonadState v m, SqlWhere v, Convertible a SqlValue) => SQL -> a -> m ()
+sqlWhereNotEq name value = sqlWhere $ name <+> "<>" <?> value
 
-sqlWhereLike :: (MonadState v m, SqlWhere v, Convertible sql SqlValue) => String -> sql -> m ()
-sqlWhereLike name value =
-  sqlWhere (SQL (name ++ " LIKE ?") [toSql value])
+sqlWhereLike :: (MonadState v m, SqlWhere v, Convertible a SqlValue) => SQL -> a -> m ()
+sqlWhereLike name value = sqlWhere $ name <+> "LIKE" <?> value
 
-sqlWhereILike :: (MonadState v m, SqlWhere v, Convertible sql SqlValue) => String -> sql -> m ()
-sqlWhereILike name value =
-  sqlWhere (SQL (name ++ " ILIKE ?") [toSql value])
+sqlWhereILike :: (MonadState v m, SqlWhere v, Convertible a SqlValue) => SQL -> a -> m ()
+sqlWhereILike name value = sqlWhere  $ name <+> "ILIKE" <?> value
 
-sqlWhereIn :: (MonadState v m, SqlWhere v, Convertible sql SqlValue) => String -> [sql] -> m ()
+sqlWhereIn :: (MonadState v m, SqlWhere v, Convertible a SqlValue) => SQL -> [a] -> m ()
 sqlWhereIn _name [] = sqlWhere (SQL "FALSE" [])
 sqlWhereIn name [value] = sqlWhereEq name value
 sqlWhereIn name values =
-  sqlWhere (SQL (name ++ " IN (" ++ concat (intersperse "," (map (const "?") values)) ++ ")") (map toSql values))
+  sqlWhere $ name <+> "IN" <+> parenthesize (sqlConcatComma (map sqlParam values))
 
-sqlWhereNotIn :: (MonadState v m, SqlWhere v, Convertible sql SqlValue) => String -> [sql] -> m ()
-sqlWhereNotIn _name [] = sqlWhere (SQL "TRUE" [])
+sqlWhereNotIn :: (MonadState v m, SqlWhere v, Convertible a SqlValue) => SQL -> [a] -> m ()
+sqlWhereNotIn _name [] = sqlWhere "TRUE"
 sqlWhereNotIn name [value] = sqlWhereNotEq name value
-sqlWhereNotIn name values =
-  sqlWhere (SQL (name ++ " NOT IN (" ++ concat (intersperse "," (map (const "?") values)) ++ ")") (map toSql values))
+sqlWhereNotIn name values = sqlWhere $ name <+> "NOT IN" <+> parenthesize (sqlConcatComma (map sqlParam values))
 
 sqlWhereExists :: (MonadState v m, SqlWhere v) => SqlSelect -> m ()
 sqlWhereExists sqlSelectD = do
   sqlWhere (SQL "EXISTS (" [] `mappend` toSQLCommand (sqlSelectD { sqlSelectResult = [SQL "TRUE" []] }) `mappend` SQL ")" [])
   
-sqlWhereIsNULL :: (MonadState v m, SqlWhere v) => String -> m ()
-sqlWhereIsNULL col = sqlWhere (SQL (col ++ " IS NULL") [])
+sqlWhereIsNULL :: (MonadState v m, SqlWhere v) => SQL -> m ()
+sqlWhereIsNULL col = sqlWhere $ col <+> "IS NULL"
 
 class SqlFrom a where
   sqlFrom1 :: a -> SQL -> a
@@ -334,26 +322,26 @@ sqlFullJoinOn table condition = sqlFrom (SQL " FULL JOIN " [] `mappend`
                                          condition)
 
 class SqlSet a where
-  sqlSet1 :: a -> String -> SQL -> a
+  sqlSet1 :: a -> RawSQL -> SqlValue -> a
 
 instance SqlSet SqlUpdate where
-  sqlSet1 cmd name sql = cmd { sqlUpdateSet = sqlUpdateSet cmd ++ [(name, sql)] }
+  sqlSet1 cmd name v = cmd { sqlUpdateSet = sqlUpdateSet cmd ++ [(name, v)] }
 
 instance SqlSet SqlInsert where
-  sqlSet1 cmd name sql = cmd { sqlInsertSet = sqlInsertSet cmd ++ [(name, Single sql)] }
+  sqlSet1 cmd name v = cmd { sqlInsertSet = sqlInsertSet cmd ++ [(name, Single v)] }
 
 
-sqlSetCmd :: (MonadState v m, SqlSet v) => String -> SQL -> m ()
+sqlSetCmd :: (MonadState v m, SqlSet v) => RawSQL -> SqlValue -> m ()
 sqlSetCmd name sql = modify (\cmd -> sqlSet1 cmd name sql)
 
-sqlSetCmdList :: (MonadState SqlInsert m) => String -> [SQL] -> m ()
-sqlSetCmdList name sql = modify (\cmd -> cmd { sqlInsertSet = sqlInsertSet cmd ++ [(name, Many sql)] })
+sqlSetCmdList :: (MonadState SqlInsert m) => RawSQL -> [SqlValue] -> m ()
+sqlSetCmdList name as = modify (\cmd -> cmd { sqlInsertSet = sqlInsertSet cmd ++ [(name, Many as)] })
 
-sqlSet :: (MonadState v m, SqlSet v, Convertible sql SqlValue) => String -> sql -> m ()
-sqlSet name sql = modify (\cmd -> sqlSet1 cmd name (SQL "?" [convert sql]))
+sqlSet :: (MonadState v m, SqlSet v, Convertible a SqlValue) => RawSQL -> a -> m ()
+sqlSet name a = sqlSetCmd name (toSql a)
 
-sqlSetList :: (MonadState SqlInsert m, Convertible sql SqlValue) => String -> [sql] -> m ()
-sqlSetList name sql = modify (\cmd -> cmd { sqlInsertSet = sqlInsertSet cmd ++ [(name, Many (map (\v -> SQL "?" [convert v]) sql))] })
+sqlSetList :: (MonadState SqlInsert m, Convertible a SqlValue) => RawSQL -> [a] -> m ()
+sqlSetList name as = sqlSetCmdList name (map toSql as)
 
 class SqlResult a where
   sqlResult1 :: a -> SQL -> a

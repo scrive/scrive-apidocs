@@ -26,7 +26,6 @@ import DB.SQL2
 import Company.CompanyID
 import Control.Monad.State
 import Data.Monoid
-import Data.List
 
 -- to be removed, only upsales used that
 newtype ExternalCompanyID = ExternalCompanyID { unExternalCompanyID :: String }
@@ -64,11 +63,10 @@ companyFilterToWhereClause (CompanyFilterByString text) = do
   -- ALL words from 'text' are in ANY of the fields
   mapM_ (sqlWhere . findWord) (words text)
   where
-      findWordInField word field =
-        SQL ("companies." ++ field ++ " ILIKE ?") [sqlwordpat word]
+      findWordInField word field = ("companies." <> field) <+> "ILIKE" <?> sqlwordpat word
       findWordList word = map (findWordInField word) ["name", "number", "address", "zip", "city", "country", "email_domain"]
-      findWord word = mconcat $ intersperse (SQL " OR " []) $ findWordList word
-      sqlwordpat word = toSql $ "%" ++ concatMap escape word ++ "%"
+      findWord word = sqlConcatOR $ findWordList word
+      sqlwordpat word = "%" ++ concatMap escape word ++ "%"
       escape '\\' = "\\\\"
       escape '%' = "\\%"
       escape '_' = "\\_"

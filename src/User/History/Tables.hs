@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module User.History.Tables where
 
 import DB

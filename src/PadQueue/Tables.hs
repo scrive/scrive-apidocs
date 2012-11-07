@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module PadQueue.Tables (tablePadQueue) where
 
 import DB

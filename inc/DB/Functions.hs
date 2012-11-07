@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module DB.Functions (
     dbCommit
   , dbRollback
@@ -14,11 +15,18 @@ module DB.Functions (
   , kRun01
   , kGetTables
   , kDescribeTable
+  , ColumnValue
+  , sql
+  , (.=)
+  , SQLType(..)
+  , mkSQL
   ) where
 
 import Control.Monad.IO.Class
 import Control.Monad.State.Strict hiding (state)
+import Data.Convertible (Convertible)
 import Data.Maybe
+import Data.String (fromString)
 import Database.HDBC hiding (originalQuery)
 import qualified Control.Exception as E
 import qualified Database.HDBC as HDBC
@@ -27,7 +35,10 @@ import DB.Core
 import DB.Env
 import DB.Exception
 import DB.Nexus
-import DB.SQL (SQL(..))
+import DB.SQL (RawSQL, SQL(..), raw, unRawSQL, (<+>), (<?>), sqlConcatComma, parenthesize, sqlParam)
+import DB.Model (Table(..))
+
+infix 7 .=
 
 dbCommit :: MonadDB m => m ()
 dbCommit = getNexus >>= liftIO . commit
@@ -40,13 +51,13 @@ dbClone = getNexus >>= liftIO . clone
 
 -- | Prepares new SQL query given as string. If there was another
 -- query prepared in this monad, it will be finished first.
-kPrepare :: MonadDB m => String -> DBEnv m ()
+kPrepare :: MonadDB m => RawSQL -> DBEnv m ()
 kPrepare q = do
   kFinish
   withDBEnvSt $ \s -> do
     let sqlquery = SQL q []
     conn <- getNexus
-    st <- protIO sqlquery $ prepare conn q
+    st <- protIO sqlquery $ prepare conn (unRawSQL q)
     return ((), s { dbStatement = Just st })
 
 -- | Execute recently prepared query. Values given as param serve as
@@ -113,32 +124,53 @@ kFinish = withDBEnvSt $ \s@DBEnvSt{..} -> do
     Nothing -> return ((), s)
 
 kRunRaw :: MonadDB m => String -> DBEnv m ()
-kRunRaw sql = withDBEnv $ \_ -> getNexus >>= \c -> liftIO (runRaw c sql)
+kRunRaw s = withDBEnv $ \_ -> getNexus >>= \c -> liftIO (runRaw c s)
 
 kRun_ :: MonadDB m => SQL -> DBEnv m ()
-kRun_ sql = kRun sql >> return ()
+kRun_ s = kRun s >> return ()
 
 kRun :: MonadDB m => SQL -> DBEnv m Integer
-kRun (SQL sql values) = kPrepare sql >> kExecute values
+kRun (SQL s values) = kPrepare s >> kExecute values
 
 kRun01 :: MonadDB m => SQL -> DBEnv m Bool
-kRun01 (SQL sql values) = kPrepare sql >> kExecute01 values
+kRun01 (SQL s values) = kPrepare s >> kExecute01 values
 
 kGetTables :: MonadDB m => DBEnv m [String]
 kGetTables = withDBEnv $ \_ -> getNexus >>= liftIO . getTables
 
-kDescribeTable :: MonadDB m => String -> DBEnv m [(String, SqlColDesc)]
-kDescribeTable table = withDBEnv $ \_ -> getNexus >>= \c -> liftIO (describeTable c table)
+kDescribeTable :: MonadDB m => RawSQL -> DBEnv m [(String, SqlColDesc)]
+kDescribeTable table = withDBEnv $ \_ -> getNexus >>= \c -> liftIO (describeTable c (unRawSQL table))
+
+-- for INSERT/UPDATE statements generation
+
+type ColumnValue = (RawSQL, SqlValue)
+
+sql :: Convertible a SqlValue => RawSQL -> a -> ColumnValue
+sql column value = (column, toSql value)
+
+(.=) :: Convertible a SqlValue => RawSQL -> a -> SQL
+r .= v = raw r <+> "=" <?> v
+
+data SQLType = INSERT | UPDATE
+
+mkSQL :: SQLType -> Table -> [ColumnValue] -> SQL
+mkSQL qtype Table{tblName} values = case qtype of
+  INSERT -> "INSERT INTO" <+> raw tblName <+> parenthesize (sqlConcatComma (map raw columns))
+        <+> "SELECT" <+> sqlConcatComma (map sqlParam vals)
+  UPDATE -> "UPDATE" <+> raw tblName
+        <+> "SET" <+> sqlConcatComma (map (uncurry (.=)) values)
+  where
+    (columns, vals) = unzip values
 
 -- internals
 
-getQuery :: Maybe Statement -> String
-getQuery = fromMaybe "" . fmap HDBC.originalQuery
+getQuery :: Maybe Statement -> RawSQL
+getQuery = fromString . fromMaybe "" . fmap HDBC.originalQuery
 
 -- | Protected 'liftIO'. Properly catches 'SqlError' and converts it
 -- to 'DBException'. Adds 'HDBC.originalQuery' that should help a lot.
 protIO :: MonadDB m => SQL -> IO a -> m a
-protIO sql m = do
+protIO s m = do
   conn <- getNexus
   liftIO $ m `E.catch` (\e -> do
         -- for some unknown reason we need to do rollback here
@@ -146,4 +178,4 @@ protIO sql m = do
         -- some commands and those will fail with 'transaction
         -- aborted, ignoring commands till the end of the block'
         liftIO $ rollback conn
-        liftIO $ E.throwIO $ SQLError sql e)
+        liftIO $ E.throwIO $ SQLError s e)

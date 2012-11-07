@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module File.Tables where
 
 import DB

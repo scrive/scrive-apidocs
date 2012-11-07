@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module ActionQueue.Tables where
 
 import DB

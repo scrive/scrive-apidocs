@@ -509,9 +509,9 @@ moveAttachmentsFromDocumentsToAttachments =
   , mgrFrom = 6
   , mgrDo = do
       inserted <- kRun $ SQL ("INSERT INTO attachments(title,file_id,deleted,shared,ctime,mtime, user_id)"
-                              ++ " SELECT title, file_id, signatory_links.deleted, sharing=2, ctime, mtime, user_id"
-                              ++ " FROM documents JOIN signatory_links ON document_id = documents.id AND (roles&2)<>0 AND (documents.file_id IS NOT NULL)"
-                              ++ " WHERE type = 3") []
+                              <> " SELECT title, file_id, signatory_links.deleted, sharing=2, ctime, mtime, user_id"
+                              <> " FROM documents JOIN signatory_links ON document_id = documents.id AND (roles&2)<>0 AND (documents.file_id IS NOT NULL)"
+                              <> " WHERE type = 3") []
       deleted <- kRun $ SQL ("DELETE FROM documents WHERE type = 3") []
       when (deleted /= inserted) $
          Log.debug  $ "Migration from documents to attachments done. Migrated: " ++ show inserted ++ ". Lost attachments due to missing files: " ++ show (deleted - inserted)
@@ -525,6 +525,6 @@ removeOldDocumentLog =
   , mgrDo = do
       now <- getMinutesTime
       _ <- kRun $ SQL ("INSERT INTO evidence_log(document_id,time,text,event_type,version_id)"
-                              ++ " SELECT id, ?, log, ? , ? FROM documents") [toSql now ,  toSql OldDocumentHistory, toSql versionID]
+                              <> " SELECT id, ?, log, ? , ? FROM documents") [toSql now ,  toSql OldDocumentHistory, toSql versionID]
       kRunRaw "ALTER TABLE documents DROP COLUMN log"
   }

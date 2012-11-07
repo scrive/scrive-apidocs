@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Doc.API.Callback.Tables where
 
 import DB

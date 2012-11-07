@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module File.Migrations where
 
 import Data.Int

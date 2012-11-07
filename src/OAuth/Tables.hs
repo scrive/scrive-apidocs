@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module OAuth.Tables where
 
 import Database.HDBC

@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Stats.Tables where
 
 import DB

@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Session.Tables where
 
 import DB

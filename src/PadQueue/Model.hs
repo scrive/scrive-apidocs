@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude, OverloadedStrings #-}
 module PadQueue.Model (
       AddToPadQueue(..)
     , GetPadQueue(..)

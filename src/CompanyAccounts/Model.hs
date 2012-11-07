@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude, OverloadedStrings #-}
 module CompanyAccounts.Model (
     module User.Model
   , module Company.Model
@@ -10,6 +10,7 @@ module CompanyAccounts.Model (
   ) where
 
 import Control.Monad
+import Data.Monoid ((<>))
 
 import Company.Model
 import DB
@@ -35,10 +36,10 @@ instance MonadDB m => DBUpdate m AddCompanyInvite CompanyInvite where
     kPrepare "DELETE FROM companyinvites WHERE (company_id = ? AND email = ?)"
     _ <- kExecute [toSql invitingcompany, toSql invitedemail]
     kPrepare $ "INSERT INTO companyinvites ("
-      ++ "  email"
-      ++ ", first_name"
-      ++ ", last_name"
-      ++ ", company_id) VALUES (?, ?, ?, ?)"
+      <> "  email"
+      <> ", first_name"
+      <> ", last_name"
+      <> ", company_id) VALUES (?, ?, ?, ?)"
     _ <- kExecute [
         toSql invitedemail
       , toSql invitedfstname
@@ -56,26 +57,26 @@ instance MonadDB m => DBUpdate m RemoveCompanyInvite Bool where
 data GetCompanyInvite = GetCompanyInvite CompanyID Email
 instance MonadDB m => DBQuery m GetCompanyInvite (Maybe CompanyInvite) where
   query (GetCompanyInvite companyid email) = do
-    kPrepare $ selectCompanyInvitesSQL ++ "WHERE (ci.company_id = ? AND ci.email = ?)"
+    kPrepare $ selectCompanyInvitesSQL <> "WHERE (ci.company_id = ? AND ci.email = ?)"
     _ <- kExecute [toSql companyid, toSql email]
     fetchCompanyInvites >>= oneObjectReturnedGuard
 
 data GetCompanyInvites = GetCompanyInvites CompanyID
 instance MonadDB m => DBQuery m GetCompanyInvites [CompanyInvite] where
   query (GetCompanyInvites companyid) = do
-    kPrepare $ selectCompanyInvitesSQL ++ "WHERE (ci.company_id = ?)"
+    kPrepare $ selectCompanyInvitesSQL <> "WHERE (ci.company_id = ?)"
     _ <- kExecute [toSql companyid]
     fetchCompanyInvites
 
 -- helpers
-selectCompanyInvitesSQL :: String
+selectCompanyInvitesSQL :: RawSQL
 selectCompanyInvitesSQL = "SELECT"
-  ++ "  ci.email"
-  ++ ", ci.first_name"
-  ++ ", ci.last_name"
-  ++ ", ci.company_id"
-  ++ "  FROM companyinvites ci"
-  ++ " "
+  <> "  ci.email"
+  <> ", ci.first_name"
+  <> ", ci.last_name"
+  <> ", ci.company_id"
+  <> "  FROM companyinvites ci"
+  <> " "
 
 fetchCompanyInvites :: MonadDB m => DBEnv m [CompanyInvite]
 fetchCompanyInvites = foldDB decoder []

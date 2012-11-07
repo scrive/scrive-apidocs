@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Mails.Tables (
     mailerTables
   , tableMails

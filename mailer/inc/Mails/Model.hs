@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, OverloadedStrings #-}
 module Mails.Model (
     module Mails.Data
   , CreateEmail(..)
@@ -20,6 +20,7 @@ module Mails.Model (
 
 import Control.Monad
 import Data.Monoid
+import Data.String (fromString)
 
 import DB
 import MagicHash
@@ -58,8 +59,8 @@ instance MonadDB m => DBUpdate m DeleteEmail Bool where
 data DeleteMailsOlderThenDays = DeleteMailsOlderThenDays Integer
 instance MonadDB m => DBUpdate m DeleteMailsOlderThenDays Integer where
   update (DeleteMailsOlderThenDays days) = do
-    kPrepare $ "DELETE FROM mails where (now() > to_be_sent + interval '"++show days++" days')" -- Sorry but it did not work as param.
-    kExecute []
+    kRun $ "DELETE FROM mails where (now() > to_be_sent + interval"
+        <+> fromString ("'"++show days++" days'") <+> ")" -- Sorry but it did not work as param.
 
 data GetUnreadEvents = GetUnreadEvents
 instance MonadDB m => DBQuery m GetUnreadEvents [(EventID, MailID, XSMTPAttrs, Event)] where
@@ -68,13 +69,13 @@ instance MonadDB m => DBQuery m GetUnreadEvents [(EventID, MailID, XSMTPAttrs, E
 data GetIncomingEmails = GetIncomingEmails
 instance MonadDB m => DBQuery m GetIncomingEmails [Mail] where
   query GetIncomingEmails = do
-    _ <- kRun $ selectMailsSQL <> SQL "WHERE title IS NOT NULL AND content IS NOT NULL AND to_be_sent <= now() AND sent IS NULL ORDER BY id DESC" []
+    _ <- kRun $ selectMailsSQL <+> "WHERE title IS NOT NULL AND content IS NOT NULL AND to_be_sent <= now() AND sent IS NULL ORDER BY id DESC"
     fetchMails
 
 data GetEmails = GetEmails
 instance MonadDB m => DBQuery m GetEmails [Mail] where
   query GetEmails = do
-    _ <- kRun $ selectMailsSQL <> SQL "WHERE title IS NOT NULL AND content IS NOT NULL ORDER BY to_be_sent" []
+    _ <- kRun $ selectMailsSQL <+> "WHERE title IS NOT NULL AND content IS NOT NULL ORDER BY to_be_sent"
     fetchMails
 
 -- below handlers are for use within mailer only. I can't hide them properly
@@ -93,8 +94,7 @@ instance MonadDB m => DBQuery m GetServiceTestEvents [(EventID, MailID, XSMTPAtt
 data GetEmail = GetEmail MailID MagicHash
 instance MonadDB m => DBQuery m GetEmail (Maybe Mail) where
   query (GetEmail mid token) = do
-    _ <- kRun $ selectMailsSQL <> SQL "WHERE id = ? AND token = ?"
-      [toSql mid, toSql token]
+    _ <- kRun $ selectMailsSQL <+> "WHERE id =" <?> mid <+> "AND token =" <?> token
     fetchMails >>= oneObjectReturnedGuard
 
 data ResendEmailsSentSince = ResendEmailsSentSince MinutesTime
@@ -123,18 +123,17 @@ instance MonadDB m => DBUpdate m UpdateWithEvent Bool where
     kExecute01 [toSql mid, toSql ev]
 
 selectMailsSQL :: SQL
-selectMailsSQL = SQL ("SELECT"
-  ++ "  id"
-  ++ ", token"
-  ++ ", sender"
-  ++ ", receivers"
-  ++ ", title"
-  ++ ", content"
-  ++ ", attachments"
-  ++ ", x_smtp_attrs"
-  ++ ", service_test"
-  ++ " FROM mails"
-  ++ " ") []
+selectMailsSQL = "SELECT" <+> sqlConcatComma [ "id"
+                                             , "token"
+                                             , "sender"
+                                             , "receivers"
+                                             , "title"
+                                             , "content"
+                                             , "attachments"
+                                             , "x_smtp_attrs"
+                                             , "service_test"
+                                             ]
+             <+> "FROM mails"
 
 insertEmail :: MonadDB m => Bool -> MagicHash -> Address -> [Address] -> MinutesTime -> DBEnv m (Maybe MailID)
 insertEmail service_test token sender to to_be_sent =
@@ -148,15 +147,14 @@ insertEmail service_test token sender to to_be_sent =
 
 getUnreadEvents :: MonadDB m => Bool -> DBEnv m [(EventID, MailID, XSMTPAttrs, Event)]
 getUnreadEvents service_test = do
-  kPrepare $ "SELECT"
-    ++ "  e.id"
-    ++ ", e.mail_id"
-    ++ ", m.x_smtp_attrs"
-    ++ ", e.event"
-    ++ " FROM mails m JOIN mail_events e ON (m.id = e.mail_id)"
-    ++ " WHERE m.service_test = ? AND e.event_read IS NULL"
-    ++ " ORDER BY m.id DESC, e.id DESC"
-  _ <- kExecute [toSql service_test]
+  kRun_ $ "SELECT" <+> sqlConcatComma [ "e.id"
+                                      , "e.mail_id"
+                                      , "m.x_smtp_attrs"
+                                      , "e.event"
+                                      ]
+      <+> "FROM mails m JOIN mail_events e ON (m.id = e.mail_id)"
+      <+> "WHERE m.service_test =" <?> service_test <+> "AND e.event_read IS NULL"
+      <+> "ORDER BY m.id DESC, e.id DESC"
   foldDB fetchEvents []
   where
     fetchEvents acc eid mid attrs event = (eid, mid, attrs, event) : acc

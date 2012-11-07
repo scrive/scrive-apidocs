@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Session.Data (
     SessionID
   , tempSessionID
@@ -7,7 +8,6 @@ module Session.Data (
   ) where
 
 import Control.Monad.IO.Class
-import Data.Monoid
 import Data.Typeable
 
 import ActionQueue.Core
@@ -61,7 +61,7 @@ session = Action {
     , sql "pad_user_id" sesPadUserID
     , sql "token" sesToken
     , sql "csrf_token" sesCSRFToken
-    ] <> SQL ("WHERE " ++ qaIndexField session ++ " = ?") [toSql sesID]
+    ] <+> "WHERE" <+> qaIndexField session <+> "=" <?> sesID
   , qaEvaluateExpired = \Session{sesID} -> do
     _ <- dbUpdate $ DeleteAction session sesID
     return ()

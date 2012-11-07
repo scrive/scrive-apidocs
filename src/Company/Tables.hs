@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Company.Tables where
 
 import DB

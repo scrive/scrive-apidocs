@@ -338,7 +338,7 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
                                       }]
                                 _ -> return []
       maxsigntime = maximum (map (signtime . (\(_,_,c,_,_,_) -> c)) signatories)
-      concatComma = concat . intersperse ", "
+      concatComma = intercalate ", "
       -- document fields
       lastHistEntry = do
                        desc <- renderLocalTemplate document "_lastHistEntry" (documentInfoFields document)

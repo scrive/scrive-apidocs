@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Payments.Tables where
 
 import Database.HDBC

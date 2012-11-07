@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module DB.Versions where
 
 import Database.HDBC

@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Doc.Checks (
     checkPreparationToPending
   , checkCancelDocument

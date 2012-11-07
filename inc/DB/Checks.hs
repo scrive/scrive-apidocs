@@ -3,10 +3,11 @@ module DB.Checks (
     performDBChecks
   ) where
 
-import Control.Arrow
+import Control.Arrow (second)
 import Control.Monad.Reader
 import Data.Either
 import Data.Maybe
+import Data.String (fromString)
 import Database.HDBC
 
 import DB.Core
@@ -36,7 +37,8 @@ checkDBTimeZone :: MonadDB m => (String -> DBEnv m ()) -> DBEnv m ()
 checkDBTimeZone logger = do
   Just dbname <- getOne "SELECT current_catalog"
   logger $ "Setting '" ++ dbname ++ "' database to return timestamps in UTC"
-  _ <- kRun $ SQL ("ALTER DATABASE \"" ++ dbname ++ "\" SET TIMEZONE = 'UTC'") []
+  let db = fromString $ "\"" ++ dbname ++ "\""
+  kRun_ $ "ALTER DATABASE" <+> db <+> "SET TIMEZONE = 'UTC'"
   return ()
 
 setByteaOutput :: MonadDB m => (String -> DBEnv m ()) -> DBEnv m Bool
@@ -62,15 +64,16 @@ checkDBConsistency logger tables migrations = do
     when (not $ null to_migration_again) $
       error $ "The following tables were not migrated to their latest versions: " ++ concatMap descNotMigrated to_migration_again
   forM_ created $ \table -> do
-    logger $ "Putting properties on table '" ++ tblName table ++ "'..."
+    logger $ "Putting properties on table '" ++ tblNameString table ++ "'..."
     tblPutProperties table
   where
-    descNotMigrated (t, from) = "\n * " ++ tblName t ++ ", current version: " ++ show from ++ ", needed version: " ++ show (tblVersion t)
+    tblNameString = unRawSQL . tblName
+    descNotMigrated (t, from) = "\n * " ++ tblNameString t ++ ", current version: " ++ show from ++ ", needed version: " ++ show (tblVersion t)
 
     checkTables = (second catMaybes . partitionEithers) `liftM` mapM checkTable tables
     checkTable table = do
       desc <- kDescribeTable $ tblName table
-      logger $ "Checking table '" ++ tblName table ++ "'..."
+      logger $ "Checking table '" ++ tblNameString table ++ "'..."
       tvr <- tblCreateOrValidate table desc
       case tvr of
         TVRvalid -> do
@@ -95,7 +98,7 @@ checkDBConsistency logger tables migrations = do
           if ver == tblVersion table
              then do
                logger $ show desc
-               error $ "Existing '" ++ tblName table ++ "' table structure is invalid"
+               error $ "Existing '" ++ tblNameString table ++ "' table structure is invalid"
              else do
                logger "Table is outdated, scheduling for migration."
                return $ Right $ Just (table, ver)
@@ -104,12 +107,12 @@ checkDBConsistency logger tables migrations = do
       mver <- getOne $ SQL "SELECT version FROM table_versions WHERE name = ?" [toSql $ tblName table]
       case mver of
         Just ver -> return ver
-        _ -> error $ "No version information about table '" ++ tblName table ++ "' was found in database"
+        _ -> error $ "No version information about table '" ++ tblNameString table ++ "' was found in database"
 
     migrate ms ts = forM_ ms $ \m -> forM_ ts $ \(t, from) -> do
       if tblName (mgrTable m) == tblName t && mgrFrom m >= from
          then do
-           logger $ "Migrating table '" ++ tblName t ++ "' from version " ++ show (mgrFrom m) ++ "..."
+           logger $ "Migrating table '" ++ tblNameString t ++ "' from version " ++ show (mgrFrom m) ++ "..."
            ver <- checkVersion $ mgrTable m
            when (ver /= mgrFrom m) $
              error $ "Migration can't be performed because current table version (" ++ show ver ++ ") doesn't match parameter mgrFrom of next migration to be run (" ++ show (mgrFrom m) ++ "). Make sure that migrations were put in migrationsList in correct order."
