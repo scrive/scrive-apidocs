@@ -53,7 +53,7 @@ import Data.Char
 import File.Storage as F
 import qualified Log as Log
 import Data.List (find)
-import Control.Logic
+--import Control.Logic
 import Control.Monad.Identity
 import Text.JSON.String (runGetJSON)
 import Doc.DocDraft()
@@ -66,7 +66,7 @@ handleDelete = do
     forM_ docids $ \did -> do
               doc <- guardRightM' $ getDocByDocID $ did
               let usl = (find (isSigLinkFor user) $ documentsignatorylinks doc)
-                  csl = (find (isSigLinkFor (usercompany user)) $ documentsignatorylinks doc) <| (useriscompanyadmin user) |> Nothing
+                  csl = Nothing -- (find (isSigLinkFor (usercompany user)) $ documentsignatorylinks doc) <| (useriscompanyadmin user) |> Nothing
                   msl =  usl `mplus` csl
               when (isNothing msl) internalError
               case (documentstatus doc) of

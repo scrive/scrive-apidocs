@@ -103,7 +103,7 @@ connectedSigLinkOnTemplateOrPreparation :: MinutesTime -> Document -> Maybe Stri
 connectedSigLinkOnTemplateOrPreparation _ document =
   assertInvariant "document has siglinks (besides author) with User or Company when in Preparation or it's a Template" $
     (isTemplate document || isPreparation document) =>>
-    (none (hasUser ||^ hasCompany) (filter (not . isAuthor) (documentsignatorylinks document)))
+    (none hasUser (filter (not . isAuthor) (documentsignatorylinks document)))
 
 {- |
    Author must have a user

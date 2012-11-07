@@ -183,7 +183,6 @@ instance Arbitrary SignatoryLink where
                            , signatorydetails           = sd
                            , signatorymagichash         = mh
                            , maybesignatory             = Nothing
-                           , maybecompany               = Nothing
                            , maybesigninfo              = signinfo
                            , maybeseeninfo              = seeninfo
                            , maybereadinvite            = Nothing
@@ -444,7 +443,6 @@ signatoryLinkExample1 :: SignatoryLink
 signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 0
                                       , signatorymagichash = unsafeMagicHash 0
                                       , maybesignatory = Nothing
-                                      , maybecompany = Nothing
                                       , maybesigninfo = Just $ SignInfo (fromSeconds 0) noIP
                                       , maybeseeninfo = Just $ SignInfo (fromSeconds 0) noIP
                                       , maybereadinvite = Nothing
@@ -681,7 +679,6 @@ addRandomDocument rda = do
       asl' <- rand 10 $ randomAuthorLinkByStatus status
       userDetails <- signatoryDetailsFromUser user roles
       let asl = asl' { maybesignatory = Just (userid user)
-                     , maybecompany = usercompany user
                      , signatorydetails = userDetails
                      }
 

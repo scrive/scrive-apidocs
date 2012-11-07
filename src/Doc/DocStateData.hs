@@ -41,7 +41,6 @@ module Doc.DocStateData (
   , doctypeFromString
   ) where
 
-import Company.Model
 import Data.Data
 import Data.Maybe
 import DB.Derive
@@ -193,7 +192,6 @@ data SignatoryLink = SignatoryLink {
   , signatorydetails           :: SignatoryDetails    -- ^ details of this person as filled in invitation
   , signatorymagichash         :: MagicHash           -- ^ authentication code
   , maybesignatory             :: Maybe UserID        -- ^ if this document has been saved to an account, that is the user id
-  , maybecompany               :: Maybe CompanyID     -- ^ if this document has been saved to a company account this is the companyid
   , maybesigninfo              :: Maybe SignInfo      -- ^ when a person has signed this document
   , maybeseeninfo              :: Maybe SignInfo      -- ^ when a person has first seen this document
   , maybereadinvite            :: Maybe MinutesTime   -- ^ when we receive confirmation that a user has read

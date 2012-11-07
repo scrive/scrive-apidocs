@@ -572,7 +572,6 @@ fetchSignatoryLinks = do
           }
           , signatorymagichash = token
           , maybesignatory = user_id
-          , maybecompany = Nothing
           , maybesigninfo = SignInfo <$> sign_time <*> sign_ip
           , maybeseeninfo = SignInfo <$> seen_time <*> seen_ip
           , maybereadinvite = read_invitation
@@ -1532,8 +1531,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
   let authorlink0 = signLinkFromDetails' authorDetails [] magichash
 
   let authorlink = authorlink0 {
-                         maybesignatory = Just $ userid user,
-                         maybecompany = usercompany user }
+                         maybesignatory = Just $ userid user }
 
   othersignatories <- sequence $ replicate nrOfOtherSignatories $ do
                         mh <- lift random
@@ -1665,8 +1663,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocumen
                            return $ (signLinkFromDetails' details atts magichash) { signatorylinkid = linkid }
       let Just authorsiglink0 = find isAuthor newSignLinks
           authorsiglink = authorsiglink0 {
-                            maybesignatory = maybesignatory asl,
-                            maybecompany = maybecompany asl
+                            maybesignatory = maybesignatory asl
                           }
           othersiglinks = filter (not . isAuthor) newSignLinks
           newsiglinks = authorsiglink : othersiglinks
@@ -1941,7 +1938,6 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                                  }
                          link = if isAuthor link'
                                 then link' { maybesignatory = maybe Nothing maybesignatory mauthorsiglink
-                                           , maybecompany   = maybe Nothing maybecompany   mauthorsiglink
                                            }
                                 else link'
                      return link

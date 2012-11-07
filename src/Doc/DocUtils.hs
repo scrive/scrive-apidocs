@@ -383,13 +383,9 @@ sameDocID :: Document -> Document -> Bool
 sameDocID doc1 doc2 = (documentid doc1) == (documentid doc2)
 
 
-isAuthoredByCompany :: CompanyID -> Document -> Bool
-isAuthoredByCompany companyid doc = (getAuthorSigLink doc >>= maybecompany) == Just companyid
-
 isAuthorAdmin :: User -> Document -> Bool
 isAuthorAdmin user doc =
-  useriscompanyadmin user
-  && maybe False (flip isAuthoredByCompany doc) (usercompany user)
+  useriscompanyadmin user && (getAuthorSigLink doc >>= maybesignatory) == Just (userid user)
 
 documentfileM :: MonadDB m => Document -> m (Maybe File)
 documentfileM = maybe (return Nothing) (dbQuery . GetFileByFileID) . documentfile

@@ -375,13 +375,14 @@ handleIssueShowGet docid = checkUserTOSGet $ do
   authorsiglink <- guardJust $ getAuthorSigLink document
   let ispreparation = documentstatus document == Preparation
       isauthor = (userid <$> muser) == maybesignatory authorsiglink
-      isincompany = isJust (maybecompany authorsiglink) &&
-                      ((usercompany =<< muser) == maybecompany authorsiglink)
+      -- FIXME: move check to database
+      isincompany = False -- isJust (maybecompany authorsiglink) &&
+                          --  ((usercompany =<< muser) == maybecompany authorsiglink)
       isauthororincompany = isauthor || isincompany
       msiglink = find (isSigLinkFor muser) $ documentsignatorylinks document
 
       isadmin = Just True == (useriscompanyadmin <$> muser)
-      iscompany = hasSigLinkFor (usercompany =<< muser) document
+      iscompany = False -- hasSigLinkFor (usercompany =<< muser) document
       isadminofcompany = isadmin && iscompany
 
   ctx <- getContext

@@ -51,6 +51,8 @@ import Util.MonadUtils
    They can if:
      the document is saved for them or their company if they are a company admin
      the document is authored within the user's company and shared
+
+  FIXME: this logic has to be moved to database layer
  -}
 canUserViewDoc :: User -> Document -> Bool
 canUserViewDoc user doc =
@@ -60,7 +62,7 @@ canUserViewDoc user doc =
     docIsSavedForUser =
       any (isSigLinkSavedFor user) $ documentsignatorylinks doc
     isSharedWithinCompany = isDocumentShared doc && isAuthoredWithinCompany
-    isAuthoredWithinCompany = isJust $ getSigLinkFor doc (signatoryisauthor . signatorydetails, usercompany user)
+    isAuthoredWithinCompany = False -- isJust $ getSigLinkFor doc (signatoryisauthor . signatorydetails, usercompany user)
 
 {- |
    Securely find a document by documentid for the author or within their company.
@@ -98,10 +100,10 @@ getDocByDocIDForAuthor docid = do
 {- | Same as getDocByDocID, but works only for author or authors company admin-}
 getDocByDocIDForAuthorOrAuthorsCompanyAdmin :: Kontrakcja m => DocumentID -> m (Either DBError Document)
 getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid = do
-      user <- guardJustM $ liftM2 mplus (ctxmaybeuser <$> getContext) (ctxmaybepaduser <$> getContext)
+      _user <- guardJustM $ liftM2 mplus (ctxmaybeuser <$> getContext) (ctxmaybepaduser <$> getContext)
       edoc <- getDocByDocID docid
       case edoc of
-           Right doc -> if (isAuthor (doc, user) || (useriscompanyadmin user  && (isJust $ getSigLinkFor doc (signatoryisauthor . signatorydetails, usercompany user))))
+           Right doc -> if True -- (isAuthor (doc, user) || (useriscompanyadmin user  && (isJust $ getSigLinkFor doc (signatoryisauthor . signatorydetails, usercompany user))))
                            then return $ Right doc
                            else return $ Left DBResourceNotAvailable
            e -> return e

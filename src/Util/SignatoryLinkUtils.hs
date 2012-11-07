@@ -28,7 +28,6 @@ module Util.SignatoryLinkUtils (
   getSignatoryPartnerLinks,
   hasSeen,  
   hasUser,
-  hasCompany,
   SignatoryLinkIdentity,
   MaybeSignatoryLink(..),
   HasSignatoryLinks,
@@ -36,7 +35,6 @@ module Util.SignatoryLinkUtils (
   hasSigLinkFor
        ) where
 
-import Company.Model
 import Doc.DocStateData
 import MagicHash (MagicHash)
 import User.Model
@@ -80,9 +78,6 @@ instance SignatoryLinkIdentity SignatoryLinkID where
  -}
 instance SignatoryLinkIdentity User where
   isJustSigLinkFor u sl = isSigLinkFor (userid u) sl || isSigLinkFor (getEmail u) sl
-
-instance SignatoryLinkIdentity CompanyID where
-  isJustSigLinkFor cid sl = Just cid == maybecompany sl
 
 instance (SignatoryLinkIdentity a) => SignatoryLinkIdentity (Maybe a) where
   isJustSigLinkFor (Just a) sl = isSigLinkFor a sl
@@ -222,12 +217,6 @@ hasUser :: (MaybeSignatoryLink a) => a -> Bool
 hasUser msl = maybe False (isJust . maybesignatory) (getMaybeSignatoryLink msl)
 
 {- |
-  Does this siglink have a company?
- -}
-hasCompany :: (MaybeSignatoryLink a) => a -> Bool
-hasCompany msl = maybe False (isJust . maybecompany) (getMaybeSignatoryLink msl)
-
-{- |
     This is counts a user as being for the signatory link
     if the userid is mentioned on the sig link, or if the user
     is an admin for a company that is mentioned on the sig link.
@@ -236,9 +225,8 @@ hasCompany msl = maybe False (isJust . maybecompany) (getMaybeSignatoryLink msl)
     would link by email.
 -}
 isSigLinkSavedFor :: User -> SignatoryLink -> Bool
-isSigLinkSavedFor User{userid, useriscompanyadmin, usercompany} sl =
-  isSigLinkFor userid sl || 
-    (useriscompanyadmin && isSigLinkFor usercompany sl)
+isSigLinkSavedFor User{userid} sl =
+  isSigLinkFor userid sl
 
 {- |
    Does i identify sl?

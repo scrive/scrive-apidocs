@@ -301,8 +301,9 @@ apiCallGet did = api $ do
             let sl = fromJust msiglink
             dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
                  (signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
-
-        let macmp = join $ maybecompany <$> getAuthorSigLink doc
+                 
+        -- FIXME: need to move this to database
+        let macmp = Nothing -- join $ maybecompany <$> getAuthorSigLink doc
         mauser <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
                        Just auid -> dbQuery $ GetUserByID auid
                        _ -> return Nothing

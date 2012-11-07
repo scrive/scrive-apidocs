@@ -738,7 +738,6 @@ assertGoodNewDocument mcompany doctype title (user, time, edoc) = do
     assertEqual "link company name matches company's" (getCompanyName mcompany) (getCompanyName siglink)
     assertEqual "link company number matches company's" (getCompanyNumber mcompany) (getCompanyNumber siglink)
     assertEqual "link signatory matches author id" (Just $ userid user) (maybesignatory siglink)
-    assertEqual "link signatory matches author company" (companyid <$> mcompany) (maybecompany siglink)
 
 testCancelDocumentCancelsDocument :: TestEnv ()
 testCancelDocumentCancelsDocument = doTimes 10 $ do

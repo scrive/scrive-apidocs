@@ -30,7 +30,6 @@ signLinkFromDetails' details attachments magichash =
                 , signatorydetails = signatoryLinkClearDetails details
                 , signatorymagichash = magichash
                 , maybesignatory = Nothing
-                , maybecompany = Nothing
                 , maybesigninfo  = Nothing
                 , maybeseeninfo  = Nothing
                 , maybereadinvite = Nothing
@@ -174,8 +173,7 @@ replaceSignatoryUser siglink user =
                        (getPersonalNumber user)
                        (getCompanyNumber  user)
                        (map sfValue $ filter isFieldCustom $ signatoryfields $ signatorydetails siglink) in
-  newsl { maybesignatory = Just $ userid user,
-          maybecompany = usercompany user }
+  newsl { maybesignatory = Just $ userid user }
 
 -- | Extract main file ID from document, assuming it has been set
 documentFileID :: (MonadIO m, MonadBase IO m) => Document -> m FileID
