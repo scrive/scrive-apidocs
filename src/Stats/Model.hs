@@ -576,31 +576,57 @@ statUpdate = StatUpdate
 -- | Register a stat event for whatever signing method was used.
 docStatSignMethod :: StatEvt -> StatQuery
 docStatSignMethod status did apistring =
-    SQL queryStr [toSql apistring, did', did']
+    mkSQL INSERT tableDocStatEvents [
+        sqlNoBind "user_id"       "sl.user_id",
+        sqlNoBind "time"          time,
+        sqlNoBind "amount"        "sigs",
+        sqlNoBind "document_id"   "doc.id",
+        sqlNoBind "company_id"    "sl.company_id",
+        sql       "api_string"    apistring,
+        sqlNoBind "quantity"      qty,
+        sqlNoBind "document_type" (docType "doc")
+      ] <+> fromPart
+        <+> joinSigLinks
+        <+> joinSigCount
+        <+> joinQty
+        <+> selectCondition
   where
-    queryStr = unlines [
-      "INSERT INTO doc_stat_events",
-      " (user_id, time, amount, api_string, document_type, document_id,",
-      "  company_id, quantity)",
-      "SELECT sl.user_id, " ++ time ++ ", sigs, ?,",
-      docType "doc" ++ ",",
-      "  doc.id, sl.company_id,",
-      "  (CASE",
-      "    WHEN doc.authentication_method=1 AND delivery_method=2 THEN",
-      "      " ++ fromSql (toSql padQty),
-      "    WHEN doc.authentication_method=1 THEN",
-      "      " ++ fromSql (toSql emailQty),
-      "    ELSE " ++ fromSql (toSql elegQty),
-      "  END)",
-      "FROM documents AS doc",
-      "JOIN",
-      "  signatory_links",
-      "  AS sl ON sl.document_id = doc.id AND sl.is_author",
-      "JOIN",
-      "  (SELECT MAX(sign_time) AS last_sign, " ++ countSigs ++ " AS sigs",
-      "   FROM signatory_links WHERE document_id = ?)",
-      "  AS sls ON TRUE",
-      "WHERE doc.id = ? AND " ++ docStatusCondition]
+    qty =
+      unlines [
+        "(CASE",
+        "  WHEN doc.authentication_method=1 AND delivery_method=2 THEN padqty",
+        "  WHEN doc.authentication_method=1 THEN emailqty",
+        "  ELSE elegqty",
+        "END)"]
+    fromPart =
+      "FROM documents AS doc"
+    joinSigLinks =
+      "JOIN signatory_links AS sl ON sl.document_id = doc.id AND sl.is_author"
+    joinSigCount =
+      SQL (unwords [
+              "JOIN",
+              "(SELECT MAX(sign_time) AS last_sign,",
+              countSigs,
+              "AS sigs",
+              "FROM signatory_links WHERE document_id = ?)",
+              "AS sls ON TRUE"])
+          [did']
+    -- I have no idea why, but unless we use these casts, postgres whines about
+    -- not being able to cast UNKNOWN to TEXT, which is weird because
+    -- toSql :: DocStatQuantity -> SQLValue returns an SQLInteger and the
+    -- column being written to is a SMALLINT. Anyway, this works.
+    joinQty =
+      SQL "JOIN (SELECT CAST(? AS SMALLINT) AS padqty) AS padtbl ON TRUE"
+          [toSql padQty] <+>
+      SQL "JOIN (SELECT CAST(? AS SMALLINT) AS emailqty) AS mailtbl ON TRUE"
+          [toSql emailQty] <+>
+      SQL "JOIN (SELECT CAST(? AS SMALLINT) AS elegqty) AS elegtbl ON TRUE"
+          [toSql elegQty]
+    
+    selectCondition =
+      SQL (unlines [
+              "WHERE doc.id = ? AND "])
+          [did'] <+> docStatusCondition
     did' = toSql did
     -- If status == Closed, then we want to count signatures and only update
     -- if the document is closed. If the document is instead pending or
@@ -612,7 +638,7 @@ docStatSignMethod status did apistring =
                        DocStatEmailSignatures,
                        DocStatElegSignatures,
                        "COUNT (sign_time)",
-                       "doc.status = " ++ fromSql (toSql Closed),
+                       SQL "doc.status = ?" [toSql Closed],
                        "sls.last_sign")
         DocPending -> (DocStatPadSignaturePending,
                        DocStatEmailSignaturePending,
@@ -638,15 +664,15 @@ docStatSignMethod status did apistring =
                        signatoryCount,
                        timeoutCondition,
                        "doc.timeout_time")
-    signatoryCount = "COUNT (CASE WHEN is_partner THEN TRUE ELSE NULL END)"
+    signatoryCount =
+        "COUNT (CASE WHEN is_partner THEN TRUE ELSE NULL END)"
     cancelCondition =
-        "doc.status = " ++ fromSql (toSql Canceled)
+        SQL "doc.status = ?" [toSql Canceled]
     timeoutCondition =
-        concat [
-            "doc.status = " ++ fromSql (toSql Timedout),
-            " AND sl.user_id IS NOT NULL",
-            " AND doc.timeout_time IS NOT NULL"
-          ]
+        mconcat [
+          SQL "doc.status = ?" [toSql Timedout],
+              " AND sl.user_id IS NOT NULL",
+              " AND doc.timeout_time IS NOT NULL"]
 
 -- | Register an event for "another document closed".
 docStatClose :: StatQuery
