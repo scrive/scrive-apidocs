@@ -116,7 +116,7 @@ docStatSignMethod status did apistring =
                                  DocStatEmailSignatureCancel,
                                  DocStatElegSignatureCancel,
                                  signatoryCount,
-                                 "TRUE",
+                                 cancelCondition,
                                  "doc.mtime")
       | status == DocReject   = (DocStatPadSignatureReject,
                                  DocStatEmailSignatureReject,
@@ -133,6 +133,8 @@ docStatSignMethod status did apistring =
       | otherwise             = error $  "docStatSignMethod called with "
                                       ++ "nonsensical DocumentStatus!"
     signatoryCount = "COUNT (CASE WHEN is_partner THEN TRUE ELSE NULL END)"
+    cancelCondition =
+        "doc.status = " ++ fromSql (toSql Canceled)
     timeoutCondition =
         concat [
             "doc.status = " ++ fromSql (toSql Timedout),
