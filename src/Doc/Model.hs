@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, OverloadedStrings #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -fcontext-stack=50  #-}
 module Doc.Model
   ( module File.File
@@ -126,9 +126,7 @@ import Util.HasSomeUserInfo
 import Templates.Fields (value, objects)
 import DB.TimeZoneName (TimeZoneName, mkTimeZoneName, withTimeZone)
 import qualified DB.TimeZoneName as TimeZoneName
-import DB.SQL2 hiding (sqlResult,sqlOrderBy)
-import qualified DB.SQL2 as SQL2 (sqlResult,sqlOrderBy)
-import Control.Monad.State
+import DB.SQL2
 
 data DocumentPagination =
   DocumentPagination
@@ -188,17 +186,17 @@ selectSignatoryLinksSmartNames is_author is_partner =
       SQL ("SELECT COALESCE(string_agg(x.value,' '),'no fields') FROM ") [] <>
       SQL ("(SELECT (") [] <>
       selectSmartName <>
-      SQL (") AS value FROM signatory_links" ++
-           " WHERE signatory_links.document_id = documents.id" ++
-           "   AND signatory_links.is_author = ? AND signatory_links.is_partner = ?" ++
+      SQL (") AS value FROM signatory_links" <>
+           " WHERE signatory_links.document_id = documents.id" <>
+           "   AND signatory_links.is_author = ? AND signatory_links.is_partner = ?" <>
            " ORDER BY signatory_links.internal_insert_order) AS x") [toSql is_author, toSql is_partner]
   where
-    selectFieldAs xtype name = SQL ("(SELECT signatory_link_fields.value AS value " ++
-                                    "FROM signatory_link_fields " ++
-                                    "WHERE signatory_link_fields.signatory_link_id = signatory_links.id " ++
-                                    "AND type = ? " ++
-                                    "LIMIT 1) " ++
-                                    "AS " ++ name) [toSql xtype]
+    selectFieldAs xtype name = "(SELECT signatory_link_fields.value AS value" <+>
+                                    "FROM signatory_link_fields" <+>
+                                    "WHERE signatory_link_fields.signatory_link_id = signatory_links.id" <+>
+                                    "AND type =" <?> xtype <+>
+                                    "LIMIT 1) " <+>
+                                    "AS" <+> name
     {-
      selectSmartName explanation:
      1. Select fields first name, last name and email into separate tables
@@ -209,10 +207,10 @@ selectSignatoryLinksSmartNames is_author is_partner =
      6. See if it is empty, if it is, convert to NULL
      7. If NULL use email address instead
      -}
-    selectSmartName = SQL ("SELECT " ++
-                           "COALESCE(NULLIF(TRIM(BOTH FROM (COALESCE(first_name.value,'') " ++
-                           "                                || ' ' || " ++
-                           "                                COALESCE(last_name.value,''))), ''),email.value) " ++
+    selectSmartName = SQL ("SELECT " <>
+                           "COALESCE(NULLIF(TRIM(BOTH FROM (COALESCE(first_name.value,'') " <>
+                           "                                || ' ' || " <>
+                           "                                COALESCE(last_name.value,''))), ''),email.value) " <>
                            "FROM (") [] <>
                       selectFieldAs FirstNameFT "first_name" <>
                       SQL " FULL JOIN " [] <>
@@ -232,38 +230,38 @@ documentDomainToSQL (DocumentsOfWholeUniverse) =
   SQL "TRUE" []
 documentDomainToSQL (DocumentsOfAuthorDeleteValue uid deleted) =
   SQL ("signatory_links.is_author"
-       ++ " AND signatory_links.user_id = ?"
-       ++ " AND signatory_links.deleted = ?"
-       ++ " AND signatory_links.really_deleted = FALSE"
-       ++ " AND documents.type = 1")
+       <> " AND signatory_links.user_id = ?"
+       <> " AND signatory_links.deleted = ?"
+       <> " AND signatory_links.really_deleted = FALSE"
+       <> " AND documents.type = 1")
         [toSql uid, toSql deleted]
 documentDomainToSQL (DocumentsForSignatoryDeleteValue uid deleted) =
   SQL ("signatory_links.user_id = ?"
-       ++ " AND signatory_links.deleted = ?"
-       ++ " AND signatory_links.really_deleted = FALSE"
-       ++ " AND documents.type = 1"
-       ++ " AND (signatory_links.is_author OR (signatory_links.is_partner"
-       ++ "          AND NOT EXISTS (SELECT 1 FROM signatory_links AS sl2"
-       ++ "                           WHERE signatory_links.document_id = sl2.document_id"
-       ++ "                             AND sl2.is_partner"
-       ++ "                             AND sl2.sign_time IS NULL"
-       ++ "                             AND sl2.sign_order < signatory_links.sign_order)))")
+       <> " AND signatory_links.deleted = ?"
+       <> " AND signatory_links.really_deleted = FALSE"
+       <> " AND documents.type = 1"
+       <> " AND (signatory_links.is_author OR (signatory_links.is_partner"
+       <> "          AND NOT EXISTS (SELECT 1 FROM signatory_links AS sl2"
+       <> "                           WHERE signatory_links.document_id = sl2.document_id"
+       <> "                             AND sl2.is_partner"
+       <> "                             AND sl2.sign_time IS NULL"
+       <> "                             AND sl2.sign_order < signatory_links.sign_order)))")
         [toSql uid, toSql deleted]
 documentDomainToSQL (TemplatesOfAuthorDeleteValue uid deleted) =
   SQL ("signatory_links.user_id = ?"
-       ++ " AND signatory_links.deleted = ?"
-       ++ " AND signatory_links.really_deleted = FALSE"
-       ++ " AND documents.type = 2")
+       <> " AND signatory_links.deleted = ?"
+       <> " AND signatory_links.really_deleted = FALSE"
+       <> " AND documents.type = 2")
         [toSql uid, toSql deleted]
 documentDomainToSQL (TemplatesSharedInUsersCompany uid) =
   SQL ("signatory_links.deleted = FALSE"
-       ++ " AND documents.type = 2"
-       ++ " AND documents.sharing = ?"
-       ++ " AND signatory_links.really_deleted = FALSE"
-       ++ " AND EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 "
-       ++ "                WHERE signatory_links.user_id = usr2.id "
-       ++ "                  AND usr2.company_id = usr1.company_id "
-       ++ "                  AND usr1.id = ?)")
+       <> " AND documents.type = 2"
+       <> " AND documents.sharing = ?"
+       <> " AND signatory_links.really_deleted = FALSE"
+       <> " AND EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 "
+       <> "                WHERE signatory_links.user_id = usr2.id "
+       <> "                  AND usr2.company_id = usr1.company_id "
+       <> "                  AND usr1.id = ?)")
         [toSql Shared, toSql uid]
 documentDomainToSQL (DocumentsOfCompany cid preparation deleted) =
   SQL "signatory_links.company_id = ? AND (? OR documents.status <> ?) AND signatory_links.deleted = ? AND signatory_links.really_deleted = FALSE"
@@ -273,36 +271,35 @@ documentDomainToSQL (DocumentsOfAuthorCompany cid preparation deleted) =
         [toSql cid, toSql preparation, toSql Preparation, toSql deleted]
 
 
-maxselect :: String
+maxselect :: SQL
 maxselect = "(SELECT max(greatest(signatory_links.sign_time"
-            ++ ", signatory_links.seen_time"
-            ++ ", signatory_links.read_invitation"
-            ++ ", documents.invite_time"
-            ++ ", documents.rejection_time"
-            ++ ", documents.mtime"
-            ++ ", documents.ctime"
-            ++ ")) FROM signatory_links WHERE signatory_links.document_id = documents.id)"
+            <> ", signatory_links.seen_time"
+            <> ", signatory_links.read_invitation"
+            <> ", documents.invite_time"
+            <> ", documents.rejection_time"
+            <> ", documents.mtime"
+            <> ", documents.ctime"
+            <> ")) FROM signatory_links WHERE signatory_links.document_id = documents.id)"
 
 documentFilterToSQL :: DocumentFilter -> SQL
 documentFilterToSQL (DocumentFilterStatuses []) =
   SQL "FALSE" []
 documentFilterToSQL (DocumentFilterStatuses statuses) =
-  SQL ("documents.status IN (" ++ intercalate "," (map (const "?") statuses) ++ ")")
-                               (map toSql statuses)
+  "documents.status IN" <+> parenthesize (sqlConcatComma (map sqlParam statuses))
 documentFilterToSQL (DocumentFilterByStatusClass []) =
   SQL "FALSE" []
 documentFilterToSQL (DocumentFilterByStatusClass statuses) =
-  documentStatusClassExpression <> SQL (" IN (" ++ intercalate "," (map (const "?") statuses) ++ ")")  (map toSql statuses)
+  documentStatusClassExpression <+> "IN" <+> parenthesize (sqlConcatComma (map sqlParam statuses))
 documentFilterToSQL (DocumentFilterMinChangeTime ctime) =
-  SQL (maxselect ++ " >= ?") [toSql ctime]
+  maxselect <+> ">=" <?> ctime
 documentFilterToSQL (DocumentFilterMaxChangeTime ctime) =
-  SQL (maxselect ++ " <= ?") [toSql ctime]
+  maxselect <+> "<=" <?> ctime
 documentFilterToSQL (DocumentFilterByProcess processes) =
-  sqlConcatOR $ map (\process -> SQL "documents.process = ?" [toSql process]) processes
+  sqlConcatOR $ map ("documents.process =" <?>) processes
 documentFilterToSQL (DocumentFilterByMonthYearFrom (month,year)) =
-  SQL ("(documents.mtime > '" ++ show year ++  "-" ++ show month ++ "-1')") []
+  fromString $ "(documents.mtime > '" ++ show year ++  "-" ++ show month ++ "-1')"
 documentFilterToSQL (DocumentFilterByMonthYearTo (month,year)) =
-  SQL ("(documents.mtime < '" ++ show (year + 1 <| month == 12 |> year)++ "-" ++ show ((month `mod` 12) + 1) ++ "-1')") []
+  fromString $ "(documents.mtime < '" ++ show (year + 1 <| month == 12 |> year)++ "-" ++ show ((month `mod` 12) + 1) ++ "-1')"
 documentFilterToSQL (DocumentFilterByTags []) =
   SQL "TRUE" []
 documentFilterToSQL (DocumentFilterByTags tags) =
@@ -312,12 +309,12 @@ documentFilterToSQL (DocumentFilterByString string) =
   result
   where
       result = SQL "documents.title ILIKE ?" [sqlpat string] `sqlOR`
-         sqlJoinWithAND (map sqlMatch (words string))
-      sqlMatch word = SQL ("EXISTS (SELECT TRUE" ++
-                                   "  FROM signatory_link_fields JOIN signatory_links AS sl5" ++
-                                                                 "  ON sl5.document_id = signatory_links.document_id" ++
-                                                                 " AND sl5.id = signatory_link_fields.signatory_link_id" ++
-                                   -- " FROM signatory_link_fields " ++
+         sqlConcatAND (map sqlMatch (words string))
+      sqlMatch word = SQL ("EXISTS (SELECT TRUE" <>
+                                   "  FROM signatory_link_fields JOIN signatory_links AS sl5" <>
+                                                                 "  ON sl5.document_id = signatory_links.document_id" <>
+                                                                 " AND sl5.id = signatory_link_fields.signatory_link_id" <>
+                                   -- " FROM signatory_link_fields " <>
                                    " WHERE signatory_link_fields.value ILIKE ?)") [sqlpat word]
                                    --" WHERE TRUE)") []
 
@@ -397,7 +394,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
 
 
 documentsSelectors :: SQL
-documentsSelectors = SQL (intercalate ", " [
+documentsSelectors = sqlConcatComma [
     "id"
   , "title"
   , "file_id"
@@ -425,7 +422,7 @@ documentsSelectors = SQL (intercalate ", " [
   , "delivery_method"
   , "api_callback_url"
   , " "
-  ]) [] <>
+  ] <>
   documentStatusClassExpression
 
   
@@ -536,12 +533,12 @@ selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
   sqlResult "signatory_attachments.file_id AS sigfileid"
   sqlResult "signatory_attachments.name AS signame"
   sqlResult "signatory_attachments.description AS sigdesc"
-  sqlLeftJoinOn ("signatory_attachments" :: SQL) ("signatory_attachments.signatory_link_id = signatory_links.id" :: SQL)
-  sqlJoinOn ("documents" :: SQL) ("signatory_links.document_id = documents.id" :: SQL)
+  sqlLeftJoinOn "signatory_attachments" "signatory_attachments.signatory_link_id = signatory_links.id"
+  sqlJoinOn "documents" "signatory_links.document_id = documents.id"
   extension
 
 selectSignatoryLinksSQL :: SQL
-selectSignatoryLinksSQL = toSQLCommand (selectSignatoryLinksX (return ())) <> SQL " " []
+selectSignatoryLinksSQL = toSQLCommand (selectSignatoryLinksX (return ())) <+> ""
 
 fetchSignatoryLinks :: MonadDB m => DBEnv m (M.Map DocumentID [SignatoryLink])
 fetchSignatoryLinks = do
@@ -688,17 +685,15 @@ fetchSignatoryAttachments = foldDB decoder M.empty
         }] acc
 
 
-documentTagsSelectors :: String
-documentTagsSelectors = intercalate ", " [
+documentTagsSelectors :: SQL
+documentTagsSelectors = sqlConcatComma [
     "document_id"
   , "name"
   , "value"
   ]
 
 selectDocumentTagsSQL :: SQL
-selectDocumentTagsSQL = SQL ("SELECT "
-  ++ documentTagsSelectors
-  ++ " FROM document_tags ") []
+selectDocumentTagsSQL = "SELECT" <+> documentTagsSelectors <+> "FROM document_tags "
 
 fetchDocumentTags :: MonadDB m => DBEnv m (M.Map DocumentID (S.Set DocumentTag))
 fetchDocumentTags = foldDB decoder M.empty
@@ -722,16 +717,14 @@ insertDocumentTagsAsAre documentid tags = do
     >>= return . concatMap (S.toList . snd) . M.toList
 
 
-authorAttachmentsSelectors :: String
-authorAttachmentsSelectors = intercalate ", " [
+authorAttachmentsSelectors :: SQL
+authorAttachmentsSelectors = sqlConcatComma [
     "document_id"
   , "file_id"
   ]
 
 selectAuthorAttachmentsSQL :: SQL
-selectAuthorAttachmentsSQL = SQL ("SELECT "
-  ++ authorAttachmentsSelectors
-  ++ " FROM author_attachments ") []
+selectAuthorAttachmentsSQL = "SELECT" <+> authorAttachmentsSelectors <+> "FROM author_attachments "
 
 fetchAuthorAttachments :: MonadDB m => DBEnv m (M.Map DocumentID [AuthorAttachment])
 fetchAuthorAttachments = foldDB decoder M.empty
@@ -782,7 +775,7 @@ signatoryLinkFieldsSelectors =
 
 selectSignatoryLinkFieldsSQL :: SQL
 selectSignatoryLinkFieldsSQL = "SELECT"
-  <+> foldr1 (<+>) (intersperse "," signatoryLinkFieldsSelectors)
+  <+> sqlConcatComma signatoryLinkFieldsSelectors
   <+> "FROM signatory_link_fields "
 
 fetchSignatoryLinkFields :: MonadDB m => DBEnv m (M.Map SignatoryLinkID [SignatoryField])
@@ -1143,7 +1136,7 @@ instance (MonadBaseControl IO m, MonadDB m, TemplatesMonad m) => DBUpdate m Prep
             -- http://www.postgresql.org/docs/9.2/static/functions-datetime.html
             dstTz <- mkTimeZoneName "Europe/Stockholm"
             withTimeZone dstTz $ updateWithEvidence tableDocuments
-              (    "status = " <?> Pending
+              (    "status =" <?> Pending
              <+> ", mtime =" <?> time
              <+> ", timeout_time = cast (" <?> timestamp <+> "as timestamp with time zone)"
                             <+> "+" <?> (show (daystosign + 1) ++ " days")
@@ -1371,7 +1364,7 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
       , if not (null orderbys)
         then SQL " ORDER BY " [] `mappend` sqlConcatComma (map documentOrderByAscDescToSQL orderbys)
         else SQL "" []
-      , SQL (" OFFSET " ++ show (documentOffset pagination) ++ " LIMIT " ++ show (documentLimit pagination)) []
+      , " OFFSET" <?> documentOffset pagination <+> "LIMIT" <?> documentLimit pagination
       ]
 
 -- | Gets all documents from database.
@@ -2196,8 +2189,8 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where
     -- signatory could not have signed already
     (eml :: String) <- $fromJust `liftM` getOne
            (SQL ("SELECT value FROM signatory_link_fields"
-                ++ " WHERE signatory_link_fields.signatory_link_id = ?"
-                ++ "   AND signatory_link_fields.type = ?")
+                <> " WHERE signatory_link_fields.signatory_link_id = ?"
+                <> "   AND signatory_link_fields.type = ?")
                  [toSql slid, toSql EmailFT])
 
     let updateValue fieldtype fvalue = do
@@ -2209,13 +2202,13 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where
           r <- kRun $ mkSQL UPDATE tableSignatoryLinkFields
                  [ sql "value" fvalue ]
                  <> SQL (" WHERE EXISTS (SELECT 1 FROM documents, signatory_links"
-                           ++             " WHERE documents.id = signatory_links.document_id"
-                           ++             "   AND documents.status = ?"
-                           ++             "   AND signatory_links.sign_time IS NULL"
-                           ++             "   AND signatory_links.id = signatory_link_id)"
-                           ++      "  AND signatory_link_id = ?"
-                           ++      "  AND custom_name = ?"
-                           ++      "  AND type = ?")
+                           <>             " WHERE documents.id = signatory_links.document_id"
+                           <>             "   AND documents.status = ?"
+                           <>             "   AND signatory_links.sign_time IS NULL"
+                           <>             "   AND signatory_links.id = signatory_link_id)"
+                           <>      "  AND signatory_link_id = ?"
+                           <>      "  AND custom_name = ?"
+                           <>      "  AND type = ?")
                         [ toSql Pending, toSql slid, toSql custom_name, toSql fieldtype]
           when_ (r > 0) $ do
             update $ InsertEvidenceEvent
@@ -2318,15 +2311,15 @@ instance MonadDB m => DBUpdate m SetDocumentModificationData Bool where
 data GetDocsSentBetween = GetDocsSentBetween UserID MinutesTime MinutesTime
 instance MonadDB m => DBQuery m GetDocsSentBetween Int where
   query (GetDocsSentBetween uid start end) = do
-    kPrepare $ "SELECT count(documents.id) " ++
-               "FROM documents " ++
-               "JOIN signatory_links ON documents.id = signatory_links.document_id " ++
-               "WHERE signatory_links.user_id = ? " ++
-               "AND is_author " ++
-               "AND documents.ctime >= ? " ++
-               "AND documents.ctime <  ? " ++
-               "AND documents.type = ? "   ++
-               "AND documents.status <> ? " ++
+    kPrepare $ "SELECT count(documents.id) " <>
+               "FROM documents " <>
+               "JOIN signatory_links ON documents.id = signatory_links.document_id " <>
+               "WHERE signatory_links.user_id = ? " <>
+               "AND is_author " <>
+               "AND documents.ctime >= ? " <>
+               "AND documents.ctime <  ? " <>
+               "AND documents.type = ? "   <>
+               "AND documents.status <> ? " <>
                "AND NOT documents.deleted" 
     _ <- kExecute [toSql uid, toSql start, toSql end, toSql Preparation, toSql $ Signable undefined]
     foldDB (+) 0
@@ -2336,7 +2329,7 @@ instance MonadDB m => DBQuery m GetDocsSentBetween Int where
 updateWithEvidence' :: (MonadDB m, TemplatesMonad m) => DBEnv m Bool -> Table -> SQL -> DBEnv m InsertEvidenceEvent -> DBEnv m Bool
 updateWithEvidence' testChanged t u mkEvidence = do
   changed <- testChanged
-  success <- kRun01 $ "UPDATE" <+> fromString (tblName t) <+> "SET" <+> u
+  success <- kRun01 $ "UPDATE" <+> raw (tblName t) <+> "SET" <+> u
   when_ (success && changed) $ do
     e <- mkEvidence
     update $ e
@@ -2349,25 +2342,14 @@ updateOneWithEvidenceIfChanged :: (MonadDB m, TemplatesMonad m, Convertible a Sq
                                => DocumentID -> SQL -> a -> DBEnv m InsertEvidenceEvent -> DBEnv m Bool
 updateOneWithEvidenceIfChanged did col new =
   updateWithEvidence'
-    (checkIfAnyReturned $ "SELECT 1 FROM" <+> fromString (tblName tableDocuments)
-                      <+> "WHERE id = " <?> did <+> "AND" <+> col <+> "IS DISTINCT FROM" <?> new)
+    (checkIfAnyReturned $ "SELECT 1 FROM" <+> raw (tblName tableDocuments)
+                      <+> "WHERE id =" <?> did <+> "AND" <+> col <+> "IS DISTINCT FROM" <?> new)
     tableDocuments (col <+> "=" <?> new <+> "WHERE id =" <?> did)
 
 updateOneAndMtimeWithEvidenceIfChanged :: (MonadDB m, TemplatesMonad m, Convertible a SqlValue)
                                        => DocumentID -> SQL -> a -> MinutesTime -> DBEnv m InsertEvidenceEvent -> DBEnv m Bool
 updateOneAndMtimeWithEvidenceIfChanged did col new mtime =
   updateWithEvidence'
-    (checkIfAnyReturned $ "SELECT 1 FROM" <+> fromString (tblName tableDocuments)
-                      <+> "WHERE id = " <?> did <+> "AND" <+> col <+> "IS DISTINCT FROM" <?> new)
+    (checkIfAnyReturned $ "SELECT 1 FROM" <+> raw (tblName tableDocuments)
+                      <+> "WHERE id =" <?> did <+> "AND" <+> col <+> "IS DISTINCT FROM" <?> new)
     tableDocuments ("mtime =" <?> mtime <+> "," <+> col <+> "=" <?> new <+> "WHERE id =" <?> did)
-
-
--- UTILS, temporary
-
-sqlOrderBy :: (MonadState v m, SqlOrderBy v) => SQL -> m ()
-sqlOrderBy = SQL2.sqlOrderBy
-
-sqlResult :: (MonadState v m, SqlResult v) => SQL -> m ()
-sqlResult = SQL2.sqlResult
-
-    

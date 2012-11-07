@@ -1,3 +1,4 @@
+{-# LANGUAGE ExtendedDefaultRules #-}
 module Doc.DocView (
     pageCreateFromTemplate 
   , documentAuthorInfo

@@ -6,6 +6,7 @@ module Payments.Stats (record
 
 import Control.Monad.Base
 import Data.Maybe
+import Data.Monoid ((<>))
 
 import MinutesTime
 import DB
@@ -40,10 +41,10 @@ data AddPaymentsStat = AddPaymentsStat { psTime        :: MinutesTime
 instance MonadDB m => DBUpdate m AddPaymentsStat Bool where
   update AddPaymentsStat{..} = do
     kPrepare $ "INSERT INTO payment_stats (time, provider, action, quantity, plan, account_type, user_id, company_id, account_code) "
-      ++ "      SELECT ?, ?, ?, ?, ?, ?, ?, ?, ? "
-      ++ "      WHERE (EXISTS (SELECT 1 FROM users         WHERE id = ?)"
-      ++ "         OR  EXISTS (SELECT 1 FROM companies     WHERE id = ?))"
-      ++ "        AND EXISTS  (SELECT 1 FROM payment_plans WHERE account_code = ?)"
+      <> "      SELECT ?, ?, ?, ?, ?, ?, ?, ?, ? "
+      <> "      WHERE (EXISTS (SELECT 1 FROM users         WHERE id = ?)"
+      <> "         OR  EXISTS (SELECT 1 FROM companies     WHERE id = ?))"
+      <> "        AND EXISTS  (SELECT 1 FROM payment_plans WHERE account_code = ?)"
     kExecute01 [toSql psTime
                ,toSql psProvider
                ,toSql psAction
@@ -62,13 +63,13 @@ instance MonadDB m => DBUpdate m AddPaymentsStat Bool where
 data GetPaymentsStats = GetPaymentsStats
 instance (MonadBase IO m, MonadDB m) => DBQuery m GetPaymentsStats [[String]] where
   query GetPaymentsStats = do
-    _ <- kRun $ SQL ("SELECT payment_stats.time, payment_stats.account_code, payment_stats.user_id, payment_stats.company_id, " ++
-                     "       payment_stats.quantity, payment_stats.plan, payment_stats.action, payment_stats.provider, " ++
-                     "       trim(trim(users.first_name) || ' ' || trim(users.last_name)), trim(users.email), " ++
-                     "       trim(users.company_name), trim(companies.name) " ++
-                     "FROM payment_stats " ++
-                     "LEFT OUTER JOIN users     ON payment_stats.user_id    = users.id " ++
-                     "LEFT OUTER JOIN companies ON payment_stats.company_id = companies.id " ++
+    _ <- kRun $ SQL ("SELECT payment_stats.time, payment_stats.account_code, payment_stats.user_id, payment_stats.company_id, " <>
+                     "       payment_stats.quantity, payment_stats.plan, payment_stats.action, payment_stats.provider, " <>
+                     "       trim(trim(users.first_name) || ' ' || trim(users.last_name)), trim(users.email), " <>
+                     "       trim(users.company_name), trim(companies.name) " <>
+                     "FROM payment_stats " <>
+                     "LEFT OUTER JOIN users     ON payment_stats.user_id    = users.id " <>
+                     "LEFT OUTER JOIN companies ON payment_stats.company_id = companies.id " <>
                      "ORDER BY payment_stats.time DESC") []
     foldDB f []
       where f :: [[String]] -> MinutesTime -> AccountCode -> Maybe UserID -> Maybe CompanyID -> Int -> PricePlan -> PaymentsAction -> PaymentPlanProvider -> Maybe String -> Maybe String -> Maybe String -> Maybe String -> [[String]]

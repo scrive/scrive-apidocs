@@ -4,11 +4,12 @@ import Database.HDBC
 
 import DB.Core
 import DB.Env
+import DB.SQL (RawSQL)
 
 data TableValidationResult = TVRvalid | TVRcreated | TVRinvalid
 
 data Table = Table {
-    tblName             :: String
+    tblName             :: RawSQL
   , tblVersion          :: Int
   , tblCreateOrValidate :: MonadDB m => [(String, SqlColDesc)] -> DBEnv m TableValidationResult
   , tblPutProperties    :: MonadDB m => DBEnv m ()

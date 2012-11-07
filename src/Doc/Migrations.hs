@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.Migrations where
 
@@ -21,6 +21,8 @@ import EvidenceLog.Model
 import Version
 import MinutesTime
 
+default (SQL)
+
 $(jsonableDeriveConvertible [t| [SignatoryField] |])
 
 setMandatoryExpirationTimeInDocument :: MonadDB m => Migration m
@@ -39,7 +41,7 @@ setMandatoryExpirationTimeInDocument = Migration {
     kRun_ $ "UPDATE documents SET days_to_sign =" <?> pendingDaysToSign
                            <+> ", timeout_time =" <?> timeout
         <+> "WHERE status =" <?> Pending <+> "AND timeout_time IS NULL"
-    kRun_ $ ("UPDATE documents SET days_to_sign = 0 WHERE days_to_sign IS NULL" :: String)
+    kRun_ "UPDATE documents SET days_to_sign = 0 WHERE days_to_sign IS NULL"
     kRunRaw "ALTER TABLE documents ALTER days_to_sign SET NOT NULL"
 }
 
@@ -87,7 +89,7 @@ removeServiceIDFromDocuments = Migration {
   , mgrFrom = 9
   , mgrDo = do
     -- check if service_id field is empty for all documents
-    check <- getMany ("SELECT DISTINCT service_id IS NULL FROM documents" :: String)
+    check <- getMany "SELECT DISTINCT service_id IS NULL FROM documents"
     case check of
       []     -> return () -- no records, ok
       [True] -> return () -- only nulls, ok
@@ -509,9 +511,9 @@ moveAttachmentsFromDocumentsToAttachments =
   , mgrFrom = 6
   , mgrDo = do
       inserted <- kRun $ SQL ("INSERT INTO attachments(title,file_id,deleted,shared,ctime,mtime, user_id)"
-                              ++ " SELECT title, file_id, signatory_links.deleted, sharing=2, ctime, mtime, user_id"
-                              ++ " FROM documents JOIN signatory_links ON document_id = documents.id AND (roles&2)<>0 AND (documents.file_id IS NOT NULL)"
-                              ++ " WHERE type = 3") []
+                              <> " SELECT title, file_id, signatory_links.deleted, sharing=2, ctime, mtime, user_id"
+                              <> " FROM documents JOIN signatory_links ON document_id = documents.id AND (roles&2)<>0 AND (documents.file_id IS NOT NULL)"
+                              <> " WHERE type = 3") []
       deleted <- kRun $ SQL ("DELETE FROM documents WHERE type = 3") []
       when (deleted /= inserted) $
          Log.debug  $ "Migration from documents to attachments done. Migrated: " ++ show inserted ++ ". Lost attachments due to missing files: " ++ show (deleted - inserted)
@@ -525,6 +527,6 @@ removeOldDocumentLog =
   , mgrDo = do
       now <- getMinutesTime
       _ <- kRun $ SQL ("INSERT INTO evidence_log(document_id,time,text,event_type,version_id)"
-                              ++ " SELECT id, ?, log, ? , ? FROM documents") [toSql now ,  toSql OldDocumentHistory, toSql versionID]
+                              <> " SELECT id, ?, log, ? , ? FROM documents") [toSql now ,  toSql OldDocumentHistory, toSql versionID]
       kRunRaw "ALTER TABLE documents DROP COLUMN log"
   }

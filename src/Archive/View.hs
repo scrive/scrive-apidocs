@@ -1,4 +1,5 @@
-module Archive.View 
+{-# LANGUAGE ExtendedDefaultRules #-}
+module Archive.View
        (
          flashMessageAttachmentArchiveDone,
          flashMessageSignableArchiveDone,

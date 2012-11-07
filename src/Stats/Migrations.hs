@@ -1,8 +1,11 @@
+{-# LANGUAGE ExtendedDefaultRules #-}
 module Stats.Migrations where
 
 import DB
 import Doc.DocStateData
 import Stats.Tables
+
+default (SQL)
 
 removeServiceIDFromDocStatEvents :: MonadDB m => Migration m
 removeServiceIDFromDocStatEvents = Migration {

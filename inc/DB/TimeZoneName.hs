@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 module DB.TimeZoneName
   ( TimeZoneName
   , mkTimeZoneName
@@ -10,15 +10,17 @@ import Data.Char (isAlpha, isAlphaNum)
 import qualified Control.Exception.Lifted as E
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Convertible (Convertible (..))
+import Data.String (fromString)
 import Data.Typeable (Typeable)
 import Database.HDBC (SqlValue)
 
 import DB.Core (MonadDB)
 import DB.Env (DBEnv)
 import DB.Functions (kRun)
-import DB.SQL ((<?>), (<+>))
+import DB.SQL (SQL, (<?>), (<+>))
 import DB.Utils (getOne, exactlyOneObjectReturnedGuard)
 
+default (SQL)
 
 -- | Time zone names that the database backend accepts.  See also
 -- http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
@@ -44,12 +46,13 @@ sanityCheck s = case break (=='/') s of
 withTimeZone :: (MonadDB m, MonadBaseControl IO m)
              => TimeZoneName -> DBEnv m a -> DBEnv m a
 withTimeZone (TimeZoneName tz) m = E.bracket
-  (do stz :: String <- getOne ("SHOW timezone" :: String) >>= exactlyOneObjectReturnedGuard
+  (do stz :: String <- getOne "SHOW timezone" >>= exactlyOneObjectReturnedGuard
       setTz tz
       return stz)
   setTz
   (const m)
-  where setTz tz' = kRun ("SET timezone = '" ++ tz' ++ "'") >> return ()
+  where setTz tz' = kRun ("SET timezone =" <+> tzq) >> return ()
+           where tzq = fromString ("'" ++ tz' ++ "'") -- tz' is sanity checked
 
 toString :: TimeZoneName -> String
 toString (TimeZoneName s) = s

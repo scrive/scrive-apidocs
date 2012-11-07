@@ -1,4 +1,3 @@
-
 {-# LANGUAGE NoMonomorphismRestriction #-}
 module Attachment.Model
   ( NewAttachment(..)
@@ -130,25 +129,11 @@ data AttachmentDomain
   = AttachmentsOfAuthorDeleteValue UserID Bool   -- ^ Attachments of user, with deleted flag
   | AttachmentsSharedInUsersCompany UserID       -- ^ Attachments shared in the user company
 
-instance IsSQL AttachmentDomain where
-  toSQLCommand (AttachmentsOfAuthorDeleteValue uid del) =
-    SQL "attachments.user_id = ? AND attachments.deleted = ?" [toSql uid, toSql del]
-  toSQLCommand (AttachmentsSharedInUsersCompany uid) =
-    SQL "attachments.deleted = FALSE AND EXISTS (SELECT 1 FROM users, users AS users_2 WHERE attachments.user_id = users.id AND users.company_id = users_2.company_id AND users_2.id = ?)" [toSql uid]
-
 -- | These are possible order by clauses that make documents sorted by.
 data AttachmentOrderBy
   = AttachmentOrderByTitle       -- ^ Order by title, alphabetically, case insensitive
   | AttachmentOrderByMTime       -- ^ Order by modification time
   | AttachmentOrderByCTime       -- ^ Order by creation time
-
-instance IsSQL (AscDesc AttachmentOrderBy) where
-  toSQLCommand (Asc AttachmentOrderByTitle) = SQL "attachments.title ASC" []
-  toSQLCommand (Desc AttachmentOrderByTitle) = SQL "attachments.title DESC" []
-  toSQLCommand (Asc AttachmentOrderByMTime) = SQL "attachments.mtime ASC" []
-  toSQLCommand (Desc AttachmentOrderByMTime) = SQL "attachments.mtime DESC" []
-  toSQLCommand (Asc AttachmentOrderByCTime) = SQL "attachments.ctime ASC" []
-  toSQLCommand (Desc AttachmentOrderByCTime) = SQL "attachments.ctime DESC" []
 
 -- | GetAttachments is central switch for attachments list queries.
 --
@@ -166,10 +151,24 @@ instance MonadDB m => DBQuery m GetAttachments [Attachment] where
   query (GetAttachments domains filters orderbys _pagination) = do
     kRun_ $ sqlSelect "attachments" $ do
       sqlAttachmentResults
-      sqlWhereOr domains
+      sqlWhereOr (map domainToSQLCommand domains)
       mapM_ sqlWhereAttachmentFilter filters
-      mapM_ sqlOrderBy orderbys
+      mapM_ (sqlOrderBy . orderToSQLCommand) orderbys
     fetchAttachments
+   where
+    domainToSQLCommand (AttachmentsOfAuthorDeleteValue uid del) =
+      "attachments.user_id =" <?> uid <+> "AND attachments.deleted =" <?> del
+    domainToSQLCommand (AttachmentsSharedInUsersCompany uid) =
+      "attachments.deleted = FALSE AND EXISTS (SELECT 1 FROM users, users AS users_2"
+                                          <+> "WHERE attachments.user_id = users.id"
+                                            <+> "AND users.company_id = users_2.company_id AND users_2.id =" <?> uid <+>")"
+    orderToSQLCommand (Asc AttachmentOrderByTitle)  = "attachments.title ASC"
+    orderToSQLCommand (Desc AttachmentOrderByTitle) = "attachments.title DESC"
+    orderToSQLCommand (Asc AttachmentOrderByMTime)  = "attachments.mtime ASC"
+    orderToSQLCommand (Desc AttachmentOrderByMTime) = "attachments.mtime DESC"
+    orderToSQLCommand (Asc AttachmentOrderByCTime)  = "attachments.ctime ASC"
+    orderToSQLCommand (Desc AttachmentOrderByCTime) = "attachments.ctime DESC"
+
 
 data SetAttachmentsSharing = SetAttachmentsSharing [AttachmentID] Bool
 instance (MonadDB m) => DBUpdate m SetAttachmentsSharing (Either String Bool) where

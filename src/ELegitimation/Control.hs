@@ -1,3 +1,4 @@
+{-# LANGUAGE ExtendedDefaultRules #-}
 module ELegitimation.Control
     ( generateBankIDTransaction
     , generateBankIDTransactionForAuthor

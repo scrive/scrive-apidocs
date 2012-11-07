@@ -11,7 +11,6 @@ module File.Model (
 
 import Control.Applicative
 import Control.Monad.Trans
-import Data.List
 import Data.Monoid
 import Database.HDBC
 
@@ -41,7 +40,7 @@ instance (Applicative m, CryptoRNG m, MonadDB m) => DBUpdate m NewFile File wher
       , sql "size" $ BS.length $ unBinary content
       , sql "aes_key" $ aesKey aes
       , sql "aes_iv" $ aesIV aes
-      ] <> SQL ("RETURNING " ++ filesSelectors) []
+      ] <+> "RETURNING" <+> filesSelectors
     fetchFiles >>= exactlyOneObjectReturnedGuard
 
 data FileMovedToAWS = FileMovedToAWS FileID String String
@@ -86,10 +85,10 @@ instance (Applicative m, CryptoRNG m, MonadDB m) => DBUpdate m SetContentToMemor
       ] <> SQL "WHERE id = ?" [toSql fid]
 
 selectFilesSQL :: SQL
-selectFilesSQL = SQL ("SELECT " ++ filesSelectors ++ " FROM files ") []
+selectFilesSQL = "SELECT" <+> filesSelectors <+> "FROM files "
 
-filesSelectors :: String
-filesSelectors = intercalate ", " [
+filesSelectors :: SQL
+filesSelectors = sqlConcatComma [
     "id"
   , "name"
   , "content"

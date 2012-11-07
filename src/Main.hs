@@ -39,7 +39,7 @@ main = Log.withLogger $ do
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
 
-  Log.server $ "Starting kontrakcja-server build " ++ concat (intersperse "." (versionTags Paths.version))
+  Log.server $ "Starting kontrakcja-server build " ++ intercalate "." (versionTags Paths.version)
 
   appConf <- do
     appname <- getProgName

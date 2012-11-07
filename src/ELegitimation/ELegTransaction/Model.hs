@@ -7,7 +7,6 @@ module ELegitimation.ELegTransaction.Model (
 import Control.Monad
 import Control.Monad.Trans
 import Data.Data
-import Data.List
 import Data.Monoid
 
 import Context
@@ -81,9 +80,9 @@ instance (KontraMonad m, MonadDB m) => DBQuery m GetELegTransaction (Maybe ELegT
     fetchTransactions >>= oneObjectReturnedGuard
 
 selectTransactionsSQL :: SQL
-selectTransactionsSQL = SQL ("SELECT " ++ selectors ++ " FROM eleg_transactions ") []
+selectTransactionsSQL = "SELECT" <+> selectors <+> "FROM eleg_transactions "
   where
-    selectors = intercalate ", " [
+    selectors = sqlConcatComma [
         "id"
       , "nonce"
       , "tbs"

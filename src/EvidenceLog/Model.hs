@@ -16,6 +16,7 @@ import EvidenceLog.Tables
 import IPAddress
 import MinutesTime
 import Utils.Prelude
+import Data.Monoid ((<>))
 import Data.Typeable
 import User.Model
 import Util.Actor
@@ -80,20 +81,20 @@ data GetEvidenceLog = GetEvidenceLog DocumentID
 instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
   query (GetEvidenceLog docid) = do
     _ <- kRun $ SQL ("SELECT "
-      ++ "  document_id"
-      ++ ", time"
-      ++ ", text"
-      ++ ", event_type"
-      ++ ", version_id"
-      ++ ", user_id"
-      ++ ", email"
-      ++ ", request_ip_v4"
-      ++ ", request_ip_v6"
-      ++ ", signatory_link_id"
-      ++ ", api_user"
-      ++ "  FROM evidence_log "
-      ++ "  WHERE document_id = ?"
-      ++ "  ORDER BY time DESC, id DESC") [
+      <> "  document_id"
+      <> ", time"
+      <> ", text"
+      <> ", event_type"
+      <> ", version_id"
+      <> ", user_id"
+      <> ", email"
+      <> ", request_ip_v4"
+      <> ", request_ip_v6"
+      <> ", signatory_link_id"
+      <> ", api_user"
+      <> "  FROM evidence_log "
+      <> "  WHERE document_id = ?"
+      <> "  ORDER BY time DESC, id DESC") [
         toSql docid
       ]
     foldDB fetchEvidenceLog []
@@ -116,31 +117,31 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
 copyEvidenceLogToNewDocument :: MonadDB m => DocumentID -> DocumentID -> DBEnv m ()
 copyEvidenceLogToNewDocument fromdoc todoc = do
   _ <- kRun $ SQL ("INSERT INTO evidence_log ("
-    ++ "  document_id"
-    ++ ", time"
-    ++ ", text"
-    ++ ", event_type"
-    ++ ", version_id"
-    ++ ", user_id"
-    ++ ", email"
-    ++ ", request_ip_v4"
-    ++ ", request_ip_v6"
-    ++ ", signatory_link_id"
-    ++ ", api_user"
-    ++ ") SELECT "
-    ++ "  ?"
-    ++ ", time"
-    ++ ", text"
-    ++ ", event_type"
-    ++ ", version_id"
-    ++ ", user_id"
-    ++ ", email"
-    ++ ", request_ip_v4"
-    ++ ", request_ip_v6"
-    ++ ", signatory_link_id"
-    ++ ", api_user"
-    ++ " FROM evidence_log "
-    ++ " WHERE document_id = ?") [
+    <> "  document_id"
+    <> ", time"
+    <> ", text"
+    <> ", event_type"
+    <> ", version_id"
+    <> ", user_id"
+    <> ", email"
+    <> ", request_ip_v4"
+    <> ", request_ip_v6"
+    <> ", signatory_link_id"
+    <> ", api_user"
+    <> ") SELECT "
+    <> "  ?"
+    <> ", time"
+    <> ", text"
+    <> ", event_type"
+    <> ", version_id"
+    <> ", user_id"
+    <> ", email"
+    <> ", request_ip_v4"
+    <> ", request_ip_v6"
+    <> ", signatory_link_id"
+    <> ", api_user"
+    <> " FROM evidence_log "
+    <> " WHERE document_id = ?") [
       toSql todoc
     , toSql fromdoc
     ]

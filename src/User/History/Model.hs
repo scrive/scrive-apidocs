@@ -22,7 +22,7 @@ import Text.JSON.Gen
 import qualified Paths_kontrakcja as Paths
 import qualified Data.Version as Ver
 
-import DB
+import DB hiding (intersperse)
 import IPAddress
 import MinutesTime
 
@@ -159,8 +159,8 @@ instance MonadDB m => DBUpdate m LogHistoryAccountCreated Bool where
     UserHistoryEvent {
         uheventtype = UserAccountCreated
       , uheventdata = Just $ JSArray $ [runJSONGen $ do 
-          value "field" "email"
-          value "oldval" ""
+          value "field" ("email" :: String)
+          value "oldval" ("" :: String)
           value "newval" $ unEmail email
         ]
       }
@@ -245,15 +245,15 @@ addUserHistory user event ip time mpuser =
 
 selectUserHistorySQL :: SQL
 selectUserHistorySQL = SQL ("SELECT"
- ++ "  user_id"
- ++ ", event_type"
- ++ ", event_data"
- ++ ", ip"
- ++ ", time"
- ++ ", system_version"
- ++ ", performing_user_id"
- ++ "  FROM users_history"
- ++ " ") []
+ <> "  user_id"
+ <> ", event_type"
+ <> ", event_data"
+ <> ", ip"
+ <> ", time"
+ <> ", system_version"
+ <> ", performing_user_id"
+ <> "  FROM users_history"
+ <> " ") []
 
 fetchUserHistory :: MonadDB m => DBEnv m [UserHistory]
 fetchUserHistory = foldDB decoder []

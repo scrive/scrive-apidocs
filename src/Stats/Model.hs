@@ -91,16 +91,16 @@ data DocStatEvent = DocStatEvent {
 
 selectDocStatEventsSQL :: SQL
 selectDocStatEventsSQL = SQL ("SELECT "
- ++ "  e.user_id"
- ++ ", e.time"
- ++ ", e.quantity"
- ++ ", e.amount"
- ++ ", e.document_id"
- ++ ", e.company_id"
- ++ ", e.document_type"
- ++ ", e.api_string"
- ++ "  FROM doc_stat_events e"
- ++ " ") []
+ <> "  e.user_id"
+ <> ", e.time"
+ <> ", e.quantity"
+ <> ", e.amount"
+ <> ", e.document_id"
+ <> ", e.company_id"
+ <> ", e.document_type"
+ <> ", e.api_string"
+ <> "  FROM doc_stat_events e"
+ <> " ") []
 
 fetchDocStats :: MonadDB m => DBEnv m [DocStatEvent]
 fetchDocStats = foldDB decoder []
@@ -146,14 +146,14 @@ instance MonadDB m => DBQuery m GetDocStatEventsByCompanyID [DocStatEvent] where
 data GetDocStatCSV = GetDocStatCSV MinutesTime MinutesTime
 instance MonadDB m => DBQuery m GetDocStatCSV [[BS.ByteString]] where
   query (GetDocStatCSV start end) = do
-    _ <- kRun $ SQL ("SELECT doc_stat_events.user_id, trim(trim(users.first_name) || ' ' || trim(users.last_name)), trim(users.email), " ++
-                    "       doc_stat_events.time, doc_stat_events.quantity, doc_stat_events.amount,  " ++
-                    "       doc_stat_events.document_id, trim(companies.name), " ++
-                    "       doc_stat_events.company_id, doc_stat_events.document_type, doc_stat_events.api_string " ++
-                    "FROM doc_stat_events " ++
-                    "LEFT JOIN users ON doc_stat_events.user_id = users.id " ++
-                    "LEFT JOIN companies ON doc_stat_events.company_id = companies.id " ++
-                    "WHERE doc_stat_events.time > ? AND doc_stat_events.time <= ?" ++
+    _ <- kRun $ SQL ("SELECT doc_stat_events.user_id, trim(trim(users.first_name) || ' ' || trim(users.last_name)), trim(users.email), " <>
+                    "       doc_stat_events.time, doc_stat_events.quantity, doc_stat_events.amount,  " <>
+                    "       doc_stat_events.document_id, trim(companies.name), " <>
+                    "       doc_stat_events.company_id, doc_stat_events.document_type, doc_stat_events.api_string " <>
+                    "FROM doc_stat_events " <>
+                    "LEFT JOIN users ON doc_stat_events.user_id = users.id " <>
+                    "LEFT JOIN companies ON doc_stat_events.company_id = companies.id " <>
+                    "WHERE doc_stat_events.time > ? AND doc_stat_events.time <= ?" <>
                     "ORDER BY doc_stat_events.time DESC") [toSql start, toSql end]
     foldDB f []
       where f :: [[BS.ByteString]] -> UserID -> BS.ByteString -> BS.ByteString -> MinutesTime -> DocStatQuantity -> Int -> DocumentID -> Maybe BS.ByteString -> Maybe CompanyID -> BS.ByteString -> BS.ByteString -> [[BS.ByteString]]
@@ -165,20 +165,20 @@ instance MonadDB m => DBQuery m GetDocStatCSV [[BS.ByteString]] where
 data GetDocHistCSV = GetDocHistCSV MinutesTime MinutesTime
 instance MonadDB m => DBQuery m GetDocHistCSV [[String]] where
   query (GetDocHistCSV start end) = do
-    _ <- kRun $ SQL ("SELECT ds.document_id, ds.company_id, ds.document_type, " ++
-                     "       creat.time, " ++
-                     "       send.time, " ++
-                     "       close.time, " ++
-                     "       reject.time, " ++
-                     "       cancel.time, " ++
-                     "       timeout.time " ++
-                     "FROM (SELECT DISTINCT document_id, company_id, document_type FROM doc_stat_events WHERE doc_stat_events.time > ? AND doc_stat_events.time <= ?) AS ds " ++
-                     "LEFT JOIN doc_stat_events AS creat   ON (ds.document_id = creat.document_id   AND creat.quantity = ?)" ++                     
-                     "LEFT JOIN doc_stat_events AS send    ON (ds.document_id = send.document_id    AND send.quantity = ?)" ++
-                     "LEFT JOIN doc_stat_events AS close   ON (ds.document_id = close.document_id   AND close.quantity = ?)" ++
-                     "LEFT JOIN doc_stat_events AS reject  ON (ds.document_id = reject.document_id  AND reject.quantity = ?)" ++
-                     "LEFT JOIN doc_stat_events AS cancel  ON (ds.document_id = cancel.document_id  AND cancel.quantity = ?)" ++
-                     "LEFT JOIN doc_stat_events AS timeout ON (ds.document_id = timeout.document_id AND timeout.quantity = ?)" ++
+    _ <- kRun $ SQL ("SELECT ds.document_id, ds.company_id, ds.document_type, " <>
+                     "       creat.time, " <>
+                     "       send.time, " <>
+                     "       close.time, " <>
+                     "       reject.time, " <>
+                     "       cancel.time, " <>
+                     "       timeout.time " <>
+                     "FROM (SELECT DISTINCT document_id, company_id, document_type FROM doc_stat_events WHERE doc_stat_events.time > ? AND doc_stat_events.time <= ?) AS ds " <>
+                     "LEFT JOIN doc_stat_events AS creat   ON (ds.document_id = creat.document_id   AND creat.quantity = ?)" <>                     
+                     "LEFT JOIN doc_stat_events AS send    ON (ds.document_id = send.document_id    AND send.quantity = ?)" <>
+                     "LEFT JOIN doc_stat_events AS close   ON (ds.document_id = close.document_id   AND close.quantity = ?)" <>
+                     "LEFT JOIN doc_stat_events AS reject  ON (ds.document_id = reject.document_id  AND reject.quantity = ?)" <>
+                     "LEFT JOIN doc_stat_events AS cancel  ON (ds.document_id = cancel.document_id  AND cancel.quantity = ?)" <>
+                     "LEFT JOIN doc_stat_events AS timeout ON (ds.document_id = timeout.document_id AND timeout.quantity = ?)" <>
                      "ORDER BY ds.document_id DESC") [toSql start, 
                                                       toSql end,
                                                       toSql DocStatCreate,
@@ -195,48 +195,48 @@ instance MonadDB m => DBQuery m GetDocHistCSV [[String]] where
 selectUsersAndCompaniesAndInviteInfoSQL :: SQL
 selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   -- User:
-  ++ "  users.id AS user_id"
-  ++ ", users.password"
-  ++ ", users.salt"
-  ++ ", users.is_company_admin"
-  ++ ", users.account_suspended"
-  ++ ", users.has_accepted_terms_of_service"
-  ++ ", users.signup_method"
-  ++ ", users.company_id AS user_company_id"
-  ++ ", users.first_name"
-  ++ ", users.last_name"
-  ++ ", users.personal_number"
-  ++ ", users.company_position"
-  ++ ", users.phone"
-  ++ ", users.mobile"
-  ++ ", users.email"
-  ++ ", users.lang"
-  ++ ", users.region"
-  ++ ", users.customfooter"
-  ++ ", users.company_name"
-  ++ ", users.company_number"
-  ++ ", users.is_free"
+  <> "  users.id AS user_id"
+  <> ", users.password"
+  <> ", users.salt"
+  <> ", users.is_company_admin"
+  <> ", users.account_suspended"
+  <> ", users.has_accepted_terms_of_service"
+  <> ", users.signup_method"
+  <> ", users.company_id AS user_company_id"
+  <> ", users.first_name"
+  <> ", users.last_name"
+  <> ", users.personal_number"
+  <> ", users.company_position"
+  <> ", users.phone"
+  <> ", users.mobile"
+  <> ", users.email"
+  <> ", users.lang"
+  <> ", users.region"
+  <> ", users.customfooter"
+  <> ", users.company_name"
+  <> ", users.company_number"
+  <> ", users.is_free"
   -- Company:
-  ++ ", c.id AS company_id"
-  ++ ", c.external_id"
-  ++ ", c.name"
-  ++ ", c.number"
-  ++ ", c.address"
-  ++ ", c.zip"
-  ++ ", c.city"
-  ++ ", c.country"
-  ++ ", c.bars_background"
-  ++ ", c.bars_textcolour"
-  ++ ", c.logo"
-  ++ ", email_domain"
+  <> ", c.id AS company_id"
+  <> ", c.external_id"
+  <> ", c.name"
+  <> ", c.number"
+  <> ", c.address"
+  <> ", c.zip"
+  <> ", c.city"
+  <> ", c.country"
+  <> ", c.bars_background"
+  <> ", c.bars_textcolour"
+  <> ", c.logo"
+  <> ", email_domain"
   -- InviteInfo:
-  ++ ", user_invite_infos.inviter_id"
-  ++ ", user_invite_infos.invite_time"
-  ++ ", user_invite_infos.invite_type"
-  ++ "  FROM users"
-  ++ "  LEFT JOIN companies c ON users.company_id = c.id"
-  ++ "  LEFT JOIN user_invite_infos ON users.id = user_invite_infos.user_id"
-  ++ "  WHERE users.deleted = FALSE")
+  <> ", user_invite_infos.inviter_id"
+  <> ", user_invite_infos.invite_time"
+  <> ", user_invite_infos.invite_type"
+  <> "  FROM users"
+  <> "  LEFT JOIN companies c ON users.company_id = c.id"
+  <> "  LEFT JOIN user_invite_infos ON users.id = user_invite_infos.user_id"
+  <> "  WHERE users.deleted = FALSE")
   []
 
 
@@ -300,12 +300,12 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` foldDB decoder []
 
 selectUserIDAndStatsSQL :: (DocStatQuantity, DocStatQuantity) -> SQL
 selectUserIDAndStatsSQL (q1, q2) = SQL ("SELECT "
-  ++ " e.user_id"
-  ++ ", e.time"
-  ++ ", e.quantity"
-  ++ ", e.amount"
-  ++ "  FROM doc_stat_events e"
-  ++ "    WHERE e.quantity IN (?, ?)")
+  <> " e.user_id"
+  <> ", e.time"
+  <> ", e.quantity"
+  <> ", e.amount"
+  <> "  FROM doc_stat_events e"
+  <> "    WHERE e.quantity IN (?, ?)")
   [toSql q1, toSql q2]
 
 
@@ -328,7 +328,7 @@ instance MonadDB m => DBQuery m GetUsersAndStatsAndInviteInfo
          , if null sorting
            then mempty
            else SQL " ORDER BY " [] <> sqlConcatComma (map userOrderByAscDescToSQL sorting)
-         , SQL (" OFFSET " ++ show (userOffset pagination) ++ " LIMIT " ++ show (userLimit pagination)) []
+         , " OFFSET" <?> userOffset pagination <+> "LIMIT" <?> userLimit pagination
          ]
 
     _ <- kRun $ SQL "SELECT * FROM users_and_companies_temp" []
@@ -390,13 +390,13 @@ data UserStatEvent = UserStatEvent {
 
 selectUserStatEventsSQL :: SQL
 selectUserStatEventsSQL = SQL ("SELECT"
- ++ "  e.user_id"
- ++ ", e.time"
- ++ ", e.quantity"
- ++ ", e.amount"
- ++ ", e.company_id"
- ++ "  FROM user_stat_events e"
- ++ " ") []
+ <> "  e.user_id"
+ <> ", e.time"
+ <> ", e.quantity"
+ <> ", e.amount"
+ <> ", e.company_id"
+ <> "  FROM user_stat_events e"
+ <> " ") []
 
 fetchUserStats :: MonadDB m => DBEnv m [UserStatEvent]
 fetchUserStats = foldDB decoder []
@@ -456,14 +456,14 @@ data SignStatEvent = SignStatEvent {
 
 selectSignStatEventsSQL :: SQL
 selectSignStatEventsSQL = SQL ("SELECT"
- ++ "  e.document_id"
- ++ ", e.signatory_link_id"
- ++ ", e.time"
- ++ ", e.quantity"
- ++ ", e.company_id"
- ++ ", e.document_process"
- ++ "  FROM sign_stat_events e"
- ++ " ") []
+ <> "  e.document_id"
+ <> ", e.signatory_link_id"
+ <> ", e.time"
+ <> ", e.quantity"
+ <> ", e.company_id"
+ <> ", e.document_process"
+ <> "  FROM sign_stat_events e"
+ <> " ") []
 
 fetchSignStats :: MonadDB m => DBEnv m [SignStatEvent]
 fetchSignStats = foldDB decoder []
@@ -503,24 +503,24 @@ instance MonadDB m => DBUpdate m AddSignStatEvent Bool where
 data GetSignHistCSV = GetSignHistCSV MinutesTime MinutesTime
 instance MonadDB m => DBQuery m GetSignHistCSV [[String]] where
   query (GetSignHistCSV start end) = do
-    _ <- kRun $ SQL ("SELECT ss.document_id, ss.signatory_link_id, ss.company_id, ss.document_process, " ++
-                     "       invite.time, " ++
-                     "       receive.time, " ++
-                     "       open.time, " ++
-                     "       link.time, " ++
-                     "       sign.time, " ++
-                     "       reject.time, " ++
-                     "       del.time, " ++                     
-                     "       purge.time " ++                                          
-                     "FROM (SELECT DISTINCT document_id, signatory_link_id, company_id, document_process FROM sign_stat_events WHERE sign_stat_events.time > ? AND sign_stat_events.time <= ?) AS ss " ++
-                     "LEFT JOIN sign_stat_events AS invite   ON (ss.document_id = invite.document_id   AND invite.quantity  = ? AND ss.signatory_link_id = invite.signatory_link_id )" ++                     
-                     "LEFT JOIN sign_stat_events AS receive  ON (ss.document_id = receive.document_id  AND receive.quantity = ? AND ss.signatory_link_id = receive.signatory_link_id )" ++                                          
-                     "LEFT JOIN sign_stat_events AS open     ON (ss.document_id = open.document_id     AND open.quantity    = ? AND ss.signatory_link_id = open.signatory_link_id )" ++
-                     "LEFT JOIN sign_stat_events AS link     ON (ss.document_id = link.document_id     AND link.quantity    = ? AND ss.signatory_link_id = link.signatory_link_id )" ++
-                     "LEFT JOIN sign_stat_events AS sign     ON (ss.document_id = sign.document_id     AND sign.quantity    = ? AND ss.signatory_link_id = sign.signatory_link_id )" ++
-                     "LEFT JOIN sign_stat_events AS reject   ON (ss.document_id = reject.document_id   AND reject.quantity  = ? AND ss.signatory_link_id = reject.signatory_link_id )" ++
-                     "LEFT JOIN sign_stat_events AS del      ON (ss.document_id = del.document_id      AND del.quantity     = ? AND ss.signatory_link_id = del.signatory_link_id )" ++
-                     "LEFT JOIN sign_stat_events AS purge    ON (ss.document_id = purge.document_id    AND purge.quantity   = ? AND ss.signatory_link_id = purge.signatory_link_id )" ++                     
+    _ <- kRun $ SQL ("SELECT ss.document_id, ss.signatory_link_id, ss.company_id, ss.document_process, " <>
+                     "       invite.time, " <>
+                     "       receive.time, " <>
+                     "       open.time, " <>
+                     "       link.time, " <>
+                     "       sign.time, " <>
+                     "       reject.time, " <>
+                     "       del.time, " <>                     
+                     "       purge.time " <>                                          
+                     "FROM (SELECT DISTINCT document_id, signatory_link_id, company_id, document_process FROM sign_stat_events WHERE sign_stat_events.time > ? AND sign_stat_events.time <= ?) AS ss " <>
+                     "LEFT JOIN sign_stat_events AS invite   ON (ss.document_id = invite.document_id   AND invite.quantity  = ? AND ss.signatory_link_id = invite.signatory_link_id )" <>                     
+                     "LEFT JOIN sign_stat_events AS receive  ON (ss.document_id = receive.document_id  AND receive.quantity = ? AND ss.signatory_link_id = receive.signatory_link_id )" <>                                          
+                     "LEFT JOIN sign_stat_events AS open     ON (ss.document_id = open.document_id     AND open.quantity    = ? AND ss.signatory_link_id = open.signatory_link_id )" <>
+                     "LEFT JOIN sign_stat_events AS link     ON (ss.document_id = link.document_id     AND link.quantity    = ? AND ss.signatory_link_id = link.signatory_link_id )" <>
+                     "LEFT JOIN sign_stat_events AS sign     ON (ss.document_id = sign.document_id     AND sign.quantity    = ? AND ss.signatory_link_id = sign.signatory_link_id )" <>
+                     "LEFT JOIN sign_stat_events AS reject   ON (ss.document_id = reject.document_id   AND reject.quantity  = ? AND ss.signatory_link_id = reject.signatory_link_id )" <>
+                     "LEFT JOIN sign_stat_events AS del      ON (ss.document_id = del.document_id      AND del.quantity     = ? AND ss.signatory_link_id = del.signatory_link_id )" <>
+                     "LEFT JOIN sign_stat_events AS purge    ON (ss.document_id = purge.document_id    AND purge.quantity   = ? AND ss.signatory_link_id = purge.signatory_link_id )" <>                     
                      "ORDER BY ss.document_id DESC, ss.signatory_link_id DESC") [toSql start, 
                                                       toSql end,
                                                       toSql SignStatInvite,

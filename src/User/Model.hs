@@ -123,7 +123,7 @@ data UserFilter
 
 userFilterToSQL :: UserFilter -> SQL
 userFilterToSQL (UserFilterByString string) =
-  sqlJoinWithAND (map (\wordpat -> SQL "users.first_name ILIKE ?" [wordpat] `sqlOR`
+    sqlConcatAND (map (\wordpat -> SQL "users.first_name ILIKE ?" [wordpat] `sqlOR`
                                    SQL "users.last_name ILIKE ?" [wordpat] `sqlOR`
                                    SQL "users.email ILIKE ?" [wordpat] `sqlOR`
                                    SQL "translate(users.mobile,'-+ .,()','') ILIKE translate(?,'-+ .,()','')" [wordpat] `sqlOR`
@@ -165,29 +165,25 @@ userOrderByAscDescToSQL (Desc x) = userOrderByToSQL x `mappend` SQL " DESC" []
 data GetUsers = GetUsers
 instance MonadDB m => DBQuery m GetUsers [User] where
   query GetUsers = do
-    kPrepare $ selectUsersSQL ++ " WHERE deleted = FALSE ORDER BY first_name || ' ' || last_name DESC"
-    _ <- kExecute []
+    kRun_ $ selectUsersSQL <+> "WHERE deleted = FALSE ORDER BY first_name || ' ' || last_name DESC"
     fetchUsers
 
 data GetUserByID = GetUserByID UserID
 instance MonadDB m => DBQuery m GetUserByID (Maybe User) where
   query (GetUserByID uid) = do
-    kPrepare $ selectUsersSQL ++ " WHERE id = ? AND deleted = FALSE"
-    _ <- kExecute [toSql uid]
+    kRun_ $ selectUsersSQL <+> "WHERE id =" <?> uid <+> "AND deleted = FALSE"
     fetchUsers >>= oneObjectReturnedGuard
 
 data GetUserByEmail = GetUserByEmail Email
 instance MonadDB m => DBQuery m GetUserByEmail (Maybe User) where
   query (GetUserByEmail email) = do
-    kPrepare $ selectUsersSQL ++ " WHERE deleted = FALSE AND email = ?"
-    _ <- kExecute [toSql $ map toLower $ unEmail email]
+    kRun_ $ selectUsersSQL <+> "WHERE deleted = FALSE AND email =" <?> map toLower (unEmail email)
     fetchUsers >>= oneObjectReturnedGuard
 
 data GetCompanyAccounts = GetCompanyAccounts CompanyID
 instance MonadDB m => DBQuery m GetCompanyAccounts [User] where
   query (GetCompanyAccounts cid) = do
-    kPrepare $ selectUsersSQL ++ " WHERE company_id = ? AND deleted = FALSE ORDER BY email DESC"
-    _ <- kExecute [toSql cid]
+    kRun_ $ selectUsersSQL <+> "WHERE company_id =" <?> cid <+> "AND deleted = FALSE ORDER BY email DESC"
     fetchUsers
 
 data GetInviteInfo = GetInviteInfo UserID
@@ -249,7 +245,7 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
       Nothing -> do
-        _ <- kRun $ mkSQL INSERT tableUsers [
+        kRun_ $ mkSQL INSERT tableUsers [
             sql "password" $ pwdHash <$> mpwd
           , sql "salt" $ pwdSalt <$> mpwd
           , sql "is_company_admin" False
@@ -259,34 +255,34 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
           , sql "company_id" mcid
           , sql "first_name" fname
           , sql "last_name" lname
-          , sql "personal_number" ""
-          , sql "company_position" ""
-          , sql "company_name" ""
-          , sql "company_number" ""
-          , sql "phone" ""
-          , sql "mobile" ""
+          , sql "personal_number" ("" :: String)
+          , sql "company_position" ("" :: String)
+          , sql "company_name" ("" :: String)
+          , sql "company_number" ("" :: String)
+          , sql "phone" ("" :: String)
+          , sql "mobile" ("" :: String)
           , sql "email" $ map toLower email
           , sql "lang" $ getLang l
           , sql "region" $ getRegion l
           , sql "deleted" False
           , sql "is_free" False
-          ] <> SQL ("RETURNING " ++ selectUsersSelectors) []
+          ] <+> "RETURNING" <+> selectUsersSelectors
         fetchUsers >>= oneObjectReturnedGuard
 
 data SetUserEmail = SetUserEmail UserID Email
 instance MonadDB m => DBUpdate m SetUserEmail Bool where
   update (SetUserEmail uid email) = do
     kPrepare $ "UPDATE users SET email = ?"
-      ++ " WHERE id = ? AND deleted = FALSE"
+      <> " WHERE id = ? AND deleted = FALSE"
     kExecute01 [toSql $ map toLower $ unEmail email, toSql uid]
 
 data SetUserPassword = SetUserPassword UserID Password
 instance MonadDB m => DBUpdate m SetUserPassword Bool where
   update (SetUserPassword uid pwd) = do
     kPrepare $ "UPDATE users SET"
-      ++ "  password = ?"
-      ++ ", salt = ?"
-      ++ "  WHERE id = ? AND deleted = FALSE"
+      <> "  password = ?"
+      <> ", salt = ?"
+      <> "  WHERE id = ? AND deleted = FALSE"
     kExecute01 [toSql $ pwdHash pwd, toSql $ pwdSalt pwd, toSql uid]
 
 data SetInviteInfo = SetInviteInfo (Maybe UserID) MinutesTime InviteType UserID
@@ -302,10 +298,10 @@ instance MonadDB m => DBUpdate m SetInviteInfo Bool where
             if rec_exists
               then do
                 kPrepare $ "UPDATE user_invite_infos SET"
-                  ++ "  inviter_id = ?"
-                  ++ ", invite_time = ?"
-                  ++ ", invite_type = ?"
-                  ++ "  WHERE user_id = ?"
+                  <> "  inviter_id = ?"
+                  <> ", invite_time = ?"
+                  <> ", invite_type = ?"
+                  <> "  WHERE user_id = ?"
                 kExecute01 [
                     toSql inviterid
                   , toSql invitetime
@@ -314,10 +310,10 @@ instance MonadDB m => DBUpdate m SetInviteInfo Bool where
                   ]
               else do
                 kPrepare $ "INSERT INTO user_invite_infos ("
-                  ++ "  user_id"
-                  ++ ", inviter_id"
-                  ++ ", invite_time"
-                  ++ ", invite_type) VALUES (?, ?, ?, ?)"
+                  <> "  user_id"
+                  <> ", inviter_id"
+                  <> ", invite_time"
+                  <> ", invite_type) VALUES (?, ?, ?, ?)"
                 kExecute01 [
                     toSql uid
                   , toSql inviterid
@@ -333,16 +329,16 @@ data SetUserInfo = SetUserInfo UserID UserInfo
 instance MonadDB m => DBUpdate m SetUserInfo Bool where
   update (SetUserInfo uid info) = do
     kPrepare $ "UPDATE users SET"
-      ++ "  first_name = ?"
-      ++ ", last_name = ?"
-      ++ ", personal_number = ?"
-      ++ ", company_position = ?"
-      ++ ", phone = ?"
-      ++ ", mobile = ?"
-      ++ ", email = ?"
-      ++ ", company_name = ?"
-      ++ ", company_number = ?"
-      ++ "  WHERE id = ? AND deleted = FALSE"
+      <> "  first_name = ?"
+      <> ", last_name = ?"
+      <> ", personal_number = ?"
+      <> ", company_position = ?"
+      <> ", phone = ?"
+      <> ", mobile = ?"
+      <> ", email = ?"
+      <> ", company_name = ?"
+      <> ", company_number = ?"
+      <> "  WHERE id = ? AND deleted = FALSE"
     kExecute01 [
         toSql $ userfstname info
       , toSql $ usersndname info
@@ -360,10 +356,10 @@ data SetUserSettings = SetUserSettings UserID UserSettings
 instance MonadDB m => DBUpdate m SetUserSettings Bool where
   update (SetUserSettings uid us) = do
     kPrepare $ "UPDATE users SET"
-      ++ "  lang = ?"
-      ++ ", region = ?"
-      ++ ", customfooter = ?"
-      ++ "  WHERE id = ? AND deleted = FALSE"
+      <> "  lang = ?"
+      <> ", region = ?"
+      <> ", customfooter = ?"
+      <> "  WHERE id = ? AND deleted = FALSE"
     kExecute01 [
         toSql $ getLang us
       , toSql $ getRegion us
@@ -375,8 +371,8 @@ data AcceptTermsOfService = AcceptTermsOfService UserID MinutesTime
 instance MonadDB m => DBUpdate m AcceptTermsOfService Bool where
   update (AcceptTermsOfService uid time) = do
     kPrepare $ "UPDATE users SET"
-      ++ "  has_accepted_terms_of_service = ?"
-      ++ "  WHERE id = ? AND deleted = FALSE"
+      <> "  has_accepted_terms_of_service = ?"
+      <> "  WHERE id = ? AND deleted = FALSE"
     kExecute01 [
         toSql time
       , toSql uid
@@ -415,32 +411,33 @@ checkIfUserExists :: MonadDB m => UserID -> DBEnv m Bool
 checkIfUserExists uid = checkIfAnyReturned
   $ SQL "SELECT 1 FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
 
-selectUsersSQL :: String
-selectUsersSQL = "SELECT " ++ selectUsersSelectors ++ " FROM users"
+selectUsersSQL :: SQL
+selectUsersSQL = "SELECT" <+> selectUsersSelectors <+> "FROM users"
 
-selectUsersSelectors :: String
-selectUsersSelectors =
- "  id"
- ++ ", password"
- ++ ", salt"
- ++ ", is_company_admin"
- ++ ", account_suspended"
- ++ ", has_accepted_terms_of_service"
- ++ ", signup_method"
- ++ ", company_id"
- ++ ", first_name"
- ++ ", last_name"
- ++ ", personal_number"
- ++ ", company_position"
- ++ ", phone"
- ++ ", mobile"
- ++ ", email"
- ++ ", lang"
- ++ ", region"
- ++ ", customfooter"
- ++ ", company_name"
- ++ ", company_number"
- ++ ", is_free"
+selectUsersSelectors :: SQL
+selectUsersSelectors = sqlConcatComma
+  [ "id"
+  , "password"
+  , "salt"
+  , "is_company_admin"
+  , "account_suspended"
+  , "has_accepted_terms_of_service"
+  , "signup_method"
+  , "company_id"
+  , "first_name"
+  , "last_name"
+  , "personal_number"
+  , "company_position"
+  , "phone"
+  , "mobile"
+  , "email"
+  , "lang"
+  , "region"
+  , "customfooter"
+  , "company_name"
+  , "company_number"
+  , "is_free"
+  ]
 
 fetchUsers :: MonadDB m => DBEnv m [User]
 fetchUsers = foldDB decoder []

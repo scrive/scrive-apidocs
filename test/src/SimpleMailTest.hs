@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -XOverloadedStrings #-}
 module SimpleMailTest where
 
 import ScriveByMail.Parse

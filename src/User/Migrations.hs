@@ -1,3 +1,4 @@
+{-# LANGUAGE ExtendedDefaultRules #-}
 module User.Migrations where
 
 import DB
@@ -5,6 +6,7 @@ import Utils.Default
 import User.Region
 import User.Tables
 
+default (SQL)
 
 addUserCustomFooter :: MonadDB m => Migration m
 addUserCustomFooter =
