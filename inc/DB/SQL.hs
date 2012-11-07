@@ -99,3 +99,5 @@ parenthesize s = "(" <+> s <+> ")"
 
 intersperse :: RawSQL -> [SQL] -> SQL
 intersperse i = foldr (<+>) mempty . Data.List.intersperse (SQL i [])
+
+-- silly merge
