@@ -4,6 +4,7 @@ module DB.SQL (
   , ColumnValue
   , sql'
   , sql
+  , sqlNoBind
   , sqlParam
   , (<+>)
   , (<?>)
@@ -20,6 +21,7 @@ module DB.SQL (
   , parenthesize
   ) where
 
+import Data.Maybe (catMaybes)
 import Data.Convertible
 import Data.List
 import Data.Monoid
@@ -37,7 +39,7 @@ instance Monoid SQL where
   mempty = SQL [] []
   (SQL q v) `mappend` (SQL q' v') = SQL (q ++ q') (v ++ v')
 
-type ColumnValue = (String, String, SqlValue)
+type ColumnValue = (String, String, Maybe SqlValue)
 
 class IsSQL a where
   toSQLCommand :: a -> SQL
@@ -61,10 +63,16 @@ s1 <+> s2 = s1 <> " " <> s2
 s <?> p = s <+> sqlParam p
 
 sql' :: Convertible a SqlValue => String -> String -> a -> ColumnValue
-sql' column placeholder value = (column, placeholder, toSql value)
+sql' column placeholder value = (column, placeholder, Just $ toSql value)
 
 sql :: Convertible a SqlValue => String -> a -> ColumnValue
 sql column value = sql' column "?" value
+
+-- | Behaves like `sql'` without binding a parameter.
+--   It's useful when inserting data straight from another table and thus don't
+--   have an extra parameter to pass in.
+sqlNoBind :: String -> String -> ColumnValue
+sqlNoBind column expr = (column, expr, Nothing)
 
 -- for INSERT/UPDATE statements generation
 
@@ -75,10 +83,10 @@ mkSQL qtype Table{tblName} values = case qtype of
   INSERT -> SQL ("INSERT INTO " ++ tblName
     ++ " (" ++ (intercalate ", " columns) ++ ")"
     ++ " SELECT " ++ (intercalate ", " placeholders)
-    ++ " ") vals
+    ++ " ") (catMaybes vals)
   UPDATE -> SQL ("UPDATE " ++ tblName ++ " SET "
     ++ (intercalate ", " $ zipWith (\c p -> c ++ " = " ++ p) columns placeholders)
-    ++ " ") vals
+    ++ " ") (catMaybes vals)
   where
     (columns, placeholders, vals) = unzip3 values
 
