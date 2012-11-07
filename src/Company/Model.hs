@@ -6,6 +6,7 @@ module Company.Model (
   , CompanyUI(..)
   , GetCompanies(..)
   , GetCompany(..)
+  , GetCompanyByUserID(..)
   , GetCompanyByExternalID(..)
   , CreateCompany(..)
   , SetCompanyInfo(..)
@@ -24,6 +25,7 @@ import DB
 import DB.SQL2
 import Company.CompanyID
 import Control.Monad.State
+import User.UserID
 import Data.Monoid
 
 -- to be removed, only upsales used that
@@ -121,6 +123,15 @@ instance MonadDB m => DBQuery m GetCompanyByExternalID (Maybe Company) where
       sqlWhereEq "external_id" ecid
     fetchCompanies >>= oneObjectReturnedGuard
 
+data GetCompanyByUserID = GetCompanyByUserID UserID
+instance MonadDB m => DBQuery m GetCompanyByUserID (Maybe Company) where
+  query (GetCompanyByUserID uid) = do
+    kRun_ $ sqlSelect "companies" $ do
+      sqlJoinOn "users" "users.company_id = companies.id"
+      selectCompaniesSelectors
+      sqlWhereEq "users.id" uid
+    fetchCompanies >>= oneObjectReturnedGuard
+
 data CreateCompany = CreateCompany (Maybe ExternalCompanyID)
 instance MonadDB m => DBUpdate m CreateCompany Company where
   update (CreateCompany mecid) = do
@@ -179,18 +190,18 @@ instance MonadDB m => DBQuery m GetCompanyByEmailDomain (Maybe Company) where
 
 selectCompaniesSelectors :: (SqlResult command) => State command ()
 selectCompaniesSelectors = do
-  sqlResult "id"
-  sqlResult "external_id"
-  sqlResult "name"
-  sqlResult "number"
-  sqlResult "address"
-  sqlResult "zip"
-  sqlResult "city"
-  sqlResult "country"
-  sqlResult "bars_background"
-  sqlResult "bars_textcolour"
-  sqlResult "logo"
-  sqlResult "email_domain"
+  sqlResult "companies.id"
+  sqlResult "companies.external_id"
+  sqlResult "companies.name"
+  sqlResult "companies.number"
+  sqlResult "companies.address"
+  sqlResult "companies.zip"
+  sqlResult "companies.city"
+  sqlResult "companies.country"
+  sqlResult "companies.bars_background"
+  sqlResult "companies.bars_textcolour"
+  sqlResult "companies.logo"
+  sqlResult "companies.email_domain"
 
 
 fetchCompanies :: MonadDB m => DBEnv m [Company]
