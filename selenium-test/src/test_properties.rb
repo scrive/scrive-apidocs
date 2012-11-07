@@ -19,7 +19,7 @@ class TestProperties
       items = line.split()
       props[items[0]] = items[1]
     end
-    
+
     @selenium_url = props["selenium-url"]
     @kontrakcja_url = props["kontrakcja-url"]
     @browser = props["browser"]

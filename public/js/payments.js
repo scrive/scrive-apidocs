@@ -446,6 +446,7 @@
             // replace button with our own
             var button = Button.init({color:'green',
                                       size:'big',
+                                      cssClass:'s-subscribe',
                                       text:localization.payments.subscribe,
                                       onClick: function() {
                                           view.validator.validate(function() {

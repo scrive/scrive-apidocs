@@ -125,6 +125,7 @@ var AccountModel = Backbone.Model.extend({
                     return new Tab({
                         name: localization.account.subscription,
                         elems: [function() {return $(account.subscription().el());}],
+                        iconClass: 's-subscription',
                         active : window.location.hash == "#subscription",
                         onActivate : function() {
                             window.location.hash = "subscription";
