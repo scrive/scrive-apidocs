@@ -421,10 +421,6 @@ documentsSelectors =
   , documentStatusClassExpression
   ]
 
-selectDocumentsSQL :: SQL
-selectDocumentsSQL = SQL "SELECT " [] <>
-                     sqlConcatComma documentsSelectors <>
-                     SQL " FROM documents " []
 
 fetchDocuments :: MonadDB m => DBEnv m [Document]
 fetchDocuments = foldDB decoder []
@@ -1234,10 +1230,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument Bool where
                 (Just docid)
                 actor
 
-
-selectDocuments :: MonadDB m => SQL -> DBEnv m [Document]
+selectDocuments :: MonadDB m => SqlSelect -> DBEnv m [Document]
 selectDocuments sqlquery = do
-    _ <- kRun $ SQL "CREATE TEMP TABLE docs AS " [] <> sqlquery
+    _ <- kRun $ SQL "CREATE TEMP TABLE docs AS " [] <> toSQLCommand sqlquery
 
     _ <- kRun $ SQL "SELECT * FROM docs" []
     docs <- reverse `liftM` fetchDocuments
@@ -1304,8 +1299,9 @@ instance MonadDB m => DBQuery m GetSignatoryLinkByID (Maybe SignatoryLink) where
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance MonadDB m => DBQuery m GetDocumentByDocumentID (Maybe Document) where
   query (GetDocumentByDocumentID did) = do
-    selectDocuments (selectDocumentsSQL
-      <> SQL "WHERE id = ?" [toSql did])
+    (selectDocuments $ sqlSelect "documents" $ do
+      mapM_ sqlResult documentsSelectors
+      sqlWhereEq "documents.id" did)
       >>= oneObjectReturnedGuard
 
 -- | GetDocuments is central switch for documents list queries.
@@ -1322,7 +1318,7 @@ instance MonadDB m => DBQuery m GetDocumentByDocumentID (Maybe Document) where
 data GetDocuments = GetDocuments [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] DocumentPagination
 instance MonadDB m => DBQuery m GetDocuments [Document] where
   query (GetDocuments domains filters orderbys pagination) = do
-    selectDocuments $ toSQLCommand $ sqlSelect "documents" $ do
+    selectDocuments $ sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereExists $ sqlSelect "signatory_links" $ do
         sqlWhere "documents.id = signatory_links.document_id"
@@ -1404,12 +1400,11 @@ instance MonadDB m => DBQuery m GetDocumentsBySignatory [Document] where
 data GetTimeoutedButPendingDocumentsChunk = GetTimeoutedButPendingDocumentsChunk MinutesTime Int
 instance MonadDB m => DBQuery m GetTimeoutedButPendingDocumentsChunk [Document] where
   query (GetTimeoutedButPendingDocumentsChunk mtime size) = do
-    selectDocuments $ selectDocumentsSQL
-      <> SQL "WHERE status = ? AND timeout_time IS NOT NULL AND timeout_time < ? LIMIT ?" [
-        toSql Pending
-      , toSql mtime
-      , toSql size
-      ]
+    selectDocuments $ sqlSelect "documents" $ do
+      mapM_ sqlResult documentsSelectors
+      sqlWhereEq "documents.status" Pending
+      sqlWhere $ "timeout_time IS NOT NULL AND timeout_time < " <?> mtime
+      sqlLimit (fromIntegral size)
 
 data MarkDocumentSeen = MarkDocumentSeen DocumentID SignatoryLinkID MagicHash Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkDocumentSeen Bool where
