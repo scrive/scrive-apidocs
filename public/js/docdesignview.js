@@ -764,7 +764,7 @@ var DocumentDesignView = Backbone.View.extend({
         var subsubbox = $("<div class='innerbox'/>");
         var buttonbox = $("<div class='button-box'/>");
         {
-          subsubbox.append($("<div class='inner-description-main'/>").html(new Blocking().el()));
+          subsubbox.append($("<div class='inner-description-main'/>").html(BlockingInfo.el()));
         }
         buttonbox.append($(this.uploadFile()).css("float","left")).append($(this.fromAvtal()).css("float","right"))
         subsubbox.append(buttonbox);

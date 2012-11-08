@@ -1,10 +1,4 @@
 ###
-  var paymentsBlocking = null;
-  jQuery(function() {
-    paymentsBlocking = Blocking();
-    paymentsBlocking.show('.blocking-box');
-  });
-<div class='blocking-box'></div>
 paymentsSignupEmail=
 $_paymentsEmailThanksForChoosingScrive()$
 $nicemail(

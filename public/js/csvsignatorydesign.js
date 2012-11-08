@@ -97,8 +97,8 @@ var CsvProblem = Backbone.Model.extend({
        submit.sendAjax(function (resp) {
            var jresp = resp;
            var extraproblems = [];
-           if(designViewBlocking && designViewBlocking.shouldBlockDocs(jresp.rows.length)) {
-               extraproblems.push(new CsvProblem({description:designViewBlocking.csvMessage(jresp.rows.length)}));
+           if(BlockingInfo && BlockingInfo.shouldBlockDocs(jresp.rows.length)) {
+               extraproblems.push(new CsvProblem({description:BlockingInfo.csvMessage(jresp.rows.length)}));
            }
 
            var problems = _.map(jresp.problems, function(pdata) {return new CsvProblem(pdata);});
