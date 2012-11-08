@@ -396,41 +396,39 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    concat (zipWith checkSigLink sl1 sl2)
 
 
-documentsSelectors :: SQL
-documentsSelectors = sqlConcatComma [
-    "id"
-  , "title"
-  , "file_id"
-  , "sealed_file_id"
-  , "status"
-  , "error_text"
-  , "type"
-  , "process"
-  , "ctime"
-  , "mtime"
-  , "days_to_sign"
-  , "timeout_time"
-  , "invite_time"
-  , "invite_ip"
-  , "invite_text"
-  , "cancelation_reason"
-  , "rejection_time"
-  , "rejection_signatory_link_id"
-  , "rejection_reason"
-  , "mail_footer"
-  , "lang"
-  , "sharing"
-  , "authentication_method"
-  , "delivery_method"
-  , "api_callback_url"
-  , " "
-  ] <>
-  documentStatusClassExpression
-
+documentsSelectors :: [SQL]
+documentsSelectors =
+  [ "documents.id"
+  , "documents.title"
+  , "documents.file_id"
+  , "documents.sealed_file_id"
+  , "documents.status"
+  , "documents.error_text"
+  , "documents.type"
+  , "documents.process"
+  , "documents.ctime"
+  , "documents.mtime"
+  , "documents.days_to_sign"
+  , "documents.timeout_time"
+  , "documents.invite_time"
+  , "documents.invite_ip"
+  , "documents.invite_text"
+  , "documents.cancelation_reason"
+  , "documents.rejection_time"
+  , "documents.rejection_signatory_link_id"
+  , "documents.rejection_reason"
+  , "documents.mail_footer"
+  , "documents.lang"
+  , "documents.sharing"
+  , "documents.authentication_method"
+  , "documents.delivery_method"
+  , "documents.api_callback_url"
+  , documentStatusClassExpression
+  ]
 
 selectDocumentsSQL :: SQL
 selectDocumentsSQL = SQL "SELECT " [] <>
-                     documentsSelectors <>
+                     sqlConcatComma documentsSelectors <>
                      SQL " FROM documents " []
 
 fetchDocuments :: MonadDB m => DBEnv m [Document]
@@ -869,7 +867,7 @@ insertDocumentAsIs document = do
       , sql "mail_footer" $ documentmailfooter $ documentui -- should go into separate table?
       , sql "lang" documentlang
       , sql "sharing" documentsharing
-      ] <> SQL "RETURNING " [] <> documentsSelectors
+      ] <> SQL "RETURNING " [] <> sqlConcatComma documentsSelectors
 
     mdoc <- fetchDocuments >>= oneObjectReturnedGuard
     case mdoc of
