@@ -24,8 +24,12 @@ describe "subscribe with a credit card" do
       (@h.wait.until { @h.driver.find_element :css => ".s-subscription" }).click
 
       (@h.wait.until { @h.driver.find_element :css => ".field.card_number input" }).send_keys "4111111111111111"
-      (@h.wait.until { @h.driver.find_element :css => ".field.expires .year select" }).select 20
-      
+      sel =(@h.wait.until { @h.driver.find_element :css => ".field.expires .year select" })
+      sel.click
+      sel.find_elements( :tag_name => "option" ).find do |option|
+        option.text == "20"
+      end.click
+
       (@h.wait.until { @h.driver.find_element :css => ".field.cvv input" }).send_keys "111"
 
       (@h.wait.until { @h.driver.find_element :css => ".s-subscribe" }).click
