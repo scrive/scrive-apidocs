@@ -33,7 +33,8 @@ describe "subscribe with a credit card" do
       (@h.wait.until { @h.driver.find_element :css => ".field.cvv input" }).send_keys "111"
 
       (@h.wait.until { @h.driver.find_element :css => ".s-subscribe" }).click
-
+      {@h.driver.find_element :css => ".payments" }.send_keys [:control :home]
+      
       @h.wait.until { @h.driver.find_element :css => ".subscription-payments" }
     end
   end
