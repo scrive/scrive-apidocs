@@ -123,9 +123,11 @@ var SignatureDrawer = Backbone.View.extend({
       this.uped = true;
     },
     xPos : function(e) {
+      if (e.changedTouches != undefined && e.changedTouches[0] != undefined) e = e.changedTouches[0];
       return e.pageX - this.canvas.offset().left;
     },
     yPos : function(e) {
+      if (e.changedTouches != undefined && e.changedTouches[0] != undefined) e = e.changedTouches[0];
       var extra = 0;
       if ($.browser.msie)
       {
@@ -135,14 +137,15 @@ var SignatureDrawer = Backbone.View.extend({
     },
     initDrawing : function() {
            var view = this;
-           this.canvas[0].addEventListener('touchstart',function(e) {e.preventDefault(); e.stopPropagation(); view.drawingtoolDown(view.xPos(e), view.yPos(e));});
-           this.canvas[0].addEventListener('touchmove',function(e) {view.drawingtoolMove(view.xPos(e), view.yPos(e));});
-           this.canvas[0].addEventListener('touchend',function(e) {view.drawingtoolUp(view.xPos(e), view.yPos(e));});
-           this.canvas.mousedown(function(e) {e.preventDefault(); e.stopPropagation();e.target.style.cursor = 'default';view.drawingtoolDown(view.xPos(e), view.yPos(e),e);});
-           this.canvas.mousemove(function(e) {view.drawingtoolMove(view.xPos(e), view.yPos(e));});
-           this.canvas.mouseup(function(e){view.drawingtoolUp(view.xPos(e), view.yPos(e));} );
-           //this.canvas.mouseout(function(e){settimeout(function() {view.drawingtoolUp(e.layerX, e.layerY);})}, 100 );
-
+           if ('ontouchstart' in document.documentElement) {
+            this.canvas[0].addEventListener('touchstart',function(e) {e.preventDefault(); e.stopPropagation();e.preventDefault(); e.stopPropagation(); view.drawingtoolDown(view.xPos(e), view.yPos(e));});
+            this.canvas[0].addEventListener('touchmove',function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolMove(view.xPos(e), view.yPos(e));});
+            this.canvas[0].addEventListener('touchend',function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolUp(view.xPos(e), view.yPos(e));});
+           } else {
+            this.canvas.mousedown(function(e) {e.preventDefault(); e.stopPropagation();e.target.style.cursor = 'default';view.drawingtoolDown(view.xPos(e), view.yPos(e),e);});
+            this.canvas.mousemove(function(e) {e.preventDefault(); e.stopPropagation();view.drawingtoolMove(view.xPos(e), view.yPos(e));});
+            this.canvas.mouseup(function(e){e.preventDefault(); e.stopPropagation();view.drawingtoolUp(view.xPos(e), view.yPos(e));} );
+           }
     },
     saveImage : function(callback) {
         if (this.empty) {
