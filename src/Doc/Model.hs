@@ -929,23 +929,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument Bool where
                         <+>     "AND usr1.id = " <?> userid user <+> "))"
     return (result>0)
 
-{-
-    case (usercompany user, useriscompanyadmin user) of
-      (Just cid, True) -> fmap (\x -> x > 0) $  kRun $ updateArchivableDoc $ SQL "WHERE (company_id = ? OR user_id = ?)" [toSql cid,toSql $ userid user]
-      _ -> fmap (\x -> x > 0) $ kRun $ updateArchivableDoc $ SQL "WHERE user_id = ?" [toSql $ userid user]
-    where
-      updateArchivableDoc whereClause = mconcat [
-          mkSQL UPDATE tableSignatoryLinks [sql "deleted" True]
-        , whereClause
-        , SQL " AND document_id = ? AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND status <> ?)" [
-            toSql did
-          , toSql did
-          , toSql Pending
-          ]
-        ]
--}
-
-
 data AttachCSVUpload = AttachCSVUpload DocumentID SignatoryLinkID CSVUpload Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachCSVUpload Bool where
   update (AttachCSVUpload did slid csvupload actor) = do
