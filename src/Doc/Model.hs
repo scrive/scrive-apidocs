@@ -231,12 +231,10 @@ documentDomainToSQL (DocumentsOfWholeUniverse) =
   SQL "TRUE" []
 documentDomainToSQL (DocumentsOfAuthor uid) =
   SQL ("signatory_links.is_author"
-       <> " AND signatory_links.user_id = ?"
-       <> " AND signatory_links.really_deleted = FALSE")
+       <> " AND signatory_links.user_id = ?")
         [toSql uid]
 documentDomainToSQL (DocumentsForSignatory uid) =
   SQL ("signatory_links.user_id = ?"
-       <> " AND signatory_links.really_deleted = FALSE"
        <> " AND documents.type = 1"
        <> " AND (signatory_links.is_author OR (signatory_links.is_partner"
        <> "          AND NOT EXISTS (SELECT 1 FROM signatory_links AS sl2"
@@ -249,14 +247,13 @@ documentDomainToSQL (TemplatesSharedInUsersCompany uid) =
   SQL ("signatory_links.deleted = FALSE"
        <> " AND documents.type = 2"
        <> " AND documents.sharing = ?"
-       <> " AND signatory_links.really_deleted = FALSE"
        <> " AND same_company_users.id = ?")
         [toSql Shared, toSql uid]
 documentDomainToSQL (DocumentsOfCompany cid preparation) =
-  SQL "users.company_id = ? AND (? OR documents.status <> ?) AND signatory_links.really_deleted = FALSE"
+  SQL "users.company_id = ? AND (? OR documents.status <> ?)"
         [toSql cid,toSql preparation, toSql Preparation]
 documentDomainToSQL (DocumentsOfAuthorCompany cid preparation) =
-  SQL "signatory_links.is_author AND users.company_id = ? AND (? OR documents.status <> ?) AND signatory_links.really_deleted = FALSE"
+  SQL "signatory_links.is_author AND users.company_id = ? AND (? OR documents.status <> ?)"
         [toSql cid, toSql preparation, toSql Preparation]
 
 
@@ -1333,6 +1330,7 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
         sqlLeftJoinOn "companies" "users.company_id = companies.id"
         sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id"
 
+        sqlWhere "NOT signatory_links.really_deleted"
         sqlWhereOr (map documentDomainToSQL domains)
         mapM_ documentFilterToSQL filters
         mapM_ (sqlOrderBy . documentOrderByAscDescToSQL) orderbys
