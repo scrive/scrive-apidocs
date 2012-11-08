@@ -55,9 +55,11 @@ getDocByDocID docid = do
   case (ctxmaybeuser `mplus` ctxmaybepaduser) of
     Nothing -> return $ Left DBNotLoggedIn
     Just user -> do
-      mdoc <- dbQuery (GetDocuments [ DocumentsForSignatoryDeleteValue (userid user) False
-                                    , DocumentsOfAuthorDeleteValue (userid user) False
-                                    ] [ DocumentFilterByDocumentID docid ]
+      mdoc <- dbQuery (GetDocuments [ DocumentsForSignatory (userid user)
+                                    , DocumentsOfAuthor (userid user)
+                                    ] [ DocumentFilterByDocumentID docid
+                                      , DocumentFilterDeleted False
+                                      ]
                                     [] (DocumentPagination 0 1))
       case mdoc of
         [doc] -> do
@@ -73,8 +75,10 @@ getDocByDocIDForAuthor docid = do
   case (ctxmaybeuser `mplus` ctxmaybepaduser) of
     Nothing -> return $ Left DBNotLoggedIn
     Just user -> do
-      mdoc <- dbQuery (GetDocuments [ DocumentsOfAuthorDeleteValue (userid user) False
-                                    ] [ DocumentFilterByDocumentID docid ]
+      mdoc <- dbQuery (GetDocuments [ DocumentsOfAuthor (userid user)
+                                    ] [ DocumentFilterByDocumentID docid
+                                      , DocumentFilterDeleted False
+                                      ]
                                     [] (DocumentPagination 0 1))
       case mdoc of
         [doc] -> do
@@ -90,9 +94,11 @@ getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid = do
   case (ctxmaybeuser `mplus` ctxmaybepaduser) of
     Nothing -> return $ Left DBNotLoggedIn
     Just user -> do
-      mdoc <- dbQuery (GetDocuments [ DocumentsOfAuthorDeleteValue (userid user) False
+      mdoc <- dbQuery (GetDocuments [ DocumentsOfAuthor (userid user)
                                     , TemplatesSharedInUsersCompany (userid user)
-                                    ] [ DocumentFilterByDocumentID docid ]
+                                    ] [ DocumentFilterByDocumentID docid
+                                      , DocumentFilterDeleted False
+                                      ]
                                     [] (DocumentPagination 0 1))
       case mdoc of
         [doc] -> do

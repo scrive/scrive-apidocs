@@ -1305,7 +1305,7 @@ testGetDocumentsSQLTextFiltered = doTimes 1 $ do
   _doc3 <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
   _doc4 <- addRandomDocumentWithAuthorAndCondition author2 (isSignable &&^ isPreparation)
 
-  let domains = [ DocumentsOfAuthorDeleteValue (userid author) False]
+  let domains = [ DocumentsOfAuthor (userid author)]
       first_name = getFirstName (head (documentsignatorylinks doc1))
       last_name = getLastName (head (documentsignatorylinks doc1))
       email = getEmail (head (documentsignatorylinks doc1))
@@ -1350,10 +1350,8 @@ testGetDocumentsSQLSorted = doTimes 1 $ do
   author <- addNewRandomUser
   _doc <- addRandomDocumentWithAuthorAndCondition author (const True)
 
-  let domains = [ DocumentsOfAuthorDeleteValue (userid author) True
-                , DocumentsOfAuthorDeleteValue (userid author) False
-                , DocumentsForSignatoryDeleteValue (userid author) True
-                , DocumentsForSignatoryDeleteValue (userid author) False
+  let domains = [ DocumentsOfAuthor (userid author)
+                , DocumentsForSignatory (userid author)
                 , TemplatesSharedInUsersCompany (userid author)
                   -- , DocumentsOfService (Maybe ServiceID)
                   -- , DocumentsOfCompany CompanyID

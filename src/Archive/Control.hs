@@ -181,15 +181,16 @@ jsonDocumentsList = do
   doctype <- getField' "documentType"
   params <- getListParamsNew
   let (domain,filters1) = case doctype of
-                          "Document"          -> ([DocumentsForSignatoryDeleteValue uid False] ++ 
-                                                  (maybeCompanyDomain False),[DocumentFilterSignable])
-                          "Template"          -> ([DocumentsOfAuthorDeleteValue uid False] ++ 
-                                                  [TemplatesSharedInUsersCompany uid],[DocumentFilterTemplate])
-                          "Rubbish"           -> ([DocumentsForSignatoryDeleteValue uid True] ++ (maybeCompanyDomain True), [])
-                          _ -> ([DocumentsForSignatoryDeleteValue uid False],[])
+                          "Document"          -> ([DocumentsForSignatory uid] ++ (maybeCompanyDomain)
+                                                 ,[DocumentFilterDeleted False, DocumentFilterSignable])
+                          "Template"          -> ([DocumentsOfAuthor uid] ++ [TemplatesSharedInUsersCompany uid]
+                                                 ,[DocumentFilterDeleted False, DocumentFilterTemplate])
+                          "Rubbish"           -> ([DocumentsForSignatory uid] ++ (maybeCompanyDomain)
+                                                 ,[DocumentFilterDeleted True])
+                          _ -> ([DocumentsForSignatory uid],[DocumentFilterDeleted False])
                          where
-                             maybeCompanyDomain d = if (useriscompanyadmin user && (isJust $ usercompany user))
-                                                   then [DocumentsOfCompany (fromJust $ usercompany user) False d]
+                             maybeCompanyDomain = if (useriscompanyadmin user && (isJust $ usercompany user))
+                                                   then [DocumentsOfCompany (fromJust $ usercompany user) False]
                                                    else []
       filters2 = concatMap fltSpec (listParamsFilters params)
       fltSpec ("process", "contract") = [DocumentFilterByProcess [Contract]]
