@@ -45,6 +45,14 @@ setMandatoryExpirationTimeInDocument = Migration {
     kRunRaw "ALTER TABLE documents ALTER days_to_sign SET NOT NULL"
 }
 
+removeDeletedFromDocuments :: MonadDB m => Migration m
+removeDeletedFromDocuments = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 14
+  , mgrDo = do
+    kRunRaw "ALTER TABLE documents DROP COLUMN deleted"
+}
+
 removeSignatoryRoles :: MonadDB m => Migration m
 removeSignatoryRoles = Migration {
     mgrTable = tableSignatoryLinks

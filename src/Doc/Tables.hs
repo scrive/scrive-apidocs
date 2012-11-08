@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = Table {
     tblName = "documents"
-  , tblVersion = 14
+  , tblVersion = 15
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
@@ -33,7 +33,6 @@ tableDocuments = Table {
        , ("rejection_reason", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("mail_footer", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("lang", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
-       , ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        , ("authentication_method", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("delivery_method", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("api_callback_url", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})

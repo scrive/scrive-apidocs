@@ -91,7 +91,6 @@ blankDocument =
           , documenttags                 = S.empty
           , documentui                   = emptyDocumentUI
           , documentauthorattachments    = []
-          , documentdeleted              = False
           -- , documentattachments          = []
           , documentlang                 = defaultValue
           , documentstatusclass          = SCDraft

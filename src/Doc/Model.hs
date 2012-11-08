@@ -388,7 +388,6 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentsharing" documentsharing
                    , checkEqualBy "documentrejectioninfo" documentrejectioninfo
                    , checkEqualBy "documenttags" documenttags
-                   , checkEqualBy "documentdeleted" documentdeleted
                    , checkEqualBy "documentauthorattachments" documentauthorattachments
                    , checkEqualBy "documentui" documentui
                    , checkEqualBy "documentlang" documentlang
@@ -418,7 +417,6 @@ documentsSelectors = sqlConcatComma [
   , "rejection_time"
   , "rejection_signatory_link_id"
   , "rejection_reason"
-  , "deleted"
   , "mail_footer"
   , "lang"
   , "sharing"
@@ -443,7 +441,7 @@ fetchDocuments = foldDB decoder []
     decoder acc did title file_id sealed_file_id status error_text simple_type
      process ctime mtime days_to_sign timeout_time invite_time
      invite_ip invite_text cancelationreason rejection_time
-     rejection_signatory_link_id rejection_reason deleted mail_footer
+     rejection_signatory_link_id rejection_reason mail_footer
      lang sharing authentication_method delivery_method apicallback status_class
        = Document {
          documentid = did
@@ -472,7 +470,6 @@ fetchDocuments = foldDB decoder []
            (Just t, Just sl, mr) -> Just (t, sl, fromMaybe "" mr)
            _ -> Nothing
        , documenttags = S.empty
-       , documentdeleted = deleted
        , documentauthorattachments = []
        , documentui = DocumentUI mail_footer
        , documentlang = lang
@@ -840,7 +837,6 @@ insertDocumentAsIs document = do
                  , documentsharing
                  , documentrejectioninfo
                  , documenttags
-                 , documentdeleted
                  , documentauthorattachments
                  , documentui
                  , documentlang
@@ -870,7 +866,6 @@ insertDocumentAsIs document = do
       , sql "rejection_time" $ fst3 `fmap` documentrejectioninfo
       , sql "rejection_signatory_link_id" $ snd3 `fmap` documentrejectioninfo
       , sql "rejection_reason" $ thd3 `fmap` documentrejectioninfo
-      , sql "deleted" documentdeleted
       , sql "mail_footer" $ documentmailfooter $ documentui -- should go into separate table?
       , sql "lang" documentlang
       , sql "sharing" documentsharing
@@ -934,7 +929,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument Bool where
 data AttachCSVUpload = AttachCSVUpload DocumentID SignatoryLinkID CSVUpload Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachCSVUpload Bool where
   update (AttachCSVUpload did slid csvupload actor) = do
-    mstatus <- getOne $ SQL "SELECT status FROM documents WHERE id = ? AND deleted = FALSE" [toSql did]
+    mstatus <- getOne $ SQL "SELECT status FROM documents WHERE id = ?" [toSql did]
     case mstatus of
       Nothing -> do
         Log.error $ "Cannot AttachCSVUpload document " ++ show did ++ " because it does not exist"
@@ -1229,7 +1224,7 @@ instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSig
 data ErrorDocument = ErrorDocument DocumentID String Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument Bool where
   update (ErrorDocument docid errmsg actor) = do
-    doc_exists <- getOne $ SQL "SELECT TRUE FROM documents WHERE id = ? AND deleted = FALSE" [toSql docid]
+    doc_exists <- getOne $ SQL "SELECT TRUE FROM documents WHERE id = ?" [toSql docid]
     case doc_exists of
       Nothing -> do
         Log.error $ "Cannot ErrorDocument document " ++ show docid ++ " because it does not exist"
@@ -1317,7 +1312,7 @@ data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance MonadDB m => DBQuery m GetDocumentByDocumentID (Maybe Document) where
   query (GetDocumentByDocumentID did) = do
     selectDocuments (selectDocumentsSQL
-      <> SQL "WHERE id = ? AND deleted = FALSE" [toSql did])
+      <> SQL "WHERE id = ?" [toSql did])
       >>= oneObjectReturnedGuard
 
 -- | GetDocuments is central switch for documents list queries.
@@ -1833,7 +1828,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentSharing Bool whe
     results <- forM dids $ \did -> kRun01 $ mkSQL UPDATE tableDocuments
          [ sql "sharing" $ (if flag then Shared else Private)
          ] <> SQL
-         " WHERE id = ? AND deleted = FALSE " [ toSql did ]
+         " WHERE id = ?" [ toSql did ]
     return $ and results
 
 data SignDocument = SignDocument DocumentID SignatoryLinkID MagicHash (Maybe SignatureInfo) Actor

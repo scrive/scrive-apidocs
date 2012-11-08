@@ -358,7 +358,6 @@ data Document = Document {
   , documentsharing                :: DocumentSharing
   , documentrejectioninfo          :: Maybe (MinutesTime, SignatoryLinkID, String)
   , documenttags                   :: S.Set DocumentTag
-  , documentdeleted                :: Bool -- set to true when doc is deleted - the other fields will be cleared too, so it is really truely deleting, it's just we want to avoid re-using the docid.
   , documentauthorattachments      :: [AuthorAttachment]
   , documentui                     :: DocumentUI
   , documentlang                   :: Lang
