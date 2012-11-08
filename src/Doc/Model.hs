@@ -1326,26 +1326,19 @@ instance MonadDB m => DBQuery m GetDocumentByDocumentID (Maybe Document) where
 data GetDocuments = GetDocuments [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] DocumentPagination
 instance MonadDB m => DBQuery m GetDocuments [Document] where
   query (GetDocuments domains filters orderbys pagination) = do
-    selectDocuments $ mconcat
-      [ selectDocumentsSQL
-      , SQL "WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = signatory_links.document_id " []
-      , if null domains
-          then mempty
-          else mconcat [
-              SQL "AND (" []
-            , sqlConcatOR (map documentDomainToSQL domains)
-            , SQL ")" []
-            ]
-      , if not (null filters)
-        then SQL " AND " [] `mappend` sqlConcatAND (map documentFilterToSQL filters)
-        else SQL "" []
-      , SQL ")" []
-      , if not (null orderbys)
-        then SQL " ORDER BY " [] `mappend` sqlConcatComma (map documentOrderByAscDescToSQL orderbys)
-        else SQL "" []
-      , " OFFSET" <?> documentOffset pagination <+> "LIMIT" <?> documentLimit pagination
-      ]
--}
+    selectDocuments $ toSQLCommand $ sqlSelect "documents" $ do
+      mapM_ sqlResult documentsSelectors
+      sqlWhereExists $ sqlSelect "signatory_links" $ do
+        sqlWhere "documents.id = signatory_links.document_id"
+        sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
+        sqlLeftJoinOn "companies" "users.company_id = companies.id"
+        sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id"
+
+        sqlWhereOr (map documentDomainToSQL domains)
+        mapM_ (sqlWhere . parenthesize . documentFilterToSQL) filters
+        mapM_ (sqlOrderBy . documentOrderByAscDescToSQL) orderbys
+        sqlOffset $ fromIntegral (documentOffset pagination)
+        sqlLimit $ fromIntegral (documentLimit pagination)
 
 {- |
     Fetches documents by company with filtering by tags, edate, and status.
