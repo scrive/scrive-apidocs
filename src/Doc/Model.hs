@@ -1346,12 +1346,13 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
         else SQL "" []
       , " OFFSET" <?> documentOffset pagination <+> "LIMIT" <?> documentLimit pagination
       ]
+-}
 
 -- | Gets all documents from database.
 -- Used for problems checking/stats/tests only.
 data GetAllDocuments = GetAllDocuments
 instance MonadDB m => DBQuery m GetAllDocuments [Document] where
-  query GetAllDocuments = query $ GetDocuments [] [] [] (DocumentPagination 0 maxBound)
+  query GetAllDocuments = query $ GetDocuments [DocumentsOfWholeUniverse] [] [] (DocumentPagination 0 maxBound)
 
 {- |
     Fetches documents by company with filtering by tags, edate, and status.

@@ -155,7 +155,7 @@ docStateTests env = testGroup "DocState" [
   testThat "TimeoutDocument fails when the document is Signable but not in Pending" env testTimeoutDocumentSignableNotPendingLeft,
   testThat "create document and check invariants" env testNewDocumentDependencies,
   testThat "can create new document and read it back with the returned id" env testDocumentCanBeCreatedAndFetchedByID,
-  testThat "can create new document and read it back with GetDocumentsByService" env testDocumentCanBeCreatedAndFetchedByAllDocs,
+  testThat "can create new document and read it back with GetAllDocuments" env testDocumentCanBeCreatedAndFetchedByAllDocs,
 
   --testThat "when I call update document, it doesn't change the document id" env testDocumentUpdateDoesNotChangeID,
   --testThat "when I call update document, i can change the title" env testDocumentUpdateCanChangeTitle,
