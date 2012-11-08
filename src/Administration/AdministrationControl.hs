@@ -44,7 +44,6 @@ import Util.HasSomeUserInfo
 import InputValidation
 import User.Utils
 import ScriveByMail.Model
-import qualified Data.ByteString.Lazy.UTF8 as BSL
 import Crypto.RNG(random)
 import Util.Actor
 import Payments.Action
@@ -75,8 +74,6 @@ import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import Happstack.StaticRouting(Route, choice, dir)
 import Text.JSON.Gen
-import Doc.Invariants
-import qualified Data.Map as Map
 
 adminonlyRoutes :: Route (KontraPlus Response)
 adminonlyRoutes =
@@ -131,7 +128,6 @@ daveRoutes =
      , dir "userhistory"   $ hGet $ toK1 $ daveUserHistory
      , dir "company"       $ hGet $ toK1 $ daveCompany
      , dir "reseal" $ hPost $ toK1 $ resealFile
-     , dir "docproblems" $ hGet $ toK0 $ handleInvariantViolations
      , dir "backdoor" $ hGet $ toK1 $ handleBackdoorQuery
     ]
 {- | Main page. Redirects users to other admin panels -}
@@ -804,7 +800,7 @@ showFunctionalityStats :: Kontrakcja m => m String
 showFunctionalityStats = onlySalesOrAdmin $ do
   Context{ctxtime} <- getContext
   users <- dbQuery GetUsers
-  documents <- dbQuery GetAllDocuments
+  (documents :: [Document]) <- return [] -- Hopefully fixed by Anton really soon! dbQuery GetAllDocuments
   adminFunctionalityStatsPage (mkStats ctxtime users)
                               (mkStats ctxtime documents)
   where
@@ -1024,13 +1020,3 @@ daveCompany :: Kontrakcja m => CompanyID -> m String
 daveCompany companyid = onlyAdmin $ do
   company <- guardJustM $ dbQuery $ GetCompany companyid
   return $ inspectXML company
-
-handleInvariantViolations :: Kontrakcja m => m Response
-handleInvariantViolations = onlyAdmin $ do
-  Context{ ctxtime } <- getContext
-  docs <- dbQuery GetAllDocuments
-  let probs = listInvariantProblems ctxtime docs
-      res = case probs of
-        [] -> "No problems!"
-        _  -> intercalate "\n" probs
-  return $ Response 200 Map.empty nullRsFlags (BSL.fromString res) Nothing

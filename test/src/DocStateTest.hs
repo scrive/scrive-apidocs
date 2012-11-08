@@ -155,7 +155,6 @@ docStateTests env = testGroup "DocState" [
   testThat "TimeoutDocument fails when the document is Signable but not in Pending" env testTimeoutDocumentSignableNotPendingLeft,
   testThat "create document and check invariants" env testNewDocumentDependencies,
   testThat "can create new document and read it back with the returned id" env testDocumentCanBeCreatedAndFetchedByID,
-  testThat "can create new document and read it back with GetAllDocuments" env testDocumentCanBeCreatedAndFetchedByAllDocs,
 
   --testThat "when I call update document, it doesn't change the document id" env testDocumentUpdateDoesNotChangeID,
   --testThat "when I call update document, i can change the title" env testDocumentUpdateCanChangeTitle,
@@ -1032,24 +1031,6 @@ testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
     assertJust mndoc
     assert $ sameDocID doc (fromJust mndoc)
     assertInvariants (fromJust mndoc)
-
-testDocumentCanBeCreatedAndFetchedByAllDocs :: TestEnv ()
-testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
-  -- setup
-  author <- addNewRandomUser
-  -- execute
-  now <- liftIO $ getMinutesTime
-  let aa = authorActor now noIP (userid author) (getEmail author)
-  mdoc <- randomUpdate $ (\title processtype -> NewDocument author (fromSNN title) (Signable processtype) 0 aa)
-
-  let doc = case mdoc of
-          Nothing -> error "No document"
-          Just d  -> d
-  docs <- dbQuery GetAllDocuments
-  -- assert
-  validTest $ do
-    assertJust $ find (sameDocID doc) docs
-    assertInvariants $ fromJust $ find (sameDocID doc) docs
 
 testDocumentAttachNotPreparationLeft :: TestEnv ()
 testDocumentAttachNotPreparationLeft = doTimes 10 $ do

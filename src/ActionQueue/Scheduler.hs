@@ -2,24 +2,19 @@ module ActionQueue.Scheduler (
     Scheduler
   , SchedulerData(..)
   , timeoutDocuments
-  , runDocumentProblemsCheck
   , getGlobalTemplates
   ) where
 
 import Control.Concurrent
 import Control.Monad.Reader
-import Data.List
 import System.Time
 
 import ActionQueue.Monad
 import AppConf
 import DB hiding (update, query)
 import Doc.DocStateData
-import Doc.Invariants
 import Doc.Model
 import MinutesTime
-import Mails.MailsData
-import Mails.SendMail
 import Stats.Control
 import Templates.TemplatesLoader
 import Util.Actor
@@ -55,32 +50,6 @@ timeoutDocuments = do
     dbCommit
     timeoutDocuments
 
-runDocumentProblemsCheck :: Scheduler ()
-runDocumentProblemsCheck = do
-  sd <- ask
-  now <- getMinutesTime
-  docs <- dbQuery GetAllDocuments
-  let probs = listInvariantProblems now docs
-  when (probs /= []) $ mailDocumentProblemsCheck $
-    "<p>"  ++ (hostpart $ sdAppConf sd) ++ "/dave/document/" ++
-    intercalate ("</p>\n\n<p>" ++ (hostpart $ sdAppConf sd) ++ "/dave/document/") probs ++
-    "</p>"
-  return ()
-  where
-    -- | Send an email out to all registered emails about document problems.
-    mailDocumentProblemsCheck msg = do
-      sd <- ask
-      scheduleEmailSendout (mailsConfig $ sdAppConf sd) $ Mail {
-          to = zipWith MailAddress documentProblemsCheckEmails documentProblemsCheckEmails
-        , title = "Document problems report " ++ (hostpart $ sdAppConf sd)
-        , content = msg
-        , attachments = []
-        , mailInfo = None
-        }
-
-    -- | A message will be sent to these email addresses when
-    -- there is an inconsistent document found in the database.
-    documentProblemsCheckEmails = ["bugs@skrivapa.se"]
 
 getGlobalTemplates :: Scheduler KontrakcjaGlobalTemplates
 getGlobalTemplates = do
