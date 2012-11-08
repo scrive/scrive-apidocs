@@ -250,16 +250,13 @@ documentDomainToSQL (TemplatesSharedInUsersCompany uid) =
        <> " AND documents.type = 2"
        <> " AND documents.sharing = ?"
        <> " AND signatory_links.really_deleted = FALSE"
-       <> " AND EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 "
-       <> "                WHERE signatory_links.user_id = usr2.id "
-       <> "                  AND usr2.company_id = usr1.company_id "
-       <> "                  AND usr1.id = ?)")
+       <> " AND same_company_users.id = ?")
         [toSql Shared, toSql uid]
 documentDomainToSQL (DocumentsOfCompany cid preparation) =
-  SQL "EXISTS (SELECT 1 FROM users WHERE users.company_id = ? AND signatory_links.user_id = users.id) AND (? OR documents.status <> ?) AND signatory_links.really_deleted = FALSE"
+  SQL "users.company_id = ? AND (? OR documents.status <> ?) AND signatory_links.really_deleted = FALSE"
         [toSql cid,toSql preparation, toSql Preparation]
 documentDomainToSQL (DocumentsOfAuthorCompany cid preparation) =
-  SQL "signatory_links.is_author AND EXISTS (SELECT 1 FROM users WHERE users.company_id = ? AND signatory_links.user_id = users.id) AND (? OR documents.status <> ?) AND signatory_links.really_deleted = FALSE"
+  SQL "signatory_links.is_author AND users.company_id = ? AND (? OR documents.status <> ?) AND signatory_links.really_deleted = FALSE"
         [toSql cid, toSql preparation, toSql Preparation]
 
 
@@ -273,35 +270,36 @@ maxselect = "(SELECT max(greatest(signatory_links.sign_time"
             <> ", documents.ctime"
             <> ")) FROM signatory_links WHERE signatory_links.document_id = documents.id)"
 
-documentFilterToSQL :: DocumentFilter -> SQL
-documentFilterToSQL (DocumentFilterStatuses []) =
-  SQL "FALSE" []
-documentFilterToSQL (DocumentFilterStatuses statuses) =
-  "documents.status IN" <+> parenthesize (sqlConcatComma (map sqlParam statuses))
-documentFilterToSQL (DocumentFilterByStatusClass []) =
-  SQL "FALSE" []
-documentFilterToSQL (DocumentFilterByStatusClass statuses) =
-  documentStatusClassExpression <+> "IN" <+> parenthesize (sqlConcatComma (map sqlParam statuses))
-documentFilterToSQL (DocumentFilterMinChangeTime ctime) =
-  maxselect <+> ">=" <?> ctime
-documentFilterToSQL (DocumentFilterMaxChangeTime ctime) =
-  maxselect <+> "<=" <?> ctime
-documentFilterToSQL (DocumentFilterByProcess processes) =
-  sqlConcatOR $ map ("documents.process =" <?>) processes
-documentFilterToSQL (DocumentFilterByMonthYearFrom (month,year)) =
-  fromString $ "(documents.mtime > '" ++ show year ++  "-" ++ show month ++ "-1')"
-documentFilterToSQL (DocumentFilterByMonthYearTo (month,year)) =
-  fromString $ "(documents.mtime < '" ++ show (year + 1 <| month == 12 |> year)++ "-" ++ show ((month `mod` 12) + 1) ++ "-1')"
-documentFilterToSQL (DocumentFilterByTags []) =
-  SQL "TRUE" []
-documentFilterToSQL (DocumentFilterByTags tags) =
-  sqlConcatAND $ map (\tag -> SQL "EXISTS (SELECT 1 FROM document_tags WHERE name = ? AND value = ? AND document_id = documents.id)"
-                              [toSql $ tagname tag, toSql $ tagvalue tag]) tags
-documentFilterToSQL (DocumentFilterByString string) =
-  result
+documentFilterToSQL :: (State.MonadState v m, SqlWhere v) => DocumentFilter -> m ()
+documentFilterToSQL (DocumentFilterStatuses statuses) = do
+  sqlWhereIn "documents.status" statuses
+documentFilterToSQL (DocumentFilterByStatusClass statuses) = do
+  -- I think here we can use the result that we define on select
+  -- check this one out later
+  sqlWhereIn documentStatusClassExpression statuses
+documentFilterToSQL (DocumentFilterMinChangeTime ctime) = do
+  sqlWhere (maxselect <+> ">=" <?> ctime)
+documentFilterToSQL (DocumentFilterMaxChangeTime ctime) = do
+  sqlWhere (maxselect <+> "<=" <?> ctime)
+documentFilterToSQL (DocumentFilterByProcess processes) = do
+  sqlWhereIn "documents.process" processes
+documentFilterToSQL (DocumentFilterByMonthYearFrom (month,year)) = do
+  sqlWhere $ fromString $ "(documents.mtime > '" ++ show year ++  "-" ++ show month ++ "-1')"
+documentFilterToSQL (DocumentFilterByMonthYearTo (month,year)) = do
+  sqlWhere $ fromString $ "(documents.mtime < '" ++ show (year + 1 <| month == 12 |> year)++ "-" ++ show ((month `mod` 12) + 1) ++ "-1')"
+documentFilterToSQL (DocumentFilterByTags []) = do
+  sqlWhere "TRUE"
+documentFilterToSQL (DocumentFilterByTags tags) = do
+  forM_ tags $ \tag -> do
+    sqlWhereExists $ sqlSelect "document_tags" $ do
+      sqlWhere "documents.id = document_tags.document_id"
+      sqlWhereEq "document_tags.name" (tagname tag)
+      sqlWhereEq "document_tags.value" (tagvalue tag)
+documentFilterToSQL (DocumentFilterByString string) = do
+  sqlWhere result
   where
-      result = SQL "documents.title ILIKE ?" [sqlpat string] `sqlOR`
-         sqlConcatAND (map sqlMatch (words string))
+      result = parenthesize $ (SQL "documents.title ILIKE ?" [sqlpat string] `sqlOR`
+                               sqlConcatAND (map sqlMatch (words string)))
       sqlMatch word = SQL ("EXISTS (SELECT TRUE" <>
                                    "  FROM signatory_link_fields JOIN signatory_links AS sl5" <>
                                                                  "  ON sl5.document_id = signatory_links.document_id" <>
@@ -316,23 +314,24 @@ documentFilterToSQL (DocumentFilterByString string) =
       escape '_' = "\\_"
       escape c = [c]
 
-documentFilterToSQL (DocumentFilterByDelivery del) =
-  SQL ("documents.delivery_method = ?") [toSql del]
+documentFilterToSQL (DocumentFilterByDelivery delivery) = do
+  sqlWhereEq "documents.delivery_method" delivery
 
-documentFilterToSQL (DocumentFilterByAuthor userid) =
-  SQL ("signatory_links.is_author AND signatory_links.user_id = ?") [toSql userid]
+documentFilterToSQL (DocumentFilterByAuthor userid) = do
+  sqlWhere "signatory_links.is_author"
+  sqlWhereEq "signatory_links.user_id" userid
 
-documentFilterToSQL (DocumentFilterByDocumentID did) =
-  SQL ("documents.id = ?") [toSql did]
+documentFilterToSQL (DocumentFilterByDocumentID did) = do
+  sqlWhereEq "documents.id" did
 
-documentFilterToSQL (DocumentFilterSignable) =
-  SQL ("documents.type = ?") [toSql (Signable undefined)]
+documentFilterToSQL (DocumentFilterSignable) = do
+  sqlWhereEq "documents.type" (Signable undefined)
 
-documentFilterToSQL (DocumentFilterTemplate) =
-  SQL ("documents.type = ?") [toSql (Template undefined)]
+documentFilterToSQL (DocumentFilterTemplate) = do
+  sqlWhereEq "documents.type" (Template undefined)
 
-documentFilterToSQL (DocumentFilterDeleted flag) =
-  SQL ("signatory_links.deleted = ?") [toSql flag]
+documentFilterToSQL (DocumentFilterDeleted flag) = do
+  sqlWhereEq "signatory_links.deleted" flag
 
 checkEqualBy :: (Eq b, Show b) => String -> (a -> b) -> a -> a -> Maybe (String, String, String)
 checkEqualBy name func obj1 obj2
@@ -1335,7 +1334,7 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
         sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id"
 
         sqlWhereOr (map documentDomainToSQL domains)
-        mapM_ (sqlWhere . parenthesize . documentFilterToSQL) filters
+        mapM_ documentFilterToSQL filters
         mapM_ (sqlOrderBy . documentOrderByAscDescToSQL) orderbys
         sqlOffset $ fromIntegral (documentOffset pagination)
         sqlLimit $ fromIntegral (documentLimit pagination)
