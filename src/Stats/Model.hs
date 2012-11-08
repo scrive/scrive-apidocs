@@ -555,16 +555,16 @@ instance MonadDB m => DBUpdate m StatUpdate Bool where
 --   name of the documents table.
 --   Example:
 -- > "SELECT id, " ++ docType "doc" ++ " FROM documents AS doc"
-docType :: String -> String
-docType doc = unlines [
+docType :: SQL -> SQL
+docType doc = mconcat [
     "  CONCAT(",
     "    CASE",
-    "      WHEN " ++ doc ++ ".type = 1 THEN 'Signable'",
+    "      WHEN " <+> doc <+> ".type = 1 THEN 'Signable'",
     "      ELSE 'Template'",
     "    END, ' ',",
     "    CASE",
-    "      WHEN " ++ doc ++ ".process = 1 THEN 'Contract'",
-    "      WHEN " ++ doc ++ ".process = 2 THEN 'Offer'",
+    "      WHEN " <+> doc <+> ".process = 1 THEN 'Contract'",
+    "      WHEN " <+> doc <+> ".process = 2 THEN 'Offer'",
     "      ELSE 'Order'",
     "    END)"]
 
@@ -577,14 +577,14 @@ statUpdate = StatUpdate
 docStatSignMethod :: StatEvt -> StatQuery
 docStatSignMethod status did apistring =
     mkSQL INSERT tableDocStatEvents [
-        sqlNoBind "user_id"       "sl.user_id",
-        sqlNoBind "time"          time,
-        sqlNoBind "amount"        "sigs",
-        sqlNoBind "document_id"   "doc.id",
-        sqlNoBind "company_id"    "sl.company_id",
-        sql       "api_string"    apistring,
-        sqlNoBind "quantity"      qty,
-        sqlNoBind "document_type" (docType "doc")
+        sqlGeneric "user_id"       "sl.user_id",
+        sqlGeneric "time"          time,
+        sqlGeneric "amount"        "sigs",
+        sqlGeneric "document_id"   "doc.id",
+        sqlGeneric "company_id"    "sl.company_id",
+        sql        "api_string"    apistring,
+        sqlGeneric "quantity"      qty,
+        sqlGeneric "document_type" (docType "doc")
       ] <+> fromPart
         <+> joinSigLinks
         <+> joinSigCount
@@ -592,25 +592,22 @@ docStatSignMethod status did apistring =
         <+> selectCondition
   where
     qty =
-      unlines [
+      foldl1' (<+>) [
         "(CASE",
         "  WHEN doc.authentication_method=1 AND delivery_method=2 THEN padqty",
         "  WHEN doc.authentication_method=1 THEN emailqty",
-        "  ELSE elegqty",
+        "  ELSE elegqty ",
         "END)"]
     fromPart =
       "FROM documents AS doc"
     joinSigLinks =
       "JOIN signatory_links AS sl ON sl.document_id = doc.id AND sl.is_author"
     joinSigCount =
-      SQL (unwords [
-              "JOIN",
-              "(SELECT MAX(sign_time) AS last_sign,",
-              countSigs,
-              "AS sigs",
-              "FROM signatory_links WHERE document_id = ?)",
-              "AS sls ON TRUE"])
-          [did']
+      foldl1' (<+>) [
+        "JOIN (SELECT MAX(sign_time) AS last_sign, ",
+        countSigs, " AS sigs ",
+        SQL "FROM signatory_links WHERE document_id = ?)" [did'],
+        " AS sls ON TRUE"]
     -- I have no idea why, but unless we use these casts, postgres whines about
     -- not being able to cast UNKNOWN to TEXT, which is weird because
     -- toSql :: DocStatQuantity -> SQLValue returns an SQLInteger and the
@@ -624,9 +621,7 @@ docStatSignMethod status did apistring =
           [toSql elegQty]
     
     selectCondition =
-      SQL (unlines [
-              "WHERE doc.id = ? AND "])
-          [did'] <+> docStatusCondition
+      SQL "WHERE doc.id = ? AND " [did'] <+> docStatusCondition
     did' = toSql did
     -- If status == Closed, then we want to count signatures and only update
     -- if the document is closed. If the document is instead pending or
@@ -669,7 +664,7 @@ docStatSignMethod status did apistring =
     cancelCondition =
         SQL "doc.status = ?" [toSql Canceled]
     timeoutCondition =
-        mconcat [
+        foldl1' (<+>) [
           SQL "doc.status = ?" [toSql Timedout],
               " AND sl.user_id IS NOT NULL",
               " AND doc.timeout_time IS NOT NULL"]
@@ -678,8 +673,8 @@ docStatSignMethod status did apistring =
 docStatClose :: StatQuery
 docStatClose did =
     genericStatEvent DocStatClose
-                     (SQL ("(SELECT MAX(sign_time) FROM signatory_links" 
-                           ++ " WHERE document_id = ?)") [toSql did])
+                     ("(SELECT MAX(sign_time) FROM signatory_links" <+>
+                      SQL " WHERE document_id = ?)" [toSql did])
                      (SQL "doc.status = ?" [toSql Closed])
                      did
 
@@ -714,11 +709,10 @@ docStatTimeout :: StatQuery
 docStatTimeout =
     genericStatEvent DocStatTimeout
                      "doc.timeout_time"
-                     (SQL (unwords [
-                             "doc.status = ?",
-                             "AND sl.user_id IS NOT NULL",
-                             "AND doc.timeout_time IS NOT NULL"])
-                          [toSql Timedout])
+                     (foldl1' (<+>) [
+                         SQL "doc.status = ?" [toSql Timedout],
+                         " AND sl.user_id IS NOT NULL",
+                         " AND doc.timeout_time IS NOT NULL"])
 
 -- | Generic document stat event. An "event" is a log item which:
 --   * always has amount = 1;
@@ -737,29 +731,22 @@ genericStatEvent :: DocStatQuantity -- ^ Event to log.
                  -> SQL             -- ^ SQL expression that determines whether
                                     --   to log the stat or not.
                  -> StatQuery
-genericStatEvent qty (SQL time timeArgs) condition did apistring =
+genericStatEvent qty time condition did apistring =
     mkSQL INSERT tableDocStatEvents [
-        sqlNoBind "user_id"       "sl.user_id",
-        bindTime,
-        sql       "amount"        (1 :: Int),
-        sqlNoBind "document_id"   "doc.id",
-        sqlNoBind "company_id"    "sl.company_id",
-        sql       "api_string"    apistring,
-        sql       "quantity"      qty,
-        sqlNoBind "document_type" (docType "doc")
+        sqlGeneric "user_id"       "sl.user_id",
+        sqlGeneric "time"          time,
+        sql        "amount"        (1 :: Int),
+        sqlGeneric "document_id"   "doc.id",
+        sqlGeneric "company_id"    "sl.company_id",
+        sql        "api_string"    apistring,
+        sql        "quantity"      qty,
+        sqlGeneric "document_type" (docType "doc")
       ] <+> fromPart
   where
-    bindTime =
-        case timeArgs of
-          []    -> sqlNoBind "time" time
-          [arg] -> sql' "time" time arg
-          _     -> error $ "time expression in genericStatEvent may NOT bind"
-                         ++" more than one argument!"
     fromPart =
-      SQL (unlines [
-           "FROM documents AS doc",
-           "JOIN signatory_links",
-           "AS sl ON sl.document_id = doc.id",
-           "WHERE doc.id = ? AND sl.is_author"])
-          [toSql did] <+>
-      SQL "AND" [] <+> condition
+      foldl1' (<+>) [
+         " FROM documents AS doc",
+         " JOIN signatory_links",
+         " AS sl ON sl.document_id = doc.id",
+         SQL " WHERE doc.id = ?" [toSql did],
+         " AND sl.is_author"] <+> "AND" <+> condition

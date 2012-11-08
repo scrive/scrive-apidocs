@@ -16,6 +16,7 @@ module DB.Functions (
   , kDescribeTable
   , ColumnValue
   , sql
+  , sqlGeneric
   , (.=)
   , SQLType(..)
   , mkSQL
@@ -34,7 +35,7 @@ import DB.Core
 import DB.Env
 import DB.Exception
 import DB.Nexus
-import DB.SQL (RawSQL, SQL(..), raw, unRawSQL, (<+>), (<?>), sqlConcatComma, parenthesize, sqlParam, IsSQL, toSQLCommand)
+import DB.SQL (RawSQL, SQL(..), raw, unRawSQL, (<+>), (<?>), sqlConcatComma, parenthesize, IsSQL, toSQLCommand)
 import DB.Model (Table(..))
 
 infix 7 .=
@@ -144,12 +145,19 @@ kGetTables = withDBEnv $ \_ -> getNexus >>= liftIO . getTables
 kDescribeTable :: MonadDB m => RawSQL -> DBEnv m [(String, SqlColDesc)]
 kDescribeTable table = withDBEnv $ \_ -> getNexus >>= \c -> liftIO (describeTable c (unRawSQL table))
 
--- for INSERT/UPDATE statements generation
+-- | Represents the binding of an SQL expression to a column in an INSERT or
+--   UPDATE statement.
+data ColumnValue = ColumnValue RawSQL SQL
 
-type ColumnValue = (RawSQL, SqlValue)
+-- | Behaves like `sql` but accepts generic SQL.
+--   It's useful when inserting data straight from another table and thus don't
+--   have an extra parameter to pass in.
+sqlGeneric :: RawSQL -> SQL -> ColumnValue
+sqlGeneric column expr = ColumnValue column expr
 
 sql :: Convertible a SqlValue => RawSQL -> a -> ColumnValue
-sql column value = (column, toSql value)
+sql column value =
+  ColumnValue column (SQL "?" [toSql value])
 
 (.=) :: Convertible a SqlValue => RawSQL -> a -> SQL
 r .= v = raw r <+> "=" <?> v
@@ -157,13 +165,17 @@ r .= v = raw r <+> "=" <?> v
 data SQLType = INSERT | UPDATE
 
 mkSQL :: SQLType -> Table -> [ColumnValue] -> SQL
-mkSQL qtype Table{tblName} values = case qtype of
-  INSERT -> "INSERT INTO" <+> raw tblName <+> parenthesize (sqlConcatComma (map raw columns))
-        <+> "SELECT" <+> sqlConcatComma (map sqlParam vals)
-  UPDATE -> "UPDATE" <+> raw tblName
-        <+> "SET" <+> sqlConcatComma (map (uncurry (.=)) values)
+mkSQL qtype Table{tblName} columnvalues = case qtype of
+  INSERT ->
+    "INSERT INTO" <+> raw tblName <+>
+    parenthesize (sqlConcatComma $ map raw columns) <+>
+    "SELECT" <+> sqlConcatComma values
+  UPDATE ->
+    "UPDATE" <+> raw tblName <+> "SET" <+>
+    sqlConcatComma (zipWith (\c v -> raw c <+> "=" <+> v) columns values)
   where
-    (columns, vals) = unzip values
+    (columns, values) =
+      unzip [(col, val) | ColumnValue col val <- columnvalues]
 
 -- internals
 
