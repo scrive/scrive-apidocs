@@ -57,7 +57,6 @@ getDocByDocID docid = do
     Just user -> do
       mdoc <- dbQuery (GetDocuments [ DocumentsForSignatoryDeleteValue (userid user) False
                                     , DocumentsOfAuthorDeleteValue (userid user) False
-                                    , TemplatesOfAuthorDeleteValue (userid user) False
                                     ] [ DocumentFilterByDocumentID docid ]
                                     [] (DocumentPagination 0 1))
       case mdoc of
@@ -75,7 +74,6 @@ getDocByDocIDForAuthor docid = do
     Nothing -> return $ Left DBNotLoggedIn
     Just user -> do
       mdoc <- dbQuery (GetDocuments [ DocumentsOfAuthorDeleteValue (userid user) False
-                                    , TemplatesOfAuthorDeleteValue (userid user) False
                                     ] [ DocumentFilterByDocumentID docid ]
                                     [] (DocumentPagination 0 1))
       case mdoc of
@@ -93,7 +91,6 @@ getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid = do
     Nothing -> return $ Left DBNotLoggedIn
     Just user -> do
       mdoc <- dbQuery (GetDocuments [ DocumentsOfAuthorDeleteValue (userid user) False
-                                    , TemplatesOfAuthorDeleteValue (userid user) False
                                     , TemplatesSharedInUsersCompany (userid user)
                                     ] [ DocumentFilterByDocumentID docid ]
                                     [] (DocumentPagination 0 1))

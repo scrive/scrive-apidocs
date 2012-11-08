@@ -181,10 +181,12 @@ jsonDocumentsList = do
   doctype <- getField' "documentType"
   params <- getListParamsNew
   let (domain,filters1) = case doctype of
-                          "Document"          -> ([DocumentsForSignatoryDeleteValue uid False] ++ (maybeCompanyDomain False),[])
-                          "Template"          -> ([TemplatesOfAuthorDeleteValue uid False] ++ [TemplatesSharedInUsersCompany uid],[])
+                          "Document"          -> ([DocumentsForSignatoryDeleteValue uid False] ++ 
+                                                  (maybeCompanyDomain False),[DocumentFilterSignable])
+                          "Template"          -> ([DocumentsOfAuthorDeleteValue uid False] ++ 
+                                                  [TemplatesSharedInUsersCompany uid],[DocumentFilterTemplate])
                           "Rubbish"           -> ([DocumentsForSignatoryDeleteValue uid True] ++ (maybeCompanyDomain True), [])
-                          _ -> ([DocumentsForSignatoryDeleteValue uid False] ++ [TemplatesOfAuthorDeleteValue uid False],[])
+                          _ -> ([DocumentsForSignatoryDeleteValue uid False],[])
                          where
                              maybeCompanyDomain d = if (useriscompanyadmin user && (isJust $ usercompany user))
                                                    then [DocumentsOfCompany (fromJust $ usercompany user) False d]

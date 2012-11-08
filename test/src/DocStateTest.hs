@@ -1354,8 +1354,6 @@ testGetDocumentsSQLSorted = doTimes 1 $ do
                 , DocumentsOfAuthorDeleteValue (userid author) False
                 , DocumentsForSignatoryDeleteValue (userid author) True
                 , DocumentsForSignatoryDeleteValue (userid author) False
-                , TemplatesOfAuthorDeleteValue (userid author) True
-                , TemplatesOfAuthorDeleteValue (userid author) False
                 , TemplatesSharedInUsersCompany (userid author)
                   -- , DocumentsOfService (Maybe ServiceID)
                   -- , DocumentsOfCompany CompanyID

@@ -143,15 +143,16 @@ data DocumentFilter
   | DocumentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
   | DocumentFilterByDelivery DeliveryMethod   -- ^ Only documents that use selected delivery method
   | DocumentFilterByMonthYearFrom (Int,Int)   -- ^ Document time after or in (month,year)
-  | DocumentFilterByMonthYearTo   (Int,Int)   -- ^  Document time before or in (month,year)
+  | DocumentFilterByMonthYearTo   (Int,Int)   -- ^ Document time before or in (month,year)
   | DocumentFilterByAuthor UserID             -- ^ Only documents created by this user
   | DocumentFilterByDocumentID DocumentID     -- ^ Only documents created by this user
+  | DocumentFilterSignable                    -- ^ Document is signable
+  | DocumentFilterTemplate                    -- ^ Document is template
   deriving Show
 data DocumentDomain
   = DocumentsOfWholeUniverse                     -- ^ All documents in the system. Only for admin view.
   | DocumentsOfAuthorDeleteValue UserID Bool     -- ^ Documents by author, with delete flag
   | DocumentsForSignatoryDeleteValue UserID Bool -- ^ Documents by signatory, with delete flag
-  | TemplatesOfAuthorDeleteValue UserID Bool     -- ^ Templates by author, with deleted flag
   | TemplatesSharedInUsersCompany UserID         -- ^ Templates shared in company
   | DocumentsOfCompany CompanyID Bool Bool       -- ^ All documents of a company, with flag for selecting also drafts and deleted
   | DocumentsOfAuthorCompany CompanyID Bool Bool -- ^ All documents of a company by author, with flag for selecting also drafts and deleted
@@ -232,8 +233,7 @@ documentDomainToSQL (DocumentsOfAuthorDeleteValue uid deleted) =
   SQL ("signatory_links.is_author"
        <> " AND signatory_links.user_id = ?"
        <> " AND signatory_links.deleted = ?"
-       <> " AND signatory_links.really_deleted = FALSE"
-       <> " AND documents.type = 1")
+       <> " AND signatory_links.really_deleted = FALSE")
         [toSql uid, toSql deleted]
 documentDomainToSQL (DocumentsForSignatoryDeleteValue uid deleted) =
   SQL ("signatory_links.user_id = ?"
@@ -246,12 +246,6 @@ documentDomainToSQL (DocumentsForSignatoryDeleteValue uid deleted) =
        <> "                             AND sl2.is_partner"
        <> "                             AND sl2.sign_time IS NULL"
        <> "                             AND sl2.sign_order < signatory_links.sign_order)))")
-        [toSql uid, toSql deleted]
-documentDomainToSQL (TemplatesOfAuthorDeleteValue uid deleted) =
-  SQL ("signatory_links.user_id = ?"
-       <> " AND signatory_links.deleted = ?"
-       <> " AND signatory_links.really_deleted = FALSE"
-       <> " AND documents.type = 2")
         [toSql uid, toSql deleted]
 documentDomainToSQL (TemplatesSharedInUsersCompany uid) =
   SQL ("signatory_links.deleted = FALSE"
@@ -332,6 +326,12 @@ documentFilterToSQL (DocumentFilterByAuthor userid) =
 
 documentFilterToSQL (DocumentFilterByDocumentID did) =
   SQL ("documents.id = ?") [toSql did]
+
+documentFilterToSQL (DocumentFilterSignable) =
+  SQL ("documents.type = ?") [toSql (Signable undefined)]
+
+documentFilterToSQL (DocumentFilterTemplate) =
+  SQL ("documents.type = ?") [toSql (Template undefined)]
 
 checkEqualBy :: (Eq b, Show b) => String -> (a -> b) -> a -> a -> Maybe (String, String, String)
 checkEqualBy name func obj1 obj2
@@ -1396,18 +1396,18 @@ instance MonadDB m => DBQuery m GetDeletedDocumentsByUser [Document] where
 data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
 instance MonadDB m => DBQuery m GetDocumentsByAuthor [Document] where
   query (GetDocumentsByAuthor uid) =
-    query (GetDocuments [DocumentsOfAuthorDeleteValue uid False, TemplatesOfAuthorDeleteValue uid False] [] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
+    query (GetDocuments [DocumentsOfAuthorDeleteValue uid False] [] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
 data GetTemplatesByAuthor = GetTemplatesByAuthor UserID
 instance MonadDB m => DBQuery m GetTemplatesByAuthor [Document] where
   query (GetTemplatesByAuthor uid) =
-    query (GetDocuments [TemplatesOfAuthorDeleteValue uid False] [] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
+    query (GetDocuments [DocumentsOfAuthorDeleteValue uid False] [DocumentFilterTemplate] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
 data GetAvailableTemplates = GetAvailableTemplates UserID [DocumentProcess]
 instance MonadDB m => DBQuery m GetAvailableTemplates [Document] where
   query (GetAvailableTemplates uid processes) =
-    query (GetDocuments [TemplatesOfAuthorDeleteValue uid False, TemplatesSharedInUsersCompany uid]
-                            [DocumentFilterByProcess processes]
+    query (GetDocuments [DocumentsOfAuthorDeleteValue uid False, TemplatesSharedInUsersCompany uid]
+                            [DocumentFilterByProcess processes, DocumentFilterTemplate]
                             [Asc DocumentOrderByMTime]
                             (DocumentPagination 0 maxBound))
 
@@ -1420,7 +1420,7 @@ instance MonadDB m => DBQuery m GetAvailableTemplates [Document] where
 data GetDocumentsBySignatory = GetDocumentsBySignatory [DocumentProcess] UserID
 instance MonadDB m => DBQuery m GetDocumentsBySignatory [Document] where
   query (GetDocumentsBySignatory processes uid) =
-    query (GetDocuments [DocumentsForSignatoryDeleteValue uid False] [DocumentFilterByProcess processes] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
+    query (GetDocuments [DocumentsForSignatoryDeleteValue uid False] [DocumentFilterSignable, DocumentFilterByProcess processes] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
 data GetTimeoutedButPendingDocumentsChunk = GetTimeoutedButPendingDocumentsChunk MinutesTime Int
 instance MonadDB m => DBQuery m GetTimeoutedButPendingDocumentsChunk [Document] where
