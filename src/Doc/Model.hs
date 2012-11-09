@@ -87,7 +87,6 @@ import qualified Control.Monad.State.Lazy as State
 import Doc.DocUtils
 import User.UserID
 import User.Model
-import Company.Model
 import MinutesTime
 import OurPrelude
 import Control.Logic
@@ -153,7 +152,6 @@ data DocumentDomain
   = DocumentsOfWholeUniverse                     -- ^ All documents in the system. Only for admin view.
   | DocumentsVisibleToUser UserID                -- ^ Documents that a user has possible access to
   | DocumentsForSignatory UserID                 -- ^ Documents by signatory
-  | DocumentsOfCompany CompanyID Bool            -- ^ All documents of a company, with flag for selecting also drafts
 
 -- | These are possible order by clauses that make documents sorted by.
 data DocumentOrderBy
@@ -280,10 +278,6 @@ documentDomainToSQL (DocumentsForSignatory uid) =
        <> "                             AND sl2.sign_time IS NULL"
        <> "                             AND sl2.sign_order < signatory_links.sign_order)))")
         [toSql uid]
-documentDomainToSQL (DocumentsOfCompany cid preparation) =
-  SQL "users.company_id = ? AND (? OR documents.status <> ?)"
-        [toSql cid,toSql preparation, toSql Preparation]
-
 
 maxselect :: SQL
 maxselect = "(SELECT max(greatest(signatory_links.sign_time"
