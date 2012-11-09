@@ -228,6 +228,9 @@
         type: function() {
             return this.get('type');
         },
+        quantity: function() {
+            return this.get('quantity');
+        },
         url: function() {
             return "/payments/pricepageinfo";
         },

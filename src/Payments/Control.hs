@@ -1,8 +1,7 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Payments.Control (
-                         handleSubscriptionDashboardInfo
-                        ,handleSyncNewSubscriptionWithRecurly
+                         handleSyncNewSubscriptionWithRecurly
                         ,handleChangePlan
                         ,handleSyncWithRecurly
                         ,handleRecurlyPostBack
@@ -55,75 +54,6 @@ import Payments.View
 import Payments.Config (RecurlyConfig(..))
 import qualified Payments.Stats as Stats
   
--- information JSON for dashboard
-handleSubscriptionDashboardInfo :: Kontrakcja m => m JSValue
-handleSubscriptionDashboardInfo = do
-  Log.payments $ "Json for payments dashboard"
-  RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext  
-  user <- pguardM' "handleSubscriptionDashboardInfo: No user logged in." $ 
-          ctxmaybeuser <$> getContext
-  mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany user
-  quantity <- (maybe (return 1) (dbQuery . GetCompanyQuantity) $ usercompany user)
-  mplan <- dbQuery $ GetPaymentPlan (maybe (Left (userid user)) Right (usercompany user))
-
-  plan <- case mplan of
-    Nothing -> do
-          teamsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "team")]
-          formsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "form")]
-          code <- dbUpdate GetAccountCode
-          return $ J.object "signup" $ do
-            J.value "code" $ show code
-            J.value "currency" "SEK"
-            J.value "quantity" quantity
-            J.object "signatures" $ do
-              J.value "team" teamsig
-              J.value "form" formsig
-    Just plan | ppPaymentPlanProvider plan == RecurlyProvider -> do
-          billingsig  <- liftIO $ genSignature recurlyPrivateKey [("account[account_code]", show $ ppAccountCode plan)]
-          esub <- liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show $ ppAccountCode plan
-          einvoices <- liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey (show $ ppAccountCode plan)
-          msub <- case esub of
-            Left e -> do
-              Log.payments $ "handleSubscriptionDashboardInfo: When fetching subscriptions for payment plan: " ++ e
-              return Nothing
-            Right (sub:_) -> return $ Just sub
-            Right _ -> do
-              Log.payments $ "handleSubscriptionDashboardInfo: No subscriptions returned."
-              return Nothing
-          minvoices <- case einvoices of
-            Left e -> do
-              Log.payments $ "handleSubscriptionDashboardInfo: When fetching invoices for payment plan: " ++ e
-              return Nothing
-            Right i -> return $ Just i
-          return $ J.object "plan" $ do
-            J.value "subscription" $ msub
-            J.value "invoices" $ minvoices
-            J.value "code"   $ show $ ppAccountCode plan
-            J.value "plan"   $ show $ ppPricePlan plan
-            J.value "status" $ show $ ppStatus plan
-            J.value "provider" "recurly"
-            J.object "signatures" $ do
-              J.value "billing"  billingsig          
-            either (J.value "userid" . show) (J.value "companyid" . show) $ ppID plan              
-    Just plan -> do -- no provider
-      return $ J.object "plan" $ do
-        J.value "code"   $ show $ ppAccountCode plan
-        J.value "plan"   $ show $ ppPricePlan plan
-        J.value "status" $ show $ ppStatus plan
-        J.value "provider" "none"
-        J.value "quantity" quantity
-        either (J.value "userid" . show) (J.value "companyid" . show) $ ppID plan
-  runJSONGenT $ do
-    J.object "contact" $ do
-      J.value "first_name"   $ getFirstName user
-      J.value "last_name"    $ getLastName user
-      J.value "email"        $ getEmail user
-      J.value "company_name" $ getCompanyName (user, mcompany)
-      J.value "country"      $ "SE" -- only one supported for now? Not important
-    J.object "server" $ do
-      J.value "subdomain"    $ recurlySubdomain
-    plan
-    
 -- to call this, user must not have an account code yet (no payment plan in table)
 handleSyncNewSubscriptionWithRecurly :: Kontrakcja m => m ()
 handleSyncNewSubscriptionWithRecurly = do
@@ -356,7 +286,6 @@ handleRecurlyPostBack = do
     Just ps -> postBackCache ps
     _       -> return ()
     
--- do I need this?
 handlePricePageUserPlanRecurlyJSON :: Kontrakcja m => User -> PaymentPlan -> m JSValue
 handlePricePageUserPlanRecurlyJSON user plan = do
   Log.payments $ "Handling Price Page JSON for existing user with payment plan on recurly"
@@ -364,6 +293,7 @@ handlePricePageUserPlanRecurlyJSON user plan = do
   billingsig  <- liftIO $ genSignature recurlyPrivateKey [("account[account_code]", show $ ppAccountCode plan)]
   esub <- liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show $ ppAccountCode plan
   einvoices <- liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey (show $ ppAccountCode plan)
+  quantity <- (maybe (return 1) (dbQuery . GetCompanyQuantity) $ usercompany user)
   msub <- case esub of
     Left e -> do
       Log.payments $ "handleSubscriptionDashboardInfo: When fetching subscriptions for payment plan: " ++ e
@@ -389,6 +319,7 @@ handlePricePageUserPlanRecurlyJSON user plan = do
     J.value "lastName"     $ getLastName user
     J.value "email"        $ getEmail user
     J.value "billingSig" billingsig
+    J.value "quantity" quantity
     J.value "provider" "recurly"
 
 handlePricePageUserPlanNoneJSON :: Kontrakcja m => User -> PaymentPlan -> m JSValue
@@ -416,6 +347,7 @@ handlePricePageUserJSON user = do
   teamsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "team")]
   formsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "form")]
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany user
+  quantity <- (maybe (return 1) (dbQuery . GetCompanyQuantity) $ usercompany user)
   runJSONGenT $ do
     J.value "type"      "user"
     J.value "subdomain" recurlySubdomain
@@ -423,6 +355,7 @@ handlePricePageUserJSON user = do
     J.value "firstName" $ getFirstName user
     J.value "lastName" $ getLastName user
     J.value "email" $ getEmail user
+    J.value "quantity" quantity
     J.value "companyName" $ getCompanyName (user, mcompany)    
     J.object "plans" $ do
       J.object "team" $ do
@@ -441,6 +374,7 @@ handlePricePageNoUserJSON = do
     J.value "type"      "nouser"
     J.value "subdomain" recurlySubdomain
     J.value "accountCode" $ show code
+    J.value "quantity" (1::Int)
     J.object "plans" $ do
       J.object "team" $ do
         J.value "signature" teamsig
