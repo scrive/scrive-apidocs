@@ -3,7 +3,6 @@
 pageDocumentView=
 <script>
 var docview;
-var BlockingInfo = Blocking();
 jQuery(function(){
   docview = KontraStandardDocument.init({
     id:"$documentid$"
