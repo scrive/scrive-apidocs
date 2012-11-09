@@ -764,7 +764,7 @@ var DocumentDesignView = Backbone.View.extend({
         var subsubbox = $("<div class='innerbox'/>");
         var buttonbox = $("<div class='button-box'/>");
         {
-          subsubbox.append($("<div class='inner-description-main'/>").html(BlockingInfo.el()));
+          subsubbox.append($("<div class='inner-description-main'/>").html(localization.nofiletext));
         }
         buttonbox.append($(this.uploadFile()).css("float","left")).append($(this.fromAvtal()).css("float","right"))
         subsubbox.append(buttonbox);
@@ -885,7 +885,7 @@ var DocumentDesignView = Backbone.View.extend({
                   })
                 ]
         });
-        this.contrainer.append($(this.tabs.view.el));
+        this.contrainer.append(BlockingInfo.el()).append($(this.tabs.view.el));
 
         new ScrollFixer({object : designbody1.add(designbody2)});
     }

@@ -40,7 +40,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 <div class="rightMain">
                                   <span class="moveleft">
                                   $if(logged)$
-                                        <a href="/d" class="enter-button"><div>$_enter()$</div></a>
+                                        <a href="/newdocumentorlatestdraft" class="enter-button"><div>$_enter()$</div></a>
                                         $else$
                                         <a href="#" class="enter-button login-button"><div>$_login()$</div></a>
                                   $endif$
