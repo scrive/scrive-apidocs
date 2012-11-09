@@ -236,11 +236,11 @@ mainLinksFields lang = do
 
 langSwitcherFields :: Monad m => Context -> Maybe (Lang -> KontraLink) -> Fields m ()
 langSwitcherFields Context{ctxlang} mlink = do
-  F.value "langswedish" $ getLang ctxlang == LANG_SE
+  F.value "langswedish" $ getLang ctxlang == LANG_SV
   F.value "langenglish" $ getLang ctxlang == LANG_EN
   F.value "linklangswitch" $ show LinkLangSwitch
-  F.value "linksesv" $ fmap (\l -> show $ l LANG_SE) mlink
-  F.value "linkgben" $ fmap (\l -> show $ l LANG_EN) mlink
+  F.value "linksv" $ fmap (\l -> show $ l LANG_SV) mlink
+  F.value "linken" $ fmap (\l -> show $ l LANG_EN) mlink
 
 {- |
     Defines the static links which are language sensitive.

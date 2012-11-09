@@ -19,7 +19,7 @@ import Utils.Read
 
 import Happstack.Server
 
-data Lang = LANG_SE --according to IANA this really should be LANG_SV - em
+data Lang = LANG_SV
           | LANG_EN
   deriving (Bounded, Enum, Show, Read, Ord, Eq)
 $(enumDeriveConvertible ''Lang)
@@ -28,14 +28,14 @@ instance FromReqURI Lang where
   fromReqURI = maybeRead
 
 codeFromLang :: Lang -> String
-codeFromLang LANG_SE = "sv"
+codeFromLang LANG_SV = "sv"
 codeFromLang LANG_EN = "en"
 
 langFromCode :: String -> Maybe Lang
 langFromCode s = find ((== s) . codeFromLang) allValues
 
 timeLocaleForLang :: Lang -> KontraTimeLocale
-timeLocaleForLang LANG_SE = SwedishTimeLocale
+timeLocaleForLang LANG_SV = SwedishTimeLocale
 timeLocaleForLang LANG_EN = BritishTimeLocale
 
 langFromHTTPHeader :: String -> Lang

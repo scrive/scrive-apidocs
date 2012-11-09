@@ -55,7 +55,7 @@ publicDir swedish english link handler = choice $
     allLangDirs $ \lang -> dirByLang lang swedish english $ hGetAllowHttp $ handler
 
     -- if they use the swedish name without lang we should redirect to the correct swedish lang
-  , dir swedish $ hGetAllowHttp $ redirectKontraResponse $ link LANG_SE
+  , dir swedish $ hGetAllowHttp $ redirectKontraResponse $ link LANG_SV
   ] ++ if swedish == english
        then [] -- if prefixes are identical, we don't know to what lang we should redirect,
                -- so ignore English redirect

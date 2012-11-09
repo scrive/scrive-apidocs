@@ -906,4 +906,4 @@ getFlashType (FlashMessage ft _) = ft
 getFlashType (FlashTemplate ft _ _) = ft
 
 instance Arbitrary Lang where
-  arbitrary = elements [LANG_SE, LANG_EN]
+  arbitrary = elements [LANG_SV, LANG_EN]

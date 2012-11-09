@@ -161,7 +161,7 @@ documentJSON forapi forauthor pq msl doc = do
       J.value "invitationmessage" $ documentinvitetext doc
       J.value "lang" $  case (getLang doc) of
                              LANG_EN -> "gb"
-                             LANG_SE -> "se"
+                             LANG_SV -> "sv"
       J.objects "tags" $ for (Set.toList $ documenttags doc) $ \(DocumentTag n v) -> do
                                     J.value "name"  n
                                     J.value "value" v

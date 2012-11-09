@@ -244,7 +244,7 @@ userFields u =  do
         F.value "phone"            $ userphone $ userinfo u
         F.value "mobile"           $ usermobile $ userinfo u
         F.value "email"            $ getEmail u
-        F.value "langsv"           $ LANG_SE == getLang u
+        F.value "langsv"           $ LANG_SV == getLang u
         F.value "langen"           $ LANG_EN == getLang u
         F.value "iscompanyaccount" $ isJust $ usercompany u
         F.value "iscompanyadmin"   $ useriscompanyadmin u

@@ -182,8 +182,8 @@ adminUsersForSales=
 
             var tr6 = jQuery("<tr/>").append(jQuery("<td/>").text("Language:"));
             var lang = jQuery("<select name='lang'>"
-                                + '<option $if(user.langen)$selected=""$endif$ value="LANG_SE">Sweden (Swedish)</option>'
-                                + '<option $if(user.langse)$selected=""$endif$ value="LANG_EN">Britain (English)</option>'
+                                + '<option $if(user.langen)$selected=""$endif$ value="LANG_SV">Sweden (Swedish)</option>'
+                                + '<option $if(user.langsv)$selected=""$endif$ value="LANG_EN">Britain (English)</option>'
                                 + "</select>");
             tr6.append(jQuery("<td/>").append(lang));
             table.append(tr6);
@@ -354,7 +354,7 @@ adminuser=
 		</tr>
     <tr> <td>Language:</td>
       <td><select name="userlang">
-        <option $if(user.langse)$selected=""$endif$ value="LANG_SE">Sweden (Swedish)</option>
+        <option $if(user.langsv)$selected=""$endif$ value="LANG_SV">Sweden (Swedish)</option>
         <option $if(user.langen)$selected=""$endif$ value="LANG_EN">Britain (English)</option>
       </select></td>
     </tr>
@@ -769,8 +769,8 @@ admincompanyusers=
 
             var tr6 = jQuery("<tr/>").append(jQuery("<td/>").text("Language:"));
             var lang = jQuery("<select name='lang'>"
-                                + '<option $if(user.langen)$selected=""$endif$ value="LANG_SE">Sweden (Swedish)</option>'
-                                + '<option $if(user.langse)$selected=""$endif$ value="LANG_EN">Britain (English)</option>'
+                                + '<option $if(user.langen)$selected=""$endif$ value="LANG_SV">Sweden (Swedish)</option>'
+                                + '<option $if(user.langsv)$selected=""$endif$ value="LANG_EN">Britain (English)</option>'
                                 + "</select>");
             tr6.append(jQuery("<td/>").append(lang));
             table.append(tr6);

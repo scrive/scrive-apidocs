@@ -50,11 +50,11 @@ testLoggedInLangSwitching = do
     assertContextLang (userid user) ctx1 LANG_EN
 
     --from the /upload page switch lang to swedish
-    req1 <- mkRequest POST [("lang", inText "LANG_SE")]
+    req1 <- mkRequest POST [("lang", inText "LANG_SV")]
     (res2, ctx2) <- runTestKontra req1 ctx1 $ handlePostUserLang >>= sendRedirect
     assertLoggedIn (userid user) res2 ctx2
-    assertUserLang (userid user) LANG_SE
-    assertContextLang (userid user) ctx2 LANG_SE
+    assertUserLang (userid user) LANG_SV
+    assertContextLang (userid user) ctx2 LANG_SV
 
     --now switch back again to uk
     req2 <- mkRequest POST [("lang", inText "LANG_EN")]
@@ -80,12 +80,12 @@ testLoggedInLangSwitching = do
 
 testDocumentLangSwitchToEnglish :: TestEnv ()
 testDocumentLangSwitchToEnglish = do
-  user <- createTestUser LANG_SE
+  user <- createTestUser LANG_SV
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
   doc <- createTestElegDoc user (ctxtime ctx)
 
   --make sure the doc lang matches the author lang
-  assertEqual "Initial lang is Swedish" LANG_SE (getLang doc)
+  assertEqual "Initial lang is Swedish" LANG_SV (getLang doc)
 
   -- check that eleg is used
   assertEqual "Eleg is used" ELegAuthentication (documentauthenticationmethod doc)

@@ -66,7 +66,8 @@ instance FromJSValue DocumentTag where
 
 instance FromJSValue Lang where
     fromJSValue j =case fromJSValue j of -- Due to documentation inconsistency we need to support gb and en for a while.
-      Just "se"    -> Just LANG_SE
+      Just "se"    -> Just LANG_SV
+      Just "sv"    -> Just LANG_SV
       Just "en"    -> Just LANG_EN
       Just "gb"    -> Just LANG_EN
       _            -> Nothing

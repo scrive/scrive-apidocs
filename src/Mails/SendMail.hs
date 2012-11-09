@@ -77,5 +77,5 @@ fromNiceAddress (Invitation did _) servicename = do
     Nothing -> return $ servicename
     Just doc -> case (documentlang doc, getAuthorName doc) of
       (_,         []) -> return $ servicename
-      (LANG_SE, an) -> return $ an ++ " genom " ++ servicename
+      (LANG_SV, an) -> return $ an ++ " genom " ++ servicename
       (LANG_EN, an) -> return $ an ++ " through " ++ servicename

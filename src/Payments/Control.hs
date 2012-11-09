@@ -119,7 +119,7 @@ handleSubscriptionDashboardInfo = do
       J.value "last_name"    $ getLastName user
       J.value "email"        $ getEmail user
       J.value "company_name" $ getCompanyName (user, mcompany)
-      J.value "country"      $ "SE" -- only one supported for now? Not important
+      J.value "country"      $ "SV" -- only one supported for now? Not important
     J.object "server" $ do
       J.value "subdomain"    $ recurlySubdomain
     plan

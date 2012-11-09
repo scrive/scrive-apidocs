@@ -14,7 +14,7 @@ window.User = Backbone.Model.extend({
       companyposition : "",
       usercompanyname : "",
       usercompanynumber : "",
-      lang : "se",
+      lang : "sv",
       footer : undefined,
       company   : undefined,
       mailapi   : undefined,

@@ -258,13 +258,13 @@ header=
 langSwitcher=
   <div class="langSwitcher">
     $if(!logged)$
-    <div><a href="$linksesv$" class="icon flag swedish $if(langswedish)$active$endif$"></a></div>
-    <div><a href="$linkgben$" class="icon flag british $if(langenglish)$active$endif$"></a></div>
+    <div><a href="$linksv$" class="icon flag swedish $if(langswedish)$active$endif$"></a></div>
+    <div><a href="$linken$" class="icon flag british $if(langenglish)$active$endif$"></a></div>
     $else$
     <div><form action="$linklangswitch$" method="POST">
-           <input type="hidden" name="lang" value="LANG_SE"/>
-           $if(linksesv)$
-           <input type="hidden" name="referer" value="$linksesv$"/>
+           <input type="hidden" name="lang" value="LANG_SV"/>
+           $if(linksv)$
+           <input type="hidden" name="referer" value="$linksv$"/>
            $endif$
            <a href="" class="submit icon flag swedish $if(langswedish)$active$endif$"></a>
          </form></div>

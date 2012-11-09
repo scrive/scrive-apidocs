@@ -99,43 +99,43 @@ langFolder lang = "/" ++ (codeFromLang lang)
 instance Show KontraLink where
     showsPrec _ (LinkHome lang) = (++) $ langFolder lang
     showsPrec _ (LinkPriceplan lang)
-      | getLang lang == LANG_SE = (++) $ langFolder lang ++ "/priser"
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/priser"
       | otherwise = (++) $ langFolder lang ++ "/pricing"
     showsPrec _ (LinkSecurity lang)
-      | getLang lang == LANG_SE = (++) $ langFolder lang ++ "/sakerhet"
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/sakerhet"
       | otherwise = (++) $ langFolder lang ++ "/security"
     showsPrec _ (LinkLegal lang)
-      | getLang lang == LANG_SE = (++) $ langFolder lang ++ "/juridik"
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/juridik"
       | otherwise = (++) $ langFolder lang ++ "/legal"
     showsPrec _ (LinkPrivacyPolicy lang)
-      | getLang lang == LANG_SE = (++) $ langFolder lang ++ "/sekretesspolicy"
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/sekretesspolicy"
       | otherwise = (++) $ langFolder lang ++ "/privacy-policy"
     showsPrec _ (LinkTerms lang)
-      | getLang lang == LANG_SE = (++) $ langFolder lang ++ "/allmana-villkor"
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/allmana-villkor"
       | otherwise = (++) $ langFolder lang ++ "/terms"
     showsPrec _ (LinkJobs lang)
-      | getLang lang == LANG_SE = (++) $ langFolder lang ++ "/jobb"
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/jobb"
       | otherwise = (++) $ langFolder lang ++ "/jobs"
     showsPrec _ (LinkAbout lang)
-      | getLang lang == LANG_SE = (++) $ langFolder lang ++ "/om-scrive"
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/om-scrive"
       | otherwise = (++) $ langFolder lang ++ "/about"
     showsPrec _ (LinkPartners lang)
-      | getLang lang == LANG_SE = (++) $ langFolder lang ++ "/partners"
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/partners"
       | otherwise = (++) $ langFolder lang ++ "/partners"
     showsPrec _ (LinkClients lang)
-      | getLang lang == LANG_SE = (++) $ langFolder lang ++ "/kunder"
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/kunder"
       | otherwise = (++) $ langFolder lang ++ "/clients"
     showsPrec _ (LinkContactUs lang)
-      | getLang lang == LANG_SE = (++) $ langFolder lang ++ "/kontakta"
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/kontakta"
       | otherwise = (++) $ langFolder lang ++ "/contact"
     showsPrec _ (LinkAPIPage lang)
-      | getLang lang == LANG_SE = (++) $ langFolder lang ++ "/scriveapi"
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/scriveapi"
       | otherwise = (++) $ langFolder lang ++ "/scriveapi"
     showsPrec _ (LinkScriveByMailPage lang)
-      | getLang lang == LANG_SE = (++) $ langFolder lang ++ "/scrivebymail"
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/scrivebymail"
       | otherwise = (++) $ langFolder lang ++ "/scrivebymail"
     showsPrec _ (LinkFeaturesPage lang)
-      | getLang lang == LANG_SE = (++) $ langFolder lang ++ "/funktioner"
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/funktioner"
       | otherwise = (++) $ langFolder lang ++ "/features"
     showsPrec _ (LinkLogin lang LoginTry) = (++) $ langFolder lang ++ "/login"
     showsPrec _ (LinkLogin lang (InvalidLoginInfo email)) = (++) $ langFolder lang ++ "/?logging&email=" ++ (URL.encode . UTF.encode $ email)

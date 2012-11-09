@@ -11,7 +11,7 @@ allLangDirs r = forAllTargetedLangs $ \l -> langDir l $ r l
 
 dirByLang :: HasLang l => l -> String -> String -> Route a -> Route a
 dirByLang lang swedishdir englishdir
-  | getLang lang == LANG_SE = dir swedishdir
+  | getLang lang == LANG_SV = dir swedishdir
   | otherwise = dir englishdir
 
 forAllTargetedLangs :: (Lang -> Route h) -> Route h

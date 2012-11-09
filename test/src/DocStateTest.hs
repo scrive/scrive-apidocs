@@ -341,7 +341,7 @@ testSetDocumentLangEvidenceLog :: TestEnv ()
 testSetDocumentLangEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success1 <- randomUpdate $ \t->SetDocumentLang (documentid doc) LANG_SE (systemActor t)
+  success1 <- randomUpdate $ \t->SetDocumentLang (documentid doc) LANG_SV (systemActor t)
   success2 <- randomUpdate $ \t->SetDocumentLang (documentid doc) LANG_EN (systemActor t)
   assert success1
   assert success2

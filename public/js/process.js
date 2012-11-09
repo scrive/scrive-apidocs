@@ -57,14 +57,14 @@ window.Lang = Backbone.Model.extend({
     en : function(){
         return this.lang() == "en";
     },
-    se : function(){
-        return this.lang() == "se";
+    sv : function(){
+        return this.lang() == "sv";
     },
     setEN : function() {
         this.set({lang : "en"});
     },
-    setSE : function() {
-        this.set({lang : "se"});
+    setSV : function() {
+        this.set({lang : "sv"});
     },
     draftData : function() {
         return this.lang();

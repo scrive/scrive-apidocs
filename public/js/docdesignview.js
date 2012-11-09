@@ -304,20 +304,20 @@ var DocumentDesignView = Backbone.View.extend({
         var box = $("<div class='languageselect'/>");
         var select= $("<select/>");
         var en =  $("<option value='en'/>").text(localization.languages.en);
-        var se = $("<option value='se'/>").text(localization.languages.se);
+        var sv = $("<option value='sv'/>").text(localization.languages.sv);
         select.append(en);
-        select.append(se);
+        select.append(sv);
         box.text(localization.languages.selectLanguage);
         box.append(select);
         if (document.lang().en())
         {
           en.attr("selected","YES");
-          se.attr("selected","");
+          sv.attr("selected","");
         }
         else
         {
           en.attr("selected","");
-          se.attr("selected","YES");
+          sv.attr("selected","YES");
         }
 
         select.change(function(event){
@@ -327,7 +327,7 @@ var DocumentDesignView = Backbone.View.extend({
                     content : localization.languages.changeSwedishToEnglishText,
                     acceptText: localization.languages.signInEnglish,
                     onReject:  function() {
-                        select.val("se");
+                        select.val("sv");
                     },
                     onAccept : function() {
                        document.lang().setEN();
@@ -350,7 +350,7 @@ var DocumentDesignView = Backbone.View.extend({
                         select.val("en");
                     },
                     onAccept : function() {
-                       document.lang().setSE();
+                       document.lang().setSV();
                        LoadingDialog.open();
                        document.save();
                        document.afterSave(function() {

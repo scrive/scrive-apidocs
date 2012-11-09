@@ -942,7 +942,7 @@ javascriptLocalisation =
               , newpassword2    : "$_RepeatNewPassword()$"
               , langSection     : "$_LanguageSettings()$"
               , lang            : "$_UserLanguage()$"
-              , langSE          : "$_Swedish()$"
+              , langSV          : "$_Swedish()$"
               , langEN          : "$_English()$"
               , footerSection   : "$_userDocumentsSettings()$"
               , useFooter       : "$_userDocumentSettingsMailFooter()$"

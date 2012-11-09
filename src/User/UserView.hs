@@ -94,8 +94,7 @@ userJSON user mumailapi mcompany mcmailapi = runJSONGenT $ do
     value "companyposition" $ usercompanyposition $ userinfo user
     value "usercompanyname" $ getCompanyName user
     value "usercompanynumber" $ getCompanyNumber user
-    -- value "region" $ "gb" <| LANG_EN == (getLang user) |> "se"
-    value "lang"   $ "en" <| LANG_EN == (getLang user) |> "se"
+    value "lang"   $ "en" <| LANG_EN == (getLang user) |> "sv"
     value "footer" $ customfooter $ usersettings user
     valueM "mailapi" $ case (mumailapi) of
                             Nothing -> return JSNull

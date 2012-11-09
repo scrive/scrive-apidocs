@@ -66,7 +66,7 @@ var SecuritySettingsModel = Backbone.Model.extend({
       password1  : "",
       password2  : "",
       footer     : this.user().footer() ,
-      lang       : this.user().lang() != "se" ?  "LANG_EN" : "LANG_SE",
+      lang       : this.user().lang() != "sv" ?  "LANG_EN" : "LANG_SV",
       useFooter  : this.user().footer() != undefined
     }, {silent : true});
     this.trigger("reset");
@@ -144,9 +144,9 @@ var SecuritySettingsView = Backbone.View.extend({
          self.langSelectBox.empty();
          self.langSelect = new Select({
                              textWidth : "90px",
-                             name : model.lang() == "LANG_EN" ? localization.account.accountSecurity.langEN : localization.account.accountSecurity.langSE,
+                             name : model.lang() == "LANG_EN" ? localization.account.accountSecurity.langEN : localization.account.accountSecurity.langSV,
                              onSelect : function(v) {model.setLang(v);return true;},
-                             options:   model.lang() == "LANG_EN" ? [{name: localization.account.accountSecurity.langSE, value: "LANG_SE"}] :
+                             options:   model.lang() == "LANG_EN" ? [{name: localization.account.accountSecurity.langSV, value: "LANG_SV"}] :
                                                                         [{name: localization.account.accountSecurity.langEN, value: "LANG_EN"}]
                            });
          self.langSelectBox.append(self.langSelect.view().el)
