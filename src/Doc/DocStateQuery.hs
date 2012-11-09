@@ -74,9 +74,10 @@ getDocByDocIDForAuthor docid = do
   case (ctxmaybeuser `mplus` ctxmaybepaduser) of
     Nothing -> return $ Left DBNotLoggedIn
     Just user -> do
-      mdoc <- dbQuery (GetDocuments [ DocumentsOfAuthor (userid user)
+      mdoc <- dbQuery (GetDocuments [ DocumentsVisibleToUser (userid user)
                                     ] [ DocumentFilterByDocumentID docid
                                       , DocumentFilterDeleted False
+                                      , DocumentFilterByAuthor (userid user)
                                       ]
                                     [] (DocumentPagination 0 1))
       case mdoc of
@@ -93,10 +94,10 @@ getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid = do
   case (ctxmaybeuser `mplus` ctxmaybepaduser) of
     Nothing -> return $ Left DBNotLoggedIn
     Just user -> do
-      mdoc <- dbQuery (GetDocuments [ DocumentsOfAuthor (userid user)
-                                    , TemplatesSharedInUsersCompany (userid user)
+      mdoc <- dbQuery (GetDocuments [ DocumentsVisibleToUser (userid user)
                                     ] [ DocumentFilterByDocumentID docid
                                       , DocumentFilterDeleted False
+                                      , DocumentFilterLinkIsAuthor True
                                       ]
                                     [] (DocumentPagination 0 1))
       case mdoc of

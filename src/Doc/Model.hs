@@ -148,11 +148,12 @@ data DocumentFilter
   | DocumentFilterSignable                    -- ^ Document is signable
   | DocumentFilterTemplate                    -- ^ Document is template
   | DocumentFilterDeleted Bool                -- ^ Only deleted (=True) or non-deleted (=False) documents
+  | DocumentFilterLinkIsAuthor Bool           -- ^ Only documents created by this user
+  | DocumentFilterLinkIsPartner Bool          -- ^ Only documents created by this user
   deriving Show
 data DocumentDomain
   = DocumentsOfWholeUniverse                     -- ^ All documents in the system. Only for admin view.
   | DocumentsVisibleToUser UserID                -- ^ Documents that a user has possible access to
-  | DocumentsOfAuthor UserID                     -- ^ Documents by author
   | DocumentsForSignatory UserID                 -- ^ Documents by signatory
   | TemplatesSharedInUsersCompany UserID         -- ^ Templates shared in company
   | DocumentsOfCompany CompanyID Bool            -- ^ All documents of a company, with flag for selecting also drafts
@@ -252,10 +253,6 @@ documentOrderByAscDescToSQL (Desc x) = documentOrderByToSQL x <> SQL " DESC" []
 documentDomainToSQL :: DocumentDomain -> SQL
 documentDomainToSQL (DocumentsOfWholeUniverse) =
   SQL "TRUE" []
-documentDomainToSQL (DocumentsOfAuthor uid) =
-  SQL ("signatory_links.is_author"
-       <> " AND signatory_links.user_id = ?")
-        [toSql uid]
 documentDomainToSQL (DocumentsVisibleToUser uid) =
   "same_company_users.id = " <?> uid
   <+> " AND ("
@@ -272,7 +269,8 @@ documentDomainToSQL (DocumentsVisibleToUser uid) =
      <+>                        "AND earlier_signatory_links.sign_time IS NULL"
      <+>                        "AND earlier_signatory_links.sign_order < signatory_links.sign_order))"
    <+> "OR"
-     <+>     "documents.sharing = " <?> Shared
+     <+> "TRUE"
+     <+> "AND documents.sharing = " <?> Shared
      <+> "AND documents.type = " <?> Template undefined    -- 4
      <+> "AND signatory_links.is_author"                   --
   <+> ")"
@@ -356,6 +354,12 @@ documentFilterToSQL (DocumentFilterByString string) = do
 
 documentFilterToSQL (DocumentFilterByDelivery delivery) = do
   sqlWhereEq "documents.delivery_method" delivery
+
+documentFilterToSQL (DocumentFilterLinkIsAuthor flag) = do
+  sqlWhereEq "signatory_links.is_author" flag
+
+documentFilterToSQL (DocumentFilterLinkIsPartner flag) = do
+  sqlWhereEq "signatory_links.is_partner" flag
 
 documentFilterToSQL (DocumentFilterByAuthor userid) = do
   sqlWhere "signatory_links.is_author"
@@ -1367,7 +1371,7 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
         sqlWhere "documents.id = signatory_links.document_id"
         sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
         sqlLeftJoinOn "companies" "users.company_id = companies.id"
-        sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id"
+        sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id OR users.id = same_company_users.id"
 
         sqlWhere "NOT signatory_links.really_deleted"
         sqlWhereOr (map documentDomainToSQL domains)
@@ -1414,17 +1418,17 @@ instance MonadDB m => DBQuery m GetDeletedDocumentsByUser [Document] where
 data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
 instance MonadDB m => DBQuery m GetDocumentsByAuthor [Document] where
   query (GetDocumentsByAuthor uid) =
-    query (GetDocuments [DocumentsOfAuthor uid] [DocumentFilterDeleted False] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
+    query (GetDocuments [DocumentsVisibleToUser uid] [DocumentFilterByAuthor uid, DocumentFilterDeleted False] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
 data GetTemplatesByAuthor = GetTemplatesByAuthor UserID
 instance MonadDB m => DBQuery m GetTemplatesByAuthor [Document] where
   query (GetTemplatesByAuthor uid) =
-    query (GetDocuments [DocumentsOfAuthor uid] [DocumentFilterDeleted False, DocumentFilterTemplate] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
+    query (GetDocuments [DocumentsVisibleToUser uid] [DocumentFilterByAuthor uid, DocumentFilterDeleted False, DocumentFilterTemplate] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
 data GetAvailableTemplates = GetAvailableTemplates UserID [DocumentProcess]
 instance MonadDB m => DBQuery m GetAvailableTemplates [Document] where
   query (GetAvailableTemplates uid processes) =
-    query (GetDocuments [DocumentsOfAuthor uid, TemplatesSharedInUsersCompany uid]
+    query (GetDocuments [DocumentsVisibleToUser uid]
                             [DocumentFilterByProcess processes, DocumentFilterTemplate, DocumentFilterDeleted False]
                             [Asc DocumentOrderByMTime]
                             (DocumentPagination 0 maxBound))

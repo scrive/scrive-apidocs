@@ -1243,12 +1243,15 @@ testGetDocumentsSharedInCompany = doTimes 10 $ do
   user5 <- addNewRandomUser
   user6 <- addNewRandomUser
 
-  docid1 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user1 (isTemplate)
-  docid2 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user2 (isTemplate)
-  docid3 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user3 (isTemplate)
-  docid4 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user4 (isTemplate)
-  docid5 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user5 (isTemplate)
-  docid6 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user6 (isTemplate)
+  doc1 <- addRandomDocumentWithAuthorAndCondition user1 (isTemplate)
+  doc2 <- addRandomDocumentWithAuthorAndCondition user2 (isTemplate)
+  doc3 <- addRandomDocumentWithAuthorAndCondition user3 (isTemplate)
+  doc4 <- addRandomDocumentWithAuthorAndCondition user4 (isTemplate)
+  doc5 <- addRandomDocumentWithAuthorAndCondition user5 (isTemplate)
+  doc6 <- addRandomDocumentWithAuthorAndCondition user6 (isTemplate)
+
+  let [docid1, docid2, docid3, docid4, docid5, docid6] = 
+         documentid <$> [doc1, doc2, doc3, doc4, doc5, doc6]
 
   -- user1: owns doc1, sees doc2
   -- user2: owns doc2, sees doc1
@@ -1286,7 +1289,7 @@ testGetDocumentsSQLTextFiltered = doTimes 1 $ do
   _doc3 <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
   _doc4 <- addRandomDocumentWithAuthorAndCondition author2 (isSignable &&^ isPreparation)
 
-  let domains = [ DocumentsOfAuthor (userid author)]
+  let domains = [ DocumentsVisibleToUser (userid author)]
       first_name = getFirstName (head (documentsignatorylinks doc1))
       last_name = getLastName (head (documentsignatorylinks doc1))
       email = getEmail (head (documentsignatorylinks doc1))
@@ -1331,11 +1334,9 @@ testGetDocumentsSQLSorted = doTimes 1 $ do
   author <- addNewRandomUser
   _doc <- addRandomDocumentWithAuthorAndCondition author (const True)
 
-  let domains = [ DocumentsOfAuthor (userid author)
+  let domains = [ DocumentsVisibleToUser (userid author)
                 , DocumentsForSignatory (userid author)
                 , TemplatesSharedInUsersCompany (userid author)
-                  -- , DocumentsOfService (Maybe ServiceID)
-                  -- , DocumentsOfCompany CompanyID
                 ]
       filters = []
   _docs <- dbQuery $ GetDocuments domains filters
