@@ -13,7 +13,7 @@ var AccountSettingsModel = Backbone.Model.extend({
     user.bind("reset",function() {
       self.reset();
     });
-    user.fetch();
+    user.fetch({cache: false});
     this.reset();
   },
   companyAdmin : function() {
@@ -160,7 +160,7 @@ var AccountSettingsModel = Backbone.Model.extend({
   createCompany : function() {
     this.saveSubmit().add("createcompany","true").send();
   },
-  refresh : function() {    this.user().fetch(); this.reset(); }
+  refresh : function() {    this.user().fetch({cache: false}); this.reset(); }
 });
 
 
@@ -277,14 +277,14 @@ var AccountSettingsView = Backbone.View.extend({
 
             var companycityinput = $("<input type='text'/>").val(model.companycity());
             if (!model.companyAdmin()) companycityinput.attr("disabled","disabled");
-            companynameinput.change(function() {
+            companycityinput.change(function() {
               model.setCompanycity(companycityinput.val());
             })
             table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companycity + ":")).append($("<td/>").append(companycityinput)));
 
             var companycountryinput = $("<input type='text'/>").val(model.companycountry());
             if (!model.companyAdmin()) companycountryinput.attr("disabled","disabled");
-            companynameinput.change(function() {
+            companycountryinput.change(function() {
               model.setCompanycountry(companycountryinput.val());
             })
             table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companycountry + ":")).append($("<td/>").append(companycountryinput)));

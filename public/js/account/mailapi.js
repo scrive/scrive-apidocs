@@ -24,7 +24,7 @@ window.MailApi = Backbone.Model.extend({
   },
   limit : function() {
      return this.get("limit");
-  },
+  }
 });
 
 

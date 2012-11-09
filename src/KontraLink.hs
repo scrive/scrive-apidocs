@@ -1,4 +1,4 @@
-module KontraLink(KontraLink(..), LoginRedirectReason(..), getHomeOrArchiveLink) where
+module KontraLink(KontraLink(..), LoginRedirectReason(..), getHomeOrDesignViewLink) where
 
 import Data.Int
 
@@ -87,7 +87,7 @@ data KontraLink
     | LinkCompanyAdminPayments CompanyID
     | LinkUserAdminPayments UserID
     | LinkExternal String
-
+    | LinkDesignView 
     deriving (Eq)
 
 localeFolder :: Locale -> String
@@ -200,6 +200,7 @@ instance Show KontraLink where
       (++) ("/adminonly/companyadmin/payments/" ++ show cid)
     showsPrec _ (LinkUserAdminPayments uid) = 
       (++) ("/adminonly/useradmin/payments/" ++ show uid)
+    showsPrec _ (LinkDesignView) = (++) "/newdocumentorlatestdraft"
     showsPrec _ (LinkExternal s) = (++) s
 
 
@@ -218,9 +219,9 @@ setParams uri params = uri { uriQuery = "?" ++ vars }
           (k, "") -> makeKV ks ((urlDecode k, ""):a)
           _ -> Nothing
 
-getHomeOrArchiveLink :: KontraMonad m => m KontraLink
-getHomeOrArchiveLink = do
+getHomeOrDesignViewLink :: KontraMonad m => m KontraLink
+getHomeOrDesignViewLink = do
   ctx <- getContext
   case ctxmaybeuser ctx of
-    Just _ -> return LinkArchive
+    Just _ -> return LinkDesignView
     Nothing -> return $ LinkHome (ctxlocale ctx)

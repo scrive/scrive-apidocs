@@ -709,11 +709,9 @@ var DocumentDesignView = Backbone.View.extend({
             text: localization.uploadButton,
             submitOnUpload: true,
             onClick : function () {
-                LoadingDialog.open();
             },
             onError: function() {
                 this.model.trigger('change');
-                LoadingDialog.close();
             },
             onAppend: function(input) {
               document.save();
@@ -764,7 +762,7 @@ var DocumentDesignView = Backbone.View.extend({
         var subsubbox = $("<div class='innerbox'/>");
         var buttonbox = $("<div class='button-box'/>");
         {
-          subsubbox.append($("<div class='inner-description-main'/>").html(BlockingInfo.el()));
+          subsubbox.append($("<div class='inner-description-main'/>").html(localization.nofiletext));
         }
         buttonbox.append($(this.uploadFile()).css("float","left")).append($(this.fromAvtal()).css("float","right"))
         subsubbox.append(buttonbox);
@@ -885,7 +883,7 @@ var DocumentDesignView = Backbone.View.extend({
                   })
                 ]
         });
-        this.contrainer.append($(this.tabs.view.el));
+        this.contrainer.append(BlockingInfo.el()).append($(this.tabs.view.el));
 
         new ScrollFixer({object : designbody1.add(designbody2)});
     }

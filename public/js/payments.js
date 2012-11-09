@@ -675,12 +675,12 @@
                         },
                         ajaxerror: function(d, a) {
                             content.empty();
-                            content.append($("<div>").text(localization.docsignview.phoneConfirmationText));
+                            content.append($("<div/>").text(localization.docsignview.phoneConfirmationText));
                             done = true;
                         },
                         ajaxsuccess: function(d) {
                             content.empty();
-                            content.append($("<div>").text(localization.docsignview.phoneConfirmationText));
+                            content.append($("<div/>").text(localization.docsignview.phoneConfirmationText));
                             done = true;
                         }
                     }).send();

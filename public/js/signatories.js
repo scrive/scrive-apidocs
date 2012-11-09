@@ -108,7 +108,7 @@ window.SignatoryAttachmentUploadView = Backbone.View.extend({
       submitOnUpload: true,
       showLoadingDialog: false,
       onClick: function() {
-        attachment.loading();
+        return true;
       },
       onError: function() {
         attachment.notLoading();

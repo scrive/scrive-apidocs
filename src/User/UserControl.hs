@@ -496,7 +496,7 @@ handleAccountSetupPost uid token = do
           _ <- dbUpdate $ DeleteAction userAccountRequest uid
           forM_ docs (\d -> postDocumentPreparationChange d "mailapi")
           addFlashM flashMessageUserActivated
-  getHomeOrArchiveLink
+  getHomeOrDesignViewLink
 
 {- |
     This is where we get to when the user clicks the link in their password reminder
@@ -513,7 +513,7 @@ handlePasswordReminderGet uid token = do
       sendRedirect LinkArchive
     Nothing -> do
       addFlashM flashMessagePasswordChangeLinkNotValid
-      sendRedirect =<< getHomeOrArchiveLink
+      sendRedirect =<< getHomeOrDesignViewLink
 
 handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m KontraLink
 handlePasswordReminderPost uid token = do
@@ -540,14 +540,14 @@ handlePasswordReminderPost uid token = do
               _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) ctxipnumber (ctxtime) (userid <$> ctxmaybeuser)
               addFlashM flash
               addFlashM $ modalNewPasswordView uid token
-              getHomeOrArchiveLink
+              getHomeOrDesignViewLink
         _ -> do
           _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
           addFlashM $ modalNewPasswordView uid token
-          getHomeOrArchiveLink
+          getHomeOrDesignViewLink
     Nothing   -> do
       addFlashM flashMessagePasswordChangeLinkNotValid
-      getHomeOrArchiveLink
+      getHomeOrDesignViewLink
 
 handleBlockingInfo :: Kontrakcja m => m JSValue
 handleBlockingInfo = do

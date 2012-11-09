@@ -220,7 +220,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
       case e of
         InternalError -> do
           addFlashM V.modalError
-          linkmain <- getHomeOrArchiveLink
+          linkmain <- getHomeOrDesignViewLink
           sendRedirect linkmain
         Respond404 -> notFoundPage >>= notFound
 

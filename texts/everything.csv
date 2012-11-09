@@ -2368,3 +2368,4 @@ have an account please follow the account creation process. Free use of up to 5 
 "_newTemplateTitle","Ny mall",,"New template"
 "_saveAsTemplateLongDescription","Du kan spara dina inställningar för att återanvända som en process mall.<BR/>Vi sparar dina inställningar från båda stegen när du klickar på knappen nedan.",,"You can save your settings to reuse as a process template later.<BR/> We save your settings from both steps when you press the button below."
 "_createFromTemplateDescription","Klicka på en mall för att starta en ny process",,"Click a template to create new document from it"
+"_nofiletext","Välj det dokument som du vill signera.",,"Choose the document that you want to sign."

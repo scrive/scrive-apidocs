@@ -6,6 +6,7 @@ module Doc.DocControl(
     -- Exported utils or test functions
       sendReminderEmail
     -- Top level handlers
+    , newDocumentOrLatestDraft
     , showCreateFromTemplate 
     , handleDownloadFile
     , handleDownloadMainFile
@@ -107,6 +108,20 @@ import qualified MemCache as MemCache
 import qualified GuardTime as GuardTime
 import System.IO.Temp
 import System.Directory
+
+
+newDocumentOrLatestDraft :: Kontrakcja m => m KontraLink
+newDocumentOrLatestDraft = withUserPost $ do
+  user <- guardJustM $ ctxmaybeuser <$> getContext
+  docs <- dbQuery $ GetDocuments [DocumentsOfAuthorDeleteValue (userid user) False] [DocumentFilterStatuses [Preparation]]  [Desc DocumentOrderByMTime] (DocumentPagination 0 1)
+  case docs of
+       [d] -> return $ LinkIssueDoc (documentid d)
+       _ -> do
+        title <- renderTemplate_ "newDocumentTitle"
+        actor <- guardJustM $ mkAuthorActor <$> getContext
+        Just doc <- dbUpdate $ NewDocument user title (Signable Contract) 1 actor
+        return $ LinkIssueDoc (documentid doc)
+  
 {-
   Document state transitions are described in DocState.
 
@@ -275,10 +290,10 @@ rejectDocument documentid siglinkid = do
   case edocs of
     Left (DBActionNotAvailable message) -> do
       addFlash (OperationFailed, message)
-      getHomeOrArchiveLink
+      getHomeOrDesignViewLink
     Left (DBDatabaseNotAvailable message) -> do
       addFlash (OperationFailed, message)
-      getHomeOrArchiveLink
+      getHomeOrDesignViewLink
     Left _ -> internalError
     Right document -> do
       postDocumentRejectedChange document siglinkid "web"

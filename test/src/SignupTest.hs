@@ -179,7 +179,7 @@ assertAccountActivatedFor uid fstname sndname (res, ctx) = do
 assertAccountActivated :: String -> String -> (Response, Context) -> TestEnv ()
 assertAccountActivated fstname sndname (res, ctx) = do
   assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "Location is /d" (Just "/d") (T.getHeader "location" (rsHeaders res))
+  assertEqual "Location is /newdocumentorlatestdraft" (Just "/newdocumentorlatestdraft") (T.getHeader "location" (rsHeaders res))
   assertEqual "A flash message" 1 (length $ ctxflashmessages ctx)
   --shouldn't this flash just indicate success and not that it's signing related?!
   assertBool "Flash message has type indicating signing related" $ any (`isFlashOfType` SigningRelated) (ctxflashmessages ctx)

@@ -41,7 +41,7 @@ window.Company = Backbone.Model.extend({
   },
   hasMailApi : function() {
      return this.mailapi() != undefined;
-  },
+  }
   
 });
 

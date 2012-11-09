@@ -996,7 +996,8 @@ javascriptLocalisation =
               , columnClosedSignatures : "$_closedSignatures()$"     
             }
           , subscription : "$_Subscription()$"
-      },
-      createFromTemplateDescription : "$_createFromTemplateDescription()$"
+      }
+      , createFromTemplateDescription : "$_createFromTemplateDescription()$"
+      , nofiletext : "$_nofiletext()$"
     };
 ###
