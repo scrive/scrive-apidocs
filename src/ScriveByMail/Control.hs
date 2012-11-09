@@ -57,8 +57,8 @@ handleConfirmDelay adminemail delayid key = do
       adminuser <- guardJustM $ dbQuery $ GetUserByEmail (Email adminemail)
       unless (Just companyid == usercompany adminuser && useriscompanyadmin adminuser)
              internalError
-      newuser <- guardJustM $ createUser (Email email) ("", "") (Just companyid) (ctxlocale ctx)
+      newuser <- guardJustM $ createUser (Email email) ("", "") (Just companyid) (ctxlang ctx)
       _ <- dbUpdate $ ConfirmBossDelay delayid (ctxtime ctx)
       _ <- sendNewCompanyUserMail adminuser company newuser
       addFlashM $ modalConfirmDelay email
-  return $ LinkHome (ctxlocale ctx)
+  return $ LinkHome (ctxlang ctx)

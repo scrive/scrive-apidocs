@@ -31,13 +31,13 @@ SignDocumentEvidenceText=Signed by $actor$ $if(!eleg)$ by clicking the sign butt
         $if(certificate)$ Certificate: $certificate$ $endif$
         $if(ocsp)$ OCSP Response: $ocsp$ $endif$
 
-    $endif$ 
+    $endif$
 ###
 SetInvitationDeliveryStatusEvidenceText=$actor$ reported that email invitation to sign (sent to $email$) was $status$.
 ###
 SetDocumentUIEvidenceText=
 ###
-SetDocumentLocaleEvidenceText=Signing process language changed to $locale$ by $actor$.
+SetDocumentLangEvidenceText=Signing process language changed to $lang$ by $actor$.
 ###
 SetDocumentTitleEvidenceText=Title changed to “$title$” by $actor$.
 ###
@@ -108,7 +108,7 @@ InvitationEvidenceText=Invitation to sign sent to $email$ by $actor$.
 ###
 SignableFromDocumentIDWithUpdatedAuthorEvidenceText=Transaction started from template $did$ by $actor$.
 ###
-ArchiveDocumentEvidenceText= 
+ArchiveDocumentEvidenceText=
 ###
 RemoveSignatoryEvidenceText=
 Signatory ($email$) removed from transaction by $actor$.
@@ -154,6 +154,6 @@ ResealedPDFText=$actor$ requested document to be resealed.
 DeliveryInformationClearedForReminderText= $name$ mail delivery details cleared, since reminder was send.
 ###
 SetDocumentProcessEvidenceText= Document process set to $process$
-### 
+###
 DetachFileEvidenceText=Main file detatched by $actor$.
 ###

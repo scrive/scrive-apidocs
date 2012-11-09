@@ -18,7 +18,7 @@ import qualified Log
 import qualified Mails.Model as M
 
 -- Needed only for FROM address
-import User.Region
+import User.Lang
 import Util.SignatoryLinkUtils
 import Doc.Model
 import Doc.DocStateData
@@ -75,7 +75,7 @@ fromNiceAddress (Invitation did _) servicename = do
   mdoc <- dbQuery $ GetDocumentByDocumentID did
   case mdoc of
     Nothing -> return $ servicename
-    Just doc -> case (documentregion doc, getAuthorName doc) of
+    Just doc -> case (documentlang doc, getAuthorName doc) of
       (_,         []) -> return $ servicename
-      (REGION_SE, an) -> return $ an ++ " genom " ++ servicename
-      (REGION_GB, an) -> return $ an ++ " through " ++ servicename
+      (LANG_SV, an) -> return $ an ++ " genom " ++ servicename
+      (LANG_EN, an) -> return $ an ++ " through " ++ servicename

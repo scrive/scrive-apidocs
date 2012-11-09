@@ -94,7 +94,7 @@ insertNewSession uid = do
   sess <- emptySession
   (_, ctx) <- do
     rq <- mkRequest GET []
-    ctx <- mkContext $ mkLocaleFromRegion defaultValue
+    ctx <- mkContext defaultValue
     runTestKontra rq ctx $ updateSession sess (sess { sesUserID = Just uid })
   -- FIXME: this sucks, but there is no way to get id of newly inserted
   -- session and modifying normal code to get access to it seems like
@@ -110,7 +110,7 @@ addDocumentAndInsertToken = do
   (_, ctx) <- do
     let Just asl = getAuthorSigLink doc
     rq <- mkRequest GET []
-    ctx <- mkContext $ mkLocaleFromRegion defaultValue
+    ctx <- mkContext defaultValue
     runTestKontra rq ctx $ do
       sess <- emptySession
       dbUpdate $ AddDocumentSessionToken (signatorylinkid asl) (signatorymagichash asl)
@@ -134,5 +134,5 @@ addElegTransaction = do
 testUser :: TestEnv UserID
 testUser = do
   pwd <- createPassword "admin"
-  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) Nothing (mkLocaleFromRegion defaultValue)
+  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) Nothing defaultValue
   return $ userid user

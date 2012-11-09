@@ -29,7 +29,7 @@ import Recurly.JS
 import Recurly.Push
 --import Templates.Templates
 import Templates.TemplatesLoader
-import User.Locale
+import User.Lang
 import Templates.Trans
 import Text.JSON
 import Text.JSON.Gen hiding (value)
@@ -53,21 +53,20 @@ import Payments.Rules
 import Payments.View
 import Payments.Config (RecurlyConfig(..))
 import qualified Payments.Stats as Stats
-  
 -- to call this, user must not have an account code yet (no payment plan in table)
 handleSyncNewSubscriptionWithRecurly :: Kontrakcja m => m ()
 handleSyncNewSubscriptionWithRecurly = do
   RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
   time <- ctxtime <$> getContext
-  ac <- pguardM' "handleSyncNewSubscriptionWithRecurly: account_code must exist and be an integer." $ 
+  ac <- pguardM' "handleSyncNewSubscriptionWithRecurly: account_code must exist and be an integer." $
         readField "account_code"
-  user <- pguardM' "handleSyncNewSubscriptionWithRecurly: No user logged in." $ 
+  user <- pguardM' "handleSyncNewSubscriptionWithRecurly: No user logged in." $
           ctxmaybeuser <$> getContext
   subscriptions <- pguardM "handleSyncNewSubscriptionWithRecurly" $ 
                    liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show ac
-  subscription <- pguard' "handleSyncNewSubscriptionWithRecurly: No subscription." $ 
+  subscription <- pguard' "handleSyncNewSubscriptionWithRecurly: No subscription." $
                   listToMaybe subscriptions
-  invoices <- pguardM "handleChangePlan" $ 
+  invoices <- pguardM "handleChangePlan" $
               liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey $ show ac
   let is = maybe "collected" inState $ listToMaybe invoices
   let eid = maybe (Left $ userid user) Right $ usercompany user
@@ -78,50 +77,50 @@ handleChangePlan :: Kontrakcja m => m ()
 handleChangePlan = do
   RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
   time <- ctxtime <$> getContext
-  newplan :: PricePlan <- pguardM' "handleChangePlan: field plan must exist and be a recurly plan code (String)" $ 
+  newplan :: PricePlan <- pguardM' "handleChangePlan: field plan must exist and be a recurly plan code (String)" $
                           readField "plan"
-  user <- pguardM' "handleChangePlan: No user logged in." $ 
+  user <- pguardM' "handleChangePlan: No user logged in." $
           ctxmaybeuser <$> getContext
-  plan <- pguardM' "handleChangePlan: No plan for logged in user." $ 
+  plan <- pguardM' "handleChangePlan: No plan for logged in user." $
           dbQuery $ GetPaymentPlan (maybe (Left (userid user)) Right (usercompany user))
-  subscriptions <- pguardM "handleChangePlan" $ 
+  subscriptions <- pguardM "handleChangePlan" $
                    liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show $ ppAccountCode plan
-  subscription <- pguard' "handleChangePlan: No subscriptions for Recurly account." $ 
+  subscription <- pguard' "handleChangePlan: No subscriptions for Recurly account." $
                   listToMaybe subscriptions
   quantity <- maybe (return 1) (dbQuery . GetCompanyQuantity) $ usercompany user
   let eid = maybe (Left $ userid user) Right $ usercompany user
       ac  = ppAccountCode plan
   subinfo <- pguard "handleChangePlan" $ subInfo subscription
-  invoices <- pguardM "handleChangePlan" $ 
+  invoices <- pguardM "handleChangePlan" $
               liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey $ show $ ppAccountCode plan
   let is = maybe "collected" inState $ listToMaybe invoices
   case syncAction (quantity, newplan) subinfo of
     RNoAction -> do
       return ()
     RUpdateNow -> do
-      s <- pguardM "handleChangePlan" $ 
+      s <- pguardM "handleChangePlan" $
            liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity True
       _ <- cachePlan time Stats.ChangeAction ac s is eid (ppDunningStep plan) (ppDunningDate plan)
       return ()
     RUpdateRenewal -> do
-      s <- pguardM "handleChangePlan" $ 
+      s <- pguardM "handleChangePlan" $
            liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity False
       _ <- cachePlan time Stats.ChangeAction ac s is eid (ppDunningStep plan) (ppDunningDate plan)
       return ()
     RReactivateNow -> do
       _ <- liftIO $ reactivateSubscription curl_exe recurlyAPIKey (subID subscription)
-      s <- pguardM "handleChangePlan" $ 
+      s <- pguardM "handleChangePlan" $
            liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity True
       _ <- cachePlan time Stats.ReactivateAction ac s is eid (ppDunningStep plan) (ppDunningDate plan)
       return ()
     RReactivateRenewal -> do
       _ <- liftIO $ reactivateSubscription curl_exe recurlyAPIKey (subID subscription)
-      s <- pguardM "handleChangePlan" $ 
+      s <- pguardM "handleChangePlan" $
            liftIO $ changeAccount curl_exe recurlyAPIKey (subID subscription) (show newplan) quantity False
       _ <- cachePlan time Stats.ReactivateAction ac s is eid (ppDunningStep plan) (ppDunningDate plan)
       return ()
     RCancel -> do
-      _ <- pguardM "handleChangePlan" $ 
+      _ <- pguardM "handleChangePlan" $
            liftIO $ cancelSubscription curl_exe recurlyAPIKey $ subID subscription
       _ <- cachePlan time Stats.CancelAction ac subscription { subState = "canceled" } is eid (ppDunningStep plan) (ppDunningDate plan)
       return ()
@@ -129,7 +128,7 @@ handleChangePlan = do
 cachePlan :: (MonadDB m) => MinutesTime -> Stats.PaymentsAction -> AccountCode -> Subscription -> String -> Either UserID CompanyID -> Maybe Int -> Maybe MinutesTime -> m Bool
 cachePlan time pa ac subscription invoicestatus eid mds mdd = do
   let p       = fromRecurlyPricePlan $ subPricePlan subscription
-      (s, sp) = if invoicestatus == "failed" 
+      (s, sp) = if invoicestatus == "failed"
                 then (OverdueStatus, OverdueStatus)
                 else fromRecurlyStatus $ subState subscription
       q       = subQuantity subscription
@@ -143,18 +142,18 @@ cachePlan time pa ac subscription invoicestatus eid mds mdd = do
                                 , ppStatus              = s
                                 , ppPendingStatus       = sp
                                 , ppQuantity            = q
-                                , ppPendingQuantity     = qp 
-                                , ppPaymentPlanProvider = RecurlyProvider 
+                                , ppPendingQuantity     = qp
+                                , ppPaymentPlanProvider = RecurlyProvider
                                 , ppDunningStep         = mds
                                 , ppDunningDate         = mdd
                                 , ppBillingEndDate      = be}
   r <- dbUpdate $ SavePaymentPlan paymentplan time
-  if r 
+  if r
     then Stats.record time pa RecurlyProvider (subQuantity subscription) (fromRecurlyPricePlan $ subPricePlan subscription) eid ac
     else do
     Log.payments "cachePlan: Could not save payment plan."
     return False
-  
+
 
 {- Should be run once per day, preferably at night -}
 handleSyncWithRecurly :: (MonadIO m, MonadDB m, CryptoRNG m) => String -> MailsConfig -> KontrakcjaGlobalTemplates -> String -> MinutesTime -> m ()
@@ -230,11 +229,11 @@ handleSyncWithRecurly hostpart mailsconfig templates recurlyapikey time = do
                 -- next dunning step: 3 days later
                 -- eventually, Recurly will expire the account
                 _ <- dbUpdate $ SavePaymentPlan (plan {ppDunningStep = Just (n+1), ppDunningDate = Just $ daysAfter 3 time}) time
-                let locale' = locale $ usersettings user
-                _ <- sendInvoiceFailedEmail hostpart mailsconfig locale' templates user mcompany invoice
+                let lang' = lang $ usersettings user
+                _ <- sendInvoiceFailedEmail hostpart mailsconfig lang' templates user mcompany invoice
                 return ()
-      _ -> return ()  
-      
+      _ -> return ()
+
 postBackCache :: Kontrakcja m => PushRequest -> m ()
 postBackCache pr = do
   time <- ctxtime <$> getContext
@@ -260,9 +259,9 @@ postBackCache pr = do
     (FailedPayment _, (ActiveStatus, _), Nothing) -> do
       -- need to add dunning step + date to plan
       -- next email 7 days later
-      _ <- cachePlan time Stats.PushAction ac s is (ppID plan) (Just 1) (Just $ daysAfter 7 time) 
+      _ <- cachePlan time Stats.PushAction ac s is (ppID plan) (Just 1) (Just $ daysAfter 7 time)
       ctx <- getContext
-      sendInvoiceFailedEmail (ctxhostpart ctx) (ctxmailsconfig ctx) (locale $ usersettings user) (ctxglobaltemplates ctx) user mcompany invoice
+      sendInvoiceFailedEmail (ctxhostpart ctx) (ctxmailsconfig ctx) (lang $ usersettings user) (ctxglobaltemplates ctx) user mcompany invoice
     (SuccessfulPayment _, _, _) -> do
       -- need to remove dunning step
       _ <- cachePlan time Stats.PushAction ac s is (ppID plan) Nothing Nothing
@@ -276,12 +275,12 @@ postBackCache pr = do
     _ -> do
       _ <- cachePlan time Stats.PushAction ac s is (ppID plan) (ppDunningStep plan) (ppDunningDate plan)
       return ()
-        
+
 handleRecurlyPostBack :: Kontrakcja m => m ()
 handleRecurlyPostBack = do
   Log.payments "Got a Push notification from Recurly"
   vbody <- rqBody <$> askRq
-  bdy <- liftIO $ BSL.toString <$> unBody <$> takeMVar vbody      
+  bdy <- liftIO $ BSL.toString <$> unBody <$> takeMVar vbody
   case parsePush bdy of
     Just ps -> postBackCache ps
     _       -> return ()
@@ -396,7 +395,7 @@ toEID user = maybe (Left (userid user)) Right (usercompany user)
 
 handleUserExists :: Kontrakcja m => m JSValue
 handleUserExists = do
-  email <- pguardM' "handleUserExists: email must exist." $ 
+  email <- pguardM' "handleUserExists: email must exist." $
            getField "email"
   muser <- dbQuery $ GetUserByEmail $ Email email
   let meid = maybe (Left $ userid $ fromJust muser) Right . usercompany <$> muser
@@ -404,7 +403,7 @@ handleUserExists = do
   runJSONGenT $ do
     J.value "user_exists" $ isJust muser
     J.value "has_plan"    $ isJust mplan
-    
+
 handleCreateUser :: Kontrakcja m => m JSValue
 handleCreateUser = do
   Log.payments $ "handleCreateUser"
@@ -422,43 +421,43 @@ handleSyncNewSubscriptionWithRecurlyOutside = do
         getField "email"
   user <- pguardM' "handleSyncNewSubscriptionWithRecurlyOutside: user does not exist." $
           dbQuery $ GetUserByEmail $ Email email
-  subscriptions <- pguardM "handleSyncNewSubscriptionWithRecurly" $ 
+  subscriptions <- pguardM "handleSyncNewSubscriptionWithRecurly" $
                    liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show ac
-  subscription <- pguard' "handleSyncNewSubscriptionWithRecurly: No subscription." $ 
+  subscription <- pguard' "handleSyncNewSubscriptionWithRecurly: No subscription." $
                   listToMaybe subscriptions
-  invoices <- pguardM "handleChangePlan" $ 
+  invoices <- pguardM "handleChangePlan" $
               liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey $ show ac
   let is = maybe "collected" inState $ listToMaybe invoices
   let eid = maybe (Left $ userid user) Right $ usercompany user
   _ <- cachePlan time Stats.SignupAction ac subscription is eid Nothing Nothing
   return ()
 
--- mails    
+-- mails
 
 sendInvoiceEmail :: Kontrakcja m => User -> Maybe Company -> Subscription -> m ()
 sendInvoiceEmail user mcompany subscription = do
   ctx <- getContext
-  mail <- runTemplatesT (locale $ usersettings user, ctxglobaltemplates ctx) $ mailSignup (ctxhostpart ctx) user mcompany subscription
+  mail <- runTemplatesT (lang $ usersettings user, ctxglobaltemplates ctx) $ mailSignup (ctxhostpart ctx) user mcompany subscription
   scheduleEmailSendout (ctxmailsconfig ctx)
                         (mail{to = [MailAddress{
                                      fullname = getFullName user
                                    , email = getEmail user }]})
 
-sendInvoiceFailedEmail :: (MonadDB m, CryptoRNG m) => String -> MailsConfig -> Locale -> KontrakcjaGlobalTemplates -> User -> Maybe Company -> Invoice -> m ()
-sendInvoiceFailedEmail hostpart mailsconfig locale templates user mcompany invoice = do
-  mail <- runTemplatesT (locale, templates) $ mailFailed hostpart user mcompany invoice
+sendInvoiceFailedEmail :: (MonadDB m, CryptoRNG m) => String -> MailsConfig -> Lang -> KontrakcjaGlobalTemplates -> User -> Maybe Company -> Invoice -> m ()
+sendInvoiceFailedEmail hostpart mailsconfig lang templates user mcompany invoice = do
+  mail <- runTemplatesT (lang, templates) $ mailFailed hostpart user mcompany invoice
   scheduleEmailSendout mailsconfig
     (mail{to = [MailAddress { fullname = getFullName user
                             , email = getEmail user}]})
-    
+
 sendExpiredEmail :: Kontrakcja m => User -> m ()
 sendExpiredEmail user = do
   ctx <- getContext
-  mail <- runTemplatesT (locale $ usersettings user, ctxglobaltemplates ctx) $ mailExpired (ctxhostpart ctx)
+  mail <- runTemplatesT (lang $ usersettings user, ctxglobaltemplates ctx) $ mailExpired (ctxhostpart ctx)
   scheduleEmailSendout (ctxmailsconfig ctx)
     (mail{to = [MailAddress { fullname = getFullName user
                             , email = getEmail user }]})
-  
+
 fromRecurlyStatus :: String -> (PaymentPlanStatus, PaymentPlanStatus)
 fromRecurlyStatus "active"   = (ActiveStatus, ActiveStatus)
 fromRecurlyStatus "canceled" = (ActiveStatus, CanceledStatus)
@@ -478,7 +477,7 @@ pguard _   (Right v) = return v
 pguard pre (Left msg) = do
   Log.payments $ pre ++ ": " ++ msg
   internalError
-  
+
 pguardM :: (MonadBase IO m, MonadIO m) => String -> m (Either String a) -> m a
 pguardM pre action = pguard pre =<< action
 
@@ -487,6 +486,6 @@ pguard' _ (Just v) = return v
 pguard' msg Nothing = do
   Log.payments msg
   internalError
-  
+
 pguardM' :: (MonadBase IO m, MonadIO m) => String -> m (Maybe a) -> m a
 pguardM' msg action = pguard' msg =<< action

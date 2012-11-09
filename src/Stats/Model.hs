@@ -168,9 +168,9 @@ instance MonadDB m => DBQuery m GetDocStatCSV [[BS.ByteString]] where
       where f :: [[BS.ByteString]] -> UserID -> BS.ByteString -> BS.ByteString -> MinutesTime -> DocStatQuantity -> Int -> DocumentID -> Maybe BS.ByteString -> Maybe CompanyID -> BS.ByteString -> BS.ByteString -> [[BS.ByteString]]
             f acc uid n em t q a did cn cid tp api =
               let smartname = if BS.null n then em else n
-              in [BS.fromString $ show uid, smartname, BS.fromString $ showDateYMD t, BS.fromString $ show q, 
+              in [BS.fromString $ show uid, smartname, BS.fromString $ showDateYMD t, BS.fromString $ show q,
                   BS.fromString $ show a, BS.fromString $ show did, fromMaybe (BS.fromString "none") cn, BS.fromString $ maybe "" show cid, tp, api] : acc
-                    
+
 data GetDocHistCSV = GetDocHistCSV MinutesTime MinutesTime
 instance MonadDB m => DBQuery m GetDocHistCSV [[String]] where
   query (GetDocHistCSV start end) = do
@@ -191,10 +191,10 @@ instance MonadDB m => DBQuery m GetDocHistCSV [[String]] where
                      "ORDER BY ds.document_id DESC") [toSql start, 
                                                       toSql end,
                                                       toSql DocStatCreate,
-                                                      toSql DocStatSend, 
-                                                      toSql DocStatClose, 
-                                                      toSql DocStatReject, 
-                                                      toSql DocStatCancel, 
+                                                      toSql DocStatSend,
+                                                      toSql DocStatClose,
+                                                      toSql DocStatReject,
+                                                      toSql DocStatCancel,
                                                       toSql DocStatTimeout]
     foldDB f []
       where f :: [[String]] -> DocumentID -> Maybe CompanyID -> String -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> [[String]]
@@ -220,7 +220,6 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   <> ", users.mobile"
   <> ", users.email"
   <> ", users.lang"
-  <> ", users.region"
   <> ", users.customfooter"
   <> ", users.company_name"
   <> ", users.company_number"
@@ -255,7 +254,7 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` foldDB decoder []
     decoder acc uid password salt is_company_admin account_suspended
      has_accepted_terms_of_service signup_method company_id
      first_name last_name personal_number company_position phone mobile
-     email lang region customfooter company_name company_number is_free cid eid
+     email lang customfooter company_name company_number is_free cid eid
      name number address zip' city country bars_background bars_textcolour logo email_domain
      inviter_id invite_time invite_type
      = (
@@ -278,7 +277,7 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` foldDB decoder []
            , usercompanynumber = company_number
            }
          , usersettings = UserSettings {
-             locale = mkLocale region lang
+             lang = lang
            , customfooter = customfooter
            }
          , usercompany = company_id
@@ -516,10 +515,10 @@ instance MonadDB m => DBQuery m GetSignHistCSV [[String]] where
                      "ORDER BY ss.document_id DESC, ss.signatory_link_id DESC") [toSql start, 
                                                       toSql end,
                                                       toSql SignStatInvite,
-                                                      toSql SignStatReceive, 
-                                                      toSql SignStatOpen, 
-                                                      toSql SignStatLink, 
-                                                      toSql SignStatSign, 
+                                                      toSql SignStatReceive,
+                                                      toSql SignStatOpen,
+                                                      toSql SignStatLink,
+                                                      toSql SignStatSign,
                                                       toSql SignStatReject,
                                                       toSql SignStatDelete,
                                                       toSql SignStatPurge]

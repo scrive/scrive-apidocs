@@ -46,7 +46,7 @@ import qualified PadQueue.Control as PadQueue
 
 staticRoutes :: Route (KontraPlus Response)
 staticRoutes = choice
-     [ hGetAllowHttp $ getContext >>= (redirectKontraResponse . LinkHome . ctxlocale)
+     [ hGetAllowHttp $ getContext >>= (redirectKontraResponse . LinkHome . ctxlang)
 
      , publicPages
 
@@ -77,7 +77,7 @@ staticRoutes = choice
      , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
 
      
-     , dir "locale" $ hPost $ toK0 $ UserControl.handlePostUserLocale
+     , dir "lang" $ hPost $ toK0 $ UserControl.handlePostUserLang
      , dir "a" $ dir "rename"      $ hPost $ toK1 $ AttachmentControl.handleRename
      , dir "a" $ dir "share"       $ hPost $ toK0 $ AttachmentControl.handleShare
      , dir "a" $ dir "delete"      $ hPost $ toK0 $ AttachmentControl.handleDelete
@@ -125,7 +125,7 @@ staticRoutes = choice
 
      , dir "verify" $ hGet  $ toK0 $ DocControl.handleShowVerificationPage
      , dir "verify" $ hPostNoXToken $ toK0 $ DocControl.handleVerify
-     
+
      , dir "padqueue" $ dir "add" $ hPost $ toK2 $ PadQueue.addToQueue
      , dir "padqueue" $ dir "clear" $ hPost $ toK0 $ PadQueue.clearQueue
 
@@ -136,7 +136,7 @@ staticRoutes = choice
 
      -- UserControl
      , dir "account"                    $ hGet  $ toK0 $ UserControl.handleAccountGet
-     , dir "account" $ dir "json"       $ hGet  $ toK0 $ UserControl.getUserJSON                   
+     , dir "account" $ dir "json"       $ hGet  $ toK0 $ UserControl.getUserJSON
      , dir "account"                    $ hPost $ toK0 $ UserControl.handleUserPost
      , dir "account" $ hGet $ toK2 $ UserControl.handleGetChangeEmail
      , dir "account" $ hPost $ toK2 $ UserControl.handlePostChangeEmail
@@ -174,7 +174,7 @@ staticRoutes = choice
      , dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
      , dir "accountsetup"  $ hGet $ toK2 $ UserControl.handleAccountSetupGet
      , dir "accountsetup"  $ hPostNoXToken $ toK2 $ UserControl.handleAccountSetupPost
- 
+
      -- question form on static pages
      , dir "question"    $ hPostAllowHttp $ toK0 $ UserControl.handleQuestion
      , dir "adminonly" $ Administration.adminonlyRoutes

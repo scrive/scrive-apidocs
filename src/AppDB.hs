@@ -109,6 +109,8 @@ kontraMigrations = [
   , addSequenceOwnerToSignatoryLinks
   , addBillingEndDateCache
   , setMandatoryExpirationTimeInDocument
+  , removeRegionFromUsers
+  , changeRegionToLang
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

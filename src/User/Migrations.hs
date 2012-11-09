@@ -2,8 +2,6 @@
 module User.Migrations where
 
 import DB
-import Utils.Default
-import User.Region
 import User.Tables
 
 default (SQL)
@@ -35,9 +33,10 @@ addRegionToUserSettings =
   , mgrFrom = 1
   , mgrDo = do
       kRunRaw "ALTER TABLE users ADD COLUMN region SMALLINT"
-      _ <- kRun $ SQL "UPDATE users SET region = ?" [toSql (defaultValue :: Region)]
+      _ <- kRun $ SQL "UPDATE users SET region = ?" [defaultRegion]
       kRunRaw "ALTER TABLE users ALTER COLUMN region SET NOT NULL"
   }
+  where defaultRegion = toSql (1 :: Integer)
 
 addIdSerialOnUsers :: MonadDB m => Migration m
 addIdSerialOnUsers =
@@ -81,7 +80,7 @@ removePreferedDesignMode =
   , mgrDo = do
       _ <- kRunRaw $ "ALTER TABLE users DROP COLUMN preferred_design_mode"
       return ()
-  }  
+  }
 
 addIsFree :: MonadDB m => Migration m
 addIsFree =
@@ -92,7 +91,7 @@ addIsFree =
       _ <- kRunRaw $ "ALTER TABLE users ADD COLUMN is_free BOOL NOT NULL DEFAULT FALSE"
       return ()
     }
-    
+
 removeServiceIDFromUsers :: MonadDB m => Migration m
 removeServiceIDFromUsers = Migration {
     mgrTable = tableUsers
@@ -107,4 +106,11 @@ removeServiceIDFromUsers = Migration {
     kRunRaw "ALTER TABLE users DROP CONSTRAINT fk_users_services"
     kRunRaw "DROP INDEX idx_users_service_id"
     kRunRaw "ALTER TABLE users DROP COLUMN service_id"
+}
+
+removeRegionFromUsers :: MonadDB m => Migration m
+removeRegionFromUsers = Migration {
+    mgrTable = tableUsers
+  , mgrFrom = 10
+  , mgrDo = kRunRaw "ALTER TABLE users DROP COLUMN region"
 }

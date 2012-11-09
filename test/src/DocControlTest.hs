@@ -40,9 +40,9 @@ docControlTests env = testGroup "Templates" [
   , testThat "We can get json for document" env testGetLoggedIn
   , testThat "We can't get json for document if we are not logged in" env testGetNotLoggedIn
   , testThat "We can't get json for document is we are logged in but we provided authorization header" env testGetBadHeader
-  
+
   ]
-  
+
 testUploadingFileAsContract :: TestEnv ()
 testUploadingFileAsContract = do
   (user, rsp) <- uploadDocAsNewUser Contract
@@ -50,7 +50,7 @@ testUploadingFileAsContract = do
   assertEqual "New doc" 1 (length docs)
   let newdoc = head docs
   assertBool "Document id in result json" ((show $ documentid newdoc) `isInfixOf` (show rsp))
-  
+
 testUploadingFileAsOffer :: TestEnv ()
 testUploadingFileAsOffer = do
   (user, rsp) <- uploadDocAsNewUser Offer
@@ -58,7 +58,7 @@ testUploadingFileAsOffer = do
   assertEqual "New doc" 1 (length docs)
   let newdoc = head docs
   assertBool "Document id in result json" ((show $ documentid newdoc) `isInfixOf` (show rsp))
-  
+
 testUploadingFileAsOrder :: TestEnv ()
 testUploadingFileAsOrder = do
   (user, rsp) <- uploadDocAsNewUser Order
@@ -71,7 +71,7 @@ uploadDocAsNewUser :: DocumentProcess -> TestEnv (User, Response)
 uploadDocAsNewUser doctype = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST [ ("type", inText (show $ Signable doctype))
                         , ("file", inFile "test/pdfs/simple.pdf") ]
@@ -82,7 +82,7 @@ testSendingDocumentSendsInvites :: TestEnv ()
 testSendingDocumentSendsInvites = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   doc <- addRandomDocumentWithAuthorAndCondition user (\d ->
        documentstatus d == Preparation
@@ -121,7 +121,7 @@ testSigningDocumentFromDesignViewSendsInvites :: TestEnv ()
 testSigningDocumentFromDesignViewSendsInvites = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   doc <- addRandomDocumentWithAuthorAndCondition user (\d ->
        documentstatus d == Preparation
@@ -146,7 +146,7 @@ testNonLastPersonSigningADocumentRemainsPending :: TestEnv ()
 testNonLastPersonSigningADocumentRemainsPending = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   doc' <- addRandomDocumentWithAuthorAndCondition
             user
@@ -177,7 +177,7 @@ testNonLastPersonSigningADocumentRemainsPending = do
 
   preq <- mkRequest GET [ ]
   (_,ctx') <- runTestKontra preq ctx $ handleSignShowSaveMagicHash (documentid doc) (signatorylinkid siglink) (signatorymagichash siglink)
-  
+
   req <- mkRequest POST [ ("fields", inText "[]")]
   (_link, _ctx') <- runTestKontra req ctx' $ signDocument (documentid doc) (signatorylinkid siglink)
   Just signeddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
@@ -190,7 +190,7 @@ testLastPersonSigningADocumentClosesIt :: TestEnv ()
 testLastPersonSigningADocumentClosesIt = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   doc' <- addRandomDocumentWithAuthorAndCondition
             user
@@ -237,7 +237,7 @@ testSendReminderEmailUpdatesLastModifiedDate :: TestEnv ()
 testSendReminderEmailUpdatesLastModifiedDate = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   doc <- addRandomDocumentWithAuthorAndCondition
             user
@@ -261,7 +261,7 @@ testSendingReminderClearsDeliveryInformation :: TestEnv ()
 testSendingReminderClearsDeliveryInformation = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   doc <- addRandomDocumentWithAuthorAndCondition
             user
@@ -279,7 +279,7 @@ testSendingReminderClearsDeliveryInformation = do
   let (Just sl') = find (\t -> signatorylinkid t == signatorylinkid sl) (documentsignatorylinks updateddoc)
   assertEqual "Invitation is not delivered" (Unknown) (invitationdeliverystatus sl')
 
-  
+
 testDocumentFromTemplate :: TestEnv ()
 testDocumentFromTemplate = do
     (Just user) <- addNewUser "aaa" "bbb" "xxx@xxx.pl"
@@ -288,7 +288,7 @@ testDocumentFromTemplate = do
                                                             _ -> False)
     docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
     ctx <- (\c -> c { ctxmaybeuser = Just user })
-      <$> mkContext (mkLocaleFromRegion defaultValue)
+      <$> mkContext defaultValue
     req <- mkRequest POST []
     _ <- runTestKontra req ctx $ apiCallCreateFromTemplate (documentid doc)
     docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
@@ -305,7 +305,7 @@ testDocumentFromTemplateShared = do
     (Just user) <- addNewCompanyUser "ccc" "ddd" "zzz@zzz.pl" companyid
     docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
     ctx <- (\c -> c { ctxmaybeuser = Just user })
-      <$> mkContext (mkLocaleFromRegion defaultValue)
+      <$> mkContext defaultValue
     req <- mkRequest POST []
     _ <- runTestKontra req ctx $ apiCallCreateFromTemplate (documentid doc)
     docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
@@ -316,17 +316,17 @@ testGetLoggedIn :: TestEnv ()
 testGetLoggedIn = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   doc <- addRandomDocumentWithAuthor user
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext (mkLocaleFromRegion defaultValue)
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
   req <- mkRequest GET []
   (res,_) <- runTestKontra req ctx $ apiCallGet doc
   assertEqual "Response code is 200" 200 (rsCode res)
 
-   
+
 testGetNotLoggedIn :: TestEnv ()
 testGetNotLoggedIn = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   doc <- addRandomDocumentWithAuthor user
-  ctx <- mkContext (mkLocaleFromRegion defaultValue)
+  ctx <- mkContext defaultValue
   req <- mkRequest GET []
   (res,_) <- runTestKontra req ctx $ apiCallGet doc
   assertEqual "Response code is 401" 401 (rsCode res)
@@ -336,13 +336,13 @@ testGetBadHeader :: TestEnv ()
 testGetBadHeader = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   doc <- addRandomDocumentWithAuthor user
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext (mkLocaleFromRegion defaultValue)
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
   req <- mkRequestWithHeaders GET [] [("authorization", ["ABC"])]
   (res,_) <- runTestKontra req ctx $ apiCallGet doc
   assertEqual "Response code is 401" 401 (rsCode res)
-  
 
-    
+
+
 mkSigDetails :: String -> String -> String -> Bool -> Bool -> SignatoryDetails
 mkSigDetails fstname sndname email isauthor ispartner = SignatoryDetails {
     signatorysignorder = SignOrder 1

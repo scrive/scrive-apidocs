@@ -169,7 +169,7 @@ signDocument documentid
   -- Any operation done on SignatoryLink can be done under one of circumstances:
   --
   -- * signatorylinkid is same as requested and magic hash matches the
-  --   one stored in session 
+  --   one stored in session
   -- * signatorylinkid is same as requested and maybesignatory is same
   --   as logged in user
   --
@@ -337,7 +337,7 @@ handleSignShow documentid
     Just magichash -> do
       document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
       invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
-      switchLocaleWhenNeeded  (Just invitedlink) document
+      switchLangWhenNeeded  (Just invitedlink) document
       _ <- dbUpdate $ MarkDocumentSeen documentid signatorylinkid magichash
            (signatoryActor ctxtime ctxipnumber (maybesignatory invitedlink) (getEmail invitedlink) signatorylinkid)
       document' <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
@@ -379,7 +379,7 @@ handleIssueShowGet docid = checkUserTOSGet $ do
                       ((usercompany =<< muser) == maybecompany authorsiglink)
       isauthororincompany = isauthor || isincompany
       msiglink = find (isSigLinkFor muser) $ documentsignatorylinks document
-      
+
       isadmin = Just True == (useriscompanyadmin <$> muser)
       iscompany = hasSigLinkFor (usercompany =<< muser) document
       isadminofcompany = isadmin && iscompany
@@ -446,7 +446,7 @@ handleIssueSign document timezone = do
     where
       forIndividual :: Kontrakcja m => Document -> m (Either String Document)
       forIndividual doc = do
-        Log.debug $ "handleIssueSign for forIndividual " ++ show (documentid doc)  
+        Log.debug $ "handleIssueSign for forIndividual " ++ show (documentid doc)
         mprovider <- readField "eleg"
         mndoc <- case mprovider of
                    Nothing ->  Right <$> authorSignDocument (documentid doc) Nothing timezone
@@ -763,14 +763,14 @@ checkFileAccess fid = do
        let allfiles = maybeToList (documentfile doc) ++ maybeToList (documentsealedfile doc) ++
                       (authorattachmentfile <$> documentauthorattachments doc) ++
                       (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
-       when (all (/= fid) allfiles) $ 
+       when (all (/= fid) allfiles) $
             internalError
     (_,_,Just did,_) -> do
        doc <- guardRightM $ getDocByDocID did
        let allfiles = maybeToList (documentfile doc) ++ maybeToList (documentsealedfile doc)  ++
                       (authorattachmentfile <$> documentauthorattachments doc) ++
                       (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
-       when (all (/= fid) allfiles) $ 
+       when (all (/= fid) allfiles) $
             internalError
     (_,_,_,Just attid) -> do
        ctx <- getContext
@@ -786,7 +786,7 @@ checkFileAccess fid = do
                                             ]
                                             []
                                             (AttachmentPagination 0 1)
-           when (length atts /= 1) $ 
+           when (length atts /= 1) $
                 internalError
     _ -> internalError
 
@@ -966,11 +966,11 @@ handleParseCSV = do
           J.valueM "description" desc
         J.value "rows" ([]::[String])
 
--- | Switch to document language. Checks first if there is not logged in user. If so it will switch only if this is a different signatory.        
-switchLocaleWhenNeeded :: (Kontrakcja m) => Maybe SignatoryLink -> Document -> m ()
-switchLocaleWhenNeeded mslid doc = do
+-- | Switch to document language. Checks first if there is not logged in user. If so it will switch only if this is a different signatory.
+switchLangWhenNeeded :: (Kontrakcja m) => Maybe SignatoryLink -> Document -> m ()
+switchLangWhenNeeded mslid doc = do
   cu <- ctxmaybeuser <$> getContext
-  when (isNothing cu || ((isJust mslid) && not (isSigLinkFor cu mslid))) $ switchLocale (getLocale doc)
+  when (isNothing cu || ((isJust mslid) && not (isSigLinkFor cu mslid))) $ switchLang (getLang doc)
 -- GuardTime verification page. This can't be external since its a page in our system.
 
 handleShowVerificationPage :: Kontrakcja m =>  m String
@@ -986,7 +986,5 @@ handleVerify = do
                     (pth,handle) <- openTempFile systmp ("vpath.pdf")
                     BSL.hPutStr handle content
                     return pth
-            _ -> internalError        
+            _ -> internalError
       liftIO $ toJSValue <$> GuardTime.verify filepath
-
-                    

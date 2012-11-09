@@ -15,7 +15,7 @@ module Kontra
     , onlyBackdoorOpen
     , getAsString
     , getDataFnM
-    , switchLocale       -- set language
+    , switchLang       -- set language
     )
     where
 
@@ -65,9 +65,9 @@ instance KontraMonad KontraPlus where
 
 instance TemplatesMonad KontraPlus where
   getTemplates = ctxtemplates <$> getContext
-  getLocalTemplates locale = do
+  getLocalTemplates lang = do
     Context{ctxglobaltemplates} <- getContext
-    return $ localizedVersion locale ctxglobaltemplates
+    return $ localizedVersion lang ctxglobaltemplates
 
 -- | Kontra is a traditional Happstack handler monad except that it's
 -- not MonadZero and WebMonad.
@@ -132,12 +132,12 @@ logUserToContext user =
 logPadUserToContext :: Kontrakcja m => Maybe User -> m ()
 logPadUserToContext user =
     modifyContext $ \ctx -> ctx { ctxmaybepaduser = user}
-    
-switchLocale :: Kontrakcja m => Locale -> m ()
-switchLocale locale =
+
+switchLang :: Kontrakcja m => Lang -> m ()
+switchLang lang =
      modifyContext $ \ctx -> ctx {
-         ctxlocale     = locale,
-         ctxtemplates  = localizedVersion locale (ctxglobaltemplates ctx)
+         ctxlang       = lang,
+         ctxtemplates  = localizedVersion lang (ctxglobaltemplates ctx)
      }
 
 -- data fetchers specific to Kontra

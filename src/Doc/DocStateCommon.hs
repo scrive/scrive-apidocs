@@ -94,7 +94,7 @@ blankDocument =
           , documentauthorattachments    = []
           , documentdeleted              = False
           -- , documentattachments          = []
-          , documentregion               = defaultValue
+          , documentlang                 = defaultValue
           , documentstatusclass          = SCDraft
           , documentapicallbackurl       = Nothing
           }

@@ -37,7 +37,7 @@ signupTests env = testGroup "Signup" [
 
 testSignupAndActivate :: TestEnv ()
 testSignupAndActivate = do
-  ctx <- mkContext (mkLocaleFromRegion defaultValue)
+  ctx <- mkContext defaultValue
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -57,7 +57,7 @@ testSignupAndActivate = do
 
 testLoginEventRecordedWhenLoggedInAfterActivation :: TestEnv ()
 testLoginEventRecordedWhenLoggedInAfterActivation = do
-  ctx <- mkContext (mkLocaleFromRegion defaultValue)
+  ctx <- mkContext defaultValue
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -70,7 +70,7 @@ testLoginEventRecordedWhenLoggedInAfterActivation = do
 
 testAcceptTOSToActivate :: TestEnv ()
 testAcceptTOSToActivate = do
-  ctx <- mkContext (mkLocaleFromRegion defaultValue)
+  ctx <- mkContext defaultValue
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -82,7 +82,7 @@ testAcceptTOSToActivate = do
 
 testNeedFirstNameToActivate :: TestEnv ()
 testNeedFirstNameToActivate = do
-  ctx <- mkContext (mkLocaleFromRegion defaultValue)
+  ctx <- mkContext defaultValue
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -94,7 +94,7 @@ testNeedFirstNameToActivate = do
 
 testNeedLastNameToActivate :: TestEnv ()
 testNeedLastNameToActivate = do
-  ctx <- mkContext (mkLocaleFromRegion defaultValue)
+  ctx <- mkContext defaultValue
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -106,7 +106,7 @@ testNeedLastNameToActivate = do
 
 testNeedPasswordToActivate :: TestEnv ()
 testNeedPasswordToActivate = do
-  ctx <- mkContext (mkLocaleFromRegion defaultValue)
+  ctx <- mkContext defaultValue
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -118,7 +118,7 @@ testNeedPasswordToActivate = do
 
 testPasswordsMatchToActivate :: TestEnv ()
 testPasswordsMatchToActivate = do
-  ctx <- mkContext (mkLocaleFromRegion defaultValue)
+  ctx <- mkContext defaultValue
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -136,7 +136,7 @@ signupForAccount ctx email = do
 assertSignupSuccessful :: (Response, Context) -> TestEnv UserAccountRequest
 assertSignupSuccessful (res, ctx) = do
   assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "Location is /se/sv" (Just "/se/sv") (T.getHeader "location" (rsHeaders res))
+  assertEqual "Location is /sv" (Just "/sv") (T.getHeader "location" (rsHeaders res))
   assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx)
   assertBool ("Flash message has type indicating success, was "  ++ show (getFlashType $ head $ ctxflashmessages ctx)) $ head (ctxflashmessages ctx) `isFlashOfType` Modal
@@ -152,7 +152,7 @@ followActivationLink ctx uid token = do
 assertActivationPageOK :: (Response, Context) -> TestEnv ()
 assertActivationPageOK (res, ctx) = do
   assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "Location is /se/sv" (Just "/se/sv") (T.getHeader "location" (rsHeaders res))
+  assertEqual "Location is /sv" (Just "/sv") (T.getHeader "location" (rsHeaders res))
   assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx)
   assertBool "Flash message has type indicating is modal" $ head (ctxflashmessages ctx) `isFlashOfType` Modal
@@ -190,7 +190,7 @@ assertAccountActivated fstname sndname (res, ctx) = do
 assertAccountActivationFailed :: (Response, Context) -> TestEnv ()
 assertAccountActivationFailed (res, ctx) = do
   assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "Location is /se/sv" (Just "/se/sv") (T.getHeader "location" (rsHeaders res))
+  assertEqual "Location is /sv" (Just "/sv") (T.getHeader "location" (rsHeaders res))
   assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
   assertEqual "There are two flash messages" 2 (length $ ctxflashmessages ctx)
   -- if they don't accept the tos then the flash is signing related, not sure why

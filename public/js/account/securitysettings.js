@@ -37,8 +37,8 @@ var SecuritySettingsModel = Backbone.Model.extend({
   footer : function() {
     return this.get("footer");
   },
-  region : function() {
-    return this.get("region");
+  lang : function() {
+    return this.get("lang");
   },
   setOldPassword : function(v) {
     this.set({"oldpassword" : v} );
@@ -55,9 +55,9 @@ var SecuritySettingsModel = Backbone.Model.extend({
   setFooter : function(v) {
     this.set({"footer" : v} );
   },
-  setRegion : function(v) {
-    this.set({"region" : v}, {silent : true} );
-    this.trigger("change:region");
+  setLang : function(v) {
+    this.set({"lang" : v}, {silent : true} );
+    this.trigger("change:lang");
   },
   reset : function() {
     if (!this.ready()) return;
@@ -66,8 +66,8 @@ var SecuritySettingsModel = Backbone.Model.extend({
       password1  : "",
       password2  : "",
       footer     : this.user().footer() ,
-      region     : this.user().region() != "se" ?  "REGION_GB" : "REGION_SE",
-      useFooter  : this.user().footer() != undefined 
+      lang       : this.user().lang() != "sv" ?  "LANG_EN" : "LANG_SV",
+      useFooter  : this.user().footer() != undefined
     }, {silent : true});
     this.trigger("reset");
   },
@@ -79,7 +79,7 @@ var SecuritySettingsModel = Backbone.Model.extend({
       oldpassword : this.oldpassword(),
       password  : this.password1(),
       password2  : this.password2(),
-      region     : this.region(),
+      lang     : this.lang(),
       footerCheckbox : this.useFooter() ? "on" : undefined,
       customfooter  : this.useFooter() ? this.footer() : undefined
     }).send();
@@ -88,7 +88,7 @@ var SecuritySettingsModel = Backbone.Model.extend({
 });
 
 
-  
+
 var SecuritySettingsView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
@@ -123,37 +123,37 @@ var SecuritySettingsView = Backbone.View.extend({
           model.setPassword2(password2input.val());
         })
       table.append($("<tr/>").append($("<td/>").text(localization.account.accountSecurity.newpassword2)).append($("<td/>").append(password2input)));
-        
+
       return box;
     },
-    regionSettings : function() {
+    langSettings : function() {
       // Building frame
       var self = this;
       var model = this.model;
       var box = $("<div class='col'/>");
-      var header = $("<div class='account-header'/>").append($("<h2/>").text(localization.account.accountSecurity.regionSection))
+      var header = $("<div class='account-header'/>").append($("<h2/>").text(localization.account.accountSecurity.langSection))
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
 
       var table = $("<table/>");
       body.append(table);
 
-      this.regionSelectBox = $("<td/>");
-      var updateRegionSelect = function() {
-         if (self.regionSelect != undefined)  self.regionSelect.clear();
-         self.regionSelectBox.empty();
-         self.regionSelect = new Select({
+      this.langSelectBox = $("<td/>");
+      var updateLangSelect = function() {
+         if (self.langSelect != undefined)  self.langSelect.clear();
+         self.langSelectBox.empty();
+         self.langSelect = new Select({
                              textWidth : "90px",
-                             name : model.region() == "REGION_GB" ? localization.account.accountSecurity.regionGB : localization.account.accountSecurity.regionSE,
-                             onSelect : function(v) {model.setRegion(v);return true;},
-                             options:   model.region() == "REGION_GB" ? [{name: localization.account.accountSecurity.regionSE, value: "REGION_SE"}] :
-                                                                        [{name: localization.account.accountSecurity.regionGB, value: "REGION_GB"}]
+                             name : model.lang() == "LANG_EN" ? localization.account.accountSecurity.langEN : localization.account.accountSecurity.langSV,
+                             onSelect : function(v) {model.setLang(v);return true;},
+                             options:   model.lang() == "LANG_EN" ? [{name: localization.account.accountSecurity.langSV, value: "LANG_SV"}] :
+                                                                        [{name: localization.account.accountSecurity.langEN, value: "LANG_EN"}]
                            });
-         self.regionSelectBox.append(self.regionSelect.view().el)
+         self.langSelectBox.append(self.langSelect.view().el)
       };
-      updateRegionSelect();
-      model.bind("change:region",updateRegionSelect);
-      table.append($("<tr/>").append($("<td/>").text(localization.account.accountSecurity.region)).append(this.regionSelectBox));
+      updateLangSelect();
+      model.bind("change:lang",updateLangSelect);
+      table.append($("<tr/>").append($("<td/>").text(localization.account.accountSecurity.lang)).append(this.langSelectBox));
       return box;
     },
     footerSettings : function() {
@@ -164,7 +164,7 @@ var SecuritySettingsView = Backbone.View.extend({
       var header = $("<div class='account-header'/>").append($("<h2/>").text(localization.account.accountSecurity.footerSection))
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
-      
+
       var checkbox = $("<input type='checkbox' autocomplete='false'/>");
       if (model.useFooter()) checkbox.attr("checked","checked");
       checkbox.change(function() {
@@ -183,7 +183,7 @@ var SecuritySettingsView = Backbone.View.extend({
       }
       updateTinyVisibility();
       model.bind("change:useFooter", updateTinyVisibility);
-      
+
       var cf = $("<textarea id='customfooter' name='customfooter' style='width:350px;height:110px'/>").html(model.useFooter() ? model.footer() : "");
       setTimeout(function() {cf.tinymce({
                                 script_url: '/tiny_mce/tiny_mce.js',
@@ -198,9 +198,9 @@ var SecuritySettingsView = Backbone.View.extend({
                                   model.setFooter(inst.getBody().innerHTML);
                                 }
                         });}, 100);
-      
+
       body.append(cfb.append(cf));
-      
+
       return box;
     },
     saveButton : function() {
@@ -214,7 +214,7 @@ var SecuritySettingsView = Backbone.View.extend({
           model.save();
           return false;
         }
-      }) 
+      })
       return box.append(button.input());
     },
     render: function () {
@@ -223,9 +223,9 @@ var SecuritySettingsView = Backbone.View.extend({
        var container = $(this.el).empty();
        var box = $("<div class='tab-content account'/>");
        container.append(box);
-       
+
        box.append(this.passwordSettings());
-       box.append(this.regionSettings());
+       box.append(this.langSettings());
        box.append(this.footerSettings());
        box.append(this.saveButton());
        box.append("<div class='clearfix'></div>");

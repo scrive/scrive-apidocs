@@ -69,7 +69,7 @@ processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
                   -- addresses here (for dropped/bounce events)
                   handleEv (SendGridEvent email ev _) = do
                     Log.debug $ signemail ++ " == " ++ email
-                    runTemplatesT (getLocale doc, templates) $ case ev of
+                    runTemplatesT (getLang doc, templates) $ case ev of
                       SG_Opened -> handleOpenedInvitation doc signlinkid email muid
                       SG_Delivered _ -> handleDeliveredInvitation mc doc signlinkid
                       -- we send notification that email is reported deferred after
@@ -81,7 +81,7 @@ processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
                       _ -> return ()
                   handleEv (MailGunEvent email ev) = do
                     Log.debug $ signemail ++ " == " ++ email
-                    runTemplatesT (getLocale doc, templates) $ case ev of
+                    runTemplatesT (getLang doc, templates) $ case ev of
                       MG_Opened -> handleOpenedInvitation doc signlinkid email muid
                       MG_Delivered -> handleDeliveredInvitation mc doc signlinkid
                       MG_Bounced _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation (host, mc) doc signlinkid
@@ -100,7 +100,7 @@ processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
     deleteEmail :: MonadDB m => MailID -> m ()
     deleteEmail mid = do
       success <- dbUpdate $ DeleteEmail mid
-      if (not success) 
+      if (not success)
         then Log.error $ "Couldn't delete email #" ++ show mid
         else Log.debug $ "Deleted email #" ++ show mid
 

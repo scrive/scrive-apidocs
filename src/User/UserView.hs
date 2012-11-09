@@ -81,7 +81,7 @@ showAccount :: TemplatesMonad m => User -> Maybe Company -> m String
 showAccount user mcompany = renderTemplate "showAccount" $ do
     F.value "companyAdmin" $ useriscompanyadmin user
     F.value "noCompany" $ isNothing mcompany
-    
+
 userJSON :: Monad m => User -> Maybe MailAPIInfo -> Maybe Company -> Maybe MailAPIInfo -> m JSValue
 userJSON user mumailapi mcompany mcmailapi = runJSONGenT $ do
     value "id" $ show $ userid user
@@ -94,8 +94,7 @@ userJSON user mumailapi mcompany mcmailapi = runJSONGenT $ do
     value "companyposition" $ usercompanyposition $ userinfo user
     value "usercompanyname" $ getCompanyName user
     value "usercompanynumber" $ getCompanyNumber user
-    value "region" $ "gb" <| LANG_EN == (getLang user) |> "se"
-    value "lang"   $ "en" <| LANG_EN == (getLang user) |> "se"
+    value "lang"   $ "en" <| LANG_EN == (getLang user) |> "sv"
     value "footer" $ customfooter $ usersettings user
     valueM "mailapi" $ case (mumailapi) of
                             Nothing -> return JSNull
@@ -116,7 +115,7 @@ companyJSON company mcmailapi = runJSONGenT $ do
     valueM "mailapi" $ case (mcmailapi) of
                             Nothing -> return JSNull
                             Just cmailapi -> mailAPIInfoJSON cmailapi
-                            
+
 userStatsDayToJSON :: [(Int, [Int])] -> [JSValue]
 userStatsDayToJSON = rights . map f
   where
@@ -147,10 +146,10 @@ companyStatsDayToJSON ts ls = rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
       value "name" ts
       value "signatures" s
       objects "subfields" $ do
-         [do value "date" (showAsDate d') 
+         [do value "date" (showAsDate d')
              value "closed" c'
-             value "sent" i' 
-             value "name" n' 
+             value "sent" i'
+             value "name" n'
              value "signatures" s'
            | (d',n',s':c':i':_) <- ls,
              d' == d,
@@ -168,9 +167,9 @@ companyStatsMonthToJSON ts ls = rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
       value "signatures" s
       objects "subfields" $ do
         [do value "date" (showAsMonth d')
-            value "closed" c' 
-            value "sent" i' 
-            value "name" n' 
+            value "closed" c'
+            value "sent" i'
+            value "name" n'
             value "signatures" s'
           | (d',n',s':c':i':_) <- ls,
             d' == d,
@@ -207,9 +206,9 @@ newUserMail hostpart emailaddress personname activatelink = do
     F.value "activatelink" $ show activatelink
     F.value "ctxhostpart"  $ hostpart
 
-mailNewAccountCreatedByAdmin :: (HasLocale a, TemplatesMonad m) => Context -> a -> String -> String -> KontraLink -> Maybe String -> m Mail
-mailNewAccountCreatedByAdmin ctx locale personname email setpasslink custommessage = do
-  kontramaillocal locale "mailNewAccountCreatedByAdmin" $ do
+mailNewAccountCreatedByAdmin :: (HasLang a, TemplatesMonad m) => Context -> a -> String -> String -> KontraLink -> Maybe String -> m Mail
+mailNewAccountCreatedByAdmin ctx lang personname email setpasslink custommessage = do
+  kontramaillocal lang "mailNewAccountCreatedByAdmin" $ do
     F.value "personname"    $ personname
     F.value "email"         $ email
     F.value "passwordlink"  $ show setpasslink

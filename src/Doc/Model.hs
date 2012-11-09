@@ -53,7 +53,7 @@ module Doc.Model
   , SaveSigAttachment(..)
   , SetDaysToSign(..)
   , SetDocumentInviteTime(..)
-  , SetDocumentLocale(..)
+  , SetDocumentLang(..)
   , SetDocumentSharing(..)
   , SetDocumentTags(..)
   , SetDocumentTitle(..)
@@ -387,7 +387,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentdeleted" documentdeleted
                    , checkEqualBy "documentauthorattachments" documentauthorattachments
                    , checkEqualBy "documentui" documentui
-                   , checkEqualBy "documentregion" documentregion
+                   , checkEqualBy "documentlang" documentlang
                    , checkEqualBy "documentsignatorylinks count" (length . documentsignatorylinks)
                    ] ++
                    concat (zipWith checkSigLink sl1 sl2)
@@ -416,7 +416,7 @@ documentsSelectors = sqlConcatComma [
   , "rejection_reason"
   , "deleted"
   , "mail_footer"
-  , "region"
+  , "lang"
   , "sharing"
   , "authentication_method"
   , "delivery_method"
@@ -425,7 +425,7 @@ documentsSelectors = sqlConcatComma [
   ] <>
   documentStatusClassExpression
 
-  
+
 selectDocumentsSQL :: SQL
 selectDocumentsSQL = SQL "SELECT " [] <>
                      documentsSelectors <>
@@ -440,7 +440,7 @@ fetchDocuments = foldDB decoder []
      process ctime mtime days_to_sign timeout_time invite_time
      invite_ip invite_text cancelationreason rejection_time
      rejection_signatory_link_id rejection_reason deleted mail_footer
-     region sharing authentication_method delivery_method apicallback status_class 
+     lang sharing authentication_method delivery_method apicallback status_class
        = Document {
          documentid = did
        , documenttitle = title
@@ -471,7 +471,7 @@ fetchDocuments = foldDB decoder []
        , documentdeleted = deleted
        , documentauthorattachments = []
        , documentui = DocumentUI mail_footer
-       , documentregion = region
+       , documentlang = lang
        , documentstatusclass = status_class
        , documentapicallbackurl = apicallback
        } : acc
@@ -479,7 +479,7 @@ fetchDocuments = foldDB decoder []
 documentStatusClassExpression :: SQL
 documentStatusClassExpression =
        SQL ("(    COALESCE((SELECT min(") []
-    <> statusClassCaseExpression 
+    <> statusClassCaseExpression
     <> SQL ") FROM signatory_links WHERE signatory_links.document_id = documents.id AND signatory_links.is_partner), ?))" [toSql SCDraft]
 
 statusClassCaseExpression :: SQL
@@ -550,7 +550,7 @@ fetchSignatoryLinks = do
      sign_order token sign_time sign_ip seen_time seen_ip read_invitation
      invitation_delivery_status signinfo_text signinfo_signature signinfo_certificate
      signinfo_provider signinfo_first_name_verified signinfo_last_name_verified
-     signinfo_personal_number_verified signinfo_ocsp_response 
+     signinfo_personal_number_verified signinfo_ocsp_response
      is_author is_partner csv_title csv_contents csv_signatory_index
      deleted really_deleted signredirecturl status_class
      safileid saname sadesc
@@ -603,7 +603,7 @@ fetchSignatoryLinks = do
           , signatorylinkcsvupload =
               CSVUpload <$> csv_title <*> csv_contents <*> csv_signatory_index
           , signatoryattachments = sigAtt
-          , signatorylinkstatusclass = status_class 
+          , signatorylinkstatusclass = status_class
           , signatorylinksignredirecturl = signredirecturl
           }
 
@@ -788,8 +788,8 @@ fetchSignatoryLinkFields = foldDB decoder M.empty
           , sfPlacements = placements
           , sfType = case xtype of
                         CustomFT{} -> CustomFT custom_name is_author_filled
-                        CheckboxOptionalFT{} -> CheckboxOptionalFT custom_name 
-                        CheckboxObligatoryFT{} -> CheckboxObligatoryFT custom_name 
+                        CheckboxOptionalFT{} -> CheckboxOptionalFT custom_name
+                        CheckboxObligatoryFT{} -> CheckboxObligatoryFT custom_name
                         _   -> xtype
           }] acc
 
@@ -842,7 +842,7 @@ insertDocumentAsIs document = do
                  , documentdeleted
                  , documentauthorattachments
                  , documentui
-                 , documentregion
+                 , documentlang
                  } = document
         process = toDocumentProcess documenttype
 
@@ -871,7 +871,7 @@ insertDocumentAsIs document = do
       , sql "rejection_reason" $ thd3 `fmap` documentrejectioninfo
       , sql "deleted" documentdeleted
       , sql "mail_footer" $ documentmailfooter $ documentui -- should go into separate table?
-      , sql "region" documentregion
+      , sql "lang" documentlang
       , sql "sharing" documentsharing
       ] <> SQL "RETURNING " [] <> documentsSelectors
 
@@ -1031,7 +1031,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument Bo
     kRun01 $ mkSQL UPDATE tableDocuments [
         sql "status" Closed
       ] <> SQL "WHERE id = ? AND status = ?" [toSql did, toSql $ DocumentError undefined]
-    
+
 data CancelDocument = CancelDocument DocumentID CancelationReason Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
   update (CancelDocument did reason actor) = do
@@ -1551,14 +1551,14 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
                 { documenttitle                = title
                 , documentsignatorylinks       = authorlink : othersignatories
                 , documenttype                 = documenttype
-                , documentregion               = getRegion user
+                , documentlang                 = getLang user
                 , documentctime                = ctime
                 , documentmtime                = ctime
                 , documentauthorattachments    = []
                 , documentauthenticationmethod = StandardAuthentication
                 , documentdeliverymethod       = EmailDelivery
                 , documentui                   = (documentui blankDocument) { documentmailfooter = customfooter $ usersettings user }
-                } 
+                }
 
   case invariantProblems ctime doc of
         Nothing -> do
@@ -1794,13 +1794,13 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTitle Bool where
         (Just did)
         actor
 
-data SetDocumentLocale = SetDocumentLocale DocumentID Locale Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentLocale Bool where
-  update (SetDocumentLocale did locale actor) = do
-    updateOneAndMtimeWithEvidenceIfChanged did "region" (getRegion locale) (actorTime actor) $ do
+data SetDocumentLang = SetDocumentLang DocumentID Lang Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentLang Bool where
+  update (SetDocumentLang did lang actor) = do
+    updateOneAndMtimeWithEvidenceIfChanged did "lang" lang (actorTime actor) $ do
       return $ InsertEvidenceEvent
-        SetDocumentLocaleEvidence
-        (value "local" (show locale) >> value "actor" (actorWho actor))
+        SetDocumentLangEvidence
+        (value "local" (show lang) >> value "actor" (actorWho actor))
         (Just did)
         actor
 
@@ -1964,7 +1964,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
               forM_ cs $ \changedfield ->
                 update $ InsertEvidenceEvent
                   ChangeFieldEvidence
-                  (do value "email" eml 
+                  (do value "email" eml
                       value "fieldtype" $ show (sfType changedfield)
                       case sfType changedfield of
                         SignatureFT -> case splitImage $ sfValue changedfield of
@@ -1974,7 +1974,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                         CheckboxOptionalFT   _ | sfValue changedfield == "" -> value "unchecked" True
                         CheckboxOptionalFT   _                              -> value "checked" True
                         CheckboxObligatoryFT _ | sfValue changedfield == "" -> value "unchecked" True
-                        CheckboxObligatoryFT _                              -> value "checked" True 
+                        CheckboxObligatoryFT _                              -> value "checked" True
                         _                                                   -> value "value" $ sfValue changedfield
                       value "hasplacements" (not $ null $ sfPlacements changedfield)
                       objects "placements" $ for (sfPlacements changedfield) $ \p -> do
@@ -2008,7 +2008,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                         CheckboxOptionalFT   _ | sfValue changedfield == "" -> value "unchecked" True
                         CheckboxOptionalFT   _                              -> value "checked" True
                         CheckboxObligatoryFT _ | sfValue changedfield == "" -> value "unchecked" True
-                        CheckboxObligatoryFT _                              -> value "checked" True 
+                        CheckboxObligatoryFT _                              -> value "checked" True
                         _                                                   -> value "value" $ sfValue changedfield
                       value "hasplacements" (not $ null $ sfPlacements changedfield)
                       objects "placements" $ for (sfPlacements changedfield) $ \p -> do
@@ -2213,7 +2213,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where
           when_ (r > 0) $ do
             update $ InsertEvidenceEvent
                UpdateFieldsEvidence
-               (do value "email" eml 
+               (do value "email" eml
                    value "fieldtype" (show fieldtype)
                    case fieldtype of
                         SignatureFT -> case splitImage fvalue of
@@ -2224,9 +2224,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where
                         CheckboxOptionalFT   _ | fvalue == "" -> value "unchecked" True
                         CheckboxOptionalFT   _                -> value "checked" True
                         CheckboxObligatoryFT _ | fvalue == "" -> value "unchecked" True
-                        CheckboxObligatoryFT _                -> value "checked" True 
+                        CheckboxObligatoryFT _                -> value "checked" True
                         _                                     -> value "value" $ fvalue
-                   
+
                    value "actor" (actorWho actor))
                (Just did)
                actor
@@ -2294,12 +2294,12 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateDraft Bool where
   update (UpdateDraft did document actor) = and `liftM` sequence [
       update $ SetDocumentTitle did (documenttitle document) actor
     , update $ SetDaysToSign  did (documentdaystosign document) actor
-    , update $ SetDocumentLocale did (getLocale document) actor
+    , update $ SetDocumentLang did (getLang document) actor
     , update $ SetDocumentAuthenticationMethod did (documentauthenticationmethod document) actor
     , update $ SetDocumentDeliveryMethod did (documentdeliverymethod document) actor
     , update $ SetInviteText did (documentinvitetext document) actor
     , update $ SetDocumentTags  did (documenttags document) actor
-    , update $ SetDocumentAPICallbackURL did (documentapicallbackurl document) 
+    , update $ SetDocumentAPICallbackURL did (documentapicallbackurl document)
     ]
 
 data SetDocumentModificationData = SetDocumentModificationData DocumentID MinutesTime

@@ -25,7 +25,7 @@ standardHeaderContents=
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta http-equiv="content-language" content="$ctxlang$" />
         <link href='https://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
-        <script src="/localization/$ctxregion$/$ctxlang$/$versioncode$.js"  type="text/javascript"></script>
+        <script src="/localization/$ctxlang$/$versioncode$.js"  type="text/javascript"></script>
         $staticResources:noescape()$
         $if(publicsafe)$
             <script src="/libs/jquery.tweet.js"  type="text/javascript"></script>
@@ -240,7 +240,7 @@ header=
                                <span class='toplink btn'><a class="blue btn-tiny s-create-document"  onclick='createnewdocument()'><div class="left"></div><div class="label">$_headerSend()$</div><div class="right"></div></a></span>
                                <!-- <a href="$linkupload$" class="toplink">$_headerSend()$</a> -->
                                <!-- <a href="$linkupload$" class="toplink">$_headerSend()$</a> -->
-                                $localeSwitcher()$
+                                $langSwitcher()$
                                 $else$
                                 <span id="moveleft2">
                                     <a href="#" class="login-button"><p>$_login()$</p></a>
@@ -248,7 +248,7 @@ header=
                                     <a href="$linkabout$" class="toplink">$_pageFooterAbout()$</a>
                                     <a href="$linkclients$" class="toplink">$_customerCases()$</a>
                                     <a href="$linkpriceplan$" class="toplink">$_pageFooterPrices()$</a>
-                                $localeSwitcher()$
+                                $langSwitcher()$
                                   </span>
 
                                 $endif$
@@ -258,25 +258,25 @@ header=
             <div class="clearboth"></div>
           </div>
 ####
-localeSwitcher=
-  <div class="localeSwitcher">
+langSwitcher=
+  <div class="langSwitcher">
     $if(!logged)$
-    <div><a href="$linksesv$" class="icon flag swedish $if(localesweden)$active$endif$"></a></div>
-    <div><a href="$linkgben$" class="icon flag british $if(localebritain)$active$endif$"></a></div>
+    <div><a href="$linksv$" class="icon flag swedish $if(langswedish)$active$endif$"></a></div>
+    <div><a href="$linken$" class="icon flag british $if(langenglish)$active$endif$"></a></div>
     $else$
-    <div><form action="$linklocaleswitch$" method="POST">
-           <input type="hidden" name="region" value="REGION_SE"/>
-           $if(linksesv)$
-           <input type="hidden" name="referer" value="$linksesv$"/>
+    <div><form action="$linklangswitch$" method="POST">
+           <input type="hidden" name="lang" value="LANG_SV"/>
+           $if(linksv)$
+           <input type="hidden" name="referer" value="$linksv$"/>
            $endif$
-           <a href="" class="submit icon flag swedish $if(localesweden)$active$endif$"></a>
+           <a href="" class="submit icon flag swedish $if(langswedish)$active$endif$"></a>
          </form></div>
-    <div><form action="$linklocaleswitch$" method="POST">
-           <input type="hidden" name="region" value="REGION_GB"/>
+    <div><form action="$linklangswitch$" method="POST">
+           <input type="hidden" name="lang" value="LANG_EN"/>
            $if(linkgben)$
            <input type="hidden" name="referer" value="$linkgben$"/>
            $endif$
-           <a href="" class="submit icon flag british $if(localebritain)$active$endif$"></a>
+           <a href="" class="submit icon flag british $if(langenglish)$active$endif$"></a>
          </form></div>
     $endif$
   </div>

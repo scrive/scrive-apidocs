@@ -29,7 +29,7 @@ mailMailAPIConfirm :: (MonadDB m, TemplatesMonad m)
                    -> SignatoryLink
                    -> m Mail
 mailMailAPIConfirm ctx document siglink = do
-  documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailconfirmbymailapi)  $ do
+  documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailconfirmbymailapi)  $ do
         F.valueM "footer" $ mailFooterForDocument ctx document
         F.valueM "timetosigninfo" $ do
             case (documenttimeouttime document) of
@@ -79,7 +79,7 @@ mailAPIInfoJSON info = J.runJSONGenT $ do
   J.value "key"   $ show $ umapiKey        info
   J.value "limit" $ show $ umapiDailyLimit info
   J.value "sent"  $ show $ umapiSentToday  info
-  
+
 
 modalDenyDelay :: TemplatesMonad m => m FlashMessage
 modalDenyDelay = toModal <$> renderTemplate_ "modalDenyDelay"

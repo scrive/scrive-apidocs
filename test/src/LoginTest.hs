@@ -32,7 +32,7 @@ loginTests env = testGroup "Login" [
 testSuccessfulLogin :: TestEnv ()
 testSuccessfulLogin = do
     uid <- createTestUser
-    ctx <- mkContext (mkLocaleFromRegion defaultValue)
+    ctx <- mkContext defaultValue
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
     assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" True)
@@ -43,7 +43,7 @@ testSuccessfulLogin = do
 testSuccessfulLoginToPadQueue :: TestEnv ()
 testSuccessfulLoginToPadQueue  = do
     uid <- createTestUser
-    ctx <- mkContext (mkLocaleFromRegion defaultValue)
+    ctx <- mkContext defaultValue
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("pad", inText "true")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
     assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" True)
@@ -54,15 +54,15 @@ testSuccessfulLoginToPadQueue  = do
 testCantLoginWithInvalidUser :: TestEnv ()
 testCantLoginWithInvalidUser = do
     _ <- createTestUser
-    ctx <- mkContext (mkLocaleFromRegion defaultValue)
+    ctx <- mkContext defaultValue
     req <- mkRequest POST [("email", inText "emily@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
-    (res, ctx') <- runTestKontra req ctx $ handleLoginPost 
+    (res, ctx') <- runTestKontra req ctx $ handleLoginPost
     loginFailureChecks res ctx'
 
 testCantLoginWithInvalidPassword :: TestEnv ()
 testCantLoginWithInvalidPassword = do
     _ <- createTestUser
-    ctx <- mkContext (mkLocaleFromRegion defaultValue)
+    ctx <- mkContext defaultValue
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "invalid"), ("loginType", inText "RegularLogin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
     loginFailureChecks res ctx'
@@ -70,7 +70,7 @@ testCantLoginWithInvalidPassword = do
 testSuccessfulLoginSavesAStatEvent :: TestEnv ()
 testSuccessfulLoginSavesAStatEvent = do
   uid <- createTestUser
-  ctx <- mkContext (mkLocaleFromRegion defaultValue)
+  ctx <- mkContext defaultValue
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
   (_res, ctx') <- runTestKontra req ctx $ handleLoginPost
   assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx') == Just uid
@@ -90,9 +90,9 @@ assertResettingPasswordRecordsALoginEvent = do
 createUserAndResetPassword :: TestEnv (User, Response, Context)
 createUserAndResetPassword = do
   pwd <- createPassword "admin"
-  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) Nothing (mkLocaleFromRegion defaultValue)
+  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) Nothing defaultValue
   PasswordReminder{..} <- newPasswordReminder $ userid user
-  ctx <- mkContext (mkLocaleFromRegion defaultValue)
+  ctx <- mkContext defaultValue
   req <- mkRequest POST [("password", inText "password123"),
                          ("password2", inText "password123")]
   (res, ctx') <- runTestKontra req ctx $ handlePasswordReminderPost prUserID prToken >>= sendRedirect
@@ -115,5 +115,5 @@ loginFailureChecks res ctx = do
 createTestUser :: TestEnv UserID
 createTestUser = do
     pwd <- createPassword "admin"
-    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) Nothing (mkLocaleFromRegion defaultValue)
+    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) Nothing defaultValue
     return userid

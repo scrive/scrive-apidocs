@@ -90,7 +90,7 @@ javascriptLocalisation =
              , deletePDF: "$_DeletePDF()$"
              , document : "$_Document()$"
              , onlyPDFAllowed : "$_updateAttachmentsDialogUpLoadOnlyPDF()$"
-             , attachmentType : "$_pageAttachmentAttachments()$" 
+             , attachmentType : "$_pageAttachmentAttachments()$"
              , attachment : "$_Attachment()$"
              , attachmentsWord : "$_Attachments()$"
              , requestedAttachments : "$_RequestedAttachments()$"
@@ -334,7 +334,7 @@ javascriptLocalisation =
           , languages : {
                 selectLanguage : "$_documentLanguageLabel()$"
               , en : "$_English()$"
-              , se : "$_Swedish()$"
+              , sv : "$_Swedish()$"
               , changeEnglishToSwedishText :  "$_signInSwedishConfirmText()$"
               , signInSwedish : "$_signInSwedish()$"
               , changeSwedishToEnglishText: "$_signInEnglishConfirmText()$"
@@ -482,7 +482,7 @@ javascriptLocalisation =
              , notEntered: "$_notEntered()$"
              , contact: "$_contact()$"
              , checkboxes : {
-                    pleaseCheck : "$_checkboxPleaseCheck()$" 
+                    pleaseCheck : "$_checkboxPleaseCheck()$"
                }
              , filladitionfields : "$_filladitionfields()$"
              , filladitionfieldsdescription : "$_filladitionfieldsdescription()$"
@@ -591,7 +591,7 @@ javascriptLocalisation =
                         , dash     : "$_paymentFeatureDash()$"
                         , branding : "$_paymentFeatureBranding()$"
                         , features : "$_paymentFeatureFeatures()$"
-                        }           
+                        }
             , subscribe: "$_paymentPlanSubscribe()$"
             , pleaseleavenumbertitle: "$_paymentsPleaseLeaveNumberTitle()$"
             , ok: "$_paymentsSubmitButtonLabel()$"
@@ -643,7 +643,7 @@ javascriptLocalisation =
                   sorryExistingUser               : "$_flashMessageUserWithSameEmailExists()$",
                   sorryExistingUserHeader         : "$_mailDocumentErrorContentBodyFourth()$"
               }
-        }  
+        }
       , documents : "$_docListTabsDocs()$"
       , templates : "$_docListTabsTemplates()$"
       , attachments : "$_docListTabsAttachemtns()$"
@@ -692,7 +692,7 @@ javascriptLocalisation =
                     , zip : {
                               action : "$_archiveZIP()$"
                             , emptyMessage : "$_noDocumentChosen()$"
-                        } 
+                        }
                     , columns :{
                               status : "$_SortStatus()$"
                             , time   : "$_SortTime()$"
@@ -700,7 +700,7 @@ javascriptLocalisation =
                             , party  : "$_SortParty()$"
                             , title  : "$_SortDoc()$"
                             , type   : "$_SortType()$"
-                            
+
                        }
                 }
             ,  templates : {
@@ -771,8 +771,8 @@ javascriptLocalisation =
                             , body : "$_listRestoreDialogBody()$"
                             , successMessage : "$_flashMessageRubbishRestoreDone()$"
                             , emptyMessage : "$_noDocumentChosen()$"
-                        } 
-                    ,  search : "$_SearchDoc()$"                     
+                        }
+                    ,  search : "$_SearchDoc()$"
                     ,  columns :{
                               time   : "$_SortTime()$"
                             , title  : "$_SortDoc()$"
@@ -940,10 +940,10 @@ javascriptLocalisation =
               , oldpassword     : "$_PresentPassword()$"
               , newpassword1    : "$_NewPassword()$"
               , newpassword2    : "$_RepeatNewPassword()$"
-              , regionSection   : "$_LanguageSettings()$"
-              , region          : "$_UserRegion()$"
-              , regionSE        : "$_Sweden()$"
-              , regionGB        : "$_Britain()$"
+              , langSection     : "$_LanguageSettings()$"
+              , lang            : "$_UserLanguage()$"
+              , langSV          : "$_Swedish()$"
+              , langEN          : "$_English()$"
               , footerSection   : "$_userDocumentsSettings()$"
               , useFooter       : "$_userDocumentSettingsMailFooter()$"
               , save : "$_SaveChanges()$"
@@ -968,7 +968,7 @@ javascriptLocalisation =
               , columnName :  "$_name()$"
               , columnEmail : "$_email()$"
               , columnRole :  "$_role()$"
- 
+
             }
           , mailAPI : {
                 name : "$_HeadMailApi()$"
@@ -982,7 +982,7 @@ javascriptLocalisation =
               , limitMailAPIHeader : "$_MailAPILimitHead()$"
               , resetLimit : "$_MailAPILimitsResetToday()$"
               , companyMailAPIHeader : "$_CompanyMailAPI()$"
- 
+
           }
           , stats : {
                 name : "$_HeadUsageStats()$"
@@ -993,7 +993,7 @@ javascriptLocalisation =
               , columnSender : "$_statsSender()$"
               , columnClosedDocuments : "$_closedDocuments()$"
               , columnSendDocuments :"$_sentDocuments()$"
-              , columnClosedSignatures : "$_closedSignatures()$"     
+              , columnClosedSignatures : "$_closedSignatures()$"
             }
           , subscription : "$_Subscription()$"
       }

@@ -30,25 +30,25 @@ data LoginRedirectReason = LoginTry
    All the links available for responses
 -}
 data KontraLink
-    = LinkHome Locale
-    | LinkPriceplan Locale
-    | LinkSecurity Locale
-    | LinkLegal Locale
-    | LinkPrivacyPolicy Locale
-    | LinkTerms Locale
-    | LinkJobs Locale
-    | LinkAbout Locale
-    | LinkPartners Locale
-    | LinkClients Locale
-    | LinkContactUs Locale
-    | LinkAPIPage Locale
-    | LinkScriveByMailPage Locale
-    | LinkFeaturesPage Locale
-    | LinkLogin Locale LoginRedirectReason
+    = LinkHome Lang
+    | LinkPriceplan Lang
+    | LinkSecurity Lang
+    | LinkLegal Lang
+    | LinkPrivacyPolicy Lang
+    | LinkTerms Lang
+    | LinkJobs Lang
+    | LinkAbout Lang
+    | LinkPartners Lang
+    | LinkClients Lang
+    | LinkContactUs Lang
+    | LinkAPIPage Lang
+    | LinkScriveByMailPage Lang
+    | LinkFeaturesPage Lang
+    | LinkLogin Lang LoginRedirectReason
     | LinkLogout
     | LinkSignup
     | LinkForgotPassword
-    | LinkLocaleSwitch
+    | LinkLangSwitch
     | LinkArchive
     | LinkAccount
     | LinkAccountCompany (Maybe CompanyID)
@@ -90,60 +90,60 @@ data KontraLink
     | LinkDesignView 
     deriving (Eq)
 
-localeFolder :: Locale -> String
-localeFolder locale = "/" ++ (codeFromRegion $ getRegion locale) ++ "/" ++ (codeFromLang $ getLang locale)
+langFolder :: Lang -> String
+langFolder lang = "/" ++ (codeFromLang lang)
 
 {- |
    Shows each link as a relative url
 -}
 instance Show KontraLink where
-    showsPrec _ (LinkHome locale) = (++) $ localeFolder locale
-    showsPrec _ (LinkPriceplan locale)
-      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/priser"
-      | otherwise = (++) $ localeFolder locale ++ "/pricing"
-    showsPrec _ (LinkSecurity locale)
-      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/sakerhet"
-      | otherwise = (++) $ localeFolder locale ++ "/security"
-    showsPrec _ (LinkLegal locale)
-      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/juridik"
-      | otherwise = (++) $ localeFolder locale ++ "/legal"
-    showsPrec _ (LinkPrivacyPolicy locale)
-      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/sekretesspolicy"
-      | otherwise = (++) $ localeFolder locale ++ "/privacy-policy"
-    showsPrec _ (LinkTerms locale)
-      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/allmana-villkor"
-      | otherwise = (++) $ localeFolder locale ++ "/terms"
-    showsPrec _ (LinkJobs locale)
-      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/jobb"
-      | otherwise = (++) $ localeFolder locale ++ "/jobs"
-    showsPrec _ (LinkAbout locale)
-      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/om-scrive"
-      | otherwise = (++) $ localeFolder locale ++ "/about"
-    showsPrec _ (LinkPartners locale)
-      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/partners"
-      | otherwise = (++) $ localeFolder locale ++ "/partners"
-    showsPrec _ (LinkClients locale)
-      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/kunder"
-      | otherwise = (++) $ localeFolder locale ++ "/clients"
-    showsPrec _ (LinkContactUs locale)
-      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/kontakta"
-      | otherwise = (++) $ localeFolder locale ++ "/contact"
-    showsPrec _ (LinkAPIPage locale)
-      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/scriveapi"
-      | otherwise = (++) $ localeFolder locale ++ "/scriveapi"
-    showsPrec _ (LinkScriveByMailPage locale)
-      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/scrivebymail"
-      | otherwise = (++) $ localeFolder locale ++ "/scrivebymail"
-    showsPrec _ (LinkFeaturesPage locale)
-      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/funktioner"
-      | otherwise = (++) $ localeFolder locale ++ "/features"
-    showsPrec _ (LinkLogin locale LoginTry) = (++) $ localeFolder locale ++ "/login"
-    showsPrec _ (LinkLogin locale (InvalidLoginInfo email)) = (++) $ localeFolder locale ++ "/?logging&email=" ++ (URL.encode . UTF.encode $ email)
-    showsPrec _ (LinkLogin locale _) = (++) $ localeFolder locale ++ "/?logging"
+    showsPrec _ (LinkHome lang) = (++) $ langFolder lang
+    showsPrec _ (LinkPriceplan lang)
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/priser"
+      | otherwise = (++) $ langFolder lang ++ "/pricing"
+    showsPrec _ (LinkSecurity lang)
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/sakerhet"
+      | otherwise = (++) $ langFolder lang ++ "/security"
+    showsPrec _ (LinkLegal lang)
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/juridik"
+      | otherwise = (++) $ langFolder lang ++ "/legal"
+    showsPrec _ (LinkPrivacyPolicy lang)
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/sekretesspolicy"
+      | otherwise = (++) $ langFolder lang ++ "/privacy-policy"
+    showsPrec _ (LinkTerms lang)
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/allmana-villkor"
+      | otherwise = (++) $ langFolder lang ++ "/terms"
+    showsPrec _ (LinkJobs lang)
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/jobb"
+      | otherwise = (++) $ langFolder lang ++ "/jobs"
+    showsPrec _ (LinkAbout lang)
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/om-scrive"
+      | otherwise = (++) $ langFolder lang ++ "/about"
+    showsPrec _ (LinkPartners lang)
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/partners"
+      | otherwise = (++) $ langFolder lang ++ "/partners"
+    showsPrec _ (LinkClients lang)
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/kunder"
+      | otherwise = (++) $ langFolder lang ++ "/clients"
+    showsPrec _ (LinkContactUs lang)
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/kontakta"
+      | otherwise = (++) $ langFolder lang ++ "/contact"
+    showsPrec _ (LinkAPIPage lang)
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/scriveapi"
+      | otherwise = (++) $ langFolder lang ++ "/scriveapi"
+    showsPrec _ (LinkScriveByMailPage lang)
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/scrivebymail"
+      | otherwise = (++) $ langFolder lang ++ "/scrivebymail"
+    showsPrec _ (LinkFeaturesPage lang)
+      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/funktioner"
+      | otherwise = (++) $ langFolder lang ++ "/features"
+    showsPrec _ (LinkLogin lang LoginTry) = (++) $ langFolder lang ++ "/login"
+    showsPrec _ (LinkLogin lang (InvalidLoginInfo email)) = (++) $ langFolder lang ++ "/?logging&email=" ++ (URL.encode . UTF.encode $ email)
+    showsPrec _ (LinkLogin lang _) = (++) $ langFolder lang ++ "/?logging"
     showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ LinkSignup = (++) "/signup"
     showsPrec _ LinkForgotPassword = (++) "/amnesia"
-    showsPrec _ LinkLocaleSwitch = (++) "/locale"
+    showsPrec _ LinkLangSwitch = (++) "/lang"
     showsPrec _ (LinkArchive) = (++) $ "/d"
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ (LinkAccount) = (++) "/account"
@@ -191,14 +191,14 @@ instance Show KontraLink where
                  "/" ++ show fid)
     showsPrec _ (LinkMailAPIDelayConfirmation email delayid key) = (++) ("/mailapi/confirmdelay/" ++ (URL.encode $ UTF.encode email) ++ "/" ++ show delayid ++ "/" ++ show key)
     showsPrec _ (LinkOAuthAuthorization token) = (++) ("/oauth/authorization?oauth_token=" ++ show token)
-    showsPrec _ (LinkOAuthCallback url token (Just verifier)) = 
+    showsPrec _ (LinkOAuthCallback url token (Just verifier)) =
       (++) (show $ setParams url [("oauth_token", show token), ("oauth_verifier", show verifier)])
-    showsPrec _ (LinkOAuthCallback url token Nothing) = 
+    showsPrec _ (LinkOAuthCallback url token Nothing) =
       (++) (show $ setParams url [("oauth_token", show token), ("denied", "true")])
     showsPrec _ (LinkAttachmentView attid) = (++) ("/a/" ++ show attid)
-    showsPrec _ (LinkCompanyAdminPayments cid) = 
+    showsPrec _ (LinkCompanyAdminPayments cid) =
       (++) ("/adminonly/companyadmin/payments/" ++ show cid)
-    showsPrec _ (LinkUserAdminPayments uid) = 
+    showsPrec _ (LinkUserAdminPayments uid) =
       (++) ("/adminonly/useradmin/payments/" ++ show uid)
     showsPrec _ (LinkDesignView) = (++) "/newdocumentorlatestdraft"
     showsPrec _ (LinkExternal s) = (++) s
@@ -224,4 +224,4 @@ getHomeOrDesignViewLink = do
   ctx <- getContext
   case ctxmaybeuser ctx of
     Just _ -> return LinkDesignView
-    Nothing -> return $ LinkHome (ctxlocale ctx)
+    Nothing -> return $ LinkHome (ctxlang ctx)

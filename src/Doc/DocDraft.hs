@@ -17,7 +17,7 @@ import Kontra
 import Util.SignatoryLinkUtils
 import Util.HasSomeUserInfo
 import Data.List
-import User.Region
+import User.Lang
 import Doc.Model
 import DB
 import Util.Actor
@@ -33,7 +33,7 @@ data DraftData = DraftData {
     , authentication :: AuthenticationMethod
     , delivery :: DeliveryMethod
     , signatories :: [SignatoryTMP]
-    , region :: Maybe Region
+    , lang :: Maybe Lang
     , template :: Bool
     , tags :: Maybe [DocumentTag]
     , apicallbackurl :: Maybe String
@@ -55,20 +55,21 @@ instance FromJSValue DeliveryMethod where
 
 instance FromJSValue DocumentProcess where
   fromJSValue j = fromJSValue j >>= maybeRead
-    
+
 instance FromJSValue DocumentTag where
     fromJSValue = do
         name   <- fromJSValueField "name"
         value  <- fromJSValueField "value"
         case (name, value) of
              (Just n, Just v) -> return $ Just $ DocumentTag n v
-             _ -> return Nothing  
-    
-instance FromJSValue Region where
+             _ -> return Nothing
+
+instance FromJSValue Lang where
     fromJSValue j =case fromJSValue j of -- Due to documentation inconsistency we need to support gb and en for a while.
-      Just "se"    -> Just REGION_SE
-      Just "en"    -> Just REGION_GB
-      Just "gb"    -> Just REGION_GB
+      Just "se"    -> Just LANG_SV
+      Just "sv"    -> Just LANG_SV
+      Just "en"    -> Just LANG_EN
+      Just "gb"    -> Just LANG_EN
       _            -> Nothing
 
 instance FromJSValue DraftData where
@@ -81,7 +82,7 @@ instance FromJSValue DraftData where
         authentication' <-  fromJSValueField "authentication"
         delivery' <-  fromJSValueField "delivery"
         signatories' <-  fromJSValueField "signatories"
-        region' <- fromJSValueField "region"
+        lang' <- fromJSValueField "lang"
         template' <- fromJSValueField "template"
         tags' <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany  fromJSValueM
         apicallbackurl' <- fromJSValueField "apicallbackurl"
@@ -96,7 +97,7 @@ instance FromJSValue DraftData where
                                     , authentication = a
                                     , delivery = d
                                     , signatories = concat $ maybeToList $ signatories'
-                                    , region = region'
+                                    , lang = lang'
                                     , template = joinB template'
                                     , tags = tags'
                                     , apicallbackurl = apicallbackurl'
@@ -117,13 +118,13 @@ applyDraftDataToDocument doc draft actor = do
                                   , documentdaystosign = daystosign draft
                                   , documentauthenticationmethod = authentication draft
                                   , documentdeliverymethod = delivery draft
-                                  , documentregion = fromMaybe (documentregion doc) (region draft)
+                                  , documentlang = fromMaybe (documentlang doc) (lang draft)
                                   , documenttags = fromMaybe (documenttags doc) (fmap Set.fromList $ tags draft)
                                   , documentapicallbackurl = (apicallbackurl draft)
                               }) actor
       when_ (template draft && (not $ isTemplate doc)) $ do
            dbUpdate $ TemplateFromDocument (documentid doc) actor
-      Log.debug $ "Process: "  ++ show (process draft)   
+      Log.debug $ "Process: "  ++ show (process draft)
       when_ (isJust (process draft) && fromJust (process draft) /= toDocumentProcess (documenttype doc)) $ do
            Log.debug "Changing document process"
            dbUpdate $ SetDocumentProcess  (documentid doc) (fromJust (process draft)) actor

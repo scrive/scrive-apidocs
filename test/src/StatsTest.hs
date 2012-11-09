@@ -233,7 +233,7 @@ testGetUsersAndStats = do
   time <- getMinutesTime
   us <- catMaybes <$> (forM (range (0, 100::Int)) $ \i->
                         dbUpdate $ AddUser ("F", "L") ("e" ++ show i ++ "@yoyo.com")
-                        Nothing Nothing (mkLocale REGION_SE LANG_SE))
+                        Nothing Nothing LANG_SV)
   _ <- forM [(u, i) | u <- us, i <- range (0, 10::Int)] $ \(u,_) -> do
     let aa = authorActor time noIP (userid u) (getEmail u)
     dbUpdate $ NewDocument u "doc!" (Signable Contract) 0 aa

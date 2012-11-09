@@ -39,7 +39,7 @@ handleAccountSetupFromSign document signatorylink = do
       lastname = getLastName signatorylink
       email = getEmail signatorylink
   muser <- dbQuery $ GetUserByEmail (Email email)
-  user <- maybe (guardJustM $ createUser (Email email) (firstname, lastname) Nothing (ctxlocale ctx))
+  user <- maybe (guardJustM $ createUser (Email email) (firstname, lastname) Nothing (ctxlang ctx))
                 return
                 muser
   mactivateduser <- handleActivate (Just $ firstname) (Just $ lastname) user BySigning
@@ -55,7 +55,7 @@ handleActivate :: Kontrakcja m => Maybe String -> Maybe String -> User -> Signup
 handleActivate mfstname msndname actvuser signupmethod = do
   Log.debug $ "Attempting to activate account for user " ++ (show $ getEmail actvuser)
   when (isJust $ userhasacceptedtermsofservice actvuser) internalError
-  switchLocale (getLocale actvuser)
+  switchLang (getLang actvuser)
   ctx <- getContext
   mtos <- getDefaultedField False asValidCheckBox "tos"
   callme <- isFieldSet "callme"
@@ -111,11 +111,11 @@ handleActivate mfstname msndname actvuser signupmethod = do
         Log.debug $ "Create account attempt failed (params missing)"
         return Nothing
 
-createUser :: Kontrakcja m => Email -> (String, String) -> Maybe CompanyID -> Locale -> m (Maybe User)
-createUser email names mcompanyid locale = do
+createUser :: Kontrakcja m => Email -> (String, String) -> Maybe CompanyID -> Lang -> m (Maybe User)
+createUser email names mcompanyid lang = do
   ctx <- getContext
   passwd <- createPassword =<< randomPassword
-  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) mcompanyid locale
+  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) mcompanyid lang
   case muser of
     Just user -> do
       _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) email (userid <$> ctxmaybeuser ctx)

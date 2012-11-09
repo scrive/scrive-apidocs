@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = Table {
     tblName = "documents"
-  , tblVersion = 13
+  , tblVersion = 14
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
@@ -32,7 +32,7 @@ tableDocuments = Table {
        , ("rejection_signatory_link_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("rejection_reason", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("mail_footer", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("region", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
+       , ("lang", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        , ("authentication_method", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("delivery_method", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
@@ -65,7 +65,7 @@ tableDocuments = Table {
           ++ ", rejection_signatory_link_id BIGINT NULL"
           ++ ", rejection_reason TEXT NULL"
           ++ ", mail_footer TEXT NULL"
-          ++ ", region SMALLINT NOT NULL"
+          ++ ", lang SMALLINT NOT NULL"
           ++ ", deleted BOOL NOT NULL"
           ++ ", authentication_method SMALLINT NOT NULL"
           ++ ", delivery_method SMALLINT NOT NULL"

@@ -140,7 +140,7 @@ postDocumentCanceledChange doc@Document{..} apistring = do
       sendElegDataMismatchEmails ctx doc author
     -- should we send cancelation emails?
     _ -> return ()
-    
+
 stateMismatchError :: Kontrakcja m => String -> DocumentStatus -> Document -> m a
 stateMismatchError funame expected Document{documentstatus, documentid} = do
   Log.debug $ funame ++ ": document #" ++ show documentid ++ " in " ++ show documentstatus ++ " state, expected " ++ show expected
@@ -175,7 +175,7 @@ saveDocumentForSignatories doc@Document{documentsignatorylinks} =
                              SignatoryLink{signatorylinkid,signatorydetails} = do
       let sigemail = getValueOfType EmailFT signatorydetails
       muser <- case (strip sigemail) of
-                "" -> return Nothing    
+                "" -> return Nothing
                 _  -> dbQuery $ GetUserByEmail (Email sigemail)
       case muser of
         Nothing -> return $ Right doc'
@@ -227,7 +227,7 @@ sendDataMismatchEmailAuthor :: Kontrakcja m => Context -> Document -> User -> St
 sendDataMismatchEmailAuthor ctx document author badname bademail = do
     let authorname = getFullName $ $(fromJust) $ getAuthorSigLink document
         authoremail = getEmail $ $(fromJust) $ getAuthorSigLink document
-    mail <- mailMismatchAuthor ctx document authorname badname bademail (getLocale author)
+    mail <- mailMismatchAuthor ctx document authorname badname bademail (getLang author)
     scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress {fullname = authorname, email = authoremail }]}
 
 {- |
@@ -245,7 +245,7 @@ sendDocumentErrorEmail document author = do
     sendDocumentErrorEmailToAuthor = do
       ctx <- getContext
       let authorlink = $(fromJust) $ getAuthorSigLink document
-      mail <- mailDocumentErrorForAuthor ctx document (getLocale author)
+      mail <- mailDocumentErrorForAuthor ctx document (getLang author)
       scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
           to = [getMailAddress authorlink]
       }
@@ -300,16 +300,16 @@ sendInvitationEmail1 ctx document signatorylink | not (isAuthor signatorylink) =
     Just doc <- dbQuery $ GetDocumentByDocumentID documentid
     return doc
   return $ maybe (Left "sendInvitationEmail1 failed") Right mdoc
-  
+
 sendInvitationEmail1 ctx document authorsiglink =
   if (isSignatory authorsiglink)
      then do
         -- send invitation to sign to author when it is his turn to sign
-        mail <- mailDocumentAwaitingForAuthor ctx document (getLocale document)
+        mail <- mailDocumentAwaitingForAuthor ctx document (getLang document)
         scheduleEmailSendout (ctxmailsconfig ctx) $
           mail { to = [getMailAddress authorsiglink] }
         return $ Right document
-     else return $ Right document 
+     else return $ Right document
 {- |
     Send a reminder email (and update the modification time on the document)
 -}
@@ -376,7 +376,7 @@ sendRejectEmails customMessage ctx document signalink = do
 
 {- |
    Send reminder to all parties in document. No custom text
- -}    
+ -}
 sendAllReminderEmails :: Kontrakcja m => Context -> Actor -> User -> DocumentID -> m [SignatoryLink]
 sendAllReminderEmails ctx actor user docid = do
     doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
@@ -386,7 +386,7 @@ sendAllReminderEmails ctx actor user docid = do
                 unsignedsiglinks = filter isEligible $ documentsignatorylinks doc
             sequence . map (sendReminderEmail Nothing ctx actor doc) $ unsignedsiglinks
           _ -> return []
-          
+
 {- |
     If the custom text field is empty then that's okay, but if it's invalid
     then we want to fail.
@@ -398,4 +398,3 @@ getCustomTextField = getValidateAndHandle asValidInviteText customTextHandler
         logIfBad textresult
             >>= flashValidationMessage
             >>= withFailureIfBad
-

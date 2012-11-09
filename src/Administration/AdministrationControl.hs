@@ -123,7 +123,7 @@ adminonlyRoutes =
   ]
 
 daveRoutes :: Route (KontraPlus Response)
-daveRoutes =  
+daveRoutes =
   fmap onlyAdmin $ choice $ [
        dir "document"      $ hGet $ toK1 $ daveDocument
      , dir "document"      $ hGet $ toK2 $ daveSignatoryLink
@@ -150,7 +150,7 @@ showAdminUsers (Just userId) = onlySalesOrAdmin $ do
   case muser of
     Nothing -> internalError
     Just user -> adminUserPage user =<< getCompanyForUser user
-    
+
 showAdminCompanies :: Kontrakcja m => m String
 showAdminCompanies = onlySalesOrAdmin $  adminCompaniesPage
 
@@ -239,7 +239,7 @@ showAdminUsersForSales = onlySalesOrAdmin $ adminUsersPageForSales
 handleUsersListCSV :: Kontrakcja m => m CSV
 handleUsersListCSV = onlySalesOrAdmin $ do
   users <- getUsersAndStatsInv [] [] (UserPagination 0 maxBound)
-  return $ CSV { csvHeader = ["id", "fstname", "sndname", "email", "company", "position","tos"] 
+  return $ CSV { csvHeader = ["id", "fstname", "sndname", "email", "company", "position","tos"]
                , csvFilename = "userslist.csv"
                , csvContent = map csvline $ filter active users
                }
@@ -327,8 +327,8 @@ handleUserChange uid = onlySalesOrAdmin $ do
       --then we just want to make this account an admin
       newuser <- guardJustM $ do
         _ <- dbUpdate $ SetUserCompanyAdmin uid True
-        _ <- dbUpdate $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
-             [("is_company_admin", "false", "true")] 
+        _ <- dbUpdate $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx)
+             [("is_company_admin", "false", "true")]
              (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       return newuser
@@ -338,15 +338,15 @@ handleUserChange uid = onlySalesOrAdmin $ do
       newuser <- guardJustM $ do
         company <- dbUpdate $ CreateCompany Nothing
         _ <- dbUpdate $ SetUserCompany uid (Just $ companyid company)
-        _ <- dbUpdate 
-                  $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
-                                             [("company_id", "null", show $ companyid company)] 
+        _ <- dbUpdate
+                  $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx)
+                                             [("company_id", "null", show $ companyid company)]
                                              (userid <$> ctxmaybeuser ctx)
         _ <- dbUpdate $ SetUserCompanyAdmin uid True
         _ <- switchPlanToCompany uid (companyid company) -- migrate payment plan to company
-        _ <- dbUpdate 
-                  $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
-                                             [("is_company_admin", "false", "true")] 
+        _ <- dbUpdate
+                  $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx)
+                                             [("is_company_admin", "false", "true")]
                                              (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       _ <- resaveDocsForUser uid
@@ -355,9 +355,9 @@ handleUserChange uid = onlySalesOrAdmin $ do
       --then we just want to downgrade this account to a standard
       newuser <- guardJustM $ do
         _ <- dbUpdate $ SetUserCompanyAdmin uid False
-        _ <- dbUpdate 
-                 $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
-                                            [("is_company_admin", "true", "false")] 
+        _ <- dbUpdate
+                 $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx)
+                                            [("is_company_admin", "true", "false")]
                                             (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       return newuser
@@ -375,9 +375,9 @@ handleUserChange uid = onlySalesOrAdmin $ do
             _ <- dbUpdate $ DeletePaymentPlan (Left uid)
             return ()
           Nothing -> return ()
-        _ <- dbUpdate 
-                 $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
-                                            [("company_id", "null", show $ companyid company)] 
+        _ <- dbUpdate
+                 $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx)
+                                            [("company_id", "null", show $ companyid company)]
                                             (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       _ <- resaveDocsForUser uid
@@ -399,10 +399,10 @@ handleUserChange uid = onlySalesOrAdmin $ do
                   liftIO $ deleteAccount curl_exe (recurlyAPIKey $ ctxrecurlyconfig ctx) (show $ ppAccountCode pp)
                 dbUpdate $ DeletePaymentPlan (Right companyid)
           Nothing -> return ()
-        
-        _ <- dbUpdate 
-                 $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
-                                            [("company_id", show companyid, "null")] 
+
+        _ <- dbUpdate
+                 $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx)
+                                            [("company_id", show companyid, "null")]
                                             (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       _ <-resaveDocsForUser uid
@@ -411,7 +411,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
   infoChange <- getUserInfoChange
   _ <- dbUpdate $ SetUserInfo uid $ infoChange $ userinfo user
   _ <- dbUpdate
-           $ LogHistoryUserInfoChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+           $ LogHistoryUserInfoChanged uid (ctxipnumber ctx) (ctxtime ctx)
                                        (userinfo user) (infoChange $ userinfo user)
                                        (userid <$> ctxmaybeuser ctx)
   settingsChange <- getUserSettingsChange
@@ -553,8 +553,8 @@ handleCreateUser = onlySalesOrAdmin $ do
     fstname <- getAsString "fstname"
     sndname <- getAsString "sndname"
     custommessage <- getField "custommessage"
-    region <- guardJustM $ readField "region"
-    muser <- createNewUserByAdmin email (fstname, sndname) custommessage Nothing (mkLocaleFromRegion region)
+    lang <- guardJustM $ readField "lang"
+    muser <- createNewUserByAdmin email (fstname, sndname) custommessage Nothing lang
     when (isNothing muser) $
       addFlashM flashMessageUserWithSameEmailExists
     -- FIXME: where to redirect?
@@ -591,9 +591,9 @@ handleCreateCompanyUser companyid = onlySalesOrAdmin $ do
   sndname <- getCriticalField asValidName "sndname"
   custommessage <- joinEmpty <$> getField "custommessage"
   Log.debug $ "Custom message when creating an account " ++ show custommessage
-  region <- guardJustM $ readField "region"
+  lang <- guardJustM $ readField "lang"
   admin <- isFieldSet "iscompanyadmin"
-  muser <- createNewUserByAdmin email (fstname, sndname) custommessage (Just (companyid, admin)) (mkLocaleFromRegion region)
+  muser <- createNewUserByAdmin email (fstname, sndname) custommessage (Just (companyid, admin)) lang
   when (isNothing muser) $
       addFlashM flashMessageUserWithSameEmailExists
   return ()
@@ -623,9 +623,9 @@ getCompanyInfoChange = do
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}
 getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)
 getUserSettingsChange = do
-  mregion <- readField "userregion"
+  mlang <- readField "userlang"
   return $ \settings -> settings {
-     locale = maybe (locale settings) mkLocaleFromRegion mregion
+     lang = fromMaybe (lang settings) mlang
   }
 
 {- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}
@@ -886,7 +886,7 @@ resealFile docid = onlyAdmin $ do
     doc' <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
     when_ (isDocumentError doc') $ do
        guardTrueM $ dbUpdate $ FixClosedErroredDocument docid actor
-    guardJustM  $ dbQuery $ GetDocumentByDocumentID docid   
+    guardJustM  $ dbQuery $ GetDocumentByDocumentID docid
   res <- sealDocument doc
   case res of
       Left  _ -> Log.debug "We failed to reseal the document"

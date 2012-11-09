@@ -11,7 +11,7 @@ import Context
 import KontraError
 import TestingUtil
 import TestKontra as T
-import User.Locale
+import User.Lang()
 import qualified Control.Exception.Lifted as E
 
 redirectTests :: TestEnvSt -> Test
@@ -27,14 +27,14 @@ testResponse = "hello"
 
 testGuardRight :: TestEnv ()
 testGuardRight = do
-    ctx <- mkContext $ mkLocaleFromRegion defaultValue
+    ctx <- mkContext defaultValue
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
     (res, _) <- runTestKontra req ctx (guardRight $ (Right testResponse :: Either String String))
     assertEqual "should be equal" res testResponse
 
 testStringGuardMZeroLeft :: TestEnv ()
 testStringGuardMZeroLeft =  do
-    ctx <- mkContext $ mkLocaleFromRegion defaultValue
+    ctx <- mkContext defaultValue
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
     (res, _) <- runTestKontra req ctx (E.catch (guardRight $ (Left "error" :: Either String String))
                                                   (\(_::KontraError) -> return testResponse))
@@ -42,19 +42,19 @@ testStringGuardMZeroLeft =  do
 
 testDBErrorGuardRedirectLeftDBNotLoggedIn :: TestEnv ()
 testDBErrorGuardRedirectLeftDBNotLoggedIn = do
-  ctx <- mkContext $ mkLocaleFromRegion defaultValue
+  ctx <- mkContext defaultValue
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
   (res, ctx') <- runTestKontra req ctx (do
                                            _ <- guardRight $ Left DBNotLoggedIn
                                            ok $ toResponseBS "stuff" "hello")
   assertBool "Response code is 303" $ rsCode res == 303
-  assertBool "Location starts with /se/sv/?logging" $ (isPrefixOf "/se/sv/?logging" <$> T.getHeader "location" (rsHeaders res)) == Just True
+  assertBool "Location starts with /sv/?logging" $ (isPrefixOf "/sv/?logging" <$> T.getHeader "location" (rsHeaders res)) == Just True
   assertBool "One flash message was added" $ length (ctxflashmessages ctx') == 1
 --    assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
 testDBErrorGuardMZeroLeft :: TestEnv ()
 testDBErrorGuardMZeroLeft = do
-  ctx <- mkContext $ mkLocaleFromRegion defaultValue
+  ctx <- mkContext defaultValue
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
   (res, _ctx') <- runTestKontra req ctx (E.catch (guardRight $ (Left DBResourceNotAvailable))
                                                     (\(_::KontraError) -> return testResponse))
