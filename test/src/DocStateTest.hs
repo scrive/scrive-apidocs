@@ -213,8 +213,6 @@ docStateTests env = testGroup "DocState" [
   testThat "ReallyDeleteDocument fails if the document hasn't been archived" env testReallyDeleteNotArchivedLeft,
 
   testThat "GetDocumentsByAuthor doesn't return archived docs" env testGetDocumentsByAuthorNoArchivedDocs,
-  testThat "GetDocumentsBySignatory doesn't return archived docs" env testGetDocumentsBySignatoryNoArchivedDocs,
-  testThat "GetDeletedDocumentsByUser returns archived docs" env testGetDeletedDocumentsByUserArchivedDocs,
   testThat "When document is signed it's status class is signed" env testStatusClassSignedWhenAllSigned,
   testThat "When document is pending and some invitation is undelivered it's status is undelivered" env testStatusClassSignedWhenAllSigned
   ]
@@ -955,10 +953,6 @@ testGetDocumentsByAuthorNoArchivedDocs :: TestEnv ()
 testGetDocumentsByAuthorNoArchivedDocs =
   checkQueryDoesntContainArchivedDocs (GetDocumentsByAuthor . userid)
 
-testGetDocumentsBySignatoryNoArchivedDocs :: TestEnv ()
-testGetDocumentsBySignatoryNoArchivedDocs =
-  checkQueryDoesntContainArchivedDocs (GetDocumentsBySignatory [Contract, Offer, Order]. userid)
-
 checkQueryDoesntContainArchivedDocs :: DBQuery TestEnv q [Document] => (User -> q) -> TestEnv ()
 checkQueryDoesntContainArchivedDocs qry = doTimes 10 $ do
   company <- addNewCompany
@@ -972,10 +966,6 @@ checkQueryDoesntContainArchivedDocs qry = doTimes 10 $ do
   _ <- randomUpdate $ \t->RestoreArchivedDocument author (documentid doc) (systemActor t)
   docsafterestore <- dbQuery (qry author)
   validTest $ assertEqual "Expecting one doc after restoring" [documentid doc] (map documentid docsafterestore)
-
-testGetDeletedDocumentsByUserArchivedDocs :: TestEnv ()
-testGetDeletedDocumentsByUserArchivedDocs =
-  checkQueryContainsArchivedDocs (GetDeletedDocumentsByUser . userid)
 
 checkQueryContainsArchivedDocs :: DBQuery TestEnv q [Document] => (User -> q) -> TestEnv ()
 checkQueryContainsArchivedDocs qry = doTimes 10 $ do
@@ -1330,7 +1320,6 @@ testGetDocumentsSQLSorted = doTimes 1 $ do
   _doc <- addRandomDocumentWithAuthorAndCondition author (const True)
 
   let domains = [ DocumentsVisibleToUser (userid author)
-                , DocumentsForSignatory (userid author)
                 ]
       filters = []
   _docs <- dbQuery $ GetDocuments domains filters

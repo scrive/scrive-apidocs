@@ -26,13 +26,11 @@ module Doc.Model
   , DeleteSigAttachment(..)
   , DocumentFromSignatoryData(..)
   , ErrorDocument(..)
-  , GetDeletedDocumentsByUser(..)
   , GetDocuments(..)
   , GetDocumentByDocumentID(..)
   , GetDocumentsByAuthor(..)
   , GetTemplatesByAuthor(..)
   , GetAvailableTemplates(..)
-  , GetDocumentsBySignatory(..)
   , GetTimeoutedButPendingDocumentsChunk(..)
   , MarkDocumentSeen(..)
   , MarkInvitationRead(..)
@@ -151,7 +149,6 @@ data DocumentFilter
 data DocumentDomain
   = DocumentsOfWholeUniverse                     -- ^ All documents in the system. Only for admin view.
   | DocumentsVisibleToUser UserID                -- ^ Documents that a user has possible access to
-  | DocumentsForSignatory UserID                 -- ^ Documents by signatory
 
 -- | These are possible order by clauses that make documents sorted by.
 data DocumentOrderBy
@@ -268,16 +265,6 @@ documentDomainToSQL (DocumentsVisibleToUser uid) =
      <+> "AND documents.type = " <?> Template undefined    -- 4
      <+> "AND signatory_links.is_author"                   --
   <+> ")"
-documentDomainToSQL (DocumentsForSignatory uid) =
-  SQL ("signatory_links.user_id = ?"
-       <> " AND documents.type = 1"
-       <> " AND (signatory_links.is_author OR (signatory_links.is_partner"
-       <> "          AND NOT EXISTS (SELECT 1 FROM signatory_links AS sl2"
-       <> "                           WHERE signatory_links.document_id = sl2.document_id"
-       <> "                             AND sl2.is_partner"
-       <> "                             AND sl2.sign_time IS NULL"
-       <> "                             AND sl2.sign_order < signatory_links.sign_order)))")
-        [toSql uid]
 
 maxselect :: SQL
 maxselect = "(SELECT max(greatest(signatory_links.sign_time"
@@ -1362,11 +1349,6 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
         sqlLimit $ fromIntegral (documentLimit pagination)
 
 
-data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser UserID
-instance MonadDB m => DBQuery m GetDeletedDocumentsByUser [Document] where
-  query (GetDeletedDocumentsByUser uid) =
-    query (GetDocuments [DocumentsForSignatory uid] [DocumentFilterDeleted True] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
-
 {- |
     All documents authored by the user that have never been deleted.
 -}
@@ -1387,17 +1369,6 @@ instance MonadDB m => DBQuery m GetAvailableTemplates [Document] where
                             [DocumentFilterByProcess processes, DocumentFilterTemplate, DocumentFilterDeleted False]
                             [Asc DocumentOrderByMTime]
                             (DocumentPagination 0 maxBound))
-
-{- |
-    All documents where the user is a signatory that are not deleted.  An author is a type
-    of signatory, so authored documents are included too.
-    This also filters so that documents where a user is a signatory, but that signatory
-    has not yet been activated according to the document's sign order, are excluded.
--}
-data GetDocumentsBySignatory = GetDocumentsBySignatory [DocumentProcess] UserID
-instance MonadDB m => DBQuery m GetDocumentsBySignatory [Document] where
-  query (GetDocumentsBySignatory processes uid) =
-    query (GetDocuments [DocumentsForSignatory uid] [DocumentFilterDeleted False, DocumentFilterSignable, DocumentFilterByProcess processes] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
 data GetTimeoutedButPendingDocumentsChunk = GetTimeoutedButPendingDocumentsChunk MinutesTime Int
 instance MonadDB m => DBQuery m GetTimeoutedButPendingDocumentsChunk [Document] where
