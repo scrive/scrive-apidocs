@@ -1,8 +1,6 @@
 {-# OPTIONS_GHC -fcontext-stack=50 #-}
 module User.Model (
     module User.Lang
-  , module User.Region
-  , module User.Locale
   , module User.Password
   , module User.UserID
   , Email(..)
@@ -51,9 +49,7 @@ import Company.Model
 import DB
 import MinutesTime
 import User.Lang
-import User.Locale
 import User.Password
-import User.Region
 import User.Tables
 import User.UserID
 import DB.SQL2
@@ -106,15 +102,15 @@ data UserInfo = UserInfo {
   } deriving (Eq, Ord, Show)
 
 data UserSettings  = UserSettings {
-    locale              :: Locale
+    lang                :: Lang
   , customfooter        :: Maybe String
   } deriving (Eq, Ord, Show)
 
-instance HasLocale User where
-  getLocale = getLocale . usersettings
+instance HasLang User where
+  getLang = getLang . usersettings
 
-instance HasLocale UserSettings where
-  getLocale = locale
+instance HasLang UserSettings where
+  getLang = lang
 
 
 data UserFilter
@@ -238,7 +234,7 @@ data RemoveInactiveUser = RemoveInactiveUser UserID
 instance MonadDB m => DBUpdate m RemoveInactiveUser Bool where
   update (RemoveInactiveUser uid) = kRun01 $ SQL "DELETE FROM users WHERE deleted = FALSE AND id = ? AND has_accepted_terms_of_service IS NULL" [toSql uid]
 
-data AddUser = AddUser (String, String) String (Maybe Password) (Maybe CompanyID) Locale
+data AddUser = AddUser (String, String) String (Maybe Password) (Maybe CompanyID) Lang
 instance MonadDB m => DBUpdate m AddUser (Maybe User) where
   update (AddUser (fname, lname) email mpwd mcid l) = do
     mu <- query $ GetUserByEmail $ Email email
@@ -262,8 +258,7 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
           , sql "phone" ("" :: String)
           , sql "mobile" ("" :: String)
           , sql "email" $ map toLower email
-          , sql "lang" $ getLang l
-          , sql "region" $ getRegion l
+          , sql "lang" l
           , sql "deleted" False
           , sql "is_free" False
           ] <+> "RETURNING" <+> selectUsersSelectors
@@ -357,12 +352,10 @@ instance MonadDB m => DBUpdate m SetUserSettings Bool where
   update (SetUserSettings uid us) = do
     kPrepare $ "UPDATE users SET"
       <> "  lang = ?"
-      <> ", region = ?"
       <> ", customfooter = ?"
       <> "  WHERE id = ? AND deleted = FALSE"
     kExecute01 [
         toSql $ getLang us
-      , toSql $ getRegion us
       , toSql $ customfooter us
       , toSql uid
       ]
@@ -432,7 +425,6 @@ selectUsersSelectors = sqlConcatComma
   , "mobile"
   , "email"
   , "lang"
-  , "region"
   , "customfooter"
   , "company_name"
   , "company_number"
@@ -447,7 +439,7 @@ fetchUsers = foldDB decoder []
     decoder acc uid password salt is_company_admin account_suspended
       has_accepted_terms_of_service signup_method company_id
       first_name last_name personal_number company_position phone mobile
-      email lang region customfooter
+      email lang customfooter
       company_name company_number is_free = User {
           userid = uid
         , userpassword = maybePassword (password, salt)
@@ -467,7 +459,7 @@ fetchUsers = foldDB decoder []
           , usercompanynumber = company_number
           }
         , usersettings = UserSettings {
-            locale = mkLocale region lang
+            lang = lang
           , customfooter = customfooter
           }
         , usercompany = company_id

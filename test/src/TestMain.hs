@@ -75,8 +75,8 @@ import CSVUtilTest
 #ifndef NO_SIMPLEEMAIL
 import SimpleMailTest
 #endif
-#ifndef NO_LOCALE
-import LocaleTest
+#ifndef NO_LANG
+import LangTest
 #endif
 #ifndef NO_COMPANYACCOUNTS
 import CompanyAccountsTest
@@ -174,8 +174,8 @@ allTests = tail tests
 #ifndef NO_SIMPLEEMAIL
       , ("simplemail", const $ const simpleMailTests)
 #endif
-#ifndef NO_LOCALE
-      , ("locale", const localeTests)
+#ifndef NO_LANG
+      , ("lang", const langTests)
 #endif
 #ifndef NO_COMPANYACCOUNTS
       , ("companyaccounts", const companyAccountsTests)
@@ -265,4 +265,3 @@ testone t = do
 
 main :: IO ()
 main = (partitionEithers . testsToRun <$> getArgs) >>= testMany
-

@@ -53,7 +53,7 @@ import Session.SessionID
 import Templates.Templates
 import Templates.TemplatesLoader
 import qualified MemCache
-import User.Locale
+import User.Lang
 import Util.FinishWith
 import ELegitimation.Config (LogicaConfig(..))
 import qualified Control.Exception.Lifted as E
@@ -87,9 +87,9 @@ instance MonadDB TestEnv where
 
 instance TemplatesMonad TestEnv where
   getTemplates = getLocalTemplates defaultValue
-  getLocalTemplates locale = do
+  getLocalTemplates lang = do
     globaltemplates <- teGlobalTemplates <$> ask
-    return $ localizedVersion locale globaltemplates
+    return $ localizedVersion lang globaltemplates
 
 instance MonadBaseControl IO TestEnv where
   newtype StM TestEnv a = StTestEnv { unStTestEnv :: StM InnerTestEnv a }
@@ -205,8 +205,8 @@ mkRequestWithHeaders method vars headers = liftIO $ do
         isReqPost = method == POST || method == PUT
 
 -- | Constructs initial context with given templates
-mkContext :: Locale -> TestEnv Context
-mkContext locale = do
+mkContext :: Lang -> TestEnv Context
+mkContext lang = do
   globaltemplates <- teGlobalTemplates <$> ask
   liftIO $ do
     docs <- MemCache.new JpegPages.pagesCount 500
@@ -230,14 +230,14 @@ mkContext locale = do
             , AWS.s3operation = HTTP.GET
         }
         , ctxproduction = False
-        , ctxtemplates = localizedVersion locale globaltemplates
+        , ctxtemplates = localizedVersion lang globaltemplates
         , ctxglobaltemplates = globaltemplates
-        , ctxlocale = locale
+        , ctxlang = lang
         , ctxmailsconfig = defaultMailsConfig
         , ctxlivedocxconf = confDefault
         , ctxlogicaconf = LogicaConfig { logicaEndpoint = "https://eidt.funktionstjanster.se:18898/osif"
                                        , logicaCertFile = "certs/steria3.pem"
-                                       , logicaServiceID = "logtest004" 
+                                       , logicaServiceID = "logtest004"
                                        , logicaMBIEndpoint = "https://eidt.funktionstjanster.se:18898/mbi/service"
                                        , logicaMBIDisplayName = "Test av Mobilt BankID"
                                        }

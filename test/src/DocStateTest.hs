@@ -46,7 +46,7 @@ docStateTests env = testGroup "DocState" [
   testThat "RestoreArchivedDocument adds to the log" env testRestoreArchivedDocumentEvidenceLog,
   testThat "SetDaysToSign adds to the log" env testSetDaysToSignEvidenceLog,
   testThat "SetDocumentInviteTime adds to the log" env testSetDocumentInviteTimeEvidenceLog,
-  testThat "SetDocumentLocale adds to the log" env testSetDocumentLocaleEvidenceLog,
+  testThat "SetDocumentLang adds to the log" env testSetDocumentLangEvidenceLog,
   testThat "SetDocumentTags adds to the log" env testSetDocumentTagsEvidenceLog,
   testThat "SetDocumentTitle adds to the log" env testSetDocumentTitleEvidenceLog,
   testThat "Set ELegAuthentication adds to the log" env testSetElegitimationAuthenticationEvidenceLog,
@@ -95,7 +95,7 @@ docStateTests env = testGroup "DocState" [
   testThat "CancelDocument cancels a document" env testCancelDocumentCancelsDocument,
   testThat "CancelDocument fails if doc not pending or awaiting author" env testCancelDocumentReturnsLeftIfDocInWrongState,
 
-  testThat "SetDocumentLocale fails when doc doesn't exist" env testSetDocumentLocaleNotLeft,
+  testThat "SetDocumentLang fails when doc doesn't exist" env testSetDocumentLangNotLeft,
 
   testThat "SetDocumentTitle fails when doc doesn't exist" env testSetDocumentTitleNotLeft,
   testThat "SetDocumentTitle succeeds when doc exists and has proper status" env testSetDocumentTitleRight,
@@ -337,16 +337,16 @@ testSetDocumentInviteTimeEvidenceLog = do
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SetDocumentInviteTimeEvidence) lg
 
-testSetDocumentLocaleEvidenceLog :: TestEnv ()
-testSetDocumentLocaleEvidenceLog = do
+testSetDocumentLangEvidenceLog :: TestEnv ()
+testSetDocumentLangEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  success1 <- randomUpdate $ \t->SetDocumentLocale (documentid doc) (mkLocaleFromRegion REGION_SE) (systemActor t)
-  success2 <- randomUpdate $ \t->SetDocumentLocale (documentid doc) (mkLocaleFromRegion REGION_GB) (systemActor t)
+  success1 <- randomUpdate $ \t->SetDocumentLang (documentid doc) LANG_SE (systemActor t)
+  success2 <- randomUpdate $ \t->SetDocumentLang (documentid doc) LANG_EN (systemActor t)
   assert success1
   assert success2
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == SetDocumentLocaleEvidence) lg
+  assertJust $ find (\e -> evType e == SetDocumentLangEvidence) lg
 
 testSetDocumentTagsEvidenceLog :: TestEnv ()
 testSetDocumentTagsEvidenceLog = do
@@ -420,7 +420,7 @@ testSetEmailDeliveryEvidenceLog = do
   assert success2
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SetEmailDeliveryMethodEvidence) lg
-  
+
 testSetInvitationDeliveryStatusEvidenceLog :: TestEnv ()
 testSetInvitationDeliveryStatusEvidenceLog = do
   author <- addNewRandomUser
@@ -500,14 +500,14 @@ testUpdateFieldsEvidenceLog = doTimes 10 $ do
   let sf = filter (\f -> not $ (sfType f) `elem` [FirstNameFT,LastNameFT, EmailFT]) $ signatoryfields $ signatorydetails sl
   case sf of
    (f:_) -> do
-        v <-  rand 10 arbitrary 
+        v <-  rand 10 arbitrary
         success <- randomUpdate $ \t->UpdateFields (documentid doc) (signatorylinkid sl) [(sfType f,v)] (systemActor t)
         lg <- dbQuery $ GetEvidenceLog (documentid doc)
         validTest $ do
             case success of
                 True ->
                     assertBool "if UpdateFields did change document it should add to the evidence (or not affect anything) " $
-                        (isJust (find (\e -> evType e == UpdateFieldsEvidence) lg))  
+                        (isJust (find (\e -> evType e == UpdateFieldsEvidence) lg))
                 False ->
                     assertEqual "if UpdateFields did not change any rows it should not add to the evidence" Nothing
                         (find (\e -> evType e == UpdateFieldsEvidence) lg)
@@ -719,7 +719,7 @@ assertGoodNewDocument mcompany doctype title (user, time, edoc) = do
     assertRight edoc
     assertEqual "Correct title" title (documenttitle doc)
     assertEqual "Correct type" doctype (documenttype doc)
-    assertEqual "Doc has user's region" (getRegion user) (getRegion doc)
+    assertEqual "Doc has user's lang" (getLang user) (getLang doc)
     assertEqual "Doc creation time" time (documentctime doc)
     assertEqual "Doc modification time" time (documentmtime doc)
     assertEqual "No author attachments" [] (documentauthorattachments doc)
@@ -998,9 +998,9 @@ checkQueryContainsArchivedDocs qry = doTimes 10 $ do
   docsafterdelete <- dbQuery (qry author)
   validTest $ assertEqual "Expecting no docs after really deleting" [] (map documentid docsafterdelete)
 
-testSetDocumentLocaleNotLeft :: TestEnv ()
-testSetDocumentLocaleNotLeft = doTimes 10 $ do
-  success <- randomUpdate $ \d l t -> SetDocumentLocale d l (systemActor t)
+testSetDocumentLangNotLeft :: TestEnv ()
+testSetDocumentLangNotLeft = doTimes 10 $ do
+  success <- randomUpdate $ \d l t -> SetDocumentLang d l (systemActor t)
   validTest $ assert $ not success
 
 testNewDocumentDependencies :: TestEnv ()
@@ -1943,7 +1943,7 @@ testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
   (name1, value1) <- rand 10 arbitrary
   (name2, value2) <- rand 10 arbitrary
   (name3, value3) <- rand 10 arbitrary
-  if (name1 /= name2 && name1 /= name2 && name2 /= name3) 
+  if (name1 /= name2 && name1 /= name2 && name2 /= name3)
    then do
     company <- addNewCompany
     author <- addNewRandomUser
@@ -1981,7 +1981,7 @@ testGetDocumentsByAuthorFiltering = doTimes 10 $ do
     validTest $ do
       assertEqual "Should have one document returned" 1 (length docs)
       assertEqual "Should have no documents" 0 (length nodocs)
-   
+
 testStatusClassSignedWhenAllSigned :: TestEnv ()
 testStatusClassSignedWhenAllSigned = doTimes 10 $ do
   author <- addNewRandomUser

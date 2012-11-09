@@ -49,8 +49,7 @@ import IPAddress
 import MagicHash
 import MinutesTime
 import User.UserID
-import User.Region
-import User.Locale
+import User.Lang
 import File.FileID
 import File.File
 import Doc.DocumentID
@@ -96,8 +95,8 @@ data StatusClass = SCDraft
                   | SCRead
                   | SCOpened
                   | SCSigned
-                  deriving (Eq, Ord, Enum, Bounded) 
-                  
+                  deriving (Eq, Ord, Enum, Bounded)
+
 instance Show StatusClass where
   show SCDraft = "draft"
   show SCCancelled = "cancelled"
@@ -143,8 +142,8 @@ data FieldType = FirstNameFT
                | EmailFT
                | CustomFT String Bool -- label filledbyauthor
                | SignatureFT
-               | CheckboxOptionalFT String 
-               | CheckboxObligatoryFT String 
+               | CheckboxOptionalFT String
+               | CheckboxObligatoryFT String
   deriving (Eq, Ord, Show, Data, Typeable)
 
 data SignatoryField = SignatoryField {
@@ -290,7 +289,7 @@ toDocumentProcess (Template p) = p
 
 -- | Terrible, I know. Better idea?
 -- | TODO: to be KILLED.
--- | 
+-- |
 -- | Changed to return Maybe
 doctypeFromString :: String -> Maybe DocumentType
 doctypeFromString "Signable Contract"  = Just $ Signable Contract
@@ -364,13 +363,13 @@ data Document = Document {
   , documentdeleted                :: Bool -- set to true when doc is deleted - the other fields will be cleared too, so it is really truely deleting, it's just we want to avoid re-using the docid.
   , documentauthorattachments      :: [AuthorAttachment]
   , documentui                     :: DocumentUI
-  , documentregion                 :: Region
+  , documentlang                   :: Lang
   , documentstatusclass            :: StatusClass
   , documentapicallbackurl         :: Maybe String
   } deriving (Eq, Ord, Show)
 
-instance HasLocale Document where
-  getLocale = mkLocaleFromRegion . documentregion
+instance HasLang Document where
+  getLang = documentlang
 
 data CancelationReason = ManualCancel
                         -- The data returned by ELeg server
@@ -420,7 +419,7 @@ instance FromJSValue FieldPlacement where
   -- representation for javascript and ajax, third is database
   -- representation. After ajax is changed and database is migrated
   -- only first on representation should be left in place.
-  fromJSValue js = msum $ fmap ($ js) 
+  fromJSValue js = msum $ fmap ($ js)
                      [ do xrel       <- fromJSValueField "xrel"
                           yrel       <- fromJSValueField "yrel"
                           wrel       <- fromJSValueField "wrel"
@@ -469,9 +468,9 @@ instance FromJSValue TipSide where
 
 
 instance Convertible  [FieldPlacement] SqlValue where
-    safeConvert = jsonToSqlValueCustom $ JSArray . (map placementJSON) 
+    safeConvert = jsonToSqlValueCustom $ JSArray . (map placementJSON)
         where
-         placementJSON placement = runJSONGen $ do 
+         placementJSON placement = runJSONGen $ do
                              value "xrel" $ placementxrel placement
                              value "yrel" $ placementyrel placement
                              value "wrel" $ placementwrel placement

@@ -38,7 +38,6 @@ import Data.Map ((!))
 import qualified Data.Map as Map
 import Data.CSV
 import User.Lang
-import User.Region
 import Text.ParserCombinators.Parsec
 import System.IO
 import Data.String.Utils (replace)
@@ -52,21 +51,20 @@ getTextTemplatesMTime = getRecursiveMTime textsDirectory
 
 -- | We recursively read all csv files from texts directory. This
 -- function will also merge by selecting the closest default text for those that are missing.
-getTextTemplates:: Region -> Lang -> IO [(String,String)]
-getTextTemplates region lang = do
+getTextTemplates:: Lang -> IO [(String,String)]
+getTextTemplates lang = do
     texts <- getAllTextTemplates
-    let sameLang = map (\r -> (r, lang)) . filter (/= region) $ allValues
-        sameRegion = map (\l -> (region, l)) . filter (/= lang) $ allValues
+    let otherLangs = filter (/= lang) allValues
         unionFoldF a k = unionBy (\x y -> fst x == fst y) a (texts ! k)
-        alternatives = sameLang ++ sameRegion
-    return $ foldl unionFoldF (texts ! (region, lang)) alternatives
+        alternatives = otherLangs
+    return $ foldl unionFoldF (texts ! lang) alternatives
 
--- | All texts maped by the region and language.  Should be used only for tests
+-- | All texts maped by the language.  Should be used only for tests
 -- since it does not do a merge with a default.
-getAllTextTemplates:: IO (Map.Map (Region, Lang) [(String,String)])
-getAllTextTemplates = getTextTemplatesFrom textsDirectory    
+getAllTextTemplates:: IO (Map.Map Lang [(String,String)])
+getAllTextTemplates = getTextTemplatesFrom textsDirectory
 
-getTextTemplatesFrom:: String -> IO (Map.Map (Region, Lang) [(String,String)])
+getTextTemplatesFrom:: String -> IO (Map.Map Lang [(String,String)])
 getTextTemplatesFrom path =
  if ("." `isSuffixOf`path)
   then return emptyTextTemplatesMap
@@ -84,7 +82,7 @@ getTextTemplatesFrom path =
 -- we can skip columns with comments and match column with language.
 -- And we do the reading line by line skiping lines starting with !
 -- (control structure) and ***** (unussed translation).
-getTextTemplatesFromFile:: String -> IO (Map.Map (Region, Lang) [(String,String)])
+getTextTemplatesFromFile:: String -> IO (Map.Map Lang [(String,String)])
 getTextTemplatesFromFile path =
  if (not $ ".csv" `isSuffixOf` path)
   then return emptyTextTemplatesMap
@@ -95,7 +93,7 @@ getTextTemplatesFromFile path =
        _ -> error $ "CSV parsing error in" ++path ++ "  \n Empty file"
  where
    getScheme s  = drop 1 (map maybeRead s)
-   addLine::[Maybe (Region, Lang)] -> (Map.Map (Region, Lang) [(String,String)]) -> [String] -> Map.Map (Region, Lang) [(String,String)]
+   addLine::[Maybe Lang] -> (Map.Map Lang [(String,String)]) -> [String] -> Map.Map Lang [(String,String)]
    addLine scheme m (n:rest) = if ( "!" `isPrefixOf` n || notvalidString `isPrefixOf` n)
                        then m
                        else Map.unionWith (++) m $ Map.fromList $
@@ -120,7 +118,7 @@ updateCSV = do
     let updatedTexts = updateTexts csv names
     writeFile fname (genCsvFile $ sortCSV $ updatedTexts)
     return ()
-        
+
 updateTexts :: [[String]] -> [String] -> [[String]]
 updateTexts ((h:hs):r) names
     | validName h `elem` names || "!" `isPrefixOf` h =
@@ -203,7 +201,7 @@ groupTTLs (t:tl) m = groupTTLs tl $ Map.insertWith (++) (finalLocation t) [t] m
 groupTTLs [] m = m
 
 finalLocation :: TemplateTextLocation -> String
-finalLocation ttl 
+finalLocation ttl
     | 2 > (length $ nub $ map fst $ location ttl) =
         templateFileNameToCSV $ head $ map fst $ location ttl
     | otherwise = commonFileName
@@ -231,8 +229,8 @@ validName = dropWhile (== '*')
 unvalidName :: String -> String
 unvalidName s | notvalidString `isPrefixOf` s = s
               | otherwise = notvalidString ++ s
-                    
--- Sorting when inserting to csv file. 
+
+-- Sorting when inserting to csv file.
 sortCSV :: [[String]] -> [[String]]
 sortCSV = sortBy textCsvSort
 
@@ -241,9 +239,9 @@ textCsvSort (s1:_) (s2:_) = compare (validName s1) (validName s2)
 textCsvSort s1 s2 = compare s1 s2
 
 -- Empty text templates map is used to ensure that we will not return map with
--- one of regions or languages missing even if not translation was provided for
+-- one of languages missing even if not translation was provided for
 -- it.
-emptyTextTemplatesMap:: (Monoid a) => Map.Map (Region, Lang) a
+emptyTextTemplatesMap:: (Monoid a) => Map.Map Lang a
 emptyTextTemplatesMap = Map.fromList $ for allValues $ \s -> (s,mempty)
 
 basicCSVParser :: String -> IO [[String]]

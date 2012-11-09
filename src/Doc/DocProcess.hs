@@ -9,7 +9,7 @@ where
 
 import Doc.DocStateData
 import Templates.Templates
-import User.Locale
+import User.Lang
 
 class HasProcess a where
   getProcess :: a -> Maybe DocProcessInfo
@@ -28,7 +28,7 @@ class HasProcess a where
   renderTextForProcess hasprocess fieldname =
       renderTemplateForProcess hasprocess fieldname $ do return ()
 
-renderLocalTemplateForProcess :: (HasLocale a, HasProcess a, TemplatesMonad m)
+renderLocalTemplateForProcess :: (HasLang a, HasProcess a, TemplatesMonad m)
                                  => a
                                  -> (DocProcessInfo -> String)
                                  -> Fields m ()
@@ -38,7 +38,7 @@ renderLocalTemplateForProcess hasprocess fieldname fields =
     Just templatename -> renderLocalTemplate hasprocess templatename fields
     _ -> return ""
 
-renderLocalTextForProcess :: (HasLocale a, HasProcess a, TemplatesMonad m)
+renderLocalTextForProcess :: (HasLang a, HasProcess a, TemplatesMonad m)
                              => a
                              -> (DocProcessInfo -> String)
                              -> m String
@@ -214,4 +214,3 @@ orderProcess =
   , processstatusinfotext = "orderstatusinfotext"
 
   }
-

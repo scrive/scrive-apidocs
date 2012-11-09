@@ -66,12 +66,12 @@ import MinutesTime
 import Templates.Templates
 
 documentAPI :: Route (KontraPlus Response)
-documentAPI = dir "api" $ choice 
+documentAPI = dir "api" $ choice
   [ dir "frontend" $ versionedAPI Frontend
   , versionedAPI V1 -- Temporary backwards compatibility for clients accessing version-less API
   , dir "v1" $ versionedAPI V1
   ]
- 
+
 versionedAPI :: APIVersion -> Route (KontraPlus Response)
 versionedAPI _version = choice [
 
@@ -161,7 +161,7 @@ apiCallCreateFromTemplate did =  api $ do
           Created <$> documentJSON True  True Nothing Nothing newdoc
       Nothing -> throwError $ serverError "Create document from template failed"
 
-    
+
 
 apiCallUpdate :: Kontrakcja m => DocumentID -> m Response
 apiCallUpdate did = api $ do
@@ -227,7 +227,7 @@ apiCallCancel did =  api $ do
   when (not $ (auid == userid user)) $ do
         throwError $ serverError "Permission problem. Not an author."
   cancelled <- dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
-  if cancelled 
+  if cancelled
     then do
       newdocument <- apiGuardL (serverError "No document found after cancel") $ dbQuery $ GetDocumentByDocumentID $ did
       lift $ postDocumentCanceledChange newdocument "api"
@@ -270,7 +270,7 @@ apiCallDelete did =  api $ do
 
 
 
-  
+
 apiCallGet :: Kontrakcja m => DocumentID -> m Response
 apiCallGet did = api $ do
   ctx <- getContext
@@ -283,9 +283,9 @@ apiCallGet did = api $ do
          when (signatorymagichash sl /= mh) $ throwError $ serverError "No document found"
          _ <- dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
                          (signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
-         lift $ switchLocale (getLocale doc)
+         lift $ switchLang (getLang doc)
          Ok <$> documentJSON False False Nothing (Just sl) doc
-      _ -> do        
+      _ -> do
         (user, _actor, external) <- getAPIUser APIDocCheck
         doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
         let msiglink = getMaybeSignatoryLink (doc,user)
@@ -293,13 +293,13 @@ apiCallGet did = api $ do
             let sl = fromJust msiglink
             dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
                  (signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
-                 
+
         let macmp = join $ maybecompany <$> getAuthorSigLink doc
         mauser <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
                        Just auid -> dbQuery $ GetUserByID auid
                        _ -> return Nothing
-                       
-        pq <- if ((userid <$> mauser) == Just (userid user)) 
+
+        pq <- if ((userid <$> mauser) == Just (userid user))
                 then dbQuery $ GetPadQueue $ userid user
                 else return Nothing
         let haspermission = (isJust msiglink)
@@ -318,7 +318,7 @@ apiCallList = api $ do
   modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
   return res
 
-  
+
 -- this one must be standard post with post params because it needs to
 -- be posted from a browser form
 -- Change main file, file stored in input "file" OR templateid stored in "template"
@@ -357,14 +357,14 @@ documentChangeMainFile docid = api $ do
                                       Left _ -> return (Left m)
       file <- dbUpdate $ NewFile filename pdfcontent
       return $ Just (fileid file, filename)
-      
+
   case mft of
     Just  (fileid,filename) -> do
       apiGuardL' $ dbUpdate $ AttachFile docid fileid aa
-      apiGuardL' $ dbUpdate $ SetDocumentTitle docid filename aa  
+      apiGuardL' $ dbUpdate $ SetDocumentTitle docid filename aa
     Nothing -> apiGuardL' $ dbUpdate $ DetachFile docid aa
 
-  
+
   return ()
 
 
@@ -458,4 +458,3 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   sigattach' <- apiGuard' $ getSignatoryAttachment d sid aname
 
   return $ jsonSigAttachmentWithFile sigattach' Nothing
-

@@ -94,7 +94,7 @@ adminUserPage user mcompany =
         F.value "adminlink" $ show $ LinkAdminOnly
 
 adminUserPaymentPage :: TemplatesMonad m => UserID -> Maybe PaymentPlan -> Maybe CompanyID -> String -> m String
-adminUserPaymentPage userid mpaymentplan mcompanyid recurlysubdomain =  
+adminUserPaymentPage userid mpaymentplan mcompanyid recurlysubdomain =
   renderTemplate "adminuserpayments" $ do
     F.value "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
     F.value "adminuserslink" $ show $ LinkUserAdmin Nothing
@@ -107,7 +107,7 @@ adminUserPaymentPage userid mpaymentplan mcompanyid recurlysubdomain =
         F.value "haspaymentplan" False
         F.value "freeplan" True
       Just paymentplan -> do
-        F.value "recurlyplan" $ ppPaymentPlanProvider paymentplan == RecurlyProvider        
+        F.value "recurlyplan" $ ppPaymentPlanProvider paymentplan == RecurlyProvider
         F.value "accountcode" $ show $ ppAccountCode paymentplan
         F.value "priceplan" $ show $ ppPricePlan paymentplan
         F.value "haspaymentplan" True
@@ -134,7 +134,7 @@ adminCompanyPage company mmailapiinfo =
     F.value "adminlink" $ show $ LinkAdminOnly
 
 adminCompanyPaymentPage :: TemplatesMonad m => Maybe PaymentPlan -> Int -> CompanyID -> String -> m String
-adminCompanyPaymentPage mpaymentplan quantity companyid recurlysubdomain =  
+adminCompanyPaymentPage mpaymentplan quantity companyid recurlysubdomain =
   renderTemplate "admincompanypayments" $ do
     F.value "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
     F.value "companyid" $ show companyid
@@ -146,7 +146,7 @@ adminCompanyPaymentPage mpaymentplan quantity companyid recurlysubdomain =
         F.value "haspaymentplan" False
         F.value "freeplan" True
       Just paymentplan -> do
-        F.value "recurlyplan" $ ppPaymentPlanProvider paymentplan == RecurlyProvider        
+        F.value "recurlyplan" $ ppPaymentPlanProvider paymentplan == RecurlyProvider
         F.value "accountcode" $ show $ ppAccountCode paymentplan
         F.value "priceplan" $ show $ ppPricePlan paymentplan
         F.value "haspaymentplan" True
@@ -244,8 +244,6 @@ userFields u =  do
         F.value "phone"            $ userphone $ userinfo u
         F.value "mobile"           $ usermobile $ userinfo u
         F.value "email"            $ getEmail u
-        F.value "regionse"         $ REGION_SE == getRegion u
-        F.value "regiongb"         $ REGION_GB == getRegion u
         F.value "langsv"           $ LANG_SE == getLang u
         F.value "langen"           $ LANG_EN == getLang u
         F.value "iscompanyaccount" $ isJust $ usercompany u

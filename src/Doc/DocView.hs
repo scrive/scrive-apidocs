@@ -159,13 +159,13 @@ documentJSON forapi forauthor pq msl doc = do
       J.value "template" $ isTemplate doc
       J.value "daystosign" $ documentdaystosign doc
       J.value "invitationmessage" $ documentinvitetext doc
-      J.value "region" $  case (getRegion doc) of
-                             REGION_GB -> "gb" 
-                             REGION_SE -> "se"
+      J.value "lang" $  case (getLang doc) of
+                             LANG_EN -> "gb"
+                             LANG_SE -> "se"
       J.objects "tags" $ for (Set.toList $ documenttags doc) $ \(DocumentTag n v) -> do
                                     J.value "name"  n
                                     J.value "value" v
-      J.value "apicallbackurl" $ documentapicallbackurl doc                              
+      J.value "apicallbackurl" $ documentapicallbackurl doc
       when (not $ forapi) $ do
         J.value "logo" logo
         J.value "barsbackgroundcolor" bbc
@@ -312,7 +312,7 @@ pageDocumentView document msiglink authorcompanyadmin =
       F.value "siglinkid" $ fmap (show . signatorylinkid) msiglink
       F.value "sigmagichash" $ fmap (show .  signatorymagichash) msiglink
       F.value "authorcompanyadmin" $ authorcompanyadmin
-      
+
 
 pageDocumentSignView :: TemplatesMonad m
                     => Context
@@ -419,5 +419,4 @@ documentsToFixView docs = do
 
 -- Page for GT verification
 gtVerificationPage :: TemplatesMonad m => m String
-gtVerificationPage = renderTemplate_ "gtVerificationPage" 
-    
+gtVerificationPage = renderTemplate_ "gtVerificationPage"

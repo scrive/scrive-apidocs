@@ -9,7 +9,7 @@ module PublicPages (
 import AppView as V
 import Kontra
 import KontraLink
-import LocaleRouting (allLocaleDirs, dirByLang)
+import LangRouting (allLangDirs, dirByLang)
 import Happstack.Fields
 import Redirect
 import Routing
@@ -23,7 +23,7 @@ import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 
 publicPages :: Route (KontraPlus Response)
 publicPages = choice
-     [ allLocaleDirs $ const $ hGetAllowHttp $ toK0 handleHomepage
+     [ allLangDirs $ const $ hGetAllowHttp $ toK0 handleHomepage
      , publicDir "priser" "pricing" LinkPriceplan handlePriceplanPage
      , publicDir "sakerhet" "security" LinkSecurity handleSecurityPage
      , publicDir "juridik" "legal" LinkLegal handleLegalPage
@@ -42,27 +42,27 @@ publicPages = choice
      , dir "webbkarta"       $ hGetAllowHttp $ handleSitemapPage
      , dir "sitemap"         $ hGetAllowHttp $ handleSitemapPage
      -- localization javascript
-     , dir "localization"    $ allLocaleDirs $ \l -> hGetAllowHttp $ toK1 $ \(_::String) ->  generateLocalizationScript l
+     , dir "localization"    $ allLangDirs $ \l -> hGetAllowHttp $ toK1 $ \(_::String) ->  generateLocalizationScript l
      ]
 
 {- |
     This is a helper function for routing a public dir.
 -}
-publicDir :: String -> String -> (Locale -> KontraLink) -> Kontra Response -> Route (KontraPlus Response)
+publicDir :: String -> String -> (Lang -> KontraLink) -> Kontra Response -> Route (KontraPlus Response)
 publicDir swedish english link handler = choice $
   [
-    -- the correct url with region/lang/publicdir where the publicdir must be in the correct lang
-    allLocaleDirs $ \locale -> dirByLang locale swedish english $ hGetAllowHttp $ handler
+    -- the correct url with lang/publicdir where the publicdir must be in the correct lang
+    allLangDirs $ \lang -> dirByLang lang swedish english $ hGetAllowHttp $ handler
 
-    -- if they use the swedish name without region/lang we should redirect to the correct swedish locale
-  , dir swedish $ hGetAllowHttp $ redirectKontraResponse $ link (mkLocaleFromRegion REGION_SE)
+    -- if they use the swedish name without lang we should redirect to the correct swedish lang
+  , dir swedish $ hGetAllowHttp $ redirectKontraResponse $ link LANG_SE
   ] ++ if swedish == english
-       then [] -- if prefixes are identical, we don't know to what locale we should redirect,
+       then [] -- if prefixes are identical, we don't know to what lang we should redirect,
                -- so ignore English redirect
        else
   [
-    -- if they use the english name without region/lang we should redirect to the correct british locale
-    dir english $ hGetAllowHttp $ redirectKontraResponse $ link (mkLocaleFromRegion REGION_GB)
+    -- if they use the english name without lang we should redirect to the correct english lang
+    dir english $ hGetAllowHttp $ redirectKontraResponse $ link LANG_EN
   ]
 
 handleHomepage :: Kontra (Either Response (Either KontraLink String))
@@ -130,9 +130,8 @@ handleWholePage f = do
   clearFlashMsgs
   return response
 
-generateLocalizationScript :: Kontrakcja m => Locale -> m Response
-generateLocalizationScript locale = do
-   switchLocale $ locale
+generateLocalizationScript :: Kontrakcja m => Lang -> m Response
+generateLocalizationScript lang = do
+   switchLang $ lang
    script <- renderTemplate_ "javascriptLocalisation"
    ok $ toResponseBS (BS.fromString "text/javascript;charset=utf-8") $ BSL.fromString script
-  

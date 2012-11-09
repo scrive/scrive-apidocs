@@ -30,7 +30,7 @@ test_handleGetCompanyJSON = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest GET []
   (jsv, _ctx') <- runTestKontra req ctx $ handleGetCompanyJSON Nothing
@@ -52,7 +52,7 @@ test_settingUIWithHandlePostCompany = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req1 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"green\",\"barstextcolour\":\"yellow\"}")
                         , ("logo", inFile "public/img/email-logo.png")
@@ -90,7 +90,7 @@ test_handleCompanyLogo :: TestEnv ()
 test_handleCompanyLogo = do
   (_user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
-  ctx <- mkContext $ mkLocaleFromRegion defaultValue
+  ctx <- mkContext defaultValue
 
   req <- mkRequest GET []
   (res, _ctx') <- runTestKontra req ctx $ handleCompanyLogo (companyid company)

@@ -17,7 +17,7 @@ import MinutesTime
 import Redirect
 import TestingUtil
 import TestKontra as T
-import User.Locale
+-- import User.Locale
 import User.Model
 import User.UserControl
 import Utils.Default

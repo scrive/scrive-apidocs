@@ -87,7 +87,7 @@ test_addingANewCompanyAccount = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST [ ("add", inText "True")
                         , ("email", inText "bob@blue.com")
@@ -119,7 +119,7 @@ test_addingExistingPrivateUserAsCompanyAccount = do
   Just existinguser <- addNewUser "Bob" "Blue" "bob@blue.com"
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST [ ("add", inText "True")
                         , ("email", inText "bob@blue.com")
@@ -146,7 +146,7 @@ test_addingExistingCompanyUserAsCompanyAccount = do
   (existinguser, existingcompany) <- addNewAdminUserAndCompany "Bob" "Blue" "bob@blue.com"
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST [ ("add", inText "True")
                         , ("email", inText "bob@blue.com")
@@ -175,7 +175,7 @@ test_resendingInviteToNewCompanyAccount = do
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST [ ("resend", inText "True")
                         , ("resendid", inText $ show (userid newuser))
@@ -201,7 +201,7 @@ test_resendingInviteToPrivateUser = do
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST [ ("resend", inText "True")
                         , ("resendid", inText "0")
@@ -224,7 +224,7 @@ test_resendingInviteToCompanyUser = do
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST [ ("resend", inText "True")
                         , ("resendid", inText "0")
@@ -246,7 +246,7 @@ test_switchingStandardToAdminUser = do
   Just standarduser <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST [ ("changerole", inText "True")
                         , ("changeid", inText $ show (userid standarduser))
@@ -269,7 +269,7 @@ test_switchingAdminToStandardUser = do
   Just adminuser <- dbQuery $ GetUserByID (userid user)
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST [ ("changerole", inText "True")
                         , ("changeid", inText $ show (userid adminuser))
@@ -290,7 +290,7 @@ test_removingCompanyAccountInvite = do
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST [ ("remove", inText "True")
                         , ("removeid", inText $ "0")
@@ -312,7 +312,7 @@ test_removingCompanyAccountWorks = do
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "jony@blue.com" "Bob" "Blue"
 
   ctx <- (\c -> c { ctxmaybeuser = Just adminuser })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST [ ("remove", inText "True")
                         , ("removeid", inText $ show (userid standarduser))
@@ -338,7 +338,7 @@ test_privateUserTakoverWorks = do
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST []
   (res, ctx') <- runTestKontra req ctx $ handlePostBecomeCompanyAccount (companyid company) >>= sendRedirect
@@ -365,7 +365,7 @@ test_mustBeInvitedForTakeoverToWork = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST []
   (l, _ctx') <- runTestKontra req ctx $

@@ -157,8 +157,8 @@ window.Document = Backbone.Model.extend({
     process: function() {
         return this.get("process");
     },
-    region: function() {
-        return this.get("region");
+    lang: function() {
+        return this.get("lang");
     },
     title: function() {
         return this.get("title");
@@ -224,7 +224,7 @@ window.Document = Backbone.Model.extend({
         var url;
         //        if(document.preparation() || (document.viewer() && document.viewer().signatoryid() === document.author().signatoryid())) // author
         //url = "/d/" + document.documentid();
-        //else 
+        //else
         url = "/s/" + document.documentid() +  "/" + document.viewer().signatoryid();
         return new Submit({
             sign : "YES",
@@ -275,9 +275,9 @@ window.Document = Backbone.Model.extend({
           daystosign: this.get("daystosign"),
           authentication: this.get("authentication"),
           delivery: this.get("delivery"),
-          apicallbackurl : this.get("apicallbackurl"),                              
+          apicallbackurl : this.get("apicallbackurl"),
           signatories: _.map(this.signatories(), function(sig) {return sig.draftData()}),
-          region: this.region().draftData(),
+          lang: this.lang().draftData(),
           process : this.process().process(),
           template: this.isTemplate()
       };
@@ -318,7 +318,7 @@ window.Document = Backbone.Model.extend({
         return (csig != undefined && csig.author());
     },
     currentViewerIsAuthorsCompanyAdmin : function() {
-        return this.viewer().authorcompanyadmin() == true;  
+        return this.viewer().authorcompanyadmin() == true;
     },
     preparation: function() {
         return this.status() == "Preparation";
@@ -497,7 +497,7 @@ window.Document = Backbone.Model.extend({
       var mpso = 0;
       _.each(this.signatories(), function(sig) {if (sig.signs()) mpso++;});
       return mpso == 0 ? 1 : mpso;
-    }, 
+    },
     fixSignorder : function() {
         var mpso = this.maxPossibleSignOrder();
         _.each(this.signatories(), function(sig) {
@@ -546,7 +546,7 @@ window.Document = Backbone.Model.extend({
                         // This is not used but nice to have. Please leave it.
                         return process;
                 }(),
-       region: new Region({region : args.region}),
+       lang: new Lang({lang : args.lang}),
        infotext: args.infotext,
        canberestarted: args.canberestarted,
        canbecanceled: args.canbecanceled,

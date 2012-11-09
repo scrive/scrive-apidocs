@@ -8,49 +8,49 @@ sitemapPage=
       http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 <!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
 
-$locales:{locale|
+$langs:{lang|
 <url>
-  <loc>$hostpart$$locale.linkhome$</loc>
+  <loc>$hostpart$$lang.linkhome$</loc>
   <changefreq>daily</changefreq>
   <priority>1.00</priority>
 </url>
 <url>
-  <loc>$hostpart$$locale.linkpartners$</loc>
+  <loc>$hostpart$$lang.linkpartners$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$$locale.linkpriceplan$</loc>
+  <loc>$hostpart$$lang.linkpriceplan$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$$locale.linksecurity$</loc>
+  <loc>$hostpart$$lang.linksecurity$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$$locale.linklegal$</loc>
+  <loc>$hostpart$$lang.linklegal$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$$locale.linkprivacypolicy$</loc>
+  <loc>$hostpart$$lang.linkprivacypolicy$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$$locale.linkterms$</loc>
+  <loc>$hostpart$$lang.linkterms$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$$locale.linkabout$</loc>
+  <loc>$hostpart$$lang.linkabout$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>
 <url>
-  <loc>$hostpart$$locale.linkclients$</loc>
+  <loc>$hostpart$$lang.linkclients$</loc>
   <changefreq>daily</changefreq>
   <priority>0.80</priority>
 </url>

@@ -15,7 +15,7 @@ window.Process = Backbone.Model.extend({
     name : function() {
         return this.get("process");
     },
-    process : function() { 
+    process : function() {
         return this.get("process");
     },
     isContract : function() {
@@ -50,24 +50,24 @@ window.Process = Backbone.Model.extend({
     }
 });
 
-window.Region = Backbone.Model.extend({
-    region : function() {
-        return this.get("region");
+window.Lang = Backbone.Model.extend({
+    lang : function() {
+        return this.get("lang");
     },
-    gb : function(){
-        return this.region() == "gb";
+    en : function(){
+        return this.lang() == "en";
     },
     se : function(){
-        return this.region() == "se";
+        return this.lang() == "se";
     },
-    setGB : function() {
-        this.set({region : "gb"});
+    setEN : function() {
+        this.set({lang : "en"});
     },
     setSE : function() {
-        this.set({region : "se"});
+        this.set({lang : "se"});
     },
     draftData : function() {
-        return this.region();
+        return this.lang();
     }
 });
 

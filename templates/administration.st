@@ -180,12 +180,12 @@ adminUsersForSales=
             tr5.append(jQuery("<td/>").append(email));
             table.append(tr5);
 
-            var tr6 = jQuery("<tr/>").append(jQuery("<td/>").text("Region:"));
-            var region = jQuery("<select name='region'>"
-                                + '<option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>'
-                                + '<option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>'
+            var tr6 = jQuery("<tr/>").append(jQuery("<td/>").text("Language:"));
+            var lang = jQuery("<select name='lang'>"
+                                + '<option $if(user.langen)$selected=""$endif$ value="LANG_SE">Sweden (Swedish)</option>'
+                                + '<option $if(user.langse)$selected=""$endif$ value="LANG_EN">Britain (English)</option>'
                                 + "</select>");
-            tr6.append(jQuery("<td/>").append(region));
+            tr6.append(jQuery("<td/>").append(lang));
             table.append(tr6);
 
             var tr7 = jQuery("<tr/>").append(jQuery("<td/>").text("Header:"));
@@ -218,7 +218,7 @@ adminUsersForSales=
                             fstname.css("background", "white");
                             sndname.css("background", "white");
                             email.css("background", "white");
-                            region.css("background", "white");
+                            lang.css("background", "white");
 
                             //delete messages
                             jQuery('[name=validate-message]').remove();
@@ -227,7 +227,7 @@ adminUsersForSales=
                                 fstname.validate(new NameValidation({callback: callback, message: "Wrong first name format!"})),
                                 sndname.validate(new NameValidation({callback: callback, message: "Wrong second name format!"})),
                                 email.validate((new NotEmptyValidation({callback: callback, message: "Email cannot be empty!"})).concat(new EmailValidation({callback: callback}))),
-                                region.validate(new NotEmptyValidation({callback: callback, message:"Region cannot be empty!"}))
+                                lang.validate(new NotEmptyValidation({callback: callback, message:"Language cannot be empty!"}))
                                 ];
 
                             if (vresult.every(function(a) {return a;})) {
@@ -238,7 +238,7 @@ adminUsersForSales=
                                     fstname : fstname.val(),
                                     sndname : sndname.val(),
                                     email : email.val(),
-                                    region : region.val(),
+                                    lang : lang.val(),
                                     custommessage : jQuery('textarea',body).val()
                                     }).send();
                             }
@@ -280,7 +280,7 @@ adminuser=
     <a style="padding-left:100px" href="$adminuserslink$">Go back to user admin page</a>
     <br/>
     <br/>
-    
+
       <div class="tab-viewer">
 	<div class="tab-header">
 	</div>
@@ -352,10 +352,10 @@ adminuser=
 		    <input type="text" style="width:200px;margin:0" value="$user.companyposition$"  name="usercompanyposition" />
 		  </td>
 		</tr>
-    <tr> <td>Region:</td>
-      <td><select name="userregion">
-        <option $if(user.regionse)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
-        <option $if(user.regiongb)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
+    <tr> <td>Language:</td>
+      <td><select name="userlang">
+        <option $if(user.langse)$selected=""$endif$ value="LANG_SE">Sweden (Swedish)</option>
+        <option $if(user.langen)$selected=""$endif$ value="LANG_EN">Britain (English)</option>
       </select></td>
     </tr>
 		<tr>
@@ -419,7 +419,7 @@ adminuserpayments=
 		<tr> <td style="padding-top:10px"><strong>Payment Info</strong></td> <td> </td></tr>
                 $if(haspaymentplan)$
                 $if(companyid)$
-		<tr> 
+		<tr>
                   <td><em>Warning:</em> </td>
 		  <td>
                     This user has a personal (user) payment plan and is part of a company. Something has gone wrong.
@@ -427,20 +427,20 @@ adminuserpayments=
 		</tr>
                 $endif$
                 $if(recurlyplan)$
-		<tr> 
+		<tr>
                   <td>Price plan on Recurly: </td>
 		  <td>
                     <a href="https://$recurlysubdomain$.recurly.com/accounts/$accountcode$">$priceplan$</a>
 		  </td>
 		</tr>
-		<tr> 
+		<tr>
                   <td>Status: </td>
 		  <td>
                     $status$
 		  </td>
 		</tr>
                 $else$
-		<tr> 
+		<tr>
                   <td>Price plan (selected by admin):</td>
 		  <td>
 		    <select name="priceplan">
@@ -451,7 +451,7 @@ adminuserpayments=
                     </select>
 		  </td>
 		</tr>
-		<tr> 
+		<tr>
                   <td>Status (selected by admin):</td>
 		  <td>
 		    <select name="status">
@@ -462,7 +462,7 @@ adminuserpayments=
                     </select>
 		  </td>
 		</tr>
-		<tr> 
+		<tr>
                   <td><input type="submit" style="width:200px;font-weight:bold"
 	           value="Change" name="change" /></td>
 		  <td>
@@ -471,14 +471,14 @@ adminuserpayments=
                 $endif$
                 $else$
                 $if(companyid)$
-		<tr> 
+		<tr>
                   <td>Company price plan: </td>
 		  <td>
                     This user is part of a company. <a href="$admincompanieslink$/payments/$companyid$">Visit the company price plan.</a>
 		  </td>
 		</tr>
                 $else$
-		<tr> 
+		<tr>
                   <td>Price plan (selected by admin):</td>
 		  <td>
 		    <select name="priceplan">
@@ -489,7 +489,7 @@ adminuserpayments=
                     </select>
 		  </td>
 		</tr>
-		<tr> 
+		<tr>
                   <td>Status (selected by admin):</td>
 		  <td>
 		    <select name="status">
@@ -500,7 +500,7 @@ adminuserpayments=
                     </select>
 		  </td>
 		</tr>
-		<tr> 
+		<tr>
                   <td><input type="submit" style="width:200px;font-weight:bold"
 	           value="Change" name="change" /></td>
 		  <td>
@@ -509,7 +509,7 @@ adminuserpayments=
                 $endif$
                 $endif$
 	    </tbody></table>
-            
+
           </form>
 	</div>
       </div>
@@ -663,27 +663,27 @@ admincompanypayments=
 	    <table><tbody>
 		<tr> <th style="width:200px"></th> <th> </th></tr>
 		<tr> <td style="padding-top:10px"><strong>Payment Info</strong></td> <td> </td></tr>
-		<tr> 
+		<tr>
                   <td>Company Users: </td>
 		  <td>
                     $quantity$
 		  </td>
 		</tr>
                 $if(recurlyplan)$
-		<tr> 
+		<tr>
                   <td>Price plan on Recurly: </td>
 		  <td>
                     <a href="https://$recurlysubdomain$.recurly.com/accounts/$accountcode$">$priceplan$</a>
 		  </td>
 		</tr>
-		<tr> 
+		<tr>
                   <td>Status: </td>
 		  <td>
                     $status$
 		  </td>
 		</tr>
                 $else$
-		<tr> 
+		<tr>
                   <td>Price plan (selected by admin):</td>
 		  <td>
 
@@ -695,7 +695,7 @@ admincompanypayments=
                     </select>
 		  </td>
 		</tr>
-		<tr> 
+		<tr>
                   <td>Status (selected by admin):</td>
 		  <td>
 		    <select name="status">
@@ -706,7 +706,7 @@ admincompanypayments=
                     </select>
 		  </td>
 		</tr>
-		<tr> 
+		<tr>
                   <td><input type="submit" style="width:200px;font-weight:bold"
 	           value="Change" name="change" /></td>
 		  <td>
@@ -714,7 +714,7 @@ admincompanypayments=
 		</tr>
                 $endif$
 	    </tbody></table>
-            
+
           </form>
 	</div>
       </div>
@@ -767,12 +767,12 @@ admincompanyusers=
             tr5.append(jQuery("<td/>").append(email));
             table.append(tr5);
 
-            var tr6 = jQuery("<tr/>").append(jQuery("<td/>").text("Region:"));
-            var region = jQuery("<select name='region'>"
-                                + '<option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>'
-                                + '<option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>'
+            var tr6 = jQuery("<tr/>").append(jQuery("<td/>").text("Language:"));
+            var lang = jQuery("<select name='lang'>"
+                                + '<option $if(user.langen)$selected=""$endif$ value="LANG_SE">Sweden (Swedish)</option>'
+                                + '<option $if(user.langse)$selected=""$endif$ value="LANG_EN">Britain (English)</option>'
                                 + "</select>");
-            tr6.append(jQuery("<td/>").append(region));
+            tr6.append(jQuery("<td/>").append(lang));
             table.append(tr6);
 
             var tr7 = jQuery("<tr/>").append(jQuery("<td/>").text("Is company admin:"));
@@ -811,7 +811,7 @@ admincompanyusers=
                             fstname.css("background", "white");
                             sndname.css("background", "white");
                             email.css("background", "white");
-                            region.css("background", "white");
+                            lang.css("background", "white");
 
                             //delete messages
                             jQuery('[name=validate-message]').remove();
@@ -820,7 +820,7 @@ admincompanyusers=
                                 fstname.validate(new NameValidation({callback: callback, message: "Wrong first name format!"})),
                                 sndname.validate(new NameValidation({callback: callback, message: "Wrong second name format!"})),
                                 email.validate((new NotEmptyValidation({callback: callback, message: "Email cannot be empty!"})).concat(new EmailValidation({callback: callback}))),
-                                region.validate(new NotEmptyValidation({callback: callback, message:"Region cannot be empty!"}))
+                                lang.validate(new NotEmptyValidation({callback: callback, message:"Language cannot be empty!"}))
                                 ];
 
                             if (vresult.every(function(a) {return a;})) {
@@ -830,7 +830,7 @@ admincompanyusers=
                                     fstname : fstname.val(),
                                     sndname : sndname.val(),
                                     email : email.val(),
-                                    region : region.val(),
+                                    lang : lang.val(),
                                     iscompanyadmin : isadmin.is(":checked") ? "Yes" : undefined,
                                     custommessage : jQuery('textarea',body).val()
                                     }).send();
@@ -1140,7 +1140,7 @@ admindocumentslist =
                                 return jQuery("<small/>")
                                                   .append(jQuery("<span/>").text(value.name))
                                                   .append("<BR/>")
-                                                  .append(jQuery("<span/>").text(value.email)) 
+                                                  .append(jQuery("<span/>").text(value.email))
                                                   .append("<BR/>")
                                                   .append(jQuery("<span/>").text(value.company));
                           }}),

@@ -46,10 +46,10 @@ mailApiTests env = testGroup "MailAPI" [
     , testThat "test eric's error email"                              env $ testSuccessfulDocCreation "test/mailapi/eric_email_error.eml" 2
     , testThat "test lukas's funny title"                             env $ testSuccessfulDocCreation "test/mailapi/email_weird_subject.eml" 2
     , testThat "test exchange email"                                  env $ testSuccessfulDocCreation "test/mailapi/email_exchange.eml" 2
-    , testThat "test exchange email with swedish chars"               env $ testSuccessfulDocCreation "test/mailapi/email_exchange_swedish.eml" 2      
+    , testThat "test exchange email with swedish chars"               env $ testSuccessfulDocCreation "test/mailapi/email_exchange_swedish.eml" 2
     , testThat "test 2 sig model from outlook mac"                    env $ testSuccessfulDocCreation "test/mailapi/email_outlook_viktor.eml" 3
     , testThat "test json with 2 sigs"                                env $ testSuccessfulDocCreation "test/mailapi/email_onesig_json.eml" 2
-    , testThat "test json with 2 sigs and newlines"                   env $ testSuccessfulDocCreation "test/mailapi/email_onesig_newlines_json.eml" 2      
+    , testThat "test json with 2 sigs and newlines"                   env $ testSuccessfulDocCreation "test/mailapi/email_onesig_newlines_json.eml" 2
     , testThat "test json with 2 sigs (from Roger)"                   env $ testSuccessfulDocCreation "test/mailapi/roger_json.eml" 2
     , testThat "test json with 2 sigs (from Roger) with decoding"     env $ testSuccessfulDocCreation "test/mailapi/roger_decode_json.eml" 2
     , testThat "test email from per"                                  env $ testSuccessfulDocCreation "test/mailapi/per_one.eml" 2
@@ -74,7 +74,7 @@ initializeMailTest emlfile = do
     uid <- createTestUser
     muser <- dbQuery $ GetUserByID uid
     ctx <- (\c -> c { ctxmaybeuser = muser })
-      <$> mkContext (mkLocaleFromRegion defaultValue)
+      <$> mkContext defaultValue
     _ <- dbUpdate $ SetUserMailAPIKey uid (read "ef545848bcd3f7d8") 1
     return (req, ctx)
 
@@ -112,7 +112,7 @@ testError emlfile = do
 
 createTestUser :: TestEnv UserID
 createTestUser = do
-    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" Nothing Nothing (mkLocaleFromRegion defaultValue)
+    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" Nothing Nothing defaultValue
     return userid
 
 test_getUserMailAPI :: TestEnv ()
@@ -135,4 +135,3 @@ test_getUserMailAPI = do
   assertBool "UserMailAPI erased correctly" res3
   nomapi <- dbQuery $ GetUserMailAPI userid
   assertBool "No UserMailAPI returned" $ isNothing nomapi
-

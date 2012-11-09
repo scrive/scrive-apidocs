@@ -1,6 +1,6 @@
 module EvidenceLog.Model (
     EvidenceEventType(..)
-  , eventTextTemplateName  
+  , eventTextTemplateName
   , apiActor
   , InsertEvidenceEvent(..)
   , GetEvidenceLog(..)
@@ -161,7 +161,7 @@ data EvidenceEventType =
   SignDocumentEvidence                            |
   SetInvitationDeliveryStatusEvidence             |
   SetDocumentUIEvidence                           |
-  SetDocumentLocaleEvidence                       |
+  SetDocumentLangEvidence                         |
   SetDocumentTitleEvidence                        |
   SetDocumentAdvancedFunctionalityEvidence        |
   RemoveDaysToSignEvidence                        | -- not used anymore
@@ -234,7 +234,7 @@ instance Convertible EvidenceEventType Int where
   safeConvert SignDocumentEvidence                            = return 10
   safeConvert SetInvitationDeliveryStatusEvidence             = return 11
   safeConvert SetDocumentUIEvidence                           = return 12
-  safeConvert SetDocumentLocaleEvidence                       = return 13
+  safeConvert SetDocumentLangEvidence                         = return 13
   safeConvert SetDocumentTitleEvidence                        = return 14
   safeConvert SetDocumentAdvancedFunctionalityEvidence        = return 15
   safeConvert RemoveDaysToSignEvidence                        = return 16
@@ -293,7 +293,7 @@ instance Convertible EvidenceEventType Int where
   safeConvert SetDocumentProcessEvidence                      = return 69
   safeConvert DetachFileEvidence                              = return 70
 
-   
+
 instance Convertible Int EvidenceEventType where
     safeConvert 1  = return AddSigAttachmentEvidence
     safeConvert 2  = return RemoveSigAttachmentsEvidence
@@ -307,7 +307,7 @@ instance Convertible Int EvidenceEventType where
     safeConvert 10 = return SignDocumentEvidence
     safeConvert 11 = return SetInvitationDeliveryStatusEvidence
     safeConvert 12 = return SetDocumentUIEvidence
-    safeConvert 13 = return SetDocumentLocaleEvidence
+    safeConvert 13 = return SetDocumentLangEvidence
     safeConvert 14 = return SetDocumentTitleEvidence
     safeConvert 15 = return SetDocumentAdvancedFunctionalityEvidence
     safeConvert 16 = return RemoveDaysToSignEvidence

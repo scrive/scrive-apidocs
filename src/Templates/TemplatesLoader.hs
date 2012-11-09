@@ -29,30 +29,31 @@ import Text.Html (stringToHtmlString)
 import System.Directory
 import System.Time
 import Templates.TemplatesFiles
-import User.Locale
+import User.Lang
 import Templates.TextTemplates
+import Utils.Enum
 
 {-Names of template files -}
 
 
 type KontrakcjaTemplates = STGroup String
 type KontrakcjaTemplate = StringTemplate String
-type KontrakcjaGlobalTemplates = Map.Map Locale KontrakcjaTemplates
+type KontrakcjaGlobalTemplates = Map.Map Lang KontrakcjaTemplates
 
-localizedVersion :: Locale -> KontrakcjaGlobalTemplates -> KontrakcjaTemplates
-localizedVersion locale mtemplates = mtemplates ! locale
+localizedVersion :: Lang -> KontrakcjaGlobalTemplates -> KontrakcjaTemplates
+localizedVersion lang mtemplates = mtemplates ! lang
 
 -- Fixme: Make this do only one read of all files !!
 readGlobalTemplates :: (Functor m, MonadIO m) => m KontrakcjaGlobalTemplates
 readGlobalTemplates =
-  fmap Map.fromList $ forM allLocales $ \locale -> do
-    templates <- liftIO $ readTemplates locale
-    return (locale,templates)
+  fmap Map.fromList $ forM allValues $ \lang -> do
+    templates <- liftIO $ readTemplates lang
+    return (lang,templates)
 
-readTemplates :: Locale -> IO KontrakcjaTemplates
-readTemplates locale = do
+readTemplates :: Lang -> IO KontrakcjaTemplates
+readTemplates lang = do
     ts <- mapM getTemplates templatesFilesPath
-    texts <- getTextTemplates (getRegion locale) (getLang locale)
+    texts <- getTextTemplates lang
     return $ groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) $ (concat ts) ++ texts
 
 getTemplatesModTime :: IO ClockTime

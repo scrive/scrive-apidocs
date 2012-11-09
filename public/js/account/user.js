@@ -1,7 +1,7 @@
 /* Main archive definition. Its a tab based set of different documents lists. */
 
 (function(window){
- 
+
 window.User = Backbone.Model.extend({
   defaults : {
       id        : "",
@@ -15,7 +15,6 @@ window.User = Backbone.Model.extend({
       usercompanyname : "",
       usercompanynumber : "",
       lang : "se",
-      region : "se",
       footer : undefined,
       company   : undefined,
       mailapi   : undefined,
@@ -63,9 +62,6 @@ window.User = Backbone.Model.extend({
   lang : function() {
      return this.get("lang");
   },
-  region : function() {
-     return this.get("region");
-  },
   footer : function() {
      return this.get("footer");
   },
@@ -97,7 +93,6 @@ window.User = Backbone.Model.extend({
       usercompanyname : args.usercompanyname,
       usercompanynumber : args.usercompanynumber,
       lang : args.lang,
-      region : args.region,
       footer : args.footer,
       company   : args.company != undefined ? new Company(args.company) : undefined,
       mailapi   :  args.mailapi != undefined ? new MailApi(args.mailapi) : undefined,
@@ -107,6 +102,6 @@ window.User = Backbone.Model.extend({
 });
 
 
-  
+
 
 })(window);

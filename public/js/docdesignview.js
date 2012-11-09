@@ -164,14 +164,14 @@ var DocumentDesignView = Backbone.View.extend({
             checkbox.attr("checked","YES");
             checkbox.attr("cc","YES");
             document.setElegAuthentication();
-          }  
+          }
           else {
              checkbox.removeAttr("checked");
              checkbox.attr("cc","NO");
              document.setStandardAuthentication();
-          }   
+          }
           return false;
-        });  
+        });
         var text = $("<span>").text(localization.designview.authentication.selectmethod + " "+ localization.eleg);
         box.append(checkbox).append(text);
         return box;
@@ -233,7 +233,7 @@ var DocumentDesignView = Backbone.View.extend({
           api.attr("selected","YES");
           select.append(api);
         }
-       
+
         select.change(function() {
             if ($(this).val() == 'pad')
                 document.setPadDelivery();
@@ -309,7 +309,7 @@ var DocumentDesignView = Backbone.View.extend({
         select.append(se);
         box.text(localization.languages.selectLanguage);
         box.append(select);
-        if (document.region().gb())
+        if (document.lang().en())
         {
           en.attr("selected","YES");
           se.attr("selected","");
@@ -330,7 +330,7 @@ var DocumentDesignView = Backbone.View.extend({
                         select.val("se");
                     },
                     onAccept : function() {
-                       document.region().setGB();
+                       document.lang().setEN();
                        LoadingDialog.open();
                        document.save();
                        document.afterSave(function() {
@@ -350,7 +350,7 @@ var DocumentDesignView = Backbone.View.extend({
                         select.val("en");
                     },
                     onAccept : function() {
-                       document.region().setSE();
+                       document.lang().setSE();
                        LoadingDialog.open();
                        document.save();
                        document.afterSave(function() {
@@ -477,12 +477,12 @@ var DocumentDesignView = Backbone.View.extend({
             if (alreadyClicked(this))
               return;
             document.save();
-            document.afterSave( function() { 
+            document.afterSave( function() {
               new Submit().send();
             });
           }
         });
-      } 
+      }
       else {
         if (document.authorCanSignFirst()) {
           button = Button.init({
@@ -498,7 +498,7 @@ var DocumentDesignView = Backbone.View.extend({
               view.signConfirmation();
             }
           });
-        } 
+        }
         else {
            button = Button.init({
              color: "green",
@@ -577,7 +577,7 @@ var DocumentDesignView = Backbone.View.extend({
                                         var link = JSON.parse(resp).link;
                                         window.location = link;
                                     });;
-                           });         
+                           });
                     }
                 }).input();
         }
@@ -643,7 +643,7 @@ var DocumentDesignView = Backbone.View.extend({
                                             else
                                                 window.location = link;
                                         });
-                                    });    
+                                    });
                                 }
                               }).input(),
               rejectText: localization.cancel,
@@ -738,7 +738,7 @@ var DocumentDesignView = Backbone.View.extend({
                     }
                   }).addInputs(input).send();
               });
-            }  
+            }
         });
         return upbutton.input();
     },

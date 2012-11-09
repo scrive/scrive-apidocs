@@ -490,7 +490,7 @@ blankUser = User { userid                        = unsafeUserID 0
                                        , usercompanyname = []
                                        , usercompanynumber = []
                                        }
-                 , usersettings  = UserSettings { locale = mkLocaleFromRegion defaultValue
+                 , usersettings  = UserSettings { lang = defaultValue
                                                 , customfooter = Nothing
                                                 }
                  , usercompany = Nothing
@@ -534,11 +534,11 @@ addNewRandomFile = do
 
 addNewUser :: String -> String -> String -> TestEnv (Maybe User)
 addNewUser firstname secondname email =
-  dbUpdate $ AddUser (firstname, secondname) email Nothing Nothing (mkLocaleFromRegion defaultValue)
+  dbUpdate $ AddUser (firstname, secondname) email Nothing Nothing defaultValue
 
 addNewCompanyUser :: String -> String -> String -> CompanyID -> TestEnv (Maybe User)
 addNewCompanyUser firstname secondname email cid =
-  dbUpdate $ AddUser (firstname, secondname) email Nothing (Just cid) (mkLocaleFromRegion defaultValue)
+  dbUpdate $ AddUser (firstname, secondname) email Nothing (Just cid) defaultValue
 
 addNewRandomUser :: TestEnv User
 addNewRandomUser = do
@@ -689,7 +689,7 @@ addRandomDocument rda = do
 
 
       let adoc = doc { documentsignatorylinks = alllinks
-                     , documentregion = getRegion user
+                     , documentlang = getLang user
                      , documentfile = Just (fileid file)
                      , documentsealedfile = if documentstatus doc == Closed
                                                then Just (fileid file)
@@ -904,14 +904,6 @@ isFlashOfType (FlashTemplate ft _ _) t = ft == t
 getFlashType :: FlashMessage -> FlashType
 getFlashType (FlashMessage ft _) = ft
 getFlashType (FlashTemplate ft _ _) = ft
-
-instance Arbitrary Locale where
-  arbitrary = do
-    (a, b) <- arbitrary
-    return $ mkLocale a b
-
-instance Arbitrary Region where
-  arbitrary = elements [REGION_SE, REGION_GB]
 
 instance Arbitrary Lang where
   arbitrary = elements [LANG_SE, LANG_EN]

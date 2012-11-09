@@ -220,7 +220,7 @@ dropDocumentIDColumntFromSignatoryAttachments = Migration {
 - migrate padqueue - add new fk referencing signatory_links
 - migrate signatory_attachments - add new fk referencing signatory_links
 -}
-             
+
 moveSignatoryLinkFieldsToSeparateTable :: MonadDB m => Migration m
 moveSignatoryLinkFieldsToSeparateTable = Migration {
     mgrTable = tableSignatoryLinks
@@ -493,7 +493,7 @@ addOCSPResponse =
     mgrTable = tableSignatoryLinks
   , mgrFrom = 9
   , mgrDo = kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN signinfo_ocsp_response VARCHAR NULL DEFAULT NULL"
-  } 
+  }
 
 addSignRedirectURL :: MonadDB m => Migration m
 addSignRedirectURL =
@@ -502,7 +502,7 @@ addSignRedirectURL =
   , mgrFrom = 10
   , mgrDo = do
       kRunRaw $ "ALTER TABLE signatory_links ADD COLUMN sign_redirect_url VARCHAR NULL DEFAULT NULL"
-  }  
+  }
 
 moveAttachmentsFromDocumentsToAttachments :: MonadDB m => Migration m
 moveAttachmentsFromDocumentsToAttachments =
@@ -529,4 +529,12 @@ removeOldDocumentLog =
       _ <- kRun $ SQL ("INSERT INTO evidence_log(document_id,time,text,event_type,version_id)"
                               <> " SELECT id, ?, log, ? , ? FROM documents") [toSql now ,  toSql OldDocumentHistory, toSql versionID]
       kRunRaw "ALTER TABLE documents DROP COLUMN log"
+  }
+
+changeRegionToLang :: MonadDB m => Migration m
+changeRegionToLang =
+  Migration
+  { mgrTable = tableDocuments
+  , mgrFrom = 13
+  , mgrDo = kRunRaw "ALTER TABLE documents RENAME COLUMN region TO lang"
   }

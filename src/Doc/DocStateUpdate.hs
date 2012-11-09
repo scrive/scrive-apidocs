@@ -62,7 +62,7 @@ signDocumentWithEmailOrPad did slid mh fields = do
   case edoc of
     Left err -> return $ Left err
     Right olddoc -> do
-     switchLocale (getLocale olddoc)
+     switchLang (getLang olddoc)
      case olddoc `allowsAuthMethod` ELegAuthentication of
       True -> return $ Left (DBActionNotAvailable "This document does not allow signing using email authentication.")
       False  -> do
@@ -87,7 +87,7 @@ signDocumentWithEleg did slid mh fields sinfo = do
   case edoc of
     Left err -> return $ Left err
     Right olddoc -> do
-     switchLocale (getLocale olddoc)
+     switchLang (getLang olddoc)
      case olddoc `allowsAuthMethod` ELegAuthentication of
       False -> return $ Left (DBActionNotAvailable "This document does not allow signing using eleg authentication.")
       True  -> do
@@ -119,7 +119,7 @@ rejectDocumentWithChecks did slid mh customtext = do
   case edoc of
     Left err -> return $ Left err
     Right olddocument -> do
-      switchLocale (getLocale olddocument)
+      switchLang (getLang olddocument)
       Context{ ctxtime, ctxipnumber } <- getContext
       let Just sll = getSigLinkFor olddocument slid
       let sa = signatoryActor ctxtime ctxipnumber (maybesignatory sll) (getEmail sll) slid
@@ -163,7 +163,7 @@ authorSendDocument :: (Kontrakcja m) => User -> Actor -> DocumentID -> TimeZoneN
 authorSendDocument user actor did timezone = do
   ctx <- getContext
   Just doc <- dbQuery $ GetDocumentByDocumentID did
-  if not $ isAuthor (doc, user) 
+  if not $ isAuthor (doc, user)
     then return $ Left DBResourceNotAvailable
     else do
         Log.debug $ "Preparation to pending for document " ++ show did
@@ -276,4 +276,3 @@ withUser :: Kontrakcja m => (User -> m (Either DBError a)) -> m (Either DBError 
 withUser action = do
   Context{ ctxmaybeuser } <- getContext
   maybe (return $ Left DBNotLoggedIn) action ctxmaybeuser
-
