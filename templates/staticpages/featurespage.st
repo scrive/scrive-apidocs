@@ -6,9 +6,6 @@ $doctype()$
     <title>$pagetitle()$ Scrive Features</title>
     <meta name="description" content="$_featuresPageMetaDescription()$" />
     $standardHeaderContents()$
-    $if(production)$
-    <script src="/libs/analytics.js" type="text/javascript"></script>
-    $endif$
   </head>
   $standardBody(unwrappedbody=featuresPageContents())$
 </html>

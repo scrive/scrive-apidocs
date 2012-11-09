@@ -5,9 +5,6 @@ jobsPage=
       <head>
         <title>Scrive is hiring</title>
         $standardHeaderContents()$
-        $if(production)$
-        <script src="/libs/analytics.js" type="text/javascript"></script>
-        $endif$
       </head>
       <body>
          $standardBodyWithQueryCol(unwrappedbody=jobsPageContents())$

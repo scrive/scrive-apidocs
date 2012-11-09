@@ -6,9 +6,6 @@ privacyPolicyPage=
         <title>$pagetitle()$ $_privacyPolicyPageTitle()$</title>
         <meta name="description" content="$_privacyPolicyPageMetaDescription()$" />
         $standardHeaderContents()$
-        $if(production)$
-        <script src="/libs/analytics.js" type="text/javascript"></script>
-        $endif$
       </head>
       $standardBodyWithQueryCol(unwrappedbody=privacyPolicyPageContents())$
     </html>

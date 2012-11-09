@@ -6,9 +6,6 @@ clientsPage=
         <title>$pagetitle()$ $_clientsPageTitle()$</title>
         <meta name="description" content="Signera och arkivera dina avtal elektroniskt. Våra kunder och våra kunders kunder älskar enkelheten." />
         $standardHeaderContents()$
-        $if(production)$
-        <script src="/libs/analytics.js" type="text/javascript"></script>
-        $endif$
       </head>
       $standardBodyWithQueryCol(unwrappedbody=clientsPageContents())$
     </html>

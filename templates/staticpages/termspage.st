@@ -6,9 +6,6 @@ termsPage=
         <title>$pagetitle()$ $_termsPageTitle()$</title>
         <meta name="description" content="$_termsPageMetaDescription()$" />
         $standardHeaderContents()$
-        $if(production)$
-        <script src="/libs/analytics.js" type="text/javascript"></script>
-        $endif$
       </head>
       <body>
          $standardBodyWithQueryCol(unwrappedbody=termsPageContents())$

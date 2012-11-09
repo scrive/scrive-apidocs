@@ -27,12 +27,6 @@ standardHeaderContents=
         <link href='https://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
         <script src="/localization/$ctxlang$/$versioncode$.js"  type="text/javascript"></script>
         $staticResources:noescape()$
-        $if(publicsafe)$
-            <script src="/libs/jquery.tweet.js"  type="text/javascript"></script>
-        $if(production)$
-            <script src="/libs/analytics.js" type="text/javascript"></script>
-        $endif$
-        $endif$
 ####
 standardBodyWithQueryCol=
        $standardBodyWrapper(unwrappedbody=contentsWithQueryCol(unwrappedbody=unwrappedbody))$

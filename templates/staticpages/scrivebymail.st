@@ -6,9 +6,6 @@ $doctype()$
     <title>$pagetitle()$ Scrive by Mail</title>
     <meta name="description" content="$_scrivebymailPageMetaDescription()$" />
     $standardHeaderContents()$
-    $if(production)$
-    <script src="/libs/analytics.js" type="text/javascript"></script>
-    $endif$
   </head>
   $standardBodyWithQueryCol(unwrappedbody=scrivebymailPageContents())$
 </html>

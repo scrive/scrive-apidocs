@@ -6,9 +6,6 @@ securityPage=
         <title>$pagetitle()$ $_securityPageTitle()$</title>
         <meta name="description" content="$_securityPageMetaDescription()$" />
         $standardHeaderContents()$
-        $if(production)$
-        <script src="/libs/analytics.js" type="text/javascript"></script>
-        $endif$
       </head>
       $standardBodyWithQueryCol(unwrappedbody=securityPageContents())$
     </html>

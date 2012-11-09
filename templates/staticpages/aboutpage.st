@@ -6,9 +6,6 @@ aboutPage=
         <title>$pagetitle()$ $_aboutPageTitle()$</title>
         <meta name="description" content="$_aboutPagaMetaDescription()$" />
         $standardHeaderContents()$
-        $if(production)$
-            <script src="/libs/analytics.js" type="text/javascript"></script>
-        $endif$
       </head>
       $standardBodyWithQueryCol(unwrappedbody=aboutPageContents())$
     </html>

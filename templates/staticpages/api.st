@@ -6,9 +6,6 @@ $doctype()$
     <title>$pagetitle()$ Scrive API</title>
     <meta name="description" content="$_apiPageMetaDescription()$" />
     $standardHeaderContents()$
-    $if(production)$
-    <script src="/libs/analytics.js" type="text/javascript"></script>
-    $endif$
   </head>
   $standardBodyWithQueryCol(unwrappedbody=apiPageContents())$
 </html>

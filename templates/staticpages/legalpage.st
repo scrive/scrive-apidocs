@@ -6,9 +6,6 @@ legalPage=
         <title>$pagetitle()$ $_legalPageTitle()$</title>
         <meta name="description" content="$_legalPageMetaDescription()$" />
         $standardHeaderContents()$
-        $if(production)$
-        <script src="/libs/analytics.js" type="text/javascript"></script>
-        $endif$
       </head>
       $standardBodyWithQueryCol(unwrappedbody=legalPageContents())$
     </html>

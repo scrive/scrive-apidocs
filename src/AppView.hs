@@ -188,7 +188,6 @@ standardPageFields ctx title mpubliclink showCreateAccount loginOn referer email
   staticLinksFields $ ctxlang ctx
   langSwitcherFields ctx mpubliclink
   contextInfoFields ctx
-  publicSafeFlagField ctx loginOn (isJust mpubliclink)
   loginModal loginOn referer email
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
   F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
@@ -214,7 +213,6 @@ simpleResonseClrFlash rsp = do
 firstPage :: TemplatesMonad m => Context -> Bool -> Maybe String -> Maybe String -> m String
 firstPage ctx loginOn referer email = renderTemplate "firstPage" $ do
   contextInfoFields ctx
-  publicSafeFlagField ctx loginOn True
   mainLinksFields $ ctxlang ctx
   staticLinksFields $ ctxlang ctx
   langSwitcherFields ctx (Just LinkHome)
@@ -272,16 +270,6 @@ contextInfoFields ctx@Context{ ctxlang } = do
   F.value "production" (ctxproduction ctx)
   F.value "ctxlang" $ codeFromLang ctxlang
 
-{- |
-    Only public safe is explicitely set as a public page,
-    and nobody is trying to login, and a user isn't logged in.
-    The flag means that things like snoobi won't be contacted.
--}
-publicSafeFlagField :: Monad m => Context -> Bool -> Bool -> Fields m ()
-publicSafeFlagField ctx loginOn publicpage = do
-  F.value "publicsafe" $ publicpage
-                      && (not loginOn)
-                      && (isNothing $ ctxmaybeuser ctx)
 
 flashMessageFields :: TemplatesMonad m => FlashMessage -> Fields m ()
 flashMessageFields flash = do

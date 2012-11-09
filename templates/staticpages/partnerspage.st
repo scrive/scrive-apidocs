@@ -6,9 +6,6 @@ partnersPage=
         <title>$pagetitle()$ $_partnersPageTitle()$</title>
         <meta name="description" content="$_partnersPageMetaDescription()$" />
         $standardHeaderContents()$
-        $if(production)$
-        <script src="/libs/analytics.js" type="text/javascript"></script>
-        $endif$
       </head>
       $standardBodyWithQueryCol(unwrappedbody=partnersPageContents())$
     </html>

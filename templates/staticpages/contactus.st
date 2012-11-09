@@ -6,9 +6,6 @@ contactUsPage=
         <title>$pagetitle()$ $_termsPageTitle()$</title>
         <meta name="description" content="$_contactUsPageMetaDescription()$" />
         $standardHeaderContents()$
-        $if(production)$
-        <script src="/libs/analytics.js" type="text/javascript"></script>
-        $endif$
       </head>
       <body>
          $standardBodyWithQueryCol(unwrappedbody=contactUsPageContents())$

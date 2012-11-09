@@ -6,9 +6,6 @@ priceplanPage=
         <title>$pagetitle()$ $_priceplanPageTitle()$</title>
         <meta name="description" content="$_priceplanPageMetaDescription()$" />
         $standardHeaderContents()$
-        $if(production)$
-        <script src="/libs/analytics.js" type="text/javascript"></script>
-        $endif$
       </head>
       $standardBody(unwrappedbody=priceplanPageContents();showCreateAccount=False)$
     </html>
