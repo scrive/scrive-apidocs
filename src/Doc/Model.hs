@@ -155,7 +155,6 @@ data DocumentDomain
   = DocumentsOfWholeUniverse                     -- ^ All documents in the system. Only for admin view.
   | DocumentsVisibleToUser UserID                -- ^ Documents that a user has possible access to
   | DocumentsForSignatory UserID                 -- ^ Documents by signatory
-  | TemplatesSharedInUsersCompany UserID         -- ^ Templates shared in company
   | DocumentsOfCompany CompanyID Bool            -- ^ All documents of a company, with flag for selecting also drafts
   | DocumentsOfAuthorCompany CompanyID Bool      -- ^ All documents of a company by author, with flag for selecting
 
@@ -284,12 +283,6 @@ documentDomainToSQL (DocumentsForSignatory uid) =
        <> "                             AND sl2.sign_time IS NULL"
        <> "                             AND sl2.sign_order < signatory_links.sign_order)))")
         [toSql uid]
-documentDomainToSQL (TemplatesSharedInUsersCompany uid) =
-  SQL ("signatory_links.deleted = FALSE"
-       <> " AND documents.type = 2"
-       <> " AND documents.sharing = ?"
-       <> " AND same_company_users.id = ?")
-        [toSql Shared, toSql uid]
 documentDomainToSQL (DocumentsOfCompany cid preparation) =
   SQL "users.company_id = ? AND (? OR documents.status <> ?)"
         [toSql cid,toSql preparation, toSql Preparation]

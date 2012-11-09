@@ -1336,7 +1336,6 @@ testGetDocumentsSQLSorted = doTimes 1 $ do
 
   let domains = [ DocumentsVisibleToUser (userid author)
                 , DocumentsForSignatory (userid author)
-                , TemplatesSharedInUsersCompany (userid author)
                 ]
       filters = []
   _docs <- dbQuery $ GetDocuments domains filters
