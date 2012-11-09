@@ -181,17 +181,13 @@ jsonDocumentsList = do
   doctype <- getField' "documentType"
   params <- getListParamsNew
   let (domain,filters1) = case doctype of
-                          "Document"          -> ([DocumentsForSignatory uid] ++ (maybeCompanyDomain)
+                          "Document"          -> ([DocumentsVisibleToUser uid]
                                                  ,[DocumentFilterDeleted False, DocumentFilterSignable])
-                          "Template"          -> ([DocumentsOfAuthor uid] ++ [TemplatesSharedInUsersCompany uid]
+                          "Template"          -> ([DocumentsVisibleToUser uid]
                                                  ,[DocumentFilterDeleted False, DocumentFilterTemplate])
-                          "Rubbish"           -> ([DocumentsForSignatory uid] ++ (maybeCompanyDomain)
+                          "Rubbish"           -> ([DocumentsVisibleToUser uid]
                                                  ,[DocumentFilterDeleted True])
-                          _ -> ([DocumentsForSignatory uid],[DocumentFilterDeleted False])
-                         where
-                             maybeCompanyDomain = if (useriscompanyadmin user && (isJust $ usercompany user))
-                                                   then [DocumentsOfCompany (fromJust $ usercompany user) False]
-                                                   else []
+                          _ -> ([DocumentsVisibleToUser uid],[DocumentFilterDeleted False])
       filters2 = concatMap fltSpec (listParamsFilters params)
       fltSpec ("process", "contract") = [DocumentFilterByProcess [Contract]]
       fltSpec ("process", "order") = [DocumentFilterByProcess [Order]]

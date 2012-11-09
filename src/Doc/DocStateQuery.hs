@@ -55,8 +55,7 @@ getDocByDocID docid = do
   case (ctxmaybeuser `mplus` ctxmaybepaduser) of
     Nothing -> return $ Left DBNotLoggedIn
     Just user -> do
-      mdoc <- dbQuery (GetDocuments [ DocumentsForSignatory (userid user)
-                                    , DocumentsOfAuthor (userid user)
+      mdoc <- dbQuery (GetDocuments [ DocumentsVisibleToUser (userid user)
                                     ] [ DocumentFilterByDocumentID docid
                                       , DocumentFilterDeleted False
                                       ]

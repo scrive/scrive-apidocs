@@ -151,6 +151,7 @@ data DocumentFilter
   deriving Show
 data DocumentDomain
   = DocumentsOfWholeUniverse                     -- ^ All documents in the system. Only for admin view.
+  | DocumentsVisibleToUser UserID                -- ^ Documents that a user has possible access to
   | DocumentsOfAuthor UserID                     -- ^ Documents by author
   | DocumentsForSignatory UserID                 -- ^ Documents by signatory
   | TemplatesSharedInUsersCompany UserID         -- ^ Templates shared in company
@@ -226,6 +227,28 @@ documentOrderByAscDescToSQL :: AscDesc DocumentOrderBy -> SQL
 documentOrderByAscDescToSQL (Asc x) = documentOrderByToSQL x
 documentOrderByAscDescToSQL (Desc x) = documentOrderByToSQL x <> SQL " DESC" []
 
+
+--
+-- Document visibility rules:
+--
+-- A document is either signable or template.
+-- Documents with really_deleted flag set are never seen by anybody.
+--
+-- 1. User can see her own authored documents.
+-- 2. User can see a signable document when:
+--     a. was invited to sign
+--     b. document is not in Preparation
+--     c. sign order says it is ok to see
+-- 3. User can see a signable document when:
+--     a. was invited to view
+--     b. document is not in Preparation
+-- 4. User can see a template document when:
+--     a. author is in the same company
+--     b. document has company sharing set
+-- 5. User can see a signable documents when
+--     a. user is company admin
+--     b. there is another user in the same company that can see the document
+--     c. document is not in preparation state
 documentDomainToSQL :: DocumentDomain -> SQL
 documentDomainToSQL (DocumentsOfWholeUniverse) =
   SQL "TRUE" []
@@ -233,6 +256,26 @@ documentDomainToSQL (DocumentsOfAuthor uid) =
   SQL ("signatory_links.is_author"
        <> " AND signatory_links.user_id = ?")
         [toSql uid]
+documentDomainToSQL (DocumentsVisibleToUser uid) =
+  "same_company_users.id = " <?> uid
+  <+> " AND ("
+   <+>       "users.id = same_company_users.id"                -- 1.
+     <+> "AND signatory_links.is_author"
+   <+> "OR"
+     <+> "(same_company_users.is_company_admin OR users.id = same_company_users.id)"              -- 2a, 3a.
+     <+> "AND documents.status <> " <?> Preparation        -- 2b, 3b
+     <+> "AND documents.type = " <?> Signable undefined    -- 2a, 3a
+     <+> "AND (NOT signatory_links.is_partner"             -- 2c, 3
+     <+>      "OR NOT EXISTS (SELECT 1 FROM signatory_links AS earlier_signatory_links"
+     <+>                      "WHERE signatory_links.document_id = earlier_signatory_links.document_id"
+     <+>                        "AND earlier_signatory_links.is_partner"
+     <+>                        "AND earlier_signatory_links.sign_time IS NULL"
+     <+>                        "AND earlier_signatory_links.sign_order < signatory_links.sign_order))"
+   <+> "OR"
+     <+>     "documents.sharing = " <?> Shared
+     <+> "AND documents.type = " <?> Template undefined    -- 4
+     <+> "AND signatory_links.is_author"                   --
+  <+> ")"
 documentDomainToSQL (DocumentsForSignatory uid) =
   SQL ("signatory_links.user_id = ?"
        <> " AND documents.type = 1"
