@@ -213,7 +213,6 @@ docStateTests env = testGroup "DocState" [
   testThat "ReallyDeleteDocument fails if the document hasn't been archived" env testReallyDeleteNotArchivedLeft,
 
   testThat "GetDocumentsByAuthor doesn't return archived docs" env testGetDocumentsByAuthorNoArchivedDocs,
-  testThat "GetDocumentsByCompanyWithFiltering doesn't return archived docs" env testGetDocumentsByCompanyWithFilteringNoArchivedDocs,
   testThat "GetDocumentsBySignatory doesn't return archived docs" env testGetDocumentsBySignatoryNoArchivedDocs,
   testThat "GetDeletedDocumentsByUser returns archived docs" env testGetDeletedDocumentsByUserArchivedDocs,
   testThat "When document is signed it's status class is signed" env testStatusClassSignedWhenAllSigned,
@@ -955,10 +954,6 @@ testReallyDeleteNotArchivedLeft = doTimes 10 $ do
 testGetDocumentsByAuthorNoArchivedDocs :: TestEnv ()
 testGetDocumentsByAuthorNoArchivedDocs =
   checkQueryDoesntContainArchivedDocs (GetDocumentsByAuthor . userid)
-
-testGetDocumentsByCompanyWithFilteringNoArchivedDocs :: TestEnv ()
-testGetDocumentsByCompanyWithFilteringNoArchivedDocs =
-  checkQueryDoesntContainArchivedDocs (\u -> GetDocumentsByCompanyWithFiltering (fromJust $ usercompany u) [])
 
 testGetDocumentsBySignatoryNoArchivedDocs :: TestEnv ()
 testGetDocumentsBySignatoryNoArchivedDocs =
@@ -1867,7 +1862,6 @@ testGetDocumentsByCompanyWithFilteringCompany :: TestEnv ()
 testGetDocumentsByCompanyWithFilteringCompany = doTimes 10 $ do
   (name, value) <- rand 10 arbitrary
   company <- addNewCompany
-  company2 <- addNewCompany
   author <- addNewRandomUser
   _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
   Just author' <- dbQuery $ GetUserByID (userid author)
@@ -1875,10 +1869,8 @@ testGetDocumentsByCompanyWithFilteringCompany = doTimes 10 $ do
   time <- getMinutesTime
   let actor = systemActor time
   _ <- dbUpdate $ SetDocumentTags did (S.singleton $ DocumentTag name value) actor
-  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company2) []
-  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
+  docs' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [] [] (DocumentPagination 0 maxBound)
   validTest $ do
-    assertEqual "Should have no documents returned" docs []
     assertEqual "Should have 1 document returned" (length docs') 1
 
 
@@ -1890,8 +1882,8 @@ testGetDocumentsByCompanyWithFilteringFilters = doTimes 10 $ do
   _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
   Just author' <- dbQuery $ GetUserByID (userid author)
   _ <- addRandomDocumentWithAuthor author'
-  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name value]]
-  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
+  docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByTags [DocumentTag name value]] [] (DocumentPagination 0 maxBound)
+  docs' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [] [] (DocumentPagination 0 maxBound)
   validTest $ do
     assertEqual "Should have no documents returned" docs []
     assertEqual "Should have 1 document returned" (length docs') 1
@@ -1908,8 +1900,8 @@ testGetDocumentsByCompanyWithFilteringFinds = doTimes 10 $ do
   time <- getMinutesTime
   let actor = systemActor time
   _ <- dbUpdate $ SetDocumentTags did (S.singleton $ DocumentTag name value) actor
-  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name value]]
-  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
+  docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByTags [DocumentTag name value]] [] (DocumentPagination 0 maxBound)
+  docs' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [] [] (DocumentPagination 0 maxBound)
   validTest $ do
     assertEqual "Should have one document returned" 1 (length docs)
     assertEqual "Should have one document returned" 1 (length docs')
@@ -1930,11 +1922,11 @@ testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
     did <- addRandomDocumentWithAuthor author'
 
     _ <- dbUpdate $ SetDocumentTags did (S.fromList [DocumentTag name1 value1, DocumentTag name2 value2]) actor
-    docs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name1 value1]]
-    docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name2 value2]]
-    docs'' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name1 value1, DocumentTag name2 value2]]
-    docs''' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
-    docs'''' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name1 value1, DocumentTag name2 value2, DocumentTag name3 value3]]
+    docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByTags [DocumentTag name1 value1]] [] (DocumentPagination 0 maxBound)
+    docs' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByTags [DocumentTag name2 value2]] [] (DocumentPagination 0 maxBound)
+    docs'' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByTags [DocumentTag name1 value1, DocumentTag name2 value2]] [] (DocumentPagination 0 maxBound)
+    docs''' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [] [] (DocumentPagination 0 maxBound)
+    docs'''' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByTags [DocumentTag name1 value1, DocumentTag name2 value2, DocumentTag name3 value3]] [] (DocumentPagination 0 maxBound)
     validTest $ do
       assertEqual "Should have one document returned" 1 (length docs)
       assertEqual "Should have one document returned" 1 (length docs')
@@ -1952,8 +1944,8 @@ testGetDocumentsByAuthorFiltering = doTimes 10 $ do
     Just u1' <- dbQuery $ GetUserByID (userid u1)
     _ <- addRandomDocumentWithAuthor u1'
 
-    docs   <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByAuthor (userid u1)]
-    nodocs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByAuthor (userid u2)]
+    docs   <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid u1)] [DocumentFilterByAuthor (userid u1)] [] (DocumentPagination 0 maxBound)
+    nodocs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid u1)] [DocumentFilterByAuthor (userid u2)] [] (DocumentPagination 0 maxBound)
     validTest $ do
       assertEqual "Should have one document returned" 1 (length docs)
       assertEqual "Should have no documents" 0 (length nodocs)

@@ -29,7 +29,6 @@ module Doc.Model
   , GetDeletedDocumentsByUser(..)
   , GetDocuments(..)
   , GetDocumentByDocumentID(..)
-  , GetDocumentsByCompanyWithFiltering(..)
   , GetDocumentsByAuthor(..)
   , GetTemplatesByAuthor(..)
   , GetAvailableTemplates(..)
@@ -1367,27 +1366,6 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
         mapM_ (sqlOrderBy . documentOrderByAscDescToSQL) orderbys
         sqlOffset $ fromIntegral (documentOffset pagination)
         sqlLimit $ fromIntegral (documentLimit pagination)
-
-{- |
-    Fetches documents by company with filtering by tags, edate, and status.
-    this won't return documents that have been deleted (so ones
-    that would appear in the recycle bin//trash can.)  It also makes sure to respect the sign order in
-    cases where the company is linked via a signatory that hasn't yet been activated.
-
-    Filters
-    ----------------------------
-    Service must match
-    CompanyID must match Author
-    Author must not be deleted
-    All DocumentTags must be present and match (currently still done in Haskell)
-    If isJust stime, the last change on the document must be greater than or equal to stime
-    if isJust ftime, the last change on the document must be less than or equal to ftime
-    if isJust statuses, the document status must be element of statuses
--}
-data GetDocumentsByCompanyWithFiltering = GetDocumentsByCompanyWithFiltering CompanyID [DocumentFilter]
-instance MonadDB m => DBQuery m GetDocumentsByCompanyWithFiltering [Document] where
-  query (GetDocumentsByCompanyWithFiltering companyid filters) =
-    query (GetDocuments [DocumentsOfCompany companyid True] (DocumentFilterDeleted False:filters) [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
 
 data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser UserID

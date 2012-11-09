@@ -325,13 +325,13 @@ test_removingCompanyAccountWorks = do
 
   assertCompanyInvitesAre company []
 
-  companydocs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
+  companydocs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid adminuser)] [] [] (DocumentPagination 0 maxBound)
   assertEqual "Company still owns users docs" 1 (length companydocs)
   assertEqual "Docid matches" docid (documentid $ head companydocs)
 
 test_privateUserTakoverWorks :: TestEnv ()
 test_privateUserTakoverWorks = do
-  (_adminuser, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
+  (adminuser, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   docid <- addRandomDocumentWithAuthor user
 
@@ -350,7 +350,7 @@ test_privateUserTakoverWorks = do
   assertEqual "User belongs to the company" (usercompany updateduser)
                                             (Just $ companyid company)
   assertBool "User is a standard user" (not $ useriscompanyadmin updateduser)
-  companydocs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
+  companydocs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid adminuser)] [] [] (DocumentPagination 0 maxBound)
   assertEqual "Company owns users docs" 1 (length companydocs)
   assertEqual "Docid matches" docid (documentid $ head companydocs)
   docs <- dbQuery $ GetDocumentsBySignatory [Contract, Offer, Order] $ userid user
