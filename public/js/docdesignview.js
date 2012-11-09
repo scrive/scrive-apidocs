@@ -477,8 +477,8 @@ var DocumentDesignView = Backbone.View.extend({
             if (alreadyClicked(this))
               return;
             document.save();
-            document.afterSave( function() { 
-              new Submit().send();
+            document.afterSave( function() {
+                new Submit().send();
             });
           }
         });
@@ -495,6 +495,11 @@ var DocumentDesignView = Backbone.View.extend({
                 return;
               }
               document.save();
+                if(BlockingInfo && BlockingInfo.shouldBlockDocs(1)) {
+                    BlockingInfo.createPopup();
+                    return false;
+                }
+
               view.signConfirmation();
             }
           });
@@ -510,6 +515,11 @@ var DocumentDesignView = Backbone.View.extend({
                  return;
                }
                document.save();
+                if(BlockingInfo && BlockingInfo.shouldBlockDocs(1)) {
+                    BlockingInfo.createPopup();
+                    return false;
+                }
+
                view.sendConfirmation();
              }
            });

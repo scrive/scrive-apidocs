@@ -5,7 +5,6 @@ createFromTemplatePage=
 jQuery(".mainContainer").append(new CreateFromTemplate().el());
 </script>
 <script>
-var BlockingInfo = Blocking();
 jQuery(function() {
   BlockingInfo.show('.blocking-box');
 });

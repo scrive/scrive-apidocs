@@ -22,6 +22,14 @@ window.createnewdocument = function() {
                 }).send();  
 }
 
+window.createfromtemplate = function() {
+    console.log("hello");
+    if(BlockingInfo && BlockingInfo.shouldBlockDocs(1)) {
+        BlockingInfo.createPopup();
+        return false;
+    }
+    window.location = "/fromtemplate";
+}
 
 //make sure we've got console logging
 if (!window.console) {

@@ -7,6 +7,5 @@ jQuery(function(){
                         id:"$documentid$"
                   }).el());
 });
-var BlockingInfo = Blocking();
 </script>
 ###
