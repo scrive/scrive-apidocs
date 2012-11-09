@@ -13,7 +13,7 @@ var SecuritySettingsModel = Backbone.Model.extend({
     user.bind("reset",function() {
       self.reset();
     });
-    user.fetch();
+    user.fetch({cache: false});
     this.reset();
   },
   user : function() {
@@ -84,7 +84,7 @@ var SecuritySettingsModel = Backbone.Model.extend({
       customfooter  : this.useFooter() ? this.footer() : undefined
     }).send();
   },
-  refresh : function() {    this.user().fetch(); this.reset(); }
+  refresh : function() {    this.user().fetch({cache: false}); this.reset(); }
 });
 
 
@@ -131,7 +131,7 @@ var SecuritySettingsView = Backbone.View.extend({
       var self = this;
       var model = this.model;
       var box = $("<div class='col'/>");
-      var header = $("<div class='account-header'/>").append($("<h2>").text(localization.account.accountSecurity.regionSection))
+      var header = $("<div class='account-header'/>").append($("<h2/>").text(localization.account.accountSecurity.regionSection))
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
 
@@ -161,7 +161,7 @@ var SecuritySettingsView = Backbone.View.extend({
       var self = this;
       var model = this.model;
       var box = $("<div class='col'/>");
-      var header = $("<div class='account-header'/>").append($("<h2>").text(localization.account.accountSecurity.footerSection))
+      var header = $("<div class='account-header'/>").append($("<h2/>").text(localization.account.accountSecurity.footerSection))
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
       
@@ -171,7 +171,7 @@ var SecuritySettingsView = Backbone.View.extend({
           model.setUseFooter(checkbox.is(":checked"));
       });
                                                 
-      var label = $("<label style='margin-left: 10px'>").text(localization.account.accountSecurity.useFooter);
+      var label = $("<label style='margin-left: 10px'/>").text(localization.account.accountSecurity.useFooter);
       body.append($("<div class=''/>").append(checkbox).append(label));
 
       var cfb = $("<div class='customfooterbox'/>");
