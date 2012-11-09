@@ -45,7 +45,7 @@ window.File = Backbone.Model.extend({
             link = "/download/" + this.fileid() + "/" + this.name() + ".pdf" + this.queryPart();
         }
         else if( this.documentid()!==undefined ) {
-            link = "/downloadmainfile/"+ this.documentid() + "/" + this.name() + ".pdf" + this.queryPart();
+            link = "/api/frontend/downloadmainfile/"+ this.documentid() + "/" + this.name() + ".pdf" + this.queryPart();
         }
         else {
             console.log("File with neither documentid nor fileid, do not know where does it link to");
@@ -55,7 +55,7 @@ window.File = Backbone.Model.extend({
     downloadLinkForMainFile : function(name) {
         var link = null;
         if( this.documentid()!==undefined ) {
-            link = "/downloadmainfile/"+ this.documentid() + "/" + (name == undefined ? this.name() : name) + ".pdf" + this.queryPart();
+            link = "/api/frontend/downloadmainfile/"+ this.documentid() + "/" + (name == undefined ? this.name() : name) + ".pdf" + this.queryPart();
         }
         else {
             console.log("File is not binded to document");

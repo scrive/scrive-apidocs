@@ -39,7 +39,6 @@ import Doc.Rendering
 import DB
 import DB.TimeZoneName (mkTimeZoneName)
 
-import File.Model
 import MagicHash (MagicHash)
 import Kontra
 import Doc.DocUtils
@@ -64,6 +63,13 @@ import qualified Data.ByteString.Base64 as B64
 import Text.JSON.Gen
 import MinutesTime
 import Templates.Templates
+import Data.Map as Map
+
+import Doc.DocSeal as DocSeal
+import qualified Data.ByteString.UTF8 as BS hiding (length)
+import Doc.DocStateCommon
+import File.Model
+import File.Storage
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
@@ -84,7 +90,8 @@ versionedAPI _version = choice [
   dir "delete"             $ hDelete   $ toK1 $ apiCallDelete,
   dir "get"                $ hGet $ toK1 $ apiCallGet,
   dir "list"               $ hGet $ apiCallList,
-
+  dir "downloadmainfile"   $ hGet  $ toK2 $ apiCallDownloadMainFile,
+  
   dir "mainfile" $ hPostNoXToken $ toK1 $ documentChangeMainFile,
 
   dir "document" $ hPostNoXToken $ toK6 $ documentUploadSignatoryAttachment,
@@ -319,6 +326,47 @@ apiCallList = api $ do
   return res
 
 
+-- | This handler downloads main file of document. This means sealed file for Closed documents.
+--   or one with preprinted fields if not closed
+
+apiCallDownloadMainFile :: Kontrakcja m => DocumentID -> String -> m Response
+apiCallDownloadMainFile did _nameForBrowser = api $ do
+
+  (msid :: Maybe SignatoryLinkID) <- lift $ readField "signatorylinkid"
+  mmh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msid
+  (user, _actor, external) <- getAPIUser APIDocCheck
+  
+  doc <- apiGuardL  (forbidden "Access to file is forbiden") $ do
+           case (msid, mmh) of
+            (Just sid, Just mh) -> getDocByDocIDSigLinkIDAndMagicHash did sid mh
+            _ ->  if (external)
+                    then do
+                      ctx <- getContext
+                      modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
+                      res <- getDocByDocID did
+                      modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
+                      return res;
+                    else getDocByDocID did
+
+  content <- case documentstatus doc of
+                Pending -> do
+                  sourceFile <- (lift $ documentFileID doc) >>= apiGuardJustM  (serverError "No file") . dbQuery . GetFileByFileID
+                  apiGuardL  (serverError "Can't get file content")  $ DocSeal.presealDocumentFile doc sourceFile
+                Closed -> do
+                  -- Here we should actually respond with a redirect
+                  -- that waits for file to appear. Hopefully nobody
+                  -- clicks download that fast.
+                  lift $ documentSealedFileID doc >>= getFileIDContents
+                _ -> do
+                  lift $ documentFileID doc >>= getFileIDContents
+  respondWithPDF content
+    where
+      respondWithPDF contents = do
+        let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+            res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
+        return res2
+  
+  
 -- this one must be standard post with post params because it needs to
 -- be posted from a browser form
 -- Change main file, file stored in input "file" OR templateid stored in "template"

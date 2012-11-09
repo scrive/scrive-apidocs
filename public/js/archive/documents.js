@@ -246,7 +246,7 @@ window.DocumentsListDefinition = function(archive) { return {
                          return true;
                         } 
                         if (docs.length == 1) {
-                          var url =  "/downloadmainfile/" + docs[0].field("id") + "/" + docs[0].field("title") + ".pdf";
+                          var url =  "/api/frontend/downloadmainfile/" + docs[0].field("id") + "/" + docs[0].field("title") + ".pdf";
                           window.open(url);
                           return true;
                         } else {  

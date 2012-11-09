@@ -9,7 +9,6 @@ module Doc.DocControl(
     , newDocumentOrLatestDraft
     , showCreateFromTemplate 
     , handleDownloadFile
-    , handleDownloadMainFile
     , handleSignShow
     , handleSignShowSaveMagicHash
     , signDocument
@@ -43,7 +42,6 @@ import DBError
 import Doc.Action
 import Doc.CSVUtils
 import Doc.Model
-import Doc.DocStateCommon (documentFileID,documentSealedFileID)
 import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocStateUpdate
@@ -53,7 +51,6 @@ import Doc.DocView
 import Doc.DocViewMail
 import Doc.Tokens.Model
 import Attachment.Model
-import qualified Doc.DocSeal as DocSeal
 import InputValidation
 import File.Model
 import File.Storage
@@ -792,47 +789,11 @@ checkFileAccess fid = do
 
 -- | This handler downloads a file by file id. As specified in
 -- handlePageOfDocument rules of access need to be obeyd. This handler
--- download file as is. If you need preprinted fields use
--- 'handleDownloadMainFile'.
+-- download file as is. 
 handleDownloadFile :: Kontrakcja m => FileID -> String -> m Response
 handleDownloadFile fid _nameForBrowser = do
   checkFileAccess fid
   content <- getFileIDContents fid
-  respondWithPDF content
-  where
-    respondWithPDF contents = do
-      let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-          res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
-      return res2
-
--- | This handler downloads main file of document. This means original
--- file for document when status is different than Closed or Pending,
--- preprinted fields document for Pending documents and sealed file
--- for Closed documents.
---
--- Use 'handleDownloadFile' to get file contents as is and to download
--- files different than main file.
-handleDownloadMainFile :: Kontrakcja m => DocumentID -> String -> m Response
-handleDownloadMainFile did _nameForBrowser = do
-  msid <- readField "signatorylinkid"
-
-  mmh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msid
-
-  doc <- case (msid, mmh) of
-           (Just sid, Just mh) -> guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
-           _ ->                   guardRightM $ getDocByDocID did
-
-  content <- case documentstatus doc of
-               Pending -> do
-                 sourceFile <- documentFileID doc >>= guardJustM . dbQuery . GetFileByFileID
-                 guardRightM $ DocSeal.presealDocumentFile doc sourceFile
-               Closed -> do
-                 -- Here we should actually respond with a redirect
-                 -- that waits for file to appear. Hopefully nobody
-                 -- clicks download that fast.
-                 documentSealedFileID doc >>= getFileIDContents
-               _ -> do
-                 documentFileID doc >>= getFileIDContents
   respondWithPDF content
   where
     respondWithPDF contents = do

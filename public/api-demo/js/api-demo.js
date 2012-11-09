@@ -49,7 +49,8 @@ var ApiDemoView = Backbone.View.extend({
             var del = $("<option value='d'>Delete</option>");
             var check = $("<option value='c'>Get</option>");
             var list  = $("<option value='l'>List</option>");
-            select.append(none).append(createFromFile).append(createFromTemplate).append(update).append(ready).append(sendReminder).append(cancel).append(del).append(check).append(list);
+            var download  = $("<option value='dl'>Download file</option>");
+            select.append(none).append(createFromFile).append(createFromTemplate).append(update).append(ready).append(sendReminder).append(cancel).append(del).append(check).append(list).append(download);
             if (model.selectedApiCall() != undefined) {
                 if (model.selectedApiCall().isCreateFromFile())
                     createFromFile.attr("selected", "true");
@@ -69,6 +70,8 @@ var ApiDemoView = Backbone.View.extend({
                     check.attr("selected", "true");
                 else if (model.selectedApiCall().isList())
                     list.attr("selected", "true");
+                else if (model.selectedApiCall().isDownloadMainFile())
+                    download.attr("selected", "true");
                 else
                     none.attr("selected", "true");
             }
@@ -92,6 +95,8 @@ var ApiDemoView = Backbone.View.extend({
                     model.setSelectedApiCall(new GetApiCall({oauth : oauth}));
                 else if (select.val() == "l")
                     model.setSelectedApiCall(new ListApiCall({oauth : oauth}));
+                else if (select.val() == "dl")
+                    model.setSelectedApiCall(new DownloadMainFileApiCall({oauth : oauth}));
                 else
                     model.setSelectedApiCall(undefined);
                 return false;

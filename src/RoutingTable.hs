@@ -56,7 +56,6 @@ staticRoutes = choice
 
      -- Only download function | unified for author and signatories
      , dir "download"                     $ hGet  $ toK2 $ DocControl.handleDownloadFile
-     , dir "downloadmainfile"             $ hGet  $ toK2 $ DocControl.handleDownloadMainFile
 
 
      , dir "fromtemplate"                 $ hGet  $ toK0 $ DocControl.showCreateFromTemplate
