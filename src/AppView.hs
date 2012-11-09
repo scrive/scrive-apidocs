@@ -153,7 +153,14 @@ renderTemplateAsPage ctx templateName mpubliclink showCreateAccount = do
   loginreferer <- getLoginReferer
   let showCreateAccount2 = showCreateAccount && (isNothing $ ctxmaybeuser ctx)
   wholePage <- renderTemplate templateName $ do
-    standardPageFields ctx kontrakcja mpubliclink showCreateAccount2 loginOn loginreferer Nothing
+    contextInfoFields ctx
+    mainLinksFields $ ctxlocale ctx
+    staticLinksFields $ ctxlocale ctx
+    localeSwitcherFields ctx mpubliclink
+    loginModal (loginOn && null (filter isModal $ ctxflashmessages ctx)) loginreferer Nothing
+    F.value "staticResources" $ SR.htmlImportList "firstPage" (ctxstaticresources ctx)
+    F.value "showCreateAccount" showCreateAccount2
+    F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
   return wholePage
 
 getLoginOn :: Kontrakcja m => m Bool
