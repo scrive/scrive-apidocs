@@ -30,7 +30,6 @@ module Doc.Model
   , GetDocuments(..)
   , GetDocumentByDocumentID(..)
   , GetDocumentsByCompanyWithFiltering(..)
-  , GetDocumentsByAuthorCompanyWithFiltering(..)
   , GetDocumentsByAuthor(..)
   , GetTemplatesByAuthor(..)
   , GetAvailableTemplates(..)
@@ -156,7 +155,6 @@ data DocumentDomain
   | DocumentsVisibleToUser UserID                -- ^ Documents that a user has possible access to
   | DocumentsForSignatory UserID                 -- ^ Documents by signatory
   | DocumentsOfCompany CompanyID Bool            -- ^ All documents of a company, with flag for selecting also drafts
-  | DocumentsOfAuthorCompany CompanyID Bool      -- ^ All documents of a company by author, with flag for selecting
 
 -- | These are possible order by clauses that make documents sorted by.
 data DocumentOrderBy
@@ -286,9 +284,6 @@ documentDomainToSQL (DocumentsForSignatory uid) =
 documentDomainToSQL (DocumentsOfCompany cid preparation) =
   SQL "users.company_id = ? AND (? OR documents.status <> ?)"
         [toSql cid,toSql preparation, toSql Preparation]
-documentDomainToSQL (DocumentsOfAuthorCompany cid preparation) =
-  SQL "signatory_links.is_author AND users.company_id = ? AND (? OR documents.status <> ?)"
-        [toSql cid, toSql preparation, toSql Preparation]
 
 
 maxselect :: SQL
@@ -1393,11 +1388,6 @@ data GetDocumentsByCompanyWithFiltering = GetDocumentsByCompanyWithFiltering Com
 instance MonadDB m => DBQuery m GetDocumentsByCompanyWithFiltering [Document] where
   query (GetDocumentsByCompanyWithFiltering companyid filters) =
     query (GetDocuments [DocumentsOfCompany companyid True] (DocumentFilterDeleted False:filters) [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
-
-data GetDocumentsByAuthorCompanyWithFiltering = GetDocumentsByAuthorCompanyWithFiltering CompanyID [DocumentFilter]
-instance MonadDB m => DBQuery m GetDocumentsByAuthorCompanyWithFiltering [Document] where
-  query (GetDocumentsByAuthorCompanyWithFiltering companyid filters) =
-    query (GetDocuments [DocumentsOfAuthorCompany companyid True] (DocumentFilterDeleted False:filters) [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
 
 data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser UserID
