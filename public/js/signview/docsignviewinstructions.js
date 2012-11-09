@@ -48,11 +48,11 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
   },
   // Option do download document (link)
   downloadOption : function() {
-      return $("<div class='menuwrapper'/>").append($("<div class='menu'/>").append(
+      return $("<div class='download'/>").append(
                         $( new DocumentDownloadView({
                                model: this.model.document(),
                                el: $("<div/>")
-                          }).el)));
+                          }).el));
   },
   // Box with next signatory selection, used only on ipad
   giveToNextPadSignatoryOption :  function() {

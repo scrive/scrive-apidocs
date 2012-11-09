@@ -709,11 +709,9 @@ var DocumentDesignView = Backbone.View.extend({
             text: localization.uploadButton,
             submitOnUpload: true,
             onClick : function () {
-                LoadingDialog.open();
             },
             onError: function() {
                 this.model.trigger('change');
-                LoadingDialog.close();
             },
             onAppend: function(input) {
               document.save();

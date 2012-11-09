@@ -139,7 +139,6 @@ body.signview {
 }
 
 .signview .instructions .subheadline .duedate {
-  display: inline-block;
   margin-top: 2px;
   margin-left: 10px;
   margin-right: 10px;
@@ -152,8 +151,7 @@ body.signview {
   /*   end of IE7 junk */
 }
 
-.signview .instructions .subheadline .menuwrapper {
-  display: inline-block;
+.signview .instructions .subheadline .download {
   margin-left: 10px;
   margin-right: 10px;
   margin-top: 6px;
@@ -164,7 +162,7 @@ body.signview {
   /*   end of IE7 junk */
 }
 
-.signview .menu .download .icon {
+.signview .download .icon {
   margin-top: 1px;
   margin-right: 2px;
   width: 18px;
@@ -172,16 +170,21 @@ body.signview {
   background: url(../img/download-icon.png);
 }
 
-.signview .menu .download .label {
+.signview .download .label {
   display: none;
 }
 
-.signview .menu .download .docname {
+.signview .download .docname {
   text-align: left;
   text-decoration: underline;
   font-weight: normal;
   color: grey;
+  width: auto;
 }
+.signview .download a {
+  display: inline-block;
+}
+
 
 .signview .save {
   background-color: white;
