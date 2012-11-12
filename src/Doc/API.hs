@@ -334,31 +334,30 @@ apiCallDownloadMainFile did _nameForBrowser = api $ do
 
   (msid :: Maybe SignatoryLinkID) <- lift $ readField "signatorylinkid"
   mmh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msid
-  (user, _actor, external) <- getAPIUser APIDocCheck
   
-  doc <- apiGuardL  (forbidden "Access to file is forbiden") $ do
+  doc <- do
            case (msid, mmh) of
-            (Just sid, Just mh) -> getDocByDocIDSigLinkIDAndMagicHash did sid mh
-            _ ->  if (external)
+            (Just sid, Just mh) -> apiGuardL  (forbidden "Access to file is forbiden") $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
+            _ ->  do
+                  (user, _actor, external) <- getAPIUser APIDocCheck
+                  if (external)
                     then do
                       ctx <- getContext
                       modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
-                      res <- getDocByDocID did
+                      res <- apiGuardL  (forbidden "Access to file is forbiden")  $ getDocByDocID did
                       modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
                       return res;
-                    else getDocByDocID did
+                    else apiGuardL  (forbidden "Access to file is forbiden")  $ getDocByDocID did
 
   content <- case documentstatus doc of
-                Pending -> do
-                  sourceFile <- (lift $ documentFileID doc) >>= apiGuardJustM  (serverError "No file") . dbQuery . GetFileByFileID
-                  apiGuardL  (serverError "Can't get file content")  $ DocSeal.presealDocumentFile doc sourceFile
                 Closed -> do
                   -- Here we should actually respond with a redirect
                   -- that waits for file to appear. Hopefully nobody
                   -- clicks download that fast.
                   lift $ documentSealedFileID doc >>= getFileIDContents
                 _ -> do
-                  lift $ documentFileID doc >>= getFileIDContents
+                  sourceFile <- (lift $ documentFileID doc) >>= apiGuardJustM  (serverError "No file") . dbQuery . GetFileByFileID
+                  apiGuardL  (serverError "Can't get file content")  $ DocSeal.presealDocumentFile doc sourceFile
   respondWithPDF content
     where
       respondWithPDF contents = do
