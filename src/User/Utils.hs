@@ -28,7 +28,7 @@ withUserPost action = do
     ctx <- getContext
     case ctxmaybeuser ctx of
          Just _  -> action
-         Nothing -> return $ LinkLogin (ctxlocale ctx) NotLogged
+         Nothing -> return $ LinkLogin (ctxlang ctx) NotLogged
 
 {- |
    Guard against a GET with no logged in user.
@@ -39,7 +39,7 @@ withUserGet action = do
   ctx <- getContext
   case ctxmaybeuser ctx of
     Just _  -> Right <$> action
-    Nothing -> return $ Left $ LinkLogin (ctxlocale ctx) NotLogged
+    Nothing -> return $ Left $ LinkLogin (ctxlang ctx) NotLogged
 
 {- |
      Takes a document and a action
@@ -63,4 +63,4 @@ checkUserTOSGet action = do
     case ctxmaybeuser ctx of
         Just (User{userhasacceptedtermsofservice = Just _}) -> Right <$> action
         Just _ -> return $ Left $ LinkAcceptTOS
-        Nothing -> return $ Left $ LinkLogin (ctxlocale ctx) NotLogged
+        Nothing -> return $ Left $ LinkLogin (ctxlang ctx) NotLogged

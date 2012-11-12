@@ -31,9 +31,9 @@ data Context = Context
     , ctxipnumber            :: IPAddress -- ^ The ip number of the client.
     , ctxs3action            :: AWS.S3Action -- ^
     , ctxproduction          :: Bool -- ^ Is this server the production server?
-    , ctxtemplates           :: KontrakcjaTemplates -- ^ The set of templates to render text for the ctxlocale
-    , ctxglobaltemplates     :: KontrakcjaGlobalTemplates -- ^ All of the templates for all valid locales
-    , ctxlocale              :: Locale -- ^ The current context locale
+    , ctxtemplates           :: KontrakcjaTemplates -- ^ The set of templates to render text for the ctxlang
+    , ctxglobaltemplates     :: KontrakcjaGlobalTemplates -- ^ All of the templates for all valid langs
+    , ctxlang                :: Lang -- ^ The current context lang
     , ctxmailsconfig         :: MailsConfig
     , ctxlivedocxconf        :: LiveDocxConf -- ^ LiveDocx configuration (does doc conversion)
     , ctxlogicaconf          :: LogicaConfig -- ^ Logica configuration (eleg)

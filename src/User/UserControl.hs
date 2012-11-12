@@ -67,7 +67,7 @@ handleAccountGet = checkUserTOSGet $ do
            mcompany <- getCompanyForUser user
            content <- showAccount user mcompany
            renderFromBody kontrakcja content
-         Nothing -> sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
+         Nothing -> sendRedirect $ LinkLogin (ctxlang ctx) NotLogged
 
 handleUserPost :: Kontrakcja m => m KontraLink
 handleUserPost = do
@@ -334,13 +334,13 @@ handlePostUserMailAPI = withUserPost $ do
                              _ -> return ()
         return LinkUserMailAPI)
 
-handlePostUserLocale :: Kontrakcja m => m KontraLink
-handlePostUserLocale = do
+handlePostUserLang :: Kontrakcja m => m KontraLink
+handlePostUserLang = do
   ctx <- getContext
   user <- guardJust $ ctxmaybeuser ctx
-  mregion <- readField "region"
+  mlang <- readField "lang"
   _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-           locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion
+           lang = fromMaybe (lang $ usersettings user) mlang
          }
   referer <- getField "referer"
   case referer of
@@ -374,15 +374,15 @@ handlePostUserSecurity = do
               _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
               addFlashM flashMessageMissingRequiredField
         _ -> return ()
-      mregion <- readField "region"
+      mlang <- readField "lang"
       footer <- getField "customfooter"
       footerCheckbox <- isFieldSet "footerCheckbox"
       _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-             locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion,
+             lang = fromMaybe (lang $ usersettings user) mlang,
              customfooter = footer <| footerCheckbox |> Nothing
            }
       return LinkAccountSecurity
-    Nothing -> return $ LinkLogin (ctxlocale ctx) NotLogged
+    Nothing -> return $ LinkLogin (ctxlang ctx) NotLogged
 
 {- |
     Checks for live documents owned by the user.
@@ -402,10 +402,10 @@ sendNewUserMail user = do
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
 
-createNewUserByAdmin :: Kontrakcja m => String -> (String, String) -> Maybe String -> Maybe (CompanyID, Bool) -> Locale -> m (Maybe User)
-createNewUserByAdmin email names custommessage mcompanydata locale = do
+createNewUserByAdmin :: Kontrakcja m => String -> (String, String) -> Maybe String -> Maybe (CompanyID, Bool) -> Lang -> m (Maybe User)
+createNewUserByAdmin email names custommessage mcompanydata lang = do
     ctx <- getContext
-    muser <- createUser (Email email) names (fst <$> mcompanydata) locale
+    muser <- createUser (Email email) names (fst <$> mcompanydata) lang
     case muser of
          Just user -> do
              case mcompanydata of
@@ -417,7 +417,7 @@ createNewUserByAdmin email names custommessage mcompanydata locale = do
              now <- liftIO $ getMinutesTime
              _ <- dbUpdate $ SetInviteInfo (userid <$> ctxmaybeuser ctx) now Admin (userid user)
              chpwdlink <- newUserAccountRequestLink $ userid user
-             mail <- mailNewAccountCreatedByAdmin ctx (getLocale user) fullname email chpwdlink custommessage
+             mail <- mailNewAccountCreatedByAdmin ctx (getLang user) fullname email chpwdlink custommessage
              scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
          Nothing -> return muser
@@ -468,20 +468,20 @@ handleQuestion = do
 handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> m Response
 handleAccountSetupGet uid token = do
   user <- guardJustM404 $ getUserAccountRequestUser uid token
-  let locale = getLocale user
-  switchLocale locale
+  let lang = getLang user
+  switchLang lang
   if isJust $ userhasacceptedtermsofservice user
     then respond404
     else do
       addFlashM $ modalAccountSetup (LinkAccountCreated uid token)
                                     (getFirstName user)
                                     (getLastName user)
-      sendRedirect $ LinkHome locale
+      sendRedirect $ LinkHome lang
 
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m KontraLink
 handleAccountSetupPost uid token = do
   user <- guardJustM404 $ getUserAccountRequestUser uid token
-  switchLocale $ getLocale user
+  switchLang $ getLang user
   if isJust $ userhasacceptedtermsofservice user
     then addFlashM flashMessageUserAlreadyActivated
     else do
@@ -508,7 +508,7 @@ handlePasswordReminderGet uid token = do
   muser <- getPasswordReminderUser uid token
   case muser of
     Just user -> do
-      switchLocale (getLocale user)
+      switchLang (getLang user)
       addFlashM $ modalNewPasswordView uid token
       sendRedirect LinkArchive
     Nothing -> do
@@ -520,7 +520,7 @@ handlePasswordReminderPost uid token = do
   muser <- getPasswordReminderUser uid token
   case muser of
     Just user -> do
-      switchLocale (getLocale user)
+      switchLang (getLang user)
       Context{ctxtime, ctxipnumber, ctxmaybeuser} <- getContext
       mpassword <- getRequiredField asValidPassword "password"
       mpassword2 <- getRequiredField asDirtyPassword "password2"

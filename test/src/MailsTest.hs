@@ -58,14 +58,14 @@ testDocumentMails mailTo = do
 
 sendDocumentMails :: Maybe String -> User -> TestEnv ()
 sendDocumentMails mailTo author = do
-  forM_ allLocales $ \l ->
+  forM_ allLangs $ \l ->
     forM_ [Contract,Offer,Order] $ \doctype -> do
-        -- make  the context, user and document all use the same locale
+        -- make  the context, user and document all use the same lang
         ctx <- mailingContext l
-        _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
+        _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { lang = l }
         let aa = authorActor (ctxtime ctx) noIP (userid author) (getEmail author)
         Just d <- randomUpdate $ NewDocument author "Document title" (Signable doctype) 0 aa
-        True <- dbUpdate $ SetDocumentLocale (documentid d) l (systemActor $ ctxtime ctx)
+        True <- dbUpdate $ SetDocumentLang (documentid d) l (systemActor $ ctxtime ctx)
 
         let docid = documentid d
         let asl = head $ documentsignatorylinks d
@@ -103,7 +103,7 @@ sendDocumentMails mailTo author = do
         checkMail "Reject"  $ mailDocumentRejected  Nothing  ctx doc sl
         -- awaiting author email
         when (doctype == Contract) $ do
-          checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc (mkLocaleFromRegion defaultValue)
+          checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc (defaultValue :: Lang)
         -- Virtual signing
         _ <- randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing
                                    (signatoryActor (10 `minutesAfter` now) ip (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
@@ -121,10 +121,10 @@ sendDocumentMails mailTo author = do
 
 testUserMails :: Maybe String -> TestEnv ()
 testUserMails mailTo = do
-  forM_ allLocales $ \l ->  do
-    -- make a user and context that use the same locale
+  forM_ allLangs $ \l ->  do
+    -- make a user and context that use the same lang
     ctx <- mailingContext l
-    user <- addNewRandomUserWithLocale l
+    user <- addNewRandomUserWithLang l
 
     req <- mkRequest POST []
     let checkMail s mg = do
@@ -137,7 +137,7 @@ testUserMails mailTo = do
           newUserMail (ctxhostpart ctx) (getEmail user) (getEmail user) al
     checkMail "New account by admin" $ do
           al <- newUserAccountRequestLink $ userid user
-          mailNewAccountCreatedByAdmin ctx (ctxlocale ctx) (getSmartName user) (getEmail user) al Nothing
+          mailNewAccountCreatedByAdmin ctx (ctxlang ctx) (getSmartName user) (getEmail user) al Nothing
     checkMail "Reset password mail" $ do
           al <- newUserAccountRequestLink $ userid user
           resetPasswordMail (ctxhostpart ctx) user al
@@ -146,7 +146,7 @@ testUserMails mailTo = do
     Log.debug "Delay for mails to get send"
     liftIO $ threadDelay 200000000
     Log.debug "Mails not send will be purged"
-         
+
 
 
 -- MAIL TESTING UTILS
@@ -161,18 +161,18 @@ validMail name m = do
          Right _ -> assertSuccess
          Left err -> assertFailure ("Not valid HTML mail " ++ name ++ " : " ++ c ++ " " ++ err)
 
-addNewRandomUserWithLocale :: Locale -> TestEnv User
-addNewRandomUserWithLocale l = do
+addNewRandomUserWithLang :: Lang -> TestEnv User
+addNewRandomUserWithLang l = do
   user <- addNewRandomUser
   _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-           locale = l
+           lang = l
          }
   (Just uuser) <- dbQuery $ GetUserByID (userid user)
   return uuser
 
-mailingContext :: Locale -> TestEnv Context
-mailingContext locale = do
-    ctx <- mkContext locale
+mailingContext :: Lang -> TestEnv Context
+mailingContext lang = do
+    ctx <- mkContext lang
     return $ ctx { ctxhostpart = "http://dev.skrivapa.se" }
 
 

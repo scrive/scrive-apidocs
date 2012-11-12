@@ -91,7 +91,7 @@ renderListTemplateNormalHelper renderFunc list =
 renderListTemplate :: TemplatesMonad m => [String] -> m String
 renderListTemplate = renderListTemplateHelper renderTemplate
 
-renderLocalListTemplate :: (HasLocale a, TemplatesMonad m) => a -> [String] -> m String
+renderLocalListTemplate :: (HasLang a, TemplatesMonad m) => a -> [String] -> m String
 renderLocalListTemplate = renderListTemplateHelper .renderLocalTemplate
 
 renderListTemplateHelper :: TemplatesMonad m
@@ -148,10 +148,10 @@ class HasFieldType a where
 
 instance HasFieldType FieldType where
     fieldType = id
-    
+
 instance HasFieldType SignatoryField where
     fieldType = sfType
-        
+
 matchingFieldType:: (HasFieldType a, HasFieldType b) => a -> b -> Bool
 matchingFieldType a b = case (fieldType a, fieldType b) of
                         (CustomFT a' _, CustomFT b' _) -> a' == b'
@@ -160,20 +160,20 @@ matchingFieldType a b = case (fieldType a, fieldType b) of
 class HasFields a where
     replaceField :: SignatoryField -> a -> a
     getAllFields:: a ->  [SignatoryField]
-    
+
 instance HasFields  [SignatoryField] where
     getAllFields = id
-    replaceField f fs = if (any (matchingFieldType f) fs) 
+    replaceField f fs = if (any (matchingFieldType f) fs)
                                 then map (\f' ->  f <| (matchingFieldType f f') |> f' )  fs
                                 else fs  ++ [f]
 
 instance HasFields SignatoryDetails where
     getAllFields = getAllFields . signatoryfields
-    replaceField f s = s {signatoryfields = replaceField f (signatoryfields s) } 
+    replaceField f s = s {signatoryfields = replaceField f (signatoryfields s) }
 
 instance HasFields SignatoryLink where
     getAllFields =  getAllFields . signatorydetails
-    replaceField f s = s {signatorydetails = replaceField f (signatorydetails s) }     
+    replaceField f s = s {signatorydetails = replaceField f (signatorydetails s) }
 
 replaceFieldValue :: HasFields a =>  FieldType -> String -> a -> a
 replaceFieldValue ft v a = case (find (matchingFieldType ft) $ getAllFields a) of
@@ -267,7 +267,7 @@ hasOtherSignatoriesThenAuthor doc = not . null $ filter (isSignatory &&^ not . i
     In addition the document must be in the correct state.  There's quite a lot to check!
 -}
 isEligibleForReminder :: User -> Document -> SignatoryLink -> Bool
-isEligibleForReminder user document@Document{documentstatus} siglink = 
+isEligibleForReminder user document@Document{documentstatus} siglink =
   signatoryActivated
     && userIsAuthor
     && not isUserSignator
@@ -323,7 +323,7 @@ replaceSignOrder signorder sd = sd { signatorysignorder = signorder }
 canUserInfoViewDirectly :: UserID -> String -> Document -> Bool
 canUserInfoViewDirectly userid email doc =
     (checkSigLink' $ getSigLinkFor doc userid) || (checkSigLink' $ getSigLinkFor doc email)
-  where 
+  where
     checkSigLink' a = case a of
       Nothing                                                                    -> False
       Just siglink | signatorylinkdeleted siglink                                -> False
@@ -374,8 +374,8 @@ samenameanddescription :: String -> String -> (String, String, [(String, String)
 samenameanddescription n d (nn, dd, _) = n == nn && d == dd
 
 getSignatoryAttachment :: Document -> SignatoryLinkID -> String -> Maybe SignatoryAttachment
-getSignatoryAttachment doc slid name = join $ find (\a -> name == signatoryattachmentname a) 
-                                       <$> signatoryattachments 
+getSignatoryAttachment doc slid name = join $ find (\a -> name == signatoryattachmentname a)
+                                       <$> signatoryattachments
                                        <$> (find (\sl -> slid == signatorylinkid sl) $ documentsignatorylinks doc)
 
 sameDocID :: Document -> Document -> Bool
@@ -450,7 +450,7 @@ makeSignatory pls fds sid sfn  ssn  se  sso sauthor spartner sc  spn  scn = Sign
     }
 
 recentDate :: Document -> MinutesTime
-recentDate doc = 
+recentDate doc =
   maximum $ [documentctime doc, documentmtime doc] ++
   (maybeToList $ signtime <$> documentinvitetime doc) ++
   (maybeToList $ (\(a,_,_) -> a) <$> documentrejectioninfo doc) ++

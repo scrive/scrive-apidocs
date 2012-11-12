@@ -46,7 +46,7 @@ sendRedirect BackToReferer = do
   let link  = if (null link') then (show mainlink) else link'
   seeOther link =<< setRsCode 303 (seeOtherXML link)
 
-sendRedirect link@(LinkLogin _locale reason) = do
+sendRedirect link@(LinkLogin _lang reason) = do
   curr <- rqUri <$> askRq
   qr <- rqQuery <$> askRq
   referer <- getField "referer"
@@ -84,7 +84,7 @@ instance GuardRight DBError where
   guardRight (Right b)            = return b
   guardRight (Left DBNotLoggedIn) = do
     ctx <- getContext
-    finishWith $ sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
+    finishWith $ sendRedirect $ LinkLogin (ctxlang ctx) NotLogged
   guardRight _                    = internalError
 
 {- |
@@ -99,5 +99,5 @@ guardLoggedIn = do
   case ctxmaybeuser of
     Nothing -> do
       ctx <- getContext
-      finishWith $ sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
+      finishWith $ sendRedirect $ LinkLogin (ctxlang ctx) NotLogged
     Just _ -> return ()

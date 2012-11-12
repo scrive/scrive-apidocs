@@ -12,7 +12,7 @@ module Doc.DocViewMail (
     , mailInvitationContent
     , mailMismatchAuthor
     , mailMismatchSignatory
-    , documentMailWithDocLocale
+    , documentMailWithDocLang
     , mailFooterForDocument
     , companyBrandFields
     ) where
@@ -77,7 +77,7 @@ remindMailNotSigned :: (MonadDB m, TemplatesMonad m)
 remindMailNotSigned forMail customMessage ctx document signlink = do
     let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document)
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
-    documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailremindnotsigned) $ do
+    documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailremindnotsigned) $ do
         F.valueM "header" $ do
             header <- if isNothing customMessage
                          then remindMailNotSignedStandardHeader document signlink
@@ -112,7 +112,7 @@ remindMailSigned :: (MonadDB m, TemplatesMonad m)
                  -> m Mail
 remindMailSigned _forMail customMessage ctx document signlink = do
     sheader <- remindMailSignedStandardHeader document signlink
-    documentMailWithDocLocale ctx document "remindMailSigned" $ do
+    documentMailWithDocLang ctx document "remindMailSigned" $ do
             F.valueM "header" $ makeEditable "customtext" $ fromMaybe sheader customMessage
             F.valueM "footer" $ mailFooterForDocument ctx document
 
@@ -164,7 +164,7 @@ mailDocumentRejected :: (MonadDB m, TemplatesMonad m)
                      -> SignatoryLink
                      -> m Mail
 mailDocumentRejected customMessage ctx document rejector = do
-   documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailreject) $ do
+   documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailreject) $ do
         F.value "rejectorName" $ getSmartName rejector
         F.valueM "footer" $ defaultFooter ctx
         F.value "customMessage" $ customMessage
@@ -181,13 +181,13 @@ mailDocumentRejectedContent :: (MonadDB m, TemplatesMonad m)
 mailDocumentRejectedContent customMessage ctx  document rejector =
      content <$> mailDocumentRejected customMessage ctx document rejector
 
-mailDocumentErrorForAuthor :: (HasLocale a, MonadDB m, TemplatesMonad m) => Context -> Document -> a -> m Mail
-mailDocumentErrorForAuthor ctx document authorlocale = do
-   documentMail authorlocale ctx document "mailDocumentError" $ return ()
+mailDocumentErrorForAuthor :: (HasLang a, MonadDB m, TemplatesMonad m) => Context -> Document -> a -> m Mail
+mailDocumentErrorForAuthor ctx document authorlang = do
+   documentMail authorlang ctx document "mailDocumentError" $ return ()
 
 mailDocumentErrorForSignatory :: (MonadDB m, TemplatesMonad m) => Context -> Document -> m Mail
 mailDocumentErrorForSignatory ctx document = do
-   documentMailWithDocLocale ctx document "mailDocumentError" $ return ()
+   documentMailWithDocLang ctx document "mailDocumentError" $ return ()
 
 
 data InvitationTo = Sign | View
@@ -214,7 +214,7 @@ mailInvitation forMail
     let creatorname = getSmartName $ fromJust $ getAuthorSigLink document
     let personname = maybe "" getSmartName msiglink
     let mainfile =  fromMaybe (unsafeFileID 0) (documentfile document) -- There always should be main file but tests fail without it
-    documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailinvitationtosign) $ do
+    documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailinvitationtosign) $ do
         fieldsInvitationTo invitationto
         F.value "nojavascriptmagic" $ forMail
         F.value "javascriptmagic" $ not forMail
@@ -262,16 +262,16 @@ mailInvitationContent  forMail ctx invitationto document msiglink = do
 mailDocumentClosed :: (MonadDB m, TemplatesMonad m) => Context -> Document -> m Mail
 mailDocumentClosed ctx document= do
    partylist <- renderLocalListTemplate document $ map getSmartName $ partyList document
-   documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailclosed) $ do
+   documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailclosed) $ do
         F.value "partylist" $ partylist
         F.valueM "footer" $ mailFooterForDocument ctx document
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
 
 
-mailDocumentAwaitingForAuthor :: (HasLocale a, MonadDB m, TemplatesMonad m) => Context -> Document -> a -> m Mail
-mailDocumentAwaitingForAuthor ctx document authorlocale = do
-    signatories <- renderLocalListTemplate authorlocale $ map getSmartName $ partySignedList document
-    documentMail authorlocale ctx document "mailDocumentAwaitingForAuthor" $ do
+mailDocumentAwaitingForAuthor :: (HasLang a, MonadDB m, TemplatesMonad m) => Context -> Document -> a -> m Mail
+mailDocumentAwaitingForAuthor ctx document authorlang = do
+    signatories <- renderLocalListTemplate authorlang $ map getSmartName $ partySignedList document
+    documentMail authorlang ctx document "mailDocumentAwaitingForAuthor" $ do
         F.value "authorname" $ getSmartName $ fromJust $ getAuthorSigLink document
         F.value "documentlink" $ (ctxhostpart ctx) ++ show (LinkSignDoc document $ fromJust $ getAuthorSigLink document)
         F.value "partylist" signatories
@@ -290,7 +290,7 @@ mailMismatchSignatory :: (MonadDB m, TemplatesMonad m)
                       -> Bool
                       -> m Mail
 mailMismatchSignatory ctx document authoremail authorname doclink signame badname msg isbad = do
-   documentMailWithDocLocale ctx document "mailMismatchSignatory" $ do
+   documentMailWithDocLang ctx document "mailMismatchSignatory" $ do
         F.value "authorname" authorname
         F.value "signame" signame
         F.value "badname" badname
@@ -298,10 +298,10 @@ mailMismatchSignatory ctx document authoremail authorname doclink signame badnam
         F.value "doclink" doclink
         F.value "messages" (if isbad then Just (concat $ map para $ lines msg) else Nothing)
 
-mailMismatchAuthor :: (HasLocale a, MonadDB m, TemplatesMonad m) => Context -> Document -> String -> String -> String -> a -> m Mail
-mailMismatchAuthor ctx document authorname badname bademail authorlocale = do
+mailMismatchAuthor :: (HasLang a, MonadDB m, TemplatesMonad m) => Context -> Document -> String -> String -> String -> a -> m Mail
+mailMismatchAuthor ctx document authorname badname bademail authorlang = do
     let Just (ELegDataMismatch msg _ _ _ _) = documentcancelationreason document
-    documentMail authorlocale ctx document "mailMismatchAuthor" $ do
+    documentMail authorlang ctx document "mailMismatchAuthor" $ do
         F.value "messages" $ concat $ map para $ lines msg
         F.value "authorname" authorname
         F.value "doclink" $ ctxhostpart ctx ++ (show $ LinkDesignDoc (documentid document))
@@ -353,11 +353,11 @@ defaultFooter ctx = renderTemplate "poweredByScrive" $ do
 makeFullLink :: Context -> String -> String
 makeFullLink ctx link = ctxhostpart ctx ++ link
 
-documentMailWithDocLocale :: (MonadDB m, TemplatesMonad m) => Context -> Document -> String -> Fields m () -> m Mail
-documentMailWithDocLocale ctx doc mailname otherfields = documentMail doc ctx doc mailname otherfields
+documentMailWithDocLang :: (MonadDB m, TemplatesMonad m) => Context -> Document -> String -> Fields m () -> m Mail
+documentMailWithDocLang ctx doc mailname otherfields = documentMail doc ctx doc mailname otherfields
 
-documentMail :: (HasLocale a, MonadDB m, TemplatesMonad m) =>  a -> Context -> Document -> String -> Fields m () -> m Mail
-documentMail haslocale ctx doc mailname otherfields = do
+documentMail :: (HasLang a, MonadDB m, TemplatesMonad m) =>  a -> Context -> Document -> String -> Fields m () -> m Mail
+documentMail haslang ctx doc mailname otherfields = do
     mcompany <- liftMM (dbQuery . GetCompany) (return $ getAuthorSigLink doc >>= maybecompany)
     let allfields = do
         contextFields ctx
@@ -367,7 +367,7 @@ documentMail haslocale ctx doc mailname otherfields = do
             let (Just company) = mcompany
             F.object "companybrand" $ companyBrandFields company
         otherfields
-    kontramaillocal haslocale mailname allfields
+    kontramaillocal haslang mailname allfields
 
 companyBrandFields :: Monad m => Company -> Fields m ()
 companyBrandFields company = do

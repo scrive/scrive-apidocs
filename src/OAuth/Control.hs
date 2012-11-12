@@ -71,27 +71,27 @@ authorization :: Kontrakcja m => m (Either KontraLink Response)
 authorization = do
   ctx <- getContext
   time   <- ctxtime      <$> getContext
-  locale <- ctxlocale    <$> getContext
+  lang <- ctxlang        <$> getContext
 
   mtk <- getDataFn' (look "oauth_token")
   token <- guardJust $ maybeRead =<< mtk
-  
+
   mprivs <- dbQuery $ GetRequestedPrivileges token time
 
   case mprivs of
     Just (companyname, p:ps) -> Right <$> pagePrivilegesConfirm ctx (p:ps) companyname token
-    _ -> return $ Left $ LinkHome locale -- no privileges recorded? we just take the traffic
+    _ -> return $ Left $ LinkHome lang -- no privileges recorded? we just take the traffic
 
 
 authorizationDenied :: Kontrakcja m => m KontraLink
 authorizationDenied = do
   time   <- ctxtime <$> getContext
-  locale <- ctxlocale <$> getContext
+  lang   <- ctxlang <$> getContext
   mtk <- getDataFn' (look "oauth_token")
   token <- guardJust $ maybeRead =<< mtk
   murl <- dbUpdate $ DenyCredentials token time
   case murl of
-    Nothing -> return $ LinkHome locale
+    Nothing -> return $ LinkHome lang
     Just url -> do
       -- here we redirect to callback with denied=true
       return $ LinkOAuthCallback url token Nothing
@@ -103,11 +103,11 @@ authorizationGranted = do
   muser <- ctxmaybeuser <$> getContext
   time <- ctxtime <$> getContext
   case muser of
-    Nothing -> 
+    Nothing ->
       return $ LinkOAuthAuthorization token
     Just user -> do
       (url, verifier) <- guardJustM $ dbUpdate $ VerifyCredentials token (userid user) time
-      _ <- addUserStatAPIGrantAccess (userid user) time (usercompany user) 
+      _ <- addUserStatAPIGrantAccess (userid user) time (usercompany user)
       return $ LinkOAuthCallback url token $ Just verifier
 
 tokenCredRequest :: Kontrakcja m => m Response
@@ -123,7 +123,7 @@ tokenCredRequest = api $ do
                            ]
 
 -- Show API Dashboard
-    
+
 apiDashboard :: Kontrakcja m => m (Either KontraLink Response)
 apiDashboard = checkUserTOSGet $ do
   Just user <- ctxmaybeuser <$> getContext -- safe because we check user
@@ -137,7 +137,7 @@ apiDashboardPersonalTokens = do
   return $ runJSONGen $ do
     J.objects "list" $ map (J.value "fields") ls
     J.value "paging" $ pagingParamsJSON $ PagedList {list = ls, pageSize = 100, params = emptyListParams}
-  
+
 apiDashboardAPITokens :: Kontrakcja m => m JSValue
 apiDashboardAPITokens = do
   Context{..} <- getContext
@@ -146,7 +146,7 @@ apiDashboardAPITokens = do
   return $ runJSONGen $ do
     J.objects "list" $ map (J.value "fields") ls
     J.value "paging" $ pagingParamsJSON $ PagedList {list = ls, pageSize = 100, params = emptyListParams}
-      
+
 apiDashboardGrantedPrivileges :: Kontrakcja m => m JSValue
 apiDashboardGrantedPrivileges = do
   Context{..} <- getContext

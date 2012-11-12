@@ -214,7 +214,7 @@ test_setUserInfoCapEmail = do
 test_setUserSettings :: TestEnv ()
 test_setUserSettings = do
   Just User{userid, usersettings} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  let us = usersettings { locale = mkLocaleFromRegion defaultValue }
+  let us = usersettings { lang = defaultValue }
   res <- dbUpdate $ SetUserSettings userid us
   assertBool "UserSettings updated correctly" res
   Just User{usersettings = us2} <- dbQuery $ GetUserByID userid

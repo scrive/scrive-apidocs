@@ -8,7 +8,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 <meta name="description" content="$_firstPageMetaDescription()$" />
                 <link href='https://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
                 $staticResources:noescape()$
-                <script src="/localization/$ctxregion$/$ctxlang$/$versioncode$.js"  type="text/javascript"></script>
+                <script src="/localization/$ctxlang$/$versioncode$.js"  type="text/javascript"></script>
                 $if(production)$
                     <script src="$resourcehostpart$/libs/analytics.js" type="text/javascript"></script>
                 $endif$
@@ -51,7 +51,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                   <a href="$linkclients$" class="toplink ">$_customerCases()$</a>
                                   <a href="$linkpriceplan$"
                                   class="toplink ">$_pageFooterPrices()$</a>
-                                  $localeSwitcher()$
+                                  $langSwitcher()$
                                   </span>
 
                                         <div class="campaign-container">
@@ -67,7 +67,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 </div>
                 <div class="nav-container">
                         <div class="logos">
-                          <img class="first" src="/img/logo/pc-$if(langen)$en$else$se$endif$.png" />
+                          <img class="first" src="/img/logo/pc-$if(langenglish)$en$else$se$endif$.png" />
                         </div>
                         <div class="bottom-border"></div>
                 </div>
@@ -198,7 +198,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </tr>
                                         </table>
                                         <div class="highlight-container">
-                                                <div class="ribbon $if(langen)$english$else$swedish$endif$"></div>
+                                                <div class="ribbon $if(langenlish)$english$else$swedish$endif$"></div>
                                                 $_PriceTableHighlightedColumn()$
                                         </div>
                                 </div>

@@ -68,10 +68,10 @@ handleDelete = do
               let usl = (find (isSigLinkFor user) $ documentsignatorylinks doc)
                   csl = (find (isSigLinkFor (usercompany user)) $ documentsignatorylinks doc) <| (useriscompanyadmin user) |> Nothing
                   msl =  usl `mplus` csl
-              when (isNothing msl) internalError    
+              when (isNothing msl) internalError
               case (documentstatus doc) of
                   Pending -> if (isAuthor msl)
-                                then do 
+                                then do
                                    guardTrueM $ dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
                                    doc' <- guardRightM' $ getDocByDocID $ did
                                    postDocumentCanceledChange doc' "web+archive"
@@ -86,11 +86,11 @@ handleDelete = do
               case (documentstatus doc') of
                    Preparation -> do
                        _ <- dbUpdate $ ReallyDeleteDocument user did actor
-                       when_ (isJust $ getSigLinkFor doc' user) $ 
+                       when_ (isJust $ getSigLinkFor doc' user) $
                             addSignStatPurgeEvent doc' (fromJust $ getSigLinkFor doc' user)  ctxtime
-                   _ -> return ()         
+                   _ -> return ()
     J.runJSONGenT $ return ()
-            
+
 
 
 handleSendReminders :: Kontrakcja m => m JSValue
@@ -102,7 +102,7 @@ handleSendReminders = do
     case (length remindedsiglinks) of
       0 -> internalError
       _ -> J.runJSONGenT $ return ()
-    
+
 handleCancel :: Kontrakcja m =>  m JSValue
 handleCancel = do
   docids <- getCriticalFieldList asValidDocID "doccheck"
@@ -116,7 +116,7 @@ handleCancel = do
            postDocumentCanceledChange doc' "web+archive"
         else internalError
   J.runJSONGenT $ return ()
-  
+
 handleRestore :: Kontrakcja m => m JSValue
 handleRestore = do
   user <- guardJustM $ ctxmaybeuser <$> getContext
@@ -177,7 +177,7 @@ jsonDocumentsList ::  Kontrakcja m => m (Either CSV JSValue)
 jsonDocumentsList = do
   Log.debug $ "Long list " ++ (show $ map fromEnum [SCDraft,SCCancelled,SCRejected,SCTimedout,SCError,SCDeliveryProblem,SCSent,SCDelivered,SCRead,SCOpened,SCSigned])
   user@User{userid = uid} <- guardJustM $ ctxmaybeuser <$> getContext
-  lang <- getLang . ctxlocale <$> getContext
+  lang <- ctxlang <$> getContext
   doctype <- getField' "documentType"
   params <- getListParamsNew
   let (domain,filters1) = case doctype of

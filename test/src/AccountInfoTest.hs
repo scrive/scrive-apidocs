@@ -17,7 +17,7 @@ import Utils.Default
 import Redirect
 import TestingUtil
 import TestKontra as T
-import User.Locale
+import User.Lang()
 import User.Model
 import User.UserControl
 import User.Utils
@@ -56,7 +56,7 @@ data UpgradeInfo = UpgradeInfo String String String String String
 upgradeCompanyForUser :: User -> UpgradeInfo -> TestEnv (Response, Context)
 upgradeCompanyForUser user (UpgradeInfo cname fstname sndname position phone) = do
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST [ ("createcompany", inText "true")
                         , ("companyname", inText cname)
@@ -91,7 +91,7 @@ testChangeEmailAddress = do
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req1 <- mkRequest POST [ ("changeemail", inText "true")
                         , ("newemail", inText "jim@bob.com")
@@ -127,7 +127,7 @@ testAddressesMustMatchToRequestEmailChange :: TestEnv ()
 testAddressesMustMatchToRequestEmailChange = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req1 <- mkRequest POST [ ("changeemail", inText "true")
                         , ("newemail", inText "jim@bob.com")
@@ -143,7 +143,7 @@ testNeedTwoAddressesToRequestEmailChange :: TestEnv ()
 testNeedTwoAddressesToRequestEmailChange = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req1 <- mkRequest POST [ ("changeemail", inText "true")
                         , ("newemail", inText "jim@bob.com")
@@ -160,7 +160,7 @@ testNeedEmailToBeUniqueToRequestChange = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   _ <- addNewUser "Jim" "Bob" "jim@bob.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req1 <- mkRequest POST [ ("changeemail", inText "true")
                         , ("newemail", inText "jim@bob.com")
@@ -181,7 +181,7 @@ testEmailChangeFailsIfActionIDIsWrong = do
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST [("password", inText "abc123")]
   EmailChangeRequest{..} <- newEmailChangeRequest (userid user) (Email "jim@bob.com")
@@ -197,7 +197,7 @@ testEmailChangeFailsIfMagicHashIsWrong = do
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST [("password", inText "abc123")]
   EmailChangeRequest{..} <- newEmailChangeRequest (userid user) (Email "jim@bob.com")
@@ -217,7 +217,7 @@ testEmailChangeIfForAnotherUser = do
   Just user <- dbQuery $ GetUserByID (userid user')
   Just anotheruser <- addNewUser "Fred" "Frog" "fred@frog.com"
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST [("password", inText "abc123")]
   EmailChangeRequest{..} <- newEmailChangeRequest (userid anotheruser) (Email "jim@bob.com")
@@ -233,7 +233,7 @@ testEmailChangeFailsIfEmailInUse = do
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST [("password", inText "abc123")]
   EmailChangeRequest{..} <- newEmailChangeRequest (userid user) (Email "jim@bob.com")
@@ -251,7 +251,7 @@ testEmailChangeFailsIfPasswordWrong = do
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST [("password", inText "wrongpassword")]
   EmailChangeRequest{..} <- newEmailChangeRequest (userid user) (Email "jim@bob.com")
@@ -269,7 +269,7 @@ testEmailChangeFailsIfNoPassword = do
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue)
+    <$> mkContext defaultValue
 
   req <- mkRequest POST [("password", inText "")]
   EmailChangeRequest{..} <- newEmailChangeRequest (userid user) (Email "jim@bob.com")

@@ -94,7 +94,7 @@ jsonAttachment attid = do
 jsonAttachmentsList ::  Kontrakcja m => m (Either KontraLink JSValue)
 jsonAttachmentsList = withUserGet $ do
   Just user@User{userid = uid} <- ctxmaybeuser <$> getContext
-  lang <- getLang . ctxlocale <$> getContext
+  lang <- ctxlang <$> getContext
 
   params <- getListParamsNew
 

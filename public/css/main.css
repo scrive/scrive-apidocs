@@ -419,7 +419,7 @@ a.new-btn-small.black p {
     font-weight: bold;
 }
 
-#top-container .moveleft .localeSwitcher a {
+#top-container .moveleft .langSwitcher a {
     margin-left: 0px;
 }
 
@@ -444,24 +444,24 @@ a.new-btn-small.black p {
 	color: #fff;
 }
 
-.localeSwitcher {
+.langSwitcher {
   display: inline-block;
   position:relative;
   z-index:100;
   padding-right: 20px;
 }
 
-#top-container .localeSwitcher {
+#top-container .langSwitcher {
   float: right;
   padding-top: 15px;
   padding-right: 0px;
 }
 
-.localeSwitcher div {
+.langSwitcher div {
   float: left;
   padding-left: 5px;
 }
-.localeSwitcher div {
+.langSwitcher div {
   float: left;
   padding-left: 5px;
 }
@@ -847,7 +847,7 @@ a.new-btn-small.black p {
 	background: #fff;
 	box-shadow: 0 0 5px #999;
 	border: 2px solid #35A4D6;
-	/* left: 467px; */ 
+	/* left: 467px; */
 	position: absolute;
 	top: -13px;
 	width: 290px;

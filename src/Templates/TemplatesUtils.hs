@@ -18,7 +18,7 @@ import Templates.Templates
 import Mails.SendMail
 import Data.Char
 import Kontra
-import User.Locale
+import User.Lang
 import qualified Templates.Fields as F
 
 {- Common templates - should be shared and it seams like a good place for them -}
@@ -68,7 +68,7 @@ markOdd fields = do
   F.value "even" False
   F.value "odd"  True
 
-kontramaillocal :: (HasLocale a, TemplatesMonad m) => a -> String -> Fields m () -> m Mail
+kontramaillocal :: (HasLang a, TemplatesMonad m) => a -> String -> Fields m () -> m Mail
 kontramaillocal = kontramailHelper . renderLocalTemplate
 
 kontramail :: TemplatesMonad m  => String -> Fields m () -> m Mail

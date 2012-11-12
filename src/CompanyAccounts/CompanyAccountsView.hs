@@ -30,7 +30,7 @@ import qualified Templates.Fields as F
 
 ----------------------------------------------------------------------------
 
-mailNewCompanyUserInvite :: (TemplatesMonad m, HasSomeUserInfo a, HasLocale a, HasSomeUserInfo b) =>
+mailNewCompanyUserInvite :: (TemplatesMonad m, HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
                                String -> a -> b -> Company -> KontraLink -> m Mail
 mailNewCompanyUserInvite hostpart invited inviter company link =
   kontramail "mailNewCompanyUserInvite" $ do
@@ -39,7 +39,7 @@ mailNewCompanyUserInvite hostpart invited inviter company link =
     F.object "companybrand" $ companyBrandFields company
 
 
-mailTakeoverPrivateUserInvite :: (TemplatesMonad m,  HasSomeUserInfo a, HasLocale a, HasSomeUserInfo b) =>
+mailTakeoverPrivateUserInvite :: (TemplatesMonad m,  HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
                                String -> a -> b -> Company -> KontraLink -> m Mail
 mailTakeoverPrivateUserInvite hostpart invited inviter company link =
   --invite in the language of the existing user rather than in the inviter's language

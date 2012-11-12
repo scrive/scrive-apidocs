@@ -14,7 +14,7 @@ import Control.Monad
 import Templates.TemplatesFiles
 import Templates.TemplatesLoader (KontrakcjaTemplates, readGlobalTemplates, localizedVersion, renderTemplateMain)
 import Templates.TextTemplates
-import User.Locale
+import User.Lang
 import Static.Resources as SR
 import TestingUtil (assertRight)
 
@@ -37,7 +37,7 @@ isIncluded (name, _) = not $ name `elem` excludedTemplates
 testValidXml :: Assertion
 testValidXml = do
   ts <- mapM getTemplates templatesFilesPath
-  texts <- mapM (\l -> getTextTemplates (getRegion l) (getLang l)) allLocales
+  texts <- mapM getTextTemplates allLangs
   _ <- mapM assertTemplateIsValidXML . filter isIncluded $ concat ts ++ concat texts
   assertSuccess
 
@@ -57,10 +57,10 @@ testNoNestedP :: Assertion
 testNoNestedP = do
   langtemplates <- readGlobalTemplates
   ts <- mapM getTemplates templatesFilesPath
-  texts <- forM allLocales (\l -> getTextTemplates (getRegion l) (getLang l))
+  texts <- forM allLangs getTextTemplates
   let alltemplatenames = map fst (concat texts ++ concat ts)
-  _ <- forM allLocales $ \locale -> do
-    let templates = localizedVersion locale langtemplates
+  _ <- forM allLangs $ \lang -> do
+    let templates = localizedVersion lang langtemplates
     --ts <- getTextTemplates lang
     assertNoNestedP alltemplatenames templates
   assertSuccess

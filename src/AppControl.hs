@@ -7,7 +7,7 @@ module AppControl
     , AppGlobals(..)
     , maybeReadTemplates
     -- exported for the sake of unit tests
-    , getStandardLocale
+    , getStandardLang
     ) where
 
 import AppConf
@@ -70,24 +70,20 @@ data AppGlobals
 
 
 {- |
-    Determines the locale of the current user (whether they are logged in or not), by checking
+    Determines the lang of the current user (whether they are logged in or not), by checking
     their settings, the request, and cookies.
 -}
-getStandardLocale :: (HasLocale a, HasRqData m, ServerMonad m, FilterMonad Response m, MonadIO m, MonadPlus m, Functor m) => Maybe a -> m Locale
+getStandardLang :: (HasLang a, HasRqData m, ServerMonad m, FilterMonad Response m, MonadIO m, MonadPlus m, Functor m) => Maybe a -> m Lang
 
-getStandardLocale muser = do
+getStandardLang muser = do
   rq <- askRq
-  currentcookielocale <- optional $ readCookieValue "locale"
-  let urlregion = (listToMaybe $ rqPaths rq) >>= regionFromCode
-      urllang = (listToMaybe . drop 1 $ rqPaths rq) >>= langFromCode
-      urllocale = case (urlregion, urllang) of
-                    (Just region, Just lang) -> Just $ mkLocale region lang
-                    _ -> Nothing
-      browserlocale =  mkLocaleFromRegion $ regionFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
-      newlocale = fromMaybe browserlocale $ msum [urllocale, (getLocale <$> muser), currentcookielocale]
-      newlocalecookie = mkCookie "locale" (show newlocale)
-  addCookie (MaxAge (60*60*24*366)) newlocalecookie
-  return newlocale
+  currentcookielang <- optional $ readCookieValue "lang"
+  let urllang = (listToMaybe $ rqPaths rq) >>= langFromCode
+      browserlang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
+      newlang = fromMaybe browserlang $ msum [urllang, (getLang <$> muser), currentcookielang]
+      newlangcookie = mkCookie "lang" (show newlang)
+  addCookie (MaxAge (60*60*24*366)) newlangcookie
+  return newlang
 
 maybeReadTemplates :: Bool -> MVar (ClockTime, KontrakcjaGlobalTemplates) -> IO KontrakcjaGlobalTemplates
 maybeReadTemplates production mvar = modifyMVar mvar $ \(modtime, templates) -> do
@@ -263,8 +259,8 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
       -- regenerate static files that need to be regenerated in development mode
       staticRes <-  liftIO $ maybeReadStaticResources (production appConf) (staticResources appGlobals) (srConfig appConf)
 
-      -- work out the region and language
-      userlocale <- getStandardLocale muser
+      -- work out the language
+      userlang <- getStandardLang muser
 
       return Context {
           ctxmaybeuser = muser
@@ -276,9 +272,9 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
         , ctxipnumber = peerip
         , ctxs3action = mkAWSAction appConf
         , ctxproduction = production appConf
-        , ctxtemplates = localizedVersion userlocale templates2
+        , ctxtemplates = localizedVersion userlang templates2
         , ctxglobaltemplates = templates2
-        , ctxlocale = userlocale
+        , ctxlang = userlang
         , ctxmailsconfig = mailsConfig appConf
         , ctxgtconf = guardTimeConf appConf
         , ctxlivedocxconf = liveDocxConfig appConf

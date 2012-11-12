@@ -164,14 +164,14 @@ var DocumentDesignView = Backbone.View.extend({
             checkbox.attr("checked","YES");
             checkbox.attr("cc","YES");
             document.setElegAuthentication();
-          }  
+          }
           else {
              checkbox.removeAttr("checked");
              checkbox.attr("cc","NO");
              document.setStandardAuthentication();
-          }   
+          }
           return false;
-        });  
+        });
         var text = $("<span>").text(localization.designview.authentication.selectmethod + " "+ localization.eleg);
         box.append(checkbox).append(text);
         return box;
@@ -233,7 +233,7 @@ var DocumentDesignView = Backbone.View.extend({
           api.attr("selected","YES");
           select.append(api);
         }
-       
+
         select.change(function() {
             if ($(this).val() == 'pad')
                 document.setPadDelivery();
@@ -304,20 +304,20 @@ var DocumentDesignView = Backbone.View.extend({
         var box = $("<div class='languageselect'/>");
         var select= $("<select/>");
         var en =  $("<option value='en'/>").text(localization.languages.en);
-        var se = $("<option value='se'/>").text(localization.languages.se);
+        var sv = $("<option value='sv'/>").text(localization.languages.sv);
         select.append(en);
-        select.append(se);
+        select.append(sv);
         box.text(localization.languages.selectLanguage);
         box.append(select);
-        if (document.region().gb())
+        if (document.lang().en())
         {
           en.attr("selected","YES");
-          se.attr("selected","");
+          sv.attr("selected","");
         }
         else
         {
           en.attr("selected","");
-          se.attr("selected","YES");
+          sv.attr("selected","YES");
         }
 
         select.change(function(event){
@@ -327,10 +327,10 @@ var DocumentDesignView = Backbone.View.extend({
                     content : localization.languages.changeSwedishToEnglishText,
                     acceptText: localization.languages.signInEnglish,
                     onReject:  function() {
-                        select.val("se");
+                        select.val("sv");
                     },
                     onAccept : function() {
-                       document.region().setGB();
+                       document.lang().setEN();
                        LoadingDialog.open();
                        document.save();
                        document.afterSave(function() {
@@ -350,7 +350,7 @@ var DocumentDesignView = Backbone.View.extend({
                         select.val("en");
                     },
                     onAccept : function() {
-                       document.region().setSE();
+                       document.lang().setSV();
                        LoadingDialog.open();
                        document.save();
                        document.afterSave(function() {
@@ -478,11 +478,11 @@ var DocumentDesignView = Backbone.View.extend({
               return;
             document.save();
             document.afterSave( function() {
-                new Submit().send();
+              new Submit().send();
             });
           }
         });
-      } 
+      }
       else {
         if (document.authorCanSignFirst()) {
           button = Button.init({
@@ -503,7 +503,7 @@ var DocumentDesignView = Backbone.View.extend({
               view.signConfirmation();
             }
           });
-        } 
+        }
         else {
            button = Button.init({
              color: "green",
@@ -587,7 +587,7 @@ var DocumentDesignView = Backbone.View.extend({
                                         var link = JSON.parse(resp).link;
                                         window.location = link;
                                     });;
-                           });         
+                           });
                     }
                 }).input();
         }
@@ -653,7 +653,7 @@ var DocumentDesignView = Backbone.View.extend({
                                             else
                                                 window.location = link;
                                         });
-                                    });    
+                                    });
                                 }
                               }).input(),
               rejectText: localization.cancel,
@@ -748,7 +748,7 @@ var DocumentDesignView = Backbone.View.extend({
                     }
                   }).addInputs(input).send();
               });
-            }  
+            }
         });
         return upbutton.input();
     },

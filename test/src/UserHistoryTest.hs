@@ -115,34 +115,34 @@ testDetailsChanged = do
 testHandlerForLoginAttempt :: TestEnv ()
 testHandlerForLoginAttempt = do
     user <- createTestUser
-    ctx <- mkContext (mkLocaleFromRegion defaultValue)
+    ctx <- mkContext defaultValue
     req <- mkRequest POST [ ("email", inText "karol@skrivapa.se")
                           , ("password", inText "test")
                           ]
     _ <- runTestKontra req ctx $ handleLoginPost
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
     assertBool "History log exists" (not . null $ history)
-    assertBool "History log contains login attempt event" 
+    assertBool "History log contains login attempt event"
                 $ compareEventTypeFromList UserLoginAttempt history
 
 testHandlerForLoginSuccess :: TestEnv ()
 testHandlerForLoginSuccess = do
     user <- createTestUser
-    ctx <- mkContext (mkLocaleFromRegion defaultValue)
+    ctx <- mkContext defaultValue
     req <- mkRequest POST [ ("email", inText "karol@skrivapa.se")
                           , ("password", inText "test_password")
                           ]
     _ <- runTestKontra req ctx $ handleLoginPost
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
     assertBool "History log exists" (not . null $ history)
-    assertBool "History log contains login success event" 
+    assertBool "History log contains login success event"
                 $ compareEventTypeFromList UserLoginSuccess history
 
 testHandlerForPasswordSetup :: TestEnv ()
 testHandlerForPasswordSetup = do
     user <- createTestUser
     ctx <- (\c -> c { ctxmaybeuser = Just user})
-      <$> mkContext (mkLocaleFromRegion defaultValue)
+      <$> mkContext defaultValue
     req <- mkRequest POST [ ("oldpassword", inText "test_password")
                           , ("password", inText "test1111test")
                           , ("password2", inText "test1111test")
@@ -150,14 +150,14 @@ testHandlerForPasswordSetup = do
     _ <- runTestKontra req ctx $ handlePostUserSecurity
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
     assertBool "History log exists" (not . null $ history)
-    assertBool "History log contains password setup event" 
+    assertBool "History log contains password setup event"
                 $ compareEventTypeFromList UserPasswordSetup $ history
 
 testHandlerForPasswordSetupReq :: TestEnv ()
 testHandlerForPasswordSetupReq = do
     user <- createTestUser
     ctx <- (\c -> c { ctxmaybeuser = Just user})
-      <$> mkContext (mkLocaleFromRegion defaultValue)
+      <$> mkContext defaultValue
     req <- mkRequest POST [ ("oldpassword", inText "test")
                           , ("password", inText "test1111test")
                           , ("password2", inText "test1111test")
@@ -165,26 +165,26 @@ testHandlerForPasswordSetupReq = do
     _ <- runTestKontra req ctx $ handlePostUserSecurity
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
     assertBool "History log exists" (not . null $ history)
-    assertBool "History log contains password setup event" 
+    assertBool "History log contains password setup event"
                 $ compareEventTypeFromList UserPasswordSetupReq $ history
 
 testHandlerForAccountCreated :: TestEnv ()
 testHandlerForAccountCreated = do
-    ctx <- mkContext (mkLocaleFromRegion defaultValue)
+    ctx <- mkContext defaultValue
     req <- mkRequest POST [ ("email", inText "test@test.com")]
     _ <- runTestKontra req ctx $ signupPagePost
     Just user <- dbQuery $ GetUserByEmail $ Email "test@test.com"
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
     assertBool "History log exists" (not . null $ history)
-    assertBool "History log contains account created event" 
+    assertBool "History log contains account created event"
                $ compareEventTypeFromList UserAccountCreated $ history
     assertBool "History log contains user's email"
-               $ compareEventDataFromList [("email", "", "test@test.com")] 
+               $ compareEventDataFromList [("email", "", "test@test.com")]
                $ history
 
 testHandlerForTOSAccept :: TestEnv ()
 testHandlerForTOSAccept = do
-    ctx <- mkContext (mkLocaleFromRegion defaultValue)
+    ctx <- mkContext defaultValue
     req1 <- mkRequest POST [("email", inText "karol@skrivapa.se")]
     (_, ctx1) <- runTestKontra req1 ctx $ signupPagePost
     UserAccountRequest{..} <- head <$> getAccountCreatedActions
@@ -204,7 +204,7 @@ testHandlerForDetailsChanged :: TestEnv ()
 testHandlerForDetailsChanged = do
     user <- createTestUser
     ctx <- (\c -> c { ctxmaybeuser = Just user})
-      <$> mkContext (mkLocaleFromRegion defaultValue)
+      <$> mkContext defaultValue
     req <- mkRequest POST [ ("fstname", inText "Karol")
                           , ("sndname", inText "Samborski")
                           , ("personalnumber", inText "123")
@@ -214,7 +214,7 @@ testHandlerForDetailsChanged = do
     _ <- runTestKontra req ctx $ handleUserPost
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
     assertBool "History log exists" (not . null $ history)
-    assertBool "History log contains details changed event" 
+    assertBool "History log contains details changed event"
                 $ compareEventTypeFromList UserDetailsChange $ history
     assertBool "History log contains valid data"
                $ compareEventDataFromList [
@@ -223,14 +223,14 @@ testHandlerForDetailsChanged = do
                     , ("personal_number", "", "123")
                     , ("company_position", "", "Engineer")
                     , ("phone", "", "2221122")
-                    ] 
+                    ]
                $ history
 
 compareEventTypeFromList :: UserHistoryEventType -> [UserHistory] -> Bool
 compareEventTypeFromList t l = not . null . filter (\h -> (uheventtype . uhevent $ h) == t) $ l
 
 compareEventDataFromList :: [(String, String, String)] -> [UserHistory] -> Bool
-compareEventDataFromList d l = (uheventdata . uhevent . head $ l) == (Just $ JSArray $ 
+compareEventDataFromList d l = (uheventdata . uhevent . head $ l) == (Just $ JSArray $
        for d $ \(field, oldv, newv) -> runJSONGen $ do
           value "field" field
           value "oldval" oldv
@@ -242,10 +242,9 @@ createTestUser = do
     pwd <- createPassword "test_password"
     muser <- dbUpdate $ AddUser ("", "")
                                 "karol@skrivapa.se"
-                                (Just pwd) 
-                                Nothing 
-                                (mkLocaleFromRegion defaultValue)
+                                (Just pwd)
+                                Nothing
+                                defaultValue
     case muser of
         Nothing     -> error "Can't create user"
         (Just user) -> return user
-

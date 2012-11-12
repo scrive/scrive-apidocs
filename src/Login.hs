@@ -54,11 +54,11 @@ forgotPasswordPagePost = do
               n -> do
                 _ <- dbUpdate $ UpdateAction passwordReminder $ pr { prRemainedEmails = n - 1 }
                 sendResetPasswordMail ctx (LinkPasswordReminder prUserID prToken) user
-                runJSONGenT $ value "send" True 
+                runJSONGenT $ value "send" True
             _ -> do
               link <- newPasswordReminderLink $ userid user
               sendResetPasswordMail ctx link user
-              runJSONGenT $ value "send" True 
+              runJSONGenT $ value "send" True
 
 sendResetPasswordMail :: Kontrakcja m => Context -> KontraLink -> User -> m ()
 sendResetPasswordMail ctx link user = do
@@ -79,7 +79,7 @@ signupPagePost = do
   return LoopBack
 
 {- |
-   Try to sign up a new user. Returns the email and the new user id. If the 
+   Try to sign up a new user. Returns the email and the new user id. If the
    user already existed, don't return the userid.
  -}
 handleSignup :: Kontrakcja m => m (Maybe (Email, Maybe UserID))
@@ -100,14 +100,14 @@ handleSignup = do
         (Nothing, Nothing) -> do
           -- this email address is new to the system, so create the user
           -- and send an invite
-          locale <- ctxlocale <$> getContext
-          mnewuser <- createUser (Email email) (fromMaybe "" mfirstname, fromMaybe "" mlastname) Nothing locale
+          lang <- ctxlang <$> getContext
+          mnewuser <- createUser (Email email) (fromMaybe "" mfirstname, fromMaybe "" mlastname) Nothing lang
           maybe (return ()) UserControl.sendNewUserMail mnewuser
           return $ Just (Email email, userid <$> mnewuser)
         (_, _) -> return $ Just (Email email, Nothing)
         -- whatever happens we want the same outcome, we just claim we sent the activation link,
         -- because we don't want any security problems with user information leaks
-        
+
 {- |
    Handles submission of a login form.  On failure will redirect back to referer, if there is one.
 -}
@@ -126,7 +126,7 @@ handleLoginPost = do
                     | verifyPassword userpassword passwd -> do
                         Log.debug $ "User " ++ show email ++ " logged in"
                         _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-                          locale = ctxlocale ctx
+                          lang = ctxlang ctx
                         }
                         muuser <- dbQuery $ GetUserByID (userid user)
                         _ <- addUserLoginStatEvent (ctxtime ctx) (fromJust muuser)
@@ -156,4 +156,4 @@ handleLogout :: Kontrakcja m => m Response
 handleLogout = do
     ctx <- getContext
     logUserToContext Nothing
-    sendRedirect $ LinkHome (ctxlocale ctx)
+    sendRedirect $ LinkHome (ctxlang ctx)

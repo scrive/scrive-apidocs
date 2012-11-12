@@ -17,7 +17,7 @@ contactUsPage=
 ###
 contactUsPageContents=
                                         <div class="opaque wide box" style="height:453px;">
-                                          <iframe width="662" height="453" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps/ms?$if(localesweden)$hl=sv$endif$$if(localebritain)$hl=en$endif$&amp;msa=0&amp;msid=205556323418288588249.0004ca37e0471835ffad9&amp;ie=UTF8&amp;t=m&amp;ll=59.335816,18.06324&amp;spn=0.079318,0.226936&amp;z=12&amp;output=embed"></iframe> </div>
+                                          <iframe width="662" height="453" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps/ms?$if(langswedish)$hl=sv$endif$$if(langenglish)$hl=en$endif$&amp;msa=0&amp;msid=205556323418288588249.0004ca37e0471835ffad9&amp;ie=UTF8&amp;t=m&amp;ll=59.335816,18.06324&amp;spn=0.079318,0.226936&amp;z=12&amp;output=embed"></iframe> </div>
                                         <br />
                                         <div class="opaque wide box smaller" style="min-height: 0px;">
                                         <div style="margin-left:auto;margin-right:auto;width:500px">

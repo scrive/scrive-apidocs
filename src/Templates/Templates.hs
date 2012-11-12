@@ -89,7 +89,7 @@ import Control.Monad.Trans.Maybe
 import Text.StringTemplate.Base hiding (ToSElem, toSElem, render)
 
 import Utils.Default
-import User.Locale
+import User.Lang
 import Templates.Fields
 import Templates.TemplatesLoader
 import Control.Monad.Reader
@@ -99,7 +99,7 @@ import Control.Monad.Error
 
 class (Functor m, Monad m) => TemplatesMonad m where
   getTemplates      :: m KontrakcjaTemplates
-  getLocalTemplates :: Locale -> m KontrakcjaTemplates
+  getLocalTemplates :: Lang -> m KontrakcjaTemplates
 
 instance TemplatesMonad m => TemplatesMonad (MaybeT m) where
   getTemplates = lift getTemplates
@@ -108,12 +108,12 @@ instance TemplatesMonad m => TemplatesMonad (MaybeT m) where
 instance (TemplatesMonad m , Error e) => TemplatesMonad (ErrorT e m) where
   getTemplates = lift getTemplates
   getLocalTemplates = lift . getLocalTemplates
-  
+
 instance (Functor m, Monad m) => TemplatesMonad (ReaderT KontrakcjaGlobalTemplates m) where
-  getTemplates      = getLocalTemplates defaultValue 
-  getLocalTemplates locale = do
+  getTemplates      = getLocalTemplates defaultValue
+  getLocalTemplates lang = do
       globaltemplates <- ask
-      return $ localizedVersion locale globaltemplates
+      return $ localizedVersion lang globaltemplates
 
 renderTemplate :: TemplatesMonad m => String -> Fields m () -> m String
 renderTemplate name fields = do
@@ -128,13 +128,13 @@ renderTemplateI name fields = do
 renderTemplate_ :: TemplatesMonad m => String -> m String
 renderTemplate_ name = renderTemplate name $ return ()
 
-renderLocalTemplate :: (HasLocale a, TemplatesMonad m) => a -> String -> Fields m () -> m String
-renderLocalTemplate haslocale name fields = do
-  ts <- getLocalTemplates $ getLocale haslocale
+renderLocalTemplate :: (HasLang a, TemplatesMonad m) => a -> String -> Fields m () -> m String
+renderLocalTemplate haslang name fields = do
+  ts <- getLocalTemplates $ getLang haslang
   renderHelper ts name fields
 
-renderLocalTemplate_ :: (HasLocale a, TemplatesMonad m) => a -> String -> m String
-renderLocalTemplate_ haslocale name = renderLocalTemplate haslocale name $ return ()
+renderLocalTemplate_ :: (HasLang a, TemplatesMonad m) => a -> String -> m String
+renderLocalTemplate_ haslang name = renderLocalTemplate haslang name $ return ()
 
 renderHelper :: Monad m => KontrakcjaTemplates -> String -> Fields m () -> m String
 renderHelper ts name fields = do

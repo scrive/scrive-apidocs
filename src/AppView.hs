@@ -38,8 +38,6 @@ import Data.Maybe
 import Happstack.Server.SimpleHTTP
 import Templates.Templates
 import User.Lang
-import User.Locale
-import User.Region
 import qualified Codec.Binary.Url as URL
 import qualified Templates.Fields as F
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
@@ -105,7 +103,7 @@ sitemapPage = do
     F.value "hostpart" $ case hostpart of
                             ('h':'t':'t':'p':'s':xs) -> "http" ++ xs
                             xs -> xs
-    F.objects "locales" $ map staticLinksFields targetedLocales
+    F.objects "langs" $ map staticLinksFields allLangs
 
 priceplanPage :: Kontra String
 priceplanPage = getContext >>= \ctx -> renderTemplateAsPage ctx "priceplanPage" (Just LinkPriceplan) True
@@ -149,7 +147,7 @@ featuresPage = getContext >>= \ctx -> renderTemplateAsPage ctx "featuresPage" (J
 {- |
     Render a template as an entire page.
 -}
-renderTemplateAsPage :: Kontrakcja m => Context -> String -> Maybe (Locale -> KontraLink) -> Bool -> m String
+renderTemplateAsPage :: Kontrakcja m => Context -> String -> Maybe (Lang -> KontraLink) -> Bool -> m String
 renderTemplateAsPage ctx templateName mpubliclink showCreateAccount = do
   loginOn <- getLoginOn
   loginreferer <- getLoginReferer
@@ -182,13 +180,13 @@ getLoginReferer = do
               then ""
               else "?" ++ intercalate "&" (empties ++ withValues)
 
-standardPageFields :: TemplatesMonad m => Context -> String -> Maybe (Locale -> KontraLink) -> Bool -> Bool -> Maybe String -> Maybe String -> Fields m ()
+standardPageFields :: TemplatesMonad m => Context -> String -> Maybe (Lang -> KontraLink) -> Bool -> Bool -> Maybe String -> Maybe String -> Fields m ()
 standardPageFields ctx title mpubliclink showCreateAccount loginOn referer email = do
   F.value "title" title
   F.value "showCreateAccount" showCreateAccount
-  mainLinksFields $ ctxlocale ctx
-  staticLinksFields $ ctxlocale ctx
-  localeSwitcherFields ctx mpubliclink
+  mainLinksFields $ ctxlang ctx
+  staticLinksFields $ ctxlang ctx
+  langSwitcherFields ctx mpubliclink
   contextInfoFields ctx
   publicSafeFlagField ctx loginOn (isJust mpubliclink)
   loginModal loginOn referer email
@@ -209,7 +207,7 @@ simpleResonseClrFlash rsp = do
   res <- simpleResponse rsp
   clearFlashMsgs
   return res
-    
+
 {- |
    The landing page contents.  Read from template.
 -}
@@ -217,65 +215,62 @@ firstPage :: TemplatesMonad m => Context -> Bool -> Maybe String -> Maybe String
 firstPage ctx loginOn referer email = renderTemplate "firstPage" $ do
   contextInfoFields ctx
   publicSafeFlagField ctx loginOn True
-  mainLinksFields $ ctxlocale ctx
-  staticLinksFields $ ctxlocale ctx
-  localeSwitcherFields ctx (Just LinkHome)
+  mainLinksFields $ ctxlang ctx
+  staticLinksFields $ ctxlang ctx
+  langSwitcherFields ctx (Just LinkHome)
   loginModal (loginOn && null (filter isModal $ ctxflashmessages ctx)) referer email
   F.value "staticResources" $ SR.htmlImportList "firstPage" (ctxstaticresources ctx)
 
 {- |
    Defines the main links as fields handy for substituting into templates.
 -}
-mainLinksFields :: Monad m => Locale -> Fields m ()
-mainLinksFields locale = do
+mainLinksFields :: Monad m => Lang -> Fields m ()
+mainLinksFields lang = do
   F.value "linkaccount"          $ show (LinkAccount)
   F.value "linkforgotenpassword" $ show LinkForgotPassword
   F.value "linkissue"            $ show LinkArchive
-  F.value "linklogin"            $ show (LinkLogin locale LoginTry)
+  F.value "linklogin"            $ show (LinkLogin lang LoginTry)
   F.value "linklogout"           $ show LinkLogout
   F.value "linkquestion"         $ show LinkAskQuestion
   F.value "linksignup"           $ show LinkSignup
 
-localeSwitcherFields :: Monad m => Context -> Maybe (Locale -> KontraLink) -> Fields m ()
-localeSwitcherFields Context{ctxlocale} mlink = do
-  F.value "localesweden" $ getLang ctxlocale == LANG_SE
-  F.value "localebritain" $ getLang ctxlocale == LANG_EN
-  F.value "langsv" $ getLang ctxlocale == LANG_SE
-  F.value "langen" $ getLang ctxlocale == LANG_EN
-  F.value "linklocaleswitch" $ show LinkLocaleSwitch
-  F.value "linksesv" $ fmap (\l -> show $ l (mkLocale REGION_SE LANG_SE)) mlink
-  F.value "linkgben" $ fmap (\l -> show $ l (mkLocale REGION_GB LANG_EN)) mlink
+langSwitcherFields :: Monad m => Context -> Maybe (Lang -> KontraLink) -> Fields m ()
+langSwitcherFields Context{ctxlang} mlink = do
+  F.value "langswedish" $ getLang ctxlang == LANG_SV
+  F.value "langenglish" $ getLang ctxlang == LANG_EN
+  F.value "linklangswitch" $ show LinkLangSwitch
+  F.value "linksv" $ fmap (\l -> show $ l LANG_SV) mlink
+  F.value "linken" $ fmap (\l -> show $ l LANG_EN) mlink
 
 {- |
-    Defines the static links which are region and language sensitive.
+    Defines the static links which are language sensitive.
 -}
-staticLinksFields :: Monad m => Locale -> Fields m ()
-staticLinksFields locale = do
-  F.value "linkhome"  $ show $ LinkHome locale
-  F.value "linkpriceplan"  $ show $ LinkPriceplan locale
-  F.value "linksecurity"  $ show $ LinkSecurity locale
-  F.value "linklegal"  $ show $ LinkLegal locale
-  F.value "linkprivacypolicy"  $ show $ LinkPrivacyPolicy locale
-  F.value "linkterms"  $ show $ LinkTerms locale
-  F.value "linkjobs"  $ show $ LinkJobs locale
-  F.value "linkabout"  $ show $ LinkAbout locale
-  F.value "linkpartners"  $ show $ LinkPartners locale
-  F.value "linkclients"  $ show $ LinkClients locale
-  F.value "linkcontactus" $ show $ LinkContactUs locale
+staticLinksFields :: Monad m => Lang -> Fields m ()
+staticLinksFields lang = do
+  F.value "linkhome"  $ show $ LinkHome lang
+  F.value "linkpriceplan"  $ show $ LinkPriceplan lang
+  F.value "linksecurity"  $ show $ LinkSecurity lang
+  F.value "linklegal"  $ show $ LinkLegal lang
+  F.value "linkprivacypolicy"  $ show $ LinkPrivacyPolicy lang
+  F.value "linkterms"  $ show $ LinkTerms lang
+  F.value "linkjobs"  $ show $ LinkJobs lang
+  F.value "linkabout"  $ show $ LinkAbout lang
+  F.value "linkpartners"  $ show $ LinkPartners lang
+  F.value "linkclients"  $ show $ LinkClients lang
+  F.value "linkcontactus" $ show $ LinkContactUs lang
 
 {- |
    Defines some standard context information as fields handy for substitution
    into templates.
 -}
 contextInfoFields :: TemplatesMonad m => Context -> Fields m ()
-contextInfoFields ctx@Context{ ctxlocale } = do
+contextInfoFields ctx@Context{ ctxlang } = do
   F.value "logged" $ isJust (ctxmaybeuser ctx)
   F.objects "flashmessages" $ map flashMessageFields $ ctxflashmessages ctx
   F.value "hostpart" $ ctxhostpart ctx
   F.value "resourcehostpart" $ ctxresourcehostpart ctx
   F.value "production" (ctxproduction ctx)
-  F.value "ctxregion" $ codeFromRegion (getRegion ctxlocale)
-  F.value "ctxlang" $ codeFromLang (getLang ctxlocale)
+  F.value "ctxlang" $ codeFromLang ctxlang
 
 {- |
     Only public safe is explicitely set as a public page,
@@ -298,7 +293,7 @@ flashMessageFields flash = do
   F.valueM "message" $ do
       isFModal <- (== Modal) <$> ftype
       if (isFModal )
-         then filter (not . isControl) <$> msg 
+         then filter (not . isControl) <$> msg
          else replace "\"" "'" <$> filter (not . isControl) <$> msg
   F.valueM "isModal" $ (== Modal) <$> ftype
   where
