@@ -306,6 +306,8 @@ handlePricePageUserPlanRecurlyJSON user plan = do
       Log.payments $ "handleSubscriptionDashboardInfo: When fetching invoices for payment plan: " ++ e
       return Nothing
     Right i -> return $ Just i
+  teamsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "team")]
+  formsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "form")]
   runJSONGenT $ do
     J.value "type"         $ "planrecurly"
     J.value "subscription" $ msub
@@ -320,12 +322,20 @@ handlePricePageUserPlanRecurlyJSON user plan = do
     J.value "billingSig" billingsig
     J.value "quantity" quantity
     J.value "provider" "recurly"
+    J.object "plans" $ do
+      J.object "team" $ do
+        J.value "signature" teamsig
+      J.object "form" $ do
+        J.value "signature" formsig
 
 handlePricePageUserPlanNoneJSON :: Kontrakcja m => User -> PaymentPlan -> m JSValue
 handlePricePageUserPlanNoneJSON user plan = do
   Log.payments $ "Handling Price Page JSON for existing user with payment plan no provider"
+  RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany user
   quantity <- (maybe (return 1) (dbQuery . GetCompanyQuantity) $ usercompany user)
+  teamsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "team")]
+  formsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "form")]
   runJSONGenT $ do
     J.value "type"        $ "plannone"
     J.value "accountCode" $ show $ ppAccountCode plan
@@ -337,6 +347,11 @@ handlePricePageUserPlanNoneJSON user plan = do
     J.value "status"      $ show $ ppStatus plan
     J.value "provider"    $ "none"
     J.value "quantity"    $ quantity
+    J.object "plans" $ do
+      J.object "team" $ do
+        J.value "signature" teamsig
+      J.object "form" $ do
+        J.value "signature" formsig
 
 handlePricePageUserJSON :: Kontrakcja m => User -> m JSValue
 handlePricePageUserJSON user = do
