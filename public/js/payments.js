@@ -453,8 +453,20 @@
                                       onClick: function() {
                                           view.validator.validate(function() {
                                               LoadingDialog.open(localization.payments.loading);
-                                              model.checkuserexists(model.email(),
-                                                                    handlechargeaccount);
+                                              if(model.type() === 'user') {
+                                                  handlechargeaccount({
+                                                      'user_exists' : true,
+                                                      'has_plan' : false
+                                                  });
+                                              } else if(model.type() === 'plan' || model.type() == 'plannone') {
+                                                  handlechargeaccount({
+                                                      'user_exists' : true,
+                                                      'has_plan' : true
+                                                  });
+                                              } else { // not logged in, so we have to check
+                                                  model.checkuserexists(model.email(),
+                                                                        handlechargeaccount);
+                                              }
                                           });
                                       }});
             div.find('button').replaceWith(button.input());
