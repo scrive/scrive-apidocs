@@ -109,7 +109,7 @@
             if(model.isFree() && model.docsLeft() > 0)
                 return localization.blocking.free.has.headline + " " + model.docsUsed();
             else if(model.isFree())
-                return localization.blocking.free.hasNot.headline + " " + model.docsUsed();
+                return localization.blocking.free.hasNot.headline;
             else if(model.hasUsedAll())
                 return localization.blocking.usedall.headline;
             else if(model.isOverdue())
