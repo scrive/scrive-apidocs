@@ -341,6 +341,7 @@ commandsFromFields pagew pageh fields = concatMap commandsFromField fields
     commandsFromField ( Field{ SealSpec.value = val
                              , x
                              , y
+                             , greyed
                              , fontSize
                              }
                       , _) = execWriter $ do
@@ -349,6 +350,7 @@ commandsFromFields pagew pageh fields = concatMap commandsFromField fields
                                       (x * fromIntegral pagew - fontOffset * fs)
 
                                       (((1 - y) * fromIntegral pageh) - fontBaseline * fs)
+                               when (greyed) $ tell "0.5 g\n"
                                tell "BT\n"
                                tell $ "/SkrivaPaHelvetica " ++ show (Number fs) ++ " Tf\n"
                                tell $ "(" ++ winAnsiPostScriptEncode val ++ ") Tj\n"
