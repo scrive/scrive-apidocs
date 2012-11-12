@@ -573,7 +573,7 @@
                         var text;
                         var header;
                         if(model.type() === 'user') {
-                            window.location = '/payments/dashboard';
+                            window.location.reload();
                             return true;
                         }
 
@@ -590,12 +590,12 @@
                             content: $('<p />').text(text),
                             onAccept: function() {
                                 if(model.type() === 'user') {
-                                    window.location = '/payments/dashboard';
+                                    window.location.reload();
                                 } else if(model.createdUser()) {
                                     popup.view.clear();
-                                    Login({referer:'/upload'});
+                                    Login({});
                                 } else {
-                                    Login({referer:'/d'});
+                                    Login({});
                                 }
                             }
                         });
