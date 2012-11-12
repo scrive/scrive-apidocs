@@ -153,7 +153,6 @@ var AccountView = Backbone.View.extend({
                   , [account.mailAPITab()] 
                   , [account.statsTab()]
                   , account.noCompany() || account.companyAdmin() ? [account.subscriptionTab()] : []
-                  
                 ])
        });
        container.append(tabs.view.el);
