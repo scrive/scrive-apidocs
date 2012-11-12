@@ -56,6 +56,9 @@ import Control.Monad.Trans.Maybe
 import Data.String.Utils
 import qualified Templates.Fields as F
 import Control.Logic
+import qualified Codec.Picture.Png as PNG
+import qualified Codec.Picture.Saving as JPG
+import Utils.Either
 
 personFromSignatoryDetails :: (BS.ByteString,BS.ByteString) -> SignatoryDetails -> Seal.Person
 personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) details =
@@ -185,8 +188,12 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signato
         [w,h,c] -> do
           wi <- maybeRead w -- NOTE: Maybe monad usage
           hi <- maybeRead h
+          let content = drop 1 $ dropWhile (\e -> e /= ',') c
+          let content' = if ("image/png" `isInfixOf` take 20 c)
+                         then BS.toString $ B64.encode $ JPG.imageToJpg 100 $ fromRight $ PNG.decodePng $ fromRight $ B64.decode $ BS.fromString content
+                         else content
           Just $ Seal.FieldJPG
-                 { valueBase64           = drop 1 $ dropWhile (\e -> e /= ',') c
+                 { valueBase64           = content' 
                  , Seal.x                = 0
                  , Seal.y                = 0
                  , Seal.page             = 0
