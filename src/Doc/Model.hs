@@ -247,7 +247,7 @@ documentDomainToSQL (DocumentsOfWholeUniverse) =
 documentDomainToSQL (DocumentsVisibleToUser uid) =
   "same_company_users.id = " <?> uid
   <+> " AND ("
-   <+>       "users.id = same_company_users.id"                -- 1.
+   <+>       "(same_company_users.is_company_admin OR users.id = same_company_users.id)"                -- 1.
      <+> "AND signatory_links.is_author"
    <+> "OR"
      <+> "(same_company_users.is_company_admin OR users.id = same_company_users.id)"              -- 2a, 3a.
