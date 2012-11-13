@@ -310,7 +310,6 @@ pageDocumentView document msiglink authorcompanyadmin =
   renderTemplate "pageDocumentView" $ do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ fmap (show . signatorylinkid) msiglink
-      F.value "sigmagichash" $ fmap (show .  signatorymagichash) msiglink
       F.value "authorcompanyadmin" $ authorcompanyadmin
 
 
@@ -323,7 +322,6 @@ pageDocumentSignView ctx document siglink =
   renderTemplate "pageDocumentSignView" $ do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink
-      F.value "sigmagichash" $ show $  signatorymagichash siglink
       F.value "documenttitle" $ documenttitle document
       standardPageFields ctx kontrakcja Nothing False False Nothing Nothing
 
