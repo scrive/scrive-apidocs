@@ -65,7 +65,6 @@ tableDocuments = Table {
           ++ ", rejection_reason TEXT NULL"
           ++ ", mail_footer TEXT NULL"
           ++ ", lang SMALLINT NOT NULL"
-          ++ ", deleted BOOL NOT NULL"
           ++ ", authentication_method SMALLINT NOT NULL"
           ++ ", delivery_method SMALLINT NOT NULL"
           ++ ", api_callback_url TEXT NULL"
