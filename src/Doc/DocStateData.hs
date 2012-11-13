@@ -144,7 +144,7 @@ data FieldType = FirstNameFT
                | SignatureFT
                | CheckboxOptionalFT String 
                | CheckboxObligatoryFT String 
-  deriving (Eq, Ord, Show, Data, Typeable, Read)
+  deriving (Eq, Ord, Show, Data, Typeable)
 
 data SignatoryField = SignatoryField {
     sfType       :: FieldType

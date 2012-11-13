@@ -516,7 +516,7 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
     liftIO $ BS.writeFile tmpin content
     checkedBoxImage <- liftIO $ BS.readFile "public/img/checkbox_checked.jpg"
     uncheckedBoxImage <- liftIO $  BS.readFile "public/img/checkbox_unchecked.jpg"
-    emptyFieldsText <- read <$> renderTemplate_ "emptyFieldsText"
+    emptyFieldsText <- emptyFieldsTextT 
     let config = presealSpecFromDocument emptyFieldsText (checkedBoxImage,uncheckedBoxImage) document tmpin tmpout
     Log.debug $ "Config " ++ show config
     (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
@@ -531,4 +531,18 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
           Log.error $ BSL.toString stderr
           Log.error $ "Presealing failed for configuration: " ++ show config
           return $ Left "Error when preprinting fields on PDF"
-        
+
+emptyFieldsTextT :: (TemplatesMonad m) => m [(FieldType,String)]
+emptyFieldsTextT = do
+  fstname <- renderTemplate_ "fstnameEmptyFieldsText"
+  sndname <- renderTemplate_ "sndnameEmptyFieldsText"
+  email <- renderTemplate_ "emailEmptyFieldsText"
+  company <- renderTemplate_ "companyEmptyFieldsText"
+  companynumber <- renderTemplate_ "companynumberEmptyFieldsText"
+  personalnumber <- renderTemplate_  "personalnumberEmptyFieldsText"
+  return [(FirstNameFT, fstname),
+          (LastNameFT, sndname),
+          (CompanyFT, company),
+          (PersonalNumberFT, personalnumber),
+          (CompanyNumberFT,companynumber),
+          (EmailFT, email)]

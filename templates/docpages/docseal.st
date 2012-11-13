@@ -99,12 +99,15 @@ signMethod=
             $_signMethodEleg()$
         $endif$
 ###
-emptyFieldsText= [
-(FirstNameFT, "$_firstname()$"),
-(LastNameFT, "$_lastname()$"),
-(CompanyFT, "$_company()$"),
-(PersonalNumberFT, "$_personnumber()$"),
-(CompanyNumberFT,"$_orgnumber()$"),
-(EmailFT, "$_email()$")
-]
+fstnameEmptyFieldsText=$_firstname()$
+####
+sndnameEmptyFieldsText=$_lastname()$
+####
+emailEmptyFieldsText=$_email()$
+####
+companyEmptyFieldsText=$_company()$
+####
+companynumberEmptyFieldsText=$_orgnumber()$
+####
+personalnumberEmptyFieldsText=$_personnumber()$
 ####

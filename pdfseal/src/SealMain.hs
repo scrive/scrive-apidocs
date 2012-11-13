@@ -66,30 +66,35 @@ sealspec filename = SealSpec
                              , page = 1
                              , includeInSummary = False
                              , fontSize = 20/770
+                             , greyed = False 
                              }
                      , Field { value = "Gracjan Polak"
                              , x = 681/770, y = 7/1085
                              , page = 1
                              , includeInSummary = False
                              , fontSize = 10/770
+                             , greyed = False 
                              }
                      , Field { value = "Gracjan Polak"
                              , x = 7/770,   y = 1058/1085
                              , page = 1
                              , includeInSummary = False
                              , fontSize = 10/770
+                             , greyed = False 
                              }
                      , Field { value = "Gracjan Polak"
                              , x = 681/770, y = 1058/1085
                              , page = 1
                              , includeInSummary = False
                              , fontSize = 10/770
+                             , greyed = False 
                              }
                      , Field { value = "gracjan@mail.com"
                              , x = 121/770, y = 347/1085
                              , page = 1
                              , includeInSummary = False
                              , fontSize = 10/770
+                             , greyed = False 
                              }
                      ]
           }) [1..10::Int]
