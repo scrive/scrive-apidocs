@@ -47,11 +47,6 @@ var  CreateFromTemplateModel = Backbone.Model.extend({
                             rendering : function(title, _mainrow, listobject) {
                                       var link = jQuery("<a/>").text(title);
                                       link.click(function(){
-                                          if(BlockingInfo && BlockingInfo.shouldBlockDocs(1)) {
-                                              BlockingInfo.createPopup();
-                                              return false;
-                                          }
-
                                           new Submit({
                                               method : "POST",
                                               url: "/api/frontend/createfromtemplate/" +  listobject.field("id"),
