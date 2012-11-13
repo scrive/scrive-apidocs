@@ -25,6 +25,8 @@ class LoginHelper
       (@wait.until { @driver.find_element :css => "#toscontainer a.submit" }).click
     end
 
+    @driver.get(@ctx.createKontrakcjaURL "/d")
+
     @wait.until { @driver.find_element :css => ".archive" }
   end
 

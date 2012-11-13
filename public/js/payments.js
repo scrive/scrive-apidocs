@@ -453,8 +453,20 @@
                                       onClick: function() {
                                           view.validator.validate(function() {
                                               LoadingDialog.open(localization.payments.loading);
-                                              model.checkuserexists(model.email(),
-                                                                    handlechargeaccount);
+                                              if(model.type() === 'user') {
+                                                  handlechargeaccount({
+                                                      'user_exists' : true,
+                                                      'has_plan' : false
+                                                  });
+                                              } else if(model.type() === 'plan' || model.type() == 'plannone') {
+                                                  handlechargeaccount({
+                                                      'user_exists' : true,
+                                                      'has_plan' : true
+                                                  });
+                                              } else { // not logged in, so we have to check
+                                                  model.checkuserexists(model.email(),
+                                                                        handlechargeaccount);
+                                              }
                                           });
                                       }});
             div.find('button').replaceWith(button.input());
@@ -561,7 +573,7 @@
                         var text;
                         var header;
                         if(model.type() === 'user') {
-                            window.location = '/payments/dashboard';
+                            window.location.reload();
                             return true;
                         }
 
@@ -578,12 +590,12 @@
                             content: $('<p />').text(text),
                             onAccept: function() {
                                 if(model.type() === 'user') {
-                                    window.location = '/payments/dashboard';
+                                    window.location.reload();
                                 } else if(model.createdUser()) {
                                     popup.view.clear();
-                                    Login({referer:'/upload'});
+                                    Login({});
                                 } else {
-                                    Login({referer:'/d'});
+                                    Login({});
                                 }
                             }
                         });
