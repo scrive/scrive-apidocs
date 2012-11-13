@@ -387,8 +387,10 @@
             guarantee.text(localization.payments.guarantee);
 
             if((model.currentPlan() || 'team') == 'team') {
-                quantbox.val(1);
-                quantbox.after($('<span class="quantity" />').text(1 + " " + localization.payments.user));
+                var q = model.quantity() || 1;
+                quantbox.val(q);
+                var usertext = q === 1 ? localization.payments.user : localization.payments.users;
+                quantbox.after($('<span class="quantity" />').text(q + " " + usertext));
                 form.find('.quantity .label').hide();
             } else {
                 quantbox.val(1);
