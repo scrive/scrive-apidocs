@@ -941,7 +941,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument Bool where
   update (ArchiveDocument user did _actor) = do
     case (usercompany user, useriscompanyadmin user) of
       (Just cid, True) -> fmap (\x -> x > 0) $  kRun $ updateArchivableDoc $ SQL "WHERE (company_id = ? OR user_id = ?)" [toSql cid,toSql $ userid user]
-      _ -> kRun01 $ updateArchivableDoc $ SQL "WHERE user_id = ?" [toSql $ userid user]
+      _ -> fmap (\x -> x > 0) $ kRun $ updateArchivableDoc $ SQL "WHERE user_id = ?" [toSql $ userid user]
     where
       updateArchivableDoc whereClause = mconcat [
           mkSQL UPDATE tableSignatoryLinks [sql "deleted" True]
@@ -1594,7 +1594,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ReallyDeleteDocument Bool w
     -- transaction. -EN
     case (usercompany user, useriscompanyadmin user) of
       (Just cid, True) -> fmap (\x -> x > 0) $ kRun $ deleteDoc $ SQL "WHERE (company_id = ? OR user_id = ?)" [toSql cid,toSql $ userid user] -- This can remove more then one link (subaccounts)
-      _ -> kRun01 $ deleteDoc $ SQL "WHERE user_id = ? AND (company_id IS NULL OR EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?))" [toSql $ userid user,toSql did, toSql Preparation]
+      _ -> fmap (\x -> x > 0) $ kRun $ deleteDoc $ SQL "WHERE user_id = ? AND (company_id IS NULL OR EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?))" [toSql $ userid user,toSql did, toSql Preparation]
     where
       deleteDoc whereClause = mconcat [
           mkSQL UPDATE tableSignatoryLinks [sql "really_deleted" True]
