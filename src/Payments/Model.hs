@@ -71,23 +71,24 @@ instance (MonadBase IO m, MonadDB m) => DBUpdate m GetAccountCode AccountCode wh
 data GetCompanyQuantity = GetCompanyQuantity CompanyID --tested
 instance MonadDB m => DBQuery m GetCompanyQuantity Int where
   query (GetCompanyQuantity cid) = do
-    kRun_ $ sqlSelect "users" $ do
-      sqlWhereEq "company_id" cid
-      sqlWhereEq "is_free"    False
-      sqlWhereEq "deleted"    False
-      sqlResult "count(id)"
+    _ <- kRun $ SQL ("SELECT count(email) " ++
+                     "FROM ((SELECT users.email " ++
+                     "       FROM users " ++
+                     "       WHERE users.company_id = ? " ++
+                     "         AND users.deleted = FALSE " ++
+                     "         AND users.is_free = FALSE) " ++
+                     "      UNION " ++
+                     "      (SELECT companyinvites.email " ++
+                     "       FROM companyinvites " ++
+                     "       WHERE companyinvites.company_id = ? " ++
+                     "         AND NOT EXISTS (SELECT 1 FROM users " ++
+                     "                         WHERE email = companyinvites.email " ++
+                     "                           AND company_id = ?))) AS emails")
+                     [toSql cid, toSql cid, toSql cid]
     res <- foldDB (flip (:)) []
-    au <- case res of
-      [x] -> return x
-      _   -> return 0
-    kRun_ $ sqlSelect "companyinvites" $ do  
-      sqlWhereEq "company_id" cid
-      sqlResult "count(email)"
-    res2 <- foldDB (flip (:)) []
-    ci <- case res2 of
-      [x] -> return x
-      _   -> return 0
-    return $ au + ci
+    case res of
+      (x:_) -> return x
+      _     -> return 0
 
 data DeletePaymentPlan = DeletePaymentPlan (Either UserID CompanyID)
 instance (MonadDB m) => DBUpdate m DeletePaymentPlan () where
