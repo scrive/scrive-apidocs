@@ -250,7 +250,7 @@ sqlWhere :: (MonadState v m, SqlWhere v, IsSQL sql) => sql -> m ()
 sqlWhere sql = modify (\cmd -> sqlWhere1 cmd (toSQLCommand sql))
 
 sqlWhereOr :: (MonadState v m, SqlWhere v, IsSQL sql) => [sql] -> m ()
-sqlWhereOr [] = sqlWhere "FALSE"
+sqlWhereOr [] = sqlWhere (SQL "FALSE" [])
 sqlWhereOr [sql] = sqlWhere sql
 sqlWhereOr sqls = sqlWhere $
                   SQL "(" [] `mappend`

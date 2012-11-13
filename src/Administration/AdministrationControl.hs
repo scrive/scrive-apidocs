@@ -445,20 +445,54 @@ handleCompanyChange companyid = onlySalesOrAdmin $ do
 handleCompanyPaymentsChange :: Kontrakcja m => CompanyID -> m KontraLink
 handleCompanyPaymentsChange companyid = onlySalesOrAdmin $ do
   mplan <- readField "priceplan"
-  Log.debug $ show mplan
   mstatus <- readField "status"
   let status = fromMaybe ActiveStatus mstatus
-  case mplan of
-    Nothing -> return $ LinkCompanyAdminPayments companyid
-    Just FreePricePlan -> do
+  migratep <- isFieldSet "migrate"
+  deletep <- isFieldSet "delete"
+  case (migratep, deletep, mplan) of
+    (True, _, _) -> migrateCompanyPlan companyid
+    (False, True, _) -> deleteCompanyPlan companyid
+    (_, _, Just plan) -> addCompanyPlanManual companyid plan status
+    _ -> return ()
+  return $ LinkCompanyAdminPayments companyid
+  
+migrateCompanyPlan :: Kontrakcja m => CompanyID -> m ()
+migrateCompanyPlan companyid = do
+  migratetype <- getField' "migratetype"
+  case migratetype of
+    "userid" -> do
+      muserid <- readField "id"
+      case muserid of
+        Just dest -> do
+          _ <- changePaymentPlanOwner (Right companyid) (Left dest)
+          return ()
+        _ -> return ()
+        
+    "companyid" -> do
+      mcompanyid <- readField "id"
+      case mcompanyid of
+        Just dest -> do
+          _ <- changePaymentPlanOwner (Right companyid) (Right dest)
+          return ()
+        _ -> return ()
+    _ -> return ()
+    
+deleteCompanyPlan :: Kontrakcja m => CompanyID -> m ()
+deleteCompanyPlan companyid = do
+  dbUpdate $ DeletePaymentPlan (Right companyid)
+
+addCompanyPlanManual :: Kontrakcja m => CompanyID -> PricePlan -> PaymentPlanStatus -> m ()
+addCompanyPlanManual companyid pp status = do
+  case pp of
+    FreePricePlan -> do
       mpaymentplan <- dbQuery $ GetPaymentPlan (Right companyid)
       case mpaymentplan of
-        Nothing -> return $ LinkCompanyAdminPayments companyid
+        Nothing -> return ()
         Just PaymentPlan {ppPaymentPlanProvider = NoProvider} -> do
           _ <- dbUpdate $ DeletePaymentPlan (Right companyid)
-          return $ LinkCompanyAdminPayments companyid
-        Just _ -> return $ LinkCompanyAdminPayments companyid
-    Just plan -> do
+          return ()
+        Just _ -> return ()
+    plan -> do
       mpaymentplan <- dbQuery $ GetPaymentPlan (Right companyid)
       quantity <- dbQuery $ GetCompanyQuantity companyid
       time <- ctxtime <$> getContext
@@ -480,7 +514,7 @@ handleCompanyPaymentsChange companyid = onlySalesOrAdmin $ do
                                         }
           _ <- dbUpdate $ SavePaymentPlan paymentplan time
           _ <- Payments.Stats.record time Payments.Stats.SignupAction NoProvider quantity plan (Right companyid) ac
-          return $ LinkCompanyAdminPayments companyid
+          return ()
         Just paymentplan | ppPaymentPlanProvider paymentplan == NoProvider -> do
           let paymentplan' = paymentplan { ppPricePlan        = plan
                                          , ppPendingPricePlan = plan
@@ -491,34 +525,69 @@ handleCompanyPaymentsChange companyid = onlySalesOrAdmin $ do
                                          }
           _ <- dbUpdate $ SavePaymentPlan paymentplan' time
           _ <- Payments.Stats.record time Payments.Stats.ChangeAction NoProvider quantity plan (Right companyid) (ppAccountCode paymentplan')
-          return $ LinkCompanyAdminPayments companyid
+          return ()
         Just _ -> do -- must be a Recurly payment plan; maybe flash message?
-          return $ LinkCompanyAdminPayments companyid
+          return ()
 
 handleUserPaymentsChange :: Kontrakcja m => UserID -> m KontraLink
 handleUserPaymentsChange userid = onlySalesOrAdmin $ do
   mplan <- readField "priceplan"
   mstatus <- readField "status"
   let status = fromMaybe ActiveStatus mstatus
-  case mplan of
-    Nothing -> return $ LinkUserAdminPayments userid
-    Just FreePricePlan -> do
-      mpaymentplan <- dbQuery $ GetPaymentPlan $ Left userid
+  migratep <- isFieldSet "migrate"
+  deletep <- isFieldSet "delete"
+  case (migratep, deletep, mplan) of
+    (True, _, _) -> migratePlan userid
+    (False, True, _) -> deletePlan userid
+    (_, _, Just plan) -> addManualPricePlan userid plan status
+    _ -> return ()
+  return $ LinkUserAdminPayments userid
+  
+migratePlan :: Kontrakcja m => UserID -> m ()
+migratePlan userid = do
+  migratetype <- getField' "migratetype"
+  case migratetype of
+    "userid" -> do
+      muserid <- readField "id"
+      case muserid of
+        Just dest -> do
+          _ <- changePaymentPlanOwner (Left userid) (Left dest)
+          return ()
+        _ -> return ()
+        
+    "companyid" -> do
+      mcompanyid <- readField "id"
+      case mcompanyid of
+        Just dest -> do
+          _ <- changePaymentPlanOwner (Left userid) (Right dest)
+          return ()
+        _ -> return ()
+    _ -> return ()
+    
+deletePlan :: Kontrakcja m => UserID -> m ()
+deletePlan userid = do
+  dbUpdate $ DeletePaymentPlan (Left userid)
+
+addManualPricePlan :: Kontrakcja m => UserID -> PricePlan -> PaymentPlanStatus -> m ()
+addManualPricePlan  uid priceplan status =
+  case priceplan of
+    FreePricePlan -> do
+      mpaymentplan <- dbQuery $ GetPaymentPlan $ Left uid
       case mpaymentplan of
         Just PaymentPlan{ppPaymentPlanProvider = NoProvider} -> do
-          _ <- dbUpdate $ DeletePaymentPlan $ Left userid
-          return $ LinkUserAdminPayments userid
+          _ <- dbUpdate $ DeletePaymentPlan $ Left uid
+          return ()
         _ -> do
-          return $ LinkUserAdminPayments userid
-    Just plan -> do
-      mpaymentplan <- dbQuery $ GetPaymentPlan $ Left userid
+          return ()
+    plan -> do
+      mpaymentplan <- dbQuery $ GetPaymentPlan $ Left uid
       let quantity = 1
       time <- ctxtime <$> getContext
       case mpaymentplan of
         Nothing -> do
           ac <- dbUpdate $ GetAccountCode
           let paymentplan = PaymentPlan { ppAccountCode         = ac
-                                        , ppID                  = Left userid
+                                        , ppID                  = Left uid
                                         , ppPricePlan           = plan
                                         , ppPendingPricePlan    = plan
                                         , ppStatus              = status
@@ -531,8 +600,8 @@ handleUserPaymentsChange userid = onlySalesOrAdmin $ do
                                         , ppBillingEndDate      = time
                                         }
           _ <- dbUpdate $ SavePaymentPlan paymentplan time
-          _ <- Payments.Stats.record time Payments.Stats.SignupAction NoProvider quantity plan (Left userid) ac
-          return $ LinkUserAdminPayments userid
+          _ <- Payments.Stats.record time Payments.Stats.SignupAction NoProvider quantity plan (Left uid) ac
+          return ()
         Just paymentplan | ppPaymentPlanProvider paymentplan == NoProvider -> do
           let paymentplan' = paymentplan { ppPricePlan        = plan
                                          , ppPendingPricePlan = plan
@@ -542,10 +611,10 @@ handleUserPaymentsChange userid = onlySalesOrAdmin $ do
                                          , ppPendingQuantity  = quantity
                                          }
           _ <- dbUpdate $ SavePaymentPlan paymentplan' time
-          _ <- Payments.Stats.record time Payments.Stats.ChangeAction NoProvider quantity plan (Left userid) (ppAccountCode paymentplan')
-          return $ LinkUserAdminPayments userid
+          _ <- Payments.Stats.record time Payments.Stats.ChangeAction NoProvider quantity plan (Left uid) (ppAccountCode paymentplan')
+          return ()
         Just _ -> do -- must be a Recurly payment plan; maybe flash message?
-          return $ LinkUserAdminPayments userid
+          return ()
 
 handleCreateUser :: Kontrakcja m => m KontraLink
 handleCreateUser = onlySalesOrAdmin $ do
