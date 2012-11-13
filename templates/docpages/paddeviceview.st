@@ -7,10 +7,8 @@ $doctype()$
     $standardHeaderContents()$
     <link rel="apple-touch-startup-image" href="/img/logo-scrive-big-black.png"/>
     <meta name="apple-mobile-web-app-capable" content="yes" />
+   <meta name="viewport" content="maximum-scale=1.2, minimum-scale=0.6" />
     <link rel="apple-touch-icon" href="/img/ipad-logo.jpg"/>
-    <script>
-        var inService = false;
-    </script>
   </head>
   <body class="signview" style="min-height:100%">
     $flashmessages()$
