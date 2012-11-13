@@ -13,7 +13,6 @@
 }
 
 .create-from-template .header .headline {
-  text-transform: uppercase;
   color: black;
   font-size: x-large;
   margin-bottom: 5px;
