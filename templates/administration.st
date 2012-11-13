@@ -416,7 +416,7 @@ adminuserpayments=
           <form method="POST">
 	    <table><tbody>
 		<tr> <th style="width:200px"></th> <th> </th></tr>
-		<tr> <td style="padding-top:10px"><strong>Payment Info</strong></td> <td> </td></tr>
+		<tr> <td style="padding-top:10px"><strong>Payment info</strong></td> <td> </td></tr>
                 $if(haspaymentplan)$
                 $if(companyid)$
 		<tr>
@@ -432,12 +432,28 @@ adminuserpayments=
 		  <td>
                     <a href="https://$recurlysubdomain$.recurly.com/accounts/$accountcode$">$priceplan$</a>
 		  </td>
-		</tr>
+                </tr>
 		<tr>
                   <td>Status: </td>
 		  <td>
                     $status$
 		  </td>
+		</tr>
+                <tr>
+                  <td>Migrate: </td>
+                  <td>
+                    <p>Migrate this user's subscription to another user/company.</p>
+                    <p><select name="migratetype"><option value="userid">User</option><option value="companyid">Company</option></select> <input type="text" name="id" placeholder="userid/companyid"></input></p>
+                    <p><input type="submit" name="migrate" value="Migrate"></input></p>
+                    <p>Be very careful with this! </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Delete: </td>
+                  <td>
+                    <p>Delete this subscription. Be careful! This will not delete it from Recurly. Please close the Recurly account first!</p>
+                    <p><input type="submit" name="delete" value="Delete"></input></p>
+                  </td>
 		</tr>
                 $else$
 		<tr>
@@ -681,6 +697,22 @@ admincompanypayments=
 		  <td>
                     $status$
 		  </td>
+		</tr>
+                <tr>
+                  <td>Migrate: </td>
+                  <td>
+                    <p>Migrate this user's subscription to another user/company.</p>
+                    <p><select name="migratetype"><option value="userid">User</option><option value="companyid">Company</option></select> <input type="text" name="id" placeholder="userid/companyid"></input></p>
+                    <p><input type="submit" name="migrate" value="Migrate"></input></p>
+                    <p>Be very careful with this! </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Delete: </td>
+                  <td>
+                    <p>Delete this subscription. Be careful! This will not delete it from Recurly. Please close the Recurly account first!</p>
+                    <p><input type="submit" name="delete" value="Delete"></input></p>
+                  </td>
 		</tr>
                 $else$
 		<tr>

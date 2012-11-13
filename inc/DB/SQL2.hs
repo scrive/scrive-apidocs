@@ -245,7 +245,7 @@ sqlWhere :: (MonadState v m, SqlWhere v) => SQL -> m ()
 sqlWhere sql = modify (\cmd -> sqlWhere1 cmd sql)
 
 sqlWhereOr :: (MonadState v m, SqlWhere v) => [SQL] -> m ()
-sqlWhereOr [] = sqlWhere "FALSE"
+sqlWhereOr [] = sqlWhere (SQL "FALSE" [])
 sqlWhereOr [sql] = sqlWhere sql
 sqlWhereOr sqls = sqlWhere $ parenthesize $ sqlConcatOR sqls
 
