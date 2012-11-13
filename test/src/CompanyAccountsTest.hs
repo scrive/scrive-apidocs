@@ -314,6 +314,10 @@ test_removingCompanyAccountWorks = do
   ctx <- (\c -> c { ctxmaybeuser = Just adminuser })
     <$> mkContext defaultValue
 
+  companydocs1 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid adminuser)] [] [] (DocumentPagination 0 maxBound)
+  assertEqual "Company admin sees users docs before user delete" 1 (length companydocs1)
+  assertEqual "Docid matches before user delete" docid (documentid $ head companydocs1)
+
   req <- mkRequest POST [ ("remove", inText "True")
                         , ("removeid", inText $ show (userid standarduser))
                         , ("removeemail", inText $ "jony@blue.com")
@@ -326,8 +330,8 @@ test_removingCompanyAccountWorks = do
   assertCompanyInvitesAre company []
 
   companydocs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid adminuser)] [] [] (DocumentPagination 0 maxBound)
-  assertEqual "Company still owns users docs" 1 (length companydocs)
-  assertEqual "Docid matches" docid (documentid $ head companydocs)
+  assertEqual "Company admin sees users docs after user delete" 1 (length companydocs)
+  assertEqual "Docid matches after user delete" docid (documentid $ head companydocs)
 
 test_privateUserTakoverWorks :: TestEnv ()
 test_privateUserTakoverWorks = do
