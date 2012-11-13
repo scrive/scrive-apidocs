@@ -99,3 +99,15 @@ signMethod=
             $_signMethodEleg()$
         $endif$
 ###
+fstnameEmptyFieldsText=$_firstname()$
+####
+sndnameEmptyFieldsText=$_lastname()$
+####
+emailEmptyFieldsText=$_email()$
+####
+companyEmptyFieldsText=$_company()$
+####
+companynumberEmptyFieldsText=$_orgnumber()$
+####
+personalnumberEmptyFieldsText=$_personnumber()$
+####

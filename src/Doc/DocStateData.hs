@@ -142,8 +142,8 @@ data FieldType = FirstNameFT
                | EmailFT
                | CustomFT String Bool -- label filledbyauthor
                | SignatureFT
-               | CheckboxOptionalFT String
-               | CheckboxObligatoryFT String
+               | CheckboxOptionalFT String 
+               | CheckboxObligatoryFT String 
   deriving (Eq, Ord, Show, Data, Typeable)
 
 data SignatoryField = SignatoryField {

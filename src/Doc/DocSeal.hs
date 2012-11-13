@@ -56,6 +56,7 @@ import Control.Monad.Trans.Maybe
 import Data.String.Utils
 import qualified Templates.Fields as F
 import Control.Logic
+import Utils.Prelude
 
 personFromSignatoryDetails :: (BS.ByteString,BS.ByteString) -> SignatoryDetails -> Seal.Person
 personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) details =
@@ -68,7 +69,7 @@ personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) details =
                 , Seal.companyverified = False
                 , Seal.numberverified = False
                 , Seal.emailverified = True
-                , Seal.fields = fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) details
+                , Seal.fields = fieldsFromSignatory False [] (checkedBoxImage,uncheckedBoxImage) details
                 }
 
 personFields :: Monad m => Document -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String) -> Fields m ()
@@ -113,8 +114,8 @@ personsFromDocument (checkedBoxImage,uncheckedBoxImage) document =
         x link = trace (show link) $ error "SignatoryLink does not have all the necessary data"
     in map x links
 
-fieldsFromSignatory :: (BS.ByteString,BS.ByteString) -> SignatoryDetails -> [Seal.Field]
-fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signatoryfields} =
+fieldsFromSignatory :: Bool -> [(FieldType,String)] -> (BS.ByteString,BS.ByteString) -> SignatoryDetails -> [Seal.Field]
+fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signatoryfields} =
   concatMap makeSealField  signatoryfields
   where
     onlyFirstInSummary (a:rest) = (a {Seal.includeInSummary = True}) : (map (\r -> r {Seal.includeInSummary = False}) rest)
@@ -126,13 +127,17 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signato
                            plsms -> onlyFirstInSummary $ concatMap (maybeToList . (fieldJPEGFromPlacement (sfValue sf))) plsms
        CheckboxOptionalFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf)
        CheckboxObligatoryFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf) 
-       _ -> map (fieldFromPlacement (sfValue sf)) (sfPlacements sf)
-    fieldFromPlacement sf placement = 
+       _ -> for (sfPlacements sf) $ \p -> case (addEmpty, sfValue sf, sfType sf) of
+                                                (True,"",CustomFT n _) -> fieldFromPlacement True n p
+                                                (True,"",ft) -> fieldFromPlacement True (fromMaybe "" (lookup ft emptyFieldsText)) p
+                                                _ -> fieldFromPlacement False (sfValue sf) p
+    fieldFromPlacement greyed sf placement =
       Seal.Field { Seal.value            = sf
                  , Seal.x                = placementxrel placement
                  , Seal.y                = placementyrel placement
                  , Seal.page             = placementpage placement
                  , Seal.fontSize         = placementfsrel placement
+                 , Seal.greyed           = greyed
                  , Seal.includeInSummary = True
                  }
     
@@ -417,12 +422,12 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
                               } ] ++ additionalAttachments
             }
 
-presealSpecFromDocument :: (BS.ByteString,BS.ByteString) -> Document -> String -> String -> Seal.PreSealSpec
-presealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) document inputpath outputpath =
+presealSpecFromDocument :: [(FieldType,String)] -> (BS.ByteString,BS.ByteString) -> Document -> String -> String -> Seal.PreSealSpec
+presealSpecFromDocument emptyFieldsText (checkedBoxImage,uncheckedBoxImage) document inputpath outputpath =
        Seal.PreSealSpec
             { Seal.pssInput          = inputpath
             , Seal.pssOutput         = outputpath
-            , Seal.pssFields         = concatMap (fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage). signatorydetails) (documentsignatorylinks document)
+            , Seal.pssFields         = concatMap (fieldsFromSignatory True emptyFieldsText (checkedBoxImage,uncheckedBoxImage). signatorydetails) (documentsignatorylinks document)
             }
             
 
@@ -511,7 +516,8 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
     liftIO $ BS.writeFile tmpin content
     checkedBoxImage <- liftIO $ BS.readFile "public/img/checkbox_checked.jpg"
     uncheckedBoxImage <- liftIO $  BS.readFile "public/img/checkbox_unchecked.jpg"
-    let config = presealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) document tmpin tmpout
+    emptyFieldsText <- emptyFieldsTextT 
+    let config = presealSpecFromDocument emptyFieldsText (checkedBoxImage,uncheckedBoxImage) document tmpin tmpout
     Log.debug $ "Config " ++ show config
     (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
     liftIO $ threadDelay 500000
@@ -525,4 +531,18 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
           Log.error $ BSL.toString stderr
           Log.error $ "Presealing failed for configuration: " ++ show config
           return $ Left "Error when preprinting fields on PDF"
-        
+
+emptyFieldsTextT :: (TemplatesMonad m) => m [(FieldType,String)]
+emptyFieldsTextT = do
+  fstname <- renderTemplate_ "fstnameEmptyFieldsText"
+  sndname <- renderTemplate_ "sndnameEmptyFieldsText"
+  email <- renderTemplate_ "emailEmptyFieldsText"
+  company <- renderTemplate_ "companyEmptyFieldsText"
+  companynumber <- renderTemplate_ "companynumberEmptyFieldsText"
+  personalnumber <- renderTemplate_  "personalnumberEmptyFieldsText"
+  return [(FirstNameFT, fstname),
+          (LastNameFT, sndname),
+          (CompanyFT, company),
+          (PersonalNumberFT, personalnumber),
+          (CompanyNumberFT,companynumber),
+          (EmailFT, email)]
