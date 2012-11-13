@@ -260,7 +260,8 @@
         },
         freeCreatePopup: function() {
             this.paymentsPopup({
-                title: localization.blocking.free.create.title
+                title: localization.blocking.free.create.title,
+                header: localization.blocking.free.heading
             });
         },
         freeCSVMessage: function() {

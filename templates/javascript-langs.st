@@ -812,7 +812,8 @@ javascriptLocalisation =
             hasNot : {
               headline : "$_blockingFreeHasNotHeadline()$",
               subtext1 : "$_blockingFreeHasNotSubtext1()$"
-            }
+            },
+            heading : "$_blockingFreeHeading()$"
           },
           overdue : {
             create : {
