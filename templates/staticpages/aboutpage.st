@@ -46,7 +46,7 @@ aboutPageContents=
 								</li>
 								<li>
 									<div class="portrait-image">
-								          <a class="dudek"></a>
+								          <a class="gracjan"></a>
 									</div>
 									<h2>$_aboutPagePerson3()$</h2>
 									<em>$_aboutPagePerson3Position()$</em>
@@ -56,7 +56,7 @@ aboutPageContents=
 								</li>
 								<li>
 									<div class="portrait-image">
-								          <a class="gracjan"></a>
+								          <a class="mariusz"></a>
 									</div>
 									<h2>$_aboutPagePerson4()$</h2>
 									<em>$_aboutPagePerson4Position()$</em>
@@ -65,7 +65,7 @@ aboutPageContents=
 								</li>
 								<li>
 									<div class="portrait-image">
-								          <a class="mariusz"></a>
+								          <a class="magnus"></a>
 									</div>
 									<h2>$_aboutPagePerson5()$</h2>
 									<em>$_aboutPagePerson5Position()$</em>
@@ -74,7 +74,7 @@ aboutPageContents=
 								</li>
                                                                 <li>
                                                                         <div class="portrait-image">
-                                                                          <a class="magnus"></a>
+                                                                          <a class="eric"></a>
                                                                         </div>
                                                                         <h2>$_aboutPagePerson6()$</h2>
                                                                         <em>$_aboutPagePerson6Position()$</em>
@@ -83,7 +83,7 @@ aboutPageContents=
                                                                 </li>
                                                                 <li>
                                                                         <div class="portrait-image">
-                                                                          <a class="eric"></a>
+                                                                          <a class="andrzej"></a>
                                                                         </div>
                                                                         <h2>$_aboutPagePerson7()$</h2>
                                                                         <em>$_aboutPagePerson7Position()$</em>
@@ -92,21 +92,12 @@ aboutPageContents=
                                                                 </li>
                                                                 <li>
                                                                         <div class="portrait-image">
-                                                                          <a class="andrzej"></a>
+                                                                          <a class="tim"></a>
                                                                         </div>
                                                                         <h2>$_aboutPagePerson8()$</h2>
                                                                         <em>$_aboutPagePerson8Position()$</em>
                                                                         <p>$_aboutPagePerson8Body()$</p>
                                                                         $_aboutPagePerson8Contact()$
-                                                                </li>
-                                                                <li>
-                                                                        <div class="portrait-image">
-                                                                          <a class="tim"></a>
-                                                                        </div>
-                                                                        <h2>$_aboutPagePerson9()$</h2>
-                                                                        <em>$_aboutPagePerson9Position()$</em>
-                                                                        <p>$_aboutPagePerson9Body()$</p>
-                                                                        $_aboutPagePerson9Contact()$
                                                                 </li>
 							</ul>
 						</div>
@@ -117,7 +108,6 @@ aboutPageContents=
         <img src='/img/team/group-2.jpg'/>
         <img src='/img/team/lukas-2.jpg'/>
         <img src='/img/team/viktor-2.jpg'/>
-        <img src='/img/team/daniel-2.jpg'/>
         <img src='/img/team/gracjan-2.jpg'/>
         <img src='/img/team/mariusz-2.jpg'/>
         <img src='/img/team/magnus-2.png'/>

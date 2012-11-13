@@ -32,7 +32,6 @@ var UploadButtonModel = Backbone.Model.extend({
       submitOnUpload : false,
       size : "small",
       showLoadingDialog : true,
-      type : "application/pdf",
       color: 'green',
       onAppend: undefined // If set no files will be stored in this upload box
   },
