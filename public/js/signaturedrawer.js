@@ -338,7 +338,7 @@ window.SignatureDrawerPopup = function(args){
              var png = self.dw.drawer.getPNG();
              self.overlay.data("overlay").close();
              setTimeout(function() {
-               var s = new SignatureDrawerPopup(args)
+               var s = new SignatureDrawerPopup(args);
                s.dw.drawer.setPNG(png);
                window.scrollTo(0,s.overlay.offset().top - 30);
               },100);
