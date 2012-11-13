@@ -2194,7 +2194,7 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_blockingFreeCSVHeader","Denna fil innehåller X1 mottagare och du har endast X2 fria dokument kvar att skicka. För att skicka vänligen <a href='/account#subscription'>köp ett abonnemang</a>.",,"Your file contains X1 recipients and you have only X2 free documents left to send. To send please <a href='/account#subscription'>purchase a subscription</a>."
 "_blockingFreeClickTitle","Köp ett abonnemang",,"Purchase a subscription"
 "_blockingFreeHasHeadline","Varje månad kan du skicka 3 dokument gratis. Skickade denna månad:",,"Every month you can send 3 documents for free. Sent so far: "
-"_blockingFreeHasSubtext1","<a>Köp ett abonnemang</a>",,"<a>Purchase a subscription</a>"
+"_blockingFreeHasSubtext1","<a>Köp ett abonnemang för att kunna skicka mer denna månad</a>",,"<a>Purchase a subscription to send more this month</a>"
 "_blockingFreeHasNotHeadline","Du har skickat alla dina fria dokument denna månad.",,"You have sent all your free documents this month."
 "_blockingFreeHasNotSubtext1","<a>Köp ett abonnemang</a>",,"<a>Purchase a subscription</a>"
 "_blockingOverdueCreateTitle","Misslyckad betalning",,"Payment failure"
