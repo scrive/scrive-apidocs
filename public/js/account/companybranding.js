@@ -109,6 +109,7 @@ window.CompanyBrandingLogo = Backbone.Model.extend({
     loadinglogo: "/img/wait30trans.gif",
     defaultlogo: "/img/email-logo.png",
     logo: localization.customiseLogo,
+    logoChanged: false,
     label: "",
     editable: false,
     loading: false,
@@ -131,13 +132,24 @@ window.CompanyBrandingLogo = Backbone.Model.extend({
     if (this.loading()) {
       return this.get("loadinglogo");
     } else if (this.customised() && logo.length>0) {
-      return logo;
+      if (this.get('logoChanged')) {
+        return 'data:image/png;base64,' + logo;
+      } else {
+        return logo;
+      }
     } else {
       return this.get("defaultlogo");
     }
   },
+  setLogo: function(logoBase64) {
+    this.set('logoChanged', true, {silent: true});
+    this.set({logo: logoBase64});
+  },
   setLoading: function(loading) {
     this.set({ loading: loading });
+  },
+  logoChanged: function() {
+    return this.get('logoChanged');
   },
   loading: function() {
     return this.get("loading");
@@ -189,7 +201,20 @@ window.CompanyBrandingLogo = Backbone.Model.extend({
       ajaxsuccess: logo.onSubmitSuccess,
       ajaxerror: logo.onSubmitError
     });
-  }
+  },
+  serializeLogo: function() {
+    var model = this;
+    return new Submit({
+      method: 'POST',
+      url: 'serialize_image',
+      ajax: true,
+      ajaxsuccess: function (rs) {
+        var response = JSON.parse(rs);
+        var logo_base64 = response.logo_base64;
+        model.setLogo(logo_base64);
+      }
+    })
+  },
 });
 
 window.CompanyBrandingLogoView = Backbone.View.extend({
@@ -206,6 +231,7 @@ window.CompanyBrandingLogoView = Backbone.View.extend({
     this.checkbox = checkbox;
     this.checkbox.change(function() {
       model.setCustomised(checkbox.is(":checked"));
+      model.set({logoChanged: true, logo: ''}, {silent: true});
     });
     var checkboxlabel = $("<label />").append(model.label());
 
@@ -216,7 +242,7 @@ window.CompanyBrandingLogoView = Backbone.View.extend({
       submitOnUpload: true,
       showLoadingDialog: false,
       type: "image/png",
-      submit: this.model.submit()
+      submit: model.serializeLogo()
     }).input();
 
     this.customdiv = $("<div />");
@@ -338,6 +364,8 @@ window.CompanyModel = Backbone.Model.extend({
       };
     },
     toJSON: function() {
+      var logo = this.logo();
+      var logochanged = logo.logoChanged();
       return ({
         id: this.get("id"),
         name: this.get("name"),
@@ -346,7 +374,9 @@ window.CompanyModel = Backbone.Model.extend({
         city: this.get("city"),
         country: this.get("country"),
         barsbackground: this.barsbackground().customised() ? this.barsbackground().colour() : "",
-        barstextcolour: this.barstextcolour().customised() ? this.barstextcolour().colour() : ""
+        barstextcolour: this.barstextcolour().customised() ? this.barstextcolour().colour() : "",
+        logochanged: logochanged,
+        logo: logochanged ? logo.get('logo') : ''
       });
     }
 });
@@ -380,10 +410,15 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
 
     return this;
   },
-  renderLogoWithSrc: function(src) {
-    console.log("rendering logo with src " + src);
+  renderLogoWithSrc: function(logourl, logoChanged) {
+    console.log("rendering logo with src " + logourl);
     var img = $("<img />");
-    img.attr("src", src + "?time=" + (new Date()).getTime());
+    if (logoChanged) {
+      img.attr('src', logourl);
+    } else {
+      var src = location.protocol + "//" + location.host + logourl
+      img.attr("src", src + "?time=" + (new Date()).getTime());
+    }
 
     this.logo.empty();
     this.logo.append(img);
@@ -397,10 +432,11 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
     var company = this.model;
 
     var logourl = company.logo().logo();
+    var logoChanged = company.logo().logoChanged();
     var bbcolour = company.barsbackground().colour();
     var btcolour = company.barstextcolour().colour();
 
-    this.renderLogoWithSrc(location.protocol + "//" + location.host + logourl);
+    this.renderLogoWithSrc(logourl, logoChanged);
     if (company.logo().loading()) {
       this.header.css("background-color", "transparent");
     } else {

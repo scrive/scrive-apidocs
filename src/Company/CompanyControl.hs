@@ -18,6 +18,7 @@ import Text.JSON.String
 import Text.JSON.FromJSValue
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Base64 as B64
 import qualified Data.Map as Map
 
 import DB
@@ -46,6 +47,7 @@ adminRoutes :: Route (KontraPlus Response)
 adminRoutes = choice
   [ hGet $ toK1 $ handleAdminGetCompany
   , hPost $ toK1 $ handlePostCompany . Just
+  , dir "serialize_image" $ hPost $ toK0 $ handleSerializeImage
   , dir "json" $ hGet $ toK1 $ handleGetCompanyJSON . Just
   ]
 
@@ -53,47 +55,42 @@ handleAdminGetCompany :: Kontrakcja m => CompanyID -> m String
 handleAdminGetCompany cid = withCompanyAdminOrAdminOnly (Just cid) $
   const $ adminCompanyBrandingPage cid
 
+handleSerializeImage :: Kontrakcja m => m JSValue
+handleSerializeImage = do
+  logo <- guardJustM $ getFileField "logo"
+  runJSONGenT $ value "logo_base64" $ showJSON $ B64.encode logo
+
 handlePostCompany :: Kontrakcja m => Maybe CompanyID -> m KontraLink
 handlePostCompany mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
   iscompanyjson <- isFieldSet "company"
-  cui' <-
+  cui <-
     if iscompanyjson
       then do
         rawcompanyjson <- guardJustM $ getField "company"
         companyjson <- guardRight $ runGetJSON readJSValue rawcompanyjson
-        jsoncui <- guardRight $ companyUiFromJSON companyjson
+        jsoncui <- guardRight $ companyUiFromJSON companyjson $ companyui company
         Log.debug $ "using json " ++ (show $ jsoncui)
-        return $ jsoncui{ companylogo = companylogo $ companyui company }
+        return jsoncui
       else
         return $ companyui company
-  cui <- setCompanyLogoFromRequest cui'
   Log.debug $ "company UI " ++ (show $ companyid company) ++ " updated to " ++ (show cui)
   _ <- dbUpdate $ UpdateCompanyUI (companyid company) cui
   return $ LinkAccountCompany mcid
 
-setCompanyLogoFromRequest :: Kontrakcja m => CompanyUI -> m CompanyUI
-setCompanyLogoFromRequest cui = do
-  mlogo <- fmap Binary <$> getFileField "logo"
-  mislogo <- getField "islogo"
-  case (mislogo, mlogo) of
-    -- islogo = False so if there is a stored logo remove it
-    (Just "false", _) -> do
-      return cui{ companylogo = Nothing }
-    -- they uploaded a logo so store it
-    (_, Just logo) -> do
-      return cui{ companylogo = Just logo }
-    -- just keep the logo however it currently is
-    _ -> do
-      return cui
-
-companyUiFromJSON :: JSValue -> Either String CompanyUI
-companyUiFromJSON jsv = maybe (Left "Unable to parse JSON!") Right $ do
+companyUiFromJSON :: JSValue -> CompanyUI -> Either String CompanyUI
+companyUiFromJSON jsv cui = maybe (Left "Unable to parse JSON!") Right $ do
   jsonbb <- fromJSValueField "barsbackground" jsv
   jsonbtc <- fromJSValueField "barstextcolour" jsv
+  jsonlogochanged <- fromJSValueField "logochanged" jsv
+  jsonlogo <- fromJSValueField "logo" jsv
+  let logo = if jsonlogochanged then
+                 fmap (Binary . B64.decodeLenient) $ maybeS jsonlogo
+             else
+                 companylogo cui
   return CompanyUI {
     companybarsbackground = maybeS jsonbb
   , companybarstextcolour = maybeS jsonbtc
-  , companylogo = Nothing
+  , companylogo = logo
   }
   where
     maybeS ""  = Nothing
