@@ -11,6 +11,7 @@ ssh dev@dev.scrive.com echo "running cabal update";cabal update
 ssh dev@dev.scrive.com echo "running cabal install --only-dependencies";cabal install --only-dependencies
 
 ssh dev@dev.scrive.com supervisorctl restart dev-mailer
+ssh dev@dev.scrive.com supervisorctl restart dev-cron
 ssh dev@dev.scrive.com supervisorctl restart dev
 
 ssh dev@dev.scrive.com rm kontrakcja-master-dist-$1.tar.gz
