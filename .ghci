@@ -1,4 +1,4 @@
-:set -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
+:set -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults
 :set -idist/build/autogen
 :set -imisc -iinc -idocconv/src -isrc -imailer/inc -imailer/src -ipdfseal/src -ipdfseal/inc -itest/src
 :set -XBangPatterns
@@ -9,6 +9,7 @@
 :set -XMultiParamTypeClasses
 :set -XNamedFieldPuns
 :set -XPatternGuards
+:set -XOverloadedStrings
 :set -XRankNTypes
 :set -XRecordWildCards
 :set -XScopedTypeVariables
