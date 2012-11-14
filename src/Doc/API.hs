@@ -302,8 +302,6 @@ apiCallGet did = api $ do
             dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
                  (signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
                  
-        -- FIXME: need to move this to database
-        let macmp = Nothing -- join $ maybecompany <$> getAuthorSigLink doc
         mauser <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
                        Just auid -> dbQuery $ GetUserByID auid
                        _ -> return Nothing
@@ -312,7 +310,6 @@ apiCallGet did = api $ do
                 then dbQuery $ GetPadQueue $ userid user
                 else return Nothing
         let haspermission = (isJust msiglink)
-                         || (isJust macmp && macmp == usercompany user && (useriscompanyadmin user || isDocumentShared doc))
                          || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared doc))
         if (haspermission)
           then Ok <$> documentJSON external ((userid <$> mauser) == (Just $ userid user)) pq msiglink doc

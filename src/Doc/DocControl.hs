@@ -375,20 +375,16 @@ handleIssueShowGet docid = checkUserTOSGet $ do
   authorsiglink <- guardJust $ getAuthorSigLink document
   let ispreparation = documentstatus document == Preparation
       isauthor = (userid <$> muser) == maybesignatory authorsiglink
-      -- FIXME: move check to database
-      isincompany = False -- isJust (maybecompany authorsiglink) &&
-                          --  ((usercompany =<< muser) == maybecompany authorsiglink)
+  mauthoruser <- maybe (return Nothing) (dbQuery . GetUserByID) (maybesignatory authorsiglink)
+
+  let isincompany = ((usercompany =<< muser) == (usercompany =<< mauthoruser))
       isauthororincompany = isauthor || isincompany
       msiglink = find (isSigLinkFor muser) $ documentsignatorylinks document
-
-      isadmin = Just True == (useriscompanyadmin <$> muser)
-      iscompany = False -- hasSigLinkFor (usercompany =<< muser) document
-      isadminofcompany = isadmin && iscompany
 
   ctx <- getContext
   case (ispreparation, msiglink) of
     (True,  _)                       -> Right <$> pageDocumentDesign document
-    (False, _) | isauthororincompany || isadminofcompany -> Right <$> pageDocumentView document msiglink (isadminofcompany || isincompany)
+    (False, _) | isauthororincompany -> Right <$> pageDocumentView document msiglink (isincompany)
     (False, Just siglink)            -> Left  <$> (simpleResonseClrFlash =<< pageDocumentSignView ctx document siglink)
     _                                -> internalError
 
