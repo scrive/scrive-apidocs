@@ -127,14 +127,16 @@ set systemPage
  js   js/signview/docsignviewsignsection.js
  js   js/signview/docsignviewpad.js
  js   js/signview/docsignview.js
- js   js/signatorydesignview.js
- js   js/docdesignviewpad.js
  js   js/avtal24popup.js
  js   js/docdesignview.js
+ js   js/designview/signatorydesignview.js
+ js   js/designview/signatoriesdesignview.js
+ js   js/designview/docdesignviewpad.js
+ js   js/designview/docdesignview.js
+ js   js/designview/attachmentsdesignview.js
  js   js/mobilebankid.js
  js   js/bankid.js
  js   js/createfromtemplate/createfromtemplate.js
- js   js/attachmentsdesignview.js
  js   js/csvsignatorydesign.js
  js   js/validation.js
  js   js/signaturedrawer.js

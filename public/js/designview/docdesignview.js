@@ -5,55 +5,76 @@
 
 (function(window){
 
-var DocumentDesignView = Backbone.View.extend({
-    initialize: function (args) {
-        _.bindAll(this, 'render', 'refreshFinalButton', 'refreshSignatoryAttachmentsOption', 'refreshAuthorizationDependantOptions');
-        this.model.bind('reset', this.render);
-        this.model.bind('change:ready', this.render);
-        this.model.bind('change:signatories', this.refreshFinalButton);
-        this.model.bind('change:signatories', this.refreshSignatoryAttachmentsOption);
-        this.model.bind('change:authenticationdelivery', this.refreshAuthorizationDependantOptions);
-
-        this.model.view = this;
-        this.prerender();
-        this.render();
-    },
-    signOrderVisible : function() {
-      if( this.showSignOrder == true ) {
-        return true;
-      }
-      return !this.model.authorSignsFirstMode() && !this.model.authorSignsLastMode() && !this.model.authorNotSignsMode();
-    },
-    toggleSignOrder : function() {
+var DocumentDesignView = Backbone.Model.extend({
+  defaults : {
+    signOrderVisible : false
+  },
+  initialize: function (args) {
+        _.bindAll(this, 'render', 'refreshFinalButton', 'refreshSignatoryAttachmentsOption', 'refreshAuthorizationDependantOptions', 'toogleSignorder');
+        this.document().bind('reset', function() {this.trigger("render")});
+        this.document().bind('change:ready', function() {this.trigger("render")});
+        this.document().bind('change:signatories', function() {this.trigger("refreshSignatoriesOption")});
+        this.document().bind('change:authenticationdelivery',  function() {this.trigger("refreshAuthorizationDependantOptions")});
+        this.document().bind('toogleSignOrder',  toogleSignOrder);
+        toogleSignorder
+  },
+  document : function() {
+     return this.get("document");
+  },
+  ready : function() {
+    this.document().ready();
+  },
+  signOrderVisible : function() {
+      if( this.get("signOrderVisible") == true ) return true;
+      return !this.document().authorSignsFirstMode() && !this.document().authorSignsLastMode() && !this.document().authorNotSignsMode();
+  },
+  toogleSignOrder : function() {
       if (this.signOrderVisible()) {
-        this.showSignOrder = false;
-        var document = this.model;
-        var author = this.model.author();
+        this.set({"signOrderVisible" : false}, {silent: true});
+        this.flattenSignOrder();
+      }
+      else 
+         this.set({"signOrderVisible" : true}, {silent: true});
+      
+
+      this.document().trigger("change");
+    },
+  flattenSignOrder : function() {
+        var signatories = this.document().signatories();
+        var author = this.document.author();
         if( author.signs()) {
           if( author.signorder()==1 ) {
             /* Make everybody else sign as second group */
-            _.each(document.signatories(),function(sig) {
+            _.each(signatories,function(sig) {
               sig.setSignOrder(sig.author()?1:2);
             });
           }
           else {
             /* Make author sign last in his own group */
-            _.each(document.signatories(),function(sig) {
+            _.each(signatories,function(sig) {
               sig.setSignOrder(sig.author()?2:1);
             });
           }
         }
         else {
           /* Author does not sign so everybody signs in first group */
-          _.each(document.signatories(),function(sig) {
+          _.each(signatories,function(sig) {
             sig.setSignOrder(1);
           });
         }
-      } else {
-        this.showSignOrder = true;
-      }
+    }
+});
 
-      this.model.trigger("change");
+  
+var DocumentDesignView = Backbone.View.extend({
+    initialize: function (args) {
+        _.bindAll(this, 'render', 'refreshFinalButton', 'refreshSignatoryAttachmentsOption', 'refreshAuthorizationDependantOptions');
+        this.model.bind('render', this.render);
+        this.model.bind('refreshSignatoriesOption', function() {this.refreshFinalButton(); this.refreshSignatoryAttachmentsOption();});
+        this.model.bind('refreshAuthorizationDependantOptions', this.refreshAuthorizationDependantOptions);
+
+        this.prerender();
+        this.render();
     },
     prerender: function(){
         this.contrainer = $("<div class='mainContainer' />");
@@ -64,7 +85,7 @@ var DocumentDesignView = Backbone.View.extend({
 
     },
     titlerow : function() {
-        var document = this.model;
+        var document = this.model.document();
         var titlepart = $("<span class='title'/>");
 
         //Editable name
@@ -106,9 +127,8 @@ var DocumentDesignView = Backbone.View.extend({
         return titlepart;
     },
     designStep1: function() {
-        var document = this.model;
         var box = $("<div class='signStepsBody'/>");
-        this.signatoriesView  = new SignatoriesDesignView({model: document, el: $("<div/>") , extra: this.nextStepButton()});
+        this.signatoriesView  = new SignatoriesDesign({documentdesignview: this.model, extra: this.nextStepButton()});
         box.append($(this.signatoriesView.el));
         return box;
     },
@@ -125,7 +145,7 @@ var DocumentDesignView = Backbone.View.extend({
         }).input();
     },
     designStep2: function() {
-       var document = this.model;
+       var document = this.model.document();;
        var box = $("<div class='signStepsBody advancedMode'/>");
 
        var box1 = $("<div class='signStepsBodyPart first'/>");
@@ -150,7 +170,7 @@ var DocumentDesignView = Backbone.View.extend({
        return box;
     },
     authenticationMethodSelection : function() {
-        var document = this.model;
+        var document = this.model.document();
         var box = $("<div class='authenticationmethodselect'/>");
         var checkbox = $("<input type='checkbox' cc='FALSE' class='elegCheckbox'>");
         if (document.elegAuthentication())
@@ -178,7 +198,7 @@ var DocumentDesignView = Backbone.View.extend({
     },
     documentTypeSelection : function() {
         // TODO: Change this HTML select to proper JavaScript-based Select one day
-        var document = this.model;
+        var document = this.model.document();
         var box = $("<div class='documenttypeselect'/>");
         var select= $("<select/>");
         var contract = $("<option value='contract'/>").text(localization.process.contract.name);
@@ -209,7 +229,7 @@ var DocumentDesignView = Backbone.View.extend({
         return box;
     },
     deliveryMethodSelection : function() {
-        var document = this.model;
+        var document = this.model.document();
         var box = $("<div class='deliverymethodselect'/>");
         var select= $("<select/>");
         var email = $("<option value='email'/>").text(localization.email);
@@ -245,7 +265,7 @@ var DocumentDesignView = Backbone.View.extend({
         return box;
     },
     finalDateSelection: function() {
-        var document = this.model;
+        var document = this.model.document();
         var box = $("<div class='finaldateselection'/>");
         var selectdaysbox  = $("<div/>");
         box.append(selectdaysbox);
@@ -273,7 +293,7 @@ var DocumentDesignView = Backbone.View.extend({
         return box;
     },
     editInvitationOption: function() {
-        var document = this.model;
+        var document = this.model.document();
         if (document.padDelivery() || document.apiDelivery()) return $("<div class='display:none'>");
         var box  = $("<div class='editinvitemessage'/>");
         var icon = $("<span class='editinvitemessageicon'/>");
@@ -300,7 +320,7 @@ var DocumentDesignView = Backbone.View.extend({
         return box;
     },
     selectLanguageOption: function() {
-        var document = this.model;
+        var document = this.model.document();
         var box = $("<div class='languageselect'/>");
         var select= $("<select/>");
         var en =  $("<option value='en'/>").text(localization.languages.en);
@@ -366,7 +386,7 @@ var DocumentDesignView = Backbone.View.extend({
         return box;
     },
     authorAttachmentsSetup: function() {
-        var document = this.model;
+        var document = this.model.document();
         var box = $("<div class='authorattachmentssetup'/>");
         var icon = $("<span class='authorattachmentssetupicon'/>");
         var text = $("<span class='authorattachmentssetuptext'/>").text(localization.authorattachments.changeAuthorAttachments);
@@ -382,7 +402,7 @@ var DocumentDesignView = Backbone.View.extend({
 
     },
     signatoryAttachmentSetup : function() {
-        var document = this.model;
+        var document = this.model.document();
         if (document.padDelivery()) return $("<div style='display:none'/>");
 
         var box = $("<div class='signatoryattachmentssetup'/>");
@@ -418,7 +438,7 @@ var DocumentDesignView = Backbone.View.extend({
       return box;
     },
     setSignLast : function(v) {
-      var document = this.model;
+      var document = this.model.document();
       if( !v ) {
         /* Make everybody else sign as second group */
         _.each(document.signatories(),function(sig) {
@@ -457,7 +477,7 @@ var DocumentDesignView = Backbone.View.extend({
             this.finalButtonBox.replaceWith(this.finalButton());
     },
     finalButton: function() {
-      var document = this.model;
+      var document = this.model.document();
       var view = this;
       this.finalButtonBox = $("<div class='finalbuttonbox'/>");
       if( document.authorSignsLastMode()) {
@@ -529,7 +549,7 @@ var DocumentDesignView = Backbone.View.extend({
       return this.finalButtonBox;
     },
     signConfirmation : function() {
-        var document = this.model;
+        var document = this.model.document();
         var signatory = document.currentSignatory();
         var acceptButton;
         if (document.elegAuthentication())
@@ -619,7 +639,7 @@ var DocumentDesignView = Backbone.View.extend({
     },
     sendConfirmation : function() {
        var view = this;
-       var document = this.model;
+       var document = this.model.document();
        var signatory = document.currentSignatory();
        var box = $("<div>");
        var padDesignViewUtil = undefined;
@@ -663,7 +683,7 @@ var DocumentDesignView = Backbone.View.extend({
     verificationBeforeSendingOrSigning : function(forSigning) {
         var view = this;
         var failed = false;
-        var sigs = this.model.signatories();
+        var sigs = this.model.document().signatories();
         var vres = true;
         var atLeastOneSignatory = false;
         for(var i =0; i< sigs.length; i++)
@@ -688,7 +708,7 @@ var DocumentDesignView = Backbone.View.extend({
               this.tabs.activate(this.tab1);
               return false;
         }
-        if (this.model.mainfile() == undefined)
+        if (this.model.document().mainfile() == undefined)
         {
              FlashMessages.add({color: 'red', content : localization.designview.validation.fileMustBeAdded});
              return false;
@@ -709,7 +729,7 @@ var DocumentDesignView = Backbone.View.extend({
         this.signatoriesView.showSignatory(sig);
     },
     uploadFile : function() {
-        var document = this.model;
+        var document = this.model.document();
         var url = "/api/frontend/mainfile/" + document.documentid();
         var upbutton = UploadButton.init({
             name: "file",
@@ -743,6 +763,7 @@ var DocumentDesignView = Backbone.View.extend({
                         else
                             FlashMessages.add({content: localization.couldNotUpload, color: "red"});
                         document.trigger('change');
+                        LoadingDialog.close();
                     },
                     ajaxsuccess: function() {
                         LoadingDialog.close();
@@ -755,7 +776,7 @@ var DocumentDesignView = Backbone.View.extend({
         return upbutton.input();
     },
     fromAvtal : function() {
-        var document = this.model;
+        var document = this.model.document();
         var button = Button.init({
             size : "big",
             color : "black",
@@ -768,7 +789,7 @@ var DocumentDesignView = Backbone.View.extend({
         return button.input();
     },
     uploadFileOption : function () {
-        var document = this.model;
+        var document = this.model.document();;
         var box = $("<div class='document-pages '/>");
         var subbox = $("<div class='nofilediv'/>");
         var subsubbox = $("<div class='innerbox'/>");
@@ -777,8 +798,8 @@ var DocumentDesignView = Backbone.View.extend({
                                         .append($("<div class='button-box'/>").append($(this.uploadFile()).append("<BR/>").append($(this.fromAvtal())))));
 
         
-        if (! this.model.isTemplate()) {
-          var text = localization.designview.saveAsTemplateDescription;
+        if (! this.model.document().isTemplate()) {
+          var text = localization.designview.saveAsTemplateLongDescription;
           var saveAsTemplateButton = Button.init({
                                  color : "black",
                                  size :  "big",
@@ -800,7 +821,7 @@ var DocumentDesignView = Backbone.View.extend({
     },
     extraFileOptions : function() {
       var box =$("<div class='extra-file-options'/>");
-      var document = this.model;
+      var document = this.model.document();;
       var removeFileButton = Button.init({
                                  color : "black",
                                  size :  "tiny",
@@ -846,9 +867,9 @@ var DocumentDesignView = Backbone.View.extend({
       return box;
     },
    render: function () {
-        var document = this.model;
+        var document = this.model.document();
         var view = this;
-        if (!document.ready())
+        if (!model.ready())
             return this;
         /* Make title row */
 
@@ -919,14 +940,17 @@ var ScrollFixer =  Backbone.Model.extend({
 });
 
 window.KontraDesignDocument = function(args) {
-       var model = new Document({
+       var document = new Document({
                         id : args.id
                     });
-       view = new DocumentDesignView({
+       var model = new DocumentDesignModel({
+                        id : args.id
+                    });
+       var view = new DocumentDesignView({
                         model: model,
                         el : $("<div/>")
                     });
-       model.fetch({ processData:  true, cache : false});
+       document.fetch({ processData:  true, cache : false});
        this.el = function() {return $(view.el);}
 }
 
