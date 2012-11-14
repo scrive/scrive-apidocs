@@ -38,10 +38,8 @@ import Doc.Model
 import Doc.DocStateData
 import Kontra
 import MagicHash
-import Util.SignatoryLinkUtils
 import qualified Log
 import User.Model
-import Data.Maybe
 
 {- |
    Securely find a document by documentid for the author or within their company.
@@ -107,6 +105,7 @@ getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid = do
           Log.debug $ "Document " ++ show docid ++ " does not exist (in getDocByDocIDForAuthorOrAuthorsCompanyAdmin)"
           return $ Left DBResourceNotAvailable
 
+
 {- |
    Get a document using docid, siglink, and magichash.
    ALWAYS FAILS THE SAME WAY FOR SECURITY PURPOSES (Left DBResourceNotAvailable).
@@ -120,7 +119,7 @@ getDocByDocIDSigLinkIDAndMagicHash :: Kontrakcja m
                                    -> MagicHash
                                    -> m (Either DBError Document)
 getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
-  mdoc <- dbQuery $ GetDocumentByDocumentID docid
+  mdoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash docid sigid mh
   case mdoc of
-    Just doc | isJust $ getSigLinkFor doc (sigid, mh) -> return $ Right doc
-    _                                                 -> return $ Left DBResourceNotAvailable
+    Just doc -> return $ Right doc
+    _        -> return $ Left DBResourceNotAvailable

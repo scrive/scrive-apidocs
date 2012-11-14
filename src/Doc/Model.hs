@@ -28,6 +28,7 @@ module Doc.Model
   , ErrorDocument(..)
   , GetDocuments(..)
   , GetDocumentByDocumentID(..)
+  , GetDocumentByDocumentIDSignatoryLinkIDMagicHash(..)
   , GetDocumentsByAuthor(..)
   , GetTemplatesByAuthor(..)
   , GetAvailableTemplates(..)
@@ -1316,6 +1317,23 @@ instance MonadDB m => DBQuery m GetDocumentByDocumentID (Maybe Document) where
   query (GetDocumentByDocumentID did) = do
     (selectDocuments $ sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
+      sqlWhereEq "documents.id" did)
+      >>= oneObjectReturnedGuard
+
+data GetDocumentByDocumentIDSignatoryLinkIDMagicHash = GetDocumentByDocumentIDSignatoryLinkIDMagicHash DocumentID SignatoryLinkID MagicHash
+instance MonadDB m => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash (Maybe Document) where
+  query (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) = do
+    (selectDocuments $ sqlSelect "documents" $ do
+      mapM_ sqlResult documentsSelectors
+      sqlWhereExists $ sqlSelect "signatory_links" $ do
+         sqlWhere "signatory_links.document_id = documents.id"
+         -- Thought for later: Here we might actually check if
+         -- visibility rules allow a person to see this document, for
+         -- example if it was not really_deleted and if sign order
+         -- allows to see the document. For now we are sloppy and let
+         -- a person see the document.
+         sqlWhereEq "signatory_links.id" slid
+         sqlWhereEq "signatory_links.token" mh
       sqlWhereEq "documents.id" did)
       >>= oneObjectReturnedGuard
 
