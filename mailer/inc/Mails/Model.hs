@@ -68,7 +68,7 @@ instance MonadDB m => DBQuery m GetUnreadEvents [(EventID, MailID, XSMTPAttrs, E
 data GetIncomingEmails = GetIncomingEmails
 instance MonadDB m => DBQuery m GetIncomingEmails [Mail] where
   query GetIncomingEmails = do
-    _ <- kRun $ selectMailsSQL <> SQL "WHERE title IS NOT NULL AND content IS NOT NULL AND to_be_sent <= now() AND sent IS NULL ORDER BY id DESC" []
+    _ <- kRun $ selectMailsSQL <> SQL "WHERE title IS NOT NULL AND content IS NOT NULL AND to_be_sent <= now() AND sent IS NULL ORDER BY service_test ASC, id DESC" []
     fetchMails
 
 data GetEmails = GetEmails
