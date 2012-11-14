@@ -22,9 +22,9 @@ serviceAvailabilityChecker rng dbconf (master, slave) msender = do
     mid <- inDB $ do
       token <- random
       now <- getMinutesTime
-      Log.mailingServer $ "Creating service testing email..."
       mid <- dbUpdate $ CreateServiceTest token testSender testReceivers now
       success <- dbUpdate $ AddContentToEmail mid "test" "test" [] mempty
+      Log.mailingServer $ "Creating service testing email #" ++ show mid ++ "..."
       when (not success) $
         error "CRITICAL: Couldn't add content to created service testing email."
       return mid
@@ -39,9 +39,8 @@ serviceAvailabilityChecker rng dbconf (master, slave) msender = do
               Log.mailingServer $ "Restoring service " ++ show master ++ "."
             return master
         else do
-          Log.mailingServer $ "Service testing emails failed to be delivered within 5 minutes."
+          Log.mailingServer $ "Service testing emails failed to be delivered within 6 minutes."
           oldsender <- liftIO $ takeMVar msender
-          Log.mailingServer $ "Current sender: " ++ show oldsender
           when (oldsender == master) $ do
             Log.mailingServer $ "Switching to " ++ show slave ++ " and resending all emails that were sent within this time."
             time <- minutesBefore 5 `fmap` getMinutesTime
@@ -50,7 +49,7 @@ serviceAvailabilityChecker rng dbconf (master, slave) msender = do
           liftIO $ putMVar msender slave
       success <- dbUpdate $ DeleteEmail mid
       when (not success) $
-        error "CRITICAL: Couldn't delete service testing email."
+        Log.mailingServer $ "Couldn't delete service testing email #" ++ show mid
   case res of
     Right () -> loop
     Left (e::E.SomeException) -> do
