@@ -1,11 +1,14 @@
 module CompanyControlTest (companyControlTests) where
 
 import Control.Applicative
+import Control.Monad.Trans (liftIO)
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Text.JSON
 import Text.JSON.FromJSValue
 import Test.Framework
+import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Char8 as BS
 
 import Company.CompanyControl
 import Company.Model
@@ -53,10 +56,10 @@ test_settingUIWithHandlePostCompany = do
 
   ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext defaultValue
+  logo <- liftIO $ BS.readFile "public/img/email-logo.png"
+  let logo64 = BS.unpack $ B64.encode logo
 
-  req1 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"green\",\"barstextcolour\":\"yellow\"}")
-                        , ("logo", inFile "public/img/email-logo.png")
-                        ]
+  req1 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"green\",\"barstextcolour\":\"yellow\",\"logochanged\":true,\"logo\":\"" ++ logo64 ++ "\"}")]
   (res1, _ctx') <- runTestKontra req1 ctx $ handlePostCompany Nothing >>= sendRedirect
 
   assertEqual "Response code is 303" 303 (rsCode res1)
@@ -65,8 +68,7 @@ test_settingUIWithHandlePostCompany = do
   assertEqual "Text colour was set" (Just "yellow") (companybarstextcolour $ companyui newcompany1)
   assertBool "File was set" $ isJust (companylogo $ companyui newcompany1)
 
-  req2 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"\",\"barstextcolour\":\"\"}")
-                         ]
+  req2 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"\",\"barstextcolour\":\"\",\"logochanged\":false,\"logo\":\"\"}")]
   (res2, _ctx') <- runTestKontra req2 ctx $ handlePostCompany Nothing >>= sendRedirect
 
   assertEqual "Response code is 303" 303 (rsCode res2)
@@ -75,9 +77,7 @@ test_settingUIWithHandlePostCompany = do
   assertEqual "Text colour reset" Nothing (companybarstextcolour $ companyui newcompany2)
   assertEqual "File still intact" (companylogo $ companyui newcompany1) (companylogo $ companyui newcompany2)
 
-  req3 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"blue\",\"barstextcolour\":\"pink\"}")
-                         , ("islogo", inText "false")
-                         ]
+  req3 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"blue\",\"barstextcolour\":\"pink\",\"logochanged\":true,\"logo\":\"\"}")]
   (res3, _ctx') <- runTestKontra req3 ctx $ handlePostCompany Nothing >>= sendRedirect
 
   assertEqual "Response code is 303" 303 (rsCode res3)
