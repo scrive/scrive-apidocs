@@ -66,12 +66,13 @@ createSMTPSender config = createExternalSender (serviceName config) "curl" creat
         "--mail-rcpt"
       , "<" ++ addrEmail addr ++ ">"
       ]
-    createargs Mail{mailFrom, mailTo} = [
-        "--user"
-      , smtpUser config ++ ":" ++ smtpPassword config
+    createargs Mail{mailFrom, mailTo} =
+      [ "-s", "-S"                   -- show no progress information but show error messages
+      , "-k", "--ssl"                -- use SSL but do not fret over self-signed or outdated certifcate
       , smtpAddr config
-      , "-k", "--ssl", "--mail-from"
-      , "<" ++ addrEmail mailFrom ++ ">"
+      , "--user"
+      , smtpUser config ++ ":" ++ smtpPassword config
+      , "--mail-from", "<" ++ addrEmail mailFrom ++ ">"
       ] ++ concatMap mailRcpt mailTo
 
 createLocalSender :: SenderConfig -> Sender
