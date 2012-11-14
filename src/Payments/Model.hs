@@ -72,20 +72,19 @@ instance (MonadBase IO m, MonadDB m) => DBUpdate m GetAccountCode AccountCode wh
 data GetCompanyQuantity = GetCompanyQuantity CompanyID --tested
 instance MonadDB m => DBQuery m GetCompanyQuantity Int where
   query (GetCompanyQuantity cid) = do
-    _ <- kRun $ SQL ("SELECT count(email) " ++
-                     "FROM ((SELECT users.email " ++
-                     "       FROM users " ++
-                     "       WHERE users.company_id = ? " ++
-                     "         AND users.deleted = FALSE " ++
-                     "         AND users.is_free = FALSE) " ++
-                     "      UNION " ++
-                     "      (SELECT companyinvites.email " ++
-                     "       FROM companyinvites " ++
-                     "       WHERE companyinvites.company_id = ? " ++
-                     "         AND NOT EXISTS (SELECT 1 FROM users " ++
-                     "                         WHERE email = companyinvites.email " ++
-                     "                           AND company_id = ?))) AS emails")
-                     [toSql cid, toSql cid, toSql cid]
+    _ <- kRun $ "SELECT count(email) " <+>
+                "FROM ((SELECT users.email " <+>
+                "       FROM users " <+>
+                "       WHERE users.company_id = " <?> cid <+>
+                "         AND users.deleted = FALSE " <+>
+                "         AND users.is_free = FALSE) " <+>
+                "      UNION " <+>
+                "      (SELECT companyinvites.email " <+>
+                "       FROM companyinvites " <+>
+                "       WHERE companyinvites.company_id = " <?> cid <+>
+                "         AND NOT EXISTS (SELECT 1 FROM users " <+>
+                "                         WHERE email = companyinvites.email " <+>
+                "                           AND company_id = " <?> cid <+> "))) AS emails"
     res <- foldDB (flip (:)) []
     case res of
       (x:_) -> return x
