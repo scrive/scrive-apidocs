@@ -65,7 +65,7 @@ serviceAvailabilityChecker rng dbconf (master, slave) msender = do
     isDelivered mid (_, emid, _, MailGunEvent _ MG_Delivered) = mid == emid
     isDelivered _ _ = False
 
-    freq = 5 * 60 * second
+    freq = 6 * 60 * second
     second = 1000000
     loop = serviceAvailabilityChecker rng dbconf (master, slave) msender
 
