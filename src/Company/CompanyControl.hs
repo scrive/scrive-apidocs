@@ -57,6 +57,7 @@ handleAdminGetCompany cid = withCompanyAdminOrAdminOnly (Just cid) $
 
 handleSerializeImage :: Kontrakcja m => m JSValue
 handleSerializeImage = do
+  guardLoggedIn
   logo <- guardJustM $ getFileField "logo"
   runJSONGenT $ value "logo_base64" $ showJSON $ B64.encode logo
 
