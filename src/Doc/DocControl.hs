@@ -109,10 +109,11 @@ import qualified MemCache as MemCache
 import qualified GuardTime as GuardTime
 import System.IO.Temp
 import System.Directory
-
+import MinutesTime
 
 newDocumentOrLatestDraft :: Kontrakcja m => m KontraLink
 newDocumentOrLatestDraft = withUserPost $ do
+  ctx <- getContext
   user <- guardJustM $ ctxmaybeuser <$> getContext
   docs <- dbQuery $ GetDocuments [DocumentsOfAuthorDeleteValue (userid user) False] [DocumentFilterStatuses [Preparation]]  [Desc DocumentOrderByMTime] (DocumentPagination 0 1)
   case docs of
@@ -120,7 +121,7 @@ newDocumentOrLatestDraft = withUserPost $ do
        _ -> do
         title <- renderTemplate_ "newDocumentTitle"
         actor <- guardJustM $ mkAuthorActor <$> getContext
-        Just doc <- dbUpdate $ NewDocument user title (Signable Contract) 1 actor
+        Just doc <- dbUpdate $ NewDocument user (title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) (Signable Contract) 1 actor
         return $ LinkIssueDoc (documentid doc)
   
 {-
