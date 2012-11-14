@@ -11,13 +11,10 @@ var SignatoriesDesignModel = Backbone.Model.extend({
   initialize: function (args) {
   },
   document : function() {
-     return this.documentdesignview.document();
+     return this.documentdesignview().document();
   },
   documentdesignview :function() {
      return this.get("documentdesignview");
-  },
-  extra : function() {
-    this.get("extra");
   }
 });
 
@@ -32,6 +29,7 @@ var SignatoriesDesignView = Backbone.View.extend({
     },
     addRemoveSignatoryBox : function() {
         var document = this.model.document();
+        var documentdesignview = this.model.documentdesignview();
         var view = this;
         var box =  $("<div class='addremovesignatorybox'/>");
         var addLink = $("<a class='addSignatory' href='#'/>").text(localization.addSignatory);
@@ -46,7 +44,19 @@ var SignatoriesDesignView = Backbone.View.extend({
             return false;
 
         });
-        box.append(addLink).append(removeLink).append(this.model.extra());
+        box.append(addLink).append(removeLink);
+        
+        var nextStep = Button.init({
+             color : 'green',
+             size: 'small',
+             text: localization.nextStep,
+             cssClass : "nextstepbutton",
+             icon : $("<span class='btn-symbol green arrow-left'></span>"),
+             onClick : function() {
+                 documentdesignview.goToNextStep();
+                }
+             });
+        box.append(nextStep.input());
         return box;
     },
     fixCurrent : function() {
@@ -54,6 +64,7 @@ var SignatoriesDesignView = Backbone.View.extend({
           this.current = this.model.document().signatories()[0];
     },
     signatoriesList : function() {
+        var model = this.model;
         var document = this.model.document();
         var view = this;
         if (view.signatoriesListBox == undefined)
@@ -61,7 +72,7 @@ var SignatoriesDesignView = Backbone.View.extend({
         else
             view.signatoriesListBox.empty();
         var header = $("<a href='#' class='header'/>");
-        if (document.view.signOrderVisible())
+        if (this.model.documentdesignview().signOrderVisible())
             header.append($("<span class='float-right'/>").text(localization.signatoryListSignOrder));
         header.append($("<span>").text(localization.signatoryListPartner));
         view.signatoriesListBox.append(header);
@@ -75,7 +86,7 @@ var SignatoriesDesignView = Backbone.View.extend({
                    text = "(" + localization.noNamePerson + ")";
                 var number = sig.signs()? sig.signorder() : "-";
                 sigline.empty();
-                if (document.view.signOrderVisible())
+                if (model.documentdesignview().signOrderVisible())
                   sigline.append($("<span class='float-right'/>").text(number));
                 sigline.append($("<span/>").text(text));
             }
@@ -98,14 +109,14 @@ var SignatoriesDesignView = Backbone.View.extend({
         var document = this.model.document();
         if (document.signatories().length == 1)
         {
-            var s1view = new SignatoryDesignView({model: document.signatories()[0], el: $("<div/>")});
+            var s1view = new SignatoryDesign({signatory: document.signatories()[0], documentdesignview : this.model.documentdesignview()});
             box.append(s1view.el);
             box.append($("<div class='sigview dummy'/>"));
         }
         else if (document.signatories().length == 2)
         {
-            var s1view = new SignatoryDesignView({model: document.signatories()[0], el: $("<div/>")});
-            var s2view = new SignatoryDesignView({model: document.signatories()[1], el: $("<div/>")});
+            var s1view = new SignatoryDesign({signatory: document.signatories()[0], documentdesignview : this.model.documentdesignview()});
+            var s2view = new SignatoryDesign({signatory: document.signatories()[1], documentdesignview : this.model.documentdesignview()});
             box.append(s1view.el);
             box.append(s2view.el);
 
@@ -113,7 +124,7 @@ var SignatoriesDesignView = Backbone.View.extend({
         else
         {
            box.append(this.signatoriesList());
-           var sview = new SignatoryDesignView({model: this.current, el: $("<div/>")});
+           var sview = new SignatoryDesign({signatory: this.current, documentdesignview : this.model.documentdesignview()});
            box.append(sview.el);
 
         }
@@ -131,6 +142,7 @@ window.SignatoriesDesign = function(args) {
           var model = new SignatoriesDesignModel(args);
           var view =  new SignatoriesDesignView({model : model, el : $("<div/>")});
           this.el = function() {return $(view.el);};
+          this.showSignatory = function(s) {view.showSignatory(s);};
 };
 
 })(window);

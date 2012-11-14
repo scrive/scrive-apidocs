@@ -5,24 +5,22 @@
 
 (function(window){
 
-var DocumentDesignView = Backbone.Model.extend({
+var DocumentDesignModel = Backbone.Model.extend({
   defaults : {
     signOrderVisible : false
   },
   initialize: function (args) {
-        _.bindAll(this, 'render', 'refreshFinalButton', 'refreshSignatoryAttachmentsOption', 'refreshAuthorizationDependantOptions', 'toogleSignorder');
-        this.document().bind('reset', function() {this.trigger("render")});
-        this.document().bind('change:ready', function() {this.trigger("render")});
-        this.document().bind('change:signatories', function() {this.trigger("refreshSignatoriesOption")});
-        this.document().bind('change:authenticationdelivery',  function() {this.trigger("refreshAuthorizationDependantOptions")});
-        this.document().bind('toogleSignOrder',  toogleSignOrder);
-        toogleSignorder
+      var self = this;
+      this.document().bind('reset', function() {self.trigger("render")});
+      this.document().bind('change:ready', function() {self.trigger("render")});
+      this.document().bind('change:signatories', function() {self.trigger("refreshSignatoriesOption")});
+      this.document().bind('change:authenticationdelivery',  function() {self.trigger("refreshAuthorizationDependantOptions")});
   },
   document : function() {
      return this.get("document");
   },
   ready : function() {
-    this.document().ready();
+     return this.document().ready();
   },
   signOrderVisible : function() {
       if( this.get("signOrderVisible") == true ) return true;
@@ -62,17 +60,21 @@ var DocumentDesignView = Backbone.Model.extend({
             sig.setSignOrder(1);
           });
         }
+    },
+    goToNextStep : function() {
+       this.trigger("goToNextStep");
     }
 });
 
   
 var DocumentDesignView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render', 'refreshFinalButton', 'refreshSignatoryAttachmentsOption', 'refreshAuthorizationDependantOptions');
-        this.model.bind('render', this.render);
-        this.model.bind('refreshSignatoriesOption', function() {this.refreshFinalButton(); this.refreshSignatoryAttachmentsOption();});
-        this.model.bind('refreshAuthorizationDependantOptions', this.refreshAuthorizationDependantOptions);
-
+        var self = this;
+        _.bindAll(this, 'render', 'refreshFinalButton', 'refreshSignatoryAttachmentsOption', 'refreshAuthorizationDependantOptions', 'goToNextStep');
+        this.model.bind('render', self.render);
+        this.model.bind('refreshSignatoriesOption', function() {self.refreshFinalButton(); self.refreshSignatoryAttachmentsOption();});
+        this.model.bind('refreshAuthorizationDependantOptions', self.refreshAuthorizationDependantOptions);
+        this.model.bind('goToNextStep', self.goToNextStep);
         this.prerender();
         this.render();
     },
@@ -128,21 +130,12 @@ var DocumentDesignView = Backbone.View.extend({
     },
     designStep1: function() {
         var box = $("<div class='signStepsBody'/>");
-        this.signatoriesView  = new SignatoriesDesign({documentdesignview: this.model, extra: this.nextStepButton()});
-        box.append($(this.signatoriesView.el));
+        this.signatoriesView  = new SignatoriesDesign({documentdesignview: this.model});
+        box.append($(this.signatoriesView.el()));
         return box;
     },
-    nextStepButton : function() {
-        var view = this;
-        return Button.init({
-             color : 'green',
-             size: 'small',
-             text: localization.nextStep,
-             cssClass : "nextstepbutton",
-             icon : $("<span class='btn-symbol green arrow-left'></span>"),
-             onClick : function() {
-                 view.tabs.next();}
-        }).input();
+    goToNextStep : function() {
+      this.tabs.next();
     },
     designStep2: function() {
        var document = this.model.document();;
@@ -355,7 +348,7 @@ var DocumentDesignView = Backbone.View.extend({
                        document.save();
                        document.afterSave(function() {
                           LoadingDialog.close();
-                          window.location = window.location;
+                          window.location.reload();
                         });
                        return true;
                     }
@@ -375,7 +368,7 @@ var DocumentDesignView = Backbone.View.extend({
                        document.save();
                        document.afterSave(function() {
                           LoadingDialog.close();
-                          window.location = window.location;
+                          window.location.reload();
                         });
                        return true;
 
@@ -762,8 +755,8 @@ var DocumentDesignView = Backbone.View.extend({
                             FlashMessages.add({content: localization.fileTooLarge, color: "red"});
                         else
                             FlashMessages.add({content: localization.couldNotUpload, color: "red"});
-                        document.trigger('change');
                         LoadingDialog.close();
+                        document.trigger('change');
                     },
                     ajaxsuccess: function() {
                         LoadingDialog.close();
@@ -867,11 +860,11 @@ var DocumentDesignView = Backbone.View.extend({
       return box;
     },
    render: function () {
-        var document = this.model.document();
         var view = this;
-        if (!model.ready())
+        if (!this.model.ready())
             return this;
-        /* Make title row */
+        
+        var document = this.model.document();
 
         // Sign boxes
         var designbody1 = this.designStep1();
@@ -944,7 +937,7 @@ window.KontraDesignDocument = function(args) {
                         id : args.id
                     });
        var model = new DocumentDesignModel({
-                        id : args.id
+                        document : document
                     });
        var view = new DocumentDesignView({
                         model: model,

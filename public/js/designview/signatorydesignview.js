@@ -5,7 +5,7 @@
 
 (function(window){
 
-window.SignatoryDesignViewModel = Backbone.Model.extend({
+var SignatoryDesignModel = Backbone.Model.extend({
   defaults : {
   },
   initialize: function (args) {
@@ -18,18 +18,17 @@ window.SignatoryDesignViewModel = Backbone.Model.extend({
   },
 });
   
-window.SignatoryDesignView = Backbone.View.extend({
+var SignatoryDesignView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
-        this.model.bind('reset', this.render);
-        this.model.bind('change:fields', this.render);
-        this.model.bind('change:role', this.render);
-        this.model.bind('change:csv', this.render);
-        this.model.view = this;
+        this.model.signatory().bind('reset', this.render);
+        this.model.signatory().bind('change:fields', this.render);
+        this.model.signatory().bind('change:role', this.render);
+        this.model.signatory().bind('change:csv', this.render);
         this.render();
     },
     name : function() {
-       var signatory = this.model;
+       var signatory = this.model.signatory();
        var process = signatory.document().process();
        if (signatory.isCsv())
         return localization.csv.title;
@@ -43,7 +42,7 @@ window.SignatoryDesignView = Backbone.View.extend({
         return process.localization().nonsignatoryname;
     },
    addCustomFieldButton : function() {
-        var signatory = this.model;
+        var signatory = this.model.signatory();
         var addFieldButton = $("<a class='addField' href='#'/>");
         addFieldButton.click(function(){
             signatory.addNewCustomField();
@@ -53,7 +52,7 @@ window.SignatoryDesignView = Backbone.View.extend({
    } ,
    refreshRoleSelector: function() {
      var self = this;
-     var signatory = self.model;
+     var signatory = self.model.signatory();
 
      if (self.showRoleSelector) {
        self.setRoleIcon.addClass("selected");
@@ -111,7 +110,7 @@ window.SignatoryDesignView = Backbone.View.extend({
    },
    setRoleFieldIcon : function() {
        var view = this;
-       var signatory = this.model;
+       var signatory = this.model.signatory();
        this.setRoleIcon = $("<a class='setRole' href='#'/>");
        this.setRoleIcon.click(function(){
            if (view.showRoleSelector)
@@ -125,16 +124,16 @@ window.SignatoryDesignView = Backbone.View.extend({
    },
    setSignOrderIcon : function() {
        var view = this;
-       var signatory = this.model;
+       var model = this.model;
        var setSignOrderIcon = $("<a class='setSignOrder' href='#'/>");
        setSignOrderIcon.click(function(){
-          signatory.document().trigger("toogleSignOrder");
+          model.documentdesignview().toogleSignOrder();
             });
         return setSignOrderIcon;
    },
    signOrderSelector : function() {
      var self = this;
-     var signatory = this.model;
+     var signatory = this.model.signatory();
      var maxSO = signatory.document().maxPossibleSignOrder();
      if (this.signOrderSelectorSelect == undefined) {
         this.signOrderSelectorSelect = $("<select class='selectSignOrder'/>");
@@ -156,7 +155,7 @@ window.SignatoryDesignView = Backbone.View.extend({
    },
    setCsvSignatoryIcon : function() {
        var view = this;
-       var signatory = this.model;
+       var signatory = this.model.signatory();
        var setCsvSignatoryIcon = $("<a class='setCsvSignatory' href='#'/>");
        setCsvSignatoryIcon.click(function() {
             CsvSignatoryDesignPopup.popup({signatory: signatory});
@@ -166,7 +165,7 @@ window.SignatoryDesignView = Backbone.View.extend({
    },
    placeCheckboxIcon : function() {
        var view = this;
-       var signatory = this.model;
+       var signatory = this.model.signatory();
        var field = signatory.newCheckbox();
        var placeCheckboxIcon = $("<a class='placeCheckboxIcon' href='#'/>");
        draggebleField(placeCheckboxIcon, field);
@@ -174,7 +173,7 @@ window.SignatoryDesignView = Backbone.View.extend({
    },
    placeSignatureIcon : function() {
        var view = this;
-       var signatory = this.model;
+       var signatory = this.model.signatory();
        var field = signatory.signature();
        var placeSignatureIcon = $("<a class='placeSignatureIcon' href='#'/>");
        field.view = placeSignatureIcon;
@@ -185,8 +184,7 @@ window.SignatoryDesignView = Backbone.View.extend({
    },
    top : function() {
         var top = $("<div class='top'/>");
-        var signatory = this.model;
-        var document = signatory.document();
+        var signatory = this.model.signatory();
         top.append($("<span class='signame'/>").text(this.name().toUpperCase()));
         top.append(this.setRoleFieldIcon());
         if (!signatory.author())
@@ -198,7 +196,7 @@ window.SignatoryDesignView = Backbone.View.extend({
         if (signatory.signs())
             top.append(this.placeSignatureIcon());
         top.append(this.addCustomFieldButton());
-        if (signatory.signs() && document.view.signOrderVisible())
+        if (signatory.signs() && this.model.documentdesignview().signOrderVisible())
             top.append(this.signOrderSelector());
 
         return top;
@@ -207,7 +205,7 @@ window.SignatoryDesignView = Backbone.View.extend({
         this.refreshRoleSelector();
     },
     render: function () {
-        var signatory = this.model;
+        var signatory = this.model.signatory();
         this.container = $(this.el);
         var view = this;
         this.container.addClass('sigview');
