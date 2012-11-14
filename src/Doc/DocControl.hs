@@ -36,6 +36,7 @@ module Doc.DocControl(
 ) where
 
 import AppView
+import Attachment.AttachmentID (AttachmentID)
 import DB
 import DB.TimeZoneName (TimeZoneName, mkTimeZoneName)
 import DBError
@@ -79,6 +80,7 @@ import Stats.Control
 import User.Utils
 import Control.Applicative
 import Control.Concurrent
+import qualified Control.Exception.Lifted as E
 import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.Trans.Maybe
@@ -631,17 +633,20 @@ showPage fileid pageno = do
   checkFileAccess fileid
   showPage' fileid pageno
 
+-- | Preview when authorized user is logged in (without magic hash)
 showPreview:: Kontrakcja m => DocumentID -> FileID -> m (Either KontraLink Response)
 showPreview docid fileid = withAuthorisedViewer docid $ do
+    checkFileAccessWith fileid Nothing Nothing (Just docid) Nothing
     iprev <- preview fileid 0
     case iprev of
          Just res -> return $ Right res
          Nothing ->   return $ Left $ LinkDocumentPreview docid Nothing fileid
 
+-- | Preview from mail client with magic hash
 showPreviewForSignatory:: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> m (Either KontraLink Response)
 showPreviewForSignatory docid siglinkid sigmagichash fileid = do
+    checkFileAccessWith fileid (Just siglinkid) (Just sigmagichash) (Just docid) Nothing
     doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
-    checkLinkIDAndMagicHash doc siglinkid sigmagichash
     iprev <- preview fileid 0
     case iprev of
          Just res -> return $ Right res
@@ -723,12 +728,6 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
             _ -> return LoopBack
     _ -> return LoopBack
 
-checkLinkIDAndMagicHash :: Kontrakcja m => Document -> SignatoryLinkID -> MagicHash -> m ()
-checkLinkIDAndMagicHash document linkid magichash1 = do
-  siglink <- guardJust $ getSigLinkFor document linkid
-  unless (signatorymagichash siglink == magichash1) internalError
-  return ()
-
 checkFileAccess :: Kontrakcja m => FileID -> m ()
 checkFileAccess fid = do
 
@@ -755,7 +754,11 @@ checkFileAccess fid = do
   -- If refering to something by SignatoryLinkID check out if in the
   -- session we have a properly stored access magic hash.
   mmh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msid
+  checkFileAccessWith fid msid mmh mdid mattid
 
+checkFileAccessWith :: Kontrakcja m =>
+  FileID -> Maybe SignatoryLinkID -> Maybe MagicHash -> Maybe DocumentID -> Maybe AttachmentID -> m ()
+checkFileAccessWith fid msid mmh mdid mattid =
   case (msid, mmh, mdid, mattid) of
     (Just sid, Just mh, Just did,_) -> do
        doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
@@ -879,21 +882,21 @@ handleSigAttach docid siglinkid = do
 prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 prepareEmailPreview docid slid = do
     mailtype <- getField' "mailtype"
-    doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
     ctx <- getContext
-    content <- case mailtype of
+    content <- flip E.catch (\(E.SomeException _) -> return "") $ case mailtype of
          "remind" -> do
-             let msl = find ((== slid) . signatorylinkid) $ documentsignatorylinks doc
-             case msl of
-               Just sl -> mailDocumentRemindContent  Nothing ctx doc sl
-               Nothing -> return ""
+             Right doc <- getDocByDocID docid
+             Just sl <- return $ getSigLinkFor doc slid
+             mailDocumentRemindContent  Nothing ctx doc sl
          "reject" -> do
-             let msl = find ((== slid) . signatorylinkid) $ documentsignatorylinks doc
-             case msl of
-               Just sl -> mailDocumentRejectedContent Nothing ctx  doc sl
-               Nothing -> return ""
-         "invite" -> mailInvitationContent False ctx Sign doc Nothing
-         _ -> return ""
+             Just mh <- dbQuery $ GetDocumentSessionToken slid
+             Just doc <- dbQuery $ GetDocumentByDocumentID docid
+             Just sl <- return $ getSigLinkFor doc (slid,mh)
+             mailDocumentRejectedContent Nothing ctx  doc sl
+         "invite" -> do
+             Right doc <- getDocByDocID docid
+             mailInvitationContent False ctx Sign doc Nothing
+         _ -> fail "prepareEmailPreview"
     runJSONGenT $ J.value "content" content
 
 handleSetAttachments :: Kontrakcja m => DocumentID -> m JSValue
