@@ -121,6 +121,7 @@ import Templates.Fields (value, objects)
 import DB.TimeZoneName (TimeZoneName, mkTimeZoneName, withTimeZone)
 import qualified DB.TimeZoneName as TimeZoneName
 import DB.SQL2
+import Control.Monad.State.Class
 
 data DocumentPagination =
   DocumentPagination
@@ -265,30 +266,31 @@ documentOrderByAscDescToSQL (Desc x) = documentOrderByToSQL x <> SQL " DESC" []
 --     a. user is company admin
 --     b. there is another user in the same company that can see the document
 --     c. document is not in preparation state
-documentDomainToSQL :: DocumentDomain -> SQL
-documentDomainToSQL (DocumentsOfWholeUniverse) =
-  SQL "TRUE" []
-documentDomainToSQL (DocumentsVisibleToUser uid) =
-  "same_company_users.id = " <?> uid
-  <+> " AND ("
-   <+>       "(same_company_users.is_company_admin OR users.id = same_company_users.id)"                -- 1.
-     <+> "AND signatory_links.is_author"
-   <+> "OR"
-     <+> "(same_company_users.is_company_admin OR users.id = same_company_users.id)"              -- 2a, 3a.
-     <+> "AND documents.status <> " <?> Preparation        -- 2b, 3b
-     <+> "AND documents.type = " <?> Signable undefined    -- 2a, 3a
-     <+> "AND (NOT signatory_links.is_partner"             -- 2c, 3
-     <+>      "OR NOT EXISTS (SELECT 1 FROM signatory_links AS earlier_signatory_links"
-     <+>                      "WHERE signatory_links.document_id = earlier_signatory_links.document_id"
-     <+>                        "AND earlier_signatory_links.is_partner"
-     <+>                        "AND earlier_signatory_links.sign_time IS NULL"
-     <+>                        "AND earlier_signatory_links.sign_order < signatory_links.sign_order))"
-   <+> "OR"
-     <+> "TRUE"
-     <+> "AND documents.sharing = " <?> Shared
-     <+> "AND documents.type = " <?> Template undefined    -- 4
-     <+> "AND signatory_links.is_author"                   --
-  <+> ")"
+documentDomainToSQL :: (MonadState v m, SqlWhere v)
+                    => DocumentDomain
+                    -> m ()
+documentDomainToSQL (DocumentsOfWholeUniverse) = do
+  sqlWhere "TRUE"
+documentDomainToSQL (DocumentsVisibleToUser uid) = sqlWhereAll $ do
+  sqlWhereEq "same_company_users.id" uid
+  sqlWhereAny $ do
+    sqlWhereAll $ do
+      sqlWhere "(same_company_users.is_company_admin OR users.id = same_company_users.id)"                -- 1.
+      sqlWhere "signatory_links.is_author"
+    sqlWhereAll $ do
+      sqlWhere "(same_company_users.is_company_admin OR users.id = same_company_users.id)"              -- 2a, 3a.
+      sqlWhereNotEq "documents.status" Preparation        -- 2b, 3b
+      sqlWhereEq "documents.type" $ Signable undefined    -- 2a, 3a
+      sqlWhere $ "(NOT signatory_links.is_partner"             -- 2c, 3
+              <+> "OR NOT EXISTS (SELECT 1 FROM signatory_links AS earlier_signatory_links"
+              <+>                 "WHERE signatory_links.document_id = earlier_signatory_links.document_id"
+              <+>                   "AND earlier_signatory_links.is_partner"
+              <+>                   "AND earlier_signatory_links.sign_time IS NULL"
+              <+>                   "AND earlier_signatory_links.sign_order < signatory_links.sign_order))"
+    sqlWhereAll $ do
+      sqlWhereEq "documents.sharing" Shared
+      sqlWhereEq "documents.type" $ Template undefined    -- 4
+      sqlWhere "signatory_links.is_author"                   --
 
 maxselect :: SQL
 maxselect = "(SELECT max(greatest(signatory_links.sign_time"
@@ -1383,7 +1385,7 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
         sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id OR users.id = same_company_users.id"
 
         sqlWhere "NOT signatory_links.really_deleted"
-        sqlWhereAny (mapM_ (sqlWhere . documentDomainToSQL) domains)
+        sqlWhereAny (mapM_ documentDomainToSQL domains)
         mapM_ documentFilterToSQL filters
         mapM_ (sqlOrderBy . documentOrderByAscDescToSQL) orderbys
         sqlOffset $ fromIntegral (documentOffset pagination)
