@@ -580,7 +580,7 @@ docStatSignMethod status did apistring =
         sqlGeneric "time"          time,
         sqlGeneric "amount"        "sigs",
         sqlGeneric "document_id"   "doc.id",
-        sqlGeneric "company_id"    "sl.company_id",
+        sqlGeneric "company_id"    "(SELECT users.company_id FROM users WHERE users.id = sl.user_id)",
         sql        "api_string"    apistring,
         sqlGeneric "quantity"      qty,
         sqlGeneric "document_type" (docType "doc")
@@ -736,7 +736,7 @@ genericStatEvent qty time condition did apistring =
         sqlGeneric "time"          time,
         sql        "amount"        (1 :: Int),
         sqlGeneric "document_id"   "doc.id",
-        sqlGeneric "company_id"    "sl.company_id",
+        sqlGeneric "company_id"    "(SELECT users.company_id FROM users WHERE users.id = sl.user_id)",
         sql        "api_string"    apistring,
         sql        "quantity"      qty,
         sqlGeneric "document_type" (docType "doc")
