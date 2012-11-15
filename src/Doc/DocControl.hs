@@ -113,7 +113,8 @@ newDocumentOrLatestDraft :: Kontrakcja m => m KontraLink
 newDocumentOrLatestDraft = withUserPost $ do
   ctx <- getContext
   user <- guardJustM $ ctxmaybeuser <$> getContext
-  docs <- dbQuery $ GetDocuments [DocumentsOfAuthor (userid user)] [DocumentFilterStatuses [Preparation], DocumentFilterDeleted False]  [Desc DocumentOrderByMTime] (DocumentPagination 0 1)
+  docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid user)] 
+                      [DocumentFilterStatuses [Preparation], DocumentFilterDeleted False, DocumentFilterLinkIsAuthor True]  [Desc DocumentOrderByMTime] (DocumentPagination 0 1)
   case docs of
        [d] -> return $ LinkIssueDoc (documentid d)
        _ -> do
