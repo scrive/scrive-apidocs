@@ -1870,12 +1870,12 @@ testGetDocumentsByCompanyWithFilteringFilters = doTimes 10 $ do
   author <- addNewRandomUser
   _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
   Just author' <- dbQuery $ GetUserByID (userid author)
-  _ <- addRandomDocumentWithAuthor author'
+  did <- addRandomDocumentWithAuthor author'
   docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByTags [DocumentTag name value]] [] (DocumentPagination 0 maxBound)
   docs' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [] [] (DocumentPagination 0 maxBound)
   validTest $ do
     assertEqual "Should have no documents returned" docs []
-    assertEqual "Should have 1 document returned" (length docs') 1
+    assertEqual "Should have 1 document returned" [did] (map documentid docs')
 
 
 testGetDocumentsByCompanyWithFilteringFinds :: TestEnv ()
@@ -1892,8 +1892,8 @@ testGetDocumentsByCompanyWithFilteringFinds = doTimes 10 $ do
   docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByTags [DocumentTag name value]] [] (DocumentPagination 0 maxBound)
   docs' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [] [] (DocumentPagination 0 maxBound)
   validTest $ do
-    assertEqual "Should have one document returned" 1 (length docs)
-    assertEqual "Should have one document returned" 1 (length docs')
+    assertEqual "Should have one document returned" [did] (map documentid docs)
+    assertEqual "Should have one document returned" [did] (map documentid docs')
 
 testGetDocumentsByCompanyWithFilteringFindsMultiple :: TestEnv ()
 testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
@@ -1917,11 +1917,11 @@ testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
     docs''' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [] [] (DocumentPagination 0 maxBound)
     docs'''' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByTags [DocumentTag name1 value1, DocumentTag name2 value2, DocumentTag name3 value3]] [] (DocumentPagination 0 maxBound)
     validTest $ do
-      assertEqual "Should have one document returned" 1 (length docs)
-      assertEqual "Should have one document returned" 1 (length docs')
-      assertEqual "Should have one document returned" 1 (length docs'')
-      assertEqual "Should have one document returned" 1 (length docs''')
-      assertEqual "Should have zero documents returned" 0 (length docs'''')
+      assertEqual "Should have one document returned" [did] (map documentid docs)
+      assertEqual "Should have one document returned" [did] (map documentid docs')
+      assertEqual "Should have one document returned" [did] (map documentid docs'')
+      assertEqual "Should have one document returned" [did] (map documentid docs''')
+      assertEqual "Should have zero documents returned" [] (map documentid docs'''')
    else return Nothing
 
 testGetDocumentsByAuthorFiltering :: TestEnv ()
