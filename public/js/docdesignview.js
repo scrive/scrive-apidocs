@@ -758,9 +758,9 @@ var DocumentDesignView = Backbone.View.extend({
             size : "big",
             color : "black",
             width: 300,
-            text: localization.buyAvtal24Template,
+            text: localization.avtal24.buy,
             onClick : function () {
-                window.location = "https://avtal24.se/scrive";
+               new Avtal24Popup();
             }
         });
         return button.input();
@@ -770,20 +770,17 @@ var DocumentDesignView = Backbone.View.extend({
         var box = $("<div class='document-pages '/>");
         var subbox = $("<div class='nofilediv'/>");
         var subsubbox = $("<div class='innerbox'/>");
-        var buttonbox = $("<div class='button-box'/>");
-        {
-          subsubbox.append($("<div class='inner-description-main'/>").html(localization.nofiletext));
-        }
-        buttonbox.append($(this.uploadFile()).css("float","left")).append($(this.fromAvtal()).css("float","right"))
-        subsubbox.append(buttonbox);
+        subsubbox.append($("<div class='inner-description-left'/>")
+                                        .append($("<span/>").text(localization.nofiletext))
+                                        .append($("<div class='button-box'/>").append($(this.uploadFile()).append("<BR/>").append($(this.fromAvtal())))));
+
         
         if (! this.model.isTemplate()) {
-          var text = localization.designview.saveAsTemplateLongDescription;
-          subsubbox.append($("<div class='inner-description-extra'/>").html(text));
+          var text = localization.designview.saveAsTemplateDescription;
           var saveAsTemplateButton = Button.init({
                                  color : "black",
-                                 size :  "small",
-                                 width : 150,
+                                 size :  "big",
+                                 width : 300,
                                  text :  localization.saveAsTemplate,
                                  onClick : function() {
                                     document.makeTemplate();
@@ -792,7 +789,9 @@ var DocumentDesignView = Backbone.View.extend({
                                         new Submit().send();
                                     });
                                 }});
-          subsubbox.append($("<div class='single-button-box'/>").append(saveAsTemplateButton.input()));
+          subsubbox.append($("<div class='inner-description-right'/>")
+                                .append($("<span/>").text(text))
+                                .append($("<div class='button-box'/>").append(saveAsTemplateButton.input())));
         };
         box.append(subbox.append(subsubbox));
         return box;
