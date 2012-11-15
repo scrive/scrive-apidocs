@@ -151,7 +151,7 @@ instance MonadDB m => DBQuery m GetAttachments [Attachment] where
   query (GetAttachments domains filters orderbys _pagination) = do
     kRun_ $ sqlSelect "attachments" $ do
       sqlAttachmentResults
-      sqlWhereOr (map domainToSQLCommand domains)
+      sqlWhereAny (mapM_ (sqlWhere . domainToSQLCommand) domains)
       mapM_ sqlWhereAttachmentFilter filters
       mapM_ (sqlOrderBy . orderToSQLCommand) orderbys
     fetchAttachments

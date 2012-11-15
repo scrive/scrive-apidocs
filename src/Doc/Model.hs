@@ -1383,7 +1383,7 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
         sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id OR users.id = same_company_users.id"
 
         sqlWhere "NOT signatory_links.really_deleted"
-        sqlWhereOr (map documentDomainToSQL domains)
+        sqlWhereAny (mapM_ (sqlWhere . documentDomainToSQL) domains)
         mapM_ documentFilterToSQL filters
         mapM_ (sqlOrderBy . documentOrderByAscDescToSQL) orderbys
         sqlOffset $ fromIntegral (documentOffset pagination)

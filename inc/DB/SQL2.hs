@@ -65,7 +65,6 @@ module DB.SQL2
   , sqlWhereNotEq
   , sqlWhereIn
   , sqlWhereNotIn
-  , sqlWhereOr
   , sqlWhereExists
   , sqlWhereLike
   , sqlWhereILike
@@ -95,6 +94,12 @@ module DB.SQL2
   , SqlUpdate(..)
   , sqlDelete
   , SqlDelete(..)
+
+  , SqlAny(..)
+  , sqlWhereAny
+
+  , SqlAll(..)
+  , sqlWhereAll
 
   , SqlResult
   , SqlFrom
@@ -147,6 +152,14 @@ data SqlDelete = SqlDelete
   , sqlDeleteWhere   :: [SQL]
   } deriving (Eq, Typeable)
 
+data SqlAny = SqlAny
+  { sqlAnyWhere :: [SQL]
+  }
+
+data SqlAll = SqlAll
+  { sqlAllWhere :: [SQL]
+  }
+
 instance Show SqlSelect where
   show = show . toSQLCommand
 
@@ -158,6 +171,13 @@ instance Show SqlUpdate where
 
 instance Show SqlDelete where
   show = show . toSQLCommand
+
+instance Show SqlAll where
+  show = show . toSQLCommand
+
+instance Show SqlAny where
+  show = show . toSQLCommand
+
 
 emitClause :: IsSQL sql => RawSQL -> sql -> SQL
 emitClause name s = case toSQLCommand s of
@@ -212,6 +232,14 @@ instance IsSQL SqlDelete where
     "DELETE FROM" <+> raw (sqlDeleteFrom cmd) `mappend`
         emitClausesSep "WHERE" "AND" (sqlDeleteWhere cmd)
 
+instance IsSQL SqlAny where
+  toSQLCommand cmd =
+    "(" <+> intersperse "OR" (map parenthesize (sqlAnyWhere cmd)) <+> ")"
+
+instance IsSQL SqlAll where
+  toSQLCommand cmd =
+    "(" <+> intersperse "AND" (map parenthesize (sqlAllWhere cmd)) <+> ")"
+
 
 sqlSelect :: RawSQL -> State SqlSelect () -> SqlSelect
 sqlSelect table refine =
@@ -241,13 +269,14 @@ instance SqlWhere SqlUpdate where
 instance SqlWhere SqlDelete where
   sqlWhere1 cmd sql = cmd { sqlDeleteWhere = sqlDeleteWhere cmd ++ [sql] }
 
+instance SqlWhere SqlAny where
+  sqlWhere1 cmd sql = cmd { sqlAnyWhere = sqlAnyWhere cmd ++ [sql] }
+
+instance SqlWhere SqlAll where
+  sqlWhere1 cmd sql = cmd { sqlAllWhere = sqlAllWhere cmd ++ [sql] }
+
 sqlWhere :: (MonadState v m, SqlWhere v) => SQL -> m ()
 sqlWhere sql = modify (\cmd -> sqlWhere1 cmd sql)
-
-sqlWhereOr :: (MonadState v m, SqlWhere v) => [SQL] -> m ()
-sqlWhereOr [] = sqlWhere (SQL "FALSE" [])
-sqlWhereOr [sql] = sqlWhere sql
-sqlWhereOr sqls = sqlWhere $ parenthesize $ sqlConcatOR sqls
 
 sqlWhereEq :: (MonadState v m, SqlWhere v, Convertible a SqlValue) => SQL -> a -> m ()
 sqlWhereEq name value = sqlWhere $ name <+> "=" <?> value
@@ -275,9 +304,16 @@ sqlWhereNotIn name values = sqlWhere $ name <+> "NOT IN" <+> parenthesize (sqlCo
 sqlWhereExists :: (MonadState v m, SqlWhere v) => SqlSelect -> m ()
 sqlWhereExists sqlSelectD = do
   sqlWhere (SQL "EXISTS (" [] `mappend` toSQLCommand (sqlSelectD { sqlSelectResult = [SQL "TRUE" []] }) `mappend` SQL ")" [])
-  
+
 sqlWhereIsNULL :: (MonadState v m, SqlWhere v) => SQL -> m ()
 sqlWhereIsNULL col = sqlWhere $ col <+> "IS NULL"
+
+sqlWhereAny :: (MonadState v m, SqlWhere v) => State SqlAny () -> m ()
+sqlWhereAny = sqlWhere . toSQLCommand . flip execState (SqlAny [])
+
+sqlWhereAll :: (MonadState v m, SqlWhere v) => State SqlAll () -> m ()
+sqlWhereAll = sqlWhere . toSQLCommand . flip execState (SqlAll [])
+
 
 class SqlFrom a where
   sqlFrom1 :: a -> SQL -> a
