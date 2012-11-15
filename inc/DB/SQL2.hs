@@ -233,10 +233,12 @@ instance IsSQL SqlDelete where
         emitClausesSep "WHERE" "AND" (sqlDeleteWhere cmd)
 
 instance IsSQL SqlAny where
+  toSQLCommand cmd | null (sqlAnyWhere cmd) = "FALSE"
   toSQLCommand cmd =
     "(" <+> intersperse "OR" (map parenthesize (sqlAnyWhere cmd)) <+> ")"
 
 instance IsSQL SqlAll where
+  toSQLCommand cmd | null (sqlAllWhere cmd) = "TRUE"
   toSQLCommand cmd =
     "(" <+> intersperse "AND" (map parenthesize (sqlAllWhere cmd)) <+> ")"
 
