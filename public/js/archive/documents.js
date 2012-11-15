@@ -23,7 +23,51 @@ window.DocumentCellsDefinition = function(archive) { return  [
         new Cell({width:"5px" }),
         new Cell({name: localization.archive.documents.columns.party, width:"190px", field:"party", special: "expandable", subfield : "name"}),
         new Cell({width:"5px" }),
-        new Cell({name: localization.archive.documents.columns.title, width:"240px", field:"title",  special: "link"}),
+        new Cell({name: localization.archive.documents.columns.title, width:"240px", substyle: "", field:"id",special: "rendered",
+                 rendering: function(value,idx,listobject) {
+                    if (idx == undefined)
+                       {
+                            return $("<a/>").text(listobject.field("title")).attr("href",listobject.link());
+                       }
+                    //For pad we show extra icon    
+                    if (listobject.field("delivery") == "pad" &&
+                          (listobject.field("status") == "sent" ||
+                           listobject.field("status") == "delivered" ||
+                           listobject.field("status") == "read" ||
+                           listobject.field("status") == "opened" ||
+                           listobject.field("status") == "signed"                           
+                          ))                     
+                      {
+                        var actionIcon = $("<a class='actionIcon'/>");
+                        if (listobject.field("inpadqueue") == "true" && listobject.subfield(idx,"inpadqueue") == "true")
+                            {
+                                actionIcon.addClass("removefromqueue");
+                                ToolTip.set({on: actionIcon,  tip : localization.pad.removeFromPadQueue});
+                                actionIcon.click(function() {
+                                    new Submit({
+                                        url: "/padqueue/clear" ,
+                                        method: "POST"
+                                    }).sendAjax(function() { LoadingDialog.close(); archive.documents().recall(); });
+                                return false;
+                                });
+                            }
+                        else
+                            {
+                                actionIcon.addClass("addtoqueue");
+                                ToolTip.set({on: actionIcon, tip : localization.pad.addToPadQueue});
+                                actionIcon.click(function() {
+                                LoadingDialog.open();
+                                new Submit({
+                                        url: "/padqueue/add/"+ listobject.field("id") + "/" +  listobject.subfield(idx,"id") ,
+                                        method: "POST"
+                                    }).sendAjax(function() { LoadingDialog.close(); archive.documents().recall(); });
+                                return false;
+                                });
+                            }
+                        return actionIcon;
+                     }
+     
+                 }}),
         new Cell({width:"5px" }),
         new Cell({name: localization.archive.documents.columns.type, width:"40px", field:"process",
                   rendering: function(value, _idx, _model) {

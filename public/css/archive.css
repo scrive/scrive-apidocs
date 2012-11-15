@@ -19,14 +19,14 @@
         width: 14px;
 }
 
-.paddevicearchive .actionIcon.removefromqueue{
+.actionIcon.removefromqueue{
         background-image: url(../img/icon-delete.png);
         float: left;
         height: 16px;
         width: 16px;
 }
 
-.paddevicearchive .actionIcon.addtoqueue{
+.actionIcon.addtoqueue{
         background-image: url(../img/foreward.png);
         float: left;
         height: 14px;
