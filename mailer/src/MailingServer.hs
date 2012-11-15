@@ -36,7 +36,7 @@ main = Log.withLogger $ do
   E.bracket (do
     tg <- TG.new
     let (iface, port) = mscHttpBindAddress conf
-        handlerConf = nullConf { port = fromIntegral port, threadGroup = Just tg }
+        handlerConf = nullConf { port = fromIntegral port }
         sender = createSender $ mscMasterSender conf
         (routes, overlaps) = R.compile handlers
         dbconf = mscDBConfig conf
