@@ -154,9 +154,9 @@ renderTemplateAsPage ctx templateName mpubliclink showCreateAccount = do
   let showCreateAccount2 = showCreateAccount && (isNothing $ ctxmaybeuser ctx)
   wholePage <- renderTemplate templateName $ do
     contextInfoFields ctx
-    mainLinksFields $ ctxlocale ctx
-    staticLinksFields $ ctxlocale ctx
-    localeSwitcherFields ctx mpubliclink
+    mainLinksFields $ ctxlang ctx
+    staticLinksFields $ ctxlang ctx
+    langSwitcherFields ctx mpubliclink
     loginModal (loginOn && null (filter isModal $ ctxflashmessages ctx)) loginreferer Nothing
     F.value "staticResources" $ SR.htmlImportList "firstPage" (ctxstaticresources ctx)
     F.value "showCreateAccount" showCreateAccount2
@@ -224,6 +224,7 @@ firstPage ctx loginOn referer email = renderTemplate "firstPage" $ do
   staticLinksFields $ ctxlang ctx
   langSwitcherFields ctx (Just LinkHome)
   loginModal (loginOn && null (filter isModal $ ctxflashmessages ctx)) referer email
+  F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
   F.value "staticResources" $ SR.htmlImportList "firstPage" (ctxstaticresources ctx)
 
 {- |

@@ -14,6 +14,7 @@ ignore  api-demo
 
 
 set firstPage
+ css css/style.css
  css css/main.css
  css css/flash.css
  css css/symbols.css
@@ -43,6 +44,7 @@ set firstPage
  js  libs/recurly.js
  js  js/payments.js
  js  js/login.js
+ js  js/blocking.js
 
 set systemPage
  css css/newdesign.css

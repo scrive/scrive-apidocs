@@ -7,8 +7,8 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 <meta http-equiv="content-language" content="$ctxlang$" />
                 <meta name="description" content="$_firstPageMetaDescription()$" />
                 <link href='https://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
-                $staticResources:noescape()$
                 <script src="/localization/$ctxlang$/$versioncode$.js"  type="text/javascript"></script>
+                $staticResources:noescape()$
         </head>
         <body>
                 $flashmessages()$
