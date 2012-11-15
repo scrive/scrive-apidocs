@@ -13,7 +13,6 @@
 module Util.SignatoryLinkUtils (
 
   isSigLinkFor,
-  isSigLinkSavedFor,
   getAuthorSigLink,
   getAuthorName,
   isUndelivered,
@@ -216,17 +215,6 @@ getSignatoryPartnerLinks = filterSigLinksFor (signatoryispartner . signatorydeta
 hasUser :: (MaybeSignatoryLink a) => a -> Bool
 hasUser msl = maybe False (isJust . maybesignatory) (getMaybeSignatoryLink msl)
 
-{- |
-    This is counts a user as being for the signatory link
-    if the userid is mentioned on the sig link, or if the user
-    is an admin for a company that is mentioned on the sig link.
-    The idea of this function is to be used when we need to be a bit
-    more strict that just isSigLinkFor, as in particular isSigLinkFor
-    would link by email.
--}
-isSigLinkSavedFor :: User -> SignatoryLink -> Bool
-isSigLinkSavedFor User{userid} sl =
-  isSigLinkFor userid sl
 
 {- |
    Does i identify sl?
