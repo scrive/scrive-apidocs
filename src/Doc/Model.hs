@@ -128,25 +128,48 @@ data DocumentPagination =
   , documentLimit  :: Int        -- ^ use for SQL LIMIT command
   }
 
+-- | Document filtering options
+--
+-- Each of these options should narrow down set of documents that are
+-- visible. Most have some relation to some features of either the
+-- document itself or to a signatory link that makes the document
+-- available to see.
+--
+-- This is important: it is not only about document, it is also about
+-- the route we got to the document, i. e. signatory_links!.
 data DocumentFilter
   = DocumentFilterStatuses [DocumentStatus]   -- ^ Any of listed statuses
   | DocumentFilterByStatusClass [StatusClass] -- ^ Any of listed status classes
-  | DocumentFilterByTags [DocumentTag]        -- ^ All of listed tags
-  | DocumentFilterMinChangeTime MinutesTime   -- ^ Minimal mtime
-  | DocumentFilterMaxChangeTime MinutesTime   -- ^ Maximum mtime
+  | DocumentFilterByTags [DocumentTag]        -- ^ All of listed tags (warning: this is ALL tags)
+  | DocumentFilterMinChangeTime MinutesTime   -- ^ Where mtime is at least the one specified
+  | DocumentFilterMaxChangeTime MinutesTime   -- ^ Where mtime is at most the one specified
   | DocumentFilterByProcess [DocumentProcess] -- ^ Any of listed processes
   | DocumentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
   | DocumentFilterByDelivery DeliveryMethod   -- ^ Only documents that use selected delivery method
   | DocumentFilterByMonthYearFrom (Int,Int)   -- ^ Document time after or in (month,year)
   | DocumentFilterByMonthYearTo   (Int,Int)   -- ^ Document time before or in (month,year)
   | DocumentFilterByAuthor UserID             -- ^ Only documents created by this user
-  | DocumentFilterByDocumentID DocumentID     -- ^ Only documents created by this user
+  | DocumentFilterByDocumentID DocumentID     -- ^ Document by specific ID
   | DocumentFilterSignable                    -- ^ Document is signable
   | DocumentFilterTemplate                    -- ^ Document is template
   | DocumentFilterDeleted Bool                -- ^ Only deleted (=True) or non-deleted (=False) documents
-  | DocumentFilterLinkIsAuthor Bool           -- ^ Only documents created by this user
-  | DocumentFilterLinkIsPartner Bool          -- ^ Only documents created by this user
+  | DocumentFilterLinkIsAuthor Bool           -- ^ Only documents visible by signatory_links.is_author equal to param
+  | DocumentFilterLinkIsPartner Bool          -- ^ Only documents visible by signatory_links.is_partner equal to param
   deriving Show
+
+-- | Document security domain.
+--
+-- This data type should be regarder our most precious and important
+-- security measure against unarthorized document access. When using
+-- `GetDocuments` or derivatives we should always specify on whose
+-- behalf are we acting upon a document. If we have user id then using
+-- `DocumentsVisibleToUser` ensures that we are touching only
+-- documents that we are allowed to touch and nothing else.
+--
+-- I wonder if we should refactor `DocumentDomain` into specialized
+-- functions like GetDocumentsVisibleToUser [DocumentFilter]
+-- [DocumentOrderBy] Pagination. For now it is `GetDocuments` and
+-- parameters.
 data DocumentDomain
   = DocumentsOfWholeUniverse                     -- ^ All documents in the system. Only for admin view.
   | DocumentsVisibleToUser UserID                -- ^ Documents that a user has possible access to
