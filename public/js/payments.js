@@ -231,6 +231,19 @@
         quantity: function() {
             return this.get('quantity');
         },
+        isAdmin : function() {
+            return this.get('is_admin');
+        },
+        hasCompany : function() {
+            return this.get('has_company');
+        },
+        canPurchase : function() {
+            if(!this.hasCompany())
+                return true;
+            if(this.isAdmin())
+                return true;
+            return false;
+        },
         url: function() {
             return "/payments/pricepageinfo";
         },
@@ -425,8 +438,16 @@
                                             });
                         work = true;
                     }
-                } else if(data.user_exists && !data.has_plan) {
-                    // charge the existing account
+                } else if(data.user_exists && !data.has_plan && data.has_company && !data.is_admin) {
+                    LoadingDialog.close();
+                    var popup = Confirmation.popup({
+                        title: localization.payments.mustBeAdmin,
+                        content: $('<p />').text(localization.payments.contactAdmin),
+                        onAccept: function() {
+                            popup.view.clear();
+                        }
+                    });
+                } else if(data.user_exists && !data.has_plan && data.has_company && data.is_admin) {
                     LoadingDialog.close();
                     if(work) {
                         work = false;
@@ -458,12 +479,16 @@
                                               if(model.type() === 'user') {
                                                   handlechargeaccount({
                                                       'user_exists' : true,
-                                                      'has_plan' : false
+                                                      'has_plan' : false,
+                                                      'has_company' : model.hasCompany(),
+                                                      'is_admin' : model.isAdmin()
                                                   });
                                               } else if(model.type() === 'plan' || model.type() == 'plannone') {
                                                   handlechargeaccount({
                                                       'user_exists' : true,
-                                                      'has_plan' : true
+                                                      'has_plan' : true,
+                                                      'has_company' : model.hasCompany(),
+                                                      'is_admin' : model.isAdmin()
                                                   });
                                               } else { // not logged in, so we have to check
                                                   model.checkuserexists(model.email(),
@@ -538,6 +563,12 @@
 
             if(model.accountCreated()) {
                 view.$el.children().detach();
+                return false;
+            }
+
+            if(model.type() === 'user' && !model.canPurchase()) {
+                view.element.text(localization.payments.contactAdmin);
+                view.element.addClass('contact-admin');
                 return false;
             }
 
@@ -647,7 +678,9 @@
                 .append(view.enterpriseBox.el);
 
             div.append($('<div class="clearfix" />'));
-            div.append($('<h3 />').text(localization.payments.paywithcard));
+            if(!(model.type() === 'user' && !model.canPurchase())) {
+                div.append($('<h3 />').text(localization.payments.paywithcard));
+            }
 
             div.append(view.recurlyForm.el);
             
@@ -869,6 +902,7 @@
                                                text:localization.payments.savechanges,
                                                onClick: function() {
                                                    if(work) {
+                                                       LoadingDialog.open(localization.payments.savingsubscription);
                                                        work = false;
                                                        $('.changebilling-form form').submit();
                                                        work = true;
@@ -881,7 +915,9 @@
                  addressRequirement: 'none',
                  successHandler: function(stuff) {
                      model.fetch({success: function() {
+                         LoadingDialog.close();
                          model.trigger('fetch');
+                         FlashMessages.add({ content: localization.payments.billingInfoSaved, color: "green"});
                      }});
                  }
                 }
@@ -898,11 +934,11 @@
                                       cssClass: 'cancel-button',
                                       text: localization.payments.cancelsubscription,
                                       onClick: function() {
-                                          var message = localization.payments.changeconfirm;
+                                          var message = localization.payments.cancelDialog;
                                           
                                           var conf = Confirmation.popup({
-                                              title: localization.payments.changeaccount,
-                                              acceptText: localization.payments.changeaccount,
+                                              title: localization.payments.cancelsubscription,
+                                              acceptText: localization.payments.cancelsubscription,
                                               content: $('<p />').text(message),
                                               submit: new Submit({url: "/payments/changeplan",
                                                                   method: "POST",
@@ -910,12 +946,86 @@
                                                                   ajax: true,
                                                                   ajaxsuccess: function() {
                                                                       model.fetch({success:function() {
+                                                                          LoadingDialog.close();
                                                                           model.trigger('fetch');
+                                                                          FlashMessages.add({color:'green', content: localization.blocking.willcancel.headline.replace('XX', Math.ceil(moment.duration(model.subscription().billingEnds() - moment()).asDays())) });
                                                                       }});
                                                                   },
                                                                   onSend: function() {
                                                                       conf.view.clear();
-                                                                      LoadingDialog.open(localization.payments.savingsubscription);
+                                                                      LoadingDialog.open(localization.payments.cancelingSubscription);
+                                                                  }
+                                                                 })
+                                          });
+                                          return false;
+                                      }
+                                     });
+            return button.input();
+        }
+    });
+
+    var RewnewSubscriptionView = Backbone.View.extend({
+        className: 'col',
+        initialize: function(args) {
+            var view = this;
+            view.model = args.model;
+            _.bindAll(this);
+            view.model.bind('fetch', this.render);
+        },
+        render: function() {
+            var view = this;
+            var model = view.model;
+            var $el = $(view.el);
+            
+            var billing = $('<div class="col" />');
+            var billingheader = $('<div class="account-header" />')
+                .append($('<h2 />')
+                        .text(localization.payments.renewSubscription));
+            var billingform = $('<div class="account-body renew-form" />');
+
+            var canceledDate = model.subscription() && model.subscription().cancelled() && new Date(model.subscription().cancelled());
+
+            var message;
+            if(canceledDate)
+                message = localization.payments.canceledDate.replace('X1', moment(canceledDate).format("YYYY-MM-DD"));
+            else 
+                message = localization.payments.wasCanceled;
+            billingform.text(message);
+            //billingform.append(view.renewButton());
+            $el.html($().add(billingheader).add(billingform).add(view.renewButton()));
+        },
+        renewButton: function() {
+            var view = this;
+            var model = view.model;
+
+            var price = model.quantity() * 299 + "kr";
+
+            var button = Button.init({color:'green',
+                                      size: 'small',
+                                      cssClass: 'renew-button',
+                                      text: localization.payments.renewSubscription,
+                                      onClick: function() {
+                                          var message = localization.payments.renewDialog.replace("X1", price);
+                                          
+                                          var conf = Confirmation.popup({
+                                              title: localization.payments.renewSubscription,
+                                              acceptText: localization.payments.renewSubscription,
+                                              content: $('<p />').text(message),
+                                              submit: new Submit({url: "/payments/changeplan",
+                                                                  method: "POST",
+                                                                  plan: "team",
+                                                                  ajax: true,
+                                                                  ajaxsuccess: function() {
+                                                                      BlockingInfo.hide();
+                                                                      model.fetch({success:function() {
+                                                                          LoadingDialog.close();
+                                                                          model.trigger('fetch');
+                                                                          FlashMessages.add({color:'green', content: localization.payments.subscriptionRenewed });
+                                                                      }});
+                                                                  },
+                                                                  onSend: function() {
+                                                                      conf.view.clear();
+                                                                      LoadingDialog.open(localization.payments.renewingSubscription);
                                                                   }
                                                                  })
                                           });
@@ -935,6 +1045,7 @@
             view.model.bind('fetch', this.render);
             view.paymentsTable = new InvoicePaymentsView({model:view.model});
             view.changeBillingForm = new ChangeBillingFormView({model:view.model});
+            view.renewSubscription = new RewnewSubscriptionView({model:view.model});
         },
         render: function() {
             var view = this;
@@ -945,8 +1056,13 @@
 
             var col1 = $('<div class="col1" />')
                 .append(view.paymentsTable.el);
-            var col2 = $('<div class="col2" />')
-                .append(view.changeBillingForm.el);
+            
+            var col2 = $('<div class="col2" />');
+
+            if(model.subscription().code() === 'free' || (model.subscription().pending() && model.subscription().pending().code() === 'free'))
+                col2.append(view.renewSubscription.el);
+            else
+                col2.append(view.changeBillingForm.el);
 
             var c = $().add(col1).add(col2);
             $el.html(c);

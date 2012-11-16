@@ -57,7 +57,9 @@ var AccountModel = Backbone.Model.extend({
                         active : window.location.hash == "#details",
                         onActivate : function() {
                             window.location.hash = "details";
-                            account.accountDetails().refresh();}
+                            account.accountDetails().refresh();
+                            BlockingInfo && BlockingInfo.unHide();
+                        }
                     });
   },
 
@@ -69,7 +71,9 @@ var AccountModel = Backbone.Model.extend({
                         active : window.location.hash == "#security",
                         onActivate : function() {
                             window.location.hash = "security";
-                            account.accountSecurity().refresh();}
+                            account.accountSecurity().refresh();
+                            BlockingInfo && BlockingInfo.unHide();
+                        }
                     });
   },
 
@@ -81,7 +85,9 @@ var AccountModel = Backbone.Model.extend({
                         active : window.location.hash == "#company",
                         onActivate : function() {
                             window.location.hash = "company";
-                            account.companySettings().refresh();}
+                            account.companySettings().refresh();
+                            BlockingInfo && BlockingInfo.unHide();
+                        }
                     });
   },
 
@@ -93,7 +99,9 @@ var AccountModel = Backbone.Model.extend({
                         active : window.location.hash == "#users",
                         onActivate : function() {
                             window.location.hash = "users";
-                            account.companyAccounts().refresh();}
+                            account.companyAccounts().refresh();
+                            BlockingInfo && BlockingInfo.unHide();
+                        }
                     });
   },
 
@@ -106,7 +114,9 @@ var AccountModel = Backbone.Model.extend({
                         active : window.location.hash == "#mailapi",
                         onActivate : function() {
                             window.location.hash = "mailapi";
-                            account.mailAPI().refresh();}
+                            account.mailAPI().refresh();
+                            BlockingInfo && BlockingInfo.unHide();
+                        }
                     });
   },
   statsTab : function() {
@@ -117,7 +127,9 @@ var AccountModel = Backbone.Model.extend({
                         active : window.location.hash == "#stats",
                         onActivate : function() {
                             window.location.hash = "stats";
-                            account.stats().refresh();}
+                            account.stats().refresh();
+                            BlockingInfo && BlockingInfo.unHide();
+                        }
                     });
   },
   subscriptionTab : function() {
@@ -128,7 +140,9 @@ var AccountModel = Backbone.Model.extend({
                         active : window.location.hash == "#subscription",
                         onActivate : function() {
                             window.location.hash = "subscription";
-                            account.subscription().refresh();}
+                            account.subscription().refresh();
+                            BlockingInfo && BlockingInfo.hide();
+                        }
                     });
   }
   

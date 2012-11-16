@@ -371,6 +371,8 @@ handlePricePageUserJSON user = do
     J.value "email" $ getEmail user
     J.value "quantity" quantity
     J.value "companyName" $ getCompanyName (user, mcompany)    
+    J.value "has_company" $ isJust $ usercompany user
+    J.value "is_admin" $ useriscompanyadmin user
     J.object "plans" $ do
       J.object "team" $ do
         J.value "signature" teamsig
@@ -418,6 +420,8 @@ handleUserExists = do
   runJSONGenT $ do
     J.value "user_exists" $ isJust muser
     J.value "has_plan"    $ isJust mplan
+    J.value "is_admin"    $ maybe False useriscompanyadmin muser
+    J.value "has_company" $ maybe False (isJust . usercompany) muser
     
 handleCreateUser :: Kontrakcja m => m JSValue
 handleCreateUser = do
