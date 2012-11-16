@@ -249,23 +249,35 @@ documentOrderByAscDescToSQL (Desc x) = documentOrderByToSQL x <> SQL " DESC" []
 -- Document visibility rules:
 --
 -- A document is either signable or template.
--- Documents with really_deleted flag set are never seen by anybody.
+--
+-- Any of number points must be true, all of letter subpoints must be
+-- true.
+--
+-- Visibility rules:
 --
 -- 1. User can see her own authored documents.
--- 2. User can see a signable document when:
---     a. was invited to sign
+-- 2. User can see a document when:
+--     a. document is signable
 --     b. document is not in Preparation
---     c. sign order says it is ok to see
--- 3. User can see a signable document when:
---     a. was invited to view
+--     c. was invited to sign (is_partner = TRUE)
+--     d. sign order says it is ok to see
+-- 3. User can see a document when:
+--     a. document is signable
 --     b. document is not in Preparation
--- 4. User can see a template document when:
---     a. author is in the same company
---     b. document has company sharing set
--- 5. User can see a signable documents when
+--     c. was invited to view (is_partner = FALSE)
+-- 4. User can see a document when:
+--     a. document is template
+--     b. author is in the same company
+--     c. document has company sharing set
+-- 5. User can see a document when:
 --     a. user is company admin
 --     b. there is another user in the same company that can see the document
 --     c. document is not in preparation state
+--
+-- A really_deleted document is never shown.
+--
+-- To do anything with document a user has at least see it. Usually
+-- more strict rules apply.
 documentDomainToSQL :: (MonadState v m, SqlWhere v)
                     => DocumentDomain
                     -> m ()
@@ -274,23 +286,32 @@ documentDomainToSQL (DocumentsOfWholeUniverse) = do
 documentDomainToSQL (DocumentsVisibleToUser uid) = sqlWhereAll $ do
   sqlWhereEq "same_company_users.id" uid
   sqlWhereAny $ do
-    sqlWhereAll $ do
-      sqlWhere "(same_company_users.is_company_admin OR users.id = same_company_users.id)"                -- 1.
+    sqlWhereAll $ do           -- 1: see own documents
+      sqlWhere "users.id = same_company_users.id"
       sqlWhere "signatory_links.is_author"
-    sqlWhereAll $ do
-      sqlWhere "(same_company_users.is_company_admin OR users.id = same_company_users.id)"              -- 2a, 3a.
-      sqlWhereNotEq "documents.status" Preparation        -- 2b, 3b
-      sqlWhereEq "documents.type" $ Signable undefined    -- 2a, 3a
-      sqlWhere $ "(NOT signatory_links.is_partner"             -- 2c, 3
-              <+> "OR NOT EXISTS (SELECT 1 FROM signatory_links AS earlier_signatory_links"
-              <+>                 "WHERE signatory_links.document_id = earlier_signatory_links.document_id"
-              <+>                   "AND earlier_signatory_links.is_partner"
-              <+>                   "AND earlier_signatory_links.sign_time IS NULL"
-              <+>                   "AND earlier_signatory_links.sign_order < signatory_links.sign_order))"
-    sqlWhereAll $ do
+    sqlWhereAll $ do           -- 2. see signables as partner
+      sqlWhere "users.id = same_company_users.id"
+      sqlWhereNotEq "documents.status" Preparation
+      sqlWhereEq "documents.type" $ Signable undefined
+      sqlWhere "signatory_links.is_partner"
+      sqlWhereNotExists $ sqlSelect "signatory_links AS earlier_signatory_links" $ do
+                            sqlWhere "signatory_links.document_id = earlier_signatory_links.document_id"
+                            sqlWhere "earlier_signatory_links.is_partner"
+                            sqlWhere "earlier_signatory_links.sign_time IS NULL"
+                            sqlWhere "earlier_signatory_links.sign_order < signatory_links.sign_order"
+    sqlWhereAll $ do           -- 3. see signables as viewer
+      sqlWhere "users.id = same_company_users.id"
+      sqlWhereNotEq "documents.status" Preparation
+      sqlWhereEq "documents.type" $ Signable undefined
+      sqlWhere "NOT signatory_links.is_partner"
+    sqlWhereAll $ do           -- 4. see shared templates
       sqlWhereEq "documents.sharing" Shared
-      sqlWhereEq "documents.type" $ Template undefined    -- 4
-      sqlWhere "signatory_links.is_author"                   --
+      sqlWhereEq "documents.type" $ Template undefined
+      sqlWhere "signatory_links.is_author"
+    sqlWhereAll $ do           -- 5: see documents of subordinates
+      sqlWhere "same_company_users.is_company_admin"
+      sqlWhere "signatory_links.is_author"
+      sqlWhereNotEq "documents.status" Preparation
 
 maxselect :: SQL
 maxselect = "(SELECT max(greatest(signatory_links.sign_time"
