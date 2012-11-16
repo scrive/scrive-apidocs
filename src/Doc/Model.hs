@@ -289,7 +289,7 @@ documentDomainToSQL (DocumentsVisibleToUser uid) =
       sqlWhereEq "signatory_links.user_id" uid
       sqlWhere "signatory_links.is_author"
     sqlWhereAll $ do           -- 2. see signables as partner
-      sqlWhereEq "users.id" uid
+      sqlWhereEq "signatory_links.user_id" uid
       sqlWhereNotEq "documents.status" Preparation
       sqlWhereEq "documents.type" $ Signable undefined
       sqlWhere "signatory_links.is_partner"
