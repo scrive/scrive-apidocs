@@ -287,10 +287,10 @@ documentDomainToSQL (DocumentsVisibleToUser uid) = sqlWhereAll $ do
   sqlWhereEq "same_company_users.id" uid
   sqlWhereAny $ do
     sqlWhereAll $ do           -- 1: see own documents
-      sqlWhere "users.id = same_company_users.id"
+      sqlWhereEq "signatory_links.user_id" uid
       sqlWhere "signatory_links.is_author"
     sqlWhereAll $ do           -- 2. see signables as partner
-      sqlWhere "users.id = same_company_users.id"
+      sqlWhereEq "users.id" uid
       sqlWhereNotEq "documents.status" Preparation
       sqlWhereEq "documents.type" $ Signable undefined
       sqlWhere "signatory_links.is_partner"
@@ -300,7 +300,7 @@ documentDomainToSQL (DocumentsVisibleToUser uid) = sqlWhereAll $ do
                             sqlWhere "earlier_signatory_links.sign_time IS NULL"
                             sqlWhere "earlier_signatory_links.sign_order < signatory_links.sign_order"
     sqlWhereAll $ do           -- 3. see signables as viewer
-      sqlWhere "users.id = same_company_users.id"
+      sqlWhereEq "signatory_links.user_id" uid
       sqlWhereNotEq "documents.status" Preparation
       sqlWhereEq "documents.type" $ Signable undefined
       sqlWhere "NOT signatory_links.is_partner"
