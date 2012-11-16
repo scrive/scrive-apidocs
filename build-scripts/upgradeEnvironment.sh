@@ -55,6 +55,7 @@ cp kontrakcja-$DATE/*.conf kontrakcja
 
 echo "Moving logs"
 mv kontrakcja-$DATE/log kontrakcja
+mv kontrakcja-$DATE/supervisor-log kontrakcja
 
 echo "Deployed. Please check out everything and then manually do:"
 echo ""
