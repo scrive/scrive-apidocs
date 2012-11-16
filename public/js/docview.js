@@ -505,7 +505,7 @@ window.DocumentStandardView = Backbone.View.extend({
     }
 
     if (document.currentSignatoryCanSign()) {
-      if (document.padDelivery()) {
+      if (document.padDelivery() && document.currentSignatory().signature() != undefined && !document.currentSignatory().signature().hasPlacements()) {
         this.extraDetails = new DocumentSignExtraDetailsSection({model: document.currentSignatory()}).el;
         bottomparts.append(this.extraDetails);
       }  

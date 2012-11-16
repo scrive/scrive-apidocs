@@ -78,6 +78,11 @@ window.FieldPlacement = Backbone.Model.extend({
        this.field().removePlacement(this);
        this.off();
     },
+    fixWHRel : function(w,h) {
+      var page =  this.field().signatory().document().mainfile().page(this.get("page"));
+      if (page != undefined && page.width() != undefined && page.height() != undefined)
+          this.set({ wrel : (w / page.width()) , hrel : (h / page.height()) },    {silent : true});
+    },
     draftData : function() {
       var document = this.field().signatory().document();
       var page = document.mainfile() != undefined ? document.mainfile().page(this.get("page")) : undefined;
