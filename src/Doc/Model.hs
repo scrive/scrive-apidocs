@@ -1288,13 +1288,15 @@ selectDocuments sqlquery = do
     kRunRaw "DROP TABLE docs"
     kRunRaw "DROP TABLE links"
 
-    let sls2 = M.map (map $ \sl -> sl { signatorydetails =
-                                    (signatorydetails sl) { signatoryfields = M.findWithDefault [] (signatorylinkid sl) fields }}) sls
+    let extendSignatoryLinkWithFields sl =
+           sl { signatorydetails = (signatorydetails sl)
+                      { signatoryfields = M.findWithDefault [] (signatorylinkid sl) fields }}
+
 
     let fill doc = doc
-                   { documentsignatorylinks       = M.findWithDefault [] (documentid doc) sls2
-                   , documentauthorattachments    = M.findWithDefault [] (documentid doc) ats
-                   , documenttags                 = M.findWithDefault S.empty (documentid doc) tags
+                   { documentsignatorylinks    = extendSignatoryLinkWithFields <$> M.findWithDefault [] (documentid doc) sls
+                   , documentauthorattachments = M.findWithDefault [] (documentid doc) ats
+                   , documenttags              = M.findWithDefault S.empty (documentid doc) tags
                    }
 
     return $ map fill docs
