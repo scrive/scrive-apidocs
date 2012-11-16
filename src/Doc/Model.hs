@@ -1262,6 +1262,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument Bool where
                 (Just docid)
                 actor
 
+
 selectDocuments :: MonadDB m => SQL -> DBEnv m [Document]
 selectDocuments sqlquery = do
     _ <- kRun $ SQL "CREATE TEMP TABLE docs AS " [] <> sqlquery
@@ -1275,7 +1276,7 @@ selectDocuments sqlquery = do
     _ <- kRun $ SQL "SELECT * FROM links" []
     sls <- fetchSignatoryLinks
 
-    _ <- kRun $ selectSignatoryLinkFieldsSQL <> SQL "WHERE EXISTS (SELECT 1 FROM links WHERE links.id = signatory_link_fields.signatory_link_id) ORDER BY signatory_link_fields.id" []
+    _ <- kRun $ selectSignatoryLinkFieldsSQL <> SQL "WHERE EXISTS (SELECT 1 FROM links WHERE links.id = signatory_link_fields.signatory_link_id) ORDER BY signatory_link_fields.id DESC" []
     fields <- fetchSignatoryLinkFields
 
     _ <- kRun $ selectAuthorAttachmentsSQL <> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE author_attachments.document_id = docs.id) ORDER BY document_id DESC" []
@@ -1288,7 +1289,7 @@ selectDocuments sqlquery = do
     kRunRaw "DROP TABLE links"
 
     let sls2 = M.map (map $ \sl -> sl { signatorydetails =
-                                    (signatorydetails sl) { signatoryfields = reverse $ M.findWithDefault [] (signatorylinkid sl) fields }}) sls
+                                    (signatorydetails sl) { signatoryfields = M.findWithDefault [] (signatorylinkid sl) fields }}) sls
 
     let fill doc = doc
                    { documentsignatorylinks       = M.findWithDefault [] (documentid doc) sls2
