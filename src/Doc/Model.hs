@@ -283,8 +283,7 @@ documentDomainToSQL :: (MonadState v m, SqlWhere v)
                     -> m ()
 documentDomainToSQL (DocumentsOfWholeUniverse) = do
   sqlWhere "TRUE"
-documentDomainToSQL (DocumentsVisibleToUser uid) = sqlWhereAll $ do
-  sqlWhereEq "same_company_users.id" uid
+documentDomainToSQL (DocumentsVisibleToUser uid) =
   sqlWhereAny $ do
     sqlWhereAll $ do           -- 1: see own documents
       sqlWhereEq "signatory_links.user_id" uid
@@ -305,10 +304,12 @@ documentDomainToSQL (DocumentsVisibleToUser uid) = sqlWhereAll $ do
       sqlWhereEq "documents.type" $ Signable undefined
       sqlWhere "NOT signatory_links.is_partner"
     sqlWhereAll $ do           -- 4. see shared templates
+      sqlWhereEq "same_company_users.id" uid
       sqlWhereEq "documents.sharing" Shared
       sqlWhereEq "documents.type" $ Template undefined
       sqlWhere "signatory_links.is_author"
     sqlWhereAll $ do           -- 5: see documents of subordinates
+      sqlWhereEq "same_company_users.id" uid
       sqlWhere "same_company_users.is_company_admin"
       sqlWhere "signatory_links.is_author"
       sqlWhereNotEq "documents.status" Preparation
@@ -1299,6 +1300,9 @@ selectDocuments sqlquery = do
     _ <- kRun $ SQL "SELECT * FROM docs" []
     docs <- reverse `liftM` fetchDocuments
 
+    when (null docs) $ do
+      Log.debug $ "Document query produced zero results:\n" ++ show sqlquery
+
     _ <- kRun $ SQL "CREATE TEMP TABLE links AS " [] <>
          selectSignatoryLinksSQL <>
          SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE signatory_links.document_id = docs.id) ORDER BY document_id DESC, internal_insert_order DESC" []
@@ -1399,18 +1403,18 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
   query (GetDocuments domains filters orderbys pagination) = do
     selectDocuments $ sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
+      mapM_ (sqlOrderBy . documentOrderByAscDescToSQL) orderbys
+      sqlOffset $ fromIntegral (documentOffset pagination)
+      sqlLimit $ fromIntegral (documentLimit pagination)
       sqlWhereExists $ sqlSelect "signatory_links" $ do
         sqlWhere "documents.id = signatory_links.document_id"
         sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
         sqlLeftJoinOn "companies" "users.company_id = companies.id"
-        sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id OR users.id = same_company_users.id"
+        sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id"
 
         sqlWhere "NOT signatory_links.really_deleted"
         sqlWhereAny (mapM_ documentDomainToSQL domains)
         mapM_ documentFilterToSQL filters
-        mapM_ (sqlOrderBy . documentOrderByAscDescToSQL) orderbys
-        sqlOffset $ fromIntegral (documentOffset pagination)
-        sqlLimit $ fromIntegral (documentLimit pagination)
 
 
 {- |
