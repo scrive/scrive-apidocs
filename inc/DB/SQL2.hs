@@ -66,6 +66,7 @@ module DB.SQL2
   , sqlWhereIn
   , sqlWhereNotIn
   , sqlWhereExists
+  , sqlWhereNotExists
   , sqlWhereLike
   , sqlWhereILike
   , sqlWhereIsNULL
@@ -306,6 +307,10 @@ sqlWhereNotIn name values = sqlWhere $ name <+> "NOT IN" <+> parenthesize (sqlCo
 sqlWhereExists :: (MonadState v m, SqlWhere v) => SqlSelect -> m ()
 sqlWhereExists sqlSelectD = do
   sqlWhere (SQL "EXISTS (" [] `mappend` toSQLCommand (sqlSelectD { sqlSelectResult = [SQL "TRUE" []] }) `mappend` SQL ")" [])
+
+sqlWhereNotExists :: (MonadState v m, SqlWhere v) => SqlSelect -> m ()
+sqlWhereNotExists sqlSelectD = do
+  sqlWhere (SQL "NOT EXISTS (" [] `mappend` toSQLCommand (sqlSelectD { sqlSelectResult = [SQL "TRUE" []] }) `mappend` SQL ")" [])
 
 sqlWhereIsNULL :: (MonadState v m, SqlWhere v) => SQL -> m ()
 sqlWhereIsNULL col = sqlWhere $ col <+> "IS NULL"
