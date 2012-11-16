@@ -73,7 +73,7 @@ module Doc.Model
   , UpdateFields(..)
   , SetSigAttachments(..)
   , UpdateDraft(..)
-  , SetDocumentModificationData(..)
+  , SetDocumentModificationDate(..)
   , GetDocsSentBetween(..)
   , FixClosedErroredDocument(..)
   ) where
@@ -2298,9 +2298,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateDraft Bool where
     , update $ SetDocumentAPICallbackURL did (documentapicallbackurl document)
     ]
 
-data SetDocumentModificationData = SetDocumentModificationData DocumentID MinutesTime
-instance MonadDB m => DBUpdate m SetDocumentModificationData Bool where
-  update (SetDocumentModificationData did time) = do
+data SetDocumentModificationDate = SetDocumentModificationDate DocumentID MinutesTime
+instance MonadDB m => DBUpdate m SetDocumentModificationDate Bool where
+  update (SetDocumentModificationDate did time) = do
     kRun01 $ mkSQL UPDATE tableDocuments [sql "mtime" time]
       <> SQL "WHERE id = ?" [toSql did]
 
