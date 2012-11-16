@@ -5,7 +5,7 @@
 $(function(){
 
 window.Avtal24Popup = function() {
-      var content = $("<div/>").append($("<div style='font-size: 14px; font-weight: bold; color: #000000; text-align: center; margin:10px auto'/>").text(localization.avtal24.description));
+      var content = $("<div/>").append($("<div style='font-size: 14px; color: #000000; text-align: left; margin:10px auto 30px'/>").text(localization.avtal24.description));
       content.append('<iframe width="634" height="476" src="https://www.youtube-nocookie.com/embed/Hkm7xzrhYic" frameborder="0" allowfullscreen></iframe>');
       Confirmation.popup({
               content  : content,
