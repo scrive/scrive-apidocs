@@ -53,6 +53,9 @@ tar -C kontrakcja -xzf $1
 echo "Copying config files"
 cp kontrakcja-$DATE/*.conf kontrakcja
 
+echo "Moving logs"
+mv kontrakcja-$DATE/log kontrakcja
+
 echo "Deployed. Please check out everything and then manually do:"
 echo ""
 echo "    supervisorctl start prod prod-mailer prod-cron"
