@@ -1927,8 +1927,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
       Just document ->
         case checkResetSignatoryData document signatories of
           [] -> do
-            kPrepare "DELETE FROM signatory_links WHERE document_id = ?"
-            _ <- kExecute [toSql documentid]
+            kRun_ $ "DELETE FROM signatory_links WHERE document_id = " <?> documentid
 
             let mauthorsiglink = getAuthorSigLink document
             siglinks <- forM signatories $ \(details, atts, mcsvupload, msignredirecturl) -> do
@@ -2262,13 +2261,7 @@ data RemoveDocumentAttachment = RemoveDocumentAttachment DocumentID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m RemoveDocumentAttachment Bool where
   update (RemoveDocumentAttachment did fid actor) = do
     mf <- query (GetFileByFileID fid)
-    kPrepare "DELETE FROM author_attachments WHERE document_id = ? AND file_id = ? AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?)"
-    success <- kExecute01 [
-        toSql did
-      , toSql fid
-      , toSql did
-      , toSql Preparation
-      ]
+    success <- kRun01 $ "DELETE FROM author_attachments WHERE document_id =" <?> did <+> "AND file_id =" <?> fid <+> "AND EXISTS (SELECT 1 FROM documents WHERE id = author_attachments.document_id AND status = " <?> Preparation <+> ")"
     when_ success $
       update $ InsertEvidenceEvent
         RemoveDocumentAttachmentEvidence
