@@ -68,7 +68,9 @@ handleDelete = do
               let usl = (find (isSigLinkFor user) $ documentsignatorylinks doc)
                   csl = (getAuthorSigLink $ documentsignatorylinks doc) <| (useriscompanyadmin user) |> Nothing
                   msl =  usl `mplus` csl
-              when (isNothing msl) internalError
+              when (isNothing msl) $ do
+                Log.debug $ "User #" ++ show (userid user) ++ " has no rights to deleted document #" ++ show did
+                internalError
               case (documentstatus doc) of
                   Pending -> if (isAuthor msl)
                                 then do
