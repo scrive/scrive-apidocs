@@ -38,7 +38,7 @@ mkTimeZoneName s | not (sanityCheck s) = fail $ "mkTimeZoneName: illegal time zo
 sanityCheck :: String -> Bool
 sanityCheck s = case break (=='/') s of
           (as@(_:_),'/':bs) -> all isAlpha as
-                          && all (\b -> isAlphaNum b || b `elem` "+-") bs
+                          && all (\b -> isAlphaNum b || b `elem` "+-_") bs
           _           -> False
 
 withTimeZone :: (MonadDB m, MonadBaseControl IO m)

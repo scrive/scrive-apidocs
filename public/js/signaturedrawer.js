@@ -129,10 +129,6 @@ var SignatureDrawer = Backbone.View.extend({
     yPos : function(e) {
       if (e.changedTouches != undefined && e.changedTouches[0] != undefined) e = e.changedTouches[0];
       var extra = 0;
-      if ($.browser.msie)
-      {
-        extra = $(window).scrollTop();
-      }
       return e.pageY + extra - this.canvas.offset().top;
     },
     initDrawing : function() {
