@@ -2226,6 +2226,49 @@ form {
   display: none;
 }
 
+.docview .section.extradetails {
+    border-color: #999999;
+    border-style: solid;
+    border-width: 1px;
+    background: none repeat scroll 0 0 white;
+    padding-top: 20px;
+}
+.docview .section.extradetails.redborder{
+    border-color: red;
+
+}
+
+.docview .section.extradetails h2 {
+    color: black;
+    float: left;
+    font-size: large;
+    font-weight: normal;
+    margin-bottom: 20px;
+    margin-right: 20px;
+    padding-left: 30px;
+    padding-right: 10px;
+    text-transform: uppercase;
+    width: 220px;
+}
+
+.docview .section.extradetails .descriptionbox {
+    padding-top: 0;
+    float: left;
+    width: 260px;
+    font-family: "Lucida Grande";
+}
+
+.docview .section.extradetails .fillbox {
+    padding-top: 0;
+    float: left;
+    width: 260px;
+    margin-right: 20px;
+}
+
+.docview .section.extradetails .signatureBox.forDrawing {
+   border-width : 0; 
+}
+
 #signViewBottomBox
 {
     /* 002 float: left;*/

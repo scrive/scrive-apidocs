@@ -77,6 +77,11 @@
     border-width: 0px 1px 0px 0px;
 }
 
+.tab-viewer .tabs li.float-right.empty {
+    padding: 0px 0px 0px 0px;
+    height: 60px;
+}
+
 .tab-viewer .tabs li.float-left.active:first-child {
     border-width: 0;
 }

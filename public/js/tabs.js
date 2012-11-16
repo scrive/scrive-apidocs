@@ -200,7 +200,7 @@ var TabsView = Backbone.View.extend({
             tabsrow.append(li);
         });
         if (!hasRight && model.tabsTail() == undefined)
-            tabsrow.append("<li class='float-right'/>");
+            tabsrow.append("<li class='float-right empty'/>");
         if (model.hasTitle())
           this.toprow.append(titlepart);
         else

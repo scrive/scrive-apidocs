@@ -613,6 +613,8 @@ body.signview {
 
 .signview .signatoryattachments .list .item .description {
   font-style: italic;
+  max-width: 360px;
+  overflow: hidden;
 }
 
 .signview .uploadedsignatoryattachments .list {

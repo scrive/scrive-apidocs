@@ -129,6 +129,7 @@ set systemPage
  js   js/signview/docsignview.js
  js   js/signatorydesignview.js
  js   js/docdesignviewpad.js
+ js   js/avtal24popup.js
  js   js/docdesignview.js
  js   js/mobilebankid.js
  js   js/bankid.js

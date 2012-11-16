@@ -1,9 +1,14 @@
+.mainContainer960 .flash-container,
+#top-slim-container .flash-container {
+   height: 100px;
+}
+
 .flash-container {
     background: url(/img/spr-flash-bg.png) 0 -50px repeat-x;
     cursor: pointer;
     -display: none;
     left: 0px;
-    height: 100px;
+    height: 50px;
     position: absolute;
     right: 0;
     top: 0;
@@ -38,9 +43,14 @@
     background-position: 0 -200px;
 }
 
+.mainContainer960 .flash-content,
+#top-slim-container .flash-content{
+  margin: 34px  auto 0;
+}
+
 .flash-content {
 	height: 40px;
-	margin: 34px  auto 0;
+	margin: 9px  auto 0;
 	position: relative;
     left: -8px;
 	width: 960px;
@@ -51,7 +61,7 @@
 	background: url(../img/spr-flash-icons.png);
 	float: left;
 	height: 30px;
-	margin: 1px 40px 0 30px;
+    margin: 1px 40px 0 30px;
 	width: 30px;
 }
 
@@ -81,6 +91,11 @@
 	margin-top: 4px;
 }
 
+.mainContainer960 .flashmsgbox,
+#top-slim-container .flashmsgbox{
+      height: 100px;
+}
+
 .flashmsgbox{
     display: none;
     left: 0;
@@ -88,7 +103,7 @@
     top: 0;
     width: 100%;
     z-index: 10000;
-    height: 100px;
+    height: 50px;
 }
 
 .flash_signingrelated {
@@ -102,30 +117,23 @@
 .flash_operationfailed {
   background: #e47071;
 }
+.mainContainer960 .flashmsgbox,
+#top-slim-container .flashmsgbox {
+   height: 100px;
+}
+.mainContainer960 .flashmsgbox .flashmessage,
+#top-slim-container .flashmsgbox .flashmessage {
+   height: 100px;
+}
 
 .flashmsgbox .flashmessage {
     color: #fff;
     font-size: 13px;
     font-weight: bold;
     width: 940px;
-    height: 100px;
+    height: 50px;
     margin: auto;
     display: block;
-}
-
-.flashmsgbox .flashcenter {
-  height: 100px;
-}
-
-.flashmessageclose{
-   color:#539EFB;
-   cursor:pointer;
-   float:right;
-   font-size:10pt;
-   font-weight:normal;
-   position:relative;
-   top:-40px;
-   right: -40px
 }
 
 .flashmsgbox .logo {
@@ -144,6 +152,7 @@
     width: 100%;
     z-index: 10000;
 }
+
 .modalbox {
 
 }

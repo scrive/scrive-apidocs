@@ -15,40 +15,40 @@ import MinutesTime
 import Sender
 import qualified Log (mailingServer)
 
-serviceAvailabilityChecker :: CryptoRNGState -> String -> (Sender, Sender) -> MVar Sender -> (forall a. IO a -> IO a) -> IO ()
+
+serviceAvailabilityChecker :: CryptoRNGState -> String -> (Sender, Sender) -> MVar Sender -> (forall a. IO a -> IO a)  -> IO ()
 serviceAvailabilityChecker rng dbconf (master, slave) msender interruptible = do
-  mid <- inDB $ do
-    token <- random
-    now <- getMinutesTime
-    Log.mailingServer $ "Creating service testing email..."
-    mid <- dbUpdate $ CreateServiceTest token testSender testReceivers now
-    success <- dbUpdate $ AddContentToEmail mid "test" "test" [] mempty
-    when (not success) $
-      error "CRITICAL: Couldn't add content to created service testing email."
-    return mid
-  interruptible $ threadDelay freq
-  inDB $ do
-    events <- dbQuery GetServiceTestEvents
-    if any (isDelivered mid) events
-      then do
-        Log.mailingServer $ "Service testing emails were delivered successfully."
-        liftIO $ modifyMVar_ msender $ \sender -> do
-          when (sender /= master) $
-            Log.mailingServer $ "Restoring service " ++ show master ++ "."
-          return master
-      else do
-        Log.mailingServer $ "Service testing emails failed to be delivered within 5 minutes."
-        oldsender <- liftIO $ takeMVar msender
-        Log.mailingServer $ "Current sender: " ++ show oldsender
-        when (oldsender == master) $ do
-          Log.mailingServer $ "Switching to " ++ show slave ++ " and resending all emails that were sent within this time."
-          time <- minutesBefore 5 `fmap` getMinutesTime
-          n <- dbUpdate $ ResendEmailsSentSince time
-          Log.mailingServer $ show n ++ " emails set to be resent."
-        liftIO $ putMVar msender slave
-    success <- dbUpdate $ DeleteEmail mid
-    when (not success) $
-      error "CRITICAL: Couldn't delete service testing email."
+    mid <- inDB $ do
+      token <- random
+      now <- getMinutesTime
+      mid <- dbUpdate $ CreateServiceTest token testSender testReceivers now
+      success <- dbUpdate $ AddContentToEmail mid "test" "test" [] mempty
+      Log.mailingServer $ "Creating service testing email #" ++ show mid ++ "..."
+      when (not success) $
+        error "CRITICAL: Couldn't add content to created service testing email."
+      return mid
+    interruptible $ threadDelay freq
+    inDB $ do
+      events <- dbQuery GetServiceTestEvents
+      if any (isDelivered mid) events
+        then do
+          Log.mailingServer $ "Service testing emails were delivered successfully."
+          liftIO $ modifyMVar_ msender $ \sender -> do
+            when (sender /= master) $
+              Log.mailingServer $ "Restoring service " ++ show master ++ "."
+            return master
+        else do
+          Log.mailingServer $ "Service testing emails failed to be delivered within 6 minutes."
+          oldsender <- liftIO $ takeMVar msender
+          when (oldsender == master) $ do
+            Log.mailingServer $ "Switching to " ++ show slave ++ " and resending all emails that were sent within this time."
+            time <- minutesBefore 5 `fmap` getMinutesTime
+            n <- dbUpdate $ ResendEmailsSentSince time
+            Log.mailingServer $ show n ++ " emails set to be resent."
+          liftIO $ putMVar msender slave
+      success <- dbUpdate $ DeleteEmail mid
+      when (not success) $
+        Log.mailingServer $ "Couldn't delete service testing email #" ++ show mid
   where
     inDB :: CryptoRNGT (DBT IO) a -> IO a
     inDB = withPostgreSQL dbconf . runCryptoRNGT rng

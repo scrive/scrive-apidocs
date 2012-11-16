@@ -231,6 +231,7 @@ Executable kontrakcja-server
   Build-depends: static-resources == 0.1.5.3
   Build-depends: recurly == 0.0.34
   Build-depends: threads == 0.5.0.1
+  Build-depends: JuicyPixels == 2.0.2
   Main-Is: Main.hs
 
   Extensions: BangPatterns,

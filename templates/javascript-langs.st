@@ -391,7 +391,7 @@ javascriptLocalisation =
                     , done : "$_checkboxDone()$"
                     , help : "$_checkboxHelp()$"
              }
-             , saveAsTemplateLongDescription : "$_saveAsTemplateLongDescription()$"
+             , saveAsTemplateDescription : "$_saveAsTemplateLongDescription()$"
            }
 
          , validation : {
@@ -501,7 +501,12 @@ javascriptLocalisation =
              ,  reason: "Reason"
 
           }
-        , buyAvtal24Template : "$_buyAvtal24Template()$"
+        , avtal24 : {
+             buy :   "$_buyAvtal24Template()$"
+           , go :    "$_goToAvtal24()$"
+           , title : "$_avtal24Title()$"
+           , description : "$_avtal24Description()$"
+          }
         , payments: {
              users: "$_CompanyAccounts()$"
            , user: "$_paymentsUser()$"

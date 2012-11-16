@@ -268,7 +268,8 @@ hasOtherSignatoriesThenAuthor doc = not . null $ filter (isSignatory &&^ not . i
 -}
 isEligibleForReminder :: User -> Document -> SignatoryLink -> Bool
 isEligibleForReminder user document@Document{documentstatus} siglink =
-  signatoryActivated
+       sendMailsDurringSigning document
+    && signatoryActivated
     && userIsAuthor
     && not isUserSignator
     && not dontShowAnyReminder

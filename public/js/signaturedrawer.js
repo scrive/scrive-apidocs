@@ -178,6 +178,22 @@ var SignatureDrawer = Backbone.View.extend({
           this.canvas[0].width = this.canvas[0].width;
           this.empty  = true;
     },
+    getPNG : function() {
+      if (this.empty) return undefined;
+      return  this.canvas[0].toDataURL("image/png",1.0);
+    },
+    setPNG : function(png) {
+      var self = this;
+      var signature = this.model;
+      this.clear();
+      if (png != undefined) {
+         var img = new Image();
+         img.type = 'image/png';
+         img.src = png;
+         img.onload = function() {self.canvas[0].getContext('2d').drawImage(img,0,0,signature.swidth(),signature.sheight());};
+         this.empty = false;
+      }   
+    },
     render: function () {
         var signature = this.model;
         var view = this;
@@ -193,7 +209,7 @@ var SignatureDrawer = Backbone.View.extend({
         if (this.model.image() != undefined && this.model.image() != "" && this.model.imagePNG() != undefined && this.model.imagePNG() != "") {
           var img = new Image();
           img.src = this.model.imagePNG() ;
-          this.canvas[0].getContext('2d').drawImage(img,0,0,img.width,img.height);
+          this.canvas[0].getContext('2d').drawImage(img,0,0,signature.swidth(),signature.sheight());
           this.empty = false;
         };  
         this.initDrawing();
@@ -277,27 +293,23 @@ var SignatureDrawerWrapper = Backbone.View.extend({
 });
 
 
-window.SignatureDrawerPopup = {
-    popup : function(args){
+window.SignatureDrawerPopup = function(args){
+       
+        var self = this; 
         if ($.browser.msie && ($.browser.version > 3 && $.browser.version < 9))
         {
             alert('Drawing signature is not avaible for older versions of Internet Explorer. Please update your browser.');
             return;
         }
-        var popup = this;
-        popup.overlay = $("<div style='width:900px;' class='overlay drawing-modal'><div class='close modal-close float-right' style='margin-right:40px;margin-top:30px'/></div>");
-        popup.overlay.append(new SignatureDrawerWrapper({model : args.signature, overlay : popup.overlay}).el);
-        $('body').append( popup.overlay );
-        window.onorientationchange = function() {
-          var wheight = window.innerHeight ? window.innerHeight : $(window).height();
-          var mheight = popup.overlay.height();
-          window.scrollTo(0,popup.overlay.offset().top - ((wheight - mheight) / 2));
-          
-        };    
-        popup.overlay.overlay({
+        self.overlay = $("<div style='width:900px;' class='overlay drawing-modal'><div class='close modal-close float-right' style='margin-right:40px;margin-top:30px'/></div>");
+        self.dw = new SignatureDrawerWrapper({model : args.signature, overlay : self.overlay});
+        self.overlay.append(self.dw.el);
+        $('body').append(self.overlay );
+        var opened = true;
+        var ol = {
             mask:  {
                 color: '#ffffff',
-                loadSpeed: 200,
+                loadSpeed: 0,
                 opacity: 0.1
             },
             onLoad : function() {
@@ -306,9 +318,11 @@ window.SignatureDrawerPopup = {
               }
             },
             onClose : function() {
+              opened = false;
               document.ontouchmove = function(e){
                  return true;
               }
+              self.overlay.detach();
             },
             top: standardDialogTop,
             resizable: false,
@@ -316,8 +330,21 @@ window.SignatureDrawerPopup = {
             closeOnEsc: false,
             load: true,
             fixed:false
-          });
-    }
+          };
+        if ($(window).scrollLeft() > 60) ol.left = 60 - $(window).scrollLeft();
+        self.overlay.overlay(ol);
+        window.onorientationchange = function() {
+           if (opened) {
+             var png = self.dw.drawer.getPNG();
+             self.overlay.data("overlay").close();
+             setTimeout(function() {
+               var s = new SignatureDrawerPopup(args);
+               s.dw.drawer.setPNG(png);
+               window.scrollTo(0,s.overlay.offset().top - 30);
+              },100);
+           }
+        };
+
 };
 
 })(window);

@@ -419,7 +419,15 @@ window.DocumentStandardView = Backbone.View.extend({
       FlashMessages.add({content: localization.addRequiredAttachments, color: "red"});
       return false;
     }
-
+    if (document.padDelivery() && !document.currentSignatory().signature().signature().hasImage())
+    {
+      if (this.extraDetails != undefined) {
+        var el = $(this.extraDetails);
+        el.addClass("redborder");
+        document.currentSignatory().signature().bind("change",function() {el.removeClass("redborder");});
+      }                                           
+      return false;
+    }
     return true;
   },
   createRejectButtonElems: function() {
@@ -497,6 +505,10 @@ window.DocumentStandardView = Backbone.View.extend({
     }
 
     if (document.currentSignatoryCanSign()) {
+      if (document.padDelivery()) {
+        this.extraDetails = new DocumentSignExtraDetailsSection({model: document.currentSignatory()}).el;
+        bottomparts.append(this.extraDetails);
+      }  
       bottomparts.append(this.createSignBoxElems());
     }
 

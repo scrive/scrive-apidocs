@@ -188,10 +188,10 @@
     background-color: white;
     border: 1px solid #BDBDBD;
     border-radius: 3px 3px 3px 3px;
-    height: 60px;
+    height: 80px;
     padding: 8px;
     position: absolute;
-    width: 316px;
+    width: 322px;
     margin-top: -2px;
 }
 .setRoleBox .close{
