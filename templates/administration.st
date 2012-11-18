@@ -1058,9 +1058,11 @@ statisticsPage=
       </div>
     </div>
     <script>
+      // Fix me - too much requests due to bad KontraLink construction. Need to use 'new' there.
       var dayTable = KontraList().init({
         name: "Past Month Table",
         timeout: 20000,
+        loadOnInit : false,
         schema: new Schema({
           url: "$adminstatsbydaylink$",
           cells: [

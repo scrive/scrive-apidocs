@@ -220,6 +220,7 @@ firstPage ctx loginOn referer email = renderTemplate "firstPage" $ do
   staticLinksFields $ ctxlocale ctx
   localeSwitcherFields ctx (Just LinkHome)
   loginModal (loginOn && null (filter isModal $ ctxflashmessages ctx)) referer email
+  F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
   F.value "staticResources" $ SR.htmlImportList "firstPage" (ctxstaticresources ctx)
 
 {- |
