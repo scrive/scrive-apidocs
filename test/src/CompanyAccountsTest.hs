@@ -306,7 +306,7 @@ test_removingCompanyAccountWorks :: TestEnv ()
 test_removingCompanyAccountWorks = do
   (adminuser, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
   Just standarduser <- addNewCompanyUser "Bob" "Blue" "jony@blue.com" (companyid company)
-  doc <- addRandomDocumentWithAuthorAndCondition standarduser (\d -> documentstatus d `elem` [Preparation, Closed])
+  doc <- addRandomDocumentWithAuthorAndCondition standarduser (\d -> documentstatus d `elem` [Closed])
   let docid = documentid doc
 
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "jony@blue.com" "Bob" "Blue"
