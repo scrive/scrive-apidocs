@@ -128,7 +128,6 @@ set systemPage
  js   js/signview/docsignviewpad.js
  js   js/signview/docsignview.js
  js   js/avtal24popup.js
- js   js/docdesignview.js
  js   js/designview/signatorydesignview.js
  js   js/designview/signatoriesdesignview.js
  js   js/designview/docdesignviewpad.js
