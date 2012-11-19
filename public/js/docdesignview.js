@@ -721,7 +721,7 @@ var DocumentDesignView = Backbone.View.extend({
             onClick : function () {
             },
             onError: function() {
-                this.model.trigger('change');
+                document.trigger('change');
             },
             onAppend: function(input) {
               document.save();
@@ -735,15 +735,17 @@ var DocumentDesignView = Backbone.View.extend({
                     onSend: function() {
                         LoadingDialog.open();
                     },
+                    ajaxtimeout : 10000,
                     ajaxerror: function(d,a){
+                        LoadingDialog.close();
                         if(a === 'parsererror') // file too large
                             FlashMessages.add({content: localization.fileTooLarge, color: "red"});
                         else
                             FlashMessages.add({content: localization.couldNotUpload, color: "red"});
-                        LoadingDialog.close();
-                        this.model.trigger('change');
+                        document.trigger('change');
                     },
                     ajaxsuccess: function() {
+                        LoadingDialog.close();
                         window.location.reload();
                     }
                   }).addInputs(input).send();

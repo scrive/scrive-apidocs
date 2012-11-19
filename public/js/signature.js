@@ -51,6 +51,9 @@ window.Signature = Backbone.Model.extend({
     },
     setSize: function(width, height) {
         this.set({width: Math.floor(width), height : Math.floor(height), image : undefined});
+        _.each(this.field().placements(), function(p) {
+         p.fixWHRel(Math.floor(width),Math.floor(height));
+        });
         this.saveToField();
     },
     restoreFromField : function() {

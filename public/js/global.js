@@ -4,14 +4,12 @@ window.createnewdocument = function() {
                     method : "POST",
                     url : "/api/frontend/createfromfile",
                     ajax: true,
-                    expectedType: 'json',
+                    expectedType : "text",
                     ajaxsuccess: function(d) {
-                            if (d != undefined && d.id != undefined) {
-                                window.location.href = "/d/"+d.id;
-                            }
-                            else {
+                            try {
+                              window.location.href = "/d/"+JSON.parse(d).id;
+                            } catch(e) {
                                 LoadingDialog.close();
-                                wiz.trigger('change');
                             }
                    }
                 }).send();  

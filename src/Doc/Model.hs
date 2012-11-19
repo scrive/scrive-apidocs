@@ -2312,11 +2312,10 @@ instance MonadDB m => DBQuery m GetDocsSentBetween Int where
                "JOIN signatory_links ON documents.id = signatory_links.document_id " <>
                "WHERE signatory_links.user_id = ? " <>
                "AND is_author " <>
-               "AND documents.ctime >= ? " <>
-               "AND documents.ctime <  ? " <>
+               "AND documents.invite_time >= ? " <>
+               "AND documents.invite_time <  ? " <>
                "AND documents.type = ? "   <>
-               "AND documents.status <> ? " <>
-               "AND NOT documents.deleted" 
+               "AND documents.status <> ? "
     _ <- kExecute [toSql uid, toSql start, toSql end, toSql Preparation, toSql $ Signable undefined]
     foldDB (+) 0
 

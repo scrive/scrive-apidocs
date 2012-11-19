@@ -102,13 +102,13 @@ handleAdminSystemUsageStatsByDayJSON :: Kontrakcja m => m JSValue
 handleAdminSystemUsageStatsByDayJSON =
     onlySalesOrAdmin $ do
       stats <- calculateStatsByDay <$> getAdminSystemUsageStats (30 `daysBefore`)
-      return $ singlePageListToJSON $ map (statToJSON showAsDate) stats
+      return $ singlePageListToJSON $ map (statToJSON showAsDate) (take 30 stats)
 
 handleAdminSystemUsageStatsByMonthJSON :: Kontrakcja m => m JSValue
 handleAdminSystemUsageStatsByMonthJSON =
     onlySalesOrAdmin $ do
       stats <- calculateStatsByMonth <$> getAdminSystemUsageStats (6 `monthsBefore`)
-      return $ singlePageListToJSON $ map (statToJSON showAsMonth) stats
+      return $ singlePageListToJSON $ map (statToJSON showAsMonth) (take 6 stats)
 
 getAdminSystemUsageStats :: Kontrakcja m => (MinutesTime -> MinutesTime) -> m [(Int, [Int])]
 getAdminSystemUsageStats timeDiff = do

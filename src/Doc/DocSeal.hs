@@ -170,8 +170,12 @@ fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage)
         [w,h,c] -> do
           wi <- maybeRead w -- NOTE: Maybe monad usage
           hi <- maybeRead h
+          let content = drop 1 $ dropWhile (\e -> e /= ',') c
+          let content' = if ("image/png" `isInfixOf` take 20 c)
+                         then BS.toString $ B64.encode $ JPG.imageToJpg 100 $ fromRight $ PNG.decodePng $ fromRight $ B64.decode $ BS.fromString content
+                         else content
           Just $ Seal.FieldJPG
-                 { valueBase64           = drop 1 $ dropWhile (\e -> e /= ',') c
+                 { valueBase64           = content'
                  , Seal.x                = placementxrel placement
                  , Seal.y                = placementyrel placement
                  , Seal.page             = placementpage placement

@@ -20,7 +20,7 @@ var ConfirmationModel = Backbone.Model.extend({
       submit : new Submit(),
       title  : "",
       acceptText: "Ok",
-      rejectText: "Cancel",
+      rejectText: localization.cancel,
       acceptColor : "green",
       content  : jQuery("<p/>"),
       cantCancel : false,

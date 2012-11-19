@@ -648,7 +648,18 @@ javascriptLocalisation =
                   sorryExistingUser               : "$_flashMessageUserWithSameEmailExists()$",
                   sorryExistingUserHeader         : "$_mailDocumentErrorContentBodyFourth()$"
               }
-        }
+              , cancelDialog : "$_paymentsCancelDialog()$"
+              , cancelingSubscription : "$_paymentsCancelingSubscription()$"
+              , renewingSubscription : "$_paymentsRenewingSubscription()$"
+              , renewSubscription : "$_paymentsRenewSubscription()$"
+              , renewDialog : "$_paymentsRenewDialog()$"
+              , billingInfoSaved : "$_paymentsBillingInfoSaved()$"
+              , wasCanceled : "$_paymentsWasCanceled()$"
+              , canceledDate : "$_paymentsCanceledDate()$"
+              , contactAdmin : "$_paymentsContactAdmin()$"
+              , mustBeAdmin : "$_paymentsMustBeAdmin()$"
+              , subscriptionRenewed : "$_paymentsSubscriptionRenewed()$"
+        }  
       , documents : "$_docListTabsDocs()$"
       , templates : "$_docListTabsTemplates()$"
       , attachments : "$_docListTabsAttachemtns()$"

@@ -181,6 +181,7 @@ apiCallUpdate did = api $ do
   json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
                                                                                J.Ok js -> Just js
                                                                                _ -> Nothing
+  Log.debug $ "Document " ++ show did ++ " updated with JSON:" ++ encode json
   draftData   <-apiGuardJustM (badInput "Given JSON does not represent valid draft data.") $ return $ fromJSValue json
   newdocument <-  apiGuardL (serverError "Could not apply draft data") $ applyDraftDataToDocument doc draftData actor
   triggerAPICallbackIfThereIsOne newdocument

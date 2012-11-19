@@ -72,6 +72,12 @@
         },
         daysLeft: function() {
             return Math.ceil(moment.duration(this.billingEnds() - moment()).asDays());
+        },
+        reload: function() {
+            var model = this;
+            model.fetch({success: function() {
+                model.trigger('fetch');
+            }});
         }
     });
 
@@ -85,7 +91,7 @@
             var view = this;
             var model = view.model;
             var $el = $(view.el);
-            $el.removeClass('warn').removeClass('good');
+            $el.removeClass('warn').removeClass('good').removeClass('hide');
             if(model.isFree() && model.docsLeft() > 0)
                 $el.addClass('good');
             else if(model.isFree())
@@ -126,6 +132,7 @@
         subtext1: function() {
             var view = this;
             var model = view.model;
+            
             if(model.isFree() && model.docsLeft() > 0)
                 return localization.blocking.free.has.subtext1;
             else if(model.isFree())
@@ -336,9 +343,7 @@
     window.Blocking = function() {
         var model = new BlockingInfoModel({});
         var view = new BlockingInfoView({model:model});
-        model.fetch({success:function() {
-            model.trigger('fetch');
-        }});
+        model.reload();
         return {
             model: model,
             show: function(selector) {
@@ -355,6 +360,15 @@
             },
             csvMessage: function(n) {
                 return view.csvMessage().replace('X1', n).replace('X2', model.docsLeft());
+            },
+            reload: function() {
+                model.reload();
+            },
+            hide: function() {
+                $(view.el).addClass('hide');
+            },
+            unHide: function() {
+                $(view.el).removeClass('hide');
             }
         };
     };
