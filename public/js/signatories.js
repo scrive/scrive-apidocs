@@ -120,7 +120,7 @@ window.SignatoryAttachmentUploadView = Backbone.View.extend({
         attachname: attachment.name(),
         sigattachment: "YES",
         ajax: true,
-        expectedType: 'json',
+        expectedType : "text",
         onSend: function() {
           attachment.loading();
         },
@@ -132,12 +132,13 @@ window.SignatoryAttachmentUploadView = Backbone.View.extend({
           attachment.notLoading();
         },
         ajaxsuccess: function(d) {
-          if (d) {
-            var doc =  attachment.signatory().document();
-            var file = new File(_.extend(d.file, {document: doc }));
-            attachment.setFile(file);
-            attachment.notLoading();
-          }
+             try {
+              var doc =  attachment.signatory().document();
+              var file = new File(_.extend(JSON.parse(d).file, {document: doc }));
+              attachment.setFile(file);
+              attachment.notLoading();
+             } catch(e) { attachment.notLoading(); }
+          
         }
       })
     });

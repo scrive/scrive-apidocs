@@ -51,16 +51,19 @@ var  CreateFromTemplateModel = Backbone.Model.extend({
                                               method : "POST",
                                               url: "/api/frontend/createfromtemplate/" +  listobject.field("id"),
                                               ajax: true,
-                                              expectedType: 'json',
+                                              expectedType : "text",
                                               onSend: function() {
                                                       LoadingDialog.open();
                                               },
                                               ajaxerror: function(d,a){
                                                       LoadingDialog.close();
-                                                      wiz.trigger('change');
                                               },
                                               ajaxsuccess: function(d) {
-                                                      window.location.href = "/d/"+d.id;
+                                                 try {
+                                                        window.location.href = "/d/"+JSON.parse(d).id;
+                                                  } catch(e) {
+                                                      LoadingDialog.close();
+                                                  }
                                               }
                                           }).send();
                                           return false;

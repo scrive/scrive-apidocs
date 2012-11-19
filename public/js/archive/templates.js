@@ -69,18 +69,16 @@ window.TemplatesListDefinition = function(archive) { return {
                                 url : "/api/frontend/createfromfile",
                                 ajax: true,
                                 template: "YES",
-                                expectedType: 'json',
+                                expectedType : "text",
                                 onSend: function() {
                                             LoadingDialog.open();
                                         },
                                 ajaxsuccess: function(d) {
-                                    if (d != undefined && d.id != undefined) {
-                                        window.location.href = "/d/"+d.id;
-                                    }
-                                    else {
-                                        FlashMessages.add({content: localization.couldNotUpload+" "+d, color: "red"});
+                                    try {
+                                        window.location.href = "/d/"+JSON.parse(d).id;
+                                    } catch(e) {
+                                        FlashMessages.add({content: localization.couldNotUpload, color: "red"});
                                         LoadingDialog.close();
-                                        wiz.trigger('change');
                                     }
                                 }
                             }).send();
