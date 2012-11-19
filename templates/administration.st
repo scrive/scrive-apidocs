@@ -61,7 +61,7 @@ adminusers=
        <div id="adminusers-viewer"></div>
     </div>
     <script>
-    var adminUsersTable = KontraList().init({
+    var adminUsersTable = new KontraList({
         name : "Admin Users Table",
         schema: new Schema({
             url: "/adminonly/userslist",
@@ -98,7 +98,7 @@ adminusers=
     });
 
     jQuery(function(){
-        jQuery("#adminusers-viewer").append(adminUsersTable.view.el)
+        jQuery("#adminusers-viewer").append(adminUsersTable.el())
     });
     </script>
 
@@ -114,7 +114,7 @@ admincompanies=
        <div id="companies-viewer"></div>
     </div>
 <script>
-  var companiesTable = KontraList().init({
+  var companiesTable = new KontraList({
     name : "CompaniesTable",
     schema: new Schema({
       url: "/adminonly/companies",
@@ -140,7 +140,7 @@ admincompanies=
   });
 
   jQuery(function(){
-    jQuery("#companies-viewer").append(companiesTable.view.el);
+    jQuery("#companies-viewer").append(companiesTable.el());
   });
 </script>
 ###
@@ -250,7 +250,7 @@ adminUsersForSales=
         }
     });
 
-    var usersTable = KontraList().init({
+    var usersTable = new KontraList({
         name : "Users Table",
         schema: new Schema({
             url: "/adminonly/userslist",
@@ -271,7 +271,7 @@ adminUsersForSales=
     });
 
     jQuery(function(){
-        jQuery("#users-viewer").append(usersTable.view.el)
+        jQuery("#users-viewer").append(usersTable.el())
     });
     </script>
 ###
@@ -930,7 +930,7 @@ admincompanyusers=
 
   jQuery(function() {
 
-    var companyAccountsTable = KontraList().init({
+    var companyAccountsTable = new KontraList({
       name : "CompanyAccountsTable",
       schema: new Schema({
         url: "/adminonly/companyaccounts/$companyid$",
@@ -959,7 +959,7 @@ admincompanyusers=
       }),
       headerExtras : newUserInCompanyButton.add(inviteExistingUserToCompany)
     });
-    jQuery(".tab-viewer").append(companyAccountsTable.view.el);
+    jQuery(".tab-viewer").append(companyAccountsTable.el());
   });
 </script>
 ####
@@ -1059,10 +1059,9 @@ statisticsPage=
     </div>
     <script>
       // Fix me - too much requests due to bad KontraLink construction. Need to use 'new' there.
-      var dayTable = KontraList().init({
+      var dayTable = new KontraList({
         name: "Past Month Table",
         timeout: 20000,
-        loadOnInit : false,
         schema: new Schema({
           url: "$adminstatsbydaylink$",
           cells: [
@@ -1073,8 +1072,8 @@ statisticsPage=
             new Cell({name: "$_avgSigsPerDoc()$",    width: "70px",  field: "avg",        tdclass: "num"}),
             new Cell({name: "$_newUsers()$",         width: "70px",  field: "users",      tdclass: "num"})
           ]})});
-      var monthTable = KontraList().init({
-        name: "Pash 6 Month Table",
+      var monthTable = new KontraList({
+        name: "Past 6 Month Table",
         timeout: 20000,
         schema: new Schema({
           url: "$adminstatsbymonthlink$",
@@ -1087,8 +1086,8 @@ statisticsPage=
             new Cell({name: "$_newUsers()$",         width: "70px",  field: "users",      tdclass: "num"})
           ]})});
       jQuery(function(){
-        jQuery("#jsdaytable").append(dayTable.view.el);
-        jQuery("#jsmonthtable").append(monthTable.view.el);
+        jQuery("#jsdaytable").append(dayTable.el());
+        jQuery("#jsmonthtable").append(monthTable.el());
       });
     </script>
 ###
@@ -1142,7 +1141,7 @@ admindocumentslist =
           </div>
          <div id="documents-viewer"></div>
     <script>
-    var docTable = KontraList().init({
+    var docTable = new KontraList({
         name : "Documents Table",
         schema: new Schema({
             url: "/adminonly/documentslist",
@@ -1217,7 +1216,7 @@ admindocumentslist =
     });
 
     jQuery(function(){
-        jQuery("#documents-viewer").append(docTable.view.el)
+        jQuery("#documents-viewer").append(docTable.el());
     });
     </script>
     </div>

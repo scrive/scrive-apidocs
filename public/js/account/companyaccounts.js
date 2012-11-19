@@ -66,9 +66,10 @@ var CompanyAccountsModel = Backbone.Model.extend({
   userList : function() {
         var self = this;
         if (this.get("userList") != undefined) return this.get("userList");
-        this.set({ "userList" :  KontraList().init({
+        this.set({ "userList" :  new KontraList({
             name : "CompanyAccountsTable",
             headerExtras: self.addCompanyAccountButton().input(),
+            loadOnInit : false,
             schema: new Schema({
               url: "/companyaccounts",
               sorting: new Sorting({ fields: ["fullname",
@@ -207,7 +208,7 @@ var CompanyAccountsView = Backbone.View.extend({
     },
     render: function () {
        var container = $(this.el);
-       container.append(this.model.userList().view.el);
+       container.append(this.model.userList().el());
        return this;
     }
 });

@@ -14,22 +14,22 @@ var ArchiveModel = Backbone.Model.extend({
   },
   documents : function() {
         if (this.get("documents") != undefined) return this.get("documents");
-        this.set({ "documents" : KontraList().init(DocumentsListDefinition(this)) });
+        this.set({ "documents" : new KontraList(DocumentsListDefinition(this)) });
         return this.documents();
   },
   templates : function() {
         if (this.get("templates") != undefined) return this.get("templates");
-        this.set({ "templates" : KontraList().init(TemplatesListDefinition(this)) });
+        this.set({ "templates" : new KontraList(TemplatesListDefinition(this)) });
         return this.templates();
   },
   attachments : function() {
         if (this.get("attachments") != undefined) return this.get("attachments");
-        this.set({ "attachments" : KontraList().init(AttachmentsListDefinition(this)) });
+        this.set({ "attachments" : new KontraList(AttachmentsListDefinition(this)) });
         return this.attachments();
   },
   bin : function() {
         if (this.get("bin") != undefined) return this.get("bin");
-        this.set({ "bin" : KontraList().init(BinListDefinition(this)) });
+        this.set({ "bin" : new KontraList(BinListDefinition(this)) });
         return this.bin();
 
   },
@@ -37,7 +37,7 @@ var ArchiveModel = Backbone.Model.extend({
                     var archive = this;    
                     return new Tab({
                         name: localization.archive.documents.name,
-                        elems: [function() {return $(archive.documents().view.el);}],
+                        elems: [function() {return $(archive.documents().el());}],
                         active : window.location.hash == "#documents",           
                         onActivate : function() {
                             window.location.hash = "documents";
@@ -48,7 +48,7 @@ var ArchiveModel = Backbone.Model.extend({
                     var archive = this;    
                     return  new Tab({
                         name: localization.archive.templates.name,
-                        elems: [function() {return $(archive.templates().view.el);}],
+                        elems: [function() {return $(archive.templates().el());}],
                         active : window.location.hash == "#templates",
                         onActivate : function() {
                             window.location.hash = "templates";
@@ -59,7 +59,7 @@ var ArchiveModel = Backbone.Model.extend({
                     var archive = this;
                     return  new Tab({
                         name: localization.archive.attachments.name,
-                        elems: [function() {return $(archive.attachments().view.el);}],
+                        elems: [function() {return $(archive.attachments().el());}],
                         active : window.location.hash == "#attachments",
                         onActivate : function() {
                             window.location.hash = "attachments";
@@ -70,7 +70,7 @@ var ArchiveModel = Backbone.Model.extend({
                     var archive = this;
                     return  new Tab({
                         name: localization.archive.bin.name,
-                        elems: [function() {return $(archive.bin().view.el);}],
+                        elems: [function() {return $(archive.bin().el());}],
                         active : window.location.hash == "#bin",
                         onActivate : function() {
                             window.location.hash = "bin";

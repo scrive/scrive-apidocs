@@ -6,7 +6,7 @@ var  CreateFromTemplateModel = Backbone.Model.extend({
   },
   list : function() {
     if (this.get("list") == undefined)
-      this.set({"list" : KontraList().init({
+      this.set({"list" : new KontraList({
         name : "Templatesarchive table",
         loadOnInit : false,
         schema: new Schema({
@@ -103,7 +103,7 @@ var CreateFromTemplateView = Backbone.View.extend({
      var container = $(this.el);
      container.append(this.header());
      model.list().recall();
-     container.append(model.list().view.el);
+     container.append(model.list().el());
      return this;
   }
 });

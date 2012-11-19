@@ -1,7 +1,7 @@
 ####
 apiDashboard =
 <script>
-var personalTokensTable = KontraList().init({
+var personalTokensTable = new KontraList({
     name : "Personal Access Token",
     headerExtras: jQuery("<div class='middle'>").append(jQuery("<p>").append(localization.apiDashboard.personalTokenDescription)),
     emptyAlternative: 
@@ -46,10 +46,10 @@ var personalTokensTable = KontraList().init({
     ]})});
 
 jQuery(function(){
-    jQuery("#jspersonaltoken").append(personalTokensTable.view.el);
+    jQuery("#jspersonaltoken").append(personalTokensTable.el());
 });
 
-var grantedPrivilegesTable = KontraList().init({
+var grantedPrivilegesTable = new KontraList({
     name : "Granted Privileges",
     headerExtras: jQuery("<div class='middle'>").append(jQuery("<p>").append(localization.apiDashboard.grantedPriviligesDescription)),
     schema: new Schema({
@@ -95,10 +95,10 @@ var grantedPrivilegesTable = KontraList().init({
     ]})});
 
 jQuery(function(){
-    jQuery("#jsgrantedprivileges").append(grantedPrivilegesTable.view.el);
+    jQuery("#jsgrantedprivileges").append(grantedPrivilegesTable.el());
 });
 
-var apiTokensTable = KontraList().init({
+var apiTokensTable = new KontraList({
     name : "Granted Privileges",
     headerExtras: jQuery("<div />").append(jQuery("<div class='middle'>").append(jQuery("<p>").append(localization.apiDashboard.apiTokenDescription)))
                                    .append(jQuery("<div class='middle'>").append(Button.init({
@@ -139,7 +139,7 @@ var apiTokensTable = KontraList().init({
     ]})});
 
 jQuery(function(){
-    jQuery("#jsapitokens").append(apiTokensTable.view.el);
+    jQuery("#jsapitokens").append(apiTokensTable.el());
 });
 
 </script>

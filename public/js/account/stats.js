@@ -8,8 +8,9 @@ var StatsModel = Backbone.Model.extend({
   },
   dayTable : function() {
         if (this.get("dayTable") != undefined) return this.get("dayTable");
-        this.set({ "dayTable" : KontraList().init({
+        this.set({ "dayTable" : new KontraList({
               name : "Past Month Table",
+              loadOnInit : false,
               schema: new Schema({
                 url: "/account/usagestats/days/json",
                 cells : _.flatten([
@@ -25,8 +26,9 @@ var StatsModel = Backbone.Model.extend({
   },
   monthTable : function() {
         if (this.get("monthTable") != undefined) return this.get("monthTable");
-        this.set({ "monthTable" :   KontraList().init({
+        this.set({ "monthTable" :   new KontraList({
               name : "Past 6 Month Table",
+              loadOnInit : false,
               schema: new Schema({
               url: "/account/usagestats/months/json",
               cells : _.flatten([
@@ -58,9 +60,9 @@ var StatsView = Backbone.View.extend({
        var model = this.model;
        var subbox = $("<div class='tab-content account usagestats'/>");
        subbox.append($("<h2/>").text(localization.account.stats.last30days));
-       subbox.append($("<div class='jsdaytable'></div>").append(model.dayTable().view.el));
+       subbox.append($("<div class='jsdaytable'></div>").append(model.dayTable().el()));
        subbox.append($("<h2/>").text(localization.account.stats.last6months));
-       subbox.append($("<div class='jsmonthtable'></div>").append(model.monthTable().view.el));
+       subbox.append($("<div class='jsmonthtable'></div>").append(model.monthTable().el()));
        container.append(subbox);
        return this;
     }

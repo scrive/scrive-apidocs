@@ -67,14 +67,18 @@
           // we reset the page to 0 when we change the filtering
           // if we do this first, the right thing happens, otherwise,
           // it goes into infinite loop -- Eric
-          this.textfiltering().bind('change', function(){paging.changePage(0);});
-          this.textfiltering().bind('change', function() {schema.trigger('change')});
+          if (!this.textfiltering().disabled()) {
+            this.textfiltering().bind('change', function(){paging.changePage(0);});
+            this.textfiltering().bind('change', function() {schema.trigger('change')});
+          }
           _.each(this.selectfiltering(), function(f) {
               f.bind('change', function(){ paging.changePage(0);});
               f.bind('change', function() {schema.trigger('change')});
           });
-          this.sorting().bind('change', function() {schema.trigger('change')});
-          this.paging().bind('change:pageCurrent', function() {schema.trigger('change')});
+          if (!this.sorting().disabled())
+            this.sorting().bind('change', function() {schema.trigger('change')});
+          if (!this.paging().disabled())
+            this.paging().bind('change:pageCurrent', function() {schema.trigger('change')});
         },
         cell: function(i) {
             return this.get("cells")[i];

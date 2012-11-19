@@ -7,7 +7,7 @@
  * Introduction:
  *
  * To use list create KontraList object by using var list =
- * KontraList().init({...}) and doing an append of list.view.el
+ * new KontraList({...}) and doing an append of list.el()
  * somewhere on page. This is just the jQuery object so this should be
  * easy, but css is probably expecting some more structure around
  * inserted element, so please check this out with example.
@@ -453,36 +453,32 @@
         }
     });
 
-    window.KontraList = function() { return {
-        init: function(args) {
-            _.bindAll(this, 'recall');
-            this.schema = args.schema;
-            this.schema.initSessionStorageNamespace(args.name);
-            this.model = new List({
-                schema: args.schema
-            });
-            this.view = new ListView({
-                model: this.model,
-                schema: args.schema,
+    window.KontraList = function(args) {
+            var self = this; 
+            var schema = args.schema;
+            schema.initSessionStorageNamespace(args.name);
+            var model = new List({ schema: schema });
+            var view = new ListView({
+                model: model,
+                schema: schema,
                 el: $("<div class='list-container'/>"),
                 headerExtras: args.headerExtras,
                 bottomExtras: args.bottomExtras,
                 emptyAlternative: args.emptyAlternative
             });
-            this.schema.bind('change', this.recall);
-            if (args.loadOnInit != false) this.recall();
-            return this;
-        },
-        recall: function() {
-            var list = this;
-            list.view.startLoading();
-            this.model.fetch({ data: this.schema.getSchemaUrlParams(),
-                               processData: true,
-                               cache: false,
-                               success: function() {list.view.stopLoading(); },
-                               error : function() {},
-                               timeout: this.timeout
-            });
+            this.el = function() {return $(view.el);};
+            this.recall = function() {
+              view.startLoading();
+              model.fetch({ data: schema.getSchemaUrlParams(),
+                                processData: true,
+                                cache: false,
+                                success: function() {view.stopLoading(); },
+                                error : function() {},
+                                timeout: args.timeout
+              });
+            };  
+            schema.bind('change', function() {self.recall();});
+            if (args.loadOnInit != false) self.recall();
         }
-    };};
+        
 })(window);

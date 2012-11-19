@@ -132,7 +132,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         });
         box.append(arrowBack);
 
-        var documentsTable = KontraList().init({
+        var documentsTable = new KontraList({
                 name : "Attachments table",
                 schema: new Schema({
                     url: "/a",
@@ -157,8 +157,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
                     ]
                 })
             });
-        documentsTable.view.render();
-        box.append($(documentsTable.view.el));
+        box.append(documentsTable.el());
         return box;
     },
     attachmentList : function() {

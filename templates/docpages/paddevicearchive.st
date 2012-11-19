@@ -9,7 +9,7 @@ pagePadDeviceArchive=
   </div>
 </div>
 <script>
-var padTable = KontraList().init({
+var padTable = new KontraList({
     name : "Pad Table",
     headerExtras: jQuery("<a href='/padqueue'/>").append(Button.init({
                     text: "Open pad view",
@@ -106,7 +106,7 @@ var padTable = KontraList().init({
 });
 
 jQuery(function(){
-    jQuery(".tab-viewer").append(padTable.view.el)
+    jQuery(".tab-viewer").append(padTable.el())
 });
 </script>
 ######
