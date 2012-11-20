@@ -173,7 +173,8 @@ docStateTests env = testGroup "DocState" [
   --testThat "when I call updatedocument with a doc that is in Preparation, it always returns Right" env testPreparationUpdateDocumentAlwaysRight,
 
   testThat "when I create document from shared template author custom fields are stored" env testCreateFromSharedTemplate,
-
+  testThat "when I create document from template company name is taken from company" env testCreateFromTemplateCompanyField,
+  
   testThat "when I call ResetSignatoryDetails, it fails when the doc doesn't exist" env testNoDocumentResetSignatoryDetailsAlwaysLeft,
   testThat "When I call ResetSignatoryDetails with a doc that is not in Preparation, always returns left" env testNotPreparationResetSignatoryDetailsAlwaysLeft,
   testThat "when I call updatedocumentSimple with a doc that is in Preparation, it always returns Right" env testPreparationResetSignatoryDetailsAlwaysRight,
@@ -1398,6 +1399,29 @@ testCreateFromSharedTemplate = do
     then assertSuccess
     else assertFailure "Replacing signatory details based on user is loosing fields | SKRIVAPADEV-294"
 
+
+testCreateFromTemplateCompanyField :: TestEnv ()
+testCreateFromTemplateCompanyField = do
+  user <- addNewRandomUser
+  company <- addNewCompany
+  _ <- dbUpdate $ SetUserCompany (userid user) (Just (companyid company))
+  docid <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user (const True)
+  tmpdoc <- fmap fromJust $ dbQuery $ GetDocumentByDocumentID docid
+  mt <- rand 10 arbitrary
+  doc <- if (isTemplate tmpdoc)
+         then return tmpdoc
+         else do
+           _ <- dbUpdate $ TemplateFromDocument docid (systemActor mt)
+           fromJust <$> (dbQuery $ GetDocumentByDocumentID docid)
+
+  doc' <- fromJust <$> (dbUpdate $ SignableFromDocumentIDWithUpdatedAuthor user (documentid doc) (systemActor mt))
+  let [author] = filter isAuthor $ documentsignatorylinks doc'
+  if ((getCompanyName company) == (getCompanyName author))
+    then assertSuccess
+    else assertFailure "Author signatory link company name is not same as his company"
+
+
+    
 testAddDocumentAttachmentFailsIfNotPreparation :: TestEnv ()
 testAddDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
   author <- addNewRandomUser

@@ -15,6 +15,7 @@ import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import qualified Data.Set as S
+import Company.Model
 
 trueOrMessage :: Bool -> String -> Maybe String
 trueOrMessage False s = Just s
@@ -163,16 +164,17 @@ templateToDocument doc =
 -}
 replaceSignatoryUser :: SignatoryLink
                      -> User
+                     -> Maybe Company
                      -> SignatoryLink
-replaceSignatoryUser siglink user =
+replaceSignatoryUser siglink user mcompany=
   let newsl = replaceSignatoryData
                        siglink
                        (getFirstName      user)
                        (getLastName       user)
                        (getEmail          user)
-                       (getCompanyName    user)
+                       (getCompanyName    (user,mcompany))
                        (getPersonalNumber user)
-                       (getCompanyNumber  user)
+                       (getCompanyNumber  (user,mcompany))
                        (map sfValue $ filter isFieldCustom $ signatoryfields $ signatorydetails siglink) in
   newsl { maybesignatory = Just $ userid user,
           maybecompany = usercompany user }
