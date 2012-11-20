@@ -1401,7 +1401,7 @@ testCreateFromSharedTemplate = do
 
 
 testCreateFromTemplateCompanyField :: TestEnv ()
-testCreateFromTemplateCompanyField = do
+testCreateFromTemplateCompanyField = doTimes 10 $ do
   user <- addNewRandomUser
   company <- addNewCompany
   _ <- dbUpdate $ SetUserCompany (userid user) (Just (companyid company))
@@ -1413,12 +1413,12 @@ testCreateFromTemplateCompanyField = do
          else do
            _ <- dbUpdate $ TemplateFromDocument docid (systemActor mt)
            fromJust <$> (dbQuery $ GetDocumentByDocumentID docid)
-
-  doc' <- fromJust <$> (dbUpdate $ SignableFromDocumentIDWithUpdatedAuthor user (documentid doc) (systemActor mt))
+  user' <- fromJust <$> (dbQuery $ GetUserByID (userid user))
+  doc' <- fromJust <$> (dbUpdate $ SignableFromDocumentIDWithUpdatedAuthor user' (documentid doc) (systemActor mt))
   let [author] = filter isAuthor $ documentsignatorylinks doc'
-  if ((getCompanyName company) == (getCompanyName author))
-    then assertSuccess
-    else assertFailure "Author signatory link company name is not same as his company"
+  validTest $ if ((getCompanyName company) == (getCompanyName author))
+                then assertSuccess
+                else assertFailure $ "Author signatory link company name is not same as his company:" ++ (getCompanyName company) ++ " vs " ++ (getCompanyName author)
 
 
     
