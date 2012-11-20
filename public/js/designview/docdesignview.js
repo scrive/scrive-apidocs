@@ -5,7 +5,7 @@
 
 (function(window){
 
-var DocumentDesignModel = Backbone.Model.extend({
+var DesignViewModel = Backbone.Model.extend({
   defaults : {
     signOrderVisible : false
   },
@@ -67,7 +67,7 @@ var DocumentDesignModel = Backbone.Model.extend({
 });
 
   
-var DocumentDesignView = Backbone.View.extend({
+var DesignViewView = Backbone.View.extend({
     initialize: function (args) {
         var self = this;
         _.bindAll(this, 'render', 'refreshFinalButton', 'refreshSignatoryAttachmentsOption', 'refreshAuthorizationDependantOptions', 'goToNextStep');
@@ -968,14 +968,14 @@ var ScrollFixer =  Backbone.Model.extend({
     }
 });
 
-window.KontraDesignDocument = function(args) {
+window.DesignView = function(args) {
        var document = new Document({
                         id : args.id
                     });
-       var model = new DocumentDesignModel({
+       var model = new DesignViewModel({
                         document : document
                     });
-       var view = new DocumentDesignView({
+       var view = new DesignViewView({
                         model: model,
                         el : $("<div/>")
                     });

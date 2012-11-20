@@ -127,7 +127,7 @@
     display: inline-block;
 }
 
-.apidashboard .tab-table {
+.apidashboard .table {
     border: 1px solid gray;
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;

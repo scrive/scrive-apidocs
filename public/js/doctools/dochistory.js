@@ -36,9 +36,7 @@ var DocumentHistoryModel = Backbone.Model.extend({
   },
   toogleShowAll : function() {
       this.set({'showAll' : !this.showAll() }, {silent : true});
-      this.historyList().model.schema.paging().setShowLimit(this.get("showAll") ? undefined : 5);
-      this.historyList().model.schema.trigger("change");
-
+      this.historyList().setShowLimit(this.get("showAll") ? undefined : 5);
   },
   document : function(){
        return this.get("document");
@@ -85,7 +83,7 @@ var DocumentHistoryView = Backbone.View.extend({
       })
       header.append(title).append(this.expandAllOption())
       container.append(header);
-      container.append(historyList.view.el)
+      container.append(historyList.el())
       return this;     
     }
 });

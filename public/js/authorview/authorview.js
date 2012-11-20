@@ -251,13 +251,32 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   }
 });
 
-window.DocumentStandardView = Backbone.View.extend({
+
+
+
+var AuthorViewModel = Backbone.Model.extend({
+  defaults : {
+  },
+  initialize: function (args) {
+      var self = this;
+      this.document().bind('reset', function() {self.trigger("render")});
+      this.document().bind('change', function() {self.trigger("render")});
+  },
+  document : function() {
+     return this.get("document");
+  },
+  ready : function() {
+     return this.document().ready();
+  }
+});
+
+  
+
+window.AuthorViewView = Backbone.View.extend({
   initialize: function(args) {
-    _.bindAll(this, 'render');
+    _.bindAll(this, 'render' , 'validateSign');
     _.bindAll(this, 'validateSign');
-    this.model.bind('reset', this.render);
-    this.model.bind('change', this.render);
-    this.model.view = this;
+    this.model.bind('render', this.render);
     this.prerender();
     this.render();
   },
@@ -279,7 +298,7 @@ window.DocumentStandardView = Backbone.View.extend({
   createInfoBoxElem: function() {
   },
   createSignatoriesTabElems: function() {
-    var document = this.model;
+    var document = this.model.document();
 
     var signatoriestabview = $("<div id='documenttabview' />");
     var body = $("<div class='signStepsBody forauthor'/>");
@@ -324,7 +343,7 @@ window.DocumentStandardView = Backbone.View.extend({
 
   },
   createRestartButtonElems: function() {
-    var document = this.model;
+    var document = this.model.document();
     return Button.init({
       color: "red",
       size: "small",
@@ -337,7 +356,7 @@ window.DocumentStandardView = Backbone.View.extend({
     }).input();
   },
   createCancelButtonElems: function() {
-    var document = this.model;
+    var document = this.model.document();
     return Button.init({
       color: "red",
       size: "small",
@@ -363,25 +382,25 @@ window.DocumentStandardView = Backbone.View.extend({
   },
   createAuthorAttachmentsElems: function() {
     return $(new DocumentAuthorAttachmentsView({
-      model: this.model,
+      model: this.model.document(),
       el: $("<div />")
     }).el);
   },
   createSignatoryAttachmentsElems: function() {
     return $(new DocumentSignatoryAttachmentsView({
-      model: this.model,
+      model: this.model.document(),
       el: $("<div />")
     }).el);
   },
   createUploadedAttachmentsElems: function() {
     return $(new DocumentUploadedSignatoryAttachmentsView({
-      model: this.model,
+      model: this.model.document(),
       el: $("<div />")
     }).el);
   },
   createAcceptButtonElems: function() {
     var validateSign = this.validateSign;
-    var document = this.model;
+    var document = this.model.document();
     return $( Button.init({
                             size: "big",
                             color: "blue",
@@ -397,7 +416,7 @@ window.DocumentStandardView = Backbone.View.extend({
             );
   },
   validateSign: function() {
-    var document = this.model;
+    var document = this.model.document();
     var signatory = document.currentSignatory();
 
     if (!signatory.signatureReadyForSign()) {
@@ -435,7 +454,7 @@ window.DocumentStandardView = Backbone.View.extend({
     return true;
   },
   createRejectButtonElems: function() {
-    var document = this.model;
+    var document = this.model.document();
     var signatory = document.currentSignatory();
     return Button.init({
       size: "small",
@@ -461,7 +480,7 @@ window.DocumentStandardView = Backbone.View.extend({
   },
   createSignBoxElems: function() {
     var leftbox = $("<div id='signViewBottomBoxContainerLeft'/>");
-    if (this.model.currentSignatory().author()) {
+    if (this.model.document().currentSignatory().author()) {
       leftbox.append(this.createCancelButtonElems());
     } else {
       leftbox.append(this.createRejectButtonElems());
@@ -477,7 +496,7 @@ window.DocumentStandardView = Backbone.View.extend({
     return box;
   },
   render: function() {
-    var document = this.model;
+    var document = this.model.document();
     if (!document.ready())
         return this;
 
@@ -544,7 +563,7 @@ window.DocumentStandardView = Backbone.View.extend({
                   $(fileview),
                   bottomparts
                  ],
-          disabled: !this.model.hasAnyAttachments() ||
+          disabled: !this.model.document().hasAnyAttachments() ||
                       (document.currentSignatory() != undefined &&
                        document.currentSignatory().signs() &&
                        !document.currentSignatory().hasSigned() &&
@@ -560,21 +579,22 @@ window.DocumentStandardView = Backbone.View.extend({
   }
 });
 
-window.KontraStandardDocument = {
-  init: function(args) {
-    this.model = new Document({
-      id: args.id,
-      viewer: args.viewer
-    });
-    this.view = new DocumentStandardView({
-      model: this.model,
-      el: $("<div/>")
-    });
-    this.recall();
-    return this;
-  },
-  recall: function() {
-    this.model.recall();
-  }
-};
+
+
+window.AuthorView = function(args) {
+       var document = new Document({
+                        id : args.id,
+                        viewer: args.viewer
+                    });
+       var model = new AuthorViewModel({
+                        document : document
+                    });
+       var view = new AuthorViewView({
+                        model: model,
+                        el : $("<div/>")
+                    });
+       document.fetch({ processData:  true, cache : false});
+       this.el = function() {return $(view.el);}
+}
+
 })(window);

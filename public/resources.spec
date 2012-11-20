@@ -95,7 +95,6 @@ set systemPage
  js   js/infotextinputs.js
  js   js/buttons.js
  js   js/uploadbuttons.js
- js   js/uploadview.js
  js   js/tooltips.js
  js   js/calendar.js
  js   js/submits.js
@@ -117,7 +116,7 @@ set systemPage
  js   js/signatories.js
  js   js/documents.js
  js   js/confirmationsWithEmails.js
- js   js/docview.js
+ js   js/authorview/authorview.js
  js   js/attachmentview.js
  js   js/tasks.js
  js   js/docsignviewframes.js

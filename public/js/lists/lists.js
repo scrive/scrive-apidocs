@@ -286,7 +286,7 @@
               this.pretablebox = $("<div class='tab-content'/>");
             this.tableoptionbox = $("<div class='option-top-box' />");
             this.pretableboxsubbox = $("<div class='subbox empty'/>");
-            this.tablebox = $("<div class='tab-table'/>");
+            this.tablebox = $("<div class='table'/>");
 
             this.tableboxfooter = $("<div/>");
             this.tablebox.append(this.tableboxfooter);
@@ -498,6 +498,10 @@
               });
             };
             this.model = function() {return model;}
+            this.setShowLimit = function(l) {
+                    schema.paging().setShowLimit(l);
+                    schema.trigger("change");
+            };
             schema.bind('change', function() {self.recall();});
             if (args.loadOnInit != false) self.recall();
         }
