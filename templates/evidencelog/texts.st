@@ -19,17 +19,18 @@ SetEmailIdentificationEvidenceText=$actor$ required only email verification for 
 TimeoutDocumentEvidenceText=Signing due date passed. Possibility to sign disabled by $actor$.
 ###
 SignDocumentEvidenceText=Signed by $actor$ $if(!eleg)$ by clicking the sign button. $else$
-        using e-legitimation. The text signed in the e-legitimation client was $infotext$.
-        E-legitimation provider: $provider$.
+        using e-legitimation.<br />
+        The text signed in the e-legitimation client was "$infotext$".<br />
+        E-legitimation provider: $provider$.<br />
         $if(fieldsverified)$
-            Information about signatory verified by $provider$:
-                $if(fstnameverified)$ First name; $endif$
-                $if(lstnameverified)$ Last name; $endif$
-                $if(persnumverified)$ Personal number; $endif$
+            Information about signatory verified by $provider$:<br />
+                $if(fstnameverified)$ First name; <br />$endif$
+                $if(lstnameverified)$ Last name; <br />$endif$
+                $if(persnumverified)$ Personal number; <br />$endif$
         $endif$
-        Signature: $signature$.
-        $if(certificate)$ Certificate: $certificate$ $endif$
-        $if(ocsp)$ OCSP Response: $ocsp$ $endif$
+        Signature: $signature$.<br />
+        $if(certificate)$ Certificate: $certificate$ <br />$endif$
+        $if(ocsp)$ OCSP Response: $ocsp$$endif$
 
     $endif$
 ###
