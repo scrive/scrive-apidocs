@@ -122,6 +122,7 @@ import DB.TimeZoneName (TimeZoneName, mkTimeZoneName, withTimeZone)
 import qualified DB.TimeZoneName as TimeZoneName
 import DB.SQL2
 import Control.Monad.State.Class
+import Company.Model
 
 data DocumentPagination =
   DocumentPagination
@@ -446,7 +447,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentsharing" documentsharing
                    , checkEqualBy "documentrejectioninfo" documentrejectioninfo
                    , checkEqualBy "documenttags" documenttags
-                   , checkEqualBy "documentauthorattachments" documentauthorattachments
+                   , checkEqualBy "documentauthorattachments" (sort . documentauthorattachments)
                    , checkEqualBy "documentui" documentui
                    , checkEqualBy "documentlang" documentlang
                    , checkEqualBy "documentsignatorylinks count" (length . documentsignatorylinks)
@@ -2058,6 +2059,10 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m SignLinkFromDe
 data SignableFromDocumentIDWithUpdatedAuthor = SignableFromDocumentIDWithUpdatedAuthor User DocumentID Actor
 instance (MonadDB m, TemplatesMonad m)=> DBUpdate m SignableFromDocumentIDWithUpdatedAuthor (Maybe Document) where
   update (SignableFromDocumentIDWithUpdatedAuthor user docid actor) = do
+          mcompany <- maybe (return Nothing) (query . GetCompany) (usercompany user)
+          let replaceAuthorSigLink sl
+                | isAuthor sl = replaceSignatoryUser sl user mcompany
+                | otherwise = sl
           let time = actorTime actor
           res <- (flip newFromDocument) docid $ \doc ->
             (templateToDocument doc) {
@@ -2077,10 +2082,6 @@ instance (MonadDB m, TemplatesMonad m)=> DBUpdate m SignableFromDocumentIDWithUp
                 (Just $ documentid d)
                 actor
               return $ Just d
-    where replaceAuthorSigLink :: SignatoryLink -> SignatoryLink
-          replaceAuthorSigLink sl
-            | isAuthor sl = replaceSignatoryUser sl user
-            | otherwise = sl
 
 data StoreDocumentForTesting = StoreDocumentForTesting Document
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m StoreDocumentForTesting DocumentID where

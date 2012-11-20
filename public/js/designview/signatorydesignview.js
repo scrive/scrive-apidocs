@@ -27,20 +27,6 @@ var SignatoryDesignView = Backbone.View.extend({
         this.model.signatory().bind('change:csv', this.render);
         this.render();
     },
-    name : function() {
-       var signatory = this.model.signatory();
-       var process = signatory.document().process();
-       if (signatory.isCsv())
-        return localization.csv.title;
-       if (signatory.signs() &&  signatory.author())
-        return process.localization().authorsignatoryname + (process.numberedsignatories() ? " " + signatory.signIndex() : "");
-       else if(signatory.author())
-        return process.localization().authorname;
-       else if (signatory.signs())
-        return process.localization().signatoryname + (process.numberedsignatories() ? " " + signatory.signIndex() : "");
-       else
-        return process.localization().nonsignatoryname;
-    },
    addCustomFieldButton : function() {
         var signatory = this.model.signatory();
         var addFieldButton = $("<a class='addField' href='#'/>");
@@ -185,7 +171,7 @@ var SignatoryDesignView = Backbone.View.extend({
    top : function() {
         var top = $("<div class='top'/>");
         var signatory = this.model.signatory();
-        top.append($("<span class='signame'/>").text(this.name().toUpperCase()));
+        top.append($("<span class='signame'/>").text(signatory.nameInDocument().toUpperCase()));
         top.append(this.setRoleFieldIcon());
         if (!signatory.author())
             top.append(this.setCsvSignatoryIcon());

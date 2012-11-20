@@ -397,7 +397,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
     },
     subtitle : function() {
         var box = $("<div class='subtitle'/>");
-        var name = this.model.field().signatory().view.name();
+        var name = this.model.field().signatory().nameInDocument();
         if (this.model.field().signatory().nameOrEmail() != "")
             name = this.model.field().signatory().nameOrEmail();
         var text = localization.designview.checkboxes.forThis + " " + name;
