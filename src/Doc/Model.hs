@@ -388,7 +388,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentrejectioninfo" documentrejectioninfo
                    , checkEqualBy "documenttags" documenttags
                    , checkEqualBy "documentdeleted" documentdeleted
-                   , checkEqualBy "documentauthorattachments" documentauthorattachments
+                   , checkEqualBy "documentauthorattachments" (sort . documentauthorattachments)
                    , checkEqualBy "documentui" documentui
                    , checkEqualBy "documentregion" documentregion
                    , checkEqualBy "documentsignatorylinks count" (length . documentsignatorylinks)
