@@ -20,7 +20,8 @@ TimeoutDocumentEvidenceText=Signing due date passed. Possibility to sign disable
 ###
 SignDocumentEvidenceText=Signed by $actor$ $if(!eleg)$ by clicking the sign button.$else$
         using e-legitimation.
-        <p>The text signed in the e-legitimation client was "$infotext$".</p>
+        <p>The text signed in the e-legitimation client was </p>
+        <pre>$infotext$</pre>
         <p>E-legitimation provider: $provider$.</p>
         $if(fieldsverified)$
             <p>Information about signatory verified by $provider$:
