@@ -3,6 +3,7 @@ module EvidenceLog.Model (
   , eventTextTemplateName
   , apiActor
   , InsertEvidenceEvent(..)
+  , InsertEvidenceEventForManyDocuments(..)
   , GetEvidenceLog(..)
   , DocumentEvidenceEvent(..)
   , copyEvidenceLogToNewDocument
@@ -36,6 +37,13 @@ data InsertEvidenceEvent = InsertEvidenceEvent
                            Actor                  -- Actor
     deriving (Typeable)
 
+data InsertEvidenceEventForManyDocuments = InsertEvidenceEventForManyDocuments
+                           EvidenceEventType      -- A code for the event
+                           (F.Fields Identity ()) -- Text for evidence
+                           [DocumentID]           -- The list of document ids this event is about
+                           Actor                  -- Actor
+    deriving (Typeable)
+
 eventTextTemplateName :: EvidenceEventType -> String
 eventTextTemplateName e =  (show e) ++ "Text"
 
@@ -46,6 +54,21 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool wh
       sqlSet "document_id" mdid
       sqlSet "time" $ actorTime actor
       sqlSet "text" text
+      sqlSet "event_type" event
+      sqlSet "version_id" versionID
+      sqlSet "user_id" $ actorUserID actor
+      sqlSet "email" $ actorEmail actor
+      sqlSet "request_ip_v4" $ actorIP actor
+      sqlSet "signatory_link_id" $ actorSigLinkID actor
+      sqlSet "api_user" $ actorAPIString actor
+
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventForManyDocuments () where
+  update (InsertEvidenceEventForManyDocuments event textFields dids actor) = do
+   texts <- lift $ forM dids $ \did -> renderTemplateI (eventTextTemplateName event) $ textFields >> F.value "did" (show did)
+   kRun_ $ sqlInsert "evidence_log" $ do
+      sqlSetList "document_id" dids
+      sqlSet "time" $ actorTime actor
+      sqlSetList "text" texts
       sqlSet "event_type" event
       sqlSet "version_id" versionID
       sqlSet "user_id" $ actorUserID actor

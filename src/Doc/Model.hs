@@ -1261,15 +1261,13 @@ instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSig
         mds <- forM csvdata $ \csvdata1 -> do
           mhs <- lift $ replicateM sigs random
           md <- newFromDocument (toNewDoc csvdata1 mhs) document
-          when_ (isJust md) $ do
-            let d = $fromJust md
-            update $ InsertEvidenceEvent
-              AuthorUsesCSVEvidence
-              (value "actor" (actorWho actor) >> value "did" (show docid))
-              (Just $ documentid d)
-              actor
           return $ $fromJust md
         copyEvidenceLogToNewDocuments docid (map documentid mds)
+        update $ InsertEvidenceEventForManyDocuments
+              AuthorUsesCSVEvidence
+              (value "actor" (actorWho actor))
+              (map documentid mds)
+              actor
         return mds
    where
      now = actorTime actor
