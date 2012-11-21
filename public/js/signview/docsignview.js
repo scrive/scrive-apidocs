@@ -187,7 +187,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
         _.each(attachments, function(attachment,i) {
                 var task = new PageTask({
                             isComplete: function() {
-                                return attachment.hasFile() && attachment.isReviewed();
+                                return attachment.hasFile();
                             },
                             el: els[i],
                             onActivate   : function() {$(model.signatoryattachmentsection().el).addClass("highlight");},

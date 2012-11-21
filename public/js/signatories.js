@@ -9,7 +9,6 @@ window.SignatoryAttachment = Backbone.Model.extend({
         name: "",
         description: "",
         loading: false,
-        reviewed: false
     },
     initialize: function(args) {
         if (args.file != undefined) {
@@ -24,7 +23,7 @@ window.SignatoryAttachment = Backbone.Model.extend({
         return this.get("file");
     },
     setFile: function(file) {
-        return this.set({'file': file, 'reviewed':false});
+        return this.set({'file': file});
     },
     description: function() {
         return this.get("description");
@@ -34,14 +33,6 @@ window.SignatoryAttachment = Backbone.Model.extend({
     },
     hasFile: function() {
         return this.file() != undefined;
-    },
-    isReviewed: function() {
-        return this.get('reviewed');
-    },
-    review: function() {
-        this.set({'reviewed':true}, {silent : true});
-        this.trigger('change');
-        return this;
     },
     signatory: function() {
         return this.get("signatory");
@@ -146,7 +137,6 @@ window.SignatoryAttachmentUploadView = Backbone.View.extend({
   reviewButton: function() {
       var model = this.model;
       var button = Button.init({color: "green", text: localization.reviewPDF, width: 90, size:'small', onClick: function() {
-          model.review();
           window.open(model.file().downloadLink(), '_blank');
           }});
       return button;
