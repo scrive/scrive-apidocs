@@ -89,13 +89,14 @@ var CsvProblem = Backbone.Model.extend({
   },
   upload : function(input) {
        var sigdesign = this;
-       var submit = new Submit({ url : "/parsecsv", method : "POST", expectedType:"json"});
+       var submit = new Submit({ url : "/parsecsv", method : "POST", expectedType:"text"});
        submit.add("customfieldscount",this.signatory().customFields().length);
        if (this.signatory().document().elegAuthentication())
         submit.add("eleg","YES");
        submit.addInputs(input);
        submit.sendAjax(function (resp) {
-           var jresp = resp;
+        try {
+           var jresp = JSON.parse(resp);
            var extraproblems = [];
            if(BlockingInfo && BlockingInfo.shouldBlockDocs(jresp.rows.length)) {
                extraproblems.push(new CsvProblem({description:BlockingInfo.csvMessage(jresp.rows.length)}));
@@ -105,7 +106,8 @@ var CsvProblem = Backbone.Model.extend({
            problems = problems.concat(extraproblems);
            sigdesign.set({'rows': jresp.rows, 'problems': problems });
            sigdesign.trigger("change");
-          });
+        } catch(e) {};
+      });   
   }
 });
 
