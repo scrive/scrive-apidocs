@@ -190,8 +190,8 @@ docStateTests env = testGroup "DocState" [
   testThat "UpdateSigAttachments works as advertised" env testUpdateSigAttachmentsAttachmentsOk,
 
   -- we need to do one that tests updateDocumentAttachment where there is an attachment
-  testThat "documentFromSignatoryData fails when document doesn't exist" env testDocumentFromSignatoryDataFailsDoesntExist,
-  testThat "documentFromSignatoryData succeeds when document exists" env testDocumentFromSignatoryDataSucceedsExists,
+  testThat "DocumentFromSignatoryData fails when document doesn't exist" env testDocumentFromSignatoryDataFailsDoesntExist,
+  testThat "DocumentFromSignatoryData succeeds when document exists" env testDocumentFromSignatoryDataSucceedsExists,
   testThat "TimeoutDocument fails when document is not signable" env testTimeoutDocumentNonSignableLeft,
 
   -- archive & doc deletion tests
