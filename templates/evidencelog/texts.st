@@ -28,9 +28,9 @@ SignDocumentEvidenceText=Signed by $actor$ $if(!eleg)$ by clicking the sign butt
                 $if(lstnameverified)$ Last name; $endif$
                 $if(persnumverified)$ Personal number; $endif$</p>
         $endif$
-        <p>Signature: <div style="white-space:no-wrap">$signature$</div></p>
-        $if(certificate)$ <p>Certificate: <div style="white-space:no-wrap">$certificate$</div></p>$endif$
-        $if(ocsp)$ <p>OCSP Response: <div style="white-space:no-wrap">$ocsp$</div></p>$endif$
+        <p>Signature: <div style="white-space:pre">$signature$</div></p>
+        $if(certificate)$ <p>Certificate: <div style="white-space:pre">$certificate$</div></p>$endif$
+        $if(ocsp)$ <p>OCSP Response: <div style="white-space:pre">$ocsp$</div></p>$endif$
     $endif$
 ###
 SetInvitationDeliveryStatusEvidenceText=$actor$ reported that email invitation to sign (sent to $email$) was $status$.
