@@ -7,6 +7,7 @@ import Data.Int
 import Data.Monoid
 import Database.HDBC
 import Text.JSON
+import Data.String (IsString, fromString)
 
 import DB
 import Doc.Tables
@@ -51,6 +52,47 @@ removeDeletedFromDocuments = Migration {
   , mgrFrom = 14
   , mgrDo = do
     kRunRaw "ALTER TABLE documents DROP COLUMN deleted"
+}
+
+removeSignatoryLinksInternalInsertOrder :: MonadDB m => Migration m
+removeSignatoryLinksInternalInsertOrder = Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 14
+  , mgrDo = do
+      kRunRaw $ "ALTER TABLE signatory_link_fields "
+             ++ "DROP CONSTRAINT fk_signatory_link_fields_signatory_links, "
+             ++ "ADD CONSTRAINT fk_signatory_link_fields_signatory_links FOREIGN KEY (signatory_link_id) "
+             ++ "REFERENCES signatory_links (id) MATCH SIMPLE "
+             ++ "ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;"
+
+      kRunRaw $ "ALTER TABLE signatory_attachments "
+             ++ "DROP CONSTRAINT fk_signatory_attachments_signatory_links, "
+             ++ "ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY (signatory_link_id) "
+             ++ "REFERENCES signatory_links (id) MATCH SIMPLE "
+             ++ "ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;"
+
+      let kRunUntilZero command = do
+            result <- command
+            when (result>0) (kRunUntilZero command)
+
+      -- Here we fix order of signatory links by one single signatory
+      -- link. There are at most 24 signatory links in a document in
+      -- the database, so this loop will finish at most after 24
+      -- iterations. This is like buble sort that moves an element not
+      -- in order to the end of a list and then repeats. It has to be
+      -- that way because order of execution of UPDATE is by
+      -- definition non-deterministic and therefore sequential numbers
+      -- could be taken in order different than we want.
+
+      kRunUntilZero $
+               kRun $ (SQL (fromString $ "UPDATE signatory_links "
+                    ++   "SET id = DEFAULT "
+                    ++  "FROM signatory_links AS sl2 "
+                    ++ "WHERE sl2.document_id = signatory_links.document_id "
+                    ++   "AND signatory_links.id < sl2.id "
+                    ++   "AND signatory_links.internal_insert_order > sl2.internal_insert_order;") [])
+      kRunRaw $ "ALTER TABLE signatory_links "
+             ++ "DROP COLUMN internal_insert_order;"
 }
 
 removeSignatoryRoles :: MonadDB m => Migration m

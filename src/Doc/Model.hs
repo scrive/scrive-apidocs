@@ -202,7 +202,7 @@ selectSignatoryLinksSmartNames is_author is_partner =
       SQL (") AS value FROM signatory_links" <>
            " WHERE signatory_links.document_id = documents.id" <>
            "   AND signatory_links.is_author = ? AND signatory_links.is_partner = ?" <>
-           " ORDER BY signatory_links.internal_insert_order) AS x") [toSql is_author, toSql is_partner]
+           " ORDER BY signatory_links.id) AS x") [toSql is_author, toSql is_partner]
   where
     selectFieldAs xtype name = "(SELECT signatory_link_fields.value AS value" <+>
                                     "FROM signatory_link_fields" <+>
@@ -689,7 +689,7 @@ insertSignatoryLinksAsAre documentid links = do
   _ <- kRun $ selectSignatoryLinksX $ do
          sqlWhereIn "signatory_links.id" slids
          sqlWhereEq "signatory_links.document_id" documentid
-         sqlOrderBy "internal_insert_order DESC"
+         sqlOrderBy "signatory_links.id DESC"
 
   siglinks <- fetchSignatoryLinks
 
@@ -1299,7 +1299,7 @@ selectDocuments sqlquery = do
 
     _ <- kRun $ SQL "CREATE TEMP TABLE links AS " [] <>
          selectSignatoryLinksSQL <>
-         SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE signatory_links.document_id = docs.id) ORDER BY document_id DESC, internal_insert_order DESC" []
+         SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE signatory_links.document_id = docs.id) ORDER BY document_id DESC, signatory_links.id DESC" []
     _ <- kRun $ SQL "SELECT * FROM links" []
     sls <- fetchSignatoryLinks
 
