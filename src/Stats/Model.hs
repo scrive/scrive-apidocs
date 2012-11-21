@@ -323,10 +323,10 @@ fetchUserIDAndStats = foldDB decoder M.empty
     decoder acc uid time quantity amount =
       M.insertWith' (++) uid [(time,quantity,amount)] acc
 
-data GetUsersAndStatsAndInviteInfo = GetUsersAndStatsAndInviteInfo [UserFilter] [AscDesc UserOrderBy] UserPagination
+data GetUsersAndStatsAndInviteInfo = GetUsersAndStatsAndInviteInfo [UserFilter] [AscDesc UserOrderBy] (Int,Int)
 instance MonadDB m => DBQuery m GetUsersAndStatsAndInviteInfo
   [(User, Maybe Company, [(MinutesTime, DocStatQuantity, Int)], Maybe InviteInfo)] where
-  query (GetUsersAndStatsAndInviteInfo filters sorting pagination) = do
+  query (GetUsersAndStatsAndInviteInfo filters sorting (offset,limit)) = do
     _ <- kRun $ mconcat
          [ SQL "CREATE TEMP TABLE users_and_companies_temp AS " []
          , selectUsersAndCompaniesAndInviteInfoSQL
@@ -336,7 +336,7 @@ instance MonadDB m => DBQuery m GetUsersAndStatsAndInviteInfo
          , if null sorting
            then mempty
            else SQL " ORDER BY " [] <> sqlConcatComma (map userOrderByAscDescToSQL sorting)
-         , " OFFSET" <?> userOffset pagination <+> "LIMIT" <?> userLimit pagination
+         , " OFFSET" <?> offset <+> "LIMIT" <?> limit
          ]
 
     _ <- kRun $ SQL "SELECT * FROM users_and_companies_temp" []
