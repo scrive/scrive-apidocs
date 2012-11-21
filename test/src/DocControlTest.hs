@@ -17,6 +17,8 @@ import Doc.Model
 import Doc.DocStateData
 import Doc.DocControl
 import Doc.DocUtils
+import IPAddress
+import Test.QuickCheck
 import Company.Model
 import User.Model
 import Util.SignatoryLinkUtils
@@ -41,6 +43,7 @@ docControlTests env = testGroup "Templates" [
   , testThat "We can get json for document" env testGetLoggedIn
   , testThat "We can't get json for document if we are not logged in" env testGetNotLoggedIn
   , testThat "We can't get json for document is we are logged in but we provided authorization header" env testGetBadHeader
+  , testThat "Split document works for csv data" env testSplitDocumentWorkerSucceedes
 
   ]
 
@@ -88,6 +91,20 @@ uploadDocAsNewUser doctype = do
                         , ("file", inFile "test/pdfs/simple.pdf") ]
   (rsp, _ctx') <- runTestKontra req ctx $ apiCallCreateFromFile
   return (user, rsp)
+
+testSplitDocumentWorkerSucceedes :: TestEnv ()
+testSplitDocumentWorkerSucceedes = doTimes 10 $ do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> length (documentsignatorylinks d)>=2 && not (isTemplate d))
+  let csvdata = replicate 20 ["First", "Last", "email@email.com", "Company", "Personalnumber", "Companynumber", "Field 1", "Field 2", "Field 3"]
+  let replace2nd 2 link = link { signatorylinkcsvupload = Just (error "should not inspect this field here") }
+      replace2nd _ link = link
+  let doc' = doc { documentsignatorylinks = zipWith replace2nd [1..] (documentsignatorylinks doc) }
+  time <- rand 10 arbitrary
+  let actor = authorActor time noIP (userid author) (getEmail author)
+  docs <- splitUpDocumentWorker doc' actor csvdata
+  validTest $ do
+    assertEqual "Number of documents after split equals length of input data" (length csvdata) (length docs)
 
 testSendingDocumentSendsInvites :: TestEnv ()
 testSendingDocumentSendsInvites = do

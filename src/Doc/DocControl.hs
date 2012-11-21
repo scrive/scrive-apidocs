@@ -11,6 +11,7 @@ module Doc.DocControl(
     , handleDownloadFile
     , handleSignShow
     , handleSignShowSaveMagicHash
+    , splitUpDocumentWorker
     , signDocument
     , signDocumentIphoneCase
     , rejectDocument
