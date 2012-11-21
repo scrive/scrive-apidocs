@@ -5,7 +5,6 @@ module Payments.Model where
 import Data.Int (Int64)
 --import Control.Monad.Trans.Error
 import Control.Monad.Base
-import Data.Monoid ((<>))
 import Data.Typeable
 import Control.Applicative
 import Data.Maybe

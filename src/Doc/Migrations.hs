@@ -7,7 +7,6 @@ import Data.Int
 import Data.Monoid
 import Database.HDBC
 import Text.JSON
-import Data.String (IsString, fromString)
 
 import DB
 import Doc.Tables
@@ -60,16 +59,16 @@ removeSignatoryLinksInternalInsertOrder = Migration {
   , mgrFrom = 14
   , mgrDo = do
       kRunRaw $ "ALTER TABLE signatory_link_fields "
-             ++ "DROP CONSTRAINT fk_signatory_link_fields_signatory_links, "
-             ++ "ADD CONSTRAINT fk_signatory_link_fields_signatory_links FOREIGN KEY (signatory_link_id) "
-             ++ "REFERENCES signatory_links (id) MATCH SIMPLE "
-             ++ "ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;"
+             <> "DROP CONSTRAINT fk_signatory_link_fields_signatory_links, "
+             <> "ADD CONSTRAINT fk_signatory_link_fields_signatory_links FOREIGN KEY (signatory_link_id) "
+             <> "REFERENCES signatory_links (id) MATCH SIMPLE "
+             <> "ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;"
 
       kRunRaw $ "ALTER TABLE signatory_attachments "
-             ++ "DROP CONSTRAINT fk_signatory_attachments_signatory_links, "
-             ++ "ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY (signatory_link_id) "
-             ++ "REFERENCES signatory_links (id) MATCH SIMPLE "
-             ++ "ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;"
+             <> "DROP CONSTRAINT fk_signatory_attachments_signatory_links, "
+             <> "ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY (signatory_link_id) "
+             <> "REFERENCES signatory_links (id) MATCH SIMPLE "
+             <> "ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;"
 
       let kRunUntilZero command = do
             result <- command
@@ -85,14 +84,14 @@ removeSignatoryLinksInternalInsertOrder = Migration {
       -- could be taken in order different than we want.
 
       kRunUntilZero $
-               kRun $ (SQL (fromString $ "UPDATE signatory_links "
-                    ++   "SET id = DEFAULT "
-                    ++  "FROM signatory_links AS sl2 "
-                    ++ "WHERE sl2.document_id = signatory_links.document_id "
-                    ++   "AND signatory_links.id < sl2.id "
-                    ++   "AND signatory_links.internal_insert_order > sl2.internal_insert_order;") [])
+               kRun $ "UPDATE signatory_links "
+                    <>   "SET id = DEFAULT "
+                    <>  "FROM signatory_links AS sl2 "
+                    <> "WHERE sl2.document_id = signatory_links.document_id "
+                    <>   "AND signatory_links.id < sl2.id "
+                    <>   "AND signatory_links.internal_insert_order > sl2.internal_insert_order;"
       kRunRaw $ "ALTER TABLE signatory_links "
-             ++ "DROP COLUMN internal_insert_order;"
+             <> "DROP COLUMN internal_insert_order;"
 }
 
 removeSignatoryRoles :: MonadDB m => Migration m
@@ -103,8 +102,8 @@ removeSignatoryRoles = Migration {
     kRunRaw "ALTER TABLE signatory_links ADD COLUMN is_author BOOL NULL"
     kRunRaw "ALTER TABLE signatory_links ADD COLUMN is_partner BOOL NULL"
     kRunRaw $ "UPDATE signatory_links SET"
-      ++ "  is_author  = (roles & 2)::BOOL"
-      ++ ", is_partner = (roles & 1)::BOOL"
+      <> "  is_author  = (roles & 2)::BOOL"
+      <> ", is_partner = (roles & 1)::BOOL"
     kRunRaw "ALTER TABLE signatory_links DROP COLUMN roles"
     kRunRaw "ALTER TABLE signatory_links ALTER is_author SET NOT NULL"
     kRunRaw "ALTER TABLE signatory_links ALTER is_partner SET NOT NULL"
@@ -189,9 +188,9 @@ addForeignKeyToDocumentTags = Migration {
     mgrTable = tableDocumentTags
   , mgrFrom = 1
   , mgrDo = kRunRaw $ "ALTER TABLE document_tags"
-      ++ " ADD CONSTRAINT fk_document_tags_document_id FOREIGN KEY(document_id)"
-      ++ " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+      <> " ADD CONSTRAINT fk_document_tags_document_id FOREIGN KEY(document_id)"
+      <> " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      <> " DEFERRABLE INITIALLY IMMEDIATE"
 }
 
 deprecateDocFunctionalityCol :: MonadDB m => Migration m
@@ -209,10 +208,10 @@ setCascadeOnSignatoryAttachments = Migration {
   , mgrDo = do
     -- this is supposed to aid in the signatory_links renumeration step that follows
     kRunRaw $ "ALTER TABLE signatory_attachments"
-              ++ " DROP CONSTRAINT fk_signatory_attachments_signatory_links,"
-              ++ " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(document_id,signatory_link_id)"
-              ++ " REFERENCES signatory_links(document_id,id) ON DELETE RESTRICT ON UPDATE CASCADE"
-              ++ " DEFERRABLE INITIALLY IMMEDIATE"
+              <> " DROP CONSTRAINT fk_signatory_attachments_signatory_links,"
+              <> " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(document_id,signatory_link_id)"
+              <> " REFERENCES signatory_links(document_id,id) ON DELETE RESTRICT ON UPDATE CASCADE"
+              <> " DEFERRABLE INITIALLY IMMEDIATE"
   }
 
 renumerateSignatoryLinkIDS :: MonadDB m => Migration m
@@ -221,11 +220,11 @@ renumerateSignatoryLinkIDS = Migration {
   , mgrFrom = 6
   , mgrDo = do
     kRunRaw $ "UPDATE signatory_links"
-              ++ " SET id = DEFAULT"
-              ++ " FROM signatory_links AS sl2"
-              ++ " WHERE signatory_links.id = sl2.id"
-              ++ " AND signatory_links.document_id <>"
-              ++ " sl2.document_id"
+              <> " SET id = DEFAULT"
+              <> " FROM signatory_links AS sl2"
+              <> " WHERE signatory_links.id = sl2.id"
+              <> " AND signatory_links.document_id <>"
+              <> " sl2.document_id"
   }
 
 dropSLForeignKeyOnSignatoryAttachments :: MonadDB m => Migration m
@@ -234,7 +233,7 @@ dropSLForeignKeyOnSignatoryAttachments = Migration {
   , mgrFrom = 4
   , mgrDo = do
     kRunRaw $ "ALTER TABLE signatory_attachments"
-           ++ " DROP CONSTRAINT fk_signatory_attachments_signatory_links"
+           <> " DROP CONSTRAINT fk_signatory_attachments_signatory_links"
   }
 
 setSignatoryLinksPrimaryKeyToIDOnly :: MonadDB m => Migration m
@@ -243,8 +242,8 @@ setSignatoryLinksPrimaryKeyToIDOnly = Migration {
   , mgrFrom = 7
   , mgrDo = do
     kRunRaw $ "ALTER TABLE signatory_links"
-              ++ " DROP CONSTRAINT pk_signatory_links,"
-              ++ " ADD CONSTRAINT pk_signatory_links PRIMARY KEY (id)"
+              <> " DROP CONSTRAINT pk_signatory_links,"
+              <> " ADD CONSTRAINT pk_signatory_links PRIMARY KEY (id)"
   }
 
 setSignatoryAttachmentsForeignKeyToSLIDOnly :: MonadDB m => Migration m
@@ -253,9 +252,9 @@ setSignatoryAttachmentsForeignKeyToSLIDOnly = Migration {
   , mgrFrom = 5
   , mgrDo = do
     kRunRaw $ "ALTER TABLE signatory_attachments"
-      ++ " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id)"
-      ++ " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+      <> " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id)"
+      <> " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      <> " DEFERRABLE INITIALLY IMMEDIATE"
   }
 
 dropDocumentIDColumntFromSignatoryAttachments :: MonadDB m => Migration m
@@ -264,7 +263,7 @@ dropDocumentIDColumntFromSignatoryAttachments = Migration {
   , mgrFrom = 6
   , mgrDo = do
     kRunRaw $ "ALTER TABLE signatory_attachments"
-      ++ " DROP COLUMN document_id"
+      <> " DROP COLUMN document_id"
   }
 
 
@@ -401,7 +400,7 @@ addColumnToRecordInternalInsertionOrder =
   , mgrDo = do
       kRunRaw "CREATE SEQUENCE signatory_links_internal_insert_order_seq"
       kRunRaw $ "ALTER TABLE signatory_links"
-        ++ " ADD COLUMN internal_insert_order BIGINT NOT NULL DEFAULT nextval('signatory_links_internal_insert_order_seq')"
+        <> " ADD COLUMN internal_insert_order BIGINT NOT NULL DEFAULT nextval('signatory_links_internal_insert_order_seq')"
       return ()
   }
 
@@ -463,9 +462,9 @@ addCSVUploadDataFromDocumentToSignatoryLink =
   , mgrFrom = 1
   , mgrDo = do
       kRunRaw $ "ALTER TABLE signatory_links"
-        ++ " ADD COLUMN csv_title TEXT NULL,"
-        ++ " ADD COLUMN csv_contents TEXT NULL,"
-        ++ " ADD COLUMN csv_signatory_index INTEGER NULL"
+        <> " ADD COLUMN csv_title TEXT NULL,"
+        <> " ADD COLUMN csv_contents TEXT NULL,"
+        <> " ADD COLUMN csv_signatory_index INTEGER NULL"
   }
 
 addSignatoryLinkIdToSignatoryAttachment :: MonadDB m => Migration m
@@ -475,22 +474,22 @@ addSignatoryLinkIdToSignatoryAttachment =
   , mgrFrom = 2
   , mgrDo = do
     kRunRaw $ "ALTER TABLE signatory_attachments"
-      ++ " ADD COLUMN signatory_link_id BIGINT NOT NULL DEFAULT 0"
+      <> " ADD COLUMN signatory_link_id BIGINT NOT NULL DEFAULT 0"
     -- set the new column signatory_link_id from signatory_links that have the same email and document_id
     kRunRaw $ "UPDATE signatory_attachments "
-      ++ "SET signatory_link_id = sl.id "
-      ++ "FROM signatory_links sl "
-      ++ "WHERE sl.document_id = signatory_attachments.document_id "
-      ++ "AND regexp_replace(sl.fields, '^.*EmailFT\",\"sfValue\":\"([a-zA-Z0-9@-_.]+)\".*$', E'\\\\1') = signatory_attachments.email"
+      <> "SET signatory_link_id = sl.id "
+      <> "FROM signatory_links sl "
+      <> "WHERE sl.document_id = signatory_attachments.document_id "
+      <> "AND regexp_replace(sl.fields, '^.*EmailFT\",\"sfValue\":\"([a-zA-Z0-9@-_.]+)\".*$', E'\\\\1') = signatory_attachments.email"
     kRunRaw $ "ALTER TABLE signatory_attachments DROP CONSTRAINT pk_signatory_attachments"
     -- delete attachments which have emails and document_id that don't exist in signatory_links
     logAndDeleteBadAttachments
     kRunRaw $ "ALTER TABLE signatory_attachments DROP COLUMN email"
     kRunRaw $ "ALTER TABLE signatory_attachments ADD CONSTRAINT pk_signatory_attachments PRIMARY KEY (document_id, signatory_link_id, name)"
     kRunRaw $ "ALTER TABLE signatory_attachments"
-      ++ " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id, document_id)"
-      ++ " REFERENCES signatory_links(id, document_id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+      <> " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id, document_id)"
+      <> " REFERENCES signatory_links(id, document_id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      <> " DEFERRABLE INITIALLY IMMEDIATE"
     kRunRaw $ "CREATE INDEX idx_signatory_attachments_signatory_link_id ON signatory_attachments(signatory_link_id)"
   }
   where

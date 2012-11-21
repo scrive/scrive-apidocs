@@ -1,6 +1,5 @@
 module Doc.Tokens.Tables where
 
-import Data.Monoid ((<>))
 import DB
 import DB.SQLFunction
 

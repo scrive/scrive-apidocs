@@ -20,7 +20,6 @@ module Mails.Model (
 
 import Control.Monad
 import Data.Monoid
-import Data.String (fromString)
 
 import DB
 import MagicHash
@@ -60,7 +59,7 @@ data DeleteMailsOlderThenDays = DeleteMailsOlderThenDays Integer
 instance MonadDB m => DBUpdate m DeleteMailsOlderThenDays Integer where
   update (DeleteMailsOlderThenDays days) = do
     kRun $ "DELETE FROM mails where (now() > to_be_sent + interval"
-        <+> fromString ("'"++show days++" days'") <+> ")" -- Sorry but it did not work as param.
+        <+> raw (unsafeFromString ("'"++show days++" days'")) <+> ")" -- Sorry but it did not work as param.
 
 data GetUnreadEvents = GetUnreadEvents
 instance MonadDB m => DBQuery m GetUnreadEvents [(EventID, MailID, XSMTPAttrs, Event)] where

@@ -26,7 +26,6 @@ import DB.SQL2
 import Company.CompanyID
 import Control.Monad.State
 import User.UserID
-import Data.Monoid
 
 -- to be removed, only upsales used that
 newtype ExternalCompanyID = ExternalCompanyID { unExternalCompanyID :: String }

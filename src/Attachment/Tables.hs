@@ -18,22 +18,22 @@ tableAttachments = tblTable {
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE attachments"
-          ++ "( id         BIGSERIAL   NOT NULL"
-          ++ ", title      TEXT        NOT NULL"
-          ++ ", ctime      TIMESTAMPTZ NOT NULL"
-          ++ ", mtime      TIMESTAMPTZ NOT NULL"
-          ++ ", user_id    BIGINT      NOT NULL"
-          ++ ", file_id    BIGINT      NOT NULL"
-          ++ ", shared     BOOL        NOT NULL"
-          ++ ", deleted    BOOL        NOT NULL"
-          ++ ", CONSTRAINT pk_attachments PRIMARY KEY (id)"
-          ++ ")"
+          <> "( id         BIGSERIAL   NOT NULL"
+          <> ", title      TEXT        NOT NULL"
+          <> ", ctime      TIMESTAMPTZ NOT NULL"
+          <> ", mtime      TIMESTAMPTZ NOT NULL"
+          <> ", user_id    BIGINT      NOT NULL"
+          <> ", file_id    BIGINT      NOT NULL"
+          <> ", shared     BOOL        NOT NULL"
+          <> ", deleted    BOOL        NOT NULL"
+          <> ", CONSTRAINT pk_attachments PRIMARY KEY (id)"
+          <> ")"
         return TVRcreated
       _ -> return TVRinvalid
   , tblPutProperties = do
     kRunRaw $ "ALTER TABLE attachments"
-      ++ " ADD CONSTRAINT fk_attachments_user_id FOREIGN KEY(user_id)"
-      ++ " REFERENCES users(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+      <> " ADD CONSTRAINT fk_attachments_user_id FOREIGN KEY(user_id)"
+      <> " REFERENCES users(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
+      <> " DEFERRABLE INITIALLY IMMEDIATE"
     return ()
   }

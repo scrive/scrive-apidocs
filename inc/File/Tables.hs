@@ -19,17 +19,17 @@ tableFiles = tblTable {
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE files ("
-          ++ "  id BIGINT NOT NULL"
-          ++ ", name TEXT NOT NULL"
-          ++ ", content BYTEA NULL"
-          ++ ", amazon_bucket TEXT NULL"
-          ++ ", amazon_url TEXT NULL"
-          ++ ", size INTEGER NOT NULL"
-          ++ ", checksum BYTEA NOT NULL"
-          ++ ", aes_key BYTEA NOT NULL"
-          ++ ", aes_iv BYTEA NOT NULL"
-          ++ ", CONSTRAINT pk_files PRIMARY KEY (id)"
-          ++ ")"
+          <> "  id BIGINT NOT NULL"
+          <> ", name TEXT NOT NULL"
+          <> ", content BYTEA NULL"
+          <> ", amazon_bucket TEXT NULL"
+          <> ", amazon_url TEXT NULL"
+          <> ", size INTEGER NOT NULL"
+          <> ", checksum BYTEA NOT NULL"
+          <> ", aes_key BYTEA NOT NULL"
+          <> ", aes_iv BYTEA NOT NULL"
+          <> ", CONSTRAINT pk_files PRIMARY KEY (id)"
+          <> ")"
         return TVRcreated
       _ -> return TVRinvalid
   , tblPutProperties = do

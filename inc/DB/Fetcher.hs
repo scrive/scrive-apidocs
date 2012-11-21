@@ -8,7 +8,6 @@ import Control.Monad.IO.Class
 import Data.Convertible
 import Data.Maybe
 import Data.Monoid
-import Data.String (fromString)
 import Database.HDBC hiding (originalQuery)
 import qualified Control.Exception as E
 import qualified Database.HDBC as HDBC
@@ -65,7 +64,7 @@ foldDB decoder !init_acc = do
     (Right acc, _, _) -> return acc
     (Left err, st, values) -> do
       kFinish
-      liftIO $ E.throwIO err { originalQuery = SQL (fromString (HDBC.originalQuery st)) values }
+      liftIO $ E.throwIO err { originalQuery = SQL (unsafeFromString (HDBC.originalQuery st)) values }
   where
     worker st !acc = do
       mrow <- fetchRow st

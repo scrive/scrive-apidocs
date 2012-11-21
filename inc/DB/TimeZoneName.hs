@@ -10,14 +10,13 @@ import Data.Char (isAlpha, isAlphaNum)
 import qualified Control.Exception.Lifted as E
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Convertible (Convertible (..))
-import Data.String (fromString)
 import Data.Typeable (Typeable)
 import Database.HDBC (SqlValue)
 
 import DB.Core (MonadDB)
 import DB.Env (DBEnv)
 import DB.Functions (kRun)
-import DB.SQL (SQL, (<?>), (<+>))
+import DB.SQL (SQL, (<?>), (<+>), unsafeFromString, raw)
 import DB.Utils (getOne, exactlyOneObjectReturnedGuard)
 
 default (SQL)
@@ -52,7 +51,7 @@ withTimeZone (TimeZoneName tz) m = E.bracket
   setTz
   (const m)
   where setTz tz' = kRun ("SET timezone =" <+> tzq) >> return ()
-           where tzq = fromString ("'" ++ tz' ++ "'") -- tz' is sanity checked
+           where tzq = raw $ unsafeFromString ("'" ++ tz' ++ "'") -- tz' is sanity checked
 
 toString :: TimeZoneName -> String
 toString (TimeZoneName s) = s

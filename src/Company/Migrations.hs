@@ -66,10 +66,10 @@ addDefaultEmptyStringsToSomeColumnsInCompaniesTable =
     mgrTable = tableCompanies
   , mgrFrom = 5
   , mgrDo = kRunRaw $ "ALTER TABLE companies"
-    ++ " ALTER name SET DEFAULT '',"
-    ++ " ALTER number SET DEFAULT '',"
-    ++ " ALTER address SET DEFAULT '',"
-    ++ " ALTER zip SET DEFAULT '',"
-    ++ " ALTER city SET DEFAULT '',"
-    ++ " ALTER country SET DEFAULT ''"
+    <> " ALTER name SET DEFAULT '',"
+    <> " ALTER number SET DEFAULT '',"
+    <> " ALTER address SET DEFAULT '',"
+    <> " ALTER zip SET DEFAULT '',"
+    <> " ALTER city SET DEFAULT '',"
+    <> " ALTER country SET DEFAULT ''"
   }

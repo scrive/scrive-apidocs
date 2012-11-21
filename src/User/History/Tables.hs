@@ -17,24 +17,24 @@ tableUsersHistory = tblTable {
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE users_history ("
-          ++ "  user_id BIGINT NOT NULL"
-          ++ ", event_type INTEGER NOT NULL"
-          ++ ", event_data TEXT NULL "
-          ++ ", ip INTEGER NOT NULL"
-          ++ ", time TIMESTAMPTZ NOT NULL"
-          ++ ", system_version TEXT NOT NULL"
-          ++ ", performing_user_id BIGINT NULL"
-          ++ ")"
+          <> "  user_id BIGINT NOT NULL"
+          <> ", event_type INTEGER NOT NULL"
+          <> ", event_data TEXT NULL "
+          <> ", ip INTEGER NOT NULL"
+          <> ", time TIMESTAMPTZ NOT NULL"
+          <> ", system_version TEXT NOT NULL"
+          <> ", performing_user_id BIGINT NULL"
+          <> ")"
         return TVRcreated
       _ -> return TVRinvalid
   , tblPutProperties = do
     kRunRaw "CREATE INDEX idx_users_history_user_id ON users_history(user_id)"
     kRunRaw $ "ALTER TABLE users_history"
-      ++ " ADD CONSTRAINT fk_users_history_user_id FOREIGN KEY(user_id)"
-      ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+      <> " ADD CONSTRAINT fk_users_history_user_id FOREIGN KEY(user_id)"
+      <> " REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE"
+      <> " DEFERRABLE INITIALLY IMMEDIATE"
     kRunRaw $ "ALTER TABLE users_history"
-      ++ " ADD CONSTRAINT fk_users_history_performing_user_id FOREIGN KEY(performing_user_id)"
-      ++ " REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+      <> " ADD CONSTRAINT fk_users_history_performing_user_id FOREIGN KEY(performing_user_id)"
+      <> " REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE"
+      <> " DEFERRABLE INITIALLY IMMEDIATE"
   }

@@ -6,7 +6,6 @@ module Payments.Stats (record
 
 import Control.Monad.Base
 import Data.Maybe
-import Data.Monoid ((<>))
 
 import MinutesTime
 import DB

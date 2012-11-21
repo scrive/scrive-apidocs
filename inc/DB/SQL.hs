@@ -6,6 +6,7 @@ module DB.SQL (
   , sqlParam
   , (<+>)
   , (<?>)
+  , (<>)
   , AscDesc(..)
   , IsSQL(..)
   , sqlOR
@@ -14,6 +15,7 @@ module DB.SQL (
   , sqlConcatOR
   , parenthesize
   , intersperse
+  , unsafeFromString
   ) where
 
 import Data.Convertible
@@ -25,16 +27,20 @@ import Database.HDBC
 infixl 6 <?>, <+>
 
 -- | Raw SQL fragments and statements (without parameters).  The
--- primitive way to construct 'RawSQL' is through
--- 'Data.String.fromString'.  By using the OverloadedStrings
--- extension, string literals can be converted by implicit uses of
--- 'fromString'.  Explicit uses of 'fromString' should be used with
--- care, to minimize risk of SQL injection.
+-- standard way to construct 'RawSQL' is by using the
+-- OverloadedStrings extension together with string literals.  Avoid
+-- explicit use of 'fromString' at all, since it can be used to
+-- convert any dynamic value to SQL, opening the door to SQL injection
+-- attacks. If absolutely necessary, use 'unsafeFromString', to
+-- indicate that you guarantee that SQL injection cannot happen.
 newtype RawSQL = RawSQL { unRawSQL :: String }
   deriving (Eq, Show)
 
 instance IsString RawSQL where
   fromString = RawSQL
+
+unsafeFromString :: String -> RawSQL
+unsafeFromString = fromString
 
 instance Convertible RawSQL SqlValue where
   safeConvert = safeConvert . unRawSQL

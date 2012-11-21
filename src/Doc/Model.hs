@@ -91,7 +91,6 @@ import Control.Logic
 import Doc.DocStateData
 import Doc.Invariants
 import Data.Maybe hiding (fromJust)
-import Data.String(fromString)
 import Data.Time.Format (formatTime)
 import System.Locale (defaultTimeLocale)
 import Utils.List
@@ -332,9 +331,9 @@ documentFilterToSQL (DocumentFilterMaxChangeTime ctime) = do
 documentFilterToSQL (DocumentFilterByProcess processes) = do
   sqlWhereIn "documents.process" processes
 documentFilterToSQL (DocumentFilterByMonthYearFrom (month,year)) = do
-  sqlWhere $ fromString $ "(documents.mtime > '" ++ show year ++  "-" ++ show month ++ "-1')"
+  sqlWhere $ raw $ unsafeFromString $ "(documents.mtime > '" ++ show year ++  "-" ++ show month ++ "-1')"
 documentFilterToSQL (DocumentFilterByMonthYearTo (month,year)) = do
-  sqlWhere $ fromString $ "(documents.mtime < '" ++ show (year + 1 <| month == 12 |> year)++ "-" ++ show ((month `mod` 12) + 1) ++ "-1')"
+  sqlWhere $ raw $ unsafeFromString $ "(documents.mtime < '" ++ show (year + 1 <| month == 12 |> year)++ "-" ++ show ((month `mod` 12) + 1) ++ "-1')"
 documentFilterToSQL (DocumentFilterByTags []) = do
   sqlWhere "TRUE"
 documentFilterToSQL (DocumentFilterByTags tags) = do

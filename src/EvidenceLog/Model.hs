@@ -16,7 +16,6 @@ import EvidenceLog.Tables
 import IPAddress
 import MinutesTime
 import Utils.Prelude
-import Data.Monoid ((<>))
 import Data.Typeable
 import User.Model
 import Util.Actor

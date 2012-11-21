@@ -1,6 +1,5 @@
 module ELegitimation.ELegTransaction.Tables where
 
-import Data.Monoid ((<>))
 import DB
 import DB.SQLFunction
 

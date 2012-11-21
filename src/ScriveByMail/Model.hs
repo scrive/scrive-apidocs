@@ -35,7 +35,6 @@ import qualified Log
 import Control.Monad
 import Control.Monad.Trans
 import Data.Maybe
-import Data.Monoid ((<>))
 import Data.Int
 
 data MailAPIInfo = MailAPIInfo {

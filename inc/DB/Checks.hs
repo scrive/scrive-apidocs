@@ -7,7 +7,6 @@ import Control.Arrow (second)
 import Control.Monad.Reader
 import Data.Either
 import Data.Maybe
-import Data.String (fromString)
 import Database.HDBC
 
 import DB.Core
@@ -34,23 +33,28 @@ performDBChecks logger tables migrations = runDBEnv $ do
   lift dbCommit
   return ()
 
+-- | Return SQL fragment of current catalog within quotes
+currentCatalog :: MonadDB m => DBEnv m RawSQL
+currentCatalog = do
+  Just dbname <- getOne "SELECT current_catalog"
+  return $ unsafeFromString $ "\"" ++ dbname ++ "\""
+
 -- |  Checks whether database returns timestamps in UTC
 checkDBTimeZone :: MonadDB m => (String -> DBEnv m ()) -> DBEnv m ()
 checkDBTimeZone logger = do
-  Just dbname <- getOne "SELECT current_catalog"
-  logger $ "Setting '" ++ dbname ++ "' database to return timestamps in UTC"
-  let db = fromString $ "\"" ++ dbname ++ "\""
-  kRun_ $ "ALTER DATABASE" <+> db <+> "SET TIMEZONE = 'UTC'"
+  dbname <- currentCatalog
+  logger $ "Setting " ++ unRawSQL dbname ++ " database to return timestamps in UTC"
+  kRunRaw $ "ALTER DATABASE " <> dbname <> " SET TIMEZONE = 'UTC'"
   return ()
 
 setByteaOutput :: MonadDB m => (String -> DBEnv m ()) -> DBEnv m Bool
 setByteaOutput logger = do
-  Just dbname <- getOne "SELECT current_catalog"
+  dbname <- currentCatalog
   Just bytea_output <- getOne "SHOW bytea_output"
   if bytea_output /= ("hex" :: String)
     then do
       logger $ "Setting bytea_output to 'hex'..."
-      kRunRaw $ "ALTER DATABASE \"" ++ dbname ++ "\" SET bytea_output = 'hex'"
+      kRunRaw $ "ALTER DATABASE " <> dbname <> " SET bytea_output = 'hex'"
       return True
     else return False
 

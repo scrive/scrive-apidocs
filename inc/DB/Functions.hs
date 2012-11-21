@@ -26,7 +26,6 @@ import Control.Monad.IO.Class
 import Control.Monad.State.Strict hiding (state)
 import Data.Convertible (Convertible)
 import Data.Maybe
-import Data.String (fromString)
 import Database.HDBC hiding (originalQuery)
 import qualified Control.Exception as E
 import qualified Database.HDBC as HDBC
@@ -35,7 +34,7 @@ import DB.Core
 import DB.Env
 import DB.Exception
 import DB.Nexus
-import DB.SQL (RawSQL, SQL(..), raw, unRawSQL, (<+>), (<?>), sqlConcatComma, parenthesize, IsSQL, toSQLCommand)
+import DB.SQL (RawSQL, SQL(..), raw, unRawSQL, (<+>), (<?>), sqlConcatComma, parenthesize, IsSQL, toSQLCommand, unsafeFromString)
 import DB.Model (Table(..))
 
 infix 7 .=
@@ -123,8 +122,8 @@ kFinish = withDBEnvSt $ \s@DBEnvSt{..} -> do
       `liftM` protIO (SQL (getQuery dbStatement) dbValues) (finish st)
     Nothing -> return ((), s)
 
-kRunRaw :: MonadDB m => String -> DBEnv m ()
-kRunRaw s = withDBEnv $ \_ -> getNexus >>= \c -> liftIO (runRaw c s)
+kRunRaw :: MonadDB m => RawSQL -> DBEnv m ()
+kRunRaw s = withDBEnv $ \_ -> getNexus >>= \c -> liftIO (runRaw c (unRawSQL s))
 
 kRun_ :: (MonadDB m, IsSQL sql) => sql -> DBEnv m ()
 kRun_ presql = kRun presql >> return ()
@@ -180,7 +179,7 @@ mkSQL qtype Table{tblName} columnvalues = case qtype of
 -- internals
 
 getQuery :: Maybe Statement -> RawSQL
-getQuery = fromString . fromMaybe "" . fmap HDBC.originalQuery
+getQuery = unsafeFromString . fromMaybe "" . fmap HDBC.originalQuery
 
 -- | Protected 'liftIO'. Properly catches 'SqlError' and converts it
 -- to 'DBException'. Adds 'HDBC.originalQuery' that should help a lot.

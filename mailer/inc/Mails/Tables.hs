@@ -31,19 +31,19 @@ tableMails = tblTable {
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE mails ("
-          ++ "  id BIGSERIAL NOT NULL"
-          ++ ", token BIGINT NOT NULL"
-          ++ ", sender TEXT NOT NULL"
-          ++ ", receivers TEXT NOT NULL"
-          ++ ", title TEXT NULL"
-          ++ ", content TEXT NULL"
-          ++ ", attachments TEXT NULL"
-          ++ ", x_smtp_attrs TEXT NULL"
-          ++ ", to_be_sent TIMESTAMPTZ NOT NULL"
-          ++ ", sent TIMESTAMPTZ NULL"
-          ++ ", service_test BOOL NOT NULL"
-          ++ ", CONSTRAINT pk_mails PRIMARY KEY (id)"
-          ++ ")"
+          <> "  id BIGSERIAL NOT NULL"
+          <> ", token BIGINT NOT NULL"
+          <> ", sender TEXT NOT NULL"
+          <> ", receivers TEXT NOT NULL"
+          <> ", title TEXT NULL"
+          <> ", content TEXT NULL"
+          <> ", attachments TEXT NULL"
+          <> ", x_smtp_attrs TEXT NULL"
+          <> ", to_be_sent TIMESTAMPTZ NOT NULL"
+          <> ", sent TIMESTAMPTZ NULL"
+          <> ", service_test BOOL NOT NULL"
+          <> ", CONSTRAINT pk_mails PRIMARY KEY (id)"
+          <> ")"
         return TVRcreated
       _ -> return TVRinvalid
   , tblPutProperties = return ()
@@ -61,18 +61,18 @@ tableMailEvents = tblTable {
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE mail_events ("
-          ++ "  id BIGSERIAL NOT NULL"
-          ++ ", mail_id BIGINT NOT NULL"
-          ++ ", event TEXT NOT NULL"
-          ++ ", event_read TIMESTAMPTZ NULL"
-          ++ ", CONSTRAINT pk_mail_events PRIMARY KEY (id)"
-          ++ ")"
+          <> "  id BIGSERIAL NOT NULL"
+          <> ", mail_id BIGINT NOT NULL"
+          <> ", event TEXT NOT NULL"
+          <> ", event_read TIMESTAMPTZ NULL"
+          <> ", CONSTRAINT pk_mail_events PRIMARY KEY (id)"
+          <> ")"
         return TVRcreated
       _ -> return TVRinvalid
   , tblPutProperties = do
     kRunRaw "CREATE INDEX idx_mail_events_mail_id ON mail_events(mail_id)"
     kRunRaw $ "ALTER TABLE mail_events"
-      ++ " ADD CONSTRAINT fk_mail_events_mails FOREIGN KEY(mail_id)"
-      ++ " REFERENCES mails(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+      <> " ADD CONSTRAINT fk_mail_events_mails FOREIGN KEY(mail_id)"
+      <> " REFERENCES mails(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      <> " DEFERRABLE INITIALLY IMMEDIATE"
   }

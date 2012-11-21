@@ -10,7 +10,6 @@ module CompanyAccounts.Model (
   ) where
 
 import Control.Monad
-import Data.Monoid ((<>))
 
 import Company.Model
 import DB

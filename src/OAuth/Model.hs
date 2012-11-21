@@ -9,7 +9,6 @@ import MagicHash
 import Crypto.RNG
 import Data.Int
 import Data.List
-import Data.Monoid ((<>))
 import Control.Monad.Trans
 import Network.URI
 import Data.Maybe
