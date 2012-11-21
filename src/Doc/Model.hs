@@ -1243,42 +1243,47 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m DeleteSigAttachment Bool wh
 
 data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID String String String String String String [String] Actor
 instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSignatoryData (Maybe Document) where
-  update (DocumentFromSignatoryData docid fstname sndname email company personalnumber companynumber fieldvalues actor) = do
+  update (DocumentFromSignatoryData docid fstname sndname email company personalnumber companynumber fieldvalues actor) =
+    listToMaybe <$> update (DocumentFromSignatoryDataV docid [(fstname,sndname,email,company,personalnumber,companynumber,fieldvalues)] actor)
+
+data DocumentFromSignatoryDataV = DocumentFromSignatoryDataV DocumentID
+                                  [(String,String,String,String,String,String,[String])] Actor
+instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSignatoryDataV [Document] where
+  update (DocumentFromSignatoryDataV docid csvdata actor) = do
     mdocument <- query $ GetDocumentByDocumentID docid
     case mdocument of
       Nothing -> do
         Log.error $ "In DocumentFromSignatoryData: document $" ++ show docid ++ " does not exist"
-        return Nothing
+        return []
       Just document -> do
         let sigs = length (documentsignatorylinks document)
-        mhs <- lift $ replicateM sigs random
-        md <- newFromDocument (toNewDoc mhs) document
-        when_ (isJust md) $ do
-          let d = $fromJust md
-          copyEvidenceLogToNewDocument docid (documentid d)
-          update $ InsertEvidenceEvent
-            AuthorUsesCSVEvidence
-            (value "actor" (actorWho actor) >> value "did" (show docid))
-            (Just $ documentid d)
-            actor
-        return md
+        forM csvdata $ \csvdata1 -> do
+          mhs <- lift $ replicateM sigs random
+          md <- newFromDocument (toNewDoc csvdata1 mhs) document
+          when_ (isJust md) $ do
+            let d = $fromJust md
+            copyEvidenceLogToNewDocument docid (documentid d)
+            update $ InsertEvidenceEvent
+              AuthorUsesCSVEvidence
+              (value "actor" (actorWho actor) >> value "did" (show docid))
+              (Just $ documentid d)
+              actor
+          return $ $fromJust md
    where
      now = actorTime actor
-     toNewDoc :: [MagicHash] -> Document -> Document
-     toNewDoc mhs d = d { documentsignatorylinks = zipWith toNewSigLink mhs (documentsignatorylinks d)
-                       , documenttype = newDocType $ documenttype d
-                       , documentctime = now
-                       , documentmtime = now
-                       }
+     toNewDoc csvdata1 mhs d = d { documentsignatorylinks = zipWith (toNewSigLink csvdata1) mhs (documentsignatorylinks d)
+                                 , documenttype = newDocType $ documenttype d
+                                 , documentctime = now
+                                 , documentmtime = now
+                                 }
      newDocType :: DocumentType -> DocumentType
      newDocType (Signable p) = Signable p
      newDocType (Template p) = Signable p
-     toNewSigLink :: MagicHash -> SignatoryLink -> SignatoryLink
-     toNewSigLink mh sl
-         | isJust (signatorylinkcsvupload sl) = (pumpData sl) { signatorylinkcsvupload = Nothing, signatorymagichash = mh }
+     toNewSigLink csvdata1 mh sl
+         | isJust (signatorylinkcsvupload sl) = (pumpData csvdata1 sl) { signatorylinkcsvupload = Nothing, signatorymagichash = mh }
          | otherwise = sl { signatorymagichash = mh }
-     pumpData :: SignatoryLink -> SignatoryLink
-     pumpData siglink = replaceSignatoryData siglink fstname sndname email company personalnumber companynumber fieldvalues
+     pumpData (fstname,sndname,email,company,personalnumber,companynumber,fieldvalues) siglink = 
+       replaceSignatoryData siglink fstname sndname email company personalnumber companynumber fieldvalues
 
 data ErrorDocument = ErrorDocument DocumentID String Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument Bool where
