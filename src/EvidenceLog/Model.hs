@@ -12,8 +12,8 @@ module EvidenceLog.Model (
   ) where
 
 import DB
+import DB.SQL2
 import Doc.DocStateData
-import EvidenceLog.Tables
 import IPAddress
 import MinutesTime
 import Utils.Prelude
@@ -42,18 +42,17 @@ eventTextTemplateName e =  (show e) ++ "Text"
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool where
   update (InsertEvidenceEvent event textFields mdid actor) = do
    text <- lift $ renderTemplateI (eventTextTemplateName event) $ textFields
-   kRun01 $ mkSQL INSERT tableEvidenceLog [
-      sql "document_id" mdid
-    , sql "time" $ actorTime actor
-    , sql "text" text
-    , sql "event_type" event
-    , sql "version_id" versionID
-    , sql "user_id" $ actorUserID actor
-    , sql "email" $ actorEmail actor
-    , sql "request_ip_v4" $ actorIP actor
-    , sql "signatory_link_id" $ actorSigLinkID actor
-    , sql "api_user" $ actorAPIString actor
-    ]
+   kRun01 $ sqlInsert "evidence_log" $ do
+      sqlSet "document_id" mdid
+      sqlSet "time" $ actorTime actor
+      sqlSet "text" text
+      sqlSet "event_type" event
+      sqlSet "version_id" versionID
+      sqlSet "user_id" $ actorUserID actor
+      sqlSet "email" $ actorEmail actor
+      sqlSet "request_ip_v4" $ actorIP actor
+      sqlSet "signatory_link_id" $ actorSigLinkID actor
+      sqlSet "api_user" $ actorAPIString actor
 
 data DocumentEvidenceEvent = DocumentEvidenceEvent {
     evDocumentID :: DocumentID
