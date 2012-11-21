@@ -10,7 +10,6 @@ module Doc.Model
 
   , DocumentFilter(..)
   , DocumentDomain(..)
-  , DocumentPagination(..)
   , DocumentOrderBy(..)
 
   , AddDocumentAttachment(..)
@@ -122,12 +121,6 @@ import DB.TimeZoneName (TimeZoneName, mkTimeZoneName, withTimeZone)
 import qualified DB.TimeZoneName as TimeZoneName
 import DB.SQL2
 import Control.Monad.State.Class
-
-data DocumentPagination =
-  DocumentPagination
-  { documentOffset :: Int        -- ^ use for SQL OFFSET command
-  , documentLimit  :: Int        -- ^ use for SQL LIMIT command
-  }
 
 -- | Document filtering options
 --
@@ -1398,14 +1391,14 @@ instance MonadDB m => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash 
 --
 -- GetDocuments returns documents in proper order, no reverse is needed.
 --
-data GetDocuments = GetDocuments [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] DocumentPagination
+data GetDocuments = GetDocuments [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] (Int,Int)
 instance MonadDB m => DBQuery m GetDocuments [Document] where
-  query (GetDocuments domains filters orderbys pagination) = do
+  query (GetDocuments domains filters orderbys (offset,limit)) = do
     selectDocuments $ sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       mapM_ (sqlOrderBy . documentOrderByAscDescToSQL) orderbys
-      sqlOffset $ fromIntegral (documentOffset pagination)
-      sqlLimit $ fromIntegral (documentLimit pagination)
+      sqlOffset $ fromIntegral offset
+      sqlLimit $ fromIntegral limit
       sqlWhereExists $ sqlSelect "signatory_links" $ do
         sqlWhere "documents.id = signatory_links.document_id"
         sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
@@ -1423,12 +1416,12 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
 data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
 instance MonadDB m => DBQuery m GetDocumentsByAuthor [Document] where
   query (GetDocumentsByAuthor uid) =
-    query (GetDocuments [DocumentsVisibleToUser uid] [DocumentFilterByAuthor uid, DocumentFilterDeleted False] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
+    query (GetDocuments [DocumentsVisibleToUser uid] [DocumentFilterByAuthor uid, DocumentFilterDeleted False] [Asc DocumentOrderByMTime] (0,maxBound))
 
 data GetTemplatesByAuthor = GetTemplatesByAuthor UserID
 instance MonadDB m => DBQuery m GetTemplatesByAuthor [Document] where
   query (GetTemplatesByAuthor uid) =
-    query (GetDocuments [DocumentsVisibleToUser uid] [DocumentFilterByAuthor uid, DocumentFilterDeleted False, DocumentFilterTemplate] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
+    query (GetDocuments [DocumentsVisibleToUser uid] [DocumentFilterByAuthor uid, DocumentFilterDeleted False, DocumentFilterTemplate] [Asc DocumentOrderByMTime] (0,maxBound))
 
 data GetAvailableTemplates = GetAvailableTemplates UserID [DocumentProcess]
 instance MonadDB m => DBQuery m GetAvailableTemplates [Document] where
@@ -1436,7 +1429,7 @@ instance MonadDB m => DBQuery m GetAvailableTemplates [Document] where
     query (GetDocuments [DocumentsVisibleToUser uid]
                             [DocumentFilterByProcess processes, DocumentFilterTemplate, DocumentFilterDeleted False]
                             [Asc DocumentOrderByMTime]
-                            (DocumentPagination 0 maxBound))
+                            (0,maxBound))
 
 data GetTimeoutedButPendingDocumentsChunk = GetTimeoutedButPendingDocumentsChunk MinutesTime Int
 instance MonadDB m => DBQuery m GetTimeoutedButPendingDocumentsChunk [Document] where

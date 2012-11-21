@@ -849,7 +849,7 @@ jsonDocuments = onlySalesOrAdmin $ do
   params <- getListParamsNew
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
-      pagination = docPaginationFromParams params
+      pagination = ((listParamsOffset params),(listParamsLimit params))
       filters    = []
       domain     = [DocumentsOfWholeUniverse]
       docsPageSize = 100
@@ -904,10 +904,6 @@ docSearchingFromParams params =
   case listParamsSearching params of
     "" -> []
     x -> [DocumentFilterByString x]
-
-
-docPaginationFromParams :: ListParams -> DocumentPagination
-docPaginationFromParams params = DocumentPagination (listParamsOffset params) (listParamsLimit params)
 
 
 handleBackdoorQuery :: Kontrakcja m => String -> m String

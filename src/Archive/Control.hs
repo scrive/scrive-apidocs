@@ -214,14 +214,14 @@ jsonDocumentsList = do
                       _ -> []
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
-      pagination = docPaginationFromParams params
+      pagination = ((listParamsOffset params),(listParamsLimit params))
       filters = filters1 ++ filters2 ++ tagsFilters
   cttime <- getMinutesTime
   padqueue <- dbQuery $ GetPadQueue $ userid user
   format <- getField "format"
   case format of
        Just "csv" -> do
-          allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting (DocumentPagination 0 maxBound)
+          allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting (0,maxBound)
           let docsCSVs = concat $ zipWith (docForListCSV (timeLocaleForLang lang)) [1..maxBound] allDocs
           return $ Left $ CSV { csvFilename = "documents.csv"
                               , csvHeader = docForListCSVHeader
@@ -270,9 +270,6 @@ docSearchingFromParams params =
     "" -> []
     x -> [DocumentFilterByString x]
 
-
-docPaginationFromParams :: ListParams -> DocumentPagination
-docPaginationFromParams params = DocumentPagination (listParamsOffset params) (listParamsLimit params)
 
 #if 0
 -- this needs to be transferred to SQL

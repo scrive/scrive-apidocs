@@ -56,7 +56,7 @@ getDocByDocID docid = do
       mdoc <- dbQuery (GetDocuments [ DocumentsVisibleToUser (userid user)
                                     ] [ DocumentFilterByDocumentID docid
                                       ]
-                                    [] (DocumentPagination 0 1))
+                                    [] (0,1))
       case mdoc of
         [doc] -> do
           return $ Right doc
@@ -75,7 +75,7 @@ getDocByDocIDForAuthor docid = do
                                     ] [ DocumentFilterByDocumentID docid
                                       , DocumentFilterByAuthor (userid user)
                                       ]
-                                    [] (DocumentPagination 0 1))
+                                    [] (0,1))
       case mdoc of
         [doc] -> do
           return $ Right doc
@@ -94,7 +94,7 @@ getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid = do
                                     ] [ DocumentFilterByDocumentID docid
                                       , DocumentFilterLinkIsAuthor True
                                       ]
-                                    [] (DocumentPagination 0 1))
+                                    [] (0,1))
       case mdoc of
         [doc] -> do
           return $ Right doc
