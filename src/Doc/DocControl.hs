@@ -784,7 +784,7 @@ checkFileAccessWith fid msid mmh mdid mattid =
                                             , AttachmentFilterByFileID [fid]
                                             ]
                                             []
-                                            (AttachmentPagination 0 1)
+                                            (0,1)
            when (length atts /= 1) $
                 internalError
     _ -> internalError

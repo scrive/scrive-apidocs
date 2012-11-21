@@ -6,7 +6,6 @@ module Attachment.Model
   , SetAttachmentTitle(..)
   , SetAttachmentsSharing(..)
   , GetAttachments(..)
-  , AttachmentPagination(..)
   , AttachmentDomain(..)
   , AttachmentFilter(..)
   , AttachmentOrderBy(..)
@@ -105,12 +104,6 @@ instance (CryptoRNG m, MonadDB m, Applicative m) => DBUpdate m SetAttachmentTitl
     sqlWhereEq "id" attid
   return $ Right ()
 
-data AttachmentPagination =
-  AttachmentPagination
-  { attachmentOffset :: Int        -- ^ use for SQL OFFSET command
-  , attachmentLimit  :: Int        -- ^ use for SQL LIMIT command
-  }
-
 data AttachmentFilter
   = AttachmentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
   | AttachmentFilterByID [AttachmentID]         -- ^ Attachments with IDs on the list
@@ -146,14 +139,16 @@ data AttachmentOrderBy
 --
 -- GetAttachments returns attachments in proper order, no reverse is needed.
 --
-data GetAttachments = GetAttachments [AttachmentDomain] [AttachmentFilter] [AscDesc AttachmentOrderBy] AttachmentPagination
+data GetAttachments = GetAttachments [AttachmentDomain] [AttachmentFilter] [AscDesc AttachmentOrderBy] (Int,Int)
 instance MonadDB m => DBQuery m GetAttachments [Attachment] where
-  query (GetAttachments domains filters orderbys _pagination) = do
+  query (GetAttachments domains filters orderbys (offset,limit)) = do
     kRun_ $ sqlSelect "attachments" $ do
       sqlAttachmentResults
       sqlWhereAny (mapM_ (sqlWhere . domainToSQLCommand) domains)
       mapM_ sqlWhereAttachmentFilter filters
       mapM_ (sqlOrderBy . orderToSQLCommand) orderbys
+      sqlOffset $ fromIntegral offset
+      sqlLimit $ fromIntegral limit
     fetchAttachments
    where
     domainToSQLCommand (AttachmentsOfAuthorDeleteValue uid del) =
