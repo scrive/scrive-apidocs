@@ -24,6 +24,7 @@ module Doc.Model
   , CloseDocument(..)
   , DeleteSigAttachment(..)
   , DocumentFromSignatoryData(..)
+  , DocumentFromSignatoryDataV(..)
   , ErrorDocument(..)
   , GetDocuments(..)
   , GetDocumentByDocumentID(..)

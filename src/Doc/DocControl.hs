@@ -537,12 +537,8 @@ splitUpDocument doc = do
 splitUpDocumentWorker :: (MonadDB m, TemplatesMonad m, CryptoRNG m, MonadBase IO m)
                       => Document -> Actor -> [[String]] -> m [Document]
 splitUpDocumentWorker doc actor csvbody = do
-  docs <- mapM (createDocFromRow doc) csvbody
-  Log.debug $ "splitUpDocument: finishing properly"
-  return docs
-  where createDocFromRow udoc xs = do
-          let pxs = xs ++ repeat ""
-          guardJustM $ dbUpdate $ DocumentFromSignatoryData (documentid udoc) (pxs!!0) (pxs!!1) (pxs!!2) (pxs!!3) (pxs!!4) (pxs!!5) (drop 6 xs) actor
+  let preparedData = map (\xs -> let pxs = xs ++ repeat "" in ((pxs!!0),(pxs!!1),(pxs!!2),(pxs!!3),(pxs!!4),(pxs!!5),(drop 6 xs))) csvbody
+  dbUpdate $ DocumentFromSignatoryDataV (documentid doc) preparedData actor
 
 
 handleIssueSignByAuthor :: Kontrakcja m => Document -> m KontraLink
