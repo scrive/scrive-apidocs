@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 module Archive.Control
        (
        handleDelete,
@@ -214,14 +213,14 @@ jsonDocumentsList = do
                       _ -> []
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
-      pagination = docPaginationFromParams params
+      pagination = ((listParamsOffset params),(listParamsLimit params))
       filters = filters1 ++ filters2 ++ tagsFilters
   cttime <- getMinutesTime
   padqueue <- dbQuery $ GetPadQueue $ userid user
   format <- getField "format"
   case format of
        Just "csv" -> do
-          allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting (DocumentPagination 0 maxBound)
+          allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting (0,maxBound)
           let docsCSVs = concat $ zipWith (docForListCSV (timeLocaleForLang lang)) [1..maxBound] allDocs
           return $ Left $ CSV { csvFilename = "documents.csv"
                               , csvHeader = docForListCSVHeader
@@ -270,34 +269,6 @@ docSearchingFromParams params =
     "" -> []
     x -> [DocumentFilterByString x]
 
-
-docPaginationFromParams :: ListParams -> DocumentPagination
-docPaginationFromParams params = DocumentPagination (listParamsOffset params) (listParamsLimit params)
-
-#if 0
--- this needs to be transferred to SQL
-{- |
-    Special comparison for partners, because we need to compare each signatory,
-    and also then inside the signatory compare the fst and snd names separately.
--}
-comparePartners :: Document -> Document -> Ordering
-comparePartners doc1 doc2 =
-  case (dropWhile isMatch $ zipWith compareSignatory (getSignatoryPartnerLinks doc1) (getSignatoryPartnerLinks doc2)) of
-    [] -> EQ
-    (x:_) -> x
-  where
-    isMatch :: Ordering -> Bool
-    isMatch EQ = True
-    isMatch _ = False
-    compareSignatory :: SignatoryLink -> SignatoryLink -> Ordering
-    compareSignatory sl1 sl2 =
-      let splitUp = span (\c -> c/=' ') . map toUpper . getSmartName
-          (fst1, snd1) = splitUp sl1
-          (fst2, snd2) = splitUp sl2 in
-      case (compare fst1 fst2) of
-        EQ -> compare snd1 snd2
-        x -> x
-#endif
 
 docsPageSize :: Int
 docsPageSize = 100

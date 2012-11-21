@@ -367,7 +367,7 @@ handleUserStatsCSV = onlySalesOrAdmin $ do
                         ]
 
 -- For User Admin tab in adminonly
-getUsersAndStatsInv :: Kontrakcja m => [UserFilter] -> [AscDesc UserOrderBy] -> UserPagination -> m [(User, Maybe Company, DocStats, InviteType)]
+getUsersAndStatsInv :: Kontrakcja m => [UserFilter] -> [AscDesc UserOrderBy] -> (Int,Int) -> m [(User, Maybe Company, DocStats, InviteType)]
 getUsersAndStatsInv filters sorting pagination = do
   Context{ctxtime} <- getContext
   list <- dbQuery $ GetUsersAndStatsAndInviteInfo filters sorting pagination

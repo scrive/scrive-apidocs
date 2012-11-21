@@ -85,7 +85,7 @@ jsonAttachment :: Kontrakcja m => AttachmentID -> m JSValue
 jsonAttachment attid = do
     ctx <- getContext
     atts <- dbQuery $ GetAttachments [AttachmentsSharedInUsersCompany (userid $ fromJust $ ctxmaybeuser ctx)]
-            [AttachmentFilterByID [attid]] [] (AttachmentPagination 0 10)
+            [AttachmentFilterByID [attid]] [] (0,10)
     case atts of
       [att] -> attachmentJSON att
       _ -> error "not found"
@@ -102,7 +102,7 @@ jsonAttachmentsList = withUserGet $ do
 
   let sorting    = attachmentSortingFromParams params
       searching  = attachmentSearchingFromParams params
-      pagination = attachmentPaginationFromParams params
+      pagination = (listParamsOffset params, listParamsLimit params)
       attachmentsPageSize = 100 :: Int
   cttime <- getMinutesTime
   allAtts <- dbQuery $ GetAttachments domain (searching ++ filters) sorting pagination
@@ -150,9 +150,6 @@ attachmentSearchingFromParams params =
     x -> [AttachmentFilterByString x]
 
 
-attachmentPaginationFromParams :: ListParams -> AttachmentPagination
-attachmentPaginationFromParams params = AttachmentPagination (listParamsOffset params) (listParamsLimit params)
-
 makeAttachmentFromFile :: Kontrakcja m => Input -> m (Maybe Attachment)
 makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do
     Log.debug $ "makeAttachmentFromFile: beggining"
@@ -186,7 +183,7 @@ handleShow attid = checkUserTOSGet $ do
     [AttachmentsSharedInUsersCompany (userid user)]
     [AttachmentFilterByID [attid]]
     []
-    (AttachmentPagination 0 1))
+    (0,1))
   case mattachment of
     Nothing -> respond404
     Just at -> Right <$> pageAttachment' at

@@ -234,7 +234,7 @@ showAdminUsersForSales = onlySalesOrAdmin $ adminUsersPageForSales
 
 handleUsersListCSV :: Kontrakcja m => m CSV
 handleUsersListCSV = onlySalesOrAdmin $ do
-  users <- getUsersAndStatsInv [] [] (UserPagination 0 maxBound)
+  users <- getUsersAndStatsInv [] [] (0,maxBound)
   return $ CSV { csvHeader = ["id", "fstname", "sndname", "email", "company", "position","tos"]
                , csvFilename = "userslist.csv"
                , csvContent = map csvline $ filter active users
@@ -272,17 +272,13 @@ userSortingFromParams params =
     x "tosREV"      = [Desc UserOrderByAccountCreationDate]
     x _             = [Asc UserOrderByName]
 
-userPaginationFromParams :: Int -> ListParams -> UserPagination
--- REVIEW: What is the magic constant 4 below?
-userPaginationFromParams pageSize params = UserPagination (listParamsOffset params) (pageSize * 4)
-
 
 jsonUsersList ::Kontrakcja m => m JSValue
 jsonUsersList = onlySalesOrAdmin $ do
     params <- getListParamsNew
     let filters = userSearchingFromParams params
         sorting = userSortingFromParams params
-        pagination = userPaginationFromParams usersPageSize params
+        pagination = ((listParamsOffset params),(usersPageSize * 4))
         usersPageSize = 100
     allUsers <- getUsersAndStatsInv filters sorting pagination
     let users = PagedList { list       = allUsers
@@ -849,7 +845,7 @@ jsonDocuments = onlySalesOrAdmin $ do
   params <- getListParamsNew
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
-      pagination = docPaginationFromParams params
+      pagination = ((listParamsOffset params),(listParamsLimit params))
       filters    = []
       domain     = [DocumentsOfWholeUniverse]
       docsPageSize = 100
@@ -904,10 +900,6 @@ docSearchingFromParams params =
   case listParamsSearching params of
     "" -> []
     x -> [DocumentFilterByString x]
-
-
-docPaginationFromParams :: ListParams -> DocumentPagination
-docPaginationFromParams params = DocumentPagination (listParamsOffset params) (listParamsLimit params)
 
 
 handleBackdoorQuery :: Kontrakcja m => String -> m String

@@ -114,7 +114,7 @@ newDocumentOrLatestDraft = withUserPost $ do
   ctx <- getContext
   user <- guardJustM $ ctxmaybeuser <$> getContext
   docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid user)] 
-                      [DocumentFilterStatuses [Preparation], DocumentFilterDeleted False, DocumentFilterLinkIsAuthor True]  [Desc DocumentOrderByMTime] (DocumentPagination 0 1)
+                      [DocumentFilterStatuses [Preparation], DocumentFilterDeleted False, DocumentFilterLinkIsAuthor True]  [Desc DocumentOrderByMTime] (0,1)
   case docs of
        [d] -> return $ LinkIssueDoc (documentid d)
        _ -> do
@@ -784,7 +784,7 @@ checkFileAccessWith fid msid mmh mdid mattid =
                                             , AttachmentFilterByFileID [fid]
                                             ]
                                             []
-                                            (AttachmentPagination 0 1)
+                                            (0,1)
            when (length atts /= 1) $
                 internalError
     _ -> internalError

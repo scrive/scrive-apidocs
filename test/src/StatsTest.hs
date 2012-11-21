@@ -240,7 +240,7 @@ testGetUsersAndStats = do
 
   Log.debug $ "Set up test, now running query."
   t0 <- getMinutesTime
-  stats <- dbQuery $ GetUsersAndStatsAndInviteInfo [] [] (UserPagination 0 maxBound)
+  stats <- dbQuery $ GetUsersAndStatsAndInviteInfo [] [] (0,maxBound)
   Log.debug $ "Number of stats returned: " ++ show (length stats)
   t1 <- getMinutesTime
 

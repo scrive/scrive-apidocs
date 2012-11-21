@@ -37,7 +37,6 @@ module User.Model (
   , UserOrderBy(..)
   , userOrderByToSQL
   , userOrderByAscDescToSQL
-  , UserPagination(..)
   ) where
 
 import Control.Applicative
@@ -131,12 +130,6 @@ userFilterToSQL (UserFilterByString string) =
       escape '%' = "\\%"
       escape '_' = "\\_"
       escape c = [c]
-
-data UserPagination =
-  UserPagination
-  { userOffset :: Int        -- ^ use for SQL OFFSET command
-  , userLimit  :: Int        -- ^ use for SQL LIMIT command
-  }
 
 
 data UserOrderBy
