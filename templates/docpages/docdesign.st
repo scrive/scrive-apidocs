@@ -1,5 +1,5 @@
 #####
-pageDocumentDesign=<html></html>
+pageDocumentDesign=
 <script>
 jQuery("body").addClass("designview");
 jQuery(function(){

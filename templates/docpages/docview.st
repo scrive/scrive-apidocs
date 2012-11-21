@@ -1,10 +1,9 @@
-###### PART INFO IN DESIGN VIEW
 ######
 pageDocumentView=
 <script>
-var docview;
+jQuery("body").addClass("authorview");
 jQuery(function(){
-  docview = new AuthorView({
+  jQuery(".body-container").replaceWith(new AuthorView({
     id:"$documentid$"
      $if(siglinkid)$
     , viewer : new DocumentViewer({
@@ -15,11 +14,8 @@ jQuery(function(){
         authorcompanyadmin : true
         })
     $endif$
-  });
-  jQuery(".body-container").replaceWith(docview.el());
-  jQuery('.body-container').prepend('<div class="blocking-box" />');
-
-  BlockingInfo.show('.blocking-box');
+  }).el());
 });
 </script>
+
 ####

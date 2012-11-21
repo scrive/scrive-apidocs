@@ -70,6 +70,7 @@ set systemPage
  less less/oauth.less
  less less/arrows.less
  less less/blocking.less
+ less less/authorview.less
  js   libs/jquery.min.js
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js
@@ -116,11 +117,18 @@ set systemPage
  js   js/signatories.js
  js   js/documents.js
  js   js/confirmationsWithEmails.js
+ js   js/authorview/authorviewtitlebox.js
+ js   js/authorview/authorsviewhistory.js
+ js   js/authorview/authorviewauthorattachments.js
+ js   js/authorview/authorviewsignatoriesattachments.js
+ js   js/authorview/authorviewsignatory.js
+ js   js/authorview/authorviewsignatories.js
  js   js/authorview/authorview.js
  js   js/attachmentview.js
  js   js/tasks.js
  js   js/docsignviewframes.js
  js   js/doctools/dochistory.js
+ js   js/doctools/docdownload.js
  js   js/signview/docsignviewinstructions.js
  js   js/signview/docsignviewsignatories.js
  js   js/signview/docsignviewcreateaccount.js

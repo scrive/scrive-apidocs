@@ -72,8 +72,10 @@ var DocumentHistoryView = Backbone.View.extend({
       var container = $(this.el)
       container.children().detach();
       var historyList = this.model.historyList();
-      var header = $("<div class='document-history-header'/>");
-      var title = $("<div class='title'/>").text("Events:");
+      
+      container.append(historyList.el())
+
+      var footer = $("<div class='document-history-footer'/>");
       var showAll = $("<div class='option'/>").text("Expand to view all");
       showAll.click(function() {
           historyList.model.schema.paging().setShowLimit(undefined);
@@ -81,9 +83,10 @@ var DocumentHistoryView = Backbone.View.extend({
           this.render();
           return false;
       })
-      header.append(title).append(this.expandAllOption())
-      container.append(header);
-      container.append(historyList.el())
+      footer.append(this.expandAllOption())
+      container.append(footer);
+
+      
       return this;     
     }
 });
@@ -97,11 +100,8 @@ window.DocumentHistory = function(args){
                         model: model,
                         el: $("<div class='document-history-container'/>")
                     });
-        return {
-              model    : function() {return model;}
-            , view     : function() {return view;}
-            , recall   : function() { model.recall();}
-         };
+        this.el     = function() {return $(view.el);};
+        this.recall = function() { model.recall();};
 };
 
 })(window);
