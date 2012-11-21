@@ -18,20 +18,19 @@ SetEmailIdentificationEvidenceText=$actor$ required only email verification for 
 ###
 TimeoutDocumentEvidenceText=Signing due date passed. Possibility to sign disabled by $actor$.
 ###
-SignDocumentEvidenceText=Signed by $actor$ $if(!eleg)$ by clicking the sign button. $else$
-        using e-legitimation.<br />
-        The text signed in the e-legitimation client was "$infotext$".<br />
-        E-legitimation provider: $provider$.<br />
+SignDocumentEvidenceText=<p>Signed by $actor$ $if(!eleg)$ by clicking the sign button.</p>$else$
+        using e-legitimation.</p>
+        <p>The text signed in the e-legitimation client was "$infotext$".</p>
+        <p>E-legitimation provider: $provider$.</p>
         $if(fieldsverified)$
-            Information about signatory verified by $provider$:<br />
-                $if(fstnameverified)$ First name; <br />$endif$
-                $if(lstnameverified)$ Last name; <br />$endif$
-                $if(persnumverified)$ Personal number; <br />$endif$
+            <p>Information about signatory verified by $provider$:
+                $if(fstnameverified)$ First name; $endif$
+                $if(lstnameverified)$ Last name; $endif$
+                $if(persnumverified)$ Personal number; $endif$</p>
         $endif$
-        Signature: $signature$.<br />
-        $if(certificate)$ Certificate: $certificate$ <br />$endif$
-        $if(ocsp)$ OCSP Response: $ocsp$$endif$
-
+        <p>Signature: <div style="white-space:no-wrap">$signature$</div></p>
+        $if(certificate)$ <p>Certificate: <div style="white-space:no-wrap">$certificate$</div></p>$endif$
+        $if(ocsp)$ <p>OCSP Response: <div style="white-space:no-wrap">$ocsp$</div></p>$endif$
     $endif$
 ###
 SetInvitationDeliveryStatusEvidenceText=$actor$ reported that email invitation to sign (sent to $email$) was $status$.

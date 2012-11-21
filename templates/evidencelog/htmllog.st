@@ -60,7 +60,7 @@ htmlevidencelog=
                     <tr>
                       <td style="font-size:10px;padding-top:18px;">$entry.time$</td>
                       <td style="font-size:10px;padding-top:18px">$entry.ip$</td>
-                      <td style="padding-top:18px;width:574px;"><div style="max-height:60px;overflow-y:auto">$entry.text:noescape()$</div></td>
+                      <td style="padding-top:18px;width:574px;max-width:574px;"><div style="max-height:60px;overflow-y:auto;overflow-x:auto">$entry.text:noescape()$</div></td>
                     </tr>
                     }$
                   </table>
