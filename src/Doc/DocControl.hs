@@ -52,6 +52,7 @@ import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
 import Doc.Tokens.Model
+import Crypto.RNG
 import Attachment.Model
 import InputValidation
 import File.Model
@@ -83,6 +84,7 @@ import qualified Control.Exception.Lifted as E
 import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.Trans.Maybe
+import Control.Monad.Base
 import Data.Either
 import Data.List
 import Data.Maybe
@@ -528,19 +530,19 @@ splitUpDocument doc = do
           Log.debug $ "splitUpDocument: back to document"
           return $ Left $ LinkDesignDoc $ (documentid doc)
         ([], CleanCSVData{csvbody}) -> do
-          mdocs <- mapM (createDocFromRow doc) csvbody
-          if all isJust mdocs
-            then do
-              Log.debug $ "splitUpDocument: finishing properly"
-              return $ Right (catMaybes mdocs)
-            else do
-              Log.debug "splitUpDocument: createDocFromRow returned some Nothings"
-              internalError
-  where createDocFromRow udoc xs = do
           actor <- guardJustM $ mkAuthorActor <$> getContext
-          dbUpdate $ DocumentFromSignatoryData (documentid udoc) (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs) actor
-          where item n | n<(length xs) = xs !! n
-                       | otherwise = ""
+          Right <$> splitUpDocumentWorker doc actor csvbody
+
+splitUpDocumentWorker :: (MonadDB m, TemplatesMonad m, CryptoRNG m, MonadBase IO m)
+                      => Document -> Actor -> [[String]] -> m [Document]
+splitUpDocumentWorker doc actor csvbody = do
+  docs <- mapM (createDocFromRow doc) csvbody
+  Log.debug $ "splitUpDocument: finishing properly"
+  return docs
+  where createDocFromRow udoc xs = do
+          let pxs = xs ++ repeat ""
+          guardJustM $ dbUpdate $ DocumentFromSignatoryData (documentid udoc) (pxs!!0) (pxs!!1) (pxs!!2) (pxs!!3) (pxs!!4) (pxs!!5) (drop 6 xs) actor
+
 
 handleIssueSignByAuthor :: Kontrakcja m => Document -> m KontraLink
 handleIssueSignByAuthor doc = do

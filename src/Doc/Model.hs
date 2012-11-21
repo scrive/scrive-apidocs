@@ -949,14 +949,18 @@ insertNewDocument doc = do
     Nothing -> error "insertNewDocument failed for some reason"
 
 -- Create new document based on existing one
-newFromDocument :: MonadDB m => (Document -> Document) -> DocumentID -> DBEnv m (Maybe Document)
-newFromDocument f docid = do
+newFromDocumentID :: MonadDB m => (Document -> Document) -> DocumentID -> DBEnv m (Maybe Document)
+newFromDocumentID f docid = do
   mdoc <- query $ GetDocumentByDocumentID docid
   case mdoc of
-      Just doc -> Just `liftM` insertNewDocument (f doc)
+      Just doc -> newFromDocument f doc
       Nothing -> do
         Log.error $ "Document " ++ show docid ++ " does not exist"
         return Nothing
+
+newFromDocument :: MonadDB m => (Document -> Document) -> Document -> DBEnv m (Maybe Document)
+newFromDocument f doc = do
+  Just `liftM` insertNewDocument (f doc)
 
 data CheckIfDocumentExists = CheckIfDocumentExists DocumentID
 instance MonadDB m => DBQuery m CheckIfDocumentExists Bool where
@@ -1240,14 +1244,15 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m DeleteSigAttachment Bool wh
 data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID String String String String String String [String] Actor
 instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSignatoryData (Maybe Document) where
   update (DocumentFromSignatoryData docid fstname sndname email company personalnumber companynumber fieldvalues actor) = do
-    Just sigs <- getOne $ SQL "SELECT COUNT(*) FROM signatory_links WHERE document_id = ?" [toSql docid]
-    if sigs == 0
-      then do
-        Log.error $ "In DocumentFromSignatoryData: 0 signatory links for document_id: " ++ show docid
+    mdocument <- query $ GetDocumentByDocumentID docid
+    case mdocument of
+      Nothing -> do
+        Log.error $ "In DocumentFromSignatoryData: document $" ++ show docid ++ " does not exist"
         return Nothing
-      else do
+      Just document -> do
+        let sigs = length (documentsignatorylinks document)
         mhs <- lift $ replicateM sigs random
-        md <- newFromDocument (toNewDoc mhs) docid
+        md <- newFromDocument (toNewDoc mhs) document
         when_ (isJust md) $ do
           let d = $fromJust md
           copyEvidenceLogToNewDocument docid (documentid d)
@@ -1636,7 +1641,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocumen
     mndoc <- tryToGetRestarted
     case mndoc of
       Right newdoc -> do
-        md <- newFromDocument (const newdoc) (documentid doc)
+        md <- newFromDocument (const newdoc) doc
         case md of
           Nothing -> return Nothing
           Just d -> do
@@ -2073,7 +2078,7 @@ instance (MonadDB m, TemplatesMonad m)=> DBUpdate m SignableFromDocumentIDWithUp
                 | isAuthor sl = replaceSignatoryUser sl user mcompany
                 | otherwise = sl
           let time = actorTime actor
-          res <- (flip newFromDocument) docid $ \doc ->
+          res <- (flip newFromDocumentID) docid $ \doc ->
             (templateToDocument doc) {
               documentsignatorylinks = map replaceAuthorSigLink (documentsignatorylinks doc)
                                        -- FIXME: Need to remove authorfields?
