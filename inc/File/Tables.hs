@@ -3,7 +3,7 @@ module File.Tables where
 import DB
 
 tableFiles :: Table
-tableFiles = Table {
+tableFiles = tblTable {
     tblName = "files"
   , tblVersion = 4
   , tblCreateOrValidate = \desc -> case desc of

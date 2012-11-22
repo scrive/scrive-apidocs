@@ -3,7 +3,7 @@ module Attachment.Tables where
 import DB
 
 tableAttachments :: Table
-tableAttachments = Table {
+tableAttachments = tblTable {
     tblName = "attachments"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of

@@ -15,6 +15,14 @@ data Table = Table {
   , tblPutProperties    :: MonadDB m => DBEnv m ()
   }
 
+tblTable :: Table
+tblTable = Table
+  { tblName = error "Table name must be specified"
+  , tblVersion = error "Table version must be specified"
+  , tblCreateOrValidate = \_ -> return TVRinvalid
+  , tblPutProperties = return ()
+  }
+
 -- | Migration object. Fields description:
 -- * mgrTable is the table you're migrating
 -- * mgrFrom is the version you're migrating from (you don't specify what

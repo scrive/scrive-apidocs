@@ -3,7 +3,7 @@ module Stats.Tables where
 import DB
 
 tableDocStatEvents :: Table
-tableDocStatEvents = Table {
+tableDocStatEvents = tblTable {
   tblName = "doc_stat_events"
   , tblVersion = 5
   , tblCreateOrValidate = \desc -> case desc of
@@ -52,7 +52,7 @@ tableDocStatEvents = Table {
   }
 
 tableUserStatEvents :: Table
-tableUserStatEvents = Table {
+tableUserStatEvents = tblTable {
   tblName = "user_stat_events"
   , tblVersion = 4
   , tblCreateOrValidate = \desc -> case desc of
@@ -95,7 +95,7 @@ tableUserStatEvents = Table {
   }
 
 tableSignStatEvents :: Table
-tableSignStatEvents = Table {
+tableSignStatEvents = tblTable {
   tblName = "sign_stat_events"
   , tblVersion = 3
   , tblCreateOrValidate = \desc -> case desc of

@@ -12,7 +12,7 @@ import DB
 -}
 
 tablePaymentPlans :: Table
-tablePaymentPlans = Table {
+tablePaymentPlans = tblTable {
   tblName = "payment_plans"
   , tblVersion = 2
   , tblCreateOrValidate = \desc -> do
@@ -88,7 +88,7 @@ tablePaymentPlans = Table {
   }
 
 tablePaymentStats :: Table
-tablePaymentStats = Table {
+tablePaymentStats = tblTable {
   tblName = "payment_stats"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> do

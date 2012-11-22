@@ -5,7 +5,7 @@ import DB.Functions
 import DB.Model
 
 tableVersions :: Table
-tableVersions = Table {
+tableVersions = tblTable {
     tblName = "table_versions"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of

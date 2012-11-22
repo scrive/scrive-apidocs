@@ -3,7 +3,7 @@ module Doc.Tables where
 import DB
 
 tableDocuments :: Table
-tableDocuments = Table {
+tableDocuments = tblTable {
     tblName = "documents"
   , tblVersion = 15
   , tblCreateOrValidate = \desc -> case desc of
@@ -85,7 +85,7 @@ tableDocuments = Table {
   }
 
 tableAuthorAttachments :: Table
-tableAuthorAttachments = Table {
+tableAuthorAttachments = tblTable {
     tblName = "author_attachments"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of
@@ -112,7 +112,7 @@ tableAuthorAttachments = Table {
   }
 
 tableSignatoryAttachments :: Table
-tableSignatoryAttachments = Table {
+tableSignatoryAttachments = tblTable {
     tblName = "signatory_attachments"
   , tblVersion = 7
   , tblCreateOrValidate = \desc -> case desc of
@@ -145,7 +145,7 @@ tableSignatoryAttachments = Table {
   }
 
 tableSignatoryLinks :: Table
-tableSignatoryLinks = Table {
+tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
   , tblVersion = 14
   , tblCreateOrValidate = \desc -> case desc of
@@ -227,7 +227,7 @@ tableSignatoryLinks = Table {
 
 
 tableDocumentTags :: Table
-tableDocumentTags = Table {
+tableDocumentTags = tblTable {
     tblName = "document_tags"
   , tblVersion = 2
   , tblCreateOrValidate = \desc -> case desc of
@@ -252,7 +252,7 @@ tableDocumentTags = Table {
   }
 
 tableSignatoryLinkFields :: Table
-tableSignatoryLinkFields = Table {
+tableSignatoryLinkFields = tblTable {
     tblName = "signatory_link_fields"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of
