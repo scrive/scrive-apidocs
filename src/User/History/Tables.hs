@@ -27,8 +27,9 @@ tableUsersHistory = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
+  , tblIndexes = [ tblIndexOnColumn "user_id"
+                 ]
   , tblPutProperties = do
-    kRunRaw "CREATE INDEX idx_users_history_user_id ON users_history(user_id)"
     kRunRaw $ "ALTER TABLE users_history"
       <> " ADD CONSTRAINT fk_users_history_user_id FOREIGN KEY(user_id)"
       <> " REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE"
