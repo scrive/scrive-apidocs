@@ -359,8 +359,7 @@ test_privateUserTakoverWorks = do
   companydocs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid adminuser)] [DocumentFilterUnsavedDraft False] [] (0,maxBound)
   assertEqual "Company owns users docs" 1 (length companydocs)
   assertEqual "Docid matches" docid (documentid $ head companydocs)
-  docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid user)] [DocumentFilterUnsavedDraft False] [] (0,maxBound)
-
+  docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid user)] [DocumentFilterUnsavedDraft False, DocumentFilterSignable] [] (0,maxBound)
   templates <- dbQuery $ GetTemplatesByAuthor $ userid user
   let userdocs = nub (docs ++ templates)
   assertEqual "User is still linked to their docs" 1 (length userdocs)
