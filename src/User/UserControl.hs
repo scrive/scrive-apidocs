@@ -55,8 +55,7 @@ getUserJSON = do
            mumailapi <- dbQuery $ GetUserMailAPI $ userid user
            mcompany <- getCompanyForUser user
            mcmailapi <- maybe (return Nothing) (dbQuery . GetCompanyMailAPI) $ usercompany user
-           companyuieditable <- withCompanyUserOrAdminOnly Nothing $ \(editable, _) -> return editable
-           userJSON user mumailapi mcompany mcmailapi companyuieditable
+           userJSON user mumailapi mcompany mcmailapi (useriscompanyadmin user || (isAdmin ||^ isSales) ctx)
          Nothing -> internalError
 
 
