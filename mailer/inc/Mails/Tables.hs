@@ -69,8 +69,8 @@ tableMailEvents = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
+  , tblIndexes = [ tblIndexOnColumn "mail_id" ]
   , tblPutProperties = do
-    kRunRaw "CREATE INDEX idx_mail_events_mail_id ON mail_events(mail_id)"
     kRunRaw $ "ALTER TABLE mail_events"
       <> " ADD CONSTRAINT fk_mail_events_mails FOREIGN KEY(mail_id)"
       <> " REFERENCES mails(id) ON DELETE CASCADE ON UPDATE RESTRICT"
