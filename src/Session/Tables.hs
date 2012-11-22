@@ -26,8 +26,8 @@ tableSessions = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
+  , tblIndexes = [ tblIndexOnColumn "user_id" ]
   , tblPutProperties = do
-    kRunRaw $ "CREATE INDEX idx_sessions_user_id ON sessions(user_id)"
     kRunRaw $ "ALTER TABLE sessions"
       <> " ADD CONSTRAINT fk_sessions_user_id FOREIGN KEY(user_id)"
       <> " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
