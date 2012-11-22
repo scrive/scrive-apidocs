@@ -62,36 +62,56 @@ removeSignatoryLinksInternalInsertOrder = Migration {
              <> "DROP CONSTRAINT fk_signatory_link_fields_signatory_links, "
              <> "ADD CONSTRAINT fk_signatory_link_fields_signatory_links FOREIGN KEY (signatory_link_id) "
              <> "REFERENCES signatory_links (id) MATCH SIMPLE "
-             <> "ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;"
+             <> "ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE"
 
       kRunRaw $ "ALTER TABLE signatory_attachments "
-             <> "DROP CONSTRAINT fk_signatory_attachments_signatory_links, "
-             <> "ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY (signatory_link_id) "
-             <> "REFERENCES signatory_links (id) MATCH SIMPLE "
-             <> "ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;"
+             <> "DROP CONSTRAINT fk_signatory_attachments_signatory_links,  "
+             <> "ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY (signatory_link_id)  "
+             <> "REFERENCES signatory_links (id) MATCH SIMPLE  "
+             <> "ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE"
 
-      let kRunUntilZero command = do
-            result <- command
-            when (result>0) (kRunUntilZero command)
+      -- This gigantic recursive query has to collect all
+      -- signatory_links that are problematic and need to get a new
+      -- id. Signatory links is problematic either because it itself
+      -- is in wrong order or because some other link after it gets
+      -- new id will make this link problematic. We iterativelly find
+      -- all such links and put them in the table
+      -- problematic_signatory_links. Then we assign new ids to
+      -- problematic_signatory_links sorted according to
+      -- internal_insert_order because this is the order we want to
+      -- mimic. At the very end we use this new ids for
+      -- signatory_links.
+      --
+      -- There is no way to make it in one swoop because UPDATE has
+      -- unspecified order of updates and it cannot be made
+      -- deterministic. Generator nextval('') has to be used in a
+      -- SELECT query.
+      kRunRaw $ "WITH RECURSIVE "
+             <> "problematic_signatory_links(id,internal_insert_order,document_id) AS ( "
+             <> "    SELECT signatory_links.id, signatory_links.internal_insert_order, signatory_links.document_id "
+             <> "      FROM signatory_links, signatory_links AS sl2 "
+             <> "     WHERE sl2.document_id = signatory_links.document_id "
+             <> "       AND signatory_links.id < sl2.id "
+             <> "       AND signatory_links.internal_insert_order > sl2.internal_insert_order "
+             <> "UNION "
+             <> "    SELECT signatory_links.id, signatory_links.internal_insert_order, signatory_links.document_id "
+             <> "      FROM signatory_links, problematic_signatory_links "
+             <> "     WHERE problematic_signatory_links.document_id = signatory_links.document_id "
+             <> "       AND signatory_links.id > problematic_signatory_links.id "
+             <> "       AND signatory_links.internal_insert_order > problematic_signatory_links.internal_insert_order "
+             <> ") "
+             <> "UPDATE signatory_links "
+             <> "   SET id = problematic_signatory_links_with_new_ids.new_id "
+             <> "  FROM (SELECT sorted_problematic_signatory_links.*, nextval('signatory_links_id_seq') AS new_id "
+             <> "          FROM (SELECT * "
+             <> "                  FROM problematic_signatory_links "
+             <> "                 ORDER BY internal_insert_order) "
+             <> "                    AS sorted_problematic_signatory_links) "
+             <> "            AS problematic_signatory_links_with_new_ids "
+             <> " WHERE signatory_links.id = problematic_signatory_links_with_new_ids.id "
 
-      -- Here we fix order of signatory links by one single signatory
-      -- link. There are at most 24 signatory links in a document in
-      -- the database, so this loop will finish at most after 24
-      -- iterations. This is like buble sort that moves an element not
-      -- in order to the end of a list and then repeats. It has to be
-      -- that way because order of execution of UPDATE is by
-      -- definition non-deterministic and therefore sequential numbers
-      -- could be taken in order different than we want.
-
-      kRunUntilZero $
-               kRun $ "UPDATE signatory_links "
-                    <>   "SET id = DEFAULT "
-                    <>  "FROM signatory_links AS sl2 "
-                    <> "WHERE sl2.document_id = signatory_links.document_id "
-                    <>   "AND signatory_links.id < sl2.id "
-                    <>   "AND signatory_links.internal_insert_order > sl2.internal_insert_order;"
       kRunRaw $ "ALTER TABLE signatory_links "
-             <> "DROP COLUMN internal_insert_order;"
+             <> "DROP COLUMN internal_insert_order"
 }
 
 removeSignatoryRoles :: MonadDB m => Migration m
