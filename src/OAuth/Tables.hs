@@ -37,7 +37,7 @@ import DB
 
 -}
 tableAPIToken :: Table
-tableAPIToken = Table {
+tableAPIToken = tblTable {
   tblName = "oauth_api_token"
   , tblVersion = 2
   , tblCreateOrValidate = \desc -> do
@@ -79,7 +79,7 @@ tableAPIToken = Table {
 
 -}
 tableAccessToken :: Table
-tableAccessToken = Table {
+tableAccessToken = tblTable {
   tblName = "oauth_access_token"
   , tblVersion = 2
   , tblCreateOrValidate = \desc -> do
@@ -130,7 +130,7 @@ tableAccessToken = Table {
 
 -}
 tablePrivilege :: Table
-tablePrivilege = Table {
+tablePrivilege = tblTable {
   tblName = "oauth_privilege"
   , tblVersion = 2
   , tblCreateOrValidate = \desc -> do
@@ -182,7 +182,7 @@ migrateTempCredentialRemoveEmail =
 
 -}
 tableTempCredential :: Table
-tableTempCredential = Table {
+tableTempCredential = tblTable {
   tblName = "oauth_temp_credential"
   , tblVersion = 3
   , tblCreateOrValidate = \desc -> do
@@ -241,7 +241,7 @@ tableTempCredential = Table {
 
 -}
 tableTempPrivileges :: Table
-tableTempPrivileges = Table {
+tableTempPrivileges = tblTable {
   tblName = "oauth_temp_privileges"
   , tblVersion = 2
   , tblCreateOrValidate = \desc -> do

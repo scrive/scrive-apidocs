@@ -13,7 +13,7 @@ mailerTables = [
   ]
 
 tableMails :: Table
-tableMails = Table {
+tableMails = tblTable {
     tblName = "mails"
   , tblVersion = 2
   , tblCreateOrValidate = \desc -> case desc of
@@ -50,7 +50,7 @@ tableMails = Table {
   }
 
 tableMailEvents :: Table
-tableMailEvents = Table {
+tableMailEvents = tblTable {
     tblName = "mail_events"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of

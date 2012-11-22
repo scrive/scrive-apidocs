@@ -3,7 +3,7 @@ module User.History.Tables where
 import DB
 
 tableUsersHistory :: Table
-tableUsersHistory = Table {
+tableUsersHistory = tblTable {
     tblName = "users_history"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of

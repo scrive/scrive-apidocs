@@ -3,7 +3,7 @@ module User.Tables where
 import DB
 
 tableUsers :: Table
-tableUsers = Table {
+tableUsers = tblTable {
     tblName = "users"
   , tblVersion = 11
   , tblCreateOrValidate = \desc -> case desc of
@@ -70,7 +70,7 @@ tableUsers = Table {
   }
 
 tableUserInviteInfos :: Table
-tableUserInviteInfos = Table {
+tableUserInviteInfos = tblTable {
     tblName = "user_invite_infos"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> do

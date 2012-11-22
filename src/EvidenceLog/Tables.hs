@@ -14,7 +14,7 @@ Also, it is insert only. No updates, no deletes.
 
 -}
 tableEvidenceLog :: Table
-tableEvidenceLog = Table {
+tableEvidenceLog = tblTable {
   tblName = "evidence_log"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of

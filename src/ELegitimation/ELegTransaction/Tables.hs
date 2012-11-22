@@ -45,7 +45,7 @@ mergeELegTransaction = SQLFunction {
 }
 
 tableELegTransactions :: Table
-tableELegTransactions = Table {
+tableELegTransactions = tblTable {
     tblName = "eleg_transactions"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of

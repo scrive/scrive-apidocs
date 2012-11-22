@@ -3,7 +3,7 @@ module Company.Tables where
 import DB
 
 tableCompanies :: Table
-tableCompanies = Table {
+tableCompanies = tblTable {
     tblName = "companies"
   , tblVersion = 7
   , tblCreateOrValidate = \desc -> case desc of

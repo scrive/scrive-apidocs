@@ -3,7 +3,7 @@ module Session.Tables where
 import DB
 
 tableSessions :: Table
-tableSessions = Table {
+tableSessions = tblTable {
     tblName = "sessions"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of

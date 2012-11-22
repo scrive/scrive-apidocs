@@ -3,7 +3,7 @@ module Doc.API.Callback.Tables where
 import DB
 
 tableDocumentApiCallbacks :: Table
-tableDocumentApiCallbacks = Table {
+tableDocumentApiCallbacks = tblTable {
     tblName = "document_api_callbacks"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of

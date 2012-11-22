@@ -8,7 +8,7 @@ module ScriveByMail.Tables (
 import DB
 
 tableUserRequest :: Table
-tableUserRequest = Table  {
+tableUserRequest = tblTable  {
     tblName = "mail_api_user_request"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of
@@ -41,7 +41,7 @@ tableUserRequest = Table  {
   }
 
 tableMailAPIDelay :: Table
-tableMailAPIDelay = Table {
+tableMailAPIDelay = tblTable {
     tblName = "mail_api_delay"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of
@@ -66,7 +66,7 @@ tableMailAPIDelay = Table {
   }
 
 tableUserMailAPIs :: Table
-tableUserMailAPIs = Table {
+tableUserMailAPIs = tblTable {
     tblName = "user_mail_apis"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of
@@ -95,7 +95,7 @@ tableUserMailAPIs = Table {
   }
 
 tableCompanyMailAPIs :: Table
-tableCompanyMailAPIs = Table {
+tableCompanyMailAPIs = tblTable {
     tblName = "company_mail_apis"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of

@@ -3,7 +3,7 @@ module PadQueue.Tables (tablePadQueue) where
 import DB
 
 tablePadQueue :: Table
-tablePadQueue = Table {
+tablePadQueue = tblTable {
     tblName = "padqueue"
   , tblVersion = 4
   , tblCreateOrValidate = \desc -> case desc of

@@ -3,7 +3,7 @@ module ActionQueue.Tables where
 import DB
 
 tablePasswordReminders :: Table
-tablePasswordReminders = Table {
+tablePasswordReminders = tblTable {
     tblName = "password_reminders"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of
@@ -30,7 +30,7 @@ tablePasswordReminders = Table {
   }
 
 tableEmailChangeRequests :: Table
-tableEmailChangeRequests = Table {
+tableEmailChangeRequests = tblTable {
     tblName = "email_change_requests"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of
@@ -57,7 +57,7 @@ tableEmailChangeRequests = Table {
   }
 
 tableUserAccountRequests :: Table
-tableUserAccountRequests = Table {
+tableUserAccountRequests = tblTable {
     tblName = "user_account_requests"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of

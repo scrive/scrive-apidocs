@@ -5,7 +5,7 @@ module CompanyAccounts.Tables (
 import DB
 
 tableCompanyInvites :: Table
-tableCompanyInvites = Table {
+tableCompanyInvites = tblTable {
     tblName = "companyinvites"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of

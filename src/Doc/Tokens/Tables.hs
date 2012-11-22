@@ -32,7 +32,7 @@ insertDocumentSessionToken = SQLFunction {
 }
 
 tableDocumentSessionTokens :: Table
-tableDocumentSessionTokens = Table {
+tableDocumentSessionTokens = tblTable {
     tblName = "document_session_tokens"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of

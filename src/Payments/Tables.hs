@@ -12,9 +12,9 @@ import DB
 -}
 
 tablePaymentPlans :: Table
-tablePaymentPlans = Table {
+tablePaymentPlans = tblTable {
   tblName = "payment_plans"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblCreateOrValidate = \desc -> do
     case desc of
       [("account_code",     SqlColDesc { colType     = SqlBigIntT
@@ -54,8 +54,8 @@ tablePaymentPlans = Table {
         kRunRaw $ "CREATE TABLE payment_plans ("
           ++ "  account_code BIGSERIAL NOT NULL"
           ++ ", account_type SMALLINT  NOT NULL"          
-          ++ ", user_id      BIGINT        NULL"          
-          ++ ", company_id   BIGINT        NULL"
+          ++ ", user_id      BIGINT        NULL UNIQUE"          
+          ++ ", company_id   BIGINT        NULL UNIQUE"
           ++ ", plan         SMALLINT  NOT NULL"
           ++ ", plan_pending SMALLINT  NOT NULL"          
           ++ ", status       SMALLINT  NOT NULL"
@@ -75,8 +75,6 @@ tablePaymentPlans = Table {
         return TVRcreated
       _ -> return TVRinvalid
   , tblPutProperties = do
-    kRunRaw $ "CREATE UNIQUE INDEX idx_payment_plans_user_id ON payment_plans(user_id) WHERE (user_id IS NOT NULL)"
-    kRunRaw $ "CREATE UNIQUE INDEX idx_payment_plans_company_id ON payment_plans(company_id) WHERE (company_id IS NOT NULL)"
     kRunRaw $ "ALTER TABLE payment_plans"
       ++ " ADD CONSTRAINT fk_payment_plans_users FOREIGN KEY(user_id)"
       ++ " REFERENCES users(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
@@ -88,7 +86,7 @@ tablePaymentPlans = Table {
   }
 
 tablePaymentStats :: Table
-tablePaymentStats = Table {
+tablePaymentStats = tblTable {
   tblName = "payment_stats"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> do
