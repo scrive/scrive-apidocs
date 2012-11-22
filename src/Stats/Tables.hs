@@ -81,8 +81,9 @@ tableUserStatEvents = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
+  , tblIndexes = [ tblIndexOnColumn "user_id"
+                 ]
   , tblPutProperties = do
-    kRunRaw "CREATE INDEX idx_user_stat_events_user_id ON user_stat_events(user_id)"
     -- we don't want to delete the stats if a user gets deleted
     kRunRaw $ "ALTER TABLE user_stat_events"
       <> " ADD CONSTRAINT fk_user_stat_events_users FOREIGN KEY(user_id)"
