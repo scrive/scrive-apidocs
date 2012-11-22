@@ -55,9 +55,10 @@ tableUsers = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
+  , tblIndexes = [ tblIndexOnColumn "company_id"
+                 , tblIndexOnColumn "email"
+                 ]
   , tblPutProperties = do
-    kRunRaw "CREATE INDEX idx_users_company_id ON users(company_id)"
-    kRunRaw "CREATE INDEX idx_users_email ON users(email)"
     kRunRaw $ "ALTER TABLE users"
       <> " ADD CONSTRAINT fk_users_companies FOREIGN KEY(company_id)"
       <> " REFERENCES companies(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
