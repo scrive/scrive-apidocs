@@ -134,8 +134,8 @@ tableSignatoryAttachments = tblTable {
         return TVRcreated
       _ -> do
         return TVRinvalid
+  , tblIndexes = [ tblIndexOnColumn "signatory_link_id" ]
   , tblPutProperties = do
-    kRunRaw $ "CREATE INDEX idx_signatory_attachments_signatory_link_id ON signatory_attachments(signatory_link_id)"
     kRunRaw $ "ALTER TABLE signatory_attachments"
       <> " ADD CONSTRAINT fk_signatory_attachments_files FOREIGN KEY(file_id)"
       <> " REFERENCES files(id) ON DELETE CASCADE ON UPDATE RESTRICT"
@@ -212,9 +212,9 @@ tableSignatoryLinks = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
+  , tblIndexes = [ tblIndexOnColumn "user_id"
+                 , tblIndexOnColumn "document_id" ]
   , tblPutProperties = do
-    kRunRaw $ "CREATE INDEX idx_signatory_links_user_id ON signatory_links(user_id)"
-    kRunRaw $ "CREATE INDEX idx_signatory_links_document_id ON signatory_links(document_id)"
     kRunRaw $ "ALTER TABLE signatory_links"
       <> " ADD CONSTRAINT fk_signatory_links_document_id FOREIGN KEY(document_id)"
       <> " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
@@ -243,8 +243,8 @@ tableDocumentTags = tblTable {
                   <> ")"
         return TVRcreated
       _ -> return TVRinvalid
+  , tblIndexes = [ tblIndexOnColumn "document_id" ]
   , tblPutProperties = do
-    kRunRaw $ "CREATE INDEX idx_document_tags_document_id ON document_tags(document_id)"
     kRunRaw $ "ALTER TABLE document_tags"
       <> " ADD CONSTRAINT fk_document_tags_document_id FOREIGN KEY(document_id)"
       <> " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
@@ -277,8 +277,8 @@ tableSignatoryLinkFields = tblTable {
                   <> ")"
         return TVRcreated
       _ -> return TVRinvalid
+  , tblIndexes = [ tblIndexOnColumn "signatory_link_id" ]
   , tblPutProperties = do
-    kRunRaw $ "CREATE INDEX idx_signatory_link_fields_signatory_links_signatory_link_id ON signatory_link_fields(signatory_link_id)"
     kRunRaw $ "ALTER TABLE signatory_link_fields"
       <> " ADD CONSTRAINT fk_signatory_link_fields_signatory_links FOREIGN KEY(signatory_link_id)"
       <> " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
