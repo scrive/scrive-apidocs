@@ -75,6 +75,13 @@ addApiCallbackUrlToDocument = Migration {
   , mgrDo = kRunRaw "ALTER TABLE documents ADD COLUMN api_callback_url TEXT NULL"
 }
 
+addUnsavedDraftToDocument :: MonadDB m => Migration m
+addUnsavedDraftToDocument = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 15
+  , mgrDo = kRunRaw "ALTER TABLE documents ADD COLUMN unsaved_draft BOOL NOT NULL DEFAULT FALSE"
+}
+
 addSequenceOwnerToDocumentsId :: MonadDB m => Migration m
 addSequenceOwnerToDocumentsId = Migration {
     mgrTable = tableDocuments
