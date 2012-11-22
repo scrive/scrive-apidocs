@@ -24,9 +24,9 @@ tableCompanyInvites = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
+  , tblIndexes = [ tblIndexOnColumn "company_id"
+                 , tblIndexOnColumn "email" ]
   , tblPutProperties = do
-    kRunRaw "CREATE INDEX idx_companyinvites_id ON companyinvites(company_id)"
-    kRunRaw "CREATE INDEX idx_companyinvites_email ON companyinvites(email)"
     kRunRaw $ "ALTER TABLE companyinvites"
       <> " ADD CONSTRAINT fk_companyinvites_companies FOREIGN KEY(company_id)"
       <> " REFERENCES companies(id) ON DELETE RESTRICT ON UPDATE RESTRICT"

@@ -38,10 +38,9 @@ tableCompanies = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
+  , tblIndexes = [ tblIndexOnColumn "external_id" ]
   , tblPutProperties = do
-    kRunRaw "CREATE INDEX idx_companies_external_id ON companies(external_id)"
     kRunRaw $ "CREATE SEQUENCE companies_id_seq"
     kRunRaw $ "SELECT setval('companies_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM companies))"
     kRunRaw $ "ALTER TABLE companies ALTER id SET DEFAULT nextval('companies_id_seq')"
   }
-
