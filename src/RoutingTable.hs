@@ -181,4 +181,7 @@ staticRoutes = choice
      , documentAPI
      , oauth
      , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "public"
+
+     -- public services
+     , dir "serialize_image" $ hPost $ toK0 $ Company.handleSerializeImage
    ]

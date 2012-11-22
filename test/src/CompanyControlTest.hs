@@ -38,17 +38,16 @@ test_handleGetCompanyJSON = do
   req <- mkRequest GET []
   (jsv, _ctx') <- runTestKontra req ctx $ handleGetCompanyJSON Nothing
 
-  let ejsonid = getIDFromJSON jsv
-  assertBool "Able to get id from json" (isRight ejsonid)
+  let ejsoncompanybarsbackground = getcompanybarsbackgroundFromJSON jsv
+  assertBool "Able to get companybarsbackground from json" (isRight ejsoncompanybarsbackground)
 
-  let (Right jsonid) = ejsonid
-  assertEqual "JSON id matches company id" (show $ companyid company) jsonid
+  let (Right jsoncompanybarsbackground) = ejsoncompanybarsbackground
+  assertEqual "JSON companybarsbackground matches company id" (fromJust $ companybarsbackground $ companyui company) jsoncompanybarsbackground
   where
-    getIDFromJSON :: JSValue -> Either String String
-    getIDFromJSON jsv = maybe (Left "Unable to parse JSON!") Right $ do
-      (companyjsv :: JSValue) <- fromJSValueField "company" jsv
-      jsonid <- fromJSValueField "id" companyjsv
-      return jsonid
+    getcompanybarsbackgroundFromJSON :: JSValue -> Either String String
+    getcompanybarsbackgroundFromJSON jsv = maybe (Left "Unable to parse JSON!") Right $ do
+      (x :: String) <- fromJSValueField "barsbackground" jsv
+      return x
 
 test_settingUIWithHandlePostCompany :: TestEnv ()
 test_settingUIWithHandlePostCompany = do
@@ -100,7 +99,9 @@ test_handleCompanyLogo = do
 addNewAdminUserAndCompany :: String -> String -> String -> TestEnv (User, Company)
 addNewAdminUserAndCompany fstname sndname email = do
   company <- addNewCompany
+  _ <- dbUpdate $ UpdateCompanyUI (companyid company) (companyui company){companybarsbackground = Just "#abcdef"}
   Just user <- addNewCompanyUser fstname sndname email (companyid company)
   _ <- dbUpdate $ SetUserCompanyAdmin (userid user) True
   Just updateduser <- dbQuery $ GetUserByID (userid user)
-  return (updateduser, company)
+  Just updatedcompany <- dbQuery $ GetCompany (companyid company)
+  return (updateduser, updatedcompany)

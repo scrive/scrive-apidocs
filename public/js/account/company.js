@@ -1,6 +1,45 @@
 
 (function(window){
 
+window.CompanyUI = Backbone.Model.extend({
+  initialize: function(args) {
+    if (args.companyid) {
+      this.url = args.url;
+      this.fetch();
+    } else {
+      this.set({
+        logo: args.logo,
+        barsbackground: args.barsbackground,
+        barstextcolour: args.barstextcolour
+      }, {silent: true});
+    }
+  },
+  logo: function() {
+    return this.get('logo');
+  },
+  barstextcolour: function() {
+    return this.get('barstextcolour');
+  },
+  setBarstextcolour: function(color) {
+    this.set({barstextcolour: colour.trim()});
+  },
+  barsbackground: function() {
+    return this.get('barsbackground');
+  },
+  editable: function() {
+    return this.get('editable');
+  },
+  parse: function(args) {
+    return {
+      editable: args.editable,
+      barsbackground: args.barsbackground,
+      barstextcolour: args.barstextcolour,
+      logo: args.logo,
+      ready: true
+    };
+  }
+});
+
 window.Company = Backbone.Model.extend({
   defaults : {
       companyid        : "",
@@ -10,10 +49,12 @@ window.Company = Backbone.Model.extend({
       zip       : "",
       city      : "",
       country    : "",
-      mailapi   : undefined
+      mailapi   : undefined,
+      companyui : undefined
   },
   initialize : function(args) {
     if (args.mailapi != undefined) this.set({"mailapi" : new MailApi(args.mailapi)});
+    if (args.companyui != undefined) this.set({"companyui" : new CompanyUI(args.companyui)});
   },
   companyid : function() {
      return this.get("companyid");
@@ -38,6 +79,9 @@ window.Company = Backbone.Model.extend({
   },
   mailapi : function() {
      return this.get("mailapi");
+  },
+  companyui : function() {
+     return this.get("companyui");
   },
   hasMailApi : function() {
      return this.mailapi() != undefined;

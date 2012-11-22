@@ -82,8 +82,8 @@ showAccount user mcompany = renderTemplate "showAccount" $ do
     F.value "companyAdmin" $ useriscompanyadmin user
     F.value "noCompany" $ isNothing mcompany
 
-userJSON :: Monad m => User -> Maybe MailAPIInfo -> Maybe Company -> Maybe MailAPIInfo -> m JSValue
-userJSON user mumailapi mcompany mcmailapi = runJSONGenT $ do
+userJSON :: Monad m => User -> Maybe MailAPIInfo -> Maybe Company -> Maybe MailAPIInfo -> Bool -> m JSValue
+userJSON user mumailapi mcompany mcmailapi companyuieditable = runJSONGenT $ do
     value "id" $ show $ userid user
     value "fstname" $ getFirstName user
     value "sndname" $ getLastName user
@@ -101,10 +101,17 @@ userJSON user mumailapi mcompany mcmailapi = runJSONGenT $ do
                             Just umailapi -> mailAPIInfoJSON umailapi
     valueM "company" $ case (mcompany) of
                             Nothing -> return JSNull
-                            Just company -> companyJSON company mcmailapi
+                            Just company -> companyJSON company mcmailapi companyuieditable
 
-companyJSON :: Monad m => Company -> Maybe MailAPIInfo -> m JSValue
-companyJSON company mcmailapi = runJSONGenT $ do
+companyUIJson :: Monad m => Company -> Bool -> m JSValue
+companyUIJson company editable = runJSONGenT $ do
+    value "logo" $ maybe "" (const $ show $ LinkCompanyLogo $ companyid company) $ companylogo $ companyui $ company
+    value "barsbackground" $ fromMaybe "" $ companybarsbackground $ companyui $ company
+    value "barstextcolour" $ fromMaybe "" $ companybarstextcolour $ companyui $ company
+    value "editable" editable
+
+companyJSON :: Monad m => Company -> Maybe MailAPIInfo -> Bool -> m JSValue
+companyJSON company mcmailapi editable = runJSONGenT $ do
     value "companyid" $ show $ companyid company
     value "address" $ companyaddress $ companyinfo company
     value "city" $ companycity $ companyinfo company
@@ -115,6 +122,7 @@ companyJSON company mcmailapi = runJSONGenT $ do
     valueM "mailapi" $ case (mcmailapi) of
                             Nothing -> return JSNull
                             Just cmailapi -> mailAPIInfoJSON cmailapi
+    valueM "companyui" $ companyUIJson company editable
 
 userStatsDayToJSON :: [(Int, [Int])] -> [JSValue]
 userStatsDayToJSON = rights . map f

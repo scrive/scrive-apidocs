@@ -23,7 +23,6 @@ import Utils.Prelude
 import ActionQueue.UserAccountRequest
 import AppView
 import DB
-import Company.CompanyControl (withCompanyAdmin)
 import Company.Model
 import CompanyAccounts.Model
 import CompanyAccounts.CompanyAccountsView

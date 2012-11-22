@@ -1,6 +1,7 @@
 module User.Utils where
 
 import Control.Monad.State
+import Control.Arrow (first)
 import Data.Functor
 
 import DB
@@ -64,3 +65,33 @@ checkUserTOSGet action = do
         Just (User{userhasacceptedtermsofservice = Just _}) -> Right <$> action
         Just _ -> return $ Left $ LinkAcceptTOS
         Nothing -> return $ Left $ LinkLogin (ctxlang ctx) NotLogged
+
+{- |
+    Guards that there is a user that is logged in and they
+    are in a company.  The user and company are passed as params
+    to the given action, to save you having to look them up yourself.
+-}
+withCompanyUser :: Kontrakcja m => ((User, Company) -> m a) -> m a
+withCompanyUser action = do
+  Context{ ctxmaybeuser } <- getContext
+  user <- guardJust ctxmaybeuser
+  company <- guardJustM $ getCompanyForUser user
+  action (user, company)
+
+{- |
+    Guards that there is a logged in company admin.
+-}
+withCompanyAdmin :: Kontrakcja m => ((User, Company) -> m a) -> m a
+withCompanyAdmin action = withCompanyUser $ \(user, company) ->
+  if useriscompanyadmin user then action (user, company) else internalError
+
+
+withCompanyUserOrAdminOnly :: Kontrakcja m => Maybe CompanyID -> ((Bool, Company) -> m a) -> m a
+withCompanyUserOrAdminOnly Nothing action = withCompanyUser (action . first useriscompanyadmin)
+withCompanyUserOrAdminOnly (Just cid) action = onlySalesOrAdmin $
+  guardJustM (dbQuery (GetCompany cid)) >>= curry action True
+
+withCompanyAdminOrAdminOnly :: Kontrakcja m => Maybe CompanyID -> (Company -> m a) -> m a
+withCompanyAdminOrAdminOnly Nothing action = withCompanyAdmin (action . snd)
+withCompanyAdminOrAdminOnly (Just cid) action = onlySalesOrAdmin $
+  guardJustM (dbQuery (GetCompany cid)) >>= action

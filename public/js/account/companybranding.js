@@ -5,9 +5,14 @@ window.CompanyBrandingColour = Backbone.Model.extend({
   defaults: {
     customised: false,
     defaultcolour: "white",
-    colour: "",
     label: "",
     editable: false
+  },
+  companyui: function() {
+    return this.get('companyui');
+  },
+  companybranding: function() {
+    return this.get('companybranding');
   },
   customised: function() {
     return this.get("customised");
@@ -15,11 +20,17 @@ window.CompanyBrandingColour = Backbone.Model.extend({
   setCustomised: function(customised) {
     this.set({ customised: customised });
   },
+  companyuiAttribute: function() {
+    return this.get('companyuiattribute');
+  },
   setColour: function(colour) {
-    this.set({ colour: colour.trim() });
+    var tmp = {};
+    tmp[this.companyuiAttribute()] = colour.trim();
+    this.companyui().set(tmp);
+    this.companybranding().trigger('change');
   },
   colour: function() {
-    var colour = this.get("colour");
+    var colour = this.companyui().get(this.companyuiAttribute());
     if (this.customised() && colour.length>0) {
       return colour;
     } else {
@@ -45,6 +56,7 @@ window.CompanyBrandingColourView = Backbone.View.extend({
   },
   prerender: function() {
     var model = this.model;
+    var self = this;
 
     var checkbox = $("<input type='checkbox' class='checkboxtoggle' />");
     this.checkbox = checkbox;
@@ -56,6 +68,7 @@ window.CompanyBrandingColourView = Backbone.View.extend({
     var input = $("<input type='text' class='float-left colour' />");;
     input.bind("keyup change", function() {
       model.setColour(input.val().trim());
+      self.render();
     });
     this.input = input;
 
@@ -78,7 +91,6 @@ window.CompanyBrandingColourView = Backbone.View.extend({
     return this;
   },
   render: function() {
-
     if (this.model.customised()) {
       this.checkbox.attr("checked", "true");
       this.customdiv.show();
@@ -113,13 +125,12 @@ window.CompanyBrandingLogo = Backbone.Model.extend({
     label: "",
     editable: false,
     loading: false,
-    submiturl: ""
   },
   initialize: function(args) {
-    _.bindAll(this, "onSend");
-    _.bindAll(this, "onSubmitSuccess");
-    _.bindAll(this, "onSubmitError");
     this.url = args.url;
+  },
+  companyui: function() {
+    return this.get('companyui');
   },
   customised: function() {
     return this.get("customised");
@@ -179,34 +190,11 @@ window.CompanyBrandingLogo = Backbone.Model.extend({
       }
     });
   },
-  onSubmitSuccess: function() {
-    console.log("onSubmitSuccess");
-    this.reload();
-  },
-  onSubmitError: function() {
-    this.reload();
-    console.log("error");
-  },
-  submiturl: function() {
-    return this.get("submiturl");
-  },
-  submit: function() {
-    var logo = this;
-    return new Submit({
-      method: "POST",
-      url: logo.submiturl(),
-      islogo: true,
-      ajax: true,
-      onSend: logo.onSend,
-      ajaxsuccess: logo.onSubmitSuccess,
-      ajaxerror: logo.onSubmitError
-    });
-  },
   serializeLogo: function() {
     var model = this;
     return new Submit({
       method: 'POST',
-      url: 'serialize_image',
+      url: '/serialize_image',
       ajax: true,
       ajaxsuccess: function (rs) {
         var response = JSON.parse(rs);
@@ -220,18 +208,20 @@ window.CompanyBrandingLogo = Backbone.Model.extend({
 window.CompanyBrandingLogoView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
-    this.model.bind('change', this.render);
+    this.model.companyui().bind('change', this.render);
     this.prerender();
     this.render();
   },
   prerender: function() {
     var model = this.model;
+    var self = this;
 
     var checkbox = $("<input type='checkbox' class='checkboxtoggle' />");
     this.checkbox = checkbox;
     this.checkbox.change(function() {
       model.setCustomised(checkbox.is(":checked"));
       model.set({logoChanged: true, logo: ''}, {silent: true});
+      self.render();
     });
     var checkboxlabel = $("<label />").append(model.label());
 
@@ -274,45 +264,72 @@ window.CompanyBrandingLogoView = Backbone.View.extend({
 });
 
 window.CompanyModel = Backbone.Model.extend({
-    defaults: {
-      id: 0,
-      name: "",
-      address: "",
-      zip: "",
-      city: "",
-      country: "",
-      logo: "",
-      iscustomlogo: false,
-      ready: false,
-      editable: false
-    },
     initialize: function(args) {
+      var self = this;
       if (!args.companyid) {
         this.submiturl = "/account/company";
         this.url = "/account/company/json";
+        this._companyui = null;
+        var user = new User();
+        this.set({"user" : user})
+        user.bind("change:ready",function() {
+          self.reset();
+          self.trigger('change:ready');
+        });
+        user.fetch({cache: false});
       } else {
         this.submiturl = "/adminonly/companyadmin/branding/"+args.companyid;
         this.url = "/adminonly/companyadmin/branding/json/"+args.companyid;
+        this._companyui = new CompanyUI({url: this.url, companyid: args.companyid})
+        this._companyui.bind("change:ready",function() {
+          self.reset();
+          self.trigger('change:ready');
+        });
+        this._companyui.fetch({cache: false});
       }
-      this.fetch({cache: false});
     },
-    id: function() {
-      return this.get("id");
+    user : function() {
+      return this.get("user");
     },
-    name: function() {
-      return this.get("name");
+    companyui : function() {
+      return this._companyui? this._companyui : this.user().company().companyui();
     },
-    address: function() {
-      return this.get("address");
-    },
-    zip: function() {
-      return this.get("zip");
-    },
-    city: function() {
-      return this.get("city");
-    },
-    country: function() {
-      return this.get("country");
+    reset : function() {
+      if (!this.ready()) return;
+      var companybranding = this;
+      var companyui = this.companyui();
+      this.set({
+        logo: new CompanyBrandingLogo({
+          companyui: companyui,
+          customised: companyui.logo().trim()!="",
+          logo: companyui.logo(),
+          label: localization.customiseLogo,
+          editable: companyui.editable(),
+          url: '',//this.url,
+        }),
+        barsbackground: new CompanyBrandingColour({
+          companyui: companyui,
+          companybranding: companybranding,
+          companyuiattribute: 'barsbackground',
+          customised: companyui.barsbackground().trim()!="",
+          defaultcolour: "#212121",
+          colour: companyui.barsbackground(),
+          label: localization.customiseBackgroundColour,
+          editable: companyui.editable()
+        }),
+        barstextcolour: new CompanyBrandingColour({
+          companyui: companyui,
+          companybranding: companybranding,
+          companyuiattribute: 'barstextcolour',
+          customised: companyui.barstextcolour().trim()!="",
+          defaultcolour: "#ffffff",
+          colour: companyui.barstextcolour(),
+          label: localization.customiseTextColour,
+          editable: companyui.editable()
+        }),
+        editable: companyui.editable()
+      }, {silent: true});
+      this.trigger("reset");
     },
     barsbackground: function() {
       return this.get("barsbackground");
@@ -324,44 +341,14 @@ window.CompanyModel = Backbone.Model.extend({
       return this.get("logo");
     },
     ready: function() {
-      return this.get("ready");
+      if (this._companyui) {
+        return this._companyui.get('ready');
+      } else {
+        return this.user().get("ready");
+      }
     },
     editable: function() {
       return this.get("editable");
-    },
-    parse: function(args) {
-      return {
-        id: args.company.id,
-        name: args.company.name,
-        number: args.company.number,
-        address: args.company.address,
-        zip: args.company.zip,
-        city: args.company.country,
-        barsbackground: new CompanyBrandingColour({
-          customised: args.company.barsbackground.trim()!="",
-          defaultcolour: "#212121",
-          colour: args.company.barsbackground,
-          label: localization.customiseBackgroundColour,
-          editable: args.company.editable
-        }),
-        barstextcolour: new CompanyBrandingColour({
-          customised: args.company.barstextcolour.trim()!="",
-          defaultcolour: "#ffffff",
-          colour: args.company.barstextcolour,
-          label: localization.customiseTextColour,
-          editable: args.company.editable
-        }),
-        logo: new CompanyBrandingLogo({
-          customised: args.company.logo.trim()!="",
-          logo: args.company.logo,
-          label: localization.customiseLogo,
-          editable: args.company.editable,
-          url: this.url,
-          submiturl: this.submiturl
-        }),
-        editable: args.company.editable,
-        ready: true
-      };
     },
     toJSON: function() {
       var logo = this.logo();
@@ -384,6 +371,7 @@ window.CompanyModel = Backbone.Model.extend({
 window.CompanyBrandingSampleView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
+    this.model.companyui().bind('change', this.render);
     this.model.barsbackground().bind('change', this.render);
     this.model.barstextcolour().bind('change', this.render);
     this.model.logo().bind('change', this.render);
@@ -459,7 +447,7 @@ window.CompanyBrandingView = Backbone.View.extend({
   model: CompanyModel,
   initialize: function(args) {
     _.bindAll(this, "render");
-    this.model.bind("change", this.render);
+    this.model.bind("change:ready", this.render);
     this.render();
   },
   createBarsbackgroundElems: function() {
@@ -557,7 +545,7 @@ window.CompanyBranding = function(args) {
     var model = new CompanyModel(args);
     var view = new CompanyBrandingView({ model: model, el:$("<div class='tab-container account'/>") });
     return {
-      refresh: function() {},
+      refresh: function() {view.render();},
       el : function() { return $(view.el); }
     };
 };
