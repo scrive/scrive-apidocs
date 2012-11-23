@@ -32,6 +32,7 @@ docControlTests env = testGroup "Templates" [
   , testThat "Create document from template | Shared" env testDocumentFromTemplateShared
   , testThat "Uploading file as offer makes doc" env testUploadingFileAsOffer
   , testThat "Uploading file as order makes doc" env testUploadingFileAsOrder
+  , testThat "Uploading file creates unsaved draft" env testNewDocumentUnsavedDraft
   , testThat "Sending document sends invites" env testSendingDocumentSendsInvites
   , testThat "Signing document from design view sends invites" env testSigningDocumentFromDesignViewSendsInvites
   , testThat "Person who isn't last signing a doc leaves it pending" env testNonLastPersonSigningADocumentRemainsPending
@@ -67,6 +68,13 @@ testUploadingFileAsOrder = do
   let newdoc = head docs
   assertBool "Document id in result json" ((show $ documentid newdoc) `isInfixOf` (show rsp))
 
+testNewDocumentUnsavedDraft :: TestEnv ()
+testNewDocumentUnsavedDraft = do
+  (user, _rsp) <- uploadDocAsNewUser Contract
+  docs <- randomQuery $ GetDocuments [DocumentsVisibleToUser $ userid user] [DocumentFilterDeleted False] [] (DocumentPagination 0 maxBound) 
+  assertEqual "New doc" 1 (length docs)
+
+  
 uploadDocAsNewUser :: DocumentProcess -> TestEnv (User, Response)
 uploadDocAsNewUser doctype = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"

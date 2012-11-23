@@ -32,7 +32,6 @@ import Test.QuickCheck
 import File.FileID
 
 import qualified Data.Set as S
-
 import Util.Actor
 import EvidenceLog.Model
 
@@ -1908,6 +1907,7 @@ testSetDocumentUnsavedDraft = doTimes 10 $ do
   _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
   Just author' <- dbQuery $ GetUserByID (userid author)
   did <- addRandomDocumentWithAuthor author'
+  doc <- fromJust <$> (dbQuery $ GetDocumentByDocumentID did)
   docs1 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)]
                      [DocumentFilterUnsavedDraft False, DocumentFilterByDocumentID did] [] (DocumentPagination 0 maxBound)
   _ <- dbUpdate $ SetDocumentUnsavedDraft [did] True
@@ -1918,11 +1918,12 @@ testSetDocumentUnsavedDraft = doTimes 10 $ do
                      [DocumentFilterUnsavedDraft False, DocumentFilterByDocumentID did] [] (DocumentPagination 0 maxBound)
   docs4 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)]
                      [DocumentFilterUnsavedDraft True, DocumentFilterByDocumentID did] [] (DocumentPagination 0 maxBound)
+  let isdraft = (isSignable doc && isPreparation doc)                   
   validTest $ do
     assertEqual "Should return the document" [did] (map documentid docs1)
-    assertEqual "Should return no documents" []    (map documentid docs2)
+    assertEqual "Should return no documents" ([] <| isdraft |>[did])    (map documentid docs2)
     assertEqual "Should return the document" [did] (map documentid docs3)
-    assertEqual "Should return no documents" []    (map documentid docs4)
+    assertEqual "Should return no documents" ([] <| isdraft |>[did])    (map documentid docs4)
 
 
 testGetDocumentsByCompanyWithFilteringFinds :: TestEnv ()
