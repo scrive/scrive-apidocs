@@ -28,8 +28,8 @@ import Text.JSON.Gen
 
 padqueueAPI :: Route (KontraPlus Response)
 padqueueAPI = choice
-  [    dir "add"   $ hPost $ toK2 $ addToQueue
-     , dir "clear" $ hPost $ toK0 $ clearQueue
+  [    dir "add"   $ hPostNoXToken $ toK2 $ addToQueue
+     , dir "clear" $ hPostNoXToken $ toK0 $ clearQueue
   ]
 
 
