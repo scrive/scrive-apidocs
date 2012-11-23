@@ -189,7 +189,7 @@ jsonDocumentsList = do
                                                  ,[DocumentFilterDeleted False, DocumentFilterTemplate])
                           "Rubbish"           -> ([DocumentsVisibleToUser uid]
                                                  ,[DocumentFilterDeleted True])
-                          _ -> ([DocumentsVisibleToUser uid],[DocumentFilterDeleted False])
+                          _ -> ([DocumentsVisibleToUser uid],[DocumentFilterDeleted False, DocumentFilterUnsavedDraft False])
       filters2 = concatMap fltSpec (listParamsFilters params)
       fltSpec ("process", "contract") = [DocumentFilterByProcess [Contract]]
       fltSpec ("process", "order") = [DocumentFilterByProcess [Order]]
