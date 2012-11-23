@@ -92,7 +92,7 @@ var padTable = new KontraList({
                             actionIcon.click(function() {
                             LoadingDialog.open();
                             new Submit({
-                                    url: "/padqueue/add/"+ listobject.field("id") + "/" +  listobject.subfield(idx,"id") ,
+                                    url: "/api/fronend/padqueue/add/"+ listobject.field("id") + "/" +  listobject.subfield(idx,"id") ,
                                     method: "POST"
                                 }).sendAjax(function() { LoadingDialog.close(); padTable.recall(); });
                             return false;    
