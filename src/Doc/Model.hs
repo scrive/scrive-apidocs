@@ -380,8 +380,12 @@ documentFilterToSQL (DocumentFilterLinkIsAuthor flag) = do
 documentFilterToSQL (DocumentFilterLinkIsPartner flag) = do
   sqlWhereEq "signatory_links.is_partner" flag
 
-documentFilterToSQL (DocumentFilterUnsavedDraft flag) = do
-  sqlWhereEq "documents.unsaved_draft" flag
+documentFilterToSQL (DocumentFilterUnsavedDraft flag) =
+  sqlWhereAny $ do
+    sqlWhereEq "documents.unsaved_draft" flag
+    sqlWhereNotEq "documents.type" (Signable undefined)
+    sqlWhereNotEq "documents.status" Preparation
+
 
 documentFilterToSQL (DocumentFilterByAuthor userid) = do
   sqlWhere "signatory_links.is_author"

@@ -85,7 +85,7 @@ staticRoutes = choice
      , dir "a"                     $ hGet  $ toK1 $ AttachmentControl.handleShow
      , dir "att"                   $ hGet  $ toK1 $ AttachmentControl.jsonAttachment
 
-     , dir "newdocumentorlatestdraft" $ hGet $ toK0 $ DocControl.newDocumentOrLatestDraft
+     , dir "newdocument" $ hGet $ toK0 $ DocControl.handleNewDocument
      
      , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showArchive
      , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet

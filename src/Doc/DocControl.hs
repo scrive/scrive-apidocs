@@ -6,7 +6,7 @@ module Doc.DocControl(
     -- Exported utils or test functions
       sendReminderEmail
     -- Top level handlers
-    , newDocumentOrLatestDraft
+    , handleNewDocument
     , showCreateFromTemplate 
     , handleDownloadFile
     , handleSignShow
@@ -110,20 +110,15 @@ import System.IO.Temp
 import System.Directory
 import MinutesTime
 
-newDocumentOrLatestDraft :: Kontrakcja m => m KontraLink
-newDocumentOrLatestDraft = withUserPost $ do
+handleNewDocument :: Kontrakcja m => m KontraLink
+handleNewDocument = withUserPost $ do
   ctx <- getContext
   user <- guardJustM $ ctxmaybeuser <$> getContext
-  docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid user)] 
-                      [DocumentFilterStatuses [Preparation], DocumentFilterDeleted False, DocumentFilterLinkIsAuthor True]  [Desc DocumentOrderByMTime] (DocumentPagination 0 1)
-  case docs of
-       [d] -> return $ LinkIssueDoc (documentid d)
-       _ -> do
-        title <- renderTemplate_ "newDocumentTitle"
-        actor <- guardJustM $ mkAuthorActor <$> getContext
-        Just doc <- dbUpdate $ NewDocument user (title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) (Signable Contract) 1 actor
-        _ <- dbUpdate $ SetDocumentUnsavedDraft [documentid doc] True
-        return $ LinkIssueDoc (documentid doc)
+  title <- renderTemplate_ "newDocumentTitle"
+  actor <- guardJustM $ mkAuthorActor <$> getContext
+  Just doc <- dbUpdate $ NewDocument user (title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) (Signable Contract) 1 actor
+  _ <- dbUpdate $ SetDocumentUnsavedDraft [documentid doc] True
+  return $ LinkIssueDoc (documentid doc)
   
 {-
   Document state transitions are described in DocState.
