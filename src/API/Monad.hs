@@ -22,6 +22,7 @@ module API.Monad (
                  Accepted(..),    
                  APIMonad(..),
                  getAPIUser,
+                 getAPIUserWithPad,
                  FormEncoded(..)
                  )
   where
@@ -247,7 +248,21 @@ getAPIUser priv = do
       case msessionuser of
         Just (user, actor) -> return (user, actor, False)
         Nothing -> throwError notLoggedIn'
-
+        
+getAPIUserWithPad :: Kontrakcja m => APIPrivilege -> APIMonad m (User, Actor, Bool)
+getAPIUserWithPad priv = do
+  moauthuser <- getOAuthUser priv
+  case moauthuser of
+    Just (Left err) -> throwError $ notLoggedIn err
+    Just (Right (user, actor)) -> return (user, actor, True)
+    Nothing -> do
+      msessionuser <- getSessionUserWithPad
+      Log.debug $ "msessionuser: " ++ show msessionuser
+      case msessionuser of
+        Just (user, actor) -> return (user, actor, False)
+        Nothing -> throwError notLoggedIn'
+        
+        
 getSessionUser :: Kontrakcja m => APIMonad m (Maybe (User, Actor))
 getSessionUser = do
   ctx <- getContext
@@ -255,6 +270,13 @@ getSessionUser = do
     Nothing -> return Nothing
     Just user -> return $ Just (user, authorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user))
 
+getSessionUserWithPad :: Kontrakcja m => APIMonad m (Maybe (User, Actor))
+getSessionUserWithPad = do
+  ctx <- getContext
+  case (ctxmaybeuser ctx `mplus` ctxmaybepaduser ctx) of
+    Nothing -> return Nothing
+    Just user -> return $ Just (user, authorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user))
+    
 getOAuthUser :: Kontrakcja m => APIPrivilege -> APIMonad m (Maybe (Either String (User, Actor)))
 getOAuthUser priv = do
   Log.debug "getOAuthUser start"

@@ -789,10 +789,31 @@ var DocumentDesignView = Backbone.View.extend({
         subsubbox.append($("<div class='inner-description-left'/>")
                                         .append($("<span/>").text(localization.nofiletext))
                                         .append($("<div class='button-box'/>").append($(this.uploadFile()).append("<BR/>").append($(this.fromAvtal())))));
-
-        
+        var text = localization.designview.saveAsTemplateDescription;
+        var savebox = $("<div class='inner-description-right'/>");
+        subsubbox.append(savebox)
         if (! this.model.document().isTemplate()) {
-          var text = localization.designview.saveAsTemplateLongDescription;
+          var saveboxbuttons = $("<div class='button-box'/>");
+          savebox.append($("<span/>").text(text)).append(saveboxbuttons);
+          var saveAsDraftButton = Button.init({
+                                 color : "black",
+                                 size :  "big",
+                                 width : 300,
+                                 text :  localization.saveAsDraft,
+                                 onClick : function() {
+                                    document.save();
+                                    document.afterSave(function() {
+                                        new Submit({
+                                          ajax : 'true',
+                                          method : 'POST',
+                                          url : '/d/save/' + document.documentid(),
+                                          ajaxsuccess : function() {
+                                            window.location.reload();
+                                          }         
+                                        }).send();
+                                    });
+                                }});
+          
           var saveAsTemplateButton = Button.init({
                                  color : "black",
                                  size :  "big",
@@ -802,12 +823,10 @@ var DocumentDesignView = Backbone.View.extend({
                                     document.makeTemplate();
                                     document.save();
                                     document.afterSave(function() {
-                                        new Submit().send();
+                                        window.location.reload();
                                     });
                                 }});
-          subsubbox.append($("<div class='inner-description-right'/>")
-                                .append($("<span/>").text(text))
-                                .append($("<div class='button-box'/>").append(saveAsTemplateButton.input())));
+          saveboxbuttons.append(saveAsDraftButton.input()).append("<BR/>").append(saveAsTemplateButton.input());
         };
         box.append(subbox.append(subsubbox));
         return box;
@@ -839,6 +858,25 @@ var DocumentDesignView = Backbone.View.extend({
                                     });
                                 }});
 
+       var saveAsDraftButton = Button.init({
+                                 color : "black",
+                                 size :  "tiny",
+                                 width : 120,
+                                 text :  localization.saveAsDraft,
+                                 onClick : function() {
+                                    document.save();
+                                    document.afterSave(function() {
+                                        new Submit({
+                                          ajax : 'true',
+                                          method : 'POST',
+                                          url : '/d/save/' + document.documentid(),
+                                          ajaxsuccess : function() {
+                                            window.location.reload();
+                                          }
+                                        }).send();
+                                    });
+                                }});
+      
       var saveAsTemplateButton = Button.init({
                                  color : "black",
                                  size :  "tiny",
@@ -855,8 +893,7 @@ var DocumentDesignView = Backbone.View.extend({
       
       box.append(removeFileButton.input().addClass("float-left"));
       if ((!document.isTemplate()))
-        box.append(saveAsTemplateButton.input().addClass("float-right"));
-      
+        box.append(saveAsTemplateButton.input().addClass("float-right")).append(saveAsDraftButton.input().addClass("float-right"));
       return box;
     },
    render: function () {

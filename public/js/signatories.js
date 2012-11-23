@@ -540,7 +540,7 @@ window.Signatory = Backbone.Model.extend({
     },
     addtoPadQueue : function(callback) {
         return new Submit({
-              url: "/padqueue/add/"+ this.document().documentid() + "/" + this.signatoryid(),
+              url: "/api/frontend/padqueue/add/"+ this.document().documentid() + "/" + this.signatoryid(),
               method: "POST",
               ajax : true,
               ajaxsuccess : callback
@@ -548,7 +548,7 @@ window.Signatory = Backbone.Model.extend({
     },
     removeFromPadQueue : function(callback) {
        return new Submit({
-              url: "/padqueue/clear",
+              url: "/api/frontend/padqueue/clear",
               method: "POST",
               ajax : true,
               ajaxsuccess : callback
@@ -795,8 +795,8 @@ window.SignatoryStandardView = Backbone.View.extend({
                                                        content: localization.pad.addToPadQueueNotAdded,
                                                        color: "red"
                                                    }); };
+                                               window.location = window.location;    
                                             }).sendAjax();
-                                           window.location = window.location; // Fix at some point not to reload the page
                                            return true;
                                            
                                         }

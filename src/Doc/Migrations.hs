@@ -136,6 +136,15 @@ addApiCallbackUrlToDocument = Migration {
   , mgrDo = kRunRaw "ALTER TABLE documents ADD COLUMN api_callback_url TEXT NULL"
 }
 
+addUnsavedDraftToDocument :: MonadDB m => Migration m
+addUnsavedDraftToDocument = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 15
+  , mgrDo = do
+      kRunRaw "ALTER TABLE documents ADD COLUMN unsaved_draft BOOL NOT NULL DEFAULT FALSE"
+      kRunRaw "UPDATE documents SET unsaved_draft = true WHERE (title ILIKE 'Namnlös%' OR title ILIKE  'Untitled%') AND type = 1 AND status = 1"
+}
+
 addSequenceOwnerToDocumentsId :: MonadDB m => Migration m
 addSequenceOwnerToDocumentsId = Migration {
     mgrTable = tableDocuments

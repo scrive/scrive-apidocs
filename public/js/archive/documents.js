@@ -45,7 +45,7 @@ window.DocumentCellsDefinition = function(archive) { return  [
                                 ToolTip.set({on: actionIcon,  tip : localization.pad.removeFromPadQueue});
                                 actionIcon.click(function() {
                                     new Submit({
-                                        url: "/padqueue/clear" ,
+                                        url: "/api/frontend/padqueue/clear" ,
                                         method: "POST"
                                     }).sendAjax(function() { LoadingDialog.close(); archive.documents().recall(); });
                                 return false;
@@ -58,7 +58,7 @@ window.DocumentCellsDefinition = function(archive) { return  [
                                 actionIcon.click(function() {
                                 LoadingDialog.open();
                                 new Submit({
-                                        url: "/padqueue/add/"+ listobject.field("id") + "/" +  listobject.subfield(idx,"id") ,
+                                        url: "/api/frontend/padqueue/add/"+ listobject.field("id") + "/" +  listobject.subfield(idx,"id") ,
                                         method: "POST"
                                     }).sendAjax(function() { LoadingDialog.close(); archive.documents().recall(); });
                                 return false;

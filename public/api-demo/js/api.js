@@ -20,6 +20,7 @@ var ApiCall = Backbone.Model.extend({
         isGet : function() {return false;},
         isList : function() {return false;},
         isDownloadMainFile : function() {return false;},
+        isAddToPadQueue : function() {return false;},
         name : function() {return this.get("name");},
         oauth : function() {return this.get("oauth");},
         authorization: function() { return this.oauth().authorizationForRequests();  },
@@ -358,6 +359,43 @@ window.DownloadMainFileApiCall = ApiCall.extend({
         }
 });
 
+window.AddToPadQueueApiCall = ApiCall.extend({
+        defaults: {
+             name : "Add to padqueue API call",
+             documentid : LocalStorage.get("api","documentid")
+
+        },
+        initialize: function (args) {
+        },
+        isAddToPadQueue : function() {return true;},
+        documentid : function() {return this.get("documentid");},
+        setDocumentid : function(documentid) {
+            LocalStorage.set("api","documentid",documentid);
+            return this.set({"documentid" : documentid});
+        },
+        signatorylinkid : function() {return this.get("signatorylinkid");},
+        setSignatorylinkid : function(documentid) {
+            LocalStorage.set("api","signatorylinkid",documentid);
+            return this.set({"signatorylinkid" : documentid});
+        },
+        
+        send : function() {
+            var model = this;
+            $.ajax(Scrive.apiUrl()+"padqueue/add/" + model.documentid() + "/" + model.signatorylinkid(), {
+                type: 'POST',
+                cache: false,
+                headers : { authorization : model.authorization() },
+                success : function(res) {
+                    model.setResult(res);
+                },
+                error : function(res) {
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
+                }
+            });
+        }
+});
+
+
 window.ApiCallView = function(args) {
         if (args.model.isCreateFromFile())
            return new CreateFromFileApiCallView(args);
@@ -379,6 +417,8 @@ window.ApiCallView = function(args) {
            return new ListApiCallView(args);
         else if (args.model.isDownloadMainFile())
            return new DownloadMainFileApiCallView(args);
+        else if (args.model.isAddToPadQueue())
+           return new AddToPadQueueApiCallView(args);
 }
 
 
@@ -669,5 +709,39 @@ var DownloadMainFileApiCallView = Backbone.View.extend({
                 this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
         }
 });
+
+var AddToPadQueueApiCallView = Backbone.View.extend({
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            this.model.bind('change', this.render);
+            this.prerender();
+
+        },
+        prerender : function() {
+            var model = this.model;
+            var box = $(this.el);
+            box.children().detach();
+            var boxLeft  = $("<div class='left-box'>");
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
+            var documentidInput = $("<input type='text'/>").val(model.documentid());
+            documentidInput.change(function() {model.setDocumentid(documentidInput.val()); return false;})
+            var signatorylinkidInput = $("<input type='text'/>").val(model.signatorylinkid());
+            signatorylinkidInput.change(function() {model.setSignatorylinkid(signatorylinkidInput.val()); return false;})
+            var button = $("<input type='button' value='Send request'/>");
+            button.click(function() {model.send(); return false;});
+            boxLeft.append($("<div>Document #: <BR/></div>").append(documentidInput))
+                   .append($("<div>Signatory #: <BR/></div>").append(signatorylinkidInput))
+                   .append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
+            if (model.result() != undefined)
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+        }
+});
+
 
 })(window);

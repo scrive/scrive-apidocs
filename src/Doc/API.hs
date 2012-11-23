@@ -70,6 +70,7 @@ import qualified Data.ByteString.UTF8 as BS hiding (length)
 import Doc.DocStateCommon
 import File.Model
 import File.Storage
+import qualified PadQueue.API as PadQueue
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
@@ -91,7 +92,8 @@ versionedAPI _version = choice [
   dir "get"                $ hGet $ toK1 $ apiCallGet,
   dir "list"               $ hGet $ apiCallList,
   dir "downloadmainfile"   $ hGet  $ toK2 $ apiCallDownloadMainFile,
-  
+
+  dir "padqueue"           $ PadQueue.padqueueAPI,
   dir "mainfile" $ hPostNoXToken $ toK1 $ documentChangeMainFile,
 
   dir "document" $ hPostNoXToken $ toK6 $ documentUploadSignatoryAttachment,
@@ -106,7 +108,7 @@ cleanFileName = takeBaseName . String.replace "\\" "/"
 apiCallCreateFromFile :: Kontrakcja m => m Response
 apiCallCreateFromFile = api $ do
   ctx <- getContext
-  (user, actor, _) <- getAPIUser APIDocCreate
+  (user, actor, external) <- getAPIUser APIDocCreate
   dtype <- lift $ fromMaybe (Contract) <$> readField "type"
   isTpl <- lift $ isFieldSet "template"
   let doctype = (Template <| isTpl |> Signable) dtype
@@ -140,6 +142,7 @@ apiCallCreateFromFile = api $ do
       file <- dbUpdate $ NewFile filename pdfcontent
       return (Just file, filename)
   Just doc <- dbUpdate $ NewDocument user title doctype 1 actor
+  when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft [documentid doc] True
   case mfile of
     Nothing -> return ()
     Just file -> do
@@ -152,7 +155,7 @@ apiCallCreateFromFile = api $ do
 
 apiCallCreateFromTemplate :: Kontrakcja m => DocumentID -> m Response
 apiCallCreateFromTemplate did =  api $ do
-  (user, actor, _) <- getAPIUser APIDocCreate
+  (user, actor, external) <- getAPIUser APIDocCreate
   template <- apiGuardJustM (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink template
   auser <- apiGuardJustM (serverError "No user found") $ dbQuery $ GetUserByID auid
@@ -165,6 +168,7 @@ apiCallCreateFromTemplate did =  api $ do
       Just newdoc -> do
           _ <- lift $ addDocumentCreateStatEvents (documentid newdoc) "web"
           Log.debug $ show "Document created from template"
+          when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft [documentid newdoc] True
           Created <$> documentJSON True  True Nothing Nothing newdoc
       Nothing -> throwError $ serverError "Create document from template failed"
 
@@ -199,7 +203,7 @@ instance FromJSValue ReadyParams where
 
 apiCallReady :: (MonadBaseControl IO m, Kontrakcja m) => DocumentID -> m Response
 apiCallReady did =  api $ do
-  (user, actor, _) <- getAPIUser APIDocCreate
+  (user, actor, _) <- getAPIUser APIDocSend
   doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
   when (not $ (auid == userid user)) $ do
@@ -292,7 +296,15 @@ apiCallGet did = api $ do
          _ <- dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
                          (signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
          lift $ switchLang (getLang doc)
-         Ok <$> documentJSON False False Nothing (Just sl) doc
+
+         mauser <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
+                       Just auid -> dbQuery $ GetUserByID auid
+                       _ -> return Nothing
+         pq <- case (mauser) of
+                Just u -> dbQuery $ GetPadQueue $ (userid u)
+                _ -> return Nothing
+         
+         Ok <$> documentJSON False False pq (Just sl) doc
       _ -> do
         (user, _actor, external) <- getAPIUser APIDocCheck
         doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
@@ -305,10 +317,10 @@ apiCallGet did = api $ do
         mauser <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
                        Just auid -> dbQuery $ GetUserByID auid
                        _ -> return Nothing
-
-        pq <- if ((userid <$> mauser) == Just (userid user))
-                then dbQuery $ GetPadQueue $ userid user
-                else return Nothing
+        pq <- case (mauser) of
+                Just u -> dbQuery $ GetPadQueue $ (userid u)
+                _ -> return Nothing
+                
         let haspermission = (isJust msiglink)
                          || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared doc))
         if (haspermission)

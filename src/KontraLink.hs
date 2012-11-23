@@ -200,7 +200,7 @@ instance Show KontraLink where
       (++) ("/adminonly/companyadmin/payments/" ++ show cid)
     showsPrec _ (LinkUserAdminPayments uid) =
       (++) ("/adminonly/useradmin/payments/" ++ show uid)
-    showsPrec _ (LinkDesignView) = (++) "/newdocumentorlatestdraft"
+    showsPrec _ (LinkDesignView) = (++) "/newdocument"
     showsPrec _ (LinkExternal s) = (++) s
 
 

@@ -1,30 +1,25 @@
-module PadQueue.Control (addToQueue,clearQueue,showPadQueuePage, padQueueState, handlePadLogout)
+module PadQueue.Control (showPadQueuePage, padQueueState, handlePadLogout)
     where
 
 import PadQueue.Model
 import DB
 import Doc.DocStateData
-import Doc.DocStateQuery
 import Doc.Tokens.Model
 import Kontra
-import Redirect
 import User.Model
 import qualified Log
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import PadQueue.View
 
-import Control.Applicative
 import Control.Monad
 
 import Text.JSON hiding (Result)
-import Text.JSON.Gen hiding (value)
 import KontraLink
 import Doc.Model
 import AppView
 import Happstack.Server.Types
 import Data.Maybe
-import Util.Actor
 
 -- PadQueue STATE
 padQueueState :: Kontrakcja m => m JSValue
@@ -43,27 +38,6 @@ padQueueState = do
                  dbUpdate $ AddDocumentSessionToken (signatorylinkid siglink) (signatorymagichash siglink)
                Nothing -> return ()
              padQueueStateJSON (isJust $ ctxmaybeuser ctx)  msdata
-
--- PadQueue ACTIONS
-addToQueue :: Kontrakcja m => DocumentID ->  SignatoryLinkID -> m JSValue
-addToQueue did slid = do
-    uid   <- userid <$> (guardJustM $ liftM2 mplus (ctxmaybeuser <$> getContext) (ctxmaybepaduser <$> getContext))
-    doc <- guardRightM $ getDocByDocIDForAuthorOrAuthorsCompanyAdmin did
-    _ <- guardJust $ getSigLinkFor doc slid
-    if (documentdeliverymethod doc == PadDelivery)
-        then do
-            Log.debug $ "Adding signatory #" ++ (show slid) ++ "to padqueue of user #" ++ (show uid)
-            actor <- guardJustM $ mkAuthorActor <$> getContext
-            dbUpdate $ AddToPadQueue uid did slid actor
-            runJSONGenT $ return ()
-        else internalError
-
-clearQueue :: Kontrakcja m => m JSValue
-clearQueue = do
-    uid <- userid <$> (guardJustM $ ctxmaybeuser <$> getContext)
-    actor <- guardJustM $ mkAuthorActor <$> getContext
-    dbUpdate $ ClearPadQueue uid actor
-    runJSONGenT $ return ()
 
 -- PadQueue Pages
 showPadQueuePage::  (Kontrakcja m) =>  m Response

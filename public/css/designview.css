@@ -707,8 +707,12 @@
 
 .extra-file-options {
   height : 23px;
-  margin : 10px 60px;
+  margin : 10px 50px;
   text-align: center;
+}
+
+.extra-file-options .btn-tiny{
+  margin : 0px 10px;
 }
 
 .visible-docname {

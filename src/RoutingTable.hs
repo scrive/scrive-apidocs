@@ -85,13 +85,14 @@ staticRoutes = choice
      , dir "a"                     $ hGet  $ toK1 $ AttachmentControl.handleShow
      , dir "att"                   $ hGet  $ toK1 $ AttachmentControl.jsonAttachment
 
-     , dir "newdocumentorlatestdraft" $ hGet $ toK0 $ DocControl.newDocumentOrLatestDraft
+     , dir "newdocument" $ hGet $ toK0 $ DocControl.handleNewDocument
      
      , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showArchive
      , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
      , dir "d" $ dir "eleg"        $ hGet  $ toK1 $ BankID.generateBankIDTransactionForAuthor
      , dir "d" $ dir "eleg" $ dir "mbi" $ hPostNoXToken $ toK1 $ BankID.initiateMobileBankIDForAuthor
      , dir "d" $ dir "eleg" $ dir "mbi" $ hGet  $ toK1 $ BankID.collectMobileBankIDForAuthor
+     , dir "d" $ dir "save"         $ hPost $ toK1 $ DocControl.handleMarkAsSaved
      , dir "d" $ dir "delete"       $ hPost $ toK0 $ ArchiveControl.handleDelete
      , dir "d" $ dir "remind"       $ hPost $ toK0 $ ArchiveControl.handleSendReminders
      , dir "d" $ dir "restore"      $ hPost $ toK0 $ ArchiveControl.handleRestore
@@ -124,9 +125,6 @@ staticRoutes = choice
 
      , dir "verify" $ hGet  $ toK0 $ DocControl.handleShowVerificationPage
      , dir "verify" $ hPostNoXToken $ toK0 $ DocControl.handleVerify
-
-     , dir "padqueue" $ dir "add" $ hPost $ toK2 $ PadQueue.addToQueue
-     , dir "padqueue" $ dir "clear" $ hPost $ toK0 $ PadQueue.clearQueue
 
      , dir "padqueue" $ dir "state" $ hGet $ toK0 $ PadQueue.padQueueState
      , dir "padqueue" $ hGet $ toK0 $ PadQueue.showPadQueuePage
