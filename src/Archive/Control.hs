@@ -184,7 +184,7 @@ jsonDocumentsList = do
   params <- getListParamsNew
   let (domain,filters1) = case doctype of
                           "Document"          -> ([DocumentsVisibleToUser uid]
-                                                 ,[DocumentFilterDeleted False, DocumentFilterSignable])
+                                                 ,[DocumentFilterDeleted False, DocumentFilterSignable, DocumentFilterUnsavedDraft False])
                           "Template"          -> ([DocumentsVisibleToUser uid]
                                                  ,[DocumentFilterDeleted False, DocumentFilterTemplate])
                           "Rubbish"           -> ([DocumentsVisibleToUser uid]

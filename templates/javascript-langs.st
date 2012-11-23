@@ -158,6 +158,7 @@ javascriptLocalisation =
             , step2template : "$_step2selectIfTemplate()$"
             , step2normal   : "$_step2selectIfNotTemplate()$"
             , saveAsTemplate : "$_signStepsMenuEmptyStepSaveAsTemplate()$"
+            , saveAsDraft    : "$_saveAsDraft()$"
             , saveTemplate : "$_signStepsBodyFunctionssaveTemplate()$"
             , skrivapa : "$_skrivapa()$"
 

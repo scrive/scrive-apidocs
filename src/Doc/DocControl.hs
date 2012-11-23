@@ -33,6 +33,7 @@ module Doc.DocControl(
     , handleFilePages
     , handleShowVerificationPage
     , handleVerify
+    , handleMarkAsSaved
 ) where
 
 import AppView
@@ -121,6 +122,7 @@ newDocumentOrLatestDraft = withUserPost $ do
         title <- renderTemplate_ "newDocumentTitle"
         actor <- guardJustM $ mkAuthorActor <$> getContext
         Just doc <- dbUpdate $ NewDocument user (title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) (Signable Contract) 1 actor
+        _ <- dbUpdate $ SetDocumentUnsavedDraft [documentid doc] True
         return $ LinkIssueDoc (documentid doc)
   
 {-
@@ -951,3 +953,10 @@ handleVerify = do
                     return pth
             _ -> internalError
       liftIO $ toJSValue <$> GuardTime.verify filepath
+
+handleMarkAsSaved :: Kontrakcja m => DocumentID -> m JSValue
+handleMarkAsSaved docid = do
+  doc <- guardRightM $ getDocByDocID docid
+  when_ (isPreparation doc) $ dbUpdate $ SetDocumentUnsavedDraft [documentid doc] False
+  runJSONGenT $ return ()
+      

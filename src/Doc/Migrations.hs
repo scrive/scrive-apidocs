@@ -79,7 +79,9 @@ addUnsavedDraftToDocument :: MonadDB m => Migration m
 addUnsavedDraftToDocument = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 15
-  , mgrDo = kRunRaw "ALTER TABLE documents ADD COLUMN unsaved_draft BOOL NOT NULL DEFAULT FALSE"
+  , mgrDo = do
+      kRunRaw "ALTER TABLE documents ADD COLUMN unsaved_draft BOOL NOT NULL DEFAULT FALSE"
+      kRunRaw "UPDATE documents SET unsaved_draft = true WHERE (title ILIKE 'Namnlös%' OR title ILIKE  'Untitled%')"
 }
 
 addSequenceOwnerToDocumentsId :: MonadDB m => Migration m
