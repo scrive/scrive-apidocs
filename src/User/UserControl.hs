@@ -120,7 +120,7 @@ handleRequestPhoneCall = do
         return ()
       phoneMeRequest user phone
     _ -> return ()
-  return $ LinkArchive
+  return $ LinkDesignView
 
 handleRequestChangeEmail :: Kontrakcja m => m KontraLink
 handleRequestChangeEmail = do
@@ -437,7 +437,7 @@ handleAcceptTOSPost = withUserPost $ do
       _ <- addUserSignTOSStatEvent user
       _ <- dbUpdate $ LogHistoryTOSAccept userid ctxipnumber ctxtime (Just userid)
       addFlashM flashMessageUserDetailsSaved
-      return LinkArchive
+      return LinkDesignView
     Just False -> do
       addFlashM flashMessageMustAcceptTOS
       return LinkAcceptTOS
@@ -510,7 +510,7 @@ handlePasswordReminderGet uid token = do
     Just user -> do
       switchLang (getLang user)
       addFlashM $ modalNewPasswordView uid token
-      sendRedirect LinkArchive
+      sendRedirect LinkDesignView
     Nothing -> do
       addFlashM flashMessagePasswordChangeLinkNotValid
       sendRedirect =<< getHomeOrDesignViewLink
@@ -535,7 +535,7 @@ handlePasswordReminderPost uid token = do
               addFlashM flashMessageUserPasswordChanged
               _ <- addUserLoginStatEvent ctxtime user
               logUserToContext $ Just user
-              return LinkArchive
+              return LinkDesignView
             Left flash -> do
               _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) ctxipnumber (ctxtime) (userid <$> ctxmaybeuser)
               addFlashM flash
