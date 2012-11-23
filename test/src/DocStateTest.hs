@@ -32,7 +32,6 @@ import Test.QuickCheck
 import File.FileID
 
 import qualified Data.Set as S
-
 import Util.Actor
 import EvidenceLog.Model
 
@@ -61,7 +60,7 @@ docStateTests env = testGroup "DocState" [
   testThat "TimeoutDocument adds to the log" env testTimeoutDocumentEvidenceLog,
   testThat "UpdateFields adds to the log" env testUpdateFieldsEvidenceLog,
   testThat "Documents are shared in company properly" env testGetDocumentsSharedInCompany,
-
+  testThat "SetDocumentUnsavedDraft and filtering based on unsaved_draft works" env testSetDocumentUnsavedDraft,
   testThat "Documents sorting SQL syntax is correct" env testGetDocumentsSQLSorted,
   testThat "Documents searching by text works" env testGetDocumentsSQLTextFiltered,
 
@@ -1900,6 +1899,31 @@ testGetDocumentsByCompanyWithFilteringFilters = doTimes 10 $ do
   validTest $ do
     assertEqual "Should have no documents returned" docs []
     assertEqual "Should have 1 document returned" [did] (map documentid docs')
+
+testSetDocumentUnsavedDraft :: TestEnv ()
+testSetDocumentUnsavedDraft = doTimes 10 $ do
+  company <- addNewCompany
+  author <- addNewRandomUser
+  _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
+  Just author' <- dbQuery $ GetUserByID (userid author)
+  did <- addRandomDocumentWithAuthor author'
+  doc <- fromJust <$> (dbQuery $ GetDocumentByDocumentID did)
+  docs1 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)]
+                     [DocumentFilterUnsavedDraft False, DocumentFilterByDocumentID did] [] (DocumentPagination 0 maxBound)
+  _ <- dbUpdate $ SetDocumentUnsavedDraft [did] True
+  docs2 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)]
+                     [DocumentFilterUnsavedDraft False, DocumentFilterByDocumentID did] [] (DocumentPagination 0 maxBound)
+  _ <- dbUpdate $ SetDocumentUnsavedDraft [did] False
+  docs3 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)]
+                     [DocumentFilterUnsavedDraft False, DocumentFilterByDocumentID did] [] (DocumentPagination 0 maxBound)
+  docs4 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)]
+                     [DocumentFilterUnsavedDraft True, DocumentFilterByDocumentID did] [] (DocumentPagination 0 maxBound)
+  let isdraft = (isSignable doc && isPreparation doc)                   
+  validTest $ do
+    assertEqual "Should return the document" [did] (map documentid docs1)
+    assertEqual "Should return no documents" ([] <| isdraft |>[did])    (map documentid docs2)
+    assertEqual "Should return the document" [did] (map documentid docs3)
+    assertEqual "Should return no documents" ([] <| isdraft |>[did])    (map documentid docs4)
 
 
 testGetDocumentsByCompanyWithFilteringFinds :: TestEnv ()

@@ -314,7 +314,7 @@ test_removingCompanyAccountWorks = do
   ctx <- (\c -> c { ctxmaybeuser = Just adminuser })
     <$> mkContext defaultValue
 
-  companydocs1 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid adminuser)] [] [] (DocumentPagination 0 maxBound)
+  companydocs1 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid adminuser)] [DocumentFilterUnsavedDraft False] [] (DocumentPagination 0 maxBound)
   assertEqual "Company admin sees users docs before user delete" 1 (length companydocs1)
   assertEqual "Docid matches before user delete" docid (documentid $ head companydocs1)
 
@@ -329,7 +329,7 @@ test_removingCompanyAccountWorks = do
 
   assertCompanyInvitesAre company []
 
-  companydocs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid adminuser)] [] [] (DocumentPagination 0 maxBound)
+  companydocs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid adminuser)] [DocumentFilterUnsavedDraft False] [] (DocumentPagination 0 maxBound)
   assertEqual "Company admin sees users docs after user delete" 1 (length companydocs)
   assertEqual "Docid matches after user delete" docid (documentid $ head companydocs)
 
@@ -337,7 +337,8 @@ test_privateUserTakoverWorks :: TestEnv ()
 test_privateUserTakoverWorks = do
   (adminuser, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  docid <- addRandomDocumentWithAuthor user
+  docid <- documentid <$> addRandomDocumentWithAuthorAndCondition user (\d -> not $ (documentstatus d) `elem` [Preparation])
+
 
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
 
@@ -354,12 +355,12 @@ test_privateUserTakoverWorks = do
   assertEqual "User belongs to the company" (usercompany updateduser)
                                             (Just $ companyid company)
   assertBool "User is a standard user" (not $ useriscompanyadmin updateduser)
-  companydocs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid adminuser)] [] [] (DocumentPagination 0 maxBound)
+  companydocs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid adminuser)] [DocumentFilterUnsavedDraft False] [] (DocumentPagination 0 maxBound)
   assertEqual "Company owns users docs" 1 (length companydocs)
   assertEqual "Docid matches" docid (documentid $ head companydocs)
-  docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid user)] [] [] (DocumentPagination 0 maxBound)
+  docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid user)] [DocumentFilterUnsavedDraft False] [] (DocumentPagination 0 maxBound)
   templates <- dbQuery $ GetTemplatesByAuthor $ userid user
-  let userdocs = docs ++ templates
+  let userdocs = nub (docs ++ templates)
   assertEqual "User is still linked to their docs" 1 (length userdocs)
   assertEqual "Docid matches" docid (documentid $ head userdocs)
 

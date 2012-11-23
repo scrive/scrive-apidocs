@@ -50,6 +50,7 @@ module Doc.Model
   , SetDocumentInviteTime(..)
   , SetDocumentLang(..)
   , SetDocumentSharing(..)
+  , SetDocumentUnsavedDraft(..)
   , SetDocumentTags(..)
   , SetDocumentTitle(..)
   , SetDocumentUI(..)
@@ -157,6 +158,7 @@ data DocumentFilter
   | DocumentFilterDeleted Bool                -- ^ Only deleted (=True) or non-deleted (=False) documents
   | DocumentFilterLinkIsAuthor Bool           -- ^ Only documents visible by signatory_links.is_author equal to param
   | DocumentFilterLinkIsPartner Bool          -- ^ Only documents visible by signatory_links.is_partner equal to param
+  | DocumentFilterUnsavedDraft Bool           -- ^ Only documents with unsaved draft flag equal to this one
   deriving Show
 
 -- | Document security domain.
@@ -377,6 +379,13 @@ documentFilterToSQL (DocumentFilterLinkIsAuthor flag) = do
 
 documentFilterToSQL (DocumentFilterLinkIsPartner flag) = do
   sqlWhereEq "signatory_links.is_partner" flag
+
+documentFilterToSQL (DocumentFilterUnsavedDraft flag) =
+  sqlWhereAny $ do
+    sqlWhereEq "documents.unsaved_draft" flag
+    sqlWhereNotEq "documents.type" (Signable undefined)
+    sqlWhereNotEq "documents.status" Preparation
+
 
 documentFilterToSQL (DocumentFilterByAuthor userid) = do
   sqlWhere "signatory_links.is_author"
@@ -1849,6 +1858,14 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentSharing Bool whe
          ] <> SQL
          " WHERE id = ?" [ toSql did ]
     return $ and results
+
+data SetDocumentUnsavedDraft = SetDocumentUnsavedDraft [DocumentID] Bool
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentUnsavedDraft Bool where
+  update (SetDocumentUnsavedDraft dids flag) = do
+    result <- kRun $ sqlUpdate "documents" $ do
+      sqlSet "unsaved_draft" flag
+      sqlWhereIn "documents.id" dids
+    return (result>0)
 
 data SignDocument = SignDocument DocumentID SignatoryLinkID MagicHash (Maybe SignatureInfo) Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument Bool where

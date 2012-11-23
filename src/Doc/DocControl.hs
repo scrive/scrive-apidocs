@@ -6,7 +6,7 @@ module Doc.DocControl(
     -- Exported utils or test functions
       sendReminderEmail
     -- Top level handlers
-    , newDocumentOrLatestDraft
+    , handleNewDocument
     , showCreateFromTemplate 
     , handleDownloadFile
     , handleSignShow
@@ -33,6 +33,7 @@ module Doc.DocControl(
     , handleFilePages
     , handleShowVerificationPage
     , handleVerify
+    , handleMarkAsSaved
 ) where
 
 import AppView
@@ -109,19 +110,15 @@ import System.IO.Temp
 import System.Directory
 import MinutesTime
 
-newDocumentOrLatestDraft :: Kontrakcja m => m KontraLink
-newDocumentOrLatestDraft = withUserPost $ do
+handleNewDocument :: Kontrakcja m => m KontraLink
+handleNewDocument = withUserPost $ do
   ctx <- getContext
   user <- guardJustM $ ctxmaybeuser <$> getContext
-  docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid user)] 
-                      [DocumentFilterStatuses [Preparation], DocumentFilterDeleted False, DocumentFilterLinkIsAuthor True]  [Desc DocumentOrderByMTime] (DocumentPagination 0 1)
-  case docs of
-       [d] -> return $ LinkIssueDoc (documentid d)
-       _ -> do
-        title <- renderTemplate_ "newDocumentTitle"
-        actor <- guardJustM $ mkAuthorActor <$> getContext
-        Just doc <- dbUpdate $ NewDocument user (title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) (Signable Contract) 1 actor
-        return $ LinkIssueDoc (documentid doc)
+  title <- renderTemplate_ "newDocumentTitle"
+  actor <- guardJustM $ mkAuthorActor <$> getContext
+  Just doc <- dbUpdate $ NewDocument user (title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) (Signable Contract) 1 actor
+  _ <- dbUpdate $ SetDocumentUnsavedDraft [documentid doc] True
+  return $ LinkIssueDoc (documentid doc)
   
 {-
   Document state transitions are described in DocState.
@@ -951,3 +948,10 @@ handleVerify = do
                     return pth
             _ -> internalError
       liftIO $ toJSValue <$> GuardTime.verify filepath
+
+handleMarkAsSaved :: Kontrakcja m => DocumentID -> m JSValue
+handleMarkAsSaved docid = do
+  doc <- guardRightM $ getDocByDocID docid
+  when_ (isPreparation doc) $ dbUpdate $ SetDocumentUnsavedDraft [documentid doc] False
+  runJSONGenT $ return ()
+      

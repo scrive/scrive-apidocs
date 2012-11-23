@@ -113,6 +113,7 @@ kontraMigrations = [
   , changeRegionToLang
   , removeCompanyIdFromSignatoryLinks
   , removeDeletedFromDocuments
+  , addUnsavedDraftToDocument
   ] ++ mailerMigrations
 
 kontraTables :: [Table]
