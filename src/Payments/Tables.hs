@@ -74,15 +74,8 @@ tablePaymentPlans = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE payment_plans"
-      <> " ADD CONSTRAINT fk_payment_plans_users FOREIGN KEY(user_id)"
-      <> " REFERENCES users(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE payment_plans"
-      <> " ADD CONSTRAINT fk_payment_plans_companies FOREIGN KEY(company_id)"
-      <> " REFERENCES companies(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id")
+                     , (tblForeignKeyColumn "company_id" "companies" "id") ]
   }
 
 tablePaymentStats :: Table
@@ -128,9 +121,5 @@ tablePaymentStats = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE payment_stats"
-      <> " ADD CONSTRAINT fk_payment_stats_users FOREIGN KEY(user_id)"
-      <> " REFERENCES users(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id") ]
   }
