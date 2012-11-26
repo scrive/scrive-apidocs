@@ -22,9 +22,6 @@ tableDocumentApiCallbacks = tblTable {
         <> ")"
       return TVRcreated
     _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE document_api_callbacks"
-      <> " ADD CONSTRAINT fk_document_api_callbacks_documents FOREIGN KEY(document_id)"
-      <> " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE NO ACTION"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "document_id" "documents" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
 }
