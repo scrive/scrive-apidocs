@@ -60,5 +60,4 @@ tableEvidenceLog = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = return ()
   }
