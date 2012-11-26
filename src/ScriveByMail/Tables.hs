@@ -33,11 +33,8 @@ tableUserRequest = tblTable  {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE mail_api_user_request"
-      <> " ADD CONSTRAINT fk_mail_api_user_request FOREIGN KEY(company_id)"
-      <> " REFERENCES companies(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "company_id" "companies" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }
 
 tableMailAPIDelay :: Table
@@ -58,11 +55,8 @@ tableMailAPIDelay = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE mail_api_delay"
-      <> " ADD CONSTRAINT fk_mail_api_delay FOREIGN KEY(user_request_id)"
-      <> " REFERENCES mail_api_user_request(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "user_request_id" "mail_api_user_request" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }
 
 tableUserMailAPIs :: Table
@@ -87,11 +81,8 @@ tableUserMailAPIs = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE user_mail_apis"
-      <> " ADD CONSTRAINT fk_user_mail_apis_users FOREIGN KEY(user_id)"
-      <> " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }
 
 tableCompanyMailAPIs :: Table
@@ -116,9 +107,6 @@ tableCompanyMailAPIs = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE company_mail_apis"
-      <> " ADD CONSTRAINT fk_company_mail_apis_users FOREIGN KEY(company_id)"
-      <> " REFERENCES companies(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "company_id" "companies" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }
