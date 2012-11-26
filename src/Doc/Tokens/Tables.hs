@@ -48,13 +48,8 @@ tableDocumentSessionTokens = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE document_session_tokens"
-      <> " ADD CONSTRAINT fk_document_session_tokens_session_id FOREIGN KEY(session_id)"
-      <> " REFERENCES sessions(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE document_session_tokens"
-      <> " ADD CONSTRAINT fk_document_session_tokens_signatory_link_id FOREIGN KEY(signatory_link_id)"
-      <> " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "session_id" "sessions" "id")
+                       { fkOnDelete = ForeignKeyCascade }
+                     , (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
 }
