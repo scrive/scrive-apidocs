@@ -38,17 +38,8 @@ tableDocStatEvents = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = do
-    -- we don't want to delete the stats if a user gets deleted
-    -- I don't know if we want to restrict user_id, either
-    kRunRaw $ "ALTER TABLE doc_stat_events"
-      <> " ADD CONSTRAINT fk_doc_stat_events_users FOREIGN KEY(user_id)"
-      <> " REFERENCES users(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE doc_stat_events"
-      <> " ADD CONSTRAINT fk_doc_stat_events_company FOREIGN KEY(company_id)"
-      <> " REFERENCES companies(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id")
+                     , (tblForeignKeyColumn "company_id" "companies" "id") ]
   }
 
 tableUserStatEvents :: Table
@@ -83,16 +74,8 @@ tableUserStatEvents = tblTable {
       _ -> return TVRinvalid
   , tblIndexes = [ tblIndexOnColumn "user_id"
                  ]
-  , tblPutProperties = do
-    -- we don't want to delete the stats if a user gets deleted
-    kRunRaw $ "ALTER TABLE user_stat_events"
-      <> " ADD CONSTRAINT fk_user_stat_events_users FOREIGN KEY(user_id)"
-      <> " REFERENCES users(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE user_stat_events"
-      <> " ADD CONSTRAINT fk_user_stat_events_company FOREIGN KEY(company_id)"
-      <> " REFERENCES companies(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id")
+                     , (tblForeignKeyColumn "company_id" "companies" "id") ]
   }
 
 tableSignStatEvents :: Table
@@ -124,20 +107,7 @@ tableSignStatEvents = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = do
-    {-
-     -- I wanted to add this but apparently signatory_link_id is not unique, so I could not.
-    kRunRaw $ "ALTER TABLE sign_stat_events"
-      <> " ADD CONSTRAINT fk_sign_stat_events_signatory_link FOREIGN KEY(signatory_link_id)"
-      <> " REFERENCES signatory_links(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    -}
-    kRunRaw $ "ALTER TABLE sign_stat_events"
-      <> " ADD CONSTRAINT fk_sign_stat_events_documents FOREIGN KEY(document_id)"
-      <> " REFERENCES documents(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE sign_stat_events"
-      <> " ADD CONSTRAINT fk_sign_stat_events_company FOREIGN KEY(company_id)"
-      <> " REFERENCES companies(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "document_id" "documents" "id")
+                     , (tblForeignKeyColumn "company_id" "companies" "id")
+                     , (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id") ]
   }
