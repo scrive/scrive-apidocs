@@ -18,6 +18,7 @@ import qualified Log (mailingServer)
 
 serviceAvailabilityChecker :: CryptoRNGState -> String -> (Sender, Sender) -> MVar Sender -> (forall a. IO a -> IO a)  -> IO ()
 serviceAvailabilityChecker rng dbconf (master, slave) msender interruptible = do
+    Log.mailingServer $ "Running service checker"
     mid <- inDB $ do
       token <- random
       now <- getMinutesTime
@@ -25,7 +26,7 @@ serviceAvailabilityChecker rng dbconf (master, slave) msender interruptible = do
       success <- dbUpdate $ AddContentToEmail mid "test" "test" [] mempty
       Log.mailingServer $ "Creating service testing email #" ++ show mid ++ "..."
       when (not success) $
-        error "CRITICAL: Couldn't add content to created service testing email."
+        Log.mailingServer $ "CRITICAL: Couldn't add content to created service testing email."
       return mid
     interruptible $ threadDelay freq
     inDB $ do

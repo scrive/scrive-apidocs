@@ -17,6 +17,7 @@ import qualified Log (mailingServer)
 
 handleSendGridEvents :: Mailer Response
 handleSendGridEvents = do
+  logMsg $ "Processing some sendgrid event"
   mident <- (,) <$> readField "email_id" <*> readField "email_token"
   case mident of
     (Just mid, Just token) -> do

@@ -17,6 +17,7 @@ import qualified Log (mailingServer)
 
 dispatcher :: CryptoRNGState -> Sender -> MVar Sender -> String -> IO ()
 dispatcher rng master msender dbconf = withPostgreSQL dbconf . runCryptoRNGT rng $ do
+    Log.mailingServer $ "Dispatcher is starting"
     mails <- dbQuery GetIncomingEmails
     Log.mailingServer $ "Batch of mails to send is " ++ show (length mails) ++ " email(s) long."
     forM_ mails $ \mail@Mail{mailID, mailServiceTest} -> do
@@ -46,6 +47,7 @@ dispatcher rng master msender dbconf = withPostgreSQL dbconf . runCryptoRNGT rng
              when (not res) $
                Log.mailingServer $ "Failed to defer email #" ++ show mailID ++ " sendout."
       dbCommit -- commit after email was handled properly
+      Log.mailingServer $ "Dispatcher is done"
   where
     isNotSendable Mail{..} =
       null (addrEmail mailFrom) || null mailTo || any (null . addrEmail) mailTo
