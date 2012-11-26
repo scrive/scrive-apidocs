@@ -1,5 +1,4 @@
 module DB.Model where
-
 import Database.HDBC
 
 import DB.Core
@@ -13,6 +12,7 @@ data Table = Table {
   , tblVersion          :: Int
   , tblCreateOrValidate :: MonadDB m => [(String, SqlColDesc)] -> DBEnv m TableValidationResult
   , tblPutProperties    :: MonadDB m => DBEnv m ()
+  , tblIndexes          :: [TableIndex]
   }
 
 tblTable :: Table
@@ -21,7 +21,20 @@ tblTable = Table
   , tblVersion = error "Table version must be specified"
   , tblCreateOrValidate = \_ -> return TVRinvalid
   , tblPutProperties = return ()
+  , tblIndexes = []
   }
+
+data TableIndex = TableIndex
+  { tblIndexColumns     :: [String]
+  }
+
+tblTableIndex :: TableIndex
+tblTableIndex = TableIndex
+  { tblIndexColumns = []
+  }
+
+tblIndexOnColumn :: String -> TableIndex
+tblIndexOnColumn column = TableIndex { tblIndexColumns = [column] }
 
 -- | Migration object. Fields description:
 -- * mgrTable is the table you're migrating

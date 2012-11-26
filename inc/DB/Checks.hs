@@ -7,13 +7,17 @@ import Control.Arrow (second)
 import Control.Monad.Reader
 import Data.Either
 import Data.Maybe
+import Data.Monoid
+import qualified Data.List as L
 import Database.HDBC
 
 import DB.Core
 import DB.Env
 import DB.Functions
+import DB.Fetcher
 import DB.Model
 import DB.SQL
+import DB.SQL2
 import DB.Utils
 import DB.Versions
 
@@ -72,6 +76,10 @@ checkDBConsistency logger tables migrations = do
   forM_ created $ \table -> do
     logger $ "Putting properties on table '" ++ tblNameString table ++ "'..."
     tblPutProperties table
+
+  forM_ tables $ \table -> do
+    logger $ "Ensuring indexes on table '" ++ tblNameString table ++ "'..."
+    checkIndexes table
   where
     tblNameString = unRawSQL . tblName
     descNotMigrated (t, from) = "\n * " ++ tblNameString t ++ ", current version: " ++ show from ++ ", needed version: " ++ show (tblVersion t)
@@ -127,3 +135,85 @@ checkDBConsistency logger tables migrations = do
            _ <- kExecute [toSql $ succ $ mgrFrom m, toSql $ tblName t]
            return ()
          else return ()
+
+    checkIndexes table = do
+      let requested' = tblIndexes table
+          mkName index = "idx_" <> tblName table <> "_" <> mconcat (L.intersperse "_" (tblIndexColumns index))
+          requested = map (\ss -> (mkName ss, ss)) requested'
+
+      -- This is PostgreSQL specific. We query database catalogs to
+      -- know which indexes are present on a table.  We also get
+      -- descriptions of columns of table for particular index.
+      --
+      -- We ignore all indexes that were implicitely created by
+      -- PostgreSQL as support for UNIQUE or PRIMARY KEY
+      -- constraints. Those belong to respective columns and
+      -- constraints anyway so we do not have to manage them.
+      --
+      -- This method ignores all specila date on index: partiality,
+      -- uniqueness, expressions. Support for advanced constructs is
+      -- left for later implementation.
+      kRun_ $ sqlSelect "" $ do
+        sqlResult "pg_index_class.relname"
+        sqlResult "pg_attribute.attname"
+        sqlFrom "(SELECT pg_index.*, generate_subscripts(pg_index.indkey,1) AS indkey1 FROM pg_index) AS pg_index1"
+        sqlJoinOn "pg_class AS pg_index_class" "pg_index_class.oid = pg_index1.indexrelid"
+        sqlJoinOn "pg_class AS pg_table_class" "pg_table_class.oid = pg_index1.indrelid"
+        sqlJoinOn "pg_attribute" "pg_table_class.oid = pg_attribute.attrelid AND pg_attribute.attnum = pg_index1.indkey[pg_index1.indkey1]"
+        sqlWhereNotExists $ sqlSelect "pg_constraint" $ do
+          sqlWhere "pg_constraint.conindid = pg_index1.indexrelid"
+        sqlWhereEq "pg_table_class.relname" (tblName table)
+        sqlOrderBy "pg_index_class.relname"
+        sqlOrderBy "pg_index1.indkey1"
+
+      -- Here we use unsafeFromString a couple of times. In general we
+      -- do not want to have Convertible SQL instance for RawSQL
+      -- because our database can store different strings. Just at
+      -- this place in code we are sure of having a string name that
+      -- can be used for SQL string substitution.
+      let fetchNamedIndex ((idxname1,index):acc) idxname column | unsafeFromString idxname==idxname1 =
+            (idxname1, index { tblIndexColumns = tblIndexColumns index ++ [unsafeFromString column]}) : acc
+          fetchNamedIndex acc idxname column =
+            (unsafeFromString idxname, TableIndex { tblIndexColumns = [unsafeFromString column] }) : acc
+
+      present <- foldDB fetchNamedIndex []
+
+      -- At this point we have 'present' that describes present
+      -- indexes and 'requested' that describes what is requested.
+      --
+      -- To sync these two we need to go through present list and drop
+      -- everything that is not structurally equivalent to anything on
+      -- requested lists. Go through requested list and add anything
+      -- that is not structurally equivalent to anything present.
+      --
+      -- Wrong names might happen because of table renames. We would
+      -- need to do renames in that case. Ignored for now.
+      --
+      -- We ignore the possibiliy of duplicate indexes that have
+      -- same structure.
+      --
+      -- Indexes also can have some more structure, like be partially
+      -- defined or be defined on expressions instead of columns. For
+      -- now we will ignore such indexes.
+      --
+      -- We also ignore indexes that are created for constraints like
+      -- UNIQUE or PRIMARY KEY constraints.
+      --
+      let toDrop = filter shouldDrop present
+          shouldDrop index = not (any (structurallySame index) requested)
+          toAdd = filter shouldAdd requested
+          shouldAdd index = not (any (structurallySame index) present)
+          structurallySame (_name1,index1) (_name2,index2) =
+            tblIndexColumns index1 == tblIndexColumns index2
+
+      forM_ toDrop $ \(name,_def) -> do
+        logger $ "   dropping index '" ++ unRawSQL name ++ "'"
+        kRun_ $ "DROP INDEX" <+> raw name
+
+      forM_ toAdd $ \(name,index) -> do
+        logger $ "   adding index '" ++ unRawSQL name ++ "'"
+        kRun_ $ "CREATE INDEX" <+> raw name
+                   <+> "ON" <+> raw (tblName table)
+                   <+> "(" <+> intersperse "," (map raw (tblIndexColumns index)) <+> ")"
+
+      return ()
