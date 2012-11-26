@@ -29,13 +29,8 @@ tableUsersHistory = tblTable {
       _ -> return TVRinvalid
   , tblIndexes = [ tblIndexOnColumn "user_id"
                  ]
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE users_history"
-      <> " ADD CONSTRAINT fk_users_history_user_id FOREIGN KEY(user_id)"
-      <> " REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE users_history"
-      <> " ADD CONSTRAINT fk_users_history_performing_user_id FOREIGN KEY(performing_user_id)"
-      <> " REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id")
+                       { fkOnDelete = ForeignKeyCascade }
+                     , (tblForeignKeyColumn "performing_user_id" "users" "id")
+                       { fkOnDelete = ForeignKeySetNull } ]
   }
