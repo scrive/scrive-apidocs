@@ -81,17 +81,10 @@ tableELegTransactions = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE eleg_transactions"
-      <> " ADD CONSTRAINT fk_eleg_transactions_session_id FOREIGN KEY(session_id)"
-      <> " REFERENCES sessions(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE eleg_transactions"
-      <> " ADD CONSTRAINT fk_eleg_transactions_signatory_link_id FOREIGN KEY(signatory_link_id)"
-      <> " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE eleg_transactions"
-      <> " ADD CONSTRAINT fk_eleg_transactions_document_id FOREIGN KEY(document_id)"
-      <> " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "session_id" "sessions" "id")
+                       { fkOnDelete = ForeignKeyCascade }
+                     , (tblForeignKeyColumn "document_id" "documents" "id")
+                       { fkOnDelete = ForeignKeyCascade }
+                     , (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
 }
