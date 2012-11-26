@@ -34,7 +34,10 @@ infixl 6 <?>, <+>
 -- attacks. If absolutely necessary, use 'unsafeFromString', to
 -- indicate that you guarantee that SQL injection cannot happen.
 newtype RawSQL = RawSQL { unRawSQL :: String }
-  deriving (Eq, Show)
+  deriving (Eq, Ord)
+
+instance Show RawSQL where
+    showsPrec n x = showsPrec n (unRawSQL x)
 
 instance IsString RawSQL where
   fromString = RawSQL
