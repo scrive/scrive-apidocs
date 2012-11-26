@@ -2385,3 +2385,5 @@ have an account please follow the account creation process. Free use of up to 5 
 "_paymentsContactAdmin","Ditt konto är en del av ett företagskonto. Endast administratörer av ditt företag kan betala för ett abonnemang. Var vänlig och kontakta din administratör för att köpa ett abonnemang.","Your account is part of a company account. Only the administrator of your company can purchase a subscription. Please contact your administrator to purchase a subscription for the company."
 "_paymentsMustBeAdmin","Ditt köp genomfördes ej","Could not purchase subscription"
 "_paymentsSubscriptionRenewed","Ditt abonnemang har blivit förnyat.","Your subscription has been renewed."
+"_paymentsVat","*Alla priser är exklusive moms.",,"*All prices are excluding VAT."
+"_paymentsVat25","25% moms",,"25% VAT"
