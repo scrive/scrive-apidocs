@@ -74,16 +74,8 @@ tableDocuments = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE documents"
-      <> " ADD CONSTRAINT fk_documents_file_id FOREIGN KEY(file_id)"
-      <> " REFERENCES files(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE documents"
-      <> " ADD CONSTRAINT fk_documents_sealed_file_id FOREIGN KEY(sealed_file_id)"
-      <> " REFERENCES files(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    return ()
+  , tblForeignKeys = [ (tblForeignKeyColumn "file_id" "files" "id")
+                     , (tblForeignKeyColumn "sealed_file_id" "files" "id") ]
   }
 
 tableAuthorAttachments :: Table
@@ -102,15 +94,9 @@ tableAuthorAttachments = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE author_attachments"
-      <> " ADD CONSTRAINT fk_author_attachments_files FOREIGN KEY(file_id)"
-      <> " REFERENCES files(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE author_attachments"
-      <> " ADD CONSTRAINT fk_author_attachments_documents FOREIGN KEY(document_id)"
-      <> " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "file_id" "files" "id")
+                     , (tblForeignKeyColumn "document_id" "documents" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }
 
 tableSignatoryAttachments :: Table
@@ -135,15 +121,9 @@ tableSignatoryAttachments = tblTable {
       _ -> do
         return TVRinvalid
   , tblIndexes = [ tblIndexOnColumn "signatory_link_id" ]
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE signatory_attachments"
-      <> " ADD CONSTRAINT fk_signatory_attachments_files FOREIGN KEY(file_id)"
-      <> " REFERENCES files(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE signatory_attachments"
-      <> " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id)"
-      <> " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "file_id" "files" "id")
+                     , (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }
 
 tableSignatoryLinks :: Table
@@ -214,15 +194,9 @@ tableSignatoryLinks = tblTable {
       _ -> return TVRinvalid
   , tblIndexes = [ tblIndexOnColumn "user_id"
                  , tblIndexOnColumn "document_id" ]
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE signatory_links"
-      <> " ADD CONSTRAINT fk_signatory_links_document_id FOREIGN KEY(document_id)"
-      <> " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE signatory_links"
-      <> " ADD CONSTRAINT fk_signatory_links_user_id FOREIGN KEY(user_id)"
-      <> " REFERENCES users(id) ON DELETE SET NULL ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "document_id" "documents" "id")
+                       { fkOnDelete = ForeignKeyCascade }
+                     , (tblForeignKeyColumn "user_id" "users" "id")]
   }
 
 
@@ -244,11 +218,8 @@ tableDocumentTags = tblTable {
         return TVRcreated
       _ -> return TVRinvalid
   , tblIndexes = [ tblIndexOnColumn "document_id" ]
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE document_tags"
-      <> " ADD CONSTRAINT fk_document_tags_document_id FOREIGN KEY(document_id)"
-      <> " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "document_id" "documents" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }
 
 tableSignatoryLinkFields :: Table
@@ -278,9 +249,6 @@ tableSignatoryLinkFields = tblTable {
         return TVRcreated
       _ -> return TVRinvalid
   , tblIndexes = [ tblIndexOnColumn "signatory_link_id" ]
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE signatory_link_fields"
-      <> " ADD CONSTRAINT fk_signatory_link_fields_signatory_links FOREIGN KEY(signatory_link_id)"
-      <> " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }
