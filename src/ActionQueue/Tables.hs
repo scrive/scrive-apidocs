@@ -22,11 +22,8 @@ tablePasswordReminders = tblTable {
         <> ")"
       return TVRcreated
     _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE password_reminders"
-      <> " ADD CONSTRAINT fk_password_reminders_users FOREIGN KEY(user_id)"
-      <> " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }
 
 tableEmailChangeRequests :: Table
@@ -49,11 +46,8 @@ tableEmailChangeRequests = tblTable {
         <> ")"
       return TVRcreated
     _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE email_change_requests"
-      <> " ADD CONSTRAINT fk_email_change_requests_users FOREIGN KEY(user_id)"
-      <> " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }
 
 tableUserAccountRequests :: Table
@@ -74,9 +68,5 @@ tableUserAccountRequests = tblTable {
         <> ")"
       return TVRcreated
     _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE user_account_requests"
-      <> " ADD CONSTRAINT fk_user_account_requests_users FOREIGN KEY(user_id)"
-      <> " REFERENCES users(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id") ]
   }
