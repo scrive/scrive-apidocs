@@ -816,7 +816,7 @@
             var billingEndsf = view.dateString(billingEnds);
             var price        = pOrS.unitAmountInCents();
             var quantity     = pOrS.quantity();
-            var total        = price * quantity;
+            var total        = price * quantity * 1.25;
             var currency     = model.subscription().currency();
             var totalf       = view.addMark(total) + " " + currency;
 
