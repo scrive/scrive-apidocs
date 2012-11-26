@@ -58,11 +58,8 @@ tableUsers = tblTable {
   , tblIndexes = [ tblIndexOnColumn "company_id"
                  , tblIndexOnColumn "email"
                  ]
+  , tblForeignKeys = [ (tblForeignKeyColumn "company_id" "companies" "id") ]
   , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE users"
-      <> " ADD CONSTRAINT fk_users_companies FOREIGN KEY(company_id)"
-      <> " REFERENCES companies(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
     kRunRaw $ "CREATE SEQUENCE users_id_seq"
     kRunRaw $ "SELECT setval('users_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM users))"
     kRunRaw $ "ALTER TABLE users ALTER id SET DEFAULT nextval('users_id_seq')"
@@ -91,13 +88,8 @@ tableUserInviteInfos = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE user_invite_infos"
-      <> " ADD CONSTRAINT fk_user_invite_info_users FOREIGN KEY(user_id)"
-      <> " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE user_invite_infos"
-      <> " ADD CONSTRAINT fk_user_invite_infos_users FOREIGN KEY(inviter_id)"
-      <> " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id")
+                       { fkOnDelete = ForeignKeyCascade }
+                     , (tblForeignKeyColumn "inviter_id" "users" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }
