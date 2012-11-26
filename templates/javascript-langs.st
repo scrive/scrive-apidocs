@@ -511,6 +511,8 @@ javascriptLocalisation =
         , payments: {
              users: "$_CompanyAccounts()$"
            , user: "$_paymentsUser()$"
+           , vat: "$_paymentsVat()$"
+           , vat25: "$_paymentsVat25()$"
            , expires: "$_paymentsExpires()$"
            , creditcardnumber: "$_paymentsCreditCardNumber()$"
            , manyusers: "$_paymentsManyUsers()$"
@@ -523,7 +525,7 @@ javascriptLocalisation =
                     , team         : {
                       name : "$_paymentPlanTeam()$",
                       tag :"$_paymentPlanTeamTag()$",
-                      price : "$_paymentsTeamPrice()$",
+                      price : "$_paymentsTeamPrice()$<span class='aster'>*</span>",
                       features: [ "$_paymentFeatureDistance()$"
                                  , "$_paymentFeaturePad()$"
                                  , "$_paymentFeatureBranding()$"
@@ -541,7 +543,7 @@ javascriptLocalisation =
                     , form : {
                       name : "$_paymentPlanForm()$",
                       tag : "$_paymentPlanFormTag()$",
-                      price : "$_paymentPlanFormPrice()$",
+                      price : "$_paymentPlanFormPrice()$<span class='aster'>*</span>",
                       features : [ "$_paymentFeatureSupport()$"
                                  , "$_paymentFeatureHTTPAPI()$"
                                  , "$_paymentFeatureDocumentation()$"
@@ -549,7 +551,7 @@ javascriptLocalisation =
                                  ],
                       price1 : "",
                       price3 : "$_paymentPlanPerMonth()$ $_and()$",
-                      price21 : "$_paymentPlanDocPrice()$",
+                      price21 : "$_paymentPlanDocPrice()$<span class='aster'>*</span>",
                       price31 : "$_paymentPlanPerDocument()$",
                       select : "$_paymentsGetInTouch()$",
                       selected : "$_paymentsSelected()$"

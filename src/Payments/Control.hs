@@ -441,9 +441,9 @@ handleSyncNewSubscriptionWithRecurlyOutside = do
         getField "email"
   user <- pguardM' "handleSyncNewSubscriptionWithRecurlyOutside: user does not exist." $
           dbQuery $ GetUserByEmail $ Email email
-  subscriptions <- pguardM "handleSyncNewSubscriptionWithRecurly" $
+  subscriptions <- pguardM "handleSyncNewSubscriptionWithRecurlyOutside" $
                    liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show ac
-  subscription <- pguard' "handleSyncNewSubscriptionWithRecurly: No subscription." $
+  subscription <- pguard' "handleSyncNewSubscriptionWithRecurlyOutside: No subscription." $ 
                   listToMaybe subscriptions
   invoices <- pguardM "handleChangePlan" $
               liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey $ show ac
