@@ -27,13 +27,8 @@ tableSessions = tblTable {
         return TVRcreated
       _ -> return TVRinvalid
   , tblIndexes = [ tblIndexOnColumn "user_id" ]
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE sessions"
-      <> " ADD CONSTRAINT fk_sessions_user_id FOREIGN KEY(user_id)"
-      <> " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE sessions"
-      <> " ADD CONSTRAINT fk_sessions_pad_user_id FOREIGN KEY(pad_user_id)"
-      <> " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id")
+                       { fkOnDelete = ForeignKeyCascade }
+                     , (tblForeignKeyColumn "pad_user_id" "users" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
 }
