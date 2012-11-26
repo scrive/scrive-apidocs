@@ -483,11 +483,11 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
         newfilepdf <- Binary <$> case code2 of
           ExitSuccess -> do
             res <- liftIO $ BS.readFile tmpout
-            Log.debug $ "GuardTime signed successfully"
+            Log.debug $ "GuardTime signed successfully #" ++ show documentid
             return res
           ExitFailure c -> do
             res <- liftIO $ BS.readFile tmpout
-            Log.debug $ "GuardTime failed: " ++ show c 
+            Log.debug $ "GuardTime failed " ++ show c ++ " of document #" ++ show documentid
             return res
         Log.debug $ "Adding new sealed file to DB"
         File{fileid = sealedfileid} <- dbUpdate $ NewFile filename newfilepdf

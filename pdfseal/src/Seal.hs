@@ -1,4 +1,4 @@
-{-# LANGUAGE DoRec #-}
+{-# LANGUAGE DoRec, NoOverloadedStrings #-}
 
 module Seal where
 import PdfModel hiding(trace)
@@ -177,13 +177,9 @@ mergeResources document' source1 source2 =
 
 placeContentOnPage :: DictData -> RefID -> (Int -> Int -> String) -> State Document ()
 placeContentOnPage newres pagerefid sealtext = do
-  Just (Indir (Dict pagedict) pagestrem) <- gets $
+  Just (Indir (Dict pagedict) pagestream) <- gets $
             PdfModel.lookup pagerefid
-  let mcontentvalue = Prelude.lookup (BS.pack "Contents") pagedict
-  let contentlist = case mcontentvalue of
-                        Just (contentvalue@Ref{}) -> [contentvalue]
-                        Just (Array arr) -> arr
-                        x -> error $ "/Contents must be either ref or array of refs but found " ++ show x
+  contentlist <- fmap Ref `fmap` contentsValueListFromPageID pagerefid
 
   [cropbox_l, cropbox_b, cropbox_r, cropbox_t] <- do
      mcropBox <- getInheritedPageKey "CropBox" pagerefid
@@ -236,61 +232,10 @@ placeContentOnPage newres pagerefid sealtext = do
       pagedict2 = filter (not . skipkey . fst) pagedict
       newpagedict = Dict pagedict2 `ext` [(BS.pack "Contents", newcontentarray)
                                            ,(BS.pack "Resources", newresdict)]
-      newpage = (Indir newpagedict pagestrem)
+      newpage = (Indir newpagedict pagestream)
   -- finally set new page in place of the old one
   modify (setIndirF pagerefid newpage)
 
-placeFieldsOnPage :: (RefID,String) -> Document -> Document
-placeFieldsOnPage (pagerefid,sealtext) document' =
-    let
-        Just (Indir (Dict pagedict) pagestrem) =
-            PdfModel.lookup pagerefid document'
-        Just contentvalue = {- trace (show pagedict) $ -} Prelude.lookup (BS.pack "Contents") pagedict
-        contentlist = case contentvalue of
-                        Ref{} -> [contentvalue]
-                        Array arr -> arr
-                        _ -> error "/Contents must be either ref or array of refs"
-
-        ([q,qQ,rr], docx) = flip runState document' $ do
-            q' <- addStream (Dict []) $ BSL.pack "q "
-            qQ' <- addStream (Dict []) $ BSL.pack (" Q " ++ normalizeToA4 ++ " " ++ rotationtext ++ " % here\n")
-            rr' <- addStream (Dict []) $ BSL.pack (sealtext)
-            return [q',qQ',rr']
-
-        rotatekey = Prelude.lookup (BS.pack "Rotate") pagedict
-        ([cropbox_l, cropbox_b, cropbox_r, cropbox_t] {- :: Double -})
-            = case (Prelude.lookup (BS.pack "CropBox") pagedict `mplus` Prelude.lookup (BS.pack "MediaBox") pagedict) of
-                  Just (PdfModel.Array [PdfModel.Number l, PdfModel.Number b, PdfModel.Number r, PdfModel.Number t]) ->
-                       [l :: Double, b, r, t]
-                  _ -> [0, 0, 595, 842]
-
-        cropbox_w = cropbox_r - cropbox_l
-        cropbox_h = cropbox_t - cropbox_b
-
-        normalizeToA4 = show (Number (cropbox_w/595)) ++ " " ++
-                        show (Number (0)) ++ " " ++
-                        show (Number (0)) ++ " " ++
-                        show (Number (cropbox_h/842)) ++ " " ++
-                        show (Number (-cropbox_l)) ++ " " ++
-                        show (Number (-cropbox_b)) ++ " cm"
-
-        rotationtext = case rotatekey of -- 595 842
-                         Just (Number 90) -> "0 1 -1 0 " ++ show (Number cropbox_w) ++ " 0 cm"
-                         Just (Number 180) -> "-1 0 0 -1 " ++ show (Number cropbox_w) ++ " " ++ show (Number cropbox_h) ++ " cm"
-                         Just (Number 270) -> "0 -1 1 0 0 " ++ show (Number cropbox_h) ++ " cm"
-                         _ -> ""
-
-        pageresdict = evalState (getResDict pagerefid) document'
-
-
-        newcontentarray = Array ([Ref q] ++ contentlist ++ [Ref qQ] ++ [Ref rr])
-        skipkey x = BS.pack "Contents" == x || BS.pack "Resources" == x
-        pagedict2 = filter (not . skipkey . fst) pagedict
-        newpagedict = Dict pagedict2 `ext` [(BS.pack "Contents", newcontentarray)
-                                           ,(BS.pack "Resources", Dict pageresdict)]
-        newpage = (Indir newpagedict pagestrem)
-        newdocument = setIndirF pagerefid newpage docx
-    in newdocument
 
 tellMatrix :: (MonadWriter String m) => Double -> Double -> Double -> Double -> Double -> Double -> m ()
 tellMatrix a b c d e f =
@@ -467,12 +412,20 @@ contentsValueListFromPageID pagerefid = do
   Just (Indir (Dict pagedict) _) <- gets $
             PdfModel.lookup pagerefid
   let mcontentvalue = Prelude.lookup (BS.pack "Contents") pagedict
-  let contentlist = case mcontentvalue of
-                        Just (Ref r) -> [r]
-                        Just (Array arr) -> map unRefID arr
-                        x -> error $ "/Contents must be ref or an array of refs, found " ++ show x
       unRefID (Ref r) = r
       unRefID _ = error "unRefID not on ref"
+  contentlist <- case mcontentvalue of
+                   Just (Array arr) -> do
+                     return $ map unRefID arr
+                   Just (Ref r) -> do
+                     -- this is not the end of the story, because it may refer to indirect array of contents
+                     doc <- get
+                     case PdfModel.lookup r doc of
+                       Just (Indir (Array arr) _) -> do
+                         return $ map unRefID arr
+                       _ -> do
+                         return [r]
+                   x -> error $ "/Contents must be ref or an array of refs, found " ++ show x
   return contentlist
 
 

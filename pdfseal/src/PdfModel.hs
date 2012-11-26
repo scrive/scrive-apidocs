@@ -1,4 +1,4 @@
-{-# LANGUAGE DoRec, PatternGuards, CPP #-}
+{-# LANGUAGE DoRec, PatternGuards, CPP, NoOverloadedStrings #-}
 {-# OPTIONS_GHC -funbox-strict-fields #-}
 
 module PdfModel where
