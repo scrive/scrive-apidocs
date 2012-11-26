@@ -8,7 +8,7 @@ module GuardTime
        ) where
 
 import qualified Data.ByteString.Lazy as BSL hiding (length)
-import qualified Data.ByteString.Lazy.UTF8 as BSL 
+import qualified Data.ByteString.Lazy.UTF8 as BSL
 import Utils.IO
 import Data.List
 import Control.Monad.IO.Class
@@ -47,9 +47,13 @@ digitallySign conf inputFileName = do
              , inputFileName
              ]
   (code,stdout,stderr) <- liftIO $ readProcessWithExitCode' "java" args BSL.empty
-  Log.debug $ "GT stdout  : " ++ BSL.toString stdout
-  Log.debug $ "GT errout  : " ++ BSL.toString stderr
-  
+  when (code /= ExitSuccess) $ do
+    Log.debug $ "GuardTime exit code " ++ show code
+    when (not (BSL.null stdout)) $ do
+      Log.debug $ "GuardTime stdout  : " ++ BSL.toString stdout
+    when (not (BSL.null stderr)) $ do
+      Log.debug $ "GuardTime errout  : " ++ BSL.toString stderr
+
   return code
 
 -- Verification
@@ -62,7 +66,7 @@ data VerifyResult = Valid String String      |
 instance FromJSValue VerifyResult where
     fromJSValueM = do
         mvalid   <- fromJSValueFieldCustom "valid" $ do
-                      time <- fromJSValueField "time" 
+                      time <- fromJSValueField "time"
                       gid <- fromJSValueField "gateway_id"
                       return $ liftM2 Valid time gid
         minvalid <- fromJSValueFieldCustom "invalid" $ do
@@ -104,9 +108,5 @@ verify inputFileName = do
                                   Nothing -> do
                                       Log.debug $ "GT parsing error " ++ BSL.toString stdout
                                       return $ Problem $ "GuardTime verification result parsing error"
-                                  Just res -> return res   
+                                  Just res -> return res
        _ -> return $ Problem $ "GuardTime verification failed: " ++ BSL.toString stderr
-
-
-
-  
