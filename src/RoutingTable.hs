@@ -100,7 +100,8 @@ staticRoutes = choice
      , dir "d" $ dir "reallydelete" $ hPost $ toK0 $ ArchiveControl.handleReallyDelete
      , dir "d" $ dir "share"        $ hPost $ toK0 $ ArchiveControl.handleShare
      , dir "d" $ dir "cancel"       $ hPost $ toK0 $ ArchiveControl.handleCancel
-     , dir "d" $ dir "zip"      $ hGet  $ toK0 $ ArchiveControl.handleZip
+     , dir "d" $ dir "zip"          $ hGet  $ toK0 $ ArchiveControl.handleZip
+     , dir "d" $ dir "signview"     $ hPost $ toK1 $ DocControl.handleIssueAuthorGoToSignview
      , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
      , dir "d" $ dir "evidencelog" $ hGet  $ toK1 $ EvidenceLog.jsonDocumentEvidenceLog
      , dir "docs"                  $ hGet  $ toK0 $ ArchiveControl.jsonDocumentsList

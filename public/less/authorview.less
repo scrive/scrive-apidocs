@@ -1,22 +1,204 @@
-.authorview .mainContainer {
-    width : 1020px;
-}
+.authorview {
+  font-family: "Lucida Grande";
 
-.authorview .subcontainer {
-    background-color: #E1E1E1;
-    background-image: url("../img/horizontal-shading-bar.png");
-    background-repeat: no-repeat;
-    box-shadow: 1px 1px 5px #505050 inset;
-    padding-bottom: 23px;
-    padding-top: 10px;
-}
+  .mainContainer {
+      width : 1020px;
+  }
+  .body-container {
+      padding-top : 10px;
+  }
+  .subcontainer {
+      background-color: #E1E1E1;
+      background-image: url("../img/horizontal-shading-bar.png");
+      background-repeat: no-repeat;
+      box-shadow: 1px 1px 5px #505050 inset;
+      padding-bottom: 23px;
+      padding-top: 10px;
+  }
 
-.authorview .history-box {
-    width : 960px;
-    background-color : #FFFFFF;
-    border: 1px solid #BABABC;
+  .history-box {
+      width : 960px;
+      background-color : #FFFFFF;
+      border: 1px solid #BABABC;
+      margin-top: 20px;
+      margin-bottom : 20px;
+      padding : 10px 29px;
+
+  }
+
+  .titlebox {
+    background-color: white;
+    padding-top: 40px;
+    padding-bottom: 25px;
     margin-top: 20px;
-    margin-bottom : 20px;
-    padding : 10px 29px;
+    border: solid #bababc 1px;
+    text-align: center;
+    font-weight: bold;
+    margin-left: auto;
+    margin-right: auto;
+    .headline {
+      text-transform: uppercase;
+      color: black;
+      font-size: x-large;
+      margin-bottom: 5px;
+    }
+    .subheadline {
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 3px;
+      margin-bottom : 3px;
+    }
+    .duedate {
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+    .buttonbox {
+      margin: 10px auto 0;
+      text-align : center;
+      .btn-small {
+        display : inline-block;
+        margin-left: 10px;
+        margin-tight : 10px;
+      }
+    }
+  }
+
+  .subcontainer .signatories {
+      padding-top: 20px;
+      margin-left: auto;
+      margin-right: auto;
+
+      clear: both;
+      background-color: white;
+      background-repeat: no-repeat;
+      overflow: hidden;
+      margin-top: 17px;
+      width: 924px;
+      box-shadow: 1px 1px 5px #505050;
+
+      .column {
+          width: 260px;
+          float: left;
+          border: solid #bababc 1px;
+          min-height: 185px;
+      }
+
+      .name {
+          font-weight: bold;
+          color: black;
+          font-size: 14px;
+          height: 19px;
+      }
+
+      .company {
+          font-weight: bold;
+          color: black;
+          height: 15px;
+      }
+
+      .face {
+          background-image: url('../img/missing-portrait.png');
+          background-size: cover;
+          width: 60px;
+          height: 50px;
+          float: left;
+      }
+
+      .inner {
+          margin-top: 10px;
+          min-height: 72px;
+          color : #505050;
+          font-size: 0.9em;
+      }
+      .inner .email:hover{
+              overflow: visible;
+      }
+
+      .numspace {
+          float:left;
+          height: 32px;
+          padding: 0px;
+          margin-top:0px;
+          margin-left: 12px;
+      }
+
+      .field {
+          height: 14px;
+          width: 160px;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          overflow:hidden;
+          margin-bottom: 5px;
+      }
+
+      .statusbox {
+          border-top: 1px dashed;
+          text-align: center;
+          font-weight: bold;
+          font-size: 14px;
+          vertical-align: middle;
+          line-height: 11px;
+          padding-top:1px;
+      }
+
+      .statusbox .spacing {
+          margin-left: auto;
+          margin-right: auto;
+      }
+
+      .statusbox .icon.status {
+          display: inline-block;
+          float: none;
+      }
+      .line {
+          display: table;
+          overflow: hidden;
+          height: 15px;
+          width: 100%;
+      }
+
+      .line .middle {
+          display: table-cell;
+          vertical-align: middle;
+          a {
+            cursor: pointer;
+            text-decoration: underline;
+          }
+      }
+
+      .signatory {
+        .field .grayed {
+          color: white;
+        }
+
+        .field input {
+          width: 195px;
+        }
+
+        .fieldwrapper {
+          width: 200px;
+        }
+      }
+
+
+  }
+
+
+
+
+  .section h2 {
+    float: left;
+    width: 220px;
+    margin-bottom: 20px;
+    margin-right: 20px;
+    text-transform: uppercase;
+    color: black;
+    font-weight: normal;
+    padding-left: 30px;
+    padding-right: 10px;
+    font-size: large;
+  }
+
+
 
 }

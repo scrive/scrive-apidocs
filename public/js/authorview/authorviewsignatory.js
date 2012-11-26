@@ -9,9 +9,54 @@ var AuthorViewSignatoryModel = Backbone.Model.extend({
   },
   initialize: function (args) {
   },
+  authorviewsignatories : function() {
+    return this.get("authorviewsignatories");
+  },
   document :function() {
-     return this.get("document");
-  }
+     return this.authorviewsignatories().document();
+  },
+  signatory : function() {
+     return this.get("signatory");
+  },
+  nameOrEmail : function() {
+    return this.signatory().nameOrEmail();
+  },
+  status : function() {
+    return this.signatory().status();
+  },
+  signatorySummary: function() {
+      var signatory = this.signatory();
+      var document = this.document();
+      if (signatory.signdate() != undefined)
+        return localization.signatoryMessage.signed;
+      else if (signatory.datamismatch() == true ||
+               document.timedout() ||
+               document.canceled() ||
+               document.rejected() ||
+               document.datamismatch())
+          return localization.docsignview.unavailableForSign;
+      else if (signatory.rejecteddate() != undefined)
+          return localization.signatoryMessage.rejected;
+      else if (signatory.status() == 'opened')
+          return localization.signatoryMessage.seen;
+      else if (signatory.status() == 'sent')
+          return localization.signatoryMessage.other;
+      return localization.signatoryMessage[signatory.status()];
+ },
+ hasRemindOption: function() {
+   var signatory = this.signatory();
+   return    (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
+          && !signatory.author()
+          && signatory.signs()
+          && !signatory.undeliveredEmail()
+          && !signatory.document().padDelivery();
+ },
+ hasChangeEmailOption: function() {
+   var signatory = this.signatory();
+   return    (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
+          && signatory.undeliveredEmail()
+          && signatory.document().pending()
+ }
 });
 
 var AuthorViewSignatoryView = Backbone.View.extend({
@@ -19,16 +64,123 @@ var AuthorViewSignatoryView = Backbone.View.extend({
         _.bindAll(this, 'render');
         this.render();
     },
-    render: function () {
+  statusbox: function() {
+      var model = this.model;
+      var statusbox  = $('<div  class="statusbox" />');
+      var space = $('<div class="spacing butt" />');
+      var statusicon = $("<span class='icon status' />").addClass(model.status());
+      var status     = $("<span class='status statustext' />").text(model.signatorySummary()).addClass(model.status());
+      space.append(statusicon).append(status).addClass(model.status());
+      statusbox.append(space);
+      return statusbox;
+  },
+  remidenMailOption: function() {
+         var signatory = this.model.signatory();
+         var button = $("<a  class='btn-tiny green prepareToSendReminderMail'/>");
+         var icon = $("<div/>").addClass(signatory.hasSigned() ? "reminderForSignedIcon" : "reminderForSendIcon");
+         var text = signatory.hasSigned() ? signatory.document().process().localization().remindagainbuttontext : localization.reminder.send;
+         var textbox = $("<div class='sendLinkText'/>").text(text);
+         button.append(icon).append(textbox);
+         button.click(function() {
+             ConfirmationWithEmail.popup({
+                title: signatory.hasSigned() ? signatory.document().process().localization().remindagainbuttontext : localization.reminder.formHead,
+                mail: signatory.remindMail(),
+                acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
+                editText: localization.reminder.formOwnMessage,
+                rejectText: localization.cancel,
+                onAccept: function(customtext) {
+                      signatory.remind(customtext).send();
+                }
+            });
+         });
+         return button;
 
-    }
+  },
+  changeEmailOption : function() {
+    var signatory = this.model;
+    var container = $("<div style='margin-top: 10px'/>");
+    var fstbutton = Button.init({
+                            size: "tiny",
+                            color: "blue",
+                            text: localization.changeEmail,
+                            onClick: function() {
+                                container.empty();
+                                var inputwrapper = $("<div class='field float-left' style='width:150px'/>");
+                                var input = $("<input type='text' class='fieldvalue' />");
+                                input.val(signatory.email());
+                                var sndbutton = Button.init({
+                                    cssClass: "float-right",
+                                    size: "tiny",
+                                    color: "blue",
+                                    text: localization.send,
+                                    onClick: function() { signatory.changeEmail(input.val()).send(); }
+                                    });
+                                inputwrapper.append(input);
+                                container.append(inputwrapper);
+                                container.append(sndbutton.input());
+                                return false;
+                             }
+                          });
+    container.append(fstbutton.input());
+    return container;
+  },  
+  authorOptions : function() {
+    var signatory = this.model.signatory();
+    var optionbox = $("<div class='optionbox'/>"); 
+    if (this.model.hasRemindOption())
+      optionbox.append(this.remidenMailOption());
+    if (this.model.hasChangeEmailOption())
+      optionbox.append(this.changeEmailOption());
+    return optionbox;
+  },
+  render: function() {
+      var box = $(this.el);
+      box.empty();
+      box.addClass('sigbox');
+      var signatory = this.model.signatory();
+      var titleinfo = $('<div class="titleinfo spacing" />');
+      var name      = $('<div class="name" />').text(signatory.name());
+      var company   = $('<div class="company" />').text(signatory.company());
+      titleinfo.append(name).append(company);
+      box.append(titleinfo);
 
+      var inner   = $('<div class="inner spacing" />');
+
+      var face    = $('<div class="face" />');
+
+      var numspace = $('<div class="spacing numspace" />');
+      var orgnum  = $('<div class="orgnum field" />').text(localization.docsignview.companyNumberLabel + ": "
+                                                           + (signatory.companynumber().trim() || localization.docsignview.notEntered))
+          .attr('title', signatory.companynumber());
+      var persnum = $('<div class="persnum field" />').text(localization.docsignview.personalNumberLabel + ": "
+                                                            + (signatory.personalnumber().trim() || localization.docsignview.notEntered))
+        .attr('title', signatory.personalnumber());
+      var contactspace = $('<div class="spacing contactspace" />');
+      var email   = $('<div class="email field" />').text(signatory.email()).attr('title', signatory.email());
+
+      numspace.append(orgnum);
+      numspace.append(persnum);
+
+      numspace.append(email);
+
+      inner.append(face);
+
+      inner.append(numspace);
+      inner.append(contactspace);
+      box.append(inner);
+      box.append(this.authorOptions());
+      box.append(this.statusbox());
+      return this;
+  }
 });
 
 window.AuthorViewSignatory = function(args) {
           var model = new AuthorViewSignatoryModel(args);
           var view =  new AuthorViewSignatoryView({model : model, el : $("<div/>")});
           this.el = function() {return $(view.el);};
+          this.signatorySummary = function() {return model.signatorySummary();};
+          this.nameOrEmail = function() {return model.nameOrEmail();};
+          this.status = function() {return model.status();};
 
 };
 

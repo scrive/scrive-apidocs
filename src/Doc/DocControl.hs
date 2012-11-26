@@ -21,6 +21,7 @@ module Doc.DocControl(
     , handleDeleteSigAttach
     , handleIssueShowGet
     , handleIssueShowPost
+    , handleIssueAuthorGoToSignview
     , handleSetAttachments
     , handleParseCSV
     , prepareEmailPreview
@@ -358,6 +359,20 @@ handleSignShow documentid
       if null cookies
          then sendRedirect LinkEnableCookies
          else internalError
+
+{- |
+   Redirect author of document to go to signview
+   URL: /d/signview/{documentid}
+   Method: POST
+ -}
+handleIssueAuthorGoToSignview :: Kontrakcja m => DocumentID -> m KontraLink
+handleIssueAuthorGoToSignview docid = do
+  doc <- guardRightM $ getDocByDocIDForAuthor docid
+  user <- guardJustM $ ctxmaybeuser <$> getContext
+  case (isAuthor <$> getMaybeSignatoryLink (doc,user)) of
+    Just True -> return $ LinkSignDoc doc $ fromJust $ getMaybeSignatoryLink (doc,user)
+    _ -> return LoopBack
+  
 
 {- |
    Handles the request to show a document to a logged in user.

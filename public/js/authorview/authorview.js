@@ -20,7 +20,7 @@ var AuthorViewModel = Backbone.Model.extend({
   },
   title : function() {
     if (this.get("title") == undefined)
-      this.set({"title" : new AuthorViewHistory({})}, {silent : true});
+      this.set({"title" : new AuthorViewTitleBox({authorview : this})}, {silent : true});
     return this.get("title");
   },
   history : function() {
@@ -30,7 +30,7 @@ var AuthorViewModel = Backbone.Model.extend({
   },
   signatories : function() {
     if (this.get("signatories") == undefined)
-      this.set({"signatories" : new AuthorViewSignatories({})}, {silent : true});
+      this.set({"signatories" : new AuthorViewSignatories({authorview : this})}, {silent : true});
     return this.get("signatories");
   },
   file  : function() {
@@ -79,9 +79,11 @@ window.AuthorViewView = Backbone.View.extend({
 
     this.container.empty();
     this.container.append(BlockingInfo.el());
+    this.container.append(this.model.title().el());
     this.container.append(this.model.history().el());
     var subcontainer = $("<div class='subcontainer'/>")
     this.container.append(subcontainer);
+    subcontainer.append(this.model.signatories().el());
     subcontainer.append(model.file().view.el);
     return this;
   }

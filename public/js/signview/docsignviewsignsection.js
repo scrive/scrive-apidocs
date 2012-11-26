@@ -7,6 +7,108 @@
 
 (function(window) {
 
+
+window.DocumentSignConfirmation = Backbone.View.extend({
+  initialize: function(args) {
+    _.bindAll(this, 'popup');
+    _.bindAll(this, 'createContentElems');
+  },
+  createElegButtonElems: function() {
+    var document = this.model;
+    var signatory = document.currentSignatory();
+
+    var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
+    var telia = $("<a href='#' class='author2 telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
+    var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
+    var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");
+    bankid.click(function() {
+      Eleg.bankidSign(document, signatory, document.sign());
+      return false;
+    });
+    telia.click(function() {
+      Eleg.teliaSign(document, signatory, document.sign());
+      return false;
+    });
+    nordea.click(function() {
+      Eleg.nordeaSign(document, signatory, document.sign());
+      return false;
+    });
+      mbi.click(function() {
+          Eleg.mobileBankIDSign(document,signatory,document.sign());
+          return false;
+      });
+    return $("<span />").append(bankid).append(telia).append(nordea).append(mbi);
+  },
+  createSignButtonElems: function() {
+    var document = this.model;
+    var guardModel = this.guardModel;
+    return Button.init({
+      size: "small",
+      color: "blue",
+      icon: $("<span class='btn-symbol cross' />"),
+      text: document.process().localization().signbuttontext,
+      onClick: function() {
+        if (alreadyClicked(this))
+          return false;
+        document.sign().send();
+      }
+    }).input();
+  },
+  createPreambleElems: function() {
+    var document = this.model;
+    var signatory = document.currentSignatory();
+
+    if (signatory.author) {
+     var content = $("<div />");
+     if (document.authorIsOnlySignatory())
+            content = $(document.process().localization().signatorysignmodalcontentauthoronly);
+     else if (document.elegAuthentication())
+          content.append(document.process().localization().signatorysignmodalcontentsignvieweleg);
+     else
+          content.append(document.process().localization().signatorysignmodalcontent);
+
+     if (document.elegAuthentication()) {
+        var subhead = $("<h3/>").text(localization.signByAuthor.eleg.subhead);
+        var a = $("<a target='_new' />").text(localization.signByAuthor.eleg.clickHere).attr("href", "http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
+        var p = $("<p/>").append(localization.signByAuthor.eleg.body1).append(a).append(localization.signByAuthor.eleg.body2);
+        content.add($("<span/>").append(subhead).append(p));
+      }
+      return content;
+    } else {
+      var content = $("<div />");
+      if (document.elegAuthentication())
+          content.append(document.process().localization().signatorysignmodalcontentsignvieweleg);
+      else
+          content.append(document.process().localization().signatorysignmodalcontent);
+
+      if (document.elegAuthentication()) {
+        var subhead = $("<h3/>").text(localization.sign.eleg.subhead);
+        var a = $("<a target='_new' />").text(localization.sign.eleg.clickHere).attr("href", "http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
+        var p = $("<p/>").append(localization.sign.eleg.body1).append(a).append(localization.sign.eleg.body2);
+        content.add($("<span/>").append(subhead).append(p));
+      }
+      return content;
+    }
+  },
+  createContentElems: function() {
+    var content = $("<div />");
+    content.append(this.createPreambleElems());
+    return content;
+  },
+  popup: function() {
+    var document = this.model;
+    var signatory = document.currentSignatory();
+
+    Confirmation.popup({
+      title: signatory.author ? localization.signByAuthor.modalTitle : document.process().localization().signatorysignmodaltitle,
+      acceptButton: document.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
+      rejectText: localization.cancel,
+      content: this.createContentElems
+    });
+  }
+});
+
+  
 window.DocumentSignSignSection = Backbone.View.extend({
    initialize : function(args){
       this.render();

@@ -444,6 +444,9 @@ javascriptLocalisation =
               logMeIn : "$_login()$"
          }
          , cancel : "$_cancel()$"
+         , authorview : {
+              signatoriesTitle : "Parties"
+         }
          , docsignview : {
                followArrowToSign: "$_followArrowToSign()$"
              , followArrowToReview: "$_followArrowToReview()$"
