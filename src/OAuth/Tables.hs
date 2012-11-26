@@ -60,12 +60,8 @@ tableAPIToken = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE oauth_api_token"
-      <> " ADD CONSTRAINT fk_oauth_api_token_users FOREIGN KEY(user_id)"
-      -- we want the api tokens to disappear when the User disappears
-      <> " REFERENCES users(id) ON UPDATE RESTRICT ON DELETE CASCADE"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }
 
 {-
@@ -110,17 +106,10 @@ tableAccessToken = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE oauth_access_token"
-      <> " ADD CONSTRAINT fk_oauth_access_token_users FOREIGN KEY(user_id)"
-      -- remove the Access Token if we delete the user
-      <> " REFERENCES users(id) ON UPDATE RESTRICT ON DELETE CASCADE"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE oauth_access_token"
-      <> " ADD CONSTRAINT fk_oauth_access_token_api_token FOREIGN KEY(api_token_id)"
-      -- also if we delete the api_token, we delete the Access Token
-      <> " REFERENCES oauth_api_token(id) ON UPDATE RESTRICT ON DELETE CASCADE"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id")
+                       { fkOnDelete = ForeignKeyCascade }
+                     , (tblForeignKeyColumn "api_token_id" "oauth_api_token" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }
 
 {-
@@ -147,12 +136,8 @@ tablePrivilege = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE oauth_privilege"
-      <> " ADD CONSTRAINT fk_oauth_privilege FOREIGN KEY(access_token_id)"
-      -- remove the privilege if we delete the Access Token
-      <> " REFERENCES oauth_access_token(id) ON UPDATE RESTRICT ON DELETE CASCADE"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "access_token_id" "oauth_access_token" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }
 
 migrateTempCredentialRemoveEmail ::  MonadDB m => Migration m
@@ -218,17 +203,10 @@ tableTempCredential = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE oauth_temp_credential"
-      <> " ADD CONSTRAINT fk_oauth_temp_credential FOREIGN KEY(api_token_id)"
-      -- we want the temp credentials to disappear when the api_token disappears
-      <> " REFERENCES oauth_api_token(id) ON UPDATE RESTRICT ON DELETE CASCADE"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE oauth_temp_credential"
-      <> " ADD CONSTRAINT fk_oauth_temp_credential_user_id FOREIGN KEY(user_id)"
-      -- we want the temp credentials to disappear when the api_token disappears
-      <> " REFERENCES users(id) ON UPDATE RESTRICT ON DELETE CASCADE"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "api_token_id" "oauth_api_token" "id")
+                       { fkOnDelete = ForeignKeyCascade }
+                     , (tblForeignKeyColumn "user_id" "users" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }
                       
                       
@@ -258,10 +236,6 @@ tableTempPrivileges = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE oauth_temp_privileges"
-      <> " ADD CONSTRAINT fk_oauth_temp_privileges_temp_token FOREIGN KEY(temp_token_id)"
-      -- we want the temp credentials to disappear when the api_token disappears
-      <> " REFERENCES oauth_temp_credential(id) ON UPDATE RESTRICT ON DELETE CASCADE"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "temp_token_id" "oauth_temp_credential" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }
