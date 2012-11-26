@@ -26,9 +26,5 @@ tableCompanyInvites = tblTable {
       _ -> return TVRinvalid
   , tblIndexes = [ tblIndexOnColumn "company_id"
                  , tblIndexOnColumn "email" ]
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE companyinvites"
-      <> " ADD CONSTRAINT fk_companyinvites_companies FOREIGN KEY(company_id)"
-      <> " REFERENCES companies(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "company_id" "companies" "id") ]
   }
