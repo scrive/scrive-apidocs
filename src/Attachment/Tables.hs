@@ -30,10 +30,6 @@ tableAttachments = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE attachments"
-      <> " ADD CONSTRAINT fk_attachments_user_id FOREIGN KEY(user_id)"
-      <> " REFERENCES users(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
-    return ()
+  , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }
