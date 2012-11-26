@@ -150,7 +150,7 @@ pageFooter=
       <ul>
         <li><a href="$linkhome$">$_pageFooterHome()$</a></li>
         <li><a href="$linkabout$">$_pageFooterAbout()$</a></li>
-        <li><a href="$linkjobs$">$_pageFooterJobs()$</a></li>
+        <li><a href="http://blog.scrive.com/jobs/">$_pageFooterJobs()$</a></li>
         <li><a href="$linkpartners$">$_pageFooterPartners()$</a></li>
         <li><a href="$linkclients$">$_pageFooterCustomers()$</a></li>
         <li><a href="$linkcontactus$">$_pageFooterContactUs()$</a></li>

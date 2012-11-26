@@ -14,7 +14,6 @@ module AppView( kontrakcja
               , legalPage
               , privacyPolicyPage
               , termsPage
-              , jobsPage
               , aboutPage
               , partnersPage
               , clientsPage
@@ -119,9 +118,6 @@ privacyPolicyPage = getContext >>= \ctx -> renderTemplateAsPage ctx "privacyPoli
 
 termsPage :: Kontra String
 termsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "termsPage" (Just LinkTerms) True
-
-jobsPage :: Kontra String
-jobsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "jobsPage" (Just LinkJobs) True
 
 aboutPage :: Kontra String
 aboutPage = getContext >>= \ctx -> renderTemplateAsPage ctx "aboutPage" (Just LinkAbout) True
@@ -259,7 +255,6 @@ staticLinksFields lang = do
   F.value "linklegal"  $ show $ LinkLegal lang
   F.value "linkprivacypolicy"  $ show $ LinkPrivacyPolicy lang
   F.value "linkterms"  $ show $ LinkTerms lang
-  F.value "linkjobs"  $ show $ LinkJobs lang
   F.value "linkabout"  $ show $ LinkAbout lang
   F.value "linkpartners"  $ show $ LinkPartners lang
   F.value "linkclients"  $ show $ LinkClients lang
