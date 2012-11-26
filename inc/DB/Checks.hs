@@ -80,6 +80,10 @@ checkDBConsistency logger tables migrations = do
   forM_ tables $ \table -> do
     logger $ "Ensuring indexes on table '" ++ tblNameString table ++ "'..."
     checkIndexes table
+
+    logger $ "Ensuring foreign keys on table '" ++ tblNameString table ++ "'..."
+    checkForeignKeys table
+
   where
     tblNameString = unRawSQL . tblName
     descNotMigrated (t, from) = "\n * " ++ tblNameString t ++ ", current version: " ++ show from ++ ", needed version: " ++ show (tblVersion t)
@@ -215,5 +219,118 @@ checkDBConsistency logger tables migrations = do
         kRun_ $ "CREATE INDEX" <+> raw name
                    <+> "ON" <+> raw (tblName table)
                    <+> "(" <+> intersperse "," (map raw (tblIndexColumns index)) <+> ")"
+
+      return ()
+
+    checkForeignKeys table = do
+      let fkRequested = tblForeignKeys table
+
+      kRun_ $ sqlSelect "" $ do
+        sqlResult "pg_constraint.conname"
+        -- sqlResult "pg_constraint.idx"
+        -- sqlResult "pg_class.relname"
+        sqlResult "pg_attribute.attname"
+        sqlResult "pg_fclass.relname"
+        sqlResult "pg_fattribute.attname"
+        sqlResult "pg_constraint.confupdtype AS upd"
+        sqlResult "pg_constraint.confdeltype AS del"
+        sqlResult "pg_constraint.condeferrable AS deferrable"
+        sqlResult "pg_constraint.condeferred AS deferred"
+        sqlFrom "(SELECT pg_catalog.pg_constraint.*, generate_subscripts(pg_constraint.conkey,1) AS idx FROM pg_constraint) AS pg_constraint"
+        sqlJoinOn "pg_class" "pg_class.oid = pg_constraint.conrelid"
+        sqlJoinOn "pg_class AS pg_fclass" "pg_fclass.oid = pg_constraint.confrelid"
+        sqlJoinOn "pg_attribute" "pg_class.oid = pg_attribute.attrelid AND pg_attribute.attnum = pg_constraint.conkey[pg_constraint.idx]"
+        sqlJoinOn "pg_attribute AS pg_fattribute" "pg_fclass.oid = pg_fattribute.attrelid AND pg_fattribute.attnum = pg_constraint.confkey[pg_constraint.idx]"
+        sqlWhereEq "pg_constraint.contype" ("f" :: String)
+        sqlWhereEq "pg_class.relname" (tblName table)
+        sqlOrderBy "pg_constraint.conname"
+        sqlOrderBy "pg_constraint.idx"
+
+      let typeToAction code =
+            case code of
+              "a" -> ForeignKeyNoAction
+              "r" -> ForeignKeyRestrict
+              "c" -> ForeignKeyCascade
+              "n" -> ForeignKeySetNull
+              "d" -> ForeignKeySetDefault
+              x   -> error $ "Invalid foreign key action code '" ++ x ++ "'"
+
+      let fetchNamedForeignKey ((constraint_name1,fk):acc) constraint_name
+                                   column_name
+                                   _reftable_name refcolumn_name
+                                   _update_type _delete_type
+                                   _deferrable _deferred | unsafeFromString constraint_name == constraint_name1
+                                   = ( constraint_name1
+                                     , fk
+                                      { fkColumns    = fkColumns fk ++ [unsafeFromString column_name]
+                                      , fkRefColumns = fkRefColumns fk ++ [unsafeFromString refcolumn_name]
+                                      }) : acc
+          fetchNamedForeignKey acc constraint_name
+                                   column_name
+                                   reftable_name refcolumn_name
+                                   update_type delete_type
+                                   deferrable deferred
+                                   = ( unsafeFromString constraint_name
+                                     , ForeignKey
+                                      { fkColumns    = [unsafeFromString column_name]
+                                      , fkRefTable   = unsafeFromString reftable_name
+                                      , fkRefColumns = [unsafeFromString refcolumn_name]
+                                      , fkOnUpdate   = typeToAction update_type
+                                      , fkOnDelete   = typeToAction delete_type
+                                      , fkDeferrable = deferrable
+                                      , fkDeferred   = deferred
+                                      }) : acc
+
+      fkPresent <- foldDB fetchNamedForeignKey []
+
+      -- At this point we have fkPresent that describe present foreign keys
+      -- and fkRequested that descript what is requested.
+      --
+      -- To sync these two we need to go through present list and drop
+      -- everything that is not structurally equivalent to anything
+      -- present on requested lists. Go through requested list and add
+      -- anything that is not structurally equivalent to anything
+      -- present.
+      --
+      -- Foreign key option change is modeled by drop and a following
+      -- add. PostgreSQL is smart enough to optimize recalculation
+      -- correctly.
+      --
+      -- We ignore the possibiliy of duplicate foreign keys that have
+      -- same structure.
+      --
+      let foreignKeysToDrop = map fst (filter shouldDrop fkPresent)
+          shouldDrop (_, fk) = not (any (structurallySame fk) fkRequested)
+          foreignKeysToAdd = filter shouldAdd fkRequested
+          shouldAdd fk = not (any (structurallySame fk) (map snd fkPresent))
+          structurallySame fk1 fk2 = fk1 == fk2 -- for now it is good so
+
+          actionToRawSQL ForeignKeyNoAction = "NO ACTION"
+          actionToRawSQL ForeignKeyRestrict = "RESTRICT"
+          actionToRawSQL ForeignKeyCascade = "CASCADE"
+          actionToRawSQL ForeignKeySetNull = "SET NULL"
+          actionToRawSQL ForeignKeySetDefault = "SET DEFAULT"
+
+          foreignKeyName fk = "fk_" <> tblName table <> "_" <> mconcat (L.intersperse "_" (fkColumns fk)) <> "_" <> fkRefTable fk
+          foreignKeysToAddNames = map foreignKeyName foreignKeysToAdd
+          xdrop name = "DROP CONSTRAINT" <+> raw name
+          xadd fk = "ADD FOREIGN KEY (" <> intersperse "," (map raw (fkColumns fk)) <> ")"
+                <+> "REFERENCES" <+> raw (fkRefTable fk) <> "(" <> intersperse "," (map raw (fkRefColumns fk)) <> ")"
+                <+> "ON UPDATE" <+> actionToRawSQL (fkOnUpdate fk)
+                <+> "ON DELETE" <+> actionToRawSQL (fkOnDelete fk)
+                <+> (if fkDeferrable fk then "DEFERRABLE" else "NOT DEFERRABLE")
+                <+> (if fkDeferred fk then "INITIALLY DEFERRED" else "INITIALLY IMMEDIATE")
+
+      forM_ (foreignKeysToDrop L.\\ foreignKeysToAddNames) $ \name -> do
+        logger $ "   dropping foreign key '" ++ unRawSQL name ++ "'"
+      forM_ (L.intersect foreignKeysToDrop foreignKeysToAddNames) $ \name -> do
+        logger $ "   updating foreign key '" ++ unRawSQL name ++ "'"
+      forM_ (foreignKeysToAddNames L.\\ foreignKeysToDrop) $ \name -> do
+        logger $ "   adding foreign key '" ++ unRawSQL name ++ "'"
+
+      when (not (null foreignKeysToDrop) || not (null foreignKeysToAdd)) $ do
+         kRun_ $ "ALTER TABLE" <+> raw (tblName table)
+                 <+> intersperse "," (map xdrop foreignKeysToDrop ++
+                                     map xadd foreignKeysToAdd)
 
       return ()

@@ -13,6 +13,7 @@ data Table = Table {
   , tblCreateOrValidate :: MonadDB m => [(String, SqlColDesc)] -> DBEnv m TableValidationResult
   , tblPutProperties    :: MonadDB m => DBEnv m ()
   , tblIndexes          :: [TableIndex]
+  , tblForeignKeys      :: [ForeignKey]
   }
 
 tblTable :: Table
@@ -22,6 +23,7 @@ tblTable = Table
   , tblCreateOrValidate = \_ -> return TVRinvalid
   , tblPutProperties = return ()
   , tblIndexes = []
+  , tblForeignKeys = []
   }
 
 data TableIndex = TableIndex
@@ -47,4 +49,40 @@ data Migration m = Migration {
     mgrTable :: Table
   , mgrFrom  :: Int
   , mgrDo    :: DBEnv m ()
+  }
+
+data ForeignKey = ForeignKey
+  { fkColumns    :: [RawSQL]
+  , fkRefTable   :: RawSQL
+  , fkRefColumns :: [RawSQL]
+  , fkOnUpdate   :: ForeignKeyAction
+  , fkOnDelete   :: ForeignKeyAction
+  , fkDeferrable :: Bool
+  , fkDeferred   :: Bool
+  }
+  deriving (Eq, Ord, Show)
+
+data ForeignKeyAction
+  = ForeignKeyNoAction
+  | ForeignKeyRestrict
+  | ForeignKeyCascade
+  | ForeignKeySetNull
+  | ForeignKeySetDefault
+  deriving (Eq, Ord, Show, Read)
+
+
+tblForeignKeyColumn :: RawSQL -> RawSQL -> RawSQL -> ForeignKey
+tblForeignKeyColumn column reftable refcolumn =
+  tblForeignKeyColumns [column] reftable [refcolumn]
+
+tblForeignKeyColumns :: [RawSQL] -> RawSQL -> [RawSQL] -> ForeignKey
+tblForeignKeyColumns columns reftable refcolumns =
+  ForeignKey
+  { fkColumns    = columns
+  , fkRefTable   = reftable
+  , fkRefColumns = refcolumns
+  , fkOnUpdate   = ForeignKeyCascade
+  , fkOnDelete   = ForeignKeyNoAction
+  , fkDeferrable = True
+  , fkDeferred   = False
   }
