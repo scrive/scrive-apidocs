@@ -142,11 +142,33 @@ showRequest rq maybeInputsBody =
     unlinesIndented title list = "  " ++ title ++ ":\n" ++
         concatMap (\line -> "    " ++ line ++ "\n") list
 
+
+-- | Long polling implementation.
+--
+-- The 'enhanceYourCalm' function checks for 420 Enhance Your Calm
+-- status code and if detected it retries to invoke a handler. This is
+-- done for at most 10s, then gives up and returns result as given.
+--
+-- It has to be done outside of database connection, because database
+-- connection needs to be dropped between retries to allow for commits
+-- to take place.
+enhanceYourCalm :: (MonadIO m) => m Response -> m Response
+enhanceYourCalm action = enhanceYourCalmWorker 100
+  where
+    enhanceYourCalmWorker 0 = action
+    enhanceYourCalmWorker n = do
+      result' <- action
+      case rsCode result' of
+        420 -> do
+          liftIO $ threadDelay 100000
+          enhanceYourCalmWorker (n-1)
+        _ -> return result'
+
 {- |
    Creates a context, routes the request, and handles the session.
 -}
 appHandler :: KontraPlus Response -> AppConf -> AppGlobals -> ServerPartT IO Response
-appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT $
+appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT . enhanceYourCalm $
   withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) $ do
     startTime <- liftIO getClockTime
     let quota = 10000000
