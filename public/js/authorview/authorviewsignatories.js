@@ -75,7 +75,7 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
   render: function() {
       var view = this;
       var box = $(this.el);
-      box.empty();
+      box.children().detach();
       box.addClass('section').addClass('signatories').addClass('spacing');
 
       box.append($("<h2 />").text(localization.authorview.signatoriesTitle));
