@@ -140,6 +140,13 @@
                     font-size: 32px;
                     color: @pricecolor;
                     font-weight: bold;
+
+                    .aster {
+                        vertical-align: super;
+                        font-weight: 100;
+                        color: @pricedescr;
+                        font-size: 24px;
+                    }
                 }
 
                 .price2.s {
@@ -244,8 +251,7 @@
                 text-align: left;
 
                 .subscription {
-                    padding-top: 8px;
-                    padding-bottom: 8px;
+                    padding: 16px 0px;
                 }
 
                 .plan .name {
@@ -253,7 +259,23 @@
                 }
 
                 .recurring_cost {
-                    display: none;
+                    .cost {
+                        font-size: 20px;
+                    }
+                    .interval {
+                        display: none;
+                    }
+                }
+
+                .vat.applicable {
+                    background: none;
+                    color: #414141;
+                    padding: 10px 20px 0px 20px;
+                    .title {
+                        display: block;
+                        color: #414141;
+                        font-family: 'Lucida Grande', sans-serif;
+                    }
                 }
 
                 .totalbox {
@@ -359,7 +381,7 @@
                     }
                 }
 
-                .field.vat_number, .field.company_name {
+                .field.vat_number, .field.company_name , .address.full {
                     display: none;
                 }
 
@@ -384,8 +406,9 @@
                 }
 
                 .field.quantity {
-                    text-align: center;
-                    margin-left:0px;
+                    margin:0px;
+                    padding: 0 20px;
+                    float: left;
                     .quantity {
                         font-weight: bold;
                         font-size: 20px;

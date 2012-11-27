@@ -335,12 +335,12 @@
             var price1 = $('<div class="price1" />');
             price1.text(localization.payments.plans[view.plan].price1);
             var price2 = $('<div class="price2" />');
-            price2.text(localization.payments.plans[view.plan].price);
+            price2.html(localization.payments.plans[view.plan].price);
             var price3 = $('<div class="price3" />');
             price3.text(localization.payments.plans[view.plan].price3);
             price.append(price1).append(price2).append(price3);
             var price21 = $('<div class="price2 s" />');
-            price21.text(localization.payments.plans[view.plan].price21);
+            price21.html(localization.payments.plans[view.plan].price21);
             var price31 = $('<div class="price3" />');
             price31.text(localization.payments.plans[view.plan].price31);
             price.append(price21).append(price31);
@@ -557,6 +557,7 @@
                     form.find('.contact_info').hide();
                 }
             }
+            form.find('.vat .title').text(localization.payments.vat25);
         },
         render: function() {
             var view = this;
@@ -584,7 +585,6 @@
                 , enableAddons: false
                 , enableCoupons: false
                 , planCode: model.currentPlan() || 'team'
-                , addressRequirement: 'none'
                 , distinguishContactFromBillingInfo: false
                 , collectCompany: false
                 , acceptedCards : ['mastercard', 'visa']
@@ -598,6 +598,10 @@
                     firstName: model.firstName()
                     , lastName: model.lastName()
                     , country: 'SE'
+                    , address1: ' '
+                    , city: ' '
+                    , state: ' '
+                    , zip: ' '
                 }
                 , signature: model.plans()[model.currentPlan() || 'team'].signature
                 , beforeInject: this.scrambleForm
@@ -677,6 +681,9 @@
             div.append(view.teamBox.el)
                 .append(view.formBox.el)
                 .append(view.enterpriseBox.el);
+
+            div.append($('<div class="clearfix" />'));
+            div.append($('<div class="vat-box" />').text(localization.payments.vat));
 
             div.append($('<div class="clearfix" />'));
             if(!(model.type() === 'user' && !model.canPurchase())) {
@@ -809,7 +816,7 @@
             var billingEndsf = view.dateString(billingEnds);
             var price        = pOrS.unitAmountInCents();
             var quantity     = pOrS.quantity();
-            var total        = price * quantity;
+            var total        = price * quantity * 1.25;
             var currency     = model.subscription().currency();
             var totalf       = view.addMark(total) + " " + currency;
 
