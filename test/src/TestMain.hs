@@ -63,6 +63,9 @@ import AccountInfoTest
 #ifndef NO_MAILAPI
 import MailAPITest
 #endif
+#ifndef NO_MAILMODEL
+import MailModelTest
+#endif
 #ifndef NO_REDIRECT
 import RedirectTest
 #endif
@@ -176,6 +179,9 @@ allTests = tail tests
 #endif
 #ifndef NO_SIMPLEEMAIL
       , ("simplemail", const $ const simpleMailTests)
+#endif
+#ifndef NO_MAILMODEL
+      , ("mailmodel", const mailModelTests)
 #endif
 #ifndef NO_LANG
       , ("lang", const langTests)
