@@ -52,6 +52,14 @@ removeServiceIDFromSignStatEvents = Migration {
     kRunRaw "ALTER TABLE sign_stat_events DROP COLUMN service_id"
 }
 
+removeBrokenLinksFromSignStatsEvents :: MonadDB m => Migration m
+removeBrokenLinksFromSignStatsEvents = Migration {
+    mgrTable = tableSignStatEvents
+  , mgrFrom = 3
+  , mgrDo = do
+    kRunRaw "DELETE FROM sign_stat_events WHERE NOT EXISTS (SELECT TRUE FROM signatory_links WHERE signatory_links.id = sign_stat_events.signatory_link_id) AND sign_stat_events.signatory_link_id IS NOT NULL"
+}
+
 removeDocEventsThatReferenceNotActivatedUsers :: MonadDB m => Migration m
 removeDocEventsThatReferenceNotActivatedUsers = Migration {
     mgrTable = tableDocStatEvents

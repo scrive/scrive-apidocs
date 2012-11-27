@@ -81,7 +81,7 @@ tableUserStatEvents = tblTable {
 tableSignStatEvents :: Table
 tableSignStatEvents = tblTable {
   tblName = "sign_stat_events"
-  , tblVersion = 3
+  , tblVersion = 4
   , tblCreateOrValidate = \desc -> case desc of
       [("document_id",       SqlColDesc { colType     = SqlBigIntT
                                         , colNullable = Just False}),

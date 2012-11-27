@@ -116,6 +116,7 @@ kontraMigrations = [
   , attachUniqueContraintsToPaymentPlansColumns
   , removeSignatoryLinksInternalInsertOrder
   , addUnsavedDraftToDocument
+  , removeBrokenLinksFromSignStatsEvents
   ] ++ mailerMigrations
 
 kontraTables :: [Table]
