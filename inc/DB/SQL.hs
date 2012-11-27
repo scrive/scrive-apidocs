@@ -24,7 +24,8 @@ import Data.Monoid
 import Data.String (IsString, fromString)
 import Database.HDBC
 
-infixl 6 <?>, <+>
+infixl 7 <?>
+infixr 6 <+>
 
 -- | Raw SQL fragments and statements (without parameters).  The
 -- standard way to construct 'RawSQL' is by using the
