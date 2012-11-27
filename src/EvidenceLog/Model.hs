@@ -19,7 +19,6 @@ import IPAddress
 import MinutesTime
 import Utils.Prelude
 import Data.Typeable
-import Data.List
 import User.Model
 import Util.Actor
 import Version
@@ -28,7 +27,6 @@ import qualified Templates.Fields as F
 import Control.Applicative
 import Control.Monad.Identity
 import Control.Monad.Trans
-import Data.String
 
 data InsertEvidenceEvent = InsertEvidenceEvent
                            EvidenceEventType      -- A code for the event
@@ -144,7 +142,7 @@ copyEvidenceLogToNewDocument fromdoc todoc = do
 
 copyEvidenceLogToNewDocuments :: MonadDB m => DocumentID -> [DocumentID] -> DBEnv m ()
 copyEvidenceLogToNewDocuments fromdoc todocs = do
-  _ <- kRun $ SQL ("INSERT INTO evidence_log ("
+  kRun_ $ "INSERT INTO evidence_log ("
     <> "  document_id"
     <> ", time"
     <> ", text"
@@ -168,9 +166,8 @@ copyEvidenceLogToNewDocuments fromdoc todocs = do
     <> ", request_ip_v6"
     <> ", signatory_link_id"
     <> ", api_user"
-    <> " FROM evidence_log, (VALUES " <> fromString (concat (Data.List.intersperse "," (map (\_ -> "(?)") todocs))) <> ") AS todocs(id)"
-    <> " WHERE evidence_log.document_id = ?") (map toSql todocs ++ [toSql fromdoc])
-  return ()
+    <> " FROM evidence_log, (VALUES" <+> sqlConcatComma (map (parenthesize . sqlParam) todocs) <+> ") AS todocs(id)"
+    <> " WHERE evidence_log.document_id =" <?> fromdoc
 
 -- | A machine-readable event code for different types of events.
 data EvidenceEventType =
