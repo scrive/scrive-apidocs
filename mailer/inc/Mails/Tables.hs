@@ -16,7 +16,7 @@ mailerTables = [
 tableMails :: Table
 tableMails = tblTable {
     tblName = "mails"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("token", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -24,7 +24,6 @@ tableMails = tblTable {
        , ("receivers", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("title", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("content", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("attachments", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("x_smtp_attrs", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("to_be_sent", SqlColDesc { colType = SqlTimestampWithZoneT, colNullable = Just False})
        , ("sent", SqlColDesc { colType = SqlTimestampWithZoneT, colNullable = Just True})
@@ -38,7 +37,6 @@ tableMails = tblTable {
           <> ", receivers TEXT NOT NULL"
           <> ", title TEXT NULL"
           <> ", content TEXT NULL"
-          <> ", attachments TEXT NULL"
           <> ", x_smtp_attrs TEXT NULL"
           <> ", to_be_sent TIMESTAMPTZ NOT NULL"
           <> ", sent TIMESTAMPTZ NULL"
