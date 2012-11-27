@@ -551,32 +551,36 @@ handlePasswordReminderPost uid token = do
 
 handleBlockingInfo :: Kontrakcja m => m JSValue
 handleBlockingInfo = do
-  user <- guardJustM $ ctxmaybeuser <$> getContext
-  time <- ctxtime <$> getContext
-  let utctime = toCalendarTimeInUTC time
-      utcbeginningOfMonth = utctime { ctDay = 1, ctHour = 0, ctMin = 0, ctSec = 0 }
-      beginningOfMonth = fromClockTime $ toClockTime utcbeginningOfMonth
+  muser <- ctxmaybeuser <$> getContext
+  case muser of
+    Nothing -> runJSONGenT $ do
+      J.value "nouser" True
+    Just user -> do
+      time <- ctxtime <$> getContext
+      let utctime = toCalendarTimeInUTC time
+          utcbeginningOfMonth = utctime { ctDay = 1, ctHour = 0, ctMin = 0, ctSec = 0 }
+          beginningOfMonth = fromClockTime $ toClockTime utcbeginningOfMonth
 
-  docsusedthismonth <- dbQuery $ GetDocsSentBetween (userid user) beginningOfMonth time
-  mpaymentplan <- dbQuery $ GetPaymentPlan $ maybe (Left $ userid user) Right (usercompany user)
-  quantity <- case usercompany user of
-    Nothing -> return 1
-    Just cid -> dbQuery $ GetCompanyQuantity cid
+      docsusedthismonth <- dbQuery $ GetDocsSentBetween (userid user) beginningOfMonth time
+      mpaymentplan <- dbQuery $ GetPaymentPlan $ maybe (Left $ userid user) Right (usercompany user)
+      quantity <- case usercompany user of
+        Nothing -> return 1
+        Just cid -> dbQuery $ GetCompanyQuantity cid
 
-  let paymentplan = maybe "free" (show . ppPricePlan) mpaymentplan
-      status      = maybe "active" (show . ppStatus) mpaymentplan
-      dunning     = maybe False (isJust . ppDunningStep) mpaymentplan
-      canceled    = Just CanceledStatus == (ppPendingStatus <$> mpaymentplan)
-      billingEnds = maybe "" (formatMinutesTimeUTC . ppBillingEndDate) mpaymentplan
+      let paymentplan = maybe "free" (show . ppPricePlan) mpaymentplan
+          status      = maybe "active" (show . ppStatus) mpaymentplan
+          dunning     = maybe False (isJust . ppDunningStep) mpaymentplan
+          canceled    = Just CanceledStatus == (ppPendingStatus <$> mpaymentplan)
+          billingEnds = maybe "" (formatMinutesTimeUTC . ppBillingEndDate) mpaymentplan
 
-  runJSONGenT $ do
-    J.value "docsused"  docsusedthismonth
-    J.value "plan"      paymentplan
-    J.value "status"    status
-    J.value "dunning"   dunning
-    J.value "canceled"  canceled
-    J.value "quantity"  quantity
-    J.value "billingEnds" billingEnds
+      runJSONGenT $ do
+        J.value "docsused"  docsusedthismonth
+        J.value "plan"      paymentplan
+        J.value "status"    status
+        J.value "dunning"   dunning
+        J.value "canceled"  canceled
+        J.value "quantity"  quantity
+        J.value "billingEnds" billingEnds
     
 {- |
    Fetch the xtoken param and double read it. Once as String and once as MagicHash.
