@@ -586,32 +586,23 @@ handleFileGet fileid' _title = do
 
 
 {- We return pending message if file is still pending, else we return JSON with number of pages-}
-handleFilePages :: Kontrakcja m => FileID -> m JSValue
+handleFilePages :: Kontrakcja m => FileID -> m Response
 handleFilePages fid = do
   checkFileAccess fid
+  jpages <- maybeScheduleRendering fid
 
-  -- we wait 10s before returning here, hopefully it does not kill too
-  -- many free ports we check every 0.1s to see if everything was
-  -- rendered, then we return promptly (before in js it checked every
-  -- 2s, so document was on average shown 1s later than it was
-  -- available, 2s later in worst case)
-  let wait10seconds 0 = maybeScheduleRendering fid
-      wait10seconds n = do
-        jpages <- maybeScheduleRendering fid
-        case jpages of
-          JpegPagesPending -> do
-            liftIO $ threadDelay 100000 -- wait 0.1s and retry
-            wait10seconds (n-1 :: Int)
-          _ -> return jpages
-  jpages <- wait10seconds 0 -- Waiting for selenium fix
-
-  runJSONGenT $ case jpages of
+  case jpages of
     JpegPagesPending -> do
-      J.value "wait" "Rendering in progress"
+      -- Here we steal Twitter's Enhance Your Calm status code.  Out
+      -- mechanism upwards the stack will know to retry to ask us
+      -- again before giving up.
+      rsp <- simpleJsonResponse $ runJSONGen $ J.value "wait" "Rendering in progress"
+      return (rsp { rsCode = 420 })
     JpegPagesError _ -> do
-      J.value "error" "Rendering failed"
+      rsp <- simpleJsonResponse $ runJSONGen $ J.value "error" "Rendering failed"
+      return (rsp { rsCode = 500 })
     JpegPages pages  -> do
-      J.objects "pages" $ for pages $ \(_,width,height) -> do
+      simpleJsonResponse $ runJSONGen $ J.objects "pages" $ for pages $ \(_,width,height) -> do
         J.value "width"  width
         J.value "height" height
 
