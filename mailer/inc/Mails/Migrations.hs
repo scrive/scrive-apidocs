@@ -5,12 +5,6 @@ module Mails.Migrations (
 import DB
 import DB.SQL2
 import Mails.Tables
-import Control.Monad
-import Text.JSON
-import qualified Data.ByteString.Base64 as B64
-import qualified Data.ByteString.Char8 as BS
-import Control.Applicative
-import Data.Int
 import qualified Log as Log
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
@@ -38,41 +32,26 @@ moveAtachmentsToSeparateTable =
   , mgrFrom = 2
   , mgrDo = do
 
-      -- we have to do this one by one because emails are big and we
-      -- might run out of memory
-      let loop n = do
-            kRun_ $ sqlSelect "mails" $ do
-                 sqlResult "mails.id"
-                 sqlResult "attachments"
-                 sqlWhere "attachments IS NOT NULL"
-                 sqlWhere "attachments <> '[]'"
-                 sqlLimit 10
-            let decoder acc mid json = (mid,json) : acc
-            movable <- foldDB decoder []
-            kRun_ $ sqlUpdate "mails" $ do
-                 sqlSet "attachments" SqlNull
-                 sqlWhereIn "id" (map fst movable)
-            Log.debug $ "Moving attachments: " ++ show (n + length movable)
-            forM_ movable $ \(mid,jsontext) -> do
-                   --Log.debug $ "JSON: " ++ jsontext
-                   let Ok (JSArray values) = decode jsontext
-                   let lookup' name (JSObject obj) =
-                         case lookup name (fromJSObject obj) of
-                           Just (JSString val) -> fromJSString val
-                           _ -> error $ "Cannot convert"
-                       lookup' _name _ = error "Cannot convert"
-                   let (names :: [String]) = map (lookup' "attName") values
-                   let (contents :: [String]) = map (lookup' "attContent") values
-                   when (not (null values)) $ do
-                     kRun_ $ sqlInsert "mail_attachments" $ do
-                       sqlSet "mail_id" (mid :: Int64)
-                       sqlSetList "name" names
-                       sqlSetList "content" ((Binary . B64.decodeLenient . BS.pack) <$> contents)
-            if not (null movable)
-              then loop (n + length movable)
-              else return ()
-      loop 0
+      kRun_ $ sqlSelect "mails" $ do
+        sqlResult "count(*)"
+        sqlWhere "attachments IS NOT NULL"
+        sqlWhere "attachments <> '[]'"
+      let decoder1 :: Int -> Int -> Int
+          decoder1 _ value = value
+      count <- foldDB decoder1 0
+
+      Log.debug $ "There are " ++ show count ++ " mails with attachments to move to mail_attachments, it will take around " ++ show ((count+999) `div` 1000) ++ " minutes"
+
+      kRun_ $ "WITH"
+          <+> "toinsert AS (SELECT mails.id AS id"
+          <+> "                  , regexp_matches(attachments, '{\"attName\":\"([^\"]*)\",\"attContent\":\"([^\"]*)\"}', 'g') AS arr"
+          <+> "               FROM mails"
+          <+> "              WHERE attachments <> '[]')"
+          <+> "INSERT INTO mail_attachments(mail_id,name,content)"
+          <+> "     SELECT id AS MailID, arr[1] AS Name, decode(arr[2],'base64') AS Content"
+          <+> "       FROM toinsert"
+
+      Log.debug "Attachments moved to separate table, now dropping attachments column from mails"
 
       kRunRaw "ALTER TABLE mails DROP COLUMN attachments"
-      error "For now retry!"
   }
