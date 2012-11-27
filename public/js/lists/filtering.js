@@ -119,7 +119,7 @@
             var self = this;
             $.get(self.optionsURL(), function(res) {
               var currentValue = self.selectedValue();
-              var newOptions = self.optionsParse()(JSON.parse(res));
+              var newOptions = self.optionsParse()(res);
               newOptions.unshift({name : self.defaultName(), value : ""})
               self.set({options : newOptions}, {silent : true});
               self.select(currentValue);

@@ -554,8 +554,7 @@ var DocumentDesignView = Backbone.View.extend({
             var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");
             var callback = function(submit) {   document.afterSave(function(){
                                                     submit.sendAjax(function(resp) {
-                                                        var link = JSON.parse(resp).link;
-                                                        window.location = link;
+                                                        window.location = resp.link;
                                                     });
                                                  });
                             }
@@ -597,7 +596,7 @@ var DocumentDesignView = Backbone.View.extend({
                         return;
                       document.afterSave(function() {
                           document.signByAuthor().sendAjax(function(resp) {
-                                        var link = JSON.parse(resp).link;
+                                        var link = resp.link;
                                         window.location = link;
                                     });;
                            });
@@ -660,7 +659,7 @@ var DocumentDesignView = Backbone.View.extend({
                                     LoadingDialog.open(localization.designview.messages.sendingDocument);
                                     document.afterSave(function() {
                                         document.sendByAuthor().sendAjax(function(resp) {
-                                            var link = JSON.parse(resp).link;
+                                            var link = resp.link;
                                             if (padDesignViewUtil != undefined)
                                                 padDesignViewUtil.postSendAction(link);
                                             else

@@ -54,8 +54,7 @@ var LoginModel = Backbone.Model.extend({
           ajax: true,
           email : model.email(),
           password : model.password(),
-          ajaxsuccess: function(rs) {
-            var resp = JSON.parse(rs);
+          ajaxsuccess: function(resp) {
             if (resp.logged == true)
             {
               window.location = model.referer() != undefined && model.referer() != "" ? model.referer() : "/newdocument";
@@ -77,8 +76,7 @@ var LoginModel = Backbone.Model.extend({
           url: "/amnesia",
           ajax: true,
           email : model.email(),
-          ajaxsuccess: function(rs) {
-            var resp = JSON.parse(rs);
+          ajaxsuccess: function(resp) {
             if (resp.send == true)
             {
               FlashMessages.add({ content: localization.loginModal.passwordReminderSend, color: "green"});
