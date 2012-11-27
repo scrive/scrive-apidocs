@@ -63,7 +63,7 @@
     }
   }
 
-  .subcontainer .signatories {
+  .section {
       padding-top: 20px;
       margin-left: auto;
       margin-right: auto;
@@ -75,6 +75,21 @@
       margin-top: 17px;
       width: 924px;
       box-shadow: 1px 1px 5px #505050;
+      h2 {
+          float: left;
+          width: 220px;
+          margin-bottom: 20px;
+          margin-right: 20px;
+          text-transform: uppercase;
+          color: black;
+          font-weight: normal;
+          padding-left: 30px;
+          padding-right: 10px;
+          font-size: large;
+        }
+    }
+
+  .subcontainer .signatories {
 
       .column {
           width: 260px;
@@ -179,38 +194,56 @@
           width: 200px;
         }
       }
-
-     .change-email-box {
-        height: 28px;
-        width: 100%;
-        input {
-          width: 180px;
-          float: left;
-        }
-        .btn-tiny {
-          margin-left: 5px;
-          float: left;
+     .optionbox {
+        margin: 4px 4px 4px 0px;
+        padding: 8px 8px 8px 0px;
+        .change-email-box {
+            height: 28px;
+            width: 100%;
+            input {
+              width: 180px;
+              float: left;
+            }
+            .btn-tiny {
+              margin-left: 5px;
+              float: left;
+            }
         }
      }
 
   }
+  .signatoryattachments {
 
+    .item {
+      margin-bottom: 10px;
+    }
 
+    .item .icon {
+      float: left;
+      width: 13px;
+      height: 14px;
+      background: url(../img/attachment-icon.png);
+    }
 
+    .item .label {
+      float: left;
+      margin-left: 10px;
+      width : 290px;
+    }
 
-  .section h2 {
-    float: left;
-    width: 220px;
-    margin-bottom: 20px;
-    margin-right: 20px;
-    text-transform: uppercase;
-    color: black;
-    font-weight: normal;
-    padding-left: 30px;
-    padding-right: 10px;
-    font-size: large;
+    .item .name {
+      font-weight: bold;
+      color: black;
+    }
+
+    .item a {
+      text-decoration: underline;
+    }
+
+    .list {
+      float: left;
+      width: 322px;
+      margin-right: 20px;
+    }
   }
-
-
-
 }

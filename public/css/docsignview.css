@@ -528,38 +528,6 @@ body.signview {
   font-size: large;
 }
 
-.signview .authorattachments .list {
-  float: left;
-  width: 322px;
-
-  margin-right: 20px;
-}
-
-.signview .authorattachments .item {
-  margin-bottom: 10px;
-}
-
-.signview .authorattachments .item .icon {
-  float: left;
-  width: 13px;
-  height: 14px;
-  background: url(../img/attachment-icon.png);
-}
-
-.signview .authorattachments .item .label {
-  float: left;
-  margin-left: 10px;
-  width : 290px;
-}
-
-.signview .authorattachments .item .name {
-  font-weight: bold;
-  color: black;
-}
-
-.signview .authorattachments .item a {
-  text-decoration: underline;
-}
 
 .signview .signatoryattachments .list {
   float: left;

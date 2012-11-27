@@ -71,6 +71,7 @@ set systemPage
  less less/arrows.less
  less less/blocking.less
  less less/authorview.less
+ less less/doctools.less
  js   libs/jquery.min.js
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js
@@ -119,7 +120,6 @@ set systemPage
  js   js/confirmationsWithEmails.js
  js   js/authorview/authorviewtitlebox.js
  js   js/authorview/authorsviewhistory.js
- js   js/authorview/authorviewauthorattachments.js
  js   js/authorview/authorviewsignatoriesattachments.js
  js   js/authorview/authorviewsignatory.js
  js   js/authorview/authorviewsignatories.js
@@ -129,6 +129,7 @@ set systemPage
  js   js/docsignviewframes.js
  js   js/doctools/dochistory.js
  js   js/doctools/docdownload.js
+ js   js/doctools/docauthorattachments.js
  js   js/signview/docsignviewinstructions.js
  js   js/signview/docsignviewsignatories.js
  js   js/signview/docsignviewcreateaccount.js
@@ -136,6 +137,7 @@ set systemPage
  js   js/signview/docsignviewextradetailssection.js
  js   js/signview/docsignviewsignsection.js
  js   js/signview/docsignviewpad.js
+ js   js/signview/docsignviewattachments.js
  js   js/signview/docsignview.js
  js   js/avtal24popup.js
  js   js/designview/signatorydesignview.js

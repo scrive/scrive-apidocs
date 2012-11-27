@@ -40,14 +40,20 @@ var AuthorViewModel = Backbone.Model.extend({
             })}, {silent : true});
     return this.get("file");
   },
-  authorattachment : function() {
-    if (this.get("authorattachment") == undefined)
-      this.set({"authorattachment" : new AuthorViewAuthorAttachments({})}, {silent : true});
-    return this.get("authorattachment");
+  hasAuthorAttachmentsSection : function() {
+    return this.document().authorattachments().length > 0;
+  },
+  authorattachments : function() {
+    if (this.get("authorattachments") == undefined)
+      this.set({"authorattachments" : new DocumentAuthorAttachments({document : this.document(), el : $("<div class='section spacing'/>")})}, {silent : true});
+    return this.get("authorattachments");
+  },
+  hasSignatoriesAttachmentsSection : function() {
+    return this.document().signatoryattachments().length > 0;
   },
   signatoryattachments : function() {
     if (this.get("signatoryattachments") == undefined)
-      this.set({"signatoryattachments" : new AuthorViewSiegnatoriesAttachments({})}, {silent : true});
+      this.set({"signatoryattachments" : new AuthorViewSignatoriesAttachments({authorview : this,el : $("<div class='section spacing'/>")})}, {silent : true});
     return this.get("signatoryattachments");
   },
   ready : function() {
@@ -85,6 +91,10 @@ window.AuthorViewView = Backbone.View.extend({
     this.container.append(subcontainer);
     subcontainer.append(this.model.signatories().el());
     subcontainer.append(model.file().view.el);
+    if (this.model.hasSignatoriesAttachmentsSection())
+       subcontainer.append(model.signatoryattachments().el());
+    if (this.model.hasAuthorAttachmentsSection())
+       subcontainer.append(model.authorattachments().el());
     return this;
   }
 });

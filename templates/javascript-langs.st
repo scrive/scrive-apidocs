@@ -445,7 +445,8 @@ javascriptLocalisation =
          }
          , cancel : "$_cancel()$"
          , authorview : {
-              signatoriesTitle : "Parties"
+               signatoriesTitle : "Parties"
+             , requestedAttachments : "$_RequestedAttachments()$"
          }
          , docsignview : {
                followArrowToSign: "$_followArrowToSign()$"

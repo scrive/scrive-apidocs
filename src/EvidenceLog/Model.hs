@@ -8,8 +8,6 @@ module EvidenceLog.Model (
   , DocumentEvidenceEvent(..)
   , copyEvidenceLogToNewDocument
   , copyEvidenceLogToNewDocuments
-  , htmlDocFromEvidenceLog
-  , htmlSkipedEvidenceType
   ) where
 
 import DB

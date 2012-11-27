@@ -150,8 +150,8 @@ var DocumentSignViewModel = Backbone.Model.extend({
   authorattachmentssection : function() {
       if (this.get("authorattachmentssection") == undefined)
         this.set({'authorattachmentssection' :
-                        new DocumentAuthorAttachmentsView({
-                            model: this.document(),
+                        new DocumentAuthorAttachments({
+                            document : this.document(),
                             el: $("<div class='section spacing'/>"),
                             title: (this.document().currentSignatory().attachments().length > 1) ?
                                     localization.docsignview.authorAttachmentsTitleForLots :
@@ -359,7 +359,7 @@ var DocumentSignViewView = Backbone.View.extend({
             this.subcontainer.append(this.model.mainfile().view.el);
         
         if (this.model.hasAuthorAttachmentsSection())
-            this.subcontainer.append(this.model.authorattachmentssection().el);
+            this.subcontainer.append(this.model.authorattachmentssection().el());
 
         if (this.model.hasExtraDetailsSection())
             this.subcontainer.append(this.model.extradetailssection().el);

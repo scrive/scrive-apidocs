@@ -1,19 +1,24 @@
-(function(window){
+/* Signatory view of document
+ */
 
-var AuthorViewSignatoriesAttachmentsModel = Backbone.Model.extend({
+
+(function(window) {
+
+var DocumentAuthorAttachmentsModel = Backbone.Model.extend({
   defaults : {
+     title  : localization.authorAttachmentBoxHeader
   },
   initialize: function (args) {
   },
-  authorview : function() {
-     return this.get("authorview");
-  },
   document :function() {
-     return this.authorview().document();
+     return this.get("document");
+  },
+  title : function() {
+     return this.get("title")
   }
 });
-
-var AuthorViewSignatoriesAttachmentsView = Backbone.View.extend({
+  
+var DocumentAuthorAttachmentsView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
     this.render();
@@ -38,8 +43,8 @@ var AuthorViewSignatoriesAttachmentsView = Backbone.View.extend({
       return this;
     }
 
-    var container = $("<div class='signatoryattachments' />");
-    container.append($("<h2/>").text(localization.authorview.requestedAttachments));
+    var container = $("<div class='authorattachments' />");
+    container.append($("<h2/>").text(this.model.title()));
     var list = $("<div class='list' />");
     var createAuthorAttachmentElems = this.createAuthorAttachmentElems;
     _.each(this.model.document().authorattachments(), function(attachment) {
@@ -54,15 +59,15 @@ var AuthorViewSignatoriesAttachmentsView = Backbone.View.extend({
 
     return this;
   }
-
 });
 
-window.AuthorViewSignatoriesAttachments = function(args) {
-          var model = new AuthorViewSignatoriesAttachmentsModel(args);
-          var view =  new AuthorViewSignatoriesAttachmentsView({model : model, el :(args.el != undefined) ? args.el : $("<div/>")});
-          this.el = function() {return $(view.el);};
-
-};
-
+window.DocumentAuthorAttachments = function(args) {
+       var model = new DocumentAuthorAttachmentsModel(args);
+       var view = new DocumentAuthorAttachmentsView({
+                        model: model,
+                        el : (args.el != undefined) ? args.el : $("<div/>")
+                    });
+       this.el = function() {return $(view.el);}
+}
 
 })(window);
