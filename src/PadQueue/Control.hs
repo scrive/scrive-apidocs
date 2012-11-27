@@ -43,7 +43,7 @@ padQueueState = do
 showPadQueuePage::  (Kontrakcja m) =>  m Response
 showPadQueuePage = do
     ctx <- getContext
-    padQueuePage ctx >>= simpleResponse
+    padQueuePage ctx >>= simpleHtmlResponse
 
 
 padQueueToSignatoryData :: Kontrakcja m => PadQueue -> m (Maybe (Document,SignatoryLink))

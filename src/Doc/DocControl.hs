@@ -346,7 +346,7 @@ handleSignShow documentid
 
       ctx <- getContext
       content <- pageDocumentSignView ctx document' invitedlink
-      simpleResonseClrFlash content
+      simpleHtmlResonseClrFlash content
     Nothing -> do
       -- There is not magic hash in session. It may mean that the
       -- session expired and we deleted the credentials already or it
@@ -386,7 +386,7 @@ handleIssueShowGet docid = checkUserTOSGet $ do
   case (ispreparation, msiglink) of
     (True,  _)                       -> Right <$> pageDocumentDesign document
     (False, _) | isauthororincompany -> Right <$> pageDocumentView document msiglink (isincompany)
-    (False, Just siglink)            -> Left  <$> (simpleResonseClrFlash =<< pageDocumentSignView ctx document siglink)
+    (False, Just siglink)            -> Left  <$> (simpleHtmlResonseClrFlash =<< pageDocumentSignView ctx document siglink)
     _                                -> internalError
 
 {- |

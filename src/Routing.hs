@@ -59,10 +59,10 @@ instance ToResp String where
     toResp = page . return
 
 instance ToResp JSValue where
-    toResp = simpleResponse . encode
+    toResp = simpleJsonResponse
 
 instance ToResp () where
-    toResp _ = simpleResponse ""
+    toResp _ = simpleHtmlResponse ""
 
 instance (ToResp a , ToResp b) => ToResp (Either a b) where
     toResp = either toResp toResp

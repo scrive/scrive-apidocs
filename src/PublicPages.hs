@@ -73,11 +73,11 @@ handleHomepage = do
   email   <- getField "email"
   case ctxmaybeuser of
     Just _user -> do
-      response <- V.simpleResponse =<< firstPage ctx loginOn referer email
+      response <- V.simpleHtmlResponse =<< firstPage ctx loginOn referer email
       clearFlashMsgs
       return $ Left response
     Nothing -> do
-      response <- V.simpleResponse =<< firstPage ctx loginOn referer email
+      response <- V.simpleHtmlResponse =<< firstPage ctx loginOn referer email
       clearFlashMsgs
       return $ Left response
 
@@ -126,7 +126,7 @@ handleFeaturesPage = handleWholePage featuresPage
 handleWholePage :: Kontra String -> Kontra Response
 handleWholePage f = do
   content <- f
-  response <- V.simpleResponse content
+  response <- V.simpleHtmlResponse content
   clearFlashMsgs
   return response
 

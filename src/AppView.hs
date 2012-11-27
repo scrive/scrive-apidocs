@@ -5,8 +5,9 @@
 module AppView( kontrakcja
               , renderFromBody
               , notFoundPage
-              , simpleResponse
-              , simpleResonseClrFlash
+              , simpleJsonResponse
+              , simpleHtmlResponse
+              , simpleHtmlResonseClrFlash
               , firstPage
               , sitemapPage
               , priceplanPage
@@ -47,7 +48,7 @@ import qualified Data.ByteString.Base16 as B16
 import Data.Char
 import Data.String.Utils
 import Version
-
+import Text.JSON
 
 {- |
    The name of our application (the codebase is known as kontrakcja,
@@ -71,7 +72,7 @@ renderFromBody title content = do
   loginreferer <- getLoginReferer
   ctx <- getContext
   let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx)
-  res <- simpleResponse =<< pageFromBody ctx loginOn loginreferer Nothing showCreateAccount title content
+  res <- simpleHtmlResponse =<< pageFromBody ctx loginOn loginreferer Nothing showCreateAccount title content
   clearFlashMsgs
   return res
 
@@ -199,18 +200,21 @@ standardPageFields ctx title mpubliclink showCreateAccount loginOn referer email
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
   F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
 
+simpleJsonResponse :: (Kontrakcja m, JSON a) => a -> m Response
+simpleJsonResponse = ok . toResponseBS (BS.fromString "application/json; charset=utf-8") . BSL.fromString . encode
+
 {- |
    Changing our pages into reponses, and clearing flash messages.
 -}
-simpleResponse :: Kontrakcja m => String -> m Response
-simpleResponse = ok . toResponseBS (BS.fromString "text/html;charset=utf-8") . BSL.fromString
+simpleHtmlResponse :: Kontrakcja m => String -> m Response
+simpleHtmlResponse = ok . toResponseBS (BS.fromString "text/html;charset=utf-8") . BSL.fromString
     -- change this to HtmlString from helpers package
     -- (didn't want to connect it one day before prelaunch)
 
-{- | Sames as simpleResponse, but clears also flash messages and modals -}
-simpleResonseClrFlash :: Kontrakcja m => String -> m Response
-simpleResonseClrFlash rsp = do
-  res <- simpleResponse rsp
+{- | Sames as simpleHtmlResponse, but clears also flash messages and modals -}
+simpleHtmlResonseClrFlash :: Kontrakcja m => String -> m Response
+simpleHtmlResonseClrFlash rsp = do
+  res <- simpleHtmlResponse rsp
   clearFlashMsgs
   return res
 
