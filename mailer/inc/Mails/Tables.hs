@@ -70,9 +70,6 @@ tableMailEvents = tblTable {
         return TVRcreated
       _ -> return TVRinvalid
   , tblIndexes = [ tblIndexOnColumn "mail_id" ]
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE mail_events"
-      <> " ADD CONSTRAINT fk_mail_events_mails FOREIGN KEY(mail_id)"
-      <> " REFERENCES mails(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      <> " DEFERRABLE INITIALLY IMMEDIATE"
+  , tblForeignKeys = [ (tblForeignKeyColumn "mail_id" "mails" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }
