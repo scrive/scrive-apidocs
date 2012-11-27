@@ -10,6 +10,7 @@ mailerTables :: [Table]
 mailerTables = [
     tableMails
   , tableMailEvents
+  , tableMailAttachments
   ]
 
 tableMails :: Table
@@ -47,6 +48,30 @@ tableMails = tblTable {
         return TVRcreated
       _ -> return TVRinvalid
   , tblPutProperties = return ()
+  }
+
+tableMailAttachments :: Table
+tableMailAttachments = tblTable {
+    tblName = "mail_attachments"
+  , tblVersion = 1
+  , tblCreateOrValidate = \desc -> case desc of
+      [  ("id",      SqlColDesc {colType = SqlBigIntT,    colNullable = Just False})
+       , ("mail_id", SqlColDesc {colType = SqlBigIntT,    colNullable = Just False})
+       , ("name",    SqlColDesc {colType = SqlVarCharT,   colNullable = Just False})
+       , ("content", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just False})
+       ] -> return TVRvalid
+      [] -> do
+        kRunRaw $ "CREATE TABLE mail_attachments ("
+          <> "  id        BIGSERIAL PRIMARY KEY"
+          <> ", mail_id   BIGINT    NOT NULL"
+          <> ", name      TEXT      NOT NULL"
+          <> ", content   BYTEA     NOT NULL"
+          <> ")"
+        return TVRcreated
+      _ -> return TVRinvalid
+  , tblIndexes = [ tblIndexOnColumn "mail_id" ]
+  , tblForeignKeys = [ (tblForeignKeyColumn "mail_id" "mails" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
   }
 
 tableMailEvents :: Table
