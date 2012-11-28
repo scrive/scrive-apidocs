@@ -249,11 +249,13 @@ testMany (args, ts) = Log.withLogger $ do
     runDBEnv $ defineMany kontraFunctions
     nex <- getNexus
     active_tests <- liftIO . atomically $ newTVar (True, 0)
+    rejected_documents <- liftIO . atomically $ newTVar 0
     let env = TestEnvSt {
           teNexus = nex
         , teRNGState = rng
         , teGlobalTemplates = templates
         , teActiveTests = active_tests
+        , teRejectedDocuments = rejected_documents
         }
     liftIO . E.finally (defaultMainWithArgs (map ($ env) ts) args) $ do
       -- upon interruption (eg. Ctrl+C), prevent next tests in line
@@ -264,6 +266,8 @@ testMany (args, ts) = Log.withLogger $ do
         when (n /= 0) retry
       stats <- getNexusStats nex
       putStrLn $ "SQL: " ++ show stats
+      rejs <- atomically (readTVar rejected_documents)
+      putStrLn $ "Documents generated but rejected: " ++ show rejs
 
 -- | Useful for running an individual test in ghci like so:
 --   @

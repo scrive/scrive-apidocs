@@ -67,6 +67,7 @@ data TestEnvSt = TestEnvSt {
   , teRNGState        :: CryptoRNGState
   , teActiveTests     :: TVar (Bool, Int)
   , teGlobalTemplates :: KontrakcjaGlobalTemplates
+  , teRejectedDocuments :: TVar Int
   }
 
 type InnerTestEnv = ReaderT TestEnvSt IO

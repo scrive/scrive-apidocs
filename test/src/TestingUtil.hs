@@ -6,6 +6,7 @@ import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 
 import Control.Applicative
+import Control.Concurrent.STM
 import Data.Char
 import Data.Word
 import Test.QuickCheck
@@ -18,6 +19,7 @@ import Data.Maybe
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import qualified Test.HUnit as T
+import Control.Monad.Reader.Class
 
 import File.FileID
 import Crypto.RNG
@@ -695,16 +697,19 @@ addRandomDocument rda = do
       case (p adoc, invariantProblems now adoc) of
         (True, Nothing) -> return adoc
         (False, _)  -> do
+          rej <- asks teRejectedDocuments
+          liftIO $ (atomically . modifyTVar' rej) (+1)
           --liftIO $ print $ "did not pass condition; doc: " ++ show adoc
           worker file now user p mcompany
 
         (_, Just _problems) -> do
-               -- am I right that random document should not have invariantProblems?
-               --uncomment this to find out why the doc was rejected
-               --print adoc
-               --liftIO $ print $ "rejecting doc: " ++ _problems
-               worker file now user p mcompany
-      --asl <- dbUpdate $ SignLinkFromDetailsForTest asd roles
+          rej <- asks teRejectedDocuments
+          liftIO $ (atomically . modifyTVar' rej) (+1)
+          -- am I right that random document should not have invariantProblems?
+          --uncomment this to find out why the doc was rejected
+          --print adoc
+          --liftIO $ print $ "rejecting doc: " ++ _problems
+          worker file now user p mcompany
 
 
 rand :: Int -> Gen a -> TestEnv a
