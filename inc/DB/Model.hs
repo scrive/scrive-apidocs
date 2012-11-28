@@ -6,6 +6,7 @@ import DB.Env
 import DB.SQL (RawSQL)
 
 data TableValidationResult = TVRvalid | TVRcreated | TVRinvalid
+  deriving (Eq, Ord, Show)
 
 data Table = Table {
     tblName             :: RawSQL
@@ -29,6 +30,7 @@ tblTable = Table
 data TableIndex = TableIndex
   { tblIndexColumns     :: [RawSQL]
   }
+  deriving (Eq, Ord, Show)
 
 tblTableIndex :: TableIndex
 tblTableIndex = TableIndex
@@ -37,6 +39,9 @@ tblTableIndex = TableIndex
 
 tblIndexOnColumn :: RawSQL -> TableIndex
 tblIndexOnColumn column = TableIndex { tblIndexColumns = [column] }
+
+tblIndexOnColumns :: [RawSQL] -> TableIndex
+tblIndexOnColumns columns = TableIndex { tblIndexColumns = columns }
 
 -- | Migration object. Fields description:
 -- * mgrTable is the table you're migrating
