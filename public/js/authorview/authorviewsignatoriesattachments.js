@@ -18,35 +18,48 @@ var AuthorViewSignatoriesAttachmentsView = Backbone.View.extend({
     _.bindAll(this, 'render');
     this.render();
   },
-  createAuthorAttachmentElems: function(attachment) {
+  attachmentDescription: function(attachment) {
     var container = $("<div class='item' />");
-    container.append($("<div class='icon' />"));
     var label = $("<div class='label' />");
     label.append($("<div class='name' />").text(attachment.name()));
-    var link = $("<a target='_blank' />");
-    link.text(localization.reviewPDF);
-    link.attr("href", attachment.downloadLink());
-    label.append(link);
+    label.append($("<div class='description' />").text(attachment.description()));
     container.append(label);
     container.append($("<div class='clearfix' />"));
     return container;
   },
+  attachmentFile : function(attachment) {
+    var container = $("<div class='item' />");
+    var text = attachment.hasFile() ? localization.authorview.uploadedBy : localization.authorview.requestedFrom;
+    var label = $("<div class='label' />").append($("<span />").text(text)).append($("<span class='name'/>").text(attachment.signatory().nameOrEmail()));
+    container.append(label);
+    if (attachment.hasFile()) {
+        var link = $("<a class='link'/>");
+        link.text(localization.reviewPDF);
+        link.attr("href", attachment.file().downloadLink());
+        label.append(link);
+    }
+    return container;
+  },
   render: function() {
+    var self = this;
     $(this.el).empty();
 
-    if (!this.model.document().authorattachments().length > 0) {
+    if (!this.model.document().signatoryattachments().length > 0) {
       return this;
     }
-
     var container = $("<div class='signatoryattachments' />");
     container.append($("<h2/>").text(localization.authorview.requestedAttachments));
-    var list = $("<div class='list' />");
-    var createAuthorAttachmentElems = this.createAuthorAttachmentElems;
-    _.each(this.model.document().authorattachments(), function(attachment) {
-      list.append(createAuthorAttachmentElems(attachment));
+    var table = $("<table class='list'/>");
+    var tbody = $("<tbody/>");
+    table.append(tbody);
+    _.each(this.model.document().signatoryattachments(), function(attachment) {
+      var tr = $("<tr/>")
+      
+      tr.append($("<td class='desc'>").append(self.attachmentDescription(attachment)));
+      tr.append($("<td class='file'>").append(self.attachmentFile(attachment)));
+      tbody.append(tr);
     });
-    list.append($("<div class='clearfix' />"));
-    container.append(list);
+    container.append(table);
 
     container.append($("<div class='clearfix' />"));
 

@@ -447,6 +447,8 @@ javascriptLocalisation =
          , authorview : {
                signatoriesTitle : "Parties"
              , requestedAttachments : "$_RequestedAttachments()$"
+             , requestedFrom : "Requested from "
+             , uploadedBy    : "Uploaded by "
          }
          , docsignview : {
                followArrowToSign: "$_followArrowToSign()$"

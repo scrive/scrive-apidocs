@@ -90,11 +90,16 @@
     }
 
   .subcontainer .signatories {
-
-      .column {
-          width: 260px;
-          float: left;
+      td.signatory-box {
           border: solid #bababc 1px;
+          vertical-align : top;
+      }
+      td.signatory-box-separator {
+          width: 20px;
+      }  
+      .column {
+          display: inline-block;
+          width: 260px;
           min-height: 185px;
       }
 
@@ -121,7 +126,7 @@
 
       .inner {
           margin-top: 10px;
-          min-height: 72px;
+          min-height: 52px;
           color : #505050;
           font-size: 0.9em;
       }
@@ -197,9 +202,10 @@
      .optionbox {
         margin: 4px 4px 4px 0px;
         padding: 8px 8px 8px 0px;
+        text-align: center;
+        height : 18px;
         .change-email-box {
-            height: 28px;
-            width: 100%;
+            display: inline-block;
             input {
               width: 180px;
               float: left;
@@ -209,26 +215,93 @@
               float: left;
             }
         }
+
+
+        .reminderForSignedIcon  {
+            background: url(../img/senddoc.png) 0 0 no-repeat;
+            display: inline-block;
+            height: 16px;
+            width: 16px;
+            float:left;
+        }
+        .reminderForSendIcon {
+            background: url(../img/remind.png) 0 0 no-repeat;
+            margin-top: 2px;
+            display: inline-block;
+            height: 16px;
+            width: 16px;
+            float:left;
+        }
+        .sendLinkText{
+            padding-top: 1px;
+            padding-left:11px;
+            float:left;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+
+        .prepareToSendReminderMail {
+            display: inline-block;
+        }
+
+        .prepareToSendReminderMail:hover{
+            font-weight: bold;
+        }
+
+        .giveForSigning {
+            padding-top: 4px;
+            height: 16px;
+            display: inline-block;
+            cursor: pointer;
+
+        }
+        .giveForSigningIcon {
+            background: url(../img/give.png) 0 0 no-repeat;
+            display: inline-block;
+            height: 16px;
+            width: 16px;
+            float:left;
+        }
+        .addToPad{
+            padding-top: 4px;
+            height: 16px;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .addToPadIcon {
+            background: url(../img/pad.png) 0 0 no-repeat;
+            display: inline-block;
+            height: 16px;
+            width: 16px;
+            float:left;
+        }
+        .removeFromPad{
+            padding-top: 4px;
+            height: 16px;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .removeFromPadIcon {
+            background: url(../img/icon-delete.png) 0 0 no-repeat;
+            display: inline-block;
+            height: 16px;
+            width: 16px;
+            float:left;
+        }
      }
 
   }
   .signatoryattachments {
 
     .item {
-      margin-bottom: 10px;
-    }
-
-    .item .icon {
-      float: left;
-      width: 13px;
-      height: 14px;
-      background: url(../img/attachment-icon.png);
+      margin-bottom : 10px;
+      margin-right  : 10px;
     }
 
     .item .label {
       float: left;
-      margin-left: 10px;
-      width : 290px;
     }
 
     .item .name {
@@ -238,12 +311,21 @@
 
     .item a {
       text-decoration: underline;
+      display: block;
     }
 
     .list {
       float: left;
-      width: 322px;
+      width: 580px;
+      margin-left: 23px;
       margin-right: 20px;
+      .desc {
+          width: 420px;
+      }
+      .file {
+          vertical-align:top
+      }
     }
+
   }
 }

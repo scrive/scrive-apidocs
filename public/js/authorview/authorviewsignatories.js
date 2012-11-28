@@ -79,10 +79,17 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
       box.addClass('section').addClass('signatories').addClass('spacing');
 
       box.append($("<h2 />").text(localization.authorview.signatoriesTitle));
+
+      var table = $("<table class='signatories-box'/>");
+      var tbody = $("<tbody/>");
+      var tr = $("<tr/>")
+      var td1 = $("<td class='signatory-box'/>");
+      var tdseparator = $("<td class='signatory-box-separator'/>");
+      var td2 = $("<td class='signatory-box'/>")
       var box1 = $('<div class="column spacing" />');
       var box2 = $('<div class="column spacing" />');
-
-      box.append(box1).append(box2);
+      table.append(tbody.append(tr.append(td1.append(box1)).append(tdseparator).append(td2.append(box2))));
+      box.append(table);
 
       if (this.model.hasDummy()) {
          box1.css("border-color","#ffffff");
