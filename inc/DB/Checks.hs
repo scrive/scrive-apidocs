@@ -141,7 +141,7 @@ checkDBConsistency logger tables migrations = do
          else return ()
 
     checkIndexes table = do
-      let requested' = tblIndexes table
+      let requested' = L.nub (tblIndexes table ++ map (tblIndexOnColumns . fkColumns) (tblForeignKeys table))
           mkName index = "idx_" <> tblName table <> "_" <> mconcat (L.intersperse "_" (tblIndexColumns index))
           requested = map (\ss -> (mkName ss, ss)) requested'
 
