@@ -15,6 +15,7 @@ module DB.SQL (
   , sqlConcatOR
   , parenthesize
   , intersperse
+  , intersperseNoWhitespace
   , unsafeFromString
   ) where
 
@@ -99,7 +100,7 @@ sqlOR :: SQL -> SQL -> SQL
 sqlOR s1 s2 = sqlConcatOR [s1, s2]
 
 sqlConcatComma :: [SQL] -> SQL
-sqlConcatComma = intersperse ","
+sqlConcatComma = intersperseNoWhitespace ","
 
 sqlConcatAND :: [SQL] -> SQL
 sqlConcatAND = intersperse "AND" . map parenthesize
@@ -108,7 +109,10 @@ sqlConcatOR :: [SQL] -> SQL
 sqlConcatOR = intersperse "OR" . map parenthesize
 
 parenthesize :: SQL -> SQL
-parenthesize s = "(" <+> s <+> ")"
+parenthesize s = "(" <> s <> ")"
 
 intersperse :: RawSQL -> [SQL] -> SQL
 intersperse i = foldr (<+>) mempty . Data.List.intersperse (SQL i [])
+
+intersperseNoWhitespace :: RawSQL -> [SQL] -> SQL
+intersperseNoWhitespace i = foldr (<>) mempty . Data.List.intersperse (SQL i [])
