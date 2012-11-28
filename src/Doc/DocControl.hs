@@ -438,10 +438,11 @@ handleIssueShowPost docid = do
 handleIssueSign :: Kontrakcja m => Document -> TimeZoneName -> m KontraLink
 handleIssueSign document timezone = do
     Log.debug "handleIssueSign"
+    actor <- guardJustM $ mkAuthorActor <$> getContext
     mdocs <- splitUpDocument document
     case mdocs of
       Right docs -> do
-        mndocs <- mapM forIndividual docs
+        mndocs <- mapM (forIndividual actor) docs
         case partitionEithers mndocs of
           ([], [d]) -> do
             when_ (sendMailsDurringSigning d) $ do
@@ -457,12 +458,12 @@ handleIssueSign document timezone = do
             return $ LinkIssueDoc (documentid document)
       Left link -> return link
     where
-      forIndividual :: Kontrakcja m => Document -> m (Either String Document)
-      forIndividual doc = do
+      forIndividual :: Kontrakcja m => Actor -> Document -> m (Either String Document)
+      forIndividual actor doc = do
         Log.debug $ "handleIssueSign for forIndividual " ++ show (documentid doc)
         mprovider <- readField "eleg"
         mndoc <- case mprovider of
-                   Nothing ->  Right <$> authorSignDocument (documentid doc) Nothing timezone
+                   Nothing ->  Right <$> authorSignDocument actor (documentid doc) Nothing timezone
                    Just provider -> do
                      transactionid <- getDataFnM $ look "transactionid"
                      esigninfo <- case provider of
@@ -476,7 +477,7 @@ handleIssueSign document timezone = do
                        BankID.Mismatch msg _ _ _ -> do
                          Log.debug $ "got this message: " ++ msg
                          return $ Left msg
-                       BankID.Sign sinfo -> Right <$>  authorSignDocument (documentid doc) (Just sinfo) timezone
+                       BankID.Sign sinfo -> Right <$>  authorSignDocument actor (documentid doc) (Just sinfo) timezone
         case mndoc of
           Right (Right newdocument) -> do
             postDocumentPreparationChange newdocument "web"

@@ -428,7 +428,7 @@ javascriptLocalisation =
              ,  justSend : "$_justSend()$"
              ,  howDoYouWantToSign : "$_howDoYouWantToSign()$"
              ,  cleanImage : "$_padCleanImage()$"
-             ,  notNamedParty : "$_notNamedPartyPad()$"
+             ,  notNamedParty : "$_notNamedParty()$"
              ,  documentCreatedFromTemplate : "$_documentCreatedFromTemplate()$"
              ,  maybeYouWantToSendDirectly : "$_maybeYouWantToSendDirectly()$"
              ,  sendDirectly : "$_sendDirectly()$"

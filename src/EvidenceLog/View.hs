@@ -21,9 +21,11 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Data.Maybe
 import Data.List
+import User.Model
+import DB
 
 -- | Evidence log for web page - short and simplified texts
-eventsJSListFromEvidenceLog :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> Document -> [DocumentEvidenceEvent] -> m [JSValue] 
+eventsJSListFromEvidenceLog ::  (MonadDB m, TemplatesMonad m) => KontraTimeLocale -> MinutesTime -> Document -> [DocumentEvidenceEvent] -> m [JSValue] 
 eventsJSListFromEvidenceLog tl crtime doc dees = mapM (J.runJSONGenT . eventJSValue tl crtime doc) $ eventsForLog doc dees
 
 
@@ -37,12 +39,30 @@ eventsForLog _doc events =
     in cleanerLog
 
         
-eventJSValue :: TemplatesMonad m => KontraTimeLocale -> MinutesTime ->  Document -> DocumentEvidenceEvent -> JSONGenT m ()
+eventJSValue :: (MonadDB m, TemplatesMonad m) => KontraTimeLocale -> MinutesTime ->  Document -> DocumentEvidenceEvent -> JSONGenT m ()
 eventJSValue tl crtime doc dee = do
     J.value "time"  $ showDateAbbrev tl crtime (evTime dee)
-    J.value "party" $ fromMaybe "Scrive" $ getSmartName <$> (getSigLinkFor doc $ evSigLinkID dee)
+    J.valueM "party" $ case (getSigLinkFor doc $ evSigLinkID dee) of
+                           Just sl -> if (isAuthor sl)
+                                         then authorName
+                                         else case (getSmartName sl) of
+                                                "" -> renderTemplate_ "notNamedParty"
+                                                name -> return name
+                           Nothing -> case (evUserID dee) of                       
+                                           Just uid -> if (isAuthor (doc,uid))
+                                                        then authorName
+                                                        else do
+                                                          muser <- dbQuery $ GetUserByID uid
+                                                          case muser of
+                                                            Just user -> return $ getSmartName user
+                                                            _ -> return "Scrive" -- This should not happend
+                                           _ ->  if (authorEvents $ evType dee)
+                                                    then authorName
+                                                    else return "Scrive"
     J.valueM "text"  $ (simplyfiedEventText doc dee)
-
+  where authorName = case (getAuthorSigLink doc) of
+                        Just sl -> return $ getSmartName sl
+                        Nothing -> renderTemplate_ "authorParty"
 
 -- Removes events that seam to be duplicated
 simpleEvents :: EvidenceEventType -> Bool
@@ -52,15 +72,22 @@ simpleEvents CancelDocumentEvidence       = True
 simpleEvents RejectDocumentEvidence       = True
 simpleEvents TimeoutDocumentEvidence      = True
 simpleEvents PreparationToPendingEvidence = True
-simpleEvents MarkInvitationReadEvidence   = True
-simpleEvents MarkDocumentSeenEvidence     = True
+simpleEvents MarkInvitationReadEvidence   = False
+simpleEvents MarkDocumentSeenEvidence     = False
 simpleEvents RestartDocumentEvidence      = True
+simpleEvents SignDocumentEvidence         = True
 simpleEvents _                            = False
 
 endOfHistoryEvent :: EvidenceEventType -> Bool
 endOfHistoryEvent  NewDocumentEvidence     = True
 endOfHistoryEvent  RestartDocumentEvidence = True
 endOfHistoryEvent _                        = False
+
+
+-- Events that should be considered as performed as author even is actor states different.
+authorEvents  :: EvidenceEventType -> Bool
+authorEvents PreparationToPendingEvidence = True
+authorEvents _ = False
 
 
 notCriticalEvent :: EvidenceEventType -> Bool

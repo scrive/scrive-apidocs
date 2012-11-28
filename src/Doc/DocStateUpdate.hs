@@ -136,13 +136,12 @@ rejectDocumentWithChecks did slid mh customtext = do
 {- |
   The Author signs a document with security checks.
  -}
-authorSignDocument :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> TimeZoneName -> m (Either DBError Document)
-authorSignDocument did msigninfo timezone = onlyAuthor did $ \olddoc -> do
+authorSignDocument :: (Kontrakcja m) => Actor -> DocumentID -> Maybe SignatureInfo -> TimeZoneName -> m (Either DBError Document)
+authorSignDocument actor did msigninfo timezone = onlyAuthor did $ \olddoc -> do
   ctx <- getContext
-  actor <- guardJustM $ mkAuthorActor <$> getContext
   let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
   mdoc <- runMaybeT $ do
-    True <- dbUpdate $ PreparationToPending did (systemActor $ ctxtime ctx) (Just timezone)
+    True <- dbUpdate $ PreparationToPending did actor (Just timezone)
     True <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
     -- please delete after Oct 1, 2012 -Eric
     -- True <- dbUpdate $ MarkInvitationRead did signatorylinkid $ systemActor $ ctxtime ctx
