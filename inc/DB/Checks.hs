@@ -154,9 +154,9 @@ checkDBConsistency logger tables migrations = do
       -- constraints. Those belong to respective columns and
       -- constraints anyway so we do not have to manage them.
       --
-      -- This method ignores all specila date on index: partiality,
-      -- uniqueness, expressions. Support for advanced constructs is
-      -- left for later implementation.
+      -- This method ignores all specific data on an index:
+      -- partiality, uniqueness, expressions or other.. Support for
+      -- advanced constructs is left for later implementation.
       kRun_ $ sqlSelect "" $ do
         sqlResult "pg_index_class.relname"
         sqlResult "pg_attribute.attname"
