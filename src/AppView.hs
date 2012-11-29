@@ -5,6 +5,7 @@
 module AppView( kontrakcja
               , renderFromBody
               , notFoundPage
+              , internalServerErrorPage
               , simpleJsonResponse
               , simpleHtmlResponse
               , simpleHtmlResonseClrFlash
@@ -23,7 +24,6 @@ module AppView( kontrakcja
               , apiPage
               , scriveByMailPage
               , featuresPage
-              , modalError
               , standardPageFields
               , contextInfoFields
               ) where
@@ -96,6 +96,9 @@ pageFromBody ctx loginOn referer email showCreateAccount title bodytext =
 
 notFoundPage :: Kontrakcja m => m Response
 notFoundPage = renderTemplate_ "notFound" >>= renderFromBody kontrakcja
+
+internalServerErrorPage :: Kontrakcja m => m Response
+internalServerErrorPage = renderTemplate_ "internalServerError" >>= renderFromBody kontrakcja
 
 sitemapPage :: Kontrakcja m => m String
 sitemapPage = do
@@ -309,6 +312,3 @@ loginModal on referer email = do
   F.value "loginModal" $ on
   F.value "referer"    $ referer
   F.value "email"      $ email
-
-modalError :: TemplatesMonad m => m FlashMessage
-modalError = toModal <$> renderTemplate_ "modalError"

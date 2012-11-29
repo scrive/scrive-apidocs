@@ -25,7 +25,6 @@ import Utils.Either
 import Utils.HTTP
 import Utils.Monoid
 import OurServerPart
-import Redirect
 import Session.Data hiding (session)
 import Session.Model
 import Templates.TemplatesLoader
@@ -35,7 +34,6 @@ import qualified FlashMessage as F
 import qualified MemCache
 import Util.FinishWith
 import Util.FlashUtil
-import KontraLink
 import File.FileID
 
 import Control.Concurrent
@@ -236,10 +234,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
       liftIO (tryReadMVar $ rqInputsBody rq)
         >>= Log.error . shows e . (++) ": " . showRequest rq
       case e of
-        InternalError -> do
-          addFlashM V.modalError
-          linkmain <- getHomeOrDesignViewLink
-          sendRedirect linkmain
+        InternalError -> internalServerErrorPage >>= internalServerError
         Respond404 -> notFoundPage >>= notFound
 
     createContext session = do

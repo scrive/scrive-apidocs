@@ -3,7 +3,14 @@ notFound=
         <div class="notfound">
             $_notFound()$
 
-            $_notFoundGoHome()$
+            $_afterErrorGoHome()$
+        </div>
+###
+internalServerError=
+        <div class="notfound">
+            $_internalServerError()$
+
+            $_afterErrorGoHome()$
         </div>
 ###
 wholePage=
