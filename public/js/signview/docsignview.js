@@ -36,6 +36,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
   isReady : function() {
       return this.document().ready() && this.document().mainfile() != undefined;
   },
+  noMainFile : function() {
+      return this.document().ready() && this.document().mainfile() == undefined;
+  },
   hasMainFileSection : function() {
       return   !this.justSaved()
             && this.document().ready() && this.document().mainfile() != undefined;
@@ -329,10 +332,10 @@ var DocumentSignViewView = Backbone.View.extend({
     render: function() {
      var view = this;
      this.container.children().detach();
-      
      if (!this.model.isReady())
      {
-         this.container.append("<div class='subcontainer'><BR/><div class='waiting4page'></div></div>");
+         if (this.model.noMainFile())
+           this.container.append("<div class='subcontainer'><BR/><div class='document-pages'><div class='waiting4page'></div></div></div>");
          return this;
      }
      this.container.append(this.model.instructionssection().el)
