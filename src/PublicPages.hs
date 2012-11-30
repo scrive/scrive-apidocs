@@ -29,7 +29,6 @@ publicPages = choice
      , publicDir "juridik" "legal" LinkLegal handleLegalPage
      , publicDir "sekretesspolicy" "privacy-policy" LinkPrivacyPolicy handlePrivacyPolicyPage
      , publicDir "allmana-villkor" "terms" LinkTerms handleTermsPage
-     , publicDir "jobb" "jobs" LinkJobs handleJobsPage
      , publicDir "om-scrive" "about" LinkAbout handleAboutPage
      , publicDir "partners" "partners" LinkPartners handlePartnersPage
      , publicDir "kunder" "clients" LinkClients handleClientsPage
@@ -98,9 +97,6 @@ handlePrivacyPolicyPage = handleWholePage privacyPolicyPage
 
 handleTermsPage :: Kontra Response
 handleTermsPage = handleWholePage termsPage
-
-handleJobsPage :: Kontra Response
-handleJobsPage = handleWholePage jobsPage
 
 handleAboutPage :: Kontra Response
 handleAboutPage = handleWholePage aboutPage

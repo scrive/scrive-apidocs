@@ -24,6 +24,7 @@ import qualified Log (mailingServer)
 
 handleMailGunEvents :: Mailer Response
 handleMailGunEvents = do
+  logMsg $ "Processing some mailgun event"
   mident <- (,) <$> readField "email_id" <*> readField "email_token"
   case mident of
     (Just mid, Just token) -> do

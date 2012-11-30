@@ -69,7 +69,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     container.append($("<div class='headline' />").text(this.text()));
     container.append($("<div class='subheadline' />").text(this.subtext()));
 
-    if (document.padDelivery() && document.isSignedNotClosed() && BrowserInfo.isPadDevice())
+    if (document.padDelivery() && document.isSignedNotClosed())
          container.append(this.giveToNextPadSignatoryOption());
 
     var smallerbit = $("<div />");

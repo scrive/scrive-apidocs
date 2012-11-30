@@ -203,7 +203,7 @@ R.locale.currency = {
   format: "%n%u"
 , separator: ","
 , delimiter: "."
-, precision: 0
+, precision: 2
 };
 
 function C(key, def) {
