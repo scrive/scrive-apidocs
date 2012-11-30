@@ -48,7 +48,7 @@ testDBErrorGuardRedirectLeftDBNotLoggedIn = do
                                            _ <- guardRight $ Left DBNotLoggedIn
                                            ok $ toResponseBS "stuff" "hello")
   assertBool "Response code is 303" $ rsCode res == 303
-  assertBool "Location starts with /sv/?logging" $ (isPrefixOf "/sv/?logging" <$> T.getHeader "location" (rsHeaders res)) == Just True
+  assertBool "Location starts with /login" $ (isPrefixOf "/login" <$> T.getHeader "location" (rsHeaders res)) == Just True
   assertBool "One flash message was added" $ length (ctxflashmessages ctx') == 1
 --    assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 

@@ -25,12 +25,13 @@ module AppView( kontrakcja
               , featuresPage
               , standardPageFields
               , contextInfoFields
+              , renderTemplateAsPage
+              , renderTemplateAsPageWithFields
               ) where
 
 import FlashMessage
 import Kontra
 import KontraLink
-import Happstack.Fields
 
 import Control.Applicative
 import Data.List
@@ -38,7 +39,6 @@ import Data.Maybe
 import Happstack.Server.SimpleHTTP
 import Templates.Templates
 import User.Lang
-import qualified Codec.Binary.Url as URL
 import qualified Templates.Fields as F
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified Data.ByteString.UTF8 as BS (fromString,toString)
@@ -67,11 +67,9 @@ renderFromBody :: Kontrakcja m
                -> m Response
 renderFromBody title content = do
   htmlPage <- (isSuffixOf ".html") . concat . rqPaths <$> askRq
-  loginOn <- getLoginOn
-  loginreferer <- getLoginReferer
   ctx <- getContext
   let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx)
-  res <- simpleHtmlResponse =<< pageFromBody ctx loginOn loginreferer Nothing showCreateAccount title content
+  res <- simpleHtmlResponse =<< pageFromBody ctx showCreateAccount title content
   clearFlashMsgs
   return res
 
@@ -82,16 +80,13 @@ renderFromBody title content = do
 pageFromBody :: TemplatesMonad m
              => Context
              -> Bool
-             -> Maybe String
-             -> Maybe String
-             -> Bool
              -> String
              -> String
              -> m String
-pageFromBody ctx loginOn referer email showCreateAccount title bodytext =
+pageFromBody ctx showCreateAccount title bodytext =
   renderTemplate "wholePage" $ do
     F.value "content" bodytext
-    standardPageFields ctx title Nothing showCreateAccount loginOn referer email
+    standardPageFields ctx title Nothing showCreateAccount
 
 notFoundPage :: Kontrakcja m => m Response
 notFoundPage = renderTemplate_ "notFound" >>= renderFromBody kontrakcja
@@ -148,54 +143,31 @@ featuresPage = getContext >>= \ctx -> renderTemplateAsPage ctx "featuresPage" (J
     Render a template as an entire page.
 -}
 renderTemplateAsPage :: Kontrakcja m => Context -> String -> Maybe (Lang -> KontraLink) -> Bool -> m String
-renderTemplateAsPage ctx templateName mpubliclink showCreateAccount = do
-  loginOn <- getLoginOn
-  loginreferer <- getLoginReferer
+renderTemplateAsPage ctx templateName mpubliclink showCreateAccount =
+    renderTemplateAsPageWithFields ctx templateName mpubliclink showCreateAccount []
+
+renderTemplateAsPageWithFields :: Kontrakcja m => Context -> String -> Maybe (Lang -> KontraLink) -> Bool -> [(String, String)] -> m String
+renderTemplateAsPageWithFields ctx templateName mpubliclink showCreateAccount extraFields = do
   let showCreateAccount2 = showCreateAccount && (isNothing $ ctxmaybeuser ctx)
   wholePage <- renderTemplate templateName $ do
     contextInfoFields ctx
     mainLinksFields $ ctxlang ctx
     staticLinksFields $ ctxlang ctx
     langSwitcherFields ctx mpubliclink
-    loginModal (loginOn && null (filter isModal $ ctxflashmessages ctx)) loginreferer Nothing
     F.value "staticResources" $ SR.htmlImportList "firstPage" (ctxstaticresources ctx)
     F.value "showCreateAccount" showCreateAccount2
     F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
+    mapM_ (uncurry F.value) extraFields
   return wholePage
 
-getLoginOn :: Kontrakcja m => m Bool
-getLoginOn = do
-  loginOn <- isFieldSet "logging"
-  return loginOn
-
-getLoginReferer :: Kontrakcja m => m (Maybe String)
-getLoginReferer = do
-  curr <- rqUri <$> askRq
-  referer <- getField "referer"
-  qstr <- querystring
-  let loginreferer = Just $ fromMaybe (curr ++ qstr) referer
-  return loginreferer
-  where
-    querystring = qs <$> queryString lookPairs
-      where
-        qs qsPairs =
-          let encodeString  = URL.encode . map (toEnum . ord)
-              relevantPairs = [ (k, v) | (k, Right v) <- qsPairs ]
-              empties       = [ encodeString k | (k, "") <- relevantPairs ]
-              withValues    = [ encodeString k ++ "=" ++ encodeString v | (k, v) <- relevantPairs, length v > 0 ]
-          in if Data.List.null relevantPairs
-              then ""
-              else "?" ++ intercalate "&" (empties ++ withValues)
-
-standardPageFields :: TemplatesMonad m => Context -> String -> Maybe (Lang -> KontraLink) -> Bool -> Bool -> Maybe String -> Maybe String -> Fields m ()
-standardPageFields ctx title mpubliclink showCreateAccount loginOn referer email = do
+standardPageFields :: TemplatesMonad m => Context -> String -> Maybe (Lang -> KontraLink) -> Bool -> Fields m ()
+standardPageFields ctx title mpubliclink showCreateAccount = do
   F.value "title" title
   F.value "showCreateAccount" showCreateAccount
   mainLinksFields $ ctxlang ctx
   staticLinksFields $ ctxlang ctx
   langSwitcherFields ctx mpubliclink
   contextInfoFields ctx
-  loginModal loginOn referer email
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
   F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
 
@@ -230,13 +202,12 @@ simpleHtmlResonseClrFlash rsp = do
 {- |
    The landing page contents.  Read from template.
 -}
-firstPage :: TemplatesMonad m => Context -> Bool -> Maybe String -> Maybe String -> m String
-firstPage ctx loginOn referer email = renderTemplate "firstPage" $ do
+firstPage :: TemplatesMonad m => Context -> m String
+firstPage ctx = renderTemplate "firstPage" $ do
   contextInfoFields ctx
   mainLinksFields $ ctxlang ctx
   staticLinksFields $ ctxlang ctx
   langSwitcherFields ctx (Just LinkHome)
-  loginModal (loginOn && null (filter isModal $ ctxflashmessages ctx)) referer email
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
   F.value "staticResources" $ SR.htmlImportList "firstPage" (ctxstaticresources ctx)
 
@@ -311,9 +282,3 @@ flashMessageFields flash = do
     ftype = fst <$> fm
     msg :: TemplatesMonad m => m String
     msg = snd <$> fm
-
-loginModal :: Monad m => Bool -> Maybe String -> Maybe String -> Fields m ()
-loginModal on referer email = do
-  F.value "loginModal" $ on
-  F.value "referer"    $ referer
-  F.value "email"      $ email

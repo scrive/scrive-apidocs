@@ -356,14 +356,7 @@ $(document).ready(function() {
   $('.tooltip').tooltip();
 
   $('.login-button').click(function(e) {
-    var newlocation = window.location.pathname + window.location.search;
-    if (newlocation.match(/[\?&]logging(&|=|$)/) === null) {
-        if (window.location.search == "")
-            newlocation += "?logging";
-        else
-            newlocation += "&logging";
-    }
-    window.location = newlocation;
+    window.location = '/login?referer=';
     return false;
   });
 

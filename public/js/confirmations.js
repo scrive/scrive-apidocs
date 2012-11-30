@@ -45,8 +45,10 @@ var ConfirmationModel = Backbone.Model.extend({
           return this.get("onReject");
       return function() {};
   },
-  reject : function() {
-      return this.onReject()();
+  reject : function(silent) {
+      if (!(typeof silent == "boolean" && silent === true)) {
+          return this.onReject()();
+      }
   },
   accept : function(){
        return this.onAccept()();
@@ -176,8 +178,8 @@ var ConfirmationView = Backbone.View.extend({
        $(this.el).append(footer);
        return this;
     },
-    reject: function(){
-        this.model.reject();
+    reject: function(silent){
+        this.model.reject(silent);
         this.clear();
     },
     clear: function(){

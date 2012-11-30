@@ -344,7 +344,7 @@ pageDocumentSignView ctx document siglink =
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink
       F.value "documenttitle" $ documenttitle document
-      standardPageFields ctx kontrakcja Nothing False False Nothing Nothing
+      standardPageFields ctx kontrakcja Nothing False
 
 -- Helper to get document after signing info text
 documentInfoText :: TemplatesMonad m => Context -> Document -> Maybe SignatoryLink -> m String

@@ -145,6 +145,9 @@ var LoginView = Backbone.View.extend({
         content: content,
         extraOption : toogleOption,
         cssClass : "login-container",
+        onReject : function () {
+          window.location = model.referer();
+        },
         mask: {
             color: standardDialogMask,
             top: standardDialogTop,
@@ -195,6 +198,9 @@ var LoginView = Backbone.View.extend({
         content: content,
         extraOption : toogleOption,
         cssClass : "recovery-container",
+        onReject : function () {
+          window.location = model.referer();
+        },
         mask: {
             color: standardDialogMask,
             top: standardDialogTop,
@@ -218,11 +224,11 @@ var LoginView = Backbone.View.extend({
        var model = this.model;
        $("#exposeMask").css("display", "none"); // Hack to expose mask. It works wrong.
        if (this.popupLoginModalConfirmation != undefined) {
-         this.popupLoginModalConfirmation.view.reject();
+         this.popupLoginModalConfirmation.view.reject(true);
          this.popupLoginModalConfirmation = undefined;
        }  
        if (this.popupReminderModalConfirmation != undefined) {
-         this.popupReminderModalConfirmation.view.reject();
+         this.popupReminderModalConfirmation.view.reject(true);
          this.popupReminderModalConfirmation = undefined;
        }  
        if (model.visible()) {

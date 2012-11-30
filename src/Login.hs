@@ -1,6 +1,7 @@
 module Login (
     forgotPasswordPagePost
   , signupPagePost
+  , handleLoginGet
   , handleLoginPost
   , handleLogout
   , handleSignup
@@ -8,6 +9,7 @@ module Login (
 
 import ActionQueue.Core
 import ActionQueue.PasswordReminder
+import AppView (simpleHtmlResponse, renderTemplateAsPageWithFields)
 import DB
 import InputValidation hiding (Result)
 import Happstack.Fields
@@ -31,6 +33,16 @@ import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Text.JSON.Gen as J
 import Text.JSON
+
+handleLoginGet :: Kontrakcja m => m Response
+handleLoginGet = do
+  ctx <- getContext
+  referer <- getField "referer"
+  content <- renderTemplateAsPageWithFields ctx "loginPage" Nothing False [("referer", fromMaybe "/" referer)]
+  response <- simpleHtmlResponse content
+  clearFlashMsgs
+  return response
+
 {- |
    Handles submission of the password reset form
 -}

@@ -10,7 +10,6 @@ import AppView as V
 import Kontra
 import KontraLink
 import LangRouting (allLangDirs, dirByLang)
-import Happstack.Fields
 import Redirect
 import Routing
 import Happstack.StaticRouting (Route, choice, dir)
@@ -67,16 +66,13 @@ publicDir swedish english link handler = choice $
 handleHomepage :: Kontra (Either Response (Either KontraLink String))
 handleHomepage = do
   ctx@Context{ctxmaybeuser} <- getContext
-  loginOn <- isFieldSet "logging"
-  referer <- getField "referer"
-  email   <- getField "email"
   case ctxmaybeuser of
     Just _user -> do
-      response <- V.simpleHtmlResponse =<< firstPage ctx loginOn referer email
+      response <- V.simpleHtmlResponse =<< firstPage ctx
       clearFlashMsgs
       return $ Left response
     Nothing -> do
-      response <- V.simpleHtmlResponse =<< firstPage ctx loginOn referer email
+      response <- V.simpleHtmlResponse =<< firstPage ctx
       clearFlashMsgs
       return $ Left response
 

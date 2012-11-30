@@ -167,6 +167,7 @@ staticRoutes = choice
 
      -- account stuff
      , dir "logout"      $ hGet  $ toK0 $ handleLogout
+     , dir "login" $ hGet $ toK0 $ handleLoginGet
      , dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
      , dir "signup"      $ hPostAllowHttp $ toK0 $ signupPagePost
      , dir "amnesia"     $ hPostNoXToken $ toK0 $ forgotPasswordPagePost

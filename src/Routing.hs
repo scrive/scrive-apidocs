@@ -27,7 +27,6 @@ import Data.Maybe
 import Happstack.Server(Response, Method(GET, POST, DELETE, PUT), ToMessage(..))
 import Happstack.StaticRouting
 import KontraLink
-import Happstack.Fields
 import Utils.HTTP
 import Kontra
 import qualified User.UserControl as UserControl
@@ -124,9 +123,8 @@ allowHttp:: Kontrakcja m => m Response -> m Response
 allowHttp action = do
     secure <- isSecure
     useHttps <- ctxusehttps <$> getContext
-    loging <- isFieldSet "logging"
     logged <- isJust <$> ctxmaybeuser <$> getContext
-    if (secure || (not $ loging || logged) || not useHttps)
+    if (secure || logged || not useHttps)
        then action
        else sendSecureLoopBack
 

@@ -137,9 +137,7 @@ instance Show KontraLink where
     showsPrec _ (LinkFeaturesPage lang)
       | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/funktioner"
       | otherwise = (++) $ langFolder lang ++ "/features"
-    showsPrec _ (LinkLogin lang LoginTry) = (++) $ langFolder lang ++ "/login"
-    showsPrec _ (LinkLogin lang (InvalidLoginInfo email)) = (++) $ langFolder lang ++ "/?logging&email=" ++ (URL.encode . UTF.encode $ email)
-    showsPrec _ (LinkLogin lang _) = (++) $ langFolder lang ++ "/?logging"
+    showsPrec _ (LinkLogin _ _) = (++"/login")
     showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ LinkSignup = (++) "/signup"
     showsPrec _ LinkForgotPassword = (++) "/amnesia"
