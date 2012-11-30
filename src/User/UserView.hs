@@ -139,12 +139,13 @@ userStatsMonthToJSON = rights . map f
 companyStatsDayToJSON :: String -> [(Int, String, [Int])] -> [JSValue]
 companyStatsDayToJSON ts ls = rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
   where
-    f (d, _, s:c:i:_) = Right . runJSONGen . object "fields" $ do
-      value "date" (showAsDate d)
-      value "closed" c
-      value "sent" i
-      value "name" ts
-      value "signatures" s
+    f (d, _, s:c:i:_) = Right $ runJSONGen $ do
+      object "fields" $ do
+        value "date" (showAsDate d)
+        value "closed" c
+        value "sent" i
+        value "name" ts
+        value "signatures" s
       objects "subfields" $ do
          [do value "date" (showAsDate d')
              value "closed" c'
@@ -159,12 +160,13 @@ companyStatsDayToJSON ts ls = rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
 companyStatsMonthToJSON :: String -> [(Int, String, [Int])] -> [JSValue]
 companyStatsMonthToJSON ts ls = rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
   where
-    f (d, _, s:c:i:_) = Right $ runJSONGen $ object "fields" $ do
-      value "date" (showAsMonth d)
-      value "closed" c
-      value "sent" i
-      value "name" ts
-      value "signatures" s
+    f (d, _, s:c:i:_) = Right $ runJSONGen $ do
+      object "fields" $ do
+        value "date" (showAsMonth d)
+        value "closed" c
+        value "sent" i
+        value "name" ts
+        value "signatures" s
       objects "subfields" $ do
         [do value "date" (showAsMonth d')
             value "closed" c'

@@ -35,11 +35,12 @@ window.PadGiveToNextSignatoryView = Backbone.View.extend({
         var model = this.model;
         var document = model.document();
         var sigs = document.signatoriesThatCanSignNow();
+        var span = $("<span/>").text(localization.pad.changePartyTo);
         if (sigs.length <= 1)
-         return $("<strong/>").text(source().smartname());
+         return span.add($("<strong/>").text(source().smartname() != "" ? source().smartname() : localization.pad.notNamedParty ));
         var select = $("<select/>");
         _.each(sigs,function(sig) {
-            var option = $("<option>").text(sig.smartname()).val(sig.email());
+            var option = $("<option>").text(sig.smartname() != "" ? sig.smartname() :  localization.pad.notNamedParty ).val(sig.email());
             if (sig == source())
                 option.attr("selected","YES");
             select.append(option);
@@ -51,7 +52,7 @@ window.PadGiveToNextSignatoryView = Backbone.View.extend({
                     callback(sig);
             });
         });
-        return select;    
+        return span.add(select);    
         
     },
     render : function() {

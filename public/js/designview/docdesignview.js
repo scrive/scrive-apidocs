@@ -708,7 +708,7 @@ var DocumentDesignView = Backbone.View.extend({
         }
         var mails = _.map(sigs, function(sig) {return sig.email();}).sort();;
         for (var i =0;i< mails.length -1;i++)
-                if (mails[i] == mails[i+1])
+                if (mails[i] == mails[i+1] && mails[i] != "")
                 {
                     FlashMessages.add({color: 'red', content : localization.designview.validation.sameMails});
                     this.tabs.activate(this.tab1);

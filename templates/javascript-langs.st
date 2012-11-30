@@ -433,6 +433,7 @@ javascriptLocalisation =
              ,  maybeYouWantToSendDirectly : "$_maybeYouWantToSendDirectly()$"
              ,  sendDirectly : "$_sendDirectly()$"
              ,  goToDesignView : "$_goToDesignView()$"
+             ,  changePartyTo : "$_changePartyTo()$"
         }
          , sampleEmailHeader: "$_SampleEmailHeader()$"
          , sampleEmailSubheader: "$_mailsubheader()$"
