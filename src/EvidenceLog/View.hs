@@ -35,7 +35,7 @@ eventsForLog _doc events =
         sevents = filter (simpleEvents . evType)  events
         (es, es') = break (endOfHistoryEvent . evType) sevents
         separatedLog = es ++ (take 1 es')
-        cleanerLog  = removeNotCriticalEventsWithSimillarTime separatedLog
+        cleanerLog  = flattenSimilar separatedLog
     in cleanerLog
 
         
@@ -64,6 +64,8 @@ eventJSValue tl crtime doc dee = do
                         Just sl -> return $ getSmartName sl
                         Nothing -> renderTemplate_ "authorParty"
 
+
+
 -- Removes events that seam to be duplicated
 simpleEvents :: EvidenceEventType -> Bool
 simpleEvents NewDocumentEvidence          = True
@@ -72,17 +74,15 @@ simpleEvents CancelDocumentEvidence       = True
 simpleEvents RejectDocumentEvidence       = True
 simpleEvents TimeoutDocumentEvidence      = True
 simpleEvents PreparationToPendingEvidence = True
-simpleEvents MarkInvitationReadEvidence   = False
-simpleEvents MarkDocumentSeenEvidence     = False
+simpleEvents MarkInvitationReadEvidence   = True
+simpleEvents MarkDocumentSeenEvidence     = True
 simpleEvents RestartDocumentEvidence      = True
 simpleEvents SignDocumentEvidence         = True
 simpleEvents _                            = False
 
 endOfHistoryEvent :: EvidenceEventType -> Bool
-endOfHistoryEvent  NewDocumentEvidence     = True
-endOfHistoryEvent  RestartDocumentEvidence = True
+endOfHistoryEvent  PreparationToPendingEvidence     = True
 endOfHistoryEvent _                        = False
-
 
 -- Events that should be considered as performed as author even is actor states different.
 authorEvents  :: EvidenceEventType -> Bool
@@ -90,35 +90,30 @@ authorEvents PreparationToPendingEvidence = True
 authorEvents _ = False
 
 
-notCriticalEvent :: EvidenceEventType -> Bool
-notCriticalEvent MarkDocumentSeenEvidence   = True
-notCriticalEvent MarkInvitationReadEvidence = True
-notCriticalEvent _                          = False
-
 
 simillarEvent :: DocumentEvidenceEvent -> DocumentEvidenceEvent -> Bool
 simillarEvent e1 e2 =
         (evType e1 == evType e2)
      && (evSigLinkID e1 == evSigLinkID e2)
-     && simillarEvent' (evType e1) (abs $ (toSeconds $ evTime e1) - (toSeconds $ evTime e2))
+     && simillarEvent' (evType e1)
     where
-        simillarEvent' MarkDocumentSeenEvidence tdiff = tdiff < 300
-        simillarEvent' MarkInvitationReadEvidence _ = True
-        simillarEvent' _ _ = False
-        
-removeNotCriticalEventsWithSimillarTime ::  [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
-removeNotCriticalEventsWithSimillarTime [] = []
-removeNotCriticalEventsWithSimillarTime (e:es) =
-    if ((isNothing $ find (simillarEvent e) es) || not (notCriticalEvent $ evType e))
-       then e : (removeNotCriticalEventsWithSimillarTime es)
-       else (removeNotCriticalEventsWithSimillarTime es)
+        simillarEvent' MarkDocumentSeenEvidence     = True
+        simillarEvent' MarkInvitationReadEvidence  = True
+        simillarEvent' _ = False
+
+flattenSimilar ::  [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
+flattenSimilar [] = []
+flattenSimilar (e:es) =
+    if ((isNothing $ find (simillarEvent e) es))
+       then e : (flattenSimilar es)
+       else (flattenSimilar es)
 
 
 simplyfiedEventText :: TemplatesMonad m => Document -> DocumentEvidenceEvent -> m String
 simplyfiedEventText doc dee = renderTemplate ("simpliefiedText" ++ (show $ evType dee)) $ do
     F.value "documenttitle" $ (documenttitle doc)
 
--- | Generating text of Evidence log that is attachmed to PDF. It should be compleate    
+-- | Generating text of Evidence log that is attachmed to PDF. It should be compleate
 htmlDocFromEvidenceLog :: TemplatesMonad m => String -> [DocumentEvidenceEvent] -> m String
 htmlDocFromEvidenceLog title elog = do
   renderTemplate "htmlevidencelog" $ do

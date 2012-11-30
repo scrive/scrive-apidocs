@@ -76,12 +76,9 @@ var DocumentHistoryView = Backbone.View.extend({
       container.append(historyList.el())
 
       var footer = $("<div class='document-history-footer'/>");
-      var showAll = $("<div class='option'/>").text("Expand to view all");
-      showAll.click(function() {
-          historyList.model.schema.paging().setShowLimit(undefined);
-          historyList.model.schema.trigger("change");
-          this.render();
-          return false;
+      historyList.model().bind('reset', function() {
+        if (historyList.model().length <= 5)
+            footer.hide();
       })
       footer.append(this.expandAllOption())
       container.append(footer);

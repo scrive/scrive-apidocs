@@ -486,6 +486,8 @@
                 bottomExtras: args.bottomExtras,
                 emptyAlternative: args.emptyAlternative
             });
+
+            this.model = function() {return model;};
             this.el = function() {return $(view.el);};
             this.recall = function() {
               view.startLoading();

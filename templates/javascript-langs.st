@@ -449,6 +449,13 @@ javascriptLocalisation =
              , requestedAttachments : "$_RequestedAttachments()$"
              , requestedFrom : "Requested from "
              , uploadedBy    : "Uploaded by "
+             , signNow : "Please go to signview to sign this document"
+             , signedAndClosed : "Document signed"
+             , closed : "Document signed by all signatories and closed"
+             , signedNotClosed : "Waiting for other signatories"
+             , canceled : "This document was withdrawn"
+             , rejected : "This document was rejected"
+             , timeouted : "This document has timedout"
          }
          , docsignview : {
                followArrowToSign: "$_followArrowToSign()$"

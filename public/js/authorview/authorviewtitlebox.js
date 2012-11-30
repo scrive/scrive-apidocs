@@ -27,7 +27,7 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
     this.document().cancel().sendAjax(function() {window.location = window.location;});
   },
   canGoToSignView : function() {
-    return this.document().currentViewerIsAuthor() && this.document().currentSignatory().signs();
+    return this.document().currentViewerIsAuthor() && this.document().currentSignatoryCanSign();
   },
   goToSignView : function() {
     new Submit({method: 'POST', url : '/d/signview/' + this.document().documentid()}).send();
@@ -45,17 +45,6 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     return this.model.document().title();
   },
   // Smaller text with more details on some states
-  subtext: function() {
-    var document = this.model.document();
-    if (document.isSignedAndClosed()) {
-      return localization.docsignview.signedAndClosedSubText;
-    } else if (document.isSignedNotClosed()) {
-      return localization.docsignview.signedNotClosedSubText;
-    } else {
-      return "";
-    }
-  },
-
   dueDateDescription : function() {
       var timeout = this.model.document().timeouttime();
       var timeoutText = timeout.getFullYear() + "-" + (timeout.getMonth() < 9 ? "0" + (timeout.getMonth() + 1) : (timeout.getMonth()+1)) + "-" + timeout.getDate();
@@ -119,7 +108,6 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
 
     var container = $("<div class='titlebox' />");
     container.append($("<div class='headline' />").text(this.text()));
-    container.append($("<div class='subheadline' />").text(this.subtext()));
 
     if (document.timeouttime() != undefined && document.signingInProcess())
       container.append($("<div class='subheadline duedate' />").text(this.dueDateDescription()));

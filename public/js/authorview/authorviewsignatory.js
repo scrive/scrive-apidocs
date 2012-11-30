@@ -48,6 +48,7 @@ var AuthorViewSignatoryModel = Backbone.Model.extend({
    return    (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
           && !signatory.author()
           && signatory.signs()
+          && (signatory.document().signingInProcess() || signatory.document().closed())
           && !signatory.undeliveredEmail()
           && !signatory.document().padDelivery();
  },
@@ -55,6 +56,7 @@ var AuthorViewSignatoryModel = Backbone.Model.extend({
    var signatory = this.signatory();
    return    (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
           && signatory.undeliveredEmail()
+          && signatory.document().signingInProcess()
           && signatory.document().pending()
  },
  hasPadOptions : function() {
@@ -72,8 +74,15 @@ var AuthorViewSignatoryModel = Backbone.Model.extend({
  },
  hasAddToPadQueueOption : function() {
    return this.hasPadOptions() && !this.signatory().inpadqueue() && !BrowserInfo.isPadDevice();
+ },
+ hasAnyOptions : function() {
+    return  this.hasRemindOption()
+         || this.hasChangeEmailOption()
+         || this.hasGiveForSigningOnThisDeviceOption()
+         || this.hasAddToPadQueueOption()
+         || this.hasRemoveFromPadQueueOption()
+
  }
- 
 });
 
 var AuthorViewSignatoryView = Backbone.View.extend({
@@ -253,8 +262,9 @@ var AuthorViewSignatoryView = Backbone.View.extend({
       inner.append(numspace);
       inner.append(contactspace);
       box.append(inner);
-      box.append(this.authorOptions());
       box.append(this.statusbox());
+      if (this.model.hasAnyOptions())
+        box.append(this.authorOptions());
       return this;
   }
 });

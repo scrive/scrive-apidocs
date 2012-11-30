@@ -21,8 +21,8 @@ var AuthorViewSignatoriesAttachmentsView = Backbone.View.extend({
   attachmentDescription: function(attachment) {
     var container = $("<div class='item' />");
     var label = $("<div class='label' />");
-    label.append($("<div class='name' />").text(attachment.name()));
-    label.append($("<div class='description' />").text(attachment.description()));
+    //label.append($("<div class='name' />").text(attachment.name()));
+    label.append($("<div class='description' />").text('"' + attachment.description() + '"'));
     container.append(label);
     container.append($("<div class='clearfix' />"));
     return container;
@@ -34,7 +34,7 @@ var AuthorViewSignatoriesAttachmentsView = Backbone.View.extend({
     container.append(label);
     if (attachment.hasFile()) {
         var link = $("<a class='link'/>");
-        link.text(localization.reviewPDF);
+        link.text(attachment.file().name()+ ".pdf");
         link.attr("href", attachment.file().downloadLink());
         label.append(link);
     }
