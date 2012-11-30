@@ -20,7 +20,7 @@ window.PadGiveToNextSignatoryModel = Backbone.Model.extend({
     giveForSigning: function() {
         var sig = this.selectedSignatory();
         sig.addtoPadQueue().sendAjax(function() {
-                      window.location =  window.location;
+                      window.location =  '/padqueue';
                 });
     }
 });
