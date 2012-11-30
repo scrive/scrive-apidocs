@@ -104,7 +104,6 @@ body.signview {
 }
 
 .signview .instructions .giveForSigning {
-  color: black;
   font-size: small;
   margin: auto;
   border: 1px solid #E9E9E9;
@@ -114,6 +113,9 @@ body.signview {
   display: inline-block;
 }
 
+.signview .instructions .giveForSigning strong{
+    color: black;
+}
 
 .signview .instructions .giveForSigning span,
 .signview .instructions .giveForSigning strong,
