@@ -265,7 +265,7 @@ data DocumentStatus = Preparation
   deriving (Eq, Ord, Show)
 
 data DocumentProcess = Contract | Offer | Order
-  deriving (Eq, Ord, Show, Read)
+  deriving (Eq, Ord, Show, Read, Bounded, Enum)
 
 data DocumentType = Signable DocumentProcess
                   | Template DocumentProcess
