@@ -152,9 +152,13 @@ SetAPIDeliveryMethodEvidenceText=$actor$ requested document to be available only
 ###
 ResealedPDFText=$actor$ requested document to be resealed.
 ###
-DeliveryInformationClearedForReminderText= $name$ mail delivery details cleared, since reminder was send.
+ReminderSendText= Reminder was send. $name$ mail delivery details cleared.
 ###
 SetDocumentProcessEvidenceText= Document process set to $process$
 ###
 DetachFileEvidenceText=Main file detatched by $actor$.
+###
+InvitationDeliveredText= Invitation delivered
+###
+InvitationUndeliveredText = Invitation undelivered
 ###

@@ -32,6 +32,7 @@ import OAuth.Tables
 import ScriveByMail.Tables
 import ELegitimation.ELegTransaction.Tables
 import EvidenceLog.Tables
+import EvidenceLog.Migrations
 import Payments.Tables
 import Payments.Migrations
 import Attachment.Tables
@@ -117,6 +118,7 @@ kontraMigrations = [
   , removeSignatoryLinksInternalInsertOrder
   , addUnsavedDraftToDocument
   , removeBrokenLinksFromSignStatsEvents
+  , expandEventsWithAffectedSignatoryAndTextMessage
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

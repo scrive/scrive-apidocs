@@ -65,7 +65,7 @@ module Doc.Model
   , StoreDocumentForTesting(..)
   , TemplateFromDocument(..)
   , TimeoutDocument(..)
-  , ResetSignatoryMailDeliveryInformationForReminder(..)
+  , PostReminderSend(..)
   , UpdateFields(..)
   , SetSigAttachments(..)
   , UpdateDraft(..)
@@ -1498,9 +1498,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkDocumentSeen Bool where
           actor
         return success
 
-data AddInvitationEvidence = AddInvitationEvidence DocumentID SignatoryLinkID Actor
+data AddInvitationEvidence = AddInvitationEvidence DocumentID SignatoryLinkID (Maybe String) Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddInvitationEvidence Bool where
-  update (AddInvitationEvidence docid slid actor) = do
+  update (AddInvitationEvidence docid slid mmsg actor) = do
     msig <- query $ GetSignatoryLinkByID docid slid Nothing
     case msig of
       Nothing -> do
@@ -1508,10 +1508,12 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddInvitationEvidence Bool 
         return False
       Just sig -> do
         let eml = getEmail sig
-        _ <- update $ InsertEvidenceEvent
+        _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
           InvitationEvidence
           (value "email" eml >> value "actor" (actorWho actor))
           (Just docid)
+          (Just slid)
+          mmsg
           actor
         return True
 
@@ -1853,6 +1855,22 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInvitationDeliveryStatus
         (value "email" email >> value "status" (show status) >> value "actor" (actorWho actor))
         (Just did)
         actor
+    when_ (success && changed && status == Delivered) $
+      update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+        InvitationDelivered
+        (value "email" email >> value "status" (show status) >> value "actor" (actorWho actor))
+        (Just did)
+        (Just slid)
+        Nothing
+        actor
+    when_ (success && changed && status == Undelivered) $
+      update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+        InvitationUndelivered
+        (value "email" email >> value "status" (show status) >> value "actor" (actorWho actor))
+        (Just did)
+        (Just slid)
+        Nothing
+        actor    
     return success
 
 data SetDocumentSharing = SetDocumentSharing [DocumentID] Bool
@@ -2188,23 +2206,25 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAPICallbackURL B
          ] <> SQL "WHERE id = ?" [ toSql did ]
 
 
-data ResetSignatoryMailDeliveryInformationForReminder = ResetSignatoryMailDeliveryInformationForReminder Document SignatoryLink Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryMailDeliveryInformationForReminder () where
-   update (ResetSignatoryMailDeliveryInformationForReminder doc sl actor) = do
-     _ <- updateWithEvidence tableSignatoryLinks
-          (    "read_invitation =" <?> (Nothing :: Maybe MinutesTime)
-         <+> ", invitation_delivery_status =" <?> Unknown
-         <+> "WHERE document_id =" <?> documentid doc
-         <+> "AND id =" <?> signatorylinkid sl
-         <+> "AND sign_time IS NULL"
-         <+> "AND EXISTS (SELECT 1 FROM documents WHERE id = document_id AND documents.status =" <?> Pending <+> ")"
-          ) $ do
-        return $ InsertEvidenceEvent
-          DeliveryInformationClearedForReminder
+data PostReminderSend = PostReminderSend Document SignatoryLink (Maybe String) Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m PostReminderSend () where
+   update (PostReminderSend doc sl mmsg actor) = do
+     success <- kRun01 $ "UPDATE" <+> raw (tblName tableSignatoryLinks) <+> "SET" <+>
+            (     "read_invitation =" <?> (Nothing :: Maybe MinutesTime)
+              <+> ", invitation_delivery_status =" <?> Unknown
+              <+> "WHERE document_id =" <?> documentid doc
+              <+> "AND id =" <?> signatorylinkid sl
+              <+> "AND sign_time IS NULL"
+              <+> "AND EXISTS (SELECT 1 FROM documents WHERE id = document_id AND documents.status =" <?> Pending <+> ")"
+            )
+     when_ (success) $
+        update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+          ReminderSend
           (value "name" (getSmartName sl))
           (Just $ documentid doc)
+          (Just $ signatorylinkid sl)
+          mmsg
           actor
-     return ()
 
 data UpdateFields = UpdateFields DocumentID SignatoryLinkID [(FieldType, String)] Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where

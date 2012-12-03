@@ -27,7 +27,7 @@ jsonDocumentEvidenceLog did = withUserGet $ do
   ctx <- getContext  
   doc <- guardRightM' $ getDocByDocID did
   evidenceLog <- dbQuery $ GetEvidenceLog $ documentid doc
-  events <- eventsJSListFromEvidenceLog  (timeLocaleForLang $ ctxlang $ ctx) (ctxtime ctx) doc (reverse evidenceLog)
+  events <- eventsJSListFromEvidenceLog  (timeLocaleForLang $ ctxlang $ ctx) doc (reverse evidenceLog)
   runJSONGenT $ do
       value "list" $ for events $ runJSONGen . (value "fields")
       value "paging" $ pagingParamsJSON (PagedList events 1000 emptyListParams)

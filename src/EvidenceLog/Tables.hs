@@ -16,7 +16,7 @@ Also, it is insert only. No updates, no deletes.
 tableEvidenceLog :: Table
 tableEvidenceLog = tblTable {
   tblName = "evidence_log"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblCreateOrValidate = \desc -> case desc of
       [("id",                SqlColDesc { colType     = SqlBigIntT
                                         , colNullable = Just False}),
@@ -41,6 +41,10 @@ tableEvidenceLog = tblTable {
        ("version_id",        SqlColDesc { colType     = SqlVarCharT
                                         , colNullable = Just False}),
        ("api_user",          SqlColDesc { colType     = SqlVarCharT
+                                        , colNullable = Just True}),
+       ("affected_signatory_link_id", SqlColDesc { colType  = SqlBigIntT
+                                        , colNullable = Just True}),
+       ("message_text",      SqlColDesc { colType     = SqlVarCharT
                                         , colNullable = Just True})] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE evidence_log ("
@@ -56,6 +60,8 @@ tableEvidenceLog = tblTable {
           <> ", event_type    SMALLINT    NOT NULL"
           <> ", version_id    VARCHAR     NOT NULL"
           <> ", api_user      VARCHAR         NULL"
+          <> ", affected_signatory_link_id BIGINT NULL"
+          <> ", message_text   VARCHAR        NULL"
           <> ", CONSTRAINT pk_evidence_log PRIMARY KEY (id)"
           <> ")"
         return TVRcreated

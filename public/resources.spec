@@ -62,7 +62,6 @@ set systemPage
  css css/docsignview.css
  css css/main.css
  css css/createfromtemplate.css
- css css/dochistory.css
  less less/selects.less
  less less/document-pages.less
  less less/payments.less

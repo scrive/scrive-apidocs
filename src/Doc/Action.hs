@@ -296,7 +296,7 @@ sendInvitationEmail1 ctx document signatorylink | not (isAuthor signatorylink) =
          , mailInfo = Invitation documentid signatorylinkid
          }
   mdoc <- runMaybeT $ do
-    True <- dbUpdate $ AddInvitationEvidence documentid signatorylinkid $ systemActor $ ctxtime ctx
+    True <- dbUpdate $ AddInvitationEvidence documentid signatorylinkid (Just (documentinvitetext document) <|documentinvitetext document /= "" |> Nothing) $ systemActor $ ctxtime ctx
     Just doc <- dbQuery $ GetDocumentByDocumentID documentid
     return doc
   return $ maybe (Left "sendInvitationEmail1 failed") Right mdoc
@@ -326,7 +326,7 @@ sendReminderEmail custommessage ctx actor doc siglink = do
     }
   when (isPending doc &&  not (hasSigned siglink)) $ do
     Log.debug $ "Reminder mail send for signatory that has not signed " ++ show (signatorylinkid siglink)
-    dbUpdate $ ResetSignatoryMailDeliveryInformationForReminder doc siglink actor
+    dbUpdate $ PostReminderSend doc siglink custommessage actor
   _ <- dbUpdate $ SetDocumentModificationDate (documentid doc) (ctxtime ctx)
   triggerAPICallbackIfThereIsOne doc
   return siglink

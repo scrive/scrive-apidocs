@@ -25,8 +25,8 @@ import User.Model
 import DB
 
 -- | Evidence log for web page - short and simplified texts
-eventsJSListFromEvidenceLog ::  (MonadDB m, TemplatesMonad m) => KontraTimeLocale -> MinutesTime -> Document -> [DocumentEvidenceEvent] -> m [JSValue] 
-eventsJSListFromEvidenceLog tl crtime doc dees = mapM (J.runJSONGenT . eventJSValue tl crtime doc) $ eventsForLog doc dees
+eventsJSListFromEvidenceLog ::  (MonadDB m, TemplatesMonad m) => KontraTimeLocale -> Document -> [DocumentEvidenceEvent] -> m [JSValue]
+eventsJSListFromEvidenceLog tl doc dees = mapM (J.runJSONGenT . eventJSValue tl doc) $ eventsForLog doc dees
 
 
 eventsForLog :: Document -> [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
@@ -35,20 +35,22 @@ eventsForLog _doc events =
         sevents = filter (simpleEvents . evType)  events
         (es, es') = break (endOfHistoryEvent . evType) sevents
         separatedLog = es ++ (take 1 es')
-        cleanerLog  = flattenSimilar separatedLog
+        cleanerLog  = cleanSeenAfterSigned $ flattenSimilar separatedLog
     in cleanerLog
 
         
-eventJSValue :: (MonadDB m, TemplatesMonad m) => KontraTimeLocale -> MinutesTime ->  Document -> DocumentEvidenceEvent -> JSONGenT m ()
-eventJSValue tl crtime doc dee = do
-    J.value "time"  $ showDateAbbrev tl crtime (evTime dee)
-    J.valueM "party" $ case (getSigLinkFor doc $ evSigLinkID dee) of
-                           Just sl -> if (isAuthor sl)
+eventJSValue :: (MonadDB m, TemplatesMonad m) => KontraTimeLocale -> Document -> DocumentEvidenceEvent -> JSONGenT m ()
+eventJSValue tl doc dee = do
+    J.value "time"  $ showDateForHistory tl (evTime dee)
+    J.valueM "party" $ if (systemEvents $ evType dee)
+                          then return "Scrive"
+                          else case (getSigLinkFor doc $ evSigLinkID dee) of
+                                Just sl -> if (isAuthor sl)
                                          then authorName
                                          else case (getSmartName sl) of
                                                 "" -> renderTemplate_ "notNamedParty"
                                                 name -> return name
-                           Nothing -> case (evUserID dee) of                       
+                                Nothing -> case (evUserID dee) of                       
                                            Just uid -> if (isAuthor (doc,uid))
                                                         then authorName
                                                         else do
@@ -78,7 +80,21 @@ simpleEvents MarkInvitationReadEvidence   = True
 simpleEvents MarkDocumentSeenEvidence     = True
 simpleEvents RestartDocumentEvidence      = True
 simpleEvents SignDocumentEvidence         = True
+simpleEvents InvitationEvidence           = True
+simpleEvents InvitationDelivered          = True
+simpleEvents InvitationUndelivered        = True
+simpleEvents ReminderSend                 = True
+simpleEvents ResealedPDF                  = True
+simpleEvents CancelDocumenElegEvidence    = True
 simpleEvents _                            = False
+
+-- Clean some events that should not be shown. Like reading docume by author after hi signed document.
+cleanSeenAfterSigned :: [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
+cleanSeenAfterSigned [] = []
+cleanSeenAfterSigned (e:es) = if (evType e == MarkDocumentSeenEvidence && isJust (find (\e' -> evType e' == SignDocumentEvidence && evSigLinkID e' == evSigLinkID e) es))
+                                 then cleanSeenAfterSigned es
+                                 else (e:cleanSeenAfterSigned es)
+                                
 
 endOfHistoryEvent :: EvidenceEventType -> Bool
 endOfHistoryEvent  PreparationToPendingEvidence     = True
@@ -88,6 +104,12 @@ endOfHistoryEvent _                        = False
 authorEvents  :: EvidenceEventType -> Bool
 authorEvents PreparationToPendingEvidence = True
 authorEvents _ = False
+
+-- Events that should be considered as performed as author even is actor states different.
+systemEvents  :: EvidenceEventType -> Bool
+systemEvents InvitationDelivered = True
+systemEvents InvitationUndelivered = True
+systemEvents _ = False
 
 
 
@@ -112,7 +134,11 @@ flattenSimilar (e:es) =
 simplyfiedEventText :: TemplatesMonad m => Document -> DocumentEvidenceEvent -> m String
 simplyfiedEventText doc dee = renderTemplate ("simpliefiedText" ++ (show $ evType dee)) $ do
     F.value "documenttitle" $ (documenttitle doc)
-
+    case (evAffectedSigLinkID dee) of
+      Just aslid -> F.value "affectedsignatory" $ getSmartName <$> getSigLinkFor doc aslid
+      _ -> return ()
+    F.value "text" $ evMessageText dee
+    
 -- | Generating text of Evidence log that is attachmed to PDF. It should be compleate
 htmlDocFromEvidenceLog :: TemplatesMonad m => String -> [DocumentEvidenceEvent] -> m String
 htmlDocFromEvidenceLog title elog = do

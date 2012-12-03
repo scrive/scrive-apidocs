@@ -17,8 +17,8 @@ var DocumentHistoryModel = Backbone.Model.extend({
             url: "/d/evidencelog/" + this.document().documentid(),
             paging : new Paging({disabled: true, showLimit : this.get("showAll") ? undefined : 5 }),
             cells : [
-                new Cell({name: "Time",  width:"80px",  field:"time"}),
-                new Cell({name: "Party", width:"100px", field:"party"}),
+                new Cell({name: "Time",  width:"60px",  field:"time"}),
+                new Cell({name: "Party", width:"80px", field:"party"}),
                 new Cell({name: "Description", width:"200px",  field:"text" })
                 ]
             })
@@ -48,27 +48,32 @@ var DocumentHistoryView = Backbone.View.extend({
         var view = this;
         this.render();
     },
-    updateCheckbox : function() {
-         if (this.model.showAll())
-            this.checkbox.addClass("checked");
-        else
-            this.checkbox.removeClass("checked");
+    updateOption : function() {
+         if (this.model.showAll()) {
+            this.checkbox.addClass("expanded");
+            this.label.text("Hide")
+         }   
+        else {
+            this.checkbox.removeClass("expanded");
+            this.label.text("Expand to view more (" + (this.model.historyList().model().length - 5) + " avaible)")
+        }    
     },
     expandAllOption : function() {
         var model = this.model;
         var view = this;
         var option = $("<div class='option'/>")
-        this.checkbox = $("<div class='checkbox'>");
-        var label = $("<div class='label'/>").text("Expand to view all");
-        this.updateCheckbox();
-        this.checkbox.click(function() {
+        this.checkbox = $("<div class='expandable'>");
+        this.label = $("<div class='label'/>");
+        this.updateOption();
+        option.click(function() {
             model.toogleShowAll();
-            view.updateCheckbox();
+            view.updateOption();
             return false;
         })
-        return option.append(this.checkbox).append(label);
+        return option.append(this.checkbox).append(this.label);
     },
     render: function() {
+      var self = this;
       var container = $(this.el)
       container.children().detach();
       var historyList = this.model.historyList();
@@ -79,6 +84,9 @@ var DocumentHistoryView = Backbone.View.extend({
       historyList.model().bind('reset', function() {
         if (historyList.model().length <= 5)
             footer.hide();
+        else
+            self.updateOption();
+          
       })
       footer.append(this.expandAllOption())
       container.append(footer);

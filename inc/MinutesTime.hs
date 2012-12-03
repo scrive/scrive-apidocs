@@ -9,6 +9,7 @@ module MinutesTime
        , minutesBefore
        , parseMinutesTimeDMY
        , showDateAbbrev
+       , showDateForHistory
        , showDateDMY
        , showDateDMYYYY
        , showDateOnly
@@ -155,6 +156,9 @@ showDateAbbrev locale current time
                where
                  ct1 = toCalendarTime current
                  ct = toCalendarTime time
+
+showDateForHistory :: KontraTimeLocale -> MinutesTime -> String
+showDateForHistory locale time = formatMinutesTime locale "%Y-%m-%d %H:%M:%S" time
 
 -- | Get current time as 'MinutesTime'. Warning: server should work in UTC time.
 getMinutesTime :: MonadIO m => m MinutesTime

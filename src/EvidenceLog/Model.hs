@@ -3,6 +3,7 @@ module EvidenceLog.Model (
   , eventTextTemplateName
   , apiActor
   , InsertEvidenceEvent(..)
+  , InsertEvidenceEventWithAffectedSignatoryAndMsg(..)
   , InsertEvidenceEventForManyDocuments(..)
   , GetEvidenceLog(..)
   , DocumentEvidenceEvent(..)
@@ -24,6 +25,16 @@ import qualified Templates.Fields as F
 import Control.Monad.Identity
 import Control.Monad.Trans
 
+
+data InsertEvidenceEventWithAffectedSignatoryAndMsg = InsertEvidenceEventWithAffectedSignatoryAndMsg
+                           EvidenceEventType      -- A code for the event
+                           (F.Fields Identity ()) -- Text for evidence
+                           (Maybe DocumentID)     -- The documentid if this event is about a document
+                           (Maybe SignatoryLinkID) -- Affected signatory
+                           (Maybe String)          -- Message text
+                           Actor                  -- Actor
+    deriving (Typeable)
+
 data InsertEvidenceEvent = InsertEvidenceEvent
                            EvidenceEventType      -- A code for the event
                            (F.Fields Identity ()) -- Text for evidence
@@ -41,8 +52,8 @@ data InsertEvidenceEventForManyDocuments = InsertEvidenceEventForManyDocuments
 eventTextTemplateName :: EvidenceEventType -> String
 eventTextTemplateName e =  (show e) ++ "Text"
 
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool where
-  update (InsertEvidenceEvent event textFields mdid actor) = do
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
+  update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields mdid maslid mmsg actor) = do
    text <- lift $ renderTemplateI (eventTextTemplateName event) $ textFields
    kRun01 $ sqlInsert "evidence_log" $ do
       sqlSet "document_id" mdid
@@ -55,7 +66,12 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool wh
       sqlSet "request_ip_v4" $ actorIP actor
       sqlSet "signatory_link_id" $ actorSigLinkID actor
       sqlSet "api_user" $ actorAPIString actor
-
+      sqlSet "affected_signatory_link_id" $ maslid
+      sqlSet "message_text" $ mmsg
+            
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool where
+  update (InsertEvidenceEvent event textFields mdid actor) = update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields mdid Nothing Nothing actor)
+      
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventForManyDocuments () where
   update (InsertEvidenceEventForManyDocuments event textFields dids actor) = do
    texts <- lift $ forM dids $ \did -> renderTemplateI (eventTextTemplateName event) $ textFields >> F.value "did" (show did)
@@ -83,6 +99,8 @@ data DocumentEvidenceEvent = DocumentEvidenceEvent {
   , evIP6        :: Maybe IPAddress
   , evSigLinkID  :: Maybe SignatoryLinkID
   , evAPI        :: Maybe String
+  , evAffectedSigLinkID :: Maybe SignatoryLinkID -- Some events affect only one signatory, but actor is out system or author. We express it here, since we can't with evType.
+  , evMessageText :: Maybe String -- Some events have message connected to them (like reminders). We don't store such events in documents, but they should not get lost.
   }
   deriving (Eq, Ord, Show, Typeable)
 
@@ -101,6 +119,8 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
       <> ", request_ip_v6"
       <> ", signatory_link_id"
       <> ", api_user"
+      <> ", affected_signatory_link_id"
+      <> ", message_text"
       <> "  FROM evidence_log "
       <> "  WHERE document_id = ?"
       <> "  ORDER BY time DESC, id DESC") [
@@ -108,7 +128,7 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
       ]
     foldDB fetchEvidenceLog []
     where
-      fetchEvidenceLog acc did' tm txt tp vid uid eml ip4 ip6 slid api =
+      fetchEvidenceLog acc did' tm txt tp vid uid eml ip4 ip6 slid api aslid emsg =
         DocumentEvidenceEvent {
             evDocumentID = did'
           , evTime       = tm
@@ -121,6 +141,8 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
           , evIP6        = ip6
           , evSigLinkID  = slid
           , evAPI        = api
+          , evAffectedSigLinkID = aslid
+          , evMessageText = emsg
           } : acc
 
 copyEvidenceLogToNewDocument :: MonadDB m => DocumentID -> DocumentID -> DBEnv m ()
@@ -141,6 +163,8 @@ copyEvidenceLogToNewDocuments fromdoc todocs = do
     <> ", request_ip_v6"
     <> ", signatory_link_id"
     <> ", api_user"
+    <> ", affected_signatory_link_id"
+    <> ", message_text"
     <> ") SELECT "
     <> "  todocs.id :: BIGINT"
     <> ", time"
@@ -153,6 +177,8 @@ copyEvidenceLogToNewDocuments fromdoc todocs = do
     <> ", request_ip_v6"
     <> ", signatory_link_id"
     <> ", api_user"
+    <> ", affected_signatory_link_id"
+    <> ", message_text"
     <> " FROM evidence_log, (VALUES" <+> sqlConcatComma (map (parenthesize . sqlParam) todocs) <+> ") AS todocs(id)"
     <> " WHERE evidence_log.document_id =" <?> fromdoc
 
@@ -225,9 +251,11 @@ data EvidenceEventType =
   SetEmailDeliveryMethodEvidence                  |
   SetPadDeliveryMethodEvidence                    |
   SetAPIDeliveryMethodEvidence                    |
-  DeliveryInformationClearedForReminder           |
+  ReminderSend                                    |  --Renamed
   SetDocumentProcessEvidence                      |
-  DetachFileEvidence
+  DetachFileEvidence                              |
+  InvitationDelivered                             |
+  InvitationUndelivered                           
   deriving (Eq, Show, Read, Ord)
 
 instance Convertible EvidenceEventType Int where
@@ -298,9 +326,11 @@ instance Convertible EvidenceEventType Int where
   safeConvert SetEmailDeliveryMethodEvidence                  = return 65
   safeConvert SetPadDeliveryMethodEvidence                    = return 66
   safeConvert SetAPIDeliveryMethodEvidence                    = return 67
-  safeConvert DeliveryInformationClearedForReminder           = return 68
+  safeConvert ReminderSend                                    = return 68
   safeConvert SetDocumentProcessEvidence                      = return 69
   safeConvert DetachFileEvidence                              = return 70
+  safeConvert InvitationDelivered                             = return 71
+  safeConvert InvitationUndelivered                           = return 72
 
 
 instance Convertible Int EvidenceEventType where
@@ -371,9 +401,11 @@ instance Convertible Int EvidenceEventType where
     safeConvert 65 = return SetEmailDeliveryMethodEvidence
     safeConvert 66 = return SetPadDeliveryMethodEvidence
     safeConvert 67 = return SetAPIDeliveryMethodEvidence
-    safeConvert 68 = return DeliveryInformationClearedForReminder
+    safeConvert 68 = return ReminderSend
     safeConvert 69 = return SetDocumentProcessEvidence
     safeConvert 70 = return DetachFileEvidence
+    safeConvert 71 = return InvitationDelivered
+    safeConvert 72 = return InvitationUndelivered
     safeConvert s  = Left ConvertError { convSourceValue = show s
                                        , convSourceType = "Int"
                                        , convDestType = "EvidenceEventType"
