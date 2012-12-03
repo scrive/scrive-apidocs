@@ -176,11 +176,11 @@ instance FromJSValue SignatoryTMP where
         signs  <- fromJSValueField "signs"
         mfields <- fromJSValueField "fields"
         signorder <- fromJSValueField "signorder"
-        mattachments <- fromJSValueField "attachments"
+        attachments <- fromMaybe [] <$> fromJSValueField "attachments"
         csv <- fromJSValueField "csv"
         sredirecturl <- fromJSValueField "signsuccessredirect"
-        case (mfields, mattachments) of
-          (Just fields, Just attachments) -> 
+        case (mfields) of
+          (Just fields) ->
             return $ Just $
                 (setSignOrder (SignOrder $ fromMaybe 1 signorder)) $
                 (makeAuthor  <| joinB author |> id) $
@@ -196,9 +196,9 @@ instance FromJSValue SignatoryField where
     fromJSValue = do
         ftype <- fromJSValue -- We read field type at this from two different fields, so we can't use fromJSValueField
         value  <- fromJSValueField "value"
-        mplacements <- fromJSValueField "placements"
-        case (ftype,value,mplacements) of 
-          (Just ft, Just v, Just placements) -> do
+        placements <- fromMaybe [] <$> fromJSValueField "placements"
+        case (ftype,value) of
+          (Just ft, Just v) -> do
               return $ Just $ SignatoryField ft v placements
           _ -> return Nothing
         
