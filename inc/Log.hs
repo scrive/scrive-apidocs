@@ -14,7 +14,6 @@ module Log (
   , server
   , integration
   , teardownLogger
-  , trustWeaver
   , withLogger
   , setupLogger
   , scrivebymail
@@ -63,7 +62,6 @@ setupLogger = do
     debugLog       <- fileHandler' "log/debug.log"       INFO >>= \lh -> return $ setFormatter lh fmt
     errorLog       <- fileHandler' "log/error.log"       INFO >>= \lh -> return $ setFormatter lh fmt
     amazonLog      <- fileHandler' "log/amazon.log"      INFO >>= \lh -> return $ setFormatter lh fmt
-    trustWeaverLog <- fileHandler' "log/trustweaver.log" INFO >>= \lh -> return $ setFormatter lh fmt
     securityLog    <- fileHandler' "log/security.log"    INFO >>= \lh -> return $ setFormatter lh fmt
     elegLog        <- fileHandler' "log/eleg.log"        INFO >>= \lh -> return $ setFormatter lh fmt
     statsLog       <- fileHandler' "log/stats.log"       INFO >>= \lh -> return $ setFormatter lh fmt
@@ -86,7 +84,6 @@ setupLogger = do
                      , mailLog
                      , debugLog
                      , errorLog
-                     , trustWeaverLog
                      , amazonLog
                      , securityLog
                      , elegLog
@@ -141,11 +138,6 @@ setupLogger = do
     updateGlobalLogger
         "Kontrakcja.Amazon"
         (setLevel NOTICE . setHandlers [amazonLog])
-
-    -- TrustWeaver Log
-    updateGlobalLogger
-        "Kontrakcja.TrustWeaver"
-        (setLevel NOTICE . setHandlers [trustWeaverLog])
 
     -- Security Log
     updateGlobalLogger
@@ -247,9 +239,6 @@ docConverter msg = liftIO $ noticeM "Kontrakcja.DocConverter" msg
 
 amazon :: (MonadIO m) => String -> m ()
 amazon msg = liftIO $ noticeM "Kontrakcja.Amazon" msg
-
-trustWeaver :: (MonadIO m) => String -> m ()
-trustWeaver msg = liftIO $ noticeM "Kontrakcja.TrustWeaver" msg
 
 security :: (MonadIO m) => String -> m ()
 security msg = liftIO $ noticeM "Kontrakcja.Security" msg
