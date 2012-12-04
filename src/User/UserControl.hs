@@ -109,16 +109,17 @@ handleRequestPhoneCall = do
   Context{ctxmaybeuser} <- getContext
   memail <- getOptionalField asValidEmail "email"
   mphone <-  getOptionalField asValidPhone "phone"
-  case (memail, mphone) of
-    (Just email, Just phone) -> do
-      user <- guardJustM $ dbQuery $ GetUserByEmail (Email email)
+  muser <- maybe (return Nothing) (dbQuery . GetUserByEmail . Email) memail
+  case (muser, mphone) of
+    (Just user, Just phone) -> do
       --only set the phone number if they're actually logged in
       -- it is possible to request a phone call from the sign view without being logged in!
       -- this function could be called by anyone!
       when (isJust ctxmaybeuser && fmap userid ctxmaybeuser == Just (userid user)) $ do
         _ <- dbUpdate $ SetUserInfo (userid user) $ (userinfo user){ userphone = phone }
         return ()
-      phoneMeRequest user phone
+      phoneMeRequest muser phone
+    (_, Just phone) -> phoneMeRequest Nothing phone
     _ -> return ()
   return $ LinkDesignView
 
