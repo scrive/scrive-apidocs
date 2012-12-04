@@ -563,6 +563,9 @@
             var view = this;
             var model = view.model;
 
+            if(model.type() === 'plannone' || model.type() === 'planrecurly')
+                return false;
+
             if(model.accountCreated()) {
                 view.$el.children().detach();
                 return false;
@@ -685,12 +688,14 @@
             div.append($('<div class="clearfix" />'));
             div.append($('<div class="vat-box" />').text(localization.payments.vat));
 
-            div.append($('<div class="clearfix" />'));
-            if(!(model.type() === 'user' && !model.canPurchase())) {
-                div.append($('<h3 />').text(localization.payments.paywithcard));
-            }
+            if(model.type() !== 'planrecurly' && model.type() !== 'plannone') {
+                div.append($('<div class="clearfix" />'));
+                if(!(model.type() === 'user' && !model.canPurchase())) {
+                    div.append($('<h3 />').text(localization.payments.paywithcard));
+                }
 
-            div.append(view.recurlyForm.el);
+                div.append(view.recurlyForm.el);
+            }
             
             view.$el.html(div.contents());
         },
