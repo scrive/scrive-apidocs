@@ -15,32 +15,32 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
     var path = document.location.pathname.split("/");
     return "/api/frontend/document/" + path[2] + "/signatory/" + path[3] + "/attachment/" + this.model.name() + "/file" + this.model.document().viewer().urlPart();
   },
-  removeLink: function() {
+  removeButton: function() {
     var attachment = this.model;
     var deleteurl = this.apiURL();
-    var removelink = $("<a href='' />").text(localization.deletePDF);
-    removelink.click(function() {
-        attachment.loading();
-        $.ajax(deleteurl, {
-          type: 'DELETE',
-          success: function(d) {
-            attachment.unset('file');
-            attachment.notLoading();
-          },
-          error: function() {
-            attachment.notLoading();
-            console.log("error");
-          }
-        });
-        return false;
-      });
-    return removelink;
+    var button = Button.init({color: "red", text: localization.deletePDF, size:'tiny', onClick: function() {
+            attachment.loading();
+            $.ajax(deleteurl, {
+              type: 'DELETE',
+              success: function(d) {
+                attachment.unset('file');
+                attachment.notLoading();
+              },
+              error: function() {
+                attachment.notLoading();
+                console.log("error");
+              }
+            });
+            return false;
+          }});
+    return button;
   },
   uploadButton: function() {
     var attachment = this.model;
     var uploadurl = this.apiURL();
     return UploadButton.init({
-      width: 200,
+      width: 120,
+      size : 'tiny',
       name: "file",
       text: localization.signatoryAttachmentUploadButton,
       submitOnUpload: true,
@@ -83,38 +83,28 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
   },
   reviewButton: function() {
       var model = this.model;
-      var button = Button.init({color: "green", text: localization.reviewPDF, width: 90, size:'small', onClick: function() {
+      var button = Button.init({color: "green", text: localization.reviewPDF, size:'tiny', onClick: function() {
           window.open(model.file().downloadLink(), '_blank');
           }});
       return button;
   },
   render: function() {
       var attachment = this.model;
-      var container = $("<div class='upload' />");
+      var container = $("<div class='item' />");
       if (attachment.get('loading')) {
           container.append($("<img class='loading'>").attr('src', "/img/wait30trans.gif"));
       } else if (attachment.hasFile()) {
           container.append($("<div class='icon' />"));
-          var label = $("<div class='file' />");
+          var label = $("<div class='file float-right' />");
           label.append($("<div class='name' />").text(this.model.file().name() + ".pdf"));
-          var actions = $("<div />");
-          //review button change
-          //please delete this line after May 1, 2012
-          // -- Eric
-          //actions.append($("<div class='action' />").append(this.fileLink()));
-          if (!attachment.signatory().hasSigned() && attachment.signatory().document().pending()) {
-              actions.append($("<div class='action' />").append(this.removeLink()));
-          }
-          actions.append($("<div class='clearfix' />"));
-          label.append(actions);
           label.append($("<div class='clearfix' />"));
           container.append(label);
-          var buttonbox = $('<div class="buttonbox" />');
-          buttonbox.append(this.reviewButton().input());
-          container.append(buttonbox);
+          container.append(this.reviewButton().input());
+          if (attachment.signatory().document().currentSignatoryCanSign())
+            container.append(this.removeButton().input());
 
       } else if (attachment.signatory().document().pending() || attachment.signatory().document().currentSignatoryCanSign()){
-          container.append(this.uploadButton().input());
+          container.append(this.uploadButton().input().addClass('float-right'));
       }
       container.append($("<div class='clearfix' />"));
 
@@ -125,38 +115,6 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
   }
 });
 
-var SignatoryAttachmentView = Backbone.View.extend({
-  
-  initialize: function(args) {
-    _.bindAll(this, 'render');
-    this.model.view = this;
-    this.render();
-  },
-  uploadView: function() {
-    return new SignatoryAttachmentUploadView({
-      model: this.model,
-      el: $("<div />")
-    });
-  },
-  render: function() {
-    $(this.el).empty();
-
-    var firstcol = $("<div class='first column'/>");
-    firstcol.append($("<div class='name' />").text(this.model.name()));
-    firstcol.append($("<div class='description' />").text(this.model.description()));
-
-    var container = $("<div class='item' />");
-    container.append(firstcol);
-    this.uploadElems = $("<div class='second column'/>").append($(this.uploadView().el));
-    container.append(this.uploadElems);
-
-    container.append($("<div class='clearfix' />"));
-
-    $(this.el).append(container);
-    return this;
-  }
-});
-
 window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
@@ -164,31 +122,44 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     this.uploadElems = [];
     this.render();
   },
-  createSignatoryAttachmentView: function(attachment) {
-    return new SignatoryAttachmentView({
+  signatoryAttachmentDescription: function(attachment) {
+    var container = $("<div class='item' />");
+    container.append($("<div class='name' />").text(attachment.name()));
+    container.append($("<div class='description' />").text(attachment.description()));
+    return container;
+  },
+  signatoryAttachmentFile: function(attachment) {
+    var upl = new SignatoryAttachmentUploadView({
       model: attachment,
       el: $("<div/>")
     });
+    this.uploadElems.push($(upl.el));
+    return upl.el;
+
+    
   },
   render: function() {
     $(this.el).empty();
-    var view = this;
+    var self = this;
 
     if (!this.model.currentSignatory().attachments().length > 0) {
       return this;
     }
 
+
     var container = $("<div class='signatoryattachments' />");
     container.append($("<h2/>").text(this.title == undefined ? localization.requestedAttachments : this.title));
-
-    var list = $("<div class='list'/>");
+    var table = $("<table class='list'/>");
+    var tbody = $("<tbody/>");
+    table.append(tbody);
     _.each(this.model.currentSignatory().attachments(), function(attachment) {
-      var attachmentview = view.createSignatoryAttachmentView(attachment);
-      view.uploadElems.push(attachmentview.uploadElems);
-      list.append($(attachmentview.el));
+      var tr = $("<tr/>")
+      tr.append($("<td class='desc'>").append(self.signatoryAttachmentDescription(attachment)));
+      tr.append($("<td class='file'>").append(self.signatoryAttachmentFile(attachment)));
+      tbody.append(tr);
     });
-    list.append($("<div class='clearfix' />"));
-    container.append(list);
+    
+    container.append(table);
     container.append($("<div class='clearfix' />"));
 
     $(this.el).append(container);

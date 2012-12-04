@@ -535,36 +535,51 @@ body.signview {
   margin-right: 20px;
 }
 
-.signview .signatoryattachments .list .item {
-  margin-bottom: 10px;
-  overflow: none;
+
+.signview .signatoryattachments .item {
+  margin-bottom : 10px;
+  margin-right  : 10px;
 }
 
-.signview .signatoryattachments .list .item .first.column {
-  float: left;
-  display: block;
-  margin-right: 30px;
+
+.signview .signatoryattachments .item .name {
+     font-weight: bold;
+     color: black;
 }
 
-.signview .signatoryattachments .list .item .second.column {
-  float: right;
-  display: block;
+.signview .signatoryattachments .item a {
+     text-decoration: underline;
+     display: block;
 }
+
+.signview .signatoryattachments .list {
+     float: left;
+     width: 580px;
+     margin-left: 23px;
+     margin-right: 20px;
+}
+.signview .signatoryattachments  .list .desc {
+     width: 420px;
+}
+
+.signview .signatoryattachments  .list .desc .description {
+     font-style: italic;
+}
+
+.signview .signatoryattachments .file {
+     vertical-align:top
+}
+
 
 .signview .signatoryattachments .list .item .loading {
   margin-left: 80px;
 }
 
-.signview .signatoryattachments .list .item .upload .icon {
-  float: left;
-  width: 13px;
-  height: 14px;
-  background: url(../img/attachment-icon.png);
-}
 
-.signview .signatoryattachments .list .item .file {
-  float: left;
-  margin-left: 10px;
+.signview .signatoryattachments .list .item .btn-tiny{
+  float:right;
+  margin-left: 6px;
+  margin-top: 6px;
 }
 
 .signview .signatoryattachments .list .item .file .name {

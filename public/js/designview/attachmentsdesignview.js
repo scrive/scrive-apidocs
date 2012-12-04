@@ -231,7 +231,7 @@ window.DesignAuthorAttachmentsPopup = {
                             submit.addInputs(att.fileUpload().attr("name", name));
                           counter++;
                       });
-                      submit.sendAjax(function() {window.location = window.location;},function() {window.location = window.location;});
+                      submit.sendAjax(function() {window.location.reload()},function() {window.location.reload();});
                   });
                   LoadingDialog.open();
                   return false;

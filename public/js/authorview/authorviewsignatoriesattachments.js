@@ -20,8 +20,9 @@ var AuthorViewSignatoriesAttachmentsView = Backbone.View.extend({
   },
   attachmentDescription: function(attachment) {
     var container = $("<div class='item' />");
+    var text = attachment.hasFile() ? localization.authorview.uploadedBy : localization.authorview.requestedFrom;
     var label = $("<div class='label' />");
-    //label.append($("<div class='name' />").text(attachment.name()));
+    label.append($("<span />").text(text)).append($("<span class='name'/>").text(attachment.signatory().nameOrEmail()));
     label.append($("<div class='description' />").text('"' + attachment.description() + '"'));
     container.append(label);
     container.append($("<div class='clearfix' />"));
@@ -29,14 +30,14 @@ var AuthorViewSignatoriesAttachmentsView = Backbone.View.extend({
   },
   attachmentFile : function(attachment) {
     var container = $("<div class='item' />");
-    var text = attachment.hasFile() ? localization.authorview.uploadedBy : localization.authorview.requestedFrom;
-    var label = $("<div class='label' />").append($("<span />").text(text)).append($("<span class='name'/>").text(attachment.signatory().nameOrEmail()));
-    container.append(label);
+    //var text = attachment.hasFile() ? localization.authorview.uploadedBy : localization.authorview.requestedFrom;
+    //var label = $("<div class='label' />").append($("<span />").text(text)).append($("<span class='name'/>").text(attachment.signatory().nameOrEmail()));
+    //container.append(label);
     if (attachment.hasFile()) {
-        var link = $("<a class='link'/>");
-        link.text(attachment.file().name()+ ".pdf");
-        link.attr("href", attachment.file().downloadLink());
-        label.append(link);
+        var button = Button.init({color: "green", text: localization.reviewPDF, cssClass: 'float-right', size:'tiny', onClick: function() {
+                        window.open(attachment.file().downloadLink(), '_blank');
+                        }});
+        container.append(button.input());
     }
     return container;
   },

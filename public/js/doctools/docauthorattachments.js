@@ -23,20 +23,26 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
     _.bindAll(this, 'render');
     this.render();
   },
-  createAuthorAttachmentElems: function(attachment) {
+  authorAttachmentDesc: function(attachment) {
     var container = $("<div class='item' />");
     container.append($("<div class='icon' />"));
     var label = $("<div class='label' />");
     label.append($("<div class='name' />").text(attachment.name()));
-    var link = $("<a target='_blank' />");
-    link.text(localization.reviewPDF);
-    link.attr("href", attachment.downloadLink());
-    label.append(link);
     container.append(label);
     container.append($("<div class='clearfix' />"));
     return container;
   },
+  authorAttachmentFile: function(attachment) {
+    var container = $("<div class='item' />");
+    var button = Button.init({color: "green", text: localization.reviewPDF, cssClass: 'float-right', size:'tiny', onClick: function() {
+                        window.open(attachment.downloadLink(), '_blank');
+                        }});
+    container.append(button.input());
+    return container;
+  },
+  
   render: function() {
+    var self = this;
     $(this.el).empty();
 
     if (!this.model.document().authorattachments().length > 0) {
@@ -45,13 +51,19 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
 
     var container = $("<div class='authorattachments' />");
     container.append($("<h2/>").text(this.model.title()));
-    var list = $("<div class='list' />");
-    var createAuthorAttachmentElems = this.createAuthorAttachmentElems;
+
+    var table = $("<table class='list'/>");
+    var tbody = $("<tbody/>");
+    table.append(tbody);
     _.each(this.model.document().authorattachments(), function(attachment) {
-      list.append(createAuthorAttachmentElems(attachment));
+      var tr = $("<tr/>")
+
+      tr.append($("<td class='desc'>").append(self.authorAttachmentDesc(attachment)));
+      tr.append($("<td class='file'>").append(self.authorAttachmentFile(attachment)));
+      tbody.append(tr);
     });
-    list.append($("<div class='clearfix' />"));
-    container.append(list);
+
+    container.append(table);
 
     container.append($("<div class='clearfix' />"));
 
