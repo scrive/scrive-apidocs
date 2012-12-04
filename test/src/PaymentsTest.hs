@@ -13,9 +13,13 @@ import Control.Monad
 import Test.Framework
 import Control.Monad.Trans
 
+import CompanyAccounts.Model
+import Util.HasSomeUserInfo
+
 --import Utils.Either
 
 import Payments.Model
+import Payments.Control
 
 import Recurly
 
@@ -25,6 +29,7 @@ paymentsTests env = testGroup "Payments" [
   , testThat "Company quantity works with free user" env testCompanyQuantity
   , testThat "SavePaymentPlan can be read in" env testSavePaymentPlan
   , testThat "PaymentPlansRequiringSync conditions are correct" env testPaymentPlansRequiringSync
+  , testThat "PaymentPlansRequiringSyncNoProvider conditions are correct" env testPaymentPlansNoProviderRequiringSync    
   , testThat "PaymentPlansExpiredDunning conditions are correct" env testPaymentPlansExpiredDunning
   , testThat "GetPaymentPlanInactiveUser works for inactive users" env testPaymentPlanInactiveUser
   , testThat "GetPaymentPlanInactiveUser does not work for active users" env testPaymentPlanInactiveUserActive
@@ -137,8 +142,50 @@ testPaymentPlansRequiringSync = do
                              }
         _ <- dbUpdate $ SavePaymentPlan pp sync
         return ()
-  rs <- dbQuery $ PaymentPlansRequiringSync now
+  rs <- dbQuery $ PaymentPlansRequiringSync RecurlyProvider now
   assert $ length rs == 27 -- hand calculated
+
+testPaymentPlansNoProviderRequiringSync :: TestEnv ()
+testPaymentPlansNoProviderRequiringSync = do
+  now <- getMinutesTime
+  company <- addNewCompany
+  forM_ [0..9] $ \(i::Int) -> do
+    user <- addNewRandomUser
+    _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid company)
+    when (i < 5) $ do
+      _ <- dbUpdate $ AddCompanyInvite $ CompanyInvite {invitedemail = Email $ getEmail user
+                                                       ,invitedfstname = getFirstName user
+                                                       ,invitedsndname = getLastName user
+                                                       ,invitingcompany = companyid company}
+      return ()
+  forM_ [0..4] $ \(i::Int) -> do
+    _ <- dbUpdate $ AddCompanyInvite $ CompanyInvite {invitedemail = Email $ "a" ++ show i ++ "@poo.com"
+                                                     ,invitedfstname = "F" ++ show i
+                                                     ,invitedsndname = "L" ++ show i
+                                                     ,invitingcompany = companyid company}
+    return ()
+  ac <- dbUpdate $ GetAccountCode
+  let pp = PaymentPlan { ppAccountCode         = ac
+                       , ppID                  = Right (companyid company)
+                       , ppPricePlan           = TeamPricePlan
+                       , ppPendingPricePlan    = TeamPricePlan
+                       , ppStatus              = ActiveStatus
+                       , ppPendingStatus       = ActiveStatus
+                       , ppQuantity            = 10
+                       , ppPendingQuantity     = 10
+                       , ppPaymentPlanProvider = NoProvider
+                       , ppDunningStep         = Nothing
+                       , ppDunningDate         = Nothing
+                       , ppBillingEndDate      = now
+                       }
+  _ <- dbUpdate $ SavePaymentPlan pp now
+  rs <- dbQuery $ PaymentPlansRequiringSync NoProvider now
+  assert $ length rs == 1
+  q <- dbQuery $ GetCompanyQuantity (companyid company)
+  assert $ q == 15
+  handleSyncNoProvider now
+  rs' <- dbQuery $ PaymentPlansRequiringSync NoProvider now
+  assert $ length rs' == 0
   
 testPaymentPlansExpiredDunning :: TestEnv ()
 testPaymentPlansExpiredDunning = do
