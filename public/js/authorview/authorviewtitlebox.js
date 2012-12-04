@@ -96,7 +96,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     return Button.init({
       color: "green",
       size: "small",
-      text: "Go to Sign View",
+      text: localization.authorview.goToSignView,
       onClick: function() {
          model.goToSignView();
         }

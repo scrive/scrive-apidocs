@@ -457,6 +457,7 @@ javascriptLocalisation =
              , rejected : "$_authorviewRejected()$"
              , timeouted : "$_authorviewTimeouted()$"
              , pending  : "$_authorviewPending()$"
+             , goToSignView : "$_authorviewGoToSignview()$"
          }
          , history : {
                time  : "$_historyTime()$"

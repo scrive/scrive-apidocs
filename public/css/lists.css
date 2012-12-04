@@ -24,6 +24,12 @@
         border-top: 0px solid #808080;
 }
 
+.list-container .tab-container {
+        border-bottom: 0px solid #808080;
+        border-left: 0px solid #808080;
+        border-right: 0px solid #808080;
+}
+
 .list-container .table {
 	background: #f4f4f4;
         border-radius: 0 0 5px 5px;
