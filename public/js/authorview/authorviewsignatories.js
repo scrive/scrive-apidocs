@@ -93,7 +93,7 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
 
       if (this.model.hasDummy()) {
          box1.css("border-color","#ffffff");
-         box2.append(this.signatoryView().el());
+         box2.append(this.model.signatoryView().el());
       }   
       else if (this.model.hasList()) {
          box1.append(this.list());

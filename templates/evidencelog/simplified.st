@@ -1,35 +1,35 @@
 ###
-simpliefiedTextNewDocumentEvidence          = Created document. It is ready to be signed.
+simpliefiedTextNewDocumentEvidence          = $_simpliefiedTextNewDocumentEvidence()$
 ###
-simpliefiedTextRestartDocumentEvidence      = Created document. It is ready to be signed.
+simpliefiedTextRestartDocumentEvidence      = $_simpliefiedTextRestartDocumentEvidence()$
 ###
-simpliefiedTextPreparationToPendingEvidence = Created document. It is ready to be signed.
+simpliefiedTextPreparationToPendingEvidence = $_simpliefiedTextPreparationToPendingEvidence()$
 ###
-simpliefiedTextCloseDocumentEvidence        = Document closed and stamped by Scrive
+simpliefiedTextCloseDocumentEvidence        = $_simpliefiedTextCloseDocumentEvidence()$
 ###
-simpliefiedTextCancelDocumentEvidence       = Document canceled
+simpliefiedTextCancelDocumentEvidence       = $_simpliefiedTextCancelDocumentEvidence()$
 ###
-simpliefiedTextRejectDocumentEvidence       = Document rejected
+simpliefiedTextRejectDocumentEvidence       = $_simpliefiedTextRejectDocumentEvidence()$
 ###
-simpliefiedTextTimeoutDocumentEvidence      = Document timeouted
+simpliefiedTextTimeoutDocumentEvidence      = $_simpliefiedTextTimeoutDocumentEvidence()$
 ###
-simpliefiedTextMarkInvitationReadEvidence   = Document invitation read
+simpliefiedTextMarkInvitationReadEvidence   = $_simpliefiedTextMarkInvitationReadEvidence()$
 ###
-simpliefiedTextMarkDocumentSeenEvidence     = Document seen online
+simpliefiedTextMarkDocumentSeenEvidence     = $_simpliefiedTextMarkDocumentSeenEvidence()$
 ####
-simpliefiedTextSignDocumentEvidence         = Document signed
+simpliefiedTextSignDocumentEvidence         = $_simpliefiedTextSignDocumentEvidence()$
 ####
-simpliefiedTextInvitationEvidence           = Invitation send to $affectedsignatory$ $if(text)$ with message $text:noescape()$ $endif$.
+simpliefiedTextInvitationEvidence           = $_simpliefiedTextInvitationEvidence()$
 ####
-simpliefiedTextInvitationDelivered          = Invitation delivered to $affectedsignatory$.
+simpliefiedTextInvitationDelivered          = $_simpliefiedTextInvitationDelivered()$
 #####
-simpliefiedTextInvitationUndelivered        = Invitation could not be delivered to $affectedsignatory$.
+simpliefiedTextInvitationUndelivered        = $_simpliefiedTextInvitationUndelivered()$
 #####
-simpliefiedTextReminderSend                 = Reminder send to $affectedsignatory$ $if(text)$ with message $text:noescape()$ $endif$.
+simpliefiedTextReminderSend                 = $_simpliefiedTextReminderSend()$
 #####
-simpliefiedTextResealedPDF                  = Document resealed by Scrive admin
+simpliefiedTextResealedPDF                  = $_simpliefiedTextResealedPDF()$
 #####
-simpliefiedTextCancelDocumenElegEvidence    = Cancelled document due to signatory and elegitimation data mismatch
+simpliefiedTextCancelDocumenElegEvidence    = $_simpliefiedTextCancelDocumenElegEvidence()$
 ##### UTILS
 #####
 notNamedParty = $_notNamedParty()$

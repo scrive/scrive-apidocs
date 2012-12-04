@@ -17,9 +17,12 @@ var DocumentHistoryModel = Backbone.Model.extend({
             url: "/d/evidencelog/" + this.document().documentid(),
             paging : new Paging({disabled: true, showLimit : this.get("showAll") ? undefined : 5 }),
             cells : [
-                new Cell({name: "Time",  width:"60px",  field:"time"}),
-                new Cell({name: "Party", width:"80px", field:"party"}),
-                new Cell({name: "Description", width:"200px",  field:"text" })
+                new Cell({name: localization.history.time,  width:"60px",  field:"time"}),
+                new Cell({name: localization.history.party, width:"80px", field:"party"}),
+                new Cell({name: localization.history.description, width:"200px",  field:"text" ,special: "rendered",
+                          rendering: function(value) {
+                            return $("<div>").html(value);
+                          }})
                 ]
             })
          
@@ -51,11 +54,11 @@ var DocumentHistoryView = Backbone.View.extend({
     updateOption : function() {
          if (this.model.showAll()) {
             this.checkbox.addClass("expanded");
-            this.label.text("Hide")
+            this.label.text(localization.history.hide)
          }   
         else {
             this.checkbox.removeClass("expanded");
-            this.label.text("Expand to view more (" + (this.model.historyList().model().length - 5) + " avaible)")
+            this.label.text(localization.history.expand + " (" + (this.model.historyList().model().length - 5) + " " +localization.history.available+ ")")
         }    
     },
     expandAllOption : function() {

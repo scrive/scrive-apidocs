@@ -22,7 +22,7 @@ var AuthorViewSignatoriesAttachmentsView = Backbone.View.extend({
     var container = $("<div class='item' />");
     var text = attachment.hasFile() ? localization.authorview.uploadedBy : localization.authorview.requestedFrom;
     var label = $("<div class='label' />");
-    label.append($("<span />").text(text)).append($("<span class='name'/>").text(attachment.signatory().nameOrEmail()));
+    label.append($("<span class='name'/>").text(attachment.name())).append($("<span />").text(text)).append($("<span class='name'/>").text(attachment.signatory().nameOrEmail()));
     label.append($("<div class='description' />").text('"' + attachment.description() + '"'));
     container.append(label);
     container.append($("<div class='clearfix' />"));

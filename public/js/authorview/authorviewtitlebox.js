@@ -15,13 +15,13 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
     return this.canBeRestarted() || this.canBeWithdrawn() || this.canGoToSignView();
   },
   canBeRestarted : function() {
-    return this.document().canberestarted();
+    return (this.document().canberestarted() && this.document().currentViewerIsAuthor());
   },
   restart : function() {
     this.document().restart().send();
   },
   canBeWithdrawn : function() {
-    return this.document().canbecanceled();
+    return this.document().canbecanceled() && (this.document().currentViewerIsAuthor() || this.document().currentViewerIsAuthorsCompanyAdmin());
   },
   cancel : function() {
     this.document().cancel().sendAjax(function() {window.location = window.location;});

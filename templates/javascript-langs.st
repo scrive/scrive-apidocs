@@ -445,18 +445,27 @@ javascriptLocalisation =
          }
          , cancel : "$_cancel()$"
          , authorview : {
-               signatoriesTitle : "Parties"
+               signatoriesTitle : "$_authorviewSignatoriesTitle()$"
              , requestedAttachments : "$_RequestedAttachments()$"
-             , requestedFrom : "Requested from "
-             , uploadedBy    : "Uploaded by "
-             , signNow : "Please go to signview to sign this document"
-             , signedAndClosed : "Document signed"
-             , closed : "Document signed by all signatories and closed"
-             , signedNotClosed : "Waiting for other signatories"
-             , canceled : "This document was withdrawn"
-             , rejected : "This document was rejected"
-             , timeouted : "This document has timedout"
+             , requestedFrom : "$_authorviewRequestedFrom()$"
+             , uploadedBy    : "$_authorviewUploadedBy()$"
+             , signNow : "$_authorviewSignNow()$"
+             , signedAndClosed : "$_authorviewSignedAndClosed()$"
+             , closed : "$_authorviewClosed()$"
+             , signedNotClosed : "$_authorviewSignedNotClosed()$"
+             , canceled : "$_authorviewCanceled()$"
+             , rejected : "$_authorviewRejected()$"
+             , timeouted : "$_authorviewTimeouted()$"
+             , pending  : "$_authorviewPending()$"
          }
+         , history : {
+               time  : "$_historyTime()$"
+             , party : "$_historyParty()$"
+             , description : "$_historyDescription()$"
+             , expand : "$_historyExpand()$"
+             , available : "$_historyAvailable()$"
+             , hide : "$_historyHide()$"
+           }
          , docsignview : {
                followArrowToSign: "$_followArrowToSign()$"
              , followArrowToReview: "$_followArrowToReview()$"

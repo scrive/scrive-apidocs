@@ -21,6 +21,8 @@ var AuthorViewHistoryModel = Backbone.Model.extend({
       return localization.authorview.closed;
     } else if (document.isSignedNotClosed()) {
       return localization.authorview.signedNotClosed;
+    } else if (document.pending()) {
+      return localization.authorview.pending;
     } else if (document.canceled()) {
       return localization.authorview.canceled;
     } else if (document.rejected()) {
@@ -29,7 +31,7 @@ var AuthorViewHistoryModel = Backbone.Model.extend({
       return localization.authorview.timeouted;
     } else {
       console.error("Unsure what state we're in");
-      return ""
+      return "";
     }
     
   },

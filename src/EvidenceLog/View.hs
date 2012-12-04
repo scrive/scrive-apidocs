@@ -23,7 +23,7 @@ import Data.Maybe
 import Data.List
 import User.Model
 import DB
-
+import Control.Logic
 -- | Evidence log for web page - short and simplified texts
 eventsJSListFromEvidenceLog ::  (MonadDB m, TemplatesMonad m) => KontraTimeLocale -> Document -> [DocumentEvidenceEvent] -> m [JSValue]
 eventsJSListFromEvidenceLog tl doc dees = mapM (J.runJSONGenT . eventJSValue tl doc) $ eventsForLog doc dees
@@ -32,10 +32,10 @@ eventsJSListFromEvidenceLog tl doc dees = mapM (J.runJSONGenT . eventJSValue tl 
 eventsForLog :: Document -> [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
 eventsForLog _doc events =
     let
-        sevents = filter (simpleEvents . evType)  events
+        sevents = filter ((simpleEvents . evType) &&^ (not . emptyEvent))  events
         (es, es') = break (endOfHistoryEvent . evType) sevents
         separatedLog = es ++ (take 1 es')
-        cleanerLog  = cleanSeenAfterSigned $ flattenSimilar separatedLog
+        cleanerLog  = flattenSimilar $ cleanUnimportantAfterSigning separatedLog
     in cleanerLog
 
         
@@ -88,17 +88,26 @@ simpleEvents ResealedPDF                  = True
 simpleEvents CancelDocumenElegEvidence    = True
 simpleEvents _                            = False
 
--- Clean some events that should not be shown. Like reading docume by author after hi signed document.
-cleanSeenAfterSigned :: [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
-cleanSeenAfterSigned [] = []
-cleanSeenAfterSigned (e:es) = if (evType e == MarkDocumentSeenEvidence && isJust (find (\e' -> evType e' == SignDocumentEvidence && evSigLinkID e' == evSigLinkID e) es))
-                                 then cleanSeenAfterSigned es
-                                 else (e:cleanSeenAfterSigned es)
+-- Clean some events that should not be shown. Like reading after signing.
+cleanUnimportantAfterSigning :: [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
+cleanUnimportantAfterSigning [] = []
+cleanUnimportantAfterSigning (e:es) = if ((     (evType e == MarkDocumentSeenEvidence)
+                                           || (evType e == MarkInvitationReadEvidence))
+                                        && wasSigned (evUserID e, evSigLinkID e) es)
+                                        then cleanUnimportantAfterSigning es
+                                        else (e:cleanUnimportantAfterSigning es)
+  where wasSigned (muid,mslid) es' =
+          isJust (find (\e' ->     evType e' == SignDocumentEvidence
+                                && ((isJust muid && evUserID e' == muid)
+                                     || (isJust mslid && evSigLinkID e' == mslid)
+                                    )) es')
                                 
 
 endOfHistoryEvent :: EvidenceEventType -> Bool
-endOfHistoryEvent  PreparationToPendingEvidence     = True
-endOfHistoryEvent _                        = False
+endOfHistoryEvent  PreparationToPendingEvidence = True
+endOfHistoryEvent  NewDocumentEvidence          = True
+endOfHistoryEvent  RestartDocumentEvidence      = True
+endOfHistoryEvent _                             = False
 
 -- Events that should be considered as performed as author even is actor states different.
 authorEvents  :: EvidenceEventType -> Bool
@@ -111,7 +120,11 @@ systemEvents InvitationDelivered = True
 systemEvents InvitationUndelivered = True
 systemEvents _ = False
 
-
+-- Empty events - they should be skipped, as they don't provide enought information to show to user
+emptyEvent :: DocumentEvidenceEvent -> Bool
+emptyEvent (DocumentEvidenceEvent {evType = InvitationEvidence, evAffectedSigLinkID = Nothing }) = True
+emptyEvent (DocumentEvidenceEvent {evType = ReminderSend,       evAffectedSigLinkID = Nothing }) = True
+emptyEvent _ = False
 
 simillarEvent :: DocumentEvidenceEvent -> DocumentEvidenceEvent -> Bool
 simillarEvent e1 e2 =
@@ -137,7 +150,9 @@ simplyfiedEventText doc dee = renderTemplate ("simpliefiedText" ++ (show $ evTyp
     case (evAffectedSigLinkID dee) of
       Just aslid -> F.value "affectedsignatory" $ getSmartName <$> getSigLinkFor doc aslid
       _ -> return ()
-    F.value "text" $ evMessageText dee
+    F.value "text" $ filterTags <$> evMessageText dee
+    F.value "eleg" $ documentauthenticationmethod doc == ELegAuthentication
+    F.value "pad"  $ documentdeliverymethod doc == PadDelivery
     
 -- | Generating text of Evidence log that is attachmed to PDF. It should be compleate
 htmlDocFromEvidenceLog :: TemplatesMonad m => String -> [DocumentEvidenceEvent] -> m String
@@ -153,5 +168,8 @@ htmlSkipedEvidenceType :: EvidenceEventType -> Bool
 htmlSkipedEvidenceType OldDocumentHistory = True
 htmlSkipedEvidenceType _ = False
 
-
+filterTags :: String -> String
+filterTags ('<':rest) = ' ' : (filterTags (drop 1 $ dropWhile (\c -> c /= '>') rest))
+filterTags (a:rest) = a : (filterTags rest)
+filterTags [] = []
 

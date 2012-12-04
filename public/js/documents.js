@@ -461,19 +461,19 @@ window.Document = Backbone.Model.extend({
     },
     isSigning: function() {
         var signatory = this.currentSignatory();
-        return this.signingInProcess() && signatory.signs() && !signatory.hasSigned();
+        return signatory != undefined && this.signingInProcess() && signatory.signs() && !signatory.hasSigned();
     },
     isReviewing: function() {
         var signatory = this.currentSignatory();
-        return (this.signingInProcess() || this.closed()) && !signatory.signs();
+        return (signatory != undefined) && (this.signingInProcess() || this.closed()) && !signatory.signs();
     },
     isSignedNotClosed: function() {
         var signatory = this.currentSignatory();
-        return this.signingInProcess() && signatory.hasSigned() && !this.closed();
+        return signatory != undefined && this.signingInProcess() && signatory.hasSigned() && !this.closed();
     },
     isSignedAndClosed: function() {
         var signatory = this.currentSignatory();
-        return signatory.hasSigned() && this.closed();
+        return signatory != undefined && signatory.hasSigned() && this.closed();
     },
     isUnavailableForSign: function() {
         return !this.signingInProcess() && !this.closed();
