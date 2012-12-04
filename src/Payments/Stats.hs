@@ -22,7 +22,7 @@ record time action provider quantity plan eid ac =
   
 handlePaymentsStatsCSV :: Kontrakcja m => m CSV
 handlePaymentsStatsCSV = onlySalesOrAdmin $ do
-  let header = ["time", "account_code", "userid", "companyid", "quantity", "plan", "action", "provider", "name"]
+  let header = ["sync time", "account code", "userid", "companyid", "quantity", "plan", "provider", "billing end time", "status", "name"]
   stats <- dbQuery $ GetPaymentsStats
   return $ CSV { csvFilename = "paymentsstats.csv"
                , csvHeader   = header
@@ -62,17 +62,17 @@ instance MonadDB m => DBUpdate m AddPaymentsStat Bool where
 data GetPaymentsStats = GetPaymentsStats
 instance (MonadBase IO m, MonadDB m) => DBQuery m GetPaymentsStats [[String]] where
   query GetPaymentsStats = do
-    _ <- kRun $ SQL ("SELECT payment_stats.time, payment_stats.account_code, payment_stats.user_id, payment_stats.company_id, " <>
-                     "       payment_stats.quantity, payment_stats.plan, payment_stats.action, payment_stats.provider, " <>
+    _ <- kRun $ SQL ("SELECT payment_plans.sync_date, payment_plans.account_code, payment_plans.user_id, payment_plans.company_id, " <>
+                     "       payment_plans.quantity, payment_plans.plan, payment_plans.provider, payment_plans.billing_ends, payment_plans.status, " <>
                      "       trim(trim(users.first_name) || ' ' || trim(users.last_name)), trim(users.email), " <>
                      "       trim(users.company_name), trim(companies.name) " <>
-                     "FROM payment_stats " <>
-                     "LEFT OUTER JOIN users     ON payment_stats.user_id    = users.id " <>
-                     "LEFT OUTER JOIN companies ON payment_stats.company_id = companies.id " <>
-                     "ORDER BY payment_stats.time DESC") []
+                     "FROM payment_plans " <>
+                     "LEFT OUTER JOIN users     ON payment_plans.user_id    = users.id " <>
+                     "LEFT OUTER JOIN companies ON payment_plans.company_id = companies.id " <>
+                     "ORDER BY payment_plans.account_code DESC") []
     foldDB f []
-      where f :: [[String]] -> MinutesTime -> AccountCode -> Maybe UserID -> Maybe CompanyID -> Int -> PricePlan -> PaymentsAction -> PaymentPlanProvider -> Maybe String -> Maybe String -> Maybe String -> Maybe String -> [[String]]
-            f acc t ac muid mcid q pp pa pr un em ucn cn =
+      where f :: [[String]] -> MinutesTime -> AccountCode -> Maybe UserID -> Maybe CompanyID -> Int -> PricePlan -> PaymentPlanProvider -> MinutesTime -> PaymentPlanStatus -> Maybe String -> Maybe String -> Maybe String -> Maybe String -> [[String]]
+            f acc t ac muid mcid q pp pr be st un em ucn cn =
               let smartname = case cn of
                     Just name -> name
                     _ -> case ucn of
@@ -80,7 +80,7 @@ instance (MonadBase IO m, MonadDB m) => DBQuery m GetPaymentsStats [[String]] wh
                       _ -> case un of
                         Just name | not $ null name -> name
                         _ -> fromMaybe "" em                        
-              in [formatMinutesTimeISO t, show ac, maybe "" show muid, maybe "" show mcid, show q, show pp, show pa, show pr, smartname] : acc
+              in [formatMinutesTimeISO t, show ac, maybe "" show muid, maybe "" show mcid, show q, show pp, show pr, formatMinutesTimeISO be, show st, smartname] : acc
 
 
 
