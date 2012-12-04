@@ -97,7 +97,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
               _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
               Log.debug $ "Attempting successfull. User " ++ (show $ getEmail actvuser) ++ "is logged in."
               logUserToContext $ Just tosuser
-              when (callme) $ phoneMeRequest tosuser phone
+              when (callme) $ phoneMeRequest (Just tosuser) phone
               return $ Just (tosuser, newdocs)
             else do
               Log.debug $ "No TOS accepted. We cant activate user."
@@ -122,24 +122,30 @@ createUser email names mcompanyid lang = do
       return muser
     _ -> return muser
 
-phoneMeRequest :: Kontrakcja m => User -> String -> m ()
-phoneMeRequest user phone = do
+phoneMeRequest :: Kontrakcja m => Maybe User -> String -> m ()
+phoneMeRequest muser phone = do
   ctx <- getContext
-  let content = "<p>User " ++ getFirstName user ++ " "
-                    ++ getLastName user ++ " "
-                    ++ "&lt;" ++ getEmail user ++ "&gt; "
+  let content = case muser of 
+        Just user -> "<p>User " ++ getFirstName user ++ " "
+                     ++ getLastName user ++ " "
+                     ++ "&l   t;" ++ getEmail user ++ "&gt; "
+                     ++ "has requested a call on "
+                     ++ "&lt;" ++ phone ++ "&gt;.  "
+                     ++ "They have just signed the TOS, "
+                     ++ "and they're setup with lang "
+                     ++ "&lt;" ++ (codeFromLang $ getLang user) ++ "&gt;.</p>"
+        Nothing -> "<p>A person "
                     ++ "has requested a call on "
                     ++ "&lt;" ++ phone ++ "&gt;.  "
-                    ++ "They have just signed the TOS, "
-                    ++ "and they're setup with lang "
-                    ++ "&lt;" ++ (codeFromLang $ getLang user) ++ "&gt;.</p>"
+                    ++ "</p>"
   scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
             to = [MailAddress { fullname = "info@skrivapa.se", email = "info@skrivapa.se" }]
           , title = "Phone Call Request"
           , content = content
       }
-  _ <- addUserPhoneAfterTOS user
-  return ()
+  when (isJust muser) $ do
+    _ <- addUserPhoneAfterTOS $ fromJust muser
+    return ()
 
 checkPasswordsMatch :: TemplatesMonad m => String -> String -> Either (m FlashMessage) ()
 checkPasswordsMatch p1 p2 =
