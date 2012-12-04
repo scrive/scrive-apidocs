@@ -4,6 +4,7 @@ module Payments.Control (
                          handleSyncNewSubscriptionWithRecurly
                         ,handleChangePlan
                         ,handleSyncWithRecurly
+                        ,handleSyncNoProvider
                         ,handleRecurlyPostBack
                         ,handlePricePageJSON
                         ,handleUserExists
@@ -52,6 +53,7 @@ import Payments.Model
 import Payments.Rules
 import Payments.View
 import Payments.Config (RecurlyConfig(..))
+import Payments.Stats
 import qualified Payments.Stats as Stats
 
 -- to call this, user must not have an account code yet (no payment plan in table)
@@ -160,7 +162,7 @@ cachePlan time pa ac subscription invoicestatus eid mds mdd = do
 handleSyncWithRecurly :: (MonadIO m, MonadDB m, CryptoRNG m) => String -> MailsConfig -> KontrakcjaGlobalTemplates -> String -> MinutesTime -> m ()
 handleSyncWithRecurly hostpart mailsconfig templates recurlyapikey time = do
   Log.payments "Syncing with Recurly."
-  plans <- dbQuery $ PaymentPlansRequiringSync time
+  plans <- dbQuery $ PaymentPlansRequiringSync RecurlyProvider time
   Log.payments $ "Found " ++ show (length plans) ++ " plans requiring sync."
   forM_ plans $ \plan -> do
     esubscriptions <- liftIO $ getSubscriptionsForAccount curl_exe recurlyapikey $ show $ ppAccountCode plan
@@ -234,6 +236,22 @@ handleSyncWithRecurly hostpart mailsconfig templates recurlyapikey time = do
                 _ <- sendInvoiceFailedEmail hostpart mailsconfig lang' templates user mcompany invoice
                 return ()
       _ -> return ()
+
+handleSyncNoProvider :: (MonadIO m, MonadDB m, CryptoRNG m) => MinutesTime -> m ()
+handleSyncNoProvider time = do
+  Log.payments "Syncing accounts with no provider."
+  plans <- dbQuery $ PaymentPlansRequiringSync NoProvider time
+  Log.payments $ "Found " ++ show (length plans) ++ " plans requiring sync."
+  forM_ plans $ \plan -> do
+    quantity <- maybe (return 1) (dbQuery . GetCompanyQuantity) $ toMaybe $ ppID plan
+    Log.payments $ "Here is the db quantity: " ++ show quantity
+    r <- dbUpdate $ SavePaymentPlan plan {ppQuantity = quantity, ppPendingQuantity = quantity} time
+    if r
+      then do
+        _ <- Stats.record time SyncAction NoProvider quantity (ppPricePlan plan) (ppID plan) (ppAccountCode plan)
+        return ()
+      else do
+        Log.payments "cachePlan: Could not save payment plan."
 
 postBackCache :: Kontrakcja m => PushRequest -> m ()
 postBackCache pr = do

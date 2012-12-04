@@ -74,9 +74,10 @@ main = Log.withLogger $ do
     mtime <- getMinutesTime
     ctime <- liftIO $ System.Time.toCalendarTime (toClockTime mtime)
     temps <- snd `liftM` liftIO (readMVar templates)
-    when (System.Time.ctHour ctime == 0) $ -- midnight
+    when (System.Time.ctHour ctime == 0) $ do -- midnight
       handleSyncWithRecurly (hostpart appConf) (mailsConfig appConf)
         temps (recurlyAPIKey $ recurlyConfig appConf) mtime
+      handleSyncNoProvider mtime
   t9 <- if AWS.isAWSConfigOk appConf
           then return <$> (forkCron_ tg "AmazonUploading" 60 $ runScheduler AWS.uploadFilesToAmazon)
           else return []

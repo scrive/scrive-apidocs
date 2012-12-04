@@ -209,18 +209,30 @@ daysBeforeSync :: Int
 daysBeforeSync = 7
 
 --tested
-data PaymentPlansRequiringSync = PaymentPlansRequiringSync MinutesTime
+data PaymentPlansRequiringSync = PaymentPlansRequiringSync PaymentPlanProvider MinutesTime
 instance MonadDB m => DBQuery m PaymentPlansRequiringSync [PaymentPlan] where
-  query (PaymentPlansRequiringSync time) = do
+  query (PaymentPlansRequiringSync prov time) = do
     let past = daysBefore daysBeforeSync time 
-    kPrepare $ "SELECT account_code, account_type, user_id, company_id, plan, status, quantity, plan_pending, status_pending, quantity_pending, provider, dunning_step, dunning_date, billing_ends " <>
+    kPrepare $ "SELECT account_code, account_type, user_id, payment_plans.company_id, plan, status, quantity, plan_pending, status_pending, quantity_pending, provider, dunning_step, dunning_date, billing_ends " <>
              "  FROM payment_plans " <> 
-             "  LEFT OUTER JOIN (SELECT company_id as cid, count(id) as q FROM users WHERE NOT deleted AND NOT is_free GROUP BY cid) as ccount ON cid = company_id " <> 
-             "  WHERE provider = ? " <> -- only sync recurly
+             "  LEFT OUTER JOIN (SELECT c.company_id, count(email) AS q " <>
+             "                   FROM ((SELECT company_id, users.email " <>
+             "                          FROM users " <>
+             "                          WHERE users.deleted = FALSE " <>
+             "                            AND users.is_free = FALSE) " <>
+             "                         UNION " <>
+             "                         (SELECT companyinvites.company_id, companyinvites.email " <>
+             "                          FROM companyinvites " <>
+             "                          WHERE NOT EXISTS (SELECT 1 FROM users " <>
+             "                                            WHERE users.email = companyinvites.email " <>
+             "                                              AND users.company_id = companyinvites.company_id))) as c" <>
+             "                   GROUP BY c.company_id) AS ccount" <>
+             "              ON (ccount.company_id = payment_plans.company_id)" <>
+             "  WHERE provider = ? " <>
              "    AND (sync_date < ? " <> -- stuff older than 7 days needs sync
              "     OR  (q > quantity " <> -- current # of users > cache
              "     OR   q <> quantity_pending)) " -- current # of users <> pending cache
-    _ <- kExecute [toSql RecurlyProvider, toSql past]
+    _ <- kExecute [toSql prov, toSql past]
     foldDB fetchPaymentPlans []
 
 --tested
