@@ -20,7 +20,7 @@ class Helpers
     @wait = Selenium::WebDriver::Wait.new(:timeout => 60)
     @ctx = TestContext.new
     @driver = @ctx.createWebDriver
-    @driver.manage.window.resize_to(1000, 800)
+    @driver.manage.window.resize_to(1080, 800)
     @emailhelper = EmailHelper.new(@ctx, @driver, @wait)
     @loginhelper = LoginHelper.new(@ctx, @driver, @wait)
     @dochelper = DocHelper.new(@ctx, @driver, @wait)

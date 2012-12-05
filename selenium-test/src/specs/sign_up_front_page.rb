@@ -16,7 +16,7 @@ describe "sign up on front page and modify account settings" do
 
   def reset_password(email, password)
     puts "reset password for "+email+" to "+password
-    @h.driver.get(@h.ctx.createKontrakcjaURL "/")
+    @h.driver.navigate().to(@h.ctx.createKontrakcjaURL "/")
     (@h.wait.until { @h.driver.find_element :css => "a.login-button" }).click
     (@h.wait.until { @h.driver.find_element :css => ".login-container a.s-forgot-password" }).click
     (@h.wait.until { @h.driver.find_element :css => ".recovery-container input[name='email']" }).send_keys email
