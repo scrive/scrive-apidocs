@@ -476,7 +476,8 @@
                                 error : function() {},
                                 timeout: args.timeout
               });
-            };  
+            };
+            this.model = function() {return model;}
             schema.bind('change', function() {self.recall();});
             if (args.loadOnInit != false) self.recall();
         }

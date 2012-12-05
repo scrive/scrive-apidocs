@@ -1061,7 +1061,7 @@ statisticsPage=
       // Fix me - too much requests due to bad KontraLink construction. Need to use 'new' there.
       var dayTable = new KontraList({
         name: "Past Month Table",
-        timeout: 20000,
+        timeout: 30000,
         schema: new Schema({
           url: "$adminstatsbydaylink$",
           cells: [
@@ -1074,7 +1074,7 @@ statisticsPage=
           ]})});
       var monthTable = new KontraList({
         name: "Past 6 Month Table",
-        timeout: 20000,
+        timeout: 30000,
         schema: new Schema({
           url: "$adminstatsbymonthlink$",
           cells: [
@@ -1087,7 +1087,9 @@ statisticsPage=
           ]})});
       jQuery(function(){
         jQuery("#jsdaytable").append(dayTable.el());
-        jQuery("#jsmonthtable").append(monthTable.el());
+        setTimeout(function() {
+            jQuery("#jsmonthtable").append(monthTable.el());
+        },7000);
       });
     </script>
 ###

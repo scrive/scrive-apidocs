@@ -28,7 +28,6 @@ tar zcf "$TMP/$ZIP"                        \
     --exclude=.git*                   \
     --exclude=_local*                 \
     --exclude=_darcs*                 \
-    --exclude=*.conf \
     --exclude=log \
     *
 ls -lh "$TMP/$ZIP"

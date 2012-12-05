@@ -286,13 +286,14 @@ documentDomainToSQL :: (MonadState v m, SqlWhere v)
                     -> m ()
 documentDomainToSQL (DocumentsOfWholeUniverse) = do
   sqlWhere "TRUE"
-documentDomainToSQL (DocumentsVisibleToUser uid) =
+documentDomainToSQL (DocumentsVisibleToUser uid) = sqlWhereAll $ do
+  sqlWhereEq "same_company_users.id" uid
   sqlWhereAny $ do
     sqlWhereAll $ do           -- 1: see own documents
-      sqlWhereEq "signatory_links.user_id" uid
+      sqlWhere "users.id = same_company_users.id"
       sqlWhere "signatory_links.is_author"
     sqlWhereAll $ do           -- 2. see signables as partner
-      sqlWhereEq "signatory_links.user_id" uid
+      sqlWhere "users.id = same_company_users.id"
       sqlWhereNotEq "documents.status" Preparation
       sqlWhereEq "documents.type" $ Signable undefined
       sqlWhere "signatory_links.is_partner"
@@ -302,20 +303,20 @@ documentDomainToSQL (DocumentsVisibleToUser uid) =
                             sqlWhere "earlier_signatory_links.sign_time IS NULL"
                             sqlWhere "earlier_signatory_links.sign_order < signatory_links.sign_order"
     sqlWhereAll $ do           -- 3. see signables as viewer
-      sqlWhereEq "signatory_links.user_id" uid
+      sqlWhere "users.id = same_company_users.id"
       sqlWhereNotEq "documents.status" Preparation
       sqlWhereEq "documents.type" $ Signable undefined
       sqlWhere "NOT signatory_links.is_partner"
     sqlWhereAll $ do           -- 4. see shared templates
-      sqlWhereEq "same_company_users.id" uid
       sqlWhereEq "documents.sharing" Shared
       sqlWhereEq "documents.type" $ Template undefined
       sqlWhere "signatory_links.is_author"
     sqlWhereAll $ do           -- 5: see documents of subordinates
-      sqlWhereEq "same_company_users.id" uid
       sqlWhere "same_company_users.is_company_admin"
       sqlWhere "signatory_links.is_author"
       sqlWhereNotEq "documents.status" Preparation
+
+
 
 maxselect :: SQL
 maxselect = "(SELECT max(greatest(signatory_links.sign_time"
@@ -339,7 +340,9 @@ documentFilterToSQL (DocumentFilterMinChangeTime ctime) = do
 documentFilterToSQL (DocumentFilterMaxChangeTime ctime) = do
   sqlWhere (maxselect <+> "<=" <?> ctime)
 documentFilterToSQL (DocumentFilterByProcess processes) = do
-  sqlWhereIn "documents.process" processes
+  if null (processes \\ [minBound..maxBound])
+    then sqlWhere "TRUE"
+    else sqlWhereIn "documents.process" processes
 documentFilterToSQL (DocumentFilterByMonthYearFrom (month,year)) = do
   sqlWhere $ fromString $ "(documents.mtime > '" ++ show year ++  "-" ++ show month ++ "-1')"
 documentFilterToSQL (DocumentFilterByMonthYearTo (month,year)) = do
@@ -1420,7 +1423,7 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
         sqlWhere "documents.id = signatory_links.document_id"
         sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
         sqlLeftJoinOn "companies" "users.company_id = companies.id"
-        sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id"
+        sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id OR users.id = same_company_users.id"
 
         sqlWhere "NOT signatory_links.really_deleted"
         sqlWhereAny (mapM_ documentDomainToSQL domains)
