@@ -275,8 +275,8 @@ window.DocumentsListDefinition = function(archive) { return {
                 {name : localization.archive.documents.csv.action,
                  acceptEmpty : true,
                  onSelect: function(){
-                        var url =  archive.documents().model.schema.url() + "?"
-                        var params =  archive.documents().model.schema.getSchemaUrlParams();
+                        var url =  archive.documents().model().schema.url() + "?"
+                        var params =  archive.documents().model().schema.getSchemaUrlParams();
                         _.each(params,function(a,b){url+=(b+"="+a+"&")})
                         window.open(url + "format=csv");
                         return true;

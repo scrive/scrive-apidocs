@@ -747,7 +747,7 @@ var DocumentDesignView = Backbone.View.extend({
                     onSend: function() {
                         LoadingDialog.open();
                     },
-                    ajaxtimeout : 10000,
+                    ajaxtimeout : 20000,
                     ajaxerror: function(d,a){
                         LoadingDialog.close();
                         if(a === 'parsererror') // file too large
