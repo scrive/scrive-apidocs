@@ -24,6 +24,6 @@ class EmailHelper
     ensure
       @loginhelper.logout
     end
-    @driver.get(link)
+    @driver.navigate().to(link)
   end
 end

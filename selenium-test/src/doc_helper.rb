@@ -89,12 +89,14 @@ class DocHelper
   end
 
   def uploadAttachment(pdf_path)
-    uploaded = (@driver.find_elements :css => "div.upload div.file").length
+    uploaded = (@driver.find_elements :css => ".s-review-sigattachment").length
     puts "uploading attachment: " + pdf_path
     (@driver.find_elements :css => ".multiFileInput")[0].send_keys pdf_path
     puts "review attachment"
-    @wait.until { (@driver.find_elements :css => "div.upload div.file").length == uploaded + 1 }
-    (@wait.until { @driver.find_elements :css => "div.upload a.btn-small" })[uploaded].click
+    @wait.until { (@driver.find_elements :css => ".s-review-sigattachment").length == uploaded + 1 }
+    puts "Checking lenght"
+    (@wait.until { @driver.find_elements :css => ".s-review-sigattachment" })[uploaded].click
+    puts "reviewed attachment"
   end
 
   def partSignStart

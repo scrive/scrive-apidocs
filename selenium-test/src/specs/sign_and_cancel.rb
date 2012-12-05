@@ -24,10 +24,10 @@ describe "Sign a document and then cancel it" do
     (@h.wait.until { @h.driver.find_element :css => ".nextstepbutton" }).click
     puts "About to sign and send"
     @h.dochelper.signAndSend
-
+    puts "After sign and send"
     (@h.wait.until { @h.driver.find_element :css => "a.s-withdraw-button" }).click
     (@h.wait.until { @h.driver.find_element :css => ".s-withdraw-confirmation .modal-footer a.float-right" }).click
-    @h.wait.until { @h.driver.find_element :css => "div.icon.status.cancelled" }
+    @h.wait.until { @h.driver.find_element :css => "span.icon.status.cancelled" }
 
     @h.loginhelper.logout
 

@@ -11,9 +11,9 @@ class LoginHelper
   end
 
   def login_as(email, password)
-    @driver.navigate().to(@ctx.createKontrakcjaURL "/")
+    @driver.navigate().to(@ctx.createKontrakcjaURL "/?logging")
     (@wait.until { @driver.find_element :css => "a.login-button" }).click
-    @wait.until { @driver.find_element :css => ".login-container" }
+    (@wait.until { @driver.find_element :css => ".login-container" })
     (@wait.until { @driver.find_element :css => ".login-container input[name='email']" }).send_keys email
     (@wait.until { @driver.find_element :css => ".login-container input[name='password']" }).send_keys password
     (@wait.until { @driver.find_element :css => ".login-container a.login-button" }).click
