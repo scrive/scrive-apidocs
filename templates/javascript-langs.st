@@ -510,7 +510,7 @@ javascriptLocalisation =
            , modalAccountSetupPhone: "$_modalAccountSetupPhone()$"
            , flashMessageUserAlreadyActivated: "$_flashMessageUserAlreadyActivated()$"
          }
-         , cancel : "$_cancel()$"
+         , cancel : "$_cancel()$" 
          , authorview : {
                signatoriesTitle : "$_authorviewSignatoriesTitle()$"
              , requestedAttachments : "$_RequestedAttachments()$"
