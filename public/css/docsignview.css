@@ -1,4 +1,4 @@
-body.signview {
+.signview {
   font-family: "Lucida Grande";
   width: 100%;
 }
@@ -47,7 +47,7 @@ body.signview {
   #top: 50%;
   display: table-cell; 
   vertical-align: middle;
-  width: 960px;
+  width: 1020px;
 }
 
 .signview .pageheader .content .sender .name {
@@ -74,7 +74,7 @@ body.signview {
   display: none;
 }
 
-.signview .mainContainer960 {
+.signview .mainContainer {
     width: 1020px;
 }
 

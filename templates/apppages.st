@@ -32,6 +32,7 @@ standardHeaderContents=
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta http-equiv="content-language" content="$ctxlang$" />
         <link href='https://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
+        <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,700,200italic,400italic,700italic' rel='stylesheet' type='text/css'>
         <script src="/localization/$ctxlang$/$versioncode$.js"  type="text/javascript"></script>
         $staticResources:noescape()$
 ####
@@ -59,7 +60,7 @@ contentsWithoutQueryCol=
 standardBodyWrapper=
       <body>
        $header()$
-        <div class="mainContainer960" >
+        <div class="mainContainer" >
           $flashmessages()$
           $loginModal()$
         <div class="body-container">
@@ -135,6 +136,31 @@ queryColumn=
                                         </div>
 ####
 pageFooter=
+
+<footer class="site">
+ <div class='ct'>
+  <div class="float-left">
+    <nav>
+      <ul>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms &amp; Conditions</a></li>
+        <li><a href="#">Jobs</a></li>
+        <li><a href="#">Developers</a></li>
+        <li><a href="#">Scrive Labs</a></li>
+        <li><a href="#">Scrive Blog</a></li>
+      </ul>
+    </nav>
+    <ul class="etc">
+      <li>Copyright &copy; 2010-2012 Scrive AB.</li>
+      <li>Visions made in Sweden. Built by experts from around the world.</li>
+    </ul>
+  </div>
+ </div>
+</footer>
+
+<!--
+
+
 <div id="footer-container" class="newdesign">
   <div class="top-border"></div>
   <div class="spacer"></div>
@@ -204,12 +230,39 @@ pageFooter=
   <img src="/theme/../img/spr-flash-bg.png" />
   <img src="/img/spr-flash-bg.png" />
 </div>
+-->
 ####
 header=
  <script>
    window.BlockingInfo = Blocking();
  </script>
+
+
+<header class="site">
+  <nav>
+    <ul class="ct">
+      <li id="branding">
+        <a id="logo" class="page" href="index.html"><img src="/img/logo.png" width="120" height="22"></a>
+        <div id="tagline" class="h3"></div>
+      </li>
+      <li class="page-first"><a class="page" id="page-features" href="{path=features}">Features</a></li>
+      <li><a class="page" id="page-pricing" href="{path=pricing}">Features</a></li>
+      <li><a class="page" id="page-legal" href="{path=legal}">Features</a></li>
+      <li><a class="page" id="page-cases" href="{path=cases}">Features</a></li>
+      <li><a class="page" id="page-about" href="{path=about}">Features</a></li>
+      <li class="page-last"><a class="page" id="page-contact" href="{path=contact}">Features</a></li>
+      <li class="session">
+        <a class="button button-small" id="page-login" href="{path=login}">Log in </a>
+        <a class="button button-small button-red" id="page-signup" href="">Sign up</a>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+
+<!--
  <div id="top-slim-container" class="newdesign">
+
                         <div class="content">
                                 <a href="$linkhome$"
                                 class="scrive-logo"></a>
@@ -220,10 +273,8 @@ header=
                                <a href="$linklogout$" class="toplink logout">$_headerLogOut()$</a>
                                <a href="$linkaccount$" class="toplink s-account">$_headerAccount()$</a>
                                <a href="$linkissue$" class="toplink">$_headerArchive()$</a>
-                               <span class='toplink btn'><a class="blue btn-tiny" onclick='createfromtemplate()' ><div class="left"></div><div class="label">$_headerTemplate()$</div><div class="right"></div></a></span>
-                               <span class='toplink btn'><a class="blue btn-tiny s-create-document"  onclick='createnewdocument()'><div class="left"></div><div class="label">$_headerSend()$</div><div class="right"></div></a></span>
-                               <!-- <a href="$linkupload$" class="toplink">$_headerSend()$</a> -->
-                               <!-- <a href="$linkupload$" class="toplink">$_headerSend()$</a> -->
+                               <span class='toplink btn'><a class="button button-small" onclick='createfromtemplate()' ><div class="label">$_headerTemplate()$</div></a></span>
+                               <span class='toplink btn'><a class="button button-small s-create-document"  onclick='createnewdocument()'><div class="label">$_headerSend()$</div></a></span>
                                 $langSwitcher()$
                                 $else$
                                 <span id="moveleft2">
@@ -239,8 +290,10 @@ header=
 
                             </div>
 
+
             <div class="clearboth"></div>
           </div>
+-->
 ####
 langSwitcher=
   <div class="langSwitcher">

@@ -101,82 +101,6 @@
   color: #FFFFFF;
 }
 
-
-.content , .newdesign .content{
-    margin:0 auto;
-    width:960px;
-    position: relative;
-}
-
-
-.float-left {
-        float: left;
-}
-
-.float-right {
-        float: right;
-}
-
-.newdesign .try-skrivapa {
-        background: #fff;
-        border: 1px solid #35A4D6;
-        border-radius: 5px;
-        height: 78px;
-        padding-left: 50px;
-        padding-top: 30px;
-        width: 888px;
-        -moz-border-radius: 5px;
-        -webkit-border-radius: 5px;
-}
-
-.newdesign .try-skrivapa .left {
-        float: left;
-        width: 470px;
-}
-
-.newdesign .try-skrivapa .right {
-        float: left;
-        margin-top: 10px;
-        width: 390px;
-}
-
-.newdesign .try-skrivapa .left h2 {
-        color: #000;
-        font: 24px/24px "Copse";
-}
-
-.newdesign .try-skrivapa .left p {
-        color: #666;
-        font: 14px/24px "Copse";
-}
-
-.newdesign .try-skrivapa .right a {
-        float: right;
-}
-.newdesign input.shiny {
-        background: #fff;
-        border: 1px solid #c6dade;
-        border-radius: 4px;
-        color: #999;
-        height: 14px;
-        padding: 8px;
-        width: 202px;
-        -moz-border-radius: 4px;
-        -webkit-border-radius: 4px;
-}
-
-:invalid {
-    box-shadow: none;
-}
-
-:-moz-submit-invalid {
-    box-shadow: none;
-}
-
-:-moz-ui-invalid {
-    box-shadow: none;
-}
-
 .newdesign a.btn-small.center {
         text-align: center;
         padding-left: 0;
@@ -582,7 +506,7 @@ a.submit{
 }
 
 
-.designview .mainContainer960,
+.designview .mainContainer,
 .designview .tab-viewer,
 .designview .tab-viewer .tab-viewer-header {
     width: 1020px;

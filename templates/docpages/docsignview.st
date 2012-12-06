@@ -11,7 +11,7 @@ $doctype()$
     </script>
       </head>
   <body class="signview">
-    <div class="mainContainer960" >
+    <div class="mainContainer" >
       $flashmessages()$
       <div class="body-container">
         <script>

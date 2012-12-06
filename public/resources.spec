@@ -10,7 +10,15 @@ ignore  libs/analytics.js
 ignore  libs/zenbox.js
 ignore  libs/recurly/recurly.css
 ignore  api-demo
-
+ignore  less/branding/buttons.less
+ignore  less/branding/colors.less
+ignore  less/branding/elements.less
+ignore  less/branding/index.less
+ignore  less/branding/reset.less
+ignore  less/branding/sample.less
+ignore  less/branding/typography.less
+ignore  less/branding/header.less
+ignore  less/branding/footer.less
 
 set systemPage
  css css/newdesign.css
@@ -22,12 +30,12 @@ set systemPage
  css css/symbols.css
  css css/tabs.css
  css css/lists.css
- css css/buttons.css
  css css/account.css
  css css/flash.css
  css css/docsignview.css
  css css/main.css
  css css/createfromtemplate.css
+ less less/branding/index.less
  less less/selects.less
  less less/document-pages.less
  less less/payments.less
@@ -37,6 +45,7 @@ set systemPage
  less less/blocking.less
  less less/authorview.less
  less less/doctools.less
+ less less/buttons.less
  js   libs/jquery.min.js
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js

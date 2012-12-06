@@ -96,15 +96,7 @@ var UploadButtonView = Backbone.View.extend({
         var model = this.model;
         var button = model.button();
         if (!button) {
-            button = $("<a/>");
-            button.addClass(model.color()).addClass("btn-" + model.size()).css("overflow", "hidden").css("width",model.width() + "px");
-            var left  = $("<div class='left'/>");
-            var labelwidth = model.width() - 2 * Button.borderWidth(model.size()) - 2 * Button.labelPadding(model.size());
-            var label = $("<div class='label' style='text-align: center;'/>").text(model.text()).css("width", labelwidth + "px");
-            var right = $("<div class='right'/>");
-            button.append(left);
-            button.append(label);
-            button.append(right);
+            button = Button.init({size: model.size(), color: model.color(), width: model.width(), text: model.text(), onClick : function() {return false;}}).input();
         }
         var fileinput = $("<input class='multiFileInput' type='file'/>");
         if (model.type() != "")

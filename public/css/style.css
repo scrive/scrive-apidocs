@@ -1,63 +1,13 @@
-/* 003  I removed the starting / on all image-urls */
-
-/* 003 new: html */
-html
+.mainContainer
 {
-    /* will always show a scroll */
-    overflow-y: scroll;
-}
-
-/* 003 moved body to the top */
-body
-{
-    /* 002 new font-family */
-    font-family: 'Segoe UI', arial, verdana, 'lucida sans unicode', tahoma, sans-serif;
-    color: #6d6e70;
-    /* 003  new backgroundcolor */
-    background-color: white;
-    font-size: small;
-    margin: 0px;
-}
-
-/* 003 new */
-a img
-{
-    border: 0;
-}
-
-
-/* 003 new: #mainContainer960. Consider to change this name to mainContainer */
-.mainContainer960
-{
-    width: 960px;
+    width: 1020px;
     min-height: 700px;
     height: auto;
     margin-left: 30px;
     margin-right: 30px;
     margin: auto;
     padding-bottom:40px;
-}
-
-/* 003 a lot of changes */
-#loginContainer
-{
-    position: absolute;
-    right: 0;
-    top: 22px;
-    text-align: right;
-    font-size: 10px;
-}
-
-/* dont know if you want to cascade these changes to all text-input? */
-#loginContainer input[type=text],
-#loginContainer input[type=email],
-#loginContainer input[type=password],
-#signUpContainer input[type=text]
-{
-    width: 151px;
-    height: 16px;
-    margin-left: 6px; /* 003 change from ridht to left */
-    color: #848484;
+    margin-top: 20px;
 }
 
 .rubbishbin
@@ -212,16 +162,6 @@ a img
     width: 190px;
 }
 
-
- input[type=submit]:hover, button:hover, a.button:hover
-{
-    background-color: #d9dae3;
-}
-
- input[type=submit]:active, button:active, a.button:active
-{
-    background-color: #b3b5bd;
-}
 
 .bodycolorbg
 {
@@ -423,11 +363,6 @@ table .selectable tr.ui-selected.odd td
     margin-bottom: 0px;
 }
 
-.mainContainer a
-{
-    color: #007cac;
-    text-decoration: none;
-}
 
 .mainContainer a.cancel {
   color: #E91600;
@@ -511,31 +446,6 @@ table .selectable tr.ui-selected.odd td
     margin: auto;
 }
 
-a.button
-{
-    color: black !important;
-}
-.button
-{
-    -moz-border-radius: 4px;
-    -webkit-border-radius: 4px;
-    -khtml-border-radius: 4px;
-    border-radius: 4px;
-
-    border: 1px solid lightgray;
-    background-color: #F5F5FF;
-
-    text-align: center;
-    vertical-align: center;
-    margin: 3px auto 3px 0px;
-    padding: 0px 7px;
-    display: block;
-    display: inline;
-
-    line-height: 20px;
-    white-space:nowrap;
-    cursor: pointer;
-}
 a.secbutton
 {
     color: white;
@@ -862,21 +772,6 @@ div.floatright
 div.clearboth
 {
     clear: both;
-}
-
-input , button, a.button
-{
-    border: 1px solid lightgray;
-    -moz-border-radius: 2px;
-    -webkit-border-radius: 2px;
-    -khtml-border-radius: 2px;
-    border-radius: 2px;
-    background-color: #FFFFFF;
-    margin: 3px auto 3px 0px;
-}
-
-a.button {
-  cursor: pointer;
 }
 
 
@@ -1968,7 +1863,6 @@ form {
 }
 */
 /* 013 new */
-#signStepsBodyLeft #people,
 #signStepsBodyFunctionsBox
 {
     border: 1px solid black;
@@ -1979,78 +1873,7 @@ form {
     padding-bottom: 5px;
 }
 
-/* 013 new */
-.buttonSignLarge
-{
-    background-image: url(/img/buttonSignLarge.png);
-    background-repeat: no-repeat;
-    display: block;
-    width: 252px;
-    height: 61px;
-    cursor: pointer;
-}
 
-.buttonSendLarge {
-    background-image: url(/img/button-send.png);
-    background-repeat: no-repeat;
-    display: block;
-    width: 252px;
-    height: 61px;
-    cursor: pointer;
-}
-
-/* 013 new */
-#signStepsBodyLeft #people
-{
-    width: 305px;
-    min-height: 74px;
-    padding: 10px 8px 8px 8px;
-    margin-top: 2px;
-}
-
-/* 013 new */
-#signStepsBodyLeft #people .signStepsBodyTitle .totalCount
-{
-    color: #9a9a9a;
-}
-
-/* 013 new */
-#signStepsBodyLeft #people .signStepsBodyForms a
-{
-    display: block;
-    font-size: 11px;
-}
-
-#signStepsBodyLeft #people .signStepsBodyForms a:hover
-{
-    background: #f5f5f5;
-}
-
-/* 013 new */
-#signStepsBodyLeft #people .signStepsBodyForms .signorderlist
-{
-    float: right;
-}
-
-/* 013 new */
-#signStepsBodyLeft #people .signStepsBodyAddField.partCount
-{
-    height: auto;
-}
-
-/* 013 new */
-#signStepsBodyLeft #people .signStepsBodyAddField.partCount span
-{
-    margin-right: 3px;
-}
-
-/* 013 new */
-#signStepsBodyLeft #people .signStepsBodyAddField.partCount a
-{
-    display: inline;
-    float: none;
-    width: auto;
-}
 
 #signViewBodySpacer
 {
@@ -2712,9 +2535,6 @@ menu, .newdesign  nav, .newdesign  output, .newdesign  ruby, .newdesign  section
         /* vertical-align: baseline; */
 }
 
-body {
-  background:url("../img/bg-body.jpg") repeat scroll 0 0 transparent;
-}
 .newdesign {
        color: #000000;
        font-size:small;

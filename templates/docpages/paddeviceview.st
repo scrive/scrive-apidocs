@@ -12,7 +12,7 @@ $doctype()$
   </head>
   <body class="signview" style="min-height:100%">
     $flashmessages()$
-    <div class="mainContainer960" >
+    <div class="mainContainer" >
       <div class="body-container">
         $padQueueCurrentPageContent()$
       </div>

@@ -1,0 +1,72 @@
+/* definitions for the style guide */
+.clearfix {
+  &:before, &:after {
+    content: "";
+    display: table;
+  }
+  &:after {
+      clear: both;
+  }
+}
+.container {
+  width: 960px;
+  margin: 3em auto;
+  text-align: center;
+}
+
+section {
+  display: block;
+  width: 960px;
+  padding: 3em 0;
+  border-top: 4px solid @blue-border;
+}
+section header {
+  margin: 0 0 2em;
+}
+section ul {
+  list-style: none;
+  padding: 0;
+}
+section ul li {
+  margin: 0 0 1em;
+}
+section.buttons .button {
+  margin: 0 @em;
+}
+section.colors .content {
+  width: 600px;
+  height: 600px;
+  margin: 0 auto;
+}
+ul.color {
+  width: 184px;
+  height: 184px;
+  float: left;
+  color: #fff;
+  background: #000;
+  margin: 8px;
+}
+ul.color.blue-dark {background: @blue-dark}
+ul.color.blue-medium {background: @blue-medium}
+ul.color.blue-light {background: @blue-light}
+ul.color.blue-border {background: @blue-border}
+ul.color.blue-border li {color: @blue-dark}
+ul.color.blue-border li:last-of-type {color: @blue-medium}
+ul.color.red {background: @red}
+ul.color.hover {background: @hover}
+ul.color.text-dark {background: @text-dark}
+ul.color.text-medium {background: @text-medium}
+ul.color.text-light {background: @text-light}
+ul.color li {
+  line-height: 32px;
+  color: #fff;
+  margin: 0;
+}
+ul.color li.title {
+  padding: 60px 0 0;
+}
+ul.color li.data {
+  color: hsla(0,0,100%,.5);
+  font-size: 12px;
+  padding: 0 0 60px;
+}

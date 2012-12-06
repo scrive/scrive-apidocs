@@ -1,0 +1,90 @@
+input[type="submit"]::-moz-focus-inner {border:0;}
+
+.button {
+  .gradient(hsl(@blueH,@blueS,35%), hsl(@blueH,@blueS,30%), hsl(@blueH,@blueS,40%));
+  border: 2px solid hsl(@blueH,@blueS,23%);
+  .box-shadow(inset hsl(@blueH,@blueS,60%) 0 0 0 2px);
+  max-height: 16px;
+  font-size: @em;
+  line-height: @em;
+  text-decoration: none;
+  padding: 14px 20px;
+  margin: 0;
+  color: #fff;
+  text-shadow: hsla(0,0,0,.5) 0 1px 0;
+  text-align: center;
+  .transition(.15s, ease-in-out);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  display: inline-block;
+  zoom:1; /* IE 7 Hack starts here*/
+  *display:inline;
+  &.button-black {
+    background: hsla(0,0,0,.66);
+    border-color: #000;
+    .box-shadow(inset hsla(0,0,100%,.33) 0 0 0 2px);
+  }
+  &.button-gray {
+    .gradient(hsl(0,0,41%), hsl(0,0,33%), hsl(0,0,50%));
+    .box-shadow(inset hsl(0,0,80%) 0 0 0 2px);
+    border-color: hsl(0,0%,27%);
+    &:hover {
+      .gradient(hsl(0,0,46%), hsl(0,0,33%), hsl(0,0,60%));
+      .box-shadow(inset hsl(0,0,88%) 0 0 0 2px);
+      border-color: hsl(0,0,33%);
+    }
+    &:active {
+      .gradient(hsl(0,0,32%), hsl(0,0,25%), hsl(0,0,40%));
+      .box-shadow(inset hsl(0,0,70%) 0 0 0 2px);
+      border-color: hsl(0,0,20%);
+    }
+  }
+  &:hover, &.button-black:hover {
+    .gradient(hsl(@blueH,@blueS,38%), hsl(@blueH,@blueS,30%), hsl(@blueH,@blueS,47%));
+    .box-shadow(inset hsl(@blueH,@blueS,75%) 0 0 0 2px);
+    .transition(.15s, ease-in-out);
+    border-color: hsl(@blueH,@blueS,23%);
+  }
+  &:active, &.active, &.button-black:active, &.button-black.active {
+    .box-shadow(inset hsl(@blueH,@blueS,50) 0 0 0 2px);
+    .gradient(hsl(@blueH,@blueS,17%), hsl(@blueH,@blueS,13%), hsl(@blueH,@blueS,20%));
+    .transition(.15s, ease-in-out);
+    border-color: hsl(@blueH,23%,23%);
+  }
+  &.button-small {
+    max-height: 12px;
+    .box-shadow(inset hsl(@blueH,@blueS,60%) 0 0 0 1px);
+    font-size: 12px;
+    line-height: 12px;
+    padding: 9px 12px;
+    border-width: 1px;
+    &.button-gray {.box-shadow(inset hsl(0,0,80%) 0 0 0 1px)}
+    &.button-gray:hover {.box-shadow(inset hsl(0,0,70%) 0 0 0 1px)}
+    &.button-gray:active,
+    &.button-gray.active, {.box-shadow(inset hsl(0,0,80%) 0 0 0 1px)}
+    &.button-black {.box-shadow(inset hsla(0,0,100%,.33) 0 0 0 1px)}
+    &:hover,
+    &.button-black:hover {
+      .box-shadow(inset hsl(@blueH,@blueS,75%) 0 0 0 1px);
+    }
+    &:active, &.active,
+    &.button-black:active, &.button-black.active {
+      .box-shadow(inset hsl(@blueH,@blueS,50) 0 0 0 1px);
+    }
+  }
+  &.button-large {
+    max-height: 31px;
+    font-size: 24px;
+    line-height: 31px;
+    font-family: @source;
+    /* to fix Firefox bug, have to use padding instead of line height */
+    padding: 15px 30px 14px;
+  }
+}
+input[type=submit].button.button-large,
+button.button.button-large {
+  /* ie8 and below input height fix */
+  line-height: 24px\9;
+  padding: 12px 30px 13px\9;
+}
