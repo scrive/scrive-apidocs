@@ -904,7 +904,7 @@ docSearchingFromParams params =
 
 handleBackdoorQuery :: Kontrakcja m => String -> m String
 handleBackdoorQuery email = onlySalesOrAdmin $ onlyBackdoorOpen $ do
-  minfo <- listToMaybe . reverse <$> dbQuery GetEmailsBySender email
+  minfo <- listToMaybe . reverse <$> dbQuery (GetEmailsBySender email)
   return $ maybe "No email found" mailContent minfo
 
 sendInviteAgain :: Kontrakcja m => m KontraLink
