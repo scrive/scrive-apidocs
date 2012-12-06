@@ -12,43 +12,6 @@ ignore  libs/recurly/recurly.css
 ignore  api-demo
 
 
-set firstPage
- css css/style.css
- css css/main.css
- css css/flash.css
- css css/symbols.css
- css css/newdesign.css
- css css/buttons.css
- less less/payments.less
- less less/paymentsoutside.less
- js  libs/jquery.min.js
- js  libs/jquery-ui.min.js
- js  libs/jquery.tools.min.js
- js  libs/jquery.MultiFile.js
- jsx tiny_mce/jquery.tinymce.js
- js  libs/jquery.tweet.js
- js  libs/analytics.js
- js  libs/zenbox.js
- js  libs/underscore.js
- js  libs/backbone.js
- js  libs/jquery.form.js
- js  libs/json2.js
- js  js/global.js
- js  js/flashmessages.js
- js  js/validation.js
- js  js/submits.js
- js  js/infotextinputs.js
- js  js/buttons.js
- js  js/confirmations.js
- js  js/loading.js
- js  libs/recurly.js
- js  js/payments.js
- js  js/login.js
- js  js/new_password.js
- js  js/new_signup.js
- js  js/account_setup.js
- js  js/blocking.js
-
 set systemPage
  css css/newdesign.css
  css css/designview.css
