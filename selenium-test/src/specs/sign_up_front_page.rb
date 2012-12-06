@@ -25,7 +25,7 @@ describe "sign up on front page and modify account settings" do
     puts "We have real change password form"
     (@h.wait.until { @h.driver.find_element :name => "password" }).send_keys password
     (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys password
-    (@h.wait.until { @h.driver.find_element :css => "a.submit" }).click
+    (@h.wait.until { @h.driver.find_element :css => "div.label" }).click
     puts "Change password request send"
     @h.loginhelper.logout
   end

@@ -462,7 +462,7 @@ javascriptLocalisation =
            , flashMessagePasswordExceedsMaxLength: "$_flashMessagePasswordExceedsMaxLength()$"
            , flashMessageInvalidCharsInPassword: "$_flashMessageInvalidCharsInPassword()$"
            , flashMessageNeedsLetterAndDigit: "$_flashMessageNeedsLetterAndDigit()$"
-           , flashMessagePasswordChangeLinkNotValid: "$_flashMessagePasswordChangeLinkNotValid()$"
+           , flashMessagePasswordChangeLinkNotValid: '$_flashMessagePasswordChangeLinkNotValid()$'
          }
          , cancel : "$_cancel()$"
          , authorview : {
