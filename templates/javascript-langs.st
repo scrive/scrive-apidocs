@@ -451,6 +451,19 @@ javascriptLocalisation =
          , login : {
               logMeIn : "$_login()$"
          }
+         , newPasswordModal: {
+             modalNewPasswordViewNewPassword: "$_modalNewPasswordViewNewPassword()$"
+           , modalNewPasswordViewRepeatPassword: "$_modalNewPasswordViewRepeatPassword()$"
+           , modalNewPasswordViewHeader: "$_modalNewPasswordViewHeader()$"
+           , modalNewPasswordViewFooterSave: "$_modalNewPasswordViewFooterSave()$"
+           , flashMessagePasswordsDontMatch: "$_flashMessagePasswordsDontMatch()$"
+           , flashMessageMissingRequiredField: "$_flashMessageMissingRequiredField()$"
+           , flashMessagePasswordLessThanMinLength: "$_flashMessagePasswordLessThanMinLength()$"
+           , flashMessagePasswordExceedsMaxLength: "$_flashMessagePasswordExceedsMaxLength()$"
+           , flashMessageInvalidCharsInPassword: "$_flashMessageInvalidCharsInPassword()$"
+           , flashMessageNeedsLetterAndDigit: "$_flashMessageNeedsLetterAndDigit()$"
+           , flashMessagePasswordChangeLinkNotValid: "$_flashMessagePasswordChangeLinkNotValid()$"
+         }
          , cancel : "$_cancel()$"
          , authorview : {
                signatoriesTitle : "$_authorviewSignatoriesTitle()$"

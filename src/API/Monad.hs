@@ -174,7 +174,7 @@ apiToResponse r =
     Left (NotLoggedIn msg) -> 
       Web.unauthorized (toAPIResponse $ jsonError $ do
                            value "message" msg
-                           value "url" "https://scrive.com/gb/en?logging")
+                           value "url" "https://scrive.com/login")
     Left (ServerError msg) ->
       Web.internalServerError (toAPIResponse $ jsonError $ value "message" msg)
     Left (ActionNotAvailable msg) ->

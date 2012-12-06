@@ -8,7 +8,6 @@ import ActionQueue.PasswordReminder
 import DB
 import Context
 import Login
-import Redirect
 import Stats.Model
 import TestingUtil
 import TestKontra as T
@@ -87,16 +86,17 @@ assertResettingPasswordRecordsALoginEvent = do
   assertEqual "User was logged into context" (Just $ userid user) (userid <$> ctxmaybeuser ctx)
   assertLoginEventRecordedFor (userid user)
 
-createUserAndResetPassword :: TestEnv (User, Response, Context)
+createUserAndResetPassword :: TestEnv (User, JSValue, Context)
 createUserAndResetPassword = do
   pwd <- createPassword "admin"
   Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) Nothing defaultValue
   PasswordReminder{..} <- newPasswordReminder $ userid user
   ctx <- mkContext defaultValue
-  req <- mkRequest POST [("password", inText "password123"),
-                         ("password2", inText "password123")]
-  (res, ctx') <- runTestKontra req ctx $ handlePasswordReminderPost prUserID prToken >>= sendRedirect
-  return (user, res, ctx')
+  req <- mkRequest POST [("password", inText "password123")]
+  (_, ctx') <- runTestKontra req ctx $ handlePasswordReminderPost prUserID prToken
+  req2 <- mkRequest GET []
+  (res, ctx'') <- runTestKontra req2 ctx' getUserJSON
+  return (user, res, ctx'')
 
 assertLoginEventRecordedFor :: UserID -> TestEnv ()
 assertLoginEventRecordedFor uid = do

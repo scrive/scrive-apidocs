@@ -45,6 +45,7 @@ set firstPage
  js  libs/recurly.js
  js  js/payments.js
  js  js/login.js
+ js  js/new_password.js
  js  js/blocking.js
 
 set systemPage

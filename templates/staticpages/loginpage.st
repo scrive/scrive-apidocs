@@ -16,3 +16,21 @@ loginPageContents=
     var login = new Login({referer: "$referer$"});
   });
 </script>
+###
+changePasswordPage=
+$doctype()$
+<html>
+  <head>
+    <title>$pagetitle()$ Scrive Features</title>
+    <meta name="description" content="$_featuresPageMetaDescription()$" />
+    $standardHeaderContents()$
+  </head>
+  $standardBody(unwrappedbody=changePasswordPageContents())$
+</html>
+###
+changePasswordPageContents=
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    new NewPassword({linkchangepassword: "$linkchangepassword$"});
+  });
+</script>

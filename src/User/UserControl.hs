@@ -510,45 +510,36 @@ handlePasswordReminderGet uid token = do
   case muser of
     Just user -> do
       switchLang (getLang user)
-      addFlashM $ modalNewPasswordView uid token
-      sendRedirect LinkDesignView
+      ctx <- getContext
+      let changePassLink = show $ LinkPasswordReminder uid token
+      content <- renderTemplateAsPageWithFields ctx "changePasswordPage" Nothing False [("linkchangepassword", changePassLink)]
+      simpleHtmlResponse content
     Nothing -> do
       addFlashM flashMessagePasswordChangeLinkNotValid
       sendRedirect =<< getHomeOrDesignViewLink
 
-handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m KontraLink
+handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
 handlePasswordReminderPost uid token = do
   muser <- getPasswordReminderUser uid token
   case muser of
     Just user -> do
       switchLang (getLang user)
       Context{ctxtime, ctxipnumber, ctxmaybeuser} <- getContext
-      mpassword <- getRequiredField asValidPassword "password"
-      mpassword2 <- getRequiredField asDirtyPassword "password2"
-      case (mpassword, mpassword2) of
-        (Just password, Just password2) -> do
-          case (checkPasswordsMatch password password2) of
-            Right () -> do
-              _ <- dbUpdate $ DeleteAction passwordReminder uid
-              passwordhash <- createPassword password
-              _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
-              _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
-              addFlashM flashMessageUserPasswordChanged
-              _ <- addUserLoginStatEvent ctxtime user
-              logUserToContext $ Just user
-              return LinkDesignView
-            Left flash -> do
-              _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) ctxipnumber (ctxtime) (userid <$> ctxmaybeuser)
-              addFlashM flash
-              addFlashM $ modalNewPasswordView uid token
-              getHomeOrDesignViewLink
-        _ -> do
-          _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
-          addFlashM $ modalNewPasswordView uid token
-          getHomeOrDesignViewLink
-    Nothing   -> do
-      addFlashM flashMessagePasswordChangeLinkNotValid
-      getHomeOrDesignViewLink
+      mpassword <- getRequiredField Good "password"
+      case mpassword of
+        Just password -> do
+          _ <- dbUpdate $ DeleteAction passwordReminder uid
+          passwordhash <- createPassword password
+          _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
+          _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
+          addFlashM flashMessageUserPasswordChanged
+          _ <- addUserLoginStatEvent ctxtime user
+          logUserToContext $ Just user
+          runJSONGenT $ do
+            value "logged" True
+            value "location" $ show LinkDesignView
+        Nothing -> internalError
+    Nothing -> runJSONGenT $ value "logged" False
 
 handleBlockingInfo :: Kontrakcja m => m JSValue
 handleBlockingInfo = do
