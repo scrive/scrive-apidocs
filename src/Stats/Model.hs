@@ -45,6 +45,7 @@ import Data.List
 import Database.HDBC
 
 import DB
+import DB.SQL2
 import MinutesTime
 import User.Model
 import Doc.DocStateData
@@ -478,18 +479,20 @@ instance MonadDB m => DBQuery m GetSignStatEvents [SignStatEvent] where
 data AddSignStatEvent = AddSignStatEvent SignStatEvent
 instance MonadDB m => DBUpdate m AddSignStatEvent Bool where
   update (AddSignStatEvent SignStatEvent{..}) =
-    kRun01 $ mkSQL INSERT tableSignStatEvents [
-        sql "document_id" ssDocumentID
-      , sql "signatory_link_id" ssSignatoryLinkID
-      , sql "time" ssTime
-      , sql "quantity" ssQuantity
-      , sql "company_id" ssCompanyID
-      , sql "document_process" ssDocumentProcess
-      ] <> SQL "WHERE NOT EXISTS (SELECT 1 FROM sign_stat_events WHERE document_id = ? AND quantity = ? AND signatory_link_id = ?)" [
-        toSql ssDocumentID
-      , toSql ssQuantity
-      , toSql ssSignatoryLinkID
-      ]
+    kRun01 $ sqlInsertSelect "sign_stat_events" "signatory_links" $ do
+      sqlSet "document_id" ssDocumentID
+      sqlSet "signatory_link_id" ssSignatoryLinkID
+      sqlSet "time" ssTime
+      sqlSet "quantity" ssQuantity
+      sqlSet "company_id" ssCompanyID
+      sqlSet "document_process" ssDocumentProcess
+      sqlJoinOn "documents" "signatory_links.document_id = documents.id"
+      sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
+      sqlLeftJoinOn "companies" "users.company_id = companies.id"
+      sqlWhereEq "signatory_links.id" ssSignatoryLinkID
+      sqlWhereNotExists $ sqlSelect "sign_stat_events" $ do
+        sqlWhereEq "quantity" ssQuantity
+        sqlWhereEq "signatory_link_id " ssSignatoryLinkID
 
 data GetSignHistCSV = GetSignHistCSV MinutesTime MinutesTime
 instance MonadDB m => DBQuery m GetSignHistCSV [[String]] where
