@@ -162,3 +162,5 @@ InvitationDeliveredText= Invitation delivered
 ###
 InvitationUndeliveredText = Invitation undelivered
 ###
+SignatoryLinkVisitedText = Link for signing document visited by $name$
+###

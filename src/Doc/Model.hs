@@ -66,6 +66,7 @@ module Doc.Model
   , TemplateFromDocument(..)
   , TimeoutDocument(..)
   , PostReminderSend(..)
+  , AddSignatoryLinkVisitedEvidence(..)
   , UpdateFields(..)
   , SetSigAttachments(..)
   , UpdateDraft(..)
@@ -2206,6 +2207,16 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAPICallbackURL B
          ] <> SQL "WHERE id = ?" [ toSql did ]
 
 
+data AddSignatoryLinkVisitedEvidence = AddSignatoryLinkVisitedEvidence DocumentID SignatoryLink Actor
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddSignatoryLinkVisitedEvidence () where
+   update (AddSignatoryLinkVisitedEvidence did sl actor) = do
+        _ <-update $ InsertEvidenceEvent
+          SignatoryLinkVisited
+          (value "name" (getSmartName sl))
+          (Just $ did)
+          actor
+        return ()  
+          
 data PostReminderSend = PostReminderSend Document SignatoryLink (Maybe String) Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m PostReminderSend () where
    update (PostReminderSend doc sl mmsg actor) = do

@@ -499,6 +499,13 @@
                                 timeout: args.timeout
               });
             };
+            this.silentFetch = function() {
+                model.fetch({ data: schema.getSchemaUrlParams(),
+                                processData: true,
+                                cache: false,
+                                timeout: args.timeout
+              });
+            } 
             this.model = function() {return model;}
             this.setShowLimit = function(l) {
                     schema.paging().setShowLimit(l);
