@@ -49,6 +49,9 @@
     min-height: 18px;
 }
 
+.sigview .fields {
+    float: left;
+}
 .sigview .field{
     padding: 2px;
     border: 1px solid #6782A5;
@@ -223,20 +226,17 @@
   margin-right: 20px;
 }
 
-.nextstepbutton {
+.button.nextstepbutton {
    margin-top:11px;
    margin-bottom:5px;
    margin-left: 30px;
-}
-.nextstepbutton .btn-symbol {
-   margin-left:10px;
+   width: 100px;
 }
 
-.finalbutton .label{
+.finalbutton {
     padding-left:20px;
     padding-right:20px;
-    width:160px;
-    text-align: center
+    width:246px;
 }
 
 .addremovesignatorybox {
@@ -400,7 +400,7 @@
 .selectAuthorAttachmentPopupContent .buttonbox,
 .designCSVSignatoryPopupContent .buttonbox
 {
-    width: 250px;
+    width: 200px;
     padding-left: 25px;
     padding-right: 25px;
 
@@ -711,7 +711,7 @@
   text-align: center;
 }
 
-.extra-file-options .btn-tiny{
+.extra-file-options .button{
   margin : 0px 10px;
 }
 

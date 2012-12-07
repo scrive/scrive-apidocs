@@ -193,8 +193,8 @@ var OAuthConfirationView = Backbone.View.extend({
       return box;
     },
     body : function() {
-      var mainContainer = $("<div class='mainContainer'/>");
-      var bodyContainer = $("<div class='body-container' />");
+      var mainContainer = $("<div/>");
+      var bodyContainer = $("<div/>");
       mainContainer.append(bodyContainer.append(this.header()).append(this.textBox()));
       if (!this.model.logged())
            mainContainer.append(this.loginBox()).append(this.createAccountBox());

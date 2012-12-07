@@ -50,44 +50,15 @@ contentsWithQueryCol=
          </div>
 ####
 standardBody=
-       $standardBodyWrapper(unwrappedbody=contentsWithoutQueryCol(unwrappedbody=unwrappedbody))$
-####
-contentsWithoutQueryCol=
-         <div class="mainContainer">
-           $unwrappedbody:noescape()$
-         </div>
-####
-standardBodyWrapper=
-      <body>
+    <body>
        $header()$
         <div class="mainContainer" >
           $flashmessages()$
           $loginModal()$
         <div class="body-container">
           $unwrappedbody:noescape()$
-                                        <div class="clearfix"></div>
-                                        <div class="spacer40"></div>
-                                        $if(showCreateAccount)$
-                                        <div class="try-skrivapa">
-                                          <div class="left">
-                                            <h3>$_standardBodyWrapperHead()$</h3>
-                                            <p>$_standardBodyWrapperBody()$</p>
-                                          </div>
-                                          <div class="right">
-                                            <form method="get" action="$linksignup$" class="requestAccount">
-                                              <input class="shiny float-left"
-                                                     name="email" type="email"
-                                                     infotext="$_FillInEmail()$"
-                                                     autocomplete="off"
-                                                     /> <a href="#" class="submit
-                                                                           new-btn-small green2 center
-                                                                           float-right"><p>$_ButtonCreateAccount()$</p></a>
-                                              <input type="submit" class="hidden" />
-                                              <div class="clearfix"></div>
-                                            </form>
-                                          </div>
-                                        </div>
-                                        $endif$
+          <div class="clearfix"></div>
+          <div class="spacer40"></div>
         </div>
         </div>
 
@@ -138,24 +109,45 @@ queryColumn=
 pageFooter=
 
 <footer class="site">
- <div class='ct'>
-  <div class="float-left">
-    <nav>
-      <ul>
-        <li><a href="#">Privacy Policy</a></li>
-        <li><a href="#">Terms &amp; Conditions</a></li>
-        <li><a href="#">Jobs</a></li>
-        <li><a href="#">Developers</a></li>
-        <li><a href="#">Scrive Labs</a></li>
-        <li><a href="#">Scrive Blog</a></li>
+  <div class="ct">
+    <div class="">
+      <nav>
+        <ul>
+          <li><a href="{path='privacy'}">Privacy</a></li>
+          <li><a href="{path='terms'}">Privacy</a></li>
+          <li><a href="{path='jobs'}">Privacy</a></li>
+          <li><a href="{path='api'}">Privacy</a></li>
+          <li><a href="{path='labs'}">Privacy</a></li>
+          <li class='last'><a href="{path='blog'}">Privacy</a></li>
+        </ul>
+      </nav>
+      <ul class="etc">
+        <li>Copyright &copy; 2010-2012 Scrive AB.</li>
+        <li>Version bla bla bla</li>
       </ul>
-    </nav>
-    <ul class="etc">
-      <li>Copyright &copy; 2010-2012 Scrive AB.</li>
-      <li>Visions made in Sweden. Built by experts from around the world.</li>
-    </ul>
+      <ul class="social">
+        <li>
+          <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+          <div class="g-plusone" data-size="medium"></div>
+        </li>
+        <li>
+          <a href="https://twitter.com/share" class="twitter-share-button" data-lang="en">Tweet</a>
+          <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+        </li>
+        <li>
+          <div id="fb-root"></div>
+          <script>(function(d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s); js.id = id;
+            js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
+            fjs.parentNode.insertBefore(js, fjs);
+          }(document, 'script', 'facebook-jssdk'));</script>
+          <div class="fb-like" data-href="http://scrive.com" data-send="true" data-layout="button_count" data-width="80" data-show-faces="false" data-font="arial"></div>
+        </li>
+      </ul>
+    </div>
   </div>
- </div>
 </footer>
 
 <!--
@@ -245,16 +237,30 @@ header=
         <a id="logo" class="page" href="index.html"><img src="/img/logo.png" width="120" height="22"></a>
         <div id="tagline" class="h3"></div>
       </li>
+      $if(logged)$
+      <li class="session-logout">
+        <a class="button button-small button-red" id="page-signup" href="$linklogout$">$_headerLogOut()$</a>
+      </li>
+      <li><a class="page" id="page-about" href="$linkaccount$">$_headerAccount()$</a></li>
+      <li><a class="page" id="page-cases" href="$linkissue$">$_headerArchive()$</a></li>
+      <li class="session-create">
+        <a class="button button-small button-red" onclick='createfromtemplate()' href="#">$_headerTemplate()$ </a>
+      </li>
+      <li class="session-create">
+        <a class="button button-small"            onclick='createnewdocument()' href="#">$_headerSend()$ </a>
+      </li>
+      $else$
       <li class="page-first"><a class="page" id="page-features" href="{path=features}">Features</a></li>
       <li><a class="page" id="page-pricing" href="{path=pricing}">Features</a></li>
       <li><a class="page" id="page-legal" href="{path=legal}">Features</a></li>
       <li><a class="page" id="page-cases" href="{path=cases}">Features</a></li>
       <li><a class="page" id="page-about" href="{path=about}">Features</a></li>
       <li class="page-last"><a class="page" id="page-contact" href="{path=contact}">Features</a></li>
-      <li class="session">
+      <li class="session-log">
         <a class="button button-small" id="page-login" href="{path=login}">Log in </a>
         <a class="button button-small button-red" id="page-signup" href="">Sign up</a>
       </li>
+      $endif$
     </ul>
   </nav>
 </header>

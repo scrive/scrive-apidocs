@@ -15,7 +15,7 @@ window.TemplatesListDefinition = function(archive) { return {
     textfiltering: new TextFiltering({text: "", infotext: localization.archive.templates.search}),
     selectfiltering : [ new SelectFiltering({
                              name: "process",
-                             textWidth : "100px",
+                             textWidth : "106px",
                              options: [
                                         {name: localization.filterByProcess.showAllProcessesTemplates, value: ""},
                                         {name: localization.filterByProcess.showContractsOnly, value: "contract"},

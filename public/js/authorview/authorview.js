@@ -71,8 +71,7 @@ window.AuthorViewView = Backbone.View.extend({
     this.render();
   },
   prerender: function() {
-    this.container = $("<div class='mainContainer' />");
-    $(this.el).addClass("body-container");
+    this.container = $("<div/>");
     $(this.el).append(this.container);
     $(this.el).append("<div class='clearfix'/>");
     $(this.el).append("<div class='spacer40'/>");

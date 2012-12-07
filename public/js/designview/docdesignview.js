@@ -79,9 +79,8 @@ var DesignViewView = Backbone.View.extend({
         this.render();
     },
     prerender: function(){
-        this.contrainer = $("<div class='mainContainer' />");
+        this.contrainer = $("<div/>");
         $(this.el).append(this.contrainer);
-        $(this.el).addClass("body-container");
         $(this.el).append("<div class='clearfix'/>");
         $(this.el).append("<div class='spacer40'/>");
 
@@ -788,7 +787,7 @@ var DesignViewView = Backbone.View.extend({
         var subsubbox = $("<div class='innerbox'/>");
         subsubbox.append($("<div class='inner-description-left'/>")
                                         .append($("<span/>").text(localization.nofiletext))
-                                        .append($("<div class='button-box'/>").append($(this.uploadFile()).append("<BR/>").append($(this.fromAvtal())))));
+                                        .append($("<div class='button-box'/>").append($(this.uploadFile()).append("<BR/>").append("<BR/>").append($(this.fromAvtal())))));
         var text = localization.designview.saveAsTemplateDescription;
         var savebox = $("<div class='inner-description-right'/>");
         subsubbox.append(savebox)
@@ -826,7 +825,7 @@ var DesignViewView = Backbone.View.extend({
                                         window.location.reload();
                                     });
                                 }});
-          saveboxbuttons.append(saveAsDraftButton.input()).append("<BR/>").append(saveAsTemplateButton.input());
+          saveboxbuttons.append(saveAsDraftButton.input()).append("<BR/>").append("<BR/>").append(saveAsTemplateButton.input());
         };
         box.append(subbox.append(subsubbox));
         return box;
@@ -837,7 +836,7 @@ var DesignViewView = Backbone.View.extend({
       var removeFileButton = Button.init({
                                  color : "black",
                                  size :  "tiny",
-                                 width : 120,
+                                 width : 140,
                                  text :  localization.designview.removeFile,
                                  onClick : function() {
                                     document.save();
@@ -861,7 +860,7 @@ var DesignViewView = Backbone.View.extend({
        var saveAsDraftButton = Button.init({
                                  color : "black",
                                  size :  "tiny",
-                                 width : 120,
+                                 width : 140,
                                  text :  localization.saveAsDraft,
                                  onClick : function() {
                                     document.save();
@@ -880,7 +879,7 @@ var DesignViewView = Backbone.View.extend({
       var saveAsTemplateButton = Button.init({
                                  color : "black",
                                  size :  "tiny",
-                                 width : 120,
+                                 width : 140,
                                  text :  localization.saveAsTemplate,
                                  onClick : function() {
                                     document.makeTemplate();

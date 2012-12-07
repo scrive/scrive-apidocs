@@ -51,7 +51,6 @@ var SignatoriesDesignView = Backbone.View.extend({
              size: 'small',
              text: localization.nextStep,
              cssClass : "nextstepbutton",
-             icon : $("<span class='btn-symbol green arrow-left'></span>"),
              onClick : function() {
                  documentdesignview.goToNextStep();
                 }

@@ -84,7 +84,7 @@ window.DocumentCellsDefinition = function(archive) { return  [
 window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.flatten([
             new SelectFiltering({
                              name: "status",
-                             textWidth : "90px",
+                             textWidth : "106px",
                              options: _.union(
                                         [{name: localization.filterByStatus.showAnyStatus, value: ""} ],
                                          (draftsAvaible ? [{name: localization.filterByStatus.showDraft,     value: "[draft]"}] : []),
@@ -94,7 +94,7 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.
                                         ])}),
             new SelectFiltering({
                              name: "process",
-                             textWidth : "90px",
+                             textWidth : "104px",
                              options: [ {name: localization.filterByProcess.showAllProcesses,  value: ""},
                                         {name: localization.filterByProcess.showContractsOnly, value: "contract"},
                                         {name: localization.filterByProcess.showOffersOnly,    value: "offer"},
@@ -103,7 +103,7 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.
             archive.forCompanyAdmin() ?
               [new SelectAjaxFiltering({
                              name: "sender",
-                             textWidth : "90px",
+                             textWidth : "104px",
                              text : "sender",
                              optionsURL : "/companyaccounts",
                              defaultName : localization.filterByAuthor.showAnyAuthor,
@@ -123,7 +123,7 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.
                  })] : [],
             new IntervalDoubleSelectFiltering({
                              name: "time",
-                             textWidth : "90px",
+                             textWidth : "104px",
                              selectedBottomPrefix : localization.filterByTime.filterForm,
                              selectedTopPrefix :    localization.filterByTime.filterTo ,
                              options: function() {
