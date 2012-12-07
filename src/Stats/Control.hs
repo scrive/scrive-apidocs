@@ -566,43 +566,19 @@ addSignStatRejectEvent doc sl =
       Log.stats $ "Cannot add reject stat because document is not rejected: " ++ show (signatorylinkid sl)
       return False
 
-addSignStatDeleteEvent :: MonadDB m => Document -> SignatoryLink -> MinutesTime -> m Bool
-addSignStatDeleteEvent doc sl time =
-  let dp = toDocumentProcess $ documenttype doc
-  in case signatorylinkdeleted sl of
-    True -> do
-      a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
-                                                          , ssSignatoryLinkID = signatorylinkid sl
-                                                          , ssTime            = time
-                                                          , ssQuantity        = SignStatDelete
-                                                          , ssDocumentProcess = dp
-                                                          , ssCompanyID       = Nothing
-                                                          }
-      unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
-        show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatDelete
-      return a
-    False -> do
-      Log.stats $ "Cannot add delete stat because document is not deleted: " ++ show (signatorylinkid sl)
-      return False
+addSignStatDeleteEvent :: MonadDB m => SignatoryLinkID -> MinutesTime -> m Bool
+addSignStatDeleteEvent slid time = do
+  a <- dbUpdate $ AddSignStatEvent2 slid SignStatDelete time
+  unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
+    show slid ++ " and quantity: " ++ show SignStatDelete
+  return a
 
-addSignStatPurgeEvent :: MonadDB m => Document -> SignatoryLink -> MinutesTime -> m Bool
-addSignStatPurgeEvent doc sl time =
-  let dp = toDocumentProcess $ documenttype doc
-  in case signatorylinkreallydeleted sl of
-    True -> do
-      a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
-                                                          , ssSignatoryLinkID = signatorylinkid sl
-                                                          , ssTime            = time
-                                                          , ssQuantity        = SignStatPurge
-                                                          , ssDocumentProcess = dp
-                                                          , ssCompanyID       = Nothing
-                                                          }
-      unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
-        show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatPurge
-      return a
-    False -> do
-      Log.stats $ "Cannot add purge stat because document is not really deleted: " ++ show (signatorylinkid sl)
-      return False
+addSignStatPurgeEvent :: MonadDB m => SignatoryLinkID -> MinutesTime -> m Bool
+addSignStatPurgeEvent slid time = do
+  a <- dbUpdate $ AddSignStatEvent2 slid SignStatPurge time
+  unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
+    show slid ++ " and quantity: " ++ show SignStatPurge
+  return a
 
 
 --CSV for sign stats

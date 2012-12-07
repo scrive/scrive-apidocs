@@ -200,7 +200,7 @@ testDeleteStat = do
 
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   let Just asl = getAuthorSigLink doc
-  _ <- addSignStatDeleteEvent doc asl time
+  _ <- addSignStatDeleteEvent (signatorylinkid asl) time
   stats'' <- dbQuery $ GetSignStatEvents
   assertEqual "Should have saved stat." 1 (length stats'')
   forM_ stats'' (\s->assertEqual "Wrong stat type" SignStatDelete (ssQuantity s))
@@ -221,7 +221,7 @@ testPurgeStat = do
   _ <- dbUpdate $ ReallyDeleteDocument author' (documentid doc') actor
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   let Just asl = getAuthorSigLink doc
-  _ <- addSignStatPurgeEvent doc asl time
+  _ <- addSignStatPurgeEvent (signatorylinkid asl) time
   stats'' <- dbQuery $ GetSignStatEvents
   assertEqual "Should have saved stat." 1 (length stats'')
   forM_ stats'' (\s->assertEqual "Wrong stat type" SignStatPurge (ssQuantity s))

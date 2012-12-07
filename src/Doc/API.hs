@@ -272,13 +272,12 @@ apiCallDelete did =  api $ do
   when (not $ (auid == userid user)) $ do
         throwError $ serverError "Permission problem. Not an author."
   _ <- apiGuardL (serverError "This document cant be deleted. Maybe it's pending?") $ dbUpdate $ ArchiveDocument user did actor
-  doc' <- apiGuardL (serverError "No document found after operation") $ dbQuery $ GetDocumentByDocumentID $ did
-  _ <- addSignStatDeleteEvent doc' (fromJust $ getSigLinkFor doc' user) (ctxtime ctx)
-  case (documentstatus doc') of
+  _ <- addSignStatDeleteEvent (signatorylinkid $ fromJust $ getSigLinkFor doc user) (ctxtime ctx)
+  case (documentstatus doc) of
        Preparation -> do
          _ <- dbUpdate $ ReallyDeleteDocument user did actor
-         when_ (isJust $ getSigLinkFor doc' user) $
-             addSignStatPurgeEvent doc' (fromJust $ getSigLinkFor doc' user)  (ctxtime ctx)
+         when_ (isJust $ getSigLinkFor doc user) $
+             addSignStatPurgeEvent (signatorylinkid $ fromJust $ getSigLinkFor doc user)  (ctxtime ctx)
        _ -> return ()
   Accepted <$> (runJSONGenT $ return ())
 

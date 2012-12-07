@@ -82,13 +82,12 @@ handleDelete = do
                                    postDocumentRejectedChange doc' (signatorylinkid $ fromJust msl) "web+archive"
                   _ -> return ()
               guardTrueM $ dbUpdate $ ArchiveDocument user did actor
-              doc' <- guardRightM' $ getDocByDocID $ did
-              _ <- addSignStatDeleteEvent doc' (fromJust msl) ctxtime
-              case (documentstatus doc') of
+              _ <- addSignStatDeleteEvent (signatorylinkid $ fromJust msl) ctxtime
+              case (documentstatus doc) of
                    Preparation -> do
                        _ <- dbUpdate $ ReallyDeleteDocument user did actor
-                       when_ (isJust $ getSigLinkFor doc' user) $
-                            addSignStatPurgeEvent doc' (fromJust $ getSigLinkFor doc' user)  ctxtime
+                       when_ (isJust $ getSigLinkFor doc user) $
+                            addSignStatPurgeEvent (signatorylinkid $ fromJust $ getSigLinkFor doc user)  ctxtime
                    _ -> return ()
     J.runJSONGenT $ return ()
 
@@ -138,7 +137,7 @@ handleReallyDelete = do
               Just doc <- dbQuery $ GetDocumentByDocumentID did
               return doc
             case getSigLinkFor doc user of
-              Just sl -> addSignStatPurgeEvent doc sl (ctxtime ctx)
+              Just sl -> addSignStatPurgeEvent (signatorylinkid sl) (ctxtime ctx)
               _ -> return False)
     docids
   J.runJSONGenT $ return ()
