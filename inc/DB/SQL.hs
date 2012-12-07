@@ -51,7 +51,10 @@ instance Convertible RawSQL SqlValue where
 
 -- | Parameterized SQL fragments and statements
 data SQL = SQL RawSQL [SqlValue]
-  deriving (Eq, Show)
+  deriving (Eq)
+
+instance Show SQL where
+    showsPrec _ (SQL rawsql values) = ((++) "SQL ") . shows rawsql . ((++) " [") . ((++) (Data.List.intercalate "," $ map fromSql values)) . ((++) "]")
 
 -- | Convenience class for things that can be turned into 'SQL'.
 -- There is intentionally no instance for String, use 'SQL' in a
