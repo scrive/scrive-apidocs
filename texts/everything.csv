@@ -2398,7 +2398,7 @@ have an account please follow the account creation process. Free use of up to 5 
 "_simpliefiedTextMarkInvitationReadEvidence","Dokumentets inbjudan lästes.","The document invitation was read."
 "_simpliefiedTextSignatoryLinkVisited","Dokumentet granskades online.","The document was seen online."
 "_simpliefiedTextSignDocumentEvidence","Dokumentet signerades.","The document was signed."
-"_simpliefiedTextInvitationEvidence","En inbjudan skickades till $affectedsignatory$$if(text)$ med meddelandet: <BR/> <i>$text:noescape()$</i>$else$.$endif$","An invitation was sent to $affectedsignatory$$if(text)$ with message: <BR/> <i>$text:noescape()$</i$else$.$endif$"
+"_simpliefiedTextInvitationEvidence","En inbjudan skickades till $affectedsignatory$$if(text)$ med meddelandet: <BR/> <i>$text:noescape()$</i>$else$.$endif$","An invitation was sent to $affectedsignatory$$if(text)$ with message: <BR/> <i>$text:noescape()$</i>$else$.$endif$"
 "_simpliefiedTextInvitationDelivered","En inbjudan levererades till $affectedsignatory$.","An invitation was delivered to $affectedsignatory$. "
 "_simpliefiedTextInvitationUndelivered","En inbjudan kunde inte levereras till $affectedsignatory$.","An invitation was delivered to $affectedsignatory$."
 "_simpliefiedTextReminderSend","En inbjudan skickades till $affectedsignatory$$if(text)$ med meddelandet: <BR/><i>$text:noescape()$</i>$else$.$endif$","A reminder was sent to $affectedsignatory$$if(text)$ with message: <BR/> <i>$text:noescape()$</i>$else$.$endif$"
