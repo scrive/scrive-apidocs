@@ -219,8 +219,10 @@ apiCallReady did =  api $ do
                          _ -> Nothing
               apiGuardJustM (badInput "Given JSON does not represent valid READY parameters.") $
                 return $ fromJSValue json
-  when (not $ all (isGood . asValidEmail . getEmail) (documentsignatorylinks doc)) $ do
+  when ((not $ all (isGood . asValidEmail . getEmail) (documentsignatorylinks doc)) && documentdeliverymethod doc == EmailDelivery) $ do
         throwError $ serverError "Some signatories don't have a valid email adress set."
+  when (isNothing $ documentfile doc) $ do
+        throwError $ serverError "File must be provided before document can be made ready."
   timezone <- lift $ runDBEnv $ mkTimeZoneName (timezonestring params)
   mndoc <- lift $ authorSendDocument user actor (documentid doc) timezone
   case mndoc of
