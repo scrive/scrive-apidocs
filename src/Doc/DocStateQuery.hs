@@ -26,6 +26,7 @@
 
 module Doc.DocStateQuery
     ( getDocByDocID
+    , getDocsByDocIDs
     , getDocByDocIDForAuthor
     , getDocByDocIDForAuthorOrAuthorsCompanyAdmin
     , getDocByDocIDSigLinkIDAndMagicHash
@@ -40,6 +41,7 @@ import Kontra
 import MagicHash
 import qualified Log
 import User.Model
+import Data.List
 
 {- |
    Securely find a document by documentid for the author or within their company.
@@ -62,6 +64,25 @@ getDocByDocID docid = do
           return $ Right doc
         _ -> do
           Log.debug $ "Document " ++ show docid ++ " does not exist (in getDocByDocID)"
+          return $ Left DBResourceNotAvailable
+
+getDocsByDocIDs :: Kontrakcja m => [DocumentID] -> m (Either DBError [Document])
+getDocsByDocIDs docids = do
+  Context { ctxmaybeuser, ctxmaybepaduser} <- getContext
+  case (ctxmaybeuser `mplus` ctxmaybepaduser) of
+    Nothing -> return $ Left DBNotLoggedIn
+    Just user -> do
+      docs <- dbQuery (GetDocuments [ DocumentsVisibleToUser (userid user)
+                                    ] [ DocumentFilterByDocumentIDs docids
+                                      ]
+                                    [] (0,-1))
+      -- lets see if all requested documents were found
+      let documentsThatWereNotFound = docids \\ (map documentid docs)
+      if null documentsThatWereNotFound
+        then do
+          return $ Right docs
+        else do
+          Log.debug $ "Documents " ++ show documentsThatWereNotFound ++ " do not exist (in getDocsByDocIDs)"
           return $ Left DBResourceNotAvailable
 
 {- | Same as getDocByDocID, but works only for author -}

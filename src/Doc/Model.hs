@@ -28,6 +28,7 @@ module Doc.Model
   , ErrorDocument(..)
   , GetDocuments(..)
   , GetDocumentByDocumentID(..)
+  , GetDocumentsByDocumentIDs(..)
   , GetDocumentByDocumentIDSignatoryLinkIDMagicHash(..)
   , GetDocumentsByAuthor(..)
   , GetTemplatesByAuthor(..)
@@ -147,6 +148,7 @@ data DocumentFilter
   | DocumentFilterByMonthYearTo   (Int,Int)   -- ^ Document time before or in (month,year)
   | DocumentFilterByAuthor UserID             -- ^ Only documents created by this user
   | DocumentFilterByDocumentID DocumentID     -- ^ Document by specific ID
+  | DocumentFilterByDocumentIDs [DocumentID]  -- ^ Documents by specific IDs
   | DocumentFilterSignable                    -- ^ Document is signable
   | DocumentFilterTemplate                    -- ^ Document is template
   | DocumentFilterDeleted Bool                -- ^ Only deleted (=True) or non-deleted (=False) documents
@@ -391,6 +393,9 @@ documentFilterToSQL (DocumentFilterByAuthor userid) = do
 
 documentFilterToSQL (DocumentFilterByDocumentID did) = do
   sqlWhereEq "documents.id" did
+
+documentFilterToSQL (DocumentFilterByDocumentIDs dids) = do
+  sqlWhereIn "documents.id" dids
 
 documentFilterToSQL (DocumentFilterSignable) = do
   sqlWhereEq "documents.type" (Signable undefined)
@@ -1391,10 +1396,15 @@ instance MonadDB m => DBQuery m GetSignatoryLinkByID (Maybe SignatoryLink) where
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance MonadDB m => DBQuery m GetDocumentByDocumentID (Maybe Document) where
   query (GetDocumentByDocumentID did) = do
-    (selectDocuments $ sqlSelect "documents" $ do
-      mapM_ sqlResult documentsSelectors
-      sqlWhereEq "documents.id" did)
+    query (GetDocumentsByDocumentIDs [did])
       >>= oneObjectReturnedGuard
+
+data GetDocumentsByDocumentIDs = GetDocumentsByDocumentIDs [DocumentID]
+instance MonadDB m => DBQuery m GetDocumentsByDocumentIDs [Document] where
+  query (GetDocumentsByDocumentIDs dids) = do
+    selectDocuments $ sqlSelect "documents" $ do
+      mapM_ sqlResult documentsSelectors
+      sqlWhereIn "documents.id" dids
 
 data GetDocumentByDocumentIDSignatoryLinkIDMagicHash = GetDocumentByDocumentIDSignatoryLinkIDMagicHash DocumentID SignatoryLinkID MagicHash
 instance MonadDB m => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash (Maybe Document) where
