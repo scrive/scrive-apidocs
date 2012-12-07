@@ -347,7 +347,7 @@ testDocumentDeleteInBulk = do
     (Just author) <- addNewCompanyUser "aaa" "bbb" "xxx@xxx.pl" companyid
     -- isSignable condition below is wrong. Tests somehow generate template documents 
     -- that are pending and that breaks everything.
-    docs <- replicateM 10 (addRandomDocumentWithAuthorAndCondition author (isSignable))
+    docs <- replicateM 100 (addRandomDocumentWithAuthorAndCondition author (isSignable))
 
     ctx <- (\c -> c { ctxmaybeuser = Just author})
       <$> mkContext defaultValue
