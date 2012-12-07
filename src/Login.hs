@@ -1,5 +1,6 @@
 module Login (
     forgotPasswordPagePost
+  , signupPageGet
   , signupPagePost
   , handleLoginGet
   , handleLoginPost
@@ -16,14 +17,12 @@ import Happstack.Fields
 import Kontra
 import KontraLink
 import Mails.SendMail
-import Utils.Prelude
 import Redirect
 import User.Action
 import User.Model
 import User.UserView as UserView
 import qualified Log (security, debug)
 import qualified User.UserControl as UserControl
-import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Stats.Control
 import User.History.Model
@@ -77,6 +76,16 @@ sendResetPasswordMail ctx link user = do
   mail <- UserView.resetPasswordMail (ctxhostpart ctx) user link
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
 
+signupPageGet :: Kontrakcja m => m Response
+signupPageGet = do
+  ctx <- getContext
+  memail <- getField "email"
+  let email = maybe "null" (\x -> "\"" ++ x ++ "\"") memail
+      signupLink = show LinkSignup
+  content <- renderTemplateAsPageWithFields ctx "signupPage" Nothing False [("email", email), ("signuplink", signupLink)]
+  response <- simpleHtmlResponse content
+  return response
+
 {- |
    Handles submission of the signup form.
    Normally this would create the user, (in the process mailing them an activation link),
@@ -84,11 +93,10 @@ sendResetPasswordMail ctx link user = do
    then we send them a new activation link because probably the old one expired or was lost.
    If they have then we stop the signup.
 -}
-signupPagePost :: Kontrakcja m => m KontraLink
+signupPagePost :: Kontrakcja m => m JSValue
 signupPagePost = do
   me <- handleSignup
-  maybeM (addFlashM . modalUserSignupDone . fst) me
-  return LoopBack
+  runJSONGenT $ value "sent" $ isJust me
 
 {- |
    Try to sign up a new user. Returns the email and the new user id. If the

@@ -46,6 +46,7 @@ set firstPage
  js  js/payments.js
  js  js/login.js
  js  js/new_password.js
+ js  js/new_signup.js
  js  js/blocking.js
 
 set systemPage

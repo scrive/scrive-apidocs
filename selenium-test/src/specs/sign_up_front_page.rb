@@ -40,7 +40,7 @@ describe "sign up on front page and modify account settings" do
     puts "request an account and make sure you get a green flash back"
     (@h.wait.until { @h.driver.find_element :css => ".requestAccount input" }).send_keys random_email
     (@h.wait.until { @h.driver.find_element :css => ".requestAccount .submit" }).click
-    (@h.wait.until { @h.driver.find_element :css => ".modal-container .close" }).click
+    (@h.wait.until { @h.driver.find_element :css => "div.label" }).click
 
     puts "we should get an email to a page where we can accept the tos"
     @h.emailhelper.follow_link_in_latest_mail_for random_email

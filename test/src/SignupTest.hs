@@ -4,6 +4,7 @@ import Control.Applicative
 import Data.Maybe
 import Happstack.Server
 import Test.Framework
+import Text.JSON
 
 import ActionQueue.Core
 import ActionQueue.UserAccountRequest
@@ -128,18 +129,14 @@ testPasswordsMatchToActivate = do
   (res3, ctx3) <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password12" "password21" Nothing
   assertAccountActivationFailed (res3, ctx3)
 
-signupForAccount :: Context -> String -> TestEnv (Response, Context)
+signupForAccount :: Context -> String -> TestEnv (JSValue, Context)
 signupForAccount ctx email = do
   req <- mkRequest POST [("email", inText email)]
-  runTestKontra req ctx $ signupPagePost >>= sendRedirect
+  runTestKontra req ctx $ signupPagePost
 
-assertSignupSuccessful :: (Response, Context) -> TestEnv UserAccountRequest
-assertSignupSuccessful (res, ctx) = do
-  assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "Location is /sv" (Just "/sv") (T.getHeader "location" (rsHeaders res))
+assertSignupSuccessful :: (JSValue, Context) -> TestEnv UserAccountRequest
+assertSignupSuccessful (_res, ctx) = do
   assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx)
-  assertBool ("Flash message has type indicating success, was "  ++ show (getFlashType $ head $ ctxflashmessages ctx)) $ head (ctxflashmessages ctx) `isFlashOfType` Modal
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
   return $ head actions

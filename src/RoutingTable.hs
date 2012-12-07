@@ -169,6 +169,7 @@ staticRoutes = choice
      , dir "logout"      $ hGet  $ toK0 $ handleLogout
      , dir "login" $ hGet $ toK0 $ handleLoginGet
      , dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
+     , dir "signup"      $ hGet $ toK0 $ signupPageGet
      , dir "signup"      $ hPostAllowHttp $ toK0 $ signupPagePost
      , dir "amnesia"     $ hPostNoXToken $ toK0 $ forgotPasswordPagePost
      , dir "amnesia"     $ hGet $ toK2 $ UserControl.handlePasswordReminderGet

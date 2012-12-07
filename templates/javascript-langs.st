@@ -464,6 +464,11 @@ javascriptLocalisation =
            , flashMessageNeedsLetterAndDigit: "$_flashMessageNeedsLetterAndDigit()$"
            , flashMessagePasswordChangeLinkNotValid: '$_flashMessagePasswordChangeLinkNotValid()$'
          }
+         , signupModal: {
+             fillinemail: "$_FillInEmail()$"
+           , emailAdress: "$_EmailAdress()$"
+           , modalAccountSetupFooter: "$_modalAccountSetupFooter()$"
+         }
          , cancel : "$_cancel()$"
          , authorview : {
                signatoriesTitle : "$_authorviewSignatoriesTitle()$"

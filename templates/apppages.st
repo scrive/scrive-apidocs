@@ -73,7 +73,7 @@ standardBodyWrapper=
                                             <p>$_standardBodyWrapperBody()$</p>
                                           </div>
                                           <div class="right">
-                                            <form method="post" action="$linksignup$" class="requestAccount">
+                                            <form method="get" action="$linksignup$" class="requestAccount">
                                               <input class="shiny float-left"
                                                      name="email" type="email"
                                                      infotext="$_FillInEmail()$"
