@@ -255,7 +255,8 @@ data EvidenceEventType =
   SetDocumentProcessEvidence                      |
   DetachFileEvidence                              |
   InvitationDelivered                             |
-  InvitationUndelivered                           
+  InvitationUndelivered                           |
+  SignatoryLinkVisited
   deriving (Eq, Show, Read, Ord)
 
 instance Convertible EvidenceEventType Int where
@@ -331,7 +332,7 @@ instance Convertible EvidenceEventType Int where
   safeConvert DetachFileEvidence                              = return 70
   safeConvert InvitationDelivered                             = return 71
   safeConvert InvitationUndelivered                           = return 72
-
+  safeConvert SignatoryLinkVisited                            = return 73
 
 instance Convertible Int EvidenceEventType where
     safeConvert 1  = return AddSigAttachmentEvidence
@@ -406,6 +407,7 @@ instance Convertible Int EvidenceEventType where
     safeConvert 70 = return DetachFileEvidence
     safeConvert 71 = return InvitationDelivered
     safeConvert 72 = return InvitationUndelivered
+    safeConvert 73 = return SignatoryLinkVisited
     safeConvert s  = Left ConvertError { convSourceValue = show s
                                        , convSourceType = "Int"
                                        , convDestType = "EvidenceEventType"

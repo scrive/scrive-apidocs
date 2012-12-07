@@ -15,7 +15,7 @@ simpliefiedTextTimeoutDocumentEvidence      = $_simpliefiedTextTimeoutDocumentEv
 ###
 simpliefiedTextMarkInvitationReadEvidence   = $_simpliefiedTextMarkInvitationReadEvidence()$
 ###
-simpliefiedTextMarkDocumentSeenEvidence     = $_simpliefiedTextMarkDocumentSeenEvidence()$
+simpliefiedTextSignatoryLinkVisited         = $_simpliefiedTextSignatoryLinkVisited()$
 ####
 simpliefiedTextSignDocumentEvidence         = $_simpliefiedTextSignDocumentEvidence()$
 ####

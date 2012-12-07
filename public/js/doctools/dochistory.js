@@ -15,13 +15,18 @@ var DocumentHistoryModel = Backbone.Model.extend({
         name : "Document history",
         schema: new Schema({
             url: "/d/evidencelog/" + this.document().documentid(),
-            paging : new Paging({disabled: true, showLimit : this.get("showAll") ? undefined : 5 }),
+            paging : new Paging({disabled: true, showLimit : this.get("showAll") ? undefined : 15 }),
             cells : [
-                new Cell({name: localization.history.time,  width:"60px",  field:"time"}),
-                new Cell({name: localization.history.party, width:"80px", field:"party"}),
-                new Cell({name: localization.history.description, width:"200px",  field:"text" ,special: "rendered",
+                new Cell({name: localization.archive.documents.columns.status, width:"46px", field:"status",
+                  rendering: function(status) {
+                      return jQuery("<div class='icon status "+status+"'></div>");
+                  }
+                }),
+                new Cell({name: localization.history.time,  width:"150px",  field:"time"}),
+                new Cell({name: localization.history.party, width:"200px", field:"party"}),
+                new Cell({name: localization.history.description, width:"460px",  field:"text" ,special: "rendered",
                           rendering: function(value) {
-                            return $("<div>").html(value);
+                            return $("<div style='margin-right:30px'>").html(value);
                           }})
                 ]
             })
@@ -39,7 +44,10 @@ var DocumentHistoryModel = Backbone.Model.extend({
   },
   toogleShowAll : function() {
       this.set({'showAll' : !this.showAll() }, {silent : true});
-      this.historyList().setShowLimit(this.get("showAll") ? undefined : 5);
+      this.historyList().setShowLimit(this.get("showAll") ? undefined : 15);
+  },
+  silentFetch : function() {
+      this.historyList().silentFetch();
   },
   document : function(){
        return this.get("document");
@@ -47,7 +55,10 @@ var DocumentHistoryModel = Backbone.Model.extend({
 });
 var DocumentHistoryView = Backbone.View.extend({
     initialize: function(args) {
+        var self = this;
         _.bindAll(this, 'render');
+        this.model.historyList().model().bind("change", function() {self.render();});
+        this.model.historyList().model().bind("reset", function() {self.render();});
         var view = this;
         this.render();
     },
@@ -58,7 +69,7 @@ var DocumentHistoryView = Backbone.View.extend({
          }   
         else {
             this.checkbox.removeClass("expanded");
-            this.label.text(localization.history.expand + " (" + (this.model.historyList().model().length - 5) + " " +localization.history.available+ ")")
+            this.label.text(localization.history.expand + " (" + (this.model.historyList().model().length - 15) + " " +localization.history.available+ ")")
         }    
     },
     expandAllOption : function() {
@@ -84,13 +95,10 @@ var DocumentHistoryView = Backbone.View.extend({
       container.append(historyList.el())
 
       var footer = $("<div class='document-history-footer'/>");
-      historyList.model().bind('reset', function() {
-        if (historyList.model().length <= 5)
+        if (historyList.model().length <= 15)
             footer.hide();
         else
             self.updateOption();
-          
-      })
       footer.append(this.expandAllOption())
       container.append(footer);
 
@@ -110,6 +118,8 @@ window.DocumentHistory = function(args){
                     });
         this.el     = function() {return $(view.el);};
         this.recall = function() { model.recall();};
+        var checkAndRefresh = function(i) {model.silentFetch(); setTimeout(function() {checkAndRefresh(i> 30 ? 30 : i+1);},i * 1000)};
+        checkAndRefresh(1);
 };
 
 })(window);

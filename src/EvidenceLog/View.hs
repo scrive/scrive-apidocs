@@ -35,12 +35,13 @@ eventsForLog _doc events =
         sevents = filter ((simpleEvents . evType) &&^ (not . emptyEvent))  events
         (es, es') = break (endOfHistoryEvent . evType) sevents
         separatedLog = es ++ (take 1 es')
-        cleanerLog  = flattenSimilar $ cleanUnimportantAfterSigning separatedLog
+        cleanerLog  = cleanUnimportantAfterSigning separatedLog
     in cleanerLog
 
         
 eventJSValue :: (MonadDB m, TemplatesMonad m) => KontraTimeLocale -> Document -> DocumentEvidenceEvent -> JSONGenT m ()
 eventJSValue tl doc dee = do
+    J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
     J.value "time"  $ showDateForHistory tl (evTime dee)
     J.valueM "party" $ if (systemEvents $ evType dee)
                           then return "Scrive"
@@ -77,7 +78,7 @@ simpleEvents RejectDocumentEvidence       = True
 simpleEvents TimeoutDocumentEvidence      = True
 simpleEvents PreparationToPendingEvidence = True
 simpleEvents MarkInvitationReadEvidence   = True
-simpleEvents MarkDocumentSeenEvidence     = True
+simpleEvents SignatoryLinkVisited         = True
 simpleEvents RestartDocumentEvidence      = True
 simpleEvents SignDocumentEvidence         = True
 simpleEvents InvitationEvidence           = True
@@ -88,10 +89,29 @@ simpleEvents ResealedPDF                  = True
 simpleEvents CancelDocumenElegEvidence    = True
 simpleEvents _                            = False
 
+getEvidenceEventStatusClass :: EvidenceEventType -> StatusClass
+getEvidenceEventStatusClass NewDocumentEvidence          = SCDraft
+getEvidenceEventStatusClass CloseDocumentEvidence        = SCSigned
+getEvidenceEventStatusClass CancelDocumentEvidence       = SCCancelled
+getEvidenceEventStatusClass RejectDocumentEvidence       = SCRejected
+getEvidenceEventStatusClass TimeoutDocumentEvidence      = SCTimedout
+getEvidenceEventStatusClass PreparationToPendingEvidence = SCSent
+getEvidenceEventStatusClass MarkInvitationReadEvidence   = SCRead
+getEvidenceEventStatusClass SignatoryLinkVisited         = SCOpened
+getEvidenceEventStatusClass RestartDocumentEvidence      = SCDraft
+getEvidenceEventStatusClass SignDocumentEvidence         = SCSigned
+getEvidenceEventStatusClass InvitationEvidence           = SCSent
+getEvidenceEventStatusClass InvitationDelivered          = SCDelivered
+getEvidenceEventStatusClass InvitationUndelivered        = SCDeliveryProblem
+getEvidenceEventStatusClass ReminderSend                 = SCSent
+getEvidenceEventStatusClass ResealedPDF                  = SCSigned
+getEvidenceEventStatusClass CancelDocumenElegEvidence    = SCCancelled
+getEvidenceEventStatusClass _                            = SCError
+
 -- Clean some events that should not be shown. Like reading after signing.
 cleanUnimportantAfterSigning :: [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
 cleanUnimportantAfterSigning [] = []
-cleanUnimportantAfterSigning (e:es) = if ((     (evType e == MarkDocumentSeenEvidence)
+cleanUnimportantAfterSigning (e:es) = if ((     (evType e == SignatoryLinkVisited)
                                            || (evType e == MarkInvitationReadEvidence))
                                         && wasSigned (evUserID e, evSigLinkID e) es)
                                         then cleanUnimportantAfterSigning es
@@ -125,24 +145,6 @@ emptyEvent :: DocumentEvidenceEvent -> Bool
 emptyEvent (DocumentEvidenceEvent {evType = InvitationEvidence, evAffectedSigLinkID = Nothing }) = True
 emptyEvent (DocumentEvidenceEvent {evType = ReminderSend,       evAffectedSigLinkID = Nothing }) = True
 emptyEvent _ = False
-
-simillarEvent :: DocumentEvidenceEvent -> DocumentEvidenceEvent -> Bool
-simillarEvent e1 e2 =
-        (evType e1 == evType e2)
-     && (evSigLinkID e1 == evSigLinkID e2)
-     && simillarEvent' (evType e1)
-    where
-        simillarEvent' MarkDocumentSeenEvidence     = True
-        simillarEvent' MarkInvitationReadEvidence  = True
-        simillarEvent' _ = False
-
-flattenSimilar ::  [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
-flattenSimilar [] = []
-flattenSimilar (e:es) =
-    if ((isNothing $ find (simillarEvent e) es))
-       then e : (flattenSimilar es)
-       else (flattenSimilar es)
-
 
 simplyfiedEventText :: TemplatesMonad m => Document -> DocumentEvidenceEvent -> m String
 simplyfiedEventText doc dee = renderTemplate ("simpliefiedText" ++ (show $ evType dee)) $ do

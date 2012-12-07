@@ -325,6 +325,14 @@ rejectDocument documentid siglinkid = do
 handleSignShowSaveMagicHash :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
 handleSignShowSaveMagicHash did sid mh = do
   dbUpdate $ AddDocumentSessionToken sid mh
+
+  -- Getting some evidence
+  ctx <- getContext
+  document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
+  invitedlink <- guardJust $ getSigLinkFor document sid
+  dbUpdate $ AddSignatoryLinkVisitedEvidence did invitedlink (signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory invitedlink) (getEmail invitedlink) sid)
+
+  -- Redirect to propper page
   return $ LinkSignDocNoMagicHash did sid
 
 handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
