@@ -4,6 +4,7 @@ module DocControlTest(
 
 import Control.Applicative
 import Data.Maybe
+import Control.Monad
 import Data.List
 import Happstack.Server
 import Test.Framework
@@ -16,6 +17,7 @@ import DB
 import Doc.Model
 import Doc.DocStateData
 import Doc.DocControl
+import Archive.Control
 import Doc.DocUtils
 import IPAddress
 import Test.QuickCheck
@@ -44,7 +46,7 @@ docControlTests env = testGroup "Templates" [
   , testThat "We can't get json for document if we are not logged in" env testGetNotLoggedIn
   , testThat "We can't get json for document is we are logged in but we provided authorization header" env testGetBadHeader
   , testThat "Split document works for csv data" env testSplitDocumentWorkerSucceedes
-
+  , testThat "Document bulk delete works fast" env testDocumentDeleteInBulk
   ]
 
 testUploadingFileAsContract :: TestEnv ()
@@ -337,8 +339,23 @@ testDocumentFromTemplateShared = do
     req <- mkRequest POST []
     _ <- runTestKontra req ctx $ apiCallCreateFromTemplate (documentid doc)
     docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
-    assertBool "New document should have been created" (length docs2 == 1+ length docs1)
+    assertEqual "New document should have been created" (1+length docs1) (length docs2)
 
+testDocumentDeleteInBulk :: TestEnv ()
+testDocumentDeleteInBulk = do
+    (Company {companyid}) <- addNewCompany
+    (Just author) <- addNewCompanyUser "aaa" "bbb" "xxx@xxx.pl" companyid
+    -- isSignable condition below is wrong. Tests somehow generate template documents 
+    -- that are pending and that breaks everything.
+    docs <- replicateM 10 (addRandomDocumentWithAuthorAndCondition author (isSignable))
+
+    ctx <- (\c -> c { ctxmaybeuser = Just author})
+      <$> mkContext defaultValue
+    req <- mkRequest POST (map (\doc -> ("doccheck", inText (show $ documentid doc))) docs)
+
+    _ <- runTestKontra req ctx $ handleDelete
+    docs2 <- dbQuery $ GetDocumentsByAuthor (userid author)
+    assertEqual "Documents are deleted" 0 (length docs2)
 
 testGetLoggedIn :: TestEnv ()
 testGetLoggedIn = do
