@@ -41,6 +41,7 @@ set firstPage
  js  js/infotextinputs.js
  js  js/buttons.js
  js  js/confirmations.js
+ js  js/loading.js
  js  libs/recurly.js
  js  js/payments.js
  js  js/login.js
