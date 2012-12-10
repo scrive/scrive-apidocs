@@ -119,7 +119,7 @@ instance MonadDB m => DBQuery m GetEmailsBySender [Mail] where
       sqlWhere "content IS NOT NULL"
       -- sender is yet another crappy json field in database
       -- change it into proper SQL column some later time
-      sqlWhereILike "sender" ("\"%" ++ sender ++ "\"%")
+      sqlWhereILike "sender" ("%\"" ++ sender ++ "\"%")
 
 -- below handlers are for use within mailer only. I can't hide them properly
 -- since mailer is not separated into another package yet so it has to be
