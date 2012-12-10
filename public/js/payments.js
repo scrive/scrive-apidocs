@@ -431,7 +431,8 @@
                                             model.firstName(), 
                                             model.lastName(), 
                                             function(data) {
-                                                LoadingDialog.close();
+                                                //LoadingDialog.close();
+                                                loadingicon.hide();
                                                 if(data.success)
                                                     form.submit();
                                                 // what else?
@@ -439,7 +440,8 @@
                         work = true;
                     }
                 } else if(data.user_exists && !data.has_plan && data.has_company && !data.is_admin) {
-                    LoadingDialog.close();
+                    loadingicon.hide();
+                    //LoadingDialog.close();
                     var popup = Confirmation.popup({
                         title: localization.payments.mustBeAdmin,
                         content: $('<p />').text(localization.payments.contactAdmin),
@@ -448,7 +450,8 @@
                         }
                     });
                 } else if(data.user_exists && !data.has_plan && data.has_company && data.is_admin) {
-                    LoadingDialog.close();
+                    //LoadingDialog.close();
+                    //loadingicon.hide();
                     if(work) {
                         work = false;
                         form.submit();
@@ -456,7 +459,8 @@
                     }
                 } else {
                     // show message (they should log in)
-                    LoadingDialog.close();
+                    //LoadingDialog.close();
+                    loadingicon.hide();
                     var text = localization.payments.outside.sorryExistingUser;
                     var header = localization.payments.outside.sorryExistingUserHeader;
                     var popup = Confirmation.popup({
@@ -468,15 +472,17 @@
                     });
                 }
             };
-            
+            var loadingicon = $('<img src="/libs/recurly/images/submitting.gif" class="loading-icon" style="display:none" />');
             // replace button with our own
             var button = Button.init({color:'green',
                                       size:'big',
                                       cssClass:'s-subscribe',
                                       text:localization.payments.subscribe,
+                                      icon: loadingicon, 
                                       onClick: function() {
                                           view.validator.validate(function() {
-                                              LoadingDialog.open(localization.payments.loading);
+                                              //LoadingDialog.open(localization.payments.loading);
+                                              loadingicon.css({display:'inline'});
                                               if(model.type() === 'user') {
                                                   handlechargeaccount({
                                                       'user_exists' : true,
@@ -577,6 +583,8 @@
                 return false;
             }
 
+            var loadingicon = $('img.loading-icon');
+
             Recurly.config({
                 subdomain: model.subdomain()
                 , currency: 'SEK'
@@ -609,7 +617,8 @@
                 , signature: model.plans()[model.currentPlan() || 'team'].signature
                 , beforeInject: this.scrambleForm
                 , successHandler: function(stuff) {
-                    LoadingDialog.open(localization.payments.savingsubscription);
+                    //LoadingDialog.open(localization.payments.savingsubscription);
+                    loadingicon.css({display:'inline'});
                     model.submitSubscription(function() {
                         var text;
                         var header;
@@ -618,7 +627,8 @@
                             return true;
                         }
 
-                        LoadingDialog.close();
+                        loadingicon.hide();
+                        //LoadingDialog.close();
                         if(model.createdUser()) {
                             text = localization.payments.outside.confirmAccountCreatedUser;
                             header = localization.payments.outside.confirmAccountCreatedUserHeader;
