@@ -45,7 +45,7 @@ import ScriveByMail.Model
 import Payments.Action
 import Payments.Model
 import ListUtil
-
+import qualified Templates.Fields as F
 
 getUserJSON :: Kontrakcja m => m JSValue
 getUserJSON = do
@@ -512,19 +512,19 @@ handleAccountSetupPost uid token = do
     email.  This'll show them the usual landing page, but with a modal dialog
     for changing their password.
 -}
-handlePasswordReminderGet :: Kontrakcja m => UserID -> MagicHash -> m Response
+handlePasswordReminderGet :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink String)
 handlePasswordReminderGet uid token = do
   muser <- getPasswordReminderUser uid token
   case muser of
     Just user -> do
       switchLang (getLang user)
-      ctx <- getContext
       let changePassLink = show $ LinkPasswordReminder uid token
-      content <- renderTemplateAsPageWithFields ctx "changePasswordPage" Nothing False [("linkchangepassword", changePassLink)]
-      simpleHtmlResponse content
+      content <- renderTemplate "changePasswordPage" $ do
+                    F.value "linkchangepassword" $ changePassLink
+      return $ Right content
     Nothing -> do
       addFlashM flashMessagePasswordChangeLinkNotValid
-      sendRedirect =<< getHomeOrDesignViewLink
+      Left <$> getHomeOrDesignViewLink
 
 handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
 handlePasswordReminderPost uid token = do

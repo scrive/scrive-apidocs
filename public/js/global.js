@@ -109,7 +109,6 @@ function enableInfoTextOnce(where) {
 }
 
 safeReady(function() {
-  showModal();
   enableInfoTextOnce();
 });
 
@@ -163,25 +162,6 @@ function prepareForEdit(form, width) {
     $(this).replaceWith(replacement);
     replacement.show();
   });
-}
-
-//used by the login and forgot password modals
-function showModal() {
-  var modalbox = $(".modalbox");
-  modalbox.overlay({
-    mask: {
-      color: standardDialogMask,
-      top: standardDialogTop,
-      loadSpeed: 0,
-      opacity: 0.9
-    },
-    speed: 0,
-    fixed: false,
-    top: standardDialogTop
-  });
-  if (modalbox.size() > 0) {
-    modalbox.first().data("overlay").load();
-  }
 }
 
 function prepareEditor(textarea) {

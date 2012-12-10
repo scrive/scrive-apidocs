@@ -1,0 +1,101 @@
+header.site {
+  top : 0;
+  left : 0;
+  width : 100%;
+  z-index : 100;
+  background : #fff;
+  border-top : 3px solid #fff;
+  box-shadow : b10 0 0 8px;
+  background : w97;
+  background : #fff;
+
+  nav {
+    position : relative;
+    border-top : 1px solid @blue-border;
+    height : 97px;
+    border-bottom : 1px solid @blue-border;
+    ul.ct {
+      .clearfix;
+      height : 95px;
+      margin: 0 auto;
+      width: 1020px;
+      position : relative;
+      li {
+        float : right;
+        width : 96px;
+        border-left : 1px solid @blue-border;
+        height : 24px;
+        margin : 35px 0 34px;
+        a.page {
+          display : block;
+          font : 1em/95px @source;
+          text-align : center;
+          color : @text-medium;
+          text-shadow : #fff 0 1px 0;
+          height : 95px + 4px;
+          margin-top : -39px;
+          border-top : 4px solid transparent;
+          transition : .15s ease-in-out all;
+          &:hover {
+            border-top-color : @blue-medium;
+            color : @blue-medium;
+          }
+        }
+        &.session-logout {
+          padding-left : 30px;
+          width : auto;
+          .clearfix;
+          a.button.button-small {
+            margin-top : -4px;
+            margin-right : 0px;
+            min-width : 40px;
+            float : left;
+            transform : translateZ(0);
+          }
+        }
+        &.session-create {
+          padding-right : 30px;
+          width : 140px;
+          .clearfix;
+          a.button.button-small {
+            width: 110px;
+            margin-top : -4px;
+            margin-right : 0px;
+            min-width : 40px;
+            float : left;
+            transform : translateZ(0);
+          }
+        }
+        &.page-first, &.session-create, &.session-logout {
+          border-left-color : transparent;
+        }
+        &#branding {
+          .clearfix;
+          float: left;
+          width : 192px;
+          border-left : none;
+          position : relative;
+
+          a#logo {
+            display : block;
+            width : 192px;
+            text-align : left;
+            img {
+              margin : 37px 1em 36px;
+            }
+          }
+          #tagline {
+            position : absolute;
+            top  : 12px;
+            left : 150px;
+            font-weight : normal;
+            display : none;
+            font-size : 1em;
+            cursor : pointer;
+            width : 140px;
+          }
+        }
+      }
+    }
+  }
+}

@@ -20,7 +20,14 @@ wholePage=
         <title>$pagetitle()$</title>
         $standardHeaderContents()$
       </head>
-      $standardBody(unwrappedbody=content)$
+      <body>
+       $header()$
+       $flashmessages()$
+       $content:noescape()$
+       <div class="clearfix"></div>
+       <div class="spacer40"></div>
+       $pageFooter()$
+      </body>
     </html>
 
 ####
@@ -36,75 +43,6 @@ standardHeaderContents=
         <script src="/localization/$ctxlang$/$versioncode$.js"  type="text/javascript"></script>
         $staticResources:noescape()$
 ####
-standardBodyWithQueryCol=
-       $standardBodyWrapper(unwrappedbody=contentsWithQueryCol(unwrappedbody=unwrappedbody))$
-####
-contentsWithQueryCol=
-         <div class="left-column">
-           $queryColumn()$
-         </div>
-         <div class="right-column">
-           <div class="mainContainer">
-             $unwrappedbody:noescape()$
-           </div>
-         </div>
-####
-standardBody=
-    <body>
-       $header()$
-        <div class="mainContainer" >
-          $flashmessages()$
-          $loginModal()$
-        <div class="body-container">
-          $unwrappedbody:noescape()$
-          <div class="clearfix"></div>
-          <div class="spacer40"></div>
-        </div>
-        </div>
-
-        $pageFooter()$
-      </body>
-####
-queryColumn=
-<div class="white thin box createaccountbox">
-                                                <h4>$_queryColumnHead()$</h4>
-<br />
-<p>$_queryColumnBody1()$</p>
-<br />
-<p>$_queryColumnBody2()$</p>
-                                                <br />
-                                                <form method="post"
-                                                action="$linksignup$" class="requestAccount">
-                                                        <input type="email"
-                                                        name="email"
-                                                        infotext="$_email()$"
-                                                        autocomplete="off"
-                                                        /><br /><br />
-
-                                                        <a class="submit new-btn-small green2 center"><p>$_ButtonCreateAccount()$</p></a>
-                                                        <input type="submit" class="hidden" />
-                                                </form>
-                                        </div>
-                                        <br />
-                                        <div class="white thin box">
-                                                <h4>$_queryColumnQuestions()$</h4>
-                                                <br />
-
-                                                <p>$_queryColumnPhone()$</p>
-                                                <p>$_queryColumnEmail()$</p>
-
-                                                <br />
-                                                <form method="post"
-                                                      action="$linkquestion$"  class='askQuestion'>
-                                                        <input type="text" name="name" infotext="$_name()$" autocomplete="off" /><br />
-                                                        <input type="email" name="email" infotext="$_email()$" autocomplete="off"/><br />
-                                                        <input type="tel" name="phone" infotext="$_phone()$" autocomplete="off"/><br />
-                                                        <textarea name="message" infotext="$_message()$" style="height:42px;" autocomplete="off"></textarea>
-                                                        <a class="submit new-btn-small green2 center"><p>$_send()$!</p></a>
-                                                        <input type="submit" class="hidden" />
-                                                </form>
-
-                                        </div>
 ####
 pageFooter=
 
@@ -250,16 +188,14 @@ header=
         <a class="button button-small"            onclick='createnewdocument()' href="#">$_headerSend()$ </a>
       </li>
       $else$
-      <li class="page-first"><a class="page" id="page-features" href="{path=features}">Features</a></li>
+      <li class="session-log">
+        <a class="button button-small" id="page-login" href="/login">Log in </a>
+      </li>
       <li><a class="page" id="page-pricing" href="{path=pricing}">Features</a></li>
       <li><a class="page" id="page-legal" href="{path=legal}">Features</a></li>
       <li><a class="page" id="page-cases" href="{path=cases}">Features</a></li>
       <li><a class="page" id="page-about" href="{path=about}">Features</a></li>
-      <li class="page-last"><a class="page" id="page-contact" href="{path=contact}">Features</a></li>
-      <li class="session-log">
-        <a class="button button-small" id="page-login" href="{path=login}">Log in </a>
-        <a class="button button-small button-red" id="page-signup" href="">Sign up</a>
-      </li>
+      <li class="page-first"><a class="page" id="page-features" href="{path=features}">Features</a></li>
       $endif$
     </ul>
   </nav>

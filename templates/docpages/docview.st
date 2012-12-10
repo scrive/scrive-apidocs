@@ -1,5 +1,7 @@
 ######
 pageDocumentView=
+<div class="mainContainer" >
+<div class="body-container">
 <script>
 jQuery("body").addClass("authorview");
 jQuery(function(){
@@ -17,5 +19,7 @@ jQuery(function(){
   }).el());
 });
 </script>
+</div>
+</div>
 
 ####

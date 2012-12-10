@@ -1,5 +1,7 @@
 ####
 pageDocumentsList=
+<div class="mainContainer" >
+<div class="body-container">
 <div class='blocking-box'></div>
 <div class='archive'></div>
 <script>
@@ -8,4 +10,6 @@ jQuery(function() {
   BlockingInfo.show('.blocking-box');
 });
 </script>
+</div>
+</div>
 ####

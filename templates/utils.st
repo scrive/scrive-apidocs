@@ -89,15 +89,29 @@ flashmessages =
      }$
    })
 </script>
-<div class="modalcontainer">
+
 $flashmessages:{ flash |
     $if(flash.isModal)$
-        <div class="modalbox overlay">
-            $flash.message:noescape()$
-        </div>
+        <script>
+          var box = jQuery("<div class='modalcontainer/'>");
+          jQuery('body').append(box);
+          var mbox = jQuery("<div class='modalbox overlay'/>").html("$flash.message:noescape()$")
+          jQuery('body').append(box.append(mbox));
+          mbox.overlay({
+              mask: {
+                color: standardDialogMask,
+                top: standardDialogTop,
+                loadSpeed: 0,
+                opacity: 0.9
+              },
+              speed: 0,
+              fixed: false,
+              top: standardDialogTop
+            });
+          mbox.data("overlay").load();
+        </script>
     $endif$
 }$
-</div>
 ####
 ####
 loadingdialog=

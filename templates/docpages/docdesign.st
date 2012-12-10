@@ -1,5 +1,7 @@
 #####
 pageDocumentDesign=
+<div class="mainContainer" >
+<div class="body-container">
 <script>
 jQuery("body").addClass("designview");
 jQuery(function(){
@@ -8,4 +10,6 @@ jQuery(function(){
                   }).el());
 });
 </script>
+</div>
+</div>
 ###

@@ -26,7 +26,6 @@ module AppView( kontrakcja
               , standardPageFields
               , contextInfoFields
               , renderTemplateAsPage
-              , renderTemplateAsPageWithFields
               ) where
 
 import FlashMessage
