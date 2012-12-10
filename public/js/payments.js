@@ -165,6 +165,12 @@
                 this.set({currentPlan:plan});
             return this;
         },
+        setDone: function() {
+            this.set({done:true});
+        },
+        done: function() {
+            this.get('done');
+        },
         creditCard: function() {
             return this.get('creditCard');
         },
@@ -379,7 +385,6 @@
             this.element = $('<div />');
             this.$el.append(this.element);
             args.model.bind('change:currentPlan', this.render);
-            args.model.bind('change:accountCreated', this.render);
             args.model.bind('fetch', this.render);
             this.hideContacts = args.hideContacts;
         },
@@ -422,6 +427,7 @@
 
             var work = true;
             var handlechargeaccount = function(data) {
+                console.log(data);
                 // three cases
                 if(!data.user_exists) {
                     // create the user and charge the account
@@ -449,7 +455,7 @@
                             popup.view.clear();
                         }
                     });
-                } else if(data.user_exists && !data.has_plan && data.has_company && data.is_admin) {
+                } else if(data.user_exists && !data.has_plan && ((data.has_company && data.is_admin) || !data.has_company)) {
                     //LoadingDialog.close();
                     //loadingicon.hide();
                     if(work) {
@@ -572,7 +578,7 @@
             if(model.type() === 'plannone' || model.type() === 'planrecurly')
                 return false;
 
-            if(model.accountCreated()) {
+            if(model.done() && model.accountCreated()) {
                 view.$el.children().detach();
                 return false;
             }
@@ -617,8 +623,9 @@
                 , signature: model.plans()[model.currentPlan() || 'team'].signature
                 , beforeInject: this.scrambleForm
                 , successHandler: function(stuff) {
+
                     LoadingDialog.open(localization.payments.savingsubscription);
-                    loadingicon.css({display:'inline'});
+                    //loadingicon.css({display:'inline'});
                     model.submitSubscription(function() {
                         var text;
                         var header;
@@ -626,6 +633,8 @@
                             window.location.reload();
                             return true;
                         }
+
+                        model.setDone();
 
                         loadingicon.hide();
                         LoadingDialog.close();
@@ -641,7 +650,7 @@
                             content: $('<p />').text(text),
                             onAccept: function() {
                                 if(model.type() === 'user') {
-                                    window.location.reload();
+                                    Login({});
                                 } else if(model.createdUser()) {
                                     popup.view.clear();
                                     Login({});
