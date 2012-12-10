@@ -617,7 +617,7 @@
                 , signature: model.plans()[model.currentPlan() || 'team'].signature
                 , beforeInject: this.scrambleForm
                 , successHandler: function(stuff) {
-                    //LoadingDialog.open(localization.payments.savingsubscription);
+                    LoadingDialog.open(localization.payments.savingsubscription);
                     loadingicon.css({display:'inline'});
                     model.submitSubscription(function() {
                         var text;
@@ -628,7 +628,7 @@
                         }
 
                         loadingicon.hide();
-                        //LoadingDialog.close();
+                        LoadingDialog.close();
                         if(model.createdUser()) {
                             text = localization.payments.outside.confirmAccountCreatedUser;
                             header = localization.payments.outside.confirmAccountCreatedUserHeader;
