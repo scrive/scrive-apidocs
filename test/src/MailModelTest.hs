@@ -48,9 +48,8 @@ testMailOrder = do
   let token = unsafeMagicHash 12341234
       senderAddrSpec = "xx@asd.com"
       sender = Address "Jarek" senderAddrSpec
-      senderAddrSpec2 = "x@asd.com"
-      sender2 = Address "FakeJarek" senderAddrSpec2
-      to = [Address "Genowefa""a1@ss.com", Address "Brunhilda" "b3@dd.com"]
+      to1 = [Address "Genowefa" "aa@ss.com", Address "Brunhilda" "b3@dd.com"]
+      to2 = [Address "Genowefa2" "a@ss.com", Address "Brunhilda" "b3@dd.com"]
       to_be_sent = fromSeconds 213123
       attachments = [ Attachment "name1" "content 123"
                     , Attachment "name2" "contenty 314124"
@@ -60,18 +59,18 @@ testMailOrder = do
       title = "The thing"
       content = "important"
 
-  mid1 <- dbUpdate $ CreateEmail token sender to to_be_sent
+  mid1 <- dbUpdate $ CreateEmail token sender to1 to_be_sent
   _ <- dbUpdate $ AddContentToEmail mid1 title content attachments xsmtpapi
-  mid2 <- dbUpdate $ CreateEmail token sender to to_be_sent
+  mid2 <- dbUpdate $ CreateEmail token sender to1 to_be_sent
   _ <- dbUpdate $ AddContentToEmail mid2 title content attachments xsmtpapi
-  mid3 <- dbUpdate $ CreateEmail token sender to to_be_sent
+  mid3 <- dbUpdate $ CreateEmail token sender to1 to_be_sent
   _ <- dbUpdate $ AddContentToEmail mid3 title content attachments xsmtpapi
-  mid4 <- dbUpdate $ CreateEmail token sender2 to to_be_sent
+  mid4 <- dbUpdate $ CreateEmail token sender to2 to_be_sent
   _ <- dbUpdate $ AddContentToEmail mid4 title content attachments xsmtpapi
-  mails <- dbQuery $ GetEmailsBySender senderAddrSpec
-  mails2 <- dbQuery $ GetEmailsBySender senderAddrSpec2
+  mails <- dbQuery $ GetEmailsByRecipient "aa@ss.com"
+  mails2 <- dbQuery $ GetEmailsByRecipient "a@ss.com"
 
-  assertEqual "Emails are all fetched by sender in GetEmailsBySender in proper order"
+  assertEqual "Emails are all fetched by sender in GetEmailsByRecipient in proper order"
          [mid1,mid2,mid3] (map mailID mails)
   assertEqual "We do not fetch too many emails"
          [mid4] (map mailID mails2)

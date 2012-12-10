@@ -16,7 +16,7 @@ module Mails.Model (
   , DeferEmail(..)
   , MarkEmailAsSent(..)
   , UpdateWithEvent(..)
-  , GetEmailsBySender(..)
+  , GetEmailsByRecipient(..)
   ) where
 
 import Control.Monad
@@ -111,15 +111,15 @@ instance MonadDB m => DBQuery m GetEmails [Mail] where
   query GetEmails = do
     selectMails $ sqlSelectMails $ do sqlWhere "title IS NOT NULL AND content IS NOT NULL"
 
-data GetEmailsBySender = GetEmailsBySender String
-instance MonadDB m => DBQuery m GetEmailsBySender [Mail] where
-  query (GetEmailsBySender sender) = do
+data GetEmailsByRecipient = GetEmailsByRecipient String
+instance MonadDB m => DBQuery m GetEmailsByRecipient [Mail] where
+  query (GetEmailsByRecipient recipient) = do
     selectMails $ sqlSelectMails $ do
       sqlWhere "title IS NOT NULL"
       sqlWhere "content IS NOT NULL"
-      -- sender is yet another crappy json field in database
+      -- receivers is yet another crappy json field in database
       -- change it into proper SQL column some later time
-      sqlWhereILike "sender" ("%\"" ++ sender ++ "\"%")
+      sqlWhereILike "receivers" ("%\"" ++ recipient ++ "\"%")
 
 -- below handlers are for use within mailer only. I can't hide them properly
 -- since mailer is not separated into another package yet so it has to be
