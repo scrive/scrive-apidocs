@@ -1,17 +1,37 @@
 ###
 notFound=
-        <div class="notfound">
-            $_notFound()$
-
-            $_afterErrorGoHome()$
-        </div>
+<div class='mainContainer big'>
+<img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
+<div class='short-input-section'>
+  <header>
+    $_notFound()$
+  </header>
+  <div class='short-input-container'>
+    <div class='short-input-container-body-wrapper'>
+      <div class='short-input-container-body'>
+           $_afterErrorGoHome()$
+      </div>
+    </div>
+  </div>
+</div>
+</div>
 ###
 internalServerError=
-        <div class="notfound">
-            $_internalServerError()$
-
-            $_afterErrorGoHome()$
-        </div>
+<div class='mainContainer big'>
+<img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
+<div class='short-input-section'>
+  <header>
+   $_internalServerError()$
+  </header>
+  <div class='short-input-container'>
+    <div class='short-input-container-body-wrapper'>
+      <div class='short-input-container-body'>
+           $_afterErrorGoHome()$
+      </div>
+    </div>
+  </div>
+</div>
+</div>
 ###
 wholePage=
     $doctype()$
@@ -188,7 +208,7 @@ header=
         <a class="button button-small"            onclick='createnewdocument()' href="#">$_headerSend()$ </a>
       </li>
       $else$
-      <li class="session-log">
+      <li class="session-login">
         <a class="button button-small" id="page-login" href="/login">Log in </a>
       </li>
       <li><a class="page" id="page-pricing" href="{path=pricing}">Features</a></li>

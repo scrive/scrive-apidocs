@@ -78,6 +78,7 @@ set systemPage
  js   js/confirmations.js
  js   js/selects.js
  js   js/login.js
+ js   js/new_password.js
  js   js/lists/action.js
  js   js/lists/sorting.js
  js   js/lists/filtering.js

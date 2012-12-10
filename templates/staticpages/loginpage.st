@@ -1,26 +1,20 @@
 ###
 loginPage=
+<div class='mainContainer big'>
+<img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    var login = new Login({referer: "$referer$"});
+    jQuery('.mainContainer').append(new Login({referer: "$referer$"}).el());
   });
-</script>
+</script> 
+</div>
 ###
 changePasswordPage=
-$doctype()$
-<html>
-  <head>
-    <title>$pagetitle()$ Scrive Features</title>
-    <meta name="description" content="$_featuresPageMetaDescription()$" />
-    $standardHeaderContents()$
-  </head>
-  $standardBody(unwrappedbody=changePasswordPageContents())$
-</html>
-###
-changePasswordPageContents=
+<div class='mainContainer big'>
+<img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    new NewPassword({linkchangepassword: "$linkchangepassword$"});
+    jQuery('.mainContainer').append(new NewPassword({linkchangepassword: "$linkchangepassword$"}).el());
   });
 </script>
 ###

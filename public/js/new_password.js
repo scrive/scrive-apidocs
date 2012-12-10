@@ -73,76 +73,62 @@
 
   var NewPasswordView = Backbone.View.extend({
     initialize: function() {
-      // _.bindAll(this, 'render');
-      // this.model.bind('change', this.render);
       this.render();
     },
 
-    popupNewPasswordModal : function() {
+    render: function () {
       var model = this.model;
+       var header = $("<header/>").append($("<h1 class='big'/>").text(localization.newPasswordModal.modalNewPasswordViewHeader));
+       $(this.el).append(header);
 
-      var container = $('<div class="recovery-container"/>');
-      var content = $('<div class="body"/>');
-      container.append(content);
-      var wrapper = $('<div class="wrapper" style="text-align: right;"/>');
-      content.append(wrapper);
-
-      var passwordLocalization = localization.newPasswordModal;
+      
+      var content = $("<div class='short-input-container recovery-container'/>");
+      var wrapper = $("<div class='short-input-container-body-wrapper'/>");
+      var body = $("<div class='short-input-container-body'/>");
+      content.append(wrapper.append(body));
 
       var passwordInput = InfoTextInput.init({
-        infotext: '',
+        infotext: localization.newPasswordModal.modalNewPasswordViewNewPassword,
         value: model.password(),
         onChange: function(v) {model.setPassword(v);},
         inputtype: 'password',
         name: 'password',
+        cssClass : "big-input",
         onEnter : function() {model.resetPassword();}
       });
       passwordInput.input().attr("autocomplete","false");
-      wrapper.append($('<span class="txt"/>').text(passwordLocalization.modalNewPasswordViewNewPassword)).append(passwordInput.input()).append("<BR/>");
-      passwordInput.input().click();
-
+      body.append($("<div class='position first'/>").append(passwordInput.input()));
+      
       var password2Input = InfoTextInput.init({
-        infotext: '',
+        infotext: localization.newPasswordModal.modalNewPasswordViewRepeatPassword,
         value: model.password2(),
         onChange: function(v) {model.setPassword2(v);},
         inputtype: 'password',
         name: 'password2',
+        cssClass : "big-input",
         onEnter : function() {model.resetPassword();}
       });
       password2Input.input().attr("autocomplete","false");
-      wrapper.append($('<span class="txt"/>').text(passwordLocalization.modalNewPasswordViewRepeatPassword)).append(password2Input.input()).append("<BR/>");
-      password2Input.input().click();
+      body.append($("<div class='position'/>").append(password2Input.input()));
 
-      Confirmation.popup({
-        title: passwordLocalization.modalNewPasswordViewHeader,
-        rejectText: localization.cancel,
-        content: container,
-        mask: {
-          color: standardDialogMask,
-          top: standardDialogTop,
-          loadSpeed: 0,
-          opacity: 0.9
-        },
-        acceptButton:  Button.init({
+      var changePasswordButton = Button.init({
           size  : 'small',
           color : 'blue',
-          text  : passwordLocalization.modalNewPasswordViewFooterSave,
+          text  : localization.newPasswordModal.modalNewPasswordViewFooterSave,
           onClick : function() {
             model.resetPassword();
           }
-        }).input()
-      });
-      passwordInput.input().focus();
-    },
+        });
 
-    render: function () {
-      this.popupNewPasswordModal();
+     body.append($("<div class='position'/>").append(changePasswordButton.input()));
+     $(this.el).append(content);
     }
   });
 
   window.NewPassword = function(args) {
     var model = new NewPasswordModel(args.linkchangepassword);
-    var view =  new NewPasswordView({model: model, el: $('<div/>')});
+    var view =  new NewPasswordView({model: model, el: $("<div class='short-input-section'/>")});
+    this.el = function() {return $(view.el);}
   };
 
 })(window);

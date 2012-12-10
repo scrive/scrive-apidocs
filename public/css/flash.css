@@ -1,14 +1,9 @@
-.mainContainer .flash-container,
-#top-slim-container .flash-container {
-   height: 100px;
-}
-
 .flash-container {
     background: url(/img/spr-flash-bg.png) 0 -50px repeat-x;
     cursor: pointer;
     -display: none;
     left: 0px;
-    height: 50px;
+    height: 100px;
     position: absolute;
     right: 0;
     top: 0;
@@ -43,14 +38,9 @@
     background-position: 0 -200px;
 }
 
-.mainContainer .flash-content,
-#top-slim-container .flash-content{
-  margin: 34px  auto 0;
-}
-
 .flash-content {
 	height: 40px;
-	margin: 9px  auto 0;
+	margin: 34px  auto 0;
 	position: relative;
     left: -8px;
 	width: 1020px;
@@ -91,11 +81,6 @@
 	margin-top: 4px;
 }
 
-.mainContainer .flashmsgbox,
-#top-slim-container .flashmsgbox{
-      height: 100px;
-}
-
 .flashmsgbox{
     display: none;
     left: 0;
@@ -103,27 +88,7 @@
     top: 0;
     width: 100%;
     z-index: 10000;
-    height: 50px;
-}
-
-.flash_signingrelated {
-  background: #59b1e8;
-}
-
-.flash_operationdone {
-  background: #8dc11c;
-}
-
-.flash_operationfailed {
-  background: #e47071;
-}
-.mainContainer .flashmsgbox,
-#top-slim-container .flashmsgbox {
-   height: 100px;
-}
-.mainContainer .flashmsgbox .flashmessage,
-#top-slim-container .flashmsgbox .flashmessage {
-   height: 100px;
+    height: 100px;
 }
 
 .flashmsgbox .flashmessage {
@@ -131,7 +96,7 @@
     font-size: 13px;
     font-weight: bold;
     width: 940px;
-    height: 50px;
+    height: 100px;
     margin: auto;
     display: block;
 }

@@ -63,18 +63,8 @@ publicDir swedish english link handler = choice $
     dir english $ hGetAllowHttp $ redirectKontraResponse $ link LANG_EN
   ]
 
-handleHomepage :: Kontra (Either Response (Either KontraLink String))
-handleHomepage = do
-  ctx@Context{ctxmaybeuser} <- getContext
-  case ctxmaybeuser of
-    Just _user -> do
-      response <- V.simpleHtmlResponse =<< firstPage ctx
-      clearFlashMsgs
-      return $ Left response
-    Nothing -> do
-      response <- V.simpleHtmlResponse =<< firstPage ctx
-      clearFlashMsgs
-      return $ Left response
+handleHomepage :: Kontra KontraLink
+handleHomepage = return LinkDesignView
 
 handleSitemapPage :: Kontra Response
 handleSitemapPage = handleWholePage sitemapPage

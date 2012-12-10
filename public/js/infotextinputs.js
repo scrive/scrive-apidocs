@@ -83,14 +83,16 @@ var InfoTextInputView = Backbone.View.extend({
             if($(this.el).hasClass("grayed"))
                 $(this.el).removeClass("grayed");
         }
-        else if (!this.model.hasFocus())
-        {
-            $(this.el).val(this.model.infotext());
-            $(this.el).addClass("grayed");
-        }
-        else {
-            $(this.el).val("");
-            $(this.el).removeClass("grayed");
+        else if (BrowserInfo.isIE9orLower()) {
+          if (!this.model.hasFocus())
+          {
+              $(this.el).val(this.model.infotext());
+              $(this.el).addClass("grayed");
+          }
+          else {
+              $(this.el).val("");
+              $(this.el).removeClass("grayed");
+          }
         }
         return this;
     },
@@ -129,6 +131,7 @@ window.InfoTextInput = {
                     });
           var input = $("<input/>");
           input.attr("type",model.inputtype());
+          input.attr("placeholder",model.infotext());
           if (args.name != undefined)
               input.attr("name",args.name);
           if (args.cssClass != undefined)

@@ -9,7 +9,6 @@ module AppView( kontrakcja
               , simpleJsonResponse
               , simpleHtmlResponse
               , simpleHtmlResonseClrFlash
-              , firstPage
               , sitemapPage
               , priceplanPage
               , securityPage
@@ -142,22 +141,14 @@ featuresPage = getContext >>= \ctx -> renderTemplateAsPage ctx "featuresPage" (J
     Render a template as an entire page.
 -}
 renderTemplateAsPage :: Kontrakcja m => Context -> String -> Maybe (Lang -> KontraLink) -> Bool -> m String
-renderTemplateAsPage ctx templateName mpubliclink showCreateAccount =
-    renderTemplateAsPageWithFields ctx templateName mpubliclink showCreateAccount []
-
-renderTemplateAsPageWithFields :: Kontrakcja m => Context -> String -> Maybe (Lang -> KontraLink) -> Bool -> [(String, String)] -> m String
-renderTemplateAsPageWithFields ctx templateName mpubliclink showCreateAccount extraFields = do
-  let showCreateAccount2 = showCreateAccount && (isNothing $ ctxmaybeuser ctx)
-  wholePage <- renderTemplate templateName $ do
+renderTemplateAsPage ctx templateName mpubliclink showCreateAccount = renderTemplate templateName $ do
     contextInfoFields ctx
     mainLinksFields $ ctxlang ctx
     staticLinksFields $ ctxlang ctx
     langSwitcherFields ctx mpubliclink
-    F.value "staticResources" $ SR.htmlImportList "firstPage" (ctxstaticresources ctx)
-    F.value "showCreateAccount" showCreateAccount2
+    F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
+    F.value "showCreateAccount" $ showCreateAccount && (isNothing $ ctxmaybeuser ctx)
     F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
-    mapM_ (uncurry F.value) extraFields
-  return wholePage
 
 standardPageFields :: TemplatesMonad m => Context -> String -> Maybe (Lang -> KontraLink) -> Bool -> Fields m ()
 standardPageFields ctx title mpubliclink showCreateAccount = do
@@ -197,18 +188,6 @@ simpleHtmlResonseClrFlash rsp = do
   res <- simpleHtmlResponse rsp
   clearFlashMsgs
   return res
-
-{- |
-   The landing page contents.  Read from template.
--}
-firstPage :: TemplatesMonad m => Context -> m String
-firstPage ctx = renderTemplate "firstPage" $ do
-  contextInfoFields ctx
-  mainLinksFields $ ctxlang ctx
-  staticLinksFields $ ctxlang ctx
-  langSwitcherFields ctx (Just LinkHome)
-  F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
-  F.value "staticResources" $ SR.htmlImportList "firstPage" (ctxstaticresources ctx)
 
 {- |
    Defines the main links as fields handy for substituting into templates.

@@ -74,10 +74,6 @@
   display: none;
 }
 
-.signview .mainContainer {
-    width: 1020px;
-}
-
 .signview .body-container {
   padding-top: 10px;
   background-color: transparent;

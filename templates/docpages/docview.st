@@ -1,9 +1,8 @@
 ######
 pageDocumentView=
-<div class="mainContainer" >
+<div class="mainContainer authorview" >
 <div class="body-container">
 <script>
-jQuery("body").addClass("authorview");
 jQuery(function(){
   jQuery(".body-container").replaceWith(new AuthorView({
     id:"$documentid$"

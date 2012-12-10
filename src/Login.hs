@@ -34,12 +34,16 @@ import Text.JSON
 import qualified Templates.Fields as F
 import Templates.Templates
 
-handleLoginGet :: Kontrakcja m => m String
+handleLoginGet :: Kontrakcja m => m (Either KontraLink String)
 handleLoginGet = do
-  referer <- getField "referer"
-  content <- renderTemplate "loginPage" $ do
+  ctx <- getContext
+  case (ctxmaybeuser ctx) of
+       Nothing -> do
+          referer <- getField "referer"
+          content <- renderTemplate "loginPage" $ do
                     F.value "referer" $ fromMaybe "/" referer
-  return content
+          return $ Right content
+       Just _ -> return $ Left LinkDesignView   
 
 {- |
    Handles submission of the password reset form

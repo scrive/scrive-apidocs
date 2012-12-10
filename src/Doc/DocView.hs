@@ -172,7 +172,6 @@ documentJSON forapi forauthor pq msl doc = do
         J.value "barsbackgroundtextcolor" bbtc
         J.value "author" $ authorJSON mauthor mcompany
         J.value "process" $ show $ toDocumentProcess (documenttype doc)
-        J.valueM "infotext" $ documentInfoText ctx doc msl
         J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
         J.value "canbecanceled" $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending
         J.value "canseeallattachments" $ isAuthor msl || isauthoradmin
@@ -346,34 +345,6 @@ pageDocumentSignView ctx document siglink =
       F.value "documenttitle" $ documenttitle document
       standardPageFields ctx kontrakcja Nothing False
 
--- Helper to get document after signing info text
-documentInfoText :: TemplatesMonad m => Context -> Document -> Maybe SignatoryLink -> m String
-documentInfoText ctx document siglnk =
-  renderTemplate "documentInfoText" $ do
-    mainFields
-    F.object "process" processFields
-  where
-    mainFields = do
-      documentInfoFields document
-      documentAuthorInfo document
-      F.objects "signatories" $ for (documentsignatorylinks document) $ \sl -> do
-                F.value "name" $   getSmartName sl
-                F.value "author" $ (isAuthor sl)
-      F.value "notsignedbyme" $ (isJust siglnk) && (isNothing $ maybesigninfo $ fromJust siglnk)
-      F.value "signedbyme" $ (isJust siglnk) && (isJust $ maybesigninfo $ fromJust siglnk)
-      F.value "iamauthor" $ maybe False isAuthor siglnk
-      F.value "isviewonly" $ not $ isAuthor siglnk || maybe False (flip isAuthorAdmin document) (ctxmaybeuser ctx)
-    getProcessText = renderTextForProcess document
-    getProcessTextWithFields f = renderTemplateForProcess document f mainFields
-    processFields = do
-      F.valueM "pendingauthornotsignedinfoheader" $ getProcessText processpendingauthornotsignedinfoheader
-      F.valueM "pendingauthornotsignedinfotext" $ getProcessText processpendingauthornotsignedinfotext
-      F.valueM "pendinginfotext" $ getProcessTextWithFields processpendinginfotext
-      F.valueM "cancelledinfoheader" $ getProcessText processcancelledinfoheader
-      F.valueM "cancelledinfotext" $ getProcessTextWithFields processcancelledinfotext
-      F.valueM "signedinfoheader" $ getProcessText processsignedinfoheader
-      F.valueM "signedinfotext" $ getProcessTextWithFields processsignedinfotext
-      F.valueM "statusinfotext" $ getProcessTextWithFields processstatusinfotext
 
 -- | Basic info about document , name, id ,author
 documentInfoFields :: Monad m => Document -> Fields m ()
