@@ -383,6 +383,13 @@ javascriptLocalisation =
                 }
              , sign : "$_sign()$"
              , removeFile : "Remove file"
+             , textFields : {
+                      textField: "$_textField()$"
+                    , obligatory: "$_textFieldObligatory()$"
+                    , forThis : "$_textFieldFor()$"
+                    , done : "$_textFieldDone()$"
+                    , help : "$_textFieldHelp()$"
+             }
              , checkboxes : {
                       checkbox : "$_checkboxCheckbox()$"
                     , prechecked : "$_checkboxPrechecked()$"
