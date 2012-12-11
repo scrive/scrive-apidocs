@@ -62,7 +62,7 @@ emptySignatoryFields = [
         , sf EmailFT
         , sf SignatureFT
         ]
-    where sf t = SignatoryField t "" []
+    where sf t = SignatoryField t "" True []
 {- |
     A blank document containing default values that need to be set before
     saving.
@@ -130,8 +130,7 @@ replaceSignatoryData siglink@SignatoryLink{signatorydetails} fstname sndname ema
       CompanyNumberFT  -> sf { sfValue = companynumber }
       EmailFT          -> sf { sfValue = email }
       CustomFT label _ -> sf { sfType = CustomFT label (not $ null v), sfValue = v }
-      CheckboxOptionalFT   _ -> sf
-      CheckboxObligatoryFT _ -> sf
+      CheckboxFT _     -> sf
       SignatureFT      -> sf)
         : pumpData rest vs'
       where
