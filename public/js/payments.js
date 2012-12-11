@@ -438,7 +438,7 @@
                                             model.lastName(), 
                                             function(data) {
                                                 //LoadingDialog.close();
-                                                loadingicon.hide();
+                                                //loadingicon.hide();
                                                 if(data.success)
                                                     form.submit();
                                                 // what else?
