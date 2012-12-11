@@ -149,9 +149,7 @@ emptyEvent _ = False
 simplyfiedEventText :: TemplatesMonad m => Document -> DocumentEvidenceEvent -> m String
 simplyfiedEventText doc dee = renderTemplate ("simpliefiedText" ++ (show $ evType dee)) $ do
     F.value "documenttitle" $ (documenttitle doc)
-    case (evAffectedSigLinkID dee) of
-      Just aslid -> F.value "affectedsignatory" $ getSmartName <$> getSigLinkFor doc aslid
-      Nothing    -> F.value "affectedsignatory" ("" :: String)
+    F.value "affectedsignatory" $ getSmartName <$> (getSigLinkFor doc =<< evAffectedSigLinkID dee)
     F.value "text" $ filterTags <$> evMessageText dee
     F.value "eleg" $ documentauthenticationmethod doc == ELegAuthentication
     F.value "pad"  $ documentdeliverymethod doc == PadDelivery
