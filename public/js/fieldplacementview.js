@@ -371,19 +371,19 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
         if (document.allowsDD()) {
             draggebleField(place, placement);
+            place.dblclick(function(){
+                if (!view.hasTypeSetter())
+                    view.addTypeSetter();
+                else
+                    view.closeTypeSetter();
+                return false;
+            });
         }
         if (field.signatory().canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true) {
             place.click(function() {
                 return view.startInlineEditing();
             });
         }
-        place.dblclick(function(){
-            if (!view.hasTypeSetter())
-                view.addTypeSetter();
-            else
-                view.closeTypeSetter();
-            return false;
-        });
 
         return this;
     }
