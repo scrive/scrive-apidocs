@@ -240,9 +240,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
                     },
                     el: elem,
                     onActivate: function() {
-                        if (placement.view != undefined && placement.view.startinlineediting != undefined && !placement.field().readyForSign())
+                        if (placement.view != undefined && placement.view.startInlineEditing != undefined && !placement.field().readyForSign())
                         {
-                          placement.view.startinlineediting();
+                          placement.view.startInlineEditing();
                           task.trigger("change");
                         }
                     },

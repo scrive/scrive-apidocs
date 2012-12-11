@@ -315,7 +315,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
              placement.typeSetter.clear();
          }
     },
-    startinlineediting : function() {
+    startInlineEditing : function() {
         var placement = this.model;
         var field =  placement.field();
         var document = field.signatory().document();
@@ -374,7 +374,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
         }
         if (field.signatory().canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true) {
             place.click(function() {
-                return view.startinlineediting();
+                return view.startInlineEditing();
             });
         }
         place.dblclick(function(){
