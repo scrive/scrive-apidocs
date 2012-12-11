@@ -224,6 +224,8 @@
     height: 22px;
     width: 31px;
     margin-left: 10px;
+    position: relative;
+    top: 4px;
 }
 
 .icon.lock-closed{

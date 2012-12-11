@@ -115,15 +115,17 @@ import System.Directory
 import MinutesTime
 
 handleNewDocument :: Kontrakcja m => m KontraLink
-handleNewDocument = withUserPost $ do
+handleNewDocument = do
   ctx <- getContext
-  user <- guardJustM $ ctxmaybeuser <$> getContext
-  title <- renderTemplate_ "newDocumentTitle"
-  actor <- guardJustM $ mkAuthorActor <$> getContext
-  Just doc <- dbUpdate $ NewDocument user (title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) (Signable Contract) 1 actor
-  _ <- dbUpdate $ SetDocumentUnsavedDraft [documentid doc] True
-  return $ LinkIssueDoc (documentid doc)
-  
+  if (isJust $ ctxmaybeuser ctx)
+     then withUserPost $ do
+        user <- guardJustM $ ctxmaybeuser <$> getContext
+        title <- renderTemplate_ "newDocumentTitle"
+        actor <- guardJustM $ mkAuthorActor <$> getContext
+        Just doc <- dbUpdate $ NewDocument user (title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) (Signable Contract) 1 actor
+        _ <- dbUpdate $ SetDocumentUnsavedDraft [documentid doc] True
+        return $ LinkIssueDoc (documentid doc)
+     else return $ LinkLogin (ctxlang ctx) LoginTry
 {-
   Document state transitions are described in DocState.
 

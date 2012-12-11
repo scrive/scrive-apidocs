@@ -216,7 +216,7 @@ var CompanyAccountsView = Backbone.View.extend({
 
 window.CompanyAccounts = function(args) {
           var model = new CompanyAccountsModel(args);
-          var view =  new CompanyAccountsView({model : model, el : $("<div/>")});
+          var view =  new CompanyAccountsView({model : model, el : $("<div class='company-accounts'/>")});
           return {
               refresh : function() {model.refresh();},
               el  : function() {return $(view.el);}

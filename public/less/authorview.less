@@ -1,3 +1,5 @@
+@import 'branding/colors';
+
 .authorview {
   font-family: "Lucida Grande";
 
@@ -189,7 +191,6 @@
           vertical-align: middle;
           a {
             cursor: pointer;
-            text-decoration: underline;
           }
       }
 
@@ -211,6 +212,7 @@
         padding: 8px 8px 0px 0px;
         text-align: center;
         height : 18px;
+        color: @blueH;
         .change-email-box {
             display: inline-block;
             input {
@@ -305,12 +307,10 @@
     .item {
       margin-bottom : 10px;
       margin-right  : 10px;
-    }
-
-
-    .item .name {
-      font-weight: bold;
-      color: black;
+      .name {
+        font-weight: bold;
+        color: black;
+      }
     }
 
     .list {

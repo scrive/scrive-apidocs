@@ -104,7 +104,7 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
             container.append(this.removeButton().input());
 
       } else if (attachment.signatory().document().pending() || attachment.signatory().document().currentSignatoryCanSign()){
-          container.append(this.uploadButton().input().addClass('float-right'));
+          container.append(this.uploadButton().input().addClass('float-right').css("height","40px").css("overflow","hidden"));
       }
       container.append($("<div class='clearfix' />"));
 

@@ -181,7 +181,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        footer.append(cancelOption);
 	   footer.append(this.editOption);
        var accept = Button.init({color:model.acceptColor(),
-                                 size: "small",
+                                 size: "tiny",
                                  cssClass: "float-right",
                                  text: this.model.acceptText(),
                                  onClick : function() {

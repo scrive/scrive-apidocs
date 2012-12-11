@@ -257,7 +257,7 @@
             var button = Button.init({color: "black",
                                       size: "tiny",
                                       text: localization.searchBoxButtonText,
-                                      cssClass: "float-right",
+                                      cssClass: "float-right search-button",
                                       onClick: function() {
                                           filtering.searchText(searchBox.value());
                                       }

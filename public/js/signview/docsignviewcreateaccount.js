@@ -110,7 +110,7 @@ window.CreateAccountAfterSignView = Backbone.View.extend({
     var model = this.model;
     var newAccountButton = Button.init({
       color: "green",
-      size: "small",
+      size: "tiny",
       text: localization.docsignview.newAccountButton,
       onClick: function() {
         view.clearPasswordValidationErrors();

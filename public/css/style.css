@@ -2878,6 +2878,9 @@ a#attachmentback {
     margin: 10px;
 }
 
+.company-accounts .list-container {
+  border-top-width: 0px;
+}
 .usagestats .tab-content {
     display: none;
 }
@@ -2886,10 +2889,6 @@ a#attachmentback {
     -moz-border-radius: 5px 5px 5px 5px;
     -webkit-border-radius: 5px 5px 5px 5px;
     border-radius: 5px 5px 5px 5px;
-}
-
-.usagestats div.tab-container {
-    border-top: 1px solid;
 }
 
 .usagestats .tab-table {

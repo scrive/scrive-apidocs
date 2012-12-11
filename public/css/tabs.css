@@ -115,10 +115,9 @@
 }
 
 .tab-viewer .tab-container {
-	background: #fff;
 	border: solid #808080;
 	border-width: 0 1px 1px 1px;
-	font: 10px "Lucida Grande";
+    font: 11px "Lucida Grande";
 	-moz-border-radius: 0 0 5px 5px;
 	-webkit-border-radius: 0 0 5px 5px;
 }

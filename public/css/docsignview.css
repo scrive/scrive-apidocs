@@ -10,12 +10,13 @@
 .signview .pageheader {
   min-width: 1020px;
   width: 100%;
-  background: url(../img/bg-header.jpg);
+  background: #FFFFFF;
   color: white;
-  border-bottom: solid #bababc 1px;
+  border-bottom: solid #DEE4ED 1px;
 }
 
 .signview .pageheader .content {
+  margin: auto;
   width: 1020px;
   padding-top: 10px;
   padding-bottom: 10px;
@@ -30,9 +31,9 @@
 }
 
 .signview .pageheader div.logo {
-  background: url(../img/logo-scrive-small.png);
-  height: 33px;
-  width: 200px;
+  background: url(../img/logo.png);
+  height: 22px;
+  width: 120px;
   background-repeat: no-repeat;
   margin-left: 30px;
 }
@@ -48,6 +49,7 @@
   display: table-cell; 
   vertical-align: middle;
   width: 1020px;
+  color: #333333;
 }
 
 .signview .pageheader .content .sender .name {
@@ -235,7 +237,7 @@
   border: solid #89c041 1px;
   background-color: #e7f6d5;
   overflow: none;
-  width: 640px;
+  width: 700px;
 }
 
 .signview .save .highlight .row {
@@ -527,11 +529,6 @@
      color: black;
 }
 
-.signview .signatoryattachments .item a {
-     text-decoration: underline;
-     display: block;
-}
-
 .signview .signatoryattachments .list {
      float: left;
      width: 580px;
@@ -540,6 +537,7 @@
 }
 .signview .signatoryattachments  .list .desc {
      width: 420px;
+     vertical-align: top;
 }
 
 .signview .signatoryattachments  .list .desc .description {
@@ -556,7 +554,7 @@
 }
 
 
-.signview .signatoryattachments .list .item .btn-tiny{
+.signview .signatoryattachments .list .item .button{
   float:right;
   margin-left: 6px;
   margin-top: 6px;
@@ -570,7 +568,6 @@
 .signview .signatoryattachments .list .item .action {
   float: left;
   margin-right: 10px;
-  text-decoration: underline;
 }
 
 .signview .signatoryattachments .list .item .name {
@@ -758,12 +755,11 @@
 }
 
 .signview .pagefooter {
-  padding-bottom: 30px;
   min-width: 1020px;
   width: 100%;
-  min-height: 200px;
-  background: url(../img/bg-header.jpg);
-  color: white;
+  min-height: 160px;
+  background: #FFFFFF;
+  color: #333333;
 }
 
 .signview .pagefooter .dogtooth {
@@ -775,6 +771,7 @@
   width: 1020px;
   padding-top: 40px;
   padding-bottom: 40px;
+  margin : auto;
 }
 
 .signview .pagefooter .sender {
@@ -923,7 +920,7 @@ div.spacing.butt {
 }
 
 .signview .newaccount .inner {
-    width: 590px;
+    width: 620px;
     margin: auto;
 }
 

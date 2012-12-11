@@ -5,7 +5,7 @@ var personalTokensTable = new KontraList({
     name : "Personal Access Token",
     headerExtras: jQuery("<div class='middle'>").append(jQuery("<p>").append(localization.apiDashboard.personalTokenDescription)),
     emptyAlternative: 
-      jQuery("<div style='height:28px;padding:2px;'>")
+      jQuery("<div style='height:32px;padding:2px;'>")
                       .append(jQuery("<div class='float-right'>").append(Button.init({
                       size: "tiny",
                       color: "green",
@@ -143,32 +143,20 @@ jQuery(function(){
 });
 
 </script>
-<div class="tab-viewer apidashboard">
-  <div class="tab-header">
-  </div>
-  <ul class="tabs">
-    <li class="float-left"><a href="/account">$_HeadUserInfo()$</a></li>
-    <li class="float-left"><a href="/account/security">$_HeadAccountSettings()$</a></li>
-    $if(iscompanyadmin)$<li class="float-left"><a href="/account/company">$_CompanySettings()$</a></li>$endif$
-    $if(iscompanyadmin)$<li class="float-left"><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>$endif$
-    <li class="float-left"><a href="/account/mailapi">$_HeadMailApi()$</a></li>
-    <li class="float-left"><a href="/account/usagestats">$_HeadUsageStats()$</a></li>
-    <li class="active float-left"><a href="/oauth/dashboard">API</a></li>
-    <li class="float-right"/>
-  </ul>
-  <div class="tab-container">
-    <div class="tab-content account">
-      <div class='oauth-section'>
-        <h2 class="first">$_apiDashboardGrantedPriviliges()$</h2>
-        <div id="jsgrantedprivileges"> </div>
-      </div>
-      <div class='oauth-section'>
-        <h2>$_apiDashboardPersonalToken()$</h2>
-        <div id="jspersonaltoken"> </div>
-      </div>
-      <div class='oauth-section'>
-        <h2>$_apiDashboardApiToken()$</h2>
-        <div id="jsapitokens"> </div>
+<div class="mainContainer" >
+  <div class="body-container">
+    <div class="apidashboard">
+          <div class='oauth-section'>
+            <h2 class="first">$_apiDashboardGrantedPriviliges()$</h2>
+            <div id="jsgrantedprivileges"> </div>
+          </div>
+          <div class='oauth-section'>
+            <h2>$_apiDashboardPersonalToken()$</h2>
+            <div id="jspersonaltoken"> </div>
+          </div>
+          <div class='oauth-section'>
+            <h2>$_apiDashboardApiToken()$</h2>
+            <div id="jsapitokens"> </div>
       </div>
     </div>
   </div>

@@ -357,7 +357,7 @@
     border-color: #E6E7EF #F3F4F7 #F0F1F5 #F2F2F7;
     border-width: 1px;
     border-style: solid;
-    height: 120px;
+    height: 130px;
     margin: 15px;
     padding: 10px;
     text-align: center;
@@ -400,7 +400,7 @@
 .selectAuthorAttachmentPopupContent .buttonbox,
 .designCSVSignatoryPopupContent .buttonbox
 {
-    width: 200px;
+    width: 210px;
     padding-left: 25px;
     padding-right: 25px;
 

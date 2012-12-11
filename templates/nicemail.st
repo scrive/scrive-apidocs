@@ -71,11 +71,11 @@ nicemail=
 
 </div>
 #####
-nicemailbgcolour=$if(!service.barsbackground)$$if(!companybrand.barsbackground)$212121$else$$companybrand.barsbackground$$endif$$else$$service.barsbackground$$endif$
+nicemailbgcolour=$if(!service.barsbackground)$$if(!companybrand.barsbackground)$FFFFFF$else$$companybrand.barsbackground$$endif$$else$$service.barsbackground$$endif$
 #####
-nicemailfgcolour=$if(!companybrand.barstextcolour)$#ffffff$else$$companybrand.barstextcolour$$endif$
+nicemailfgcolour=$if(!companybrand.barstextcolour)$#333333$else$$companybrand.barstextcolour$$endif$
 #####
-nicemaillogo=$if(!service.logo)$$if(!companybrand.logo)$$ctxhostpart$/img/email-logo.png$else$$ctxhostpart$$companybrand.logoLink$$endif$$else$$ctxhostpart$$service.logoLink$$endif$
+nicemaillogo=$if(!service.logo)$$if(!companybrand.logo)$$ctxhostpart$/img/logo.png$else$$ctxhostpart$$companybrand.logoLink$$endif$$else$$ctxhostpart$$service.logoLink$$endif$
 #####
 nicemailparagraph =
       $if(p)$

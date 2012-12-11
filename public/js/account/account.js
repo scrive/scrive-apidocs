@@ -178,7 +178,7 @@ var AccountView = Backbone.View.extend({
 
 window.Account = function(args) {
           var model = new AccountModel(args);
-          var view =  new AccountView({model : model, el : $("<div/>")});
+          var view =  new AccountView({model : model, el : $("<div class='account'/>")});
           return {
               el  : function() {return view.el;}
             };

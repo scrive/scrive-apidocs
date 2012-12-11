@@ -43,9 +43,8 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var document = this.model;
     var guardModel = this.guardModel;
     return Button.init({
-      size: "small",
+      size: "tiny",
       color: "blue",
-      icon: $("<span class='btn-symbol cross' />"),
       text: document.process().localization().signbuttontext,
       onClick: function() {
         if (alreadyClicked(this))
@@ -120,6 +119,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
        this.rejectButton = Button.init({
                                         size: "big",
                                         color: "red",
+                                        width: 260,
                                         text: document.process().localization().rejectbuttontext,
                                         onClick: function() {
                                             ConfirmationWithEmail.popup({
@@ -140,6 +140,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
        this.signButton = Button.init({
                             size: "big",
                             color: "blue",
+                            width: 260,
                             text: document.process().localization().signbuttontext,
                             icon: $("<span class='icon cross'></span>"),
                             onClick: function() {

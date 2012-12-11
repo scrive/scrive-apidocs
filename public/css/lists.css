@@ -89,7 +89,7 @@
 }
 
 .list-container .table table td a {
-	color: #666 !important;
+	color: #666;
 }
 
 .list-container .table table td a:hover {
@@ -207,6 +207,11 @@
         -moz-border-radius: 3px;
         -webkit-border-radius: 3px;
 }
+
+.list-container .search-button{
+        margin-top: -4px;
+}
+
 
 .list-container .subbox {
    padding-top: 5px;

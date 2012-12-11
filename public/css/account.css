@@ -111,27 +111,11 @@
   border : 1px dashed #CCCCCC;
   padding: 20px;
 }
-.apidashboard #jsapitokens .tab-container,
-.apidashboard #jspersonaltoken .tab-container,
-.apidashboard #jsgrantedprivileges .tab-container
-{
-    border-width: 0px;
-}
 
 .apidashboard .account .col p {
     margin-right: 30px;
     display: inline-block;
 
-}
-.apidashboard .account .col .btn-small {
-    display: inline-block;
-}
-
-.apidashboard .table {
-    border: 1px solid gray;
-    -moz-border-radius: 5px;
-    -webkit-border-radius: 5px;
-    border-radius:5px;
 }
 
 .apidashboard .col.float-right {

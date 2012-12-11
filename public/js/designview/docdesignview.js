@@ -587,9 +587,8 @@ var DesignViewView = Backbone.View.extend({
         else
         {
             acceptButton = Button.init({
-                  size: "small",
+                  size: "tiny",
                   color : "blue",
-                  icon : $("<span class='btn-symbol cross' />"),
                   text : localization.designview.sign,
                   onClick : function() {
                       if (alreadyClicked(this))
@@ -650,7 +649,7 @@ var DesignViewView = Backbone.View.extend({
        Confirmation.popup({
               title : (!document.padDelivery()) ? document.process().localization().confirmsendtitle : localization.pad.howDoYouWantToSign,
               acceptButton : Button.init({
-                                size: "small",
+                                size: "tiny",
                                 color : "green",
                                 text : document.process().localization().sendbuttontext,
                                 onClick : function() {
