@@ -52,6 +52,8 @@ import Doc.Rendering
 import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
+import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
+import qualified Doc.Screenshot as Screenshot
 import Doc.Tokens.Model
 import Crypto.RNG
 import Attachment.Model
@@ -94,7 +96,8 @@ import Happstack.Server hiding (simpleHTTP)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
-import qualified Data.ByteString.UTF8 as BS hiding (length)
+import qualified Data.ByteString.RFC2397 as RFC2397
+import qualified Data.ByteString.UTF8 as BS hiding (length, take)
 import qualified Data.Map as Map
 import System.FilePath
 import Text.JSON hiding (Result)
@@ -200,13 +203,14 @@ signDocument documentid
       return (signatorymagichash authorlink)
 
   fieldsJSON <- guardRightM $ liftM (runGetJSON readJSArray) $ getField' "fields"
+  screenshots <- readScreenshots
   fields <- guardJustM $ withJSValue fieldsJSON $ fromJSValueCustomMany $ do
       ft <- fromJSValueM
       value <- fromJSValueField "value"
       return $ pairMaybe ft value
   mprovider <- readField "eleg"
   edoc <- case mprovider of
-           Nothing -> Right <$> signDocumentWithEmailOrPad documentid signatorylinkid magichash fields
+           Nothing -> Right <$> signDocumentWithEmailOrPad documentid signatorylinkid magichash fields screenshots
            Just provider -> do
              transactionid <- getDataFnM $ look "transactionid"
              esigninfo <- case provider of
@@ -221,7 +225,7 @@ signDocument documentid
                  document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
                  handleMismatch document signatorylinkid msg sfn sln spn
                  return $ Left msg
-               BankID.Sign sinfo -> Right <$> signDocumentWithEleg documentid signatorylinkid magichash fields sinfo
+               BankID.Sign sinfo -> Right <$> signDocumentWithEleg documentid signatorylinkid magichash fields sinfo screenshots
   case edoc of
     Right (Right (doc, olddoc)) -> do
       postDocumentPendingChange doc olddoc "web"
@@ -454,14 +458,33 @@ handleIssueShowPost docid = do
          l <- lg
          runJSONGenT $ J.value "link" (show l)
 
+readScreenshots :: Kontrakcja m => m SignatoryScreenshots.T
+readScreenshots = do
+    json <- either (fail . show) return =<<
+            (runGetJSON readJSObject <$>
+            (maybe (fail "readScreenshots: missing field \"screenshots\"") return =<< getField "screenshots"))
+    maybe (fail "readScreenshots: invalid JSON") return $ withJSValue json $ do
+      first   <- (decodeScreenshot =<<) `fmap` fromJSValueField "first"
+      signing <- (decodeScreenshot =<<) `fmap` fromJSValueField "signing"
+      return SignatoryScreenshots.T{ SignatoryScreenshots.first = first
+                                   , SignatoryScreenshots.signing = signing
+                                   }
+   where decodeScreenshot (time, s) = do
+          (mt, i) <- RFC2397.decode $ BS.fromString s
+          unless (mt `elem` ["image/jpeg", "image/png"]) Nothing
+          return (fromSeconds time, Screenshot.T{ Screenshot.mimetype = BS.toString mt
+                                                , Screenshot.image = Binary i
+                                                })
+
 handleIssueSign :: Kontrakcja m => Document -> TimeZoneName -> m KontraLink
 handleIssueSign document timezone = do
     Log.debug "handleIssueSign"
     actor <- guardJustM $ mkAuthorActor <$> getContext
+    screenshots <- readScreenshots
     mdocs <- splitUpDocument document
     case mdocs of
       Right docs -> do
-        mndocs <- mapM (forIndividual actor) docs
+        mndocs <- mapM (forIndividual actor screenshots) docs
         case partitionEithers mndocs of
           ([], [d]) -> do
             when_ (sendMailsDuringSigning d) $ do
@@ -477,12 +500,12 @@ handleIssueSign document timezone = do
             return $ LinkIssueDoc (documentid document)
       Left link -> return link
     where
-      forIndividual :: Kontrakcja m => Actor -> Document -> m (Either String Document)
-      forIndividual actor doc = do
+      forIndividual :: Kontrakcja m => Actor -> SignatoryScreenshots.T -> Document -> m (Either String Document)
+      forIndividual actor screenshots doc = do
         Log.debug $ "handleIssueSign for forIndividual " ++ show (documentid doc)
         mprovider <- readField "eleg"
         mndoc <- case mprovider of
-                   Nothing ->  Right <$> authorSignDocument actor (documentid doc) Nothing timezone
+                   Nothing ->  Right <$> authorSignDocument actor (documentid doc) Nothing timezone screenshots
                    Just provider -> do
                      transactionid <- getDataFnM $ look "transactionid"
                      esigninfo <- case provider of
@@ -496,7 +519,7 @@ handleIssueSign document timezone = do
                        BankID.Mismatch msg _ _ _ -> do
                          Log.debug $ "got this message: " ++ msg
                          return $ Left msg
-                       BankID.Sign sinfo -> Right <$>  authorSignDocument actor (documentid doc) (Just sinfo) timezone
+                       BankID.Sign sinfo -> Right <$>  authorSignDocument actor (documentid doc) (Just sinfo) timezone screenshots
         case mndoc of
           Right (Right newdocument) -> do
             postDocumentPreparationChange newdocument "web"
@@ -579,8 +602,9 @@ splitUpDocumentWorker doc actor csvbody = do
 handleIssueSignByAuthor :: Kontrakcja m => Document -> m KontraLink
 handleIssueSignByAuthor doc = do
      mprovider <- readField "eleg"
+     screenshots <- readScreenshots
      mndoc <- case mprovider of
-                   Nothing ->  Right <$> authorSignDocumentFinal (documentid doc) Nothing
+                   Nothing ->  Right <$> authorSignDocumentFinal (documentid doc) Nothing screenshots
                    Just provider -> do
                       signature     <- getDataFnM $ look "signature"
                       transactionid <- getDataFnM $ look "transactionid"
@@ -588,7 +612,7 @@ handleIssueSignByAuthor doc = do
                       case esinfo of
                         BankID.Problem msg -> return $ Left msg
                         BankID.Mismatch msg _ _ _ -> return $ Left msg
-                        BankID.Sign sinfo -> Right <$>  authorSignDocumentFinal (documentid doc) (Just sinfo)
+                        BankID.Sign sinfo -> Right <$>  authorSignDocumentFinal (documentid doc) (Just sinfo) screenshots
 
      case mndoc of
          Right (Right ndoc) -> do

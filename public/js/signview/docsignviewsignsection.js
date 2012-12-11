@@ -22,23 +22,23 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
     var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");
     bankid.click(function() {
-        mixpanel.track('Click BankID');
-      Eleg.bankidSign(document, signatory, document.sign());
+      mixpanel.track('Click BankID');
+      document.takeSigningScreenshot(function() { Eleg.bankidSign(document, signatory, document.sign()); });
       return false;
     });
     telia.click(function() {
-        mixpanel.track('Click Telia');
-      Eleg.teliaSign(document, signatory, document.sign());
+      mixpanel.track('Click Telia');
+      document.takeSigningScreenshot(function() { Eleg.teliaSign(document, signatory, document.sign()); });
       return false;
     });
     nordea.click(function() {
-        mixpanel.track('Click Nordea');
-      Eleg.nordeaSign(document, signatory, document.sign());
+      mixpanel.track('Click Nordea');
+      document.takeSigningScreenshot(function() { Eleg.nordeaSign(document, signatory, document.sign()); });
       return false;
     });
       mbi.click(function() {
           mixpanel.track('Click Mobile BankID');
-          Eleg.mobileBankIDSign(document,signatory,document.sign(),null,signatory.personalnumberField().value());
+          document.takeSigningScreenshot(function() { Eleg.mobileBankIDSign(document,signatory,document.sign(),null,signatory.personalnumberField().value()); });
           return false;
       });
     return $("<span />").append(bankid).append(telia).append(nordea).append(mbi);
@@ -57,6 +57,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
         trackTimeout('Accept', {'Accept' : 'sign document'}, function() {
             document.sign().send();
         });
+        document.takeSigningScreenshot(function() { document.sign().send(); });
       }
     }).input().css('margin-top', '-10px');
   },
@@ -197,6 +198,8 @@ window.DocumentSignSignSection = Backbone.View.extend({
         box.css("text-align","center").append($("<div class='signwrapper sign' style='width:100%;margin-right:0px;'>").append(this.signButton.input()));
       }
       box.append($("<div class='clearfix' />"));
+
+      document.takeFirstScreenshot();
    }
 });
 

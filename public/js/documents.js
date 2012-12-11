@@ -66,7 +66,8 @@ window.Document = Backbone.Model.extend({
         authentication: "standard",
         delivery: "email",
         template: false,
-        saveQueue : new AjaxQueue()
+        saveQueue : new AjaxQueue(),
+        screenshots : {}
     },
     initialize: function(args) {
         this.url = "/api/frontend/get/" + args.id;
@@ -218,6 +219,36 @@ window.Document = Backbone.Model.extend({
                                                 editWidth: 300
                         });
     },
+    takeFirstScreenshot: function() {
+        var document = this;
+        if (document.file() && document.file().view.readyFirstPage())
+            document.takeScreenshot(true, null);
+        else
+            document.file().bind('FirstPageReady', function() {
+            document.takeScreenshot(true, null);
+            });
+    },
+    takeSigningScreenshot: function(done) {
+        this.takeScreenshot(false, done);
+    },
+    takeScreenshot: function(first, done) {
+        var document = this;
+        function callDone() {
+            if (done) done();
+        }
+        window.takeScreenshot( 
+            function(canvas) {
+                var shot = [ new Date().getTime()/1000, canvas.toDataURL("image/jpeg",0.7) ];
+                if (first)
+                    document.get("screenshots").first = shot;
+                else
+                    document.get("screenshots").signing = shot;
+                callDone();
+            },
+            function(e) { callDone() },
+            function() { callDone() },
+            3000);
+    },
     sign: function() {
         var document = this;
         var fields = [];
@@ -234,6 +265,7 @@ window.Document = Backbone.Model.extend({
             sign : "YES",
             url : url,
             method: "POST",
+            screenshots: JSON.stringify(document.get("screenshots")),
             fields: JSON.stringify(fields)
         });
     },
@@ -247,11 +279,13 @@ window.Document = Backbone.Model.extend({
           });
     },
     signByAuthor: function() {
+        var document = this;
         return new Submit({
               url : "/d/" + this.documentid(),
               timezone: jstz.determine().name(),
               sign: "YES",
               method: "POST",
+              screenshots: JSON.stringify(document.get("screenshots")),
               ajaxtimeout : 120000
           });
     },

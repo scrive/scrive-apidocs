@@ -254,3 +254,32 @@ tableSignatoryLinkFields = tblTable {
   , tblForeignKeys = [ (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id")
                        { fkOnDelete = ForeignKeyCascade } ]
   }
+
+tableSignatoryScreenshots :: Table
+tableSignatoryScreenshots = tblTable {
+    tblName = "signatory_screenshots"
+  , tblVersion = 1
+  , tblCreateOrValidate = \desc -> case desc of
+      [  ("id",                SqlColDesc {colType = SqlBigIntT,              colNullable = Just False})
+       , ("signatory_link_id", SqlColDesc {colType = SqlBigIntT,              colNullable = Just False})
+       , ("type",              SqlColDesc {colType = SqlVarCharT,             colNullable = Just False})
+       , ("time",              SqlColDesc {colType = SqlTimestampWithZoneT,   colNullable = Just False})
+       , ("mimetype",          SqlColDesc {colType = SqlVarCharT,             colNullable = Just False})
+       , ("image",             SqlColDesc {colType = SqlVarBinaryT,           colNullable = Just False})
+       ] -> return TVRvalid
+      [] -> do
+        kRunRaw $ "CREATE TABLE signatory_screenshots"
+                  <> "( id                BIGSERIAL"
+                  <> ", signatory_link_id BIGINT      NOT NULL"
+                  <> ", type              TEXT        NOT NULL"
+                  <> ", time              TIMESTAMPTZ NOT NULL"
+                  <> ", mimetype          TEXT        NOT NULL"
+                  <> ", image             BYTEA       NOT NULL"
+                  <> ", CONSTRAINT pk_signatory_screenshots PRIMARY KEY (id)"
+                  <> ")"
+        return TVRcreated
+      _ -> return TVRinvalid
+  , tblIndexes = [ tblIndexOnColumn "signatory_link_id" ]
+  , tblForeignKeys = [ (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id")
+                       { fkOnDelete = ForeignKeyCascade } ]
+  }

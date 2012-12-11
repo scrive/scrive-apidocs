@@ -147,6 +147,7 @@ kontraTables = [
   , tableMailAPIDelay
   , tableDocumentTags
   , tableSignatoryLinkFields
+  , tableSignatoryScreenshots
   , tableTempCredential
   , tableTempPrivileges
   , tableAPIToken

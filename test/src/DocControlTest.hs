@@ -3,6 +3,8 @@ module DocControlTest(
 ) where
 
 import Control.Applicative
+import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString.RFC2397 as RFC2397
 import Data.Maybe
 import Control.Monad
 import qualified Control.Exception.Lifted as E
@@ -11,6 +13,8 @@ import Happstack.Server
 import Test.Framework
 import TestingUtil
 import TestKontra as T
+import qualified Text.JSON
+import Text.JSON.Gen (runJSONGen, value)
 import Mails.Model
 import Utils.Default
 import Context
@@ -149,6 +153,10 @@ testSendingDocumentSendsInvites = do
   emails <- dbQuery GetEmails
   assertBool "Emails sent" (length emails > 0)
 
+signScreenshots :: (String, Input)
+signScreenshots = ("screenshots", inText $ Text.JSON.encode $ runJSONGen $ ss "first" >> ss "signing")
+  where ss f = value f (0::Int, BS.toString $ RFC2397.encode "image/jpeg" "\255\216\255\224\NUL\DLEJFIF\NUL\SOH\SOH\SOH\NULH\NULH\NUL\NUL\255\219\NULC\NUL\ETX\STX\STX\STX\STX\STX\ETX\STX\STX\STX\ETX\ETX\ETX\ETX\EOT\ACK\EOT\EOT\EOT\EOT\EOT\b\ACK\ACK\ENQ\ACK\t\b\n\n\t\b\t\t\n\f\SI\f\n\v\SO\v\t\t\r\DC1\r\SO\SI\DLE\DLE\DC1\DLE\n\f\DC2\DC3\DC2\DLE\DC3\SI\DLE\DLE\DLE\255\201\NUL\v\b\NUL\SOH\NUL\SOH\SOH\SOH\DC1\NUL\255\204\NUL\ACK\NUL\DLE\DLE\ENQ\255\218\NUL\b\SOH\SOH\NUL\NUL?\NUL\210\207 \255\217")
+
 testSigningDocumentFromDesignViewSendsInvites :: TestEnv ()
 testSigningDocumentFromDesignViewSendsInvites = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
@@ -166,6 +174,7 @@ testSigningDocumentFromDesignViewSendsInvites = do
 
   req <- mkRequest POST [ ("sign", inText "True")
                         , ("timezone", inText "Europe/Stockholm")
+                        , signScreenshots
                         ]
   (_link, _ctx') <- runTestKontra req ctx $ handleIssueShowPost (documentid doc)
 
@@ -210,7 +219,7 @@ testNonLastPersonSigningADocumentRemainsPending = do
   preq <- mkRequest GET [ ]
   (_,ctx') <- runTestKontra preq ctx $ handleSignShowSaveMagicHash (documentid doc) (signatorylinkid siglink) (signatorymagichash siglink)
 
-  req <- mkRequest POST [ ("fields", inText "[]")]
+  req <- mkRequest POST [ ("fields", inText "[]"), signScreenshots]
   (_link, _ctx') <- runTestKontra req ctx' $ signDocument (documentid doc) (signatorylinkid siglink)
   Just signeddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "In pending state" Pending (documentstatus signeddoc)
@@ -255,7 +264,7 @@ testLastPersonSigningADocumentClosesIt = do
   preq <- mkRequest GET [ ]
   (_,ctx') <- runTestKontra preq ctx $ handleSignShowSaveMagicHash (documentid doc) (signatorylinkid siglink) (signatorymagichash siglink)
 
-  req <- mkRequest POST [ ("fields", inText "[]")]
+  req <- mkRequest POST [ ("fields", inText "[]"), signScreenshots]
   (_link, _ctx') <- runTestKontra req ctx' $ signDocument (documentid doc) (signatorylinkid siglink)
 
   Just signeddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)

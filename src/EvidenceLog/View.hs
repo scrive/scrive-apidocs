@@ -2,10 +2,13 @@ module EvidenceLog.View (
       eventsJSListFromEvidenceLog
     , htmlDocFromEvidenceLog
     , htmlSkipedEvidenceType
+    , evidenceOfIntentHTML
   ) where
 
 
 import Doc.DocStateData
+import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
+import qualified Doc.Screenshot as Screenshot
 import Templates.Templates
 
 import Control.Applicative
@@ -19,6 +22,8 @@ import EvidenceLog.Model
 import Utils.Prelude
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import qualified Data.ByteString.RFC2397 as RFC2397
+import qualified Data.ByteString.UTF8 as BS
 import Data.Maybe
 import Data.List
 import User.Model
@@ -173,3 +178,19 @@ filterTags ('<':rest) = ' ' : (filterTags (drop 1 $ dropWhile (\c -> c /= '>') r
 filterTags (a:rest) = a : (filterTags rest)
 filterTags [] = []
 
+-- | Generate evidence of intent in self-contained HTML for inclusion as attachment in PDF.
+evidenceOfIntentHTML :: TemplatesMonad m => String -> [(SignatoryLink, SignatoryScreenshots.T)] -> m String
+evidenceOfIntentHTML title l = do
+  renderTemplate "evidenceOfIntent" $ do
+    F.value "documenttitle" title
+    let values Nothing = return ()
+        values (Just (t,s)) = do
+          F.value "time" $ formatMinutesTimeUTC t ++ " UTC"
+          F.value "image" $ RFC2397.encode (BS.fromString (Screenshot.mimetype s))
+                                           (unBinary (Screenshot.image s))
+        nonempty (_,s) = isJust (SignatoryScreenshots.first s) ||
+                         isJust (SignatoryScreenshots.signing s)
+    F.objects "entries" $ for (filter nonempty l) $ \(sl, entry) -> do
+      F.value "signatory"  $ getSmartName sl
+      F.object "first"     $ values (SignatoryScreenshots.first entry)
+      F.object "signing"   $ values (SignatoryScreenshots.signing entry)

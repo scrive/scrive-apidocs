@@ -533,6 +533,13 @@ bin_builder_word8_escape x | x<32 || x >=127 || x == BSB.c2w '\\' || isdelim x
                                        ]
                     | otherwise = Bin.singleton x
 
+bin_builder_word8_name_escape :: Word8 -> Bin.Builder
+bin_builder_word8_name_escape x | x<32 || x >=127 || x == BSB.c2w '#' || not (isregular x)
+                             = mconcat [ Bin.singleton (BSB.c2w '#')
+                                       , Bin.fromByteString $ hexencode $ BS.singleton x
+                                       ]
+                    | otherwise = Bin.singleton x
+
 bin_builder_char_escape :: Char -> Bin.Builder
 bin_builder_char_escape x = bin_builder_word8_escape (BSB.c2w x)
 
@@ -551,6 +558,15 @@ bin_builder_string_escape x =
 bin_builder_bytestring_escape :: BS.ByteString -> Bin.Builder
 bin_builder_bytestring_escape x =
     mconcat (map bin_builder_word8_escape (BS.unpack x))
+
+bin_builder_bytestring_name_escape :: BS.ByteString -> Bin.Builder
+bin_builder_bytestring_name_escape x =
+    mconcat (map bin_builder_word8_name_escape (BS.unpack x))
+
+-- | Turn unencoded string into Name
+eName :: BS.ByteString -> Value
+eName = Name . mconcat . BSL.toChunks
+      . Bin.toLazyByteString . bin_builder_bytestring_name_escape
 
 hexencode :: BS.ByteString -> BS.ByteString
 hexencode = BS.concatMap hex

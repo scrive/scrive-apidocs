@@ -33,6 +33,7 @@ module Doc.Model
   , GetDocumentsByDocumentIDs(..)
   , GetDocumentByDocumentIDSignatoryLinkIDMagicHash(..)
   , GetDocumentsByAuthor(..)
+  , GetSignatoryScreenshots(..)
   , GetTemplatesByAuthor(..)
   , GetAvailableTemplates(..)
   , GetTimeoutedButPendingDocumentsChunk(..)
@@ -112,8 +113,11 @@ import Data.Monoid
 import qualified Data.Foldable as F
 import qualified Data.Map as M
 import qualified Data.Set as S
+import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
+import qualified Doc.Screenshot as Screenshot
 import Doc.Tables
 import Control.Applicative
+import Control.Arrow (second)
 import Util.SignatoryLinkUtils
 import Doc.DocStateCommon
 import qualified Log
@@ -888,6 +892,45 @@ insertSignatoryLinkFieldsAsAre fields = do
          mapM_ sqlResult signatoryLinkFieldsSelectors
 
   fetchSignatoryLinkFields
+
+
+insertSignatoryScreenshots :: MonadDB m
+                           => [(SignatoryLinkID, SignatoryScreenshots.T)] -> DBEnv m Integer
+insertSignatoryScreenshots l = do
+  let (slids, types, times, ss) = unzip4 $ [ (slid, "first", t, s)   | (slid, Just (t, s)) <- map (second SignatoryScreenshots.first) l ]
+                                        <> [ (slid, "signing", t, s) | (slid, Just (t, s)) <- map (second SignatoryScreenshots.signing) l ]
+  if null slids then return 0 else
+    kRun $ sqlInsert "signatory_screenshots" $ do
+           sqlSetList "signatory_link_id" $ slids
+           sqlSetList "type"              $ (types :: [String])
+           sqlSetList "time"              $ times
+           sqlSetList "mimetype"          $ map Screenshot.mimetype ss
+           sqlSetList "image"             $ map Screenshot.image ss
+
+data GetSignatoryScreenshots = GetSignatoryScreenshots [SignatoryLinkID]
+instance MonadDB m => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots.T)] where
+  query (GetSignatoryScreenshots l) = do
+    _ <- kRun $ sqlSelect "signatory_screenshots" $ do
+                sqlWhereIn "signatory_link_id" l
+                sqlOrderBy "signatory_link_id"
+
+                sqlResult "signatory_link_id"
+                sqlResult "type"
+                sqlResult "time"
+                sqlResult "mimetype"
+                sqlResult "image"
+    let folder ((slid', s):a) slid ty time mt i | slid' == slid = (slid, s <> mkss ty time mt i):a
+        folder a slid ty time mt i = (slid, mkss ty time mt i) : a
+        mkss :: String -> MinutesTime -> String -> Binary -> SignatoryScreenshots.T
+        mkss "first"   time mt i = SignatoryScreenshots.T { SignatoryScreenshots.first = Just (time, Screenshot.T mt i)
+                                                          , SignatoryScreenshots.signing = Nothing
+                                                          }
+        mkss "signing" time mt i = SignatoryScreenshots.T { SignatoryScreenshots.first = Nothing
+                                                          , SignatoryScreenshots.signing = Just (time, Screenshot.T mt i)
+                                                          }
+        mkss t         _    _  _ = error $ "GetSignatoryScreenshots: invalid type: " <> show t
+    flip foldDB [] folder
+
 
 insertDocumentAsIs :: MonadDB m => Document -> DBEnv m (Maybe Document)
 insertDocumentAsIs document = do
@@ -1943,9 +1986,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentUnsavedDraft Boo
       sqlWhereIn "documents.id" dids
     return (result>0)
 
-data SignDocument = SignDocument DocumentID SignatoryLinkID MagicHash (Maybe SignatureInfo) Actor
+data SignDocument = SignDocument DocumentID SignatoryLinkID MagicHash (Maybe SignatureInfo) SignatoryScreenshots.T Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument Bool where
-  update (SignDocument docid slid mh msiginfo actor) = do
+  update (SignDocument docid slid mh msiginfo screenshots actor) = do
     doc_exists <- query $ CheckIfDocumentExists docid
     if not doc_exists
       then do
@@ -1955,6 +1998,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument Bool where
         errmsgs <- checkSignDocument docid slid mh
         case errmsgs of
           [] -> do
+            _ <- insertSignatoryScreenshots [(slid, screenshots)]
             let ipnumber = fromMaybe noIP $ actorIP actor
                 time     = actorTime actor
             updateWithEvidence tableSignatoryLinks

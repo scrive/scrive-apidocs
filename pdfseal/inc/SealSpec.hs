@@ -54,8 +54,9 @@ data Field
 -- order.  File name should be without any directory parts. File
 -- content as base64 encoded string.
 data SealAttachment = SealAttachment
-  { fileName          :: String -- ^ how should attached file be named
-  , fileBase64Content :: String -- ^ base64 binary content of the file
+  { fileName          :: String       -- ^ how should attached file be named
+  , mimeType          :: Maybe String -- ^ optional "subtype" specification, like "text/plain"
+  , fileBase64Content :: String       -- ^ base64 binary content of the file
   }
     deriving (Eq,Ord,Show,Read)
 

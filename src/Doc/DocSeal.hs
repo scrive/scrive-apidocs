@@ -291,6 +291,15 @@ findOutAttachmentDesc document = do
                  , fileAttachedBy = attachedByText
                  }
 
+evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m) => String -> [SignatoryLink] -> m Seal.SealAttachment
+evidenceOfIntentAttachment title sls = do
+  ss <- dbQuery $ GetSignatoryScreenshots (map signatorylinkid sls)
+  html <- evidenceOfIntentHTML title [ (sl, s) | (i, s) <- ss, sl <- filter ((==i) . signatorylinkid) sls ]
+  return $ Seal.SealAttachment { Seal.fileName = "evidenceOfIntent.html"
+                               , Seal.mimeType = Nothing
+                               , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString html
+                               }
+
 sealSpecFromDocument :: (KontraMonad m, MonadIO m, TemplatesMonad m, MonadDB m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
@@ -305,7 +314,7 @@ sealSpecFromDocument boxImages hostpart document elog content inputpath outputpa
   sigVerFile <- liftIO $ BS.toString <$> B64.encode <$> BS.readFile "files/verification.html"
   sealSpecFromDocument2 boxImages hostpart document elog content inputpath outputpath additionalAttachments sigVerFile
 
-sealSpecFromDocument2 :: (TemplatesMonad m)
+sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m)
                      => (BS.ByteString,BS.ByteString)
                      -> String
                      -> Document
@@ -438,11 +447,13 @@ sealSpecFromDocument2 boxImages hostpart document elog content inputpath outputp
       -- Creating HTML Evidence Log
       htmllogs <- htmlDocFromEvidenceLog (documenttitle document) elog
       let evidenceattachment = Seal.SealAttachment { Seal.fileName = "evidencelog.html"
+                                                   , Seal.mimeType = Nothing
                                                    , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString htmllogs }
-
+      evidenceOfIntent <- evidenceOfIntentAttachment (documenttitle document) (documentsignatorylinks document)
       -- add signature verification documentation
       let signatureVerificationAttachment =
             Seal.SealAttachment { Seal.fileName = "signatureverification.html"
+                                , Seal.mimeType = Nothing
                                 , Seal.fileBase64Content = sigVerFile
                                 }
 
@@ -470,9 +481,7 @@ sealSpecFromDocument2 boxImages hostpart document elog content inputpath outputp
             , Seal.initials       = initials
             , Seal.hostpart       = hostpart
             , Seal.staticTexts    = readtexts
-            , Seal.attachments    = [ evidenceattachment
-                                    , signatureVerificationAttachment
-                                    ]
+            , Seal.attachments    = [evidenceattachment, evidenceOfIntent, signatureVerificationAttachment]
             , Seal.filesList      =
               [ Seal.FileDesc { fileTitle = documenttitle document
                               , fileRole = mainDocumentText

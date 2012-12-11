@@ -31,6 +31,7 @@ import Util.Actor
 import qualified Log as Log
 import Control.Concurrent
 import Data.Maybe
+import Data.Monoid (mempty)
 
 mailsTests :: [String] -> TestEnvSt -> Test
 mailsTests params env  = testGroup "Mails" [
@@ -82,7 +83,7 @@ sendDocumentMails mailTo author = do
         let asl2 = head $ documentsignatorylinks d2
         True <- randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2)
              (signatoryActor now noIP (maybesignatory asl2) (getEmail asl2) (signatorylinkid asl2))
-        True <- randomUpdate $ \si -> SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) si (systemActor now)
+        True <- randomUpdate $ \si -> SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) si mempty (systemActor now)
         Just doc <- dbQuery $ GetDocumentByDocumentID docid
         let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
         req <- mkRequest POST []
@@ -105,7 +106,7 @@ sendDocumentMails mailTo author = do
         when (doctype == Contract) $ do
           checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc (defaultValue :: Lang)
         -- Virtual signing
-        _ <- randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing
+        _ <- randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing mempty
                                    (signatoryActor (10 `minutesAfter` now) ip (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
         (Just sdoc) <- randomQuery $ GetDocumentByDocumentID docid
         -- Sending closed email

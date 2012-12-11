@@ -105,12 +105,15 @@ sealspec filename = SealSpec
                                          }) [10..99::Int]
     , staticTexts = sampleSealingTexts
     , attachments = [ SealAttachment { fileName = "SkrivaPå attachment 1 żółw ŻÓŁW ÄÅÖäåö.txt"
+                                     , mimeType = Nothing
                                      , fileBase64Content = "214124124123412341234"
                                      }
                     , SealAttachment { fileName = "SkrivaPå attachment 2 żółw ŻÓŁW ÄÅÖäåö.html"
+                                     , mimeType = Just "text/html"
                                      , fileBase64Content = "26345645636534563454"
                                      }
                     , SealAttachment { fileName = "SkrivaPå attachment 2b żółw ŻÓŁW ÄÅÖäåö.pdf"
+                                     , mimeType = Nothing
                                      , fileBase64Content = "2632345234534563454"
                                      }
                     ]

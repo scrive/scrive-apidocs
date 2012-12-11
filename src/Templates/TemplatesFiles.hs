@@ -55,6 +55,7 @@ templateFiles = ["modals.st",
                  "oauth/accept.st",
                  "javascript-langs.st",
                  "evidencelog/htmllog.st",
+                 "evidencelog/evidenceOfIntent.st",
                  "evidencelog/texts.st",
                  "payments.st",
                  "evidencelog/simplified.st"

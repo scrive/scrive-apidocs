@@ -27,6 +27,7 @@ import Control.Applicative
 import User.Model
 import Control.Monad.Trans
 import Doc.Rendering
+import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import File.Model
 import Redirect
 import DB
@@ -56,8 +57,9 @@ restartDocument doc = withUser $ \user -> do
    Sign a document with email identification (typical, non-eleg).
  -}
 
-signDocumentWithEmailOrPad :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(FieldType, String)] -> m (Either DBError (Document, Document))
-signDocumentWithEmailOrPad did slid mh fields = do
+signDocumentWithEmailOrPad :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(FieldType, String)] -> SignatoryScreenshots.T
+                           -> m (Either DBError (Document, Document))
+signDocumentWithEmailOrPad did slid mh fields screenshots = do
   edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
   case edoc of
     Left err -> return $ Left err
@@ -71,7 +73,7 @@ signDocumentWithEmailOrPad did slid mh fields = do
         let actor = signatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
         mdoc <- runMaybeT $ do
           True <- dbUpdate $ UpdateFields did slid fields actor
-          True <- dbUpdate $ SignDocument did slid mh Nothing actor
+          True <- dbUpdate $ SignDocument did slid mh Nothing screenshots actor
           Just doc <- dbQuery $ GetDocumentByDocumentID did
           let Just sl = getSigLinkFor doc slid
           _ <- addSignStatSignEvent doc sl
@@ -80,8 +82,9 @@ signDocumentWithEmailOrPad did slid mh fields = do
           Nothing  -> Left $ DBActionNotAvailable "Signing with email/pad failed"
           Just doc -> Right (doc, olddoc)
 
-signDocumentWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(FieldType, String)] -> SignatureInfo -> m (Either DBError (Document, Document))
-signDocumentWithEleg did slid mh fields sinfo = do
+signDocumentWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(FieldType, String)] -> SignatureInfo -> SignatoryScreenshots.T
+                     -> m (Either DBError (Document, Document))
+signDocumentWithEleg did slid mh fields sinfo screenshots = do
   Context{ ctxtime, ctxipnumber } <- getContext
   edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
   case edoc of
@@ -97,7 +100,7 @@ signDocumentWithEleg did slid mh fields sinfo = do
           Log.debug "a"
           True <- dbUpdate $ UpdateFields did slid fields actor
           Log.debug "b"
-          True <- dbUpdate $ SignDocument did slid mh (Just sinfo) actor
+          True <- dbUpdate $ SignDocument did slid mh (Just sinfo) screenshots actor
           Log.debug "c"
           Just doc <- dbQuery $ GetDocumentByDocumentID did
           Log.debug "d"
@@ -136,8 +139,8 @@ rejectDocumentWithChecks did slid mh customtext = do
 {- |
   The Author signs a document with security checks.
  -}
-authorSignDocument :: (Kontrakcja m) => Actor -> DocumentID -> Maybe SignatureInfo -> TimeZoneName -> m (Either DBError Document)
-authorSignDocument actor did msigninfo timezone = onlyAuthor did $ \olddoc -> do
+authorSignDocument :: (Kontrakcja m) => Actor -> DocumentID -> Maybe SignatureInfo -> TimeZoneName -> SignatoryScreenshots.T -> m (Either DBError Document)
+authorSignDocument actor did msigninfo timezone screenshots = onlyAuthor did $ \olddoc -> do
   ctx <- getContext
   let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
   mdoc <- runMaybeT $ do
@@ -146,7 +149,7 @@ authorSignDocument actor did msigninfo timezone = onlyAuthor did $ \olddoc -> do
     -- please delete after Oct 1, 2012 -Eric
     -- True <- dbUpdate $ MarkInvitationRead did signatorylinkid $ systemActor $ ctxtime ctx
     -- True <- dbUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
-    True <- dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo actor
+    True <- dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo screenshots actor
     Just doc <- dbQuery $ GetDocumentByDocumentID did
     let Just sl = getSigLinkFor doc signatorylinkid
     _ <- addSignStatSignEvent doc sl
@@ -191,13 +194,13 @@ setSigAttachments did sid sigatts = onlyAuthor did $ \_ -> do
 {- |
    Only the author can Close a document when its in AwaitingAuthor status.
  -}
-authorSignDocumentFinal :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> m (Either DBError Document)
-authorSignDocumentFinal did msigninfo = onlyAuthor did $ \olddoc -> do
+authorSignDocumentFinal :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> SignatoryScreenshots.T -> m (Either DBError Document)
+authorSignDocumentFinal did msigninfo screenshots = onlyAuthor did $ \olddoc -> do
   ctx <- getContext
   actor <- guardJustM $ mkAuthorActor <$> getContext
   let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
   mdoc <- runMaybeT $ do
-    True <- dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo actor
+    True <- dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo screenshots actor
     True <- dbUpdate $ CloseDocument did $ systemActor $ ctxtime ctx
     Just doc <- dbQuery $ GetDocumentByDocumentID did
     let Just sl = getSigLinkFor doc signatorylinkid

@@ -284,6 +284,7 @@ var FileView = Backbone.View.extend({
                  view.pageviews.push(pageview);
                  docbox.append($(pageview.el));
             });
+            view.startReadyCheckerFirstPage();
             view.startReadyChecker();
 
         }
@@ -297,6 +298,13 @@ var FileView = Backbone.View.extend({
         else
          setTimeout(function() {view.startReadyChecker()},1000);
     },
+    startReadyCheckerFirstPage : function() {
+        var view = this;
+        if (view.readyFirstPage())
+         view.model.trigger('FirstPageReady');
+        else
+         setTimeout(function() {view.startReadyCheckerFirstPage()},1000);
+    },
     ready : function() {
         //console.log("Document view checking ...")
         //console.log("File is ready " + this.model.ready())
@@ -304,7 +312,9 @@ var FileView = Backbone.View.extend({
         //console.log("All pages ready "  +  _.all(this.pageviews, function(pv) {return pv.ready();}))
         return this.model.ready() && (this.model.pages().length > 0) && (this.pageviews.length == this.model.pages().length) && _.all(this.pageviews, function(pv) {return pv.ready();});
     },
-
+    readyFirstPage : function () {
+        return this.pageviews.length > 0 && this.pageviews[0].ready();
+    },
     moveCoordinateAxes : function(helper) {
       var self = this;
       _.defer(function() {

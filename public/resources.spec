@@ -67,6 +67,7 @@ set systemPage
  js   libs/recurly.js
  js   libs/moment.min.js
  js   libs/iso8601.min.js
+ js   libs/html2canvas.js
  js   js/global.js
  js   js/storage.js
  js   js/browserinfo.js
@@ -101,6 +102,7 @@ set systemPage
  js   js/signature.js
  js   js/signatories.js
  js   js/documents.js
+ js   js/takeScreenshot.js
  js   js/confirmationsWithEmails.js
  js   js/authorview/authorviewtitlebox.js
  js   js/authorview/authorsviewhistory.js

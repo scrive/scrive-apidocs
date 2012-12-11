@@ -840,9 +840,10 @@ pageToForm refid' = do
     addStream (Dict value') streamdata
 
 addFileStream :: SealAttachment -> State Document (Value, RefID)
-addFileStream SealAttachment{fileBase64Content, fileName} = do
+addFileStream SealAttachment{fileBase64Content, mimeType, fileName} = do
    let content = BSL.fromChunks [Base64.decodeLenient (BS.pack fileBase64Content)]
-   sid <- addStream (Dict [(BS.pack "Type", Name $ BS.pack "EmbeddedFile")]) $ content
+   sid <- addStream (Dict $ [(BS.pack "Type", Name $ BS.pack "EmbeddedFile")]
+                         ++ maybe [] (\t -> [(BS.pack "Subtype", eName $ BS.pack t)]) mimeType) $ content
    sid2 <- addObject (Dict [ (BS.pack "Type", Name $ BS.pack "Filespec")
                            , (BS.pack "F", string fileName)
                            , (BS.pack "EF", Dict [

@@ -638,7 +638,7 @@ var DesignViewView = Backbone.View.extend({
                     mixpanel.track('Select eleg provider', {
                         'Eleg provider' : 'BankID'
                     });
-                    Eleg.bankidSign(document,signatory, document.signByAuthor(),callback);
+                    document.takeSigningScreenshot(function() { Eleg.bankidSign(document,signatory, document.signByAuthor(),callback); });
                     return false;
             });
             telia.click(function() {
@@ -647,7 +647,7 @@ var DesignViewView = Backbone.View.extend({
                     mixpanel.track('Select eleg provider', {
                         'Eleg provider' : 'Telia'
                     });
-                    Eleg.teliaSign(document,signatory, document.signByAuthor(),callback);
+                    document.takeSigningScreenshot(function() { Eleg.teliaSign(document,signatory, document.signByAuthor(),callback); });
                     return false;
             });
             nordea.click(function() {
@@ -656,7 +656,7 @@ var DesignViewView = Backbone.View.extend({
                     mixpanel.track('Select eleg provider', {
                         'Eleg provider' : 'Nordea'
                     });
-                    Eleg.nordeaSign(document,signatory, document.signByAuthor(),callback);
+                    document.takeSigningScreenshot(function() { Eleg.nordeaSign(document,signatory, document.signByAuthor(),callback); });
                     return false;
             });
             mbi.click(function() {
@@ -665,7 +665,7 @@ var DesignViewView = Backbone.View.extend({
                 mixpanel.track('Select eleg provider', {
                     'Eleg provider' : 'Mobile BankID'
                 });
-                Eleg.mobileBankIDSign(document,signatory,document.signByAuthor(),callback);
+                document.takeSigningScreenshot(function() { Eleg.mobileBankIDSign(document,signatory,document.signByAuthor(),callback); });
                 return false;
             });
             acceptButton.append(bankid).append(telia).append(nordea).append(mbi);
@@ -683,12 +683,14 @@ var DesignViewView = Backbone.View.extend({
                       mixpanel.track('Click accept sign', {
                           'Button' : 'sign'
                       });
-                      document.afterSave(function() {
-                          document.signByAuthor().sendAjax(function(resp) {
-                                        var link = JSON.parse(resp).link;
-                                        window.location = link;
-                                    });;
-                           });
+                      document.takeSigningScreenshot(function() {
+                          document.afterSave(function() {
+                              document.signByAuthor().sendAjax(function(resp) {
+                                            var link = JSON.parse(resp).link;
+                                            window.location = link;
+                                        });;
+                               });
+                          });
                     }
                 }).input();
         }
@@ -1075,6 +1077,7 @@ var DesignViewView = Backbone.View.extend({
         this.contrainer.append(BlockingInfo.el()).append($(this.tabs.view.el));
 
         new ScrollFixer({object : designbody1.add(designbody2)});
+        document.takeFirstScreenshot();
     }
 });
 
