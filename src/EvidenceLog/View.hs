@@ -151,7 +151,7 @@ simplyfiedEventText doc dee = renderTemplate ("simpliefiedText" ++ (show $ evTyp
     F.value "documenttitle" $ (documenttitle doc)
     case (evAffectedSigLinkID dee) of
       Just aslid -> F.value "affectedsignatory" $ getSmartName <$> getSigLinkFor doc aslid
-      _ -> return ()
+      Nothing    -> F.value "affectedsignatory" ("" :: String)
     F.value "text" $ filterTags <$> evMessageText dee
     F.value "eleg" $ documentauthenticationmethod doc == ELegAuthentication
     F.value "pad"  $ documentdeliverymethod doc == PadDelivery
