@@ -63,10 +63,87 @@ standardHeaderContents=
         <link href='/css/fonts/HelveticaNeue.css' rel='stylesheet' type='text/css'/>
         <script src="/$ctxlang$/localization/$versioncode$.js"  type="text/javascript"></script>
         $staticResources:noescape()$
+<!-- start Mixpanel --><script type="text/javascript">(function(e,b){if(!b.__SV){var a,f,i,g;window.mixpanel=b;a=e.createElement("script");a.type="text/javascript";a.async=!0;a.src=("https:"===e.location.protocol?"https:":"http:")+'//cdn.mxpnl.com/libs/mixpanel-2.2.min.js';f=e.getElementsByTagName("script")[0];f.parentNode.insertBefore(a,f);b._i=[];b.init=function(a,e,d){function f(b,h){var a=h.split(".");2==a.length&&(b=b[a[0]],h=a[1]);b[h]=function(){b.push([h].concat(Array.prototype.slice.call(arguments,0)))}}var c=b;"undefined"!==
+typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var a="mixpanel";"mixpanel"!==d&&(a+="."+d);b||(a+=" (stub)");return a};c.people.toString=function(){return c.toString(1)+".people (stub)"};i="disable track track_pageview track_links track_forms register register_once alias unregister identify name_tag set_config people.set people.increment".split(" ");for(g=0;g<i.length;g++)f(c,i[g]);b._i.push([a,e,d])};b.__SV=1.2}})(document,window.mixpanel||[]);
+mixpanel.init("5b04329b972851feac0e9b853738e742");</script><!-- end Mixpanel -->
+<script type="text/javascript">
+  var _kmq = _kmq || [];
+  var _kmk = _kmk || '88301a45c3b1ca4b0de03f151c179d263596ae0f';
+  function _kms(u){
+    setTimeout(function(){
+      var d = document, f = d.getElementsByTagName('script')[0],
+      s = d.createElement('script');
+      s.type = 'text/javascript'; s.async = true; s.src = u;
+      f.parentNode.insertBefore(s, f);
+    }, 1);
+  }
+  _kms('//i.kissmetrics.com/i.js');
+  _kms('//doug1izaerwt3.cloudfront.net/' + _kmk + '.1.js');
+</script>
 ####
 pageFooter=
 <footer class="site">
 <div class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
+$if(user)$
+        <script id="IntercomSettingsScriptTag">
+          var intercomSettings = {
+            // TODO: The current logged in user's email address.
+            email: "$user.email$",
+            // TODO: The current logged in user's sign-up date as a Unix timestamp.
+            created_at: $user.signup_epoch$,
+            app_id: "lhmxja9e",
+            name: "$user.fullname$",
+            user_id: "$user.id$",
+    company_status: "$user.companystatus$",
+    company_name: '$user.company$',
+    phone: '$user.phone$'
+
+          };
+
+mixpanel.identify("$user.id$");
+          mixpanel.people.set({
+    "\$email": "$user.email$",    // only special properties need the 
+    "\$created": "$user.TOSdate$",
+    "\$last_login": new Date(),         // properties can be dates...
+    "company_status": "$user.companystatus$" 
+});
+
+       </script>
+<script>(function(){var w=window;var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://api.intercom.io/api/js/library.js';var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{w.addEventListener('load',l,false);}})();</script>
+<script type="text/javascript">
+  var _cio = _cio || [];
+  (function() {
+    var a,b,c;a=function(f){return function(){_cio.push([f].
+    concat(Array.prototype.slice.call(arguments,0)))}};b=["identify",
+    "track"];for(c=0;c<b.length;c++){_cio[b[c]]=a(b[c])};
+    var t = document.createElement('script'),
+        s = document.getElementsByTagName('script')[0];
+    t.async = true;
+    t.id    = 'cio-tracker';
+    t.setAttribute('data-site-id', 'd49809e6040bbc5bafea');
+    t.src = 'https://assets.customer.io/assets/track.js';
+    s.parentNode.insertBefore(t, s);
+  })();
+</script>
+
+<script type="text/javascript">
+  _cio.identify({
+    // Required attributes
+    id: '$user.id$',           // Unique id for the currently signed in user in your application.
+    email: '$user.email$', // Email of the currently signed in user.
+    created_at: $user.signup_epoch$,   // Timestamp in your system that represents when
+                              // the user first signed up. You'll want to send it
+                              // as seconds since the epoch.
+
+    // Optional (these are examples. You can name attributes what you wish)
+
+    full_name: '$user.fullname$',       // Add any attributes you'd like to use in the email subject or body.
+    company_status: "$user.companystatus$",
+    company_name: '$user.company$',
+    phone: '$user.phone$'
+  });
+</script>
+$endif$
 
   <div class="visions">
     <p>Visions made in Sweden. Built by experts from around the world. </p>

@@ -348,6 +348,7 @@
             model: model,
             show: function(selector) {
                 $(selector).html(view.el);
+                _cio.track("blocked");
             },
             el : function() {
                return $(view.el);

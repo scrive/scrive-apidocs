@@ -25,7 +25,10 @@ import Control.Applicative
 import Data.Maybe
 import Happstack.Server.SimpleHTTP
 import Templates.Templates
+import Company.Model
 import User.Lang
+import User.Model
+import User.UserView
 import qualified Templates.Fields as F
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified Data.ByteString.UTF8 as BS (fromString,toString)
@@ -36,6 +39,7 @@ import Data.String.Utils
 import Version
 import Text.JSON
 import Utils.HTTP
+import DB
 
 {- |
    The name of our application (the codebase is known as kontrakcja,
@@ -55,7 +59,12 @@ renderFromBody :: Kontrakcja m
                -> m Response
 renderFromBody title content = do
   ctx <- getContext
-  res <- simpleHtmlResponse =<< pageFromBody False ctx title content
+  let muser = ctxmaybeuser ctx
+  mcompany <- case usercompany <$> muser of
+    Just (Just cid) -> dbQuery $ GetCompany cid
+    _ -> return Nothing
+
+  res <- simpleHtmlResponse =<< pageFromBody False ctx muser mcompany title content
   clearFlashMsgs
   return res
   
@@ -68,7 +77,12 @@ renderFromBodyThin :: Kontrakcja m
                -> m Response
 renderFromBodyThin title content = do
   ctx <- getContext
-  res <- simpleHtmlResponse =<< pageFromBody True ctx title content
+  let muser = ctxmaybeuser ctx
+  mcompany <- case usercompany <$> muser of
+    Just (Just cid) -> dbQuery $ GetCompany cid
+    _ -> return Nothing
+
+  res <- simpleHtmlResponse =<< pageFromBody True ctx muser mcompany title content
   clearFlashMsgs
   return res
 
@@ -79,15 +93,20 @@ renderFromBodyThin title content = do
 pageFromBody :: Kontrakcja m
              => Bool
              -> Context
+             -> Maybe User
+             -> Maybe Company
              -> String
              -> String
              -> m String
-pageFromBody thin ctx title bodytext =
+pageFromBody thin ctx muser mcompany title bodytext =
   renderTemplate "wholePage" $ do
     F.value "content" bodytext
     F.value "thin" thin
     standardPageFields ctx title Nothing
     F.valueM "httplink" $ getHttpHostpart
+    case muser of
+      Nothing -> return ()
+      Just user -> F.object "user" $ userBasicFields user mcompany
 
 notFoundPage :: Kontrakcja m => m Response
 notFoundPage = renderTemplate_ "notFound" >>= renderFromBody kontrakcja

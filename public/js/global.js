@@ -6,7 +6,9 @@ window.closeAllActiveModals = function() {
   });
 }
 
+
 window.createnewdocument = function() {
+  mixpanel.track("Click Start new process");
   new Submit({
                     method : "POST",
                     url : "/api/frontend/createfromfile",
@@ -23,6 +25,7 @@ window.createnewdocument = function() {
 }
 
 window.createfromtemplate = function() {
+    _cio.track("click_createfromtemplate");
     window.location = "/fromtemplate";
 }
 
