@@ -165,6 +165,12 @@
                 this.set({currentPlan:plan});
             return this;
         },
+        setDone: function() {
+            this.set({done:true});
+        },
+        done: function() {
+            this.get('done');
+        },
         creditCard: function() {
             return this.get('creditCard');
         },
@@ -379,7 +385,6 @@
             this.element = $('<div />');
             this.$el.append(this.element);
             args.model.bind('change:currentPlan', this.render);
-            args.model.bind('change:accountCreated', this.render);
             args.model.bind('fetch', this.render);
             this.hideContacts = args.hideContacts;
         },
@@ -422,6 +427,7 @@
 
             var work = true;
             var handlechargeaccount = function(data) {
+                console.log(data);
                 // three cases
                 if(!data.user_exists) {
                     // create the user and charge the account
@@ -431,7 +437,8 @@
                                             model.firstName(), 
                                             model.lastName(), 
                                             function(data) {
-                                                LoadingDialog.close();
+                                                //LoadingDialog.close();
+                                                //loadingicon.hide();
                                                 if(data.success)
                                                     form.submit();
                                                 // what else?
@@ -439,7 +446,8 @@
                         work = true;
                     }
                 } else if(data.user_exists && !data.has_plan && data.has_company && !data.is_admin) {
-                    LoadingDialog.close();
+                    loadingicon.hide();
+                    //LoadingDialog.close();
                     var popup = Confirmation.popup({
                         title: localization.payments.mustBeAdmin,
                         content: $('<p />').text(localization.payments.contactAdmin),
@@ -447,8 +455,9 @@
                             popup.view.clear();
                         }
                     });
-                } else if(data.user_exists && !data.has_plan && data.has_company && data.is_admin) {
-                    LoadingDialog.close();
+                } else if(data.user_exists && !data.has_plan && ((data.has_company && data.is_admin) || !data.has_company)) {
+                    //LoadingDialog.close();
+                    //loadingicon.hide();
                     if(work) {
                         work = false;
                         form.submit();
@@ -456,7 +465,8 @@
                     }
                 } else {
                     // show message (they should log in)
-                    LoadingDialog.close();
+                    //LoadingDialog.close();
+                    loadingicon.hide();
                     var text = localization.payments.outside.sorryExistingUser;
                     var header = localization.payments.outside.sorryExistingUserHeader;
                     var popup = Confirmation.popup({
@@ -468,15 +478,17 @@
                     });
                 }
             };
-            
+            var loadingicon = $('<img src="/libs/recurly/images/submitting.gif" class="loading-icon" style="display:none" />');
             // replace button with our own
             var button = Button.init({color:'green',
                                       size:'big',
                                       cssClass:'s-subscribe',
                                       text:localization.payments.subscribe,
+                                      icon: loadingicon, 
                                       onClick: function() {
                                           view.validator.validate(function() {
-                                              LoadingDialog.open(localization.payments.loading);
+                                              //LoadingDialog.open(localization.payments.loading);
+                                              loadingicon.css({display:'inline'});
                                               if(model.type() === 'user') {
                                                   handlechargeaccount({
                                                       'user_exists' : true,
@@ -566,7 +578,7 @@
             if(model.type() === 'plannone' || model.type() === 'planrecurly')
                 return false;
 
-            if(model.accountCreated()) {
+            if(model.done() && model.accountCreated()) {
                 view.$el.children().detach();
                 return false;
             }
@@ -576,6 +588,8 @@
                 view.element.addClass('contact-admin');
                 return false;
             }
+
+            var loadingicon = $('img.loading-icon');
 
             Recurly.config({
                 subdomain: model.subdomain()
@@ -609,7 +623,9 @@
                 , signature: model.plans()[model.currentPlan() || 'team'].signature
                 , beforeInject: this.scrambleForm
                 , successHandler: function(stuff) {
+
                     LoadingDialog.open(localization.payments.savingsubscription);
+                    //loadingicon.css({display:'inline'});
                     model.submitSubscription(function() {
                         var text;
                         var header;
@@ -618,6 +634,9 @@
                             return true;
                         }
 
+                        model.setDone();
+
+                        loadingicon.hide();
                         LoadingDialog.close();
                         if(model.createdUser()) {
                             text = localization.payments.outside.confirmAccountCreatedUser;
@@ -631,7 +650,7 @@
                             content: $('<p />').text(text),
                             onAccept: function() {
                                 if(model.type() === 'user') {
-                                    window.location.reload();
+                                    Login({});
                                 } else if(model.createdUser()) {
                                     popup.view.clear();
                                     Login({});

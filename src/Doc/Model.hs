@@ -1095,10 +1095,12 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
              <+> "WHERE id =" <?> did <+> "AND type =" <?> Signable undefined
               ) $ do
               case reason of
-                ManualCancel -> return $ InsertEvidenceEvent
+                ManualCancel -> return $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                   CancelDocumentEvidence
                   (value "actor" (actorWho actor))
                   (Just did)
+                  Nothing
+                  Nothing
                   actor
                 ELegDataMismatch _ sid fn ln num -> do
                   Just sl <- query $ GetSignatoryLinkByID did sid Nothing
@@ -1107,10 +1109,12 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
                               ,("Personal number", getPersonalNumber sl, num)]
                       uneql = filter (\(_,a,b)->a/=b) trips
                       msg = intercalate "; " $ map (\(f,s,e)->f ++ " from transaction was \"" ++ s ++ "\" but from e-legitimation was \"" ++ e ++ "\"") uneql
-                  return $ InsertEvidenceEvent
+                  return $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                     CancelDocumenElegEvidence
                     (value "actor" (actorWho actor) >> value "msg" msg )
                     (Just did)
+                    (Just sid)
+                    Nothing
                     actor
           s -> do
             Log.error $ "Cannot CancelDocument document " ++ show did ++ " because " ++ concat s
@@ -2374,7 +2378,7 @@ instance MonadDB m => DBQuery m GetDocsSentBetween Int where
 
 -- Update utilities
 
-updateWithEvidence' :: (MonadDB m, TemplatesMonad m) => DBEnv m Bool -> Table -> SQL -> DBEnv m InsertEvidenceEvent -> DBEnv m Bool
+updateWithEvidence' :: (MonadDB m, TemplatesMonad m, DBUpdate m evidence Bool) => DBEnv m Bool -> Table -> SQL -> DBEnv m evidence -> DBEnv m Bool
 updateWithEvidence' testChanged t u mkEvidence = do
   changed <- testChanged
   success <- kRun01 $ "UPDATE" <+> raw (tblName t) <+> "SET" <+> u
@@ -2383,19 +2387,19 @@ updateWithEvidence' testChanged t u mkEvidence = do
     update $ e
   return success
 
-updateWithEvidence ::  (MonadDB m, TemplatesMonad m) => Table -> SQL -> DBEnv m InsertEvidenceEvent -> DBEnv m Bool
+updateWithEvidence ::  (MonadDB m, TemplatesMonad m, DBUpdate m evidence Bool) => Table -> SQL -> DBEnv m evidence -> DBEnv m Bool
 updateWithEvidence = updateWithEvidence' (return True)
 
-updateOneWithEvidenceIfChanged :: (MonadDB m, TemplatesMonad m, Convertible a SqlValue)
-                               => DocumentID -> SQL -> a -> DBEnv m InsertEvidenceEvent -> DBEnv m Bool
+updateOneWithEvidenceIfChanged :: (MonadDB m, TemplatesMonad m, Convertible a SqlValue, DBUpdate m evidence Bool)
+                               => DocumentID -> SQL -> a -> DBEnv m evidence -> DBEnv m Bool
 updateOneWithEvidenceIfChanged did col new =
   updateWithEvidence'
     (checkIfAnyReturned $ "SELECT 1 FROM" <+> raw (tblName tableDocuments)
                       <+> "WHERE id =" <?> did <+> "AND" <+> col <+> "IS DISTINCT FROM" <?> new)
     tableDocuments (col <+> "=" <?> new <+> "WHERE id =" <?> did)
 
-updateOneAndMtimeWithEvidenceIfChanged :: (MonadDB m, TemplatesMonad m, Convertible a SqlValue)
-                                       => DocumentID -> SQL -> a -> MinutesTime -> DBEnv m InsertEvidenceEvent -> DBEnv m Bool
+updateOneAndMtimeWithEvidenceIfChanged :: (MonadDB m, TemplatesMonad m, Convertible a SqlValue, DBUpdate m evidence Bool)
+                                       => DocumentID -> SQL -> a -> MinutesTime -> DBEnv m evidence -> DBEnv m Bool
 updateOneAndMtimeWithEvidenceIfChanged did col new mtime =
   updateWithEvidence'
     (checkIfAnyReturned $ "SELECT 1 FROM" <+> raw (tblName tableDocuments)
