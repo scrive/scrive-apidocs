@@ -828,6 +828,7 @@ signatoryLinkFieldsSelectors =
   , "custom_name"
   , "is_author_filled"
   , "value"
+  , "obligatory"
   , "placements"
   ]
 
@@ -839,16 +840,16 @@ selectSignatoryLinkFieldsSQL = "SELECT"
 fetchSignatoryLinkFields :: MonadDB m => DBEnv m (M.Map SignatoryLinkID [SignatoryField])
 fetchSignatoryLinkFields = foldDB decoder M.empty
   where
-    decoder acc slid xtype custom_name is_author_filled v placements =
+    decoder acc slid xtype custom_name is_author_filled v obligatory placements =
       M.insertWith' (++) slid
          [SignatoryField
           { sfValue = v
           , sfPlacements = placements
           , sfType = case xtype of
                         CustomFT{} -> CustomFT custom_name is_author_filled
-                        CheckboxOptionalFT{} -> CheckboxOptionalFT custom_name
-                        CheckboxObligatoryFT{} -> CheckboxObligatoryFT custom_name
+                        CheckboxFT{} -> CheckboxFT custom_name
                         _   -> xtype
+          , sfObligatory = obligatory
           }] acc
 
 insertSignatoryLinkFieldsAsAre :: MonadDB m
@@ -858,13 +859,11 @@ insertSignatoryLinkFieldsAsAre fields | all (null . snd) fields = return M.empty
 insertSignatoryLinkFieldsAsAre fields = do
   let getCustomName field = case sfType field of
                               CustomFT name _ -> name
-                              CheckboxOptionalFT name -> name
-                              CheckboxObligatoryFT name -> name
+                              CheckboxFT name -> name
                               _ -> ""
       isAuthorFilled field = case sfType field of
                                CustomFT _ authorfilled -> authorfilled
-                               CheckboxOptionalFT _  -> False
-                               CheckboxObligatoryFT _  -> False
+                               CheckboxFT _  -> False
                                _ -> False
   _ <- kRun $ sqlInsert "signatory_link_fields" $ do
          sqlSetList "signatory_link_id" $ concatMap (\(d,l) -> map (const d) l) fields
@@ -873,6 +872,7 @@ insertSignatoryLinkFieldsAsAre fields = do
          sqlSetList "is_author_filled" $ isAuthorFilled <$> concatMap snd fields
          sqlSetList "value" $ sfValue <$> concatMap snd fields
          sqlSetList "placements" $ sfPlacements <$> concatMap snd fields
+         sqlSetList "obligatory" $ sfObligatory <$> concatMap snd fields
          mapM_ sqlResult signatoryLinkFieldsSelectors
 
   fetchSignatoryLinkFields
@@ -2021,11 +2021,9 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                           Just (_w,_h,"") -> return ()
                           Just (_w,_h,i)  -> value "signature" i
                           Nothing -> return ()
-                        CheckboxOptionalFT   _ | sfValue changedfield == "" -> value "unchecked" True
-                        CheckboxOptionalFT   _                              -> value "checked" True
-                        CheckboxObligatoryFT _ | sfValue changedfield == "" -> value "unchecked" True
-                        CheckboxObligatoryFT _                              -> value "checked" True
-                        _                                                   -> value "value" $ sfValue changedfield
+                        CheckboxFT   _ | sfValue changedfield == "" -> value "unchecked" True
+                        CheckboxFT   _                              -> value "checked" True
+                        _                                           -> value "value" $ sfValue changedfield
                       value "hasplacements" (not $ null $ sfPlacements changedfield)
                       objects "placements" $ for (sfPlacements changedfield) $ \p -> do
                         value "xrel"    $ show $ placementxrel p
@@ -2055,11 +2053,9 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                           Just (_,_,"") -> return ()
                           Just (_,_,i)  -> value "signature" i
                           Nothing -> return ()
-                        CheckboxOptionalFT   _ | sfValue changedfield == "" -> value "unchecked" True
-                        CheckboxOptionalFT   _                              -> value "checked" True
-                        CheckboxObligatoryFT _ | sfValue changedfield == "" -> value "unchecked" True
-                        CheckboxObligatoryFT _                              -> value "checked" True
-                        _                                                   -> value "value" $ sfValue changedfield
+                        CheckboxFT   _ | sfValue changedfield == "" -> value "unchecked" True
+                        CheckboxFT   _                              -> value "checked" True
+                        _                                           -> value "value" $ sfValue changedfield
                       value "hasplacements" (not $ null $ sfPlacements changedfield)
                       objects "placements" $ for (sfPlacements changedfield) $ \p -> do
                         value "xrel"    $ show $ placementxrel p
@@ -2258,8 +2254,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where
     let updateValue fieldtype fvalue = do
           let custom_name = case fieldtype of
                               CustomFT xname _ -> xname
-                              CheckboxObligatoryFT xname -> xname
-                              CheckboxOptionalFT xname -> xname
+                              CheckboxFT xname -> xname
                               _ -> ""
           r <- kRun $ mkSQL UPDATE tableSignatoryLinkFields
                  [ sql "value" fvalue ]
@@ -2283,11 +2278,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where
                           Just (_,_,i)  -> do
                             value "signature" i
                           Nothing -> return ()
-                        CheckboxOptionalFT   _ | fvalue == "" -> value "unchecked" True
-                        CheckboxOptionalFT   _                -> value "checked" True
-                        CheckboxObligatoryFT _ | fvalue == "" -> value "unchecked" True
-                        CheckboxObligatoryFT _                -> value "checked" True
-                        _                                     -> value "value" $ fvalue
+                        CheckboxFT   _ | fvalue == "" -> value "unchecked" True
+                        CheckboxFT   _                -> value "checked" True
+                        _                             -> value "value" $ fvalue
 
                    value "actor" (actorWho actor))
                (Just did)
