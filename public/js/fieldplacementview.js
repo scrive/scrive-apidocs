@@ -371,7 +371,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
         if (document.allowsDD()) {
             draggebleField(place, placement);
-            place.dblclick(function(){
+            place.click(function(){
                 if (!view.hasTypeSetter())
                     view.addTypeSetter();
                 else
@@ -626,7 +626,7 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
                     view.addTypeSetter();
                 } ,50);
             }
-            innerPlace.dblclick(function(){
+            innerPlace.click(function(){
                 if (!view.hasTypeSetter())
                     view.addTypeSetter();
                 else
