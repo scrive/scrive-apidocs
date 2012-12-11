@@ -43,9 +43,9 @@ singleMinimalSignatory = testCase "Single Minimal Signatory" $ do
     Right (title, [sig]) | 
       title == "Contract Title" &&
       sig == SignatoryDetails { signatorysignorder = SignOrder 0,
-                                signatoryfields = [ SignatoryField FirstNameFT "Mariusz" []
-                                                  , SignatoryField LastNameFT  "Rak" []
-                                                  , SignatoryField EmailFT     "mariusz@skrivapa.se" []],
+                                signatoryfields = [ SignatoryField FirstNameFT "Mariusz" True []
+                                                  , SignatoryField LastNameFT  "Rak" True []
+                                                  , SignatoryField EmailFT     "mariusz@skrivapa.se" True []],
                                 signatoryisauthor = False,
                                 signatoryispartner = False
                               }
@@ -60,12 +60,12 @@ doubleMinimalSignatory = testCase "Double Minimal Signatory" $ do
     Left msg -> error msg
     Right (title, sigs) | 
       title == "Contract Title" &&
-      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" []
-                                              , SignatoryField LastNameFT  "Rak" []
-                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" []] False False,
-               SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" []
-                                              , SignatoryField LastNameFT  "Normand" []
-                                              , SignatoryField EmailFT     "eric@skrivapa.se" []] False False]
+      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" True []
+                                              , SignatoryField LastNameFT  "Rak" True []
+                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" True []] False False,
+               SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" True []
+                                              , SignatoryField LastNameFT  "Normand" True []
+                                              , SignatoryField EmailFT     "eric@skrivapa.se" True []] False False]
       -> return ()
     _ -> error "Did not return correct json"
 
@@ -77,15 +77,15 @@ doubleOptionalFieldsSignatory = testCase "Double Optional Fields Signatory" $ do
     Left msg -> error msg
     Right (title, sigs) | 
       title == "Contract Title2" &&
-      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" []
-                                              , SignatoryField LastNameFT  "Rak" []
-                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" []
-                                              , SignatoryField CompanyNumberFT "78765554" []] False False,
-               SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" []
-                                              , SignatoryField LastNameFT  "Normand" []
-                                              , SignatoryField EmailFT     "eric@skrivapa.se" []
-                                              , SignatoryField CompanyFT   "Hello" []
-                                              , SignatoryField PersonalNumberFT "78676545464" []] False False]
+      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" True []
+                                              , SignatoryField LastNameFT  "Rak" True []
+                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" True []
+                                              , SignatoryField CompanyNumberFT "78765554" True []] False False,
+               SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" True []
+                                              , SignatoryField LastNameFT  "Normand" True []
+                                              , SignatoryField EmailFT     "eric@skrivapa.se" True []
+                                              , SignatoryField CompanyFT   "Hello" True []
+                                              , SignatoryField PersonalNumberFT "78676545464" True []] False False]
       -> return ()
     a -> do
       Log.debug $ "JSON returned from parse: " ++ show a
@@ -126,12 +126,12 @@ stupidEmailSignature = testCase "Stupid email signature" $ do
     Left msg -> error msg
     Right (title, sigs) | 
       title == "Contract Title" &&
-      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" []
-                                              , SignatoryField LastNameFT  "Rak" []
-                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" []] False False,
-               SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" []
-                                              , SignatoryField LastNameFT  "Normand" []
-                                              , SignatoryField EmailFT     "eric@skrivapa.se" []] False False]
+      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" True []
+                                              , SignatoryField LastNameFT  "Rak" True []
+                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" True []] False False,
+               SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" True []
+                                              , SignatoryField LastNameFT  "Normand" True []
+                                              , SignatoryField EmailFT     "eric@skrivapa.se" True []] False False]
       -> return ()
     _ -> error "Did not return correct json"
 
@@ -148,12 +148,12 @@ looksLikeSignature = testCase "Stupid email looks like signatory signature" $ do
     Left msg -> error msg
     Right (title, sigs) | 
       title == "Contract Title" &&
-      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" []
-                                              , SignatoryField LastNameFT  "Rak" []
-                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" []] False False,
-               SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" []
-                                              , SignatoryField LastNameFT  "Normand" []
-                                              , SignatoryField EmailFT     "eric@skrivapa.se" []] False False]
+      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" True []
+                                              , SignatoryField LastNameFT  "Rak" True []
+                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" True []] False False,
+               SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" True []
+                                              , SignatoryField LastNameFT  "Normand" True []
+                                              , SignatoryField EmailFT     "eric@skrivapa.se" True []] False False]
       -> return ()
     _ -> error "Did not return correct values"
 
@@ -165,15 +165,15 @@ doubleOptionalFieldsWeirdSignatory = testCase "Double Optional Fields Weird Sign
     Left msg -> error msg
     Right (title, sigs) | 
       title == "Contract Title" &&
-      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" []
-                                              , SignatoryField LastNameFT  "Rak" []
-                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" []
-                                              , SignatoryField CompanyNumberFT "78765554" []] False False,
-               SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" []
-                                              , SignatoryField LastNameFT  "Normand" []
-                                              , SignatoryField EmailFT     "eric@skrivapa.se" []
-                                              , SignatoryField CompanyFT   "Hello" []
-                                              , SignatoryField PersonalNumberFT "78676545464" []] False False]
+      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" True []
+                                              , SignatoryField LastNameFT  "Rak" True []
+                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" True []
+                                              , SignatoryField CompanyNumberFT "78765554" True []] False False,
+               SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Eric" True []
+                                              , SignatoryField LastNameFT  "Normand" True []
+                                              , SignatoryField EmailFT     "eric@skrivapa.se" True []
+                                              , SignatoryField CompanyFT   "Hello" True []
+                                              , SignatoryField PersonalNumberFT "78676545464" True []] False False]
       -> return ()
     a -> error $ "Did not return correct value: " ++ show a
 
@@ -214,10 +214,10 @@ testWackySignature = testCase "Test wacky signature (rtf)" $
     Left msg -> error msg
     Right (title, sigs) | 
       title == "Contract Title" &&
-      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" []
-                                              , SignatoryField LastNameFT  "Rak" []
-                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" []
-                                              , SignatoryField CompanyNumberFT "78765554" []] False False]
+      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "Mariusz" True []
+                                              , SignatoryField LastNameFT  "Rak" True []
+                                              , SignatoryField EmailFT     "mariusz@skrivapa.se" True []
+                                              , SignatoryField CompanyNumberFT "78765554" True []] False False]
       -> return ()
     a ->  do
       Log.debug $ "JSON returned from parse: " ++ show a
@@ -238,9 +238,9 @@ testExtraSpaces = testCase "Test that those stupid clients that think Return mea
     Left msg -> error msg
     Right (title, sigs) |
       title == "Dude!" &&
-      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "eric" []
-                                              , SignatoryField LastNameFT "normand" []
-                                              , SignatoryField EmailFT "ericwnormand@gmail.com" []] False False]
+      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "eric" True []
+                                              , SignatoryField LastNameFT "normand" True []
+                                              , SignatoryField EmailFT "ericwnormand@gmail.com" True []] False False]
       -> return ()
     a -> do
       error ("Did not return correct json; got: " ++ show a)
@@ -269,12 +269,12 @@ testExtraSpaces2 = testCase "Test that those stupid clients that think Return me
     Left msg -> error msg
     Right (title, sigs) |
       title == "Dude!" &&
-      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "eric" []
-                                              , SignatoryField LastNameFT "normand" []
-                                              , SignatoryField EmailFT "ericwnormand@gmail.com" []]
-              ,SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "eric" []
-                                              , SignatoryField LastNameFT "normand" []
-                                              , SignatoryField EmailFT "eric@scrive.com" []]]
+      sigs == [SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "eric" True []
+                                              , SignatoryField LastNameFT "normand" True []
+                                              , SignatoryField EmailFT "ericwnormand@gmail.com" True []]
+              ,SignatoryDetails (SignOrder 0) [ SignatoryField FirstNameFT "eric" True []
+                                              , SignatoryField LastNameFT "normand" True []
+                                              , SignatoryField EmailFT "eric@scrive.com" True []]]
       -> return ()
     a -> do
       error ("Did not return correct json; got: " ++ show a)
