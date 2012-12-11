@@ -975,6 +975,7 @@ daveSignatoryLink documentid siglinkid = onlyAdmin $ do
         F.objects "fields" $ for (signatoryfields $ signatorydetails siglink) $ \sf -> do
             F.value "fieldname" $ fieldTypeToString (sfType sf)
             F.value "fieldvalue" $ sfValue sf
+            F.value "obligatory" $ sfObligatory sf
             F.value "label" $ show $ sfType sf
       where fieldTypeToString sf = case sf of
               FirstNameFT      -> "sigfstname"
@@ -985,8 +986,7 @@ daveSignatoryLink documentid siglinkid = onlyAdmin $ do
               CompanyNumberFT  -> "sigcompnr"
               SignatureFT      -> "signature"
               CustomFT label _ -> "Custom: " ++ label
-              CheckboxOptionalFT label -> "Checkbox*: " ++ label
-              CheckboxObligatoryFT label -> "Checkbox: " ++ label
+              CheckboxFT label -> "Checkbox: " ++ label
 
 {- |
    Used by super users to inspect a particular user.
