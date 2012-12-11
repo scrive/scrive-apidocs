@@ -1,6 +1,5 @@
 DBNAME=kontratest
 DBUSER=kontra
-DBPASSWORD=kontra
 TESTS=all --plain
 
 
@@ -9,10 +8,19 @@ all:
 	cabal-dev install -f-test
 
 # Make "pretty" diagram of database model (requires postgresql-autodoc and graphwiz)
-dist/dbmodel/$(DBNAME).png:
+.PHONY: dot
+dot:
 	mkdir -p dist/dbmodel
-	cd dist/dbmodel && postgresql_autodoc -t dot -d $(DBNAME) -u $(DBUSER) --password=$(DBPASSWORD)
+	cd dist/dbmodel && postgresql_autodoc -t dot -l ../../postgresql_autodoc -d $(DBNAME) -u $(DBUSER)
 	dot -Tpng dist/dbmodel/$(DBNAME).dot -o dist/dbmodel/$(DBNAME).png
+	dot -Tsvg dist/dbmodel/$(DBNAME).dot -o dist/dbmodel/$(DBNAME).svg
+
+JDBCDRIVER=/usr/share/java/postgresql-jdbc3.jar
+SCHEMASPY=schemaSpy_5.0.0.jar
+# Make browsable schema documentation in dist/schema/index.html using SchemaSpy
+.PHONY: schemaspy
+schemaspy:
+	java -jar $(SCHEMASPY) -t pgsql -host localhost -db $(DBNAME) -u $(DBUSER) -o dist/schema -dp $(JDBCDRIVER) -pfp -s public
 
 # Build and run all tests
 .PHONY : test
