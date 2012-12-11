@@ -620,12 +620,6 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
         if (document.allowsDD()) {
 
             draggebleField(place, placement);
-            if (!field.isReady())
-            {
-                setTimeout(function(){
-                    view.addTypeSetter();
-                } ,50);
-            }
             innerPlace.click(function(){
                 if (!view.hasTypeSetter())
                     view.addTypeSetter();
