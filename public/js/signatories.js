@@ -410,7 +410,12 @@ window.Signatory = Backbone.Model.extend({
        return this.addNewField("custom");
     },
     newCheckbox: function() {
-       var checkbox =  this.author() ? this.newField("checkbox-optional") : this.newField("checkbox-obligatory");
+       var checkbox = this.newField("checkbox");
+       if(this.author())
+           checkbox.makeOptional()
+        else 
+            checkbox.makeObligatory();
+       
        //var allfields = _.flatten(_.map(this.document().signatories(), function(s) {return s.fields();}));
        //var i = 1;
        //while(_.any(allfields, function(f) {f.name() == (localization.designview.checkboxes.checkbox + " " + i)})) i++;

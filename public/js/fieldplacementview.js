@@ -338,13 +338,13 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         var label = $("<span/>").text(localization.designview.checkboxes.obligatory);
         var field = this.model.field();
         option.append(checkbox).append(label);
-        if (field.isObligatoryCheckbox())
+        if (field.isObligatory())
             checkbox.attr("checked","Yes");
         checkbox.click(function(){
-            if (field.isObligatoryCheckbox())
-                    field.makeCheckboxOptional();
+            if (field.isObligatory())
+                    field.makeOptional();
                 else
-                    field.makeCheckboxObligatory();
+                    field.makeObligatory();
         });
 
         return option;
