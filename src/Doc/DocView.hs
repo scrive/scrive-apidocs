@@ -343,7 +343,7 @@ pageDocumentSignView ctx document siglink =
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink
       F.value "documenttitle" $ documenttitle document
-      standardPageFields ctx kontrakcja Nothing False
+      standardPageFields ctx kontrakcja Nothing
 
 
 -- | Basic info about document , name, id ,author

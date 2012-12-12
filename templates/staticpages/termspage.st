@@ -1,20 +1,8 @@
-###
-termsPage=
-    $doctype()$
-    <html>
-      <head>
-        <title>$pagetitle()$ $_termsPageTitle()$</title>
-        <meta name="description" content="$_termsPageMetaDescription()$" />
-        $standardHeaderContents()$
-      </head>
-      <body>
-         $standardBodyWithQueryCol(unwrappedbody=termsPageContents())$
-      </body>
-    </html>
+
 ###
 termsPageContents=
 
-					<div class="nicetext">
+<div class="nicetext">
 <h1>$_termsPageHeader()$</h1>
 <br />
 <p>$_termsPage0()$</p>

@@ -32,18 +32,6 @@ data LoginRedirectReason = LoginTry
 data KontraLink
     = LinkHome Lang
     | LinkPriceplan Lang
-    | LinkSecurity Lang
-    | LinkLegal Lang
-    | LinkPrivacyPolicy Lang
-    | LinkTerms Lang
-    | LinkJobs Lang
-    | LinkAbout Lang
-    | LinkPartners Lang
-    | LinkClients Lang
-    | LinkContactUs Lang
-    | LinkAPIPage Lang
-    | LinkScriveByMailPage Lang
-    | LinkFeaturesPage Lang
     | LinkLogin Lang LoginRedirectReason
     | LinkLogout
     | LinkSignup
@@ -101,42 +89,6 @@ instance Show KontraLink where
     showsPrec _ (LinkPriceplan lang)
       | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/priser"
       | otherwise = (++) $ langFolder lang ++ "/pricing"
-    showsPrec _ (LinkSecurity lang)
-      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/sakerhet"
-      | otherwise = (++) $ langFolder lang ++ "/security"
-    showsPrec _ (LinkLegal lang)
-      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/juridik"
-      | otherwise = (++) $ langFolder lang ++ "/legal"
-    showsPrec _ (LinkPrivacyPolicy lang)
-      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/sekretesspolicy"
-      | otherwise = (++) $ langFolder lang ++ "/privacy-policy"
-    showsPrec _ (LinkTerms lang)
-      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/allmana-villkor"
-      | otherwise = (++) $ langFolder lang ++ "/terms"
-    showsPrec _ (LinkJobs lang)
-      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/jobb"
-      | otherwise = (++) $ langFolder lang ++ "/jobs"
-    showsPrec _ (LinkAbout lang)
-      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/om-scrive"
-      | otherwise = (++) $ langFolder lang ++ "/about"
-    showsPrec _ (LinkPartners lang)
-      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/partners"
-      | otherwise = (++) $ langFolder lang ++ "/partners"
-    showsPrec _ (LinkClients lang)
-      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/kunder"
-      | otherwise = (++) $ langFolder lang ++ "/clients"
-    showsPrec _ (LinkContactUs lang)
-      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/kontakta"
-      | otherwise = (++) $ langFolder lang ++ "/contact"
-    showsPrec _ (LinkAPIPage lang)
-      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/scriveapi"
-      | otherwise = (++) $ langFolder lang ++ "/scriveapi"
-    showsPrec _ (LinkScriveByMailPage lang)
-      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/scrivebymail"
-      | otherwise = (++) $ langFolder lang ++ "/scrivebymail"
-    showsPrec _ (LinkFeaturesPage lang)
-      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/funktioner"
-      | otherwise = (++) $ langFolder lang ++ "/features"
     showsPrec _ (LinkLogin _ _) = (++"/login")
     showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ LinkSignup = (++) "/signup"

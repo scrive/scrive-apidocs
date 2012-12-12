@@ -19,6 +19,7 @@ ignore  less/branding/sample.less
 ignore  less/branding/typography.less
 ignore  less/branding/header.less
 ignore  less/branding/footer.less
+ignore  less/branding/containter.less
 
 set systemPage
  css css/newdesign.css

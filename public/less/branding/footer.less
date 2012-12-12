@@ -1,6 +1,6 @@
 footer.site {
   border-top: 1px solid #DEE4ED;
-  padding-top : 1.5em;
+  padding-top : 3em;
   background : #fff;
   position : relative;
   z-index : 100;
@@ -23,45 +23,41 @@ footer.site {
         li {
           float : left;
           border-right: 1px solid #DEE4ED;
+          width: 95px;
+          text-align: center;
+          &.copyright {
+            border-right-color : transparent;
+            padding: 0 1em;
+            position: relative;
+            width: 192px;
+            a {
+              text-align: left;
+            }
+          }
           &.last {
              border-right-color : transparent;
           }
           a {
-            text-transform : uppercase;
             color : @text-light;
-            padding : 0 .75em;
             display : block;
             line-height : 24px;
             color: #666666;
             display: block;
             font-family: Source Sans Pro,Helvetica Neue,Arial,Helvetica,sans-serif;
             font-size: 16px;
-            letter-spacing: 1px;
-            padding: 0 1.5em;
             &:hover {
-              text-decoration : underline;
               color : #7A94B8;
             }
           }
         }
       }
     }
-    ul.etc {
-      float: left;
-      font-size : .75em;
-      margin-bottom : 3em;
-      margin-left : 16px;
-      li {
-        font: 12px Arial,Helvetica,sans-serif;
-        text-transform : uppercase;
-        color : #ccc;
-      }
-    }
     ul.social {
-      float: right;
       .clearfix;
-      margin-left : 1em;
+      margin : auto;
+      width:300px;
       li {
+        border-right-color : transparent;
         float : left;
         a {
           display : block;

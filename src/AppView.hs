@@ -9,19 +9,7 @@ module AppView( kontrakcja
               , simpleJsonResponse
               , simpleHtmlResponse
               , simpleHtmlResonseClrFlash
-              , sitemapPage
               , priceplanPage
-              , securityPage
-              , legalPage
-              , privacyPolicyPage
-              , termsPage
-              , aboutPage
-              , partnersPage
-              , clientsPage
-              , contactUsPage
-              , apiPage
-              , scriveByMailPage
-              , featuresPage
               , standardPageFields
               , contextInfoFields
               , renderTemplateAsPage
@@ -32,7 +20,6 @@ import Kontra
 import KontraLink
 
 import Control.Applicative
-import Data.List
 import Data.Maybe
 import Happstack.Server.SimpleHTTP
 import Templates.Templates
@@ -64,10 +51,8 @@ renderFromBody :: Kontrakcja m
                -> String
                -> m Response
 renderFromBody title content = do
-  htmlPage <- (isSuffixOf ".html") . concat . rqPaths <$> askRq
   ctx <- getContext
-  let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx)
-  res <- simpleHtmlResponse =<< pageFromBody ctx showCreateAccount title content
+  res <- simpleHtmlResponse =<< pageFromBody ctx title content
   clearFlashMsgs
   return res
 
@@ -77,14 +62,13 @@ renderFromBody title content = do
 -}
 pageFromBody :: TemplatesMonad m
              => Context
-             -> Bool
              -> String
              -> String
              -> m String
-pageFromBody ctx showCreateAccount title bodytext =
+pageFromBody ctx title bodytext =
   renderTemplate "wholePage" $ do
     F.value "content" bodytext
-    standardPageFields ctx title Nothing showCreateAccount
+    standardPageFields ctx title Nothing
 
 notFoundPage :: Kontrakcja m => m Response
 notFoundPage = renderTemplate_ "notFound" >>= renderFromBody kontrakcja
@@ -92,50 +76,8 @@ notFoundPage = renderTemplate_ "notFound" >>= renderFromBody kontrakcja
 internalServerErrorPage :: Kontrakcja m => m Response
 internalServerErrorPage = renderTemplate_ "internalServerError" >>= renderFromBody kontrakcja
 
-sitemapPage :: Kontrakcja m => m String
-sitemapPage = do
-  hostpart <- ctxhostpart <$> getContext
-  renderTemplate "sitemapPage" $ do
-    F.value "hostpart" $ case hostpart of
-                            ('h':'t':'t':'p':'s':xs) -> "http" ++ xs
-                            xs -> xs
-    F.objects "langs" $ map staticLinksFields allLangs
-
-priceplanPage :: Kontra String
-priceplanPage = getContext >>= \ctx -> renderTemplateAsPage ctx "priceplanPage" (Just LinkPriceplan) True
-
-securityPage :: Kontra String
-securityPage = getContext >>= \ctx -> renderTemplateAsPage ctx "securityPage" (Just LinkSecurity) True
-
-legalPage :: Kontra String
-legalPage = getContext >>= \ctx -> renderTemplateAsPage ctx "legalPage" (Just LinkLegal) True
-
-privacyPolicyPage :: Kontra String
-privacyPolicyPage = getContext >>= \ctx -> renderTemplateAsPage ctx "privacyPolicyPage" (Just LinkPrivacyPolicy) True
-
-termsPage :: Kontra String
-termsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "termsPage" (Just LinkTerms) True
-
-aboutPage :: Kontra String
-aboutPage = getContext >>= \ctx -> renderTemplateAsPage ctx "aboutPage" (Just LinkAbout) True
-
-partnersPage :: Kontra String
-partnersPage = getContext >>= \ctx -> renderTemplateAsPage ctx "partnersPage" (Just LinkPartners) True
-
-clientsPage :: Kontra String
-clientsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "clientsPage" (Just LinkClients) True
-
-contactUsPage:: Kontra String
-contactUsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "contactUsPage" (Just LinkContactUs) True
-
-apiPage:: Kontra String
-apiPage = getContext >>= \ctx -> renderTemplateAsPage ctx "apiPage" (Just LinkAPIPage) True
-
-scriveByMailPage :: Kontra String
-scriveByMailPage = getContext >>= \ctx -> renderTemplateAsPage ctx "scrivebymailPage" (Just LinkScriveByMailPage) True
-
-featuresPage :: Kontra String
-featuresPage = getContext >>= \ctx -> renderTemplateAsPage ctx "featuresPage" (Just LinkFeaturesPage) True
+priceplanPage :: Kontrakcja m => m Response
+priceplanPage = renderTemplate_ "priceplanPage" >>= renderFromBody kontrakcja
 
 {- |
     Render a template as an entire page.
@@ -150,10 +92,9 @@ renderTemplateAsPage ctx templateName mpubliclink showCreateAccount = renderTemp
     F.value "showCreateAccount" $ showCreateAccount && (isNothing $ ctxmaybeuser ctx)
     F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
 
-standardPageFields :: TemplatesMonad m => Context -> String -> Maybe (Lang -> KontraLink) -> Bool -> Fields m ()
-standardPageFields ctx title mpubliclink showCreateAccount = do
+standardPageFields :: TemplatesMonad m => Context -> String -> Maybe (Lang -> KontraLink) -> Fields m ()
+standardPageFields ctx title mpubliclink = do
   F.value "title" title
-  F.value "showCreateAccount" showCreateAccount
   mainLinksFields $ ctxlang ctx
   staticLinksFields $ ctxlang ctx
   langSwitcherFields ctx mpubliclink
@@ -215,16 +156,7 @@ langSwitcherFields Context{ctxlang} mlink = do
 -}
 staticLinksFields :: Monad m => Lang -> Fields m ()
 staticLinksFields lang = do
-  F.value "linkhome"  $ show $ LinkHome lang
   F.value "linkpriceplan"  $ show $ LinkPriceplan lang
-  F.value "linksecurity"  $ show $ LinkSecurity lang
-  F.value "linklegal"  $ show $ LinkLegal lang
-  F.value "linkprivacypolicy"  $ show $ LinkPrivacyPolicy lang
-  F.value "linkterms"  $ show $ LinkTerms lang
-  F.value "linkabout"  $ show $ LinkAbout lang
-  F.value "linkpartners"  $ show $ LinkPartners lang
-  F.value "linkclients"  $ show $ LinkClients lang
-  F.value "linkcontactus" $ show $ LinkContactUs lang
 
 {- |
    Defines some standard context information as fields handy for substitution

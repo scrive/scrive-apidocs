@@ -52,8 +52,12 @@ window.OAuthConfirationModel = Backbone.Model.extend({
           ajax: true,
           email : email,
           password : password,
+<<<<<<< HEAD
           ajaxsuccess: function(rs) {
             var resp = JSON.parse(rs);
+=======
+          ajaxsuccess: function(resp) {
+>>>>>>> OAuth pages fixes + links in app pages
             if (resp.logged == true)
             {
               window.location = window.location;
@@ -88,12 +92,14 @@ var OAuthConfirationView = Backbone.View.extend({
     },
     top: function() {
       var model = this.model;
-      var box = $("<div id='top-slim-container'>");
+      var box = $("<header class='site'/>");
+      var nav = $("<nav/>")
+      var ul = $("<ul class='ct'/>")
       var content = $("<div class='content'>");
-      var deny = $("<a class='toplink deny' href='#'></a>").text(localization.apiConfiration.deny);
+      var deny = $("<li class='page-first' style='float:left;width:200px'/>").append($("<a class='deny page' href='#'></a>").text(localization.apiConfiration.deny));
       deny.click(function() {model.deny();});
-      var logo = $("<a class='scrive-logo'  href='#'></a>");
-      return box.append(content.append(deny).append(logo)).append("<div class='clearboth'></div>");
+      var logo = $("<li id='branding' style='float:right'><a href='/' class='page' id='logo'><img width='120' height='22' src='/img/logo.png'></a></id>");
+      return box.append(nav.append(ul.append(deny).append(logo)));
     },
     header : function() {
         return $("<h1/>").text(localization.apiConfiration.title);
@@ -141,26 +147,29 @@ var OAuthConfirationView = Backbone.View.extend({
       var emailinput = InfoTextInput.init({
               infotext: localization.loginModal.email,
               value : "",
+              cssClass : "big-input",
               inputtype : "text",
               name : "email"
       });
  
       emailinput.input().attr("autocomplete","false");
-      box.append($("<span class='txt'/>").text(localization.loginModal.email)).append(emailinput.input()).append("<BR/>");
+      box.append(emailinput.input());
       var passwordinput = InfoTextInput.init({
               infotext: localization.loginModal.password,
               value : "",
               inputtype : "password",
+              cssClass : "big-input",
               name : "password",
               onEnter : function() {  model.login(emailinput.value(),passwordinput.value());}
 
       });
       passwordinput.input().attr("autocomplete","false");
-      box.append($("<span class='txt'/>").text(localization.loginModal.password)).append(passwordinput.input()).append("<BR/>");
+      box.append(passwordinput.input());
 
       var button = Button.init({
                   size  : "small",
                   color : "green",
+                  cssClass : "login-button",
                   text  : localization.apiConfiration.loginAndAccept,
                   onClick : function() {
                         model.login(emailinput.value(),passwordinput.value());
@@ -176,14 +185,15 @@ var OAuthConfirationView = Backbone.View.extend({
       var emailinput = InfoTextInput.init({
               infotext: localization.apiConfiration.enterEmailAdress,
               value : "",
+              cssClass : "big-input",
               inputtype : "text",
               name : "email"
       });
-      box.append($("<span class='txt'/>").text(localization.loginModal.email)).append(emailinput.input()).append("<BR/>");
-      box.append("<BR/>").append("<BR/>");
+      box.append(emailinput.input());
       var button = Button.init({
                   size  : "small",
                   color : "green",
+                  cssClass : "create-account-button",
                   text  : localization.apiConfiration.createAccount,
                   onClick : function() {
                         model.createAccount(emailinput.value());
@@ -193,8 +203,9 @@ var OAuthConfirationView = Backbone.View.extend({
       return box;
     },
     body : function() {
-      var mainContainer = $("<div/>");
-      var bodyContainer = $("<div/>");
+      var mainContainer = $("<div class='mainContainer'/>");
+      var bodyContainer = $("<div class='body-container'/>");
+      
       mainContainer.append(bodyContainer.append(this.header()).append(this.textBox()));
       if (!this.model.logged())
            mainContainer.append(this.loginBox()).append(this.createAccountBox());

@@ -24,25 +24,25 @@ publicPages :: Route (KontraPlus Response)
 publicPages = choice
      [ allLangDirs $ const $ hGetAllowHttp $ toK0 handleHomepage
      , publicDir "priser" "pricing" LinkPriceplan handlePriceplanPage
-     , publicDir "sakerhet" "security" LinkSecurity handleSecurityPage
-     , publicDir "juridik" "legal" LinkLegal handleLegalPage
-     , publicDir "sekretesspolicy" "privacy-policy" LinkPrivacyPolicy handlePrivacyPolicyPage
-     , publicDir "allmana-villkor" "terms" LinkTerms handleTermsPage
-     , publicDir "om-scrive" "about" LinkAbout handleAboutPage
-     , publicDir "partners" "partners" LinkPartners handlePartnersPage
-     , publicDir "kunder" "clients" LinkClients handleClientsPage
-     , publicDir "kontakta" "contact" LinkContactUs handleContactUsPage
-     , publicDir "scriveapi" "scriveapi" LinkAPIPage handleApiPage
-     , publicDir "scrivebymail" "scrivebymail" LinkScriveByMailPage handleScriveByMailPage
-     , publicDir "funktioner" "features" LinkFeaturesPage handleFeaturesPage
+     , publicDir "sakerhet" "security" (\l -> LinkLogin l LoginTry) sendLoginRedirect -- Drop all this pages after Feb, 2013
+     , publicDir "juridik" "legal" (\l -> LinkLogin l LoginTry) sendLoginRedirect
+     , publicDir "sekretesspolicy" "privacy-policy" (\l -> LinkLogin l LoginTry) sendLoginRedirect
+     , publicDir "allmana-villkor" "terms" (\l -> LinkLogin l LoginTry) sendLoginRedirect
+     , publicDir "om-scrive" "about" (\l -> LinkLogin l LoginTry) sendLoginRedirect
+     , publicDir "partners" "partners" (\l -> LinkLogin l LoginTry) sendLoginRedirect
+     , publicDir "kunder" "clients" (\l -> LinkLogin l LoginTry) sendLoginRedirect
+     , publicDir "kontakta" "contact" (\l -> LinkLogin l LoginTry) sendLoginRedirect
+     , publicDir "scriveapi" "scriveapi" (\l -> LinkLogin l LoginTry) sendLoginRedirect
+     , publicDir "scrivebymail" "scrivebymail" (\l -> LinkLogin l LoginTry) sendLoginRedirect
+     , publicDir "funktioner" "features" (\l -> LinkLogin l LoginTry) sendLoginRedirect
 
-     -- sitemap
-     , dir "webbkarta"       $ hGetAllowHttp $ handleSitemapPage
-     , dir "sitemap"         $ hGetAllowHttp $ handleSitemapPage
      -- localization javascript
      , dir "localization"    $ allLangDirs $ \l -> hGetAllowHttp $ toK1 $ \(_::String) ->  generateLocalizationScript l
      ]
-
+  where
+    sendLoginRedirect = do
+      ctx <- getContext
+      sendRedirect (LinkLogin (ctxlang ctx) LoginTry)
 {- |
     This is a helper function for routing a public dir.
 -}
@@ -66,51 +66,10 @@ publicDir swedish english link handler = choice $
 handleHomepage :: Kontra KontraLink
 handleHomepage = return LinkDesignView
 
-handleSitemapPage :: Kontra Response
-handleSitemapPage = handleWholePage sitemapPage
-
 handlePriceplanPage :: Kontra Response
-handlePriceplanPage = handleWholePage priceplanPage
+handlePriceplanPage = priceplanPage
 
-handleSecurityPage :: Kontra Response
-handleSecurityPage = handleWholePage securityPage
 
-handleLegalPage :: Kontra Response
-handleLegalPage = handleWholePage legalPage
-
-handlePrivacyPolicyPage :: Kontra Response
-handlePrivacyPolicyPage = handleWholePage privacyPolicyPage
-
-handleTermsPage :: Kontra Response
-handleTermsPage = handleWholePage termsPage
-
-handleAboutPage :: Kontra Response
-handleAboutPage = handleWholePage aboutPage
-
-handlePartnersPage :: Kontra Response
-handlePartnersPage = handleWholePage partnersPage
-
-handleClientsPage :: Kontra Response
-handleClientsPage = handleWholePage clientsPage
-
-handleContactUsPage :: Kontra Response
-handleContactUsPage = handleWholePage contactUsPage
-
-handleApiPage :: Kontra Response
-handleApiPage = handleWholePage apiPage
-
-handleScriveByMailPage :: Kontra Response
-handleScriveByMailPage = handleWholePage scriveByMailPage
-
-handleFeaturesPage :: Kontra Response
-handleFeaturesPage = handleWholePage featuresPage
-
-handleWholePage :: Kontra String -> Kontra Response
-handleWholePage f = do
-  content <- f
-  response <- V.simpleHtmlResponse content
-  clearFlashMsgs
-  return response
 
 generateLocalizationScript :: Kontrakcja m => Lang -> m Response
 generateLocalizationScript lang = do

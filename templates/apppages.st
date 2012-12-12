@@ -65,134 +65,44 @@ standardHeaderContents=
 ####
 ####
 pageFooter=
-
 <footer class="site">
   <div class="ct">
-    <div class="">
-      <nav>
+      <nav class='top'>
         <ul>
-          <li><a href="{path='privacy'}">Privacy</a></li>
-          <li><a href="{path='terms'}">Privacy</a></li>
-          <li><a href="{path='jobs'}">Privacy</a></li>
-          <li><a href="{path='api'}">Privacy</a></li>
-          <li><a href="{path='labs'}">Privacy</a></li>
-          <li class='last'><a href="{path='blog'}">Privacy</a></li>
+          <li class="copyright"><a href="$if(langenglish)$/en/$else$/sv/$endif$">&copy; $_footerScrive()$</a></li>
+          <li><a href="$if(langenglish)$/en/$else$/sv/$endif$blog">$_footerBlog()$</a></li>
+          <li><a href="$if(langenglish)$/en/$else$/sv/$endif$labs">$_footerLabs()$</a></li>
+          <li><a href="$if(langenglish)$/en/$else$/sv/$endif$api">$_footerAPI()$</a></li>
+          <li><a href="$if(langenglish)$/en/$else$/sv/$endif$jobs">$_footerJobs()$</a></li>
+          <li><a href="$if(langenglish)$/en/$else$/sv/$endif$privacy">$_footerPrivacy()$</a></li>
+          <li class='last'><a href="$if(langenglish)$/en/$else$/sv/$endif$terms">$_footerTerms()$</a></li>
         </ul>
       </nav>
-      <ul class="etc">
-        <li>Copyright &copy; 2010-2012 Scrive AB.</li>
-        <li>Version bla bla bla</li>
-      </ul>
-      <ul class="social">
-        <li>
-          <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
-          <div class="g-plusone" data-size="medium"></div>
-        </li>
-        <li>
-          <a href="https://twitter.com/share" class="twitter-share-button" data-lang="en">Tweet</a>
-          <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-        </li>
-        <li>
-          <div id="fb-root"></div>
-          <script>(function(d, s, id) {
-            var js, fjs = d.getElementsByTagName(s)[0];
-            if (d.getElementById(id)) return;
-            js = d.createElement(s); js.id = id;
-            js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
-            fjs.parentNode.insertBefore(js, fjs);
-          }(document, 'script', 'facebook-jssdk'));</script>
-          <div class="fb-like" data-href="http://scrive.com" data-send="true" data-layout="button_count" data-width="80" data-show-faces="false" data-font="arial"></div>
-        </li>
-      </ul>
-    </div>
+      <nav class='bottom'>
+        <ul class="social">
+          <li>
+            <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+            <div class="g-plusone" data-size="medium"></div>
+          </li>
+          <li>
+            <a href="https://twitter.com/share" class="twitter-share-button" data-lang="en">Tweet</a>
+            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+          </li>
+        </ul>
+      </nav>
   </div>
 </footer>
-
-<!--
-
-
-<div id="footer-container" class="newdesign">
-  <div class="top-border"></div>
-  <div class="spacer"></div>
-  <div class="content">
-    <div class="col left">
-      <strong>$_pageFooterTheService()$</strong>
-      <ul>
-        <li><a href="$linkpriceplan$">$_pageFooterPrices()$</a></li>
-      </ul>
-      <br />
-      <strong>$_pageFooterTerms()$</strong>
-      <ul>
-        <li><a href="$linksecurity$">$_pageFooterSecurity()$</a></li>
-        <li><a href="$linklegal$">$_pageFooterLaw()$</a></li>
-        <li><a href="$linkprivacypolicy$">$_pageFooterPrivacy()$</a></li>
-        <li><a href="$linkterms$">$_pageFooterTOS()$</a></li>
-      </ul>
-      <br />
-      <strong style='text-transform:uppercase'>Scrive</strong>
-      <ul>
-        <li><a href="$linkhome$">$_pageFooterHome()$</a></li>
-        <li><a href="$linkabout$">$_pageFooterAbout()$</a></li>
-        <li><a href="http://blog.scrive.com/jobs/">$_pageFooterJobs()$</a></li>
-        <li><a href="$linkpartners$">$_pageFooterPartners()$</a></li>
-        <li><a href="$linkclients$">$_pageFooterCustomers()$</a></li>
-        <li><a href="$linkcontactus$">$_pageFooterContactUs()$</a></li>
-      </ul>
-    </div>
-    $if(publicsafe)$
-    <div class="col centre">
-      <strong>$_pageFooterTwitter()$</strong>
-      <div class="tweet">
-
-      </div>
-    </div>
-    $endif$
-    <div class="col right">
-      $_pageFooterContact1()$
-      <ul>
-        <li>
-          $_pageFooterContact2()$
-        </li>
-        <li>
-          $_pageFooterContact3()$
-        </li>
-        <li>
-          $_pageFooterContact4()$
-        </li>
-        <li>
-          $_pageFooterContact5()$
-        </li>
-        <li>
-          $_pageFooterContact6()$
-        </li>
-        <li>
-          $_pageFooterContact7()$
-        </li>
-        <li>
-          $_pageFooterContact8()$
-        </li>
-      </ul>
-    </div>
-  </div>
-</div>
-
-<div class="imgCache">
-  <img src="/theme/../img/spr-flash-bg.png" />
-  <img src="/img/spr-flash-bg.png" />
-</div>
--->
 ####
 header=
  <script>
    window.BlockingInfo = Blocking();
  </script>
 
-
 <header class="site">
   <nav>
     <ul class="ct">
       <li id="branding">
-        <a id="logo" class="page" href="index.html"><img src="/img/logo.png" width="120" height="22"></a>
+        <a id="logo" class="page" href="$if(langenglish)$/en/$else$/sv/$endif$"><img src="/img/logo.png" width="120" height="22"></a>
         <div id="tagline" class="h3"></div>
       </li>
       $if(logged)$
@@ -211,51 +121,16 @@ header=
       <li class="session-login">
         <a class="button button-small" id="page-login" href="/login">Log in </a>
       </li>
-      <li><a class="page" id="page-pricing" href="{path=pricing}">Features</a></li>
-      <li><a class="page" id="page-legal" href="{path=legal}">Features</a></li>
-      <li><a class="page" id="page-cases" href="{path=cases}">Features</a></li>
-      <li><a class="page" id="page-about" href="{path=about}">Features</a></li>
-      <li class="page-first"><a class="page" id="page-features" href="{path=features}">Features</a></li>
+      <li><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$contact">$_headerContakt()$</a></li>
+      <li><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$about">$_headerAbout()$</a></li>
+      <li><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$cases">$_headerCases()$</a></li>
+      <li><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$legal">$_headerLegal()$</a></li>
+      <li><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$pricing">$_headerPricing()$</a></li>
+      <li class="page-first"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$features">$_headerFeatures()$</a></li>
       $endif$
     </ul>
   </nav>
 </header>
-
-
-<!--
- <div id="top-slim-container" class="newdesign">
-
-                        <div class="content">
-                                <a href="$linkhome$"
-                                class="scrive-logo"></a>
-
-
-                                $if(logged)$
-
-                               <a href="$linklogout$" class="toplink logout">$_headerLogOut()$</a>
-                               <a href="$linkaccount$" class="toplink s-account">$_headerAccount()$</a>
-                               <a href="$linkissue$" class="toplink">$_headerArchive()$</a>
-                               <span class='toplink btn'><a class="button button-small" onclick='createfromtemplate()' ><div class="label">$_headerTemplate()$</div></a></span>
-                               <span class='toplink btn'><a class="button button-small s-create-document"  onclick='createnewdocument()'><div class="label">$_headerSend()$</div></a></span>
-                                $langSwitcher()$
-                                $else$
-                                <span id="moveleft2">
-                                    <a href="#" class="login-button"><p>$_login()$</p></a>
-                                    <a href="$linkcontactus$" class="toplink">$_pageHeaderContactUs()$</a>
-                                    <a href="$linkabout$" class="toplink">$_pageFooterAbout()$</a>
-                                    <a href="$linkclients$" class="toplink">$_customerCases()$</a>
-                                    <a href="$linkpriceplan$" class="toplink">$_pageFooterPrices()$</a>
-                                $langSwitcher()$
-                                  </span>
-
-                                $endif$
-
-                            </div>
-
-
-            <div class="clearboth"></div>
-          </div>
--->
 ####
 langSwitcher=
   <div class="langSwitcher">
