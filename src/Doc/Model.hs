@@ -1606,14 +1606,11 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ReallyDeleteDocument Bool w
     result <- kRun $ mkSQL UPDATE tableSignatoryLinks
                                       [sql "really_deleted" True]
                   <+> "FROM documents, users "
-                  <+> "WHERE (user_id = " <?> (userid user)
-                  <+> "          AND documents.status = " <?> Pending
-                  <+> "       OR EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 "
-                  <+>                  "  WHERE signatory_links.user_id = usr2.id "
-                  <+>                  "    AND usr2.company_id = usr1.company_id "
-                  <+>                  "    AND usr1.is_company_admin "
-                  <+>                  "    AND usr1.id = " <?> (userid user)
-                  <+> "       OR users.company_id IS NULL ))"
+                  <+> "WHERE ((users.id = " <?> (userid user) <+> "AND (users.company_id IS NULL OR users.is_company_admin))"
+                  <+> "       OR EXISTS (SELECT 1 FROM users AS same_company_users "
+                  <+>                  "  WHERE users.company_id = same_company_users.company_id "
+                  <+>                  "    AND same_company_users.is_company_admin "
+                  <+>                  "    AND same_company_users.id = " <?> (userid user) <+> "))"
                   <+> "  AND users.id = signatory_links.user_id "
                   <+> "  AND documents.id = signatory_links.document_id "
                   <+> "  AND signatory_links.document_id = " <?> did
