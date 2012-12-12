@@ -2369,7 +2369,7 @@ instance MonadDB m => DBQuery m GetDocsSentBetween Int where
                "AND documents.invite_time <  ? " <>
                "AND documents.type = ? "   <>
                "AND documents.status <> ? "
-    _ <- kExecute [toSql uid, toSql start, toSql end, toSql Preparation, toSql $ Signable undefined]
+    _ <- kExecute [toSql uid, toSql start, toSql end, toSql $ Signable undefined, toSql Preparation]
     foldDB (+) 0
 
 -- Update utilities
