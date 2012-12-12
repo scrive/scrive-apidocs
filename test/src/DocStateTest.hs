@@ -70,6 +70,7 @@ docStateTests env = testGroup "DocState" [
   testThat "ErrorDocument adds to the log" env testErrorDocumentEvidenceLog,
   testThat "DocumentFromSignatoryData adds to the log" env testDocumentFromSignatoryDataEvidenceLog,
   testThat "SaveSigAttachment adds to the log" env testSaveSigAttachmentEvidenceLog,
+  testThat "DeleteSigAttachment will not work after signing" env testDeleteSigAttachmentAlreadySigned,
   testThat "DeleteSigAttachment adds to the log" env testDeleteSigAttachmentEvidenceLog,
   testThat "CloseDocument adds to the log" env testCloseDocumentEvidenceLog,
   testThat "ChangeSignatoryEmailWhenUndelivered adds to the log" env testChangeSignatoryEmailWhenUndeliveredEvidenceLog,
@@ -585,6 +586,33 @@ testSaveSigAttachmentEvidenceLog = do
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SaveSigAttachmentEvidence) lg
 
+
+testDeleteSigAttachmentAlreadySigned :: TestEnv ()
+testDeleteSigAttachmentAlreadySigned = do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author $ (    isSignable
+                                                           &&^ isPreparation
+                                                           &&^ ((all isSignatory) . documentsignatorylinks)
+                                                           &&^ (((==) 2) . length .documentsignatorylinks))
+  file <- addNewRandomFile
+  let sl = (documentsignatorylinks doc) !! 1
+  _<-randomUpdate $ \t->SetSigAttachments (documentid doc) (signatorylinkid $ sl)
+                        [SignatoryAttachment { signatoryattachmentfile        = Nothing
+                                             , signatoryattachmentname        = "attachment"
+                                             , signatoryattachmentdescription = "gimme!"
+                                             }] (systemActor t)
+  _ <- randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t) Nothing
+  u1 <- randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ sl) "attachment" (fileid file) (systemActor t)
+  assertBool "We can't upload signatory attachmnet"  u1
+  d1 <- randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ sl) (fileid file) (systemActor t)
+  assertBool "We can't delete attachment"  d1
+  u2 <- randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ sl) "attachment" (fileid file) (systemActor t)
+  assertBool "We can't reupload attachment"  u2
+  _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
+  _ <- randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing (systemActor t)
+  d2 <- randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ sl) (fileid file) (systemActor t)
+  assertBool  "We can remove attachment after signing" (not d2)
+  
 testDeleteSigAttachmentEvidenceLog :: TestEnv ()
 testDeleteSigAttachmentEvidenceLog = do
   author <- addNewRandomUser

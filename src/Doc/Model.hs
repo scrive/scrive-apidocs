@@ -359,7 +359,8 @@ documentFilterToSQL (DocumentFilterByString string) = do
                                                                  "  ON sl5.document_id = signatory_links.document_id" <>
                                                                  " AND sl5.id = signatory_link_fields.signatory_link_id" <>
                                    -- " FROM signatory_link_fields " <>
-                                   " WHERE signatory_link_fields.value ILIKE ?)") [sqlpat word]
+                                   " WHERE (signatory_link_fields.type != ?) " <>
+                                           " AND (signatory_link_fields.value ILIKE ?))") [toSql SignatureFT,sqlpat word]
                                    --" WHERE TRUE)") []
 
       sqlpat text = toSql $ "%" ++ concatMap escape text ++ "%"
@@ -1235,20 +1236,25 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m DeleteSigAttachment Bool wh
       Nothing -> do
         Log.error $ "SignatoryLink does not exist. Trying to Delete Sig Attachment. docid: " ++ show did
         return False
-      Just sig -> case find (\sl->signatoryattachmentfile sl == Just fid) $ signatoryattachments sig of
-        Nothing -> do
-          Log.error $ "No signatory attachment for that file id: " ++ show fid
-          return False
-        Just sa -> do
-          updateWithEvidence tableSignatoryAttachments
-            (  "file_id =" <?> SqlNull
-           <+> "WHERE file_id =" <?> fid <+> "AND signatory_link_id =" <?> slid
-            ) $ do
-            return $ InsertEvidenceEvent
-              DeleteSigAttachmentEvidence
-              (value "actor" (actorWho actor) >> value "name" (signatoryattachmentname sa) >> value "email" (getEmail sig))
-              (Just did)
-              actor
+      Just sig -> case (maybesigninfo sig) of
+       Just _ ->  do
+            Log.error $ "Signatory has already signed. Cant delete attachment.docid: " ++ show did
+            return False
+       Nothing -> do 
+          case find (\sl->signatoryattachmentfile sl == Just fid) $ signatoryattachments sig of
+            Nothing -> do
+              Log.error $ "No signatory attachment for that file id: " ++ show fid
+              return False
+            Just sa -> do
+              updateWithEvidence tableSignatoryAttachments
+                (   "file_id =" <?> SqlNull
+                <+> "WHERE file_id =" <?> fid <+> "AND signatory_link_id =" <?> slid
+                ) $ do
+                  return $ InsertEvidenceEvent
+                    DeleteSigAttachmentEvidence
+                    (value "actor" (actorWho actor) >> value "name" (signatoryattachmentname sa) >> value "email" (getEmail sig))
+                    (Just did)
+                    actor
 
 data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID String String String String String String [String] Actor
 instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSignatoryData (Maybe Document) where
