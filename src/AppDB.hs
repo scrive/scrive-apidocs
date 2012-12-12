@@ -119,6 +119,7 @@ kontraMigrations = [
   , addUnsavedDraftToDocument
   , removeBrokenLinksFromSignStatsEvents
   , expandEventsWithAffectedSignatoryAndTextMessage
+  , addObligatoryColumnToSignatoryLinkFields
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

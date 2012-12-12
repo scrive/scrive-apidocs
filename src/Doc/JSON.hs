@@ -153,18 +153,20 @@ arFromJSON = do
                 signatoryattachmentname        = name,
                 signatoryattachmentdescription = desc
               }
-           Nothing -> return Nothing   
+           Nothing -> return Nothing
 
 sfFromJSON :: (String, JSValue) -> Maybe SignatoryField
 sfFromJSON (name, jsv) =
   Just $ SignatoryField {
       sfType = tp,
       sfValue = val,
+      sfObligatory = obl,
       sfPlacements = [] -- do placements later /Eric
     }
   where
     val = maybe "" id (fromJSValueField "value" jsv)
     req = maybe False id (fromJSValueField "requested" jsv)
+    obl = maybe True id (fromJSValueField "obligatory" jsv)
     tp  = case name of
             "email"      -> EmailFT
             "fstname"    -> FirstNameFT
@@ -211,4 +213,4 @@ dcrFromJSON jsv = runIdentity $ withJSValue jsv $ do
                                    , dcrInvolved = inv'
                                    , dcrMainFile = mmainfile
                                    , dcrAttachments = []
-                                   }                          
+                                   }

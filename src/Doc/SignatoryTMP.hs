@@ -1,8 +1,8 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{- 
+{-
     Signatory TMP is an data structure used to represend signatory data
-    for external comunication. It is build over standard signatory but most of stuff is hidden 
+    for external comunication. It is build over standard signatory but most of stuff is hidden
     so it's quite easy to use it and be sure that a lot of important data stays there.
 -}
 
@@ -30,7 +30,7 @@ module Doc.SignatoryTMP (
     , isAuthorTMP
     , isSignatoryTMP
     , getAttachments
-    
+
 ) where
 
 import Control.Logic
@@ -56,8 +56,8 @@ data SignatoryTMP = SignatoryTMP {
 instance HasFields SignatoryTMP where
     replaceField f s = s {details = replaceField f (details s)}
     getAllFields = getAllFields . details
-    
-emptySignatoryTMP :: SignatoryTMP 
+
+emptySignatoryTMP :: SignatoryTMP
 emptySignatoryTMP = SignatoryTMP {
     details = SignatoryDetails {
       signatorysignorder = SignOrder 1
@@ -86,13 +86,13 @@ sndname = nothingIfEmpty . getLastName . details
 
 setSndname:: String -> SignatoryTMP -> SignatoryTMP
 setSndname = replaceFieldValue LastNameFT
-  
+
 company::SignatoryTMP -> Maybe String
 company = nothingIfEmpty . getCompanyName . details
 
 setCompany:: String -> SignatoryTMP -> SignatoryTMP
 setCompany = replaceFieldValue CompanyFT
-    
+
 personalnumber::SignatoryTMP -> Maybe String
 personalnumber = nothingIfEmpty . getPersonalNumber . details
 
@@ -120,7 +120,7 @@ setEmail =  replaceFieldValue EmailFT
 setCSV :: (Maybe CSVUpload) -> SignatoryTMP -> SignatoryTMP
 setCSV mcsv s = s {csvupload = mcsv}
 
-makeAuthor :: SignatoryTMP -> SignatoryTMP 
+makeAuthor :: SignatoryTMP -> SignatoryTMP
 makeAuthor s =  s {details = (details s) { signatoryisauthor = True }}
 
 makePartner :: SignatoryTMP -> SignatoryTMP
@@ -151,7 +151,7 @@ toSignatoryDetails1 :: SignatoryTMP -> SignatoryDetails
 toSignatoryDetails1 sTMP = (\(x,_,_,_) -> x) (toSignatoryDetails2 sTMP)
 -- To SignatoryLink or SignatoryDetails conversion
 toSignatoryDetails2 :: SignatoryTMP -> (SignatoryDetails, [SignatoryAttachment], Maybe CSVUpload, Maybe String)
-toSignatoryDetails2 sTMP  = 
+toSignatoryDetails2 sTMP  =
     let sig = makeSignatory [] [] ""
                  (fold $ fstname sTMP)
                  (fold $ sndname sTMP)
@@ -162,14 +162,14 @@ toSignatoryDetails2 sTMP  =
                  (fold $ company sTMP)
                  (fold $ personalnumber sTMP)
                  (fold $ companynumber sTMP)
-    in withRolesAndAttsAndCSV $ sig { 
+    in withRolesAndAttsAndCSV $ sig {
             signatoryfields =  mergeFields (getAllFields sTMP)  (signatoryfields sig),
             signatorysignorder = signatorysignorder $ details sTMP }
   where
    mergeFields [] l = l
    mergeFields (f:fs) l = mergeFields fs (replaceField f l)
    withRolesAndAttsAndCSV x = (x, attachments $ sTMP, csvupload $ sTMP, signredirecturl $ sTMP)
-   
+
 instance FromJSValue SignatoryTMP where
     fromJSValue = do
         author <- fromJSValueField "author"
@@ -191,17 +191,18 @@ instance FromJSValue SignatoryTMP where
                 (map addAttachment attachments) $^^
                 emptySignatoryTMP
           _ -> return Nothing
-            
+
 instance FromJSValue SignatoryField where
     fromJSValue = do
         ftype <- fromJSValue -- We read field type at this from two different fields, so we can't use fromJSValueField
         value  <- fromJSValueField "value"
+        obligatory <- fromMaybe True <$> fromJSValueField "obligatory"
         placements <- fromMaybe [] <$> fromJSValueField "placements"
         case (ftype,value) of
           (Just ft, Just v) -> do
-              return $ Just $ SignatoryField ft v placements
+              return $ Just $ SignatoryField ft v obligatory placements
           _ -> return Nothing
-        
+
 
 instance FromJSValue SignatoryAttachment where
     fromJSValue = do
@@ -211,7 +212,7 @@ instance FromJSValue SignatoryAttachment where
              (Just n, Just d) -> return $ Just $ SignatoryAttachment {signatoryattachmentname  = n ,
                                                                       signatoryattachmentdescription = d,
                                                                       signatoryattachmentfile = Nothing}
-             _ -> return Nothing  
+             _ -> return Nothing
 
 instance FromJSValue FieldType where
    fromJSValue = do
@@ -219,19 +220,18 @@ instance FromJSValue FieldType where
     t <- fromJSValueField "type"
     filled <- (not . null) <$> fromMaybe ("" :: String) <$> fromJSValueField "value"
     return $ case (fromMaybe "standard" t,s) of
-         ("standard",            Just "fstname")    -> Just $ FirstNameFT
-         ("standard",            Just "sndname")    -> Just $ LastNameFT
-         ("standard",            Just "email")      -> Just $ EmailFT
-         ("standard",            Just "sigpersnr")  -> Just $ PersonalNumberFT
-         ("standard",            Just "sigco")      -> Just $ CompanyFT
-         ("standard",            Just "sigcompnr")  -> Just $ CompanyNumberFT
-         ("signature",           Just "signature")  -> Just $ SignatureFT
-         ("custom",              Just name       )  -> Just $ CustomFT  name filled
-         ("checkbox-optional",   Just name       )  -> Just $ CheckboxOptionalFT  name 
-         ("checkbox-obligatory", Just name       )  -> Just $ CheckboxObligatoryFT  name 
+         ("standard",  Just "fstname")    -> Just $ FirstNameFT
+         ("standard",  Just "sndname")    -> Just $ LastNameFT
+         ("standard",  Just "email")      -> Just $ EmailFT
+         ("standard",  Just "sigpersnr")  -> Just $ PersonalNumberFT
+         ("standard",  Just "sigco")      -> Just $ CompanyFT
+         ("standard",  Just "sigcompnr")  -> Just $ CompanyNumberFT
+         ("signature", Just "signature")  -> Just $ SignatureFT
+         ("custom",    Just name       )  -> Just $ CustomFT name filled
+         ("checkbox",  Just name       )  -> Just $ CheckboxFT name
          _ -> Nothing
 
-         
+
 instance FromJSValue CSVUpload  where
     fromJSValue = do
         rows <- fromJSValue

@@ -20,6 +20,7 @@ module Stats.Model
          SignStatQuantity(..),
          SignStatEvent(..),
          AddSignStatEvent(..),
+         AddSignStatEvent2(..),
          GetSignStatEvents(..),
          GetSignHistCSV(..),
 
@@ -45,6 +46,7 @@ import Data.List
 import Database.HDBC
 
 import DB
+import DB.SQL2
 import MinutesTime
 import User.Model
 import Doc.DocStateData
@@ -478,18 +480,25 @@ instance MonadDB m => DBQuery m GetSignStatEvents [SignStatEvent] where
 data AddSignStatEvent = AddSignStatEvent SignStatEvent
 instance MonadDB m => DBUpdate m AddSignStatEvent Bool where
   update (AddSignStatEvent SignStatEvent{..}) =
-    kRun01 $ mkSQL INSERT tableSignStatEvents [
-        sql "document_id" ssDocumentID
-      , sql "signatory_link_id" ssSignatoryLinkID
-      , sql "time" ssTime
-      , sql "quantity" ssQuantity
-      , sql "company_id" ssCompanyID
-      , sql "document_process" ssDocumentProcess
-      ] <> SQL "WHERE NOT EXISTS (SELECT 1 FROM sign_stat_events WHERE document_id = ? AND quantity = ? AND signatory_link_id = ?)" [
-        toSql ssDocumentID
-      , toSql ssQuantity
-      , toSql ssSignatoryLinkID
-      ]
+    update (AddSignStatEvent2 ssSignatoryLinkID ssQuantity ssTime)
+
+data AddSignStatEvent2 = AddSignStatEvent2 SignatoryLinkID SignStatQuantity MinutesTime
+instance MonadDB m => DBUpdate m AddSignStatEvent2 Bool where
+  update (AddSignStatEvent2 slid quantity time) =
+    kRun01 $ sqlInsertSelect "sign_stat_events" "signatory_links" $ do
+      sqlSetCmd "document_id" "documents.id"
+      sqlSet "signatory_link_id" slid
+      sqlSet "time" time
+      sqlSet "quantity" quantity
+      sqlSetCmd "company_id" "companies.id"
+      sqlSetCmd "document_process" "documents.process"
+      sqlJoinOn "documents" "signatory_links.document_id = documents.id"
+      sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
+      sqlLeftJoinOn "companies" "users.company_id = companies.id"
+      sqlWhereEq "signatory_links.id" slid
+      sqlWhereNotExists $ sqlSelect "sign_stat_events" $ do
+        sqlWhereEq "quantity" quantity
+        sqlWhereEq "signatory_link_id " slid
 
 data GetSignHistCSV = GetSignHistCSV MinutesTime MinutesTime
 instance MonadDB m => DBQuery m GetSignHistCSV [[String]] where

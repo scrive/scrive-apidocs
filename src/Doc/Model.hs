@@ -28,6 +28,7 @@ module Doc.Model
   , ErrorDocument(..)
   , GetDocuments(..)
   , GetDocumentByDocumentID(..)
+  , GetDocumentsByDocumentIDs(..)
   , GetDocumentByDocumentIDSignatoryLinkIDMagicHash(..)
   , GetDocumentsByAuthor(..)
   , GetTemplatesByAuthor(..)
@@ -147,6 +148,7 @@ data DocumentFilter
   | DocumentFilterByMonthYearTo   (Int,Int)   -- ^ Document time before or in (month,year)
   | DocumentFilterByAuthor UserID             -- ^ Only documents created by this user
   | DocumentFilterByDocumentID DocumentID     -- ^ Document by specific ID
+  | DocumentFilterByDocumentIDs [DocumentID]  -- ^ Documents by specific IDs
   | DocumentFilterSignable                    -- ^ Document is signable
   | DocumentFilterTemplate                    -- ^ Document is template
   | DocumentFilterDeleted Bool                -- ^ Only deleted (=True) or non-deleted (=False) documents
@@ -359,7 +361,8 @@ documentFilterToSQL (DocumentFilterByString string) = do
                                                                  "  ON sl5.document_id = signatory_links.document_id" <>
                                                                  " AND sl5.id = signatory_link_fields.signatory_link_id" <>
                                    -- " FROM signatory_link_fields " <>
-                                   " WHERE signatory_link_fields.value ILIKE ?)") [sqlpat word]
+                                   " WHERE (signatory_link_fields.type != ?) " <>
+                                           " AND (signatory_link_fields.value ILIKE ?))") [toSql SignatureFT,sqlpat word]
                                    --" WHERE TRUE)") []
 
       sqlpat text = toSql $ "%" ++ concatMap escape text ++ "%"
@@ -390,6 +393,9 @@ documentFilterToSQL (DocumentFilterByAuthor userid) = do
 
 documentFilterToSQL (DocumentFilterByDocumentID did) = do
   sqlWhereEq "documents.id" did
+
+documentFilterToSQL (DocumentFilterByDocumentIDs dids) = do
+  sqlWhereIn "documents.id" dids
 
 documentFilterToSQL (DocumentFilterSignable) = do
   sqlWhereEq "documents.type" (Signable undefined)
@@ -827,6 +833,7 @@ signatoryLinkFieldsSelectors =
   , "custom_name"
   , "is_author_filled"
   , "value"
+  , "obligatory"
   , "placements"
   ]
 
@@ -838,16 +845,16 @@ selectSignatoryLinkFieldsSQL = "SELECT"
 fetchSignatoryLinkFields :: MonadDB m => DBEnv m (M.Map SignatoryLinkID [SignatoryField])
 fetchSignatoryLinkFields = foldDB decoder M.empty
   where
-    decoder acc slid xtype custom_name is_author_filled v placements =
+    decoder acc slid xtype custom_name is_author_filled v obligatory placements =
       M.insertWith' (++) slid
          [SignatoryField
           { sfValue = v
           , sfPlacements = placements
           , sfType = case xtype of
                         CustomFT{} -> CustomFT custom_name is_author_filled
-                        CheckboxOptionalFT{} -> CheckboxOptionalFT custom_name
-                        CheckboxObligatoryFT{} -> CheckboxObligatoryFT custom_name
+                        CheckboxFT{} -> CheckboxFT custom_name
                         _   -> xtype
+          , sfObligatory = obligatory
           }] acc
 
 insertSignatoryLinkFieldsAsAre :: MonadDB m
@@ -857,13 +864,11 @@ insertSignatoryLinkFieldsAsAre fields | all (null . snd) fields = return M.empty
 insertSignatoryLinkFieldsAsAre fields = do
   let getCustomName field = case sfType field of
                               CustomFT name _ -> name
-                              CheckboxOptionalFT name -> name
-                              CheckboxObligatoryFT name -> name
+                              CheckboxFT name -> name
                               _ -> ""
       isAuthorFilled field = case sfType field of
                                CustomFT _ authorfilled -> authorfilled
-                               CheckboxOptionalFT _  -> False
-                               CheckboxObligatoryFT _  -> False
+                               CheckboxFT _  -> False
                                _ -> False
   _ <- kRun $ sqlInsert "signatory_link_fields" $ do
          sqlSetList "signatory_link_id" $ concatMap (\(d,l) -> map (const d) l) fields
@@ -872,6 +877,7 @@ insertSignatoryLinkFieldsAsAre fields = do
          sqlSetList "is_author_filled" $ isAuthorFilled <$> concatMap snd fields
          sqlSetList "value" $ sfValue <$> concatMap snd fields
          sqlSetList "placements" $ sfPlacements <$> concatMap snd fields
+         sqlSetList "obligatory" $ sfObligatory <$> concatMap snd fields
          mapM_ sqlResult signatoryLinkFieldsSelectors
 
   fetchSignatoryLinkFields
@@ -1095,10 +1101,12 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
              <+> "WHERE id =" <?> did <+> "AND type =" <?> Signable undefined
               ) $ do
               case reason of
-                ManualCancel -> return $ InsertEvidenceEvent
+                ManualCancel -> return $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                   CancelDocumentEvidence
                   (value "actor" (actorWho actor))
                   (Just did)
+                  Nothing
+                  Nothing
                   actor
                 ELegDataMismatch _ sid fn ln num -> do
                   Just sl <- query $ GetSignatoryLinkByID did sid Nothing
@@ -1107,10 +1115,12 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
                               ,("Personal number", getPersonalNumber sl, num)]
                       uneql = filter (\(_,a,b)->a/=b) trips
                       msg = intercalate "; " $ map (\(f,s,e)->f ++ " from transaction was \"" ++ s ++ "\" but from e-legitimation was \"" ++ e ++ "\"") uneql
-                  return $ InsertEvidenceEvent
+                  return $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                     CancelDocumenElegEvidence
                     (value "actor" (actorWho actor) >> value "msg" msg )
                     (Just did)
+                    (Just sid)
+                    Nothing
                     actor
           s -> do
             Log.error $ "Cannot CancelDocument document " ++ show did ++ " because " ++ concat s
@@ -1231,20 +1241,25 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m DeleteSigAttachment Bool wh
       Nothing -> do
         Log.error $ "SignatoryLink does not exist. Trying to Delete Sig Attachment. docid: " ++ show did
         return False
-      Just sig -> case find (\sl->signatoryattachmentfile sl == Just fid) $ signatoryattachments sig of
-        Nothing -> do
-          Log.error $ "No signatory attachment for that file id: " ++ show fid
-          return False
-        Just sa -> do
-          updateWithEvidence tableSignatoryAttachments
-            (  "file_id =" <?> SqlNull
-           <+> "WHERE file_id =" <?> fid <+> "AND signatory_link_id =" <?> slid
-            ) $ do
-            return $ InsertEvidenceEvent
-              DeleteSigAttachmentEvidence
-              (value "actor" (actorWho actor) >> value "name" (signatoryattachmentname sa) >> value "email" (getEmail sig))
-              (Just did)
-              actor
+      Just sig -> case (maybesigninfo sig) of
+       Just _ ->  do
+            Log.error $ "Signatory has already signed. Cant delete attachment.docid: " ++ show did
+            return False
+       Nothing -> do 
+          case find (\sl->signatoryattachmentfile sl == Just fid) $ signatoryattachments sig of
+            Nothing -> do
+              Log.error $ "No signatory attachment for that file id: " ++ show fid
+              return False
+            Just sa -> do
+              updateWithEvidence tableSignatoryAttachments
+                (   "file_id =" <?> SqlNull
+                <+> "WHERE file_id =" <?> fid <+> "AND signatory_link_id =" <?> slid
+                ) $ do
+                  return $ InsertEvidenceEvent
+                    DeleteSigAttachmentEvidence
+                    (value "actor" (actorWho actor) >> value "name" (signatoryattachmentname sa) >> value "email" (getEmail sig))
+                    (Just did)
+                    actor
 
 data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID String String String String String String [String] Actor
 instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSignatoryData (Maybe Document) where
@@ -1381,10 +1396,15 @@ instance MonadDB m => DBQuery m GetSignatoryLinkByID (Maybe SignatoryLink) where
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance MonadDB m => DBQuery m GetDocumentByDocumentID (Maybe Document) where
   query (GetDocumentByDocumentID did) = do
-    (selectDocuments $ sqlSelect "documents" $ do
-      mapM_ sqlResult documentsSelectors
-      sqlWhereEq "documents.id" did)
+    query (GetDocumentsByDocumentIDs [did])
       >>= oneObjectReturnedGuard
+
+data GetDocumentsByDocumentIDs = GetDocumentsByDocumentIDs [DocumentID]
+instance MonadDB m => DBQuery m GetDocumentsByDocumentIDs [Document] where
+  query (GetDocumentsByDocumentIDs dids) = do
+    selectDocuments $ sqlSelect "documents" $ do
+      mapM_ sqlResult documentsSelectors
+      sqlWhereIn "documents.id" dids
 
 data GetDocumentByDocumentIDSignatoryLinkIDMagicHash = GetDocumentByDocumentIDSignatoryLinkIDMagicHash DocumentID SignatoryLinkID MagicHash
 instance MonadDB m => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash (Maybe Document) where
@@ -1602,14 +1622,11 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ReallyDeleteDocument Bool w
     result <- kRun $ mkSQL UPDATE tableSignatoryLinks
                                       [sql "really_deleted" True]
                   <+> "FROM documents, users "
-                  <+> "WHERE (user_id = " <?> (userid user)
-                  <+> "          AND documents.status = " <?> Pending
-                  <+> "       OR EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 "
-                  <+>                  "  WHERE signatory_links.user_id = usr2.id "
-                  <+>                  "    AND usr2.company_id = usr1.company_id "
-                  <+>                  "    AND usr1.is_company_admin "
-                  <+>                  "    AND usr1.id = " <?> (userid user)
-                  <+> "       OR users.company_id IS NULL ))"
+                  <+> "WHERE ((users.id = " <?> (userid user) <+> "AND (users.company_id IS NULL OR users.is_company_admin))"
+                  <+> "       OR EXISTS (SELECT 1 FROM users AS same_company_users "
+                  <+>                  "  WHERE users.company_id = same_company_users.company_id "
+                  <+>                  "    AND same_company_users.is_company_admin "
+                  <+>                  "    AND same_company_users.id = " <?> (userid user) <+> "))"
                   <+> "  AND users.id = signatory_links.user_id "
                   <+> "  AND documents.id = signatory_links.document_id "
                   <+> "  AND signatory_links.document_id = " <?> did
@@ -2014,11 +2031,9 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                           Just (_w,_h,"") -> return ()
                           Just (_w,_h,i)  -> value "signature" i
                           Nothing -> return ()
-                        CheckboxOptionalFT   _ | sfValue changedfield == "" -> value "unchecked" True
-                        CheckboxOptionalFT   _                              -> value "checked" True
-                        CheckboxObligatoryFT _ | sfValue changedfield == "" -> value "unchecked" True
-                        CheckboxObligatoryFT _                              -> value "checked" True
-                        _                                                   -> value "value" $ sfValue changedfield
+                        CheckboxFT   _ | sfValue changedfield == "" -> value "unchecked" True
+                        CheckboxFT   _                              -> value "checked" True
+                        _                                           -> value "value" $ sfValue changedfield
                       value "hasplacements" (not $ null $ sfPlacements changedfield)
                       objects "placements" $ for (sfPlacements changedfield) $ \p -> do
                         value "xrel"    $ show $ placementxrel p
@@ -2048,11 +2063,9 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                           Just (_,_,"") -> return ()
                           Just (_,_,i)  -> value "signature" i
                           Nothing -> return ()
-                        CheckboxOptionalFT   _ | sfValue changedfield == "" -> value "unchecked" True
-                        CheckboxOptionalFT   _                              -> value "checked" True
-                        CheckboxObligatoryFT _ | sfValue changedfield == "" -> value "unchecked" True
-                        CheckboxObligatoryFT _                              -> value "checked" True
-                        _                                                   -> value "value" $ sfValue changedfield
+                        CheckboxFT   _ | sfValue changedfield == "" -> value "unchecked" True
+                        CheckboxFT   _                              -> value "checked" True
+                        _                                           -> value "value" $ sfValue changedfield
                       value "hasplacements" (not $ null $ sfPlacements changedfield)
                       objects "placements" $ for (sfPlacements changedfield) $ \p -> do
                         value "xrel"    $ show $ placementxrel p
@@ -2251,8 +2264,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where
     let updateValue fieldtype fvalue = do
           let custom_name = case fieldtype of
                               CustomFT xname _ -> xname
-                              CheckboxObligatoryFT xname -> xname
-                              CheckboxOptionalFT xname -> xname
+                              CheckboxFT xname -> xname
                               _ -> ""
           r <- kRun $ mkSQL UPDATE tableSignatoryLinkFields
                  [ sql "value" fvalue ]
@@ -2276,11 +2288,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where
                           Just (_,_,i)  -> do
                             value "signature" i
                           Nothing -> return ()
-                        CheckboxOptionalFT   _ | fvalue == "" -> value "unchecked" True
-                        CheckboxOptionalFT   _                -> value "checked" True
-                        CheckboxObligatoryFT _ | fvalue == "" -> value "unchecked" True
-                        CheckboxObligatoryFT _                -> value "checked" True
-                        _                                     -> value "value" $ fvalue
+                        CheckboxFT   _ | fvalue == "" -> value "unchecked" True
+                        CheckboxFT   _                -> value "checked" True
+                        _                             -> value "value" $ fvalue
 
                    value "actor" (actorWho actor))
                (Just did)
@@ -2374,7 +2384,7 @@ instance MonadDB m => DBQuery m GetDocsSentBetween Int where
 
 -- Update utilities
 
-updateWithEvidence' :: (MonadDB m, TemplatesMonad m) => DBEnv m Bool -> Table -> SQL -> DBEnv m InsertEvidenceEvent -> DBEnv m Bool
+updateWithEvidence' :: (MonadDB m, TemplatesMonad m, DBUpdate m evidence Bool) => DBEnv m Bool -> Table -> SQL -> DBEnv m evidence -> DBEnv m Bool
 updateWithEvidence' testChanged t u mkEvidence = do
   changed <- testChanged
   success <- kRun01 $ "UPDATE" <+> raw (tblName t) <+> "SET" <+> u
@@ -2383,19 +2393,19 @@ updateWithEvidence' testChanged t u mkEvidence = do
     update $ e
   return success
 
-updateWithEvidence ::  (MonadDB m, TemplatesMonad m) => Table -> SQL -> DBEnv m InsertEvidenceEvent -> DBEnv m Bool
+updateWithEvidence ::  (MonadDB m, TemplatesMonad m, DBUpdate m evidence Bool) => Table -> SQL -> DBEnv m evidence -> DBEnv m Bool
 updateWithEvidence = updateWithEvidence' (return True)
 
-updateOneWithEvidenceIfChanged :: (MonadDB m, TemplatesMonad m, Convertible a SqlValue)
-                               => DocumentID -> SQL -> a -> DBEnv m InsertEvidenceEvent -> DBEnv m Bool
+updateOneWithEvidenceIfChanged :: (MonadDB m, TemplatesMonad m, Convertible a SqlValue, DBUpdate m evidence Bool)
+                               => DocumentID -> SQL -> a -> DBEnv m evidence -> DBEnv m Bool
 updateOneWithEvidenceIfChanged did col new =
   updateWithEvidence'
     (checkIfAnyReturned $ "SELECT 1 FROM" <+> raw (tblName tableDocuments)
                       <+> "WHERE id =" <?> did <+> "AND" <+> col <+> "IS DISTINCT FROM" <?> new)
     tableDocuments (col <+> "=" <?> new <+> "WHERE id =" <?> did)
 
-updateOneAndMtimeWithEvidenceIfChanged :: (MonadDB m, TemplatesMonad m, Convertible a SqlValue)
-                                       => DocumentID -> SQL -> a -> MinutesTime -> DBEnv m InsertEvidenceEvent -> DBEnv m Bool
+updateOneAndMtimeWithEvidenceIfChanged :: (MonadDB m, TemplatesMonad m, Convertible a SqlValue, DBUpdate m evidence Bool)
+                                       => DocumentID -> SQL -> a -> MinutesTime -> DBEnv m evidence -> DBEnv m Bool
 updateOneAndMtimeWithEvidenceIfChanged did col new mtime =
   updateWithEvidence'
     (checkIfAnyReturned $ "SELECT 1 FROM" <+> raw (tblName tableDocuments)

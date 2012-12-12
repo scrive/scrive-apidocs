@@ -323,9 +323,9 @@ instance Arbitrary SignatoryDetails where
                               , signatoryisauthor = False
                               , signatoryispartner = True
                               , signatoryfields = filter (\f->notElem (sfType f) [FirstNameFT, LastNameFT, EmailFT]) fields
-                                                  ++ [ SignatoryField FirstNameFT fn []
-                                                     , SignatoryField LastNameFT  ln []
-                                                     , SignatoryField EmailFT     em []]}
+                                                  ++ [ SignatoryField FirstNameFT fn True []
+                                                     , SignatoryField LastNameFT  ln True []
+                                                     , SignatoryField EmailFT     em True []]}
 
 instance Arbitrary FieldPlacement where
   arbitrary = do  -- We loose precision with conversion, so please watch out for this
@@ -359,6 +359,7 @@ instance Arbitrary SignatoryField where
     return $ SignatoryField { sfType = t
                             , sfValue = v
                             , sfPlacements = p
+                            , sfObligatory = True
                             }
 
 instance Arbitrary AuthenticationMethod where
@@ -452,21 +453,20 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 
                                       , signatorysignatureinfo = Nothing
                                       , signatorylinkdeleted = False
                                       , signatorylinkreallydeleted = False
-                                      , signatorydetails = SignatoryDetails {
-                                      signatoryisauthor = False,
-                                      signatoryispartner = True,
-                                      signatorysignorder = SignOrder 1,
-                                                                              signatoryfields = [SignatoryField FirstNameFT "Eric" [],
-                                                                                                 SignatoryField LastNameFT "Normand" [],
-                                                                                                 SignatoryField EmailFT "eric@scrive.com" [],
-                                                                                                 SignatoryField CompanyFT "Scrive" [],
-                                                                                                 SignatoryField CompanyNumberFT "1234" [],
-                                                                                                 SignatoryField PersonalNumberFT "9101112" [],
-                                                                                                 SignatoryField (CustomFT "phone" True) "504-302-3742" []
+                                      , signatorydetails = SignatoryDetails
+                                        { signatoryisauthor = False
+                                        , signatoryispartner = True
+                                        , signatorysignorder = SignOrder 1
+                                        , signatoryfields = [ SignatoryField FirstNameFT "Eric" True []
+                                                            , SignatoryField LastNameFT "Normand" True []
+                                                            , SignatoryField EmailFT "eric@scrive.com" True []
+                                                            , SignatoryField CompanyFT "Scrive" True []
+                                                            , SignatoryField CompanyNumberFT "1234" True []
+                                                            , SignatoryField PersonalNumberFT "9101112" True []
+                                                            , SignatoryField (CustomFT "phone" True) "504-302-3742" True []
+                                                            ]
 
-                                                                                                ]
-
-                                                                            }
+                                        }
                                       , signatorylinkcsvupload = Nothing
                                       , signatoryattachments   = []
                                       , signatorylinkstatusclass = SCDraft

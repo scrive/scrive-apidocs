@@ -130,8 +130,7 @@ fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage)
        SignatureFT -> case (sfPlacements sf) of
                            [] -> maybeToList $ fieldJPEGFromSignatureField (sfValue sf)
                            plsms -> onlyFirstInSummary $ concatMap (maybeToList . (fieldJPEGFromPlacement (sfValue sf))) plsms
-       CheckboxOptionalFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf)
-       CheckboxObligatoryFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf) 
+       CheckboxFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf)
        _ -> for (sfPlacements sf) $ \p -> case (addEmpty, sfValue sf, sfType sf) of
                                                 (True,"",CustomFT n _) -> fieldFromPlacement True n p
                                                 (True,"",ft) -> fieldFromPlacement True (fromMaybe "" (lookup ft emptyFieldsText)) p

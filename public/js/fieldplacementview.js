@@ -137,6 +137,107 @@ window.draggebleField = function(dragHandler, fieldOrPlacement)
     });
 }
 
+var TextTypeSetterView = Backbone.View.extend({
+    initialize: function (args) {
+        _.bindAll(this, 'render' , 'clear');
+        this.model.bind('removed', this.clear);
+        var view = this;
+        this.fixPlaceFunction = function(){
+            view.place();
+        }
+        $(window).scroll(view.fixPlaceFunction); // To deal with resize;
+        $(window).resize(view.fixPlaceFunction);
+        this.render();
+    },
+    clear: function() {
+        this.off();
+        $(this.el).remove();
+        $(window).unbind('scroll',this.fixPlaceFunction);
+        $(window).unbind('resize',this.fixPlaceFunction);
+        this.model.typeSetter = undefined;
+    },
+    obligatoryOption : function() {
+        var option = $("<div class='checkboxTypeSetter-option'/>");
+        var checkbox = $("<input type='checkbox'>");
+        var label = $("<span/>").text(localization.designview.textFields.obligatory);
+        var field = this.model.field();
+        option.append(checkbox).append(label);
+        if (field.isObligatory())
+            checkbox.attr("checked","Yes");
+        checkbox.click(function(){
+            if (field.isObligatory())
+                    field.makeOptional();
+                else
+                    field.makeObligatory();
+        });
+
+        return option;
+    },
+    help : function() {
+        return $("<div class='help'/>").text(localization.designview.textFields.help);
+    },
+    doneOption : function() {
+        var view = this;
+        var field = this.model.field();
+        return Button.init({color:"green",
+                            size: "tiny",
+                            text: localization.designview.textFields.done,
+                            style: "position: relative;  z-index: 107;",
+                            onClick : function() {
+
+                                var done = field.name() != undefined && field.name() != "";
+                                done = done && _.all(field.signatory().fields(), function(f) {
+                                    return f.name() != field.name() || f.type() != field.type() || f == field;
+                                });
+                                if (done){
+                                     field.makeReady();
+                                     view.clear();
+                                    }
+                                else
+                                    view.nameinput.addClass('redborder');
+                                    return false;
+                                }
+            }).input();
+    },
+    title : function() {
+        return $("<div class='title'/>").text(localization.designview.textFields.textField);
+    },
+    subtitle : function() {
+        var box = $("<div class='subtitle'/>");
+        var name = this.model.field().signatory().nameInDocument();
+        if (this.model.field().signatory().nameOrEmail() != "")
+            name = this.model.field().signatory().nameOrEmail();
+        var text = localization.designview.textFields.forThis + " " + name;
+        box.text(text);
+        return box;
+    },
+    place : function() {
+        var placement = this.model;
+        var offset = $(placement.view.el).offset();
+        $(this.el).css("left",offset.left + Math.max($(placement.view.el).width()+18));
+        $(this.el).css("top",offset.top - 20);
+    },
+    render: function() {
+           var view = this;
+           var container = $(this.el);
+           container.addClass("checkboxTypeSetter-container");
+           container.css("position", "absolute");
+           var body = $("<div class='checkboxTypeSetter-body'/>");
+           var arrow = $("<div class='checkboxTypeSetter-arrow'/>");
+           container.append(arrow);
+           container.append(body);
+
+           body.append(this.title());
+           body.append(this.subtitle());
+           body.append(this.obligatoryOption());
+
+           body.append(this.doneOption());
+           body.append(this.help());
+           this.place();
+           return this;
+    }
+});
+
 var TextPlacementView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'clear');
@@ -198,7 +299,23 @@ var TextPlacementPlacedView = Backbone.View.extend({
         this.off();
         $(this.el).remove();
     },
-    startinlineediting : function() {
+    hasTypeSetter : function(){
+        return this.model.typeSetter != undefined;
+    },
+    addTypeSetter : function() {
+         var placement = this.model;
+         if (!this.hasTypeSetter() && $.contains(document.body, this.el)) {
+             placement.typeSetter = new TextTypeSetterView({model : placement});
+             $('body').append(placement.typeSetter.el);
+         }
+    },
+    closeTypeSetter : function() {
+         var placement = this.model;
+         if (this.hasTypeSetter()) {
+             placement.typeSetter.clear();
+         }
+    },
+    startInlineEditing : function() {
         var placement = this.model;
         var field =  placement.field();
         var document = field.signatory().document();
@@ -254,12 +371,20 @@ var TextPlacementPlacedView = Backbone.View.extend({
 
         if (document.allowsDD()) {
             draggebleField(place, placement);
+            place.click(function(){
+                if (!view.hasTypeSetter())
+                    view.addTypeSetter();
+                else
+                    view.closeTypeSetter();
+                return false;
+            });
         }
         if (field.signatory().canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true) {
             place.click(function() {
-                return view.startinlineediting();
+                return view.startInlineEditing();
             });
         }
+
         return this;
     }
 });
@@ -338,13 +463,13 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         var label = $("<span/>").text(localization.designview.checkboxes.obligatory);
         var field = this.model.field();
         option.append(checkbox).append(label);
-        if (field.isObligatoryCheckbox())
+        if (field.isObligatory())
             checkbox.attr("checked","Yes");
         checkbox.click(function(){
-            if (field.isObligatoryCheckbox())
-                    field.makeCheckboxOptional();
+            if (field.isObligatory())
+                    field.makeOptional();
                 else
-                    field.makeCheckboxObligatory();
+                    field.makeObligatory();
         });
 
         return option;
@@ -433,6 +558,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
     }
 });
 
+
 var CheckboxPlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render' , 'clear', 'addTypeSetter');
@@ -494,13 +620,7 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
         if (document.allowsDD()) {
 
             draggebleField(place, placement);
-            if (!field.isReady())
-            {
-                setTimeout(function(){
-                    view.addTypeSetter();
-                } ,50);
-            }
-            innerPlace.dblclick(function(){
+            innerPlace.click(function(){
                 if (!view.hasTypeSetter())
                     view.addTypeSetter();
                 else

@@ -141,13 +141,13 @@ data FieldType = FirstNameFT
                | EmailFT
                | CustomFT String Bool -- label filledbyauthor
                | SignatureFT
-               | CheckboxOptionalFT String 
-               | CheckboxObligatoryFT String 
+               | CheckboxFT String
   deriving (Eq, Ord, Show, Data, Typeable)
 
-data SignatoryField = SignatoryField {
-    sfType       :: FieldType
+data SignatoryField = SignatoryField
+  { sfType       :: FieldType
   , sfValue      :: String
+  , sfObligatory :: Bool
   , sfPlacements :: [FieldPlacement]
   } deriving (Eq, Ord, Show, Data, Typeable)
 

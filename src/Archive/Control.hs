@@ -62,33 +62,32 @@ handleDelete = do
     Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
     docids <- getCriticalFieldList asValidDocID "doccheck"
     let actor = userActor ctxtime ctxipnumber (userid user) (getEmail user)
-    forM_ docids $ \did -> do
-              doc <- guardRightM' $ getDocByDocID $ did
+    docs <- guardRightM' $ getDocsByDocIDs docids
+    forM_ docs $ \doc -> do
               let usl = (find (isSigLinkFor user) $ documentsignatorylinks doc)
                   csl = (getAuthorSigLink $ documentsignatorylinks doc) <| (useriscompanyadmin user) |> Nothing
                   msl =  usl `mplus` csl
               when (isNothing msl) $ do
-                Log.debug $ "User #" ++ show (userid user) ++ " has no rights to deleted document #" ++ show did
+                Log.debug $ "User #" ++ show (userid user) ++ " has no rights to deleted document #" ++ show (documentid doc)
                 internalError
               case (documentstatus doc) of
                   Pending -> if (isAuthor msl)
                                 then do
                                    guardTrueM $ dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
-                                   doc' <- guardRightM' $ getDocByDocID $ did
+                                   doc' <- guardRightM' $ getDocByDocID (documentid doc)
                                    postDocumentCanceledChange doc' "web+archive"
                                 else do
-                                   guardTrueM $ dbUpdate $ RejectDocument did (signatorylinkid $ fromJust msl) Nothing actor
-                                   doc' <- guardRightM' $ getDocByDocID $ did
+                                   guardTrueM $ dbUpdate $ RejectDocument (documentid doc) (signatorylinkid $ fromJust msl) Nothing actor
+                                   doc' <- guardRightM' $ getDocByDocID (documentid doc)
                                    postDocumentRejectedChange doc' (signatorylinkid $ fromJust msl) "web+archive"
                   _ -> return ()
-              guardTrueM $ dbUpdate $ ArchiveDocument user did actor
-              doc' <- guardRightM' $ getDocByDocID $ did
-              _ <- addSignStatDeleteEvent doc' (fromJust msl) ctxtime
-              case (documentstatus doc') of
+              guardTrueM $ dbUpdate $ ArchiveDocument user (documentid doc) actor
+              _ <- addSignStatDeleteEvent (signatorylinkid $ fromJust msl) ctxtime
+              case (documentstatus doc) of
                    Preparation -> do
-                       _ <- dbUpdate $ ReallyDeleteDocument user did actor
-                       when_ (isJust $ getSigLinkFor doc' user) $
-                            addSignStatPurgeEvent doc' (fromJust $ getSigLinkFor doc' user)  ctxtime
+                       _ <- dbUpdate $ ReallyDeleteDocument user (documentid doc) actor
+                       when_ (isJust $ getSigLinkFor doc user) $
+                            addSignStatPurgeEvent (signatorylinkid $ fromJust $ getSigLinkFor doc user)  ctxtime
                    _ -> return ()
     J.runJSONGenT $ return ()
 
@@ -138,7 +137,7 @@ handleReallyDelete = do
               Just doc <- dbQuery $ GetDocumentByDocumentID did
               return doc
             case getSigLinkFor doc user of
-              Just sl -> addSignStatPurgeEvent doc sl (ctxtime ctx)
+              Just sl -> addSignStatPurgeEvent (signatorylinkid sl) (ctxtime ctx)
               _ -> return False)
     docids
   J.runJSONGenT $ return ()

@@ -14,12 +14,12 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
    emailInputAvaible : function() {
      var signatory = this.model;
      var field = signatory.emailField();
-     return (!new EmailValidation().validateData(field.value())) && !field.hasPlacements()
+     return (!new EmailValidation().validateData(field.value())) && (!field.hasPlacements() || !field.obligatory());
    },
    emailInput : function() {
      var signatory = this.model;
      var field = signatory.emailField();
-     return InfoTextInput.init({
+     var iti = InfoTextInput.init({
                                  infotext: localization.email,
                                  value: field.value(),
                                  onChange : function(value) {
@@ -27,58 +27,66 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
                                      signatory.trigger("change");
 
                                  }
-                            }).input();
+                            });
+     field.bind("change", function() {iti.setValue(field.value())});
+     return iti.input();
    },
    fstNameInputAvaible : function() {
      var signatory = this.model;
      var field = signatory.fstnameField();
-     return (field.value() == "" || field.value() == undefined) && !field.hasPlacements()
+     return (field.value() == "" || field.value() == undefined) && (!field.hasPlacements() || !field.obligatory());
    },
    fstNameInput : function() {
      var signatory = this.model;
      var field = signatory.fstnameField();
-     return InfoTextInput.init({
+     var iti =  InfoTextInput.init({
                                  infotext: localization.fstname,
                                  value: field.value(),
                                  onChange : function(value) {
                                      field.setValue(value);
                                      signatory.trigger("change");
                                  }
-                            }).input();
+                            });
+     field.bind("change", function() {iti.setValue(field.value())});
+     return iti.input();
    },
    sndNameInputAvaible : function() {
      var signatory = this.model;
      var field = signatory.sndnameField();
-     return (field.value() == "" || field.value() == undefined) && !field.hasPlacements()
+     return (field.value() == "" || field.value() == undefined) && (!field.hasPlacements() || !field.obligatory());
    },
    sndNameInput : function() {
      var signatory = this.model;
      var field = this.model.sndnameField();
-     return InfoTextInput.init({
+     var iti = InfoTextInput.init({
                                  infotext: localization.sndname,
                                  value: field.value(),
                                  onChange : function(value) {
                                      field.setValue(value);
                                      signatory.trigger("change");
                                  }
-                            }).input();
+                            });
+     field.bind("change", function() {iti.setValue(field.value())});
+     return iti.input();;
    },
    ssnInputAvaible : function() {
      var signatory = this.model;
      var field = signatory.personalnumberField();
-     return (field.value() == "" || field.value() == undefined) && !field.hasPlacements() && this.model.document().elegAuthentication()
+     return (field.value() == "" || field.value() == undefined) && (!field.hasPlacements() || !field.obligatory()) && this.model.document().elegAuthentication()
    },
    ssnInput : function() {
      var signatory = this.model;
      var field = this.model.personalnumberField();
-     return InfoTextInput.init({
+     var iti = InfoTextInput.init({
                                  infotext: localization.personamNumber,
                                  value: field.value(),
                                  onChange : function(value) {
                                      field.setValue(value);
                                      signatory.trigger("change");
                                  }
-                            }).input();
+                            });
+     field.bind("change", function() {iti.setValue(field.value())});
+     return iti.input();
    },
    signatureInputAvaible : function() {
      var signatory = this.model;

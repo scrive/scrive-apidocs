@@ -141,7 +141,8 @@ window.InfoTextInput = {
           var view = new InfoTextInputView({model : model, el : input});
           return new Object({
               value : function() {return model.value();},
-              input : function() {return input;}
+              input : function() {return input;},
+              setValue : function(v) {model.setValue(v);}
             });
         }
 };

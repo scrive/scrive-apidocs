@@ -185,6 +185,18 @@ removeServiceIDFromDocuments = Migration {
     kRunRaw "ALTER TABLE documents DROP COLUMN service_id"
 }
 
+addObligatoryColumnToSignatoryLinkFields :: MonadDB m => Migration m
+addObligatoryColumnToSignatoryLinkFields = Migration {
+    mgrTable = tableSignatoryLinkFields
+  , mgrFrom = 1
+  , mgrDo = do
+    kRunRaw "ALTER TABLE signatory_link_fields ADD COLUMN obligatory BOOL NOT NULL DEFAULT TRUE"
+    -- Change CheckboxOptionalFT to CheckboxFT and set obligatory to false
+    kRunRaw "UPDATE signatory_link_fields SET obligatory = FALSE WHERE type = 9"
+    -- Change CheckboxMandatoryFT to CheckboxFT and do not change obligatory (will stay true)
+    kRunRaw "UPDATE signatory_link_fields SET type = 9 WHERE type = 10"
+  }
+
 splitIdentificationTypes :: MonadDB m => Migration m
 splitIdentificationTypes = Migration {
     mgrTable = tableDocuments

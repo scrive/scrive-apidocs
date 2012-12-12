@@ -228,9 +228,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
                 if (!placement.field().signatory().current()) return;
                 var elem = $(placement.view.el);
                 var label = "";
-                if (placement.field().isText())
+                if (placement.field().isText() && placement.field().isObligatory())
                     label = placement.field().nicename();
-                else if (placement.field().isObligatoryCheckbox())
+                else if (placement.field().isCheckbox() && placement.field().isObligatory())
                     label = localization.docsignview.checkboxes.pleaseCheck;
                 else if (placement.field().isSignature())
                     label = localization.signature.placeYourTip;
@@ -240,9 +240,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
                     },
                     el: elem,
                     onActivate: function() {
-                        if (placement.view != undefined && placement.view.startinlineediting != undefined && !placement.field().readyForSign())
+                        if (placement.view != undefined && placement.view.startInlineEditing != undefined && !placement.field().readyForSign())
                         {
-                          placement.view.startinlineediting();
+                          placement.view.startInlineEditing();
                           task.trigger("change");
                         }
                     },

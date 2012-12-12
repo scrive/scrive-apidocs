@@ -154,7 +154,7 @@ window.Signatory = Backbone.Model.extend({
     },
     companynumberField : function() {
         return this.field("sigcompnr", "standard");
-    }, 
+    },
     personalnumberField : function() {
         return this.field("sigpersnr", "standard");
     },
@@ -191,7 +191,7 @@ window.Signatory = Backbone.Model.extend({
         for (var i = 0; i < fields.length; i++)
             if (fields[i].isCustom()) cf.push(fields[i]);
         return cf;
-    },  
+    },
     name: function() {
         var name = this.fstname() + " " + this.sndname();
         if (name != undefined && name != " ")
@@ -245,7 +245,7 @@ window.Signatory = Backbone.Model.extend({
         if (this.get("seendate") != undefined)
           return new Date(Date.parse(this.get("seendate")));
         return undefined;
-        
+
     },
     readdate: function() {
         if (this.get("readdate") != undefined)
@@ -293,9 +293,9 @@ window.Signatory = Backbone.Model.extend({
         this.signature().removeAllPlacements();
       }
       _.each(this.fields(), function(field) {
-          if (field.isCheckbox()) field.remove();    
+          if (field.isCheckbox()) field.remove();
       });
-      
+
       if( this.author() && authorSignsFirstMode) {
         /* We need to renumber all other signatories from group 2 to group 1 */
         _.each(this.document().signatories(),function(sig) {
@@ -410,11 +410,23 @@ window.Signatory = Backbone.Model.extend({
        return this.addNewField("custom");
     },
     newCheckbox: function() {
-       var checkbox =  this.author() ? this.newField("checkbox-optional") : this.newField("checkbox-obligatory");
-       //var allfields = _.flatten(_.map(this.document().signatories(), function(s) {return s.fields();}));
-       //var i = 1;
-       //while(_.any(allfields, function(f) {f.name() == (localization.designview.checkboxes.checkbox + " " + i)})) i++;
-       //checkbox.setName("Checkbox " + i);
+       var checkbox = this.newField("checkbox");
+       if(this.author())
+           checkbox.makeOptional();
+       else
+           checkbox.makeObligatory();
+
+       /* Generate unique name for a checkbox. Checkbox names are really important for API,
+          for humans checkbox names are pure annoyance.
+        */
+       var allfields = _.flatten(_.map(this.document().signatories(), function(s) {return s.fields();}));
+       var i = 1;
+       while(_.any(allfields, function(f) {
+           return f.name() == "checkbox-" + i;
+       })) {
+           i++;
+       }
+       checkbox.setName("checkbox-" + i);
        return checkbox;
     },
     newField : function(t) {
@@ -452,7 +464,7 @@ window.Signatory = Backbone.Model.extend({
        return this.get("inpadqueue");
     },
     removed : function() {
-        this.trigger("removed"); 
+        this.trigger("removed");
         this.off();
     },
     hasUser: function() {
