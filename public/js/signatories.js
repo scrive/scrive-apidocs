@@ -412,7 +412,7 @@ window.Signatory = Backbone.Model.extend({
     newCheckbox: function() {
        var checkbox = this.newField("checkbox");
        if(this.author())
-           checkbox.makeOptional()
+           checkbox.makeOptional();
        else
            checkbox.makeObligatory();
 
