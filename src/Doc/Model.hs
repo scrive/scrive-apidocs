@@ -359,7 +359,8 @@ documentFilterToSQL (DocumentFilterByString string) = do
                                                                  "  ON sl5.document_id = signatory_links.document_id" <>
                                                                  " AND sl5.id = signatory_link_fields.signatory_link_id" <>
                                    -- " FROM signatory_link_fields " <>
-                                   " WHERE signatory_link_fields.value ILIKE ?)") [sqlpat word]
+                                   " WHERE (signatory_link_fields.type != ?) " <>
+                                           " AND (signatory_link_fields.value ILIKE ?))") [toSql SignatureFT,sqlpat word]
                                    --" WHERE TRUE)") []
 
       sqlpat text = toSql $ "%" ++ concatMap escape text ++ "%"
@@ -1095,10 +1096,12 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
              <+> "WHERE id =" <?> did <+> "AND type =" <?> Signable undefined
               ) $ do
               case reason of
-                ManualCancel -> return $ InsertEvidenceEvent
+                ManualCancel -> return $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                   CancelDocumentEvidence
                   (value "actor" (actorWho actor))
                   (Just did)
+                  Nothing
+                  Nothing
                   actor
                 ELegDataMismatch _ sid fn ln num -> do
                   Just sl <- query $ GetSignatoryLinkByID did sid Nothing
@@ -1107,10 +1110,12 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
                               ,("Personal number", getPersonalNumber sl, num)]
                       uneql = filter (\(_,a,b)->a/=b) trips
                       msg = intercalate "; " $ map (\(f,s,e)->f ++ " from transaction was \"" ++ s ++ "\" but from e-legitimation was \"" ++ e ++ "\"") uneql
-                  return $ InsertEvidenceEvent
+                  return $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                     CancelDocumenElegEvidence
                     (value "actor" (actorWho actor) >> value "msg" msg )
                     (Just did)
+                    (Just sid)
+                    Nothing
                     actor
           s -> do
             Log.error $ "Cannot CancelDocument document " ++ show did ++ " because " ++ concat s
@@ -1231,20 +1236,25 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m DeleteSigAttachment Bool wh
       Nothing -> do
         Log.error $ "SignatoryLink does not exist. Trying to Delete Sig Attachment. docid: " ++ show did
         return False
-      Just sig -> case find (\sl->signatoryattachmentfile sl == Just fid) $ signatoryattachments sig of
-        Nothing -> do
-          Log.error $ "No signatory attachment for that file id: " ++ show fid
-          return False
-        Just sa -> do
-          updateWithEvidence tableSignatoryAttachments
-            (  "file_id =" <?> SqlNull
-           <+> "WHERE file_id =" <?> fid <+> "AND signatory_link_id =" <?> slid
-            ) $ do
-            return $ InsertEvidenceEvent
-              DeleteSigAttachmentEvidence
-              (value "actor" (actorWho actor) >> value "name" (signatoryattachmentname sa) >> value "email" (getEmail sig))
-              (Just did)
-              actor
+      Just sig -> case (maybesigninfo sig) of
+       Just _ ->  do
+            Log.error $ "Signatory has already signed. Cant delete attachment.docid: " ++ show did
+            return False
+       Nothing -> do 
+          case find (\sl->signatoryattachmentfile sl == Just fid) $ signatoryattachments sig of
+            Nothing -> do
+              Log.error $ "No signatory attachment for that file id: " ++ show fid
+              return False
+            Just sa -> do
+              updateWithEvidence tableSignatoryAttachments
+                (   "file_id =" <?> SqlNull
+                <+> "WHERE file_id =" <?> fid <+> "AND signatory_link_id =" <?> slid
+                ) $ do
+                  return $ InsertEvidenceEvent
+                    DeleteSigAttachmentEvidence
+                    (value "actor" (actorWho actor) >> value "name" (signatoryattachmentname sa) >> value "email" (getEmail sig))
+                    (Just did)
+                    actor
 
 data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID String String String String String String [String] Actor
 instance (CryptoRNG m, MonadDB m,TemplatesMonad m) => DBUpdate m DocumentFromSignatoryData (Maybe Document) where
@@ -1602,14 +1612,11 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ReallyDeleteDocument Bool w
     result <- kRun $ mkSQL UPDATE tableSignatoryLinks
                                       [sql "really_deleted" True]
                   <+> "FROM documents, users "
-                  <+> "WHERE (user_id = " <?> (userid user)
-                  <+> "          AND documents.status = " <?> Pending
-                  <+> "       OR EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 "
-                  <+>                  "  WHERE signatory_links.user_id = usr2.id "
-                  <+>                  "    AND usr2.company_id = usr1.company_id "
-                  <+>                  "    AND usr1.is_company_admin "
-                  <+>                  "    AND usr1.id = " <?> (userid user)
-                  <+> "       OR users.company_id IS NULL ))"
+                  <+> "WHERE ((users.id = " <?> (userid user) <+> "AND (users.company_id IS NULL OR users.is_company_admin))"
+                  <+> "       OR EXISTS (SELECT 1 FROM users AS same_company_users "
+                  <+>                  "  WHERE users.company_id = same_company_users.company_id "
+                  <+>                  "    AND same_company_users.is_company_admin "
+                  <+>                  "    AND same_company_users.id = " <?> (userid user) <+> "))"
                   <+> "  AND users.id = signatory_links.user_id "
                   <+> "  AND documents.id = signatory_links.document_id "
                   <+> "  AND signatory_links.document_id = " <?> did
@@ -2374,7 +2381,7 @@ instance MonadDB m => DBQuery m GetDocsSentBetween Int where
 
 -- Update utilities
 
-updateWithEvidence' :: (MonadDB m, TemplatesMonad m) => DBEnv m Bool -> Table -> SQL -> DBEnv m InsertEvidenceEvent -> DBEnv m Bool
+updateWithEvidence' :: (MonadDB m, TemplatesMonad m, DBUpdate m evidence Bool) => DBEnv m Bool -> Table -> SQL -> DBEnv m evidence -> DBEnv m Bool
 updateWithEvidence' testChanged t u mkEvidence = do
   changed <- testChanged
   success <- kRun01 $ "UPDATE" <+> raw (tblName t) <+> "SET" <+> u
@@ -2383,19 +2390,19 @@ updateWithEvidence' testChanged t u mkEvidence = do
     update $ e
   return success
 
-updateWithEvidence ::  (MonadDB m, TemplatesMonad m) => Table -> SQL -> DBEnv m InsertEvidenceEvent -> DBEnv m Bool
+updateWithEvidence ::  (MonadDB m, TemplatesMonad m, DBUpdate m evidence Bool) => Table -> SQL -> DBEnv m evidence -> DBEnv m Bool
 updateWithEvidence = updateWithEvidence' (return True)
 
-updateOneWithEvidenceIfChanged :: (MonadDB m, TemplatesMonad m, Convertible a SqlValue)
-                               => DocumentID -> SQL -> a -> DBEnv m InsertEvidenceEvent -> DBEnv m Bool
+updateOneWithEvidenceIfChanged :: (MonadDB m, TemplatesMonad m, Convertible a SqlValue, DBUpdate m evidence Bool)
+                               => DocumentID -> SQL -> a -> DBEnv m evidence -> DBEnv m Bool
 updateOneWithEvidenceIfChanged did col new =
   updateWithEvidence'
     (checkIfAnyReturned $ "SELECT 1 FROM" <+> raw (tblName tableDocuments)
                       <+> "WHERE id =" <?> did <+> "AND" <+> col <+> "IS DISTINCT FROM" <?> new)
     tableDocuments (col <+> "=" <?> new <+> "WHERE id =" <?> did)
 
-updateOneAndMtimeWithEvidenceIfChanged :: (MonadDB m, TemplatesMonad m, Convertible a SqlValue)
-                                       => DocumentID -> SQL -> a -> MinutesTime -> DBEnv m InsertEvidenceEvent -> DBEnv m Bool
+updateOneAndMtimeWithEvidenceIfChanged :: (MonadDB m, TemplatesMonad m, Convertible a SqlValue, DBUpdate m evidence Bool)
+                                       => DocumentID -> SQL -> a -> MinutesTime -> DBEnv m evidence -> DBEnv m Bool
 updateOneAndMtimeWithEvidenceIfChanged did col new mtime =
   updateWithEvidence'
     (checkIfAnyReturned $ "SELECT 1 FROM" <+> raw (tblName tableDocuments)

@@ -39,14 +39,11 @@ flashMessagePasswordsDontMatch=
 	$_flashMessagePasswordsDontMatch()$
 
 ###
-flashMessageContractRestarted=
-    Du har startat om dokumentet och kan nu underteckna och skicka inbjudan på nytt.
+flashMessageContractRestarted=$_flashMessageContractRestarted()$
 ###
-flashMessageOfferRestarted=
-    Du har startat om offerten och kan nu skicka den på nytt
+flashMessageOfferRestarted=$_flashMessageOfferRestarted()$
 ###
-flashMessageOrderRestarted=
-    Du har startat om orderbekräftelsen och kan nu skicka den på nytt
+flashMessageOrderRestarted=$_flashMessageOrderRestarted()$
 ###
 flashMessageUserPasswordChanged=
 	$_flashMessageUserPasswordChanged()$
