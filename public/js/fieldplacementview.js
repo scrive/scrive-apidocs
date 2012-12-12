@@ -214,7 +214,7 @@ var TextTypeSetterView = Backbone.View.extend({
     place : function() {
         var placement = this.model;
         var offset = $(placement.view.el).offset();
-        $(this.el).css("left",offset.left + 32);
+        $(this.el).css("left",offset.left + Math.max($(placement.view.el).width()+18));
         $(this.el).css("top",offset.top - 20);
     },
     render: function() {
