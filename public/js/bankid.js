@@ -201,17 +201,17 @@ function netIDSignAuthor() {
 }
 
 function flashNordeaMessage() {
-    FlashMessages.add({ content: localization.noNordeaInstalled, color: "red"});
+    new FlashMessage({ content: localization.noNordeaInstalled, color: "red"});
     return false;
 }
 
 function flashBankIDMessage() {
-    FlashMessages.add({ content: localization.noBankIdInstalled, color: "red"});
+    new FlashMessage({ content: localization.noBankIdInstalled, color: "red"});
     return false;
 }
 
 function flashTeliaMessage() {
-    FlashMessages.add({ content: localization.noTeliaInstalled, color: "red"});
+    new FlashMessage({ content: localization.noTeliaInstalled, color: "red"});
     return false;
 }
 
@@ -219,7 +219,7 @@ function failEleg(msg, personalNumber) {
     if( personalNumber!=undefined && personalNumber!="" && personalNumber!=null ) {
         msg = msg + " (" + personalNumber + ")";
     }
-    FlashMessages.add({ content: msg, color: "red"});
+    new FlashMessage({ content: msg, color: "red"});
     LoadingDialog.close();
     return null;
 }
@@ -402,7 +402,7 @@ window.Eleg = {
                     return; }
                 var signer = $('#signer2')[0];
                 if(!signer)  {
-                     FlashMessages.add({ content: localization.yourSigningPluginFailed, color: "red"});
+                     new FlashMessage({ content: localization.yourSigningPluginFailed, color: "red"});
                      LoadingDialog.close();
                      failEleg(localization.yourSigningPluginFailed);
                      return;
@@ -414,7 +414,7 @@ window.Eleg = {
                var res = signer.PerformAction('Sign');
                if (res !== 0) // 0 means success
                 {
-                    FlashMessages.add({ content: localization.yourSigningPluginFailed + " " + res, color: "red"});
+                    new FlashMessage({ content: localization.yourSigningPluginFailed + " " + res, color: "red"});
                     LoadingDialog.close();
                     return;
                 }
@@ -431,7 +431,7 @@ window.Eleg = {
                     callback(submit);
             }    
             else
-                FlashMessages.add({ content: data.msg, color: "red"});
+               new FlashMessage({ content: data.msg, color: "red"});
             LoadingDialog.close();
             },
             error: repeatForeverWithDelay(250)
@@ -467,7 +467,7 @@ window.Eleg = {
                     return; }
                 var signer = $('#signerId')[0];
                 if(!signer)  {
-                     FlashMessages.add({ content: localization.yourSigningPluginFailed, color: "red"});
+                     new FlashMessage({ content: localization.yourSigningPluginFailed, color: "red"});
                      LoadingDialog.close();
                      failEleg(localization.yourSigningPluginFailed);
                      return;
@@ -482,7 +482,7 @@ window.Eleg = {
                 var res = signer.Sign();
                 if (res !== 0) // 0 means success
                 {
-                    FlashMessages.add({ content: localization.yourSigningPluginFailed + " " + signer.GetErrorString(), color: "red"});
+                    new FlashMessage({ content: localization.yourSigningPluginFailed + " " + signer.GetErrorString(), color: "red"});
                     LoadingDialog.close();
                     return;
                 }
@@ -499,7 +499,7 @@ window.Eleg = {
                     callback(submit);
             }    
             else
-                FlashMessages.add({ content: data.msg, color: "red"});
+                new FlashMessage({ content: data.msg, color: "red"});
             LoadingDialog.close();
             },
             error: repeatForeverWithDelay(250)
@@ -537,7 +537,7 @@ window.Eleg = {
                      return; }
                 var signer = $("#iid")[0];
                 if(!signer) {
-                     FlashMessages.add({ content: localization.yourSigningPluginFailed, color: "red"});
+                     new FlashMessage({ content: localization.yourSigningPluginFailed, color: "red"});
                      LoadingDialog.close();
                      failEleg(localization.yourSigningPluginFailed);
                      return;
@@ -550,7 +550,7 @@ window.Eleg = {
                 signer.SetProperty('IncludeCaCert', 'true');
                 var res = signer.Invoke('Sign');
                 if (res !== 0) {
-                    FlashMessages.add({ content: localization.yourSigningPluginFailed + " error code: " + res, color: "red"});
+                    new FlashMessage({ content: localization.yourSigningPluginFailed + " error code: " + res, color: "red"});
                     LoadingDialog.close();
                     return;
                 }
@@ -568,7 +568,7 @@ window.Eleg = {
 
             }    
             else
-                FlashMessages.add({ content: data.msg, color: "red"});
+               new FlashMessage({ content: data.msg, color: "red"});
             LoadingDialog.close();
             
             
@@ -602,7 +602,7 @@ window.Eleg = {
                 if (data && !data.error)  {
                     LoadingDialog.open(data.msg);
                 } else if (data && data.error) {
-                    FlashMessages.add({ content: data.error, color: "red"});
+                    new FlashMessage({ content: data.error, color: "red"});
                     LoadingDialog.close();
                     return; 
                 }

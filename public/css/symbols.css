@@ -274,63 +274,6 @@
 
 /* Lightbox Icons */
 
-.modal-icon {
-	background: url(../img/spr-icons-lb.png) no-repeat transparent;
-	float: left;
-	margin-right: 20px;
-	margin-top: 4px;
-	width: 38px;
-}
-
-.modal-icon.reminder {
-	background-position: 0 0;
-	height: 31px;
-}
-
-.modal-icon.message {
-	background-position: 0 -31px;
-	height: 31px;
-    margin-top: 1px;
-}
-
-.modal-icon.sign {
-	background-position: 0 -63px;
-	height: 30px;
-}
-
-.modal-icon.recall {
-	background-position: 0 -92px;
-	height: 25px;
-}
-
-.modal-icon.decline {
-	background-position: 0 -117px;
-	height: 30px;
-}
-
-.modal-icon.send {
-	background-position: 0 -150px;
-	height: 30px;
-}
-
-/* Lightbox Close Button */
-
-.modal-close, .flash-close, .popup-close {
-	background: url(../img/spr-btn-close.png) no-repeat transparent;
-	cursor: pointer;
-	display: block;
-	height: 24px;
-	width: 24px;
-}
-
-.modal-close:hover, .flash-close:hover , .popup-close:hover{
-	background-position: 0 -24px;
-}
-
-.modal-close:active, .flash-close:active,  .popup-close:active {
-	background-position: 0 -48px;
-}
-
 .documenticon {
     background: url(../img/document-icon-large.png) no-repeat transparent;
     height: 128px;

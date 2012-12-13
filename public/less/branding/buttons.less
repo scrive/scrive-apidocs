@@ -20,11 +20,6 @@ input[type="submit"]::-moz-focus-inner {border:0;}
   display: inline-block;
   zoom:1; /* IE 7 Hack starts here*/
   *display:inline;
-  &.button-black {
-    background: hsla(0,0,0,.66);
-    border-color: #000;
-    .box-shadow(inset hsla(0,0,100%,.33) 0 0 0 2px);
-  }
   &.button-gray {
     .gradient(hsl(0,0,41%), hsl(0,0,33%), hsl(0,0,50%));
     .box-shadow(inset hsl(0,0,80%) 0 0 0 2px);
@@ -40,13 +35,30 @@ input[type="submit"]::-moz-focus-inner {border:0;}
       border-color: hsl(0,0,20%);
     }
   }
-  &:hover, &.button-black:hover {
+
+  &.button-red {
+    .gradient(hsl(@redH,@redS,30%), hsl(@redH,@redS,25%), hsl(@redH,@redS,@redL));
+    border-color: hsl(@redH,@redS,30%);
+    .box-shadow(inset hsl(@redH,60%,67%) 0 0 0 2px);
+    &:hover {
+      .gradient(hsl(@redH,@redS,35%), hsl(@redH,@redS,28%), hsl(@redH,@redS,41%));
+      border-color: hsl(@redH,@redS,38%);
+      .box-shadow(inset hsl(@redH,66%,73%) 0 0 0 2px);
+    }
+    &:active, &.active {
+      .gradient(hsl(@redH,@redS,25%), hsl(@redH,@redS,20%), hsl(@redH,@redS,30%));
+      border-color: hsl(@redH,@redS,27%);
+      .box-shadow(inset hsl(@redH,54%,60%) 0 0 0 2px);
+    }
+  }
+
+  &:hover {
     .gradient(hsl(@blueH,@blueS,38%), hsl(@blueH,@blueS,30%), hsl(@blueH,@blueS,47%));
     .box-shadow(inset hsl(@blueH,@blueS,75%) 0 0 0 2px);
     .transition(.15s, ease-in-out);
     border-color: hsl(@blueH,@blueS,23%);
   }
-  &:active, &.active, &.button-black:active, &.button-black.active {
+  &:active, &.active {
     .box-shadow(inset hsl(@blueH,@blueS,50) 0 0 0 2px);
     .gradient(hsl(@blueH,@blueS,17%), hsl(@blueH,@blueS,13%), hsl(@blueH,@blueS,20%));
     .transition(.15s, ease-in-out);
@@ -55,7 +67,8 @@ input[type="submit"]::-moz-focus-inner {border:0;}
   &.button-small {
     max-height: 12px;
     .box-shadow(inset hsl(@blueH,@blueS,60%) 0 0 0 1px);
-    font-size: 12px;
+    font-size: 14px;
+    font-family: @source;
     line-height: 12px;
     padding: 9px 12px;
     border-width: 1px;
@@ -63,15 +76,12 @@ input[type="submit"]::-moz-focus-inner {border:0;}
     &.button-gray:hover {.box-shadow(inset hsl(0,0,70%) 0 0 0 1px)}
     &.button-gray:active,
     &.button-gray.active, {.box-shadow(inset hsl(0,0,80%) 0 0 0 1px)}
-    &.button-black {.box-shadow(inset hsla(0,0,100%,.33) 0 0 0 1px)}
-    &:hover,
-    &.button-black:hover {
-      .box-shadow(inset hsl(@blueH,@blueS,75%) 0 0 0 1px);
-    }
-    &:active, &.active,
-    &.button-black:active, &.button-black.active {
-      .box-shadow(inset hsl(@blueH,@blueS,50) 0 0 0 1px);
-    }
+    &:hover {.box-shadow(inset hsl(@blueH,@blueS,75%) 0 0 0 1px)}
+    &:active, &.active {.box-shadow(inset hsl(@blueH,@blueS,50%) 0 0 0 1px)}
+    &.button-red{.box-shadow(inset hsl(@redH,60%,67%) 0 0 0 1px)}
+    &.button-red:hover{.box-shadow(inset hsl(@redH,66%,73%) 0 0 0 1px)}
+    &.button-red:active,
+    &.button-red.active{.box-shadow(inset hsl(@redH,54%,60%) 0 0 0 1px)}
   }
   &.button-large {
     max-height: 31px;

@@ -164,7 +164,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                                if (resp.error == undefined)
                                                    window.location = signatory.padSigningURL();
                                                else
-                                                   FlashMessages.add({
+                                                   new FlashMessage({
                                                        content: localization.pad.addToPadQueueNotAdded,
                                                        color: "red"
                                                    });

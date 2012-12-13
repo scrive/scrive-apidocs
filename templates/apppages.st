@@ -112,7 +112,7 @@ header=
       <li><a class="page" id="page-about" href="$linkaccount$">$_headerAccount()$</a></li>
       <li><a class="page" id="page-cases" href="$linkissue$">$_headerArchive()$</a></li>
       <li class="session-create">
-        <a class="button button-small button-red" onclick='createfromtemplate()' href="#">$_headerTemplate()$ </a>
+        <a class="button button-small" onclick='createfromtemplate()' href="#">$_headerTemplate()$ </a>
       </li>
       <li class="session-create">
         <a class="button button-small"            onclick='createnewdocument()' href="#">$_headerSend()$ </a>

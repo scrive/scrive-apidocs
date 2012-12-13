@@ -60,9 +60,9 @@
             var self = this;
             var model = self.model;
             if (model.selected().length == 0 && !model.acceptEmpty())
-              FlashMessages.add({color: "red", content : model.emptyMessage()});
+              new FlashMessage({color: "red", content : model.emptyMessage()});
             else if (!model.allAvaible())
-              FlashMessages.add({color: "red", content : model.notAvailableMessage()});
+              new FlashMessage({color: "red", content : model.notAvailableMessage()});
             else
               model.onSelect();
             return false;

@@ -64,9 +64,9 @@ var SignatoryAttachmentUploadView = Backbone.View.extend({
         },
         ajaxerror: function(d, a) {
           if (a === 'parsererror') // file too large
-            FlashMessages.add({content: localization.fileTooLarge, color: "red"});
+            new FlashMessage({content: localization.fileTooLarge, color: "red"});
           else
-            FlashMessages.add({content: localization.couldNotUpload, color: "red"});
+            new FlashMessage({content: localization.couldNotUpload, color: "red"});
           attachment.notLoading();
         },
         ajaxsuccess: function(d) {

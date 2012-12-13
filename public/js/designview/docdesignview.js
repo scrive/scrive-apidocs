@@ -684,7 +684,7 @@ var DesignViewView = Backbone.View.extend({
                 var field = fields[j];
                 var validationCallback = function(text, object, validation) {
                     view.showSignatory(sigs[i]);
-                    FlashMessages.add({color: 'red', content : validation.message()});
+                    new FlashMessage({color: 'red', content : validation.message()});
                     if (field.view != undefined)
                         field.view.redborder();
                  };
@@ -695,20 +695,20 @@ var DesignViewView = Backbone.View.extend({
 
         if (!atLeastOneSignatory)
         {
-              FlashMessages.add({color: 'red', content : localization.designview.validation.atLeastOnePersonMustSigns});
+              new FlashMessage({color: 'red', content : localization.designview.validation.atLeastOnePersonMustSigns});
               this.tabs.activate(this.tab1);
               return false;
         }
         if (this.model.document().mainfile() == undefined)
         {
-             FlashMessages.add({color: 'red', content : localization.designview.validation.fileMustBeAdded});
+             new FlashMessage({color: 'red', content : localization.designview.validation.fileMustBeAdded});
              return false;
         }
         var mails = _.map(sigs, function(sig) {return sig.email();}).sort();;
         for (var i =0;i< mails.length -1;i++)
                 if (mails[i] == mails[i+1] && mails[i] != "")
                 {
-                    FlashMessages.add({color: 'red', content : localization.designview.validation.sameMails});
+                    new FlashMessage({color: 'red', content : localization.designview.validation.sameMails});
                     this.tabs.activate(this.tab1);
                     return false;
                 }
@@ -750,9 +750,9 @@ var DesignViewView = Backbone.View.extend({
                     ajaxerror: function(d,a){
                         LoadingDialog.close();
                         if(a === 'parsererror') // file too large
-                            FlashMessages.add({content: localization.fileTooLarge, color: "red"});
+                            new FlashMessage({content: localization.fileTooLarge, color: "red"});
                         else
-                            FlashMessages.add({content: localization.couldNotUpload, color: "red"});
+                            new FlashMessage({content: localization.couldNotUpload, color: "red"});
                         LoadingDialog.close();
                         document.trigger('change');
                     },

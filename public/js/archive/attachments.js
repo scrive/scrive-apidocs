@@ -57,7 +57,7 @@ window.AttachmentsListDefinition = function(archive) {
                                                 method: "POST",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
-                                                    FlashMessages.add({color : "green", content : localization.archive.attachments.share.successMessage});
+                                                    new FlashMessage({color : "green", content : localization.archive.attachments.share.successMessage});
                                                     archive.attachments().recall();
                                                 }
                                           }).sendAjax();
@@ -91,7 +91,7 @@ window.AttachmentsListDefinition = function(archive) {
                                                 method: "POST",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
-                                                    FlashMessages.add({color : "green", content : localization.archive.attachments.remove.successMessage});
+                                                    new FlashMessage({color : "green", content : localization.archive.attachments.remove.successMessage});
                                                     archive.attachments().recall();
                                                 }
                                           }).sendAjax();

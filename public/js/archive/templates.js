@@ -77,7 +77,7 @@ window.TemplatesListDefinition = function(archive) { return {
                                     try {
                                         window.location.href = "/d/"+JSON.parse(d).id;
                                     } catch(e) {
-                                        FlashMessages.add({content: localization.couldNotUpload, color: "red"});
+                                        new FlashMessage({content: localization.couldNotUpload, color: "red"});
                                         LoadingDialog.close();
                                     }
                                 }
@@ -114,7 +114,7 @@ window.TemplatesListDefinition = function(archive) { return {
                                                 method: "POST",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
-                                                    FlashMessages.add({color : "green", content : localization.archive.templates.share.successMessage});
+                                                    new FlashMessage({color : "green", content : localization.archive.templates.share.successMessage});
                                                     archive.templates().recall();
                                                     confirmationPopup.view.clear();
                                                 }
@@ -149,7 +149,7 @@ window.TemplatesListDefinition = function(archive) { return {
                                                 method: "POST",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
-                                                    FlashMessages.add({color : "green", content : localization.archive.templates.remove.successMessage});
+                                                    new FlashMessage({color : "green", content : localization.archive.templates.remove.successMessage});
                                                     archive.templates().recall();
                                                     confirmationPopup.view.clear();
                                                 }

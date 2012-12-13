@@ -31,7 +31,7 @@ window.BinListDefinition = function(archive) { return {
                                                 method: "POST",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
-                                                    FlashMessages.add({color : "green", content : localization.archive.bin.restore.successMessage});
+                                                    new FlashMessage({color : "green", content : localization.archive.bin.restore.successMessage});
                                                     archive.bin().recall();
                                                     confirmationPopup.view.clear();
                                                 }
@@ -57,7 +57,7 @@ window.BinListDefinition = function(archive) { return {
                                                 method: "POST",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
-                                                    FlashMessages.add({color : "green", content : localization.archive.bin.remove.successMessage});
+                                                    new FlashMessage({color : "green", content : localization.archive.bin.remove.successMessage});
                                                     archive.bin().recall();
                                                     confirmationPopup.view.clear();
                                                 }

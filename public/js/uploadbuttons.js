@@ -114,7 +114,7 @@ var UploadButtonView = Backbone.View.extend({
             onError: function(a,b,c,d) {
                 var splittype = model.type().split(",")[0].split("/");
                 var lasttype = splittype[splittype.length - 1].toUpperCase();
-                FlashMessages.add({content: localization.onlyFileWithTypeAllowed(lasttype), color: "red"});
+                new FlashMessage({content: localization.onlyFileWithTypeAllowed(lasttype), color: "red"});
                 if (model.get('onError'))
                     model.get('onError')(a,b,c,d);
             },

@@ -20,6 +20,10 @@ ignore  less/branding/typography.less
 ignore  less/branding/header.less
 ignore  less/branding/footer.less
 ignore  less/branding/containter.less
+ignore  less/branding/flash.less
+ignore  less/branding/modal.less
+ignore  less/branding/select.less
+
 
 set systemPage
  css css/newdesign.css

@@ -64,7 +64,7 @@ window.OAuthConfirationModel = Backbone.Model.extend({
             }
             else
             {
-              FlashMessages.add({ content: localization.loginModal.loginFailed, color: "red"});
+              new FlashMessage({ content: localization.loginModal.loginFailed, color: "red"});
             }
           }
         }).send();

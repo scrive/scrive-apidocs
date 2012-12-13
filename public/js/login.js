@@ -70,7 +70,7 @@ var LoginModel = Backbone.Model.extend({
             }  
             else
             {
-              FlashMessages.add({ content: localization.loginModal.loginFailed, color: "red"});
+              new FlashMessage({ content: localization.loginModal.loginFailed, color: "red"});
             }
           }
         });
@@ -89,7 +89,7 @@ var LoginModel = Backbone.Model.extend({
             var resp = JSON.parse(rs);
             if (resp.send == true)
             {
-              FlashMessages.add({ content: localization.loginModal.passwordReminderSend, color: "green"});
+              new FlashMessage({ content: localization.loginModal.passwordReminderSend, color: "green"});
             }
             else 
             {
@@ -100,7 +100,7 @@ var LoginModel = Backbone.Model.extend({
                 text = localization.loginModal.noUser;
               else if (resp.toomuch)
                 text = localization.loginModal.tooMuch;
-              FlashMessages.add({ content: text, color: "red"});
+              new FlashMessage({ content: text, color: "red"});
             }
           }
         }).send();

@@ -949,7 +949,7 @@
                      model.fetch({success: function() {
                          LoadingDialog.close();
                          model.trigger('fetch');
-                         FlashMessages.add({ content: localization.payments.billingInfoSaved, color: "green"});
+                         new FlashMessage({ content: localization.payments.billingInfoSaved, color: "green"});
                      }});
                  }
                 }
@@ -980,7 +980,7 @@
                                                                       model.fetch({success:function() {
                                                                           LoadingDialog.close();
                                                                           model.trigger('fetch');
-                                                                          FlashMessages.add({color:'green', content: localization.blocking.willcancel.headline.replace('XX', Math.ceil(moment.duration(model.subscription().billingEnds() - moment()).asDays())) });
+                                                                          new FlashMessage({color:'green', content: localization.blocking.willcancel.headline.replace('XX', Math.ceil(moment.duration(model.subscription().billingEnds() - moment()).asDays())) });
                                                                       }});
                                                                   },
                                                                   onSend: function() {
@@ -1052,7 +1052,7 @@
                                                                       model.fetch({success:function() {
                                                                           LoadingDialog.close();
                                                                           model.trigger('fetch');
-                                                                          FlashMessages.add({color:'green', content: localization.payments.subscriptionRenewed });
+                                                                          new FlashMessage({color:'green', content: localization.payments.subscriptionRenewed });
                                                                       }});
                                                                   },
                                                                   onSend: function() {

@@ -50,7 +50,7 @@
       var model = this;
       var validationError = model.validatePassword();
       if (validationError !== null) {
-        FlashMessages.add({content: validationError, color: 'red'});
+        new FlashMessage({content: validationError, color: 'red'});
         return;
       }
 
@@ -63,7 +63,7 @@
           if (resp.logged === true) {
             window.location = resp.location;
           } else {
-            FlashMessages.add({content: localization.newPasswordModal.flashMessagePasswordChangeLinkNotValid,
+            new FlashMessage({content: localization.newPasswordModal.flashMessagePasswordChangeLinkNotValid,
                                color: 'red'});
           }
         }

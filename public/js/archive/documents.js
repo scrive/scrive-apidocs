@@ -185,12 +185,12 @@ window.DocumentsListDefinition = function(archive) { return {
                                                 method: "POST",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
-                                                    FlashMessages.add({color : "green", content : localization.archive.documents.sendreminder.successMessage});
+                                                    new FlashMessage({color : "green", content : localization.archive.documents.sendreminder.successMessage});
                                                     archive.documents().recall();
                                                     confirmationPopup.view.clear();
                                                 },
                                                 ajaxerror : function() {
-                                                    FlashMessages.add({color : "red", content : localization.archive.documents.sendreminder.errorMessage});
+                                                    new FlashMessage({color : "red", content : localization.archive.documents.sendreminder.errorMessage});
                                                     archive.documents().recall();
                                                     confirmationPopup.view.clear();
                                                 }
@@ -222,7 +222,7 @@ window.DocumentsListDefinition = function(archive) { return {
                                                 method: "POST",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
-                                                    FlashMessages.add({color : "green", content : localization.archive.documents.cancel.successMessage});
+                                                    new FlashMessage({color : "green", content : localization.archive.documents.cancel.successMessage});
                                                     archive.documents().recall();
                                                     confirmationPopup.view.clear();
                                                 },
@@ -260,7 +260,7 @@ window.DocumentsListDefinition = function(archive) { return {
                                                 method: "POST",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");}),
                                                 ajaxsuccess : function() {
-                                                    FlashMessages.add({color : "green", content : localization.archive.documents.remove.successMessage});
+                                                    new FlashMessage({color : "green", content : localization.archive.documents.remove.successMessage});
                                                     archive.documents().recall();
                                                     confirmationPopup.view.clear();
                                                 }
@@ -286,7 +286,7 @@ window.DocumentsListDefinition = function(archive) { return {
                  acceptEmpty : true, // We handle in manually
                  onSelect: function(docs){
                         if (docs == undefined || docs.length == 0 ) {
-                         FlashMessages.add({color : "red", content : localization.archive.documents.zip.emptyMessage}); 
+                         new FlashMessage({color : "red", content : localization.archive.documents.zip.emptyMessage}); 
                          return true;
                         } 
                         if (docs.length == 1) {

@@ -76,12 +76,11 @@ spanNoEscape=<span>$it:noescape()$</span>
 #### Puts an invisible box with flash messages. jScripts do all show magic.
 ####
 flashmessages =
-<div class="flashmsgbox"> </div>
 <script>
    jQuery(function(){
      $flashmessages:{ flash |
          $if(!flash.isModal)$
-            FlashMessages.add({
+            new FlashMessages({
               "color" : "$flash.type$",
               "content": "$flash.message:noescape()$"
             })

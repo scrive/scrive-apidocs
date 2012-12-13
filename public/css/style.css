@@ -2947,6 +2947,12 @@ a#attachmentback {
     outline:0px;
 }
 
+.modal-container.email-preview {
+  width:800px;
+  left: 40%;
+  top:  40%;
+}
+
 .box.verificationBox{
     text-align : center;
     padding: 120px 0px;
@@ -2957,19 +2963,19 @@ a#attachmentback {
     display: inline-block;
 }
 
-.overlay.verificationModal, 
-.overlay.verificationModal .modal-container{
+.model.verificationModal,
+.model.verificationModal .modal-container{
   width: 300px;
   min-height: 120px;
 }
 
-.overlay.verificationModal.failed,
-.overlay.verificationModal.failed .modal-container{
+.model.verificationModal.failed,
+.model.verificationModal.failed .modal-container{
   width: 280px;
   min-height: 120px;
 }
 
-.overlay.verificationModal .modal-close{
+.model.verificationModal .modal-close{
   z-index : 1070;
   float:right;
   margin: 5px;

@@ -137,19 +137,19 @@ var ConfirmationView = Backbone.View.extend({
     render: function () {
        var view = this;
        var model = this.model;
-       $(this.el).addClass("modal-container");
+       var container = $("<div class='modal-container'/>")
        if (model.extraClass() != undefined)
             $(this.el).addClass(model.extraClass());
-       $(this.el).css("width",model.width());
+       container.css("width",model.width());
        var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");
        var title = $("<span class='modal-title'/>");
-       title.append($("<h2/>").append(this.model.title()));
+       title.append(this.model.title());
        header.append(title);
        if (model.canCancel())
-        header.append("<a class='modal-close close'/>");
+        header.append($("<a class='modal-close'><img width='24' height='24' src='/img/close.png'></a>").click(function() {view.reject(); return false;}));
        var body = $("<div class='modal-body'>");
        var content = $("<div class='modal-content'/>");
-       content.html(this.model.content());
+       content.append($("<div class='body'/>").html(this.model.content()));
        body.append(content);
        var footer = $("<div class='modal-footer'/>");
        if (model.canCancel()) {
@@ -173,20 +173,25 @@ var ConfirmationView = Backbone.View.extend({
             }).input();
        this.renderAcceptButton();
        footer.append( this.acceptButton);
-       $(this.el).append(header);
-       $(this.el).append(body);
-       $(this.el).append(footer);
+       container.append(header);
+       container.append(body);
+       container.append(footer);
+       $(this.el).append(container);
        return this;
     },
     reject: function(silent){
+        var self = this;
+        $(this.el).removeClass("active");
         this.model.reject(silent);
-        this.clear();
+        setTimeout(function() {if (self.clear != undefined) self.clear()},1000);
     },
     clear: function(){
-        $(this.el).data('overlay').close();
-        this.model.destroy();
-        this.model.view = undefined;
-        $(this.el).remove();
+        if (this.model != undefined) {
+          this.model.destroy();
+          this.model.view = undefined;
+        }  
+        if (this.el != undefined)
+          $(this.el).remove();
 
     }
 
@@ -196,18 +201,13 @@ var ConfirmationView = Backbone.View.extend({
 window.Confirmation = {
     popup: function (args) {
           var model = new ConfirmationModel(args);
-          var overlay = $("<div/>");
+          var overlay = $("<div class='modal'/>");
           if (args.cssClass != undefined)
             overlay.addClass(args.cssClass);
+          overlay.height($(document).height());
           var view = new ConfirmationView({model : model, el : overlay});
           $("body").append(overlay);
-          overlay.overlay({load: true,
-                           target:overlay,
-                           speed : 0,
-                           mask: args.mask != undefined ? args.mask : standardDialogMask,
-                           top: standardDialogTop,
-                           fixed: false
-                          });
+          setTimeout(function() {overlay.addClass("active");},100);
           return model;
    }
 

@@ -142,8 +142,8 @@ var ConfirmationWithEmailModel = Backbone.Model.extend({
 
 var ConfirmationWithEmailView = Backbone.View.extend({
   events: {
-        "click .close"  :  "reject",
-	"click .edit"  :  "edit"
+        "click .close" :  "reject",
+        "click .edit"  :  "edit"
     },
     initialize: function (args) {
         _.bindAll(this, 'render', 'reject');
@@ -155,21 +155,21 @@ var ConfirmationWithEmailView = Backbone.View.extend({
     render: function () {
        var model = this.model;
        var view = this;
-       $(this.el).addClass("modal-container");
-       $(this.el).addClass("email-preview");
+       var container = $("<div class='modal-container email-preview'/>");
 
 	   //Modal header
        var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");
        var title = $("<span class='modal-title'/>");
-       title.append($("<h2/>").append(this.model.title()));
+       title.append(this.model.title());
        header.append(title);
-       header.append("<a class='modal-close close'/>");
+       header.append($("<a class='modal-close'><img width='24' height='24' src='/img/close.png'></a>").click(function() {view.reject(); return false;}));
+
 
 	   //Modal body
        var body = $("<div class='modal-body'>");
        var content = $("<div class='modal-content'>");
 	   var mailview = new MailView({model: model.mail(), el : $("<div/>")});
-       content.html($(mailview.el));
+       content.append($("<div class='body'/>").html($(mailview.el)));
        body.append(content);
 
 	   //Modal footer
@@ -187,18 +187,20 @@ var ConfirmationWithEmailView = Backbone.View.extend({
                                  onClick : function() {
 									 var customtext = mailview.customtext();
 									 var res = model.accept(customtext);
-                                                                         if (res == true) $(view.el).data("overlay").close();
+                                     if (res == true) $(view.el).data("overlay").close();
 
 								}
         });
        footer.append(accept.input());
-       $(this.el).append(header);
-       $(this.el).append(body);
-       $(this.el).append(footer);
+       container.append(header);
+       container.append(body);
+       container.append(footer);
+       $(this.el).append(container)
        return this;
     },
     reject: function(){
-        this.clear();
+        $(this.el).removeClass("active");
+        setTimeout(function() {if (self.clear != undefined) self.clear()},1000);
     },
     edit: function(){
 		this.editOption.remove();
@@ -206,9 +208,12 @@ var ConfirmationWithEmailView = Backbone.View.extend({
 		return false;
     },
     clear: function(){
-        this.model.destroy();
-        this.model.view = undefined;
-        $(this.el).remove();
+        if (this.model != undefined) {
+          this.model.destroy();
+          this.model.view = undefined;
+        }
+        if (this.el != undefined)
+          $(this.el).remove();
     }
 
 });
@@ -217,16 +222,12 @@ var ConfirmationWithEmailView = Backbone.View.extend({
 window.ConfirmationWithEmail = {
     popup: function (args) {
           var model = new ConfirmationWithEmailModel(args);
-          var overlay = $("<div/>");
+          var overlay = $("<div class='modal'/>");
+          overlay.height($(document).height());
           var view = new ConfirmationWithEmailView({model : model, el : overlay});
           $("body").append(overlay);
-          overlay.overlay({load: true,
-                           target:overlay,
-                           speed : 0,
-                           mask: standardDialogMask,
-                           top: standardDialogTop,
-                           fixed: false
-                          });
+          setTimeout(function() {overlay.addClass("active");},100);
+          return model;
    }
 
 };
