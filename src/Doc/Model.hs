@@ -334,7 +334,7 @@ documentFilterToSQL (DocumentFilterMinChangeTime ctime) = do
 documentFilterToSQL (DocumentFilterMaxChangeTime ctime) = do
   sqlWhere (maxselect <+> "<=" <?> ctime)
 documentFilterToSQL (DocumentFilterByProcess processes) = do
-  if null (processes \\ [minBound..maxBound])
+  if null ([minBound..maxBound] \\ processes)
     then sqlWhere "TRUE"
     else sqlWhereIn "documents.process" processes
 documentFilterToSQL (DocumentFilterByMonthYearFrom (month,year)) = do
