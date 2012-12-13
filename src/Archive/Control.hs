@@ -56,6 +56,7 @@ import Control.Logic
 import Control.Monad.Identity
 import Text.JSON.String (runGetJSON)
 import Doc.DocDraft()
+import Data.String.Utils (splitWs)
 
 handleDelete :: Kontrakcja m => m JSValue
 handleDelete = do
@@ -267,7 +268,7 @@ docSearchingFromParams :: ListParams -> [DocumentFilter]
 docSearchingFromParams params =
   case listParamsSearching params of
     "" -> []
-    x -> [DocumentFilterByString x]
+    x -> map DocumentFilterByString $ take 5 (splitWs x)
 
 
 docsPageSize :: Int
