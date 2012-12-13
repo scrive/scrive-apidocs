@@ -3,7 +3,7 @@
 module GuardTime
        ( digitallySign
        , verify
-       , VerifyResult
+       , VerifyResult(Valid)
        , GuardTimeConf(..)
        ) where
 
