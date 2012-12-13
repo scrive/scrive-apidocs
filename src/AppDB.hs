@@ -36,6 +36,7 @@ import EvidenceLog.Migrations
 import Payments.Tables
 import Payments.Migrations
 import Attachment.Tables
+import ThirdPartyStats.Tables
 
 kontraFunctions :: [SQLFunction]
 kontraFunctions = [
@@ -160,4 +161,5 @@ kontraTables = [
   , tableSessions
   , tableDocumentSessionTokens
   , tableELegTransactions
+  , tableAsyncEventQueue
   ] ++ mailerTables
