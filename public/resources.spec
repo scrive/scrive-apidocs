@@ -36,12 +36,10 @@ set systemPage
  css css/tabs.css
  css css/lists.css
  css css/account.css
- css css/flash.css
  css css/docsignview.css
  css css/main.css
  css css/createfromtemplate.css
  less less/branding/index.less
- less less/selects.less
  less less/document-pages.less
  less less/payments.less
  less less/paymentsoutside.less

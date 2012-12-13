@@ -2,7 +2,7 @@
 
 ul.select {
   position: relative;
-  height: 32px;
+  height: 30px;
   width: @selectWidth;
   border: 1px solid @blue-border;
   text-align: left;
@@ -76,4 +76,84 @@ ul.select {
       }
     }
   }
+}
+
+
+.select{
+    font-family: @source;
+    color: @blue-dark;
+    font-size : 16px;
+    border: 1px solid @blue-border;
+    position: relative;
+    cursor: pointer;
+    text-align : left;
+    background: #fff;
+    .select-button {
+            height: 30px;
+            position: relative;
+            background: #fff;
+            z-index: 0;
+            &.select-exp {
+              position: relative;
+              z-index: 2;
+            }
+            .select-button-left {
+                    float: left;
+                    height: 30px;
+                    position: relative;
+                    width: 6px;
+            }
+
+            .select-button-right {
+                    background: url('/img/select-arrow.png') no-repeat;
+                    background-position: 0px 8px;
+                    height: 30px;
+                    width: 21px;
+                    position: relative;
+                    float: left;
+            }
+
+            .select-button-label {
+                    background-repeat:repeat-y;
+                    text-decoration: none;
+                    float: left;
+                    padding-top: 5px;
+                    white-space:nowrap;
+                    overflow: hidden;
+                    text-indent: 5px;
+            }
+    }
+    .select-opts {
+            display: none;
+            color: @dim;
+            background: #fff;
+            border: 1px solid @blue-border;
+            position: absolute;
+            top: 28px;
+            width: 200px;
+            z-index: 1;
+            padding-top: 5px;
+            left : -1px ;
+            text-align : left;
+            &.right {
+              right : 9px ;
+              text-align : right;
+              padding-right :10px
+            }
+            li {
+              text-indent: 9px;
+              padding: 6px;
+              height: 24px;
+              &:hover {
+                 background: @blue-border;
+                 color: @blue-dark;
+                    }
+            }
+    }
+
+}
+
+/* Extra width*/
+.select.extra-width .select-opts {
+            width: 270px;
 }
