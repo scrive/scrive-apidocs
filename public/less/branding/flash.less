@@ -1,0 +1,83 @@
+.flash {
+  position: fixed;
+  top: -96px;
+  left: 0;
+  width: 100%;
+  padding: 1em 0;
+  background: rgba(255,255,255,.75);
+  .transition(.25s,ease-in-out);
+  &.active {
+    top: 0;
+  }
+  &.success {
+    .flash-content {
+      border-color: @blue-dark;
+      color: @blue-dark;
+    }
+    .flash-icon {
+      background: @blue-dark;
+    }
+  }
+  &.error {
+    .flash-content {
+      border-color: @red;
+      color: @red;
+    }
+    .flash-icon {
+      background: @red;
+    }
+  }
+  &.warning {
+    .flash-content {
+      border-color: orange;
+      color: orange;
+    }
+    .flash-icon {
+      background: orange;
+    }
+  }
+}
+.flash-content {
+  width: 960px - 4px;
+  height: 64px - 4px;
+  margin: 0 auto;
+  position: relative;
+  border: 2px solid #ddd;
+  background: #fff;
+}
+
+.flash-icon {
+  width: 60px;
+  height: 60px;
+  background: #ddd;
+  float: left;
+  img {
+    margin: 18px;
+    opacity: .75;
+  }
+}
+.flash-body {
+  float: left;
+  padding-left: 16px;
+  text-align: left;
+  font-size: 1.25em;
+  line-height: 60px;
+  font-family: @source;
+}
+.flash-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 22px;
+  height: 22px;
+  padding: 20px;
+  cursor: pointer;
+  img {
+    display: block;
+    opacity: .25;
+    .transition(.15s,ease-in-out);
+  }
+  &:hover img {
+    opacity: 1;
+  }
+}
