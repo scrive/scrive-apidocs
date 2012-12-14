@@ -199,8 +199,18 @@ standardPageFields ctx title mpubliclink showCreateAccount loginOn referer email
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
   F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
 
+-- Official documentation states that JSON mime type is
+-- 'application/json'. IE8 for anything that starts with
+-- 'application/*' invokes 'Download file...' dialog box and does not
+-- allow JavaScript XHR to see the response. Therefore we have to
+-- ignore the standard and output something that matches 'text/*', we
+-- use 'text/javascript' for this purpose.
+--
+-- If future we should return 'application/json' for all browsers
+-- except for IE8. We do not have access to 'Agent' string at this
+-- point though, so we go this hackish route for everybody.
 simpleJsonResponse :: (Kontrakcja m, JSON a) => a -> m Response
-simpleJsonResponse = ok . toResponseBS (BS.fromString "application/json; charset=utf-8") . BSL.fromString . encode
+simpleJsonResponse = ok . toResponseBS (BS.fromString "text/javascript; charset=utf-8") . BSL.fromString . encode
 
 {- |
    Changing our pages into reponses, and clearing flash messages.
