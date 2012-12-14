@@ -179,7 +179,7 @@ Executable kontrakcja-server
   Build-depends: containers
   Build-depends: convertible == 1.0.11.0
   Build-depends: crypto-api == 0.10.1
-  Build-depends: cryptocipher == 0.3.0
+  Build-depends: cryptocipher == 0.3.2
   Build-depends: dataenc == 0.14.0.3
   Build-depends: directory
   Build-depends: explicit-exception == 0.1.6
