@@ -217,7 +217,7 @@ function flashTeliaMessage() {
 
 function failEleg(msg, personalNumber) {
     if( personalNumber!=undefined && personalNumber!="" && personalNumber!=null ) {
-        msg = msg + " (" + personalNumber + ")"
+        msg = msg + " (" + personalNumber + ")";
     }
     FlashMessages.add({ content: msg, color: "red"});
     LoadingDialog.close();
