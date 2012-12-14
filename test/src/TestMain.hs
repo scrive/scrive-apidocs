@@ -42,6 +42,9 @@ import DocStateTest
 #ifndef NO_DOCCONTROL
 import DocControlTest
 #endif
+#ifndef NO_DOCAPI
+import DocAPITest
+#endif
 #ifndef NO_DOCSTATEQUERY
 import DocStateQueryTest
 #endif
@@ -143,6 +146,9 @@ allTests = tail tests
 #endif
 #ifndef NO_DOCCONTROL
       , ("doccontrol", const docControlTests)
+#endif
+#ifndef NO_DOCAPI
+      , ("docapi", const docAPITests)
 #endif
 #ifndef NO_DOCSTATEQUERY
       , ("docstatequery", const $ const docStateQueryTests)

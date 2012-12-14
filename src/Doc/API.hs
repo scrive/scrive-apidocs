@@ -2,7 +2,9 @@ module Doc.API (
     documentAPI
   , apiCallCreateFromFile      -- Exported for tests
   , apiCallCreateFromTemplate  -- Exported for tests
-  , apiCallGet                -- Exported for tests
+  , apiCallGet                 -- Exported for tests
+  , apiCallUpdate              -- Exported for tests
+  , apiCallReady               -- Exported for tests
   ) where
 
 import Control.Monad.Trans.Maybe
