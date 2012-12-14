@@ -197,7 +197,7 @@ window.CompanyBrandingLogo = Backbone.Model.extend({
       url: '/serialize_image',
       ajax: true,
       ajaxsuccess: function (rs) {
-        var response = rs;
+        var response = JSON.parse(rs);
         var logo_base64 = response.logo_base64;
         model.setLogo(logo_base64);
       }

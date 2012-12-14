@@ -584,6 +584,7 @@ body.signview {
 
 .signview .signatoryattachments .list .item .file .name {
   color: black;
+  text-align : right;
 }
 
 .signview .signatoryattachments .list .item .action {
