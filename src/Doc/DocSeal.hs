@@ -482,12 +482,21 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
         code2 <- liftIO $ GT.digitallySign ctxgtconf tmpout
         newfilepdf <- Binary <$> case code2 of
           ExitSuccess -> do
-            res <- liftIO $ BS.readFile tmpout
-            Log.debug $ "GuardTime signed successfully #" ++ show documentid
-            return res
+            vr <- liftIO $ GT.verify tmpout
+            case vr of
+                 GT.Valid _ _ -> do 
+                      res <- liftIO $ BS.readFile tmpout
+                      Log.debug $ "GuardTime signed successfully #" ++ show documentid
+                      return res
+                 _ -> do
+                      res <- liftIO $ BS.readFile tmpout
+                      Log.debug $ "GuardTime verification after signing failed for document #" ++ show documentid
+                      Log.error $ "GuardTime verification after signing failed for document #" ++ show documentid
+                      return res     
           ExitFailure c -> do
             res <- liftIO $ BS.readFile tmpout
             Log.debug $ "GuardTime failed " ++ show c ++ " of document #" ++ show documentid
+            Log.error $ "GuardTime failed for document #" ++ show documentid
             return res
         Log.debug $ "Adding new sealed file to DB"
         File{fileid = sealedfileid} <- dbUpdate $ NewFile filename newfilepdf

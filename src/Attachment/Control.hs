@@ -49,9 +49,9 @@ handleRename attid = do
 
 handleShare :: Kontrakcja m => m JSValue
 handleShare =  do
-    _ <- guardJustM $ ctxmaybeuser <$> getContext
+    user <- guardJustM $ ctxmaybeuser <$> getContext
     ids <- getCriticalFieldList asValidAttachmentID "doccheck"
-    _ <- dbUpdate $ SetAttachmentsSharing ids True
+    _ <- dbUpdate $ SetAttachmentsSharing (userid user) ids True
     J.runJSONGenT $ return ()
 
 handleDelete :: Kontrakcja m => m JSValue
@@ -84,7 +84,8 @@ attachmentJSON att = do
 jsonAttachment :: Kontrakcja m => AttachmentID -> m JSValue
 jsonAttachment attid = do
     ctx <- getContext
-    atts <- dbQuery $ GetAttachments [AttachmentsSharedInUsersCompany (userid $ fromJust $ ctxmaybeuser ctx)]
+    let Just user = ctxmaybeuser ctx
+    atts <- dbQuery $ GetAttachments [AttachmentsSharedInUsersCompany (userid $ fromJust $ ctxmaybeuser ctx),  AttachmentsOfAuthorDeleteValue  (userid user) False]
             [AttachmentFilterByID [attid]] [] (0,10)
     case atts of
       [att] -> attachmentJSON att
@@ -180,7 +181,7 @@ handleShow attid = checkUserTOSGet $ do
   ctx <- getContext
   let Just user = ctxmaybeuser ctx
   mattachment <- oneObjectReturnedGuard =<< dbQuery (GetAttachments
-    [AttachmentsSharedInUsersCompany (userid user)]
+    [AttachmentsSharedInUsersCompany (userid user), AttachmentsOfAuthorDeleteValue  (userid user) False]
     [AttachmentFilterByID [attid]]
     []
     (0,1))

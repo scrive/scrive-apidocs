@@ -70,8 +70,8 @@ var DocumentSignSignatoriesListView = Backbone.View.extend({
           var name       = $("<div class='name' />").text(signatory.nameOrEmail());
           var line       = $("<div class='line' />");
           var middle1    = $("<div class='middle' />");
-          var middle2    = $("<div class='middle' />");
-          var middle3    = $("<div class='middle' />");
+          var middle2    = $("<div class='middle' style='min-width:100px'/>");
+          var middle3    = $("<div class='middle float-left' />");
           var statusicon = $("<div class='icon status' />").addClass(signatory.status());
           var status     = $("<span class='statustext' />").addClass(signatory.status()).text(view.signatorySummary(signatory));
           var details    = $('<a class="details" href="#" />').text(localization.docsignview.showDetails);

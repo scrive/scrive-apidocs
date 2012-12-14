@@ -165,10 +165,11 @@ instance MonadDB m => DBQuery m GetAttachments [Attachment] where
     orderToSQLCommand (Desc AttachmentOrderByCTime) = "attachments.ctime DESC"
 
 
-data SetAttachmentsSharing = SetAttachmentsSharing [AttachmentID] Bool
+data SetAttachmentsSharing = SetAttachmentsSharing UserID [AttachmentID] Bool
 instance (MonadDB m) => DBUpdate m SetAttachmentsSharing (Either String Bool) where
-  update (SetAttachmentsSharing atts flag) = do
+  update (SetAttachmentsSharing uid atts flag) = do
     kRun_ $ sqlUpdate "attachments" $ do
           sqlSet "shared" flag
           sqlWhereIn "id" atts
+          sqlWhereEq "user_id" uid
     return (Right True)
