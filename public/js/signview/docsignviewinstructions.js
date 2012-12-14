@@ -17,7 +17,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     if (document.isSigning()) {
       return localization.docsignview.followArrowToSign;
     } else if (document.isReviewing()) {
-      return localization.docsignview.followArrowToReview;
+      return localization.docsignview.reviewDocument;
     } else if (document.isSignedAndClosed()) {
       return localization.docsignview.signedAndClosed;
     } else if (document.isSignedNotClosed()) {

@@ -966,6 +966,7 @@ div.spacing.butt {
     #position: relative;
     overflow: hidden;
     height: 15px;
+    width: 100%;
 }
 
 .signview .line .middle {
