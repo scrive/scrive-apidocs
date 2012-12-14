@@ -8,7 +8,6 @@ ignore  tiny_mce/themes
 ignore  tiny_mce/utils
 ignore  libs/analytics.js
 ignore  libs/zenbox.js
-ignore  js/signup.js
 ignore  libs/recurly/recurly.css
 ignore  api-demo
 
@@ -47,6 +46,7 @@ set firstPage
  js  js/login.js
  js  js/new_password.js
  js  js/new_signup.js
+ js  js/account_setup.js
  js  js/blocking.js
 
 set systemPage

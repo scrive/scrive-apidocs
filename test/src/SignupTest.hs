@@ -18,7 +18,6 @@ import Login
 import LoginTest (assertLoginEventRecordedFor)
 import MinutesTime
 import Utils.Default
-import Redirect
 import TestingUtil
 import TestKontra as T
 import User.Model
@@ -49,8 +48,8 @@ testSignupAndActivate = do
   assertActivationPageOK (res2, ctx2)
 
   -- activate the account using the signup details
-  (res3, ctx3) <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password12" "password12" (Just "123")
-  assertAccountActivatedFor uarUserID "Andrzej" "Rybczak" (res3, ctx3)
+  ctx3 <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password12" "password12" (Just "123")
+  assertAccountActivatedFor uarUserID "Andrzej" "Rybczak" ctx3
   Just uuser <- dbQuery $ GetUserByID  uarUserID
   assertEqual "Phone number was saved" "123" (userphone $ userinfo uuser)
   emails <- dbQuery GetEmails
@@ -65,8 +64,8 @@ testLoginEventRecordedWhenLoggedInAfterActivation = do
   UserAccountRequest{..} <- assertSignupSuccessful (res1, ctx1)
 
   -- activate the account using the signup details
-  (res3, ctx3) <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password12" "password12" Nothing
-  assertAccountActivatedFor uarUserID "Andrzej" "Rybczak" (res3, ctx3)
+  ctx3 <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password12" "password12" Nothing
+  assertAccountActivatedFor uarUserID "Andrzej" "Rybczak" ctx3
   assertLoginEventRecordedFor uarUserID
 
 testAcceptTOSToActivate :: TestEnv ()
@@ -78,8 +77,8 @@ testAcceptTOSToActivate = do
   UserAccountRequest{..} <- assertSignupSuccessful (res1, ctx1)
 
   -- activate the account without accepting the tos
-  (res3, ctx3) <- activateAccount ctx1 uarUserID uarToken False "Andrzej" "Rybczak" "password12" "password12" Nothing
-  assertAccountActivationFailed (res3, ctx3)
+  ctx3 <- activateAccount ctx1 uarUserID uarToken False "Andrzej" "Rybczak" "password12" "password12" Nothing
+  assertAccountActivationFailed ctx3
 
 testNeedFirstNameToActivate :: TestEnv ()
 testNeedFirstNameToActivate = do
@@ -90,8 +89,8 @@ testNeedFirstNameToActivate = do
   UserAccountRequest{..} <- assertSignupSuccessful (res1, ctx1)
 
   -- activate the account without entering passwords
-  (res3, ctx3) <- activateAccount ctx1 uarUserID uarToken True "" "Rybczak" "" "" Nothing
-  assertAccountActivationFailed (res3, ctx3)
+  ctx3 <- activateAccount ctx1 uarUserID uarToken True "" "Rybczak" "" "" Nothing
+  assertAccountActivationFailed ctx3
 
 testNeedLastNameToActivate :: TestEnv ()
 testNeedLastNameToActivate = do
@@ -102,8 +101,8 @@ testNeedLastNameToActivate = do
   UserAccountRequest{..} <- assertSignupSuccessful (res1, ctx1)
 
   -- activate the account without entering passwords
-  (res3, ctx3) <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "" "" "" Nothing
-  assertAccountActivationFailed (res3, ctx3)
+  ctx3 <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "" "" "" Nothing
+  assertAccountActivationFailed ctx3
 
 testNeedPasswordToActivate :: TestEnv ()
 testNeedPasswordToActivate = do
@@ -114,8 +113,8 @@ testNeedPasswordToActivate = do
   UserAccountRequest{..} <- assertSignupSuccessful (res1, ctx1)
 
   -- activate the account without entering passwords
-  (res3, ctx3) <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "" "" Nothing
-  assertAccountActivationFailed (res3, ctx3)
+  ctx3 <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "" "" Nothing
+  assertAccountActivationFailed ctx3
 
 testPasswordsMatchToActivate :: TestEnv ()
 testPasswordsMatchToActivate = do
@@ -126,8 +125,8 @@ testPasswordsMatchToActivate = do
   UserAccountRequest{..} <- assertSignupSuccessful (res1, ctx1)
 
   -- activate the account using mismatched passwords
-  (res3, ctx3) <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password12" "password21" Nothing
-  assertAccountActivationFailed (res3, ctx3)
+  ctx3 <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password12" "password21" Nothing
+  assertAccountActivationFailed ctx3
 
 signupForAccount :: Context -> String -> TestEnv (JSValue, Context)
 signupForAccount ctx email = do
@@ -148,13 +147,10 @@ followActivationLink ctx uid token = do
 
 assertActivationPageOK :: (Response, Context) -> TestEnv ()
 assertActivationPageOK (res, ctx) = do
-  assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "Location is /sv" (Just "/sv") (T.getHeader "location" (rsHeaders res))
+  assertEqual "Response code is 200" 200 (rsCode res)
   assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx)
-  assertBool "Flash message has type indicating is modal" $ head (ctxflashmessages ctx) `isFlashOfType` Modal
 
-activateAccount :: Context -> UserID -> MagicHash -> Bool -> String -> String -> String -> String -> Maybe String -> TestEnv (Response, Context)
+activateAccount :: Context -> UserID -> MagicHash -> Bool -> String -> String -> String -> String -> Maybe String -> TestEnv Context
 activateAccount ctx uid token tos fstname sndname password password2 phone = do
   let tosValue = if tos
                    then "on"
@@ -166,17 +162,16 @@ activateAccount ctx uid token tos fstname sndname password password2 phone = do
                           , ("password2", inText password2)
                           ] ++
                           ([("callme", inText "YES"), ("phone", inText $ fromJust phone)] <| isJust phone |> [])
-  runTestKontra req ctx $ handleAccountSetupPost uid token >>= sendRedirect
+  (_, ctx') <- runTestKontra req ctx $ handleAccountSetupPost uid token
+  return ctx'
 
-assertAccountActivatedFor :: UserID -> String -> String -> (Response, Context) -> TestEnv ()
-assertAccountActivatedFor uid fstname sndname (res, ctx) = do
+assertAccountActivatedFor :: UserID -> String -> String -> Context -> TestEnv ()
+assertAccountActivatedFor uid fstname sndname ctx = do
   assertEqual "User is logged in" (Just uid) (fmap userid $ ctxmaybeuser ctx)
-  assertAccountActivated fstname sndname (res, ctx)
+  assertAccountActivated fstname sndname ctx
 
-assertAccountActivated :: String -> String -> (Response, Context) -> TestEnv ()
-assertAccountActivated fstname sndname (res, ctx) = do
-  assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "Location is /newdocument" (Just "/newdocument") (T.getHeader "location" (rsHeaders res))
+assertAccountActivated :: String -> String -> Context -> TestEnv ()
+assertAccountActivated fstname sndname ctx = do
   assertEqual "A flash message" 1 (length $ ctxflashmessages ctx)
   --shouldn't this flash just indicate success and not that it's signing related?!
   assertBool "Flash message has type indicating signing related" $ any (`isFlashOfType` SigningRelated) (ctxflashmessages ctx)
@@ -184,15 +179,12 @@ assertAccountActivated fstname sndname (res, ctx) = do
   assertEqual "First name was set" (Just fstname) (getFirstName <$> ctxmaybeuser ctx)
   assertEqual "Second name was set" (Just sndname) (getLastName <$> ctxmaybeuser ctx)
 
-assertAccountActivationFailed :: (Response, Context) -> TestEnv ()
-assertAccountActivationFailed (res, ctx) = do
-  assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "Location is /sv" (Just "/sv") (T.getHeader "location" (rsHeaders res))
+assertAccountActivationFailed :: Context -> TestEnv ()
+assertAccountActivationFailed ctx = do
   assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
-  assertEqual "There are two flash messages" 2 (length $ ctxflashmessages ctx)
+  assertEqual "There are two flash messages" 1 (length $ ctxflashmessages ctx)
   -- if they don't accept the tos then the flash is signing related, not sure why
   assertBool "One flash has type indicating a failure or signing related" $ any (\f -> f `isFlashOfType` OperationFailed || f `isFlashOfType` SigningRelated) (ctxflashmessages ctx)
-  assertBool "One flash has type indicating a modal (the tos modal)" $ any (`isFlashOfType` Modal) (ctxflashmessages ctx)
 
 getAccountCreatedActions :: TestEnv [UserAccountRequest]
 getAccountCreatedActions = do

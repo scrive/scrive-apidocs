@@ -52,3 +52,23 @@ signupPageContents=
     new Signup({email: $email:noescape()$, signuplink: "$signuplink$"});
   });
 </script>
+###
+accountSetupPage=
+$doctype()$
+<html>
+  <head>
+    <title>$pagetitle()$ Scrive Features</title>
+    <meta name="description" content="$_featuresPageMetaDescription()$" />
+    $standardHeaderContents()$
+  </head>
+  $standardBody(unwrappedbody=accountSetupPageContents())$
+</html>
+###
+accountSetupPageContents=
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    new AccountSetup({signuplink: "$signuplink$",
+                      fstname: "$fstname$",
+                      sndname: "$sndname$"});
+  });
+</script>

@@ -474,30 +474,38 @@ handleAccountSetupGet uid token = do
   if isJust $ userhasacceptedtermsofservice user
     then respond404
     else do
-      addFlashM $ modalAccountSetup (LinkAccountCreated uid token)
-                                    (getFirstName user)
-                                    (getLastName user)
-      sendRedirect $ LinkHome lang
+      ctx <- getContext
+      let fields = [ ("signuplink", show $ LinkAccountCreated uid token)
+                   , ("fstname", getFirstName user)
+                   , ("sndname", getLastName user)
+                   ]
+      content <- renderTemplateAsPageWithFields ctx "accountSetupPage" Nothing False fields
+      simpleHtmlResponse content
 
-handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m KontraLink
+handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
 handleAccountSetupPost uid token = do
   user <- guardJustM404 $ getUserAccountRequestUser uid token
   switchLang $ getLang user
   if isJust $ userhasacceptedtermsofservice user
-    then addFlashM flashMessageUserAlreadyActivated
+    then runJSONGenT $ do
+           value "ok" False
+           value "error" ("already_active" :: String)
     else do
       mfstname <- getRequiredField asValidName "fstname"
       msndname <- getRequiredField asValidName "sndname"
       mactivateduser <- handleActivate mfstname msndname user AccountRequest
       case mactivateduser of
-        Nothing -> addFlashM $ modalAccountSetup (LinkAccountCreated uid token)
-                                                 (fromMaybe "" mfstname)
-                                                 (fromMaybe "" msndname)
+        Nothing -> runJSONGenT $ do
+                    value "ok" False
+                    value "error" ("reload" :: String)
         Just (_, docs) -> do
           _ <- dbUpdate $ DeleteAction userAccountRequest uid
           forM_ docs (\d -> postDocumentPreparationChange d "mailapi")
           addFlashM flashMessageUserActivated
-  getHomeOrDesignViewLink
+          link <- getHomeOrDesignViewLink
+          runJSONGenT $ do
+            value "ok" True
+            value "location" $ show link
 
 {- |
     This is where we get to when the user clicks the link in their password reminder
