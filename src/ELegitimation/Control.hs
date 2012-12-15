@@ -40,6 +40,7 @@ import Text.JSON.Gen as J
 import Templates.Templates
 import qualified Templates.Fields as F
 import Data.List
+import Data.Maybe
 
 {- 
   There are two versions of almost everything for historical reasons.
@@ -315,9 +316,11 @@ initiateMobileBankID docid slid = do
     document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid slid magic
     unless (document `allowsAuthMethod` ELegAuthentication) internalError
 
-    sl <- guardJust $ getSigLinkFor document slid
-    let pn = getPersonalNumber sl
+    mpn <- getField "personnummer"
 
+    sl <- guardJust $ getSigLinkFor document slid
+    let pn = fromMaybe (getPersonalNumber sl) mpn
+        
     tbs <- getTBS document
 
     eresponse <- liftIO $ mbiRequestSignature logicaconf pn tbs

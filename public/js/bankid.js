@@ -574,7 +574,7 @@ window.Eleg = {
             
     });
     },
-    mobileBankIDSign: function(document, signatory, submit, callback) {
+    mobileBankIDSign: function(document, signatory, submit, callback, personnummer) {
         var eleg = this;
         var url;
         if(document.preparation())// || (document.viewer() && document.viewer().signatoryid() === document.author().signatoryid())) // author
@@ -584,11 +584,14 @@ window.Eleg = {
         console.log(url);
         LoadingDialog.open(localization.sign.eleg.mobile.startingMobileBankID);
         var fetching = true;
+
+        var data = {};
+        if(personnummer)
+            data.personnummer = personnummer;
         $.ajax({
             'url': url,
             'dataType': 'json',
-            'data': { 
-            }, 
+            'data': data,
             'type': 'POST',
             'scriptCharset': "utf-8",
             'success': function(data) {
@@ -607,7 +610,7 @@ window.Eleg = {
                                                  ,callback: function() {
                                                      submit.add("transactionid", data.transactionid);
                                                      submit.add("eleg" , "mobilebankid");
-                                                     if (callback == undefined)
+                                                     if (!callback)
                                                          submit.send();
                                                      else
                                                          callback(submit);
