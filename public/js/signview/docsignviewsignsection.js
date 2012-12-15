@@ -34,7 +34,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       return false;
     });
       mbi.click(function() {
-          Eleg.mobileBankIDSign(document,signatory,document.sign());
+          Eleg.mobileBankIDSign(document,signatory,document.sign(),null,signatory.personalnumberField().value());
           return false;
       });
     return $("<span />").append(bankid).append(telia).append(nordea).append(mbi);
