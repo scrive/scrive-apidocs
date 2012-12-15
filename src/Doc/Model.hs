@@ -336,7 +336,7 @@ documentFilterToSQL (DocumentFilterMinChangeTime ctime) = do
 documentFilterToSQL (DocumentFilterMaxChangeTime ctime) = do
   sqlWhere (maxselect <+> "<=" <?> ctime)
 documentFilterToSQL (DocumentFilterByProcess processes) = do
-  if null (processes \\ [minBound..maxBound])
+  if null ([minBound..maxBound] \\ processes)
     then sqlWhere "TRUE"
     else sqlWhereIn "documents.process" processes
 documentFilterToSQL (DocumentFilterByMonthYearFrom (month,year)) = do
@@ -1646,19 +1646,22 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RejectDocument Bool where
         errmsgs <- checkRejectDocument docid slid
         case errmsgs of
           [] -> do
-            updateWithEvidence tableDocuments
-              (    "status =" <?> Rejected
-             <+> ", mtime =" <?> time
-             <+> ", rejection_time =" <?> time
-             <+> ", rejection_reason =" <?> customtext
-             <+> ", rejection_signatory_link_id =" <?> slid
-             <+> "WHERE id =" <?> docid
-              ) $ do
-                return $ InsertEvidenceEvent
+              success <- kRun01 $ "UPDATE" <+> raw (tblName tableDocuments) <+> "SET" <+>  (
+                                    "status =" <?> Rejected
+                                <+> ", mtime =" <?> time
+                                <+> ", rejection_time =" <?> time
+                                <+> ", rejection_reason =" <?> customtext
+                                <+> ", rejection_signatory_link_id =" <?> slid
+                                <+> "WHERE id =" <?> docid
+                          )
+              when_ (success) $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                   RejectDocumentEvidence
                   (value "email" (getEmail sig) >> value "actor" (actorWho actor))
                   (Just docid)
+                  Nothing
+                  customtext
                   actor
+              return success    
           s -> do
             Log.error $ "Cannot RejectDocument document " ++ show docid ++ " because " ++ concat s
             return False

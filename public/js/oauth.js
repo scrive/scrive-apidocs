@@ -53,6 +53,7 @@ window.OAuthConfirationModel = Backbone.Model.extend({
           email : email,
           password : password,
           ajaxsuccess: function(rs) {
+            var resp = JSON.parse(rs);
             if (resp.logged == true)
             {
               window.location = window.location;

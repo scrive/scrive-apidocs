@@ -8,10 +8,16 @@ var AuthorViewSignatoriesModel = Backbone.Model.extend({
   initialize: function (args) {
     var self = this;
     var signatoriesViews = this.get("signatoriesViews");
-    _.each(this.document().signatories(), function(sig) {
+    _.each(this.signatories(), function(sig) {
       signatoriesViews.push(new AuthorViewSignatory({signatory: sig, authorviewsignatories : self }));
     });
     this.set({currentSignview : this.get('signatoriesViews')[0]}, {silent : true});
+  },
+  signatories: function() {
+        var signatories = this.document().signatories();
+        var current = _.find  (signatories, function(s) { return  s.current(); });
+        var others  = _.filter(signatories, function(s) { return !s.current(); });
+        return _.filter([current].concat(others), function(s) { return s.signs(); });
   },
   authorview :function() {
      return this.get("authorview");
@@ -54,7 +60,7 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
           var name       = $("<div class='name' />").text(sigview.nameOrEmail());
           var line       = $("<div class='line' />");
           var middle1    = $("<div class='middle' />");
-          var middle2    = $("<div class='middle' />");
+          var middle2    = $("<div class='middle' style='min-width:100px'/>");
           var middle3    = $("<div class='middle float-right' />");
           var statusicon = $("<div class='icon status' />").addClass(sigview.status());
           var status     = $("<span class='statustext' />").addClass(sigview.status()).text(sigview.signatorySummary());
