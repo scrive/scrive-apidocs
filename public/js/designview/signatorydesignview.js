@@ -15,7 +15,7 @@ var SignatoryDesignModel = Backbone.Model.extend({
   },
   documentdesignview :function() {
      return this.get("documentdesignview");
-  },
+  }
 });
   
 var SignatoryDesignView = Backbone.View.extend({

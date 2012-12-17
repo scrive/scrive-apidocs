@@ -39,7 +39,7 @@ var AuthorViewHistoryModel = Backbone.Model.extend({
     if (this.get("history") == undefined)
       this.set({"history" : new DocumentHistory({document : this.document()})}, {silent : true});
     return this.get("history");
-  },
+  }
 });
 
 var AuthorViewHistoryView = Backbone.View.extend({

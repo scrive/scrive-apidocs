@@ -46,14 +46,6 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
       var timeoutText = timeout.getFullYear() + "-" + (timeout.getMonth() < 9 ? "0" + (timeout.getMonth() + 1) : (timeout.getMonth()+1)) + "-" + timeout.getDate();
       return localization.docsignview.dueDate + " " + timeoutText;
   },
-  // Option do download document (link)
-  downloadOption : function() {
-      return $("<div class='download'/>").append(
-                        $( new DocumentDownloadView({
-                               model: this.model.document(),
-                               el: $("<div/>")
-                          }).el));
-  },
   // Box with next signatory selection, used only on ipad
   giveToNextPadSignatoryOption :  function() {
       var document = this.model.document();
@@ -72,15 +64,18 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     if (document.padDelivery() && document.isSignedNotClosed())
          container.append(this.giveToNextPadSignatoryOption());
 
-    var smallerbit = $("<div />");
+    var smallerbit = $("<div class='smaller-bits'/>");
 
     if (document.timeouttime() != undefined && document.signingInProcess())
         smallerbit.append($("<div class='duedate' />").text(this.dueDateDescription()));
 
 
-    if (!this.model.document().padDelivery())
-        smallerbit.append(this.downloadOption());
+    if (!this.model.document().padDelivery()) {
+        var link = $("<a target='_blank' class='download' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(document.title() + ".pdf")
+        smallerbit.append(link);
+    }    
 
+    
     container.append($("<div class='subheadline' />").append(smallerbit));
 
 
