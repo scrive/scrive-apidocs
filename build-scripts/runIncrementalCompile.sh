@@ -5,7 +5,7 @@ cabal install --only-dependencies
 cabal configure -ftest-coverage
 cabal build --ghc-options="-O0 -c"
 
-if [ x$TEAMCITY_VERSION == x ]; then
+if [ "$TEAMCITY_VERSION" == "" ]; then
   cabal build --ghc-options="-O0 -optl -O0"
 else
   cabal build --ghc-options="-O0 -optl -O0" 2>&1 | runghc build-scripts/Teamcity.hs ghc
