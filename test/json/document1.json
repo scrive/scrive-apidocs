@@ -91,7 +91,7 @@
                             "fieldHandler": null},
                            {"type": "standard",
                             "name": "email",
-                            "value": "",
+                            "value": "example@example.com",
                             "closed": false,
                             "fieldHandler": null},
                            {"type": "signature",
