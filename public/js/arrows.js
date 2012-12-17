@@ -30,6 +30,10 @@ var ArrowModel = Backbone.Model.extend({
   },
   isScrollDown: function() {
       return this.type() ==  "scroll-down";
+  },
+  scrollDone : function() {
+      if (this.get("scrollDone") != undefined)
+        this.get("scrollDone")();
   }
 });
 
@@ -145,11 +149,12 @@ var ScrollUpArrowView = Backbone.View.extend({
 
     },
     scroll: function(){
+       var model = this.model;
        var task = this.model.point();
        if (task == undefined) return;
        $('html,body').animate({
           scrollTop: task.offset().top - 150
-       }, 1000);
+       }, 1000, function() {model.scrollDone();});
        return false;
     }
 
@@ -205,12 +210,13 @@ var ScrollDownArrowView = Backbone.View.extend({
       }
     },
     scroll: function(){
+        var model = this.model;
         var task = this.model.point();
         if (task == undefined) return;
         var scrollbottom = task.offset().top + task.height() + 150;
         $('html,body').animate({
           scrollTop: scrollbottom - $(window).height()
-        }, 2000);
+        }, 2000, function() {model.scrollDone();});
        return false;
     }
 
@@ -224,7 +230,8 @@ window.Arrow = {
           var model = new ArrowModel({
                           type  : args.type,
                           text  : args.text,
-                          point : args.point
+                          point : args.point,
+                          scrollDone : args.scrollDone
                     });
           var view = new ArrowView({model : model, el : $("<div/>")});
           return new Object({

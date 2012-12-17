@@ -102,6 +102,13 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
         }
     }).input();
   },
+  downloadLink : function() {
+     return $("<a class='download'/>").attr("href", this.model.document().mainfile().downloadLink())
+              .append("<div class='float-left icon'></div>")
+              .append($("<div class='float-left docname'></div>").text(localization.downloadPDF))
+              .append("<div class='clearfix'></div>");
+     
+  },
   render: function() {
     var document = this.model.document();
     $(this.el).empty();
@@ -111,7 +118,8 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
 
     if (document.timeouttime() != undefined && document.signingInProcess())
       container.append($("<div class='subheadline duedate' />").text(this.dueDateDescription()));
-
+    
+      container.append($("<div class='subheadline download' />").append(this.downloadLink()));
 
     $(this.el).append(container);
 

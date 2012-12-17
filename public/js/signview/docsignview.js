@@ -375,6 +375,7 @@ var DocumentSignViewView = Backbone.View.extend({
 
         this.subcontainer.append($("<div class='clearfix' />"));
      }
+     
      if (this.model.hasArrows())
          view.container.prepend(view.model.arrow().view().el);
      return this;

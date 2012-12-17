@@ -205,14 +205,18 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var place = $(this.el);
         var view = this;
         if (view.inlineediting == true) {
-          if (this.input != undefined) this.input.focus();
+          if (this.input != undefined) {
+               if (window.scrollY + $(window).height() > this.input.offset().top && window.scrollY < this.input.offset().top) 
+                   this.input.focus();
+               
+          }
           return false;
         }
         view.inlineediting = true;
-        var width = place.width() > 80 ? place.width() : 80;
+        var width = place.width() > 100 ? place.width() : 100;
         place.empty();
         var box = $("<div class='inlineEditing'/>").width(width+24);
-        this.input = $("<input type='text' autofocus='autofocus'/>").val(field.value()).width(width+5);
+        this.input = $("<input type='text'/>").val(field.value()).width(width+5);
         var acceptIcon = $("<span class='acceptIcon'/>");
         place.append(box.append(this.input).append(acceptIcon));
         field.bind('change',function() { view.inlineediting  = false; view.render();});
@@ -235,7 +239,8 @@ var TextPlacementPlacedView = Backbone.View.extend({
                         return false;
                     }
         });
-        this.input.focus();
+        if (window.scrollY + $(window).height() > this.input.offset().top && window.scrollY < this.input.offset().top)
+                   this.input.focus();
         return false;
     },
     render: function() {
