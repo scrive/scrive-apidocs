@@ -3125,7 +3125,6 @@ a#attachmentback {
 .inlineEditing .acceptIcon {
     height:14px;
     width:14px;
-    margin:2px;
     display: block;
     float:right;
     background: url("../img/spr-icons.png") no-repeat scroll 0 0 transparent;
@@ -3135,9 +3134,15 @@ a#attachmentback {
 }
 .inlineEditing {
     border: 1px solid #DDDDDD;
-    height: 18px;
+    height: 14px;
+    padding: 5px 2px 5px 10px;
+    border-radius: 2px 2px 2px 2px;
+    margin-top: -5px;
+    margin-left: -10px;
+    background : #FFF;
 }
 .inlineEditing input{
+    font: 11px "Lucida Grande";
     border: 0px solid #DDDDDD;
     float: left;
     padding: 0px;

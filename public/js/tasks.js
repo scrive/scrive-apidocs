@@ -155,9 +155,9 @@ var PageTasksArrowView = Backbone.View.extend({
                                    , text : task.label()
                              });
         else if ((elbottom + bottommargin) > scrollbottom)
-            return new Arrow.init({type: 'scroll-down',  point : $(task.el())});
+            return new Arrow.init({type: 'scroll-down',  point : $(task.el()), scrollDone : function() {task.onActivate();} });
         else
-            return new Arrow.init({type: 'scroll-up',  point : $(task.el())});
+            return new Arrow.init({type: 'scroll-up',  point : $(task.el()), scrollDone : function() {task.onActivate();} });
   },
   arrowShouldChange : function(newtask) {
         var view = this;
