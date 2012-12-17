@@ -5,4 +5,9 @@ cabal update
 cabal clean
 cabal install --only-dependencies
 cabal configure -ftest-coverage
-cabal build
+
+if [ x$TEAMCITY_VERSION == x ]; then
+  cabal build
+else
+  cabal build 2>&1 | runghc build-scripts/Teamcity.hs ghc
+fi
