@@ -63,7 +63,6 @@ standardHeaderContents=
         <script src="/localization/$ctxlang$/$versioncode$.js"  type="text/javascript"></script>
         $staticResources:noescape()$
 ####
-####
 pageFooter=
 <footer class="site">
   <div class="ct">
@@ -76,7 +75,22 @@ pageFooter=
           <li><a href="$if(langenglish)$/en/$else$/sv/$endif$jobs">$_footerJobs()$</a></li>
           <li><a href="$if(langenglish)$/en/$else$/sv/$endif$privacy">$_footerPrivacy()$</a></li>
           <li class='last'><a href="$if(langenglish)$/en/$else$/sv/$endif$terms">$_footerTerms()$</a></li>
+          <li class='langSwitcher'>
+            <script>
+              jQuery(function() {
+                   var select = new Select({  name : $if(langswedish)$ "$_Swedish()$" $else$ "$_English()$" $endif$,
+                                              options: [ $if(langswedish)$
+                                                               {name: "$_English()$", value: "en"}
+                                                         $else$
+                                                               {name: "$_Swedish()$", value: "sv"}
+                                                         $endif$
+                                                ]})
+                   jQuery('.langSwitcher').append(select.view().el);
+              })
+            </script>
+          </li>
         </ul>
+
       </nav>
       <nav class='bottom'>
         <ul class="social">

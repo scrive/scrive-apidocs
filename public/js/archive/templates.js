@@ -61,7 +61,7 @@ window.TemplatesListDefinition = function(archive) { return {
                 button: Button.init({
                             size: "tiny",
                             color : "black",
-                            width : "140",
+                            width : "144",
                             text: localization.archive.templates.createnew,
                             onClick : function() {
                               new Submit({
