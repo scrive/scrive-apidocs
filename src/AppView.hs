@@ -210,7 +210,7 @@ standardPageFields ctx title mpubliclink showCreateAccount loginOn referer email
 -- except for IE8. We do not have access to 'Agent' string at this
 -- point though, so we go this hackish route for everybody.
 simpleJsonResponse :: (Kontrakcja m, JSON a) => a -> m Response
-simpleJsonResponse = ok . toResponseBS (BS.fromString "text/javascript; charset=utf-8") . BSL.fromString . encode
+simpleJsonResponse = ok . toResponseBS (BS.fromString "text/html; charset=utf-8") . BSL.fromString . encode
 
 {- |
    Changing our pages into reponses, and clearing flash messages.

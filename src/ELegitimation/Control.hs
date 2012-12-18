@@ -42,12 +42,12 @@ import qualified Templates.Fields as F
 import Data.List
 import Data.Maybe
 
-{- 
+{-
   There are two versions of almost everything for historical reasons.
   Before, the document was not saved before the document was sent or signed.
-  So the complete document was not available to Haskell. The Text to be Signed 
+  So the complete document was not available to Haskell. The Text to be Signed
   (which shows up in the BankID plugin) had to be generated on the client in JS
-  for the author. It contains a list of all signatories and other info. 
+  for the author. It contains a list of all signatories and other info.
   Also, the Text to be Signed was not available in JS for the signatory because
   we did not have all of that information in sign view in JS.
 
@@ -61,11 +61,11 @@ import Data.Maybe
 generateBankIDTransaction :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 generateBankIDTransaction docid signid = do
   Context{ctxtime,ctxlogicaconf} <- getContext
-  
+
   magic    <- guardJustM $ dbQuery $ GetDocumentSessionToken signid
   provider <- guardJustM $ readField "provider"
   let seconds = toSeconds ctxtime
-      
+
   -- sanity check
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
 
@@ -137,7 +137,7 @@ generateBankIDTransactionForAuthor  docid = do
                                         , transactiondocumentid      = docid
                                         , transactionmagichash       = signatorymagichash <$> asl
                                         , transactionnonce           = Just nonce
-                                        , transactionstatus = Left "Only necessary for mobile bankid"                                        
+                                        , transactionstatus = Left "Only necessary for mobile bankid"
                                         , transactionoref = Nothing
                                         }
                     return $ runJSONGen $ do
@@ -219,7 +219,7 @@ verifySignatureAndGetSignInfo docid signid magic fields provider signature trans
                                                      , signaturefstnameverified  = bfn
                                                      , signaturelstnameverified  = bln
                                                      , signaturepersnumverified  = bpn
-                                                     , signatureinfoocspresponse = mocsp                                                                            
+                                                     , signatureinfoocspresponse = mocsp
                                                     }
 
 {- |
@@ -271,7 +271,7 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
     Log.eleg $ ("Document " ++ show docid ) ++ ": Document matched"
     unless (doc `allowsAuthMethod` ELegAuthentication) internalError
     Log.eleg $ ("Document " ++ show docid ) ++ ": Document allows eleg"
-    res <- liftIO $ verifySignature logicaconf provider 
+    res <- liftIO $ verifySignature logicaconf provider
                       etbs
                       signature
                       ( transactionnonce <|  provider == BankIDProvider |> Nothing )
@@ -325,7 +325,7 @@ initiateMobileBankID docid slid = do
 
     eresponse <- liftIO $ mbiRequestSignature logicaconf pn tbs
     case eresponse of
-      Left e -> mobileBankIDErrorJSON e
+      Left e -> mobileBankIDErrorJSON e pn
       Right (tid, oref) -> do
         dbUpdate . MergeELegTransaction $ ELegTransaction {
             transactiontransactionid   = tid
@@ -351,7 +351,7 @@ initiateMobileBankIDForAuthor docid = do
     let pn = getPersonalNumber sl
     eresponse <- liftIO $ mbiRequestSignature logicaconf pn tbs
     case eresponse of
-      Left e -> mobileBankIDErrorJSON e
+      Left e -> mobileBankIDErrorJSON e pn
       Right (tid, oref) -> do
         dbUpdate . MergeELegTransaction $ ELegTransaction {
             transactiontransactionid   = tid
@@ -388,9 +388,12 @@ collectMobileBankID docid slid = do
           transactionmagichash       == Just magic &&
           transactiondocumentid      == docid) internalError
 
+  sl <- guardJust $ getSigLinkFor document slid
+  let pn = getPersonalNumber sl
+
   case transactionstatus of
-    Left e -> mobileBankIDErrorJSON e
-    Right (CRComplete _ _ _) -> 
+    Left e -> mobileBankIDErrorJSON e pn
+    Right (CRComplete _ _ _) ->
       return $ runJSONGen $ J.value "status" "complete"
     _ -> do
       oref <- guardJust transactionoref
@@ -398,25 +401,30 @@ collectMobileBankID docid slid = do
       case eresponse of
         Left e -> do
           dbUpdate . MergeELegTransaction $ trans { transactionstatus = Left e }
-          return $ runJSONGen $ J.value "error" e
+          return $ runJSONGen $ do
+            J.value "error" e
+            J.value "personalNumber" pn
         Right s@(CROutstanding _) -> do
           dbUpdate . MergeELegTransaction $ trans { transactionstatus = Right s}
           msg <- renderTemplate "bankidStartApp" $ return ()
           return $ runJSONGen $ do
             J.value "status" "outstanding"
             J.value "message" msg
+            J.value "personalNumber" pn
         Right s@(CRUserSign _) -> do
           dbUpdate . MergeELegTransaction $ trans { transactionstatus = Right s}
           msg <- renderTemplate "bankidEnterCode" $ return ()
           return $ runJSONGen $ do
             J.value "status" "usersign"
             J.value "message" msg
+            J.value "personalNumber" pn
         Right s@(CRComplete _ _signature _attrs) -> do
           dbUpdate . MergeELegTransaction $ trans { transactionstatus = Right s}
-          -- save signature and attrs somewhere; 
+          -- save signature and attrs somewhere;
           return $ runJSONGen $ do
             J.value "status" "complete"
-  
+            J.value "personalNumber" pn
+
 collectMobileBankIDForAuthor :: Kontrakcja m => DocumentID -> m JSValue
 collectMobileBankIDForAuthor docid = do
   tid <- guardJustM $ getField "transactionid"
@@ -429,35 +437,45 @@ collectMobileBankIDForAuthor docid = do
                         ,transactiondocumentid} <- guardJustM $ dbQuery $ GetELegTransaction tid
   oref <- guardJust transactionoref
   unless (transactiondocumentid == docid) internalError
+  sl <- guardJust $ getAuthorSigLink document
+  let pn = getPersonalNumber sl
+
   case transactionstatus of
-    Left e -> mobileBankIDErrorJSON e
+    Left e -> mobileBankIDErrorJSON e pn
     Right (CRComplete _ _ _) ->
-      return $ runJSONGen $ J.value "status" "complete"
+      return $ runJSONGen $ do
+        J.value "status" "complete"
+        J.value "personalNumber" pn
     _ -> do
       eresponse <- liftIO $ mbiRequestCollect logicaconf tid oref
       case eresponse of
         Left e -> do
           dbUpdate . MergeELegTransaction $ trans { transactionstatus = Left e }
-          return $ runJSONGen $ J.value "error" e
+          return $ runJSONGen $ do
+            J.value "error" e
+            J.value "personalNumber" pn
         Right s@(CROutstanding _) -> do
           dbUpdate . MergeELegTransaction $ trans { transactionstatus = Right s}
           msg <- renderTemplate "bankidStartApp" $ return ()
           return $ runJSONGen $ do
             J.value "status" "outstanding"
             J.value "message" msg
+            J.value "personalNumber" pn
         Right s@(CRUserSign _) -> do
-          dbUpdate . MergeELegTransaction $ trans { transactionstatus = Right s}      
+          dbUpdate . MergeELegTransaction $ trans { transactionstatus = Right s}
           msg <- renderTemplate "bankidEnterCode" $ return ()
           return $ runJSONGen $ do
             J.value "status" "usersign"
             J.value "message" msg
+            J.value "personalNumber" pn
         Right s@(CRComplete _ _signature _attrs) -> do
           dbUpdate . MergeELegTransaction $ trans { transactionstatus = Right s}
-          -- save signature and attrs somewhere; 
+          -- save signature and attrs somewhere;
           return $ runJSONGen $ do
             J.value "status" "complete"
+            J.value "personalNumber" pn
 
-verifySignatureAndGetSignInfoMobile :: Kontrakcja m 
+verifySignatureAndGetSignInfoMobile :: Kontrakcja m
                                        => DocumentID
                                        -> SignatoryLinkID
                                        -> MagicHash
@@ -481,7 +499,7 @@ verifySignatureAndGetSignInfoMobile docid signid magic fields transactionid = do
       Right (CRComplete _ signature attrs) -> do
             Log.eleg "Successfully identified using eleg. (Omitting private information)."
             -- compare information from document (and fields) to that obtained from BankID
-            info <- compareSigLinkToElegData siglink fields attrs 
+            info <- compareSigLinkToElegData siglink fields attrs
             case info of
                 -- either number or name do not match
                 Left (msg, sfn, sln, spn) -> do
@@ -496,12 +514,12 @@ verifySignatureAndGetSignInfoMobile docid signid magic fields transactionid = do
                                                      , signaturefstnameverified  = bfn
                                                      , signaturelstnameverified  = bln
                                                      , signaturepersnumverified  = bpn
-                                                     , signatureinfoocspresponse = lookup "Validation.ocsp.response" attrs                                                                                 
+                                                     , signatureinfoocspresponse = lookup "Validation.ocsp.response" attrs
                                                     }
       Left s -> return $ Problem s
       _ -> return $ Problem "Signature is not yet complete."
 
-verifySignatureAndGetSignInfoMobileForAuthor :: Kontrakcja m 
+verifySignatureAndGetSignInfoMobileForAuthor :: Kontrakcja m
                                              => DocumentID
                                              -> String
                                              -> m VerifySignatureResult
@@ -533,15 +551,17 @@ verifySignatureAndGetSignInfoMobileForAuthor docid transactionid = do
                                                      , signaturefstnameverified  = bfn
                                                      , signaturelstnameverified  = bln
                                                      , signaturepersnumverified  = bpn
-                                                     , signatureinfoocspresponse = lookup "Validation.ocsp.response" attrs                                                                                 
+                                                     , signatureinfoocspresponse = lookup "Validation.ocsp.response" attrs
                                                     }
       Left s -> return $ Problem s
       _ -> return $ Problem "Signature is not yet complete."
 
-mobileBankIDErrorJSON :: TemplatesMonad m => String -> m JSValue
-mobileBankIDErrorJSON e = do
+mobileBankIDErrorJSON :: TemplatesMonad m => String -> String -> m JSValue
+mobileBankIDErrorJSON e pn = do
   errormessage <- renderTemplate errortemplate $ return ()
-  runJSONGenT $ J.value "error" errormessage
+  runJSONGenT $ do
+    J.value "error" errormessage
+    J.value "personalNumber" pn
   where errortemplate = case e of
           _ | "INVALID_PARAMETERS"     `isInfixOf` e -> "bankidInvalidParameters"
             | "SIGN_VALIDATION_FAILED" `isInfixOf` e -> "bankidInternalError"

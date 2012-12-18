@@ -247,10 +247,10 @@ var DocumentSignViewModel = Backbone.Model.extend({
                         }
                     },
                     tipSide : placement.tip(),
-                    label:label
+                    label:localization.writeHere
                 });
-                placement.field().bind("change", function() { task.update()});
-                placement.field().bind("reset", function() {task.update()});
+                placement.field().bind("change", function() { task.update();});
+                placement.field().bind("reset", function() {task.update();});
                 tasks.push(task);
             });
          this.set({'filltasks' : tasks }, {silent : true});
@@ -375,6 +375,7 @@ var DocumentSignViewView = Backbone.View.extend({
 
         this.subcontainer.append($("<div class='clearfix' />"));
      }
+     
      if (this.model.hasArrows())
          view.container.prepend(view.model.arrow().view().el);
      return this;

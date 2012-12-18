@@ -124,7 +124,7 @@ window.CompanyBrandingLogo = Backbone.Model.extend({
     logoChanged: false,
     label: "",
     editable: false,
-    loading: false,
+    loading: false
   },
   initialize: function(args) {
     this.url = args.url;
@@ -197,12 +197,12 @@ window.CompanyBrandingLogo = Backbone.Model.extend({
       url: '/serialize_image',
       ajax: true,
       ajaxsuccess: function (rs) {
-        var response = rs;
+        var response = JSON.parse(rs);
         var logo_base64 = response.logo_base64;
         model.setLogo(logo_base64);
       }
     })
-  },
+  }
 });
 
 window.CompanyBrandingLogoView = Backbone.View.extend({
@@ -305,7 +305,7 @@ window.CompanyModel = Backbone.Model.extend({
           logo: companyui.logo(),
           label: localization.customiseLogo,
           editable: companyui.editable(),
-          url: '',//this.url,
+          url: ''//this.url,
         }),
         barsbackground: new CompanyBrandingColour({
           companyui: companyui,

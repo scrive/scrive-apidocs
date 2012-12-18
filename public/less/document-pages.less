@@ -126,14 +126,24 @@
 }
 
 .placedcheckbox {
-    background: url("../img/checkbox_unchecked.jpg") no-repeat scroll 0 0 transparent;
+    background: url("../img/checkbox_unchecked.png") no-repeat scroll 0 0 transparent;
     height: 16px;
     width: 16px;
     cursor: pointer;
 }
 
 .placedcheckbox.checked {
-    background: url("../img/checkbox_checked.jpg") no-repeat scroll 0 0 transparent;
+    background: url("../img/checkbox_checked.png") no-repeat scroll 0 0 transparent;
+}
+
+
+.signview .placedcheckbox,
+.signview  .placedcheckbox.checked {
+    background-position : center;
+    padding: 10px;
+    margin-left: -10px;
+    margin-top: -10px;
+
 }
 
 .signatureBox {

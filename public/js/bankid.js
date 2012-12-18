@@ -215,7 +215,10 @@ function flashTeliaMessage() {
     return false;
 }
 
-function failEleg(msg) {
+function failEleg(msg, personalNumber) {
+    if( personalNumber!=undefined && personalNumber!="" && personalNumber!=null ) {
+        msg = msg + " (" + personalNumber + ")";
+    }
     FlashMessages.add({ content: msg, color: "red"});
     LoadingDialog.close();
     return null;
@@ -326,7 +329,7 @@ function ajaxRequest(ajaxurl, provider, posturl, formselector, successfn, tbs) {
             if (data && data.status === 0)
                 successfn(data.transactionid, data.tbs, data.nonce, data.servertime, posturl, formselector);
             else
-                failEleg(data.msg);
+                failEleg(data.msg, data.personalNumber);
         },
         error: repeatForeverWithDelay(250)
     });

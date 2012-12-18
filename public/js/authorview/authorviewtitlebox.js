@@ -109,9 +109,12 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     var container = $("<div class='titlebox' />");
     container.append($("<div class='headline' />").text(this.text()));
 
-    if (document.timeouttime() != undefined && document.signingInProcess())
-      container.append($("<div class='subheadline duedate' />").text(this.dueDateDescription()));
 
+    var smallerbits = $("<div class='subheadline'/>");
+    container.append(smallerbits);
+    if (document.timeouttime() != undefined && document.signingInProcess())
+      smallerbits.append($("<div class='duedate'/>").text(this.dueDateDescription()));
+    smallerbits.append($("<a target='_blank' class='download' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(localization.downloadPDF));
 
     $(this.el).append(container);
 
