@@ -79,15 +79,12 @@ sendResetPasswordMail ctx link user = do
   mail <- UserView.resetPasswordMail (ctxhostpart ctx) user link
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
 
-signupPageGet :: Kontrakcja m => m Response
+signupPageGet :: Kontrakcja m => m String
 signupPageGet = do
-  ctx <- getContext
   memail <- getField "email"
-  let email = maybe "null" (\x -> "\"" ++ x ++ "\"") memail
-      signupLink = show LinkSignup
-  content <- renderTemplateAsPageWithFields ctx "signupPage" Nothing False [("email", email), ("signuplink", signupLink)]
-  response <- simpleHtmlResponse content
-  return response
+  renderTemplate "signupPage" $ do
+    F.value "email" memail
+    F.value "signuplink" $ show LinkSignup
 
 {- |
    Handles submission of the signup form.

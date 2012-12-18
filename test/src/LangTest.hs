@@ -12,7 +12,6 @@ import Context
 import Kontra (Kontra(..))
 import Login
 import MinutesTime
-import Redirect
 import TestingUtil
 import TestKontra as T
 import User.Lang
@@ -51,15 +50,15 @@ testLoggedInLangSwitching = do
 
     --from the /upload page switch lang to swedish
     req1 <- mkRequest POST [("lang", inText "LANG_SV")]
-    (res2, ctx2) <- runTestKontra req1 ctx1 $ handlePostUserLang >>= sendRedirect
-    assertLoggedIn (userid user) res2 ctx2
+    (_res2, ctx2) <- runTestKontra req1 ctx1 $ handlePostUserLang
+    assertLoggedIn (userid user) ctx2
     assertUserLang (userid user) LANG_SV
     assertContextLang (userid user) ctx2 LANG_SV
 
     --now switch back again to uk
     req2 <- mkRequest POST [("lang", inText "LANG_EN")]
-    (res3, ctx3) <- runTestKontra req2 ctx2 $ handlePostUserLang >>= sendRedirect
-    assertLoggedIn (userid user) res3 ctx3
+    (_res3, ctx3) <- runTestKontra req2 ctx2 $ handlePostUserLang
+    assertLoggedIn (userid user) ctx3
     assertUserLang (userid user) LANG_EN
     assertContextLang (userid user) ctx3 LANG_EN
   where
@@ -73,8 +72,7 @@ testLoggedInLangSwitching = do
       assertLang userlang lang
     assertLang :: HasLang a => a -> Lang -> TestEnv ()
     assertLang langlike lang = assertEqual "Lang" lang (getLang langlike)
-    assertLoggedIn uid res ctx = do
-      assertBool "Response code is 303" $ rsCode res == 303
+    assertLoggedIn uid ctx = do
       assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx) == Just uid
       assertBool "No flash messages were added" $ null $ ctxflashmessages ctx
 

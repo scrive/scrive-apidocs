@@ -13,6 +13,7 @@ module AppView( kontrakcja
               , standardPageFields
               , contextInfoFields
               , renderTemplateAsPage
+              , localizationScript
               ) where
 
 import FlashMessage
@@ -192,3 +193,9 @@ flashMessageFields flash = do
     ftype = fst <$> fm
     msg :: TemplatesMonad m => m String
     msg = snd <$> fm
+
+localizationScript :: Kontrakcja m => String -> m Response
+localizationScript _ = do
+   script <- renderTemplate_ "javascriptLocalisation"
+   ok $ toResponseBS (BS.fromString "text/javascript;charset=utf-8") $ BSL.fromString script
+    

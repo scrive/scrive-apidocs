@@ -335,19 +335,18 @@ handlePostUserMailAPI = withUserPost $ do
                              _ -> return ()
         return LinkUserMailAPI)
 
-handlePostUserLang :: Kontrakcja m => m KontraLink
+handlePostUserLang :: Kontrakcja m => m ()
 handlePostUserLang = do
   ctx <- getContext
-  user <- guardJust $ ctxmaybeuser ctx
-  mlang <- readField "lang"
-  _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
+  case (ctxmaybeuser ctx) of
+    Just user -> do
+      mlang <- readField "lang"
+      _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
            lang = fromMaybe (lang $ usersettings user) mlang
          }
-  referer <- getField "referer"
-  case referer of
-    Just _ -> return BackToReferer
-    Nothing -> return LoopBack
-
+      return ()
+    Nothing -> return ()     
+  
 handlePostUserSecurity :: Kontrakcja m => m KontraLink
 handlePostUserSecurity = do
   ctx <- getContext
@@ -444,43 +443,17 @@ handleAcceptTOSPost = withUserPost $ do
       return LinkAcceptTOS
     Nothing -> return LinkAcceptTOS
 
-handleQuestion :: Kontrakcja m => m KontraLink
-handleQuestion = do
-    ctx <- getContext
-    name <- getField "name"
-    memail <- getDefaultedField "" asValidEmail "email"
-    phone <- getField "phone"
-    message <- getField "message"
-    case memail of
-         Nothing -> return LoopBack
-         Just email -> do
-             let content = "name: "    ++ fromMaybe "" name ++ "<BR/>"
-                        ++ "email: "   ++ email ++ "<BR/>"
-                        ++ "phone "    ++ fromMaybe "" phone ++ "<BR/>"
-                        ++ "message: " ++ fromMaybe "" message
-             scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
-                   to = [MailAddress { fullname = "info@skrivapa.se", email = "info@skrivapa.se" }]
-                 , title = "Question"
-                 , content = content
-             }
-             addFlashM flashMessageThanksForTheQuestion
-             return LoopBack
-
-handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> m Response
+handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> m String
 handleAccountSetupGet uid token = do
   user <- guardJustM404 $ getUserAccountRequestUser uid token
   let lang = getLang user
   switchLang lang
   if isJust $ userhasacceptedtermsofservice user
     then respond404
-    else do
-      ctx <- getContext
-      let fields = [ ("signuplink", show $ LinkAccountCreated uid token)
-                   , ("fstname", getFirstName user)
-                   , ("sndname", getLastName user)
-                   ]
-      content <- renderTemplateAsPageWithFields ctx "accountSetupPage" Nothing False fields
-      simpleHtmlResponse content
+    else renderTemplate "accountSetupPage" $ do
+              F.value "signuplink" $ show $ LinkAccountCreated uid token
+              F.value "fstname" $ getFirstName user
+              F.value "sndname" $ getLastName user
 
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
 handleAccountSetupPost uid token = do

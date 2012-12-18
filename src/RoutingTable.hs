@@ -8,7 +8,6 @@ module RoutingTable (
 import Kontra
 import KontraLink
 import Login
-import PublicPages (publicPages)
 import Redirect
 import Routing
 import Happstack.StaticRouting(Route, choice, dir, param, remainingPath)
@@ -25,9 +24,9 @@ import qualified Attachment.Control as AttachmentControl
 import qualified EvidenceLog.Control as EvidenceLog
 import Doc.API
 import OAuth.Control
-
+import LangRouting
 import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
-
+import AppView
 import qualified PadQueue.Control as PadQueue
 
 {- |
@@ -47,10 +46,9 @@ import qualified PadQueue.Control as PadQueue
 
 staticRoutes :: Route (KontraPlus Response)
 staticRoutes = choice
-     [ hGetAllowHttp $ getContext >>= (redirectKontraResponse . LinkHome . ctxlang)
-
-     , publicPages
-
+     [  allLangDirs $                          hGet $ toK0 $ sendRedirect $ LinkDesignView
+     ,  allLangDirs $  dir "localization"    $ hGet $ toK1 localizationScript
+     ,  allLangDirs $  dir "pricing"         $ hGet $ toK0 priceplanPage
      -- this is SMTP to HTTP gateway
      , dir "mailapi" $ hPostNoXToken             $ toK0 $ MailAPI.handleMailAPI
      , dir "mailapi" $ dir "confirmdelay" $ hGet $ toK3 $ MailAPI.handleConfirmDelay
@@ -167,18 +165,16 @@ staticRoutes = choice
 
      -- account stuff
      , dir "logout"      $ hGet  $ toK0 $ handleLogout
-     , dir "login" $ hGet $ toK0 $ handleLoginGet
+     , allLangDirs $ dir "login" $ hGet $ toK0 $ handleLoginGet
      , dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
-     , dir "signup"      $ hGet $ toK0 $ signupPageGet
+     , allLangDirs $ dir "signup"      $ hGet $ toK0 $ signupPageGet
      , dir "signup"      $ hPostAllowHttp $ toK0 $ signupPagePost
      , dir "amnesia"     $ hPostNoXToken $ toK0 $ forgotPasswordPagePost
-     , dir "amnesia"     $ hGet $ toK2 $ UserControl.handlePasswordReminderGet
+     , allLangDirs $ dir "amnesia"     $ hGet $ toK2 $ UserControl.handlePasswordReminderGet
      , dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
-     , dir "accountsetup"  $ hGet $ toK2 $ UserControl.handleAccountSetupGet
+     , allLangDirs $ dir "accountsetup"  $ hGet $ toK2 $ UserControl.handleAccountSetupGet
      , dir "accountsetup"  $ hPostNoXToken $ toK2 $ UserControl.handleAccountSetupPost
 
-     -- question form on static pages
-     , dir "question"    $ hPostAllowHttp $ toK0 $ UserControl.handleQuestion
      , dir "adminonly" $ Administration.adminonlyRoutes
      , dir "dave"      $ Administration.daveRoutes
      , documentAPI

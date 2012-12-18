@@ -1,21 +1,13 @@
 module LangRouting
   ( allLangDirs
-  , dirByLang
   ) where
 
 import Happstack.StaticRouting (Route, choice, dir)
 import User.Model
+import Kontra
 
-allLangDirs :: (Lang -> Route a) -> Route a
-allLangDirs r = forAllTargetedLangs $ \l -> langDir l $ r l
+allLangDirs :: Route (KontraPlus a) -> Route (KontraPlus a)
+allLangDirs r = choice $ r : (map (langDir r) allLangs)
 
-dirByLang :: HasLang l => l -> String -> String -> Route a -> Route a
-dirByLang lang swedishdir englishdir
-  | getLang lang == LANG_SV = dir swedishdir
-  | otherwise = dir englishdir
-
-forAllTargetedLangs :: (Lang -> Route h) -> Route h
-forAllTargetedLangs r = choice (map r allLangs)
-
-langDir :: Lang -> Route a -> Route a
-langDir = dir . codeFromLang . getLang
+langDir :: Route (KontraPlus a) -> Lang -> Route (KontraPlus a)
+langDir r l  = dir (codeFromLang l) $ fmap (\r' -> switchLang l >> r') r

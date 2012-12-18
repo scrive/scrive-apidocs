@@ -80,7 +80,7 @@ flashmessages =
    jQuery(function(){
      $flashmessages:{ flash |
          $if(!flash.isModal)$
-            new FlashMessages({
+            new FlashMessage({
               "color" : "$flash.type$",
               "content": "$flash.message:noescape()$"
             })

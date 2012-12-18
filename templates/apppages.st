@@ -60,7 +60,7 @@ standardHeaderContents=
         <meta http-equiv="content-language" content="$ctxlang$" />
         <link href='https://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
         <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,700,200italic,400italic,700italic' rel='stylesheet' type='text/css'>
-        <script src="/localization/$ctxlang$/$versioncode$.js"  type="text/javascript"></script>
+        <script src="/$ctxlang$/localization/$versioncode$.js"  type="text/javascript"></script>
         $staticResources:noescape()$
 ####
 pageFooter=
@@ -78,15 +78,30 @@ pageFooter=
           <li class='langSwitcher'>
             <script>
               jQuery(function() {
+                   var changeLang = function(l) {
+                      new Submit({
+                          method : "POST",
+                          url: "$linklangswitch$",
+                          lang: l == "en" ? "LANG_EN" : "LANG_SV"
+                                }).sendAjax(function() {
+                                   var p = window.location.pathname;
+                                   if (p.substring(0, 3) == "/en" || p.substring(0, 3) == "/sv")
+                                        p = "/" + l + p.substr(3);
+                                   window.location.pathname = p; 
+                          })
+                   }
+
                    var select = new Select({  name : $if(langswedish)$ "$_Swedish()$" $else$ "$_English()$" $endif$,
                                               options: [ $if(langswedish)$
-                                                               {name: "$_English()$", value: "en"}
+                                                               {name: "$_English()$", value: "en", onSelect : function() {changeLang("en");}}
                                                          $else$
-                                                               {name: "$_Swedish()$", value: "sv"}
+                                                               {name: "$_Swedish()$", value: "sv", onSelect : function() {changeLang("sv");} }
                                                          $endif$
                                                 ]})
                    jQuery('.langSwitcher').append(select.view().el);
               })
+
+
             </script>
           </li>
         </ul>
@@ -133,7 +148,8 @@ header=
       </li>
       $else$
       <li class="session-login">
-        <a class="button button-small" id="page-login" href="/login">Log in </a>
+        <a class="button button-small" id="page-login" href="/login">$_login()$ </a>
+        <a class="button button-small button-red" id="page-login" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_signUp()$</a>
       </li>
       <li><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$contact">$_headerContakt()$</a></li>
       <li><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$about">$_headerAbout()$</a></li>

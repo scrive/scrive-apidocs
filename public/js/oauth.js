@@ -52,12 +52,8 @@ window.OAuthConfirationModel = Backbone.Model.extend({
           ajax: true,
           email : email,
           password : password,
-<<<<<<< HEAD
           ajaxsuccess: function(rs) {
             var resp = JSON.parse(rs);
-=======
-          ajaxsuccess: function(resp) {
->>>>>>> OAuth pages fixes + links in app pages
             if (resp.logged == true)
             {
               window.location = window.location;

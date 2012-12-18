@@ -82,6 +82,8 @@ set systemPage
  js   js/selects.js
  js   js/login.js
  js   js/new_password.js
+ js   js/account_setup.js
+ js   js/new_signup.js
  js   js/lists/action.js
  js   js/lists/sorting.js
  js   js/lists/filtering.js

@@ -32,58 +32,43 @@
     initialize: function() {
       this.render();
     },
-
-    popupSignupModal : function() {
-      var model = this.model;
-
-      var container = $('<div class="recovery-container"/>');
-      var content = $('<div class="body"/>');
-      container.append(content);
-      var wrapper = $('<div class="wrapper" style="text-align: right;"/>');
-      content.append(wrapper);
-
-      var signupLocalization = localization.signupModal;
-
-      var emailInput = InfoTextInput.init({
-        infotext: signupLocalization.fillinemail,
-        value: model.email(),
-        onChange: function(v) {model.setEmail(v);},
-        inputtype: 'text',
-        name: 'email'
-      });
-      wrapper.append($('<span class="txt"/>').text(signupLocalization.emailAdress)).append(emailInput.input()).append('<BR/>');
-      emailInput.input().click();
-
-      Confirmation.popup({
-        title: signupLocalization.modalAccountSetupFooter,
-        rejectText: localization.cancel,
-        content: container,
-        mask: {
-          color: standardDialogMask,
-          top: standardDialogTop,
-          loadSpeed: 0,
-          opacity: 0.9
-        },
-        acceptButton: Button.init({
-          size: 'small',
-          color: 'blue',
-          text: signupLocalization.modalAccountSetupFooter,
-          onClick: function() {
-            model.signup();
-          }
-        }).input()
-      });
-      emailInput.input().focus();
-    },
-
     render: function () {
-      this.popupSignupModal();
-    }
+        var model = this.model;
+        var header = $("<header/>").append($("<h1 class='big'/>").text(localization.signupModal.modalAccountSetupFooter));
+        $(this.el).append(header);
+
+        var content = $("<div class='short-input-container recovery-container'/>");
+        var wrapper = $("<div class='short-input-container-body-wrapper'/>");
+        var body = $("<div class='short-input-container-body'/>");
+        content.append(wrapper.append(body));
+
+        var emailInput = InfoTextInput.init({
+          infotext: localization.signupModal.fillinemail,
+          value: model.email(),
+          onChange: function(v) {model.setEmail(v);},
+          cssClass : "big-input",
+          inputtype: 'text',
+          name: 'email'
+        });
+
+        var signupButton = Button.init({
+            size  : 'small',
+            color : 'blue',
+            text: localization.signupModal.modalAccountSetupFooter,
+            onClick: function() {
+              model.signup();
+            }
+          });
+
+        body.append($("<div class='position'/>").append(emailInput.input()).append(signupButton.input()));
+        $(this.el).append(content);
+      }
   });
 
   window.Signup = function(args) {
     var model = new SignupModel(args);
-    var view =  new SignupView({model: model, el: $('<div/>')});
+    var view =  new SignupView({model: model, el: $("<div class='signup short-input-section'/>")});
+    this.el = function() {return $(view.el);}
   };
 
 })(window);

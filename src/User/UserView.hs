@@ -33,7 +33,6 @@ module User.UserView (
     flashMessageUserAlreadyActivated,
     flashMessageNewActivationLinkSend,
     flashMessageUserSignupDone,
-    flashMessageThanksForTheQuestion,
     flashMessageChangeEmailMailSent,
     flashMessageMismatchedEmails,
     flashMessageProblemWithEmailChange,
@@ -247,10 +246,6 @@ modalDoYouWantToChangeEmail :: TemplatesMonad m => Email -> m FlashMessage
 modalDoYouWantToChangeEmail newemail = do
   toModal <$> (renderTemplate "modalDoYouWantToChangeEmail" $
                  F.value "newemail" $ unEmail newemail)
-
-flashMessageThanksForTheQuestion :: TemplatesMonad m => m FlashMessage
-flashMessageThanksForTheQuestion =
-    toFlashMsg OperationDone <$> renderTemplate_ "flashMessageThanksForTheQuestion"
 
 flashMessageLoginRedirectReason :: TemplatesMonad m => LoginRedirectReason -> m (Maybe FlashMessage)
 flashMessageLoginRedirectReason reason =

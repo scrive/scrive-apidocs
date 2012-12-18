@@ -34,8 +34,8 @@ data KontraLink
     | LinkPriceplan Lang
     | LinkLogin Lang LoginRedirectReason
     | LinkLogout
-    | LinkSignup
-    | LinkForgotPassword
+    | LinkSignup Lang
+    | LinkForgotPassword Lang
     | LinkLangSwitch
     | LinkArchive
     | LinkAccount
@@ -85,14 +85,12 @@ langFolder lang = "/" ++ (codeFromLang lang)
    Shows each link as a relative url
 -}
 instance Show KontraLink where
-    showsPrec _ (LinkHome lang) = (++) $ langFolder lang
-    showsPrec _ (LinkPriceplan lang)
-      | getLang lang == LANG_SV = (++) $ langFolder lang ++ "/priser"
-      | otherwise = (++) $ langFolder lang ++ "/pricing"
-    showsPrec _ (LinkLogin _ _) = (++"/login")
+    showsPrec _ (LinkHome lang) = (++) $ langFolder lang 
+    showsPrec _ (LinkPriceplan lang) = (++) $ langFolder lang ++ "/pricing"
+    showsPrec _ (LinkLogin lang _) = (++) $ langFolder lang ++ "/login"
     showsPrec _ LinkLogout = (++) "/logout"
-    showsPrec _ LinkSignup = (++) "/signup"
-    showsPrec _ LinkForgotPassword = (++) "/amnesia"
+    showsPrec _ (LinkSignup lang) = (++) $ langFolder lang ++ "/signup"
+    showsPrec _ (LinkForgotPassword lang) = (++) $ langFolder lang ++ "/amnesia"
     showsPrec _ LinkLangSwitch = (++) "/lang"
     showsPrec _ (LinkArchive) = (++) $ "/d"
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"

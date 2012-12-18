@@ -140,14 +140,13 @@ assertSignupSuccessful (_res, ctx) = do
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
   return $ head actions
 
-followActivationLink :: Context -> UserID -> MagicHash -> TestEnv (Response, Context)
+followActivationLink :: Context -> UserID -> MagicHash -> TestEnv (String, Context)
 followActivationLink ctx uid token = do
   req <- mkRequest GET []
   runTestKontra req ctx $ handleAccountSetupGet uid token
 
-assertActivationPageOK :: (Response, Context) -> TestEnv ()
-assertActivationPageOK (res, ctx) = do
-  assertEqual "Response code is 200" 200 (rsCode res)
+assertActivationPageOK :: (String, Context) -> TestEnv ()
+assertActivationPageOK (_res, ctx) = do
   assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
 
 activateAccount :: Context -> UserID -> MagicHash -> Bool -> String -> String -> String -> String -> Maybe String -> TestEnv Context
