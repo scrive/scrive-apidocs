@@ -1,7 +1,14 @@
 -- | Backend API for logging events to be sent off to a third party.
 module ThirdPartyStats.Core (
-    someProp, numProp, stringProp, EventProperty, asyncLogEvent,
-    ProcRes (..), NumEvents (..), asyncProcessEvents
+    EventProperty (..),
+    PropValue (..),
+    ProcRes (..),
+    NumEvents (..),
+    someProp,
+    numProp,
+    stringProp,
+    asyncLogEvent,
+    asyncProcessEvents
   ) where
 import Data.Binary
 import Control.Monad.IO.Class
@@ -83,6 +90,10 @@ data EventProperty
 --   special properties IDs starting at 0. Obviously.
 instance Binary EventProperty where
   put (MailProp mail)     = putWord8 0   >> put mail
+  put (IPProp ip)         = putWord8 1   >> put ip
+  put (NameProp name)     = putWord8 2   >> put name
+  put (UserIDProp uid)    = putWord8 3   >> put uid
+  put (TimeProp t)        = putWord8 4   >> put t
   put (SomeProp name val) = putWord8 255 >> put name >> put val
   
   get = do
