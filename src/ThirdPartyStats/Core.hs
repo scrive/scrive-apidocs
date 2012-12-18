@@ -1,6 +1,6 @@
 -- | Backend API for logging events to be sent off to a third party.
 module ThirdPartyStats.Core (
-    someProp, numProp, stringProp, EventProperty, AsyncEvent, asyncLogEvent,
+    someProp, numProp, stringProp, EventProperty, asyncLogEvent,
     ProcRes (..), NumEvents (..), asyncProcessEvents
   ) where
 import Data.Binary
@@ -103,16 +103,15 @@ data NumEvents = All | NoMoreThan Integer
 
 -- | Indicates how the processing of an event fared.
 data ProcRes
-  = OK                 -- ^ Processing succeeded, we're done with this event.
-  | PutBack AsyncEvent -- ^ Processing failed, but may succeed if retried
-                       --   later.
-  | Failed String      -- ^ Processing failed permanently, discard event and
-                       --   log the failure.
+  = OK            -- ^ Processing succeeded, we're done with this event.
+  | PutBack       -- ^ Processing failed, but may succeed if retried later.
+  | Failed String -- ^ Processing failed permanently, discard event and
+                  --   log the failure.
 
 
 -- | Remove a number of events from the queue and process them.
 asyncProcessEvents :: (MonadIO m, MonadDB m)
-                   => (AsyncEvent -> m ProcRes)
+                   => (EventName -> [EventProperty] -> m ProcRes)
                       -- ^ Event processing function.
                    -> NumEvents
                       -- ^ Max events to process.
@@ -122,10 +121,10 @@ asyncProcessEvents process numEvts = do
     mapM_ processEvent evts
     deleteEvents lastEvt
   where
-    processEvent evt = do
-        result <- process evt
+    processEvent (AsyncEvent name props) = do
+        result <- process name props
         case result of
-          PutBack (AsyncEvent name props) ->
+          PutBack ->
             asyncLogEvent name props
           Failed msg ->
             Log.error $ "Event processing failed because: " ++ msg
