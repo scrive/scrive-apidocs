@@ -1,5 +1,5 @@
 -- | Backend API for logging events to be sent off to a third party.
-module ThirdPartyStats.Backend (
+module ThirdPartyStats.Core (
     SomeProperty (..), EventProperty, AsyncEvent, asyncLogEvent,
     ProcRes (..), NumEvents (..), asyncProcessEvents
   ) where
