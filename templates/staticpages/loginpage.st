@@ -24,7 +24,7 @@ signupPage=
 <img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery('.mainContainer').append(new Signup({email: "$email:noescape()$", signuplink: "$signuplink$"}).el());
+    jQuery('.mainContainer').append(new Signup({email: "$email:noescape()$"}).el());
   });
 </script>
 </div>

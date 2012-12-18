@@ -84,7 +84,6 @@ signupPageGet = do
   memail <- getField "email"
   renderTemplate "signupPage" $ do
     F.value "email" memail
-    F.value "signuplink" $ show LinkSignup
 
 {- |
    Handles submission of the signup form.

@@ -468,6 +468,7 @@ javascriptLocalisation =
              fillinemail: "$_FillInEmail()$"
            , emailAdress: "$_EmailAdress()$"
            , modalAccountSetupFooter: "$_modalAccountSetupFooter()$"
+           , startNow : "$_startNow()$"
          }
          , accountSetupModal: {
              termsPageHeader: "$_termsPageHeader()$"

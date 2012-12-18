@@ -49,6 +49,7 @@ set systemPage
  less less/authorview.less
  less less/doctools.less
  less less/buttons.less
+ less less/util-pages.less
  js   libs/jquery.min.js
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js

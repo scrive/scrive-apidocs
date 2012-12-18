@@ -7,15 +7,12 @@
     setEmail: function(email) {
       this.set('email', email);
     },
-    signuplink: function() {
-      return this.get('signuplink');
-    },
     signup: function() {
       var model = this;
 
       new Submit({
         method: 'POST',
-        url: model.signuplink(),
+        url: "/signup",
         ajax: true,
         email: model.email(),
         ajaxsuccess: function(resp) {
@@ -59,7 +56,7 @@
               model.signup();
             }
           });
-
+        body.append($("<div class='position first'/>").append($("<h2>").text(localization.signupModal.startNow)));
         body.append($("<div class='position'/>").append(emailInput.input()).append(signupButton.input()));
         $(this.el).append(content);
       }
