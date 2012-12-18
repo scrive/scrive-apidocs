@@ -110,6 +110,7 @@ jsonAttachmentsList = withUserGet $ do
   let atts = PagedList { list       = allAtts
                        , params     = params
                        , pageSize   = attachmentsPageSize
+                       , listLength = length allAtts
                        }
   attsJSONs <- mapM (attForListJSON (timeLocaleForLang lang) cttime user) $ take attachmentsPageSize $ list atts
   runJSONGenT $ do
