@@ -147,7 +147,7 @@ asyncProcessEvents process numEvts = do
         runDBEnv $ do
             _ <- kRun_ $ sqlSelect (tblName tableAsyncEventQueue) $ do
                 sqlResult "sequence_number"
-                sqlResult "json"
+                sqlResult "event"
                 sqlOrderBy "sequence_number ASC"
                 case numEvts of
                   NoMoreThan n -> sqlLimit n
@@ -168,4 +168,4 @@ asyncLogEvent name props = do
     _ <- runDBEnv $ kRun $ mkSQL INSERT tableAsyncEventQueue serializedEvent
     return ()
   where
-    serializedEvent = [sql "json" $ encode $ AsyncEvent name props]
+    serializedEvent = [sql "event" $ encode $ AsyncEvent name props]
