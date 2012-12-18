@@ -70,8 +70,12 @@ type PropName = String
 
 -- | Represents a property on an event.
 data EventProperty
-  = MailProp String
-  | SomeProp PropName PropValue
+  = MailProp   String
+  | IPProp     String
+  | NameProp   String
+  | UserIDProp String
+  | TimeProp   MinutesTime
+  | SomeProp   PropName PropValue
     deriving Show
 
 
