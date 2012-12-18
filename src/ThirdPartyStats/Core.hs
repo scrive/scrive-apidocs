@@ -1,6 +1,6 @@
 -- | Backend API for logging events to be sent off to a third party.
 module ThirdPartyStats.Core (
-    SomeProperty (..), EventProperty, AsyncEvent, asyncLogEvent,
+    someProp, numProp, stringProp, EventProperty, AsyncEvent, asyncLogEvent,
     ProcRes (..), NumEvents (..), asyncProcessEvents
   ) where
 import Data.Binary
@@ -53,6 +53,14 @@ instance SomeProperty Bool where
 
 instance SomeProperty MinutesTime where
   someProp s = SomeProp s . PVMinutesTime
+
+-- | Create a named property with a Double value.
+numProp :: PropName -> Double -> EventProperty
+numProp s = SomeProp s . PVNumber
+
+-- | Create a named property with a String value.
+stringProp :: PropName -> String -> EventProperty
+stringProp s = SomeProp s . PVString
 
 
 -- | Makes type signatures on functions involving event names look nicer.
