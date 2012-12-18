@@ -24,9 +24,9 @@ import qualified Data.List
 import Data.Monoid
 import Data.String (IsString, fromString)
 import Database.HDBC
+import DB.SpaceMonoid
 
 infixl 7 <?>
-infixr 6 <+>
 
 -- | Raw SQL fragments and statements (without parameters).  The
 -- standard way to construct 'RawSQL' is by using the
@@ -73,19 +73,21 @@ instance Monoid RawSQL where
   mempty = RawSQL ""
   (RawSQL q) `mappend` (RawSQL q') = RawSQL (q ++ q')
 
+instance SpaceMonoid RawSQL where
+  mspace = RawSQL " "
+
 instance Monoid SQL where
   mempty = raw mempty
   (SQL q v) `mappend` (SQL q' v') = SQL (q <> q') (v ++ v')
+
+instance SpaceMonoid SQL where
+  mspace = raw mspace
 
 instance IsString SQL where
   fromString s = SQL (fromString s) []
 
 sqlParam :: Convertible a SqlValue => a -> SQL
 sqlParam p = SQL "?" [toSql p]
-
--- | Concatenate fragments with a space in between
-(<+>) :: SQL -> SQL -> SQL
-s1 <+> s2 = s1 <> " " <> s2
 
 -- | Append a parameter to a SQL fragment
 (<?>) :: Convertible a SqlValue => SQL -> a -> SQL

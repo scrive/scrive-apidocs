@@ -42,7 +42,7 @@ moveAtachmentsToSeparateTable =
 
       Log.debug $ "There are " ++ show count ++ " mails with attachments to move to mail_attachments, it will take around " ++ show ((count+999) `div` 1000) ++ " minutes"
 
-      kRun_ $ "WITH"
+      kRunRaw $ "WITH"
           <+> "toinsert AS (SELECT mails.id AS id"
           <+> "                  , regexp_matches(attachments, '{\"attName\":\"([^\"]*)\",\"attContent\":\"([^\"]*)\"}', 'g') AS arr"
           <+> "               FROM mails"
