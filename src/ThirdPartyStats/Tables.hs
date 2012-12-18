@@ -15,13 +15,13 @@ tableAsyncEventQueue = tblTable {
   , tblCreateOrValidate = \desc -> case desc of
       [("sequence_number", SqlColDesc { colType       = SqlBigIntT
                                       , colNullable   = Just False}),
-       ("json",            SqlColDesc { colType       = SqlVarCharT
+       ("event",           SqlColDesc { colType       = SqlVarCharT
                                       , colNullable   = Just False})] ->
         return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE async_event_queue ("
           <> "  sequence_number SERIAL      NOT NULL"
-          <> ", json            TEXT        NOT NULL"
+          <> ", event           TEXT        NOT NULL"
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
