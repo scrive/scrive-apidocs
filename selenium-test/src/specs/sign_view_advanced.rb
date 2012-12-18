@@ -119,6 +119,6 @@ describe "sign view all functionalities" do
     @h.dochelper.partSign
 
     puts "make sure we get a link for downloading the document"
-    @h.wait.until { @h.driver.find_element :css => "div.download" }
+    @h.wait.until { @h.driver.find_element :css => "a.download" }
   end
 end
