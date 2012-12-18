@@ -13,7 +13,7 @@ var SignatoriesDesignModel = Backbone.Model.extend({
   document : function() {
      return this.documentdesignview().document();
   },
-  documentdesignview :function() {
+  documentdesignview : function() {
      return this.get("documentdesignview");
   }
 });

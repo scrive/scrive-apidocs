@@ -85,6 +85,7 @@ javascriptLocalisation =
              , listand : "$_listand()$"
              , you : "$_you()$"
              , searchBoxButtonText : "$_searchBoxButtonText()$"
+             , writeHere : "$_writeHere()$"
              , downloadPDF : "$_DownloadPDF()$"
              , reviewPDF: "$_ReviewPDF()$"
              , deletePDF: "$_DeletePDF()$"

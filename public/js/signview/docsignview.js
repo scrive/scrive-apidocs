@@ -247,10 +247,10 @@ var DocumentSignViewModel = Backbone.Model.extend({
                         }
                     },
                     tipSide : placement.tip(),
-                    label:label
+                    label:localization.writeHere
                 });
-                placement.field().bind("change", function() { task.update()});
-                placement.field().bind("reset", function() {task.update()});
+                placement.field().bind("change", function() { task.update();});
+                placement.field().bind("reset", function() {task.update();});
                 tasks.push(task);
             });
          this.set({'filltasks' : tasks }, {silent : true});

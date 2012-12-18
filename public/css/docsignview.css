@@ -136,40 +136,24 @@ body.signview {
   margin-bottom: 5px;
 }
 
-.signview .instructions a {
-  display: block;
+.smaller-bits {
+    margin: 10px auto;
+    margin-top: 10px;
+    text-align : center;
+    
+  
 }
-
 .signview .instructions .subheadline .duedate {
-  margin-top: 2px;
-  margin-left: 10px;
-  margin-right: 10px;
-  position: relative;
-  top: -7px;
-  /*   believe it or not these lines do inline-blocking for IE7 */
-    zoom: 1;
-    *display: inline;
-    _height: 15px;
-  /*   end of IE7 junk */
+  display: inline;
+  margin-right:20px;
 }
 
-.signview .instructions .subheadline .download {
-  margin-left: 10px;
-  margin-right: 10px;
-  margin-top: 6px;
-  /*   believe it or not these lines do inline-blocking for IE7 */
-    zoom: 1;
-    *display: inline;
-    _height: 21px;
-  /*   end of IE7 junk */
-}
-
-.signview .download .icon {
-  margin-top: 1px;
-  margin-right: 2px;
-  width: 18px;
-  height: 20px;
-  background: url(../img/download-icon.png);
+.signview .instructions .subheadline a.download  {
+  background: url(../img/download-icon.png) no-repeat;;
+  padding-left: 20px;
+  margin-left:20px;
+  display: inline;
+  text-decoration : underline;
 }
 
 .signview .download .label {

@@ -96,7 +96,7 @@ window.TemplatesListDefinition = function(archive) { return {
                         popup.hideAccept();
                         return false;
                     }
-            }),
+            })
         }),
         new ListAction({
                 name : localization.archive.templates.share.action,
