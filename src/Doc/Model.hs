@@ -1340,6 +1340,7 @@ selectDocumentsWithSoftLimit softlimit sqlquery = do
         _ <- kRun $ SQL "CREATE TEMP TABLE docs1 AS " [] <> toSQLCommand sqlquery
         _ <- kRun $ SQL ("CREATE TEMP TABLE docs AS SELECT * FROM docs1 LIMIT " <> unsafeFromString (show limit)) []
         Just count <- getOne $ SQL "SELECT count(*) FROM docs1" []
+        kRunRaw "DROP TABLE docs1"
         return count
 
     _ <- kRun $ SQL "SELECT * FROM docs" []
@@ -1363,10 +1364,6 @@ selectDocumentsWithSoftLimit softlimit sqlquery = do
 
     kRunRaw "DROP TABLE docs"
     kRunRaw "DROP TABLE links"
-    case softlimit of
-      Nothing -> return ()
-      Just _ -> do
-        kRunRaw "DROP TABLE docs1"
 
     let extendSignatoryLinkWithFields sl =
            sl { signatorydetails = (signatorydetails sl)
