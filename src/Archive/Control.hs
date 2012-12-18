@@ -213,26 +213,27 @@ jsonDocumentsList = do
                       _ -> []
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
-      pagination = ((listParamsOffset params),(listParamsLimit params))
+      pagination2 = ((listParamsOffset params),(listParamsLimit params), Just docsPageSize)
       filters = filters1 ++ filters2 ++ tagsFilters
   cttime <- getMinutesTime
   padqueue <- dbQuery $ GetPadQueue $ userid user
   format <- getField "format"
   case format of
        Just "csv" -> do
-          allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting (0,maxBound)
-          let docsCSVs = concat $ zipWith (docForListCSV (timeLocaleForLang lang)) [1..maxBound] allDocs
+          allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting (0,-1)
+          let docsCSVs = concat $ zipWith (docForListCSV (timeLocaleForLang lang)) [1..] allDocs
           return $ Left $ CSV { csvFilename = "documents.csv"
                               , csvHeader = docForListCSVHeader
                               , csvContent = docsCSVs
                               }
        _ -> do
-          allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
+          (allDocsCount,allDocs) <- dbQuery $ GetDocuments2 domain (searching ++ filters) sorting pagination2
           let docs = PagedList {  list       = allDocs
                                 , params     = params
                                 , pageSize   = docsPageSize
+                                , listLength = allDocsCount
                                 }
-          docsJSONs <- mapM (docForListJSON (timeLocaleForLang lang) cttime user padqueue) $ take docsPageSize $ list docs
+          docsJSONs <- mapM (docForListJSON (timeLocaleForLang lang) cttime user padqueue) $ list docs
           return $ Right $ runJSONGen $ do
               value "list" docsJSONs
               value "paging" $ pagingParamsJSON docs

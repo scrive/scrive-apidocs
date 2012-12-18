@@ -27,6 +27,7 @@ module Doc.Model
   , DocumentFromSignatoryDataV(..)
   , ErrorDocument(..)
   , GetDocuments(..)
+  , GetDocuments2(..)
   , GetDocumentByDocumentID(..)
   , GetDocumentsByDocumentIDs(..)
   , GetDocumentByDocumentIDSignatoryLinkIDMagicHash(..)
@@ -1325,14 +1326,25 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ErrorDocument Bool where
                 actor
 
 selectDocuments :: MonadDB m => SqlSelect -> DBEnv m [Document]
-selectDocuments sqlquery = do
-    _ <- kRun $ SQL "CREATE TEMP TABLE docs AS " [] <> toSQLCommand sqlquery
+selectDocuments sqlquery = snd <$> selectDocumentsWithSoftLimit Nothing sqlquery
+
+selectDocumentsWithSoftLimit :: MonadDB m => Maybe Int -> SqlSelect -> DBEnv m (Int,[Document])
+selectDocumentsWithSoftLimit softlimit sqlquery = do
+    allDocumentsCount <- case softlimit of
+      Nothing -> do
+        _ <- kRun $ SQL "CREATE TEMP TABLE docs AS " [] <> toSQLCommand sqlquery
+        Just count <- getOne $ SQL "SELECT count(*) FROM docs" []
+        return count
+
+      Just limit -> do
+        _ <- kRun $ SQL "CREATE TEMP TABLE docs1 AS " [] <> toSQLCommand sqlquery
+        _ <- kRun $ SQL ("CREATE TEMP TABLE docs AS SELECT * FROM docs1 LIMIT " <> unsafeFromString (show limit)) []
+        Just count <- getOne $ SQL "SELECT count(*) FROM docs1" []
+        return count
 
     _ <- kRun $ SQL "SELECT * FROM docs" []
     docs <- reverse `liftM` fetchDocuments
 
-    when (null docs) $ do
-      Log.debug $ "Document query produced zero results:\n" ++ show sqlquery
 
     _ <- kRun $ SQL "CREATE TEMP TABLE links AS " [] <>
          selectSignatoryLinksSQL <>
@@ -1351,6 +1363,10 @@ selectDocuments sqlquery = do
 
     kRunRaw "DROP TABLE docs"
     kRunRaw "DROP TABLE links"
+    case softlimit of
+      Nothing -> return ()
+      Just _ -> do
+        kRunRaw "DROP TABLE docs1"
 
     let extendSignatoryLinkWithFields sl =
            sl { signatorydetails = (signatorydetails sl)
@@ -1363,7 +1379,7 @@ selectDocuments sqlquery = do
                    , documenttags              = M.findWithDefault S.empty (documentid doc) tags
                    }
 
-    return $ map fill docs
+    return (allDocumentsCount, map fill docs)
 
 data GetDocumentTags = GetDocumentTags DocumentID
 instance MonadDB m => DBQuery m GetDocumentTags (S.Set DocumentTag) where
@@ -1436,8 +1452,13 @@ instance MonadDB m => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash 
 --
 data GetDocuments = GetDocuments [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] (Int,Int)
 instance MonadDB m => DBQuery m GetDocuments [Document] where
-  query (GetDocuments domains filters orderbys (offset,limit)) = do
-    selectDocuments $ sqlSelect "documents" $ do
+  query (GetDocuments domains filters orderbys (offset,limit)) = 
+    snd <$> query (GetDocuments2 domains filters orderbys (offset,limit,Nothing))
+
+data GetDocuments2 = GetDocuments2 [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] (Int,Int,Maybe Int)
+instance MonadDB m => DBQuery m GetDocuments2 (Int,[Document]) where
+  query (GetDocuments2 domains filters orderbys (offset,limit,softlimit)) = do
+    selectDocumentsWithSoftLimit softlimit $ sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       mapM_ (sqlOrderBy . documentOrderByAscDescToSQL) orderbys
       sqlOffset $ fromIntegral offset

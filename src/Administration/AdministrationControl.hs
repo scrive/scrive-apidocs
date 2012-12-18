@@ -183,6 +183,7 @@ jsonCompanies = onlySalesOrAdmin $ do
     let companies = PagedList { list       = allCompanies
                               , params     = params
                               , pageSize   = companiesPageSize
+                              , listLength = length allCompanies
                               }
     runJSONGenT $ do
             valueM "list" $ forM (take companiesPageSize $ allCompanies) $ \company -> runJSONGenT $ do
@@ -284,6 +285,7 @@ jsonUsersList = onlySalesOrAdmin $ do
     let users = PagedList { list       = allUsers
                           , params     = params
                           , pageSize   = usersPageSize
+                          , listLength = length allUsers
                           }
 
     runJSONGenT $ do
@@ -855,6 +857,7 @@ jsonDocuments = onlySalesOrAdmin $ do
   let documents = PagedList { list       = allDocs
                             , params     = params
                             , pageSize   = docsPageSize
+                            , listLength = length allDocs
                             }
   runJSONGenT $ do
             valueM "list" $ forM (take docsPageSize $ list documents) $ \doc-> runJSONGenT $ do

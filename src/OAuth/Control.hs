@@ -136,7 +136,7 @@ apiDashboardPersonalTokens = do
   ls <- map jsonFromPersonalToken <$> maybeToList <$> (dbQuery $ GetPersonalToken (userid user))
   return $ runJSONGen $ do
     J.objects "list" $ map (J.value "fields") ls
-    J.value "paging" $ pagingParamsJSON $ PagedList {list = ls, pageSize = 100, params = emptyListParams}
+    J.value "paging" $ pagingParamsJSON $ PagedList {list = ls, pageSize = 100, params = emptyListParams, listLength = length ls}
 
 apiDashboardAPITokens :: Kontrakcja m => m JSValue
 apiDashboardAPITokens = do
@@ -145,7 +145,7 @@ apiDashboardAPITokens = do
   ls <- map jsonFromAPIToken <$> (dbQuery $ GetAPITokensForUser (userid user))
   return $ runJSONGen $ do
     J.objects "list" $ map (J.value "fields") ls
-    J.value "paging" $ pagingParamsJSON $ PagedList {list = ls, pageSize = 100, params = emptyListParams}
+    J.value "paging" $ pagingParamsJSON $ PagedList {list = ls, pageSize = 100, params = emptyListParams, listLength = length ls}
 
 apiDashboardGrantedPrivileges :: Kontrakcja m => m JSValue
 apiDashboardGrantedPrivileges = do
@@ -155,7 +155,7 @@ apiDashboardGrantedPrivileges = do
   ls <- concatMap (\p->jsonFromGrantedPrivilege p ds) <$> (dbQuery $ GetGrantedPrivileges (userid user))
   return $ runJSONGen $ do
     J.objects "list" $ map (J.value "fields") ls
-    J.value "paging" $ pagingParamsJSON $ PagedList {list = ls, pageSize = 100, params = emptyListParams}
+    J.value "paging" $ pagingParamsJSON $ PagedList {list = ls, pageSize = 100, params = emptyListParams, listLength = length ls}
 
 -- Manipulate dashboard stuff
 

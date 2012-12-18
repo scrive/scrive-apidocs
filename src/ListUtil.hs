@@ -64,13 +64,13 @@ import Text.JSON.FromJSValue
 import Control.Monad
 import Control.Monad.Identity
 import Utils.Prelude
-import qualified Log
- 
+
 -- This part is responsible for sorting,searching and paging documents lists
 data PagedList a =
-  PagedList { list     :: [a]
-            , pageSize :: Int
-            , params   :: ListParams
+  PagedList { list       :: [a]
+            , pageSize   :: Int
+            , params     :: ListParams
+            , listLength :: Int
             } deriving Show
 
 data ListParams = ListParams
@@ -135,7 +135,7 @@ getListParamsNew = do
     let sorting'  = if (sortingReversed)
                      then sorting
                      else (++ "REV") <$> sorting
-    Log.debug $ "Filters : " ++ show filters
+
     return ListParams
            -- REVIEW: I am assuming constants below stem from emptyListParams.
              { offset  = fromMaybe (offset emptyListParams) offset'
@@ -146,13 +146,13 @@ getListParamsNew = do
              }
 
 pagingParamsJSON :: PagedList a -> JSValue
-pagingParamsJSON (PagedList{list,pageSize,params}) = runJSONGen $ do
+pagingParamsJSON (PagedList{pageSize,params,listLength}) = runJSONGen $ do
     value "pageCurrent" $ offset params `div` pageSize
     value "itemMin" $ offset params
-    value "itemMax" $ offset params + length list - 1
+    value "itemMax" $ offset params + listLength - 1
     value "maxNextPages" $ (limit params) `div` pageSize
     value "pageSize" $ pageSize
-    
+
 singlePageListToJSON :: ToJSValue a => [a] -> JSValue
 singlePageListToJSON items =
     runJSONGen $ do
@@ -163,8 +163,8 @@ singlePageListToJSON items =
         value "pageCurrent" (0 :: Int)
         value "itemMin"     (0 :: Int)
         value "itemMax"     (itemCount - 1)
-    
-    
+
+
 getListParamsForSearch :: (ServerMonad m, Functor m, HasRqData m, MonadIO m) => m ListParams
 getListParamsForSearch = do
     search <- getField "search"
@@ -191,6 +191,7 @@ listSortSearchPage sortFunc searchFunc pageSize params list =
     in  PagedList { list = paged
                   , params = params
                   , pageSize = pageSize
+                  , listLength = length list
                   }
 
 doSorting :: SortingFunction a -> [String] -> [a] -> [a]
