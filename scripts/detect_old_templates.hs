@@ -1,4 +1,11 @@
--- run with: runhaskell -isrc templater.hs
+--- run with: runhaskell -isrc scripts/detect_old_templates.hs
+{-# OPTIONS_GHC -Wall -Werror #-}
+{- needed packages:
+    MissingH
+    HStringTemplate
+    filemanip
+    haskell-src-exts
+-}
 import qualified Data.Set as S
 import Data.Maybe
 import Control.Applicative
@@ -28,7 +35,7 @@ fileExps path = do
   case parseResult of
     ParseOk module' -> return $ moduleExps module'
     ParseFailed (SrcLoc _ line _) e -> do
-      hPutStrLn stderr $ "Error reading " ++ path ++ ":" ++ show line ++ " - " ++ e
+      hPutStrLn stderr $ path ++ ":" ++ show line ++ ": " ++ e
       return S.empty
   where mode' = defaultParseMode{ fixities   = Just []
                                 , extensions = [ MultiParamTypeClasses
@@ -140,7 +147,7 @@ fieldUpdateExps _ = S.empty
 qualStmtExps :: QualStmt -> S.Set Exp
 qualStmtExps _ = S.empty
 --------------------------------------------------
--- returns list of consturcors of EvidenceEventType datatype
+-- returns list of constructors of EvidenceEventType datatype
 -- (parsed from EvidenceLog.Model module)
 -- these are needed, because every event types has associated template
 elogEvents :: IO (S.Set String)
@@ -185,7 +192,7 @@ templateDeps tmpl = fromMaybe S.empty $ S.fromList <$> immDeps
     where parsedTmpl = newSTMP tmpl :: StringTemplate String
           (_, _, immDeps) = checkTemplate parsedTmpl
 
--- recursive template dependancy scanner
+-- recursive template dependency scanner
 -- takes a map from template names to template strings (all known templates in the system)
 -- set of already seen templates (empty in the beginning)
 -- names of templates that we wish to recursively scan for dependencies
@@ -225,4 +232,4 @@ main = do
       allTemplates = S.fromList $ Map.keys templatesMap ++ translations
       knownTemplates = go templatesMap S.empty topLevelTemplates
       unusedTemplates = allTemplates S.\\ knownTemplates S.\\ whiteList
-  print unusedTemplates
+  putStr $ unlines $ filter (not.null) $ S.toList $ unusedTemplates
