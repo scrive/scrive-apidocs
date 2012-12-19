@@ -3,6 +3,7 @@
 module ThirdPartyStats.Mixpanel (
   MixpanelToken,
   processMixpanelEvent) where
+import Control.Monad.IO.Class
 import ThirdPartyStats.Core
 import Mixpanel.Event as Mixpanel
 import Mixpanel.Result
@@ -12,15 +13,16 @@ import MinutesTime (toUTCTime)
 type MixpanelToken = String
 
 -- | Ship an event off to Mixpanel.
-processMixpanelEvent :: MixpanelToken
+processMixpanelEvent :: MonadIO m
+                     => MixpanelToken
                      -> EventName
                      -> [EventProperty]
-                     -> IO ProcRes
+                     -> m ProcRes
 processMixpanelEvent _ SetUserProps _ = do
     return $ Failed $  "Attempted to set Mixpanel user property using async "
                     ++ "event, but that's not done yet!"
 processMixpanelEvent token (NamedEvent name) props = do
-    res <- Mixpanel.track token name (map mixpanelProperty props)
+    res <- liftIO $ Mixpanel.track token name (map mixpanelProperty props)
     case res of
       HTTPError reason     -> return (Failed reason)
       MixpanelError reason -> return (Failed reason)
