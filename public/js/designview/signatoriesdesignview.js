@@ -1,5 +1,7 @@
 /* Signatory view of document
  * Now unified with author and viewer views
+ * 
+ * Instrumented with Mixpanel events
  */
 
 
@@ -36,11 +38,13 @@ var SignatoriesDesignView = Backbone.View.extend({
         addLink.click(function(){
             var nsig = document.addSignatory();
             view.showSignatory(nsig);
+            mixpanel.track('Click add signatory');
             return false;
         });
         var removeLink = $("<label class='removeSignatory clickable'/>").text(localization.removeSignatory);
         removeLink.click(function() {
             document.removeSignatory(view.current);
+            mixpanel.track('Click remove signatory');
             return false;
 
         });
@@ -52,6 +56,7 @@ var SignatoriesDesignView = Backbone.View.extend({
              text: localization.nextStep,
              cssClass : "nextstepbutton",
              onClick : function() {
+                 mixpanel.track('Click next step');
                  documentdesignview.goToNextStep();
                 }
              });
@@ -93,6 +98,7 @@ var SignatoriesDesignView = Backbone.View.extend({
             sigline.click(function() {
                 view.current= sig;
                 view.render();
+                mixpanel.track('Click sig in list');
                 return false;
             });
             view.signatoriesListBox.append(sigline);
