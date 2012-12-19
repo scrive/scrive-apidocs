@@ -4,6 +4,7 @@ module ThirdPartyStats.Mixpanel (
   processMixpanelEvent) where
 import ThirdPartyStats.Core
 import Mixpanel.Event as Mixpanel
+import Mixpanel.Result
 import MinutesTime (toUTCTime)
 
 -- | Token identifying us to Mixpanel.
@@ -17,8 +18,9 @@ processMixpanelEvent :: MixpanelToken
 processMixpanelEvent token name props = do
     res <- Mixpanel.track token name (map mixpanelProperty props)
     case res of
-      Just reason -> return (Failed reason)
-      _           -> return OK
+      HTTPError reason     -> return (Failed reason)
+      MixpanelError reason -> return (Failed reason)
+      Success              -> return OK
 
 -- | Convert a generic async event property to a Mixpanel property.
 mixpanelProperty :: EventProperty -> Mixpanel.Property
