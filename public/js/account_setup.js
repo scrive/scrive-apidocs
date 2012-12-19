@@ -105,13 +105,12 @@
         password: model.password(),
         password2: model.password(), // validated on the client side that they're equal
         phone: model.phone(),
-        ajaxsuccess: function(resp) {
-          var translation = localization.accountSetupModal;
+        ajaxsuccess: function(rs) {
+          var resp = JSON.parse(rs);
           if (resp.ok === true) {
             window.location = resp.location;
           } else if (resp.error == 'already_active') {
-            FlashMessages.add({content: translation.flashMessageUserAlreadyActivated,
-                               color: 'red'});
+            new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, color: 'red'});
           } else if (resp.error == 'reload') {
             model.trigger('reload');
           }          
@@ -129,194 +128,213 @@
     },
 
     validationCallback: function(t, e, v) {
-      e.css('background', 'red');
-      $('<div/>').attr('name', 'validate-message').addClass('failed-validation').css({'font-size': 8, 'font-weight': 'bold', color: 'red'}).append(v.message()).appendTo(e.parent());
+      $("<div class='validate-message failed-validation' />").css({'font-size': 8, 'font-weight': 'bold', color: 'red'}).append(v.message()).appendTo(e.parent());
     },
-
+    clearValidationMessages : function() {
+      $(".validate-message",this.el).remove();
+    },
     termsPageContents: function() {
-      var translation = localization.accountSetupModal;
       var container = $('<div class="nicetext"/>');
-      container.append($('<h1/>').append(translation.termsPageHeader));
+      container.append($('<h2/>').append(localization.accountSetupModal.termsPageHeader));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage0));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage0));
       container.append($('<br/>'));
-      container.append($('<h2/>').append(translation.termsPage1Header));
+      container.append($('<h3/>').append(localization.accountSetupModal.termsPage1Header));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage1));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage1));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage1a));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage1a));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage1b));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage1b));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage1c));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage1c));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage1d));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage1d));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage1e));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage1e));
       container.append($('<br/>'));
-      container.append($('<h2/>').append(translation.termsPage2Header));
+      container.append($('<h3/>').append(localization.accountSetupModal.termsPage2Header));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage2));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage2));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage2a));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage2a));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage2b));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage2b));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage2c));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage2c));
       container.append($('<br/>'));
-      container.append($('<h2/>').append(translation.termsPage3Header));
+      container.append($('<h3/>').append(localization.accountSetupModal.termsPage3Header));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage3));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage3));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage3a));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage3a));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage3b));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage3b));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage3c));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage3c));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage3d));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage3d));
       container.append($('<br/>'));
-      container.append($('<h2/>').append(translation.termsPage4Header));
+      container.append($('<h3/>').append(localization.accountSetupModal.termsPage4Header));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage4));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage4));
       container.append($('<br/>'));
-      container.append($('<h2/>').append(translation.termsPage5Header));
+      container.append($('<h3/>').append(localization.accountSetupModal.termsPage5Header));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage5));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage5));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage5a));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage5a));
       container.append($('<br/>'));
-      container.append($('<h2/>').append(translation.termsPage6Header));
+      container.append($('<h3/>').append(localization.accountSetupModal.termsPage6Header));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage6));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage6));
       container.append($('<br/>'));
-      container.append($('<h2/>').append(translation.termsPage7Header));
+      container.append($('<h3/>').append(localization.accountSetupModal.termsPage7Header));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage7a));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage7a));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage7b));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage7b));
       container.append($('<br/>'));
-      container.append($('<h2/>').append(translation.termsPage8Header));
+      container.append($('<h3/>').append(localization.accountSetupModal.termsPage8Header));
       container.append($('<br/>'));
-      container.append($('<p/>').append(translation.termsPage8));
+      container.append($('<p/>').append(localization.accountSetupModal.termsPage8));
       container.append($('<br/>'));
       return container;
     },
 
-    popupAccountSetupModal: function() {
+    render: function () {
       var model = this.model;
       var view = this;
-      var translation = localization.accountSetupModal;
+      //var header = $("<header/>").append($("<h1 class='big'/>").text(localization.accountSetupModal.termsPageHeader));
+      //$(this.el).append(header);
+       
+      var content = $("<div class='short-input-container'/>");
+      var wrapper = $("<div class='short-input-container-body-wrapper'/>");
+      var body = $("<div class='short-input-container-body'/>");
+      $(this.el).append(content.append(wrapper.append(body)));
+      
 
-      var container = $('<div style="width: 100%;"/>');
-
-      var terms = $('<div style="max-height: 300px; overflow: auto"/>');
+      var terms = $('<div style="max-height: 400px; overflow: auto"/>');
       terms.append(this.termsPageContents());
-      container.append(terms);
+      body.append(terms);
 
-      var info = $('<div style="padding: 0 19px;"/>');
-      container.append(info);
+      var info = $('<div style="padding: 10px 0px"/>');
+      body.append(info);
 
       var tosAccept = $('<div style="padding-bottom:10px;"/>');
-      var tosCBox = $('<input type="checkbox" id="tosCBox" name="tos" />');
+      var tosCBox = $("<input type='checkbox' id='tosCBox' name='tos' style='margin-right:10px;margin-top: -2px'/>");
       model.setTosValidator(function() {
         tosCBox.validate(new CheckboxReqValidation({callback: view.validationCallback, message: localization.validation.mustAcceptTOS}));
       });
       tosAccept.append(tosCBox);
-      tosAccept.append($('<label for="tosCBox"/>').append(translation.modalAccountSetupBodyAcceptTOS));
+      tosAccept.append($('<label for="tosCBox"/>').append(localization.accountSetupModal.modalAccountSetupBodyAcceptTOS));
       tosAccept.append($('<br/>'));
-      info.append(tosAccept);
-
-      var signupInfoTable = $('<table id="signupInfo"/>');
-      signupInfoTable.hide();
-      var signupInfo = $('<tbody/>');
-      signupInfoTable.append(signupInfo);
-      info.append(signupInfoTable);
-
-      var firstName = $('<tr/>');
-      firstName.append($('<td/>').append(localization.account.accountDetails.fstname));
-      var firstNameInput = $('<input type="text" name="fstname" value="" autocomplete="off"/>');
-      firstNameInput.val(model.fstname());
+      var signupInfo = $("<div class='signupInfo' style='display:none;'/>");
+      info.append(tosAccept).append(signupInfo);
+      var firstNameInput = InfoTextInput.init({
+        infotext: localization.account.accountDetails.fstname,
+        value: model.fstname(),
+        onChange: function(v) {model.setFstname(v);},
+        inputtype: 'text',
+        name: 'fstname',
+        cssClass : "big-input"
+      });
+      
       model.addValidator(function() {
-        return firstNameInput.validate(new NameValidation({callback: view.validationCallback, message: localization.validation.firstNameRequired}));
+        return firstNameInput.input().validate(new NameValidation({callback: view.validationCallback, message: localization.validation.firstNameRequired}));
       });
-      firstName.append($('<td/>').append(firstNameInput));
-      signupInfo.append(firstName);
-      firstNameInput.change(function() {
-        model.setFstname($(this).val());
-      });
+      
+      signupInfo.append($("<div class='position first'/>").append(firstNameInput.input()));
 
       tosCBox.change(function() {
         if (tosCBox.attr('checked')) {
           model.setAccepted(true);
-          signupInfoTable.show();
-          firstNameInput.focus();
+          signupInfo.show();
+          firstNameInput.input().focus();
         } else {
           model.setAccepted(false);
-          signupInfoTable.hide();
+          signupInfo.hide();
         }
       });
 
-      var lastName = $('<tr/>');
-      lastName.append($('<td/>').append(localization.account.accountDetails.sndname));
-      var lastNameInput = $('<input type="text" name="sndname" value="" autocomplete="off"/>');
-      model.addValidator(function() {
-        return lastNameInput.validate(new NameValidation({callback: view.validationCallback, message: localization.validation.secondNameRequired}));
-      });
-      lastNameInput.val(model.sndname());
-      lastName.append($('<td/>').append(lastNameInput));
-      signupInfo.append(lastName);
-      lastNameInput.change(function() {
-        model.setSndname($(this).val());
+      
+      var lastNameInput = InfoTextInput.init({
+        infotext: localization.account.accountDetails.sndname,
+        value: model.fstname(),
+        onChange: function(v) {model.setSndname(v);},
+        inputtype: 'text',
+        name: 'sndname',
+        cssClass : "big-input"
       });
 
-      var password = $('<tr/>');
-      password.append($('<td style="width: 120px"/>').append(translation.modalAccountSetupChoosePassword));
-      var passwordInput = $('<input type="password" name="password" autocomplete="off"/>');
       model.addValidator(function() {
-        return passwordInput.validate(new PasswordValidation({callback: view.validationCallback,
+        return lastNameInput.input().validate(new NameValidation({callback: view.validationCallback, message: localization.validation.secondNameRequired}));
+      });
+
+      signupInfo.append($("<div class='position'/>").append(lastNameInput.input()));
+
+
+      var passwordInput = InfoTextInput.init({
+        infotext: localization.accountSetupModal.modalAccountSetupChoosePassword,
+        value: "",
+        onChange: function(v) {model.setPassword(v);},
+        inputtype: 'password',
+        name: 'password',
+        cssClass : "big-input"
+      });
+
+      model.addValidator(function() {
+        return passwordInput.input().validate(new PasswordValidation({callback: view.validationCallback,
                                                               message: localization.validation.passwordLessThanMinLength,
                                                               message_max: localization.validation.passwordExceedsMaxLength,
                                                               message_digits: localization.validation.passwordNeedsLetterAndDigit}));
       });
-      password.append($('<td/>').append(passwordInput));
-      signupInfo.append(password);
-      passwordInput.change(function() {
-        model.setPassword($(this).val());
+
+      signupInfo.append($("<div class='position'/>").append(passwordInput.input()));
+      
+
+      var password2Input = InfoTextInput.init({
+        infotext: localization.accountSetupModal.modalAccountSetupRepeatPassword,
+        value: "",
+        onChange: function(v) {model.setPassword(v);},
+        inputtype: 'password',
+        name: 'password2',
+        cssClass : "big-input"
       });
 
-      var password2 = $('<tr/>');
-      password2.append($('<td/>').append(translation.modalAccountSetupRepeatPassword));
-      var password2Input = $('<input type="password" name="password2" autocomplete="off"/>');
       model.addValidator(function() {
-        return password2Input.validate(new PasswordEqValidation({callback: view.validationCallback,
+        return password2Input.input().validate(new PasswordEqValidation({callback: view.validationCallback,
                                                                  message: localization.validation.passwordsDontMatch,
-                                                                 'with': passwordInput}));
+                                                                 'with': passwordInput.input()}));
       });
-      password2.append($('<td/>').append(password2Input));
-      signupInfo.append(password2);
 
-      var callme = $('<tr style="height:20px;"/>');
+      signupInfo.append($("<div class='position'/>").append(password2Input.input()));
+
+
+      var callme = $("<div class='position'/>");
       var callmeInput = $('<input type="checkbox" style="padding: 0px; margin: 0px 5px 0px 0px; float: left;" class="callme" id="callme" name="callme"/>');
-      callme.append($('<td colspan="2"/>').append(callmeInput).append($('<label for="callme"/>').append(translation.modalAccountSetupCallMe)));
-      callme.append($('<td/>'));
+      callme.append(callmeInput).append($('<label for="callme"/>').append(localization.accountSetupModal.modalAccountSetupCallMe));
       signupInfo.append(callme);
 
-      var phonerow = $('<tr class="phonerow" style="display: none;"/>');
-      phonerow.append($('<td/>').append(translation.modalAccountSetupPhone));
-      var phoneInput = $('<input type="text" name="phone" autocomplete="off"/>');
-      phonerow.append($('<td/>').append(phoneInput));
-      signupInfo.append(phonerow);
-      phoneInput.change(function() {
-        model.setPhone($(this).val());
-      });
+
+      var phoneInput = InfoTextInput.init({
+        infotext: localization.accountSetupModal.modalAccountSetupPhone,
+        value: "",
+        onChange: function(v) {model.setPhone(v);},
+        inputtype: 'text',
+        name: 'phone',
+        cssClass : "big-input"
+       });
 
       model.setPhoneValidator(function(callme) {
         if (callme) {
-          return phoneInput.validate(new NotEmptyValidation({callback: view.validationCallback, message: localization.validation.phoneRequired}));
+          return phoneInput.input().validate(new NotEmptyValidation({callback: view.validationCallback, message: localization.validation.phoneRequired}));
         }
       });
+      var phonerow = $("<div class='position' style='display:none;'/>").append(phoneInput.input())
+      signupInfo.append(phonerow);
 
+      
       callmeInput.change(function() {
         if (callmeInput.attr('checked')) {
           model.setCallme(true);
@@ -327,38 +345,25 @@
         }
       });
 
-      Confirmation.popup({
-        title: translation.PleaseAcceptTOS,
-        rejectText: null,
-        content: container.children(),
-        mask: {
-          color: standardDialogMask,
-          top: standardDialogTop,
-          loadSpeed: 0,
-          opacity: 0.9
-        },
-        acceptButton: Button.init({
-          icon: $('<div class="btn-symbol green arrow-left"/>'),
+      var acceptButton = Button.init({
           size: 'small',
           color: 'green',
           text: localization.signupModal.modalAccountSetupFooter,
           onClick: function() {
+            view.clearValidationMessages();
             model.signup();
           }
-        }).input()
-      });
-      $('.modal-body').css('padding', '10px');
-      $('.modal-container').wrap($('<div class="modalbox overlay" style="display: block;"/>'));
-    },
-
-    render: function () {
-      this.popupAccountSetupModal();
+        });
+      
+      signupInfo.append($("<div class='position'/>").append(acceptButton.input()));
+      
     }
   });
 
   window.AccountSetup = function(args) {
     var model = new AccountSetupModel(args);
-    var view =  new AccountSetupView({model: model, el: $('<div/>')});
+    var view =  new AccountSetupView({model: model, el: $("<div class='short-input-section account-setup'/>")});
+    this.el = function() {return $(view.el);}
   };
 
 })(window);

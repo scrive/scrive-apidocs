@@ -60,7 +60,7 @@ data KontraLink
     | LinkAdminStatsByDay
     | LinkAdminStatsByMonth
     | LinkPasswordReminder UserID MagicHash
-    | LinkAccountCreated UserID MagicHash -- email
+    | LinkAccountCreated Lang UserID MagicHash -- email
     | LoopBack
     | BackToReferer
     | LinkDaveDocument DocumentID
@@ -125,7 +125,7 @@ instance Show KontraLink where
     showsPrec _ (LinkAdminStatsByDay) = (++) $ "/adminonly/statsbyday"
     showsPrec _ (LinkAdminStatsByMonth) = (++) $ "/adminonly/statsbymonth"
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
-    showsPrec _ (LinkAccountCreated uid hash) = (++) $ "/accountsetup/" ++ show uid ++ "/" ++ show hash
+    showsPrec _ (LinkAccountCreated lang uid hash) = (++) $ langFolder lang  ++ "/accountsetup/" ++ show uid ++ "/" ++ show hash
     showsPrec _ LoopBack = (++) $ "/" -- this should never be used
     showsPrec _ BackToReferer = (++) $ "/" -- this should never be used
     showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid ++"/")

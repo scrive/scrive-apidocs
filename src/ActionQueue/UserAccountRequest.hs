@@ -111,7 +111,7 @@ newUserAccountRequest uid = do
   _ <- dbUpdate $ DeleteAction userAccountRequest uid
   dbUpdate $ NewAction userAccountRequest expires (uid, token)
 
-newUserAccountRequestLink :: (MonadDB m, CryptoRNG m) => UserID -> m KontraLink
-newUserAccountRequestLink uid = do
+newUserAccountRequestLink :: (MonadDB m, CryptoRNG m) => Lang -> UserID -> m KontraLink
+newUserAccountRequestLink lang uid = do
   uar <- newUserAccountRequest uid
-  return $ LinkAccountCreated (uarUserID uar) (uarToken uar)
+  return $ LinkAccountCreated lang (uarUserID uar) (uarToken uar)

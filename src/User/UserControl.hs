@@ -397,7 +397,7 @@ isUserDeletable user = do
 sendNewUserMail :: Kontrakcja m => User -> m ()
 sendNewUserMail user = do
   ctx <- getContext
-  al <- newUserAccountRequestLink $ userid user
+  al <- newUserAccountRequestLink (ctxlang ctx) (userid user)
   mail <- newUserMail (ctxhostpart ctx) (getEmail user) (getSmartName user) al
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
@@ -416,49 +416,41 @@ createNewUserByAdmin email names custommessage mcompanydata lang = do
              let fullname = composeFullName names
              now <- liftIO $ getMinutesTime
              _ <- dbUpdate $ SetInviteInfo (userid <$> ctxmaybeuser ctx) now Admin (userid user)
-             chpwdlink <- newUserAccountRequestLink $ userid user
+             chpwdlink <- newUserAccountRequestLink (ctxlang ctx) (userid user)
              mail <- mailNewAccountCreatedByAdmin ctx (getLang user) fullname email chpwdlink custommessage
              scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
          Nothing -> return muser
 
-handleAcceptTOSGet :: Kontrakcja m => m (Either KontraLink Response)
-handleAcceptTOSGet = withUserGet $ do
-    renderFromBody kontrakcja =<< pageAcceptTOS
+handleAcceptTOSGet :: Kontrakcja m => m (Either KontraLink String)
+handleAcceptTOSGet = withUserGet $ pageAcceptTOS
 
-handleAcceptTOSPost :: Kontrakcja m => m KontraLink
-handleAcceptTOSPost = withUserPost $ do
-  Context{ctxmaybeuser = Just User{userid}, ctxtime, ctxipnumber} <- getContext
+handleAcceptTOSPost :: Kontrakcja m => m ()
+handleAcceptTOSPost = do
+  Context{ctxmaybeuser,ctxtime, ctxipnumber} <- getContext
+  userid <- guardJustM $ return $ userid <$>ctxmaybeuser
   tos <- getDefaultedField False asValidCheckBox "tos"
-  case tos of
-    Just True -> do
+  when (Just True == tos) $ do
       _ <- dbUpdate $ AcceptTermsOfService userid ctxtime
       user <- guardJustM $ dbQuery $ GetUserByID userid
       _ <- addUserSignTOSStatEvent user
       _ <- dbUpdate $ LogHistoryTOSAccept userid ctxipnumber ctxtime (Just userid)
       addFlashM flashMessageUserDetailsSaved
-      return LinkDesignView
-    Just False -> do
-      addFlashM flashMessageMustAcceptTOS
-      return LinkAcceptTOS
-    Nothing -> return LinkAcceptTOS
+  return ()
+      
 
 handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> m String
 handleAccountSetupGet uid token = do
   user <- guardJustM404 $ getUserAccountRequestUser uid token
-  let lang = getLang user
-  switchLang lang
   if isJust $ userhasacceptedtermsofservice user
     then respond404
     else renderTemplate "accountSetupPage" $ do
-              F.value "signuplink" $ show $ LinkAccountCreated uid token
               F.value "fstname" $ getFirstName user
               F.value "sndname" $ getLastName user
 
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
 handleAccountSetupPost uid token = do
   user <- guardJustM404 $ getUserAccountRequestUser uid token
-  switchLang $ getLang user
   if isJust $ userhasacceptedtermsofservice user
     then runJSONGenT $ do
            value "ok" False
@@ -474,6 +466,8 @@ handleAccountSetupPost uid token = do
         Just (_, docs) -> do
           _ <- dbUpdate $ DeleteAction userAccountRequest uid
           forM_ docs (\d -> postDocumentPreparationChange d "mailapi")
+          ctx <- getContext
+          _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = ctxlang ctx }
           addFlashM flashMessageUserActivated
           link <- getHomeOrDesignViewLink
           runJSONGenT $ do

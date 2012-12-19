@@ -59,7 +59,8 @@ standardHeaderContents=
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta http-equiv="content-language" content="$ctxlang$" />
         <link href='https://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
-        <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,700,200italic,400italic,700italic' rel='stylesheet' type='text/css'>
+        <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,700,200italic,400italic,700italic' rel='stylesheet' type='text/css'/>
+        <link href='https://fonts.googleapis.com/css?family=Helvetica%20Neue' rel='stylesheet' type='text/css'/>
         <script src="/$ctxlang$/localization/$versioncode$.js"  type="text/javascript"></script>
         $staticResources:noescape()$
 ####

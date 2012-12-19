@@ -123,9 +123,7 @@ handleSignup = do
           mnewuser <- createUser (Email email) (fromMaybe "" mfirstname, fromMaybe "" mlastname) Nothing lang
           maybe (return ()) UserControl.sendNewUserMail mnewuser
           return $ Just (Email email, userid <$> mnewuser)
-        (_, _) -> return $ Just (Email email, Nothing)
-        -- whatever happens we want the same outcome, we just claim we sent the activation link,
-        -- because we don't want any security problems with user information leaks
+        (_, _) -> return Nothing
 
 {- |
    Handles submission of a login form.  On failure will redirect back to referer, if there is one.

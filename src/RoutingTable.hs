@@ -173,7 +173,7 @@ staticRoutes = choice
      , allLangDirs $ dir "amnesia"     $ hGet $ toK2 $ UserControl.handlePasswordReminderGet
      , dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
      , allLangDirs $ dir "accountsetup"  $ hGet $ toK2 $ UserControl.handleAccountSetupGet
-     , dir "accountsetup"  $ hPostNoXToken $ toK2 $ UserControl.handleAccountSetupPost
+     , allLangDirs $ dir "accountsetup"  $ hPostNoXToken $ toK2 $ UserControl.handleAccountSetupPost
 
      , dir "adminonly" $ Administration.adminonlyRoutes
      , dir "dave"      $ Administration.daveRoutes

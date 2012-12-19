@@ -156,6 +156,8 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        var model = this.model;
        var view = this;
        var container = $("<div class='modal-container email-preview'/>");
+       container.css("top",$(window).scrollTop());
+       container.css("margin-top",$(window).height() > 700 ? 100 : 50);
 
 	   //Modal header
        var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");

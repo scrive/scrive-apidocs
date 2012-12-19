@@ -412,6 +412,7 @@ javascriptLocalisation =
               , passwordsDontMatch: "$_PasswordValidationMessagePasswordsDontMatch()$"
               , mustAcceptTOS: "$_flashMessageMustAcceptTOS()$"
               , phoneRequired: "$_flashMessagePhoneIsRequired()$"
+              , wrongEmail : "$_emptyOrNotValidEmail()$"
          }
          , emailBranding: "$_EmailBranding()$"
          , customiseBackgroundColour: "$_CustomiseBackgroundColour()$"

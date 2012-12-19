@@ -24,7 +24,7 @@ var LoginModel = Backbone.Model.extend({
     return this.get("visible");
   },
   pad : function() {
-    return this.get("pad");
+    return this.get("pad") == true;
   },
   show: function() {
     this.set({visible : true});
@@ -74,7 +74,7 @@ var LoginModel = Backbone.Model.extend({
             }
           }
         });
-    if (model.pad() == true)
+    if (model.pad())
       submit.add("pad","true");
     submit.send();
   },
@@ -118,8 +118,7 @@ var LoginView = Backbone.View.extend({
       var content = $("<div class='short-input-container'/>");
       var wrapper = $("<div class='short-input-container-body-wrapper'/>");
       var body = $("<div class='short-input-container-body'/>");
-      var footer = $("<div class='short-input-container-footer'/>");
-      content.append(wrapper.append(body)).append(footer);
+      content.append(wrapper.append(body));
 
       var emailinput = InfoTextInput.init({
               infotext: localization.loginModal.email,
@@ -171,13 +170,17 @@ var LoginView = Backbone.View.extend({
         else if (!model.rememberPassword())
           rememberPasswordCheckbox.removeAttr("checked");
       })
+
+      if (!model.pad()) {
+        var footer = $("<div class='short-input-container-footer'/>");
+        content.append(footer);
+        var rememberPasswordLabel = $("<a href='#'/>").text("Keep me logged in").click(function(event) {model.toogleRememberPassword(); return false;});
+        var rememberPassword = $("<p/>").append(rememberPasswordCheckbox).append(rememberPasswordLabel);
+        footer.append(rememberPassword);
       
-      var rememberPasswordLabel = $("<a href='#'/>").text("Keep me logged in").click(function(event) {model.toogleRememberPassword(); return false;});
-      var rememberPassword = $("<p/>").append(rememberPasswordCheckbox).append(rememberPasswordLabel);
-      footer.append(rememberPassword);
-      
-      var toogleOption = $("<a href='#' class='s-forgot-password'/>").text(localization.loginModal.forgotpassword + " > ").click(function(){ model.toogleView();return false;});
-      footer.append($("<p/>").append(toogleOption));
+        var toogleOption = $("<a href='#' class='s-forgot-password'/>").text(localization.loginModal.forgotpassword + " > ").click(function(){ model.toogleView();return false;});
+        footer.append($("<p/>").append(toogleOption));
+      }
       return content;
     },
     reminderSection : function() {
@@ -224,8 +227,10 @@ var LoginView = Backbone.View.extend({
     render: function () {
        var model = this.model;
        $(this.el).empty();
-       var header = $("<header><h1 class='big'>Welcome back!</h1></header>");
-       $(this.el).append(header);
+       if (!model.pad()) {
+          var header = $("<header><h1 class='big'>Welcome back!</h1></header>");
+          $(this.el).append(header);
+       } 
        if (model.loginView())
            $(this.el).append(this.loginSection());
        else

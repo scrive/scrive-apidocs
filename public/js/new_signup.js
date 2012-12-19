@@ -15,10 +15,13 @@
         url: "/signup",
         ajax: true,
         email: model.email(),
-        ajaxsuccess: function(resp) {
+        ajaxsuccess: function(rs) {
+          resp = JSON.parse(rs);
           if (resp.sent === true) {
             var content = localization.payments.outside.confirmAccountCreatedUserHeader;
-            FlashMessages.add({content: content, color: 'green'});
+            new FlashMessage({content: content, color: 'green'});
+          } else if (resp.sent === false) {
+            new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, color: 'red'});
           }
         }
       }).send();
@@ -29,7 +32,14 @@
     initialize: function() {
       this.render();
     },
+    validationCallback: function(t, e, v) {
+      $("<div class='validate-message failed-validation' />").css({'font-size': 8, 'font-weight': 'bold', color: 'red'}).append(v.message()).appendTo(e.parent());
+    },
+    clearValidationMessages : function() {
+      $(".validate-message",this.el).remove();
+    },
     render: function () {
+        var self = this;
         var model = this.model;
         var header = $("<header/>").append($("<h1 class='big'/>").text(localization.signupModal.modalAccountSetupFooter));
         $(this.el).append(header);
@@ -42,20 +52,24 @@
         var emailInput = InfoTextInput.init({
           infotext: localization.signupModal.fillinemail,
           value: model.email(),
-          onChange: function(v) {model.setEmail(v);},
+          onChange: function(v) {self.clearValidationMessages(); model.setEmail(v);},
           cssClass : "big-input",
           inputtype: 'text',
           name: 'email'
         });
 
+              
         var signupButton = Button.init({
             size  : 'small',
             color : 'blue',
             text: localization.signupModal.modalAccountSetupFooter,
             onClick: function() {
-              model.signup();
+              self.clearValidationMessages(); 
+              if (emailInput.input().validate(new EmailValidation({callback: self.validationCallback, message: localization.validation.wrongEmail})))
+                model.signup();
             }
           });
+        
         body.append($("<div class='position first'/>").append($("<h2>").text(localization.signupModal.startNow)));
         body.append($("<div class='position'/>").append(emailInput.input()).append(signupButton.input()));
         $(this.el).append(content);

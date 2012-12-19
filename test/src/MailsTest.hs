@@ -133,13 +133,13 @@ testUserMails mailTo = do
                            validMail s m
                            sendoutForManualChecking s req ctx mailTo m
     checkMail "New account" $ do
-          al <- newUserAccountRequestLink $ userid user
+          al <- newUserAccountRequestLink (ctxlang ctx) (userid user)
           newUserMail (ctxhostpart ctx) (getEmail user) (getEmail user) al
     checkMail "New account by admin" $ do
-          al <- newUserAccountRequestLink $ userid user
+          al <- newUserAccountRequestLink (ctxlang ctx) (userid user)
           mailNewAccountCreatedByAdmin ctx (ctxlang ctx) (getSmartName user) (getEmail user) al Nothing
     checkMail "Reset password mail" $ do
-          al <- newUserAccountRequestLink $ userid user
+          al <- newUserAccountRequestLink (ctxlang ctx) (userid user)
           resetPasswordMail (ctxhostpart ctx) user al
   dbCommit
   when (isJust mailTo) $ do

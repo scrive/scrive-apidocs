@@ -94,11 +94,11 @@ window.PadQueueView = Backbone.View.extend({
         return box;
         
     },
-    logToPadDevicePopup : function() {
-        Login({
+    logToPadDevice : function() {
+        return new Login({
             pad : true,
             referer : "/padqueue"
-            });
+            }).el();
     },
     padLogoutIcon : function() {
         var icon = $("<div class='padTopIcon logout-image' style='float: right;position: absolute;top: 0;right:0'>");
@@ -127,7 +127,7 @@ window.PadQueueView = Backbone.View.extend({
             else if (padqueue.logged())
                 container.append(this.noDocumentView())  ;    
             else 
-                this.logToPadDevicePopup();
+                container.append(this.logToPadDevice())  
 
             if (padqueue.loggedToPad())
                $('body').append(this.padLogoutIcon());

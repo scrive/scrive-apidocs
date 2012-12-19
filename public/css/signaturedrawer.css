@@ -36,6 +36,8 @@
 .drawing-modal .footer {
     padding: 20px 0px;
     min-height: 60px;
+    margin: auto;
+    width: 820px;
 }
 
 .drawing-modal .footer .details-box {

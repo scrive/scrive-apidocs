@@ -14,19 +14,19 @@ $doctype()$
     $flashmessages()$
     <div class="mainContainer" >
       <div class="body-container">
-        $padQueueCurrentPageContent()$
+        <div class="padview"></div>
+        <script>
+        jQuery(function(){
+            var pad = new KontraPad();
+            jQuery(".padview").append(pad.view().el)
+        });
+
+        </script>
       </div>
     </div>
   </body>
 </html>
 #####
 padQueueCurrentPageContent=
-<div class="padview"></div>
-<script>
-jQuery(function(){
-    var pad = new KontraPad();
-    jQuery(".padview").append(pad.view().el)
-});
 
-</script>
 ######
