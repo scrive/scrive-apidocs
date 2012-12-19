@@ -1,5 +1,7 @@
 /* Signatory view of document
  * Now unified with author and viewer views
+ *
+ * Instrumented with Mixpanel
  */
 
 
@@ -32,6 +34,9 @@ var SignatoryDesignView = Backbone.View.extend({
         var addFieldButton = $("<a class='addField' href='#'/>");
         addFieldButton.click(function(){
             signatory.addNewCustomField();
+            mixpanel.track('Add custom field',
+                           {'Signatory Index': signatory.signIndex(),
+                            'Author?': signatory.author()});
             return false;
             });
         return addFieldButton;
@@ -41,6 +46,9 @@ var SignatoryDesignView = Backbone.View.extend({
      var signatory = self.model.signatory();
 
      if (self.showRoleSelector) {
+         mixpanel.track('Show role selector',
+                        {'Signatory Index': signatory.signIndex(),
+                         'Author?': signatory.author()});
        self.setRoleIcon.addClass("selected");
        self.setRoleBox = $("<div class='setRoleBox'/>");
        self.container.append(self.setRoleBox);
@@ -63,6 +71,10 @@ var SignatoryDesignView = Backbone.View.extend({
        var closeButton = $("<a class='close' href='#'/>");
        closeButton.click(function() {
          niceClose();
+           mixpanel.track('Close role selector',
+                          {'Signatory Index': signatory.signIndex(),
+                           'Author?': signatory.author(),
+                           Button: 'X'});
          return false;
        });
        self.setRoleBox.append(closeButton);
@@ -88,6 +100,10 @@ var SignatoryDesignView = Backbone.View.extend({
      }
      else {
        self.setRoleIcon.removeClass("selected");
+         mixpanel.track('Close role selector',
+                        {'Signatory Index': signatory.signIndex(),
+                         'Author?': signatory.author(),
+                         Button: 'icon'});
        if (self.setRoleBox!= undefined)
          self.setRoleBox.remove();
      }
@@ -109,11 +125,15 @@ var SignatoryDesignView = Backbone.View.extend({
    setSignOrderIcon : function() {
        var view = this;
        var model = this.model;
+       var signatory = model.signatory();
        var setSignOrderIcon = $("<a class='setSignOrder' href='#'/>");
        setSignOrderIcon.click(function(){
-          model.documentdesignview().toogleSignOrder();
+           mixpanel.track('Toggle sign order',
+                          {'Signatory Index': signatory.signIndex(),
+                           'Author?': signatory.author()});
+           model.documentdesignview().toogleSignOrder();
           return false;
-            });
+       });
         return setSignOrderIcon;
    },
    signOrderSelector : function() {
@@ -123,7 +143,12 @@ var SignatoryDesignView = Backbone.View.extend({
      if (this.signOrderSelectorSelect == undefined) {
         this.signOrderSelectorSelect = $("<select class='selectSignOrder'/>");
         this.signOrderSelectorSelect.change(function(){
-          signatory.setSignOrder($(this).val());
+            var val = $(this).val();
+            mixpanel.track('Change sign order',
+                           {'Signatory Index': signatory.signIndex(),
+                            'Author?': signatory.author(),
+                            'Value': val});
+          signatory.setSignOrder(val);
         });
         signatory.bind("change:signorder", function() {
           self.signOrderSelectorSelect.val(signatory.signorder());
@@ -143,6 +168,9 @@ var SignatoryDesignView = Backbone.View.extend({
        var signatory = this.model.signatory();
        var setCsvSignatoryIcon = $("<a class='setCsvSignatory' href='#'/>");
        setCsvSignatoryIcon.click(function() {
+           mixpanel.track('Click CSV icon',
+                          {'Signatory Index': signatory.signIndex(),
+                           'Author?': signatory.author()});
             CsvSignatoryDesignPopup.popup({signatory: signatory});
             return false;
        });
