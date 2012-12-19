@@ -34,6 +34,9 @@ import Templates.TemplatesLoader
 import qualified Amazon as AWS
 import qualified Log (cron, withLogger)
 
+import ThirdPartyStats.Core
+import ThirdPartyStats.Mixpanel
+
 main :: IO ()
 main = Log.withLogger $ do
   appConf <- do
@@ -81,8 +84,17 @@ main = Log.withLogger $ do
   t9 <- if AWS.isAWSConfigOk appConf
           then return <$> (forkCron_ tg "AmazonUploading" 60 $ runScheduler AWS.uploadFilesToAmazon)
           else return []
+  
+  -- Asynchronous event dispatcher; if you want to add a consumer to the event
+  -- dispatcher, please combine the two into one dispatcher function rather
+  -- than creating a new thread or something like that, since
+  -- asyncProcessEvents removes events after processing.
+  t0 <- forkCron_ tg "Async Event Dispatcher" (10) $ withPostgreSQL (dbConfig appConf) $ do
+    case mixpanelToken appConf of
+      ""    -> Log.error "WARNING: no Mixpanel token present!"
+      token -> asyncProcessEvents (processMixpanelEvent token) All
 
   waitForTermination
   Log.cron $ "Termination request received, waiting for jobs to finish..."
-  mapM_ stopCron (t1:t2:t3:t4:t5:t6:t7:t8:t9)
+  mapM_ stopCron (t0:t1:t2:t3:t4:t5:t6:t7:t8:t9)
   TG.wait tg
