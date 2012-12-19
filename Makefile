@@ -2,10 +2,11 @@ DBNAME=kontratest
 DBUSER=kontra
 TESTS=all --plain
 
+INSTALL=BUILD_DATE=2010-01-01-00-00-00 cabal-dev install
 
 .PHONY : all
 all:
-	cabal-dev install -f-test
+	$(INSTALL) -f-test
 
 # Make "pretty" diagram of database model (requires postgresql-autodoc and graphwiz)
 .PHONY: dot
@@ -25,7 +26,7 @@ schemaspy:
 # Build and run all tests
 .PHONY : test
 test:
-	cabal-dev install -f-server -f-cron -f-mailing-server -ftest-coverage
+	$(INSTALL) -f-server -f-cron -f-mailing-server -ftest-coverage
 	rm -f kontrakcja-test.tix
 	time dist/build/kontrakcja-test/kontrakcja-test $(TESTS)
 
@@ -50,6 +51,6 @@ reset-test-db:
 
 .PHONY : profiling
 profiling:
-	cabal-dev install --only-dependencies --enable-library-profiling --ghc-options="-auto-all -caf-all"
+	$(INSTALL) --only-dependencies --enable-library-profiling --ghc-options="-auto-all -caf-all"
 	cabal-dev configure --enable-executable-profiling --ghc-options="-auto-all -caf-all"
 	cabal-dev build
