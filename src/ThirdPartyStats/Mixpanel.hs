@@ -1,4 +1,5 @@
 -- | Mixpanel utilities and event processor for the third party stats system.
+--   TODO: implement setting properties on Mixpanel users!
 module ThirdPartyStats.Mixpanel (
   MixpanelToken,
   processMixpanelEvent) where
@@ -15,8 +16,11 @@ processMixpanelEvent :: MixpanelToken
                      -> EventName
                      -> [EventProperty]
                      -> IO ProcRes
-processMixpanelEvent token name props = do
-    res <- Mixpanel.track token name (map mixpanelProperty props)
+processMixpanelEvent _ SetUserProps _ = do
+    return $ Failed $  "Attempted to set Mixpanel user property using async "
+                    ++ "event, but that's not done yet!"
+processMixpanelEvent token (NamedEvent name) props = do
+    Mixpanel.track token name (map mixpanelProperty props)
     case res of
       HTTPError reason     -> return (Failed reason)
       MixpanelError reason -> return (Failed reason)
