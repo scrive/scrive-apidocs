@@ -4,7 +4,7 @@ module ThirdPartyStats.Core (
     PropValue (..),
     ProcRes (..),
     NumEvents (..),
-    EventName,
+    EventName (..),
     someProp,
     numProp,
     stringProp,
@@ -12,6 +12,7 @@ module ThirdPartyStats.Core (
     asyncProcessEvents
   ) where
 import Data.Binary
+import Data.String
 import Control.Monad.IO.Class
 import Control.Applicative
 import DB hiding (Binary)
@@ -42,7 +43,7 @@ instance Binary PropValue where
       1 -> PVString      <$> get
       2 -> PVBool        <$> get
       3 -> PVMinutesTime <$> get
-      n -> error $ "Couldn't parse PropValue constructor tag: " ++ show n
+      n -> fail $ "Couldn't parse PropValue constructor tag: " ++ show n
 
 
 -- | Type class to keep the user from having to wrap stuff in annoying data
@@ -72,8 +73,22 @@ stringProp s = SomeProp s . PVString
 
 
 -- | Makes type signatures on functions involving event names look nicer.
-type EventName = String
+data EventName = SetUserProps | NamedEvent String deriving Show
 type PropName = String
+
+instance IsString EventName where
+  fromString = NamedEvent
+
+instance Binary EventName where
+  put (SetUserProps)    = putWord8 0
+  put (NamedEvent name) = putWord8 255 >> put name
+  
+  get = do
+    tag <- getWord8
+    case tag of
+      0   -> return SetUserProps
+      255 -> NamedEvent <$> get
+      t   -> fail $ "Unable to parse EventName constructor tag: " ++ show t
 
 
 -- | Represents a property on an event.
@@ -102,7 +117,7 @@ instance Binary EventProperty where
     case tag of
       0   -> MailProp <$> get
       255 -> SomeProp <$> get <*> get
-      n   -> error $ "Couldn't parse EventProperty constructor tag: " ++ show n
+      n   -> fail $ "Couldn't parse EventProperty constructor tag: " ++ show n
 
 
 -- | Data type representing an asynchronous event.
