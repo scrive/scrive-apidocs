@@ -1,5 +1,7 @@
 /* Modal to direct users to Avtal24.
  * Usage: new Avtal24Popup()
+ * 
+ * Instrumented with Mixpanel events
 */
 
 $(function(){
@@ -13,9 +15,16 @@ window.Avtal24Popup = function() {
               acceptText: localization.avtal24.go,
               width: 800,
               onAccept : function() {
+                  // this may not fire because pending connections
+                  // are closed when you change locations
+                  mixpanel.track('Left to Avtal24');
+
                   window.location = "https://avtal24.se/scrive";
                   return true;
-              }    
+              },
+              onReject: function() {
+                  mixpanel.track('Rejected Avtal24');
+              }
             });
 };
 
