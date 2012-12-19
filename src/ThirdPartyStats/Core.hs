@@ -4,6 +4,7 @@ module ThirdPartyStats.Core (
     PropValue (..),
     ProcRes (..),
     NumEvents (..),
+    EventName,
     someProp,
     numProp,
     stringProp,

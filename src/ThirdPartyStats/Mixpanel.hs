@@ -1,8 +1,24 @@
 -- | Mixpanel utilities and event processor for the third party stats system.
-module ThirdPartyStats.Mixpanel where
+module ThirdPartyStats.Mixpanel (
+  MixpanelToken,
+  processMixpanelEvent) where
 import ThirdPartyStats.Core
 import Mixpanel.Event as Mixpanel
 import MinutesTime (toUTCTime)
+
+-- | Token identifying us to Mixpanel.
+type MixpanelToken = String
+
+-- | Ship an event off to Mixpanel.
+processMixpanelEvent :: MixpanelToken
+                     -> EventName
+                     -> [EventProperty]
+                     -> IO ProcRes
+processMixpanelEvent token name props = do
+    res <- Mixpanel.track token name (map mixpanelProperty props)
+    case res of
+      Just reason -> return (Failed reason)
+      _           -> return OK
 
 -- | Convert a generic async event property to a Mixpanel property.
 mixpanelProperty :: EventProperty -> Mixpanel.Property
