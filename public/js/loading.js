@@ -8,46 +8,32 @@
 
 window.LoadingDialog = {
     dialog : function() {
-        var dialog = $('#loadingdialog') ;
+        var dialog = $('.loadingdialog') ;
         if (dialog.size() == 0)
         {
-          var dialog = $("<div id='loadingdialog' class='overlay'>" +
-                              "<a href='#' id='loadinglink' style='display:none;' rel='#loadingdialog'></a>" +
-                                "<div class='modal-container'>" +
-                                    "<div class='modal-body' style='padding:30px'>" +
-                                        "<center>" +
-                                            "<h3 id='loadingmessage'>Loading</h3>" +
-                                            "<img src='/img/wait30trans.gif' style='margin:30px'/>" +
-                                        "</center>" +
-                                    "</div>" +
-                                "</div>" +
-                            "</div>");
-          dialog.overlay({
-            mask: standardDialogMask,
-            top: standardDialogTop,
-            resizable: false,
-            closeOnClick: false,
-            closeOnEsc: false,
-            load: false,
-            fixed:false
-          }); 
+          var dialog = $("<div class='modal loadingdialog'><div class='modal-container'><div class='modal-body'><div class='modal-content'><div class='body'>" +
+                             "<center>" +
+                                "<h4 class='loadingmessage'>Loading</h4>" +
+                                     "<img src='/img/wait30trans.gif' style='margin:30px'/>" +
+                             "</center>" +
+                        "</div></div></div></div></div>");
           $('body').append(dialog);
         }
         return dialog;
     },
     changeMessage : function(message) {
-         $("#loadingmessage").text(message);
+         $(".loadingmessage").text(message);
     },
     open: function (message) {
          var dialog = LoadingDialog.dialog();
-         $("#loadingmessage", dialog).html(message);
-         dialog.overlay({
-                fixed:false
-            }).load();
+         $(".loadingmessage", dialog).html(message);
+         $(".modal-container",dialog).css("top",$(window).scrollTop());
+         $(".modal-container",dialog).css("margin-top",200);
+         dialog.addClass('active');
     },        
     close : function() {
        var dialog =  $('#loadingdialog');
-       if (dialog.size() > 0 ) dialog.overlay().close();
+       if (dialog.size() > 0 ) dialog.removeClass("active");
     }
 };
 })();

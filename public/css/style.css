@@ -944,7 +944,6 @@ input[type=submit].hidden
     font-size: 16px;
     margin-right: 2px;
     width: 450px;
-    font-family:'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
 }
 
 .docname .icon {
@@ -972,7 +971,6 @@ input[type=submit].hidden
     font-size:16px;
     font-weight:bold;
     width: 450px;
-    font-family:'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
 }
 
 .tab-viewer-header-title .docname input.docname-edit {
@@ -1494,23 +1492,6 @@ input.multiFileInput,
     height: 16px;
     position:relative;
     top:3px;
-}
-
-.tab-viewer .tabs a.extraLink
-{
-    display: inline-block;
-    height: 20px;
-    background-position: 2px 0px;
-    background-repeat: no-repeat;
-    padding-left: 23px;
-    color: #007CAC;
-    cursor: pointer;
-    font-size: 9px;
-    font-family: 'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
-}
-
-.tab-viewer tabs a.extraLink:hover{
-    color: #000000;
 }
 
 /* 013 new */
@@ -2507,58 +2488,6 @@ menu, .newdesign  nav, .newdesign  output, .newdesign  ruby, .newdesign  section
         border: 0;
         outline: 0;
         /* vertical-align: baseline; */
-}
-
-.newdesign {
-       color: #000000;
-       font-size:small;
-       line-height:1;
-       font-family:'Helvetica Neue','Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
-}
-
-@font-face {
-    font-family: 'Helvetica Neue';
-    src: url('../fonts/helveticaneueltcom-bd.eot?') format('eot'),
-         url('../fonts/helveticaneueltcom-bd.woff') format('woff'),
-         url('../fonts/helveticaneueltcom-bd.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'Lucida Grande';
-    src: url('../fonts/lucida_grande.eot?') format('eot'),
-         url('../fonts/lucida_grande.woff') format('woff'),
-         url('../fonts/lucida_grande.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-}
-
-/* HTML5 display-role reset for older browsers */
-.newdesign article, .newdesign  aside, .newdesign  details, .newdesign  figcaption, .newdesign  figure, .newdesign  footer, .newdesign  header, .newdesign  hgroup, .newdesign  menu, .newdesign  nav, .newdesign section {
-        display: block;
-}
-
-.newdesign body {
-        line-height: 1;
-}
-
-.newdesign ol, .newdesign ul {
-        list-style: none;
-}
-
-.newdesign blockquote, .newdesign q {
-        quotes: none;
-}
-
-.newdesign blockquote:before, .newdesign blockquote:after, .newdesign q:before, .newdesign q:after {
-        content: '';
-        content: none;
-}
-
-.newdesign table {
-        border-collapse: collapse;
-        border-spacing: 0;
 }
 
 input#cancel {

@@ -23,7 +23,7 @@ ignore  less/branding/containter.less
 ignore  less/branding/flash.less
 ignore  less/branding/modal.less
 ignore  less/branding/select.less
-
+ignore  less/branding/main.less
 
 set systemPage
  css css/newdesign.css

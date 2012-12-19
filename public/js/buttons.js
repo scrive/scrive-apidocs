@@ -74,9 +74,11 @@ var ButtonView = Backbone.View.extend({
         else if (this.model.size() == "big")
             $(this.el).addClass("button-large")
         if (this.model.color() == "red" )
-            $(this.el).addClass("button-gray");
+            $(this.el).addClass("button-red");
+        else if (this.model.color() == "green" )
+            $(this.el).addClass("button-green");
         else if (this.model.color() == "black")
-            $(this.el).addClass("button-black");
+            $(this.el).addClass("button-gray");
 
         var label = $("<div class='label'/>").text(this.model.text());
         if (this.model.width() != undefined)

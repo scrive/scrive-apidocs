@@ -75,7 +75,7 @@ staticRoutes = choice
      , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
 
      
-     , dir "lang" $ hPost $ toK0 $ UserControl.handlePostUserLang
+     , dir "lang" $ hPostNoXToken $ toK0 $ UserControl.handlePostUserLang
      , dir "a" $ dir "rename"      $ hPost $ toK1 $ AttachmentControl.handleRename
      , dir "a" $ dir "share"       $ hPost $ toK0 $ AttachmentControl.handleShare
      , dir "a" $ dir "delete"      $ hPost $ toK0 $ AttachmentControl.handleDelete

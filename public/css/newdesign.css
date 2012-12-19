@@ -5,27 +5,6 @@
     width: 137px;
 }
 
-
-.tweet_text {
-        color: #666;
-        font: 12px "Lucida Grande";
-}
-
-.tweet_text a {
-        text-decoration: none;
-}
-
-.tweet_text a:hover {
-        color: #000;
-}
-
-.tweet_time {
-        color: #666;
-        display: block;
-        font: 10px "Lucida Grande";
-        text-transform: uppercase;
-}
-
 .box {
         border: 1px solid #ccc;
         border-radius: 5px;
@@ -35,91 +14,6 @@
         -webkit-border-radius: 5px;
 }
 
-
-/* Head Container */
-#top-slim-container {
-    background: url(../img/bg-header.jpg);
-    border-bottom: 1px solid #737373;
-    height: 100px;
-    min-width: 1020px;
-}
-
-#top-slim-container .scrive-logo {
-    background: url(../img/logo-scrive-small.png);
-    display: block;
-    float: left;
-    height: 35px;
-    margin-top: 34px;
-    width: 137px;
-    margin-left: -8px;
-}
-
-
-#top-slim-container .langSwitcher {
-    float: right;
-    top: 43px;
-}
-
-#top-slim-container .content
-{
-        position: relative;
-}
-
-#top-slim-container .login-button {
-        background: url(../img/icon-lock.png) no-repeat;
-        color: #999;
-        float: right;
-        font: 14px/18px "Helvetica Neue";
-        margin-right: 38px;
-        margin-left: 30px;
-        margin-top: 42px;
-        padding-bottom: 5px;
-        padding-left: 28px;
-        text-shadow: #000 0 1px 3px;
-        text-decoration: none;
-        font-weight: bold;
-}
-#top-slim-container .toplink {
-        color: #999;
-        float: right;
-        font: 14px/18px "Helvetica Neue";
-        margin-top: 42px;
-        padding-bottom: 5px;
-        padding-left: 30px;
-        text-shadow: #000 0 1px 3px;
-        text-decoration: none;
-        font-weight: bold;
-}
-
-#top-slim-container .toplink.btn {
-        margin-top: 37px;
-}
-
-#top-slim-container .toplink:hover,
-#top-slim-container .login-button:hover
-{
-  color: #FFFFFF;
-}
-
-.newdesign a.btn-small.center {
-        text-align: center;
-        padding-left: 0;
-        padding-right: 16px;
-        width: 135px;
-}
-
-.newdesign .btn-small {
-        background: url(../img/btn-small.png) 0 0 no-repeat;
-        color: #fff;
-        display: block;
-        font: 12px "Helvetica Neue";
-        height: 23px;
-        letter-spacing: 0.2px;
-        padding-left: 16px;
-        padding-top: 10px;
-        text-decoration: none;
-        width: 136px;
-}
 
 
 #mailapiemailslist {
@@ -145,10 +39,6 @@
    margin-top: 10px;
    margin-bottom: 10px;
    text-transform: uppercase;
-}
-
-.account-body table input[disabled] {
-   background: transparent;
 }
 
 .tab-viewer .account-body table td {
@@ -187,12 +77,12 @@
 
 .tab-viewer .account-header h2 {
    color: #fff;
-   font: 14px/24px "Helvetica Neue";
+   font-size: 14px/24px;
 }
 
 .tab-viewer .account-header a {
    color: #2777ca;
-   font: 10px/24px "Lucida Grande";
+   font-size: 10px/24px;
    text-decoration: none;
    text-transform: uppercase;
 }

@@ -785,14 +785,14 @@ var DesignViewView = Backbone.View.extend({
         var subbox = $("<div class='nofilediv'/>");
         var subsubbox = $("<div class='innerbox'/>");
         subsubbox.append($("<div class='inner-description-left'/>")
-                                        .append($("<span/>").text(localization.nofiletext))
+                                        .append($("<h4/>").text(localization.nofiletext))
                                         .append($("<div class='button-box'/>").append($(this.uploadFile()).append("<BR/>").append("<BR/>").append($(this.fromAvtal())))));
         var text = localization.designview.saveAsTemplateDescription;
         var savebox = $("<div class='inner-description-right'/>");
         subsubbox.append(savebox)
         if (! this.model.document().isTemplate()) {
           var saveboxbuttons = $("<div class='button-box'/>");
-          savebox.append($("<span/>").text(text)).append(saveboxbuttons);
+          savebox.append($("<h4/>").text(text)).append(saveboxbuttons);
           var saveAsDraftButton = Button.init({
                                  color : "black",
                                  size :  "big",

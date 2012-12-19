@@ -3,6 +3,8 @@
    Author: Eric Normand
 
 **/
+@import 'branding/colors';
+@import 'branding/typography';
 
 .payments.loading {
     background-image: url(/img/wait30trans.gif);
@@ -27,9 +29,6 @@
     @pricecolor      : black;
     @fieldcolor      : #fff;
 
-    /* Our two fonts */
-    @serif : 'Copse', serif;
-    @sans  : 'Lucida Grande', sans-serif;
 
     /* @amount is between 0.0 and 1.0 */
     .opacity(@amount) {
@@ -72,7 +71,7 @@
     margin: auto;
 
     color: @gray;
-    font-family: @serif;
+    font-family: @source;
 
     .payments {
         min-height: 1309px;
@@ -274,7 +273,7 @@
                     .title {
                         display: block;
                         color: #414141;
-                        font-family: 'Lucida Grande', sans-serif;
+                        font-family: @source;
                     }
                 }
 

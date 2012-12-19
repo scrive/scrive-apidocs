@@ -671,7 +671,6 @@
 .checkboxTypeSetter-option {
         color: #414241;
         font-size: small;
-        font-family: 'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
         text-align : left;
 }
 .checkboxTypeSetter-option input, .checkboxTypeSetter-container .name  {
