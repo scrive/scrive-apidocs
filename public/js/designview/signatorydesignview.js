@@ -172,7 +172,7 @@ var SignatoryDesignView = Backbone.View.extend({
    top : function() {
         var top = $("<div class='top'/>");
         var signatory = this.model.signatory();
-        top.append($("<span class='signame'/>").text(signatory.nameInDocument().toUpperCase()));
+        top.append($("<h5 class='signame'/>").text(signatory.nameInDocument().toUpperCase()));
         top.append(this.setRoleFieldIcon());
         if (!signatory.author())
             top.append(this.setCsvSignatoryIcon());

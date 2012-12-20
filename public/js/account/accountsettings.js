@@ -188,31 +188,31 @@ var AccountSettingsView = Backbone.View.extend({
       fstnameinput.change(function() {
           model.setFstname(fstnameinput.val());
         })
-      table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.fstname + ":")).append($("<td/>").append(fstnameinput)));
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.fstname + ":"))).append($("<td/>").append(fstnameinput)));
 
       var sndnameinput = $("<input type='text' name='sndname'/>").val(model.sndname());
       sndnameinput.change(function() {
           model.setSndname(sndnameinput.val());
         })
-      table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.sndname + ":")).append($("<td/>").append(sndnameinput)));
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.sndname + ":"))).append($("<td/>").append(sndnameinput)));
 
       var personnumberinput = $("<input type='text' name='personalnumber'/>").val(model.personnumber());
       personnumberinput.change(function() {
           model.setPersonnumber(personnumberinput.val());
         })
-      table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.personnumber + ":")).append($("<td/>").append(personnumberinput)));      
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.personnumber + ":"))).append($("<td/>").append(personnumberinput)));
 
       var emailinput = $("<input type='text' disabled='disabled'/>").val(model.email());
       emailinput.change(function() {
           model.setEmail(emailinput.val());
         })
-      table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.email + ":")).append($("<td/>").append(emailinput).append("<BR/>").append(this.changeEmailButton())));
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.email + ":"))).append($("<td/>").append(emailinput).append("<BR/>").append(this.changeEmailButton())));
 
       var phoneinput = $("<input type='text' name='phone'/>").val(model.phone());
       phoneinput.change(function() {
           model.setPhone(phoneinput.val());
         })
-      table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.phone + ":")).append($("<td/>").append(phoneinput)));
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.phone + ":"))).append($("<td/>").append(phoneinput)));
 
       if (!model.user().hasCompany()) {
         
@@ -220,20 +220,20 @@ var AccountSettingsView = Backbone.View.extend({
           companynameinput.change(function() {
               model.setCompanyname(companynameinput.val());
             })
-          table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companyname + ":")).append($("<td/>").append(companynameinput)));
+          table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companyname + ":"))).append($("<td/>").append(companynameinput)));
 
           var companynumberinput = $("<input type='text' name='companynumber'/>").val(model.companynumber());
           companynumberinput.change(function() {
               model.setCompanynumber(companynumberinput.val());
             })
-          table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companynumber + ":")).append($("<td/>").append(companynumberinput)));
+          table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companynumber + ":"))).append($("<td/>").append(companynumberinput)));
           
       };
       var companypositioninput = $("<input type='text' name='companyposition'/>").val(model.companyposition());
       companypositioninput.change(function() {
           model.setCompanyposition(companypositioninput.val());
         })
-      table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companyposition+ ":" )).append($("<td/>").append(companypositioninput)));
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companyposition+ ":" ))).append($("<td/>").append(companypositioninput)));
       
       return box;
     },
@@ -252,42 +252,42 @@ var AccountSettingsView = Backbone.View.extend({
             companynameinput.change(function() {
               model.setCompanyname(companynameinput.val());
             })
-            table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companyname + ":")).append($("<td/>").append(companynameinput)));
+            table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companyname + ":"))).append($("<td/>").append(companynameinput)));
 
             var companynumberinput = $("<input type='text'/>").val(model.companynumber());
             if (!model.companyAdmin()) companynumberinput.attr("disabled","disabled");
             companynumberinput.change(function() {
               model.setCompanynumber(companynumberinput.val());
             })
-            table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companynumber + ":")).append($("<td/>").append(companynumberinput)));
+            table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companynumber + ":"))).append($("<td/>").append(companynumberinput)));
 
             var companyaddressinput = $("<input type='text'/>").val(model.companyaddress());
             if (!model.companyAdmin()) companyaddressinput.attr("disabled","disabled");
             companyaddressinput.change(function() {
               model.setCompanyaddress(companyaddressinput.val());
             })
-            table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companyaddress + ":")).append($("<td/>").append(companyaddressinput)));
+            table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companyaddress + ":"))).append($("<td/>").append(companyaddressinput)));
 
             var companyzipinput = $("<input type='text'/>").val(model.companyzip());
             if (!model.companyAdmin()) companyzipinput.attr("disabled","disabled");
             companyzipinput.change(function() {
               model.setCompanyzip(companyzipinput.val());
             })
-            table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companyzip + ":")).append($("<td/>").append(companyzipinput)));
+            table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companyzip + ":"))).append($("<td/>").append(companyzipinput)));
 
             var companycityinput = $("<input type='text'/>").val(model.companycity());
             if (!model.companyAdmin()) companycityinput.attr("disabled","disabled");
             companycityinput.change(function() {
               model.setCompanycity(companycityinput.val());
             })
-            table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companycity + ":")).append($("<td/>").append(companycityinput)));
+            table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companycity + ":"))).append($("<td/>").append(companycityinput)));
 
             var companycountryinput = $("<input type='text'/>").val(model.companycountry());
             if (!model.companyAdmin()) companycountryinput.attr("disabled","disabled");
             companycountryinput.change(function() {
               model.setCompanycountry(companycountryinput.val());
             })
-            table.append($("<tr/>").append($("<td/>").text(localization.account.accountDetails.companycountry + ":")).append($("<td/>").append(companycountryinput)));
+            table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountDetails.companycountry + ":"))).append($("<td/>").append(companycountryinput)));
 
 
             body.append(table);

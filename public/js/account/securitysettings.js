@@ -110,19 +110,19 @@ var SecuritySettingsView = Backbone.View.extend({
       oldpasswordinput.change(function() {
           model.setOldPassword(oldpasswordinput.val());
         })
-      table.append($("<tr/>").append($("<td/>").text(localization.account.accountSecurity.oldpassword)).append($("<td/>").append(oldpasswordinput)));
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountSecurity.oldpassword))).append($("<td/>").append(oldpasswordinput)));
 
       var password1input = $("<input type='password' autocomplete='off'/>");
       password1input.change(function() {
           model.setPassword1(password1input.val());
         })
-      table.append($("<tr/>").append($("<td/>").text(localization.account.accountSecurity.newpassword1)).append($("<td/>").append(password1input)));
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountSecurity.newpassword1))).append($("<td/>").append(password1input)));
 
       var password2input = $("<input type='password' autocomplete='off'/>");
       password2input.change(function() {
           model.setPassword2(password2input.val());
         })
-      table.append($("<tr/>").append($("<td/>").text(localization.account.accountSecurity.newpassword2)).append($("<td/>").append(password2input)));
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountSecurity.newpassword2))).append($("<td/>").append(password2input)));
 
       return box;
     },
@@ -153,7 +153,7 @@ var SecuritySettingsView = Backbone.View.extend({
       };
       updateLangSelect();
       model.bind("change:lang",updateLangSelect);
-      table.append($("<tr/>").append($("<td/>").text(localization.account.accountSecurity.lang)).append(this.langSelectBox));
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountSecurity.lang))).append(this.langSelectBox));
       return box;
     },
     footerSettings : function() {

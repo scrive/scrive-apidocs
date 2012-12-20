@@ -6,7 +6,7 @@
 
 window.DocumentCellsDefinition = function(archive) { return  [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
-        new Cell({name: localization.archive.documents.columns.status, width:"52px", field:"status",
+        new Cell({name: localization.archive.documents.columns.status, width:"62px", field:"status",
                  rendering: function(status,idx,listobject) {
                     var icon = jQuery("<div class='icon status "+status+"'></div>")
                     var tip = jQuery("<div id='tooltip-"+status+"'> <div class='icon status "+status+"'></div><p>"+
@@ -18,12 +18,12 @@ window.DocumentCellsDefinition = function(archive) { return  [
                     return icon;
                  }
         }),
-        new Cell({name: localization.archive.documents.columns.time, width:"116px", field:"time"}),
-        new Cell({name: localization.archive.documents.columns.sender, width:"110px", field:"author",  special: "link"}),
+        new Cell({name: localization.archive.documents.columns.time, width:"140px", field:"time"}),
+        new Cell({name: localization.archive.documents.columns.sender, width:"140px", field:"author",  special: "link"}),
         new Cell({width:"5px" }),
         new Cell({name: localization.archive.documents.columns.party, width:"190px", field:"party", special: "expandable", subfield : "name"}),
         new Cell({width:"5px" }),
-        new Cell({name: localization.archive.documents.columns.title, width:"240px", substyle: "", field:"id",special: "rendered",
+        new Cell({name: localization.archive.documents.columns.title, width:"230px", substyle: "", field:"id",special: "rendered",
                  rendering: function(value,idx,listobject) {
                     if (idx == undefined)
                        {

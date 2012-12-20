@@ -388,12 +388,12 @@
                    th.append(this.checkbox = $("<div class='listcheckbox' class='selectall'/>"));
                    th.click(function() {view.toggleSelectAll();return false;});
                } else {
-                   var a = $("<a/>");
+                   var h = $("<h6/>");
                    var makeText = function() {
                         var text = cell.name();
                         if (schema.sorting().isSortable(cell.field())) {
                             var field = cell.field();
-                            a.click(schema.sorting().sortOnFunction(field));
+                            h.click(schema.sorting().sortOnFunction(field));
                             if (schema.sorting().isCurrent(cell.field())) {
                                 if (schema.sorting().isAsc()) {
                                     text += " ▼";
@@ -402,12 +402,12 @@
                                 }
                             }
                         }
-                        a.html(text);
+                        h.html(text);
                      }
                    makeText();
                    this.model.bind('change', makeText);
 
-                   th.append(a);
+                   th.append(h);
                }
                if (cell.width() != undefined) {
                    th.css("width", cell.width());

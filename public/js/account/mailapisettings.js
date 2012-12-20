@@ -158,10 +158,10 @@ var MailAPISettingsView = Backbone.View.extend({
         limitinput.change(function() {
           model.setDailyLimitChange(limitinput.val());
         })
-      table.append($("<tr/>").append($("<td/>").text(localization.account.mailAPI.dailyLimit)).append($("<td/>").append(limitinput)));
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.mailAPI.dailyLimit))).append($("<td/>").append(limitinput)));
 
       var sendinput = $("<input type='text' disabled='disabled'/>").val(model.hasPersonalMailApi() ? this.model.personalMailApi().sent() : "N/A");
-      table.append($("<tr/>").append($("<td/>").text(localization.account.mailAPI.processedToday)).append($("<td/>").append(sendinput)));
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.mailAPI.processedToday))).append($("<td/>").append(sendinput)));
 
       if (model.hasPersonalMailApi()) {
         var resetbox = $("<div class='mailapi'/>");
@@ -170,7 +170,7 @@ var MailAPISettingsView = Backbone.View.extend({
           model.setResetLimit(checkbox.is(":checked"));
           return true;
         });
-        var label = $("<label style='margin-left: 10px'/>").text(localization.account.mailAPI.resetLimit);
+        var label = $("<label style='margin-left: 10px'/>").append($("<label/>").text(localization.account.mailAPI.resetLimit));
         body.append(resetbox.append(checkbox).append(label));
       }
            
@@ -187,7 +187,7 @@ var MailAPISettingsView = Backbone.View.extend({
       box.append(header).append(body);
 
       // Filling content
-      subbox.append($("<span/>").text(localization.account.mailAPI.activeMails));
+      subbox.append($("<label/>").text(localization.account.mailAPI.activeMails));
       var list = $("<ul class='mailapiemailslist'/>");
       var a1 = $("<a/>").attr('href',"mailto:contract+"+companyMailApi.key()+"@api.scrive.com").text("contract+"+companyMailApi.key()+"@api.scrive.com");
       var a2 = $("<a/>").attr('href',"mailto:offer+"+companyMailApi.key()+"@api.scrive.com").text("offer+"+companyMailApi.key()+"@api.scrive.com");
@@ -197,9 +197,9 @@ var MailAPISettingsView = Backbone.View.extend({
       list.append($("<li/>").append(a3));
       subbox.append(list)
       subbox.append("<BR/>");
-      subbox.append($("<div/>").text(localization.account.mailAPI.dailyLimit + ":" + companyMailApi.limit()));
+      subbox.append($("<label/>").text(localization.account.mailAPI.dailyLimit + ":" + companyMailApi.limit()));
       subbox.append("<BR/>");
-      subbox.append($("<div/>").text(localization.account.mailAPI.processedToday + ":" + companyMailApi.sent()));
+      subbox.append($("<label/>").text(localization.account.mailAPI.processedToday + ":" + companyMailApi.sent()));
       subbox.append("<BR/>");
       
       return box;

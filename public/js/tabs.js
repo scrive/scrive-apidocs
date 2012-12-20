@@ -1,7 +1,7 @@
 /*Module for basic system schema called tabs. Like three steps in design view or Conteacts | Offers | Orders | .. in Archive
  *
  * Tab contails of name and body,
- * Tabs is collection of Tabs with some title.
+ * Tabs is collection of Tabs.
  * By default first one is active.
  *
  *
@@ -72,12 +72,6 @@ var Tabs = Backbone.Model.extend({
    defaults: {
        numbers : false
     },
-   title: function(){
-     return this.get("title") != undefined ? this.get("title") : "";
-    },
-   hasTitle : function() {
-     return this.get("title") != undefined;
-   }, 
    numbers : function() {
      return   this.get("numbers") == true;
    },
@@ -164,9 +158,6 @@ var TabsView = Backbone.View.extend({
         var container = $(this.el);
         var tabsview = this;
         this.toprow.children().detach();
-        // Top part , with title and the tabs
-        var titlepart = $("<div class='tab-viewer-header-title'/>");
-        titlepart.append(this.model.title());
         var tabsrow = $("<ul class='tabs'/>");
         var model = this.model;
         var hasRight = false;
@@ -180,9 +171,9 @@ var TabsView = Backbone.View.extend({
             }
             else
                 li.addClass("float-left");
+            var icon = $("<h4/>");
             if (tab.hasNumber())
-                li.append(tabsview.numberIcon(tab.number()));
-            var icon = $("<a href='#'/>");
+                icon.addClass("numbericon").addClass("numbericon" + tab.number());
             icon.text(tab.name());
             if (tab.iconClass() != undefined){
                 icon.addClass(tab.iconClass());
@@ -201,10 +192,6 @@ var TabsView = Backbone.View.extend({
         });
         if (!hasRight && model.tabsTail() == undefined)
             tabsrow.append("<li class='float-right empty'/>");
-        if (model.hasTitle())
-          this.toprow.append(titlepart);
-        else
-          this.toprow.addClass("no-title");
         if (model.hasManyTabs())
             this.toprow.append(tabsrow);
         if (model.tabsTail() != undefined)
@@ -221,11 +208,6 @@ var TabsView = Backbone.View.extend({
             e.show();
         });
         return this;
-    },
-    numberIcon : function(number) {
-        var icon = $("<span/>");
-        icon.addClass("numbericon" + number);
-        return icon;
     }
 });
 

@@ -1,0 +1,157 @@
+@import 'branding/colors';
+@import 'branding/typography';
+
+.tab-viewer > .list-container {
+        border-top: 0px solid #808080;
+}
+
+.list-container {
+   border-radius: 0 0 5px 5px;
+   border-top: 1px solid #808080;
+   border-left: 1px solid #808080;
+   border-right: 1px solid #808080;
+   border-bottom: 1px solid #808080;
+   -moz-border-radius: 0 0 5px 5px;
+   -webkit-border-radius: 0 0 5px 5px;
+
+  .table {
+      background: #f4f4f4;
+      border-radius: 0 0 5px 5px;
+      -moz-border-radius: 0 0 5px 5px;
+      -webkit-border-radius: 0 0 5px 5px;
+      border: 4px solid #f4f4f4;
+      table {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            width: 100%;
+            table-layout: fixed;
+            th {
+                  height: 40px;
+                  padding-bottom: 4px;
+                  padding-left: 15px;
+                  text-align: left;
+                  vertical-align: bottom;
+                  h1,h2,h3,h4,h5,h6 {
+                     color: #000 !important;
+                      text-decoration: none;
+                     cursor: pointer;
+                     &:hover {
+                        color: #388add !important;
+                     }
+                  }
+              }
+           td {
+                  color: #666;
+                  height: 22px;
+                  font-size: 13px;
+                  margin-bottom: 1px;
+                  padding-left: 15px;
+                  overflow-x:hidden;
+                  &.right {
+                        padding-right: 12px;
+                        text-align: right;
+                    }
+                  a {
+                        color: #666;
+                    &:hover {
+                        color: #000;
+                    }
+                  }
+              }
+           tr {
+              border-top: 1px solid #e0e0e0;
+              &.odd td {
+                background: #f6f6f6;
+              }
+            }
+          }
+  .table-paginate {
+      .pages {
+        color: #999;
+        margin: 10px auto 5px;
+        text-align: center;
+        width: 600px;
+        }
+        strong {
+          color: #000;
+          display: block;
+        }
+        .page-change{
+              padding: 3px;
+              color: #007CAC;
+              cursor: pointer;
+              &.current{
+                color: #333333;
+                font-weight : bold;
+                cursor: default;
+              }
+        }
+    }
+}
+
+
+
+  .col {
+        margin: 0 20px;
+        padding-top: 20px;
+        padding-bottom: 6px;
+        max-width: 800px;
+        &.float-right {
+            margin: 0 20px 0 0;
+        }
+        &.float-left {
+            margin: 0 0 0 20px;
+        }
+  }
+
+  /* Select boxes and search boxes for lists */
+
+  .option-top-box {
+        background: #fff;
+        border-bottom: 1px solid #cccccc;
+  }
+
+  .list-search {
+        background: none repeat scroll 0 0 #FFFFFF;
+        border: 1px solid #DEE4ED;
+        box-shadow: none;
+        font: 16px/1 @source;
+        padding: 5px;
+        height: 20px;
+        width: 160px;
+        margin-right: 8px;
+  }
+
+  .subbox {
+    padding-top: 5px;
+    height : 40px;
+    padding-bottom: 10px;
+    display : block;
+    padding-right: 10px;
+    padding-left: 20px;
+    .empty {
+      height : 0px;
+    }
+    .options-box  {
+      float: right;
+
+    }
+  }
+  .actionButton, .select  {
+      margin-right : 8px;
+  }
+
+
+
+  .listcheckbox{
+      background: url("../img/checkbox_unchecked.png") no-repeat scroll 0 0 transparent;
+      display: block;
+      height: 16px;
+      width: 16px;
+      cursor: pointer;
+      & .checked{
+        background: url("../img/checkbox_checked.png") no-repeat scroll 0 0 transparent;
+      }
+  }
+
+}

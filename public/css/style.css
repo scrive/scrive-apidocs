@@ -139,7 +139,6 @@ input[type=submit].hidden
 
 .designview .signStepsBody
 {
-    color: #414241;
     background-image: url(/img/signStepsBodyBorderLong.png);
     background-repeat: repeat-y;
     overflow: hidden;
@@ -153,8 +152,8 @@ input[type=submit].hidden
 
 
 /* HOW TO MAKE FILE INPUT LOOKING LIKE A BUTTON !!!! */
-input.multiFileInput,
-.box input.multiFileInput {
+.button input.multiFileInput
+{
     position:relative;
     z-index:10;
     cursor:pointer;
@@ -169,6 +168,7 @@ input.multiFileInput,
     opacity: 0;
     /* only IE will use this, it's necessary because it ignores the maxlength att <IE7 */
     #width:0px;
+    min-height: 50px;
 }
 
 /* 015 new */
@@ -192,31 +192,6 @@ input.multiFileInput,
   top: 3px;
   left: 3px;
   cursor: pointer;
-}
-
-
-.numbericon1 {
-    background-image: url(/img/icon1.png);
-    background-repeat: no-repeat;
-    float: left;
-    height: 24px;
-    width: 24px;
-}
-
-.numbericon2 {
-    background-image: url(/img/icon2.png);
-    background-repeat: no-repeat;
-    float: left;
-    height: 24px;
-    width: 24px;
-}
-
-.numbericon3 {
-    background-image: url(/img/icon3.png);
-    background-repeat: no-repeat;
-    float: left;
-    height: 24px;
-    width: 24px;
 }
 
 .redborder

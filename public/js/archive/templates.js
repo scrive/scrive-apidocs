@@ -25,12 +25,12 @@ window.TemplatesListDefinition = function(archive) { return {
             ], 
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
-        new Cell({name: localization.archive.templates.columns.shared, width:"52px", field:"shared", special: "rendered",
+        new Cell({name: localization.archive.templates.columns.shared, width:"60px", field:"shared", special: "rendered",
                   rendering: function(shared) {
                          return $("<div/>").addClass((shared == "True") ? "sharedIcon" : "notSharedIcon");
                   }}),
 
-        new Cell({name: localization.archive.templates.columns.time, width:"140px", field:"time"}),
+        new Cell({name: localization.archive.templates.columns.time, width:"150px", field:"time"}),
         new Cell({name: localization.archive.templates.columns.verificationMethod, width:"100px", field:"id",  special: "rendered",
                   rendering: function(value, idx, model) {
                          var res= $("<div/>");

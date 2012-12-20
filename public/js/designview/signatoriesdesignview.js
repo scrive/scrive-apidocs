@@ -32,13 +32,13 @@ var SignatoriesDesignView = Backbone.View.extend({
         var documentdesignview = this.model.documentdesignview();
         var view = this;
         var box =  $("<div class='addremovesignatorybox'/>");
-        var addLink = $("<a class='addSignatory' href='#'/>").text(localization.addSignatory);
+        var addLink = $("<label class='addSignatory clickable'/>").text(localization.addSignatory);
         addLink.click(function(){
             var nsig = document.addSignatory();
             view.showSignatory(nsig);
             return false;
         });
-        var removeLink = $("<a class='removeSignatory' href='#'/>").text(localization.removeSignatory);
+        var removeLink = $("<label class='removeSignatory clickable'/>").text(localization.removeSignatory);
         removeLink.click(function() {
             document.removeSignatory(view.current);
             return false;
@@ -70,15 +70,14 @@ var SignatoriesDesignView = Backbone.View.extend({
             view.signatoriesListBox =  $("<div class='siglist'/>");
         else
             view.signatoriesListBox.empty();
-        var header = $("<a href='#' class='header'/>");
+        var header = $("<h5 class='header'/>").text(localization.signatoryListPartner);
         if (this.model.documentdesignview().signOrderVisible())
             header.append($("<span class='float-right'/>").text(localization.signatoryListSignOrder));
-        header.append($("<span>").text(localization.signatoryListPartner));
         view.signatoriesListBox.append(header);
 
         var sigs = document.signatories();
         _.each(document.signatories(),function(sig) {
-            var sigline = $("<a href='#' class='signame'/>");
+            var sigline = $("<label class='signame clickable'/>");
             var setSiglineContent= function() {
                 var text = sig.isCsv() ?  localization.csv.title : sig.nameOrEmail();
                 if (text == undefined || text == "")

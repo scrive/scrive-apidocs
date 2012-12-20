@@ -163,7 +163,7 @@ var DesignViewView = Backbone.View.extend({
     },
     authenticationMethodSelection : function() {
         var document = this.model.document();
-        var box = $("<div class='authenticationmethodselect'/>");
+        var box = $("<label class='authenticationmethodselect'/>");
         var checkbox = $("<input type='checkbox' cc='FALSE' class='elegCheckbox'>");
         if (document.elegAuthentication())
         {
@@ -191,7 +191,7 @@ var DesignViewView = Backbone.View.extend({
     documentTypeSelection : function() {
         // TODO: Change this HTML select to proper JavaScript-based Select one day
         var document = this.model.document();
-        var box = $("<div class='documenttypeselect'/>");
+        var box = $("<label class='documenttypeselect'/>");
         var select= $("<select/>");
         var contract = $("<option value='contract'/>").text(localization.process.contract.name);
         var offer = $("<option value='offer'/>").text(localization.process.offer.name);
@@ -222,7 +222,7 @@ var DesignViewView = Backbone.View.extend({
     },
     deliveryMethodSelection : function() {
         var document = this.model.document();
-        var box = $("<div class='deliverymethodselect'/>");
+        var box = $("<label class='deliverymethodselect'/>");
         var select= $("<select/>");
         var email = $("<option value='email'/>").text(localization.email);
         var pad = $("<option value='pad'/>").text(localization.pad.delivery);
@@ -258,7 +258,7 @@ var DesignViewView = Backbone.View.extend({
     },
     finalDateSelection: function() {
         var document = this.model.document();
-        var box = $("<div class='finaldateselection'/>");
+        var box = $("<label class='finaldateselection'/>");
         var selectdaysbox  = $("<div/>");
         box.append(selectdaysbox);
         selectdaysbox.append($("<span/>").text(document.process().localization().expirytext));
@@ -287,7 +287,7 @@ var DesignViewView = Backbone.View.extend({
     editInvitationOption: function() {
         var document = this.model.document();
         if (document.padDelivery() || document.apiDelivery()) return $("<div class='display:none'>");
-        var box  = $("<div class='editinvitemessage'/>");
+        var box  = $("<label class='editinvitemessage clickable'/>");
         var icon = $("<span class='editinvitemessageicon'/>");
         var text = $("<span class='editinvitemessagetext'/>").text(localization.editInviteText);
         box.append(icon).append(text);
@@ -313,7 +313,7 @@ var DesignViewView = Backbone.View.extend({
     },
     selectLanguageOption: function() {
         var document = this.model.document();
-        var box = $("<div class='languageselect'/>");
+        var box = $("<label class='languageselect'/>");
         var select= $("<select/>");
         var en =  $("<option value='en'/>").text(localization.languages.en);
         var sv = $("<option value='sv'/>").text(localization.languages.sv);
@@ -379,7 +379,7 @@ var DesignViewView = Backbone.View.extend({
     },
     authorAttachmentsSetup: function() {
         var document = this.model.document();
-        var box = $("<div class='authorattachmentssetup'/>");
+        var box = $("<label class='authorattachmentssetup clickable'/>");
         var icon = $("<span class='authorattachmentssetupicon'/>");
         var text = $("<span class='authorattachmentssetuptext'/>").text(localization.authorattachments.changeAuthorAttachments);
         var countspan = $("<span class='countspan' />").text("(" + document.authorattachments().length + ")").appendTo(text);
@@ -397,7 +397,7 @@ var DesignViewView = Backbone.View.extend({
         var document = this.model.document();
         if (document.padDelivery()) return $("<div style='display:none'/>");
 
-        var box = $("<div class='signatoryattachmentssetup'/>");
+        var box = $("<label class='signatoryattachmentssetup clickable'/>");
         var icon = $("<span class='signatoryattachmentssetupicon'/>");
         var text = $("<span class='signatoryattachmentssetuptext'/>").text(localization.signatoryAttachments.requestAttachments);
         var countspan = $("<span class='countspan' />").text("(" + document.signatoryattachments().length + ")");
@@ -415,7 +415,7 @@ var DesignViewView = Backbone.View.extend({
     },
     signLastOption : function(signLast) {
       var self = this;
-      var box = $("<div class='signLastOption'/>");
+      var box = $("<label class='signLastOption'/>");
       var checkbox = $("<input type='checkbox' class='signLastCheckbox'>");
       var checkboxid = "fdd" + Math.random();
       checkbox.attr("id",checkboxid);

@@ -25,22 +25,12 @@
 
 .siglist .signame {
     display: block;
-    font-size: 8pt;
-    width:100%;
 }
 
  .signame:hover{
     background-color:#F7F7F7;
 }
 
-
-.siglist .header{
-    display: block;
-    font-size: 8pt;
-    color : #414241;
-    width:100%;
-    padding-bottom: 5px;
-}
 .sigview .top{
     display: block;
     font-size: 10pt;
@@ -70,14 +60,12 @@
 .sigview .field .fieldvalue {
     background-color: transparent;
     border: medium none;
-    font-size: 12px;
     height: 18px;
     line-height: 18px;
     margin: 0;
     outline: medium none;
     overflow: hidden;
     position: relative;
-    top: 1px;
     width: 132px;
     font-style: italic;
 }
@@ -103,18 +91,19 @@
     margin-top : 7px;
     padding-top:1px;
     padding-bottom:1px;
-    font-size: 8pt;
 }
 .addSignatory{
     background-image: url("/img/iconPlus.png");
+    background-position: 0 5px;
 }
 .removeSignatory{
     background-image: url("/img/iconMinus.png");
+    background-position: 0 5px;
 }
 .field .ddIcon{
     height:16px;
     width:12px;
-    margin:2px;
+    margin: 4px 2px;
     float:left;
     background-image: url("/img/iconHand.png");
     cursor: pointer;
@@ -229,7 +218,7 @@
 .button.nextstepbutton {
    margin-top:11px;
    margin-bottom:5px;
-   width: 130px;
+   width: 144px;
 }
 
 .finalbutton {
@@ -322,14 +311,6 @@
     position: relative;
     top: 3px;
     width: 16px;
-}
-
-.editinvitemessagetext , .authorattachmentssetuptext,  .signatoryattachmentssetuptext{
-    cursor: pointer;
-    color: #007CAC;
-    text-decoration: none;
-    font-size: 8pt;
-    text-transform: uppercase;
 }
 
 .signStepsBodyPart{
@@ -728,4 +709,14 @@
   overflow : hidden;
   display : inline-block;
   white-space:nowrap;
+}
+
+.designview h1,
+.designview h2,
+.designview h3,
+.designview h4,
+.designview h5,
+.designview h6
+{
+  color : #333333;
 }
