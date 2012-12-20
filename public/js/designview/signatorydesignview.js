@@ -114,6 +114,7 @@ var SignatoryDesignView = Backbone.View.extend({
        var setSignOrderIcon = $("<a class='setSignOrder' href='#'/>");
        setSignOrderIcon.click(function(){
           model.documentdesignview().toogleSignOrder();
+          return false;
             });
         return setSignOrderIcon;
    },

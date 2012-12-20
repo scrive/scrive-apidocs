@@ -208,7 +208,7 @@ var CompanyAccountsView = Backbone.View.extend({
     },
     render: function () {
        var container = $(this.el);
-       container.append(this.model.userList().el());
+       this.el = this.model.userList().el();
        return this;
     }
 });
@@ -216,7 +216,7 @@ var CompanyAccountsView = Backbone.View.extend({
 
 window.CompanyAccounts = function(args) {
           var model = new CompanyAccountsModel(args);
-          var view =  new CompanyAccountsView({model : model, el : $("<div class='company-accounts'/>")});
+          var view =  new CompanyAccountsView({model : model});
           return {
               refresh : function() {model.refresh();},
               el  : function() {return $(view.el);}

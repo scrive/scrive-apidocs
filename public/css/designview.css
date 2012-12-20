@@ -229,8 +229,7 @@
 .button.nextstepbutton {
    margin-top:11px;
    margin-bottom:5px;
-   margin-left: 30px;
-   width: 100px;
+   width: 130px;
 }
 
 .finalbutton {
@@ -245,8 +244,8 @@
     border-style: solid;
     float: left;
     position: relative;
-    width: 190px;
-    padding: 12px 5px 10px 17px;
+    width: 188px;
+    padding: 12px 15px 10px 15px;
     margin-top : 20px;
     margin-bottom : 20px;
 }
@@ -364,6 +363,13 @@
     width: 250px;
 }
 
+.selectAuthorAttachmentPopupContent {
+    width: 610px;
+    margin:auto;
+}
+.selectAuthorAttachmentPopupContent .description{
+    text-align: center;
+}
 .selectAuthorAttachmentPopupContent .option-box
 {
     margin: 15px;

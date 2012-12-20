@@ -53,9 +53,9 @@
 
 .archive .scrolled .option-top-box{
     position: fixed;
-    top: -47px;
+    top: -61px;
     background : #ffffff;
-    width: 958px;
+    width: 1018px;
     border-bottom : 1px solid #808080;
 
 }
@@ -74,3 +74,22 @@
     height: 16px;
     background-image: url(/img/iconGroup.png);
 }
+
+.table-statuses {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 3px;
+      color: #999;
+      font-size: 9px;
+      margin-top: 10px;
+      padding: 10px;
+      height: 12px;
+      text-transform: uppercase;
+      -moz-border-radius: 3px;
+      -webkit-border-radius: 3px;
+  }
+
+.table-statuses .icon {
+      margin-bottom: -1px;
+      margin-left: 8px;
+  }

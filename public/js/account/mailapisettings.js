@@ -116,7 +116,7 @@ var MailAPISettingsView = Backbone.View.extend({
         body.append(subbox);
         var personalMailApi = this.model.personalMailApi();
         subbox.append($("<span/>").text(localization.account.mailAPI.activeMails));
-        var list = $("<ul id='mailapiemailslist'/>");
+        var list = $("<ul class='mailapiemailslist'/>");
         var a1 = $("<a/>").attr('href',"mailto:contract+"+personalMailApi.key()+"@api.scrive.com").text("contract+"+personalMailApi.key()+"@api.scrive.com");
         var a2 = $("<a/>").attr('href',"mailto:offer+"+personalMailApi.key()+"@api.scrive.com").text("offer+"+personalMailApi.key()+"@api.scrive.com");
         var a3 = $("<a/>").attr('href',"mailto:order+"+personalMailApi.key()+"@api.scrive.com").text("order+"+personalMailApi.key()+"@api.scrive.com");
@@ -188,7 +188,7 @@ var MailAPISettingsView = Backbone.View.extend({
 
       // Filling content
       subbox.append($("<span/>").text(localization.account.mailAPI.activeMails));
-      var list = $("<ul id='mailapiemailslist'/>");
+      var list = $("<ul class='mailapiemailslist'/>");
       var a1 = $("<a/>").attr('href',"mailto:contract+"+companyMailApi.key()+"@api.scrive.com").text("contract+"+companyMailApi.key()+"@api.scrive.com");
       var a2 = $("<a/>").attr('href',"mailto:offer+"+companyMailApi.key()+"@api.scrive.com").text("offer+"+companyMailApi.key()+"@api.scrive.com");
       var a3 = $("<a/>").attr('href',"mailto:order+"+companyMailApi.key()+"@api.scrive.com").text("order+"+companyMailApi.key()+"@api.scrive.com");

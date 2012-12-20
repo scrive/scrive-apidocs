@@ -262,14 +262,12 @@
             $(this.el).css("opacity",1);
         },
         renderEmpty: function() {
-            this.main = $("<div/>");
             this.pretableboxleft = $("<div class='col float-left'/>");
             this.pretableboxright = $("<div class='col float-right'/>");
             this.pretablebox = $("<div/>");
             this.pretableboxleft.append(this.emptyAlternative);
-            this.main.append(this.pretablebox);
+            $(this.el).append(this.pretablebox);
             this.pretablebox.append(this.pretableboxleft).append(this.pretableboxright);
-            $(this.el).append(this.main);
         },
         hasFirstTopBox : function() {
             return this.headerExtras != undefined || this.schema.allFiltering().length > 0 || !this.schema.textfiltering().disabled();
@@ -280,7 +278,6 @@
         
         prerender: function() {
             var view = this;
-            this.main = $("<div class='tab-container'/>");
             this.pretableboxleft = $("<div class='col float-left'/>");
             this.pretableboxright = $("<div class='col float-right'/>");
               this.pretablebox = $("<div class='tab-content'/>");
@@ -294,7 +291,7 @@
 
             if (this.hasFirstTopBox() || this.hasSecoundTopBox()) {
                 this.tableoptionbox = $("<div class='option-top-box' />");
-                this.main.append(this.tableoptionbox);
+                $(this.el).append(this.tableoptionbox);
                 // Top box - for filters
                 if (this.hasFirstTopBox()) {
                     this.pretablebox = $("<div/>");
@@ -330,7 +327,7 @@
                     }
                 }
             }
-            this.main.append(this.tablebox);
+            $(this.el).append(this.tablebox);
             if (this.bottomExtras != undefined) {
                 this.tableboxfooter.append(this.bottomExtras);
             }
@@ -339,7 +336,6 @@
                 new PagingView({model: this.schema.paging(), el: pagingFooter});
                 this.tableboxfooter.append(pagingFooter);
             }
-            $(this.el).append(this.main);
         },
         prepareOptions: function() {
             var options = this.schema.options();

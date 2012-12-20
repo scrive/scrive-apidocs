@@ -39,7 +39,7 @@ var DesignViewModel = Backbone.Model.extend({
     },
   flattenSignOrder : function() {
         var signatories = this.document().signatories();
-        var author = this.document.author();
+        var author = this.document().author();
         if( author.signs()) {
           if( author.signorder()==1 ) {
             /* Make everybody else sign as second group */

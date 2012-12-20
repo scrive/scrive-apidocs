@@ -1,26 +1,9 @@
 
-.scrive-logo {
-    background: url(../img/logo-scrive-small.png) no-repeat;
-    height: 34px;
-    width: 137px;
-}
-
-.box {
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        min-height: 180px;
-        padding: 20px;
-        -moz-border-radius: 5px;
-        -webkit-border-radius: 5px;
-}
-
-
-
-#mailapiemailslist {
+.mailapiemailslist {
     margin-bottom: 5px;
 }
 
-#mailapiemailslist li {
+.mailapiemailslist li {
     margin: 5px 0 0 5px;
 }
 

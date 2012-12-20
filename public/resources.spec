@@ -33,8 +33,6 @@ set systemPage
  css css/signaturedrawer.css
  css css/archive.css
  css css/symbols.css
- css css/tabs.css
- css css/lists.css
  css css/account.css
  css css/docsignview.css
  css css/main.css
@@ -50,6 +48,8 @@ set systemPage
  less less/doctools.less
  less less/buttons.less
  less less/util-pages.less
+ less less/lists.less
+ less less/tabs.less
  js   libs/jquery.min.js
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js
