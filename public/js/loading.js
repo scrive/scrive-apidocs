@@ -28,7 +28,10 @@ window.LoadingDialog = {
          var dialog = LoadingDialog.dialog();
          $(".loadingmessage", dialog).html(message);
          $(".modal-container",dialog).css("top",$(window).scrollTop());
-         $(".modal-container",dialog).css("margin-top",200);
+         $(".modal-container",dialog).css("margin-top",($(window).height()- 200) /2);
+         $(".modal-container",dialog).css("left",$(window).scrollLeft());
+         $(".modal-container",dialog).css("margin-left",($(window).width() - 600) / 2);
+         
          dialog.addClass('active');
     },        
     close : function() {

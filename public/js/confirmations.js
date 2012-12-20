@@ -24,7 +24,7 @@ var ConfirmationModel = Backbone.Model.extend({
       acceptColor : "green",
       content  : jQuery("<p/>"),
       cantCancel : false,
-      width: "640px",
+      width: 640,
       acceptVisible : true,
       extraOption : undefined
   },
@@ -140,9 +140,11 @@ var ConfirmationView = Backbone.View.extend({
        var container = $("<div class='modal-container'/>")
        container.css("top",$(window).scrollTop());
        container.css("margin-top",$(window).height() > 700 ? 200 : 100);
+       container.css("left",$(window).scrollLeft());
+       container.css("margin-left",($(window).width() - model.width()) / 2);
        if (model.extraClass() != undefined)
             $(this.el).addClass(model.extraClass());
-       container.css("width",model.width());
+       container.width(model.width());
        var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");
        var title = $("<span class='modal-title'/>");
        title.append(this.model.title());

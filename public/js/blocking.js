@@ -228,7 +228,7 @@
                 title: opts.title,
                 content: div,
                 acceptVisible: false,
-                width: "906px"
+                width: 906
             });
             var o = {hideContacts:true};
             if(opts.header)

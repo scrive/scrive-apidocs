@@ -11,7 +11,7 @@ window.Avtal24Popup = function() {
               content  : content,
               title  : localization.avtal24.title,
               acceptText: localization.avtal24.go,
-              width: "800px",
+              width: 800,
               onAccept : function() {
                   window.location = "https://avtal24.se/scrive";
                   return true;

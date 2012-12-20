@@ -218,7 +218,7 @@ window.DesignAuthorAttachmentsPopup = {
               content  : $(view.el),
               title  : localization.authorattachments.selectAttachments,
               acceptText: localization.save,
-              width: "800px",
+              width: 800,
               onAccept : function() {
                   document.afterSave( function() {
                       var submit = document.setAttachments();
@@ -425,7 +425,7 @@ window.DesignSignatoryAttachmentsPopup = {
               content  : $(view.el),
               title  : localization.signatoryAttachments.requestAttachments,
               acceptText: localization.save,
-              width: "800px",
+              width: 800,
               onAccept : function() {
                   if (_.any(model.attachments(), function(a) {return  !a.ready() }))
                       return false;

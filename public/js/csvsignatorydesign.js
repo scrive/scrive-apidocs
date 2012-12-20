@@ -241,7 +241,7 @@ window.CsvSignatoryDesignPopup = {
               content  : $(view.el),
               title  : localization.csv.title,
               acceptText: localization.save,
-              width: "960px",
+              width: 960,
               acceptVisible : model.ready(),
               onAccept : function() {
                   signatory.makeCsv(model.rows());
