@@ -6,6 +6,7 @@ module User.UserID (
 import Data.Int
 import Data.Typeable
 import Happstack.Server
+import Data.Binary
 
 import DB.Derive
 import Utils.Read
@@ -17,6 +18,10 @@ $(newtypeDeriveUnderlyingReadShow ''UserID)
 
 instance FromReqURI UserID where
   fromReqURI = maybeRead
+
+instance Binary UserID where
+  put (UserID uid) = put uid
+  get = fmap UserID get
 
 unsafeUserID :: Int64 -> UserID
 unsafeUserID = UserID
