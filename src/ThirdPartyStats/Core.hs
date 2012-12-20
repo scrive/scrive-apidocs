@@ -20,6 +20,7 @@ import DB.SQL2
 import ThirdPartyStats.Tables
 import qualified Log
 import MinutesTime
+import User.UserID (UserID)
 
 
 -- | The various types of values a property can take.
@@ -96,7 +97,7 @@ data EventProperty
   = MailProp   String
   | IPProp     String
   | NameProp   String
-  | UserIDProp String
+  | UserIDProp UserID
   | TimeProp   MinutesTime
   | SomeProp   PropName PropValue
     deriving Show
