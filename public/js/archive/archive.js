@@ -41,7 +41,10 @@ var ArchiveModel = Backbone.Model.extend({
                         active : window.location.hash == "#documents",           
                         onActivate : function() {
                             window.location.hash = "documents";
-                            archive.documents().recall();}
+                            archive.documents().recall();
+                            mixpanel.register({Subcontext : 'Documents tab'});
+                            mixpanel.track('View Documents Tab');
+                        }
                     });
   },
   templatesTab : function() {
@@ -52,7 +55,10 @@ var ArchiveModel = Backbone.Model.extend({
                         active : window.location.hash == "#templates",
                         onActivate : function() {
                             window.location.hash = "templates";
-                            archive.templates().recall();}
+                            archive.templates().recall();
+                            mixpanel.register({Subcontext : 'Templates tab'});
+                            mixpanel.track('View Templates Tab');
+                        }
                     })
   },
   attachmentsTab : function() {
@@ -63,7 +69,10 @@ var ArchiveModel = Backbone.Model.extend({
                         active : window.location.hash == "#attachments",
                         onActivate : function() {
                             window.location.hash = "attachments";
-                            archive.attachments().recall();}
+                            archive.attachments().recall();
+                            mixpanel.register({Subcontext : 'Attachments tab'});
+                            mixpanel.track('View Attachments Tab');
+                        }
                     });
   },
   binTab : function() {
@@ -74,7 +83,10 @@ var ArchiveModel = Backbone.Model.extend({
                         active : window.location.hash == "#bin",
                         onActivate : function() {
                             window.location.hash = "bin";
-                            archive.bin().recall();}
+                            archive.bin().recall();
+                            mixpanel.register({Subcontext : 'Bin tab'});
+                            mixpanel.track('View Bin Tab');
+                        }
                     });
   }
 });
