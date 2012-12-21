@@ -262,6 +262,7 @@ mkContext lang = do
                                            , recurlyPrivateKey = "49c1b30592fa475b8535a0ca04f88e65"
                                            }
         , ctxsessionid = tempSessionID
+        , ctxmixpaneltoken = "5b04329b972851feac0e9b853738e742"
     }
 
 -- pgsql database --

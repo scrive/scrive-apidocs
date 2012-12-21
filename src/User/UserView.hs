@@ -348,9 +348,3 @@ userBasicFields u mc = do
     F.value "position" $ usercompanyposition $ userinfo u
     F.value "iscompanyadmin" $ useriscompanyadmin u
     F.value "TOSdate" $ maybe "-" show (userhasacceptedtermsofservice u)
-    maybe (return ()) (F.value "companyid" . show) (usercompany u)
-    maybe (return ()) (F.value "signup_epoch" . toSeconds) (userhasacceptedtermsofservice u)
-    F.value "companystatus" $ case (useriscompanyadmin u, usercompany u) of
-      (True, _) -> "admin"
-      (False, Nothing) -> "single"
-      _ -> "sub"

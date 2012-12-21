@@ -305,4 +305,5 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
         , ctxusehttps = useHttps appConf
         , ctxrecurlyconfig = recurlyConfig appConf
         , ctxsessionid = sesID session
+        , ctxmixpaneltoken = mixpanelToken appConf
         }

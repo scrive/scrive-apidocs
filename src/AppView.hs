@@ -25,10 +25,7 @@ import Control.Applicative
 import Data.Maybe
 import Happstack.Server.SimpleHTTP
 import Templates.Templates
-import Company.Model
 import User.Lang
-import User.Model
-import User.UserView
 import qualified Templates.Fields as F
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified Data.ByteString.UTF8 as BS (fromString,toString)
@@ -39,7 +36,7 @@ import Data.String.Utils
 import Version
 import Text.JSON
 import Utils.HTTP
-import DB
+import Analytics.Include
 
 {- |
    The name of our application (the codebase is known as kontrakcja,
@@ -60,9 +57,7 @@ renderFromBody :: Kontrakcja m
 renderFromBody title content = do
   ctx <- getContext
   let muser = ctxmaybeuser ctx
-  mcompany <- case usercompany <$> muser of
-    Just (Just cid) -> dbQuery $ GetCompany cid
-    _ -> return Nothing
+  res <- simpleHtmlResponse =<< pageFromBody ctx ad loginOn loginreferer Nothing showCreateAccount title content
 
   res <- simpleHtmlResponse =<< pageFromBody False ctx muser mcompany title content
   clearFlashMsgs
@@ -93,20 +88,16 @@ renderFromBodyThin title content = do
 pageFromBody :: Kontrakcja m
              => Bool
              -> Context
-             -> Maybe User
-             -> Maybe Company
+             -> AnalyticsData
              -> String
              -> String
              -> m String
-pageFromBody thin ctx muser mcompany title bodytext =
+pageFromBody thin ctx ad title bodytext =
   renderTemplate "wholePage" $ do
     F.value "content" bodytext
     F.value "thin" thin
-    standardPageFields ctx title Nothing
+    standardPageFields ctx ad title Nothing
     F.valueM "httplink" $ getHttpHostpart
-    case muser of
-      Nothing -> return ()
-      Just user -> F.object "user" $ userBasicFields user mcompany
 
 notFoundPage :: Kontrakcja m => m Response
 notFoundPage = renderTemplate_ "notFound" >>= renderFromBody kontrakcja
@@ -122,6 +113,7 @@ priceplanPage = renderTemplate_ "priceplanPage" >>= renderFromBody kontrakcja
 -}
 renderTemplateAsPage :: Kontrakcja m => Context -> String -> Maybe (Lang -> KontraLink) -> Bool -> m String
 renderTemplateAsPage ctx templateName mpubliclink showCreateAccount = renderTemplate templateName $ do
+  ad <- getAnalyticsData
     contextInfoFields ctx
     mainLinksFields $ ctxlang ctx
     staticLinksFields $ ctxlang ctx
@@ -129,9 +121,10 @@ renderTemplateAsPage ctx templateName mpubliclink showCreateAccount = renderTemp
     F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
     F.value "showCreateAccount" $ showCreateAccount && (isNothing $ ctxmaybeuser ctx)
     F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
+    F.object "analytics" $ analyticsTemplates ad
 
-standardPageFields :: TemplatesMonad m => Context -> String -> Maybe (Lang -> KontraLink) -> Fields m ()
-standardPageFields ctx title mpubliclink = do
+standardPageFields :: TemplatesMonad m => Context -> String -> Maybe (Lang -> KontraLink) -> AnalyticsData -> Fields m ()
+standardPageFields ctx title mpubliclink ad = do
   F.value "title" title
   mainLinksFields $ ctxlang ctx
   staticLinksFields $ ctxlang ctx
@@ -139,6 +132,7 @@ standardPageFields ctx title mpubliclink = do
   contextInfoFields ctx
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
   F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
+  F.object "analytics" $ analyticsTemplates ad
 
 -- Official documentation states that JSON mime type is
 -- 'application/json'. IE8 for anything that starts with

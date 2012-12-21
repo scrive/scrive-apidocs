@@ -58,6 +58,7 @@ import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
 import qualified Templates.Fields as F
 import qualified Data.Set as Set
+import Analytics.Include
 
 pageCreateFromTemplate :: TemplatesMonad m => m String
 pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
@@ -333,14 +334,15 @@ pageDocumentSignView :: TemplatesMonad m
                     => Context
                     -> Document
                     -> SignatoryLink
+                    -> AnalyticsData
                     -> m String
-pageDocumentSignView ctx document siglink =
+pageDocumentSignView ctx document siglink ad =
   renderTemplate "pageDocumentSignView" $ do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink
       F.value "documenttitle" $ documenttitle document
-      standardPageFields ctx kontrakcja Nothing
-
+      standardPageFields ctx kontrakcja Nothing ad
+  
 
 -- | Basic info about document , name, id ,author
 documentInfoFields :: Monad m => Document -> Fields m ()

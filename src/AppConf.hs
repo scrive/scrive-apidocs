@@ -36,6 +36,7 @@ data AppConf = AppConf {
   , sales              :: [Email]                      -- ^ email addresses of people regarded as sales admins
   , initialUsers       :: [(Email,String)]             -- ^ email and passwords for initial users
   , recurlyConfig      :: RecurlyConfig                -- ^ for payments (api key + private key)
+  , mixpanelToken      :: String                       -- ^ for mixpanel integration
   } deriving (Read, Eq, Ord, Show)
 
 -- | Default application configuration that does nothing.
@@ -67,6 +68,7 @@ instance Configuration AppConf where
                                          , recurlyAPIKey     = "c31afaf14af3457895ee93e7e08e4451"
                                          , recurlyPrivateKey = "49c1b30592fa475b8535a0ca04f88e65"
                                          }
+    , mixpanelToken      = "5b04329b972851feac0e9b853738e742"
     }
   confOptions = [
   {-
