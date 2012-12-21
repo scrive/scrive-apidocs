@@ -203,8 +203,9 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        return this;
     },
     reject: function(){
+        var self = this;
         $(this.el).removeClass("active");
-        setTimeout(function() {if (self.clear != undefined) self.clear()},1000);
+        setTimeout(function() {if (self.clear != undefined) self.clear()}, 600);
     },
     edit: function(){
 		this.editOption.remove();

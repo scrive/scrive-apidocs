@@ -136,7 +136,7 @@ header=
   <nav>
     <ul class="ct $if(thin)$thin$endif$">
       <li id="branding">
-        <a id="logo" class="page" href="$if(langenglish)$/en/$else$/sv/$endif$"><img src="/img/logo.png" width="120" height="22"></a>
+        <a id="logo" class="page" href="$if(langenglish)$/en/$else$/sv/$endif$"><img src="/img/logo.png" width="120" height="22"/></a>
         <div id="tagline" class="h3"></div>
       </li>
       $if(logged)$

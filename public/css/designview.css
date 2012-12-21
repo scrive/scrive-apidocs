@@ -176,7 +176,7 @@
     background-color: white;
     border: 1px solid #BDBDBD;
     border-radius: 3px 3px 3px 3px;
-    height: 80px;
+    height: 93px;
     padding: 8px;
     position: absolute;
     width: 322px;
@@ -184,14 +184,15 @@
 }
 .setRoleBox .close{
     float:right;
-    margin-right: 5px;
+    margin: 5px;
+    z-index : 1000;
+    background: url("../img/spr-btn-close.png") no-repeat scroll 0 0 transparent;
+    display: block;
+    height: 24px;
+    width: 24px;
 }
-.setRoleBox .option{
-    margin-top:3px;
-}
-.setRoleBox .option .radio{
-    margin-top:2px;
-    margin-right: 5px;
+.setRoleBox .close:hover{
+    background-position: 0px -24px
 }
 
 .selectSignOrder{
@@ -472,7 +473,8 @@
 .editSignatoryAttachmentTDRemove{
     width: 30px;
 }
-.signLastCheckbox, .elegCheckbox {
+.signLastCheckbox, .elegCheckbox,
+.setRoleBox .option .radio {
     margin-top:   -2px;
     margin-right: 5px;
 }
@@ -697,13 +699,6 @@
 
 .extra-file-options .button{
   margin : 0px 10px;
-}
-
-.visible-docname {
-  max-width: 450px;
-  overflow : hidden;
-  display : inline-block;
-  white-space:nowrap;
 }
 
 .designview label {

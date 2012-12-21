@@ -187,7 +187,7 @@ var ConfirmationView = Backbone.View.extend({
         var self = this;
         $(this.el).removeClass("active");
         this.model.reject(silent);
-        setTimeout(function() {if (self.clear != undefined) self.clear()},1000);
+        setTimeout(function() {if (self.clear != undefined) self.clear()},600);
     },
     clear: function(){
         if (this.model != undefined) {

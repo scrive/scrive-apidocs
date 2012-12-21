@@ -112,7 +112,7 @@ var PointRightArrowView = Backbone.View.extend({
             height = p.children().outerHeight();
 
           container.css("top", (top + (height / 2) - 14) + "px");
-          container.css("left", (this.model.point().offset().left + this.model.point().width() + 10) + "px");
+          container.css("left", (this.model.point().offset().left + this.model.point().outerWidth() + 10) + "px");
        }
        return this;
     }

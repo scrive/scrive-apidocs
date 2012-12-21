@@ -60,7 +60,7 @@ var SignatoryDesignView = Backbone.View.extend({
          }
        }
 
-       var closeButton = $("<a class='modal-close close' href='#'/>");
+       var closeButton = $("<a class='close' href='#'/>");
        closeButton.click(function() {
          niceClose();
          return false;
@@ -68,10 +68,8 @@ var SignatoryDesignView = Backbone.View.extend({
        self.setRoleBox.append(closeButton);
 
        var addOption = function(text,checked,funcOnChange) {
-         var wrapper = $("<div class='option'/>");
+         var wrapper = $("<label class='option'/>");
          var checkbox = $("<input class='radio' type='radio'/>");
-         var checkboxID = "idf" + Math.random();
-         checkbox.attr("id",checkboxID);
          if (checked) {
            checkbox.attr("checked","yes");
          } else {
@@ -79,7 +77,7 @@ var SignatoryDesignView = Backbone.View.extend({
              niceClose(funcOnChange);
            });
          }
-         var label = $("<label class='radiolabel'>").text(text).attr("for", checkboxID);
+         var label = $("<span class='radiolabel'/>").text(text);
          wrapper.append(checkbox).append(label);
          self.setRoleBox.append(wrapper);
        };
