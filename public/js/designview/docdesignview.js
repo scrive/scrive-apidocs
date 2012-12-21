@@ -646,7 +646,7 @@ var DesignViewView = Backbone.View.extend({
                   onClick : function() {
                       if (alreadyClicked(this))
                         return;
-                      mixpanel.click('Click accept sign (popup)');
+                      mixpanel.track('Click accept sign (popup)');
                       document.afterSave(function() {
                           document.signByAuthor().sendAjax(function(resp) {
                                         var link = JSON.parse(resp).link;
