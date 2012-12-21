@@ -672,18 +672,21 @@
             _.bindAll(this);
             this.teamBox = new PlanBoxView({model: args.model,
                                             plan:'team',
-                                            onClick: function() { 
+                                            onClick: function() {
+                                                mixpanel.track('Click team plan');
                                                 if(view.model.currentPlan() !== 'team')
                                                     view.model.setCurrentPlan('team');
                                             }});
             this.formBox = new PlanBoxView({model: args.model,
                                             plan:'form', 
                                             onClick: function() { 
+                                                mixpanel.track('Click online form plan');
                                                 view.getInTouch();
                                             }});
             this.enterpriseBox = new PlanBoxView({model: args.model,
                                                   plan:'enterprise', 
                                                   onClick: function() {
+                                                      mixpanel.track('Click enterprise plan');
                                                       view.getInTouch();
                                                   }});
             this.recurlyForm = new RecurlyView({model: args.model, hideContacts: args.hideContacts});
@@ -751,6 +754,8 @@
                         phone: phone,
                         ajax: true,
                         onSend: function() {
+                            mixpanel.track('Send phone number');
+                            mixpanel.set({Phone : phone});
                             content.empty();
                             content.append("<div class='loading payments'/>");
                         },
@@ -946,6 +951,7 @@
                  },
                  addressRequirement: 'none',
                  successHandler: function(stuff) {
+                     mixpanel.track('Change billing information');
                      model.fetch({success: function() {
                          LoadingDialog.close();
                          model.trigger('fetch');
@@ -966,6 +972,7 @@
                                       cssClass: 'cancel-button',
                                       text: localization.payments.cancelsubscription,
                                       onClick: function() {
+                                          mixpanel.track('Click cancel subscription button');
                                           var message = localization.payments.cancelDialog;
                                           
                                           var conf = Confirmation.popup({
@@ -984,6 +991,7 @@
                                                                       }});
                                                                   },
                                                                   onSend: function() {
+                                                                      mixpanel.track('Accept cancel subscription');
                                                                       conf.view.clear();
                                                                       LoadingDialog.open(localization.payments.cancelingSubscription);
                                                                   }
@@ -1037,6 +1045,7 @@
                                       cssClass: 'renew-button',
                                       text: localization.payments.renewSubscription,
                                       onClick: function() {
+                                          mixpanel.track('Click renew subscription');
                                           var message = localization.payments.renewDialog.replace("X1", price);
                                           
                                           var conf = Confirmation.popup({
@@ -1056,6 +1065,7 @@
                                                                       }});
                                                                   },
                                                                   onSend: function() {
+                                                                      mixpanel.track('Accept renew subscription');
                                                                       conf.view.clear();
                                                                       LoadingDialog.open(localization.payments.renewingSubscription);
                                                                   }

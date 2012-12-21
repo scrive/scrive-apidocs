@@ -1,4 +1,8 @@
-/* Main archive definition. Its a tab based set of different documents lists. */
+/* 
+ * Main archive definition. Its a tab based set of different documents lists. 
+ * 
+ * Instrumented with Mixpanel
+*/
 
 (function(window){
  
@@ -59,6 +63,8 @@ var AccountModel = Backbone.Model.extend({
                             window.location.hash = "details";
                             account.accountDetails().refresh();
                             BlockingInfo && BlockingInfo.unHide();
+                            mixpanel.register({Subcontext : 'Account details tab'});
+                            mixpanel.track('View Account Details Tab');
                         }
                     });
   },
@@ -73,6 +79,8 @@ var AccountModel = Backbone.Model.extend({
                             window.location.hash = "security";
                             account.accountSecurity().refresh();
                             BlockingInfo && BlockingInfo.unHide();
+                            mixpanel.register({Subcontext : 'Security tab'});
+                            mixpanel.track('View Security Tab');
                         }
                     });
   },
@@ -87,6 +95,8 @@ var AccountModel = Backbone.Model.extend({
                             window.location.hash = "company";
                             account.companySettings().refresh();
                             BlockingInfo && BlockingInfo.unHide();
+                            mixpanel.register({Subcontext : 'Company settings tab'});
+                            mixpanel.track('View Company Settings Tab');
                         }
                     });
   },
@@ -101,6 +111,8 @@ var AccountModel = Backbone.Model.extend({
                             window.location.hash = "users";
                             account.companyAccounts().refresh();
                             BlockingInfo && BlockingInfo.unHide();
+                            mixpanel.register({Subcontext : 'Subaccounts tab'});
+                            mixpanel.track('View Subaccounts Tab');
                         }
                     });
   },
@@ -116,6 +128,8 @@ var AccountModel = Backbone.Model.extend({
                             window.location.hash = "mailapi";
                             account.mailAPI().refresh();
                             BlockingInfo && BlockingInfo.unHide();
+                            mixpanel.register({Subcontext : 'MailAPI tab'});
+                            mixpanel.track('View MailAPI Tab');
                         }
                     });
   },
@@ -129,6 +143,8 @@ var AccountModel = Backbone.Model.extend({
                             window.location.hash = "stats";
                             account.stats().refresh();
                             BlockingInfo && BlockingInfo.unHide();
+                            mixpanel.register({Subcontext : 'Stats tab'});
+                            mixpanel.track('View Stats Tab');
                         }
                     });
   },
@@ -143,6 +159,11 @@ var AccountModel = Backbone.Model.extend({
                             window.location.hash = "subscription";
                             account.subscription().refresh();
                             BlockingInfo && BlockingInfo.hide();
+                            mixpanel.register({Subcontext : 'Subscription tab'});
+                            mixpanel.track('View Subscription Tab');
+                            mixpanel.people.set({
+                                'View subscription tab' : new Date()
+                            });
                         }
                     });
   }

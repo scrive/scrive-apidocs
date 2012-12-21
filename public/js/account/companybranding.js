@@ -1,3 +1,6 @@
+/*
+ * Instrumented with Mixpanel
+ */
 
 (function(window){
 
@@ -61,7 +64,12 @@ window.CompanyBrandingColourView = Backbone.View.extend({
     var checkbox = $("<input type='checkbox' class='checkboxtoggle' />");
     this.checkbox = checkbox;
     this.checkbox.change(function() {
-      model.setCustomised(checkbox.is(":checked"));
+        var checked = checkbox.is(":checked");
+        if(checked)
+            mixpanel.track('Check ' + model.label().toLowerCase());
+        else
+            mixpanel.track('Uncheck ' + model.label().toLowerCase());
+      model.setCustomised(checked);
     });
     var checkboxlabel = $("<label />").append(model.label());
 
@@ -219,7 +227,12 @@ window.CompanyBrandingLogoView = Backbone.View.extend({
     var checkbox = $("<input type='checkbox' class='checkboxtoggle' />");
     this.checkbox = checkbox;
     this.checkbox.change(function() {
-      model.setCustomised(checkbox.is(":checked"));
+        var checked = checkbox.is(":checked");
+        if(checked)
+            mixpanel.track('Check ' + model.label().toLowerCase());
+        else
+            mixpanel.track('Uncheck ' + model.label().toLowerCase());
+      model.setCustomised(checked);
       model.set({logoChanged: true, logo: ''}, {silent: true});
       self.render();
     });
@@ -481,6 +494,7 @@ window.CompanyBrandingView = Backbone.View.extend({
       size: "small",
       text: localization.saveBranding,
       onClick: function() {
+          mixpanel.track('Click save branding button');
           new Submit({
               method: "POST",
               url: company.submiturl,
