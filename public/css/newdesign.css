@@ -7,39 +7,41 @@
     margin: 5px 0 0 5px;
 }
 
-.tab-viewer .mailapitable td:first-child {
-   width: 250px !important;
+.account-body .mailapitable td:first-child {
+   width: 300px !important;
 }
 
-.tab-viewer .mailapitable input {
-    width: 70px !important;
+.account-body .mailapitable input {
+    width: 50px !important;
 }
 
-.tab-viewer .account-body table td {
+.account-body table td {
    padding: 4px;
 }
 
-.tab-viewer .account-body table td:first-child {
+.account-body table td:first-child {
    width: 140px;
 }
 
-.account-body table td,
-.tab-viewer .account-body table td {
+.account-body table td{
    padding: 4px;
 }
 
-.tab-viewer .account {
+.account {
    padding: 40px 50px 20px;
 }
 
-.tab-viewer .account .col {
+.account .col {
    float: left;
    margin: 0 20px;
    width: 418px;
    padding: 15px 0;
 }
+.account .col.float-right {
+   float: right;
+}
 
-.tab-viewer .account-header {
+.account-header {
    background: url(../img/bg-body-dark.png);
    border-radius:  5px 5px 0px 0px;
        -moz-border-radius: 5px 5px 0px 0px;
@@ -49,19 +51,19 @@
    position: relative;
 }
 
-.tab-viewer .account-header h2 {
+.account-header h2 {
    color: #fff;
    font-size: 14px/24px;
 }
 
-.tab-viewer .account-header a {
+.account-header a {
    color: #2777ca;
    font-size: 10px/24px;
    text-decoration: none;
    text-transform: uppercase;
 }
 
-.tab-viewer .account-header .image {
+.account-header .image {
    background: #fff;
    border-radius: 3px;
        -moz-border-radius: 3px;
@@ -76,7 +78,7 @@
    z-index: 1;
 }
 
-.tab-viewer .account-header .image:before {
+.account-header .image:before {
    bottom: 3px;
    box-shadow: inset 0 0 5px #000;
        -moz-box-shadow: inset 0 0 5px #000;
@@ -89,36 +91,35 @@
    z-index: -1;
 }
 
-.account-body,
-.tab-viewer .account-body {
+.account-body {
    background: #f7f7f7;
    border: 1px solid #dedede;
    border-radius: 0px 0px 5px 5px;
        -moz-border-radius: 0px 0px 5px 5px;
        -webkit-border-radius: 0px 0px 5px 5px;
    margin-top: 0px;
-   padding: 0 15px;
-   min-height: 150px;
+   padding: 10px 15px;
+   min-height: 170px;
 }
 
 
 .account-body h2,
-.tab-viewer .account-body h2 {
+{
    color: #000;
    font: 14px/24px "Helvetica Neue";
 }
 
-.tab-viewer .account-footer {
+.account-footer {
     float:right;
     margin-right:20px;
     margin-top:10px;
 }
 
-.tab-viewer .col .account-footer {
+.account-body .col .account-footer {
     margin-right: 5px;
 }
 
-.tab-viewer .account-footer a {
+.account-body .account-footer a {
    display: inline-block;
    margin: 0 auto;
 }
@@ -169,7 +170,8 @@ a.submit{
     cursor:pointer
 }
 
-.account input {
+.account input[type="text"],
+.account input[type="password"] {
     background: none repeat scroll 0 0 #FFFFFF;
     border: 1px solid #DDDDDD;
     box-shadow: none;
@@ -178,6 +180,10 @@ a.submit{
     padding: 5px;
     width: 200px;
 
+}
+.account input[type="checkbox"]{
+    margin-right : 6px;
+    margin-top : -3px;
 }
 
 .account input:focus {

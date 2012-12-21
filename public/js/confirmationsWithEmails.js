@@ -180,7 +180,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        var footer = $("<div class='modal-footer'>");
        var cancelOption = $("<a class='cancel close float-left'/>");
        cancelOption.text(this.model.rejectText());
-	   this.editOption = $("<a class='edit float-left' style='margin-left:10px; cursor:pointer'/>");
+	   this.editOption = $("<label class='clickable edit float-left' style='margin-left:10px;line-height: 32px;'/>");
        this.editOption.text(this.model.editText());
        footer.append(cancelOption);
 	   footer.append(this.editOption);
@@ -191,7 +191,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
                                  onClick : function() {
 									 var customtext = mailview.customtext();
 									 var res = model.accept(customtext);
-                                     if (res == true) $(view.el).data("overlay").close();
+                                     if (res == true) view.reject(); //We don't actually reject. Just clean the modal.
 
 								}
         });

@@ -16,9 +16,10 @@ module Routing ( hGet
                , hPostAllowHttp
                , hGetAllowHttp
                , https
-               , RedirectOrContent, allowHttp
+               , allowHttp
                , toK0, toK1, toK2, toK3, toK4, toK5, toK6
                , ToResp, toResp
+               , ThinPage(..)
                  )where
 
 import Data.Functor
@@ -29,14 +30,16 @@ import Happstack.StaticRouting
 import KontraLink
 import Utils.HTTP
 import Kontra
-import qualified User.UserControl as UserControl
 import Redirect
 import Text.JSON
 import Util.CSVUtil
 import Util.ZipUtil
+import Control.Monad
+import qualified Log as Log
+import Utils.Read
+import Happstack.Fields
 
-
-type RedirectOrContent = Either KontraLink String
+newtype ThinPage = ThinPage String
 
 kpath :: (Path Kontra KontraPlus h a) => Method -> (Kontra a -> Kontra b) -> h
       -> Route (KontraPlus b)
@@ -56,7 +59,10 @@ instance ToResp KontraLink where
 
 instance ToResp String where
     toResp = page . return
-
+    
+instance ToResp ThinPage where
+    toResp = pageThin . return
+    
 instance ToResp JSValue where
     toResp = simpleJsonResponse
 
@@ -90,6 +96,13 @@ page pageBody = do
     pb <- pageBody
     renderFromBody kontrakcja pb
 
+{- To change thin page type to full response -}
+pageThin :: Kontra ThinPage -> Kontra Response
+pageThin pageBody = do
+    ThinPage pb  <- pageBody
+    renderFromBodyThin kontrakcja pb
+
+    
 hPost :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hPost = hPostWrap (https . guardXToken)
 
@@ -128,9 +141,6 @@ allowHttp action = do
        then action
        else sendSecureLoopBack
 
-guardXToken:: Kontra Response -> Kontra Response
-guardXToken = (>>) UserControl.guardXToken
-
 -- | Use to enforce a specific arity of a handler to make it explicit
 -- how requests are routed and convert returned value to Responses
 toK0 :: ToResp r => Kontra r -> Kontra Response
@@ -153,3 +163,14 @@ toK5 m a b c d e = m a b c d e >>= toResp
 
 toK6 :: ToResp r => (a -> b -> c -> d -> e -> f -> Kontra r) -> (a -> b -> c -> d -> e -> f -> Kontra Response)
 toK6 m a b c d e f = m a b c d e f >>= toResp
+
+
+guardXToken :: Kontra Response -> Kontra Response
+guardXToken = (>>) $ do
+  Context { ctxxtoken } <- getContext
+  xtoken <- guardRightM $ do
+      mxtoken <- join <$> (fmap maybeRead) <$> readField "xtoken"
+      return $ maybe (Left $ ("xtoken read failure" :: String)) Right mxtoken
+  unless (xtoken == ctxxtoken) $ do
+    Log.debug $ "xtoken failure: session: " ++ show ctxxtoken ++ " param: " ++ show xtoken
+    internalError

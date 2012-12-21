@@ -8,7 +8,6 @@ priceplanPage=
       PricePage({}).show('.js-price-plan');
     </script>
 
-    </div>
-  </div>
+ </div>
 </div>
 ###

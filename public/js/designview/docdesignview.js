@@ -425,7 +425,7 @@ var DesignViewView = Backbone.View.extend({
         self.setSignLast( $(this).attr("checked"));
       });
 
-      var label = $("<label>").text(localization.signLast).attr("for",checkboxid);
+      var label = $("<span>").text(localization.signLast);
       box.append(checkbox).append(label);
       return box;
     },

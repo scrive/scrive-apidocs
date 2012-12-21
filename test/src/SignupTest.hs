@@ -44,8 +44,8 @@ testSignupAndActivate = do
   UserAccountRequest{..} <- assertSignupSuccessful (res1, ctx1)
 
   -- follow the signup link
-  (res2, ctx2) <- followActivationLink ctx1 uarUserID uarToken
-  assertActivationPageOK (res2, ctx2)
+  ctx2 <- followActivationLink ctx1 uarUserID uarToken
+  assertActivationPageOK ctx2
 
   -- activate the account using the signup details
   ctx3 <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password12" "password12" (Just "123")
@@ -140,13 +140,13 @@ assertSignupSuccessful (_res, ctx) = do
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
   return $ head actions
 
-followActivationLink :: Context -> UserID -> MagicHash -> TestEnv (String, Context)
+followActivationLink :: Context -> UserID -> MagicHash -> TestEnv Context
 followActivationLink ctx uid token = do
   req <- mkRequest GET []
-  runTestKontra req ctx $ handleAccountSetupGet uid token
+  fmap snd $ runTestKontra req ctx $ handleAccountSetupGet uid token
 
-assertActivationPageOK :: (String, Context) -> TestEnv ()
-assertActivationPageOK (_res, ctx) = do
+assertActivationPageOK :: Context -> TestEnv ()
+assertActivationPageOK ctx = do
   assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
 
 activateAccount :: Context -> UserID -> MagicHash -> Bool -> String -> String -> String -> String -> Maybe String -> TestEnv Context

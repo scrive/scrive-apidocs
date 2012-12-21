@@ -28,7 +28,6 @@ import Mails.SendMail
 import MinutesTime hiding (toClockTime)
 import Happstack.Fields
 import Utils.Monad
-import Utils.Read
 import Redirect
 import Templates.Templates
 import User.Model
@@ -46,6 +45,7 @@ import Payments.Action
 import Payments.Model
 import ListUtil
 import qualified Templates.Fields as F
+import Routing
 
 getUserJSON :: Kontrakcja m => m JSValue
 getUserJSON = do
@@ -439,12 +439,12 @@ handleAcceptTOSPost = do
   return ()
       
 
-handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> m String
+handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> m ThinPage
 handleAccountSetupGet uid token = do
   user <- guardJustM404 $ getUserAccountRequestUser uid token
   if isJust $ userhasacceptedtermsofservice user
     then respond404
-    else renderTemplate "accountSetupPage" $ do
+    else fmap ThinPage $ renderTemplate "accountSetupPage" $ do
               F.value "fstname" $ getFirstName user
               F.value "sndname" $ getLastName user
 
@@ -479,7 +479,7 @@ handleAccountSetupPost uid token = do
     email.  This'll show them the usual landing page, but with a modal dialog
     for changing their password.
 -}
-handlePasswordReminderGet :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink String)
+handlePasswordReminderGet :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink ThinPage)
 handlePasswordReminderGet uid token = do
   muser <- getPasswordReminderUser uid token
   case muser of
@@ -488,7 +488,7 @@ handlePasswordReminderGet uid token = do
       let changePassLink = show $ LinkPasswordReminder uid token
       content <- renderTemplate "changePasswordPage" $ do
                     F.value "linkchangepassword" $ changePassLink
-      return $ Right content
+      return $ Right $ ThinPage content
     Nothing -> do
       addFlashM flashMessagePasswordChangeLinkNotValid
       Left <$> getHomeOrDesignViewLink
@@ -549,19 +549,3 @@ handleBlockingInfo = do
         J.value "quantity"  quantity
         J.value "billingEnds" billingEnds
     
-{- |
-   Fetch the xtoken param and double read it. Once as String and once as MagicHash.
- -}
-readXToken :: Kontrakcja m => m (Either String MagicHash)
-readXToken = do
-  mxtoken <- join <$> (fmap maybeRead) <$> readField "xtoken"
-  return $ maybe (Left $ "xtoken read failure" ) Right mxtoken
-
-guardXToken :: Kontrakcja m => m ()
-guardXToken = do
-  Context { ctxxtoken } <- getContext
-  xtoken <- guardRightM readXToken
-  unless (xtoken == ctxxtoken) $ do
-    Log.debug $ "xtoken failure: session: " ++ show ctxxtoken
-      ++ " param: " ++ show xtoken
-    internalError

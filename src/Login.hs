@@ -33,8 +33,9 @@ import Text.JSON.Gen as J
 import Text.JSON
 import qualified Templates.Fields as F
 import Templates.Templates
+import Routing
 
-handleLoginGet :: Kontrakcja m => m (Either KontraLink String)
+handleLoginGet :: Kontrakcja m => m (Either KontraLink ThinPage)
 handleLoginGet = do
   ctx <- getContext
   case (ctxmaybeuser ctx) of
@@ -42,7 +43,7 @@ handleLoginGet = do
           referer <- getField "referer"
           content <- renderTemplate "loginPage" $ do
                     F.value "referer" $ fromMaybe "/" referer
-          return $ Right content
+          return $ Right $ ThinPage content
        Just _ -> return $ Left LinkDesignView   
 
 {- |
@@ -79,10 +80,10 @@ sendResetPasswordMail ctx link user = do
   mail <- UserView.resetPasswordMail (ctxhostpart ctx) user link
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
 
-signupPageGet :: Kontrakcja m => m String
+signupPageGet :: Kontrakcja m => m ThinPage
 signupPageGet = do
   memail <- getField "email"
-  renderTemplate "signupPage" $ do
+  fmap ThinPage $ renderTemplate "signupPage" $ do
     F.value "email" memail
 
 {- |

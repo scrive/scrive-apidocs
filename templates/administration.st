@@ -1,56 +1,62 @@
 ###
 adminsmain=
-<strong>Stats CSVs</strong>
-<p><a href="/adminonly/allstatscsv">Download the CSV containing  all signature stats</a></p>
-<p><a href="/adminonly/userstatscsv">Download the CSV containing all
-    user stats</a></p>
-<p><a href="/adminonly/signstatscsv">Download the CSV containing all
-    sign stats</a></p>
-<p><a href="/adminonly/dochistorycsv">Download the CSV containing
-    document histories</a></p>
-<p><a href="/adminonly/signhistorycsv">Download the CSV containing
-    sign histories</a></p>
-<p><a href="/adminonly/userslistcsv">Download the CSV containing all
-    users (not suspended, with accepted TOS, no integration parties)</a></p>
-<p><a href="/adminonly/paymentsstats.csv">Download the CSV containing payments stats</a></p>
-    <strong>Sales Tools</strong>
-    <table><tbody>
-        <tr>
-          <td style="height:50px;width:200px">
-            <a href="/adminonly/useradminforsales">
-              <button style="width:150px"> Sales user admin</button>
-            </a>
-          </td>
-          <td style="height:50px;width:200px">
-            <a href="/adminonly/companyadmin">
-              <button style="width:150px"> Company Admin </button>
-            </a>
-          </td>
-       </tr>
-        <tr>
-          <td style="height:50px;width:200px">
-            <a href="/adminonly/statistics">
-              <button style="width:150px"> Statistics</button>
-            </a>
-          </td>
-          <td style="height:50px;">
-            <a href="/adminonly/functionalitystats">
-              <button style="width:150px">Functionality Stats</button>
-            </a>
-          </td>
+<div class="mainContainer" >
+  <div class="body-container">
+  <strong>Stats CSVs</strong>
+  <p><a href="/adminonly/allstatscsv">Download the CSV containing  all signature stats</a></p>
+  <p><a href="/adminonly/userstatscsv">Download the CSV containing all
+      user stats</a></p>
+  <p><a href="/adminonly/signstatscsv">Download the CSV containing all
+      sign stats</a></p>
+  <p><a href="/adminonly/dochistorycsv">Download the CSV containing
+      document histories</a></p>
+  <p><a href="/adminonly/signhistorycsv">Download the CSV containing
+      sign histories</a></p>
+  <p><a href="/adminonly/userslistcsv">Download the CSV containing all
+      users (not suspended, with accepted TOS, no integration parties)</a></p>
+  <p><a href="/adminonly/paymentsstats.csv">Download the CSV containing payments stats</a></p>
+      <strong>Sales Tools</strong>
+      <table><tbody>
+          <tr>
+            <td style="height:50px;width:200px">
+              <a href="/adminonly/useradminforsales">
+                <button style="width:150px"> Sales user admin</button>
+              </a>
+            </td>
+            <td style="height:50px;width:200px">
+              <a href="/adminonly/companyadmin">
+                <button style="width:150px"> Company Admin </button>
+              </a>
+            </td>
         </tr>
-        <tr>
-          <td style="height:50px">
-            <a href="/adminonly/documents">
-              <button style="width:150px">Documents</button>
-            </a>
-          </td>
-          <td style="height:50px;width:200px"> <a href="/adminonly/useradmin"><button style="width:150px"> User Admin </button> </a></td>
-        </tr>
-    </tbody></table>
-    <br/>
+          <tr>
+            <td style="height:50px;width:200px">
+              <a href="/adminonly/statistics">
+                <button style="width:150px"> Statistics</button>
+              </a>
+            </td>
+            <td style="height:50px;">
+              <a href="/adminonly/functionalitystats">
+                <button style="width:150px">Functionality Stats</button>
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="height:50px">
+              <a href="/adminonly/documents">
+                <button style="width:150px">Documents</button>
+              </a>
+            </td>
+            <td style="height:50px;width:200px"> <a href="/adminonly/useradmin"><button style="width:150px"> User Admin </button> </a></td>
+          </tr>
+      </tbody></table>
+      <br/>
+  </div>
+</div>
 #####
 adminusers=
+<div class="mainContainer" >
+  <div class="body-container">
    <div class="tab-viewer">
          <div class="tab-header">
           <strong>
@@ -101,9 +107,12 @@ adminusers=
         jQuery("#adminusers-viewer").append(adminUsersTable.el())
     });
     </script>
-
+  </div>
+</div>
 ###
 admincompanies=
+<div class="mainContainer" >
+  <div class="body-container">
    <div class="tab-viewer">
          <div class="tab-header">
           <strong>
@@ -143,8 +152,12 @@ admincompanies=
     jQuery("#companies-viewer").append(companiesTable.el());
   });
 </script>
+  </div>
+</div>
 ###
 adminUsersForSales=
+<div class="mainContainer" >
+  <div class="body-container">
    <div class="tab-viewer">
          <div class="tab-header">
           <strong>
@@ -274,8 +287,12 @@ adminUsersForSales=
         jQuery("#users-viewer").append(usersTable.el())
     });
     </script>
+  </div>
+</div>
 ###
 adminuser=
+<div class="mainContainer" >
+  <div class="body-container">
     <a href="$adminlink$">Go back to main admin page</a>
     <a style="padding-left:100px" href="$adminuserslink$">Go back to user admin page</a>
     <br/>
@@ -395,9 +412,12 @@ adminuser=
 	  </div>
 	</div>
       </div>
-
+</div>
+</div>
 ####
 adminuserpayments=
+<div class="mainContainer" >
+  <div class="body-container">
     <a href="$adminlink$">Go back to main admin page</a>
     <a style="padding-left:100px" href="$adminuserslink$">Go back to user admin page</a>
     <br/>
@@ -530,10 +550,12 @@ adminuserpayments=
 	</div>
       </div>
     </div>
-<script>
-</script>
+</div>
+</div>
 ####
 admincompany=
+<div class="mainContainer" >
+  <div class="body-container">
     <a href="$adminlink$">Go back to main admin page</a>
     <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
     <br/>
@@ -632,8 +654,12 @@ admincompany=
 	</div>
       </div>
     </form>
+</div>
+</div>
 ####
 admincompanybranding=
+<div class="mainContainer" >
+  <div class="body-container">
     <a href="$adminlink$">Go back to main admin page</a>
     <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
     <br/>
@@ -656,8 +682,12 @@ admincompanybranding=
 var company = new CompanyBranding({ companyid: "$companyid$" });
 jQuery('.place-for-branding').append(company.el());
 </script>
+</div>
+</div>
 ####
 admincompanypayments=
+<div class="mainContainer" >
+  <div class="body-container">
     <a href="$adminlink$">Go back to main admin page</a>
     <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
     <br/>
@@ -751,219 +781,225 @@ admincompanypayments=
 	</div>
       </div>
     </div>
-<script>
-</script>
+</div>
+</div>
 ####
 admincompanyusers=
-<a href="$adminlink$">Go back to main admin page</a>
-<a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
-<br/>
-<br/>
+<div class="mainContainer" >
+  <div class="body-container">
+  <a href="$adminlink$">Go back to main admin page</a>
+  <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
+  <br/>
+  <br/>
 
-<div class="tab-viewer">
-  <div class="tab-header">
+  <div class="tab-viewer">
+    <div class="tab-header">
+    </div>
+    <ul class="tabs">
+      <li class="float-left"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+      <li class="float-left"><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
+      <li class="active float-left"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
+      <li class="float-left"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
+      <li class="float-left"><a href="$admincompanieslink$/payments/$companyid$">Payments</a></li>
+      <li class="float-right"/>
+    </ul>
   </div>
-  <ul class="tabs">
-    <li class="float-left"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
-    <li class="float-left"><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
-    <li class="active float-left"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
-    <li class="float-left"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
-    <li class="float-left"><a href="$admincompanieslink$/payments/$companyid$">Payments</a></li>
-    <li class="float-right"/>
-  </ul>
-</div>
-<script>
+  <script>
 
-  var newUserInCompanyButton = Button.init({
-       color: "green",
-       text : "Add new user",
-       size : "tiny",
-       style: "float:left",
-       onClick : function() {
-            var body = jQuery("<div class='account-body'>");
-            body.append("<p>Create new user account in company</p>");
-            var table = jQuery("<table/>");
+    var newUserInCompanyButton = Button.init({
+        color: "green",
+        text : "Add new user",
+        size : "tiny",
+        style: "float:left",
+        onClick : function() {
+              var body = jQuery("<div class='account-body'>");
+              body.append("<p>Create new user account in company</p>");
+              var table = jQuery("<table/>");
 
-            var tr1 = jQuery("<tr/>").append(jQuery("<td/>").text("First name:"));
-            var fstname = jQuery("<input type='text' name='fstname' autocomplete='off' />");
-            tr1.append(jQuery("<td/>").append(fstname));
-            table.append(tr1);
+              var tr1 = jQuery("<tr/>").append(jQuery("<td/>").text("First name:"));
+              var fstname = jQuery("<input type='text' name='fstname' autocomplete='off' />");
+              tr1.append(jQuery("<td/>").append(fstname));
+              table.append(tr1);
 
-            var tr2 = jQuery("<tr/>").append(jQuery("<td/>").text("Second name:"));
-            var sndname = jQuery("<input type='text' name='sndname' autocomplete='off' />");
-            tr2.append(jQuery("<td/>").append(sndname));
-            table.append(tr2);
+              var tr2 = jQuery("<tr/>").append(jQuery("<td/>").text("Second name:"));
+              var sndname = jQuery("<input type='text' name='sndname' autocomplete='off' />");
+              tr2.append(jQuery("<td/>").append(sndname));
+              table.append(tr2);
 
-            var tr5 = jQuery("<tr/>").append(jQuery("<td/>").text("Email address:"));
-            var email = jQuery("<input type='text' name='email' autocomplete='off' />");
-            tr5.append(jQuery("<td/>").append(email));
-            table.append(tr5);
+              var tr5 = jQuery("<tr/>").append(jQuery("<td/>").text("Email address:"));
+              var email = jQuery("<input type='text' name='email' autocomplete='off' />");
+              tr5.append(jQuery("<td/>").append(email));
+              table.append(tr5);
 
-            var tr6 = jQuery("<tr/>").append(jQuery("<td/>").text("Language:"));
-            var lang = jQuery("<select name='lang'>"
-                                + '<option $if(user.langen)$selected=""$endif$ value="LANG_SV">Sweden (Swedish)</option>'
-                                + '<option $if(user.langsv)$selected=""$endif$ value="LANG_EN">Britain (English)</option>'
-                                + "</select>");
-            tr6.append(jQuery("<td/>").append(lang));
-            table.append(tr6);
+              var tr6 = jQuery("<tr/>").append(jQuery("<td/>").text("Language:"));
+              var lang = jQuery("<select name='lang'>"
+                                  + '<option $if(user.langen)$selected=""$endif$ value="LANG_SV">Sweden (Swedish)</option>'
+                                  + '<option $if(user.langsv)$selected=""$endif$ value="LANG_EN">Britain (English)</option>'
+                                  + "</select>");
+              tr6.append(jQuery("<td/>").append(lang));
+              table.append(tr6);
 
-            var tr7 = jQuery("<tr/>").append(jQuery("<td/>").text("Is company admin:"));
-            var isadmin = jQuery("<input type='checkbox' name='isadmin' autocomplete='off' />");
-            tr7.append(jQuery("<td/>").append(isadmin));
-            table.append(tr7);
+              var tr7 = jQuery("<tr/>").append(jQuery("<td/>").text("Is company admin:"));
+              var isadmin = jQuery("<input type='checkbox' name='isadmin' autocomplete='off' />");
+              tr7.append(jQuery("<td/>").append(isadmin));
+              table.append(tr7);
 
 
-            var tr8 = jQuery("<tr/>").append(jQuery("<td/>").text("Header:"));
-            var btnHeader = jQuery('<input type="button" class="editer" value="Default"/>').click(function(){
-                prepareForEdit(jQuery(this).parents("div"), '300');
-                jQuery(this).hide();
-            });
-            var header = jQuery('<span class="editable" name="custommessage" style="display: none">'
-                                + jQuery('#message').html()
-                                + '</span>');
+              var tr8 = jQuery("<tr/>").append(jQuery("<td/>").text("Header:"));
+              var btnHeader = jQuery('<input type="button" class="editer" value="Default"/>').click(function(){
+                  prepareForEdit(jQuery(this).parents("div"), '300');
+                  jQuery(this).hide();
+              });
+              var header = jQuery('<span class="editable" name="custommessage" style="display: none">'
+                                  + jQuery('#message').html()
+                                  + '</span>');
 
-            tr8.append(jQuery("<td/>").append(btnHeader).append(header));
-            table.append(tr8);
+              tr8.append(jQuery("<td/>").append(btnHeader).append(header));
+              table.append(tr8);
 
-            body.append(table);
-
-
-            Confirmation.popup({
-              onAccept : function() {
-                            var callback = function(t,e,v) {
-                                e.css("background", "red");
-                                jQuery(document.createElement('div'))
-                                    .attr("name", "validate-message")
-                                    .css({"font-size": 8, "font-weight": "bold", "color": "red"})
-                                    .append(v.message())
-                                    .appendTo(e.parent());
-                            };
-
-                            //reset red background
-                            fstname.css("background", "white");
-                            sndname.css("background", "white");
-                            email.css("background", "white");
-                            lang.css("background", "white");
-
-                            //delete messages
-                            jQuery('[name=validate-message]').remove();
-
-                            var vresult = [
-                                fstname.validate(new NameValidation({callback: callback, message: "Wrong first name format!"})),
-                                sndname.validate(new NameValidation({callback: callback, message: "Wrong second name format!"})),
-                                email.validate((new NotEmptyValidation({callback: callback, message: "Email cannot be empty!"})).concat(new EmailValidation({callback: callback}))),
-                                lang.validate(new NotEmptyValidation({callback: callback, message:"Language cannot be empty!"}))
-                                ];
-
-                            if (vresult.every(function(a) {return a;})) {
-                                new Submit({
-                                    method: "POST",
-                                    url: "$admincompanieslink$/users/$companyid$",
-                                    fstname : fstname.val(),
-                                    sndname : sndname.val(),
-                                    email : email.val(),
-                                    lang : lang.val(),
-                                    iscompanyadmin : isadmin.is(":checked") ? "Yes" : undefined,
-                                    custommessage : jQuery('textarea',body).val()
-                                    }).send();
-                            }
-                         },
-              title : "Create user in company",
-              acceptText : "Create",
-              content  : body
-            });
-   } }).input();
-
-  var inviteExistingUserToCompany = Button.init({
-     color: "green",
-     text : "Invite existing user",
-     size : "tiny",
-     style: "float:left;margin-left:10px",
-     onClick : function() {
-     var body = jQuery("<div class='account-body' style='min-height:50px;'>");
-            body.append("<p>Create new user account in company</p>");
-            var table = jQuery("<table/>");
-
-            var tr = jQuery("<tr/>").append(jQuery("<td/>").text("Email address:"));
-            var email = jQuery("<input type='text' name='email' autocomplete='off' />");
-            tr.append(jQuery("<td/>").append(email));
-            table.append(tr);
-            body.append(table);
+              body.append(table);
 
 
-            Confirmation.popup({
-              onAccept : function() {
-                            var callback = function(t,e,v) {
-                                e.css("background", "red");
-                                jQuery(document.createElement('div'))
-                                    .attr("name", "validate-message")
-                                    .css({"font-size": 8, "font-weight": "bold", "color": "red"})
-                                    .append(v.message())
-                                    .appendTo(e.parent());
-                            };
+              Confirmation.popup({
+                onAccept : function() {
+                              var callback = function(t,e,v) {
+                                  e.css("background", "red");
+                                  jQuery(document.createElement('div'))
+                                      .attr("name", "validate-message")
+                                      .css({"font-size": 8, "font-weight": "bold", "color": "red"})
+                                      .append(v.message())
+                                      .appendTo(e.parent());
+                              };
 
-                            email.css("background", "white");
+                              //reset red background
+                              fstname.css("background", "white");
+                              sndname.css("background", "white");
+                              email.css("background", "white");
+                              lang.css("background", "white");
+
+                              //delete messages
+                              jQuery('[name=validate-message]').remove();
+
+                              var vresult = [
+                                  fstname.validate(new NameValidation({callback: callback, message: "Wrong first name format!"})),
+                                  sndname.validate(new NameValidation({callback: callback, message: "Wrong second name format!"})),
+                                  email.validate((new NotEmptyValidation({callback: callback, message: "Email cannot be empty!"})).concat(new EmailValidation({callback: callback}))),
+                                  lang.validate(new NotEmptyValidation({callback: callback, message:"Language cannot be empty!"}))
+                                  ];
+
+                              if (vresult.every(function(a) {return a;})) {
+                                  new Submit({
+                                      method: "POST",
+                                      url: "$admincompanieslink$/users/$companyid$",
+                                      fstname : fstname.val(),
+                                      sndname : sndname.val(),
+                                      email : email.val(),
+                                      lang : lang.val(),
+                                      iscompanyadmin : isadmin.is(":checked") ? "Yes" : undefined,
+                                      custommessage : jQuery('textarea',body).val()
+                                      }).send();
+                              }
+                          },
+                title : "Create user in company",
+                acceptText : "Create",
+                content  : body
+              });
+    } }).input();
+
+    var inviteExistingUserToCompany = Button.init({
+      color: "green",
+      text : "Invite existing user",
+      size : "tiny",
+      style: "float:left;margin-left:10px",
+      onClick : function() {
+      var body = jQuery("<div class='account-body' style='min-height:50px;'>");
+              body.append("<p>Create new user account in company</p>");
+              var table = jQuery("<table/>");
+
+              var tr = jQuery("<tr/>").append(jQuery("<td/>").text("Email address:"));
+              var email = jQuery("<input type='text' name='email' autocomplete='off' />");
+              tr.append(jQuery("<td/>").append(email));
+              table.append(tr);
+              body.append(table);
 
 
-                            //delete messages
-                            jQuery('[name=validate-message]').remove();
+              Confirmation.popup({
+                onAccept : function() {
+                              var callback = function(t,e,v) {
+                                  e.css("background", "red");
+                                  jQuery(document.createElement('div'))
+                                      .attr("name", "validate-message")
+                                      .css({"font-size": 8, "font-weight": "bold", "color": "red"})
+                                      .append(v.message())
+                                      .appendTo(e.parent());
+                              };
 
-                            var vresult = [
-                                email.validate((new NotEmptyValidation({callback: callback, message: "Email cannot be empty!"})).concat(new EmailValidation({callback: callback}))),
-                                ];
-
-                            if (vresult.every(function(a) {return a;})) {
-                                new Submit({
-                                    method: "POST",
-                                    url: "$admincompanieslink$/users/$companyid$",
-                                    email : email.val(),
-                                    privateinvite : "true",
-                                    }).send();
-                            }
-                         },
-              title : "Add existing user to company",
-              acceptText : "Add",
-              content  : body
-            });
-    }}).input();
+                              email.css("background", "white");
 
 
-  jQuery(function() {
+                              //delete messages
+                              jQuery('[name=validate-message]').remove();
 
-    var companyAccountsTable = new KontraList({
-      name : "CompanyAccountsTable",
-      schema: new Schema({
-        url: "/adminonly/companyaccounts/$companyid$",
-        sorting: new Sorting({ fields: ["fullname",
-                                        "email",
-                                        "role",
-                                        "activated",
-                                        "id",
-                                        "deletable"] }),
-        paging: new Paging({}),
-        textfiltering: new TextFiltering({ text: "", infotext: "Company Accounts" }),
-        cells: [
-          new Cell({name: "Name", width: "100px", field:"fullname", special : "link"}),
-          new Cell({name: "Email", width: "100px", field:"email"}),
-          new Cell({name: "Role", width: "100px", field:"role", special: "rendered",
-                    rendering: function(value, idx, user) {
-                      if (user.field("role")=="RoleAdmin") {
-                        return jQuery("<span>Admin</span>");
-                      } else if (user.field("role")=="RoleStandard") {
-                        return jQuery("<span>Standard</span>");
-                      } else {
-                        return jQuery("<span>Pending</span>");
-                      }
-                    }})
-        ]
-      }),
-      headerExtras : newUserInCompanyButton.add(inviteExistingUserToCompany)
+                              var vresult = [
+                                  email.validate((new NotEmptyValidation({callback: callback, message: "Email cannot be empty!"})).concat(new EmailValidation({callback: callback}))),
+                                  ];
+
+                              if (vresult.every(function(a) {return a;})) {
+                                  new Submit({
+                                      method: "POST",
+                                      url: "$admincompanieslink$/users/$companyid$",
+                                      email : email.val(),
+                                      privateinvite : "true",
+                                      }).send();
+                              }
+                          },
+                title : "Add existing user to company",
+                acceptText : "Add",
+                content  : body
+              });
+      }}).input();
+
+
+    jQuery(function() {
+
+      var companyAccountsTable = new KontraList({
+        name : "CompanyAccountsTable",
+        schema: new Schema({
+          url: "/adminonly/companyaccounts/$companyid$",
+          sorting: new Sorting({ fields: ["fullname",
+                                          "email",
+                                          "role",
+                                          "activated",
+                                          "id",
+                                          "deletable"] }),
+          paging: new Paging({}),
+          textfiltering: new TextFiltering({ text: "", infotext: "Company Accounts" }),
+          cells: [
+            new Cell({name: "Name", width: "100px", field:"fullname", special : "link"}),
+            new Cell({name: "Email", width: "100px", field:"email"}),
+            new Cell({name: "Role", width: "100px", field:"role", special: "rendered",
+                      rendering: function(value, idx, user) {
+                        if (user.field("role")=="RoleAdmin") {
+                          return jQuery("<span>Admin</span>");
+                        } else if (user.field("role")=="RoleStandard") {
+                          return jQuery("<span>Standard</span>");
+                        } else {
+                          return jQuery("<span>Pending</span>");
+                        }
+                      }})
+          ]
+        }),
+        headerExtras : newUserInCompanyButton.add(inviteExistingUserToCompany)
+      });
+      jQuery(".tab-viewer").append(companyAccountsTable.el());
     });
-    jQuery(".tab-viewer").append(companyAccountsTable.el());
-  });
-</script>
+  </script>
+</div>
+</div>
 ####
 userusagestats=
+<div class="mainContainer" >
+  <div class="body-container">
    <a href="$adminlink$">Go back to main admin page</a>
     <a style="padding-left:100px" href="$adminuserslink$">Go back to user admin page</a>
     <br/>
@@ -998,8 +1034,12 @@ userusagestats=
 	</div>
       </div>
     </div>
+</div>
+</div>
 ####
 companyusagestats=
+<div class="mainContainer" >
+  <div class="body-container">
     <a href="$adminlink$">Go back to main admin page</a>
     <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
     <br/>
@@ -1038,8 +1078,12 @@ companyusagestats=
 	</div>
       </div>
     </div>
+</div>
+</div>
 ###
 statisticsPage=
+<div class="mainContainer" >
+  <div class="body-container">
     <div class="tab-viewer">
       <div class="tab-header"></div>
       <ul class="tabs">
@@ -1092,9 +1136,13 @@ statisticsPage=
         },7000);
       });
     </script>
+</div>
+</div>
 ###
 ###
 adminFunctionalityStatsPage=
+<div class="mainContainer" >
+  <div class="body-container">
     $backtoadminmainlink()$
     <div>
       <h1>Functionality Statistics</h1><br/><br/>
@@ -1127,13 +1175,16 @@ adminFunctionalityStatsPage=
 	    <table>
 	    </table>
     </div>
+</div>
+</div>
 ###
 backtoadminmainlink=
    <a href="$adminlink$">Go back to main admin page</a>
     <br/><br/>
 ####
 admindocumentslist =
-
+<div class="mainContainer" >
+  <div class="body-container">
    <div class="tab-viewer">
          <div class="tab-header">
           <strong>
@@ -1222,9 +1273,12 @@ admindocumentslist =
     });
     </script>
     </div>
-
+</div>
+</div>
 ####
 daveDocument=
+<div class="mainContainer" >
+  <div class="body-container">
 $daveBody:noescape()$
 
 <div style="border:10px solid red;padding:10px">
@@ -1243,8 +1297,12 @@ $elseif(closed)$
 $endif$
 <BR/>
 </div>
+</div>
+</div>
 ####
 daveSignatoryLink=
+<div class="mainContainer" >
+  <div class="body-container">
 $daveBody:noescape()$
 
 <div style="border:10px solid red;padding:10px">
@@ -1252,5 +1310,7 @@ $daveBody:noescape()$
 This will record the change in the evidence log.
 <BR/>
 <BR/>
+</div>
+</div>
 </div>
 ####

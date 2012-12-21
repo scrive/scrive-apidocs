@@ -58,6 +58,9 @@ doctype=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.
 standardHeaderContents=
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta http-equiv="content-language" content="$ctxlang$" />
+        <!--[if lt IE 9]>
+        <script src="/libs/html5shiv.js"></script>
+        <![endif]-->
         <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,700,200italic,400italic,700italic' rel='stylesheet' type='text/css'/>
         <link href='https://fonts.googleapis.com/css?family=Helvetica%20Neue' rel='stylesheet' type='text/css'/>
         <script src="/$ctxlang$/localization/$versioncode$.js"  type="text/javascript"></script>
@@ -65,7 +68,7 @@ standardHeaderContents=
 ####
 pageFooter=
 <footer class="site">
-  <div class="ct">
+  <div class="ct $if(thin)$thin$endif$">
       <nav class='top'>
         <ul>
           <li class="copyright"><a href="$if(langenglish)$/en/$else$/sv/$endif$">&copy; $_footerScrive()$</a></li>
@@ -85,9 +88,11 @@ pageFooter=
                           lang: l == "en" ? "LANG_EN" : "LANG_SV"
                                 }).sendAjax(function() {
                                    var p = window.location.pathname;
-                                   if (p.substring(0, 3) == "/en" || p.substring(0, 3) == "/sv")
+                                   if (p.substring(0, 3) == "/en" || p.substring(0, 3) == "/sv") {
                                         p = "/" + l + p.substr(3);
-                                   window.location.pathname = p; 
+                                        window.location.pathname = p;
+                                   } else
+                                      window.location.reload();
                           })
                    }
 
@@ -129,7 +134,7 @@ header=
 
 <header class="site">
   <nav>
-    <ul class="ct">
+    <ul class="ct $if(thin)$thin$endif$">
       <li id="branding">
         <a id="logo" class="page" href="$if(langenglish)$/en/$else$/sv/$endif$"><img src="/img/logo.png" width="120" height="22"></a>
         <div id="tagline" class="h3"></div>

@@ -4,6 +4,7 @@
 -}
 module AppView( kontrakcja
               , renderFromBody
+              , renderFromBodyThin
               , notFoundPage
               , internalServerErrorPage
               , simpleJsonResponse
@@ -53,7 +54,20 @@ renderFromBody :: Kontrakcja m
                -> m Response
 renderFromBody title content = do
   ctx <- getContext
-  res <- simpleHtmlResponse =<< pageFromBody ctx title content
+  res <- simpleHtmlResponse =<< pageFromBody False ctx title content
+  clearFlashMsgs
+  return res
+  
+{- |
+   Renders some page body xml into a complete reponse
+-}
+renderFromBodyThin :: Kontrakcja m
+               => String
+               -> String
+               -> m Response
+renderFromBodyThin title content = do
+  ctx <- getContext
+  res <- simpleHtmlResponse =<< pageFromBody True ctx title content
   clearFlashMsgs
   return res
 
@@ -62,13 +76,15 @@ renderFromBody title content = do
    Renders some page body xml into a complete page of xml
 -}
 pageFromBody :: TemplatesMonad m
-             => Context
+             => Bool
+             -> Context
              -> String
              -> String
              -> m String
-pageFromBody ctx title bodytext =
+pageFromBody thin ctx title bodytext =
   renderTemplate "wholePage" $ do
     F.value "content" bodytext
+    F.value "thin" thin
     standardPageFields ctx title Nothing
 
 notFoundPage :: Kontrakcja m => m Response

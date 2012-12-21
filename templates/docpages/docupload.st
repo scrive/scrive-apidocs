@@ -8,10 +8,7 @@ createFromTemplatePage=
 jQuery(function() {
   BlockingInfo.show('.blocking-box');
 });
-</script>
-<script>
 jQuery(".body-container").append(new CreateFromTemplate().el());
-</script>
 </script>
 </div>
 </div>

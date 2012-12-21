@@ -20,9 +20,9 @@ header.site {
       margin: 0 auto;
       width: 1020px;
       position : relative;
+      &.thin { width: 960px; }
       li {
         float : right;
-        width : 96px;
         border-left : 1px solid @blue-border;
         height : 24px;
         margin : 35px 0 34px;
@@ -36,6 +36,7 @@ header.site {
           margin-top : -39px;
           border-top : 4px solid transparent;
           transition : .15s ease-in-out all;
+          padding: 0 1.25em;
           &:hover {
             border-top-color : @blue-medium;
             color : @blue-medium;

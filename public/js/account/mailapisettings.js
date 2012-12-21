@@ -100,22 +100,19 @@ var MailAPISettingsView = Backbone.View.extend({
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
 
-      var disablebox = $("<div class='mailapi'/>");
       var disablecheckbox = $("<input type='checkbox' autocomplete='false'/>");
       if (model.hasPersonalMailApi()) disablecheckbox.attr("checked","checked");
       disablecheckbox.change(function() {
           model.setEnablePersonal(disablecheckbox.is(":checked"));
           return true;
         });
-      var disablelabel = $("<label style='margin-left: 10px'/>").text(localization.account.mailAPI.enablePersonal);
-      body.append(disablebox.append(disablecheckbox).append(disablelabel));
+      var disablelabel = $("<label/>").text(localization.account.mailAPI.enablePersonal);
+      body.append(disablecheckbox).append(disablelabel);
 
       if (model.hasPersonalMailApi()) {
         // Filling content
-        var subbox = $("<div class='mailapi' style='margin-top: 10px'/>");
-        body.append(subbox);
         var personalMailApi = this.model.personalMailApi();
-        subbox.append($("<span/>").text(localization.account.mailAPI.activeMails));
+        body.append($("<label/>").text(localization.account.mailAPI.activeMails));
         var list = $("<ul class='mailapiemailslist'/>");
         var a1 = $("<a/>").attr('href',"mailto:contract+"+personalMailApi.key()+"@api.scrive.com").text("contract+"+personalMailApi.key()+"@api.scrive.com");
         var a2 = $("<a/>").attr('href',"mailto:offer+"+personalMailApi.key()+"@api.scrive.com").text("offer+"+personalMailApi.key()+"@api.scrive.com");
@@ -123,16 +120,15 @@ var MailAPISettingsView = Backbone.View.extend({
         list.append($("<li/>").append(a1));
         list.append($("<li/>").append(a2));
         list.append($("<li/>").append(a3));
-        subbox.append(list)
+        body.append(list)
 
-        var resetbox = $("<div class='mailapi'/>");
         var resetcheckbox = $("<input type='checkbox' autocomplete='false'/>");
         resetcheckbox.change(function() {
           model.setResetKeys(resetcheckbox.is(":checked"));
           return true;
         });
-        var resetlabel = $("<label style='margin-left: 10px'/>").text(localization.account.mailAPI.resetKeys);
-        body.append(resetbox.append(resetcheckbox).append(resetlabel));
+        var resetlabel = $("<label/>").text(localization.account.mailAPI.resetKeys);
+        body.append(resetcheckbox).append(resetlabel);
       }
         
       return box;
@@ -144,8 +140,6 @@ var MailAPISettingsView = Backbone.View.extend({
       var box = $("<div class='col'/>");
       var header = $("<div class='account-header'/>").append($("<h2/>").text(localization.account.mailAPI.limitMailAPIHeader))
       var body = $("<div class='account-body'/>");
-      var subbox = $("<div class='mailapi' style='margin-top: 10px'/>");
-      body.append(subbox);
       box.append(header).append(body);
 
       var table = $("<table class='mailapitable'/>");
@@ -170,7 +164,7 @@ var MailAPISettingsView = Backbone.View.extend({
           model.setResetLimit(checkbox.is(":checked"));
           return true;
         });
-        var label = $("<label style='margin-left: 10px'/>").append($("<label/>").text(localization.account.mailAPI.resetLimit));
+        var label = $("<label/>").append($("<label/>").text(localization.account.mailAPI.resetLimit));
         body.append(resetbox.append(checkbox).append(label));
       }
            
@@ -182,12 +176,10 @@ var MailAPISettingsView = Backbone.View.extend({
       var box = $("<div class='col'/>");
       var header = $("<div class='account-header'/>").append($("<h2/>").text(localization.account.mailAPI.companyMailAPIHeader))
       var body = $("<div class='account-body'/>");
-      var subbox = $("<div class='mailapi' style='margin-top: 10px'/>");
-      body.append(subbox);
       box.append(header).append(body);
 
       // Filling content
-      subbox.append($("<label/>").text(localization.account.mailAPI.activeMails));
+      body.append($("<label/>").text(localization.account.mailAPI.activeMails));
       var list = $("<ul class='mailapiemailslist'/>");
       var a1 = $("<a/>").attr('href',"mailto:contract+"+companyMailApi.key()+"@api.scrive.com").text("contract+"+companyMailApi.key()+"@api.scrive.com");
       var a2 = $("<a/>").attr('href',"mailto:offer+"+companyMailApi.key()+"@api.scrive.com").text("offer+"+companyMailApi.key()+"@api.scrive.com");
@@ -195,12 +187,12 @@ var MailAPISettingsView = Backbone.View.extend({
       list.append($("<li/>").append(a1));
       list.append($("<li/>").append(a2));
       list.append($("<li/>").append(a3));
-      subbox.append(list)
-      subbox.append("<BR/>");
-      subbox.append($("<label/>").text(localization.account.mailAPI.dailyLimit + ":" + companyMailApi.limit()));
-      subbox.append("<BR/>");
-      subbox.append($("<label/>").text(localization.account.mailAPI.processedToday + ":" + companyMailApi.sent()));
-      subbox.append("<BR/>");
+      body.append(list)
+      body.append("<BR/>");
+      body.append($("<label/>").text(localization.account.mailAPI.dailyLimit + ":" + companyMailApi.limit()));
+      body.append("<BR/>");
+      body.append($("<label/>").text(localization.account.mailAPI.processedToday + ":" + companyMailApi.sent()));
+      body.append("<BR/>");
       
       return box;
     },
