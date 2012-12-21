@@ -154,6 +154,7 @@ var ScrollUpArrowView = Backbone.View.extend({
 
     },
     scroll: function(){
+        mixpanel.track('Click fat arrow up');
        var model = this.model;
        var task = this.model.point();
        if (task == undefined) return;
@@ -215,6 +216,7 @@ var ScrollDownArrowView = Backbone.View.extend({
       }
     },
     scroll: function(){
+        mixpanel.track('Click fat arrow down');
         var model = this.model;
         var task = this.model.point();
         if (task == undefined) return;

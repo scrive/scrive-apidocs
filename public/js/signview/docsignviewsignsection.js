@@ -22,18 +22,22 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
     var mbi = $("<a href='#' class='mbi'><img src='/img/mobilebankid.png' alt='Mobilt BankID' /></a>");
     bankid.click(function() {
+        mixpanel.track('Click BankID');
       Eleg.bankidSign(document, signatory, document.sign());
       return false;
     });
     telia.click(function() {
+        mixpanel.track('Click Telia');
       Eleg.teliaSign(document, signatory, document.sign());
       return false;
     });
     nordea.click(function() {
+        mixpanel.track('Click Nordea');
       Eleg.nordeaSign(document, signatory, document.sign());
       return false;
     });
       mbi.click(function() {
+          mixpanel.track('Click Mobile BankID');
           Eleg.mobileBankIDSign(document,signatory,document.sign(),null,signatory.personalnumberField().value());
           return false;
       });
@@ -49,6 +53,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       onClick: function() {
         if (alreadyClicked(this))
           return false;
+          mixpanel.track('Accept Sign');
         document.sign().send();
       }
     }).input();
@@ -122,6 +127,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                         width: 260,
                                         text: document.process().localization().rejectbuttontext,
                                         onClick: function() {
+                                            mixpanel.track('Click Reject');
                                             ConfirmationWithEmail.popup({
                                             title: document.process().localization().signatorycancelmodaltitle,
                                             mail: document.currentSignatory().rejectMail(),
@@ -132,6 +138,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                             onAccept: function(customtext) {
                                                 if (alreadyClicked(this))
                                                   return;
+                                                mixpanel.track('Accept reject');
                                                 document.currentSignatory().reject(customtext).send();
                                               }
                                             });
@@ -144,11 +151,13 @@ window.DocumentSignSignSection = Backbone.View.extend({
                             text: document.process().localization().signbuttontext,
                             icon: $("<span class='icon cross'></span>"),
                             onClick: function() {
+
                                 var valid =  model.tasks().notCompleatedTasks().length == 1 && model.tasks().notCompleatedTasks()[0] == model.signtask();
                                 if (!valid) {
                                         model.arrow().blink();
                                         return false;
                                     }
+                                mixpanel.track('Click sign');
                                 new DocumentSignConfirmation({
                                     model: document
                                     }).popup();

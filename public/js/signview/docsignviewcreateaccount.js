@@ -116,6 +116,7 @@ window.CreateAccountAfterSignView = Backbone.View.extend({
         view.clearPasswordValidationErrors();
         view.clearTOSValidationErrors();
         if (view.filledAndValid()) {
+            mixpanel.track('Create new account');
          new Submit({
            url: model.document().currentSignatory().saveurl(),
            method: "POST",

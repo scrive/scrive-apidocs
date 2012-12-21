@@ -74,12 +74,14 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
           mixpanel.identify("$analytics.userid$");
         $endif$
 
+        $if(analytics.properties)$
         var analyticsproperties = $analytics.properties:noescape()$;
 
           mixpanel.register(analyticsproperties);
           mixpanel.people.set(analyticsproperties);
         if(analyticsproperties['Smart Name'])
           mixpanel.name_tag(analyticsproperties['Smart Name']);
+        $endif$
 
         mixpanel.track_links('.logout', 'Click Logout');
         mixpanel.track_links('.scrive-logo', 'Click Logo');
