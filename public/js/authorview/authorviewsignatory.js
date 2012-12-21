@@ -1,4 +1,6 @@
 /* Signatories model + basic view + signatories attachments
+ *
+ * Instrumented with mixpanel
  */
 
 
@@ -108,6 +110,8 @@ var AuthorViewSignatoryView = Backbone.View.extend({
          var textbox = $("<span/>").text(text);
          button.append(icon).append(textbox);
          button.click(function() {
+             mixpanel.track('Click send reminder',
+                            {'Signatory index':signatory.signIndex()});
              ConfirmationWithEmail.popup({
                 title: signatory.hasSigned() ? signatory.document().process().localization().remindagainbuttontext : localization.reminder.formHead,
                 mail: signatory.remindMail(),
@@ -115,6 +119,8 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                 editText: localization.reminder.formOwnMessage,
                 rejectText: localization.cancel,
                 onAccept: function(customtext) {
+                    mixpanel.track('Accept send reminder',
+                                   {'Signatory index':signatory.signIndex()});
                       signatory.remind(customtext).send();
                 }
             });
@@ -130,13 +136,19 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                             color: "blue",
                             text: localization.changeEmail,
                             onClick: function() {
+                                mixpanel.track('Click change email',
+                                               {'Signatory index':signatory.signIndex()});
                                 var input = $("<input type='text'/>");
                                 input.val(signatory.email());
                                 var sndbutton = Button.init({
                                     size: "tiny",
                                     color: "blue",
                                     text: localization.send,
-                                    onClick: function() { signatory.changeEmail(input.val()).send(); }
+                                    onClick: function() { 
+                                        mixpanel.track('Accept change email',
+                                                       {'Signatory index':signatory.signIndex()});
+                                        signatory.changeEmail(input.val()).send(); 
+                                    }
                                     });
                                 container.empty().append(input).append(sndbutton.input());
                                 return false;
@@ -153,6 +165,8 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                  var textbox = $("<span/>").text(text);
                  button.append(icon).append(textbox);
                  button.click(function() {
+                     mixpanel.track('Click give for signing',
+                                    {'Signatory index':signatory.signIndex()});
                          Confirmation.popup({
                                 title : localization.pad.signingOnSameDeviceConfirmHeader,
                                 content : localization.pad.signingOnSameDeviceConfirmText,
@@ -160,6 +174,8 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                 rejectText : localization.cancel,
                                 onAccept : function()
                                         {
+                                            mixpanel.track('Accept give for signing',
+                                                           {'Signatory index':signatory.signIndex()});
                                            signatory.addtoPadQueue(function(resp) {
                                                if (resp.error == undefined)
                                                    window.location = signatory.padSigningURL();
@@ -183,6 +199,8 @@ var AuthorViewSignatoryView = Backbone.View.extend({
         var textbox = $("<span/>").text(text);
         button.append(icon).append(textbox);
         button.click(function() {
+            mixpanel.track('Click remove from pad queue',
+                           {'Signatory index':signatory.signIndex()});
             signatory.removeFromPadQueue().sendAjax( function() { window.location = window.location;});
         });
         return button;
@@ -196,6 +214,8 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                  var textbox = $("<span/>").text(text);
                  button.append(icon).append(textbox);
                  button.click(function() {
+                     mixpanel.track('Click add to pad queue',
+                                    {'Signatory index':signatory.signIndex()});
                          Confirmation.popup({
                                 title : localization.pad.addToPadQueueConfirmHeader,
                                 content : localization.pad.addToPadQueueConfirmText,
@@ -203,6 +223,8 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                 rejectText : localization.cancel,
                                 onAccept : function()
                                         {
+                                            mixpanel.track('Accept add to pad queue',
+                                                           {'Signatory index':signatory.signIndex()});
                                            signatory.addtoPadQueue(function(resp) {window.location = window.location;}).sendAjax();
                                            return true;
 

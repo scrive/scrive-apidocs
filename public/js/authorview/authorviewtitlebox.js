@@ -60,6 +60,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
       onClick: function() {
         if (alreadyClicked(this))
           return;
+          mixpanel.track('Click restart button');
         model.restart();
       }
     }).input();
@@ -73,6 +74,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
       text: document.process().localization().cancelbuttontext,
       cssClass: "s-withdraw-button",
       onClick: function() {
+          mixpanel.track('Click withdraw button');
         Confirmation.popup({
           title: document.process().localization().cancelmodaltitle,
           content: document.process().localization().cancelmodaltext,
@@ -83,6 +85,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
           onAccept: function() {
               if (alreadyClicked(this))
                 return;
+              mixpanel.track('Accept withdraw');
               model.cancel();
               return true;
             }
@@ -98,6 +101,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
       size: "small",
       text: localization.authorview.goToSignView,
       onClick: function() {
+          mixpanel.track('Click go to sign view');
          model.goToSignView();
         }
     }).input();
@@ -115,6 +119,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     if (document.timeouttime() != undefined && document.signingInProcess())
       smallerbits.append($("<div class='duedate'/>").text(this.dueDateDescription()));
     smallerbits.append($("<a target='_blank' class='download' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(localization.downloadPDF));
+      mixpanel.track_links('.download', 'Download PDF');
 
     $(this.el).append(container);
 
