@@ -547,7 +547,7 @@ var DesignViewView = Backbone.View.extend({
                 if(BlockingInfo && BlockingInfo.shouldBlockDocs(1)) {
                     mixpanel.track('Open blocking popup',
                                    {Button: 'sign'});
-                    mixpanel.set({
+                    mixpanel.people.set({
                         'Blocking Popup': new Date()
                     });
 
@@ -574,7 +574,7 @@ var DesignViewView = Backbone.View.extend({
                 if(BlockingInfo && BlockingInfo.shouldBlockDocs(1)) {
                     mixpanel.track('Open blocking popup',
                                    {Button: 'send'});
-                    mixpanel.set({
+                    mixpanel.people.set({
                         'Blocking Popup': new Date()
                     });
                     BlockingInfo.createPopup();

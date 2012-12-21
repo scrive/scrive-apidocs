@@ -755,7 +755,7 @@
                         ajax: true,
                         onSend: function() {
                             mixpanel.track('Send phone number');
-                            mixpanel.set({Phone : phone});
+                            mixpanel.people.set({Phone : phone});
                             content.empty();
                             content.append("<div class='loading payments'/>");
                         },
