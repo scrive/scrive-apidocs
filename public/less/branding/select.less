@@ -1,84 +1,3 @@
-@selectWidth: 160px;
-
-ul.select {
-  position: relative;
-  height: 30px;
-  width: @selectWidth;
-  border: 1px solid @blue-border;
-  text-align: left;
-  cursor: pointer;
-  list-style: none;
-  padding: 0;
-  &:after {
-    display: block;
-    position: absolute;
-    top: 8px;
-    right: 7px;
-    content: '';
-    width: 15px;
-    height: 15px;
-    background: url(http://nylira.scrive.com/images/site/select-arrow.png) no-repeat;
-  }
-  li.option {
-    width: @selectWidth;
-    height: 30px;
-    font-family: @source;
-    line-height: 30px;
-    a {
-      display: block;
-      padding: 0 1em;
-      color: @dim;
-      text-decoration: none;
-    }
-    &:not(:first-of-type) {
-      display: none;
-    }
-  }
-
-  &.click:hover {
-    border: 1px solid @blue-dark;
-  }
-
-  &.hover:hover,
-  &.click.active {
-    &:after {
-      display: none;
-    }
-    li.option {
-      width: @selectWidth;
-      margin: -1px 0 0 -1px;
-      display: block;
-      background: #fff;
-      border-left: 1px solid @blue-medium;
-      border-right: 1px solid @blue-medium;
-      a {
-        color: @blue-medium;
-      }
-      &.active {
-        background: m248;
-      }
-      &:not(:first-of-type) {
-        display: block;
-      }
-      &:first-of-type {
-        border: 1px solid @blue-medium;
-        border-bottom: none;
-      }
-      &:last-of-type {
-        border: 1px solid @blue-medium;
-        border-top: none;
-      }
-      &:hover {
-        background: @blue-border;
-        a {
-          color: @blue-dark;
-        }
-      }
-    }
-  }
-}
-
-
 .select{
     font-family: @source;
     color: @blue-dark;
@@ -126,7 +45,7 @@ ul.select {
     }
     .select-opts {
             display: none;
-            color: @dim;
+            color: @blue-dark;
             background: #fff;
             border: 1px solid @blue-border;
             position: absolute;
@@ -135,6 +54,7 @@ ul.select {
             z-index: 1;
             left : -1px ;
             text-align : left;
+	    padding:0px;			
             &.right {
               text-align : left;
             }
