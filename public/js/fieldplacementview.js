@@ -105,6 +105,9 @@ window.draggebleField = function(dragHandler, fieldOrPlacement)
                      * placement. Refactor this later to in place
                      * update.
                      */
+                    mixpanel.track('Drag field to new page', {fieldname:field.name(), 
+                                                              signatory:field.signatory().signIndex(),
+                                                              documentid:field.signatory().document().documentid()});
                     placement.remove();
                     var newPlacement = new FieldPlacement({
                         page: page.number(),
@@ -121,6 +124,9 @@ window.draggebleField = function(dragHandler, fieldOrPlacement)
                 }
             }
             else {
+                mixpanel.track('Drag field', {fieldname:field.name(), 
+                                              signatory:field.signatory().signIndex(),
+                                              documentid:field.signatory().document().documentid()});
                 var newPlacement = new FieldPlacement({
                     page: page.number(),
                     fileid: page.file().fileid(),
