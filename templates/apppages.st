@@ -68,7 +68,7 @@ standardHeaderContents=
 ####
 pageFooter=
 <footer class="site">
-  <div class="ct $if(thin)$thin$endif$">
+  <div class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
       <nav class='top'>
         <ul>
           <li class="copyright"><a href="$if(langenglish)$/en/$else$/sv/$endif$">&copy; $_footerScrive()$</a></li>
@@ -134,34 +134,34 @@ header=
 
 <header class="site">
   <nav>
-    <ul class="ct $if(thin)$thin$endif$">
+    <ul class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
       <li id="branding">
         <a id="logo" class="page" href="$if(langenglish)$/en/$else$/sv/$endif$"><img src="/img/logo.png" width="120" height="22"/></a>
         <div id="tagline" class="h3"></div>
       </li>
       $if(logged)$
-      <li class="session-logout">
+      <li class="session-logout float-right">
         <a class="button button-small button-red" id="page-signup" href="$linklogout$">$_headerLogOut()$</a>
       </li>
-      <li><a class="page" id="page-about" href="$linkaccount$">$_headerAccount()$</a></li>
-      <li><a class="page" id="page-cases" href="$linkissue$">$_headerArchive()$</a></li>
-      <li class="session-create">
+      <li class="float-right"><a class="page" href="$linkaccount$">$_headerAccount()$</a></li>
+      <li class="float-right"><a class="page" href="$linkissue$">$_headerArchive()$</a></li>
+      <li class="session-create float-right">
         <a class="button button-small" onclick='createfromtemplate()' href="#">$_headerTemplate()$ </a>
       </li>
-      <li class="session-create">
+      <li class="session-create float-right">
         <a class="button button-small"            onclick='createnewdocument()' href="#">$_headerSend()$ </a>
       </li>
       $else$
-      <li class="session-login">
+      <li class="page-first float-left"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$features">$_headerFeatures()$</a></li>
+      <li class="float-left"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$pricing">$_headerPricing()$</a></li>
+      <li class="float-left"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$legal">$_headerLegal()$</a></li>
+      <li class="float-left"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$cases">$_headerCases()$</a></li>
+      <li class="float-left"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$about">$_headerAbout()$</a></li>
+      <li class="float-left"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$contact">$_headerContakt()$</a></li>
+      <li class="session-login float-right">
         <a class="button button-small" id="page-login" href="/login">$_login()$ </a>
         <a class="button button-small button-red" id="page-login" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_signUp()$</a>
       </li>
-      <li><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$contact">$_headerContakt()$</a></li>
-      <li><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$about">$_headerAbout()$</a></li>
-      <li><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$cases">$_headerCases()$</a></li>
-      <li><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$legal">$_headerLegal()$</a></li>
-      <li><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$pricing">$_headerPricing()$</a></li>
-      <li class="page-first"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$features">$_headerFeatures()$</a></li>
       $endif$
     </ul>
   </nav>

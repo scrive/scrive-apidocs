@@ -41,8 +41,6 @@
     render: function () {
         var self = this;
         var model = this.model;
-        var header = $("<header/>").append($("<h1 class='big'/>").text(localization.signupModal.modalAccountSetupFooter));
-        $(this.el).append(header);
 
         var content = $("<div class='short-input-container recovery-container'/>");
         var wrapper = $("<div class='short-input-container-body-wrapper'/>");
@@ -70,7 +68,7 @@
             }
           });
         
-        body.append($("<div class='position first'/>").append($("<h2>").text(localization.signupModal.startNow)));
+        body.append($("<div class='position first'/>").append($("<h1>").text(localization.signupModal.startNow)));
         body.append($("<div class='position'/>").append(emailInput.input()).append(signupButton.input()));
         $(this.el).append(content);
       }

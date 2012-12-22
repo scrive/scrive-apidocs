@@ -1,7 +1,7 @@
 ###
 loginPage=
 <div class='mainContainer big'>
-<img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
+<img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
   jQuery(document).ready(function() {
     jQuery('.mainContainer').append(new Login({referer: "$referer$"}).el());
@@ -11,7 +11,7 @@ loginPage=
 ###
 changePasswordPage=
 <div class='mainContainer big'>
-<img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
+<img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
   jQuery(document).ready(function() {
     jQuery('.mainContainer').append(new NewPassword({linkchangepassword: "$linkchangepassword$"}).el());
@@ -21,7 +21,7 @@ changePasswordPage=
 ###
 signupPage=
 <div class='mainContainer big'>
-<img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
+<img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
   jQuery(document).ready(function() {
     jQuery('.mainContainer').append(new Signup({email: "$email:noescape()$"}).el());
@@ -43,7 +43,7 @@ accountSetupPage=
 ###
 pageAcceptTOS =
 <div class='mainContainer big'>
-<img width="1920" height="800" src="/img/bg-home.jpg" class="bg"/>
+<img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
   jQuery(document).ready(function() {
     jQuery('.mainContainer').append(new AcceptTOS({}).el());

@@ -22,7 +22,6 @@ header.site {
       position : relative;
       &.thin { width: 960px; }
       li {
-        float : right;
         border-left : 1px solid @blue-border;
         height : 24px;
         margin : 35px 0 34px;
@@ -43,7 +42,7 @@ header.site {
           }
         }
         &.session-logout, &.session-login {
-          padding-left : 30px;
+          margin-right: 16px;
           width : auto;
           .clearfix;
           a.button.button-small {
@@ -74,16 +73,16 @@ header.site {
         &#branding {
           .clearfix;
           float: left;
-          width : 192px;
           border-left : none;
           position : relative;
 
           a#logo {
             display : block;
-            width : 192px;
+            width : 156px;
             text-align : left;
+            padding-left: 14px;
             img {
-              margin : 37px 1em 36px;
+              margin : 37px 0 36px;
             }
           }
           #tagline {

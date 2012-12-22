@@ -85,7 +85,7 @@ langFolder lang = "/" ++ (codeFromLang lang)
    Shows each link as a relative url
 -}
 instance Show KontraLink where
-    showsPrec _ (LinkHome lang) = (++) $ langFolder lang 
+    showsPrec _ (LinkHome lang) = (++) $ langFolder lang ++ "/"
     showsPrec _ (LinkPriceplan lang) = (++) $ langFolder lang ++ "/pricing"
     showsPrec _ (LinkLogin lang _) = (++) $ langFolder lang ++ "/login"
     showsPrec _ LinkLogout = (++) "/logout"

@@ -1,6 +1,6 @@
 .mainContainer {
     width: 1020px;
-    min-height: 680px;
+    min-height: 544px;
     margin: 20px auto;
     &.big {
       margin: 0;
@@ -27,7 +27,7 @@
 
       .short-input-container {
         width: 416px;
-        margin: auto;
+        margin: 84px auto;
         .short-input-container-body-wrapper{
           border: 1px solid rgba(0, 0, 0, 0.5);
           transition: all 0.15s ease-in-out 0s;
@@ -44,6 +44,14 @@
               &.first {
                 margin-top: 0px;
               }
+
+              h1 {
+                color: #7A94B8;
+                font: 1.5em/1 @source;
+                letter-spacing: normal;
+                text-align: center;
+              }
+              
             }
           }
         }
@@ -55,13 +63,24 @@
             border-right: 1px solid rgba(0, 0, 0, 0.5);
             border-left: 1px solid rgba(0, 0, 0, 0.5);
             border-bottom: 1px solid rgba(0, 0, 0, 0.5);
-            padding: 1em 0;
+            padding: 1em 2em;
+            min-height: 33px;
             a {
               color: #CCCCCC;
               text-decoration: none;
               font: 16px/1.5 @source;
               &:hover {
                 color: #FFFFFF;
+              }
+            }
+            p {
+              width: 175px;
+              line-height: 2em;
+              &.float-left {
+                text-align: left;
+              }
+              &.float-right {
+                text-align: right;
               }
             }
         }
