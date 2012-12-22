@@ -72,7 +72,7 @@ var ButtonView = Backbone.View.extend({
         if (this.model.size() == "tiny")
             $(this.el).addClass("button-small");
         else if (this.model.size() == "big")
-            $(this.el).addClass("button-large")
+            $(this.el).addClass("button-large");
         if (this.model.color() == "red" )
             $(this.el).addClass("button-red");
         else if (this.model.color() == "green" )

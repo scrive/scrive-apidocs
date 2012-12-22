@@ -18,13 +18,13 @@ window.BrowserInfo = {
         return navigator.userAgent.match(/iPhone/i) != null;
     },
     isIE9orLower : function() {
-      return $.browser.msie && ($.browser.version > "3" && $.browser.version <= "9.0")
+      return $.browser.msie && ($.browser.version > "3" && $.browser.version <= "9.0");
     },
     isIE8orLower : function() {
-      return $.browser.msie && ($.browser.version > "3" && $.browser.version <= "8.0")
+      return $.browser.msie && ($.browser.version > "3" && $.browser.version <= "8.0");
     },
     isIE7orLower : function() {
-      return $.browser.msie && ($.browser.version > "3" && $.browser.version <= "7.0")
+      return $.browser.msie && ($.browser.version > "3" && $.browser.version <= "7.0");
     }
 };
 

@@ -59,7 +59,7 @@ var FlashMessageView = Backbone.View.extend({
 });
 
 window.FlashMessage = function(args) {
-        var model = new FlashMessageModel(args)
+        var model = new FlashMessageModel(args);
         var view = new FlashMessageView({model : model, el : $("<div class='flash'/>")});
         $("body").append($(view.el));
         setTimeout(function() {$(view.el).addClass("active");},100);

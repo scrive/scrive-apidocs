@@ -331,7 +331,7 @@
           return phoneInput.input().validate(new NotEmptyValidation({callback: view.validationCallback, message: localization.validation.phoneRequired}));
         }
       });
-      var phonerow = $("<div class='position' style='display:none;'/>").append(phoneInput.input())
+      var phonerow = $("<div class='position' style='display:none;'/>").append(phoneInput.input());
       signupInfo.append(phonerow);
 
       

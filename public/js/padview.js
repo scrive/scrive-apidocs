@@ -125,9 +125,9 @@ window.PadQueueView = Backbone.View.extend({
             else if (padqueue.hasDocument())
                 container.append(this.documentView());
             else if (padqueue.logged())
-                container.append(this.noDocumentView())  ;    
+                container.append(this.noDocumentView());    
             else 
-                container.append(this.logToPadDevice())  
+                container.append(this.logToPadDevice());  
 
             if (padqueue.loggedToPad())
                $('body').append(this.padLogoutIcon());

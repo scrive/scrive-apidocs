@@ -169,7 +169,7 @@ var LoginView = Backbone.View.extend({
           rememberPasswordCheckbox.attr("checked","YES");
         else if (!model.rememberPassword())
           rememberPasswordCheckbox.removeAttr("checked");
-      })
+      });
 
       if (!model.pad()) {
         var footer = $("<div class='short-input-container-footer'/>");

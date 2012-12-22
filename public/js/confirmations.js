@@ -137,7 +137,7 @@ var ConfirmationView = Backbone.View.extend({
     render: function () {
        var view = this;
        var model = this.model;
-       var container = $("<div class='modal-container'/>")
+       var container = $("<div class='modal-container'/>");
        container.css("top",$(window).scrollTop());
        container.css("margin-top",$(window).height() > 700 ? 200 : 100);
        container.css("left",$(window).scrollLeft());

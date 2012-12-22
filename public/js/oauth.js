@@ -89,8 +89,8 @@ var OAuthConfirationView = Backbone.View.extend({
     top: function() {
       var model = this.model;
       var box = $("<header class='site'/>");
-      var nav = $("<nav/>")
-      var ul = $("<ul class='ct'/>")
+      var nav = $("<nav/>");
+      var ul = $("<ul class='ct'/>");
       var content = $("<div class='content'>");
       var deny = $("<li class='page-first' style='float:left;width:200px'/>").append($("<a class='deny page' href='#'></a>").text(localization.apiConfiration.deny));
       deny.click(function() {model.deny();});

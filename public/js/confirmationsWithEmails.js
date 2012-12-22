@@ -199,7 +199,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        container.append(header);
        container.append(body);
        container.append(footer);
-       $(this.el).append(container)
+       $(this.el).append(container);
        return this;
     },
     reject: function(){
