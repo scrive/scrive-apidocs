@@ -4,7 +4,7 @@
   left: 0;
   bottom: 0;
   right: 0;
-  background: rgba(0,0,0,.8);
+  background: rgba(51,51,51,.8);
   height: 100%;
   z-index: 10000;
   -webkit-transition: opacity .5s ease-in;
@@ -28,6 +28,20 @@
 .modal.loadingdialog .modal-container {
   .transition(.0s,ease-in-out);
 }
+
+.modal-container:after {
+    border: 10px solid #000000;
+    border-radius: 8px 8px 8px 8px;
+    bottom: -10px;
+    content: "";
+    left: -10px;
+    opacity: 0.4;
+    position: absolute;
+    right: -10px;
+    top: -10px;
+    z-index: -1;
+}
+
 .modal-container {
   width: 600px;
   position: absolute;
@@ -35,8 +49,8 @@
   left: 50%;
   margin-top: -240px;
   margin-left: -300px;
-  border: 4px solid @blue-dark;
   background: #fff;
+  border: 1px solid #686868;
   .box-shadow(rgba(0,0,0,.33) 0 .125em 1em);
   z-index: 102;
   .transition(.5s,ease-in-out);
@@ -47,46 +61,60 @@
 }
 
 .modal-header {
-  height: 80px;
+  padding: 20px;
+  height: 25px;
+  background: url("/img/bg-header.jpg") repeat scroll 0 0 #000000;
   border-bottom: 1px solid @blue-border;
-}
-.modal-title, .modal-close {
-  float: left;
 }
 .modal-title {
   font-family: @source;
   font-size: 1.5em;
-  line-height: 80px;
-  color: @blue-dark;
-  padding-left: 25px;
-  width: 600px - 64px;
+  line-height: 25px;
+  display: block;
+  color: #FFF;
+  width: 500px;
+  float: left;
 }
+
+.modal-icon.message {
+    height: 31px;
+    margin-top: 1px;
+    background: url("/img/spr-icons-lb.png") no-repeat scroll 0 -31px transparent;
+    float: left;
+    margin-right: 20px;
+    margin-top: 2px;
+    width: 38px;
+}
+
 .modal-close {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 24px;
-  height: 24px;
-  padding: 30px 25px 19px;
-  cursor: pointer;
-  img {
+    background: url("/img/spr-btn-close.png") no-repeat scroll 0 0 transparent;
+    cursor: pointer;
     display: block;
-    opacity: .25;
-    .transition(.15s,ease-in-out);
-  }
-  &:hover img {
-    opacity: 1;
-  }
+    height: 24px;
+    width: 24px;
+    position:relative;
+    float:right;
+    &:hover {
+      background-position: 0 -24px;
+    }
+    &:active {
+      background-position: 0 -48px;
+    }
 }
+
 .modal-content {
   border-bottom: 1px solid @blue-border;
-}
-.modal-content .body {
-  padding: 25px;
+ .body {
+    padding: 20px 83px;
+    p {
+      margin: 10px 0;
+    }
+  }
 }
 .modal-footer {
   height: 32px;
-  padding: 20px 25px;
+  padding: 10px 25px;
+  background: none repeat scroll 0 0 #F5F5F5;
 }
 .modal-footer .button {
   min-width: 80px;

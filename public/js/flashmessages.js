@@ -19,7 +19,7 @@ var FlashMessageModel = Backbone.Model.extend({
     if (this.get("color") == "red")
       return "error";
     else if (this.get("color") == "blue")
-      return "warning";
+      return "success";
     else
       return "success";  
   }

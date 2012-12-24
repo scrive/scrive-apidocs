@@ -132,7 +132,7 @@ header=
    window.BlockingInfo = Blocking();
  </script>
 
-<header class="site">
+<header class="site $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
   <nav>
     <ul class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
       <li id="branding">
@@ -140,11 +140,11 @@ header=
         <div id="tagline" class="h3"></div>
       </li>
       $if(logged)$
-      <li class="session-logout float-right">
-        <a class="button button-small button-red" id="page-signup" href="$linklogout$">$_headerLogOut()$</a>
+      <li class="float-right">
+        <a class="page" href="$linklogout$">$_headerLogOut()$</a></li>
       </li>
       <li class="float-right"><a class="page" href="$linkaccount$">$_headerAccount()$</a></li>
-      <li class="float-right"><a class="page" href="$linkissue$">$_headerArchive()$</a></li>
+      <li class="page-first float-right"><a class=" page" href="$linkissue$">$_headerArchive()$</a></li>
       <li class="session-create float-right">
         <a class="button button-small" onclick='createfromtemplate()' href="#">$_headerTemplate()$ </a>
       </li>

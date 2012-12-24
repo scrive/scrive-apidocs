@@ -150,7 +150,7 @@ var ConfirmationView = Backbone.View.extend({
        title.append(this.model.title());
        header.append(title);
        if (model.canCancel())
-        header.append($("<a class='modal-close'><img width='24' height='24' src='/img/close.png'></a>").click(function() {view.reject(); return false;}));
+        header.append($("<a class='modal-close'></a>").click(function() {view.reject(); return false;}));
        var body = $("<div class='modal-body'>");
        var content = $("<div class='modal-content'/>");
        content.append($("<div class='body'/>").html(this.model.content()));
