@@ -31,6 +31,7 @@ import Payments.Config
 import Payments.Control
 import Session.Data
 import Templates.TemplatesLoader
+import Doc.Model
 import qualified Amazon as AWS
 import qualified Log (cron, withLogger)
 
@@ -81,8 +82,13 @@ main = Log.withLogger $ do
   t9 <- if AWS.isAWSConfigOk appConf
           then return <$> (forkCron_ tg "AmazonUploading" 60 $ runScheduler AWS.uploadFilesToAmazon)
           else return []
+  t10 <- forkCron_ tg "removeOldDrafts" (60 * 60) $ do
+    Log.cron "Removing old, unsaved draft documents..."
+    runScheduler $ do
+      delCount <- dbUpdate $ RemoveOldDrafts 1
+      Log.cron $ "Removed " ++ show delCount ++ " old, unsaved draft documents."
 
   waitForTermination
   Log.cron $ "Termination request received, waiting for jobs to finish..."
-  mapM_ stopCron (t1:t2:t3:t4:t5:t6:t7:t8:t9)
+  mapM_ stopCron (t10:t1:t2:t3:t4:t5:t6:t7:t8:t9)
   TG.wait tg

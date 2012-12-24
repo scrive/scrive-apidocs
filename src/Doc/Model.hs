@@ -23,6 +23,7 @@ module Doc.Model
   , ChangeSignatoryEmailWhenUndelivered(..)
   , CloseDocument(..)
   , DeleteSigAttachment(..)
+  , RemoveOldDrafts(..)
   , DocumentFromSignatoryData(..)
   , DocumentFromSignatoryDataV(..)
   , ErrorDocument(..)
@@ -2353,6 +2354,22 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RemoveDocumentAttachment Bo
         (Just did)
         actor
     return success
+
+-- Remove unsaved drafts (older than 1 week) from db.
+-- Uses chunking to not overload db when there's a lot of old drafts
+data RemoveOldDrafts = RemoveOldDrafts Int
+instance MonadDB m => DBUpdate m RemoveOldDrafts Integer where
+    update (RemoveOldDrafts limit) = kRun $
+      "DELETE FROM documents" <+>
+      "WHERE id = any (array(SELECT id" <+>
+                            "FROM documents" <+>
+                            "WHERE unsaved_draft IS TRUE" <+>
+                              "AND type = " <?> Signable undefined <+>
+                              "AND status = " <?> Preparation <+>
+                              "AND mtime < (now() - '7 days'::interval)" <+>
+                            "LIMIT " <?> limit <+>
+                           ")" <+>
+                     ")"
 
 data SetSigAttachments = SetSigAttachments DocumentID SignatoryLinkID [SignatoryAttachment] Actor
 instance MonadDB m => DBUpdate m SetSigAttachments () where
