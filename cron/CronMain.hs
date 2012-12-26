@@ -85,7 +85,7 @@ main = Log.withLogger $ do
   t10 <- forkCron_ tg "removeOldDrafts" (60 * 60) $ do
     Log.cron "Removing old, unsaved draft documents..."
     runScheduler $ do
-      delCount <- dbUpdate $ RemoveOldDrafts 1
+      delCount <- dbUpdate $ RemoveOldDrafts 100
       Log.cron $ "Removed " ++ show delCount ++ " old, unsaved draft documents."
 
   waitForTermination
