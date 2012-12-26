@@ -44,8 +44,6 @@ wholePage=
        $header()$
        $flashmessages()$
        $content:noescape()$
-       <div class="clearfix"></div>
-       <div class="spacer40"></div>
        $pageFooter()$
       </body>
     </html>
@@ -68,63 +66,121 @@ standardHeaderContents=
 ####
 pageFooter=
 <footer class="site">
-  <div class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
-      <nav class='top'>
-        <ul>
-          <li class="copyright"><a href="$if(langenglish)$/en/$else$/sv/$endif$">&copy; $_footerScrive()$</a></li>
-          <li><a href="$if(langenglish)$/en/$else$/sv/$endif$blog">$_footerBlog()$</a></li>
-          <li><a href="$if(langenglish)$/en/$else$/sv/$endif$labs">$_footerLabs()$</a></li>
-          <li><a href="$if(langenglish)$/en/$else$/sv/$endif$api">$_footerAPI()$</a></li>
-          <li><a href="$if(langenglish)$/en/$else$/sv/$endif$jobs">$_footerJobs()$</a></li>
-          <li><a href="$if(langenglish)$/en/$else$/sv/$endif$privacy">$_footerPrivacy()$</a></li>
-          <li class='last'><a href="$if(langenglish)$/en/$else$/sv/$endif$terms">$_footerTerms()$</a></li>
-          <li class='langSwitcher'>
-            <script>
-              jQuery(function() {
-                   var changeLang = function(l) {
-                      new Submit({
-                          method : "POST",
-                          url: "$linklangswitch$",
-                          lang: l == "en" ? "LANG_EN" : "LANG_SV"
-                                }).sendAjax(function() {
-                                   var p = window.location.pathname;
-                                   if (p.substring(0, 3) == "/en" || p.substring(0, 3) == "/sv") {
-                                        p = "/" + l + p.substr(3);
-                                        window.location.pathname = p;
-                                   } else
-                                      window.location.reload();
-                          })
-                   }
+<div class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
 
-                   var select = new Select({  name : $if(langswedish)$ "$_Swedish()$" $else$ "$_English()$" $endif$,
-                                              options: [ $if(langswedish)$
-                                                               {name: "$_English()$", value: "en", onSelect : function() {changeLang("en");}}
-                                                         $else$
-                                                               {name: "$_Swedish()$", value: "sv", onSelect : function() {changeLang("sv");} }
-                                                         $endif$
-                                                ]})
-                   jQuery('.langSwitcher').append(select.view().el);
-              })
-
-
-            </script>
-          </li>
-        </ul>
-
-      </nav>
-      <nav class='bottom'>
-        <ul class="social">
-          <li>
-            <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
-            <div class="g-plusone" data-size="medium"></div>
-          </li>
-          <li>
-            <a href="https://twitter.com/share" class="twitter-share-button" data-lang="en">Tweet</a>
-            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-          </li>
-        </ul>
-      </nav>
+  <div class="visions">
+    <p>Visions made in Sweden. Built by experts from around the world. </p>
   </div>
+
+  <nav class="left">
+    <div class="content">
+      <ul class="icons">
+        <li>
+          <a href="{var_googleplus_url}" target="_blank">
+            <img src="/img/sm-google.png" width="32" height="32" alt="Google+">
+          </a>
+        </li>
+        <li>
+          <a href="{var_twitter_url}" target="_blank">
+            <img src="/img/sm-twitter.png" width="32" height="32" alt="Twitter">
+          </a>
+        </li>
+        <li>
+          <a href="{var_facebook_url}" target="_blank">
+            <img src="/img/sm-facebook.png" width="32" height="32" alt="Facebook">
+          </a>
+        </li>
+      </ul>
+      <ul class="tree">
+        <li class="branch">
+            $langSwitcher()$
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+
+  <nav>
+    <header>
+      <h4>$_pageFooterExplore()$</h4>
+    </header>
+    <div class="content">
+      <ul class="tree">
+        <li class="branch">
+          <a href="$if(langenglish)$/en/$else$/sv/$endif$api" id="nav-api">
+            $_pageFooterAPI()$
+          </a>
+        </li>
+
+        <li class="branch">
+          <a href="$if(langenglish)$/en/$else$/sv/$endif$labs" id="nav-labs">
+            $_pageFooterLabs()$
+          </a>
+        </li>
+        <li class="branch">
+          <a href="$if(langenglish)$/en/$else$/sv/$endif$blog" id="nav-blog">
+            $_pageFooterBlog()$
+          </a>
+        </li>
+        <li class="branch">
+          <a href="$if(langenglish)$/en/$else$/sv/$endif$jobs" id="nav-jobs">
+            $_pageFooterWork()$
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <nav>
+    <header>
+      <h4>$_pageFooterTerms()$</h4>
+    </header>
+    <div class="content">
+      <ul class="tree">
+        <li class="branch"><a href="$if(langenglish)$/en/$else$/sv/$endif$terms" id="nav-terms">$_pageFooterTOS()$</a></li>
+        <li class="branch"><a href="$if(langenglish)$/en/$else$/sv/$endif$environment" id="nav-environment">$_pageFooterEnvironmentalPolicy()$</a></li>
+        <li class="branch"><a href="$if(langenglish)$/en/$else$/sv/$endif$privacy" id="nav-privacy">$_pageFooterPrivacyPolicy()$</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <nav>
+    <header>
+      <h4>$_pageFooterContact()$</h4>
+    </header>
+    <div class="content">
+      <ul class="tree">
+        <li class="branch">
+            $_pageFooterWorkDay()$
+        </li>
+        <li class="branch">
+          <a href="tel:$_pageFooterPhone()$">
+            $_pageFooterPhone()$
+          </a>
+        <li class="branch">
+          <a href="mailto:$_pageFooterMail()$">
+            $_pageFooterMail()$
+          </a>
+        </li>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <nav>
+    <header>
+      <h4>$_pageFooterAddress()$</h4>
+    </header>
+    <div class="content">
+      <ul class="tree">
+         <li class="branch">$_pageFooterAddress1()$</li>
+         <li class="branch">$_pageFooterAddress2()$</li>
+         <li class="branch">$_pageFooterAddress3()$</li>
+         <li class="branch">$_pageFooterAddress4()$</li>
+      </ul>
+    </div>
+  </nav>
+
 </footer>
 ####
 header=
@@ -168,25 +224,33 @@ header=
 </header>
 ####
 langSwitcher=
-  <div class="langSwitcher">
-    $if(!logged)$
-    <div><a href="$linksv$" class="icon flag swedish $if(langswedish)$active$endif$"></a></div>
-    <div><a href="$linken$" class="icon flag british $if(langenglish)$active$endif$"></a></div>
-    $else$
-    <div><form action="$linklangswitch$" method="POST">
-           <input type="hidden" name="lang" value="LANG_SV"/>
-           $if(linksv)$
-           <input type="hidden" name="referer" value="$linksv$"/>
-           $endif$
-           <a href="" class="submit icon flag swedish $if(langswedish)$active$endif$"></a>
-         </form></div>
-    <div><form action="$linklangswitch$" method="POST">
-           <input type="hidden" name="lang" value="LANG_EN"/>
-           $if(linkgben)$
-           <input type="hidden" name="referer" value="$linkgben$"/>
-           $endif$
-           <a href="" class="submit icon flag british $if(langenglish)$active$endif$"></a>
-         </form></div>
-    $endif$
-  </div>
+<div class='langSwitcher'></div>
+<script>
+              jQuery(function() {
+                   var changeLang = function(l) {
+                      new Submit({
+                          method : "POST",
+                          url: "$linklangswitch$",
+                          lang: l == "en" ? "LANG_EN" : "LANG_SV"
+                                }).sendAjax(function() {
+                                   var p = window.location.pathname;
+                                   if (p.substring(0, 3) == "/en" || p.substring(0, 3) == "/sv") {
+                                        p = "/" + l + p.substr(3);
+                                        window.location.pathname = p;
+                                   } else
+                                      window.location.reload();
+                          })
+                   }
+
+                   var select = new Select({  name : $if(langswedish)$ "$_Swedish()$" $else$ "$_English()$" $endif$,
+                                              textWidth: 80,
+                                              options: [ $if(langswedish)$
+                                                               {name: "$_English()$", value: "en", onSelect : function() {changeLang("en");}}
+                                                         $else$
+                                                               {name: "$_Swedish()$", value: "sv", onSelect : function() {changeLang("sv");} }
+                                                         $endif$
+                                                ]})
+                   jQuery('.langSwitcher').append(select.view().el);
+              })
+</script>
 ####
