@@ -143,7 +143,7 @@ var DocumentSignSignatoryView = Backbone.View.extend({
 
       var face    = $('<div class="face" />');
 
-      var numspace = $('<div class="spacing numspace" />');
+      var numspace = $('<div class="details" />');
       var orgnum  = $('<div class="orgnum field" />').text(localization.docsignview.companyNumberLabel + ": "
                                                            + (signatory.companynumber().trim() || localization.docsignview.notEntered))
           .attr('title', signatory.companynumber());

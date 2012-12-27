@@ -136,22 +136,21 @@
           margin-top: 10px;
           min-height: 52px;
           color : #505050;
-          font-size: 0.9em;
       }
       .inner .email:hover{
               overflow: visible;
       }
 
-      .numspace {
+      .details {
           float:left;
-          height: 32px;
           padding: 0px;
-          margin-top:0px;
+          margin-top:-3px;
           margin-left: 12px;
       }
 
       .field {
-          height: 14px;
+          height: 18px;
+          line-height: 16px;
           width: 160px;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -167,6 +166,7 @@
           vertical-align: middle;
           line-height: 11px;
           padding-top:1px;
+          margin-top: 10px;
       }
 
       .statusbox .spacing {
@@ -207,8 +207,7 @@
         }
       }
      .optionbox {
-        margin: 4px 4px 0px 0px;
-        padding: 8px 8px 0px 0px;
+        padding: 8px 0px 0px 0px;
         text-align: center;
         height : 18px;
         color: @blueH;
@@ -224,74 +223,49 @@
             }
         }
 
+        .reminderForSendIcon {
+            background: url(../img/remind.png) 0 0 no-repeat;
+            margin-top: 7px;
+            margin-right: 7px;
+            display: inline-block;
+            height: 16px;
+            width: 16px;
+            float:left;
+        }
 
         .reminderForSignedIcon  {
             background: url(../img/senddoc.png) 0 0 no-repeat;
             display: inline-block;
+            margin-top: 4px;
+            margin-right: 7px;
             height: 16px;
             width: 16px;
             float:left;
         }
-        .reminderForSendIcon {
-            background: url(../img/remind.png) 0 0 no-repeat;
-            margin-top: 2px;
-            display: inline-block;
-            height: 16px;
-            width: 16px;
-            float:left;
-        }
-        .sendLinkText{
-            padding-top: 1px;
-            padding-left:11px;
-            float:left;
-            text-transform: uppercase;
-            font-size: 10px;
-        }
 
-        .prepareToSendReminderMail {
-            display: inline-block;
-        }
-
-        .prepareToSendReminderMail:hover{
-            font-weight: bold;
-        }
-
-        .giveForSigning {
-            padding-top: 4px;
-            height: 16px;
-            display: inline-block;
-            cursor: pointer;
-
-        }
         .giveForSigningIcon {
             background: url(../img/give.png) 0 0 no-repeat;
+            margin-top: 5px;
+            margin-right: 7px;
             display: inline-block;
             height: 16px;
             width: 16px;
             float:left;
-        }
-        .addToPad{
-            padding-top: 4px;
-            height: 16px;
-            display: inline-block;
-            cursor: pointer;
         }
 
         .addToPadIcon {
+            margin-top: 5px;
+            margin-right: 7px;
             background: url(../img/pad.png) 0 0 no-repeat;
             display: inline-block;
             height: 16px;
             width: 16px;
             float:left;
         }
-        .removeFromPad{
-            padding-top: 4px;
-            height: 16px;
-            display: inline-block;
-            cursor: pointer;
-        }
 
         .removeFromPadIcon {
+            margin-top: 4px;
+            margin-right: 7px;
             background: url(../img/icon-delete.png) 0 0 no-repeat;
             display: inline-block;
             height: 16px;

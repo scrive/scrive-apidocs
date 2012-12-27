@@ -102,10 +102,10 @@ var AuthorViewSignatoryView = Backbone.View.extend({
   },
   remidenMailOption: function() {
          var signatory = this.model.signatory();
-         var button = $("<a  class='btn-tiny green prepareToSendReminderMail'/>");
+         var button = $("<label class='clickable prepareToSendReminderMail'/>");
          var icon = $("<div/>").addClass(signatory.hasSigned() ? "reminderForSignedIcon" : "reminderForSendIcon");
          var text = signatory.hasSigned() ? signatory.document().process().localization().remindagainbuttontext : localization.reminder.send;
-         var textbox = $("<div class='sendLinkText'/>").text(text);
+         var textbox = $("<span/>").text(text);
          button.append(icon).append(textbox);
          button.click(function() {
              ConfirmationWithEmail.popup({
@@ -147,10 +147,10 @@ var AuthorViewSignatoryView = Backbone.View.extend({
   },
   giveForSigningOnThisDeviceOption : function() {
                  var signatory = this.model.signatory();
-                 var button = $("<a  class='giveForSigning'/>");
+                 var button = $("<label  class='clickable giveForSigning'/>");
                  var icon = $("<div class='giveForSigningIcon'/>");
                  var text = localization.pad.signingOnSameDevice;
-                 var textbox = $("<div class='sendLinkText'/>").text(text);
+                 var textbox = $("<span/>").text(text);
                  button.append(icon).append(textbox);
                  button.click(function() {
                          Confirmation.popup({
@@ -177,10 +177,10 @@ var AuthorViewSignatoryView = Backbone.View.extend({
     },
     removeFromPadQueueOption :  function() {
         var signatory = this.model.signatory();
-        var button = $("<a  class='removeFromPad'/>");
+        var button = $("<label class='clickable removeFromPad'/>");
         var icon = $("<div class='removeFromPadIcon'/>");
         var text = localization.pad.removeFromPadQueue;
-        var textbox = $("<div class='sendLinkText'/>").text(text);
+        var textbox = $("<span/>").text(text);
         button.append(icon).append(textbox);
         button.click(function() {
             signatory.removeFromPadQueue().sendAjax( function() { window.location = window.location;});
@@ -190,10 +190,10 @@ var AuthorViewSignatoryView = Backbone.View.extend({
     },
     addToPadQueueOption : function() {
                  var signatory = this.model.signatory();
-                 var button = $("<a  class='addToPad'/>");
+                 var button = $("<label  class='clickable addToPad'/>");
                  var icon = $("<div class='addToPadIcon'/>");
                  var text = localization.pad.addToPadQueue;
-                 var textbox = $("<div class='sendLinkText'/>").text(text);
+                 var textbox = $("<span/>").text(text);
                  button.append(icon).append(textbox);
                  button.click(function() {
                          Confirmation.popup({
@@ -242,7 +242,7 @@ var AuthorViewSignatoryView = Backbone.View.extend({
 
       var face    = $('<div class="face" />');
 
-      var numspace = $('<div class="spacing numspace" />');
+      var numspace = $('<div class="details" />');
       var orgnum  = $('<div class="orgnum field" />').text(localization.docsignview.companyNumberLabel + ": "
                                                            + (signatory.companynumber().trim() || localization.docsignview.notEntered))
           .attr('title', signatory.companynumber());

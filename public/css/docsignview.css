@@ -686,21 +686,21 @@
         overflow: visible;
 }
 
-.signview .signatories .numspace {
+.signview .signatories .details {
     float:left;
-    height: 32px;
     padding: 0px;
-    margin-top:0px;
+    margin-top: -3px;
     margin-left: 12px;
 }
 
 .signview .field {
-    height: 14px;
+    height: 18px;
+    line-height:16px;
     width: 160px;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow:hidden;
-    margin-bottom: 5px;
+    margin-bottom: 3px;
 }
 
 .signview .signatories .statusbox {
