@@ -13,7 +13,6 @@ module User.UserView (
     mailEmailChangeRequest,
 
     -- modals
-    modalAccountSetup,
     modalDoYouWantToChangeEmail,
 
     -- flash messages
@@ -39,10 +38,6 @@ module User.UserView (
     flashMessageProblemWithPassword,
     flashMessageYourEmailHasChanged,
 
-    --modals
-    modalNewPasswordView,
-    modalUserSignupDone,
-
     --utils
     userBasicFields,
     menuFields,
@@ -58,7 +53,6 @@ import Data.Maybe
 import Company.Model
 import Kontra
 import KontraLink
-import MagicHash (MagicHash)
 import Mails.SendMail(Mail)
 import Templates.Templates
 import Templates.TemplatesUtils
@@ -235,13 +229,6 @@ mailEmailChangeRequest hostpart user newemail link = do
 
 -------------------------------------------------------------------------------
 
-modalAccountSetup :: Monad m => KontraLink -> String -> String -> m FlashMessage
-modalAccountSetup signuplink fstname sndname = do
-  return $ toFlashTemplate Modal "modalAccountSetup" $
-    [ ("signuplink", show signuplink)
-    , ("fstname", fstname)
-    , ("sndname", sndname) ]
-
 modalDoYouWantToChangeEmail :: TemplatesMonad m => Email -> m FlashMessage
 modalDoYouWantToChangeEmail newemail = do
   toModal <$> (renderTemplate "modalDoYouWantToChangeEmail" $
@@ -326,16 +313,6 @@ flashMessageNewActivationLinkSend =
 flashMessageUserSignupDone :: TemplatesMonad m => m FlashMessage
 flashMessageUserSignupDone =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageUserSignupDone"
-
-modalNewPasswordView :: TemplatesMonad m => UserID -> MagicHash -> m FlashMessage
-modalNewPasswordView aid hash = do
-  toModal <$> (renderTemplate "modalNewPasswordView" $ do
-            F.value "linkchangepassword" $ show $ LinkPasswordReminder aid hash)
-
-modalUserSignupDone :: TemplatesMonad m => Email -> m FlashMessage
-modalUserSignupDone email =
-  toModal <$> (renderTemplate "modalUserSignupDone" $ do
-                 F.value "email" $ unEmail email)
 
 flashMessageChangeEmailMailSent :: TemplatesMonad m => Email -> m FlashMessage
 flashMessageChangeEmailMailSent newemail =
