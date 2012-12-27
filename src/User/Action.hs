@@ -60,6 +60,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
   mtos <- getDefaultedField False asValidCheckBox "tos"
   callme <- isFieldSet "callme"
   phone <-  fromMaybe "" <$> getField "phone"
+  position <- fromMaybe "" <$> getField "position"
   mpassword <- getRequiredField asValidPassword "password"
   mpassword2 <- getRequiredField asValidPassword "password2"
   case (mtos, mfstname, msndname, mpassword, mpassword2) of
@@ -73,6 +74,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
                   userfstname = fstname
                 , usersndname = sndname
                 , userphone = phone
+                , usercompanyposition = position
               }
               _ <- dbUpdate $ LogHistoryUserInfoChanged (userid actvuser)
                 (ctxipnumber ctx) (ctxtime ctx) (userinfo actvuser)

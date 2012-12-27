@@ -91,24 +91,11 @@ flashmessages =
 
 $flashmessages:{ flash |
     $if(flash.isModal)$
-        <script>
-          var box = jQuery("<div class='modalcontainer/'>");
-          jQuery('body').append(box);
-          var mbox = jQuery("<div class='modalbox overlay'/>").html("$flash.message:noescape()$")
-          jQuery('body').append(box.append(mbox));
-          mbox.overlay({
-              mask: {
-                color: standardDialogMask,
-                top: standardDialogTop,
-                loadSpeed: 0,
-                opacity: 0.9
-              },
-              speed: 0,
-              fixed: false,
-              top: standardDialogTop
-            });
-          mbox.data("overlay").load();
-        </script>
+        <div class="modal active" style="height: 100%">
+          <div class="modal-container" style="top: 100px; margin: auto; width: 640px;position: relative;left:auto; ">
+            $flash.message:noescape()$
+          </div>
+        </div>
     $endif$
 }$
 ####

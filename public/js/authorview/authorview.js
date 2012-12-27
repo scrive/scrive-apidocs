@@ -81,7 +81,8 @@ window.AuthorViewView = Backbone.View.extend({
     var document = this.model.document();
     if (!document.ready())
         return this;
-
+    if (document.mainfile() == undefined)
+        return this;
     this.container.empty();
     this.container.append(BlockingInfo.el());
     this.container.append(this.model.title().el());

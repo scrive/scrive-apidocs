@@ -32,6 +32,12 @@ getHostpart = do
   let scheme = maybe "http" BS.toString $ getHeader "scheme" rq
   return $ scheme ++ "://" ++ hostpart
 
+getHttpHostpart :: ServerMonad m => m String
+getHttpHostpart = do
+  rq <- askRq
+  let hostpart = maybe "scrive.com" BS.toString $ getHeader "host" rq
+  return $ "http://" ++ hostpart
+
 getResourceHostpart :: ServerMonad m => m String
 getResourceHostpart = do
   rq <- askRq

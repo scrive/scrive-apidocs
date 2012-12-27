@@ -35,7 +35,7 @@ window.LoadingDialog = {
          dialog.addClass('active');
     },        
     close : function() {
-       var dialog =  $('#loadingdialog');
+       var dialog =  $('.loadingdialog');
        if (dialog.size() > 0 ) dialog.removeClass("active");
     }
 };

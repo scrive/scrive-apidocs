@@ -1,3 +1,6 @@
+@import 'branding/colors';
+@import 'branding/typography';
+
 .mainContainer .short-input-section.signup .short-input-container,
 .mainContainer .short-input-section .short-input-container.recovery {
     width: 640px;
@@ -21,11 +24,9 @@
 }
 
 .mainContainer .short-input-section.account-setup {
-     width: 960px;
-     margin-top: 20px;
-     margin-top: 20px;
+     width: 530px;
     .short-input-container {
-      width: 800px;
+      width: 530px;
       p {
         text-align : left;
         line-height: 24px;
@@ -40,6 +41,10 @@
           width : 300px;
           margin-left:0px;
         }
+        .optional{
+          color : @text-very-light;
+          margin-left: 10px;
+        }
         .button {
           width: 142px;
           display: inline-block;
@@ -50,23 +55,17 @@
 
 .mainContainer .short-input-section.accept-tos {
 
-     width: 960px;
+     width: 500px;
      margin-top: 20px;
      margin-top: 20px;
     .short-input-container {
-      width: 800px;
-      p {
-        text-align : left;
-        line-height: 24px;
-      }
-
+      width: 500px;
       .short-input-container-body-wrapper .short-input-container-body .position {
-        text-align : left;
         padding-left: 0px;
         padding-right: 0px;
-        margin-top: 10px;
+        margin-top: 20px;
         .button {
-          width: 142px;
+          width: 200px;
           display: inline-block;
         }
       }

@@ -1,5 +1,12 @@
-window.createnewdocument = function() {
+window.closeAllActiveModals = function() {
+  $(".modal.active").each(function() {
+    var self = $(this);
+    self.removeClass("active");
+    setTimeout(function() {self.remove()},600);
+  });
+}
 
+window.createnewdocument = function() {
   new Submit({
                     method : "POST",
                     url : "/api/frontend/createfromfile",

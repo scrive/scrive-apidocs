@@ -17,7 +17,6 @@ module Doc.DocView (
   , mailDocumentRejected
   , mailDocumentRemind
   , mailInvitation
-  , modalLoginForSaveView
   , modalRejectedView
   , modalSendConfirmationView
   , pageDocumentDesign
@@ -88,9 +87,6 @@ modalRejectedView document = do
   toModal <$> (renderTemplate "modalRejectedView" $ do
     F.value "partyList" partylist
     F.value "documenttitle" $ documenttitle document)
-
-modalLoginForSaveView :: TemplatesMonad m => m FlashMessage
-modalLoginForSaveView = toModal <$> renderTemplate_ "modalLoginForSaveView"
 
 flashDocumentDraftSaved :: TemplatesMonad m => m FlashMessage
 flashDocumentDraftSaved =
