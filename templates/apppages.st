@@ -213,9 +213,9 @@ pageFooter=
 </footer>
 ####
 header=
- <script>
-   window.BlockingInfo = Blocking();
- </script>
+<script>
+  window.BlockingInfo = Blocking();
+</script>
 
 <header class="site $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
   <nav>
@@ -226,7 +226,7 @@ header=
       </li>
       $if(logged)$
       <li class="float-right">
-        <a class="page logout" href="$linklogout$">$_headerLogOut()$</a></li>
+        <a class="page logout" href="$linklogout$">$_headerLogOut()$</a>
       </li>
       <li class="float-right"><a class="page" href="$linkaccount$">$_headerAccount()$</a></li>
       <li class="page-first float-right"><a class=" page" href="$linkissue$">$_headerArchive()$</a></li>
