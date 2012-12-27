@@ -34,76 +34,6 @@
       this.render();
       _.bindAll(this, 'render');
     },
-
-    termsPageContents: function() {
-      var container = $('<div class="nicetext"/>');
-      container.append($('<h2/>').append(localization.accountSetupModal.termsPageHeader));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage0));
-      container.append($('<br/>'));
-      container.append($('<h3/>').append(localization.accountSetupModal.termsPage1Header));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage1));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage1a));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage1b));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage1c));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage1d));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage1e));
-      container.append($('<br/>'));
-      container.append($('<h3/>').append(localization.accountSetupModal.termsPage2Header));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage2));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage2a));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage2b));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage2c));
-      container.append($('<br/>'));
-      container.append($('<h3/>').append(localization.accountSetupModal.termsPage3Header));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage3));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage3a));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage3b));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage3c));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage3d));
-      container.append($('<br/>'));
-      container.append($('<h3/>').append(localization.accountSetupModal.termsPage4Header));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage4));
-      container.append($('<br/>'));
-      container.append($('<h3/>').append(localization.accountSetupModal.termsPage5Header));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage5));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage5a));
-      container.append($('<br/>'));
-      container.append($('<h3/>').append(localization.accountSetupModal.termsPage6Header));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage6));
-      container.append($('<br/>'));
-      container.append($('<h3/>').append(localization.accountSetupModal.termsPage7Header));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage7a));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage7b));
-      container.append($('<br/>'));
-      container.append($('<h3/>').append(localization.accountSetupModal.termsPage8Header));
-      container.append($('<br/>'));
-      container.append($('<p/>').append(localization.accountSetupModal.termsPage8));
-      container.append($('<br/>'));
-      return container;
-    },
-
     render: function () {
       var model = this.model;
       var view = this;
@@ -116,14 +46,14 @@
       $(this.el).append(content.append(wrapper.append(body)));
       
 
-      var terms = $('<div style="max-height: 400px; overflow: auto"/>');
-      terms.append(this.termsPageContents());
-      body.append(terms);
-
-      var tosAccept = $("<div class='position'/>");
+      var tosAccept = $("<div class='position first'/>");
       var tosCBox = $("<input type='checkbox' id='tosCBox' name='tos' style='margin-right:10px;margin-top: -2px'/>");
       tosAccept.append(tosCBox);
-      tosAccept.append($('<label for="tosCBox"/>').append(localization.accountSetupModal.modalAccountSetupBodyAcceptTOS));
+      var thref = "http://" + location.host + location.pathname.substring(0, 3) + "/terms";
+      tosAccept.append($('<span/>')
+                  .append($("<label/>").text(localization.accountSetupModal.modalAccountSetupBodyAccept))
+                  .append($("<a class='clickable' target='_blank'/>").attr('href',thref).text(" " + localization.accountSetupModal.modalAccountSetupBodyTOS))
+                );     
       tosAccept.append($('<br/>'));
       body.append(tosAccept);
       tosCBox.change(function() {

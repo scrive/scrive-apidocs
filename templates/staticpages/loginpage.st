@@ -31,6 +31,7 @@ signupPage=
 ###
 accountSetupPage=
 <div class='mainContainer big'>
+<img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
   jQuery(document).ready(function() {
     jQuery('.mainContainer').append( new AccountSetup({
