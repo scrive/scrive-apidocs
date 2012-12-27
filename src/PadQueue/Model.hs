@@ -44,7 +44,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddToPadQueue () where
 data ClearPadQueue = ClearPadQueue UserID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ClearPadQueue () where
   update (ClearPadQueue uid a) = do
-    pq <- query $ GetPadQueue uid
+    kPrepare $ "SELECT document_id, signatorylink_id FROM padqueue WHERE user_id = ? "
+    _ <- kExecute [toSql uid]
+    pq <- fetchPadQueue
     case pq of
        Nothing -> return ()
        Just (did, slid) -> do
@@ -63,8 +65,10 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ClearPadQueue () where
 data GetPadQueue = GetPadQueue UserID
 instance MonadDB m => DBQuery m GetPadQueue PadQueue where
   query (GetPadQueue uid) = do
-    kPrepare $ "SELECT document_id, signatorylink_id FROM padqueue WHERE user_id = ?"
-    _ <- kExecute [toSql uid]
+    kPrepare $ "SELECT document_id, signatorylink_id FROM padqueue WHERE user_id = ? " 
+                <+> "AND EXISTS (SELECT * FROM signatory_links WHERE signatory_links.document_id = padqueue.document_id " 
+                <+>                                               " AND signatory_links.user_id = ? AND NOT signatory_links.deleted)"
+    _ <- kExecute [toSql uid,toSql uid]
     fetchPadQueue
 
 fetchPadQueue :: MonadDB m => DBEnv m PadQueue
