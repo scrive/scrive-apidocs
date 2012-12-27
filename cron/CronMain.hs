@@ -32,7 +32,7 @@ import Payments.Control
 import Session.Data
 import Templates.TemplatesLoader
 import qualified Amazon as AWS
-import qualified Log (cron, withLogger)
+import qualified Log (cron, withLogger, error)
 
 import ThirdPartyStats.Core
 import ThirdPartyStats.Mixpanel
@@ -89,10 +89,11 @@ main = Log.withLogger $ do
   -- dispatcher, please combine the two into one dispatcher function rather
   -- than creating a new thread or something like that, since
   -- asyncProcessEvents removes events after processing.
-  t0 <- forkCron_ tg "Async Event Dispatcher" (10) $ withPostgreSQL (dbConfig appConf) $ do
+  t0 <- forkCron_ tg "Async Event Dispatcher" (10) $
     case mixpanelToken appConf of
       ""    -> Log.error "WARNING: no Mixpanel token present!"
-      token -> asyncProcessEvents (processMixpanelEvent token) All
+      token -> withPostgreSQL (dbConfig appConf) $ do
+        asyncProcessEvents (processMixpanelEvent token) All
 
   waitForTermination
   Log.cron $ "Termination request received, waiting for jobs to finish..."

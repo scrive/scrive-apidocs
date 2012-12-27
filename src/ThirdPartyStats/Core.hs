@@ -143,7 +143,7 @@ data ProcRes
 
 -- | Remove a number of events from the queue and process them.
 asyncProcessEvents :: (MonadIO m, MonadDB m)
-                   => (EventName -> [EventProperty] -> m ProcRes)
+                   => (EventName -> [EventProperty] -> IO ProcRes)
                       -- ^ Event processing function.
                    -> NumEvents
                       -- ^ Max events to process.
@@ -154,7 +154,7 @@ asyncProcessEvents process numEvts = do
     deleteEvents lastEvt
   where
     processEvent (AsyncEvent name props) = do
-        result <- process name props
+        result <- liftIO $ process name props
         case result of
           PutBack ->
             asyncLogEvent name props
