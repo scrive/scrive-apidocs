@@ -93,122 +93,123 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
 ####
 pageFooter=
 <footer class="site">
-<div class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
+  <div class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
 
 
-  <div class="visions">
-    <p>Visions made in Sweden. Built by experts from around the world. </p>
-  </div>
+    <div class="visions">
+      <p>Visions made in Sweden. Built by experts from around the
+        world. </p>
+    </div>
 
-  <nav class="left">
-    <div class="content">
-      <ul class="icons">
-        <li>
-          <a href="https://plus.google.com/share?url=http://scrive.com" target="_blank">
-            <img src="/img/sm-google.png" width="32" height="32" alt="Google+">
-          </a>
-        </li>
-        <li>
-          <a href="https://twitter.com/scrive" target="_blank">
-            <img src="/img/sm-twitter.png" width="32" height="32" alt="Twitter">
-          </a>
-        </li>
-        <li>
-          <a href="https://www.facebook.com/pages/Scrive/237391196280189" target="_blank">
-            <img src="/img/sm-facebook.png" width="32" height="32" alt="Facebook">
-          </a>
-        </li>
-      </ul>
-      <ul class="tree">
-        <li class="branch">
+    <nav class="left">
+      <div class="content">
+        <ul class="icons">
+          <li>
+            <a href="https://plus.google.com/share?url=http://scrive.com" target="_blank">
+              <img src="/img/sm-google.png" width="32" height="32" alt="Google+" />
+            </a>
+          </li>
+          <li>
+            <a href="https://twitter.com/scrive" target="_blank">
+              <img src="/img/sm-twitter.png" width="32" height="32" alt="Twitter" />
+            </a>
+          </li>
+          <li>
+            <a href="https://www.facebook.com/pages/Scrive/237391196280189" target="_blank">
+              <img src="/img/sm-facebook.png" width="32" height="32" alt="Facebook" />
+            </a>
+          </li>
+        </ul>
+        <ul class="tree">
+          <li class="branch">
             $langSwitcher()$
-        </li>
-      </ul>
-    </div>
-  </nav>
+          </li>
+        </ul>
+      </div>
+    </nav>
 
 
-  <nav>
-    <header>
-      <h4>$_pageFooterExplore()$</h4>
-    </header>
-    <div class="content">
-      <ul class="tree">
-        <li class="branch">
-          <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$api" id="nav-api">
-            $_pageFooterAPI()$
-          </a>
-        </li>
+    <nav>
+      <header>
+        <h4>$_pageFooterExplore()$</h4>
+      </header>
+      <div class="content">
+        <ul class="tree">
+          <li class="branch">
+            <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$api" id="nav-api">
+              $_pageFooterAPI()$
+            </a>
+          </li>
 
-        <li class="branch">
-          <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$labs" id="nav-labs">
-            $_pageFooterLabs()$
-          </a>
-        </li>
-        <li class="branch">
-          <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$blog" id="nav-blog">
-            $_pageFooterBlog()$
-          </a>
-        </li>
-        <li class="branch">
-          <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$jobs" id="nav-jobs">
-            $_pageFooterWork()$
-          </a>
-        </li>
-      </ul>
-    </div>
-  </nav>
+          <li class="branch">
+            <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$labs" id="nav-labs">
+              $_pageFooterLabs()$
+            </a>
+          </li>
+          <li class="branch">
+            <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$blog" id="nav-blog">
+              $_pageFooterBlog()$
+            </a>
+          </li>
+          <li class="branch">
+            <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$jobs" id="nav-jobs">
+              $_pageFooterWork()$
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
 
-  <nav>
-    <header>
-      <h4>$_pageFooterTerms()$</h4>
-    </header>
-    <div class="content">
-      <ul class="tree">
-        <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$terms" id="nav-terms">$_pageFooterTOS()$</a></li>
-        <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$environment" id="nav-environment">$_pageFooterEnvironmentalPolicy()$</a></li>
-        <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$privacy" id="nav-privacy">$_pageFooterPrivacyPolicy()$</a></li>
-      </ul>
-    </div>
-  </nav>
+    <nav>
+      <header>
+        <h4>$_pageFooterTerms()$</h4>
+      </header>
+      <div class="content">
+        <ul class="tree">
+          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$terms" id="nav-terms">$_pageFooterTOS()$</a></li>
+          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$environment" id="nav-environment">$_pageFooterEnvironmentalPolicy()$</a></li>
+          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$privacy" id="nav-privacy">$_pageFooterPrivacyPolicy()$</a></li>
+        </ul>
+      </div>
+    </nav>
 
-  <nav>
-    <header>
-      <h4>$_pageFooterContact()$</h4>
-    </header>
-    <div class="content">
-      <ul class="tree">
-        <li class="branch">
+    <nav>
+      <header>
+        <h4>$_pageFooterContact()$</h4>
+      </header>
+      <div class="content">
+        <ul class="tree">
+          <li class="branch">
             $_pageFooterWorkDay()$
-        </li>
-        <li class="branch">
-          <a href="tel:$_pageFooterPhone()$">
-            $_pageFooterPhone()$
-          </a>
-        <li class="branch">
-          <a href="mailto:$_pageFooterMail()$">
-            $_pageFooterMail()$
-          </a>
-        </li>
-        </li>
-      </ul>
-    </div>
-  </nav>
+          </li>
+          <li class="branch">
+            <a href="tel:$_pageFooterPhone()$">
+              $_pageFooterPhone()$
+            </a>
+          <li class="branch">
+            <a href="mailto:$_pageFooterMail()$">
+              $_pageFooterMail()$
+            </a>
+          </li>
+          </li>
+        </ul>
+      </div>
+    </nav>
 
-  <nav>
-    <header>
-      <h4>$_pageFooterAddress()$</h4>
-    </header>
-    <div class="content">
-      <ul class="tree">
-         <li class="branch">$_pageFooterAddress1()$</li>
-         <li class="branch">$_pageFooterAddress2()$</li>
-         <li class="branch">$_pageFooterAddress3()$</li>
-         <li class="branch">$_pageFooterAddress4()$</li>
-      </ul>
-    </div>
-  </nav>
-
+    <nav>
+      <header>
+        <h4>$_pageFooterAddress()$</h4>
+      </header>
+      <div class="content">
+        <ul class="tree">
+          <li class="branch">$_pageFooterAddress1()$</li>
+          <li class="branch">$_pageFooterAddress2()$</li>
+          <li class="branch">$_pageFooterAddress3()$</li>
+          <li class="branch">$_pageFooterAddress4()$</li>
+        </ul>
+      </div>
+    </nav>
+  </div>
 </footer>
 ####
 header=
