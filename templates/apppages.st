@@ -84,7 +84,7 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
         $endif$
 
         mixpanel.track_links('.logout', 'Click Logout');
-        mixpanel.track_links('.scrive-logo', 'Click Logo');
+        mixpanel.track_links('#logo', 'Click Logo');
         mixpanel.track_links('.fromtemplate', 'Click from template');
 
         </script>
@@ -225,12 +225,12 @@ header=
       </li>
       $if(logged)$
       <li class="float-right">
-        <a class="page" href="$linklogout$">$_headerLogOut()$</a></li>
+        <a class="page logout" href="$linklogout$">$_headerLogOut()$</a></li>
       </li>
       <li class="float-right"><a class="page" href="$linkaccount$">$_headerAccount()$</a></li>
       <li class="page-first float-right"><a class=" page" href="$linkissue$">$_headerArchive()$</a></li>
       <li class="session-create float-right">
-        <a class="button button-small" onclick='createfromtemplate()' href="#">$_headerTemplate()$ </a>
+        <a class="button button-small fromtemplate" onclick='createfromtemplate()' href="#">$_headerTemplate()$ </a>
       </li>
       <li class="session-create float-right">
         <a class="button button-small"            onclick='createnewdocument()' href="#">$_headerSend()$ </a>
@@ -256,6 +256,7 @@ langSwitcher=
 <script>
               jQuery(function() {
                    var changeLang = function(l) {
+                      mixpanel.track('Click switch languages', { 'Language' : l });
                       new Submit({
                           method : "POST",
                           url: "$linklangswitch$",

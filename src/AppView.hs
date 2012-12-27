@@ -56,10 +56,8 @@ renderFromBody :: Kontrakcja m
                -> m Response
 renderFromBody title content = do
   ctx <- getContext
-  let muser = ctxmaybeuser ctx
-  res <- simpleHtmlResponse =<< pageFromBody ctx ad loginOn loginreferer Nothing showCreateAccount title content
-
-  res <- simpleHtmlResponse =<< pageFromBody False ctx muser mcompany title content
+  ad <- getAnalyticsData
+  res <- simpleHtmlResponse =<< pageFromBody False ctx ad title content
   clearFlashMsgs
   return res
   
@@ -72,12 +70,8 @@ renderFromBodyThin :: Kontrakcja m
                -> m Response
 renderFromBodyThin title content = do
   ctx <- getContext
-  let muser = ctxmaybeuser ctx
-  mcompany <- case usercompany <$> muser of
-    Just (Just cid) -> dbQuery $ GetCompany cid
-    _ -> return Nothing
-
-  res <- simpleHtmlResponse =<< pageFromBody True ctx muser mcompany title content
+  ad <- getAnalyticsData
+  res <- simpleHtmlResponse =<< pageFromBody True ctx ad title content
   clearFlashMsgs
   return res
 
@@ -96,7 +90,7 @@ pageFromBody thin ctx ad title bodytext =
   renderTemplate "wholePage" $ do
     F.value "content" bodytext
     F.value "thin" thin
-    standardPageFields ctx ad title Nothing
+    standardPageFields ctx title Nothing ad
     F.valueM "httplink" $ getHttpHostpart
 
 notFoundPage :: Kontrakcja m => m Response
@@ -112,8 +106,9 @@ priceplanPage = renderTemplate_ "priceplanPage" >>= renderFromBody kontrakcja
     Render a template as an entire page.
 -}
 renderTemplateAsPage :: Kontrakcja m => Context -> String -> Maybe (Lang -> KontraLink) -> Bool -> m String
-renderTemplateAsPage ctx templateName mpubliclink showCreateAccount = renderTemplate templateName $ do
+renderTemplateAsPage ctx templateName mpubliclink showCreateAccount = do
   ad <- getAnalyticsData
+  renderTemplate templateName $ do
     contextInfoFields ctx
     mainLinksFields $ ctxlang ctx
     staticLinksFields $ ctxlang ctx
