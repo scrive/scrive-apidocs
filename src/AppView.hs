@@ -35,6 +35,7 @@ import Data.Char
 import Data.String.Utils
 import Version
 import Text.JSON
+import Utils.HTTP
 
 {- |
    The name of our application (the codebase is known as kontrakcja,
@@ -75,7 +76,7 @@ renderFromBodyThin title content = do
 {- |
    Renders some page body xml into a complete page of xml
 -}
-pageFromBody :: TemplatesMonad m
+pageFromBody :: Kontrakcja m
              => Bool
              -> Context
              -> String
@@ -86,6 +87,7 @@ pageFromBody thin ctx title bodytext =
     F.value "content" bodytext
     F.value "thin" thin
     standardPageFields ctx title Nothing
+    F.valueM "httplink" $ getHttpHostpart
 
 notFoundPage :: Kontrakcja m => m Response
 notFoundPage = renderTemplate_ "notFound" >>= renderFromBody kontrakcja

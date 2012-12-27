@@ -76,17 +76,17 @@ pageFooter=
     <div class="content">
       <ul class="icons">
         <li>
-          <a href="{var_googleplus_url}" target="_blank">
+          <a href="https://plus.google.com/share?url=http://scrive.com" target="_blank">
             <img src="/img/sm-google.png" width="32" height="32" alt="Google+">
           </a>
         </li>
         <li>
-          <a href="{var_twitter_url}" target="_blank">
+          <a href="https://twitter.com/scrive" target="_blank">
             <img src="/img/sm-twitter.png" width="32" height="32" alt="Twitter">
           </a>
         </li>
         <li>
-          <a href="{var_facebook_url}" target="_blank">
+          <a href="https://www.facebook.com/pages/Scrive/237391196280189" target="_blank">
             <img src="/img/sm-facebook.png" width="32" height="32" alt="Facebook">
           </a>
         </li>
@@ -107,23 +107,23 @@ pageFooter=
     <div class="content">
       <ul class="tree">
         <li class="branch">
-          <a href="$if(langenglish)$/en/$else$/sv/$endif$api" id="nav-api">
+          <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$api" id="nav-api">
             $_pageFooterAPI()$
           </a>
         </li>
 
         <li class="branch">
-          <a href="$if(langenglish)$/en/$else$/sv/$endif$labs" id="nav-labs">
+          <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$labs" id="nav-labs">
             $_pageFooterLabs()$
           </a>
         </li>
         <li class="branch">
-          <a href="$if(langenglish)$/en/$else$/sv/$endif$blog" id="nav-blog">
+          <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$blog" id="nav-blog">
             $_pageFooterBlog()$
           </a>
         </li>
         <li class="branch">
-          <a href="$if(langenglish)$/en/$else$/sv/$endif$jobs" id="nav-jobs">
+          <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$jobs" id="nav-jobs">
             $_pageFooterWork()$
           </a>
         </li>
@@ -137,9 +137,9 @@ pageFooter=
     </header>
     <div class="content">
       <ul class="tree">
-        <li class="branch"><a href="$if(langenglish)$/en/$else$/sv/$endif$terms" id="nav-terms">$_pageFooterTOS()$</a></li>
-        <li class="branch"><a href="$if(langenglish)$/en/$else$/sv/$endif$environment" id="nav-environment">$_pageFooterEnvironmentalPolicy()$</a></li>
-        <li class="branch"><a href="$if(langenglish)$/en/$else$/sv/$endif$privacy" id="nav-privacy">$_pageFooterPrivacyPolicy()$</a></li>
+        <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$terms" id="nav-terms">$_pageFooterTOS()$</a></li>
+        <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$environment" id="nav-environment">$_pageFooterEnvironmentalPolicy()$</a></li>
+        <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$privacy" id="nav-privacy">$_pageFooterPrivacyPolicy()$</a></li>
       </ul>
     </div>
   </nav>
@@ -192,7 +192,7 @@ header=
   <nav>
     <ul class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
       <li id="branding">
-        <a id="logo" class="page" href="$if(langenglish)$/en/$else$/sv/$endif$"><img src="/img/logo.png" width="120" height="22"/></a>
+        <a id="logo" class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$"><img src="/img/logo.png" width="120" height="22"/></a>
         <div id="tagline" class="h3"></div>
       </li>
       $if(logged)$
@@ -209,11 +209,11 @@ header=
       </li>
       $else$
       <li class="page-first float-left"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$features">$_headerFeatures()$</a></li>
-      <li class="float-left"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$pricing">$_headerPricing()$</a></li>
-      <li class="float-left"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$legal">$_headerLegal()$</a></li>
-      <li class="float-left"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$cases">$_headerCases()$</a></li>
-      <li class="float-left"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$about">$_headerAbout()$</a></li>
-      <li class="float-left"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$contact">$_headerContakt()$</a></li>
+      <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$pricing">$_headerPricing()$</a></li>
+      <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$legal">$_headerLegal()$</a></li>
+      <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$cases">$_headerCases()$</a></li>
+      <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$about">$_headerAbout()$</a></li>
+      <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$contact">$_headerContakt()$</a></li>
       <li class="session-login float-right">
         <a class="button button-small" id="page-login" href="/login">$_login()$ </a>
         <a class="button button-small button-red" id="page-login" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_signUp()$</a>
