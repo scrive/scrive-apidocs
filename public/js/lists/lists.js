@@ -388,7 +388,7 @@
                    th.append(this.checkbox = $("<div class='listcheckbox' class='selectall'/>"));
                    th.click(function() {view.toggleSelectAll();return false;});
                } else {
-                   var h = $("<h6/>");
+                   var h = $("<span/>");
                    var makeText = function() {
                         var text = cell.name();
                         if (schema.sorting().isSortable(cell.field())) {
