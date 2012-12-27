@@ -13,7 +13,7 @@ class DocHelper
 
   def uploadContract
     puts "Creating document"
-    (@wait.until { @driver.find_element :css => ".s-create-document" }).click
+    (@wait.until { @driver.find_element :css => ".js-create-document" }).click
     (@wait.until { @driver.find_element :css => ".document-pages input.multiFileInput" }).send_keys @ctx.props.contract_pdf_path
     puts "waiting for pages"
     @wait.until { @driver.find_element :css => "#page1" }
@@ -118,12 +118,12 @@ class DocHelper
     puts "Final approval modal"
     acceptStandardModal
     puts "Closing confirmation modal"
-    (@wait.until { @driver.find_element :css => "div.s-sign-confirmation" }).click
+    (@wait.until { @driver.find_element :css => "div.modal-footer a.button-green" }).click
   end
 
  def acceptStandardModal
     puts "acceptStandardModal"
-    (@wait.until { @driver.find_element :css => ".modal-footer .btn-small.float-right" }).click
+    (@wait.until { @driver.find_element :css => ".modal-footer .button-small.float-right" }).click
  end
 
 end
