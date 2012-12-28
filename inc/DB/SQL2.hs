@@ -170,7 +170,9 @@ data SqlInsertSelect = SqlInsertSelect
 
 data SqlDelete = SqlDelete
   { sqlDeleteFrom    :: RawSQL
+  , sqlDeleteUsing   :: SQL
   , sqlDeleteWhere   :: [SQL]
+  , sqlDeleteResult  :: [SQL]
   , sqlDeleteWith    :: [(RawSQL,SQL)]
   } deriving (Eq, Typeable)
 
@@ -278,7 +280,9 @@ instance IsSQL SqlDelete where
   toSQLCommand cmd =
     emitClausesSepComma "WITH" (map (\(name,command) -> raw name <+> "AS" <+> parenthesize command) (sqlDeleteWith cmd)) <+>
     "DELETE FROM" <+> raw (sqlDeleteFrom cmd) <+>
-        emitClausesSep "WHERE" "AND" (sqlDeleteWhere cmd)
+    emitClause "USING" (sqlDeleteUsing cmd) <+>
+        emitClausesSep "WHERE" "AND" (sqlDeleteWhere cmd) <+>
+    emitClausesSepComma "RETURNING" (sqlDeleteResult cmd)
 
 instance IsSQL SqlAny where
   toSQLCommand cmd | null (sqlAnyWhere cmd) = "FALSE"
@@ -321,7 +325,12 @@ sqlUpdate table refine =
 
 sqlDelete :: RawSQL -> State SqlDelete () -> SqlDelete
 sqlDelete table refine =
-  execState refine (SqlDelete table [] [])
+  execState refine (SqlDelete  { sqlDeleteFrom   = table
+                               , sqlDeleteUsing  = SQL "" []
+                               , sqlDeleteWhere  = []
+                               , sqlDeleteResult = []
+                               , sqlDeleteWith   = []
+                               })
 
 class SqlWith a where
   sqlWith1 :: a -> RawSQL -> SQL -> a
