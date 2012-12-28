@@ -11,9 +11,11 @@ module Routing ( hGet
                , hGetWrap
                , hPost
                , hDelete
+               , hDeleteAllowHttp
                , hPut
                , hPostNoXToken
                , hPostAllowHttp
+               , hPostNoXTokenHttp
                , hGetAllowHttp
                , https
                , allowHttp
@@ -112,6 +114,9 @@ hGet = hGetWrap https
 hDelete :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hDelete = hDeleteWrap https
 
+hDeleteAllowHttp :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
+hDeleteAllowHttp = hDeleteWrap allowHttp
+
 hPut :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hPut = hPutWrap https
 
@@ -123,6 +128,9 @@ hPostAllowHttp = hPostWrap allowHttp
 
 hPostNoXToken :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hPostNoXToken = hPostWrap https
+
+hPostNoXTokenHttp :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
+hPostNoXTokenHttp = hPostWrap allowHttp
 
 https:: Kontra Response -> Kontra Response
 https action = do
