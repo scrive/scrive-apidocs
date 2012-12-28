@@ -111,7 +111,8 @@ var ConfirmationWithEmailModel = Backbone.Model.extend({
       acceptText: "Ok",
       rejectText: "Cancel",
 	  editText : "Edit",
-      acceptColor : "green"
+      acceptColor : "green",
+      onEdit: function() {}
   },
   initialize : function() {
   },
@@ -135,6 +136,9 @@ var ConfirmationWithEmailModel = Backbone.Model.extend({
   },
   mail: function() {
        return this.get("mail");
+  },
+  onEdit: function() {
+      return this.get("onEdit");
   }
 
 });
@@ -210,6 +214,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
     edit: function(){
 		this.editOption.remove();
 		this.model.mail().makeEditable();
+                this.model.onEdit()();
 		return false;
     },
     clear: function(){

@@ -366,4 +366,7 @@ $.extend({
   }
 });
 
+
+window.OAuthModel = OAuthModel;
+
 })(window);

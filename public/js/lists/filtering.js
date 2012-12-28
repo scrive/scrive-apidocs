@@ -252,6 +252,9 @@
             searchBox.input().keypress(function(event) {
                 var keycode = (event.keyCode ? event.keyCode : event.which);
                 if (keycode == '13') {
+                    mixpanel.track('Search',
+                                   {Input : "Enter",
+                                    Query : $(this).val()});
                     filtering.searchText($(this).val());
                 }});
             var button = Button.init({color: "black",
@@ -259,6 +262,9 @@
                                       text: localization.searchBoxButtonText,
                                       cssClass: "float-right search-button",
                                       onClick: function() {
+                                          mixpanel.track('Search',
+                                                         {Query : searchBox.value(),
+                                                          Input : "Button"});
                                           filtering.searchText(searchBox.value());
                                       }
                                      });
@@ -290,6 +296,8 @@
                 theme : selected.value != "" ? "dark" : "warm",
                 textWidth : selectFiltering.textWidth(),
                 onSelect : function(value) {
+                    mixpanel.track('Filter ' + selectFiltering.name(),
+                                   {Value : selected.name});
                     selectFiltering.select(value);
                 }
             });
@@ -330,6 +338,8 @@
                     return false;
                 },
                 onSelect : function(value) {
+                    mixpanel.track('Filter ' + selectFiltering.name(),
+                                   {Value : selected.name});
                     selectFiltering.select(value);
                 }
             });
@@ -371,6 +381,8 @@
                 theme : selectedBottom.value != "<" ? "dark" : "warm",
                 textWidth : filtering.textWidth(),
                 onSelect : function(value) {
+                    mixpanel.track('Select from date',
+                                   {Value : selectedBottom.value});
                     filtering.selectBottom(value);
                 }
             });
@@ -392,6 +404,8 @@
                 theme : selectedTop.value != ">" ? "dark" : "warm",
                 textWidth : filtering.textWidth(),
                 onSelect : function(value) {
+                    mixpanel.track('Select to date',
+                                   {Value : selectedTop.value});
                     filtering.selectTop(value);
                 }
             });

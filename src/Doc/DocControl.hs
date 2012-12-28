@@ -113,6 +113,7 @@ import qualified GuardTime as GuardTime
 import System.IO.Temp
 import System.Directory
 import MinutesTime
+import Analytics.Include
 
 handleNewDocument :: Kontrakcja m => m KontraLink
 handleNewDocument = do
@@ -356,7 +357,8 @@ handleSignShow documentid
       _ <- addSignStatLinkEvent document' invitedlink
 
       ctx <- getContext
-      content <- pageDocumentSignView ctx document' invitedlink
+      ad <- getAnalyticsData
+      content <- pageDocumentSignView ctx document' invitedlink ad
       simpleHtmlResonseClrFlash content
     Nothing -> do
       -- There is not magic hash in session. It may mean that the
@@ -406,12 +408,13 @@ handleIssueShowGet docid = checkUserTOSGet $ do
   let isincompany = ((usercompany =<< muser) == (usercompany =<< mauthoruser))
       isauthororincompany = isauthor || isincompany
       msiglink = find (isSigLinkFor muser) $ documentsignatorylinks document
+  ad <- getAnalyticsData
 
   ctx <- getContext
   case (ispreparation, msiglink) of
     (True,  _)                       -> Right <$> pageDocumentDesign document
     (False, _) | isauthororincompany -> Right <$> pageDocumentView document msiglink (isincompany)
-    (False, Just siglink)            -> Left  <$> (simpleHtmlResonseClrFlash =<< pageDocumentSignView ctx document siglink)
+    (False, Just siglink)            -> Left  <$> (simpleHtmlResonseClrFlash =<< pageDocumentSignView ctx document siglink ad)
     _                                -> internalError
 
 {- |

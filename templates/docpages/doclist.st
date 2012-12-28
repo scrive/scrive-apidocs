@@ -9,6 +9,8 @@ jQuery(".archive").append(new Archive({month : $month$, year : $year$, forCompan
 jQuery(function() {
   BlockingInfo.show('.blocking-box');
 });
+        mixpanel.register({Context : 'Archive'});
+  mixpanel.track('View Archive');
 </script>
 </div>
 </div>

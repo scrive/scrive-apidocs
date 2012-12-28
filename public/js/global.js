@@ -6,7 +6,9 @@ window.closeAllActiveModals = function() {
   });
 }
 
+
 window.createnewdocument = function() {
+  mixpanel.track('Click start new process'); 
   new Submit({
                     method : "POST",
                     url : "/api/frontend/createfromfile",
@@ -23,6 +25,7 @@ window.createnewdocument = function() {
 }
 
 window.createfromtemplate = function() {
+    mixpanel.track('Click create from template');
     window.location = "/fromtemplate";
 }
 
@@ -255,6 +258,7 @@ safeReady(function() {
 // shows avanza demo video
 safeReady(function() {
   $(".avanza-play-video").click(function() {
+      mixpanel.track('Play avanza video');
     window.open('https://player.vimeo.com/video/44888641', '', 'scrollbars=no,menubar=no,height=500,width=700,resizable=yes,toolbar=no,location=no,status=no');
     return false;
   });
@@ -263,6 +267,7 @@ safeReady(function() {
 //shows the video on the front page
 safeReady(function() {
   $(".campaign-play-video").click(function() {
+      mixpanel.track('Play Frontpage video');
     window.open('https://player.vimeo.com/video/41846881', '', 'scrollbars=no,menubar=no,height=500,width=700,resizable=yes,toolbar=no,location=no,status=no');
     return false;
   });

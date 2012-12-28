@@ -1,5 +1,7 @@
 /* Signatory view of document
  * Now unified with author and viewer views
+ * 
+ * Instrumented with Mixpanel events.
  */
 
 
@@ -107,6 +109,7 @@ var DesignViewView = Backbone.View.extend({
           titleshow.text(document.title());
           edit.hide();
           display.show();
+            mixpanel.track('Click save title');
           return false;
         };
         iconok.click(fn);
@@ -121,6 +124,7 @@ var DesignViewView = Backbone.View.extend({
             display.hide();
             edit.show();
             titleedit.focus();
+            mixpanel.track('Click edit title');
             return false;
         });
 
@@ -176,11 +180,14 @@ var DesignViewView = Backbone.View.extend({
             checkbox.attr("checked","YES");
             checkbox.attr("cc","YES");
             document.setElegAuthentication();
+            mixpanel.track('Check require eleg');
+
           }
           else {
              checkbox.removeAttr("checked");
              checkbox.attr("cc","NO");
              document.setStandardAuthentication();
+            mixpanel.track('Check no eleg');
           }
           return false;
         });
@@ -209,12 +216,18 @@ var DesignViewView = Backbone.View.extend({
             order.attr("selected","yes");
 
         select.change(function() {
-            if ($(this).val() == "contract")
+            if ($(this).val() == "contract") {
               document.process().changeToContract();
-            else if ($(this).val() == "offer")
+                mixpanel.track('Select contract (document type)');
+            }
+            else if ($(this).val() == "offer") {
               document.process().changeToOffer();
-            else if ($(this).val() == "order")
+                mixpanel.track('Select offer (document type)');
+            }
+            else if ($(this).val() == "order") {
               document.process().changeToOrder();
+                mixpanel.track('Select order (document type)');
+            }
             document.save();
             document.afterSave(function() { LoadingDialog.open(); window.location = window.location; });
         });
@@ -234,16 +247,19 @@ var DesignViewView = Backbone.View.extend({
         if (document.emailDelivery()) {
           email.attr("selected","YES");
           pad.attr("selected","");
+            mixpanel.track('Select email delivery');
         }
         else if (document.padDelivery()) {
           email.attr("selected","");
           pad.attr("selected","YES");
+            mixpanel.track('Select pad delivery');
         }
         else if (document.apiDelivery()) {
           email.attr("selected","");
           pad.attr("selected","");
           api.attr("selected","YES");
           select.append(api);
+            mixpanel.track('Select api delivery');
         }
 
         select.change(function() {
@@ -279,6 +295,8 @@ var DesignViewView = Backbone.View.extend({
             {
                 document.setDaystosign(days);
                 calendar.setDays(days);
+                mixpanel.track('Change final date',
+                               {'Days Before Expiration':days});
             }
         });
         selectdaysbox.append(calendarbutton);
@@ -293,16 +311,20 @@ var DesignViewView = Backbone.View.extend({
         box.append(icon).append(text);
         icon.add(text).click(function() {
               document.save();
+            mixpanel.track('Click edit invitation');
               document.afterSave( function() {
                          ConfirmationWithEmail.popup({
                             title :localization.editInviteDialogHead,
                             mail : document.inviteMail(),
                             acceptText : localization.ok,
                             editText :  localization.reminder.formOwnMessage,
+                             onEdit: function(){mixpanel.track('Click write own invitation')},
                             rejectText : localization.cancel,
                             onAccept : function(customtext)
-                            {   if (customtext != undefined)
+                            {   if (customtext != undefined) {
                                     document.setInvitationMessage(customtext);
+                                }
+                                mixpanel.track('Click OK invitation');
                                 return true;
                             }
                             });
@@ -334,6 +356,8 @@ var DesignViewView = Backbone.View.extend({
 
         select.change(function(event){
             if ($(this).val() == 'en'){
+                mixpanel.track('Select language', 
+                               {'New Language': 'English'});
                 Confirmation.popup({
                     title:    localization.languages.signInEnglish,
                     content : localization.languages.changeSwedishToEnglishText,
@@ -342,6 +366,8 @@ var DesignViewView = Backbone.View.extend({
                         select.val("sv");
                     },
                     onAccept : function() {
+                        mixpanel.track('Accept language', 
+                                       {'New Language': 'English'});
                        document.lang().setEN();
                        LoadingDialog.open();
                        document.save();
@@ -353,7 +379,9 @@ var DesignViewView = Backbone.View.extend({
                     }
                 });
             }
-            else
+            else {
+                mixpanel.track('Select language',
+                               {'New Language': 'Swedish'});
                  Confirmation.popup({
                     title:    localization.languages.signInSwedish,
                     content : localization.languages.changeEnglishToSwedishText,
@@ -362,6 +390,8 @@ var DesignViewView = Backbone.View.extend({
                         select.val("en");
                     },
                     onAccept : function() {
+                        mixpanel.track('Accept language', 
+                                       {'New Language': 'Swedish'});
                        document.lang().setSV();
                        LoadingDialog.open();
                        document.save();
@@ -373,6 +403,7 @@ var DesignViewView = Backbone.View.extend({
 
                     }
                 });
+            }
             return false;
         });
         return box;
@@ -386,6 +417,7 @@ var DesignViewView = Backbone.View.extend({
         box.append(icon).append(text);
 
         icon.add(text).click(function() {
+            mixpanel.track('Click add attachment');
             document.save();
             DesignAuthorAttachmentsPopup.popup({document: document});
             return false;
@@ -407,6 +439,7 @@ var DesignViewView = Backbone.View.extend({
           countspan.text("(" + document.signatoryattachments().length + ")");
         });
         icon.add(text).click(function() {
+            mixpanel.track('Click add sig attachment');
             document.save();
             DesignSignatoryAttachmentsPopup.popup({document: document});
             return false;
@@ -423,6 +456,8 @@ var DesignViewView = Backbone.View.extend({
 
       checkbox.change(function() {
         self.setSignLast( $(this).attr("checked"));
+          mixpanel.track('Click sign last');
+          
       });
 
       var label = $("<span>").text(localization.signLast);
@@ -488,6 +523,7 @@ var DesignViewView = Backbone.View.extend({
           onClick: function() {
             if (alreadyClicked(this))
               return;
+            mixpanel.track('Click Save Template');
             document.save();
             document.afterSave( function() {
               new Submit().send();
@@ -503,11 +539,18 @@ var DesignViewView = Backbone.View.extend({
             cssClass: "finalbutton",
             text: localization.designview.sign,
             onClick: function() {
+                mixpanel.track('Click sign button');
               if (!view.verificationBeforeSendingOrSigning(true)) {
                 return;
               }
               document.save();
                 if(BlockingInfo && BlockingInfo.shouldBlockDocs(1)) {
+                    mixpanel.track('Open blocking popup',
+                                   {Button: 'sign'});
+                    mixpanel.people.set({
+                        'Blocking Popup': new Date()
+                    });
+
                     BlockingInfo.createPopup();
                     return false;
                 }
@@ -523,11 +566,17 @@ var DesignViewView = Backbone.View.extend({
              cssClass: "finalbutton",
              text: document.process().localization().sendbuttontext,
              onClick: function() {
+                 mixpanel.track('Click send button');
                if (!view.verificationBeforeSendingOrSigning(false)) {
                  return;
                }
                document.save();
                 if(BlockingInfo && BlockingInfo.shouldBlockDocs(1)) {
+                    mixpanel.track('Open blocking popup',
+                                   {Button: 'send'});
+                    mixpanel.people.set({
+                        'Blocking Popup': new Date()
+                    });
                     BlockingInfo.createPopup();
                     return false;
                 }
@@ -561,24 +610,28 @@ var DesignViewView = Backbone.View.extend({
             bankid.click(function() {
                     if (alreadyClicked(acceptButton))
                       return false;
+                    mixpanel.track('Click BankID');
                     Eleg.bankidSign(document,signatory, document.signByAuthor(),callback);
                     return false;
             });
             telia.click(function() {
                     if (alreadyClicked(acceptButton))
                       return false;
+                    mixpanel.track('Click Telia');
                     Eleg.teliaSign(document,signatory, document.signByAuthor(),callback);
                     return false;
             });
             nordea.click(function() {
                     if (alreadyClicked(acceptButton))
                       return false;
+                    mixpanel.track('Click Nordea');
                     Eleg.nordeaSign(document,signatory, document.signByAuthor(),callback);
                     return false;
             });
             mbi.click(function() {
                 if (alreadyClicked(acceptButton))
                   return false;
+                mixpanel.track('Click Mobile BankID');
                 Eleg.mobileBankIDSign(document,signatory,document.signByAuthor(),callback);
                 return false;
             });
@@ -593,6 +646,7 @@ var DesignViewView = Backbone.View.extend({
                   onClick : function() {
                       if (alreadyClicked(this))
                         return;
+                      mixpanel.track('Click accept sign (popup)');
                       document.afterSave(function() {
                           document.signByAuthor().sendAjax(function(resp) {
                                         var link = JSON.parse(resp).link;
@@ -655,6 +709,7 @@ var DesignViewView = Backbone.View.extend({
                                 onClick : function() {
                                     if (alreadyClicked(this))
                                       return;
+                                    mixpanel.track('Click accept send (popup)');
                                     LoadingDialog.open(localization.designview.messages.sendingDocument);
                                     document.afterSave(function() {
                                         document.sendByAuthor().sendAjax(function(resp) {
@@ -687,6 +742,10 @@ var DesignViewView = Backbone.View.extend({
                     new FlashMessage({color: 'red', content : validation.message()});
                     if (field.view != undefined)
                         field.view.redborder();
+                    mixpanel.track('Error: field validation', 
+                                   {Field: field.name(),
+                                    Value: field.value(),
+                                    Message: validation.message()});
                  };
                 if (!field.validation(forSigning).setCallback(validationCallback).validateData(field.value()))
                     return false;
@@ -697,11 +756,14 @@ var DesignViewView = Backbone.View.extend({
         {
               new FlashMessage({color: 'red', content : localization.designview.validation.atLeastOnePersonMustSigns});
               this.tabs.activate(this.tab1);
+            mixpanel.track('Error: nobody signs');
+                                                    
               return false;
         }
         if (this.model.document().mainfile() == undefined)
         {
              new FlashMessage({color: 'red', content : localization.designview.validation.fileMustBeAdded});
+            mixpanel.track('Error: no document');
              return false;
         }
         var mails = _.map(sigs, function(sig) {return sig.email();}).sort();;
@@ -709,6 +771,7 @@ var DesignViewView = Backbone.View.extend({
                 if (mails[i] == mails[i+1] && mails[i] != "")
                 {
                     new FlashMessage({color: 'red', content : localization.designview.validation.sameMails});
+                    mixpanel.track('Error: duplicate emails');
                     this.tabs.activate(this.tab1);
                     return false;
                 }
@@ -736,6 +799,7 @@ var DesignViewView = Backbone.View.extend({
             },
             onAppend: function(input) {
               document.save();
+                
               document.afterSave( function() {
                   new Submit({
                     method : "POST",
@@ -749,14 +813,20 @@ var DesignViewView = Backbone.View.extend({
                     ajaxtimeout : 20000,
                     ajaxerror: function(d,a){
                         LoadingDialog.close();
-                        if(a === 'parsererror') // file too large
+                        if(a === 'parsererror') { // file too large
                             new FlashMessage({content: localization.fileTooLarge, color: "red"});
-                        else
+                            mixpanel.track('Error: main file too large');
+                            
+                        }
+                        else {
                             new FlashMessage({content: localization.couldNotUpload, color: "red"});
+                            mixpanel.track('Error: could not upload main file');
+                        }
                         LoadingDialog.close();
                         document.trigger('change');
                     },
                     ajaxsuccess: function() {
+                        mixpanel.track('Upload main file');
                         LoadingDialog.close();
                         window.location.reload();
                     }
@@ -774,6 +844,7 @@ var DesignViewView = Backbone.View.extend({
             width: 300,
             text: localization.avtal24.buy,
             onClick : function () {
+                mixpanel.track('Click Avtal24');
                new Avtal24Popup();
             }
         });
@@ -799,6 +870,8 @@ var DesignViewView = Backbone.View.extend({
                                  width : 300,
                                  text :  localization.saveAsDraft,
                                  onClick : function() {
+                                     mixpanel.track('Click save as draft',
+                                                    {Subcontext: 'upload view'});
                                     document.save();
                                     document.afterSave(function() {
                                         new Submit({
@@ -818,6 +891,8 @@ var DesignViewView = Backbone.View.extend({
                                  width : 300,
                                  text :  localization.saveAsTemplate,
                                  onClick : function() {
+                                     mixpanel.track('Click save as template',
+                                                    {Subcontext: 'upload view'});
                                     document.makeTemplate();
                                     document.save();
                                     document.afterSave(function() {
@@ -838,6 +913,7 @@ var DesignViewView = Backbone.View.extend({
                                  width : 140,
                                  text :  localization.designview.removeFile,
                                  onClick : function() {
+                                     mixpanel.track('Click remove file');
                                     document.save();
                                     document.afterSave( function() {
                                       new Submit({
@@ -862,6 +938,8 @@ var DesignViewView = Backbone.View.extend({
                                  width : 140,
                                  text :  localization.saveAsDraft,
                                  onClick : function() {
+                                     mixpanel.track('Click save as draft',
+                                                    {Subcontext: 'existing document'});
                                     document.save();
                                     document.afterSave(function() {
                                         new Submit({
@@ -881,6 +959,8 @@ var DesignViewView = Backbone.View.extend({
                                  width : 140,
                                  text :  localization.saveAsTemplate,
                                  onClick : function() {
+                                     mixpanel.track('Click save as template',
+                                                    {Subcontext: 'existing document'});
                                     document.makeTemplate();
                                     document.save();
                                     document.afterSave(function() {

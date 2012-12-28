@@ -36,6 +36,7 @@ import Data.String.Utils
 import Version
 import Text.JSON
 import Utils.HTTP
+import Analytics.Include
 
 {- |
    The name of our application (the codebase is known as kontrakcja,
@@ -55,7 +56,8 @@ renderFromBody :: Kontrakcja m
                -> m Response
 renderFromBody title content = do
   ctx <- getContext
-  res <- simpleHtmlResponse =<< pageFromBody False ctx title content
+  ad <- getAnalyticsData
+  res <- simpleHtmlResponse =<< pageFromBody False ctx ad title content
   clearFlashMsgs
   return res
   
@@ -68,7 +70,8 @@ renderFromBodyThin :: Kontrakcja m
                -> m Response
 renderFromBodyThin title content = do
   ctx <- getContext
-  res <- simpleHtmlResponse =<< pageFromBody True ctx title content
+  ad <- getAnalyticsData
+  res <- simpleHtmlResponse =<< pageFromBody True ctx ad title content
   clearFlashMsgs
   return res
 
@@ -79,14 +82,15 @@ renderFromBodyThin title content = do
 pageFromBody :: Kontrakcja m
              => Bool
              -> Context
+             -> AnalyticsData
              -> String
              -> String
              -> m String
-pageFromBody thin ctx title bodytext =
+pageFromBody thin ctx ad title bodytext =
   renderTemplate "wholePage" $ do
     F.value "content" bodytext
     F.value "thin" thin
-    standardPageFields ctx title Nothing
+    standardPageFields ctx title Nothing ad
     F.valueM "httplink" $ getHttpHostpart
 
 notFoundPage :: Kontrakcja m => m Response
@@ -102,7 +106,9 @@ priceplanPage = renderTemplate_ "priceplanPage" >>= renderFromBody kontrakcja
     Render a template as an entire page.
 -}
 renderTemplateAsPage :: Kontrakcja m => Context -> String -> Maybe (Lang -> KontraLink) -> Bool -> m String
-renderTemplateAsPage ctx templateName mpubliclink showCreateAccount = renderTemplate templateName $ do
+renderTemplateAsPage ctx templateName mpubliclink showCreateAccount = do
+  ad <- getAnalyticsData
+  renderTemplate templateName $ do
     contextInfoFields ctx
     mainLinksFields $ ctxlang ctx
     staticLinksFields $ ctxlang ctx
@@ -110,9 +116,10 @@ renderTemplateAsPage ctx templateName mpubliclink showCreateAccount = renderTemp
     F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
     F.value "showCreateAccount" $ showCreateAccount && (isNothing $ ctxmaybeuser ctx)
     F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
+    F.object "analytics" $ analyticsTemplates ad
 
-standardPageFields :: TemplatesMonad m => Context -> String -> Maybe (Lang -> KontraLink) -> Fields m ()
-standardPageFields ctx title mpubliclink = do
+standardPageFields :: TemplatesMonad m => Context -> String -> Maybe (Lang -> KontraLink) -> AnalyticsData -> Fields m ()
+standardPageFields ctx title mpubliclink ad = do
   F.value "title" title
   mainLinksFields $ ctxlang ctx
   staticLinksFields $ ctxlang ctx
@@ -120,6 +127,7 @@ standardPageFields ctx title mpubliclink = do
   contextInfoFields ctx
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
   F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
+  F.object "analytics" $ analyticsTemplates ad
 
 -- Official documentation states that JSON mime type is
 -- 'application/json'. IE8 for anything that starts with

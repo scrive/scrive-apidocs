@@ -1,4 +1,3 @@
-
 (function(window){
 
 window.MailApi = Backbone.Model.extend({

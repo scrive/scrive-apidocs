@@ -21,6 +21,8 @@ import AppView
 import Happstack.Server.Types
 import Data.Maybe
 
+import Analytics.Include
+
 -- PadQueue STATE
 padQueueState :: Kontrakcja m => m JSValue
 padQueueState = do
@@ -43,7 +45,8 @@ padQueueState = do
 showPadQueuePage::  (Kontrakcja m) =>  m Response
 showPadQueuePage = do
     ctx <- getContext
-    padQueuePage ctx >>= simpleHtmlResponse
+    ad <- getAnalyticsData
+    padQueuePage ctx ad >>= simpleHtmlResponse
 
 
 padQueueToSignatoryData :: Kontrakcja m => PadQueue -> m (Maybe (Document,SignatoryLink))

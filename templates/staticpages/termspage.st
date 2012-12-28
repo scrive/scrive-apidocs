@@ -67,4 +67,8 @@ termsPageContents=
 <br />
 <p>$_termsPage8()$</p>
 </div>
+<script>
+  mixpanel.track('View Terms Page');
+</script>
+
 ###

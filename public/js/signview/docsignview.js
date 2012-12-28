@@ -1,4 +1,6 @@
 /* Signatory view of document
+ *
+ * Instrumented for Mixpanel
  */
 
 
@@ -193,8 +195,14 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                 return attachment.hasFile();
                             },
                             el: els[i],
-                            onActivate   : function() {$(model.signatoryattachmentsection().el).addClass("highlight");},
-                            onDeactivate : function() {$(model.signatoryattachmentsection().el).removeClass("highlight");}
+                            onActivate   : function() {
+                                mixpanel.track('Begin attachment task');
+                                $(model.signatoryattachmentsection().el).addClass("highlight");
+                            },
+                            onDeactivate : function() {
+                                mixpanel.track('Finish attachment task');
+                                $(model.signatoryattachmentsection().el).removeClass("highlight");
+                            }
                         })
             attachment.bind("change", function() {
                 task.update();
@@ -215,8 +223,14 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                     return !model.document().currentSignatoryCanSign();
                                 },
                                 el:  model.signsection().signButton.input(),
-                                onActivate   : function() {$(model.signsection().el).addClass("highlight");},
-                                onDeactivate : function() {$(model.signsection().el).removeClass("highlight");}
+                                onActivate   : function() {
+                                    mixpanel.track('Begin signature task');
+                                    $(model.signsection().el).addClass("highlight");
+                                },
+                                onDeactivate : function() {
+                                    mixpanel.track('Finish signature task');
+                                    $(model.signsection().el).removeClass("highlight");
+                                }
                                 })
             }, {silent : true});
         return this.get('signtask');
@@ -243,8 +257,14 @@ var DocumentSignViewModel = Backbone.Model.extend({
                         if (placement.view != undefined && placement.view.startInlineEditing != undefined && !placement.field().readyForSign())
                         {
                           placement.view.startInlineEditing();
+                            mixpanel.track('Begin editing field',
+                                           {Label : placement.field().name()});
                           task.trigger("change");
                         }
+                    },
+                    onDeactivate: function() {
+                        mixpanel.track('Finish editing field',
+                                       {Label : placement.field().name()});
                     },
                     tipSide : placement.tip(),
                     label:localization.writeHere
@@ -279,8 +299,16 @@ var DocumentSignViewModel = Backbone.Model.extend({
                         return res;
                     },
                     el: $(self.extradetailssection().el),
-                    onActivate   : function() {$(self.extradetailssection().el).addClass("highlight");},
-                    onDeactivate : function() {$(self.extradetailssection().el).removeClass("highlight");}
+                    onActivate   : function() {
+                        mixpanel.track('Begin editing extra field',
+                                       {Label : field.name()});
+                        $(self.extradetailssection().el).addClass("highlight");
+                    },
+                    onDeactivate : function() {
+                        mixpanel.track('Finish editing extra field',
+                                       {Label : field.name()});
+                        $(self.extradetailssection().el).removeClass("highlight");
+                    }
                 });
          document.currentSignatory().bind("change", function() { task.update()});
          self.set({'fillExtraDetailsTask' : task }, {silent : true});

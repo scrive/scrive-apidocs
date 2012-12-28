@@ -11,6 +11,8 @@ import Text.JSON.Gen as JSON
 import AppView
 import Context
 
+import Analytics.Include
+
 
 padQueueStateJSON :: Monad m => Bool -> Maybe (Document, SignatoryLink) -> m JSValue
 padQueueStateJSON systemlogged mds = JSON.runJSONGenT $ do
@@ -22,8 +24,8 @@ padQueueStateJSONNotLoggedIn :: Monad m => m JSValue
 padQueueStateJSONNotLoggedIn = JSON.runJSONGenT $ do
   JSON.value "logged" $ JSNull
 
-padQueuePage :: TemplatesMonad m => Context -> m String
-padQueuePage ctx = do
+padQueuePage :: TemplatesMonad m => Context -> AnalyticsData -> m String
+padQueuePage ctx ad = do
     renderTemplate "padQueueCurrentPage" $ do
-      standardPageFields ctx kontrakcja Nothing
+      standardPageFields ctx kontrakcja Nothing ad
 

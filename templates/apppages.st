@@ -63,130 +63,159 @@ standardHeaderContents=
         <link href='/css/fonts/HelveticaNeue.css' rel='stylesheet' type='text/css'/>
         <script src="/$ctxlang$/localization/$versioncode$.js"  type="text/javascript"></script>
         $staticResources:noescape()$
+
+<!-- start Mixpanel -->
+        <script>
+(function(e,b){if(!b.__SV){var a,f,i,g;window.mixpanel=b;a=e.createElement("script");a.type="text/javascript";a.async=!0;a.src=("https:"===e.location.protocol?"https:":"http:")+'//cdn.mxpnl.com/libs/mixpanel-2.2.min.js';f=e.getElementsByTagName("script")[0];f.parentNode.insertBefore(a,f);b._i=[];b.init=function(a,e,d){function f(b,h){var a=h.split(".");2==a.length&&(b=b[a[0]],h=a[1]);b[h]=function(){b.push([h].concat(Array.prototype.slice.call(arguments,0)))}}var c=b;"undefined"!==
+typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var a="mixpanel";"mixpanel"!==d&&(a+="."+d);b||(a+=" (stub)");return a};c.people.toString=function(){return c.toString(1)+".people (stub)"};i="disable track track_pageview track_links track_forms register register_once alias unregister identify name_tag set_config people.set people.increment".split(" ");for(g=0;g<i.length;g++)f(c,i[g]);b._i.push([a,e,d])};b.__SV=1.2}})(document,window.mixpanel||[]);
+        mixpanel.init("$analytics.token$");
+
+        $if(analytics.userid)$
+          mixpanel.identify("$analytics.userid$");
+        $endif$
+
+        $if(analytics.properties)$
+        var analyticsproperties = $analytics.properties:noescape()$;
+
+          mixpanel.register(analyticsproperties);
+          mixpanel.people.set(analyticsproperties);
+        if(analyticsproperties['Smart Name'])
+          mixpanel.name_tag(analyticsproperties['Smart Name']);
+        $endif$
+
+        mixpanel.track_links('.logout', 'Click Logout');
+        mixpanel.track_links('#logo', 'Click Logo');
+        mixpanel.track_links('.fromtemplate', 'Click from template');
+
+        </script>
+<!-- end Mixpanel -->
+
 ####
 pageFooter=
 <footer class="site">
-<div class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
+  <div class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
 
-  <div class="visions">
-    <p>Visions made in Sweden. Built by experts from around the world. </p>
-  </div>
 
-  <nav class="left">
-    <div class="content">
-      <ul class="icons">
-        <li>
-          <a href="https://plus.google.com/share?url=http://scrive.com" target="_blank">
-            <img src="/img/sm-google.png" width="32" height="32" alt="Google+">
-          </a>
-        </li>
-        <li>
-          <a href="https://twitter.com/scrive" target="_blank">
-            <img src="/img/sm-twitter.png" width="32" height="32" alt="Twitter">
-          </a>
-        </li>
-        <li>
-          <a href="https://www.facebook.com/pages/Scrive/237391196280189" target="_blank">
-            <img src="/img/sm-facebook.png" width="32" height="32" alt="Facebook">
-          </a>
-        </li>
-      </ul>
-      <ul class="tree">
-        <li class="branch">
+    <div class="visions">
+      <p>Visions made in Sweden. Built by experts from around the
+        world. </p>
+    </div>
+
+    <nav class="left">
+      <div class="content">
+        <ul class="icons">
+          <li>
+            <a href="https://plus.google.com/share?url=http://scrive.com" target="_blank">
+              <img src="/img/sm-google.png" width="32" height="32" alt="Google+" />
+            </a>
+          </li>
+          <li>
+            <a href="https://twitter.com/scrive" target="_blank">
+              <img src="/img/sm-twitter.png" width="32" height="32" alt="Twitter" />
+            </a>
+          </li>
+          <li>
+            <a href="https://www.facebook.com/pages/Scrive/237391196280189" target="_blank">
+              <img src="/img/sm-facebook.png" width="32" height="32" alt="Facebook" />
+            </a>
+          </li>
+        </ul>
+        <ul class="tree">
+          <li class="branch">
             $langSwitcher()$
-        </li>
-      </ul>
-    </div>
-  </nav>
+          </li>
+        </ul>
+      </div>
+    </nav>
 
 
-  <nav>
-    <header>
-      <h4>$_pageFooterExplore()$</h4>
-    </header>
-    <div class="content">
-      <ul class="tree">
-        <li class="branch">
-          <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$api" id="nav-api">
-            $_pageFooterAPI()$
-          </a>
-        </li>
+    <nav>
+      <header>
+        <h4>$_pageFooterExplore()$</h4>
+      </header>
+      <div class="content">
+        <ul class="tree">
+          <li class="branch">
+            <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$api" id="nav-api">
+              $_pageFooterAPI()$
+            </a>
+          </li>
 
-        <li class="branch">
-          <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$labs" id="nav-labs">
-            $_pageFooterLabs()$
-          </a>
-        </li>
-        <li class="branch">
-          <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$blog" id="nav-blog">
-            $_pageFooterBlog()$
-          </a>
-        </li>
-        <li class="branch">
-          <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$jobs" id="nav-jobs">
-            $_pageFooterWork()$
-          </a>
-        </li>
-      </ul>
-    </div>
-  </nav>
+          <li class="branch">
+            <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$labs" id="nav-labs">
+              $_pageFooterLabs()$
+            </a>
+          </li>
+          <li class="branch">
+            <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$blog" id="nav-blog">
+              $_pageFooterBlog()$
+            </a>
+          </li>
+          <li class="branch">
+            <a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$jobs" id="nav-jobs">
+              $_pageFooterWork()$
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
 
-  <nav>
-    <header>
-      <h4>$_pageFooterTerms()$</h4>
-    </header>
-    <div class="content">
-      <ul class="tree">
-        <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$terms" id="nav-terms">$_pageFooterTOS()$</a></li>
-        <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$environment" id="nav-environment">$_pageFooterEnvironmentalPolicy()$</a></li>
-        <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$privacy" id="nav-privacy">$_pageFooterPrivacyPolicy()$</a></li>
-      </ul>
-    </div>
-  </nav>
+    <nav>
+      <header>
+        <h4>$_pageFooterTerms()$</h4>
+      </header>
+      <div class="content">
+        <ul class="tree">
+          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$terms" id="nav-terms">$_pageFooterTOS()$</a></li>
+          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$environment" id="nav-environment">$_pageFooterEnvironmentalPolicy()$</a></li>
+          <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$privacy" id="nav-privacy">$_pageFooterPrivacyPolicy()$</a></li>
+        </ul>
+      </div>
+    </nav>
 
-  <nav>
-    <header>
-      <h4>$_pageFooterContact()$</h4>
-    </header>
-    <div class="content">
-      <ul class="tree">
-        <li class="branch">
+    <nav>
+      <header>
+        <h4>$_pageFooterContact()$</h4>
+      </header>
+      <div class="content">
+        <ul class="tree">
+          <li class="branch">
             $_pageFooterWorkDay()$
-        </li>
-        <li class="branch">
-          <a href="tel:$_pageFooterPhone()$">
-            $_pageFooterPhone()$
-          </a>
-        <li class="branch">
-          <a href="mailto:$_pageFooterMail()$">
-            $_pageFooterMail()$
-          </a>
-        </li>
-        </li>
-      </ul>
-    </div>
-  </nav>
+          </li>
+          <li class="branch">
+            <a href="tel:$_pageFooterPhone()$">
+              $_pageFooterPhone()$
+            </a>
+          <li class="branch">
+            <a href="mailto:$_pageFooterMail()$">
+              $_pageFooterMail()$
+            </a>
+          </li>
+          </li>
+        </ul>
+      </div>
+    </nav>
 
-  <nav>
-    <header>
-      <h4>$_pageFooterAddress()$</h4>
-    </header>
-    <div class="content">
-      <ul class="tree">
-         <li class="branch">$_pageFooterAddress1()$</li>
-         <li class="branch">$_pageFooterAddress2()$</li>
-         <li class="branch">$_pageFooterAddress3()$</li>
-         <li class="branch">$_pageFooterAddress4()$</li>
-      </ul>
-    </div>
-  </nav>
-
+    <nav>
+      <header>
+        <h4>$_pageFooterAddress()$</h4>
+      </header>
+      <div class="content">
+        <ul class="tree">
+          <li class="branch">$_pageFooterAddress1()$</li>
+          <li class="branch">$_pageFooterAddress2()$</li>
+          <li class="branch">$_pageFooterAddress3()$</li>
+          <li class="branch">$_pageFooterAddress4()$</li>
+        </ul>
+      </div>
+    </nav>
+  </div>
 </footer>
 ####
 header=
- <script>
-   window.BlockingInfo = Blocking();
- </script>
+<script>
+  window.BlockingInfo = Blocking();
+</script>
 
 <header class="site $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
   <nav>
@@ -197,12 +226,12 @@ header=
       </li>
       $if(logged)$
       <li class="float-right">
-        <a class="page" href="$linklogout$">$_headerLogOut()$</a></li>
+        <a class="page logout" href="$linklogout$">$_headerLogOut()$</a>
       </li>
       <li class="float-right"><a class="page" href="$linkaccount$">$_headerAccount()$</a></li>
       <li class="page-first float-right"><a class=" page" href="$linkissue$">$_headerArchive()$</a></li>
       <li class="session-create float-right">
-        <a class="button button-small" onclick='createfromtemplate()' href="#">$_headerTemplate()$ </a>
+        <a class="button button-small fromtemplate" onclick='createfromtemplate()' href="#">$_headerTemplate()$ </a>
       </li>
       <li class="session-create float-right">
         <a class="button button-small"            onclick='createnewdocument()' href="#">$_headerSend()$ </a>
@@ -228,6 +257,7 @@ langSwitcher=
 <script>
               jQuery(function() {
                    var changeLang = function(l) {
+                      mixpanel.track('Click switch languages', { 'Language' : l });
                       new Submit({
                           method : "POST",
                           url: "$linklangswitch$",

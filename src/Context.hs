@@ -47,4 +47,5 @@ data Context = Context
     , ctxusehttps            :: Bool
     , ctxrecurlyconfig       :: RecurlyConfig
     , ctxsessionid           :: SessionID
+    , ctxmixpaneltoken       :: String
     }

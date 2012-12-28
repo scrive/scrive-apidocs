@@ -9,6 +9,8 @@ jQuery(function(){
                         id:"$documentid$"
                   }).el());
 });
+  mixpanel.register({DocumentID: "$documentid$", Context: "design view"});
+  mixpanel.track('View Design View');
 </script>
 </div>
 </div>

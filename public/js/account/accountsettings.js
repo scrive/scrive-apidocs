@@ -302,6 +302,7 @@ var AccountSettingsView = Backbone.View.extend({
         text: localization.account.accountDetails.changeEmailButton,
         cssClass : "new-mail-button",
         onClick: function() {
+            mixpanel.track('Click change email button');
             var body = jQuery("<div/>");
             var p = $("<p/>").text(localization.account.accountDetails.changeEmailExplaination);
             body.append(p);
@@ -324,9 +325,11 @@ var AccountSettingsView = Backbone.View.extend({
 
             Confirmation.popup({
               onAccept: function() {
+                  mixpanel.track('Accept change email');
                     model.changeEmail();
               },
               onReject : function() {
+                  mixpanel.track('Reject change email');
                     model.setNewEmail("");
                     model.setNewEmailAgain("");
               },
@@ -345,6 +348,7 @@ var AccountSettingsView = Backbone.View.extend({
         size: "small",
         text: localization.account.accountDetails.createCompany,
         onClick: function() {
+            mixpanel.track('Click create company button');
             var body = jQuery("<div class='account-body'>");
             body.append($("<p/>").text(localization.account.accountDetails.createCompanyExplanation));
             body.append($("<p/>").text(localization.account.accountDetails.createCompanyPreambule));
@@ -392,6 +396,7 @@ var AccountSettingsView = Backbone.View.extend({
 
             Confirmation.popup({
               onAccept: function() {
+                  mixpanel.track('Accept create company');
                 model.createCompany();
               },
               onReject: function() {
@@ -413,6 +418,7 @@ var AccountSettingsView = Backbone.View.extend({
         cssClass : "save",
         text : localization.account.accountDetails.save,
         onClick : function() {
+            mixpanel.track('Click save button');
           model.save();
           return false;
         }

@@ -85,6 +85,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
                 width: 200,
                 maxlength: 2,
                 onAppend : function(input,title,multifile) {
+                    mixpanel.track('Upload attachment');
                     attachmentsList.addAttachment(
                                               new DesignAuthorAttachment({
                                                     name : title,
@@ -110,6 +111,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
             text: localization.authorattachments.selectAttachment,
             width: 200,
             onClick : function() {
+                mixpanel.track('Click select attachment');
                 view.showAvaibleAttachmentsList = true;
                 view.render();
             }
@@ -126,6 +128,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
 
         var arrowBack = $("<div class='back'>");
         arrowBack.click(function() {
+            mixpanel.track('Click back (author attachment)');
               view.showAvaibleAttachmentsList = false;
               view.render();
               return false;
@@ -144,6 +147,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
                                       var link = jQuery("<a/>").text(title);
                                       var attachment_file = listobject.field("file");
                                       link.click(function(){
+                                          mixpanel.track('Select attachment from list');
                                           attachmentsList.addAttachment(
                                               new DesignAuthorAttachment({
                                                     name : title,
@@ -220,6 +224,7 @@ window.DesignAuthorAttachmentsPopup = {
               acceptText: localization.save,
               width: 800,
               onAccept : function() {
+                  mixpanel.track('Save attachments', {documentid:document.documentid()});
                   document.afterSave( function() {
                       var submit = document.setAttachments();
                       var counter = 0;
@@ -331,6 +336,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
             color: 'blue',
             text: localization.signatoryAttachments.addAttachment,
             onClick: function() {
+                mixpanel.track('Click add sig attachment (popup)');
             attachments.addNewAttachment();
             return false;
             }
@@ -344,6 +350,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
         editName.val(attachment.name());
         editName.change(function() {
             attachment.setName(editName.val());
+            mixpanel.track('Set attachment name');
         });
         td1.append(editName);
 
@@ -352,6 +359,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
         editDesc.val(attachment.description());
         editDesc.change(function() {
             attachment.setDescription(editDesc.val());
+            mixpanel.track('Set attachment description');
         });
         td2.append(editDesc);
 
@@ -377,6 +385,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
         selectSignatory.change(function(){
             var signatory = $("option:selected",selectSignatory).data("signatory");
             attachment.setSignatory(signatory);
+            mixpanel.track('Set signatory (in attachment)');
         });
         td3.append(selectSignatory);
 
@@ -384,6 +393,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
         var removeIcon = $("<div class='removeSignatoryAttachmentIcon'>");
         removeIcon.click(function() {
             attachments.removeAttachment(attachment);
+            mixpanel.track('Remove sig attachment');
         });
         td4.append(removeIcon);
 

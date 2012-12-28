@@ -77,6 +77,14 @@
             var model = this;
             model.fetch({success: function() {
                 model.trigger('fetch');
+                mixpanel.people.set({
+                    'Price plan'          : model.plan(),
+                    'Subscription status' : model.status(),
+                    'Documents used'      : model.docsUsed(),
+                    'Documents total'     : model.docsTotal(),
+                    'Billing ends'        : model.billingEnds(),
+                    'Dunning?'            : model.isDunning()
+                });
             }});
         }
     });
@@ -205,10 +213,12 @@
         clickAction: function() {
             var view = this;
             var model = view.model;
-            if(model.isFree())
+            mixpanel.track('Click blocking header');
+            if(model.isFree()) {
                 view.paymentsPopup({
                     title: localization.blocking.free.click.title
                 });
+            }
             else if(model.hasUsedAll())
                 window.location = 'mailto:support@scrive.com';
             else if(model.isOverdue())

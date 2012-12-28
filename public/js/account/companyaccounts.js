@@ -1,4 +1,8 @@
-/* Main archive definition. Its a tab based set of different documents lists. */
+/*
+ * Main archive definition. Its a tab based set of different documents lists. 
+ * 
+ * Instrument for Mixpanel
+ */
 
 (function(window){
 
@@ -22,7 +26,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
         size: "tiny",
         text: localization.account.companyAccounts.createNewButtonText,
         onClick: function() {
-
+            mixpanel.track('Click new account');
             var body = jQuery("<div class='account-body'>");
             body.append($("<p></p>").text(localization.account.companyAccounts.createNewModalBody));
             var table = jQuery("<table/>");
@@ -47,6 +51,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
 
             Confirmation.popup({
               onAccept : function() {
+                  mixpanel.track('Accept new account');
                             new Submit({
                                 url: "/account/companyaccounts",
                                 method: "POST",
@@ -120,12 +125,16 @@ var CompanyAccountsModel = Backbone.Model.extend({
                               icon.addClass("reminderForSendIcon");
 
                               var popupResendConfirmation = function() {
+                                  mixpanel.track('Click resend confirmation');
                                 var submit = new Submit({
                                   url: "/account/companyaccounts",
                                   method: "POST",
                                   resend: "true",
                                   resendid: user.field("id"),
-                                  resendemail: user.field("email")
+                                  resendemail: user.field("email"),
+                                    onSend : function() {
+                                        mixpanel.track('Accept resend confirmation');
+                                    }
                                 });
                                 var text = localization.account.companyAccounts.resendModalBody + self.userFullName(user) + "?";
                                 var content = jQuery("<p/>").text(text);
@@ -153,12 +162,16 @@ var CompanyAccountsModel = Backbone.Model.extend({
                                 icon.addClass("delete");
 
                                 var popupDeleteConfirmation = function() {
+                                    mixpanel.track('Click delete user');
                                   var submit = new Submit({
                                     url: "/account/companyaccounts",
                                     method: "POST",
                                     remove: "true",
                                     removeid: user.field("id"),
-                                    removeemail: user.field("email")
+                                    removeemail: user.field("email"),
+                                      onSend: function() {
+                                          mixpanel.track('Accept delete user');
+                                      }
                                   });
                                   var text = localization.account.companyAccounts.deleteModalBody + self.userFullName(user) + "?";
                                   var content = jQuery("<p/>").text(text);

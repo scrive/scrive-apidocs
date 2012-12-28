@@ -44,6 +44,7 @@ window.DocumentCellsDefinition = function(archive) { return  [
                                 actionIcon.addClass("removefromqueue");
                                 ToolTip.set({on: actionIcon,  tip : localization.pad.removeFromPadQueue});
                                 actionIcon.click(function() {
+                                    mixpanel.track('Click clear pad queue');
                                     new Submit({
                                         url: "/api/frontend/padqueue/clear" ,
                                         method: "POST"
@@ -57,6 +58,8 @@ window.DocumentCellsDefinition = function(archive) { return  [
                                 ToolTip.set({on: actionIcon, tip : localization.pad.addToPadQueue});
                                 actionIcon.click(function() {
                                 LoadingDialog.open();
+                                    mixpanel.track('Add to pad queue', 
+                                                   {DocumentID : listobject.field("id")});
                                 new Submit({
                                         url: "/api/frontend/padqueue/add/"+ listobject.field("id") + "/" +  listobject.subfield(idx,"id") ,
                                         method: "POST"
@@ -180,6 +183,7 @@ window.DocumentsListDefinition = function(archive) { return {
                                 title: localization.archive.documents.sendreminder.action,
                                 content: content,
                                 onAccept : function() {
+                                    mixpanel.track('Send reminder');
                                     new Submit({
                                                 url: "/d/remind",
                                                 method: "POST",
@@ -217,6 +221,7 @@ window.DocumentsListDefinition = function(archive) { return {
                                 title: localization.archive.documents.cancel.action,
                                 content: jQuery("<p/>").text(localization.archive.documents.cancel.body),
                                 onAccept : function() {
+                                    mixpanel.track('Cancel document');
                                     new Submit({
                                                 url: "/d/cancel",
                                                 method: "POST",
@@ -255,6 +260,7 @@ window.DocumentsListDefinition = function(archive) { return {
                                 title: localization.archive.documents.remove.action,
                                 content: confirmtext,
                                 onAccept : function() {
+                                    mixpanel.track('Delete document');
                                     new Submit({
                                                 url: "/d/delete",
                                                 method: "POST",
@@ -275,6 +281,7 @@ window.DocumentsListDefinition = function(archive) { return {
                 {name : localization.archive.documents.csv.action,
                  acceptEmpty : true,
                  onSelect: function(){
+                     mixpanel.track('Download CSV');
                         var url =  archive.documents().model().schema.url() + "?"
                         var params =  archive.documents().model().schema.getSchemaUrlParams();
                         _.each(params,function(a,b){url+=(b+"="+a+"&")})
@@ -285,6 +292,7 @@ window.DocumentsListDefinition = function(archive) { return {
                {name : localization.archive.documents.zip.action,
                  acceptEmpty : true, // We handle in manually
                  onSelect: function(docs){
+                     mixpanel.track('Download PDFs');
                         if (docs == undefined || docs.length == 0 ) {
                          new FlashMessage({color : "red", content : localization.archive.documents.zip.emptyMessage}); 
                          return true;
