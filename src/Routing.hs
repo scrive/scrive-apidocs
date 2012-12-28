@@ -11,9 +11,11 @@ module Routing ( hGet
                , hGetWrap
                , hPost
                , hDelete
+               , hDeleteAllowHttp
                , hPut
                , hPostNoXToken
                , hPostAllowHttp
+               , hPostNoXTokenHttp
                , hGetAllowHttp
                , https
                , allowHttp
@@ -38,6 +40,7 @@ import Control.Monad
 import qualified Log as Log
 import Utils.Read
 import Happstack.Fields
+import OAuth.Util
 
 newtype ThinPage = ThinPage String
 
@@ -112,6 +115,9 @@ hGet = hGetWrap https
 hDelete :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hDelete = hDeleteWrap https
 
+hDeleteAllowHttp :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
+hDeleteAllowHttp = hDeleteWrap allowHttp
+
 hPut :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hPut = hPutWrap https
 
@@ -123,6 +129,9 @@ hPostAllowHttp = hPostWrap allowHttp
 
 hPostNoXToken :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hPostNoXToken = hPostWrap https
+
+hPostNoXTokenHttp :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
+hPostNoXTokenHttp = hPostWrap allowHttp
 
 https:: Kontra Response -> Kontra Response
 https action = do
@@ -137,7 +146,8 @@ allowHttp action = do
     secure <- isSecure
     useHttps <- ctxusehttps <$> getContext
     logged <- isJust <$> ctxmaybeuser <$> getContext
-    if (secure || logged || not useHttps)
+    hasOAuth <- isJust <$> getAuthorization
+    if (secure || logged || not useHttps || hasOAuth)
        then action
        else sendSecureLoopBack
 
