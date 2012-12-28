@@ -141,7 +141,7 @@ var ConfirmationView = Backbone.View.extend({
        container.css("top",$(window).scrollTop());
        container.css("margin-top",$(window).height() > 700 ? 200 : 100);
        container.css("left",$(window).scrollLeft());
-       container.css("margin-left",($(window).width() - model.width()) / 2);
+       container.css("margin-left",Math.floor(($(window).width() - model.width()) / 2));
        if (model.extraClass() != undefined)
             $(this.el).addClass(model.extraClass());
        container.width(model.width());
