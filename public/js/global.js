@@ -26,7 +26,7 @@ window.createnewdocument = function() {
 
 window.createfromtemplate = function() {
     mixpanel.track('Click create from template');
-    window.location.hre = "/fromtemplate";
+    window.location.href = "/fromtemplate";
     return false;
 }
 
