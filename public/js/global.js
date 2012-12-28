@@ -7,7 +7,9 @@ window.closeAllActiveModals = function() {
 }
 
 
-window.createnewdocument = function() {
+window.createnewdocument = function(event) {
+  event.preventDefault();
+  event.stopImmediatePropagation();
   mixpanel.track('Click start new process'); 
   new Submit({
                     method : "POST",
@@ -24,7 +26,9 @@ window.createnewdocument = function() {
                 }).send();  
 }
 
-window.createfromtemplate = function() {
+window.createfromtemplate = function(event) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
     mixpanel.track('Click create from template');
     window.location.href = "/fromtemplate";
     return false;

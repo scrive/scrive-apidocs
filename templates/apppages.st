@@ -231,10 +231,10 @@ header=
       <li class="float-right"><a class="page" id='page-account' href="$linkaccount$">$_headerAccount()$</a></li>
       <li class="page-first float-right"><a class=" page" id='page-archive' href="$linkissue$">$_headerArchive()$</a></li>
       <li class="session-create float-right">
-        <a class="button button-small fromtemplate" onclick='createfromtemplate()' href="">$_headerTemplate()$ </a>
+        <a class="button button-small fromtemplate" onclick='createfromtemplate(event)' href="#">$_headerTemplate()$ </a>
       </li>
       <li class="session-create float-right">
-        <a class="button button-small"            onclick='createnewdocument()' href="">$_headerSend()$ </a>
+        <a class="button button-small"            onclick='createnewdocument(event)' href="#">$_headerSend()$ </a>
       </li>
       $else$
       <li class="page-first float-left"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$features">$_headerFeatures()$</a></li>
