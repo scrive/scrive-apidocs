@@ -55,6 +55,7 @@ var SignatoriesDesignView = Backbone.View.extend({
              size: 'small',
              text: localization.nextStep,
              cssClass : "nextstepbutton",
+             shape: "rounded",
              onClick : function() {
                  mixpanel.track('Click next step');
                  documentdesignview.goToNextStep();

@@ -72,7 +72,7 @@ window.DocumentCellsDefinition = function(archive) { return  [
      
                  }}),
         new Cell({width:"5px" }),
-        new Cell({name: localization.archive.documents.columns.type, width:"40px", field:"process",
+        new Cell({name: localization.archive.documents.columns.type, width:"50px", field:"process",
                   rendering: function(value, _idx, _model) {
                       var txt = "";
                       if( localization.process[value] !== undefined ) {

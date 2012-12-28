@@ -19,6 +19,7 @@ var ButtonModel = Backbone.Model.extend({
       color : "green",
       size  : "small",
       text  : "",
+      shape : "squere",
       onClick : function() {return false;},
       icon : jQuery(""),
       labelstyle : undefined,
@@ -47,6 +48,12 @@ var ButtonModel = Backbone.Model.extend({
   },
   width: function() {
        return this.get("width");
+  },
+  shape : function() {
+    return this.get("shape");
+  },
+  isRounded : function() {
+    return this.shape() == "rounded";
   }
 });
 
@@ -80,6 +87,9 @@ var ButtonView = Backbone.View.extend({
         else if (this.model.color() == "black")
             $(this.el).addClass("button-gray");
 
+        if (this.model.isRounded())
+            $(this.el).addClass("button-round");
+
         var label = $("<div class='label'/>").text(this.model.text());
         if (this.model.width() != undefined)
             $(this.el).css("width",this.model.width() - (2*Button.borderWidth(this.model.size())) - (2* Button.labelPadding(this.model.size()))+ "px");
@@ -105,7 +115,8 @@ window.Button = {
                        onClick : args.onClick,
                        icon : args.icon,
                        labelstyle : args.labelstyle,
-                       width: args.width
+                       width: args.width,
+                       shape : args.shape
                     });
           var input = $("<a/>");
           if (args.cssClass != undefined)

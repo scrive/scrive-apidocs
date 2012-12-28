@@ -19,12 +19,16 @@
     margin-right: 25px;
     margin-top : 20px;
     margin-bottom : 20px;
-    min-height: 96px;
+    min-height: 122px;
 
 }
 
+.siglist .header {
+  margin-bottom: 7px;
+}
 .siglist .signame {
     display: block;
+    margin-top: 3px;
 }
 
 .sigview .top{
@@ -44,7 +48,7 @@
     border-radius: 2px 2px 2px 2px;
     display: block;
     float: left;
-    margin: 4px 5px 2px 0px;
+    margin: 6px 8px 2px 0px;
     overflow: hidden;
     width: 161px;
     position: relative;
@@ -58,12 +62,12 @@
     border: medium none;
     height: 18px;
     line-height: 18px;
+    font-size: 14.5px;
     margin: 0;
     outline: medium none;
     overflow: hidden;
     position: relative;
-    width: 132px;
-    font-style: italic;
+    width: 130px;
 }
 
 .sigview .field .fieldvalue.shorter {
@@ -91,6 +95,7 @@
 .addSignatory{
     background-image: url("/img/iconPlus.png");
     background-position: 0 5px;
+    margin-top: -3px;
 }
 .removeSignatory{
     background-image: url("/img/iconMinus.png");
@@ -99,7 +104,7 @@
 .field .ddIcon{
     height:16px;
     width:12px;
-    margin: 4px 2px;
+    margin: 4px 4px 4px 2px;
     float:left;
     background-image: url("/img/iconHand.png");
     cursor: pointer;
@@ -209,7 +214,7 @@
 }
 
 .top {
-  margin-right: 20px;
+  margin: 4px 20px 10px 0px;
 }
 
 .button.nextstepbutton {
@@ -234,6 +239,7 @@
     padding: 12px 15px 10px 15px;
     margin-top : 20px;
     margin-bottom : 20px;
+    height: 122px;
 }
 
 
@@ -248,15 +254,22 @@
 .deliverymethodselect,
 .signLastOption
 {
-    min-height: 29px;
+    margin: 5px 0;
+    min-height: 30px;
 }
 
 
-.authenticationmethodselect select,
-.deliverymethodselect select,
-.languageselect select,
-.documenttypeselect select{
-    margin-left: 5px;
+.authenticationmethodselect .select,
+.deliverymethodselect .select,
+.languageselect .select,
+.documenttypeselect .select{
+    width: 150px
+}
+.authenticationmethodselect .select .select-opts,
+.deliverymethodselect .select .select-opts,
+.languageselect .select .select-opts,
+.documenttypeselect .select .select-opts {
+    width: 150px
 }
 
 

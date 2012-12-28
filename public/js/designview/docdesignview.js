@@ -153,7 +153,8 @@ var DesignViewView = Backbone.View.extend({
        box.append(box1).append($("<div class='border'/>"));
 
        var box2 = $("<div class='signStepsBodyPart middle'/>");
-       box2.append(this.deliveryMethodSelection());
+       this.deliveryMethodSelectionBox = this.deliveryMethodSelection();
+       box2.append(this.deliveryMethodSelectionBox);
        box2.append(this.authenticationMethodSelection());
        box2.append(this.authorAttachmentsSetup());
        this.signatoryAttachmentSetupBox = this.signatoryAttachmentSetup();
@@ -196,80 +197,82 @@ var DesignViewView = Backbone.View.extend({
         return box;
     },
     documentTypeSelection : function() {
-        // TODO: Change this HTML select to proper JavaScript-based Select one day
         var document = this.model.document();
         var box = $("<label class='documenttypeselect'/>");
-        var select= $("<select/>");
-        var contract = $("<option value='contract'/>").text(localization.process.contract.name);
-        var offer = $("<option value='offer'/>").text(localization.process.offer.name);
-        var order = $("<option value='order'/>").text(localization.process.order.name);
-        select.append(contract);
-        select.append(offer);
-        select.append(order);
-        box.text(localization.designview.selectprocess);
-        box.append(select);
-        if (document.process().isContract())
-            contract.attr("selected","yes");
-        else if (document.process().isOffer())
-            offer.attr("selected","yes");
-        else if (document.process().isOrder())
-            order.attr("selected","yes");
+        box.append($("<div class='float-left' style='line-height:30px;margin-right:10px;'/>").text(localization.designview.selectprocess));
+        var contractOption = {name : localization.process.contract.name, onSelect :
+              function() {
+                    document.process().changeToContract();
+                    mixpanel.track('Select contract (document type)');
+                    document.save();
+                    document.afterSave(function() { LoadingDialog.open(); window.location = window.location; });  
+             }
+        };
+        var offerOption =    {name : localization.process.offer.name, onSelect :
+              function() {
+                    document.process().changeToOffer();
+                    mixpanel.track('Select offer (document type)');
+                    document.save();
+                    document.afterSave(function() { LoadingDialog.open(); window.location = window.location; });
+             }
+        };
+        var orderOption =   {name : localization.process.order.name, onSelect :
+              function() {
+                    document.process().changeToOrder();
+                    mixpanel.track('Select order (document type)');
+                    document.save();
+                    document.afterSave(function() { LoadingDialog.open(); window.location = window.location; });
+             }
+        };
+        var options = []
+        var name = ""
+        
+        
+        if (document.process().isContract()) {
+            name = localization.process.contract.name;
+            options = [offerOption,orderOption];
+        }    
+        else if (document.process().isOffer()) {
+            name = localization.process.offer.name;
+            options = [contractOption,orderOption];
+        }    
+        else if (document.process().isOrder()) {
+            name = localization.process.order.name;
+            options = [contractOption,offerOption];
+        }
+        var select = new Select({options: options, name: name, textWidth: "122px"}).view().el;
+        $(select).addClass("float-right");
+        box.append($(select));
 
-        select.change(function() {
-            if ($(this).val() == "contract") {
-              document.process().changeToContract();
-                mixpanel.track('Select contract (document type)');
-            }
-            else if ($(this).val() == "offer") {
-              document.process().changeToOffer();
-                mixpanel.track('Select offer (document type)');
-            }
-            else if ($(this).val() == "order") {
-              document.process().changeToOrder();
-                mixpanel.track('Select order (document type)');
-            }
-            document.save();
-            document.afterSave(function() { LoadingDialog.open(); window.location = window.location; });
-        });
         return box;
     },
     deliveryMethodSelection : function() {
         var document = this.model.document();
         var box = $("<label class='deliverymethodselect'/>");
-        var select= $("<select/>");
-        var email = $("<option value='email'/>").text(localization.email);
-        var pad = $("<option value='pad'/>").text(localization.pad.delivery);
-        var api = $("<option value='api'/>").text("API");
-        select.append(email);
-        select.append(pad);
-        box.text(localization.designview.delivery.selectmethod);
-        box.append(select);
+        box.append($("<div class='float-left' style='line-height:30px;margin-right:10px;'/>").text(localization.designview.delivery.selectmethod));
+
+        var emailOption =    {name : localization.email, onSelect :  function() {  mixpanel.track('Select email delivery'); document.setEmailDelivery(); return true;}  };
+        var padOption =    {name : localization.pad.delivery, onSelect :  function() {  mixpanel.track('Select pad delivery'); document.setPadDelivery(); return true;}  };
+
+        
+        var options = []
+        var name = ""
+
         if (document.emailDelivery()) {
-          email.attr("selected","YES");
-          pad.attr("selected","");
-            mixpanel.track('Select email delivery');
-        }
-        else if (document.padDelivery()) {
-          email.attr("selected","");
-          pad.attr("selected","YES");
-            mixpanel.track('Select pad delivery');
+            name = localization.email;
+            options = [padOption];
+        } else if (document.padDelivery()) {
+            name = localization.pad.delivery;
+            options = [emailOption];
         }
         else if (document.apiDelivery()) {
-          email.attr("selected","");
-          pad.attr("selected","");
-          api.attr("selected","YES");
-          select.append(api);
-            mixpanel.track('Select api delivery');
+            name = "API";
+            options = [padOption,emailOption];
         }
+        var select = new Select({options: options, name: name, textWidth: "122px"}).view().el;
+        $(select).addClass("float-right");
+        box.append($(select));
 
-        select.change(function() {
-            if ($(this).val() == 'pad')
-                document.setPadDelivery();
-            else if ($(this).val() == 'api')
-                document.setAPIDelivery();
-            else
-                document.setEmailDelivery();
-        });
         return box;
     },
     finalDateSelection: function() {
@@ -336,27 +339,11 @@ var DesignViewView = Backbone.View.extend({
     selectLanguageOption: function() {
         var document = this.model.document();
         var box = $("<label class='languageselect'/>");
-        var select= $("<select/>");
-        var en =  $("<option value='en'/>").text(localization.languages.en);
-        var sv = $("<option value='sv'/>").text(localization.languages.sv);
-        select.append(en);
-        select.append(sv);
-        box.text(localization.languages.selectLanguage);
-        box.append(select);
-        if (document.lang().en())
-        {
-          en.attr("selected","YES");
-          sv.attr("selected","");
-        }
-        else
-        {
-          en.attr("selected","");
-          sv.attr("selected","YES");
-        }
+        box.append($("<div class='float-left' style='line-height:30px;margin-right:10px;'/>").text(localization.languages.selectLanguage));
 
-        select.change(function(event){
-            if ($(this).val() == 'en'){
-                mixpanel.track('Select language', 
+        var changeLang = function(lang){
+            if (lang == 'en'){
+                mixpanel.track('Select language',
                                {'New Language': 'English'});
                 Confirmation.popup({
                     title:    localization.languages.signInEnglish,
@@ -366,7 +353,7 @@ var DesignViewView = Backbone.View.extend({
                         select.val("sv");
                     },
                     onAccept : function() {
-                        mixpanel.track('Accept language', 
+                        mixpanel.track('Accept language',
                                        {'New Language': 'English'});
                        document.lang().setEN();
                        LoadingDialog.open();
@@ -390,7 +377,7 @@ var DesignViewView = Backbone.View.extend({
                         select.val("en");
                     },
                     onAccept : function() {
-                        mixpanel.track('Accept language', 
+                        mixpanel.track('Accept language',
                                        {'New Language': 'Swedish'});
                        document.lang().setSV();
                        LoadingDialog.open();
@@ -405,7 +392,27 @@ var DesignViewView = Backbone.View.extend({
                 });
             }
             return false;
-        });
+        };
+
+        var enOption =    {name : localization.languages.en, onSelect :  function() { changeLang("en");}  };
+        var svOption =    {name : localization.languages.sv, onSelect :  function() { changeLang("sv");}  };
+
+        var options = []
+        var name = ""
+
+
+        if (document.lang().en()) {
+            name = localization.languages.en;
+            options = [svOption];
+        }
+        else {
+            name = localization.languages.sv;
+            options = [enOption];
+        }
+        var select = new Select({options: options, name: name, textWidth: "122px" }).view().el;
+        $(select).addClass("float-right");
+        box.append($(select));
+
         return box;
     },
     authorAttachmentsSetup: function() {
@@ -487,6 +494,13 @@ var DesignViewView = Backbone.View.extend({
             this.editInvitationOptionBox = tmp;
         }
     },
+    refreshDeliveryMethodSelection : function() {
+       if (this.deliveryMethodSelectionBox != undefined)
+        {   var tmp = this.deliveryMethodSelection();
+            this.deliveryMethodSelectionBox.replaceWith(tmp);
+            this.deliveryMethodSelectionBox = tmp;
+        }
+    },
     refreshSignatoryAttachmentsOption : function() {
        if (this.signatoryAttachmentSetupBox != undefined)
         {   var tmp = this.signatoryAttachmentSetup();
@@ -495,6 +509,7 @@ var DesignViewView = Backbone.View.extend({
         }
     },
     refreshAuthorizationDependantOptions : function() {
+        this.refreshDeliveryMethodSelection();
         this.refreshInvitationMessageOption();
         this.refreshSignatoryAttachmentsOption();
         this.refreshFinalButton();
@@ -788,7 +803,7 @@ var DesignViewView = Backbone.View.extend({
         var upbutton = UploadButton.init({
             name: "file",
             color : "black",
-            size : "big",
+            size : "small",
             width: 300,
             text: localization.uploadButton,
             submitOnUpload: true,
@@ -839,7 +854,7 @@ var DesignViewView = Backbone.View.extend({
     fromAvtal : function() {
         var document = this.model.document();
         var button = Button.init({
-            size : "big",
+            size : "small",
             color : "black",
             width: 300,
             text: localization.avtal24.buy,
@@ -866,7 +881,7 @@ var DesignViewView = Backbone.View.extend({
           savebox.append($("<h4/>").text(text)).append(saveboxbuttons);
           var saveAsDraftButton = Button.init({
                                  color : "black",
-                                 size :  "big",
+                                 size :  "small",
                                  width : 300,
                                  text :  localization.saveAsDraft,
                                  onClick : function() {
@@ -887,7 +902,7 @@ var DesignViewView = Backbone.View.extend({
           
           var saveAsTemplateButton = Button.init({
                                  color : "black",
-                                 size :  "big",
+                                 size :  "small",
                                  width : 300,
                                  text :  localization.saveAsTemplate,
                                  onClick : function() {
