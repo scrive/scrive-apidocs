@@ -1,7 +1,7 @@
 body {
   font-size: @em;
-  line-height: 1.5;
   font-family: @sans;
+  line-height: 1.5em;
   color: @text-dark;
   background: url("/img/bg-body.png") repeat scroll 0 0 transparent;
 }
@@ -20,7 +20,6 @@ p a {
 h1, h2, h3, h4, h5, h6,
 .h1, .h2, .h3, .h4, .h5, .h6 {
   font-family: @source;
-  line-height: 1.2*@em;
   margin: 0;
 }
 
@@ -28,35 +27,43 @@ h1, .h1 {
   font-size: 3.5*@em;
   color: @blue-dark;
   letter-spacing: -1px;
+  letter-spacing: -2px;
+  line-height: 1.2em;
+  margin: 0;
 }
 
 h2, .h2 {
   font-size: 2*@em;
   font-weight: normal;
   color: @blue-medium;
+  line-height: 1.5em;
 }
 h3, .h3 {
   font-size: 2*@em;
   font-weight: bold;
   color: @blue-dark;
+  line-height: 1.2em;
 }
 
 h4, .h4 {
   font-size: 1.5*@em;
   font-weight: normal;
   color: @blue-dark;
+  line-height: 1.2em;
 }
 
 h5 {
   font-size: 1.25*@em;
   color: @blue-medium;
   font-weight: normal;
+  line-height: 1.2em;
 }
 
 h6 {
   font-size: 1*@em;
   font-weight: bold;
   color: @blue-dark;
+  line-height: 1.2em;
 }
 
 .big-input {
@@ -64,8 +71,8 @@ h6 {
     border: 1px solid #DDDDDD;
     box-shadow: none;
     font: 16px/1 @sans;
-    margin-left: -14px;
     padding: 14px;
+    line-height: 19px;
     width: 100%;
     &:focus {
       border-color: #7A94B8;

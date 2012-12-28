@@ -33,22 +33,26 @@
       this.render();
     },
     validationCallback: function(t, e, v) {
-      $("<div class='validate-message failed-validation' />").css({'font-size': 8, 'font-weight': 'bold', color: 'red'}).append(v.message()).appendTo(e.parent());
+      $("<div class='validate-message failed-validation float-left' />").css({'font-size': 8, 'font-weight': 'bold', color: 'red'}).append(v.message()).appendTo(e.parent());
     },
     clearValidationMessages : function() {
       $(".validate-message",this.el).remove();
     },
     render: function () {
+        $("#page-signup").removeClass("button-red").addClass("button-gray");
         var self = this;
         var model = this.model;
-
+        var header = $("<header class='shadowed signup'/>");
+        header.append($("<h1/>").text(localization.getStartedInstantly));
+        $(this.el).append(header);
+        
         var content = $("<div class='short-input-container recovery-container'/>");
         var wrapper = $("<div class='short-input-container-body-wrapper'/>");
         var body = $("<div class='short-input-container-body'/>");
         content.append(wrapper.append(body));
 
         var emailInput = InfoTextInput.init({
-          infotext: localization.signupModal.fillinemail,
+          infotext: localization.email,
           value: model.email(),
           onChange: function(v) {self.clearValidationMessages(); model.setEmail(v);},
           cssClass : "big-input",
@@ -60,7 +64,7 @@
         var signupButton = Button.init({
             size  : 'small',
             color : 'blue',
-            text: localization.signupModal.modalAccountSetupFooter,
+            text: localization.signup + " ›",
             onClick: function() {
               self.clearValidationMessages(); 
               if (emailInput.input().validate(new EmailValidation({callback: self.validationCallback, message: localization.validation.wrongEmail})))
@@ -68,8 +72,7 @@
             }
           });
         
-        body.append($("<div class='position first'/>").append($("<h1>").text(localization.signupModal.startNow)));
-        body.append($("<div class='position'/>").append(emailInput.input()).append(signupButton.input()));
+        body.append($("<div class='position first'/>").append(emailInput.input()).append(signupButton.input()));
         $(this.el).append(content);
       }
   });

@@ -228,8 +228,8 @@ header=
       <li class="float-right">
         <a class="page logout" href="$linklogout$">$_headerLogOut()$</a>
       </li>
-      <li class="float-right"><a class="page" href="$linkaccount$">$_headerAccount()$</a></li>
-      <li class="page-first float-right"><a class=" page" href="$linkissue$">$_headerArchive()$</a></li>
+      <li class="float-right"><a class="page" id='page-account' href="$linkaccount$">$_headerAccount()$</a></li>
+      <li class="page-first float-right"><a class=" page" id='page-archive' href="$linkissue$">$_headerArchive()$</a></li>
       <li class="session-create float-right">
         <a class="button button-small fromtemplate" onclick='createfromtemplate()' href="#">$_headerTemplate()$ </a>
       </li>
@@ -245,7 +245,7 @@ header=
       <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$contact">$_headerContakt()$</a></li>
       <li class="session-login float-right">
         <a class="button button-small" id="page-login" href="/login">$_login()$ </a>
-        <a class="button button-small button-red" id="page-login" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_signUp()$</a>
+        <a class="button button-small button-red" id="page-signup" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_signUp()$</a>
       </li>
       $endif$
     </ul>

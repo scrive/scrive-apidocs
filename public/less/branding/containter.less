@@ -1,6 +1,6 @@
 .mainContainer {
     width: 1020px;
-    min-height: 370px;
+    min-height: 544px;
     margin: 50px auto;
     overflow: hidden;
     &.big {
@@ -19,9 +19,9 @@
       width: 800px;
       margin: auto;
       header {
-        padding: 5em 0 0;
+        padding: 4em 0 3em;
         text-align: center;
-        h1 {
+        h1, h2 {
           color: #FFFFFF;
           text-shadow: 0 2px 3px rgba(0, 0, 0, 0.45);
         }
@@ -29,19 +29,19 @@
 
       .short-input-container {
         width: 416px;
-        margin: 84px auto;
+        margin: 0px auto;
         .short-input-container-body-wrapper{
           border: 1px solid rgba(0, 0, 0, 0.5);
           transition: all 0.15s ease-in-out 0s;
           .short-input-container-body {
             background: none repeat scroll 0 0 #FFFFFF;
             border: 3px solid #DEE4ED;
-            padding: 32px;
+            padding: 1.5em 0 0.5em;
             transition: all 0.15s ease-in-out 0s;
             .position {
-              margin: 24px auto 0px;
-              padding-left: 20px;
-              padding-right: 20px;
+              margin: 16px auto 16px;
+              padding-left: 48px;
+              padding-right: 48px;
               text-align: center;
               &.first {
                 margin-top: 0px;
@@ -62,21 +62,17 @@
         }
         .short-input-container-footer{
             background: none repeat scroll 0 0 rgba(0, 0, 0, 0.5);
-            border-right: 1px solid rgba(0, 0, 0, 0.5);
-            border-left: 1px solid rgba(0, 0, 0, 0.5);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.5);
-            padding: 1em 2em;
-            min-height: 33px;
+            border: 1px solid rgba(0, 0, 0, 0.5);
+            padding: 8px 48px 8px 32px ;
+            height: 2em;
             a {
               color: #CCCCCC;
               text-decoration: none;
-              font: 16px/1.5 @source;
               &:hover {
                 color: #FFFFFF;
               }
             }
             p {
-              width: 175px;
               line-height: 2em;
               &.float-left {
                 text-align: left;

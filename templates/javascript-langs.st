@@ -5,8 +5,13 @@
 ####
 javascriptLocalisation =
     var localization =
-        {
-               loadingFile : "$_loadingFile()$"
+        {      welcomeback : "$_welcomeback()$"
+             , rememberme  : "$_rememberme()$"
+             , resetYourPassword : "$_resetYourPassword()$"
+             , resetYourPasswordCheckEmail : "$_resetYourPasswordCheckEmail()$"
+             , getStartedInstantly : "$_getStartedInstantly()$"
+             , signup : "$_signUp()$"
+             , loadingFile : "$_loadingFile()$"
              , problemWithPDF : "$_problemWithPDF()$"
              , backToArchive : "$_backToArchive()$"
              , repetedEmailAddress : "$_repetedEmailAddress()$"
