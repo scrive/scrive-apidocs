@@ -40,6 +40,7 @@ import Control.Monad
 import qualified Log as Log
 import Utils.Read
 import Happstack.Fields
+import OAuth.Util
 
 newtype ThinPage = ThinPage String
 
@@ -145,7 +146,8 @@ allowHttp action = do
     secure <- isSecure
     useHttps <- ctxusehttps <$> getContext
     logged <- isJust <$> ctxmaybeuser <$> getContext
-    if (secure || logged || not useHttps)
+    hasOAuth <- isJust <$> getAuthorization
+    if (secure || logged || not useHttps || hasOAuth)
        then action
        else sendSecureLoopBack
 
