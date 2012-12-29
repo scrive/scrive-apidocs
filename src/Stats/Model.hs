@@ -558,10 +558,10 @@ instance MonadDB m => DBUpdate m StatUpdate Bool where
   update (StatUpdate doIt did apistring) =
       kRun01 $ doIt did apistring
 
--- | SQL for turning a (document.type, document.process) pair into a doctype
---   that's suitable for the doc_stat_events table. Its sole argument is the
---   name of the documents table.
---   Example:
+-- | SQL for turning a (document.type, document.process) pair into a
+-- doctype that's suitable for the doc_stat_events table. Its sole
+-- argument is the name of the documents table. Example:
+--
 -- > "SELECT id, " ++ docType "doc" ++ " FROM documents AS doc"
 docType :: SQL -> SQL
 docType doc = mconcat [

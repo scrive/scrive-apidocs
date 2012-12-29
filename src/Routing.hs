@@ -20,9 +20,9 @@ module Routing ( hGet
                , https
                , allowHttp
                , toK0, toK1, toK2, toK3, toK4, toK5, toK6
-               , ToResp, toResp
+               , ToResp(..)
                , ThinPage(..)
-                 )where
+               ) where
 
 import Data.Functor
 import AppView as V
@@ -62,10 +62,10 @@ instance ToResp KontraLink where
 
 instance ToResp String where
     toResp = page . return
-    
+
 instance ToResp ThinPage where
     toResp = pageThin . return
-    
+
 instance ToResp JSValue where
     toResp = simpleJsonResponse
 
@@ -105,7 +105,7 @@ pageThin pageBody = do
     ThinPage pb  <- pageBody
     renderFromBodyThin kontrakcja pb
 
-    
+
 hPost :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hPost = hPostWrap (https . guardXToken)
 
