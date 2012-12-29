@@ -112,7 +112,7 @@ var SelectView = Backbone.View.extend({
         this.model.view = this;
         var view = this;
         $(this.el).mouseout(function() {
-                 setTimeout(function() {view.closeIfNeeded();}, 300);
+                 setTimeout(function() {view.closeIfNeeded();}, 100);
               });
         $(this.el).mouseenter(function() {view.enterdate = new Date().getTime();});
         this.render();
@@ -120,7 +120,7 @@ var SelectView = Backbone.View.extend({
     closeIfNeeded : function() {
         if ( this.dead != true 
             && this.model.expanded()
-            && new Date().getTime() - this.enterdate > 200
+            && new Date().getTime() - this.enterdate > 50
             && $(":hover", this.el).size() == 0
            )
           this.model.toggleExpand();
@@ -170,7 +170,7 @@ var SelectView = Backbone.View.extend({
           button.mouseenter(function(){
               view.enterdate = new Date().getTime();
               model.expand();
-              setTimeout(function() {view.closeIfNeeded();}, 300);
+              setTimeout(function() {view.closeIfNeeded();}, 100);
               return false;
           });
         }    

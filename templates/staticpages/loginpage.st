@@ -39,10 +39,6 @@ accountSetupPage=
       </head>
       <body style='background: none repeat scroll 0 0 #FFFFFF'>
 
-<script>
-  window.BlockingInfo = Blocking();
-</script>
-
       <header class="site thin">
         <nav>
           <ul class="ct thin">
