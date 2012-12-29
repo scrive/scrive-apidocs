@@ -26,7 +26,8 @@ window.SelectModel = Backbone.Model.extend({
       options : [],
       expandSide : "left",
       expanded : false,
-      onOpen : function() {return true;}
+      onOpen : function() {return true;},
+      expandOnHover : false
   },
   initialize: function(args){
       var model = this;
@@ -70,6 +71,9 @@ window.SelectModel = Backbone.Model.extend({
      if (!this.expanded() && this.onOpen() && this.options().length > 0)
        this.set({"expanded" : true});
   },
+  expandOnHover : function() {
+     return this.get("expandOnHover");
+  },
   onOpen : function(){
        if (this.get("onOpen") != undefined)
         return this.get("onOpen")();
@@ -108,7 +112,7 @@ var SelectView = Backbone.View.extend({
         this.model.view = this;
         var view = this;
         $(this.el).mouseout(function() {
-                 setTimeout(function() {view.closeIfNeeded();}, 1000);
+                 setTimeout(function() {view.closeIfNeeded();}, 300);
               });
         $(this.el).mouseenter(function() {view.enterdate = new Date().getTime();});
         this.render();
@@ -116,7 +120,7 @@ var SelectView = Backbone.View.extend({
     closeIfNeeded : function() {
         if ( this.dead != true 
             && this.model.expanded()
-            && new Date().getTime() - this.enterdate > 900
+            && new Date().getTime() - this.enterdate > 200
             && $(":hover", this.el).size() == 0
            )
           this.model.toggleExpand();
@@ -161,6 +165,16 @@ var SelectView = Backbone.View.extend({
               model.toggleExpand();
               return false;
         });
+        
+        if (model.expandOnHover()){
+          button.mouseenter(function(){
+              view.enterdate = new Date().getTime();
+              model.expand();
+              setTimeout(function() {view.closeIfNeeded();}, 300);
+              return false;
+          });
+        }    
+          
         if (model.expanded())
             {
               button.addClass("select-exp");
@@ -188,7 +202,8 @@ window.Select = function(args) {
                                         theme : args.theme != undefined ? args.theme : "standard",
                                         textWidth : args.textWidth,
                                         expandSide : args.expandSide,
-                                        onOpen : args.onOpen
+                                        onOpen : args.onOpen,
+                                        expandOnHover : args.expandOnHover
                                        });
           var input = $("<div class='select'/>");
           if (args.cssClass!= undefined)

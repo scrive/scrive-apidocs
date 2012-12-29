@@ -240,8 +240,8 @@ var DesignViewView = Backbone.View.extend({
             name = localization.process.order.name;
             options = [contractOption,offerOption];
         }
-        var select = new Select({options: options, name: name, textWidth: "122px"}).view().el;
-        $(select).addClass("float-right");
+        var select = new Select({options: options, name: name, textWidth: "122px", expandOnHover : true}).view().el;
+        $(select).addClass("float-left");
         box.append($(select));
 
         return box;
@@ -269,8 +269,8 @@ var DesignViewView = Backbone.View.extend({
             name = "API";
             options = [padOption,emailOption];
         }
-        var select = new Select({options: options, name: name, textWidth: "122px"}).view().el;
-        $(select).addClass("float-right");
+        var select = new Select({options: options, name: name, textWidth: "122px", expandOnHover: true}).view().el;
+        $(select).addClass("float-left");
         box.append($(select));
 
         return box;
@@ -409,8 +409,8 @@ var DesignViewView = Backbone.View.extend({
             name = localization.languages.sv;
             options = [enOption];
         }
-        var select = new Select({options: options, name: name, textWidth: "122px" }).view().el;
-        $(select).addClass("float-right");
+        var select = new Select({options: options, name: name, textWidth: "122px", expandOnHover : true }).view().el;
+        $(select).addClass("float-left");
         box.append($(select));
 
         return box;
