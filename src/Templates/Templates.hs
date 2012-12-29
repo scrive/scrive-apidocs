@@ -45,21 +45,19 @@
 --  - IO wrapped values and fields can be also a values of a field.
 --
 -- Example
--- @
---       userView tempates user =
---         renderTemplate templates "userView" $ do
---             userFields
 --
---       userFields user = do
---             field "name" $ username user
---             field "company" $ usercompany user
---             field "documents" $ map (documentFields) getUserDocumentsFromDB
---
---       documentFields document = do
---             field "id" $ documentid document
---             field "title" $ documenttitle document
---
--- @
+-- >      userView tempates user =
+-- >        renderTemplate templates "userView" $ do
+-- >          userFields
+-- >
+-- >      userFields user = do
+-- >        field "name" $ username user
+-- >        field "company" $ usercompany user
+-- >        field "documents" $ map (documentFields) getUserDocumentsFromDB
+-- >
+-- >      documentFields document = do
+-- >        field "id" $ documentid document
+-- >        field "title" $ documenttitle document
 --
 --
 -- Why we want to use fields

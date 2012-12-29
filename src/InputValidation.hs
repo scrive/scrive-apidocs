@@ -328,18 +328,40 @@ withFailureIfBad (_,Good x) = return $ Just x
 withFailureIfBad (_,Bad _) = internalError
 withFailureIfBad (_,Empty) = return Nothing
 
-{- |
-    Creates a clean and validated email.
-    Validating emails is bizarrely hard.  These rules define a subset of what the official rules (RFC) would allow you to have.  This is because the official rules are very liberal, and email providers in practise aren't that liberal.  So this is kind of a, hopefully, practical compromise. So officially “Abc\@def”@example.com is a valid email address, but really if a user put that in, it's got to be wrong!
-    Rules:
-    * It must contain an @ character
-    * Before the @ character there must appear one of more of the following: Full-stop ., Underscore _, Percentage %, Plus +, Hyphen -, ASCII letters a-z and A-Z, digits 0-9
-    * After the @ character you must have a full-stop .
-    * Between the @ character and the full-stop you must have one of the following: Full-stop ., Hyphen -, ASCII letters a-z and A-Z, digits 0-9.
-    * After the full-stop there must be either two, three or four characters and these can be: ASCII letters a-z and A-Z.
-    * Size: Up to 200 characters
-  Also emails are lowercased.
--}
+-- | Creates a clean and validated email.
+--
+-- Validating emails is bizarrely hard.  These rules define a subset
+-- of what the official rules (RFC) would allow you to have.  This is
+-- because the official rules are very liberal, and email providers in
+-- practise aren't that liberal.  So this is kind of a, hopefully,
+-- practical compromise. So officially
+--
+-- > “Abc\@def”@example.com
+--
+-- is a valid email address, but really if a user put that in, it's
+-- got to be wrong!
+--
+-- Rules:
+--
+--  * It must contain an \@ character
+--
+--  * Before the \@ character there must appear one of more of the
+--  following: Full-stop ., Underscore _, Percentage %, Plus +, Hyphen
+--  -, ASCII letters a-z and A-Z, digits 0-9
+--
+--  * After the \@ character you must have a full-stop .
+--
+--  * Between the \@ character and the full-stop you must have one of
+--  the following: Full-stop ., Hyphen -, ASCII letters a-z and A-Z,
+--  digits 0-9
+--
+--  * After the full-stop there must be either two, three or four
+--  characters and these can be: ASCII letters a-z and A-Z.
+--
+--  * Size: Up to 200 characters
+--
+-- Also emails are lowercased.
+--
 asValidEmail :: String -> Result String
 asValidEmail input =
     stripWhitespace input
@@ -423,7 +445,7 @@ replaceChar c r s = Good $ map (\ch -> if ch == c then r else ch) s
 
 {- |
     Creates a clean and validated company name.
-    White list: Space, Ampersand &, Apostrophe ', At @, Open and close brackets (), Colon :, Comma , Exclamation !, Full-stop ., Hyphen -, Question mark ?, Alphabetic characters, Numeric characters
+    White list: Space, Ampersand &, Apostrophe \', At \@, Open and close brackets (), Colon :, Comma , Exclamation !, Full-stop ., Hyphen -, Question mark ?, Alphabetic characters, Numeric characters
     Size: Up to 100 chars
 -}
 asValidCompanyName :: String -> Result String

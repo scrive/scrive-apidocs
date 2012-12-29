@@ -103,7 +103,7 @@ import Text.JSON.Gen hiding (value)
 import Text.JSON.String (runGetJSON)
 import qualified Text.JSON.Gen as J
 import Text.JSON.FromJSValue
-import Doc.DocDraft() -- | Some instance is imported
+import Doc.DocDraft() -- Import instances only
 import qualified User.Action
 import qualified ELegitimation.Control as BankID
 import Util.Actor
@@ -173,9 +173,9 @@ signDocument documentid
   --
   -- Any operation done on SignatoryLink can be done under one of circumstances:
   --
-  -- * signatorylinkid is same as requested and magic hash matches the
+  -- . signatorylinkid is same as requested and magic hash matches the
   --   one stored in session
-  -- * signatorylinkid is same as requested and maybesignatory is same
+  -- . signatorylinkid is same as requested and maybesignatory is same
   --   as logged in user
   --
   -- The above requires changes to logic in all invoked procedures.
@@ -495,7 +495,7 @@ handleIssueSign document timezone = do
           Right (Right newdocument) -> do
             postDocumentPreparationChange newdocument "web"
             newdocument' <- guardJustM $ dbQuery $ GetDocumentByDocumentID (documentid newdocument)
-            postDocumentPendingChange newdocument' newdocument' "web" -- | We call it on same document since there was no change
+            postDocumentPendingChange newdocument' newdocument' "web" -- We call it on same document since there was no change
             return $ Right newdocument'
           Right (Left (DBActionNotAvailable message)) -> return $ Left message
           Right (Left (DBDatabaseNotAvailable message)) -> return $ Left message

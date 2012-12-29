@@ -72,9 +72,8 @@ decodeByteString bs =
     nordicCharCount = length . filter (\c -> c `elem` "äÄöÖåÅ")
 
 
-{- | Render a BSL.ByteString representation of CSV. Uses ';' as
-spearator and '"' as quote.
--}
+-- | Render a BSL.ByteString representation of CSV. Uses \';\' as
+-- spearator and \'\"\' as quote.
 renderCSV :: [[String]] -> BSL.ByteString
 renderCSV content = BSL.fromString $ SS.toString '"' ';' content
 

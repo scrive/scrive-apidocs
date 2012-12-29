@@ -282,9 +282,8 @@ testMany (args, ts) = Log.withLogger $ do
       putStrLn $ "Documents generated but rejected: " ++ show rejs
 
 -- | Useful for running an individual test in ghci like so:
---   @
---    testone flip (testThat "") testPreparationAttachCSVUploadNonExistingSignatoryLink
---   @
+--
+-- >  testone flip (testThat "") testPreparationAttachCSVUploadNonExistingSignatoryLink
 testone :: (TestEnvSt -> Test) -> IO ()
 testone t = do
   args <- getArgs
