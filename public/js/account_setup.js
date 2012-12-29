@@ -135,7 +135,7 @@
        
       var content = $("<div class='short-input-container'/>");
       var wrapper = $("<div class='short-input-container-body-wrapper float-left'/>");
-      var acceptButtonBox = $("<div class='short-input-container-right float-right'></div>")
+      var acceptButtonBox = $("<div class='short-input-container-right float-right'></div>");
       var body = $("<div class='short-input-container-body'/>");
       $(this.el).append(content.append(wrapper.append(body)).append(acceptButtonBox));
       
@@ -230,7 +230,7 @@
       body.append(tosAccept);
 
 
-      var optionaldescriptionrow = $("<div class='position' style='text-align:left;'/>").append("<label style='text-align:left;margin-left: 5px'>Some description of optional stuff</label>")
+      var optionaldescriptionrow = $("<div class='position' style='text-align:left;'/>").append("<label style='text-align:left;margin-left: 5px'>Some description of optional stuff</label>");
       body.append(optionaldescriptionrow);
 
       var positionInput = InfoTextInput.init({
