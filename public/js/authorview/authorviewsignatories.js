@@ -67,7 +67,7 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
           var middle3    = $("<div class='middle float-right' />");
           var statusicon = $("<div class='icon status' />").addClass(sigview.status());
           var status     = $("<span class='statustext' />").addClass(sigview.status()).text(sigview.signatorySummary());
-          var details    = $('<a class="details" href="#" />').text(localization.docsignview.showDetails);
+          var details    = $('<a class="details clickable" href="#" />').text(localization.docsignview.showDetails);
           middle1.append(statusicon);
           middle2.append(status);
           middle3.append(details);
@@ -101,7 +101,7 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
       box.append(table);
 
       if (this.model.hasDummy()) {
-         box1.css("border-color","#ffffff");
+         td1.css("border-color","#ffffff");
          box2.append(this.model.signatoryView().el());
       }   
       else if (this.model.hasList()) {
