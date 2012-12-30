@@ -29,7 +29,7 @@ class LoginHelper
   end
 
   def set_name(fstname, sndname)
-    (@wait.until { @driver.find_element :css => "a.s-account" }).click
+    (@wait.until { @driver.find_element :css => "#page-account" }).click
     (@wait.until { @driver.find_element :name => "fstname" }).clear
     (@wait.until { @driver.find_element :name => "fstname" }).send_keys fstname
     (@wait.until { @driver.find_element :name => "sndname" }).clear
