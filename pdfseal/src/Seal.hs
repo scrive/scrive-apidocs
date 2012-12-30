@@ -783,7 +783,7 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
 
             let footerBox = boxEnlarge printableMargin 0 0 0 $
                                 (setLightTextColor . setFrameColor . boxDrawFrame . boxEnlarge 16 11 16 10) $
-                                boxEnlarge 0 0 80 0 $
+                                boxEnlarge 0 0 90 0 $
                                 boxVCat 5
                                           [ makeLeftTextBox (PDFFont Helvetica 8) (boxWidth histExample - 90 - 32)
                                                               (verificationFooter staticTexts)
@@ -793,7 +793,7 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
             tell $ "1 0 0 1 15 " ++ show (15 + boxHeight footerBox + printableMargin) ++ " cm\n"
             tell $ boxCommands footerBox
             tell "Q\n"
-            tell (rightcornerseal (printableWidth - printableMargin - 66)
+            tell (rightcornerseal (printableWidth - printableMargin - 84)
                   (13 + printableMargin + ((boxHeight footerBox - 90) `div` 2)))
 
 -- To emulate a near perfect circle of radius r with cubic Bézier
