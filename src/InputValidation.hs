@@ -400,11 +400,11 @@ asValidPassword input =
     >>= checkLengthIsMin 8 fieldtemplate
     >>= checkLengthIsMax 250 fieldtemplate
     >>= checkOnly [isAlpha, isDigit, isPunctuation, isSymbol] fieldtemplate
-    >>= checkContains2AlphaAndDigit
+    >>= checkContains1AlphaAndDigit
     where fieldtemplate = "passwordFieldName"
-          checkContains2AlphaAndDigit :: String -> Result String
-          checkContains2AlphaAndDigit pwd
-              | length (filter isAlpha pwd) >= 2 && length (filter isDigit pwd) >= 2 = return pwd
+          checkContains1AlphaAndDigit :: String -> Result String
+          checkContains1AlphaAndDigit pwd
+              | length (filter isAlpha pwd) >= 1 && length (filter isDigit pwd) >=1 = return pwd
               | otherwise = Bad $ flashMessageNeedsLetterAndDigit fieldtemplate
 
 flashMessageNeedsLetterAndDigit :: String -> ValidationMessage

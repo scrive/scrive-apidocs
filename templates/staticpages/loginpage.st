@@ -46,13 +46,10 @@ accountSetupPage=
               <a id="logo" class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$"><img src="/img/logo.png" width="120" height="22"/></a>
               <div id="tagline" class="h3"></div>
             </li>
-            <li class="float-right page-first" style="margin-top: 15px;text-align : right; line-height: 20px">
-              <div style='font-size: 13px'>
-                 Contact
-                 <BR/>
-                 <strong>Lukas Duczko</strong>
-                 <BR/>
-                 <strong>070 - 456 04 04</strong>
+            <li class="float-right page-first" style="margin-top: 30px;text-align : right; line-height: 20px">
+              <div style='font-size: 14.5px'>
+                 <div>Scrive help desk</div>
+                 <div>+46 8 519 779 00</div>
               </div>
             </li>
           </ul>

@@ -93,14 +93,14 @@ window.DigitsLettersValidation = Validation.extend({
     defaults: {
         validates: function(t) {
             // we don't allow international in password; good or bad?
-            if (!/[a-z].*[a-z]/i.test(t))
+            if (!/[a-z]/i.test(t))
                 return false;
-            if (!/[0-9].*[0-9]/.test(t))
+            if (!/[0-9]/.test(t))
                 return false;
 
             return true;
         },
-        message: "The field must have minimum two letters and two digits!"
+        message: "The field must have minimum one letter and one digits!"
     }
 });
 
@@ -109,7 +109,7 @@ window.PasswordValidation = Validation.extend({
         validates: function(t) { return t.length >= 8; },
         message: "Password must contain 8 characters at least!",
         message_max: "Password must contain 250 characters at most!",
-        message_digits: "Password must have minimum two digits and two letters!"
+        message_digits: "Password must have minimum one digits and one letters!"
     },
     initialize: function() {
         this.set({"next": new Validation({

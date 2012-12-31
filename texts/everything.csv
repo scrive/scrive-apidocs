@@ -1310,6 +1310,9 @@ the document <strong>$documenttitle$</strong>. The signing
 "_modalAccountSetupFooter","Skapa konto!","Create account!"
 "_modalAccountSetupHeaderAcceptTOS","Vänligen acceptera användarvillkoren","Please accept the Terms of Service"
 "_modalAccountSetupRepeatPassword","Upprepa lösenord","Repeat password"
+"_modalAccountSetupCompany","Företag","Company"
+"_modalAccountOptionalPositions","Uppgifterna kommer att visas för dina motparter när de signerar vilket kommer att ge ett mer professionellt intryck.","The details will be shown to your counterparts when signing which will give a more professional impression."
+"_modalAccountPasswordRequirements","Minimum 8 tecken. Minst en bokstav och en siffra.","Minimum 8 characters. At least one letter and one number."
 "_modalDoYouWantToBeCompanyAccountBody","Vill du konvertera ditt privata Scrive konto till ett $companyname$ Scrive-konto? När du konverterar kommer ägarskapet av kontot och dess samtliga dokument att överföras till $companyname$","Do you want to convert your private Scrive account into a $companyname$ Scrive account? When you convert, the ownership of the account and all its documents, will be transferred to $companyname$."
 "_modalDoYouWantToBeCompanyAccountFooterAccept","Acceptera","Accept"
 "_modalDoYouWantToBeCompanyAccountHeader","Vänligen verifiera din avsikt","Account confirmation"
@@ -2049,9 +2052,9 @@ Möjliga försiktighet.","Sign and store your contracts online. All information 
 "_atLeastOnePersonMustSigns","Dokumentet måste ha åtminstone en signerande part.","Document needs to have at least one signatory."
 "_PasswordValidationMessageInputExceedsMaxLength","Lösenord får max innehålla 250 tecken.","Password must contain max 250 characters."
 "_PasswordValidationMessageInputLessThanMinLength","Lösenord måste innehålla minst 8 tecken.","Password must contain at least 8 characters."
-"_PasswordValidationMessageNeedsLetterAndDigit","Lösenord måste innehålla åtminstone två bokstäver
- och två siffror.","Password must contain at least two letters and two
- digits."
+"_PasswordValidationMessageNeedsLetterAndDigit","Lösenord måste innehålla åtminstone en bokstav
+ och en siffra.","Password must contain at least one letter and one
+ digit."
 "_PasswordValidationMessagePasswordsDontMatch","Nytt lösenord matchar inte med Upprepa lösenord","The two passwords do not match."
 "_modalAccountSetupCallMe","Jag vill veta mer, ring mig!","I want to know more, call me!"
 "_modalAccountSetupPhone","Telefonnummer","Phone"

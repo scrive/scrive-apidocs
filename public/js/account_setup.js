@@ -35,6 +35,12 @@
     setPosition: function(position) {
       this.set('position', position);
     },
+    company: function() {
+      return this.get('company');
+    },
+    setCompany: function(company) {
+      this.set('company', company);
+    },
     phone: function() {
       return this.get('phone');
     },
@@ -98,6 +104,7 @@
         password: model.password(),
         password2: model.password(), // validated on the client side that they're equal
         phone: model.phone(),
+        company : model.company(),         
         position : model.position(),         
         ajaxsuccess: function(rs) {
           var resp = JSON.parse(rs);
@@ -189,7 +196,7 @@
       });
 
       body.append($("<div class='position'/>")
-                    .append("<label style='text-align:left;margin-left: 5px;width:100%'>Password should contain min 8 chars</label>")
+                    .append($("<label style='text-align:left;margin-left: 5px;width:100%'></label>").text(localization.accountSetupModal.modalAccountPasswordRequirements))
                     .append(passwordInput.input()));
       
 
@@ -210,8 +217,8 @@
 
       body.append($("<div class='position'/>").append(password2Input.input()));
 
-      var tosAccept = $("<div class='position' />");
-      var tosCBox = $("<input type='checkbox' id='tosCBox' name='tos' style='margin-right:10px;margin-top: -2px'/>");
+      var tosAccept = $("<div class='position' style='text-align: left;'/>");
+      var tosCBox = $("<input type='checkbox' id='tosCBox' name='tos' style='margin-right:10px;margin-top: -2px;margin-left:3px'/>");
 
       tosCBox.change(function() { model.setAccepted(tosCBox.attr('checked'));});
 
@@ -230,11 +237,25 @@
       body.append(tosAccept);
 
 
-      var optionaldescriptionrow = $("<div class='position' style='text-align:left;'/>").append("<label style='text-align:left;margin-left: 5px'>Some description of optional stuff</label>");
+      var optionaldescriptionrow = $("<div class='position' style='text-align:left;'/>")
+        .append($("<label style='text-align:left;margin-left: 5px'></label>").text(localization.accountSetupModal.modalAccountOptionalPositions));
       body.append(optionaldescriptionrow);
 
+      var companyInput = InfoTextInput.init({
+        infotext: localization.accountSetupModal.modalAccountSetupCompany,
+        value: "",
+        onChange: function(v) {model.setCompany(v);},
+        inputtype: 'text',
+        name: 'position',
+        cssClass : "big-input"
+       });
+
+      var companyrow = $("<div class='position'/>").append(companyInput.input());
+
+      body.append(companyrow);
+      
       var positionInput = InfoTextInput.init({
-        infotext: localization.accountSetupModal.modalAccountSetupPosition +  " (" + localization.accountSetupModal.modalAccountSetupOptional+")",
+        infotext: localization.accountSetupModal.modalAccountSetupPosition,
         value: "",
         onChange: function(v) {model.setPosition(v);},
         inputtype: 'text',
@@ -247,7 +268,7 @@
       body.append(positionrow);
 
       var phoneInput = InfoTextInput.init({
-        infotext: localization.accountSetupModal.modalAccountSetupPhone + " (" + localization.accountSetupModal.modalAccountSetupOptional+")",
+        infotext: localization.accountSetupModal.modalAccountSetupPhone,
         value: "",
         onChange: function(v) {model.setPhone(v);},
         inputtype: 'text',
