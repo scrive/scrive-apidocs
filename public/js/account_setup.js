@@ -134,9 +134,10 @@
       //$(this.el).append(header);
        
       var content = $("<div class='short-input-container'/>");
-      var wrapper = $("<div class='short-input-container-body-wrapper'/>");
+      var wrapper = $("<div class='short-input-container-body-wrapper float-left'/>");
+      var acceptButtonBox = $("<div class='short-input-container-right float-right'></div>");
       var body = $("<div class='short-input-container-body'/>");
-      $(this.el).append(content.append(wrapper.append(body)));
+      $(this.el).append(content.append(wrapper.append(body)).append(acceptButtonBox));
       
 
 
@@ -170,33 +171,6 @@
 
       body.append($("<div class='position'/>").append(lastNameInput.input()));
 
-      var positionInput = InfoTextInput.init({
-        infotext: localization.accountSetupModal.modalAccountSetupPosition,
-        value: "",
-        onChange: function(v) {model.setPosition(v);},
-        inputtype: 'text',
-        name: 'position',
-        cssClass : "big-input"
-       });
-
-      var positionrow = $("<div class='position'/>").append(positionInput.input());
-      positionrow.append($("<span class='optional'/>").text("(" + localization.accountSetupModal.modalAccountSetupOptional+")"));
-
-      body.append(positionrow);
-      
-      var phoneInput = InfoTextInput.init({
-        infotext: localization.accountSetupModal.modalAccountSetupPhone,
-        value: "",
-        onChange: function(v) {model.setPhone(v);},
-        inputtype: 'text',
-        name: 'phone',
-        cssClass : "big-input"
-       });
-
-      var phonerow = $("<div class='position'/>").append(phoneInput.input());
-      phonerow.append($("<span class='optional'/>").text("(" + localization.accountSetupModal.modalAccountSetupOptional+")"));
-      body.append(phonerow);
-      
 
       var passwordInput = InfoTextInput.init({
         infotext: localization.accountSetupModal.modalAccountSetupChoosePassword,
@@ -214,7 +188,9 @@
                                                               message_digits: localization.validation.passwordNeedsLetterAndDigit}));
       });
 
-      body.append($("<div class='position'/>").append(passwordInput.input()));
+      body.append($("<div class='position'/>")
+                    .append("<label style='text-align:left;margin-left: 5px;width:100%'>Password should contain min 8 chars</label>")
+                    .append(passwordInput.input()));
       
 
       var password2Input = InfoTextInput.init({
@@ -252,10 +228,42 @@
       tosAccept.append($('<br/>'));
 
       body.append(tosAccept);
+
+
+      var optionaldescriptionrow = $("<div class='position' style='text-align:left;'/>").append("<label style='text-align:left;margin-left: 5px'>Some description of optional stuff</label>");
+      body.append(optionaldescriptionrow);
+
+      var positionInput = InfoTextInput.init({
+        infotext: localization.accountSetupModal.modalAccountSetupPosition +  " (" + localization.accountSetupModal.modalAccountSetupOptional+")",
+        value: "",
+        onChange: function(v) {model.setPosition(v);},
+        inputtype: 'text',
+        name: 'position',
+        cssClass : "big-input"
+       });
+
+      var positionrow = $("<div class='position'/>").append(positionInput.input());
+
+      body.append(positionrow);
+
+      var phoneInput = InfoTextInput.init({
+        infotext: localization.accountSetupModal.modalAccountSetupPhone + " (" + localization.accountSetupModal.modalAccountSetupOptional+")",
+        value: "",
+        onChange: function(v) {model.setPhone(v);},
+        inputtype: 'text',
+        name: 'phone',
+        cssClass : "big-input"
+       });
+
+      var phonerow = $("<div class='position'/>").append(phoneInput.input());
+      body.append(phonerow);
+      
+
+      
       
       var acceptButton = Button.init({
           size: 'small',
-          color: 'green',
+          color: 'blue',
           text: localization.signupModal.modalAccountSetupFooter,
           onClick: function() {
             view.clearValidationMessages();
@@ -263,7 +271,7 @@
           }
         });
       
-      body.append($("<div class='position'/>").append(acceptButton.input()));
+      acceptButtonBox.append($("<h3>Roglit priss Roglit priss <BR/> Roglit priss Roglit priss <BR/> Roglit priss  Roglit priss</h3>")).append(acceptButton.input());
       
     }
   });

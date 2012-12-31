@@ -1057,7 +1057,6 @@
                                                                   plan: "team",
                                                                   ajax: true,
                                                                   ajaxsuccess: function() {
-                                                                      BlockingInfo.hide();
                                                                       model.fetch({success:function() {
                                                                           LoadingDialog.close();
                                                                           model.trigger('fetch');

@@ -20,7 +20,7 @@
 }
 
 .account-body table td:first-child {
-   width: 140px;
+   width: 120px;
 }
 
 .account-body table td{
@@ -31,83 +31,54 @@
    padding: 40px 50px 20px;
 }
 
-.account .col {
-   float: left;
-   margin: 0 20px;
-   width: 418px;
-   padding: 15px 0;
+.account > .col,
+.account > .blue-box,
+.companybranding > .col,
+.noprovider > .col {
+   margin: 0 20px 20px;
+   border: 4px solid #DEE4ED;
+   transition: all 0.5s ease-in-out 0s;  
 }
-.account .col.float-right {
+.account > .col,
+.companybranding > .col,
+.noprovider > .col {
+     float: left;
+     width: 410px;
+}
+
+.account > .col:hover,
+.account > .blue-box:hover,
+.companybranding > .col:hover,
+.noprovider > .col:hover{
+    border-color: #364963;
+}
+
+.account > .col.float-right {
    float: right;
 }
 
 .account-header {
-   background: url(../img/bg-body-dark.png);
-   border-radius:  5px 5px 0px 0px;
-       -moz-border-radius: 5px 5px 0px 0px;
-       -webkit-border-radius: 5px 5px 0px 0px;
-   min-height: 48px;
-   padding: 33px 18px 32px;
+   min-height: 32px;
+   margin: 20px 18px 5px 18px;
+   padding-bottom: 15px;
    position: relative;
-}
-
-.account-header h2 {
-   color: #fff;
-   font-size: 14px/24px;
-}
-
-.account-header a {
-   color: #2777ca;
-   font-size: 10px/24px;
-   text-decoration: none;
-   text-transform: uppercase;
-}
-
-.account-header .image {
-   background: #fff;
-   border-radius: 3px;
-       -moz-border-radius: 3px;
-       -webkit-border-radius: 3px;
+   color: #333333;
    display: block;
-   height: 68px;
-   padding: 3px;
-   position: absolute;
-   right: 15px;
-   top: 20px;
-   width: 58px;
-   z-index: 1;
+   text-align: left;
+   border-bottom: 1px solid #DEE4ED;
+   font-family: Source Sans Pro,Helvetica Neue,sans-serif;
+   font-size: 1.5em;
+   line-height: 25px;
 }
 
-.account-header .image:before {
-   bottom: 3px;
-   box-shadow: inset 0 0 5px #000;
-       -moz-box-shadow: inset 0 0 5px #000;
-       -webkit-box-shadow: inset 0 0 5px #000;
-   content: "";
-   left: 3px;
-   position: absolute;
-   right: 3px;
-   top: 3px;
-   z-index: -1;
-}
+
 
 .account-body {
-   background: #f7f7f7;
-   border: 1px solid #dedede;
-   border-radius: 0px 0px 5px 5px;
-       -moz-border-radius: 0px 0px 5px 5px;
-       -webkit-border-radius: 0px 0px 5px 5px;
    margin-top: 0px;
    padding: 10px 15px;
    min-height: 170px;
 }
 
-
-.account-body h2,
-{
-   color: #000;
-   font: 14px/24px "Helvetica Neue";
-}
 
 .account-footer {
     float:right;
@@ -170,27 +141,18 @@ a.submit{
     cursor:pointer
 }
 
+.account .new-mail-button {
+    width: 40px;
+}
 .account input[type="text"],
 .account input[type="password"] {
-    background: none repeat scroll 0 0 #FFFFFF;
-    border: 1px solid #DDDDDD;
-    box-shadow: none;
-    font: 16px/1 @sans;
-    height: 20px;
-    padding: 5px;
-    width: 200px;
+    width: 220px;
 
 }
 .account input[type="checkbox"]{
     margin-right : 6px;
     margin-top : -3px;
 }
-
-.account input:focus {
-      border-color: #7A94B8;
-      outline: medium none;
-}
-
 
 .designview .subcontainer {
   background-color: #F0F0F0;

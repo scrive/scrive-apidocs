@@ -73,6 +73,7 @@ import Doc.DocStateCommon
 import File.Model
 import File.Storage
 import qualified PadQueue.API as PadQueue
+import Data.String.Utils (replace)
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
@@ -118,7 +119,7 @@ apiCallCreateFromFile = api $ do
   (mfile, title) <- case minput of
     Nothing -> do
       title <- renderTemplate_ ("newDocumentTitle" <| not isTpl |> "newTemplateTitle")
-      return (Nothing,  title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx))
+      return (Nothing,  replace "  " " " $ title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx))
     Just (Input _ Nothing _) -> throwError $ badInput "Missing file"
     Just (Input contentspec (Just filename') _contentType) -> do
       let filename = takeBaseName filename'

@@ -439,15 +439,15 @@ handleAcceptTOSPost = do
   return ()
       
 
-handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> m ThinPage
+handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> m Response
 handleAccountSetupGet uid token = do
+  ctx <- getContext
   user <- guardJustM404 $ getUserAccountRequestUser uid token
   if isJust $ userhasacceptedtermsofservice user
     then respond404
-    else fmap ThinPage $ renderTemplate "accountSetupPage" $ do
+    else simpleHtmlResponse =<< (renderTemplateAsPage ctx "accountSetupPage" Nothing False $ do
               F.value "fstname" $ getFirstName user
-              F.value "sndname" $ getLastName user
-
+              F.value "sndname" $ getLastName user)
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
 handleAccountSetupPost uid token = do
   user <- guardJustM404 $ getUserAccountRequestUser uid token

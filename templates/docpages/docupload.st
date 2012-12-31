@@ -6,7 +6,6 @@ createFromTemplatePage=
 <div class="blocking-box"></div>
 <script>
 jQuery(function() {
-  BlockingInfo.show('.blocking-box');
   mixpanel.register({Context : 'Create from template'});
   mixpanel.track('View Create From Template');
 });

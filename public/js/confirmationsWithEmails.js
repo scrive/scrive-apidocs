@@ -182,15 +182,16 @@ var ConfirmationWithEmailView = Backbone.View.extend({
 
 	   //Modal footer
        var footer = $("<div class='modal-footer'>");
-       var cancelOption = $("<a class='cancel close float-left'/>");
+       var cancelOption = $("<label class='clickable cancel close float-left' s/>");
        cancelOption.text(this.model.rejectText());
-	   this.editOption = $("<label class='clickable edit float-left' style='margin-left:10px;line-height: 32px;'/>");
+	   this.editOption = $("<label class='clickable edit float-left' style='margin-left:10px;'/>");
        this.editOption.text(this.model.editText());
        footer.append(cancelOption);
 	   footer.append(this.editOption);
        var accept = Button.init({color:model.acceptColor(),
                                  size: "tiny",
                                  cssClass: "float-right",
+                                 shape: "rounded",
                                  text: this.model.acceptText(),
                                  onClick : function() {
 									 var customtext = mailview.customtext();

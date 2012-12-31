@@ -99,7 +99,7 @@ var SecuritySettingsView = Backbone.View.extend({
       // Building frame
       var model = this.model;
       var box = $("<div class='col'/>");
-      var header = $("<div class='account-header'/>").append($("<h2>").text(localization.account.accountSecurity.passwordSection))
+      var header = $("<div class='account-header'/>").text(localization.account.accountSecurity.passwordSection)
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
 
@@ -131,7 +131,7 @@ var SecuritySettingsView = Backbone.View.extend({
       var self = this;
       var model = this.model;
       var box = $("<div class='col'/>");
-      var header = $("<div class='account-header'/>").append($("<h2/>").text(localization.account.accountSecurity.langSection))
+      var header = $("<div class='account-header'/>").text(localization.account.accountSecurity.langSection);
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
 
@@ -161,7 +161,7 @@ var SecuritySettingsView = Backbone.View.extend({
       var self = this;
       var model = this.model;
       var box = $("<div class='col'/>");
-      var header = $("<div class='account-header'/>").append($("<h2/>").text(localization.account.accountSecurity.footerSection))
+      var header = $("<div class='account-header'/>").text(localization.account.accountSecurity.footerSection);
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
 
@@ -207,8 +207,9 @@ var SecuritySettingsView = Backbone.View.extend({
       var model = this.model;
       var box = $("<div class='account-footer'/>");
       var button = Button.init({
-        color : "green",
+        color : "blue",
         size: "small",
+        shape: "rounded",
         text : localization.account.accountSecurity.save,
         onClick : function() {
           model.save();

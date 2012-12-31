@@ -138,7 +138,7 @@
   background-image: url("/img/iconPlus.png");
   width:14px;
   height:14px;
-  margin-top: 1px;
+  margin-top: 5px;
   margin-left: 12px;
   display: block;
   float: left;
@@ -148,6 +148,7 @@
   width:16px;
   height:16px;
   margin-left: 12px;
+  margin-top: 4px;
   display: block;
   float: left;
 }
@@ -156,13 +157,14 @@
   width:16px;
   height:16px;
   margin-left: 12px;
+  margin-top: 4px;
   display: block;
   float: left;
 }
 .setRole{
     background-image: url("/img/iconMan.png");
     background-repeat: no-repeat;
-    margin-top: -1px;
+    margin-top: 3px;
     height: 16px;
     width: 16px;
     display: block;
@@ -537,7 +539,7 @@
     width: 16px;
     cursor: pointer;
     margin-left: 12px;
-    margin-top: 1px;
+    margin-top: 4px;
     float : left;
 }
 
@@ -548,15 +550,8 @@
     width: 16px;
     cursor: pointer;
     margin-left: 12px;
-    margin-top: 1px;
+    margin-top: 5px;
     float : left;
-}
-.placeSignatureIcon.redborder {
-    margin-left: 11px;
-    margin-top: 0px;
-    border: 1px solid red;
-    border-radius: 2px 2px 2px 2px;
-
 }
 
 .signview .signatureBox.forDrawing {

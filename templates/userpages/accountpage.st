@@ -7,9 +7,8 @@ showAccount =
     <script>
       var account = new Account({companyAdmin : $if(companyAdmin)$true$else$false$endif$, noCompany : $if(noCompany)$true$else$false$endif$});
       jQuery(".body-container").append(account.el());
-      jQuery(function() { BlockingInfo.show('.blocking-box'); });
-  mixpanel.register({Context : 'Account Page'});
-  mixpanel.track('View Account Page');
+      mixpanel.register({Context : 'Account Page'});
+      mixpanel.track('View Account Page');
     </script>
   </div>
 </div>

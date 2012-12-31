@@ -105,8 +105,8 @@ priceplanPage = renderTemplate_ "priceplanPage" >>= renderFromBody kontrakcja
 {- |
     Render a template as an entire page.
 -}
-renderTemplateAsPage :: Kontrakcja m => Context -> String -> Maybe (Lang -> KontraLink) -> Bool -> m String
-renderTemplateAsPage ctx templateName mpubliclink showCreateAccount = do
+renderTemplateAsPage :: Kontrakcja m => Context -> String -> Maybe (Lang -> KontraLink) -> Bool -> (Fields m ()) -> m String
+renderTemplateAsPage ctx templateName mpubliclink showCreateAccount f = do
   ad <- getAnalyticsData
   renderTemplate templateName $ do
     contextInfoFields ctx
@@ -117,6 +117,7 @@ renderTemplateAsPage ctx templateName mpubliclink showCreateAccount = do
     F.value "showCreateAccount" $ showCreateAccount && (isNothing $ ctxmaybeuser ctx)
     F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
     F.object "analytics" $ analyticsTemplates ad
+    f
 
 standardPageFields :: TemplatesMonad m => Context -> String -> Maybe (Lang -> KontraLink) -> AnalyticsData -> Fields m ()
 standardPageFields ctx title mpubliclink ad = do
