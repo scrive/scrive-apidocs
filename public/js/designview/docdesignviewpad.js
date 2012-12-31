@@ -105,8 +105,8 @@ var PadDesignViewUtilsView = Backbone.View.extend({
            var model = this.model;
            box.empty();
            box.addClass('padoptions');
-           var justSendRadio = $("<input type='radio' name='padsend'/>");
-           var justSendRadioLabel =  $("<span class='label'/>").text(localization.pad.justSend);
+           var justSendRadio = $("<input type='radio' name='padsend' id='padsend-1'/>");
+           var justSendRadioLabel =  $("<label class='label' for='padsend-1'/>").text(localization.pad.justSend);
 
            var justSend = $("<div class='padoption'/>").append(justSendRadio).append(justSendRadioLabel);
 
@@ -116,9 +116,9 @@ var PadDesignViewUtilsView = Backbone.View.extend({
                model.setJustSend();
             });
            
-           var giveForSigningRadio = $("<input type='radio' name='padsend'/>");
+           var giveForSigningRadio = $("<input type='radio' name='padsend' id='padsend-2'/>");
            var giveForSigningSelector = this.sigSelector(function() {return model.giveForSigningSignatory()}, function(a) {model.setGiveForSigningSignatory(a)});
-           var giveForSigningLabel =  $("<span class='label'/>").append($("<span class='float-left'/>").text(localization.pad.signingOnSameDeviceFor));
+           var giveForSigningLabel =  $("<label class='label' for='padsend-2'/>").append($("<span class='float-left'/>").text(localization.pad.signingOnSameDeviceFor));
            var giveForSigning = $("<div class='padoption'/>").append(giveForSigningRadio)
                                                              .append(giveForSigningLabel)
                                                              .append(giveForSigningSelector);
@@ -130,9 +130,9 @@ var PadDesignViewUtilsView = Backbone.View.extend({
             });
 
            
-           var sendToPadRadio = $("<input type='radio' name='padsend'/>");
+           var sendToPadRadio = $("<input type='radio' name='padsend' id='padsend-3'/>");
            var sendToPadSelector = this.sigSelector(function() {return model.sendToPadSignatory()}, function(a) {model.setSendToPadSignatory(a)});
-           var sendToPadLabel =  $("<span class='label'/>").append($("<span class='float-left'/>").text(localization.pad.sendToDifferentDeviceFor));
+           var sendToPadLabel =  $("<label class='label' for='padsend-3'/>").append($("<span class='float-left'/>").text(localization.pad.sendToDifferentDeviceFor));
            var sendToPad = $("<div class='padoption'/>").append(sendToPadRadio)
                                                         .append(sendToPadLabel)
                                                         .append(sendToPadSelector);
