@@ -100,7 +100,7 @@ var MailAPISettingsView = Backbone.View.extend({
       // Building frame
       var model = this.model;
       var box = $("<div class='col'/>");
-      var header = $("<div class='account-header'/>").append($("<h2/>").text(localization.account.mailAPI.personalMailAPIHeader))
+      var header = $("<div class='account-header'/>").text(localization.account.mailAPI.personalMailAPIHeader);
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
 
@@ -123,9 +123,9 @@ var MailAPISettingsView = Backbone.View.extend({
         var personalMailApi = this.model.personalMailApi();
         body.append($("<label/>").text(localization.account.mailAPI.activeMails));
         var list = $("<ul class='mailapiemailslist'/>");
-        var a1 = $("<a/>").attr('href',"mailto:contract+"+personalMailApi.key()+"@api.scrive.com").text("contract+"+personalMailApi.key()+"@api.scrive.com");
-        var a2 = $("<a/>").attr('href',"mailto:offer+"+personalMailApi.key()+"@api.scrive.com").text("offer+"+personalMailApi.key()+"@api.scrive.com");
-        var a3 = $("<a/>").attr('href',"mailto:order+"+personalMailApi.key()+"@api.scrive.com").text("order+"+personalMailApi.key()+"@api.scrive.com");
+        var a1 = $("<a class='clickable'/>").attr('href',"mailto:contract+"+personalMailApi.key()+"@api.scrive.com").text("contract+"+personalMailApi.key()+"@api.scrive.com");
+        var a2 = $("<a class='clickable'/>").attr('href',"mailto:offer+"+personalMailApi.key()+"@api.scrive.com").text("offer+"+personalMailApi.key()+"@api.scrive.com");
+        var a3 = $("<a class='clickable'/>").attr('href',"mailto:order+"+personalMailApi.key()+"@api.scrive.com").text("order+"+personalMailApi.key()+"@api.scrive.com");
         list.append($("<li/>").append(a1));
         list.append($("<li/>").append(a2));
         list.append($("<li/>").append(a3));
@@ -152,7 +152,7 @@ var MailAPISettingsView = Backbone.View.extend({
       var model = this.model;
       // Building frame
       var box = $("<div class='col'/>");
-      var header = $("<div class='account-header'/>").append($("<h2/>").text(localization.account.mailAPI.limitMailAPIHeader))
+      var header = $("<div class='account-header'/>").text(localization.account.mailAPI.limitMailAPIHeader);
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
 
@@ -193,16 +193,16 @@ var MailAPISettingsView = Backbone.View.extend({
       var companyMailApi = this.model.companyMailApi();
       // Building frame
       var box = $("<div class='col'/>");
-      var header = $("<div class='account-header'/>").append($("<h2/>").text(localization.account.mailAPI.companyMailAPIHeader))
+      var header = $("<div class='account-header'/>").text(localization.account.mailAPI.companyMailAPIHeader);
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
 
       // Filling content
       body.append($("<label/>").text(localization.account.mailAPI.activeMails));
       var list = $("<ul class='mailapiemailslist'/>");
-      var a1 = $("<a/>").attr('href',"mailto:contract+"+companyMailApi.key()+"@api.scrive.com").text("contract+"+companyMailApi.key()+"@api.scrive.com");
-      var a2 = $("<a/>").attr('href',"mailto:offer+"+companyMailApi.key()+"@api.scrive.com").text("offer+"+companyMailApi.key()+"@api.scrive.com");
-      var a3 = $("<a/>").attr('href',"mailto:order+"+companyMailApi.key()+"@api.scrive.com").text("order+"+companyMailApi.key()+"@api.scrive.com");
+      var a1 = $("<a class='clickable'/>").attr('href',"mailto:contract+"+companyMailApi.key()+"@api.scrive.com").text("contract+"+companyMailApi.key()+"@api.scrive.com");
+      var a2 = $("<a class='clickable'/>").attr('href',"mailto:offer+"+companyMailApi.key()+"@api.scrive.com").text("offer+"+companyMailApi.key()+"@api.scrive.com");
+      var a3 = $("<a class='clickable'/>").attr('href',"mailto:order+"+companyMailApi.key()+"@api.scrive.com").text("order+"+companyMailApi.key()+"@api.scrive.com");
       list.append($("<li/>").append(a1));
       list.append($("<li/>").append(a2));
       list.append($("<li/>").append(a3));
@@ -219,8 +219,9 @@ var MailAPISettingsView = Backbone.View.extend({
       var model = this.model;
       var box = $("<div class='account-footer'/>");
       var button = Button.init({
-        color : "green",
+        color : "blue",
         size: "small",
+        shape: "rounded",
         text : localization.account.mailAPI.save,
         onClick : function() {
             mixpanel.track('Click save button');

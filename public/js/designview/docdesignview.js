@@ -533,6 +533,7 @@ var DesignViewView = Backbone.View.extend({
         button = Button.init({
           color: "green",
           size: "big" ,
+          shape : "rounded",
           cssClass: "finalbutton",
           text: localization.saveTemplate,
           onClick: function() {
@@ -550,6 +551,7 @@ var DesignViewView = Backbone.View.extend({
         if (document.authorCanSignFirst()) {
           button = Button.init({
             color: "blue",
+            shape : "rounded",
             size: "big" ,
             cssClass: "finalbutton",
             text: localization.designview.sign,
@@ -578,6 +580,7 @@ var DesignViewView = Backbone.View.extend({
            button = Button.init({
              color: "green",
              size: "big" ,
+             shape : "rounded",
              cssClass: "finalbutton",
              text: document.process().localization().sendbuttontext,
              onClick: function() {
@@ -657,6 +660,7 @@ var DesignViewView = Backbone.View.extend({
             acceptButton = Button.init({
                   size: "tiny",
                   color : "blue",
+                  shape : "rounded",
                   text : localization.designview.sign,
                   onClick : function() {
                       if (alreadyClicked(this))
@@ -720,6 +724,7 @@ var DesignViewView = Backbone.View.extend({
               acceptButton : Button.init({
                                 size: "tiny",
                                 color : "green",
+                                shape : "rounded",
                                 text : document.process().localization().sendbuttontext,
                                 onClick : function() {
                                     if (alreadyClicked(this))
@@ -803,6 +808,7 @@ var DesignViewView = Backbone.View.extend({
         var upbutton = UploadButton.init({
             name: "file",
             color : "black",
+            shape : "rounded",
             size : "small",
             width: 300,
             text: localization.uploadButton,
@@ -856,6 +862,7 @@ var DesignViewView = Backbone.View.extend({
         var button = Button.init({
             size : "small",
             color : "black",
+            shape : "rounded",
             width: 300,
             text: localization.avtal24.buy,
             onClick : function () {
@@ -882,6 +889,7 @@ var DesignViewView = Backbone.View.extend({
           var saveAsDraftButton = Button.init({
                                  color : "black",
                                  size :  "small",
+                                 shape : "rounded",
                                  width : 300,
                                  text :  localization.saveAsDraft,
                                  onClick : function() {
@@ -903,6 +911,7 @@ var DesignViewView = Backbone.View.extend({
           var saveAsTemplateButton = Button.init({
                                  color : "black",
                                  size :  "small",
+                                 shape : "rounded",
                                  width : 300,
                                  text :  localization.saveAsTemplate,
                                  onClick : function() {

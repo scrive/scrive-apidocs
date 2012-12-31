@@ -1,7 +1,7 @@
 body {
   font-size: 14.5px;
   font-family: @sans;
-  line-height: 1.5em;
+  line-height: 22px;
   color: @text-dark;
   background: url("/img/bg-body.png") repeat scroll 0 0 transparent;
 }
@@ -97,9 +97,19 @@ input.grayed {
   color : #AAA;
 }
 
-input, textarea, select {
+input, textarea {
   font-family : @sans;
+  background: none repeat scroll 0 0 #FFFFFF;
+  border: 1px solid #DDDDDD;
+  box-shadow: none;
+  height: 20px;
+  padding: 5px;
+  &:focus {
+      border-color: #7A94B8;
+      outline: medium none;
+  }
 }
+
 label {
   color : @dim;
   display: inline-block;

@@ -241,6 +241,8 @@ window.CompanyBrandingLogoView = Backbone.View.extend({
     this.upload = UploadButton.init({
       width: 150,
       name: "logo",
+      color: "blue",
+      size: "tiny",
       text: localization.selectImageLabel,
       submitOnUpload: true,
       showLoadingDialog: false,
@@ -490,7 +492,8 @@ window.CompanyBrandingView = Backbone.View.extend({
   createSaveButton: function() {
     var company = this.model;
     return Button.init({
-      color: "green",
+      color: "blue",
+      shape: "rounded",
       size: "small",
       text: localization.saveBranding,
       onClick: function() {
@@ -511,8 +514,7 @@ window.CompanyBrandingView = Backbone.View.extend({
       return this;
     }
 
-    this.title = $("<h2 />").append(localization.emailBranding);
-    var header = $("<div class='account-header' />").append(this.title);
+    var header = $("<div class='account-header' />").text(localization.emailBranding);
 
     var body = $("<div class='account-body' />");
     var table = $("<table />");

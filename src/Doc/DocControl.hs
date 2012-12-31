@@ -114,6 +114,7 @@ import System.IO.Temp
 import System.Directory
 import MinutesTime
 import Analytics.Include
+import Data.String.Utils (replace)
 
 handleNewDocument :: Kontrakcja m => m KontraLink
 handleNewDocument = do
@@ -123,7 +124,7 @@ handleNewDocument = do
         user <- guardJustM $ ctxmaybeuser <$> getContext
         title <- renderTemplate_ "newDocumentTitle"
         actor <- guardJustM $ mkAuthorActor <$> getContext
-        Just doc <- dbUpdate $ NewDocument user (title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) (Signable Contract) 1 actor
+        Just doc <- dbUpdate $ NewDocument user (replace "  " " " $ title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) (Signable Contract) 1 actor
         _ <- dbUpdate $ SetDocumentUnsavedDraft [documentid doc] True
         return $ LinkIssueDoc (documentid doc)
      else return $ LinkLogin (ctxlang ctx) LoginTry
