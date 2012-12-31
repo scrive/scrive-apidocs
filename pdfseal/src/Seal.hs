@@ -542,7 +542,7 @@ paginCommands pageWidth (SealSpec{documentNumber,initials,staticTexts }) =
             ,   "1 0 0 1 " ++ show sioffset ++ " 20 Tm"          -- move to the beginning of initials text
             , "[(" ++ signedinitials ++ ")] TJ"                -- write initials
             , "ET"                                             -- end of text
-            , "0.863 0.43 0.152 0.004 K"                       -- choose blueish color
+            , "0.8 0.6 0.3 0.4 K"                              -- choose blueish color
             , "0.4 w"                                          -- line is 0.4pt wide
             , "60 23 m " ++ show (docnroffset-10) ++ " 23 l S" -- draw left line
             , show (sioffset+siwidth+10) ++ " 23 m " ++ show (pageWidth - 60) ++ " 23 l S" -- draw right line
@@ -782,7 +782,7 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
             tell "q\n"
 
             let footerBox = boxEnlarge printableMargin 0 0 0 $
-                                (setLightTextColor . setFrameColor . boxDrawFrame . boxEnlarge 16 11 16 11) $
+                                (setLightTextColor . setFrameColor . boxDrawFrame . boxEnlarge 16 11 16 10) $
                                 boxEnlarge 0 0 90 0 $
                                 boxVCat 5
                                           [ makeLeftTextBox (PDFFont Helvetica 8) (boxWidth histExample - 90 - 32)
@@ -793,8 +793,8 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
             tell $ "1 0 0 1 15 " ++ show (15 + boxHeight footerBox + printableMargin) ++ " cm\n"
             tell $ boxCommands footerBox
             tell "Q\n"
-            tell (rightcornerseal (printableWidth - printableMargin - 66)
-                  (15 + printableMargin + ((boxHeight footerBox - 90) `div` 2)))
+            tell (rightcornerseal (printableWidth - printableMargin - 84)
+                  (13 + printableMargin + ((boxHeight footerBox - 90) `div` 2)))
 
 -- To emulate a near perfect circle of radius r with cubic Bézier
 -- curves, draw four curves such that one of the line segments
@@ -806,12 +806,13 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
 rightcornerseal :: Int -> Int -> String
 rightcornerseal x y = "q 1 0 0 1 " ++ show x ++ " " ++ show y ++ "  cm " ++
                    "1 g 1 G " ++
+                   "q 1 0 0 1 2 2 cm " ++
                    "0 45 m " ++
                    "0  20 20 0  45 0  c " ++
                    "70 0  90 20 90 45 c " ++
                    "90 70 70 90 45 90 c " ++
                    "20 90 0  70 0  45 c " ++
-                   "f " ++
+                   "f Q " ++
                    "/SealMarkerForm Do Q"
 
 pageToForm :: RefID -> State Document RefID
@@ -824,7 +825,13 @@ pageToForm refid' = do
     Just (Indir (Dict contentsdict) (Just streamdata)) <- gets $ PdfModel.lookup contentsrefid
 
     let changekeys (k,v)
-            | k==BS.pack "MediaBox" = [(BS.pack "BBox",v)]
+            | k==BS.pack "MediaBox" = [(BS.pack "BBox", v)
+                                      ,(BS.pack "Matrix", case v of
+                                                            Array [Number l, Number b, Number _r, Number _t] ->
+                                                              Array [Number 1, Number 0, Number 0, Number 1,
+                                                                            Number (-l), Number (-b)]
+                                                            _ -> error $ "Strange MediaBox: " ++ show v)
+                                      ]
             | k==BS.pack "Group" = [(k,v)]
             | k==BS.pack "Resources" = [(k,v)]
             | True = []

@@ -166,6 +166,23 @@ sealAllInTest = do
                     Left (thing :: SomeException) -> putStrLn (show thing)
                     Right _ -> return ()
 
+sealSimple :: IO ()
+sealSimple = do
+  let dir = "test/pdfs"
+  p dir "simple.pdf"
+  where p dir filename | "sealed.pdf" `isSuffixOf` filename = return ()
+                       | ".pdf" `isSuffixOf` filename = do
+                              let fullname = dir ++ "/" ++ filename
+                              putStrLn $ "Doing " ++ fullname
+                              processa fullname
+                       | otherwise = return ()
+        processa filename = do
+                  result <- try $ do
+                    processFile filename
+                  case result of
+                    Left (thing :: SomeException) -> putStrLn (show thing)
+                    Right _ -> return ()
+
 
 main :: IO ()
 main = do
