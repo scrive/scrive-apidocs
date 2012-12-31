@@ -120,7 +120,7 @@ testSendingDocumentSendsInvites = do
     && case documenttype d of
           Signable _ -> True
           _ -> False
-    && sendMailsDurringSigning d)
+    && sendMailsDuringSigning d)
 
   req <- mkRequest POST [ ("send", inText "True")
                         , ("timezone", inText "Europe/Stockholm")
@@ -160,7 +160,7 @@ testSigningDocumentFromDesignViewSendsInvites = do
         _ -> False
     && isSignatory (getAuthorSigLink d)
     && 2 <= length (filterSigLinksFor (signatoryispartner . signatorydetails) d)
-    && sendMailsDurringSigning d)
+    && sendMailsDuringSigning d)
 
   req <- mkRequest POST [ ("sign", inText "True")
                         , ("timezone", inText "Europe/Stockholm")

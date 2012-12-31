@@ -459,7 +459,7 @@ handleIssueSign document timezone = do
         mndocs <- mapM (forIndividual actor) docs
         case partitionEithers mndocs of
           ([], [d]) -> do
-            when_ (sendMailsDurringSigning d) $ do
+            when_ (sendMailsDuringSigning d) $ do
                 addFlashM $ modalSendConfirmationView d True
             return $ LinkIssueDoc (documentid d)
           ([], ds) -> do
@@ -516,7 +516,7 @@ handleIssueSend document timezone = do
         mndocs <- mapM (forIndividual user actor) docs
         case partitionEithers mndocs of
           ([], [d]) -> do
-            when_ (sendMailsDurringSigning d) $ do
+            when_ (sendMailsDuringSigning d) $ do
                 addFlashM $ modalSendConfirmationView d False
             return $ LinkIssueDoc (documentid d)
           ([], ds) -> do
