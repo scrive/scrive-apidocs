@@ -364,7 +364,7 @@ documentFilterToSQL (DocumentFilterByString string) = do
                                                                  " AND sl5.id = signatory_link_fields.signatory_link_id" <>
                                    -- " FROM signatory_link_fields " <>
                                    " WHERE (signatory_link_fields.type != ?) " <>
-                                           " AND (signatory_link_fields.value ILIKE ?))") [toSql SignatureFT,sqlpat word]
+                                           " AND (signatory_link_fields.value ILIKE ?))") [toSql (SignatureFT "signature"),sqlpat word]
                                    --" WHERE TRUE)") []
 
       sqlpat text = toSql $ "%" ++ concatMap escape text ++ "%"
@@ -855,6 +855,9 @@ fetchSignatoryLinkFields = foldDB decoder M.empty
           , sfType = case xtype of
                         CustomFT{} -> CustomFT custom_name is_author_filled
                         CheckboxFT{} -> CheckboxFT custom_name
+                        SignatureFT{} -> SignatureFT (if null custom_name
+                                                      then "signature"
+                                                      else custom_name)
                         _   -> xtype
           , sfObligatory = obligatory
           }] acc
@@ -867,6 +870,7 @@ insertSignatoryLinkFieldsAsAre fields = do
   let getCustomName field = case sfType field of
                               CustomFT name _ -> name
                               CheckboxFT name -> name
+                              SignatureFT name -> name
                               _ -> ""
       isAuthorFilled field = case sfType field of
                                CustomFT _ authorfilled -> authorfilled
@@ -2049,7 +2053,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                   (do value "email" eml
                       value "fieldtype" $ show (sfType changedfield)
                       case sfType changedfield of
-                        SignatureFT -> case splitImage $ sfValue changedfield of
+                        SignatureFT _ -> case splitImage $ sfValue changedfield of
                           Just (_w,_h,"") -> return ()
                           Just (_w,_h,i)  -> value "signature" i
                           Nothing -> return ()
@@ -2081,7 +2085,7 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatory
                   (do value "email" eml
                       value "fieldtype" $ show (sfType changedfield)
                       case sfType changedfield of
-                        SignatureFT -> case splitImage $ sfValue changedfield of
+                        SignatureFT _ -> case splitImage $ sfValue changedfield of
                           Just (_,_,"") -> return ()
                           Just (_,_,i)  -> value "signature" i
                           Nothing -> return ()
@@ -2287,6 +2291,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where
           let custom_name = case fieldtype of
                               CustomFT xname _ -> xname
                               CheckboxFT xname -> xname
+                              SignatureFT xname -> xname
                               _ -> ""
           r <- kRun $ mkSQL UPDATE tableSignatoryLinkFields
                  [ sql "value" fvalue ]
@@ -2305,7 +2310,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where
                (do value "email" eml
                    value "fieldtype" (show fieldtype)
                    case fieldtype of
-                        SignatureFT -> case splitImage fvalue of
+                        SignatureFT _ -> case splitImage fvalue of
                           Just (_,_,"") -> return ()
                           Just (_,_,i)  -> do
                             value "signature" i

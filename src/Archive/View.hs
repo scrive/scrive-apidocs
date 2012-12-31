@@ -142,6 +142,8 @@ signatoryForListCSV ktl _agr doc msl = [
         customFields = filter isCustom  $ concat $ maybeToList $ signatoryfields <$> signatorydetails <$> msl
         fieldNameSort sf1 sf2 = case (sfType sf1, sfType sf2) of
                                   (CustomFT n1 _, CustomFT n2 _) -> compare n1 n2
+                                  (SignatureFT n1, SignatureFT n2) -> compare n1 n2
+                                  (CheckboxFT n1, CheckboxFT n2) -> compare n1 n2
                                   _ -> EQ
         isCustom SignatoryField{sfType} = case sfType of
                                             (CustomFT _ _) -> True

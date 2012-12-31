@@ -987,7 +987,7 @@ daveSignatoryLink documentid siglinkid = onlyAdmin $ do
               CompanyFT        -> "sigco"
               PersonalNumberFT -> "sigpersnr"
               CompanyNumberFT  -> "sigcompnr"
-              SignatureFT      -> "signature"
+              SignatureFT label-> "signature: " ++ label
               CustomFT label _ -> "Custom: " ++ label
               CheckboxFT label -> "Checkbox: " ++ label
 

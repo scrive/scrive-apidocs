@@ -49,7 +49,7 @@ signatoryLinkClearDetails sd = sd {signatoryfields = map signatoryLinkClearField
 
 signatoryLinkClearField :: SignatoryField -> SignatoryField
 signatoryLinkClearField field =  case sfType field of
-                                      SignatureFT -> field {sfValue = reverse $ dropWhile ((/=) '|' ) $ reverse $ sfValue field}
+                                      SignatureFT _ -> field {sfValue = reverse $ dropWhile ((/=) '|' ) $ reverse $ sfValue field}
                                       _ -> field
 
 emptySignatoryFields :: [SignatoryField]
@@ -60,7 +60,6 @@ emptySignatoryFields = [
         , sf PersonalNumberFT
         , sf CompanyNumberFT
         , sf EmailFT
-        , sf SignatureFT
         ]
     where sf t = SignatoryField t "" True []
 {- |
@@ -131,7 +130,7 @@ replaceSignatoryData siglink@SignatoryLink{signatorydetails} fstname sndname ema
       EmailFT          -> sf { sfValue = email }
       CustomFT label _ -> sf { sfType = CustomFT label (not $ null v), sfValue = v }
       CheckboxFT _     -> sf
-      SignatureFT      -> sf)
+      SignatureFT _    -> sf)
         : pumpData rest vs'
       where
         (v, vs') = case sfType sf of

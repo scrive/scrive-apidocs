@@ -165,7 +165,9 @@ maxLengthOnFields _ document =
       -- signature field can be longer than max
       lengths = [length $ sfValue f | s <- documentsignatorylinks document
                                     , f <- signatoryfields $ signatorydetails s
-                                    , SignatureFT /= sfType f ]
+                                    , case sfType f of
+                                        SignatureFT {} -> False -- filter our signatures, they might be long
+                                        _ -> True ]
       m = maximum (0 : lengths) in
   assertInvariant ("some fields were too long: " ++ show m ++ ". max is " ++ show maxlength) $ m <= maxlength
     

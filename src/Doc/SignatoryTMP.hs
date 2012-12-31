@@ -226,7 +226,7 @@ instance FromJSValue FieldType where
          ("standard",  Just "sigpersnr")  -> Just $ PersonalNumberFT
          ("standard",  Just "sigco")      -> Just $ CompanyFT
          ("standard",  Just "sigcompnr")  -> Just $ CompanyNumberFT
-         ("signature", Just "signature")  -> Just $ SignatureFT
+         ("signature", Just name       )  -> Just $ SignatureFT name
          ("custom",    Just name       )  -> Just $ CustomFT name filled
          ("checkbox",  Just name       )  -> Just $ CheckboxFT name
          _ -> Nothing

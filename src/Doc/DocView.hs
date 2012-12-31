@@ -241,7 +241,7 @@ signatoryFieldsJSON doc (SignatoryLink{signatorydetails = SignatoryDetails{signa
       CompanyNumberFT       -> fieldJSON "standard" "sigcompnr"  sfValue
                                   (closedF sf && (not $ isPreparation doc))
                                   sfObligatory sfPlacements
-      SignatureFT           -> fieldJSON "signature" "signature" sfValue
+      SignatureFT label     -> fieldJSON "signature" label sfValue
                                   (closedSignatureF sf && (not $ isPreparation doc))
                                   sfObligatory sfPlacements
       CustomFT label closed -> fieldJSON "custom" label          sfValue

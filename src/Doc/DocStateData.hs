@@ -140,7 +140,7 @@ data FieldType = FirstNameFT
                | CompanyNumberFT
                | EmailFT
                | CustomFT String Bool -- label filledbyauthor
-               | SignatureFT
+               | SignatureFT String
                | CheckboxFT String
   deriving (Eq, Ord, Show, Data, Typeable)
 

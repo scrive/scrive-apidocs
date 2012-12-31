@@ -128,7 +128,7 @@ fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage)
     onlyFirstInSummary [] = []
     makeSealField :: SignatoryField -> [Seal.Field]
     makeSealField sf = case sfType sf of
-       SignatureFT -> case (sfPlacements sf) of
+       SignatureFT _ -> case (sfPlacements sf) of
                            [] -> maybeToList $ fieldJPEGFromSignatureField (sfValue sf)
                            plsms -> onlyFirstInSummary $ concatMap (maybeToList . (fieldJPEGFromPlacement (sfValue sf))) plsms
        CheckboxFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf)
