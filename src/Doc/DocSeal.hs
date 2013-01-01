@@ -64,7 +64,7 @@ import Utils.Either
 
 
 personFromSignatoryDetails :: (BS.ByteString,BS.ByteString) -> SignatoryDetails -> Seal.Person
-personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) details =
+personFromSignatoryDetails boxImages details =
     Seal.Person { Seal.fullname = getFullName details
                 , Seal.company = getCompanyName details
                 , Seal.email = getEmail details
@@ -74,7 +74,7 @@ personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) details =
                 , Seal.companyverified = False
                 , Seal.numberverified = False
                 , Seal.emailverified = True
-                , Seal.fields = fieldsFromSignatory False [] (checkedBoxImage,uncheckedBoxImage) details
+                , Seal.fields = fieldsFromSignatory False [] boxImages details
                 }
 
 personFields :: Monad m => Document -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String) -> Fields m ()
@@ -91,7 +91,7 @@ personFields doc (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
    F.value "api"    $ documentdeliverymethod doc == APIDelivery
 
 personsFromDocument :: (BS.ByteString,BS.ByteString) -> Document -> [(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String)]
-personsFromDocument (checkedBoxImage,uncheckedBoxImage) document =
+personsFromDocument boxImages document =
     let
         links = filter isSignatory $ documentsignatorylinks document
         x (sl@SignatoryLink { signatorydetails
@@ -100,7 +100,7 @@ personsFromDocument (checkedBoxImage,uncheckedBoxImage) document =
                             , signatorysignatureinfo
                             })
              -- FIXME: this one should really have seentime always...
-             = ((personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) signatorydetails)
+             = ((personFromSignatoryDetails boxImages signatorydetails)
                 { Seal.emailverified = True
                 , Seal.fullnameverified = fullnameverified
                 , Seal.companyverified = False
@@ -144,7 +144,7 @@ fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage)
                  , Seal.greyed           = greyed
                  , Seal.includeInSummary = True
                  }
-    
+
     checkedImageFromPlacement = iconWithPlacement checkedBoxImage
     uncheckedImageFromPlacement = iconWithPlacement uncheckedBoxImage
     iconWithPlacement image placement = Seal.FieldJPG
@@ -163,7 +163,7 @@ fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage)
                  , Seal.includeInSummary = False
                  , Seal.onlyForSummary   = False
                  , Seal.keyColor         = Nothing
-                 }    
+                 }
     fieldJPEGFromPlacement v placement =
       case split "|" v of
         [_,_,""] -> Nothing
@@ -203,7 +203,7 @@ fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage)
                          then BS.toString $ B64.encode $ JPG.imageToJpg 100 $ fromRight $ PNG.decodePng $ fromRight $ B64.decode $ BS.fromString content
                          else content
           Just $ Seal.FieldJPG
-                 { valueBase64           = content' 
+                 { valueBase64           = content'
                  , Seal.x                = 0
                  , Seal.y                = 0
                  , Seal.page             = 0
@@ -217,9 +217,9 @@ fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage)
                  }
         _ -> Nothing
 
-    
+
 listAttachmentsFromDocument :: Document -> [(SignatoryAttachment,SignatoryLink)]
-listAttachmentsFromDocument document = 
+listAttachmentsFromDocument document =
   concatMap extract (documentsignatorylinks document)
   where extract sl = map (\at -> (at,sl)) (signatoryattachments sl)
 
@@ -294,30 +294,29 @@ findOutAttachmentDesc document = do
 
 sealSpecFromDocument :: (KontraMonad m, MonadIO m, TemplatesMonad m, MonadDB m)
                      => (BS.ByteString,BS.ByteString)
-                     -> String 
+                     -> String
                      -> Document
                      -> [DocumentEvidenceEvent]
                      -> BS.ByteString
                      -> String
                      -> String
                      -> m Seal.SealSpec
-sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog content inputpath outputpath =
+sealSpecFromDocument boxImages hostpart document elog content inputpath outputpath =
   let docid = documentid document
       Just authorsiglink = getAuthorSigLink document
-      --authorHasSigned = isSignatory authorsiglink && isJust (maybesigninfo authorsiglink)
       signatoriesdetails = [signatorydetails sl | sl <- documentsignatorylinks document
                                                 , signatoryispartner $ signatorydetails sl]
       authordetails = signatorydetails authorsiglink
-      signatories = personsFromDocument (checkedBoxImage,uncheckedBoxImage) document
-      --secretaries = if authorHasSigned then [] else [personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) authordetails]
-      secretaries = [personFromSignatoryDetails (checkedBoxImage,uncheckedBoxImage) $ signatorydetails s| s <- documentsignatorylinks document
+      signatories = personsFromDocument boxImages document
+
+      secretaries = [personFromSignatoryDetails boxImages $ signatorydetails s| s <- documentsignatorylinks document
                                                                                                         , not . signatoryispartner $ signatorydetails s]
 
       persons = map (\(a,_,_,_,_,_) -> a) signatories
       initialsx = map (\(_,_,_,_,_,a) -> a) signatories
       paddeddocid = pad0 20 (show docid)
 
-      initials = concatComma initialsx
+      initials = intercalate ", " initialsx
       makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isauthor, _, _)  = do
           seenDesc <- renderLocalTemplate document "_seenHistEntry" $ do
                         personFields document personInfo
@@ -355,7 +354,6 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
                                       }]
                                 _ -> return []
       maxsigntime = maximum (map (signtime . (\(_,_,c,_,_,_) -> c)) signatories)
-      concatComma = intercalate ", "
       -- document fields
       lastHistEntry = do
                        desc <- renderLocalTemplate document "_lastHistEntry" (documentInfoFields document)
@@ -391,17 +389,17 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
       htmllogs <- htmlDocFromEvidenceLog (documenttitle document) elog
       let evidenceattachment = Seal.SealAttachment { Seal.fileName = "evidencelog.html"
                                                    , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString htmllogs }
-      
+
       -- add signature verification documentation
       sigVerFile <- liftIO $ BS.toString <$> B64.encode <$> BS.readFile "files/verification.html"
-      let signatureVerificationAttachment = 
+      let signatureVerificationAttachment =
             Seal.SealAttachment { Seal.fileName = "signatureverification.html"
                                 , Seal.fileBase64Content = sigVerFile
                                 }
-                               
+
 
       let numberOfPages = getNumberOfPDFPages content
-      numberOfPagesText <- 
+      numberOfPagesText <-
         if numberOfPages==1
            then renderLocalTemplate document "_numberOfPagesIs1" $ return ()
            else renderLocalTemplate document "_numberOfPages" $ do
@@ -435,13 +433,13 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
             }
 
 presealSpecFromDocument :: [(FieldType,String)] -> (BS.ByteString,BS.ByteString) -> Document -> String -> String -> Seal.PreSealSpec
-presealSpecFromDocument emptyFieldsText (checkedBoxImage,uncheckedBoxImage) document inputpath outputpath =
+presealSpecFromDocument emptyFieldsText boxImages document inputpath outputpath =
        Seal.PreSealSpec
             { Seal.pssInput          = inputpath
             , Seal.pssOutput         = outputpath
-            , Seal.pssFields         = concatMap (fieldsFromSignatory True emptyFieldsText (checkedBoxImage,uncheckedBoxImage). signatorydetails) (documentsignatorylinks document)
+            , Seal.pssFields         = concatMap (fieldsFromSignatory True emptyFieldsText boxImages . signatorydetails) (documentsignatorylinks document)
             }
-            
+
 
 sealDocument :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
              => Document
@@ -484,7 +482,7 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
           ExitSuccess -> do
             vr <- liftIO $ GT.verify tmpout
             case vr of
-                 GT.Valid _ _ -> do 
+                 GT.Valid _ _ -> do
                       res <- liftIO $ BS.readFile tmpout
                       Log.debug $ "GuardTime signed successfully #" ++ show documentid
                       return res
@@ -492,7 +490,7 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
                       res <- liftIO $ BS.readFile tmpout
                       Log.debug $ "GuardTime verification after signing failed for document #" ++ show documentid
                       Log.error $ "GuardTime verification after signing failed for document #" ++ show documentid
-                      return res     
+                      return res
           ExitFailure c -> do
             res <- liftIO $ BS.readFile tmpout
             Log.debug $ "GuardTime failed " ++ show c ++ " of document #" ++ show documentid
@@ -537,7 +535,7 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
     liftIO $ BS.writeFile tmpin content
     checkedBoxImage <- liftIO $ BS.readFile "public/img/checkbox_checked.jpg"
     uncheckedBoxImage <- liftIO $  BS.readFile "public/img/checkbox_unchecked.jpg"
-    emptyFieldsText <- emptyFieldsTextT 
+    emptyFieldsText <- emptyFieldsTextT
     let config = presealSpecFromDocument emptyFieldsText (checkedBoxImage,uncheckedBoxImage) document tmpin tmpout
     Log.debug $ "Config " ++ show config
     (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
