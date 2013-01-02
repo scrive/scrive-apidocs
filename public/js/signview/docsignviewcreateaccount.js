@@ -93,15 +93,12 @@ window.CreateAccountAfterSignView = Backbone.View.extend({
                                                         
     form.append("<div class='clearfix' />");
 
-    this.tos = $("<div class='tos'/>");
+    this.tos = $("<div class='checkbox-box'/>");
     if (this.checkbox == undefined) {
-        this.checkbox = $("<input type='checkbox'  id='tosCBox' autocomplete='off'/>");
-        this.checkbox.change(function() {view.clearTOSValidationErrors();});
+        this.checkbox = $("<div class='checkbox'/>");
+        this.checkbox.click(function() {view.checkbox.toggleClass('checked'); view.clearTOSValidationErrors();});
     };
-    this.tos.append($("<div class='check'/>").append(this.checkbox));
-
-    var toslabel = $("<label for='tosCBox'/>");
-    this.tos.append($("<div class='label'/>").append(localization.docsignview.acceptTOSLabel));
+    this.tos.append(this.checkbox).append($("<label/>").append(localization.docsignview.acceptTOSLabel));
     this.tos.append($("<div class='clearfix'/>"));
     form.append($("<div class='row'>").append(this.tos));
 
@@ -123,7 +120,7 @@ window.CreateAccountAfterSignView = Backbone.View.extend({
            acceptaccount: true,
            password: view.passwordinput.val(),
            password2: view.password2input.val(),
-           tos: view.checkbox.val(),
+           tos: view.checkbox.hasClass("checked") ? "on" : "",
            ajax: true,
            onSend: function() {
              container.empty().append("<div class='saving'/>");

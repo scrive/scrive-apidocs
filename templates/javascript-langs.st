@@ -538,7 +538,7 @@ javascriptLocalisation =
              , emailLabel: "$_email()$"
              , passwordLabel: "$_modalAccountSetupChoosePassword()$"
              , password2Label: "$_modalAccountSetupRepeatPassword()$"
-             , acceptTOSLabel: '$_accountFromSignInputsBodyAcceptTOS()$'
+             , acceptTOSLabel: "$_accountFromSignInputsBodyAcceptTOS()$"
              , newAccountButton: "$_signViewCreateAccountLabel()$"
              , createdAccountTitle: "$_signViewCreatedAccountTitle()$"
              , createdAccountSubtitle: "$_signViewCreatedAccountSubtitle()$"
