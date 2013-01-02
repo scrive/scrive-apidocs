@@ -188,7 +188,7 @@ var SignatoryDesignView = Backbone.View.extend({
    placeSignatureIcon : function() {
        var view = this;
        var signatory = this.model.signatory();
-       var field = signatory.signature();
+       var field = signatory.newSignature();
        var placeSignatureIcon = $("<a class='placeSignatureIcon' href='#'/>");
        field.view = placeSignatureIcon;
        field.view.redborder = function() {placeSignatureIcon.addClass('redborder')};

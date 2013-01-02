@@ -432,8 +432,10 @@ window.Document = Backbone.Model.extend({
     authorCanSignFirst : function() {
         if (!this.author().signs() || this.padDelivery())
             return false;
-        if (this.author().signature() != undefined && this.author().signature().hasPlacements()) // We don't support drawing signature in design view
+        if (this.author().hasPlacedSignatures()) {
+            // We don't support drawing signature in design view
             return false;
+        }
         var aidx = this.author().signorder();
         return ! _.any(this.signatories(), function(sig) {
             return sig.signs() && sig.signorder() < aidx;

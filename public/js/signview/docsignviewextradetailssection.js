@@ -89,13 +89,20 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
      return iti.input();
    },
    signatureInputAvaible : function() {
-     var signatory = this.model;
-     var field = signatory.signature();
-     return ((!field.signature().hasImage())) && !field.hasPlacements() && this.model.document().padDelivery();
+       var signatory = this.model;
+       if( signatory.document().padDelivery() ) {
+           var fields = signatory.signatures();
+           return !_.any(fields, function (field) {
+               return field.signature().hasImage() || field.hasPlacements();
+           });
+       }
+       else {
+           return false;
+       }
    },
    signatureInput : function() {
      var signatory = this.model;
-     var field = this.model.signature();
+     var field = this.model.signatures()[0];
      field.bind("change", function() {signatory.trigger("change");});
      return new SignaturePlacementViewForDrawing({model: field}).el;
    },

@@ -178,9 +178,17 @@ window.Signatory = Backbone.Model.extend({
     },
     field: function(name, type) {
         var fields = this.fields();
-        for (var i = 0; i < fields.length; i++)
-            if (fields[i].name() == name && fields[i].type() == type)
+        for (var i = 0; i < fields.length; i++) {
+            if ((name == undefined || fields[i].name() == name) &&
+                (type == undefined || fields[i].type() == type)) {
                 return fields[i];
+            }
+        }
+    },
+    fieldsByType: function(type) {
+        return _.filter(this.fields(), function(field) {
+            return field.type() == type;
+        });
     },
     readyFields: function() {
         return _.filter(this.fields(), function(f) {return f.isReady();});
@@ -340,10 +348,17 @@ window.Signatory = Backbone.Model.extend({
         });
     },
     signatureReadyForSign: function() {
-        return this.signature() == undefined || this.signature().readyForSign();
+        return _.all(this.signatures(), function(signature) {
+            return signature.readyForSign();
+        });
     },
-    signature: function() {
-        return this.field("signature", "signature");
+    signatures: function() {
+        return this.fieldsByType("signature");
+    },
+    hasPlacedSignatures: function() {
+        return _.any(this.signatures(), function(signature) {
+            return signature.hasPlacements();
+        });
     },
     remind: function(customtext) {
         return new Submit({
@@ -431,6 +446,23 @@ window.Signatory = Backbone.Model.extend({
     },
     newField : function(t,f) {
         return new Field({signatory: this, fresh: (f != undefined ? f : true) , type : t});
+    },
+    newSignature: function() {
+       var signature = this.newField("signature", false);
+       signature.makeObligatory();
+
+       /* Generate unique name for a signature. Signature names are really important for API,
+          for humans signature names are pure annoyance.
+        */
+       var allfields = _.flatten(_.map(this.document().signatories(), function(s) {return s.fields();}));
+       var i = 1;
+       while(_.any(allfields, function(f) {
+           return f.name() == "signature-" + i;
+       })) {
+           i++;
+       }
+       signature.setName("signature-" + i);
+       return signature;
     },
     addField : function(f) {
         var fields = this.fields();
