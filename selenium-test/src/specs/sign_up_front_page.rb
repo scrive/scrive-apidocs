@@ -43,7 +43,7 @@ describe "sign up on front page and modify account settings" do
 
     puts "we should get an email to a page where we can accept the tos"
     @h.emailhelper.follow_link_in_latest_mail_for random_email
-    @h.wait.until { @h.driver.find_element :id => "tosCBox" }
+    @h.wait.until { @h.driver.find_element :css => ".checkbox" }
 
     puts "make sure we get a red flash if we try to activate without signing the tos"
     (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-right a.blue.button" }).click
@@ -51,7 +51,7 @@ describe "sign up on front page and modify account settings" do
     @h.wait.until { @h.driver.find_element :css => ".failed-validation" }
 
     puts "accept the tos"
-    (@h.wait.until { @h.driver.find_element :id => "tosCBox" }).click
+    (@h.wait.until { @h.driver.find_element :css => ".checkbox" }).click
 
     puts "make sure we get a red flash if we try to activate without filling in a name"
     (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-right a.blue.button" }).click
