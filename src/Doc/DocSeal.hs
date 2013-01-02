@@ -124,13 +124,11 @@ fieldsFromSignatory :: Bool -> [(FieldType,String)] -> (BS.ByteString,BS.ByteStr
 fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage) SignatoryDetails{signatoryfields} =
   concatMap makeSealField  signatoryfields
   where
-    onlyFirstInSummary (a:rest) = (a {Seal.includeInSummary = True}) : (map (\r -> r {Seal.includeInSummary = False}) rest)
-    onlyFirstInSummary [] = []
     makeSealField :: SignatoryField -> [Seal.Field]
     makeSealField sf = case sfType sf of
        SignatureFT _ -> case (sfPlacements sf) of
                            [] -> maybeToList $ fieldJPEGFromSignatureField (sfValue sf)
-                           plsms -> onlyFirstInSummary $ concatMap (maybeToList . (fieldJPEGFromPlacement (sfValue sf))) plsms
+                           plsms -> concatMap (maybeToList . (fieldJPEGFromPlacement (sfValue sf))) plsms
        CheckboxFT _ -> map (uncheckedImageFromPlacement <| null (sfValue sf) |>  checkedImageFromPlacement) (sfPlacements sf)
        _ -> for (sfPlacements sf) $ \p -> case (addEmpty, sfValue sf, sfType sf) of
                                                 (True,"",CustomFT n _) -> fieldFromPlacement True n p

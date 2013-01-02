@@ -659,15 +659,16 @@ signatoryBox sealingTexts (Person {fullname,personalnumber,company,companynumber
     when (not (null companynumber)) $
          lm (makeLeftTextBox (PDFFont Helvetica 10) width $ orgNumberText sealingTexts ++ " " ++ companynumber)
     lm (makeLeftTextBox (PDFFont Helvetica_Oblique 10) width email)
-    forM_ fields $ \field ->
-      case field of
-        FieldJPG{ SealSpec.valueBase64 = val
-                , internal_image_w, internal_image_h
-                , includeInSummary = True
-                } -> let halfWidth, halfHeight :: Int
-                         halfWidth = cardWidth `div` 2
-                         halfHeight = (halfWidth * internal_image_h `div` internal_image_w)
-                    in lm $ boxEnlarge 0 6 0 6 $
+    let fieldsFiltered = nub . map extractUsefulInfo . filter includeInSummary $ fields
+        extractUsefulInfo FieldJPG{ SealSpec.valueBase64 = val
+                                  , internal_image_w, internal_image_h
+                                  } = (internal_image_w, internal_image_h, val)
+        extractUsefulInfo _ = (0,0,"")
+    forM_ fieldsFiltered $ \(internal_image_w, internal_image_h, val) -> do
+      let halfWidth, halfHeight :: Int
+          halfWidth = cardWidth `div` 2
+          halfHeight = (halfWidth * internal_image_h `div` internal_image_w)
+      lm $ boxEnlarge 0 6 0 6 $
                         setFrameColor $
                         boxDrawBottomLine $
                         Box halfWidth halfHeight $ execWriter $ do
@@ -683,7 +684,6 @@ signatoryBox sealingTexts (Person {fullname,personalnumber,company,companynumber
                          tell $ BS.unpack (Base64.decodeLenient (BS.pack val)) ++ "\n"
                          tell "EI\n"        -- end image
                          tell "Q\n"
-        _ -> return ()
   where
     width = cardWidth
 
