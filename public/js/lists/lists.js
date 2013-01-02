@@ -170,7 +170,7 @@
 
                 if (cell.isSelect()) {
                     td.click(function(){view.selectCheck(); return false;});
-                    this.checkbox = $("<div class='listcheckbox'/>");
+                    this.checkbox = $("<div class='checkbox'/>");
                     this.renderSelection();
                     this.checkbox.click(function(){view.selectCheck();return false;})
                     elem = this.checkbox;
@@ -385,7 +385,7 @@
                var cell = schema.cell(i);
                var th = $("<th>");
                if (cell.isSelect()) {
-                   th.append(this.checkbox = $("<div class='listcheckbox' class='selectall'/>"));
+                   th.append(this.checkbox = $("<div class='checkbox' class='selectall'/>"));
                    th.click(function() {view.toggleSelectAll();return false;});
                } else {
                    var h = $("<span/>");

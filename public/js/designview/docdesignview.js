@@ -168,31 +168,22 @@ var DesignViewView = Backbone.View.extend({
     },
     authenticationMethodSelection : function() {
         var document = this.model.document();
-        var box = $("<label class='authenticationmethodselect'/>");
-        var checkbox = $("<input type='checkbox' cc='FALSE' class='elegCheckbox'>");
-        if (document.elegAuthentication())
-        {
-            checkbox.attr("checked","YES");
-            checkbox.attr("cc","YES");
-        }
-        checkbox.change(function() {
-          if ($(this).attr("cc") != "YES")
+        var box = $("<div class='authenticationmethodselect checkbox-box'/>");
+        var checkbox = $("<div class='checkbox elegCheckbox'>");
+        if (document.elegAuthentication()) checkbox.addClass("checked","YES");
+        checkbox.click(function() {
+          if (!document.elegAuthentication())
           {
-            checkbox.attr("checked","YES");
-            checkbox.attr("cc","YES");
+            checkbox.addClass("checked");
             document.setElegAuthentication();
-            mixpanel.track('Check require eleg');
-
           }
           else {
-             checkbox.removeAttr("checked");
-             checkbox.attr("cc","NO");
-             document.setStandardAuthentication();
-            mixpanel.track('Check no eleg');
+            checkbox.removeClass("checked");
+            document.setStandardAuthentication();
           }
           return false;
         });
-        var text = $("<span>").text(localization.designview.authentication.selectmethod + " "+ localization.eleg);
+        var text = $("<label>").text(localization.designview.authentication.selectmethod + " "+ localization.eleg);
         box.append(checkbox).append(text);
         return box;
     },
@@ -454,20 +445,21 @@ var DesignViewView = Backbone.View.extend({
         return box;
     },
     signLastOption : function(signLast) {
+     
       var self = this;
-      var box = $("<label class='signLastOption'/>");
-      var checkbox = $("<input type='checkbox' class='signLastCheckbox'>");
-      var checkboxid = "fdd" + Math.random();
-      checkbox.attr("id",checkboxid);
-      checkbox.attr("checked", signLast);
-
-      checkbox.change(function() {
-        self.setSignLast( $(this).attr("checked"));
+      var box = $("<label class='signLastOption checkbox-box'/>");
+      var checkbox = $("<div class='checkbox signLastCheckbox'>");
+      if (signLast)
+        checkbox.addClass("checked");
+      else
+        checkbox.removeClass("checked");
+      
+      checkbox.click(function() {
+          self.setSignLast( !$(this).hasClass("checked"));
           mixpanel.track('Click sign last');
           
       });
-
-      var label = $("<span>").text(localization.signLast);
+      var label = $("<label>").text(localization.signLast);
       box.append(checkbox).append(label);
       return box;
     },

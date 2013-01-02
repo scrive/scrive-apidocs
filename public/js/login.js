@@ -161,24 +161,10 @@ var LoginView = Backbone.View.extend({
                 
       body.append($("<div class='position'/>").append(loginButton.input()));
 
-      var rememberPasswordCheckbox = $("<input type='checkbox' autocomplete='off'>").change(function() {model.toogleRememberPassword(); return false;});;
-      if (model.rememberPassword() && !rememberPasswordCheckbox.is(":checked"))
-          rememberPasswordCheckbox.attr("checked","YES");
-      else if (!model.rememberPassword())
-          rememberPasswordCheckbox.removeAttr("checked");
-      model.bind('rememberPasswordChange', function() {
-        if (model.rememberPassword() && !rememberPasswordCheckbox.is(":checked"))
-          rememberPasswordCheckbox.attr("checked","YES");
-        else if (!model.rememberPassword())
-          rememberPasswordCheckbox.removeAttr("checked");
-      });
 
       if (!model.pad()) {
         var footer = $("<div class='short-input-container-footer'/>");
         content.append(footer);
-        var rememberPasswordLabel = $("<a href='#'/>").text(localization.rememberme).click(function(event) {model.toogleRememberPassword(); return false;});
-        var rememberPassword = $("<p class='float-left'/>").append(rememberPasswordCheckbox).append(rememberPasswordLabel);
-        footer.append(rememberPassword);
       
         var toogleOption = $("<a href='#' class='s-forgot-password'/>").text(localization.loginModal.forgotpassword + "?").click(function(){ model.toogleView();return false;});
         footer.append($("<p class='float-right'/>").append(toogleOption));

@@ -1,66 +1,26 @@
 .checkbox {
-  height: 32px;
-  cursor: pointer;
-  &:hover  {
-    .checkbox-input {
-      background-position: 0 -12px;
-    }
-  }
-  &:active, &.active {
-    .checkbox-input, .checkbox-input {
-      background-position: 0 -24px;
-    }
-  }
-}
-
-.checkbox-input,
-.checkbox-label {
-  float: left;
-}
-
-.checkbox-input {
   width: 12px;
   height: 12px;
-  background: url(../img/checkboxes-blue.png) top left no-repeat;
-  margin: 10px 10px 10px 0;
-}
-
-.checkbox-label {
-  font-family: @source;
-  line-height: 2em;
-  color: @txt;
-}
-
-@media (-webkit-min-device-pixel-ratio: 2) {
-  .checkbox-input {
-    background-image: url(../img/checkboxes-blue2x.png);
-    background-size: 12px 36px;
-  }
-}
-
-.checkbox.white {
-  .checkbox-input {
-    background-image: url(../img/checkboxes.png);
-  }
-  .checkbox-label {
-    color: #ccc;
-  }
+  background: url(/img/checkboxes-blue.png) top left no-repeat;
+  margin: 10px 0 10px 0;
+  cursor: pointer;
   &:hover  {
-    .checkbox-label {
-      color: #fff;
-    }
+      background-position: 0 -12px;
   }
-  &:active, &.active {
-    .checkbox-label {
-      color: #fff;
-    }
+  &:active, &.active, &.checked {
+      background-position: 0 -24px;
   }
 }
-@media (-webkit-min-device-pixel-ratio: 2) {
-  .checkbox.white {
-    .checkbox-input {
-      background-image: url(../img/checkboxes2x.png);
-      background-size: 12px 36px;
-    }
+
+.checkbox-box {
+  height: 32px;
+  .checkbox,label {
+    float:left;
+  }
+  label {
+    margin-top: 8px;
+    margin-left: 10px;
+    margin-bottom: 8px;
+    line-height: 16px;
   }
 }

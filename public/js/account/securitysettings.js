@@ -165,14 +165,15 @@ var SecuritySettingsView = Backbone.View.extend({
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
 
-      var checkbox = $("<input type='checkbox' autocomplete='false'/>");
-      if (model.useFooter()) checkbox.attr("checked","checked");
-      checkbox.change(function() {
-          model.setUseFooter(checkbox.is(":checked"));
+      var checkbox = $("<div class='checkbox'/>");
+      if (model.useFooter()) checkbox.addClass("checked");
+      checkbox.click(function() {
+        checkbox.toggleClass("checked");
+        model.setUseFooter(!model.useFooter());
       });
                                                 
-      var label = $("<label style='margin-left: 10px'/>").text(localization.account.accountSecurity.useFooter);
-      body.append($("<div class=''/>").append(checkbox).append(label));
+      var label = $("<label/>").text(localization.account.accountSecurity.useFooter);
+      body.append($("<div class='checkbox-box'/>").append(checkbox).append(label));
 
       var cfb = $("<div class='customfooterbox'/>");
       var updateTinyVisibility = function() {

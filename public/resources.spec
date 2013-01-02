@@ -23,6 +23,7 @@ ignore  less/branding/containter.less
 ignore  less/branding/flash.less
 ignore  less/branding/modal.less
 ignore  less/branding/select.less
+ignore  less/branding/checkbox.less
 ignore  less/branding/main.less
 ignore  libs/html5shiv.js
 ignore  css/fonts
