@@ -338,7 +338,7 @@ sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart document elog 
           return $ if (isauthor)
                     then [signEvent]
                     else [seenEvent,signEvent]
-      invitationSentEntry = case (documentinvitetime document,(sendMailsDurringSigning &&^ hasOtherSignatoriesThenAuthor) document ) of
+      invitationSentEntry = case (documentinvitetime document,(sendMailsDuringSigning &&^ hasOtherSignatoriesThenAuthor) document ) of
                                 (Just (SignInfo time ipnumber),True) -> do
                                    desc <-  renderLocalTemplate document "_invitationSentEntry" $ do
                                        let partyListButAuthor' = partyListButAuthor document
