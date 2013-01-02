@@ -46,7 +46,7 @@ describe "sign up on front page and modify account settings" do
     @h.wait.until { @h.driver.find_element :id => "tosCBox" }
 
     puts "make sure we get a red flash if we try to activate without signing the tos"
-    (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-body a.button-green" }).click
+    (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-right a.blue.button" }).click
 
     @h.wait.until { @h.driver.find_element :css => ".failed-validation" }
 
@@ -54,7 +54,7 @@ describe "sign up on front page and modify account settings" do
     (@h.wait.until { @h.driver.find_element :id => "tosCBox" }).click
 
     puts "make sure we get a red flash if we try to activate without filling in a name"
-    (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-body a.button-green" }).click
+    (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-right a.blue.button" }).click
     @h.wait.until { @h.driver.find_element :css => ".failed-validation" }
 
 
@@ -63,7 +63,7 @@ describe "sign up on front page and modify account settings" do
     (@h.wait.until { @h.driver.find_element :name => "sndname" }).send_keys "Person"
 
     puts "make sure we get a red flash if we try to activate without filling in the password details"
-    (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-body a.button-green" }).click
+    (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-right a.blue.button" }).click
     puts "Checking if it failed for some reason"
     @h.wait.until { @h.driver.find_element :css => ".failed-validation" }
 
@@ -71,7 +71,7 @@ describe "sign up on front page and modify account settings" do
     puts "fill in the password details incorrectly and make sure we get red flash message"
     (@h.wait.until { @h.driver.find_element :name => "password" }).send_keys "password-12"
     (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys "password-123"
-    (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-body a.button-green" }).click
+    (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-right a.blue.button" }).click
     @h.wait.until { @h.driver.find_element :css => ".failed-validation" }
 
 
@@ -83,7 +83,7 @@ describe "sign up on front page and modify account settings" do
     (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys password
 
     puts "submit the signup form"
-    (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-body a.button-green" }).click
+    (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-right a.blue.button" }).click
 
     puts "should be logged in and able to upload a document"
     @h.wait.until { @h.driver.find_element :css => "a.js-logout" }
@@ -141,7 +141,7 @@ describe "sign up on front page and modify account settings" do
     @h.loginhelper.login_as(new_email, new_password)
 
     puts "change other personal settings"
-    (@h.wait.until { @h.driver.find_element :css => "a.js-account" }).click
+    (@h.wait.until { @h.driver.find_element :css => "#page-account" }).click
     companyposition = "Vice President of Testing"
     (@h.wait.until { @h.driver.find_element :name => "personalnumber" }).send_keys "800101-4132"
     (@h.wait.until { @h.driver.find_element :name => "phone" }).send_keys "031-650 000"
