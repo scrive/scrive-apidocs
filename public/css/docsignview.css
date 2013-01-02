@@ -101,12 +101,11 @@
 }
 
 .signview .instructions .giveForSigning {
-  font-size: small;
   margin: auto;
   border: 1px solid #E9E9E9;
-  height : 26px;
-  padding: 8px;
   margin: 5px auto 10px;
+  padding-left: 10px;
+  font-weight: normal;
   display: inline-block;
 }
 
@@ -114,16 +113,9 @@
     color: black;
 }
 
-.signview .instructions .giveForSigning span,
-.signview .instructions .giveForSigning strong,
-.signview .instructions .giveForSigning select{
- top: -7px;
- position: relative;
-}
-
-.signview .instructions .giveForSigning a.btn-tiny
+.signview .instructions .giveForSigning a.button
 {
-   padding-left: 10px;
+   margin-left: 10px;
 }
 
 .signview .instructions .subheadline {

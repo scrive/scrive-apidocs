@@ -217,10 +217,10 @@
 
       body.append($("<div class='position'/>").append(password2Input.input()));
 
-      var tosAccept = $("<div class='position' style='text-align: left;'/>");
-      var tosCBox = $("<input type='checkbox' id='tosCBox' name='tos' style='margin-right:10px;margin-top: -2px;margin-left:3px'/>");
-
-      tosCBox.change(function() { model.setAccepted(tosCBox.attr('checked'));});
+      var tosAccept = $("<div class='position checkbox-box' style='text-align: left;'/>");
+      var tosCBox = $("<div class='checkbox' name='tos' style='margin-left:3px'/>");
+      if (model.accepted()) tosCBox.addClass('checked');
+      tosCBox.click(function() { tosCBox.toggleClass('checked'); model.setAccepted(tosCBox.hasClass('checked'));});
 
       
       model.setTosValidator(function() {
@@ -228,8 +228,8 @@
       });
       tosAccept.append(tosCBox);
       var thref = "http://" + location.host + location.pathname.substring(0, 3) + "/terms";
-      tosAccept.append($('<span/>')
-                  .append($("<label/>").text(localization.accountSetupModal.modalAccountSetupBodyAccept))
+      tosAccept.append($('<label/>')
+                  .append($("<span/>").text(localization.accountSetupModal.modalAccountSetupBodyAccept))
                   .append($("<a class='clickable' target='_blank'/>").attr('href',thref).text(" " + localization.accountSetupModal.modalAccountSetupBodyTOS))
                 );
       tosAccept.append($('<br/>'));

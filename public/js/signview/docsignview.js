@@ -300,13 +300,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
                     },
                     el: $(self.extradetailssection().el),
                     onActivate   : function() {
-                        mixpanel.track('Begin editing extra field',
-                                       {Label : field.name()});
                         $(self.extradetailssection().el).addClass("highlight");
                     },
                     onDeactivate : function() {
-                        mixpanel.track('Finish editing extra field',
-                                       {Label : field.name()});
                         $(self.extradetailssection().el).removeClass("highlight");
                     }
                 });

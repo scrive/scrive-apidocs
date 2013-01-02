@@ -83,7 +83,7 @@ window.NameValidation = Validation.extend({
 window.CheckboxReqValidation = Validation.extend({
     defaults: {
             validates: function(t) {
-                return t.attr('checked');
+                return t.attr('checked') || t.hasClass("checked");
             },
             message: "Checkbox must be checked!"
     }
@@ -142,7 +142,7 @@ jQuery.fn.validate = function(validationObject){
 
     this.each(function(){
             //if this is a checkbox then passing value makes no sense for validation
-            if ($(this).attr('type') == 'checkbox') {
+            if ($(this).attr('type') == 'checkbox' || $(this).hasClass('checkbox')) {
                 if (!validationObject.validateData($(this), $(this))) {
                     validates = false;
                     return false; 
