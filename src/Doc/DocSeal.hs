@@ -154,12 +154,12 @@ fieldsFromSignatory addEmpty emptyFieldsText (checkedBoxImage,uncheckedBoxImage)
                  , Seal.page             = placementpage placement
                  , Seal.image_w          = if placementwrel placement /= 0
                                            then placementwrel placement
-                                           else 16 / 943
+                                           else 12 / 943
                  , Seal.image_h          = if placementhrel placement /= 0
                                            then placementhrel placement
-                                           else 16 / 1335
-                 , Seal.internal_image_w = 16
-                 , Seal.internal_image_h = 16
+                                           else 12 / 1335
+                 , Seal.internal_image_w = 24
+                 , Seal.internal_image_h = 24
                  , Seal.includeInSummary = False
                  , Seal.onlyForSummary   = False
                  , Seal.keyColor         = Nothing
