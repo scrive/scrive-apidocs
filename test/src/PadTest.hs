@@ -42,7 +42,7 @@ testSendDocumentsDurringSigningReturnsFalseForPad :: TestEnv ()
 testSendDocumentsDurringSigningReturnsFalseForPad = do
   author <- addNewRandomUser
   doc <-  addRandomDocumentWithAuthorAndCondition author (((==) PadDelivery) . documentdeliverymethod)
-  assertBool "sendMailsDurringSigning returns false for padsigning documents" (not $ sendMailsDurringSigning doc)
+  assertBool "sendMailsDuringSigning returns false for padsigning documents" (not $ sendMailsDuringSigning doc)
 
 
 testAddToPadQueue :: TestEnv ()

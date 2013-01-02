@@ -23,10 +23,15 @@ class Helpers
     @driver.manage.window.resize_to(1080, 800)
     @emailhelper = EmailHelper.new(@ctx, @driver, @wait)
     @loginhelper = LoginHelper.new(@ctx, @driver, @wait)
-    @dochelper = DocHelper.new(@ctx, @driver, @wait)
+    @dochelper = DocHelper.new(@ctx, @driver, @wait, self)
   end
 
   def quit
     @driver.quit
+  end
+
+  def click(css)
+    @wait.until { (@driver.find_element :css => css).displayed? }
+    (@driver.find_element :css => css).click
   end
 end

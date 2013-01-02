@@ -226,7 +226,7 @@ header=
       </li>
       $if(logged)$
       <li class="float-right">
-        <a class="page logout" href="$linklogout$">$_headerLogOut()$</a>
+        <a class="page js-logout" href="$linklogout$">$_headerLogOut()$</a>
       </li>
       <li class="float-right"><a class="page" id='page-account' href="$linkaccount$">$_headerAccount()$</a></li>
       <li class="page-first float-right"><a class=" page" id='page-archive' href="$linkissue$">$_headerArchive()$</a></li>
@@ -234,7 +234,7 @@ header=
         <a class="button button-small fromtemplate" onclick='createfromtemplate(event)' href="#">$_headerTemplate()$ </a>
       </li>
       <li class="session-create float-right">
-        <a class="button button-small"            onclick='createnewdocument(event)' href="#">$_headerSend()$ </a>
+        <a class="button button-small js-create-document"            onclick='createnewdocument(event)' href="#">$_headerSend()$ </a>
       </li>
       $else$
       <li class="page-first float-left"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$features">$_headerFeatures()$</a></li>
