@@ -36,7 +36,7 @@ section ul {
 section ul li {
   margin: 0 0 1em;
 }
-ul#interaction-menu {
+ul.ui-menu {
   list-style: none;
   padding: 3em 0;
   margin: 0 auto;
@@ -46,6 +46,11 @@ ul#interaction-menu {
     float: left;
     margin-right: 1em;
   }
+}
+
+li.dark {
+  background: rgba(0,0,0,.75);
+  padding: 0 10px;
 }
 
 .sample {
@@ -65,6 +70,7 @@ ul#interaction-menu {
     border-top: 1px dotted @blue-border;
   }
 }
+
 section.buttons .button {
   margin: 0 @em;
 }
