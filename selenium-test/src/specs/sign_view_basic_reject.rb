@@ -33,7 +33,7 @@ describe "rejecting document" do
 
     puts "reject the document"
     (@h.wait.until { @h.driver.find_element :css => ".rejectwrapper a" }).click
-    (@h.wait.until { @h.driver.find_element :css => ".modal-container a.button-small.float-right" }).click
+    @h.click ".modal-container a.button-small.float-right"
 
     puts "make sure there's a cancelled signatory"
     @h.wait.until { @h.driver.find_elements :css => ".summary.cancelled" }
