@@ -63,7 +63,10 @@ accountSetupPage=
           jQuery(document).ready(function() {
             jQuery('.mainContainer').append( new AccountSetup({
                                                   fstname: "$fstname$",
-                                                  sndname: "$sndname$"})
+                                                  sndname: "$sndname$",
+                                                  company : "$company$",
+                                                  companyFilled : $if(company)$true$else$false$endif$,
+                                                  })
                                               .el());
           });
         </script>

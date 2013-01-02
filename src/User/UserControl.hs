@@ -443,11 +443,14 @@ handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> m Response
 handleAccountSetupGet uid token = do
   ctx <- getContext
   user <- guardJustM404 $ getUserAccountRequestUser uid token
+  mcompany <-  getCompanyForUser user
   if isJust $ userhasacceptedtermsofservice user
     then respond404
     else simpleHtmlResponse =<< (renderTemplateAsPage ctx "accountSetupPage" Nothing False $ do
               F.value "fstname" $ getFirstName user
-              F.value "sndname" $ getLastName user)
+              F.value "sndname" $ getLastName user
+              F.value "company" $ companyname <$> companyinfo <$> mcompany)
+              
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
 handleAccountSetupPost uid token = do
   user <- guardJustM404 $ getUserAccountRequestUser uid token
