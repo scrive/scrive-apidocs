@@ -1056,7 +1056,7 @@ var ScrollFixer =  Backbone.Model.extend({
     },
     fix : function() {
               var fixer = this;
-              if ($(window).scrollTop() >= this.top)
+              if ($(window).scrollTop() >= this.top && $(window).scrollTop() > 100)
                 this.object.addClass('fixed');
                else
                 this.object.removeClass('fixed');
