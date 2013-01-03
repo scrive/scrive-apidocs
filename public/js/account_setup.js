@@ -297,7 +297,7 @@
           }
         });
       
-      acceptButtonBox.append($("<h3>Roglit priss Roglit priss <BR/> Roglit priss Roglit priss <BR/> Roglit priss  Roglit priss</h3>")).append(acceptButton.input());
+      acceptButtonBox.append($("<h3></h3>").append(localization.signupModal.mainHeader)).append(acceptButton.input());
       
     }
   });

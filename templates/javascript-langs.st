@@ -475,6 +475,7 @@ javascriptLocalisation =
            , emailAdress: "$_EmailAdress()$"
            , modalAccountSetupFooter: "$_modalAccountSetupFooter()$"
            , startNow : "$_startNow()$"
+           , mainHeader : "$_signupModalMainHeader()$"
          }
          , accountSetupModal: {
              modalAccountSetupBodyAccept: "$_modalAccountSetupBodyAccept()$"
