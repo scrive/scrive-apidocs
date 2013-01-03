@@ -32,8 +32,6 @@ class Helpers
 
   def click(css)
     @wait.until { (@driver.find_element :css => css).displayed? }
-    elem = @driver.find_element :css => css
-    elem.location_once_scrolled_into_view
-    elem.click
+    (@driver.find_element :css => css).click
   end
 end
