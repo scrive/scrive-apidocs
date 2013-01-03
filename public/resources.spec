@@ -7,7 +7,6 @@ ignore  tiny_mce/plugins
 ignore  tiny_mce/themes
 ignore  tiny_mce/utils
 ignore  libs/analytics.js
-ignore  libs/zenbox.js
 ignore  libs/recurly/recurly.css
 ignore  api-demo
 ignore  less/branding/buttons.less
@@ -67,7 +66,6 @@ set systemPage
  js   libs/livequery.js
  js   libs/recurly.js
  js   libs/moment.min.js
- js   libs/zenbox.js
  js   libs/iso8601.min.js
  js   js/global.js
  js   js/storage.js
