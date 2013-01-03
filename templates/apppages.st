@@ -44,6 +44,7 @@ wholePage=
        $header()$
        $flashmessages()$
        $content:noescape()$
+       $contactUsVivocha()$
        $pageFooter()$
       </body>
     </html>
@@ -283,4 +284,40 @@ langSwitcher=
                    jQuery('.langSwitcher').append(select.view().el);
               })
 </script>
+####
+contactUsVivocha=
+<aside class="contact">
+  <nav class="contact">
+  <ul>
+    <li class="call-vivocha vivocha_widget_openmedia_voip">
+      <a class="" href="tel:+46 8 519 779 00">
+        <div class="icon"><img src="/img/phone.png" width="32" height="32" alt="Call"></div>
+        <div class="hover">
+          <p>Call us now, click here</p>
+          <small>+46 8 519 779 00</small>
+        </div>
+      </a>
+    </li>
+    <li class="email">
+      <a class="" href="mailto:info@scrive.com">
+        <div class="icon"><img src="/img/mail-us.png" width="32" height="32" alt="Email"></div>
+        <div class="hover">
+          <p>Send an email</p>
+          <small>info@scrive.com</small>
+        </div>
+      </a>
+    </li>
+    <li class="chat-vivocha vivocha_widget_openmedia_chat">
+      <a class="" href="#vivocha-chat-url">
+        <div class="icon"><img src="/img/chat.png" width="32" height="32" alt="Chat"></div>
+        <div class="hover">
+          <p>Chat now</p>
+          <small>Live chat</small>
+        </div>
+      </a>
+    </li>
+  </ul>
+</nav>
+</aside>
+<script src="https://www.vivocha.com/a/scrive/api/vivocha.js"></script>
 ####
