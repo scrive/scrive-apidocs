@@ -46,9 +46,6 @@ var SignatoryDesignView = Backbone.View.extend({
      var signatory = self.model.signatory();
 
      if (self.showRoleSelector) {
-         mixpanel.track('Show role selector',
-                        {'Signatory Index': signatory.signIndex(),
-                         'Author?': signatory.author()});
        self.setRoleIcon.addClass("selected");
        self.setRoleBox = $("<div class='setRoleBox'/>");
        self.container.append(self.setRoleBox);
@@ -100,10 +97,6 @@ var SignatoryDesignView = Backbone.View.extend({
      }
      else {
        self.setRoleIcon.removeClass("selected");
-         mixpanel.track('Close role selector',
-                        {'Signatory Index': signatory.signIndex(),
-                         'Author?': signatory.author(),
-                         Button: 'icon'});
        if (self.setRoleBox!= undefined)
          self.setRoleBox.remove();
      }
@@ -115,8 +108,16 @@ var SignatoryDesignView = Backbone.View.extend({
        this.setRoleIcon.click(function(){
            if (view.showRoleSelector)
                view.showRoleSelector = false;
-           else
+           mixpanel.track('Close role selector',
+                          {'Signatory Index': signatory.signIndex(),
+                           'Author?': signatory.author(),
+                           Button: 'icon'});
+           else {
                view.showRoleSelector = true;
+               mixpanel.track('Show role selector',
+                              {'Signatory Index': signatory.signIndex(),
+                               'Author?': signatory.author()});
+           }
             view.refreshRoleSelector();
             return false;
             });
