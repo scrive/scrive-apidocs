@@ -673,8 +673,20 @@
             var view = this;
             var model = view.model;
 
-            if(model.type() === 'plannone' || model.type() === 'planrecurly')
+            if(model.type() === 'plannone' || model.type() === 'planrecurly') {
+                var f = $('<form />');
+
+                f.append($('<h3 />')
+                         .html(localization.payments.already));
+                f.append($('<h4 />')
+                         .html(localization.payments.alreadyGo)
+                         .click(function() {
+                             location = '/account#subscription';
+                         }));
+
+                view.element.append(f);
                 return false;
+            }
 
             if(model.done() && model.accountCreated()) {
                 view.$el.children().detach();

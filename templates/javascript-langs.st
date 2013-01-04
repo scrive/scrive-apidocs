@@ -595,6 +595,8 @@ javascriptLocalisation =
            , featuresurl : "$_paymentsFeaturesURL()$"
            , subheader: "$_paymentsSubheader()$"
            , contact: "$_paymentPlanContact()$"
+           , already: "$_paymentPlanAlreadySubscribed()$"
+           , alreadyGo: "$_paymentPlanAlreadySubscribedGo()$"
            , plans: { professional : "$_paymentPlanProfessional()$"
                     , team         : {
                       name : "$_paymentPlanTeam()$",
