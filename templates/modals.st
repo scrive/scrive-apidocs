@@ -72,38 +72,20 @@ modalRejectedView=
 #####
 ####
 modalDoYouWantToBeCompanyAccount=
-<form action="" method="post">
-  <div class="modal-container">
-    <div class="modal-header">
-      <span class="modal-icon message"></span>
-      <span class="modal-title">
-	    <h1>$_modalDoYouWantToBeCompanyAccountHeader()$</h1>
-      </span>
-      <a class="modal-close close"> </a>
-    </div>
-    <div class="modal-body">
-      <div class="modal-content">
-	    <div class="recovery-container">
-	      <div class="body">
-	        <p>$_modalDoYouWantToBeCompanyAccountBody()$</p>
-	      </div>
-	    </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <div class="float-left">
-	    <a class="close cancel">$_cancel()$</a>
-      </div>
-      <a href="#" class="btn-small blue float-right submit">
-	    <div class="left"></div>
-	    <div class="label">
-	      <p>$_modalDoYouWantToBeCompanyAccountFooterAccept()$</p>
-	    </div>
-	    <div class="right"></div>
-      </a>
-    </div>
-  </div>
-</form>
+<script>
+  jQuery(document).ready(function() {
+    var content = jQuery('<div/>').addClass('recovery-container');
+    var body = jQuery('<div/>').addClass('body');
+    content.append(body);
+    body.append(jQuery('<p/>').append('$_modalDoYouWantToBeCompanyAccountBody()$'));
+    Confirmation.popup({onAccept: function() {
+                                    new Submit({method: 'POST', url: ''}).send();
+                                  },
+                        title: '$_modalDoYouWantToBeCompanyAccountHeader()$',
+                        acceptButtonText: '$_modalDoYouWantToBeCompanyAccountFooterAccept()$',
+                        content: content});
+  });
+</script>
 ####
 modalDoYouWantToChangeEmail=
 <script>
