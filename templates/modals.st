@@ -25,59 +25,24 @@ modalContractCreated=
 </script>
 ###
 modalOfferCreated=
-<div class="modal-container">
-  <div class="modal-header">
-    <span class="modal-icon message"></span>
-    <span class="modal-title">
-      <h3>$_modalOfferCreatedHeader()$</h3>
-    </span>
-    <a class="modal-close close"> </a>
-  </div>
-  <div class="modal-body">
-    <div class="modal-content">
-      <p>$_modalOfferCreatedBody()$
-      </p>
-    </div>
-  </div>
-  <div class="modal-footer">
-    <a class="btn-small green float-right close">
-      <div class="left"></div>
-      <div class="label">
-        <p>$_close()$</p>
-        <div class="btn-symbol green arrow-left"></div>
-      </div>
-      <div class="right"></div>
-    </a>
-  </div>
-</div>
+<script>
+  jQuery(document).ready(function() {
+    var content = jQuery('<p/>').append('$_modalOfferCreatedBody()$');
+    Confirmation.popup({title: '$_modalOfferCreatedHeader()$',
+                        acceptButtonText: '$_close()$',
+                        content: content});
+  });
+</script>
 ###
 modalOrderCreated=
-<div class="modal-container">
-  <div class="modal-header">
-    <span class="modal-icon message"></span>
-    <span class="modal-title">
-      <h3>$_modalOrderCreatedHeader()$</h3>
-    </span>
-    <a class="modal-close close"> </a>
-  </div>
-  <div class="modal-body">
-    <div class="modal-content">
-      <p>$_modalOrderCreatedBody()$
-      </p>
-    </div>
-  </div>
-  <div class="modal-footer">
-    <a class="btn-small green float-right close">
-      <div class="left"></div>
-      <div class="label">
-        <p>$_close()$</p>
-        <div class="btn-symbol green arrow-left"></div>
-      </div>
-      <div class="right"></div>
-    </a>
-  </div>
-</div>
-####
+<script>
+  jQuery(document).ready(function() {
+    var content = jQuery('<p/>').append('$_modalOrderCreatedBody()$');
+    Confirmation.popup({title: '$_modalOrderCreatedHeader()$',
+                        acceptButtonText: '$_close()$',
+                        content: content});
+  });
+</script>
 #####
 modalRejectedView=
 <div class="modal-container">
