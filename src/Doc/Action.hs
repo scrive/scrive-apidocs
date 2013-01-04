@@ -38,6 +38,8 @@ import Util.Actor
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import Stats.Control
+import ThirdPartyStats.Core
+import MinutesTime
 
 import Control.Monad
 import Data.List hiding (head, tail)
@@ -62,6 +64,10 @@ postDocumentPreparationChange doc@Document{documenttitle} apistring = do
       return doc
     Right saveddoc -> return saveddoc
   Log.server $ "Sending invitation emails for document #" ++ show docid ++ ": " ++ documenttitle
+  now <- getMinutesTime
+  user <- getDocAuthor doc
+  asyncLogEvent SetUserProps [UserIDProp $ userid user,
+                              SomeProp "Last Doc Sent" (PVMinutesTime now)]
   edoc <- if (sendMailsDuringSigning document')
              then sendInvitationEmails ctx document'
              else return $ Right $ document'
