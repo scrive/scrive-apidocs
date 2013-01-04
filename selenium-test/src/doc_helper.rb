@@ -72,7 +72,7 @@ class DocHelper
   def loadAuthorAttachment(no, filepath)
     (@wait.until { @driver.find_element :css => ".authorattachmentssetuptext span.countspan" }).click
     (@wait.until { @driver.find_element :css => "div.selectAuthorAttachmentPopupContent input.multiFileInput" }).send_keys filepath
-    (@wait.until { @driver.find_element :css => "div.modal-footer a.float-right" }).click
+    click "div.modal-footer a.float-right"
     @wait.until { @driver.execute_script("return $('span.authorattachmentssetuptext span').first().text()") == "("+no.to_s()+")" }
   end
 
