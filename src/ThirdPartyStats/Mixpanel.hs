@@ -4,10 +4,12 @@ module ThirdPartyStats.Mixpanel (
   MixpanelToken,
   processMixpanelEvent) where
 import Control.Monad.IO.Class
+import Data.List (partition)
 import ThirdPartyStats.Core
 import Mixpanel.Event as Mixpanel
-import Mixpanel.Result
+import Mixpanel.Engage as Mixpanel (set)
 import MinutesTime (toUTCTime)
+import User.UserID (UserID)
 
 -- | Token identifying us to Mixpanel.
 type MixpanelToken = String
@@ -18,23 +20,44 @@ processMixpanelEvent :: MonadIO m
                      -> EventName
                      -> [EventProperty]
                      -> m ProcRes
-processMixpanelEvent _ SetUserProps _ = do
-    return $ Failed $  "Attempted to set Mixpanel user property using async "
-                    ++ "event, but that's not done yet!"
-processMixpanelEvent token (NamedEvent name) props = do
-    res <- liftIO $ Mixpanel.track token name (map mixpanelProperty props)
+processMixpanelEvent token SetUserProps props
+  | Just (uid, props') <- extractUID props = do
+    res <- liftIO $ Mixpanel.set token (show uid) (map mixpanelProperty props')
     case res of
       HTTPError reason     -> return (Failed reason)
       MixpanelError reason -> return (Failed reason)
       Success              -> return OK
+  | otherwise = do
+    return (Failed "Tried to set prop without user ID!")
+processMixpanelEvent token (NamedEvent name) props
+  | Just (uid, props') <- extractUID props = do
+    res <- liftIO $ Mixpanel.track token (show uid) name (map mixpanelProperty props')
+    case res of
+      HTTPError reason     -> return (Failed reason)
+      MixpanelError reason -> return (Failed reason)
+      Success              -> return OK
+  | otherwise = do
+    return (Failed "Tried to set user prop without user ID!")
+
+
+-- | Separate the user ID property from the rest, if present.
+--   More than one UID is not OK either.
+extractUID :: [EventProperty] -> Maybe (UserID, [EventProperty])
+extractUID props =
+    case partition isUIDProp props of
+      ([UserIDProp uid], props') -> Just (uid, props')
+      _                          -> Nothing
+  where
+    isUIDProp (UserIDProp _) = True
+    isUIDProp _              = False
 
 -- | Convert a generic async event property to a Mixpanel property.
 mixpanelProperty :: EventProperty -> Mixpanel.Property
 mixpanelProperty (MailProp mail)     = CustomString "$email" mail
 mixpanelProperty (IPProp ip)         = IP ip
-mixpanelProperty (NameProp name)     = Name name
-mixpanelProperty (UserIDProp uid)    = DistinctID (show uid)
+mixpanelProperty (NameProp name)     = FullName name
 mixpanelProperty (TimeProp t)        = Time (toUTCTime t)
+mixpanelProperty (UserIDProp _)      = error "User ID prop in the wrong place!"
 mixpanelProperty (SomeProp name val) = mkMixpanelProperty val
     where
       mkMixpanelProperty (PVNumber n) =
