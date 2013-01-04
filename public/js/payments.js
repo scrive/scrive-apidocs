@@ -755,14 +755,7 @@
                             title: header,
                             content: $('<p />').text(text),
                             onAccept: function() {
-                                if(model.type() === 'user') {
-                                    Login({});
-                                } else if(model.createdUser()) {
-                                    popup.view.clear();
-                                    Login({});
-                                } else {
-                                    Login({});
-                                }
+                                window.location = '/login';
                             }
                         });
                     });
