@@ -368,12 +368,18 @@ window.Signatory = Backbone.Model.extend({
               ajaxsuccess : callback
        });
     },
-    reject: function(customtext) {
+    reject: function(customtext, callback) {
         return new Submit({
               url: "/s/" + this.document().documentid() + "/" + this.document().viewer().signatoryid(),
+              ajax: true,
               method: "POST",
               customtext: customtext,
-              reject: "YES"
+              reject: "YES",
+              ajaxsuccess: function(resp) {
+                if (callback !== null) {
+                  callback(resp);
+                }
+              }
           });
     },
     padSigningURL : function() {
