@@ -294,8 +294,114 @@
         }
     });
 
-    var PlanBoxView = Backbone.View.extend({
-        className: "planbox",
+    var ContactBoxView = Backbone.View.extend({
+        className: "plan-container",
+        initialize: function(args) {
+            _.bindAll(this);
+            args.model.bind('change:currentPlan', this.render);
+            args.model.bind('fetch', this.render);
+            this.plan = args.plan;
+            this.onClick = args.onClick;
+            var view = this;
+            this.$el.addClass(this.plan);
+        },
+        render: function() {
+            var view = this;
+            var model = view.model;
+
+            var div = view.$el;
+            var div2 = $('<div class="plan" />');
+
+            var features = $('<div class="features" />');
+
+            var title = $('<div class="title" />')
+                .append($('<h2 />')
+                        .text(localization.payments.plans[view.plan].name))
+                .append($('<p />')
+                        .html(localization.payments.plans[view.plan].tag));
+            features.append(title);
+
+            var cost = $('<div class="cost" />')
+                .append($('<span class="price" />')
+                        .html(localization.payments.plans[view.plan].price))
+                .append($('<p />')
+                        .text(localization.payments.plans[view.plan].price3));
+
+            features.append(cost);
+
+            var button = $('<a class="button action-sign-up" />')
+                .append($('<span class="blue" />')
+                        .text(localization.payments.contact))
+                .append($('<span class="gray" />')
+                        .text(localization.cancel));
+
+            var action = $('<div class="action" />').append(button);
+
+            features.toggle(function() {
+                button.addClass('button-gray');
+                div2.addClass("active");
+                div2.find('input.initial-focus').focus();
+            }, function() {
+                button.removeClass('button-gray');
+                div2.removeClass("active");
+                div2.find('input.initial-focus').blur();
+            });
+
+            features.append(action);
+            // end features construction
+
+            div2.append(features);
+
+            var form = $('<form method="POST" action="/payments/contact" />').addClass(view.plan);
+            var ul = $('<ul class="fields" />');
+
+            var fn = $('<li class="field" />');
+            fn.append($('<label for="input-first-name" />').text(localization.fstname));
+            fn.append($('<div class="input" />')
+                      .append($('<input type="text" id="input-first-name" name="firstname" />')
+                              .attr('placeholder', localization.fstname)
+                              .val(model.firstName() || '')));
+            ul.append(fn);
+
+            var ln = $('<li class="field" />');
+            ln.append($('<label for="input-last-name" />').text(localization.sndname));
+            ln.append($('<div class="input" />')
+                      .append($('<input type="text" id="input-last-name" name="lastname" />')
+                              .attr('placeholder', localization.sndname)
+                              .val(model.lastName() || '')));
+            ul.append(ln);
+
+            var email = $('<li class="field" />');
+            email.append($('<label for="input-email" />').text(localization.email));
+            email.append($('<div class="input" />')
+                         .append($('<input type="text" id="input-email" name="email" />')
+                                 .attr('placeholder', localization.email)
+                                 .val(model.email() || '')));
+            ul.append(email);
+
+            var message = $('<li class="field" />');
+            message.append($('<label for="input-message" />').text(localization.email));
+            message.append($('<div class="input" />')
+                           .append($('<textarea type="text" id="input-message" name="message" />')
+                                   .attr('placeholder', "Please describe your problem here in a few sentences. We'll get back to you right away.")));
+            ul.append(message);
+
+            var submit = $('<li class="field submit" />');
+            submit.append($('<div class="input" />')
+                          .append($('<input type="submit" id="input-submit" class="button button-blue" />')
+                                  .val("Send message ›")));
+            ul.append(submit);
+
+            form.append(ul);
+            form.append($('<input type="hidden" name="plan" />').val(view.plan));
+            div2.append(form);
+            
+            div.append(div2);
+        }
+    });
+
+    var TeamBoxView = Backbone.View.extend({
+        className: "plan-container",
         initialize: function(args) {
             _.bindAll(this);
             args.model.bind('change:currentPlan', this.render);
@@ -308,74 +414,58 @@
                 return false;
             });
             this.$el.addClass(this.plan);
+            this.recurly = new RecurlyView(args);
         },
         render: function() {
             var view = this;
             var model = view.model;
-            // placeholder div
-            var div = $('<div class="team planbox" />');
 
-            var header = $('<div class="header" />');
-            var header1 = $('<div class="header1" />');
-            header1.text(localization.payments.plans[view.plan].name);
-            var header2 = $('<div class="header2" />');
-            header2.html(localization.payments.plans[view.plan].tag);
-            header.append(header1).append(header2);
-            div.append(header);
+            var div = view.$el;
+            var div2 = $('<div class="plan" />');
 
             var features = $('<div class="features" />');
-            _.each(localization.payments.plans[view.plan].features, function(t) {
-                features.append($('<div class="feature" />').html(t));
+
+            var title = $('<div class="title" />')
+                .append($('<h2 />')
+                        .text(localization.payments.plans[view.plan].name))
+                .append($('<p />')
+                        .html(localization.payments.plans[view.plan].tag));
+            features.append(title);
+
+            var cost = $('<div class="cost" />')
+                .append($('<span class="price" />')
+                        .html(localization.payments.plans[view.plan].price))
+                .append($('<p />')
+                        .text(localization.payments.plans[view.plan].price3));
+
+            features.append(cost);
+
+            var button = $('<a class="button action-sign-up" />')
+                .append($('<span class="blue" />')
+                        .text(localization.payments.purchase))
+                .append($('<span class="gray" />')
+                        .text(localization.cancel));
+
+            var action = $('<div class="action" />')
+                .append(button);
+
+            features.append(action);
+            features.toggle(function() {
+                button.addClass('button-gray');
+                div2.addClass("active");
+                div2.find('input.initial-focus').focus();
+            }, function() {
+                button.removeClass('button-gray');
+                div2.removeClass("active");
+                div2.find('input.initial-focus').blur();
             });
+            // end features construction
 
-            features.append($('<a />').attr('href', localization.payments.featuresurl)
-                            .addClass('readmorelink')
-                            .text(localization.payments.readmore)
-                            .click(function(e) { 
-                                e.stopPropagation();
-                            }));
+            div2.append(features);
+            div2.append(view.recurly.el);
 
-            div.append(features);
+            div.append(div2);
 
-            var price = $('<div class="price" />');
-            var price1 = $('<div class="price1" />');
-            price1.text(localization.payments.plans[view.plan].price1);
-            var price2 = $('<div class="price2" />');
-            price2.html(localization.payments.plans[view.plan].price);
-            var price3 = $('<div class="price3" />');
-            price3.text(localization.payments.plans[view.plan].price3);
-            price.append(price1).append(price2).append(price3);
-            var price21 = $('<div class="price2 s" />');
-            price21.html(localization.payments.plans[view.plan].price21);
-            var price31 = $('<div class="price3" />');
-            price31.text(localization.payments.plans[view.plan].price31);
-            price.append(price21).append(price31);
-
-            div.append(price);
-
-            var color = 'black';
-            var text = localization.payments.plans[view.plan].select;
-            
-            if(model.currentPlan() == view.plan) {
-                color = 'green';
-                text = localization.payments.plans[view.plan].selected;
-                view.$el.addClass('selected');
-            } else {
-                view.$el.removeClass('selected');
-            }
-
-            var buttonbox = $('<div class="buttonbox" />');
-            var button = Button.init({color: color,
-                                      text: text,
-                                      size: 'small',
-                                      width: 150,
-                                      onClick: function() {
-                                          return false;
-                                      }});
-            
-            buttonbox.append(button.input());
-            div.append(buttonbox);
-            view.$el.html(div.contents());
         }
     });
 
@@ -401,9 +491,6 @@
             // set the quantity that we found from the db
             var quantbox = form.find('.quantity input');
 
-            var guarantee = $('<div class="guarantee" />');
-            guarantee.text(localization.payments.guarantee);
-
             if((model.currentPlan() || 'team') == 'team') {
                 var q = model.quantity() || 1;
                 quantbox.val(q);
@@ -414,17 +501,19 @@
                 quantbox.val(1);
                 form.find('.quantity .label').text("You next invoice will include: ");
                 quantbox.after($('<span class="quantity" />').html("&nbsp;"));
-                guarantee.text(localization.and + " " + localization.payments.plans.docprice + " " + localization.payments.perdocument + " " + localization.payments.signed);
             }
             quantbox.change();                    
             quantbox.hide();
 
             var permonth = $('<span />');
-            permonth.text(" " + localization.payments.permonth);
+            permonth.text(localization.payments.table.total + " " + localization.payments.permonth);
 
-            form.find('.due_now').append(permonth).append(guarantee);
-            form.find('.due_now .title').hide();
+            form.find('.due_now .title').html(permonth);
 
+            // move errors above contact_info
+
+            form.find('div.contact_info').before(form.find('div.server_errors'));
+            
             var work = true;
             var handlechargeaccount = function(data) {
                 console.log(data);
@@ -481,12 +570,12 @@
             var loadingicon = $('<img src="/libs/recurly/images/submitting.gif" class="loading-icon" style="display:none" />');
             // replace button with our own
             var button = Button.init({color:'green',
-                                      size:'big',
+                                      //size:'big',
                                       cssClass:'s-subscribe',
                                       text:localization.payments.subscribe,
                                       icon: loadingicon, 
                                       onClick: function() {
-                                          view.validator.validate(function() {
+                                          view.validator.validate(function success() {
                                               //LoadingDialog.open(localization.payments.loading);
                                               loadingicon.css({display:'inline'});
                                               if(model.type() === 'user') {
@@ -507,10 +596,12 @@
                                                   model.checkuserexists(model.email(),
                                                                         handlechargeaccount);
                                               }
+                                          }, function failure() {
+                                              loadingicon.hide();
                                           });
                                       }});
             div.find('button').replaceWith(button.input());
-            
+
             var expires = form.find('.field.expires');
             form.find('.field.cvv').insertAfter(expires);
             expires.find('.title').text(localization.payments.expires);
@@ -520,24 +611,28 @@
             // we can store the field values so they won't have to type them again
             var cc = form.find('.card_number input');
             cc.val(model.creditCard());
+            cc.attr('placeholder', cc.parent().find('.placeholder').text());
             cc.change();
             cc.change(function(e) { 
                 model.setCreditCard($(e.target).val()); 
             });
             var cvv = form.find('.cvv input');
             cvv.val(model.cvv());
+            cvv.attr('placeholder', cvv.parent().find('.placeholder').text());
             cvv.change();
             cvv.change(function(e) {
                 model.setCvv($(e.target).val());
             });
             var fn = form.find('.first_name input');
             fn.val(model.firstName());
+            fn.attr('placeholder', fn.parent().find('.placeholder').text());
             fn.change();
             fn.change(function(e) {
                 model.setFirstName($(e.target).val());
             });
             var ln = form.find('.last_name input');
             ln.val(model.lastName());
+            ln.attr('placeholder', ln.parent().find('.placeholder').text());
             ln.change();
             ln.change(function(e) {
                 model.setLastName($(e.target).val());
@@ -545,6 +640,7 @@
 
             var en = form.find('.email input');
             en.val(model.email());
+            en.attr('placeholder', en.parent().find('.placeholder').text());
             en.change();
             en.change(function(e) {
                 model.setEmail($(e.target).val());
@@ -566,10 +662,12 @@
                     fn.hide();
                     ln.hide();
                     en.hide();
+                    form.addClass('nocontact');
                     form.find('.contact_info').hide();
                 }
             }
             form.find('.vat .title').text(localization.payments.vat25);
+            form.find('.placeholder').remove();
         },
         render: function() {
             var view = this;
@@ -589,7 +687,7 @@
                 return false;
             }
 
-            var loadingicon = $('img.loading-icon');
+            var loadingicon;
 
             Recurly.config({
                 subdomain: model.subdomain()
@@ -597,7 +695,7 @@
                 , country: 'SE'
             });
 
-            this.validator = Recurly.buildSubscriptionForm({
+            view.validator = Recurly.buildSubscriptionForm({
                 target: view.element
                 , enableAddons: false
                 , enableCoupons: false
@@ -621,9 +719,17 @@
                     , zip: ' '
                 }
                 , signature: model.plans()[model.currentPlan() || 'team'].signature
-                , beforeInject: this.scrambleForm
+                , beforeInject: function(form) {
+                    view.scrambleForm(form);
+                    loadingicon = $(form).find('img.loading-icon');
+                }
+                , onError: function() {
+                    console.log("hello!! Error!!!");
+                    console.log(loadingicon);
+                    loadingicon.hide();
+                }
                 , successHandler: function(stuff) {
-
+                    
                     LoadingDialog.open(localization.payments.savingsubscription);
                     //loadingicon.css({display:'inline'});
                     model.submitSubscription(function() {
@@ -649,14 +755,7 @@
                             title: header,
                             content: $('<p />').text(text),
                             onAccept: function() {
-                                if(model.type() === 'user') {
-                                    Login({});
-                                } else if(model.createdUser()) {
-                                    popup.view.clear();
-                                    Login({});
-                                } else {
-                                    Login({});
-                                }
+                                window.location = '/login';
                             }
                         });
                     });
@@ -670,38 +769,38 @@
         initialize: function(args){
             var view = this;
             _.bindAll(this);
-            this.teamBox = new PlanBoxView({model: args.model,
+            this.teamBox = new TeamBoxView({model: args.model,
+                                            hideContacts: args.hideContacts,
                                             plan:'team',
                                             onClick: function() {
                                                 mixpanel.track('Click team plan');
                                                 if(view.model.currentPlan() !== 'team')
                                                     view.model.setCurrentPlan('team');
                                             }});
-            this.formBox = new PlanBoxView({model: args.model,
-                                            plan:'form', 
-                                            onClick: function() { 
-                                                mixpanel.track('Click online form plan');
-                                                view.getInTouch();
-                                            }});
-            this.enterpriseBox = new PlanBoxView({model: args.model,
-                                                  plan:'enterprise', 
-                                                  onClick: function() {
-                                                      mixpanel.track('Click enterprise plan');
-                                                      view.getInTouch();
-                                                  }});
-            this.recurlyForm = new RecurlyView({model: args.model, hideContacts: args.hideContacts});
+            this.formBox = new ContactBoxView({model: args.model,
+                                               plan:'form', 
+                                               onClick: function() { 
+                                                   mixpanel.track('Click online form plan');
+                                               }});
+            this.enterpriseBox = new ContactBoxView({model: args.model,
+                                                     plan:'enterprise', 
+                                                     onClick: function() {
+                                                         mixpanel.track('Click enterprise plan');
+                                                     }});
+            //this.recurlyForm = new RecurlyView({model: args.model, hideContacts: args.hideContacts});
             view.model.bind('fetch', this.render);
         },
         render: function() {
             var view = this;
             var model = view.model;
-            var div = $('<div />');
+            var div = $('<div />'); // container div
 
-            var header = $('<div class="header" />')
-                .append($('<h2 />').text(model.header()));
+            var header = $('<header />')
+                .append($('<h1 />').text(model.header()))
+                .append($('<h2 />').text('')); //localization.payments.subheader
 
             div.append(header);
-            div.append($('<h3 />').text(localization.payments.chooseplan));
+            //div.append($('<h3 />').text(localization.payments.chooseplan));
 
             div.append(view.teamBox.el)
                 .append(view.formBox.el)
@@ -709,69 +808,8 @@
 
             div.append($('<div class="clearfix" />'));
             div.append($('<div class="vat-box" />').text(localization.payments.vat));
-
-            if(model.type() !== 'planrecurly' && model.type() !== 'plannone') {
-                div.append($('<div class="clearfix" />'));
-                if(!(model.type() === 'user' && !model.canPurchase())) {
-                    div.append($('<h3 />').text(localization.payments.paywithcard));
-                }
-
-                div.append(view.recurlyForm.el);
-            }
             
             view.$el.html(div.contents());
-        },
-        getInTouch: function() {
-            var view = this;
-            var model = view.model;
-            var form = $("<div />");
-            var popup;
-            var numberinput = InfoTextInput.init({infotext: localization.payments.phonenumber, 
-                                                  onEnter: function() {
-                                                      popup.model.accept();
-                                                      return false;
-                                                  }
-                                                 }).input().blur().change();
-            form.append(numberinput);
-
-            var content = $('<div />');
-            content.append($('<p />').text(localization.payments.pleaseleavenumber));
-            content.append(form);
-            var done = false;
-            popup = Confirmation.popup({
-                //acceptText: localization.payments.ok,
-                title: localization.payments.pleaseleavenumbertitle,
-                content: content,
-                onAccept: function() {
-                    if(done)
-                        popup.view.clear();
-                    var phone = numberinput.val();
-                    if (phone.trim().length == 0) return;
-                    new Submit({
-                        url: "/account/phoneme",
-                        method: "POST",
-                        email: model.email(),
-                        phone: phone,
-                        ajax: true,
-                        onSend: function() {
-                            mixpanel.track('Send phone number');
-                            mixpanel.people.set({Phone : phone});
-                            content.empty();
-                            content.append("<div class='loading payments'/>");
-                        },
-                        ajaxerror: function(d, a) {
-                            content.empty();
-                            content.append($("<div/>").text(localization.docsignview.phoneConfirmationText));
-                            done = true;
-                        },
-                        ajaxsuccess: function(d) {
-                            content.empty();
-                            content.append($("<div/>").text(localization.docsignview.phoneConfirmationText));
-                            done = true;
-                        }
-                    }).send();
-                }
-            });
         }
     });
 
@@ -948,6 +986,12 @@
                                                }
                                               });
                      el.find('button').replaceWith(button.input());
+                     el.find('div.field').each(function(i, f) {
+                         f = $(f);
+                         var p = f.find('.placeholder').text();
+                         if(p)
+                             f.find('input').attr('placeholder', p);
+                     });
                  },
                  addressRequirement: 'none',
                  successHandler: function(stuff) {
@@ -957,10 +1001,16 @@
                          model.trigger('fetch');
                          new FlashMessage({ content: localization.payments.billingInfoSaved, color: "green"});
                      }});
+                 },
+                 onError: function() {
+                     LoadingDialog.close();
+                 },
+                 onValidationError: function() {
+                     LoadingDialog.close();
                  }
                 }
             );
-            billingform.append($('<div class="cancel" />').append(view.cancelButton()));
+            billingform.find('.footer').prepend($('<div class="cancel" />').append(view.cancelButton()));
             $el.html($().add(billingheader).add(billingform));
         },
         cancelButton: function() {
@@ -1122,7 +1172,6 @@
             return new PaymentsDashboardRecurlyView({model:model});
     };
     window.PaymentsDashboard = function(opts) {
-        $("head").append('<link rel="stylesheet" href="/libs/recurly/recurly.css"></link>');
         var model = new PricePageModel(opts);
         var el = $("<div class='tab-container'/>");
         var view = null;
@@ -1139,15 +1188,10 @@
             model.trigger('fetch');
         }});
 
-
         return {
-          refresh : function() { },
-          el : function() {return el;}
-          
+            refresh : function() { },
+            el : function() {return el;}
         };
-                if(model.type() == 'planrecurly')
-                    sel.removeClass('price-plan');
-
     };
 
     window.PricePage = function(opts) { 
@@ -1159,7 +1203,6 @@
         }});
 
         return { show : function(selector) {
-            $("head").append('<link rel="stylesheet" href="/libs/recurly/recurly.css"></link>');
             $(selector).html(view.el);
         }};
     };

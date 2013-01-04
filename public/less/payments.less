@@ -3,6 +3,8 @@
   Author: Eric Normand
 
 **/
+@import 'branding/colors';
+@import 'branding/typography';
 
 .payments.loading {
     background-image: url(/img/wait30trans.gif);
@@ -13,13 +15,16 @@
 }
 
 
-.payments-dashboard {
+.payments-dashboard .subscribed {
 
     @blue: #35a4d6;
     @darkblue: #137DAD;
     @green: #9bd567;
 
     color: #666;
+
+    height: 800px;
+    font: 16px/16px @sans;
 
 
     .payments {
@@ -93,7 +98,7 @@
 
     .cancel-button {
         float: left;
-        margin-left: -16px;
+        margin: 0 16px 0 0;
     }
 
     .savechanges {
@@ -195,20 +200,13 @@
 
     .recurly .field .placeholder {
         font-size: 10px;
+        display: none;
     }
 
-    .recurly .field.card_number input[type="text"] {
-        width: 180px;
-    }
-
-    .recurly .field.cvv input[type="text"] {
-        width: 40px;
-    }
 
     .recurly .footer {
         padding:0px;
         padding-bottom:12px;
-        text-align: center;
     }
 
     .payments.subscribing {
@@ -225,10 +223,11 @@
         margin: auto;
     }
 
-    .subscribed .billing_info .title {
+    .billing_info .title {
         font-size: 0px;
         padding: 0;
         height: 16px;
+        display: none;
     }
 
     span.subscription-chooser {
@@ -260,29 +259,52 @@
     }
 
     .recurly {
-        .field input[type=text] {
-            padding: 1px;
+        .field {
+            width: 430px;
+            margin: 8px 0;
+            input[type=text] {
+                padding: 1px;
+                background-color: #fff;
+                border: 1px solid lightgray;
+                border-radius: 2px;
+                margin: 3px auto 3px 0;
+                height: 17px;
+                padding: 1px;
+                box-shadow: none;
+                width: 298px;
+                
+                border-width: 1px;
+                padding: 7px 10px;
+                height: 16px;
+                
+                display: inline-block;
+                margin: 0;
+                border: 1px solid #ccc;
+                font: 16px/16px @sans;
+                padding: 7px 10px;
+                height: 16px;
+                color: @txt;
+                width: 260px;
+            }
 
-
-        background-color: #fff;
-        border: 1px solid lightgray;
-        border-radius: 2px;
-        margin: 3px auto 3px 0;
-        font-size: 10px;
-        height: 17px;
-        padding: 1px;
-        box-shadow: none;
-        width: 268px;
+            &.vat_number {
+                display: none;
+            }
  
         }
         .field.expires .title {
-            font-size: 10px;
             line-height: 25px;
         }
 
         .field.expires {
             padding-bottom: 6px;
+            div {
+                display: inline-block;
+                margin: 0 8px 0 0;
+            }
         }
+
+        
     }
 
     .payments .recurly .field {
@@ -302,12 +324,13 @@
 
     .recurly .server_errors.any {
         margin: 16px 28px 0 0;
+        color: @red;
     }
 
     .recurly .field .error {
-        font-size: 10px;
-        margin-left: 0px;
-        line-height: 13px;
+        display: inline-block;
+        color: @red;
+        margin-left: 16px;
     }
 
     .changebilling-form {
@@ -360,3 +383,4 @@
 .contact-admin {
     margin-top: 32px;
 }
+
