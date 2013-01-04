@@ -268,7 +268,7 @@ var DesignViewView = Backbone.View.extend({
     },
     finalDateSelection: function() {
         var document = this.model.document();
-        var box = $("<label class='finaldateselection'/>");
+        var box = $("<label class='finaldateselection'/>").click(function() {return false;});
         var selectdaysbox  = $("<div/>");
         box.append(selectdaysbox);
         selectdaysbox.append($("<span/>").text(document.process().localization().expirytext));
