@@ -73,7 +73,7 @@ class DocHelper
     (@wait.until { @driver.find_element :css => ".authorattachmentssetuptext span.countspan" }).click
     (@wait.until { @driver.find_element :css => "div.selectAuthorAttachmentPopupContent input.multiFileInput" }).send_keys filepath
     (@wait.until { @driver.find_element :css => "div.modal-footer a.float-right" }).click
-    @wait.until { @driver.find_element :xpath => "//span[contains(@class,'authorattachmentssetuptext')]//span[text()='("+no.to_s()+")']" }
+    @wait.until { @driver.execute_script("return $('span.authorattachmentssetuptext span').first().text()") == "("+no.to_s()+")" }
   end
 
   def requestSigAttachment(attname, attdesc, counterparts)
