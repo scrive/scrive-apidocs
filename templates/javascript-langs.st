@@ -91,6 +91,7 @@ javascriptLocalisation =
              , you : "$_you()$"
              , searchBoxButtonText : "$_searchBoxButtonText()$"
              , writeHere : "$_writeHere()$"
+             , checkHere : "$_checkHere()$"
              , downloadPDF : "$_DownloadPDF()$"
              , reviewPDF: "$_ReviewPDF()$"
              , deletePDF: "$_DeletePDF()$"
