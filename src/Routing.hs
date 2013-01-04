@@ -142,14 +142,7 @@ https action = do
        else sendSecureLoopBack
 
 allowHttp:: Kontrakcja m => m Response -> m Response
-allowHttp action = do
-    secure <- isSecure
-    useHttps <- ctxusehttps <$> getContext
-    logged <- isJust <$> ctxmaybeuser <$> getContext
-    hasOAuth <- isJust <$> getAuthorization
-    if (secure || logged || not useHttps || hasOAuth)
-       then action
-       else sendSecureLoopBack
+allowHttp action = action
 
 -- | Use to enforce a specific arity of a handler to make it explicit
 -- how requests are routed and convert returned value to Responses
