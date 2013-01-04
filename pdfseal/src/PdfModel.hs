@@ -41,18 +41,182 @@ traceM :: (Monad m) => P.String -> m ()
 traceM msg = trace msg (return ())
 
 
+pdfStandardEncoding :: [(Char,Char)]
+pdfStandardEncoding = map (\(a,b) -> (Char.chr a, Char.chr b)) [
+    (0x0020,0x20), --       # SPACE # space
+    (0x00A0,0x20), --       # NO-BREAK SPACE        # space
+    (0x0021,0x21), --       # EXCLAMATION MARK      # exclam
+    (0x0022,0x22), --       # QUOTATION MARK        # quotedbl
+    (0x0023,0x23), --       # NUMBER SIGN   # numbersign
+    (0x0024,0x24), --       # DOLLAR SIGN   # dollar
+    (0x0025,0x25), --       # PERCENT SIGN  # percent
+    (0x0026,0x26), --       # AMPERSAND     # ampersand
+    (0x2019,0x27), --       # RIGHT SINGLE QUOTATION MARK   # quoteright
+    (0x0028,0x28), --       # LEFT PARENTHESIS      # parenleft
+    (0x0029,0x29), --       # RIGHT PARENTHESIS     # parenright
+    (0x002A,0x2A), --       # ASTERISK      # asterisk
+    (0x002B,0x2B), --       # PLUS SIGN     # plus
+    (0x002C,0x2C), --       # COMMA # comma
+    (0x002D,0x2D), --       # HYPHEN-MINUS  # hyphen
+    (0x00AD,0x2D), --       # SOFT HYPHEN   # hyphen
+    (0x002E,0x2E), --       # FULL STOP     # period
+    (0x002F,0x2F), --       # SOLIDUS       # slash
+    (0x0030,0x30), --       # DIGIT ZERO    # zero
+    (0x0031,0x31), --       # DIGIT ONE     # one
+    (0x0032,0x32), --       # DIGIT TWO     # two
+    (0x0033,0x33), --       # DIGIT THREE   # three
+    (0x0034,0x34), --       # DIGIT FOUR    # four
+    (0x0035,0x35), --       # DIGIT FIVE    # five
+    (0x0036,0x36), --       # DIGIT SIX     # six
+    (0x0037,0x37), --       # DIGIT SEVEN   # seven
+    (0x0038,0x38), --       # DIGIT EIGHT   # eight
+    (0x0039,0x39), --       # DIGIT NINE    # nine
+    (0x003A,0x3A), --       # COLON # colon
+    (0x003B,0x3B), --       # SEMICOLON     # semicolon
+    (0x003C,0x3C), --       # LESS-THAN SIGN        # less
+    (0x003D,0x3D), --       # EQUALS SIGN   # equal
+    (0x003E,0x3E), --       # GREATER-THAN SIGN     # greater
+    (0x003F,0x3F), --       # QUESTION MARK # question
+    (0x0040,0x40), --       # COMMERCIAL AT # at
+    (0x0041,0x41), --       # LATIN CAPITAL LETTER A        # A
+    (0x0042,0x42), --       # LATIN CAPITAL LETTER B        # B
+    (0x0043,0x43), --       # LATIN CAPITAL LETTER C        # C
+    (0x0044,0x44), --       # LATIN CAPITAL LETTER D        # D
+    (0x0045,0x45), --       # LATIN CAPITAL LETTER E        # E
+    (0x0046,0x46), --       # LATIN CAPITAL LETTER F        # F
+    (0x0047,0x47), --       # LATIN CAPITAL LETTER G        # G
+    (0x0048,0x48), --       # LATIN CAPITAL LETTER H        # H
+    (0x0049,0x49), --       # LATIN CAPITAL LETTER I        # I
+    (0x004A,0x4A), --       # LATIN CAPITAL LETTER J        # J
+    (0x004B,0x4B), --       # LATIN CAPITAL LETTER K        # K
+    (0x004C,0x4C), --       # LATIN CAPITAL LETTER L        # L
+    (0x004D,0x4D), --       # LATIN CAPITAL LETTER M        # M
+    (0x004E,0x4E), --       # LATIN CAPITAL LETTER N        # N
+    (0x004F,0x4F), --       # LATIN CAPITAL LETTER O        # O
+    (0x0050,0x50), --       # LATIN CAPITAL LETTER P        # P
+    (0x0051,0x51), --       # LATIN CAPITAL LETTER Q        # Q
+    (0x0052,0x52), --       # LATIN CAPITAL LETTER R        # R
+    (0x0053,0x53), --       # LATIN CAPITAL LETTER S        # S
+    (0x0054,0x54), --       # LATIN CAPITAL LETTER T        # T
+    (0x0055,0x55), --       # LATIN CAPITAL LETTER U        # U
+    (0x0056,0x56), --       # LATIN CAPITAL LETTER V        # V
+    (0x0057,0x57), --       # LATIN CAPITAL LETTER W        # W
+    (0x0058,0x58), --       # LATIN CAPITAL LETTER X        # X
+    (0x0059,0x59), --       # LATIN CAPITAL LETTER Y        # Y
+    (0x005A,0x5A), --       # LATIN CAPITAL LETTER Z        # Z
+    (0x005B,0x5B), --       # LEFT SQUARE BRACKET   # bracketleft
+    (0x005C,0x5C), --       # REVERSE SOLIDUS       # backslash
+    (0x005D,0x5D), --       # RIGHT SQUARE BRACKET  # bracketright
+    (0x005E,0x5E), --       # CIRCUMFLEX ACCENT     # asciicircum
+    (0x005F,0x5F), --       # LOW LINE      # underscore
+    (0x2018,0x60), --       # LEFT SINGLE QUOTATION MARK    # quoteleft
+    (0x0061,0x61), --       # LATIN SMALL LETTER A  # a
+    (0x0062,0x62), --       # LATIN SMALL LETTER B  # b
+    (0x0063,0x63), --       # LATIN SMALL LETTER C  # c
+    (0x0064,0x64), --       # LATIN SMALL LETTER D  # d
+    (0x0065,0x65), --       # LATIN SMALL LETTER E  # e
+    (0x0066,0x66), --       # LATIN SMALL LETTER F  # f
+    (0x0067,0x67), --       # LATIN SMALL LETTER G  # g
+    (0x0068,0x68), --       # LATIN SMALL LETTER H  # h
+    (0x0069,0x69), --       # LATIN SMALL LETTER I  # i
+    (0x006A,0x6A), --       # LATIN SMALL LETTER J  # j
+    (0x006B,0x6B), --       # LATIN SMALL LETTER K  # k
+    (0x006C,0x6C), --       # LATIN SMALL LETTER L  # l
+    (0x006D,0x6D), --       # LATIN SMALL LETTER M  # m
+    (0x006E,0x6E), --       # LATIN SMALL LETTER N  # n
+    (0x006F,0x6F), --       # LATIN SMALL LETTER O  # o
+    (0x0070,0x70), --       # LATIN SMALL LETTER P  # p
+    (0x0071,0x71), --       # LATIN SMALL LETTER Q  # q
+    (0x0072,0x72), --       # LATIN SMALL LETTER R  # r
+    (0x0073,0x73), --       # LATIN SMALL LETTER S  # s
+    (0x0074,0x74), --       # LATIN SMALL LETTER T  # t
+    (0x0075,0x75), --       # LATIN SMALL LETTER U  # u
+    (0x0076,0x76), --       # LATIN SMALL LETTER V  # v
+    (0x0077,0x77), --       # LATIN SMALL LETTER W  # w
+    (0x0078,0x78), --       # LATIN SMALL LETTER X  # x
+    (0x0079,0x79), --       # LATIN SMALL LETTER Y  # y
+    (0x007A,0x7A), --       # LATIN SMALL LETTER Z  # z
+    (0x007B,0x7B), --       # LEFT CURLY BRACKET    # braceleft
+    (0x007C,0x7C), --       # VERTICAL LINE # bar
+    (0x007D,0x7D), --       # RIGHT CURLY BRACKET   # braceright
+    (0x007E,0x7E), --       # TILDE # asciitilde
+    (0x00A1,0xA1), --       # INVERTED EXCLAMATION MARK     # exclamdown
+    (0x00A2,0xA2), --       # CENT SIGN     # cent
+    (0x00A3,0xA3), --       # POUND SIGN    # sterling
+    (0x2044,0xA4), --       # FRACTION SLASH        # fraction
+    (0x2215,0xA4), --       # DIVISION SLASH        # fraction
+    (0x00A5,0xA5), --       # YEN SIGN      # yen
+    (0x0192,0xA6), --       # LATIN SMALL LETTER F WITH HOOK        # florin
+    (0x00A7,0xA7), --       # SECTION SIGN  # section
+    (0x00A4,0xA8), --       # CURRENCY SIGN # currency
+    (0x0027,0xA9), --       # APOSTROPHE    # quotesingle
+    (0x201C,0xAA), --       # LEFT DOUBLE QUOTATION MARK    # quotedblleft
+    (0x00AB,0xAB), --       # LEFT-POINTING DOUBLE ANGLE QUOTATION MARK     # guillemotleft
+    (0x2039,0xAC), --       # SINGLE LEFT-POINTING ANGLE QUOTATION MARK     # guilsinglleft
+    (0x203A,0xAD), --       # SINGLE RIGHT-POINTING ANGLE QUOTATION MARK    # guilsinglright
+    (0xFB01,0xAE), --       # LATIN SMALL LIGATURE FI       # fi
+    (0xFB02,0xAF), --       # LATIN SMALL LIGATURE FL       # fl
+    (0x2013,0xB1), --       # EN DASH       # endash
+    (0x2020,0xB2), --       # DAGGER        # dagger
+    (0x2021,0xB3), --       # DOUBLE DAGGER # daggerdbl
+    (0x00B7,0xB4), --       # MIDDLE DOT    # periodcentered
+    (0x2219,0xB4), --       # BULLET OPERATOR       # periodcentered
+    (0x00B6,0xB6), --       # PILCROW SIGN  # paragraph
+    (0x2022,0xB7), --       # BULLET        # bullet
+    (0x201A,0xB8), --       # SINGLE LOW-9 QUOTATION MARK   # quotesinglbase
+    (0x201E,0xB9), --       # DOUBLE LOW-9 QUOTATION MARK   # quotedblbase
+    (0x201D,0xBA), --       # RIGHT DOUBLE QUOTATION MARK   # quotedblright
+    (0x00BB,0xBB), --       # RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK    # guillemotright
+    (0x2026,0xBC), --       # HORIZONTAL ELLIPSIS   # ellipsis
+    (0x2030,0xBD), --       # PER MILLE SIGN        # perthousand
+    (0x00BF,0xBF), --       # INVERTED QUESTION MARK        # questiondown
+    (0x0060,0xC1), --       # GRAVE ACCENT  # grave
+    (0x00B4,0xC2), --       # ACUTE ACCENT  # acute
+    (0x02C6,0xC3), --       # MODIFIER LETTER CIRCUMFLEX ACCENT     # circumflex
+    (0x02DC,0xC4), --       # SMALL TILDE   # tilde
+    (0x00AF,0xC5), --       # MACRON        # macron
+    (0x02C9,0xC5), --       # MODIFIER LETTER MACRON        # macron
+    (0x02D8,0xC6), --       # BREVE # breve
+    (0x02D9,0xC7), --       # DOT ABOVE     # dotaccent
+    (0x00A8,0xC8), --       # DIAERESIS     # dieresis
+    (0x02DA,0xCA), --       # RING ABOVE    # ring
+    (0x00B8,0xCB), --       # CEDILLA       # cedilla
+    (0x02DD,0xCD), --       # DOUBLE ACUTE ACCENT   # hungarumlaut
+    (0x02DB,0xCE), --       # OGONEK        # ogonek
+    (0x02C7,0xCF), --       # CARON # caron
+    (0x2014,0xD0), --       # EM DASH       # emdash
+    (0x00C6,0xE1), --       # LATIN CAPITAL LETTER AE       # AE
+    (0x00AA,0xE3), --       # FEMININE ORDINAL INDICATOR    # ordfeminine
+    (0x0141,0xE8), --       # LATIN CAPITAL LETTER L WITH STROKE    # Lslash
+    (0x00D8,0xE9), --       # LATIN CAPITAL LETTER O WITH STROKE    # Oslash
+    (0x0152,0xEA), --       # LATIN CAPITAL LIGATURE OE     # OE
+    (0x00BA,0xEB), --       # MASCULINE ORDINAL INDICATOR   # ordmasculine
+    (0x00E6,0xF1), --       # LATIN SMALL LETTER AE # ae
+    (0x0131,0xF5), --       # LATIN SMALL LETTER DOTLESS I  # dotlessi
+    (0x0142,0xF8), --       # LATIN SMALL LETTER L WITH STROKE      # lslash
+    (0x00F8,0xF9), --       # LATIN SMALL LETTER O WITH STROKE      # oslash
+    (0x0153,0xFA), --       # LATIN SMALL LIGATURE OE       # oe
+    (0x00DF,0xFB), --       # LATIN SMALL LETTER SHARP S    # germandbls
+    (0,0)]
+
 -- this is cheating
 -- FIXME: font encoding
 winAnsiChars :: P.String
 winAnsiChars = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~?€\201‚ƒ„…†‡ˆ‰Š‹Œ\215Ž\217\220‘’“”•–—˜™š›œ\235žŸ ¡¢£¤¥¦§¨©ª«¬?®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ"
 
 unicodeToWinAnsi :: Char -> Char
-unicodeToWinAnsi x = 
-    case findIndex (==x) winAnsiChars of
+unicodeToWinAnsi x | x <= ' ' = ' '
+                   | otherwise =
+  case findIndex (==x) winAnsiChars of
       Just i -> Char.chr (i + 33)
-      Nothing -> x
-      
+      Nothing -> '?'
 
+unicodeToStandardEncoding :: Char -> Char
+unicodeToStandardEncoding x | x <= ' ' = ' '
+                            | otherwise =
+  case P.lookup x pdfStandardEncoding of
+    Just c -> c
+    Nothing -> '?'
 
 type MyReadP a = P.ReadP a
 
@@ -61,7 +225,7 @@ data Document = Document
                    , documentBodies :: [Body]                         -- bodies, from last to first
                    }
 
-data Body = Body 
+data Body = Body
                    { bodyTrailer :: DictData
                    , bodyObjects :: IntMap.IntMap Entry   -- trailer and object map
                    }
@@ -71,7 +235,7 @@ data Entry = UsedEntry !Int !Indir                -- generation and indirect obj
            deriving (Show)
 data Indir = Indir Value (Maybe BSL.ByteString)   -- object value and associated encoded stream data
            deriving (Show)
-           
+
 type StringData = BS.ByteString
 type ArrayData = [Value]
 type DictData = [(BS.ByteString,Value)]
@@ -197,10 +361,10 @@ floatToDigits2 x =
   (minExp0, _) = floatRange x
   p = floatDigits x
   b = floatRadix x
-  minExp = minExp0 - p -- the real minimum exponent                                 
+  minExp = minExp0 - p -- the real minimum exponent
   -- Haskell requires that f be adjusted so denormalized numbers
   -- will have an impossibly low exponent.  Adjust for this.
-  (f, e) = 
+  (f, e) =
    let n = minExp - e0 in
    if n > 0 then (f0 `div` (b^n), e0+n) else (f0, e0)
   (r, s, mUp, mDn) =
@@ -528,11 +692,11 @@ addStream :: Value -> BSL.ByteString -> State Document RefID
 addStream value'@(Dict dt) strm
     | Just _ <- Prelude.lookup (BSC.pack "Length") dt =
         addIndir (Indir value' (Just strm))
-    | otherwise = 
+    | otherwise =
         do rec s <- addIndir (Indir (Dict (entry "Length" cl:dt)) (Just strm))
                cl <- addIndir (Indir (Number 0) Nothing)
            return s
-          
+
 addStream _ _ = error "Stream must begin with a dict"
 
 lookup :: RefID -> Document -> Maybe Indir
@@ -647,7 +811,7 @@ writeFileX :: FilePath -> Document -> IO ()
 writeFileX file document' = do
     bracket (openBinaryFile file WriteMode)
             (hClose)
-            (\handle' -> writeDocument (\x -> BS.hPutStr handle' x >> hFlush handle') 
+            (\handle' -> writeDocument (\x -> BS.hPutStr handle' x >> hFlush handle')
                         (liftM fromIntegral $ hTell handle') document')
 
 importObjects :: Document -> [RefID] -> State Document [RefID]
@@ -784,7 +948,7 @@ place width height xcount ycount xpos ypos content =
         mshow x = showFFloat Nothing x ""
 
 multipage :: IsValue b => b -> Double -> Double -> Int -> Int -> [P.String] -> State Document [RefID]
-multipage parent width height xcount ycount contents = 
+multipage parent width height xcount ycount contents =
     mapM multipagehelper (groupN (xcount*ycount) contents)
     where
         multipagehelper contents' = do
@@ -832,7 +996,7 @@ parse bin = do
         case BS.breakSubstring startxref bytes of
           (h,t) | BS.null t -> h
                 | otherwise -> findLastStartXref (BS.drop 9 t)
-      
+
 
 
 -- parseBodyList :: IntSet.IntSet -> BinaryData -> Int -> Maybe [(Body,IntSet.IntSet)]
@@ -1081,21 +1245,21 @@ parseString = do
                          , P.char (o 't') >> return (BSC.singleton '\t')
                          , P.char (o 'b') >> return (BSC.singleton '\b')
                            -- \\\n or \\\r or \\\r\n all result in \n
-                         , P.char (o '\r') >> 
+                         , P.char (o '\r') >>
                                   (P.char (o '\n') P.<++ return (o '\n')) >> return (BSC.singleton '\n')
                          , P.char (o '\n') >> return (BSC.singleton '\n')
-                         , (do 
+                         , (do
                              o1 <- octDigit
                              o2 <- octDigit
                              o3 <- octDigit
                              return $ BS.singleton ((o1-48)*8*8 + (o2-48)*8 + (o3-48)))
                             P.<++
-                           (do 
+                           (do
                              o2 <- octDigit
                              o3 <- octDigit
                              return $ BS.singleton ((o2-48)*8 + (o3-48)))
                             P.<++
-                           (do 
+                           (do
                              o3 <- octDigit
                              return $ BS.singleton ((o3-48)))
                          ] P.<++ do
