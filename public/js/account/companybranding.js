@@ -326,7 +326,7 @@ window.CompanyModel = Backbone.Model.extend({
           companybranding: companybranding,
           companyuiattribute: 'barsbackground',
           customised: companyui.barsbackground().trim()!="",
-          defaultcolour: "#212121",
+          defaultcolour: "#FFFFFF",
           colour: companyui.barsbackground(),
           label: localization.customiseBackgroundColour,
           editable: companyui.editable()
@@ -336,7 +336,7 @@ window.CompanyModel = Backbone.Model.extend({
           companybranding: companybranding,
           companyuiattribute: 'barstextcolour',
           customised: companyui.barstextcolour().trim()!="",
-          defaultcolour: "#ffffff",
+          defaultcolour: "#333333",
           colour: companyui.barstextcolour(),
           label: localization.customiseTextColour,
           editable: companyui.editable()

@@ -50,7 +50,7 @@
     float: left;
     margin: 6px 8px 2px 0px;
     overflow: hidden;
-    width: 161px;
+    width: 168px;
     position: relative;
 }
 
@@ -112,14 +112,14 @@
 .field .prepIcon{
     height:15px;
     width:15px;
-    margin:2px;
+    margin: 6px 2px 2px 2px;
     float:left;
     background-image: url("/img/iconPen.png");
 }
 .field .setNameIcon{
     height:14px;
     width:14px;
-    margin:2px;
+    margin: 6px 2px 2px 2px;
     display: block;
     float:right;
     background: url("../img/spr-icons.png") no-repeat scroll 0 0 transparent;
@@ -129,7 +129,7 @@
 .field .removeField{
     height:14px;
     width:14px;
-    margin:2px;
+    margin: 6px 2px 2px 2px;
     float:right;
     background-image: url("/img/iconMinus.png");
 }
@@ -186,8 +186,12 @@
     height: 120px;
     padding: 8px;
     position: absolute;
-    width: 324px;
+    width: 340px;
     margin-top: -9px;
+}
+.setRoleBox label {
+  margin-left : 5px;
+  margin-top: 8px;
 }
 .setRoleBox .close{
     float:right;

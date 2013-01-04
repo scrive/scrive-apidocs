@@ -185,8 +185,8 @@ var SecuritySettingsView = Backbone.View.extend({
       updateTinyVisibility();
       model.bind("change:useFooter", updateTinyVisibility);
 
-      var cf = $("<textarea id='customfooter' name='customfooter' style='width:350px;height:110px'/>").html(model.useFooter() ? model.footer() : "");
-      setTimeout(function() {cf.tinymce({
+      this.customfooter = $("<textarea id='customfooter' name='customfooter' style='width:350px;height:110px'/>").html(model.useFooter() ? model.footer() : "");
+      setTimeout(function() {self.customfooter.tinymce({
                                 script_url: '/tiny_mce/tiny_mce.js',
                                 theme: "advanced",
                                 theme_advanced_toolbar_location: "top",
@@ -200,11 +200,12 @@ var SecuritySettingsView = Backbone.View.extend({
                                 }
                         });}, 100);
 
-      body.append(cfb.append(cf));
+      body.append(cfb.append(this.customfooter));
 
       return box;
     },
     saveButton : function() {
+      var self = this;
       var model = this.model;
       var box = $("<div class='account-footer'/>");
       var button = Button.init({
@@ -213,6 +214,8 @@ var SecuritySettingsView = Backbone.View.extend({
         shape: "rounded",
         text : localization.account.accountSecurity.save,
         onClick : function() {
+          if (model.useFooter() && self.customfooter)
+            model.setFooter(self.customfooter.val());
           model.save();
           return false;
         }

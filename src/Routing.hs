@@ -26,7 +26,6 @@ module Routing ( hGet
 
 import Data.Functor
 import AppView as V
-import Data.Maybe
 import Happstack.Server(Response, Method(GET, POST, DELETE, PUT), ToMessage(..))
 import Happstack.StaticRouting
 import KontraLink
@@ -40,7 +39,6 @@ import Control.Monad
 import qualified Log as Log
 import Utils.Read
 import Happstack.Fields
-import OAuth.Util
 
 newtype ThinPage = ThinPage String
 
@@ -142,14 +140,7 @@ https action = do
        else sendSecureLoopBack
 
 allowHttp:: Kontrakcja m => m Response -> m Response
-allowHttp action = do
-    secure <- isSecure
-    useHttps <- ctxusehttps <$> getContext
-    logged <- isJust <$> ctxmaybeuser <$> getContext
-    hasOAuth <- isJust <$> getAuthorization
-    if (secure || logged || not useHttps || hasOAuth)
-       then action
-       else sendSecureLoopBack
+allowHttp action = action
 
 -- | Use to enforce a specific arity of a handler to make it explicit
 -- how requests are routed and convert returned value to Responses

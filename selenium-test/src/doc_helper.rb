@@ -72,8 +72,8 @@ class DocHelper
   def loadAuthorAttachment(no, filepath)
     (@wait.until { @driver.find_element :css => ".authorattachmentssetuptext span.countspan" }).click
     (@wait.until { @driver.find_element :css => "div.selectAuthorAttachmentPopupContent input.multiFileInput" }).send_keys filepath
-    (@wait.until { @driver.find_element :css => "div.modal-footer a.float-right" }).click
-    @wait.until { @driver.find_element :xpath => "//span[contains(@class,'authorattachmentssetuptext')]//span[text()='("+no.to_s()+")']" }
+    click "div.modal-footer a.float-right"
+    @wait.until { @driver.execute_script("return $('span.authorattachmentssetuptext span').first().text()") == "("+no.to_s()+")" }
   end
 
   def requestSigAttachment(attname, attdesc, counterparts)
@@ -83,6 +83,7 @@ class DocHelper
       (@wait.until { @driver.find_elements :css => "input.editSignatoryAttachmentName" }).last.send_keys attname
       (@wait.until { @driver.find_elements :css => "textarea.editSignatoryAttachmentDescription" }).last.send_keys attdesc
       (@wait.until { @driver.find_elements :xpath => "//option[text()='" + counterpart + "']" }).last.click
+      sleep 2
     end
     acceptStandardModal
   end

@@ -43,7 +43,7 @@ describe "sign up on front page and modify account settings" do
 
     puts "we should get an email to a page where we can accept the tos"
     @h.emailhelper.follow_link_in_latest_mail_for random_email
-    @h.wait.until { @h.driver.find_element :id => "tosCBox" }
+    @h.wait.until { @h.driver.find_element :css => ".checkbox" }
 
     puts "make sure we get a red flash if we try to activate without signing the tos"
     (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-right a.blue.button" }).click
@@ -51,7 +51,7 @@ describe "sign up on front page and modify account settings" do
     @h.wait.until { @h.driver.find_element :css => ".failed-validation" }
 
     puts "accept the tos"
-    (@h.wait.until { @h.driver.find_element :id => "tosCBox" }).click
+    (@h.wait.until { @h.driver.find_element :css => ".checkbox" }).click
 
     puts "make sure we get a red flash if we try to activate without filling in a name"
     (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-right a.blue.button" }).click
@@ -128,12 +128,8 @@ describe "sign up on front page and modify account settings" do
 
     @h.wait.until { @h.driver.find_element :css => "div.recovery-container" }
 
-    # HACK!!! selenium says these elems aren't visible (but they are, seems like a bug)
-    # should look like this:
-    # (@h.wait.until { @h.driver.find_element :name => "password" }).send_keys new_password
-    # (@h.wait.until { @h.driver.find_element :css => "a.s-submit-change-email" }).click
-    @h.driver.execute_script("$('input[name=password]').val('" + new_password + "');")
-    @h.driver.execute_script("$('a.s-submit-change-email').click();")
+    (@h.wait.until { @h.driver.find_element :name => "password" }).send_keys new_password
+    @h.dochelper.acceptStandardModal
 
     @h.loginhelper.logout
 

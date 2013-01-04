@@ -330,8 +330,9 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var document = field.signatory().document();
         var place = $(this.el);
         var view = this;
-        if (view.inlineediting == true) {
-          if (this.input != undefined) {
+        var self = this;
+        if (self.inlineediting == true) {
+          if (self.input != undefined) {
                if ($(window).scrollTop() + $(window).height() > this.input.offset().top && $(window).scrollTop() < this.input.offset().top) {
                   self.input.focus();
                }
@@ -369,10 +370,6 @@ var TextPlacementPlacedView = Backbone.View.extend({
                     {   accept();
                         return false;
                     }
-                    else if (self.input.hasClass("grayed") && $.browser.msie) {
-                      self.input.val("");
-                      self.input.removeClass("grayed");
-                    }
         });
         this.input.blur(function() {
                   if (view.input.val() != "") {
@@ -380,7 +377,12 @@ var TextPlacementPlacedView = Backbone.View.extend({
                       return false;
                   }    
         });
-        if ($(window).scrollTop() + $(window).height() > this.input.offset().top && $(window).scrollTop() < this.input.offset().top) {
+        if (this.input.hasClass("grayed") && $.browser.msie) {
+                      this.input.val("");
+                      this.input.removeClass("grayed");
+        }
+                    
+        if ($(window).scrollTop() + $(window).height() > this.input.offset().top && $(window).scrollTop() < this.input.offset().top && self.input != undefined) {
                    self.input.focus();
         }           
         return false;

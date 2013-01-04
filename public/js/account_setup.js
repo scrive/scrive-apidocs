@@ -39,7 +39,11 @@
       return this.get('company');
     },
     setCompany: function(company) {
-      this.set('company', company);
+      if (!this.companyFilled())
+        this.set('company', company);
+    },
+    companyFilled : function() { // if this is set company should not be altered
+      return this.get('companyFilled') == true;
     },
     phone: function() {
       return this.get('phone');
@@ -243,13 +247,14 @@
 
       var companyInput = InfoTextInput.init({
         infotext: localization.accountSetupModal.modalAccountSetupCompany,
-        value: "",
+        value: model.company(),
         onChange: function(v) {model.setCompany(v);},
         inputtype: 'text',
         name: 'position',
         cssClass : "big-input"
        });
-
+      if (this.model.companyFilled())
+        companyInput.input().attr("readonly","true");
       var companyrow = $("<div class='position'/>").append(companyInput.input());
 
       body.append(companyrow);
@@ -292,7 +297,7 @@
           }
         });
       
-      acceptButtonBox.append($("<h3>Roglit priss Roglit priss <BR/> Roglit priss Roglit priss <BR/> Roglit priss  Roglit priss</h3>")).append(acceptButton.input());
+      acceptButtonBox.append($("<h3></h3>").append(localization.signupModal.mainHeader)).append(acceptButton.input());
       
     }
   });

@@ -16,45 +16,31 @@ var FileVerifierView = Backbone.View.extend({
           var container = $("<div class='modal-container'></div>");
           var close = $("<div class='modal-close close'></div>");
           var body = $("<div class='modal-body' style='padding:10px;text-align: center'>");
-          var title = $("<h1></h1>");
+          var title = "";
           var bleft = $("<div class='float-left' style='width:60px;text-align: center'/>");
           var bright = $("<div class='float-right'  style='width:180px;text-align: left'/>");
           if (res.success) {
               bleft.append("<div class='verificationSuccessIcon'>");
-              title.text(localization.verification.success);
-              bright.append("<BR/>");
+              title = localization.verification.success;
               bright.append($("<div/>").text(localization.verification.time + ": " + res.time));
               bright.append("<BR/>");
               bright.append($("<div/>").text(localization.verification.gateway + ": " + res.gateway));
           }    
           else if (res.error)  {
-              bleft.append("<div class='verificationErrorIcon'>");
-              title.text(localization.verification.error);
+              bleft.append("<div class='verificationErrorIcon' style='margin-top: 25px;'>");
+              title = localization.verification.error;
               bright.append("<BR/>");
               bright.append($("<div/>").text(localization.verification.errorMessage));
               dialog.addClass("failed");
           }
           else  {              
-              bleft.append("<div class='verificationFailedIcon'>");
-              title.text(localization.verification.failed);
+              bleft.append("<div class='verificationFailedIcon' style='margin-top: 25px;'>");
+              title = localization.verification.failed;
               bright.append("<BR/>");
               bright.append($("<div/>").text(localization.verification.failedMessage));
               dialog.addClass("failed");
           }                                  
-          body.append(title).append(bleft).append(bright);
-          container.append(close).append(body);                                  
-          dialog.append(container); 
-          dialog.overlay({
-            mask: standardDialogMask,
-            top: standardDialogTop,
-            closeOnClick: true,
-            closeOnEsc: true,
-            load: false,
-            fixed:false,
-            onClose : function() {dialog.remove();}
-          });
-          $('body').append(dialog);
-          setTimeout(function() {dialog.overlay().load();},100);
+          Confirmation.popup({title: title, content : $("<div style='height:100px;width: 300px;margin: auto;'/>").append(bleft).append(bright)});
         
     },
     uploadButton : function() {

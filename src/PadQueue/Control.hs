@@ -46,7 +46,7 @@ showPadQueuePage::  (Kontrakcja m) =>  m Response
 showPadQueuePage = do
     ctx <- getContext
     ad <- getAnalyticsData
-    padQueuePage ctx ad >>= simpleHtmlResponse
+    padQueuePage ctx ad >>= simpleHtmlResonseClrFlash
 
 
 padQueueToSignatoryData :: Kontrakcja m => PadQueue -> m (Maybe (Document,SignatoryLink))

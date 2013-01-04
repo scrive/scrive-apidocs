@@ -443,11 +443,14 @@ handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> m Response
 handleAccountSetupGet uid token = do
   ctx <- getContext
   user <- guardJustM404 $ getUserAccountRequestUser uid token
+  mcompany <-  getCompanyForUser user
   if isJust $ userhasacceptedtermsofservice user
     then respond404
     else simpleHtmlResponse =<< (renderTemplateAsPage ctx "accountSetupPage" Nothing False $ do
               F.value "fstname" $ getFirstName user
-              F.value "sndname" $ getLastName user)
+              F.value "sndname" $ getLastName user
+              F.value "company" $ companyname <$> companyinfo <$> mcompany)
+              
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
 handleAccountSetupPost uid token = do
   user <- guardJustM404 $ getUserAccountRequestUser uid token
@@ -549,3 +552,29 @@ handleBlockingInfo = do
         J.value "quantity"  quantity
         J.value "billingEnds" billingEnds
     
+-- please treat this function like a public query form, it's not secure
+handleContactUs :: Kontrakcja m => m KontraLink
+handleContactUs = do
+  Context{..} <- getContext
+  fname   <- getField' "firstname"
+  lname   <- getField' "lastname"
+  email   <- getField' "email"
+  message <- getField' "message"
+  plan    <- getField' "plan"
+  
+  let uid = maybe "user not logged in" ((++) "user with id " . show . userid) ctxmaybeuser
+      content = "<p>Hi there!</p>" ++
+                "<p>Someone requested information from the payments form.</p>" ++
+                "<p>Name: " ++ fname ++ " " ++ lname ++ "</p>" ++
+                "<p>Email: " ++ email ++ "</p>" ++
+                "<p>Message: \n" ++ message ++ "</p>" ++
+                "<p>Looking at plan: " ++ plan ++ "</p>" ++
+                "<p>" ++ uid ++ "</p>" ++
+                "<p>Have a good one!</p>"
+
+  scheduleEmailSendout ctxmailsconfig $ emptyMail {
+            to = [MailAddress { fullname = "info@scrive.com", email = "info@scrive.com" }]
+          , title = "Contact request (" ++ plan ++ ")"
+          , content = content
+      }
+  return $ LoopBack

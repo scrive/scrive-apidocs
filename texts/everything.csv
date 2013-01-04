@@ -106,10 +106,10 @@
         </li>
     </ul>"
 "_PriceTablePriceRow","<td><span class='price'>299kr/månad</span><span class='price-comment'>per användare</span></td>
-                       <td><span class='price'>1.000kr/månad</span><span class='price-comment'>per användare</span></td>
+                       <td><span class='price'>999kr/månad</span><span class='price-comment'>per användare</span></td>
                        <td><span class='price-comment'>$_paymentsAskForA()$</span><span class='price'>$_paymentsQuote()$</span></td>","
                        <td><span class='price'>299kr/month</span><span class='price-comment'>per user</span></td>
-                       <td><span class='price'>1.000kr/month </span><span class='price-comment'>per user</span></td>
+                       <td><span class='price'>999kr/month </span><span class='price-comment'>per user</span></td>
                        <td><span class='price-comment'>$_paymentsAskForA()$</span><span class='price'>$_paymentsQuote()$</span></td>"
 "_PriceTableRow1","<td>$_paymentFeatureDistance()$</td>
                    <td>$_paymentFeatureSupport()$</td>
@@ -235,8 +235,7 @@
 "_aboutPageTitle","| Om Scrive","| About Scrive"
 "_aboutPageTopBody","<p>Scrive är en tjänst för att e-signera offerter, avtal och andra typer av dokument. Vi hjälper våra kunder att stänga affärer snabbare, minska den administrativa bördan och samtidigt förbättra kundupplevelsen. </p> <BR/> <p>Vi är ett ungt företag som växer i en rasande fart. Idag har vi tolv medarbetare som arbetar från åtta platser runt om i världen. Du finner våra medarbetare i bland annat Stockholm, Berlin, New Orleans och Warszawa. Vi är stolta över att vi på så kort tid lyckats bygga en tjänst som är marknadsledande på svenska marknaden och vi berättar gärna mer om hur mycket vi tycker om Haskell, den teknologi vi valt för att bygga tjänsten.  </p> <BR/> <p>Scrive grundades av Lukas Duczko och Gracjan Polak som lärde känna varandra under sin tid på kreditbolaget Klarna. </p> <BR/> ","<p>Scrive is a service for e-signing tenders, contracts, and other documents. We help our clients close deals faster, decrease their administrative burden, and improve their customers’ experience. </p> <BR/> <p>We are a young company in rapid growth. Today we are twelve team members working from eight different places around the globe. You can find us in cities such as Stockholm, Berlin, New Orleans and Warszaw. We are proud that we have managed to build a market-leading solution for the Swedish market in such a short time and we would love to tell you more about how much we like Haskell, our technology of choice. </p> <BR/> <p>Scrive was founded by Lukas Duczko and Gracjan Polak, who got to know each other at the Swedish credit company Klarna.
  </p> <BR/> "
-"_accountFromSignInputsBodyAcceptTOS","Jag har läst och accepterat <a target=""_blank"" href=""$linkterms$"">Scrive
- Allmänna Villkor</a>","I have read and accept the <a target=""_blank"" href=""$linkterms$"">Scrive Terms of Service</a>"
+"_accountFromSignInputsBodyAcceptTOS","Jag har läst och accepterat <a target='_blank' class='clickable' href='/terms'>Scrive Allmänna Villkor</a>","I have read and accept the <a target='_blank' class='clickable' href='/terms'>Scrive Terms of Service</a>"
 "_activatePageViewNotValidLinkBody","Begklagar, din aktiveringslänk är äldre än 12 timmar. Vänligen
  fyll i        din mailadress så skickar vi en ny aktiveringslänk
  omedelbart.","We are sorry, your activation link is older than 12 hours. Please
@@ -440,9 +439,8 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_flashMessageAttachmentShareDone","Valda bilagor har blivit delade inom din organisation.","The selected attachments have been shared with your organisation."
 "_flashMessageTemplateShareDone","Valda mallar har blivit delade inom din organisation.","The selected templates have been shared with your organisation."
 "_flashMessageMustAcceptTOS","Vänligen acceptera Scrive Allmänna Villkor för att komma igång.","Please accept the Scrive Terms of Service to get started."
-"_flashMessageNeedsLetterAndDigit","$fieldnametitlecase$ måste innehålla åtminstone två bokstäver
- och två siffror.","$fieldnametitlecase$ must contain at least two letters and two
- digits."
+"_flashMessageNeedsLetterAndDigit","$fieldnametitlecase$ måste innehålla åtminstone en bokstav och en siffra.","$fieldnametitlecase$ must contain at least one letter and one
+ digit."
 "_flashMessageNewActivationLinkSend","Vi har skickat din kontoinbjudan igen. Vänligen gå tillbaka till
  din inkorg och följ instruktionerna i mailet för att aktivera ditt
  konto.","We have resent your account activation link. Please go to your inbox
@@ -2181,7 +2179,7 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_flashEmailIncorectlyFormed","E-post är ej korrekt formaterad.","Email is incorrectly formated."
 "_filterBySent","Inväntar signatur","Pending"
 "_paymentPlanProfessional","Professional","Professional"
-"_paymentPlanTeam","Team","Team"
+"_paymentPlanTeam","Fastpris","Fixed price"
 "_paymentPlanCurrentPlan","Nuvarande prisplan","Current Plan"
 "_paymentPlanPayments","Betalningar","Payments"
 "_paymentPlanNextPayment","Nästa betalning","Next Payment"
@@ -2195,9 +2193,10 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_paymentPlanNone","Ingen","None"
 "_paymentPlanChangeSubscription","Byt prenumeration","Change Subscription"
 "_paymentPlanChangeBilling","Byt betalningsinfo","Change Billing Information"
+"_paymentPlanContact","Kontakt","Contact"
 "_paymentPlanFree","Gratis","Free"
 "_paymentPlanEnterprise","Enterprise","Enterprise"
-"_paymentPlanSubscribe","Köp prenumeration","Subscribe"
+"_paymentPlanSubscribe","Prenumerera ›","Subscribe ›"
 "_paymentPlanSelectPlan","Prisplan","Price Plan"
 "_paymentPlanChangeConfirmMessage","Är du säker på att du vill ändra ditt konto?","Are you sure you would like to change your account?"
 "_paymentPlanChangeAccount","Ändra konto","Change account"
@@ -2207,6 +2206,7 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_paymentPlanSavingSubscription","Sparar prenumeration","Saving subscription"
 "_paymentPlanLoading","Laddar","Loading"
 "_paymentPlanAskViktor","För att byta prisplan, var god kontakta <a href='mailto:viktor@scrive.com'>vår säljavdelning</a>.","To change your plan, please contact <a href='mailto:viktor@scrive.com'>our sales department</a>."
+"_paymentPlanPurchase","Köp","Purchase"
 "_paymentPlanCancelSubscription","Avsluta prenumeration","Cancel Subscription"
 "_blockingFreeCreateTitle","Köp ett abonnemang","Purchase a subscription"
 "_blockingFreeCSVHeader","Denna fil innehåller X1 mottagare och du har endast X2 fria dokument kvar att skicka. För att skicka vänligen <a href='/account#subscription'>köp ett abonnemang</a>.","Your file contains X1 recipients and you have only X2 free documents left to send. To send please <a href='/account#subscription'>purchase a subscription</a>."
@@ -2265,19 +2265,20 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_paymentsEmailExpiredSubject","Kontot har gått ut","Account Expired"
 "_paymentsEmailExpiredHeader","Ditt abonnemang för Scrive har nu löpt ut.","Your subscription for Scrive is now expired."
 "_paymentsEmailExpiredQuestions","Var vänlig och spar detta mail för din bokföring. Om du har några frågor, vänligen kontakta <a href = 'accounting@scrive.com'>accounting@scrive.com</a>. Tack för ditt köp.","Please keep this email for your records. If you have any questions, please contact <a href='accounting@scrive.com'>accounting@scrive.com</a>. Thanks for your purchase."
-"_paymentsSubscribeHeader","Välj den säkraste lösningen för elektronisk signering i Sverige.","Sign up for the most trusted e-signing solution in Sweden."
+"_paymentsSubscribeHeader","Ingen bindning. Allt inkluderat.","All features included in your monthly subscription."
+"_paymentsSubheader"," "," "
 "_paymentsChoosePlan","Välj betalningsplan","Choose payment plan"
 "_paymentsPayWithCard","Betala med kreditkort","Pay with credit card"
-"_paymentPlanTeamTag","för säljteam och administrativa team","for sales and administrative teams"
+"_paymentPlanTeamTag","Team med normal månatlig användning.","Teams with normal monthly usage."
 "_paymentsSelect","Välj","Select"
 "_paymentsFlatRate","Simple flat rate","Simple flat rate"
 "_paymentsTeamPrice","299kr","299kr"
 "_paymentsPerUserRate","per användning","Per user rate"
-"_paymentPlanPerUserPerMonth","per användare per månad","per user per month"
+"_paymentPlanPerUserPerMonth","per användare och månad","per user per month"
 "_paymentPlanLogoAndBranding","Logotyp och Branding","Logo and Branding"
 "_paymentPlanDashboard","Försäljningschefsdashboard","Manager Dashboard"
 "_paymentsSelected","Vald","Selected"
-"_paymentPlanEnterpriseTag","konsultation och<br />skräddarsydda lösningar","consultation and tailored solutions"
+"_paymentPlanEnterpriseTag","Skräddarsydda lösningar för enterprisekunder.","Tailored solutions for enterprise customers."
 "_paymentsIntegrations","Vi utvecklar skräddarsydda integration för dokumentsigneringsprocesser.","We develop custom integrations for document signing processes."
 "_paymentsManyUsers","många användare","Many Users"
 "_paymentsUser","Användare","User"
@@ -2297,8 +2298,8 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_paymentFeatureDash","Sales team dashboard","Sales team dashboard"
 "_paymentFeatureBranding","Era färger och logo","Your logo and colors"
 "_paymentFeatureFeatures","+30 premium-features","+30 premium features"
-"_paymentPlanForm","Online forms","Online forms"
-"_paymentPlanFormTag","signerbara formulär integrerade i din webbsida","signable forms integrated into your webpage"
+"_paymentPlanForm","Rörligt pris","Variable price"
+"_paymentPlanFormTag","Webbintegration eller team med låg snittanvändning.","Website integration or teams with low average use."
 "_paymentFeatureDistance","Distanssignering","Distance signing"
 "_paymentFeaturePad","Signering på läsplatta","Pad signing"
 "_paymentFeatureTracking","Bevaka dokumentstatus","Document tracking"
@@ -2307,7 +2308,7 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_paymentFeatureHTTPAPI","Öppet HTTP API","Open HTTP API"
 "_paymentFeatureExampleCode","Exempelkod","Example code"
 "_paymentFeatureDocumentation","Dokumentation","Documentation"
-"_paymentPlanFormPrice","1.000kr","1.000kr"
+"_paymentPlanFormPrice","999kr","999kr"
 "_paymentFeatureOnPremise","On-site installation","On-premise solution"
 "_paymentFeatureFullCust","Skräddarsydd lösning","Tailored solution"
 "_paymentFeatureProjMan","Projektledning","Project management"
@@ -2316,8 +2317,9 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_paymentFeatureAllOnlineFormFeatures","<i>Team</i> och <i>Online forms</i>","<i>Team</i> and <i>Online forms</i>"
 "_paymentPlanPerDocument","per dokument","per document"
 "_paymentPlanDocPrice","25kr","25kr"
+"_paymentPlanPerMonthPerDoc","per månad och 25 kr / dok","per month & 25 kr / doc"
 "_paymentsSigned","signerad","signed"
-"_paymentsGetInTouch","Begär samtal","Request a call"
+"_paymentsGetInTouch","få en offert idag","get a quote today"
 "_paymentsAskForA","fråga efter","ask for a"
 "_paymentsQuote","Offert","Quote"
 "_paymentsExpires","Löper ut","Expires"
@@ -2440,6 +2442,7 @@ have an account please follow the account creation process. Free use of up to 5 
 "_historyAvailable","tillgängligt","available"
 "_historyHide","Göm","Hide"
 "_writeHere","Skriv här","Write here"
+"_checkHere","Kryssa här","Check here"
 "_headerFeatures","Funktioner","Features"
 "_headerPricing","Priser","Pricing"
 "_headerLegal","Juridik","Legal"
@@ -2461,3 +2464,4 @@ have an account please follow the account creation process. Free use of up to 5 
 "_resetYourPasswordCheckEmail","Kontrollera din e-post efter att fylla i detta formulär.","Check your email after filling out this form."
 "_getStartedInstantly","Kom igång direkt. ","Get started instantly."
 "_signUp","Skapa konto","Sign up"
+"_signupModalMainHeader","Enklare för dig och enklare för motparten. De kommer att tacka dig.","Simpler for you and simpler for your counterparts. They will thank you."

@@ -196,7 +196,7 @@ var DesignViewView = Backbone.View.extend({
                     document.process().changeToContract();
                     mixpanel.track('Select contract (document type)');
                     document.save();
-                    document.afterSave(function() { LoadingDialog.open(); window.location = window.location; });  
+                    document.afterSave(function() { LoadingDialog.open();   window.location.reload(); });  
              }
         };
         var offerOption =    {name : localization.process.offer.name, onSelect :
@@ -204,7 +204,7 @@ var DesignViewView = Backbone.View.extend({
                     document.process().changeToOffer();
                     mixpanel.track('Select offer (document type)');
                     document.save();
-                    document.afterSave(function() { LoadingDialog.open(); window.location = window.location; });
+                    document.afterSave(function() { LoadingDialog.open();   window.location.reload();; });
              }
         };
         var orderOption =   {name : localization.process.order.name, onSelect :
@@ -212,7 +212,7 @@ var DesignViewView = Backbone.View.extend({
                     document.process().changeToOrder();
                     mixpanel.track('Select order (document type)');
                     document.save();
-                    document.afterSave(function() { LoadingDialog.open(); window.location = window.location; });
+                    document.afterSave(function() { LoadingDialog.open();   window.location.reload(); });
              }
         };
         var options = []
@@ -1056,7 +1056,7 @@ var ScrollFixer =  Backbone.Model.extend({
     },
     fix : function() {
               var fixer = this;
-              if ($(window).scrollTop() >= this.top)
+              if ($(window).scrollTop() >= this.top && $(window).scrollTop() > 100)
                 this.object.addClass('fixed');
                else
                 this.object.removeClass('fixed');
