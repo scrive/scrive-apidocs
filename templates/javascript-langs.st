@@ -593,6 +593,8 @@ javascriptLocalisation =
            , phonenumber : "$_paymentsPhonenumber()$"
            , readmore : "$_paymentsReadMore()$"
            , featuresurl : "$_paymentsFeaturesURL()$"
+           , subheader: "$_paymentsSubheader()$"
+           , contact: "$_paymentPlanContact()$"
            , plans: { professional : "$_paymentPlanProfessional()$"
                     , team         : {
                       name : "$_paymentPlanTeam()$",
@@ -622,7 +624,7 @@ javascriptLocalisation =
                                  , "$_paymentFeatureExampleCode()$"
                                  ],
                       price1 : "",
-                      price3 : "$_paymentPlanPerMonth()$ $_and()$",
+                      price3 : "$_paymentPlanPerMonthPerDoc()$",
                       price21 : "$_paymentPlanDocPrice()$<span class='aster'>*</span>",
                       price31 : "$_paymentPlanPerDocument()$",
                       select : "$_paymentsGetInTouch()$",
@@ -640,7 +642,7 @@ javascriptLocalisation =
                                  , "$_paymentFeatureProjMan()$"
                                  ],
                       price1 : "$_paymentsAskForA()$",
-                      price3 : "",
+                      price3 : "$_paymentsGetInTouch()$",
                       price21 : "",
                       price31 : "",
                       select : "$_paymentsGetInTouch()$",
@@ -673,6 +675,7 @@ javascriptLocalisation =
                         , features : "$_paymentFeatureFeatures()$"
                         }
             , subscribe: "$_paymentPlanSubscribe()$"
+            , purchase: "$_paymentPlanPurchase()$"
             , pleaseleavenumbertitle: "$_paymentsPleaseLeaveNumberTitle()$"
             , ok: "$_paymentsSubmitButtonLabel()$"
             , pleaseleavenumber: "$_paymentsPleaseLeaveNumber()$"
