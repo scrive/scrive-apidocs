@@ -528,10 +528,10 @@ paginCommands pageWidth (SealSpec{documentNumber,initials,staticTexts }) =
     docnrwidth = textWidth font (toPDFString docnrtext)
     docnroffset = center - 20 - docnrwidth
     center = fromIntegral pageWidth/2
-    signedinitials = signedText staticTexts ++ ": " ++ winAnsiPostScriptEncode initials
+    signedinitials = winAnsiPostScriptEncode (signedText staticTexts ++ ": " ++ initials)
     siwidth = textWidth font (toPDFString signedinitials)
     sioffset = center + 20
-    docnrtext = docPrefix staticTexts ++ " " ++ documentNumber
+    docnrtext = winAnsiPostScriptEncode (docPrefix staticTexts ++ " " ++ documentNumber)
 
  in unlines [ "q"                                              -- safe state
             , "0.546 0.469 0.454 0.113 k"                      -- set graish color
