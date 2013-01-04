@@ -103,7 +103,7 @@ import Text.JSON.Gen hiding (value)
 import Text.JSON.String (runGetJSON)
 import qualified Text.JSON.Gen as J
 import Text.JSON.FromJSValue
-import Doc.DocDraft() -- | Some instance is imported
+import Doc.DocDraft() -- Import instances only
 import qualified User.Action
 import qualified ELegitimation.Control as BankID
 import Util.Actor
@@ -114,6 +114,7 @@ import System.IO.Temp
 import System.Directory
 import MinutesTime
 import Analytics.Include
+import Data.String.Utils (replace)
 
 handleNewDocument :: Kontrakcja m => m KontraLink
 handleNewDocument = do
@@ -123,7 +124,7 @@ handleNewDocument = do
         user <- guardJustM $ ctxmaybeuser <$> getContext
         title <- renderTemplate_ "newDocumentTitle"
         actor <- guardJustM $ mkAuthorActor <$> getContext
-        Just doc <- dbUpdate $ NewDocument user (title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) (Signable Contract) 1 actor
+        Just doc <- dbUpdate $ NewDocument user (replace "  " " " $ title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx)) (Signable Contract) 1 actor
         _ <- dbUpdate $ SetDocumentUnsavedDraft [documentid doc] True
         return $ LinkIssueDoc (documentid doc)
      else return $ LinkLogin (ctxlang ctx) LoginTry
@@ -173,9 +174,9 @@ signDocument documentid
   --
   -- Any operation done on SignatoryLink can be done under one of circumstances:
   --
-  -- * signatorylinkid is same as requested and magic hash matches the
+  -- . signatorylinkid is same as requested and magic hash matches the
   --   one stored in session
-  -- * signatorylinkid is same as requested and maybesignatory is same
+  -- . signatorylinkid is same as requested and maybesignatory is same
   --   as logged in user
   --
   -- The above requires changes to logic in all invoked procedures.
@@ -458,7 +459,7 @@ handleIssueSign document timezone = do
         mndocs <- mapM (forIndividual actor) docs
         case partitionEithers mndocs of
           ([], [d]) -> do
-            when_ (sendMailsDurringSigning d) $ do
+            when_ (sendMailsDuringSigning d) $ do
                 addFlashM $ modalSendConfirmationView d True
             return $ LinkIssueDoc (documentid d)
           ([], ds) -> do
@@ -495,7 +496,7 @@ handleIssueSign document timezone = do
           Right (Right newdocument) -> do
             postDocumentPreparationChange newdocument "web"
             newdocument' <- guardJustM $ dbQuery $ GetDocumentByDocumentID (documentid newdocument)
-            postDocumentPendingChange newdocument' newdocument' "web" -- | We call it on same document since there was no change
+            postDocumentPendingChange newdocument' newdocument' "web" -- We call it on same document since there was no change
             return $ Right newdocument'
           Right (Left (DBActionNotAvailable message)) -> return $ Left message
           Right (Left (DBDatabaseNotAvailable message)) -> return $ Left message
@@ -515,7 +516,7 @@ handleIssueSend document timezone = do
         mndocs <- mapM (forIndividual user actor) docs
         case partitionEithers mndocs of
           ([], [d]) -> do
-            when_ (sendMailsDurringSigning d) $ do
+            when_ (sendMailsDuringSigning d) $ do
                 addFlashM $ modalSendConfirmationView d False
             return $ LinkIssueDoc (documentid d)
           ([], ds) -> do

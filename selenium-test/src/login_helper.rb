@@ -11,13 +11,12 @@ class LoginHelper
   end
 
   def login_as(email, password)
-    @driver.navigate().to(@ctx.createKontrakcjaURL "/?logging")
-    (@wait.until { @driver.find_element :css => "a.login-button" }).click
-    (@wait.until { @driver.find_element :css => ".login-container" })
-    (@wait.until { @driver.find_element :css => ".login-container input[name='email']" }).send_keys email
-    (@wait.until { @driver.find_element :css => ".login-container input[name='password']" }).send_keys password
-    (@wait.until { @driver.find_element :css => ".login-container a.login-button" }).click
-    (@wait.until { @driver.find_element :css => "a.logout" })
+    @driver.navigate().to(@ctx.createKontrakcjaURL "/login")
+    (@wait.until { @driver.find_element :css => ".short-input-container" })
+    (@wait.until { @driver.find_element :css => ".short-input-container input[name='email']" }).send_keys email
+    (@wait.until { @driver.find_element :css => ".short-input-container input[name='password']" }).send_keys password
+    (@wait.until { @driver.find_element :css => ".short-input-container a.login-button" }).click
+    (@wait.until { @driver.find_element :css => "a.js-logout" })
 
     if (@driver.find_elements :id => "toscontainer").length>0 then
       (@wait.until { @driver.find_element :css => "input#tos" }).click
@@ -30,7 +29,7 @@ class LoginHelper
   end
 
   def set_name(fstname, sndname)
-    (@wait.until { @driver.find_element :css => "a.s-account" }).click
+    (@wait.until { @driver.find_element :css => "#page-account" }).click
     (@wait.until { @driver.find_element :name => "fstname" }).clear
     (@wait.until { @driver.find_element :name => "fstname" }).send_keys fstname
     (@wait.until { @driver.find_element :name => "sndname" }).clear
@@ -40,8 +39,8 @@ class LoginHelper
 
   def logout
     puts "logout"
-    (@wait.until { (@driver.find_element :css => "a.logout") }).click
-    @wait.until { @driver.find_element :css => "a.login-button" }
+    (@wait.until { (@driver.find_element :css => "a.js-logout") }).click
+    @wait.until { @driver.find_element :css => "a#page-signin, a.login-button" }
     puts "logged out"
   end
 end

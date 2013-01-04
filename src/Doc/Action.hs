@@ -62,7 +62,7 @@ postDocumentPreparationChange doc@Document{documenttitle} apistring = do
       return doc
     Right saveddoc -> return saveddoc
   Log.server $ "Sending invitation emails for document #" ++ show docid ++ ": " ++ documenttitle
-  edoc <- if (sendMailsDurringSigning document')
+  edoc <- if (sendMailsDuringSigning document')
              then sendInvitationEmails ctx document'
              else return $ Right $ document'
   case edoc of
@@ -104,7 +104,7 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistri
     _ -> when (documentcurrentsignorder doc /= documentcurrentsignorder olddoc) $ do
       ctx <- getContext
       Log.server $ "Resending invitation emails for document #" ++ show documentid ++ ": " ++ documenttitle
-      when_ (sendMailsDurringSigning doc) $
+      when_ (sendMailsDuringSigning doc) $
           sendInvitationEmails ctx doc
       return ()
   where
@@ -120,7 +120,7 @@ postDocumentRejectedChange doc@Document{..} siglinkid apistring = do
   Log.server $ "Sending rejection emails for document #" ++ show documentid ++ ": " ++ documenttitle
   ctx <- getContext
   customMessage <- getCustomTextField "customtext"
-  when_ (sendMailsDurringSigning doc) $
+  when_ (sendMailsDuringSigning doc) $
     sendRejectEmails customMessage ctx doc ($(fromJust) $ getSigLinkFor doc siglinkid)
   return ()
 

@@ -84,7 +84,6 @@ window.AuthorViewView = Backbone.View.extend({
     if (document.mainfile() == undefined)
         return this;
     this.container.empty();
-    this.container.append(BlockingInfo.el());
     this.container.append(this.model.title().el());
     this.container.append(this.model.history().el());
     var subcontainer = $("<div class='subcontainer'/>")

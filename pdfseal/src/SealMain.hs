@@ -38,7 +38,7 @@ sealspec filename = SealSpec
     , documentNumber = "0000001234"
     , hostpart = "http://host.skrivapa"
     , secretaries = [Person
-          { fullname = "Belinda Rossman (secretary)"
+          { fullname = "Belinda Rossman ÄÅÖäåö żółw (secretary)"
           , email = "belinda@rossman.de"
           , company = "Rossman, CO"
           , personalnumber = "435324-222"
@@ -51,17 +51,17 @@ sealspec filename = SealSpec
           }]
     , persons = map (\num ->
          Person
-          { fullname = "Lukas Duczko " ++ show num
-          , email = "lukas@duczko.se"
-          , company = "CEO, SkrivaPå"
-          , personalnumber = "123456-4567-" ++ show num
-          , companynumber = "00006-4567" ++ show num
+          { fullname = "Lukas Duczko ÄÅÖäåö żółw ŻÓŁW " ++ show num
+          , email = "lukas@duczko.se ÄÅÖäåö żółw ŻÓŁW"
+          , company = "CEO, SkrivaPå, ÄÅÖäåö żółw ŻÓŁW"
+          , personalnumber = "żółw ŻÓŁW ÄÅÖäåö 123456-4567-" ++ show num
+          , companynumber = "żółw ŻÓŁW ÄÅÖäåö 00006-4567" ++ show num
           , fullnameverified = False
           , emailverified = True
           , companyverified = False
           , numberverified = True
           -- should be in 4 corners, aligned
-          , fields = [ Field { value = "Gracjan Polak"
+          , fields = [ Field { value = "Gracjan Polak ÄÅÖäåö"
                              , x = 7/770,   y = 7/1085
                              , page = 1
                              , includeInSummary = False
@@ -82,14 +82,14 @@ sealspec filename = SealSpec
                              , fontSize = 10/770
                              , greyed = False 
                              }
-                     , Field { value = "Gracjan Polak"
+                     , Field { value = "Gracjan Polak żółw ŻÓŁW"
                              , x = 681/770, y = 1058/1085
                              , page = 1
                              , includeInSummary = False
                              , fontSize = 10/770
                              , greyed = False 
                              }
-                     , Field { value = "gracjan@mail.com"
+                     , Field { value = "gracjan@mail.com ÄÅÖäåö żółw ŻÓŁW"
                              , x = 121/770, y = 347/1085
                              , page = 1
                              , includeInSummary = False
@@ -98,41 +98,46 @@ sealspec filename = SealSpec
                              }
                      ]
           }) [1..10::Int]
-    , initials = "LD, LD"
+    , initials = "LD, LD, żółw ŻÓŁW"
     , history = map (\num -> HistEntry { histdate = "2010-09-" ++ show num ++ " 13:34"
-                                         , histcomment = "I was here and mucked around with PDFs. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good."
+                                         , histcomment = "I was here and mucked around with PDFs. This is actually a very long line of text so we can really see if the line breaking works or maybe not that good. żółw ŻÓŁW, ÄÅÖäåö"
                                          , histaddress = "IP: 123.34.1231.12"
                                          }) [10..99::Int]
     , staticTexts = sampleSealingTexts
-    , attachments = [ SealAttachment { fileName = "SkrivaPå attachment 1.txt"
+    , attachments = [ SealAttachment { fileName = "SkrivaPå attachment 1 żółw ŻÓŁW ÄÅÖäåö.txt"
                                      , fileBase64Content = "214124124123412341234"
                                      }
-                    , SealAttachment { fileName = "SkrivaPå attachment 2.html"
+                    , SealAttachment { fileName = "SkrivaPå attachment 2 żółw ŻÓŁW ÄÅÖäåö.html"
                                      , fileBase64Content = "26345645636534563454"
                                      }
-                    , SealAttachment { fileName = "SkrivaPå attachment 2b.pdf"
+                    , SealAttachment { fileName = "SkrivaPå attachment 2b żółw ŻÓŁW ÄÅÖäåö.pdf"
                                      , fileBase64Content = "2632345234534563454"
                                      }
                     ]
-    , filesList = []
+    , filesList = [ FileDesc
+                    { fileTitle      = "żółw ŻÓŁW ÄÅÖäåö"
+                    , fileRole       = "żółw ŻÓŁW ÄÅÖäåö"
+                    , filePagesText  = "żółw ŻÓŁW ÄÅÖäåö"
+                    , fileAttachedBy = "żółw ŻÓŁW ÄÅÖäåö"
+                    }]
     }
 
 
 sampleSealingTexts::SealingTexts
 sampleSealingTexts = SealingTexts
-    {   verificationTitle="Verifikat"
-      , docPrefix="Dok.nr."
-      , signedText="Undertecknat:"
-      , partnerText="Parter"
-      , secretaryText="Ej undertecknande part"
-      , orgNumberText="Org.nr. "
-      , eventsText="Registrerade händelser"
-      , dateText="Datum"
-      , historyText="Händelser"
+    {   verificationTitle="Verifikat żółw ŻÓŁW ÄÅÖäåö"
+      , docPrefix="Dok.nr. żółw ŻÓŁW ÄÅÖäåö"
+      , signedText="Undertecknat: żółw ŻÓŁW ÄÅÖäåö"
+      , partnerText="Parter żółw ŻÓŁW ÄÅÖäåö"
+      , secretaryText="Ej undertecknande part żółw ŻÓŁW ÄÅÖäåö"
+      , orgNumberText="Org.nr. żółw ŻÓŁW ÄÅÖäåö"
+      , eventsText="Registrerade händelser żółw ŻÓŁW ÄÅÖäåö"
+      , dateText="Datum żółw ŻÓŁW ÄÅÖäåö"
+      , historyText="Händelser żółw ŻÓŁW ÄÅÖäåö"
       , verificationFooter=
-           "Detta verifikat är utfärdat av Scrive. Kursiverad information är säkert verifierad. Tidsstämpeln säkerställer att dokumentets äkthet går att bevisa matematiskt och oberoende av Scrive. För mer information se den dolda juridiska bilagan. För er bekvämlighet tillhandahåller Scrive även en tjänst för att kontrollera dokumentets äkthet automatiskt på: https://scrive.com/verify/"
-      , documentText = "Dokument"
-      , personalNumberText = "ID-nr."
+           "Detta verifikat är utfärdat av Scrive. Kursiverad information är säkert verifierad. Tidsstämpeln säkerställer att dokumentets äkthet går att bevisa matematiskt och oberoende av Scrive. För mer information se den dolda juridiska bilagan. För er bekvämlighet tillhandahåller Scrive även en tjänst för att kontrollera dokumentets äkthet automatiskt på: https://scrive.com/verify/ żółw ŻÓŁW"
+      , documentText = "Dokument żółw ŻÓŁW ÄÅÖäåö"
+      , personalNumberText = "ID-nr. żółw ŻÓŁW ÄÅÖäåö"
     }
 
 processFile :: String -> IO ()
@@ -153,6 +158,23 @@ sealAllInTest = do
   let dir = "test/pdfs"
   contents <- getDirectoryContents dir
   mapM_ (p dir) contents
+  where p dir filename | "sealed.pdf" `isSuffixOf` filename = return ()
+                       | ".pdf" `isSuffixOf` filename = do
+                              let fullname = dir ++ "/" ++ filename
+                              putStrLn $ "Doing " ++ fullname
+                              processa fullname
+                       | otherwise = return ()
+        processa filename = do
+                  result <- try $ do
+                    processFile filename
+                  case result of
+                    Left (thing :: SomeException) -> putStrLn (show thing)
+                    Right _ -> return ()
+
+sealSimple :: IO ()
+sealSimple = do
+  let dir = "test/pdfs"
+  p dir "simple.pdf"
   where p dir filename | "sealed.pdf" `isSuffixOf` filename = return ()
                        | ".pdf" `isSuffixOf` filename = do
                               let fullname = dir ++ "/" ++ filename

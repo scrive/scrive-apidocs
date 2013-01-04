@@ -11,7 +11,6 @@ module Doc.DocView (
   , flashMessageInvalidCSV
   , flashRemindMailSent
   , getDataMismatchMessage
-  , modalMismatch
   , mailDocumentAwaitingForAuthor
   , mailDocumentClosed
   , mailDocumentRejected
@@ -62,13 +61,6 @@ import Analytics.Include
 
 pageCreateFromTemplate :: TemplatesMonad m => m String
 pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
-
-modalMismatch :: TemplatesMonad m => String -> SignatoryLink -> m FlashMessage
-modalMismatch msg author = toModal <$>  do
-    renderTemplate "signCanceledDataMismatchModal" $ do
-                    F.value "authorname"  $ getSmartName author
-                    F.value "authoremail" $ getEmail author
-                    F.value "message"     $ concatMap (\s -> "<p>" ++ s ++ "</p>") $ lines msg
 
 modalSendConfirmationView :: TemplatesMonad m => Document -> Bool -> m FlashMessage
 modalSendConfirmationView document authorWillSign = do

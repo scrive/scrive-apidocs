@@ -171,7 +171,7 @@ var TabsView = Backbone.View.extend({
             }
             else
                 li.addClass("float-left");
-            var icon = $("<h4/>");
+            var icon = $("<h5/>");
             if (tab.hasNumber())
                 icon.addClass("numbericon").addClass("numbericon" + tab.number());
             icon.text(tab.name());

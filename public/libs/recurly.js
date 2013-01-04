@@ -1069,7 +1069,7 @@ function invalidMode(e) {
   });
 }
 
-function validationGroup(pull,success) {
+function validationGroup(pull,success,failure) {
   var anyErrors = false;
   var puller = {
     field: function($form, fieldSel, validations) {
@@ -1096,7 +1096,9 @@ function validationGroup(pull,success) {
   }
 
   if(!anyErrors) {
-    success();
+      success && success();
+  } else {
+      failure && failure();
   }
 }
 
@@ -1586,7 +1588,6 @@ R.buildBillingInfoUpdateForm = function(options) {
   initCommonForm($form, options);
   initBillingInfoForm($form, options);
 
-
   $form.submit(function(e) {
     e.preventDefault(); 
 
@@ -1626,7 +1627,8 @@ R.buildBillingInfoUpdateForm = function(options) {
           $form.find('button.submit').removeAttr('disabled').text('Update');
         }
       });
-    });
+    },
+                    options.onValidationError);
   });
 
   if(options.beforeInject) {

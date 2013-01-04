@@ -163,18 +163,21 @@ var TextTypeSetterView = Backbone.View.extend({
         this.model.typeSetter = undefined;
     },
     obligatoryOption : function() {
-        var option = $("<div class='checkboxTypeSetter-option'/>");
-        var checkbox = $("<input type='checkbox'>");
-        var label = $("<span/>").text(localization.designview.textFields.obligatory);
+        var option = $("<div class='checkboxTypeSetter-option checkbox-box'/>");
+        var checkbox = $("<div class='checkbox'>");
+        var label = $("<label/>").text(localization.designview.textFields.obligatory);
         var field = this.model.field();
         option.append(checkbox).append(label);
         if (field.isObligatory())
-            checkbox.attr("checked","Yes");
+            checkbox.addClass("checked");
         checkbox.click(function(){
-            if (field.isObligatory())
+            if (field.isObligatory()) {
+                    checkbox.removeClass("checked");
                     field.makeOptional();
-                else
+            } else {
+                    checkbox.addClass("checked");
                     field.makeObligatory();
+            }
         });
 
         return option;
@@ -221,7 +224,7 @@ var TextTypeSetterView = Backbone.View.extend({
         var placement = this.model;
         var offset = $(placement.view.el).offset();
         $(this.el).css("left",offset.left + Math.max($(placement.view.el).width()+18));
-        $(this.el).css("top",offset.top - 20);
+        $(this.el).css("top",offset.top - 19);
     },
     render: function() {
            var view = this;
@@ -327,8 +330,9 @@ var TextPlacementPlacedView = Backbone.View.extend({
         var document = field.signatory().document();
         var place = $(this.el);
         var view = this;
-        if (view.inlineediting == true) {
-          if (this.input != undefined) {
+        var self = this;
+        if (self.inlineediting == true) {
+          if (self.input != undefined) {
                if ($(window).scrollTop() + $(window).height() > this.input.offset().top && $(window).scrollTop() < this.input.offset().top) {
                   self.input.focus();
                }
@@ -366,10 +370,6 @@ var TextPlacementPlacedView = Backbone.View.extend({
                     {   accept();
                         return false;
                     }
-                    else if (self.input.hasClass("grayed") && $.browser.msie) {
-                      self.input.val("");
-                      self.input.removeClass("grayed");
-                    }
         });
         this.input.blur(function() {
                   if (view.input.val() != "") {
@@ -377,7 +377,12 @@ var TextPlacementPlacedView = Backbone.View.extend({
                       return false;
                   }    
         });
-        if ($(window).scrollTop() + $(window).height() > this.input.offset().top && $(window).scrollTop() < this.input.offset().top) {
+        if (this.input.hasClass("grayed") && $.browser.msie) {
+                      this.input.val("");
+                      this.input.removeClass("grayed");
+        }
+                    
+        if ($(window).scrollTop() + $(window).height() > this.input.offset().top && $(window).scrollTop() < this.input.offset().top && self.input != undefined) {
                    self.input.focus();
         }           
         return false;
@@ -485,35 +490,42 @@ var CheckboxTypeSetterView = Backbone.View.extend({
      return this.nameinput;
     },
     obligatoryOption : function() {
-        var option = $("<div class='checkboxTypeSetter-option'/>");
-        var checkbox = $("<input type='checkbox'>");
-        var label = $("<span/>").text(localization.designview.checkboxes.obligatory);
+      
+        var option = $("<div class='checkboxTypeSetter-option checkbox-box'/>");
+        var checkbox = $("<div class='checkbox'>");
+        var label = $("<label/>").text(localization.designview.checkboxes.obligatory);
         var field = this.model.field();
         option.append(checkbox).append(label);
         if (field.isObligatory())
-            checkbox.attr("checked","Yes");
+            checkbox.addClass("checked");
         checkbox.click(function(){
-            if (field.isObligatory())
+            if (field.isObligatory()) {
+                    checkbox.removeClass("checked");
                     field.makeOptional();
-                else
-                    field.makeObligatory();
+            } else {
+              checkbox.addClass("checked");
+              field.makeObligatory();
+            }
         });
 
         return option;
     },
     precheckedOption: function() {
-        var option = $("<div class='checkboxTypeSetter-option'/>");
-        var checkbox = $("<input type='checkbox'>");
-        var label = $("<span/>").text(localization.designview.checkboxes.prechecked);
+        var option = $("<div class='checkboxTypeSetter-option checkbox-box'/>");
+        var checkbox = $("<div class='checkbox'>");
+        var label = $("<label/>").text(localization.designview.checkboxes.prechecked);
         var field = this.model.field();
         option.append(checkbox).append(label);
         if (field.value() != undefined && field.value()  != "")
-            checkbox.attr("checked","Yes");
+            checkbox.addClass("checked");
         checkbox.click(function(){
-            if (field.value() != undefined && field.value()  != "")
+            if (field.value() != undefined && field.value()  != "") {
+                    checkbox.removeClass("checked");
                     field.setValue("");
-                else
+            }  else {
+                    checkbox.addClass("checked");
                     field.setValue("checked");
+            }
             field.trigger("change");
         });
         return option;
@@ -560,7 +572,7 @@ var CheckboxTypeSetterView = Backbone.View.extend({
         var placement = this.model;
         var offset = $(placement.view.el).offset();
         $(this.el).css("left",offset.left + 32);
-        $(this.el).css("top",offset.top - 20);
+        $(this.el).css("top",offset.top - 22);
     },
     render: function() {
            var view = this;

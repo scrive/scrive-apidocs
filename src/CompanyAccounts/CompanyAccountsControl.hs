@@ -102,7 +102,7 @@ handleCompanyAccountsInternal cid = do
   let companypage = companyAccountsSortSearchPage params companyaccounts
   runJSONGenT $ do
     objects "list" $ for (take companyAccountsPageSize $ list companypage) $ \f -> do
-           value "link" $ show $ LinkUserAdmin $ camaybeuserid f -- | Used in admins only
+           value "link" $ show $ LinkUserAdmin $ camaybeuserid f            -- Used in admins only
            object "fields" $ do
                 value "id" $ maybe "0" show $ camaybeuserid f
                 value "fullname" $ cafullname f
@@ -117,20 +117,20 @@ handleCompanyAccountsInternal cid = do
     A special data type used for just displaying stuff in the list
     this lets make a unified list of users and pending invites
 -}
-data CompanyAccount = CompanyAccount {
-    camaybeuserid :: Maybe UserID --the account's userid if they have one & not if they're a pending takeover invite
-  , cafstname :: String --the account's first name
-  , casndname :: String --the account's last name
-  , cafullname :: String --the account's fullname
-  , caemail :: String --the account's email
-  , carole :: Role --the account's role
-  , cadeletable :: Bool --can the account be deleted, or do they have pending documents?
-  , caactivated :: Bool --is the account a full company user with accepted tos?
+data CompanyAccount = CompanyAccount
+  { camaybeuserid :: Maybe UserID -- ^ the account's userid if they have one & not if they're a pending takeover invite
+  , cafstname     :: String       -- ^ the account's first name
+  , casndname     :: String       -- ^ the account's last name
+  , cafullname    :: String       -- ^ the account's fullname
+  , caemail       :: String       -- ^ the account's email
+  , carole        :: Role         -- ^ the account's role
+  , cadeletable   :: Bool         -- ^ can the account be deleted, or do they have pending documents?
+  , caactivated   :: Bool         -- ^ is the account a full company user with accepted tos?
   }
 
-data Role = RoleAdmin --an admin user
-            | RoleStandard --a standard user
-            | RolePending --a pending takeover request (didn't want to implement role switching for invites!)
+data Role = RoleAdmin    -- ^ an admin user
+          | RoleStandard -- ^ a standard user
+          | RolePending  -- ^ a pending takeover request (didn't want to implement role switching for invites!)
   deriving (Eq, Ord, Show)
 
 -- Searching, sorting and paging

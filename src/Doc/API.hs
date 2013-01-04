@@ -73,6 +73,7 @@ import Doc.DocStateCommon
 import File.Model
 import File.Storage
 import qualified PadQueue.API as PadQueue
+import Data.String.Utils (replace)
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
@@ -84,22 +85,22 @@ documentAPI = dir "api" $ choice
 versionedAPI :: APIVersion -> Route (KontraPlus Response)
 versionedAPI _version = choice [
 
-  dir "createfromfile"     $ hPostNoXToken $ toK0 $ apiCallCreateFromFile,
-  dir "createfromtemplate" $ hPostNoXToken $ toK1 $ apiCallCreateFromTemplate,
-  dir "update"             $ hPostNoXToken $ toK1 $ apiCallUpdate,
-  dir "ready"              $ hPostNoXToken $ toK1 $ apiCallReady,
-  dir "cancel"             $ hPostNoXToken $ toK1 $ apiCallCancel,
-  dir "remind"             $ hPostNoXToken $ toK1 $ apiCallRemind,
-  dir "delete"             $ hDelete   $ toK1 $ apiCallDelete,
-  dir "get"                $ hGet $ toK1 $ apiCallGet,
-  dir "list"               $ hGet $ apiCallList,
-  dir "downloadmainfile"   $ hGet  $ toK2 $ apiCallDownloadMainFile,
+  dir "createfromfile"     $ hPostNoXTokenHttp $ toK0 $ apiCallCreateFromFile,
+  dir "createfromtemplate" $ hPostNoXTokenHttp $ toK1 $ apiCallCreateFromTemplate,
+  dir "update"             $ hPostNoXTokenHttp $ toK1 $ apiCallUpdate,
+  dir "ready"              $ hPostNoXTokenHttp $ toK1 $ apiCallReady,
+  dir "cancel"             $ hPostNoXTokenHttp $ toK1 $ apiCallCancel,
+  dir "remind"             $ hPostNoXTokenHttp $ toK1 $ apiCallRemind,
+  dir "delete"             $ hDeleteAllowHttp  $ toK1 $ apiCallDelete,
+  dir "get"                $ hGetAllowHttp $ toK1 $ apiCallGet,
+  dir "list"               $ hGetAllowHttp $ apiCallList,
+  dir "downloadmainfile"   $ hGetAllowHttp  $ toK2 $ apiCallDownloadMainFile,
 
   dir "padqueue"           $ PadQueue.padqueueAPI,
-  dir "mainfile" $ hPostNoXToken $ toK1 $ documentChangeMainFile,
+  dir "mainfile" $ hPostNoXTokenHttp $ toK1 $ documentChangeMainFile,
 
-  dir "document" $ hPostNoXToken $ toK6 $ documentUploadSignatoryAttachment,
-  dir "document" $ hDelete       $ toK6 $ documentDeleteSignatoryAttachment
+  dir "document" $ hPostNoXTokenHttp $ toK6 $ documentUploadSignatoryAttachment,
+  dir "document" $ hDeleteAllowHttp  $ toK6 $ documentDeleteSignatoryAttachment
   ]
 
 -- | Clean a filename from a path (could be windows \) to a base name
@@ -118,7 +119,7 @@ apiCallCreateFromFile = api $ do
   (mfile, title) <- case minput of
     Nothing -> do
       title <- renderTemplate_ ("newDocumentTitle" <| not isTpl |> "newTemplateTitle")
-      return (Nothing,  title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx))
+      return (Nothing,  replace "  " " " $ title ++ " " ++ formatMinutesTimeSimple (ctxtime ctx))
     Just (Input _ Nothing _) -> throwError $ badInput "Missing file"
     Just (Input contentspec (Just filename') _contentType) -> do
       let filename = takeBaseName filename'

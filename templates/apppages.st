@@ -44,6 +44,7 @@ wholePage=
        $header()$
        $flashmessages()$
        $content:noescape()$
+       $contactUsVivocha()$
        $pageFooter()$
       </body>
     </html>
@@ -226,15 +227,15 @@ header=
       </li>
       $if(logged)$
       <li class="float-right">
-        <a class="page logout" href="$linklogout$">$_headerLogOut()$</a>
+        <a class="page js-logout" href="$linklogout$">$_headerLogOut()$</a>
       </li>
-      <li class="float-right"><a class="page" href="$linkaccount$">$_headerAccount()$</a></li>
-      <li class="page-first float-right"><a class=" page" href="$linkissue$">$_headerArchive()$</a></li>
+      <li class="float-right"><a class="page" id='page-account' href="$linkaccount$">$_headerAccount()$</a></li>
+      <li class="page-first float-right"><a class=" page" id='page-archive' href="$linkissue$">$_headerArchive()$</a></li>
       <li class="session-create float-right">
-        <a class="button button-small fromtemplate" onclick='createfromtemplate()' href="#">$_headerTemplate()$ </a>
+        <a class="button button-small fromtemplate" onclick='createfromtemplate(event)' href="/fromtemplate">$_headerTemplate()$ </a>
       </li>
       <li class="session-create float-right">
-        <a class="button button-small"            onclick='createnewdocument()' href="#">$_headerSend()$ </a>
+        <a class="button button-small js-create-document"            onclick='createnewdocument(event)' href="/newdocument">$_headerSend()$ </a>
       </li>
       $else$
       <li class="page-first float-left"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$features">$_headerFeatures()$</a></li>
@@ -245,7 +246,7 @@ header=
       <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$contact">$_headerContakt()$</a></li>
       <li class="session-login float-right">
         <a class="button button-small" id="page-login" href="/login">$_login()$ </a>
-        <a class="button button-small button-red" id="page-login" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_signUp()$</a>
+        <a class="button button-small button-red" id="page-signup" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_signUp()$</a>
       </li>
       $endif$
     </ul>
@@ -283,4 +284,40 @@ langSwitcher=
                    jQuery('.langSwitcher').append(select.view().el);
               })
 </script>
+####
+contactUsVivocha=
+<aside class="contact">
+  <nav class="contact">
+  <ul>
+    <li class="call-vivocha vivocha_widget_openmedia_voip">
+      <a class="" href="tel:+46 8 519 779 00">
+        <div class="icon"><img src="/img/phone.png" width="32" height="32" alt="Call"></div>
+        <div class="hover">
+          <p>Call us now, click here</p>
+          <small>+46 8 519 779 00</small>
+        </div>
+      </a>
+    </li>
+    <li class="email">
+      <a class="" href="mailto:info@scrive.com">
+        <div class="icon"><img src="/img/mail-us.png" width="32" height="32" alt="Email"></div>
+        <div class="hover">
+          <p>Send an email</p>
+          <small>info@scrive.com</small>
+        </div>
+      </a>
+    </li>
+    <li class="chat-vivocha vivocha_widget_openmedia_chat">
+      <a class="" href="#vivocha-chat-url">
+        <div class="icon"><img src="/img/chat.png" width="32" height="32" alt="Chat"></div>
+        <div class="hover">
+          <p>Chat now</p>
+          <small>Live chat</small>
+        </div>
+      </a>
+    </li>
+  </ul>
+</nav>
+</aside>
+<script src="https://www.vivocha.com/a/scrive/api/vivocha.js"></script>
 ####

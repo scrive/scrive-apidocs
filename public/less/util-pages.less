@@ -1,55 +1,68 @@
 @import 'branding/colors';
 @import 'branding/typography';
 
+
+
+.mainContainer .short-input-section .short-input-container.login,
+.mainContainer .short-input-section .short-input-container.recovery-container {
+        .big-input {
+          width : 282px;
+        }
+        .button {
+          width : 268px;
+        }
+}
+
+
+.mainContainer .short-input-section header.recovery,
+.mainContainer .short-input-section header.signup  {
+      padding-top: 138px;
+}
 .mainContainer .short-input-section.signup .short-input-container,
 .mainContainer .short-input-section .short-input-container.recovery {
     width: 640px;
-    margin-top: 196px;
 
     .short-input-container-body-wrapper .short-input-container-body .position {
-      text-align: left;
-      h1 {
-        text-align: left;
-      }
       .big-input {
-          width : 280px;
+          width : 320px;
           display: inline-block;
-          margin-left:0px;
+          margin-right:24px;
+          float: left;
         }
         .button {
-          width: 162px;
+          width: 116px;
           display: inline-block;
         }
     }
 }
 
 .mainContainer .short-input-section.account-setup {
-     width: 530px;
+     width: 930px;
     .short-input-container {
-      width: 530px;
-      p {
-        text-align : left;
-        line-height: 24px;
+      width: 930px;
+      margin-top: 50px;
+      margin-bottom: 50px;
+      .short-input-container-body-wrapper {
+        width: 490px;
+        border-color: transparent;
+      }
+      .short-input-container-right {
+        width: 400px;
+        margin-top: 10px;
+        margin-left: 35px;
       }
 
-      .short-input-container-body-wrapper .short-input-container-body .position {
-        text-align : left;
-        padding-left: 20px;
-        padding-right: 20px;
-        margin-top: 10px;
-        .big-input {
-          width : 300px;
-          margin-left:0px;
+      .big-input {
+          width: 360px;
+          padding: 10px;
         }
-        .optional{
-          color : @text-very-light;
-          margin-left: 10px;
-        }
-        .button {
-          width: 142px;
+
+      .button {
+          margin-top: 20px;
+          width: 280px;
           display: inline-block;
-        }
       }
+
     }
 }
 

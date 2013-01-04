@@ -100,49 +100,55 @@ var MailAPISettingsView = Backbone.View.extend({
       // Building frame
       var model = this.model;
       var box = $("<div class='col'/>");
-      var header = $("<div class='account-header'/>").append($("<h2/>").text(localization.account.mailAPI.personalMailAPIHeader))
+      var header = $("<div class='account-header'/>").text(localization.account.mailAPI.personalMailAPIHeader);
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
-
-      var disablecheckbox = $("<input type='checkbox' autocomplete='false'/>");
-      if (model.hasPersonalMailApi()) disablecheckbox.attr("checked","checked");
-      disablecheckbox.change(function() {
-          var checked = disablecheckbox.is(":checked");
-          if(checked)
+     
+      
+      var checkbox = $("<div class='checkbox'/>");
+      if (model.hasPersonalMailApi()) checkbox.addClass("checked");
+      checkbox.click(function() {
+          if(!checkbox.hasClass("checked"))
               mixpanel.track('Check enable personal mailapi');
           else
               mixpanel.track('Uncheck enable personal mailapi');
-          model.setEnablePersonal(checked);
+          checkbox.toggleClass("checked");
+          model.setEnablePersonal(!model.enablePersonal());
           return true;
         });
-      var disablelabel = $("<label/>").text(localization.account.mailAPI.enablePersonal);
-      body.append(disablecheckbox).append(disablelabel);
+      var label = $("<label/>").text(localization.account.mailAPI.enablePersonal);
+      body.append($("<div class='checkbox-box'/>").append(checkbox).append(label));
 
+
+
+
+      
       if (model.hasPersonalMailApi()) {
         // Filling content
         var personalMailApi = this.model.personalMailApi();
         body.append($("<label/>").text(localization.account.mailAPI.activeMails));
         var list = $("<ul class='mailapiemailslist'/>");
-        var a1 = $("<a/>").attr('href',"mailto:contract+"+personalMailApi.key()+"@api.scrive.com").text("contract+"+personalMailApi.key()+"@api.scrive.com");
-        var a2 = $("<a/>").attr('href',"mailto:offer+"+personalMailApi.key()+"@api.scrive.com").text("offer+"+personalMailApi.key()+"@api.scrive.com");
-        var a3 = $("<a/>").attr('href',"mailto:order+"+personalMailApi.key()+"@api.scrive.com").text("order+"+personalMailApi.key()+"@api.scrive.com");
+        var a1 = $("<a class='clickable'/>").attr('href',"mailto:contract+"+personalMailApi.key()+"@api.scrive.com").text("contract+"+personalMailApi.key()+"@api.scrive.com");
+        var a2 = $("<a class='clickable'/>").attr('href',"mailto:offer+"+personalMailApi.key()+"@api.scrive.com").text("offer+"+personalMailApi.key()+"@api.scrive.com");
+        var a3 = $("<a class='clickable'/>").attr('href',"mailto:order+"+personalMailApi.key()+"@api.scrive.com").text("order+"+personalMailApi.key()+"@api.scrive.com");
         list.append($("<li/>").append(a1));
         list.append($("<li/>").append(a2));
         list.append($("<li/>").append(a3));
         body.append(list)
 
-        var resetcheckbox = $("<input type='checkbox' autocomplete='false'/>");
-        resetcheckbox.change(function() {
-            var checked = resetcheckbox.is(":checked");
-            if(checked)
+
+        var resetcheckbox = $("<div class='checkbox'/>");
+        resetcheckbox.click(function() {
+            if(!resetcheckbox.hasClass("checked"))
                 mixpanel.track('Check reset mailapi');
             else
                 mixpanel.track('Uncheck reset mailapi');
-            model.setResetKeys(checked);
-          return true;
+            resetcheckbox.toggleClass("checked");
+            model.setResetKeys(resetcheckbox.hasClass("checked"));
+          return false;
         });
         var resetlabel = $("<label/>").text(localization.account.mailAPI.resetKeys);
-        body.append(resetcheckbox).append(resetlabel);
+        body.append($("<div class='checkbox-box'/>").append(resetcheckbox).append(resetlabel));
       }
         
       return box;
@@ -152,7 +158,7 @@ var MailAPISettingsView = Backbone.View.extend({
       var model = this.model;
       // Building frame
       var box = $("<div class='col'/>");
-      var header = $("<div class='account-header'/>").append($("<h2/>").text(localization.account.mailAPI.limitMailAPIHeader))
+      var header = $("<div class='account-header'/>").text(localization.account.mailAPI.limitMailAPIHeader);
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
 
@@ -172,19 +178,19 @@ var MailAPISettingsView = Backbone.View.extend({
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.mailAPI.processedToday))).append($("<td/>").append(sendinput)));
 
       if (model.hasPersonalMailApi()) {
-        var resetbox = $("<div class='mailapi'/>");
-        var checkbox = $("<input type='checkbox' autocomplete='false'/>");
-        checkbox.change(function() {
-            var checked = checkbox.is(":checked");
-            if(checked)
+
+        var checkbox = $("<div class='checkbox'/>");
+        checkbox.click(function() {
+            if(!checkbox.hasClass("checked"))
                 mixpanel.track('Check reset limits');
             else
-                mixpanel.track('Uncheck reset limits');           
-          model.setResetLimit(checked);
-          return true;
+                mixpanel.track('Uncheck reset limits');     
+            checkbox.toggleClass("checked");
+            model.setResetLimit(checkbox.hasClass("checked"));
+          return false;
         });
-        var label = $("<label/>").append($("<label/>").text(localization.account.mailAPI.resetLimit));
-        body.append(resetbox.append(checkbox).append(label));
+        var label = $("<label/>").text(localization.account.mailAPI.resetLimit);
+        body.append($("<div class='checkbox-box'/>").append(checkbox).append(label));
       }
            
       return box;
@@ -193,16 +199,16 @@ var MailAPISettingsView = Backbone.View.extend({
       var companyMailApi = this.model.companyMailApi();
       // Building frame
       var box = $("<div class='col'/>");
-      var header = $("<div class='account-header'/>").append($("<h2/>").text(localization.account.mailAPI.companyMailAPIHeader))
+      var header = $("<div class='account-header'/>").text(localization.account.mailAPI.companyMailAPIHeader);
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
 
       // Filling content
       body.append($("<label/>").text(localization.account.mailAPI.activeMails));
       var list = $("<ul class='mailapiemailslist'/>");
-      var a1 = $("<a/>").attr('href',"mailto:contract+"+companyMailApi.key()+"@api.scrive.com").text("contract+"+companyMailApi.key()+"@api.scrive.com");
-      var a2 = $("<a/>").attr('href',"mailto:offer+"+companyMailApi.key()+"@api.scrive.com").text("offer+"+companyMailApi.key()+"@api.scrive.com");
-      var a3 = $("<a/>").attr('href',"mailto:order+"+companyMailApi.key()+"@api.scrive.com").text("order+"+companyMailApi.key()+"@api.scrive.com");
+      var a1 = $("<a class='clickable'/>").attr('href',"mailto:contract+"+companyMailApi.key()+"@api.scrive.com").text("contract+"+companyMailApi.key()+"@api.scrive.com");
+      var a2 = $("<a class='clickable'/>").attr('href',"mailto:offer+"+companyMailApi.key()+"@api.scrive.com").text("offer+"+companyMailApi.key()+"@api.scrive.com");
+      var a3 = $("<a class='clickable'/>").attr('href',"mailto:order+"+companyMailApi.key()+"@api.scrive.com").text("order+"+companyMailApi.key()+"@api.scrive.com");
       list.append($("<li/>").append(a1));
       list.append($("<li/>").append(a2));
       list.append($("<li/>").append(a3));
@@ -219,8 +225,9 @@ var MailAPISettingsView = Backbone.View.extend({
       var model = this.model;
       var box = $("<div class='account-footer'/>");
       var button = Button.init({
-        color : "green",
+        color : "blue",
         size: "small",
+        shape: "rounded",
         text : localization.account.mailAPI.save,
         onClick : function() {
             mixpanel.track('Click save button');

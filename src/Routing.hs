@@ -11,20 +11,21 @@ module Routing ( hGet
                , hGetWrap
                , hPost
                , hDelete
+               , hDeleteAllowHttp
                , hPut
                , hPostNoXToken
                , hPostAllowHttp
+               , hPostNoXTokenHttp
                , hGetAllowHttp
                , https
                , allowHttp
                , toK0, toK1, toK2, toK3, toK4, toK5, toK6
-               , ToResp, toResp
+               , ToResp(..)
                , ThinPage(..)
-                 )where
+               ) where
 
 import Data.Functor
 import AppView as V
-import Data.Maybe
 import Happstack.Server(Response, Method(GET, POST, DELETE, PUT), ToMessage(..))
 import Happstack.StaticRouting
 import KontraLink
@@ -59,10 +60,10 @@ instance ToResp KontraLink where
 
 instance ToResp String where
     toResp = page . return
-    
+
 instance ToResp ThinPage where
     toResp = pageThin . return
-    
+
 instance ToResp JSValue where
     toResp = simpleJsonResponse
 
@@ -102,7 +103,7 @@ pageThin pageBody = do
     ThinPage pb  <- pageBody
     renderFromBodyThin kontrakcja pb
 
-    
+
 hPost :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hPost = hPostWrap (https . guardXToken)
 
@@ -111,6 +112,9 @@ hGet = hGetWrap https
 
 hDelete :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hDelete = hDeleteWrap https
+
+hDeleteAllowHttp :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
+hDeleteAllowHttp = hDeleteWrap allowHttp
 
 hPut :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hPut = hPutWrap https
@@ -124,6 +128,9 @@ hPostAllowHttp = hPostWrap allowHttp
 hPostNoXToken :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hPostNoXToken = hPostWrap https
 
+hPostNoXTokenHttp :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
+hPostNoXTokenHttp = hPostWrap allowHttp
+
 https:: Kontra Response -> Kontra Response
 https action = do
     secure <- isSecure
@@ -133,13 +140,7 @@ https action = do
        else sendSecureLoopBack
 
 allowHttp:: Kontrakcja m => m Response -> m Response
-allowHttp action = do
-    secure <- isSecure
-    useHttps <- ctxusehttps <$> getContext
-    logged <- isJust <$> ctxmaybeuser <$> getContext
-    if (secure || logged || not useHttps)
-       then action
-       else sendSecureLoopBack
+allowHttp action = action
 
 -- | Use to enforce a specific arity of a handler to make it explicit
 -- how requests are routed and convert returned value to Responses

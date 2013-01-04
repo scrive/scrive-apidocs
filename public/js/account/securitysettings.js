@@ -99,7 +99,7 @@ var SecuritySettingsView = Backbone.View.extend({
       // Building frame
       var model = this.model;
       var box = $("<div class='col'/>");
-      var header = $("<div class='account-header'/>").append($("<h2>").text(localization.account.accountSecurity.passwordSection))
+      var header = $("<div class='account-header'/>").text(localization.account.accountSecurity.passwordSection)
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
 
@@ -131,7 +131,7 @@ var SecuritySettingsView = Backbone.View.extend({
       var self = this;
       var model = this.model;
       var box = $("<div class='col'/>");
-      var header = $("<div class='account-header'/>").append($("<h2/>").text(localization.account.accountSecurity.langSection))
+      var header = $("<div class='account-header'/>").text(localization.account.accountSecurity.langSection);
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
 
@@ -161,18 +161,19 @@ var SecuritySettingsView = Backbone.View.extend({
       var self = this;
       var model = this.model;
       var box = $("<div class='col'/>");
-      var header = $("<div class='account-header'/>").append($("<h2/>").text(localization.account.accountSecurity.footerSection))
+      var header = $("<div class='account-header'/>").text(localization.account.accountSecurity.footerSection);
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
 
-      var checkbox = $("<input type='checkbox' autocomplete='false'/>");
-      if (model.useFooter()) checkbox.attr("checked","checked");
-      checkbox.change(function() {
-          model.setUseFooter(checkbox.is(":checked"));
+      var checkbox = $("<div class='checkbox'/>");
+      if (model.useFooter()) checkbox.addClass("checked");
+      checkbox.click(function() {
+        checkbox.toggleClass("checked");
+        model.setUseFooter(!model.useFooter());
       });
                                                 
-      var label = $("<label style='margin-left: 10px'/>").text(localization.account.accountSecurity.useFooter);
-      body.append($("<div class=''/>").append(checkbox).append(label));
+      var label = $("<label/>").text(localization.account.accountSecurity.useFooter);
+      body.append($("<div class='checkbox-box'/>").append(checkbox).append(label));
 
       var cfb = $("<div class='customfooterbox'/>");
       var updateTinyVisibility = function() {
@@ -184,8 +185,8 @@ var SecuritySettingsView = Backbone.View.extend({
       updateTinyVisibility();
       model.bind("change:useFooter", updateTinyVisibility);
 
-      var cf = $("<textarea id='customfooter' name='customfooter' style='width:350px;height:110px'/>").html(model.useFooter() ? model.footer() : "");
-      setTimeout(function() {cf.tinymce({
+      this.customfooter = $("<textarea id='customfooter' name='customfooter' style='width:350px;height:110px'/>").html(model.useFooter() ? model.footer() : "");
+      setTimeout(function() {self.customfooter.tinymce({
                                 script_url: '/tiny_mce/tiny_mce.js',
                                 theme: "advanced",
                                 theme_advanced_toolbar_location: "top",
@@ -199,18 +200,22 @@ var SecuritySettingsView = Backbone.View.extend({
                                 }
                         });}, 100);
 
-      body.append(cfb.append(cf));
+      body.append(cfb.append(this.customfooter));
 
       return box;
     },
     saveButton : function() {
+      var self = this;
       var model = this.model;
       var box = $("<div class='account-footer'/>");
       var button = Button.init({
-        color : "green",
+        color : "blue",
         size: "small",
+        shape: "rounded",
         text : localization.account.accountSecurity.save,
         onClick : function() {
+          if (model.useFooter() && self.customfooter)
+            model.setFooter(self.customfooter.val());
           model.save();
           return false;
         }

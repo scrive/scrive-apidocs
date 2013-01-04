@@ -1,6 +1,7 @@
 module DB.Fetcher (
     Fetcher
   , foldDB
+  , foldDB2
   ) where
 
 import Control.Monad
@@ -55,8 +56,13 @@ instance Fetcher r r where
 -- (usually it's not neccessary since compiler will be able to infer them,
 -- but if it won't, you have to expect quite ugly error message about
 -- missing instances).
-foldDB :: MonadDB m => Fetcher a b => (b -> a) -> b -> DBEnv m b
-foldDB decoder !init_acc = do
+foldDB :: MonadDB m => Fetcher v a => (a -> v) -> a -> DBEnv m a
+foldDB decoder !init_acc =
+  foldDB2 (\acc row -> apply 0 row (decoder acc)) init_acc
+
+
+foldDB2 :: MonadDB m => (a -> [SqlValue] -> Either SQLError a) -> a -> DBEnv m a
+foldDB2 decoder !init_acc = do
   res <- withDBEnvSt $ \s@DBEnvSt{..} -> (, s) `liftM` case dbStatement of
     Nothing -> return (Right init_acc, undefined, undefined)
     Just st -> (, st, dbValues) `liftM` liftIO (worker st init_acc)
@@ -71,7 +77,7 @@ foldDB decoder !init_acc = do
       case mrow of
         Nothing -> return $ Right acc
         Just row ->
-          case apply 0 row (decoder acc) of
+          case decoder acc row of
             Right acc' -> worker st acc'
             Left err@CannotConvertSqlValue{position = pos} -> do
               column <- liftIO $ getColumnNames st

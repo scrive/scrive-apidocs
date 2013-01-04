@@ -1,0 +1,26 @@
+.checkbox {
+  width: 12px;
+  height: 12px;
+  background: url(/img/checkboxes-blue.png) top left no-repeat;
+  margin: 10px 0 10px 0;
+  cursor: pointer;
+  &:hover  {
+      background-position: 0 -12px;
+  }
+  &:active, &.active, &.checked {
+      background-position: 0 -24px;
+  }
+}
+
+.checkbox-box {
+  height: 32px;
+  .checkbox,label {
+    float:left;
+  }
+  label {
+    margin-top: 8px;
+    margin-left: 10px;
+    margin-bottom: 8px;
+    line-height: 16px;
+  }
+}

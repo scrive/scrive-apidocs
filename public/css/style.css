@@ -86,8 +86,7 @@ input[type=submit].hidden
 
 .docname
 {
-    font-weight: bold;
-    font-size: 16px;
+    font-size: 14.5px;
     margin-right: 2px;
     width: 450px;
 }
@@ -96,6 +95,10 @@ input[type=submit].hidden
     width: 14px;
     height: 14px;
     display: inline-block;
+}
+
+.docname .icon.ok {
+    margin-top: 4px;
 }
 
 .docname .icon.edit {
@@ -113,14 +116,13 @@ input[type=submit].hidden
     margin:0;
     outline:0 none;
     padding:0;
-    font-size:16px;
-    font-weight:bold;
+    font-size:14.5px;
     width: 450px;
+    margin-top:-3px;
 }
 
 .visible-docname {
-    font-size:16px;
-    font-weight:bold;
+    font-size:14.5px;
     max-width: 450px;
     overflow : hidden;
     white-space:nowrap;
@@ -182,7 +184,7 @@ input[type=submit].hidden
 .border {
    background-color: #ecedf3;
    width: 1px;
-   height: 157px;
+   height: 192px;
    display:inline-block;
    float:left;
 }
@@ -276,6 +278,10 @@ width: 690px;
 
 .usagestats h2 {
     text-align: center;
+    font-family: Source Sans Pro,Helvetica Neue,sans-serif;
+    font-size: 1.5em;
+    line-height: 25px;
+    color: #333333;
 }
 
 .usagestats td.num {

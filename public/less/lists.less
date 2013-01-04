@@ -26,7 +26,7 @@
             width: 100%;
             table-layout: fixed;
             th {
-                  height: 30px;
+                  height: 40px;
                   padding-bottom: 4px;
                   padding-left: 15px;
                   text-align: left;
@@ -42,10 +42,12 @@
                         color: @blue-dark !important;
                      }
                   }
+                
               }
            td {
                   color: #666;
-                  height: 22px;
+                  height: 28px;
+                  line-height: 22px;
                   font-size: 13px;
                   margin-bottom: 1px;
                   padding-left: 15px;
@@ -97,8 +99,8 @@
 
   .col {
         margin: 0 20px;
-        padding-top: 20px;
-        padding-bottom: 6px;
+        padding-top: 28px;
+        padding-bottom: 14px;
         max-width: 800px;
         &.float-right {
             margin: 0 20px 0 0;
@@ -117,21 +119,24 @@
 
   input.list-search {
         background: none repeat scroll 0 0 #FFFFFF;
-        border: 1px solid #DEE4ED;
+        border: 1px solid #DDDDDD;
         box-shadow: none;
-        font-family :  @source;
-        font-size: 16px;
+        font-family :  @sans;
+        font-size: 14.5px;
         padding: 5px;
         height: 20px;
         width: 160px;
         margin-right: 8px;
         line-height: 20px;
+        &:focus, &:hover {
+          border-color: #7A94B8;
+        }
   }
 
   .subbox {
-    padding-top: 5px;
+    padding-top: 10x;
     height : 40px;
-    padding-bottom: 10px;
+    padding-bottom: 20px;
     display : block;
     padding-right: 10px;
     padding-left: 20px;
@@ -153,17 +158,8 @@
       }
   }
 
-
-
-  .listcheckbox{
-      background: url("../img/checkbox_unchecked.png") no-repeat scroll 0 0 transparent;
-      display: block;
-      height: 16px;
-      width: 16px;
-      cursor: pointer;
-      &.checked{
-        background: url("../img/checkbox_checked.png") no-repeat scroll 0 0 transparent;
-      }
+  th .checkbox {
+    margin-top: 20px;
+    margin-bottom: 6px;
   }
-
 }

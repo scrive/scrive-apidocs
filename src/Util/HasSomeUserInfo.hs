@@ -10,14 +10,10 @@
 -----------------------------------------------------------------------------
 module Util.HasSomeUserInfo (
   emailFromSigLink,
-  getEmail,
   getMailAddress,
-  getFirstName,
   getFullName,
-  getLastName,
-  getPersonalNumber,
   getSmartName,
-  HasSomeUserInfo
+  HasSomeUserInfo(..)
   ) where
 
 

@@ -5,8 +5,13 @@
 ####
 javascriptLocalisation =
     var localization =
-        {
-               loadingFile : "$_loadingFile()$"
+        {      welcomeback : "$_welcomeback()$"
+             , rememberme  : "$_rememberme()$"
+             , resetYourPassword : "$_resetYourPassword()$"
+             , resetYourPasswordCheckEmail : "$_resetYourPasswordCheckEmail()$"
+             , getStartedInstantly : "$_getStartedInstantly()$"
+             , signup : "$_signUp()$"
+             , loadingFile : "$_loadingFile()$"
              , problemWithPDF : "$_problemWithPDF()$"
              , backToArchive : "$_backToArchive()$"
              , repetedEmailAddress : "$_repetedEmailAddress()$"
@@ -86,6 +91,7 @@ javascriptLocalisation =
              , you : "$_you()$"
              , searchBoxButtonText : "$_searchBoxButtonText()$"
              , writeHere : "$_writeHere()$"
+             , checkHere : "$_checkHere()$"
              , downloadPDF : "$_DownloadPDF()$"
              , reviewPDF: "$_ReviewPDF()$"
              , deletePDF: "$_DeletePDF()$"
@@ -470,41 +476,10 @@ javascriptLocalisation =
            , emailAdress: "$_EmailAdress()$"
            , modalAccountSetupFooter: "$_modalAccountSetupFooter()$"
            , startNow : "$_startNow()$"
+           , mainHeader : "$_signupModalMainHeader()$"
          }
          , accountSetupModal: {
-             termsPageHeader: "$_termsPageHeader()$"
-           , termsPage0: '$_termsPage0()$'
-           , termsPage1Header: "$_termsPage1Header()$"
-           , termsPage1: "$_termsPage1()$"
-           , termsPage1a: "$_termsPage1a()$"
-           , termsPage1b: "$_termsPage1b()$"
-           , termsPage1c: "$_termsPage1c()$"
-           , termsPage1d: "$_termsPage1d()$"
-           , termsPage1e: "$_termsPage1e()$"
-           , termsPage2Header: "$_termsPage2Header()$"
-           , termsPage2: "$_termsPage2()$"
-           , termsPage2a: "$_termsPage2a()$"
-           , termsPage2b: "$_termsPage2b()$"
-           , termsPage2c: "$_termsPage2c()$"
-           , termsPage3Header: "$_termsPage3Header()$"
-           , termsPage3: "$_termsPage3()$"
-           , termsPage3a: "$_termsPage3a()$"
-           , termsPage3b: "$_termsPage3b()$"
-           , termsPage3c: "$_termsPage3c()$"
-           , termsPage3d: "$_termsPage3d()$"
-           , termsPage4Header: "$_termsPage4Header()$"
-           , termsPage4: "$_termsPage4()$"
-           , termsPage5Header: "$_termsPage5Header()$"
-           , termsPage5: "$_termsPage5()$"
-           , termsPage5a: "$_termsPage5a()$"
-           , termsPage6Header: "$_termsPage6Header()$"
-           , termsPage6: "$_termsPage6()$"
-           , termsPage7Header: "$_termsPage7Header()$"
-           , termsPage7a: "$_termsPage7a()$"
-           , termsPage7b: "$_termsPage7b()$"
-           , termsPage8Header: "$_termsPage8Header()$"
-           , termsPage8: "$_termsPage8()$"
-           , modalAccountSetupBodyAccept: "$_modalAccountSetupBodyAccept()$"
+             modalAccountSetupBodyAccept: "$_modalAccountSetupBodyAccept()$"
            , modalAccountSetupBodyTOS   : "$_modalAccountSetupBodyTOS()$"
            , modalAccountSetupChoosePassword: "$_modalAccountSetupChoosePassword()$"
            , modalAccountSetupRepeatPassword: "$_modalAccountSetupRepeatPassword()$"
@@ -512,8 +487,9 @@ javascriptLocalisation =
            , PleaseAcceptTOS: "$_PleaseAcceptTOS()$"
            , modalAccountSetupPhone: "$_modalAccountSetupPhone()$"
            , modalAccountSetupPosition : "$_modalAccountSetupPosition()$"
-           , modalAccountSetupOptional : "$_modalAccountSetupOptional()$"
-           , flashMessageUserAlreadyActivated: "$_flashMessageUserAlreadyActivated()$"
+           , modalAccountSetupCompany : "$_modalAccountSetupCompany()$"
+           , modalAccountOptionalPositions : "$_modalAccountOptionalPositions()$"
+           , modalAccountPasswordRequirements : "$_modalAccountPasswordRequirements()$"
          }
          , cancel : "$_cancel()$" 
          , authorview : {
@@ -564,7 +540,7 @@ javascriptLocalisation =
              , emailLabel: "$_email()$"
              , passwordLabel: "$_modalAccountSetupChoosePassword()$"
              , password2Label: "$_modalAccountSetupRepeatPassword()$"
-             , acceptTOSLabel: '$_accountFromSignInputsBodyAcceptTOS()$'
+             , acceptTOSLabel: "$_accountFromSignInputsBodyAcceptTOS()$"
              , newAccountButton: "$_signViewCreateAccountLabel()$"
              , createdAccountTitle: "$_signViewCreatedAccountTitle()$"
              , createdAccountSubtitle: "$_signViewCreatedAccountSubtitle()$"
@@ -617,6 +593,8 @@ javascriptLocalisation =
            , phonenumber : "$_paymentsPhonenumber()$"
            , readmore : "$_paymentsReadMore()$"
            , featuresurl : "$_paymentsFeaturesURL()$"
+           , subheader: "$_paymentsSubheader()$"
+           , contact: "$_paymentPlanContact()$"
            , plans: { professional : "$_paymentPlanProfessional()$"
                     , team         : {
                       name : "$_paymentPlanTeam()$",
@@ -646,7 +624,7 @@ javascriptLocalisation =
                                  , "$_paymentFeatureExampleCode()$"
                                  ],
                       price1 : "",
-                      price3 : "$_paymentPlanPerMonth()$ $_and()$",
+                      price3 : "$_paymentPlanPerMonthPerDoc()$",
                       price21 : "$_paymentPlanDocPrice()$<span class='aster'>*</span>",
                       price31 : "$_paymentPlanPerDocument()$",
                       select : "$_paymentsGetInTouch()$",
@@ -664,7 +642,7 @@ javascriptLocalisation =
                                  , "$_paymentFeatureProjMan()$"
                                  ],
                       price1 : "$_paymentsAskForA()$",
-                      price3 : "",
+                      price3 : "$_paymentsGetInTouch()$",
                       price21 : "",
                       price31 : "",
                       select : "$_paymentsGetInTouch()$",
@@ -697,6 +675,7 @@ javascriptLocalisation =
                         , features : "$_paymentFeatureFeatures()$"
                         }
             , subscribe: "$_paymentPlanSubscribe()$"
+            , purchase: "$_paymentPlanPurchase()$"
             , pleaseleavenumbertitle: "$_paymentsPleaseLeaveNumberTitle()$"
             , ok: "$_paymentsSubmitButtonLabel()$"
             , pleaseleavenumber: "$_paymentsPleaseLeaveNumber()$"

@@ -8,7 +8,7 @@ header.site {
   box-shadow : b10 0 0 8px;
   background : w97;
   background : #fff;
-
+  font-size: 16px;
   nav {
     position : relative;
     border-top : 1px solid @blue-border;
@@ -40,6 +40,13 @@ header.site {
             border-top-color : @blue-medium;
             color : @blue-medium;
           }
+         &.active {
+          border-top-color: #C2000A;
+          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+          color: #C2000A;
+          cursor: default;
+          font-weight: bold;
+          }
         }
         &.session-login {
           margin-right: 16px;
@@ -50,6 +57,8 @@ header.site {
             margin-left: 8px;
             margin-right : 0px;
             min-width : 40px;
+            padding-left:10px;
+            padding-right:10px;
             float : left;
             transform : translateZ(0);
           }

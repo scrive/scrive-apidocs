@@ -141,7 +141,7 @@ var ConfirmationView = Backbone.View.extend({
        container.css("top",$(window).scrollTop());
        container.css("margin-top",$(window).height() > 700 ? 200 : 100);
        container.css("left",$(window).scrollLeft());
-       container.css("margin-left",($(window).width() - model.width()) / 2);
+       container.css("margin-left",Math.floor(($(window).width() - model.width()) / 2));
        if (model.extraClass() != undefined)
             $(this.el).addClass(model.extraClass());
        container.width(model.width());
@@ -157,7 +157,7 @@ var ConfirmationView = Backbone.View.extend({
        body.append(content);
        var footer = $("<div class='modal-footer'/>");
        if (model.canCancel()) {
-        var cancel = $("<a class='cancel close float-left'/>");
+        var cancel = $("<label class='cancel clickable close float-left'/>");
         cancel.text(this.model.rejectText());
         footer.append(cancel);
        }
@@ -167,6 +167,7 @@ var ConfirmationView = Backbone.View.extend({
        this.acceptButton = model.acceptButton() != undefined ?  model.acceptButton().addClass("float-right") :
             Button.init({color:model.acceptColor(),
                                  size: "tiny",
+                                 shape: "rounded",
                                  cssClass: "float-right",
                                  text: this.model.acceptText(),
                                  onClick : function() {

@@ -117,8 +117,8 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
     var smallerbits = $("<div class='subheadline'/>");
     container.append(smallerbits);
     if (document.timeouttime() != undefined && document.signingInProcess())
-      smallerbits.append($("<div class='duedate'/>").text(this.dueDateDescription()));
-    smallerbits.append($("<a target='_blank' class='download' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(localization.downloadPDF));
+      smallerbits.append($("<label class='duedate'/>").text(this.dueDateDescription()));
+    smallerbits.append($("<a target='_blank' class='download clickable' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(localization.downloadPDF));
       mixpanel.track_links('.download', 'Download PDF');
 
     $(this.el).append(container);

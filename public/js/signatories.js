@@ -407,10 +407,10 @@ window.Signatory = Backbone.Model.extend({
         return field;
     },
     addNewCustomField: function() {
-       return this.addNewField("custom");
+       return this.addNewField("custom", true);
     },
     newCheckbox: function() {
-       var checkbox = this.newField("checkbox");
+       var checkbox = this.newField("checkbox", false);
        if(this.author())
            checkbox.makeOptional();
        else
@@ -429,8 +429,8 @@ window.Signatory = Backbone.Model.extend({
        checkbox.setName("checkbox-" + i);
        return checkbox;
     },
-    newField : function(t) {
-        return new Field({signatory: this, fresh: true, type : t});
+    newField : function(t,f) {
+        return new Field({signatory: this, fresh: (f != undefined ? f : true) , type : t});
     },
     addField : function(f) {
         var fields = this.fields();

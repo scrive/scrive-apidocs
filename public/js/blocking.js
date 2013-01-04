@@ -68,7 +68,7 @@
                     this.docsLeft() <= 0;
         },
         billingEnds: function() {
-            return moment.utc(this.get('billingEnds'));
+            return this.get('billingEnds') && moment.utc(this.get('billingEnds'));
         },
         daysLeft: function() {
             return Math.ceil(moment.duration(this.billingEnds() - moment()).asDays());
@@ -238,7 +238,7 @@
                 title: opts.title,
                 content: div,
                 acceptVisible: false,
-                width: 906
+                width: 1200
             });
             var o = {hideContacts:true};
             if(opts.header)

@@ -4,16 +4,20 @@ require "selenium-webdriver"
 
 class DocHelper
 
-  def initialize(ctx, driver, wait)
+  def initialize(ctx, driver, wait, helper)
     @ctx = ctx
     @driver = driver
     @wait = wait
+    @helper = helper
   end
 
+  def click(css)
+    @helper.click(css)
+  end
 
   def uploadContract
     puts "Creating document"
-    (@wait.until { @driver.find_element :css => ".s-create-document" }).click
+    (@wait.until { @driver.find_element :css => ".js-create-document" }).click
     (@wait.until { @driver.find_element :css => ".document-pages input.multiFileInput" }).send_keys @ctx.props.contract_pdf_path
     puts "waiting for pages"
     @wait.until { @driver.find_element :css => "#page1" }
@@ -52,7 +56,7 @@ class DocHelper
   end
 
   def addPart
-    (@wait.until { @driver.find_element :css => "a.addSignatory" }).click
+    (@wait.until { @driver.find_element :css => ".addSignatory" }).click
   end
 
   def gotToStep3
@@ -66,19 +70,20 @@ class DocHelper
   end
 
   def loadAuthorAttachment(no, filepath)
-    (@wait.until { @driver.find_element :css => "div.authorattachmentssetup span.countspan" }).click
+    (@wait.until { @driver.find_element :css => ".authorattachmentssetuptext span.countspan" }).click
     (@wait.until { @driver.find_element :css => "div.selectAuthorAttachmentPopupContent input.multiFileInput" }).send_keys filepath
-    (@wait.until { @driver.find_element :css => "div.modal-footer a.float-right" }).click
-    @wait.until { @driver.find_element :xpath => "//div[contains(@class,'authorattachmentssetup')]//span[text()='("+no.to_s()+")']" }
+    click "div.modal-footer a.float-right"
+    @wait.until { @driver.execute_script("return $('span.authorattachmentssetuptext span').first().text()") == "("+no.to_s()+")" }
   end
 
   def requestSigAttachment(attname, attdesc, counterparts)
-    (@wait.until { @driver.find_element :css => "div.signatoryattachmentssetup span.countspan" }).click
+    (@wait.until { @driver.find_element :css => ".signatoryattachmentssetuptext span.countspan" }).click
     counterparts.each do |counterpart|
-      (@wait.until { @driver.find_elements :css => "div.designSignatoryAttachmentsPopupContent div.label" }).last.click
+      click "div.designSignatoryAttachmentsPopupContent div.label"
       (@wait.until { @driver.find_elements :css => "input.editSignatoryAttachmentName" }).last.send_keys attname
       (@wait.until { @driver.find_elements :css => "textarea.editSignatoryAttachmentDescription" }).last.send_keys attdesc
       (@wait.until { @driver.find_elements :xpath => "//option[text()='" + counterpart + "']" }).last.click
+      sleep 2
     end
     acceptStandardModal
   end
@@ -108,7 +113,7 @@ class DocHelper
   def partSign
     partSignStart
     puts "sign the document"
-    (@wait.until { @driver.find_element :css => "div.modal-footer a.float-right" }).click
+    click "div.modal-footer a.float-right"
   end
 
 
@@ -118,12 +123,16 @@ class DocHelper
     puts "Final approval modal"
     acceptStandardModal
     puts "Closing confirmation modal"
-    (@wait.until { @driver.find_element :css => "div.s-sign-confirmation" }).click
+    (@wait.until { @driver.find_element :css => "div.modal-footer a.button-small" }).click
   end
 
- def acceptStandardModal
+  def acceptStandardModal
     puts "acceptStandardModal"
-    (@wait.until { @driver.find_element :css => ".modal-footer .btn-small.float-right" }).click
- end
+    (@wait.until { @driver.find_element :css => ".modal-footer .button-small.float-right" }).click
+
+    # needed, because the modal exists for about 0.5s after closing (done in css at first)
+    # and anouther code can look for an ok button in another modal and find button from this one instead
+    sleep 1
+  end
 
 end

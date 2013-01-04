@@ -267,7 +267,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                        {Label : placement.field().name()});
                     },
                     tipSide : placement.tip(),
-                    label:localization.writeHere
+                    label: placement.field().isCheckbox() ? localization.checkHere : localization.writeHere
                 });
                 placement.field().bind("change", function() { task.update();});
                 placement.field().bind("reset", function() {task.update();});
@@ -300,13 +300,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
                     },
                     el: $(self.extradetailssection().el),
                     onActivate   : function() {
-                        mixpanel.track('Begin editing extra field',
-                                       {Label : field.name()});
                         $(self.extradetailssection().el).addClass("highlight");
                     },
                     onDeactivate : function() {
-                        mixpanel.track('Finish editing extra field',
-                                       {Label : field.name()});
                         $(self.extradetailssection().el).removeClass("highlight");
                     }
                 });

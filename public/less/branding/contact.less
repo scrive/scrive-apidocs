@@ -1,0 +1,77 @@
+aside.contact nav.contact {
+  position : fixed;
+  top : 50%;
+  left : 0;
+  margin-top : -90px;
+  height : 180px;
+  width : 60px;
+  margin-left : 4px;
+  z-index : 97;
+  ul {
+    li {
+      &:last-child a .hover { height: 36px;}
+      width : 60px;
+      height : 60px;
+      position : relative;
+      a {
+        width : 64px;
+        border-left : 4px solid transparent;
+        margin-left : -4px;
+        margin-top : -1px;
+        display : block;
+        transition : .15s ease-in-out all;
+
+        .icon {
+          border : 1px solid @blue-border;
+          text-align : center;
+          position : relative;
+          background : #fff;
+          width : 60px;
+          height : 60px;
+          z-index : 10;
+          img {
+            opacity : .66;
+            transition : .15s ease-in-out all;
+            margin : 14px;
+          }
+        }
+        .hover {
+          position : absolute;
+          z-index : 0;
+          top : 0;
+          left : -180px;
+          height : 34px;
+          width : 180px;
+          padding : 12px 16px;
+          opacity : 0;
+          background : #fff;
+          border : 1px solid @blue-border;
+          border-left : none;
+          p {
+            margin-bottom : 0;
+            font : 14px/1 @source;
+            font-weight: bold;
+            color : @blue-dark;
+            margin : 0;
+          }
+          small {
+            font : .75em/1 @sans;
+            color : @blue-medium;
+          }
+        }
+        &:hover {
+          border-color : @blue-medium;
+          .icon {
+            img {
+              opacity : 1;
+            }
+          }
+          .hover {
+            opacity : 1;
+            left :60px;
+          }
+        }
+    }
+  }
+  }
+}

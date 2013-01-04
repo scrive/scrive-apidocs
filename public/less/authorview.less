@@ -3,7 +3,7 @@
 .authorview {
 
   .subcontainer {
-      background-color: #E1E1E1;
+      background-color: #F0F0F0;
       background-image: url("../img/horizontal-shading-bar.png");
       background-repeat: no-repeat;
       box-shadow: 1px 1px 5px #505050 inset;
@@ -31,7 +31,6 @@
     background-color: white;
     padding-top: 40px;
     padding-bottom: 25px;
-    margin-top: 20px;
     border: solid #bababc 1px;
     text-align: center;
     font-weight: bold;
@@ -52,11 +51,13 @@
     .duedate {
         margin-right: 40px;
         display: inline;
+        font-weight: normal;
     }
 
     a.download {
-        background: url(../img/download-icon.png) no-repeat;
+        background: url(../img/senddoc.png) no-repeat;
         padding-left: 20px;
+        font-weight: normal;
         display: inline;
     }
     .buttonbox {
@@ -113,16 +114,14 @@
       }
 
       .name {
-          font-weight: bold;
           color: black;
-          font-size: 14px;
+          font-size: 16px;
           height: 19px;
       }
 
       .company {
-          font-weight: bold;
           color: black;
-          height: 15px;
+          height: 14.5px;
       }
 
       .face {
@@ -145,28 +144,29 @@
       .details {
           float:left;
           padding: 0px;
-          margin-top:-3px;
           margin-left: 12px;
+          margin-top: -2px;
       }
 
       .field {
-          height: 18px;
-          line-height: 16px;
+          height: 16px;
+          font-size: 14.5px;
+          line-height: 14.5px;
           width: 160px;
           text-overflow: ellipsis;
           white-space: nowrap;
           overflow:hidden;
           margin-bottom: 5px;
       }
-
+      .statustext {
+          font-size: 13px;
+      }
       .statusbox {
           border-top: 1px dashed;
           text-align: center;
-          font-weight: bold;
-          font-size: 14px;
+          font-size: 13px;
           vertical-align: middle;
-          line-height: 11px;
-          padding-top:1px;
+          line-height: 13px;
           margin-top: 10px;
       }
 
@@ -176,8 +176,9 @@
       }
 
       .statusbox .icon.status {
-          display: inline-block;
+          display: inline-block; 
           float: none;
+          margin-top: 1px;
       }
       .line {
           display: table;

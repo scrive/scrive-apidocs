@@ -71,7 +71,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
 
 
     if (!this.model.document().padDelivery()) {
-        var link = $("<a target='_blank' class='download' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(document.title() + ".pdf")
+        var link = $("<a target='_blank' class='download clickable' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(document.title() + ".pdf")
         smallerbit.append(link);
     }    
 

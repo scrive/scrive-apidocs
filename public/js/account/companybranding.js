@@ -60,16 +60,16 @@ window.CompanyBrandingColourView = Backbone.View.extend({
   prerender: function() {
     var model = this.model;
     var self = this;
-
-    var checkbox = $("<input type='checkbox' class='checkboxtoggle' />");
-    this.checkbox = checkbox;
-    this.checkbox.change(function() {
-        var checked = checkbox.is(":checked");
-        if(checked)
+    var checkboxbox = $("<div class='checkbox-box'/>");
+    this.checkbox = $("<div class='checkbox'/>");
+    this.checkbox.click(function() {
+        if (self.checkbox.attr("readonly") != undefined) return false;
+        if(!self.checkbox.hasClass("checked"))
             mixpanel.track('Check ' + model.label().toLowerCase());
         else
             mixpanel.track('Uncheck ' + model.label().toLowerCase());
-      model.setCustomised(checked);
+        self.checkbox.toggleClass("checked");
+        model.setCustomised(!model.customised());
     });
     var checkboxlabel = $("<label />").append(model.label());
 
@@ -88,8 +88,7 @@ window.CompanyBrandingColourView = Backbone.View.extend({
     this.customdiv.append(this.display);
 
     var container = $("<div/>");
-    container.append(this.checkbox);
-    container.append(checkboxlabel);
+    container.append(checkboxbox.append(this.checkbox).append(checkboxlabel));
     container.append($("<div />").append(this.customdiv));
 
 
@@ -100,10 +99,10 @@ window.CompanyBrandingColourView = Backbone.View.extend({
   },
   render: function() {
     if (this.model.customised()) {
-      this.checkbox.attr("checked", "true");
+      this.checkbox.addClass("checked");
       this.customdiv.show();
     } else {
-      this.checkbox.removeAttr("checked");
+      this.checkbox.removeClass("checked");
       this.customdiv.hide();
     }
 
@@ -224,23 +223,26 @@ window.CompanyBrandingLogoView = Backbone.View.extend({
     var model = this.model;
     var self = this;
 
-    var checkbox = $("<input type='checkbox' class='checkboxtoggle' />");
-    this.checkbox = checkbox;
-    this.checkbox.change(function() {
-        var checked = checkbox.is(":checked");
-        if(checked)
+    var checkboxbox = $("<div class='checkbox-box'/>");
+    this.checkbox = $("<div class='checkbox'/>");
+    this.checkbox.click(function() {
+        if (self.checkbox.attr("readonly") != undefined) return false;
+        if(!self.checkbox.hasClass("checked"))
             mixpanel.track('Check ' + model.label().toLowerCase());
         else
             mixpanel.track('Uncheck ' + model.label().toLowerCase());
-      model.setCustomised(checked);
-      model.set({logoChanged: true, logo: ''}, {silent: true});
-      self.render();
+        self.checkbox.toggleClass("checked");
+        model.setCustomised(!model.customised());
+        model.set({logoChanged: true, logo: ''}, {silent: true});
+        self.render();
     });
     var checkboxlabel = $("<label />").append(model.label());
 
     this.upload = UploadButton.init({
       width: 150,
       name: "logo",
+      color: "blue",
+      size: "tiny",
       text: localization.selectImageLabel,
       submitOnUpload: true,
       showLoadingDialog: false,
@@ -252,8 +254,7 @@ window.CompanyBrandingLogoView = Backbone.View.extend({
     this.customdiv.append($("<div class='logocustomise' />").append(this.upload));
 
     var container = $("<div/>");
-    container.append(this.checkbox);
-    container.append(checkboxlabel);
+    container.append(checkboxbox.append(this.checkbox).append(checkboxlabel));
     container.append($("<div />").append(this.customdiv));
 
     $(this.el).empty();
@@ -263,10 +264,10 @@ window.CompanyBrandingLogoView = Backbone.View.extend({
   },
   render: function() {
     if (this.model.customised()) {
-      this.checkbox.attr("checked", "true");
+      this.checkbox.addClass("checked");
       this.customdiv.show();
     } else {
-      this.checkbox.removeAttr("checked");
+      this.checkbox.removeClass("checked");
       this.customdiv.hide();
     }
 
@@ -325,7 +326,7 @@ window.CompanyModel = Backbone.Model.extend({
           companybranding: companybranding,
           companyuiattribute: 'barsbackground',
           customised: companyui.barsbackground().trim()!="",
-          defaultcolour: "#212121",
+          defaultcolour: "#FFFFFF",
           colour: companyui.barsbackground(),
           label: localization.customiseBackgroundColour,
           editable: companyui.editable()
@@ -335,7 +336,7 @@ window.CompanyModel = Backbone.Model.extend({
           companybranding: companybranding,
           companyuiattribute: 'barstextcolour',
           customised: companyui.barstextcolour().trim()!="",
-          defaultcolour: "#ffffff",
+          defaultcolour: "#333333",
           colour: companyui.barstextcolour(),
           label: localization.customiseTextColour,
           editable: companyui.editable()
@@ -490,7 +491,8 @@ window.CompanyBrandingView = Backbone.View.extend({
   createSaveButton: function() {
     var company = this.model;
     return Button.init({
-      color: "green",
+      color: "blue",
+      shape: "rounded",
       size: "small",
       text: localization.saveBranding,
       onClick: function() {
@@ -511,8 +513,7 @@ window.CompanyBrandingView = Backbone.View.extend({
       return this;
     }
 
-    this.title = $("<h2 />").append(localization.emailBranding);
-    var header = $("<div class='account-header' />").append(this.title);
+    var header = $("<div class='account-header' />").text(localization.emailBranding);
 
     var body = $("<div class='account-body' />");
     var table = $("<table />");
