@@ -36,6 +36,9 @@ header.site {
           border-top : 4px solid transparent;
           transition : .15s ease-in-out all;
           padding: 0 1em;
+          &.last-link {
+            padding: 0 0 0 1em;
+          }
           &:hover {
             border-top-color : @blue-medium;
             color : @blue-medium;
@@ -61,6 +64,9 @@ header.site {
             padding-right:10px;
             float : left;
             transform : translateZ(0);
+            #page-login{
+              margin-left: 0px;
+            }
           }
         }
         &.session-create {
