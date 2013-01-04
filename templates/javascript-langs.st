@@ -490,6 +490,7 @@ javascriptLocalisation =
            , modalAccountSetupCompany : "$_modalAccountSetupCompany()$"
            , modalAccountOptionalPositions : "$_modalAccountOptionalPositions()$"
            , modalAccountPasswordRequirements : "$_modalAccountPasswordRequirements()$"
+           , flashMessageUserAlreadyActivated : "$_flashMessageUserAlreadyActivated()$"
          }
          , cancel : "$_cancel()$" 
          , authorview : {
