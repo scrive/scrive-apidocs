@@ -2,9 +2,7 @@
 modalContractCreated=
 <script>
   jQuery(document).ready(function() {
-    var content = jQuery('<div/>').addClass('body');
     var p = jQuery('</p>');
-    content.append(p);
     var title;
 
     $if(signedAndCompleted)$
@@ -20,7 +18,7 @@ modalContractCreated=
 
     Confirmation.popup({title: title,
                         acceptButtonText: '$_close()$',
-                        content: content});
+                        content: p});
   });
 </script>
 ###
@@ -75,9 +73,7 @@ modalDoYouWantToBeCompanyAccount=
 <script>
   jQuery(document).ready(function() {
     var content = jQuery('<div/>').addClass('recovery-container');
-    var body = jQuery('<div/>').addClass('body');
-    content.append(body);
-    body.append(jQuery('<p/>').append('$_modalDoYouWantToBeCompanyAccountBody()$'));
+    content.append(jQuery('<p/>').append('$_modalDoYouWantToBeCompanyAccountBody()$'));
     Confirmation.popup({onAccept: function() {
                                     new Submit({method: 'POST', url: ''}).send();
                                   },
@@ -91,11 +87,9 @@ modalDoYouWantToChangeEmail=
 <script>
   jQuery(document).ready(function() {
     var content = jQuery('<div/>').addClass('recovery-container');
-    var body = jQuery('<div/>').addClass('body');
-    content.append(body);
-    body.append(jQuery('<p/>').append('$_modalDoYouWantToChangeEmailBody()$'));
+    content.append(jQuery('<p/>').append('$_modalDoYouWantToChangeEmailBody()$'));
     var password_input = jQuery('<input type="password" name="password" autocomplete="off"/>');
-    body.append(jQuery('<p/>').append(password_input));
+    content.append(jQuery('<p/>').append(password_input));
     Confirmation.popup({onAccept: function() {
                                     new Submit({method: 'POST',
                                                 url: '',
