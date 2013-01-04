@@ -91,11 +91,7 @@ flashmessages =
 
 $flashmessages:{ flash |
     $if(flash.isModal)$
-        <div class="modal active" style="height: 100%">
-          <div class="modal-container" style="top: 100px; margin: auto; width: 640px;position: relative;left:auto; ">
-            $flash.message:noescape()$
-          </div>
-        </div>
+          $flash.message:noescape()$
     $endif$
 }$
 ####

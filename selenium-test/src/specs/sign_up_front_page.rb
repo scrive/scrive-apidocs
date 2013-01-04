@@ -128,12 +128,8 @@ describe "sign up on front page and modify account settings" do
 
     @h.wait.until { @h.driver.find_element :css => "div.recovery-container" }
 
-    # HACK!!! selenium says these elems aren't visible (but they are, seems like a bug)
-    # should look like this:
-    # (@h.wait.until { @h.driver.find_element :name => "password" }).send_keys new_password
-    # (@h.wait.until { @h.driver.find_element :css => "a.s-submit-change-email" }).click
-    @h.driver.execute_script("$('input[name=password]').val('" + new_password + "');")
-    @h.driver.execute_script("$('a.s-submit-change-email').click();")
+    (@h.wait.until { @h.driver.find_element :name => "password" }).send_keys new_password
+    @h.dochelper.acceptStandardModal
 
     @h.loginhelper.logout
 

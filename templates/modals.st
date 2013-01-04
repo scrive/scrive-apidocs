@@ -156,45 +156,26 @@ modalDoYouWantToBeCompanyAccount=
   </div>
 </form>
 ####
-####
 modalDoYouWantToChangeEmail=
-<form action="" method="post">
-  <div class="modal-container">
-    <div class="modal-header">
-      <span class="modal-icon message"></span>
-      <span class="modal-title">
-            <h1>$_modalDoYouWantToChangeEmailHeader()$</h1>
-      </span>
-      <a class="modal-close close"> </a>
-    </div>
-    <div class="modal-body">
-      <div class="modal-content">
-            <div class="recovery-container">
-              <div class="body">
-                <p>$_modalDoYouWantToChangeEmailBody()$</p>
-                <p>
-                  <input type="password" name="password" autocomplete="off"/>
-                </p>
-              </div>
-            </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <div class="float-left">
-            <a class="close cancel">$_cancel()$</a>
-      </div>
-      <a href="#" class="btn-small blue float-right submit s-submit-change-email">
-            <div class="left"></div>
-            <div class="label">
-              <p>$_modalDoYouWantToChangeEmailAccept()$</p>
-            </div>
-            <div class="right"></div>
-      </a>
-    </div>
-  </div>
-</form>
+<script>
+  jQuery(document).ready(function() {
+    var content = jQuery('<div/>').addClass('recovery-container');
+    var body = jQuery('<div/>').addClass('body');
+    content.append(body);
+    body.append(jQuery('<p/>').append('$_modalDoYouWantToChangeEmailBody()$'));
+    var password_input = jQuery('<input type="password" name="password" autocomplete="off"/>');
+    body.append(jQuery('<p/>').append(password_input));
+    Confirmation.popup({onAccept: function() {
+                                    new Submit({method: 'POST',
+                                                url: '',
+                                                password: password_input.val()}).send();
+                                  },
+                        title: '$_modalDoYouWantToChangeEmailHeader()$',
+                        acceptButtonText: 'OK',
+                        content: content});
+  });
+</script>
 ####
-###
 signCanceledDataMismatchModal=
 <div class="modal-container">
   <div class="modal-header">
