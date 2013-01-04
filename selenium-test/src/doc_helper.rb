@@ -83,6 +83,7 @@ class DocHelper
       (@wait.until { @driver.find_elements :css => "input.editSignatoryAttachmentName" }).last.send_keys attname
       (@wait.until { @driver.find_elements :css => "textarea.editSignatoryAttachmentDescription" }).last.send_keys attdesc
       (@wait.until { @driver.find_elements :xpath => "//option[text()='" + counterpart + "']" }).last.click
+      sleep 2
     end
     acceptStandardModal
   end
