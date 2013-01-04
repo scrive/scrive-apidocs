@@ -17,7 +17,6 @@ module Doc.DocView (
   , mailDocumentRemind
   , mailInvitation
   , modalRejectedView
-  , modalRejectedViewJSON
   , modalSendConfirmationView
   , pageDocumentDesign
   , pageDocumentView
@@ -74,17 +73,6 @@ modalSendConfirmationView document authorWillSign = do
     F.value "signedByAuthor" $ hasSigned $ getAuthorSigLink document
     documentInfoFields document)
 
-modalRejectedViewJSON :: TemplatesMonad m => Document -> m JSValue
-modalRejectedViewJSON document = do
-  partylist <- renderListTemplate . map getSmartName $ partyList document
-  let fields = do
-            F.value "partyList" partylist
-            F.value "documenttitle" $ documenttitle document
-  title <- renderTemplate "_modalRejectedViewHeader" fields
-  content <- renderTemplate "_modalRejectedViewBody" fields
-  runJSONGenT $ do
-    J.value "content" content
-    J.value "title" title
 
 modalRejectedView :: TemplatesMonad m => Document -> m FlashMessage
 modalRejectedView document = do

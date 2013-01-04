@@ -128,8 +128,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                         text: document.process().localization().rejectbuttontext,
                                         onClick: function() {
                                             mixpanel.track('Click Reject');
-                                            var popup;
-                                            popup = ConfirmationWithEmail.popup({
+                                            ConfirmationWithEmail.popup({
                                             title: document.process().localization().signatorycancelmodaltitle,
                                             mail: document.currentSignatory().rejectMail(),
                                             acceptText: localization.reject.send,
@@ -140,21 +139,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                                 if (alreadyClicked(this))
                                                   return;
                                                 mixpanel.track('Accept reject');
-                                                var callback = function(resp) {
-                                                  popup.view.reject();
-                                                  setTimeout(function() {
-                                                    if (typeof resp === 'string') {
-                                                      resp = JSON.parse(resp);
-                                                    }
-                                                    if (resp.error === true) {
-                                                      window.location = resp.location;
-                                                    } else {
-                                                      Confirmation.popup({title: resp.message.title,
-                                                                          content: resp.message.content});
-                                                    }
-                                                  }, 1000);
-                                                };
-                                                document.currentSignatory().reject(customtext, callback).send();
+                                                document.currentSignatory().reject(customtext).send();
                                               }
                                             });
                                         }

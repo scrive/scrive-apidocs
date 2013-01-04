@@ -280,55 +280,31 @@ handleAfterSigning document@Document{documentid} signatorylinkid = do
 
 
 rejectDocumentIphoneCase :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
-rejectDocumentIphoneCase did sid _ = do
-  magichash <- guardJustM $ dbQuery $ GetDocumentSessionToken sid
-  customtext <- getCustomTextField "customtext"
-
-  edocs <- rejectDocumentWithChecks did sid magichash customtext
-
-  case edocs of
-    Left (DBActionNotAvailable message) -> do
-      addFlash (OperationFailed, message)
-      getHomeOrDesignViewLink
-    Left (DBDatabaseNotAvailable message) -> do
-      addFlash (OperationFailed, message)
-      getHomeOrDesignViewLink
-    Left _ -> internalError
-    Right document -> do
-      postDocumentRejectedChange document sid "web"
-      addFlashM $ modalRejectedView document
-      return $ LoopBack
+rejectDocumentIphoneCase did sid _ = rejectDocument did sid
 
 {- |
    Control rejecting the document
    URL: /s/{docid}/{signatorylinkid1}
  -}
-rejectDocument :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
+rejectDocument :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 rejectDocument documentid siglinkid = do
   magichash <- guardJustM $ dbQuery $ GetDocumentSessionToken siglinkid
   customtext <- getCustomTextField "customtext"
 
   edocs <- rejectDocumentWithChecks documentid siglinkid magichash customtext
 
-  link <- getHomeOrDesignViewLink
   case edocs of
     Left (DBActionNotAvailable message) -> do
       addFlash (OperationFailed, message)
-      runJSONGenT $ do
-        J.value "error" True
-        J.value "location" $ show link
+      getHomeOrDesignViewLink
     Left (DBDatabaseNotAvailable message) -> do
-        addFlash (OperationFailed, message)
-        runJSONGenT $ do
-          J.value "error" True
-          J.value "location" $ show link
+      addFlash (OperationFailed, message)
+      getHomeOrDesignViewLink
     Left _ -> internalError
     Right document -> do
       postDocumentRejectedChange document siglinkid "web"
-      message <- modalRejectedViewJSON document
-      runJSONGenT $ do
-        J.value "error" False
-        J.value "message" message
+      addFlashM $ modalRejectedView document
+      return $ LoopBack
 
 -- |
 -- Show the document to be signed.
