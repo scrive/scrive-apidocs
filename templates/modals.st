@@ -1,44 +1,28 @@
 ###
 modalContractCreated=
-  <div class="modal-header">
-    <span class="modal-icon message"></span>
+<script>
+  jQuery(document).ready(function() {
+    var content = jQuery('<div/>').addClass('body');
+    var p = jQuery('</p>');
+    content.append(p);
+    var title;
+
     $if(signedAndCompleted)$
-    <span class="modal-title">
-      $_modalContractCreatedHeaderIfSignedAndCompleted()$
-    </span>
+      p.append('$_modalContractCreatedBodyIfSignedAndCompleted()$');
+      title = '$_modalContractCreatedHeaderIfSignedAndCompleted()$';
     $elseif(signedByAuthor)$
-    <span class="modal-title">
-      $_modalContractCreatedHeaderIfSignedAndSent()$
-    </span>
+      p.append('$_modalContractCreatedBodyIfSignedAndSent()$');
+      title = '$_modalContractCreatedHeaderIfSignedAndSent()$';
     $else$
-    <span class="modal-title">
-      $_modalContractCreatedHeaderIfSent()$
-    </span>
+      p.append('$_modalContractCreatedBodyIfSent()$');
+      title = '$_modalContractCreatedHeaderIfSent()$';
     $endif$
-    <a class="modal-close close" onclick="closeAllActiveModals()"> </a>
-  </div>
-  <div class="modal-body">
-    <div class="modal-content">
-      <div class="body">
-      $if(signedAndCompleted)$
-      <p>
-        $_modalContractCreatedBodyIfSignedAndCompleted()$
-      </p>
-      $elseif(signedByAuthor)$
-      <p>
-        $_modalContractCreatedBodyIfSignedAndSent()$
-      </p>
-      $else$
-      <p>
-        $_modalContractCreatedBodyIfSent()$
-      </p>
-      $endif$
-      </div>
-    </div>
-  </div>
-  <div class="modal-footer">
-      <a class="float-right green button button-small button-green" onclick="closeAllActiveModals()"><div class="label">$_close()$</div></a>
-  </div>
+
+    Confirmation.popup({title: title,
+                        acceptButtonText: '$_close()$',
+                        content: content});
+  });
+</script>
 ###
 modalOfferCreated=
 <div class="modal-container">
