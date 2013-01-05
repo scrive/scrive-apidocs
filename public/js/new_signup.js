@@ -43,7 +43,8 @@
         var self = this;
         var model = this.model;
         var header = $("<header class='shadowed signup'/>");
-        header.append($("<h1/>").text(localization.getStartedInstantly));
+        header.append($("<h1/>").append(localization.getStartedInstantly));
+        header.append($("<h2/>").append(localization.freeDocumentPerMonth));
         $(this.el).append(header);
         
         var content = $("<div class='short-input-container recovery-container'/>");

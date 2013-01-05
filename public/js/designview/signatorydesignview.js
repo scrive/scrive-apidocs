@@ -106,13 +106,13 @@ var SignatoryDesignView = Backbone.View.extend({
        var signatory = this.model.signatory();
        this.setRoleIcon = $("<a class='setRole' href='#'/>");
        this.setRoleIcon.click(function(){
-           if (view.showRoleSelector)
+           if (view.showRoleSelector) {
                view.showRoleSelector = false;
-           mixpanel.track('Close role selector',
+                mixpanel.track('Close role selector',
                           {'Signatory Index': signatory.signIndex(),
                            'Author?': signatory.author(),
                            Button: 'icon'});
-           else {
+           } else {
                view.showRoleSelector = true;
                mixpanel.track('Show role selector',
                               {'Signatory Index': signatory.signIndex(),

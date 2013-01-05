@@ -10,6 +10,7 @@ javascriptLocalisation =
              , resetYourPassword : "$_resetYourPassword()$"
              , resetYourPasswordCheckEmail : "$_resetYourPasswordCheckEmail()$"
              , getStartedInstantly : "$_getStartedInstantly()$"
+             , freeDocumentPerMonth : "$_freeDocumentPerMonth()$"
              , signup : "$_signUp()$"
              , loadingFile : "$_loadingFile()$"
              , problemWithPDF : "$_problemWithPDF()$"
