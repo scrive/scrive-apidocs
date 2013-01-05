@@ -1,32 +1,38 @@
 ###
 loginPage=
 <div class='mainContainer big'>
+<div class="inner">
 <img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery('.mainContainer').append(new Login({referer: "$referer$"}).el());
+    jQuery('.inner').append(new Login({referer: "$referer$"}).el());
   });
 </script> 
+</div>
 </div>
 ###
 changePasswordPage=
 <div class='mainContainer big'>
+<div class="inner">
 <img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery('.mainContainer').append(new NewPassword({linkchangepassword: "$linkchangepassword$"}).el());
+    jQuery('.inner').append(new NewPassword({linkchangepassword: "$linkchangepassword$"}).el());
   });
 </script>
+</div>
 </div>
 ###
 signupPage=
 <div class='mainContainer big'>
+<div class="inner">
 <img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery('.mainContainer').append(new Signup({email: "$email:noescape()$"}).el());
+    jQuery('.inner').append(new Signup({email: "$email:noescape()$"}).el());
   });
 </script>
+</div>
 </div>
 ###
 accountSetupPage=
@@ -77,11 +83,13 @@ accountSetupPage=
 ###
 pageAcceptTOS =
 <div class='mainContainer big'>
+<div class='inner'>
 <img width="1920" height="544" src="/img/bg-home.jpg" class="bg"/>
 <script type="text/javascript">
   jQuery(document).ready(function() {
-    jQuery('.mainContainer').append(new AcceptTOS({}).el());
+    jQuery('.inner').append(new AcceptTOS({}).el());
   });
 </script>
+</div>
 </div>
 ####
