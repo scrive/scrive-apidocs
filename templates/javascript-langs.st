@@ -599,6 +599,8 @@ javascriptLocalisation =
            , contact: "$_paymentPlanContact()$"
            , already: "$_paymentPlanAlreadySubscribed()$"
            , alreadyGo: "$_paymentPlanAlreadySubscribedGo()$"
+           , placeholder : "$_paymentPlanPlaceholder()$"
+           , sendmsg : "$_paymentPlanSendMessage()$"
            , plans: { professional : "$_paymentPlanProfessional()$"
                     , team         : {
                       name : "$_paymentPlanTeam()$",
