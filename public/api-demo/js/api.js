@@ -112,12 +112,16 @@ window.UpdateApiCall = ApiCall.extend({
         send : function() {
             var model = this;
             var form = $("<form method='post' style='display:none;' enctype='multipart/form-data'/>");
+            form.attr('action', Scrive.apiUrl()+"update/" + model.documentid());
+            
             $("body").append(form);
             form.append($("<input type='hidden' name='json'/>").val(model.json()));
-            var formData = new FormData(form[0]);
-            $.ajax(Scrive.apiUrl()+"update/" + model.documentid(), {
-                type: 'POST',
-                data: formData,
+            
+            //var formData = new FormData(form[0]);
+            //$.ajax(Scrive.apiUrl()+"update/" + model.documentid(), {
+                //type: 'POST',
+                //data: formData,
+            form.ajaxSubmit({
                 cache: false,
                 processData: false,
                 contentType: false,
@@ -151,12 +155,14 @@ window.ReadyApiCall = ApiCall.extend({
         send : function() {
             var model = this;
             var form = $("<form method='post' style='display:none;' enctype='multipart/form-data'/>");
+            form.attr('action', Scrive.apiUrl()+"ready/" + model.documentid());
             $("body").append(form);
             form.append($("<input type='hidden' name='json'/>").val('{ "timezone": "Europe/Stockholm" }'));
-            var formData = new FormData(form[0]);
-            $.ajax(Scrive.apiUrl()+"ready/" + model.documentid(), {
-                type: 'POST',
-                data: formData,
+//            var formData = new FormData(form[0]);
+//            $.ajax(Scrive.apiUrl()+"ready/" + model.documentid(), {
+//                type: 'POST',
+//                data: formData,
+            form.ajaxSubmit({
                 cache: false,
                 contentType: false,
                 processData: false,
