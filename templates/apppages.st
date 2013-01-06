@@ -62,6 +62,7 @@ standardHeaderContents=
         <![endif]-->
         <link href='/css/fonts/SourceSansPro.css' rel='stylesheet' type='text/css'/>
         <link href='/css/fonts/HelveticaNeue.css' rel='stylesheet' type='text/css'/>
+        <link rel=" icon" href="/favicon.ico?new" />
         <script src="/$ctxlang$/localization/$versioncode$.js"  type="text/javascript"></script>
         $staticResources:noescape()$
 
