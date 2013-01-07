@@ -35,11 +35,10 @@ set systemPage
  css css/calendar.css
  css css/signaturedrawer.css
  css css/archive.css
- css css/symbols.css
  css css/account.css
  css css/docsignview.css
- css css/main.css
  css css/createfromtemplate.css
+ less less/utils.less
  less less/branding/index.less
  less less/document-pages.less
  less less/payments.less

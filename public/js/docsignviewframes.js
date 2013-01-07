@@ -47,7 +47,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
         this.logowrapper = $("<div class='logowrapper' />");
         this.sender = $("<div class='sender' />");
         this.inner = $('<div class="inner" />');
-        this.content.append(this.logowrapper).append(this.sender.append(this.inner)).append("<div class='clearboth'/>");
+        this.content.append(this.logowrapper).append(this.sender.append(this.inner)).append("<div class='clearfix'/>");
         maindiv.append(this.content);
         this.usedStandardLogo = undefined;
         this.usedStandardColorsBars = undefined;
@@ -174,7 +174,7 @@ window.DocumentSignViewFooter = Backbone.View.extend({
         this.dogtooth = $("<div class='dogtooth' />");
         this.powerdiv = $("<div class='poweredbyscrive'/>");
         this.sender = $("<div class='sender' />");
-        this.content.append(this.sender).append(this.powerdiv).append("<div class='clearboth'/>");
+        this.content.append(this.sender).append(this.powerdiv).append("<div class='clearfix'/>");
         maindiv.append(this.dogtooth.append(this.content));
         this.usedStandardColorsBars = undefined;
         this.usedStandardColorsTexts = undefined;
