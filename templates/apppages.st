@@ -256,7 +256,7 @@ header=
         <a class="button button-small js-create-document"            onclick='createnewdocument(event)' href="/newdocument">$_headerSend()$ </a>
       </li>
       $else$
-      <li class="page-first float-left"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$features">$_headerFeatures()$</a></li>
+      <li class="page-first float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$features">$_headerFeatures()$</a></li>
       <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$legal">$_headerLegal()$</a></li>
       <li class="float-left"><a class="page price-plan-page-link" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$pricing">$_headerPricing()$</a></li>
       <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$cases">$_headerCases()$</a></li>
