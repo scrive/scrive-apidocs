@@ -338,8 +338,10 @@
             var action = $('<div class="action" />').append(button);
 
             features.toggle(function() {
+                $('.plan-container').removeClass('on-top');
                 button.addClass('button-gray');
                 div2.addClass("active");
+                div.addClass('on-top');
                 div2.find('input.initial-focus').focus();
             }, function() {
                 button.removeClass('button-gray');
@@ -451,7 +453,9 @@
 
             features.append(action);
             features.toggle(function() {
+                $('.plan-container').removeClass('on-top');
                 button.addClass('button-gray');
+                div.addClass('on-top');
                 div2.addClass("active");
                 div2.find('input.initial-focus').focus();
             }, function() {
