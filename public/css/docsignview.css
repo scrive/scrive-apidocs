@@ -61,16 +61,6 @@
   vertical-align: middle;
 }
 
-.signview .pageheader .poweredbyscrive {
-  height: 114px;
-  width: 114px;
-  background: url(../img/powered-by-scrive-corner.png);
-  background-repeat: no-repeat;
-  position: absolute;
-  top: 0px;
-  right: 0px;
-}
-
 .signview .pageheader.withstandardlogo .poweredbyscrive {
   display: none;
 }
