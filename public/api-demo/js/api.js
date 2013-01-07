@@ -112,15 +112,17 @@ window.UpdateApiCall = ApiCall.extend({
         send : function() {
             var model = this;
             var form = $("<form method='post' style='display:none;' enctype='multipart/form-data'/>");
+            form.attr('action', Scrive.apiUrl()+"update/" + model.documentid());
+            
             $("body").append(form);
             form.append($("<input type='hidden' name='json'/>").val(model.json()));
-            var formData = new FormData(form[0]);
+            
+            //var formData = new FormData(form[0]);
             $.ajax(Scrive.apiUrl()+"update/" + model.documentid(), {
                 type: 'POST',
-                data: formData,
+                data:{json:model.json()},
+                //data: formData,
                 cache: false,
-                processData: false,
-                contentType: false,
                 headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
@@ -151,15 +153,14 @@ window.ReadyApiCall = ApiCall.extend({
         send : function() {
             var model = this;
             var form = $("<form method='post' style='display:none;' enctype='multipart/form-data'/>");
+            form.attr('action', Scrive.apiUrl()+"ready/" + model.documentid());
             $("body").append(form);
             form.append($("<input type='hidden' name='json'/>").val('{ "timezone": "Europe/Stockholm" }'));
-            var formData = new FormData(form[0]);
+//            var formData = new FormData(form[0]);
             $.ajax(Scrive.apiUrl()+"ready/" + model.documentid(), {
                 type: 'POST',
-                data: formData,
+                data : {json : '{ "timezone": "Europe/Stockholm" }'},
                 cache: false,
-                contentType: false,
-                processData: false,
                 headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));

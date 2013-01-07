@@ -1163,6 +1163,8 @@ function displayServerErrors($form, errors) {
       var $e = $('<div class="error">');
       $e.text(errors[i]);
       $serverErrors.append($e);
+
+        new FlashMessage({content: errors[i], color: 'red'});
     }
   }
 }
