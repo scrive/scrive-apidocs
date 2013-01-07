@@ -118,13 +118,11 @@ window.UpdateApiCall = ApiCall.extend({
             form.append($("<input type='hidden' name='json'/>").val(model.json()));
             
             //var formData = new FormData(form[0]);
-            //$.ajax(Scrive.apiUrl()+"update/" + model.documentid(), {
-                //type: 'POST',
+            $.ajax(Scrive.apiUrl()+"update/" + model.documentid(), {
+                type: 'POST',
+                data:{json:model.json()},
                 //data: formData,
-            form.ajaxSubmit({
                 cache: false,
-                processData: false,
-                contentType: false,
                 headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
@@ -159,13 +157,10 @@ window.ReadyApiCall = ApiCall.extend({
             $("body").append(form);
             form.append($("<input type='hidden' name='json'/>").val('{ "timezone": "Europe/Stockholm" }'));
 //            var formData = new FormData(form[0]);
-//            $.ajax(Scrive.apiUrl()+"ready/" + model.documentid(), {
-//                type: 'POST',
-//                data: formData,
-            form.ajaxSubmit({
+            $.ajax(Scrive.apiUrl()+"ready/" + model.documentid(), {
+                type: 'POST',
+                data : {json : '{ "timezone": "Europe/Stockholm" }'},
                 cache: false,
-                contentType: false,
-                processData: false,
                 headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
