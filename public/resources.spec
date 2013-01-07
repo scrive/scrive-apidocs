@@ -34,8 +34,6 @@ set systemPage
  css css/style.css
  css css/calendar.css
  css css/signaturedrawer.css
- css css/archive.css
- css css/account.css
  css css/docsignview.css
  css css/createfromtemplate.css
  less less/utils.less
@@ -52,6 +50,9 @@ set systemPage
  less less/util-pages.less
  less less/lists.less
  less less/tabs.less
+ less less/archive.less
+ less less/account.less
+ less less/paddeviceview.less
  js   libs/jquery.min.js
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js
