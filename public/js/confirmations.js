@@ -17,7 +17,6 @@ $(function(){
 /* InfoTextInput model. Has value, infotext and information if its focused  */
 var ConfirmationModel = Backbone.Model.extend({
   defaults : {
-      submit : new Submit(),
       title  : "",
       acceptText: "Ok",
       rejectText: localization.cancel,
