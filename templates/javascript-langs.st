@@ -10,6 +10,7 @@ javascriptLocalisation =
              , resetYourPassword : "$_resetYourPassword()$"
              , resetYourPasswordCheckEmail : "$_resetYourPasswordCheckEmail()$"
              , getStartedInstantly : "$_getStartedInstantly()$"
+             , freeDocumentPerMonth : "$_freeDocumentPerMonth()$"
              , signup : "$_signUp()$"
              , loadingFile : "$_loadingFile()$"
              , problemWithPDF : "$_problemWithPDF()$"
@@ -490,6 +491,7 @@ javascriptLocalisation =
            , modalAccountSetupCompany : "$_modalAccountSetupCompany()$"
            , modalAccountOptionalPositions : "$_modalAccountOptionalPositions()$"
            , modalAccountPasswordRequirements : "$_modalAccountPasswordRequirements()$"
+           , flashMessageUserAlreadyActivated : "$_flashMessageUserAlreadyActivated()$"
          }
          , cancel : "$_cancel()$" 
          , authorview : {
@@ -595,6 +597,10 @@ javascriptLocalisation =
            , featuresurl : "$_paymentsFeaturesURL()$"
            , subheader: "$_paymentsSubheader()$"
            , contact: "$_paymentPlanContact()$"
+           , already: "$_paymentPlanAlreadySubscribed()$"
+           , alreadyGo: "$_paymentPlanAlreadySubscribedGo()$"
+           , placeholder : "$_paymentPlanPlaceholder()$"
+           , sendmsg : "$_paymentPlanSendMessage()$"
            , plans: { professional : "$_paymentPlanProfessional()$"
                     , team         : {
                       name : "$_paymentPlanTeam()$",

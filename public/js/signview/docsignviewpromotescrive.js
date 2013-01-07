@@ -136,7 +136,7 @@ window.PromoteScriveView = Backbone.View.extend({
     panel.append($("<div class='clearfix' />"));
     container.append(panel);
     var videobox = $('<div class="sbox"><div class="video">' 
-                    +  '<iframe src="https://player.vimeo.com/video/41846881" width="620" height="330" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>'
+                    +  '<iframe src="https://player.vimeo.com/video/56501734" width="620" height="330" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>'
                     +'</div></div>');
     container.append(videobox);
     $(this.el).append(container);

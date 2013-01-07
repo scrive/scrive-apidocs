@@ -119,15 +119,16 @@ section.pricing-cases header {
   top: 0;
   left: 0;
   background: #fff;
-  -webkit-transition: 0.5s ease-in-out all;
-  -moz-transition: 0.5s ease-in-out all;
+  -webkit-transition: 0.5s ease-in-out left, 0.5s ease-in-out width, 10s linear 0.5s z-index;
+  -moz-transition: 0.5s ease-in-out left, 0.5s ease-in-out width, 10s linear z-index;
 
-  -ms-transition: 0.5s ease-in-out all;
-  transition: 0.5s ease-in-out all;
+  -ms-transition: 0.5s ease-in-out left, 0.5s ease-in-out width, 10s linear 0.5s z-index;
+  transition: 0.5s ease-in-out left, 0.5s ease-in-out width, 10s linear z-index;
   overflow: hidden;
 }
 .plan-container > .plan:hover {
   border-color: @blue-dark;
+  z-index: 100;
 }
 .plan-container > .plan.active {
   width: 912px;
@@ -135,7 +136,7 @@ section.pricing-cases header {
   border-color: @blue-dark;
 }
 .plan-container > .plan form {
-    display: none;
+    
 }
 .plan-container > .plan.active form {
   display: block;
@@ -181,6 +182,7 @@ section.pricing-cases header {
 .plan-container > .plan .features div.action {
   padding: 2em 3em;
   border: none;
+  margin-top: 18px;
 }
 .plan-container > .plan .features div.action a {
   width: 108px;
@@ -205,6 +207,16 @@ section.pricing-cases header {
   width: 591px;
   padding: 1em 1em 0;
   margin: 1em 0;
+  min-height: 395.5px;
+
+  h3, h4 {
+      width: 460px;
+      margin: auto;
+  }
+
+  h4 {
+      margin-top: 32px;
+  }
 }
 .plan-container form ul.fields {
   padding: 0 1em;
@@ -271,6 +283,36 @@ section.pricing-cases header {
     }
 
 
+    div.plan-container form div.field textarea::-webkit-input-placeholder {
+        color: @text-light;
+    }
+
+    div.plan-container form div.field input::-webkit-input-placeholder {
+        color: @text-light;
+    }
+
+    div.plan-container form div.field textarea:-moz-placeholder {
+        color: @text-light;
+    }
+    div.plan-container form div.field textarea::-moz-placeholder {
+        color: @text-light;
+    } 
+
+    div.plan-container form div.field input:-moz-placeholder {
+        color: @text-light;
+    }
+    div.plan-container form div.field input::-moz-placeholder {
+        color: @text-light;
+    } 
+
+    div.plan-container form div.field textarea:-ms-input-placeholder {
+        color: @text-light;
+    }
+    div.plan-container form div.field input:-ms-input-placeholder {
+        color: @text-light;
+    }
+
+
 
 .plan-container form ul.fields li.field .input textarea {
   height: 159px;
@@ -326,15 +368,18 @@ section.pricing-cases header {
     width: 591px;
     padding: 0 16px 0 16px;
     height: 405px;
+    font-size: 18px;
 
     /* If there is no contact information (normal case) */
     /* We need more spacing */
     &.nocontact {
         padding: 32px 16px 0 16px;
         .billing_info {
-            margin: 0 auto 32px auto;
+            margin: 54px auto 32px auto;
         }
-        
+        .field {
+            padding: 6px 0px;
+        }
     }
 
     div.server_errors {
@@ -343,6 +388,7 @@ section.pricing-cases header {
         margin: 16px auto 12px auto;
         color: @red;
         line-height: 18px;
+        display: none;
     }
 
     div.title {
@@ -406,15 +452,15 @@ section.pricing-cases header {
         margin: 8px auto;
         .title {
             display: inline-block;
-            width: 120px;
+            width: 160px;
         }
         .cost {
-            font-size: 24px;
-            width: 200px;
+            width: 160px;
             padding: 0 0 0 0;
             text-align:right;
             display: inline-block;
             color: @red;
+            font-weight: bold;
         }
     }
 
@@ -438,6 +484,7 @@ section.pricing-cases header {
         display: table;
 
         width: 320px;
+        height: 32px;
         input:focus, input:hover {
             border-color: @blue-medium;
             outline: none;
@@ -494,7 +541,7 @@ section.pricing-cases header {
         width: 320px;
         margin: auto;
         .green.button {
-            margin: 8px 0 0 0;
+            margin: 16px 0 0 0;
             width: 276px;
         }
     }

@@ -1,11 +1,11 @@
 ######
 nicemail=
 <BR/>
-<div style="font-family:'Lucida Grande', sans-serif;margin-top:0px;padding:0px;">
+<div style="font-family:'Source Sans Pro', 'Helvetica Neue', Arial, Helvetica, sans-serif;margin-top:0px;padding:0px;">
 
 <table width="100%" cellpadding="0" cellspacing="0" style="margin: auto;"><tr><td>
     <!--
-    <table id="top-message" cellpadding="0" cellspacing="0" width="600" align="center" style="font-family:sans-serif;font-weight:bold;color:#aaaaaa;font-size:10px;">
+    <table id="top-message" cellpadding="0" cellspacing="0" width="600" align="center" style="font-family:'Helvetica Neue', Arial, Helvetica, sans-serif;font-weight:bold;color:#aaaaaa;font-size:10px;">
         <tr>
             <td align="center" height="30">
                 $if(mailtop)$ $mailtom$ $endif$ <p>Kan du inte läsa detta brev? <a href="#">Öppna det i din webbläsare här.</a></p>
@@ -27,7 +27,7 @@ nicemail=
                     <td>
                         <table id="banner" width="590" cellpadding="0" bgcolor="$nicemailbgcolour()$">
                             <tr>
-                                <td width="580" align="center" cellpadding="0" style="text-align:center;"><span style="font-weight:100;font-size:24px;margin:0px;letter-spacing:0.04em;color:$nicemailfgcolour()$;font-family:'Copse', serif;padding:10px">
+                                <td width="580" align="center" cellpadding="0" style="text-align:center;"><span style="font-weight:100;font-size:24px;margin:0px;letter-spacing:0.04em;color:$nicemailfgcolour()$;font-family:'Source Sans Pro', 'Helvetica Neue', Arial, Helvetica, sans-serif;padding:10px">
                                     $if(mailheader)$ $mailheader$ $endif$
                                     </span>
                                 </td>
@@ -37,7 +37,7 @@ nicemail=
                             </tr>
                             <tr>
 
-                                <td width="580" align="center" style="text-align:center;"><span style="display:block;font-weight:100;font-family:'Lucida Grande',sans-serif;font-size:11px;margin:0px;margin-bottom:20px;color:$nicemailfgcolour()$;">
+                                <td width="580" align="center" style="text-align:center;"><span style="display:block;font-weight:100;font-family:'Source Sans Pro', 'Helvetica Neue', Arial, Helvetica, sans-serif;font-size:11px;margin:0px;margin-bottom:20px;color:$nicemailfgcolour()$;">
                                        $if(!service)$ $_mailsubheader()$ $endif$
                                     </span>
                                 </td>
@@ -50,7 +50,7 @@ nicemail=
         </tr><!-- header -->
         <tr>
             <td>
-                <table id="content" width="590" cellspacing="0" align="center" style="margin: auto;color:#212121;font-family:'Lucida Grande', sans-serif;font-size:12px;">
+                <table id="content" width="590" cellspacing="0" align="center" style="margin: auto;color:#212121;font-family:'Helvetica Neue', Arial, Helvetica, sans-serif;font-size:12px;">
                     <tr>
                         <td style="padding-left:25px; padding-right: 25px; padding-top: 5px; padding-bottom: 5px; margin: auto;"><img src="$ctxhostpart$/img/email-line.jpg" alt="" width="540" height="10" /></td>
                     </tr>

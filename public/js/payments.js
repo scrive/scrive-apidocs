@@ -383,13 +383,13 @@
             message.append($('<label for="input-message" />').text(localization.email));
             message.append($('<div class="input" />')
                            .append($('<textarea type="text" id="input-message" name="message" />')
-                                   .attr('placeholder', "Please describe your problem here in a few sentences. We'll get back to you right away.")));
+                                   .attr('placeholder', localization.payments.placeholder)));
             ul.append(message);
 
             var submit = $('<li class="field submit" />');
             submit.append($('<div class="input" />')
                           .append($('<input type="submit" id="input-submit" class="button button-blue" />')
-                                  .val("Send message ›")));
+                                  .val(localization.payments.sendmsg)));
             ul.append(submit);
 
             form.append(ul);
@@ -673,8 +673,20 @@
             var view = this;
             var model = view.model;
 
-            if(model.type() === 'plannone' || model.type() === 'planrecurly')
+            if(model.type() === 'plannone' || model.type() === 'planrecurly') {
+                var f = $('<form />');
+
+                f.append($('<h3 />')
+                         .html(localization.payments.already));
+                f.append($('<h4 />')
+                         .html(localization.payments.alreadyGo)
+                         .click(function() {
+                             location = '/account#subscription';
+                         }));
+
+                view.element.append(f);
                 return false;
+            }
 
             if(model.done() && model.accountCreated()) {
                 view.$el.children().detach();
@@ -755,14 +767,7 @@
                             title: header,
                             content: $('<p />').text(text),
                             onAccept: function() {
-                                if(model.type() === 'user') {
-                                    Login({});
-                                } else if(model.createdUser()) {
-                                    popup.view.clear();
-                                    Login({});
-                                } else {
-                                    Login({});
-                                }
+                                window.location = '/login';
                             }
                         });
                     });

@@ -47,7 +47,8 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var document = this.model;
     var guardModel = this.guardModel;
     return Button.init({
-      size: "tiny",
+      size: "small",
+      shape : "rounded",
       color: "blue",
       text: document.process().localization().signbuttontext,
       onClick: function() {
@@ -56,7 +57,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
           mixpanel.track('Accept Sign');
         document.sign().send();
       }
-    }).input();
+    }).input().css('margin-top', '-10px');
   },
   createPreambleElems: function() {
     var document = this.model;
@@ -122,8 +123,9 @@ window.DocumentSignSignSection = Backbone.View.extend({
        var document = this.model.document();
        var box = $(this.el).addClass('section').addClass('spacing').addClass('signbuttons');
        this.rejectButton = Button.init({
-                                        size: "big",
+                                        size: "small",
                                         color: "red",
+                                        shape : "rounded",
                                         width: 260,
                                         text: document.process().localization().rejectbuttontext,
                                         onClick: function() {
@@ -145,11 +147,12 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                         }
                                 });
        this.signButton = Button.init({
-                            size: "big",
+                            size: "small",
+                            shape : "rounded",
                             color: "blue",
                             width: 260,
                             text: document.process().localization().signbuttontext,
-                            icon: $("<span class='icon cross'></span>"),
+                            icon: $("<span class='icon cross' style='position: absolute; top: auto;margin-top: -1px;'></span>"),
                             onClick: function() {
 
                                 var valid =  model.tasks().notCompleatedTasks().length == 1 && model.tasks().notCompleatedTasks()[0] == model.signtask();

@@ -62,6 +62,7 @@ standardHeaderContents=
         <![endif]-->
         <link href='/css/fonts/SourceSansPro.css' rel='stylesheet' type='text/css'/>
         <link href='/css/fonts/HelveticaNeue.css' rel='stylesheet' type='text/css'/>
+        <link rel=" icon" href="/favicon.ico?new" />
         <script src="/$ctxlang$/localization/$versioncode$.js"  type="text/javascript"></script>
         $staticResources:noescape()$
 
@@ -90,7 +91,6 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
 
         </script>
 <!-- end Mixpanel -->
-
 ####
 pageFooter=
 <footer class="site">
@@ -170,6 +170,7 @@ pageFooter=
           <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$terms" id="nav-terms">$_pageFooterTOS()$</a></li>
           <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$environment" id="nav-environment">$_pageFooterEnvironmentalPolicy()$</a></li>
           <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$privacy" id="nav-privacy">$_pageFooterPrivacyPolicy()$</a></li>
+          <li class="branch"><a href="/verify" id="nav-privacy">$_footerVerifyDocument()$</a></li>
         </ul>
       </div>
     </nav>
@@ -212,6 +213,23 @@ pageFooter=
     </nav>
   </div>
 </footer>
+<!-- Google Code for Tagg f&ouml;r ommarknadsf&ouml;ring -->
+<!-- Remarketing tags may not be associated with personally identifiable information or placed on pages related to sensitive categories. For instructions on adding this tag and more information on the above requirements, read the setup guide: google.com/ads/remarketingsetup -->
+<script type="text/javascript">
+/* <![CDATA[ */
+var google_conversion_id = 1009530676;
+var google_conversion_label = "bYPcCKyX6QMQtO6w4QM";
+var google_custom_params = window.google_tag_params;
+var google_remarketing_only = true;
+/* ]]> */
+</script>
+<script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js">
+</script>
+<noscript>
+<div style="display:inline;">
+<img height="1" width="1" style="border-style:none;" alt="" src="//googleads.g.doubleclick.net/pagead/viewthroughconversion/1009530676/?value=0&amp;label=bYPcCKyX6QMQtO6w4QM&amp;guid=ON&amp;script=0"/>
+</div>
+</noscript>
 ####
 header=
 <script>
@@ -239,14 +257,15 @@ header=
       </li>
       $else$
       <li class="page-first float-left"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$features">$_headerFeatures()$</a></li>
-      <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$pricing">$_headerPricing()$</a></li>
       <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$legal">$_headerLegal()$</a></li>
+      <li class="float-left"><a class="page price-plan-page-link" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$pricing">$_headerPricing()$</a></li>
       <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$cases">$_headerCases()$</a></li>
+      <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$get-started">$_headerGetStarted()$</a></li>
       <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$about">$_headerAbout()$</a></li>
-      <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$contact">$_headerContakt()$</a></li>
+      <li class="float-left"><a class="page last-link" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$contact">$_headerContakt()$</a></li>
       <li class="session-login float-right">
         <a class="button button-small" id="page-login" href="/login">$_login()$ </a>
-        <a class="button button-small button-red" id="page-signup" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_signUp()$</a>
+        <a class="button button-small button-red" id="page-signup" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_startFreeTrial()$</a>
       </li>
       $endif$
     </ul>
