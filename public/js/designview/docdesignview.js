@@ -99,7 +99,7 @@ var DesignViewView = Backbone.View.extend({
 
         var iconok = $("<a href='#' class='icon small ok' style='margin-left: 2px;margin-top: 2px;float:right'></a>");
         var iconedit = $("<a href='#' class='icon edit' style='margin-left: 2px;margin-top: 2px;float:right'></a>");
-        var titleshow = $("<span class='visible-docname'/>").text(document.title());
+        var titleshow = $("<span class='visible-docname float-left'/>").text(document.title());
         var titleedit = $("<input type='text' name='docname-edit' style='text-align:right'/>").val(document.title());
         display.append(titleshow).append(iconedit);
         edit.append(titleedit).append(iconok);
