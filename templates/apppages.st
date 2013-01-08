@@ -291,13 +291,12 @@ langSwitcher=
                                       window.location.reload();
                           })
                    }
-
-                   var select = new Select({  name : $if(langswedish)$ "$_Swedish()$" $else$ "$_English()$" $endif$,
+                   var select = new Select({  name : $if(langswedish)$ "$_SwedishInSwedish()$" $else$ "$_EnglishInEnglish()$" $endif$,
                                               textWidth: 80,
                                               options: [ $if(langswedish)$
-                                                               {name: "$_English()$", value: "en", onSelect : function() {changeLang("en");}}
+                                                               {name: "$_EnglishInEnglish()$", value: "en", onSelect : function() {changeLang("en");}}
                                                          $else$
-                                                               {name: "$_Swedish()$", value: "sv", onSelect : function() {changeLang("sv");} }
+                                                               {name: "$_SwedishInSwedish()$", value: "sv", onSelect : function() {changeLang("sv");} }
                                                          $endif$
                                                 ]})
                    jQuery('.langSwitcher').append(select.view().el);

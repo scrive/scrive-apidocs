@@ -340,9 +340,6 @@ var DesignViewView = Backbone.View.extend({
                     title:    localization.languages.signInEnglish,
                     content : localization.languages.changeSwedishToEnglishText,
                     acceptText: localization.languages.signInEnglish,
-                    onReject:  function() {
-                        select.val("sv");
-                    },
                     onAccept : function() {
                         mixpanel.track('Accept language',
                                        {'New Language': 'English'});
@@ -1057,12 +1054,12 @@ var ScrollFixer =  Backbone.Model.extend({
     fix : function() {
               var fixer = this;
               if ($(window).scrollTop() >= this.top && $(window).scrollTop() > 100) {
-                this.object.next().css("margin-top", this.object.height() + "px")
+                this.object.next().not(this.object).css("margin-top", this.object.height() + "px")
                 this.object.addClass('fixed');
               }  
                else {
 
-                this.object.next().css("margin-top", "")
+                 this.object.next().not(this.object).css("margin-top", "")
                 this.object.removeClass('fixed');
                }  
     }

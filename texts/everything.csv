@@ -29,6 +29,8 @@
 "_ReviewPDF","Granska","Review"
 "_DeletePDF","Radera","Delete"
 "_English","Engelska","English"
+"_EnglishInEnglish","English","English"
+"_SwedishInSwedish","Svenska","Svenska"
 "_FillInEmail","Fyll i din e-postadress","Enter your email address"
 "_EmailAdress","E-postadress","Email address"
 "_HeadAccountSettings","Mina inställningar","My settings"

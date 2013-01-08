@@ -87,8 +87,11 @@ var ButtonView = Backbone.View.extend({
         else if (this.model.color() == "black")
             $(this.el).addClass("button-gray");
 
-        if (this.model.isRounded())
+        if (this.model.isRounded()) {
             $(this.el).addClass("button-round");
+            if (BrowserInfo.isIE9orLower())
+              $(this.el).css("filter","none"); // CSS filter is in conflict with border-radius in IE9. Older IE does not support it anyway.
+        }    
 
         var label = $("<div class='label'/>").text(this.model.text());
         if (this.model.width() != undefined)
