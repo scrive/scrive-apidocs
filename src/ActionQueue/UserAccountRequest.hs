@@ -108,8 +108,15 @@ newUserAccountRequest uid = do
   token <- random
   expires <- (14 `daysAfter`) `liftM` getMinutesTime
   -- FIXME: highly unlikely, but possible race condition
-  _ <- dbUpdate $ DeleteAction userAccountRequest uid
-  dbUpdate $ NewAction userAccountRequest expires (uid, token)
+  ma <- dbQuery $ GetAction userAccountRequest uid
+  case ma of
+       Just a -> do
+         let a' = a { uarExpires = expires }
+         _ <- dbUpdate $ UpdateAction userAccountRequest a'
+         return a'
+       Nothing -> do
+          _ <- dbUpdate $ DeleteAction userAccountRequest uid
+          dbUpdate $ NewAction userAccountRequest expires (uid, token)
 
 newUserAccountRequestLink :: (MonadDB m, CryptoRNG m) => Lang -> UserID -> m KontraLink
 newUserAccountRequestLink lang uid = do
