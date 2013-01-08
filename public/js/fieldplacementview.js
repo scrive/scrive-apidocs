@@ -862,7 +862,7 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
         place.addClass('placedfield');
         this.updatePosition();
 
-        if (document.signingInProcess() && signatory.document().currentSignatoryCanSign() && signatory.current()) {
+        if (document.signingInProcess() && signatory.document().currentSignatoryCanSign() && signatory.current() && !signatory.document().readOnlyView()) {
             place.append(new SignaturePlacementViewForDrawing({model: placement.field()}).el);
         }
         else if (document.preparation()) {
