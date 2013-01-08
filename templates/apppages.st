@@ -93,7 +93,7 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
 <!-- end Mixpanel -->
 ####
 pageFooter=
-<footer class="site">
+<footer class="site $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
   <div class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
 
 
