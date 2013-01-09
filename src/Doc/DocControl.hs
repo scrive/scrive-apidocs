@@ -650,11 +650,17 @@ showPage fileid pageno = do
 -- | Preview when authorized user is logged in (without magic hash)
 showPreview:: Kontrakcja m => DocumentID -> FileID -> m (Either KontraLink Response)
 showPreview docid fileid = withAuthorisedViewer docid $ do
-    checkFileAccessWith fileid Nothing Nothing (Just docid) Nothing
-    iprev <- preview fileid 0
-    case iprev of
-         Just res -> return $ Right res
-         Nothing ->   return $ Left $ LinkDocumentPreview docid Nothing fileid
+   if (fileid == (unsafeFileID 0))
+    then do
+        emptyPreview <- liftIO $ BS.readFile "public/img/empty-preview.jpg"
+        let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [emptyPreview]) Nothing
+        return $ Right $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
+    else do
+        checkFileAccessWith fileid Nothing Nothing (Just docid) Nothing
+        iprev <- preview fileid 0
+        case iprev of
+          Just res -> return $ Right res
+          Nothing ->   return $ Left $ LinkDocumentPreview docid Nothing fileid
 
 -- | Preview from mail client with magic hash
 showPreviewForSignatory:: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> m (Either KontraLink Response)

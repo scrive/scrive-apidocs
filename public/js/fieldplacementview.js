@@ -411,7 +411,7 @@ var TextPlacementPlacedView = Backbone.View.extend({
                 return false;
             });
         }
-        if (field.signatory().canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true) {
+        if (field.signatory().canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true && !document.readOnlyView()) {
             place.click(function() {
                 return view.startInlineEditing();
             });
@@ -451,7 +451,6 @@ var CheckboxPlacementView = Backbone.View.extend({
                 else
                     box.removeClass("checked");
             });
-
     }
 });
 
@@ -668,7 +667,8 @@ var CheckboxPlacementPlacedView = Backbone.View.extend({
             });
         }
         if (field.signatory().canSign() && !field.isClosed() &&
-            field.signatory().current() && view.inlineediting != true ) {
+            field.signatory().current() && view.inlineediting != true &&
+            !document.readOnlyView()) {
             innerPlace.click(function() {
                 if (field.value() == "")
                     field.setValue("CHECKED");
@@ -862,7 +862,7 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
         place.addClass('placedfield');
         this.updatePosition();
 
-        if (document.signingInProcess() && signatory.document().currentSignatoryCanSign() && signatory.current()) {
+        if (document.signingInProcess() && signatory.document().currentSignatoryCanSign() && signatory.current() && !signatory.document().readOnlyView()) {
             place.append(new SignaturePlacementViewForDrawing({model: placement.field()}).el);
         }
         else if (document.preparation()) {

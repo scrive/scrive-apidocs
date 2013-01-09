@@ -101,6 +101,9 @@ section.pricing-cases header {
   position: relative;
   float: left;
   margin: 4em 0 1.5em 1.5em;
+  &.on-top {
+      z-index: 1000;
+  }
 }
 .plan-container.team {
   margin: 4em 0 1.5em 0;
@@ -119,16 +122,15 @@ section.pricing-cases header {
   top: 0;
   left: 0;
   background: #fff;
-  -webkit-transition: 0.5s ease-in-out left, 0.5s ease-in-out width, 10s linear 0.5s z-index;
-  -moz-transition: 0.5s ease-in-out left, 0.5s ease-in-out width, 10s linear z-index;
+  -webkit-transition: 0.5s ease-in-out left, 0.5s ease-in-out width;
+  -moz-transition: 0.5s ease-in-out left, 0.5s ease-in-out width;
 
-  -ms-transition: 0.5s ease-in-out left, 0.5s ease-in-out width, 10s linear 0.5s z-index;
-  transition: 0.5s ease-in-out left, 0.5s ease-in-out width, 10s linear z-index;
+  -ms-transition: 0.5s ease-in-out left, 0.5s ease-in-out width;
+  transition: 0.5s ease-in-out left, 0.5s ease-in-out width;
   overflow: hidden;
 }
 .plan-container > .plan:hover {
   border-color: @blue-dark;
-  z-index: 100;
 }
 .plan-container > .plan.active {
   width: 912px;

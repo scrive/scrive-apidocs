@@ -103,7 +103,8 @@ window.AuthorViewView = Backbone.View.extend({
 window.AuthorView = function(args) {
        var document = new Document({
                         id : args.id,
-                        viewer: args.viewer
+                        viewer: args.viewer,
+                        readOnlyView: true
                     });
        var model = new AuthorViewModel({
                         document : document

@@ -17,7 +17,6 @@ $(function(){
 /* InfoTextInput model. Has value, infotext and information if its focused  */
 var ConfirmationModel = Backbone.Model.extend({
   defaults : {
-      submit : new Submit(),
       title  : "",
       acceptText: "Ok",
       rejectText: localization.cancel,
@@ -41,7 +40,7 @@ var ConfirmationModel = Backbone.Model.extend({
       if (submit != undefined)
         return function() {submit.send();};
       else
-        return function() {};
+        return function() {return true;};
   },
   onReject : function() {
       if (this.get("onReject") != undefined )

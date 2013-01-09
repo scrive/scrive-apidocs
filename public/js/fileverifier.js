@@ -51,9 +51,6 @@ var FileVerifierView = Backbone.View.extend({
             size: "big",
             text: localization.uploadButton,
             submitOnUpload: true,
-            onClick : function () {
-              LoadingDialog.open();
-            },
             onError: function() {
               LoadingDialog.close();
             },

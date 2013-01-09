@@ -54,8 +54,9 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       onClick: function() {
         if (alreadyClicked(this))
           return false;
-          mixpanel.track('Accept Sign');
-        document.sign().send();
+        mixpanel.track('Accept Sign', {}, function() {
+            document.sign().send();
+        });
       }
     }).input().css('margin-top', '-10px');
   },
