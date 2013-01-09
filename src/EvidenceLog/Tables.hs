@@ -66,4 +66,10 @@ tableEvidenceLog = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
+  , tblIndexes = [ tblIndexOnColumn "user_id"
+                 , tblIndexOnColumn "document_id"
+                 , tblIndexOnColumn "email"
+                 , tblIndexOnColumn "signatory_link_id"
+                 , tblIndexOnColumn "affected_signatory_link_id"
+                 ]
   }
