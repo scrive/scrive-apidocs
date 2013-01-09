@@ -169,15 +169,15 @@ input[type=submit].hidden
     float:right;
     top:-50px;
     left:10;
-    right:0px;
-    font-size:70px;
+    right:-30px;
+    font-size:90px;
     cursor:pointer;
     -ms-filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
     filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
     opacity: 0;
     /* only IE will use this, it's necessary because it ignores the maxlength att <IE7 */
     #width:0px;
-    min-height: 50px;
+    min-height: 66px;
 }
 
 /* 015 new */

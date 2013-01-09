@@ -170,7 +170,7 @@ pageFooter=
           <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$terms" id="nav-terms">$_pageFooterTOS()$</a></li>
           <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$environment" id="nav-environment">$_pageFooterEnvironmentalPolicy()$</a></li>
           <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$privacy" id="nav-privacy">$_pageFooterPrivacyPolicy()$</a></li>
-          <li class="branch"><a href="/verify" id="nav-privacy">$_footerVerifyDocument()$</a></li>
+          <li class="branch"><a href="$if(langenglish)$/en/$else$/sv/$endif$verify" id="nav-privacy">$_footerVerifyDocument()$</a></li>
         </ul>
       </div>
     </nav>
@@ -264,7 +264,7 @@ header=
       <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$about">$_headerAbout()$</a></li>
       <li class="float-left"><a class="page last-link" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$contact">$_headerContakt()$</a></li>
       <li class="session-login float-right">
-        <a class="button button-small" id="page-login" href="/login">$_login()$ </a>
+        <a class="button button-small" id="page-login" href="$if(langenglish)$/en/$else$/sv/$endif$login">$_login()$ </a>
         <a class="button button-small button-red" id="page-signup" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_startFreeTrial()$</a>
       </li>
       $endif$
