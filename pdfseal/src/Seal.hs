@@ -45,9 +45,6 @@ winAnsiPostScriptEncode text' = concatMap charEncode text'
       charEncode ')' = "\\)"
       charEncode x = [unicodeToWinAnsi x]
 
-sealFileName :: String
-sealFileName = "files/seal3.pdf"
-
 listPageRefIDSFromPages :: Document -> RefID -> [RefID]
 listPageRefIDSFromPages document' pagesrefid =
     let
@@ -347,9 +344,10 @@ makeXObjectImageIfNeeded field@(FieldJPG{ SealSpec.valueBase64 = val
 makeXObjectImageIfNeeded field = do
   return (field,[])
 
-placeFieldsAndPagina :: SealSpec -> [Field] -> RefID -> RefID -> State Document ()
-placeFieldsAndPagina sealSpec fields paginrefid sealmarkerformrefid = do
+placeFieldsAndPagina :: SealSpec -> [Field] -> [RefID] -> RefID -> State Document ()
+placeFieldsAndPagina sealSpec fields fonts sealmarkerformrefid = do
     pages <- gets listPageRefIDs
+    let [tt0, tt1, tt2] = fonts
 
     fieldsWithIndirectObjs <- mapM makeXObjectImageIfNeeded fields
 
@@ -358,27 +356,28 @@ placeFieldsAndPagina sealSpec fields paginrefid sealmarkerformrefid = do
            commandsFromFields pagew pageh (findFields pageno) ++
            paginCommands pagew sealSpec
 
-    paginresdict <- getResDict paginrefid
-
-    document' <- get
-
     let makeEntry rd = entry ("SkrivaPa_" ++ show (objno rd) ++ "_" ++ show (gener rd)) rd
-    let newres = mergeResources document' paginresdict
-                        [ entry "XObject" $ dict (entry "SealMarkerForm" sealmarkerformrefid
-                                                  : (map makeEntry . concatMap snd) fieldsWithIndirectObjs)
-                        ]
+    let Dict newres = dict [ entry "XObject" $ dict (entry "SealMarkerForm" sealmarkerformrefid
+                                                   : (map makeEntry . concatMap snd) fieldsWithIndirectObjs)
+                           , entry "Font" $ dict [ entry "SkrivaPaHelvetica" tt0
+                                                 , entry "SkrivaPaHelveticaBold" tt1
+                                                 , entry "SkrivaPaHelveticaOblique" tt2
+                                                 ]
+                           ]
     mapM_ (uncurry $ placeContentOnPage newres)
             [(page,contentCommands pageno) | (page,pageno) <- zip pages [1..]]
 
-appendVerificationPages :: RefID -> [String] -> RefID -> State Document ()
-appendVerificationPages sealrefid sealtexts sealmarkerformrefid = do
+appendVerificationPages :: [RefID] -> [String] -> RefID -> State Document ()
+appendVerificationPages fonts sealtexts sealmarkerformrefid = do
 
-    sealresdict <- getResDict sealrefid
+    let [tt0, tt1, tt2] = fonts
 
-    document' <- get
-
-    let newres = mergeResources document' sealresdict
-                        ([(BS.pack "XObject", Dict [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)])])
+    let Dict newres = dict [ entry "XObject" $ dict [ entry "SealMarkerForm" sealmarkerformrefid ]
+                           , entry "Font" $ dict [ entry "SkrivaPaHelvetica" tt0
+                                                 , entry "SkrivaPaHelveticaBold" tt1
+                                                 , entry "SkrivaPaHelveticaOblique" tt2
+                                                 ]
+                           ]
 
     flip mapM_ sealtexts $ \sealtext -> do
       let pagew = 595
@@ -386,10 +385,11 @@ appendVerificationPages sealrefid sealtexts sealmarkerformrefid = do
       lastpage' <- addPageToDocument (page_dict (Array []) (Array []) `ext` [entryna "MediaBox" [0::Int,0,pagew,pageh]])
       placeContentOnPage newres lastpage' (\_ _ -> sealtext)
 
-placeFields :: [Field] -> RefID -> State Document ()
-placeFields fields paginrefid = do
+placeFields :: [Field] -> [RefID] -> State Document ()
+placeFields fields fonts = do
     pages <- gets listPageRefIDs
 
+    let [tt0, tt1, tt2] = fonts
     fieldsWithIndirectObjs <- mapM makeXObjectImageIfNeeded fields
 
     let findFields pageno = filter (\(field,_) -> page field == pageno) fieldsWithIndirectObjs
@@ -397,13 +397,13 @@ placeFields fields paginrefid = do
     let contentCommands pageno = \pagew pageh ->
            commandsFromFields pagew pageh (findFields pageno)
 
-    paginresdict <- getResDict paginrefid
-    document' <- get
-
     let makeEntry rd = entry ("SkrivaPa_" ++ show (objno rd) ++ "_" ++ show (gener rd)) rd
-    let newres = mergeResources document' paginresdict
-                        [ entry "XObject" $ dict $ (map makeEntry . concatMap snd) fieldsWithIndirectObjs
-                        ]
+    let Dict newres = dict [ entry "XObject" $ dict $ (map makeEntry . concatMap snd) fieldsWithIndirectObjs
+                           , entry "Font" $ dict [ entry "SkrivaPaHelvetica" tt0
+                                                 , entry "SkrivaPaHelveticaBold" tt1
+                                                 , entry "SkrivaPaHelveticaOblique" tt2
+                                                 ]
+                           ]
     mapM_ (uncurry $ placeContentOnPage newres)
             [(page,contentCommands pageno) | (page,pageno) <- zip pages [1..]]
 
@@ -609,9 +609,9 @@ makeLeftTextBox font@(PDFFont name' size) width text' = result
                " ET\n"
     resourceFontName =
       case name' of
-        Helvetica -> "TT0"
-        Helvetica_Bold -> "TT1"
-        Helvetica_Oblique -> "TT2"
+        Helvetica -> "SkrivaPaHelvetica"
+        Helvetica_Bold -> "SkrivaPaHelveticaBold"
+        Helvetica_Oblique -> "SkrivaPaHelveticaOblique"
         _ -> error $ "Font " ++ show name' ++ " not available, add to resources dictionary"
 
 verificationTextBox :: SealingTexts -> Box
@@ -915,23 +915,22 @@ process (sealSpec@SealSpec
     let fields' = concatMap fields persons ++ concatMap fields secretaries
     mdoc <- PdfModel.parseFile input
     doc <- maybe (error $ "Cannot parse input PDF " ++ input) return mdoc
-    mseal <- PdfModel.parseFile sealFileName
-    seal <- maybe (error $ "Cannot parse seal PDF " ++ sealFileName)
-            return mseal
     msealmarker <- PdfModel.parseFile "files/sealmarker.pdf"
     sealmarker <- maybe (error $ "Cannot parse marker PDF " ++ "files/sealmarker.pdf")
                   return msealmarker
 
-    let [paginpage1, sealpage1] = listPageRefIDs seal
-        [sealmarkerpage] = listPageRefIDs sealmarker
+    let [sealmarkerpage] = listPageRefIDs sealmarker
 
     let outputdoc = flip execState doc $ do
-              [newpagincontents,newsealcontents] <- importObjects seal [paginpage1,sealpage1]
+              tt0 <- addObject (standard_font_dict "Helvetica" "WinAnsiEncoding")
+              tt1 <- addObject (standard_font_dict "Helvetica-Bold" "WinAnsiEncoding")
+              tt2 <- addObject (standard_font_dict "Helvetica-Oblique" "WinAnsiEncoding")
+              let fonts = [tt0, tt1, tt2]
               [sealmarkerpage2] <- importObjects sealmarker [sealmarkerpage]
               sealmarkerform <- pageToForm sealmarkerpage2
               let sealtexts = verificationPagesContents sealSpec
-              placeFieldsAndPagina sealSpec fields' newpagincontents sealmarkerform
-              appendVerificationPages newsealcontents sealtexts sealmarkerform
+              placeFieldsAndPagina sealSpec fields' fonts sealmarkerform
+              appendVerificationPages fonts sealtexts sealmarkerform
               when (not (null attachments)) $
                    attachFiles attachments
     putStrLn $ "Writing file " ++ output
@@ -943,14 +942,12 @@ preprocess (PreSealSpec{ pssInput, pssOutput, pssFields }) = do
     mdoc <- PdfModel.parseFile pssInput
     doc <- maybe (error $ "Cannot parse input PDF " ++ pssInput) return mdoc
 
-    mseal <- PdfModel.parseFile sealFileName
-    seal <- maybe (error $ "Cannot parse seal PDF " ++ sealFileName)
-            return mseal
-
     let outputdoc = flip execState doc $ do
-              let [paginpage1, _sealpage1] = listPageRefIDs seal
-              [newpagincontents] <- importObjects seal [paginpage1]
-              placeFields pssFields newpagincontents
+              tt0 <- addObject (standard_font_dict "Helvetica" "WinAnsiEncoding")
+              tt1 <- addObject (standard_font_dict "Helvetica-Bold" "WinAnsiEncoding")
+              tt2 <- addObject (standard_font_dict "Helvetica-Oblique" "WinAnsiEncoding")
+              let fonts = [tt0, tt1, tt2]
+              placeFields pssFields fonts
 
     putStrLn $ "Writing file " ++ pssOutput
     writeFileX pssOutput outputdoc

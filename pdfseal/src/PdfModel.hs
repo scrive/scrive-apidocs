@@ -889,10 +889,11 @@ pages_dict parent count kids = page_tree_item "Pages" parent `ext` [ entryn "Cou
 page_dict :: (IsValue b, IsValue b1) => b -> b1 -> Value
 page_dict parent contents = page_tree_item "Page" parent `ext` [ entry "Contents" contents ]
 
-standard_font_dict :: IsValue b => b -> Value
-standard_font_dict basefont = dict [ entry "Type" "Font"
+standard_font_dict :: (IsValue b, IsValue c) => b -> c -> Value
+standard_font_dict basefont encoding = dict [ entry "Type" "Font"
                                             , entry "Subtype" "Type1"
                                             , entry "BaseFont" basefont
+                                            , entry "Encoding" encoding
                                             ]
 
 function_dict :: (Real a1) => Int -> [a1] -> Value
