@@ -20,25 +20,27 @@ describe "subscribe with a credit card" do
 
     puts "go to price plan page"
     @h.driver.get(@h.ctx.createKontrakcjaURL "/en/pricing")
+
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team a.button.action-sign-up" }).click
     
     puts "fill in a name"
-    (@h.wait.until { @h.driver.find_element :css => ".first_name input" }).send_keys "Random"
-    (@h.wait.until { @h.driver.find_element :css => ".last_name input" }).send_keys "Person"
-    (@h.wait.until { @h.driver.find_element :css => ".email input" }).send_keys random_email
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .first_name input" }).send_keys "Random"
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .last_name input" }).send_keys "Person"
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .email input" }).send_keys random_email
 
-    (@h.wait.until { @h.driver.find_element :css => ".card_number input" }).send_keys "4111 1111 1111 1111"
-    sel =(@h.wait.until { @h.driver.find_element :css => ".field.expires .year select" })
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .card_number input" }).send_keys "4111 1111 1111 1111"
+    sel =(@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.expires .year select" })
 
     sel.find_elements( :css => ".year select option" ).find do |option|
       option.text == "20"
     end.click
 
-    (@h.wait.until { @h.driver.find_element :css => ".field.cvv input" }).send_keys "111"
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.cvv input" }).send_keys "111"
 
-    (@h.wait.until { @h.driver.find_element :css => ".s-subscribe" }).click
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team a.s-subscribe" }).click
 
     (@h.wait.until { @h.driver.find_element :css => ".modal-footer a .label"}).click
-    (@h.wait.until { @h.driver.find_element :css => ".modal-footer a.login-button"})
+    (@h.wait.until { @h.driver.find_element :css => "a.login-button"})
 
   end
 
@@ -48,30 +50,38 @@ describe "subscribe with a credit card" do
 
     puts "go to price plan page"
     @h.driver.get(@h.ctx.createKontrakcjaURL "/en/pricing")
+
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team a.button.action-sign-up" }).click
     
     puts "fill in a name"
-    (@h.wait.until { @h.driver.find_element :css => ".first_name input" }).send_keys "Random"
-    (@h.wait.until { @h.driver.find_element :css => ".last_name input" }).send_keys "Person"
-    (@h.wait.until { @h.driver.find_element :css => ".email input" }).send_keys random_email
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .first_name input" }).send_keys "Random"
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .last_name input" }).send_keys "Person"
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .email input" }).send_keys random_email
 
-    (@h.wait.until { @h.driver.find_element :css => ".card_number input" }).send_keys "4111 1111 1111 1110"
-    sel =(@h.wait.until { @h.driver.find_element :css => ".field.expires .year select" })
+    puts "fill in cc number (incorrect)"
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .card_number input" }).send_keys "4111 1111 1111 1110"
+    sel =(@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.expires .year select" })
 
     sel.find_elements( :css => "option" ).find do |option|
       option.text == "20"
     end.click
 
-    (@h.wait.until { @h.driver.find_element :css => ".field.cvv input" }).send_keys "111"
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.cvv input" }).send_keys "111"
 
-    (@h.wait.until { @h.driver.find_element :css => ".s-subscribe" }).click
+    puts "click"
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .s-subscribe" }).click
 
-    (@h.wait.until { @h.driver.find_element :css => ".card_number input" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
-    (@h.wait.until { @h.driver.find_element :css => ".card_number input" }).send_keys "4111 1111 1111 1111"
+    puts "erase the input"
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .card_number input" }).send_keys "\xEE\x80\x83"
+    #@h.driver.type({:css => ".plan-container.team .card_number input"}, "")
+    puts "fill in cc number (correct)"
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .card_number input" }).send_keys "1"
 
-    (@h.wait.until { @h.driver.find_element :css => ".s-subscribe" }).click
+    puts "click subscribe"
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .s-subscribe" }).click
 
-    (@h.wait.until { @h.driver.find_element :css => ".modal-footer a .label"}).click
-    (@h.wait.until { @h.driver.find_element :css => ".modal-footer a.login-button"})
+    (@h.wait.until { @h.driver.find_element :css => ".modal-footer a.button"}).click
+    (@h.wait.until { @h.driver.find_element :css => "a.login-button"})
 
   end
 
@@ -79,19 +89,17 @@ describe "subscribe with a credit card" do
     random_email = rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + "-test@mailinator.com"
     puts "using random email : " + random_email
 
-    @h.driver.get(@h.ctx.createKontrakcjaURL "/")
+    @h.driver.get(@h.ctx.createKontrakcjaURL "/en/signup")
 
     puts "request an account and make sure you get a green flash back"
-    (@h.wait.until { @h.driver.find_element :css => ".requestAccount input" }).send_keys random_email
-    (@h.wait.until { @h.driver.find_element :css => ".requestAccount .submit" }).click
-    (@h.wait.until { @h.driver.find_element :css => ".modal-container .close" }).click
+    (@h.wait.until { @h.driver.find_element :css => ".signup input" }).send_keys random_email
+    (@h.wait.until { @h.driver.find_element :css => ".signup a.button" }).click
+    (@h.wait.until { @h.driver.find_element :css => ".flash-body" })
 
     puts "we should get an email to a page where we can accept the tos"
     @h.emailhelper.follow_link_in_latest_mail_for random_email
-    @h.wait.until { @h.driver.find_element :id => "tosCBox" }
-
     puts "accept the tos"
-    (@h.wait.until { @h.driver.find_element :id => "tosCBox" }).click
+    @h.wait.until { @h.driver.find_element :css => ".checkbox[name=tos]" }.click
 
     puts "fill in a name"
     (@h.wait.until { @h.driver.find_element :name => "fstname" }).send_keys "Random"
@@ -102,26 +110,22 @@ describe "subscribe with a credit card" do
     (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys "password-123"
 
     puts "submit the signup form"
-    (@h.wait.until { @h.driver.find_element :css => ".modal-footer .btn-small.float-right" }).click
+    (@h.wait.until { @h.driver.find_element :css => ".account-setup a.button" }).click
 
     puts "should be logged in and able to upload a document"
-    @h.wait.until { @h.driver.find_element :css => "a.logout" }
-    @h.driver.get(@h.ctx.createKontrakcjaURL "/d")
-    @h.wait.until { @h.driver.find_element :css => ".archive" }
-
     (@h.wait.until { @h.driver.find_element :css => ".blocking-info" }).click
-    
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team a.button.action-sign-up" }).click
 
-    (@h.wait.until { @h.driver.find_element :css => ".card_number input" }).send_keys "4111 1111 1111 1111"
-    sel =(@h.wait.until { @h.driver.find_element :css => ".field.expires .year select" })
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .card_number input" }).send_keys "4111 1111 1111 1111"
+    sel =(@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.expires .year select" })
 
     sel.find_elements( :css => "option" ).find do |option|
       option.text == "20"
     end.click
 
-    (@h.wait.until { @h.driver.find_element :css => ".field.cvv input" }).send_keys "111"
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.cvv input" }).send_keys "111"
 
-    (@h.wait.until { @h.driver.find_element :css => ".s-subscribe" }).click
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .s-subscribe" }).click
 
     @h.wait.until { (@h.driver.find_element :css => ".blocking-info").text == ""}
 
@@ -131,19 +135,17 @@ describe "subscribe with a credit card" do
     random_email = rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + rand(10).to_s + "-test@mailinator.com"
     puts "using random email : " + random_email
 
-    @h.driver.get(@h.ctx.createKontrakcjaURL "/")
+    @h.driver.get(@h.ctx.createKontrakcjaURL "/en/signup")
 
     puts "request an account and make sure you get a green flash back"
-    (@h.wait.until { @h.driver.find_element :css => ".requestAccount input" }).send_keys random_email
-    (@h.wait.until { @h.driver.find_element :css => ".requestAccount .submit" }).click
-    (@h.wait.until { @h.driver.find_element :css => ".modal-container .close" }).click
+    (@h.wait.until { @h.driver.find_element :css => ".signup input" }).send_keys random_email
+    (@h.wait.until { @h.driver.find_element :css => ".signup a.button" }).click
+    (@h.wait.until { @h.driver.find_element :css => ".flash-body" })
 
     puts "we should get an email to a page where we can accept the tos"
     @h.emailhelper.follow_link_in_latest_mail_for random_email
-    @h.wait.until { @h.driver.find_element :id => "tosCBox" }
-
     puts "accept the tos"
-    (@h.wait.until { @h.driver.find_element :id => "tosCBox" }).click
+    @h.wait.until { @h.driver.find_element :css => ".checkbox[name=tos]" }.click
 
     puts "fill in a name"
     (@h.wait.until { @h.driver.find_element :name => "fstname" }).send_keys "Random"
@@ -154,26 +156,28 @@ describe "subscribe with a credit card" do
     (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys "password-123"
 
     puts "submit the signup form"
-    (@h.wait.until { @h.driver.find_element :css => ".modal-footer .btn-small.float-right" }).click
+    (@h.wait.until { @h.driver.find_element :css => ".account-setup a.button" }).click
 
     puts "should be logged in and able to upload a document"
-    @h.wait.until { @h.driver.find_element :css => "a.logout" }
+    @h.wait.until { @h.driver.find_element :css => "a.js-logout" }
     @h.driver.get(@h.ctx.createKontrakcjaURL "/account")
 
-    
     (@h.wait.until { @h.driver.find_element :css => ".s-subscription" }).click
-    
 
-    (@h.wait.until { @h.driver.find_element :css => ".card_number input" }).send_keys "4111 1111 1111 1111"
-    sel =(@h.wait.until { @h.driver.find_element :css => ".field.expires .year select" })
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team a.button.action-sign-up" }).click
+    
+    puts "fill in cc number (incorrect)"
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .card_number input" }).send_keys "4111 1111 1111 1111"
+    sel =(@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.expires .year select" })
 
     sel.find_elements( :css => "option" ).find do |option|
       option.text == "20"
     end.click
 
-    (@h.wait.until { @h.driver.find_element :css => ".field.cvv input" }).send_keys "111"
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.cvv input" }).send_keys "111"
 
-    (@h.wait.until { @h.driver.find_element :css => ".s-subscribe" }).click
+    puts "click"
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .s-subscribe" }).click
 
     @h.wait.until { @h.driver.find_element :css => ".changebilling-form"}
 
