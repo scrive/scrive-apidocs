@@ -60,6 +60,7 @@ window.Document = Backbone.Model.extend({
         authorattachments: [],
         signatoryattachments: [],
         ready: false,
+        readOnlyView: false,
         viewer: new DocumentViewer(),
         infotext: "",
         authentication: "standard",
@@ -153,6 +154,9 @@ window.Document = Backbone.Model.extend({
     },
     ready: function() {
         return this.get("ready");
+    },
+    readOnlyView: function() {
+        return this.get("readOnlyView");
     },
     process: function() {
         return this.get("process");

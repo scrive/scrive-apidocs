@@ -124,8 +124,8 @@ staticRoutes = choice
 
      , dir "filepages" $ hGet $  toK1 $ DocControl.handleFilePages
 
-     , dir "verify" $ hGet  $ toK0 $ DocControl.handleShowVerificationPage
-     , dir "verify" $ hPostNoXToken $ toK0 $ DocControl.handleVerify
+     , allLangDirs $ dir "verify" $ hGet  $ toK0 $ DocControl.handleShowVerificationPage
+     , allLangDirs $ dir "verify" $ hPostNoXToken $ toK0 $ DocControl.handleVerify
 
      , dir "padqueue" $ dir "state" $ hGet $ toK0 $ PadQueue.padQueueState
      , dir "padqueue" $ hGet $ toK0 $ PadQueue.showPadQueuePage

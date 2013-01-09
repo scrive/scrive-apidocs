@@ -93,7 +93,7 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
 <!-- end Mixpanel -->
 ####
 pageFooter=
-<footer class="site">
+<footer class="site $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
   <div class="ct $if(thin)$thin$endif$ $if(!logged)$thin$endif$">
 
 
@@ -170,7 +170,7 @@ pageFooter=
           <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$terms" id="nav-terms">$_pageFooterTOS()$</a></li>
           <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$environment" id="nav-environment">$_pageFooterEnvironmentalPolicy()$</a></li>
           <li class="branch"><a href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$privacy" id="nav-privacy">$_pageFooterPrivacyPolicy()$</a></li>
-          <li class="branch"><a href="/verify" id="nav-privacy">$_footerVerifyDocument()$</a></li>
+          <li class="branch"><a href="$if(langenglish)$/en/$else$/sv/$endif$verify" id="nav-privacy">$_footerVerifyDocument()$</a></li>
         </ul>
       </div>
     </nav>
@@ -256,7 +256,7 @@ header=
         <a class="button button-small js-create-document"            onclick='createnewdocument(event)' href="/newdocument">$_headerSend()$ </a>
       </li>
       $else$
-      <li class="page-first float-left"><a class="page" href="$if(langenglish)$/en/$else$/sv/$endif$features">$_headerFeatures()$</a></li>
+      <li class="page-first float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$features">$_headerFeatures()$</a></li>
       <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$legal">$_headerLegal()$</a></li>
       <li class="float-left"><a class="page price-plan-page-link" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$pricing">$_headerPricing()$</a></li>
       <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$cases">$_headerCases()$</a></li>
@@ -264,7 +264,7 @@ header=
       <li class="float-left"><a class="page" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$about">$_headerAbout()$</a></li>
       <li class="float-left"><a class="page last-link" href="$httplink$$if(langenglish)$/en/$else$/sv/$endif$contact">$_headerContakt()$</a></li>
       <li class="session-login float-right">
-        <a class="button button-small" id="page-login" href="/login">$_login()$ </a>
+        <a class="button button-small" id="page-login" href="$if(langenglish)$/en/$else$/sv/$endif$login">$_login()$ </a>
         <a class="button button-small button-red" id="page-signup" href="$if(langenglish)$/en/$else$/sv/$endif$signup">$_startFreeTrial()$</a>
       </li>
       $endif$
@@ -291,13 +291,13 @@ langSwitcher=
                                       window.location.reload();
                           })
                    }
-
-                   var select = new Select({  name : $if(langswedish)$ "$_Swedish()$" $else$ "$_English()$" $endif$,
+                   var select = new Select({  name : $if(langswedish)$ "$_SwedishInSwedish()$" $else$ "$_EnglishInEnglish()$" $endif$,
                                               textWidth: 80,
+                                              expandOnHover : true,
                                               options: [ $if(langswedish)$
-                                                               {name: "$_English()$", value: "en", onSelect : function() {changeLang("en");}}
+                                                               {name: "$_EnglishInEnglish()$", value: "en", onSelect : function() {changeLang("en");}}
                                                          $else$
-                                                               {name: "$_Swedish()$", value: "sv", onSelect : function() {changeLang("sv");} }
+                                                               {name: "$_SwedishInSwedish()$", value: "sv", onSelect : function() {changeLang("sv");} }
                                                          $endif$
                                                 ]})
                    jQuery('.langSwitcher').append(select.view().el);

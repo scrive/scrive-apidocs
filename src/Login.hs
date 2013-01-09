@@ -34,6 +34,7 @@ import Text.JSON
 import qualified Templates.Fields as F
 import Templates.Templates
 import Routing
+import Utils.HTTP
 
 handleLoginGet :: Kontrakcja m => m (Either KontraLink ThinPage)
 handleLoginGet = do
@@ -172,6 +173,5 @@ handleLoginPost = do
 -}
 handleLogout :: Kontrakcja m => m Response
 handleLogout = do
-    ctx <- getContext
     logUserToContext Nothing
-    sendRedirect $ LinkHome (ctxlang ctx)
+    (sendRedirect . LinkExternal) =<< getHttpHostpart

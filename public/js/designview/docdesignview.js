@@ -99,7 +99,7 @@ var DesignViewView = Backbone.View.extend({
 
         var iconok = $("<a href='#' class='icon small ok' style='margin-left: 2px;margin-top: 2px;float:right'></a>");
         var iconedit = $("<a href='#' class='icon edit' style='margin-left: 2px;margin-top: 2px;float:right'></a>");
-        var titleshow = $("<span class='visible-docname'/>").text(document.title());
+        var titleshow = $("<span class='visible-docname float-left'/>").text(document.title());
         var titleedit = $("<input type='text' name='docname-edit' style='text-align:right'/>").val(document.title());
         display.append(titleshow).append(iconedit);
         edit.append(titleedit).append(iconok);
@@ -340,9 +340,6 @@ var DesignViewView = Backbone.View.extend({
                     title:    localization.languages.signInEnglish,
                     content : localization.languages.changeSwedishToEnglishText,
                     acceptText: localization.languages.signInEnglish,
-                    onReject:  function() {
-                        select.val("sv");
-                    },
                     onAccept : function() {
                         mixpanel.track('Accept language',
                                        {'New Language': 'English'});
@@ -1057,12 +1054,12 @@ var ScrollFixer =  Backbone.Model.extend({
     fix : function() {
               var fixer = this;
               if ($(window).scrollTop() >= this.top && $(window).scrollTop() > 100) {
-                this.object.next().css("margin-top", this.object.height() + "px")
+                this.object.next().not(this.object).css("margin-top", this.object.height() + "px")
                 this.object.addClass('fixed');
               }  
                else {
 
-                this.object.next().css("margin-top", "")
+                 this.object.next().not(this.object).css("margin-top", "")
                 this.object.removeClass('fixed');
                }  
     }

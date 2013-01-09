@@ -43,7 +43,7 @@ accountSetupPage=
         <title>$pagetitle()$</title>
         $standardHeaderContents()$
       </head>
-      <body style='background: none repeat scroll 0 0 #FFFFFF'>
+      <body style='background: none repeat scroll 0 0 #FFFFFF;'>
 
       <header class="site thin">
         <nav>
@@ -64,7 +64,7 @@ accountSetupPage=
 
        $flashmessages()$
 
-        <div class='mainContainer big'>
+        <div class='mainContainer big' style='min-height: 650px;'>
         <script type="text/javascript">
           jQuery(document).ready(function() {
             jQuery('.mainContainer').append( new AccountSetup({
