@@ -112,8 +112,10 @@ describe "subscribe with a credit card" do
     puts "submit the signup form"
     (@h.wait.until { @h.driver.find_element :css => ".account-setup a.button" }).click
 
-    puts "should be logged in and able to upload a document"
+    puts "should see blocking header"
     (@h.wait.until { @h.driver.find_element :css => ".blocking-info" }).click
+
+    puts "sign up for teamplan"
     (@h.wait.until { @h.driver.find_element :css => ".plan-container.team a.button.action-sign-up" }).click
 
     (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .card_number input" }).send_keys "4111 1111 1111 1111"
@@ -124,9 +126,11 @@ describe "subscribe with a credit card" do
     end.click
 
     (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.cvv input" }).send_keys "111"
-
+    puts "click subscribe"
     (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .s-subscribe" }).click
 
+    puts "blocking info should disappear"
+    @h.driver.get(@h.ctx.createKontrakcjaURL "/newdocument")
     @h.wait.until { (@h.driver.find_element :css => ".blocking-info").text == ""}
 
   end
@@ -166,7 +170,7 @@ describe "subscribe with a credit card" do
 
     (@h.wait.until { @h.driver.find_element :css => ".plan-container.team a.button.action-sign-up" }).click
     
-    puts "fill in cc number (incorrect)"
+    puts "fill in cc number"
     (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .card_number input" }).send_keys "4111 1111 1111 1111"
     sel =(@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.expires .year select" })
 
