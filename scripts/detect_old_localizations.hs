@@ -139,10 +139,19 @@ removeLocalizationCallFromLocalization (LocalizationCall path filePath' lineNumb
           aux _ (Value _) = error "Trying to remove from Value Localization"
 
           aux [node] (Object m) =
-              case Map.lookup node m of
-                Nothing -> myError $ "Detected access to non-existing key '" ++ node ++ "'"
-                Just (Object _) -> myError $ "Detected access to a whole dict from localization '" ++ node ++ "'"
-                Just (Value _) -> Right $ Object $ Map.delete node m
+              if last node == '(' then
+                  -- looks like a function call
+                  let functionName = init node
+                  in case Map.lookup functionName m of
+                       Nothing -> myError $ "Detected function/method like access to non-existing key '" ++ node ++ "'"
+                       Just (Object _) -> myError $ "Detected function/method like access to a sub-dict from localization '" ++ node ++ "'"
+                       Just (Value "<function>") -> Right $ Object $ Map.delete node m
+                       Just (Value _) -> Right $ Object $ Map.delete node m -- functionName is probably a string method
+              else
+                  case Map.lookup node m of
+                    Nothing -> myError $ "Detected access to non-existing key '" ++ node ++ "'"
+                    Just (Object _) -> myError $ "Detected access to a whole dict from localization '" ++ node ++ "'"
+                    Just (Value _) -> Right $ Object $ Map.delete node m
 
           aux (node:children) (Object m) =
               case Map.lookup node m of
@@ -160,17 +169,8 @@ readLocalizations paths = concat <$> mapM aux paths
     where aux path = do
             contents <- readFile path
             let numberedLines = zip [1..] $ lines contents
-                localizationRegex = "localization(\\.[a-zA-Z0-9_]+)*" :: String
-
-                -- handle things like: 'localization.foo.bar.replace(...)'
-                matchThatRegex s = case s =~ localizationRegex :: (String, String, String) of
-                                     (_, "", _) -> ""
-                                     (_, x, '(':_) -> -- our match is followed by a paren, so that last token is a method name, drop it
-                                       reverse $ dropPrefix "." $ snd $ break (== '.') $ reverse x
-                                     (_, x, _) -> x
-
-                results = map (\(lineNumber, line) -> (matchThatRegex line, path, lineNumber)) numberedLines
-                -- results = map (\(lineNumber, line) -> (line =~ localizationRegex, path, lineNumber)) numberedLines
+                localizationRegex = "localization(\\.[a-zA-Z0-9_]+)*\\(?" :: String
+                results = map (\(lineNumber, line) -> (line =~ localizationRegex, path, lineNumber)) numberedLines
                 properResults = filter (\(line, _, _) -> not $ null line) results -- filter out lines that don't match the regex
             return $ map (uncurry3 localizationCallFromString) properResults
 
@@ -181,8 +181,7 @@ main = do
   localizationCalls <- readLocalizations files
   let results = map (flip removeLocalizationCallFromLocalization mainLocalization) localizationCalls
       (logs, cleanedLocalizations) = splitEithers results
-      usedLocalization = foldl intersectLocalizations mainLocalization cleanedLocalizations
-      unusedLocalization = diffLocalization mainLocalization usedLocalization
+      unusedLocalization = foldl intersectLocalizations mainLocalization cleanedLocalizations
   _ <- forM logs $ \warn -> hPutStrLn stderr $ "Warning: " ++ warn
   putStrLn "******************************"
   putStrLn "Unused localization calls:"
