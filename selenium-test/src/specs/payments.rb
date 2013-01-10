@@ -91,7 +91,7 @@ describe "subscribe with a credit card" do
 
     @h.driver.get(@h.ctx.createKontrakcjaURL "/en/signup")
 
-    puts "request an account and make sure you get a green flash back"
+    puts "request an account and make sure you get a flash back"
     (@h.wait.until { @h.driver.find_element :css => ".signup input" }).send_keys random_email
     (@h.wait.until { @h.driver.find_element :css => ".signup a.button" }).click
     (@h.wait.until { @h.driver.find_element :css => ".flash-body" })
@@ -117,14 +117,15 @@ describe "subscribe with a credit card" do
 
     puts "sign up for teamplan"
     (@h.wait.until { @h.driver.find_element :css => ".plan-container.team a.button.action-sign-up" }).click
-
-    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .card_number input" }).send_keys "4111 1111 1111 1111"
+    puts "fill in cc"
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.card_number input" }).send_keys "4111 1111 1111 1111"
+    puts "select expiration date"
     sel =(@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.expires .year select" })
 
     sel.find_elements( :css => "option" ).find do |option|
       option.text == "20"
     end.click
-
+    puts "fill in cvv"
     (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.cvv input" }).send_keys "111"
     puts "click subscribe"
     (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .s-subscribe" }).click
@@ -141,7 +142,7 @@ describe "subscribe with a credit card" do
 
     @h.driver.get(@h.ctx.createKontrakcjaURL "/en/signup")
 
-    puts "request an account and make sure you get a green flash back"
+    puts "request an account and make sure you get a flash back"
     (@h.wait.until { @h.driver.find_element :css => ".signup input" }).send_keys random_email
     (@h.wait.until { @h.driver.find_element :css => ".signup a.button" }).click
     (@h.wait.until { @h.driver.find_element :css => ".flash-body" })
