@@ -11,10 +11,13 @@ module ThirdPartyStats.Core (
     asyncLogEvent,
     asyncProcessEvents
   ) where
+import qualified Data.ByteString.Lazy as BL
+import qualified Data.ByteString as B
 import Data.Binary
 import Data.String
 import Control.Monad.IO.Class
 import Control.Applicative
+import qualified DB (Binary (..))
 import DB hiding (Binary)
 import DB.SQL2
 import ThirdPartyStats.Tables
@@ -116,8 +119,12 @@ instance Binary EventProperty where
   get = do
     tag <- getWord8
     case tag of
-      0   -> MailProp <$> get
-      255 -> SomeProp <$> get <*> get
+      0   -> MailProp   <$> get
+      1   -> IPProp     <$> get
+      2   -> NameProp   <$> get
+      3   -> UserIDProp <$> get
+      4   -> TimeProp   <$> get
+      255 -> SomeProp   <$> get <*> get
       n   -> fail $ "Couldn't parse EventProperty constructor tag: " ++ show n
 
 
@@ -163,8 +170,8 @@ asyncProcessEvents process numEvts = do
           _  | otherwise ->
             return ()
 
-    decoder (evt_acc, max_seq) seqnum evt =
-        (decode evt : evt_acc, max seqnum max_seq)
+    decoder (evts, max_seq) seqnum evt =
+        (decode (BL.fromChunks [DB.unBinary evt]) : evts, max seqnum max_seq)
 
     -- Delete all events with a sequence number less than or equal to lastEvt.
     deleteEvents lastEvt = do
@@ -200,4 +207,5 @@ asyncLogEvent name props = do
     _ <- runDBEnv $ kRun $ mkSQL INSERT tableAsyncEventQueue serializedEvent
     return ()
   where
-    serializedEvent = [sql "event" $ encode $ AsyncEvent name props]
+    serializedEvent = [sql "event" . mkBinary $ AsyncEvent name props]
+    mkBinary = DB.Binary . B.concat . BL.toChunks . encode
