@@ -20,7 +20,7 @@ describe "subscribe with a credit card" do
 
     puts "go to price plan page"
     @h.driver.get(@h.ctx.createKontrakcjaURL "/en/pricing")
-
+    (@h.wait.until { (@h.driver.find_element :css => ".plan-container.team a.button.action-sign-up").displayed? })
     (@h.wait.until { @h.driver.find_element :css => ".plan-container.team a.button.action-sign-up" }).click
     
     puts "fill in a name"
@@ -40,7 +40,6 @@ describe "subscribe with a credit card" do
     (@h.wait.until { @h.driver.find_element :css => ".plan-container.team a.s-subscribe" }).click
 
     (@h.wait.until { @h.driver.find_element :css => ".modal-footer a .label"}).click
-    (@h.wait.until { @h.driver.find_element :css => "a.login-button"})
 
   end
 
@@ -50,7 +49,7 @@ describe "subscribe with a credit card" do
 
     puts "go to price plan page"
     @h.driver.get(@h.ctx.createKontrakcjaURL "/en/pricing")
-
+    (@h.wait.until { (@h.driver.find_element :css => ".plan-container.team a.button.action-sign-up").displayed? })
     (@h.wait.until { @h.driver.find_element :css => ".plan-container.team a.button.action-sign-up" }).click
     
     puts "fill in a name"
@@ -81,7 +80,6 @@ describe "subscribe with a credit card" do
     (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .s-subscribe" }).click
 
     (@h.wait.until { @h.driver.find_element :css => ".modal-footer a.button"}).click
-    (@h.wait.until { @h.driver.find_element :css => "a.login-button"})
 
   end
 
@@ -117,7 +115,8 @@ describe "subscribe with a credit card" do
     puts "waiting for recurly form"
     (@h.wait.until { @h.driver.find_element :css => "form.recurly" })
     puts "sign up for teamplan"
-    (@h.wait.until { @h.driver.find_element :css => ".modal.active .plan-container.team a.button.action-sign-up" }).click
+    (@h.wait.until { (@h.driver.find_element :css => ".plan-container.team a.button.action-sign-up").displayed? })
+    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team a.button.action-sign-up" }).click
     puts "fill in cc"
     (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.card_number input" }).send_keys "4111 1111 1111 1111"
     puts "select expiration date"
@@ -169,7 +168,7 @@ describe "subscribe with a credit card" do
     @h.driver.get(@h.ctx.createKontrakcjaURL "/account")
 
     (@h.wait.until { @h.driver.find_element :css => ".s-subscription" }).click
-
+    (@h.wait.until { (@h.driver.find_element :css => ".plan-container.team a.button.action-sign-up").displayed? })
     (@h.wait.until { @h.driver.find_element :css => ".plan-container.team a.button.action-sign-up" }).click
     
     puts "fill in cc number"
