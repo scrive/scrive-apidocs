@@ -283,7 +283,7 @@ var DesignViewView = Backbone.View.extend({
         var box = $("<label class='finaldateselection'/>").click(function() {return false;});
         var selectdaysbox  = $("<div/>");
         box.append(selectdaysbox);
-        selectdaysbox.append($("<span/>").text(document.process().localization().expirytext));
+        selectdaysbox.append($("<span/>").text(document.process().processLocalization().expirytext));
         var daysinput = $("<input class='daystosign' maxlength='2' size='2' autocomplete='off'>");
         daysinput.val(document.daystosign());
         selectdaysbox.append(daysinput);
@@ -587,7 +587,7 @@ var DesignViewView = Backbone.View.extend({
              size: "big" ,
              shape : "rounded",
              cssClass: "finalbutton",
-             text: document.process().localization().sendbuttontext,
+             text: document.process().processLocalization().sendbuttontext,
              onClick: function() {
                  mixpanel.track('Click sign button', {
                      'Button' : 'send'
@@ -694,11 +694,11 @@ var DesignViewView = Backbone.View.extend({
         }
         var content = $("<span/>");
         if (document.authorIsOnlySignatory())
-            content = $(document.process().localization().signatorysignmodalcontentauthoronly);
+            content = $(document.process().processLocalization().signatorysignmodalcontentauthoronly);
         else if (document.elegAuthentication())
-            content = $(document.process().localization().signatorysignmodalcontentdesignvieweleg);
+            content = $(document.process().processLocalization().signatorysignmodalcontentdesignvieweleg);
         else {
-            content = $(document.process().localization().signatorysignmodalcontent);
+            content = $(document.process().processLocalization().signatorysignmodalcontent);
         }
 
         DocumentDataFiller.fill(document, content);
@@ -726,7 +726,7 @@ var DesignViewView = Backbone.View.extend({
        var padDesignViewUtil = undefined;
        if (!document.padDelivery())
        {
-           var content = $("<p/>").append($("<span/>").append(document.process().localization().confirmsendtext));
+           var content = $("<p/>").append($("<span/>").append(document.process().processLocalization().confirmsendtext));
            if (!document.authorIsOnlySignatory())
                 content.append($("<span/>").text(localization.to)).append("<span class='unsignedpartynotcurrent'/>");
            content.append($("<span>?</span>"));
@@ -737,12 +737,12 @@ var DesignViewView = Backbone.View.extend({
            box.append(padDesignViewUtil.el());
        }
        Confirmation.popup({
-              title : (!document.padDelivery()) ? document.process().localization().confirmsendtitle : localization.pad.howDoYouWantToSign,
+              title : (!document.padDelivery()) ? document.process().processLocalization().confirmsendtitle : localization.pad.howDoYouWantToSign,
               acceptButton : Button.init({
                                 size: "tiny",
                                 color : "green",
                                 shape : "rounded",
-                                text : document.process().localization().sendbuttontext,
+                                text : document.process().processLocalization().sendbuttontext,
                                 onClick : function() {
                                     if (alreadyClicked(this))
                                       return;

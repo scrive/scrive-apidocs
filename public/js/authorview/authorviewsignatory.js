@@ -106,14 +106,14 @@ var AuthorViewSignatoryView = Backbone.View.extend({
          var signatory = this.model.signatory();
          var button = $("<label class='clickable prepareToSendReminderMail'/>");
          var icon = $("<div/>").addClass(signatory.hasSigned() ? "reminderForSignedIcon" : "reminderForSendIcon");
-         var text = signatory.hasSigned() ? signatory.document().process().localization().remindagainbuttontext : localization.reminder.send;
+         var text = signatory.hasSigned() ? signatory.document().process().processLocalization().remindagainbuttontext : localization.reminder.send;
          var textbox = $("<span/>").text(text);
          button.append(icon).append(textbox);
          button.click(function() {
              mixpanel.track('Click send reminder',
                             {'Signatory index':signatory.signIndex()});
              ConfirmationWithEmail.popup({
-                title: signatory.hasSigned() ? signatory.document().process().localization().remindagainbuttontext : localization.reminder.formHead,
+                title: signatory.hasSigned() ? signatory.document().process().processLocalization().remindagainbuttontext : localization.reminder.formHead,
                 mail: signatory.remindMail(),
                 acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
                 editText: localization.reminder.formOwnMessage,

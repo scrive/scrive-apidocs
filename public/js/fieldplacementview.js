@@ -786,7 +786,7 @@ var SignaturePlacementView = Backbone.View.extend({
             if (signatory.isCsv())
              sname =  localization.csv.title;
             else
-             sname =  process.localization().signatoryname + (process.numberedsignatories() ? " " + signatory.signIndex() : "");
+             sname =  process.processLocalization().signatoryname + (process.numberedsignatories() ? " " + signatory.signIndex() : "");
         }
         if (!this.signature.hasImage())
             box.text(localization.signature.placeFor(sname));

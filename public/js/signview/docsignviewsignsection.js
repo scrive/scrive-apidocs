@@ -50,7 +50,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       size: "small",
       shape : "rounded",
       color: "blue",
-      text: document.process().localization().signbuttontext,
+      text: document.process().processLocalization().signbuttontext,
       onClick: function() {
         if (alreadyClicked(this))
           return false;
@@ -67,11 +67,11 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     if (signatory.author) {
      var content = $("<div />");
      if (document.authorIsOnlySignatory())
-            content = $(document.process().localization().signatorysignmodalcontentauthoronly);
+            content = $(document.process().processLocalization().signatorysignmodalcontentauthoronly);
      else if (document.elegAuthentication())
-          content.append(document.process().localization().signatorysignmodalcontentsignvieweleg);
+          content.append(document.process().processLocalization().signatorysignmodalcontentsignvieweleg);
      else
-          content.append(document.process().localization().signatorysignmodalcontent);
+          content.append(document.process().processLocalization().signatorysignmodalcontent);
 
      if (document.elegAuthentication()) {
         var subhead = $("<h3/>").text(localization.signByAuthor.eleg.subhead);
@@ -83,9 +83,9 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     } else {
       var content = $("<div />");
       if (document.elegAuthentication())
-          content.append(document.process().localization().signatorysignmodalcontentsignvieweleg);
+          content.append(document.process().processLocalization().signatorysignmodalcontentsignvieweleg);
       else
-          content.append(document.process().localization().signatorysignmodalcontent);
+          content.append(document.process().processLocalization().signatorysignmodalcontent);
 
       if (document.elegAuthentication()) {
         var subhead = $("<h3/>").text(localization.sign.eleg.subhead);
@@ -106,7 +106,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var signatory = document.currentSignatory();
 
     Confirmation.popup({
-      title: signatory.author ? localization.signByAuthor.modalTitle : document.process().localization().signatorysignmodaltitle,
+      title: signatory.author ? localization.signByAuthor.modalTitle : document.process().processLocalization().signatorysignmodaltitle,
       acceptButton: document.elegAuthentication() ? this.createElegButtonElems() : this.createSignButtonElems(),
       rejectText: localization.cancel,
       content: this.createContentElems
@@ -147,11 +147,11 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                         color: "red",
                                         shape : "rounded",
                                         width: 260,
-                                        text: document.process().localization().rejectbuttontext,
+                                        text: document.process().processLocalization().rejectbuttontext,
                                         onClick: function() {
                                             mixpanel.track('Click Reject');
                                             ConfirmationWithEmail.popup({
-                                            title: document.process().localization().signatorycancelmodaltitle,
+                                            title: document.process().processLocalization().signatorycancelmodaltitle,
                                             mail: document.currentSignatory().rejectMail(),
                                             acceptText: localization.reject.send,
                                             editText: localization.reject.editMessage,
@@ -174,7 +174,7 @@ window.DocumentSignSignSection = Backbone.View.extend({
                             shape : "rounded",
                             color: "blue",
                             width: 260,
-                            text: document.process().localization().signbuttontext,
+                            text: document.process().processLocalization().signbuttontext,
                             icon: $("<span class='icon cross' style='position: absolute; top: auto;margin-top: -1px;'></span>"),
                             onClick: function() {
 
