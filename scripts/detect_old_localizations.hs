@@ -160,8 +160,10 @@ removeLocalizationCallFromLocalization (LocalizationCall path filePath' lineNumb
                   y <- aux children l
                   return $ Object $ Map.alter (const $ Just y) node m
                 Just (Value _) ->
-                    let badPrefix = take (length path - length children) path
-                    in myError $ "Detected dict-like acces ('" ++ format path ++ "'), but '" ++ format badPrefix ++ "' is a simple value'"
+                    case children of
+                      [finalNode] | last finalNode == '(' -> Right $ Object $ Map.delete node m -- method is immediately called
+                      _ -> let badPrefix = take (length path - length children) path
+                          in myError $ "Detected dict-like acces ('" ++ format path ++ "'), but '" ++ format badPrefix ++ "' is a simple value'"
 
 -- parse localization calls from a list of files
 readLocalizations :: [FilePath] -> IO [LocalizationCall]
