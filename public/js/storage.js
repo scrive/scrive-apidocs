@@ -22,7 +22,13 @@ window.SessionStorage = {
             if (window.sessionStorage != undefined)
                 return window.sessionStorage.getItem(namespace + " " + field);
         } catch (e) {}
-    }
+    },
+    del: function(namespace, field) {
+        try {
+            if (window.sessionStorage != undefined)
+                return window.sessionStorage.removeItem(namespace + " " + field);
+        } catch (e) {}
+    },
 };
 
 window.LocalStorage = {
@@ -36,6 +42,12 @@ window.LocalStorage = {
         try {
             if (window.localStorage != undefined)
                 return window.localStorage.getItem(namespace + " " + field);
+        } catch (e) {}
+    },
+    del: function(namespace, field) {
+        try {
+            if (window.localStorage != undefined)
+                return window.localStorage.removeItem(namespace + " " + field);
         } catch (e) {}
     }
 };
