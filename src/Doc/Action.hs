@@ -97,6 +97,11 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistri
       Log.docevent $ "Pending -> Closed; Sending emails: " ++ show documentid
       _ <- addDocumentCloseStatEvents documentid apistring
       author <- getDocAuthor closeddoc
+      -- Log the current time as the last doc sent time
+      asyncLogEvent SetUserProps [
+          UserIDProp (userid author),
+          someProp "Last Doc Sent" time
+        ]
       dbCommit
       forkAction ("Sealing document #" ++ show documentid ++ ": " ++ documenttitle) $ do
         enewdoc <- sealDocument closeddoc
