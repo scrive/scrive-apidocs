@@ -170,8 +170,8 @@ window.Field = Backbone.Model.extend({
             return true;
         else if (this.canBeIgnored())
             return true;
-        else if (this.isSignature() && (this.signature().hasImage() || this.placements().length == 0))
-            return true;
+        else if (this.isSignature())
+            return (this.signature().hasImage() || this.placements().length == 0);
         else if (this.isObligatory() && this.value() != "")
             return true;
 
