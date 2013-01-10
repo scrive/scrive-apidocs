@@ -495,8 +495,8 @@ boxDrawFrame box =
 
 boxDrawBottomLine :: Box -> Box
 boxDrawBottomLine box =
-  box { boxCommands = boxCommands box ++ 
-                      " q 0 " ++ show (-boxHeight box) ++ " m " ++ 
+  box { boxCommands = boxCommands box ++
+                      " q 0 " ++ show (-boxHeight box) ++ " m " ++
                       show (boxWidth box) ++ " " ++ show (-boxHeight box) ++ " l S Q "
       }
 
@@ -584,7 +584,7 @@ splitLinesOfLength font width text' = result
                     | len + l < fromIntegral width = takeWhileLength (len + l) (text'' ++ t) rest
                     | otherwise = text'' : takeWhileLength 0 "" all'
     result = takeWhileLength 0 "" textSplitWithLength
-    
+
 makeManyLines :: PDFFont -> Int -> String -> [String]
 makeManyLines font width text' = result
   where
@@ -766,8 +766,6 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
 
       pageContent (pageBoxes,pageNumber) =
           execWriter $ do
-            tell "/GS0 gs "
-
             -- Frame around whole page
             tell "0 0 0 0.333 K "
             tell "581.839 14.37 -567.36 813.12 re "
