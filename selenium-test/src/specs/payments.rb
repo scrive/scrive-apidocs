@@ -114,7 +114,8 @@ describe "subscribe with a credit card" do
 
     puts "should see blocking header"
     (@h.wait.until { @h.driver.find_element :css => ".blocking-info" }).click
-
+    puts "waiting for recurly form"
+    (@h.wait.until { @h.driver.find_element :css => "form.recurly" })
     puts "sign up for teamplan"
     (@h.wait.until { @h.driver.find_element :css => ".plan-container.team a.button.action-sign-up" }).click
     puts "fill in cc"
