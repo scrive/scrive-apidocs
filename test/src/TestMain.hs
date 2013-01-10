@@ -129,6 +129,9 @@ import FlashMessages
 #ifndef NO_PAYMENTS
 import PaymentsTest
 #endif
+#ifndef NO_THIRDPARTYSTATS
+import ThirdPartyStats
+#endif
 
 allTests :: [(String, [String] -> TestEnvSt -> Test)]
 allTests = tail tests
@@ -233,6 +236,9 @@ allTests = tail tests
 #endif
 #ifndef NO_SESSIONS
       , ("sessions", const sessionsTests)
+#endif
+#ifndef NO_THIRDPARTYSTATS
+      , ("thirdpartystats", const thirdPartyStatsTests)
 #endif
       ]
 

@@ -5,6 +5,7 @@ module ThirdPartyStats.Core (
     ProcRes (..),
     NumEvents (..),
     EventName (..),
+    AsyncEvent,
     someProp,
     numProp,
     stringProp,
@@ -23,7 +24,9 @@ import DB.SQL2
 import ThirdPartyStats.Tables
 import qualified Log
 import MinutesTime
-import User.UserID (UserID)
+import User.UserID (UserID, unsafeUserID)
+
+import Test.QuickCheck (Arbitrary (..), frequency, oneof)
 
 
 -- | The various types of values a property can take.
@@ -32,7 +35,7 @@ data PropValue
   | PVString      String
   | PVBool        Bool
   | PVMinutesTime MinutesTime
-    deriving Show
+    deriving (Show, Eq)
 
 instance Binary PropValue where
   put (PVNumber d)      = putWord8 0 >> put d
@@ -77,7 +80,7 @@ stringProp s = SomeProp s . PVString
 
 
 -- | Makes type signatures on functions involving event names look nicer.
-data EventName = SetUserProps | NamedEvent String deriving Show
+data EventName = SetUserProps | NamedEvent String deriving (Show, Eq)
 type PropName = String
 
 instance IsString EventName where
@@ -103,7 +106,7 @@ data EventProperty
   | UserIDProp UserID
   | TimeProp   MinutesTime
   | SomeProp   PropName PropValue
-    deriving Show
+    deriving (Show, Eq)
 
 
 -- | The scheme here is to have generic properties at ID 255 and give any
@@ -129,7 +132,7 @@ instance Binary EventProperty where
 
 
 -- | Data type representing an asynchronous event.
-data AsyncEvent = AsyncEvent EventName [EventProperty] deriving Show
+data AsyncEvent = AsyncEvent EventName [EventProperty] deriving (Show, Eq)
 
 instance Binary AsyncEvent where
   put (AsyncEvent name props) = put name >> put props
@@ -209,3 +212,33 @@ asyncLogEvent name props = do
   where
     serializedEvent = [sql "event" . mkBinary $ AsyncEvent name props]
     mkBinary = DB.Binary . B.concat . BL.toChunks . encode
+
+
+
+
+-- Arbitrary instances for testing
+
+instance Arbitrary EventName where
+  arbitrary = frequency [
+      (1, return SetUserProps),
+      (9, NamedEvent <$> arbitrary)]
+
+instance Arbitrary PropValue where
+  arbitrary = oneof [
+      PVNumber <$> arbitrary,
+      PVString <$> arbitrary,
+      PVBool <$> arbitrary,
+      PVMinutesTime . fromSeconds <$> arbitrary]
+
+instance Arbitrary EventProperty where
+  arbitrary = frequency [
+      (1, MailProp <$> arbitrary),
+      (1, IPProp <$> arbitrary),
+      (1, NameProp <$> arbitrary),
+      (1, UserIDProp . unsafeUserID  <$> arbitrary),
+      (1, TimeProp . fromSeconds <$> arbitrary),
+      (5, SomeProp <$> arbitrary <*> arbitrary)
+    ]
+
+instance Arbitrary AsyncEvent where
+  arbitrary = AsyncEvent <$> arbitrary <*> arbitrary
