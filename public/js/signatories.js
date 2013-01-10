@@ -297,9 +297,9 @@ window.Signatory = Backbone.Model.extend({
     makeViewer: function() {
       var authorSignsFirstMode = this.document().authorSignsFirstMode();
       this.set({signs: false});
-      if (this.signature() != undefined) {
-        this.signature().removeAllPlacements();
-      }
+      _.each(this.signatures(),function(s) {
+         s.removeAllPlacements();
+      });
       _.each(this.fields(), function(field) {
           if (field.isCheckbox()) field.remove();
       });
@@ -359,6 +359,11 @@ window.Signatory = Backbone.Model.extend({
         return _.any(this.signatures(), function(signature) {
             return signature.hasPlacements();
         });
+    },
+    anySignatureHasImageOrPlacement : function() {
+      return _.any(this.signatures(), function (field) {
+           return field.signature().hasImage() || field.hasPlacements();
+       });
     },
     remind: function(customtext) {
         return new Submit({
