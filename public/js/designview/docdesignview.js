@@ -1,6 +1,6 @@
 /* Signatory view of document
  * Now unified with author and viewer views
- * 
+ *
  * Instrumented with Mixpanel events.
  */
 
@@ -17,6 +17,8 @@ var DesignViewModel = Backbone.Model.extend({
       this.document().bind('change:ready', function() {self.trigger("render")});
       this.document().bind('change:signatories', function() {self.trigger("refreshSignatoriesOption")});
       this.document().bind('change:authenticationdelivery',  function() {self.trigger("refreshAuthorizationDependantOptions")});
+      var signOrderVisible = LocalStorage.get("signOrderVisible", this.document().id);
+      this.set({"signOrderVisible": signOrderVisible}, {silent: true});
   },
   document : function() {
      return this.get("document");
@@ -26,16 +28,20 @@ var DesignViewModel = Backbone.Model.extend({
   },
   signOrderVisible : function() {
       if( this.get("signOrderVisible") == true ) return true;
-      return !this.document().authorSignsFirstMode() && !this.document().authorSignsLastMode() && !this.document().authorNotSignsMode();
+      return !this.document().authorSignsFirstMode() &&
+             !this.document().authorSignsLastMode() &&
+          !this.document().authorNotSignsMode();
   },
   toogleSignOrder : function() {
       if (this.signOrderVisible()) {
-        this.set({"signOrderVisible" : false}, {silent: true});
-        this.flattenSignOrder();
+          this.set({"signOrderVisible" : false}, {silent: true});
+          this.flattenSignOrder();
+          LocalStorage.del("signOrderVisible", this.document().id);
       }
-      else 
-         this.set({"signOrderVisible" : true}, {silent: true});
-      
+      else {
+          this.set({"signOrderVisible" : true}, {silent: true});
+          LocalStorage.set("signOrderVisible", this.document().id, true);
+      }
 
       this.document().trigger("change");
     },
@@ -68,7 +74,7 @@ var DesignViewModel = Backbone.Model.extend({
     }
 });
 
-  
+
 var DesignViewView = Backbone.View.extend({
     initialize: function (args) {
         var self = this;
@@ -196,7 +202,7 @@ var DesignViewView = Backbone.View.extend({
                     document.process().changeToContract();
                     mixpanel.track('Select contract (document type)');
                     document.save();
-                    document.afterSave(function() { LoadingDialog.open();   window.location.reload(); });  
+                    document.afterSave(function() { LoadingDialog.open();   window.location.reload(); });
              }
         };
         var offerOption =    {name : localization.process.offer.name, onSelect :
@@ -217,16 +223,16 @@ var DesignViewView = Backbone.View.extend({
         };
         var options = []
         var name = ""
-        
-        
+
+
         if (document.process().isContract()) {
             name = localization.process.contract.name;
             options = [offerOption,orderOption];
-        }    
+        }
         else if (document.process().isOffer()) {
             name = localization.process.offer.name;
             options = [contractOption,orderOption];
-        }    
+        }
         else if (document.process().isOrder()) {
             name = localization.process.order.name;
             options = [contractOption,offerOption];
@@ -245,7 +251,7 @@ var DesignViewView = Backbone.View.extend({
         var emailOption =    {name : localization.email, onSelect :  function() {  mixpanel.track('Select email delivery'); document.setEmailDelivery(); return true;}  };
         var padOption =    {name : localization.pad.delivery, onSelect :  function() {  mixpanel.track('Select pad delivery'); document.setPadDelivery(); return true;}  };
 
-        
+
         var options = []
         var name = ""
 
@@ -442,7 +448,7 @@ var DesignViewView = Backbone.View.extend({
         return box;
     },
     signLastOption : function(signLast) {
-     
+
       var self = this;
       var box = $("<label class='signLastOption checkbox-box'/>");
       var checkbox = $("<div class='checkbox signLastCheckbox'>");
@@ -450,11 +456,11 @@ var DesignViewView = Backbone.View.extend({
         checkbox.addClass("checked");
       else
         checkbox.removeClass("checked");
-      
+
       checkbox.click(function() {
           self.setSignLast( !$(this).hasClass("checked"));
           mixpanel.track('Click sign last');
-          
+
       });
       var label = $("<label>").text(localization.signLast);
       box.append(checkbox).append(label);
@@ -751,7 +757,7 @@ var DesignViewView = Backbone.View.extend({
                     new FlashMessage({color: 'red', content : validation.message()});
                     if (field.view != undefined)
                         field.view.redborder();
-                    mixpanel.track('Error: field validation', 
+                    mixpanel.track('Error: field validation',
                                    {Field: field.name(),
                                     Value: field.value(),
                                     Message: validation.message()});
@@ -766,7 +772,7 @@ var DesignViewView = Backbone.View.extend({
               new FlashMessage({color: 'red', content : localization.designview.validation.atLeastOnePersonMustSigns});
               this.tabs.activate(this.tab1);
             mixpanel.track('Error: nobody signs');
-                                                    
+
               return false;
         }
         if (this.model.document().mainfile() == undefined)
@@ -809,7 +815,7 @@ var DesignViewView = Backbone.View.extend({
             },
             onAppend: function(input) {
               document.save();
-                
+
               document.afterSave( function() {
                   new Submit({
                     method : "POST",
@@ -826,7 +832,7 @@ var DesignViewView = Backbone.View.extend({
                         if(a === 'parsererror') { // file too large
                             new FlashMessage({content: localization.fileTooLarge, color: "red"});
                             mixpanel.track('Error: main file too large');
-                            
+
                         }
                         else {
                             new FlashMessage({content: localization.couldNotUpload, color: "red"});
@@ -892,11 +898,11 @@ var DesignViewView = Backbone.View.extend({
                                           url : '/d/save/' + document.documentid(),
                                           ajaxsuccess : function() {
                                             window.location.reload();
-                                          }         
+                                          }
                                         }).send();
                                     });
                                 }});
-          
+
           var saveAsTemplateButton = Button.init({
                                  color : "black",
                                  size :  "small",
@@ -965,7 +971,7 @@ var DesignViewView = Backbone.View.extend({
                                         }).send();
                                     });
                                 }});
-      
+
       var saveAsTemplateButton = Button.init({
                                  color : "black",
                                  size :  "tiny",
@@ -981,7 +987,7 @@ var DesignViewView = Backbone.View.extend({
                                     });
                                 }});
 
-      
+
       box.append(removeFileButton.input().addClass("float-left"));
       if ((!document.isTemplate()))
         box.append(saveAsTemplateButton.input().addClass("float-right")).append(saveAsDraftButton.input().addClass("float-right"));
@@ -991,7 +997,7 @@ var DesignViewView = Backbone.View.extend({
         var view = this;
         if (!this.model.ready())
             return this;
-        
+
         var document = this.model.document();
 
         // Sign boxes
@@ -1010,7 +1016,7 @@ var DesignViewView = Backbone.View.extend({
         }
         this.tabs = new KontraTabs({
             numbers : true,
-            tabsTail : this.titlerow(),                       
+            tabsTail : this.titlerow(),
             tabs: [
                 this.tab1 = new Tab({
                     name  : document.isTemplate() ? localization.step1template : localization.step1normal,
@@ -1056,12 +1062,12 @@ var ScrollFixer =  Backbone.Model.extend({
               if ($(window).scrollTop() >= this.top && $(window).scrollTop() > 100) {
                 this.object.next().not(this.object).css("margin-top", this.object.height() + "px")
                 this.object.addClass('fixed');
-              }  
+              }
                else {
 
                  this.object.next().not(this.object).css("margin-top", "")
                 this.object.removeClass('fixed');
-               }  
+               }
     }
 });
 
