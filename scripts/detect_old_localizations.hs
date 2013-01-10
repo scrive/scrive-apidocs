@@ -25,6 +25,10 @@ splitEithers (e:es) =
 
 uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
 uncurry3 f (x, y, z) = f x y z
+
+dropPrefix :: Eq a => [a] -> [a] -> [a]
+dropPrefix prefix s | prefix `isPrefixOf` s = drop (length prefix) s
+                    | otherwise             = s
 ------------------------------
 -- Localizations
 
@@ -157,7 +161,16 @@ readLocalizations paths = concat <$> mapM aux paths
             contents <- readFile path
             let numberedLines = zip [1..] $ lines contents
                 localizationRegex = "localization(\\.[a-zA-Z0-9_]+)*" :: String
-                results = map (\(lineNumber, line) -> (line =~ localizationRegex, path, lineNumber)) numberedLines
+
+                -- handle things like: 'localization.foo.bar.replace(...)'
+                matchThatRegex s = case s =~ localizationRegex :: (String, String, String) of
+                                     (_, "", _) -> ""
+                                     (_, x, '(':_) -> -- our match is followed by a paren, so that last token is a method name, drop it
+                                       reverse $ dropPrefix "." $ snd $ break (== '.') $ reverse x
+                                     (_, x, _) -> x
+
+                results = map (\(lineNumber, line) -> (matchThatRegex line, path, lineNumber)) numberedLines
+                -- results = map (\(lineNumber, line) -> (line =~ localizationRegex, path, lineNumber)) numberedLines
                 properResults = filter (\(line, _, _) -> not $ null line) results -- filter out lines that don't match the regex
             return $ map (uncurry3 localizationCallFromString) properResults
 
