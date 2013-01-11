@@ -43,7 +43,7 @@ mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, el
   let failmsgs = [msg | MergeFail msg <- results]
       matches  = map (== MergeMatch) results
   if not $ null failmsgs
-    then return $ Left  (intercalate "\n" failmsgs, elegFirst, elegLast, elegNumber)
+    then return $ Left  (intercalate ".\n " failmsgs, elegFirst, elegLast, elegNumber)
     else return $ Right (matches !! 0, matches !! 1, matches !! 2)
 
 getTBS :: TemplatesMonad m => D.Document -> m String
