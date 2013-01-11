@@ -107,8 +107,6 @@ staticRoutes = choice
      , dir "parsecsv"              $ hPost $ toK0 $ DocControl.handleParseCSV
      , dir "mailpreview"           $ hGet  $ toK2 $ DocControl.prepareEmailPreview
 
-     , dir "df"                    $ hGet  $ toK2 $ DocControl.handleFileGet
-
      , dir "blockinginfo"          $ hGet $ toK0 $ UserControl.handleBlockingInfo
 
      --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
@@ -129,7 +127,6 @@ staticRoutes = choice
 
      , dir "padqueue" $ dir "state" $ hGet $ toK0 $ PadQueue.padQueueState
      , dir "padqueue" $ hGet $ toK0 $ PadQueue.showPadQueuePage
-     , dir "padqueue" $ dir "archive" $ hGet $ toK0 $ ArchiveControl.showPadDeviceArchive
      , dir "padqueue" $ dir "logout" $ hPostNoXToken $ toK0 $ PadQueue.handlePadLogout
 
      -- UserControl

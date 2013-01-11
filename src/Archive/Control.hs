@@ -8,7 +8,6 @@ module Archive.Control
        handleCancel,
        handleZip,
        showArchive,
-       showPadDeviceArchive,
        jsonDocumentsList
        )
        where
@@ -170,9 +169,6 @@ showArchive = checkUserTOSGet $ do
     tostime <- guardJustM $ join <$> fmap userhasacceptedtermsofservice <$> ctxmaybeuser <$> getContext
     user    <- guardJustM $ ctxmaybeuser <$> getContext
     pageArchive user tostime
-
-showPadDeviceArchive :: Kontrakcja m => m (Either KontraLink String)
-showPadDeviceArchive = checkUserTOSGet $ (guardJustM $ ctxmaybeuser <$> getContext) >> pagePadDeviceArchive
 
 jsonDocumentsList ::  Kontrakcja m => m (Either CSV JSValue)
 jsonDocumentsList = do

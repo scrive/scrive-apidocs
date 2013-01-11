@@ -25,7 +25,6 @@ module Doc.DocControl(
     , handleSetAttachments
     , handleParseCSV
     , prepareEmailPreview
-    , handleFileGet
     , handleResend
     , handleChangeSignatoryEmail
     , handleRestart
@@ -592,29 +591,6 @@ handleIssueSignByAuthor doc = do
              return $ LinkIssueDoc (documentid doc)
          _ -> return LoopBack
 
--- | Check if current user is author or has company rights to view the document
-withAuthorisedViewer :: Kontrakcja m => DocumentID -> m (Either KontraLink a) -> m (Either KontraLink a)
-withAuthorisedViewer docid action = do
-  _ <- guardRightM $ getDocByDocID docid
-  action
-
-{- |
-   Show the document with title in the url
-   URL: /d/{documentid}/{title}
-   Method: GET
- -}
-handleFileGet :: Kontrakcja m => FileID -> String -> m (Either KontraLink Response)
-handleFileGet fileid' _title = do
-  withUserGet $ onlyAdmin $ do
-   contents <- getFileIDContents fileid'
-   if BS.null contents
-      then internalError
-      else do
-          let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-          let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
-          return res2
-
-
 {- We return pending message if file is still pending, else we return JSON with number of pages-}
 handleFilePages :: Kontrakcja m => FileID -> m Response
 handleFilePages fid = do
@@ -649,7 +625,8 @@ showPage fileid pageno = do
 
 -- | Preview when authorized user is logged in (without magic hash)
 showPreview:: Kontrakcja m => DocumentID -> FileID -> m (Either KontraLink Response)
-showPreview docid fileid = withAuthorisedViewer docid $ do
+showPreview docid fileid = do
+   _ <- guardRightM $ getDocByDocID docid
    if (fileid == (unsafeFileID 0))
     then do
         emptyPreview <- liftIO $ BS.readFile "public/img/empty-preview.jpg"

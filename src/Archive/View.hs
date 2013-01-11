@@ -5,7 +5,6 @@ module Archive.View
          flashMessageSignableArchiveDone,
          flashMessageTemplateArchiveDone,
          pageArchive,
-         pagePadDeviceArchive,
          docForListJSON,
          docForListCSV,
          docForListCSVHeader
@@ -53,10 +52,7 @@ pageArchive user mt = renderTemplate "pageDocumentsList" $ do
                     F.value "isadmin" $ useriscompanyadmin user && isJust (usercompany user)
                     F.value "month" $ mtMonth mt
                     F.value "year" $ mtYear mt
-                    
-pagePadDeviceArchive :: TemplatesMonad m =>  m String
-pagePadDeviceArchive = renderTemplate_ "pagePadDeviceArchive"
-    
+                        
 docForListJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> User -> PadQueue ->  Document -> m JSValue
 docForListJSON tl crtime user padqueue doc = do
   let link = case getSigLinkFor doc user of

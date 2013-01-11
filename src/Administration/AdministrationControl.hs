@@ -74,6 +74,12 @@ import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import Happstack.StaticRouting(Route, choice, dir)
 import Text.JSON.Gen
+import qualified Data.Map as Map
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.UTF8 as BS hiding (length)
+import File.Model
+import File.Storage
 
 adminonlyRoutes :: Route (KontraPlus Response)
 adminonlyRoutes =
@@ -127,6 +133,7 @@ daveRoutes =
      , dir "userhistory"   $ hGet $ toK1 $ daveUserHistory
      , dir "company"       $ hGet $ toK1 $ daveCompany
      , dir "reseal" $ hPost $ toK1 $ resealFile
+     , dir "file"   $ hGet  $ toK2 $ daveFile
      , dir "backdoor" $ hGet $ toK1 $ handleBackdoorQuery
     ]
 {- | Main page. Redirects users to other admin panels -}
@@ -957,3 +964,15 @@ daveCompany :: Kontrakcja m => CompanyID -> m String
 daveCompany companyid = onlyAdmin $ do
   company <- guardJustM $ dbQuery $ GetCompany companyid
   return $ inspectXML company
+
+daveFile :: Kontrakcja m => FileID -> String -> m Response
+daveFile fileid' _title = onlyAdmin $ do
+   contents <- getFileIDContents fileid'
+   if BS.null contents
+      then internalError
+      else do
+          let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+          let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
+          return res2
+
+  
