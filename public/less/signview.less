@@ -1,0 +1,888 @@
+.signview {
+  width: 100%;
+
+  .pageheader {
+    min-width: 1020px;
+    width: 100%;
+    background: #FFFFFF;
+    color: white;
+    border-bottom: solid #DEE4ED 1px;
+    .content {
+      margin: auto;
+      width: 1020px;
+      padding-top: 10px;
+      padding-bottom: 10px;
+      height: 120px;
+      display: table;
+      overflow: hidden;
+      .sender {
+          text-align: right;
+          display: table-cell;
+          vertical-align: middle;
+          width: 1020px;
+          color: #333333;
+          .name,.phone  {
+            font-weight: bold;
+            vertical-align: middle;
+          }
+      }
+    }
+    .logowrapper {
+      width : 200px;
+    }
+    div.logo {
+      background: url(../img/logo.png);
+      height: 22px;
+      width: 120px;
+      background-repeat: no-repeat;
+      margin-left: 30px;
+    }
+    .logo {
+      margin-left: 30px;
+    }
+  }
+
+
+  .instructions {
+    background-color: white;
+    padding-top: 40px;
+    padding-bottom: 25px;
+    margin-top: 20px;
+    border: solid #bababc 1px;
+    text-align: center;
+    font-weight: bold;
+    margin-left: auto;
+    margin-right: auto;
+    .headline {
+      text-transform: uppercase;
+      color: black;
+      font-size: x-large;
+      margin-bottom: 5px;
+    }
+    .giveForSigning {
+      margin: auto;
+      border: 1px solid #E9E9E9;
+      margin: 5px auto 10px;
+      padding-left: 10px;
+      font-weight: normal;
+      display: inline-block;
+    }
+   .giveForSigning strong{
+      color: black;
+      a.button {
+          margin-left: 10px;
+      }
+    }
+   .subheadline {
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 0px;
+      margin-bottom: 5px;
+     .smaller-bits {
+        margin: 10px auto;
+        margin-top: 10px;
+        text-align : center;
+        .duedate {
+          display: inline;
+          margin-right:20px;
+          font-weight : normal;
+        }
+        .download  {
+          background: url(../img/senddoc.png) no-repeat;
+          padding-left: 20px;
+          margin-left:20px;
+          display: inline;
+          font-weight : normal;
+          display: inline-block;
+          .docname {
+              text-align: left;
+              text-decoration: underline;
+              font-weight: normal;
+              color: grey;
+              width: auto;
+          }
+        }
+      }
+    }
+  }
+
+  .save {
+    background-color: white;
+    border: solid #bababc 1px;
+    text-align: center;
+    padding: 40px;
+    overflow: none;
+    margin-top: 30px;
+    margin-bottom : 30px;
+  }
+
+  .save .title {
+    font-size: large;
+    color: black;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .save .subtitle {
+    margin-bottom: 20px;
+    max-width: 602px;
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .save.saving {
+    min-height: 118px;
+    background-image: url(/img/wait30trans.gif);
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .save.done {
+    background-color: white;
+    padding-top: 31px;
+    padding-bottom: 15px;
+    margin-bottom: 7px;
+    border: solid #bababc 1px;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  .save .headline {
+    text-transform: uppercase;
+    color: black;
+    font-size: x-large;
+    margin-bottom: 5px;
+  }
+
+  .save .subheadline {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 0px;
+    margin-bottom: 5px;
+  }
+
+
+  .save .highlight {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: left;
+    padding-top: 40px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 40px;
+    border: solid #89c041 1px;
+    background-color: #e7f6d5;
+    overflow: none;
+    width: 700px;
+  }
+
+  .save .highlight .row {
+    clear: both;
+    margin-left: 11px;
+    margin-top: 10px;
+  }
+
+  .save .item input {
+      position: relative;
+      width: 146px;
+      font-size: 13px;
+      border: 1px solid #9e9e9e;
+  }
+
+  .save .item {
+    float: left;
+    width: 172px;
+    margin-left: 11px;
+    margin-right: 11px;
+    margin-bottom: 11px;
+  }
+
+  .save .invalid {
+    border: solid red 1px;
+  }
+
+  .save .errormsg {
+    color: red;
+    font-size: x-small;
+  }
+
+  .save .row {
+    float: left;
+  }
+
+  .save .tos {
+    margin-bottom: 2px;
+    vertical-align: middle;
+  }
+
+  .save .invalid.tos {
+    padding: 2px 10px;
+  }
+
+  .save .tos .check {
+    float: left;
+    margin-right: 10px;
+  }
+
+  .save .tos input {
+    background: transparent;
+  }
+
+  .save .tos .label {
+    float: left;
+    line-height: 19px;
+  }
+
+  .save .acceptbutton {
+    float: right;
+    margin-right: 22px;
+    margin-top: 4px;
+  }
+
+  .share {
+    background-color: white;
+    padding-top: 45px;
+    padding-bottom: 45px;
+    margin-bottom: 7px;
+    margin-top: 30px;
+    border: solid #bababc 1px;
+    text-align: center;
+    font-weight: bold;
+    padding-left: 45px;
+    padding-right: 45px;
+  }
+
+  .share .title {
+    font-size: 24px;
+    font-weight: normal;
+    margin-bottom: 45px;
+  }
+
+  .share .panel {
+      margin:auto;
+      float: left;
+      width: 182px;
+  }
+
+  .share .item {
+    float: left;
+    margin: 10px;
+    cursor: pointer;
+    height: 82px;
+    width: 162px;
+  }
+
+  .share .btn {
+    background-repeat: no-repeat;
+    background-position: 0px 0px;
+    height: 82px;
+    width: 162px;
+  }
+
+  .share .btn:hover {
+    background-position: -162px 0px;
+  }
+
+  .share .btn .label {
+    font-family: Source Sans Pro,Helvetica Neue,sans-serif;
+    line-height: 18px;
+    padding-left: 60px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    padding-right: 20px;
+    color: white;
+    text-align: left;
+    text-shadow: #bababc 1px 1px 1px;
+    font-weight: normal;
+  }
+
+  .share .facebook.btn {
+    background-image: url(/img/facebook-button.png);
+  }
+
+  .share .dropdown {
+    position: relative;
+    z-index: 5000;
+    top: -3px;
+    background-repeat: no-repeat;
+    height: 99px;
+    width: 318px;
+    padding-top: 25px;
+    padding-left: 12px;
+    padding-right: 12px;
+    background-position: 0px 0px;
+    text-align: left;
+    font-weight: normal;
+  }
+
+  .share .dropdown.over {
+    background-position: -366px 0px;
+  }
+
+  .share .dropdown .content {
+    background: white;
+    width: 292px;
+    margin: 0px;
+  }
+
+  .share .facebook.dropdown {
+    background-image: url(/img/facebook-dropdown.png);
+  }
+
+  .share .phone.dropdown {
+    background-image: url(/img/phone-dropdown.png);
+  }
+
+
+  .share .phone.dropdown .loading {
+    background-image: url(/img/wait30trans.gif);
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 50px;
+    width: 240px;
+  }
+
+  .share .phone.dropdown input {
+    float: left;
+  }
+
+  .share .phone.dropdown a {
+    float: left;
+    margin-left: 20px;
+  }
+
+  .share .twitter.btn {
+    background-image: url(/img/twitter-button.png);
+  }
+
+  .share .phone.btn {
+    background-image: url(/img/phone-button.png);
+  }
+
+  .share .phone.btn .label {
+    color: #666666;
+  }
+
+  .share .start.btn {
+    background-image: url(/img/start-button.png)
+  }
+
+  .share .start.btn .label {
+    padding-left: 50px;
+  }
+
+  .subcontainer {
+    background-color: #F0F0F0;
+    box-shadow: inset 1px 1px 5px #505050;
+    -moz-box-shadow: inset 1px 1px 5px #505050;
+    -webkit-box-shadow: inset 1px 1px 5px #505050;
+    background-image: url(../img/horizontal-shading-bar.png);
+    background-repeat: no-repeat;
+    padding-bottom:23px;
+    padding-top:10px;
+  }
+
+  .subcontainer .end {
+    /*background-image: url(../img/horizontal-shading-bar.png); */
+    background-repeat: no-repeat;
+    height: 2px;
+  }
+
+  .section {
+    clear: both;
+    margin: 7px;
+    background-color: white;
+    /* background-image: url(../img/horizontal-shading-bar.png); */
+    background-repeat: no-repeat;
+    overflow: hidden;
+    margin-top: 17px;
+
+    width: 924px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .section.highlight {
+    border: 5px solid #83bc39;
+    padding: 15px;
+    background-image: none;
+    width: 916px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .section h2 {
+    float: left;
+    width: 220px;
+    margin-bottom: 20px;
+    margin-right: 20px;
+    text-transform: uppercase;
+    color: black;
+    font-weight: normal;
+    padding-left: 30px;
+    padding-right: 10px;
+    font-size: large;
+  }
+
+
+  .signatoryattachments .list {
+    float: left;
+    width: 605px;
+    margin-right: 20px;
+  }
+
+
+  .signatoryattachments .item {
+    margin-bottom : 10px;
+    margin-right  : 10px;
+  }
+
+
+  .signatoryattachments .item .name {
+      font-weight: bold;
+      color: black;
+  }
+
+  .signatoryattachments .list {
+      float: left;
+      width: 580px;
+      margin-left: 23px;
+      margin-right: 20px;
+  }
+  .signatoryattachments  .list .desc {
+      width: 420px;
+      vertical-align: top;
+  }
+
+  .signatoryattachments  .list .desc .description {
+      font-style: italic;
+  }
+
+  .signatoryattachments .file {
+      vertical-align:top
+  }
+
+
+  .signatoryattachments .list .item .loading {
+    margin-left: 80px;
+  }
+
+
+  .signatoryattachments .list .item .button{
+    float:right;
+    margin-left: 6px;
+    margin-top: 6px;
+  }
+
+  .signatoryattachments .list .item .file .name {
+    color: black;
+    text-align : right;
+  }
+
+  .signatoryattachments .list .item .action {
+    float: left;
+    margin-right: 10px;
+  }
+
+  .signatoryattachments .list .item .name {
+    font-weight: bold;
+  }
+
+  .signatoryattachments .list .item .description {
+    font-style: italic;
+    max-width: 360px;
+    overflow: hidden;
+  }
+
+  .uploadedsignatoryattachments .list {
+    float: left;
+    width: 500px;
+    margin-right: 20px;
+  }
+
+  .uploadedsignatoryattachments .item .icon {
+    float: left;
+    width: 13px;
+    height: 14px;
+    background: url(../img/attachment-icon.png);
+  }
+
+  .uploadedsignatoryattachments .item {
+    margin-bottom: 10px;
+  }
+
+  .uploadedsignatoryattachments .item .label {
+    float: left;
+    margin-left: 10px;
+  }
+
+  .uploadedsignatoryattachments .list .item .name {
+    font-weight: bold;
+    color: black;
+  }
+
+  .uploadedsignatoryattachments .list .item .from {
+    font-style: italic;
+  }
+
+  .uploadedsignatoryattachments .list .item a {
+    text-decoration: underline;
+  }
+
+  .signatories .list .sig .statustext {
+      width: 124px;
+      float: left;
+      font-size: 13px;
+      vertical-align: middle;
+      line-height: 13px;
+  }
+
+  .statustext.signed {
+      color: black;
+  }
+
+  .statustext.opened {
+      color: #71a0c2;
+  }
+
+  .statustext.sent {
+      color: #eea045;
+  }
+
+  .statustext.canceled {
+      color: #d55d5d;
+  }
+
+  .statustext.delivered {
+      color: black;
+  }
+
+  .signatories .column {
+      width: 260px;
+      float: left;
+      border: solid #bababc 1px;
+      min-height: 185px;
+  }
+
+  .signatories .name {
+      color: black;
+      font-size: 16px;
+      height: 19px;
+  }
+
+  .signatories .company {
+      color: black;
+      height: 14.5px;
+  }
+
+  .signatories .face {
+      background-image: url('../img/missing-portrait.png');
+      background-size: cover;
+      width: 60px;
+      height: 50px;
+      float: left;
+  }
+
+  .signatories .inner {
+      margin-top: 10px;
+      min-height: 72px;
+      color : #505050;
+  }
+  .signatories .inner .email:hover{
+          overflow: visible;
+  }
+
+  .signatories .details {
+      float:left;
+      padding: 0px;
+      margin-top: -3px;
+      margin-left: 12px;
+  }
+
+  .field {
+      height: 18px;
+      line-height:16px;
+      width: 160px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow:hidden;
+      margin-bottom: 3px;
+  }
+
+  .signatories .statusbox {
+      border-top: 1px dashed;
+      text-align: center;
+      font-size: 13px;
+      vertical-align: middle;
+      line-height: 11px;
+      padding-top:1px;
+
+  }
+
+  .signatories .statusbox .spacing {
+      margin-left: auto;
+      margin-right: auto;
+  }
+
+  .signatories .statusbox .icon.status {
+      display: inline-block;
+      float: none;
+  }
+
+  /*Hide the info text on the custom fields, cos
+  * we're using labels.
+  */
+  .signatories .signatory .field .grayed {
+    color: white;
+  }
+
+  .signatories .signatory .field input {
+    width: 195px;
+  }
+
+  .signatories .signatory .fieldwrapper {
+    width: 200px;
+  }
+
+  .rejectwrapper {
+    float: left;
+    margin-left: 30px;
+  }
+
+  .rejectwrapper a.btn-big.red .label {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .signwrapper {
+    float: right;
+    margin-right: 30px;
+  }
+
+  .pagefooter {
+    min-width: 1020px;
+    width: 100%;
+    min-height: 160px;
+    background: #FFFFFF;
+    color: #333333;
+  }
+
+  .pagefooter .dogtooth {
+    background: url(../img/dog-tooth-transparent.png);
+    background-repeat: repeat-x;
+  }
+
+  .pagefooter .content {
+    width: 1020px;
+    padding-top: 40px;
+    padding-bottom: 40px;
+    margin : auto;
+  }
+
+  .pagefooter .sender {
+    float: left;
+  }
+
+  .pagefooter .sender .name {
+    font-size: x-large;
+    font-style: italic;
+  }
+
+  .pagefooter .sender .phone {
+    margin-top: 30px;
+    font-size: large;
+    font-style: italic;
+  }
+
+  .pagefooter .sender .position,
+  .pagefooter .sender .company,
+  .pagefooter .sender .email {
+    font-size: small;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  .pagefooter .poweredbyscrive {
+    float: right;
+    margin-top: 10px;
+  }
+
+  .pagefooter .poweredbyscrive a {
+    /*  color: white; */
+    font-size: small;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  div.spacing {
+      padding: 8px;
+  }
+
+
+  .sig.first {
+      margin-top: 0px;
+      padding-top: 0px;
+  }
+
+  .sig {
+      margin-top: 4px;
+  }
+
+  .sig .name {
+      margin-bottom: 2px;
+  }
+
+  .sig .name.first {
+      margin-top: 0px;
+  }
+
+  .column.spacing {
+      margin-right: 20px;
+  }
+
+  .section.spacing {
+      padding: 15px;
+  }
+
+  .section.signatories {
+      padding-top: 20px;
+      margin-left: auto;
+      margin-right: auto;
+  }
+
+  .signatoryattachments {
+      padding-top: 20px;
+      padding-bottom: 10px; /* An extra 10px snuck in somewhere! */
+  }
+
+  .signatoryattachments .buttonbox {
+      float: left;
+      margin-left: 10px;
+  }
+
+  .author {
+      margin: 0px;
+      font-size: 0.9em;
+  }
+
+
+  .logowrapper {
+      display: table-cell;
+      vertical-align: middle;
+  }
+
+  .sender .inner {
+      margin-right: 30px;
+  }
+
+  @media screen and (max-width: 1220px) {
+    .sender .inner {
+        margin-right: 100px;
+    }
+  }
+
+  @media screen and (max-width: 1000px) {
+    .sender .inner {
+        margin-right: 150px;
+    }
+  }
+
+  @media screen and (max-width: 980px) {
+    .sender .inner {
+        margin-right: 180px;
+    }
+  }
+
+  .signbuttons.section {
+      padding-top: 35px;
+      padding-bottom:35px;
+  }
+
+  .section {
+    box-shadow: 1px 1px 5px #505050;
+    -moz-box-shadow: 1px 1px 5px #505050;
+    -webkit-box-shadow: 1px 1px 5px #505050;
+    padding-top: 35px;
+    padding-bottom:35px;
+  }
+
+  .newaccount .inner {
+      width: 620px;
+      margin: auto;
+  }
+
+
+  .sbox {
+      padding: 10px;
+  }
+
+  .video {
+    box-shadow: inset 1px 1px 5px #505050;
+    -moz-box-shadow: inset 1px 1px 5px #505050;
+    -webkit-box-shadow: inset 1px 1px 5px #505050;
+    background-color: #e1e1e1;
+    padding: 30px;
+    margin-left: 227px;
+    height: 328px;
+  }
+
+  .line {
+      display: table;
+      overflow: hidden;
+      height: 15px;
+      width: 100%;
+  }
+
+  .line .middle {
+      display: table-cell;
+      vertical-align: middle;
+  }
+
+  .extradetails .title {
+    float: left;
+    width: 260px;
+  }
+
+  .extradetails .descriptionbox {
+    float: left;
+    width: 260px;
+  }
+
+  .extradetails .fillbox {
+    float: left;
+    width: 260px;
+  }
+
+  .extradetails div.spacing{
+    padding-top: 0px;
+  }
+
+  .extradetails .fillbox input{
+      background: none repeat scroll 0 0 #FFFFFF;
+      border: 1px solid #C6DADE;
+      border-radius: 4px 4px 4px 4px;
+      height: 17px;
+      margin: 5px auto;
+      padding: 8px;
+      width: 248px;
+
+  }
+
+  .extradetails .fillbox .signatureBox.withImage {
+      border: 1px solid #C6DADE;
+      border-radius: 4px 4px 4px 4px;
+      padding: 2px;
+      margin-top: 5px;
+  }
+
+  .section.highlight.extradetails {
+      padding-bottom: 35px;
+      padding-top: 35px;
+  }
+
+
+  .signatureBox.forDrawing {
+      border-width: 0px;
+  }
+
+}

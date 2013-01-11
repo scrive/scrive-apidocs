@@ -32,7 +32,6 @@ set systemPage
  css css/newdesign.css
  css css/style.css
  css css/calendar.css
- css css/docsignview.css
  less less/utils.less
  less less/branding/index.less
  less less/document-pages.less
@@ -53,6 +52,7 @@ set systemPage
  less less/paddeviceview.less
  less less/createfromtemplate.less
  less less/designview.less
+ less less/signview.less
  js   libs/jquery.min.js
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js
