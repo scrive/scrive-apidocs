@@ -10,6 +10,7 @@ module Doc.Action (
   , sendAllReminderEmails
   ) where
 
+import Control.Applicative
 import Control.Monad.Trans.Maybe
 import Control.Logic
 import Crypto.RNG
@@ -64,10 +65,26 @@ postDocumentPreparationChange doc@Document{documenttitle} apistring = do
       return doc
     Right saveddoc -> return saveddoc
   Log.server $ "Sending invitation emails for document #" ++ show docid ++ ": " ++ documenttitle
+  
+  -- Stat logging
   now <- getMinutesTime
-  user <- getDocAuthor doc
-  asyncLogEvent SetUserProps [UserIDProp $ userid user,
-                              SomeProp "Last Doc Sent" (PVMinutesTime now)]
+  author <- getDocAuthor doc
+  ip <- ctxipnumber <$> getContext
+  let uid = userid author
+      uinfo = userinfo author
+      email = useremail uinfo
+      fullname = userfstname uinfo ++ " " ++ usersndname uinfo
+  -- Log the current time as the last doc sent time
+  asyncLogEvent SetUserProps [UserIDProp uid,
+                              someProp "Last Doc Sent" now]
+  -- Log the fact that a doc was sent
+  asyncLogEvent "Doc Sent" [
+    UserIDProp uid,
+    TimeProp   now,
+    MailProp   email,
+    IPProp     ip,
+    NameProp   fullname]
+
   edoc <- if (sendMailsDuringSigning document')
              then sendInvitationEmails ctx document'
              else return $ Right $ document'
@@ -96,12 +113,7 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistri
         return newdoc
       Log.docevent $ "Pending -> Closed; Sending emails: " ++ show documentid
       _ <- addDocumentCloseStatEvents documentid apistring
-      author <- getDocAuthor closeddoc
-      -- Log the current time as the last doc sent time
-      asyncLogEvent SetUserProps [
-          UserIDProp (userid author),
-          someProp "Last Doc Sent" time
-        ]
+      author <- getDocAuthor doc
       dbCommit
       forkAction ("Sealing document #" ++ show documentid ++ ": " ++ documenttitle) $ do
         enewdoc <- sealDocument closeddoc
