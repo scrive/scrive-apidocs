@@ -949,3 +949,8 @@ div.spacing.butt {
     padding-bottom: 35px;
     padding-top: 35px;
 }
+
+
+.signview .signatureBox.forDrawing {
+    border-width: 0px;
+}
