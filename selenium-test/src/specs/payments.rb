@@ -120,15 +120,18 @@ describe "subscribe with a credit card" do
     #".plan-container.team a.button.action-sign-up" }).click
     @h.driver.execute_script "$('.plan-container.team a.button-small.action-sign-up').click();"
     puts "fill in cc"
-    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.card_number input" }).send_keys "4111 1111 1111 1111"
+    #(@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.card_number input" }).send_keys "4111 1111 1111 1111"
+    @h.driver.execute_script "$('.plan-container.team .field.card_number input').val('4111 1111 1111 1111');"
     puts "select expiration date"
-    sel =(@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.expires .year select" })
+    @h.driver.execute_script "$('.plan-container.team .field.expires .year select').val('20');"
+    #sel =(@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.expires .year select" })
 
-    sel.find_elements( :css => "option" ).find do |option|
-      option.text == "20"
-    end.click
+    #sel.find_elements( :css => "option" ).find do |option|
+    #  option.text == "20"
+    #end.click
     puts "fill in cvv"
-    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.cvv input" }).send_keys "111"
+    @h.driver.execute_script "$('.plan-container.team .field.cvv input').val('111');"
+    #(@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.cvv input" }).send_keys "111"
     puts "click subscribe"
     (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .s-subscribe" }).click
 
