@@ -211,7 +211,6 @@ javascriptLocalisation =
                    signatorysignmodalcontentsignvieweleg: "<p>$_contractsignatorysignmodalcontentdesignvieweleg()$ </p>",
                    signatorysignmodalcontentauthoronly: "<p>$_contractsignatorysignmodalcontentauthoronly()$ </p>",
                    signbuttontext: "$_contractsignbuttontext()$",
-                   signbuttontext: "$_contractsignbuttontext()$",
                    signbuttontextauthor: "$_contractsignbuttontextauthor()$",
                    signatorycancelmodaltitle: "$_contractsignatorycancelmodaltitle()$",
                    authorissecretarytext: "$_contractauthorissecretarytext()$",
@@ -240,7 +239,6 @@ javascriptLocalisation =
                    signatorysignmodalcontentsignvieweleg: "<p>$_offersignatorysignmodalcontentdesignvieweleg()$ </p>",
                    signatorysignmodalcontentauthoronly: "<p>$_offersignatorysignmodalcontentauthoronly()$ </p>",
                    signbuttontext: "$_offersignbuttontext()$",
-                   signbuttontext: "$_offersignbuttontext()$",
                    signbuttontextauthor: "$_offersignbuttontextauthor()$",
                    signatorycancelmodaltitle: "$_offersignatorycancelmodaltitle()$",
                    authorissecretarytext: "$_offerauthorissecretarytext()$",
@@ -268,7 +266,6 @@ javascriptLocalisation =
                    signatorysignmodalcontentdesignvieweleg: "<p>$_ordersignatorysignmodalcontentdesignvieweleg()$ </p>",
                    signatorysignmodalcontentsignvieweleg: "<p>$_ordersignatorysignmodalcontentdesignvieweleg()$ </p>",
                    signatorysignmodalcontentauthoronly: "<p>$_ordersignatorysignmodalcontentauthoronly()$ </p>",
-                   signbuttontext: "$_ordersignbuttontext()$",
                    signbuttontext: "$_ordersignbuttontext()$",
                    signbuttontextauthor: "$_ordersignbuttontextauthor()$",
                    signatorycancelmodaltitle: "$_ordersignatorycancelmodaltitle()$",
@@ -752,8 +749,6 @@ javascriptLocalisation =
       , archive : {
                 documents : {
                        name :  "$_docListTabsDocs()$"
-                    ,  sendreminder : "$_SendReminder()$"
-                    ,  remove : "$_delete()$"
                     ,  search : "$_SearchDoc()$"
                     ,  statusDescription : {
                               draft :     "$_tablestatusesDraft()$"
