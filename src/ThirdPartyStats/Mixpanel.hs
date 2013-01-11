@@ -10,6 +10,7 @@ import Mixpanel.Event as Mixpanel
 import Mixpanel.Engage as Mixpanel (set)
 import MinutesTime (toUTCTime)
 import User.UserID (UserID)
+import User.Model (unEmail)
 
 -- | Token identifying us to Mixpanel.
 type MixpanelToken = String
@@ -53,8 +54,8 @@ extractUID props =
 
 -- | Convert a generic async event property to a Mixpanel property.
 mixpanelProperty :: EventProperty -> Mixpanel.Property
-mixpanelProperty (MailProp mail)     = CustomString "$email" mail
-mixpanelProperty (IPProp ip)         = IP ip
+mixpanelProperty (MailProp mail)     = CustomString "$email" (unEmail mail)
+mixpanelProperty (IPProp ip)         = IP (show ip)
 mixpanelProperty (NameProp name)     = FullName name
 mixpanelProperty (TimeProp t)        = Time (toUTCTime t)
 mixpanelProperty (UserIDProp _)      = error "User ID prop in the wrong place!"
