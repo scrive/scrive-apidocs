@@ -72,13 +72,18 @@ instance SomeProperty Bool where
 instance SomeProperty MinutesTime where
   someProp s = SomeProp s . PVMinutesTime
 
+
 -- | Create a named property with a Double value.
+--   This function just fixes the property type of someProp to avoid
+--   unnecessary type annotations due to numeric literals being overloaded.
 numProp :: PropName -> Double -> EventProperty
-numProp s = SomeProp s . PVNumber
+numProp = someProp
 
 -- | Create a named property with a String value.
+--   This function just fixes the property type of someProp to avoid
+--   unnecessary type annotations in the presence of overloaded strings.
 stringProp :: PropName -> String -> EventProperty
-stringProp s = SomeProp s . PVString
+stringProp = someProp
 
 
 -- | Makes type signatures on functions involving event names look nicer.
