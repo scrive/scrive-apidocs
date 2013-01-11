@@ -133,7 +133,8 @@ describe "subscribe with a credit card" do
     @h.driver.execute_script "$('.plan-container.team .field.cvv input').val('111');"
     #(@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.cvv input" }).send_keys "111"
     puts "click subscribe"
-    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .s-subscribe" }).click
+    @h.driver.execute_script "$('.plan-container.team .s-subscribe').click();"
+    #(@h.wait.until { @h.driver.find_element :css => ".plan-container.team .s-subscribe" }).click
 
     puts "blocking info should disappear"
     @h.driver.get(@h.ctx.createKontrakcjaURL "/newdocument")
