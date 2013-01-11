@@ -99,7 +99,6 @@ adminonlyRoutes =
         , dir "companyaccounts" $ hGet  $ toK1 $ CompanyAccounts.handleCompanyAccountsForAdminOnly
         , dir "companyadmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminCompanyUsageStats
         , dir "companyadmin" $ hPost $ toK1 $ handleCompanyChange
-        , dir "functionalitystats" $ hGet $ toK0 $ showFunctionalityStats
 
         , dir "documents" $ hGet $ toK0 $ showDocuments
         , dir "documentslist" $ hGet $ toK0 $ jsonDocuments
@@ -781,62 +780,6 @@ Used signatures last 3 months
 Used signatures last 6 months
 Used signatures last 12 months
 -}
-
-{- |
-    Shows statistics about functionality use.
-
-    If you would like to add some stats then please add the definitions to
-    the getStatDefinitions function of whatever HasFunctionalityStats instance
-    is relevant.
-    The getStatDefinitions defines each statistic as a label and definition function
-    pair.  The label will describe it in the table.  And the definition function
-    takes in the doc, user or siglink, and has to return a bool to indicate whether
-    that object uses the particular functionality.
-    So you should add a pair to the list to add a statistic.
--}
-showFunctionalityStats :: Kontrakcja m => m String
-showFunctionalityStats = onlySalesOrAdmin $ do
-  Context{ctxtime} <- getContext
-  users <- dbQuery GetUsers
-  (documents :: [Document]) <- return [] -- Hopefully fixed by Anton really soon! dbQuery GetAllDocuments
-  adminFunctionalityStatsPage (mkStats ctxtime users)
-                              (mkStats ctxtime documents)
-  where
-    mkStats :: HasFunctionalityStats a => MinutesTime -> [a] -> [(String, Int)]
-    mkStats time xs =
-      map (\(label, deffunc) -> (label, length $ filter (\x -> isRecent time x && deffunc x) xs)) getStatDefinitions
-
-class HasFunctionalityStats a where
-  isRecent :: MinutesTime -> a -> Bool
-  getStatDefinitions :: [(String, a -> Bool)]
-
-aRecentDate :: MinutesTime -> MinutesTime
-aRecentDate = ((30 * 3) `daysBefore`)
-
-instance HasFunctionalityStats Document where
-  isRecent time doc = aRecentDate time < documentctime doc
-  getStatDefinitions =
-    [ ("drag n drop", anyField hasPlacement)
-    , ("custom fields", anyField isCustom)
-    , ("custom sign order", any ((/=) (SignOrder 1) . signatorysignorder . signatorydetails) . documentsignatorylinks)
-    , ("csv", isJust . msum . fmap signatorylinkcsvupload . documentsignatorylinks)
-    ]
-    where
-      anyField p doc =
-        any p . concatMap (signatoryfields . signatorydetails) $ documentsignatorylinks doc
-      hasPlacement SignatoryField{sfPlacements} = not $ null sfPlacements
-      isCustom SignatoryField{sfType} =
-        case sfType of
-          (CustomFT _ _) -> True
-          _ -> False
-
-instance HasFunctionalityStats User where
-  isRecent time user =
-    case userhasacceptedtermsofservice user of
-      Just tostime -> aRecentDate time < tostime
-      Nothing -> False
-  getStatDefinitions = []
-
 
 showDocuments ::  Kontrakcja m => m  String
 showDocuments = onlySalesOrAdmin $ adminDocuments =<< getContext
