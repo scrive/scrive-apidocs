@@ -74,6 +74,12 @@ import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import Happstack.StaticRouting(Route, choice, dir)
 import Text.JSON.Gen
+import qualified Data.Map as Map
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.UTF8 as BS hiding (length)
+import File.Model
+import File.Storage
 
 adminonlyRoutes :: Route (KontraPlus Response)
 adminonlyRoutes =
@@ -99,7 +105,6 @@ adminonlyRoutes =
         , dir "companyaccounts" $ hGet  $ toK1 $ CompanyAccounts.handleCompanyAccountsForAdminOnly
         , dir "companyadmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminCompanyUsageStats
         , dir "companyadmin" $ hPost $ toK1 $ handleCompanyChange
-        , dir "functionalitystats" $ hGet $ toK0 $ showFunctionalityStats
 
         , dir "documents" $ hGet $ toK0 $ showDocuments
         , dir "documentslist" $ hGet $ toK0 $ jsonDocuments
@@ -128,6 +133,7 @@ daveRoutes =
      , dir "userhistory"   $ hGet $ toK1 $ daveUserHistory
      , dir "company"       $ hGet $ toK1 $ daveCompany
      , dir "reseal" $ hPost $ toK1 $ resealFile
+     , dir "file"   $ hGet  $ toK2 $ daveFile
      , dir "backdoor" $ hGet $ toK1 $ handleBackdoorQuery
     ]
 {- | Main page. Redirects users to other admin panels -}
@@ -782,62 +788,6 @@ Used signatures last 6 months
 Used signatures last 12 months
 -}
 
-{- |
-    Shows statistics about functionality use.
-
-    If you would like to add some stats then please add the definitions to
-    the getStatDefinitions function of whatever HasFunctionalityStats instance
-    is relevant.
-    The getStatDefinitions defines each statistic as a label and definition function
-    pair.  The label will describe it in the table.  And the definition function
-    takes in the doc, user or siglink, and has to return a bool to indicate whether
-    that object uses the particular functionality.
-    So you should add a pair to the list to add a statistic.
--}
-showFunctionalityStats :: Kontrakcja m => m String
-showFunctionalityStats = onlySalesOrAdmin $ do
-  Context{ctxtime} <- getContext
-  users <- dbQuery GetUsers
-  (documents :: [Document]) <- return [] -- Hopefully fixed by Anton really soon! dbQuery GetAllDocuments
-  adminFunctionalityStatsPage (mkStats ctxtime users)
-                              (mkStats ctxtime documents)
-  where
-    mkStats :: HasFunctionalityStats a => MinutesTime -> [a] -> [(String, Int)]
-    mkStats time xs =
-      map (\(label, deffunc) -> (label, length $ filter (\x -> isRecent time x && deffunc x) xs)) getStatDefinitions
-
-class HasFunctionalityStats a where
-  isRecent :: MinutesTime -> a -> Bool
-  getStatDefinitions :: [(String, a -> Bool)]
-
-aRecentDate :: MinutesTime -> MinutesTime
-aRecentDate = ((30 * 3) `daysBefore`)
-
-instance HasFunctionalityStats Document where
-  isRecent time doc = aRecentDate time < documentctime doc
-  getStatDefinitions =
-    [ ("drag n drop", anyField hasPlacement)
-    , ("custom fields", anyField isCustom)
-    , ("custom sign order", any ((/=) (SignOrder 1) . signatorysignorder . signatorydetails) . documentsignatorylinks)
-    , ("csv", isJust . msum . fmap signatorylinkcsvupload . documentsignatorylinks)
-    ]
-    where
-      anyField p doc =
-        any p . concatMap (signatoryfields . signatorydetails) $ documentsignatorylinks doc
-      hasPlacement SignatoryField{sfPlacements} = not $ null sfPlacements
-      isCustom SignatoryField{sfType} =
-        case sfType of
-          (CustomFT _ _) -> True
-          _ -> False
-
-instance HasFunctionalityStats User where
-  isRecent time user =
-    case userhasacceptedtermsofservice user of
-      Just tostime -> aRecentDate time < tostime
-      Nothing -> False
-  getStatDefinitions = []
-
-
 showDocuments ::  Kontrakcja m => m  String
 showDocuments = onlySalesOrAdmin $ adminDocuments =<< getContext
 
@@ -1014,3 +964,15 @@ daveCompany :: Kontrakcja m => CompanyID -> m String
 daveCompany companyid = onlyAdmin $ do
   company <- guardJustM $ dbQuery $ GetCompany companyid
   return $ inspectXML company
+
+daveFile :: Kontrakcja m => FileID -> String -> m Response
+daveFile fileid' _title = onlyAdmin $ do
+   contents <- getFileIDContents fileid'
+   if BS.null contents
+      then internalError
+      else do
+          let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+          let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
+          return res2
+
+  

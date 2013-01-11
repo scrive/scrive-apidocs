@@ -19,7 +19,6 @@ module Administration.AdministrationView(
             , adminCompanyPaymentPage
             , adminUsersPageForSales
             , allUsersTable
-            , adminFunctionalityStatsPage
             , adminDocuments
             , adminUserUsageStatsPage
             , adminCompanyUsageStatsPage
@@ -169,19 +168,6 @@ adminSystemUsageStatsPage =
       F.value "adminstatisticslink"   $ show $ LinkAdminStatistics
       F.value "adminstatsbydaylink"   $ show $ LinkAdminStatsByDay
       F.value "adminstatsbymonthlink" $ show $ LinkAdminStatsByMonth
-
-adminFunctionalityStatsPage :: TemplatesMonad m => [(String, Int)]
-                                              -> [(String, Int)]
-                                              -> m String
-adminFunctionalityStatsPage userstats docstats =
-  renderTemplate "adminFunctionalityStatsPage" $ do
-    F.objects "userfunctionalitystats" $ map functionalityStatFields userstats
-    F.objects "docfunctionalitystats" $ map functionalityStatFields docstats
-    F.value "adminlink" $ show $ LinkAdminOnly
-  where
-    functionalityStatFields (label, count) = do
-      F.value "label" label
-      F.value "count" count
 
 {-| Manage user page - can change user info and settings here -}
 -- adminUserUsageStatsPage :: KontrakcjaTemplates -> User -> DocStatsL -> IO String

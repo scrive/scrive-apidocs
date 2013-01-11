@@ -64,7 +64,7 @@ data KontraLink
     | LoopBack
     | BackToReferer
     | LinkDaveDocument DocumentID
-    | LinkFile FileID String
+    | LinkDaveFile FileID String
     | LinkAskQuestion
     | LinkAttachmentView AttachmentID
     | LinkEnableCookies
@@ -108,8 +108,6 @@ instance Show KontraLink where
         (++) $ "/d/" ++ show documentid
     showsPrec _ (LinkDesignDoc did) =  (++) $ "/" ++ show did
     showsPrec _ (LinkRenameAttachment documentid) = (++) $ "/a/rename/" ++ show documentid
-    showsPrec _ (LinkFile fileid filename) =
-        (++) $ "/df/" ++ show fileid ++ "/" ++ filename
     showsPrec _ (LinkSignDoc document signatorylink) =
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
                  "/"++ show (signatorymagichash signatorylink)
@@ -129,6 +127,7 @@ instance Show KontraLink where
     showsPrec _ LoopBack = (++) $ "/" -- this should never be used
     showsPrec _ BackToReferer = (++) $ "/" -- this should never be used
     showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid ++"/")
+    showsPrec _ (LinkDaveFile fileid filename) =  (++) $ "/dave/file/" ++ show fileid ++ "/" ++ filename
     showsPrec _ (LinkAskQuestion) = (++) ("/question")
     showsPrec _ (LinkEnableCookies) = (++) ("/enable-cookies/enable-cookies.html")
     showsPrec _ (LinkDocumentPreview did (Just sl) fid) = (++) ("/preview/" ++ show did ++
