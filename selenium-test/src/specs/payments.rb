@@ -115,8 +115,10 @@ describe "subscribe with a credit card" do
     puts "waiting for recurly form"
     (@h.wait.until { @h.driver.find_element :css => "form.recurly" })
     puts "sign up for teamplan"
-    (@h.wait.until { (@h.driver.find_element :css => ".plan-container.team a.button.action-sign-up").displayed? })
-    (@h.wait.until { @h.driver.find_element :css => ".plan-container.team a.button.action-sign-up" }).click
+    #(@h.wait.until { (@h.driver.find_element :css => ".plan-container.team a.button.action-sign-up").displayed? })
+    #(@h.wait.until { @h.driver.find_element :css =>
+    #".plan-container.team a.button.action-sign-up" }).click
+    @h.driver.execute_script "$('.plan-container.team a.button-small.action-sign-up').click();"
     puts "fill in cc"
     (@h.wait.until { @h.driver.find_element :css => ".plan-container.team .field.card_number input" }).send_keys "4111 1111 1111 1111"
     puts "select expiration date"
