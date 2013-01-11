@@ -174,7 +174,7 @@ var DesignViewView = Backbone.View.extend({
     },
     authenticationMethodSelection : function() {
         var document = this.model.document();
-        var box = $("<div class='authenticationmethodselect checkbox-box'/>");
+        var box = $("<label class='authenticationmethodselect checkbox-box'/>");
         var checkbox = $("<div class='checkbox elegCheckbox'>");
         if (document.elegAuthentication()) checkbox.addClass("checked","YES");
         checkbox.click(function() {

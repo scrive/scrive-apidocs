@@ -348,7 +348,6 @@ var DocumentSignViewView = Backbone.View.extend({
     },
     prerender : function() {
       this.container = $("<div/>");
-      $('.mainContainer').addClass('signview');
       $(this.el).append(this.container);
       $(this.el).append("<div class='clearfix'/>");
       $(this.el).append("<div class='spacer40'/>");

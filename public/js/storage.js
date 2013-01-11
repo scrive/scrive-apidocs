@@ -28,7 +28,7 @@ window.SessionStorage = {
             if (window.sessionStorage != undefined)
                 return window.sessionStorage.removeItem(namespace + " " + field);
         } catch (e) {}
-    },
+    }
 };
 
 window.LocalStorage = {
