@@ -4,6 +4,7 @@
 module Main where
 
 import Data.List (isPrefixOf, unfoldr, intersperse)
+import Data.Foldable (foldlM)
 import Data.Maybe
 import Control.Monad (forM)
 import Control.Applicative
@@ -12,6 +13,7 @@ import Text.Regex.TDFA
 import System.FilePath.Find
 import qualified Data.Map as Map
 import System.IO
+import System.Exit
 
 ------------------------------
 -- utils
@@ -29,6 +31,16 @@ uncurry3 f (x, y, z) = f x y z
 dropPrefix :: Eq a => [a] -> [a] -> [a]
 dropPrefix prefix s | prefix `isPrefixOf` s = drop (length prefix) s
                     | otherwise             = s
+
+-- union of two maps or an error for some key that's present in both maps (and its values)
+disjointUnion :: Ord k => (k -> a -> a -> x) -> Map.Map k a -> Map.Map k a -> Either x (Map.Map k a)
+disjointUnion f m1 m2 = case Map.minViewWithKey intersection of
+                          Just ((k, v), _) -> Left $ f k v $ m2 Map.! k
+                          Nothing -> Right $ m1 `Map.union` m2
+    where intersection = m1 `Map.intersection` m2
+
+disjointUnions :: Ord k => (k -> a -> a -> x) -> [Map.Map k a] -> Either x (Map.Map k a)
+disjointUnions f = foldlM (disjointUnion f) Map.empty
 ------------------------------
 -- Localizations
 
@@ -86,13 +98,29 @@ diffLocalization _ _ = undefined
 
 ------------------------------
 -- parsing Localization from javascript
-propsToLocalization :: [JSNode] -> Localization
-propsToLocalization props = Object $ Map.unions $ map aux props
-    where aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _) _ [NT (JSStringLiteral _ template) _ _])) = Map.singleton varName $ Value template
-          aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _) _ [NN (JSObjectLiteral _ props' _)])) = Map.singleton varName $ propsToLocalization props'
-          aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _) _ [NN (JSFunctionExpression _ _ _ _ _ _)])) = Map.singleton varName $ Value "<function>"
-          aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _) _ [NN (JSArrayLiteral _ _ _)])) = Map.singleton varName $ Value "<array>"
-          aux _ = Map.empty
+propsToLocalization :: String -> [JSNode] -> Either String Localization
+propsToLocalization path props = do
+  subProps <- mapM aux props
+  Object <$> disjointUnions merger subProps
+    where aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _) _ [NT (JSStringLiteral _ template) _ _])) =
+              return $ Map.singleton varName $ Value template
+          aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _) _ [NN (JSObjectLiteral _ props' _)])) = do
+              children <- propsToLocalization (path ++ "." ++ varName) props'
+              return $ Map.singleton varName children
+          aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _) _ [NN (JSFunctionExpression _ _ _ _ _ _)])) =
+              return $ Map.singleton varName $ Value "<function>"
+          aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _) _ [NN (JSArrayLiteral _ _ _)])) =
+              return $ Map.singleton varName $ Value "<array>"
+          aux _ = return $ Map.empty
+          merger k x y = concat [ "Multiple values (in file 'javascript-langs.st') for key '"
+                                , path
+                                , "."
+                                , k
+                                , "': "
+                                , show x
+                                , ", and "
+                                , show y
+                                ]
 
 localizationsFromFile :: FilePath -> IO Localization
 localizationsFromFile path = do
@@ -104,7 +132,9 @@ localizationsFromFile path = do
       JSVariables _ [NN vardecl] _ = vars
       JSVarDecl _ [_, NN obj] = vardecl
       JSObjectLiteral _ props _ = obj
-  return $ Object $ Map.singleton "localization" $ propsToLocalization props
+  case propsToLocalization "localization" props of
+    Left e -> hPutStrLn stderr e >> exitFailure
+    Right localization -> return $ Object $ Map.singleton "localization" localization
 
 ------------------------------
 -- localization calls
