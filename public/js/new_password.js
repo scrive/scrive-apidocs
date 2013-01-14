@@ -27,21 +27,20 @@
       var password = this.password();
       var password2 = this.password2();
       var validCharsRegex = /^[a-zA-Z0-9\.,-\/#! +$%\^&\*;:{}=\-_`~()]*$/;
-      var passwordLocalization = localization.newPasswordModal;
       if (password !== password2) {
-        return passwordLocalization.flashMessagePasswordsDontMatch;
+        return localization.newPasswordModal.flashMessagePasswordsDontMatch;
       } else if (password === '') {
-        return passwordLocalization.flashMessageMissingRequiredField;
+        return localization.newPasswordModal.flashMessageMissingRequiredField;
       } else if (password.length < 8) {
-        return passwordLocalization.flashMessagePasswordLessThanMinLength;
+        return localization.newPasswordModal.flashMessagePasswordLessThanMinLength;
       } else if (password.length > 250) {
-        return passwordLocalization.flashMessagePasswordExceedsMaxLength;
+        return localization.newPasswordModal.flashMessagePasswordExceedsMaxLength;
       } else if (password.match(validCharsRegex) === null) {
-        return passwordLocalization.flashMessageInvalidCharsInPassword;
+        return localization.newPasswordModal.flashMessageInvalidCharsInPassword;
       } else if (password.replace(/[^a-zA-Z]/g, '').length < 2) {
-        return passwordLocalization.flashMessageNeedsLetterAndDigit;
+        return localization.newPasswordModal.flashMessageNeedsLetterAndDigit;
       } else if (password.replace(/[^0-9]/g, '').length < 2) {
-        return passwordLocalization.flashMessageNeedsLetterAndDigit;
+        return localization.newPasswordModal.flashMessageNeedsLetterAndDigit;
       } else {
         return null;
       }

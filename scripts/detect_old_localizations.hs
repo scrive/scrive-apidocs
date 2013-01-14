@@ -3,6 +3,10 @@
 
 module Main where
 
+-- TODO:
+-- regex currently parses valid tokens like 'localization2' as 'localization',
+-- which results in a false-positive.
+
 import Data.List (isPrefixOf, unfoldr, intersperse)
 import Data.Foldable (foldlM)
 import Data.Maybe
@@ -14,6 +18,57 @@ import System.FilePath.Find
 import qualified Data.Map as Map
 import System.IO
 import System.Exit
+
+------------------------------
+-- WHITELIST
+whitelist =
+    o[("localization",
+      o[ ("statusToolTip", o[ ("draft", d)
+                            , ("cancelled", d)
+                            , ("sent", d)
+                            , ("delivered", d)
+                            , ("reviewed", d)
+                            , ("read", d)
+                            , ("opened", d)
+                            , ("signed", d)
+                            , ("rejected", d)
+                            , ("deliveryproblem", d)
+                            , ("timeouted", d)
+                            , ("problem", d)
+                            ])
+       , ("process", o[ ("contract", o[("shortName", d)])
+                      , ("offer", o[("shortName", d)])
+                      , ("order", o[("shortName", d)])
+                      ])
+       , ("signatoryMessage", o[ ("datamismatch", d)
+                               , ("timedout", d)
+                               , ("rejected", d)
+                               , ("seen", d)
+                               , ("read", d)
+                               , ("delivered", d)
+                               , ("signed", d)
+                               , ("cancelled", d)
+                               , ("other", d)
+                               , ("waitingForSignature", d)
+                               ])
+       , ("payments", o[("plans", o[ ("team", o[ ("name", d)
+                                               , ("tag", d)
+                                               , ("price", d)
+                                               , ("price3", d)])
+                                   , ("form", o[ ("name", d)
+                                               , ("tag", d)
+                                               , ("price", d)
+                                               , ("price3", d)])
+                                   , ("enterprise", o[ ("name", d)
+                                                     , ("tag", d)
+                                                     , ("price", d)
+                                                     , ("price3", d)])
+                                   ])])
+       ]
+      )
+     ]
+        where d = Value "" -- dummy value
+              o = Object . Map.fromList
 
 ------------------------------
 -- utils
@@ -91,8 +146,11 @@ diffLocalization (Object m1) (Object m2) = Object $ Map.fromList items'
                                else
                                    Nothing
           aux (k, m@(Object _)) =
-              let m' = m2 Map.! k
-              in Just (k, diffLocalization m m')
+              if k `Map.member` m2 then
+                  let m' = m2 Map.! k
+                  in Just (k, diffLocalization m m')
+              else
+                  Just (k, m)
           items' = catMaybes $ map aux items
 diffLocalization _ _ = undefined
 
@@ -265,7 +323,8 @@ main = do
   localizationCalls <- readLocalizations files
   let results = map (flip removeLocalizationCallFromLocalization mainLocalization) localizationCalls
       (logs, cleanedLocalizations) = splitEithers results
-      unusedLocalization = foldl intersectLocalizations mainLocalization cleanedLocalizations
+      mainLocalizationWithWhiteList = mainLocalization `diffLocalization` whitelist
+      unusedLocalization = foldl intersectLocalizations mainLocalizationWithWhiteList cleanedLocalizations
   _ <- forM logs $ \warn -> hPutStrLn stderr $ "Warning: " ++ warn
   putStrLn "******************************"
   putStrLn "Unused localization calls:"

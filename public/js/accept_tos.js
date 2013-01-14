@@ -37,8 +37,6 @@
     render: function () {
       var model = this.model;
       var view = this;
-      //var header = $("<header/>").append($("<h1 class='big'/>").text(localization.accountSetupModal.termsPageHeader));
-      //$(this.el).append(header);
        
       var content = $("<div class='short-input-container'/>");
       var wrapper = $("<div class='short-input-container-body-wrapper'/>");
