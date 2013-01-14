@@ -85,10 +85,11 @@ class DocHelper
 
   def requestSigAttachment(attname, attdesc, counterparts)
     (@wait.until { @driver.find_element :css => ".signatoryattachmentssetuptext span.countspan" }).click
+    sleep 1
     counterparts.each do |counterpart|
-      click "div.designSignatoryAttachmentsPopupContent div.label"
-      (@wait.until { @driver.find_elements :css => "input.editSignatoryAttachmentName" }).last.send_keys attname
-      (@wait.until { @driver.find_elements :css => "textarea.editSignatoryAttachmentDescription" }).last.send_keys attdesc
+      click ".modal.active div.designSignatoryAttachmentsPopupContent div.label"
+      (@wait.until { @driver.find_elements :css => ".modal.active input.editSignatoryAttachmentName" }).last.send_keys attname
+      (@wait.until { @driver.find_elements :css => ".modal.active textarea.editSignatoryAttachmentDescription" }).last.send_keys attdesc
       (@wait.until { @driver.find_elements :xpath => "//option[text()='" + counterpart + "']" }).last.click
       sleep 2
     end
