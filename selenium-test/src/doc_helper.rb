@@ -74,6 +74,7 @@ class DocHelper
     sleep 1
     puts "Uploading attachment"
     (@wait.until { @driver.find_element :css => ".modal.active .selectAuthorAttachmentPopupContent input.multiFileInput" }).send_keys filepath
+    sleep 5
     puts "Closing attachment modal"
     click ".modal.active .modal-footer a.float-right"
     puts "Modal closed"
