@@ -76,7 +76,8 @@ class DocHelper
     (@wait.until { @driver.find_element :css => "div.selectAuthorAttachmentPopupContent input.multiFileInput" }).send_keys filepath
     puts "Closing attachment modal"
     click "div.modal-footer a.float-right"
-    @wait.until { @driver.execute_script("return $('span.authorattachmentssetuptext span').first().text()") == "("+no.to_s()+")" }
+    puts "Modal closed, checking attachments count"
+    @wait.until { @driver.execute_script("return $('.authorattachmentssetuptext .countspan').first().text()") == "("+no.to_s()+")" }
   end
 
   def requestSigAttachment(attname, attdesc, counterparts)
