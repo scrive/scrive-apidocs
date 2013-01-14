@@ -225,7 +225,13 @@ instance MonadDB m => DBUpdate m DeleteUser Bool where
 -- | Removes user who didn't accept TOS from the database
 data RemoveInactiveUser = RemoveInactiveUser UserID
 instance MonadDB m => DBUpdate m RemoveInactiveUser Bool where
-  update (RemoveInactiveUser uid) = kRun01 $ SQL "DELETE FROM users WHERE deleted = FALSE AND id = ? AND has_accepted_terms_of_service IS NULL" [toSql uid]
+  update (RemoveInactiveUser uid) = do
+    -- There is a chance that a signatory_links gets connected to an
+    -- yet not active account the true fix is to not have inactive
+    -- accounts, but we are not close to that point yet. Here is a
+    -- kludge to get around our own bug.
+    kRun_ $ "UPDATE signatory_links SET user_id = NULL WHERE user_id = " <?> uid <+> "AND EXISTS (SELECT TRUE FROM users WHERE users.id = signatory_links.user_id AND users.has_accepted_terms_of_service IS NULL)"
+    kRun01 $ "DELETE FROM users WHERE id = " <?> uid <+> "AND has_accepted_terms_of_service IS NULL"
 
 data AddUser = AddUser (String, String) String (Maybe Password) (Maybe CompanyID) Lang
 instance MonadDB m => DBUpdate m AddUser (Maybe User) where

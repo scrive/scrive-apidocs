@@ -39,7 +39,9 @@ tableDocStatEvents = tblTable {
         return TVRcreated
       _ -> return TVRinvalid
   , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id")
-                     , (tblForeignKeyColumn "company_id" "companies" "id") ]
+                       { fkOnDelete = ForeignKeyCascade }
+                     , (tblForeignKeyColumn "company_id" "companies" "id")
+                     ]
   }
 
 tableUserStatEvents :: Table
@@ -72,10 +74,10 @@ tableUserStatEvents = tblTable {
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblIndexes = [ tblIndexOnColumn "user_id"
-                 ]
   , tblForeignKeys = [ (tblForeignKeyColumn "user_id" "users" "id")
-                     , (tblForeignKeyColumn "company_id" "companies" "id") ]
+                       { fkOnDelete = ForeignKeyCascade }
+                     , (tblForeignKeyColumn "company_id" "companies" "id")
+                     ]
   }
 
 tableSignStatEvents :: Table
@@ -97,7 +99,7 @@ tableSignStatEvents = tblTable {
                                         , colNullable = Just False})] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE sign_stat_events ("
-          <> "  document_id        BIGINT      NOT NULL"          
+          <> "  document_id        BIGINT      NOT NULL"
           <> ", signatory_link_id  BIGINT      NOT NULL"
           <> ", time               TIMESTAMPTZ NOT NULL"
           <> ", quantity           SMALLINT    NOT NULL"
@@ -108,6 +110,9 @@ tableSignStatEvents = tblTable {
         return TVRcreated
       _ -> return TVRinvalid
   , tblForeignKeys = [ (tblForeignKeyColumn "document_id" "documents" "id")
+                       { fkOnDelete = ForeignKeyCascade }
                      , (tblForeignKeyColumn "company_id" "companies" "id")
-                     , (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id") ]
+                     , (tblForeignKeyColumn "signatory_link_id" "signatory_links" "id")
+                       { fkOnDelete = ForeignKeyCascade }
+                     ]
   }
