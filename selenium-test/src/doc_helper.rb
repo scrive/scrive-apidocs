@@ -87,7 +87,7 @@ class DocHelper
     (@wait.until { @driver.find_element :css => ".signatoryattachmentssetuptext span.countspan" }).click
     sleep 2
     counterparts.each do |counterpart|
-      click ".modal.active div.designSignatoryAttachmentsPopupContent .button-small.blue"
+      @driver.execute_script("$('.modal.active div.designSignatoryAttachmentsPopupContent .button-small.blue').click()")
       (@wait.until { @driver.find_elements :css => ".modal.active input.editSignatoryAttachmentName" }).last.send_keys attname
       (@wait.until { @driver.find_elements :css => ".modal.active textarea.editSignatoryAttachmentDescription" }).last.send_keys attdesc
       (@wait.until { @driver.find_elements :xpath => "//option[text()='" + counterpart + "']" }).last.click
