@@ -300,7 +300,8 @@ jsonUsersList = onlySalesOrAdmin $ do
                     value "id" $ show $ userid user
                     value "username" $ getFullName user
                     value "email"    $ getEmail user
-                    value "company"  $ getCompanyName mcompany
+                    value "companyposition" $ usercompanyposition $ userinfo user
+                    value "company"  $ getCompanyName (user,mcompany)
                     value "phone"    $ userphone $ userinfo user
                     value "tos"      $ maybe "-" show (userhasacceptedtermsofservice user)
                     value "signed_1m" $ show $ signaturecount1m docstats
