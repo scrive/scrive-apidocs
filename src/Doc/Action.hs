@@ -83,7 +83,10 @@ postDocumentPreparationChange doc@Document{documenttitle} apistring = do
     TimeProp   now,
     MailProp   email,
     IPProp     ip,
-    NameProp   fullname]
+    NameProp   fullname,
+    stringProp "Authentication" (show $ documentauthenticationmethod doc),
+    stringProp "Delivery" (show $ documentdeliverymethod doc),
+    numProp "Days to sign" (fromIntegral $ documentdaystosign doc)]
 
   edoc <- if (sendMailsDuringSigning document')
              then sendInvitationEmails ctx document'
