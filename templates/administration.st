@@ -274,10 +274,10 @@ adminUsersForSales=
                 new Cell({name: "Username", width:"130px", field:"username", special:"link"}),
                 new Cell({name: "Email", width:"130px", field:"email", special:"link"}),
                 new Cell({name: "Company", width:"100px", field:"company", special:"link"}),
+                new Cell({name: "Position", width:"100px", field:"companyposition", special:"link"}),
                 new Cell({name: "Phone", width:"100px", field:"phone", special:"link"}),
                 new Cell({name: "TOS date", width:"100px", field:"tos", special:"link"}),
-                new Cell({name: "Signed Docs", width:"100px", field:"signed_docs", special:"link"}),
-                new Cell({name: "Subaccounts", width:"100px", field:"subaccounts", special:"link"})
+                new Cell({name: "Signed Docs", width:"100px", field:"signed_docs", special:"link"})
                 ]
         }),
         headerExtras: createUserBtn.input()
