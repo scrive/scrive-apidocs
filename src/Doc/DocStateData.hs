@@ -271,7 +271,7 @@ data DocumentType = Signable DocumentProcess
   deriving (Eq, Ord, Show, Read)
 
 instance Convertible DocumentType SqlValue where
-  safeConvert v = Right . SqlInteger $ case v of
+  safeConvert v = Right . SqlInt32 $ case v of
     Signable _ -> 1
     Template _ -> 2
 
@@ -279,6 +279,19 @@ documentType :: (Int, DocumentProcess) -> DocumentType
 documentType (1, p) = Signable p
 documentType (2, p) = Template p
 documentType v = error $ "documentType: wrong values: " ++ show v
+
+instance Convertible SqlValue DocumentType where
+  safeConvert v = do
+    (val :: Int) <- safeConvert v
+    case val of
+      1 -> return (Signable undefined)
+      2 -> return (Template undefined)
+      x -> Left (ConvertError { convSourceValue = show v
+                              , convSourceType = show (typeOf v)
+                              , convDestType = "DocumentType"
+                              , convErrorMessage = "Value " ++ show x ++ " is not in [1,2]"
+                              })
+
 
 toDocumentProcess :: DocumentType -> DocumentProcess
 toDocumentProcess (Signable p) = p
