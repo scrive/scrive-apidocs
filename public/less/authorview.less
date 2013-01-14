@@ -96,7 +96,42 @@
         }
     }
 
+  .column.spacing {
+          margin-right: 20px;
+      }
+
+  .section.spacing {
+          padding: 15px;
+      }
+
   .subcontainer .signatories {
+
+      div.spacing {
+          padding: 8px;
+          .butt {
+            padding-bottom: 0px;
+            margin-bottom: 0px;
+          }
+      }
+
+
+      .sig.first {
+          margin-top: 0px;
+          padding-top: 0px;
+      }
+
+      .sig {
+          margin-top: 4px;
+      }
+
+      .sig .name {
+          margin-bottom: 2px;
+      }
+
+      .sig .name.first {
+          margin-top: 0px;
+      }
+
       padding-bottom: 35px;
       padding-top: 35px;
       td.signatory-box {
@@ -108,9 +143,11 @@
       }  
       .column {
           display: inline-block;
-          width: 260px;
+          width: 270px;
           min-height: 125px;
-          margin-right: 0px;
+          &.spacing {  
+            margin-right: 0px;
+          }
       }
 
       .name {
