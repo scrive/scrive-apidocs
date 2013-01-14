@@ -87,11 +87,14 @@ class DocHelper
     (@wait.until { @driver.find_element :css => ".signatoryattachmentssetuptext span.countspan" }).click
     sleep 2
     counterparts.each do |counterpart|
-      @driver.execute_script("$('.modal.active div.designSignatoryAttachmentsPopupContent .button-small.blue').click()")
-      (@wait.until { @driver.find_elements :css => ".modal.active input.editSignatoryAttachmentName" }).last.send_keys attname
-      (@wait.until { @driver.find_elements :css => ".modal.active textarea.editSignatoryAttachmentDescription" }).last.send_keys attdesc
-      (@wait.until { @driver.find_elements :xpath => "//option[text()='" + counterpart + "']" }).last.click
       sleep 2
+      @driver.execute_script("$('.modal.active div.designSignatoryAttachmentsPopupContent .button-small.blue').focus().click()")
+      (@wait.until { @driver.find_elements :css => ".modal.active input.editSignatoryAttachmentName" }).last.send_keys attname
+      @driver.execute_script("$('.modal.active input.editSignatoryAttachmentName').change()");
+      (@wait.until { @driver.find_elements :css => ".modal.active textarea.editSignatoryAttachmentDescription" }).last.send_keys attdesc
+      @driver.execute_script("$('.modal.active  textarea.editSignatoryAttachmentDescription').change()");
+      @driver.execute_script("$(\".modal.active option:contains('" + counterpart + "')\").last().attr('selected','true')");
+      @driver.execute_script("$('.modal.active  select').change()");
     end
      @driver.execute_script("$('.modal.active .modal-footer .button-small.button-green').click()")
      sleep 2
