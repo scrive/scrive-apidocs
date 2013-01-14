@@ -21,6 +21,7 @@ import System.Exit
 
 ------------------------------
 -- WHITELIST
+whitelist :: Localization
 whitelist =
     o[("localization",
       o[ ("statusToolTip", o[ ("draft", d)
@@ -312,9 +313,8 @@ readLocalizations paths = concat <$> mapM aux paths
             contents <- readFile path
             let numberedLines = zip [1..] $ lines contents
                 localizationRegex = "localization(\\.[a-zA-Z0-9_]+)*[([]?" :: String
-                results = map (\(lineNumber, line) -> (line =~ localizationRegex, path, lineNumber)) numberedLines
-                properResults = filter (\(line, _, _) -> not $ null line) results -- filter out lines that don't match the regex
-            return $ map (uncurry3 localizationCallFromString) properResults
+                results = concatMap (\(lineNumber, line) -> map (\x -> (x, path, lineNumber)) $ getAllTextMatches $ line =~ localizationRegex) numberedLines
+            return $ map (uncurry3 localizationCallFromString) results
 
 main :: IO ()
 main = do
