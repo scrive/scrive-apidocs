@@ -14,6 +14,9 @@ module DBError
     , transActionNotAvailable
     ) where
 
+import Control.Exception
+import Data.Typeable
+
 {- |
    The different types of errors that could occur when accessing the database.
 
@@ -29,8 +32,10 @@ data DBError = DBResourceNotAvailable -- ^ The queried for resource does not exi
              | DBNotLoggedIn -- ^ There is no user logged in (in Context) and access control requires log in
              | DBDatabaseNotAvailable String -- ^ A generalized error for any problem with the database itself
              | DBActionNotAvailable String -- ^ An error when an action is not available on a given record
-             deriving (Show, Eq)
+             deriving (Show, Eq, Typeable)
 
 transActionNotAvailable :: Either String b -> Either DBError b
 transActionNotAvailable (Left s) = Left $ DBActionNotAvailable s
 transActionNotAvailable (Right d) = Right d
+
+instance Exception DBError
