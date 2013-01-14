@@ -139,20 +139,35 @@ localizationsFromFile path = do
 ------------------------------
 -- localization calls
 
+-- final element of localization call
+-- e.g. X in 'localization.foo.bar.X'
+data LocalizationCallFinalElem = Attribute String  -- X = baz
+                               | FunCall String    -- X = baz(
+                               | DictAccess String -- X = baz[
+
 -- localization call is a lvalue usage of values from localization objects
 -- so if there's something like this in a file.js:
 -- box.html(localization.foo.bar);
 -- we extract from that (34 is a line number of ^^ line):
--- LocalizationCall ["localization", "foo", "bar"] "file.js" 34
-data LocalizationCall = LocalizationCall [String] FilePath Int
+-- LocalizationCall ["localization", "foo"] (Attribute "bar") "file.js" 34
+data LocalizationCall = LocalizationCall [String] LocalizationCallFinalElem FilePath Int
 
 -- parsing
 localizationCallFromString :: String -> FilePath -> Int -> LocalizationCall
-localizationCallFromString s = LocalizationCall (unfoldr (aux . break (== '.')) s)
+localizationCallFromString s = LocalizationCall path finalElem
     where aux ("", "") = Nothing
           aux (x, "") = Just (x, "")
           aux (x, '.':y) = Just (x, y)
           aux _ = Nothing
+
+          path' = unfoldr (aux . break (== '.')) s
+          path = init path'
+          finalElem' = last path'
+          finalElem = case last finalElem' of
+                        '[' -> DictAccess $ init finalElem'
+                        '(' -> FunCall $ init finalElem'
+                        _ -> Attribute finalElem'
+
 
 -- remove one leaf (matching localization call) from a localization
 -- localization must be an Object, and localization call cannot be empty
@@ -161,39 +176,76 @@ localizationCallFromString s = LocalizationCall (unfoldr (aux . break (== '.')) 
 -- localization call points to a whole [sub]dictionary of the localization
 -- dict-like access to simple values (e.g. localization call 'foo.bar' for localization '{foo: "quuz"}')
 removeLocalizationCallFromLocalization :: LocalizationCall -> Localization -> Either String Localization
-removeLocalizationCallFromLocalization (LocalizationCall path filePath' lineNumber) loc = aux path loc
-    where myError s = Left $ s ++ " at " ++ filePath' ++ ":" ++ show lineNumber ++ " (from call: '" ++ format path ++ "')"
+removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath' lineNumber) loc = aux path loc
+    where myError s = Left $ s ++ " at " ++ filePath' ++ ":" ++ show lineNumber ++ " (from call: '" ++ wholePathFormatted ++ "')"
+          wholePathFormatted = format $ path ++ [case finalElem of
+                                                   DictAccess x -> x ++ "["
+                                                   FunCall x -> x ++ "("
+                                                   Attribute x -> x]
           format = concat . intersperse "."
 
-          aux [] _ = error "Trying to remove empty path"
           aux _ (Value _) = error "Trying to remove from Value Localization"
-
-          aux [node] (Object m) =
-              if last node == '(' then
-                  -- looks like a function call
-                  let functionName = init node
-                  in case Map.lookup functionName m of
-                       Nothing -> myError $ "Detected function/method like access to non-existing key '" ++ node ++ "'"
-                       Just (Object _) -> myError $ "Detected function/method like access to a sub-dict from localization '" ++ node ++ "'"
-                       Just (Value "<function>") -> Right $ Object $ Map.delete node m
-                       Just (Value _) -> Right $ Object $ Map.delete node m -- functionName is probably a string method
-              else
-                  case Map.lookup node m of
-                    Nothing -> myError $ "Detected access to non-existing key '" ++ node ++ "'"
-                    Just (Object _) -> myError $ "Detected access to a whole dict from localization '" ++ node ++ "'"
-                    Just (Value _) -> Right $ Object $ Map.delete node m
+          aux [] (Object m) =
+              case finalElem of
+                FunCall functionName ->
+                    case Map.lookup functionName m of
+                      Nothing -> myError $ "Detected function/method like access to non-existing key '" ++ functionName ++ "'"
+                      Just (Object _) -> myError $ "Detected function/method like access to a sub-dict '" ++ functionName ++ "'"
+                      Just (Value "<function>") -> Right $ Object $ Map.delete functionName m
+                      Just (Value "<array>") -> myError $ "Detected function/method like access to an array '" ++ functionName ++ "'"
+                      Just (Value _) -> myError $ "Detected function/method like access to a string '" ++ functionName ++ "'"
+                DictAccess dictName ->
+                    case Map.lookup dictName m of
+                      Nothing -> myError $ "Detected dict/array like access to non-existing key '" ++ dictName ++ "'"
+                      Just (Object _) -> myError $ "Detected dict access (" ++ dictName ++ "), probably using dynamic keys. Please manually add needed keys to the whitelist"
+                      Just (Value "<function>") -> myError $ "Detected dict/array like access to a function '" ++ dictName ++ "'"
+                      Just (Value "<array>") -> Right $ Object $ Map.delete dictName m
+                      Just (Value _) -> myError $ "Detected dict/array like access to a string '" ++ dictName ++ "'"
+                Attribute attr ->
+                    case Map.lookup attr m of
+                      Nothing -> myError $ "Detected access to non-existing key '" ++ attr ++ "'"
+                      Just (Object _) -> myError $ "Detected access to a whole sub-dict '" ++ attr ++ "'. Please manually add needed keys to the whitelist."
+                      Just (Value "<function>") -> myError $ "Detected attribute access to a function '" ++ attr ++ "'"
+                      Just (Value "<array>") -> myError $ "Detected attribute access to an array '" ++ attr ++ "'"
+                      Just (Value _) -> Right $ Object $ Map.delete attr m
 
           aux (node:children) (Object m) =
               case Map.lookup node m of
                 Nothing -> myError $ "Detected access to non-existing key '" ++ node ++ "'"
+                Just (Value v) -> -- "foo....QUUX" "{foo: v}"
+                    case children of
+                      [] -> -- "foo.QUUX" "{foo: v}"
+                        case finalElem of
+                          FunCall _ -> -- "foo.quux(" "{foo: v}"
+                            case v of
+                              "<function>" -> -- "foo.quux(" "{foo: function() {}}"
+                                myError $ "Detected function call on a function '" ++ format path ++ "'"
+                              "<array>" -> -- "foo.quux(" "{foo: []}"
+                                myError $ "Detected function call on an array '" ++ format path ++ "'"
+                              _ -> -- "foo.quux(" "{foo: 'bar'}", string method call
+                                return $ Object $ Map.delete node m
+                          DictAccess _ -> -- "foo.quux[" "{foo: v}"
+                            case v of
+                              "<function>" -> -- "foo.quux[" "{foo: function() {}}"
+                                myError $ "Detected attribute access (followed by a key retrieval) to a function '" ++ format path ++ "'"
+                              "<array>" -> -- "foo.quux[" "{foo: []}"
+                                myError $ "Detected attribute access (followed by a key retrieval) to an array '" ++ format path ++ "'"
+                              _ -> -- "foo.quux[" "{foo: 'bar'}"
+                                myError $ "Detected attribute access (followed by a key retrieval) to a string '" ++ format path ++ "'"
+                          Attribute _ -> -- "foo.quux" "{foo: v}"
+                            case v of
+                              "<function>" -> -- "foo.quux" "{foo: function() {}}"
+                                myError $ "Detected attribute access to a function '" ++ format path ++ "'"
+                              "<array>" -> -- "foo.quux" "{foo: []}"
+                                myError $ "Detected attribute access to an array '" ++ format path ++ "'"
+                              _ -> -- "foo.quux" "{foo: 'bar'}"
+                                myError $ "Detected attribute access to a string '" ++ format path ++ "'"
+                      _ -> -- "foo....QUUX" "{foo: v}"
+                        let badPrefix = take (length path - length children) path
+                        in myError $ "Detected dict-like acces ('" ++ format path ++ "'), but '" ++ format badPrefix ++ "' is a simple value'"
                 Just l@(Object _) -> do
                   y <- aux children l
                   return $ Object $ Map.alter (const $ Just y) node m
-                Just (Value _) ->
-                    case children of
-                      [finalNode] | last finalNode == '(' -> Right $ Object $ Map.delete node m -- method is immediately called
-                      _ -> let badPrefix = take (length path - length children) path
-                          in myError $ "Detected dict-like acces ('" ++ format path ++ "'), but '" ++ format badPrefix ++ "' is a simple value'"
 
 -- parse localization calls from a list of files
 readLocalizations :: [FilePath] -> IO [LocalizationCall]
@@ -201,7 +253,7 @@ readLocalizations paths = concat <$> mapM aux paths
     where aux path = do
             contents <- readFile path
             let numberedLines = zip [1..] $ lines contents
-                localizationRegex = "localization(\\.[a-zA-Z0-9_]+)*\\(?" :: String
+                localizationRegex = "localization(\\.[a-zA-Z0-9_]+)*[([]?" :: String
                 results = map (\(lineNumber, line) -> (line =~ localizationRegex, path, lineNumber)) numberedLines
                 properResults = filter (\(line, _, _) -> not $ null line) results -- filter out lines that don't match the regex
             return $ map (uncurry3 localizationCallFromString) properResults
