@@ -25,6 +25,7 @@ import ThirdPartyStats.Tables
 import qualified Log
 import MinutesTime
 import User.UserID (UserID, unsafeUserID)
+import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import IPAddress
 import User.Model (Email (..))
 
@@ -112,6 +113,7 @@ data EventProperty
   | NameProp   String
   | UserIDProp UserID
   | TimeProp   MinutesTime
+  | DocIDProp  DocumentID
   | SomeProp   PropName PropValue
     deriving (Show, Eq)
 
@@ -124,6 +126,7 @@ instance Binary EventProperty where
   put (NameProp name)     = putWord8 2   >> put name
   put (UserIDProp uid)    = putWord8 3   >> put uid
   put (TimeProp t)        = putWord8 4   >> put t
+  put (DocIDProp did)     = putWord8 5   >> put did
   put (SomeProp name val) = putWord8 255 >> put name >> put val
   
   get = do
@@ -134,6 +137,7 @@ instance Binary EventProperty where
       2   -> NameProp         <$> get
       3   -> UserIDProp       <$> get
       4   -> TimeProp         <$> get
+      5   -> DocIDProp        <$> get
       255 -> SomeProp         <$> get <*> get
       n   -> fail $ "Couldn't parse EventProperty constructor tag: " ++ show n
 
@@ -245,6 +249,7 @@ instance Arbitrary EventProperty where
       (1, NameProp <$> arbitrary),
       (1, UserIDProp . unsafeUserID <$> arbitrary),
       (1, TimeProp . fromSeconds <$> arbitrary),
+      (1, DocIDProp . unsafeDocumentID <$> arbitrary),
       (5, SomeProp <$> arbitrary <*> arbitrary)]
     where
       email = do

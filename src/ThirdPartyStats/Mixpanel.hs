@@ -1,5 +1,4 @@
 -- | Mixpanel utilities and event processor for the third party stats system.
---   TODO: implement setting properties on Mixpanel users!
 module ThirdPartyStats.Mixpanel (
   MixpanelToken,
   processMixpanelEvent) where
@@ -59,6 +58,7 @@ mixpanelProperty (IPProp ip)         = IP (show ip)
 mixpanelProperty (NameProp name)     = FullName name
 mixpanelProperty (TimeProp t)        = Time (toUTCTime t)
 mixpanelProperty (UserIDProp _)      = error "User ID prop in the wrong place!"
+mixpanelProperty (DocIDProp did)     = CustomString "Document ID" (show did)
 mixpanelProperty (SomeProp name val) = mkMixpanelProperty val
     where
       mkMixpanelProperty (PVNumber n) =
