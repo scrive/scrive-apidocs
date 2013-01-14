@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 
-if [ "$TEAMCITY_VERSION" == "" ]; then
+if [ "$TEAMCITY_VERSION" = "" ]; then
 
 ./dist/build/kontrakcja-test/kontrakcja-test --plain all
 
