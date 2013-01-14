@@ -6,37 +6,13 @@
 javascriptLocalisation =
     var localization =
         {      welcomeback : "$_welcomeback()$"
-             , rememberme  : "$_rememberme()$"
              , resetYourPassword : "$_resetYourPassword()$"
              , resetYourPasswordCheckEmail : "$_resetYourPasswordCheckEmail()$"
              , getStartedInstantly : "$_getStartedInstantly()$"
              , freeDocumentPerMonth : "$_freeDocumentPerMonth()$"
              , signup : "$_signUp()$"
              , loadingFile : "$_loadingFile()$"
-             , problemWithPDF : "$_problemWithPDF()$"
-             , backToArchive : "$_backToArchive()$"
-             , repetedEmailAddress : "$_repetedEmailAddress()$"
-             , offerSignatory : "$_offerSignatory()$"
-             , sigattachmessage : "$_pageDocumentForAuthorHelpersLocalDialogsRecipient()$"
-             , secretaryCantSign : "$_secretaryCantSign()$"
              , more : "$_more()$"
-             , cantSendReminder: function(listtype){
-                    return "$_cantSendReminder1()$" + listtype + "$_cantSendReminder2()$"
-                    }
-             , addRequiredAttachments : "$_addRequiredAttachments()$"
-             , setAllFields : "$_setAllFields()$"
-             , multipleSignatory : "$_multipleSignatory()$"
-             , contractSignatory : function(idx) {return "$_contractSignatory()$ " + idx;}
-             , nonsignatory : "$_nonsignatory()$"
-             , offerAuthor : "$_offerAuthor()$"
-             , author : "$_sender()$"
-             , youMustSetParnerEmail : "$_youMustSetParnerEmail()$"
-             , emptyOrNotValidEmail :  "$_emptyOrNotValidEmail()$"
-             , atLeastOneSignatoryRequired : "$_atLeastOneSignatoryRequired()$"
-             , mustFillFieldsBeforeSigning : "$_mustFillFieldsBeforeSigning()$"
-             , backToStepTwoAndFillPersonNumber : "$_backToStepTwoAndFillPersonNumber()$"
-             , missingNames : "$_missingNames()$"
-             , missingSignatoryNames : "$_missingSignatoryNames()$"
              , yourSigningPluginFailed : "$_yourSigningPluginFailed()$"
              , startingSaveSigning : "$_startingSaveSigning()$"
              , noNordeaInstalled  : "$_noNordeaInstalled()$"
@@ -48,29 +24,15 @@ javascriptLocalisation =
                      }
              , differentSignatories :  "$_differentSignatories()$"
              , ie6NotSupported : "$_ie6NotSupported()$"
-             , youCanNotInviteSameEmail : "$_youCanNotInviteSameEmail()$"
              , fstname : "$_firstname()$"
              , sndname : "$_lastname()$"
-             , companyposition : "$_companyposition()$"
-             , phone : "$_phone()$"
              , email : "$_email()$"
-             , password : "$_password()$"
-             , niceEmail : "$_niceEmail()$"
              , company : "$_company()$"
              , personamNumber : "$_personnumber()$"
              , companyNumber : "$_orgnumber()$"
              , loadingTweets : "$_loadingTweets()$"
              , fieldName : "$_fieldName()$"
-             , multiPartPartner : "$_multiPartPartner()$"
              , noNamePerson : "$_noNamePerson()$"
-             , senderName : "$_senderName()$"
-             , senderTitle : "$_senderTitle()$"
-             , senderNumber :  "$_senderNumber()$"
-             , senderEmail :  "$_senderEmail()$"
-             , partnerName : "$_partnerName()$"
-             , partnerTitle : "$_partnerTitle()$"
-             , partnerNumber : "$_partnerNumber()$"
-             , partnerEmail : "$_partnerEmail()$"
              , statusToolTip: {
                    draft: "$_tooltipdraft()$"
                  , cancelled : "$_tooltipcancelled()$"
@@ -85,8 +47,6 @@ javascriptLocalisation =
                  , timeouted       : "$_tooltiptimedout()$"
                  , problem           : "$_tooltiperror()$"
              }
-             , select : "$_options()$"
-             , of : "$_of()$"
              , and : "$_and()$"
              , listand : "$_listand()$"
              , you : "$_you()$"
@@ -96,11 +56,7 @@ javascriptLocalisation =
              , downloadPDF : "$_DownloadPDF()$"
              , reviewPDF: "$_ReviewPDF()$"
              , deletePDF: "$_DeletePDF()$"
-             , document : "$_Document()$"
-             , onlyPDFAllowed : "$_updateAttachmentsDialogUpLoadOnlyPDF()$"
              , attachmentType : "$_pageAttachmentAttachments()$"
-             , attachment : "$_Attachment()$"
-             , attachmentsWord : "$_Attachments()$"
              , requestedAttachments : "$_RequestedAttachments()$"
              , send : "$_send()$"
              , csvFilePersons : "$_csvFilePersons()$"
@@ -111,8 +67,7 @@ javascriptLocalisation =
                        , formOwnMessage : "$_reminderFormFooterOwnMessage()$"
 					}
              , sign :  {
-                          guardCBox : "$_signGuardCBox()$"
-                        , eleg : {
+                          eleg : {
                                      subhead : "$_pageDocumentForSignContentElegSubhead()$"
                                    , body1: " $_pageDocumentForSignContentElegBody1()$ "
                                    , clickHere : "$_pageDocumentForSignContentElegBody2ClickHere()$"
@@ -124,9 +79,6 @@ javascriptLocalisation =
                     }
              , signByAuthor : {
                           modalTitle : "$_dialogConfirmSignByAuthorHead()$"
-                        , modalBody1 : "$_dialogConfirmSignByAuthorBody1()$"
-                        , modalBody2 : "$_dialogConfirmSignByAuthorBody2()$"
-                        , modalBody3 : "$_dialogConfirmSignByAuthorBody3()$"
                         , eleg : {
                                      subhead : "$_dialogConfirmSignByAuthorElegSubHead()$"
                                    , body1: " $_dialogConfirmSignByAuthorElegBody()$ "
@@ -156,11 +108,7 @@ javascriptLocalisation =
                        , waitingForSignature: "$_waitingForSignature()$"
                     }
             , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"
-            , signatoryAttachmentBoxHeader : "$_signViewSigAttachmentBoxHead()$"
             , signatoryAttachmentUploadButton: "$_signViewSigAttachmentBoxChooseFile()$"
-            , uploadedAttachments: "$_uploadedAttachments()$"
-            , waitingForAttachment: "$_waitingForAttachment()$"
-            , templateTitle : "$_signStepsTitleRowTextContainerIfTemplate()$"
             , step1template : "$_step1selectIfTemplate()$"
             , step1normal   : "$_step1selectIfElse()$"
             , step2template : "$_step2selectIfTemplate()$"
@@ -168,8 +116,6 @@ javascriptLocalisation =
             , saveAsTemplate : "$_signStepsMenuEmptyStepSaveAsTemplate()$"
             , saveAsDraft    : "$_saveAsDraft()$"
             , saveTemplate : "$_signStepsBodyFunctionssaveTemplate()$"
-            , skrivapa : "$_skrivapa()$"
-
             , months : [ "$_january()$",
                          "$_february()$",
                          "$_march()$",
@@ -195,7 +141,6 @@ javascriptLocalisation =
                 contract: {
                    name: "$_contractname()$",
                    shortName: "$_contractshortname()$",
-                   title: "$_contracttitle()$",
                    sendbuttontext: "$_contractsendbuttontext()$",
                    confirmsendtext: "$_contractconfirmsendtext()$",
                    confirmsendtitle: "$_contractconfirmsendtitle()$",
@@ -211,9 +156,7 @@ javascriptLocalisation =
                    signatorysignmodalcontentsignvieweleg: "<p>$_contractsignatorysignmodalcontentdesignvieweleg()$ </p>",
                    signatorysignmodalcontentauthoronly: "<p>$_contractsignatorysignmodalcontentauthoronly()$ </p>",
                    signbuttontext: "$_contractsignbuttontext()$",
-                   signbuttontextauthor: "$_contractsignbuttontextauthor()$",
                    signatorycancelmodaltitle: "$_contractsignatorycancelmodaltitle()$",
-                   authorissecretarytext: "$_contractauthorissecretarytext()$",
                    remindagainbuttontext: "$_contractremindagainbuttontext()$",
                    authorname: "$_contractauthorname()$",
                    authorsignatoryname: "$_contractauthorsignatoryname()$",
@@ -223,7 +166,6 @@ javascriptLocalisation =
                 offer: {
                    name: "$_offername()$",
                    shortName: "$_offershortname()$",
-                   title: "$_offertitle()$",
                    sendbuttontext: "$_offersendbuttontext()$",
                    confirmsendtext: "$_offerconfirmsendtext()$",
                    confirmsendtitle: "$_offerconfirmsendtitle()$",
@@ -239,9 +181,7 @@ javascriptLocalisation =
                    signatorysignmodalcontentsignvieweleg: "<p>$_offersignatorysignmodalcontentdesignvieweleg()$ </p>",
                    signatorysignmodalcontentauthoronly: "<p>$_offersignatorysignmodalcontentauthoronly()$ </p>",
                    signbuttontext: "$_offersignbuttontext()$",
-                   signbuttontextauthor: "$_offersignbuttontextauthor()$",
                    signatorycancelmodaltitle: "$_offersignatorycancelmodaltitle()$",
-                   authorissecretarytext: "$_offerauthorissecretarytext()$",
                    remindagainbuttontext: "$_offerremindagainbuttontext()$",
                    authorname: "$_offerauthorname()$",
                    authorsignatoryname: "$_offerauthorsignatoryname()$",
@@ -251,7 +191,6 @@ javascriptLocalisation =
                 order: {
                    name: "$_ordername()$",
                    shortName: "$_ordershortname()$",
-                   title: "$_ordertitle()$",
                    sendbuttontext: "$_ordersendbuttontext()$",
                    confirmsendtext: "$_orderconfirmsendtext()$",
                    confirmsendtitle: "$_orderconfirmsendtitle()$",
@@ -267,9 +206,7 @@ javascriptLocalisation =
                    signatorysignmodalcontentsignvieweleg: "<p>$_ordersignatorysignmodalcontentdesignvieweleg()$ </p>",
                    signatorysignmodalcontentauthoronly: "<p>$_ordersignatorysignmodalcontentauthoronly()$ </p>",
                    signbuttontext: "$_ordersignbuttontext()$",
-                   signbuttontextauthor: "$_ordersignbuttontextauthor()$",
                    signatorycancelmodaltitle: "$_ordersignatorycancelmodaltitle()$",
-                   authorissecretarytext: "$_orderauthorissecretarytext()$",
                    remindagainbuttontext: "$_orderremindagainbuttontext()$",
                    authorname: "$_orderauthorname()$",
                    authorsignatoryname: "$_orderauthorsignatoryname()$",
@@ -299,10 +236,6 @@ javascriptLocalisation =
            , filterByAuthor : {
                 showAnyAuthor : "$_anyAuthor()$"
             }
-           , searchTemplate : "$_SearchTemplate()$"
-           , sortTemplate : "$_SortTemplate()$"
-           , infoSelectTemplate : "$_InfoSelectTemplate()$"
-           , goBack : "$_GoBack()$"
            , eleg : "$_eleg()$"
            , editInviteText :"$_editinvitetextlinkInviteText()$"
            , editInviteDialogHead : "$_editInviteTextDialogHead()$"
@@ -319,7 +252,6 @@ javascriptLocalisation =
            , signatoryListSignOrder : "$_signStep2ContentSignOrder()$"
            , authorattachments: {
                   changeAuthorAttachments : "$_addattachmentlink()$"
-                , attach: "$_updateAttachmentsDialogUpLoadFooterAttach()$"
                 , selectAttachments: "$_updateAttachmentsDialogHead()$"
                 , selectAttachment : "$_updateAttachmentsDialogUpLoadChooseAttachment()$"
                 , selectAttachmentsDescription: "$_updateAttachmentsDialogChooseAttachment()$"
@@ -333,7 +265,6 @@ javascriptLocalisation =
               , attachment:         "$_pageDocumentForAuthorHelpersLocalDialogsAttachmentname()$"
               , from :              "$_pageDocumentForAuthorHelpersLocalDialogsAttachmentsigs()$"
               , requestAttachments : "$_pageDocumentForAuthorHelpersLocalDialogsHead()$"
-              , select            : "$_pageDocumentForAuthorHelpersLocalDialogsRecipient()$"
             }
           , save : "$_save()$"
           , signLast : "$_switchercheckboxSignLast()$"
@@ -355,7 +286,6 @@ javascriptLocalisation =
             }
          , signature : {
                placeFor : function(s) { return s + " $_signaturePlaceFor()$"; }
-             , missing : "$_signatureMissing()$"
              , placeYour : "$_signaturePlaceYour()$"
              , placeYourTip : "$_signaturePlaceYourTip()$"
              , confirmSignature : "$_signatureConfirm()$"
@@ -364,8 +294,6 @@ javascriptLocalisation =
               selectprocess : "$_selectDocumentType()$",
               validation : {
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
-                    , missingNames:  "$_missingSignatoryNames()$"
-                    , wrongNames :   "$_wrongSignatoryNames()$"
                     , missingOrWrongPersonalNumber : "$_backToStepTwoAndFillPersonNumber()$"
                     , missingOrWrongPlacedAuthorField : "$_missingPlacedAuthorFieldValue()$"
                     , missingOrWrongCustomFieldValue: "$_missingCustomFieldValue()$"
@@ -415,7 +343,6 @@ javascriptLocalisation =
               , passwordNeedsLetterAndDigit: "$_PasswordValidationMessageNeedsLetterAndDigit()$"
               , passwordsDontMatch: "$_PasswordValidationMessagePasswordsDontMatch()$"
               , mustAcceptTOS: "$_flashMessageMustAcceptTOS()$"
-              , phoneRequired: "$_flashMessagePhoneIsRequired()$"
               , wrongEmail : "$_emptyOrNotValidEmail()$"
          }
          , emailBranding: "$_EmailBranding()$"
@@ -432,7 +359,6 @@ javascriptLocalisation =
              ,  addToPadQueue : "$_padAddToPadQueue()$"
              ,  addToPadQueueConfirmHeader : "$_padAddToPadQueueConfirmHeader()$"
              ,  addToPadQueueConfirmText : "$_padAddToPadQueueConfirmText()$"
-             ,  addToPadQueueAdded : "$_padAddToPadQueueAdded()$"
              ,  addToPadQueueNotAdded : "$_padAddToPadQueueNotAdded()$"
              ,  removeFromPadQueue : "$_padRemoveFromPadQueue()$"
              ,  drawSignatureBoxHeader : "$_padDrawSignatureBoxHeader()$"
@@ -442,10 +368,6 @@ javascriptLocalisation =
              ,  howDoYouWantToSign : "$_howDoYouWantToSign()$"
              ,  cleanImage : "$_padCleanImage()$"
              ,  notNamedParty : "$_notNamedParty()$"
-             ,  documentCreatedFromTemplate : "$_documentCreatedFromTemplate()$"
-             ,  maybeYouWantToSendDirectly : "$_maybeYouWantToSendDirectly()$"
-             ,  sendDirectly : "$_sendDirectly()$"
-             ,  goToDesignView : "$_goToDesignView()$"
              ,  changePartyTo : "$_changePartyTo()$"
              ,  giveForSigningThisDevice : "$_padGiveForSigningThisDevice()$"
         }
@@ -454,9 +376,6 @@ javascriptLocalisation =
          , sampleEmailContent: "$_SampleEmailContent()$"
          , changeEmail : "$_changeEmail()$"
          , onlyPDF : "$_onlyPDF()$"
-         , login : {
-              logMeIn : "$_login()$"
-         }
          , newPasswordModal: {
              modalNewPasswordViewNewPassword: "$_modalNewPasswordViewNewPassword()$"
            , modalNewPasswordViewRepeatPassword: "$_modalNewPasswordViewRepeatPassword()$"
@@ -471,10 +390,7 @@ javascriptLocalisation =
            , flashMessagePasswordChangeLinkNotValid: '$_flashMessagePasswordChangeLinkNotValid()$'
          }
          , signupModal: {
-             fillinemail: "$_FillInEmail()$"
-           , emailAdress: "$_EmailAdress()$"
-           , modalAccountSetupFooter: "$_modalAccountSetupFooter()$"
-           , startNow : "$_startNow()$"
+             modalAccountSetupFooter: "$_modalAccountSetupFooter()$"
            , mainHeader : "$_signupModalMainHeader()$"
          }
          , accountSetupModal: {
@@ -482,8 +398,6 @@ javascriptLocalisation =
            , modalAccountSetupBodyTOS   : "$_modalAccountSetupBodyTOS()$"
            , modalAccountSetupChoosePassword: "$_modalAccountSetupChoosePassword()$"
            , modalAccountSetupRepeatPassword: "$_modalAccountSetupRepeatPassword()$"
-           , modalAccountSetupCallMe: "$_modalAccountSetupCallMe()$"
-           , PleaseAcceptTOS: "$_PleaseAcceptTOS()$"
            , modalAccountSetupPhone: "$_modalAccountSetupPhone()$"
            , modalAccountSetupPosition : "$_modalAccountSetupPosition()$"
            , modalAccountSetupCompany : "$_modalAccountSetupCompany()$"
@@ -525,15 +439,12 @@ javascriptLocalisation =
              , unavailableForSign: "$_unavailableForSign()$"
              , dueDate: "$_dueDate()$"
              , showDetails: "$_showDetails()$"
-             , hideDetails: "$_hideDetails()$"
              , companyNumberLabel: "$_companyNumberLabel()$"
              , personalNumberLabel: "$_personalNumberLabel()$"
              , authorAttachmentsTitleForOne: "$_signViewAuthorAttachmentsTitleForOne()$"
              , authorAttachmentsTitleForLots: "$_signViewAuthorAttachmentsTitleForLots()$"
              , signatoryAttachmentsTitleForOne: "$_signViewSignatoryAttachmentsTitleForOne()$"
              , signatoryAttachmentsTitleForLots: "$_signViewSignatoryAttachmentsTitleForLots()$"
-             , uploadedAttachmentsTitleForOne: "$_signViewUploadedAttachmentsTitleForOne()$"
-             , uploadedAttachmentsTitleForLots: "$_signViewUploadedAttachmentsTitleForLots()$"
              , signatoriesTitle: "$_signViewSignatoriesTitle()$"
              , newAccountTitle: "$_signViewCreateAccountTitle()$"
              , newAccountSubTitle: "$_signViewCreateAccountSubTitle()$"
@@ -562,7 +473,6 @@ javascriptLocalisation =
              , welcome : "$_welcome()$"
 
         }
-        , poweredByScrive : "$_poweredByScrive()$"
         , verification : {
                 result: "$_verificationResult()$"
              ,  success: "$_verificationSuccess()$"
@@ -588,131 +498,51 @@ javascriptLocalisation =
            , vat25: "$_paymentsVat25()$"
            , expires: "$_paymentsExpires()$"
            , creditcardnumber: "$_paymentsCreditCardNumber()$"
-           , manyusers: "$_paymentsManyUsers()$"
-           , price : "$_paymentsPrice()$"
-           , buysyou : "$_paymentsBuysYou()$"
-           , phonenumber : "$_paymentsPhonenumber()$"
-           , readmore : "$_paymentsReadMore()$"
-           , featuresurl : "$_paymentsFeaturesURL()$"
            , subheader: "$_paymentsSubheader()$"
            , contact: "$_paymentPlanContact()$"
            , already: "$_paymentPlanAlreadySubscribed()$"
            , alreadyGo: "$_paymentPlanAlreadySubscribedGo()$"
            , placeholder : "$_paymentPlanPlaceholder()$"
            , sendmsg : "$_paymentPlanSendMessage()$"
-           , plans: { professional : "$_paymentPlanProfessional()$"
-                    , team         : {
+           , plans: {
+                      team         : {
                       name : "$_paymentPlanTeam()$",
                       tag :"$_paymentPlanTeamTag()$",
                       price : "$_paymentsTeamPrice()$<span class='aster'>*</span>",
-                      features: [ "$_paymentFeatureDistance()$"
-                                 , "$_paymentFeaturePad()$"
-                                 , "$_paymentFeatureBranding()$"
-                                 , "$_paymentFeatureTracking()$"
-                                 , "$_paymentFeatureAPI()$"
-                                 , "$_paymentFeatureFeatures()$"
-                                 ],
-                      price1 : "",
                       price3 : "$_paymentPlanPerUserPerMonth()$",
-                      price21 : "",
-                      price31 : "",
-                      select : "$_paymentsSelect()$",
-                      selected : "$_paymentsSelected()$"
                     }
                     , form : {
                       name : "$_paymentPlanForm()$",
                       tag : "$_paymentPlanFormTag()$",
                       price : "$_paymentPlanFormPrice()$<span class='aster'>*</span>",
-                      features : [ "$_paymentFeatureSupport()$"
-                                 , "$_paymentFeatureHTTPAPI()$"
-                                 , "$_paymentFeatureDocumentation()$"
-                                 , "$_paymentFeatureExampleCode()$"
-                                 ],
-                      price1 : "",
                       price3 : "$_paymentPlanPerMonthPerDoc()$",
-                      price21 : "$_paymentPlanDocPrice()$<span class='aster'>*</span>",
-                      price31 : "$_paymentPlanPerDocument()$",
-                      select : "$_paymentsGetInTouch()$",
-                      selected : "$_paymentsSelected()$"
                     }
                     , enterprise : {
                       name : "$_paymentPlanEnterprise()$",
                       tag : "$_paymentPlanEnterpriseTag()$",
                       price : "$_paymentsQuote()$",
-                      features : [ "$_paymentFeatureAllTeamFeatures()$"
-                                 , "$_paymentFeatureAllOnlineFormFeatures()$"
-                                 , "&nbsp;"
-                                 , "$_paymentFeatureOnPremise()$"
-                                 , "$_paymentFeatureFullCust()$"
-                                 , "$_paymentFeatureProjMan()$"
-                                 ],
-                      price1 : "$_paymentsAskForA()$",
                       price3 : "$_paymentsGetInTouch()$",
-                      price21 : "",
-                      price31 : "",
-                      select : "$_paymentsGetInTouch()$",
-                      selected : "$_paymentsSelect()$"
 
                     }
-                    , free         : "$_paymentPlanFree()$"
-                    , pay          : "$_paymentPlanPay()$"
-                    , logo : "$_paymentPlanLogoAndBranding()$"
-                    , dash : "$_paymentPlanDashboard()$"
-                    , docprice : "$_paymentPlanDocPrice()$"
                     }
            , table: { currentplan : "$_paymentPlanCurrentPlan()$"
-                    , item        : "$_paymentPlanItem()$"
-                    , price       : "$_paymentPlanPrice()$"
-                    , quantity    : "$_paymentPlanQuantity()$"
-                    , subtotal    : "$_paymentPlanSubtotal()$"
                     , total       : "$_paymentPlanTotal()$"
                     , payments    : "$_paymentPlanPayments()$"
                     , nextpayment : "$_paymentPlanNextPayment()$"
                     , previouspayments : "$_paymentPlanPreviousPayments()$"
-                    , changesubscription : "$_paymentPlanChangeSubscription()$"
                     , changebilling: "$_paymentPlanChangeBilling()$"
                     , none: "$_paymentPlanNone()$"
                     }
-            , features: { send     : "$_paymentFeatureSend()$"
-                        , manage   : "$_paymentFeatureManage()$"
-                        , dash     : "$_paymentFeatureDash()$"
-                        , branding : "$_paymentFeatureBranding()$"
-                        , features : "$_paymentFeatureFeatures()$"
-                        }
             , subscribe: "$_paymentPlanSubscribe()$"
             , purchase: "$_paymentPlanPurchase()$"
-            , pleaseleavenumbertitle: "$_paymentsPleaseLeaveNumberTitle()$"
-            , ok: "$_paymentsSubmitButtonLabel()$"
-            , pleaseleavenumber: "$_paymentsPleaseLeaveNumber()$"
-            , askfora: "$_paymentsAskForA()$"
-            , quote: "$_paymentsQuote()$"
-            , getintouch: "$_paymentsGetInTouch()$"
-            , signed: "$_paymentsSigned()$"
             , subscribeheader : "$_paymentsSubscribeHeader()$"
             , chooseplan : "$_paymentsChoosePlan()$"
-            , paywithcard: "$_paymentsPayWithCard()$"
-            , selectplan: "$_paymentPlanSelectPlan()$"
             , savechanges : "$_SaveChanges()$"
-            , changeconfirm: "$_paymentPlanChangeConfirmMessage()$"
-            , changeaccount: "$_paymentPlanChangeAccount()$"
             , permonth: "$_paymentPlanPerMonth()$"
-            , peruserpermonth: "$_paymentPlanPerUserPerMonth()$"
-            , perprocesspermonth: "$_paymentPlanPerProcessPerMonth()$"
-            , perdocument: "$_paymentPlanPerDocument()$"
-            , pendingline : {part1: "$_paymentPlanPendingLinePart1()$",
-                             part2: "$_paymentPlanPendingLinePart2()$"}
             , savingsubscription : "$_paymentPlanSavingSubscription()$"
             , loading : "$_paymentPlanLoading()$"
             , askviktor : "$_paymentPlanAskViktor()$"
             , cancelsubscription: "$_paymentPlanCancelSubscription()$"
-            , select : "$_paymentsSelect()$"
-            , selected : "$_paymentsSelected()$"
-            , flatrate : "$_paymentsFlatRate()$"
-            , peruserrate : "$_paymentsPerUserRate()$"
-            , integrations : "$_paymentsIntegrations()$"
-            , enterpriseprice : "$_paymentsEnterprisePrice()$"
-            , guarantee : "$_paymentsGuarantee()$"
-            , nousers : "$_paymentsNoUsers()$"
             , errors: { emptyField: "$_paymentsErrorsEmptyField()$"
                       , missingFullAddress: "$_paymentsErrorsMissingFullAddress()$"
                       , invalidEmail: "$_paymentsErrorsInvalid()$"
@@ -759,7 +589,6 @@ javascriptLocalisation =
                             , opened :    "$_tablestatusesViewedOnline()$"
                             , signed :    "$_tablestatusesSigned()$"
                        }
-                    ,  createnew : "$_createNewDocument()$"
                     ,  sendreminder : {
                               action: "$_SendReminder()$"
                             , bodymulti : "$_ContractReminderBodyMulti()$"
@@ -779,9 +608,7 @@ javascriptLocalisation =
                     ,  remove : {
                               action: "$_delete()$"
                             , body : "$_listLocalDialogsBody()$"
-                            , cantremoveactive : "$_CantRemoveActiveDocuments()$"
                             , successMessage : "$_flashMessageDocumentArchiveDone()$"
-                            , emptyMessage : "$_noDocumentChosen()$"
                         }
                     , csv : {
                               action : "$_archiveCSV()$"
@@ -816,7 +643,6 @@ javascriptLocalisation =
                             , emptyMessage : "$_noDocumentChosen()$"
                         }
                     ,  createnew : "$_createNewTemplate()$"
-                    ,  shared : "$_shared()$"
                     ,  search : "$_SearchDoc()$"
                     ,  columns :{
                               time       : "$_SortTime()$"
@@ -844,7 +670,6 @@ javascriptLocalisation =
                     ,  createnew : {
                               action: "$_pageAttachmentListNewAttachment()$"
                        }
-                    ,  shared : "$_pageAttachmentListIfShared()$"
                     ,  search : "$_pageAttachmentListSearchInfo()$"
                     ,  columns :{
                               time       : "$_SortTime()$"
@@ -870,12 +695,6 @@ javascriptLocalisation =
                             , emptyMessage : "$_noDocumentChosen()$"
                         }
                     ,  search : "$_SearchDoc()$"
-                    ,  columns :{
-                              time   : "$_SortTime()$"
-                            , title  : "$_SortDoc()$"
-                            , type   : "$_SortType()$"
-
-                       }
                }
         }
       , loginModal : {
@@ -970,9 +789,7 @@ javascriptLocalisation =
             }
           },
            button : {
-             purchase    : "$_blockingButtonPurchase()$",
              doublecheck : "$_blockingButtonDoubleCheck()$",
-             upgrade     : "$_blockingButtonUpgrade()$",
              reinstate   : "$_blockingButtonReinstate()$",
              contact     : "$_blockingButtonContact()$"
            }
@@ -995,12 +812,9 @@ javascriptLocalisation =
       , apiDashboard : {
             deleteToken :  "$_apiDashboardDelete()$"
           , deleteAll : "$_apiDashboardDeleteAll()$"
-          , grantedPriviliges: "$_apiDashboardGrantedPriviliges()$"
           , grantedPriviligesDescription: "$_apiDashboardGrantedPriviligesDescription()$"
-          , personalToken: "$_apiDashboardPersonalToken()$"
           , personalTokenDescription: "$_apiDashboardpersonalTokenDescription()$"
           , personalTokenCreate: "$_apiDashboardPersonalTokenCreate()$"
-          , apiToken: "$_apiDashboardApiToken()$"
           , apiTokenDescription : "$_apiDashboardApiTokenDescription()$"
           , apiTokenCreate : "$_apiDashboardApiTokenCreate()$"
           , personOrCompany : "$_apiDashboardPersonOrCompany()$"
