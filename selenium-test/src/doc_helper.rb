@@ -74,7 +74,7 @@ class DocHelper
     sleep 1
     puts "Uploading attachment"
     (@wait.until { @driver.find_element :css => ".modal.active .selectAuthorAttachmentPopupContent input.multiFileInput" }).send_keys filepath
-    sleep 5
+    sleep 1
     puts "Closing attachment modal"
     @driver.execute_script("$('.modal.active .modal-footer .button-small.button-green').click()")
     puts "Modal closed"
@@ -92,7 +92,8 @@ class DocHelper
       (@wait.until { @driver.find_elements :xpath => "//option[text()='" + counterpart + "']" }).last.click
       sleep 2
     end
-    acceptStandardModal
+     @driver.execute_script("$('.modal.active .modal-footer .button-small.button-green').click()")
+     sleep 2
   end
 
   def checkOpened
