@@ -659,11 +659,14 @@ signatoryBox sealingTexts (Person {fullname,personalnumber,company,companynumber
     when (not (null companynumber)) $
          lm (makeLeftTextBox (PDFFont Helvetica 10) width $ orgNumberText sealingTexts ++ " " ++ companynumber)
     lm (makeLeftTextBox (PDFFont Helvetica_Oblique 10) width email)
-    let fieldsFiltered = nub . map extractUsefulInfo . filter includeInSummary $ fields
+    let fieldsFiltered = nub . filter isNotEmpty . map extractUsefulInfo $ fields
         extractUsefulInfo FieldJPG{ SealSpec.valueBase64 = val
                                   , internal_image_w, internal_image_h
+                                  , includeInSummary = True
                                   } = (internal_image_w, internal_image_h, val)
         extractUsefulInfo _ = (0,0,"")
+        isNotEmpty (0,0,_) = False
+        isNotEmpty _ = True
     forM_ fieldsFiltered $ \(internal_image_w, internal_image_h, val) -> do
       let halfWidth, halfHeight :: Int
           halfWidth = cardWidth `div` 2
