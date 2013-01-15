@@ -64,7 +64,7 @@ sealspec filename = SealSpec
           , fields = [ Field { value = "Gracjan Polak ÄÅÖäåö"
                              , x = 7/770,   y = 7/1085
                              , page = 1
-                             , includeInSummary = False
+                             , includeInSummary = True
                              , fontSize = 20/770
                              , greyed = False 
                              }
