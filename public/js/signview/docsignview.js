@@ -293,7 +293,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                 res = false;
                             if (field.isSSN()    && (field.value() == "") && field.signatory().document().elegAuthentication())
                                 res = false;
-                             if (field.isSignature() && ((!field.signature().hasImage())) && field.signatory().document().padDelivery())
+                             if (field.isSignature() && (!field.signature().hasImage())
+                                 && field.placements().length == 0 && !document.currentSignatory().anySignatureHasImageOrPlacement()
+                                 && document.padDelivery())
                                 res = false;
                         });
                         return res;
