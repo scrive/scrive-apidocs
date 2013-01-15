@@ -174,7 +174,6 @@ var FilePageView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'renderDragables');
         this.model.bind('change:dragables', this.renderDragables);
-        this.renderedPlacements = [];
         this.render();
     },
     makeDropable : function() {
@@ -207,19 +206,11 @@ var FilePageView = Backbone.View.extend({
         var container = $(this.el);
         var file = page.file();
 
-        this.renderedPlacements = [];
-        $(".placedfield",container).detach();
         _.each(page.placements(), function(placement) {
             var placement = placement;
-            if (placement.page()==page.number()) {
+            if (!placement.placed() && placement.page()==page.number()) {
                 var elem = $("<div>").appendTo(container);
                 createFieldPlacementPlacedView({model: placement, el: elem});
-                if (!placement.field().isClosed()) {
-                    view.renderedPlacements.push({
-                        placement: placement,
-                        elem: elem
-                    });
-                }
             }
         });
     },
