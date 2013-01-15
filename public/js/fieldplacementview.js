@@ -342,6 +342,14 @@ var TextPlacementPlacedView = Backbone.View.extend({
         }
         view.inlineediting = true;
         var width = place.width() > 100 ? place.width() : 100;
+        var parent = place.parent();
+        if( parent.length>0 ) { // Check max width so we don't expand inline editing over page width.
+          var maxWidth = (1 - placement.xrel()) * parent.width() - 36;
+          if (maxWidth < width) width = maxWidth;
+          if (width < 30) width = 30;
+                                                   
+        }
+        
         place.empty();
         var box = $("<div class='inlineEditing'/>").width(width+24);
         this.input = $("<input type='text'/>").val(field.value()).width(width+5).attr("placeholder",field.nicetext());
