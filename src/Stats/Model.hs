@@ -171,7 +171,7 @@ instance MonadDB m => DBQuery m GetDocStatCSV [[BS.ByteString]] where
             f acc uid n em t q a did cn cid dt dp api =
               let smartname = if BS.null n then em else n
               in [BS.fromString $ show uid, smartname, BS.fromString $ showDateYMD t, BS.fromString $ show q,
-                  BS.fromString $ show a, BS.fromString $ show did, fromMaybe (BS.fromString "none") cn, BS.fromString $ maybe "" show cid, BS.fromString $ show (documentType (dt, Just dp)), api] : acc
+                  BS.fromString $ show a, BS.fromString $ show did, fromMaybe (BS.fromString "none") cn, BS.fromString $ maybe "" show cid, BS.fromString $ show (documentType (dt, dp)), api] : acc
 
 data GetDocHistCSV = GetDocHistCSV MinutesTime MinutesTime
 instance MonadDB m => DBQuery m GetDocHistCSV [[String]] where
@@ -203,7 +203,7 @@ instance MonadDB m => DBQuery m GetDocHistCSV [[String]] where
             f acc did co st dp cr se cl re ca ti =
               [ show did
               , maybe "" show co
-              , show (documentType (st, Just dp))
+              , show (documentType (st, dp))
               , maybe "" formatMinutesTimeISO cr
               , maybe "" formatMinutesTimeISO se
               , maybe "" formatMinutesTimeISO cl
