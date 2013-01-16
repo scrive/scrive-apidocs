@@ -29,8 +29,24 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
   canGoToSignView : function() {
     return this.document().currentViewerIsAuthor() && this.document().currentSignatoryCanSign();
   },
+  canGiveToNextSignatoryPad : function() {
+    return !this.canGoToSignView() && this.document().currentViewerIsAuthor() && this.document().padDelivery() && this.document().signatoriesThatCanSignNow().length > 0;
+  },
   goToSignView : function() {
     new Submit({method: 'POST', url : '/d/signview/' + this.document().documentid()}).send();
+  },
+  padNextSignatory : function() {
+    if (this.get("padNextSignatory") != undefined) return this.get("padNextSignatory");
+    return this.document().signatoriesThatCanSignNow()[0]
+  },
+  setPadNextSignatory : function(sig) {
+    this.set("padNextSignatory",sig)
+  },
+  giveToPadSignatory : function() {
+      if (this.padNextSignatory() != undefined)
+        this.padNextSignatory().addtoPadQueue().sendAjax(function() {
+                      window.location =  '/padqueue';
+                });
   }
 });
 
@@ -106,6 +122,56 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
         }
     }).input();
   },
+  giveToNextSignatoryPadButton : function() {
+    var self = this;
+    var model = this.model;
+    var document = this.model.document();
+    var sig = document.signatoriesThatCanSignNow()[0];
+    if (sig == undefined) return; // Should never happend
+    return Button.init({
+      color: "green",
+      size: "small",
+      text: localization.authorview.goToSignView,
+      onClick: function() {
+          //Refactor this when we will get confirmation that this is what viktor needs.
+          mixpanel.track('Give for pad signing to some pad signatory - opening modal');
+          self.signatory = document.signatoriesThatCanSignNow()[0];
+          var modalContent = function() {
+            var div = $("<div style='height:32px;'/>");
+            div.append($("<label style='float:left;padding-right:10px;line-height: 32px;'>").text(localization.pad.giveForSigningThisDevice + " " ));
+            var options = [];
+            _.each(document.signatoriesThatCanSignNow(),function(sig) {
+               if (sig != model.padNextSignatory())
+               options.push({
+                 name: (sig.smartname() != "" ? sig.smartname() : localization.pad.notNamedParty),
+                 onSelect : function() {model.setPadNextSignatory(sig);}
+              });
+            })
+            var select = new Select({
+              name : (model.padNextSignatory().smartname() != "" ? model.padNextSignatory().smartname() : localization.pad.notNamedParty),
+              textWidth : 160,
+              options : options
+            });
+            return div.append($(select.view().el).css("width","200px").addClass('float-left'));
+          }
+          self.padNextSignatoryModalContent = modalContent();
+          model.bind("change:padNextSignatory", function() {
+            var c = modalContent();
+            self.padNextSignatoryModalContent.replaceWith(c);
+            self.padNextSignatoryModalContent = c;
+          })
+          Confirmation.popup({
+            title : localization.authorview.goToSignView,
+            content :self.padNextSignatoryModalContent,
+            onAccept : function() {
+                mixpanel.track('Give for pad signing to some pad signatory - opening signview');
+                model.giveToPadSignatory(self.signatory);
+            }
+          });
+          return false;
+        }
+    }).input();
+  } ,
   render: function() {
     var document = this.model.document();
     $(this.el).empty();
@@ -131,6 +197,8 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
         buttonbox.append(this.withdrawnButton());
       if (this.model.canGoToSignView())
         buttonbox.append(this.goToSignViewButton());
+      else if (this.model.canGiveToNextSignatoryPad())
+        buttonbox.append(this.giveToNextSignatoryPadButton())
       container.append(buttonbox);
     }
     return this;
