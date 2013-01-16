@@ -113,6 +113,22 @@ selectDocStatEventsSQL = SQL ("SELECT "
  <> "  FROM doc_stat_events e"
  <> " ") []
 
+
+-- | Terrible, I know. Better idea?
+-- TODO: to be KILLED.
+--
+-- This should go away. Stats table should have two fields that are
+-- enums equivalent to documents.type and documents.process.
+doctypeFromString :: String -> Maybe DocumentType
+doctypeFromString "Signable Contract"  = Just $ Signable Contract
+doctypeFromString "Signable Offer"     = Just $ Signable Offer
+doctypeFromString "Signable Order"     = Just $ Signable Order
+doctypeFromString "Template Contract"  = Just $ Template Contract
+doctypeFromString "Template Offer"     = Just $ Template Offer
+doctypeFromString "Template Order"     = Just $ Template Order
+doctypeFromString _                    = Nothing
+
+
 fetchDocStats :: MonadDB m => DBEnv m [DocStatEvent]
 fetchDocStats = foldDB decoder []
   where
