@@ -275,9 +275,9 @@ instance Convertible DocumentType SqlValue where
     Signable _ -> 1
     Template _ -> 2
 
-documentType :: (Int, Maybe DocumentProcess) -> DocumentType
-documentType (1, Just p) = Signable p
-documentType (2, Just p) = Template p
+documentType :: (Int, DocumentProcess) -> DocumentType
+documentType (1, p) = Signable p
+documentType (2, p) = Template p
 documentType v = error $ "documentType: wrong values: " ++ show v
 
 toDocumentProcess :: DocumentType -> DocumentProcess
