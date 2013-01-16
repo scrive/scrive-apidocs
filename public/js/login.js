@@ -66,10 +66,13 @@ var LoginModel = Backbone.Model.extend({
             var resp = JSON.parse(rs);
             if (resp.logged == true)
             {
-              window.location = model.referer() != undefined && model.referer() != "" && model.referer() != "/" ? model.referer() : "/newdocument";
+                mixpanel.('Login successful', {}, function() {
+                    window.location = model.referer() != undefined && model.referer() != "" && model.referer() != "/" ? model.referer() : "/newdocument";
+                });
             }  
             else
             {
+                mixpanel.track('Error: login failed');
               new FlashMessage({ content: localization.loginModal.loginFailed, color: "red"});
             }
           }
@@ -89,6 +92,7 @@ var LoginModel = Backbone.Model.extend({
             var resp = JSON.parse(rs);
             if (resp.send == true)
             {
+                mixpanel.track('Password reminder sent');
               new FlashMessage({ content: localization.loginModal.passwordReminderSend, color: "green"});
             }
             else 
@@ -100,6 +104,7 @@ var LoginModel = Backbone.Model.extend({
                 text = localization.loginModal.noUser;
               else if (resp.toomuch)
                 text = localization.loginModal.tooMuch;
+              mixpanel.track('Error: password reminder failed: ' + text);
               new FlashMessage({ content: text, color: "red"});
             }
           }
