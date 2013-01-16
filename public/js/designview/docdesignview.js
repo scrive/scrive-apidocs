@@ -200,7 +200,9 @@ var DesignViewView = Backbone.View.extend({
         var contractOption = {name : localization.process.contract.name, onSelect :
               function() {
                     document.process().changeToContract();
-                    mixpanel.track('Select contract (document type)');
+                    mixpanel.track('Select document type', {
+                        'Document type' : 'contract'
+                    });
                     document.save();
                     document.afterSave(function() { LoadingDialog.open();   window.location.reload(); });
              }
@@ -208,7 +210,9 @@ var DesignViewView = Backbone.View.extend({
         var offerOption =    {name : localization.process.offer.name, onSelect :
               function() {
                     document.process().changeToOffer();
-                    mixpanel.track('Select offer (document type)');
+                    mixpanel.track('Select document type', {
+                        'Document type' : 'offer'
+                    });
                     document.save();
                     document.afterSave(function() { LoadingDialog.open();   window.location.reload();; });
              }
@@ -216,7 +220,9 @@ var DesignViewView = Backbone.View.extend({
         var orderOption =   {name : localization.process.order.name, onSelect :
               function() {
                     document.process().changeToOrder();
-                    mixpanel.track('Select order (document type)');
+                    mixpanel.track('Select document type', {
+                        'Document type' : 'order'
+                    });
                     document.save();
                     document.afterSave(function() { LoadingDialog.open();   window.location.reload(); });
              }
@@ -248,8 +254,8 @@ var DesignViewView = Backbone.View.extend({
         var box = $("<label class='deliverymethodselect'/>");
         box.append($("<div class='float-left' style='line-height:30px;margin-right:10px;'/>").text(localization.designview.delivery.selectmethod));
 
-        var emailOption =    {name : localization.email, onSelect :  function() {  mixpanel.track('Select email delivery'); document.setEmailDelivery(); return true;}  };
-        var padOption =    {name : localization.pad.delivery, onSelect :  function() {  mixpanel.track('Select pad delivery'); document.setPadDelivery(); return true;}  };
+        var emailOption =    {name : localization.email, onSelect :  function() {  mixpanel.track('Select delivery method', {'Delivery method' : 'email'}); document.setEmailDelivery(); return true;}  };
+        var padOption =    {name : localization.pad.delivery, onSelect :  function() {  mixpanel.track('Select delivery method', {'Delivery method' : 'pad'}); document.setPadDelivery(); return true;}  };
 
 
         var options = []
@@ -551,7 +557,9 @@ var DesignViewView = Backbone.View.extend({
             cssClass: "finalbutton",
             text: localization.designview.sign,
             onClick: function() {
-                mixpanel.track('Click sign button');
+                mixpanel.track('Click sign button', {
+                    'Button' : 'sign'
+                });
               if (!view.verificationBeforeSendingOrSigning(true)) {
                 return;
               }
@@ -579,7 +587,9 @@ var DesignViewView = Backbone.View.extend({
              cssClass: "finalbutton",
              text: document.process().localization().sendbuttontext,
              onClick: function() {
-                 mixpanel.track('Click send button');
+                 mixpanel.track('Click sign button', {
+                     'Button' : 'send'
+                 });
                if (!view.verificationBeforeSendingOrSigning(false)) {
                  return;
                }
@@ -623,28 +633,36 @@ var DesignViewView = Backbone.View.extend({
             bankid.click(function() {
                     if (alreadyClicked(acceptButton))
                       return false;
-                    mixpanel.track('Click BankID');
+                    mixpanel.track('Select eleg provider', {
+                        'Eleg provider' : 'BankID'
+                    });
                     Eleg.bankidSign(document,signatory, document.signByAuthor(),callback);
                     return false;
             });
             telia.click(function() {
                     if (alreadyClicked(acceptButton))
                       return false;
-                    mixpanel.track('Click Telia');
+                    mixpanel.track('Select eleg provider', {
+                        'Eleg provider' : 'Telia'
+                    });
                     Eleg.teliaSign(document,signatory, document.signByAuthor(),callback);
                     return false;
             });
             nordea.click(function() {
                     if (alreadyClicked(acceptButton))
                       return false;
-                    mixpanel.track('Click Nordea');
+                    mixpanel.track('Select eleg provider', {
+                        'Eleg provider' : 'Nordea'
+                    });
                     Eleg.nordeaSign(document,signatory, document.signByAuthor(),callback);
                     return false;
             });
             mbi.click(function() {
                 if (alreadyClicked(acceptButton))
                   return false;
-                mixpanel.track('Click Mobile BankID');
+                mixpanel.track('Select eleg provider', {
+                    'Eleg provider' : 'Mobile BankID'
+                });
                 Eleg.mobileBankIDSign(document,signatory,document.signByAuthor(),callback);
                 return false;
             });
@@ -660,7 +678,9 @@ var DesignViewView = Backbone.View.extend({
                   onClick : function() {
                       if (alreadyClicked(this))
                         return;
-                      mixpanel.track('Click accept sign (popup)');
+                      mixpanel.track('Click accept sign', {
+                          'Button' : 'sign'
+                      });
                       document.afterSave(function() {
                           document.signByAuthor().sendAjax(function(resp) {
                                         var link = JSON.parse(resp).link;
@@ -724,7 +744,9 @@ var DesignViewView = Backbone.View.extend({
                                 onClick : function() {
                                     if (alreadyClicked(this))
                                       return;
-                                    mixpanel.track('Click accept send (popup)');
+                                    mixpanel.track('Click accept sign', {
+                                        'Button' : 'send'
+                                    });
                                     LoadingDialog.open(localization.designview.messages.sendingDocument);
                                     document.afterSave(function() {
                                         document.sendByAuthor().sendAjax(function(resp) {
