@@ -333,8 +333,8 @@ var DocumentSignViewModel = Backbone.Model.extend({
         }, {silent : true} );
       return this.get('arrow');
   },
-  recall : function() {
-      this.document().recall();
+  recall : function(f) {
+      this.document().recall(f);
   }
 });
 var DocumentSignViewView = Backbone.View.extend({
@@ -415,7 +415,21 @@ window.DocumentSignView = function(args){
                         model: this.model,
                         el: $("<div/>")
                     });
-        this.model.recall();
+        var model = this.model;
+        this.model.recall(function() {
+            var sig = model.document().currentSignatory();
+            var dta = {};
+            if(sig.seendate())
+                dta['Seen date'] = sig.seendate();
+            if(sig.readdate())
+                dta['Email read date'] = sig.readdate();
+            if(sig.rejecteddate())
+                dta['Rejected date'] = sig.rejecteddate();
+            if(sig.signdate())
+                dta['Signed date'] = sig.signdate();
+            mixpanel.track('View Sign View', dta);
+        });
+
         return {
               model    : this.model
             , view     : this.view

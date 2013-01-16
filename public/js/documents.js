@@ -413,11 +413,14 @@ window.Document = Backbone.Model.extend({
     makeTemplate: function() {
        return this.set({"template": true}, {silent: true});
     },
-    recall: function() {
+    recall: function(f) {
        var doc = this;
        this.fetch({data: this.viewer().forFetch(),
                    processData: true,
                    cache: false,
+                   success: function() {
+                       f();
+                   },
                    error: function() {
                     console.error("Failed to fetch doc, trying again ...");
                     window.setTimeout(doc.recall, 1000);
