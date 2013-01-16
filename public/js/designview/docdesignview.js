@@ -1080,16 +1080,29 @@ var ScrollFixer =  Backbone.Model.extend({
 
     },
     fix : function() {
-              var fixer = this;
-              if ($(window).scrollTop() >= this.top && $(window).scrollTop() > 100) {
-                this.object.next().not(this.object).css("margin-top", this.object.height() + "px")
-                this.object.addClass('fixed');
-              }
-               else {
+        var fixer = this;
 
-                 this.object.next().not(this.object).css("margin-top", "")
-                this.object.removeClass('fixed');
-               }
+        /* This fix is required to force Chrome under Mac to redraw
+         * whole screen.  Otherwise native controls (inputs, buttons)
+         * are correctly set in place but the graphics DIV elements
+         * are not redrawn and show garbage.
+         */
+        if( $(window).scrollTop() > 100 ) {
+            var old = $(".mainContainer").css("background-color");
+            $(".mainContainer").css("background-color","#FFFFFF");
+            setTimeout( function() {
+                $(".mainContainer").css("background-color",old);
+            }, 1);
+        }
+        if ($(window).scrollTop() >= this.top && $(window).scrollTop() > 100) {
+            this.object.next().not(this.object).css("margin-top", this.object.height() + "px")
+            this.object.addClass('fixed');
+        }
+        else {
+
+            this.object.next().not(this.object).css("margin-top", "")
+            this.object.removeClass('fixed');
+        }
     }
 });
 
