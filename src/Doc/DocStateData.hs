@@ -38,7 +38,6 @@ module Doc.DocStateData (
   , emptyDocumentUI
   , documentType
   , toDocumentProcess
-  , doctypeFromString
   ) where
 
 import Data.Data
@@ -284,19 +283,6 @@ documentType v = error $ "documentType: wrong values: " ++ show v
 toDocumentProcess :: DocumentType -> DocumentProcess
 toDocumentProcess (Signable p) = p
 toDocumentProcess (Template p) = p
-
--- | Terrible, I know. Better idea?
--- | TODO: to be KILLED.
--- |
--- | Changed to return Maybe
-doctypeFromString :: String -> Maybe DocumentType
-doctypeFromString "Signable Contract"  = Just $ Signable Contract
-doctypeFromString "Signable Offer"     = Just $ Signable Offer
-doctypeFromString "Signable Order"     = Just $ Signable Order
-doctypeFromString "Template Contract"  = Just $ Template Contract
-doctypeFromString "Template Offer"     = Just $ Template Offer
-doctypeFromString "Template Order"     = Just $ Template Order
-doctypeFromString _                    = Nothing
 
 data DocumentSharing = Private
                      | Shared -- means that the document is shared with subaccounts, and those with same parent accounts
