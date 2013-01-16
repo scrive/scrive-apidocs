@@ -6,6 +6,10 @@ loginPage=
 <script type="text/javascript">
   jQuery(document).ready(function() {
     jQuery('.inner').append(new Login({referer: "$referer$"}).el());
+    mixpanel.register({
+      Context : 'Login page'
+    });
+    mixpanel.track('View login page');
   });
 </script> 
 </div>
