@@ -1110,7 +1110,10 @@ statisticsPage=
             new Cell({name: "$_closedDocuments()$",  width: "70px",  field: "closed",     tdclass: "num"}),
             new Cell({name: "$_sentDocuments()$",    width: "70px",  field: "sent",       tdclass: "num"}),
             new Cell({name: "$_closedSignatures()$", width: "70px",  field: "signatures", tdclass: "num"}),
-            new Cell({name: "$_avgSigsPerDoc()$",    width: "70px",  field: "avg",        tdclass: "num"}),
+            new Cell({name: "$_avgSigsPerDoc()$",    width: "70px", field: "avg",        tdclass: "num",
+                               rendering: function(_, _, doc) {
+                                    return jQuery("<span>").text( doc.field("avg").toFixed(2));
+                          }}),
             new Cell({name: "$_newUsers()$",         width: "70px",  field: "users",      tdclass: "num"})
           ]})});
       var monthTable = new KontraList({
@@ -1123,7 +1126,10 @@ statisticsPage=
             new Cell({name: "$_closedDocuments()$",  width: "70px",  field: "closed",     tdclass: "num"}),
             new Cell({name: "$_sentDocuments()$",    width: "70px",  field: "sent",       tdclass: "num"}),
             new Cell({name: "$_closedSignatures()$", width: "70px",  field: "signatures", tdclass: "num"}),
-            new Cell({name: "$_avgSigsPerDoc()$",    width: "70px",  field: "avg",        tdclass: "num"}),
+            new Cell({name: "$_avgSigsPerDoc()$",    width: "70px",  field: "avg",        tdclass: "num",
+                               rendering: function(_, _, doc) {
+                                    return jQuery("<span>").text( doc.field("avg").toFixed(2));
+                          }}),
             new Cell({name: "$_newUsers()$",         width: "70px",  field: "users",      tdclass: "num"})
           ]})});
       jQuery(function(){
