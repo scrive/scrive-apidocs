@@ -41,11 +41,14 @@ window.File = Backbone.Model.extend({
     downloadLink : function() {
         var link = null;
         /* FIXME: this is wrong that we add .pdf as default extension. File should just know better. */
+        var name = this.name();
+        if (name.toLowerCase().indexOf(".pdf", name.length - 4) == -1)
+          name = name + ".pdf";
         if( this.fileid()!==undefined ) {
-            link = "/download/" + this.fileid() + "/" + encodeURIComponent(this.name()) + ".pdf" + this.queryPart();
+            link = "/download/" + this.fileid() + "/" + encodeURIComponent(name) + this.queryPart();
         }
         else if( this.documentid()!==undefined ) {
-            link = "/api/frontend/downloadmainfile/"+ this.documentid() + "/" + encodeURIComponent(this.name()) + ".pdf" + this.queryPart();
+            link = "/api/frontend/downloadmainfile/"+ this.documentid() + "/" + encodeURIComponent(name) + this.queryPart();
         }
         else {
             console.log("File with neither documentid nor fileid, do not know where does it link to");
