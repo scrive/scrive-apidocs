@@ -108,42 +108,26 @@ selectDocStatEventsSQL = SQL ("SELECT "
  <> ", e.amount"
  <> ", e.document_id"
  <> ", e.company_id"
- <> ", e.document_type"
+ <> ", e.type"
+ <> ", e.process"
  <> ", e.api_string"
  <> "  FROM doc_stat_events e"
  <> " ") []
-
-
--- | Terrible, I know. Better idea?
--- TODO: to be KILLED.
---
--- This should go away. Stats table should have two fields that are
--- enums equivalent to documents.type and documents.process.
-doctypeFromString :: String -> Maybe DocumentType
-doctypeFromString "Signable Contract"  = Just $ Signable Contract
-doctypeFromString "Signable Offer"     = Just $ Signable Offer
-doctypeFromString "Signable Order"     = Just $ Signable Order
-doctypeFromString "Template Contract"  = Just $ Template Contract
-doctypeFromString "Template Offer"     = Just $ Template Offer
-doctypeFromString "Template Order"     = Just $ Template Order
-doctypeFromString _                    = Nothing
 
 
 fetchDocStats :: MonadDB m => DBEnv m [DocStatEvent]
 fetchDocStats = foldDB decoder []
   where
     decoder acc uid time quantity amount documentid
-     companyid documenttype apistring =
-       case doctypeFromString documenttype of
-         Nothing -> acc -- Skip Attachment doctypes
-         Just doctype -> DocStatEvent {
+     companyid dtype dprocess apistring =
+       DocStatEvent {
             seUserID       = uid
           , seTime         = time
           , seQuantity     = quantity
           , seAmount       = amount
           , seDocumentID   = documentid
           , seCompanyID    = companyid
-          , seDocumentType = doctype
+          , seDocumentType = documentType (dtype, dprocess)
           , seAPIString    = apistring
           } : acc
 
@@ -176,30 +160,30 @@ instance MonadDB m => DBQuery m GetDocStatCSV [[BS.ByteString]] where
     _ <- kRun $ SQL ("SELECT doc_stat_events.user_id, trim(trim(users.first_name) || ' ' || trim(users.last_name)), trim(users.email), " <>
                     "       doc_stat_events.time, doc_stat_events.quantity, doc_stat_events.amount,  " <>
                     "       doc_stat_events.document_id, trim(companies.name), " <>
-                    "       doc_stat_events.company_id, doc_stat_events.document_type, doc_stat_events.api_string " <>
+                    "       doc_stat_events.company_id, doc_stat_events.type, doc_stat_events.process, doc_stat_events.api_string " <>
                     "FROM doc_stat_events " <>
                     "LEFT JOIN users ON doc_stat_events.user_id = users.id " <>
                     "LEFT JOIN companies ON doc_stat_events.company_id = companies.id " <>
                     "WHERE doc_stat_events.time > ? AND doc_stat_events.time <= ?" <>
                     "ORDER BY doc_stat_events.time DESC") [toSql start, toSql end]
     foldDB f []
-      where f :: [[BS.ByteString]] -> UserID -> BS.ByteString -> BS.ByteString -> MinutesTime -> DocStatQuantity -> Int -> DocumentID -> Maybe BS.ByteString -> Maybe CompanyID -> BS.ByteString -> BS.ByteString -> [[BS.ByteString]]
-            f acc uid n em t q a did cn cid tp api =
+      where f :: [[BS.ByteString]] -> UserID -> BS.ByteString -> BS.ByteString -> MinutesTime -> DocStatQuantity -> Int -> DocumentID -> Maybe BS.ByteString -> Maybe CompanyID -> Int -> DocumentProcess -> BS.ByteString -> [[BS.ByteString]]
+            f acc uid n em t q a did cn cid dt dp api =
               let smartname = if BS.null n then em else n
               in [BS.fromString $ show uid, smartname, BS.fromString $ showDateYMD t, BS.fromString $ show q,
-                  BS.fromString $ show a, BS.fromString $ show did, fromMaybe (BS.fromString "none") cn, BS.fromString $ maybe "" show cid, tp, api] : acc
+                  BS.fromString $ show a, BS.fromString $ show did, fromMaybe (BS.fromString "none") cn, BS.fromString $ maybe "" show cid, BS.fromString $ show (documentType (dt, Just dp)), api] : acc
 
 data GetDocHistCSV = GetDocHistCSV MinutesTime MinutesTime
 instance MonadDB m => DBQuery m GetDocHistCSV [[String]] where
   query (GetDocHistCSV start end) = do
-    _ <- kRun $ SQL ("SELECT ds.document_id, ds.company_id, ds.document_type, " <>
+    _ <- kRun $ SQL ("SELECT ds.document_id, ds.company_id, ds.type, ds.process" <>
                      "       creat.time, " <>
                      "       send.time, " <>
                      "       close.time, " <>
                      "       reject.time, " <>
                      "       cancel.time, " <>
                      "       timeout.time " <>
-                     "FROM (SELECT DISTINCT document_id, company_id, document_type FROM doc_stat_events WHERE doc_stat_events.time > ? AND doc_stat_events.time <= ?) AS ds " <>
+                     "FROM (SELECT DISTINCT document_id, company_id, type, process FROM doc_stat_events WHERE doc_stat_events.time > ? AND doc_stat_events.time <= ?) AS ds " <>
                      "LEFT JOIN doc_stat_events AS creat   ON (ds.document_id = creat.document_id   AND creat.quantity = ?)" <>                     
                      "LEFT JOIN doc_stat_events AS send    ON (ds.document_id = send.document_id    AND send.quantity = ?)" <>
                      "LEFT JOIN doc_stat_events AS close   ON (ds.document_id = close.document_id   AND close.quantity = ?)" <>
@@ -215,9 +199,17 @@ instance MonadDB m => DBQuery m GetDocHistCSV [[String]] where
                                                       toSql DocStatCancel,
                                                       toSql DocStatTimeout]
     foldDB f []
-      where f :: [[String]] -> DocumentID -> Maybe CompanyID -> String -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> [[String]]
-            f acc did co t cr se cl re ca ti =
-              [show did, maybe "" show co, t, maybe "" formatMinutesTimeISO cr, maybe "" formatMinutesTimeISO se, maybe "" formatMinutesTimeISO cl, maybe "" formatMinutesTimeISO re, maybe "" formatMinutesTimeISO ca, maybe "" formatMinutesTimeISO ti] : acc
+      where f :: [[String]] -> DocumentID -> Maybe CompanyID -> Int -> DocumentProcess -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> [[String]]
+            f acc did co st dp cr se cl re ca ti =
+              [ show did
+              , maybe "" show co
+              , show (documentType (st, Just dp))
+              , maybe "" formatMinutesTimeISO cr
+              , maybe "" formatMinutesTimeISO se
+              , maybe "" formatMinutesTimeISO cl
+              , maybe "" formatMinutesTimeISO re
+              , maybe "" formatMinutesTimeISO ca
+              , maybe "" formatMinutesTimeISO ti ] : acc
 
 selectUsersAndCompaniesAndInviteInfoSQL :: SQL
 selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
@@ -574,24 +566,6 @@ instance MonadDB m => DBUpdate m StatUpdate Bool where
   update (StatUpdate doIt did apistring) =
       kRun01 $ doIt did apistring
 
--- | SQL for turning a (document.type, document.process) pair into a
--- doctype that's suitable for the doc_stat_events table. Its sole
--- argument is the name of the documents table. Example:
---
--- > "SELECT id, " ++ docType "doc" ++ " FROM documents AS doc"
-docType :: SQL -> SQL
-docType doc = mconcat [
-    "  CONCAT(",
-    "    CASE",
-    "      WHEN " <+> doc <+> ".type = 1 THEN 'Signable'",
-    "      ELSE 'Template'",
-    "    END, ' ',",
-    "    CASE",
-    "      WHEN " <+> doc <+> ".process = 1 THEN 'Contract'",
-    "      WHEN " <+> doc <+> ".process = 2 THEN 'Offer'",
-    "      ELSE 'Order'",
-    "    END)"]
-
 
 -- | Create a stat database update using the given event, ID and API string.
 statUpdate :: StatQuery -> DocumentID -> APIString -> StatUpdate
@@ -608,7 +582,8 @@ docStatSignMethod status did apistring =
         sqlGeneric "company_id"    "(SELECT users.company_id FROM users WHERE users.id = sl.user_id)",
         sql        "api_string"    apistring,
         sqlGeneric "quantity"      qty,
-        sqlGeneric "document_type" (docType "doc")
+        sqlGeneric "type"          "doc.type",
+        sqlGeneric "process"       "doc.process"
       ] <+> fromPart
         <+> joinSigLinks
         <+> joinSigCount
@@ -764,7 +739,8 @@ genericStatEvent qty time condition did apistring =
         sqlGeneric "company_id"    "(SELECT users.company_id FROM users WHERE users.id = sl.user_id)",
         sql        "api_string"    apistring,
         sql        "quantity"      qty,
-        sqlGeneric "document_type" (docType "doc")
+        sqlGeneric "type"          "doc.type",
+        sqlGeneric "process"       "doc.process"
       ] <+> fromPart
   where
     fromPart =

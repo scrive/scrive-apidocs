@@ -120,6 +120,7 @@ kontraMigrations = [
   , removeBrokenLinksFromSignStatsEvents
   , expandEventsWithAffectedSignatoryAndTextMessage
   , addObligatoryColumnToSignatoryLinkFields
+  , separateDocumentTypeInDocStatEvents
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

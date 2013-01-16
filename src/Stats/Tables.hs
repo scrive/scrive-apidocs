@@ -5,7 +5,7 @@ import DB
 tableDocStatEvents :: Table
 tableDocStatEvents = tblTable {
   tblName = "doc_stat_events"
-  , tblVersion = 5
+  , tblVersion = 6
   , tblCreateOrValidate = \desc -> case desc of
       [("user_id",     SqlColDesc { colType       = SqlBigIntT
                                   , colNullable   = Just False}),
@@ -19,10 +19,12 @@ tableDocStatEvents = tblTable {
                                   , colNullable   = Just False}),
        ("company_id",  SqlColDesc { colType       = SqlBigIntT
                                   , colNullable   = Just True}),
-       ("document_type", SqlColDesc { colType     = SqlVarCharT
-                                    , colNullable = Just False}),
-       ("api_string", SqlColDesc { colType        = SqlVarCharT
-                                 , colNullable    = Just False})
+       ("api_string",  SqlColDesc { colType        = SqlVarCharT
+                                  , colNullable    = Just False}),
+       ("type",        SqlColDesc { colType       = SqlSmallIntT
+                                  , colNullable   = Just False}),
+       ("process",     SqlColDesc { colType       = SqlSmallIntT
+                                  , colNullable   = Just False})
                                     ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE doc_stat_events ("
@@ -32,8 +34,9 @@ tableDocStatEvents = tblTable {
           <> ", amount        INTEGER     NOT NULL"
           <> ", document_id   BIGINT      NOT NULL"
           <> ", company_id    BIGINT          NULL"
-          <> ", document_type TEXT        NOT NULL"
           <> ", api_string    TEXT        NOT NULL"
+          <> ", type          SMALLINT    NOT NULL"
+          <> ", process       SMALLINT    NOT NULL"
           <> ", CONSTRAINT pk_doc_stat_events PRIMARY KEY (quantity, document_id)"
           <> ")"
         return TVRcreated

@@ -7,6 +7,26 @@ import Stats.Tables
 
 default (SQL)
 
+separateDocumentTypeInDocStatEvents :: MonadDB m => Migration m
+separateDocumentTypeInDocStatEvents =
+  Migration {
+      mgrTable = tableDocStatEvents
+    , mgrFrom = 5
+    , mgrDo = do
+        kRunRaw "ALTER TABLE doc_stat_events ADD COLUMN type    SMALLINT"
+        kRunRaw "ALTER TABLE doc_stat_events ADD COLUMN process SMALLINT"
+        kRunRaw "UPDATE doc_stat_events SET type = 1 WHERE document_type ILIKE '%Signable%'"
+        kRunRaw "UPDATE doc_stat_events SET type = 2 WHERE document_type ILIKE '%Template%'"
+        kRunRaw "UPDATE doc_stat_events SET process = 1 WHERE document_type ILIKE '%Contract%'"
+        kRunRaw "UPDATE doc_stat_events SET process = 2 WHERE document_type ILIKE '%Offer%'"
+        kRunRaw "UPDATE doc_stat_events SET process = 3 WHERE document_type ILIKE '%Order%'"
+        kRunRaw "DELETE FROM doc_stat_events WHERE type IS NULL OR process IS NULL"
+        kRunRaw "ALTER TABLE doc_stat_events ALTER COLUMN type    SET NOT NULL"
+        kRunRaw "ALTER TABLE doc_stat_events ALTER COLUMN process SET NOT NULL"
+        kRunRaw "ALTER TABLE doc_stat_events DROP COLUMN document_type"
+        return ()
+    }
+
 removeServiceIDFromDocStatEvents :: MonadDB m => Migration m
 removeServiceIDFromDocStatEvents = Migration {
     mgrTable = tableDocStatEvents
