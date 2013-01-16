@@ -15,10 +15,10 @@ echo "TMP: "$TMP
 echo "Server: "$SRV
 
 echo "Building Clean"
-sh build-scripts/runCleanCompile.sh > build-report.txt
+./build-scripts/runCleanCompile.sh > build-report.txt
 
 echo "Running unit tests"
-sh build-scripts/runAllUnitTests.sh > test-report.txt
+./build-scripts/runAllUnitTests.sh > test-report.txt
 
 ZIP="$BUILD_ID.$SRV.tar.gz"
 

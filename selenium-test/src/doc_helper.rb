@@ -71,21 +71,33 @@ class DocHelper
 
   def loadAuthorAttachment(no, filepath)
     (@wait.until { @driver.find_element :css => ".authorattachmentssetuptext span.countspan" }).click
-    (@wait.until { @driver.find_element :css => "div.selectAuthorAttachmentPopupContent input.multiFileInput" }).send_keys filepath
-    click "div.modal-footer a.float-right"
-    @wait.until { @driver.execute_script("return $('span.authorattachmentssetuptext span').first().text()") == "("+no.to_s()+")" }
+    sleep 1
+    puts "Uploading attachment"
+    (@wait.until { @driver.find_element :css => ".modal.active .selectAuthorAttachmentPopupContent input.multiFileInput" }).send_keys filepath
+    sleep 1
+    puts "Closing attachment modal"
+    @driver.execute_script("$('.modal.active .modal-footer .button-small.button-green').click()")
+    puts "Modal closed"
+    sleep 1
+    @wait.until { @driver.execute_script("return $('.authorattachmentssetuptext span.countspan').first().text()") == "("+no.to_s()+")" }
+    puts "We seen that attachent has been added"
   end
 
   def requestSigAttachment(attname, attdesc, counterparts)
     (@wait.until { @driver.find_element :css => ".signatoryattachmentssetuptext span.countspan" }).click
+    sleep 2
     counterparts.each do |counterpart|
-      click "div.designSignatoryAttachmentsPopupContent div.label"
-      (@wait.until { @driver.find_elements :css => "input.editSignatoryAttachmentName" }).last.send_keys attname
-      (@wait.until { @driver.find_elements :css => "textarea.editSignatoryAttachmentDescription" }).last.send_keys attdesc
-      (@wait.until { @driver.find_elements :xpath => "//option[text()='" + counterpart + "']" }).last.click
       sleep 2
+      @driver.execute_script("$('.modal.active div.designSignatoryAttachmentsPopupContent .button-small.blue').focus().click()")
+      (@wait.until { @driver.find_elements :css => ".modal.active input.editSignatoryAttachmentName" }).last.send_keys attname
+      @driver.execute_script("$('.modal.active input.editSignatoryAttachmentName').change()");
+      (@wait.until { @driver.find_elements :css => ".modal.active textarea.editSignatoryAttachmentDescription" }).last.send_keys attdesc
+      @driver.execute_script("$('.modal.active  textarea.editSignatoryAttachmentDescription').change()");
+      @driver.execute_script("$(\".modal.active option:contains('" + counterpart + "')\").last().attr('selected','true')");
+      @driver.execute_script("$('.modal.active  select').change()");
     end
-    acceptStandardModal
+     @driver.execute_script("$('.modal.active .modal-footer .button-small.button-green').click()")
+     sleep 2
   end
 
   def checkOpened
