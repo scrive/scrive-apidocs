@@ -2416,7 +2416,7 @@ have an account please follow the account creation process. Free use of up to 5 
 "_simpliefiedTextPreparationToPendingEvidence","En ny signeringsprocess inleds i Scrive.","A new signing process is initiated in Scrive."
 "_simpliefiedTextCloseDocumentEvidence","Dokumentet förseglas och signeras digitalt av Scrive.","The document is sealed and signed digitally by Scrive."
 "_simpliefiedTextCancelDocumentEvidence","Inbjudan att signera återkallas.","The invitation to sign is withdrawn."
-"_simpliefiedTextRejectDocumentEvidence","Inbjudan att signera avvisas $if(text)$ med meddelandet: <BR/> <i>$text:noescape()$</i>$else$.$endif$","The invitation to sign is rejected $if(text)$ with message: <BR/> <i>$text:noescape()$</i>$else$.$endif$"
+"_simpliefiedTextRejectDocumentEvidence","Inbjudan att signera avvisas$if(text)$ med meddelandet: <BR/> <i>$text:noescape()$</i>$else$.$endif$","The invitation to sign is rejected$if(text)$ with message: <BR/> <i>$text:noescape()$</i>$else$.$endif$"
 "_simpliefiedTextTimeoutDocumentEvidence","Inbjudan att signera återkallas automatiskt eftersom fördefinierat förfallodatum passerat.","The invitation to sign is withdrawn automatically because the predetermined due date has passed."
 "_simpliefiedTextMarkInvitationReadEvidence","Mailet med inbjudan att signera läses.","The email with the invitation to sign is read."
 "_simpliefiedTextSignatoryLinkVisited","Dokumentet läses online.","The document is read online."
