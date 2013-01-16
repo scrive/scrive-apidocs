@@ -214,8 +214,6 @@ var SecuritySettingsView = Backbone.View.extend({
         shape: "rounded",
         text : localization.account.accountSecurity.save,
         onClick : function() {
-          if (model.useFooter() && self.customfooter)
-            model.setFooter(self.customfooter.val());
           model.save();
           return false;
         }
