@@ -28,6 +28,3 @@ $doctype()$
   </body>
 </html>
 #####
-padQueueCurrentPageContent=
-
-######

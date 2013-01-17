@@ -3,16 +3,6 @@ tbs=$_tbsYouSignWithEleg()$
 tbssig=  $firstname$ $lastname$, $number$
 
 ##
-signCanceledDataMismatch=
-    <div class="centerdivnarrow">
-      <p class="headline">$_signCanceledDataMismatchIncorrectPersonalInfo()$</p>
-
-      <p>$_signCanceledDataMismatchBody()$</p>
-
-      $cancelationMessage$
-
-    </div>
-##
 bankidInvalidParameters=$_bankidInvalidParameters()$
 ##
 bankidInternalError=$_bankidInternalError()$
@@ -45,5 +35,5 @@ bankidLastNameMismatch=$_bankidLastNameMismatch()$: '$contract$' $_and()$ '$eleg
 ##
 bankidNoNumber=$_bankidNoNumber()$
 ##
-bankdiNumberMismatch=$_bankidNumberMismatch()$: '$contract$' $_and()$ '$eleg$'.
+bankidNumberMismatch=$_bankidNumberMismatch()$: '$contract$' $_and()$ '$eleg$'.
 ##
