@@ -1,6 +1,6 @@
 /* Signatory view of document
  * Usage:
- * 
+ *
  *   $('body').append(new DocumentSignSignSection(model : document).el);
  */
 
@@ -106,9 +106,9 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
    render: function() {
        var document = this.model;
        var box = $(this.el).addClass('section').addClass('spacing').addClass('extradetails');
-       var header = $("<h2 class='title'>").text(localization.docsignview.filladitionfields);
-       var description = $("<div class='column spacing descriptionbox'>").text(localization.docsignview.filladitionfieldsdescription);
-       this.fillBox = $("<div class='column spacing fillbox'>");
+       var header = $("<h2 class='title'/>").text(localization.docsignview.filladitionfields);
+       var description = $("<div class='column spacing descriptionbox'/>").text(localization.docsignview.filladitionfieldsdescription);
+       this.fillBox = $("<div class='column spacing fillbox'/>");
        if (this.fstNameInputAvaible())
         this.fillBox.append(this.fstNameInput());
        if (this.sndNameInputAvaible())
@@ -120,7 +120,7 @@ window.DocumentSignExtraDetailsSection = Backbone.View.extend({
        if (this.signatureInputAvaible())
         this.fillBox.append(this.signatureInput());
        box.append(header).append(description).append(this.fillBox).append("<div class='clearfix' />");
-   } 
+   }
 });
 
 })(window);
