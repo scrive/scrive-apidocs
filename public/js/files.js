@@ -41,11 +41,14 @@ window.File = Backbone.Model.extend({
     downloadLink : function() {
         var link = null;
         /* FIXME: this is wrong that we add .pdf as default extension. File should just know better. */
+        var name = this.name();
+        if (name.toLowerCase().indexOf(".pdf", name.length - 4) == -1)
+          name = name + ".pdf";
         if( this.fileid()!==undefined ) {
-            link = "/download/" + this.fileid() + "/" + encodeURIComponent(this.name()) + ".pdf" + this.queryPart();
+            link = "/download/" + this.fileid() + "/" + encodeURIComponent(name) + this.queryPart();
         }
         else if( this.documentid()!==undefined ) {
-            link = "/api/frontend/downloadmainfile/"+ this.documentid() + "/" + encodeURIComponent(this.name()) + ".pdf" + this.queryPart();
+            link = "/api/frontend/downloadmainfile/"+ this.documentid() + "/" + encodeURIComponent(name) + this.queryPart();
         }
         else {
             console.log("File with neither documentid nor fileid, do not know where does it link to");
@@ -174,7 +177,6 @@ var FilePageView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'renderDragables');
         this.model.bind('change:dragables', this.renderDragables);
-        this.renderedPlacements = [];
         this.render();
     },
     makeDropable : function() {
@@ -207,19 +209,11 @@ var FilePageView = Backbone.View.extend({
         var container = $(this.el);
         var file = page.file();
 
-        this.renderedPlacements = [];
-        $(".placedfield",container).detach();
         _.each(page.placements(), function(placement) {
             var placement = placement;
-            if (placement.page()==page.number()) {
+            if (!placement.placed() && placement.page()==page.number()) {
                 var elem = $("<div>").appendTo(container);
                 createFieldPlacementPlacedView({model: placement, el: elem});
-                if (!placement.field().isClosed()) {
-                    view.renderedPlacements.push({
-                        placement: placement,
-                        elem: elem
-                    });
-                }
             }
         });
     },

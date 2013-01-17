@@ -1,42 +1,5 @@
-.waiting4data
-{
-    margin-left:40%;
-    margin-right:40%;
-    height: 100px;
-    background-image: url(/img/wait30trans.gif);
-    background-repeat: no-repeat;
-    background-position: center center;
-}
-.loadingMail
-{
-    margin-left:40%;
-    margin-right:40%;
-    height: 400px;
-    background-image: url(/img/wait30trans.gif);
-    background-repeat: no-repeat;
-    background-position: center center;
-}
 
-
-
-.author, .signatory
-{
-    margin-bottom:10px;
-}
-
-
-input[type=submit].hidden
-{
-    display: inherit;
-    visibility: hidden;
-    height:0px;
-    width:0px;
-    padding:0px;
-    margin:0px;
-}
-
-/**/
-.tab-viewer-header-title
+.attachment-view-topbar
 {
     color: #ffffff;
     min-height: 20px;
@@ -45,14 +8,13 @@ input[type=submit].hidden
     position: relative;
 }
 
-.tab-viewer-header-title .title
+.attachment-view-topbar .title
 {
     font-size: 10px;
     margin-right: 2px;
 }
 
-.tab-viewer-header-title .download,
-.tab-viewer-header-title .remove
+.attachment-view-topbar .download,
 {
     font-size: 10px;
     font-weight: bold;
@@ -60,23 +22,26 @@ input[type=submit].hidden
     display: inline-block;
     float: right;
     margin: 4px 10px 0 18px;
-
-
 }
 
-.tab-viewer-header-title .remove a,
-.tab-viewer-header-title .download a{
+.attachment-view-topbar .download a{
     color: #999999;
-    text-transform: uppercase;
+    float: right;
 }
 
-.tab-viewer-header-title .download .docname {
+.attachment-view-topbar .download .docname {
   display: none;
 }
 
-.tab-viewer-header-title .remove a:hover,
-.tab-viewer-header-title .download a:hover{
+.attachment-view-topbar .download a:hover{
   color: #FFFFFF;
+}
+
+.attachment-view-topbar .docname input.docname-edit {
+  background: transparent;
+  border: 0px solid transparent;
+  padding: 0px;
+  color : #FFFFFF;
 }
 
 .docname
@@ -86,19 +51,11 @@ input[type=submit].hidden
     width: 450px;
 }
 
-.docname .icon {
-    width: 14px;
-    height: 14px;
-    display: inline-block;
-}
 
 .docname .icon.ok {
     margin-top: 4px;
 }
 
-.docname .icon.edit {
-    background-image: url(/img/iconPen.png);
-}
 
 .docname .docname-display text {
     display: inline-block;
@@ -123,67 +80,6 @@ input[type=submit].hidden
     white-space:nowrap;
 }
 
-.tab-viewer-header-title .docname input.docname-edit {
-  color : #FFFFFF;
-}
-
-.tab-viewer-header-title .changeName a
-{
-    font-size: 10px;
-}
-
-
-.tab-viewer-header-title .saveButton,
-.tab-viewer-header-title .downloadButton
-{
-    float:right;
-    margin-right: 10px;
-    margin-top: 2px;
-}
-
-.designview .signStepsBody
-{
-    background-image: url(/img/signStepsBodyBorderLong.png);
-    background-repeat: repeat-y;
-    overflow: hidden;
-    min-height: 100px;
-    padding: 0px 19px;
-    border-left: 1px solid #BDBDBD;
-    border-right: 1px solid #BDBDBD;
-    border-bottom: 1px solid #C0C0C0;
-    min-width: 980px;
-}
-
-
-/* HOW TO MAKE FILE INPUT LOOKING LIKE A BUTTON !!!! */
-.button input.multiFileInput
-{
-    position:relative;
-    z-index:10;
-    cursor:pointer;
-    float:right;
-    top:-50px;
-    left:10;
-    right:-30px;
-    font-size:90px;
-    cursor:pointer;
-    -ms-filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
-    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
-    opacity: 0;
-    /* only IE will use this, it's necessary because it ignores the maxlength att <IE7 */
-    #width:0px;
-    min-height: 66px;
-}
-
-/* 015 new */
-.border {
-   background-color: #ecedf3;
-   width: 1px;
-   height: 192px;
-   display:inline-block;
-   float:left;
-}
-
 /* For the draggable fields in signatory details */
 .dragfield {
   position: relative;
@@ -206,13 +102,6 @@ input[type=submit].hidden
 .redborder input {
     border-color: red;
 }
-
-
-.signatoriesBox {
-float: right;
-width: 690px;
-}
-
 
 .nordea {
     padding-top: 11px;
@@ -245,81 +134,6 @@ width: 690px;
     float: right;
     height: 33px;
     overflow:none;
-}
-
-
-.usagestats .tab-content {
-    display: none;
-}
-
-.usagestats .jsdaytable .tab-container, .usagestats .jsmonthtable .tab-container, .usagestats .tab-table {
-    -moz-border-radius: 5px 5px 5px 5px;
-    -webkit-border-radius: 5px 5px 5px 5px;
-    border-radius: 5px 5px 5px 5px;
-}
-
-.usagestats .tab-table {
-    border-top: 0;
-}
-
-.usagestats .option-top-box {
-    display: none;
-}
-
-.usagestats .jsdaytable, .usagestats .jsmonthtable {
-    margin-top: 20px;
-    margin-bottom: 40px;
-}
-
-.usagestats h2 {
-    text-align: center;
-    font-family: Source Sans Pro,Helvetica Neue,sans-serif;
-    font-size: 1.5em;
-    line-height: 25px;
-    color: #333333;
-}
-
-.usagestats td.num {
-
-    font-weight: bold;
-    font-family: "Courier New", Courier, monospace;
-
-}
-
-.inlineEditing .acceptIcon {
-    height:14px;
-    width:14px;
-    display: block;
-    float:right;
-    background: url("../img/spr-icons.png") no-repeat scroll 0 0 transparent;
-    background-position: -171px 0px;
-    margin-top: 3px;
-    width: 14px;
-    float:right;
-}
-.inlineEditing {
-    border: 1px solid #DDDDDD;
-    height: 21px;
-    padding: 5px 10px 5px 10px;
-    border-radius: 2px 2px 2px 2px;
-    margin-top: -6px;
-    margin-left: -11px;
-    background : #FFF;
-}
-.inlineEditing input{
-    font-family: Helvetica;
-    font-size: 15.8487px;
-    border: 0px solid #DDDDDD;
-    float: left;
-    padding: 0px;
-    margin: 0px;
-}
-.inlineEditing input:focus{
-    outline:0px;
-}
-
-.modal-container.email-preview {
-  width:800px;
 }
 
 .box.verificationBox{
@@ -358,7 +172,7 @@ width: 690px;
     margin: 0 auto;
     width: 64px;
     margin:15px;
-    
+
 }
 
 .verificationFailedIcon, .verificationErrorIcon {

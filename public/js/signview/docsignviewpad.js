@@ -6,7 +6,7 @@
 
 window.PadGiveToNextSignatoryModel = Backbone.Model.extend({
     initialize: function (args) {
-       this.setSignatory(args.document.signatoriesThatCanSignNow()[0]);      
+       this.setSignatory(args.document.signatoriesThatCanSignNow()[0]);
     },
     document: function() {
        return this.get("document");
@@ -52,8 +52,8 @@ window.PadGiveToNextSignatoryView = Backbone.View.extend({
                     callback(sig);
             });
         });
-        return span.add(select);    
-        
+        return span.add(select);
+
     },
     render : function() {
            var box = $(this.el);
@@ -65,7 +65,7 @@ window.PadGiveToNextSignatoryView = Backbone.View.extend({
                                 size: "tiny",
                                 color : "green",
                                 text : model.document().process().localization().sendbuttontext,
-                                //cssClass: "float-right" ,                 
+                                //cssClass: "float-right" ,
                                 onClick : function() {
                                     model.giveForSigning();
                                     return false;
@@ -75,7 +75,7 @@ window.PadGiveToNextSignatoryView = Backbone.View.extend({
                                                                 .append(giveForSigningSelector)
                                                                 .append($("<span/>").text(localization.pad.signingOnSameDeviceFor2))
                                                                 .append(giveForSigningButton);
-      
+
            box.append(giveForSigning);
            return box;
     }

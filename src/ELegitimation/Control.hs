@@ -320,7 +320,7 @@ initiateMobileBankID docid slid = do
 
     sl <- guardJust $ getSigLinkFor document slid
     let pn = fromMaybe (getPersonalNumber sl) mpn
-        
+
     tbs <- getTBS document
 
     eresponse <- liftIO $ mbiRequestSignature logicaconf pn tbs

@@ -109,7 +109,7 @@ var AttachmentView = Backbone.View.extend({
       return;
     }
 
-    var titlerow = $("<div class='tab-viewer-header-title'/>");
+    var titlerow = $("<div class='attachment-view-topbar'/>");
     titlerow.append(this.namebox());
     titlerow.append(this.downloadbox());
 

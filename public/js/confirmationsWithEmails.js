@@ -77,6 +77,9 @@ window.MailView = Backbone.View.extend({
                                 setTimeout(function() {body.css('background', '#ffffff');},1);
                                 return true;
                               });
+                      },
+                      onchange_callback  : function (inst) {
+                                view.customtextvalue = inst.getBody().innerHTML;
                       }
           });
         },100);
@@ -99,6 +102,8 @@ window.MailView = Backbone.View.extend({
         return this;
     },
     customtext : function() {
+        if (this.customtextvalue != undefined)
+            return this.customtextvalue;
         if (this.editor != undefined)
             return this.editor.val();
     }
@@ -159,12 +164,12 @@ var ConfirmationWithEmailView = Backbone.View.extend({
     render: function () {
        var model = this.model;
        var view = this;
-       var container = $("<div class='modal-container email-preview'/>");
+       var container = $("<div class='modal-container' style='width:800px'/>");
        container.css("top",$(window).scrollTop());
        container.css("margin-top",50);
        container.css("left",$(window).scrollLeft());
        container.css("margin-left",Math.floor(($(window).width() - 800) / 2));
-       
+
 	   //Modal header
        var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");
        var title = $("<span class='modal-title'/>");
