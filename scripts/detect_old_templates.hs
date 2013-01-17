@@ -19,9 +19,43 @@ import Data.CSV
 import qualified Text.ParserCombinators.Parsec as Parsec (parse)
 
 whiteList :: S.Set String
-whiteList = S.fromList [ "template names"
-                       , "that are surely needed"
-                       , "but this script marks them as unused"
+whiteList = S.fromList [ "emailFieldName"
+                       , "passwordFieldName"
+                       , "nameFieldName"
+                       , "companyNameFieldName"
+                       , "companyNumberFieldName"
+                       , "addressFieldName"
+                       , "positionFieldName"
+                       , "checkBoxFieldName"
+                       , "_phone"
+                       , "daysToSignFieldName"
+                       , "idFieldName"
+                       , "idFieldName"
+                       , "idFieldName"
+                       , "placeFieldName"
+                       , "fieldNameFieldName"
+                       , "fieldValueFieldName"
+                       , "inviteTextFieldName"
+                       , "flashMessageInputExceedsMaxLength"
+                       , "flashMessageInputLessThanMinLength"
+                       , "flashMessageInvalidFormat"
+                       , "flashMessageInvalidPrintableCharsInInput"
+                       , "flashMessageInvalidSpaceInInput"
+                       , "flashMessageInvalidUnprintableCharsInInput"
+                       , "flashMessageNotAValidInteger"
+                       , "flashMessageNumberAboveMaximum"
+                       , "flashMessageNumberBelowMinimum"
+                       , "flashRemindMailSentNotSigned"
+                       , "flashRemindMailSentSigned"
+                       , "newTemplateTitle"
+                       , "br"
+                       , "input"
+                       , "td"
+                       , "th"
+                       , "morethenonelist"
+                       , "morethenonelistnormal"
+                       , "nomorethanonelist"
+                       , "nomorethanonelistnormal"
                        ]
 
 ------------------------------
@@ -165,6 +199,19 @@ elogEvents = do
       eventCtor (QualConDecl _ _ _ (RecDecl name' _)) = nameToString name'
 
   return $ S.fromList $ map eventCtor eventCtorDecls
+
+-- parse template names from DocProcessInfo records
+docProcessInfos :: IO (S.Set String)
+docProcessInfos = do
+  ParseOk (Module _ _ _ _ _ _ decls) <- parseFile "src/Doc/DocProcess.hs"
+  let docProcessInfoFields (PatBind _ (PVar (Ident _)) Nothing (UnGuardedRhs (RecConstr (UnQual (Ident "DocProcessInfo")) fields)) _) = Just fields
+      docProcessInfoFields _ = Nothing
+      interestingFields = concat $ catMaybes $ map docProcessInfoFields decls
+
+      templateFromField (FieldUpdate _ (Lit (String template))) = Just template
+      templateFromField _ = Nothing
+
+  return $ S.fromList $ catMaybes $ map templateFromField interestingFields
 --------------------------------------------------
 -- returns template name from expression of certain forms
 -- e.g. renderTemplate "foo" returns Just "foo"
@@ -177,12 +224,22 @@ expTemplateName (App (Var (UnQual (Ident funName))) (Lit (String template)))
                      , "renderTemplate_"
                      , "renderTemplateI"
                      , "kontramail"
+                     , "flashMessage"
+                     , "flashMessageWithFieldName"
                      ] = Just template
     | otherwise = Nothing
 expTemplateName (App (App (Var (UnQual (Ident funName))) _) (Lit (String template)))
     | funName `elem` [ "renderLocalTemplate"
                      , "renderLocalTemplate_"
+                     , "kontramaillocal"
+                     , "flashMessageWithFieldName"
                      , "renderTemplateAsPage"] = Just template
+    | otherwise = Nothing
+expTemplateName (App (App (App (Var (UnQual (Ident funName))) _) _) (Lit (String template)))
+    | funName `elem` ["documentMailWithDocLang"] = Just template
+    | otherwise = Nothing
+expTemplateName (App (App (App (App (Var (UnQual (Ident funName))) _) _) _) (Lit (String template)))
+    | funName `elem` ["documentMail"] = Just template
     | otherwise = Nothing
 expTemplateName _ = Nothing
 
@@ -224,12 +281,13 @@ main = do
   exps <- S.unions <$> mapM fileExps files
   let topLevelTemplatesFromSources = setCatMaybes $ S.map expTemplateName exps
   elogTemplates <- S.map (++"Text") <$> elogEvents
-  let topLevelTemplates = elogTemplates `S.union` topLevelTemplatesFromSources
+  docProcessInfoTemplates <- docProcessInfos
+  let topLevelTemplates = S.unions [elogTemplates, topLevelTemplatesFromSources, docProcessInfoTemplates, whiteList]
   translationsLines <- tail <$> basicCSVParser "texts/everything.csv"
   let translations = map head translationsLines
   templates <- concat <$> mapM getTemplates templatesFilesPath
   let templatesMap = Map.fromList templates
       allTemplates = S.fromList $ Map.keys templatesMap ++ translations
       knownTemplates = go templatesMap S.empty topLevelTemplates
-      unusedTemplates = allTemplates S.\\ knownTemplates S.\\ whiteList
+      unusedTemplates = allTemplates S.\\ knownTemplates
   putStr $ unlines $ filter (not.null) $ S.toList $ unusedTemplates
