@@ -1,10 +1,10 @@
 /* Select box - as in top-left of archive*/
-  
+
 (function( window){
 
 window.SelectOptionModel = Backbone.Model.extend({
   defaults : {
-    onSelect : function(){return false;}    
+    onSelect : function(){return false;}
   },
   initialize: function(args){
   },
@@ -48,7 +48,7 @@ window.SelectModel = Backbone.Model.extend({
   },
   iconClass : function(){
        return this.get("iconClass");
-  }, 
+  },
   expanded : function(){
        return this.get("expanded");
   },
@@ -101,7 +101,7 @@ window.SelectOptionView = Backbone.View.extend({
         $(this.el).click(function() {model.selected(); return false;});
         return this;
     }
-    
+
 });
 
 
@@ -118,10 +118,11 @@ var SelectView = Backbone.View.extend({
         this.render();
     },
     closeIfNeeded : function() {
-        if ( this.dead != true 
+        if ( this.dead != true
             && this.model.expanded()
             && new Date().getTime() - this.enterdate > 50
             && $(":hover", this.el).size() == 0
+            && (!BrowserInfo.doesNotSupportHoverPseudoclassSelector() && !BrowserInfo.isPadDevice())
            )
           this.model.toggleExpand();
     },
@@ -165,16 +166,16 @@ var SelectView = Backbone.View.extend({
               model.toggleExpand();
               return false;
         });
-        
-        if (model.expandOnHover()){
+
+        if (model.expandOnHover() && !BrowserInfo.doesNotSupportHoverPseudoclassSelector() && !BrowserInfo.isPadDevice()){
           button.mouseenter(function(){
               view.enterdate = new Date().getTime();
               model.expand();
               setTimeout(function() {view.closeIfNeeded();}, 100);
               return false;
           });
-        }    
-          
+        }
+
         if (model.expanded())
             {
               button.addClass("select-exp");
@@ -214,7 +215,7 @@ window.Select = function(args) {
               view : function()  {return view;},
               clear : function() {view.clear(); model.destroy();},
               open : function()  {model.expand();}
-            });    
+            });
 };
 
-})(window); 
+})(window);
