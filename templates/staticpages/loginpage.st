@@ -7,7 +7,7 @@ loginPage=
   jQuery(document).ready(function() {
     jQuery('.inner').append(new Login({referer: "$referer$"}).el());
   });
-</script> 
+</script>
 </div>
 </div>
 ###
@@ -64,7 +64,7 @@ accountSetupPage=
 
        $flashmessages()$
 
-        <div class='mainContainer big' style='min-height: 650px;'>
+        <div class='mainContainer big' style='min-height: 712px;'>
         <script type="text/javascript">
           jQuery(document).ready(function() {
             jQuery('.mainContainer').append( new AccountSetup({
