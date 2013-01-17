@@ -554,18 +554,18 @@ verifySignatureAndGetSignInfoMobileForAuthor docid transactionid = do
 
 mobileBankIDErrorJSON :: TemplatesMonad m => String -> String -> m JSValue
 mobileBankIDErrorJSON e pn = do
-  errormessage <- renderTemplate errortemplate $ return ()
+  errormessage <- errortemplate
   runJSONGenT $ do
     J.value "error" errormessage
     J.value "personalNumber" pn
   where errortemplate = case e of
-          _ | "INVALID_PARAMETERS"     `isInfixOf` e -> "bankidInvalidParameters"
-            | "SIGN_VALIDATION_FAILED" `isInfixOf` e -> "bankidInternalError"
-            | "RETRY"                  `isInfixOf` e -> "bankidInternalError"
-            | "INTERNAL_ERROR"         `isInfixOf` e -> "bankidInternalError"
-            | "UNKNOWN_USER"           `isInfixOf` e -> "bankidUnknownUser"
-            | "EXPIRED_TRANSACTION"    `isInfixOf` e -> "bankidExpiredTransaction"
-            | "INVALID_DEVICES"        `isInfixOf` e -> "bankidInvalidDevices"
-            | "ALREADY_IN_PROGRESS"    `isInfixOf` e -> "bankidAlreadyInProgress"
-            | "USER_CANCEL"            `isInfixOf` e -> "bankidUserCancel"
-            | otherwise                              -> e
+          _ | "INVALID_PARAMETERS"     `isInfixOf` e -> renderTemplate_ "bankidInvalidParameters"
+            | "SIGN_VALIDATION_FAILED" `isInfixOf` e -> renderTemplate_ "bankidInternalError"
+            | "RETRY"                  `isInfixOf` e -> renderTemplate_ "bankidInternalError"
+            | "INTERNAL_ERROR"         `isInfixOf` e -> renderTemplate_ "bankidInternalError"
+            | "UNKNOWN_USER"           `isInfixOf` e -> renderTemplate_ "bankidUnknownUser"
+            | "EXPIRED_TRANSACTION"    `isInfixOf` e -> renderTemplate_ "bankidExpiredTransaction"
+            | "INVALID_DEVICES"        `isInfixOf` e -> renderTemplate_ "bankidInvalidDevices"
+            | "ALREADY_IN_PROGRESS"    `isInfixOf` e -> renderTemplate_ "bankidAlreadyInProgress"
+            | "USER_CANCEL"            `isInfixOf` e -> renderTemplate_ "bankidUserCancel"
+            | otherwise                              -> return e
