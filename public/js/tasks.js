@@ -6,16 +6,16 @@
  *      PageTasks - collection of tasks. It keeps one active. Takes care of updates and order.
  *      PageTasksArrowView - generates green arrow pointing at active task | Hidden
  *      PageTasksArrow - controler for  PageTasksArrowView & PageTasks
- * 
+ *
  * PageTasksArrowView points at active task (or up/down if task is out of scope)
- * 
+ *
  * Task is being active as long as it is not completed (isComplete function is used for test).
  * Tasks are ordered top to bottom, based on this jQuery object position.
  * On task update - first, not compleated task is activated.
  *
  * ! You need to manually call 'update' method. 'update' performes isComplete check on task.
  *   isComplete result is stored in task internal cache - it gets updated only on 'update' method call.
- * 
+ *
    Sample task :
         var el = $("<input type='text'/>").appendTo('body');
         var task = new PageTask({
@@ -28,7 +28,7 @@
             })
         el.change(function() {task.update();});
 
-  Usage:      
+  Usage:
 
         var arrow = new PageTasksArrow({
             tasks : new PageTasks({tasks : [task]}),
@@ -83,7 +83,7 @@ window.PageTasks = Backbone.Model.extend({
     active : undefined
   },
   initialize: function(args) {
-    var model = this;  
+    var model = this;
     var tasks = args.tasks.sort(function(t1,t2) {return t1.el().offset().top - t2.el().offset().top} );
    _.each(tasks, function(t) {t.bind('change', function() { model.activateTask();})});
    this.activateTask();
@@ -101,8 +101,8 @@ window.PageTasks = Backbone.Model.extend({
              hasIncompleteTask = true;
              if (this.tasks()[i] == this.active()) break;
              if (this.active() != undefined) this.active().onDeactivate();
-             this.set({"active" : this.tasks()[i]});
              this.tasks()[i].onActivate();
+             this.set({"active" : this.tasks()[i]});
              this.trigger("change");
              break;
          }
@@ -113,13 +113,13 @@ window.PageTasks = Backbone.Model.extend({
          this.set({"active" : this.tasks()[i]});
          this.trigger("change");
     }
-        
+
   },
   notCompleatedTasks : function() {
          var tasks = [];
          for (var i=0;i< this.tasks().length ; i++ )
                if (!this.tasks()[i].isComplete()) tasks.push(this.tasks()[i]);
-         return tasks;                             
+         return tasks;
   }
 });
 
@@ -132,7 +132,7 @@ var PageTasksArrowView = Backbone.View.extend({
   },
   blink : function() {
     if (this.arrow != undefined)
-        this.arrow.blink(10);  
+        this.arrow.blink(10);
   },
   taskArrow : function(task) {
         var view = this;
@@ -174,7 +174,7 @@ var PageTasksArrowView = Backbone.View.extend({
         if (task == undefined || arrow == undefined) return true;
         if (task != newtask) return true;
         if ((scrolltop >= 0) && (elbottom <= eltop)) return false;
-        
+
         if (((elbottom + bottommargin) <= scrollbottom) && ((eltop - topmargin) >= scrolltop)) {
            if (arrow.model().type() == 'point-left')  return false;
            if (arrow.model().type() == 'point-right') return (elleft + elwidth > $(arrow.view().el).offset().left);
@@ -184,11 +184,11 @@ var PageTasksArrowView = Backbone.View.extend({
            return (arrow.model().type() != 'scroll-down');
 
         return (arrow.model().type() != 'scroll-up');
-  },      
+  },
   updateArrow : function() {
      var view = this;
      if (view.arrow == undefined || view.arrowShouldChange(this.model.active()))
-     {  
+     {
       if (view.arrow != undefined)
           this.arrow.clear();
       if (this.model.active() != undefined)
