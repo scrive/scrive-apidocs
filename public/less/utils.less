@@ -105,6 +105,12 @@
     background: url(../img/icon-delete-gray.png) 0 0 no-repeat;
 }
 
+.icon.edit {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+    background-image: url(/img/iconPen.png);
+}
 
 .backicon {
     background: url(../img/back.png) no-repeat transparent;
@@ -206,3 +212,42 @@
     list-style: disc outside none;
   }
 }
+
+.waiting4data
+{
+    margin-left:40%;
+    margin-right:40%;
+    height: 100px;
+    background-image: url(/img/wait30trans.gif);
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+.loadingMail
+{
+    margin-left:40%;
+    margin-right:40%;
+    height: 400px;
+    background-image: url(/img/wait30trans.gif);
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+
+/* HOW TO MAKE FILE INPUT LOOKING LIKE A BUTTON !!!! */
+.button input.multiFileInput
+{
+    position:relative;
+    z-index:10;
+    cursor:pointer;
+    float:right;
+    top:-50px;
+    left:10;
+    right:-30px;
+    font-size:90px;
+    cursor:pointer;
+    -ms-filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
+    filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
+    opacity: 0;
+    min-height: 66px;
+}
+

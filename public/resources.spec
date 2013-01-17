@@ -22,6 +22,7 @@ ignore  less/branding/containter.less
 ignore  less/branding/flash.less
 ignore  less/branding/modal.less
 ignore  less/branding/select.less
+ignore  less/branding/tooltip.less
 ignore  less/branding/checkbox.less
 ignore  less/branding/contact.less
 ignore  less/branding/main.less
@@ -29,7 +30,6 @@ ignore  libs/html5shiv.js
 ignore  css/fonts
 
 set systemPage
- css css/newdesign.css
  css css/style.css
  css css/calendar.css
  less less/utils.less
