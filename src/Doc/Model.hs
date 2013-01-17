@@ -76,6 +76,7 @@ module Doc.Model
   , SetDocumentModificationDate(..)
   , GetDocsSentBetween(..)
   , FixClosedErroredDocument(..)
+  , GetDocsSent(..)
   ) where
 
 import Control.Monad.Trans
@@ -2423,6 +2424,19 @@ instance MonadDB m => DBQuery m GetDocsSentBetween Int where
                "AND documents.type = ? "   <>
                "AND documents.status <> ? "
     _ <- kExecute [toSql uid, toSql start, toSql end, toSql $ Signable undefined, toSql Preparation]
+    foldDB (+) 0
+
+data GetDocsSent = GetDocsSent UserID
+instance MonadDB m => DBQuery m GetDocsSent Int where
+  query (GetDocsSent uid) = do
+    kPrepare $ "SELECT count(documents.id) " <>
+               "FROM documents " <>
+               "JOIN signatory_links ON documents.id = signatory_links.document_id " <>
+               "WHERE signatory_links.user_id = ? " <>
+               "AND is_author " <>
+               "AND documents.type = ? "   <>
+               "AND documents.status <> ? "
+    _ <- kExecute [toSql uid, toSql $ Signable undefined, toSql Preparation]
     foldDB (+) 0
 
 -- Update utilities
