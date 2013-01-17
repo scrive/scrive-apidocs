@@ -66,12 +66,6 @@ flashMessageUserAlreadyActivated=
 	$_flashMessageUserAlreadyActivated()$
 
 ###
-flashMessageChangePasswordEmailSend=
-	$_flashMessageChangePasswordEmailSend()$
-###
-flashMessageNoRemainedPasswordReminderEmails=
-	$_flashMessageNoRemainedPasswordReminderEmails()$
-####
 flashMessageNewActivationLinkSend=
 	$_flashMessageNewActivationLinkSend()$
 
@@ -97,10 +91,6 @@ emailFieldName=	$_email()$
 passwordFieldName=	$_passwordFieldName()$
 ###
 nameFieldName=	$_nameFieldName()$
-###
-firstNameFieldName=	$_firstname()$
-###
-secondNameFieldName=	$_lastname()$
 ###
 companyNameFieldName=	$_company()$
 ###
@@ -159,16 +149,6 @@ flashMessageRowLessThanMinColCount=	$_flashMessageRowLessThanMinColCount()$
 flashMessageRowGreaterThanMaxColCount=	$_flashMessageRowGreaterThanMaxColCount()$
 ###
 flashMessageValueNotValid = $_flashMessageValueNotValid()$
-###
-flashMessageFirstNameIsRequired=	$_flashMessageFirstNameIsRequired()$
-###
-flashMessageSecondNameIsRequired=	$_flashMessageSecondNameIsRequired()$
-###
-flashMessageEmailIsRequired=	$_flashMessageEmailIsRequired()$
-###
-flashMessageNumberIsRequired=	$_flashMessageNumberIsRequired()$
-###
-flashMessageThanksForTheQuestion=	$_flashMessageThanksForTheQuestion()$
 ###
 flashMessageInvalidCSV=	$_flashMessageInvalidCSV()$
 ###

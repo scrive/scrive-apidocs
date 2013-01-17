@@ -699,19 +699,6 @@ mailMailAPIConfirmOfferMainP=
 timetosigninfo=
     <span>$_timetosigninfo()$ <strong>$time$</strong>.</span><br/>
 ###
-updateinglistwithauthor=
-    <span>
-      <span class="partylistupdate"></span>
-    </span>
-####
-contracthassignedformailtext=$_contracthassignedformailtext()$
-####
-offerhassignedformailtext=$_offerhassignedformailtext()$
-####
-orderhassignedformailtext=$_orderhassignedformailtext()$
-####
-####
-####
 legalparagraph=
 <p style="width:90%;font-size:8pt;font-style:italic;">$_legalparagraphBody()$ </p>
 <BR/>
