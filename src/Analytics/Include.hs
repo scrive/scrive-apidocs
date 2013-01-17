@@ -25,12 +25,14 @@ import MinutesTime
 import DB
 
 import Payments.Model
+import Doc.Model
 
 data AnalyticsData = AnalyticsData { aUser           :: Maybe User
                                    , aCompany        :: Maybe Company
                                    , aToken          :: String
                                    , aPaymentPlan    :: Maybe PaymentPlan
                                    , aLanguage       :: Lang
+                                   , aDocsSent       :: Int
                                    }
                      
 getAnalyticsData :: Kontrakcja m => m AnalyticsData
@@ -45,12 +47,16 @@ getAnalyticsData = do
     Just User{userid} -> dbQuery $ GetPaymentPlan (Left userid)
     Nothing -> return Nothing
   lang <- ctxlang <$> getContext
+  docssent <- case muser of
+    Just User{userid} -> dbQuery $ GetDocsSent userid
+    Nothing -> return 0
     
   return $ AnalyticsData { aUser         = muser
                          , aCompany      = mcompany
                          , aToken        = token 
                          , aPaymentPlan  = mplan 
                          , aLanguage     = lang
+                         , aDocsSent     = docssent
                          }
 
 mnop :: Monad m => (a -> m ()) -> Maybe a -> m ()
@@ -95,5 +101,6 @@ instance ToJSValue AnalyticsData where
     mnop (J.value "Company Status") $ companyStatus <$> aUser
     mnop (J.value "Company Name") $ join $ maybeS <$> (\u -> getCompanyName (u, aCompany)) <$> aUser
 
-    mnop (J.value "Payment Plan") $ show <$> ppPricePlan <$> aPaymentPlan
+    J.value "Payment Plan" $ maybe "free" show $ ppPricePlan <$> aPaymentPlan
     J.value "Language" $ codeFromLang aLanguage
+    J.value "Docs sent" aDocsSent
