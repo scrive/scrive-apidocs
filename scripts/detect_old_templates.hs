@@ -284,10 +284,10 @@ main = do
   docProcessInfoTemplates <- docProcessInfos
   let topLevelTemplates = S.unions [elogTemplates, topLevelTemplatesFromSources, docProcessInfoTemplates, whiteList]
   translationsLines <- tail <$> basicCSVParser "texts/everything.csv"
-  let translations = map head translationsLines
+  let translations = map (\fields -> (fields !! 0, fields !! 1)) translationsLines
   templates <- concat <$> mapM getTemplates templatesFilesPath
-  let templatesMap = Map.fromList templates
-      allTemplates = S.fromList $ Map.keys templatesMap ++ translations
+  let templatesMap = Map.fromList $ templates ++ translations
+      allTemplates = S.fromList $ Map.keys templatesMap
       knownTemplates = go templatesMap S.empty topLevelTemplates
       unusedTemplates = allTemplates S.\\ knownTemplates
   putStr $ unlines $ filter (not.null) $ S.toList $ unusedTemplates
