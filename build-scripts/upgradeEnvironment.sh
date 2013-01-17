@@ -25,6 +25,8 @@ if [ ! -f "${HOME}/.pgpass" ] ; then
     exit 3
 fi
 
+chmod og-rwx "${HOME}/.pgpass"
+
 DATE=`date +%Y-%m-%d-%H-%M-%S`
 
 echo "Starting upgrade process for the $2 environment, date = $DATE"
@@ -59,4 +61,4 @@ mv kontrakcja-$DATE/supervisor-log kontrakcja
 
 echo "Deployed. Please check out everything and then manually do:"
 echo ""
-echo "    supervisorctl start prod prod-mailer prod-cron"
+echo "    supervisorctl start $2 $2-mailer $2-cron"
