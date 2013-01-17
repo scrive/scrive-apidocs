@@ -280,7 +280,8 @@ main = do
   files <- find (return True) (extension ==? ".hs") "."
   exps <- S.unions <$> mapM fileExps files
   let topLevelTemplatesFromSources = setCatMaybes $ S.map expTemplateName exps
-  elogTemplates <- S.map (++"Text") <$> elogEvents
+  events <- elogEvents
+  let elogTemplates = S.map (++"Text") events `S.union` S.map ("simpliefiedText"++) events
   docProcessInfoTemplates <- docProcessInfos
   let topLevelTemplates = S.unions [elogTemplates, topLevelTemplatesFromSources, docProcessInfoTemplates, whiteList]
   translationsLines <- tail <$> basicCSVParser "texts/everything.csv"
