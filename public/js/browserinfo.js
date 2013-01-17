@@ -9,13 +9,16 @@
 
 window.BrowserInfo = {
     isPadDevice : function() {
-       return  BrowserInfo.isIpad() || BrowserInfo.isIphone();        
+       return  BrowserInfo.isIpad() || BrowserInfo.isIphone() || BrowserInfo.isAndroid();        
     },
     isIpad : function(){
         return navigator.userAgent.match(/iPad/i) != null;      
     },
     isIphone : function(){
         return navigator.userAgent.match(/iPhone/i) != null;
+    },
+    isAndroid : function(){
+        return navigator.userAgent.toLowerCase().match(/android/i) != null;
     },
     isIE9orLower : function() {
       return $.browser.msie && ($.browser.version > "3" && $.browser.version <= "9.0");

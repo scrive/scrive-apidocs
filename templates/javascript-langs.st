@@ -450,6 +450,7 @@ javascriptLocalisation =
              ,  sendDirectly : "$_sendDirectly()$"
              ,  goToDesignView : "$_goToDesignView()$"
              ,  changePartyTo : "$_changePartyTo()$"
+             ,  giveForSigningThisDevice : "$_padGiveForSigningThisDevice()$"
         }
          , sampleEmailHeader: "$_SampleEmailHeader()$"
          , sampleEmailSubheader: "$_mailsubheader()$"
@@ -493,7 +494,7 @@ javascriptLocalisation =
            , modalAccountPasswordRequirements : "$_modalAccountPasswordRequirements()$"
            , flashMessageUserAlreadyActivated : "$_flashMessageUserAlreadyActivated()$"
          }
-         , cancel : "$_cancel()$" 
+         , cancel : "$_cancel()$"
          , authorview : {
                signatoriesTitle : "$_authorviewSignatoriesTitle()$"
              , requestedAttachments : "$_RequestedAttachments()$"
@@ -743,7 +744,7 @@ javascriptLocalisation =
               , contactAdmin : "$_paymentsContactAdmin()$"
               , mustBeAdmin : "$_paymentsMustBeAdmin()$"
               , subscriptionRenewed : "$_paymentsSubscriptionRenewed()$"
-        }  
+        }
       , documents : "$_docListTabsDocs()$"
       , templates : "$_docListTabsTemplates()$"
       , attachments : "$_docListTabsAttachemtns()$"

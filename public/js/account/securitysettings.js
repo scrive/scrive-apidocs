@@ -171,7 +171,7 @@ var SecuritySettingsView = Backbone.View.extend({
         checkbox.toggleClass("checked");
         model.setUseFooter(!model.useFooter());
       });
-                                                
+
       var label = $("<label/>").text(localization.account.accountSecurity.useFooter);
       body.append($("<div class='checkbox-box'/>").append(checkbox).append(label));
 
@@ -185,7 +185,7 @@ var SecuritySettingsView = Backbone.View.extend({
       updateTinyVisibility();
       model.bind("change:useFooter", updateTinyVisibility);
 
-      this.customfooter = $("<textarea id='customfooter' name='customfooter' style='width:350px;height:110px'/>").html(model.useFooter() ? model.footer() : "");
+      this.customfooter = $("<textarea id='customfooter' name='customfooter' style='width:350px;height:110px'/>").val(model.useFooter() ? model.footer() : "");
       setTimeout(function() {self.customfooter.tinymce({
                                 script_url: '/tiny_mce/tiny_mce.js',
                                 theme: "advanced",
@@ -214,8 +214,6 @@ var SecuritySettingsView = Backbone.View.extend({
         shape: "rounded",
         text : localization.account.accountSecurity.save,
         onClick : function() {
-          if (model.useFooter() && self.customfooter)
-            model.setFooter(self.customfooter.val());
           model.save();
           return false;
         }

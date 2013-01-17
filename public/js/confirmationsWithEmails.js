@@ -77,6 +77,9 @@ window.MailView = Backbone.View.extend({
                                 setTimeout(function() {body.css('background', '#ffffff');},1);
                                 return true;
                               });
+                      },
+                      onchange_callback  : function (inst) {
+                                view.customtextvalue = inst.getBody().innerHTML;
                       }
           });
         },100);
@@ -99,6 +102,8 @@ window.MailView = Backbone.View.extend({
         return this;
     },
     customtext : function() {
+        if (this.customtextvalue != undefined)
+            return this.customtextvalue;
         if (this.editor != undefined)
             return this.editor.val();
     }
