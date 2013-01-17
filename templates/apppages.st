@@ -106,8 +106,8 @@ pageFooter=
       <div class="content">
         <ul class="icons">
           <li>
-            <a href="https://plus.google.com/share?url=http://scrive.com" target="_blank">
-              <img src="/img/sm-google.png" width="32" height="32" alt="Google+" />
+            <a href="http://www.linkedin.com/company/scrive" target="_blank">
+              <img src="/img/sm-linkedin.png" width="32" height="32" alt="LinkedIn" />
             </a>
           </li>
           <li>
