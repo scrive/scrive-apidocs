@@ -1,16 +1,7 @@
-window.closeAllActiveModals = function() {
-  $(".modal.active").each(function() {
-    var self = $(this);
-    self.removeClass("active");
-    setTimeout(function() {self.remove()},600);
-  });
-}
-
-
 window.createnewdocument = function(event) {
   event.preventDefault();
   event.stopImmediatePropagation();
-  mixpanel.track('Click start new process'); 
+  mixpanel.track('Click start new process');
   new Submit({
                     method : "POST",
                     url : "/api/frontend/createfromfile",
@@ -23,7 +14,7 @@ window.createnewdocument = function(event) {
                                 LoadingDialog.close();
                             }
                    }
-                }).send();  
+                }).send();
 }
 
 window.createfromtemplate = function(event) {
@@ -70,88 +61,6 @@ function repeatForeverWithDelay(delay) {
   };
 }
 
-//used all over the place to do the text info on the text inputs
-function enableInfoTextOnce(where) {
-  if (!where) {
-    where = $(document);
-  }
-  var selector = 'input[infotext] ,  textarea[infotext]';
-  var inputs = $(selector, where);
-
-  function setInfoText(obj) {
-    var input = $(obj);
-    if (input.val() == "") {
-      if ($.browser.msie && $.browser.version >= 9) {
-        input = input.not(":focus");
-      } else {
-        input = input.not($(document.activeElement));
-      }
-      input.addClass("grayed");
-      input.val(input.attr("infotext"));
-    }
-  }
-
-  var removeInfoText = function(input) {
-    if (input.hasClass("grayed")) {
-      input.val("");
-      input.removeClass("grayed");
-    }
-  };
-
-  inputs.live("focus", function() {
-    var input = $(this);
-    removeInfoText(input);
-  });
-
-  inputs.live("keydown", function() {
-    var input = $(this);
-    removeInfoText(input);
-  });
-
-  inputs.live("blur", function() {
-    setInfoText(this);
-  });
-
-  inputs.each(function() {
-    setInfoText(this);
-  });
-
-  $("form").live("submit", function() {
-    var elems = $(this).find(".grayed");
-    elems.val("");
-    return true;
-  });
-}
-
-safeReady(function() {
-  enableInfoTextOnce();
-});
-
-//used by the tos you get when you enter as an initial
-//system user
-safeReady(function() {
-  $("#toscontainer").overlay({
-    mask: standardDialogMask,
-    load: true,
-    fixed: false
-  });
-});
-
-//used by the frontpage to show the legal popup
-safeReady(function() {
-  $(".openmodal").overlay({
-    mask: standardDialogMask,
-    top: standardDialogTop,
-    fixed: false
-  });
-});
-
-//not really sure why we have this - but it seems like
-//something that's a bug fix - em
-safeReady(function() {
-  $(window).resize();
-});
-
 //used by buttons for signing/sending/saving/rejecting document
 function alreadyClicked(button) {
   var result = false;
@@ -193,9 +102,6 @@ function prepareEditor(textarea) {
   });
 }
 
-standardDialogMask = "#333333";
-standardDialogTop = "10%";
-
 function readCookie(name) {
   var nameEQ = name + "=";
   var ca = document.cookie.split(';');
@@ -233,64 +139,6 @@ safeReady(function() {
     }
   });
 });
-
-//does some google analytics stuff, not sure if this is working or not
-safeReady(function() {
-  $("form.requestAccount").submit(function() {
-    if (window._gaq != undefined) 
-        _gaq.push(['_trackEvent', 'Signup', 'Click']);
-  });
-});
-
-//does some google analytics stuff, not sure if this is working or not
-safeReady(function() {
-  $("form.askQuestion").submit(function() {
-      var einput = $("input[name='email']",this);
-      return einput.validate(new EmailValidation({
-          callback : function(){
-            einput.addClass('redborder');
-            einput.focus(function() {einput.removeClass('redborder');});
-          }
-        
-      }));
-
-  });
-});
-
-
-
-
-// shows avanza demo video
-safeReady(function() {
-  $(".avanza-play-video").click(function() {
-      mixpanel.track('Play avanza video');
-    window.open('https://player.vimeo.com/video/44888641', '', 'scrollbars=no,menubar=no,height=500,width=700,resizable=yes,toolbar=no,location=no,status=no');
-    return false;
-  });
-});
-
-//shows the video on the front page
-safeReady(function() {
-  $(".campaign-play-video").click(function() {
-      mixpanel.track('Play Frontpage video');
-    window.open('https://player.vimeo.com/video/41846881', '', 'scrollbars=no,menubar=no,height=500,width=700,resizable=yes,toolbar=no,location=no,status=no');
-    return false;
-  });
-});
-
-//seems unecessary to clear the inputs, but i guess this is here because
-//it fixed a bug
-safeReady(function() {
-  $(document).unload(function() {
-    $("input").each(function() {
-      var i = $(this);
-      if (i.val().trim() === i.attr('infotext').trim()) {
-        i.val("");
-      }
-    });
-  });
-});
-
 
 //Checking
 $(document).ready(function() {
@@ -330,47 +178,6 @@ $(document).ready(function() {
     });
   };
 })(jQuery);
-
-// tooltip
-(function($) {
-  $.fn.tooltip = function() {
-    return this.each(function() {
-      var container = $('<div>');
-      $(this).mouseenter(function(e) {
-        container.appendTo('body').addClass('tooltip-container').css({
-          left: $(this).offset().left + $(this).width() + 19,
-          top: $(this).offset().top - 20
-        }).html('<div class="tooltip-arrow"></div><div class="tooltip-body">' + $($(this).attr('rel')).html() + '</div>');
-      }).mouseleave(function() {
-        container.remove();
-      });
-    });
-  };
-})(jQuery);
-
-//stuff for public pages
-$(document).ready(function() {
-  $('.tooltip').tooltip();
-
-  $('.login-button').click(function(e) {
-    window.location = '/login?referer=';
-    return false;
-  });
-
-  //this loads the tweets
-  var tweetelems = $(".tweet");
-  if (tweetelems.length > 0) {
-    setTimeout(function() {
-      tweetelems.tweet({
-        username: localization.tweetAccount,
-        count: 3,
-        loading_text: localization.loadingTweets
-      });
-    }, 1000);
-  }
-
-  $('a.submit').altSubmit();
-});
 
 function capitaliseFirstLetter(string)
 {
