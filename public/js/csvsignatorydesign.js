@@ -107,7 +107,7 @@ var CsvProblem = Backbone.Model.extend({
            sigdesign.set({'rows': jresp.rows, 'problems': problems });
            sigdesign.trigger("change");
         } catch(e) {};
-      });   
+      });
   }
 });
 
@@ -138,7 +138,7 @@ var CsvSignatoryDesignView = Backbone.View.extend({
       table.append(thead).append(tbody);
 
       // make sure the field names are in the right order
-      var fieldnames = 
+      var fieldnames =
             this.csvheaderorder.concat(
                 _.difference(_.invoke(model.signatory().fields(),  'name'),
                              this.csvheaderorder));
@@ -166,7 +166,7 @@ var CsvSignatoryDesignView = Backbone.View.extend({
          if (model.problemWithRow(i) != undefined)
          {
            var td = $("<td>");
-           td.append($("<div class='problem'>").text(model.problemWithRow().description()));
+           td.append($("<div class='problem'>").text(model.problemWithRow(i).description()));
            tr.append(td);
          }
          tbody.append(tr);
@@ -200,7 +200,7 @@ var CsvSignatoryDesignView = Backbone.View.extend({
          var model = this.model;
          var uploadButton = UploadButton.init({
                     name: "csv",
-                    color : "blue",
+                    color : "green",
                     size: "tiny",
                     text: localization.csv.selectOtherFile,
                     width: 100,

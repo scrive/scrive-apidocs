@@ -223,7 +223,7 @@ mailInvitation forMail
                          then if isSignatory msiglink || not forMail
                                  then renderLocalTemplateForProcess document processmailinvitationtosigndefaultheader $ do
                                      F.value "creatorname" $ creatorname
-                                     F.value "personname" $ personname
+                                     F.value "personname" $ Just personname <| personname /= "" |> Nothing
                                      F.value "documenttitle" $ documenttitle
                                  else renderLocalTemplate document "mailInvitationToViewDefaultHeader" $ do
                                      F.value "creatorname" creatorname

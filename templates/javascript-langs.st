@@ -390,7 +390,7 @@ javascriptLocalisation =
                     , extraActions : "$_designViewMessageExtraActions()$"
                 }
              , sign : "$_sign()$"
-             , removeFile : "Remove file"
+             , removeFile : "$_removeFile()$"
              , textFields : {
                       textField: "$_textField()$"
                     , obligatory: "$_textFieldObligatory()$"
