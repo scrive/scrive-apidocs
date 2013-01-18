@@ -474,15 +474,13 @@ javascriptLocalisation =
 
         }
         , verification : {
-                result: "$_verificationResult()$"
-             ,  success: "$_verificationSuccess()$"
+                success: "$_verificationSuccess()$"
              ,  failed: "$_verificationFailed()$"
              ,  failedMessage: "$_verificationFailedMessage()$"
              ,  error : "$_verificationError()$"
              ,  errorMessage : "$_verificationErrorMessage()$"
              ,  time: "$_verificationTime()$"
              ,  gateway : "$_verificationGateway()$"
-             ,  reason: "$_verificationReason()$"
 
           }
         , avtal24 : {
