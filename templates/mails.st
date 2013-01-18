@@ -251,7 +251,7 @@ mailInvitationToSignOrderIntructions=
     $endif$
 ####
 mailInvitationToSignContractDefaultHeader=
-    <p>$_hi()$ $personname$,
+    <p>$_hi()$$if(personname)$ $personname$$endif$,
       <br/><br/>
       $if(!service)$
         $_mailInvitationToSignContractDefaultHeader()$
@@ -261,13 +261,13 @@ mailInvitationToSignContractDefaultHeader=
    </p>
 ####
 mailInvitationToSignOfferDefaultHeader=
-    <p>$_hi()$ $personname$,
+    <p>$_hi()$$if(personname)$ $personname$$endif$,
       <br/><br/>
       $_mailInvitationToSignOfferDefaultHeader()$
     </p>
 ####
 mailInvitationToSignOrderDefaultHeader=
-    <p>$_hi()$ $personname$,
+    <p>$_hi()$$if(personname)$ $personname$$endif$,
       <br/><br/>
       $_mailInvitationToSignOrderDefaultHeader()$
     </p>
