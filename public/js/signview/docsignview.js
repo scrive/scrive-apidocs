@@ -41,6 +41,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
   noMainFile : function() {
       return this.document().ready() && this.document().mainfile() == undefined;
   },
+  hasRejectOption : function() {
+      return !this.document().padDelivery();
+  },
   hasMainFileSection : function() {
       return   !this.justSaved()
             && this.document().ready() && this.document().mainfile() != undefined;
@@ -50,7 +53,8 @@ var DocumentSignViewModel = Backbone.Model.extend({
   },
   hasSignatoriesSection : function() {
       return    !this.justSaved()
-             && !this.document().closed();
+             && !this.document().closed()
+             && _.filter(this.document().signatories(),function(sig) {return sig.signs();}).lenght > 1;
   },
   hasAuthorAttachmentsSection : function() {
       return    !this.justSaved()
@@ -99,7 +103,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                 new DocumentSignInstructionsView({
                     model: this,
                     el: $("<div />")
-                }) 
+                })
             });
         return this.get('instructionssection');
   },
@@ -178,7 +182,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
         }, {silent : true} );
         this.get('mainfile').view.bind("ready", function() {
             model.trigger("change");
-            
+
         });
       }
       return this.get('mainfile');
@@ -253,13 +257,14 @@ var DocumentSignViewModel = Backbone.Model.extend({
                     return placement.field().readyForSign();
                     },
                     el: elem,
+                    hasDirectArrow : !placement.field().isSignature(),
                     onActivate: function() {
                         if (placement.view != undefined && placement.view.startInlineEditing != undefined && !placement.field().readyForSign())
                         {
                           placement.view.startInlineEditing();
                             mixpanel.track('Begin editing field',
                                            {Label : placement.field().name()});
-                          task.trigger("change");
+                          //task.trigger("change"); This causes JS stack overflow, but might be needed
                         }
                     },
                     onDeactivate: function() {
@@ -311,7 +316,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
          document.currentSignatory().bind("change", function() { task.update()});
          self.set({'fillExtraDetailsTask' : task }, {silent : true});
        }
-       return self.get('fillExtraDetailsTask');  
+       return self.get('fillExtraDetailsTask');
   },
   tasks : function() {
       if (this.get("tasks") == undefined) {
@@ -323,7 +328,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
         if (this.hasSignatoriesAttachmentsSection())
             tasks = _.union(tasks,this.signatoryattachmentasks());
         if (this.hasSignSection())
-            tasks.push(this.signtask());  
+            tasks.push(this.signtask());
         this.set({'tasks' : new PageTasks({ tasks : tasks})}, {silent : true});
         }
       return this.get('tasks');
@@ -364,13 +369,13 @@ var DocumentSignViewView = Backbone.View.extend({
          return this;
      }
      this.container.append(this.model.instructionssection().el)
-      
+
      if (this.model.hasCreateAccountSection())
          this.container.append(this.model.createaccountsection().el);
-        
+
      if (this.model.hasPromoteScriveSection())
          this.container.append(this.model.promotescrivesection().el);
-     
+
      if (   this.model.hasMainFileSection()
          || this.model.hasAuthorAttachmentsSection()
          || this.model.hasExtraDetailsSection()
@@ -382,7 +387,7 @@ var DocumentSignViewView = Backbone.View.extend({
 
         if (this.model.hasMainFileSection())
             this.subcontainer.append(this.model.mainfile().view.el);
-        
+
         if (this.model.hasAuthorAttachmentsSection())
             this.subcontainer.append(this.model.authorattachmentssection().el());
 
@@ -392,7 +397,7 @@ var DocumentSignViewView = Backbone.View.extend({
         if (this.model.hasSignatoriesAttachmentsSection())
             this.subcontainer.append(this.model.signatoryattachmentsection().el);
 
-        if (this.model.hasSignatoriesSection()) 
+        if (this.model.hasSignatoriesSection())
             this.subcontainer.append(this.model.signatoriessection().view().el);
 
         if (this.model.hasSignSection())
@@ -400,11 +405,11 @@ var DocumentSignViewView = Backbone.View.extend({
 
         this.subcontainer.append($("<div class='clearfix' />"));
      }
-     
+
      if (this.model.hasArrows())
          view.container.prepend(view.model.arrow().view().el);
      return this;
-     
+
     }
 });
 
@@ -412,7 +417,7 @@ var DocumentSignViewView = Backbone.View.extend({
 window.DocumentSignView = function(args){
         this.model = new DocumentSignViewModel( {
                         document : new Document({ id: args.id, viewer: args.viewer })
-                    });   
+                    });
         this.view = new DocumentSignViewView({
                         model: this.model,
                         el: $("<div/>")
