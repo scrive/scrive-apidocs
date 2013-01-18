@@ -618,7 +618,7 @@ var DesignViewView = Backbone.View.extend({
         var acceptButton;
         if (document.elegAuthentication())
         {
-            acceptButton = $("<span/>");
+            acceptButton = $("<span style='margin-top: -8px;'/>");
             var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
             var telia = $("<a href='#' class='telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
             var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
@@ -703,7 +703,7 @@ var DesignViewView = Backbone.View.extend({
         if (document.elegAuthentication())
         {
 
-            var subhead = $("<h3/>").text(localization.sign.eleg.subhead);
+            var subhead = $("<h6/>").text(localization.sign.eleg.subhead);
             var a = $("<a target='_new' />").text(localization.sign.eleg.clickHere).attr("href","http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
             var p = $("<p/>").append(localization.sign.eleg.body1).append(a).append(localization.sign.eleg.body2);
             content = content.add($("<span/>").append(subhead).append(p));
