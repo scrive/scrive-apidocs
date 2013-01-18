@@ -3,6 +3,7 @@ padQueueCurrentPage=
 $doctype()$
 <html>
   <head>
+    <script src="//cdn.optimizely.com/js/158965942.js"></script>
     <title>Pad signing</title>
     $standardHeaderContents()$
     <link rel="apple-touch-startup-image" href="/img/logo-scrive-big-black.png"/>
