@@ -6,7 +6,6 @@ ignore  tiny_mce/langs
 ignore  tiny_mce/plugins
 ignore  tiny_mce/themes
 ignore  tiny_mce/utils
-ignore  libs/analytics.js
 ignore  libs/recurly/recurly.css
 ignore  api-demo
 ignore  less/branding/buttons.less
