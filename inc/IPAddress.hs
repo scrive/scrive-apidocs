@@ -11,9 +11,14 @@ import Data.Int
 import Data.List
 import Data.Word
 import Database.HDBC
+import Data.Binary
 
 newtype IPAddress = IPAddress Word32
   deriving (Eq, Ord)
+
+instance Binary IPAddress where
+  put (IPAddress w32) = put w32
+  get = IPAddress `fmap` get
 
 -- IP addresses are currently cast to signed Int32 in DB
 instance Convertible IPAddress SqlValue where

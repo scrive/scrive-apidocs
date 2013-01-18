@@ -33,7 +33,10 @@ import Session.Data
 import Templates.TemplatesLoader
 import Doc.Model
 import qualified Amazon as AWS
-import qualified Log (cron, withLogger)
+import qualified Log (cron, withLogger, error)
+
+import ThirdPartyStats.Core
+import ThirdPartyStats.Mixpanel
 
 main :: IO ()
 main = Log.withLogger $ do
@@ -88,7 +91,15 @@ main = Log.withLogger $ do
       delCount <- dbUpdate $ RemoveOldDrafts 100
       Log.cron $ "Removed " ++ show delCount ++ " old, unsaved draft documents."
 
+  -- Asynchronous event dispatcher; if you want to add a consumer to the event
+  -- dispatcher, please combine the two into one dispatcher function rather
+  -- than creating a new thread or something like that, since
+  -- asyncProcessEvents removes events after processing.
+  t11 <- forkCron_ tg "Async Event Dispatcher" (10) . inDB $ do
+    case mixpanelToken appConf of
+      ""    -> Log.error "WARNING: no Mixpanel token present!"
+      token -> asyncProcessEvents (processMixpanelEvent token) All
+
   waitForTermination
   Log.cron $ "Termination request received, waiting for jobs to finish..."
-  mapM_ stopCron (t10:t1:t2:t3:t4:t5:t6:t7:t8:t9)
-  TG.wait tg
+  mapM_ stopCron (t11:t10:t1:t2:t3:t4:t5:t6:t7:t8:t9)

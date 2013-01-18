@@ -10,6 +10,7 @@ module Doc.Action (
   , sendAllReminderEmails
   ) where
 
+import Control.Applicative
 import Control.Monad.Trans.Maybe
 import Control.Logic
 import Crypto.RNG
@@ -38,6 +39,8 @@ import Util.Actor
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import Stats.Control
+import ThirdPartyStats.Core
+import MinutesTime
 
 import Control.Monad
 import Data.List hiding (head, tail)
@@ -46,6 +49,28 @@ import qualified Data.ByteString as BS
 import ForkAction
 import Doc.API.Callback.Model
 import Data.String.Utils (strip)
+
+-- | Log a document event, adding some standard properties.
+logDocEvent :: Kontrakcja m => EventName -> Document -> User -> [EventProperty] -> m ()
+logDocEvent name doc user extraProps = do
+  now <- getMinutesTime
+  ip <- ctxipnumber <$> getContext
+  let uid = userid user
+      email = Email $ getEmail user
+      fullname = getFullName user
+  asyncLogEvent name $ extraProps ++ [
+    UserIDProp uid,
+    DocIDProp  (documentid doc),
+    TimeProp   now,
+    MailProp   email,
+    IPProp     ip,
+    NameProp   fullname,
+    stringProp "Authentication" (show $ documentauthenticationmethod doc),
+    stringProp "Delivery" (show $ documentdeliverymethod doc),
+    stringProp "Type" (show $ documenttype doc),
+    stringProp "Language" (show $ documentlang doc),
+    numProp "Days to sign" (fromIntegral $ documentdaystosign doc),
+    numProp "Signatories" (fromIntegral $ length $ documentsignatorylinks doc)]
 
 postDocumentPreparationChange :: Kontrakcja m => Document -> String -> m ()
 postDocumentPreparationChange doc@Document{documenttitle} apistring = do
@@ -62,6 +87,15 @@ postDocumentPreparationChange doc@Document{documenttitle} apistring = do
       return doc
     Right saveddoc -> return saveddoc
   Log.server $ "Sending invitation emails for document #" ++ show docid ++ ": " ++ documenttitle
+  
+  -- Stat logging
+  now <- getMinutesTime
+  author <- getDocAuthor doc
+  -- Log the current time as the last doc sent time
+  asyncLogEvent SetUserProps [UserIDProp (userid author),
+                              someProp "Last Doc Sent" now]
+  logDocEvent "Doc Sent" doc author []
+
   edoc <- if (sendMailsDuringSigning document')
              then sendInvitationEmails ctx document'
              else return $ Right $ document'
@@ -83,14 +117,18 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistri
   case undefined of
     _ | allSignatoriesSigned doc -> do
       Log.docevent $ "All have signed; " ++ show documentstatus ++ " -> Closed: " ++ show documentid
-      time <- ctxtime `liftM` getContext
+      ctx <- getContext
+      let time = ctxtime ctx
       closeddoc <- guardJustM . runMaybeT $ do
         True <- dbUpdate $ CloseDocument documentid (systemActor time)
         Just newdoc <- dbQuery $ GetDocumentByDocumentID documentid
         return newdoc
       Log.docevent $ "Pending -> Closed; Sending emails: " ++ show documentid
       _ <- addDocumentCloseStatEvents documentid apistring
-      author <- getDocAuthor closeddoc
+      author <- getDocAuthor doc
+      logDocEvent "Doc Closed" doc author []
+      asyncLogEvent SetUserProps [UserIDProp (userid author),
+                                  someProp "Last Doc Closed" time]
       dbCommit
       forkAction ("Sealing document #" ++ show documentid ++ ": " ++ documenttitle) $ do
         enewdoc <- sealDocument closeddoc
@@ -119,6 +157,10 @@ postDocumentRejectedChange doc@Document{..} siglinkid apistring = do
   _ <- addDocumentRejectStatEvents documentid apistring
   Log.server $ "Sending rejection emails for document #" ++ show documentid ++ ": " ++ documenttitle
   ctx <- getContext
+  -- Log the fact that the current user rejected a document.
+  maybe (return ())
+        (\user -> logDocEvent "Doc Rejected" doc user [])
+        (ctxmaybeuser ctx)
   customMessage <- getCustomTextField "customtext"
   when_ (sendMailsDuringSigning doc) $
     sendRejectEmails customMessage ctx doc ($(fromJust) $ getSigLinkFor doc siglinkid)
@@ -132,14 +174,19 @@ postDocumentCanceledChange doc@Document{..} apistring = do
   Log.docevent $ "Pending -> Canceled (ElegDataMismatch); Sending cancelation emails: " ++ show documentid
   _ <- addDocumentCancelStatEvents documentid apistring
   -- if canceled because of ElegDataMismatch, send out emails
+  author <- getDocAuthor doc
+  maybe (return ())
+        (\r -> logDocEvent "Doc Canceled" doc author [reasonProp r])
+        (documentcancelationreason)
   case documentcancelationreason of
     Just reason | isELegDataMismatch reason -> do
       ctx <- getContext
-      author <- getDocAuthor doc
       Log.server $ "Sending cancelation emails for document #" ++ show documentid ++ ": " ++ documenttitle
       sendElegDataMismatchEmails ctx doc author
     -- should we send cancelation emails?
     _ -> return ()
+  where
+    reasonProp = stringProp "Reason" . show
 
 stateMismatchError :: Kontrakcja m => String -> DocumentStatus -> Document -> m a
 stateMismatchError funame expected Document{documentstatus, documentid} = do

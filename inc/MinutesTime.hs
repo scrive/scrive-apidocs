@@ -52,11 +52,16 @@ import System.Time hiding (toClockTime, toUTCTime, toCalendarTime)
 import qualified System.Time as System.Time (toUTCTime, toCalendarTime)
 import Text.Printf
 import System.IO.Unsafe
+import Data.Binary
 
 -- | Time in seconds from 1970-01-01 00:00:00 in UTC coordinates
 -- Same as POSIX seconds and what every other database uses as TIMESTAMP time type.
 newtype MinutesTime = MinutesTime Int
     deriving (Eq, Ord, Typeable)
+
+instance Binary MinutesTime where
+  put (MinutesTime t) = put t
+  get = fmap MinutesTime get
 
 instance Show MinutesTime where
     show = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d, %H:%M:%S %Z"

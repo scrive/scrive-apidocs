@@ -31,6 +31,7 @@ import Util.Actor
 import User.History.Model
 import ScriveByMail.Model
 import qualified ScriveByMail.Action as MailAPI
+import ThirdPartyStats.Core
 
 handleAccountSetupFromSign :: Kontrakcja m => Document -> SignatoryLink -> m (Maybe User)
 handleAccountSetupFromSign document signatorylink = do
@@ -48,6 +49,12 @@ handleAccountSetupFromSign document signatorylink = do
       let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink)  (getEmail signatorylink) (signatorylinkid signatorylink)
       _ <- dbUpdate $ SaveDocumentForUser (documentid document) activateduser (signatorylinkid signatorylink) actor
       _ <- addUserSaveAfterSignStatEvent activateduser
+      let name = getFirstName activateduser ++ " " ++ getLastName activateduser
+      asyncLogEvent "Create Account After Sign" [
+        UserIDProp (userid activateduser),
+        TimeProp (ctxtime ctx),
+        NameProp name,
+        MailProp $ Email email]
       return $ Just activateduser
     Nothing -> return Nothing
 
@@ -101,6 +108,12 @@ handleActivate mfstname msndname actvuser signupmethod = do
               _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
               Log.debug $ "Attempting successfull. User " ++ (show $ getEmail actvuser) ++ "is logged in."
               logUserToContext $ Just tosuser
+              let name = getFirstName tosuser ++ " " ++ getLastName tosuser
+                  email = useremail $ userinfo tosuser
+              asyncLogEvent "User Activated" [UserIDProp (userid tosuser),
+                                              TimeProp (ctxtime ctx),
+                                              NameProp name,
+                                              MailProp email]
               when (callme) $ phoneMeRequest (Just tosuser) phone
               return $ Just (tosuser, newdocs)
             else do
@@ -148,7 +161,14 @@ phoneMeRequest muser phone = do
           , content = content
       }
   when (isJust muser) $ do
-    _ <- addUserPhoneAfterTOS $ fromJust muser
+    let user = fromJust muser
+        name = getFirstName user ++ " " ++ getLastName user
+    now <- ctxtime <$> getContext
+    _ <- addUserPhoneAfterTOS user
+    asyncLogEvent "Phone Request" [UserIDProp (userid user),
+                                   NameProp name,
+                                   TimeProp now,
+                                   MailProp (useremail $ userinfo user)]
     return ()
 
 checkPasswordsMatch :: TemplatesMonad m => String -> String -> Either (m FlashMessage) ()
