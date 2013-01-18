@@ -1089,12 +1089,18 @@ var ScrollFixer =  Backbone.Model.extend({
          * are not redrawn and show garbage.
          */
         if( $(window).scrollTop() > 100 ) {
-            var old = $(".mainContainer").css("background-color");
-            $(".mainContainer").css("background-color","#FFFFFF");
-            setTimeout( function() {
-                $(".mainContainer").css("background-color",old);
-            }, 1);
+            var elem1 = $(".signStepsBody");
+            var elem2 = $(".subcontainer");
+            var old1 = elem1.css("background-color");
+            var old2 = elem2.css("background-color");
+            elem1.css("background-color", "white");
+            elem2.css("background-color", "#F1F1F1");
+            _.delay(function() {
+                elem1.css("background-color", "");
+                elem2.css("background-color", "");
+            }, 0);
         }
+
         if ($(window).scrollTop() >= this.top && $(window).scrollTop() > 100) {
             this.object.next().not(this.object).css("margin-top", this.object.height() + "px")
             this.object.addClass('fixed');
