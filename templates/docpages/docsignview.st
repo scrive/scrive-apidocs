@@ -25,20 +25,19 @@ $doctype()$
                        })
                     $endif$
                 });
-            jQuery('body').prepend(new DocumentSignViewHeader({model : docview.model, mainview : docview.view}).el)
-            jQuery('body').append(new DocumentSignViewFooter({model : docview.model,  mainview : docview.view}).el)
-            jQuery(".body-container").replaceWith(docview.view.el);
+              jQuery('body').prepend(new DocumentSignViewHeader({model : docview.model, mainview : docview.view}).el)
+              jQuery('body').append(new DocumentSignViewFooter({model : docview.model,  mainview : docview.view}).el)
+              jQuery(".body-container").replaceWith(docview.view.el);
             });
 
             mixpanel.register({
-            Context : 'Sign view',
+              Context : 'Sign view',
               DocumentID : "$documentid$",
               'Signatory ID' : $siglinkid$
             });
-         mixpanel.people.set({
-           'Last document signed' : new Date()
-         });
-         mixpanel.track('View Sign View');
+            mixpanel.people.set({
+             'Last document sign view' : new Date()
+            });
 
        </script>
       </div>
