@@ -127,10 +127,8 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistri
       _ <- addDocumentCloseStatEvents documentid apistring
       author <- getDocAuthor doc
       logDocEvent "Doc Closed" doc author []
-      -- Log stats
-      case ctxmaybeuser ctx of
-        Just user -> logDocEvent "Doc Signed" doc user []
-        _         -> return ()
+      asyncLogEvent SetUserProps [UserIDProp (userid author),
+                                  someProp "Last Doc Closed" time]
       dbCommit
       forkAction ("Sealing document #" ++ show documentid ++ ": " ++ documenttitle) $ do
         enewdoc <- sealDocument closeddoc
