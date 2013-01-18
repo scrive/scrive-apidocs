@@ -1100,7 +1100,6 @@ var ScrollFixer =  Backbone.Model.extend({
             this.object.addClass('fixed');
         }
         else {
-
             this.object.next().not(this.object).css("margin-top", "")
             this.object.removeClass('fixed');
         }
