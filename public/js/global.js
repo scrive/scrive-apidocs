@@ -161,24 +161,6 @@ $(document).ready(function() {
 
 });
 
-// Alternative submit button
-(function($) {
-  $.fn.altSubmit = function() {
-    return this.each(function() {
-      $(this).click(function(e) {
-        e.preventDefault();
-        var name = $(this).attr('rel');
-        var form = null;
-        if ($(this).attr('form') != undefined)
-            form = $($(this).attr('form'));
-        else
-            form = $(this).parents('form');
-        form.append('<input type="hidden" name="' + name + '" value="1" />').submit();
-      });
-    });
-  };
-})(jQuery);
-
 function capitaliseFirstLetter(string)
 {
     return string.charAt(0).toUpperCase() + string.slice(1);

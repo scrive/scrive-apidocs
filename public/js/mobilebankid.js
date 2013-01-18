@@ -55,7 +55,7 @@
                 var next = polling.next();
                 console.log("Setting up timer: " + next);
                 if(next)
-                    setTimeout(function() { 
+                    setTimeout(function() {
                         if(polling.trid() && polling.collectUrl())
                             console.log("yo!");
                         $.ajax(polling.collectUrl(),
