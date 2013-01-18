@@ -212,7 +212,7 @@ window.Field = Backbone.Model.extend({
             this.setValue(this.value().trim());
             return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
-        
+
         if ( this.isEmail() && this.value() != undefined && this.value() != "") {
             var msg = localization.designview.validation.missingOrWrongEmail;
             this.setValue(this.value().trim());
@@ -232,7 +232,7 @@ window.Field = Backbone.Model.extend({
           var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
           return new NotEmptyValidation({message: msg});
         }
-        
+
         if (this.isCustom()) {
           var msg1 = localization.designview.validation.notReadyField;
           var msg2 = localization.designview.validation.notPlacedField;
@@ -246,9 +246,9 @@ window.Field = Backbone.Model.extend({
 
         if (this.isCheckbox()) {
             var validation = new Validation({validates: function() {return field.name() != undefined && field.name() != "" }, message: localization.designview.validation.notReadyField});
-            return validation;  
+            return validation;
         }
-        
+
         return new Validation();
     },
     isEmail: function() {
@@ -475,7 +475,7 @@ window.FieldDesignView = Backbone.View.extend({
                                     field.setValue(value);
                                   }
                             }).input();
-          if (field.isClosed())
+          if (field.isClosed() || ((field.isEmail() || field.isFstName() || field.isSndName()) && field.signatory().author()))
             {
                 $(this.el).addClass('closed');
                 this.input.attr("readonly","yes");

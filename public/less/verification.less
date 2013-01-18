@@ -1,0 +1,49 @@
+.box.verificationBox{
+    text-align : center;
+    padding: 120px 0px;
+}
+.verificationContainer{
+    margin: 0 auto;
+    padding: 20px 50px;
+    display: inline-block;
+}
+
+.model.verificationModal,
+.model.verificationModal .modal-container{
+  width: 300px;
+  min-height: 120px;
+}
+
+.model.verificationModal.failed,
+.model.verificationModal.failed .modal-container{
+  width: 280px;
+  min-height: 120px;
+}
+
+.model.verificationModal .modal-close{
+  z-index : 1070;
+  float:right;
+  margin: 5px;
+  position: relative;
+}
+
+.verificationSuccessIcon {
+    background: url(../img/icons.png) 0 0 no-repeat;
+    background-position: 0 -339px;
+    height: 61px;
+    margin: 0 auto;
+    width: 64px;
+    margin:15px;
+
+}
+
+.verificationFailedIcon, .verificationErrorIcon {
+    background-image: url(/img/spr-flash-icons.png);
+    background-repeat: no-repeat;
+    height:30px;
+    width:30px;
+    display: block;
+    background-position: 0px 0px;
+    margin:15px;
+
+}

@@ -618,7 +618,7 @@ var DesignViewView = Backbone.View.extend({
         var acceptButton;
         if (document.elegAuthentication())
         {
-            acceptButton = $("<span/>");
+            acceptButton = $("<span style='margin-top: -8px;'/>");
             var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
             var telia = $("<a href='#' class='telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
             var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
@@ -703,7 +703,7 @@ var DesignViewView = Backbone.View.extend({
         if (document.elegAuthentication())
         {
 
-            var subhead = $("<h3/>").text(localization.sign.eleg.subhead);
+            var subhead = $("<h6/>").text(localization.sign.eleg.subhead);
             var a = $("<a target='_new' />").text(localization.sign.eleg.clickHere).attr("href","http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
             var p = $("<p/>").append(localization.sign.eleg.body1).append(a).append(localization.sign.eleg.body2);
             content = content.add($("<span/>").append(subhead).append(p));
@@ -864,9 +864,10 @@ var DesignViewView = Backbone.View.extend({
                         document.trigger('change');
                     },
                     ajaxsuccess: function() {
-                        mixpanel.track('Upload main file');
-                        LoadingDialog.close();
-                        window.location.reload();
+                        mixpanel.track('Upload main file', {}, function() {
+                            LoadingDialog.close();
+                            window.location.reload();
+                        });
                     }
                   }).addInputs(input).send();
               });
@@ -1088,18 +1089,23 @@ var ScrollFixer =  Backbone.Model.extend({
          * are not redrawn and show garbage.
          */
         if( $(window).scrollTop() > 100 ) {
-            var old = $(".mainContainer").css("background-color");
-            $(".mainContainer").css("background-color","#FFFFFF");
-            setTimeout( function() {
-                $(".mainContainer").css("background-color",old);
-            }, 1);
+            var elem1 = $(".signStepsBody");
+            var elem2 = $(".subcontainer");
+            var old1 = elem1.css("background-color");
+            var old2 = elem2.css("background-color");
+            elem1.css("background-color", "white");
+            elem2.css("background-color", "#F1F1F1");
+            _.delay(function() {
+                elem1.css("background-color", "");
+                elem2.css("background-color", "");
+            }, 0);
         }
+
         if ($(window).scrollTop() >= this.top && $(window).scrollTop() > 100) {
             this.object.next().not(this.object).css("margin-top", this.object.height() + "px")
             this.object.addClass('fixed');
         }
         else {
-
             this.object.next().not(this.object).css("margin-top", "")
             this.object.removeClass('fixed');
         }

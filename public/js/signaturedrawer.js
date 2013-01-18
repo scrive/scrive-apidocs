@@ -1,7 +1,7 @@
 
 (function(window){
 
-    
+
 var SignatureDrawer = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
@@ -32,7 +32,7 @@ var SignatureDrawer = Backbone.View.extend({
       this.drawingPointY = y;
     },
     drawCircle : function(x,y) {
-          
+
             if (!this.drawing)
               this.picture.beginPath();
             this.picture.fillStyle = "#000000";
@@ -40,7 +40,7 @@ var SignatureDrawer = Backbone.View.extend({
             this.picture.fill();
             if (!this.drawing)
               this.picture.closePath();
-    },    
+    },
     drawingtoolDown : function(x,y) {
       var view = this;
       this.empty = false;
@@ -164,10 +164,10 @@ var SignatureDrawer = Backbone.View.extend({
 
                signature.setImage(canvas[0].toDataURL("image/jpeg",1.0));
                signature.setImagePNG(image);
-               
+
                if (callback != undefined) callback();
          };
-       }   
+       }
     },
     clear: function() {
           this.canvas[0].getContext('2d').clearRect(0,0,this.model.swidth(),this.model.sheight());
@@ -188,7 +188,7 @@ var SignatureDrawer = Backbone.View.extend({
          img.src = png;
          img.onload = function() {self.canvas[0].getContext('2d').drawImage(img,0,0,signature.swidth(),signature.sheight());};
          this.empty = false;
-      }   
+      }
     },
     render: function () {
         var signature = this.model;
@@ -207,7 +207,7 @@ var SignatureDrawer = Backbone.View.extend({
           img.src = this.model.imagePNG() ;
           this.canvas[0].getContext('2d').drawImage(img,0,0,signature.swidth(),signature.sheight());
           this.empty = false;
-        };  
+        };
         this.initDrawing();
         this.container.append(this.canvas);
         return this;
@@ -250,7 +250,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
                         view.overlay.detach();
                         return false;
                     }
-            }).input();      
+            }).input();
     },
     clearButton : function() {
         var view = this;
@@ -290,8 +290,8 @@ var SignatureDrawerWrapper = Backbone.View.extend({
 
 
 window.SignatureDrawerPopup = function(args){
-       
-        var self = this; 
+
+        var self = this;
         if (BrowserInfo.isIE8orLower())
         {
             alert('Drawing signature is not avaible for older versions of Internet Explorer. Please update your browser.');
@@ -320,7 +320,7 @@ window.SignatureDrawerPopup = function(args){
               }
               self.overlay.detach();
             },
-            top: standardDialogTop,
+            top: "10%",
             resizable: false,
             closeOnClick: false,
             closeOnEsc: false,

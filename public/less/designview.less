@@ -20,7 +20,6 @@
   .signame {
     display: block;
     margin-top: 3px;
-    color: #333333;
   }
 }
 
@@ -662,5 +661,68 @@ input.daystosign {
   text-align: center;
   .button{
     margin : 0px 10px;
+  }
+}
+
+
+.designview {
+  .docname {
+    font-size: 14.5px;
+    margin-right: 2px;
+    width: 450px;
+    .icon.ok {
+        margin-top: 4px;
+    }
+    .docname-display text {
+        display: inline-block;
+    }
+    .docname-edit input{
+        -moz-border-radius:0px;
+        background:transparent;
+        border:0 none;
+        margin:0;
+        outline:0 none;
+        padding:0;
+        font-size:14.5px;
+        width: 450px;
+        margin-top:-3px;
+    }
+    .visible-docname {
+        font-size:14.5px;
+        max-width: 450px;
+        overflow : hidden;
+        white-space:nowrap;
+    }
+  }
+
+
+  .signStepsBody
+  {
+    background-image: url(/img/signStepsBodyBorderLong.png);
+    background-repeat: repeat-y;
+    overflow: hidden;
+    min-height: 100px;
+    padding: 0px 19px;
+    border-left: 1px solid #BDBDBD;
+    border-right: 1px solid #BDBDBD;
+    border-bottom: 1px solid #C0C0C0;
+    min-width: 980px;
+  }
+  .subcontainer {
+    background-color: #F0F0F0;
+    box-shadow: inset 1px 1px 5px #505050;
+    -moz-box-shadow: inset 1px 1px 5px #505050;
+    -webkit-box-shadow: inset 1px 1px 5px #505050;
+    background-image: url(../img/horizontal-shading-bar.png);
+    background-repeat: no-repeat;
+    padding-bottom:23px;
+    padding-top:10px;
+  }
+  .border {
+    background-color: #ecedf3;
+    width: 1px;
+    height: 192px;
+    display:inline-block;
+    float:left;
   }
 }

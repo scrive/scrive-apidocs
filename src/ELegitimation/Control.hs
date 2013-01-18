@@ -111,11 +111,7 @@ generateBankIDTransactionForAuthor  docid = do
     document   <- guardRightM $ getDocByDocID docid
     tbs <- case documentstatus document of
         Preparation    -> getDataFnM $ look "tbs" -- tbs will be sent as post param
-        _ | canAuthorSignNow document -> getTBS document -- tbs is stored in document
         _              -> internalError
-    let asl = case documentstatus document of
-                Preparation    -> Nothing
-                _ -> getAuthorSigLink document
     unless (isAuthor (document, author)) internalError -- necessary because someone other than author cannot initiate eleg
 
     nonceresponse <- liftIO $ generateChallenge logicaconf provider
@@ -133,9 +129,9 @@ generateBankIDTransactionForAuthor  docid = do
                                         { transactiontransactionid   = transactionid
                                         , transactiontbs             = tbs
                                         , transactionencodedtbs      = Just txt
-                                        , transactionsignatorylinkid = signatorylinkid <$> asl
+                                        , transactionsignatorylinkid = Nothing
                                         , transactiondocumentid      = docid
-                                        , transactionmagichash       = signatorymagichash <$> asl
+                                        , transactionmagichash       = Nothing
                                         , transactionnonce           = Just nonce
                                         , transactionstatus = Left "Only necessary for mobile bankid"
                                         , transactionoref = Nothing
@@ -320,7 +316,7 @@ initiateMobileBankID docid slid = do
 
     sl <- guardJust $ getSigLinkFor document slid
     let pn = fromMaybe (getPersonalNumber sl) mpn
-        
+
     tbs <- getTBS document
 
     eresponse <- liftIO $ mbiRequestSignature logicaconf pn tbs
