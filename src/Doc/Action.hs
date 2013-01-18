@@ -56,9 +56,8 @@ logDocEvent name doc user extraProps = do
   now <- getMinutesTime
   ip <- ctxipnumber <$> getContext
   let uid = userid user
-      uinfo = userinfo user
-      email = useremail uinfo
-      fullname = userfstname uinfo ++ " " ++ usersndname uinfo
+      email = Email $ getEmail user
+      fullname = getFullName user
   asyncLogEvent name $ extraProps ++ [
     UserIDProp uid,
     DocIDProp  (documentid doc),
