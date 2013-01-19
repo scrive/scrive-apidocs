@@ -12,7 +12,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     this.render();
   },
   welcomeText : function() {
-    return localization.docsignview.welcome + " " + this.model.document().currentSignatory().nameOrEmail();
+    return localization.docsignview.welcome + " " + this.model.document().currentSignatory().name();
   },
   // Big instruction or information about document state
   text: function() {
@@ -62,8 +62,14 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     if(this.model.justSaved())  return this;
 
     var container = $("<div class='instructions' />");
-    if (document.currentSignatory() != undefined)
+    if (document.currentSignatory() != undefined &&
+       document.currentSignatory().name()!="" &&
+       !document.padDelivery() &&
+       document.currentSignatory().canSign() &&
+       !document.currentSignatory().author()) {
       container.append($("<div class='headline' style='margin-bottom : 10px'/>").text(this.welcomeText()));
+    }
+
     container.append($("<div class='headline' />").text(this.text()));
     container.append($("<div class='subheadline' />").text(this.subtext()));
 
