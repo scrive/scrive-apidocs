@@ -562,6 +562,7 @@ javascriptLocalisation =
                }
              , filladitionfields : "$_filladitionfields()$"
              , filladitionfieldsdescription : "$_filladitionfieldsdescription()$"
+             , welcome : "$_welcome()$"
 
         }
         , poweredByScrive : "$_poweredByScrive()$"

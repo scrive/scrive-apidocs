@@ -11,6 +11,9 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     this.model.bind('change', this.render);
     this.render();
   },
+  welcomeText : function() {
+    return localization.docsignview.welcome + " " + this.model.document().currentSignatory().name();
+  },
   // Big instruction or information about document state
   text: function() {
     var document = this.model.document();
@@ -28,6 +31,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
       console.error("Unsure what state we're in");
       return localization.docsignview.unavailableForSign;
     }
+
   },
   // Smaller text with more details on some states
   subtext: function() {
@@ -58,6 +62,14 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     if(this.model.justSaved())  return this;
 
     var container = $("<div class='instructions' />");
+    if (document.currentSignatory() != undefined &&
+       document.currentSignatory().name()!="" &&
+       !document.padDelivery() &&
+       document.currentSignatory().canSign() &&
+       !document.currentSignatory().author()) {
+      container.append($("<div class='headline' style='margin-bottom : 10px'/>").text(this.welcomeText()));
+    }
+
     container.append($("<div class='headline' />").text(this.text()));
     container.append($("<div class='subheadline' />").text(this.subtext()));
 
@@ -73,9 +85,9 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     if (!this.model.document().padDelivery()) {
         var link = $("<a target='_blank' class='download clickable' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(document.title() + ".pdf")
         smallerbit.append(link);
-    }    
+    }
 
-    
+
     container.append($("<div class='subheadline' />").append(smallerbit));
 
 

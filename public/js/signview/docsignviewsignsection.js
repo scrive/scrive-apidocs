@@ -1,6 +1,6 @@
 /* Signatory view of document
  * Usage:
- * 
+ *
  *   $('body').append(new DocumentSignSignSection(model : document).el);
  */
 
@@ -114,7 +114,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   }
 });
 
-  
+
 window.DocumentSignSignSection = Backbone.View.extend({
    initialize : function(args){
       this.render();
@@ -167,10 +167,15 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                     }).popup();
                                 }
                             });
-      box.append($("<div class='rejectwrapper reject'>").append(this.rejectButton.input()));
-      box.append($("<div class='signwrapper sign'>").append(this.signButton.input()));
+      if (model.hasRejectOption()) {
+        box.append($("<div class='rejectwrapper reject'>").append(this.rejectButton.input()));
+        box.append($("<div class='signwrapper sign'>").append(this.signButton.input()));
+      }
+      else {
+        box.css("text-align","center").append($("<div class='signwrapper sign' style='width:100%;margin-right:0px;'>").append(this.signButton.input()));
+      }
       box.append($("<div class='clearfix' />"));
-   } 
+   }
 });
 
 })(window);
