@@ -413,19 +413,24 @@ window.Document = Backbone.Model.extend({
     makeTemplate: function() {
        return this.set({"template": true}, {silent: true});
     },
-    recall: function(f) {
-       var doc = this;
-       this.fetch({data: this.viewer().forFetch(),
-                   processData: true,
-                   cache: false,
-                   success: function() {
-                       f();
-                   },
-                   error: function() {
-                    console.error("Failed to fetch doc, trying again ...");
-                    window.setTimeout(doc.recall, 1000);
-                  }
-      });
+    recall: function(successCallback) {
+        var self = this;
+        var fetchOptions = { data: self.viewer().forFetch(),
+                             processData: true,
+                             cache: false };
+        var fetchFunction = function () {
+            self.fetch(fetchOptions);
+        };
+        fetchOptions.error = function() {
+            console.error("Failed to fetch document #" + self.documentid() + ", trying again in one sec...");
+            window.setTimeout(fetchFunction, 1000);
+        };
+
+        if( successCallback!=undefined ) {
+            fetchOptions.success = successCallback;
+        }
+        fetchFunction();
+
     },
     author: function() {
       for (var i = 0; i < this.signatories().length; i++)
