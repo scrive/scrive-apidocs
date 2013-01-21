@@ -106,8 +106,8 @@ checkDBConsistency logger tables migrations = do
                return $ Right $ Just (table, ver)
         TVRcreated -> do
           logger $ "Table created, writing version information..."
-          kPrepare "INSERT INTO table_versions (name, version) VALUES (?, ?)"
-          _ <- kExecute [toSql $ tblName table, toSql $ tblVersion table]
+          kRun_ $ SQL "INSERT INTO table_versions (name, version) VALUES (?, ?)"
+                  [toSql $ tblName table, toSql $ tblVersion table]
           _ <- checkTable table
           return $ Left table
         TVRinvalid -> do
@@ -135,8 +135,8 @@ checkDBConsistency logger tables migrations = do
            when (ver /= mgrFrom m) $
              error $ "Migration can't be performed because current table version (" ++ show ver ++ ") doesn't match parameter mgrFrom of next migration to be run (" ++ show (mgrFrom m) ++ "). Make sure that migrations were put in migrationsList in correct order."
            mgrDo m
-           kPrepare "UPDATE table_versions SET version = ? WHERE name = ?"
-           _ <- kExecute [toSql $ succ $ mgrFrom m, toSql $ tblName t]
+           kRun_ $ SQL "UPDATE table_versions SET version = ? WHERE name = ?"
+                   [toSql $ succ $ mgrFrom m, toSql $ tblName t]
            return ()
          else return ()
 

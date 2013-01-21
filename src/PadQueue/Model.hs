@@ -31,8 +31,8 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddToPadQueue () where
     mdoc <- query $ GetDocumentByDocumentID did
     let memail = getEmail <$> (mdoc >>= \d->getSigLinkFor d slid)
     update $ ClearPadQueue uid a
-    kPrepare $ "INSERT INTO padqueue( user_id, document_id, signatorylink_id) VALUES(?,?,?)"
-    r <- kExecute [toSql uid, toSql did, toSql slid]
+    r <- kRun $ SQL "INSERT INTO padqueue( user_id, document_id, signatorylink_id) VALUES(?,?,?)"
+                [toSql uid, toSql did, toSql slid]
     when_ (r == 1) $
                 update $ InsertEvidenceEvent
                 SendToPadDevice
@@ -44,16 +44,16 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddToPadQueue () where
 data ClearPadQueue = ClearPadQueue UserID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ClearPadQueue () where
   update (ClearPadQueue uid a) = do
-    kPrepare $ "SELECT document_id, signatorylink_id FROM padqueue WHERE user_id = ? "
-    _ <- kExecute [toSql uid]
+    kRun_ $ SQL "SELECT document_id, signatorylink_id FROM padqueue WHERE user_id = ? "
+           [toSql uid]
     pq <- fetchPadQueue
     case pq of
        Nothing -> return ()
        Just (did, slid) -> do
          mdoc <- query $ GetDocumentByDocumentID did
          let memail = getEmail <$> (mdoc >>= \d->getSigLinkFor d slid)
-         kPrepare "DELETE FROM padqueue WHERE user_id = ?"
-         r <- kExecute [toSql uid]
+         r <- kRun $ SQL "DELETE FROM padqueue WHERE user_id = ?"
+                   [toSql uid]
          when_ ((r == 1) && isJust pq ) $ do
          _ <- update $ InsertEvidenceEvent
               RemovedFromPadDevice
@@ -65,10 +65,10 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ClearPadQueue () where
 data GetPadQueue = GetPadQueue UserID
 instance MonadDB m => DBQuery m GetPadQueue PadQueue where
   query (GetPadQueue uid) = do
-    kPrepare $ "SELECT document_id, signatorylink_id FROM padqueue WHERE user_id = ? " 
+    kRun_ $ SQL ("SELECT document_id, signatorylink_id FROM padqueue WHERE user_id = ? " 
                 <+> "AND EXISTS (SELECT * FROM signatory_links WHERE signatory_links.document_id = padqueue.document_id " 
-                <+>                                               " AND signatory_links.user_id = ? AND NOT signatory_links.deleted)"
-    _ <- kExecute [toSql uid,toSql uid]
+                <+>                                               " AND signatory_links.user_id = ? AND NOT signatory_links.deleted)")
+            [toSql uid,toSql uid]
     fetchPadQueue
 
 fetchPadQueue :: MonadDB m => DBEnv m PadQueue
