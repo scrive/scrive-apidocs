@@ -85,22 +85,22 @@ instance MonadDB m => DBUpdate m SetUserMailAPIKey Bool where
         if r == 1
          then return True
          else do
-          kPrepare $ "INSERT INTO user_mail_apis ("
-                  <> "  user_id"
-                  <> ", key"
-                  <> ", daily_limit"
-                  <> ", sent_today"
-                  <> ", last_sent_date"
-                  <> ") "
-                  <> "SELECT ?, ?, ?, 0, now() "
-                  <> "WHERE NOT EXISTS (SELECT 1 FROM user_mail_apis WHERE user_id = ?) "
-                  <> "AND EXISTS (SELECT 1 FROM users WHERE id = ?)"
-          kExecute01 [ toSql uid
-                     , toSql key
-                     , toSql limit
-                     , toSql uid
-                     , toSql uid
-                     ]
+          kRun01 $ SQL ("INSERT INTO user_mail_apis ("
+                        <> "  user_id"
+                        <> ", key"
+                        <> ", daily_limit"
+                        <> ", sent_today"
+                        <> ", last_sent_date"
+                        <> ") "
+                        <> "SELECT ?, ?, ?, 0, now() "
+                        <> "WHERE NOT EXISTS (SELECT 1 FROM user_mail_apis WHERE user_id = ?) "
+                        <> "AND EXISTS (SELECT 1 FROM users WHERE id = ?)")
+                   [ toSql uid
+                   , toSql key
+                   , toSql limit
+                   , toSql uid
+                   , toSql uid
+                   ]
 
 data RemoveUserMailAPI = RemoveUserMailAPI UserID
 instance MonadDB m => DBUpdate m RemoveUserMailAPI Bool where
@@ -149,22 +149,22 @@ instance MonadDB m => DBUpdate m SetCompanyMailAPIKey Bool where
         if r == 1
          then return True
          else do
-          kPrepare $ "INSERT INTO company_mail_apis ("
-                  <> "  company_id"
-                  <> ", key"
-                  <> ", daily_limit"
-                  <> ", sent_today"
-                  <> ", last_sent_date"
-                  <> ") "
-                  <> "SELECT ?, ?, ?, 0, now() "
-                  <> "WHERE NOT EXISTS (SELECT 1 FROM company_mail_apis WHERE company_id = ?) "
-                  <> "AND EXISTS (SELECT 1 FROM companies WHERE id = ?)"
-          kExecute01 [ toSql cid
-                     , toSql key
-                     , toSql limit
-                     , toSql cid
-                     , toSql cid
-                     ]
+          kRun01 $ SQL( "INSERT INTO company_mail_apis ("
+                        <> "  company_id"
+                        <> ", key"
+                        <> ", daily_limit"
+                        <> ", sent_today"
+                        <> ", last_sent_date"
+                        <> ") "
+                        <> "SELECT ?, ?, ?, 0, now() "
+                        <> "WHERE NOT EXISTS (SELECT 1 FROM company_mail_apis WHERE company_id = ?) "
+                        <> "AND EXISTS (SELECT 1 FROM companies WHERE id = ?)")
+                   [ toSql cid
+                   , toSql key
+                   , toSql limit
+                   , toSql cid
+                   , toSql cid
+                   ]
 
 data RemoveCompanyMailAPI = RemoveCompanyMailAPI CompanyID
 instance MonadDB m => DBUpdate m RemoveCompanyMailAPI Bool where

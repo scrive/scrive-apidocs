@@ -5,7 +5,6 @@ module DB.Functions (
   , kPrepare
   , kExecute
   , kExecute1
-  , kExecute01
   , kExecute1P
   , kFinish
   , kRunRaw

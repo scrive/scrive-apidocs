@@ -39,12 +39,12 @@ data AddPaymentsStat = AddPaymentsStat { psTime        :: MinutesTime
                                        }
 instance MonadDB m => DBUpdate m AddPaymentsStat Bool where
   update AddPaymentsStat{..} = do
-    kPrepare $ "INSERT INTO payment_stats (time, provider, action, quantity, plan, account_type, user_id, company_id, account_code) "
+    kRun01 $ SQL ("INSERT INTO payment_stats (time, provider, action, quantity, plan, account_type, user_id, company_id, account_code) "
       <> "      SELECT ?, ?, ?, ?, ?, ?, ?, ?, ? "
       <> "      WHERE (EXISTS (SELECT 1 FROM users         WHERE id = ?)"
       <> "         OR  EXISTS (SELECT 1 FROM companies     WHERE id = ?))"
-      <> "        AND EXISTS  (SELECT 1 FROM payment_plans WHERE account_code = ?)"
-    kExecute01 [toSql psTime
+      <> "        AND EXISTS  (SELECT 1 FROM payment_plans WHERE account_code = ?)")
+               [toSql psTime
                ,toSql psProvider
                ,toSql psAction
                ,toSql psQuantity

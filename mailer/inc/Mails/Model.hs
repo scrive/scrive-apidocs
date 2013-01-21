@@ -156,14 +156,14 @@ instance MonadDB m => DBUpdate m DeferEmail Bool where
 data MarkEmailAsSent = MarkEmailAsSent MailID MinutesTime
 instance MonadDB m => DBUpdate m MarkEmailAsSent Bool where
   update (MarkEmailAsSent mid time) = do
-    kPrepare "UPDATE mails SET sent = ? WHERE id = ?"
-    kExecute01 [toSql time, toSql mid]
+    kRun01 $ SQL "UPDATE mails SET sent = ? WHERE id = ?"
+             [toSql time, toSql mid]
 
 data UpdateWithEvent = UpdateWithEvent MailID Event
 instance MonadDB m => DBUpdate m UpdateWithEvent Bool where
   update (UpdateWithEvent mid ev) = do
-    kPrepare "INSERT INTO mail_events (mail_id, event) VALUES (?, ?)"
-    kExecute01 [toSql mid, toSql ev]
+    kRun01 $ SQL "INSERT INTO mail_events (mail_id, event) VALUES (?, ?)"
+             [toSql mid, toSql ev]
 
 sqlSelectMails :: State SqlSelect () -> SqlSelect
 sqlSelectMails refine = sqlSelect "mails" $ do

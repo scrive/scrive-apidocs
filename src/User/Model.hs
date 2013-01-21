@@ -192,11 +192,11 @@ data SetUserCompany = SetUserCompany UserID (Maybe CompanyID)
 instance MonadDB m => DBUpdate m SetUserCompany Bool where
   update (SetUserCompany uid mcid) = case mcid of
     Nothing -> do
-      kPrepare "UPDATE users SET company_id = NULL, is_company_admin = FALSE WHERE id = ? AND deleted = FALSE"
-      kExecute01 [toSql uid]
+      kRun01 $ SQL "UPDATE users SET company_id = NULL, is_company_admin = FALSE WHERE id = ? AND deleted = FALSE"
+               [toSql uid]
     Just cid -> do
-      kPrepare "UPDATE users SET company_id = ? WHERE id = ? AND deleted = FALSE"
-      kExecute01 [toSql cid, toSql uid]
+      kRun01 $ SQL "UPDATE users SET company_id = ? WHERE id = ? AND deleted = FALSE"
+               [toSql cid, toSql uid]
 
 data IsUserDeletable = IsUserDeletable UserID
 instance MonadDB m => DBQuery m IsUserDeletable Bool where
@@ -219,8 +219,8 @@ instance MonadDB m => DBQuery m IsUserDeletable Bool where
 data DeleteUser = DeleteUser UserID
 instance MonadDB m => DBUpdate m DeleteUser Bool where
   update (DeleteUser uid) = do
-    kPrepare $ "UPDATE users SET deleted = ? WHERE id = ? AND deleted = FALSE"
-    kExecute01 [toSql True, toSql uid]
+    kRun01 $ SQL "UPDATE users SET deleted = ? WHERE id = ? AND deleted = FALSE"
+             [toSql True, toSql uid]
 
 -- | Removes user who didn't accept TOS from the database
 data RemoveInactiveUser = RemoveInactiveUser UserID
@@ -266,18 +266,18 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
 data SetUserEmail = SetUserEmail UserID Email
 instance MonadDB m => DBUpdate m SetUserEmail Bool where
   update (SetUserEmail uid email) = do
-    kPrepare $ "UPDATE users SET email = ?"
-      <> " WHERE id = ? AND deleted = FALSE"
-    kExecute01 [toSql $ map toLower $ unEmail email, toSql uid]
+    kRun01 $ SQL ("UPDATE users SET email = ?"
+                  <> " WHERE id = ? AND deleted = FALSE")
+             [toSql $ map toLower $ unEmail email, toSql uid]
 
 data SetUserPassword = SetUserPassword UserID Password
 instance MonadDB m => DBUpdate m SetUserPassword Bool where
   update (SetUserPassword uid pwd) = do
-    kPrepare $ "UPDATE users SET"
-      <> "  password = ?"
-      <> ", salt = ?"
-      <> "  WHERE id = ? AND deleted = FALSE"
-    kExecute01 [toSql $ pwdHash pwd, toSql $ pwdSalt pwd, toSql uid]
+    kRun01 $ SQL ("UPDATE users SET"
+                  <> "  password = ?"
+                  <> ", salt = ?"
+                  <> "  WHERE id = ? AND deleted = FALSE")
+             [toSql $ pwdHash pwd, toSql $ pwdSalt pwd, toSql uid]
 
 data SetInviteInfo = SetInviteInfo (Maybe UserID) MinutesTime InviteType UserID
 instance MonadDB m => DBUpdate m SetInviteInfo Bool where
@@ -291,90 +291,85 @@ instance MonadDB m => DBUpdate m SetInviteInfo Bool where
             rec_exists <- checkIfAnyReturned $ SQL "SELECT 1 FROM user_invite_infos WHERE user_id = ?" [toSql uid]
             if rec_exists
               then do
-                kPrepare $ "UPDATE user_invite_infos SET"
-                  <> "  inviter_id = ?"
-                  <> ", invite_time = ?"
-                  <> ", invite_type = ?"
-                  <> "  WHERE user_id = ?"
-                kExecute01 [
-                    toSql inviterid
-                  , toSql invitetime
-                  , toSql invitetype
-                  , toSql uid
-                  ]
+                kRun01 $ SQL ("UPDATE user_invite_infos SET"
+                              <> "  inviter_id = ?"
+                              <> ", invite_time = ?"
+                              <> ", invite_type = ?"
+                              <> "  WHERE user_id = ?")
+                         [ toSql inviterid
+                         , toSql invitetime
+                         , toSql invitetype
+                         , toSql uid
+                         ]
               else do
-                kPrepare $ "INSERT INTO user_invite_infos ("
-                  <> "  user_id"
-                  <> ", inviter_id"
-                  <> ", invite_time"
-                  <> ", invite_type) VALUES (?, ?, ?, ?)"
-                kExecute01 [
-                    toSql uid
-                  , toSql inviterid
-                  , toSql invitetime
-                  , toSql invitetype
-                  ]
+                kRun01 $ SQL ("INSERT INTO user_invite_infos ("
+                              <> "  user_id"
+                              <> ", inviter_id"
+                              <> ", invite_time"
+                              <> ", invite_type) VALUES (?, ?, ?, ?)")
+                              [ toSql uid
+                              , toSql inviterid
+                              , toSql invitetime
+                              , toSql invitetype
+                              ]
           Nothing -> do
-            kPrepare "DELETE FROM user_invite_infos WHERE user_id = ?"
-            kExecute01 [toSql uid]
+            kRun01 $ SQL ("DELETE FROM user_invite_infos WHERE user_id = ?")
+                     [toSql uid]
       else return False
 
 data SetUserInfo = SetUserInfo UserID UserInfo
 instance MonadDB m => DBUpdate m SetUserInfo Bool where
   update (SetUserInfo uid info) = do
-    kPrepare $ "UPDATE users SET"
-      <> "  first_name = ?"
-      <> ", last_name = ?"
-      <> ", personal_number = ?"
-      <> ", company_position = ?"
-      <> ", phone = ?"
-      <> ", mobile = ?"
-      <> ", email = ?"
-      <> ", company_name = ?"
-      <> ", company_number = ?"
-      <> "  WHERE id = ? AND deleted = FALSE"
-    kExecute01 [
-        toSql $ userfstname info
-      , toSql $ usersndname info
-      , toSql $ userpersonalnumber info
-      , toSql $ usercompanyposition info
-      , toSql $ userphone info
-      , toSql $ usermobile info
-      , toSql $ map toLower $ unEmail $ useremail info
-      , toSql $ usercompanyname info
-      , toSql $ usercompanynumber info
-      , toSql uid
-      ]
+    kRun01 $ SQL ("UPDATE users SET"
+                  <> "  first_name = ?"
+                  <> ", last_name = ?"
+                  <> ", personal_number = ?"
+                  <> ", company_position = ?"
+                  <> ", phone = ?"
+                  <> ", mobile = ?"
+                  <> ", email = ?"
+                  <> ", company_name = ?"
+                  <> ", company_number = ?"
+                  <> "  WHERE id = ? AND deleted = FALSE")
+             [ toSql $ userfstname info
+             , toSql $ usersndname info
+             , toSql $ userpersonalnumber info
+             , toSql $ usercompanyposition info
+             , toSql $ userphone info
+             , toSql $ usermobile info
+             , toSql $ map toLower $ unEmail $ useremail info
+             , toSql $ usercompanyname info
+             , toSql $ usercompanynumber info
+             , toSql uid
+             ]
 
 data SetUserSettings = SetUserSettings UserID UserSettings
 instance MonadDB m => DBUpdate m SetUserSettings Bool where
   update (SetUserSettings uid us) = do
-    kPrepare $ "UPDATE users SET"
-      <> "  lang = ?"
-      <> ", customfooter = ?"
-      <> "  WHERE id = ? AND deleted = FALSE"
-    kExecute01 [
-        toSql $ getLang us
-      , toSql $ customfooter us
-      , toSql uid
-      ]
+    kRun01 $ SQL ("UPDATE users SET"
+                  <> "  lang = ?"
+                  <> ", customfooter = ?"
+                  <> "  WHERE id = ? AND deleted = FALSE")
+             [ toSql $ getLang us
+             , toSql $ customfooter us
+             , toSql uid
+             ]
 
 data AcceptTermsOfService = AcceptTermsOfService UserID MinutesTime
 instance MonadDB m => DBUpdate m AcceptTermsOfService Bool where
   update (AcceptTermsOfService uid time) = do
-    kPrepare $ "UPDATE users SET"
-      <> "  has_accepted_terms_of_service = ?"
-      <> "  WHERE id = ? AND deleted = FALSE"
-    kExecute01 [
-        toSql time
-      , toSql uid
-      ]
+    kRun01 $ SQL ("UPDATE users SET"
+                  <> "  has_accepted_terms_of_service = ?"
+                  <> "  WHERE id = ? AND deleted = FALSE")
+             [ toSql time
+             , toSql uid
+             ]
 
 data SetSignupMethod = SetSignupMethod UserID SignupMethod
 instance MonadDB m => DBUpdate m SetSignupMethod Bool where
   update (SetSignupMethod uid signupmethod) = do
-    kPrepare "UPDATE users SET signup_method = ? WHERE id = ? AND deleted = FALSE"
-    kExecute01 [toSql signupmethod, toSql uid]
+    kRun01 $ SQL ("UPDATE users SET signup_method = ? WHERE id = ? AND deleted = FALSE")
+           [toSql signupmethod, toSql uid]
 
 data SetUserCompanyAdmin = SetUserCompanyAdmin UserID Bool
 instance MonadDB m => DBUpdate m SetUserCompanyAdmin Bool where

@@ -50,8 +50,8 @@ instance MonadDB m => DBUpdate m AddCompanyInvite CompanyInvite where
 data RemoveCompanyInvite = RemoveCompanyInvite CompanyID Email
 instance MonadDB m => DBUpdate m RemoveCompanyInvite Bool where
   update (RemoveCompanyInvite companyid email) = do
-    kPrepare "DELETE FROM companyinvites WHERE (company_id = ? AND email = ?)"
-    kExecute01 [toSql companyid, toSql email]
+    kRun01 $ SQL "DELETE FROM companyinvites WHERE (company_id = ? AND email = ?)"
+             [toSql companyid, toSql email]
 
 data GetCompanyInvite = GetCompanyInvite CompanyID Email
 instance MonadDB m => DBQuery m GetCompanyInvite (Maybe CompanyInvite) where
