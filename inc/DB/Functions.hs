@@ -2,8 +2,6 @@ module DB.Functions (
     dbCommit
   , dbRollback
   , dbClone
-  , kPrepare
-  , kExecute
   , kFinish
   , kRunRaw
   , kRun_
