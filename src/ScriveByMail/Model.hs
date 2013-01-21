@@ -46,8 +46,8 @@ data MailAPIInfo = MailAPIInfo {
 data GetUserMailAPI = GetUserMailAPI UserID
 instance MonadDB m => DBQuery m GetUserMailAPI (Maybe MailAPIInfo) where
   query (GetUserMailAPI uid) = do
-    kPrepare "SELECT key, daily_limit, (CASE WHEN last_sent_date = now()::DATE THEN sent_today ELSE 0 END) FROM user_mail_apis WHERE user_id = ?"
-    _ <- kExecute [toSql uid]
+    kRun_ $ SQL "SELECT key, daily_limit, (CASE WHEN last_sent_date = now()::DATE THEN sent_today ELSE 0 END) FROM user_mail_apis WHERE user_id = ?"
+           [toSql uid]
     foldDB fetchUserMailAPIs [] >>= oneObjectReturnedGuard
     where
       fetchUserMailAPIs acc key daily_limit sent_today = MailAPIInfo {
@@ -74,11 +74,11 @@ instance MonadDB m => DBUpdate m IncrementUserMailAPI (Maybe Int) where
 data SetUserMailAPIKey = SetUserMailAPIKey UserID MagicHash Int32
 instance MonadDB m => DBUpdate m SetUserMailAPIKey Bool where
   update (SetUserMailAPIKey uid key limit) = do
-        kPrepare $ "UPDATE user_mail_apis SET "
-                <> " key = ? "
-                <> ",daily_limit = ? "
-                <> "WHERE user_id = ?"
-        r <- kExecute [ toSql key
+        r <- kRun $ SQL ("UPDATE user_mail_apis SET "
+                         <> " key = ? "
+                         <> ",daily_limit = ? "
+                         <> "WHERE user_id = ?")
+                      [ toSql key
                       , toSql limit
                       , toSql uid
                       ]
@@ -110,8 +110,8 @@ instance MonadDB m => DBUpdate m RemoveUserMailAPI Bool where
 data GetCompanyMailAPI = GetCompanyMailAPI CompanyID
 instance MonadDB m => DBQuery m GetCompanyMailAPI (Maybe MailAPIInfo) where
   query (GetCompanyMailAPI cid) = do
-    kPrepare "SELECT key, daily_limit, (CASE WHEN last_sent_date = now()::DATE THEN sent_today ELSE 0 END) FROM company_mail_apis WHERE company_id = ?"
-    _ <- kExecute [toSql cid]
+    kRun_ $ SQL "SELECT key, daily_limit, (CASE WHEN last_sent_date = now()::DATE THEN sent_today ELSE 0 END) FROM company_mail_apis WHERE company_id = ?"
+            [toSql cid]
     foldDB fetchCompanyMailAPIs [] >>= oneObjectReturnedGuard
     where
       fetchCompanyMailAPIs acc key daily_limit sent_today = MailAPIInfo {
@@ -138,11 +138,11 @@ instance MonadDB m => DBUpdate m IncrementCompanyMailAPI (Maybe Int) where
 data SetCompanyMailAPIKey = SetCompanyMailAPIKey CompanyID MagicHash Int32
 instance MonadDB m => DBUpdate m SetCompanyMailAPIKey Bool where
   update (SetCompanyMailAPIKey cid key limit) = do
-        kPrepare $ "UPDATE company_mail_apis SET "
-                <> " key = ? "
-                <> ",daily_limit = ? "
-                <> "WHERE company_id = ?"
-        r <- kExecute [ toSql key
+        r <- kRun $ SQL ("UPDATE company_mail_apis SET "
+                         <> " key = ? "
+                         <> ",daily_limit = ? "
+                         <> "WHERE company_id = ?")
+                      [ toSql key
                       , toSql limit
                       , toSql cid
                       ]
@@ -182,7 +182,7 @@ data AddMailAPIDelay = AddMailAPIDelay String BS.ByteString CompanyID MinutesTim
 instance (CryptoRNG m, MonadDB m) => DBUpdate m AddMailAPIDelay (Maybe (Int64, MagicHash, Bool)) where
   update (AddMailAPIDelay email text cid now) = do
     key :: MagicHash <- lift random
-    kPrepare $ "INSERT INTO mail_api_user_request ("
+    r <- kRun $ SQL ("INSERT INTO mail_api_user_request ("
                  <> " key"
                  <> ",email"
                  <> ",time"
@@ -190,8 +190,8 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m AddMailAPIDelay (Maybe (Int64, M
                  <> ",status"
                  <> ",company_id"
                  <> ") SELECT ?,?,?,?,?,? "
-                 <> "WHERE NOT EXISTS (SELECT 1 FROM mail_api_user_request WHERE email = ? AND company_id = ?) "
-    r <- kExecute [ toSql key
+                 <> "WHERE NOT EXISTS (SELECT 1 FROM mail_api_user_request WHERE email = ? AND company_id = ?) ")
+                  [ toSql key
                   , toSql email
                   , toSql now
                   , toSql $ 3 `daysAfter` now
@@ -206,11 +206,11 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m AddMailAPIDelay (Maybe (Int64, M
     case a of
       Nothing -> return Nothing
       Just (requestid, key') -> do
-        kPrepare $ "INSERT INTO mail_api_delay ("
+        kRun_ $ SQL ("INSERT INTO mail_api_delay ("
                      <> " email_text"
                      <> ",user_request_id"
-                     <> ") VALUES (?,?) "
-        _ <- kExecute [ toSql text
+                     <> ") VALUES (?,?) ")
+                      [ toSql text
                       , toSql requestid]
         return $ Just (requestid, key', r == 1) -- r is 1 when user_request is new
     where f acc delayid key = (delayid, key):acc
@@ -218,28 +218,28 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m AddMailAPIDelay (Maybe (Int64, M
 data GetMailAPIUserRequest = GetMailAPIUserRequest Int64 MagicHash MinutesTime
 instance MonadDB m => DBQuery m GetMailAPIUserRequest (Maybe (String, CompanyID)) where
   query (GetMailAPIUserRequest delayid key now) = do
-    kPrepare $ "SELECT email, company_id FROM mail_api_user_request "
-            <> "WHERE id = ? AND key = ? AND expires >= ? AND status = ?"
-    _ <- kExecute [toSql delayid, toSql key, toSql now, toSql DelayWaitAdmin]
+    kRun_ $ SQL ("SELECT email, company_id FROM mail_api_user_request "
+            <> "WHERE id = ? AND key = ? AND expires >= ? AND status = ?")
+            [toSql delayid, toSql key, toSql now, toSql DelayWaitAdmin]
     foldDB f [] >>= oneObjectReturnedGuard
     where f acc email cid = (email, cid):acc
 
 data DeleteMailAPIDelays = DeleteMailAPIDelays Int64 MinutesTime
 instance MonadDB m => DBUpdate m DeleteMailAPIDelays () where
   update (DeleteMailAPIDelays delayid now) = do
-    kPrepare $ "DELETE FROM mail_api_user_request "
+    kRun_ $ SQL ("DELETE FROM mail_api_user_request "
             <> "WHERE id = ? "
-            <> "   OR expires < ?"
-    _ <- kExecute [toSql delayid, toSql now]
+            <> "   OR expires < ?")
+            [toSql delayid, toSql now]
     return ()
 
 data GetMailAPIDelaysForEmail = GetMailAPIDelaysForEmail String MinutesTime
 instance MonadDB m => DBQuery m GetMailAPIDelaysForEmail (Maybe (Int64, [BS.ByteString])) where
   query (GetMailAPIDelaysForEmail email now) = do
-    kPrepare $ "SELECT mail_api_user_request.id, mail_api_delay.email_text FROM mail_api_user_request "
+    kRun_ $ SQL ("SELECT mail_api_user_request.id, mail_api_delay.email_text FROM mail_api_user_request "
             <> "JOIN mail_api_delay ON mail_api_delay.user_request_id = mail_api_user_request.id "
-            <> "WHERE email = ? AND expires >= ? AND status = ?"
-    _ <- kExecute [toSql email, toSql now, toSql DelayWaitUser]
+            <> "WHERE email = ? AND expires >= ? AND status = ?")
+            [toSql email, toSql now, toSql DelayWaitUser]
     foldDB f Nothing
     where f Nothing i e = Just (i, [e])
           f (Just (i, acc)) _ e = Just (i, e:acc)

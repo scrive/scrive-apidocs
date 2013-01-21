@@ -2414,7 +2414,7 @@ instance MonadDB m => DBUpdate m SetDocumentModificationDate Bool where
 data GetDocsSentBetween = GetDocsSentBetween UserID MinutesTime MinutesTime
 instance MonadDB m => DBQuery m GetDocsSentBetween Int where
   query (GetDocsSentBetween uid start end) = do
-    kPrepare $ "SELECT count(documents.id) " <>
+    kRun_ $ SQL ("SELECT count(documents.id) " <>
                "FROM documents " <>
                "JOIN signatory_links ON documents.id = signatory_links.document_id " <>
                "WHERE signatory_links.user_id = ? " <>
@@ -2422,21 +2422,21 @@ instance MonadDB m => DBQuery m GetDocsSentBetween Int where
                "AND documents.invite_time >= ? " <>
                "AND documents.invite_time <  ? " <>
                "AND documents.type = ? "   <>
-               "AND documents.status <> ? "
-    _ <- kExecute [toSql uid, toSql start, toSql end, toSql $ Signable undefined, toSql Preparation]
+               "AND documents.status <> ? ")
+            [toSql uid, toSql start, toSql end, toSql $ Signable undefined, toSql Preparation]
     foldDB (+) 0
 
 data GetDocsSent = GetDocsSent UserID
 instance MonadDB m => DBQuery m GetDocsSent Int where
   query (GetDocsSent uid) = do
-    kPrepare $ "SELECT count(documents.id) " <>
+    kRun_ $ SQL ("SELECT count(documents.id) " <>
                "FROM documents " <>
                "JOIN signatory_links ON documents.id = signatory_links.document_id " <>
                "WHERE signatory_links.user_id = ? " <>
                "AND is_author " <>
                "AND documents.type = ? "   <>
-               "AND documents.status <> ? "
-    _ <- kExecute [toSql uid, toSql $ Signable undefined, toSql Preparation]
+               "AND documents.status <> ? ")
+            [toSql uid, toSql $ Signable undefined, toSql Preparation]
     foldDB (+) 0
 
 -- Update utilities

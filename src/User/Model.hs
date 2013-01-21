@@ -178,8 +178,8 @@ instance MonadDB m => DBQuery m GetCompanyAccounts [User] where
 data GetInviteInfo = GetInviteInfo UserID
 instance MonadDB m => DBQuery m GetInviteInfo (Maybe InviteInfo) where
   query (GetInviteInfo uid) = do
-    kPrepare "SELECT inviter_id, invite_time, invite_type FROM user_invite_infos WHERE user_id = ?"
-    _ <- kExecute [toSql uid]
+    kRun_ $ SQL "SELECT inviter_id, invite_time, invite_type FROM user_invite_infos WHERE user_id = ?"
+            [toSql uid]
     foldDB fetchInviteInfos [] >>= oneObjectReturnedGuard
     where
       fetchInviteInfos acc inviter_id invite_time invite_type = InviteInfo {
