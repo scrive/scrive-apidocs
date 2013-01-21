@@ -67,13 +67,13 @@ window.DocumentSignViewHeader = Backbone.View.extend({
 
     // Setting logo
 
-    
+
     if((this.useStandardBranding() || document.logo() == undefined)) {
        if (this.usedStandardLogo != true) {
          maindiv.removeClass('withcustomlogo').addClass('withstandardlogo');
          this.logowrapper.empty().append("<a href='/'><div class='logo'></div></a>");
          this.usedStandardLogo = true;
-       }  
+       }
     }
     else {
       if (this.usedStandardLogo != false) {
@@ -83,9 +83,9 @@ window.DocumentSignViewHeader = Backbone.View.extend({
         img.attr('src',document.logo());
         this.logowrapper.empty().append(img);
         this.usedStandardLogo = false;
-      }  
+      }
     }
-    
+
     // Background color of top bar
     if((this.useStandardBranding() || document.barsbackgroundcolor() == undefined)) {
       if (this.usedStandardColorsBars != true) {
@@ -127,12 +127,11 @@ window.DocumentSignViewHeader = Backbone.View.extend({
     }
     else {
       if (this.usedStandardDescription != false) {
-        var author = $("<div class='author' />").text((document.authoruser().fullname().trim()||document.authoruser().phone().trim())?localization.docsignview.contact:"");
         var name = $("<div class='name' />").text(document.authoruser().fullname());
         var phone = $("<div class='phone' />").text(document.authoruser().phone());
-        this.inner.empty().append(author).append(name).append(phone);
+        this.inner.empty().append(name).append(phone);
         this.usedStandardDescription = false;
-      } 
+      }
     }
 
     this.updateHeaderSenderPosition();
@@ -162,7 +161,7 @@ window.DocumentSignViewFooter = Backbone.View.extend({
         var width = Math.max($('body').width(),$(document).width());
         if (width > 1020)
           el.css("min-width",width + "px");
-      }   
+      }
   },
   useStandardBranding : function() {
     return this.model.document().currentSignatory() != undefined && this.model.document().currentSignatory().hasSigned() &&  this.model.justSaved();
@@ -171,10 +170,9 @@ window.DocumentSignViewFooter = Backbone.View.extend({
         var maindiv = $(this.el);
         maindiv.addClass("pagefooter");
         this.content = $("<div class='content' />");
-        this.dogtooth = $("<div class='dogtooth' />");
-        this.sender = $("<div class='sender' />");
-        this.content.append(this.sender).append("<div class='clearfix'/>");
-        maindiv.append(this.dogtooth.append(this.content));
+        this.pbs = $("<div class='poweredbyscrive' />");
+        this.content.append(this.pbs).append("<div class='clearfix'/>");
+        maindiv.append(this.content);
         this.usedStandardColorsBars = undefined;
         this.usedStandardColorsTexts = undefined;
         this.usedStandardDescription = undefined;
@@ -217,26 +215,21 @@ window.DocumentSignViewFooter = Backbone.View.extend({
       if (this.usedStandardColorsTexts != false) {
         maindiv.css("color", document.barsbackgroundtextcolor());
         this.usedStandardColorsTexts = false;
-      }  
+      }
     }
 
-    // Text in header | Scrive or Author details
-    if(this.useStandardBranding()) {
+    if(document.barsbackgroundcolor() != undefined) {
       if (this.usedStandardDescription != true ) {
-        var name = $("<div class='name' />").text("Scrive help desk");
-        var phone = $("<div class='phone' />").text("+46 8 519 779 00");
-        this.sender.empty().append(name).append(phone);
+        var pbstext = $("<span class='text' />").text("Powered by Scrive");
+        this.pbs.empty().append(pbstext);
         this.usedStandardDescription = true;
       }
     }
     else {
       if (this.usedStandardDescription != false ) {
-        var name = $("<div class='name' />").text(document.authoruser().fullname());
-        var position = $("<div class='position' />").text(document.authoruser().position());
-        var company = $("<div class='company' />").text(document.authoruser().company());
-        var phone = $("<div class='phone' />").text(document.authoruser().phone());
-        var email = $("<div class='email' />").text(document.authoruser().email());
-        this.sender.empty().append(name).append(position).append(company).append(phone).append(email);
+        var pbstext = $("<span class='text' />").text("Powered by ");
+        var pbslogo = $("<span class='logo' />");
+        this.pbs.empty().append(pbstext).append(pbslogo);
         this.usedStandardDescription = false;
       }
     }

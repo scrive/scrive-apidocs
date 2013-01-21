@@ -47,7 +47,8 @@ window.PageTask = Backbone.Model.extend({
     onActivate : function() {return false;},
     onDeactivate : function() {return false;},
     tipSide : "right",
-    label:""
+    label:"",
+    hasDirectArrow : true
   },
   initialize: function(args) {
     _.bindAll(this, 'update');
@@ -71,6 +72,9 @@ window.PageTask = Backbone.Model.extend({
   },
   tipSide : function() {
     return this.get("tipSide");
+  },
+  hasDirectArrow : function() {
+    return this.get("hasDirectArrow");
   },
   update: function() {
     this.set({ complete: this.get("isComplete")()});
@@ -149,11 +153,13 @@ var PageTasksArrowView = Backbone.View.extend({
            window.setTimeout(function() {view.updateArrow()} , 500);
            return;
         }
-        else if (((elbottom + bottommargin) <= scrollbottom) && ((eltop - topmargin) >= scrolltop))
-           return Arrow.init({       type: task.tipSide() != "right" ? 'point-left' : 'point-right'
-                                   , point : $(task.el())
+        else if (((elbottom + bottommargin) <= scrollbottom) && ((eltop - topmargin) >= scrolltop)) {
+           if (task.hasDirectArrow())
+            return Arrow.init({       type: task.tipSide() != "right" ? 'point-left' : 'point-right'
+                                    , point : $(task.el())
                                    , text : task.label()
-                             });
+                              });
+        }
         else if ((elbottom + bottommargin) > scrollbottom)
             return new Arrow.init({type: 'scroll-down',  point : $(task.el()), scrollDone : function() {task.onActivate();} });
         else
