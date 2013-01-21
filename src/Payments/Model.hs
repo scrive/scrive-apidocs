@@ -60,8 +60,7 @@ data PaymentPlanProvider = NoProvider
 data GetAccountCode = GetAccountCode -- tested
 instance (MonadBase IO m, MonadDB m) => DBUpdate m GetAccountCode AccountCode where
   update GetAccountCode = do
-    kPrepare $ "SELECT nextval('payment_plans_account_code_seq')"
-    _ <- kExecute []
+    kRun_ $ SQL "SELECT nextval('payment_plans_account_code_seq')" []
     results <- foldDB (flip (:)) []
     case results of
       [x] -> return x
@@ -212,7 +211,7 @@ data PaymentPlansRequiringSync = PaymentPlansRequiringSync PaymentPlanProvider M
 instance MonadDB m => DBQuery m PaymentPlansRequiringSync [PaymentPlan] where
   query (PaymentPlansRequiringSync prov time) = do
     let past = daysBefore daysBeforeSync time 
-    kPrepare $ "SELECT account_code, account_type, user_id, payment_plans.company_id, plan, status, quantity, plan_pending, status_pending, quantity_pending, provider, dunning_step, dunning_date, billing_ends " <>
+    kRun_ $ SQL ("SELECT account_code, account_type, user_id, payment_plans.company_id, plan, status, quantity, plan_pending, status_pending, quantity_pending, provider, dunning_step, dunning_date, billing_ends " <>
              "  FROM payment_plans " <> 
              "  LEFT OUTER JOIN (SELECT c.company_id, count(email) AS q " <>
              "                   FROM ((SELECT company_id, users.email " <>
@@ -230,27 +229,27 @@ instance MonadDB m => DBQuery m PaymentPlansRequiringSync [PaymentPlan] where
              "  WHERE provider = ? " <>
              "    AND (sync_date < ? " <> -- stuff older than 7 days needs sync
              "     OR  (q > quantity " <> -- current # of users > cache
-             "     OR   q <> quantity_pending)) " -- current # of users <> pending cache
-    _ <- kExecute [toSql prov, toSql past]
+             "     OR   q <> quantity_pending)) ") -- current # of users <> pending cache
+            [toSql prov, toSql past]
     foldDB fetchPaymentPlans []
 
 --tested
 data PaymentPlansExpiredDunning = PaymentPlansExpiredDunning MinutesTime
 instance MonadDB m => DBQuery m PaymentPlansExpiredDunning [PaymentPlan] where
   query (PaymentPlansExpiredDunning time) = do
-    kPrepare $ "SELECT account_code, account_type, user_id, company_id, plan, status, quantity, " <> 
+    kRun_ $ SQL ("SELECT account_code, account_type, user_id, company_id, plan, status, quantity, " <> 
              "    plan_pending, status_pending, quantity_pending, provider, dunning_step, dunning_date, billing_ends " <>
              "  FROM payment_plans " <> 
              "  WHERE dunning_date < ? " <>
-             "    AND provider = ? "
-    _ <- kExecute [toSql time, toSql RecurlyProvider]
+             "    AND provider = ? ")
+            [toSql time, toSql RecurlyProvider]
     foldDB fetchPaymentPlans []
 
 -- tested
 data SavePaymentPlan = SavePaymentPlan PaymentPlan MinutesTime
 instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
   update (SavePaymentPlan pp tm) = do
-    kPrepare $ "UPDATE payment_plans " <>
+    r <- kRun $ SQL ("UPDATE payment_plans " <>
                "SET account_type = ?, user_id = ?, company_id = ? " <>
                ",   plan = ?, status = ? " <> 
                ",   plan_pending = ?, status_pending = ? " <>
@@ -260,8 +259,8 @@ instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
                ",   dunning_step = ? " <>
                ",   dunning_date = ? " <>
                ",   billing_ends = ? " <>
-               "WHERE account_code = ? "
-    r <- kExecute [toSql $ either (const (1 :: Int)) (const 2)  $ ppID pp
+               "WHERE account_code = ? ")
+                  [toSql $ either (const (1 :: Int)) (const 2)  $ ppID pp
                   ,toSql $ either Just (const Nothing) $ ppID pp
                   ,toSql $ either (const Nothing) Just $ ppID pp
                   ,toSql $ ppPricePlan pp
@@ -279,11 +278,11 @@ instance MonadDB m => DBUpdate m SavePaymentPlan Bool where
     case r of
       1 -> return True
       _ -> do
-        kPrepare $ "INSERT INTO payment_plans (account_code, plan, status, plan_pending, status_pending, quantity, " <> 
+        r' <- kRun $ SQL ("INSERT INTO payment_plans (account_code, plan, status, plan_pending, status_pending, quantity, " <> 
           "quantity_pending, provider, sync_date, dunning_step, dunning_date, billing_ends, account_type, user_id, company_id) " <>
           "SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? " <>
-          "WHERE ? NOT IN (SELECT account_code FROM payment_plans) "
-        r' <- kExecute $ [toSql $ ppAccountCode pp
+          "WHERE ? NOT IN (SELECT account_code FROM payment_plans) ")
+                         [toSql $ ppAccountCode pp
                          ,toSql $ ppPricePlan pp
                          ,toSql $ ppStatus pp
                          ,toSql $ ppPendingPricePlan pp 
