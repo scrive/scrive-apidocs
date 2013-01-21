@@ -4,8 +4,6 @@ module DB.Functions (
   , dbClone
   , kPrepare
   , kExecute
-  , kExecute1
-  , kExecute1P
   , kFinish
   , kRunRaw
   , kRun_
@@ -68,20 +66,6 @@ kExecute values = withDBEnvSt $ \s@DBEnvSt{dbStatement} -> do
     Nothing -> liftIO $ E.throwIO NoStatementPrepared
     Just st -> protIO sqlquery $ execute st values
 
--- | Execute recently prepared query and check if it returned exactly
--- 1 row affected result. Useful for INSERT, DELETE or UPDATE
--- statements. Watch out for RETURNING clauses though: they make
--- everything return 0.
-kExecute1 :: MonadDB m => [SqlValue] -> DBEnv m ()
-kExecute1 values = do
-  result <- kExecute values
-  when (result /= 1) $ withDBEnv $ \DBEnvSt{dbStatement} ->
-    liftIO $ E.throwIO TooManyObjects {
-        originalQuery = SQL (getQuery dbStatement) values
-      , tmoExpected = 1
-      , tmoGiven = result
-    }
-
 -- | Execute recently prepared query and check if it returned 0 or 1
 -- row affected result. Useful for INSERT, DELETE or UPDATE
 -- statements. Watch out for RETURNING clauses though: they make
@@ -96,21 +80,6 @@ kExecute01 values = do
       , tmoGiven = result
     }
   return $ result == 1
-
--- | Execute recently prepared query and check if it returned 1 or
--- more rows affected result. Useful for INSERT, DELETE or UPDATE
--- statements. Watch out for RETURNING clauses though: they make
--- everything return 0.
-kExecute1P :: MonadDB m => [SqlValue] -> DBEnv m Integer
-kExecute1P values = do
-  result <- kExecute values
-  when (result < 1) $ withDBEnv $ \DBEnvSt{dbStatement} ->
-    liftIO $ E.throwIO TooManyObjects {
-        originalQuery = SQL (getQuery dbStatement) values
-      , tmoExpected = 1
-      , tmoGiven = result
-    }
-  return result
 
 -- | Finish current statement. 'kPrepare' and 'kExecute' call
 -- 'kFinish' before they alter query.
