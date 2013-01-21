@@ -404,7 +404,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_flashDocumentDraftSaved","Du har sparat dokumentet.","Your document has been saved."
 "_flashDocumentTemplateSaved","Din mall är sparad.","Your template has been saved."
 "_flashMessageCompanyAccountDeleted","Kontot har tagits bort.","The account was successfully removed."
-"_flashMessageActivationLinkNotValid","Vi beklagar. Länken är inte längre giltig.<br/> Vänligen gå till www.scrive.com, klicka på ""Logga in"" och använd ""Glömt lösenord"" för att generera en ny länk.","We are sorry. This link is no longer valid.<br/> Please go to www.scrive.com, klick on ""Login"" and use ""Forgot password"" to generate a new link."
+"_flashMessageActivationLinkNotValid","Vi beklagar. Länken är inte längre giltig.<br/> Vänligen gå till www.scrive.com, klicka på ""Logga in"" och använd ""Glömt lösenord"" för att generera en ny länk.","We are sorry. This link is no longer valid.<br/> Please go to www.scrive.com, click on ""Login"" and use ""Forgot password"" to generate a new link."
 "_flashMessageAttachmentArchiveDone","Valda bilagor har blivit raderade.","The selected attachments have been deleted."
 "_flashMessageBadOldPassword","Du har skrivit in fel nuvarande lösenord.","Current password incorrect."
 "_flashMessageBulkDocumentRemindsSent","Påminnelse har skickats till alla parter som ännu inte signerat.","Reminders have been sent to all recipients who have not yet signed."

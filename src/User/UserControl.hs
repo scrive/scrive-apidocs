@@ -439,17 +439,23 @@ handleAcceptTOSPost = do
   return ()
       
 
-handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> m Response
+handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink Response)
 handleAccountSetupGet uid token = do
   ctx <- getContext
-  user <- guardJustM404 $ getUserAccountRequestUser uid token
-  mcompany <-  getCompanyForUser user
-  if isJust $ userhasacceptedtermsofservice user
-    then respond404
-    else simpleHtmlResponse =<< (renderTemplateAsPage ctx "accountSetupPage" Nothing False $ do
-              F.value "fstname" $ getFirstName user
-              F.value "sndname" $ getLastName user
-              F.value "company" $ companyname <$> companyinfo <$> mcompany)
+  muser <- getUserAccountRequestUser uid token
+  case (muser, userhasacceptedtermsofservice =<< muser) of
+    (Just user, Nothing) -> do
+      mcompany <-  getCompanyForUser user
+      Right <$> (simpleHtmlResponse =<< (renderTemplateAsPage ctx "accountSetupPage" Nothing False $ do
+                                            F.value "fstname" $ getFirstName user
+                                            F.value "sndname" $ getLastName user
+                                            F.value "company" $ companyname <$> companyinfo <$> mcompany))
+    (Just _user, Just _) -> do
+      -- this case looks impossible since we delete the account request upon signing up
+      -- but may it happen if they sign tos in some other way?
+      return $ Left $ LinkLogin (ctxlang ctx) NotLogged
+    _ -> do
+      return $ Left $ LinkSignup $ ctxlang ctx
               
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
 handleAccountSetupPost uid token = do
