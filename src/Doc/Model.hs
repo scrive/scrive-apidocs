@@ -1646,18 +1646,26 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
 data ReallyDeleteDocument = ReallyDeleteDocument UserID DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ReallyDeleteDocument Bool where
   update (ReallyDeleteDocument uid did _actor) = do
-    result <- kRun $ mkSQL UPDATE tableSignatoryLinks
-                                      [sql "really_deleted" True]
-                  <+> "FROM documents, users "
-                  <+> "WHERE ((users.id = " <?> uid <+> "AND (users.company_id IS NULL OR users.is_company_admin))"
-                  <+> "       OR EXISTS (SELECT 1 FROM users AS same_company_users "
-                  <+>                  "  WHERE users.company_id = same_company_users.company_id "
-                  <+>                  "    AND same_company_users.is_company_admin "
-                  <+>                  "    AND same_company_users.id = " <?> uid <+> "))"
-                  <+> "  AND users.id = signatory_links.user_id "
-                  <+> "  AND documents.id = signatory_links.document_id "
-                  <+> "  AND signatory_links.document_id = " <?> did
-                  <+> "  AND signatory_links.deleted = TRUE"
+    result <- kRun $ sqlUpdate "signatory_links" $ do
+      sqlSet "really_deleted" True
+      sqlWhereExists $ sqlSelect "documents" $ do
+        sqlWhere "documents.id = signatory_links.document_id"
+        sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
+        sqlLeftJoinOn "companies" "users.company_id = companies.id"
+        sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id OR users.id = same_company_users.id"
+
+        sqlWhere "NOT signatory_links.really_deleted"
+        sqlWhere "signatory_links.deleted"
+        sqlWhereEq "documents.id" did
+
+        sqlWhereEq "same_company_users.id" uid
+        sqlWhereAny $ do
+          sqlWhereAll $ do           -- 1: see own documents
+            sqlWhere "users.id = same_company_users.id"
+            sqlWhere "users.company_id IS NULL"
+          sqlWhereAll $ do           -- 5: see documents of subordinates
+            sqlWhere "same_company_users.is_company_admin"
+
     return (result>0)
 
 data RejectDocument = RejectDocument DocumentID SignatoryLinkID (Maybe String) Actor
