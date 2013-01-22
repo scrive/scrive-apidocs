@@ -47,7 +47,7 @@
       
 
       var tosAccept = $("<div class='position first'/>");
-      var tosCBox = $("<input type='checkbox' id='tosCBox' name='tos' style='margin-right:10px;margin-top: -2px'/>");
+      var tosCBox = $("<input type='checkbox' id='tosCBox' name='tos' class='s-accept-tos-cbox' style='margin-right:10px;margin-top: -2px'/>");
       tosAccept.append(tosCBox);
       var thref = "http://" + location.host + location.pathname.substring(0, 3) + "/terms";
       tosAccept.append($('<span/>')
@@ -82,7 +82,7 @@
 
   window.AcceptTOS = function(args) {
     var model = new AcceptTOSModel(args);
-    var view =  new AcceptTOSView({model: model, el: $("<div class='short-input-section accept-tos'/>")});
+    var view =  new AcceptTOSView({model: model, el: $("<div class='short-input-section accept-tos s-accept-tos'/>")});
     this.el = function() {return $(view.el);}
   };
 

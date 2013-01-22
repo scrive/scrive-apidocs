@@ -18,9 +18,9 @@ class LoginHelper
     (@wait.until { @driver.find_element :css => ".short-input-container a.login-button" }).click
     (@wait.until { @driver.find_element :css => "a.js-logout" })
 
-    if (@driver.find_elements :id => "toscontainer").length>0 then
-      (@wait.until { @driver.find_element :css => "input#tos" }).click
-      (@wait.until { @driver.find_element :css => "#toscontainer a.submit" }).click
+    if (@driver.find_elements :css => ".s-accept-tos").length>0 then
+      (@wait.until { @driver.find_element :css => ".s-accept-tos-cbox" }).click
+      (@wait.until { @driver.find_element :css => ".s-accept-tos a.button" }).click
     end
 
     @driver.navigate().to(@ctx.createKontrakcjaURL "/d")
