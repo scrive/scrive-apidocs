@@ -652,9 +652,17 @@ addRandomDocument2 :: User -> (RandomDocumentAllows -> RandomDocumentAllows) -> 
 addRandomDocument2 user refine =
   addRandomDocument (refine (randomDocumentAllowsDefault user))
 
+addRandomDocumentWithAuthorAndConditionAndFile :: User -> (Document -> Bool) -> File -> TestEnv Document
+addRandomDocumentWithAuthorAndConditionAndFile user p file =
+  addRandomDocumentWithFile file ((randomDocumentAllowsDefault user) { randomDocumentCondition = p})
+
 addRandomDocument :: RandomDocumentAllows -> TestEnv Document
 addRandomDocument rda = do
   file <- addNewRandomFile
+  addRandomDocumentWithFile file rda
+
+addRandomDocumentWithFile :: File -> RandomDocumentAllows -> TestEnv Document
+addRandomDocumentWithFile file rda = do
   now <- liftIO getMinutesTime
   let user = randomDocumentAuthor rda
       p = randomDocumentCondition rda
@@ -662,7 +670,7 @@ addRandomDocument rda = do
     Nothing  -> return Nothing
     Just cid -> dbQuery $ GetCompany cid
   --liftIO $ print $ "about to generate document"
-  document <- worker file now user p mcompany
+  document <- worker now user p mcompany
   docid <- dbUpdate $ StoreDocumentForTesting document
   mdoc  <- dbQuery  $ GetDocumentByDocumentID docid
   case mdoc of
@@ -672,7 +680,7 @@ addRandomDocument rda = do
     Just doc' -> do
               return doc'
   where
-    worker file now user p mcompany = do
+    worker now user p mcompany = do
       doc' <- rand 10 arbitrary
       xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
       status <- rand 10 (elements $ randomDocumentAllowedStatuses rda)
@@ -704,7 +712,7 @@ addRandomDocument rda = do
           rej <- asks teRejectedDocuments
           liftIO $ (atomically . modifyTVar' rej) (+1)
           --liftIO $ print $ "did not pass condition; doc: " ++ show adoc
-          worker file now user p mcompany
+          worker now user p mcompany
 
         (_, Just _problems) -> do
           rej <- asks teRejectedDocuments
@@ -713,7 +721,7 @@ addRandomDocument rda = do
           --uncomment this to find out why the doc was rejected
           --print adoc
           --liftIO $ print $ "rejecting doc: " ++ _problems
-          worker file now user p mcompany
+          worker now user p mcompany
 
 
 rand :: Int -> Gen a -> TestEnv a

@@ -4,6 +4,7 @@ module DB.Binary (
   ) where
 
 import Data.Convertible
+import Data.String (IsString(..))
 import Database.HDBC
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Base16 as B16
@@ -17,6 +18,9 @@ binApp f = Binary . f . unBinary
 newtype Binary = Binary { unBinary :: BS.ByteString }
   deriving (Eq, Ord)
 $(newtypeDeriveUnderlyingReadShow ''Binary)
+
+instance IsString Binary where
+  fromString = Binary . fromString
 
 instance Convertible Binary SqlValue where
   safeConvert = safeConvert . BS.append (BS.pack "\\x") . B16.encode . unBinary

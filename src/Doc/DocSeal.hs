@@ -13,6 +13,7 @@ module Doc.DocSeal(sealDocument, presealDocumentFile) where
 
 import Control.Monad.Trans.Control
 import Control.Monad.Reader
+import Data.Function (on)
 import Data.Maybe
 import Data.List
 import Data.Ord
@@ -294,7 +295,8 @@ findOutAttachmentDesc document = do
 evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m) => String -> [SignatoryLink] -> m Seal.SealAttachment
 evidenceOfIntentAttachment title sls = do
   ss <- dbQuery $ GetSignatoryScreenshots (map signatorylinkid sls)
-  html <- evidenceOfIntentHTML title [ (sl, s) | (i, s) <- ss, sl <- filter ((==i) . signatorylinkid) sls ]
+  let sortBySignTime = sortBy (on compare (fmap signtime . maybesigninfo . fst))
+  html <- evidenceOfIntentHTML title $ sortBySignTime [ (sl, s) | (i, s) <- ss, sl <- filter ((==i) . signatorylinkid) sls ]
   return $ Seal.SealAttachment { Seal.fileName = "evidenceOfIntent.html"
                                , Seal.mimeType = Nothing
                                , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString html
@@ -312,7 +314,8 @@ sealSpecFromDocument :: (KontraMonad m, MonadIO m, TemplatesMonad m, MonadDB m)
 sealSpecFromDocument boxImages hostpart document elog content inputpath outputpath = do
   additionalAttachments <- findOutAttachmentDesc document
   sigVerFile <- liftIO $ BS.toString <$> B64.encode <$> BS.readFile "files/verification.html"
-  sealSpecFromDocument2 boxImages hostpart document elog content inputpath outputpath additionalAttachments sigVerFile
+  evidenceDoc <- liftIO $ BS.toString <$> B64.encode <$> BS.readFile "files/evidenceDocumentation.html"
+  sealSpecFromDocument2 boxImages hostpart document elog content inputpath outputpath additionalAttachments sigVerFile evidenceDoc
 
 sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m)
                      => (BS.ByteString,BS.ByteString)
@@ -324,8 +327,9 @@ sealSpecFromDocument2 :: (TemplatesMonad m, MonadDB m)
                      -> String
                      -> [Seal.FileDesc]
                      -> String
+                     -> String
                      -> m Seal.SealSpec
-sealSpecFromDocument2 boxImages hostpart document elog content inputpath outputpath additionalAttachments sigVerFile =
+sealSpecFromDocument2 boxImages hostpart document elog content inputpath outputpath additionalAttachments sigVerFile evidenceDoc =
   let docid = documentid document
       Just authorsiglink = getAuthorSigLink document
 
@@ -456,6 +460,11 @@ sealSpecFromDocument2 boxImages hostpart document elog content inputpath outputp
                                 , Seal.mimeType = Nothing
                                 , Seal.fileBase64Content = sigVerFile
                                 }
+      let evidenceDocumentationAttachment =
+            Seal.SealAttachment { Seal.fileName = "readme.html"
+                                , Seal.mimeType = Nothing
+                                , Seal.fileBase64Content = evidenceDoc
+                                }
 
 
       let numberOfPages = getNumberOfPDFPages content
@@ -481,7 +490,7 @@ sealSpecFromDocument2 boxImages hostpart document elog content inputpath outputp
             , Seal.initials       = initials
             , Seal.hostpart       = hostpart
             , Seal.staticTexts    = readtexts
-            , Seal.attachments    = [evidenceattachment, evidenceOfIntent, signatureVerificationAttachment]
+            , Seal.attachments    = [evidenceDocumentationAttachment, evidenceattachment, evidenceOfIntent, signatureVerificationAttachment]
             , Seal.filesList      =
               [ Seal.FileDesc { fileTitle = documenttitle document
                               , fileRole = mainDocumentText

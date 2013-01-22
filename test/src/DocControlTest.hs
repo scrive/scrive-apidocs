@@ -3,10 +3,12 @@ module DocControlTest(
 ) where
 
 import Control.Applicative
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.RFC2397 as RFC2397
 import Data.Maybe
 import Control.Monad
+import Control.Monad.Trans (liftIO)
 import qualified Control.Exception.Lifted as E
 import Data.List
 import Happstack.Server
@@ -233,7 +235,11 @@ testLastPersonSigningADocumentClosesIt = do
   ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext defaultValue
 
-  doc' <- addRandomDocumentWithAuthorAndCondition
+  let filename = "test/pdfs/simple.pdf"
+  filecontent <- liftIO $ BS.readFile filename
+  file <- addNewFile filename filecontent
+
+  doc' <- addRandomDocumentWithAuthorAndConditionAndFile
             user
             (\d -> documentstatus d == Preparation
                      && case documenttype d of
@@ -241,6 +247,7 @@ testLastPersonSigningADocumentClosesIt = do
                          _ -> False
                      && d `allowsAuthMethod` StandardAuthentication
                      && documentdeliverymethod d == EmailDelivery)
+            file
 
   let authorOnly sd = sd { signatoryisauthor = True, signatoryispartner = False }
   True <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([

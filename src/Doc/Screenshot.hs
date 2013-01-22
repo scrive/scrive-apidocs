@@ -8,4 +8,4 @@ data T = T
   { mimetype :: String
   , image :: Binary
   }
-  deriving Show
+  deriving (Show, Eq, Ord)

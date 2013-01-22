@@ -897,8 +897,9 @@ insertSignatoryLinkFieldsAsAre fields = do
 insertSignatoryScreenshots :: MonadDB m
                            => [(SignatoryLinkID, SignatoryScreenshots.T)] -> DBEnv m Integer
 insertSignatoryScreenshots l = do
-  let (slids, types, times, ss) = unzip4 $ [ (slid, "first", t, s)   | (slid, Just (t, s)) <- map (second SignatoryScreenshots.first) l ]
-                                        <> [ (slid, "signing", t, s) | (slid, Just (t, s)) <- map (second SignatoryScreenshots.signing) l ]
+  let (slids, types, times, ss) = unzip4 $ [ (slid, "first",     t, s) | (slid, Just (t, s)) <- map (second SignatoryScreenshots.first) l ]
+                                        <> [ (slid, "signing",   t, s) | (slid, Just (t, s)) <- map (second SignatoryScreenshots.signing) l ]
+                                        <> [ (slid, "reference", t, s) | (slid,      (t, s)) <- map (second SignatoryScreenshots.reference) l ]
   if null slids then return 0 else
     kRun $ sqlInsert "signatory_screenshots" $ do
            sqlSetList "signatory_link_id" $ slids
@@ -919,16 +920,14 @@ instance MonadDB m => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, Signa
                 sqlResult "time"
                 sqlResult "mimetype"
                 sqlResult "image"
-    let folder ((slid', s):a) slid ty time mt i | slid' == slid = (slid, s <> mkss ty time mt i):a
-        folder a slid ty time mt i = (slid, mkss ty time mt i) : a
-        mkss :: String -> MinutesTime -> String -> Binary -> SignatoryScreenshots.T
-        mkss "first"   time mt i = SignatoryScreenshots.T { SignatoryScreenshots.first = Just (time, Screenshot.T mt i)
-                                                          , SignatoryScreenshots.signing = Nothing
-                                                          }
-        mkss "signing" time mt i = SignatoryScreenshots.T { SignatoryScreenshots.first = Nothing
-                                                          , SignatoryScreenshots.signing = Just (time, Screenshot.T mt i)
-                                                          }
-        mkss t         _    _  _ = error $ "GetSignatoryScreenshots: invalid type: " <> show t
+    let folder ((slid', s):a) slid ty time mt i | slid' == slid = (slid, mkss ty time mt i s):a
+        folder a slid ty time mt i = (slid, mkss ty time mt i SignatoryScreenshots.empty) : a
+
+        mkss :: String -> MinutesTime -> String -> Binary -> SignatoryScreenshots.T -> SignatoryScreenshots.T
+        mkss "first"     time mt i s = s{ SignatoryScreenshots.first = Just (time, Screenshot.T mt i) }
+        mkss "signing"   time mt i s = s{ SignatoryScreenshots.signing = Just (time, Screenshot.T mt i) }
+        mkss "reference" time mt i s = s{ SignatoryScreenshots.reference = (time, Screenshot.T mt i) }
+        mkss t           _    _  _ _ = error $ "GetSignatoryScreenshots: invalid type: " <> show t
     flip foldDB [] folder
 
 

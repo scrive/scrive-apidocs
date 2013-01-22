@@ -188,9 +188,9 @@ evidenceOfIntentHTML title l = do
           F.value "time" $ formatMinutesTimeUTC t ++ " UTC"
           F.value "image" $ RFC2397.encode (BS.fromString (Screenshot.mimetype s))
                                            (unBinary (Screenshot.image s))
-        nonempty (_,s) = isJust (SignatoryScreenshots.first s) ||
-                         isJust (SignatoryScreenshots.signing s)
-    F.objects "entries" $ for (filter nonempty l) $ \(sl, entry) -> do
+    F.objects "entries" $ for l $ \(sl, entry) -> do
       F.value "signatory"  $ getSmartName sl
+      F.value "ip"         $ show . signipnumber <$> maybesigninfo sl
       F.object "first"     $ values (SignatoryScreenshots.first entry)
       F.object "signing"   $ values (SignatoryScreenshots.signing entry)
+      F.object "reference" $ values (Just (SignatoryScreenshots.reference entry))

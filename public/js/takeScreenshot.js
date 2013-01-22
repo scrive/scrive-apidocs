@@ -31,6 +31,7 @@
                            },
                            width : $(window).width(),
                            height : $(window).height(),
+                           scale : 0.6, // smallest scale that still makes text readable
                            logging: true,
                            proxy: null,
                          }

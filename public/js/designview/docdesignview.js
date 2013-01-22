@@ -1077,7 +1077,6 @@ var DesignViewView = Backbone.View.extend({
         this.contrainer.append(BlockingInfo.el()).append($(this.tabs.view.el));
 
         new ScrollFixer({object : designbody1.add(designbody2)});
-        document.takeFirstScreenshot();
     }
 });
 

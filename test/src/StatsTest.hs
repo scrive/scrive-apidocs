@@ -9,6 +9,7 @@ import Doc.DocStateData
 import IPAddress
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
+import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import TestingUtil
 import Company.Model
 import MinutesTime
@@ -25,7 +26,6 @@ import Control.Applicative
 import Data.Ix
 import Util.HasSomeUserInfo
 import Data.Maybe
-import Data.Monoid (mempty)
 import Util.Actor
 
 statsTests :: TestEnvSt -> Test
@@ -150,7 +150,7 @@ testSignStat = do
                     (authorActor time noIP (fromJust $ maybesignatory sl) (getEmail sl))
                else dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl)
                     (signatoryActor time noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl)))
-  _ <- forM (filter isSignatory $ documentsignatorylinks doc') (\sl -> dbUpdate $ SignDocument (documentid doc') (signatorylinkid sl) (signatorymagichash sl) Nothing mempty (signatoryActor time noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl)))
+  _ <- forM (filter isSignatory $ documentsignatorylinks doc') (\sl -> dbUpdate $ SignDocument (documentid doc') (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty (signatoryActor time noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl)))
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatSignEvent doc sl)
   stats'' <- dbQuery $ GetSignStatEvents

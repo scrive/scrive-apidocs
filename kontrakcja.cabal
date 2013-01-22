@@ -35,6 +35,11 @@ Flag server-coverage
   Manual: True
   Default: False
 
+Flag update-reference-screenshot
+  Description: Build update-reference-screenshot utility
+  Manual: True
+  Default: True
+
 Flag test
   Description: Build tests
   Manual: True
@@ -346,6 +351,46 @@ Executable mailing-server
 
   cpp-options: -DMailingServer=Main
   Main-is: MailingServer.hs
+
+  Extensions: BangPatterns,
+              DeriveDataTypeable,
+              FlexibleContexts,
+              FlexibleInstances,
+              GeneralizedNewtypeDeriving,
+              MultiParamTypeClasses,
+              NamedFieldPuns,
+              OverloadedStrings,
+              PatternGuards,
+              RankNTypes,
+              RecordWildCards,
+              ScopedTypeVariables,
+              TemplateHaskell,
+              TupleSections,
+              TypeFamilies,
+              TypeOperators,
+              TypeSynonymInstances,
+              UndecidableInstances
+
+Executable update-reference-screenshot
+  if flag(update-reference-screenshot)
+    Buildable: True
+  else
+    Buildable: False
+
+  Hs-source-dirs: inc misc src docconv/src update-reference-screenshot
+
+  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fno-warn-type-defaults
+  if !flag(allow-warnings)
+    GHC-Options: -Werror
+  if !os(windows)
+    -- don't do threaded on Windows because it uses blocking listen and accept
+    GHC-Options: -threaded
+  if os(windows)
+    cpp-options: -DWINDOWS
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
+  Main-is: update-reference-screenshot.hs
 
   Extensions: BangPatterns,
               DeriveDataTypeable,

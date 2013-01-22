@@ -2683,6 +2683,7 @@ html2canvas = function( elements, opts ) {
         flashcanvas: undefined, // path to flashcanvas
         width: null,
         height: null,
+        scale: 1,
         taintTest: true, // do a taint test with all images before applying to canvas
 		renderer: "Canvas"
     }, renderer;
@@ -2846,10 +2847,11 @@ _html2canvas.Renderer.Canvas = function( options ) {
             safeImages = [],
             fstyle;
 
-            canvas.width = canvas.style.width = (!usingFlashcanvas) ? options.width || zStack.ctx.width : Math.min(flashMaxSize, (options.width || zStack.ctx.width) );
-            canvas.height = canvas.style.height = (!usingFlashcanvas) ? options.height || zStack.ctx.height : Math.min(flashMaxSize, (options.height || zStack.ctx.height) );
+            canvas.width = canvas.style.width = options.scale * ((!usingFlashcanvas) ? options.width || zStack.ctx.width : Math.min(flashMaxSize, (options.width || zStack.ctx.width) ));
+            canvas.height = canvas.style.height = options.scale * ((!usingFlashcanvas) ? options.height || zStack.ctx.height : Math.min(flashMaxSize, (options.height || zStack.ctx.height) ));
 
             h2clog("html2canvas: geometry "+canvas.width+" "+canvas.height);
+            ctx.scale(options.scale, options.scale);
             fstyle = ctx.fillStyle;
             ctx.fillStyle = zStack.backgroundColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);

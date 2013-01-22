@@ -25,7 +25,6 @@ import Util.HasSomeCompanyInfo
 
 import Data.Functor
 import Data.Maybe
-import Data.Monoid (mempty)
 import Control.Monad
 import Control.Monad.Trans
 import Data.List
@@ -459,9 +458,9 @@ getScreenshots = do
   let mkss i = Just (now, Screenshot.T{ Screenshot.mimetype = "image/jpeg"
                                       , Screenshot.image = Binary i
                                       })
-  return $ SignatoryScreenshots.T{ SignatoryScreenshots.first = mkss first_
-                                 , SignatoryScreenshots.signing = mkss signing
-                                 }
+  return $ SignatoryScreenshots.empty{ SignatoryScreenshots.first = mkss first_
+                                     , SignatoryScreenshots.signing = mkss signing
+                                     }
 
 testSignDocumentEvidenceLog :: TestEnv ()
 testSignDocumentEvidenceLog = do
@@ -555,7 +554,7 @@ testMarkDocumentSeenEvidenceLog  = do
   success <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
   assert success
   _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
-  _ <- randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing mempty (systemActor t)
+  _ <- randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty (systemActor t)
   _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
   _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) mh (systemActor t)
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
@@ -625,7 +624,7 @@ testDeleteSigAttachmentAlreadySigned = do
   u2 <- randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ sl) "attachment" (fileid file) (systemActor t)
   assertBool "We can't reupload attachment"  u2
   _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
-  _ <- randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing mempty (systemActor t)
+  _ <- randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty (systemActor t)
   d2 <- randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ sl) (fileid file) (systemActor t)
   assertBool  "We can remove attachment after signing" (not d2)
   
@@ -731,7 +730,7 @@ testCloseDocumentEvidenceLog = do
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
   forM_ (documentsignatorylinks doc) $ \sl -> do
     void $ randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
-    void $ randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing mempty (systemActor t)
+    void $ randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty (systemActor t)
   success <- randomUpdate $ \t-> CloseDocument (documentid doc) (systemActor t)
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
@@ -1547,7 +1546,7 @@ testSignDocumentNonSignableLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
   let Just sl = getSigLinkFor doc author
-  success <- randomUpdate $ \si t -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si mempty (systemActor t)
+  success <- randomUpdate $ \si t -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si SignatoryScreenshots.empty (systemActor t)
   assert $ not success
 
 testSignDocumentSignableNotPendingLeft :: TestEnv ()
@@ -1555,16 +1554,8 @@ testSignDocumentSignableNotPendingLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . isPending))
   let Just sl = getSigLinkFor doc author
-<<<<<<< variant A
-  success <- randomUpdate $ \si t -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si (systemActor t)
+  success <- randomUpdate $ \si t -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si SignatoryScreenshots.empty (systemActor t)
   assert $ not success
->>>>>>> variant B
-  success <- randomUpdate $ \si t -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si mempty (systemActor t)
-  validTest $ assert $ not success
-####### Ancestor
-  success <- randomUpdate $ \si t -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si (systemActor t)
-  validTest $ assert $ not success
-======= end
 
 testSignDocumentSignablePendingRight :: TestEnv ()
 testSignDocumentSignablePendingRight = doTimes 10 $ do
@@ -1573,30 +1564,14 @@ testSignDocumentSignablePendingRight = doTimes 10 $ do
   let Just sl = find (isSignatory &&^ (not . hasSigned)) (documentsignatorylinks doc)
   time <- rand 10 arbitrary
   _ <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor time)
-<<<<<<< variant A
-  success <- randomUpdate $ \si -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si (systemActor time)
+  success <- randomUpdate $ \si -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si SignatoryScreenshots.empty (systemActor time)
   assert success
->>>>>>> variant B
-  success <- randomUpdate $ \si -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si mempty (systemActor time)
-  validTest $ assert success
-####### Ancestor
-  success <- randomUpdate $ \si -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si (systemActor time)
-  validTest $ assert success
-======= end
 
 
 testSignDocumentNotLeft :: TestEnv ()
 testSignDocumentNotLeft = doTimes 10 $ do
-<<<<<<< variant A
-  success <- randomUpdate $ \d sl mh si t -> SignDocument d sl mh si (systemActor t)
+  success <- randomUpdate $ \d sl mh si t -> SignDocument d sl mh si SignatoryScreenshots.empty (systemActor t)
   assert $ not success
->>>>>>> variant B
-  success <- randomUpdate $ \d sl mh si t -> SignDocument d sl mh si mempty (systemActor t)
-  validTest $ assert $ not success
-####### Ancestor
-  success <- randomUpdate $ \d sl mh si t -> SignDocument d sl mh si (systemActor t)
-  validTest $ assert $ not success
-======= end
 
 testPreparationToPendingNotSignableLeft :: TestEnv ()
 testPreparationToPendingNotSignableLeft = doTimes 10 $ do
@@ -1834,7 +1809,7 @@ testCloseDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
          }
   sa <- unSystemActor <$> rand 10 arbitrary
   let Just sl = getAuthorSigLink doc
-  _ <- randomUpdate (\si -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si mempty sa)
+  _ <- randomUpdate (\si -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si SignatoryScreenshots.empty sa)
   success <- randomUpdate $ CloseDocument (documentid doc) sa
   assert $ not success
 

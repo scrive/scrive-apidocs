@@ -3,7 +3,7 @@ htmlevidencelog=
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>$documenttitle$ Evidence Log</title>
+    <title>$documenttitle$ Evidence Log for "$documenttitle$"</title>
   </head>
   <body>
     <h1></h1>

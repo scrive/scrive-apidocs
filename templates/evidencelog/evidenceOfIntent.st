@@ -10,7 +10,6 @@ evidenceOfIntent=
 
     <div style="font-family:'Lucida Grande', sans-serif;margin-top:0px;padding:0px;">
 
-      <table width="100%" cellpadding="0" cellspacing="0" style="margin: auto;"><tr><td>
         <table id="main" cellpadding="0" cellspacing="15" width="960" align="center" style="margin: auto;background-color:#ffffff;border:1px solid #DDDDDD;">
           <tr>
             <td style="padding:10px; margin: auto;">
@@ -47,40 +46,51 @@ evidenceOfIntent=
             </td>
           </tr><!-- header -->
           <tr>
-            <td>
+            <td><div style="margin-left:100px;margin-right:100px">The
+            following screen shots show the signing environments of
+            the respective signing parties.  Each time stamp reflects
+            the clock of the client, and may be different from the
+            server clock.
+
+            <p/>At any point in time, the signing service maintains a
+            screen shot of a <em>reference sign view</em> showing a
+            standard document at the moment it is being signed.  The
+            reference sign view shot illustrates what the signing
+            environment is supposed to look like for clients at the
+            moment of signing, which is helpful for cases when
+            clients' signing environments were unable to provide
+            accurate screen shots.</div></td>
+          </tr>
+          <tr><td>
               <table id="content" width="800" cellspacing="0"
                      align="top" style="margin:auto;color:#212121;font-family:'Lucida Grande',sans-serif;font-size:12px;">
+                <tr style="font-weight:800;font-family:'Lucida Grande',sans-serif;font-size:14px;margin:0px;">
+                  <td style="border-bottom: solid 1px black;margin-bottom:60px;width:140px;">Time</td>
+                  <td style="border-bottom: solid 1px black;margin-bottom:60px;width:80px;">IP</td>
+                  <td style="border-bottom: solid 1px black;margin-bottom:60px;width:574px">Event</td>
+                </tr>
                 $entries:{entry|
+                $if(entry.first.time)$
                 <tr>
-                  <td>
-                    <table cellpadding="0" cellspacing="5" align="center" style="margin: auto;background-color:#ffffff;border:1px solid #DDDDDD;">
-                      <tr>
-                        <td>
-                          $if(entry.first.time)$
-                          <table cellpadding="0" cellspacing="5" align="center" style="margin: auto;background-color:#ffffff;border:1px solid #DDDDDD;">
-                            <tr>
-                              <td>At time $entry.first.time$ (as reported by client), $entry.signatory$ opened the sign view:
-                              <br/><img alt="first" src="$entry.first.image$"/>
-                              </td>
-                            </tr>
-                            </table>$endif$
-                            $if(entry.signing.time)$
-                            <table cellpadding="0" cellspacing="5" align="center" style="margin: auto;background-color:#ffffff;border:1px solid #DDDDDD;">
-                              <tr>
-                                <td>At time $entry.signing.time$ (as reported by client), $entry.signatory$ signed the document:
-                                <br/><img alt="signing" src="$entry.signing.image$"/>
-                                </td>
-                              </tr>
-                              </table>$endif$
-                        </td>
-                      </tr>
-                    </table>
+                  <td style="font-size:10px;padding-top:18px;">$entry.first.time$</td>
+                  <td style="font-size:10px;padding-top:18px">$entry.ip$</td>
+                  <td style="padding-top:18px;width:574px;max-width:574px;">
+                    <a href="$entry.first.image$">$entry.signatory$ opened the sign view</a>.
                   </td>
-                  </tr>}$
+                </tr>
+                $endif$
+                <tr>
+                  <td style="font-size:10px;padding-top:18px;">$entry.signing.time$</td>
+                  <td style="font-size:10px;padding-top:18px">$entry.ip$</td>
+                  <td style="padding-top:18px;width:574px;max-width:574px;">
+                    $if(entry.signing.image)$<a href="$entry.signing.image$">$endif$$entry.signatory$ signed the document$if(entry.signing.image)$</a>$endif$.
+                    Corresponding <a href="$entry.reference.image$">reference sign view</a>, created $entry.reference.time$.
+                  </td>
+                </tr>}$
               </table>
             </td>
           </tr>
-      </table></td></tr></table>
+      </table>
     </div>
   </body>
 </html>

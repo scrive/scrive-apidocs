@@ -466,9 +466,9 @@ readScreenshots = do
     maybe (fail "readScreenshots: invalid JSON") return $ withJSValue json $ do
       first   <- (decodeScreenshot =<<) `fmap` fromJSValueField "first"
       signing <- (decodeScreenshot =<<) `fmap` fromJSValueField "signing"
-      return SignatoryScreenshots.T{ SignatoryScreenshots.first = first
-                                   , SignatoryScreenshots.signing = signing
-                                   }
+      return SignatoryScreenshots.empty{ SignatoryScreenshots.first = first
+                                       , SignatoryScreenshots.signing = signing
+                                       }
    where decodeScreenshot (time, s) = do
           (mt, i) <- RFC2397.decode $ BS.fromString s
           unless (mt `elem` ["image/jpeg", "image/png"]) Nothing
