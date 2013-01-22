@@ -61,7 +61,7 @@ forkAction title action = do
         Log.error $ "forkAction: " ++ title ++ ": " ++ show e
         return $ ForkedActionError title startTime endTime e
       Right _ -> do
-        dbCommit
+        kCommit
         return $ ForkedActionDone title startTime endTime
     liftIO $ modifyMVar_ allActions $ return . Map.insert key retval
   return ()

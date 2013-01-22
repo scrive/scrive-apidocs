@@ -1,5 +1,5 @@
 module DB.Functions (
-    dbCommit
+    kCommit
   , dbRollback
   , dbClone
   , kFinish
@@ -31,8 +31,8 @@ import DB.Nexus
 import DB.SQL (RawSQL, SQL(..), raw, unRawSQL, (<+>), sqlConcatComma, parenthesize, IsSQL, toSQLCommand, unsafeFromString)
 import DB.Model (Table(..))
 
-dbCommit :: MonadDB m => m ()
-dbCommit = getNexus >>= liftIO . commit
+kCommit :: MonadDB m => m ()
+kCommit = getNexus >>= liftIO . commit
 
 dbRollback :: MonadDB m => m ()
 dbRollback = getNexus >>= liftIO . rollback

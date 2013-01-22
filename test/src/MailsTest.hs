@@ -94,7 +94,7 @@ sendDocumentMails mailTo author = do
                               sendoutForManualChecking (s ++ " " ++ show doctype ) req ctx mailTo m
         checkMail "Invitation" $ mailInvitation True ctx Sign doc (Just sl)
         -- DELIVERY MAILS
-        checkMail "Deferred invitadbCommittion"    $  mailDeferredInvitation (ctxhostpart ctx) doc
+        checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxhostpart ctx) doc
         checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxhostpart ctx) doc sl
         checkMail "Delivered invitation"   $  mailDeliveredInvitation doc sl
         --remind mails
@@ -112,7 +112,7 @@ sendDocumentMails mailTo author = do
         checkMail "Closed" $ mailDocumentClosed ctx sdoc
         -- Reminder after send
         checkMail "Reminder signed" $ mailDocumentRemind Nothing ctx doc (head $ documentsignatorylinks sdoc)
-  dbCommit
+  kCommit
   when (isJust mailTo) $ do
     Log.debug "Delay for mails to get send"
     liftIO $ threadDelay 200000000
@@ -141,7 +141,7 @@ testUserMails mailTo = do
     checkMail "Reset password mail" $ do
           al <- newUserAccountRequestLink (ctxlang ctx) (userid user)
           resetPasswordMail (ctxhostpart ctx) user al
-  dbCommit
+  kCommit
   when (isJust mailTo) $ do
     Log.debug "Delay for mails to get send"
     liftIO $ threadDelay 200000000

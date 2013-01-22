@@ -321,7 +321,7 @@ sendMailAPIErrorEmail ctx email msg = do
   dbRollback
   mail <- mailMailApiError ctx msg
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress email email] }
-  dbCommit -- Needed because ActionControl will roll back on the error we'll throw
+  kCommit -- Needed because ActionControl will roll back on the error we'll throw
   internalError
 
 sendMailAPIDelayAdminEmail :: Kontrakcja m => String -> String -> Int64 -> MagicHash -> MinutesTime -> m ()

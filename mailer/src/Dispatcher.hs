@@ -46,7 +46,7 @@ dispatcher rng master msender dbconf = withPostgreSQL dbconf . runCryptoRNGT rng
              res <- dbUpdate $ DeferEmail mailID $ 5 `minutesAfter` now
              when (not res) $
                Log.mailingServer $ "Failed to defer email #" ++ show mailID ++ " sendout."
-      dbCommit -- commit after email was handled properly
+      kCommit -- commit after email was handled properly
       Log.mailingServer $ "Dispatcher is done"
   where
     isNotSendable Mail{..} =

@@ -57,7 +57,7 @@ uploadFilesToAmazon = do
       conf <- sdAppConf <$> ask
       success <- exportFile (mkAWSAction conf) file
       if success
-        then dbCommit
+        then kCommit
         else do
           dbRollback
           Log.debug "Uploading to Amazon failed, sleeping for 5 minutes."

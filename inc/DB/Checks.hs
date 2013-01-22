@@ -29,12 +29,12 @@ performDBChecks logger tables migrations = runDBEnv $ do
   let liftedLogger = lift . logger
   set <- setByteaOutput liftedLogger
   when set $ do
-    lift dbCommit
+    lift kCommit
     error $ "Bytea_output was changed to 'hex'. Restart application so the change is visible."
   checkDBTimeZone liftedLogger
   checkDBConsistency liftedLogger (tableVersions : tables) migrations
   -- everything is OK, commit changes
-  lift dbCommit
+  lift kCommit
   return ()
 
 -- | Return SQL fragment of current catalog within quotes

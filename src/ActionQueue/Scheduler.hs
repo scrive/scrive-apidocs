@@ -47,7 +47,7 @@ timeoutDocuments = do
       return ()
     Log.debug $ "Document timedout " ++ (show $ documenttitle doc)
   when (not (null docs)) $ do
-    dbCommit
+    kCommit
     timeoutDocuments
 
 

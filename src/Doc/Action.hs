@@ -129,7 +129,7 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistri
       logDocEvent "Doc Closed" doc author []
       asyncLogEvent SetUserProps [UserIDProp (userid author),
                                   someProp "Last Doc Closed" time]
-      dbCommit
+      kCommit
       forkAction ("Sealing document #" ++ show documentid ++ ": " ++ documenttitle) $ do
         enewdoc <- sealDocument closeddoc
         case enewdoc of

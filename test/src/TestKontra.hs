@@ -271,7 +271,7 @@ mkContext lang = do
 withTestDB :: TestEnv () -> TestEnv ()
 withTestDB m = E.finally m $ do
   clearTables
-  dbCommit
+  kCommit
 
 clearTables :: TestEnv ()
 clearTables = runDBEnv $ do

@@ -46,7 +46,7 @@ actionQueue qa = getMinutesTime
         dbRollback
       Right () -> do
         printSuccess a
-        dbCommit
+        kCommit
     )
   where
     printSuccess a = Log.debug $ "Action " ++ show a ++ " evaluated successfully"
