@@ -9,6 +9,7 @@ import Database.HDBC
 import Text.JSON
 
 import DB
+import DB.SQL2
 import Doc.Tables
 import qualified Log
 import Doc.DocumentID
@@ -352,14 +353,14 @@ moveSignatoryLinkFieldsToSeparateTable = Migration {
                       "SignatureFT"      -> 8
                       _                  -> error $ "Unknown field type: " ++ xtypestr
 
-        _ <- kRun $ mkSQL INSERT tableSignatoryLinkFields
-           [ sql "type" xtype
-           , sql "value" $ fromJSString x_sfValue
-           , sql "signatory_link_id" slid
-           , sql "is_author_filled" is_author_filled
-           , sql "custom_name" custom_name
-           , sql "placements" $ encode placement
-           ]
+        _ <- kRun $ sqlInsert "signatory_link_fields" $ do
+                sqlSet "type" xtype
+                sqlSet "value" $ fromJSString x_sfValue
+                sqlSet "signatory_link_id" slid
+                sqlSet "is_author_filled" is_author_filled
+                sqlSet "custom_name" custom_name
+                sqlSet "placements" $ encode placement
+
         return ()
       return ()
     kRunRaw $ "ALTER TABLE signatory_links DROP COLUMN fields"
@@ -384,11 +385,10 @@ moveDocumentTagsFromDocumentsTableToDocumentTagsTable = Migration {
       forM_ tags $ \tag -> do
         let Just (JSString tagname) = lookup "tagname" tag
             Just (JSString tagvalue) = lookup "tagvalue" tag
-        kRun $ mkSQL INSERT tableDocumentTags
-           [ sql "name" $ fromJSString tagname
-           , sql "value" $ fromJSString tagvalue
-           , sql "document_id" docid
-           ]
+        kRun $ sqlInsert "document_tags" $ do
+                   sqlSet "name" $ fromJSString tagname
+                   sqlSet "value" $ fromJSString tagvalue
+                   sqlSet "document_id" docid
       return ()
     kRunRaw $ "ALTER TABLE documents DROP COLUMN tags"
   }
