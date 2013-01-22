@@ -23,10 +23,10 @@ import qualified Paths_kontrakcja as Paths
 import qualified Data.Version as Ver
 
 import DB hiding (intersperse)
+import DB.SQL2
 import IPAddress
 import MinutesTime
 
-import User.History.Tables
 import User.UserID
 import User.Model
 import Utils.Prelude
@@ -233,15 +233,14 @@ diffUserInfos old new = fstNameDiff
 
 addUserHistory :: MonadDB m => UserID -> UserHistoryEvent -> IPAddress -> MinutesTime -> Maybe UserID -> DBEnv m Bool
 addUserHistory user event ip time mpuser =
-  kRun01 $ mkSQL INSERT tableUsersHistory [
-      sql "user_id" user
-    , sql "event_type" $ uheventtype event
-    , sql "event_data" $ maybe "" encode $ uheventdata event
-    , sql "ip" ip
-    , sql "time" time
-    , sql "system_version" $ concat $ intersperse "." $ Ver.versionTags Paths.version
-    , sql "performing_user_id" mpuser
-    ]
+  kRun01 $ sqlInsert "users_history" $ do
+      sqlSet "user_id" user
+      sqlSet "event_type" $ uheventtype event
+      sqlSet "event_data" $ maybe "" encode $ uheventdata event
+      sqlSet "ip" ip
+      sqlSet "time" time
+      sqlSet "system_version" $ concat $ intersperse "." $ Ver.versionTags Paths.version
+      sqlSet "performing_user_id" mpuser
 
 selectUserHistorySQL :: SQL
 selectUserHistorySQL = SQL ("SELECT"

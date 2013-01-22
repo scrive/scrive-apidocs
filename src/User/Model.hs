@@ -49,7 +49,6 @@ import DB
 import MinutesTime
 import User.Lang
 import User.Password
-import User.Tables
 import User.UserID
 import DB.SQL2
 import Doc.DocStateData (DocumentStatus(..), DocumentID)
@@ -240,27 +239,27 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
       Nothing -> do
-        kRun_ $ mkSQL INSERT tableUsers [
-            sql "password" $ pwdHash <$> mpwd
-          , sql "salt" $ pwdSalt <$> mpwd
-          , sql "is_company_admin" False
-          , sql "account_suspended" False
-          , sql "has_accepted_terms_of_service" SqlNull
-          , sql "signup_method" AccountRequest
-          , sql "company_id" mcid
-          , sql "first_name" fname
-          , sql "last_name" lname
-          , sql "personal_number" ("" :: String)
-          , sql "company_position" ("" :: String)
-          , sql "company_name" ("" :: String)
-          , sql "company_number" ("" :: String)
-          , sql "phone" ("" :: String)
-          , sql "mobile" ("" :: String)
-          , sql "email" $ map toLower email
-          , sql "lang" l
-          , sql "deleted" False
-          , sql "is_free" False
-          ] <+> "RETURNING" <+> selectUsersSelectors
+        kRun_ $ sqlInsert "users" $ do
+            sqlSet "password" $ pwdHash <$> mpwd
+            sqlSet "salt" $ pwdSalt <$> mpwd
+            sqlSet "is_company_admin" False
+            sqlSet "account_suspended" False
+            sqlSet "has_accepted_terms_of_service" SqlNull
+            sqlSet "signup_method" AccountRequest
+            sqlSet "company_id" mcid
+            sqlSet "first_name" fname
+            sqlSet "last_name" lname
+            sqlSet "personal_number" ("" :: String)
+            sqlSet "company_position" ("" :: String)
+            sqlSet "company_name" ("" :: String)
+            sqlSet "company_number" ("" :: String)
+            sqlSet "phone" ("" :: String)
+            sqlSet "mobile" ("" :: String)
+            sqlSet "email" $ map toLower email
+            sqlSet "lang" l
+            sqlSet "deleted" False
+            sqlSet "is_free" False
+            mapM_ (sqlResult . raw) selectUsersSelectorsList
         fetchUsers >>= oneObjectReturnedGuard
 
 data SetUserEmail = SetUserEmail UserID Email
@@ -401,8 +400,8 @@ checkIfUserExists uid = checkIfAnyReturned
 selectUsersSQL :: SQL
 selectUsersSQL = "SELECT" <+> selectUsersSelectors <+> "FROM users"
 
-selectUsersSelectors :: SQL
-selectUsersSelectors = sqlConcatComma
+selectUsersSelectorsList :: [RawSQL]
+selectUsersSelectorsList =
   [ "id"
   , "password"
   , "salt"
@@ -424,6 +423,9 @@ selectUsersSelectors = sqlConcatComma
   , "company_number"
   , "is_free"
   ]
+
+selectUsersSelectors :: SQL
+selectUsersSelectors = sqlConcatComma (map raw selectUsersSelectorsList)
 
 fetchUsers :: MonadDB m => DBEnv m [User]
 fetchUsers = foldDB decoder []
