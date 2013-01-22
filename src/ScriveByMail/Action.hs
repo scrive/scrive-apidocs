@@ -318,7 +318,7 @@ sendMailAPIConfirmEmail ctx document =
 -- | Roll back DB operations; commit an error email to DB; throw error.
 sendMailAPIErrorEmail :: Kontrakcja m => Context -> String -> String -> m a
 sendMailAPIErrorEmail ctx email msg = do
-  dbRollback
+  kRollback
   mail <- mailMailApiError ctx msg
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress email email] }
   kCommit -- Needed because ActionControl will roll back on the error we'll throw

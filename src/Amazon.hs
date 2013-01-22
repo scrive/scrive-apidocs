@@ -59,7 +59,7 @@ uploadFilesToAmazon = do
       if success
         then kCommit
         else do
-          dbRollback
+          kRollback
           Log.debug "Uploading to Amazon failed, sleeping for 5 minutes."
           liftIO $ threadDelay $ 5 * 60 * 1000000
       uploadFilesToAmazon

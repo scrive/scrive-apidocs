@@ -209,7 +209,7 @@ appHandler handleRoutes appConf appGlobals = catchEverything . runOurServerPartT
     case res of
       Right response -> return response
       Left response -> do
-        dbRollback -- if exception was thrown, rollback everything
+        kRollback -- if exception was thrown, rollback everything
         return response
   where
     catchEverything m = m `E.catch` \(e::E.SomeException) -> do

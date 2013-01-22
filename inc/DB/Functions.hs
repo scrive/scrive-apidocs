@@ -1,6 +1,6 @@
 module DB.Functions (
     kCommit
-  , dbRollback
+  , kRollback
   , dbClone
   , kFinish
   , kRunRaw
@@ -34,8 +34,8 @@ import DB.Model (Table(..))
 kCommit :: MonadDB m => m ()
 kCommit = getNexus >>= liftIO . commit
 
-dbRollback :: MonadDB m => m ()
-dbRollback = getNexus >>= liftIO . rollback
+kRollback :: MonadDB m => m ()
+kRollback = getNexus >>= liftIO . rollback
 
 dbClone :: MonadDB m => m Nexus
 dbClone = getNexus >>= liftIO . clone

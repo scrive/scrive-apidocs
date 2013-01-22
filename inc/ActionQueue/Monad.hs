@@ -43,7 +43,7 @@ actionQueue qa = getMinutesTime
     case res of
       Left (e::E.SomeException) -> do
         printError a e
-        dbRollback
+        kRollback
       Right () -> do
         printSuccess a
         kCommit

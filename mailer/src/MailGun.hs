@@ -47,7 +47,7 @@ handleMailGunEvents = do
                   let ev = MailGunEvent email event
                   res <- dbUpdate (UpdateWithEvent mailID ev) `E.catch` \(e::SQLError) -> do
                     logMsg $ "SQLError thrown while executing UpdateWithEvent: " ++ show e
-                    dbRollback
+                    kRollback
                     return False
                   logMsg $ if not res
                     then "UpdateWithEvent didn't update anything"

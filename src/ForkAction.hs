@@ -57,7 +57,7 @@ forkAction title action = do
     endTime <- liftIO getClockTime
     retval <- case result of
       Left e -> do
-        dbRollback
+        kRollback
         Log.error $ "forkAction: " ++ title ++ ": " ++ show e
         return $ ForkedActionError title startTime endTime e
       Right _ -> do

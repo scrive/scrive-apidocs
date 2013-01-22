@@ -102,7 +102,7 @@ testError emlfile = do
     mails <- dbQuery $ GetEmails
     (runTestKontra req ctx handleMailAPI >> internalError) `E.catch`
          \InternalError -> do
-         dbRollback -- simulate AppControl's behavior
+         kRollback -- simulate AppControl's behavior
          -- Now, check that we got an error email
          mails' <- dbQuery $ GetEmails
          let errorMailsLen ms =
