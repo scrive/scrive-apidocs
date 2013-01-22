@@ -12,7 +12,6 @@ module DB.Functions (
   , ColumnValue
   , sql
   , sqlGeneric
-  , (.=)
   , SQLType(..)
   , mkSQL
   ) where
@@ -29,10 +28,8 @@ import DB.Core
 import DB.Env
 import DB.Exception
 import DB.Nexus
-import DB.SQL (RawSQL, SQL(..), raw, unRawSQL, (<+>), (<?>), sqlConcatComma, parenthesize, IsSQL, toSQLCommand, unsafeFromString)
+import DB.SQL (RawSQL, SQL(..), raw, unRawSQL, (<+>), sqlConcatComma, parenthesize, IsSQL, toSQLCommand, unsafeFromString)
 import DB.Model (Table(..))
-
-infix 7 .=
 
 dbCommit :: MonadDB m => m ()
 dbCommit = getNexus >>= liftIO . commit
@@ -123,9 +120,6 @@ sqlGeneric column expr = ColumnValue column expr
 sql :: Convertible a SqlValue => RawSQL -> a -> ColumnValue
 sql column value =
   ColumnValue column (SQL "?" [toSql value])
-
-(.=) :: Convertible a SqlValue => RawSQL -> a -> SQL
-r .= v = raw r <+> "=" <?> v
 
 data SQLType = INSERT | UPDATE
 
