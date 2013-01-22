@@ -1643,17 +1643,17 @@ instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m NewDocument (M
            Log.debug $ "insertDocumentAsIs invariants violated: " ++ show a
            return Nothing
 
-data ReallyDeleteDocument = ReallyDeleteDocument User DocumentID Actor
+data ReallyDeleteDocument = ReallyDeleteDocument UserID DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ReallyDeleteDocument Bool where
-  update (ReallyDeleteDocument user did _actor) = do
+  update (ReallyDeleteDocument uid did _actor) = do
     result <- kRun $ mkSQL UPDATE tableSignatoryLinks
                                       [sql "really_deleted" True]
                   <+> "FROM documents, users "
-                  <+> "WHERE ((users.id = " <?> (userid user) <+> "AND (users.company_id IS NULL OR users.is_company_admin))"
+                  <+> "WHERE ((users.id = " <?> uid <+> "AND (users.company_id IS NULL OR users.is_company_admin))"
                   <+> "       OR EXISTS (SELECT 1 FROM users AS same_company_users "
                   <+>                  "  WHERE users.company_id = same_company_users.company_id "
                   <+>                  "    AND same_company_users.is_company_admin "
-                  <+>                  "    AND same_company_users.id = " <?> (userid user) <+> "))"
+                  <+>                  "    AND same_company_users.id = " <?> uid <+> "))"
                   <+> "  AND users.id = signatory_links.user_id "
                   <+> "  AND documents.id = signatory_links.document_id "
                   <+> "  AND signatory_links.document_id = " <?> did

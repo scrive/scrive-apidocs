@@ -218,7 +218,7 @@ testPurgeStat = do
                                                            isClosed &&^
                                                            (any isSignatory . documentsignatorylinks))
   _ <- dbUpdate $ ArchiveDocument author' (documentid doc') actor
-  _ <- dbUpdate $ ReallyDeleteDocument author' (documentid doc') actor
+  _ <- dbUpdate $ ReallyDeleteDocument (userid author') (documentid doc') actor
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   let Just asl = getAuthorSigLink doc
   _ <- addSignStatPurgeEvent (signatorylinkid asl) time

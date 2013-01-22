@@ -85,7 +85,7 @@ handleDelete = do
               _ <- addSignStatDeleteEvent (signatorylinkid $ fromJust msl) ctxtime
               case (documentstatus doc) of
                    Preparation -> do
-                       _ <- dbUpdate $ ReallyDeleteDocument user (documentid doc) actor
+                       _ <- dbUpdate $ ReallyDeleteDocument (userid user) (documentid doc) actor
                        when_ (isJust $ getSigLinkFor doc user) $
                             addSignStatPurgeEvent (signatorylinkid $ fromJust $ getSigLinkFor doc user)  ctxtime
                    _ -> return ()
@@ -133,7 +133,7 @@ handleReallyDelete = do
   docids <- getCriticalFieldList asValidDocID "doccheck"
   mapM_ (\did -> do
             doc <- guardJustM . runMaybeT $ do
-              True <- dbUpdate $ ReallyDeleteDocument user did actor
+              True <- dbUpdate $ ReallyDeleteDocument (userid user) did actor
               Just doc <- dbQuery $ GetDocumentByDocumentID did
               return doc
             case getSigLinkFor doc user of

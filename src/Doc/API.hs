@@ -278,7 +278,7 @@ apiCallDelete did =  api $ do
   _ <- addSignStatDeleteEvent (signatorylinkid $ fromJust $ getSigLinkFor doc user) (ctxtime ctx)
   case (documentstatus doc) of
        Preparation -> do
-         _ <- dbUpdate $ ReallyDeleteDocument user did actor
+         _ <- dbUpdate $ ReallyDeleteDocument (userid user) did actor
          when_ (isJust $ getSigLinkFor doc user) $
              addSignStatPurgeEvent (signatorylinkid $ fromJust $ getSigLinkFor doc user)  (ctxtime ctx)
        _ -> return ()

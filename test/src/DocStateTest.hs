@@ -894,7 +894,7 @@ testReallyDeleteDocumentPrivateAuthorRight = doTimes 10 $ do
   assert success1
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   assertOneArchivedSigLink ndoc
-  success2 <- randomUpdate $ \t->ReallyDeleteDocument author (documentid doc) (systemActor t)
+  success2 <- randomUpdate $ \t->ReallyDeleteDocument (userid author) (documentid doc) (systemActor t)
   Just ndoc2 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   validTest $ do
     assert success2
@@ -907,7 +907,7 @@ testReallyDeleteDocumentCompanyAdminRight = doTimes 10 $ do
   adminuser <- addNewRandomCompanyUser (companyid company) True
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (systemActor t)
-  success <- randomUpdate $ \t->ReallyDeleteDocument adminuser (documentid doc) (systemActor t)
+  success <- randomUpdate $ \t->ReallyDeleteDocument (userid adminuser) (documentid doc) (systemActor t)
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   validTest $ do
     assert success
@@ -956,7 +956,7 @@ testReallyDeleteDocumentCompanyAuthorLeft = doTimes 10 $ do
   author <- addNewRandomCompanyUser (companyid company) False
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (systemActor t)
-  success <- randomUpdate $ \t->ReallyDeleteDocument author (documentid doc) (systemActor t)
+  success <- randomUpdate $ \t->ReallyDeleteDocument (userid author) (documentid doc) (systemActor t)
   validTest $  assertBool "Not admin can only delete drafts" (not success || Preparation == documentstatus doc)
 
 testReallyDeleteDocumentCompanyStandardLeft :: TestEnv ()
@@ -966,7 +966,7 @@ testReallyDeleteDocumentCompanyStandardLeft = doTimes 10 $ do
   standarduser <- addNewRandomCompanyUser (companyid company) False
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (systemActor t)
-  success <- randomUpdate $ \t->ReallyDeleteDocument standarduser (documentid doc) (systemActor t)
+  success <- randomUpdate $ \t->ReallyDeleteDocument (userid standarduser) (documentid doc) (systemActor t)
   validTest $ assertBool "Not admin can only delete drafts" (not success || Preparation == documentstatus doc)
 
 testReallyDeleteNotArchivedLeft :: TestEnv ()
@@ -974,7 +974,7 @@ testReallyDeleteNotArchivedLeft = doTimes 10 $ do
   company <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company) True
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  success <- randomUpdate $ \t->ReallyDeleteDocument author (documentid doc) (systemActor t)
+  success <- randomUpdate $ \t->ReallyDeleteDocument (userid author) (documentid doc) (systemActor t)
   validTest $ assert $ not success
 
 testGetDocumentsByAuthorNoArchivedDocs :: TestEnv ()
@@ -1005,7 +1005,7 @@ checkQueryContainsArchivedDocs qry = doTimes 10 $ do
   _ <- randomUpdate $ \t -> ArchiveDocument author (documentid doc) (systemActor t)
   docsafterarchive <- dbQuery (qry author)
   assertEqual "Expecting 1 doc after archive" [documentid doc] (map documentid docsafterarchive)
-  _ <- randomUpdate $ \t -> ReallyDeleteDocument author (documentid doc) (systemActor t)
+  _ <- randomUpdate $ \t -> ReallyDeleteDocument (userid author) (documentid doc) (systemActor t)
   docsafterdelete <- dbQuery (qry author)
   validTest $ assertEqual "Expecting no docs after really deleting" [] (map documentid docsafterdelete)
 
