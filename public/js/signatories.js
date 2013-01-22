@@ -237,7 +237,7 @@ window.Signatory = Backbone.Model.extend({
       return this.get("saved");
     },
     signdate: function() {
-        if (this.get("signdate") != undefined)
+        if (this.get("signdate"))
           return new Date(Date.parse(this.get("signdate")));
         return undefined;
     },
@@ -245,18 +245,18 @@ window.Signatory = Backbone.Model.extend({
         return this.get("datamismatch");
     },
     rejecteddate: function() {
-        if (this.get("rejecteddate") != undefined)
+        if (this.get("rejecteddate"))
           return new Date(Date.parse(this.get("rejecteddate")));
         return undefined;
     },
     seendate: function() {
-        if (this.get("seendate") != undefined)
+        if (this.get("seendate"))
           return new Date(Date.parse(this.get("seendate")));
         return undefined;
 
     },
     readdate: function() {
-        if (this.get("readdate") != undefined)
+        if (this.get("readdate"))
           return new Date(Date.parse(this.get("readdate")));
         return undefined;
     },
