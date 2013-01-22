@@ -915,33 +915,33 @@ insertDocumentAsIs document = do
                  } = document
         process = toDocumentProcess documenttype
 
-    _ <- kRun $ mkSQL INSERT tableDocuments [
-        sql "title" documenttitle
-      , sql "file_id" $ documentfile
-      , sql "sealed_file_id" $ documentsealedfile
-      , sql "status" documentstatus
-      , sql "error_text" $ case documentstatus of
+    _ <- kRun $ sqlInsert "documents" $ do
+        sqlSet "title" documenttitle
+        sqlSet "file_id" $ documentfile
+        sqlSet "sealed_file_id" $ documentsealedfile
+        sqlSet "status" documentstatus
+        sqlSet "error_text" $ case documentstatus of
           DocumentError msg -> toSql msg
           _ -> SqlNull
-      , sql "type" documenttype
-      , sql "process" process
-      , sql "ctime" documentctime
-      , sql "mtime" documentmtime
-      , sql "days_to_sign" documentdaystosign
-      , sql "timeout_time" documenttimeouttime
-      , sql "invite_time" $ signtime `fmap` documentinvitetime
-      , sql "invite_ip" (fmap signipnumber documentinvitetime)
-      , sql "invite_text" documentinvitetext
-      , sql "authentication_method" documentauthenticationmethod
-      , sql "delivery_method" documentdeliverymethod
-      , sql "cancelation_reason" documentcancelationreason
-      , sql "rejection_time" $ fst3 `fmap` documentrejectioninfo
-      , sql "rejection_signatory_link_id" $ snd3 `fmap` documentrejectioninfo
-      , sql "rejection_reason" $ thd3 `fmap` documentrejectioninfo
-      , sql "mail_footer" $ documentmailfooter $ documentui -- should go into separate table?
-      , sql "lang" documentlang
-      , sql "sharing" documentsharing
-      ] <> SQL "RETURNING " [] <> sqlConcatComma documentsSelectors
+        sqlSet "type" documenttype
+        sqlSet "process" process
+        sqlSet "ctime" documentctime
+        sqlSet "mtime" documentmtime
+        sqlSet "days_to_sign" documentdaystosign
+        sqlSet "timeout_time" documenttimeouttime
+        sqlSet "invite_time" $ signtime `fmap` documentinvitetime
+        sqlSet "invite_ip" (fmap signipnumber documentinvitetime)
+        sqlSet "invite_text" documentinvitetext
+        sqlSet "authentication_method" documentauthenticationmethod
+        sqlSet "delivery_method" documentdeliverymethod
+        sqlSet "cancelation_reason" documentcancelationreason
+        sqlSet "rejection_time" $ fst3 `fmap` documentrejectioninfo
+        sqlSet "rejection_signatory_link_id" $ snd3 `fmap` documentrejectioninfo
+        sqlSet "rejection_reason" $ thd3 `fmap` documentrejectioninfo
+        sqlSet "mail_footer" $ documentmailfooter $ documentui -- should go into separate table?
+        sqlSet "lang" documentlang
+        sqlSet "sharing" documentsharing
+        mapM_ (sqlResult) documentsSelectors
 
     mdoc <- fetchDocuments >>= oneObjectReturnedGuard
     case mdoc of
@@ -1084,9 +1084,10 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile Bool where
 data FixClosedErroredDocument = FixClosedErroredDocument DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument Bool where
   update (FixClosedErroredDocument did _actor) = do
-    kRun01 $ mkSQL UPDATE tableDocuments [
-        sql "status" Closed
-      ] <> SQL "WHERE id = ? AND status = ?" [toSql did, toSql $ DocumentError undefined]
+    kRun01 $ sqlUpdate "documents" $ do
+        sqlSet "status" Closed
+        sqlWhereEq "id" did
+        sqlWhereEq "status" $ DocumentError undefined
 
 data CancelDocument = CancelDocument DocumentID CancelationReason Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
@@ -1144,16 +1145,17 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeSignatoryEmailWhenUnd
      else do
       let Just sl = getSigLinkFor doc slid
           oldemail = getEmail sl
-      success1 <- kRun01 $ mkSQL UPDATE tableSignatoryLinkFields [
-             sql "value" email
-            ] <> SQL (" WHERE signatory_link_id = ? AND type = ?") [toSql slid, toSql EmailFT]
-      success2 <- kRun01 $ mkSQL UPDATE tableSignatoryLinks [
-          sql "invitation_delivery_status" Unknown
-        , sql "user_id" $ fmap userid muser
-        ] <> SQL "WHERE EXISTS (SELECT 1 FROM documents WHERE documents.id = signatory_links.document_id AND documents.status = ?) AND id = ?" [
-          toSql Pending
-        , toSql slid
-        ]
+      success1 <- kRun01 $ sqlUpdate "signatory_link_fields" $ do
+             sqlSet "value" email
+             sqlWhereEq "signatory_link_id" slid
+             sqlWhereEq "type" EmailFT
+      success2 <- kRun01 $ sqlUpdate "signatory_links" $ do
+          sqlSet "invitation_delivery_status" Unknown
+          sqlSet "user_id" $ fmap userid muser
+          sqlWhereEq "id" slid
+          sqlWhereExists $ sqlSelect "documents" $ do
+              sqlWhere "documents.id = signatory_links.document_id"
+              sqlWhereEq "documents.status" Pending
       when_ (success1 && success2) $
         update $ InsertEvidenceEvent
           ChangeSignatoryEmailWhenUndeliveredEvidence
@@ -1519,18 +1521,19 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkDocumentSeen Bool where
       Just sig -> do
         let time = actorTime actor
             ipnumber = fromMaybe noIP $ actorIP actor
-        success <- kRun01 $ mkSQL UPDATE tableSignatoryLinks [
-            sql "seen_time" time
-          , sql "seen_ip" ipnumber
-          ] <> SQL "WHERE id = ? AND document_id = ? AND token = ? AND seen_time IS NULL AND sign_time IS NULL AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND type = ? AND status <> ? AND status <> ?)" [
-            toSql slid
-          , toSql did
-          , toSql mh
-          , toSql did
-          , toSql $ Signable undefined
-          , toSql Preparation
-          , toSql Closed
-          ]
+        success <- kRun01 $ sqlUpdate "signatory_links" $ do
+            sqlSet "seen_time" time
+            sqlSet "seen_ip" ipnumber
+            sqlWhereEq "id" slid
+            sqlWhereEq "document_id" did
+            sqlWhereEq "token" mh
+            sqlWhere "seen_time IS NULL" 
+            sqlWhere "sign_time IS NULL"
+            sqlWhereExists $ sqlSelect "documents" $ do
+               sqlWhereEq "id" did
+               sqlWhereEq "type" $ Signable undefined
+               sqlWhereNotEq "status" Preparation
+               sqlWhereNotEq "status" Closed
           -- it's okay if we don't update the doc because it's been seen or signed already
           -- (see jira #1194)
 
@@ -1573,11 +1576,11 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m MarkInvitationRead Bool whe
       Just sig -> do
         let time = actorTime actor
             eml  = getEmail sig
-        success <- kRun01 $ mkSQL UPDATE tableSignatoryLinks [sql "read_invitation" time]
-          <> SQL "WHERE id = ? AND document_id = ? AND read_invitation IS NULL" [
-            toSql slid
-          , toSql did
-          ]
+        success <- kRun01 $ sqlUpdate "signatory_links" $ do
+                      sqlSet "read_invitation" time
+                      sqlWhereEq "id" slid
+                      sqlWhereEq "document_id" did
+                      sqlWhere "read_invitation IS NULL"
         _ <- update $ InsertEvidenceEvent
           MarkInvitationReadEvidence
           (value "email" eml >> value "actor" (actorWho actor))
@@ -1769,12 +1772,10 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m RestoreArchivedDocument Boo
 data SaveDocumentForUser = SaveDocumentForUser DocumentID User SignatoryLinkID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SaveDocumentForUser Bool where
   update (SaveDocumentForUser did User{userid} slid _actor) = do
-    kRun01 $ mkSQL UPDATE tableSignatoryLinks [
-        sql "user_id" userid
-      ] <> SQL "WHERE document_id = ? AND id = ?" [
-        toSql did
-      , toSql slid
-      ]
+    kRun01 $ sqlUpdate "signatory_links" $ do
+        sqlSet "user_id" userid
+        sqlWhereEq "document_id" did
+        sqlWhereEq "id" slid
 
 {- |
     Saves a signatory attachment to a document.
@@ -1874,10 +1875,10 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentLang Bool where
 data SetDocumentUI = SetDocumentUI DocumentID DocumentUI Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentUI Bool where
   update (SetDocumentUI did docui actor) = do
-    kRun01 $ mkSQL UPDATE tableDocuments [
-        sql "mail_footer" $ documentmailfooter docui
-      , sql "mtime" $ actorTime actor
-      ] <> SQL "WHERE id = ?" [toSql did]
+    kRun01 $ sqlUpdate "documents" $ do
+        sqlSet "mail_footer" $ documentmailfooter docui
+        sqlSet "mtime" $ actorTime actor
+        sqlWhereEq "id" did
 
 data SetInvitationDeliveryStatus = SetInvitationDeliveryStatus DocumentID SignatoryLinkID MailsDeliveryStatus Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInvitationDeliveryStatus Bool where
@@ -1886,14 +1887,14 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInvitationDeliveryStatus
     let (email, changed) = case msig of
           Nothing -> ("", False)
           Just sl -> (getEmail sl, invitationdeliverystatus sl /= status)
-    success <- kRun01 $ mkSQL UPDATE tableSignatoryLinks [
-        sql "invitation_delivery_status" status
-      ] <> SQL "WHERE id = ? AND document_id = ? AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND type = ?)" [
-        toSql slid
-      , toSql did
-      , toSql did
-      , toSql $ Signable undefined
-      ]
+    success <- kRun01 $ sqlUpdate "signatory_links" $ do 
+        sqlSet "invitation_delivery_status" status
+        sqlWhereEq "id" slid
+        sqlWhereEq "document_id" did
+        sqlWhereExists $ sqlSelect "documents" $ do
+          sqlWhereEq "id" did
+          sqlWhereEq "type" $ Signable undefined
+
     when_ (success && changed) $
       update $ InsertEvidenceEvent
         SetInvitationDeliveryStatusEvidence
@@ -1921,11 +1922,10 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetInvitationDeliveryStatus
 data SetDocumentSharing = SetDocumentSharing [DocumentID] Bool
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentSharing Bool where
   update (SetDocumentSharing dids flag) = do
-    results <- forM dids $ \did -> kRun01 $ mkSQL UPDATE tableDocuments
-         [ sql "sharing" $ (if flag then Shared else Private)
-         ] <> SQL
-         " WHERE id = ?" [ toSql did ]
-    return $ and results
+    results <- kRun $ sqlUpdate "documents" $ do
+          sqlSet "sharing" $ (if flag then Shared else Private)
+          sqlWhereIn "id" dids
+    return $ results == (fromIntegral $ length dids)
 
 data SetDocumentUnsavedDraft = SetDocumentUnsavedDraft [DocumentID] Bool
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentUnsavedDraft Bool where
@@ -2242,9 +2242,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentProcess Bool whe
 data SetDocumentAPICallbackURL = SetDocumentAPICallbackURL DocumentID (Maybe String)
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAPICallbackURL Bool where
   update (SetDocumentAPICallbackURL did mac) = do
-    kRun01 $ mkSQL UPDATE tableDocuments
-         [ sql "api_callback_url" mac
-         ] <> SQL "WHERE id = ?" [ toSql did ]
+    kRun01 $ sqlUpdate "documents" $ do
+               sqlSet "api_callback_url" mac
+               sqlWhereEq "id" did
 
 
 data AddSignatoryLinkVisitedEvidence = AddSignatoryLinkVisitedEvidence DocumentID SignatoryLink Actor
@@ -2333,13 +2333,12 @@ data AddDocumentAttachment = AddDocumentAttachment DocumentID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AddDocumentAttachment Bool where
   update (AddDocumentAttachment did fid actor) = do
     mf <- query (GetFileByFileID fid)
-    success <- kRun01 $ mkSQL INSERT tableAuthorAttachments [
-        sql "document_id" did
-      , sql "file_id" fid
-      ] <> SQL "WHERE EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?)" [
-        toSql did
-      , toSql Preparation
-      ]
+    success <- kRun01 $ sqlInsertSelect "author_attachments" "" $ do 
+        sqlSet "document_id" did
+        sqlSet "file_id" fid
+        sqlWhereExists $ sqlSelect "documents" $ do
+          sqlWhereEq "id" did
+          sqlWhereEq "status" Preparation
     when_ success $
       update $ InsertEvidenceEvent
         AddDocumentAttachmentEvidence
@@ -2385,12 +2384,11 @@ instance MonadDB m => DBUpdate m SetSigAttachments () where
     where
      doDeleteAll = kRun $ SQL "DELETE FROM signatory_attachments WHERE signatory_link_id = ?" [toSql slid]
      doInsertOne SignatoryAttachment{..} = do
-        kRun $ mkSQL INSERT tableSignatoryAttachments [
-            sql "file_id" signatoryattachmentfile
-          , sql "name" signatoryattachmentname
-          , sql "description" signatoryattachmentdescription
-          , sql "signatory_link_id" slid
-          ]
+        kRun $ sqlInsert "signatory_attachments" $ do
+            sqlSet "file_id" signatoryattachmentfile
+            sqlSet "name" signatoryattachmentname
+            sqlSet "description" signatoryattachmentdescription
+            sqlSet "signatory_link_id" slid
 
 data UpdateDraft = UpdateDraft DocumentID  Document Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateDraft Bool where
@@ -2408,8 +2406,9 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateDraft Bool where
 data SetDocumentModificationDate = SetDocumentModificationDate DocumentID MinutesTime
 instance MonadDB m => DBUpdate m SetDocumentModificationDate Bool where
   update (SetDocumentModificationDate did time) = do
-    kRun01 $ mkSQL UPDATE tableDocuments [sql "mtime" time]
-      <> SQL "WHERE id = ?" [toSql did]
+    kRun01 $ sqlUpdate "documents" $ do
+               sqlSet "mtime" time
+               sqlWhereEq "id" did
 
 data GetDocsSentBetween = GetDocsSentBetween UserID MinutesTime MinutesTime
 instance MonadDB m => DBQuery m GetDocsSentBetween Int where
