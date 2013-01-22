@@ -1,7 +1,7 @@
 module DB.Functions (
     kCommit
   , kRollback
-  , dbClone
+  , kClone
   , kFinish
   , kRunRaw
   , kRun_
@@ -37,8 +37,8 @@ kCommit = getNexus >>= liftIO . commit
 kRollback :: MonadDB m => m ()
 kRollback = getNexus >>= liftIO . rollback
 
-dbClone :: MonadDB m => m Nexus
-dbClone = getNexus >>= liftIO . clone
+kClone :: MonadDB m => m Nexus
+kClone = getNexus >>= liftIO . clone
 
 -- | Prepares new SQL query given as string. If there was another
 -- query prepared in this monad, it will be finished first.

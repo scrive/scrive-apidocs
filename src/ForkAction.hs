@@ -45,7 +45,7 @@ allActions = unsafePerformIO $ newMVar Map.empty
 
 forkAction :: (MonadBaseControl IO m, MonadDB m) => String -> m () -> m ()
 forkAction title action = do
-  nex <- dbClone
+  nex <- kClone
   _ <- C.fork $ flip E.finally (liftIO $ disconnect nex) $ localNexus (const nex) $ do
     startTime <- liftIO getClockTime
     key <- liftIO $ modifyMVar allActions $ \themap -> do
