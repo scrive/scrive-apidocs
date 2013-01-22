@@ -13,6 +13,7 @@ import ActionQueue.Core
 import ActionQueue.Scheduler
 import Crypto.RNG
 import DB
+import DB.SQL2
 import MinutesTime
 import MagicHash
 import Session.SessionID
@@ -55,12 +56,12 @@ session = Action {
   , qaIndexField = "id"
   , qaExpirationDelay = "2 hours"
   , qaDecode = foldDB decoder []
-  , qaUpdateSQL = \Session{..} -> mkSQL UPDATE tableSessions [
-      sql "user_id" sesUserID
-    , sql "pad_user_id" sesPadUserID
-    , sql "token" sesToken
-    , sql "csrf_token" sesCSRFToken
-    ] <+> "WHERE" <+> qaIndexField session <+> "=" <?> sesID
+  , qaUpdateSQL = \Session{..} -> toSQLCommand $ sqlUpdate "sessions" $ do
+      sqlSet "user_id" sesUserID
+      sqlSet "pad_user_id" sesPadUserID
+      sqlSet "token" sesToken
+      sqlSet "csrf_token" sesCSRFToken
+      sqlWhereEq (qaIndexField session) sesID
   , qaEvaluateExpired = \Session{sesID} -> do
     _ <- dbUpdate $ DeleteAction session sesID
     return ()
