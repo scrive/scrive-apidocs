@@ -46,19 +46,20 @@
                   <table id="content" width="800" cellspacing="0" align="top" style="margin:auto;color:#212121;font-family:'Lucida Grande',sans-serif;font-size:12px;">
                     <tr style="font-size:10px;padding-top:18px;margin:0px;">
                       <td style="margin-bottom:60px;width:140px;">
-                        <p>The PDF document into which this file is embedded has been signed by Scrive using the GuardTime Keyless Signature technology. This enables independent verification of the time when the document was signed and checking that it has not been modified since. The process consists of several steps outlined below.</p>
+                        <p>The PDF document into which this file is embedded has been signed by Scrive using the Guardtime Keyless Signature technology. This enables independent verification of the time when the document was signed and checking that it has not been modified since. The process consists of several steps outlined below.</p>
+                        <p>Note that in some cases, Scrive protects the integrity of signed PDF documents with other methods than the Guardtime Keyless Signature technology.  If the PDF document lacks the keyless signature as described below, please contact Scrive.</p>
 
                         <h2>1. Extracting the Signature</h2>
-                        <p>The signature is embedded into the document following the standard PDF digital signature framework [<a href="#pdf">PDF</a>, section 12.8]. A GuardTime signature has the value <code>GTTS.TimeStamp</code> in its <code>Filter</code> field.</p>
-                        <p>A single PDF file can contain several revisions of a document [<a href="#pdf">PDF</a>, section 7.5.6]. A GuardTime signature normally signs all revisions up to and including the one that contains it. In order to verify the document as it was signed, all subsequent updates have to be removed from the file.</p>
+                        <p>The signature is embedded into the document following the standard PDF digital signature framework [<a href="#pdf">PDF</a>, section 12.8]. A Guardtime signature has the value <code>GTTS.TimeStamp</code> in its <code>Filter</code> field.</p>
+                        <p>A single PDF file can contain several revisions of a document [<a href="#pdf">PDF</a>, section 7.5.6]. A Guardtime signature normally signs all revisions up to and including the one that contains it. In order to verify the document as it was signed, all subsequent updates have to be removed from the file.</p>
                         <p>More precisely, the signature protects the parts of the document specified by the <code>ByteRange</code> field of the signature. The two ranges must cover everything left after the previous step, except the <code>Contents</code> field of the signature.</p>
                         <p>The signature value is embedded in the <code>Contents</code> field in base 16 encoding. The value has to be stripped of trailing spaces and decoded [<a href="#base">BASE</a>, section 8] for further processing.</p>
 
                         <h2><a name="parse">2. Parsing the Signature</a></h2>
                         <p>The result of the previous step has to be parsed as an ASN.1 data structure in BER encoding [<a href="#asn">ASN</a>, <a href="#der">DER</a>]. This must yield a <code>ContentInfo</code> structure [<a href="#cms">CMS</a>, section 3] that embeds a <code>SignedData</code> structure [<a href="#cms">CMS</a>, section 5] in the <code>content</code> field.</p>
                         <p>The contents of the <code>encapContentInfo.eContent</code> field of the <code>SignedData</code> structure have to be parsed as an ASN.1 data structure in DER encoding. This must yield a <code>TSTInfo</code> structure [<a href="#tsp">TSP</a>, section 2.4.2].</p>
-                        <p>A GuardTime signature must have a single <code>SignerInfo</code> element in the <code>signerInfos</code> field of the <code>SignedData</code> structure and the object identifier <code>1.3.6.1.4.1.27868.4.1</code> in the <code>signatureAlgorithm</code> field of the <code>SignerInfo</code> structure.</p>
-                        <p>The contents of the <code>signature</code> field of the <code>SignerInfo</code> structure have to be parsed as an ASN.1 data structure in DER encoding. This must yield a GuardTime-defined <code>TimeSignature</code> structure:</p>
+                        <p>A Guardtime signature must have a single <code>SignerInfo</code> element in the <code>signerInfos</code> field of the <code>SignedData</code> structure and the object identifier <code>1.3.6.1.4.1.27868.4.1</code> in the <code>signatureAlgorithm</code> field of the <code>SignerInfo</code> structure.</p>
+                        <p>The contents of the <code>signature</code> field of the <code>SignerInfo</code> structure have to be parsed as an ASN.1 data structure in DER encoding. This must yield a Guardtime-defined <code>TimeSignature</code> structure:</p>
                         <pre>
                           TimeSignature ::= SEQUENCE {
                             location HashChain,
@@ -100,7 +101,7 @@
 
                         <h2>5. Checking the Publication</h2>
                         <p>To check that the signature matches the widely witnessed control publication, it must be verified that the contents of the <code>PublishedData</code> structure correspond to a printed publication acquired from a trusted source.</p>
-                        <p>The <code>publicationIdentifier</code> field in the <code>PublishedData</code> structure contains the POSIX time [<a href="#posix">POSIX</a>, section 4.15] value for the moment when the control publication was generated. A GuardTime control publication appears in the World Edition of the Financial Times 2&ndash;6 days after it is generated (depending on the publisher's schedules).</p>
+                        <p>The <code>publicationIdentifier</code> field in the <code>PublishedData</code> structure contains the POSIX time [<a href="#posix">POSIX</a>, section 4.15] value for the moment when the control publication was generated. A Guardtime control publication appears in the World Edition of the Financial Times 2&ndash;6 days after it is generated (depending on the publisher's schedules).</p>
                         <p>The <code>PublishedData</code> structure is formatted into human-comparable form as follows:</p>
                         <ol>
                           <li>the value of the <code>publicationIdentifier</code> field as a 64-bit integer (8 bytes in big-endian order) and the contents of the <code>publicationImprint</code> field are concatenated;</li>
@@ -112,12 +113,12 @@
 
                         <h2>6. Conclusion</h2>
                         <p>Since in the whole computation starts from the contents of the PDF file and through a series applications of one-way functions ends up at a value that was known to exist at some well-established time in the past (the time when the newspaper was printed), this proves that the file in question existed before that time in the same form as it is currently.</p>
-                        <p>The preceding statement relies only on the hash functions being one-way and assumes absolutely nothing about the GuardTime technology. Adding information about how the hash chains are constructed (which is seen by all GuardTime clients while it happens and can thus also be considered quite widely witnessed) makes it possible to extract the signing time with much better precision (appendix <a href="#time">Extracting the Signing Time</a>).</p>
+                        <p>The preceding statement relies only on the hash functions being one-way and assumes absolutely nothing about the Guardtime technology. Adding information about how the hash chains are constructed (which is seen by all Guardtime clients while it happens and can thus also be considered quite widely witnessed) makes it possible to extract the signing time with much better precision (appendix <a href="#time">Extracting the Signing Time</a>).</p>
                         
                         <h2><a name="hash">A. Hash Functions</a></h2>
-                        <p>The following table lists the hash functions that may be used in hash chains in GuardTime keyless signatures, along with their identifiers and hash value sizes.</p>
+                        <p>The following table lists the hash functions that may be used in hash chains in Guardtime keyless signatures, along with their identifiers and hash value sizes.</p>
                         <table border="1">
-                          <tr><th>Algorithm Name</th><th>GuardTime ID</th><th>Hash Value Size</th><th>Algorithm Specification</th></tr>
+                          <tr><th>Algorithm Name</th><th>Guardtime ID</th><th>Hash Value Size</th><th>Algorithm Specification</th></tr>
                           <tr><td>SHA-1</td><td>0</td><td>20</td><td><a href="#sha">SHA</a>, section 6.1</td></tr>
                           <tr><td>SHA-224</td><td>3</td><td>28</td><td><a href="#sha">SHA</a>, section 6.3</td></tr>
                           <tr><td>SHA-256</td><td>1</td><td>32</td><td><a href="#sha">SHA</a>, section 6.2</td></tr>
@@ -127,7 +128,7 @@
                         </table>
 
                         <h2><a name="time">B. Extracting the Signing Time</a></h2>
-                        <p>The time when a datum was signed with a GuardTime keyless signature can be extacted from the <code>history</code> and the <code>publicationIdentifier</code> fields of the <code>TimeSignature</code> structure (section <a href="#parse">Parsing the Signature</a>). The process is as follows:</p>
+                        <p>The time when a datum was signed with a Guardtime keyless signature can be extacted from the <code>history</code> and the <code>publicationIdentifier</code> fields of the <code>TimeSignature</code> structure (section <a href="#parse">Parsing the Signature</a>). The process is as follows:</p>
                         <ol>
                           <li>set <var>h</var> to 0 and <var>p</var> to the value of the <code>publicationIdentifier</code> field;</li>
                           <li>for each <code>HashStep</code> record in the <code>history</code> hash chain, in the reverse of the order in which the records appear in the chain:
@@ -149,9 +150,9 @@
                         <p>The final value of <var>h</var> is the POSIX time [<a href="#posix">POSIX</a>, section 4.15] value for the moment when the datum was signed.</p>
 
                         <h2><a name="ext">C. Extending the TimeSignature</a></h2>
-                        <p>For each GuardTime signature and any control publication generated after the signature was issued, a hash chain can be created that connects the signature to the control publication and thus also to the printed medium in which the publication appeared. This process is called extending the signature.</p>
-                        <p>The preferred way to do this is to access an online verification service using a tool obtained from either Scrive or GuardTime. This can also be done independently using the calendar database acquired either from GuardTime or, in case GuardTime has ceased the service, from the Estonian Technical Surveillance Authority, to which GuardTime is obligated to deposit the database before exiting the business.</p>
-                        <p>The GuardTime calendar database consists of one hash value per second, indexed by integral POSIX time [<a href="#posix">POSIX</a>, section 4.15] values (red nodes and black numbers on the figure below). Each of these hash values aggregates all signing requests that the GuardTime service processed during the corresponding 1-second time interval.</p>
+                        <p>For each Guardtime signature and any control publication generated after the signature was issued, a hash chain can be created that connects the signature to the control publication and thus also to the printed medium in which the publication appeared. This process is called extending the signature.</p>
+                        <p>The preferred way to do this is to access an online verification service using a tool obtained from either Scrive or Guardtime. This can also be done independently using the calendar database acquired either from Guardtime or, in case Guardtime has ceased the service, from the Estonian Technical Surveillance Authority, to which Guardtime is obligated to deposit the database before exiting the business.</p>
+                        <p>The Guardtime calendar database consists of one hash value per second, indexed by integral POSIX time [<a href="#posix">POSIX</a>, section 4.15] values (red nodes and black numbers on the figure below). Each of these hash values aggregates all signing requests that the Guardtime service processed during the corresponding 1-second time interval.</p>
                         <p>The aggregate hash values are connected into binary trees by hashing them together in pairs in left to right order, then hashing the first level pairs together again, and so on until a set of complete binary trees is obtained (blue arrows and nodes on the figure). For generating the control publication, the roots of the binary trees are hashed into a chain in right to left order (purple arrows and nodes), and the value from the last node of the chain is extracted for generating the control publication (golden arrow).</p>
                         <p>More precisely, each node on the figure is a <code>DataImprint</code> structure (section <a href="#parse">Parsing the Signature</a>). On each step, the <code>DataImprint</code> from the left child node, the <code>DataImprint</code> from the right child node, and a single byte with the value of 255 are concatenated together, hashed, and the result is obtained as a <code>DataImprint</code> consisting of the concatenation of the 1-byte hash algorithm code (appendix <a href="#hash">Hash Functions</a>) and the hash value.</p>
                         <div style="height: 275px; width: 600px; margin: auto">
