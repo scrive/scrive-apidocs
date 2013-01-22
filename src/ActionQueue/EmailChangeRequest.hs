@@ -17,6 +17,7 @@ import ActionQueue.Tables
 import Context
 import Crypto.RNG
 import DB
+import DB.SQL2
 import KontraMonad
 import KontraLink
 import MagicHash
@@ -42,11 +43,11 @@ emailChangeRequest = Action {
   , qaIndexField = "user_id"
   , qaExpirationDelay = "1 hour"
   , qaDecode = foldDB decoder []
-  , qaUpdateSQL = \EmailChangeRequest{..} -> mkSQL UPDATE tableEmailChangeRequests [
-      sql "expires" ecrExpires
-    , sql "new_email" ecrNewEmail
-    , sql "token" ecrToken
-    ] <+> "WHERE" <+> qaIndexField emailChangeRequest <+> "=" <?> ecrUserID
+  , qaUpdateSQL = \EmailChangeRequest{..} -> toSQLCommand $ sqlUpdate "email_change_requests" $ do
+      sqlSet "expires" ecrExpires
+      sqlSet "new_email" ecrNewEmail
+      sqlSet "token" ecrToken
+      sqlWhereEq (qaIndexField emailChangeRequest) ecrUserID
   , qaEvaluateExpired = \EmailChangeRequest{ecrUserID} -> do
     _ <- dbUpdate $ DeleteAction emailChangeRequest ecrUserID
     return ()

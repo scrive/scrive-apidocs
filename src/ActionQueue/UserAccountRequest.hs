@@ -18,6 +18,7 @@ import ActionQueue.Tables
 import AppConf
 import Crypto.RNG
 import DB
+import DB.SQL2
 import KontraLink
 import MagicHash
 import MinutesTime
@@ -47,10 +48,10 @@ userAccountRequest = Action {
   , qaIndexField = "user_id"
   , qaExpirationDelay = "1 hour"
   , qaDecode = foldDB decoder []
-  , qaUpdateSQL = \UserAccountRequest{..} -> mkSQL UPDATE tableUserAccountRequests [
-      sql "expires" uarExpires
-    , sql "token" uarToken
-    ] <+> "WHERE" <+> qaIndexField userAccountRequest <+> "=" <?> uarUserID
+  , qaUpdateSQL = \UserAccountRequest{..} -> toSQLCommand $ sqlUpdate "user_account_requests" $ do
+      sqlSet "expires" uarExpires
+      sqlSet "token" uarToken
+      sqlWhereEq (qaIndexField userAccountRequest) uarUserID
   , qaEvaluateExpired = \UserAccountRequest{uarUserID} -> do
     mplan <- dbQuery $ GetPaymentPlanInactiveUser uarUserID
     case mplan of

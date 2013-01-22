@@ -16,6 +16,7 @@ import ActionQueue.Scheduler
 import ActionQueue.Tables
 import Crypto.RNG
 import DB
+import DB.SQL2
 import KontraLink
 import MagicHash
 import MinutesTime
@@ -40,11 +41,11 @@ passwordReminder = Action {
   , qaIndexField = "user_id"
   , qaExpirationDelay = "1 hour"
   , qaDecode = foldDB decoder []
-  , qaUpdateSQL = \PasswordReminder{..} -> mkSQL UPDATE tablePasswordReminders [
-      sql "expires" prExpires
-    , sql "remained_emails" prRemainedEmails
-    , sql "token" prToken
-    ] <+> "WHERE" <+> qaIndexField passwordReminder <+> "=" <?> prUserID
+  , qaUpdateSQL = \PasswordReminder{..} -> toSQLCommand $ sqlUpdate "password_reminders" $ do
+      sqlSet "expires" prExpires
+      sqlSet "remained_emails" prRemainedEmails
+      sqlSet "token" prToken
+      sqlWhereEq (qaIndexField passwordReminder) prUserID
   , qaEvaluateExpired = \PasswordReminder{prUserID} -> do
     _ <- dbUpdate $ DeleteAction passwordReminder prUserID
     return ()
