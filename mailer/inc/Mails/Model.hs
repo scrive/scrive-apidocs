@@ -21,14 +21,12 @@ module Mails.Model (
 
 import Control.Monad
 import Control.Applicative
-import Data.Monoid
 import Control.Monad.State.Lazy
 
 import DB
 import DB.SQL2
 import MagicHash
 import Mails.Data
-import Mails.Tables
 import MinutesTime
 import OurPrelude
 import qualified Data.Map as Map
@@ -143,15 +141,17 @@ instance MonadDB m => DBQuery m GetEmail (Maybe Mail) where
 data ResendEmailsSentSince = ResendEmailsSentSince MinutesTime
 instance MonadDB m => DBUpdate m ResendEmailsSentSince Integer where
   update (ResendEmailsSentSince time) =
-    kRun $ mkSQL UPDATE tableMails [sql "sent" SqlNull]
-      <> SQL "WHERE service_test = FALSE AND sent >= ?" [toSql time]
+    kRun $ sqlUpdate "mails" $ do
+      sqlSet "sent" SqlNull
+      sqlWhere "service_test = FALSE"
+      sqlWhere $ "sent >= " <?> time
 
 data DeferEmail = DeferEmail MailID MinutesTime
 instance MonadDB m => DBUpdate m DeferEmail Bool where
   update (DeferEmail mid time) =
-    kRun01 $ mkSQL UPDATE tableMails [
-        sql "to_be_sent" time
-      ] <> SQL "WHERE id = ?" [toSql mid]
+    kRun01 $ sqlUpdate "mails" $ do
+        sqlSet "to_be_sent" time
+        sqlWhereEq "id" mid
 
 data MarkEmailAsSent = MarkEmailAsSent MailID MinutesTime
 instance MonadDB m => DBUpdate m MarkEmailAsSent Bool where
