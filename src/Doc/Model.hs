@@ -2302,17 +2302,17 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m UpdateFields Bool where
                               CheckboxFT xname -> xname
                               SignatureFT xname -> xname
                               _ -> ""
-          r <- kRun $ mkSQL UPDATE tableSignatoryLinkFields
-                 [ sql "value" fvalue ]
-                 <> SQL (" WHERE EXISTS (SELECT 1 FROM documents, signatory_links"
-                           <>             " WHERE documents.id = signatory_links.document_id"
-                           <>             "   AND documents.status = ?"
-                           <>             "   AND signatory_links.sign_time IS NULL"
-                           <>             "   AND signatory_links.id = signatory_link_id)"
-                           <>      "  AND signatory_link_id = ?"
-                           <>      "  AND custom_name = ?"
-                           <>      "  AND type = ?")
-                        [ toSql Pending, toSql slid, toSql custom_name, toSql fieldtype]
+          r <- kRun $ sqlUpdate "signatory_link_fields" $ do
+                   sqlSet "value" fvalue
+                   sqlWhereEq "signatory_link_id" slid
+                   sqlWhereEq "custom_name" custom_name
+                   sqlWhereEq "type" fieldtype
+                   sqlWhereExists $ sqlSelect "documents" $ do
+                     sqlWhere "signatory_links.id = signatory_link_id"
+                     sqlLeftJoinOn "signatory_links" "documents.id = signatory_links.document_id"
+                     sqlWhereEq "documents.status" Pending
+                     sqlWhere "signatory_links.sign_time IS NULL"
+
           when_ (r > 0) $ do
             update $ InsertEvidenceEvent
                UpdateFieldsEvidence
