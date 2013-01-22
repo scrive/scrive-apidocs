@@ -17,9 +17,9 @@ import Database.HDBC
 import Crypto
 import Crypto.RNG
 import DB
+import DB.SQL2
 import File.File
 import File.FileID
-import File.Tables
 import qualified Data.ByteString as BS
 import qualified Crypto.Hash.SHA1 as SHA1
 
@@ -33,24 +33,24 @@ data NewFile = NewFile String Binary
 instance (Applicative m, CryptoRNG m, MonadDB m) => DBUpdate m NewFile File where
   update (NewFile filename content) = do
     Right aes <- lift $ mkAESConf <$> randomBytes 32 <*> randomBytes 16
-    kRun_ $ mkSQL INSERT tableFiles [
-        sql "name" filename
-      , sql "content" $ aesEncrypt aes `binApp` content
-      , sql "checksum" $ SHA1.hash `binApp` content
-      , sql "size" $ BS.length $ unBinary content
-      , sql "aes_key" $ aesKey aes
-      , sql "aes_iv" $ aesIV aes
-      ] <+> "RETURNING" <+> filesSelectors
+    kRun_ $ sqlInsert "files" $ do
+        sqlSet "name" filename
+        sqlSet "content" $ aesEncrypt aes `binApp` content
+        sqlSet "checksum" $ SHA1.hash `binApp` content
+        sqlSet "size" $ BS.length $ unBinary content
+        sqlSet "aes_key" $ aesKey aes
+        sqlSet "aes_iv" $ aesIV aes
+        mapM_ (sqlResult . raw) filesSelectors
     fetchFiles >>= exactlyOneObjectReturnedGuard
 
 data FileMovedToAWS = FileMovedToAWS FileID String String
 instance MonadDB m => DBUpdate m FileMovedToAWS () where
   update (FileMovedToAWS fid bucket url) =
-    kRun_ $ mkSQL UPDATE tableFiles [
-        sql "content" SqlNull
-      , sql "amazon_bucket" bucket
-      , sql "amazon_url" url
-      ] <> SQL "WHERE id = ?" [toSql fid]
+    kRun_ $ sqlUpdate "files" $ do
+        sqlSet "content" SqlNull
+        sqlSet "amazon_bucket" bucket
+        sqlSet "amazon_url" url
+        sqlWhereEq "id" fid
 
 data GetFileThatShouldBeMovedToAmazon = GetFileThatShouldBeMovedToAmazon
 instance MonadDB m => DBQuery m GetFileThatShouldBeMovedToAmazon (Maybe File) where
@@ -69,26 +69,27 @@ instance MonadDB m => DBQuery m GetFileWithNoChecksum (Maybe File) where
 data SetChecksum = SetChecksum FileID Binary
 instance MonadDB m => DBUpdate m SetChecksum Bool where
   update (SetChecksum fid checksum) = do
-    kRun01 $ mkSQL UPDATE tableFiles [sql "checksum" checksum]
-      <> SQL "WHERE id = ?" [toSql fid]
+    kRun01 $ sqlUpdate "files" $ do
+      sqlSet "checksum" checksum
+      sqlWhereEq "id" fid
 
 -- | Needed for encrypting/calculating checksum for old files. To be removed after 15.08.2012.
 data SetContentToMemoryAndEncryptIt = SetContentToMemoryAndEncryptIt FileID Binary
 instance (Applicative m, CryptoRNG m, MonadDB m) => DBUpdate m SetContentToMemoryAndEncryptIt Bool where
   update (SetContentToMemoryAndEncryptIt fid content) = do
     Right aes <- lift $ mkAESConf <$> randomBytes 32 <*> randomBytes 16
-    kRun01 $ mkSQL UPDATE tableFiles [
-        sql "content" $ aesEncrypt aes `binApp` content
-      , sql "size" $ BS.length $ unBinary content
-      , sql "aes_key" $ aesKey aes
-      , sql "aes_iv" $ aesIV aes
-      ] <> SQL "WHERE id = ?" [toSql fid]
+    kRun01 $ sqlUpdate "files" $ do
+        sqlSet "content" $ aesEncrypt aes `binApp` content
+        sqlSet "size" $ BS.length $ unBinary content
+        sqlSet "aes_key" $ aesKey aes
+        sqlSet "aes_iv" $ aesIV aes
+        sqlSet "id" fid
 
 selectFilesSQL :: SQL
-selectFilesSQL = "SELECT" <+> filesSelectors <+> "FROM files "
+selectFilesSQL = "SELECT" <+> sqlConcatComma (map raw filesSelectors) <+> "FROM files "
 
-filesSelectors :: SQL
-filesSelectors = sqlConcatComma [
+filesSelectors :: [RawSQL]
+filesSelectors = [
     "id"
   , "name"
   , "content"
