@@ -14,6 +14,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
 import ActionQueue.Core
 import ActionQueue.Scheduler
 import DB
+import DB.SQL2
 import Doc.API.Callback.Tables
 import Doc.DocumentID
 import Doc.DocStateData
@@ -41,11 +42,11 @@ documentAPICallback = Action {
   , qaIndexField = "document_id"
   , qaExpirationDelay = "5 minutes" -- not really needed
   , qaDecode = foldDB decoder []
-  , qaUpdateSQL = \DocumentAPICallback{..} -> mkSQL UPDATE tableDocumentApiCallbacks [
-      sql "expires" dacExpires
-    , sql "url" dacURL
-    , sql "attempt" dacAttempt
-    ] <+> "WHERE" <+> qaIndexField documentAPICallback <+> "=" <?> dacDocumentID
+  , qaUpdateSQL = \DocumentAPICallback{..} -> toSQLCommand $ sqlUpdate "document_api_callbacks" $ do
+      sqlSet "expires" dacExpires
+      sqlSet "url" dacURL
+      sqlSet "attempt" dacAttempt
+      sqlWhereEq (qaIndexField documentAPICallback) dacDocumentID
   , qaEvaluateExpired = evaluateDocumentCallback
   }
   where
