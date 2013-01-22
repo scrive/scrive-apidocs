@@ -37,6 +37,9 @@
         status: function() {
             return this.get('status');
         },
+        isAdminUser: function() {
+            return this.get('adminuser');
+        },
         willCancel: function() {
             return this.get('canceled');
         },
@@ -363,7 +366,7 @@
                return $(view.el);
             } ,
             shouldBlockDocs: function(n) {
-                return n > model.docsLeft();
+                return n > model.docsLeft() && !model.isAdminUser();
             },
             createPopup: function() {
                 view.createPopup();

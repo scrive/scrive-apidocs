@@ -532,6 +532,7 @@ handleBlockingInfo = do
     Nothing -> runJSONGenT $ do
       J.value "nouser" True
     Just user -> do
+      admin <- isAdmin <$> getContext
       time <- ctxtime <$> getContext
       let utctime = toCalendarTimeInUTC time
           utcbeginningOfMonth = utctime { ctDay = 1, ctHour = 0, ctMin = 0, ctSec = 0 }
@@ -550,6 +551,7 @@ handleBlockingInfo = do
           billingEnds = maybe "" (formatMinutesTimeUTC . ppBillingEndDate) mpaymentplan
 
       runJSONGenT $ do
+        J.value "adminuser" admin
         J.value "docsused"  docsusedthismonth
         J.value "plan"      paymentplan
         J.value "status"    status
