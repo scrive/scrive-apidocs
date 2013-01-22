@@ -54,7 +54,15 @@ readTemplates :: Lang -> IO KontrakcjaTemplates
 readTemplates lang = do
     ts <- mapM getTemplates templatesFilesPath
     texts <- getTextTemplates lang
-    return $ groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) $ (concat ts) ++ texts
+    checked <- mapM newCheckedTemplate $ (concat ts) ++ texts
+    return $ groupStringTemplates checked
+
+newCheckedTemplate :: Monad m => (String, String) -> m (String, KontrakcjaTemplate)
+newCheckedTemplate (n,v) = do
+  let t = newSTMP v
+      (errors, _, _) = checkTemplate t
+  maybe (return ()) (\e -> fail $ "newCheckedTemplate: problem with template " ++ show n ++ ": " ++ e) errors
+  return (n,t)
 
 getTemplatesModTime :: IO ClockTime
 getTemplatesModTime = do
