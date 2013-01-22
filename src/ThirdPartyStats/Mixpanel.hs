@@ -3,12 +3,11 @@ module ThirdPartyStats.Mixpanel (
   MixpanelToken,
   processMixpanelEvent) where
 import Control.Monad.IO.Class
-import Data.List (partition)
 import ThirdPartyStats.Core
+import ThirdPartyStats.Utils
 import Mixpanel.Event as Mixpanel
 import Mixpanel.Engage as Mixpanel (set)
 import MinutesTime (toUTCTime)
-import User.UserID (UserID)
 import User.Model (unEmail)
 
 -- | Token identifying us to Mixpanel.
@@ -39,17 +38,6 @@ processMixpanelEvent token (NamedEvent name) props
   | otherwise = do
     return (Failed "Tried to set user prop without user ID!")
 
-
--- | Separate the user ID property from the rest, if present.
---   More than one UID is not OK either.
-extractUID :: [EventProperty] -> Maybe (UserID, [EventProperty])
-extractUID props =
-    case partition isUIDProp props of
-      ([UserIDProp uid], props') -> Just (uid, props')
-      _                          -> Nothing
-  where
-    isUIDProp (UserIDProp _) = True
-    isUIDProp _              = False
 
 -- | Convert a generic async event property to a Mixpanel property.
 mixpanelProperty :: EventProperty -> Mixpanel.Property
