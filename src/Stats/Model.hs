@@ -419,13 +419,12 @@ instance MonadDB m => DBQuery m GetUserStatEvents [UserStatEvent] where
 data AddUserStatEvent = AddUserStatEvent UserStatEvent
 instance MonadDB m => DBUpdate m AddUserStatEvent Bool where
   update (AddUserStatEvent UserStatEvent{..}) =
-    kRun01 $ mkSQL INSERT tableUserStatEvents [
-        sql "user_id" usUserID
-      , sql "time" usTime
-      , sql "quantity" usQuantity
-      , sql "amount" usAmount
-      , sql "company_id" usCompanyID
-      ]
+    kRun01 $ sqlInsert "user_stat_events" $ do
+        sqlSet "user_id" usUserID
+        sqlSet "time" usTime
+        sqlSet "quantity" usQuantity
+        sqlSet "amount" usAmount
+        sqlSet "company_id" usCompanyID
 
 data RemoveInactiveUserLoginEvents = RemoveInactiveUserLoginEvents UserID
 instance MonadDB m => DBUpdate m RemoveInactiveUserLoginEvents Bool where
