@@ -37,6 +37,7 @@ data AppConf = AppConf {
   , initialUsers       :: [(Email,String)]             -- ^ email and passwords for initial users
   , recurlyConfig      :: RecurlyConfig                -- ^ for payments (api key + private key)
   , mixpanelToken      :: String                       -- ^ for mixpanel integration
+  , homebase           :: String                       -- ^ url fragment where to fetch scripts
   } deriving (Read, Eq, Ord, Show)
 
 -- | Default application configuration that does nothing.
@@ -69,6 +70,7 @@ instance Configuration AppConf where
                                          , recurlyPrivateKey = "49c1b30592fa475b8535a0ca04f88e65"
                                          }
     , mixpanelToken      = "5b04329b972851feac0e9b853738e742"
+    , homebase           = "https://staging.scrive.com"
     }
   confOptions = [
   {-
