@@ -116,8 +116,6 @@ set systemPage
  js   js/doctools/docauthorattachments.js
  js   js/signview/docsignviewinstructions.js
  js   js/signview/docsignviewsignatories.js
- js   js/signview/docsignviewcreateaccount.js
- js   js/signview/docsignviewpromotescrive.js
  js   js/signview/docsignviewextradetailssection.js
  js   js/signview/docsignviewsignsection.js
  js   js/signview/docsignviewpad.js
