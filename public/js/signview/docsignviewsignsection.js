@@ -123,6 +123,24 @@ window.DocumentSignSignSection = Backbone.View.extend({
        var model = this.model;
        var document = this.model.document();
        var box = $(this.el).addClass('section').addClass('spacing').addClass('signbuttons');
+       var signatory = document.currentSignatory();
+       var sps = {};
+       sps['Has user?'] = signatory.hasUser();
+       sps['First visit'] = !signatory.seendate();
+       mixpanel.register(sps);
+
+       // track signatory properties
+       var ps = {};
+       ps['Full Name'] = signatory.nameOrEmail();
+       ps['$email'] = signatory.email();
+       if(signatory.fstname())
+           ps['$first_name'] = signatory.fstname();
+       if(signatory.sndname())
+           ps['$last_name'] = signatory.sndname();
+       if(signatory.hasUser())
+           ps['$username'] = signatory.email();
+       mixpanel.people.set(ps);
+
        this.rejectButton = Button.init({
                                         size: "small",
                                         color: "red",

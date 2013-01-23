@@ -436,6 +436,8 @@ window.DocumentSignView = function(args){
                 dta['Signed date'] = sig.signdate();
             if(sig.hasUser())
                 dta['Has user?'] = sig.hasUser();
+            dta['First visit'] = !sig.seendate();
+            data['Signed'] = sig.hasSigned();
             mixpanel.track('View Sign View', dta);
         });
 
