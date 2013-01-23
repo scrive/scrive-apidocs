@@ -14,13 +14,7 @@ var AuthorViewSignatoriesModel = Backbone.Model.extend({
     this.set({currentSignview : this.get('signatoriesViews')[0]}, {silent : true});
   },
   signatories: function() {
-        var signatories = this.document().signatories();
-        var current = _.find  (signatories, function(s) { return  s.current(); });
-        var others  = _.filter(signatories, function(s) { return !s.current(); });
-        if (current == undefined)
-          return  _.filter(others, function(s) { return s.signs(); });
-        else                                               
-          return _.filter([current].concat(others), function(s) { return s.signs(); });
+    return this.document().signatories();
   },
   authorview :function() {
      return this.get("authorview");
@@ -66,6 +60,9 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
           var middle2    = $("<div class='middle' style='min-width:100px'/>");
           var middle3    = $("<div class='middle float-right' />");
           var statusicon = $("<div class='icon status' />").addClass(sigview.status());
+          if (!sigview.signatory().author() && !sigview.signatory().canSign()) {
+            statusicon.addClass('viewer');
+          }
           var status     = $("<span class='statustext' />").addClass(sigview.status()).text(sigview.signatorySummary());
           var details    = $('<a class="details clickable" href="#" />').text(localization.docsignview.showDetails);
           middle1.append(statusicon);
