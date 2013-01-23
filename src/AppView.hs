@@ -129,6 +129,7 @@ standardPageFields ctx title mpubliclink ad = do
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
   F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
   F.object "analytics" $ analyticsTemplates ad
+  F.value "homebase" $ ctxhomebase ctx
 
 -- Official documentation states that JSON mime type is
 -- 'application/json'. IE8 for anything that starts with

@@ -10,6 +10,8 @@ $doctype()$
     <script>
         var inService = $if(isservice)$true$else$false$endif$;
     </script>
+    <script src="$homebase$/js/docsignviewcreateaccount.js"></script>
+    <script src="$homebase$/js/docsignviewpromotescrive.js"></script>
       </head>
   <body class="signview">
     <div class="mainContainer" >
