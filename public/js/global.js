@@ -1,3 +1,19 @@
+window.trackTimeout = function(name, props, cb) {
+    var called = false;
+    mixpanel.track(name, props, function(e) {
+        if(called)
+            return;
+        called = true;
+        return cb(e);
+    });
+    setTimeout(function(e) {
+        if(called)
+            return;
+        called = true;
+        return cb(e);
+    }, 300);
+};
+
 window.createnewdocument = function(event) {
   event.preventDefault();
   event.stopImmediatePropagation();

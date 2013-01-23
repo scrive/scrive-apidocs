@@ -32,6 +32,7 @@ window.Submit = Backbone.Model.extend({
             k == "expectedType" ||
             k == "beforeSend" ||
             k == "onSend"    ||
+            k == "mixpanel" ||
             k == "ajaxtimeout";
     },
     add: function(k,v)
@@ -93,12 +94,20 @@ window.Submit = Backbone.Model.extend({
             });
 
         this.get('beforeSend')();
-        form.submit();
+        if(this.mixpanel())
+          trackTimeout(this.mixpanel().name, this.mixpanel().props, function() {
+              form.submit();
+          });
+        else
+            form.submit();
         this.get('onSend')();
     },
   success: function(f) {
     this.set({ajaxsuccess: f || function(){}}, {silent:true});
     return this;
+  },
+  mixpanel: function() {
+    return this.get('mixpanel');
   }
 });
 })(window);

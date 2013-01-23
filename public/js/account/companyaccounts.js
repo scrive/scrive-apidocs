@@ -51,16 +51,17 @@ var CompanyAccountsModel = Backbone.Model.extend({
 
             Confirmation.popup({
               onAccept : function() {
-                  mixpanel.track('Accept new account');
-                            new Submit({
-                                url: "/account/companyaccounts",
-                                method: "POST",
-                                add : "true",
-                                fstname : fstname.val(),
-                                sndname : sndname.val(),
-                                email : email.val()
-                                }).send();
-                         },
+                  new Submit({
+                      url: "/account/companyaccounts",
+                      method: "POST",
+                      add : "true",
+                      fstname : fstname.val(),
+                      sndname : sndname.val(),
+                      email : email.val(),
+                      mixpanel : {name : 'Accept',
+                                  props : {'Accept' : 'new account'}}
+                  }).send();
+              },
               title : localization.account.companyAccounts.createNewModalTitle,
               acceptButtonText : localization.account.companyAccounts.createNewModalAcceptButton,
               content  : body
@@ -132,9 +133,8 @@ var CompanyAccountsModel = Backbone.Model.extend({
                                   resend: "true",
                                   resendid: user.field("id"),
                                   resendemail: user.field("email"),
-                                    onSend : function() {
-                                        mixpanel.track('Accept resend confirmation');
-                                    }
+                                    mixpanel : {name : 'Accept',
+                                                props : {'Accept' : 'resend confirmation'}}
                                 });
                                 var text = localization.account.companyAccounts.resendModalBody + self.userFullName(user) + "?";
                                 var content = jQuery("<p/>").text(text);
@@ -169,9 +169,8 @@ var CompanyAccountsModel = Backbone.Model.extend({
                                     remove: "true",
                                     removeid: user.field("id"),
                                     removeemail: user.field("email"),
-                                      onSend: function() {
-                                          mixpanel.track('Accept delete user');
-                                      }
+                                      mixpanel : {name : 'Accept',
+                                                  props : {'Accept' : 'delete user'}}
                                   });
                                   var text = localization.account.companyAccounts.deleteModalBody + self.userFullName(user) + "?";
                                   var content = jQuery("<p/>").text(text);

@@ -1057,7 +1057,8 @@
                                                                       }});
                                                                   },
                                                                   onSend: function() {
-                                                                      mixpanel.track('Accept cancel subscription');
+                                                                      mixpanel.track('Accept',
+                                                                                     {'Accept' : 'Cancel subscription'});
                                                                       conf.view.clear();
                                                                       LoadingDialog.open(localization.payments.cancelingSubscription);
                                                                   }
@@ -1130,7 +1131,8 @@
                                                                       }});
                                                                   },
                                                                   onSend: function() {
-                                                                      mixpanel.track('Accept renew subscription');
+                                                                      mixpanel.track('Accept',
+                                                                                     {'Accept' : 'Renew subscription'});
                                                                       conf.view.clear();
                                                                       LoadingDialog.open(localization.payments.renewingSubscription);
                                                                   }

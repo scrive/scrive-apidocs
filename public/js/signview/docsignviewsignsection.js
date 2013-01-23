@@ -54,7 +54,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       onClick: function() {
         if (alreadyClicked(this))
           return false;
-        mixpanel.track('Accept Sign', {}, function() {
+        trackTimeout('Accept', {'Accept' : 'sign document'}, function() {
             document.sign().send();
         });
       }
@@ -114,7 +114,6 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   }
 });
 
-
 window.DocumentSignSignSection = Backbone.View.extend({
    initialize : function(args){
       this.render();
@@ -141,6 +140,8 @@ window.DocumentSignSignSection = Backbone.View.extend({
            ps['$username'] = signatory.email();
        mixpanel.people.set(ps);
 
+       mixpanel.track('View sign view');
+
        this.rejectButton = Button.init({
                                         size: "small",
                                         color: "red",
@@ -159,8 +160,11 @@ window.DocumentSignSignSection = Backbone.View.extend({
                                             onAccept: function(customtext) {
                                                 if (alreadyClicked(this))
                                                   return;
-                                                mixpanel.track('Accept reject');
-                                                document.currentSignatory().reject(customtext).send();
+                                                trackTimeout('Accept',
+                                                             {'Accept' : 'reject document'},
+                                                             function() {
+                                                                 document.currentSignatory().reject(customtext).send();
+                                                             });
                                               }
                                             });
                                         }

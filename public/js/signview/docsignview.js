@@ -423,23 +423,7 @@ window.DocumentSignView = function(args){
                         el: $("<div/>")
                     });
         var model = this.model;
-        this.model.recall(function() {
-            var sig = model.document().currentSignatory();
-            var dta = {};
-            if(sig.seendate())
-                dta['Seen date'] = sig.seendate();
-            if(sig.readdate())
-                dta['Email read date'] = sig.readdate();
-            if(sig.rejecteddate())
-                dta['Rejected date'] = sig.rejecteddate();
-            if(sig.signdate())
-                dta['Signed date'] = sig.signdate();
-            if(sig.hasUser())
-                dta['Has user?'] = sig.hasUser();
-            dta['First visit'] = !sig.seendate();
-            data['Signed'] = sig.hasSigned();
-            mixpanel.track('View Sign View', dta);
-        });
+        this.model.recall();
 
         return {
               model    : this.model

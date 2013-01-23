@@ -101,8 +101,11 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
           onAccept: function() {
               if (alreadyClicked(this))
                 return;
-              mixpanel.track('Accept withdraw');
-              model.cancel();
+              trackTimeout('Accept',
+                           {'Accept' : 'withdraw document'},
+                           function() {
+                               model.cancel();
+                           });
               return true;
             }
           });

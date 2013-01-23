@@ -35,6 +35,7 @@ import qualified Templates.Fields as F
 import Templates.Templates
 import Routing
 import Utils.HTTP
+import ThirdPartyStats.Core
 
 handleLoginGet :: Kontrakcja m => m (Either KontraLink ThinPage)
 handleLoginGet = do
@@ -149,6 +150,13 @@ handleLoginPost = do
                         }
                         muuser <- dbQuery $ GetUserByID (userid user)
                         _ <- addUserLoginStatEvent (ctxtime ctx) (fromJust muuser)
+                        case muuser of
+                          Just User{userid = uid} -> 
+                            asyncLogEvent SetUserProps [    
+                              UserIDProp uid,
+                              someProp "Last login" $ ctxtime ctx
+                            ]
+                          _ -> return ()
                         if padlogin
                           then do
                             _ <- dbUpdate $ LogHistoryPadLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)

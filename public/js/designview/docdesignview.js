@@ -353,8 +353,9 @@ var DesignViewView = Backbone.View.extend({
                     content : localization.languages.changeSwedishToEnglishText,
                     acceptText: localization.languages.signInEnglish,
                     onAccept : function() {
-                        mixpanel.track('Accept language',
-                                       {'New Language': 'English'});
+                        mixpanel.track('Accept',
+                                       {'New Language': 'English',
+                                        'Accept' : 'Select language'});
                        document.lang().setEN();
                        LoadingDialog.open();
                        document.save();
@@ -377,8 +378,9 @@ var DesignViewView = Backbone.View.extend({
                         select.val("en");
                     },
                     onAccept : function() {
-                        mixpanel.track('Accept language',
-                                       {'New Language': 'Swedish'});
+                        mixpanel.track('Accept',
+                                       {'New Language': 'Swedish',
+                                        'Accept' : 'Select language'});
                        document.lang().setSV();
                        LoadingDialog.open();
                        document.save();

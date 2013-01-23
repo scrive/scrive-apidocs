@@ -108,12 +108,19 @@ handleActivate mfstname msndname actvuser signupmethod = do
               _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
               Log.debug $ "Attempting successfull. User " ++ (show $ getEmail actvuser) ++ "is logged in."
               logUserToContext $ Just tosuser
-              let name = getFirstName tosuser ++ " " ++ getLastName tosuser
-                  email = useremail $ userinfo tosuser
+              let name = getFullName tosuser
+                  email = getEmail tosuser
               asyncLogEvent "User Activated" [UserIDProp (userid tosuser),
                                               TimeProp (ctxtime ctx),
                                               NameProp name,
-                                              MailProp email]
+                                              MailProp $ Email email]
+              asyncLogEvent SetUserProps [UserIDProp (userid tosuser),
+                                          someProp "TOS Date" (ctxtime ctx),
+                                          NameProp name,
+                                          MailProp $ Email email,
+                                          someProp "Signup Method" (show signupmethod),
+                                          someProp "Last login" (ctxtime ctx)
+                                         ]
               when (callme) $ phoneMeRequest (Just tosuser) phone
               return $ Just (tosuser, newdocs)
             else do
