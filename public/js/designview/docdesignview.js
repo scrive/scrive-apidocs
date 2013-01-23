@@ -779,7 +779,7 @@ var DesignViewView = Backbone.View.extend({
                     new FlashMessage({color: 'red', content : validation.message()});
                     if (field.view != undefined)
                         field.view.redborder();
-                    mixpanel.track('Error: field validation',
+                    mixpanel.track('Error',
                                    {Field: field.name(),
                                     Value: field.value(),
                                     Message: validation.message()});
@@ -793,14 +793,16 @@ var DesignViewView = Backbone.View.extend({
         {
               new FlashMessage({color: 'red', content : localization.designview.validation.atLeastOnePersonMustSigns});
               this.tabs.activate(this.tab1);
-            mixpanel.track('Error: nobody signs');
+            mixpanel.track('Error', 
+                           {Message: 'nobody signs'});
 
               return false;
         }
         if (this.model.document().mainfile() == undefined)
         {
              new FlashMessage({color: 'red', content : localization.designview.validation.fileMustBeAdded});
-            mixpanel.track('Error: no document');
+            mixpanel.track('Error', 
+                           {Message: 'no document'});
              return false;
         }
         var mails = _.map(sigs, function(sig) {return sig.email();}).sort();;
@@ -808,7 +810,8 @@ var DesignViewView = Backbone.View.extend({
                 if (mails[i] == mails[i+1] && mails[i] != "")
                 {
                     new FlashMessage({color: 'red', content : localization.designview.validation.sameMails});
-                    mixpanel.track('Error: duplicate emails');
+                    mixpanel.track('Error',
+                                   {Message: 'duplicate emails'});
                     this.tabs.activate(this.tab1);
                     return false;
                 }
@@ -853,12 +856,14 @@ var DesignViewView = Backbone.View.extend({
                         LoadingDialog.close();
                         if(a === 'parsererror') { // file too large
                             new FlashMessage({content: localization.fileTooLarge, color: "red"});
-                            mixpanel.track('Error: main file too large');
+                            mixpanel.track('Error',
+                                           {Message: 'main file too large'});
 
                         }
                         else {
                             new FlashMessage({content: localization.couldNotUpload, color: "red"});
-                            mixpanel.track('Error: could not upload main file');
+                            mixpanel.track('Error',
+                                           {Message: 'could not upload main file'});
                         }
                         LoadingDialog.close();
                         document.trigger('change');

@@ -72,7 +72,8 @@ var LoginModel = Backbone.Model.extend({
             }  
             else
             {
-                mixpanel.track('Error: login failed');
+                mixpanel.track('Error',
+                               {Message: 'login failed'});
               new FlashMessage({ content: localization.loginModal.loginFailed, color: "red"});
             }
           }
@@ -104,7 +105,8 @@ var LoginModel = Backbone.Model.extend({
                 text = localization.loginModal.noUser;
               else if (resp.toomuch)
                 text = localization.loginModal.tooMuch;
-              mixpanel.track('Error: password reminder failed: ' + text);
+              mixpanel.track('Error',
+                             {Message: 'password reminder failed: ' + text});
               new FlashMessage({ content: text, color: "red"});
             }
           }
