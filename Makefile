@@ -2,7 +2,7 @@ DBNAME=kontratest
 DBUSER=kontra
 TESTS=all --plain
 
-INSTALL=BUILD_DATE=2010-01-01-00-00-00 cabal-dev install
+INSTALL=BUILD_DATE=2010-01-01-00-00-00 cabal-dev install $(INSTALLFLAGS)
 
 .PHONY : all
 all:
