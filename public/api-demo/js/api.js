@@ -302,12 +302,24 @@ window.GetApiCall = ApiCall.extend({
 window.ListApiCall = ApiCall.extend({
         defaults: {
              name : "List API call",
-             tags : "[]"
+             tags : "[]",
+             offset : 0,
+             limit : 5
         },
         tags : function() {return this.get("tags");},
         setTags : function(tags) {
             LocalStorage.set("api","tags",tags);
             this.set({"tags" : tags});
+        },
+        offset : function() {return this.get("offset");},
+        setOffset : function(offset) {
+            LocalStorage.set("api","offset",offset);
+            this.set({"offset" : offset});
+        },
+        limit : function() {return this.get("limit");},
+        setLimit : function(limit) {
+            LocalStorage.set("api","limit",limit);
+            this.set({"limit" : limit});
         },
         initialize: function (args) {
         },
@@ -317,7 +329,9 @@ window.ListApiCall = ApiCall.extend({
             $.ajax(Scrive.apiUrl()+"list", {
                 type: 'GET',
                 cache: false,
-                data : { tags : model.tags() },
+                data : { tags   : model.tags(),
+                         offset : model.offset(),
+                         limit  : model.limit() },
                 headers : { authorization : model.authorization() },
                 success : function(res) {
                     model.setResult(JSON.stringify(JSON.parse(res),undefined," "));
@@ -669,9 +683,16 @@ var ListApiCallView = Backbone.View.extend({
             box.append(this.boxRight).append(boxLeft);
             var tagsInput = $("<input type='text'/>").val(model.tags());
             tagsInput.change(function() {model.setTags(tagsInput.val()); return false;})
+            var offsetInput = $("<input type='text'/>").val(model.offset());
+            offsetInput.change(function() {model.setOffset(offsetInput.val()); return false;})
+            var limitInput = $("<input type='text'/>").val(model.limit());
+            limitInput.change(function() {model.setLimit(limitInput.val()); return false;})
             var button = $("<input type='button' value='Send request'/>");
             button.click(function() {model.send(); return false;});
-            boxLeft.append($("<div>Tags: <BR/></div>").append(tagsInput)).append($("<div/>").append(button));
+            boxLeft.append($("<div>Tags: <BR/></div>").append(tagsInput));
+            boxLeft.append($("<div>Offset: <BR/></div>").append(offsetInput));
+            boxLeft.append($("<div>Limit: <BR/></div>").append(limitInput));
+            boxLeft.append($("<div/>").append(button));
             this.render();
         },
         render : function() {
