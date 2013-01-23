@@ -119,9 +119,12 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                 editText: localization.reminder.formOwnMessage,
                 rejectText: localization.cancel,
                 onAccept: function(customtext) {
-                    mixpanel.track('Accept send reminder',
-                                   {'Signatory index':signatory.signIndex()});
-                      signatory.remind(customtext).send();
+                    trackTimeout('Accept', 
+                                 {'Accept' : 'send reminder',
+                                  'Signatory index' : signatory.signIndex()},
+                                 function() {
+                                     signatory.remind(customtext).send();
+                                 });
                 }
             });
          });
@@ -145,9 +148,12 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                     color: "blue",
                                     text: localization.send,
                                     onClick: function() { 
-                                        mixpanel.track('Accept change email',
-                                                       {'Signatory index':signatory.signIndex()});
-                                        signatory.changeEmail(input.val()).send(); 
+                                        trackTimeout('Accept',
+                                                     {'Signatory index':signatory.signIndex(),
+                                                      'Accept' : 'change email'},
+                                                     function() {
+                                                         signatory.changeEmail(input.val()).send(); 
+                                                     });
                                     }
                                     });
                                 container.empty().append(input).append(sndbutton.input());
@@ -173,9 +179,10 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                 acceptText : localization.pad.signingOnSameDevice ,
                                 rejectText : localization.cancel,
                                 onAccept : function()
-                                        {
-                                            mixpanel.track('Accept give for signing',
-                                                           {'Signatory index':signatory.signIndex()});
+                             {
+                                 mixpanel.track('Accept',
+                                                {'Signatory index':signatory.signIndex(),
+                                                 'Accept' : 'give for signing'});
                                            signatory.addtoPadQueue(function(resp) {
                                                if (resp.error == undefined)
                                                    window.location = signatory.padSigningURL();
@@ -223,8 +230,9 @@ var AuthorViewSignatoryView = Backbone.View.extend({
                                 rejectText : localization.cancel,
                                 onAccept : function()
                                         {
-                                            mixpanel.track('Accept add to pad queue',
-                                                           {'Signatory index':signatory.signIndex()});
+                                            mixpanel.track('Accept',
+                                                           {'Accept' : 'add to pad queue',
+                                                            'Signatory index':signatory.signIndex()});
                                            signatory.addtoPadQueue(function(resp) {window.location = window.location;}).sendAjax();
                                            return true;
 

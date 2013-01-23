@@ -328,11 +328,15 @@ var AccountSettingsView = Backbone.View.extend({
 
             Confirmation.popup({
               onAccept: function() {
-                  mixpanel.track('Accept change email');
-                    model.changeEmail();
+                  trackTimeout('Accept',
+                               {'Accept' : 'Change email'},
+                               function () {
+                                   model.changeEmail();
+                               });
               },
               onReject : function() {
-                  mixpanel.track('Reject change email');
+                  mixpanel.track('Reject',
+                                 {'Reject' : 'Change email'});
                     model.setNewEmail("");
                     model.setNewEmailAgain("");
               },
@@ -400,8 +404,11 @@ var AccountSettingsView = Backbone.View.extend({
 
             Confirmation.popup({
               onAccept: function() {
-                  mixpanel.track('Accept create company');
-                model.createCompany();
+                  trackTimeout('Accept',
+                               {'Accept' : 'create company'},
+                              function() {
+                                  model.createCompany();
+                              });
               },
               onReject: function() {
                 window.location = window.location
