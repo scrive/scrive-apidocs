@@ -4,6 +4,7 @@ coverage-reports/
 log/
 kontrakcja.conf
 mailing_server.conf
+_cron_pid
 _mailer_pid
 _server_pid
 kontrakcja_test.conf
