@@ -114,6 +114,15 @@ window.CreateAccountAfterSignView = Backbone.View.extend({
         view.clearTOSValidationErrors();
         if (view.filledAndValid()) {
             mixpanel.track('Create new account');
+            mixpanel.people.set({
+                'TOS Date'    : new Date(),
+                'Full Name'   : model.document().currentSignatory().name(),
+                '$first_name' : model.document().currentSignatory().fstname(),
+                '$last_name'  : model.document().currentSignatory().sndname(),
+                '$email'      : model.document().currentSignatory().email(),
+                'Language'    : (model.document().lang() === "gb" ? "en" : "sv"),
+                'Signup Method' : 'BySigning'
+            });
          new Submit({
            url: model.document().currentSignatory().saveurl(),
            method: "POST",
