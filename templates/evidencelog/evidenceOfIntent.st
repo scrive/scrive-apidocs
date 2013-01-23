@@ -83,7 +83,9 @@ evidenceOfIntent=
                   <td style="font-size:10px;padding-top:18px;">$entry.signing.time$</td>
                   <td style="font-size:10px;padding-top:18px">$entry.ip$</td>
                   <td style="padding-top:18px;width:574px;max-width:574px;">
-                    $if(entry.signing.image)$<a href="$entry.signing.image$">$endif$$entry.signatory$ signed the document$if(entry.signing.image)$</a>$endif$.
+                    $if(entry.signing.image)$<a href="$entry.signing.image$">$entry.signatory$ signed the document</a>.
+                    $else$                                                   $entry.signatory$ signed the document.
+                    $endif$
                     Corresponding <a href="$entry.reference.image$">reference sign view</a>, created $entry.reference.time$.
                   </td>
                 </tr>}$
