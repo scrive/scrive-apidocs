@@ -27,7 +27,7 @@ processMixpanelEvent token SetUserProps props
       MixpanelError reason -> return (Failed reason)
       Success              -> return OK
   | otherwise = do
-    return (Failed "Tried to set prop without user ID!")
+    return (Failed "Tried to set Mixpanel prop without user ID!")
 processMixpanelEvent token (NamedEvent name) props
   | Just (uid, props') <- extractUID props = do
     res <- liftIO $ Mixpanel.track token (show uid) name (map mixpanelProperty props')
@@ -36,7 +36,10 @@ processMixpanelEvent token (NamedEvent name) props
       MixpanelError reason -> return (Failed reason)
       Success              -> return OK
   | otherwise = do
-    return (Failed "Tried to set user prop without user ID!")
+    return (Failed "Tried to track Mixpanel event without user ID!")
+processMixpanelEvent _ (UploadDocInfo _) _ =
+  -- We only do this for Precog
+  return OK
 
 
 -- | Convert a generic async event property to a Mixpanel property.

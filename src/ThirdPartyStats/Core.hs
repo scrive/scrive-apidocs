@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 -- | Backend API for logging events to be sent off to a third party.
 module ThirdPartyStats.Core (
     EventProperty (..),
@@ -28,6 +29,7 @@ import User.UserID (UserID, unsafeUserID)
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import IPAddress
 import User.Model (Email (..))
+import qualified Text.JSON as J
 
 import Test.QuickCheck (Arbitrary (..), frequency, oneof, suchThat)
 
@@ -54,6 +56,33 @@ instance Binary PropValue where
       2 -> PVBool        <$> get
       3 -> PVMinutesTime <$> get
       n -> fail $ "Couldn't parse PropValue constructor tag: " ++ show n
+
+instance Binary J.JSString where  
+  get = J.toJSString <$> get
+  put = put . J.fromJSString
+
+instance Binary a => Binary (J.JSObject a) where
+  get = J.toJSObject <$> get
+  put = put . J.fromJSObject
+
+instance Binary J.JSValue where
+  put (J.JSNull)         = putWord8 0
+  put (J.JSBool b)       = putWord8 1 >> put b
+  put (J.JSRational b r) = putWord8 2 >> put b >> put r
+  put (J.JSString s)     = putWord8 3 >> put s
+  put (J.JSArray arr)    = putWord8 4 >> put arr
+  put (J.JSObject obj)   = putWord8 5 >> put obj
+  
+  get = do
+    tag <- getWord8
+    case tag of
+      0 -> return J.JSNull
+      1 -> J.JSBool <$> get
+      2 -> J.JSRational <$> get <*> get
+      3 -> J.JSString <$> get
+      4 -> J.JSArray <$> get
+      5 -> J.JSObject <$> get
+      _ -> fail $ "Unable to parse JSValue because of bad tag: " ++ show tag
 
 
 -- | Type class to keep the user from having to wrap stuff in annoying data
@@ -88,22 +117,28 @@ stringProp = someProp
 
 
 -- | Makes type signatures on functions involving event names look nicer.
-data EventName = SetUserProps | NamedEvent String deriving (Show, Eq)
+data EventName
+  = SetUserProps
+  | NamedEvent String 
+  | UploadDocInfo J.JSValue
+    deriving (Show, Eq)
 type PropName = String
 
 instance IsString EventName where
   fromString = NamedEvent
 
 instance Binary EventName where
-  put (SetUserProps)    = putWord8 0
-  put (NamedEvent name) = putWord8 255 >> put name
+  put (SetUserProps)          = putWord8 0
+  put (UploadDocInfo docjson) = putWord8 1 >> put docjson
+  put (NamedEvent name)       = putWord8 255 >> put name
   
   get = do
-    tag <- getWord8
-    case tag of
-      0   -> return SetUserProps
-      255 -> NamedEvent <$> get
-      t   -> fail $ "Unable to parse EventName constructor tag: " ++ show t
+      tag <- getWord8
+      case tag of
+        0   -> return SetUserProps
+        1   -> UploadDocInfo <$> get
+        255 -> NamedEvent <$> get
+        t   -> fail $ "Unable to parse EventName constructor tag: " ++ show t
 
 
 -- | Represents a property on an event.
@@ -229,10 +264,37 @@ asyncLogEvent name props = do
 
 -- Arbitrary instances for testing
 
+instance Arbitrary J.JSValue where
+  arbitrary = jsval 10
+    where 
+      jsval sz = frequency [
+        (1,  return J.JSNull),
+        (1,  J.JSBool <$> arbitrary),
+        (1,  J.JSRational <$> arbitrary <*> arbitrary),
+        (1,  J.JSString . J.toJSString . unStr <$> arbitrary),
+        (sz, J.JSArray <$> jslist (sz `div` 2)),
+        (sz, J.JSObject <$> jsobj (sz `div` 2))]
+      jslist sz = do
+        n <- oneof $ map return [0..10]
+        sequence $ replicate n (jsval sz)
+      jsobj sz = do
+        vals <- jslist sz
+        names <- map unStr <$> arbitrary
+        return $ J.toJSObject $ zip (zipWith (:) ['a'..] names) vals
+
+newtype JSStr = JSStr {unStr :: String}
+
+-- This is a _really_ crappy instance, but I'm sick of writing generators!
+instance Arbitrary JSStr where
+  arbitrary = do
+    n <- oneof $ map return [1..100]
+    JSStr <$> sequence (replicate n (oneof (map return ['a' .. 'z'])))
+
 instance Arbitrary EventName where
   arbitrary = frequency [
       (1, return SetUserProps),
-      (9, NamedEvent <$> arbitrary)]
+      (1, UploadDocInfo <$> arbitrary),
+      (8, NamedEvent <$> arbitrary)]
 
 instance Arbitrary PropValue where
   arbitrary = oneof [
