@@ -9,7 +9,7 @@
     },
     signup: function() {
       var model = this;
-
+      mixpanel.track('Submit signup');
       new Submit({
         method: 'POST',
         url: "/signup",
@@ -18,9 +18,16 @@
         ajaxsuccess: function(rs) {
           resp = JSON.parse(rs);
           if (resp.sent === true) {
+            mixpanel.track('Create new account');
+            mixpanel.people.set({
+                '$email'      : model.email(),
+                'Signup Method' : 'AccountRequest'
+            });
             var content = localization.payments.outside.confirmAccountCreatedUserHeader;
             new FlashMessage({content: content, color: 'green'});
           } else if (resp.sent === false) {
+            mixpanel.track('Error', 
+                           {Message : 'signup failed'});
             new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, color: 'red'});
           }
         }
