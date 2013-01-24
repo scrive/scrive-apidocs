@@ -8,6 +8,7 @@ import Control.Monad.Trans
 import System.Environment
 import qualified Control.Concurrent.Thread.Group as TG
 import qualified System.Time
+import Data.Maybe (catMaybes)
 
 import ActionQueue.EmailChangeRequest
 import ActionQueue.Monad
@@ -37,6 +38,8 @@ import qualified Log (cron, withLogger, error)
 
 import ThirdPartyStats.Core
 import ThirdPartyStats.Mixpanel
+import ThirdPartyStats.Precog
+import Precog.Ingest (precogCredentials)
 
 main :: IO ()
 main = Log.withLogger $ do
@@ -95,10 +98,18 @@ main = Log.withLogger $ do
   -- dispatcher, please combine the two into one dispatcher function rather
   -- than creating a new thread or something like that, since
   -- asyncProcessEvents removes events after processing.
+  mmixpanel <- case mixpanelToken appConf of
+    ""    -> Log.error "WARNING: no Mixpanel token present!" >> return Nothing
+    token -> return $ Just $ processMixpanelEvent token
+
+  mprecog <- case (precogKey appConf, precogRootPath appConf) of
+    (key@(_:_), root@(_:_)) ->
+      return $ Just $ processPrecogEvent $ precogCredentials key root
+    _ ->
+      Log.error "WARNING: no Precog credentials!" >> return Nothing
+  
   t11 <- forkCron_ tg "Async Event Dispatcher" (10) . inDB $ do
-    case mixpanelToken appConf of
-      ""    -> Log.error "WARNING: no Mixpanel token present!"
-      token -> asyncProcessEvents (processMixpanelEvent token) All
+    asyncProcessEvents (catEventProcs $ catMaybes [mmixpanel, mprecog]) All
 
   waitForTermination
   Log.cron $ "Termination request received, waiting for jobs to finish..."

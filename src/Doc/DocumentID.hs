@@ -1,6 +1,7 @@
 module Doc.DocumentID (
     DocumentID
   , unsafeDocumentID
+  , fromDocumentID
   ) where
 
 import Data.Binary
@@ -23,5 +24,8 @@ instance Binary DocumentID where
 
 unsafeDocumentID :: Int64 -> DocumentID
 unsafeDocumentID = DocumentID
+
+fromDocumentID :: DocumentID -> Int64
+fromDocumentID (DocumentID did) = did
 
 $(newtypeDeriveConvertible ''DocumentID)

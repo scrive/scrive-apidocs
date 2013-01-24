@@ -11,10 +11,13 @@ module ThirdPartyStats.Core (
     numProp,
     stringProp,
     asyncLogEvent,
-    asyncProcessEvents
+    asyncProcessEvents,
+    (@@),
+    catEventProcs
   ) where
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString as B
+import Data.Monoid
 import Data.Binary
 import Data.String
 import Control.Monad.IO.Class
@@ -31,7 +34,7 @@ import IPAddress
 import User.Model (Email (..))
 import qualified Text.JSON as J
 
-import Test.QuickCheck (Arbitrary (..), frequency, oneof, suchThat)
+import Test.QuickCheck (Arbitrary (..), frequency, oneof, suchThat, Gen)
 
 
 -- | The various types of values a property can take.
@@ -120,7 +123,7 @@ stringProp = someProp
 data EventName
   = SetUserProps
   | NamedEvent String 
-  | UploadDocInfo J.JSValue
+  | UploadDocInfo (J.JSObject J.JSValue)
     deriving (Show, Eq)
 type PropName = String
 
@@ -196,6 +199,39 @@ data ProcRes
   | Failed String -- ^ Processing failed permanently, discard event and
                   --   log the failure.
 
+type EventProcessor m = (EventName -> [EventProperty] -> m ProcRes)
+
+-- | Combine two event processors into one. The first event processor is always
+--   executed. If it fails, the second is not. Unfortunately, there is no way
+--   to rollback an event processor that already succeeded, so if the second
+--   event processor returns PutBack, the aggregate event processor will return
+--   Failed rather than PutBack.
+--   The operator is kind of ugly, but all the good ones were already taken by
+--   Arrow, Applicative, etc.
+(@@) :: Monad m => EventProcessor m -> EventProcessor m -> EventProcessor m
+a @@ b = \evt props -> do
+  res <- a evt props
+  case res of
+    OK -> do
+      res' <- b evt props
+      case res' of
+        PutBack -> return (Failed $ "PutBack after one or more event " ++
+                                    "processors already succeded!")
+        x       -> return x
+    PutBack ->
+      return PutBack
+    x ->
+      return x
+
+-- | Concatenate a list of event processors.
+catEventProcs :: Monad m => [EventProcessor m] -> EventProcessor m
+catEventProcs (ep:eps) = ep @@ catEventProcs eps
+catEventProcs _        = \_ _ -> return OK
+
+instance Monad m => Monoid (EventProcessor m) where
+  mempty  = \_ _ -> return OK
+  mappend = (@@)
+  mconcat = catEventProcs
 
 -- | Remove a number of events from the queue and process them.
 asyncProcessEvents :: (MonadIO m, MonadDB m)
@@ -263,24 +299,31 @@ asyncLogEvent name props = do
 
 
 -- Arbitrary instances for testing
+jsobj :: Int -> Gen (J.JSObject J.JSValue)
+jsobj sz = do
+  vals <- jslist sz
+  names <- map unStr <$> arbitrary
+  return $ J.toJSObject $ zip (zipWith (:) ['a'..] names) vals
+    
+jslist :: Int -> Gen [J.JSValue]
+jslist sz = do
+  n <- oneof $ map return [0..10]
+  sequence $ replicate n (jsval sz)
+
+jsval :: Int -> Gen J.JSValue
+jsval sz = frequency [
+  (1,  return J.JSNull),
+  (1,  J.JSBool <$> arbitrary),
+  (1,  J.JSRational <$> arbitrary <*> arbitrary),
+  (1,  J.JSString . J.toJSString . unStr <$> arbitrary),
+  (sz, J.JSArray <$> jslist (sz `div` 2)),
+  (sz, J.JSObject <$> jsobj (sz `div` 2))]
+
+instance Arbitrary (J.JSObject J.JSValue) where
+  arbitrary = jsobj 10
 
 instance Arbitrary J.JSValue where
   arbitrary = jsval 10
-    where 
-      jsval sz = frequency [
-        (1,  return J.JSNull),
-        (1,  J.JSBool <$> arbitrary),
-        (1,  J.JSRational <$> arbitrary <*> arbitrary),
-        (1,  J.JSString . J.toJSString . unStr <$> arbitrary),
-        (sz, J.JSArray <$> jslist (sz `div` 2)),
-        (sz, J.JSObject <$> jsobj (sz `div` 2))]
-      jslist sz = do
-        n <- oneof $ map return [0..10]
-        sequence $ replicate n (jsval sz)
-      jsobj sz = do
-        vals <- jslist sz
-        names <- map unStr <$> arbitrary
-        return $ J.toJSObject $ zip (zipWith (:) ['a'..] names) vals
 
 newtype JSStr = JSStr {unStr :: String}
 
