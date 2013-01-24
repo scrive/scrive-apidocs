@@ -111,6 +111,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
               let name = getFullName tosuser
                   email = getEmail tosuser
               asyncLogEvent "User Activated" [UserIDProp (userid tosuser),
+                                              IPProp (ctxipnumber ctx),
                                               TimeProp (ctxtime ctx),
                                               NameProp name,
                                               MailProp $ Email email]

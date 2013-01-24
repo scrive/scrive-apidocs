@@ -151,11 +151,16 @@ handleLoginPost = do
                         muuser <- dbQuery $ GetUserByID (userid user)
                         _ <- addUserLoginStatEvent (ctxtime ctx) (fromJust muuser)
                         case muuser of
-                          Just User{userid = uid} -> 
+                          Just User{userid = uid} -> do
+                            asyncLogEvent "Login" [
+                              UserIDProp uid,
+                              IPProp $ ctxipnumber ctx,
+                              TimeProp $ ctxtime ctx                              
+                              ]
                             asyncLogEvent SetUserProps [    
                               UserIDProp uid,
                               someProp "Last login" $ ctxtime ctx
-                            ]
+                              ]
                           _ -> return ()
                         if padlogin
                           then do
