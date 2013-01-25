@@ -646,7 +646,11 @@ randomAuthorLinkByStatus _ = arbitrary
 
 addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> TestEnv Document
 addRandomDocumentWithAuthorAndCondition user p =
-  addRandomDocument ((randomDocumentAllowsDefault user) { randomDocumentCondition = p})
+  addRandomDocument2 user (\x -> x { randomDocumentCondition = p})
+
+addRandomDocument2 :: User -> (RandomDocumentAllows -> RandomDocumentAllows) -> TestEnv Document
+addRandomDocument2 user refine =
+  addRandomDocument (refine (randomDocumentAllowsDefault user))
 
 addRandomDocument :: RandomDocumentAllows -> TestEnv Document
 addRandomDocument rda = do

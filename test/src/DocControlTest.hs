@@ -5,6 +5,7 @@ module DocControlTest(
 import Control.Applicative
 import Data.Maybe
 import Control.Monad
+import qualified Control.Exception.Lifted as E
 import Data.List
 import Happstack.Server
 import Test.Framework
@@ -42,6 +43,7 @@ docControlTests env = testGroup "Templates" [
   , testThat "Person who isn't last signing a doc leaves it pending" env testNonLastPersonSigningADocumentRemainsPending
   , testThat "Last person signing a doc closes it" env testLastPersonSigningADocumentClosesIt
   , testThat "Sending an reminder clears delivery information" env testSendingReminderClearsDeliveryInformation
+  , testThat "Sending reminder email works for company admin" env testSendReminderEmailByCompanyAdmin
   , testThat "We can get json for document" env testGetLoggedIn
   , testThat "We can't get json for document if we are not logged in" env testGetNotLoggedIn
   , testThat "We can't get json for document is we are logged in but we provided authorization header" env testGetBadHeader
@@ -281,10 +283,63 @@ testSendReminderEmailUpdatesLastModifiedDate = do
   -- who cares which one, just pick the last one
   let sl = head . reverse $ documentsignatorylinks doc
   req <- mkRequest POST []
-  (_link, _ctx') <- runTestKontra req ctx $ sendReminderEmail Nothing ctx (systemActor $ ctxtime ctx) doc sl
+  (_link, _ctx') <- runTestKontra req ctx $ handleResend (documentid doc) (signatorylinkid sl)
 
   Just updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "Modified date is updated" (ctxtime ctx) (documentmtime updateddoc)
+  emails <- dbQuery GetEmails
+  assertEqual "Email was sent" 1 (length emails)
+
+testSendReminderEmailByCompanyAdmin :: TestEnv ()
+testSendReminderEmailByCompanyAdmin = do
+  company <- addNewCompany
+  user <- addNewRandomCompanyUser (companyid company) False
+  otheruser <- addNewRandomCompanyUser (companyid company) False
+  adminuser <- addNewRandomCompanyUser (companyid company) True
+
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext defaultValue
+
+  ctxadmin <- (\c -> c { ctxmaybeuser = Just adminuser })
+    <$> mkContext defaultValue
+
+  ctxother <- (\c -> c { ctxmaybeuser = Just otheruser })
+    <$> mkContext defaultValue
+
+  doc <- addRandomDocumentWithAuthorAndCondition
+            user
+            (\d -> documentstatus d == Pending
+                     && case documenttype d of
+                         Signable _ -> True
+                         _ -> False)
+
+  assertBool "Precondition" $ (ctxtime ctx) /= documentmtime doc
+
+  -- who cares which one, just pick the last one
+  let sl = head . reverse $ documentsignatorylinks doc
+
+  -- fail if have no right to send reminder
+  req1 <- mkRequest POST []
+  result' <- E.try $ runTestKontra req1 ctxother $ handleResend (documentid doc) (signatorylinkid sl)
+
+  case result' of
+    Right _ -> assertFailure "Should not be able to resend when having no rights to do it"
+    Left (_ :: E.SomeException) -> return ()
+
+
+  Just updateddoc1 <- dbQuery $ GetDocumentByDocumentID (documentid doc)
+  assertEqual "Modified date is not updated" (documentmtime doc) (documentmtime updateddoc1)
+  emails1 <- dbQuery GetEmails
+  assertEqual "No emails were sent" 0 (length emails1)
+
+  -- succeed to send a reminder as company admin
+  req2 <- mkRequest POST []
+  (_link, _ctx') <- runTestKontra req2 ctxadmin $ handleResend (documentid doc) (signatorylinkid sl)
+
+  Just updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
+  assertEqual "Modified date is updated" (ctxtime ctxadmin) (documentmtime updateddoc)
+  emails <- dbQuery GetEmails
+  assertEqual "Email was sent" 1 (length emails)
 
 
 testSendingReminderClearsDeliveryInformation :: TestEnv ()
