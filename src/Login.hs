@@ -109,6 +109,7 @@ handleSignup = do
   memail <- getOptionalFieldNoFlash asValidEmail "email"
   mfirstname <- getOptionalFieldNoFlash asValidName "firstName"
   mlastname <- getOptionalFieldNoFlash asValidName "lastName"
+  ctx <- getContext
   case memail of
     Nothing -> return Nothing
     Just email -> do
@@ -118,14 +119,35 @@ handleSignup = do
           -- there is an existing user that hasn't been activated
           -- send them another invite
           UserControl.sendNewUserMail user
+          asyncLogEvent "Send account confirmation email" [
+            UserIDProp $ userid user,
+            IPProp $ ctxipnumber ctx,
+            TimeProp $ ctxtime ctx                              
+            ]
+          asyncLogEvent SetUserProps [    
+            UserIDProp $ userid user,
+            someProp "Account confirmation email" $ ctxtime ctx
+            ]
           return $ Just (Email email, Nothing)
         (Nothing, Nothing) -> do
           -- this email address is new to the system, so create the user
           -- and send an invite
           lang <- ctxlang <$> getContext
           mnewuser <- createUser (Email email) (fromMaybe "" mfirstname, fromMaybe "" mlastname) Nothing lang
-          maybe (return ()) UserControl.sendNewUserMail mnewuser
-          return $ Just (Email email, userid <$> mnewuser)
+          case mnewuser of
+            Nothing -> return $ Just (Email email, Nothing)
+            Just newuser -> do
+              UserControl.sendNewUserMail newuser
+              asyncLogEvent "Send account confirmation email" [
+                UserIDProp $ userid newuser,
+                IPProp $ ctxipnumber ctx,
+                TimeProp $ ctxtime ctx                              
+                ]
+              asyncLogEvent SetUserProps [    
+                UserIDProp $ userid newuser,
+                someProp "Account confirmation email" $ ctxtime ctx
+                ]
+              return $ Just (Email email, Just $ userid newuser)
         (_, _) -> return Nothing
 
 {- |
