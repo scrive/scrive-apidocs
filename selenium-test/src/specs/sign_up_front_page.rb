@@ -116,6 +116,8 @@ describe "sign up on front page and modify account settings" do
     (@h.wait.until { @h.driver.find_element :name => "newemail" }).send_keys new_email
     (@h.wait.until { @h.driver.find_element :name => "newemailagain" }).send_keys new_email
     (@h.wait.until { @h.driver.find_element :css => "a.float-right" }).click
+    # wait for flash message to go away to avoid race condition
+    sleep 5
     @h.loginhelper.logout
 
     @h.emailhelper.follow_link_in_latest_mail_for new_email
