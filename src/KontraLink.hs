@@ -108,7 +108,7 @@ instance Show KontraLink where
     showsPrec _ (LinkIssueDoc documentid) =
         (++) $ "/d/" ++ show documentid
     showsPrec _ (LinkDesignDoc did) =  (++) $ "/" ++ show did
-    showsPrec _ (LinkEvidenceAttachment did file) =  (++) $ "/d/evidenceattachment/" ++ show did ++ "/" ++ BSC.unpack file
+    showsPrec _ (LinkEvidenceAttachment did filename) =  (++) $ "/d/evidenceattachment/" ++ show did ++ "/" ++ BSC.unpack filename
     showsPrec _ (LinkRenameAttachment documentid) = (++) $ "/a/rename/" ++ show documentid
     showsPrec _ (LinkSignDoc document signatorylink) =
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
