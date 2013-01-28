@@ -63,7 +63,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
   // Smaller text with more details on some states
   dueDateDescription : function() {
       var timeout = this.model.document().timeouttime();
-      var timeoutText = timeout.getFullYear() + "-" + (timeout.getMonth() < 9 ? "0" + (timeout.getMonth() + 1) : (timeout.getMonth()+1)) + "-" + timeout.getDate();
+      var timeoutText = moment(timeout).format("YYYY-MM-DD");
       return localization.docsignview.dueDate + " " + timeoutText;
   },
   restartButton : function() {
