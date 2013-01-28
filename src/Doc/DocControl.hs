@@ -401,9 +401,10 @@ handleIssueShowGet docid = checkUserTOSGet $ do
     addFlash (OperationFailed, fromJust mMismatchMessage)
 
   authorsiglink <- guardJust $ getAuthorSigLink document
+
   let ispreparation = documentstatus document == Preparation
       isauthor = (userid <$> muser) == maybesignatory authorsiglink
-  mauthoruser <- maybe (return Nothing) (dbQuery . GetUserByID) (maybesignatory authorsiglink)
+  mauthoruser <- maybe (return Nothing) (dbQuery . GetUserByIDIncludeDeleted) (maybesignatory authorsiglink)
 
   let isincompany = ((usercompany =<< muser) == (usercompany =<< mauthoruser))
       isauthororincompany = isauthor || isincompany
@@ -412,10 +413,15 @@ handleIssueShowGet docid = checkUserTOSGet $ do
 
   ctx <- getContext
   case (ispreparation, msiglink) of
-    (True,  _)                       -> Right <$> pageDocumentDesign document
-    (False, _) | isauthororincompany -> Right <$> pageDocumentView document msiglink (isincompany)
-    (False, Just siglink)            -> Left  <$> (simpleHtmlResonseClrFlash =<< pageDocumentSignView ctx document siglink ad)
-    _                                -> internalError
+    (True,  _)                       -> do
+       Right <$> pageDocumentDesign document
+    (False, _) | isauthororincompany -> do
+       Right <$> pageDocumentView document msiglink (isincompany)
+    (False, Just siglink)            -> do
+       Left  <$> (simpleHtmlResonseClrFlash =<< pageDocumentSignView ctx document siglink ad)
+    _                                -> do
+       Log.error $ "internalError in handleIssueShowGet for document #" ++ show (documentid document)
+       internalError
 
 {- |
    Modify a document. Typically called with the "Underteckna" or "Save" button

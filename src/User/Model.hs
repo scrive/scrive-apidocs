@@ -12,6 +12,7 @@ module User.Model (
   , UserSettings(..)
   , GetUsers(..)
   , GetUserByID(..)
+  , GetUserByIDIncludeDeleted(..)
   , GetUserByEmail(..)
   , GetCompanyAccounts(..)
   , GetInviteInfo(..)
@@ -160,6 +161,12 @@ data GetUserByID = GetUserByID UserID
 instance MonadDB m => DBQuery m GetUserByID (Maybe User) where
   query (GetUserByID uid) = do
     kRun_ $ selectUsersSQL <+> "WHERE id =" <?> uid <+> "AND deleted = FALSE"
+    fetchUsers >>= oneObjectReturnedGuard
+
+data GetUserByIDIncludeDeleted = GetUserByIDIncludeDeleted UserID
+instance MonadDB m => DBQuery m GetUserByIDIncludeDeleted (Maybe User) where
+  query (GetUserByIDIncludeDeleted uid) = do
+    kRun_ $ selectUsersSQL <+> "WHERE id =" <?> uid
     fetchUsers >>= oneObjectReturnedGuard
 
 data GetUserByEmail = GetUserByEmail Email

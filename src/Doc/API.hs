@@ -161,7 +161,7 @@ apiCallCreateFromTemplate did =  api $ do
   (user, actor, external) <- getAPIUser APIDocCreate
   template <- apiGuardJustM (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink template
-  auser <- apiGuardJustM (serverError "No user found") $ dbQuery $ GetUserByID auid
+  auser <- apiGuardJustM (serverError "No user found") $ dbQuery $ GetUserByIDIncludeDeleted auid
   let haspermission = (userid auser == userid user) ||
                           ((usercompany auser == usercompany user && (isJust $ usercompany user)) &&  isDocumentShared template)
   enewdoc <- if (isTemplate template && haspermission)
@@ -302,7 +302,7 @@ apiCallGet did = api $ do
          lift $ switchLang (getLang doc)
 
          mauser <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
-                       Just auid -> dbQuery $ GetUserByID auid
+                       Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
                        _ -> return Nothing
          pq <- case (mauser) of
                 Just u -> dbQuery $ GetPadQueue $ (userid u)
@@ -319,7 +319,7 @@ apiCallGet did = api $ do
                  (signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
                  
         mauser <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
-                       Just auid -> dbQuery $ GetUserByID auid
+                       Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
                        _ -> return Nothing
         pq <- case (mauser) of
                 Just u -> dbQuery $ GetPadQueue $ (userid u)
