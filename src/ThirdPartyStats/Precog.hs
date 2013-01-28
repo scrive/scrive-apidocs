@@ -35,9 +35,7 @@ processPrecogEvent creds (NamedEvent evt) props
     return (Failed "Tried to track Precog event without user ID!")
 processPrecogEvent creds SetUserProps props
   | Just (uid, props') <- extractUID props = do
-    liftIO $ putStrLn $ "USER PROPS CREDENTIALS: " ++ show (precogKey creds)
     let path = mconcat [toPath uid, "properties"]
-    liftIO $ putStrLn $ "PATH IS: " ++ show path
     res <- liftIO $ asyncIngest creds path Nothing [jsonObj props']
     case res of
       HTTPError   reason -> return (Failed reason)
@@ -50,7 +48,7 @@ processPrecogEvent creds (UploadDocInfo docjson) props = do
         (uid, props') <- extractUID props
         (did, _) <- extractDocID props'
         let path = mconcat [toPath uid, "documents", toPath did]
-        return $ asyncIngest creds path Nothing [docjson]
+        return $ asyncIngest creds path Nothing [toJSObject [("doc", docjson)]]
   case mact of
     Just act -> do
       res <- liftIO act

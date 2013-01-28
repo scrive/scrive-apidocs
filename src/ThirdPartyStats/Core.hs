@@ -123,7 +123,7 @@ stringProp = someProp
 data EventName
   = SetUserProps
   | NamedEvent String 
-  | UploadDocInfo (J.JSObject J.JSValue)
+  | UploadDocInfo J.JSValue
     deriving (Show, Eq)
 type PropName = String
 
