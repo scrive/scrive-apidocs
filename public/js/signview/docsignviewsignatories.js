@@ -144,17 +144,27 @@ var DocumentSignSignatoryView = Backbone.View.extend({
       var face    = $('<div class="face" />');
 
       var numspace = $('<div class="details" />');
-      var orgnum  = $('<div class="orgnum field" />').text(localization.docsignview.companyNumberLabel + ": "
-                                                           + (signatory.companynumber().trim() || localization.docsignview.notEntered))
-          .attr('title', signatory.companynumber());
-      var persnum = $('<div class="persnum field" />').text(localization.docsignview.personalNumberLabel + ": "
-                                                            + (signatory.personalnumber().trim() || localization.docsignview.notEntered))
-        .attr('title', signatory.personalnumber());
+      var orgnumtext = signatory.companynumber().trim();
+      var orgnum = null;
+      if( orgnumtext ) {
+          orgnum = $('<div class="orgnum field" />').text(localization.docsignview.companyNumberLabel + ": " + orgnumtext)
+              .attr('title', signatory.companynumber());
+      }
+      var persnumtext = signatory.personalnumber().trim();
+      var persnum = null;
+      if( persnumtext ) {
+          persnum = $('<div class="persnum field" />').text(localization.docsignview.personalNumberLabel + ": " + persnumtext)
+              .attr('title', signatory.personalnumber());
+      }
       var contactspace = $('<div class="spacing contactspace" />');
       var email   = $('<div class="email field" />').text(signatory.email()).attr('title', signatory.email());
 
-      numspace.append(orgnum);
-      numspace.append(persnum);
+      if( orgnum ) {
+          numspace.append(orgnum);
+      }
+      if( persnum ) {
+          numspace.append(persnum);
+      }
 
       numspace.append(email);
 
