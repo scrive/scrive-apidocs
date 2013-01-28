@@ -123,7 +123,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
                           rendering: function(value, idx, user) {
                             if (!user.field("activated")) {
                               var icon = jQuery("<a>");
-                              icon.addClass("reminderForSendIcon");
+                              icon.addClass("remind");
 
                               var popupResendConfirmation = function() {
                                   mixpanel.track('Click resend confirmation');
