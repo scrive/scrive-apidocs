@@ -1,7 +1,7 @@
 module KontraLink(KontraLink(..), LoginRedirectReason(..), getHomeOrDesignViewLink) where
 
 import Data.Int
-
+import qualified Data.ByteString.Char8 as BSC
 import Doc.DocStateData
 import MagicHash
 import Utils.List
@@ -48,6 +48,7 @@ data KontraLink
     | LinkSignDocNoMagicHash DocumentID SignatoryLinkID
     | LinkIssueDoc DocumentID
     | LinkDesignDoc DocumentID
+    | LinkEvidenceAttachment DocumentID BSC.ByteString
     | LinkRenameAttachment AttachmentID
     | LinkCompanyAccounts
     | LinkCompanyTakeover CompanyID
@@ -107,6 +108,7 @@ instance Show KontraLink where
     showsPrec _ (LinkIssueDoc documentid) =
         (++) $ "/d/" ++ show documentid
     showsPrec _ (LinkDesignDoc did) =  (++) $ "/" ++ show did
+    showsPrec _ (LinkEvidenceAttachment did file) =  (++) $ "/d/evidenceattachment/" ++ show did ++ "/" ++ BSC.unpack file
     showsPrec _ (LinkRenameAttachment documentid) = (++) $ "/a/rename/" ++ show documentid
     showsPrec _ (LinkSignDoc document signatorylink) =
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++

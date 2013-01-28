@@ -58,6 +58,7 @@ window.Document = Backbone.Model.extend({
         file: null,
         sealedfile: null,
         authorattachments: [],
+        evidenceattachments: [],
         signatoryattachments: [],
         ready: false,
         readOnlyView: false,
@@ -70,7 +71,8 @@ window.Document = Backbone.Model.extend({
         screenshots : {}
     },
     initialize: function(args) {
-        this.url = "/api/frontend/get/" + args.id;
+        var params = { evidenceAttachments: args.evidenceAttachments }
+        this.url = "/api/frontend/get/" + args.id + "?" + $.param(params,true);
     },
     viewer: function() {
         if (this.get("viewer") != undefined)
@@ -146,6 +148,9 @@ window.Document = Backbone.Model.extend({
     },
     authorattachments: function() {
         return this.get("authorattachments");
+    },
+    evidenceattachments: function() {
+        return this.get("evidenceattachments");
     },
     signatoryattachments: function() {
         return _.flatten(_.map(this.signatories(), function(sig) { return sig.attachments(); }));
@@ -584,6 +589,7 @@ window.Document = Backbone.Model.extend({
        authorattachments: _.map(args.authorattachments, function(fileargs) {
          return new File(_.defaults(fileargs, dataForFile));
        }),
+       evidenceattachments: args.evidenceattachments,
        signatories: _.map(args.signatories, function(signatoryargs) {
          return new Signatory(_.defaults(signatoryargs, { document: self }));
        }),

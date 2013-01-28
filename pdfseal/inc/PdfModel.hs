@@ -568,6 +568,17 @@ eName :: BS.ByteString -> Value
 eName = Name . mconcat . BSL.toChunks
       . Bin.toLazyByteString . bin_builder_bytestring_name_escape
 
+-- | Turn Name into unencoded string
+dName :: Value -> Maybe BS.ByteString
+dName (Name s) = BSC.pack `fmap` decode (BSC.unpack s) where
+  decode [] = return []
+  decode ('#':a:b:r) = case readHex [a,b] of
+                         [(c,"")] -> (toEnum c:) `fmap` decode r
+                         _        -> Nothing
+  decode (c:r) | c /= '#' = (c:) `fmap` decode r
+  decode _ = Nothing
+dName _ = Nothing
+
 hexencode :: BS.ByteString -> BS.ByteString
 hexencode = BS.concatMap hex
     where hex x = BS.pack [hex1 ((x `shiftR` 4) .&. 15),hex1 (x .&. 15)]
@@ -723,6 +734,14 @@ lookup refid' (Document _ bodies) = msum (map check bodies)
                                                            then Just indir
                                                            else Nothing
                           _ -> Nothing
+
+-- Lookup a key in a dictionary (possibly following a reference to find the dictionary)
+lookupRef :: Document -> BS.ByteString -> Value -> Maybe Value
+lookupRef _ k (Dict l) = Prelude.lookup k l
+lookupRef d k (Ref n)  = do
+  Indir (Dict l) _ <- PdfModel.lookup n d
+  Prelude.lookup k l
+lookupRef _ _ _ = Nothing
 
 --writeObject :: (BS.ByteString -> IO ())     -- write action
 --            -> (IO Int)                     -- tell offset action

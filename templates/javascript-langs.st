@@ -52,6 +52,7 @@ javascriptLocalisation =
              , writeHere : "$_writeHere()$"
              , checkHere : "$_checkHere()$"
              , downloadPDF : "$_DownloadPDF()$"
+             , reviewAttachment: "$_ReviewAttachment()$"
              , reviewPDF: "$_ReviewPDF()$"
              , deletePDF: "$_DeletePDF()$"
              , attachmentType : "$_pageAttachmentAttachments()$"
@@ -106,6 +107,7 @@ javascriptLocalisation =
                        , waitingForSignature: "$_waitingForSignature()$"
                     }
             , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"
+            , evidenceAttachmentBoxHeader : "$_evidenceAttachmentBoxHeader()$"
             , signatoryAttachmentUploadButton: "$_signViewSigAttachmentBoxChooseFile()$"
             , step1template : "$_step1selectIfTemplate()$"
             , step1normal   : "$_step1selectIfElse()$"

@@ -48,6 +48,7 @@ import DocAPITest
 #ifndef NO_DOCSTATEQUERY
 import DocStateQueryTest
 #endif
+import EvidenceAttachmentsTest
 #ifndef NO_HTML
 import HtmlTest
 #endif
@@ -156,6 +157,7 @@ allTests = tail tests
 #ifndef NO_DOCSTATEQUERY
       , ("docstatequery", const $ const docStateQueryTests)
 #endif
+      , ("evidenceattachments", const $ const evidenceAttachmentsTest)
 #ifndef NO_HTML
       , ("html", const $ const htmlTests)
 #endif

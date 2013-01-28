@@ -32,6 +32,7 @@ import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocViewMail
+import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import FlashMessage
 import Kontra
 import KontraLink
@@ -47,6 +48,7 @@ import Doc.JSON()
 import Doc.DocInfo
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
+import qualified Data.ByteString.Char8 as BSC
 import Data.Maybe
 import Text.JSON
 import Data.List (sortBy)
@@ -115,12 +117,13 @@ flashMessageCSVSent :: TemplatesMonad m => Int -> m FlashMessage
 flashMessageCSVSent doccount =
   toFlashMsg OperationDone <$> (renderTemplate "flashMessageCSVSent" $ F.value "doccount" doccount)
 
-documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m) => Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
-documentJSON forapi forauthor pq msl doc = do
+documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m) => Bool -> Bool -> Bool -> PadQueue -> Maybe SignatoryLink -> Document -> m JSValue
+documentJSON includeEvidenceAttachments forapi forauthor pq msl doc = do
     ctx <- getContext
     file <- documentfileM doc
     sealedfile <- documentsealedfileM doc
     authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
+    evidenceattachments <- if includeEvidenceAttachments then EvidenceAttachments.fetch doc else return []
     let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
     mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) (getAuthorSigLink doc >>= maybesignatory)
     mcompany <- maybe (return Nothing) (dbQuery . GetCompanyByUserID) (getAuthorSigLink doc >>= maybesignatory)
@@ -139,6 +142,10 @@ documentJSON forapi forauthor pq msl doc = do
       J.value "file" $ fmap fileJSON file
       J.value "sealedfile" $ fmap fileJSON sealedfile
       J.value "authorattachments" $ map fileJSON (catMaybes authorattachmentfiles)
+      J.objects "evidenceattachments" $ for evidenceattachments $ \a -> do
+        J.value "name"     $ BSC.unpack $ EvidenceAttachments.name a
+        J.value "mimetype" $ BSC.unpack <$> EvidenceAttachments.mimetype a
+        J.value "downloadLink" $ show $ LinkEvidenceAttachment (documentid doc) (EvidenceAttachments.name a)
       J.value "timeouttime" $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc
       J.value "status" $ show $ documentstatus doc
       J.objects "signatories" $ map (signatoryJSON forapi forauthor pq doc msl) (documentsignatorylinks doc)

@@ -48,6 +48,14 @@ var AuthorViewModel = Backbone.Model.extend({
       this.set({"authorattachments" : new DocumentAuthorAttachments({document : this.document(), el : $("<div class='section spacing'/>")})}, {silent : true});
     return this.get("authorattachments");
   },
+  hasEvidenceAttachmentsSection : function() {
+    return this.document().evidenceattachments().length > 0;
+  },
+  evidenceattachments : function() {
+    if (this.get("evidenceattachments") == undefined)
+      this.set({"evidenceattachments" : new DocumentEvidenceAttachments({document : this.document(), el : $("<div class='section spacing'/>")})}, {silent : true});
+    return this.get("evidenceattachments");
+  },
   hasSignatoriesAttachmentsSection : function() {
     return this.document().signatoryattachments().length > 0;
   },
@@ -94,6 +102,8 @@ window.AuthorViewView = Backbone.View.extend({
        subcontainer.append(model.signatoryattachments().el());
     if (this.model.hasAuthorAttachmentsSection())
        subcontainer.append(model.authorattachments().el());
+    if (this.model.hasEvidenceAttachmentsSection())
+       subcontainer.append(model.evidenceattachments().el());
     return this;
   }
 });
@@ -104,7 +114,8 @@ window.AuthorView = function(args) {
        var document = new Document({
                         id : args.id,
                         viewer: args.viewer,
-                        readOnlyView: true
+                        readOnlyView: true,
+                        evidenceAttachments: true
                     });
        var model = new AuthorViewModel({
                         document : document

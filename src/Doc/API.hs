@@ -153,7 +153,7 @@ apiCallCreateFromFile = api $ do
       return ()
   let doc' = doc{ documentfile = fileid `fmap` mfile }
   _ <- lift $ addDocumentCreateStatEvents (documentid doc) "web"
-  Created <$> documentJSON True True Nothing Nothing doc'
+  Created <$> documentJSON False True True Nothing Nothing doc'
 
 
 apiCallCreateFromTemplate :: Kontrakcja m => DocumentID -> m Response
@@ -172,7 +172,7 @@ apiCallCreateFromTemplate did =  api $ do
           _ <- lift $ addDocumentCreateStatEvents (documentid newdoc) "web"
           Log.debug $ show "Document created from template"
           when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft [documentid newdoc] True
-          Created <$> documentJSON True  True Nothing Nothing newdoc
+          Created <$> documentJSON False True  True Nothing Nothing newdoc
       Nothing -> throwError $ serverError "Create document from template failed"
 
 
@@ -192,7 +192,7 @@ apiCallUpdate did = api $ do
   draftData   <-apiGuardJustM (badInput "Given JSON does not represent valid draft data.") $ return $ fromJSValue json
   newdocument <-  apiGuardL (serverError "Could not apply draft data") $ applyDraftDataToDocument doc draftData actor
   triggerAPICallbackIfThereIsOne newdocument
-  Ok <$> documentJSON True True Nothing Nothing newdocument
+  Ok <$> documentJSON False True True Nothing Nothing newdocument
 
 data ReadyParams = ReadyParams
   { timezonestring :: String
@@ -232,7 +232,7 @@ apiCallReady did =  api $ do
           Right newdocument -> do
               lift $ postDocumentPreparationChange newdocument "web"
               newdocument' <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
-              Accepted <$> documentJSON True True Nothing Nothing newdocument'
+              Accepted <$> documentJSON False True True Nothing Nothing newdocument'
           Left reason -> throwError $ serverError $ "Operation failed: " ++ show reason
 
 
@@ -249,7 +249,7 @@ apiCallCancel did =  api $ do
       newdocument <- apiGuardL (serverError "No document found after cancel") $ dbQuery $ GetDocumentByDocumentID $ did
       lift $ postDocumentCanceledChange newdocument "api"
       newdocument' <- apiGuardL (serverError "No document found after cancel and post actions") $ dbQuery $ GetDocumentByDocumentID $ did
-      Accepted <$> documentJSON True True Nothing Nothing newdocument'
+      Accepted <$> documentJSON False True True Nothing Nothing newdocument'
     else throwError $ serverError $ "Operation failed"
 
 apiCallRemind :: Kontrakcja m => DocumentID -> m Response
@@ -264,7 +264,7 @@ apiCallRemind did =  api $ do
         throwError $ serverError "Permission problem. Not an author."
   _ <- lift $ sendAllReminderEmails ctx actor user did
   newdocument <- apiGuardL (serverError "No document found after sending reminder") $ dbQuery $ GetDocumentByDocumentID $ did
-  Accepted <$> documentJSON True True Nothing Nothing newdocument
+  Accepted <$> documentJSON False True True Nothing Nothing newdocument
 
 apiCallDelete :: Kontrakcja m => DocumentID -> m Response
 apiCallDelete did =  api $ do
@@ -292,6 +292,7 @@ apiCallGet did = api $ do
   ctx <- getContext
   (msignatorylink :: Maybe SignatoryLinkID) <- lift $ readField "signatoryid"
   mmagichashh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msignatorylink
+  includeEvidenceAttachments <- lift $ (=="true") <$> getField' "evidenceAttachments"
   case (msignatorylink,mmagichashh) of
       (Just slid,Just mh) -> do
          doc <- apiGuardL (serverError "No document found") $  dbQuery $ GetDocumentByDocumentID did
@@ -308,7 +309,7 @@ apiCallGet did = api $ do
                 Just u -> dbQuery $ GetPadQueue $ (userid u)
                 _ -> return Nothing
          
-         Ok <$> documentJSON False False pq (Just sl) doc
+         Ok <$> documentJSON includeEvidenceAttachments False False pq (Just sl) doc
       _ -> do
         (user, _actor, external) <- getAPIUser APIDocCheck
         doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
@@ -328,7 +329,7 @@ apiCallGet did = api $ do
         let haspermission = (isJust msiglink)
                          || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared doc))
         if (haspermission)
-          then Ok <$> documentJSON external ((userid <$> mauser) == (Just $ userid user)) pq msiglink doc
+          then Ok <$> documentJSON includeEvidenceAttachments external ((userid <$> mauser) == (Just $ userid user)) pq msiglink doc
           else throwError $ serverError "You do not have right to access document"
 
 apiCallList :: Kontrakcja m => m Response

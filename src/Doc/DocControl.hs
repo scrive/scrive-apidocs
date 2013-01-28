@@ -19,6 +19,7 @@ module Doc.DocControl(
     , handleAcceptAccountFromSign
     , handleSigAttach
     , handleDeleteSigAttach
+    , handleEvidenceAttachment
     , handleIssueShowGet
     , handleIssueShowPost
     , handleIssueAuthorGoToSignview
@@ -52,6 +53,7 @@ import Doc.Rendering
 import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
+import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import qualified Doc.Screenshot as Screenshot
 import Doc.Tokens.Model
@@ -388,7 +390,14 @@ handleIssueAuthorGoToSignview docid = do
   case (isAuthor <$> getMaybeSignatoryLink (doc,user)) of
     Just True -> return $ LinkSignDoc doc $ fromJust $ getMaybeSignatoryLink (doc,user)
     _ -> return LoopBack
-  
+
+handleEvidenceAttachment :: Kontrakcja m => DocumentID -> String -> m Response
+handleEvidenceAttachment docid file = do
+  doc <- guardRightM $ getDocByDocID docid
+  es <- EvidenceAttachments.fetch doc
+  e <- guardJust $ listToMaybe $ filter ((==(BS.fromString file)) . EvidenceAttachments.name) es
+  let mimetype = fromMaybe "text/html" (EvidenceAttachments.mimetype e)
+  return $ toResponseBS mimetype (EvidenceAttachments.content e)
 
 {- |
    Handles the request to show a document to a logged in user.
