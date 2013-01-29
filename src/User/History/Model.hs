@@ -255,7 +255,7 @@ selectUserHistorySQL = SQL ("SELECT"
  <> " ") []
 
 fetchUserHistory :: MonadDB m => DBEnv m [UserHistory]
-fetchUserHistory = foldDB decoder []
+fetchUserHistory = kFold decoder []
   where
     decoder acc userid eventtype meventdata ip time sysver mpuser = UserHistory {
         uhuserid = userid

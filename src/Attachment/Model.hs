@@ -49,7 +49,7 @@ sqlAttachmentResults = do
   sqlResult "deleted"
 
 fetchAttachments :: MonadDB m => DBEnv m [Attachment]
-fetchAttachments = foldDB decoder []
+fetchAttachments = kFold decoder []
   where
     decoder acc aid title ctime mtime file_id user_id shared deleted =
       Attachment { attachmentid      = aid

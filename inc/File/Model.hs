@@ -101,7 +101,7 @@ filesSelectors = [
   ]
 
 fetchFiles :: MonadDB m => DBEnv m [File]
-fetchFiles = foldDB decoder []
+fetchFiles = kFold decoder []
   where
     decoder acc fid fname content amazon_bucket
       amazon_url checksum aes_key aes_iv = File {

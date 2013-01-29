@@ -55,7 +55,7 @@ session = Action {
   , qaSelectFields = ["id", "user_id", "pad_user_id", "expires", "token", "csrf_token"]
   , qaIndexField = "id"
   , qaExpirationDelay = "2 hours"
-  , qaDecode = foldDB decoder []
+  , qaDecode = kFold decoder []
   , qaUpdateSQL = \Session{..} -> toSQLCommand $ sqlUpdate "sessions" $ do
       sqlSet "user_id" sesUserID
       sqlSet "pad_user_id" sesPadUserID

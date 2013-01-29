@@ -98,7 +98,7 @@ selectTransactionsSQL = "SELECT" <+> selectors <+> "FROM eleg_transactions "
       ]
 
 fetchTransactions :: MonadDB m => DBEnv m [ELegTransaction]
-fetchTransactions = foldDB decoder []
+fetchTransactions = kFold decoder []
   where
     decoder acc tid nonce tbs encoded_tbs slid did token status
       cr_transaction_id cr_signature cr_attributes oref = ELegTransaction {

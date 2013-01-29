@@ -502,7 +502,7 @@ documentsSelectors =
 
 
 fetchDocuments :: MonadDB m => DBEnv m [Document]
-fetchDocuments = foldDB decoder []
+fetchDocuments = kFold decoder []
   where
     -- Note: this function gets documents in reversed order, but all queries
     -- use reversed order too, so in the end everything is properly ordered.
@@ -610,7 +610,7 @@ selectSignatoryLinksSQL = toSQLCommand (selectSignatoryLinksX (return ())) <+> "
 
 fetchSignatoryLinks :: MonadDB m => DBEnv m (M.Map DocumentID [SignatoryLink])
 fetchSignatoryLinks = do
-  sigs <- foldDB decoder (nulldocid, [], M.empty)
+  sigs <- kFold decoder (nulldocid, [], M.empty)
   return $ (\(d, l, m) -> M.insertWith' (++) d l m) sigs
   where
     nulldocid = unsafeDocumentID $ -1
@@ -706,7 +706,7 @@ insertSignatoryLinksAsAre documentid links = do
            sqlSetList "sign_redirect_url" $ signatorylinksignredirecturl <$> links
            sqlResult "id"
 
-  (slids :: [SignatoryLinkID]) <- foldDB (\acc slid -> slid : acc) []
+  (slids :: [SignatoryLinkID]) <- kFold (\acc slid -> slid : acc) []
 
   _ <- kRun $ selectSignatoryLinksX $ do
          sqlWhereIn "signatory_links.id" slids
@@ -741,7 +741,7 @@ signatoryAttachmentsSelectors = intercalate ", "
   ]
 
 fetchSignatoryAttachments :: MonadDB m => DBEnv m (M.Map SignatoryLinkID [SignatoryAttachment])
-fetchSignatoryAttachments = foldDB decoder M.empty
+fetchSignatoryAttachments = kFold decoder M.empty
   where
     decoder acc signatory_link_id file_id name description =
       M.insertWith' (++) signatory_link_id [SignatoryAttachment {
@@ -762,7 +762,7 @@ selectDocumentTagsSQL :: SQL
 selectDocumentTagsSQL = "SELECT" <+> documentTagsSelectors <+> "FROM document_tags "
 
 fetchDocumentTags :: MonadDB m => DBEnv m (M.Map DocumentID (S.Set DocumentTag))
-fetchDocumentTags = foldDB decoder M.empty
+fetchDocumentTags = kFold decoder M.empty
   where
     decoder acc document_id name v =
       M.insertWith' S.union document_id
@@ -793,7 +793,7 @@ selectAuthorAttachmentsSQL :: SQL
 selectAuthorAttachmentsSQL = "SELECT" <+> authorAttachmentsSelectors <+> "FROM author_attachments "
 
 fetchAuthorAttachments :: MonadDB m => DBEnv m (M.Map DocumentID [AuthorAttachment])
-fetchAuthorAttachments = foldDB decoder M.empty
+fetchAuthorAttachments = kFold decoder M.empty
   where
     decoder acc document_id file_id =
       M.insertWith' (++) document_id [AuthorAttachment {
@@ -846,7 +846,7 @@ selectSignatoryLinkFieldsSQL = "SELECT"
   <+> "FROM signatory_link_fields "
 
 fetchSignatoryLinkFields :: MonadDB m => DBEnv m (M.Map SignatoryLinkID [SignatoryField])
-fetchSignatoryLinkFields = foldDB decoder M.empty
+fetchSignatoryLinkFields = kFold decoder M.empty
   where
     decoder acc slid xtype custom_name is_author_filled v obligatory placements =
       M.insertWith' (++) slid
@@ -2431,7 +2431,7 @@ instance MonadDB m => DBQuery m GetDocsSentBetween Int where
                "AND documents.type = ? "   <>
                "AND documents.status <> ? ")
             [toSql uid, toSql start, toSql end, toSql $ Signable undefined, toSql Preparation]
-    foldDB (+) 0
+    kFold (+) 0
 
 data GetDocsSent = GetDocsSent UserID
 instance MonadDB m => DBQuery m GetDocsSent Int where
@@ -2444,7 +2444,7 @@ instance MonadDB m => DBQuery m GetDocsSent Int where
                "AND documents.type = ? "   <>
                "AND documents.status <> ? ")
             [toSql uid, toSql $ Signable undefined, toSql Preparation]
-    foldDB (+) 0
+    kFold (+) 0
 
 -- Update utilities
 

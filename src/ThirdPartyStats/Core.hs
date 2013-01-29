@@ -205,7 +205,7 @@ asyncProcessEvents process numEvts = do
                 case numEvts of
                   NoMoreThan n -> sqlLimit n
                   _            -> return ()
-            foldDB decoder ([], 0 :: Integer)
+            kFold decoder ([], 0 :: Integer)
 
 
 -- | Send a message off to the async queue for later processing.

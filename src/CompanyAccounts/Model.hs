@@ -77,7 +77,7 @@ selectCompanyInvitesSQL = "SELECT"
   <> " "
 
 fetchCompanyInvites :: MonadDB m => DBEnv m [CompanyInvite]
-fetchCompanyInvites = foldDB decoder []
+fetchCompanyInvites = kFold decoder []
   where
     decoder acc email fstname sndname cid = CompanyInvite {
         invitedemail = email

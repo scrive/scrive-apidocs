@@ -201,12 +201,12 @@ getUnreadEvents service_test = do
     sqlWhere "mail_events.event_read IS NULL"
     sqlOrderBy "mails.id DESC"
     sqlOrderBy "mail_events.id DESC"
-  foldDB fetchEvents []
+  kFold fetchEvents []
   where
     fetchEvents acc eid mid attrs event = (eid, mid, attrs, event) : acc
 
 fetchMails :: MonadDB m => DBEnv m [Mail]
-fetchMails = foldDB decoder []
+fetchMails = kFold decoder []
   where
     -- Note: this function gets mails in reversed order, but all queries
     -- use ORDER BY DESC, so in the end everything is properly ordered.
@@ -224,7 +224,7 @@ fetchMails = foldDB decoder []
         } : acc
 
 fetchMailAttachments :: MonadDB m => DBEnv m (Map.Map MailID [Attachment])
-fetchMailAttachments = foldDB decoder Map.empty
+fetchMailAttachments = kFold decoder Map.empty
   where
     -- Note: this function gets mails in reversed order, but all queries
     -- use ORDER BY DESC, so in the end everything is properly ordered.

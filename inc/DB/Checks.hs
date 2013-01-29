@@ -180,7 +180,7 @@ checkDBConsistency logger tables migrations = do
           fetchNamedIndex acc idxname column =
             (unsafeFromString idxname, TableIndex { tblIndexColumns = [unsafeFromString column] }) : acc
 
-      present <- foldDB fetchNamedIndex []
+      present <- kFold fetchNamedIndex []
 
       -- At this point we have 'present' that describes present
       -- indexes and 'requested' that describes what is requested.
@@ -281,7 +281,7 @@ checkDBConsistency logger tables migrations = do
                                       , fkDeferred   = deferred
                                       }) : acc
 
-      fkPresent <- foldDB fetchNamedForeignKey []
+      fkPresent <- kFold fetchNamedForeignKey []
 
       -- At this point we have fkPresent that describe present foreign keys
       -- and fkRequested that descript what is requested.

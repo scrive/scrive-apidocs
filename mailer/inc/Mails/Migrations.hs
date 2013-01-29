@@ -38,7 +38,7 @@ moveAtachmentsToSeparateTable =
         sqlWhere "attachments <> '[]'"
       let decoder1 :: Int -> Int -> Int
           decoder1 _ value = value
-      count <- foldDB decoder1 0
+      count <- kFold decoder1 0
 
       Log.debug $ "There are " ++ show count ++ " mails with attachments to move to mail_attachments, it will take around " ++ show ((count+999) `div` 1000) ++ " minutes"
 

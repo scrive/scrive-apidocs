@@ -40,7 +40,7 @@ passwordReminder = Action {
   , qaSelectFields = ["user_id", "expires", "remained_emails", "token"]
   , qaIndexField = "user_id"
   , qaExpirationDelay = "1 hour"
-  , qaDecode = foldDB decoder []
+  , qaDecode = kFold decoder []
   , qaUpdateSQL = \PasswordReminder{..} -> toSQLCommand $ sqlUpdate "password_reminders" $ do
       sqlSet "expires" prExpires
       sqlSet "remained_emails" prRemainedEmails

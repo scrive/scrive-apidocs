@@ -64,7 +64,7 @@ checkIfOneObjectReturned xs = oneObjectReturnedGuard xs
 getMany :: (IsSQL sql, MonadDB m) => Convertible SqlValue a => sql -> DBEnv m [a]
 getMany s = do
   _ <- kRun s
-  foldDB (\acc v -> v : acc) []
+  kFold (\acc v -> v : acc) []
 
 getOne :: (IsSQL sql, MonadDB m) => Convertible SqlValue a => sql -> DBEnv m (Maybe a)
 getOne s = getMany s >>= oneObjectReturnedGuard

@@ -72,6 +72,6 @@ instance MonadDB m => DBQuery m GetPadQueue PadQueue where
     fetchPadQueue
 
 fetchPadQueue :: MonadDB m => DBEnv m PadQueue
-fetchPadQueue = listToMaybe `liftM` foldDB decoder []
+fetchPadQueue = listToMaybe `liftM` kFold decoder []
   where
     decoder acc did slid  = (did, slid) : acc

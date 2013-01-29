@@ -186,7 +186,7 @@ instance MonadDB m => DBQuery m GetInviteInfo (Maybe InviteInfo) where
   query (GetInviteInfo uid) = do
     kRun_ $ SQL "SELECT inviter_id, invite_time, invite_type FROM user_invite_infos WHERE user_id = ?"
             [toSql uid]
-    foldDB fetchInviteInfos [] >>= oneObjectReturnedGuard
+    kFold fetchInviteInfos [] >>= oneObjectReturnedGuard
     where
       fetchInviteInfos acc inviter_id invite_time invite_type = InviteInfo {
           userinviter = inviter_id
@@ -217,7 +217,7 @@ instance MonadDB m => DBQuery m IsUserDeletable Bool where
       sqlWhereEq "documents.status" Pending
       sqlResult "documents.id"
       sqlLimit 1
-    (results :: [DocumentID]) <- foldDB (flip (:)) []
+    (results :: [DocumentID]) <- kFold (flip (:)) []
     return (null results)
 
 -- | Marks a user as deleted so that queries won't return them any more.
@@ -435,7 +435,7 @@ selectUsersSelectors :: SQL
 selectUsersSelectors = sqlConcatComma (map raw selectUsersSelectorsList)
 
 fetchUsers :: MonadDB m => DBEnv m [User]
-fetchUsers = foldDB decoder []
+fetchUsers = kFold decoder []
   where
     -- Note: this function gets users in reversed order, but all queries
     -- use ORDER BY DESC, so in the end everything is properly ordered.

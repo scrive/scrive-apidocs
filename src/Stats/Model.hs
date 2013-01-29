@@ -116,7 +116,7 @@ selectDocStatEventsSQL = SQL ("SELECT "
 
 
 fetchDocStats :: MonadDB m => DBEnv m [DocStatEvent]
-fetchDocStats = foldDB decoder []
+fetchDocStats = kFold decoder []
   where
     decoder acc uid time quantity amount documentid
      companyid dtype dprocess apistring =
@@ -166,7 +166,7 @@ instance MonadDB m => DBQuery m GetDocStatCSV [[BS.ByteString]] where
                     "LEFT JOIN companies ON doc_stat_events.company_id = companies.id " <>
                     "WHERE doc_stat_events.time > ? AND doc_stat_events.time <= ?" <>
                     "ORDER BY doc_stat_events.time DESC") [toSql start, toSql end]
-    foldDB f []
+    kFold f []
       where f :: [[BS.ByteString]] -> UserID -> BS.ByteString -> BS.ByteString -> MinutesTime -> DocStatQuantity -> Int -> DocumentID -> Maybe BS.ByteString -> Maybe CompanyID -> Int -> DocumentProcess -> BS.ByteString -> [[BS.ByteString]]
             f acc uid n em t q a did cn cid dt dp api =
               let smartname = if BS.null n then em else n
@@ -198,7 +198,7 @@ instance MonadDB m => DBQuery m GetDocHistCSV [[String]] where
                                                       toSql DocStatReject,
                                                       toSql DocStatCancel,
                                                       toSql DocStatTimeout]
-    foldDB f []
+    kFold f []
       where f :: [[String]] -> DocumentID -> Maybe CompanyID -> Int -> DocumentProcess -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> [[String]]
             f acc did co st dp cr se cl re ca ti =
               [ show did
@@ -259,7 +259,7 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
 
 
 fetchUsersAndCompaniesAndInviteInfo :: MonadDB m => DBEnv m [(User, Maybe Company, Maybe InviteInfo)]
-fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` foldDB decoder []
+fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
   where
     decoder acc uid password salt is_company_admin account_suspended
      has_accepted_terms_of_service signup_method company_id
@@ -328,7 +328,7 @@ selectUserIDAndStatsSQL (q1, q2) = SQL ("SELECT "
 
 
 fetchUserIDAndStats :: MonadDB m => DBEnv m (M.Map UserID [(MinutesTime, DocStatQuantity, Int)])
-fetchUserIDAndStats = foldDB decoder M.empty
+fetchUserIDAndStats = kFold decoder M.empty
   where
     decoder acc uid time quantity amount =
       M.insertWith' (++) uid [(time,quantity,amount)] acc
@@ -400,7 +400,7 @@ selectUserStatEventsSQL = SQL ("SELECT"
  <> " ") []
 
 fetchUserStats :: MonadDB m => DBEnv m [UserStatEvent]
-fetchUserStats = foldDB decoder []
+fetchUserStats = kFold decoder []
   where
     decoder acc uid time quantity amount companyid = UserStatEvent {
         usUserID       = uid
@@ -466,7 +466,7 @@ selectSignStatEventsSQL = SQL ("SELECT"
  <> " ") []
 
 fetchSignStats :: MonadDB m => DBEnv m [SignStatEvent]
-fetchSignStats = foldDB decoder []
+fetchSignStats = kFold decoder []
   where
     decoder acc docid slid time quantity
      companyid documentprocess = SignStatEvent {
@@ -538,7 +538,7 @@ instance MonadDB m => DBQuery m GetSignHistCSV [[String]] where
                                                       toSql SignStatReject,
                                                       toSql SignStatDelete,
                                                       toSql SignStatPurge]
-    foldDB f []
+    kFold f []
       where f :: [[String]] -> DocumentID -> SignatoryLinkID -> Maybe CompanyID -> String -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> Maybe MinutesTime -> [[String]]
             f acc did sid co t inv rec op li si rej del pur =
               [show did, show sid, maybe "" show co, t, maybe "" formatMinutesTimeISO inv, maybe "" formatMinutesTimeISO rec, maybe "" formatMinutesTimeISO op, maybe "" formatMinutesTimeISO li, maybe "" formatMinutesTimeISO si, maybe "" formatMinutesTimeISO rej, maybe "" formatMinutesTimeISO del, maybe "" formatMinutesTimeISO pur] : acc

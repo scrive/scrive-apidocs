@@ -204,7 +204,7 @@ selectCompaniesSelectors = do
 
 
 fetchCompanies :: MonadDB m => DBEnv m [Company]
-fetchCompanies = foldDB decoder []
+fetchCompanies = kFold decoder []
   where
     decoder acc cid eid name number address zip' city country
       bars_background bars_textcolour logo email_domain = Company {

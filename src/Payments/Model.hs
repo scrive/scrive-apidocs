@@ -61,7 +61,7 @@ data GetAccountCode = GetAccountCode -- tested
 instance (MonadBase IO m, MonadDB m) => DBUpdate m GetAccountCode AccountCode where
   update GetAccountCode = do
     kRun_ $ SQL "SELECT nextval('payment_plans_account_code_seq')" []
-    results <- foldDB (flip (:)) []
+    results <- kFold (flip (:)) []
     case results of
       [x] -> return x
       _ -> internalError -- should never happen
@@ -83,7 +83,7 @@ instance MonadDB m => DBQuery m GetCompanyQuantity Int where
                 "         AND NOT EXISTS (SELECT 1 FROM users " <+>
                 "                         WHERE email = companyinvites.email " <+>
                 "                           AND company_id = " <?> cid <+> "))) AS emails"
-    res <- foldDB (flip (:)) []
+    res <- kFold (flip (:)) []
     case res of
       (x:_) -> return x
       _     -> return 0
@@ -118,7 +118,7 @@ instance (MonadDB m) => DBQuery m GetPaymentPlan (Maybe PaymentPlan) where
       case eid of
         Left  uid -> sqlWhereEq "user_id"    uid
         Right cid -> sqlWhereEq "company_id" cid
-    listToMaybe <$> foldDB fetchPaymentPlans []
+    listToMaybe <$> kFold fetchPaymentPlans []
 
 -- tested
 data GetPaymentPlanInactiveUser = GetPaymentPlanInactiveUser UserID
@@ -142,7 +142,7 @@ instance MonadDB m => DBQuery m GetPaymentPlanInactiveUser (Maybe PaymentPlan) w
       sqlJoinOn "users" "payment_plans.user_id = users.id"
       sqlWhereEq "user_id" uid
       sqlWhereIsNULL "users.has_accepted_terms_of_service"
-    listToMaybe <$> foldDB fetchPaymentPlans []
+    listToMaybe <$> kFold fetchPaymentPlans []
 
 -- tested
 data GetPaymentPlanByAccountCode = GetPaymentPlanByAccountCode AccountCode
@@ -164,7 +164,7 @@ instance (MonadDB m) => DBQuery m GetPaymentPlanByAccountCode (Maybe PaymentPlan
       sqlResult "dunning_date"
       sqlResult "billing_ends"
       sqlWhereEq "account_code" ac
-    listToMaybe <$> foldDB fetchPaymentPlans []
+    listToMaybe <$> kFold fetchPaymentPlans []
 
 fetchPaymentPlans :: [PaymentPlan]       -> 
                      AccountCode         -> 
@@ -231,7 +231,7 @@ instance MonadDB m => DBQuery m PaymentPlansRequiringSync [PaymentPlan] where
              "     OR  (q > quantity " <> -- current # of users > cache
              "     OR   q <> quantity_pending)) ") -- current # of users <> pending cache
             [toSql prov, toSql past]
-    foldDB fetchPaymentPlans []
+    kFold fetchPaymentPlans []
 
 --tested
 data PaymentPlansExpiredDunning = PaymentPlansExpiredDunning MinutesTime
@@ -243,7 +243,7 @@ instance MonadDB m => DBQuery m PaymentPlansExpiredDunning [PaymentPlan] where
              "  WHERE dunning_date < ? " <>
              "    AND provider = ? ")
             [toSql time, toSql RecurlyProvider]
-    foldDB fetchPaymentPlans []
+    kFold fetchPaymentPlans []
 
 -- tested
 data SavePaymentPlan = SavePaymentPlan PaymentPlan MinutesTime

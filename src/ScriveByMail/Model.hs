@@ -48,7 +48,7 @@ instance MonadDB m => DBQuery m GetUserMailAPI (Maybe MailAPIInfo) where
   query (GetUserMailAPI uid) = do
     kRun_ $ SQL "SELECT key, daily_limit, (CASE WHEN last_sent_date = now()::DATE THEN sent_today ELSE 0 END) FROM user_mail_apis WHERE user_id = ?"
            [toSql uid]
-    foldDB fetchUserMailAPIs [] >>= oneObjectReturnedGuard
+    kFold fetchUserMailAPIs [] >>= oneObjectReturnedGuard
     where
       fetchUserMailAPIs acc key daily_limit sent_today = MailAPIInfo {
           umapiKey = key
@@ -112,7 +112,7 @@ instance MonadDB m => DBQuery m GetCompanyMailAPI (Maybe MailAPIInfo) where
   query (GetCompanyMailAPI cid) = do
     kRun_ $ SQL "SELECT key, daily_limit, (CASE WHEN last_sent_date = now()::DATE THEN sent_today ELSE 0 END) FROM company_mail_apis WHERE company_id = ?"
             [toSql cid]
-    foldDB fetchCompanyMailAPIs [] >>= oneObjectReturnedGuard
+    kFold fetchCompanyMailAPIs [] >>= oneObjectReturnedGuard
     where
       fetchCompanyMailAPIs acc key daily_limit sent_today = MailAPIInfo {
           umapiKey = key
@@ -202,7 +202,7 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m AddMailAPIDelay (Maybe (Int64, M
     Log.debug $ "number of rows AddMailAPIDelay: " ++ show r
     _ <- kRun $ SQL "SELECT id, key FROM mail_api_user_request WHERE email = ? AND company_id = ?"
                       [toSql email, toSql cid]
-    a <- listToMaybe `liftM` foldDB f []
+    a <- listToMaybe `liftM` kFold f []
     case a of
       Nothing -> return Nothing
       Just (requestid, key') -> do
@@ -221,7 +221,7 @@ instance MonadDB m => DBQuery m GetMailAPIUserRequest (Maybe (String, CompanyID)
     kRun_ $ SQL ("SELECT email, company_id FROM mail_api_user_request "
             <> "WHERE id = ? AND key = ? AND expires >= ? AND status = ?")
             [toSql delayid, toSql key, toSql now, toSql DelayWaitAdmin]
-    foldDB f [] >>= oneObjectReturnedGuard
+    kFold f [] >>= oneObjectReturnedGuard
     where f acc email cid = (email, cid):acc
 
 data DeleteMailAPIDelays = DeleteMailAPIDelays Int64 MinutesTime
@@ -240,7 +240,7 @@ instance MonadDB m => DBQuery m GetMailAPIDelaysForEmail (Maybe (Int64, [BS.Byte
             <> "JOIN mail_api_delay ON mail_api_delay.user_request_id = mail_api_user_request.id "
             <> "WHERE email = ? AND expires >= ? AND status = ?")
             [toSql email, toSql now, toSql DelayWaitUser]
-    foldDB f Nothing
+    kFold f Nothing
     where f Nothing i e = Just (i, [e])
           f (Just (i, acc)) _ e = Just (i, e:acc)
 

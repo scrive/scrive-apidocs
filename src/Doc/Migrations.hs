@@ -326,7 +326,7 @@ moveSignatoryLinkFieldsToSeparateTable = Migration {
   , mgrFrom = 8
   , mgrDo = do
     _ <- kRun $ SQL "SELECT id, fields FROM signatory_links WHERE fields <> '' AND fields <> '[]'" [];
-    values <- foldDB fetch []
+    values <- kFold fetch []
     forM_ values $ \(slid, fields) -> do
       forM_ fields $ \field -> do
         let (xtypestr :: String, custom_name :: String, is_author_filled :: Bool) =
@@ -380,7 +380,7 @@ moveDocumentTagsFromDocumentsTableToDocumentTagsTable = Migration {
   , mgrFrom = 4
   , mgrDo = do
     _ <- kRun $ SQL "SELECT id, tags FROM documents WHERE tags <> '' AND tags <> '[]'" [];
-    values <- foldDB fetch []
+    values <- kFold fetch []
     forM_ values $ \(docid, tags) -> do
       forM_ tags $ \tag -> do
         let Just (JSString tagname) = lookup "tagname" tag
@@ -418,7 +418,7 @@ removeOldSignatoryLinkIDFromCancelationReason = Migration {
   , mgrFrom = 1
   , mgrDo = do
     _ <- kRun $ SQL "SELECT id, cancelation_reason FROM documents WHERE cancelation_reason LIKE ?" [toSql ("{\"ELegDataMismatch%"::String)]
-    values <- foldDB fetch []
+    values <- kFold fetch []
     forM_ values $ \(slid, params) -> do
       let (x : JSObject link : xs) = params
           [("unSignatoryLinkID", newlink)] = fromJSObject link
@@ -536,7 +536,7 @@ addSignatoryLinkIdToSignatoryAttachment =
   where
     logAndDeleteBadAttachments = do
       kRunRaw $ "SELECT document_id, name, email, description FROM signatory_attachments WHERE signatory_link_id = 0"
-      atts <- foldDB decoder []
+      atts <- kFold decoder []
       kRunRaw $ "DELETE FROM signatory_attachments WHERE signatory_link_id = 0"
       mapM_ (\(d, n, e, s) ->
         Log.debug $ "Deleted bad attachment: document_id = " ++ show d
@@ -555,7 +555,7 @@ fixSignatoryLinksSwedishChars =
   , mgrFrom = 5
   , mgrDo = do
      _ <- kRun $ SQL "SELECT id, document_id, fields FROM signatory_links" []
-     sls <- foldDB decoder []
+     sls <- kFold decoder []
      forM_ sls $ \(sid,did,fields) -> do
        let fixedfields = fixSwedishChars fields
        when (fields /= fixedfields) $ do

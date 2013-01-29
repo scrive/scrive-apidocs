@@ -47,7 +47,7 @@ userAccountRequest = Action {
   , qaSelectFields = ["user_id", "expires", "token"]
   , qaIndexField = "user_id"
   , qaExpirationDelay = "1 hour"
-  , qaDecode = foldDB decoder []
+  , qaDecode = kFold decoder []
   , qaUpdateSQL = \UserAccountRequest{..} -> toSQLCommand $ sqlUpdate "user_account_requests" $ do
       sqlSet "expires" uarExpires
       sqlSet "token" uarToken

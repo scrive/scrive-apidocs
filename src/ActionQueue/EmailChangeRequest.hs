@@ -42,7 +42,7 @@ emailChangeRequest = Action {
   , qaSelectFields = ["user_id", "expires", "new_email", "token"]
   , qaIndexField = "user_id"
   , qaExpirationDelay = "1 hour"
-  , qaDecode = foldDB decoder []
+  , qaDecode = kFold decoder []
   , qaUpdateSQL = \EmailChangeRequest{..} -> toSQLCommand $ sqlUpdate "email_change_requests" $ do
       sqlSet "expires" ecrExpires
       sqlSet "new_email" ecrNewEmail

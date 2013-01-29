@@ -140,7 +140,7 @@ instance MonadDB m => DBQuery m GetAPITokensForUser [(APIToken, MagicHash)] wher
              <> "                 WHERE oauth_privilege.privilege = ?) "
              <> "ORDER BY id DESC")
             [toSql uid, toSql APIPersonal]
-    foldDB (\acc i t s -> (APIToken i t, s):acc) []
+    kFold (\acc i t s -> (APIToken i t, s):acc) []
 
 
 -- Temporary Credentials Request (first part of OAuth flow)
@@ -197,7 +197,7 @@ instance MonadDB m => DBUpdate m VerifyCredentials (Maybe (URI, MagicHash)) wher
   update (VerifyCredentials token uid time) = do
     kRun_ $ SQL ("UPDATE oauth_temp_credential SET user_id = ? WHERE user_id IS NULL AND EXISTS (SELECT 1 FROM users WHERE id = ?) AND id = ? AND temp_token = ? AND expires > ? RETURNING callback, verifier")
             [ toSql uid, toSql uid, toSql $ atID token, toSql $ atToken token, toSql time ]
-    mr <- foldDB (\acc cb vr -> maybe acc (\uri->(uri,vr):acc) $ parseURI cb) []
+    mr <- kFold (\acc cb vr -> maybe acc (\uri->(uri,vr):acc) $ parseURI cb) []
     oneObjectReturnedGuard mr
 
 {- |
@@ -208,7 +208,7 @@ instance MonadDB m => DBUpdate m DenyCredentials (Maybe URI) where
   update (DenyCredentials token _time) = do
     _ <- kRun $ SQL "DELETE FROM oauth_temp_credential WHERE (id = ? AND temp_token = ?) RETURNING callback"
                     [ toSql $ atID token, toSql $ atToken token ]
-    mr <- foldDB (\acc cb -> maybe acc (:acc) $ parseURI cb) []
+    mr <- kFold (\acc cb -> maybe acc (:acc) $ parseURI cb) []
     oneObjectReturnedGuard mr
 
 {- |
@@ -225,7 +225,7 @@ instance MonadDB m => DBQuery m GetRequestedPrivileges (Maybe (String, [APIPrivi
               <> "LEFT OUTER JOIN companies com ON u.company_id    = com.id " -- 0..1 relationship
               <> "WHERE c.temp_token = ? AND c.id = ? AND expires > ? AND c.user_id IS NULL")
               [ toSql $ atToken token, toSql $ atID token, toSql time ]
-    foldDB f Nothing
+    kFold f Nothing
     -- get name of company from companies table, or if that does not exist, the users.company_name
     where f :: Maybe (String, [APIPrivilege]) -> Maybe String -> String -> String -> String -> String -> APIPrivilege -> Maybe (String, [APIPrivilege])
           f Nothing c n fn ln e pr       = Just (getname c n fn ln e, [pr])
@@ -268,7 +268,7 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m RequestAccessToken (Maybe (APITo
                   , toSql trVerifier
                   , toSql time
                   ]
-    mr <- foldDB (\acc i t s -> (APIToken { atID = i, atToken = t }, s):acc) []
+    mr <- kFold (\acc i t s -> (APIToken { atID = i, atToken = t }, s):acc) []
     case mr of
       [(tk, _)] -> do
         _ <- kRun $ SQL (   "INSERT INTO oauth_privilege (access_token_id, privilege) "
@@ -328,7 +328,7 @@ instance MonadDB m => DBQuery m GetUserIDForAPIWithPrivilege (Maybe (UserID, Str
                   , toSql asecret
                   , toSql priv
                   , toSql APIPersonal]
-    mr <- foldDB f []
+    mr <- kFold f []
     oneObjectReturnedGuard mr
       where f acc uid _ _ _ _ (Just s) = (uid, s):acc               -- company name from company table
             f acc uid e "" "" "" _     = (uid, e):acc               -- just email
@@ -358,7 +358,7 @@ instance MonadDB m => DBQuery m GetGrantedPrivileges [(Int64, String, [APIPrivil
              <> "                   WHERE oauth_privilege.privilege = ?) "
              <> "ORDER BY a.id ")
             [toSql userid, toSql APIPersonal]
-    foldDB f []
+    kFold f []
       where f ((tid,n,ps):as) tid' _ _ _ _ _ p | tid == tid' = (tid, n, p:ps): as -- already have the id
             f acc tid _ _ _ _ (Just s) p = (tid, s, [p]):acc                      -- company name
             f acc tid e "" "" "" _     p = (tid, e, [p]):acc                      -- just email
@@ -408,7 +408,7 @@ instance MonadDB m => DBQuery m GetPersonalToken (Maybe (APIToken, MagicHash, AP
              <> "JOIN oauth_api_token t on a.api_token_id = t.id "
              <> "WHERE a.user_id = ? AND t.user_id = ? AND a.id IN (SELECT access_token_id FROM oauth_privilege WHERE access_token_id = a.id AND privilege = ?)")
             [toSql userid, toSql userid, toSql APIPersonal]
-    mr <- foldDB (\acc ti tt ts i t s -> (APIToken ti tt, ts, APIToken i t, s):acc) []
+    mr <- kFold (\acc ti tt ts i t s -> (APIToken ti tt, ts, APIToken i t, s):acc) []
     oneObjectReturnedGuard mr
 
 {- |
@@ -433,7 +433,7 @@ instance (MonadDB m, CryptoRNG m) => DBUpdate m CreatePersonalToken Bool where
                        toSql secret,
                        toSql userid,
                        toSql userid]
-        [apiid] <- foldDB (\acc (i :: Int64) -> i:acc) []
+        [apiid] <- kFold (\acc (i :: Int64) -> i:acc) []
         -- now create the access token
         atoken  :: MagicHash <- lift random
         asecret :: MagicHash <- lift random
@@ -447,7 +447,7 @@ instance (MonadDB m, CryptoRNG m) => DBUpdate m CreatePersonalToken Bool where
                        toSql apiid,
                        toSql userid,
                        toSql now]
-        [accessid] <- foldDB (\acc (i :: Int64) -> i:acc) []
+        [accessid] <- kFold (\acc (i :: Int64) -> i:acc) []
         -- need to add all privileges here
         r <- kRun $ SQL (  "INSERT INTO oauth_privilege "
                  <> "(access_token_id, privilege) "

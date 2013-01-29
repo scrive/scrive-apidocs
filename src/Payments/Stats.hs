@@ -70,7 +70,7 @@ instance (MonadBase IO m, MonadDB m) => DBQuery m GetPaymentsStats [[String]] wh
                      "LEFT OUTER JOIN users     ON payment_plans.user_id    = users.id " <>
                      "LEFT OUTER JOIN companies ON payment_plans.company_id = companies.id " <>
                      "ORDER BY payment_plans.account_code DESC") []
-    foldDB f []
+    kFold f []
       where f :: [[String]] -> MinutesTime -> AccountCode -> Maybe UserID -> Maybe CompanyID -> Int -> PricePlan -> PaymentPlanProvider -> MinutesTime -> PaymentPlanStatus -> Maybe String -> Maybe String -> Maybe String -> Maybe String -> [[String]]
             f acc t ac muid mcid q pp pr be st un em ucn cn =
               let smartname = case cn of

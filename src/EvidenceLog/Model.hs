@@ -126,7 +126,7 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
       <> "  ORDER BY time DESC, id DESC") [
         toSql docid
       ]
-    foldDB fetchEvidenceLog []
+    kFold fetchEvidenceLog []
     where
       fetchEvidenceLog acc did' tm txt tp vid uid eml ip4 ip6 slid api aslid emsg =
         DocumentEvidenceEvent {

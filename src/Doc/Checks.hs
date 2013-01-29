@@ -62,7 +62,7 @@ checkDocument did conditions = do
     , helper conditions
     , SQL ", '[\\n\\r]+') FROM documents d WHERE id = ?" [toSql did]
     ]
-  filter (not . null) <$> foldDB (flip (:)) []
+  filter (not . null) <$> kFold (flip (:)) []
   where
     helper = mintercalate (\a b -> a <> SQL " || '\n' || " [] <> b)
       . map (\(s, msg) -> mconcat [

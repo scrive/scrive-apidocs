@@ -55,7 +55,7 @@ decodeANonZero acc i s d = if i == 0
 sqlTestFetcherProperData :: TestEnv ()
 sqlTestFetcherProperData = runDBEnv $ do
   k <- injectStatement [[SqlInt64 123, SqlString "abc", SqlDouble 1.23]]
-  v <- foldDB decodeA []
+  v <- kFold decodeA []
   assertEqual "result" [A 123 "abc" 1.23] v
   (r, fc) <- liftIO $ readIORef k
   assertEqual "finish called" True fc
@@ -67,7 +67,7 @@ sqlTestFetcherProperDataManyRows = runDBEnv $ do
                        , [SqlInt64 2, SqlString "b", SqlDouble 2.23]
                        , [SqlInt64 3, SqlString "c", SqlDouble 3.23]
                        ]
-  v <- reverse `liftM` foldDB decodeA []
+  v <- reverse `liftM` kFold decodeA []
   assertEqual "result" [ A 1 "a" 1.23
                        , A 2 "b" 2.23
                        , A 3 "c" 3.23
@@ -82,7 +82,7 @@ sqlTestFetcherRowTooShort = runDBEnv $ do
                        , [SqlInt64 2, SqlString "b"]
                        , [SqlInt64 3, SqlString "c", SqlDouble 3.23]
                        ]
-  v <- E.try $ foldDB decodeA []
+  v <- E.try $ kFold decodeA []
   assertEqual "row too short exception was thrown" True $
               case v of
                 Left RowLengthMismatch{} -> True
@@ -98,7 +98,7 @@ sqlTestFetcherRowTooLong = runDBEnv $ do
                        , [SqlInt64 2, SqlString "b", SqlDouble 1.23, SqlDouble 1.23]
                        , [SqlInt64 3, SqlString "c", SqlDouble 3.23]
                        ]
-  v <- E.try $ foldDB decodeA []
+  v <- E.try $ kFold decodeA []
   assertEqual "row too long exception was thrown" True $
               case v of
                 Left RowLengthMismatch{} -> True
@@ -114,7 +114,7 @@ sqlTestFetcherConvertError = runDBEnv $ do
                        , [SqlString "b", SqlString "b", SqlDouble 1.23]
                        , [SqlInt64 3, SqlString "c", SqlDouble 3.23]
                        ]
-  v <- E.try $ foldDB decodeA []
+  v <- E.try $ kFold decodeA []
   assertEqual "convert error was thrown" True $
               case v of
                 Left CannotConvertSqlValue{} -> True
@@ -131,7 +131,7 @@ sqlTestFetcherUserConvertError = runDBEnv $ do
                        , [SqlInt64 0, SqlString "b", SqlDouble 1.23]
                        , [SqlInt64 3, SqlString "c", SqlDouble 3.23]
                        ]
-  v <- E.try $ foldDB decodeANonZero []
+  v <- E.try $ kFold decodeANonZero []
   assertEqual "user convert error was thrown" True $
               case v of
                 Left E.ErrorCall{} -> True

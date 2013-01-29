@@ -41,7 +41,7 @@ documentAPICallback = Action {
   , qaSelectFields = ["document_id", "expires", "url", "attempt"]
   , qaIndexField = "document_id"
   , qaExpirationDelay = "5 minutes" -- not really needed
-  , qaDecode = foldDB decoder []
+  , qaDecode = kFold decoder []
   , qaUpdateSQL = \DocumentAPICallback{..} -> toSQLCommand $ sqlUpdate "document_api_callbacks" $ do
       sqlSet "expires" dacExpires
       sqlSet "url" dacURL

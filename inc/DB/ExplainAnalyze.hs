@@ -12,5 +12,5 @@ import DB.Functions
 kExplainAnalyze :: (SqlTurnIntoSelect s, MonadDB m) => s -> DBEnv m String
 kExplainAnalyze cmd = do
   kRun_ ("EXPLAIN ANALYZE" <+> toSQLCommand (sqlTurnIntoSelect cmd))
-  resultLines <- foldDB (flip (:)) []
+  resultLines <- kFold (flip (:)) []
   return (unlines resultLines)
