@@ -131,6 +131,24 @@ type Template = String
 data Localization = Value Template
                   | Object (Map.Map String Localization)
 
+-- recursively remove internal nodes that have no leaves
+pruneLocalization :: Localization -> Localization
+pruneLocalization l@(Value _) = l
+pruneLocalization (Object m) = Object $ Map.fromList $ filter (\(_, v) -> nonEmptyElem v) prunnedElems
+    where elems = Map.toList m
+          prunnedElems = map (\(k, v) -> (k, pruneLocalization v)) elems
+          nonEmptyElem (Value _) = True
+          nonEmptyElem (Object m') = not $ Map.null m'
+
+-- get key, must be called on Objects and with existing keys
+(!) :: Localization -> String -> Localization
+(!) (Value _) _ = error "(!) must be called on Object localization"
+(!) (Object m) k = m Map.! k
+
+nullLocalization :: Localization -> Bool
+nullLocalization (Value _) = False
+nullLocalization (Object m) = Map.null m
+
 instance Show Localization where
     show = aux 0
         where aux _ (Value t) = "\"" ++ t ++ "\""
@@ -253,17 +271,17 @@ localizationCallFromString s = LocalizationCall path finalElem
 -- localization call points to non-existing value in a localization
 -- localization call points to a whole [sub]dictionary of the localization
 -- dict-like access to simple values (e.g. localization call 'foo.bar' for localization '{foo: "quuz"}')
-removeLocalizationCallFromLocalization :: LocalizationCall -> Localization -> Either String Localization
-removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath' lineNumber) loc = aux path loc
-    where myError s = Left $ s ++ " at " ++ filePath' ++ ":" ++ show lineNumber ++ " (from call: '" ++ wholePathFormatted ++ "')"
+removeLocalizationCallFromLocalization :: LocalizationCall -> Localization -> Localization -> Either String Localization
+removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath' lineNumber) whiteList loc = aux path loc whiteList
+    where myError s = Left $ filePath' ++ ":" ++ show lineNumber ++ ": " ++ s ++ " (from call: '" ++ wholePathFormatted ++ "')"
           wholePathFormatted = format $ path ++ [case finalElem of
                                                    DictAccess x -> x ++ "["
                                                    FunCall x -> x ++ "("
                                                    Attribute x -> x]
           format = concat . intersperse "."
 
-          aux _ (Value _) = error "Trying to remove from Value Localization"
-          aux [] (Object m) =
+          aux _ (Value _) _ = error "Trying to remove from Value Localization"
+          aux [] (Object m) wl =
               case finalElem of
                 FunCall functionName ->
                     case Map.lookup functionName m of
@@ -275,7 +293,11 @@ removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath
                 DictAccess dictName ->
                     case Map.lookup dictName m of
                       Nothing -> myError $ "Detected dict/array like access to non-existing key '" ++ dictName ++ "'"
-                      Just (Object _) -> myError $ "Detected dict access (" ++ dictName ++ "), probably using dynamic keys. Please manually add needed keys to the whitelist"
+                      Just l@(Object _) -> myError $
+                          if nullLocalization $ pruneLocalization $ l `diffLocalization` (wl ! dictName) then
+                              "(WHITELISTED) Detected dict access (" ++ dictName ++ "), probably using dynamic keys."
+                          else
+                              "Detected dict access (" ++ dictName ++ "), probably using dynamic keys. Please manually add needed keys to the whitelist"
                       Just (Value "<function>") -> myError $ "Detected dict/array like access to a function '" ++ dictName ++ "'"
                       Just (Value "<array>") -> Right $ Object $ Map.delete dictName m
                       Just (Value _) -> myError $ "Detected dict/array like access to a string '" ++ dictName ++ "'"
@@ -287,7 +309,7 @@ removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath
                       Just (Value "<array>") -> myError $ "Detected attribute access to an array '" ++ attr ++ "'"
                       Just (Value _) -> Right $ Object $ Map.delete attr m
 
-          aux (node:children) (Object m) =
+          aux (node:children) (Object m) wl =
               case Map.lookup node m of
                 Nothing -> myError $ "Detected access to non-existing key '" ++ node ++ "'"
                 Just (Value v) -> -- "foo....QUUX" "{foo: v}"
@@ -322,7 +344,7 @@ removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath
                         let badPrefix = take (length path - length children) path
                         in myError $ "Detected dict-like acces ('" ++ format path ++ "'), but '" ++ format badPrefix ++ "' is a simple value'"
                 Just l@(Object _) -> do
-                  y <- aux children l
+                  y <- aux children l $ wl ! node
                   return $ Object $ Map.alter (const $ Just y) node m
 
 -- parse localization calls from a list of files
@@ -340,11 +362,12 @@ main = do
   mainLocalization <- localizationsFromFile "templates/javascript-langs.st"
   files <- find (return True) (extension ==? ".js") "public/js"
   localizationCalls <- readLocalizations files
-  let results = map (flip removeLocalizationCallFromLocalization mainLocalization) localizationCalls
+  let results = map (\lc -> removeLocalizationCallFromLocalization lc whitelist mainLocalization) localizationCalls
       (logs, cleanedLocalizations) = splitEithers results
       mainLocalizationWithWhiteList = mainLocalization `diffLocalization` whitelist
       unusedLocalization = foldl intersectLocalizations mainLocalizationWithWhiteList cleanedLocalizations
-  _ <- forM logs $ \warn -> hPutStrLn stderr $ "Warning: " ++ warn
+  hPutStrLn stderr "Warnings:"
+  _ <- forM logs $ hPutStrLn stderr
   putStrLn "******************************"
   putStrLn "Unused localization calls:"
-  print unusedLocalization
+  print $ pruneLocalization unusedLocalization
