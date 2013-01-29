@@ -144,6 +144,13 @@ createUser email names mcompanyid lang = do
   case muser of
     Just user -> do
       _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) email (userid <$> ctxmaybeuser ctx)
+      asyncLogEvent "Create User" [UserIDProp (userid user),
+                                   TimeProp (ctxtime ctx),
+                                   MailProp email]
+      asyncLogEvent SetUserProps [UserIDProp (userid user),
+                                  NameProp (getFullName user),
+                                  MailProp email,
+                                  someProp "Created" (ctxtime ctx)]
       return muser
     _ -> return muser
 
