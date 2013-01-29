@@ -22,7 +22,6 @@ javascriptLocalisation =
              , tbsGenerationMessage : function(doctitle, docid){
                     return  '$_tbsGenerationMessage1()$"' + doctitle + '"$_tbsGenerationMessage2()$"' + docid + '"$_tbsGenerationMessage3()$'
                      }
-             , differentSignatories :  "$_differentSignatories()$"
              , ie6NotSupported : "$_ie6NotSupported()$"
              , fstname : "$_firstname()$"
              , sndname : "$_lastname()$"
@@ -30,7 +29,6 @@ javascriptLocalisation =
              , company : "$_company()$"
              , personamNumber : "$_personnumber()$"
              , companyNumber : "$_orgnumber()$"
-             , loadingTweets : "$_loadingTweets()$"
              , fieldName : "$_fieldName()$"
              , noNamePerson : "$_noNamePerson()$"
              , statusToolTip: {
@@ -130,7 +128,6 @@ javascriptLocalisation =
                          "$_december()$"
                        ]
 
-            , tweetAccount : "$_tweetAccount()$"
             , selectFileToUpload : "$_selectFileToUpload()$"
             , onlyFileWithTypeAllowed : function(t) {
                 return "$_onlyFileWithTypeAllowed1()$" + t + "$_onlyFileWithTypeAllowed2()$"
@@ -446,25 +443,7 @@ javascriptLocalisation =
              , signatoryAttachmentsTitleForOne: "$_signViewSignatoryAttachmentsTitleForOne()$"
              , signatoryAttachmentsTitleForLots: "$_signViewSignatoryAttachmentsTitleForLots()$"
              , signatoriesTitle: "$_signViewSignatoriesTitle()$"
-             , newAccountTitle: "$_signViewCreateAccountTitle()$"
-             , newAccountSubTitle: "$_signViewCreateAccountSubTitle()$"
-             , emailLabel: "$_email()$"
-             , passwordLabel: "$_modalAccountSetupChoosePassword()$"
-             , password2Label: "$_modalAccountSetupRepeatPassword()$"
-             , acceptTOSLabel: "$_accountFromSignInputsBodyAcceptTOS()$"
-             , newAccountButton: "$_signViewCreateAccountLabel()$"
-             , createdAccountTitle: "$_signViewCreatedAccountTitle()$"
-             , createdAccountSubtitle: "$_signViewCreatedAccountSubtitle()$"
-             , shareTitle: "$_signViewShareTitle()$"
-             , facebookButtonLabel: "$_facebookButtonLabel()$"
-             , tweetButtonLabel: "$_tweetButtonLabel()$"
-             , phoneButtonLabel: "$_phoneButtonLabel()$"
-             , phoneFormDescription: "$_phoneFormDescription()$"
-             , phoneSubmitButtonLabel: "$_phoneSubmitButtonLabel()$"
-             , phoneConfirmationText: "$_phoneConfirmationText()$"
-             , startButtonLabel: "$_startButtonLabel()$"
              , notEntered: "$_notEntered()$"
-             , contact: "$_contact()$"
              , checkboxes : {
                     pleaseCheck : "$_checkboxPleaseCheck()$"
                }
