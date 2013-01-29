@@ -107,8 +107,8 @@ testSplitDocumentWorkerSucceedes = doTimes 10 $ do
   time <- rand 10 arbitrary
   let actor = authorActor time noIP (userid author) (getEmail author)
   docs <- splitUpDocumentWorker doc' actor csvdata
-  validTest $ do
-    assertEqual "Number of documents after split equals length of input data" (length csvdata) (length docs)
+
+  assertEqual "Number of documents after split equals length of input data" (length csvdata) (length docs)
 
 testSendingDocumentSendsInvites :: TestEnv ()
 testSendingDocumentSendsInvites = do

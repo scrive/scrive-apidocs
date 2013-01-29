@@ -60,7 +60,7 @@ documentJSONTests env = testGroup "Document JSON tests" [
       ]
  ]
 dcrTest :: TestEnv ()
-dcrTest = doNTimes 100 $ do
+dcrTest = doTimes 100 $ do
   (mainfile, title, fn, sn, em) <- rand 10 arbitrary
   let o = dcrFromJSON $ runJSONGen $ do
             object "mainfile" $ do value "name" mainfile

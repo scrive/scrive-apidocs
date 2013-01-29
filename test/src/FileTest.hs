@@ -28,17 +28,17 @@ fileTests env = testGroup "Files" [
   ]
 
 testFileIDReadShow :: TestEnv ()
-testFileIDReadShow = doNTimes 100 $  do
+testFileIDReadShow = doTimes 100 $  do
    (fid :: FileID) <- rand 10 arbitrary 
    assertBool "read . show == id" ( fid == (read . show)  fid ) 
 
 testFileIDUriShow :: TestEnv ()
-testFileIDUriShow = doNTimes 100 $  do
+testFileIDUriShow = doTimes 100 $  do
    (fid :: FileID) <- rand 10 arbitrary 
    assertBool "fromReqURI . show == id" ( Just fid == (fromReqURI . show)  fid )  
 
 testFileNewFile :: TestEnv ()
-testFileNewFile  = doNTimes 100 $ do
+testFileNewFile  = doTimes 100 $ do
   (name, content) <- fileData 
   File { fileid = fileid , filename = fname1 , filestorage = FileStorageMemory fcontent1 aes1 } <- dbUpdate $  NewFile name $ Binary content
   assertBool ("File content doesn't change " ++ show content ++ " vs "++ show fcontent1) (content == aesDecrypt aes1 fcontent1)
@@ -47,7 +47,7 @@ testFileNewFile  = doNTimes 100 $ do
   assertBool "File data doesn't change after storing" ( name == fname2 && content == aesDecrypt aes2 fcontent2)
 
 testFileMovedToAWS :: TestEnv ()
-testFileMovedToAWS  = doNTimes 100 $ do
+testFileMovedToAWS  = doTimes 100 $ do
   (name,content) <- fileData
   bucket <- viewableS
   url <- viewableS 

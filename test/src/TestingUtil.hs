@@ -729,28 +729,12 @@ untilCondition cond gen = do
 addRandomDocumentWithAuthor' :: User -> TestEnv Document
 addRandomDocumentWithAuthor' user = addRandomDocumentWithAuthorAndCondition user (\_ -> True)
 
-doNTimes :: (Monad m) => Int -> m () -> m ()
-doNTimes 0 _ = return ()
-doNTimes n a = do
+doTimes :: (Monad m) => Int -> m () -> m ()
+doTimes 0 _ = return ()
+doTimes n a = do
   _ <- a
-  doNTimes (n - 1) a
+  doTimes (n - 1) a
 
-doTimes :: Int -> TestEnv (Maybe (TestEnv ())) -> TestEnv ()
-doTimes i action
-  | i == 0 = return ()
-  | otherwise = do
-    res <- action
-    case res of
-      Nothing -> doTimes i action
-      Just ass -> do
-        _ <- ass
-        doTimes (i - 1) action
-
-invalidateTest :: TestEnv (Maybe (TestEnv ()))
-invalidateTest = return Nothing
-
-validTest :: TestEnv () -> TestEnv (Maybe (TestEnv ()))
-validTest = return . Just
 
 -- Random gen
 

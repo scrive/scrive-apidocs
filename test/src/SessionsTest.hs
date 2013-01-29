@@ -36,7 +36,7 @@ sessionsTests env = testGroup "Sessions" [
 testNewSessionInsertion :: TestEnv ()
 testNewSessionInsertion = do
   uid <- testUser
-  doNTimes 12 $ do
+  doTimes 12 $ do
     (msess, _) <- insertNewSession uid
     assertBool "session successfully taken from the database" (isJust msess)
   Just (user_sessions::Int) <- runDBEnv . getOne
@@ -56,13 +56,13 @@ testSessionUpdate = do
   assertEqual "session successfully modified" (sesPadUserID sess') (Just uid)
 
 testDocumentTicketInsertion :: TestEnv ()
-testDocumentTicketInsertion = doNTimes 10 $ do
+testDocumentTicketInsertion = doTimes 10 $ do
   (_, _, ctx) <- addDocumentAndInsertToken
   Just (tokens::Int) <- runDBEnv $ getOne $ SQL "SELECT COUNT(*) FROM document_session_tokens WHERE session_id = ?" [toSql $ ctxsessionid ctx]
   assertEqual "token successfully inserted into the database" 1 tokens
 
 testDocumentTicketReinsertion :: TestEnv ()
-testDocumentTicketReinsertion = doNTimes 10 $ do
+testDocumentTicketReinsertion = doTimes 10 $ do
   (_, doc, ctx) <- addDocumentAndInsertToken
   _ <- do
     let Just asl = getAuthorSigLink doc
@@ -72,12 +72,12 @@ testDocumentTicketReinsertion = doNTimes 10 $ do
   return ()
 
 testElegTransactionInsertion :: TestEnv ()
-testElegTransactionInsertion = doNTimes 10 $ do
+testElegTransactionInsertion = doTimes 10 $ do
   (mtrans, _) <- addElegTransaction
   assertBool "eleg transaction successfully inserted into the database" $ isJust mtrans
 
 testElegTransactionUpdate :: TestEnv ()
-testElegTransactionUpdate = doNTimes 10 $ do
+testElegTransactionUpdate = doTimes 10 $ do
   (Just trans, ctx) <- addElegTransaction
   let newtrans = trans { transactionsignatorylinkid = Nothing }
   (mtrans', _) <- do

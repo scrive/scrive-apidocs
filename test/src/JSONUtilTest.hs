@@ -26,7 +26,7 @@ jsonUtilTests env = testGroup "JSONUtil" [
   ]
 
 testJSONContainer :: TestEnv ()
-testJSONContainer = doNTimes 100 $ do
+testJSONContainer = doTimes 100 $ do
    (initJSON :: JSValue) <- rand 10 arbitrary 
    (newJSON :: JSValue) <- rand 10 arbitrary
    let changedJSON = getJSValue (setJSValue newJSON initJSON)
