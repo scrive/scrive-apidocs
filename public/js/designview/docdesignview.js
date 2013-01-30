@@ -716,6 +716,7 @@ var DesignViewView = Backbone.View.extend({
               title : localization.signByAuthor.modalTitle,
               acceptButton : acceptButton,
               rejectText: localization.cancel,
+              extraClass: "s-document-created",
               content  : content
         });
 
