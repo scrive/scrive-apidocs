@@ -67,7 +67,7 @@ import Doc.API.Callback.Model
 import qualified Data.ByteString.Base64 as B64
 import Text.JSON.Gen
 import MinutesTime
-import Templates.Templates
+import Text.StringTemplates.Templates
 import Data.Map as Map
 
 import Doc.DocSeal as DocSeal

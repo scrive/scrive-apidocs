@@ -15,7 +15,8 @@ import Control.Logic
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Doc.DocStateData
-import Templates.Templates
+import Text.StringTemplates.Templates
+import Templates
 import User.Model
 import Doc.SignatoryLinkID
 import Util.SignatoryLinkUtils
@@ -23,7 +24,7 @@ import Doc.DocInfo
 import Company.Model
 import DB
 import Utils.Prelude
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 
 import Control.Monad
 import Data.List hiding (insert)

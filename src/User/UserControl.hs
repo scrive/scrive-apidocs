@@ -28,7 +28,7 @@ import MinutesTime hiding (toClockTime)
 import Happstack.Fields
 import Utils.Monad
 import Redirect
-import Templates.Templates
+import Text.StringTemplates.Templates
 import User.Model
 import User.UserView
 import Util.FlashUtil
@@ -42,7 +42,7 @@ import User.History.Model
 import ScriveByMail.Model
 import Payments.Model
 import ListUtil
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import Routing
 
 handleAccountGet :: Kontrakcja m => m (Either KontraLink Response)

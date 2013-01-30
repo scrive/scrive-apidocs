@@ -38,8 +38,8 @@ import Text.JSON
 import ELegitimation.BankIDUtils
 import ELegitimation.BankIDRequests
 import Text.JSON.Gen as J
-import Templates.Templates
-import qualified Templates.Fields as F
+import Text.StringTemplates.Templates
+import qualified Text.StringTemplates.Fields as F
 import Data.List
 import Data.Maybe
 

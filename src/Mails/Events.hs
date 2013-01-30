@@ -31,9 +31,7 @@ import Mails.Model hiding (Mail)
 import Mails.SendMail
 import MinutesTime
 import Utils.Read
-import Templates.Templates
-import Templates.TemplatesUtils
-import Templates.Trans
+import Text.StringTemplates.Templates
 import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -41,7 +39,7 @@ import Doc.SignatoryLinkID
 import qualified Log
 import Util.Actor
 import Stats.Control
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 
 processEvents :: Scheduler ()
 processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
@@ -70,7 +68,7 @@ processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
                   -- addresses here (for dropped/bounce events)
                   handleEv (SendGridEvent email ev _) = do
                     Log.debug $ signemail ++ " == " ++ email
-                    runTemplatesT (getLang doc, templates) $ case ev of
+                    runTemplatesT (show $ getLang doc, templates) $ case ev of
                       SG_Opened -> handleOpenedInvitation doc signlinkid email muid
                       SG_Delivered _ -> handleDeliveredInvitation mc doc signlinkid
                       -- we send notification that email is reported deferred after
@@ -82,7 +80,7 @@ processEvents = dbQuery GetUnreadEvents >>= mapM_ processEvent
                       _ -> return ()
                   handleEv (MailGunEvent email ev) = do
                     Log.debug $ signemail ++ " == " ++ email
-                    runTemplatesT (getLang doc, templates) $ case ev of
+                    runTemplatesT (show $ getLang doc, templates) $ case ev of
                       MG_Opened -> handleOpenedInvitation doc signlinkid email muid
                       MG_Delivered -> handleDeliveredInvitation mc doc signlinkid
                       MG_Bounced _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation (host, mc) doc signlinkid

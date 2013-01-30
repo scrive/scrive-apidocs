@@ -29,7 +29,7 @@ import MinutesTime
 import Payments.Config
 import Payments.Control
 import Session.Data
-import Templates.TemplatesLoader
+import Templates
 import Doc.Model
 import qualified Amazon as AWS
 import qualified Log (cron, withLogger, error)

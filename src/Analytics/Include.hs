@@ -2,8 +2,8 @@ module Analytics.Include
 
 where
 
-import Templates.Templates
-import qualified Templates.Fields as F
+import Text.StringTemplates.Templates
+import qualified Text.StringTemplates.Fields as F
 
 import Text.JSON
 import Text.JSON.Gen

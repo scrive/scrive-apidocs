@@ -8,12 +8,12 @@ module Stats.View
        where
 
 import MinutesTime
-import Templates.Templates
+import Text.StringTemplates.Templates
 import Text.JSON
 import Text.JSON.Gen
 import qualified Text.JSON.Gen as J
 import Utils.Prelude
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 
 statisticsFieldsByDay :: Monad m => [(Int, [Int])] -> [Fields m ()]
 statisticsFieldsByDay stats = for stats f

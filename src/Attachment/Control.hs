@@ -34,8 +34,6 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Log
 import Control.Monad.IO.Class
 import User.Utils
-import Templates.Templates
-import qualified Templates.Fields as F
 import Doc.Rendering
 import Utils.String
 

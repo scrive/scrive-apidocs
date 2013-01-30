@@ -9,13 +9,12 @@ module Payments.View where
 --import Misc
 --import OAuth.Model
 import MinutesTime
-import Mails.SendMail(Mail)
+import Mails.SendMail(Mail, kontramail)
 import Company.Model
-import Templates.Templates
-import Templates.TemplatesUtils
+import Text.StringTemplates.Templates
 import User.Model
 import qualified Recurly as Recurly
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 

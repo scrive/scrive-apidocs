@@ -22,6 +22,7 @@ import qualified Control.Monad.State.Lazy as LS
 import qualified Control.Monad.State.Strict as SS
 import qualified Control.Monad.Writer.Lazy as LW
 import qualified Control.Monad.Writer.Strict as SW
+import qualified Text.StringTemplates.Templates as T
 
 import Control.Monad.Trans.Control.Util
 import Crypto.RNG
@@ -144,3 +145,7 @@ instance (MonadDB m, Monoid w) => MonadDB (LW.WriterT w m) where
 instance (MonadDB m, Monoid w) => MonadDB (SW.WriterT w m) where
   getNexus     = lift getNexus
   localNexus f = SW.mapWriterT $ localNexus f
+
+instance MonadDB m => MonadDB (T.TemplatesT m) where
+  getNexus = lift getNexus
+  localNexus f (T.TemplatesT m) = T.TemplatesT $ ReaderT $ localNexus f . runReaderT m

@@ -126,10 +126,10 @@ import Doc.DocStateCommon
 import qualified Log
 import Control.Monad
 import Util.Actor
-import Templates.Templates
+import Text.StringTemplates.Templates
 import EvidenceLog.Model
 import Util.HasSomeUserInfo
-import Templates.Fields (value, objects)
+import Text.StringTemplates.Fields (value, objects)
 import DB.TimeZoneName (TimeZoneName, mkTimeZoneName, withTimeZone)
 import qualified DB.TimeZoneName as TimeZoneName
 import DB.SQL2

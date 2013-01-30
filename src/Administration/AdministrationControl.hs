@@ -37,7 +37,7 @@ import User.UserView
 import User.Model
 import Data.Maybe
 import Data.Char
-import Templates.Templates
+import Text.StringTemplates.Templates
 import Util.FlashUtil
 import Data.List
 import Util.MonadUtils
@@ -67,7 +67,7 @@ import CompanyAccounts.Model
 import Util.SignatoryLinkUtils
 import Stats.Control (getUsersAndStatsInv)
 import User.History.Model
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import Control.Logic
 import Doc.DocInfo
 import EvidenceLog.Model

@@ -27,8 +27,8 @@ import Cookies
 import Utils.HTTP
 import Utils.Monoid
 import Utils.Read
-import Templates.Templates
-import Templates.TemplatesLoader
+import Text.StringTemplates.Templates
+import Text.StringTemplates.TemplatesLoader
 
 data FlashType
     = SigningRelated

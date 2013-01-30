@@ -48,9 +48,8 @@ import Data.Maybe
 import Company.Model
 import Kontra
 import KontraLink
-import Mails.SendMail(Mail)
-import Templates.Templates
-import Templates.TemplatesUtils
+import Mails.SendMail(Mail, kontramail, kontramaillocal)
+import Text.StringTemplates.Templates
 import Text.StringTemplate.GenericStandard()
 import FlashMessage
 import Util.HasSomeCompanyInfo
@@ -62,7 +61,7 @@ import Text.JSON.Gen
 import Data.Either
 import ScriveByMail.Model
 import ScriveByMail.View
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import Control.Logic
 
 showAccount :: TemplatesMonad m => User -> Maybe Company -> m String

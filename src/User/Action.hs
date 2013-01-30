@@ -19,7 +19,7 @@ import InputValidation
 import Kontra
 import Mails.SendMail
 import Happstack.Fields
-import Templates.Templates
+import Text.StringTemplates.Templates
 import User.Model
 import User.UserView
 import Util.FlashUtil

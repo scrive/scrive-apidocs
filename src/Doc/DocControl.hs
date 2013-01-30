@@ -77,7 +77,7 @@ import Redirect
 import User.Model
 import Util.HasSomeUserInfo
 import qualified Log
-import Templates.Templates
+import Text.StringTemplates.Templates
 import Util.CSVUtil
 import Util.FlashUtil
 import Util.SignatoryLinkUtils
@@ -113,7 +113,7 @@ import Doc.DocDraft() -- Import instances only
 import qualified User.Action
 import qualified ELegitimation.Control as BankID
 import Util.Actor
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import qualified MemCache as MemCache
 import qualified GuardTime as GuardTime
 import System.IO.Temp

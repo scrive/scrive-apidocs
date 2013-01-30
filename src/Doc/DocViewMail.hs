@@ -30,8 +30,8 @@ import Utils.List
 import Utils.Monad
 import Utils.Monoid
 import Utils.Prelude
-import Templates.Templates
-import Templates.TemplatesUtils
+import Text.StringTemplates.Templates
+import Templates
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import DB
@@ -41,7 +41,7 @@ import Data.Maybe
 import File.Model
 import User.Model
 import Util.HasSomeCompanyInfo
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 
 -- FIXME: why do we even use that?
 para :: String -> String
@@ -362,7 +362,7 @@ documentMail :: (HasLang a, MonadDB m, TemplatesMonad m) =>  a -> Context -> Doc
 documentMail haslang ctx doc mailname otherfields = do
     mcompany <- liftMM (dbQuery . GetCompanyByUserID) (return $ getAuthorSigLink doc >>= maybesignatory)
     let allfields = do
-        contextFields ctx
+        F.value "ctxhostpart" (ctxhostpart ctx)
         F.value "documenttitle" $ documenttitle doc
         F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
         when (isJust mcompany) $ do

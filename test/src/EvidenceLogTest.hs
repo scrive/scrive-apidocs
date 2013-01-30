@@ -10,7 +10,7 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit.Base (Assertion)
 import TestingUtil
 import TestKontra
-import Templates.Templates
+import Text.StringTemplates.Templates
 import Data.List
 import EvidenceLog.View
 

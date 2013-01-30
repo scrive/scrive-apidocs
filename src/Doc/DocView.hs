@@ -38,7 +38,7 @@ import KontraLink
 import MinutesTime
 import Utils.Prelude
 import Utils.Monoid
-import Templates.Templates
+import Text.StringTemplates.Templates
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -56,7 +56,7 @@ import DB
 import PadQueue.Model
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import qualified Data.Set as Set
 import Analytics.Include
 

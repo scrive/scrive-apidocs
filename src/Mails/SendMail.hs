@@ -5,6 +5,8 @@ module Mails.SendMail
     , MailAddress(..)
     , MailInfo(..)
     , scheduleEmailSendout
+    , kontramail
+    , kontramaillocal
     ) where
 
 import DB
@@ -16,6 +18,11 @@ import Mails.Model hiding (Mail)
 import MinutesTime
 import qualified Log
 import qualified Mails.Model as M
+import qualified Text.StringTemplates.Templates as T
+import qualified Text.StringTemplates.Fields as F
+import Templates
+import Control.Logic
+import Data.Char
 
 -- Needed only for FROM address
 import User.Lang
@@ -79,3 +86,17 @@ fromNiceAddress (Invitation did _) servicename = do
       (_,         []) -> return $ servicename
       (LANG_SV, an) -> return $ an ++ " genom " ++ servicename
       (LANG_EN, an) -> return $ an ++ " through " ++ servicename
+
+kontramaillocal :: (HasLang a, T.TemplatesMonad m) => a -> String -> F.Fields m () -> m Mail
+kontramaillocal = kontramailHelper . renderLocalTemplate
+
+kontramail :: T.TemplatesMonad m  => String -> F.Fields m () -> m Mail
+kontramail = kontramailHelper T.renderTemplate
+
+kontramailHelper :: T.TemplatesMonad m => (String -> F.Fields m () -> m String) -> String -> F.Fields m () -> m Mail
+kontramailHelper renderFunc tname fields = do
+    wholemail <- renderFunc tname fields
+    let (title,content) = span (/= '\n') $ dropWhile (isControl ||^ isSpace) wholemail
+    return $ emptyMail { title   = title
+                       , content = content
+                       }

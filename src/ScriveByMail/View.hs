@@ -1,7 +1,7 @@
 module ScriveByMail.View where
 
-import Templates.Templates
-import Templates.TemplatesUtils
+import Text.StringTemplates.Templates
+import Templates
 import Context
 import DB
 import Doc.DocStateData
@@ -17,11 +17,12 @@ import MagicHash
 import MinutesTime
 import ScriveByMail.Model
 import FlashMessage
-import qualified Templates.Fields as F
+import qualified Text.StringTemplates.Fields as F
 import qualified Text.JSON.Gen as J
 import Text.JSON
 import Control.Applicative
 import Data.Int
+import Mails.SendMail(kontramail)
 
 mailMailAPIConfirm :: (MonadDB m, TemplatesMonad m)
                    => Context

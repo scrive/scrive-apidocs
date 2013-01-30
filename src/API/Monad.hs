@@ -51,7 +51,7 @@ import OAuth.Util
 import OAuth.Model
 import Doc.Rendering
 import Util.Actor
-import Templates.Templates
+import Text.StringTemplates.Templates
 import Util.CSVUtil
 import Util.ZipUtil
 import Control.Exception.Lifted

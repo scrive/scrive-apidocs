@@ -27,10 +27,9 @@ import Crypto.RNG
 import Recurly
 import Recurly.JS
 import Recurly.Push
---import Templates.Templates
-import Templates.TemplatesLoader
+import Templates
 import User.Lang
-import Templates.Trans
+import Text.StringTemplates.Templates
 import Text.JSON
 import Text.JSON.Gen hiding (value)
 import User.Model
@@ -466,7 +465,7 @@ handleSyncNewSubscriptionWithRecurlyOutside = do
 sendInvoiceEmail :: Kontrakcja m => User -> Maybe Company -> Subscription -> m ()
 sendInvoiceEmail user mcompany subscription = do
   ctx <- getContext
-  mail <- runTemplatesT (lang $ usersettings user, ctxglobaltemplates ctx) $ mailSignup (ctxhostpart ctx) user mcompany subscription
+  mail <- runTemplatesT (show $ lang $ usersettings user, ctxglobaltemplates ctx) $ mailSignup (ctxhostpart ctx) user mcompany subscription
   scheduleEmailSendout (ctxmailsconfig ctx)
                         (mail{to = [MailAddress{
                                      fullname = getFullName user
@@ -474,7 +473,7 @@ sendInvoiceEmail user mcompany subscription = do
 
 sendInvoiceFailedEmail :: (MonadDB m, CryptoRNG m) => String -> MailsConfig -> Lang -> KontrakcjaGlobalTemplates -> User -> Maybe Company -> Invoice -> m ()
 sendInvoiceFailedEmail hostpart mailsconfig lang templates user mcompany invoice = do
-  mail <- runTemplatesT (lang, templates) $ mailFailed hostpart user mcompany invoice
+  mail <- runTemplatesT (show lang, templates) $ mailFailed hostpart user mcompany invoice
   scheduleEmailSendout mailsconfig
     (mail{to = [MailAddress { fullname = getFullName user
                             , email = getEmail user}]})
@@ -482,7 +481,7 @@ sendInvoiceFailedEmail hostpart mailsconfig lang templates user mcompany invoice
 sendExpiredEmail :: Kontrakcja m => User -> m ()
 sendExpiredEmail user = do
   ctx <- getContext
-  mail <- runTemplatesT (lang $ usersettings user, ctxglobaltemplates ctx) $ mailExpired (ctxhostpart ctx)
+  mail <- runTemplatesT (show $ lang $ usersettings user, ctxglobaltemplates ctx) $ mailExpired (ctxhostpart ctx)
   scheduleEmailSendout (ctxmailsconfig ctx)
     (mail{to = [MailAddress { fullname = getFullName user
                             , email = getEmail user }]})

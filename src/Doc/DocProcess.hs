@@ -8,7 +8,8 @@ module Doc.DocProcess (
 where
 
 import Doc.DocStateData
-import Templates.Templates
+import Text.StringTemplates.Templates
+import Templates
 import User.Lang
 
 class HasProcess a where
