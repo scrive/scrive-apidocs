@@ -37,7 +37,30 @@ describe "basic signing" do
     @h.dochelper.partSign
 
     puts "make sure you're given a save option"
-    @h.wait.until { @h.driver.find_elements :css => ".save" }
+    @h.wait_until { @h.driver.find_elements :css => ".save" }
+
+    puts "check that author can view evidence attachments in the archive"
+
+    @h.loginhelper.login_as(@h.ctx.props.tester_email, @h.ctx.props.tester_password)
+    (@h.wait_until { @h.driver.find_element :css => ".s-archive" }).click
+
+    puts "find first document in list"
+    (@h.wait_until { @h.driver.find_element :link_text => @h.ctx.props.tester_email }).click
+
+    puts "find first evidence attachment"
+    wh = @h.driver.window_handles()
+    (@h.wait_until { @h.driver.find_element :css => ".s-evidenceattachments a.button " }).click
+
+    puts "wait for new window to popup"
+    @h.wait_until { @h.driver.window_handles().size > wh.size }
+
+    puts "swith to new window"
+    @h.driver.switch_to().window((@h.driver.window_handles() - wh)[0]) {
+      puts "click first screenshot..."
+      (@h.wait_until { @h.driver.find_element :partial_link_text => "signed the document" }).click
+      puts "wait a bit for the screenshot to be recorded in a movie"
+      sleep 2
+    }
   end
 
 end

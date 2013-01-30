@@ -21,20 +21,20 @@ describe "Sign a document and then cancel it" do
     @h.dochelper.uploadContract
     puts "Fill in counterpart"
     @h.dochelper.enterCounterpart(@h.ctx.props.first_counterpart_fstname, @h.ctx.props.first_counterpart_sndname, @h.ctx.props.first_counterpart_email)
-    (@h.wait.until { @h.driver.find_element :css => ".nextstepbutton" }).click
+    (@h.wait_until { @h.driver.find_element :css => ".nextstepbutton" }).click
     puts "About to sign and send"
     @h.dochelper.signAndSend
     puts "After sign and send"
-    (@h.wait.until { @h.driver.find_element :css => "a.s-withdraw-button" }).click
+    (@h.wait_until { @h.driver.find_element :css => "a.s-withdraw-button" }).click
     @h.click ".s-withdraw-confirmation .modal-footer a.float-right"
-    @h.wait.until { @h.driver.find_element :css => "span.icon.status.cancelled" }
+    @h.wait_until { @h.driver.find_element :css => "span.icon.status.cancelled" }
 
     @h.loginhelper.logout
 
     puts "Checking that the document is cancelled for the counterpart"
 
     @h.emailhelper.follow_link_in_latest_mail_for @h.ctx.props.first_counterpart_email
-    @h.wait.until { @h.driver.find_element :css => "span.icon.status.cancelled" }
+    @h.wait_until { @h.driver.find_element :css => "span.icon.status.cancelled" }
   end
 
 end

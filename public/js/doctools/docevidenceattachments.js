@@ -45,7 +45,7 @@ var DocumentEvidenceAttachmentsView = Backbone.View.extend({
       return this;
     }
 
-    var container = $("<div class='authorattachments' />");
+    var container = $("<div class='s-evidenceattachments authorattachments' />");
     container.append($("<h2/>").text(this.model.title()));
 
     var table = $("<table class='list'/>");

@@ -17,14 +17,14 @@ describe "sign up on front page and modify account settings" do
   def reset_password(email, password)
     puts "reset password for "+email+" to "+password
     @h.driver.navigate().to(@h.ctx.createKontrakcjaURL "/login")
-    (@h.wait.until { @h.driver.find_element :css => "a.s-forgot-password" }).click
-    (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-body input.big-input" }).send_keys email
-    (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-body a.button" }).click
+    (@h.wait_until { @h.driver.find_element :css => "a.s-forgot-password" }).click
+    (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body input.big-input" }).send_keys email
+    (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body a.button" }).click
     @h.emailhelper.follow_link_in_latest_mail_for email
     puts "We have real change password form"
-    (@h.wait.until { @h.driver.find_element :name => "password" }).send_keys password
-    (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys password
-    (@h.wait.until { @h.driver.find_element :css => "div.label" }).click
+    (@h.wait_until { @h.driver.find_element :name => "password" }).send_keys password
+    (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys password
+    (@h.wait_until { @h.driver.find_element :css => "div.label" }).click
     puts "Change password request send"
     @h.loginhelper.logout
   end
@@ -37,58 +37,58 @@ describe "sign up on front page and modify account settings" do
     @h.driver.get(@h.ctx.createKontrakcjaURL "/signup")
 
     puts "request an account and make sure you get a green flash back"
-    (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-body input.big-input" }).send_keys random_email
-    (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-body a.button" }).click
-    @h.wait.until { @h.driver.find_element :css => ".flash-body" }
+    (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body input.big-input" }).send_keys random_email
+    (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-body a.button" }).click
+    @h.wait_until { @h.driver.find_element :css => ".flash-body" }
 
     puts "we should get an email to a page where we can accept the tos"
     @h.emailhelper.follow_link_in_latest_mail_for random_email
-    @h.wait.until { @h.driver.find_element :css => ".checkbox" }
+    @h.wait_until { @h.driver.find_element :css => ".checkbox" }
 
     puts "make sure we get a red flash if we try to activate without signing the tos"
-    (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-right a.blue.button" }).click
+    (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-right a.blue.button" }).click
 
-    @h.wait.until { @h.driver.find_element :css => ".failed-validation" }
+    @h.wait_until { @h.driver.find_element :css => ".failed-validation" }
 
     puts "accept the tos"
-    (@h.wait.until { @h.driver.find_element :css => ".checkbox" }).click
+    (@h.wait_until { @h.driver.find_element :css => ".checkbox" }).click
 
     puts "make sure we get a red flash if we try to activate without filling in a name"
-    (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-right a.blue.button" }).click
-    @h.wait.until { @h.driver.find_element :css => ".failed-validation" }
+    (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-right a.blue.button" }).click
+    @h.wait_until { @h.driver.find_element :css => ".failed-validation" }
 
 
     puts "fill in a name"
-    (@h.wait.until { @h.driver.find_element :name => "fstname" }).send_keys "Random"
-    (@h.wait.until { @h.driver.find_element :name => "sndname" }).send_keys "Person"
+    (@h.wait_until { @h.driver.find_element :name => "fstname" }).send_keys "Random"
+    (@h.wait_until { @h.driver.find_element :name => "sndname" }).send_keys "Person"
 
     puts "make sure we get a red flash if we try to activate without filling in the password details"
-    (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-right a.blue.button" }).click
+    (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-right a.blue.button" }).click
     puts "Checking if it failed for some reason"
-    @h.wait.until { @h.driver.find_element :css => ".failed-validation" }
+    @h.wait_until { @h.driver.find_element :css => ".failed-validation" }
 
 
     puts "fill in the password details incorrectly and make sure we get red flash message"
-    (@h.wait.until { @h.driver.find_element :name => "password" }).send_keys "password-12"
-    (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys "password-123"
-    (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-right a.blue.button" }).click
-    @h.wait.until { @h.driver.find_element :css => ".failed-validation" }
+    (@h.wait_until { @h.driver.find_element :name => "password" }).send_keys "password-12"
+    (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys "password-123"
+    (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-right a.blue.button" }).click
+    @h.wait_until { @h.driver.find_element :css => ".failed-validation" }
 
 
     puts "fill in the password details correctly"
-    (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
-    (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
-    (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
+    (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
+    (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
+    (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
     password = "password-12"
-    (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys password
+    (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys password
 
     puts "submit the signup form"
-    (@h.wait.until { @h.driver.find_element :css => "div.short-input-container-right a.blue.button" }).click
+    (@h.wait_until { @h.driver.find_element :css => "div.short-input-container-right a.blue.button" }).click
 
     puts "should be logged in and able to upload a document"
-    @h.wait.until { @h.driver.find_element :css => "a.js-logout" }
+    @h.wait_until { @h.driver.find_element :css => "a.js-logout" }
     @h.driver.get(@h.ctx.createKontrakcjaURL "/d")
-    @h.wait.until { @h.driver.find_element :css => ".archive" }
+    @h.wait_until { @h.driver.find_element :css => ".archive" }
 
     @h.loginhelper.logout
 
@@ -109,28 +109,28 @@ describe "sign up on front page and modify account settings" do
     puts "Setting names"
     @h.loginhelper.set_name("Random", "User")
     puts "Looking for change mail button"
-    (@h.wait.until { @h.driver.find_element :css => "a.new-mail-button" }).click
+    (@h.wait_until { @h.driver.find_element :css => "a.new-mail-button" }).click
 
     puts "change email address"
     new_email = "new-"+random_email
-    (@h.wait.until { @h.driver.find_element :name => "newemail" }).send_keys new_email
-    (@h.wait.until { @h.driver.find_element :name => "newemailagain" }).send_keys new_email
-    (@h.wait.until { @h.driver.find_element :css => "a.float-right" }).click
+    (@h.wait_until { @h.driver.find_element :name => "newemail" }).send_keys new_email
+    (@h.wait_until { @h.driver.find_element :name => "newemailagain" }).send_keys new_email
+    (@h.wait_until { @h.driver.find_element :css => "a.float-right" }).click
     # wait for flash message to go away to avoid race condition
     sleep 5
     @h.loginhelper.logout
 
     @h.emailhelper.follow_link_in_latest_mail_for new_email
 
-    (@h.wait.until { @h.driver.find_element :css => ".short-input-container input[name='email']" }).send_keys random_email
-    (@h.wait.until { @h.driver.find_element :css => ".short-input-container input[name='password']" }).send_keys new_password
+    (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='email']" }).send_keys random_email
+    (@h.wait_until { @h.driver.find_element :css => ".short-input-container input[name='password']" }).send_keys new_password
 
-    (@h.wait.until { @h.driver.find_element :css => ".short-input-container a.login-button" }).click
+    (@h.wait_until { @h.driver.find_element :css => ".short-input-container a.login-button" }).click
 
 
-    @h.wait.until { @h.driver.find_element :css => "div.recovery-container" }
+    @h.wait_until { @h.driver.find_element :css => "div.recovery-container" }
 
-    (@h.wait.until { @h.driver.find_element :name => "password" }).send_keys new_password
+    (@h.wait_until { @h.driver.find_element :name => "password" }).send_keys new_password
     @h.dochelper.acceptStandardModal
 
     @h.loginhelper.logout
@@ -139,18 +139,18 @@ describe "sign up on front page and modify account settings" do
     @h.loginhelper.login_as(new_email, new_password)
 
     puts "change other personal settings"
-    (@h.wait.until { @h.driver.find_element :css => "#page-account" }).click
+    (@h.wait_until { @h.driver.find_element :css => "#page-account" }).click
     companyposition = "Vice President of Testing"
-    (@h.wait.until { @h.driver.find_element :name => "personalnumber" }).send_keys "800101-4132"
-    (@h.wait.until { @h.driver.find_element :name => "phone" }).send_keys "031-650 000"
-    (@h.wait.until { @h.driver.find_element :name => "companyname" }).send_keys "Scrive AB"
-    (@h.wait.until { @h.driver.find_element :name => "companynumber" }).send_keys "556816-6804"
-    (@h.wait.until { @h.driver.find_element :name => "companyposition" }).send_keys companyposition
-    (@h.wait.until { @h.driver.find_element :css => "a.save" }).click
+    (@h.wait_until { @h.driver.find_element :name => "personalnumber" }).send_keys "800101-4132"
+    (@h.wait_until { @h.driver.find_element :name => "phone" }).send_keys "031-650 000"
+    (@h.wait_until { @h.driver.find_element :name => "companyname" }).send_keys "Scrive AB"
+    (@h.wait_until { @h.driver.find_element :name => "companynumber" }).send_keys "556816-6804"
+    (@h.wait_until { @h.driver.find_element :name => "companyposition" }).send_keys companyposition
+    (@h.wait_until { @h.driver.find_element :css => "a.save" }).click
 
     puts "make sure we get a confirmation"
-    @h.wait.until { @h.driver.find_element :css => "div.flash.success" }
-    assert(((@h.wait.until { @h.driver.find_element :xpath => "//input[@name='companyposition']" }).attribute("value") == companyposition), "Values not equal in detail")
+    @h.wait_until { @h.driver.find_element :css => "div.flash.success" }
+    assert(((@h.wait_until { @h.driver.find_element :xpath => "//input[@name='companyposition']" }).attribute("value") == companyposition), "Values not equal in detail")
     @h.loginhelper.logout
   end
 

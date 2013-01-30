@@ -64,7 +64,7 @@ describe "sign view all functionalities" do
     @h.emailhelper.follow_link_in_latest_mail_for @h.ctx.props.first_counterpart_email
 
     puts "make sure it's got the sign button"
-    @h.wait.until { @h.driver.find_element :css => "div.sign" }
+    @h.wait_until { @h.driver.find_element :css => "div.sign" }
 
     @h.dochelper.uploadAttachment(@h.ctx.props.first_sig_attachment_pdf_path)
     @h.dochelper.uploadAttachment(@h.ctx.props.second_sig_attachment_pdf_path)
@@ -72,24 +72,24 @@ describe "sign view all functionalities" do
 #    puts "sign the doc, but it should fail because we haven't filled in a custom value"
     @h.dochelper.partSign
 #    puts "make sure we get a red flash message"
-#    @h.wait.until { @h.driver.find_element :css => ".flash-container.red" }
+#    @h.wait_until { @h.driver.find_element :css => ".flash-container.red" }
 
 #    puts "fill in the unfilled field"
-#    (@h.wait.until { @h.driver.find_element :css => ".signViewBodyBox.float-left input.fieldvalue.grayed" }).send_keys "part1FV2"
+#    (@h.wait_until { @h.driver.find_element :css => ".signViewBodyBox.float-left input.fieldvalue.grayed" }).send_keys "part1FV2"
 
 # FIXME: test the case when user forgets to check box.
 #    puts "sign the doc, but it should fail because we haven't filled in a custom value"
-#    (@h.wait.until { @h.driver.find_element :css => "#signViewBottomBoxContainerRight a" }).click
+#    (@h.wait_until { @h.driver.find_element :css => "#signViewBottomBoxContainerRight a" }).click
 #    puts "make sure we get a red flash message"
-#    @h.wait.until { @h.driver.find_element :css => ".flash-container.red" }
+#    @h.wait_until { @h.driver.find_element :css => ".flash-container.red" }
 
 #    puts "sign the doc for real"
-#    (@h.wait.until { @h.driver.find_element :id => "signGuardCBox" }).click
-#    (@h.wait.until { @h.driver.find_element :css => "#signViewBottomBoxContainerRight a" }).click
-#    (@h.wait.until { @h.driver.find_element :css => ".modal-container a.btn-small.float-right" }).click
+#    (@h.wait_until { @h.driver.find_element :id => "signGuardCBox" }).click
+#    (@h.wait_until { @h.driver.find_element :css => "#signViewBottomBoxContainerRight a" }).click
+#    (@h.wait_until { @h.driver.find_element :css => ".modal-container a.btn-small.float-right" }).click
 
     puts "make sure there are two signed icons"
-    @h.wait.until { (@h.driver.find_elements :css => "div.icon.status.signed").length==2 }
+    @h.wait_until { (@h.driver.find_elements :css => "div.icon.status.signed").length==2 }
 
     puts "now sign as the second person"
     @h.emailhelper.follow_link_in_latest_mail_for @h.ctx.props.second_counterpart_email
@@ -98,7 +98,7 @@ describe "sign view all functionalities" do
 
     puts "try and sign the doc, but it should fail because we haven't uploaded an attachment"
 #
-    @h.wait.until { (@h.driver.find_element :css => "div.sign a").displayed? }
+    @h.wait_until { (@h.driver.find_element :css => "div.sign a").displayed? }
 # FIXME: no feedback is given when trying to sign before uploading attachment
     @h.dochelper.partSignStart
 
@@ -108,7 +108,7 @@ describe "sign view all functionalities" do
     @h.dochelper.partSign
 
     puts "make sure there are three signed icons"
-    @h.wait.until { (@h.driver.find_elements :css => "div.icon.status.signed").length==3 }
+    @h.wait_until { (@h.driver.find_elements :css => "div.icon.status.signed").length==3 }
 
     puts "now sign as the third person"
     @h.emailhelper.follow_link_in_latest_mail_for @h.ctx.props.third_counterpart_email
@@ -119,6 +119,6 @@ describe "sign view all functionalities" do
     @h.dochelper.partSign
 
     puts "make sure we get a link for downloading the document"
-    @h.wait.until { @h.driver.find_element :css => "a.download" }
+    @h.wait_until { @h.driver.find_element :css => "a.download" }
   end
 end

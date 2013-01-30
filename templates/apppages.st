@@ -252,7 +252,7 @@ header=
         <a class="page js-logout" href="$linklogout$">$_headerLogOut()$</a>
       </li>
       <li class="float-right"><a class="page" id='page-account' href="$linkaccount$">$_headerAccount()$</a></li>
-      <li class="page-first float-right"><a class=" page" id='page-archive' href="$linkissue$">$_headerArchive()$</a></li>
+      <li class="page-first float-right"><a class="s-archive page" id='page-archive' href="$linkissue$">$_headerArchive()$</a></li>
       <li class="session-create float-right">
         <a class="button button-small fromtemplate" onclick='createfromtemplate(event)' href="/fromtemplate">$_headerTemplate()$ </a>
       </li>

@@ -18,6 +18,7 @@ modalContractCreated=
 
     Confirmation.popup({title: title,
                         acceptButtonText: '$_close()$',
+                        extraClass: "s-document-created",
                         content: p});
   });
 </script>

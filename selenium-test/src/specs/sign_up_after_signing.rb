@@ -35,30 +35,30 @@ describe "sign up after signing a document" do
     @h.dochelper.partSign
 
     puts "we should be given the option to accept the tos"
-    @h.wait.until { @h.driver.find_element :css => ".checkbox-box div.checkbox" }.click
+    @h.wait_until { @h.driver.find_element :css => ".checkbox-box div.checkbox" }.click
     puts "make sure we get invalid elements if we try to activate without filling in the password details"
-    (@h.wait.until { @h.driver.find_element :css => ".save .button-small" }).click
-    @h.wait.until { @h.driver.find_element :css => ".errormsg" }
+    (@h.wait_until { @h.driver.find_element :css => ".save .button-small" }).click
+    @h.wait_until { @h.driver.find_element :css => ".errormsg" }
 
     puts "fill in the password details incorrectly and make sure we get invalid elements"
-    (@h.wait.until { @h.driver.find_element :name => "password" }).send_keys "password-12"
-    (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys "password-123"
-    (@h.wait.until { @h.driver.find_element :css => ".save .button-small" }).click
-    @h.wait.until { @h.driver.find_element :css => ".errormsg" }
+    (@h.wait_until { @h.driver.find_element :name => "password" }).send_keys "password-12"
+    (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys "password-123"
+    (@h.wait_until { @h.driver.find_element :css => ".save .button-small" }).click
+    @h.wait_until { @h.driver.find_element :css => ".errormsg" }
 
     puts "clear password2 and really activate"
-    (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
-    (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
-    (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
+    (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
+    (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
+    (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
 
-    (@h.wait.until { @h.driver.find_element :name => "password2" }).send_keys "password-12"
-    (@h.wait.until { @h.driver.find_element :css => ".save .button-small" }).click
+    (@h.wait_until { @h.driver.find_element :name => "password2" }).send_keys "password-12"
+    (@h.wait_until { @h.driver.find_element :css => ".save .button-small" }).click
 
     puts "should be logged in"
-    (@h.wait.until { @h.driver.find_element :css => ".save.done" })
+    (@h.wait_until { @h.driver.find_element :css => ".save.done" })
 
     puts "go to the server"
-    (@h.wait.until { @h.driver.find_element :css => ".start.btn" }).click();
+    (@h.wait_until { @h.driver.find_element :css => ".start.btn" }).click();
     
     @h.loginhelper.logout
 
