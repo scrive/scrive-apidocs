@@ -20,4 +20,7 @@ if [ "$1" == "all" ]; then
 else
   run "$@"
 fi
+if [ $errors != 0 ]; then
+  echo "At least one test failed"
+fi
 exit $errors
