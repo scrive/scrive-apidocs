@@ -71,7 +71,7 @@ window.Document = Backbone.Model.extend({
         screenshots : {}
     },
     initialize: function(args) {
-        var params = { evidenceAttachments: args.evidenceAttachments }
+        var params = { evidenceAttachments: args.evidenceAttachments };
         this.url = "/api/frontend/get/" + args.id + "?" + $.param(params,true);
     },
     viewer: function() {
