@@ -928,7 +928,7 @@ instance MonadDB m => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, Signa
         mkss "signing"   time mt i s = s{ SignatoryScreenshots.signing = Just (time, Screenshot.T mt i) }
         mkss "reference" time mt i s = s{ SignatoryScreenshots.reference = (time, Screenshot.T mt i) }
         mkss t           _    _  _ _ = error $ "GetSignatoryScreenshots: invalid type: " <> show t
-    flip foldDB [] folder
+    flip kFold [] folder
 
 
 insertDocumentAsIs :: MonadDB m => Document -> DBEnv m (Maybe Document)
