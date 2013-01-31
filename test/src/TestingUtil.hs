@@ -15,6 +15,7 @@ import Doc.DocUtils
 import Test.QuickCheck.Gen
 import Control.Monad (unless)
 import Control.Monad.Trans
+import Control.Monad.Trans.Control
 import Data.Maybe
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
@@ -36,6 +37,7 @@ import ELegitimation.ELegTransaction.Model
 import KontraError (internalError)
 import KontraMonad
 import MinutesTime
+import Control.Exception.Lifted
 import User.Model
 import Utils.Default
 import IPAddress
@@ -886,6 +888,20 @@ assertString = liftIO . T.assertString
 
 assertionPredicate :: (T.AssertionPredicable t, MonadIO m) => t -> m Bool
 assertionPredicate = liftIO . T.assertionPredicate
+
+
+assertRaises :: (Exception e, Show v, MonadIO m, MonadBaseControl IO m)
+             => (e -> Bool) -> m v -> m ()
+assertRaises correctException action = do
+  result' <- try $ action
+  case result' of
+    Right r -> assertString $ "Action should raise exception " ++ show (typeOf (fromLeft result')) ++
+               ", instead returned " ++ show r
+    Left e -> if correctException e
+              then return ()
+              else assertString $ "Action threw exception, but not a valid one: " ++ show e
+  where fromLeft (Left x) = x
+        fromLeft (Right _) = error "Should never happen"
 
 -- other helpers
 
