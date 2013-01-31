@@ -32,6 +32,7 @@ import User.History.Model
 import ScriveByMail.Model
 import qualified ScriveByMail.Action as MailAPI
 import ThirdPartyStats.Core
+import Crypto.RNG
 
 handleAccountSetupFromSign :: Kontrakcja m => Document -> SignatoryLink -> m (Maybe User)
 handleAccountSetupFromSign document signatorylink = do
@@ -136,7 +137,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
         Log.debug $ "Create account attempt failed (params missing)"
         return Nothing
 
-createUser :: Kontrakcja m => Email -> (String, String) -> Maybe CompanyID -> Lang -> m (Maybe User)
+createUser :: (CryptoRNG m, KontraMonad m, MonadDB m, TemplatesMonad m) => Email -> (String, String) -> Maybe CompanyID -> Lang -> m (Maybe User)
 createUser email names mcompanyid lang = do
   ctx <- getContext
   passwd <- createPassword =<< randomPassword
@@ -144,6 +145,13 @@ createUser email names mcompanyid lang = do
   case muser of
     Just user -> do
       _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) email (userid <$> ctxmaybeuser ctx)
+      asyncLogEvent "Create User" [UserIDProp (userid user),
+                                   TimeProp (ctxtime ctx),
+                                   MailProp email]
+      asyncLogEvent SetUserProps [UserIDProp (userid user),
+                                  NameProp (getFullName user),
+                                  MailProp email,
+                                  someProp "Created" (ctxtime ctx)]
       return muser
     _ -> return muser
 

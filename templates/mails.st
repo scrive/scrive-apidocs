@@ -16,6 +16,14 @@ mailDocumentAwaitingForAuthor=
         mailp3 = legalparagraph()
     )$
 #####
+mailClosedSignup=
+
+$if(confirmationlink)$
+$_mailClosedSignup()$
+$else$
+$_mailClosedLogin()$
+$endif$
+#####
 mailDocumentAwaitingForAuthorContentMainP =
    <p>$_hi()$,</p>
    <p>$_mailDocumentAwaitingForAuthorContentSignedBy()$</p>
@@ -35,7 +43,7 @@ mailContractClosed=
 mailContractClosedMainP =
       <p>$_hi()$,</p>
       <p>$_mailContractClosedContentSignedBy()$</p>
-      <p>$_mailContractClosedContentAttached()$</p>
+      <p>$_mailContractClosedContentAttached()$ $mailClosedSignup()$</p>
 
 ####
 mailOfferClosed=
@@ -56,7 +64,7 @@ mailOfferClosedMainP =
         $_mailOfferClosedContentOfferAcceptedWithService()$
        $endif$
        </p>
-      <p>$_mailOfferClosedContentAttached()$</p>
+      <p>$_mailOfferClosedContentAttached()$ $mailClosedSignup()$</p>
 ####
 mailOrderClosed=
     $_mailDocumentClosedTitleOrder()$
@@ -75,7 +83,7 @@ mailOrderClosedMainP=
         $_mailOrderClosedContentViewedWithService()$
        $endif$
       </p>
-      <p>$_mailOrderClosedContentAttached()$</p>
+      <p>$_mailOrderClosedContentAttached()$ $mailClosedSignup()$</p>
 ####
 #### REJECTED MAIL
 ####

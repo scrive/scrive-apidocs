@@ -1,6 +1,7 @@
 module User.UserID (
     UserID
   , unsafeUserID
+  , unUserID
   ) where
 
 import Data.Int
@@ -25,3 +26,6 @@ instance Binary UserID where
 
 unsafeUserID :: Int64 -> UserID
 unsafeUserID = UserID
+
+unUserID :: UserID -> Int64
+unUserID (UserID i) = i

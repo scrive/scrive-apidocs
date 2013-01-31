@@ -41,6 +41,8 @@ import Util.MonadUtils
 import Stats.Control
 import ThirdPartyStats.Core
 import MinutesTime
+import ActionQueue.UserAccountRequest
+import User.Action
 
 import Control.Monad
 import Data.List hiding (head, tail)
@@ -384,13 +386,15 @@ sendReminderEmail custommessage ctx actor doc siglink = do
 sendClosedEmails :: (CryptoRNG m, KontraMonad m, MonadDB m, TemplatesMonad m) => Document -> m ()
 sendClosedEmails document = do
     ctx <- getContext
-    let signatorylinks = documentsignatorylinks document
-    mail <- mailDocumentClosed ctx document
     mailattachments <- makeMailAttachments document
-    scheduleEmailSendout (ctxmailsconfig ctx) $
-      mail { to = map getMailAddress signatorylinks
-           , attachments = mailattachments
-           }
+    let signatorylinks = documentsignatorylinks document
+    forM_ signatorylinks $ \sl -> do
+      ml <- handlePostSignSignup (Email $ getEmail sl) (getFirstName sl) (getLastName sl)
+      mail <- mailDocumentClosed ctx document ml
+      scheduleEmailSendout (ctxmailsconfig ctx) $
+        mail { to = [getMailAddress sl]
+             , attachments = mailattachments
+             }
 
 makeMailAttachments :: (KontraMonad m, MonadDB m) => Document -> m [(String, BS.ByteString)]
 makeMailAttachments document = do
@@ -445,3 +449,55 @@ getCustomTextField = getValidateAndHandle asValidInviteText customTextHandler
         logIfBad textresult
             >>= flashValidationMessage
             >>= withFailureIfBad
+
+{- |
+   Try to sign up a new user. Returns the confirmation link for the new user.
+   Nothing means there is already an account or there was an error creating the user.
+ -}
+handlePostSignSignup :: (CryptoRNG m, KontraMonad m, MonadDB m, TemplatesMonad m) => Email -> String -> String -> m (Maybe KontraLink)
+handlePostSignSignup email fn ln = do
+  ctx <- getContext
+  let lang = ctxlang ctx
+  muser <- dbQuery $ GetUserByEmail email
+  case (muser, muser >>= userhasacceptedtermsofservice) of
+    (Just user, Nothing) -> do
+      -- there is an existing user that hasn't been activated
+      -- return the existing link
+      l <- newUserAccountRequestLink lang (userid user)
+      asyncLogEvent "Send account confirmation email" [
+        UserIDProp $ userid user,
+        IPProp $ ctxipnumber ctx,
+        TimeProp $ ctxtime ctx,
+        someProp "Context" ("Post sign" :: String)
+        ]
+      asyncLogEvent SetUserProps [    
+        UserIDProp $ userid user,
+        someProp "Post-sign confirmation email" $ ctxtime ctx,
+        someProp "Confirmation link" $ show l
+        ]
+      return $ Just l
+    (Nothing, Nothing) -> do
+      -- this email address is new to the system, so create the user
+      -- and send an invite
+      mnewuser <- createUser email (fn, ln) Nothing lang
+      case mnewuser of
+        Nothing -> return Nothing
+        Just newuser -> do
+          l <- newUserAccountRequestLink lang (userid newuser)    
+          asyncLogEvent "Send account confirmation email" [
+            UserIDProp $ userid newuser,
+            IPProp $ ctxipnumber ctx,
+            TimeProp $ ctxtime ctx,
+            someProp "Context" ("Post sign" :: String)
+            ]
+          asyncLogEvent SetUserProps [    
+            UserIDProp $ userid newuser,
+            someProp "Post-sign confirmation email" $ ctxtime ctx,
+            NameProp (fn ++ " " ++ ln),
+            someProp "First Name" fn,
+            someProp "Last Name" ln,
+            someProp "Confirmation link" $ show l
+            ]
+          return $ Just l
+    (_, _) -> return Nothing
+
