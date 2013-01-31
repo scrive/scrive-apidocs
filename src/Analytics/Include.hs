@@ -50,7 +50,7 @@ getAnalyticsData = do
   docssent <- case muser of
     Just User{userid} -> dbQuery $ GetDocsSent userid
     Nothing -> return 0
-    
+
   return $ AnalyticsData { aUser         = muser
                          , aCompany      = mcompany
                          , aToken        = token 

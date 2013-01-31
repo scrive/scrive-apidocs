@@ -25,6 +25,7 @@ import qualified User.UserControl as UserControl
 import Util.HasSomeUserInfo
 import Stats.Control
 import User.History.Model
+import ActionQueue.UserAccountRequest
 
 import Control.Applicative
 import Data.Maybe
@@ -119,14 +120,17 @@ handleSignup = do
           -- there is an existing user that hasn't been activated
           -- send them another invite
           UserControl.sendNewUserMail user
+          l <- newUserAccountRequestLink (ctxlang ctx) (userid user)
           asyncLogEvent "Send account confirmation email" [
             UserIDProp $ userid user,
             IPProp $ ctxipnumber ctx,
-            TimeProp $ ctxtime ctx                              
+            TimeProp $ ctxtime ctx,
+            someProp "Context" ("Acount request" :: String)
             ]
           asyncLogEvent SetUserProps [    
             UserIDProp $ userid user,
-            someProp "Account confirmation email" $ ctxtime ctx
+            someProp "Account confirmation email" $ ctxtime ctx,
+            someProp "Confirmation link" $ show l
             ]
           return $ Just (Email email, Nothing)
         (Nothing, Nothing) -> do
@@ -138,14 +142,20 @@ handleSignup = do
             Nothing -> return $ Just (Email email, Nothing)
             Just newuser -> do
               UserControl.sendNewUserMail newuser
+              l <- newUserAccountRequestLink (ctxlang ctx) (userid newuser)
               asyncLogEvent "Send account confirmation email" [
                 UserIDProp $ userid newuser,
                 IPProp $ ctxipnumber ctx,
-                TimeProp $ ctxtime ctx                              
+                TimeProp $ ctxtime ctx,
+                someProp "Context" ("Acount request" :: String)
                 ]
               asyncLogEvent SetUserProps [    
                 UserIDProp $ userid newuser,
-                someProp "Account confirmation email" $ ctxtime ctx
+                someProp "Account confirmation email" $ ctxtime ctx,
+                NameProp (fromMaybe "" mfirstname ++ " " ++ fromMaybe "" mlastname),
+                someProp "First Name" $ fromMaybe "" mfirstname,
+                someProp "Last Name" $ fromMaybe "" mlastname,
+                someProp "Confirmation link" $ show l
                 ]
               return $ Just (Email email, Just $ userid newuser)
         (_, _) -> return Nothing
