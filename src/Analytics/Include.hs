@@ -104,3 +104,13 @@ instance ToJSValue AnalyticsData where
     J.value "Payment Plan" $ maybe "free" show $ ppPricePlan <$> aPaymentPlan
     J.value "Language" $ codeFromLang aLanguage
     J.value "Docs sent" aDocsSent
+
+    case unUserID <$> userid <$> aUser of
+      Nothing -> return ()
+      Just uid -> do
+        J.value "MOD 2" $ uid `mod` 2
+        J.value "MOD 3" $ uid `mod` 3
+        J.value "MOD 4" $ uid `mod` 4
+        J.value "MOD 5" $ uid `mod` 5
+        J.value "MOD 6" $ uid `mod` 6
+        J.value "MOD 7" $ uid `mod` 7
