@@ -30,6 +30,7 @@ import qualified Log
 import MinutesTime
 import User.UserID (UserID, unsafeUserID)
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
+import Company.CompanyID (CompanyID, unsafeCompanyID)
 import IPAddress
 import User.Model (Email (..))
 import qualified Text.JSON as J
@@ -146,13 +147,14 @@ instance Binary EventName where
 
 -- | Represents a property on an event.
 data EventProperty
-  = MailProp   Email
-  | IPProp     IPAddress
-  | NameProp   String
-  | UserIDProp UserID
-  | TimeProp   MinutesTime
-  | DocIDProp  DocumentID
-  | SomeProp   PropName PropValue
+  = MailProp      Email
+  | IPProp        IPAddress
+  | NameProp      String
+  | UserIDProp    UserID
+  | TimeProp      MinutesTime
+  | DocIDProp     DocumentID
+  | CompanyIDProp CompanyID
+  | SomeProp      PropName PropValue
     deriving (Show, Eq)
 
 
@@ -165,6 +167,7 @@ instance Binary EventProperty where
   put (UserIDProp uid)    = putWord8 3   >> put uid
   put (TimeProp t)        = putWord8 4   >> put t
   put (DocIDProp did)     = putWord8 5   >> put did
+  put (CompanyIDProp cid) = putWord8 6   >> put cid
   put (SomeProp name val) = putWord8 255 >> put name >> put val
   
   get = do
@@ -176,6 +179,7 @@ instance Binary EventProperty where
       3   -> UserIDProp       <$> get
       4   -> TimeProp         <$> get
       5   -> DocIDProp        <$> get
+      6   -> CompanyIDProp    <$> get
       255 -> SomeProp         <$> get <*> get
       n   -> fail $ "Couldn't parse EventProperty constructor tag: " ++ show n
 
@@ -355,6 +359,7 @@ instance Arbitrary EventProperty where
       (1, UserIDProp . unsafeUserID <$> arbitrary),
       (1, TimeProp . fromSeconds <$> arbitrary),
       (1, DocIDProp . unsafeDocumentID <$> arbitrary),
+      (1, CompanyIDProp . unsafeCompanyID <$> arbitrary),
       (5, SomeProp <$> arbitrary <*> arbitrary)]
     where
       email = do

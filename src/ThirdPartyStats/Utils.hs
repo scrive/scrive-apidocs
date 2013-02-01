@@ -1,29 +1,45 @@
 module ThirdPartyStats.Utils (
-    extractUID, extractDocID
+    extractUID, extractDocID, extractCompanyID
   ) where
 import User.UserID (UserID)
 import Doc.DocumentID (DocumentID)
+import Company.CompanyID (CompanyID)
 import ThirdPartyStats.Core
 import Data.List (partition)
+import Data.Maybe (isJust)
 
 -- | Separate the user ID property from the rest, if present.
 --   More than one UID is not OK either.
 extractUID :: [EventProperty] -> Maybe (UserID, [EventProperty])
-extractUID props =
-    case partition isUIDProp props of
-      ([UserIDProp uid], props') -> Just (uid, props')
-      _                          -> Nothing
+extractUID = extract uidProp
   where
-    isUIDProp (UserIDProp _) = True
-    isUIDProp _              = False
+    uidProp (UserIDProp x) = Just x
+    uidProp _              = Nothing
 
 -- | Separate the doc ID property from the rest, if present.
 --   More than one doc ID is not OK either.
 extractDocID :: [EventProperty] -> Maybe (DocumentID, [EventProperty])
-extractDocID props =
-    case partition isUIDProp props of
-      ([DocIDProp uid], props') -> Just (uid, props')
-      _                         -> Nothing
+extractDocID = extract didProp
   where
-    isUIDProp (DocIDProp _) = True
-    isUIDProp _             = False
+    didProp (DocIDProp x) = Just x
+    didProp _             = Nothing
+
+-- | Separate the doc ID property from the rest, if present.
+--   More than one doc ID is not OK either.
+extractCompanyID :: [EventProperty] -> Maybe (CompanyID, [EventProperty])
+extractCompanyID = extract cidProp
+  where
+    cidProp (CompanyIDProp x) = Just x
+    cidProp _                 = Nothing
+
+-- | Extract a certain property from the rest. There has to be exactly one
+--   instance of this property, or the result will be Nothing.
+extract :: (EventProperty -> Maybe a) -> [EventProperty] -> Maybe (a, [EventProperty])
+extract fromprop props =
+    case partition predicate props of
+      ([prop], props') | Just prop' <- fromprop prop ->
+        Just (prop', props')
+      _ ->
+        Nothing
+  where
+    predicate = isJust . fromprop

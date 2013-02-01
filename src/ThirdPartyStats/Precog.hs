@@ -16,6 +16,7 @@ import Precog.Result
 import MinutesTime
 import User.Model (unEmail)
 import Doc.DocumentID (fromDocumentID)
+import Company.CompanyID (fromCompanyID)
 import Data.Time.Clock.POSIX
 
 processPrecogEvent :: MonadIO m
@@ -25,7 +26,9 @@ processPrecogEvent :: MonadIO m
                    -> m ProcRes
 processPrecogEvent creds (NamedEvent evt) props
   | Just (uid, props') <- extractUID props = do
-    let path = mconcat [toPath uid, "events", fromString $ noSpaces evt]
+    let mcid = extractCompanyID props'
+        company = maybe "nocompany" (\(cid, _) -> toPath cid) mcid
+        path = mconcat [company,toPath uid,"events",fromString $ noSpaces evt]
     res <- liftIO $ asyncIngest creds path Nothing [jsonObj props']
     case res of
       HTTPError   reason -> return (Failed reason)
@@ -35,7 +38,9 @@ processPrecogEvent creds (NamedEvent evt) props
     return (Failed "Tried to track Precog event without user ID!")
 processPrecogEvent creds SetUserProps props
   | Just (uid, props') <- extractUID props = do
-    let path = mconcat [toPath uid, "properties"]
+    let mcid = extractCompanyID props'
+        company = maybe "nocompany" (\(cid, _) -> toPath cid) mcid
+        path = mconcat [company, toPath uid, "properties"]
     res <- liftIO $ asyncIngest creds path Nothing [jsonObj props']
     case res of
       HTTPError   reason -> return (Failed reason)
@@ -47,7 +52,9 @@ processPrecogEvent creds (UploadDocInfo docjson) props = do
   let mact = do
         (uid, props') <- extractUID props
         (did, _) <- extractDocID props'
-        let path = mconcat [toPath uid, "documents", toPath did]
+        let mcid = extractCompanyID props'
+            company = maybe "nocompany" (\(cid, _) -> toPath cid) mcid
+            path = mconcat [company, toPath uid, "documents", toPath did]
         return $ asyncIngest creds path Nothing [toJSObject [("doc", docjson)]]
   case mact of
     Just act -> do
@@ -76,6 +83,7 @@ jsonProperty (NameProp name) = ("name", JSString $ toJSString name)
 jsonProperty (TimeProp t)    = ("time", timeToJSON t)
 jsonProperty (UserIDProp _)  = error "User ID prop in the wrong place!"
 jsonProperty (DocIDProp did) = ("docid", showJSON (fromDocumentID did))
+jsonProperty (CompanyIDProp cid) = ("companyid", showJSON (fromCompanyID cid))
 jsonProperty (SomeProp k v)  = (k, toJSONVal v)
   where
     toJSONVal (PVNumber d)      = showJSON d

@@ -50,6 +50,7 @@ mixpanelProperty (NameProp name)     = FullName name
 mixpanelProperty (TimeProp t)        = Time (toUTCTime t)
 mixpanelProperty (UserIDProp _)      = error "User ID prop in the wrong place!"
 mixpanelProperty (DocIDProp did)     = CustomString "Document ID" (show did)
+mixpanelProperty (CompanyIDProp cid) = CustomString "Company ID" (show cid)
 mixpanelProperty (SomeProp name val) = mkMixpanelProperty val
     where
       mkMixpanelProperty (PVNumber n) =
