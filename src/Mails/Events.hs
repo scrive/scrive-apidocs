@@ -37,6 +37,7 @@ import Templates.Trans
 import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import Doc.SignatoryLinkID
 import qualified Log
 import Util.Actor
 import Stats.Control

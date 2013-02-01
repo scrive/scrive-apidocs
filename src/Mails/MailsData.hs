@@ -3,6 +3,7 @@ module Mails.MailsData where
 import qualified Data.ByteString as BS
 
 import Doc.DocStateData
+import Doc.SignatoryLinkID
 
 data MailAddress = MailAddress {
     fullname    :: String

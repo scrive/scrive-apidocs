@@ -17,6 +17,7 @@ import Util.SignatoryLinkUtils
 import DB
 import Kontra
 import User.Model
+import Doc.SignatoryLinkID
 import API.Monad
 import Control.Monad.Error
 import qualified Log

@@ -10,6 +10,7 @@ import Util.SignatoryLinkUtils
 import MinutesTime
 import Doc.DocInfo
 import Doc.DocUtils
+import Doc.SignatoryLinkID
 import Utils.Prelude
 import Utils.Monoid
 import Util.HasSomeUserInfo

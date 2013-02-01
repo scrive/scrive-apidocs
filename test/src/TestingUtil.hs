@@ -39,6 +39,7 @@ import KontraMonad
 import MinutesTime
 import Control.Exception.Lifted
 import User.Model
+import Doc.SignatoryLinkID
 import Utils.Default
 import IPAddress
 import File.Model

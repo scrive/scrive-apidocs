@@ -53,6 +53,7 @@ import Doc.Rendering
 import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
+import Doc.SignatoryLinkID
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import qualified Doc.Screenshot as Screenshot

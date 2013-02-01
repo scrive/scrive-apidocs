@@ -17,6 +17,7 @@ import Util.HasSomeUserInfo
 import Doc.DocStateData
 import Templates.Templates
 import User.Model
+import Doc.SignatoryLinkID
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Company.Model

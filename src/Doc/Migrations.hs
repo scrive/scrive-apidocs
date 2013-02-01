@@ -20,6 +20,7 @@ import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
 import EvidenceLog.Model
 import Version
+import Doc.SignatoryLinkID
 import MinutesTime
 
 default (SQL)

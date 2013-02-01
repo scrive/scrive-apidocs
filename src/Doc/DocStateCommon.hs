@@ -5,6 +5,7 @@ import Control.Monad.Trans (MonadIO)
 import Data.Maybe
 import Doc.DocStateData
 import Doc.DocUtils
+import Doc.SignatoryLinkID
 import File.FileID (FileID)
 import qualified Log
 import KontraError (internalError)

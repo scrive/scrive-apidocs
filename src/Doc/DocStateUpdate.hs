@@ -23,6 +23,7 @@ import Util.SignatoryLinkUtils
 import Doc.DocStateQuery
 import qualified Data.ByteString as BS
 import Doc.DocUtils
+import Doc.SignatoryLinkID
 import Control.Applicative
 import User.Model
 import Control.Monad.Trans

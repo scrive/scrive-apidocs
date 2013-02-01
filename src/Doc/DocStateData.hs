@@ -2,7 +2,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.DocStateData (
     module Doc.DocumentID
-  , module Doc.SignatoryLinkID
   , CSVUpload(..)
   , CancelationReason(..)
   , DocStats(..)

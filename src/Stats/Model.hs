@@ -50,6 +50,7 @@ import DB.SQL2
 import MinutesTime
 import User.Model
 import Doc.DocStateData
+import Doc.SignatoryLinkID
 import Stats.Tables
 import Company.Model
 import OurPrelude

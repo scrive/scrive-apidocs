@@ -15,6 +15,7 @@ import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import TestingUtil
 import TestKontra
+import Doc.SignatoryLinkID
 import Company.Model
 import Doc.Invariants
 import MagicHash

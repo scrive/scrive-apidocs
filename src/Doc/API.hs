@@ -19,6 +19,7 @@ import Doc.APIVersion (APIVersion(..))
 import Doc.DocStateQuery
 import Doc.DocStateData
 import Doc.Model
+import Doc.SignatoryLinkID
 import Doc.JSON
 import Doc.Tokens.Model
 import Control.Applicative

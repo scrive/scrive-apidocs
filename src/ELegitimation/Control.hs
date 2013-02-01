@@ -24,6 +24,7 @@ import Doc.DocUtils
 import Doc.Tokens.Model
 import ELegitimation.ELegTransaction.Model
 import Happstack.Server
+import Doc.SignatoryLinkID
 import Kontra
 import MagicHash (MagicHash)
 import MinutesTime

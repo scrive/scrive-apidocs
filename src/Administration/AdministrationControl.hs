@@ -25,6 +25,7 @@ import Kontra
 import Administration.AdministrationView
 import Doc.Model
 import Doc.DocStateData
+import Doc.SignatoryLinkID
 import Company.Model
 import KontraLink
 import MinutesTime

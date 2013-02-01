@@ -19,6 +19,7 @@ import MinutesTime
 import Data.Typeable
 import User.Model
 import Util.Actor
+import Doc.SignatoryLinkID
 import Version
 import Templates.Templates
 import qualified Templates.Fields as F

@@ -38,6 +38,7 @@ import Doc.DocStateData
 import MagicHash (MagicHash)
 import User.Model
 import Util.HasSomeUserInfo
+import Doc.SignatoryLinkID
 import Utils.Prelude
 
 import Data.List

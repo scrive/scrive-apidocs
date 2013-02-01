@@ -52,6 +52,7 @@ import MinutesTime
 import Utils.List
 import Stats.Model
 import Stats.View
+import Doc.SignatoryLinkID
 import Text.JSON
 import User.Model
 import Util.HasSomeUserInfo

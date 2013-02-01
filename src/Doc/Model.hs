@@ -93,6 +93,7 @@ import qualified Control.Monad.State.Lazy as State
 import Doc.DocUtils
 import User.UserID
 import User.Model
+import Doc.SignatoryLinkID
 import MinutesTime
 import OurPrelude
 import Control.Logic

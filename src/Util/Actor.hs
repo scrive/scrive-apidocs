@@ -17,7 +17,7 @@ import Context
 import IPAddress
 import MinutesTime
 import User.Model
-import Doc.DocStateData
+import Doc.SignatoryLinkID
 import Data.Typeable
 import Control.Monad
 

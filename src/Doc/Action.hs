@@ -24,6 +24,7 @@ import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
+import Doc.SignatoryLinkID
 import InputValidation
 import File.Model
 import File.Storage

@@ -3,6 +3,7 @@ module KontraLink(KontraLink(..), LoginRedirectReason(..), getHomeOrDesignViewLi
 import Data.Int
 import qualified Data.ByteString.Char8 as BSC
 import Doc.DocStateData
+import Doc.SignatoryLinkID
 import MagicHash
 import Utils.List
 import User.Model

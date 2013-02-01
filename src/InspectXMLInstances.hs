@@ -13,6 +13,7 @@ import Doc.DocStateData
 import Company.Model
 import MagicHash (MagicHash)
 import MinutesTime
+import Doc.SignatoryLinkID
 import InspectXML
 import User.Model
 import User.History.Model

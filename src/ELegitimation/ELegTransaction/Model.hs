@@ -15,6 +15,7 @@ import DB
 import Doc.DocStateData
 import ELegitimation.BankIDRequests
 import KontraMonad
+import Doc.SignatoryLinkID
 import MagicHash
 import Session.Model
 
