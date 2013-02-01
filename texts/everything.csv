@@ -275,8 +275,8 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_login","Logga in","Log in"
 "_loginModalForgotPasswordSendNewPassword","Återställ","Reset"
 "_mailContractClosedContentAttached","Det färdigställda dokumentet bifogas med detta mail.","The finalised document is attached."
-"_mailClosedSignup","","You can save a safety copy of the document in Scrive's e-archive: <a href='$confirmationlink$'>Click here to create your account.</a>"
-"_mailClosedLogin","","The document has also been saved to your Scrive account: <a href='$ctxhostpart$/$ctxlang$/login'>Login to view it.</a>"
+"_mailClosedSignup","&nbsp;","You can save a safety copy of the document in Scrive's e-archive: <a href='$confirmationlink$'>Click here to create your account.</a>"
+"_mailClosedLogin","&nbsp;","The document has also been saved to your Scrive account: <a href='$ctxhostpart$/$ctxlang$/login'>Login to view it.</a>"
 "_mailContractClosedContentSignedBy","Dokumentet <strong>$documenttitle$</strong> har signerats
          av $partylist:noescape()$. Avtalet är nu bindande.","The document <strong>$documenttitle$</strong> has been signed by $partylist:noescape()$. This agreement is now legally binding."
 "_mailDocumentAwaitingForAuthorContentInstruction","För att signera dokumentet gör följande:<br/>      1. Klicka på länken<br/>      <a href=""$documentlink$"">$documenttitle$</a><br/>

@@ -874,7 +874,7 @@ var DesignViewView = Backbone.View.extend({
                         document.trigger('change');
                     },
                     ajaxsuccess: function() {
-                        mixpanel.track('Upload main file', {}, function() {
+                        trackTimeout('Upload main file', {}, function() {
                             LoadingDialog.close();
                             window.location.reload();
                         });

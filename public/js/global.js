@@ -1,3 +1,24 @@
+// globally track errors
+window.onerror = function(msg, url, line) {
+    mixpanel.track('Error', {
+        Message         : 'Javascript Error',
+        URL             : url,
+        Line            : line,
+        'Error Message' : msg
+    });
+
+    return false;
+};
+
+$(document).ajaxError(function(event, jqxhr, settings, exception) {
+    mixpanel.track('Error', {
+        Message         : 'Ajax Error',
+        URL             : settings.url,
+        Method          : settings.type,
+        'Error Message' : exception.toString()
+    });
+});
+
 window.trackTimeout = function(name, props, cb) {
     var called = false;
     mixpanel.track(name, props, function(e) {
@@ -17,27 +38,29 @@ window.trackTimeout = function(name, props, cb) {
 window.createnewdocument = function(event) {
   event.preventDefault();
   event.stopImmediatePropagation();
-  mixpanel.track('Click start new process');
-  new Submit({
-                    method : "POST",
-                    url : "/api/frontend/createfromfile",
-                    ajax: true,
-                    expectedType : "text",
-                    ajaxsuccess: function(d) {
-                            try {
-                              window.location.href = "/d/"+JSON.parse(d).id;
-                            } catch(e) {
-                                LoadingDialog.close();
-                            }
-                   }
-                }).send();
+  trackTimeout('Click start new process', {}, function() {
+      new Submit({
+          method : "POST",
+          url : "/api/frontend/createfromfile",
+          ajax: true,
+          expectedType : "text",
+          ajaxsuccess: function(d) {
+              try {
+                  window.location.href = "/d/"+JSON.parse(d).id;
+              } catch(e) {
+                  LoadingDialog.close();
+              }
+          }
+      }).send();
+  });
 }
 
 window.createfromtemplate = function(event) {
     event.preventDefault();
     event.stopImmediatePropagation();
-    mixpanel.track('Click create from template');
-    window.location.href = "/fromtemplate";
+    trackTimeout('Click create from template', {}, function() {
+        window.location.href = "/fromtemplate";
+    });
     return false;
 }
 

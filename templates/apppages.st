@@ -15,6 +15,12 @@ notFound=
   </div>
 </div>
 </div>
+<script>
+mixpanel.track('Error', {
+  Message : '404',
+  URL : window.location.href
+});
+</script>
 ###
 internalServerError=
 <div class='mainContainer big'>
@@ -32,6 +38,10 @@ internalServerError=
   </div>
 </div>
 </div>
+mixpanel.track('Error', {
+  Message : '500',
+  URL : window.location.href
+});
 ###
 wholePage=
     $doctype()$
