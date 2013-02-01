@@ -30,10 +30,19 @@ var SignatoryDesignView = Backbone.View.extend({
         this.render();
     },
    addCustomFieldButton : function() {
+        var self = this;
         var signatory = this.model.signatory();
         var addFieldButton = $("<a class='addField' href='#'/>");
         addFieldButton.click(function(){
+            var fields = self.fields;
+            var currentPosition = fields.scrollTop();
             signatory.addNewCustomField();
+
+            // this should work, but using old reference doesn't scroll at all
+            // but getting new reference does:/
+            // fields.scrollTop(currentPosition);
+            $('div.fields').scrollTop(currentPosition);
+
             mixpanel.track('Add custom field',
                            {'Signatory Index': signatory.signIndex(),
                             'Author?': signatory.author()});
@@ -226,6 +235,7 @@ var SignatoryDesignView = Backbone.View.extend({
         this.container.children().detach();
         this.container.append(this.top());
         var fields = $("<div class='fields'/>");
+        view.fields = fields;
         var makeField = function(field) {
                        if (field != undefined)
                         fields.append(new FieldDesignView(
