@@ -66,7 +66,7 @@ var LoginModel = Backbone.Model.extend({
             var resp = JSON.parse(rs);
             if (resp.logged == true)
             {
-                mixpanel.track('Login successful', {}, function() {
+                trackTimeout('Login successful', {}, function() {
                     window.location = model.referer() != undefined && model.referer() != "" && model.referer() != "/" ? model.referer() : "/newdocument";
                 });
             }  
