@@ -15,6 +15,7 @@ import Control.Applicative
 
 import Util.SignatoryLinkUtils
 import DB
+import DB.SQL2
 import Kontra
 import User.Model
 import Doc.SignatoryLinkID
@@ -25,6 +26,7 @@ import qualified Log
 import PadQueue.Model
 import OAuth.Model
 import Text.JSON.Gen
+import Control.Exception.Lifted
 
 
 
@@ -42,14 +44,14 @@ addToQueue did slid = api $ do
     doc <- apiGuardL (serverError "No document found") $ dbQuery $ GetDocumentByDocumentID $ did
     auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
     when (not $ (auid == userid user)) $ do
-        throwError $ serverError "Permission problem. Not an author."
+        throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
     _ <-  apiGuardJustM (serverError "Not a signatory") $ return $ getSigLinkFor doc slid
     if (documentdeliverymethod doc == PadDelivery)
         then do
             Log.debug $ "Adding signatory #" ++ (show slid) ++ "to padqueue of user #" ++ (show $ userid user)
             dbUpdate $ AddToPadQueue (userid user) did slid actor
             runJSONGenT $ return ()
-        else throwError $ serverError "Not a pad document."
+        else throwIO . SomeKontraException $ serverError "Not a pad document."
 
 clearQueue :: Kontrakcja m => m Response
 clearQueue = api $ do

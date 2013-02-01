@@ -185,6 +185,7 @@ module DB.SQL2
 
   , KontraException(..)
   , SomeKontraException(..)
+  , DBBaseLineConditionIsFalse(..)
   )
   where
 
