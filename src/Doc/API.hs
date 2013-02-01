@@ -21,6 +21,7 @@ import Doc.DocStateData
 import Doc.Model
 import Doc.SignatoryLinkID
 import Doc.JSON
+import Doc.DocumentID
 import Doc.Tokens.Model
 import Control.Applicative
 import Control.Logic

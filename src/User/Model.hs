@@ -52,7 +52,8 @@ import User.Lang
 import User.Password
 import User.UserID
 import DB.SQL2
-import Doc.DocStateData (DocumentStatus(..), DocumentID)
+import Doc.DocStateData (DocumentStatus(..))
+import Doc.DocumentID
 
 -- newtypes
 newtype Email = Email { unEmail :: String }

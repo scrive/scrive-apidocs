@@ -19,13 +19,14 @@ import Redirect
 import qualified Log
 import Control.Logic
 import Control.Monad.State
-import Doc.DocStateData as D
+import Doc.DocStateData
 import Doc.DocUtils
 import Doc.Tokens.Model
 import ELegitimation.ELegTransaction.Model
 import Happstack.Server
 import Doc.SignatoryLinkID
 import Kontra
+import Doc.DocumentID
 import MagicHash (MagicHash)
 import MinutesTime
 import Happstack.Fields

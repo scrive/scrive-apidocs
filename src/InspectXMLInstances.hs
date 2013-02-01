@@ -14,6 +14,7 @@ import Company.Model
 import MagicHash (MagicHash)
 import MinutesTime
 import Doc.SignatoryLinkID
+import Doc.DocumentID
 import InspectXML
 import User.Model
 import User.History.Model

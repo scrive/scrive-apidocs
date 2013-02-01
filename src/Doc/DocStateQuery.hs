@@ -38,6 +38,7 @@ import DBError
 import Doc.Model
 import Doc.DocStateData
 import Doc.SignatoryLinkID
+import Doc.DocumentID
 import Kontra
 import MagicHash
 import qualified Log

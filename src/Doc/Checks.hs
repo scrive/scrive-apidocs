@@ -12,6 +12,7 @@ import Data.Monoid
 import DB
 import Doc.DocStateData
 import Doc.SignatoryLinkID
+import Doc.DocumentID
 import MagicHash
 import Utils.Monoid
 

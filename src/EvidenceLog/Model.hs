@@ -13,7 +13,6 @@ module EvidenceLog.Model (
 
 import DB
 import DB.SQL2
-import Doc.DocStateData
 import IPAddress
 import MinutesTime
 import Data.Typeable
@@ -21,6 +20,7 @@ import User.Model
 import Util.Actor
 import Doc.SignatoryLinkID
 import Version
+import Doc.DocumentID
 import Templates.Templates
 import qualified Templates.Fields as F
 import Control.Monad.Identity

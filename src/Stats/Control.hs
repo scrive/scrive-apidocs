@@ -54,6 +54,7 @@ import Stats.Model
 import Stats.View
 import Doc.SignatoryLinkID
 import Text.JSON
+import Doc.DocumentID
 import User.Model
 import Util.HasSomeUserInfo
 import Util.MonadUtils

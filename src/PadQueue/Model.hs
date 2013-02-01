@@ -13,7 +13,7 @@ import OurPrelude
 import Utils.Monad
 import User.Model
 import Doc.SignatoryLinkID
-import Doc.DocStateData
+import Doc.DocumentID
 import Doc.Model
 import Data.Maybe (listToMaybe, isJust)
 import Data.Functor

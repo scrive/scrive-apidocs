@@ -95,6 +95,7 @@ import User.UserID
 import User.Model
 import Doc.SignatoryLinkID
 import MinutesTime
+import Doc.DocumentID
 import OurPrelude
 import Control.Logic
 import Doc.DocStateData

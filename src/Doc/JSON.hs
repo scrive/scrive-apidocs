@@ -17,6 +17,7 @@ import Doc.DocStateData
 import Text.JSON
 import Text.JSON.FromJSValue
 import Text.JSON.Gen
+import Doc.DocumentID
 import Utils.Enum
 import KontraLink
 import Control.Monad.Identity

@@ -25,6 +25,7 @@ import qualified Data.ByteString as BS
 import Doc.DocUtils
 import Doc.SignatoryLinkID
 import Control.Applicative
+import Doc.DocumentID
 import User.Model
 import Control.Monad.Trans
 import Doc.Rendering

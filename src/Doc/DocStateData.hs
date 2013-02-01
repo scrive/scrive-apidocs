@@ -1,8 +1,7 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.DocStateData (
-    module Doc.DocumentID
-  , CSVUpload(..)
+    CSVUpload(..)
   , CancelationReason(..)
   , DocStats(..)
   , Document(..)

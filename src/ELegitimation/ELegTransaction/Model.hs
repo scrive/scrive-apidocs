@@ -12,10 +12,10 @@ import Data.Monoid
 import Context
 import Crypto.RNG
 import DB
-import Doc.DocStateData
 import ELegitimation.BankIDRequests
 import KontraMonad
 import Doc.SignatoryLinkID
+import Doc.DocumentID
 import MagicHash
 import Session.Model
 

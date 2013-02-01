@@ -5,6 +5,7 @@ import qualified Data.ByteString.Char8 as BSC
 import Doc.DocStateData
 import Doc.SignatoryLinkID
 import MagicHash
+import Doc.DocumentID
 import Utils.List
 import User.Model
 import qualified Codec.Binary.Url as URL

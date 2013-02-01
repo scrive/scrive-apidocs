@@ -52,6 +52,7 @@ import User.Model
 import Doc.DocStateData
 import Doc.SignatoryLinkID
 import Stats.Tables
+import Doc.DocumentID
 import Company.Model
 import OurPrelude
 import Data.Maybe (fromMaybe)
