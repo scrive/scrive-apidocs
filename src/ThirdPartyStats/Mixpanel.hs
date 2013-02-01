@@ -3,12 +3,11 @@ module ThirdPartyStats.Mixpanel (
   MixpanelToken,
   processMixpanelEvent) where
 import Control.Monad.IO.Class
-import Data.List (partition)
 import ThirdPartyStats.Core
+import ThirdPartyStats.Utils
 import Mixpanel.Event as Mixpanel
 import Mixpanel.Engage as Mixpanel (set)
 import MinutesTime (toUTCTime)
-import User.UserID (UserID)
 import User.Model (unEmail)
 
 -- | Token identifying us to Mixpanel.
@@ -28,7 +27,7 @@ processMixpanelEvent token SetUserProps props
       MixpanelError reason -> return (Failed reason)
       Success              -> return OK
   | otherwise = do
-    return (Failed "Tried to set prop without user ID!")
+    return (Failed "Tried to set Mixpanel prop without user ID!")
 processMixpanelEvent token (NamedEvent name) props
   | Just (uid, props') <- extractUID props = do
     res <- liftIO $ Mixpanel.track token (show uid) name (map mixpanelProperty props')
@@ -37,19 +36,11 @@ processMixpanelEvent token (NamedEvent name) props
       MixpanelError reason -> return (Failed reason)
       Success              -> return OK
   | otherwise = do
-    return (Failed "Tried to set user prop without user ID!")
+    return (Failed "Tried to track Mixpanel event without user ID!")
+processMixpanelEvent _ (UploadDocInfo _) _ =
+  -- We only do this for Precog
+  return OK
 
-
--- | Separate the user ID property from the rest, if present.
---   More than one UID is not OK either.
-extractUID :: [EventProperty] -> Maybe (UserID, [EventProperty])
-extractUID props =
-    case partition isUIDProp props of
-      ([UserIDProp uid], props') -> Just (uid, props')
-      _                          -> Nothing
-  where
-    isUIDProp (UserIDProp _) = True
-    isUIDProp _              = False
 
 -- | Convert a generic async event property to a Mixpanel property.
 mixpanelProperty :: EventProperty -> Mixpanel.Property
@@ -59,6 +50,7 @@ mixpanelProperty (NameProp name)     = FullName name
 mixpanelProperty (TimeProp t)        = Time (toUTCTime t)
 mixpanelProperty (UserIDProp _)      = error "User ID prop in the wrong place!"
 mixpanelProperty (DocIDProp did)     = CustomString "Document ID" (show did)
+mixpanelProperty (CompanyIDProp cid) = CustomString "Company ID" (show cid)
 mixpanelProperty (SomeProp name val) = mkMixpanelProperty val
     where
       mkMixpanelProperty (PVNumber n) =

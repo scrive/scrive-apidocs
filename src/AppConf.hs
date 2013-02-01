@@ -38,6 +38,8 @@ data AppConf = AppConf {
   , recurlyConfig      :: RecurlyConfig                -- ^ for payments (api key + private key)
   , mixpanelToken      :: String                       -- ^ for mixpanel integration
   , homebase           :: String                       -- ^ url fragment where to fetch scripts
+  , precogKey          :: String                       -- ^ API key for Precog
+  , precogRootPath     :: String                       -- ^ API root path for Precog
   } deriving (Read, Eq, Ord, Show)
 
 -- | Default application configuration that does nothing.
@@ -71,6 +73,8 @@ instance Configuration AppConf where
                                          }
     , mixpanelToken      = "5b04329b972851feac0e9b853738e742"
     , homebase           = "https://staging.scrive.com"
+    , precogKey = ""
+    , precogRootPath = ""
     }
   confOptions = [
   {-
