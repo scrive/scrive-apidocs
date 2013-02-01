@@ -195,11 +195,11 @@ placeContentOnPage newres pagerefid sealtext = do
 
   let offsetToZero = [1,0,0,1,-cropbox_l,-cropbox_b]
   let rotateKey = Prelude.lookup (BS.pack "Rotate") pagedict
-  let rotateToZero = case rotateKey of
-                       Just (Number 90)  -> [ 0,  1, -1,  0, cropbox_w,         0]
-                       Just (Number 180) -> [-1,  0,  0, -1, cropbox_w, cropbox_h]
-                       Just (Number 270) -> [ 0, -1,  1,  0,         0, cropbox_h]
-                       _                 -> [ 1,  0,  0,  1,         0,         0]
+  let (rotateToZero, w, h) = case rotateKey of
+                       Just (Number 90)  -> ([ 0,  1, -1,  0, cropbox_w,         0], cropbox_h, cropbox_w)
+                       Just (Number 180) -> ([-1,  0,  0, -1, cropbox_w, cropbox_h], cropbox_w, cropbox_h)
+                       Just (Number 270) -> ([ 0, -1,  1,  0,         0, cropbox_h], cropbox_h, cropbox_w)
+                       _                 -> ([ 1,  0,  0,  1,         0,         0], cropbox_w, cropbox_h)
 
   q <- addStream (Dict []) $ BSL.pack "q "
   qQ <- addStream (Dict []) $ BSL.pack $ unlines [ " Q "
@@ -207,7 +207,7 @@ placeContentOnPage newres pagerefid sealtext = do
                                                  , unwords (map show rotateToZero) ++ " cm "
                                                  ]
 
-  rr <- addStream (Dict []) $ BSL.pack (sealtext (floor cropbox_w) (floor cropbox_h))
+  rr <- addStream (Dict []) $ BSL.pack (sealtext (floor w) (floor h))
 
   pageresdict <- getResDict pagerefid
   document' <- get
