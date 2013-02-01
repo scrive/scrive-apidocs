@@ -38,9 +38,9 @@
         return passwordLocalization.flashMessagePasswordExceedsMaxLength;
       } else if (password.match(validCharsRegex) === null) {
         return passwordLocalization.flashMessageInvalidCharsInPassword;
-      } else if (password.replace(/[^a-zA-Z]/g, '').length < 2) {
+      } else if (password.replace(/[^a-zA-Z]/g, '').length < 1) {
         return passwordLocalization.flashMessageNeedsLetterAndDigit;
-      } else if (password.replace(/[^0-9]/g, '').length < 2) {
+      } else if (password.replace(/[^0-9]/g, '').length < 1) {
         return passwordLocalization.flashMessageNeedsLetterAndDigit;
       } else {
         return null;
