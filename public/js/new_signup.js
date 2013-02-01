@@ -40,7 +40,7 @@
       this.render();
     },
     validationCallback: function(t, e, v) {
-      $("<div class='validate-message failed-validation float-left' />").css({'font-size': 8, 'font-weight': 'bold', color: 'red'}).append(v.message()).appendTo(e.parent());
+      $("<div class='validate-message failed-validation float-left' />").css({'font-size': 12, 'font-weight': 'bold', color: 'red'}).append(v.message()).appendTo(e.parent());
     },
     clearValidationMessages : function() {
       $(".validate-message",this.el).remove();
