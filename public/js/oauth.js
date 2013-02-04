@@ -209,7 +209,7 @@ var OAuthConfirationView = Backbone.View.extend({
                         if (new EmailValidation().validateData(emailinput.value()))
                           model.createAccount(emailinput.value());
                         else
-                          new FlashMessage({color: "red", content: localization.loginModal.invalidEmail})
+                          new FlashMessage({color: "red", content: localization.loginModal.invalidEmail});
                     }
                 }).input();
       box.append(button);
