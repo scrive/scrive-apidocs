@@ -1,8 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -fcontext-stack=50  #-}
 module Doc.Model
-  ( module File.File
-  , isTemplate -- fromUtils
+  ( isTemplate -- fromUtils
   , anyInvitationUndelivered
   , undeliveredSignatoryLinks
   , insertDocumentAsIs
