@@ -123,7 +123,7 @@ window.Eleg = {
       LoadingDialog.open(localization.startingSaveSigning);
 
       var url;
-      if(document.preparation() || (document.viewer() && document.viewer().signatoryid() === document.author().signatoryid())) // author
+      if(document.preparation()) // designview
         url = "/d/eleg/" + document.documentid();
       else
         url = "/s/eleg/" + document.documentid() +  "/" + document.viewer().signatoryid();
@@ -189,7 +189,7 @@ window.Eleg = {
       if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage))
         return;
       var url;
-      if(document.preparation() || (document.viewer() && document.viewer().signatoryid() === document.author().signatoryid())) // author
+      if(document.preparation()) // // designview
         url = "/d/eleg/" + document.documentid();
       else
         url = "/s/eleg/" + document.documentid() +  "/" + document.viewer().signatoryid();
@@ -260,7 +260,7 @@ window.Eleg = {
       if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage))
         return false;
       var url;
-      if(document.preparation() || (document.viewer() && document.viewer().signatoryid() === document.author().signatoryid())) // author
+      if(document.preparation()) // designview
         url = "/d/eleg/" + document.documentid();
       else
         url = "/s/eleg/" + document.documentid() +  "/" + document.viewer().signatoryid();
@@ -328,7 +328,7 @@ window.Eleg = {
     mobileBankIDSign: function(document, signatory, submit, callback, personnummer) {
         var eleg = this;
         var url;
-        if(document.preparation())// || (document.viewer() && document.viewer().signatoryid() === document.author().signatoryid())) // author
+        if(document.preparation())// designview
             url = "/d/eleg/mbi/" + document.documentid();
         else
             url = "/s/eleg/mbi/" + document.documentid() +  "/" + document.viewer().signatoryid();
