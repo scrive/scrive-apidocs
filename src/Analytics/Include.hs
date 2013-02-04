@@ -1,4 +1,4 @@
-module Analytics.Include 
+module Analytics.Include
 
 where
 
@@ -34,7 +34,7 @@ data AnalyticsData = AnalyticsData { aUser           :: Maybe User
                                    , aLanguage       :: Lang
                                    , aDocsSent       :: Int
                                    }
-                     
+
 getAnalyticsData :: Kontrakcja m => m AnalyticsData
 getAnalyticsData = do
   muser <- ctxmaybeuser <$> getContext
@@ -53,8 +53,8 @@ getAnalyticsData = do
 
   return $ AnalyticsData { aUser         = muser
                          , aCompany      = mcompany
-                         , aToken        = token 
-                         , aPaymentPlan  = mplan 
+                         , aToken        = token
+                         , aPaymentPlan  = mplan
                          , aLanguage     = lang
                          , aDocsSent     = docssent
                          }
@@ -73,7 +73,7 @@ companyStatus u = case (useriscompanyadmin u, usercompany u) of
   (True, _)        -> "admin"
   (False, Nothing) -> "solo"
   (False, Just _ ) -> "sub"
-  
+
 -- | A safe version of !!
 (??) :: [a] -> Int -> Maybe a
 (??) l i = if i < length l then Just (l !! i) else Nothing
@@ -83,23 +83,29 @@ maybeS :: String -> Maybe String
 maybeS "" = Nothing
 maybeS s  = Just s
 
+escapeHTML :: String -> String
+escapeHTML =  concatMap escape
+        where escape '<' = "&lt;"
+              escape '>' = "&gt;"
+              escape c   = [c]
+
 instance ToJSValue AnalyticsData where
   toJSValue AnalyticsData{..} = runJSONGen $ do
-    mnop (J.value "$email") $ getEmail <$> aUser
+    mnop (J.value "$email") $ escapeHTML <$> getEmail <$> aUser
     mnop (J.value "userid") $ show <$> userid <$> aUser
-    
+
     mnop (J.value "Signup Method") $ show <$> usersignupmethod <$> aUser
     mnop (J.value "TOS Date" . formatMinutesTimeRealISO) $ join $ userhasacceptedtermsofservice <$> aUser
-    mnop (J.value "Full Name") $ join $ maybeS <$> getFullName <$> aUser
-    mnop (J.value "Smart Name") $ join $ maybeS <$> getSmartName <$> aUser
-    mnop (J.value "$first_name") $ join $ maybeS <$> getFirstName <$> aUser
-    mnop (J.value "$last_name") $ join $ maybeS <$> getLastName <$> aUser
-    mnop (J.value "$username") $ getEmail <$> aUser
-    mnop (J.value "Phone") $ join $ maybeS <$> (userphone . userinfo) <$> aUser    
-    mnop (J.value "Position") $ join $ maybeS <$> usercompanyposition <$> userinfo  <$> aUser
-    
-    mnop (J.value "Company Status") $ companyStatus <$> aUser
-    mnop (J.value "Company Name") $ join $ maybeS <$> (\u -> getCompanyName (u, aCompany)) <$> aUser
+    mnop (J.value "Full Name") $ join $ maybeS <$> escapeHTML <$> getFullName <$> aUser
+    mnop (J.value "Smart Name") $ join $ maybeS <$> escapeHTML <$> getSmartName <$> aUser
+    mnop (J.value "$first_name") $ join $ maybeS <$> escapeHTML <$> getFirstName <$> aUser
+    mnop (J.value "$last_name") $ join $ maybeS <$> escapeHTML <$> getLastName <$> aUser
+    mnop (J.value "$username") $ escapeHTML <$> getEmail <$> aUser
+    mnop (J.value "Phone") $ join $ maybeS <$> escapeHTML <$> (userphone . userinfo) <$> aUser
+    mnop (J.value "Position") $ join $ maybeS <$> escapeHTML <$> usercompanyposition <$> userinfo  <$> aUser
+
+    mnop (J.value "Company Status") $ escapeHTML <$> companyStatus <$> aUser
+    mnop (J.value "Company Name") $ join $ maybeS <$> escapeHTML <$> (\u -> getCompanyName (u, aCompany)) <$> aUser
 
     J.value "Payment Plan" $ maybe "free" show $ ppPricePlan <$> aPaymentPlan
     J.value "Language" $ codeFromLang aLanguage

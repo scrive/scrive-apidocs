@@ -38,10 +38,12 @@ internalServerError=
   </div>
 </div>
 </div>
+<script>
 mixpanel.track('Error', {
   Message : '500',
   URL : window.location.href
 });
+</script>
 ###
 wholePage=
     $doctype()$
