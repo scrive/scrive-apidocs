@@ -1,6 +1,6 @@
 /*
- * Main archive definition. Its a tab based set of different documents lists. 
- * 
+ * Main archive definition. Its a tab based set of different documents lists.
+ *
  * Instrument for Mixpanel
  */
 
@@ -11,7 +11,7 @@
 
 
 
-  
+
 var CompanyAccountsModel = Backbone.Model.extend({
   userFullName : function(user) {
     var fullname = user.field("fullname");
@@ -68,7 +68,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
             });
             }
       });
-  },  
+  },
   userList : function() {
         var self = this;
         if (this.get("userList") != undefined) return this.get("userList");
@@ -86,9 +86,9 @@ var CompanyAccountsModel = Backbone.Model.extend({
               paging: new Paging({}),
               textfiltering: new TextFiltering({ text: "", infotext: localization.account.companyAccounts.search }),
               cells : [
-                new Cell({name: localization.account.companyAccounts.columnName, width: "100px", field:"fullname"}),
-                new Cell({name: localization.account.companyAccounts.columnEmail, width: "100px", field:"email" }),
-                new Cell({name: localization.account.companyAccounts.columnRole, width: "100px", field:"role", special: "rendered",
+                new Cell({name: localization.account.companyAccounts.columnName, width: "260px", field:"fullname"}),
+                new Cell({name: localization.account.companyAccounts.columnEmail, width: "260px", field:"email" }),
+                new Cell({name: localization.account.companyAccounts.columnRole, width: "260px", field:"role", special: "rendered",
                           rendering: function(value, idx, user) {
                             var label = localization.account.companyAccounts.roleStandard;
                             if (user.field("role")=="RoleAdmin") {
@@ -97,7 +97,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
                               label =  localization.account.companyAccounts.roleStandard;
                             } else if (user.field("role")=="RolePending") {
                               label =  localization.account.companyAccounts.rolePending;
-                            }  
+                            }
                             if (user.field("isctxuser") || user.field("role")=="RolePending") {
                               var role = jQuery("<span>");
                               role.text(label);
@@ -123,7 +123,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
                           rendering: function(value, idx, user) {
                             if (!user.field("activated")) {
                               var icon = jQuery("<a>");
-                              icon.addClass("remind");
+                              icon.addClass("remind").addClass("icon").css("margin-top","3px");
 
                               var popupResendConfirmation = function() {
                                   mixpanel.track('Click resend confirmation');
@@ -153,7 +153,7 @@ var CompanyAccountsModel = Backbone.Model.extend({
                             }
                             return jQuery("<span>");
                           }}),
-                new Cell({width: "16px", field:"deletable", special: "rendered",
+                new Cell({width: "32px", field:"deletable", special: "rendered",
                           rendering: function(value, idx, user) {
                             if (!user.field("isctxuser")) {
                               if (user.field("deletable")) {

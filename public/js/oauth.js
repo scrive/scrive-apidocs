@@ -70,10 +70,24 @@ window.OAuthConfirationModel = Backbone.Model.extend({
           method: "POST",
           url: "/signup",
           email : email,
+          ajax: true,
           ajaxsuccess: function(rs) {
-              window.location = window.location;
-          }
-        }).send();
+            resp = JSON.parse(rs);
+            if (resp.sent === true) {
+              mixpanel.track('Create new account from API permissions');
+              mixpanel.people.set({
+                  '$email'      :  email,
+                  'Signup Method' : 'API'
+              });
+              var content = localization.payments.outside.confirmAccountCreatedUserHeader;
+              new FlashMessage({content: content, color: 'green'});
+            } else if (resp.sent === false) {
+              mixpanel.track('Error',
+                            {Message : 'signup failed'});
+              new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, color: 'red'});
+            }
+         }
+        }).sendAjax();
   }
 });
 
@@ -99,7 +113,7 @@ var OAuthConfirationView = Backbone.View.extend({
     },
     header : function() {
         return $("<h1/>").text(localization.apiConfiration.title);
-    },    
+    },
     textBox : function() {
       var model = this.model;
       var box = $("<div class='box white oauth-confiration-box'/>");
@@ -118,7 +132,7 @@ var OAuthConfirationView = Backbone.View.extend({
         box.append($("<p class=''/>").text(localization.apiConfiration.footerLogged));
       else
         box.append($("<p class=''/>").text(localization.apiConfiration.footerNotLogged));
-        
+
       return box;
     },
     acceptButton : function() {
@@ -147,7 +161,7 @@ var OAuthConfirationView = Backbone.View.extend({
               inputtype : "text",
               name : "email"
       });
- 
+
       emailinput.input().attr("autocomplete","false");
       box.append(emailinput.input());
       var passwordinput = InfoTextInput.init({
@@ -171,7 +185,7 @@ var OAuthConfirationView = Backbone.View.extend({
                         model.login(emailinput.value(),passwordinput.value());
                     }
                 }).input();
-      box.append(button);          
+      box.append(button);
       return box;
     },
     createAccountBox : function() {
@@ -192,7 +206,10 @@ var OAuthConfirationView = Backbone.View.extend({
                   cssClass : "create-account-button",
                   text  : localization.apiConfiration.createAccount,
                   onClick : function() {
-                        model.createAccount(emailinput.value());
+                        if (new EmailValidation().validateData(emailinput.value()))
+                          model.createAccount(emailinput.value());
+                        else
+                          new FlashMessage({color: "red", content: localization.loginModal.invalidEmail});
                     }
                 }).input();
       box.append(button);
@@ -201,7 +218,7 @@ var OAuthConfirationView = Backbone.View.extend({
     body : function() {
       var mainContainer = $("<div class='mainContainer'/>");
       var bodyContainer = $("<div class='body-container'/>");
-      
+
       mainContainer.append(bodyContainer.append(this.header()).append(this.textBox()));
       if (!this.model.logged())
            mainContainer.append(this.loginBox()).append(this.createAccountBox());

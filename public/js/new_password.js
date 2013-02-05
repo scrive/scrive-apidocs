@@ -37,9 +37,9 @@
         return localization.newPasswordModal.flashMessagePasswordExceedsMaxLength;
       } else if (password.match(validCharsRegex) === null) {
         return localization.newPasswordModal.flashMessageInvalidCharsInPassword;
-      } else if (password.replace(/[^a-zA-Z]/g, '').length < 2) {
+      } else if (password.replace(/[^a-zA-Z]/g, '').length < 1) {
         return localization.newPasswordModal.flashMessageNeedsLetterAndDigit;
-      } else if (password.replace(/[^0-9]/g, '').length < 2) {
+      } else if (password.replace(/[^0-9]/g, '').length < 1) {
         return localization.newPasswordModal.flashMessageNeedsLetterAndDigit;
       } else {
         return null;
@@ -83,7 +83,7 @@
        var header = $("<header/>").append($("<h1 class='big'/>").text(localization.newPasswordModal.modalNewPasswordViewHeader));
        $(this.el).append(header);
 
-      
+
       var content = $("<div class='short-input-container recovery-container'/>");
       var wrapper = $("<div class='short-input-container-body-wrapper'/>");
       var body = $("<div class='short-input-container-body'/>");
@@ -100,7 +100,7 @@
       });
       passwordInput.input().attr("autocomplete","false");
       body.append($("<div class='position first'/>").append(passwordInput.input()));
-      
+
       var password2Input = InfoTextInput.init({
         infotext: localization.newPasswordModal.modalNewPasswordViewRepeatPassword,
         value: model.password2(),
