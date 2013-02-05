@@ -50,7 +50,6 @@ import Data.Maybe hiding (fromJust)
 import qualified Data.ByteString as BS
 import ForkAction
 import Doc.API.Callback.Model
-import Data.String.Utils (strip)
 
 -- | Log a document event, adding some standard properties.
 logDocEvent :: Kontrakcja m => EventName -> Document -> User -> [EventProperty] -> m ()
@@ -89,7 +88,7 @@ postDocumentPreparationChange doc@Document{documenttitle} apistring = do
       return doc
     Right saveddoc -> return saveddoc
   Log.server $ "Sending invitation emails for document #" ++ show docid ++ ": " ++ documenttitle
-  
+
   -- Stat logging
   now <- getMinutesTime
   author <- getDocAuthor doc
@@ -222,8 +221,8 @@ saveDocumentForSignatories doc@Document{documentsignatorylinks} =
     saveDocumentForSignatory :: Kontrakcja m => Document -> SignatoryLink -> m (Either String Document)
     saveDocumentForSignatory doc'@Document{documentid}
                              SignatoryLink{signatorylinkid,signatorydetails} = do
-      let sigemail = getValueOfType EmailFT signatorydetails
-      muser <- case (strip sigemail) of
+      let sigemail = getEmail signatorydetails
+      muser <- case (sigemail) of
                 "" -> return Nothing
                 _  -> dbQuery $ GetUserByEmail (Email sigemail)
       case muser of
@@ -470,7 +469,7 @@ handlePostSignSignup email fn ln = do
         TimeProp $ ctxtime ctx,
         someProp "Context" ("Post sign" :: String)
         ]
-      asyncLogEvent SetUserProps [    
+      asyncLogEvent SetUserProps [
         UserIDProp $ userid user,
         someProp "Post-sign confirmation email" $ ctxtime ctx,
         someProp "Confirmation link" $ show l
@@ -483,14 +482,14 @@ handlePostSignSignup email fn ln = do
       case mnewuser of
         Nothing -> return Nothing
         Just newuser -> do
-          l <- newUserAccountRequestLink lang (userid newuser)    
+          l <- newUserAccountRequestLink lang (userid newuser)
           asyncLogEvent "Send account confirmation email" [
             UserIDProp $ userid newuser,
             IPProp $ ctxipnumber ctx,
             TimeProp $ ctxtime ctx,
             someProp "Context" ("Post sign" :: String)
             ]
-          asyncLogEvent SetUserProps [    
+          asyncLogEvent SetUserProps [
             UserIDProp $ userid newuser,
             someProp "Post-sign confirmation email" $ ctxtime ctx,
             NameProp (fn ++ " " ++ ln),
