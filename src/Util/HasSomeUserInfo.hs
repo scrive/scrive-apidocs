@@ -32,25 +32,25 @@ class HasSomeUserInfo a where
   getPersonalNumber :: a -> String
 
 instance HasSomeUserInfo UserInfo where
-  getEmail          = unEmail . useremail
+  getEmail          = strip . unEmail . useremail
   getFirstName      = userfstname
   getLastName       = usersndname
   getPersonalNumber = userpersonalnumber
 
 instance HasSomeUserInfo User where
-  getEmail          = unEmail . useremail . userinfo
+  getEmail          = strip . unEmail . useremail . userinfo
   getFirstName      = userfstname         . userinfo
   getLastName       = usersndname         . userinfo
   getPersonalNumber = userpersonalnumber  . userinfo
 
 instance HasSomeUserInfo SignatoryDetails where
-  getEmail          = getValueOfType EmailFT
+  getEmail          = strip . getValueOfType EmailFT
   getFirstName      = getValueOfType FirstNameFT
   getLastName       = getValueOfType LastNameFT
   getPersonalNumber = getValueOfType PersonalNumberFT
 
 instance HasSomeUserInfo SignatoryLink where
-  getEmail          = getEmail          . signatorydetails
+  getEmail          = strip . getEmail          . signatorydetails
   getFirstName      = getFirstName      . signatorydetails
   getLastName       = getLastName       . signatorydetails
   getPersonalNumber = getPersonalNumber . signatorydetails
@@ -73,7 +73,7 @@ getFullName a = (strip $ getFirstName a) ++ " " ++ (strip $ getLastName  a)
 -- (no check if email is empty)
 getSmartName :: (HasSomeUserInfo a) => a -> String
 getSmartName a = if (all isSpace (getFullName a))
-                    then strip $ getEmail a   
+                    then strip $ getEmail a
                     else strip $ getFullName a
 
 -- | Get a MailAddress
