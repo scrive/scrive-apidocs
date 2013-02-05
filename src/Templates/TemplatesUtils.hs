@@ -89,4 +89,7 @@ kontramailHelper renderFunc tname fields = do
                         }
 
 contextFields :: Monad m => Context -> Fields m ()
-contextFields ctx = F.value "ctxhostpart" (ctxhostpart ctx)
+contextFields ctx = do
+  F.value "ctxhostpart" (ctxhostpart ctx)
+  F.value "ctxlang" (codeFromLang $ ctxlang ctx)
+
