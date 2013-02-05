@@ -45,7 +45,7 @@ describe "basic signing" do
     (@h.wait_until { @h.driver.find_element :css => ".s-archive" }).click
 
     puts "find first document in list"
-    (@h.wait_until { @h.driver.find_element :link_text => @h.ctx.props.tester_email }).click
+    (@h.wait_until { @h.driver.find_element :css => ".s-archive-document-title" }).click
 
     puts "find first evidence attachment"
     wh = @h.driver.window_handles()

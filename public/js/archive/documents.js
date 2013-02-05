@@ -27,16 +27,16 @@ window.DocumentCellsDefinition = function(archive) { return  [
                  rendering: function(value,idx,listobject) {
                     if (idx == undefined)
                        {
-                            return $("<a/>").text(listobject.field("title")).attr("href",listobject.link());
+                            return $("<a class='s-archive-document-title'/>").text(listobject.field("title")).attr("href",listobject.link());
                        }
-                    //For pad we show extra icon    
+                    //For pad we show extra icon
                     if (listobject.field("delivery") == "pad" &&
                           (listobject.field("status") == "sent" ||
                            listobject.field("status") == "delivered" ||
                            listobject.field("status") == "read" ||
                            listobject.field("status") == "opened" ||
-                           listobject.field("status") == "signed"                           
-                          ))                     
+                           listobject.field("status") == "signed"
+                          ))
                       {
                         var actionIcon = $("<a class='actionIcon'/>");
                         if (listobject.field("inpadqueue") == "true" && listobject.subfield(idx,"inpadqueue") == "true")
@@ -58,7 +58,7 @@ window.DocumentCellsDefinition = function(archive) { return  [
                                 ToolTip.set({on: actionIcon, tip : localization.pad.addToPadQueue});
                                 actionIcon.click(function() {
                                 LoadingDialog.open();
-                                    mixpanel.track('Add to pad queue', 
+                                    mixpanel.track('Add to pad queue',
                                                    {DocumentID : listobject.field("id")});
                                 new Submit({
                                         url: "/api/frontend/padqueue/add/"+ listobject.field("id") + "/" +  listobject.subfield(idx,"id") ,
@@ -69,7 +69,7 @@ window.DocumentCellsDefinition = function(archive) { return  [
                             }
                         return actionIcon;
                      }
-     
+
                  }}),
         new Cell({width:"5px" }),
         new Cell({name: localization.archive.documents.columns.type, width:"50px", field:"process",
@@ -145,7 +145,7 @@ window.DocumentSelectsDefinition = function(archive, draftsAvaible) { return  _.
                              })
             ]);
 };
-    
+
 window.DocumentsListDefinition = function(archive) { return {
     name : "Documents Table",
     loadOnInit : false,
@@ -294,21 +294,21 @@ window.DocumentsListDefinition = function(archive) { return {
                  onSelect: function(docs){
                      mixpanel.track('Download PDFs');
                         if (docs == undefined || docs.length == 0 ) {
-                         new FlashMessage({color : "red", content : localization.archive.documents.zip.emptyMessage}); 
+                         new FlashMessage({color : "red", content : localization.archive.documents.zip.emptyMessage});
                          return true;
-                        } 
+                        }
                         if (docs.length == 1) {
                           var url =  "/api/frontend/downloadmainfile/" + docs[0].field("id") + "/" + encodeURIComponent(docs[0].field("title")) + ".pdf";
                           window.open(url);
                           return true;
-                        } else {  
+                        } else {
                           var url =  "/d/zip?"
                           _.each(docs,function(doc){url+=("doccheck="+doc.field("id")+"&")})
                           window.open(url);
                           return true;
                         }
                  }
-                } 
+                }
               ]
     }),
     bottomExtras : function() {
