@@ -44,6 +44,7 @@ import Utils.Monoid
 import Utils.Prelude
 import Text.JSON.FromJSValue
 import Control.Applicative
+import Data.String.Utils
 
 -- Structure definition + pointed
 data SignatoryTMP = SignatoryTMP {
@@ -200,7 +201,7 @@ instance FromJSValue SignatoryField where
         placements <- fromMaybe [] <$> fromJSValueField "placements"
         case (ftype,value) of
           (Just ft, Just v) -> do
-              return $ Just $ SignatoryField ft v obligatory placements
+              return $ Just $ SignatoryField ft (v <| ft /= EmailFT|> strip v) obligatory placements
           _ -> return Nothing
 
 
