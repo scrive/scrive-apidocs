@@ -243,7 +243,7 @@ var DesignViewView = Backbone.View.extend({
             name = localization.process.order.name;
             options = [contractOption,offerOption];
         }
-        var select = new Select({options: options, name: name, textWidth: "122px", expandOnHover : true}).view().el;
+        var select = new Select({options: options, name: name, textWidth: "122px"}).view().el;
         $(select).addClass("float-left");
         box.append($(select));
 
@@ -272,7 +272,7 @@ var DesignViewView = Backbone.View.extend({
             name = "API";
             options = [padOption,emailOption];
         }
-        var select = new Select({options: options, name: name, textWidth: "122px", expandOnHover: true}).view().el;
+        var select = new Select({options: options, name: name, textWidth: "122px"}).view().el;
         $(select).addClass("float-left");
         box.append($(select));
 
@@ -411,7 +411,7 @@ var DesignViewView = Backbone.View.extend({
             name = localization.languages.sv;
             options = [enOption];
         }
-        var select = new Select({options: options, name: name, textWidth: "122px", expandOnHover : true }).view().el;
+        var select = new Select({options: options, name: name, textWidth: "122px"}).view().el;
         $(select).addClass("float-left");
         box.append($(select));
 
@@ -795,7 +795,7 @@ var DesignViewView = Backbone.View.extend({
         {
               new FlashMessage({color: 'red', content : localization.designview.validation.atLeastOnePersonMustSigns});
               this.tabs.activate(this.tab1);
-            mixpanel.track('Error', 
+            mixpanel.track('Error',
                            {Message: 'nobody signs'});
 
               return false;
@@ -803,7 +803,7 @@ var DesignViewView = Backbone.View.extend({
         if (this.model.document().mainfile() == undefined)
         {
              new FlashMessage({color: 'red', content : localization.designview.validation.fileMustBeAdded});
-            mixpanel.track('Error', 
+            mixpanel.track('Error',
                            {Message: 'no document'});
              return false;
         }
