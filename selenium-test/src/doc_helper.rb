@@ -132,6 +132,7 @@ class DocHelper
     puts "Sign and send"
     (@h.wait_until { @driver.find_element :css => ".finalbutton" }).click
     puts "Final approval modal"
+    sleep 1
     acceptStandardModal
     puts "Closing confirmation modal"
     (@h.wait_until { @driver.find_element :css => ".s-document-created .modal-footer a.button-small" }).click
@@ -140,7 +141,7 @@ class DocHelper
   def acceptStandardModal
     puts "acceptStandardModal"
     (@h.wait_until { @driver.find_element :css => ".modal-footer .button-small.float-right" }).click
-   
+
     # If you are thinking of inserting a delay here because there is
     # another modal coming up after this one, please don't (it doesn't
     # cure the problem).  Instead, you need to insert a distinguishing
