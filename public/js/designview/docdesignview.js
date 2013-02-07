@@ -716,7 +716,6 @@ var DesignViewView = Backbone.View.extend({
               title : localization.signByAuthor.modalTitle,
               acceptButton : acceptButton,
               rejectText: localization.cancel,
-              extraClass: "s-document-created",
               content  : content
         });
 
@@ -798,7 +797,7 @@ var DesignViewView = Backbone.View.extend({
         {
               new FlashMessage({color: 'red', content : localization.designview.validation.atLeastOnePersonMustSigns});
               this.tabs.activate(this.tab1);
-            mixpanel.track('Error', 
+            mixpanel.track('Error',
                            {Message: 'nobody signs'});
 
               return false;
@@ -806,7 +805,7 @@ var DesignViewView = Backbone.View.extend({
         if (this.model.document().mainfile() == undefined)
         {
              new FlashMessage({color: 'red', content : localization.designview.validation.fileMustBeAdded});
-            mixpanel.track('Error', 
+            mixpanel.track('Error',
                            {Message: 'no document'});
              return false;
         }
