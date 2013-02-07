@@ -158,8 +158,6 @@ var ConfirmationWithEmailView = Backbone.View.extend({
         _.bindAll(this, 'render', 'reject');
         this.model.view = this;
         this.render();
-        this.fixer = new ExposeMaskFixer({object : this.model});
-
     },
     render: function () {
        var model = this.model;

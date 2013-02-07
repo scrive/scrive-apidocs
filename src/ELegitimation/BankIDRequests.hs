@@ -9,6 +9,7 @@ module ELegitimation.BankIDRequests (
         ) where
 
 import Data.Maybe
+import Data.Char
 import Utils.Enum
 import SOAP.SOAP
 import Text.XML.HaXml.Posn (Posn)
@@ -315,7 +316,8 @@ instance XmlContent (CollectResponse) where
 
 mbiRequestSignature :: LogicaConfig -> String -> String -> IO (Either String (String, String))
 mbiRequestSignature LogicaConfig{..} personalnumber uvd = do
-  eresponse <- makeSoapCallWithCA logicaMBIEndpoint logicaCertFile "Sign" $ SignatureRequest logicaServiceID logicaMBIDisplayName personalnumber (BS.toString $ Base64.encode $ BS.fromString uvd)
+  let personalnumbernormalized = filter isDigit personalnumber
+  eresponse <- makeSoapCallWithCA logicaMBIEndpoint logicaCertFile "Sign" $ SignatureRequest logicaServiceID logicaMBIDisplayName personalnumbernormalized (BS.toString $ Base64.encode $ BS.fromString uvd)
   case eresponse of
     Left m -> return $ Left m
     Right (SignatureResponse tid oref) -> return $ Right (tid, oref)
