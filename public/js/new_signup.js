@@ -21,7 +21,6 @@
             mixpanel.track('Create new account');
             mixpanel.people.set({
                 '$email'        : model.email(),
-                'Signup Method' : 'AccountRequest'
             });
               mixpanel.alias();
             var content = localization.payments.outside.confirmAccountCreatedUserHeader;

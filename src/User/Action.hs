@@ -59,6 +59,7 @@ handleAccountSetupFromSign document signatorylink = do
         someProp "First Name" $ getFirstName activateduser,
         someProp "Last Name" $ getLastName activateduser,
         MailProp $ Email email,
+        IPProp $ ctxipnumber ctx,
         someProp "Company Name" $ getValueOfType CompanyFT $ signatorydetails signatorylink] ++ 
         [someProp k v | SignatoryField{sfValue = v, sfType = CustomFT k _} <- signatoryfields (signatorydetails signatorylink)]
                         
@@ -121,14 +122,17 @@ handleActivate mfstname msndname actvuser signupmethod = do
                                               IPProp (ctxipnumber ctx),
                                               TimeProp (ctxtime ctx),
                                               NameProp name,
-                                              MailProp $ Email email]
-              asyncLogEvent SetUserProps [UserIDProp (userid tosuser),
-                                          someProp "TOS Date" (ctxtime ctx),
-                                          NameProp name,
-                                          MailProp $ Email email,
-                                          someProp "Signup Method" (show signupmethod),
-                                          someProp "Last login" (ctxtime ctx)
-                                         ]
+                                              MailProp $ Email email,
+                                              someProp "Signup Method" (show signupmethod)]
+              asyncLogEvent SetUserProps  [UserIDProp (userid tosuser),
+                                           someProp "TOS Date" (ctxtime ctx),
+                                           NameProp name,
+                                           MailProp $ Email email,
+                                           someProp "Signup Method" (show signupmethod),
+                                           someProp "Last login" (ctxtime ctx),
+                                           someProp "Phone" phone,
+                                           someProp "Company Name" companyname,
+                                           someProp "Position" position]
               when (callme) $ phoneMeRequest (Just tosuser) phone
               return $ Just (tosuser, newdocs)
             else do

@@ -44,6 +44,7 @@ import Control.Applicative
 import Data.Monoid
 import Data.Char
 import Database.HDBC
+import Happstack.Server (FromReqURI(..))
 
 import Company.Model
 import DB
@@ -54,6 +55,7 @@ import User.Tables
 import User.UserID
 import DB.SQL2
 import Doc.DocStateData (DocumentStatus(..), DocumentID)
+import Utils.Read
 
 -- newtypes
 newtype Email = Email { unEmail :: String }
@@ -65,9 +67,12 @@ data InviteType = Viral | Admin
   deriving (Eq, Ord, Show)
 $(enumDeriveConvertible ''InviteType)
 
-data SignupMethod = AccountRequest | ViralInvitation | BySigning
-  deriving (Eq, Ord, Show)
+data SignupMethod = AccountRequest | ViralInvitation | BySigning | ByAdmin | CompanyInvitation
+  deriving (Eq, Ord, Show, Read)
 $(enumDeriveConvertible ''SignupMethod)
+
+instance FromReqURI SignupMethod where
+  fromReqURI = maybeRead
 
 -- data structures
 data InviteInfo = InviteInfo {

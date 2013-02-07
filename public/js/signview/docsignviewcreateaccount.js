@@ -113,16 +113,6 @@ window.CreateAccountAfterSignView = Backbone.View.extend({
         view.clearPasswordValidationErrors();
         view.clearTOSValidationErrors();
         if (view.filledAndValid()) {
-            mixpanel.track('Create new account');
-            mixpanel.people.set({
-                'TOS Date'    : new Date(),
-                'Full Name'   : model.document().currentSignatory().name(),
-                '$first_name' : model.document().currentSignatory().fstname(),
-                '$last_name'  : model.document().currentSignatory().sndname(),
-                '$email'      : model.document().currentSignatory().email(),
-                'Language'    : (model.document().lang() === "gb" ? "en" : "sv"),
-                'Signup Method' : 'BySigning'
-            });
          new Submit({
            url: model.document().currentSignatory().saveurl(),
            method: "POST",
@@ -136,8 +126,22 @@ window.CreateAccountAfterSignView = Backbone.View.extend({
            },
            ajaxsuccess: function(d) {
                d = JSON.parse(d);
-             if(d.userid)
-               mixpanel.alias(d.userid);
+             if(d.userid) {
+                 mixpanel.alias(d.userid);
+                 mixpanel.track('Create new account', {
+                     'Signup Method' : 'BySigning'
+                 });
+                 mixpanel.track('Sign TOS');
+                 mixpanel.people.set({
+                     'TOS Date'    : new Date(),
+                     'Full Name'   : model.document().currentSignatory().name(),
+                     '$first_name' : model.document().currentSignatory().fstname(),
+                     '$last_name'  : model.document().currentSignatory().sndname(),
+                     '$email'      : model.document().currentSignatory().email(),
+                     'Language'    : (model.document().lang() === "gb" ? "en" : "sv"),
+                     'Signup Method' : 'BySigning'
+                 });
+             }
              model.setJustSaved();
            }
          }).send();
