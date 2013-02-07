@@ -81,40 +81,14 @@ var ConfirmationModel = Backbone.Model.extend({
       this.set({acceptVisible : false});
   },
   acceptVisible : function() {
-      return this.get("acceptVisible");   
+      return this.get("acceptVisible");
   },
   extraClass : function() {
-            return this.get("extraClass");   
+            return this.get("extraClass");
   },
   extraOption: function() {
             return this.get("extraOption");
-  } 
-});
-
-/* Fixer for background overlay.  We need to extend it if the page is
- * changing dynamicaly in the backgroud or else it may only match half
- * screen.  It gets initialized by confirmation view on confirmation
- * view and will self-destroy when confirmation view is closed.
- */
-
-window.ExposeMaskFixer =  Backbone.Model.extend({
-    initialize: function(args){
-        var fixer = this;
-        this.object = args.object;
-        setTimeout(function() {fixer.fixer();},1000);
-    },
-    fixer: function() {
-        var fixer = this;
-        if (this.object.view != undefined)
-        {
-            var em = $("#exposeMask");
-            var body = $("body");
-            var height = Math.max(body.height(),$(document).height());
-            if (em.size() == 1 && (height != em.height()))
-                em.height(height);
-            setTimeout(function() {fixer.fixer();},1000);
-        }
-    }
+  }
 });
 
 var ConfirmationView = Backbone.View.extend({
@@ -126,7 +100,6 @@ var ConfirmationView = Backbone.View.extend({
         this.model.bind('change:acceptVisible', this.renderAcceptButton);
         this.model.view = this;
         this.render();
-        this.fixer = new ExposeMaskFixer({object : this.model});
     },
     renderAcceptButton : function() {
         var model = this.model;
@@ -196,7 +169,7 @@ var ConfirmationView = Backbone.View.extend({
         if (this.model != undefined) {
           this.model.destroy();
           this.model.view = undefined;
-        }  
+        }
         if (this.el != undefined)
           $(this.el).remove();
 
