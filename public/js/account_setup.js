@@ -113,7 +113,7 @@
         ajaxsuccess: function(rs) {
           var resp = JSON.parse(rs);
           if (resp.ok === true) {
-            window.location = resp.location;
+              window.location = resp.location;
           } else if (resp.error == 'already_active') {
             new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, color: 'red'});
           } else if (resp.error == 'reload') {

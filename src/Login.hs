@@ -120,7 +120,7 @@ handleSignup = do
           -- there is an existing user that hasn't been activated
           -- send them another invite
           UserControl.sendNewUserMail user
-          l <- newUserAccountRequestLink (ctxlang ctx) (userid user)
+          l <- newUserAccountRequestLink (ctxlang ctx) (userid user) AccountRequest
           asyncLogEvent "Send account confirmation email" [
             UserIDProp $ userid user,
             IPProp $ ctxipnumber ctx,
@@ -142,7 +142,7 @@ handleSignup = do
             Nothing -> return $ Just (Email email, Nothing)
             Just newuser -> do
               UserControl.sendNewUserMail newuser
-              l <- newUserAccountRequestLink (ctxlang ctx) (userid newuser)
+              l <- newUserAccountRequestLink (ctxlang ctx) (userid newuser) AccountRequest
               asyncLogEvent "Send account confirmation email" [
                 UserIDProp $ userid newuser,
                 IPProp $ ctxipnumber ctx,
