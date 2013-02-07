@@ -363,6 +363,7 @@ documentMail haslang ctx doc mailname otherfields = do
     mcompany <- liftMM (dbQuery . GetCompanyByUserID) (return $ getAuthorSigLink doc >>= maybesignatory)
     let allfields = do
         F.value "ctxhostpart" (ctxhostpart ctx)
+        F.value "ctxlang" (codeFromLang $ ctxlang ctx)
         F.value "documenttitle" $ documenttitle doc
         F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
         when (isJust mcompany) $ do
