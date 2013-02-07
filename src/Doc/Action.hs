@@ -467,7 +467,7 @@ handlePostSignSignup email fn ln = do
     (Just user, Nothing) -> do
       -- there is an existing user that hasn't been activated
       -- return the existing link
-      l <- newUserAccountRequestLink lang (userid user)
+      l <- newUserAccountRequestLink lang (userid user) BySigning
       asyncLogEvent "Send account confirmation email" [
         UserIDProp $ userid user,
         IPProp $ ctxipnumber ctx,
@@ -477,7 +477,11 @@ handlePostSignSignup email fn ln = do
       asyncLogEvent SetUserProps [
         UserIDProp $ userid user,
         someProp "Post-sign confirmation email" $ ctxtime ctx,
-        someProp "Confirmation link" $ show l
+        someProp "Confirmation link" $ show l,
+        NameProp (fn ++ " " ++ ln),
+        someProp "First Name" fn,
+        someProp "Last Name" ln,
+        IPProp $ ctxipnumber ctx
         ]
       return $ Just l
     (Nothing, Nothing) -> do
@@ -487,7 +491,7 @@ handlePostSignSignup email fn ln = do
       case mnewuser of
         Nothing -> return Nothing
         Just newuser -> do
-          l <- newUserAccountRequestLink lang (userid newuser)
+          l <- newUserAccountRequestLink lang (userid newuser) BySigning
           asyncLogEvent "Send account confirmation email" [
             UserIDProp $ userid newuser,
             IPProp $ ctxipnumber ctx,
@@ -500,7 +504,8 @@ handlePostSignSignup email fn ln = do
             NameProp (fn ++ " " ++ ln),
             someProp "First Name" fn,
             someProp "Last Name" ln,
-            someProp "Confirmation link" $ show l
+            someProp "Confirmation link" $ show l,
+            IPProp $ ctxipnumber ctx
             ]
           return $ Just l
     (_, _) -> return Nothing

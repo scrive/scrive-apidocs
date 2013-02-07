@@ -20,8 +20,7 @@
           if (resp.sent === true) {
             mixpanel.track('Create new account');
             mixpanel.people.set({
-                '$email'      : model.email(),
-                'Signup Method' : 'AccountRequest'
+                '$email'      : model.email()
             });
             var content = localization.payments.outside.confirmAccountCreatedUserHeader;
             new FlashMessage({content: content, color: 'green'});
