@@ -6,7 +6,15 @@ loginPage=
 <script type="text/javascript">
   jQuery(document).ready(function() {
     jQuery('.inner').append(new Login({referer: "$referer$"}).el());
-    jQuery('.short-input-section input:first').focus();
+
+    var emailfield = jQuery('.short-input-section input[type=text]');
+    if(emailfield.val()) {
+      // Email field already filled, focus password instead
+      jQuery('.short-input-section input[type=password]').focus();
+    } else {
+      emailfield.focus();
+    }
+
     mixpanel.register({
       Context : 'Login page'
     });

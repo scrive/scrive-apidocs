@@ -1,5 +1,16 @@
 // Login + Password reminder modal
 
+// Make the cookie information easily available.
+function buildCookieMap() {
+    var cookies = document.cookie.split(';');
+    var cookieMap = {};
+    for(var i in cookies) {
+        cookies[i] = cookies[i].split('=');
+        cookieMap[cookies[i][0].trim()] = cookies[i][1];
+    }
+    return cookieMap;
+}
+
 (function(window){
 
 var LoginModel = Backbone.Model.extend({
@@ -121,11 +132,17 @@ var LoginView = Backbone.View.extend({
         this.render();
     },
     loginSection : function() {
+      var cookies = buildCookieMap();
       var model = this.model;
       var content = $("<div class='short-input-container login'/>");
       var wrapper = $("<div class='short-input-container-body-wrapper'/>");
       var body = $("<div class='short-input-container-body'/>");
       var header = $("<header class='shadowed'/>");
+      var loginFunction = function() {
+          document.cookie = 'last_login_email=' + model.email();
+          model.login();
+      }
+      model.setEmail(cookies['last_login_email']);
       header.append($("<h1/>").text(localization.welcomeback));
       if (!model.pad()) $(this.el).append(header);
       content.append(wrapper.append(body));
@@ -137,7 +154,7 @@ var LoginView = Backbone.View.extend({
               cssClass : "big-input",
               inputtype : "text",
               name : "email",
-              onEnter : function() {  model.login();}
+              onEnter : loginFunction
 
       });
       emailinput.input().attr("autocomplete","false");
@@ -150,7 +167,7 @@ var LoginView = Backbone.View.extend({
               inputtype : "password",
               cssClass : "big-input",
               name : "password",
-              onEnter : function() {  model.login();}
+              onEnter : loginFunction
 
       });
       passwordinput.input().attr("autocomplete","false");
@@ -161,9 +178,7 @@ var LoginView = Backbone.View.extend({
                   color : "blue",
                   text  : localization.loginModal.login + " ›",
                   cssClass : "login-button ",
-                  onClick : function() {
-                        model.login();
-                    }
+                  onClick : loginFunction
                 });
                 
       body.append($("<div class='position'/>").append(loginButton.input()));
