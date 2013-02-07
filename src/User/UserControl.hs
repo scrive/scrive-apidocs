@@ -397,7 +397,7 @@ isUserDeletable user = do
 sendNewUserMail :: Kontrakcja m => User -> m ()
 sendNewUserMail user = do
   ctx <- getContext
-  al <- newUserAccountRequestLink (ctxlang ctx) (userid user)
+  al <- newUserAccountRequestLink (ctxlang ctx) (userid user) AccountRequest
   mail <- newUserMail (ctxhostpart ctx) (getEmail user) (getSmartName user) al
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
@@ -416,7 +416,7 @@ createNewUserByAdmin email names custommessage mcompanydata lang = do
              let fullname = composeFullName names
              now <- liftIO $ getMinutesTime
              _ <- dbUpdate $ SetInviteInfo (userid <$> ctxmaybeuser ctx) now Admin (userid user)
-             chpwdlink <- newUserAccountRequestLink (ctxlang ctx) (userid user)
+             chpwdlink <- newUserAccountRequestLink (ctxlang ctx) (userid user) ByAdmin
              mail <- mailNewAccountCreatedByAdmin ctx (getLang user) fullname email chpwdlink custommessage
              scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
@@ -438,9 +438,11 @@ handleAcceptTOSPost = do
       addFlashM flashMessageUserDetailsSaved
   return ()
 
-
 handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink Response)
-handleAccountSetupGet uid token = do
+handleAccountSetupGet uid token = handleAccountSetupGetWithMethod uid token AccountRequest
+
+handleAccountSetupGetWithMethod :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m (Either KontraLink Response)
+handleAccountSetupGetWithMethod uid token _ = do
   ctx <- getContext
   muser <- getUserAccountRequestUser uid token
   case (muser, userhasacceptedtermsofservice =<< muser) of
@@ -457,8 +459,8 @@ handleAccountSetupGet uid token = do
     _ -> do
       return $ Left $ LinkSignup $ ctxlang ctx
 
-handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
-handleAccountSetupPost uid token = do
+handleAccountSetupPostWithMethod :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m JSValue
+handleAccountSetupPostWithMethod uid token sm = do
   user <- guardJustM404 $ getUserAccountRequestUser uid token
   if isJust $ userhasacceptedtermsofservice user
     then runJSONGenT $ do
@@ -467,7 +469,7 @@ handleAccountSetupPost uid token = do
     else do
       mfstname <- getRequiredField asValidName "fstname"
       msndname <- getRequiredField asValidName "sndname"
-      mactivateduser <- handleActivate mfstname msndname user AccountRequest
+      mactivateduser <- handleActivate mfstname msndname user sm
       case mactivateduser of
         Nothing -> runJSONGenT $ do
                     value "ok" False
@@ -482,6 +484,9 @@ handleAccountSetupPost uid token = do
           runJSONGenT $ do
             value "ok" True
             value "location" $ show link
+
+handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
+handleAccountSetupPost uid token = handleAccountSetupPostWithMethod uid token AccountRequest
 
 {- |
     This is where we get to when the user clicks the link in their password reminder

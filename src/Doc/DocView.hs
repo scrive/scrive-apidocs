@@ -78,7 +78,9 @@ modalSendConfirmationView document authorWillSign = do
 
 modalRejectedView :: TemplatesMonad m => Document -> m FlashMessage
 modalRejectedView document = do
-  partylist <- renderListTemplate . map getSmartName $ partyList document
+  let activatedSignatories = [sl | sl <- documentsignatorylinks document
+                                 , isActivatedSignatory (documentcurrentsignorder document) sl || isAuthor sl]
+  partylist <- renderListTemplate . map getSmartName $ partyList (document { documentsignatorylinks = activatedSignatories })
   toModal <$> (renderTemplate "modalRejectedView" $ do
     F.value "partyList" partylist
     F.value "documenttitle" $ documenttitle document)
@@ -340,6 +342,7 @@ pageDocumentSignView ctx document siglink ad =
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink
       F.value "documenttitle" $ documenttitle document
+      F.value "usestandardheaders" $ (isJust $ maybesignatory siglink) && (maybesignatory siglink) == (userid <$> ctxmaybeuser ctx)
       standardPageFields ctx kontrakcja ad
 
 

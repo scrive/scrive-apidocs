@@ -280,7 +280,7 @@ handleResendToCompanyAccount = withCompanyAdmin $ \(user, company) -> do
 sendNewCompanyUserMail :: Kontrakcja m => User -> Company -> User -> m ()
 sendNewCompanyUserMail inviter company user = do
   ctx <- getContext
-  al <- newUserAccountRequestLink (ctxlang ctx) (userid user)
+  al <- newUserAccountRequestLink (ctxlang ctx) (userid user) CompanyInvitation
   mail <- mailNewCompanyUserInvite (ctxhostpart ctx) user inviter company al
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getFullName user, email = getEmail user }]}
   return ()
