@@ -4,8 +4,9 @@
 #### it just uses this module
 ####
 javascriptLocalisation =
-    var localization =
-        {      welcomeback : "$_welcomeback()$"
+  window.localization =
+        {      code : "$_code()$"
+             , welcomeback : "$_welcomeback()$"
              , resetYourPassword : "$_resetYourPassword()$"
              , resetYourPasswordCheckEmail : "$_resetYourPasswordCheckEmail()$"
              , getStartedInstantly : "$_getStartedInstantly()$"

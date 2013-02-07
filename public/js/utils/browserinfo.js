@@ -1,9 +1,4 @@
-/* Simple local storage mechanism
- * Only provided methods are set and get.
- * Always use namespace to avoid confusions
- * May fail on some browsers so don't use it for critical data,
- * rather like a local cache
- */
+/* Getting some information about browsers */
 
 (function(window){
 

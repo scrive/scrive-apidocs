@@ -28,7 +28,7 @@ padQueueState :: Kontrakcja m => m JSValue
 padQueueState = do
     ctx <- getContext
     Log.debug "Checking state"
-    case (ctxmaybeuser ctx `mplus` ctxmaybepaduser ctx) of 
+    case (ctxmaybeuser ctx `mplus` ctxmaybepaduser ctx) of
          Nothing  -> do
              Log.debug "Not logged in"
              padQueueStateJSONNotLoggedIn
@@ -57,7 +57,7 @@ padQueueToSignatoryData (Just (did,slid)) = do
         sl <- guardJust $ getSigLinkFor doc slid
         if (Preparation /= documentstatus doc)
          then return $ Just (doc,sl)
-         else return Nothing  
+         else return Nothing
 
 -- PadQueue Logout
 handlePadLogout :: Kontrakcja m => m KontraLink

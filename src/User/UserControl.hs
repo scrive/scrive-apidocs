@@ -345,8 +345,8 @@ handlePostUserLang = do
            lang = fromMaybe (lang $ usersettings user) mlang
          }
       return ()
-    Nothing -> return ()     
-  
+    Nothing -> return ()
+
 handlePostUserSecurity :: Kontrakcja m => m KontraLink
 handlePostUserSecurity = do
   ctx <- getContext
@@ -437,7 +437,7 @@ handleAcceptTOSPost = do
       _ <- dbUpdate $ LogHistoryTOSAccept userid ctxipnumber ctxtime (Just userid)
       addFlashM flashMessageUserDetailsSaved
   return ()
-      
+
 
 handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink Response)
 handleAccountSetupGet uid token = do
@@ -446,7 +446,7 @@ handleAccountSetupGet uid token = do
   case (muser, userhasacceptedtermsofservice =<< muser) of
     (Just user, Nothing) -> do
       mcompany <-  getCompanyForUser user
-      Right <$> (simpleHtmlResponse =<< (renderTemplateAsPage ctx "accountSetupPage" Nothing False $ do
+      Right <$> (simpleHtmlResponse =<< (renderTemplateAsPage ctx "accountSetupPage" False $ do
                                             F.value "fstname" $ getFirstName user
                                             F.value "sndname" $ getLastName user
                                             F.value "company" $ companyname <$> companyinfo <$> mcompany))
@@ -456,7 +456,7 @@ handleAccountSetupGet uid token = do
       return $ Left $ LinkLogin (ctxlang ctx) NotLogged
     _ -> do
       return $ Left $ LinkSignup $ ctxlang ctx
-              
+
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
 handleAccountSetupPost uid token = do
   user <- guardJustM404 $ getUserAccountRequestUser uid token
@@ -559,7 +559,7 @@ handleBlockingInfo = do
         J.value "canceled"  canceled
         J.value "quantity"  quantity
         J.value "billingEnds" billingEnds
-    
+
 -- please treat this function like a public query form, it's not secure
 handleContactUs :: Kontrakcja m => m KontraLink
 handleContactUs = do
@@ -569,7 +569,7 @@ handleContactUs = do
   email   <- getField' "email"
   message <- getField' "message"
   plan    <- getField' "plan"
-  
+
   let uid = maybe "user not logged in" ((++) "user with id " . show . userid) ctxmaybeuser
       content = "<p>Hi there!</p>" ++
                 "<p>Someone requested information from the payments form.</p>" ++

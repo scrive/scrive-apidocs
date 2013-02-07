@@ -370,6 +370,14 @@ var DocumentSignViewView = Backbone.View.extend({
            this.container.append("<div class='subcontainer'><BR/><div class='document-pages'><div class='waiting4page'></div></div></div>");
          return this;
      }
+
+     if (Language.current() != view.model.document().lang().simpleCode()) {
+         Language.changeOnCurrentPage(view.model.document().lang().simpleCode() ,function() {
+           view.render();
+        })
+        return this;
+     }
+
      this.container.append(this.model.instructionssection().el)
 
      if (this.model.hasCreateAccountSection())

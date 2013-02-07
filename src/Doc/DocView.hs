@@ -340,8 +340,8 @@ pageDocumentSignView ctx document siglink ad =
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink
       F.value "documenttitle" $ documenttitle document
-      standardPageFields ctx kontrakcja Nothing ad
-  
+      standardPageFields ctx kontrakcja ad
+
 
 -- | Basic info about document , name, id ,author
 documentInfoFields :: Monad m => Document -> Fields m ()

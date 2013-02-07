@@ -77,6 +77,7 @@ standardHeaderContents=
         <link href='/css/fonts/HelveticaNeue.css' rel='stylesheet' type='text/css'/>
         <link rel=" icon" href="/favicon.ico?new" />
         <script src="/$ctxlang$/localization/$versioncode$.js"  type="text/javascript"></script>
+        <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
         $staticResources:noescape()$
 
 <!-- start Mixpanel -->
@@ -294,18 +295,7 @@ langSwitcher=
               jQuery(function() {
                    var changeLang = function(l) {
                       mixpanel.track('Click switch languages', { 'Language' : l });
-                      new Submit({
-                          method : "POST",
-                          url: "$linklangswitch$",
-                          lang: l == "en" ? "LANG_EN" : "LANG_SV"
-                                }).sendAjax(function() {
-                                   var p = window.location.pathname;
-                                   if (p.substring(0, 3) == "/en" || p.substring(0, 3) == "/sv") {
-                                        p = "/" + l + p.substr(3);
-                                        window.location.pathname = p;
-                                   } else
-                                      window.location.reload();
-                          })
+                      Language.changeforPageAndUserAndReload(l);
                    }
                    var select = new Select({  name : $if(langswedish)$ "$_SwedishInSwedish()$" $else$ "$_EnglishInEnglish()$" $endif$,
                                               textWidth: 80,
