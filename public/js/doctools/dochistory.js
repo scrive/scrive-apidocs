@@ -11,7 +11,6 @@ var DocumentHistoryModel = Backbone.Model.extend({
   initialize : function(){
   },
   newHistoryList : function() {
-     var self = this;
      return  new KontraList({
         name : "Document history",
         schema: new Schema({
@@ -19,13 +18,7 @@ var DocumentHistoryModel = Backbone.Model.extend({
             paging : new Paging({disabled: true, showLimit : this.get("showAll") ? undefined : 15 }),
             cells : [
                 new Cell({name: localization.archive.documents.columns.status, width:"46px", field:"status",
-                  rendering: function(status, row, model) {
-                      var name = model.field('party');
-                      var signatories = self.document().signatories();
-                      var signatory = _.find(signatories, function(x) {return x.name() == name;});
-                      if (signatory && !signatory.author() && !signatory.canSign()) {
-                        status = status + ' viewer';
-                      }
+                  rendering: function(status) {
                       return jQuery("<div class='icon status "+status+"'></div>");
                   }
                 }),

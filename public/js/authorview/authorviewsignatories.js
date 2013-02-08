@@ -60,9 +60,6 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
           var middle2    = $("<div class='middle' style='min-width:100px'/>");
           var middle3    = $("<div class='middle float-right' />");
           var statusicon = $("<div class='icon status' />").addClass(sigview.status());
-          if (!sigview.signatory().author() && !sigview.signatory().canSign()) {
-            statusicon.addClass('viewer');
-          }
           var status     = $("<span class='statustext' />").addClass(sigview.status()).text(sigview.signatorySummary());
           var details    = $('<a class="details clickable" href="#" />').text(localization.docsignview.showDetails);
           middle1.append(statusicon);
