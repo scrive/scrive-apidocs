@@ -205,7 +205,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_flashMessageUserActivated","Välkommen till Scrive!","Welcome to Scrive!"
 "_flashMessageUserAlreadyActivated","Du har redan aktiverat detta konto.","You have already activated this account."
 "_flashMessageUserDetailsSaved","Dina kontoändringar har sparats.","Your account settings have been saved."
-"_flashMessageCompanyCreated","Ert företagskonto hos Scrive har skapats. Nu kan du även bjuda in dina kollegor till tjänsten. Samtliga era företagsanvändares dokument kommer att tillhöra ert företagskonto.","Your company account at Scrive has been created. You can now invite your colleagues to join the service. All your companies users documents will belong to your company account."
+"_flashMessageCompanyCreated","Ett företagskonto har skapats. Du kan nu börja bjuda in kollegor till Scrive.","Your company account at Scrive has been created. You can now invite your colleagues to join the service. All your companies users documents will belong to your company account."
 "_flashMessageUserHasBecomeCompanyAccount","Ditt konto är nu en del av $companyname$ och rättigheterna till dina dokument har nu överförts till $companyname$.","Your account is now a part of $companyname$ and the rights to your documents have been transferred."
 "_flashMessageUserHasLiveDocs","Det går inte att ta bort kontot eftersom användaren har dokument som ännu inte avslutats eller avbrutits.","Unable to remove the account as the user has documents that have not yet been finalised or cancelled."
 "_flashMessageUserPasswordChanged","Ditt lösenord har ändrats.","Your password has been changed."
