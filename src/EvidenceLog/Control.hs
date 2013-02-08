@@ -5,13 +5,11 @@ module EvidenceLog.Control
        )
        where
 
-import KontraLink
 import Kontra
 import DB
 import Doc.DocStateData
 import Doc.DocumentID
 import User.Model
-import User.Utils
 import Util.MonadUtils
 
 import Text.JSON
@@ -23,8 +21,8 @@ import Doc.DocStateQuery
 import EvidenceLog.View
 import EvidenceLog.Model
 
-jsonDocumentEvidenceLog ::  Kontrakcja m => DocumentID -> m (Either KontraLink JSValue)
-jsonDocumentEvidenceLog did = withUserGet $ do
+jsonDocumentEvidenceLog ::  Kontrakcja m => DocumentID -> m JSValue
+jsonDocumentEvidenceLog did = do
   ctx <- getContext
   doc <- guardRightM' $ getDocByDocID did
   evidenceLog <- dbQuery $ GetEvidenceLog $ documentid doc
