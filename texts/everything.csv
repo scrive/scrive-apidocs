@@ -1090,7 +1090,7 @@ have an account please follow the account creation process. Free use of up to 5 
 "_getStartedInstantly","Kom igång direkt.","Get started immediately."
 "_freeDocumentPerMonth","3 fria dokument per månad.","3 free documents per month."
 "_signUp","Skapa konto","Sign up"
-"_signupModalMainHeader","Enklare för dig och enklare för motparten. De kommer att tacka dig.","Simpler for you and simpler for your counterparts. They will thank you."
+"_signupModalMainHeader","Enklare för både dig din motpart. De kommer att tacka dig.","Simpler for you and simpler for your counterparts. They will thank you."
 "_verificationSuccess","Giltig signatur","Valid signature"
 "_verificationFailed","Ej digital signatur","Not digital signature"
 "_verificationFailedMessage","Dokumentet är inte signerat genom Scrive","Given document was not signed using Scrive."
