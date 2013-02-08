@@ -306,7 +306,6 @@ window.AuthorViewSignatory = function(args) {
           this.signatorySummary = function() {return model.signatorySummary();};
           this.nameOrEmail = function() {return model.nameOrEmail();};
           this.status = function() {return model.status();};
-
 };
 
 
