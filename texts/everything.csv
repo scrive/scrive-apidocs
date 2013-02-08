@@ -29,6 +29,7 @@
 "_MailAPILimitsResetToday","Återställ mail processade idag","Reset counter of emails processed today"
 "_MailAPIResetKey","API-nyckel","Reset API key"
 "_MailAPISettings","Personlig Inställningar","Personal Settings"
+"_CompanyMailAPI","Företagsinställningar",,"Company Settings"
 "_NewPassword","Nytt lösenord","New password"
 "_PresentPassword","Nuvarande lösenord","Present password"
 "_ContractReminderBodyMulti","Är du säker att du vill skicka en påminnelse till berörda parter för","Are you sure you want to send reminders to the parties involved in the"
