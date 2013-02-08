@@ -14,7 +14,7 @@ var DocumentHistoryModel = Backbone.Model.extend({
      return  new KontraList({
         name : "Document history",
         schema: new Schema({
-            url: "/d/evidencelog/" + this.document().documentid(),
+            url: "/api/frontend/evidencelog/" + this.document().documentid(),
             paging : new Paging({disabled: true, showLimit : this.get("showAll") ? undefined : 15 }),
             cells : [
                 new Cell({name: localization.archive.documents.columns.status, width:"46px", field:"status",
@@ -30,14 +30,14 @@ var DocumentHistoryModel = Backbone.Model.extend({
                           }})
                 ]
             })
-         
+
     });
   },
   historyList : function() {
         if (this.get("historyList") == undefined)
             this.set({'historyList' : this.newHistoryList() }, {silent : true});
         return this.get('historyList');
-        
+
   },
   showAll : function() {
       return this.get("showAll");
@@ -66,11 +66,11 @@ var DocumentHistoryView = Backbone.View.extend({
          if (this.model.showAll()) {
             this.checkbox.addClass("expanded");
             this.label.text(localization.history.hide)
-         }   
+         }
         else {
             this.checkbox.removeClass("expanded");
             this.label.text(localization.history.expand + " (" + (this.model.historyList().model().length - 15) + " " +localization.history.available+ ")")
-        }    
+        }
     },
     expandAllOption : function() {
         var model = this.model;
@@ -91,7 +91,7 @@ var DocumentHistoryView = Backbone.View.extend({
       var container = $(this.el)
       container.children().detach();
       var historyList = this.model.historyList();
-      
+
       container.append(historyList.el())
 
       var footer = $("<div class='document-history-footer'/>");
@@ -102,8 +102,8 @@ var DocumentHistoryView = Backbone.View.extend({
       footer.append(this.expandAllOption())
       container.append(footer);
 
-      
-      return this;     
+
+      return this;
     }
 });
 
@@ -111,7 +111,7 @@ var DocumentHistoryView = Backbone.View.extend({
 window.DocumentHistory = function(args){
         var model = new DocumentHistoryModel( {
                         document : args.document
-                    });   
+                    });
         var view = new DocumentHistoryView ({
                         model: model,
                         el: $("<div class='document-history-container'/>")

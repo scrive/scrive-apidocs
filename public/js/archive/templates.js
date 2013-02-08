@@ -8,7 +8,7 @@ window.TemplatesListDefinition = function(archive) { return {
     name : "Templatesarchive table",
     loadOnInit : false,
     schema: new Schema({
-    url: "/docs",
+    url: "/api/frontend/list",
     extraParams : { documentType : "Template" },
     sorting: new Sorting({ fields: ["title", "time", "process"]}),
     paging: new Paging({}),
@@ -22,7 +22,7 @@ window.TemplatesListDefinition = function(archive) { return {
                                         {name: localization.filterByProcess.showOffersOnly,    value: "offer"},
                                         {name: localization.filterByProcess.showOrdersOnly,    value: "order"}
                                       ]})
-            ], 
+            ],
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
         new Cell({name: localization.archive.templates.columns.shared, width:"60px", field:"shared", special: "rendered",
@@ -56,7 +56,7 @@ window.TemplatesListDefinition = function(archive) { return {
     actions : [
        new ListAction({
                 name : localization.archive.templates.createnew,
-                avaible : function() {return true;}, 
+                avaible : function() {return true;},
                 acceptEmpty : true,
                 button: Button.init({
                             size: "tiny",
@@ -110,7 +110,7 @@ window.TemplatesListDefinition = function(archive) { return {
                               });
                             return true;
                           }
-    
+
             }),
         new ListAction({
                 name : localization.archive.templates.remove.action,
@@ -145,7 +145,7 @@ window.TemplatesListDefinition = function(archive) { return {
                               });
                             return true;
                           }
-            })           
+            })
        ]
     })
 };};

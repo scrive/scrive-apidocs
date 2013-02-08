@@ -8,7 +8,8 @@
 
 var DocumentSignViewModel = Backbone.Model.extend({
   defaults : {
-    justsaved: false
+    justsaved: false,
+    ignoredoclang : false
   },
   initialize : function(args){
       var model = this;
@@ -27,6 +28,9 @@ var DocumentSignViewModel = Backbone.Model.extend({
   },
   document : function(){
        return this.get("document");
+  },
+  ignoredoclang : function() {
+       return this.get("ignoredoclang") == true;
   },
   justSaved: function() {
     return this.get('justsaved');
@@ -370,6 +374,14 @@ var DocumentSignViewView = Backbone.View.extend({
            this.container.append("<div class='subcontainer'><BR/><div class='document-pages'><div class='waiting4page'></div></div></div>");
          return this;
      }
+
+     if (!this.model.ignoredoclang() && Language.current() != view.model.document().lang().simpleCode()) {
+         Language.changeOnCurrentPage(view.model.document().lang().simpleCode() ,function() {
+           view.render();
+        })
+        return this;
+     }
+
      this.container.append(this.model.instructionssection().el)
 
      if (this.model.hasCreateAccountSection())
@@ -418,7 +430,8 @@ var DocumentSignViewView = Backbone.View.extend({
 
 window.DocumentSignView = function(args){
         this.model = new DocumentSignViewModel( {
-                        document : new Document({ id: args.id, viewer: args.viewer })
+                        document : new Document({ id: args.id, viewer: args.viewer }),
+                        ignoredoclang : args.ignoredoclang
                     });
         this.view = new DocumentSignViewView({
                         model: this.model,

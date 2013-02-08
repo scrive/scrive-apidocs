@@ -14,13 +14,7 @@ var AuthorViewSignatoriesModel = Backbone.Model.extend({
     this.set({currentSignview : this.get('signatoriesViews')[0]}, {silent : true});
   },
   signatories: function() {
-        var signatories = this.document().signatories();
-        var current = _.find  (signatories, function(s) { return  s.current(); });
-        var others  = _.filter(signatories, function(s) { return !s.current(); });
-        if (current == undefined)
-          return  _.filter(others, function(s) { return s.signs(); });
-        else                                               
-          return _.filter([current].concat(others), function(s) { return s.signs(); });
+    return this.document().signatories();
   },
   authorview :function() {
      return this.get("authorview");

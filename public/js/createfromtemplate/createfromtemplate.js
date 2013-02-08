@@ -10,7 +10,7 @@ var  CreateFromTemplateModel = Backbone.Model.extend({
         name : "Templatesarchive table",
         loadOnInit : false,
         schema: new Schema({
-              url: "/docs",
+              url: "/api/frontend/list",
               extraParams : { documentType : "Template" },
               sorting: new Sorting({ fields: ["title", "time", "process"]}),
               paging: new Paging({}),
@@ -84,7 +84,7 @@ var  CreateFromTemplateModel = Backbone.Model.extend({
         })
       });
 
-    return this.get("list");  
+    return this.get("list");
   }
 });
 

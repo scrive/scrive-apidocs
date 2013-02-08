@@ -27,5 +27,5 @@ padQueueStateJSONNotLoggedIn = JSON.runJSONGenT $ do
 padQueuePage :: TemplatesMonad m => Context -> AnalyticsData -> m String
 padQueuePage ctx ad = do
     renderTemplate "padQueueCurrentPage" $ do
-      standardPageFields ctx kontrakcja Nothing ad
+      standardPageFields ctx kontrakcja ad
 

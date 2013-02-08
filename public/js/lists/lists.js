@@ -275,7 +275,7 @@
         hasSecoundTopBox : function() {
             return this.schema.options().length > 0 || this.schema.actions().length > 0;
         },
-        
+
         prerender: function() {
             var view = this;
             this.pretableboxleft = $("<div class='col float-left'/>");
@@ -300,7 +300,7 @@
                     this.pretablebox.append(this.pretableboxleft).append(this.pretableboxright).append("<div class='clearfix'/>");
                     this.tableoptionbox.append(this.pretablebox);
                     if (this.headerExtras != undefined) {
-                        if (typeof(this.headerExtras) == "function") 
+                        if (typeof(this.headerExtras) == "function")
                             this.pretableboxleft.append(this.headerExtras());
                         else
                             this.pretableboxleft.append(this.headerExtras);
@@ -434,8 +434,8 @@
             }
             else {
                 this.tablebox.prepend(this.emptyAlternative);
-            }  
-            
+            }
+
             var body = this.tbody;
             var odd = true;
             var schema = this.schema
@@ -454,7 +454,7 @@
                      $(e.view.el).removeClass("odd");
                  }
                  odd = !odd;
-                
+
             });
             return this;
         },
@@ -470,7 +470,7 @@
     });
 
     window.KontraList = function(args) {
-            var self = this; 
+            var self = this;
             var schema = args.schema;
             schema.initSessionStorageNamespace(args.name);
             var model = new List({ schema: schema });
@@ -491,7 +491,11 @@
                                 processData: true,
                                 cache: false,
                                 success: function() {view.stopLoading(); },
-                                error : function() {},
+                                error : function(list,resp) {
+                                  if (resp != undefined && resp.status != undefined && resp.status == 401)
+                                    window.location.reload(); // Reload page since we are not authorized to see it, one should
+
+                                },
                                 timeout: args.timeout
               });
             };
@@ -499,9 +503,13 @@
                 model.fetch({ data: schema.getSchemaUrlParams(),
                                 processData: true,
                                 cache: false,
-                                timeout: args.timeout
+                                timeout: args.timeout,
+                                error : function(list,resp) {
+                                  if (resp != undefined && resp.status != undefined && resp.status == 401)
+                                    self.silentFetch = function() {return;}; // Disable featching
+                                }
               });
-            } 
+            }
             this.model = function() {return model;}
             this.setShowLimit = function(l) {
                     schema.paging().setShowLimit(l);

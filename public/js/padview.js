@@ -5,8 +5,8 @@
 
 (function(window){
 
-    
-    
+
+
 window.PadQueue = Backbone.Model.extend({
     defaults: {
         needFullRefresh  : false,
@@ -48,7 +48,7 @@ window.PadQueue = Backbone.Model.extend({
         return this.get("logged") == "pad";
     },
     needFullRefresh : function() {
-        return this.get("needFullRefresh");  
+        return this.get("needFullRefresh");
     },
     logout : function() {
         return new Submit({method: "POST", url : "/padqueue/logout"});
@@ -65,8 +65,8 @@ window.PadQueue = Backbone.Model.extend({
     }
 
 });
-    
-    
+
+
 window.PadQueueView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
@@ -92,7 +92,7 @@ window.PadQueueView = Backbone.View.extend({
         var sheader = $("<div class='sheader'>Inväntar dokument</div>");
         box.append(header).append(sheader);
         return box;
-        
+
     },
     logToPadDevice : function() {
         return new Login({
@@ -121,13 +121,13 @@ window.PadQueueView = Backbone.View.extend({
         container.empty();
         if (padqueue.ready()) {
             if (padqueue.needFullRefresh())
-               window.location = window.location; // We reload if content has changes so much that it is not good to keep it opened. 
+               window.location = window.location; // We reload if content has changes so much that it is not good to keep it opened.
             else if (padqueue.hasDocument())
                 container.append(this.documentView());
             else if (padqueue.logged())
-                container.append(this.noDocumentView());    
-            else 
-                container.append(this.logToPadDevice());  
+                container.append(this.noDocumentView());
+            else
+                container.append(this.logToPadDevice());
 
             if (padqueue.loggedToPad())
                $('body').append(this.padLogoutIcon());

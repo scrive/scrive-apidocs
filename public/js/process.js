@@ -113,6 +113,12 @@ window.Lang = Backbone.Model.extend({
     lang : function() {
         return this.get("lang");
     },
+    simpleCode : function() {
+      if (this.en())
+        return "en";
+      else if (this.sv())
+        return "sv";
+    },
     en : function(){
         return this.lang() == "en" || this.lang() == "gb";
     },

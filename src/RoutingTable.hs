@@ -21,7 +21,6 @@ import qualified User.UserControl as UserControl
 import qualified ScriveByMail.Control as MailAPI
 import qualified Payments.Control as Payments
 import qualified Attachment.Control as AttachmentControl
-import qualified EvidenceLog.Control as EvidenceLog
 import Doc.API
 import OAuth.Control
 import LangRouting
@@ -58,7 +57,7 @@ staticRoutes = choice
 
 
      , dir "fromtemplate"                 $ hGet  $ toK0 $ DocControl.showCreateFromTemplate
-     
+
      , dir "s" $ dir "eleg" $ hGet $ toK2 $ BankID.generateBankIDTransaction
      , dir "s" $ dir "eleg" $ dir "mbi" $ hPostNoXToken $ toK2 $ BankID.initiateMobileBankID
      , dir "s" $ dir "eleg" $ dir "mbi" $ hGet  $ toK2 $ BankID.collectMobileBankID
@@ -74,7 +73,7 @@ staticRoutes = choice
      , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK2 $ DocControl.handleSigAttach
      , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
 
-     
+
      , dir "lang" $ hPostNoXToken $ toK0 $ UserControl.handlePostUserLang
      , dir "a" $ dir "rename"      $ hPost $ toK1 $ AttachmentControl.handleRename
      , dir "a" $ dir "share"       $ hPost $ toK0 $ AttachmentControl.handleShare
@@ -85,7 +84,7 @@ staticRoutes = choice
      , dir "att"                   $ hGet  $ toK1 $ AttachmentControl.jsonAttachment
 
      , dir "newdocument" $ hGet $ toK0 $ DocControl.handleNewDocument
-     
+
      , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showArchive
      , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
      , dir "d" $ dir "eleg"        $ hGet  $ toK1 $ BankID.generateBankIDTransactionForAuthor
@@ -101,9 +100,7 @@ staticRoutes = choice
      , dir "d" $ dir "zip"          $ hGet  $ toK0 $ ArchiveControl.handleZip
      , dir "d" $ dir "signview"     $ hPost $ toK1 $ DocControl.handleIssueAuthorGoToSignview
      , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
-     , dir "d" $ dir "evidencelog" $ hGet  $ toK1 $ EvidenceLog.jsonDocumentEvidenceLog
      , dir "d" $ dir "evidenceattachment" $ hGet $ toK2 $ DocControl.handleEvidenceAttachment
-     , dir "docs"                  $ hGet  $ toK0 $ ArchiveControl.jsonDocumentsList
      , dir "setattachments"        $ hPost $ toK1 $ DocControl.handleSetAttachments -- Since setting attachments can have file upload, we need extra handler for it.
      , dir "parsecsv"              $ hPost $ toK0 $ DocControl.handleParseCSV
      , dir "mailpreview"           $ hGet  $ toK2 $ DocControl.prepareEmailPreview
