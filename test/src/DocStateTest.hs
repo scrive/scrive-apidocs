@@ -34,6 +34,7 @@ import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
 import File.FileID
+import Doc.Conditions
 
 import qualified Data.Set as S
 import Util.Actor
@@ -297,8 +298,7 @@ testRestartDocumentEvidenceLog :: TestEnv ()
 testRestartDocumentEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
-  success <- randomUpdate $ \t->CancelDocument (documentid doc) ManualCancel (systemActor t)
-  assert success
+  randomUpdate $ \t->CancelDocument (documentid doc) ManualCancel (systemActor t)
   Just cdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   mdoc <- randomUpdate $ \t->RestartDocument cdoc (systemActor t)
   assertJust mdoc
@@ -312,7 +312,7 @@ testRestoreArchivedDocumentEvidenceLog :: TestEnv ()
 testRestoreArchivedDocumentEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isClosed
-  _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (systemActor t)
+  _ <- randomUpdate $ \t -> ArchiveDocument (userid author) (documentid doc) (systemActor t)
   success <- randomUpdate $ \t->RestoreArchivedDocument author (documentid doc) (systemActor t)
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
@@ -710,8 +710,7 @@ testCancelDocumentEvidenceLog :: TestEnv ()
 testCancelDocumentEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
-  success <- randomUpdate $ \t-> CancelDocument (documentid doc) ManualCancel (systemActor t)
-  assert success
+  randomUpdate $ \t-> CancelDocument (documentid doc) ManualCancel (systemActor t)
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == CancelDocumentEvidence) lg
 
@@ -783,8 +782,8 @@ testCancelDocumentCancelsDocument = doTimes 10 $ do
   user <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition user (isSignable &&^ isPending)
   time <- getMinutesTime
-  success <- randomUpdate $ CancelDocument (documentid doc) ManualCancel (authorActor time noIP (userid user) (getEmail user))
-  assert success
+  randomUpdate $ CancelDocument (documentid doc) ManualCancel (authorActor time noIP (userid user) (getEmail user))
+
   Just canceleddoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   let doNotCompareStatusClass x = x { signatorylinkstatusclass = SCDraft }
   assertEqual "In canceled state" Canceled (documentstatus canceleddoc)
@@ -800,8 +799,9 @@ testCancelDocumentReturnsLeftIfDocInWrongState = doTimes 10 $ do
   user <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition user (isSignable &&^ not . isPending)
   time <- getMinutesTime
-  success <- randomUpdate $ CancelDocument (documentid doc) ManualCancel (authorActor time noIP (userid user) (getEmail user))
-  assert $ not success
+  assertRaises (\DocumentStatusShouldBe {} -> True) $
+               randomUpdate $ CancelDocument (documentid doc) ManualCancel 
+                              (authorActor time noIP (userid user) (getEmail user))
 
 testSignatories1 :: Assertion
 testSignatories1 =
@@ -850,17 +850,21 @@ assertNoArchivedSigLink doc =
 testArchiveDocumentPendingLeft :: TestEnv ()
 testArchiveDocumentPendingLeft = doTimes 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPending
-  success <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (systemActor t)
-  assert $ not success
+  _doc0 <- addRandomDocumentWithAuthorAndCondition author isPending
+  _doc1 <- addRandomDocumentWithAuthorAndCondition author isPending
+
+  let doc = _doc1
+
+  assertRaises (\(DocumentStatusShouldBe {}) -> True) $
+               randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
+
 
 testArchiveDocumentAuthorRight :: TestEnv ()
 testArchiveDocumentAuthorRight = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  success <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (systemActor t)
+  randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-  assert success
   assertOneArchivedSigLink ndoc
 
 testArchiveDocumentCompanyAdminRight :: TestEnv ()
@@ -869,19 +873,17 @@ testArchiveDocumentCompanyAdminRight = doTimes 10 $ do
   author <- addNewRandomCompanyUser (companyid company) False
   adminuser <- addNewRandomCompanyUser (companyid company) True
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  success <- randomUpdate $ \t->ArchiveDocument adminuser (documentid doc) (systemActor t)
+  randomUpdate $ \t->ArchiveDocument (userid adminuser) (documentid doc) (systemActor t)
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-  assert success
   assertOneArchivedSigLink ndoc
 
 testRestoreArchivedDocumentAuthorRight :: TestEnv ()
 testRestoreArchivedDocumentAuthorRight = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (systemActor t)
+  randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
   success <- randomUpdate $ \t->RestoreArchivedDocument author (documentid doc) (systemActor t)
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
-
   assert success
   assertNoArchivedSigLink ndoc
 
@@ -891,7 +893,7 @@ testRestoreArchiveDocumentCompanyAdminRight = doTimes 10 $ do
   author <- addNewRandomCompanyUser (companyid company) False
   adminuser <- addNewRandomCompanyUser (companyid company) True
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (systemActor t)
+  randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
   success <- randomUpdate $ \t->RestoreArchivedDocument adminuser (documentid doc) (systemActor t)
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
@@ -902,8 +904,7 @@ testReallyDeleteDocumentPrivateAuthorRight :: TestEnv ()
 testReallyDeleteDocumentPrivateAuthorRight = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  success1 <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (systemActor t)
-  assert success1
+  randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   assertOneArchivedSigLink ndoc
   success2 <- randomUpdate $ \t->ReallyDeleteDocument (userid author) (documentid doc) (systemActor t)
@@ -918,7 +919,7 @@ testReallyDeleteDocumentCompanyAdminRight = doTimes 10 $ do
   author <- addNewRandomCompanyUser (companyid company) False
   adminuser <- addNewRandomCompanyUser (companyid company) True
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (systemActor t)
+  randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
   success <- randomUpdate $ \t->ReallyDeleteDocument (userid adminuser) (documentid doc) (systemActor t)
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
@@ -931,8 +932,8 @@ testArchiveDocumentUnrelatedUserLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   unrelateduser <- addNewRandomUser
-  success <- randomUpdate $ \t->ArchiveDocument unrelateduser (documentid doc) (systemActor t)
-  assert $ not success
+  assertRaises (\UserShouldBeDirectlyOrIndirectlyRelatedToDocument {} -> True) $ 
+    randomUpdate $ \t -> ArchiveDocument (userid unrelateduser) (documentid doc) (systemActor t)
 
 testArchiveDocumentCompanyStandardLeft :: TestEnv ()
 testArchiveDocumentCompanyStandardLeft = doTimes 10 $ do
@@ -940,15 +941,15 @@ testArchiveDocumentCompanyStandardLeft = doTimes 10 $ do
   author <- addNewRandomCompanyUser (companyid company) False
   standarduser <- addNewRandomCompanyUser (companyid company) False
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  success <- randomUpdate $ \t->ArchiveDocument standarduser (documentid doc) (systemActor t)
-  assert $ not success
+  assertRaises (\UserShouldBeSelfOrCompanyAdmin {} -> True) $
+    randomUpdate $ \t->ArchiveDocument (userid standarduser) (documentid doc) (systemActor t)
 
 testRestoreArchivedDocumentUnrelatedUserLeft :: TestEnv ()
 testRestoreArchivedDocumentUnrelatedUserLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   unrelateduser <- addNewRandomUser
-  _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (systemActor t)
+  randomUpdate $ \t -> ArchiveDocument (userid author) (documentid doc) (systemActor t)
   success <- randomUpdate $ \t->RestoreArchivedDocument unrelateduser (documentid doc) (systemActor t)
   assert $ not success
 
@@ -958,7 +959,7 @@ testRestoreArchiveDocumentCompanyStandardLeft = doTimes 10 $ do
   author <- addNewRandomCompanyUser (companyid company) False
   standarduser <- addNewRandomCompanyUser (companyid company) False
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (systemActor t)
+  randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
   success <- randomUpdate $ \t->RestoreArchivedDocument standarduser (documentid doc) (systemActor t)
   assert $ not success
 
@@ -967,7 +968,7 @@ testReallyDeleteDocumentCompanyAuthorLeft = doTimes 10 $ do
   company <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company) False
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (systemActor t)
+  randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
   success <- randomUpdate $ \t->ReallyDeleteDocument (userid author) (documentid doc) (systemActor t)
   assertBool "Not admin can only delete drafts" (not success || Preparation == documentstatus doc)
 
@@ -977,7 +978,7 @@ testReallyDeleteDocumentCompanyStandardLeft = doTimes 10 $ do
   author <- addNewRandomCompanyUser (companyid company) False
   standarduser <- addNewRandomCompanyUser (companyid company) False
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (systemActor t)
+  randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
   success <- randomUpdate $ \t->ReallyDeleteDocument (userid standarduser) (documentid doc) (systemActor t)
   assertBool "Not admin can only delete drafts" (not success || Preparation == documentstatus doc)
 
@@ -1000,7 +1001,7 @@ checkQueryDoesntContainArchivedDocs qry = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> (isPreparation d || isClosed d) && (isSignable d))
   docsbeforearchive <- dbQuery (qry author)
   assertEqual "Expecting one doc before archive" [documentid doc] (map documentid docsbeforearchive)
-  _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (systemActor t)
+  randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
   docsafterarchive <- dbQuery (qry author)
   assertEqual "Expecting no docs after archive" [] (map documentid docsafterarchive)
   _ <- randomUpdate $ \t->RestoreArchivedDocument author (documentid doc) (systemActor t)
@@ -1014,7 +1015,7 @@ checkQueryContainsArchivedDocs qry = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (isPreparation ||^ isClosed))
   docsbeforearchive <- dbQuery (qry author)
   assertEqual "Expecting no docs before archive" [] (map documentid docsbeforearchive)
-  _ <- randomUpdate $ \t -> ArchiveDocument author (documentid doc) (systemActor t)
+  randomUpdate $ \t -> ArchiveDocument (userid author) (documentid doc) (systemActor t)
   docsafterarchive <- dbQuery (qry author)
   assertEqual "Expecting 1 doc after archive" [documentid doc] (map documentid docsafterarchive)
   _ <- randomUpdate $ \t -> ReallyDeleteDocument (userid author) (documentid doc) (systemActor t)
@@ -1835,14 +1836,17 @@ testCancelDocumentNotSignableNothing = doTimes 10 $ do
          { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
          , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
          }
-  success <- randomUpdate $ CancelDocument (documentid doc) ManualCancel (authorActor time noIP (userid author) (getEmail author))
-  assert $ not success
+
+  assertRaises (\DocumentTypeShouldBe {} -> True) $ 
+               randomUpdate $ CancelDocument (documentid doc) ManualCancel
+                              (authorActor time noIP (userid author) (getEmail author))
 
 testCancelDocumentNotNothing :: TestEnv ()
 testCancelDocumentNotNothing = doTimes 10 $ do
   aa <- unAuthorActor <$> rand 10 arbitrary
-  success <- randomUpdate $ (\did -> CancelDocument did ManualCancel aa)
-  assert $ not success
+
+  assertRaises (\DocumentDoesNotExist {} -> True) $ 
+             randomUpdate $ (\did -> CancelDocument did ManualCancel aa)
 
 testSetDocumentTitleNotLeft :: TestEnv ()
 testSetDocumentTitleNotLeft = doTimes 10 $ do

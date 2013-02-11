@@ -247,8 +247,8 @@ apiCallCancel did =  api $ do
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
   when (not $ (auid == userid user)) $ do
         throwError $ serverError "Permission problem. Not an author."
-  cancelled <- dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
-  if cancelled
+  dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
+  if True
     then do
       newdocument <- apiGuardL (serverError "No document found after cancel") $ dbQuery $ GetDocumentByDocumentID $ did
       lift $ postDocumentCanceledChange newdocument "api"
@@ -278,7 +278,7 @@ apiCallDelete did =  api $ do
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
   when (not $ (auid == userid user)) $ do
         throwError $ serverError "Permission problem. Not an author."
-  _ <- apiGuardL (serverError "This document cant be deleted. Maybe it's pending?") $ dbUpdate $ ArchiveDocument user did actor
+  dbUpdate $ ArchiveDocument (userid user) did actor
   _ <- addSignStatDeleteEvent (signatorylinkid $ fromJust $ getSigLinkFor doc user) (ctxtime ctx)
   case (documentstatus doc) of
        Preparation -> do

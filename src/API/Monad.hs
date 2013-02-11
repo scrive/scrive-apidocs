@@ -28,6 +28,7 @@ module API.Monad (
   where
 
 import Control.Monad.Trans
+import Control.Monad.Base
 import Happstack.Server (toResponse)
 import Happstack.Server.Types
 import Text.JSON hiding (Ok)
@@ -147,7 +148,7 @@ instance ToAPIResponse FormEncoded where
     in setHeader "Content-Type" "application/x-www-form-urlencoded" r1
     
 newtype APIMonad m a = AM { runAPIMonad :: ErrorT APIError m a }
-  deriving (Applicative, CryptoRNG, Functor, Monad, MonadDB, MonadError APIError, MonadIO, MonadTrans, TemplatesMonad)
+  deriving (Applicative, CryptoRNG, Functor, Monad, MonadDB, MonadError APIError, MonadIO, MonadTrans, TemplatesMonad, MonadBase b)
 
 instance KontraMonad m => KontraMonad (APIMonad m) where
   getContext = lift getContext

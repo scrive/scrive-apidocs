@@ -1,6 +1,5 @@
 module Doc.Checks (
     checkPreparationToPending
-  , checkCancelDocument
   , checkCloseDocument
   , checkRejectDocument
   , checkSignDocument
@@ -23,12 +22,6 @@ checkPreparationToPending did = checkDocument did [
   , hasOneAuthor
   , hasSignatories
   , hasOneFile
-  ]
-
-checkCancelDocument :: MonadDB m => DocumentID -> DBEnv m [String]
-checkCancelDocument did = checkDocument did [
-    isSignable
-  , isPending
   ]
 
 checkCloseDocument :: MonadDB m => DocumentID -> DBEnv m [String]

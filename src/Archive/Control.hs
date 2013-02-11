@@ -73,7 +73,7 @@ handleDelete = do
               case (documentstatus doc) of
                   Pending -> if (isAuthor msl)
                                 then do
-                                   guardTrueM $ dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
+                                   dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
                                    doc' <- guardRightM' $ getDocByDocID (documentid doc)
                                    postDocumentCanceledChange doc' "web+archive"
                                 else do
@@ -81,7 +81,7 @@ handleDelete = do
                                    doc' <- guardRightM' $ getDocByDocID (documentid doc)
                                    postDocumentRejectedChange doc' (signatorylinkid $ fromJust msl) "web+archive"
                   _ -> return ()
-              guardTrueM $ dbUpdate $ ArchiveDocument user (documentid doc) actor
+              dbUpdate $ ArchiveDocument (userid user) (documentid doc) actor
               _ <- addSignStatDeleteEvent (signatorylinkid $ fromJust msl) ctxtime
               case (documentstatus doc) of
                    Preparation -> do
@@ -111,7 +111,7 @@ handleCancel = do
       actor <- guardJustM $ mkAuthorActor <$> getContext
       if (documentstatus doc == Pending)
         then do
-           guardTrueM $ dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
+           dbUpdate $ CancelDocument (documentid doc) ManualCancel actor
            doc' <- guardRightM' $ getDocByDocID $ docid
            postDocumentCanceledChange doc' "web+archive"
         else internalError

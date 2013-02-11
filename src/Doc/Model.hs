@@ -11,6 +11,8 @@ module Doc.Model
   , DocumentDomain(..)
   , DocumentOrderBy(..)
 
+  , CheckIfDocumentExists(..)
+
   , AddDocumentAttachment(..)
   , AddInvitationEvidence(..)
   , ArchiveDocument(..)
@@ -81,10 +83,12 @@ module Doc.Model
 
 import Control.Monad.Trans
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Control.Monad.Base
 import DB
 import MagicHash
 import Crypto.RNG
 import Doc.Checks
+import Doc.Conditions
 import File.File
 import File.FileID
 import File.Model
@@ -133,6 +137,11 @@ import qualified DB.TimeZoneName as TimeZoneName
 import DB.SQL2
 import Control.Monad.State.Class
 import Company.Model
+import Control.Exception
+import DBError
+
+
+
 
 -- | Document filtering options
 --
@@ -290,13 +299,14 @@ documentDomainToSQL :: (MonadState v m, SqlWhere v)
                     -> m ()
 documentDomainToSQL (DocumentsOfWholeUniverse) = do
   sqlWhere "TRUE"
-documentDomainToSQL (DocumentsVisibleToUser uid) = sqlWhereAll $ do
-  sqlWhereEq "same_company_users.id" uid
+documentDomainToSQL (DocumentsVisibleToUser uid) =
   sqlWhereAny $ do
     sqlWhereAll $ do           -- 1: see own documents
+      sqlWhereEq "same_company_users.id" uid
       sqlWhere "users.id = same_company_users.id"
       sqlWhere "signatory_links.is_author"
     sqlWhereAll $ do           -- 2. see signables as partner
+      sqlWhereEq "same_company_users.id" uid
       sqlWhere "users.id = same_company_users.id"
       sqlWhereNotEq "documents.status" Preparation
       sqlWhereEq "documents.type" $ Signable undefined
@@ -307,15 +317,18 @@ documentDomainToSQL (DocumentsVisibleToUser uid) = sqlWhereAll $ do
                             sqlWhere "earlier_signatory_links.sign_time IS NULL"
                             sqlWhere "earlier_signatory_links.sign_order < signatory_links.sign_order"
     sqlWhereAll $ do           -- 3. see signables as viewer
+      sqlWhereEq "same_company_users.id" uid
       sqlWhere "users.id = same_company_users.id"
       sqlWhereNotEq "documents.status" Preparation
       sqlWhereEq "documents.type" $ Signable undefined
       sqlWhere "NOT signatory_links.is_partner"
     sqlWhereAll $ do           -- 4. see shared templates
+      sqlWhereEq "same_company_users.id" uid
       sqlWhereEq "documents.sharing" Shared
       sqlWhereEq "documents.type" $ Template undefined
       sqlWhere "signatory_links.is_author"
     sqlWhereAll $ do           -- 5: see documents of subordinates
+      sqlWhereEq "same_company_users.id" uid
       sqlWhere "same_company_users.is_company_admin"
       sqlWhere "signatory_links.is_author"
       sqlWhereNotEq "documents.status" Preparation
@@ -1026,22 +1039,27 @@ instance MonadDB m => DBQuery m CheckIfDocumentExists Bool where
   query (CheckIfDocumentExists did) =
     checkIfAnyReturned $ SQL "SELECT 1 FROM documents WHERE id = ?" [toSql did]
 
-data ArchiveDocument = ArchiveDocument User DocumentID Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m ArchiveDocument Bool where
-  update (ArchiveDocument user did _actor) = do
-    result <- kRun $ sqlUpdate "signatory_links" $ do
-        sqlFrom "documents"
-        sqlWhereEq "signatory_links.document_id" did
-        sqlWhere "documents.id = signatory_links.document_id"
+data ArchiveDocument = ArchiveDocument UserID DocumentID Actor
+instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m ArchiveDocument () where
+  update (ArchiveDocument uid did _actor) = do
+    kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
         sqlSet "deleted" True
-        sqlWhereNotEq "documents.status" Pending
-        sqlWhere $ "(signatory_links.user_id = " <?> userid user <+>  "OR"
-                        <+> "EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 "
-                        <+>   "WHERE signatory_links.user_id = usr2.id "
-                        <+>     "AND usr2.company_id = usr1.company_id "
-                        <+>     "AND usr1.is_company_admin "
-                        <+>     "AND usr1.id = " <?> userid user <+> "))"
-    return (result>0)
+
+        sqlWhereExists $ sqlSelect "users" $ do
+          sqlJoinOn "users AS same_company_users" "(users.company_id = same_company_users.company_id OR users.id = same_company_users.id)"
+          sqlWhere "signatory_links.user_id = users.id"
+
+          sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument uid
+          sqlWhereUserIsSelfOrCompanyAdmin
+
+        sqlWhereExists $ sqlSelect "documents" $ do
+          sqlJoinOn "users AS same_company_users" "TRUE"
+
+          sqlWhere $ "signatory_links.document_id = " <?> did
+          sqlWhere "documents.id = signatory_links.document_id"
+
+          sqlWhereDocumentStatusIsOneOf [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError ""]
+
 
 data AttachCSVUpload = AttachCSVUpload DocumentID SignatoryLinkID CSVUpload Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachCSVUpload Bool where
@@ -1130,24 +1148,18 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument Bo
         sqlWhereEq "status" $ DocumentError undefined
 
 data CancelDocument = CancelDocument DocumentID CancelationReason Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument () where
   update (CancelDocument did reason actor) = do
     let mtime = actorTime actor
-    doc_exists <- query $ CheckIfDocumentExists did
-    if not doc_exists
-      then do
-        Log.error $ "Cannot CancelDocument document " ++ show did ++ " because it does not exist"
-        return False
-      else do
-        errmsgs <- checkCancelDocument did
-        case errmsgs of
-          [] -> do
-            updateWithEvidence tableDocuments
-              (    "status =" <?> Canceled
-             <+> ", mtime =" <?> mtime
-             <+> ", cancelation_reason =" <?> reason
-             <+> "WHERE id =" <?> did <+> "AND type =" <?> Signable undefined
-              ) $ do
+    updateWithEvidence2' (return True)
+        (sqlUpdate "documents" $ do
+                 sqlSet "status" Canceled
+                 sqlSet "mtime" mtime
+                 sqlSet "cancelation_reason" reason
+                 sqlWhereDocumentIDIs did
+                 sqlWhereDocumentTypeIs (Signable undefined)
+                 sqlWhereDocumentStatusIs Pending
+             ) $ do
               case reason of
                 ManualCancel -> return $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                   CancelDocumentEvidence
@@ -1170,9 +1182,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument Bool where
                     (Just sid)
                     Nothing
                     actor
-          s -> do
-            Log.error $ "Cannot CancelDocument document " ++ show did ++ " because " ++ concat s
-            return False
 
 data ChangeSignatoryEmailWhenUndelivered = ChangeSignatoryEmailWhenUndelivered DocumentID SignatoryLinkID (Maybe User) String Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeSignatoryEmailWhenUndelivered Bool where
@@ -2497,6 +2506,36 @@ updateWithEvidence' testChanged t u mkEvidence = do
     e <- mkEvidence
     update $ e
   return success
+
+
+updateWithEvidence2' :: ( MonadDB m
+                        , TemplatesMonad m
+                        , DBUpdate m evidence Bool
+                        , SqlTurnIntoSelect s)
+                     => DBEnv m Bool
+                     -> s
+                     -> DBEnv m evidence
+                     -> DBEnv m ()
+updateWithEvidence2' testChanged sqlcommand mkEvidence = do
+  changed <- testChanged
+  when changed $ do
+       success <- kRun01 sqlcommand
+       if success
+         then do
+           _ <- update =<< mkEvidence
+           return ()
+         else do
+           listOfExceptions <- kWhyNot1 sqlcommand
+           -- If listOfExceptions is empty, then we should throw
+           -- document does not exists, otherwise we throw first
+           -- exception on the list (and ignore rest, which is sad, but
+           -- who cares?)
+
+           case listOfExceptions of
+             [] -> do
+               liftIO $ throwIO DBResourceNotAvailable -- here we should give more information
+             (ex:_) -> do
+               liftIO $ throwIO ex
 
 updateWithEvidence ::  (MonadDB m, TemplatesMonad m, DBUpdate m evidence Bool) => Table -> SQL -> DBEnv m evidence -> DBEnv m Bool
 updateWithEvidence = updateWithEvidence' (return True)
