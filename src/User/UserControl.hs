@@ -451,6 +451,7 @@ handleAccountSetupGetWithMethod uid token _ = do
       Right <$> (simpleHtmlResponse =<< (renderTemplateAsPage ctx "accountSetupPage" False $ do
                                             F.value "fstname" $ getFirstName user
                                             F.value "sndname" $ getLastName user
+                                            F.value "userid"  $ show uid
                                             F.value "company" $ companyname <$> companyinfo <$> mcompany))
     (Just _user, Just _) -> do
       -- this case looks impossible since we delete the account request upon signing up
@@ -484,7 +485,7 @@ handleAccountSetupPostWithMethod uid token sm = do
           runJSONGenT $ do
             value "ok" True
             value "location" $ show link
-
+              
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
 handleAccountSetupPost uid token = handleAccountSetupPostWithMethod uid token AccountRequest
 
