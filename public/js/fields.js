@@ -475,7 +475,9 @@ window.FieldDesignView = Backbone.View.extend({
                                     field.setValue(value);
                                   }
                             }).input();
-          if (field.isClosed() || ((field.isEmail() || field.isFstName() || field.isSndName()) && field.signatory().author()))
+          if  ( field.isClosed() ||
+              ((field.isEmail() || field.isFstName() || field.isSndName()) && field.signatory().author()) ||
+              ( field.isStandard() && field.signatory().author() && field.signatory().document().isTemplate()))
             {
                 $(this.el).addClass('closed');
                 this.input.attr("readonly","yes");
