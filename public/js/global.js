@@ -169,12 +169,14 @@ function readCookie(name) {
 safeReady(function() {
   $("form").live('submit', function() {
     var form = $(this);
-    var tokenTag = $('<input type="hidden" name="xtoken">');
-    var token = readCookie("xtoken");
-    if (token && token.length > 0) {
-      console.log(token);
-      tokenTag.attr("value", token);
-      form.append(tokenTag);
+    if ($("input[name='xtoken']",form).size() == 0 && $(form).attr('method').toUpperCase() == 'POST') {
+      var tokenTag = $('<input type="hidden" name="xtoken">');
+      var token = readCookie("xtoken");
+      if (token && token.length > 0) {
+        console.log(token);
+        tokenTag.attr("value", token);
+        form.append(tokenTag);
+      }
     }
   });
 });
@@ -191,8 +193,8 @@ $(document).ready(function() {
              */
             mixpanel.track('Old IE popup', {'Browser version' : ver});
             var alertModal = $("<div class='modal-container' style='height:80px'>" +
-                                 "<div class='modal-body' style='padding:20px;font-size:13pt'>" + 
-                                   "<div class='modal-icon decline' style='margin-top:0px'></div>" + 
+                                 "<div class='modal-body' style='padding:20px;font-size:13pt'>" +
+                                   "<div class='modal-icon decline' style='margin-top:0px'></div>" +
                                    "<div>" + localization.ie6NotSupported + "</div>" +
                                  "</div>" +
                                "</div>");
@@ -210,7 +212,7 @@ $(document).ready(function() {
                 }
             });
         }
-    } 
+    }
 });
 
 function capitaliseFirstLetter(string)
