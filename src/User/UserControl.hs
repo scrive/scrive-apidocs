@@ -449,6 +449,7 @@ handleAccountSetupGet uid token = do
     else simpleHtmlResponse =<< (renderTemplateAsPage ctx "accountSetupPage" Nothing False $ do
               F.value "fstname" $ getFirstName user
               F.value "sndname" $ getLastName user
+              F.value "userid"  $ show uid
               F.value "company" $ companyname <$> companyinfo <$> mcompany)
               
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue

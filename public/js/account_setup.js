@@ -42,6 +42,9 @@
       if (!this.companyFilled())
         this.set('company', company);
     },
+    userid : function() {
+        return this.get('userid');
+    },
     companyFilled : function() { // if this is set company should not be altered
       return this.get('companyFilled') == true;
     },
@@ -113,7 +116,15 @@
         ajaxsuccess: function(rs) {
           var resp = JSON.parse(rs);
           if (resp.ok === true) {
-            window.location = resp.location;
+              mixpanel.alias(model.userid());
+              mixpanel.people.set({Phone : model.phone(),
+                                   'Company name' : model.company(),
+                                   'Position' : model.position(),
+                                   'First Name' : model.fstname(),
+                                   'Last Name' : model.sndname()});
+              trackTimeout('Sign TOS', {}, function() {
+                  window.location = resp.location;
+              });
           } else if (resp.error == 'already_active') {
             new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, color: 'red'});
           } else if (resp.error == 'reload') {

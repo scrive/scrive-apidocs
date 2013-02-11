@@ -141,15 +141,19 @@ showCreateFromTemplate = withUserGet $ pageCreateFromTemplate
 
     Handles an account setup from within the sign view.
 -}
-handleAcceptAccountFromSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
+handleAcceptAccountFromSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 handleAcceptAccountFromSign documentid
                             signatorylinkid = do
   magichash <- guardJustM $ dbQuery $ GetDocumentSessionToken signatorylinkid
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
   when (documentdeliverymethod document == PadDelivery) internalError
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
-  _ <- guardJustM $ User.Action.handleAccountSetupFromSign document signatorylink
-  return $ LinkSignDoc document signatorylink
+  muser <- User.Action.handleAccountSetupFromSign document signatorylink
+  case muser of
+    Just user -> runJSONGenT $ do
+      J.value "userid" (show $ userid user)
+    Nothing -> runJSONGenT $ do
+      return ()
 
 {- |
    Control the signing of a document

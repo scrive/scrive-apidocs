@@ -51,11 +51,17 @@ handleAccountSetupFromSign document signatorylink = do
       _ <- dbUpdate $ SaveDocumentForUser (documentid document) activateduser (signatorylinkid signatorylink) actor
       _ <- addUserSaveAfterSignStatEvent activateduser
       let name = getFirstName activateduser ++ " " ++ getLastName activateduser
-      asyncLogEvent "Create Account After Sign" [
+      asyncLogEvent "User Activated" $ [
         UserIDProp (userid activateduser),
+        IPProp (ctxipnumber ctx),
         TimeProp (ctxtime ctx),
         NameProp name,
-        MailProp $ Email email]
+        someProp "First Name" $ getFirstName activateduser,
+        someProp "Last Name" $ getLastName activateduser,
+        MailProp $ Email email,
+        someProp "Company Name" $ getValueOfType CompanyFT $ signatorydetails signatorylink] ++ 
+        [someProp k v | SignatoryField{sfValue = v, sfType = CustomFT k _} <- signatoryfields (signatorydetails signatorylink)]
+                        
       return $ Just activateduser
     Nothing -> return Nothing
 
@@ -147,7 +153,8 @@ createUser email names mcompanyid lang = do
       _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) email (userid <$> ctxmaybeuser ctx)
       asyncLogEvent "Create User" [UserIDProp (userid user),
                                    TimeProp (ctxtime ctx),
-                                   MailProp email]
+                                   MailProp email,
+                                   IPProp (ctxipnumber ctx)]
       asyncLogEvent SetUserProps [UserIDProp (userid user),
                                   NameProp (getFullName user),
                                   MailProp email,
@@ -182,9 +189,13 @@ phoneMeRequest muser phone = do
     now <- ctxtime <$> getContext
     _ <- addUserPhoneAfterTOS user
     asyncLogEvent "Phone Request" [UserIDProp (userid user),
+                                   IPProp (ctxipnumber ctx),
                                    NameProp name,
                                    TimeProp now,
                                    MailProp (useremail $ userinfo user)]
+    asyncLogEvent SetUserProps [UserIDProp (userid user),
+                                IPProp (ctxipnumber ctx),
+                                someProp "Phone Request" now]
     return ()
 
 checkPasswordsMatch :: TemplatesMonad m => String -> String -> Either (m FlashMessage) ()

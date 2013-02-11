@@ -135,6 +135,9 @@ window.CreateAccountAfterSignView = Backbone.View.extend({
              container.empty().append("<div class='saving'/>");
            },
            ajaxsuccess: function(d) {
+               d = JSON.parse(d);
+             if(d.userid)
+               mixpanel.alias(d.userid);
              model.setJustSaved();
            }
          }).send();
