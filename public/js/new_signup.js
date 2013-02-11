@@ -22,6 +22,7 @@
             mixpanel.people.set({
                 '$email'      : model.email()
             });
+              mixpanel.alias();
             var content = localization.payments.outside.confirmAccountCreatedUserHeader;
             new FlashMessage({content: content, color: 'green'});
           } else if (resp.sent === false) {
