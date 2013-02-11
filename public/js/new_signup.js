@@ -20,7 +20,7 @@
           if (resp.sent === true) {
             mixpanel.track('Create new account');
             mixpanel.people.set({
-                '$email'        : model.email(),
+                '$email'        : model.email()
             });
               mixpanel.alias();
             var content = localization.payments.outside.confirmAccountCreatedUserHeader;
