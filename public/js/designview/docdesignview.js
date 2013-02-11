@@ -1052,10 +1052,7 @@ var DesignViewView = Backbone.View.extend({
             tabs: [
                 this.tab1 = new Tab({
                     name  : document.isTemplate() ? localization.step1template : localization.step1normal,
-                    active :  SessionStorage.get(document.documentid(), "step") != "2",
-                    onActivate : function() {
-                         SessionStorage.set(document.documentid(), "step", "1");
-                    },
+                    pagehash : "step1",
                     elems : _.flatten([
                               [designbody1],
                               [$(fileel)]
@@ -1063,10 +1060,7 @@ var DesignViewView = Backbone.View.extend({
                   }),
                 this.tab2 = new Tab({
                     name  : document.isTemplate() ? localization.step2template : localization.step2normal,
-                    active :  SessionStorage.get(document.documentid(), "step") == "2",
-                    onActivate : function() {
-                         SessionStorage.set(document.documentid(), "step", "2");
-                    },
+                    pagehash : "step2",
                     elems :  _.flatten([
                               [designbody2],
                               [$(fileel)]

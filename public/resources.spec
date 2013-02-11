@@ -57,6 +57,7 @@ set systemPage
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js
  js   libs/jquery.MultiFile.js
+ js   libs/jquery.hashchange.js
  jsx  tiny_mce/jquery.tinymce.js
  js   libs/json2.js
  js   libs/jstz.min.js
