@@ -75,6 +75,7 @@ accountSetupPage=
                                                   fstname: "$fstname$",
                                                   sndname: "$sndname$",
                                                   company : "$company$",
+                                                  userid : "$userid$",
                                                   companyFilled : $if(company)$true$else$false$endif$,
                                                   })
                                               .el());
