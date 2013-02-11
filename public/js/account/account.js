@@ -1,11 +1,11 @@
-/* 
- * Main archive definition. Its a tab based set of different documents lists. 
- * 
+/*
+ * Main archive definition. Its a tab based set of different documents lists.
+ *
  * Instrumented with Mixpanel
 */
 
 (function(window){
- 
+
 var AccountModel = Backbone.Model.extend({
   companyAdmin : function() {
      return this.get("companyAdmin");
@@ -52,15 +52,14 @@ var AccountModel = Backbone.Model.extend({
   },
 
 
-  
+
   accountDetailsTab : function() {
-                    var account = this;  
+                    var account = this;
                     return new Tab({
                         name: localization.account.accountDetails.name,
                         elems: [function() {return $(account.accountDetails().el());}],
-                        active : window.location.hash == "#details",
+                        pagehash : "details",
                         onActivate : function() {
-                            window.location.hash = "details";
                             account.accountDetails().refresh();
                             mixpanel.register({Subcontext : 'Account details tab'});
                             mixpanel.track('View Account Details Tab');
@@ -69,13 +68,12 @@ var AccountModel = Backbone.Model.extend({
   },
 
   accountSecurityTab : function() {
-                    var account = this; 
+                    var account = this;
                     return new Tab({
                         name: localization.account.accountSecurity.name,
                         elems: [function() {return $(account.accountSecurity().el());}],
-                        active : window.location.hash == "#security",
+                        pagehash : "security",
                         onActivate : function() {
-                            window.location.hash = "security";
                             account.accountSecurity().refresh();
                             mixpanel.register({Subcontext : 'Security tab'});
                             mixpanel.track('View Security Tab');
@@ -88,9 +86,8 @@ var AccountModel = Backbone.Model.extend({
                     return new Tab({
                         name: localization.account.companySettings,
                         elems: [function() {return $(account.companySettings().el());}],
-                        active : window.location.hash == "#company",
+                        pagehash : "company",
                         onActivate : function() {
-                            window.location.hash = "company";
                             account.companySettings().refresh();
                             mixpanel.register({Subcontext : 'Company settings tab'});
                             mixpanel.track('View Company Settings Tab');
@@ -103,9 +100,8 @@ var AccountModel = Backbone.Model.extend({
                     return new Tab({
                         name: localization.account.companyAccounts.name,
                         elems: [function() {return $(account.companyAccounts().el());}],
-                        active : window.location.hash == "#users",
+                        pagehash : "users",
                         onActivate : function() {
-                            window.location.hash = "users";
                             account.companyAccounts().refresh();
                             mixpanel.register({Subcontext : 'Subaccounts tab'});
                             mixpanel.track('View Subaccounts Tab');
@@ -119,10 +115,9 @@ var AccountModel = Backbone.Model.extend({
                     return new Tab({
                         name: localization.account.mailAPI.name,
                         elems: [function() {return $(account.mailAPI().el());}],
-                        active : window.location.hash == "#mailapi",
+                        pagehash : "mailapi",
                         onActivate : function() {
-                            window.location.hash = "mailapi";
-                            account.mailAPI().refresh();
+                             account.mailAPI().refresh();
                             mixpanel.register({Subcontext : 'MailAPI tab'});
                             mixpanel.track('View MailAPI Tab');
                         }
@@ -133,9 +128,8 @@ var AccountModel = Backbone.Model.extend({
                     return new Tab({
                         name: localization.account.stats.name,
                         elems: [function() {return $(account.stats().el());}],
-                        active : window.location.hash == "#stats",
+                        pagehash : "stats",
                         onActivate : function() {
-                            window.location.hash = "stats";
                             account.stats().refresh();
                             mixpanel.register({Subcontext : 'Stats tab'});
                             mixpanel.track('View Stats Tab');
@@ -148,9 +142,8 @@ var AccountModel = Backbone.Model.extend({
                         name: localization.account.subscription,
                         elems: [function() {return $(account.subscription().el());}],
                         iconClass: 's-subscription',
-                        active : window.location.hash == "#subscription",
+                        pagehash : "subscription",
                         onActivate : function() {
-                            window.location.hash = "subscription";
                             account.subscription().refresh();
                             mixpanel.register({Subcontext : 'Subscription tab'});
                             mixpanel.track('View Subscription Tab');
@@ -160,9 +153,9 @@ var AccountModel = Backbone.Model.extend({
                         }
                     });
   }
-  
 
-  
+
+
 });
 
 var AccountView = Backbone.View.extend({
@@ -179,7 +172,7 @@ var AccountView = Backbone.View.extend({
                   , [account.accountSecurityTab()]
                   , account.companyAdmin() ? [account.companySettingsTab()] : []
                   , account.companyAdmin() ? [account.companyAccountsTab()] : []
-                  , [account.mailAPITab()] 
+                  , [account.mailAPITab()]
                   , [account.statsTab()]
                   , account.noCompany() || account.companyAdmin() ? [account.subscriptionTab()] : []
                 ])

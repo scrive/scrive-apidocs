@@ -30,13 +30,14 @@ import Text.JSON.Gen as J
 import Redirect
 import System.FilePath
 
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Log
 import Control.Monad.IO.Class
 import User.Utils
 import Templates.Templates
 import qualified Templates.Fields as F
+import Doc.Rendering
+import Utils.String
 
 handleRename :: Kontrakcja m => AttachmentID -> m JSValue
 handleRename attid = do
@@ -159,17 +160,18 @@ makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do
     content <- case contentspec of
         Left filepath -> liftIO $ BSL.readFile filepath
         Right content -> return content
-    if BSL.null content
-      then do
-        Log.debug "makeAttachmentFromFile: no content"
-        return Nothing
-      else do
-          Log.debug "Got the content, creating document"
-          let title = takeBaseName filename
-          actor <- guardJustM $ mkAuthorActor <$> getContext
-          ctx <- getContext
-          att <- guardRightM $ dbUpdate $ NewAttachment (userid $ fromJust $ ctxmaybeuser ctx) title filename (Binary $ BS.concat $ BSL.toChunks content) actor
-          return $ Just att
+    cres <- liftIO $ preCheckPDF (concatChunks content)
+    case cres of
+      Left _ -> do
+         Log.debug "Attachment file is not a valid PDF"
+         internalError
+      Right content' -> do
+        Log.debug "Got the content, creating document"
+        let title = takeBaseName filename
+        actor <- guardJustM $ mkAuthorActor <$> getContext
+        ctx <- getContext
+        att <- guardRightM $ dbUpdate $ NewAttachment (userid $ fromJust $ ctxmaybeuser ctx) title filename content' actor
+        return $ Just att
 makeAttachmentFromFile _ = internalError -- to complete the patterns
 
 {- |

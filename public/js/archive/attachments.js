@@ -36,8 +36,12 @@ window.AttachmentsListDefinition = function(archive) {
                                 new Submit({
                                 method : "POST",
                                 url : "/a",
-                                ajaxsuccess : function() {archive.attachments().recall();}
+                                ajaxsuccess : function() {archive.attachments().recall();},
+                                ajaxerror : function() {
+                                  new FlashMessage({color: "red", content: localization.couldNotUpload});
+                                }
                                 }).addInputs($(input)).sendAjax(); },100);
+
                             }
                         })
                }),
@@ -105,6 +109,6 @@ window.AttachmentsListDefinition = function(archive) {
 
     })
  };
- 
+
 };
 })(window);

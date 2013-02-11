@@ -1,10 +1,10 @@
 /* Main archive definition. Its a tab based set of different documents lists. */
 
 (function(window){
- 
+
 var ArchiveModel = Backbone.Model.extend({
   month : function() {
-     return this.get("month");    
+     return this.get("month");
   },
   year : function() {
      return this.get("year");
@@ -34,27 +34,25 @@ var ArchiveModel = Backbone.Model.extend({
 
   },
   documentsTab : function() {
-                    var archive = this;    
+                    var archive = this;
                     return new Tab({
                         name: localization.archive.documents.name,
                         elems: [function() {return $(archive.documents().el());}],
-                        active : window.location.hash == "#documents",           
+                        pagehash : "documents",
                         onActivate : function() {
-                            window.location.hash = "documents";
-                            archive.documents().recall();
+                             archive.documents().recall();
                             mixpanel.register({Subcontext : 'Documents tab'});
                             mixpanel.track('View Documents Tab');
                         }
                     });
   },
   templatesTab : function() {
-                    var archive = this;    
+                    var archive = this;
                     return  new Tab({
                         name: localization.archive.templates.name,
                         elems: [function() {return $(archive.templates().el());}],
-                        active : window.location.hash == "#templates",
+                        pagehash : "templates",
                         onActivate : function() {
-                            window.location.hash = "templates";
                             archive.templates().recall();
                             mixpanel.register({Subcontext : 'Templates tab'});
                             mixpanel.track('View Templates Tab');
@@ -66,9 +64,8 @@ var ArchiveModel = Backbone.Model.extend({
                     return  new Tab({
                         name: localization.archive.attachments.name,
                         elems: [function() {return $(archive.attachments().el());}],
-                        active : window.location.hash == "#attachments",
+                        pagehash : "attachments",
                         onActivate : function() {
-                            window.location.hash = "attachments";
                             archive.attachments().recall();
                             mixpanel.register({Subcontext : 'Attachments tab'});
                             mixpanel.track('View Attachments Tab');
@@ -80,9 +77,8 @@ var ArchiveModel = Backbone.Model.extend({
                     return  new Tab({
                         name: localization.archive.bin.name,
                         elems: [function() {return $(archive.bin().el());}],
-                        active : window.location.hash == "#bin",
+                        pagehash : "bin",
                         onActivate : function() {
-                            window.location.hash = "bin";
                             archive.bin().recall();
                             mixpanel.register({Subcontext : 'Bin tab'});
                             mixpanel.track('View Bin Tab');
@@ -108,7 +104,7 @@ var ArchiveView = Backbone.View.extend({
         } else if ( $(this.el).hasClass("scrolled") && $(window).scrollTop() <= 277){
             $(this.el).removeClass("scrolled");
         }
-            
+
     },
     render: function () {
        var container = $(this.el);
@@ -129,7 +125,7 @@ window.Archive = function(args) {
           return new Object({
               model : function() {return model;},
               view  : function() {return view;}
-              
+
             });
 };
 

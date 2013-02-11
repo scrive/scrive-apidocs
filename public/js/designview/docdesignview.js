@@ -243,7 +243,7 @@ var DesignViewView = Backbone.View.extend({
             name = localization.process.order.name;
             options = [contractOption,offerOption];
         }
-        var select = new Select({options: options, name: name, textWidth: "122px"}).view().el;
+        var select = new Select({options: options, name: name, textWidth: "126px"}).view().el;
         $(select).addClass("float-left");
         box.append($(select));
 
@@ -272,7 +272,7 @@ var DesignViewView = Backbone.View.extend({
             name = "API";
             options = [padOption,emailOption];
         }
-        var select = new Select({options: options, name: name, textWidth: "122px"}).view().el;
+        var select = new Select({options: options, name: name, textWidth: "126px"}).view().el;
         $(select).addClass("float-left");
         box.append($(select));
 
@@ -411,7 +411,7 @@ var DesignViewView = Backbone.View.extend({
             name = localization.languages.sv;
             options = [enOption];
         }
-        var select = new Select({options: options, name: name, textWidth: "122px"}).view().el;
+        var select = new Select({options: options, name: name, textWidth: "126px"}).view().el;
         $(select).addClass("float-left");
         box.append($(select));
 
@@ -1052,10 +1052,7 @@ var DesignViewView = Backbone.View.extend({
             tabs: [
                 this.tab1 = new Tab({
                     name  : document.isTemplate() ? localization.step1template : localization.step1normal,
-                    active :  SessionStorage.get(document.documentid(), "step") != "2",
-                    onActivate : function() {
-                         SessionStorage.set(document.documentid(), "step", "1");
-                    },
+                    pagehash : "step1",
                     elems : _.flatten([
                               [designbody1],
                               [$(fileel)]
@@ -1063,10 +1060,7 @@ var DesignViewView = Backbone.View.extend({
                   }),
                 this.tab2 = new Tab({
                     name  : document.isTemplate() ? localization.step2template : localization.step2normal,
-                    active :  SessionStorage.get(document.documentid(), "step") == "2",
-                    onActivate : function() {
-                         SessionStorage.set(document.documentid(), "step", "2");
-                    },
+                    pagehash : "step2",
                     elems :  _.flatten([
                               [designbody2],
                               [$(fileel)]
