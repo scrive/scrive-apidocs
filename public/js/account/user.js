@@ -21,7 +21,7 @@ window.User = Backbone.Model.extend({
       ready : false
   },
   initialize: function(args) {
-        this.url = "/account/json";
+        this.url = "/api/frontend/getprofile";
   },
   ready : function() {
      return this.get("ready");

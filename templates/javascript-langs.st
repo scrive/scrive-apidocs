@@ -345,6 +345,7 @@ javascriptLocalisation =
               , passwordsDontMatch: "$_PasswordValidationMessagePasswordsDontMatch()$"
               , mustAcceptTOS: "$_flashMessageMustAcceptTOS()$"
               , wrongEmail : "$_emptyOrNotValidEmail()$"
+              , passwordOldPasswordNotValid : "$_flashMessageBadOldPassword()$"
          }
          , emailBranding: "$_EmailBranding()$"
          , customiseBackgroundColour: "$_CustomiseBackgroundColour()$"

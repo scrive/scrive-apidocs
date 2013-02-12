@@ -71,18 +71,52 @@ var SecuritySettingsModel = Backbone.Model.extend({
     }, {silent : true});
     this.trigger("reset");
   },
-  save : function() {
-    var self = this;
-    var submit = new Submit({
+  savePassword : function(callback) {
+    new Submit({
       method : "POST",
-      url : "/account/security",
+      url : "/api/frontend/changepassword",
       oldpassword : this.oldpassword(),
       password  : this.password1(),
       password2  : this.password2(),
-      lang     : this.lang(),
-      footerCheckbox : this.useFooter() ? "on" : undefined,
-      customfooter  : this.useFooter() ? this.footer() : undefined
+      ajax : true,
+      ajaxsuccess : function(rs) {
+         var resp = JSON.parse(rs);
+         if (resp.changed === true) {
+            callback();
+         }
+         else
+           new FlashMessage({color: 'red', content : localization.validation.passwordOldPasswordNotValid})
+      }
     }).send();
+  },
+  saveFooter : function(callback) {
+    new Submit({
+      method : "POST",
+      url : "/api/frontend/changefooter",
+      customfooter  : this.useFooter() ? this.footer() : undefined,
+      ajax : true,
+      ajaxsuccess : callback
+    }).send();
+  },
+  saveLang : function(callback) {
+    new Submit({
+      method : "POST",
+      url : "/api/frontend/changelanguage",
+      lang     : this.lang(),
+      ajax : true,
+      ajaxsuccess : callback
+    }).send();
+  },
+  passwordNeedSaving: function() {
+    return this.oldpassword() != "" || this.password1() != "" || this.password2() != "";
+  },
+
+  save : function() {
+    var self = this;
+    if (self.passwordNeedSaving())
+      self.savePassword(function() { self.saveLang(function() { self.saveFooter(function() {window.location.reload();})})});
+    else
+      self.saveFooter(function() { self.saveFooter(function() {window.location.reload();})});
   },
   refresh : function() {    this.user().fetch({cache: false}); this.reset(); }
 });
@@ -112,13 +146,13 @@ var SecuritySettingsView = Backbone.View.extend({
         })
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountSecurity.oldpassword))).append($("<td/>").append(oldpasswordinput)));
 
-      var password1input = $("<input type='password' autocomplete='off'/>");
+      password1input = $("<input type='password' autocomplete='off'/>");
       password1input.change(function() {
           model.setPassword1(password1input.val());
         })
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text(localization.account.accountSecurity.newpassword1))).append($("<td/>").append(password1input)));
 
-      var password2input = $("<input type='password' autocomplete='off'/>");
+      password2input = $("<input type='password' autocomplete='off'/>");
       password2input.change(function() {
           model.setPassword2(password2input.val());
         })
@@ -204,6 +238,23 @@ var SecuritySettingsView = Backbone.View.extend({
 
       return box;
     },
+    passwordsAreValid : function() {
+        var model = this.model;
+        var res = model.password1().validate(new PasswordValidation({callback: function(text,elem,v) {new FlashMessage({color: 'red', content : v.message() })},
+                                message: localization.validation.passwordLessThanMinLength,
+                                message_max: localization.validation.passwordExceedsMaxLength,
+                                message_digits: localization.validation.passwordNeedsLetterAndDigit
+        }));
+        if (!res) return false;
+        if (model.password1() != model.password2())
+        {
+          new FlashMessage({color: 'red', content : localization.validation.passwordsDontMatch});
+          return false;
+        }
+        return true;
+
+
+    },
     saveButton : function() {
       var self = this;
       var model = this.model;
@@ -217,7 +268,12 @@ var SecuritySettingsView = Backbone.View.extend({
           if (self.customfooter != undefined) {
             model.setFooter(self.customfooter.val())
           }
-          model.save();
+          if (model.passwordNeedSaving())
+          { if (self.passwordsAreValid())
+              model.save();
+          }
+          else
+            model.save();
           return false;
         }
       })

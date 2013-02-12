@@ -9,6 +9,7 @@ import DB
 import MinutesTime
 import User.Model
 import User.UserControl
+import User.API
 import User.History.Model
 import Context
 import TestKontra as T
@@ -147,7 +148,7 @@ testHandlerForPasswordSetup = do
                           , ("password", inText "test1111test")
                           , ("password2", inText "test1111test")
                           ]
-    _ <- runTestKontra req ctx $ handlePostUserSecurity
+    _ <- runTestKontra req ctx $ apiCallChangeUserPassword
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
     assertBool "History log exists" (not . null $ history)
     assertBool "History log contains password setup event"
@@ -162,7 +163,7 @@ testHandlerForPasswordSetupReq = do
                           , ("password", inText "test1111test")
                           , ("password2", inText "test1111test")
                           ]
-    _ <- runTestKontra req ctx $ handlePostUserSecurity
+    _ <- runTestKontra req ctx $ apiCallChangeUserPassword
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
     assertBool "History log exists" (not . null $ history)
     assertBool "History log contains password setup event"

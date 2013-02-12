@@ -19,7 +19,6 @@ import DB hiding (update, query)
 import Doc.Action
 import Doc.Model
 import Company.Model
-import Control.Logic
 import InputValidation
 import Kontra
 import KontraLink
@@ -46,18 +45,6 @@ import Payments.Model
 import ListUtil
 import qualified Templates.Fields as F
 import Routing
-
-getUserJSON :: Kontrakcja m => m JSValue
-getUserJSON = do
-    ctx <- getContext
-    case (ctxmaybeuser ctx) of
-         Just user -> do
-           mumailapi <- dbQuery $ GetUserMailAPI $ userid user
-           mcompany <- getCompanyForUser user
-           mcmailapi <- maybe (return Nothing) (dbQuery . GetCompanyMailAPI) $ usercompany user
-           userJSON user mumailapi mcompany mcmailapi (useriscompanyadmin user || (isAdmin ||^ isSales) ctx)
-         Nothing -> internalError
-
 
 handleAccountGet :: Kontrakcja m => m (Either KontraLink Response)
 handleAccountGet = checkUserTOSGet $ do
@@ -346,43 +333,6 @@ handlePostUserLang = do
          }
       return ()
     Nothing -> return ()
-
-handlePostUserSecurity :: Kontrakcja m => m KontraLink
-handlePostUserSecurity = do
-  ctx <- getContext
-  case (ctxmaybeuser ctx) of
-    Just user -> do
-      moldpassword <- getOptionalField asDirtyPassword "oldpassword"
-      mpassword <- getOptionalField asValidPassword "password"
-      mpassword2 <- getOptionalField asDirtyPassword "password2"
-      case (moldpassword, mpassword, mpassword2) of
-        (Just oldpassword, Just password, Just password2) ->
-          case (verifyPassword (userpassword user) oldpassword,
-                  checkPasswordsMatch password password2) of
-            (False,_) -> do
-              _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
-              addFlashM flashMessageBadOldPassword
-            (_, Left f) -> do
-              _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
-              addFlashM f
-            _ ->  do
-              passwordhash <- createPassword password
-              _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
-              _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
-              addFlashM flashMessageUserDetailsSaved
-        _ | isJust moldpassword || isJust mpassword || isJust mpassword2 -> do
-              _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
-              addFlashM flashMessageMissingRequiredField
-        _ -> return ()
-      mlang <- readField "lang"
-      footer <- getField "customfooter"
-      footerCheckbox <- isFieldSet "footerCheckbox"
-      _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-             lang = fromMaybe (lang $ usersettings user) mlang,
-             customfooter = footer <| footerCheckbox |> Nothing
-           }
-      return LinkAccountSecurity
-    Nothing -> return $ LinkLogin (ctxlang ctx) NotLogged
 
 {- |
     Checks for live documents owned by the user.

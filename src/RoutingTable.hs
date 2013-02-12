@@ -22,6 +22,7 @@ import qualified ScriveByMail.Control as MailAPI
 import qualified Payments.Control as Payments
 import qualified Attachment.Control as AttachmentControl
 import Doc.API
+import User.API
 import OAuth.Control
 import LangRouting
 import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
@@ -129,11 +130,9 @@ staticRoutes = choice
 
      -- UserControl
      , dir "account"                    $ hGet  $ toK0 $ UserControl.handleAccountGet
-     , dir "account" $ dir "json"       $ hGet  $ toK0 $ UserControl.getUserJSON
      , dir "account"                    $ hPost $ toK0 $ UserControl.handleUserPost
      , dir "account" $ hGet $ toK2 $ UserControl.handleGetChangeEmail
      , dir "account" $ hPost $ toK2 $ UserControl.handlePostChangeEmail
-     , dir "account" $ dir "security" $ hPost $ toK0 $ UserControl.handlePostUserSecurity
      , dir "account" $ dir "company" $ Company.routes
      , dir "account" $ dir "mailapi" $ hPost $ toK0 $ UserControl.handlePostUserMailAPI
      , dir "account" $ dir "usagestats" $ dir "days"   $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserDays
@@ -178,6 +177,7 @@ staticRoutes = choice
      , dir "adminonly" $ Administration.adminonlyRoutes
      , dir "dave"      $ Administration.daveRoutes
      , documentAPI
+     , userAPI
      , oauth
      , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "public"
 
