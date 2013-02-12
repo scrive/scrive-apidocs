@@ -249,9 +249,6 @@ signDocument documentid
       --addFlash (OperationFailed, message)
       Log.debug $ "When signing document: " ++ message
       return LoopBack
-    Right (Left (DBDatabaseNotAvailable message)) -> do
-      addFlash (OperationFailed, message)
-      return LoopBack
     Left msg -> do
       addFlash  (OperationFailed, msg)
       return LoopBack
@@ -306,9 +303,6 @@ rejectDocument documentid siglinkid = do
 
   case edocs of
     Left (DBActionNotAvailable message) -> do
-      addFlash (OperationFailed, message)
-      getHomeOrDesignViewLink
-    Left (DBDatabaseNotAvailable message) -> do
       addFlash (OperationFailed, message)
       getHomeOrDesignViewLink
     Left _ -> internalError
@@ -542,7 +536,6 @@ handleIssueSign document timezone = do
             postDocumentPendingChange newdocument' newdocument' "web" -- We call it on same document since there was no change
             return $ Right newdocument'
           Right (Left (DBActionNotAvailable message)) -> return $ Left message
-          Right (Left (DBDatabaseNotAvailable message)) -> return $ Left message
           Right (Left _) -> return $ Left "Server error. Please try again."
           Left s -> return $ Left s
 
