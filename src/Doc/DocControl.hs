@@ -749,10 +749,9 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
         Right _ -> do
           muser <- dbQuery $ GetUserByEmail (Email email)
           actor <- guardJustM $ mkAuthorActor <$> getContext
-          mnewdoc <- runMaybeT $ do
-            True <- dbUpdate $ ChangeSignatoryEmailWhenUndelivered docid slid muser email actor
-            Just newdoc <- dbQuery $ GetDocumentByDocumentID docid
-            return newdoc
+          dbUpdate $ ChangeSignatoryEmailWhenUndelivered docid slid muser email actor
+          mnewdoc <- dbQuery $ GetDocumentByDocumentID docid
+
           case mnewdoc of
             Just newdoc -> do
               -- get (updated) siglink from updated document

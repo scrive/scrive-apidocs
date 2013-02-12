@@ -1184,34 +1184,28 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m CancelDocument () where
                     actor
 
 data ChangeSignatoryEmailWhenUndelivered = ChangeSignatoryEmailWhenUndelivered DocumentID SignatoryLinkID (Maybe User) String Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m ChangeSignatoryEmailWhenUndelivered Bool where
+instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m ChangeSignatoryEmailWhenUndelivered () where
   update (ChangeSignatoryEmailWhenUndelivered did slid muser email actor) = do
-    Just doc <- query $ GetDocumentByDocumentID did
-    if (documentstatus doc /= Pending)
-     then do
-       Log.error $ "Cannot ChangeSignatoryEmailWhenUndelivered for document #" ++ show did ++ " that is in " ++ show (documentstatus doc) ++ " state"
-       return False;
-     else do
-      let Just sl = getSigLinkFor doc slid
-          oldemail = getEmail sl
-      success1 <- kRun01 $ sqlUpdate "signatory_link_fields" $ do
+      oldemail <- kRunAndFetch1OrThrowWhyNot (\acc (m :: String) -> acc ++ [m]) $ sqlUpdate "signatory_link_fields" $ do
+             sqlFrom "signatory_link_fields AS signatory_link_fields_old"
+             sqlWhere "signatory_link_fields.id = signatory_link_fields_old.id"
              sqlSet "value" email
-             sqlWhereEq "signatory_link_id" slid
-             sqlWhereEq "type" EmailFT
-      success2 <- kRun01 $ sqlUpdate "signatory_links" $ do
+             sqlResult "signatory_link_fields_old.value"
+             sqlWhereEq "signatory_link_fields.signatory_link_id" slid
+             sqlWhereEq "signatory_link_fields.type" EmailFT
+      kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
           sqlSet "invitation_delivery_status" Unknown
           sqlSet "user_id" $ fmap userid muser
-          sqlWhereEq "id" slid
+          sqlWhereEq "signatory_links.id" slid
           sqlWhereExists $ sqlSelect "documents" $ do
               sqlWhere "documents.id = signatory_links.document_id"
-              sqlWhereEq "documents.status" Pending
-      when_ (success1 && success2) $
-        update $ InsertEvidenceEvent
+              sqlWhereDocumentStatusIs Pending
+      _ <- update $ InsertEvidenceEvent
           ChangeSignatoryEmailWhenUndeliveredEvidence
           (value "oldemail" oldemail >> value "newemail" email >> value "actor" (actorWho actor))
           (Just did)
           actor
-      return $ success1 && success2
+      return ()
 
 data PreparationToPending = PreparationToPending DocumentID Actor (Maybe TimeZoneName)
 instance (MonadBaseControl IO m, MonadDB m, TemplatesMonad m) => DBUpdate m PreparationToPending Bool where
