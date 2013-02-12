@@ -19,6 +19,8 @@ import Mails.SendMail
 import Redirect
 import User.Action
 import User.Model
+import IPAddress
+import Company.Model
 import User.UserView as UserView
 import qualified Log (security, debug)
 import qualified User.UserControl as UserControl
@@ -173,9 +175,20 @@ handleLoginPost = do
         (Just email, Just passwd) -> do
             -- check the user things here
             maybeuser <- dbQuery $ GetUserByEmail (Email email)
+            ipIsOK <- case maybeuser of
+                        Just x -> do
+                             mcompany <- dbQuery $ GetCompanyByUserID (userid x)
+                             case mcompany of
+                               Just company -> do
+                                 Log.debug $ "Company " ++ show (companyid company) ++ "(" ++ show (usercompany <$> maybeuser) ++ ") allows access from " ++ show ((companyinfo company))
+                                 return $ null (companyipaddressmasklist (companyinfo company)) ||
+                                               (any (ipAddressIsInNetwork (ctxipnumber ctx)) (companyipaddressmasklist (companyinfo company)))
+                               Nothing -> return True
+                        Nothing -> return True
             case maybeuser of
                 Just user@User{userpassword}
-                    | verifyPassword userpassword passwd -> do
+                    | verifyPassword userpassword passwd 
+                    && ipIsOK -> do
                         Log.debug $ "User " ++ show email ++ " logged in"
                         _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
                           lang = ctxlang ctx
@@ -203,7 +216,10 @@ handleLoginPost = do
                             logUserToContext muuser
                         runJSONGenT $ value "logged" True
                 Just u -> do
-                        Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
+                        if ipIsOK
+                         then Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
+                         else Log.debug $ "User " ++ show email ++ " login failed (ip " ++ show (ctxipnumber ctx) 
+                                ++ " not on allowed list)"
                         _ <- if padlogin
                           then dbUpdate $ LogHistoryPadLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
                           else dbUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
