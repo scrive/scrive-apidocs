@@ -485,14 +485,13 @@ handleAccountSetupPostWithMethod uid token sm = do
           runJSONGenT $ do
             value "ok" True
             value "location" $ show link
-              
+
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
 handleAccountSetupPost uid token = handleAccountSetupPostWithMethod uid token AccountRequest
 
 {- |
     This is where we get to when the user clicks the link in their password reminder
-    email.  This'll show them the usual landing page, but with a modal dialog
-    for changing their password.
+    email.  This'll show them the usual landing page, but with option to changing their password.
 -}
 handlePasswordReminderGet :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink ThinPage)
 handlePasswordReminderGet uid token = do
