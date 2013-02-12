@@ -258,6 +258,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_mailTakeoverPrivateUserInviteContentLink","Klicka på länken för att acceptera inbjudan","Click to accept the invitation"
 "_mailTakeoverPrivateUserInviteTitle","Förfrågan att göra till företagskonto","Company account invitation"
 "_inviteTextFieldName","inbjudningstext","invite text"
+"_ipAddressMaskList","IP Address Mask List","IP Address Mask List"
 "_lastname","Efternamn","Last name"
 "_legalparagraphBody","Detta e-postmeddelande innehåller konfidentiell information
  och får inte vidarebefordras.   Avslöjande, kopiering, distribution

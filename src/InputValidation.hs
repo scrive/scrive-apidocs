@@ -49,6 +49,7 @@ module InputValidation
     , asValidFieldValue
     , asValidPlace
     , asValidInviteText
+    , asValidIPAddressWithMaskList
     , sanitize
     , flashMessageMissingRequiredField) where
 
@@ -67,6 +68,7 @@ import Kontra
 import Doc.DocumentID
 import Attachment.AttachmentID
 import Numeric
+import IPAddress
 import qualified Log (security)
 import Happstack.Fields hiding (getFields)
 import Templates.Templates
@@ -483,6 +485,25 @@ asValidAddress input =
     >>= checkLengthIsMax 200 fieldtemplate
     >>= checkOnly (isAlphaNum : map (==) " \'():,/.#-") fieldtemplate
     where fieldtemplate = "addressFieldName"
+
+asValidIPAddressWithMaskList :: String -> Result [IPAddressWithMask]
+asValidIPAddressWithMaskList input =
+    stripWhitespace input
+    >>= readAll2
+    where readAll src = do
+            (value,rest) <- reads src
+            case dropWhile isSpace rest of
+              ',' : r -> do
+                 (values,m) <- readAll r
+                 return (value : values, m)
+              _ -> return ([value],rest)
+          readAll2 src = case readAll src of
+                           [(result,r)] | all isSpace r -> return result
+                           [] | all isSpace src -> return []
+                           _ -> Bad $ flashMessageInvalidFormat "ipAddressMaskList"
+
+
+
 
 {- |
     Creates a clean and validated company position.

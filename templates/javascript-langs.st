@@ -856,6 +856,7 @@ javascriptLocalisation =
               , langEN          : "$_English()$"
               , footerSection   : "$_userDocumentsSettings()$"
               , useFooter       : "$_userDocumentSettingsMailFooter()$"
+              , ipMaskSection   : "$_userIPMaskSection()$"
               , save : "$_SaveChanges()$"
             }
           , companySettings : "$_CompanySettings()$"

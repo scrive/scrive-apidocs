@@ -122,6 +122,7 @@ kontraMigrations = [
   , expandEventsWithAffectedSignatoryAndTextMessage
   , addObligatoryColumnToSignatoryLinkFields
   , separateDocumentTypeInDocStatEvents
+  , addIPAddressMaskListToCompanies
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

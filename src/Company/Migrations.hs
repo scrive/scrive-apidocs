@@ -6,6 +6,15 @@ import Company.Tables
 
 default (SQL)
 
+addIPAddressMaskListToCompanies :: MonadDB m => Migration m
+addIPAddressMaskListToCompanies = Migration {
+    mgrTable = tableCompanies
+  , mgrFrom = 7
+  , mgrDo = do
+    kRunRaw "ALTER TABLE companies ADD COLUMN ip_address_mask_list TEXT NULL"
+    kRunRaw "ALTER SEQUENCE companies_id_seq OWNED BY companies.id"
+}
+
 removeServiceIDFromCompanies :: MonadDB m => Migration m
 removeServiceIDFromCompanies = Migration {
     mgrTable = tableCompanies
