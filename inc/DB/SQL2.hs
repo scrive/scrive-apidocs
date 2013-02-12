@@ -181,6 +181,7 @@ module DB.SQL2
   , kWhyNot1
   , DBExceptionCouldNotParseValues(..)
   , kRun1OrThrowWhyNot
+  , kRunAndFetch1OrThrowWhyNot
   )
   where
 
@@ -1025,3 +1026,28 @@ kRun1OrThrowWhyNot sqlcommand = do
         -- Lets throw first exception on the list. It should be the
         -- most generic one.
         throwIO ex
+
+kRunAndFetch1OrThrowWhyNot :: (SqlTurnIntoSelect s, MonadDB m, MonadBase IO m, Fetcher v [a])
+                           => ([a] -> v) -> s -> DBEnv m a
+kRunAndFetch1OrThrowWhyNot decoder sqlcommand = do
+  kRun_ sqlcommand
+  results <- kFold decoder []
+  case results of
+    [] -> do
+      listOfExceptions <- kWhyNot1 sqlcommand
+
+      case listOfExceptions of
+        [] -> do
+            -- This case should not really happen due to how we handle
+            -- DBBaseLineConditionIsFalse in decodeListOfExceptionsFromWhere
+            -- Just to be extra safe we put DBBaseLineConditionIsFalse here.
+            throwIO $ DBBaseLineConditionIsFalse (toSQLCommand sqlcommand)
+        (ex:_) -> do
+            -- Lets throw first exception on the list. It should be the
+            -- most generic one.
+            throwIO ex
+    [r] -> return r
+    _ -> liftIO $ throwIO TooManyObjects { originalQuery = mempty
+                                         , tmoExpected = 1
+                                         , tmoGiven = fromIntegral $ length results
+                                         }
