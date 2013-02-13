@@ -66,7 +66,7 @@ var SecuritySettingsModel = Backbone.Model.extend({
       password1  : "",
       password2  : "",
       footer     : this.user().footer() ,
-      lang       : this.user().lang() != "sv" ?  "LANG_EN" : "LANG_SV",
+      lang       : this.user().lang() != "sv" ?  "en" : "sv",
       useFooter  : this.user().footer() != undefined
     }, {silent : true});
     this.trigger("reset");
@@ -116,7 +116,7 @@ var SecuritySettingsModel = Backbone.Model.extend({
     if (self.passwordNeedSaving())
       self.savePassword(function() { self.saveLang(function() { self.saveFooter(function() {window.location.reload();})})});
     else
-      self.saveFooter(function() { self.saveFooter(function() {window.location.reload();})});
+      self.saveFooter(function() { self.saveLang(function() {window.location.reload();})});
   },
   refresh : function() {    this.user().fetch({cache: false}); this.reset(); }
 });
@@ -178,10 +178,10 @@ var SecuritySettingsView = Backbone.View.extend({
          self.langSelectBox.empty();
          self.langSelect = new Select({
                              textWidth : "90px",
-                             name : model.lang() == "LANG_EN" ? localization.account.accountSecurity.langEN : localization.account.accountSecurity.langSV,
+                             name : model.lang() == "en" ? localization.account.accountSecurity.langEN : localization.account.accountSecurity.langSV,
                              onSelect : function(v) {model.setLang(v);return true;},
-                             options:   model.lang() == "LANG_EN" ? [{name: localization.account.accountSecurity.langSV, value: "LANG_SV"}] :
-                                                                        [{name: localization.account.accountSecurity.langEN, value: "LANG_EN"}]
+                             options:   model.lang() == "en" ? [{name: localization.account.accountSecurity.langSV, value: "sv"}] :
+                                                                        [{name: localization.account.accountSecurity.langEN, value: "en"}]
                            });
          self.langSelectBox.append(self.langSelect.view().el)
       };

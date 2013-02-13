@@ -21,16 +21,18 @@ window.Language = {
            if (callback != undefined) callback();
          })
     },
-    changeforPageAndUserAndReload : function(code) {
-        $.post('/lang', {lang: code == "en" ? "LANG_EN" : "LANG_SV"},
-               function() {
-                 var p = window.location.pathname;
-                 if (p.substring(0, 3) == "/en" || p.substring(0, 3) == "/sv") {
-                    p = "/" + code + p.substr(3);
-                    window.location.pathname = p;
-                 } else
-                    window.location.reload();
-                 });
+    changeForPageAndUserAndReload : function(code) {
+        $.post('/api/frontend/changelanguage', {lang: code }, function() {
+               Language.changeForPageAndReload(code);
+        });
+    },
+    changeForPageAndReload : function(code) {
+        var p = window.location.pathname;
+        if (p.substring(0, 3) == "/en" || p.substring(0, 3) == "/sv") {
+            p = "/" + code + p.substr(3);
+            window.location.pathname = p;
+        } else
+            window.location.reload();
     }
 };
 })(window);

@@ -1,7 +1,8 @@
 module User.API (
     userAPI,
     apiCallGetUserProfile,
-    apiCallChangeUserPassword
+    apiCallChangeUserPassword,
+    apiCallChangeUserLanguage
   ) where
 
 
@@ -99,7 +100,7 @@ apiCallChangeUserPassword = api $ do
 apiCallChangeUserLanguage :: Kontrakcja m => m Response
 apiCallChangeUserLanguage = api $ do
   (user, _ , _) <- getAPIUser APIPersonal
-  mlang <- lift $  readField "lang"
+  mlang <- lift $  (join . (fmap langFromCode)) <$> getField "lang"
   _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
              lang = fromMaybe (lang $ usersettings user) mlang
            }

@@ -16,9 +16,9 @@ import TestingUtil
 import TestKontra as T
 import User.Lang
 import User.Model
-import User.UserControl
 import Utils.Default
 import Util.Actor
+import User.API
 
 langTests :: TestEnvSt -> Test
 langTests env = testGroup "Lang" [
@@ -50,14 +50,14 @@ testLoggedInLangSwitching = do
 
     --from the /upload page switch lang to swedish
     req1 <- mkRequest POST [("lang", inText "LANG_SV")]
-    (_res2, ctx2) <- runTestKontra req1 ctx1 $ handlePostUserLang
+    (_res2, ctx2) <- runTestKontra req1 ctx1 $ apiCallChangeUserLanguage
     assertLoggedIn (userid user) ctx2
     assertUserLang (userid user) LANG_SV
     assertContextLang (userid user) ctx2 LANG_SV
 
     --now switch back again to uk
     req2 <- mkRequest POST [("lang", inText "LANG_EN")]
-    (_res3, ctx3) <- runTestKontra req2 ctx2 $ handlePostUserLang
+    (_res3, ctx3) <- runTestKontra req2 ctx2 $ apiCallChangeUserLanguage
     assertLoggedIn (userid user) ctx3
     assertUserLang (userid user) LANG_EN
     assertContextLang (userid user) ctx3 LANG_EN

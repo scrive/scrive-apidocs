@@ -322,18 +322,6 @@ handlePostUserMailAPI = withUserPost $ do
                              _ -> return ()
         return LinkUserMailAPI)
 
-handlePostUserLang :: Kontrakcja m => m ()
-handlePostUserLang = do
-  ctx <- getContext
-  case (ctxmaybeuser ctx) of
-    Just user -> do
-      mlang <- readField "lang"
-      _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-           lang = fromMaybe (lang $ usersettings user) mlang
-         }
-      return ()
-    Nothing -> return ()
-
 {- |
     Checks for live documents owned by the user.
 -}

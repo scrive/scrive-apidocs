@@ -38,7 +38,6 @@ data KontraLink
     | LinkLogout
     | LinkSignup Lang
     | LinkForgotPassword Lang
-    | LinkLangSwitch
     | LinkArchive
     | LinkAccount
     | LinkAccountCompany (Maybe CompanyID)
@@ -78,7 +77,7 @@ data KontraLink
     | LinkCompanyAdminPayments CompanyID
     | LinkUserAdminPayments UserID
     | LinkExternal String
-    | LinkDesignView 
+    | LinkDesignView
     deriving (Eq)
 
 langFolder :: Lang -> String
@@ -94,7 +93,6 @@ instance Show KontraLink where
     showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ (LinkSignup lang) = (++) $ langFolder lang ++ "/signup"
     showsPrec _ (LinkForgotPassword lang) = (++) $ langFolder lang ++ "/amnesia"
-    showsPrec _ LinkLangSwitch = (++) "/lang"
     showsPrec _ (LinkArchive) = (++) $ "/d"
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ (LinkAccount) = (++) "/account"
