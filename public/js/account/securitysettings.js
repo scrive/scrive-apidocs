@@ -76,7 +76,7 @@ var SecuritySettingsModel = Backbone.Model.extend({
       method : "POST",
       url : "/api/frontend/changepassword",
       oldpassword : this.oldpassword(),
-      password  : this.password1(),
+      password1  : this.password1(),
       password2  : this.password2(),
       ajax : true,
       ajaxsuccess : function(rs) {

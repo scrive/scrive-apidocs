@@ -14,13 +14,16 @@ var ApiCall = Backbone.Model.extend({
         isCreateFromTemplate : function() {return false;},
         isUpdate : function() {return false;},
         isReady : function() {return false;},
-        isSendReminder : function() {return false;},                           
+        isSendReminder : function() {return false;},
         isCancel : function() {return false;},
         isDelete : function() {return false;},
         isGet : function() {return false;},
         isList : function() {return false;},
         isDownloadMainFile : function() {return false;},
         isAddToPadQueue : function() {return false;},
+        isGetProfile : function() {return false;},
+        isSetPassword : function() {return false;},
+        isSetLanguage : function() {return false;},
         name : function() {return this.get("name");},
         oauth : function() {return this.get("oauth");},
         authorization: function() { return this.oauth().authorizationForRequests();  },
@@ -61,7 +64,7 @@ window.CreateFromFileApiCall = ApiCall.extend({
                 }
             });
 
-        }                                     
+        }
 });
 
 window.CreateFromTemplateApiCall = ApiCall.extend({
@@ -90,7 +93,7 @@ window.CreateFromTemplateApiCall = ApiCall.extend({
                 }
             });
 
-        }                     
+        }
 });
 
 window.UpdateApiCall = ApiCall.extend({
@@ -113,10 +116,10 @@ window.UpdateApiCall = ApiCall.extend({
             var model = this;
             var form = $("<form method='post' style='display:none;' enctype='multipart/form-data'/>");
             form.attr('action', Scrive.apiUrl()+"update/" + model.documentid());
-            
+
             $("body").append(form);
             form.append($("<input type='hidden' name='json'/>").val(model.json()));
-            
+
             //var formData = new FormData(form[0]);
             $.ajax(Scrive.apiUrl()+"update/" + model.documentid(), {
                 type: 'POST',
@@ -133,7 +136,7 @@ window.UpdateApiCall = ApiCall.extend({
                     form.remove();
                 }
             });
-        }   
+        }
 });
 
 window.ReadyApiCall = ApiCall.extend({
@@ -146,7 +149,7 @@ window.ReadyApiCall = ApiCall.extend({
             LocalStorage.set("api","documentid",documentid);
             return this.set({"documentid" : documentid});
         },
-      
+
         initialize: function (args) {
         },
         isReady : function() {return true;},
@@ -169,7 +172,7 @@ window.ReadyApiCall = ApiCall.extend({
                     model.setResult(JSON.stringify(res.responseText,undefined," "));
                 }
             });
-        }    
+        }
 });
 
 window.SendReminderApiCall = ApiCall.extend({
@@ -296,7 +299,7 @@ window.GetApiCall = ApiCall.extend({
                     model.setResult(JSON.stringify(res.responseText,undefined," "));
                 }
             });
-        }    
+        }
 });
 
 window.ListApiCall = ApiCall.extend({
@@ -393,7 +396,7 @@ window.AddToPadQueueApiCall = ApiCall.extend({
             LocalStorage.set("api","signatorylinkid",documentid);
             return this.set({"signatorylinkid" : documentid});
         },
-        
+
         send : function() {
             var model = this;
             $.ajax(Scrive.apiUrl()+"padqueue/add/" + model.documentid() + "/" + model.signatorylinkid(), {
@@ -409,6 +412,109 @@ window.AddToPadQueueApiCall = ApiCall.extend({
             });
         }
 });
+
+
+window.GetProfileApiCall = ApiCall.extend({
+        defaults: {
+             name : "Get user profile. Only for current user"
+        },
+        initialize: function (args) {
+        },
+        isGetProfile : function() {return true;},
+        send : function() {
+            var model = this;
+            $.ajax(Scrive.apiUrl()+"getprofile", {
+                type: 'GET',
+                cache: false,
+                headers : { authorization : model.authorization() },
+                success : function(res) {
+                    model.setResult(res);
+                },
+                error : function(res) {
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
+                }
+            });
+        }
+});
+
+window.SetLanguageApiCall = ApiCall.extend({
+        defaults: {
+             name : "Set user language",
+             language : LocalStorage.get("api","language")
+
+        },
+        initialize: function (args) {
+        },
+        isSetLanguage : function() {return true;},
+        language : function() {return this.get("language");},
+        setLanguage : function(language) {
+            LocalStorage.set("api","language",language);
+            return this.set({"language" : language});
+        },
+
+        send : function() {
+            var model = this;
+            $.ajax(Scrive.apiUrl()+"changelanguage", {
+                type: 'POST',
+                cache: false,
+                headers : { authorization : model.authorization() },
+                success : function(res) {
+                    model.setResult(res);
+                },
+                data : { lang : model.language()},
+                error : function(res) {
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
+                }
+            });
+        }
+});
+
+
+window.SetPasswordApiCall = ApiCall.extend({
+        defaults: {
+             name : "Add to padqueue API call",
+             oldpassword : LocalStorage.get("api","oldpassword"),
+             newpassword1 : LocalStorage.get("api","newpassword1"),
+             newpassword2 : LocalStorage.get("api","newpassword2"),
+
+        },
+        initialize: function (args) {
+        },
+        isSetPassword : function() {return true;},
+        oldpassword : function() {return this.get("oldpassword");},
+        setOldpassword: function(oldpassword) {
+            LocalStorage.set("api","oldpassword",oldpassword);
+            return this.set({"oldpassword" : oldpassword});
+        },
+        newpassword1 : function() {return this.get("newpassword1");},
+        setNewpassword1: function(newpassword1) {
+            LocalStorage.set("api","newpassword1",newpassword1);
+            return this.set({"newpassword1" : newpassword1});
+        },
+        newpassword2 : function() {return this.get("newpassword2");},
+        setNewpassword2: function(newpassword2) {
+            LocalStorage.set("api","newpassword2",newpassword2);
+            return this.set({"newpassword2" : newpassword2});
+        },
+        send : function() {
+            var model = this;
+            $.ajax(Scrive.apiUrl()+"changepassword" , {
+                type: 'POST',
+                cache: false,
+                headers : { authorization : model.authorization() },
+                data : { oldpassword   : model.oldpassword(),
+                         password1  : model.newpassword1(),
+                         password2  : model.newpassword2() },
+                success : function(res) {
+                    model.setResult(res);
+                },
+                error : function(res) {
+                    model.setResult(JSON.stringify(res.responseText,undefined," "));
+                }
+            });
+        }
+});
+
 
 
 window.ApiCallView = function(args) {
@@ -434,6 +540,12 @@ window.ApiCallView = function(args) {
            return new DownloadMainFileApiCallView(args);
         else if (args.model.isAddToPadQueue())
            return new AddToPadQueueApiCallView(args);
+        else if (args.model.isGetProfile())
+           return new GetProfileApiCallView(args);
+        else if (args.model.isSetLanguage())
+           return new SetLanguageApiCallView(args);
+        else if (args.model.isSetPassword())
+           return new SetPasswordApiCallView(args);
 }
 
 
@@ -462,7 +574,7 @@ var CreateFromFileApiCallView = Backbone.View.extend({
             if (model.result() != undefined)
                 this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
             this.filebox.append(model.file())
-                
+
         }
 });
 
@@ -644,7 +756,7 @@ var GetApiCallView = Backbone.View.extend({
             _.bindAll(this, 'render');
             this.model.bind('change', this.render);
             this.prerender();
-          
+
         },
         prerender : function() {
             var model = this.model;
@@ -701,7 +813,7 @@ var ListApiCallView = Backbone.View.extend({
             if (model.result() != undefined)
                 this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
         }
-});    
+});
 
 var DownloadMainFileApiCallView = Backbone.View.extend({
         initialize: function(args) {
@@ -765,5 +877,100 @@ var AddToPadQueueApiCallView = Backbone.View.extend({
         }
 });
 
+
+var GetProfileApiCallView = Backbone.View.extend({
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            this.model.bind('change', this.render);
+            this.prerender();
+
+        },
+        prerender : function() {
+            var model = this.model;
+            var box = $(this.el);
+            box.children().detach();
+            var boxLeft  = $("<div class='left-box'>");
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
+            var button = $("<input type='button' value='Send request'/>");
+            button.click(function() {model.send(); return false;});
+            boxLeft.append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
+            if (model.result() != undefined)
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+        }
+});
+
+
+var SetLanguageApiCallView = Backbone.View.extend({
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            this.model.bind('change', this.render);
+            this.prerender();
+
+        },
+        prerender : function() {
+            var model = this.model;
+            var box = $(this.el);
+            box.children().detach();
+            var boxLeft  = $("<div class='left-box'>");
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
+            var langInput = $("<input type='text'/>").val(model.language());
+            langInput.change(function() {model.setLanguage(langInput.val()); return false;})
+            var button = $("<input type='button' value='Send request'/>");
+            button.click(function() {model.send(); return false;});
+            boxLeft.append($("<div>Language (en or sv): <BR/></div>").append(langInput))
+                   .append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
+            if (model.result() != undefined)
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+        }
+});
+
+
+var SetPasswordApiCallView = Backbone.View.extend({
+        initialize: function(args) {
+            _.bindAll(this, 'render');
+            this.model.bind('change', this.render);
+            this.prerender();
+
+        },
+        prerender : function() {
+            var model = this.model;
+            var box = $(this.el);
+            box.children().detach();
+            var boxLeft  = $("<div class='left-box'>");
+            this.boxRight = $("<div class='right-box'>");
+            box.append(this.boxRight).append(boxLeft);
+            var oldpasswordInput = $("<input type='text'/>").val(model.oldpassword());
+            oldpasswordInput.change(function() {model.setOldpassword(oldpasswordInput.val()); return false;})
+            var password1Input = $("<input type='text'/>").val(model.newpassword1());
+            password1Input.change(function() {model.setNewpassword1(password1Input.val()); return false;})
+            var password2Input = $("<input type='text'/>").val(model.newpassword2());
+            password2Input.change(function() {model.setNewpassword2(password2Input.val()); return false;})
+            var button = $("<input type='button' value='Send request'/>");
+            button.click(function() {model.send(); return false;});
+            boxLeft.append($("<div>Old password : <BR/></div>").append(oldpasswordInput))
+                   .append($("<div>New password : <BR/></div>").append(password1Input))
+                   .append($("<div>Repeat new password : <BR/></div>").append(password2Input))
+                   .append($("<div/>").append(button));
+            this.render();
+        },
+        render : function() {
+            this.boxRight.empty();
+            var model = this.model;
+            if (model.result() != undefined)
+                this.boxRight.append($("<div>Result : <BR/></div>").append($("<textarea class='json-text-area'>").val(model.result() )))
+        }
+});
 
 })(window);

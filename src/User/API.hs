@@ -81,7 +81,7 @@ apiCallChangeUserPassword = api $ do
   ctx <- getContext
   (user, _ , _) <- getAPIUser APIPersonal
   oldpassword <- lift $ getField' "oldpassword"
-  mpassword <- lift $ getOptionalField asValidPassword "password"
+  mpassword <- lift $ getOptionalField asValidPassword "password1"
   mpassword2 <- lift $ getOptionalField asDirtyPassword "password2"
   case (mpassword, mpassword == mpassword2) of
      (Just password, True) ->
@@ -101,10 +101,15 @@ apiCallChangeUserLanguage :: Kontrakcja m => m Response
 apiCallChangeUserLanguage = api $ do
   (user, _ , _) <- getAPIUser APIPersonal
   mlang <- lift $  (join . (fmap langFromCode)) <$> getField "lang"
-  _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-             lang = fromMaybe (lang $ usersettings user) mlang
+  case mlang of
+       Just lang -> do
+         _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
+             lang = lang
            }
-  Ok <$> (runJSONGenT $ return ())
+         Ok <$> (runJSONGenT $ value "changed" True)
+       Nothing -> do
+         Ok <$> (runJSONGenT $ value "changed" False)
+
 
 apiCallChangeUserFooter :: Kontrakcja m => m Response
 apiCallChangeUserFooter = api $ do
@@ -113,7 +118,8 @@ apiCallChangeUserFooter = api $ do
   _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
              customfooter = customfooter
            }
-  Ok <$> (runJSONGenT $ return ())
+  Ok <$> (runJSONGenT $ value "changed" True)
+
 
 
 apiCallUpdateUserProfile :: Kontrakcja m => m Response
