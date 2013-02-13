@@ -20,17 +20,14 @@
           if (resp.sent === true) {
             mixpanel.track('Create new account');
             mixpanel.people.set({
-<<<<<<< HEAD
                 '$email'      : model.email()
-=======
                 '$email'        : model.email()
->>>>>>> production
             });
               mixpanel.alias();
             var content = localization.payments.outside.confirmAccountCreatedUserHeader;
             new FlashMessage({content: content, color: 'green'});
           } else if (resp.sent === false) {
-            mixpanel.track('Error', 
+            mixpanel.track('Error',
                            {Message : 'signup failed'});
             new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, color: 'red'});
           }
@@ -57,7 +54,7 @@
         header.append($("<h1/>").append(localization.getStartedInstantly));
         header.append($("<h2/>").append(localization.freeDocumentPerMonth));
         $(this.el).append(header);
-        
+
         var content = $("<div class='short-input-container recovery-container'/>");
         var wrapper = $("<div class='short-input-container-body-wrapper'/>");
         var body = $("<div class='short-input-container-body'/>");
@@ -75,18 +72,18 @@
           name: 'email'
         });
 
-              
+
         var signupButton = Button.init({
             size  : 'small',
             color : 'blue',
             text: localization.signup + " ›",
             onClick: function() {
-              self.clearValidationMessages(); 
+              self.clearValidationMessages();
               if (emailInput.input().validate(new EmailValidation({callback: self.validationCallback, message: localization.validation.wrongEmail})))
                 model.signup();
             }
           });
-        
+
         body.append($("<div class='position first'/>").append(emailInput.input()).append(signupButton.input()));
         $(this.el).append(content);
       }
