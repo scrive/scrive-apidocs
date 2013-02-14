@@ -378,7 +378,7 @@ the document <strong>$documenttitle$</strong>. The signing
  <strong>$documenttitle$</strong>."
 "_mailRejectOrderMailContentHasRejected","<strong>$rejectorName$</strong> har avvisat ordern <strong>$documenttitle$</strong>.","<strong>$rejectorName$</strong> has returned the order
  <strong>$documenttitle$</strong>."
-"_missingCustomFieldValue","Du har inte fyllt i alla fält. Vänliga fyll i de rödmarkerade fälten.","You have not entered values for some of your own created fields."
+"_missingCustomFieldValue","Du har inte fyllt i alla fält. Vänligen fyll i de rödmarkerade fälten.","You have not entered values for some of your own created fields."
 "_modalAccountSetupBodyAccept","Jag har läst och accepterar ","I have read and accept the "
 "_modalAccountSetupBodyTOS","Scrive Allmänna Villkor","Scrive Terms of Service"
 "_modalAccountSetupChoosePassword","Välj lösenord","Choose password"
