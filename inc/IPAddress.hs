@@ -92,6 +92,22 @@ unsafeIPAddressWithMask = IPAddressWithMask
 
 ipAddressIsInNetwork :: IPAddress -> IPAddressWithMask -> Bool
 ipAddressIsInNetwork (IPAddress ipaddr) (IPAddressWithMask (IPAddress netaddr) bits) =
-  (ipaddr .&. mask) == (netaddr .&. mask)
+  (addr_le .&. mask) == (subnet_le .&. mask)
   where
+    a_addr = (ipaddr `shiftR` 0)  .&. 255
+    b_addr = (ipaddr `shiftR` 8)  .&. 255
+    c_addr = (ipaddr `shiftR` 16) .&. 255
+    d_addr = (ipaddr `shiftR` 24) .&. 255
+    addr_le = (d_addr `shiftL` 0) .|.
+              (c_addr `shiftL` 8) .|.
+              (b_addr `shiftL` 16) .|.
+              (a_addr `shiftL` 24)
+    a_subnet = (netaddr `shiftR` 0)  .&. 255
+    b_subnet = (netaddr `shiftR` 8)  .&. 255
+    c_subnet = (netaddr `shiftR` 16) .&. 255
+    d_subnet = (netaddr `shiftR` 24) .&. 255
+    subnet_le = (d_subnet `shiftL` 0) .|.
+              (c_subnet `shiftL` 8) .|.
+              (b_subnet `shiftL` 16) .|.
+              (a_subnet `shiftL` 24)
     mask = 0xFFFFFFFF `shiftL` (32 - fromIntegral bits)
