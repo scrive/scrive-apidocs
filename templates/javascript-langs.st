@@ -298,7 +298,6 @@ javascriptLocalisation =
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
                     , missingOrWrongPersonalNumber : "$_backToStepTwoAndFillPersonNumber()$"
                     , missingOrWrongPlacedAuthorField : "$_missingPlacedAuthorFieldValue()$"
-                    , missingOrWrongCustomFieldValue: "$_missingCustomFieldValue()$"
                     , sameMails : "$_repetedEmailAddress()$"
                     , atLeastOnePersonMustSigns : "$_atLeastOnePersonMustSigns()$"
                     , notReadyField : "$_setAllFields()$"
