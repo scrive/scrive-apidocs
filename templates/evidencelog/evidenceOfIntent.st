@@ -6,7 +6,7 @@ evidenceOfIntent=
 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-    <title>Scrive Evidence of Intent Log</title>
+    <title>Evidence of Intent</title>
 
     <style>
       body,
@@ -165,8 +165,8 @@ evidenceOfIntent=
 
 
 <body class="en legal article ct full">
-<h1>Contract</h1>
-<h2>Evidence of Intent Log</h2>
+<h1>Evidence of Intent </h1>
+
 <p>The following screen shots show the signing environments of
    the respective signing parties. Each time stamp reflects
    the clock of the client, and may be different from the

@@ -106,12 +106,14 @@ window.DocumentSignViewHeader = Backbone.View.extend({
     if((this.useStandardBranding() || document.barsbackgroundtextcolor() == undefined)) {
       if (this.usedStandardColorsTexts != true) {
         maindiv.css("color", '');
+        if (this.sender != undefined) this.sender.css("color", '');
         this.usedStandardColorsTexts = true;
       }
     }
     else {
       if (this.usedStandardColorsTexts != false) {
         maindiv.css("color", document.barsbackgroundtextcolor());
+        if (this.sender != undefined) this.sender.css("color", document.barsbackgroundtextcolor());
         this.usedStandardColorsTexts = false;
       }
     }

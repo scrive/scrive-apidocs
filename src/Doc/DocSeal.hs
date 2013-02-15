@@ -297,7 +297,7 @@ evidenceOfIntentAttachment title sls = do
   ss <- dbQuery $ GetSignatoryScreenshots (map signatorylinkid sls)
   let sortBySignTime = sortBy (on compare (fmap signtime . maybesigninfo . fst))
   html <- evidenceOfIntentHTML title $ sortBySignTime [ (sl, s) | (i, s) <- ss, sl <- filter ((==i) . signatorylinkid) sls ]
-  return $ Seal.SealAttachment { Seal.fileName = "evidenceOfIntent.html"
+  return $ Seal.SealAttachment { Seal.fileName = "EvidenceofIntent.html"
                                , Seal.mimeType = Nothing
                                , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString html
                                }
@@ -450,18 +450,18 @@ sealSpecFromDocument2 boxImages hostpart document elog content inputpath outputp
 
       -- Creating HTML Evidence Log
       htmllogs <- htmlDocFromEvidenceLog (documenttitle document) elog
-      let evidenceattachment = Seal.SealAttachment { Seal.fileName = "evidencelog.html"
+      let evidenceattachment = Seal.SealAttachment { Seal.fileName = "EvidenceLog.html"
                                                    , Seal.mimeType = Nothing
                                                    , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString htmllogs }
       evidenceOfIntent <- evidenceOfIntentAttachment (documenttitle document) (documentsignatorylinks document)
       -- add signature verification documentation
       let signatureVerificationAttachment =
-            Seal.SealAttachment { Seal.fileName = "signatureverification.html"
+            Seal.SealAttachment { Seal.fileName = "DigitalSignatureDocumentation.html"
                                 , Seal.mimeType = Nothing
                                 , Seal.fileBase64Content = sigVerFile
                                 }
       let evidenceDocumentationAttachment =
-            Seal.SealAttachment { Seal.fileName = "readme.html"
+            Seal.SealAttachment { Seal.fileName = "EvidenceDocumentation.html"
                                 , Seal.mimeType = Nothing
                                 , Seal.fileBase64Content = evidenceDoc
                                 }

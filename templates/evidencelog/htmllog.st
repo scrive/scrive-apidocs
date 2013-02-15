@@ -3,7 +3,7 @@ htmlevidencelog=
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Contract Evidence Log for "Contract"</title>
+    <title>Evidence Log</title>
     <style>
       body,
       div,
@@ -150,8 +150,7 @@ htmlevidencelog=
 
 
 <body class="en legal article ct full">
-<h1>Contract</h1>
-<h2>Evidence Log</h2>
+<h1>Evidence Log</h1>
 
 <table>
     <tr>
@@ -164,7 +163,7 @@ htmlevidencelog=
      <tr>
        <td>$entry.time$</td>
        <td>$entry.ip$</td>
-       <td><div style="max-height:60px;overflow-y:auto;overflow-x:auto">$entry.text:noescape()$</div></td>
+       <td><div style="max-height:80px;overflow-y:auto;overflow-x:auto">$entry.text:noescape()$</div></td>
      </tr>
     }$
 
