@@ -56,11 +56,11 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
               sigdiv.addClass('first');
           var name       = $("<div class='name' />").text(sigview.nameOrEmail());
           var line       = $("<div class='line' />");
-          var middle1    = $("<div class='middle' />");
-          var middle2    = $("<div class='middle' style='min-width:100px'/>");
+          var middle1    = $("<div class='middle' style='width: 20px; vertical-align: top;' />");
+          var middle2    = $("<div class='middle' />");
           var middle3    = $("<div class='middle float-right' />");
-          var statusicon = $("<div class='icon status' />").addClass(sigview.status());
-          var status     = $("<span class='statustext' />").addClass(sigview.status()).text(sigview.signatorySummary());
+          var statusicon = $("<div class='icon status' style='vertical-align: top; margin-top: 4px;' />").addClass(sigview.status());
+          var status     = $("<div class='statustext' style='margin-bottom: 7px; margin-top: 3px; line-height: 13px; height: 100%; vertial-align: top;' />").addClass(sigview.status()).html(sigview.signatoryViewerySummary());
           var details    = $('<a class="details clickable" href="#" />').text(localization.docsignview.showDetails);
           middle1.append(statusicon);
           middle2.append(status);
@@ -81,15 +81,15 @@ var AuthorViewSignatoriesView = Backbone.View.extend({
       box.children().detach();
       box.addClass('section').addClass('signatories').addClass('spacing');
 
-      box.append($("<h2 />").text(localization.authorview.signatoriesTitle));
+      box.append($("<h2 style='width: 100px;' />").text(localization.authorview.signatoriesTitle));
 
-      var table = $("<table class='signatories-box'/>");
+      var table = $("<table class='signatories-box' style='float: right;' />");
       var tbody = $("<tbody/>");
       var tr = $("<tr/>")
-      var td1 = $("<td class='signatory-box'/>");
+      var td1 = $("<td class='signatory-box' style='width: 300px;' />");
       var tdseparator = $("<td class='signatory-box-separator'/>");
       var td2 = $("<td class='signatory-box'/>")
-      var box1 = $('<div class="column spacing" />');
+      var box1 = $('<div class="column spacing" style="width: 95%;" />');
       var box2 = $('<div class="column spacing" />');
       table.append(tbody.append(tr.append(td1.append(box1)).append(tdseparator).append(td2.append(box2))));
       box.append(table);

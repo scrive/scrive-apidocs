@@ -337,6 +337,9 @@ window.Signatory = Backbone.Model.extend({
                 !this.hasSigned() &&
                  this.signorder() == this.document().signorder();
     },
+    isViewer : function() {
+        return !this.author() && !this.canSign();
+    },
     allAttachemntHaveFile: function() {
         return _.all(this.attachments(), function(attachment) {
             return attachment.hasFile();

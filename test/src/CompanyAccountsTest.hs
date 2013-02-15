@@ -40,7 +40,6 @@ companyAccountsTests env = testGroup "CompanyAccounts" [
       , testThat "Admin user can invite a company user to their company" env test_addingExistingCompanyUserAsCompanyAccount
       , testThat "Admin user can resend invite to a new user" env test_resendingInviteToNewCompanyAccount
       , testThat "Admin user can resend invite to an existing private user" env test_resendingInviteToPrivateUser
-      , testThat "Admin user can resend invite to an existing company user" env test_resendingInviteToCompanyUser
       , testThat "Admin user can switch a standard user to admin" env test_switchingStandardToAdminUser
       , testThat "Admin user can switch an admin user to standard" env test_switchingAdminToStandardUser
       , testThat "Admin user can remove a company account invite" env test_removingCompanyAccountInvite
@@ -156,14 +155,13 @@ test_addingExistingCompanyUserAsCompanyAccount = do
   (res, ctx') <- runTestKontra req ctx $ handlePostCompanyAccounts >>= sendRedirect
 
   assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
-  assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
+  assertEqual "A flash message was added" 0 (length $ ctxflashmessages ctx') -- We don't have a flash on fail there
 
   Just updatedexistinguser <- dbQuery $ GetUserByID (userid existinguser)
   assertEqual "Invited user's company stays the same" (usercompany updatedexistinguser)
                                                       (Just $ companyid existingcompany)
 
-  assertCompanyInvitesAre company [mkInvite company "bob@blue.com" "Bob" "Blue"]
+  assertCompanyInvitesAre company []
 
   emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
@@ -217,28 +215,6 @@ test_resendingInviteToPrivateUser = do
   emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
 
-test_resendingInviteToCompanyUser :: TestEnv ()
-test_resendingInviteToCompanyUser = do
-  (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  (_existinguser, _existingcompany) <- addNewAdminUserAndCompany "Bob" "Blue" "bob@blue.com"
-  _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
-
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext defaultValue
-
-  req <- mkRequest POST [ ("resend", inText "True")
-                        , ("resendid", inText "0")
-                        , ("resendemail", inText "bob@blue.com")
-                        , ("sndname", inText "Blue")
-                        ]
-  (res, ctx') <- runTestKontra req ctx $ handlePostCompanyAccounts >>= sendRedirect
-
-  assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
-  assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
-
-  emails <- dbQuery GetEmails
-  assertEqual "An email was sent" 1 (length emails)
 
 test_switchingStandardToAdminUser :: TestEnv ()
 test_switchingStandardToAdminUser = do
