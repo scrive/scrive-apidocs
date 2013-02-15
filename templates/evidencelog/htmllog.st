@@ -1,80 +1,177 @@
 #####
 htmlevidencelog=
 <html>
-  <head>
+<head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>$documenttitle$ Evidence Log for "$documenttitle$"</title>
-  </head>
-  <body>
-    <h1></h1>
+    <title>Contract Evidence Log for "Contract"</title>
+    <style>
+      body,
+      div,
+      p,
+      em,
+      ol,
+      ul,
+      li,
+      table,
+      tbody,
+      thead,
+      tr,
+      th,
+      td {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        font-size: 100%;
+        vertical-align: baseline;
+      /**  border:1px solid red;**/
 
-    <div style="font-family:'Lucida Grande', sans-serif;margin-top:0px;padding:0px;">
+      }
+      body {
+        line-height: 1;
+        color: #000;
+        background: #f8f8f8;
+      }
 
-      <table width="100%" cellpadding="0" cellspacing="0" style="margin: auto;"><tr><td>
-            <table id="main" cellpadding="0" cellspacing="15" width="960" align="center" style="margin: auto;background-color:#ffffff;border:1px solid #DDDDDD;">
-              <tr>
-                <td style="padding:10px; margin: auto;">
-                  <table id="header" width="580" cellpadding="9" 
-                         bgcolor="212121" cellspacing="0"
-                         align="center"
-                         style="color:#ffffff;text-align:center;margin:auto">
-                    <tr>
-                      <td style="text-align:left; margin: auto;padding:10px;">
 
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <table id="banner" width="800" cellpadding="0" bgcolor="212121" cellspacing="0" align="center" style="color:#fff;text-align:center;">
-                          <tr>
-                            <td width="800" cellpadding="0">
-                              <span style="font-weight:100;font-size:32px;margin:0px;letter-spacing:0.04em;color:#fff;font-family:'Copse',
-                                           serif;padding:10px">
-                                $documenttitle$
-                              </span>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td width="580">
-                              <span style="display:block;font-weight:400;font-family:'Lucida Grande',sans-serif;font-size:18px;margin:0px;margin-top:12px;margin-bottom:20px;color:#fff;">
-                                Evidence Log
-                              </span>
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-                  </table><!-- header -->
-                </td>
-              </tr><!-- header -->
-              <tr>
-                <td>
-                  <table id="content" width="800" cellspacing="0"
-                         align="top" style="margin:auto;color:#212121;font-family:'Lucida Grande',sans-serif;font-size:12px;">
-                    <tr style="font-weight:800;font-family:'Lucida Grande',sans-serif;font-size:14px;margin:0px;">
-                      <td style="border-bottom: solid 1px black;margin-bottom:60px;width:140px;">Time</td>
-                      <td style="border-bottom: solid 1px black;margin-bottom:60px;width:80px;">IP</td>
-                      <td style="border-bottom: solid 1px black;margin-bottom:60px;width:574px">Event</td>
-                    </tr> 
-                    $entries:{entry|
-                    <tr>
-                      <td style="font-size:10px;padding-top:18px;">$entry.time$</td>
-                      <td style="font-size:10px;padding-top:18px">$entry.ip$</td>
-                      <td style="padding-top:18px;width:574px;max-width:574px;"><div style="max-height:60px;overflow-y:auto;overflow-x:auto">$entry.text:noescape()$</div></td>
-                    </tr>
-                    }$
-                  </table>
-                </td>
-              </tr>
-            </table><!-- main -->
+      body {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        display: block;
+        background: #fff;
+        padding-top: 100px;
+        position: relative;
+      }
 
-            <table id="bottom-message" cellpadding="20" cellspacing="0" width="600" align="center">
-            </table><!-- bottom message -->
 
-      </td></tr></table><!-- wrapper -->
 
-    </div>
+      tr {
+      margin-bottom: 70px;
+      }
 
-  </body>
+      body {
+        font: 16px/1.5 Helvetica Neue, Arial, Helvetica, sans-serif;
+      }
+
+      h1 {
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        font-weight: bold;
+        letter-spacing: normal;
+        font-size: 3.0em;
+        color: #364963;
+        letter-spacing: 0px;
+        line-height: .7em;
+        margin: 0;
+        margin-bottom: 20px;
+        /**border: 1px solid red;**/
+      }
+      h2 {
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        color: #364963;
+        font-weight: normal;
+        font-size: 2.0em;
+        line-height: 1.1em;
+        margin: 0;
+        margin-top: 0.6em;
+        margin-bottom: 0.3em;
+        /**border: 1px solid green;**/
+      }
+
+      h3 {
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        font-weight: normal;
+        font-size: 1.5em;
+        font-style: italic;
+        line-height: 0.8em;
+        color: #364963;
+        margin: 0;
+        margin-bottom: 0.4em;
+        /**border: 1px solid red;**/
+      }
+
+
+
+      p {
+        margin-bottom: 1.2em;
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        font-size: 1.0em;
+        line-height: 1.3em;
+        text-align: justify;
+        letter-spacing: 1px;
+        color: #333333;
+        /**border: 1px solid red;**/
+      }
+
+      * {
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+      }
+
+      .ct {
+        width: 800px;
+        margin: 0 auto;
+        zoom: 1;
+      }
+
+
+      table {
+      width: 800px;
+      margin-bottom: 60px;
+      padding: 0;
+
+      }
+
+      table td{
+        width:
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        font-weight: normal;
+        font-size: .8em;
+        line-height: 1.4em;
+        text-align: justify;
+        letter-spacing: 1px;
+        color: #333333;
+        padding-top: 18px;
+
+      }
+
+      td.top{
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        font-size: 1.1em;
+        line-height: 1.4em;
+        text-align: justify;
+        letter-spacing: 1px;
+        color: #364963;
+        font-style: italic;
+        margin: 0px;
+      }
+    </style>
+
+</head>
+
+
+<body class="en legal article ct full">
+<h1>Contract</h1>
+<h2>Evidence Log</h2>
+
+<table>
+    <tr>
+        <td class="top" style="border-bottom: solid 1px #666; width:170px;"><em>Time</em></td>
+        <td class="topt" style="border-bottom: solid 1px #666; width:170px;"><em>IP</em></td>
+        <td class="top" style="border-bottom: solid 1px #666; width:170px;"><em>Event</em></td>
+    </tr>
+
+    $entries:{entry|
+     <tr>
+       <td>$entry.time$</td>
+       <td>$entry.ip$</td>
+       <td><div style="max-height:60px;overflow-y:auto;overflow-x:auto">$entry.text:noescape()$</div></td>
+     </tr>
+    }$
+
+</table>
+</body>
 </html>
 ###

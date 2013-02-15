@@ -1,99 +1,217 @@
 #####
 evidenceOfIntent=
 <html>
-  <head>
+
+<head>
+
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Evidence Of Intent Log for "$documenttitle$"</title>
-  </head>
-  <body>
-    <h1></h1>
 
-    <div style="font-family:'Lucida Grande', sans-serif;margin-top:0px;padding:0px;">
+    <title>Scrive Evidence of Intent Log</title>
 
-        <table id="main" cellpadding="0" cellspacing="15" width="960" align="center" style="margin: auto;background-color:#ffffff;border:1px solid #DDDDDD;">
-          <tr>
-            <td style="padding:10px; margin: auto;">
-              <table id="header" width="580" cellpadding="9" 
-                     bgcolor="212121" cellspacing="0"
-                     align="center"
-                     style="color:#ffffff;text-align:center;margin:auto">
-                <tr>
-                  <td style="text-align:left; margin: auto;padding:10px;">
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <table id="banner" width="800" cellpadding="0" bgcolor="212121" cellspacing="0" align="center" style="color:#fff;text-align:center;">
-                      <tr>
-                        <td width="800" cellpadding="0">
-                          <span style="font-weight:100;font-size:32px;margin:0px;letter-spacing:0.04em;color:#fff;font-family:'Copse',
-                                       serif;padding:10px">
-                            $documenttitle$
-                          </span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td width="580">
-                          <span style="display:block;font-weight:400;font-family:'Lucida Grande',sans-serif;font-size:18px;margin:0px;margin-top:12px;margin-bottom:20px;color:#fff;">
-                            Evidence Of Intent Log
-                          </span>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr><!-- header -->
-          <tr>
-            <td><div style="margin-left:100px;margin-right:100px">The
-            following screen shots show the signing environments of
-            the respective signing parties.  Each time stamp reflects
-            the clock of the client, and may be different from the
-            server clock.
+    <style>
+      body,
+      div,
+      p,
+      em,
+      ol,
+      ul,
+      li,
+      table,
+      tbody,
+      thead,
+      tr,
+      th,
+      td {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        font-size: 100%;
+        vertical-align: baseline;
+      /**  border:1px solid red;**/
 
-            <p/>At any point in time, the signing service maintains a
-            screen shot of a <em>reference sign view</em> showing a
-            standard document at the moment it is being signed.  The
-            reference sign view shot illustrates what the signing
-            environment is supposed to look like for clients at the
-            moment of signing, which is helpful for cases when
-            clients' signing environments were unable to provide
-            accurate screen shots.</div></td>
-          </tr>
-          <tr><td>
-              <table id="content" width="800" cellspacing="0"
-                     align="top" style="margin:auto;color:#212121;font-family:'Lucida Grande',sans-serif;font-size:12px;">
-                <tr style="font-weight:800;font-family:'Lucida Grande',sans-serif;font-size:14px;margin:0px;">
-                  <td style="border-bottom: solid 1px black;margin-bottom:60px;width:140px;">Time</td>
-                  <td style="border-bottom: solid 1px black;margin-bottom:60px;width:80px;">IP</td>
-                  <td style="border-bottom: solid 1px black;margin-bottom:60px;width:574px">Event</td>
-                </tr>
-                $entries:{entry|
+      }
+      body {
+        line-height: 1;
+        color: #000;
+        background: #f8f8f8;
+      }
+
+
+      body {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        display: block;
+        background: #fff;
+        padding-top: 100px;
+        position: relative;
+      }
+
+
+
+      tr {
+      margin-bottom: 70px;
+      }
+
+      body {
+        font: 16px/1.5 Helvetica Neue, Arial, Helvetica, sans-serif;
+      }
+
+      h1,
+      h2,
+      h3 {
+        display: block;
+          letter-spacing: normal;
+        padding: 24px 0 0;
+        margin: 0px;
+
+      /** border: 1px solid blue;**/
+      }
+      h1 {
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        font-weight: bold;
+        letter-spacing: normal;
+        font-size: 3.0em;
+        color: #364963;
+        letter-spacing: 0px;
+        line-height: .7em;
+        margin: 0;
+        margin-bottom: 20px;
+        /**border: 1px solid red;**/
+      }
+      h2 {
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        color: #364963;
+        font-weight: normal;
+        font-size: 2.0em;
+        line-height: 1.1em;
+        margin: 0;
+        margin-top: 0.6em;
+        margin-bottom: 0.3em;
+        /**border: 1px solid green;**/
+      }
+
+      h3 {
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        font-weight: normal;
+        font-size: 1.5em;
+        font-style: italic;
+        line-height: 0.8em;
+        color: #364963;
+        margin: 0;
+        margin-bottom: 0.4em;
+        /**border: 1px solid red;**/
+      }
+
+
+
+      p {
+        margin-bottom: 1.2em;
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        font-size: 1.0em;
+        line-height: 1.3em;
+        text-align: justify;
+        letter-spacing; 1px;
+        color: #333333;
+        /**border: 1px solid red;**/
+      }
+
+      * {
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+      }
+
+      .ct {
+        width: 800px;
+        margin: 0 auto;
+        zoom: 1;
+      }
+
+
+      table {
+      width: 800px;
+      margin-bottom: 20px;
+      padding: 0;
+
+      }
+
+      table td{
+        width:
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        font-weight: normal;
+        font-size: .8em;
+        line-height: 1.4em;
+        text-align: justify;
+        letter-spacing; 1px;
+        color: #333333;
+        padding-top: 18px;
+
+      }
+
+      td.top{
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        font-size: 1.1em;
+        line-height: 1.4em;
+        text-align: justify;
+        letter-spacing; 1px;
+        color: #364963;
+        font-style: italic;
+        margin: 0px;
+      }
+
+    </style>
+
+</head>
+
+
+<body class="en legal article ct full">
+<h1>Contract</h1>
+<h2>Evidence of Intent Log</h2>
+<p>The following screen shots show the signing environments of
+   the respective signing parties. Each time stamp reflects
+   the clock of the client, and may be different from the
+   server clock. </p>
+<p> At any point in time, the signing service maintains a
+    screen shot of a <em>reference sign view</em> showing a
+   standard document at the moment it is being signed.  The
+    reference sign view shot illustrates what the signing
+    environment is supposed to look like for clients at the
+    moment of signing, which is helpful for cases when
+    clients' signing environments were unable to provide
+    accurate screen shots.</p>
+
+<table>
+    <tr>
+        <td class="top" style="border-bottom: solid 1px #666; width:170px;"><em>Time</em></td>
+        <td class="top" style="border-bottom: solid 1px #666; width:80px;"><em>IP</em></td>
+        <td class="top" style="border-bottom: solid 1px #666; width:474px;"><em>Event</em></td>
+    </tr>
+             $entries:{entry|
                 $if(entry.first.time)$
                 <tr>
-                  <td style="font-size:10px;padding-top:18px;">$entry.first.time$</td>
-                  <td style="font-size:10px;padding-top:18px">$entry.ip$</td>
-                  <td style="padding-top:18px;width:574px;max-width:574px;">
+                  <td>$entry.first.time$</td>
+                  <td>$entry.ip$</td>
+                  <td class="column3">
                     <a href="$entry.first.image$">$entry.signatory$ opened the sign view</a>.
                   </td>
                 </tr>
                 $endif$
                 <tr>
-                  <td style="font-size:10px;padding-top:18px;">$entry.signing.time$</td>
-                  <td style="font-size:10px;padding-top:18px">$entry.ip$</td>
-                  <td style="padding-top:18px;width:574px;max-width:574px;">
+                  <td>$entry.signing.time$</td>
+                  <td>$entry.ip$</td>
+                  <td class="column3">
                     $if(entry.signing.image)$<a href="$entry.signing.image$">$entry.signatory$ signed the document</a>.
                     $else$                                                   $entry.signatory$ signed the document.
                     $endif$
                     Corresponding <a href="$entry.reference.image$">reference sign view</a>, created $entry.reference.time$.
                   </td>
-                </tr>}$
-              </table>
-            </td>
-          </tr>
-      </table>
-    </div>
-  </body>
+                </tr>
+              }$
+</table>
+
+</body>
 </html>
 ###
