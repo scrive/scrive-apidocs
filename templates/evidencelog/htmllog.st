@@ -163,7 +163,7 @@ htmlevidencelog=
      <tr>
        <td>$entry.time$</td>
        <td>$entry.ip$</td>
-       <td><div style="max-height:80px;overflow-y:auto;overflow-x:auto">$entry.text:noescape()$</div></td>
+       <td><div style="max-height:100px;overflow-y:auto;overflow-x:auto">$entry.text:noescape()$</div></td>
      </tr>
     }$
 
