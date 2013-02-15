@@ -278,7 +278,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_loginModalForgotPasswordSendNewPassword","Återställ","Reset"
 "_mailContractClosedContentAttached","Det färdigställda dokumentet bifogas med detta mail.","The finalised document is attached."
 "_mailClosedSignup","Du kan spara en säkerhetskopia av dokumentet i Scrives e-arkiv: <a href='$confirmationlink$'>klicka här för att skapa ett konto.</a>","You can save a safety copy of the document in Scrive's e-archive: <a href='$confirmationlink$'>Click here to create your account.</a>"
-"_mailClosedLogin","Dokumentet har även sparats till ditt Scrive-konto: <a href='$ctxhostpart$/$ctxlang$/login'>logga in för att se ditt dokument.</a>","The document has also been saved to your Scrive account: <a href='$ctxhostpart$/$ctxlang$/login'>Login to view it.</a>"
+"_mailClosedLogin","Dokumentet har även sparats till ditt Scrive-konto: <a href='$doclink$'>logga in för att se ditt dokument.</a>","The document has also been saved to your Scrive account: <a href='$doclink$'>click here to view it.</a>"
 "_mailContractClosedContentSignedBy","Dokumentet <strong>$documenttitle$</strong> har signerats
          av $partylist:noescape()$. Avtalet är nu bindande.","The document <strong>$documenttitle$</strong> has been signed by $partylist:noescape()$. This agreement is now legally binding."
 "_mailDocumentAwaitingForAuthorContentInstruction","För att signera dokumentet gör följande:<br/>      1. Klicka på länken<br/>      <a href=""$documentlink$"">$documenttitle$</a><br/>

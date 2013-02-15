@@ -394,7 +394,7 @@ sendClosedEmails document = do
     let signatorylinks = documentsignatorylinks document
     forM_ signatorylinks $ \sl -> do
       ml <- handlePostSignSignup (Email $ getEmail sl) (getFirstName sl) (getLastName sl)
-      mail <- mailDocumentClosed ctx document ml
+      mail <- mailDocumentClosed ctx document ml sl
       scheduleEmailSendout (ctxmailsconfig ctx) $
         mail { to = [getMailAddress sl]
              , attachments = mailattachments
