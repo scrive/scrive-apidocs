@@ -113,7 +113,6 @@ evidenceOfIntent=
         font-size: 1.0em;
         line-height: 1.3em;
         text-align: justify;
-        letter-spacing; 1px;
         color: #333333;
         /**border: 1px solid red;**/
       }
@@ -145,7 +144,6 @@ evidenceOfIntent=
         font-size: .8em;
         line-height: 1.4em;
         text-align: justify;
-        letter-spacing; 1px;
         color: #333333;
         padding-top: 18px;
 
@@ -156,7 +154,6 @@ evidenceOfIntent=
         font-size: 1.1em;
         line-height: 1.4em;
         text-align: justify;
-        letter-spacing; 1px;
         color: #364963;
         font-style: italic;
         margin: 0px;
