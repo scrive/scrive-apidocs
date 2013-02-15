@@ -40,7 +40,6 @@ import User.Action
 import User.Utils
 import User.History.Model
 import ScriveByMail.Model
-import Payments.Action
 import Payments.Model
 import ListUtil
 import qualified Templates.Fields as F
@@ -55,40 +54,6 @@ handleAccountGet = checkUserTOSGet $ do
            content <- showAccount user mcompany
            renderFromBody kontrakcja content
          Nothing -> sendRedirect $ LinkLogin (ctxlang ctx) NotLogged
-
-handleUserPost :: Kontrakcja m => m KontraLink
-handleUserPost = do
-  guardLoggedIn
-  createcompany <- isFieldSet "createcompany"
-  changeemail <- isFieldSet "changeemail"
-  mlink <- case True of
-             _ | createcompany -> Just <$> handleCreateCompany
-             _ | changeemail -> Just <$> handleRequestChangeEmail
-             _ -> return Nothing
-
-  --whatever happens run the update in case they changed things in other places
-  ctx <- getContext
-  user' <- guardJust $ ctxmaybeuser ctx
-  --requery for the user as they may have been upgraded
-  user <- guardJustM $ dbQuery $ GetUserByID (userid user')
-  infoUpdate <- getUserInfoUpdate
-  _ <- dbUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
-  _ <- dbUpdate $ LogHistoryUserInfoChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
-                                               (userinfo user) (infoUpdate $ userinfo user)
-                                               (userid <$> ctxmaybeuser ctx)
-  mcompany <- getCompanyForUser user
-  case (useriscompanyadmin user, mcompany) of
-    (True, Just company) -> do
-      companyinfoupdate <- getCompanyInfoUpdate
-      _ <- dbUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
-      return ()
-    _ -> return ()
-
-  case mlink of
-    Just link -> return link
-    Nothing -> do
-       addFlashM flashMessageUserDetailsSaved
-       return $ LinkAccount
 
 -- please treat this function like a public query form, it's not secure
 handleRequestPhoneCall :: Kontrakcja m => m KontraLink
@@ -110,27 +75,6 @@ handleRequestPhoneCall = do
     _ -> return ()
   return $ LinkDesignView
 
-handleRequestChangeEmail :: Kontrakcja m => m KontraLink
-handleRequestChangeEmail = do
-  ctx <- getContext
-  user <- guardJust $ ctxmaybeuser ctx
-  mnewemail <- getRequiredField asValidEmail "newemail"
-  mnewemailagain <- getRequiredField asValidEmail "newemailagain"
-  case (Email <$> mnewemail, Email <$> mnewemailagain) of
-    (Just newemail, Just newemailagain) | newemail == newemailagain -> do
-       mexistinguser <- dbQuery $ GetUserByEmail newemail
-       case mexistinguser of
-         Just _existinguser ->
-           sendChangeToExistingEmailInternalWarningMail user newemail
-         Nothing ->
-           sendRequestChangeEmailMail user newemail
-       --so there's no info leaking show this flash either way
-       addFlashM $ flashMessageChangeEmailMailSent newemail
-    (Just newemail, Just newemailagain) | newemail /= newemailagain -> do
-       addFlashM flashMessageMismatchedEmails
-    _ -> return ()
-  return $ LinkAccount
-
 sendChangeToExistingEmailInternalWarningMail :: Kontrakcja m => User -> Email -> m ()
 sendChangeToExistingEmailInternalWarningMail user newemail = do
   ctx <- getContext
@@ -148,37 +92,6 @@ sendChangeToExistingEmailInternalWarningMail user newemail = do
     , title = "Request to Change Email to Existing Account"
     , content = content
     }
-
-sendRequestChangeEmailMail :: Kontrakcja m => User -> Email -> m ()
-sendRequestChangeEmailMail user newemail = do
-  ctx <- getContext
-  changeemaillink <- newEmailChangeRequestLink (userid user) newemail
-  mail <- mailEmailChangeRequest (ctxhostpart ctx) user newemail changeemaillink
-  scheduleEmailSendout (ctxmailsconfig ctx)
-                        (mail{to = [MailAddress{
-                                    fullname = getFullName user
-                                  , email = unEmail newemail }]})
-
-handleCreateCompany :: Kontrakcja m => m KontraLink
-handleCreateCompany = do
-  ctx <- getContext
-  user <- guardJust $ ctxmaybeuser ctx
-  company <- dbUpdate $ CreateCompany Nothing
-  mailapikey <- random
-  _ <- dbUpdate $ SetCompanyMailAPIKey (companyid company) mailapikey 1000
-  _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid company)
-  _ <- dbUpdate $ SetUserCompanyAdmin (userid user) True
-  -- payment plan needs to migrate to company
-  _ <- switchPlanToCompany (userid user) (companyid company)
-  upgradeduser <- guardJustM $ dbQuery $ GetUserByID $ userid user
-  _ <- addUserCreateCompanyStatEvent (ctxtime ctx) upgradeduser
-  _ <- dbUpdate $ LogHistoryDetailsChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
-                                              [("is_company_admin", "false", "true")]
-                                              (Just $ userid user)
-  companyinfoupdate <- getCompanyInfoUpdate -- This is redundant to standard usage - bu I want to leave it here because of consistency
-  _ <- dbUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
-  addFlashM flashMessageCompanyCreated
-  return LoopBack
 
 handleGetChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink Response)
 handleGetChangeEmail uid hash = withUserGet $ do

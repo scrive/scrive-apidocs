@@ -129,7 +129,6 @@ staticRoutes = choice
 
      -- UserControl
      , dir "account"                    $ hGet  $ toK0 $ UserControl.handleAccountGet
-     , dir "account"                    $ hPost $ toK0 $ UserControl.handleUserPost
      , dir "account" $ hGet $ toK2 $ UserControl.handleGetChangeEmail
      , dir "account" $ hPost $ toK2 $ UserControl.handlePostChangeEmail
      , dir "account" $ dir "company" $ Company.routes

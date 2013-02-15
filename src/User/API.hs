@@ -28,6 +28,15 @@ import ScriveByMail.Model
 import Control.Logic
 import InputValidation
 import User.History.Model
+import User.UserControl
+import Payments.Action
+import Company.Model
+import Mails.SendMail
+import ActionQueue.EmailChangeRequest
+import Stats.Control
+import Util.HasSomeUserInfo
+import Util.MonadUtils
+import Crypto.RNG
 
 userAPI :: Route (KontraPlus Response)
 userAPI = dir "api" $ choice
@@ -43,7 +52,9 @@ versionedAPI _version = choice [
   dir "changepassword"  $ hPostNoXTokenHttp $ toK0 $ apiCallChangeUserPassword,
   dir "changelanguage"  $ hPostNoXTokenHttp $ toK0 $ apiCallChangeUserLanguage,
   dir "changefooter"    $ hPostNoXTokenHttp $ toK0 $ apiCallChangeUserFooter,
-  dir "updateprofile"   $ hPostNoXTokenHttp $ toK0 $ apiCallUpdateUserProfile
+  dir "updateprofile"   $ hPostNoXTokenHttp $ toK0 $ apiCallUpdateUserProfile,
+  dir "createcompany"   $ hPostNoXTokenHttp $ toK0 $ apiCallCreateCompany,
+  dir "changeemail"     $ hPostNoXTokenHttp $ toK0 $ apiCallChangeEmail
   ]
 
 
@@ -124,5 +135,60 @@ apiCallChangeUserFooter = api $ do
 
 apiCallUpdateUserProfile :: Kontrakcja m => m Response
 apiCallUpdateUserProfile = api $ do
-  _ <- throwError $ serverError "Call not ready"
-  Ok <$> (runJSONGenT $ return ())
+  (user, _ , _) <- getAPIUser APIPersonal
+  ctx <- getContext
+  infoUpdate <- lift $ getUserInfoUpdate
+  _ <- dbUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
+  _ <- dbUpdate $ LogHistoryUserInfoChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
+                                               (userinfo user) (infoUpdate $ userinfo user)
+                                               (userid <$> ctxmaybeuser ctx)
+  mcompany <- getCompanyForUser user
+  case (useriscompanyadmin user, mcompany) of
+    (True, Just company) -> do
+      companyinfoupdate <- lift $ getCompanyInfoUpdate
+      _ <- dbUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
+      Ok <$> (runJSONGenT $ value "changed" True)
+    _ ->   Ok <$> (runJSONGenT $ value "changed" True)
+
+apiCallChangeEmail :: Kontrakcja m => m Response
+apiCallChangeEmail = api $ do
+  ctx <- getContext
+  (user, _ , _) <- getAPIUser APIPersonal
+  mnewemail <- lift $ getRequiredField asValidEmail "newemail"
+  case (Email <$> mnewemail) of
+    (Just newemail) -> do
+       mexistinguser <- dbQuery $ GetUserByEmail newemail
+       case mexistinguser of
+         Just _existinguser -> do
+           lift $ sendChangeToExistingEmailInternalWarningMail user newemail
+           Ok <$> (runJSONGenT $ value "send" False)
+         Nothing -> do
+            changeemaillink <- newEmailChangeRequestLink (userid user) newemail
+            mail <- mailEmailChangeRequest (ctxhostpart ctx) user newemail changeemaillink
+            scheduleEmailSendout (ctxmailsconfig ctx)
+                        (mail{to = [MailAddress{
+                                    fullname = getFullName user
+                                  , email = unEmail newemail }]})
+            Ok <$> (runJSONGenT $ value "send" False)
+    Nothing -> Ok <$> (runJSONGenT $ value "send" False)
+
+
+
+apiCallCreateCompany :: Kontrakcja m => m Response
+apiCallCreateCompany =  api $  do
+  ctx <- getContext
+  (user, _ , _) <- getAPIUser APIPersonal
+  company <- dbUpdate $ CreateCompany Nothing
+  mailapikey <- random
+  _ <- dbUpdate $ SetCompanyMailAPIKey (companyid company) mailapikey 1000
+  _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid company)
+  _ <- dbUpdate $ SetUserCompanyAdmin (userid user) True
+  -- payment plan needs to migrate to company
+  _ <- lift $ switchPlanToCompany (userid user) (companyid company)
+  upgradeduser <- lift $ guardJustM $ dbQuery $ GetUserByID $ userid user
+  _ <- lift $ addUserCreateCompanyStatEvent (ctxtime ctx) upgradeduser
+  _ <- dbUpdate $ LogHistoryDetailsChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
+                                              [("is_company_admin", "false", "true")]
+                                              (Just $ userid user)
+  Ok <$> (runJSONGenT $ value "created" True)
+
