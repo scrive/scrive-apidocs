@@ -13,7 +13,7 @@ var DocumentEvidenceAttachmentsModel = Backbone.Model.extend({
      return this.get("title")
   }
 });
-  
+
 var DocumentEvidenceAttachmentsView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
@@ -36,7 +36,7 @@ var DocumentEvidenceAttachmentsView = Backbone.View.extend({
     container.append(button.input());
     return container;
   },
-  
+
   render: function() {
     var self = this;
     $(this.el).empty();
