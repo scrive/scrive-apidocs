@@ -171,7 +171,7 @@ apiCallChangeEmail = api $ do
                         (mail{to = [MailAddress{
                                     fullname = getFullName user
                                   , email = unEmail newemail }]})
-            Ok <$> (runJSONGenT $ value "send" False)
+            Ok <$> (runJSONGenT $ value "send" True)
     Nothing -> Ok <$> (runJSONGenT $ value "send" False)
 
 

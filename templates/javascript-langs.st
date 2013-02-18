@@ -847,6 +847,10 @@ javascriptLocalisation =
               , detailSaved : "$_flashMessageUserDetailsSaved()$"
               , mismatchedEmails : "$_flashMessageMismatchedEmails()$"
               , invalidEmail : "$_flashMessageInvalidEmailFormat()$"
+              , emailAlreadyInUse : "$_flashCantChangeEmail()$"
+              , changeEmailMailSent1 : "$_flashMessageChangeEmailMailSent1()$"
+              , changeEmailMailSent2 : "$_flashMessageChangeEmailMailSent2()$"
+              , companyCreated : "$_flashMessageCompanyCreated()$"
 
             }
           , accountSecurity : {

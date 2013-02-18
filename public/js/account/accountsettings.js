@@ -15,7 +15,7 @@ var AccountSettingsModel = Backbone.Model.extend({
       self.reset();
     });
     this.user().set({"ready" : false}, {silent: true});
-    user.fetch({cache: false});
+    user.fetch({cache: false, processData: true});
     this.reset();
   },
   companyAdmin : function() {
@@ -140,16 +140,30 @@ var AccountSettingsModel = Backbone.Model.extend({
       method : "POST",
       url : "/api/frontend/createcompany",
       ajax : true,
-      ajaxsuccess : callback
+      ajaxsuccess : function(rs) {
+        new FlashMessage({content: localization.account.accountDetails.companyCreated, color: "green"});
+        if (callback!= undefined) callback();
+      },
     }).send();
   },
   changeEmail :function(callback) {
+     var self = this;
      return new Submit({
       method : "POST",
       url : "/api/frontend/changeemail",
       ajax : true,
-      ajaxsuccess : callback,
-      newemail : this.newemail()
+      ajaxsuccess : function(rs) {
+        var res = JSON.parse(rs);
+        if (res.send) {
+            new FlashMessage({content: localization.account.accountDetails.changeEmailMailSent1 + self.newemail() + localization.account.accountDetails.changeEmailMailSent2, color: "green"});
+        }
+        else {
+            new FlashMessage({content: localization.account.accountDetails.emailAlreadyInUse, color: "red"});
+        }
+        if (callback!= undefined) callback();
+
+      },
+      newemail : self.newemail()
     }).send();
   },
   updateProfile : function(callback) {
@@ -157,7 +171,9 @@ var AccountSettingsModel = Backbone.Model.extend({
       method : "POST",
       url : "/api/frontend/updateprofile",
       ajax : true,
-      ajaxsuccess : callback,
+      ajaxsuccess : function() {
+        if (callback!= undefined) callback();
+      },
       fstname : this.fstname(),
       sndname : this.sndname(),
       personalnumber : this.personnumber(),
@@ -181,8 +197,10 @@ var AccountSettingsModel = Backbone.Model.extend({
   },
   refresh : function() {
     this.user().set({"ready" : false}, {silent: true});
-    this.user().fetch({cache: false});
-    this.reset(); }
+    this.user().fetch({cache: false, processData: true});
+    this.reset();
+
+  }
 });
 
 
@@ -348,20 +366,25 @@ var AccountSettingsView = Backbone.View.extend({
             body.append(table);
 
 
-            Confirmation.popup({
+            var confirmation = Confirmation.popup({
               onAccept: function() {
                 if ( ! new EmailValidation().validateData(model.newemail())) {
                   new FlashMessage({color: "red", content : localization.account.accountDetails.invalidEmail });
                   return false;
                 }
-                if (model.newemail() != nodel.newemailagain()) {
+                if (model.newemail() != model.newemailagain()) {
                   new FlashMessage({color: "red", content : localization.account.accountDetails.mismatchedEmails });
                   return false;
                 }
                   trackTimeout('Accept',
                                {'Accept' : 'Change email'},
                                function () {
-                                   model.changeEmail();
+                                   model.changeEmail(
+                                     function() {model.updateProfile(function() {
+                                       confirmation.close();
+                                       model.refresh();
+                                    }); }
+                                  );
                                });
               },
               onReject : function() {
@@ -432,13 +455,18 @@ var AccountSettingsView = Backbone.View.extend({
 
             body.append(table);
 
-            Confirmation.popup({
+            var confirmation = Confirmation.popup({
               onAccept: function() {
                   trackTimeout('Accept',
                                {'Accept' : 'create company'},
-                              function() {
-                                  model.createCompany();
-                              });
+                                function() {
+                                  model.createCompany(function() {
+                                       model.updateProfile(function() {
+                                         confirmation.close();
+                                         model.refresh();
+                                      });
+                                    });
+                                  });
               },
               onReject: function() {
                 window.location = window.location
