@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 16
+  , tblVersion = 17
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
@@ -22,7 +22,6 @@ tableDocuments = tblTable {
        , ("invite_time", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True})
        , ("invite_ip", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("invite_text", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("trust_weaver_reference", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("csv_title", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("csv_contents", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("csv_signatory_index", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
@@ -55,7 +54,6 @@ tableDocuments = tblTable {
           <> ", invite_time                   TIMESTAMPTZ      NULL"
           <> ", invite_ip                     INTEGER          NULL"
           <> ", invite_text                   TEXT         NOT NULL"
-          <> ", trust_weaver_reference        TEXT             NULL"
           <> ", csv_title                     TEXT             NULL"
           <> ", csv_contents                  TEXT             NULL"
           <> ", csv_signatory_index           INTEGER          NULL"

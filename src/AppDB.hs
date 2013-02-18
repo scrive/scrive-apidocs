@@ -123,6 +123,7 @@ kontraMigrations = [
   , addObligatoryColumnToSignatoryLinkFields
   , separateDocumentTypeInDocStatEvents
   , addIPAddressMaskListToCompanies
+  , dropTrustWeaverReferenceFromDocuments
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

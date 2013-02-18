@@ -147,6 +147,14 @@ addUnsavedDraftToDocument = Migration {
       kRunRaw "UPDATE documents SET unsaved_draft = true WHERE (title ILIKE 'Namnlös%' OR title ILIKE  'Untitled%') AND type = 1 AND status = 1"
 }
 
+dropTrustWeaverReferenceFromDocuments :: MonadDB m => Migration m
+dropTrustWeaverReferenceFromDocuments = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 16
+  , mgrDo = do
+      kRunRaw "ALTER TABLE documents DROP COLUMN trust_weaver_reference"
+}
+
 addSequenceOwnerToDocumentsId :: MonadDB m => Migration m
 addSequenceOwnerToDocumentsId = Migration {
     mgrTable = tableDocuments
