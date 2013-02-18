@@ -182,6 +182,9 @@ module DB.SQL2
   , DBExceptionCouldNotParseValues(..)
   , kRun1OrThrowWhyNot
   , kRunAndFetch1OrThrowWhyNot
+
+  , KontraException(..)
+  , SomeKontraException(..)
   )
   where
 
@@ -201,6 +204,7 @@ import Data.Typeable
 import Control.Exception.Lifted
 import Control.Applicative
 import Data.Maybe
+import qualified Text.JSON.Gen as JSON
 
 data Multiplicity a = Single a | Many [a]
   deriving (Eq, Ord, Show, Typeable)
@@ -210,7 +214,7 @@ data SqlCondition = SqlPlainCondition SQL (Maybe SqlWhyNot)
                   | SqlExistsCondition SqlSelect
                     deriving (Typeable, Show)
 
-data SqlWhyNot = forall e. (Exception e) => SqlWhyNot ([SqlValue] -> Either ConvertError e) [SQL]
+data SqlWhyNot = forall e. (KontraException e) => SqlWhyNot ([SqlValue] -> Either ConvertError e) [SQL]
 
 instance Eq SqlCondition where
   (SqlPlainCondition a _) == (SqlPlainCondition b _) = a == b
@@ -483,25 +487,25 @@ instance SqlWhere SqlAll where
 sqlWhere :: (MonadState v m, SqlWhere v) => SQL -> m ()
 sqlWhere sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql Nothing))
 
-sqlWhereE :: (MonadState v m, SqlWhere v, Exception e) => e -> SQL -> m ()
+sqlWhereE :: (MonadState v m, SqlWhere v, KontraException e) => e -> SQL -> m ()
 sqlWhereE exc sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (Just (SqlWhyNot exc2 []))))
   where
     exc2 [] = return exc
     exc2 vs = error $ "sqlWhereE.exc2  should be given 0 values, got " ++ show vs
 
-sqlWhereEV :: (MonadState v m, SqlWhere v, Exception e, Convertible SqlValue a) => (a -> e,SQL) -> SQL -> m ()
+sqlWhereEV :: (MonadState v m, SqlWhere v, KontraException e, Convertible SqlValue a) => (a -> e,SQL) -> SQL -> m ()
 sqlWhereEV (exc,vsql) sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (Just (SqlWhyNot exc2 [vsql]))))
   where
     exc2 [v1] = exc <$> safeFromSql v1
     exc2 vs = error $ "sqlWhereEV.exc2  should be given 1 values, got " ++ show vs
 
-sqlWhereEVV :: (MonadState v m, SqlWhere v, Exception e, Convertible SqlValue a, Convertible SqlValue b) => (a -> b -> e,SQL,SQL) -> SQL -> m ()
+sqlWhereEVV :: (MonadState v m, SqlWhere v, KontraException e, Convertible SqlValue a, Convertible SqlValue b) => (a -> b -> e,SQL,SQL) -> SQL -> m ()
 sqlWhereEVV (exc,vsql1,vsql2) sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (Just (SqlWhyNot exc2 [vsql1,vsql2]))))
   where
     exc2 [v1,v2] = exc <$> safeFromSql v1 <*> safeFromSql v2
     exc2 vs = error $ "sqlWhereEV.exc2  should be given 2 values, got " ++ show vs
 
-sqlWhereEVVV :: (MonadState v m, SqlWhere v, Exception e, Convertible SqlValue a, Convertible SqlValue b, Convertible SqlValue c) => (a -> b -> c -> e,SQL,SQL,SQL) -> SQL -> m ()
+sqlWhereEVVV :: (MonadState v m, SqlWhere v, KontraException e, Convertible SqlValue a, Convertible SqlValue b, Convertible SqlValue c) => (a -> b -> c -> e,SQL,SQL,SQL) -> SQL -> m ()
 sqlWhereEVVV (exc,vsql1,vsql2,vsql3) sql = modify (\cmd -> sqlWhere1 cmd (SqlPlainCondition sql (Just (SqlWhyNot exc2 [vsql1, vsql2, vsql3]))))
   where
     exc2 [v1,v2,v3] = exc <$> safeFromSql v1 <*> safeFromSql v2 <*> safeFromSql v3
@@ -510,28 +514,28 @@ sqlWhereEVVV (exc,vsql1,vsql2,vsql3) sql = modify (\cmd -> sqlWhere1 cmd (SqlPla
 sqlWhereEq :: (MonadState v m, SqlWhere v, Convertible a SqlValue) => SQL -> a -> m ()
 sqlWhereEq name value = sqlWhere $ name <+> "=" <?> value
 
-sqlWhereEqE :: (MonadState v m, SqlWhere v, Exception e, Convertible a SqlValue, Convertible SqlValue a)
+sqlWhereEqE :: (MonadState v m, SqlWhere v, KontraException e, Convertible a SqlValue, Convertible SqlValue a)
             => (a -> a -> e) -> SQL -> a -> m ()
 sqlWhereEqE exc name value = sqlWhereEV (exc value, name) $ name <+> "=" <?> value
 
 sqlWhereNotEq :: (MonadState v m, SqlWhere v, Convertible a SqlValue) => SQL -> a -> m ()
 sqlWhereNotEq name value = sqlWhere $ name <+> "<>" <?> value
 
-sqlWhereNotEqE :: (MonadState v m, SqlWhere v, Exception e, Convertible a SqlValue, Convertible SqlValue a)
+sqlWhereNotEqE :: (MonadState v m, SqlWhere v, KontraException e, Convertible a SqlValue, Convertible SqlValue a)
                => (a -> a -> e) -> SQL -> a -> m ()
 sqlWhereNotEqE exc name value = sqlWhereEV (exc value, name) $ name <+> "<>" <?> value
 
 sqlWhereLike :: (MonadState v m, SqlWhere v, Convertible a SqlValue) => SQL -> a -> m ()
 sqlWhereLike name value = sqlWhere $ name <+> "LIKE" <?> value
 
-sqlWhereLikeE :: (MonadState v m, SqlWhere v, Exception e, Convertible a SqlValue, Convertible SqlValue a)
+sqlWhereLikeE :: (MonadState v m, SqlWhere v, KontraException e, Convertible a SqlValue, Convertible SqlValue a)
               => (a -> a -> e) -> SQL -> a -> m ()
 sqlWhereLikeE exc name value = sqlWhereEV (exc value, name) $ name <+> "LIKE" <?> value
 
 sqlWhereILike :: (MonadState v m, SqlWhere v, Convertible a SqlValue) => SQL -> a -> m ()
 sqlWhereILike name value = sqlWhere  $ name <+> "ILIKE" <?> value
 
-sqlWhereILikeE :: (MonadState v m, SqlWhere v, Exception e, Convertible a SqlValue, Convertible SqlValue a)
+sqlWhereILikeE :: (MonadState v m, SqlWhere v, KontraException e, Convertible a SqlValue, Convertible SqlValue a)
                => (a -> a -> e) -> SQL -> a -> m ()
 sqlWhereILikeE exc name value = sqlWhereEV (exc value, name) $ name <+> "ILIKE" <?> value
 
@@ -541,7 +545,7 @@ sqlWhereIn name [value] = sqlWhereEq name value
 sqlWhereIn name values =
   sqlWhere $ name <+> "IN" <+> parenthesize (sqlConcatComma (map sqlParam values))
 
-sqlWhereInE :: (MonadState v m, SqlWhere v, Exception e, Convertible a SqlValue, Convertible SqlValue a)
+sqlWhereInE :: (MonadState v m, SqlWhere v, KontraException e, Convertible a SqlValue, Convertible SqlValue a)
             => ([a] -> a -> e) -> SQL -> [a] -> m ()
 sqlWhereInE exc name [] = sqlWhereEV (exc [], name) (SQL "FALSE" [])
 sqlWhereInE exc name [value] = sqlWhereEqE (exc . (\x -> [x])) name value
@@ -553,7 +557,7 @@ sqlWhereNotIn _name [] = sqlWhere "TRUE"
 sqlWhereNotIn name [value] = sqlWhereNotEq name value
 sqlWhereNotIn name values = sqlWhere $ name <+> "NOT IN" <+> parenthesize (sqlConcatComma (map sqlParam values))
 
-sqlWhereNotInE :: (MonadState v m, SqlWhere v, Exception e, Convertible a SqlValue, Convertible SqlValue a)
+sqlWhereNotInE :: (MonadState v m, SqlWhere v, KontraException e, Convertible a SqlValue, Convertible SqlValue a)
                => ([a] -> a -> e) -> SQL -> [a] -> m ()
 sqlWhereNotInE exc name [] = sqlWhereEV (exc [], name) "TRUE"
 sqlWhereNotInE exc name [value] = sqlWhereNotEqE (exc . (\x -> [x])) name value
@@ -571,7 +575,7 @@ sqlWhereNotExists sqlSelectD = do
 sqlWhereIsNULL :: (MonadState v m, SqlWhere v) => SQL -> m ()
 sqlWhereIsNULL col = sqlWhere $ col <+> "IS NULL"
 
-sqlWhereIsNULLE :: (MonadState v m, SqlWhere v, Exception e, Convertible SqlValue a)
+sqlWhereIsNULLE :: (MonadState v m, SqlWhere v, KontraException e, Convertible SqlValue a)
                 => (a -> e) -> SQL -> m ()
 sqlWhereIsNULLE exc col = sqlWhereEV (exc, col) $ col <+> "IS NULL"
 
@@ -918,12 +922,22 @@ instance SqlTurnIntoSelect SqlInsertSelect where
 data DBExceptionCouldNotParseValues = DBExceptionCouldNotParseValues TypeRep ConvertError [SqlValue]
   deriving (Eq, Show, Typeable)
 
-instance Exception DBExceptionCouldNotParseValues
+instance KontraException DBExceptionCouldNotParseValues
+
+instance JSON.ToJSValue DBExceptionCouldNotParseValues where
+  toJSValue _ = JSON.runJSONGen $ do
+                JSON.value "message" "DBExceptionCouldNotParseValues"
+                JSON.value "http_status" (500::Int)
 
 data DBBaseLineConditionIsFalse = DBBaseLineConditionIsFalse SQL
   deriving (Eq, Show, Typeable)
 
-instance Exception DBBaseLineConditionIsFalse
+instance KontraException DBBaseLineConditionIsFalse
+
+instance JSON.ToJSValue DBBaseLineConditionIsFalse where
+  toJSValue _ = JSON.runJSONGen $ do
+                JSON.value "message" "DBBaseLineConditionIsFalse"
+                JSON.value "http_status" (403::Int)
 
 {- Warning: use kWhyNot1 for now as kWhyNot does not work in expected way.
 
@@ -939,7 +953,7 @@ kWhyNot will be resurrected when we get a row identity concept.
 -}
 
 {-
-kWhyNot :: (SqlTurnIntoSelect s, MonadDB m) => s -> DBEnv m [[SomeException]]
+kWhyNot :: (SqlTurnIntoSelect s, MonadDB m) => s -> DBEnv m [[SomeKontraException]]
 kWhyNot cmd = do
   let newSelect = sqlTurnIntoWhyNotSelect cmd
   if null (sqlSelectResult newSelect)
@@ -949,6 +963,32 @@ kWhyNot cmd = do
        kFold2 (decodeListOfExceptionsFromWhere (sqlGetWhereConditions cmd)) []
 -}
 
+
+-- | KontraException and SomeKontraException mimic Exception and
+-- SomeException but we need our own class and data type to limit its
+-- use to only those which describe semantic exceptions.
+--
+-- Our data types also feature conversion to json type so that
+-- external representation is known in place where exception is
+-- defined.
+class (Show e, Typeable e, JSON.ToJSValue e) => KontraException e where
+  toKontraException :: e -> SomeKontraException
+  toKontraException = SomeKontraException
+  fromKontraException :: SomeKontraException -> Maybe e
+  fromKontraException (SomeKontraException e) = cast e
+
+
+data SomeKontraException = forall e. (Show e, KontraException e) => SomeKontraException e
+  deriving (Typeable)
+
+instance Exception SomeKontraException
+
+deriving instance Show SomeKontraException
+
+{-
+instance Show SomeKontraException where
+  show (SomeKontraException e) = show e
+-}
 
 -- | Function kWhyNot1 is a workhorse for explainable SQL
 -- failures. SQL fails if it did not affect any rows or did no return
@@ -963,7 +1003,7 @@ kWhyNot cmd = do
 --
 -- (In the second case your original query should have succedded
 -- also. File a bug report if this is not the case.)
-kWhyNot1 :: (SqlTurnIntoSelect s, MonadDB m) => s -> DBEnv m [SomeException]
+kWhyNot1 :: (SqlTurnIntoSelect s, MonadDB m) => s -> DBEnv m [SomeKontraException]
 kWhyNot1 cmd = do
   let newSelect = sqlTurnIntoWhyNotSelect cmd
   case sqlSelectResult newSelect of
@@ -986,7 +1026,7 @@ enumerateWhyNotExceptions conds = concatMap worker conds
     worker (SqlPlainCondition _ (Just x)) = [x]
     worker (SqlExistsCondition s) = enumerateWhyNotExceptions (sqlGetWhereConditions s)
 
-matchUpExceptionWithValues :: [SqlWhyNot] -> [SqlValue] -> [SomeException]
+matchUpExceptionWithValues :: [SqlWhyNot] -> [SqlValue] -> [SomeKontraException]
 matchUpExceptionWithValues [] [] = []
 matchUpExceptionWithValues (SqlWhyNot e qs : es) (b : vs) =
   if b == SqlBool False
@@ -996,14 +1036,14 @@ matchUpExceptionWithValues (SqlWhyNot e qs : es) (b : vs) =
     vs1 = take (length qs) vs
     vs2 = drop (length qs) vs
     exc = case e vs1 of
-            Right x -> toException x
-            Left l -> toException (DBExceptionCouldNotParseValues (typeOf (fromRight (e vs1))) l vs1)
+            Right x -> toKontraException x
+            Left l -> toKontraException (DBExceptionCouldNotParseValues (typeOf (fromRight (e vs1))) l vs1)
     fromRight ~(Right x) = x
 
 matchUpExceptionWithValues (_ : _) [] = error "There were not enough values from SQL to fill in all needs for SqlWhyNotException in matchUpExceptionWithValues"
 matchUpExceptionWithValues [] (_ : _) = error "There were not enough SqlWhyNotException's to use up all give SQL values in matchUpExceptionWithValues"
 
-decodeListOfExceptionsFromWhere :: SQL -> [SqlCondition] -> [[SomeException]] -> [SqlValue] -> Either SQLError [[SomeException]]
+decodeListOfExceptionsFromWhere :: SQL -> [SqlCondition] -> [[SomeKontraException]] -> [SqlValue] -> Either SQLError [[SomeKontraException]]
 decodeListOfExceptionsFromWhere fullquery conds excepts sqlvalues =
   return $ excepts ++
            [matchUpExceptionWithValues (SqlWhyNot (\_ -> return (DBBaseLineConditionIsFalse fullquery)) []
@@ -1021,7 +1061,7 @@ kRun1OrThrowWhyNot sqlcommand = do
         -- This case should not really happen due to how we handle
         -- DBBaseLineConditionIsFalse in decodeListOfExceptionsFromWhere
         -- Just to be extra safe we put DBBaseLineConditionIsFalse here.
-        throwIO $ DBBaseLineConditionIsFalse (toSQLCommand sqlcommand)
+        throwIO $ toKontraException $ DBBaseLineConditionIsFalse (toSQLCommand sqlcommand)
       (ex:_) -> do
         -- Lets throw first exception on the list. It should be the
         -- most generic one.
@@ -1041,7 +1081,7 @@ kRunAndFetch1OrThrowWhyNot decoder sqlcommand = do
             -- This case should not really happen due to how we handle
             -- DBBaseLineConditionIsFalse in decodeListOfExceptionsFromWhere
             -- Just to be extra safe we put DBBaseLineConditionIsFalse here.
-            throwIO $ DBBaseLineConditionIsFalse (toSQLCommand sqlcommand)
+            throwIO $ toKontraException $ DBBaseLineConditionIsFalse (toSQLCommand sqlcommand)
         (ex:_) -> do
             -- Lets throw first exception on the list. It should be the
             -- most generic one.
