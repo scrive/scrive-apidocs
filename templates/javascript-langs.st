@@ -507,20 +507,19 @@ javascriptLocalisation =
                       name : "$_paymentPlanTeam()$",
                       tag :"$_paymentPlanTeamTag()$",
                       price : "$_paymentsTeamPrice()$<span class='aster'>*</span>",
-                      price3 : "$_paymentPlanPerUserPerMonth()$",
+                      price3 : "$_paymentPlanPerUserPerMonth()$"
                     }
                     , form : {
                       name : "$_paymentPlanForm()$",
                       tag : "$_paymentPlanFormTag()$",
                       price : "$_paymentPlanFormPrice()$<span class='aster'>*</span>",
-                      price3 : "$_paymentPlanPerMonthPerDoc()$",
+                      price3 : "$_paymentPlanPerMonthPerDoc()$"
                     }
                     , enterprise : {
                       name : "$_paymentPlanEnterprise()$",
                       tag : "$_paymentPlanEnterpriseTag()$",
                       price : "$_paymentsQuote()$",
-                      price3 : "$_paymentsGetInTouch()$",
-
+                      price3 : "$_paymentsGetInTouch()$"
                     }
                     }
            , table: { currentplan : "$_paymentPlanCurrentPlan()$"
