@@ -702,6 +702,7 @@ javascriptLocalisation =
            , forgotpassword : "$_forgotpassword()$"
            , sendNewPassword : "$_loginModalForgotPasswordSendNewPassword()$"
            , loginFailed : "$_flashMessageLoginPageRedirectReasonWrongMailOrPassword()$"
+           , loginFailedBadIP : "$_flashMessageLoginPageRedirectReasonWrongIPAddress()$"
            , invalidEmail : "$_flashEmailIncorectlyFormed()$"
            , noUser : "$_cantSendReminderNoUser()$"
            , tooMuch : "$_cantSendReminderTooMuch()$"

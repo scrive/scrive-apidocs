@@ -49,7 +49,7 @@ handleLoginGet = do
           content <- renderTemplate "loginPage" $ do
                     F.value "referer" $ fromMaybe "/" referer
           return $ Right $ ThinPage content
-       Just _ -> return $ Left LinkDesignView   
+       Just _ -> return $ Left LinkDesignView
 
 {- |
    Handles submission of the password reset form
@@ -129,7 +129,7 @@ handleSignup = do
             TimeProp $ ctxtime ctx,
             someProp "Context" ("Acount request" :: String)
             ]
-          asyncLogEvent SetUserProps [    
+          asyncLogEvent SetUserProps [
             UserIDProp $ userid user,
             someProp "Account confirmation email" $ ctxtime ctx,
             someProp "Confirmation link" $ show l
@@ -151,7 +151,7 @@ handleSignup = do
                 TimeProp $ ctxtime ctx,
                 someProp "Context" ("Acount request" :: String)
                 ]
-              asyncLogEvent SetUserProps [    
+              asyncLogEvent SetUserProps [
                 UserIDProp $ userid newuser,
                 someProp "Account confirmation email" $ ctxtime ctx,
                 NameProp (fromMaybe "" mfirstname ++ " " ++ fromMaybe "" mlastname),
@@ -187,7 +187,7 @@ handleLoginPost = do
                         Nothing -> return True
             case maybeuser of
                 Just user@User{userpassword}
-                    | verifyPassword userpassword passwd 
+                    | verifyPassword userpassword passwd
                     && ipIsOK -> do
                         Log.debug $ "User " ++ show email ++ " logged in"
                         _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
@@ -200,9 +200,9 @@ handleLoginPost = do
                             asyncLogEvent "Login" [
                               UserIDProp uid,
                               IPProp $ ctxipnumber ctx,
-                              TimeProp $ ctxtime ctx                              
+                              TimeProp $ ctxtime ctx
                               ]
-                            asyncLogEvent SetUserProps [    
+                            asyncLogEvent SetUserProps [
                               UserIDProp uid,
                               someProp "Last login" $ ctxtime ctx
                               ]
@@ -215,15 +215,31 @@ handleLoginPost = do
                             _ <- dbUpdate $ LogHistoryLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
                             logUserToContext muuser
                         runJSONGenT $ value "logged" True
-                Just u -> do
-                        if ipIsOK
-                         then Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
-                         else Log.debug $ "User " ++ show email ++ " login failed (ip " ++ show (ctxipnumber ctx) 
-                                ++ " not on allowed list)"
+                Just u@User{userpassword} | not (verifyPassword userpassword passwd) -> do
+                        Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
                         _ <- if padlogin
                           then dbUpdate $ LogHistoryPadLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
                           else dbUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
                         runJSONGenT $ value "logged" False
+
+                Just u -> do
+                        Log.debug $ "User " ++ show email ++ " login failed (ip " ++ show (ctxipnumber ctx)
+                                ++ " not on allowed list)"
+                        _ <- if padlogin
+                          then dbUpdate $ LogHistoryPadLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
+                          else dbUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
+
+                        mcompany <- dbQuery $ GetCompanyByUserID (userid u)
+                        admins <- case mcompany of
+                                    Just company -> dbQuery $ GetCompanyAdmins (companyid company)
+                                    _ -> return []
+                        case admins of
+                          (admin:_) -> runJSONGenT $ do
+                                         value "logged" False
+                                         value "ipaddr" (show (ctxipnumber ctx))
+                                         value "adminname" (getSmartName admin)
+                          _ -> runJSONGenT $ do
+                                         value "logged" False
                 Nothing -> do
                     Log.debug $ "User " ++ show email ++ " login failed (user not found)"
                     runJSONGenT $ value "logged" False
