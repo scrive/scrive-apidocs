@@ -25,6 +25,7 @@ import Control.Monad.Reader.Class
 import File.FileID
 import Crypto.RNG
 import DB
+import DB.SQL2
 import MagicHash (MagicHash, unsafeMagicHash)
 import Company.Model
 import FlashMessage
@@ -892,18 +893,20 @@ assertionPredicate :: (T.AssertionPredicable t, MonadIO m) => t -> m Bool
 assertionPredicate = liftIO . T.assertionPredicate
 
 
-assertRaises :: (Exception e, Show v, MonadIO m, MonadBaseControl IO m)
+assertRaisesKontra :: forall e v m. (KontraException e, Show v, MonadIO m, MonadBaseControl IO m)
              => (e -> Bool) -> m v -> m ()
-assertRaises correctException action = do
-  result' <- try $ action
-  case result' of
-    Right r -> assertString $ "Action should raise exception " ++ show (typeOf (fromLeft result')) ++
-               ", instead returned " ++ show r
-    Left e -> if correctException e
-              then return ()
-              else assertString $ "Action threw exception, but not a valid one: " ++ show e
-  where fromLeft (Left x) = x
-        fromLeft (Right _) = error "Should never happen"
+assertRaisesKontra correctException action =
+  helper `handle` (action >>= \r -> assertString $ "Expected KontraException " ++ show (typeOf (undefined :: e)) ++
+                    ", instead returned result " ++ show r)
+  where
+    helper (SomeKontraException e) =
+      case cast e of
+        Just e1 -> if correctException e1
+                   then return ()
+                   else assertString $ "KontraException " ++ show (typeOf (undefined :: e)) ++
+                          " is not correct " ++ show e1
+        Nothing -> assertString $ "Expected KontraException " ++ show (typeOf (undefined :: e)) ++
+                          ", instead got exception " ++ show (typeOf e)
 
 -- other helpers
 

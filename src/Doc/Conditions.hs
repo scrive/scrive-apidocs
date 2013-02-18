@@ -5,7 +5,6 @@ where
 
 import Doc.DocStateData
 import DB.SQL2
-import Control.Exception.Lifted
 import Control.Monad.State.Class
 import Data.Typeable
 import DB.SQL
@@ -13,6 +12,7 @@ import Data.List
 import Company.CompanyID
 import User.UserID
 import Doc.DocumentID
+import Text.JSON.Gen
 
 -- This is the part where we define all possible wrongs about a document.
 
@@ -27,8 +27,16 @@ instance Show DocumentTypeShouldBe where
     where x (Signable {}) = "Signable"
           x (Template {}) = "Template"
 
+instance ToJSValue DocumentTypeShouldBe where
+  toJSValue (DocumentTypeShouldBe a b) = runJSONGen $ do
+                     value "message" ("Document has incorrect type" :: String)
+                     value "expected" (x a)
+                     value "actual" (x b)
+    where x (Signable {}) = ("Signable" :: String)
+          x (Template {}) = "Template"
 
-instance Exception DocumentTypeShouldBe
+
+instance KontraException DocumentTypeShouldBe
 
 sqlWhereDocumentTypeIs :: (MonadState v m, SqlWhere v)
                        => DocumentType -> m ()
@@ -45,7 +53,16 @@ instance Show DocumentStatusShouldBe where
     where x (DocumentError {}) = "DocumentError {}"
           x v = show v
 
-instance Exception DocumentStatusShouldBe
+instance ToJSValue DocumentStatusShouldBe where
+  toJSValue (DocumentStatusShouldBe d a b) = runJSONGen $ do
+                     value "message" ("Document status is incorrect" :: String)
+                     value "document_id" (show d)
+                     value "expected" (map x a)
+                     value "actual" (x b)
+    where x (DocumentError {}) = "DocumentError {}"
+          x v = show v
+
+instance KontraException DocumentStatusShouldBe
 
 sqlWhereDocumentStatusIsOneOf :: (MonadState v m, SqlWhere v)
                               => [DocumentStatus] -> m ()
@@ -69,7 +86,14 @@ data UserShouldBeSelfOrCompanyAdmin = UserShouldBeSelfOrCompanyAdmin
   }
      deriving (Eq, Ord, Typeable, Show)
 
-instance Exception UserShouldBeSelfOrCompanyAdmin
+instance ToJSValue UserShouldBeSelfOrCompanyAdmin where
+  toJSValue (UserShouldBeSelfOrCompanyAdmin d a b) = runJSONGen $ do
+                     value "message" ("User is not company admin" :: String)
+                     value "user_id" (show d)
+                     value "user_email" (a)
+                     value "company_id" (show b)
+
+instance KontraException UserShouldBeSelfOrCompanyAdmin
 
 sqlWhereUserIsSelfOrCompanyAdmin :: (MonadState v m, SqlWhere v)
                                  => m ()
@@ -86,7 +110,15 @@ data UserShouldBeDirectlyOrIndirectlyRelatedToDocument = UserShouldBeDirectlyOrI
   }
    deriving (Eq, Ord, Typeable, Show)
 
-instance Exception UserShouldBeDirectlyOrIndirectlyRelatedToDocument
+instance ToJSValue UserShouldBeDirectlyOrIndirectlyRelatedToDocument where
+  toJSValue (UserShouldBeDirectlyOrIndirectlyRelatedToDocument d a g b) = runJSONGen $ do
+                     value "message" ("User is not related to document" :: String)
+                     value "user_id" (show d)
+                     value "document_id" (show a)
+                     value "document_title" (g)
+                     value "user_email" (b)
+
+instance KontraException UserShouldBeDirectlyOrIndirectlyRelatedToDocument
 
 sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument :: (MonadState v m, SqlWhere v)
                                                     => UserID -> m ()
@@ -96,15 +128,15 @@ sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument uid =
                "(SELECT email FROM users WHERE id = " <?> uid <> ")")
               ("same_company_users.id = " <?> uid)
 
-data DocumentShouldHaveAtLeastOneSignatoryLink = DocumentShouldHaveAtLeastOneSignatoryLink DocumentID
-  deriving (Eq, Ord, Show, Typeable)
-
-instance Exception DocumentShouldHaveAtLeastOneSignatoryLink
-
 data DocumentDoesNotExist = DocumentDoesNotExist DocumentID
   deriving (Eq, Ord, Show, Typeable)
 
-instance Exception DocumentDoesNotExist
+instance ToJSValue DocumentDoesNotExist where
+  toJSValue (DocumentDoesNotExist d) = runJSONGen $ do
+                     value "message" ("Document does not exists" :: String)
+                     value "document_id" (show d)
+
+instance KontraException DocumentDoesNotExist
 
 sqlWhereDocumentIDIs :: (MonadState v m, SqlWhere v)
                      => DocumentID -> m ()

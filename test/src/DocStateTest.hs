@@ -799,7 +799,7 @@ testCancelDocumentReturnsLeftIfDocInWrongState = doTimes 10 $ do
   user <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition user (isSignable &&^ not . isPending)
   time <- getMinutesTime
-  assertRaises (\DocumentStatusShouldBe {} -> True) $
+  assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $
                randomUpdate $ CancelDocument (documentid doc) ManualCancel 
                               (authorActor time noIP (userid user) (getEmail user))
 
@@ -855,7 +855,7 @@ testArchiveDocumentPendingLeft = doTimes 10 $ do
 
   let doc = _doc1
 
-  assertRaises (\(DocumentStatusShouldBe {}) -> True) $
+  assertRaisesKontra (\(DocumentStatusShouldBe {}) -> True) $
                randomUpdate $ \t->ArchiveDocument (userid author) (documentid doc) (systemActor t)
 
 
@@ -932,7 +932,7 @@ testArchiveDocumentUnrelatedUserLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   unrelateduser <- addNewRandomUser
-  assertRaises (\UserShouldBeDirectlyOrIndirectlyRelatedToDocument {} -> True) $ 
+  assertRaisesKontra (\UserShouldBeDirectlyOrIndirectlyRelatedToDocument {} -> True) $ 
     randomUpdate $ \t -> ArchiveDocument (userid unrelateduser) (documentid doc) (systemActor t)
 
 testArchiveDocumentCompanyStandardLeft :: TestEnv ()
@@ -941,7 +941,7 @@ testArchiveDocumentCompanyStandardLeft = doTimes 10 $ do
   author <- addNewRandomCompanyUser (companyid company) False
   standarduser <- addNewRandomCompanyUser (companyid company) False
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  assertRaises (\UserShouldBeSelfOrCompanyAdmin {} -> True) $
+  assertRaisesKontra (\UserShouldBeSelfOrCompanyAdmin {} -> True) $
     randomUpdate $ \t->ArchiveDocument (userid standarduser) (documentid doc) (systemActor t)
 
 testRestoreArchivedDocumentUnrelatedUserLeft :: TestEnv ()
@@ -1837,7 +1837,7 @@ testCancelDocumentNotSignableNothing = doTimes 10 $ do
          , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
          }
 
-  assertRaises (\DocumentTypeShouldBe {} -> True) $ 
+  assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ 
                randomUpdate $ CancelDocument (documentid doc) ManualCancel
                               (authorActor time noIP (userid author) (getEmail author))
 
@@ -1845,7 +1845,7 @@ testCancelDocumentNotNothing :: TestEnv ()
 testCancelDocumentNotNothing = doTimes 10 $ do
   aa <- unAuthorActor <$> rand 10 arbitrary
 
-  assertRaises (\DocumentDoesNotExist {} -> True) $ 
+  assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ 
              randomUpdate $ (\did -> CancelDocument did ManualCancel aa)
 
 testSetDocumentTitleNotLeft :: TestEnv ()
