@@ -49,14 +49,14 @@ testLoggedInLangSwitching = do
     assertContextLang (userid user) ctx1 LANG_EN
 
     --from the /upload page switch lang to swedish
-    req1 <- mkRequest POST [("lang", inText "LANG_SV")]
+    req1 <- mkRequest POST [("lang", inText "sv")]
     (_res2, ctx2) <- runTestKontra req1 ctx1 $ apiCallChangeUserLanguage
     assertLoggedIn (userid user) ctx2
     assertUserLang (userid user) LANG_SV
     assertContextLang (userid user) ctx2 LANG_SV
 
     --now switch back again to uk
-    req2 <- mkRequest POST [("lang", inText "LANG_EN")]
+    req2 <- mkRequest POST [("lang", inText "en")]
     (_res3, ctx3) <- runTestKontra req2 ctx2 $ apiCallChangeUserLanguage
     assertLoggedIn (userid user) ctx3
     assertUserLang (userid user) LANG_EN

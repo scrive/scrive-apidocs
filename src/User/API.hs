@@ -2,7 +2,10 @@ module User.API (
     userAPI,
     apiCallGetUserProfile,
     apiCallChangeUserPassword,
-    apiCallChangeUserLanguage
+    apiCallChangeUserLanguage,
+    apiCallUpdateUserProfile,
+    apiCallChangeEmail,
+    apiCallCreateCompany
   ) where
 
 
@@ -92,10 +95,9 @@ apiCallChangeUserPassword = api $ do
   ctx <- getContext
   (user, _ , _) <- getAPIUser APIPersonal
   oldpassword <- lift $ getField' "oldpassword"
-  mpassword <- lift $ getOptionalField asValidPassword "password1"
-  mpassword2 <- lift $ getOptionalField asDirtyPassword "password2"
-  case (mpassword, mpassword == mpassword2) of
-     (Just password, True) ->
+  mpassword <- lift $ getOptionalField asValidPassword "password"
+  case (mpassword) of
+     (Just password) ->
           if (verifyPassword (userpassword user) oldpassword)
             then do
               passwordhash <- createPassword password

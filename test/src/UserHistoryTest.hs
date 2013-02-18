@@ -21,7 +21,6 @@ import SignupTest (getAccountCreatedActions)
 import Utils.Prelude
 import Text.JSON.Gen
 
-
 userHistoryTests :: TestEnvSt -> Test
 userHistoryTests env = testGroup "User's history" [
       testThat "Test creating login attempt event"          env testLoginAttempt
@@ -146,7 +145,6 @@ testHandlerForPasswordSetup = do
       <$> mkContext defaultValue
     req <- mkRequest POST [ ("oldpassword", inText "test_password")
                           , ("password", inText "test1111test")
-                          , ("password2", inText "test1111test")
                           ]
     _ <- runTestKontra req ctx $ apiCallChangeUserPassword
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
@@ -161,7 +159,6 @@ testHandlerForPasswordSetupReq = do
       <$> mkContext defaultValue
     req <- mkRequest POST [ ("oldpassword", inText "test")
                           , ("password", inText "test1111test")
-                          , ("password2", inText "test1111test")
                           ]
     _ <- runTestKontra req ctx $ apiCallChangeUserPassword
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
@@ -212,7 +209,7 @@ testHandlerForDetailsChanged = do
                           , ("phone", inText "2221122")
                           , ("companyposition", inText "Engineer")
                           ]
-    _ <- runTestKontra req ctx $ handleUserPost
+    _ <- runTestKontra req ctx $ apiCallUpdateUserProfile
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
     assertBool "History log exists" (not . null $ history)
     assertBool "History log contains details changed event"

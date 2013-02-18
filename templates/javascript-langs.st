@@ -844,6 +844,10 @@ javascriptLocalisation =
               , createCompanyExplanation : "$_createCompanyExplanation()$"
               , createCompanyPreambule :   "$_createCompanyFormPreamble()$"
               , save : "$_SaveChanges()$"
+              , detailSaved : "$_flashMessageUserDetailsSaved()$"
+              , mismatchedEmails : "$_flashMessageMismatchedEmails()$"
+              , invalidEmail : "$_flashMessageInvalidEmailFormat()$"
+
             }
           , accountSecurity : {
                 name            : "$_HeadAccountSettings()$"
