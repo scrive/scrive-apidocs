@@ -425,7 +425,11 @@ contentsValueListFromPageID pagerefid = do
                          return $ map unRefID arr
                        _ -> do
                          return [r]
-                   x -> error $ "/Contents must be ref or an array of refs, found " ++ show x
+                   Nothing -> do
+                     -- this page has no content, it is empty
+                     -- that is ok for us
+                     return []
+                   x -> error $ "/Contents must be ref or an array of refs, found " ++ show x ++ ", page dict at " ++ show pagerefid ++ " is " ++ show pagedict
   return contentlist
 
 
