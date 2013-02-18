@@ -235,10 +235,8 @@ instance Arbitrary CSVUpload where
     cols <- arbitrary
     rows <- arbitrary
     b <- vectorOf rows (vectorOf cols arbitrary)
-    c <- arbitrary
     return $ CSVUpload { csvtitle = a
                        , csvcontents = b
-                       , csvsignatoryindex = c
                        }
 
 instance Arbitrary DocumentID where

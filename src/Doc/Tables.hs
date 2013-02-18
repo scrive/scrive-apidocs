@@ -127,7 +127,7 @@ tableSignatoryAttachments = tblTable {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 15
+  , tblVersion = 16
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -151,7 +151,6 @@ tableSignatoryLinks = tblTable {
        , ("really_deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        , ("csv_title", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("csv_contents", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("csv_signatory_index", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("signinfo_ocsp_response", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("sign_redirect_url", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("is_author", SqlColDesc {colType = SqlBitT, colNullable = Just False})
@@ -181,7 +180,6 @@ tableSignatoryLinks = tblTable {
           <> ", really_deleted                      BOOL         NOT NULL DEFAULT FALSE"
           <> ", csv_title                           TEXT             NULL"
           <> ", csv_contents                        TEXT             NULL"
-          <> ", csv_signatory_index                 INTEGER          NULL"
           <> ", signinfo_ocsp_response              VARCHAR          NULL"
           <> ", sign_redirect_url                   VARCHAR          NULL"
           <> ", is_author                           BOOL         NOT NULL"

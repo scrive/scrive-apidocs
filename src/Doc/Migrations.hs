@@ -155,6 +155,14 @@ dropTrustWeaverReferenceFromDocuments = Migration {
       kRunRaw "ALTER TABLE documents DROP COLUMN trust_weaver_reference"
 }
 
+dropCSVSignatoryIndexFromSignatoryLinks :: MonadDB m => Migration m
+dropCSVSignatoryIndexFromSignatoryLinks = Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 15
+  , mgrDo = do
+      kRunRaw "ALTER TABLE signatory_links DROP COLUMN csv_signatory_index"
+}
+
 addSequenceOwnerToDocumentsId :: MonadDB m => Migration m
 addSequenceOwnerToDocumentsId = Migration {
     mgrTable = tableDocuments
