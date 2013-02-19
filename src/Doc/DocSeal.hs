@@ -572,7 +572,7 @@ sealDocumentFile document@Document{documentid} file@File{fileid, filename} =
         File{fileid = sealedfileid} <- dbUpdate $ NewFile filename newfilepdf
         Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
         res <- runMaybeT $ do
-          True <- dbUpdate $ AttachSealedFile documentid sealedfileid $ systemActor ctxtime
+          dbUpdate $ AttachSealedFile documentid sealedfileid $ systemActor ctxtime
           Just doc <- dbQuery $ GetDocumentByDocumentID documentid
           return doc
         Log.debug $ "Should be attached to document; is it? " ++ show (((Just sealedfileid==) . documentsealedfile) <$> res)

@@ -1117,19 +1117,20 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m DetachFile () where
     return ()
 
 data AttachSealedFile = AttachSealedFile DocumentID FileID Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile () where
   update (AttachSealedFile did fid actor) = do
     let time = actorTime actor
-    updateWithEvidence tableDocuments
-      (    "mtime =" <?> time
-     <+> ", sealed_file_id =" <?> fid
-     <+> "WHERE id =" <?> did <+> "AND status =" <?> Closed
-      ) $ do
-      return $ InsertEvidenceEvent
+    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+      sqlSet "mtime" time
+      sqlSet "sealed_file_id" fid
+      sqlWhereDocumentIDIs did
+      sqlWhereDocumentStatusIs Closed
+    _ <- update $ InsertEvidenceEvent
         AttachSealedFileEvidence
         (value "actor"(actorWho actor))
         (Just did)
         actor
+    return ()
 
 data FixClosedErroredDocument = FixClosedErroredDocument DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m FixClosedErroredDocument Bool where

@@ -704,8 +704,8 @@ testAttachSealedFileEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isClosed
   file <- addNewRandomFile
-  success <- randomUpdate $ \t->AttachSealedFile (documentid doc) (fileid file) (systemActor t)
-  assert success
+  randomUpdate $ \t->AttachSealedFile (documentid doc) (fileid file) (systemActor t)
+
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == AttachSealedFileEvidence) lg
 
@@ -1113,9 +1113,8 @@ testNoDocumentAttachSealedAlwaysLeft = doTimes 10 $ do
   --execute
   -- non-existent docid
   time <- rand 10 arbitrary
-  success <- randomUpdate $ (\docid -> AttachSealedFile docid (fileid file) (systemActor time))
-  --assert
-  assert $ not success
+  assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
+    randomUpdate $ (\docid -> AttachSealedFile docid (fileid file) (systemActor time))
 
 testDocumentAttachSealedPendingRight :: TestEnv ()
 testDocumentAttachSealedPendingRight = doTimes 10 $ do
