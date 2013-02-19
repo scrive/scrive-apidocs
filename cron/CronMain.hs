@@ -39,7 +39,7 @@ import qualified Log (cron, withLogger, error)
 import ThirdPartyStats.Core
 import ThirdPartyStats.Mixpanel
 import ThirdPartyStats.Precog
-import Precog.Ingest (precogCredentials)
+import Precog.Ingest (precogConfig)
 
 main :: IO ()
 main = Log.withLogger $ do
@@ -102,9 +102,16 @@ main = Log.withLogger $ do
     ""    -> Log.error "WARNING: no Mixpanel token present!" >> return Nothing
     token -> return $ Just $ processMixpanelEvent token
 
-  mprecog <- case (precogKey appConf, precogRootPath appConf) of
-    (key@(_:_), root@(_:_)) ->
-      return $ Just $ processPrecogEvent $ precogCredentials key root
+  let precogcfg = (precogHost appConf,
+                   precogKey appConf,
+                   precogRootPath appConf,
+                   precogPathPrefix appConf)
+  mprecog <- case precogcfg of
+    (host@(_:_), key@(_:_), root@(_:_), prefix) ->
+      return
+        $ Just
+        $ processPrecogEvent
+        $ precogConfig host key root (Just prefix)
     _ ->
       Log.error "WARNING: no Precog credentials!" >> return Nothing
   

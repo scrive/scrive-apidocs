@@ -184,7 +184,6 @@ apiToResponse r =
 apiErrorFromDBError :: DBError -> APIError
 apiErrorFromDBError DBResourceNotAvailable     = forbidden "The resource you are trying to access does not exist or you do not have permission to access it."
 apiErrorFromDBError DBNotLoggedIn              = notLoggedIn "You must identify yourself to access this resource."
-apiErrorFromDBError (DBDatabaseNotAvailable x) = serverError x
 apiErrorFromDBError (DBActionNotAvailable x)   = actionNotAvailable x
 
 apiGuardL' :: (Kontrakcja m, APIGuard m a b) => m a -> APIMonad m b

@@ -6,6 +6,7 @@ loginPage=
 <script type="text/javascript">
   jQuery(document).ready(function() {
     jQuery('.inner').append(new Login({referer: "$referer$"}).el());
+    jQuery('.short-input-section input:first').focus();
     mixpanel.register({
       Context : 'Login page'
     });
@@ -34,6 +35,7 @@ signupPage=
 <script type="text/javascript">
   jQuery(document).ready(function() {
     jQuery('.inner').append(new Signup({email: "$email:noescape()$"}).el());
+    jQuery('.short-input-section input').focus();
   });
 </script>
 </div>
@@ -79,6 +81,7 @@ accountSetupPage=
                                                   companyFilled : $if(company)$true$else$false$endif$,
                                                   })
                                               .el());
+            jQuery('.short-input-section input:first').focus();
           });
         </script>
         </div>

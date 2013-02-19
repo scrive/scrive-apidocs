@@ -110,7 +110,7 @@ sendDocumentMails mailTo author = do
                                    (signatoryActor (10 `minutesAfter` now) ip (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
         (Just sdoc) <- randomQuery $ GetDocumentByDocumentID docid
         -- Sending closed email
-        checkMail "Closed" $ mailDocumentClosed ctx sdoc Nothing
+        checkMail "Closed" $ mailDocumentClosed ctx sdoc Nothing sl
         -- Reminder after send
         checkMail "Reminder signed" $ mailDocumentRemind Nothing ctx doc (head $ documentsignatorylinks sdoc)
   kCommit

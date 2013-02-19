@@ -33,6 +33,7 @@ import User.UserView
 import User.Model
 import Doc.DocStateData
 import Company.Model
+import Data.List
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 import Kontra
@@ -219,6 +220,7 @@ companyFields mc = do
         F.value "companycity" $  maybe "" (companycity . companyinfo) mc
         F.value "companycountry" $ maybe "" (companycountry . companyinfo) mc
         F.value "companyemaildomain" $ maybe "" (fromMaybe "" . (companyemaildomain . companyinfo)) mc
+        F.value "companyipaddressmasklist" $ maybe "" (intercalate "," . fmap show . companyipaddressmasklist . companyinfo) mc
 
 {-| Full fields set about user -}
 userFields :: Monad m => User -> Fields m ()

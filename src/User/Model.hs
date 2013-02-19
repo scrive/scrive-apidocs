@@ -15,6 +15,7 @@ module User.Model (
   , GetUserByIDIncludeDeleted(..)
   , GetUserByEmail(..)
   , GetCompanyAccounts(..)
+  , GetCompanyAdmins(..)
   , GetInviteInfo(..)
   , SetUserCompany(..)
   , DeleteUser(..)
@@ -185,6 +186,12 @@ data GetCompanyAccounts = GetCompanyAccounts CompanyID
 instance MonadDB m => DBQuery m GetCompanyAccounts [User] where
   query (GetCompanyAccounts cid) = do
     kRun_ $ selectUsersSQL <+> "WHERE company_id =" <?> cid <+> "AND deleted = FALSE ORDER BY email DESC"
+    fetchUsers
+
+data GetCompanyAdmins = GetCompanyAdmins CompanyID
+instance MonadDB m => DBQuery m GetCompanyAdmins [User] where
+  query (GetCompanyAdmins cid) = do
+    kRun_ $ selectUsersSQL <+> "WHERE is_company_admin AND company_id =" <?> cid <+> "AND deleted = FALSE ORDER BY email DESC"
     fetchUsers
 
 data GetInviteInfo = GetInviteInfo UserID

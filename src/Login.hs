@@ -19,6 +19,8 @@ import Mails.SendMail
 import Redirect
 import User.Action
 import User.Model
+import IPAddress
+import Company.Model
 import User.UserView as UserView
 import qualified Log (security, debug)
 import qualified User.UserControl as UserControl
@@ -47,7 +49,7 @@ handleLoginGet = do
           content <- renderTemplate "loginPage" $ do
                     F.value "referer" $ fromMaybe "/" referer
           return $ Right $ ThinPage content
-       Just _ -> return $ Left LinkDesignView   
+       Just _ -> return $ Left LinkDesignView
 
 {- |
    Handles submission of the password reset form
@@ -127,7 +129,7 @@ handleSignup = do
             TimeProp $ ctxtime ctx,
             someProp "Context" ("Acount request" :: String)
             ]
-          asyncLogEvent SetUserProps [    
+          asyncLogEvent SetUserProps [
             UserIDProp $ userid user,
             someProp "Account confirmation email" $ ctxtime ctx,
             someProp "Confirmation link" $ show l
@@ -149,7 +151,7 @@ handleSignup = do
                 TimeProp $ ctxtime ctx,
                 someProp "Context" ("Acount request" :: String)
                 ]
-              asyncLogEvent SetUserProps [    
+              asyncLogEvent SetUserProps [
                 UserIDProp $ userid newuser,
                 someProp "Account confirmation email" $ ctxtime ctx,
                 NameProp (fromMaybe "" mfirstname ++ " " ++ fromMaybe "" mlastname),
@@ -173,9 +175,20 @@ handleLoginPost = do
         (Just email, Just passwd) -> do
             -- check the user things here
             maybeuser <- dbQuery $ GetUserByEmail (Email email)
+            ipIsOK <- case maybeuser of
+                        Just x -> do
+                             mcompany <- dbQuery $ GetCompanyByUserID (userid x)
+                             case mcompany of
+                               Just company -> do
+                                 Log.debug $ "Company " ++ show (companyid company) ++ "(" ++ show (usercompany <$> maybeuser) ++ ") allows access from " ++ show ((companyinfo company))
+                                 return $ null (companyipaddressmasklist (companyinfo company)) ||
+                                               (any (ipAddressIsInNetwork (ctxipnumber ctx)) (companyipaddressmasklist (companyinfo company)))
+                               Nothing -> return True
+                        Nothing -> return True
             case maybeuser of
                 Just user@User{userpassword}
-                    | verifyPassword userpassword passwd -> do
+                    | verifyPassword userpassword passwd
+                    && ipIsOK -> do
                         Log.debug $ "User " ++ show email ++ " logged in"
                         _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
                           lang = ctxlang ctx
@@ -187,9 +200,9 @@ handleLoginPost = do
                             asyncLogEvent "Login" [
                               UserIDProp uid,
                               IPProp $ ctxipnumber ctx,
-                              TimeProp $ ctxtime ctx                              
+                              TimeProp $ ctxtime ctx
                               ]
-                            asyncLogEvent SetUserProps [    
+                            asyncLogEvent SetUserProps [
                               UserIDProp uid,
                               someProp "Last login" $ ctxtime ctx
                               ]
@@ -202,12 +215,31 @@ handleLoginPost = do
                             _ <- dbUpdate $ LogHistoryLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
                             logUserToContext muuser
                         runJSONGenT $ value "logged" True
-                Just u -> do
+                Just u@User{userpassword} | not (verifyPassword userpassword passwd) -> do
                         Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
                         _ <- if padlogin
                           then dbUpdate $ LogHistoryPadLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
                           else dbUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
                         runJSONGenT $ value "logged" False
+
+                Just u -> do
+                        Log.debug $ "User " ++ show email ++ " login failed (ip " ++ show (ctxipnumber ctx)
+                                ++ " not on allowed list)"
+                        _ <- if padlogin
+                          then dbUpdate $ LogHistoryPadLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
+                          else dbUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
+
+                        mcompany <- dbQuery $ GetCompanyByUserID (userid u)
+                        admins <- case mcompany of
+                                    Just company -> dbQuery $ GetCompanyAdmins (companyid company)
+                                    _ -> return []
+                        case admins of
+                          (admin:_) -> runJSONGenT $ do
+                                         value "logged" False
+                                         value "ipaddr" (show (ctxipnumber ctx))
+                                         value "adminname" (getSmartName admin)
+                          _ -> runJSONGenT $ do
+                                         value "logged" False
                 Nothing -> do
                     Log.debug $ "User " ++ show email ++ " login failed (user not found)"
                     runJSONGenT $ value "logged" False

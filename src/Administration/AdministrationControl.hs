@@ -21,6 +21,7 @@ import Utils.IO
 import Utils.Monad
 import Utils.Monoid
 import Utils.Prelude
+import IPAddress ()
 import Kontra
 import Administration.AdministrationView
 import Doc.Model
@@ -668,6 +669,7 @@ getCompanyInfoChange = do
   mcompanycity    <- getField "companycity"
   mcompanycountry <- getField "companycountry"
   mcompanyemaildomain <- getField "companyemaildomain"
+  mcompanyipaddressmasklist <- getOptionalField asValidIPAddressWithMaskList "companyipaddressmasklist"
   return $ \CompanyInfo{..} ->  CompanyInfo {
         companyname        = fromMaybe companyname mcompanyname
       , companynumber      = fromMaybe companynumber mcompanynumber
@@ -678,6 +680,7 @@ getCompanyInfoChange = do
       , companyemaildomain = case mcompanyemaildomain of
                                Just a | not $ null a -> Just a
                                _                     -> Nothing
+      , companyipaddressmasklist = fromMaybe companyipaddressmasklist mcompanyipaddressmasklist
     }
 
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}

@@ -106,3 +106,4 @@ handleGetCompanyJSON mcid = withCompanyUserOrAdminOnly mcid $ \(editable, compan
     value "barstextcolour" $ fromMaybe "" $ companybarstextcolour $ companyui $ company
     value "logo" $ maybe "" (const $ show $ LinkCompanyLogo $ companyid company) $ companylogo $ companyui $ company
     value "editable" editable
+    value "ipmasklist" $ show <$> (companyipaddressmasklist $ companyinfo company)

@@ -1,3 +1,4 @@
+{-# LANGUAGE NoImplicitPrelude, OverloadedStrings #-}
 module Company.Model (
     module Company.CompanyID
   , ExternalCompanyID(..)
@@ -14,6 +15,7 @@ module Company.Model (
   , GetOrCreateCompanyWithExternalID(..)
   , GetCompanyByEmailDomain(..)
   , SetCompanyEmailDomain(..)
+  , SetCompanyIPAddressMaskList(..)
 
   , CompanyFilter(..)
   , CompanyOrderBy(..)
@@ -26,6 +28,8 @@ import DB.SQL2
 import Company.CompanyID
 import Control.Monad.State
 import User.UserID
+import IPAddress
+import OurPrelude
 
 -- to be removed, only upsales used that
 newtype ExternalCompanyID = ExternalCompanyID { unExternalCompanyID :: String }
@@ -47,6 +51,7 @@ data CompanyInfo = CompanyInfo {
   , companycity    :: String
   , companycountry :: String
   , companyemaildomain :: Maybe String
+  , companyipaddressmasklist :: [IPAddressWithMask]
   } deriving (Eq, Ord, Show)
 
 data CompanyUI = CompanyUI {
@@ -139,6 +144,15 @@ instance MonadDB m => DBUpdate m CreateCompany Company where
       selectCompaniesSelectors
     fetchCompanies >>= exactlyOneObjectReturnedGuard
 
+data SetCompanyIPAddressMaskList = SetCompanyIPAddressMaskList CompanyID [IPAddress]
+instance MonadDB m => DBUpdate m SetCompanyIPAddressMaskList Bool where
+  update (SetCompanyIPAddressMaskList cid ads) = do
+    kRun01 $ SQL ("UPDATE companies SET"
+                  <> "  ip_address_mask = ?"
+                  <> "  WHERE id = ?")
+             [toSql $ (show ads), toSql cid]
+
+
 data SetCompanyInfo = SetCompanyInfo CompanyID CompanyInfo
 instance MonadDB m => DBUpdate m SetCompanyInfo Bool where
   update (SetCompanyInfo cid CompanyInfo{..}) =
@@ -150,6 +164,9 @@ instance MonadDB m => DBUpdate m SetCompanyInfo Bool where
       sqlSet "city" companycity
       sqlSet "country" companycountry
       sqlSet "email_domain" companyemaildomain
+      sqlSet "ip_address_mask_list" $ case companyipaddressmasklist of
+                                        [] -> Nothing
+                                        x -> Just (show x)
       sqlWhereEq "id" cid
 
 data UpdateCompanyUI = UpdateCompanyUI CompanyID CompanyUI
@@ -201,13 +218,15 @@ selectCompaniesSelectors = do
   sqlResult "companies.bars_textcolour"
   sqlResult "companies.logo"
   sqlResult "companies.email_domain"
+  sqlResult "companies.ip_address_mask_list"
 
 
 fetchCompanies :: MonadDB m => DBEnv m [Company]
 fetchCompanies = kFold decoder []
   where
     decoder acc cid eid name number address zip' city country
-      bars_background bars_textcolour logo email_domain = Company {
+      bars_background bars_textcolour logo email_domain
+      ip_address_mask_list = Company {
         companyid = cid
       , companyexternalid = eid
       , companyinfo = CompanyInfo {
@@ -218,6 +237,7 @@ fetchCompanies = kFold decoder []
         , companycity = city
         , companycountry = country
         , companyemaildomain = email_domain
+        , companyipaddressmasklist = maybe [] $(read) ip_address_mask_list
         }
       , companyui = CompanyUI {
           companybarsbackground = bars_background

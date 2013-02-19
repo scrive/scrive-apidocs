@@ -30,7 +30,6 @@ import Data.Typeable
 -}
 data DBError = DBResourceNotAvailable -- ^ The queried for resource does not exist OR the current user does not have access
              | DBNotLoggedIn -- ^ There is no user logged in (in Context) and access control requires log in
-             | DBDatabaseNotAvailable String -- ^ A generalized error for any problem with the database itself
              | DBActionNotAvailable String -- ^ An error when an action is not available on a given record
              deriving (Show, Eq, Typeable)
 

@@ -259,14 +259,17 @@ mailInvitationContent :: (MonadDB m, TemplatesMonad m)
 mailInvitationContent  forMail ctx invitationto document msiglink = do
      content <$> mailInvitation forMail ctx invitationto document msiglink
 
-mailDocumentClosed :: (MonadDB m, TemplatesMonad m) => Context -> Document -> Maybe KontraLink -> m Mail
-mailDocumentClosed ctx document l = do
+mailDocumentClosed :: (MonadDB m, TemplatesMonad m) => Context -> Document -> Maybe KontraLink -> SignatoryLink -> m Mail
+mailDocumentClosed ctx document l sl = do
    partylist <- renderLocalListTemplate document $ map getSmartName $ partyList document
    documentMailWithDocLang ctx document (fromMaybe "" $ getValueForProcess document processmailclosed) $ do
         F.value "partylist" $ partylist
         F.valueM "footer" $ mailFooterForDocument ctx document
         F.value "companyname" $ nothingIfEmpty $ getCompanyName document
         F.value "confirmationlink" $ (++) (ctxhostpart ctx) <$> show <$> l
+        F.value "doclink" $ if isAuthor sl
+                            then (++) (ctxhostpart ctx) $ show $ LinkIssueDoc (documentid document)
+                            else (++) (ctxhostpart ctx) $ show $ LinkSignDoc document sl
 
 mailDocumentAwaitingForAuthor :: (HasLang a, MonadDB m, TemplatesMonad m) => Context -> Document -> a -> m Mail
 mailDocumentAwaitingForAuthor ctx document authorlang = do
