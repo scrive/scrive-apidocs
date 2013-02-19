@@ -1704,37 +1704,30 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m ReallyDeleteDocument Bool w
     return (result>0)
 
 data RejectDocument = RejectDocument DocumentID SignatoryLinkID (Maybe String) Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m RejectDocument Bool where
+instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m RejectDocument Bool where
   update (RejectDocument docid slid customtext actor) = do
     let time = actorTime actor
-    msig <- query $ GetSignatoryLinkByID docid slid Nothing
-    case msig of
-      Nothing -> do
-        Log.error $ "Cannot RejectDocument document " ++ show docid ++ " because there is no docid/siglinkid = " ++ show docid ++ "/" ++ show slid
-        return False
-      Just sig -> do
-        errmsgs <- checkRejectDocument docid slid
-        case errmsgs of
-          [] -> do
-              success <- kRun01 $ "UPDATE" <+> raw (tblName tableDocuments) <+> "SET" <+>  (
-                                    "status =" <?> Rejected
-                                <+> ", mtime =" <?> time
-                                <+> ", rejection_time =" <?> time
-                                <+> ", rejection_reason =" <?> customtext
-                                <+> ", rejection_signatory_link_id =" <?> slid
-                                <+> "WHERE id =" <?> docid
-                          )
-              when_ (success) $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+    Just sig <- query $ GetSignatoryLinkByID docid slid Nothing
+    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+                                     sqlSet "status" Rejected
+                                     sqlSet "mtime" time
+                                     sqlSet "rejection_time" time
+                                     sqlSet "rejection_reason" customtext
+                                     sqlSet "rejection_signatory_link_id" slid
+                                     sqlFrom "signatory_links"
+                                     sqlWhere "signatory_links.document_id = documents.id"
+                                     sqlWhereDocumentIDIs docid
+                                     sqlWhereDocumentTypeIs (Signable undefined)
+                                     sqlWhereDocumentStatusIs Pending
+
+    _ <- update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                   RejectDocumentEvidence
                   (value "email" (getEmail sig) >> value "actor" (actorWho actor))
                   (Just docid)
                   Nothing
                   customtext
                   actor
-              return success    
-          s -> do
-            Log.error $ "Cannot RejectDocument document " ++ show docid ++ " because " ++ concat s
-            return False
+    return True
 
 data RestartDocument = RestartDocument Document Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m RestartDocument (Maybe Document) where
