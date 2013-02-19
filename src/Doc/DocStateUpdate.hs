@@ -146,7 +146,7 @@ authorSignDocument actor did msigninfo timezone screenshots = onlyAuthor did $ \
   ctx <- getContext
   let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
   mdoc <- runMaybeT $ do
-    True <- dbUpdate $ PreparationToPending did actor (Just timezone)
+    dbUpdate $ PreparationToPending did actor (Just timezone)
     True <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
     -- please delete after Oct 1, 2012 -Eric
     -- True <- dbUpdate $ MarkInvitationRead did signatorylinkid $ systemActor $ ctxtime ctx
@@ -171,13 +171,10 @@ authorSendDocument user actor did timezone = do
     then return $ Left DBResourceNotAvailable
     else do
         Log.debug $ "Preparation to pending for document " ++ show did
-        r1 <-  dbUpdate $ PreparationToPending did actor (Just timezone)
-        if (not r1)
-           then return $ Left $ DBActionNotAvailable $ "Can't change from draft to pending"
-           else do
-             Log.debug $ "Setting invite time for  " ++ show did
-             r2 <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
-             if (not r2)
+        dbUpdate $ PreparationToPending did actor (Just timezone)
+        Log.debug $ "Setting invite time for  " ++ show did
+        r2 <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
+        if (not r2)
                then return $ Left $ DBActionNotAvailable $ "Can't send proper invitation time on document"
                else do
                  mdoc <- dbQuery $ GetDocumentByDocumentID did

@@ -87,7 +87,6 @@ import Control.Monad.Base
 import DB
 import MagicHash
 import Crypto.RNG
-import Doc.Checks
 import Doc.Conditions
 import File.File
 import File.FileID
@@ -1200,19 +1199,10 @@ instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m ChangeSigna
       return ()
 
 data PreparationToPending = PreparationToPending DocumentID Actor (Maybe TimeZoneName)
-instance (MonadBaseControl IO m, MonadDB m, TemplatesMonad m) => DBUpdate m PreparationToPending Bool where
+instance (MonadBaseControl IO m, MonadDB m, TemplatesMonad m) => DBUpdate m PreparationToPending () where
   update (PreparationToPending docid actor mtzn) = do
-    let time = actorTime actor
-    doc_exists <- query $ CheckIfDocumentExists docid
-    if not doc_exists
-      then do
-        Log.error $ "Cannot PreparationToPending document " ++ show docid ++ " because it does not exist"
-        return False
-      else do
-        errmsgs <- checkPreparationToPending docid
-        case errmsgs of
-          [] -> do
-            daystosign :: Int <- getOne (SQL "SELECT days_to_sign FROM documents WHERE id = ?" [toSql docid]) >>= exactlyOneObjectReturnedGuard
+            let time = actorTime actor
+
             -- If we know actor's time zone:
             --   Set timeout to the beginning of the day: start of actorTime day + days to sign + 1
             --   Example: if actor time is 13:00 October 24, and days to sign is 1, then timeout is October 26 00:00
@@ -1231,24 +1221,26 @@ instance (MonadBaseControl IO m, MonadDB m, TemplatesMonad m) => DBUpdate m Prep
             -- (i.e., so that we stay on midnight)
             -- http://www.postgresql.org/docs/9.2/static/functions-datetime.html
             dstTz <- mkTimeZoneName "Europe/Stockholm"
-            withTimeZone dstTz $ updateWithEvidence tableDocuments
-              (    "status =" <?> Pending
-             <+> ", mtime =" <?> time
-             <+> ", timeout_time = cast (" <?> timestamp <+> "as timestamp with time zone)"
-                            <+> "+" <?> (show (daystosign + 1) ++ " days")
-             <+> "WHERE id =" <?> docid <+> "AND type =" <?> Signable undefined
-              ) $ do
+            withTimeZone dstTz $ do
+              kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+                sqlSet "status" Pending
+                sqlSet "mtime" time
+                sqlSetCmd "timeout_time" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
+                            <+> "+ (interval '1 day') * documents.days_to_sign"
+                sqlWhereDocumentIDIs docid
+                sqlWhereDocumentTypeIs (Signable undefined)
+                sqlWhereDocumentStatusIs Preparation
+
               Just (TimeoutTime tot) <- getOne ("SELECT timeout_time FROM documents WHERE id =" <?> docid) >>= exactlyOneObjectReturnedGuard
-              return $ InsertEvidenceEvent
+              _ <- update $ InsertEvidenceEvent
                 PreparationToPendingEvidence
                 (  value "actor" (actorWho actor)
                 >> value "timezone" (maybe "" TimeZoneName.toString mtzn)
                 >> value "timeouttime" (formatMinutesTimeUTC tot))
                 (Just docid)
                 actor
-          s -> do
-            Log.error $ "Cannot PreparationToPending document " ++ show docid ++ " because " ++ concat s
-            return False
+              return ()
+            return ()
 
 data CloseDocument = CloseDocument DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m CloseDocument () where

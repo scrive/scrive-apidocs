@@ -282,10 +282,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     -- send sorry email
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what is wrong. I created it in Scrive, but I cannot get it ready to send. If you want to see your document, you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
 
-  is_pending <- dbUpdate $ PreparationToPending (documentid doc) actor Nothing
-  when (not is_pending) $ do
-    -- send sorry email
-    sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what's wrong. Your document is created and ready to be sent. To see your document and send it yourself, <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
+  dbUpdate $ PreparationToPending (documentid doc) actor Nothing
 
   _ <- dbUpdate $ SetDocumentInviteTime (documentid doc) ctxtime actor
   -- if previous step succeeded, document must be in the database
@@ -533,9 +530,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
   when (not $ and res) $ do
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what is wrong. I created it in Scrive, but I cannot get it ready to send. If you want to see your document, you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
 
-  is_pending <- dbUpdate $ PreparationToPending (documentid doc) actor Nothing
-  when (not is_pending) $ do
-    sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what's wrong. Your document is created and ready to be sent. To see your document and send it yourself, <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
+  dbUpdate $ PreparationToPending (documentid doc) actor Nothing
 
   _ <- dbUpdate $ SetDocumentInviteTime (documentid doc) ctxtime actor
   -- if previous step succeeded, document must be in the database

@@ -207,7 +207,7 @@ testNonLastPersonSigningADocumentRemainsPending = do
                  , (mkSigDetails "Gordon" "Gecko" "gord@geck.com" False True)
                ]) (systemActor $ documentctime doc')
 
-  True <- randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc')) Nothing
+  randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc')) Nothing
   Just doc'' <- dbQuery $ GetDocumentByDocumentID $ documentid doc'
 
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
@@ -256,7 +256,7 @@ testLastPersonSigningADocumentClosesIt = do
                ]) (systemActor $ documentctime doc')
 
 
-  True <- randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc')) Nothing
+  randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc')) Nothing
   Just doc'' <- dbQuery $ GetDocumentByDocumentID $ documentid doc'
 
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)

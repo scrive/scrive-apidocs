@@ -531,8 +531,8 @@ testPreparationToPendingEvidenceLog :: TestEnv ()
 testPreparationToPendingEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation &&^ ((<=) 2 . length . documentsignatorylinks))
-  success <- randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t) Nothing
-  assert success
+  randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t) Nothing
+
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == PreparationToPendingEvidence) lg
 
@@ -592,14 +592,14 @@ testDocumentFromSignatoryDataEvidenceLog = do
 testSaveSigAttachmentEvidenceLog :: TestEnv ()
 testSaveSigAttachmentEvidenceLog = do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
+  doc <- addRandomDocumentWithAuthorAndCondition author (isPreparation &&^ isSignable)
   file <- addNewRandomFile
   randomUpdate $ \t->SetSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0)
                         [SignatoryAttachment { signatoryattachmentfile        = Nothing
                                              , signatoryattachmentname        = "attachment"
                                              , signatoryattachmentdescription = "gimme!"
                                              }] (systemActor t)
-  _ <- randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t) Nothing
+  randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t) Nothing
   success <- randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) "attachment" (fileid file) (systemActor t)
   assert success
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
@@ -620,7 +620,7 @@ testDeleteSigAttachmentAlreadySigned = do
                                              , signatoryattachmentname        = "attachment"
                                              , signatoryattachmentdescription = "gimme!"
                                              }] (systemActor t)
-  _ <- randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t) Nothing
+  randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t) Nothing
   u1 <- randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ sl) "attachment" (fileid file) (systemActor t)
   assertBool "We can't upload signatory attachmnet"  u1
   d1 <- randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ sl) (fileid file) (systemActor t)
@@ -731,7 +731,7 @@ testCloseDocumentEvidenceLog :: TestEnv ()
 testCloseDocumentEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
-  forM_ (documentsignatorylinks doc) $ \sl -> do
+  forM_ (documentsignatorylinks doc) $ \sl -> when (isSignatory sl) $ do
     void $ randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
     randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty (systemActor t)
   randomUpdate $ \t-> CloseDocument (documentid doc) (systemActor t)
@@ -1575,8 +1575,8 @@ testPreparationToPendingNotSignableLeft = doTimes 10 $ do
          { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
          }
   time <- rand 10 arbitrary
-  success <- randomUpdate $ PreparationToPending (documentid doc) (systemActor time) Nothing
-  assert $ not success
+  assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ do
+    randomUpdate $ PreparationToPending (documentid doc) (systemActor time) Nothing
 
 testPreparationToPendingSignableNotPreparationLeft :: TestEnv ()
 testPreparationToPendingSignableNotPreparationLeft = doTimes 10 $ do
@@ -1586,14 +1586,14 @@ testPreparationToPendingSignableNotPreparationLeft = doTimes 10 $ do
          , randomDocumentAllowedStatuses = documentAllStatuses \\ [Preparation]
          }
   time <- rand 10 arbitrary
-  success <- randomUpdate $ PreparationToPending (documentid doc) (systemActor time) Nothing
-  assert $ not success
+  assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $ do
+    randomUpdate $ PreparationToPending (documentid doc) (systemActor time) Nothing
 
 testPreparationToPendingNotLeft :: TestEnv ()
 testPreparationToPendingNotLeft = doTimes 100 $ do
   (time, did) <- rand 10 arbitrary
-  success <- randomUpdate $ PreparationToPending did (systemActor time) Nothing
-  assert $ not success
+  assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
+    randomUpdate $ PreparationToPending did (systemActor time) Nothing
 
 testPreparationToPendingSignablePreparationRight :: TestEnv ()
 testPreparationToPendingSignablePreparationRight = doTimes 10 $ do
@@ -1606,10 +1606,9 @@ testPreparationToPendingSignablePreparationRight = doTimes 10 $ do
           ((==) 1 . length . filter isAuthor . documentsignatorylinks)
          }
   time <- rand 10 arbitrary
-  success <- randomUpdate $ PreparationToPending (documentid doc) (systemActor time) Nothing
+  randomUpdate $ PreparationToPending (documentid doc) (systemActor time) Nothing
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
-  assert success
   assertInvariants ndoc
 
 testRejectDocumentNotSignableLeft :: TestEnv ()
