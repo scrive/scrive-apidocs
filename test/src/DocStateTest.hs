@@ -269,8 +269,8 @@ testRejectDocumentEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending &&^ ((<=) 2 . length . documentsignatorylinks))
   let Just sl = getSigLinkFor doc (not . (isAuthor::SignatoryLink->Bool))
-  success <- randomUpdate $ \m t->RejectDocument (documentid doc) (signatorylinkid sl) m (systemActor t)
-  assert success
+  randomUpdate $ \m t->RejectDocument (documentid doc) (signatorylinkid sl) m (systemActor t)
+
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == RejectDocumentEvidence) lg
 
@@ -558,7 +558,9 @@ testMarkDocumentSeenEvidenceLog  = do
   _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
   randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty (systemActor t)
   _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
-  _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) mh (systemActor t)
+  assertRaisesKontra (\SignatoryTokenDoesNotMatch {} -> True) $ do
+    _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) mh (systemActor t)
+    return ()
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   let n = length (filter (\e -> evType e == MarkDocumentSeenEvidence) lg)
   assertBool ("Should have 3 seen events, but found " ++ show n) $ 3 == n
@@ -1623,9 +1625,9 @@ testRejectDocumentNotSignableLeft = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
   let Just sl = getSigLinkFor doc author
   time <- rand 10 arbitrary
-  success <- randomUpdate $ RejectDocument (documentid doc) (signatorylinkid sl) Nothing
+  assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ do
+    randomUpdate $ RejectDocument (documentid doc) (signatorylinkid sl) Nothing
            (authorActor time noIP (userid author) (getEmail author))
-  assert $ not success
 
 testRejectDocumentSignableNotPendingLeft :: TestEnv ()
 testRejectDocumentSignableNotPendingLeft = doTimes 10 $ do
@@ -1633,16 +1635,16 @@ testRejectDocumentSignableNotPendingLeft = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ not . isPending)
   let Just sl = getSigLinkFor doc author
   time <- rand 10 arbitrary
-  success <- randomUpdate $ RejectDocument (documentid doc) (signatorylinkid sl) Nothing
+  assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $ do
+    randomUpdate $ RejectDocument (documentid doc) (signatorylinkid sl) Nothing
            (authorActor time noIP (userid author) (getEmail author))
-  assert $ not success
 
 testRejectDocumentNotLeft :: TestEnv ()
 testRejectDocumentNotLeft = doTimes 10 $ do
   (did, time, slid) <- rand 10 arbitrary
   let sa = signatoryActor time noIP Nothing "hello@hello.com" slid
-  success <- randomUpdate $ RejectDocument did slid Nothing sa
-  assert $ not success
+  assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
+    randomUpdate $ RejectDocument did slid Nothing sa
 
 testRejectDocumentSignablePendingRight :: TestEnv ()
 testRejectDocumentSignablePendingRight = doTimes 10 $ do
@@ -1652,10 +1654,9 @@ testRejectDocumentSignablePendingRight = doTimes 10 $ do
   let Just sl = getSigLinkFor doc slid
   time <- rand 10 arbitrary
   let sa = signatoryActor time noIP Nothing (getEmail sl) slid
-  success <- randomUpdate $ RejectDocument (documentid doc) slid Nothing sa
+  randomUpdate $ RejectDocument (documentid doc) slid Nothing sa
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
-  assert success
   assertInvariants ndoc
 
 testMarkInvitationRead :: TestEnv ()
@@ -1678,8 +1679,10 @@ testMarkInvitationRead = doTimes 10 $ do
 testMarkInvitationReadDocDoesntExist :: TestEnv ()
 testMarkInvitationReadDocDoesntExist = doTimes 10 $ do
   (did, slid, time, ip, eml) <- rand 10 arbitrary
-  _ <- randomUpdate $ MarkInvitationRead did slid
-       (signatoryActor time ip Nothing eml slid)
+  assertRaisesKontra (\DocumentDoesNotExist{} -> True) $ do
+    _ <- randomUpdate $ MarkInvitationRead did slid
+            (signatoryActor time ip Nothing eml slid)
+    return ()
   return ()
 
 testMarkDocumentSeenNotSignableLeft :: TestEnv ()
@@ -1713,8 +1716,9 @@ testMarkDocumentSeenClosedOrPreparationLeft = doTimes 10 $ do
 testMarkDocumentSeenNotLeft :: TestEnv ()
 testMarkDocumentSeenNotLeft = doTimes 10 $ do
   (d, s, m, a) <- rand 10 arbitrary
-  success <- randomUpdate $ MarkDocumentSeen d s m (unSignatoryActor a)
-  assert $ not success
+  assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
+    success <- randomUpdate $ MarkDocumentSeen d s m (unSignatoryActor a)
+    assert $ not success
 
 forEachSignatoryLink :: Document -> (SignatoryLink -> TestEnv ()) -> TestEnv ()
 forEachSignatoryLink doc fn =
@@ -1747,23 +1751,28 @@ testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft = doTimes 10 $ do
                 mh <- untilCondition (\a -> a /= (signatorymagichash sl)) $ rand 1000 arbitrary
                 (time, ip) <- rand 10 arbitrary
                 let sa = signatoryActor time ip (maybesignatory sl) (getEmail sl) (signatorylinkid sl)
-                success <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) mh sa
-                assert $ not success)
+                assertRaisesKontra (\SignatoryTokenDoesNotMatch {} -> True) $ do
+                  success <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) mh sa
+                  assert $ not success)
 
 testSetInvitationDeliveryStatusNotSignableLeft :: TestEnv ()
 testSetInvitationDeliveryStatusNotSignableLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
   actor <- unSystemActor <$> rand 10 arbitrary
-  success <- randomUpdate $ \sl st-> SetInvitationDeliveryStatus (documentid doc) sl st actor
-  assert $ not success
+  let Just sl = getAuthorSigLink doc
+  assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ do
+    success <- randomUpdate $ \st-> SetInvitationDeliveryStatus (documentid doc) (signatorylinkid sl) st actor
+    assert $ not success
 
 
 testSetInvitationDeliveryStatusNotLeft :: TestEnv ()
 testSetInvitationDeliveryStatusNotLeft = doTimes 10 $ do
   actor <- unSystemActor <$> rand 10 arbitrary
-  success <- randomUpdate $ \d s st-> SetInvitationDeliveryStatus d s st actor
-  assert $ not success
+  --assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
+  assertRaisesKontra (\DBBaseLineConditionIsFalse {} -> True) $ do
+    success <- randomUpdate $ \d s st-> SetInvitationDeliveryStatus d s st actor
+    assert $ not success
 
 testSetInvitationDeliveryStatusSignableRight :: TestEnv ()
 testSetInvitationDeliveryStatusSignableRight = doTimes 10 $ do

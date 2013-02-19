@@ -129,7 +129,7 @@ rejectDocumentWithChecks did slid mh customtext = do
       let Just sll = getSigLinkFor olddocument slid
       let sa = signatoryActor ctxtime ctxipnumber (maybesignatory sll) (getEmail sll) slid
       mdoc <- runMaybeT $ do
-        True <- dbUpdate $ RejectDocument did slid customtext sa
+        dbUpdate $ RejectDocument did slid customtext sa
         Just doc <- dbQuery $ GetDocumentByDocumentID did
         let Just sl = getSigLinkFor doc slid
         _ <- addSignStatRejectEvent doc sl

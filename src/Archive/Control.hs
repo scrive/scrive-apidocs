@@ -77,7 +77,7 @@ handleDelete = do
                                    doc' <- guardRightM' $ getDocByDocID (documentid doc)
                                    postDocumentCanceledChange doc' "web+archive"
                                 else do
-                                   guardTrueM $ dbUpdate $ RejectDocument (documentid doc) (signatorylinkid $ fromJust msl) Nothing actor
+                                   dbUpdate $ RejectDocument (documentid doc) (signatorylinkid $ fromJust msl) Nothing actor
                                    doc' <- guardRightM' $ getDocByDocID (documentid doc)
                                    postDocumentRejectedChange doc' (signatorylinkid $ fromJust msl) "web+archive"
                   _ -> return ()
