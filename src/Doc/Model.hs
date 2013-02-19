@@ -137,7 +137,6 @@ import DB.SQL2
 import Control.Monad.State.Class
 import Company.Model
 import Control.Exception.Lifted
-import DBError
 
 
 
@@ -1150,17 +1149,15 @@ data CancelDocument = CancelDocument DocumentID CancelationReason Actor
 instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m CancelDocument () where
   update (CancelDocument did reason actor) = do
     let mtime = actorTime actor
-    updateWithEvidence2' (return True)
-        (sqlUpdate "documents" $ do
+    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
                  sqlSet "status" Canceled
                  sqlSet "mtime" mtime
                  sqlSet "cancelation_reason" reason
                  sqlWhereDocumentIDIs did
                  sqlWhereDocumentTypeIs (Signable undefined)
                  sqlWhereDocumentStatusIs Pending
-             ) $ do
-              case reason of
-                ManualCancel -> return $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+    _ <- case reason of
+                ManualCancel -> update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                   CancelDocumentEvidence
                   (value "actor" (actorWho actor))
                   (Just did)
@@ -1174,13 +1171,14 @@ instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m CancelDocum
                               ,("Personal number", getPersonalNumber sl, num)]
                       uneql = filter (\(_,a,b)->a/=b) trips
                       msg = intercalate "; " $ map (\(f,s,e)->f ++ " from transaction was \"" ++ s ++ "\" but from e-legitimation was \"" ++ e ++ "\"") uneql
-                  return $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+                  update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
                     CancelDocumenElegEvidence
                     (value "actor" (actorWho actor) >> value "msg" msg )
                     (Just did)
                     (Just sid)
                     Nothing
                     actor
+    return ()
 
 data ChangeSignatoryEmailWhenUndelivered = ChangeSignatoryEmailWhenUndelivered DocumentID SignatoryLinkID (Maybe User) String Actor
 instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m ChangeSignatoryEmailWhenUndelivered () where
@@ -1261,20 +1259,20 @@ data CloseDocument = CloseDocument DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m CloseDocument () where
   update (CloseDocument docid actor) = do
     let time = actorTime actor
-    updateWithEvidence2' (return True)
-       (sqlUpdate "documents" $ do
+    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
                  sqlSet "status" Closed
                  sqlSet "mtime" time
                  sqlWhereDocumentIDIs docid
                  sqlWhereDocumentTypeIs $ Signable undefined
                  sqlWhereDocumentStatusIs Pending
                  sqlWhereAllSignatoriesHaveSigned
-       ) $ do
-             return $ InsertEvidenceEvent
+    _ <- update $ InsertEvidenceEvent
                 CloseDocumentEvidence
                 (value "actor" (actorWho actor))
                 (Just docid)
                 actor
+    return ()
+   
 
 data DeleteSigAttachment = DeleteSigAttachment DocumentID SignatoryLinkID FileID Actor
 instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m DeleteSigAttachment Bool where
@@ -1976,8 +1974,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument () where
   update (SignDocument docid slid mh msiginfo screenshots actor) = do
             let ipnumber = fromMaybe noIP $ actorIP actor
                 time     = actorTime actor
-            updateWithEvidence2' (return True)
-              (sqlUpdate "signatory_links" $ do
+            kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
                  sqlFrom "documents"
                  sqlSet "sign_ip"                            ipnumber
                  sqlSet "sign_time"                          time
@@ -1997,8 +1994,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument () where
                  sqlWhereSignatoryIsPartner
                  sqlWhereSignatoryHasNotSigned
                  sqlWhereSignatoryLinkMagicHashIs mh
-              ) $ do
-              let signatureFields = case msiginfo of
+            let signatureFields = case msiginfo of
                     Nothing -> return ()
                     Just si -> do
                               value "eleg" True
@@ -2015,7 +2011,7 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument () where
                               value "certificate" $ nothingIfEmpty $ signatureinfocertificate si
                               value "ocsp" $ signatureinfoocspresponse si
                               value "infotext" $ signatureinfotext si
-              return $ InsertEvidenceEvent
+            _ <- update $ InsertEvidenceEvent
                 SignDocumentEvidence
                 (signatureFields >> value "actor" (actorWho actor))
                 (Just docid)
@@ -2211,18 +2207,19 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m StoreDocumentForTesting Doc
    - should not change type or copy this doc into new doc
 -}
 data TemplateFromDocument = TemplateFromDocument DocumentID Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m TemplateFromDocument Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m TemplateFromDocument () where
   update (TemplateFromDocument did actor) = do
-    updateWithEvidence tableDocuments
-      (    "status =" <?> Preparation
-     <+> ", type =" <?> Template undefined
-     <+> "WHERE id =" <?> did
-      ) $ do
-      return $ InsertEvidenceEvent
+    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+       sqlSet "status" Preparation
+       sqlSet "type" (Template undefined)
+       sqlWhereDocumentIDIs did
+
+    _ <- update $ InsertEvidenceEvent
         TemplateFromDocumentEvidence
         (value "actor" $ actorWho actor)
         (Just did)
         actor
+    return ()
 
 
 data TimeoutDocument = TimeoutDocument DocumentID Actor
@@ -2485,34 +2482,6 @@ updateWithEvidence' testChanged t u mkEvidence = do
   return success
 
 
-updateWithEvidence2' :: ( MonadDB m
-                        , TemplatesMonad m
-                        , DBUpdate m evidence Bool
-                        , SqlTurnIntoSelect s)
-                     => DBEnv m Bool
-                     -> s
-                     -> DBEnv m evidence
-                     -> DBEnv m ()
-updateWithEvidence2' testChanged sqlcommand mkEvidence = do
-  changed <- testChanged
-  when changed $ do
-       success <- kRun01 sqlcommand
-       if success
-         then do
-           _ <- update =<< mkEvidence
-           return ()
-         else do
-           listOfExceptions <- kWhyNot1 sqlcommand
-           -- If listOfExceptions is empty, then we should throw
-           -- document does not exists, otherwise we throw first
-           -- exception on the list (and ignore rest, which is sad, but
-           -- who cares?)
-
-           case listOfExceptions of
-             [] -> do
-               liftIO $ throwIO DBResourceNotAvailable -- here we should give more information
-             (ex:_) -> do
-               liftIO $ throwIO ex
 
 updateWithEvidence ::  (MonadDB m, TemplatesMonad m, DBUpdate m evidence Bool) => Table -> SQL -> DBEnv m evidence -> DBEnv m Bool
 updateWithEvidence = updateWithEvidence' (return True)
