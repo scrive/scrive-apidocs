@@ -75,7 +75,7 @@ signDocumentWithEmailOrPad did slid mh fields screenshots = do
         let actor = signatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
         mdoc <- runMaybeT $ do
           True <- dbUpdate $ UpdateFields did slid fields actor
-          True <- dbUpdate $ SignDocument did slid mh Nothing screenshots actor
+          dbUpdate $ SignDocument did slid mh Nothing screenshots actor
           Just doc <- dbQuery $ GetDocumentByDocumentID did
           let Just sl = getSigLinkFor doc slid
           _ <- addSignStatSignEvent doc sl
@@ -102,7 +102,7 @@ signDocumentWithEleg did slid mh fields sinfo screenshots = do
           Log.debug "a"
           True <- dbUpdate $ UpdateFields did slid fields actor
           Log.debug "b"
-          True <- dbUpdate $ SignDocument did slid mh (Just sinfo) screenshots actor
+          dbUpdate $ SignDocument did slid mh (Just sinfo) screenshots actor
           Log.debug "c"
           Just doc <- dbQuery $ GetDocumentByDocumentID did
           Log.debug "d"
@@ -151,7 +151,7 @@ authorSignDocument actor did msigninfo timezone screenshots = onlyAuthor did $ \
     -- please delete after Oct 1, 2012 -Eric
     -- True <- dbUpdate $ MarkInvitationRead did signatorylinkid $ systemActor $ ctxtime ctx
     -- True <- dbUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
-    True <- dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo screenshots actor
+    dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo screenshots actor
     Just doc <- dbQuery $ GetDocumentByDocumentID did
     let Just sl = getSigLinkFor doc signatorylinkid
     _ <- addSignStatSignEvent doc sl
@@ -202,7 +202,7 @@ authorSignDocumentFinal did msigninfo screenshots = onlyAuthor did $ \olddoc -> 
   actor <- guardJustM $ mkAuthorActor <$> getContext
   let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
   mdoc <- runMaybeT $ do
-    True <- dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo screenshots actor
+    dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo screenshots actor
     dbUpdate $ CloseDocument did $ systemActor $ ctxtime ctx
     Just doc <- dbQuery $ GetDocumentByDocumentID did
     let Just sl = getSigLinkFor doc signatorylinkid

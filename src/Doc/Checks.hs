@@ -1,7 +1,6 @@
 module Doc.Checks (
     checkPreparationToPending
   , checkRejectDocument
-  , checkSignDocument
   ) where
 
 import Control.Applicative
@@ -11,7 +10,6 @@ import DB
 import Doc.DocStateData
 import Doc.SignatoryLinkID
 import Doc.DocumentID
-import MagicHash
 import Utils.Monoid
 
 checkPreparationToPending :: MonadDB m => DocumentID -> DBEnv m [String]
@@ -28,16 +26,6 @@ checkRejectDocument did slid = checkDocument did [
     isSignable
   , isPending
   , hasSignatory slid
-  ]
-
-checkSignDocument :: MonadDB m => DocumentID -> SignatoryLinkID -> MagicHash -> DBEnv m [String]
-checkSignDocument did slid mh = checkDocument did [
-    isPending
-  , isSignable
-  , hasSignatory slid
-  , hasNotSigned slid
-  --, hasSeenDoc slid
-  , hasMagicHash slid mh
   ]
 
 -- internal stuff
@@ -80,13 +68,3 @@ hasOneFile = (SQL "file_id IS NOT NULL AND sealed_file_id IS NULL" [], "Document
 
 hasSignatory :: SignatoryLinkID -> (SQL, String)
 hasSignatory slid = (SQL "(SELECT COUNT(*) FROM signatory_links sl WHERE sl.id = ? AND document_id = d.id AND sl.is_partner) = 1" [toSql slid], "Signatory #" ++ show slid ++ " either doesn't belong to this document or is not signatory partner")
-
-hasNotSigned :: SignatoryLinkID -> (SQL, String)
-hasNotSigned slid = (SQL "(SELECT COUNT(*) FROM signatory_links sl WHERE sl.id = ? AND document_id = d.id AND sign_time IS NULL) = 1" [toSql slid], "Signatory #" ++ show slid ++ " has already signed")
-
--- delete Oct 1, 2012 -Eric
---hasSeenDoc :: SignatoryLinkID -> (SQL, String)
---hasSeenDoc slid = (SQL "(SELECT COUNT(*) FROM signatory_links sl WHERE sl.id = ? AND document_id = d.id AND seen_time IS NOT NULL) = 1" [toSql slid], "Signatory #" ++ show slid ++ " didn't see the document")
-
-hasMagicHash :: SignatoryLinkID -> MagicHash -> (SQL, String)
-hasMagicHash slid mh = (SQL "SELECT token = ? FROM signatory_links sl WHERE sl.id = ? AND document_id = d.id" [toSql mh, toSql slid], "Magic hash for signatory #" ++ show slid ++ " doesn't match")

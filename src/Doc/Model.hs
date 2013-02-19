@@ -1979,32 +1979,31 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentUnsavedDraft Boo
     return (result>0)
 
 data SignDocument = SignDocument DocumentID SignatoryLinkID MagicHash (Maybe SignatureInfo) SignatoryScreenshots.T Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument () where
   update (SignDocument docid slid mh msiginfo screenshots actor) = do
-    doc_exists <- query $ CheckIfDocumentExists docid
-    if not doc_exists
-      then do
-        Log.error $ "Cannot SignDocument document " ++ show docid ++ " because it does not exist"
-        return False
-      else do
-        errmsgs <- checkSignDocument docid slid mh
-        case errmsgs of
-          [] -> do
-            _ <- insertSignatoryScreenshots [(slid, screenshots)]
             let ipnumber = fromMaybe noIP $ actorIP actor
                 time     = actorTime actor
-            updateWithEvidence tableSignatoryLinks
-              (    "sign_ip ="                           <?> ipnumber
-             <+> ", sign_time ="                         <?> time
-             <+> ", signinfo_text ="                     <?> signatureinfotext `fmap` msiginfo
-             <+> ", signinfo_signature ="                <?> signatureinfosignature `fmap` msiginfo
-             <+> ", signinfo_certificate ="              <?> signatureinfocertificate `fmap` msiginfo
-             <+> ", signinfo_provider ="                 <?> signatureinfoprovider `fmap` msiginfo
-             <+> ", signinfo_first_name_verified ="      <?> signaturefstnameverified `fmap` msiginfo
-             <+> ", signinfo_last_name_verified ="       <?> signaturelstnameverified `fmap` msiginfo
-             <+> ", signinfo_personal_number_verified =" <?> signaturepersnumverified `fmap` msiginfo
-             <+> ", signinfo_ocsp_response ="            <?> signatureinfoocspresponse `fmap` msiginfo
-             <+> "WHERE id =" <?> slid <+> "AND document_id =" <?> docid
+            updateWithEvidence2' (return True)
+              (sqlUpdate "signatory_links" $ do
+                 sqlFrom "documents"
+                 sqlSet "sign_ip"                            ipnumber
+                 sqlSet "sign_time"                          time
+                 sqlSet "signinfo_text"                      $ signatureinfotext `fmap` msiginfo
+                 sqlSet "signinfo_signature"                 $ signatureinfosignature `fmap` msiginfo
+                 sqlSet "signinfo_certificate"               $ signatureinfocertificate `fmap` msiginfo
+                 sqlSet "signinfo_provider"                  $ signatureinfoprovider `fmap` msiginfo
+                 sqlSet "signinfo_first_name_verified"       $ signaturefstnameverified `fmap` msiginfo
+                 sqlSet "signinfo_last_name_verified"        $ signaturelstnameverified `fmap` msiginfo
+                 sqlSet "signinfo_personal_number_verified"  $ signaturepersnumverified `fmap` msiginfo
+                 sqlSet "signinfo_ocsp_response"             $ signatureinfoocspresponse `fmap` msiginfo
+                 sqlWhere "documents.id = signatory_links.document_id"
+                 sqlWhereDocumentIDIs docid
+                 sqlWhereSignatoryLinkIDIs slid
+                 sqlWhereDocumentTypeIs (Signable undefined)
+                 sqlWhereDocumentStatusIs Pending
+                 sqlWhereSignatoryIsPartner
+                 sqlWhereSignatoryHasNotSigned
+                 sqlWhereSignatoryLinkMagicHashIs mh
               ) $ do
               let signatureFields = case msiginfo of
                     Nothing -> return ()
@@ -2028,9 +2027,8 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SignDocument Bool where
                 (signatureFields >> value "actor" (actorWho actor))
                 (Just docid)
                 actor
-          s -> do
-            Log.error $ "Cannot SignDocument document " ++ show docid ++ " because " ++ concat s
-            return False
+            _ <- insertSignatoryScreenshots [(slid, screenshots)]
+            return ()
 
 data ResetSignatoryDetails = ResetSignatoryDetails DocumentID [SignatoryDetails] Actor
 instance (CryptoRNG m, MonadDB m, TemplatesMonad m) => DBUpdate m ResetSignatoryDetails Bool where

@@ -12,7 +12,9 @@ import Data.List
 import Company.CompanyID
 import User.UserID
 import Doc.DocumentID
+import Doc.SignatoryLinkID
 import Text.JSON.Gen
+import MagicHash
 
 -- This is the part where we define all possible wrongs about a document.
 
@@ -143,6 +145,21 @@ sqlWhereDocumentIDIs :: (MonadState v m, SqlWhere v)
 sqlWhereDocumentIDIs did =
   sqlWhereE (DocumentDoesNotExist did) ("documents.id = " <?> did)
 
+data SignatoryLinkDoesNotExist = SignatoryLinkDoesNotExist SignatoryLinkID
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue SignatoryLinkDoesNotExist where
+  toJSValue (SignatoryLinkDoesNotExist d) = runJSONGen $ do
+                     value "message" ("Signatory link does not exists" :: String)
+                     value "signatory_link_id" (show d)
+
+instance KontraException SignatoryLinkDoesNotExist
+
+sqlWhereSignatoryLinkIDIs :: (MonadState v m, SqlWhere v)
+                          => SignatoryLinkID -> m ()
+sqlWhereSignatoryLinkIDIs slid =
+  sqlWhereE (SignatoryLinkDoesNotExist slid) ("signatory_links.id = " <?> slid)
+
 
 data SignatoryHasNotYetSigned = SignatoryHasNotYetSigned
   deriving (Eq, Ord, Show, Typeable)
@@ -157,3 +174,49 @@ sqlWhereAllSignatoriesHaveSigned :: (MonadState v m, SqlWhere v)
                                  => m ()
 sqlWhereAllSignatoriesHaveSigned = sqlWhereE SignatoryHasNotYetSigned $
   "NOT EXISTS (SELECT TRUE FROM signatory_links WHERE signatory_links.document_id = documents.id AND signatory_links.is_partner AND signatory_links.sign_time IS NULL)"
+
+
+
+data SignatoryIsNotPartner = SignatoryIsNotPartner
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue SignatoryIsNotPartner where
+  toJSValue (SignatoryIsNotPartner) = runJSONGen $ do
+                     value "message" ("Signatory is not partner" :: String)
+
+instance KontraException SignatoryIsNotPartner
+
+sqlWhereSignatoryIsPartner :: (MonadState v m, SqlWhere v)
+                                 => m ()
+sqlWhereSignatoryIsPartner = sqlWhereE SignatoryIsNotPartner $
+  "signatory_links.is_partner"
+
+
+data SignatoryHasAlreadySigned = SignatoryHasAlreadySigned
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue SignatoryHasAlreadySigned where
+  toJSValue (SignatoryHasAlreadySigned) = runJSONGen $ do
+                     value "message" ("Signatory has already signed" :: String)
+
+instance KontraException SignatoryHasAlreadySigned
+
+sqlWhereSignatoryHasNotSigned :: (MonadState v m, SqlWhere v)
+                                 => m ()
+sqlWhereSignatoryHasNotSigned = sqlWhereE SignatoryHasAlreadySigned $
+  "signatory_links.sign_time IS NULL"
+
+
+data SignatoryTokenDoesNotMatch = SignatoryTokenDoesNotMatch
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue SignatoryTokenDoesNotMatch where
+  toJSValue (SignatoryTokenDoesNotMatch) = runJSONGen $ do
+                     value "message" ("Signatory token does not match" :: String)
+
+instance KontraException SignatoryTokenDoesNotMatch
+
+sqlWhereSignatoryLinkMagicHashIs :: (MonadState v m, SqlWhere v)
+                                 => MagicHash -> m ()
+sqlWhereSignatoryLinkMagicHashIs mh = sqlWhereE SignatoryTokenDoesNotMatch $
+  "signatory_links.token = " <?> mh
