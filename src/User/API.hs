@@ -114,7 +114,7 @@ apiCallChangeUserPassword = api $ do
             else do
               _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (Just $ userid $ user)
               Ok <$> (runJSONGenT $ value "changed" False)
-     _ ->  throwError $ serverError "One of parameters is missing, newpassword fields do not match or password is too week"
+     _ ->  throwError $ serverError "Newpassword fields do not match Scrive standard"
 
 
 apiCallChangeUserLanguage :: Kontrakcja m => m Response

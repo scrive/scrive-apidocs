@@ -28,6 +28,7 @@ import LangRouting
 import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 import AppView
 import qualified PadQueue.Control as PadQueue
+import PadApplication.API
 
 {- |
    The routing table for the app.
@@ -175,6 +176,7 @@ staticRoutes = choice
      , dir "dave"      $ Administration.daveRoutes
      , documentAPI
      , userAPI
+     , padApplicationAPI
      , oauth
      , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "public"
 

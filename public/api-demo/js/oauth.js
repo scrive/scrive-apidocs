@@ -182,7 +182,7 @@ var OAuthModel = Backbone.Model.extend({
         },
         tryToGetPesonalToken : function() {
              var model = this;
-             $.post(Scrive.serverUrl() + "/api/frontend/getpersonaltoken", {email : model.email() , password : model.password()},
+             $.post(Scrive.apiUrl() + "getpersonaltoken", {email : model.email() , password : model.password()},
               function(rs) {
                     var resp = JSON.parse(rs)
                     model.set_consumer_key(resp.apitoken);

@@ -83,9 +83,10 @@ userJSON user mumailapi mcompany mcmailapi companyuieditable = runJSONGenT $ do
     value "personalnumber" $ getPersonalNumber user
     value "phone" $ userphone $ userinfo user
     value "mobile" $ usermobile $ userinfo user
+    value "companyadmin" $ useriscompanyadmin user
     value "companyposition" $ usercompanyposition $ userinfo user
-    value "usercompanyname" $ getCompanyName user
-    value "usercompanynumber" $ getCompanyNumber user
+    value "usercompanyname" $ getCompanyName (user,mcompany)
+    value "usercompanynumber" $ getCompanyNumber (user,mcompany)
     value "lang"   $ "en" <| LANG_EN == (getLang user) |> "sv"
     value "footer" $ customfooter $ usersettings user
     valueM "mailapi" $ case (mumailapi) of

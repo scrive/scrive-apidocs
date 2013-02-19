@@ -54,13 +54,17 @@ var ApiDemoView = Backbone.View.extend({
             var profile  = $("<option value='gp'>Get profile</option>");
             var language  = $("<option value='sl'>Set language</option>");
             var password  = $("<option value='sp'>Set password</option>");
-
+            var updateprofile = $("<option value='up'>Update profile</option>");
+            var signup = $("<option value='su'>Signup</option>");
+            var checkclient  = $("<option value='check'>Check client</option>");
 
             select.append(none).append(createFromFile).append(createFromTemplate).append(update)
                   .append(ready).append(sendReminder).append(cancel).append(del).append(check)
                   .append(list).append(download).append(addtopad)
                   .append($("<option>---------</option>"))
-                  .append(profile).append(language).append(password);
+                  .append(profile).append(language).append(password).append(signup).append(updateprofile)
+                  .append($("<option>---------</option>"))
+                  .append(checkclient);
             if (model.selectedApiCall() != undefined) {
                 if (model.selectedApiCall().isCreateFromFile())
                     createFromFile.attr("selected", "true");
@@ -90,6 +94,12 @@ var ApiDemoView = Backbone.View.extend({
                     language.attr("selected", "true");
                 else if (model.selectedApiCall().isSetPassword())
                     password.attr("selected", "true");
+                else if (model.selectedApiCall().isSignup())
+                    signup.attr("selected", "true");
+                else if (model.selectedApiCall().isUpdateProfile())
+                    updateprofile.attr("selected", "true");
+                else if (model.selectedApiCall().isCheckClient())
+                    checkclient.attr("selected", "true");
                 else
                     none.attr("selected", "true");
             }
@@ -123,6 +133,13 @@ var ApiDemoView = Backbone.View.extend({
                     model.setSelectedApiCall(new SetLanguageApiCall({oauth : oauth}));
                 else if (select.val() == "sp")
                     model.setSelectedApiCall(new SetPasswordApiCall({oauth : oauth}));
+                else if (select.val() == "up")
+                    model.setSelectedApiCall(new UpdateProfileApiCall({oauth : oauth}));
+                else if (select.val() == "su")
+                    model.setSelectedApiCall(new SignupApiCall({oauth : oauth}));
+                else if (select.val() == "check")
+                    model.setSelectedApiCall(new CheckClientApiCall({oauth : oauth}));
+
                 else
                     model.setSelectedApiCall(undefined);
                 return false;
