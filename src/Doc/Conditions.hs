@@ -142,3 +142,18 @@ sqlWhereDocumentIDIs :: (MonadState v m, SqlWhere v)
                      => DocumentID -> m ()
 sqlWhereDocumentIDIs did =
   sqlWhereE (DocumentDoesNotExist did) ("documents.id = " <?> did)
+
+
+data SignatoryHasNotYetSigned = SignatoryHasNotYetSigned
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue SignatoryHasNotYetSigned where
+  toJSValue (SignatoryHasNotYetSigned) = runJSONGen $ do
+                     value "message" ("Not all signatories have signed" :: String)
+
+instance KontraException SignatoryHasNotYetSigned
+
+sqlWhereAllSignatoriesHaveSigned :: (MonadState v m, SqlWhere v)
+                                 => m ()
+sqlWhereAllSignatoriesHaveSigned = sqlWhereE SignatoryHasNotYetSigned $
+  "NOT EXISTS (SELECT TRUE FROM signatory_links WHERE signatory_links.document_id = documents.id AND signatory_links.is_partner AND signatory_links.sign_time IS NULL)"

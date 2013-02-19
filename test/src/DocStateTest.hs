@@ -110,7 +110,7 @@ docStateTests env = testGroup "DocState" [
 
   testThat "CloseDocument fails when doc is not signable" env testCloseDocumentNotSignableNothing,
   testThat "CloseDocument fails when doc doesn't exist" env testCloseDocumentNotNothing,
-  testThat "CloseDocument fails when doc is signable and awaiting author" env testCloseDocumentSignableNotAwaitingAuthorNothing,
+  testThat "CloseDocument fails when doc is signable but not everybody has signed" env testCloseDocumentSignableButNotEverybodyHasSigned,
 
   testThat "CancelDocument fails when doc is not signable" env testCancelDocumentNotSignableNothing,
   testThat "CancelDocument fails when doc doesn't exist" env testCancelDocumentNotNothing,
@@ -731,8 +731,8 @@ testCloseDocumentEvidenceLog = do
   forM_ (documentsignatorylinks doc) $ \sl -> do
     void $ randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
     void $ randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty (systemActor t)
-  success <- randomUpdate $ \t-> CloseDocument (documentid doc) (systemActor t)
-  assert success
+  randomUpdate $ \t-> CloseDocument (documentid doc) (systemActor t)
+
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == CloseDocumentEvidence) lg
 
@@ -1796,19 +1796,19 @@ testSetDocumentUIRight = doTimes 10 $ do
   success <- randomUpdate $ (\ui -> SetDocumentUI (documentid doc) ui ac)
   assert success
 
-testCloseDocumentSignableNotAwaitingAuthorNothing :: TestEnv ()
-testCloseDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
+testCloseDocumentSignableButNotEverybodyHasSigned :: TestEnv ()
+testCloseDocumentSignableButNotEverybodyHasSigned = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentAllowedTypes = documentSignableTypes
          , randomDocumentAllowedStatuses = [Pending]
-         , randomDocumentCondition = (\doc -> length (documentsignatorylinks doc) > 1)
+         , randomDocumentCondition = (\doc -> length (documentsignatorylinks doc) > 1) &&^
+                                     (not . all (isSignatory =>>^ hasSigned) . documentsignatorylinks)
          }
   sa <- unSystemActor <$> rand 10 arbitrary
-  let Just sl = getAuthorSigLink doc
-  _ <- randomUpdate (\si -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si SignatoryScreenshots.empty sa)
-  success <- randomUpdate $ CloseDocument (documentid doc) sa
-  assert $ not success
+
+  assertRaisesKontra (\(SignatoryHasNotYetSigned {}) -> True) $ do
+    randomUpdate $ CloseDocument (documentid doc) sa
 
 testCloseDocumentNotSignableNothing :: TestEnv ()
 testCloseDocumentNotSignableNothing = doTimes 10 $ do
@@ -1818,15 +1818,15 @@ testCloseDocumentNotSignableNothing = doTimes 10 $ do
          , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
          }
   sa <- unSystemActor <$> rand 10 arbitrary
-  success <- randomUpdate $ CloseDocument (documentid doc) sa
-  assert $ not success
+  assertRaisesKontra (\(DocumentTypeShouldBe {}) -> True) $ do
+    randomUpdate $ CloseDocument (documentid doc) sa
 
 testCloseDocumentNotNothing :: TestEnv ()
 testCloseDocumentNotNothing = doTimes 10 $ do
   sa <- unSystemActor <$> rand 10 arbitrary
   did <- rand 10 arbitrary
-  success <- randomUpdate $ CloseDocument did sa
-  assert $ not success
+  assertRaisesKontra (\(DocumentDoesNotExist {}) -> True) $ do
+    randomUpdate $ CloseDocument did sa
 
 testCancelDocumentNotSignableNothing :: TestEnv ()
 testCancelDocumentNotSignableNothing = doTimes 10 $ do

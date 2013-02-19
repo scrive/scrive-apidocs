@@ -1259,31 +1259,23 @@ instance (MonadBaseControl IO m, MonadDB m, TemplatesMonad m) => DBUpdate m Prep
             return False
 
 data CloseDocument = CloseDocument DocumentID Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m CloseDocument Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m CloseDocument () where
   update (CloseDocument docid actor) = do
     let time = actorTime actor
-    doc_exists <- query $ CheckIfDocumentExists docid
-    if not doc_exists
-      then do
-        Log.error $ "Cannot Close document " ++ show docid ++ " because it does not exist"
-        return False
-      else do
-        errmsgs <- checkCloseDocument docid
-        case errmsgs of
-          [] -> do
-            updateWithEvidence tableDocuments
-              (    "status =" <?> Closed
-             <+> ", mtime =" <?> time
-             <+> "WHERE id =" <?> docid <+> "AND type =" <?> Signable undefined
-              ) $ do
-              return $ InsertEvidenceEvent
+    updateWithEvidence2' (return True)
+       (sqlUpdate "documents" $ do
+                 sqlSet "status" Closed
+                 sqlSet "mtime" time
+                 sqlWhereDocumentIDIs docid
+                 sqlWhereDocumentTypeIs $ Signable undefined
+                 sqlWhereDocumentStatusIs Pending
+                 sqlWhereAllSignatoriesHaveSigned
+       ) $ do
+             return $ InsertEvidenceEvent
                 CloseDocumentEvidence
                 (value "actor" (actorWho actor))
                 (Just docid)
                 actor
-          s -> do
-            Log.error $ "Cannot CloseDocument " ++ show docid ++ " because " ++ concat s
-            return False
 
 data DeleteSigAttachment = DeleteSigAttachment DocumentID SignatoryLinkID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m DeleteSigAttachment Bool where

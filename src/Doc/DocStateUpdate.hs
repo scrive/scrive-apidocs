@@ -203,7 +203,7 @@ authorSignDocumentFinal did msigninfo screenshots = onlyAuthor did $ \olddoc -> 
   let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink olddoc
   mdoc <- runMaybeT $ do
     True <- dbUpdate $ SignDocument did signatorylinkid signatorymagichash msigninfo screenshots actor
-    True <- dbUpdate $ CloseDocument did $ systemActor $ ctxtime ctx
+    dbUpdate $ CloseDocument did $ systemActor $ ctxtime ctx
     Just doc <- dbQuery $ GetDocumentByDocumentID did
     let Just sl = getSigLinkFor doc signatorylinkid
     _ <- addSignStatSignEvent doc sl

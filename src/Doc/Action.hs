@@ -125,10 +125,9 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistri
       Log.docevent $ "All have signed; " ++ show documentstatus ++ " -> Closed: " ++ show documentid
       ctx <- getContext
       let time = ctxtime ctx
-      closeddoc <- guardJustM . runMaybeT $ do
-        True <- dbUpdate $ CloseDocument documentid (systemActor time)
-        Just newdoc <- dbQuery $ GetDocumentByDocumentID documentid
-        return newdoc
+      dbUpdate $ CloseDocument documentid (systemActor time)
+      Just closeddoc <- dbQuery $ GetDocumentByDocumentID documentid
+
       Log.docevent $ "Pending -> Closed; Sending emails: " ++ show documentid
       _ <- addDocumentCloseStatEvents documentid apistring
       author <- getDocAuthor doc

@@ -1,6 +1,5 @@
 module Doc.Checks (
     checkPreparationToPending
-  , checkCloseDocument
   , checkRejectDocument
   , checkSignDocument
   ) where
@@ -22,13 +21,6 @@ checkPreparationToPending did = checkDocument did [
   , hasOneAuthor
   , hasSignatories
   , hasOneFile
-  ]
-
-checkCloseDocument :: MonadDB m => DocumentID -> DBEnv m [String]
-checkCloseDocument did = checkDocument did [
-    isSignable
-  , isPending
-  , allHaveSigned
   ]
 
 checkRejectDocument :: MonadDB m => DocumentID -> SignatoryLinkID -> DBEnv m [String]
@@ -76,9 +68,6 @@ isPending = (SQL "status = ?" [toSql Pending], "Document is not Pending")
 
 isPreparation :: (SQL, String)
 isPreparation = (SQL "status = ?" [toSql Preparation], "Document is not Preparation")
-
-allHaveSigned :: (SQL, String)
-allHaveSigned = (SQL "(SELECT COUNT(*) FROM signatory_links WHERE document_id = d.id AND is_partner AND sign_time IS NULL) = 0" [], "Not all signatories have signed")
 
 hasOneAuthor :: (SQL, String)
 hasOneAuthor = (SQL "(SELECT COUNT(*) FROM signatory_links WHERE document_id = d.id AND is_author) = 1" [], "Number of authors was not 1")
