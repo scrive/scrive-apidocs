@@ -152,7 +152,6 @@ staticRoutes = choice
      -- price plan page information
      , dir "payments" $ dir "pricepageinfo" $ hGetAllowHttp $ toK0 $ Payments.handlePricePageJSON
      , dir "payments" $ dir "userexists" $ hGetAllowHttp $ toK0 $ Payments.handleUserExists
-     , dir "payments" $ dir "createuser" $ hPostAllowHttp $ toK0 $ Payments.handleCreateUser
      , dir "payments" $ dir "newsubscriptionoutside" $ hPostAllowHttp $ toK0 $ Payments.handleSyncNewSubscriptionWithRecurlyOutside
 
      -- account stuff
@@ -160,7 +159,7 @@ staticRoutes = choice
      , allLangDirs $ dir "login" $ hGet $ toK0 $ handleLoginGet
      , dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
      , allLangDirs $ dir "signup"      $ hGetAllowHttp $ toK0 $ signupPageGet
-     , allLangDirs $ dir "signup"      $ hPostNoXTokenHttp $ toK0 $ signupPagePost
+     , allLangDirs $ dir "signup"      $ hPostNoXTokenHttp $ toK0 $ apiCallSignup -- Drop handler after this comment gets to prod, and EE routs gets fixed to use API
      , dir "amnesia"     $ hPostNoXToken $ toK0 $ forgotPasswordPagePost
      , allLangDirs $ dir "amnesia"     $ hGet $ toK2 $ UserControl.handlePasswordReminderGet
      , dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost

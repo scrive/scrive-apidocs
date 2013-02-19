@@ -170,7 +170,7 @@ testHandlerForAccountCreated :: TestEnv ()
 testHandlerForAccountCreated = do
     ctx <- mkContext defaultValue
     req <- mkRequest POST [ ("email", inText "test@test.com")]
-    _ <- runTestKontra req ctx $ signupPagePost
+    _ <- runTestKontra req ctx $ apiCallSignup
     Just user <- dbQuery $ GetUserByEmail $ Email "test@test.com"
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
     assertBool "History log exists" (not . null $ history)
@@ -184,7 +184,7 @@ testHandlerForTOSAccept :: TestEnv ()
 testHandlerForTOSAccept = do
     ctx <- mkContext defaultValue
     req1 <- mkRequest POST [("email", inText "karol@skrivapa.se")]
-    (_, ctx1) <- runTestKontra req1 ctx $ signupPagePost
+    (_, ctx1) <- runTestKontra req1 ctx $ apiCallSignup
     UserAccountRequest{..} <- head <$> getAccountCreatedActions
     req2 <- mkRequest POST [ ("tos", inText "on")
                            , ("fstname", inText "Karol")

@@ -5,7 +5,8 @@ module User.API (
     apiCallChangeUserLanguage,
     apiCallUpdateUserProfile,
     apiCallChangeEmail,
-    apiCallCreateCompany
+    apiCallCreateCompany,
+    apiCallSignup
   ) where
 
 
@@ -41,6 +42,9 @@ import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Crypto.RNG
 import Util.FlashUtil
+import ActionQueue.UserAccountRequest
+import ThirdPartyStats.Core
+import User.Action
 
 userAPI :: Route (KontraPlus Response)
 userAPI = dir "api" $ choice
@@ -52,6 +56,7 @@ userAPI = dir "api" $ choice
 versionedAPI :: APIVersion -> Route (KontraPlus Response)
 versionedAPI _version = choice [
   dir "getpersonaltoken"     $ hPostNoXTokenHttp $ toK0 $ apiCallGetUserPersonalToken,
+  dir "signup"          $ hPostNoXTokenHttp $ toK0 $ apiCallSignup,
   dir "getprofile" $ hGet $ toK0 $ apiCallGetUserProfile,
   dir "changepassword"  $ hPostNoXTokenHttp $ toK0 $ apiCallChangeUserPassword,
   dir "changelanguage"  $ hPostNoXTokenHttp $ toK0 $ apiCallChangeUserLanguage,
@@ -195,6 +200,50 @@ apiCallCreateCompany =  api $  do
                                               [("is_company_admin", "false", "true")]
                                               (Just $ userid user)
   Ok <$> (runJSONGenT $ value "created" True)
+
+  {- |
+   Handles submission of the signup form.
+   Normally this would create the user, (in the process mailing them an activation link),
+   but if the user already exists, we check to see if they have accepted the tos.  If they haven't,
+   then we send them a new activation link because probably the old one expired or was lost.
+   If they have then we stop the signup.
+-}
+
+apiCallSignup :: Kontrakcja m => m Response
+apiCallSignup = api $ do
+  ctx <- getContext
+  memail <- lift $ getOptionalFieldNoFlash asValidEmail "email"
+  when (isNothing memail) $ do
+    throwError $ serverError "Email not provided or invalid"
+  let email = fromJust memail
+  firstname <- lift $ fromMaybe "" <$> getOptionalFieldNoFlash asValidName "firstName"
+  lastname <- lift $ fromMaybe "" <$> getOptionalFieldNoFlash asValidName "lastName"
+  lang <- lift $ fromMaybe (ctxlang ctx) <$> langFromCode <$> getField' "lang"
+  muser <- dbQuery $ GetUserByEmail $ Email email
+  muser' <- case muser of
+               Just user ->   return $ Nothing <| (isJust (userhasacceptedtermsofservice user)) |> Just user
+               Nothing ->     lift $ createUser (Email email) (firstname,lastname) Nothing lang
+  case muser' of
+    Nothing -> runJSONGenT $ value "sent" $ False
+    Just user -> do
+          lift $ sendNewUserMail user
+          l <- newUserAccountRequestLink lang (userid user) AccountRequest
+          asyncLogEvent "Send account confirmation email" [
+                UserIDProp $ userid user,
+                IPProp $ ctxipnumber ctx,
+                TimeProp $ ctxtime ctx,
+                someProp "Context" ("Acount request" :: String)
+                ]
+          asyncLogEvent SetUserProps [
+                UserIDProp $ userid user,
+                someProp "Account confirmation email" $ ctxtime ctx,
+                NameProp (firstname ++ " " ++ lastname),
+                someProp "First Name" $ firstname,
+                someProp "Last Name" $ lastname,
+                someProp "Confirmation link" $ show l
+                ]
+          runJSONGenT $ value "sent" $ True
+
 
 
 apiCallAddFlash :: Kontrakcja m => m Response

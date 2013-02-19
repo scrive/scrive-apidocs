@@ -12,8 +12,9 @@
       mixpanel.track('Submit signup');
       new Submit({
         method: 'POST',
-        url: "/signup",
+        url: "/api/frontend/signup",
         ajax: true,
+        lang : Language.current(),
         email: model.email(),
         ajaxsuccess: function(rs) {
           resp = JSON.parse(rs);
