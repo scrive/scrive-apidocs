@@ -20,7 +20,7 @@ import Company.CompanyID (fromCompanyID)
 import Data.Time.Clock.POSIX
 
 processPrecogEvent :: MonadIO m
-                   => PrecogCredentials
+                   => PrecogConfig
                    -> EventName
                    -> [EventProperty]
                    -> m ProcRes

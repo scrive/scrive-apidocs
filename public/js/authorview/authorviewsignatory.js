@@ -45,6 +45,18 @@ var AuthorViewSignatoryModel = Backbone.Model.extend({
           return localization.signatoryMessage[signatory.status()];
       return localization.signatoryMessage["other"];
  },
+ signatoryViewerySummary: function() {
+   var signatory = this.signatory();
+   if (!signatory.isViewer()) {
+     return this.signatorySummary(signatory);
+   } else if (signatory.status() === 'sent') {
+     return localization.signatoryMessage.sentViewer;
+   } else if (signatory.status() === 'opened') {
+     return localization.signatoryMessage.openedViewer;
+   } else {
+     return this.signatorySummary(signatory);
+   }
+  },
  hasRemindOption: function() {
    var signatory = this.signatory();
    return    (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
@@ -304,9 +316,9 @@ window.AuthorViewSignatory = function(args) {
           var view =  new AuthorViewSignatoryView({model : model, el : $("<div/>")});
           this.el = function() {return $(view.el);};
           this.signatorySummary = function() {return model.signatorySummary();};
+          this.signatoryViewerySummary = function() {return model.signatoryViewerySummary();};
           this.nameOrEmail = function() {return model.nameOrEmail();};
           this.status = function() {return model.status();};
-
 };
 
 

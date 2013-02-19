@@ -57,6 +57,7 @@ set systemPage
  js   libs/jquery-ui.min.js
  js   libs/jquery.tools.min.js
  js   libs/jquery.MultiFile.js
+ js   libs/jquery.hashchange.js
  jsx  tiny_mce/jquery.tinymce.js
  js   libs/json2.js
  js   libs/jstz.min.js
@@ -70,7 +71,8 @@ set systemPage
  js   libs/html2canvas.js
  js   js/global.js
  js   js/storage.js
- js   js/browserinfo.js
+ js   js/utils/browserinfo.js
+ js   js/utils/language.js
  js   js/loading.js
  js   js/table.js
  js   js/arrows.js

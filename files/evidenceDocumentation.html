@@ -1,202 +1,428 @@
 <html>
+
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Scrive Evidence Documentation</title>
-<style type="text/css">
-html,
-body,
-div,
-h1,
-h2,
-p,
-em,
-ol,
-ul,
-li,
-table,
-tbody,
-thead,
-tr,
-th,
-td {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  outline: 0;
-  font-weight: inherit;
-  font-style: inherit;
-  font-family: inherit;
-  font-size: 100%;
-  vertical-align: baseline;
-}
-body {
-  line-height: 1;
-  color: #000;
-  background: #fff;
-}
-ol,
-ul {
-  list-style: none;
-}
-table {
-  border-collapse: separate;
-  border-spacing: 0;
-  vertical-align: middle;
-}
-th,
-td {
-  text-align: left;
-  font-weight: normal;
-  vertical-align: middle;
-}
-body {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  outline: 0;
-  display: block;
-}
-body {
-  display: block;
-}
-em {
-  font-style: italic;
-}
-body {
-  font: 16px/1.5 Helvetica Neue, Arial, Helvetica, sans-serif;
-  color: #333;
-}
-h1,
-h2 {
-  display: block;
-  font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
-  color: #364963;
-}
-h1 {
-  font-weight: normal;
-  letter-spacing: normal;
-  font-size: 3.5em;
-  font-weight: bold;
-  letter-spacing: -2px;
-  line-height: 1.2em;
-  margin: 0;
-}
-h2 {
-  font-size: 2em;
-  color: #7a94b8;
-  margin: 0;
-}
-p {
-  margin-bottom: 1.5em;
-}
-body.ct.full {
-  padding-left: 0px;
-  padding-right: 40px;
-  min-height: 480px;
-}
-body.ct.full .content {
-  padding-bottom: 3em;
-}
-body.ct.full .content h1,
-body.ct.full .content h2 {
-  color: #364963;
-  margin: 0 0 16px;
-  line-height: 1.25em;
-}
-body.ct.full .content h1,
-body.ct.full .content h2 {
-  font-size: 2em;
-  font-weight: bold;
-  letter-spacing: -1px;
-  padding: 24px 0 0;
-  margin: 0 0 16px;
-}
-body.ct.full .content h2 {
-  font-weight: normal;
-  color: #7a94b8;
-  letter-spacing: normal;
-  font-size: 1.5em;
-  line-height: 1.5em;
-  margin-bottom: 0.5em;
-}
-body.ct.full .content ul,
-body.ct.full .content ol,
-body.ct.full .content p {
-  margin: 0 0 1.5em;
-}
-body.ct.full .content ul ,
-body.ct.full .content ol {
-  padding-left: 2em;
-}
-body.ct.full .content ul {
-  list-style: disc;
-}
-body.ct.full .content ol {
-  list-style: decimal;
-}
-body.ct.full .content li {
-  margin: 0 0 0.5em;
-}
-body.ct.full .content li p {
-  margin: 0;
-}
-body.ct.full .content > table {
-  border-top: 1px solid #333;
-  border-left: 1px solid #333;
-  table-layout: fixed;
-  margin: 0 0 1.5em;
-}
-body.ct.full .content > table tr th ,
-body.ct.full .content > table tr td {
-  border-right: 1px solid #333;
-  border-bottom: 1px solid #333;
-  font: 13px/1.5 Helvetica Neue, Arial, Helvetica, sans-serif;
-  padding: 0.75em;
-  text-align: center;
-  color: #364963;
-}
-body.ct.full .content > table tr td.green,
-body.ct.full .content > table tr td.orange,
-body.ct.full .content > table tr td.red {
-  color: #333;
-  color: rgba(0,0,0,0.9);
-}
-body.ct.full .content > table tr td.green {
-  background: #77bb3f;
-}
-body.ct.full .content > table tr td.orange {
-  background: #fa0;
-}
-body.ct.full .content > table tr td.red {
-  background: #ff4013;
-}
-body.legal.article .content table tr th,
-body.legal.article .content table tr td {
-  height: 57px;
-  width: 92px;
-}
-* {
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  box-sizing: border-box;
-}
-body {
-  background: #fff;
-  padding-top: 100px;
-  position: relative;
-}
-.ct {
-  width: 800px;
-  margin: 0 auto;
-  zoom: 1;
-}
-</style>
+
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<title>Evidence Documentation</title>
+
+    <style>
+
+      html,
+      body,
+      div,
+      p,
+      em,
+      ol,
+      ul,
+      li,
+      table,
+      tbody,
+      thead,
+      tr,
+      th,
+      td {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        font-size: 100%;
+        vertical-align: baseline;
+      /**  border:1px solid red;**/
+
+      }
+      body {
+        line-height: 1;
+        color: #000;
+        background: #f8f8f8;
+      }
+      ol,
+      ul {
+        list-style: none;
+      }
+      table {
+      min-width: 760px;
+        border-collapse: separate;
+        border-spacing: 0;
+        vertical-align: middle;
+      }
+      th,
+      td {
+        text-align: left;
+        font-weight: normal;
+        vertical-align: middle;
+      }
+
+
+      body {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        display: block;
+      }
+      body {
+        display: block;
+      }
+      em {
+        font-style: italic;
+      }
+
+
+      body {
+        font: 16px/1.5 Helvetica Neue, Arial, Helvetica, sans-serif;
+      }
+
+      h1,
+      h2,
+      h3 {
+        display: block;
+          letter-spacing: normal;
+        padding: 24px 0 0;
+        margin: 0px;
+
+      /** border: 1px solid blue;**/
+      }
+      h1 {
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        font-weight: bold;
+        letter-spacing: normal;
+        font-size: 3.0em;
+        color: #364963;
+        line-height: .7em;
+        margin: 0;
+        margin-bottom: 20px;
+        /**border: 1px solid red;**/
+      }
+      h2 {
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        color: #364963;
+        font-weight: normal;
+        font-size: 2.0em;
+        line-height: 1.1em;
+        margin: 0;
+        margin-top: 0.6em;
+        margin-bottom: 0.3em;
+        /**border: 1px solid green;**/
+      }
+
+      h3 {
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        font-weight: normal;
+        font-size: 1.5em;
+        font-style: italic;
+        line-height: 0.8em;
+        color: #364963;
+        margin: 0;
+        margin-bottom: 0.4em;
+        /**border: 1px solid red;**/
+      }
+
+      p, p#top {
+        margin-bottom: 1.2em;
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        font-size: 1.0em;
+        line-height: 1.3em;
+        text-align: justify;
+        color: #333333;
+        /**border: 1px solid red;**/
+      }
+      p#top {
+      padding-bottom: 30px;
+
+      }
+
+      body.ct.full {
+        padding-left: 0px;
+        padding-right: 40px;
+        min-height: 480px;
+      }
+      body.ct.full .content {
+        padding-bottom: 3em;
+      }
+
+      body.ct.full .content ul,
+      body.ct.full .content ol,
+      body.ct.full .content p {
+        margin-bottom: 1.0em;
+      }
+      body.ct.full .content ul ,
+      body.ct.full .content ol {
+        padding-left: 2em;
+      }
+      body.ct.full .content ul {
+        list-style: disc;
+      }
+      body.ct.full .content ol {
+        list-style: decimal;
+      }
+      body.ct.full .content li {
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        font-size: 1.0em;
+        line-height: 1.4em;
+        text-align: justify;
+        color: #333333;
+        margin: 0 0 0.5em;
+      }
+      body.ct.full .content li p {
+        margin: 0;
+      }
+      body.ct.full .content > table {
+        border-top: 4px solid #f7f7f7;
+        border-left: 4px solid #f7f7f7;
+        border-bottom: 4px solid #f7f7f7;
+        border-right: 4px solid #f7f7f7;
+        table-layout: fixed;
+        margin: 0 0 1.0em;
+        margin-top: 1.3em;
+      }
+      body.ct.full .content > table tr th ,
+      body.ct.full .content > table tr td {
+        border-right: 1px solid #f7f7f7;
+        border-bottom: 1px solid #f7f7f7;
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        font-size: 0.9em;
+        line-height: 1.2em;
+        padding: 0.75em;
+        text-align: center;
+        color: #333333;
+
+      }
+
+
+      body.ct.full .content > table tr td.green,
+      body.ct.full .content > table tr td.orange,
+      body.ct.full .content > table tr td.red {
+        font-family: "Source Sans Pro", Helvetica Neue, Arial, Helvetica, sans-serif;
+        font-weight: normal;
+        font-size: 0.9em;
+        line-height: 1.2em;
+        padding: 0.75em;
+        text-align: center;
+
+
+      }
+      body.ct.full .content > table tr td.green {
+        color: #333333;
+        background-color: #48c2c5;
+        background-color: rgba(72,194,197,.7)
+        /**
+        background-color: #6fbe44;
+        background-color: rgba(111,190,68,.6)**/
+      }
+      body.ct.full .content > table tr td.orange {
+        color: #333333;
+        background-color: #fcc267;
+        background-color: rgba(252,194,103,.7)
+        /**
+        background-color: #fcdc66;
+        background-color: rgba(252,220,102,.6)**/
+      }
+      body.ct.full .content > table tr td.red {
+        color: #333333;
+        background-color: #fc5166;
+        background-color: rgba(252,81,102,.7)
+      }
+
+      body.ct.full .content > table tr td.label {
+      text-align: left;
+      }
+
+
+      body.legal.article .content table tr th,
+      body.legal.article .content table tr td {
+        height: 57px;
+        width: 92px;
+
+      }
+      * {
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+      }
+      body {
+        background: #fff;
+        padding-top: 100px;
+        position: relative;
+      }
+      .ct {
+        width: 800px;
+        margin: 0 auto;
+        zoom: 1;
+      }
+    </style>
+
 </head>
+
+
 <body class="en legal article ct full">
-<h1>Scrive Evidence Documentation</h1>
+<h1>Evidence Documentation</h1>
 <div class="content">
-<p/>
-<p>This documentation (the “Evidence Documentation”) is one of many attachments inside a Scrive PDF (“the Evidence Package”). The Evidence Documentation is a complete instruction manual of how to interpret the different parts of the Evidence Package and is intended to make understanding and use of the Evidence Package as easy as possible and independently of any third party (including independence from Scrive), thus removing the need for any special resources or expertise for the interpretation of the document and making it fully accessible and useful for anyone.</p>
+<p id="top">This documentation (the “Evidence Documentation”) is one of many attachments inside a Scrive PDF (“the Evidence Package”). The Evidence Documentation is a complete instruction manual of how to interpret the different parts of the Evidence Package and is intended to provide an understanding and make use of the Evidence Package as easily as possible and independently of any third party (including independence from Scrive), thus removing the need for any special resources or expertise for the interpretation of the document and making it fully accessible and useful for anyone.</p>
+
+
+<h2>The importance of evidence quality</h2>
+
+	<p>In the case of agreements and other types of document signing, evidence collection is a security measure that we use to protect ourselves in the case of conflicts in the future. The evidence collected can serve the purpose of clarifying what was actually agreed or not agreed, the circumstances of when the agreement took place and disclosing the identity of all parties involved. The value of quality evidence cannot be overstated, as it is likely to be the difference between winning and losing a case. </p>
+
+<h2>New technology and evidence quality</h2>
+
+	<p>Signing can be done in a variety of different ways, where the standard has traditionally been signing a paper document. With the digital age the paper document standard has evolved into alternative formats such as the printed fax and the scanned PDF. These new document formats have been introduced to facilitate transactions and reduce transaction costs. But these advancements in signing solutions have not come without their pitfalls. Paper has several inherent qualities that are not easily transferrable into digital formats. Thus, in the haste of solving problems associated with high transaction costs; new technologies have been introduced at the cost of significant loss in evidence qualities of signed documents. </p>
+
+<h2>Scrive´s solution</h2>
+	<p>To understand how to remedy the problems with deteriorating evidence quality we have dug deep into understanding the characteristics of document evidence quality. With the knowledge we have gained we have aimed to create an appropriate document structure and evidence generation strategy that together produce the highest of quality evidence container.</p>
+	<p>The target has been to reproduce the evidence qualities of the paper, the long-standing gold standard for evidence containers, while at the same time to add new qualities enabled by new available technology. Looking at the end-result we are proud to claim that we have produced what we believe to be an evidence container not only imitating the most important features of paper but also with qualities superior to paper. </p>
+
+<h2>The evidence qualities of the paper</h2>
+	<p>Before explaining our solution let us start by first understanding the evidence qualities of paper and relate the problems of trying to reproduce such qualities in digital formats.</p>
+
+<h3>Durability</h3>
+
+	<p>In order to prove that an agreement is legitimate it is important to be able to provide evidence and to prove that this evidence is credible. An original copy of the signed paper agreement is usually considered to be an acceptable piece of such credible evidence. The reason being, that paper is by nature an immutable format; once signed it is not editable and is virtually impossible to remove all data available (fingerprints and ink). Thus paper can be seen as a durable “snapshot” of reality, at the time that the agreement was made.</p>
+
+	<p>On the other hand, digital formats such as the PDF copy of a signed and scanned paper document are by nature mutable formats. A person can easily modify or edit the document content in an editor program such as Adobe Photoshop. It’s quite simple to remove an important proof element like a time marker and replace it with a new one to suit a fabricated story about the document. </p>
+
+	<p>Question to ask: how can we emulate the immutability of the paper format?</p>
+
+<h3>Accessibility</h3>
+
+	<p>Accessibility is a key component in the usefulness and quality of a document. The fewer tools or specialized expertise required for the interpretation of the document the more valuable it is as evidence as more people can easily understand it. Paper as a medium has two inherent characteristics that make it highly accessible:</p>
+
+	<ul>
+		<li><p>Paper signing is a format where all the contents are clearly displayed to everyone with reliable sight, thus paper doesn’t require any additional tools to interpret the contents.</p></li>
+		<li><p>Paper is a standard medium familiar to most and as such it is easy to learn what to look for in order to identify the authenticity of the document, as that knowledge is readily available.</p></li>
+	</ul>
+
+	<p>Digital documents have the opposite characteristics:</p>
+	<ul>
+		<li><p>Digital documents can come in various forms and understanding how to  interpret them is highly dependent on the document format. In addition, with digital formats, information can be inserted into a document that is not necessarily visible to the naked eye and thus it is not by definition obvious where to look for the information.</p></li>
+		<li><p>Digital documents by nature also require additional tools to be interpreted, like PDF-readers or other types of software. In an ideal case the format is standardized and the tools are easily accessible.</p></li>
+		</ul>
+	<p>As outlined above, accessibility is an inherent quality of the paper document but not necessarily that of a digital document. The availability of a digital document is highly dependent on the design of the software that produces it. </p>
+	<p>Question to ask: what is required to make a digital document as accessible as a paper document?</p>
+
+<h3>Capturing the identity</h3>
+
+	<p>A common and familiar way of capturing an identity is with an identification card (driver’s license, passport etc). But paper has a less apparent ability by which it automatically collects evidence of identity of signing parties. When a signature is signed on paper, the visual representation can be used for signature comparisons while the ink can be analyzed to date the agreement. Additionally, during the paper signing process, the paper automatically captures fingerprints and other biometric materials from the signing parties which can be used to authenticate the signature. </p>
+	<p>In the case of digitally signed documents there is no automatic collection of identity into the document. Data about the identity of the signing party is only captured and stored inside the document if the signing software is programmed to do so. Thus, the capturing of identity is highly dependent on the design of the software that produces the final document. </p>
+	<p>Questions to ask: What identity data should be captured and how should it be embedded within the document in such a way that it could not be manually altered?</p>
+
+<h3>Capturing the intent to sign</h3>
+
+	<p>Contract law worldwide states that an agreement comes into effect when the agreeing parties understand that they are engaged in a signing process and have a voluntary intent to do so. Thus, intent is a key component for the legal establishment of an agreement. </p>
+	<p>Paper has the characteristics that:</p>
+	<ul>
+		<li><p>The signing environment (the paper document) is the same as the final output (the signed paper document).</p></li>
+		<li><p>Signing a paper is the most standardized form of making an agreement. It is reasonable to maintain that a mentally capable adult understands their actions when engaging in signing a paper document. Upon signing on paper, the implication of this action is assumed to be understood and it is nearly impossible to claim otherwise. Instances by which a claim could be made is if the party can prove mental incapacitation at the time of signing or claim that they were forced to sign, thus the action was not voluntary.</p></li>
+	</ul>
+
+	<p>On the other hand a digital environment has the opposite characteristics to paper:</p>
+
+	<ul>
+		<li><p>The signing environment is not the same as the final output. i.e. the displayed document is not the same as the final document produced by the system.</p></li>
+		<li><p>Signing in a digital environment can happen in a variety of different of ways therefore the signing environment may not make it immediately clear that one is participating in signing a document. </p></li>
+	</ul>
+	<p>Together, the aforementioned characteristics create a situation where it is not beyond reason for a person to claim that they did not understand the activity they were engaged in and/or that it was not their intention to sign. The person could claim that the signing environment did not portray the same information as the final output (the displayed agreement was not the same as the document produced by the system) or that the signing environment did not make it clear that an action could produce a binding signature. Let’s make an extreme example:</p>
+	<p><em>A person could claim that the system instead of showing “this is an agreement, click here to sign” was showing “this is a picture of a blue elephant, click here to see a pink sheep.” Therefore, upon clicking the button the person could not have been aware that they were participating in a signing process and thus could not have had the intention to sign.</em></p>
+	<p>Question to ask: how can we generate unquestionable proof of the intention to sign in a digital signing environment?</p>
+
+<h3>Third party independence</h3>
+
+	<p>Things change and companies come and go. Signed documents stay the same. If the provability of a signed document is dependent on third parties the document provability risks changing over time. </p>
+	<p>The signed paper is by definition independent of third parties for evidence because the evidence can physically only be present at one place at any given time. Either it is in the document or it is not. Digital data on the other hand can be in many places at the same time. Therefore, just because data about a transaction exists it is not given that the data has been printed into the document. If the data is printed into the document, this is the best case. In the worst case the data is not printed into the document and is erased. In a third scenario the data is not printed into the document but is stored in a database outside the document. This third scenario creates a dependency between the holder of the document and the holder of the database, where the holder of the document is dependent on the holder of the database for access to pieces of evidence. Depending on the amount and importance of the data withheld from the document, this may or may not become a future problem. When the holder of the document requires access to that data they could have trouble gaining access to the database to obtain the necessary data.</p>
+	<p>Question to ask: how to make an electronic signed document independent of third parties?</p>
+
+<h2>Potential for additional evidence qualities</h2>
+
+<p>Paper has many important qualities as a high quality evidence container, but there are several enhancement opportunities with new technology.</p>
+
+<h3>Metadata collection</h3>
+
+	<p>Paper allows for a limited set of metadata to be appended to a document and this data must be appended manually in writing (time, place and other comments). But digitally signed documents allow for an infinite amount of metadata to be appended in many different formats (i.e. video, audio, text). This ability to append limitless amounts of data and with various formats creates possibilities to further reinforce the document evidence qualities by appending more data and data with special evidence qualities.</p>
+
+<h3>Capturing time</h3>
+
+	<p>In many processes, such as a bidding process, accurate time measurement is important to the transaction, as it can be the difference between an approved or  unapproved bid. Using the paper signing format, the time must be recorded manually which gives way to inaccuracies and disagreements. Digital documents on the other hand can record time with a much higher accuracy. Nevertheless, problems with time accuracy in digital signing formats persist. As a famous Swedish court case shows, recording time is not necessarily the same as a credible time record. Example:</p>
+	<p><em>A company was engaged in a bidding process and sent their bid by fax one minute to 12, in the last minute before the deadline. But the time recorded by the receiving fax machine was one minute past 12, within one minute past the deadline. As this was a bid to a Swedish municipality, Swedish law prohibited acceptance of the bid. The bidding party, convinced that their fax time was correctly set, went to court disputing the case. The case went all the way to the supreme court where the supreme court ruled in favor of the receiving party as it could not be proven that the receiving party actually had the wrong time set on their fax machine. Additionally the telecom company who was responsible for the fax wire had not set their system in such a way that they could prove the time deviation of their system from standard time. Thus, it could not be credibly shown that the time record of the telecom company was accurate.</em></p>
+
+<h2>The Scrive evidence container</h2>
+
+	<p>We have now analyzed the important evidence quality characteristics of paper and the potential for additional evidence qualities previously not possible with the paper format. How does Scrive´s solution relate to these issues and how have they been interpreted?</p>
+
+<h3>Time Drift Prevention system</h3>
+	<p>As described earlier, capturing time in a credible manner can be very important. As it stands, there are a relatively low number of cases with which time capture is critical, but such things cannot be predicted. Therefore, to eliminate this unnecessary company risk, a quality solution should guarantee a time capture in 100% of all documents signed.</p>
+	<p>At Scrive we keep our systems synchronized with local NTP (Network Time Protocol) systems that are synced to as high a stratum NTP server as possible. This produces an accuracy of time that is virtually impossible to refute. The minimum and maximum poll intervals for the NTP server are left at defaults (minpoll 6, maxpoll 10 on the default Linux NTP server – these settings are seconds to the power of 2). This is because updating too often can be prone to more errors and jitter, and updating after too long can produce bigger corrections due to the larger timespan between updates. With these settings we have had an average drift of 0.000789 seconds and a maximum drift of 0.022 seconds the year 2012.</p>
+	<p>For provability purposes the latest synchronizations and reported time drift at each synchronization is recorded by the Scrive system and inserted into the Evidence Log (as described below).</p>
+
+<h3>Generating the Evidence Container</h3>
+	<p>Scrive provides a set of signing processes that enable the signing parties to come to an agreement. Once all signing parties have signed the agreement the Scrive system will execute the following actions to finalize the “Evidence Container”. The steps are as follows:</p>
+	<ol>
+		<li><p>Make the agreement into a PDF.</p></li>
+		<li><p>Print additional information added during the signing process into the PDF (visual signature, text, checked checkboxes and more).</p></li>
+		<li><p>Append a “Verification Page” as an extra page to the PDF.</p></li>
+		<li><p>Append the “Evidence Documentation” (as described in this section) as an appendix to the PDF </p></li>
+		<li><p>Append the “Evidence Log” as an appendix to the PDF.</p></li>
+		<li><p>Append the “Evidence of Intent” as an appendix to the PDF.</p></li>
+		<li><p>Append the “Digital Signature Documentation” as an appendix to the PDF.</p></li>
+		<li><p>Sign the Evidence Package (PDF plus appendices) with a digital signature.</p></li>
+	</ol>
+		<p>A detailed description of the steps 3-8 follows below.</p>
+
+<h3>Appending the Verification Page (step 3)</h3>
+	<p>The Verification Page is intended to make the most important metadata of the transaction as accessible as possible. The key details include who signed which documents, when and how. The Verification Page contains the following information:</p>
+		<ul>
+			<li><p>Transaction ID</p></li>
+			<li><p>Selected document details</p></li>
+			<li><p>Selected signing person details</p></li>
+			<li><p>Selected non-signing person details</p></li>
+			<li><p>Selected actions of each signing person, time of action and IP-number</p></li>
+			<li><p>A seal confirming that a third party has verified the transaction</p></li>
+		</ul>
+	<p>At the end of the Verification Page there is brief documentation describing what the verification page is. The documentation is intended to give the reader all the information necessary in order to:</p>
+		<ul>
+			<li><p>Understand the nature of the document</p></li>
+			<li><p>Understand where to find any additional documentation about the document</p></li>
+			<li><p>Understand how to simply verify the integrity of the document</p></li>
+		</ul>
+	<p>This information is intended to be useful even if Scrive ceases to exist, making the document understandable and useful independently of Scrive.</p>
+
+<h3>Appending the Evidence Documentation (step 4)</h3>
+	<p>Full documentation about the Evidence Package is appended as an appendix to the signed PDF (hereinafter the “Evidence Documentation”). The Evidence Documentation is a complete instruction manual of how to interpret the different parts of the Evidence Package and is intended to make understanding and use of the Evidence Package as easy as possible and independently of any third party (including independence from Scrive), thus removing the need for any special resources or expertise for the interpretation of the document and making it fully accessible and useful for anyone.</p>
+
+<h3>Appending the Evidence Log (Step 5)</h3>
+	<p>The Scrive system will record as many of the signatories’ actions as possible as log data (“Transaction Log”) and once the Scrive system has produced the signed PDF, a document containing all data from the Transaction Log is appended as an appendix (“Evidence Log”). Note that the Verification Page only contains selected transaction log data with the intention to make a preselected set of transaction history easily accessible, while the Evidence Log itself contains all transaction log data with the intention to make all transaction history easily accessible. The extensive logging of the parties’ actions and the appending of the Evidence Log is carried out with the intention of optimally enhancing the document quality through the additional metadata of the transaction.</p>
+
+<h3>Appending the Evidence of Intent (Step 6)</h3>
+	<p>The Scrive system will make screenshots of each party’s signing experience as evidence of the intent to sign. When the Scrive system is preparing the Evidence Package it will append the Evidence of Intent which is a document with a brief description of the actions of the signing process, who did what and when, with the screenshots included. The intention behind appending the Evidence of Intent is to provide the parties with evidence of such signing intentions in order to provide additional evidence in the potential situation as exemplified with the blue elephant and the pink sheep example.</p>
+
+<h3>Appending the Digital Signature Documentation (Step 7)</h3>
+	<p>The Scrive system will also append the Digital Signature Documentation to the Evidence Package. The Digital Signature Documentation contains an algorithm for how to prove the document’s integrity mathematically. With the help of the Digital Signature Documentation the document integrity can be tested mathematically without the help of Scrive or any other third party. This document does require some technical knowledge to be useful.</p>
+	<p>Note: the Digital Signature Documentation is not intended as the primary method for proving the document’s integrity. The use of the Digital Signature Documentation is intended as a last resort after which all other methods of verifying the integrity have failed. To clarify, the intended order for verifying the integrity of a document is:</p>
+		<ol>
+			<li><p>Scrive provides the primary method for verifying the integrity of a signature at www.scrive.com/verify. Here the document owner can upload the document and get an automated validation of the document integrity. This method does not require any technical knowledge to be useful.</p></li>
+			<li><p>If this primary method , for some reason fails to perform the verification of integrity then the digital signature provider, Guardtime, can be contacted directly for verification. This second method also does not require any technical knowledge to be useful.</p></li>
+			<li><p>Finally, if both previous methods have failed, the Digital Signature Documentation can be used to mathematically verify the document integrity.</p></li>
+		</ol>
+
+<h3>Appending the Digital Signature (Step 8)</h3>
+	<p>Once all extra documentation has been appended to the document, the document wrapper is digitally signed with an industry standard digital signature from Guardtime.</p>
+
+
+<h2>Summary 1: Legal effects of the Scrive solution</h2>
+
+	<p>To summarize, all the above measures involved in producing the Scrive PDF effectively address the different problems of deteriorating digital document quality.</p>
+
+	<ul>
+		<li><p>Infinite durability (better than paper) is assured with the help of appending the digital signature (step 8) and with the help of the Digital Signature Documentation (step 7).</p></li>
+		<li><p>Maximum accessibility is assured by appending the Verification Page to the PDF containing a short documentation (step 3) and appending the full Evidence Documentation document which fully explains all parts of the document and eliminates any need for further expertise or resources (step 4).</p></li>
+		<li><p>Capturing identity is assured by meticulous data collection to the Transaction Logs and then printing selected identity data into both the Verification Page (step 3) and more detailed identity data into the Evidence Log (step 5).</p></li>
+		<li><p>Capturing intent is assured by the screenshot mechanism and by appending the Evidence of Intent document to the PDF (step 6).</p></li>
+		<li><p>Capturing time is assured by the Time Drift Prevention system, the logging of average, max and minimum time drift and the recording of such into the Evidence Log (step 5).</p></li>
+		<li><p>Collecting additional data to further improve the document quality is carried out by the Time Drift Prevention system and by the redundant collection of logs into the Transaction Log and the final printing of all available data into the Evidence Log (step 5).</p></li>
+	</ul>
+
+	<p>Below you can see a summary table showing how Scrives PDF compares to competing evidence container formats.</p>
+
 <table>
   <thead>
     <tr>
@@ -212,151 +438,77 @@ body {
   <tbody>
     <tr>
       <td class="label">Paper</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="orange">weak</td>
+      <td class="green">Yes</td>
+      <td class="green">Yes</td>
+      <td class="green">Yes</td>
+      <td class="green">Yes</td>
+      <td class="green">Yes</td>
+      <td class="orange">Weak</td>
     </tr>
     <tr>
       <td class="label">Fax</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="orange">weak</td>
-      <td class="green">yes</td>
-      <td class="orange">varies</td>
-      <td class="orange">weak</td>
+      <td class="green">Yes</td>
+      <td class="green">Yes</td>
+      <td class="orange">Weak</td>
+      <td class="green">Yes</td>
+      <td class="orange">Varies</td>
+      <td class="orange">Weak</td>
     </tr>
     <tr>
       <td class="label">Scanned PDF</td>
-      <td class="red">rare</td>
-      <td class="green">yes</td>
-      <td class="orange">weak</td>
-      <td class="green">yes</td>
-      <td class="orange">varies</td>
-      <td class="green">yes</td>
+      <td class="red">Rare</td>
+      <td class="green">Yes</td>
+      <td class="orange">Weak</td>
+      <td class="green">Yes</td>
+      <td class="orange">Varies</td>
+      <td class="green">Yes</td>
     </tr>
     <tr>
       <td class="label">Email</td>
-      <td class="red">rare</td>
-      <td class="green">yes</td>
-      <td class="orange">weak</td>
-      <td class="green">yes</td>
-      <td class="orange">varies</td>
-      <td class="green">yes</td>
+      <td class="red">Rare</td>
+      <td class="green">Yes</td>
+      <td class="orange">Weak</td>
+      <td class="green">Yes</td>
+      <td class="orange">Varies</td>
+      <td class="green">Yes</td>
     </tr>
     <tr>
       <td class="label">E-signing PDF</td>
-      <td class="red">rare</td>
-      <td class="orange">weak</td>
-      <td class="green">yes</td>
-      <td class="red">no (warning!)</td>
-      <td class="orange">varies</td>
-      <td class="green">yes</td>
+      <td class="red">Rare</td>
+      <td class="orange">Weak</td>
+      <td class="green">Yes</td>
+      <td class="red">No</td>
+      <td class="orange">Varies</td>
+      <td class="green">Yes</td>
     </tr>
     <tr>
       <td class="label">Scrive PDF</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
+      <td class="green">Yes</td>
+      <td class="green">Yes</td>
+      <td class="green">Yes</td>
+      <td class="green">Yes</td>
+      <td class="green">Yes</td>
+      <td class="green">Yes</td>
     </tr>
   </tbody>
 </table>
 
-<p><i>Note: This is a summary table. Full explanation is given in the text below.</i></p>
+<h2>Summary 2: Independence effects of the Scrive solution</h2>
 
-<h1 id="p1">Loss of document quality</h1>
+	<p>The holder of the document is made independent of Scrive because:</p>
 
-<p>Signing can be done in many ways. The standard has traditionally been signing a paper document. With the digital age the paper document standard has evolved into alternative formats such as the printed fax and the scanned PDF.</p>
+	<ol>
+		<li><p>The holder of the document is not dependent on the Scrive logs to prove document durability due to the digital signature appended (step 8) and the Digital Signature Documentation (step 7).</p></li>
+		<li><p>The holder of the document is not dependent on the Scrive logs for additional evidence in case of conflict, as all evidence available to Scrive was made available to the holder of the document through the Evidence Log (step 5).</p></li>
+		<li><p>The holder of the document is not dependent on access to old versions of the Scrive system to prove the original signing environment to prove all parties’ intent to sign. Instead the evidence of intent is made available to the holder of the document through the Evidence of Intent document (step 6).</p></li>
+		<li><p>Finally, the holder of the document is made independent of other parties and/or Scrive’s expertise to interpret the document, through the Evidence Documentation document that is appended (step 4).</p></li>
+	</ol>
 
-<p>At the time of writing (the year of 2013), new document formats have been introduced to facilitate transactions and reduce transaction costs. The price for the reductions in transaction costs has been a dramatic decrease in the evidence qualities of signed documents.</p>
+<h2>Appendix: Evidence quality analysis between newer document standards and paper</h2>
 
-<p>In recent years there has evolved a plethora of software solutions for signing agreements electronically. Whilst these solutions have further lowered transaction costs, few have addressed the issues with decreasing document evidence qualities and none have set forward a solution that could fully bring back document evidence quality to the level of the printed-paper.</p>
+	<p>For the reader to be able to put the Scrive evidence container into perspective it could be useful to understand the evidence quality characteristics of documents signed through other types of signing solutions. To give an overview of the quality of available formats the following table describes the differences in critical legal qualities between paper and other newer document formats. A brief elaboration of the strength and weaknesses of each format can be found below the table. </p>
 
-<h1 id="p2">Scrive is better than paper</h1>
-
-<p>We care about quality and we think that only the best is good enough. Therefore we have dug deep into understanding the document quality problems and made sure to create an appropriate document structure and evidence generation strategies to create what, to our knowledge, is the best quality evidence container in the world. Yes, we would even like to claim that it&#8217;s better than paper, the gold standard for evidence containers. Further down you will find out more about our solution, but first let us start with further fleshing out the problems with the current evidence quality situation and how current solutions fail to solve the issues.</p>
-
-<h1 id="p3">Qualities lost</h1>
-
-<p>Paper has several qualities that are so obvious to us that we take them for granted. At the same time the qualities are easily lost with new document formats. Let’s take a brief look at these innate qualities of paper format.</p>
-
-<h2><em>Durability</em></h2>
-
-<p>To prove an agreement it’s important that available evidence is credible. An original copy of the signed agreement is usually considered to be a good piece of such credible evidence. One reason is that paper is by nature an immutable format, once signed it is not editable and it is virtually impossible to remove all data available (fingerprints and ink). Thus it is a durable “snapshot” of reality at the time of making the agreement. Digital formats such as the PDF copy of a signed and scanned paper document are by nature mutable formats. You can easily edit the document content in an editor program such as Adobe Photoshop and it’s not very difficult to remove old and make new time markers to fit a new made up story about the document. Thus, it’s important to ask: how to emulate the immutability of the paper format?</p>
-
-<h2><em>Accessibility</em></h2>
-
-<p>Accessibility is a key component for a document to be useful. The less specialised expertise or tools required for the interpretation of the document the more likely it is to be useful evidence as more people can access it easily. Paper has two characteristics that make it highly accessible:</p>
-
-<ul>
-<li><p>Paper is a format where all the contents are clearly displayed to everyone with eyes to read and thus paper doesn’t require any additional tools to interpret the contents.</p></li>
-<li><p>Paper is a standard format known to everyone and as such it is easy to find out what to look for to identify the authenticity of the document, as that knowledge is commonly available.</p></li>
-</ul>
-
-<p>Digital documents have the opposite characteristics:</p>
-
-<p>a. Digital documents can come in any form and knowledge about their interpretation is highly dependent on the document format. Also information can be placed anywhere inside the document (not necessarily only in places that are available to the naked eye and thus it is not automatically obvious where to look for the information.</p>
-
-<p>b. Digital documents by nature require additional tools to interpret. For example PDF-readers or other types of software. In best case the format is standardised and the tools are easy to come by.</p>
-
-<p>As you understand accessibility is in the nature of the paper document but not automatically in the nature of a digital document. Thus, availability of a digital document is highly dependant on the design of the software that produces it. What is required to make a digital document as available as a paper document or at least as available as possible?</p>
-
-<h2><em>Capturing identity</em></h2>
-
-<p>Paper automatically collects evidence of identity of the signing parties. A signature is appended and the visual representation is useful for signature comparisons and the ink can be analysed to date the agreement. Also, in the process of signing, the paper automatically captures fingerprints and other biometric materials from the signing parties and can at a later point in time be used to authenticate the signature. In the case of digital signed documents there is no automatic collection of identity into the document. Data about identity is only captured from the signing parties and stored inside the document if the signing software is programmed to do so. Thus, capturing of identity is highly dependant on the design of the software that produces the final document. What identity data should be captured and how should it be placed inside the document?</p>
-
-<h2><em>Capturing intent</em></h2>
-
-<p>Contract law world wide states that an agreement come into effect when the agreeing parties understand that they are signing and have a voluntary intent to do so. Thus, intent is a key ingredient for the formation of an agreement. Paper has the characteristics that:</p>
-
-<ul>
-<li><p>The signing environment (the paper) is the same as the final output (the signed paper).</p></li>
-<li><p>Signing a paper is the most standardised form of making an agreement and any mentally capable adult will understand exactly what is happening when signing on paper.</p></li>
-</ul>
-
-<p>Thus, upon signing on paper you are assumed to have understood the implications of your actions and it is virtually impossible to claim that you had no intention to sign. The only way you can get away is if you can credibly prove your mental inability at the time of signing or that your were for some reason forced to sign and that it thus wasn&#8217;t a voluntary action.</p>
-
-<p>On the other hand a digital environment has the opposite characteristics to paper:</p>
-
-<p>a. The signing environment is not the same as the final output.</p>
-
-<p>b. Signing in a digital environment can happen in an infinite amount of ways.</p>
-
-<p>Both these characteristics make it easy to claim that it was not your intention to sign. You can claim that the signing environment did not portray the same information as the final output (the displayed agreement was not the same as the document produced by the system) or you can claim that the signing environment did not make it clear that you were signing. Let’s make an extreme example:</p>
-
-<p><em>Instead of showing “do this to sign this agreement as displayed here” it showed “here is a blue elephant, click here to see a pink sheep instead.” Thus, upon clicking the button the party could not have been aware that they were signing an agreement and thus would have no intention to sign.</em></p>
-
-<p>This is of course an extreme example but it does point out a central problem with digital signing environments: how do you prove the intention to sign in a digital environment?</p>
-
-<h1 id="p4">Potential for new additional qualities</h1>
-
-<p>Paper has many important qualities as a high quality evidence container. Though there are several important improvement opportunities with new technology.</p>
-
-<h2><em>Metadata collection</em></h2>
-
-<p>Whilst the paper only allows for a restricted set of metadata to be appended to the document and the data must be appended manually by writing (time, place and other comments), digitally signed documents allow for an infinite amount of metadata to be appended in an infinite amount of formats (video, audio, text and more) thus opening up new possibilities for appending much larger quantities and variety of data strengthening the document qualities as legal evidence.</p>
-
-<h2><em>Capturing time</em></h2>
-
-<p>In many processes, such as bidding processes, exact time measurement is important to the transaction, as it can be the difference between an approved or a disapproved bid. When it comes to signed paper it is fairly blunt as a time recorder whilst digital documents can record time with a much higher accuracy. Though, as a famous Swedish court case shows, recording time is not necessarily the same as a credible time record. Example:</p>
-
-<p><em>In an interesting type case a company was in a bidding process and sent their bid by fax one minute to twelve, just in the last minute before deadline. The time recorded by the receiving fax machine was one minute past twelve, just past the time for the deadline. As this was a bid to a Swedish municipality, Swedish law prohibited acceptance of the bid. The bidding party, convinced that their fax time was correctly set, went to court disputing the case. The case went all the way to the supreme court where the supreme court ruled in favour of the receiving party as it could not be proven that the receiving party actually had the wrong time set on their fax machine. The problem was also that the telecom company Telia that was responsible for the fax wire had not set their system in such a way that they could prove the time deviation of their system from standard time. Thus, it could not be credibly shown that the time record of Telia was accurate.</em></p>
-
-<h1 id="p5">Quality comparison between standard formats</h1>
-
-<p>To give an overview of the quality status of available formats the following table describes the difference in essential legal qualities between paper and other newer document formats. Find a short explanation of each formats status below the table. Note that:</p>
-
-<ul>
-<li><p>Paper has already been described in the previous section as the standard and will therefore not be described in further detail below.</p></li>
-<li><p>Notes about capturing time would be the same for all different cases. The answer to all is that: it depends on each service provider and as described above it&#8217;s known that even the biggest can fail. We will therefore not describe this in any further detail below.</p></li>
-</ul>
-
-<table>
+	<table>
   <thead>
     <tr>
       <th></th>
@@ -371,305 +523,102 @@ body {
   <tbody>
     <tr>
       <td class="label">Paper</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="orange">weak</td>
+      <td class="green">Yes</td>
+      <td class="green">Yes</td>
+      <td class="green">Yes</td>
+      <td class="green">Yes</td>
+      <td class="green">Yes</td>
+      <td class="orange">Weak</td>
     </tr>
     <tr>
       <td class="label">Fax</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="orange">weak</td>
-      <td class="green">yes</td>
-      <td class="orange">varies</td>
-      <td class="orange">weak</td>
+      <td class="green">Yes</td>
+      <td class="green">Yes</td>
+      <td class="orange">Weak</td>
+      <td class="green">Yes</td>
+      <td class="orange">Varies</td>
+      <td class="orange">Weak</td>
     </tr>
     <tr>
       <td class="label">Scanned PDF</td>
-      <td class="red">rare</td>
-      <td class="green">yes</td>
-      <td class="orange">weak</td>
-      <td class="green">yes</td>
-      <td class="orange">varies</td>
-      <td class="green">yes</td>
+      <td class="red">Rare</td>
+      <td class="green">Yes</td>
+      <td class="orange">Weak</td>
+      <td class="green">Yes</td>
+      <td class="orange">Varies</td>
+      <td class="green">Yes</td>
     </tr>
     <tr>
       <td class="label">Email</td>
-      <td class="red">rare</td>
-      <td class="green">yes</td>
-      <td class="orange">weak</td>
-      <td class="green">yes</td>
-      <td class="orange">varies</td>
-      <td class="green">yes</td>
+      <td class="red">Rare</td>
+      <td class="green">Yes</td>
+      <td class="orange">Weak</td>
+      <td class="green">Yes</td>
+      <td class="orange">Varies</td>
+      <td class="green">Yes</td>
     </tr>
     <tr>
       <td class="label">E-signing PDF</td>
-      <td class="red">rare</td>
-      <td class="orange">weak</td>
-      <td class="green">yes</td>
-      <td class="red">no (warning!)</td>
-      <td class="orange">varies</td>
-      <td class="green">yes</td>
+      <td class="red">Rare</td>
+      <td class="orange">Weak</td>
+      <td class="green">Yes</td>
+      <td class="red">No</td>
+      <td class="orange">Varies</td>
+      <td class="green">Yes</td>
     </tr>
   </tbody>
 </table>
 
-<h2><em>Fax</em></h2>
+	<p>Note:</p>
+		<ul>
+			<li><p>Paper has already been described in the previous section as the standard and will therefore not be described in further detail below.</p></li>
+			<li><p>Notes about capturing time would be the same for all different cases; it depends on each service provider and as described above it’s known that even the largest can fail. We will therefore not describe this in any further detail below.</p></li>
+		</ul>
 
-<p>The “fax” is a result of a document signed on paper and sent back to the counterpart by using a facsimile.</p>
+<h3><em>Fax</em></h3>
 
-<ul>
-<li><p><em>Strengths</em>: The facsimile is paper. Therefore just like paper it captures intent and is highly durable and accessible just like a normal signed paper.</p></li>
-<li><p><em>Weaknesses</em>: What the fax really lacks is biometric data from both signing parties (fingerprints and more). The fax only transmits a photocopy of the signature as an identifier and could therefore be considered to be substantially weaker than paper when it comes to capturing identity. Another weakness is metadata collection. Some metadata might be printed on the document when the fax is printed but the format doesn&#8217;t allow for very much more than the standard paper (time, place and some comments) therefore the data collection can be considered to be as weak as the data collection for paper.</p></li>
-</ul>
+	<p>The “fax” is a result of a document signed on paper and sent back to the counterpart by using a facsimile.</p>
 
-<h2><em>Scanned PDF</em></h2>
+	<ul>
+		<li><p><em>Strengths</em>: The facsimile is paper. Therefore just like paper it captures intent and is highly durable and accessible just like a normal signed paper.</p></li>
+		<li><p><em>Weaknesses</em>: What the fax lacks is biometric data from both signing parties (fingerprints and more). The fax merely transmits a photocopy of the signature as an identifier and could therefore when it comes to capturing identity could be considered substantially weaker than paper. Another weakness is metadata collection. Some metadata may be printed on the document when the fax is printed but the format does not allow for much more than the standard paper (time, place and some comments) therefore the data collection can be considered as weak as the data collection for paper.</p></li>
+	</ul>
 
-<p>The “scanned PDF” is a result of printing the contract on paper, signing with a pen and then scanning and sending the document back using email or other electronic communication. More and more commonly the printing and signing step is also eliminated and the signing is executed by a copy and paste procedure (reusing a saved signature), by using some kind of software.</p>
+<h3><em>Scanned PDF</em></h3>
 
-<ul>
-<li><p><em>Strengths</em>: The scanned PDF is originally signed on paper or by a similar digital method controlled by the signing party. Therefore intent to sign can be considered to be executed in the same way as on a paper. There is some automatic collection of metadata in the digital transaction (usually email), especially if the email contains the full thread of the previous interaction and therefore metadata collection can be considered to be fairly good. The signed and scanned PDF is a standard format so the accessibility can be considered to be high both because it is easy to interpret the contents and the availability of the technology required to do so.</p></li>
-<li><p><em>Weaknesses</em>: The main problem with the scanned PDF is that usually no measures have been taken to ensure the documents durability and thus provability of integrity over time (such as applying a digital signature for example). Therefore the document is susceptible to forgery and is very weak as evidence of the transaction. Actually the e-mail with which the document was sent could be argued to be stronger evidence of the transaction than the document itself, as log records will actually exist of the email transaction as supportive evidence. Unfortunately as the scanned PDF-document is highly mutable, the credibility of the visual signature also suffers as it is easy to copy-paste a new signature into the document at some later point in time and erase any traces of such editing. Therefore capturing the identity of the signed and scanned PDF is weaker than in the fax case and could be considered to be close to zero if no measure to ensure document durability has been applied (ex. a digital signature).</p></li>
-</ul>
+	<p>The “scanned PDF” is a result of printing the contract on paper, signing with a pen, scanning it and sending the document back using email or other electronic communication. More and more commonly the printing and signing step is also eliminated and the signing is executed by a copy and paste procedure (reusing a saved signature), by using some kind of software.</p>
 
-<h2><em>Email OK</em></h2>
+	<ul>
+		<li><p><em>Strengths</em>: The scanned PDF is originally signed on paper or by a similar digital method controlled by the signing party. Therefore intent to sign can be considered to be executed in the same way as on a paper. There is some automatic collection of metadata in the digital transaction (usually email), especially if the email contains the full thread of the previous interaction and therefore metadata collection can be considered fairly good. The signed and scanned PDF is a standard format so the accessibility can be considered high both because it is easy to interpret the contents and the technology required to do so is accessible.</p></li>
+		<li><p><em>Weaknesses</em>: The primary weakness with the scanned PDF is that more often than not, no measures have been taken to ensure the documents durability and thus provability of integrity over time (such as applying a digital signature for example). Therefore the document is susceptible to forgery and is very weak as evidence of the transaction. In fact, the e-mail with which the document was sent could be argued to be stronger evidence of the transaction than the document itself, as log records of the email transaction can be used as supportive evidence. Unfortunately as the scanned PDF-document is highly mutable, the credibility of the visual signature also suffers, as it is easy to copy-paste a new signature into the document at a later point in time while erasing any traces of such editing. Therefore capturing the identity of the signed and scanned PDF is weaker than in the fax format. It could be considered to have next to no measure of ensuring that document durability has been applied (ex. a digital signature).</p></li>
+	</ul>
 
-<p>The “email OK” is a result of one party emailing a document or a text string with the agreement and the other party answering with an “OK” or similar.</p>
+<h3><em>Email OK</em></h3>
 
-<ul>
-<li><p><em>Strengths</em>: The email OK is “signed” (OK:ed) with a software that can be considered to have been within each signing parties domain of control. Therefore the intent to sign can be assumed. Also the format of the “document” (email) is a standard format, the contents should be easy to interpret and the tools (email client) should be easy to obtain. Therefore accessibility can be considered high.</p></li>
-<li><p><em>Weaknesses</em>: Just like with the scanned PDF usually no measures are taken to ensure the document durability and provability of integrity over time (such as applying a digital signature). Therefore the email is, just like the scanned PDF, susceptible to forgery and evidence of integrity is dependent on the availability and quality of the logs of the email provider. Identity usually cannot be captured in any other way than capturing the email of the counterpart. In many B2B transactions where the counterpart has a company specific email this is good enough as identification. In B2C or C2C transactions identification can easily be an issue as private persons have email addresses from providers that don&#8217;t require any identification (such as Gmail, Yahoo or Hotmail) and therefore in such cases possibilities for identification can be considered very weak.</p></li>
-</ul>
+	<p>The “email OK” is a result of which one party emails a document or a text string containing an agreement and the other party replies with an “OK” or similar.</p>
 
-<h2><em>E-signing PDF</em></h2>
+	<ul>
+		<li><p><em>Strengths</em>: The email OK is “signed” (okayed) with a software that can be considered to have been within each signing parties domain of control. Therefore the intent to sign can be assumed. In addition, the format of the “document” (email) is a standard format, the contents should be easy to interpret and the tools (email client) should be easy to obtain. Therefore accessibility can be considered high.</p></li>
+		<li><p><em>Weaknesses</em>: Just like with the scanned PDF, more often than not, no measures are taken to ensure the document durability and provability of integrity over time (such as applying a digital signature). Therefore the email is, just like the scanned PDF, susceptible to forgery and evidence of integrity is dependent on the availability and quality of the logs of the email provider. Identity cannot usually be captured in another way other than capturing the email of the counterpart. In many B2B (business-to-business) transactions where the counterpart has a company specific email, this is sufficient as identification. In B2C (business-to-consumer) or C2C (consumer-to-consumer) transactions identification can easily be a problematic issue as private persons have email addresses from providers that don’t require any form of identification (such as Gmail, Yahoo! or Hotmail) and therefore in such cases, possibilities for identification can be considered very weak.</p></li>
+	</ul>
 
-<p>The “e-signing PDF” is a result of the parties using a third party SaaS provider as a platform for executing the agreement. Usually one party uses the software to invite the counterpart to sign inside the SaaS provider’s software and the final product of the procedure is an e-signed PDF produced and stamped by the SaaS provider. This type of software is used as a signing process management tool. Scrive is one of many solutions within this category of solutions. In this section we describe our overall perspective of known solutions, Scrive excluded (to be described in more detail further down):</p>
+<h3><em>E-signing PDF</em></h3>
 
-<ul>
-<li><p><em>Strengths</em>: These types of services enable identification in many different ways such as email, IP-address, text messaging, photo, fingerprint scanning and more. All this identity data can be captured and placed into the document. Most e-signing services provide multiple types of identification and could therefore be considered to be fairly strong in this area. Although of course, the quality of the identification is dependant on what the sending user selects as the method for identification. Most services also collect metadata about the transaction and print it into the document as a time trail describing the actions taken by the parties with IP and time. Thus, metadata collection can be considered to be fairly strong.</p></li>
-<li><p><em>Weaknesses</em>: One of the main differences between the method of generating an e-signed PDF and the other types of processes generating signed documents (described above) is that the receiving counterpart cannot be considered to have control over the signing environment. This is a major problem because suddenly it is not at all as easy to prove the intent to sign of the party receiving the invitation. As described in an example earlier they could claim that they didn’t understand that they were signing and that “the only experience they had was the display of a blue elephant and a clickable button to see a pink sheep as the next image.” To our knowledge no e-signing service today claims to solve this issue. We would guess that from the lack of documentation most might not even be aware of the problem and the business risk they are exposing their clients to by this ignorance. We see two more problems. First, it is rare that the e-signing providers take measures to ensure the document durability (ex. stamp the document with a digital signature). This means that the evidence of the document integrity lies in the logs at the e-signing service’s database. Thus, the business customers of the e-signing providers are in effect giving up the ability to prove the originality of core company documents and are effectively giving themselves to be at the mercy of e-signing providers good will and/or further existence. We don&#8217;t believe that this is a healthy situation for any company to be in. Every company should have complete and indisputable ownership of their own legal documents. Second, as the documents produced by the e-signing provider cannot by default be considered to be standard (as the format is still new to the market and the standard is still in creation), one needs to read documentation or inspect the document by oneself to figure out all aspects of the document. Thus, the accessibility is partially limited. Most probably both legal and technical expertise is required to find out about all aspects of the document. This is of course problematic as it can potentially skew the power to parties with deeper pockets or more expertise available and can also induce insecurities in a legal process. What if the court cannot fully interpret the document? What if the e-signing provider is no longer in existence to assist with an explanation?</p></li>
-</ul>
+	<p>The “e-signing PDF” is a result of the parties using a third party SaaS (software-as-a-service) provider as a platform for executing an agreement. Usually one party uses the software to invite the counterpart to sign inside the SaaS provider’s software and the final product of the procedure is an e-signed PDF produced and stamped by the SaaS provider. This type of software is used as a signing process management tool. Scrive is one of many solutions within this category of solutions. In this section we describe our overall perspective of known solutions, Scrive excluded (to be described in more detail further down):</p>
 
-<h1 id="p6">Problems due to lack of independence</h1>
+	<ul>
+		<li><p><em>Strengths</em>: These types of services enable identification in many different ways such as email, IP-address, text messaging, photo, fingerprint scanning and more. All of this identity data can be captured and placed into the document. Most e-signing services provide multiple types of identification and could therefore be considered fairly strong in this area. Although of course, the quality of the identification is dependent on what the sending user selects as the method for identification. Most services also collect metadata about the transaction and print it into the document as a time trail describing the actions taken by the parties using IP and time. Thus, metadata collection can be considered fairly strong.</p></li>
+		<li><p><em>Weaknesses</em>: One of the main differences between the method of generating an e-signed PDF and the other types of processes generating signed documents (described above) is that the receiving counterpart cannot be considered to have control over the signing environment. This is a significant problem because it can become difficult to prove that the invited party had an intention to sign. As described in a previous example, the receiving party could claim they did not understand that they were engaged in signing a document. They could claim that they were under the impression that they were “clicking a button to see an image change from a blue elephant to a pink”. There is a lack of documentation regarding this risk, and it is possible that many e-signing providers might not even be aware of this risk.  </p></li>
+	</ul>
 
-<p>Things change and companies come and go. Signed documents stay the same. If the provability of a signed document is dependent on third parties the document provability risks changing over time. Except from the signed paper format no other solution is completely independent of third parties for evidence. Fax, scanned PDF, email OK and e-signed PDF are all dependent on third parties for their logs and time drift records. We believe that future provability should never be compromised due to dependencies on external parties.</p>
+		<p>To continue, two more problems exist: </p>
+		<p>First, if an e-signing provider does not take measures to ensure the document’s durability (ex. stamping the document with a digital signature), the evidence of the document integrity will lie in the logs at the e-signing service’s database. Thus, customers of the e-signing provider would in effect be giving up the ability to prove the originality of the documents without relying on the good faith of the provider and/or the continued existence of the provider as a business. This is a risky situation for any company to be in as they should have complete and indisputable ownership of their own legal documents. </p>
+		<p>Second, the documents produced by the e-signing provider cannot by default be considered the standard (as the format is still new to the market and standards are still being developed). Given this unfamiliarity it is likely that, without access to clear documentation, both legal and technical expertise would be required to understand all aspects of the document. This is of course problematic as it can potentially skew the power to parties with deeper pockets or more expertise available and can also induce insecurities in a legal process. What if the court cannot fully interpret the document? What if the e-signing provider is no longer in existence to assist with an explanation?</p>
 
-<h1 id="p7">Scrive’s solution</h1>
 
-<p>At Scrive we are very proud of our solution: an evidence container with higher quality than paper and whose provability is independent of third parties. This is how we do it.</p>
 
-<table>
-  <thead>
-    <tr>
-      <td></td>
-      <td>Durability</td>
-      <td>Availability</td>
-      <td>Capturing ID</td>
-      <td>Capturing intent</td>
-      <td>Capturing time</td>
-      <td>Collecting data</td>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="label">Paper</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="orange">weak</td>
-    </tr>
-    <tr>
-      <td class="label">Scrive PDF</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-    </tr>
-  </tbody>
-</table>
 
-<h2><em>Time Drift Prevention system</em></h2>
 
-<p>As described earlier capturing time in a credible manner can be very important. Even though the cases when it is as crucial might not be that many we believe that it is not always possible for businesses to determine this on beforehand. Therefore, to eliminate this unnecessary company risk, a quality solution should solve this for 100% of all documents signed.</p>
-
-<p>At Scrive we keep our systems synchronized with local NTP (Network Time Protocol) systems that are synced to as high a stratum NTP server as possible. This produces an accuracy of time that is virtually impossible to refute. The minimum and maximum poll intervals for the NTP server are left at defaults (minpoll 6, maxpoll 10 on the default Linux NTP server – these settings are seconds to the power of 2). This is because updating too often can be prone to more errors and jitter, and updating after too long can produce bigger corrections due to the larger timespan between updates. With these settings we have had an average drift of 0.000789 seconds and a maximum drift of 0.022 seconds the year 2012.</p>
-
-<p>For provability purposes the latest synchronizations and reported time drift at each synchronization is recorded by the Scrive system and inserted into the Evidence Log (as described below).</p>
-
-<h2><em>Generating the Evidence Package</em></h2>
-
-<p>Scrive provides a set of signing processes that enable the signing parties to come to an agreement. Once all signing parties have signed the agreement the Scrive system will execute the following actions to finalize the especially designed “Evidence Package”:</p>
-
-<ol>
-<li>Make the agreement into a PDF.</li>
-<li>Print additional information added during the signing process into the PDF (visual signature, text, checked checkboxes and more).</li>
-<li>Append a “Verification Page” as an extra page to the PDF. </li>
-<li>Append an “Evidence Documentation” as an appendix to the PDF. It is the Evidence Documentation that you are currently reading.</li>
-<li>Append an “Evidence Log” as an appendix to the PDF.</li>
-<li>Append an “Evidence of Intent” as an appendix to the PDF.</li>
-<li>Append a “Digital Signature Documentation” as an appendix to the PDF.</li>
-<li>Sign the Evidence Package (PDF plus appendices) with a digital signature.</li>
-</ol>
-
-<p>A detailed description of the steps 3-8 follows below.</p>
-
-<h2><em>Step 3: Appending the Verification Page</em></h2>
-
-<p>The Verification Page is intended to make the most important metadata of the transaction as accessible as possible. The key details are who signed which documents, when and how. The Verification Page contains the following information:</p>
-
-<ul>
-<li>Transaction ID</li>
-<li>Selected document details</li>
-<li>Selected signing person details</li>
-<li>Selected non-signing person details</li>
-<li>Selected actions of each signing person, time of action and IP-number </li>
-<li>A seal confirming that a third party has verified the transaction</li>
-</ul>
-
-<p>At the end of the Verification Page there is brief documentation describing what the verification page is. The documentation is intended to give the reader all the information necessary in order to:</p>
-
-<ul>
-<li>Understand the nature of the document</li>
-<li>Understand where to find any additional documentation about the document</li>
-<li>Understand how to simply verify the integrity of the document</li>
-</ul>
-
-<p>This information is intended to be useful even if Scrive ceases to exist, making the document understandable and useful independently of Scrive.</p>
-
-<h2><em>Step 4: Appending the Evidence Documentation</em></h2>
-
-<p>A full documentation about the Evidence Package is appended as an appendix to the signed PDF (hereinafter the “Evidence Documentation”). The Evidence Documentation is a complete instruction manual of how to interpret the different parts of the Evidence Package and is intended to make understanding and use of the Evidence Package as easy as possible and independently of any third party (including independence from Scrive), thus removing the need for any special resources or expertise for the interpretation of the document and making it fully accessible and useful for anyone.</p>
-
-<h2><em>Step 5: Appending the Evidence Log</em></h2>
-
-<p>The Scrive system will record as much as possible of the signatories’ actions as log data (“Transaction Log”) and once the Scrive system has produced the signed PDF, a document containing all data from the Transaction Log is appended as an appendix (“Evidence Log”). Note that the Verification Page only contains selected transaction log data with the intention to make a preselected set of transaction history easily accessible, while the Evidence Log contains all transaction log data with the intention to make all transaction history easily accessible. The extensive logging of the parties actions and the appending of the Evidence Log is carried out with the intention of optimally enhancing the document quality through the additional metadata of the transaction.</p>
-
-<h2><em>Step 6: Appending the Evidence of Intent</em></h2>
-
-<p>The Scrive system will make screen shots of each party&#8217;s signing experience. Then, when the Scrive system is preparing the Evidence Package it will append the Evidence of Intent that is a document with the relevant signing experience screen shots and a brief description of the signing process and who did what. The intention with appending the Evidence of Intent is to provide the parties with evidence of intent to sign in order to efficiently avoid the potential court situation described above and exemplified with the blue elephant and the pink sheep.</p>
-
-<h2><em>Step 7: Appending the Digital Signature Documentation</em></h2>
-
-<p>The Scrive system will also append the Digital Signature Documentation to the Evidence Package. The Digital Signature Documentation contains an algorithm for how to prove the document&#8217;s integrity mathematically. With the help of the Digital Signature Documentation the document integrity can be tested mathematically without the help of Scrive or any other third party. This document does require some technical knowledge to be useful.</p>
-
-<p>Note that the Digital Signature Documentation is not intended as the main route for proving the document integrity. The Digital Signature Documentation is only intended as a last resort when all other methods of verifying the integrity have failed. The intended order for verifying the integrity is:</p>
-
-<ol>
-<li><p>Scrive provides the main route at www.scrive.com/verify. Here the document owner can upload the document and get an automated validation of the document integrity. This main route does not require any technical knowledge to be useful.</p></li>
-<li><p>If the main route for some reason fails to perform the verification of integrity then the digital signature provider (Guardtime) can be contacted directly for verification. This second route also does not require any technical knowledge to be useful.</p></li>
-<li><p>Finally, if both previous methods to perform the verification of integrity have failed, the digital signature documentation can be used to prove the document’s integrity.</p></li>
-</ol>
-
-<h2><em>Step 8: Appending the Digital Signature</em></h2>
-
-<p>Once all extra documentation has been appended to the document, the document wrapper is digitally signed with an industry standard digital signature from Guardtime.</p>
-
-<h2><em>Summary 1: Legal effects of the Scrive solution</em></h2>
-
-<p>To summarize, all the above measures involved in producing the Scrive PDF effectively address the different problems of deteriorating digital document quality.</p>
-
-<ul>
-<li><p>Infinite durability (better than paper) is assured with the help of appending the digital signature (step 8) and with the help of the Digital Signature Documentation (step 7).</p></li>
-<li><p>Maximal accessibility is assured by appending the Verification Page to the PDF with the short documentation inside (step 3) and appending the full Evidence Documentation document which fully explains all parts of the document and eliminates any further need for expertise and resources (step 4).</p></li>
-<li><p>Capturing identity is assured by meticulous data collection to the Transaction Logs and the printing selected ID data into both the Verification Page (step 3) and more fleshed out ID data into the Evidence Log (step 5).</p></li>
-<li><p>Capturing intent is assured by the screen shot mechanism and by appending the Evidence of Intent document to the PDF (step 6).</p></li>
-<li><p>Capturing time is assured by the Time Drift Prevention system, the logging of average, max and minimum time drift and the recording of such into the Evidence Log (step 5).</p></li>
-<li><p>Collecting additional data to improve the document quality further is carried out by the Time Drift Prevention system and by the redundant collection of logs into the Transaction Log and the final printing of all available data into the Evidence Log (step 5).</p></li>
-</ul>
-
-<p>Below you can see a summary table showing how Scrives PDF compares to competing evidence container formats.</p>
-
-<table>
-  <thead>
-    <tr>
-      <th></th>
-      <th>Durability</th>
-      <th>Availability</th>
-      <th>Capturing ID</th>
-      <th>Capturing intent</th>
-      <th>Capturing time</th>
-      <th>Collecting data</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="label">Paper</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="orange">weak</td>
-    </tr>
-    <tr>
-      <td class="label">Fax</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="orange">weak</td>
-      <td class="green">yes</td>
-      <td class="orange">varies</td>
-      <td class="orange">weak</td>
-    </tr>
-    <tr>
-      <td class="label">Scanned PDF</td>
-      <td class="red">rare</td>
-      <td class="green">yes</td>
-      <td class="orange">weak</td>
-      <td class="green">yes</td>
-      <td class="orange">varies</td>
-      <td class="green">yes</td>
-    </tr>
-    <tr>
-      <td class="label">Email</td>
-      <td class="red">rare</td>
-      <td class="green">yes</td>
-      <td class="orange">weak</td>
-      <td class="green">yes</td>
-      <td class="orange">varies</td>
-      <td class="green">yes</td>
-    </tr>
-    <tr>
-      <td class="label">E-signing PDF</td>
-      <td class="red">rare</td>
-      <td class="orange">weak</td>
-      <td class="green">yes</td>
-      <td class="red">no (warning!)</td>
-      <td class="orange">varies</td>
-      <td class="green">yes</td>
-    </tr>
-    <tr>
-      <td class="label">Scrive PDF</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-      <td class="green">yes</td>
-    </tr>
-  </tbody>
-</table>
-
-<h2><em>Summary 2: Independence effects of the Scrive solution</em></h2>
-
-<p>The holder of the document is made independent of Scrive because:</p>
-
-<ol>
-<li><p>The holder of the document is not dependent on the Scrive logs to prove document durability due to the digital signature appended (step 8) and the Digital Signature Documentation (step 7).</p></li>
-<li><p>The holder of the document is not dependent on the Scrive logs for additional evidence in case of conflict as all evidence available to Scrive was made available to the holder of the document through the Evidence Log (step 5).</p></li>
-<li><p>The holder of the document is not dependent on access to old versions of the Scrive system to prove the original signing environment to prove all parties&#8217; intent to sign, instead the evidence of intent is made available to the holder of the document through the Evidence of Intent document (step 6).</p></li>
-<li><p>Finally, the holder of the document is made independent of other parties or Scrive’s expertise to interpret the document through the Evidence Documentation document that is appended (step 4).</p></li>
-</ol>
-
-<h1 id="p8">Final word</h1>
-
-<p>It took us about three years to fully understand the complexities of creating the ultimate digital evidence container and to make such a container into reality. We don’t charge anything extra for making the above, instead we see it as an integral part of our solution and what we stand for. We hope that you appreciate our solution and our obsession with delivering the highest quality solutions.</p>
 </div>
 </body>
 </html>

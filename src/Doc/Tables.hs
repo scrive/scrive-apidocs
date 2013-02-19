@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 16
+  , tblVersion = 17
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
@@ -22,7 +22,6 @@ tableDocuments = tblTable {
        , ("invite_time", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True})
        , ("invite_ip", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("invite_text", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
-       , ("trust_weaver_reference", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("csv_title", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("csv_contents", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("csv_signatory_index", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
@@ -40,36 +39,35 @@ tableDocuments = tblTable {
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE documents ("
-          <> "  id BIGSERIAL"
-          <> ", file_id BIGINT NULL"
-          <> ", sealed_file_id BIGINT NULL"
-          <> ", title TEXT NOT NULL"
-          <> ", status SMALLINT NOT NULL"
-          <> ", error_text TEXT NULL DEFAULT NULL"
-          <> ", type SMALLINT NOT NULL"
-          <> ", process SMALLINT NULL"
-          <> ", ctime TIMESTAMPTZ NOT NULL"
-          <> ", mtime TIMESTAMPTZ NOT NULL"
-          <> ", days_to_sign INTEGER NOT NULL"
-          <> ", timeout_time TIMESTAMPTZ NULL"
-          <> ", invite_time TIMESTAMPTZ NULL"
-          <> ", invite_ip INTEGER NULL"
-          <> ", invite_text TEXT NOT NULL"
-          <> ", trust_weaver_reference TEXT NULL"
-          <> ", csv_title TEXT NULL"
-          <> ", csv_contents TEXT NULL"
-          <> ", csv_signatory_index INTEGER NULL"
-          <> ", cancelation_reason TEXT NULL"
-          <> ", sharing SMALLINT NOT NULL"
-          <> ", rejection_time TIMESTAMPTZ NULL"
-          <> ", rejection_signatory_link_id BIGINT NULL"
-          <> ", rejection_reason TEXT NULL"
-          <> ", mail_footer TEXT NULL"
-          <> ", lang SMALLINT NOT NULL"
-          <> ", authentication_method SMALLINT NOT NULL"
-          <> ", delivery_method SMALLINT NOT NULL"
-          <> ", api_callback_url TEXT NULL"
-          <> ", unsaved_draft BOOL NOT NULL DEFAULT FALSE"
+          <> "  id                            BIGSERIAL"
+          <> ", file_id                       BIGINT           NULL"
+          <> ", sealed_file_id                BIGINT           NULL"
+          <> ", title                         TEXT         NOT NULL"
+          <> ", status                        SMALLINT     NOT NULL"
+          <> ", error_text                    TEXT             NULL"
+          <> ", type                          SMALLINT     NOT NULL"
+          <> ", process                       SMALLINT         NULL"
+          <> ", ctime                         TIMESTAMPTZ  NOT NULL"
+          <> ", mtime                         TIMESTAMPTZ  NOT NULL"
+          <> ", days_to_sign                  INTEGER      NOT NULL"
+          <> ", timeout_time                  TIMESTAMPTZ      NULL"
+          <> ", invite_time                   TIMESTAMPTZ      NULL"
+          <> ", invite_ip                     INTEGER          NULL"
+          <> ", invite_text                   TEXT         NOT NULL"
+          <> ", csv_title                     TEXT             NULL"
+          <> ", csv_contents                  TEXT             NULL"
+          <> ", csv_signatory_index           INTEGER          NULL"
+          <> ", cancelation_reason            TEXT             NULL"
+          <> ", sharing                       SMALLINT     NOT NULL"
+          <> ", rejection_time                TIMESTAMPTZ      NULL"
+          <> ", rejection_signatory_link_id   BIGINT           NULL"
+          <> ", rejection_reason              TEXT             NULL"
+          <> ", mail_footer                   TEXT             NULL"
+          <> ", lang                          SMALLINT     NOT NULL"
+          <> ", authentication_method         SMALLINT     NOT NULL"
+          <> ", delivery_method               SMALLINT     NOT NULL"
+          <> ", api_callback_url              TEXT             NULL"
+          <> ", unsaved_draft                 BOOL         NOT NULL DEFAULT FALSE"
           <> ", CONSTRAINT pk_documents PRIMARY KEY (id)"
           <> ")"
         return TVRcreated
@@ -129,7 +127,7 @@ tableSignatoryAttachments = tblTable {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 15
+  , tblVersion = 16
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -153,7 +151,6 @@ tableSignatoryLinks = tblTable {
        , ("really_deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        , ("csv_title", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("csv_contents", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("csv_signatory_index", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("signinfo_ocsp_response", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("sign_redirect_url", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("is_author", SqlColDesc {colType = SqlBitT, colNullable = Just False})
@@ -161,33 +158,32 @@ tableSignatoryLinks = tblTable {
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE signatory_links"
-          <> "( id BIGSERIAL"
-          <> ", document_id BIGINT NOT NULL"
-          <> ", user_id BIGINT NULL DEFAULT NULL"
-          <> ", sign_order INTEGER NOT NULL DEFAULT 1"
-          <> ", token BIGINT NOT NULL"
-          <> ", sign_time TIMESTAMPTZ NULL DEFAULT NULL"
-          <> ", sign_ip INTEGER NULL DEFAULT NULL"
-          <> ", seen_time TIMESTAMPTZ NULL DEFAULT NULL"
-          <> ", seen_ip INTEGER NULL DEFAULT NULL"
-          <> ", read_invitation TIMESTAMPTZ NULL DEFAULT NULL"
-          <> ", invitation_delivery_status SMALLINT NOT NULL DEFAULT 3"     -- this is Unknown
-          <> ", signinfo_text TEXT NULL DEFAULT NULL"
-          <> ", signinfo_signature TEXT NULL DEFAULT NULL"
-          <> ", signinfo_certificate TEXT NULL DEFAULT NULL"
-          <> ", signinfo_provider SMALLINT NULL DEFAULT NULL"
-          <> ", signinfo_first_name_verified BOOL NULL DEFAULT NULL"
-          <> ", signinfo_last_name_verified BOOL NULL DEFAULT NULL"
-          <> ", signinfo_personal_number_verified BOOL NULL DEFAULT NULL"
-          <> ", deleted BOOL NOT NULL DEFAULT false"
-          <> ", really_deleted BOOL NOT NULL DEFAULT false"
-          <> ", csv_title TEXT NULL"
-          <> ", csv_contents TEXT NULL"
-          <> ", csv_signatory_index INTEGER NULL"
-          <> ", signinfo_ocsp_response VARCHAR NULL DEFAULT NULL"
-          <> ", sign_redirect_url VARCHAR NULL DEFAULT NULL"
-          <> ", is_author BOOL NOT NULL"
-          <> ", is_partner BOOL NOT NULL"
+          <> "( id                                  BIGSERIAL"
+          <> ", document_id                         BIGINT       NOT NULL"
+          <> ", user_id                             BIGINT           NULL"
+          <> ", sign_order                          INTEGER      NOT NULL DEFAULT 1"
+          <> ", token                               BIGINT       NOT NULL"
+          <> ", sign_time                           TIMESTAMPTZ      NULL"
+          <> ", sign_ip                             INTEGER          NULL"
+          <> ", seen_time                           TIMESTAMPTZ      NULL"
+          <> ", seen_ip                             INTEGER          NULL"
+          <> ", read_invitation                     TIMESTAMPTZ      NULL"
+          <> ", invitation_delivery_status          SMALLINT     NOT NULL DEFAULT 3"     -- 3 equals Unknown
+          <> ", signinfo_text                       TEXT             NULL"
+          <> ", signinfo_signature                  TEXT             NULL"
+          <> ", signinfo_certificate                TEXT             NULL"
+          <> ", signinfo_provider                   SMALLINT         NULL"
+          <> ", signinfo_first_name_verified        BOOL             NULL"
+          <> ", signinfo_last_name_verified         BOOL             NULL"
+          <> ", signinfo_personal_number_verified   BOOL             NULL"
+          <> ", deleted                             BOOL         NOT NULL DEFAULT FALSE"
+          <> ", really_deleted                      BOOL         NOT NULL DEFAULT FALSE"
+          <> ", csv_title                           TEXT             NULL"
+          <> ", csv_contents                        TEXT             NULL"
+          <> ", signinfo_ocsp_response              VARCHAR          NULL"
+          <> ", sign_redirect_url                   VARCHAR          NULL"
+          <> ", is_author                           BOOL         NOT NULL"
+          <> ", is_partner                          BOOL         NOT NULL"
           <> ", CONSTRAINT pk_signatory_links PRIMARY KEY (id)"
           <> ")"
         return TVRcreated

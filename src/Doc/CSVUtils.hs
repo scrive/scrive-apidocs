@@ -46,9 +46,9 @@ getCSVCustomFields doc@Document{ documentsignatorylinks } =
     [] -> Right []
     [sl] ->
       case isAuthor sl of
-        True -> Left $ "getCSVCustomFields: signatory link #" ++ show (signatorylinkid sl) ++ " of document #" ++ 
+        True -> Left $ "getCSVCustomFields: signatory link #" ++ show (signatorylinkid sl) ++ " of document #" ++
                 show (documentid doc) ++ " cannot be both csvupload and author"
-        False -> 
+        False ->
           Right $ map sfValue . filter isFieldCustom . signatoryfields . signatorydetails $ sl
     _ -> Left $ "getCSVCustomFields: only one signatory per document can be csv upload in document #" ++ show (documentid doc)
 
@@ -119,12 +119,12 @@ cleanCSVContents eleg customfieldcount contents =
         All the validators that we're going to use to check the field values.
     -}
     fieldValidators :: [String -> Either (Int -> Int -> CSVProblem) String]
-    fieldValidators = map validate $ 
+    fieldValidators = map validate $
       [ (checkIfEmpty >=>  asValidName,  FirstNameNotValid )
       , (checkIfEmpty >=>  asValidName,  SecondNameNotValid )
       , (checkIfEmpty >=>  asValidEmail, EmailNotValid )
       , (                  asValidCompanyName, ValueNotValid)
-      , ((checkIfEmpty <| eleg |> return) >=> asValidCompanyNumber, NumberNotValid)
+      , ((checkIfEmpty <| eleg |> return), ValueNotValid)
        ] ++ repeat (asValidFieldValue, ValueNotValid)
 
     validate :: (String -> Result a, Int -> Int -> CSVProblem) -> String -> Either (Int -> Int -> CSVProblem) String

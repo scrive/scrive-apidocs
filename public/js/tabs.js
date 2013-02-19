@@ -11,6 +11,7 @@
 
 window.Tab = Backbone.Model.extend({
   defaults: {
+    pagehash : undefined,
     active : false,
     disabled : false,
     clickable : true,
@@ -19,25 +20,35 @@ window.Tab = Backbone.Model.extend({
     }
   ,
   initialize : function(args){
+       var self = this;
+       if (this.pagehash() != undefined && window.location.hash == "#" + this.pagehash())
+          this.set({active: true}, {silent: true});
+
        if (this.active())
           this.get("onActivate")();
   },
   name : function() {
       return this.get("name");
   },
+  pagehash : function() {
+      return this.get("pagehash");
+  },
   iconClass : function() {
-      return this.get("iconClass");  
+      return this.get("iconClass");
   },
   right : function() {
-      return this.get("right") == true;  
+      return this.get("right") == true;
   },
   elems : function() {
       return this.get("elems");
   },
   setActive : function(bool) {
       this.set({active: bool});
-      if (bool)
+      if (bool) {
+          if (this.pagehash() != undefined)
+            window.location.hash = this.pagehash();
           this.get("onActivate")();
+      }
   },
   active : function() {
         return this.get("active");
@@ -180,7 +191,7 @@ var TabsView = Backbone.View.extend({
                 li.addClass('withIcon');
             }
             li.append(icon);
-            
+
             if (tab.active())
                 li.addClass("active");
             li.click(function() {
@@ -199,7 +210,7 @@ var TabsView = Backbone.View.extend({
            var li = $("<li class='float-right' style='padding-left:0px;padding-right:20px;'/>").append(elem);
            tabsrow.append(li);
         });
-        
+
 
         this.model.hideAll();
         this.model.activeTab().initateAll();
@@ -213,11 +224,18 @@ var TabsView = Backbone.View.extend({
 
 
 window.KontraTabs = function(args){
+        var self = this;
         this.model = new Tabs(args);
         this.view = new TabsView({
                         model: this.model,
                         el : $("<div/>")
                     });
+        $(window).hashchange(function() {
+         _.each(self.model.tabs(), function(tab) {
+          if (tab.pagehash() != undefined && window.location.hash == "#" + tab.pagehash() && !tab.active())
+            self.model.activate(tab);
+          });
+        });
         return {
               model    : this.model
             , view     : this.view

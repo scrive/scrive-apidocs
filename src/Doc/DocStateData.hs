@@ -205,7 +205,6 @@ data SignatoryLink = SignatoryLink {
 data CSVUpload = CSVUpload {
     csvtitle :: String
   , csvcontents  :: [[String]]
-  , csvsignatoryindex :: Int
   } deriving (Eq, Ord, Show)
 
 data SignInfo = SignInfo {

@@ -1,5 +1,5 @@
-/* 
- * Main archive definition. Its a tab based set of different documents lists. 
+/*
+ * Main archive definition. Its a tab based set of different documents lists.
  *
  * Instrumented for Mixpanel
  */
@@ -89,7 +89,7 @@ var MailAPISettingsModel = Backbone.Model.extend({
 });
 
 
-  
+
 var MailAPISettingsView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
@@ -103,8 +103,8 @@ var MailAPISettingsView = Backbone.View.extend({
       var header = $("<div class='account-header'/>").text(localization.account.mailAPI.personalMailAPIHeader);
       var body = $("<div class='account-body'/>");
       box.append(header).append(body);
-     
-      
+
+
       var checkbox = $("<div class='checkbox'/>");
       if (model.hasPersonalMailApi()) checkbox.addClass("checked");
       checkbox.click(function() {
@@ -122,7 +122,7 @@ var MailAPISettingsView = Backbone.View.extend({
 
 
 
-      
+
       if (model.hasPersonalMailApi()) {
         // Filling content
         var personalMailApi = this.model.personalMailApi();
@@ -150,7 +150,7 @@ var MailAPISettingsView = Backbone.View.extend({
         var resetlabel = $("<label/>").text(localization.account.mailAPI.resetKeys);
         body.append($("<div class='checkbox-box'/>").append(resetcheckbox).append(resetlabel));
       }
-        
+
       return box;
     },
     limits: function() {
@@ -164,7 +164,7 @@ var MailAPISettingsView = Backbone.View.extend({
 
       var table = $("<table class='mailapitable'/>");
       body.append(table);
-      
+
       var limitinput = $("<input type='text'/>").val(model.hasPersonalMailApi() ? this.model.dailyLimitChange() : "N/A");
       if (!model.hasPersonalMailApi())
         limitinput.attr("disabled", "disabled");
@@ -184,7 +184,7 @@ var MailAPISettingsView = Backbone.View.extend({
             if(!checkbox.hasClass("checked"))
                 mixpanel.track('Check reset limits');
             else
-                mixpanel.track('Uncheck reset limits');     
+                mixpanel.track('Uncheck reset limits');
             checkbox.toggleClass("checked");
             model.setResetLimit(checkbox.hasClass("checked"));
           return false;
@@ -192,7 +192,7 @@ var MailAPISettingsView = Backbone.View.extend({
         var label = $("<label/>").text(localization.account.mailAPI.resetLimit);
         body.append($("<div class='checkbox-box'/>").append(checkbox).append(label));
       }
-           
+
       return box;
     },
     companySettings : function() {
@@ -218,7 +218,7 @@ var MailAPISettingsView = Backbone.View.extend({
       body.append("<BR/>");
       body.append($("<label/>").text(localization.account.mailAPI.processedToday + ":" + companyMailApi.sent()));
       body.append("<BR/>");
-      
+
       return box;
     },
     saveButton : function() {
@@ -234,7 +234,7 @@ var MailAPISettingsView = Backbone.View.extend({
           model.save();
           return false;
         }
-      }) 
+      })
       return box.append(button.input());
     },
     render: function () {
@@ -243,7 +243,7 @@ var MailAPISettingsView = Backbone.View.extend({
        var container = $(this.el).empty();
        var box = $("<div class='tab-content account'/>");
        container.append(box);
-       
+
        box.append(this.personalSettings());
        box.append(this.limits());
        if (model.hasCompanyMailApi())

@@ -237,8 +237,8 @@ instance FromJSValue CSVUpload  where
     fromJSValue = do
         rows <- fromJSValue
         case rows of
-             Just rs -> return $ Just $ CSVUpload {
-                    csvtitle = ""
-                    , csvcontents = rs
-                    , csvsignatoryindex = 0}
+             Just rs -> return $ Just $ CSVUpload
+                        { csvtitle = ""
+                        , csvcontents = rs
+                        }
              _ -> return Nothing

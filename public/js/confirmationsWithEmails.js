@@ -102,10 +102,11 @@ window.MailView = Backbone.View.extend({
         return this;
     },
     customtext : function() {
-        if (this.customtextvalue != undefined)
-            return this.customtextvalue;
         if (this.editor != undefined)
             return this.editor.val();
+        if (this.customtextvalue != undefined)
+            return this.customtextvalue;
+        return "";
     }
 });
 

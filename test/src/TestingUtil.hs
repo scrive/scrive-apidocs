@@ -115,6 +115,7 @@ instance Arbitrary CompanyInfo where
                          , companycity       = e
                          , companycountry    = f
                          , companyemaildomain = Nothing
+                         , companyipaddressmasklist = []
                          }
 
 instance Arbitrary MagicHash where
@@ -234,10 +235,8 @@ instance Arbitrary CSVUpload where
     cols <- arbitrary
     rows <- arbitrary
     b <- vectorOf rows (vectorOf cols arbitrary)
-    c <- arbitrary
     return $ CSVUpload { csvtitle = a
                        , csvcontents = b
-                       , csvsignatoryindex = c
                        }
 
 instance Arbitrary DocumentID where
@@ -523,6 +522,7 @@ addNewCompany = do
          , companycity = companycity
          , companycountry = companycountry
          , companyemaildomain = Just companyemaildomain
+         , companyipaddressmasklist = []
          }
     Just company <- dbQuery $ GetCompany cid
     return company

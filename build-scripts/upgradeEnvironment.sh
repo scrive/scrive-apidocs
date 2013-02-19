@@ -1,9 +1,18 @@
 #!/bin/bash
+#
+# Easiest way to get this script on the server is:
+#
+# git show master:build-scripts/upgradeEnvironment.sh | ssh staging@prod.scrive.lan tee upgradeEnvironment.sh
+# ssh staging@prod.scrive.lan chmod a+x upgradeEnvironment.sh
+#
+
 
 # Test number of arguments passed
-if [ "$#" != "2" ] ; then
+if [ "$#" != "2" ] && [ "$#" != 3 ]; then
     echo "upgradeEnvironment.sh usage:" ; echo
-    echo "   upgradeEnvironment.sh <deployment archive> <environment name>" ; echo
+    echo "   upgradeEnvironment.sh <deployment archive> <environment name>"
+    echo "   upgradeEnvironment.sh <deployment archive> <environment name> skip_pg_dump"
+    echo
     echo "Currently this script is only supported for prod and staging"
     exit 3
 fi
@@ -35,14 +44,16 @@ echo "Stopping services...."
 supervisorctl stop ${2} ${2}-mailer ${2}-cron
 
 
-echo "Dumping the database should something go wrong"
+if [ "$3" != "skip_pg_dump" ] ; then
+    echo "Dumping the database should something go wrong"
 
-if [ ! -d "${HOME}/db-backup" ] ; then
-    echo "Creating ${HOME}/db-backup to put database dumps into."
-    mkdir -p ${HOME}/db-backup
+    if [ ! -d "${HOME}/db-backup" ] ; then
+        echo "Creating ${HOME}/db-backup to put database dumps into."
+        mkdir -p ${HOME}/db-backup
+    fi
+
+    pg_dump ${2} -f ${HOME}/db-backup/${2}-${DATE}.bin -F custom -Z 9 -v
 fi
-
-pg_dump ${2} -f ${HOME}/db-backup/${2}-${DATE}.bin -F custom -Z 9 -v
 
 echo "Moving kontrakcja to kontrakcja-$DATE"
 

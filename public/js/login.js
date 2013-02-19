@@ -81,11 +81,22 @@ var LoginModel = Backbone.Model.extend({
                     window.location = model.referer() != undefined && model.referer() != "" && model.referer() != "/" ? model.referer() : "/newdocument";
                 });
             }  
-            else
-            {
-                mixpanel.track('Error',
-                               {Message: 'login failed'});
-              new FlashMessage({ content: localization.loginModal.loginFailed, color: "red"});
+            else {
+                if( resp.ipaddr ) {
+                    mixpanel.track('Error',
+                                   {Message: 'login failed due to IP restriction',
+                                   IP: resp.ipaddr,
+                                   Admin: resp.adminname});
+                    var text = localization.loginModal.loginFailedBadIP;
+                    text = text.replace("ipaddr", resp.ipaddr);
+                    text = text.replace("adminname", resp.adminname);
+                    new FlashMessage({ content: text, color: "red"});
+                }
+                else {
+                    mixpanel.track('Error',
+                                   {Message: 'login failed'});
+                    new FlashMessage({ content: localization.loginModal.loginFailed, color: "red"});
+                }
             }
           }
         });

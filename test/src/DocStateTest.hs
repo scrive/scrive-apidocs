@@ -1214,19 +1214,14 @@ testPreparationAttachCSVUploadAuthorIndexLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   (csvupload, t) <- rand 10 arbitrary
-  let Just ai = authorIndex (documentsignatorylinks doc)
+  let Just sl = getAuthorSigLink doc
   --execute
   success <- dbUpdate $ AttachCSVUpload (documentid doc)
-          (signatorylinkid ((documentsignatorylinks doc) !! ai))
-          (csvupload { csvsignatoryindex = ai })
+          (signatorylinkid sl)
+          (csvupload)
           (systemActor t)
   --assert
   assert $ not success
-
-authorIndex :: [SignatoryLink] -> Maybe Int
-authorIndex sls = case catMaybes $ zipWith (\sl i -> if isAuthor sl then Just i else Nothing) sls [0..] of
-  [] -> Nothing
-  x:_ -> Just x
 
 testPreparationAttachCSVUploadNonExistingSignatoryLink :: TestEnv ()
 testPreparationAttachCSVUploadNonExistingSignatoryLink = doTimes 3 $ do

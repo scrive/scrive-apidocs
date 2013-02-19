@@ -7,7 +7,7 @@ module Doc.DocControl(
       sendReminderEmail
     -- Top level handlers
     , handleNewDocument
-    , showCreateFromTemplate 
+    , showCreateFromTemplate
     , handleDownloadFile
     , handleSignShow
     , handleSignShowSaveMagicHash
@@ -148,15 +148,19 @@ showCreateFromTemplate = withUserGet $ pageCreateFromTemplate
 
     Handles an account setup from within the sign view.
 -}
-handleAcceptAccountFromSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
+handleAcceptAccountFromSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 handleAcceptAccountFromSign documentid
                             signatorylinkid = do
   magichash <- guardJustM $ dbQuery $ GetDocumentSessionToken signatorylinkid
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
   when (documentdeliverymethod document == PadDelivery) internalError
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
-  _ <- guardJustM $ User.Action.handleAccountSetupFromSign document signatorylink
-  return $ LinkSignDoc document signatorylink
+  muser <- User.Action.handleAccountSetupFromSign document signatorylink
+  case muser of
+    Just user -> runJSONGenT $ do
+      J.value "userid" (show $ userid user)
+    Nothing -> runJSONGenT $ do
+      return ()
 
 {- |
    Control the signing of a document
@@ -245,9 +249,6 @@ signDocument documentid
       --addFlash (OperationFailed, message)
       Log.debug $ "When signing document: " ++ message
       return LoopBack
-    Right (Left (DBDatabaseNotAvailable message)) -> do
-      addFlash (OperationFailed, message)
-      return LoopBack
     Left msg -> do
       addFlash  (OperationFailed, msg)
       return LoopBack
@@ -302,9 +303,6 @@ rejectDocument documentid siglinkid = do
 
   case edocs of
     Left (DBActionNotAvailable message) -> do
-      addFlash (OperationFailed, message)
-      getHomeOrDesignViewLink
-    Left (DBDatabaseNotAvailable message) -> do
       addFlash (OperationFailed, message)
       getHomeOrDesignViewLink
     Left _ -> internalError
@@ -538,7 +536,6 @@ handleIssueSign document timezone = do
             postDocumentPendingChange newdocument' newdocument' "web" -- We call it on same document since there was no change
             return $ Right newdocument'
           Right (Left (DBActionNotAvailable message)) -> return $ Left message
-          Right (Left (DBDatabaseNotAvailable message)) -> return $ Left message
           Right (Left _) -> return $ Left "Server error. Please try again."
           Left s -> return $ Left s
 
@@ -832,7 +829,7 @@ checkFileAccessWith fid msid mmh mdid mattid =
 
 -- | This handler downloads a file by file id. As specified in
 -- handlePageOfDocument rules of access need to be obeyd. This handler
--- download file as is. 
+-- download file as is.
 handleDownloadFile :: Kontrakcja m => FileID -> String -> m Response
 handleDownloadFile fid _nameForBrowser = do
   checkFileAccess fid
@@ -923,8 +920,14 @@ handleSetAttachments did = do
             case inp of
                  Just (Input (Left filepath) (Just filename) _contentType) -> do
                      content <- liftIO $ BSL.readFile filepath
-                     file <- dbUpdate $ NewFile filename (Binary $ BS.concat (BSL.toChunks content))
-                     return (Just (fileid file))
+                     cres <- liftIO $ preCheckPDF (concatChunks content)
+                     case cres of
+                       Left _ -> do
+                         Log.debug $ "Document #" ++ show did ++ ". File for attachment " ++ show filepath ++ " is broken PDF. Skipping."
+                         return Nothing
+                       Right content' -> do
+                         file <- dbUpdate $ NewFile filename content'
+                         return (Just (fileid file))
                  Just (Input  (Right c)  _ _)  -> do
                       case maybeRead (BSL.toString c) of
                           Just fid -> (fmap fileid) <$> (dbQuery $ GetFileByFileID fid)
@@ -998,4 +1001,4 @@ handleMarkAsSaved docid = do
   doc <- guardRightM $ getDocByDocID docid
   when_ (isPreparation doc) $ dbUpdate $ SetDocumentUnsavedDraft [documentid doc] False
   runJSONGenT $ return ()
-      
+

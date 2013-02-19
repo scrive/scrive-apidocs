@@ -150,7 +150,7 @@ window.DocumentsListDefinition = function(archive) { return {
     name : "Documents Table",
     loadOnInit : false,
     schema: new Schema({
-    url: "/docs",
+    url: "/api/frontend/list",
     extraParams : { documentType : "Document" },
     sorting: new Sorting({ fields: ["title", "status", "time", "party", "author"]}),
     paging: new Paging({}),

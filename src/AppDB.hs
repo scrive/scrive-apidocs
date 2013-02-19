@@ -122,6 +122,9 @@ kontraMigrations = [
   , expandEventsWithAffectedSignatoryAndTextMessage
   , addObligatoryColumnToSignatoryLinkFields
   , separateDocumentTypeInDocStatEvents
+  , addIPAddressMaskListToCompanies
+  , dropTrustWeaverReferenceFromDocuments
+  , dropCSVSignatoryIndexFromSignatoryLinks
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

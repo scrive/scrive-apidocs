@@ -345,8 +345,8 @@ handlePostUserLang = do
            lang = fromMaybe (lang $ usersettings user) mlang
          }
       return ()
-    Nothing -> return ()     
-  
+    Nothing -> return ()
+
 handlePostUserSecurity :: Kontrakcja m => m KontraLink
 handlePostUserSecurity = do
   ctx <- getContext
@@ -448,9 +448,10 @@ handleAccountSetupGetWithMethod uid token _ = do
   case (muser, userhasacceptedtermsofservice =<< muser) of
     (Just user, Nothing) -> do
       mcompany <-  getCompanyForUser user
-      Right <$> (simpleHtmlResponse =<< (renderTemplateAsPage ctx "accountSetupPage" Nothing False $ do
+      Right <$> (simpleHtmlResponse =<< (renderTemplateAsPage ctx "accountSetupPage" False $ do
                                             F.value "fstname" $ getFirstName user
                                             F.value "sndname" $ getLastName user
+                                            F.value "userid"  $ show uid
                                             F.value "company" $ companyname <$> companyinfo <$> mcompany))
     (Just _user, Just _) -> do
       -- this case looks impossible since we delete the account request upon signing up
@@ -564,7 +565,7 @@ handleBlockingInfo = do
         J.value "canceled"  canceled
         J.value "quantity"  quantity
         J.value "billingEnds" billingEnds
-    
+
 -- please treat this function like a public query form, it's not secure
 handleContactUs :: Kontrakcja m => m KontraLink
 handleContactUs = do
@@ -574,7 +575,7 @@ handleContactUs = do
   email   <- getField' "email"
   message <- getField' "message"
   plan    <- getField' "plan"
-  
+
   let uid = maybe "user not logged in" ((++) "user with id " . show . userid) ctxmaybeuser
       content = "<p>Hi there!</p>" ++
                 "<p>Someone requested information from the payments form.</p>" ++

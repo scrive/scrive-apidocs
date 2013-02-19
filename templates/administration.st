@@ -612,6 +612,11 @@ admincompany=
 		    <input type="text" style="width:200px;margin:0" value="$companyemaildomain$" name="companyemaildomain" />
 		  </td>
 		</tr>
+		<tr> <td>IP address mask list:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" value="$companyipaddressmasklist$" name="companyipaddressmasklist" />
+		  </td>
+		</tr>
                 $if(hasmailapi)$
 		<tr> <td style="padding-top:10px"><strong>Company Mail API</strong></td> <td> </td></tr>
 		<tr> <td>emails:</td>

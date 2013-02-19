@@ -9,9 +9,7 @@ import Control.Monad.Trans.Maybe
 import Doc.SignatoryTMP
 import Doc.DocStateData
 import Utils.Monad
-import Utils.Monoid
 import Utils.Prelude
-import Control.Monad
 import Data.Maybe
 import Kontra
 import Util.SignatoryLinkUtils
@@ -75,7 +73,7 @@ instance FromJSValue Lang where
 instance FromJSValue DraftData where
    fromJSValue = do
         title' <- fromJSValueField "title"
-        invitationmessage <-  liftM join $ liftM (fmap nothingIfEmpty) $ fromJSValueField "invitationmessage"
+        invitationmessage <-  fromJSValueField "invitationmessage"
         daystosign' <- fromJSValueField "daystosign"
         let minDaysToSign = 1
             maxDaysToSign = 90
@@ -114,7 +112,7 @@ applyDraftDataToDocument doc draft actor = do
      else do
       _ <- dbUpdate $ UpdateDraft (documentid doc) ( doc {
                                     documenttitle = title draft
-                                  , documentinvitetext = fromMaybe "" $ invitationmessage draft
+                                  , documentinvitetext = fromMaybe (documentinvitetext doc) $ invitationmessage draft
                                   , documentdaystosign = daystosign draft
                                   , documentauthenticationmethod = authentication draft
                                   , documentdeliverymethod = delivery draft

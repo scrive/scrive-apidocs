@@ -228,7 +228,7 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
         --this is a corner case where someone is trying to takeover someone in another company
         --we send emails to tell people, but we don't send any activation links
         _ <- sendTakeoverCompanyInternalWarningMail user company existinguser
-        return $ Just existinguser
+        return $ Nothing
       _ -> return Nothing
 
   -- record the invite and flash a message
@@ -272,7 +272,7 @@ handleResendToCompanyAccount = withCompanyAdmin $ \(user, company) -> do
         isJust (usercompany userbyemail) -> do
         -- this is a company user
           _ <- sendTakeoverCompanyInternalWarningMail user company userbyemail
-          return True
+          return False
       _ -> return False
 
   when resent $ addFlashM flashMessageCompanyAccountInviteResent
@@ -300,8 +300,6 @@ sendTakeoverCompanyInternalWarningMail inviter company user = do
                 ++ " has asked to takeover " ++ getFullName user
                 ++ " &lt;" ++ getEmail user ++ "&gt;"
                 ++ " who is already in a company."
-                ++ "  " ++ getFullName user
-                ++ " has been emailed about the problem and advised to contact us if they want to move accounts."
   scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
         to = [MailAddress { fullname = "info@skrivapa.se", email = "info@skrivapa.se" }]
       , title = "Attempted Company Account Takeover"

@@ -2,12 +2,12 @@
 
 (function(window){
 
-    
+
 window.BinListDefinition = function(archive) { return {
     name : "Trash table",
     loadOnInit : false,
     schema: new Schema({
-    url: "/docs",
+    url: "/api/frontend/list",
     extraParams : { documentType : "Rubbish" },
     sorting: new Sorting({ fields: ["title", "time", "type"]}),
     paging: new Paging({}),
@@ -41,7 +41,7 @@ window.BinListDefinition = function(archive) { return {
                             return true;
                           }
                }),
-     new ListAction({ 
+     new ListAction({
                 name : localization.archive.bin.remove.action,
                 emptyMessage :  localization.archive.bin.remove.emptyMessage,
                 avaible : function() {return true;},

@@ -60,7 +60,7 @@ renderFromBody title content = do
   res <- simpleHtmlResponse =<< pageFromBody False ctx ad title content
   clearFlashMsgs
   return res
-  
+
 {- |
    Renders some page body xml into a complete reponse
 -}
@@ -90,7 +90,7 @@ pageFromBody thin ctx ad title bodytext =
   renderTemplate "wholePage" $ do
     F.value "content" bodytext
     F.value "thin" thin
-    standardPageFields ctx title Nothing ad
+    standardPageFields ctx title ad
     F.valueM "httplink" $ getHttpHostpart
 
 notFoundPage :: Kontrakcja m => m Response
@@ -105,26 +105,26 @@ priceplanPage = renderTemplate_ "priceplanPage" >>= renderFromBody kontrakcja
 {- |
     Render a template as an entire page.
 -}
-renderTemplateAsPage :: Kontrakcja m => Context -> String -> Maybe (Lang -> KontraLink) -> Bool -> (Fields m ()) -> m String
-renderTemplateAsPage ctx templateName mpubliclink showCreateAccount f = do
+renderTemplateAsPage :: Kontrakcja m => Context -> String -> Bool -> (Fields m ()) -> m String
+renderTemplateAsPage ctx templateName showCreateAccount f = do
   ad <- getAnalyticsData
   renderTemplate templateName $ do
     contextInfoFields ctx
     mainLinksFields $ ctxlang ctx
     staticLinksFields $ ctxlang ctx
-    langSwitcherFields ctx mpubliclink
+    langSwitcherFields ctx
     F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
     F.value "showCreateAccount" $ showCreateAccount && (isNothing $ ctxmaybeuser ctx)
     F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
     F.object "analytics" $ analyticsTemplates ad
     f
 
-standardPageFields :: TemplatesMonad m => Context -> String -> Maybe (Lang -> KontraLink) -> AnalyticsData -> Fields m ()
-standardPageFields ctx title mpubliclink ad = do
+standardPageFields :: TemplatesMonad m => Context -> String -> AnalyticsData -> Fields m ()
+standardPageFields ctx title ad = do
   F.value "title" title
   mainLinksFields $ ctxlang ctx
   staticLinksFields $ ctxlang ctx
-  langSwitcherFields ctx mpubliclink
+  langSwitcherFields ctx
   contextInfoFields ctx
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
   F.value "staticResources" $ SR.htmlImportList "systemPage" (ctxstaticresources ctx)
@@ -172,13 +172,10 @@ mainLinksFields lang = do
   F.value "linkquestion"         $ show LinkAskQuestion
   F.value "linksignup"           $ show LinkSignup
 
-langSwitcherFields :: Monad m => Context -> Maybe (Lang -> KontraLink) -> Fields m ()
-langSwitcherFields Context{ctxlang} mlink = do
+langSwitcherFields :: Monad m => Context -> Fields m ()
+langSwitcherFields Context{ctxlang} = do
   F.value "langswedish" $ getLang ctxlang == LANG_SV
   F.value "langenglish" $ getLang ctxlang == LANG_EN
-  F.value "linklangswitch" $ show LinkLangSwitch
-  F.value "linksv" $ fmap (\l -> show $ l LANG_SV) mlink
-  F.value "linken" $ fmap (\l -> show $ l LANG_EN) mlink
 
 {- |
     Defines the static links which are language sensitive.
@@ -226,4 +223,3 @@ localizationScript :: Kontrakcja m => String -> m Response
 localizationScript _ = do
    script <- renderTemplate_ "javascriptLocalisation"
    ok $ toResponseBS (BS.fromString "text/javascript;charset=utf-8") $ BSL.fromString script
-    

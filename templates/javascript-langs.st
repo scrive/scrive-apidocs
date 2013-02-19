@@ -4,8 +4,9 @@
 #### it just uses this module
 ####
 javascriptLocalisation =
-    var localization =
-        {      welcomeback : "$_welcomeback()$"
+  window.localization =
+        {      code : "$_code()$"
+             , welcomeback : "$_welcomeback()$"
              , resetYourPassword : "$_resetYourPassword()$"
              , resetYourPasswordCheckEmail : "$_resetYourPasswordCheckEmail()$"
              , getStartedInstantly : "$_getStartedInstantly()$"
@@ -105,6 +106,8 @@ javascriptLocalisation =
                        , cancelled : "$_signatoryMessageIfCancelled()$"
                        , other : "$_signatoryMessageIfElse()$"
                        , waitingForSignature: "$_waitingForSignature()$"
+                       , sentViewer: "$_signatoryMessageSentViewer()$"
+                       , openedViewer: "$_signatoryMessageOpenedViewer()$"
                     }
             , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"
             , evidenceAttachmentBoxHeader : "$_evidenceAttachmentBoxHeader()$"
@@ -295,7 +298,6 @@ javascriptLocalisation =
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
                     , missingOrWrongPersonalNumber : "$_backToStepTwoAndFillPersonNumber()$"
                     , missingOrWrongPlacedAuthorField : "$_missingPlacedAuthorFieldValue()$"
-                    , missingOrWrongCustomFieldValue: "$_missingCustomFieldValue()$"
                     , sameMails : "$_repetedEmailAddress()$"
                     , atLeastOnePersonMustSigns : "$_atLeastOnePersonMustSigns()$"
                     , notReadyField : "$_setAllFields()$"
@@ -505,20 +507,19 @@ javascriptLocalisation =
                       name : "$_paymentPlanTeam()$",
                       tag :"$_paymentPlanTeamTag()$",
                       price : "$_paymentsTeamPrice()$<span class='aster'>*</span>",
-                      price3 : "$_paymentPlanPerUserPerMonth()$",
+                      price3 : "$_paymentPlanPerUserPerMonth()$"
                     }
                     , form : {
                       name : "$_paymentPlanForm()$",
                       tag : "$_paymentPlanFormTag()$",
                       price : "$_paymentPlanFormPrice()$<span class='aster'>*</span>",
-                      price3 : "$_paymentPlanPerMonthPerDoc()$",
+                      price3 : "$_paymentPlanPerMonthPerDoc()$"
                     }
                     , enterprise : {
                       name : "$_paymentPlanEnterprise()$",
                       tag : "$_paymentPlanEnterpriseTag()$",
                       price : "$_paymentsQuote()$",
-                      price3 : "$_paymentsGetInTouch()$",
-
+                      price3 : "$_paymentsGetInTouch()$"
                     }
                     }
            , table: { currentplan : "$_paymentPlanCurrentPlan()$"
@@ -700,6 +701,7 @@ javascriptLocalisation =
            , forgotpassword : "$_forgotpassword()$"
            , sendNewPassword : "$_loginModalForgotPasswordSendNewPassword()$"
            , loginFailed : "$_flashMessageLoginPageRedirectReasonWrongMailOrPassword()$"
+           , loginFailedBadIP : "$_flashMessageLoginPageRedirectReasonWrongIPAddress()$"
            , invalidEmail : "$_flashEmailIncorectlyFormed()$"
            , noUser : "$_cantSendReminderNoUser()$"
            , tooMuch : "$_cantSendReminderTooMuch()$"
@@ -854,6 +856,7 @@ javascriptLocalisation =
               , langEN          : "$_English()$"
               , footerSection   : "$_userDocumentsSettings()$"
               , useFooter       : "$_userDocumentSettingsMailFooter()$"
+              , ipMaskSection   : "$_userIPMaskSection()$"
               , save : "$_SaveChanges()$"
             }
           , companySettings : "$_CompanySettings()$"

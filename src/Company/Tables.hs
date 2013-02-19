@@ -5,7 +5,7 @@ import DB
 tableCompanies :: Table
 tableCompanies = tblTable {
     tblName = "companies"
-  , tblVersion = 7
+  , tblVersion = 8
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("external_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -19,10 +19,11 @@ tableCompanies = tblTable {
        , ("logo", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
        , ("bars_textcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("email_domain", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("ip_address_mask_list", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE companies ("
-          <> "  id              BIGINT NOT NULL"
+          <> "  id              BIGSERIAL NOT NULL"
           <> ", external_id     TEXT       NULL"
           <> ", name            TEXT   NOT NULL DEFAULT ''"
           <> ", number          TEXT   NOT NULL DEFAULT ''"
@@ -34,13 +35,10 @@ tableCompanies = tblTable {
           <> ", logo            BYTEA      NULL"
           <> ", bars_textcolour TEXT       NULL"
           <> ", email_domain    TEXT       NULL"
+          <> ", ip_address_mask_list    TEXT       NULL"
           <> ", CONSTRAINT pk_companies PRIMARY KEY (id)"
           <> ")"
         return TVRcreated
       _ -> return TVRinvalid
   , tblIndexes = [ tblIndexOnColumn "external_id" ]
-  , tblPutProperties = do
-    kRunRaw $ "CREATE SEQUENCE companies_id_seq"
-    kRunRaw $ "SELECT setval('companies_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM companies))"
-    kRunRaw $ "ALTER TABLE companies ALTER id SET DEFAULT nextval('companies_id_seq')"
   }

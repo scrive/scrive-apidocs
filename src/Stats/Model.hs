@@ -249,6 +249,7 @@ selectUsersAndCompaniesAndInviteInfoSQL = SQL ("SELECT "
   <> ", c.bars_textcolour"
   <> ", c.logo"
   <> ", email_domain"
+  <> ", ip_address_mask_list"
   -- InviteInfo:
   <> ", user_invite_infos.inviter_id"
   <> ", user_invite_infos.invite_time"
@@ -267,7 +268,8 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
      has_accepted_terms_of_service signup_method company_id
      first_name last_name personal_number company_position phone mobile
      email lang customfooter company_name company_number is_free cid eid
-     name number address zip' city country bars_background bars_textcolour logo email_domain
+     name number address zip' city country bars_background bars_textcolour logo 
+     email_domain ip_address_mask
      inviter_id invite_time invite_type
      = (
        User {
@@ -307,6 +309,7 @@ fetchUsersAndCompaniesAndInviteInfo = reverse `liftM` kFold decoder []
                 , companycity = $(fromJust) city
                 , companycountry = $(fromJust) country
                 , companyemaildomain = email_domain
+                , companyipaddressmasklist = maybe [] $(read) ip_address_mask
                 }
               , companyui = CompanyUI {
                   companybarsbackground = bars_background

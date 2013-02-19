@@ -76,6 +76,7 @@ import File.Model
 import File.Storage
 import qualified PadQueue.API as PadQueue
 import Data.String.Utils (replace)
+import EvidenceLog.Control
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = dir "api" $ choice
@@ -96,6 +97,7 @@ versionedAPI _version = choice [
   dir "delete"             $ hDeleteAllowHttp  $ toK1 $ apiCallDelete,
   dir "get"                $ hGetAllowHttp $ toK1 $ apiCallGet,
   dir "list"               $ hGetAllowHttp $ apiCallList,
+  dir "evidencelog"        $ hGetAllowHttp $ apiCallEvidenceLog,
   dir "downloadmainfile"   $ hGetAllowHttp  $ toK2 $ apiCallDownloadMainFile,
 
   dir "padqueue"           $ PadQueue.padqueueAPI,
@@ -310,7 +312,7 @@ apiCallGet did = api $ do
          pq <- case (mauser) of
                 Just u -> dbQuery $ GetPadQueue $ (userid u)
                 _ -> return Nothing
-         
+
          Ok <$> documentJSON includeEvidenceAttachments False False pq (Just sl) doc
       _ -> do
         (user, _actor, external) <- getAPIUser APIDocCheck
@@ -320,14 +322,14 @@ apiCallGet did = api $ do
             let sl = fromJust msiglink
             dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
                  (signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
-                 
+
         mauser <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
                        Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
                        _ -> return Nothing
         pq <- case (mauser) of
                 Just u -> dbQuery $ GetPadQueue $ (userid u)
                 _ -> return Nothing
-                
+
         let haspermission = (isJust msiglink)
                          || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared doc))
         if (haspermission)
@@ -343,6 +345,15 @@ apiCallList = api $ do
   modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
   return res
 
+apiCallEvidenceLog :: Kontrakcja m => DocumentID -> m Response
+apiCallEvidenceLog did = api $ do
+  (user, _actor, _) <- getAPIUser APIDocCheck
+  ctx <- getContext
+  modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
+  res <- lift $ jsonDocumentEvidenceLog did
+  modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
+  return res
+
 
 -- | This handler downloads main file of document. This means sealed file for Closed documents.
 --   or one with preprinted fields if not closed
@@ -352,7 +363,7 @@ apiCallDownloadMainFile did _nameForBrowser = api $ do
 
   (msid :: Maybe SignatoryLinkID) <- lift $ readField "signatorylinkid"
   mmh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msid
-  
+
   doc <- do
            case (msid, mmh) of
             (Just sid, Just mh) -> apiGuardL  (forbidden "Access to file is forbiden") $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
@@ -382,8 +393,8 @@ apiCallDownloadMainFile did _nameForBrowser = api $ do
         let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
             res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
         return res2
-  
-  
+
+
 -- this one must be standard post with post params because it needs to
 -- be posted from a browser form
 -- Change main file, file stored in input "file" OR templateid stored in "template"

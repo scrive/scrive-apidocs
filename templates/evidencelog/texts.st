@@ -10,7 +10,7 @@ AddDocumentAttachmentEvidenceText=Attachment “$name$” uploaded by $actor$.
 PendingToAwaitingAuthorEvidenceText=$actor$ emailed notification to author ($email$) that all other parties have signed and the author is next to sign.
 ###
 UpdateFieldsEvidenceText=
-Field $fieldtype$ for signatory ($email$) was $if(checked)$checked$elseif(unchecked)$unchecked$elseif(value)$filled with "$value$"$elseif(signature)$signed <img alt="signature for $email$" src="$signature$" width="100" height="50"></img>$else$changed$endif$ by $actor$.
+Field $fieldtype$ for signatory ($email$) was $if(checked)$checked$elseif(unchecked)$unchecked$elseif(value)$filled with "$value$"$elseif(signature)$signed$else$changed$endif$ by $actor$. $if(signature)$<BR/><img alt="signature for $email$" src="$signature$" width="100" height="50"></img>$endif$
 ###
 SetElegitimationIdentificationEvidenceText=$actor$ required e-legitimation verification for all signatories.
 ###
@@ -124,7 +124,7 @@ AddFieldEvidenceText=
 Field $fieldtype$ for signatory ($email$) was $if(checked)$added checked$elseif(unchecked)$added unchecked$elseif(value)$filled with "$value$"$else$added$endif$ by $actor$.$if(hasplacements)$ Field was placed onto the page at coordinates $placements:{p | (page=$p.page$, x=$p.x$, y=$p.y$) }; separator=","$.$endif$
 ###
 ChangeFieldEvidenceText=
-Field $fieldtype$ for signatory ($email$) was $if(checked)$checked$elseif(unchecked)$unchecked$elseif(value)$filled with "$value$"$elseif(signature)$signed <img alt="signature for $email$" src="$signature$" width="100" height="50"></img>$else$changed$endif$ by $actor$.$if(hasplacements)$ Field was placed onto the page at coordinates $placements:{p | (page=$p.page$, x=$p.x$, y=$p.y$) }; separator=","$.$endif$
+Field $fieldtype$ for signatory ($email$) was $if(checked)$checked$elseif(unchecked)$unchecked$elseif(value)$filled with "$value$"$elseif(signature)$signed$else$changed$endif$ by $actor$.$if(hasplacements)$ Field was placed onto the page at coordinates $placements:{p | (page=$p.page$, x=$p.x$, y=$p.y$) }; separator=","$.$endif$ $if(signature)$ <BR/><img alt="signature for $email$" src="$signature$" width="100" height="50"></img>$endif$
 ###
 ResetSignatoryDetailsEvidenceText=DO NOT USE!
 ###

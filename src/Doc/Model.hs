@@ -598,7 +598,6 @@ selectSignatoryLinksX extension = sqlSelect "signatory_links" $ do
   sqlResult "signatory_links.is_partner"
   sqlResult "signatory_links.csv_title"
   sqlResult "signatory_links.csv_contents"
-  sqlResult "signatory_links.csv_signatory_index"
   sqlResult "signatory_links.deleted"
   sqlResult "signatory_links.really_deleted"
   sqlResult "signatory_links.sign_redirect_url"
@@ -624,7 +623,7 @@ fetchSignatoryLinks = do
      invitation_delivery_status signinfo_text signinfo_signature signinfo_certificate
      signinfo_provider signinfo_first_name_verified signinfo_last_name_verified
      signinfo_personal_number_verified signinfo_ocsp_response
-     is_author is_partner csv_title csv_contents csv_signatory_index
+     is_author is_partner csv_title csv_contents
      deleted really_deleted signredirecturl status_class
      safileid saname sadesc
       | docid == nulldocid                      = (document_id, [link], linksmap)
@@ -673,7 +672,7 @@ fetchSignatoryLinks = do
           , signatorylinkdeleted = deleted
           , signatorylinkreallydeleted = really_deleted
           , signatorylinkcsvupload =
-              CSVUpload <$> csv_title <*> csv_contents <*> csv_signatory_index
+              CSVUpload <$> csv_title <*> csv_contents
           , signatoryattachments = sigAtt
           , signatorylinkstatusclass = status_class
           , signatorylinksignredirecturl = signredirecturl
@@ -704,7 +703,6 @@ insertSignatoryLinksAsAre documentid links = do
            sqlSetList "signinfo_personal_number_verified" $ fmap signaturepersnumverified <$> signatorysignatureinfo <$> links
            sqlSetList "csv_title" $ fmap csvtitle <$> signatorylinkcsvupload <$> links
            sqlSetList "csv_contents" $ fmap csvcontents <$> signatorylinkcsvupload <$> links
-           sqlSetList "csv_signatory_index" $ fmap csvsignatoryindex <$> signatorylinkcsvupload <$> links
            sqlSetList "deleted" $ signatorylinkdeleted <$> links
            sqlSetList "really_deleted" $ signatorylinkreallydeleted <$> links
            sqlSetList "signinfo_ocsp_response" $ fmap signatureinfoocspresponse <$> signatorysignatureinfo <$> links
@@ -1056,7 +1054,6 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachCSVUpload Bool where
       Just Preparation -> do
         updateWithEvidence tableSignatoryLinks
           (    "csv_title =" <?> csvtitle csvupload
-         <+> ", csv_signatory_index =" <?> csvsignatoryindex csvupload
          <+> ", csv_contents =" <?> csvcontents csvupload
          <+> "WHERE document_id =" <?> did
          <+> "AND signatory_links.id =" <?> slid
