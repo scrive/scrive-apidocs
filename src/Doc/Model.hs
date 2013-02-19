@@ -1101,19 +1101,20 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachFile () where
     return ()
 
 data DetachFile = DetachFile DocumentID Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m DetachFile Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m DetachFile () where
   update (DetachFile did a) = do
     let time = actorTime a
-    updateWithEvidence tableDocuments
-      (    "mtime =" <?> time
-     <+> ", file_id =" <?> (Nothing :: Maybe FileID)
-     <+> "WHERE id =" <?> did <+> "AND status =" <?> Preparation
-      ) $ do
-      return $ InsertEvidenceEvent
+    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+      sqlSet "mtime" time
+      sqlSet "file_id" SqlNull
+      sqlWhereDocumentIDIs did
+      sqlWhereDocumentStatusIs Preparation
+    _ <- update $ InsertEvidenceEvent
         DetachFileEvidence
         (value "actor" (actorWho a))
         (Just did)
         a
+    return ()
 
 data AttachSealedFile = AttachSealedFile DocumentID FileID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachSealedFile Bool where

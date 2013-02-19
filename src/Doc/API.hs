@@ -437,7 +437,7 @@ documentChangeMainFile docid = api $ do
     Just  (fileid,filename) -> do
       dbUpdate $ AttachFile docid fileid aa
       apiGuardL' $ dbUpdate $ SetDocumentTitle docid filename aa
-    Nothing -> apiGuardL' $ dbUpdate $ DetachFile docid aa
+    Nothing -> dbUpdate $ DetachFile docid aa
 
 
   return ()
