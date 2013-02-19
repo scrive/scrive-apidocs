@@ -19,5 +19,5 @@ main = do
   args <- getArgs
   let disabled = allFlags \\ args
   let flags = map (\f -> "-f-" ++ f) disabled
-  _ <- rawSystem "cabal-dev" (["configure"] ++ flags ++ ["-fallow-warnings"])
+  _ <- rawSystem "cabal-dev" (["configure"] ++ flags ++ ["-fallow-warnings", "--disable-optimization"])
   return ()
