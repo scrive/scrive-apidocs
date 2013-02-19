@@ -167,10 +167,13 @@ instance ToAPIResponse FormEncoded where
     in setHeader "Content-Type" "application/x-www-form-urlencoded" r1
 
 newtype APIMonad m a = AM { runAPIMonad :: m a }
-  deriving (Applicative, CryptoRNG, Functor, Monad, MonadDB, MonadIO, TemplatesMonad, MonadBase b)
+  deriving (Applicative, CryptoRNG, Functor, Monad, MonadIO, TemplatesMonad)
 
 instance MonadTrans APIMonad where
   lift = AM
+
+deriving instance (MonadBase IO m) => MonadBase IO (APIMonad m)
+deriving instance (MonadDB m) => MonadDB (APIMonad m)
 
 instance KontraMonad m => KontraMonad (APIMonad m) where
   getContext = lift getContext
