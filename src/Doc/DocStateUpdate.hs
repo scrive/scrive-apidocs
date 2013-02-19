@@ -261,7 +261,7 @@ attachFile docid filename content = onlyAuthor docid $ \_ -> do
   file <- dbUpdate $ NewFile filename content14
   actor <- guardJustM $ mkAuthorActor <$> getContext
   mdoc <- runMaybeT $ do
-    True <- dbUpdate $ AttachFile docid (fileid file) actor
+    dbUpdate $ AttachFile docid (fileid file) actor
     Just doc <- dbQuery $ GetDocumentByDocumentID docid
     return doc
   return $ case mdoc of

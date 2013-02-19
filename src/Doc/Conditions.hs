@@ -191,6 +191,20 @@ sqlWhereSignatoryIsPartner :: (MonadState v m, SqlWhere v)
 sqlWhereSignatoryIsPartner = sqlWhereE SignatoryIsNotPartner $
   "signatory_links.is_partner"
 
+data SignatoryIsAuthor = SignatoryIsAuthor
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue SignatoryIsAuthor where
+  toJSValue (SignatoryIsAuthor) = runJSONGen $ do
+                     value "message" ("Signatory is author" :: String)
+
+instance KontraException SignatoryIsAuthor
+
+sqlWhereSignatoryIsNotAuthor :: (MonadState v m, SqlWhere v)
+                                 => m ()
+sqlWhereSignatoryIsNotAuthor = sqlWhereE SignatoryIsAuthor $
+  "NOT signatory_links.is_author"
+
 
 data SignatoryHasAlreadySigned = SignatoryHasAlreadySigned
   deriving (Eq, Ord, Show, Typeable)

@@ -31,7 +31,6 @@ import Stats.Control
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
-import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import qualified Log (scrivebymail, scrivebymailfailure, mailAPI, jsonMailAPI)
 
@@ -274,7 +273,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
 
   content14 <- guardRightM $ liftIO $ preCheckPDF pdfBinary
   file <- dbUpdate $ NewFile title content14
-  _ <- guardTrueM $ dbUpdate (AttachFile (documentid doc) (fileid file) actor)
+  dbUpdate (AttachFile (documentid doc) (fileid file) actor)
   _ <- dbUpdate $ SetDocumentAuthenticationMethod (documentid doc) StandardAuthentication actor
   _ <- dbUpdate $ SetDocumentDeliveryMethod (documentid doc) EmailDelivery actor
   res <- (sequence $ [dbUpdate $ ResetSignatoryDetails (documentid doc) (userDetails:signatories) actor])
@@ -516,7 +515,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
   content14 <- guardRightM $ liftIO $ preCheckPDF pdfBinary
   file <- dbUpdate $ NewFile title content14
-  _ <- guardTrueM $ dbUpdate (AttachFile (documentid doc) (fileid file) actor)
+  dbUpdate (AttachFile (documentid doc) (fileid file) actor)
 
   _ <- dbUpdate $ SetDocumentAuthenticationMethod (documentid doc) StandardAuthentication actor
   _ <- dbUpdate $ SetDocumentDeliveryMethod (documentid doc) EmailDelivery actor

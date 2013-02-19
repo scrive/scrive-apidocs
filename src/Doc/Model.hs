@@ -1060,52 +1060,45 @@ instance (MonadDB m, TemplatesMonad m, MonadBase IO m) => DBUpdate m ArchiveDocu
 
 
 data AttachCSVUpload = AttachCSVUpload DocumentID SignatoryLinkID CSVUpload Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachCSVUpload Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachCSVUpload () where
   update (AttachCSVUpload did slid csvupload actor) = do
-    mstatus <- getOne $ SQL "SELECT status FROM documents WHERE id = ?" [toSql did]
-    case mstatus of
-      Nothing -> do
-        Log.error $ "Cannot AttachCSVUpload document " ++ show did ++ " because it does not exist"
-        return False
-      Just Preparation -> do
-        updateWithEvidence tableSignatoryLinks
-          (    "csv_title =" <?> csvtitle csvupload
-         <+> ", csv_contents =" <?> csvcontents csvupload
-         <+> "WHERE document_id =" <?> did
-         <+> "AND signatory_links.id =" <?> slid
-         <+> "AND deleted = FALSE AND NOT is_author"
-          ) $ do
-          return $ InsertEvidenceEvent
+    kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
+      sqlFrom "documents"
+      sqlWhere "documents.id = signatory_links.document_id"
+
+      sqlSet "csv_title" (csvtitle csvupload)
+      sqlSet "csv_contents" (csvcontents csvupload)
+      sqlWhereDocumentIDIs did
+      sqlWhereSignatoryLinkIDIs slid
+      sqlWhereDocumentStatusIs Preparation
+
+      sqlWhereSignatoryIsNotAuthor
+
+    _ <- update $ InsertEvidenceEvent
             AttachCSVUploadEvidence
             (value "csvtitle" (csvtitle csvupload) >> value "actor" (actorWho actor))
             (Just did)
             actor
-      -- standard conversion puts error in DocumentError argument, so we
-      -- can't try to evaluate it here.
-      Just DocumentError{} -> do
-        Log.error $ errmsg "DocumentError"
-        return False
-      Just status -> do
-        Log.error $ errmsg $ show status
-        return False
-    where
-      errmsg status = "Document #" ++ show did ++ " is in " ++ status ++ " state, must be Preparation"
+    return ()
 
 data AttachFile = AttachFile DocumentID FileID Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachFile Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m AttachFile () where
   update (AttachFile did fid a) = do
     let time = actorTime a
-    updateWithEvidence tableDocuments
-      (    "mtime =" <?> time
-     <+> ", file_id =" <?> fid
-     <+> "WHERE id =" <?> did <+> "AND status =" <?> Preparation
-      ) $ do
-      f <- exactlyOneObjectReturnedGuard =<< query (GetFileByFileID fid)
-      return $ InsertEvidenceEvent
+    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+      sqlSet "mtime" time
+      sqlSet "file_id" fid
+      -- FIXME: check if file actually exists
+      sqlWhereDocumentIDIs did
+      sqlWhereDocumentStatusIs Preparation
+
+    f <- exactlyOneObjectReturnedGuard =<< query (GetFileByFileID fid)
+    _ <- update $ InsertEvidenceEvent
         AttachFileEvidence
         (value "actor" (actorWho a) >> value "filename" (filename f))
         (Just did)
         a
+    return ()
 
 data DetachFile = DetachFile DocumentID Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m DetachFile Bool where

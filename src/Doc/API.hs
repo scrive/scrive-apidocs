@@ -155,7 +155,7 @@ apiCallCreateFromFile = api $ do
   case mfile of
     Nothing -> return ()
     Just file -> do
-      True <- dbUpdate $ AttachFile (documentid doc) (fileid file) actor
+      dbUpdate $ AttachFile (documentid doc) (fileid file) actor
       return ()
   let doc' = doc{ documentfile = fileid `fmap` mfile }
   _ <- lift $ addDocumentCreateStatEvents (documentid doc) "web"
@@ -435,7 +435,7 @@ documentChangeMainFile docid = api $ do
 
   case mft of
     Just  (fileid,filename) -> do
-      apiGuardL' $ dbUpdate $ AttachFile docid fileid aa
+      dbUpdate $ AttachFile docid fileid aa
       apiGuardL' $ dbUpdate $ SetDocumentTitle docid filename aa
     Nothing -> apiGuardL' $ dbUpdate $ DetachFile docid aa
 

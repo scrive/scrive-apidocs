@@ -684,8 +684,8 @@ testAttachCSVUploadEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isPreparation &&^ ((<=) 2 . length . documentsignatorylinks))
   let Just sl = getSigLinkFor doc (not . (isAuthor::SignatoryLink->Bool))
-  success <- randomUpdate $ \c t->AttachCSVUpload (documentid doc) (signatorylinkid sl) c (systemActor t)
-  assert success
+  randomUpdate $ \c t->AttachCSVUpload (documentid doc) (signatorylinkid sl) c (systemActor t)
+
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == AttachCSVUploadEvidence) lg
 
@@ -694,8 +694,8 @@ testAttachFileEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   file <- addNewRandomFile
-  success <- randomUpdate $ \t->AttachFile (documentid doc) (fileid file) (systemActor t)
-  assert success
+  randomUpdate $ \t->AttachFile (documentid doc) (fileid file) (systemActor t)
+
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == AttachFileEvidence) lg
 
@@ -1067,9 +1067,8 @@ testDocumentAttachNotPreparationLeft = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
   file <- addNewRandomFile
   --execute
-  success <- randomUpdate $ \t->AttachFile (documentid doc) (fileid file) (systemActor t)
-  --assert
-  assert $ not success
+  assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $ do
+    randomUpdate $ \t->AttachFile (documentid doc) (fileid file) (systemActor t)
 
 testDocumentAttachPreparationRight :: TestEnv ()
 testDocumentAttachPreparationRight = doTimes 10 $ do
@@ -1078,10 +1077,9 @@ testDocumentAttachPreparationRight = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   file <- addNewRandomFile
   --execute
-  success <- randomUpdate $ \t -> AttachFile (documentid doc) (fileid file) (systemActor t)
+  randomUpdate $ \t -> AttachFile (documentid doc) (fileid file) (systemActor t)
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   --assert
-  assert success
   assertInvariants ndoc
 
 
@@ -1091,9 +1089,9 @@ testNoDocumentAttachAlwaysLeft = doTimes 10 $ do
   file <- addNewRandomFile
   --execute
   -- non-existent docid
-  success <- randomUpdate $ (\docid t -> AttachFile docid (fileid file) (systemActor t))
+  assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
+    randomUpdate $ (\docid t -> AttachFile docid (fileid file) (systemActor t))
   --assert
-  assert $ not success
 
 testDocumentAttachHasAttachment :: TestEnv ()
 testDocumentAttachHasAttachment = doTimes 10 $ do
@@ -1102,10 +1100,9 @@ testDocumentAttachHasAttachment = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   file <- addNewRandomFile
   --execute
-  success <- randomUpdate $ \t -> AttachFile (documentid doc) (fileid file) (systemActor t)
+  randomUpdate $ \t -> AttachFile (documentid doc) (fileid file) (systemActor t)
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   --assert
-  assert success
   -- assertJust $ find ((== a) . filename) (documentfiles $ fromRight edoc)
   assertInvariants ndoc
 
@@ -1197,9 +1194,9 @@ testNoDocumentAttachCSVUploadAlwaysLeft :: TestEnv ()
 testNoDocumentAttachCSVUploadAlwaysLeft = doTimes 10 $ do
   -- setup
   --execute
-  success <- randomUpdate $ \did slid csv t->AttachCSVUpload did slid csv (systemActor t)
-  --assert
-  assert $ not success
+  --assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
+  assertRaisesKontra (\DBBaseLineConditionIsFalse {} -> True) $ do
+    randomUpdate $ \did slid csv t->AttachCSVUpload did slid csv (systemActor t)
 
 testNotPreparationAttachCSVUploadAlwaysLeft :: TestEnv ()
 testNotPreparationAttachCSVUploadAlwaysLeft = doTimes 10 $ do
@@ -1208,9 +1205,8 @@ testNotPreparationAttachCSVUploadAlwaysLeft = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
   slid <- rand 10 $ elements [signatorylinkid sl | sl <- documentsignatorylinks doc, isSignatory sl]
   --execute
-  success <- randomUpdate $ \csv t -> AttachCSVUpload (documentid doc) slid csv (systemActor t)
-  --assert
-  assert $ not success
+  assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $ do
+    randomUpdate $ \csv t -> AttachCSVUpload (documentid doc) slid csv (systemActor t)
 
 testPreparationAttachCSVUploadAuthorIndexLeft :: TestEnv ()
 testPreparationAttachCSVUploadAuthorIndexLeft = doTimes 10 $ do
@@ -1220,12 +1216,11 @@ testPreparationAttachCSVUploadAuthorIndexLeft = doTimes 10 $ do
   (csvupload, t) <- rand 10 arbitrary
   let Just sl = getAuthorSigLink doc
   --execute
-  success <- dbUpdate $ AttachCSVUpload (documentid doc)
+  assertRaisesKontra (\SignatoryIsAuthor {} -> True) $ do
+    dbUpdate $ AttachCSVUpload (documentid doc)
           (signatorylinkid sl)
           (csvupload)
           (systemActor t)
-  --assert
-  assert $ not success
 
 testPreparationAttachCSVUploadNonExistingSignatoryLink :: TestEnv ()
 testPreparationAttachCSVUploadNonExistingSignatoryLink = doTimes 3 $ do
@@ -1235,10 +1230,9 @@ testPreparationAttachCSVUploadNonExistingSignatoryLink = doTimes 3 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   slid <- unsafeSignatoryLinkID <$> rand 10 arbitrary
   --execute
-  success <- dbUpdate $ AttachCSVUpload (documentid doc)
+  assertRaisesKontra (\SignatoryLinkDoesNotExist {} -> True) $ do
+    dbUpdate $ AttachCSVUpload (documentid doc)
           slid csvupload (systemActor time)
-  --assert
-  assert $ not success
 
 testGetDocumentsSharedInCompany :: TestEnv ()
 testGetDocumentsSharedInCompany = doTimes 10 $ do

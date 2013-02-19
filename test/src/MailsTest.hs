@@ -72,7 +72,7 @@ sendDocumentMails mailTo author = do
         let asl = head $ documentsignatorylinks d
         let authordetails = signatorydetails asl
         file <- addNewRandomFile
-        True <- randomUpdate $ AttachFile docid (fileid file) (systemActor $ ctxtime ctx)
+        randomUpdate $ AttachFile docid (fileid file) (systemActor $ ctxtime ctx)
 
         isl <- rand 10 arbitrary
         now <- getMinutesTime
