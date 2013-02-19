@@ -445,7 +445,7 @@ testGetNotLoggedIn = do
   ctx <- mkContext defaultValue
   req <- mkRequest GET []
   (res,_) <- runTestKontra req ctx $ apiCallGet doc
-  assertEqual "Response code is 401" 401 (rsCode res)
+  assertEqual "Response code is 403" 403 (rsCode res)
 
 
 testGetBadHeader :: TestEnv ()
@@ -455,7 +455,7 @@ testGetBadHeader = do
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext defaultValue
   req <- mkRequestWithHeaders GET [] [("authorization", ["ABC"])]
   (res,_) <- runTestKontra req ctx $ apiCallGet doc
-  assertEqual "Response code is 401" 401 (rsCode res)
+  assertEqual "Response code is 403" 403 (rsCode res)
 
 
 

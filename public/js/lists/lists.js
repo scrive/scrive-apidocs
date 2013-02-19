@@ -495,7 +495,7 @@
                                 cache: false,
                                 success: function() {view.stopLoading(); },
                                 error : function(list,resp) {
-                                  if (resp != undefined && resp.status != undefined && resp.status == 401)
+                                  if (resp != undefined && resp.status != undefined && resp.status == 403)
                                     window.location.reload(); // Reload page since we are not authorized to see it, one should
 
                                 },
@@ -508,7 +508,7 @@
                                 cache: false,
                                 timeout: args.timeout,
                                 error : function(list,resp) {
-                                  if (resp != undefined && resp.status != undefined && resp.status == 401)
+                                  if (resp != undefined && resp.status != undefined && resp.status == 403)
                                     self.silentFetch = function() {return;}; // Disable featching
                                 }
               });
