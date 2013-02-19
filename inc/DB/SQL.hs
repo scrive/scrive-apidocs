@@ -59,7 +59,9 @@ instance Show SQL where
       where
         showSql (SqlNull) = "NULL"
         showSql s = case safeFromSql s of
-                      Right g -> g
+                      Right g -> if null (drop 30 g)
+                                 then take 30 g
+                                 else take 30 g ++ "..."
                       Left _ -> "<inconvertible sql value>"
 
 -- | Convenience class for things that can be turned into 'SQL'.
