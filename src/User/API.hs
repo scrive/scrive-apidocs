@@ -40,6 +40,7 @@ import Stats.Control
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Crypto.RNG
+import Util.FlashUtil
 
 userAPI :: Route (KontraPlus Response)
 userAPI = dir "api" $ choice
@@ -57,7 +58,8 @@ versionedAPI _version = choice [
   dir "changefooter"    $ hPostNoXTokenHttp $ toK0 $ apiCallChangeUserFooter,
   dir "updateprofile"   $ hPostNoXTokenHttp $ toK0 $ apiCallUpdateUserProfile,
   dir "createcompany"   $ hPostNoXTokenHttp $ toK0 $ apiCallCreateCompany,
-  dir "changeemail"     $ hPostNoXTokenHttp $ toK0 $ apiCallChangeEmail
+  dir "changeemail"     $ hPostNoXTokenHttp $ toK0 $ apiCallChangeEmail,
+  dir "addflash"        $ hPostNoXTokenHttp $ toK0 $ apiCallAddFlash
   ]
 
 
@@ -194,3 +196,15 @@ apiCallCreateCompany =  api $  do
                                               (Just $ userid user)
   Ok <$> (runJSONGenT $ value "created" True)
 
+
+apiCallAddFlash :: Kontrakcja m => m Response
+apiCallAddFlash = api $  do
+  (_, _ , _) <- getAPIUser APIPersonal
+  color <- lift $ getField' "color"
+  content <- lift $ getField' "content"
+  case color of
+       "red"   -> lift $ addFlashMsg (FlashMessage OperationFailed content)
+       "green" -> lift $ addFlashMsg (FlashMessage OperationDone content)
+       "blue"  -> lift $ addFlashMsg (FlashMessage SigningRelated content)
+       _ -> return ()
+  Ok <$> (runJSONGenT $ return ())

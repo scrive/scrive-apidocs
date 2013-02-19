@@ -7,11 +7,8 @@ var AccountSettingsModel = Backbone.Model.extend({
     var self = this;
     var user = new User();
     this.set({"user" : user})
-    user.bind("change:ready",function() {
-      self.reset();
-    });
-    user.bind("reset",function() {
-      console.log('')
+    user.bind("change",function() {
+      console.log('User changed ready');
       self.reset();
     });
     this.user().set({"ready" : false}, {silent: true});
@@ -141,7 +138,6 @@ var AccountSettingsModel = Backbone.Model.extend({
       url : "/api/frontend/createcompany",
       ajax : true,
       ajaxsuccess : function(rs) {
-        new FlashMessage({content: localization.account.accountDetails.companyCreated, color: "green"});
         if (callback!= undefined) callback();
       },
     }).send();
@@ -196,8 +192,11 @@ var AccountSettingsModel = Backbone.Model.extend({
     });
   },
   refresh : function() {
+    console.log("Forcing refresh");
     this.user().set({"ready" : false}, {silent: true});
+    console.log("User marked as dirty");
     this.user().fetch({cache: false, processData: true});
+    console.log("Done fetching, now reset");
     this.reset();
 
   }
@@ -463,7 +462,9 @@ var AccountSettingsView = Backbone.View.extend({
                                   model.createCompany(function() {
                                        model.updateProfile(function() {
                                          confirmation.close();
-                                         model.refresh();
+                                         // We need to refrest the page, since other tabs will be added.
+                                         // Flash message has to be personstent
+                                         new FlashMessage({content: localization.account.accountDetails.companyCreated, color: "green", withReload : true});
                                       });
                                     });
                                   });
@@ -496,8 +497,10 @@ var AccountSettingsView = Backbone.View.extend({
       return button.input();
     },
     render: function () {
+       console.log("Rendering main view");
        var model = this.model;
        if (!model.ready()) return;
+       console.log("Rendering main view - now we are ready");
        var container = $(this.el).empty();
        var box = $("<div class='tab-content account'/>");
        container.append(box);
