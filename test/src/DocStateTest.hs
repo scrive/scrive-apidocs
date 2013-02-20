@@ -1505,32 +1505,31 @@ testTimeoutDocumentNonSignableLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
   -- execute
-  success <- dbUpdate $ TimeoutDocument (documentid doc) (systemActor mt)
-  assert $ not success
+  assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ do
+    dbUpdate $ TimeoutDocument (documentid doc) (systemActor mt)
 
 testTimeoutDocumentSignableNotPendingLeft :: TestEnv ()
 testTimeoutDocumentSignableNotPendingLeft = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . isPending))
-  success <- randomUpdate $ \t->TimeoutDocument (documentid doc) (systemActor t)
-  assert $ not success
+  assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $ do
+    randomUpdate $ \t->TimeoutDocument (documentid doc) (systemActor t)
 
 testTimeoutDocumentSignablePendingRight :: TestEnv ()
 testTimeoutDocumentSignablePendingRight = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
   --execute
-  success <- randomUpdate $ \t->TimeoutDocument (documentid doc) (systemActor t)
+  randomUpdate $ \t->TimeoutDocument (documentid doc) (systemActor t)
   Just ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
-  assert success
   assertInvariants ndoc
 
 testTimeoutDocumentSignableNotLeft :: TestEnv ()
 testTimeoutDocumentSignableNotLeft = doTimes 10 $ do
   actor <- unSystemActor <$> rand 10 arbitrary
-  success <- randomUpdate $ \d-> TimeoutDocument d actor
-  assert $ not success
+  assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
+    randomUpdate $ \d-> TimeoutDocument d actor
 
 testSignDocumentNonSignableLeft :: TestEnv ()
 testSignDocumentNonSignableLeft = doTimes 10 $ do

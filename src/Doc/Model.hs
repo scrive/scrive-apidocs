@@ -2215,19 +2215,21 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m TemplateFromDocument () whe
 
 
 data TimeoutDocument = TimeoutDocument DocumentID Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m TimeoutDocument Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m TimeoutDocument () where
   update (TimeoutDocument did actor) = do
     let time = actorTime actor
-    updateWithEvidence tableDocuments
-      (    "status =" <?> Timedout
-     <+> ", mtime =" <?> time
-     <+> "WHERE id =" <?> did <+> "AND type =" <?> Signable undefined <+> "AND status =" <?> Pending
-      ) $ do
-      return $ InsertEvidenceEvent
+    kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+       sqlSet "status" Timedout
+       sqlSet "mtime" time
+       sqlWhereDocumentIDIs did
+       sqlWhereDocumentTypeIs (Signable undefined)
+       sqlWhereDocumentStatusIs Pending
+    _ <- update $ InsertEvidenceEvent
         TimeoutDocumentEvidence
         (value "actor" (actorWho actor))
         (Just did)
         actor
+    return ()
 
 data SetDocumentAuthenticationMethod = SetDocumentAuthenticationMethod DocumentID AuthenticationMethod Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentAuthenticationMethod Bool where
