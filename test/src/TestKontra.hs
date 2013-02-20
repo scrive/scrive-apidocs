@@ -51,7 +51,7 @@ import Payments.Config (RecurlyConfig(..))
 import IPAddress
 import OurServerPart
 import Session.SessionID
-import Text.StringTemplates.TemplatesLoader (columnizedVersion)
+import qualified Text.StringTemplates.TemplatesLoader as TL
 import Text.StringTemplates.Templates
 import Templates
 import qualified MemCache
@@ -98,7 +98,7 @@ instance TemplatesMonad TestEnv where
   getTemplates = getLocalTemplates defaultValue
   getTextTemplatesByColumn langStr = do
     globaltemplates <- teGlobalTemplates <$> ask
-    return $ columnizedVersion langStr globaltemplates
+    return $ TL.localizedVersion langStr globaltemplates
 
 instance MonadBaseControl IO TestEnv where
   newtype StM TestEnv a = StTestEnv { unStTestEnv :: StM InnerTestEnv a }
