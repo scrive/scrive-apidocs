@@ -173,6 +173,7 @@ var LoginView = Backbone.View.extend({
       emailinput.input().click();
       emailinput.input().focus(
           function() {
+              emailinput.input().select();
               window.setTimeout(function() {
                   emailinput.input().select();
               }, 200);
