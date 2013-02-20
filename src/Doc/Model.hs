@@ -1794,17 +1794,22 @@ instance (MonadDB m, TemplatesMonad m) => DBUpdate m SaveDocumentForUser Bool wh
     or the document does not exist a Left is returned.
 -}
 data SaveSigAttachment = SaveSigAttachment DocumentID SignatoryLinkID String FileID Actor
-instance (MonadDB m, TemplatesMonad m) => DBUpdate m SaveSigAttachment Bool where
+instance (MonadDB m, TemplatesMonad m) => DBUpdate m SaveSigAttachment () where
   update (SaveSigAttachment did slid name fid actor) = do
-    updateWithEvidence tableSignatoryAttachments
-      (  "file_id =" <?> fid
-     <+> "WHERE file_id IS NULL AND name =" <?> name <+> "AND signatory_link_id =" <?> slid
-      ) $ do
-      return $ InsertEvidenceEvent
+    kRun1OrThrowWhyNot $ sqlUpdate "signatory_attachments" $ do
+       sqlFrom "signatory_links"
+       sqlWhere "signatory_links.id = signatory_attachments.signatory_link_id"
+       sqlSet "file_id"  fid
+       sqlWhere "file_id IS NULL"
+       sqlWhereEq "name" name
+       sqlWhereSignatoryLinkIDIs slid
+
+    _ <- update $ InsertEvidenceEvent
         SaveSigAttachmentEvidence
         (value "name" name  >> value "actor" (actorWho actor))
         (Just did)
         actor
+    return ()
 
 data SetDocumentTags = SetDocumentTags DocumentID (S.Set DocumentTag) Actor
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentTags Bool where

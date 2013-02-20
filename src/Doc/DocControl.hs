@@ -871,11 +871,9 @@ handleSigAttach docid siglinkid = do
   content <- guardRightM $ liftIO $ preCheckPDF (concatChunks content1)
   file <- dbUpdate $ NewFile attachname content
   let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory siglink) email siglinkid
-  d <- guardJustM . runMaybeT $ do
-    True <- dbUpdate $ SaveSigAttachment docid siglinkid attachname (fileid file) actor
-    Just newdoc <- dbQuery $ GetDocumentByDocumentID docid
-    return newdoc
-  return $ LinkSignDoc d siglink
+  dbUpdate $ SaveSigAttachment docid siglinkid attachname (fileid file) actor
+  newdoc <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
+  return $ LinkSignDoc newdoc siglink
 
 prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 prepareEmailPreview docid slid = do

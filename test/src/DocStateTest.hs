@@ -600,8 +600,8 @@ testSaveSigAttachmentEvidenceLog = do
                                              , signatoryattachmentdescription = "gimme!"
                                              }] (systemActor t)
   randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t) Nothing
-  success <- randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) "attachment" (fileid file) (systemActor t)
-  assert success
+  randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) "attachment" (fileid file) (systemActor t)
+
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SaveSigAttachmentEvidence) lg
 
@@ -621,11 +621,11 @@ testDeleteSigAttachmentAlreadySigned = do
                                              , signatoryattachmentdescription = "gimme!"
                                              }] (systemActor t)
   randomUpdate $ \t->PreparationToPending (documentid doc) (systemActor t) Nothing
-  u1 <- randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ sl) "attachment" (fileid file) (systemActor t)
-  assertBool "We can't upload signatory attachmnet"  u1
+  randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ sl) "attachment" (fileid file) (systemActor t)
+
   randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ sl) (fileid file) (systemActor t)
-  u2 <- randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ sl) "attachment" (fileid file) (systemActor t)
-  assertBool "We can't reupload attachment"  u2
+  randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ sl) "attachment" (fileid file) (systemActor t)
+
   _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
   randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing SignatoryScreenshots.empty (systemActor t)
   assertRaisesKontra (\SignatoryHasAlreadySigned {} -> True) $ do
@@ -1468,7 +1468,7 @@ testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
   randomUpdate $ DeleteSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) (fileid file1) sa
   Just ndoc1 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
-  success2 <- randomUpdate $ SaveSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) name1 (fileid file2) sa
+  randomUpdate $ SaveSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) name1 (fileid file2) sa
   Just ndoc2 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
 
   --assert
@@ -1479,7 +1479,6 @@ testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
   assertBool "All signatory attachments are not connected to files" (all (isNothing . signatoryattachmentfile)
                                                                            (signatoryattachments $ (documentsignatorylinks ndoc1) !! 0))
 
-  assert success2
   assertBool "Attachment connected to signatory"
                  (Just (fileid file2) `elem` map signatoryattachmentfile (signatoryattachments $ (documentsignatorylinks ndoc2) !! 0))
 

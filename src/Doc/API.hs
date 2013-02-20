@@ -498,7 +498,7 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   file <- dbUpdate $ NewFile (cleanFileName filename) content
   let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) email slid
   d <- apiGuardL (serverError "documentUploadSignatoryAttachment: SaveSigAttachment failed") . runMaybeT $ do
-    True <- dbUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor
+    dbUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor
     Just newdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
     return newdoc
 
